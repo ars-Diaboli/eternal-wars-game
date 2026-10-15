@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bn8sdldqad4q7"]
+
+[ext_resource type="Texture2D" uid="uid://cn01i2we1dpk3" path="res://Resources/TerrainTextures/brown_mud_03_diff_1.png" id="1_g5xj4"]
+
+[resource]
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_g5xj4")

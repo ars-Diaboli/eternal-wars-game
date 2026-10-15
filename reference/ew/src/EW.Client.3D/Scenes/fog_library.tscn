@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://c658ct40sofq4"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ud88j"]
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_oqo0t"]
+material = SubResource("StandardMaterial3D_ud88j")
+size = Vector3(2, 1, 2)
+
+[node name="FogLibrary" type="Node3D" unique_id=583876001]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1680274053]
+mesh = SubResource("BoxMesh_oqo0t")

@@ -1,0 +1,108 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Interface/ScenarioSelectionWindow.cs" id="1_scenario"]
+
+[node name="ScenarioSelectionWindow" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_scenario")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(520, 420)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="SelectionPanel" type="Control" parent="CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/SelectionPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/SelectionPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Custom Scenario"
+
+[node name="ScenarioList" type="ItemList" parent="CenterContainer/PanelContainer/MarginContainer/SelectionPanel/VBoxContainer"]
+custom_minimum_size = Vector2(472, 280)
+layout_mode = 2
+size_flags_vertical = 3
+item_count = 2
+item_0/text = "World Map"
+item_1/text = "Adventure Map"
+
+[node name="BottomBar" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/SelectionPanel/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="NextButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/SelectionPanel/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+disabled = true
+text = "Next"
+
+[node name="BackButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/SelectionPanel/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Back"
+
+[node name="ConfigurationPanel" type="Control" parent="CenterContainer/PanelContainer/MarginContainer"]
+visible = false
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ConfigurationPanel"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ConfigurationPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Scenario Configuration"
+
+[node name="ScenarioNameLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ConfigurationPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Scenario"
+
+[node name="DescriptionLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ConfigurationPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Press Begin to start the selected scenario."
+autowrap_mode = 3
+
+[node name="BottomBar" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ConfigurationPanel/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 12
+
+[node name="BeginButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ConfigurationPanel/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Begin"
+
+[node name="BackButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ConfigurationPanel/VBoxContainer/BottomBar"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+text = "Back"

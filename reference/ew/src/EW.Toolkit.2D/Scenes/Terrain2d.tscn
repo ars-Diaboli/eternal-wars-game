@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://bae3vsrpv2e43"]
+
+[ext_resource type="Script" uid="uid://bb05rysuutuhx" path="res://Scripts/TerrainGrid.cs" id="1_n8eyo"]
+[ext_resource type="Script" uid="uid://c508b7pc4w6by" path="res://Scripts/GameController.cs" id="2_8c0l6"]
+
+[node name="Node2D" type="Node2D" unique_id=212913573]
+
+[node name="TerrainGrid" type="Node2D" parent="." unique_id=216693319]
+script = ExtResource("1_n8eyo")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+enabled = true
+zoom = Vector2(1, 1)
+position_smoothing_enabled = true
+position_smoothing_speed = 8.0
+
+[node name="GameController" type="Node" parent="." unique_id=1754698803]
+script = ExtResource("2_8c0l6")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="PanelContainer" type="PanelContainer" parent="UI"]
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 276.0
+offset_bottom = 64.0
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/PanelContainer"]
+offset_right = 260.0
+offset_bottom = 48.0
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/PanelContainer/MarginContainer"]
+offset_right = 244.0
+offset_bottom = 32.0
+theme_override_constants/separation = 8
+
+[node name="SaveButton" type="Button" parent="UI/PanelContainer/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(74, 32)
+layout_mode = 2
+text = "Save"
+
+[node name="LoadButton" type="Button" parent="UI/PanelContainer/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(74, 32)
+layout_mode = 2
+text = "Load"
+
+[node name="EndTurnButton" type="Button" parent="UI/PanelContainer/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(80, 32)
+layout_mode = 2
+text = "End Turn"

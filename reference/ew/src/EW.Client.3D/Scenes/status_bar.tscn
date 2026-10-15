@@ -1,0 +1,27 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Interface/StatusBar.cs" id="1_status"]
+
+[node name="StatusBar" type="PanelContainer"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_status")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 6
+
+[node name="StatusLabel" type="Label" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Resources: -"
+horizontal_alignment = 0
+vertical_alignment = 1

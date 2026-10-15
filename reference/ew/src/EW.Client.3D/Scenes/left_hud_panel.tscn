@@ -1,0 +1,146 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scripts/Interface/HudPanel.cs" id="1_hud"]
+[ext_resource type="Script" uid="uid://0cbqwmsh46xi" path="res://Scripts/Interface/HeroPanel.cs" id="1_hero"]
+[ext_resource type="Script" uid="uid://dmh4ooags4mmx" path="res://Scripts/Interface/TownPanel.cs" id="2_town"]
+[ext_resource type="Script" uid="uid://ddpmmi0qmlxr2" path="res://Scripts/Interface/CalendarPanel.cs" id="3_calendar"]
+
+[node name="HudPanel" type="PanelContainer"]
+custom_minimum_size = Vector2(236, 540)
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 248.0
+offset_bottom = 552.0
+script = ExtResource("1_hud")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="HudStack" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MinimapPanel" type="PanelContainer" parent="MarginContainer/HudStack"]
+custom_minimum_size = Vector2(220, 152)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HudStack/MinimapPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="CenterContainer" type="CenterContainer" parent="MarginContainer/HudStack/MinimapPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="MinimapPlaceholder" type="ColorRect" parent="MarginContainer/HudStack/MinimapPanel/MarginContainer/CenterContainer"]
+custom_minimum_size = Vector2(136, 136)
+layout_mode = 2
+color = Color(0.08, 0.09, 0.1, 0.75)
+
+[node name="HeroPanel" type="PanelContainer" parent="MarginContainer/HudStack"]
+custom_minimum_size = Vector2(220, 112)
+layout_mode = 2
+script = ExtResource("1_hero")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HudStack/HeroPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HudStack/HeroPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/HudStack/HeroPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Player Heroes"
+
+[node name="HeroList" type="ItemList" parent="MarginContainer/HudStack/HeroPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(204, 74)
+layout_mode = 2
+item_count = 1
+fixed_column_width = 180
+item_0/text = "No heroes"
+
+[node name="TownPanel" type="PanelContainer" parent="MarginContainer/HudStack"]
+custom_minimum_size = Vector2(220, 112)
+layout_mode = 2
+script = ExtResource("2_town")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HudStack/TownPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HudStack/TownPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/HudStack/TownPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Player Towns"
+
+[node name="TownList" type="ItemList" parent="MarginContainer/HudStack/TownPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(204, 74)
+layout_mode = 2
+item_count = 1
+fixed_column_width = 180
+item_0/text = "No towns"
+
+[node name="SelectedStatsPanel" type="PanelContainer" parent="MarginContainer/HudStack"]
+custom_minimum_size = Vector2(220, 66)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HudStack/SelectedStatsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="SelectedStatsLabel" type="Label" parent="MarginContainer/HudStack/SelectedStatsPanel/MarginContainer"]
+layout_mode = 2
+text = "Selected Stats
+-"
+
+[node name="CalendarPanel" type="PanelContainer" parent="MarginContainer/HudStack"]
+custom_minimum_size = Vector2(220, 42)
+layout_mode = 2
+script = ExtResource("3_calendar")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/HudStack/CalendarPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="CalendarLabel" type="Label" parent="MarginContainer/HudStack/CalendarPanel/MarginContainer"]
+layout_mode = 2
+text = "Day 1 / Week 1 / Month 1"
+
+[node name="BottomControls" type="HBoxContainer" parent="MarginContainer/HudStack"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="MenuButton" type="Button" parent="MarginContainer/HudStack/BottomControls"]
+custom_minimum_size = Vector2(98, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Menu"
+
+[node name="EndTurnButton" type="Button" parent="MarginContainer/HudStack/BottomControls"]
+custom_minimum_size = Vector2(98, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "End Turn"

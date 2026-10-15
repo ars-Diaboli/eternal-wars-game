@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://bjahqdcm8l5e5"]
+
+[ext_resource type="Script" uid="uid://18yviydyrwxn" path="res://Scripts/Interface/MainMenu.cs" id="1_853f1"]
+[ext_resource type="Texture2D" uid="uid://cx1ucpr4tom54" path="res://Resources/Backgrounds/ChatGPT Image Jun 7, 2026, 04_03_03 PM.png" id="1_tt5f1"]
+[ext_resource type="PackedScene" path="res://Scenes/load_game_window.tscn" id="2_loadwin"]
+[ext_resource type="PackedScene" path="res://Scenes/scenario_selection_window.tscn" id="3_scenario"]
+[ext_resource type="PackedScene" path="res://Scenes/settings_window.tscn" id="4_settings"]
+
+[node name="MainMenu" type="Control" unique_id=2083444558]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_853f1")
+
+[node name="BackgroundImage" type="TextureRect" parent="." unique_id=1468881395]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("1_tt5f1")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=793001951]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 139.0
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 160
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=1406750548]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NewCampaignButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=909131648]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "New Campaign"
+
+[node name="CustomScenarioButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1638870534]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 20
+text = "Custom Scenario"
+
+[node name="LoadGameButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1317792066]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Load Game"
+
+[node name="SettingsButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1993614448]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Settings"
+
+[node name="ExitButton" type="Button" parent="MarginContainer/VBoxContainer" unique_id=1671145051]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_constants/outline_size = 0
+theme_override_font_sizes/font_size = 20
+text = "Exit"
+
+[node name="SettingsWindow" parent="." instance=ExtResource("4_settings")]
+
+[node name="LoadGameWindow" parent="." instance=ExtResource("2_loadwin")]
+
+[node name="ScenarioSelectionWindow" parent="." instance=ExtResource("3_scenario")]

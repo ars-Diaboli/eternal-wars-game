@@ -1,0 +1,327 @@
+[gd_scene format=3 uid="uid://c3t0pif6m3cy8"]
+
+[ext_resource type="Script" uid="uid://x1d18xi3v5eu" path="res://Scripts/WorldMap/WorldMapSettings.cs" id="1_3jykw"]
+[ext_resource type="Script" uid="uid://ctgbdiwr16tc0" path="res://Scripts/Messaging/Hub.cs" id="2_ahhb8"]
+[ext_resource type="Script" uid="uid://ela6t858lplp" path="res://Scripts/InputManager.cs" id="2_w1i7g"]
+[ext_resource type="Script" uid="uid://ceibthh6oxubv" path="res://Scripts/TurnManager.cs" id="3_cwbjy"]
+[ext_resource type="Script" uid="uid://cmqw7cdlaosou" path="res://Scripts/Ai/AiBrain.cs" id="4_cwbjy"]
+[ext_resource type="Script" uid="uid://coere48jrvfhk" path="res://Scripts/WorldMap/PathVisualizer.cs" id="4_pykxj"]
+[ext_resource type="Script" uid="uid://ob44rwmdy6af" path="res://Scripts/CameraController.cs" id="5_1huhg"]
+[ext_resource type="PackedScene" uid="uid://c7opx84csltkl" path="res://Scenes/Heroes/hero.tscn" id="6_k3mpa"]
+[ext_resource type="Script" uid="uid://0fl4bhuc13bc" path="res://Scripts/WorldMap/WorldMapController.cs" id="6_worldmap"]
+[ext_resource type="PackedScene" uid="uid://cyp7fxasypuai" path="res://Scenes/map_object.tscn" id="7_bgae6"]
+[ext_resource type="Script" uid="uid://bg1131v1vw4n8" path="res://Scripts/WorldMap/ResourcePickup.cs" id="8_v5ucs"]
+[ext_resource type="Script" uid="uid://0bop3e5a5kom" path="res://Scripts/WorldMap/FogOfWarTextureSystem.cs" id="10_pykxj"]
+[ext_resource type="PackedScene" uid="uid://d0ldm1neew001" path="res://Scenes/ResourceGenerators/gold_mine.tscn" id="11_gold"]
+[ext_resource type="PackedScene" path="res://Scenes/left_hud_panel.tscn" id="12_hud"]
+[ext_resource type="PackedScene" uid="uid://eomluqv0eqq" path="res://Scenes/lumber_mill.tscn" id="12_lumber"]
+[ext_resource type="PackedScene" path="res://Scenes/in_game_menu.tscn" id="12_menu"]
+[ext_resource type="PackedScene" path="res://Scenes/status_bar.tscn" id="12_status"]
+[ext_resource type="PackedScene" uid="uid://xtobdex7xrc7" path="res://Scenes/ResourceGenerators/crystal_mine.tscn" id="14_crystal"]
+[ext_resource type="PackedScene" uid="uid://gemmine001" path="res://Scenes/ResourceGenerators/gem_mine.tscn" id="15_gem"]
+[ext_resource type="PackedScene" uid="uid://dexxijxieliyy" path="res://Scenes/sulfur_mine.tscn" id="16_sulfur"]
+[ext_resource type="PackedScene" uid="uid://town001" path="res://Scenes/Towns/town.tscn" id="17_town"]
+[ext_resource type="Script" uid="uid://daepb2eqvybs0" path="res://Scripts/Players/GamePlayer.cs" id="18_player"]
+[ext_resource type="Script" uid="uid://csi7b5scbp5gl" path="res://Scripts/DataTypes/Monsters/CastleFactionUnits.cs" id="24_a7jn7"]
+[ext_resource type="Script" uid="uid://bitfqic1e5god" path="res://Scripts/Calendar/GameCalendar.cs" id="31_q8g78"]
+
+[sub_resource type="Gradient" id="Gradient_6fcl7"]
+offsets = PackedFloat32Array(0.2, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_1ni1k"]
+noise_type = 2
+frequency = 0.03
+cellular_jitter = 3.0
+cellular_return_type = 0
+domain_warp_enabled = true
+domain_warp_type = 1
+domain_warp_amplitude = 50.0
+domain_warp_fractal_type = 2
+domain_warp_fractal_lacunarity = 1.5
+domain_warp_fractal_gain = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_o32km"]
+noise = SubResource("FastNoiseLite_1ni1k")
+color_ramp = SubResource("Gradient_6fcl7")
+seamless = true
+
+[sub_resource type="Shader" id="Shader_cwbjy"]
+code = "shader_type spatial;
+render_mode diffuse_lambert, specular_schlick_ggx;
+
+// --- OUR DECOUPLED FOG MODULE PIPELINE ---
+global uniform sampler2D fog_texture_mask : filter_linear, repeat_disable;
+global uniform vec2 fog_map_size;
+global uniform vec2 fog_world_offset;
+
+// Terrain3D exposes its composite painted texture array through this uniform slot
+uniform sampler2DArray texture_array_albedo : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+
+varying vec3 world_vertex_pos;
+
+void vertex() {
+    // Cache the absolute world position of the ground vertices
+    world_vertex_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+}
+
+void fragment() {
+    // 1. Calculate a standard top-down UV map for painting the landscape textures
+    // Adjust the 10.0 scaling value to make your ground textures tile larger or smaller
+    vec2 terrain_uv = world_vertex_pos.xz / 10.0; 
+    
+    // 2. Fetch the default base texture layer from Terrain3D's texture array (Index 0)
+    vec4 ground_color = texture(texture_array_albedo, vec3(terrain_uv, 0.0));
+    
+    // 3. Shift the world space position so center (0,0) fits on our 2D texture map pixel matrix
+    vec2 adjusted_pos = world_vertex_pos.xz + fog_world_offset;
+    vec2 fog_uv = adjusted_pos / fog_map_size;
+    
+    // 4. Sample our dynamic C# rendering viewport buffer
+    float visibility_factor = texture(fog_texture_mask, fog_uv).r;
+    
+    // 5. Blend Terrain3D's painted textures right down into pure strategic shadow!
+    ALBEDO = mix(vec3(0.0), ground_color.rgb, visibility_factor);
+}"
+
+[sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_ahhb8"]
+_shader_parameters = {
+&"bias_distance": null,
+&"blend_sharpness": null,
+&"depth_blur": null,
+&"enable_macro_variation": null,
+&"enable_projection": null,
+&"flat_terrain_normals": null,
+&"macro_variation1": null,
+&"macro_variation2": null,
+&"macro_variation_slope": null,
+&"mipmap_bias": null,
+&"noise1_angle": null,
+&"noise1_offset": null,
+&"noise1_scale": null,
+&"noise2_scale": null,
+&"noise_texture": SubResource("NoiseTexture2D_o32km"),
+&"projection_threshold": null
+}
+shader_override = SubResource("Shader_cwbjy")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_op7r8"]
+transparency = 4
+cull_mode = 2
+vertex_color_use_as_albedo = true
+backlight_enabled = true
+backlight = Color(0.5, 0.5, 0.5, 1)
+distance_fade_mode = 1
+distance_fade_min_distance = 128.0
+distance_fade_max_distance = 96.0
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_ixpr0"]
+generated_type = 1
+height_offset = 0.5
+material_override = SubResource("StandardMaterial3D_op7r8")
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
+[sub_resource type="Image" id="Image_0w3n0"]
+data = {
+; "data": PackedByteArray <6400 KB of baked data removed, see docs/reference-sandbox.md>
+"format": "DXT5 RGBA8",
+"height": 1024,
+"mipmaps": true,
+"width": 1024
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_w1i7g"]
+image = SubResource("Image_0w3n0")
+
+[sub_resource type="Image" id="Image_5gg28"]
+data = {
+; "data": PackedByteArray <6314 KB of baked data removed, see docs/reference-sandbox.md>
+"format": "DXT5 RGBA8",
+"height": 1024,
+"mipmaps": true,
+"width": 1024
+}
+
+[sub_resource type="ImageTexture" id="ImageTexture_pykxj"]
+image = SubResource("Image_5gg28")
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_1huhg"]
+name = "world_map"
+albedo_texture = SubResource("ImageTexture_w1i7g")
+normal_texture = SubResource("ImageTexture_pykxj")
+
+[sub_resource type="Terrain3DAssets" id="Terrain3DAssets_luygi"]
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_ixpr0")])
+texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_1huhg")])
+
+[sub_resource type="Environment" id="Environment_xm5nr"]
+ambient_light_source = 3
+ambient_light_energy = 0.6
+
+[node name="WorldMap" type="Node3D" unique_id=1558626715]
+script = ExtResource("1_3jykw")
+
+[node name="EventHub" type="Node" parent="." unique_id=307409072]
+script = ExtResource("2_ahhb8")
+
+[node name="Terrain3D" type="Terrain3D" parent="." unique_id=1361763361]
+data_directory = "res://terrain_data"
+material = SubResource("Terrain3DMaterial_ahhb8")
+assets = SubResource("Terrain3DAssets_luygi")
+mesh_lods = 5
+mesh_size = 64
+top_level = true
+metadata/_edit_lock_ = true
+
+[node name="InputManager" type="Node" parent="." unique_id=2050924119 node_paths=PackedStringArray("WorldMapSettings", "OverworldHero", "ActiveTurnManager", "Visualizer")]
+script = ExtResource("2_w1i7g")
+WorldMapSettings = NodePath("..")
+OverworldHero = NodePath("../PlayerHero")
+ActiveTurnManager = NodePath("../TurnManager")
+Visualizer = NodePath("../PathVisualizer")
+
+[node name="PlayerOne" type="Node" parent="." unique_id=1955314403 node_paths=PackedStringArray("Heroes")]
+script = ExtResource("18_player")
+DisplayName = "Player 1"
+PlayerColor = Color(0.254902, 0.411765, 0.882353, 1)
+Heroes = [NodePath("../PlayerHero")]
+
+[node name="PlayerTwo" type="Node" parent="." unique_id=612418494 node_paths=PackedStringArray("Heroes", "AiBrain")]
+script = ExtResource("18_player")
+PlayerNumber = 2
+DisplayName = "Player 2"
+ControlType = 1
+PlayerColor = Color(0.803922, 0.360784, 0.360784, 1)
+Heroes = [NodePath("../EnemyHero")]
+AiBrain = NodePath("../AiBrain")
+
+[node name="EnvironmentPlayer" type="Node" parent="." unique_id=751771424]
+script = ExtResource("18_player")
+DisplayName = "Environment"
+ControlType = 1
+IsEnvironment = true
+
+[node name="TurnManager" type="Node" parent="." unique_id=1172608018 node_paths=PackedStringArray("ActivePlayers")]
+script = ExtResource("3_cwbjy")
+ActivePlayers = [NodePath("../PlayerOne"), NodePath("../PlayerTwo")]
+
+[node name="AiBrain" type="Node" parent="." unique_id=348627958 node_paths=PackedStringArray("ControlledHero")]
+script = ExtResource("4_cwbjy")
+ControlledHero = NodePath("../EnemyHero")
+
+[node name="PathVisualizer" type="Node3D" parent="." unique_id=717699325]
+script = ExtResource("4_pykxj")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=432838470]
+transform = Transform3D(0.81915206, -0.4055798, 0.4055798, 0, 0.70710677, 0.70710677, -0.57357645, -0.579228, 0.579228, 10, 50, 0)
+shadow_enabled = true
+shadow_bias = 0.05
+
+[node name="CameraRig" type="Node3D" parent="." unique_id=186817001]
+script = ExtResource("5_1huhg")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig" unique_id=1158588316]
+transform = Transform3D(1, 0, 0, 0, 0.64278764, 0.76604444, 0, -0.76604444, 0.64278764, 0, 12, 12)
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=688890313]
+
+[node name="HudPanel" parent="CanvasLayer" unique_id=1613881187 instance=ExtResource("12_hud")]
+
+[node name="InGameMenu" parent="CanvasLayer" unique_id=714131926 instance=ExtResource("12_menu")]
+
+[node name="StatusBar" parent="CanvasLayer" unique_id=2096763469 instance=ExtResource("12_status")]
+
+[node name="WorldMapController" type="Node" parent="." unique_id=1018806643]
+script = ExtResource("6_worldmap")
+
+[node name="PlayerHero" parent="." unique_id=1224909926 node_paths=PackedStringArray("WorldMapSettings", "VisionSystem") instance=ExtResource("6_k3mpa")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.1891308, -0.3945999, 1.3597984)
+WorldMapSettings = NodePath("..")
+Faction = 1
+VisionSystem = NodePath("../FogOfWar")
+
+[node name="EnemyHero" parent="." unique_id=602398754 node_paths=PackedStringArray("WorldMapSettings", "VisionSystem") instance=ExtResource("6_k3mpa")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 10)
+WorldMapSettings = NodePath("..")
+Faction = 2
+VisionSystem = NodePath("../FogOfWar")
+
+[node name="GoldPile" parent="." unique_id=2092420225 node_paths=PackedStringArray("WorldMapSettings") instance=ExtResource("7_bgae6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 0)
+script = ExtResource("8_v5ucs")
+WorldMapSettings = NodePath("..")
+
+[node name="WoodPile" parent="." unique_id=1117039282 node_paths=PackedStringArray("WorldMapSettings") instance=ExtResource("7_bgae6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 8)
+script = ExtResource("8_v5ucs")
+Type = 2
+Amount = 10
+WorldMapSettings = NodePath("..")
+
+[node name="GemsPile" parent="." unique_id=1206368800 node_paths=PackedStringArray("WorldMapSettings") instance=ExtResource("7_bgae6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 3)
+script = ExtResource("8_v5ucs")
+Type = 5
+Amount = 10
+WorldMapSettings = NodePath("..")
+
+[node name="GoldMine" parent="." unique_id=1297565626 instance=ExtResource("11_gold")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.6407051, -7.6553288, 24.041206)
+MapObjectSize = Vector2i(1, 1)
+
+[node name="LumberMill" parent="." unique_id=545980417 instance=ExtResource("12_lumber")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, 20)
+MapObjectSize = Vector2i(1, 1)
+
+[node name="CrystalMine" parent="." unique_id=1830967207 instance=ExtResource("14_crystal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 0, 14)
+MapObjectSize = Vector2i(1, 1)
+
+[node name="GemMine" parent="." unique_id=1127780989 instance=ExtResource("15_gem")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 14)
+MapObjectSize = Vector2i(1, 1)
+
+[node name="SulfurMine" parent="." unique_id=1768255058 instance=ExtResource("16_sulfur")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 16)
+MapObjectSize = Vector2i(1, 1)
+
+[node name="Town" parent="." unique_id=1306709969 node_paths=PackedStringArray("WorldMapSettings") instance=ExtResource("17_town")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 2)
+Faction = 9
+WorldMapSettings = NodePath("..")
+
+[node name="TownNorth" parent="." unique_id=1190631705 node_paths=PackedStringArray("WorldMapSettings") instance=ExtResource("17_town")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -12)
+Faction = 2
+WorldMapSettings = NodePath("..")
+
+[node name="TownEast" parent="." unique_id=225104412 node_paths=PackedStringArray("WorldMapSettings") instance=ExtResource("17_town")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0, 6)
+Faction = 3
+WorldMapSettings = NodePath("..")
+
+[node name="TownSouth" parent="." unique_id=706266566 node_paths=PackedStringArray("WorldMapSettings") instance=ExtResource("17_town")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -18)
+Faction = 4
+WorldMapSettings = NodePath("..")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1183292354]
+environment = SubResource("Environment_xm5nr")
+
+[node name="FogOfWar" type="Node" parent="." unique_id=926779594 node_paths=PackedStringArray("WorldMap")]
+script = ExtResource("10_pykxj")
+WorldMap = NodePath("..")
+
+[node name="FogViewport" type="SubViewport" parent="FogOfWar" unique_id=1256803786]
+
+[node name="FogCanvas" type="TextureRect" parent="FogOfWar/FogViewport" unique_id=811482322]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="GameCalendar" type="Node" parent="." unique_id=1872880666]
+script = ExtResource("31_q8g78")
+
+[node name="KnightFactionUnits" type="Node" parent="." unique_id=1383763246]
+script = ExtResource("24_a7jn7")

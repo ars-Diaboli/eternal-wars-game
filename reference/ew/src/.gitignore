@@ -1,0 +1,47 @@
+# C# / .NET build output
+[Bb]in/
+[Oo]bj/
+# Godot addons ship required scripts and native libraries in bin directories.
+!**/addons/**/bin/
+!**/addons/**/bin/**
+artifacts/
+*.binlog
+
+# Test results and coverage output
+TestResults/
+coverage/
+*.trx
+*.coverage
+*.coveragexml 
+
+# Godot generated caches (all game projects)
+.godot/
+.mono/
+.import/
+export_credentials.cfg
+
+# Godot generated Android builds and export output
+**/android/build/
+**/android/.gradle/
+**/builds/
+**/exports/
+
+# Keep project.godot, export_presets.cfg, *.uid and asset *.import files tracked.
+# They contain project settings, resource identities and import configuration.
+
+# IDE / editor local settings
+.vs/
+.idea/
+.claude/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.DotSettings.user
+rider.project.restore.info
+rider.project.model.nuget.info
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://yc6825hny1dc"]
+
+[ext_resource type="Script" uid="uid://b71wpbtxjohbj" path="res://Scripts/Combat/CombatManager.cs" id="1_1x6wr"]
+
+[node name="CombatMap" type="Node3D" unique_id=1954586328]
+script = ExtResource("1_1x6wr")

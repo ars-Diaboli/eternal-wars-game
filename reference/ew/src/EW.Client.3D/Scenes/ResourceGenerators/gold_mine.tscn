@@ -1,0 +1,35 @@
+[gd_scene format=3 uid="uid://d0ldm1neew001"]
+
+[ext_resource type="Script" uid="uid://co2eric781dlp" path="res://Scripts/WorldMap/Mines/GoldMine.cs" id="1_goldm"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_body"]
+albedo_color = Color(0.7, 0.52, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_roof"]
+albedo_color = Color(0.25, 0.2, 0.16, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_body"]
+material = SubResource("StandardMaterial3D_body")
+top_radius = 0.45
+bottom_radius = 0.55
+height = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_flag"]
+size = Vector3(0.45, 0.18, 0.08)
+
+[node name="GoldMine" type="Node3D"]
+script = ExtResource("1_goldm")
+MapObjectSize = Vector2i(3, 2)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(2.4, 0, 0, 0, 1, 0, 0, 0, 1.4, 1, 0.4, 0.5)
+mesh = SubResource("CylinderMesh_body")
+
+[node name="Roof" type="MeshInstance3D" parent="."]
+transform = Transform3D(2.1, 0, 0, 0, 0.35, 0, 0, 0, 1.2, 1, 0.95, 0.5)
+mesh = SubResource("CylinderMesh_body")
+material_override = SubResource("StandardMaterial3D_roof")
+
+[node name="OwnerIndicator" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1.35, 1.45)
+mesh = SubResource("BoxMesh_flag")

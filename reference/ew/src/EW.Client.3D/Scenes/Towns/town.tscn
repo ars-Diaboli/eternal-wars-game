@@ -1,0 +1,76 @@
+[gd_scene format=3 uid="uid://town001"]
+
+[ext_resource type="Script" uid="uid://cnu5fsxifid5j" path="res://Scripts/WorldMap/Town.cs" id="1_town"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_stone"]
+albedo_color = Color(0.46, 0.48, 0.5, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_roof"]
+albedo_color = Color(0.26, 0.18, 0.14, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_keep"]
+material = SubResource("StandardMaterial3D_stone")
+size = Vector3(4.5, 1.8, 4.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall"]
+material = SubResource("StandardMaterial3D_stone")
+size = Vector3(7, 1.0, 0.35)
+
+[sub_resource type="BoxMesh" id="BoxMesh_tower"]
+material = SubResource("StandardMaterial3D_stone")
+size = Vector3(1.0, 2.4, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_roof"]
+material = SubResource("StandardMaterial3D_roof")
+size = Vector3(1.2, 0.45, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_flag"]
+size = Vector3(0.75, 0.24, 0.08)
+
+[node name="Town" type="Node3D"]
+script = ExtResource("1_town")
+MapObjectSize = Vector2i(7, 7)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.9, 3)
+mesh = SubResource("BoxMesh_keep")
+
+[node name="NorthWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, -0.175)
+mesh = SubResource("BoxMesh_wall")
+
+[node name="SouthWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 6.175)
+mesh = SubResource("BoxMesh_wall")
+
+[node name="WestWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -0.175, 0.5, 3)
+mesh = SubResource("BoxMesh_wall")
+
+[node name="EastWall" type="MeshInstance3D" parent="."]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 6.175, 0.5, 3)
+mesh = SubResource("BoxMesh_wall")
+
+[node name="NorthWestTower" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+mesh = SubResource("BoxMesh_tower")
+
+[node name="NorthEastTower" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.2, 0)
+mesh = SubResource("BoxMesh_tower")
+
+[node name="SouthWestTower" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 6)
+mesh = SubResource("BoxMesh_tower")
+
+[node name="SouthEastTower" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.2, 6)
+mesh = SubResource("BoxMesh_tower")
+
+[node name="KeepRoof" type="MeshInstance3D" parent="."]
+transform = Transform3D(3.9, 0, 0, 0, 1, 0, 0, 0, 3.9, 3, 2.025, 3)
+mesh = SubResource("BoxMesh_roof")
+
+[node name="OwnerIndicator" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 2.8, 6.55)
+mesh = SubResource("BoxMesh_flag")

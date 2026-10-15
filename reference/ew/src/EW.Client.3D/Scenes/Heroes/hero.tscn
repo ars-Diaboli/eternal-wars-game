@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://c7opx84csltkl"]
+
+[ext_resource type="Script" uid="uid://5dlxxcli0dyq" path="res://Scripts/Heroes/Hero.cs" id="1_qhmnl"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6tqrl"]
+albedo_color = Color(0, 0.003921569, 1, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_qhmnl"]
+material = SubResource("StandardMaterial3D_6tqrl")
+height = 1.5
+
+[node name="Hero" type="Node3D" unique_id=1224909926]
+script = ExtResource("1_qhmnl")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=863852998]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("CylinderMesh_qhmnl")

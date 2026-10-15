@@ -1,0 +1,189 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/TechTree/TownTechTree.cs" id="1_towntechtree"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_techtree"]
+bg_color = Color(0.14, 0.14, 0.16, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.28, 0.28, 0.32, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bottom"]
+bg_color = Color(0.09, 0.09, 0.1, 1)
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="TownTechTree" type="Control"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("1_towntechtree")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Tech Tree"
+
+[node name="BackgroundPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_techtree")
+
+[node name="CenterContainer" type="CenterContainer" parent="VBoxContainer/BackgroundPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TechTreeBackground" type="TextureRect" parent="VBoxContainer/BackgroundPanel/CenterContainer"]
+custom_minimum_size = Vector2(880, 440)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlaceholderLabel" type="Label" parent="VBoxContainer/BackgroundPanel/CenterContainer/TechTreeBackground"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -132.0
+offset_top = -10.0
+offset_right = 132.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+text = "Tech Tree Background"
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Built: -"
+
+[node name="BuildingsPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_techtree")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/BuildingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TownHallRow" type="HBoxContainer" parent="VBoxContainer/BuildingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Marker" type="ColorRect" parent="VBoxContainer/BuildingsPanel/VBoxContainer/TownHallRow"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.24, 0.72, 0.34, 1)
+
+[node name="BuildTownHallButton" type="Button" parent="VBoxContainer/BuildingsPanel/VBoxContainer/TownHallRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Build Town Hall"
+
+[node name="FortRow" type="HBoxContainer" parent="VBoxContainer/BuildingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Marker" type="ColorRect" parent="VBoxContainer/BuildingsPanel/VBoxContainer/FortRow"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.24, 0.72, 0.34, 1)
+
+[node name="BuildFortButton" type="Button" parent="VBoxContainer/BuildingsPanel/VBoxContainer/FortRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Build Fort"
+
+[node name="BlacksmithRow" type="HBoxContainer" parent="VBoxContainer/BuildingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Marker" type="ColorRect" parent="VBoxContainer/BuildingsPanel/VBoxContainer/BlacksmithRow"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.24, 0.72, 0.34, 1)
+
+[node name="BuildBlacksmithButton" type="Button" parent="VBoxContainer/BuildingsPanel/VBoxContainer/BlacksmithRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Build Blacksmith"
+
+[node name="MarketplaceRow" type="HBoxContainer" parent="VBoxContainer/BuildingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Marker" type="ColorRect" parent="VBoxContainer/BuildingsPanel/VBoxContainer/MarketplaceRow"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.24, 0.72, 0.34, 1)
+
+[node name="BuildMarketplaceButton" type="Button" parent="VBoxContainer/BuildingsPanel/VBoxContainer/MarketplaceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Build Marketplace"
+
+[node name="MagesGuildRow" type="HBoxContainer" parent="VBoxContainer/BuildingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Marker" type="ColorRect" parent="VBoxContainer/BuildingsPanel/VBoxContainer/MagesGuildRow"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.24, 0.72, 0.34, 1)
+
+[node name="BuildMagesGuildButton" type="Button" parent="VBoxContainer/BuildingsPanel/VBoxContainer/MagesGuildRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Build Mages Guild"
+
+[node name="TavernRow" type="HBoxContainer" parent="VBoxContainer/BuildingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Marker" type="ColorRect" parent="VBoxContainer/BuildingsPanel/VBoxContainer/TavernRow"]
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+color = Color(0.24, 0.72, 0.34, 1)
+
+[node name="BuildTavernButton" type="Button" parent="VBoxContainer/BuildingsPanel/VBoxContainer/TavernRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Build Tavern"
+
+[node name="DwellingsPanel" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_techtree")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/DwellingsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BottomBar" type="PanelContainer" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bottom")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer/BottomBar"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="BackButton" type="Button" parent="VBoxContainer/BottomBar/HBoxContainer"]
+layout_mode = 2
+text = "Back"

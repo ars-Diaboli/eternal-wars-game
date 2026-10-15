@@ -1,0 +1,7 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://sc24f4w0py6b"]
+
+[ext_resource type="Shader" uid="uid://cwdmm7jxwq4f4" path="res://Resources/Shaders/terrain_fog.gdshader" id="1_568kg"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_568kg")

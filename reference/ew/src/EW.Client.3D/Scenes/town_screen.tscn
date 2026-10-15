@@ -1,0 +1,148 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://Scripts/Interface/TownScreen.cs" id="1_townscreen"]
+[ext_resource type="PackedScene" path="res://Scenes/town_tech_tree.tscn" id="2_towntechtree"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay"]
+bg_color = Color(0, 0, 0, 0.62)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.12, 0.12, 0.14, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.34, 0.34, 0.38, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_image"]
+bg_color = Color(0.16, 0.16, 0.18, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.28, 0.28, 0.3, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bottom"]
+bg_color = Color(0.09, 0.09, 0.1, 1)
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="TownScreen" type="Control"]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("1_townscreen")
+
+[node name="Overlay" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay")
+mouse_filter = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(960, 640)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+mouse_filter = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="HeaderLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Town"
+
+[node name="TownOverviewPanel" type="Control" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ImagePanel" type="PanelContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TownOverviewPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_image")
+
+[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TownOverviewPanel/ImagePanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="TownImage" type="TextureRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TownOverviewPanel/ImagePanel/CenterContainer"]
+custom_minimum_size = Vector2(880, 500)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlaceholderLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/TownOverviewPanel/ImagePanel/CenterContainer/TownImage"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -72.0
+offset_top = -10.0
+offset_right = 72.0
+offset_bottom = 10.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_alignment = 1
+text = "Town Image"
+
+[node name="TownTechTree" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" instance=ExtResource("2_towntechtree")]
+
+[node name="BottomBar" type="PanelContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bottom")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/BottomBar"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="TechTreeButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/BottomBar/HBoxContainer"]
+layout_mode = 2
+text = "Tech Tree"
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/BottomBar/HBoxContainer"]
+layout_mode = 2
+text = "Close"

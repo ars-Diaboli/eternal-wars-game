@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://qvd0rbqprenb"]
+
+[ext_resource type="Texture2D" uid="uid://beqvwmeajadu8" path="res://Resources/TerrainTextures/grass-field_1.png" id="1_ec8v3"]
+
+[resource]
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_ec8v3")

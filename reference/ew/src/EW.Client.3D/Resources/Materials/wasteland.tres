@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://1w8uieuvxpeo"]
+
+[ext_resource type="Texture2D" uid="uid://bjwajktj0cdxo" path="res://Resources/TerrainTextures/lichen_rock_diff_1.png" id="1_tgccp"]
+
+[resource]
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_tgccp")
