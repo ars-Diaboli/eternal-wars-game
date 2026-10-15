@@ -1,0 +1,11 @@
+<Project Sdk="Godot.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Reusable Godot UI components (HUD widgets, panels, dialogs) bound to core events.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EternalWars.Godot.Shared\EternalWars.Godot.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

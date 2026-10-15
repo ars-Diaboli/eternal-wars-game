@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    Architecture guard: core projects must never reference Godot.
+    Fails the build if a Tier 1 project picks up GodotSharp directly or transitively via a project reference.
+  -->
+  <Target Name="EnsureCoreHasNoGodotDependency"
+          BeforeTargets="Build"
+          Condition="$(MSBuildProjectDirectory.Contains('src$([System.IO.Path]::DirectorySeparatorChar)Core'))">
+    <Error Condition="'@(PackageReference->AnyHaveMetadataValue('Identity', 'GodotSharp'))' == 'true'"
+           Text="$(MSBuildProjectName) is a core (Tier 1) project and must not reference GodotSharp." />
+    <Error Condition="'$(UsingGodotNETSdk)' == 'true'"
+           Text="$(MSBuildProjectName) is a core (Tier 1) project and must not use Godot.NET.Sdk." />
+    <Error Condition="$([System.String]::Copy('@(ProjectReference)').Contains('Godot'))"
+           Text="$(MSBuildProjectName) is a core (Tier 1) project and must not reference Godot-dependent projects." />
+  </Target>
+</Project>

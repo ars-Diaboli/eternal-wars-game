@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>File formats (maps, later saves and content definitions) and their mapping to the domain.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

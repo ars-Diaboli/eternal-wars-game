@@ -1,0 +1,64 @@
+using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Events;
+
+namespace EternalWars.Core.Domain.Turns;
+
+/// <summary>
+/// HoMM-style sequential turns: every player acts once per day, in slot order.
+/// When the last player ends the turn the calendar advances.
+/// </summary>
+public sealed class TurnService(
+    GameState state,
+    IEventPublisher events,
+    EconomyService economy,
+    HeroMovementService movement)
+{
+    public void StartGame()
+    {
+        if (state.IsStarted)
+        {
+            throw new InvalidOperationException("The game has already started.");
+        }
+
+        state.IsStarted = true;
+        state.CurrentPlayerIndex = 0;
+        events.Publish(new GameStarted(state.Date));
+        events.Publish(new DayStarted(state.Date));
+        BeginTurn();
+    }
+
+    public void EndTurn()
+    {
+        if (!state.IsStarted)
+        {
+            throw new InvalidOperationException("The game has not started yet.");
+        }
+
+        events.Publish(new TurnEnded(state.CurrentPlayer.Id, state.Date));
+
+        state.CurrentPlayerIndex++;
+        if (state.CurrentPlayerIndex >= state.Players.Count)
+        {
+            state.CurrentPlayerIndex = 0;
+            state.Date = state.Date.Next();
+            events.Publish(new DayStarted(state.Date));
+            if (state.Date.IsFirstDayOfWeek)
+            {
+                events.Publish(new WeekStarted(state.Date));
+            }
+        }
+
+        BeginTurn();
+    }
+
+    private void BeginTurn()
+    {
+        var player = state.CurrentPlayer;
+        movement.RestoreMovement(player.Id);
+        economy.CollectDailyIncome(player.Id);
+        events.Publish(new TurnStarted(player.Id, state.Date));
+    }
+}
