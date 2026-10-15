@@ -12,6 +12,7 @@ using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Players;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Tools.Sim;
@@ -22,6 +23,7 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
+/// sim towns [--runs 20] [--upgraded]  (round robin of one-week town armies, for roster balance)
 /// sim selftest                      (CI: determinism and replay round trip)
 /// </code>
 /// </summary>
@@ -36,6 +38,7 @@ public static class Program
                 ["battle", var attacker, var defender, .. var rest] => Battle(ParseArmy(attacker), ParseArmy(defender), Option(rest, "--runs", 100), (ulong)Option(rest, "--seed", 1)),
                 ["record", var path, .. var rest] => Record(path, Option(rest, "--days", 7), (ulong)Option(rest, "--seed", 1)),
                 ["replay", var path] => Replay(path),
+                ["towns", .. var rest] => Towns(Option(rest, "--runs", 20), rest.Contains("--upgraded")),
                 ["selftest"] => SelfTest(),
                 _ => Usage(),
             };
@@ -49,7 +52,7 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | towns [--runs N] [--upgraded] | selftest");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
     }
@@ -99,6 +102,61 @@ public static class Program
         return (ended ?? throw new InvalidOperationException("The battle did not finish."), rounds);
 
         static Army Copy(Army army) => new(army.Slots);
+    }
+
+    /// <summary>
+    /// Every playable town against every other with a one-week army: both lines of tiers 1–2, the first line of tiers
+    /// 3–4 and the tier-5 creature, one week of growth each. Each pairing fights from both sides. Prints win rates.
+    /// </summary>
+    private static int Towns(int runs, bool upgraded)
+    {
+        string[] towns = [TownIds.Haven, TownIds.Sylvan, TownIds.Academy, TownIds.Necropolis, TownIds.Inferno, TownIds.Dungeon, TownIds.Stronghold, TownIds.SwampBestiary];
+        var catalog = CreatureCatalog.Default;
+        var armies = towns.ToDictionary(t => t, t =>
+        {
+            var lines = catalog.BaseCreaturesOf(t).ToList();
+            var picked = lines.Where(c => c.Tier <= 2)
+                .Concat(lines.Where(c => c.Tier is 3 or 4).GroupBy(c => c.Tier).Select(g => g.First()))
+                .Concat(lines.Where(c => c.Tier == 5));
+            return Army.Of(picked.Select(c => new CreatureStack(upgraded ? c.UpgradesTo! : c.Id, c.WeeklyGrowth)).ToArray());
+        });
+
+        foreach (var (town, army) in armies)
+        {
+            var stacks = army.Stacks.Select(s => (Creature: catalog.Get(s.Stack.Creature), s.Stack.Count)).ToList();
+            Console.WriteLine($"{town,-16} power {stacks.Sum(s => (long)s.Count * s.Creature.Value),7}  " +
+                              string.Join("  ", stacks.Select(s => $"T{s.Creature.Tier} {s.Creature.Name} {s.Count}×{s.Creature.Value}")));
+        }
+
+        Console.WriteLine($"Win rate of the row town over the column town ({runs} battles per side, {(upgraded ? "upgraded" : "base")} one-week armies)");
+        Console.WriteLine("".PadRight(16) + string.Concat(towns.Select(t => t[..Math.Min(7, t.Length)].PadLeft(8))) + "   total");
+        foreach (var row in towns)
+        {
+            var wins = 0;
+            var line = row.PadRight(16);
+            foreach (var column in towns)
+            {
+                if (row == column)
+                {
+                    line += "-".PadLeft(8);
+                    continue;
+                }
+
+                var won = 0;
+                for (var run = 0; run < runs; run++)
+                {
+                    won += FightOnce(armies[row], armies[column], (ulong)run).Ended.Winner == BattleSide.Attacker ? 1 : 0;
+                    won += FightOnce(armies[column], armies[row], (ulong)(run + 1000)).Ended.Winner == BattleSide.Defender ? 1 : 0;
+                }
+
+                wins += won;
+                line += $"{100 * won / (2 * runs)}%".PadLeft(8);
+            }
+
+            Console.WriteLine(line + $"{100 * wins / (2 * runs * (towns.Length - 1))}%".PadLeft(8));
+        }
+
+        return 0;
     }
 
     /// <summary>Plays the demo scenario with scripted heroes and writes a replay file.</summary>
