@@ -139,3 +139,47 @@ arrays are ~260k entries per search; fog sight is set-based.
 Tilt 15–30° from vertical, coupled to zoom (zoomed in = 30°, zoomed out = 15°); rotation limited to ±45°
 around the vertical axis, so the map never appears upside down and art can assume a "south-ish"
 viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared), not yet verified in Godot.
+
+### ADR-023: Standalone editor; template-based random maps in both game and editor
+**Status**: accepted (2026-10-15)
+The map editor stays a separate app. Random maps are generated from **templates** (HotA-style zone
+graphs: zones with towns, richness, treasure and monster strength, plus guarded connections). Templates
+are authored in the editor's template editor. The game generates from any available template on its
+new-game screen; the editor generates into an editable map. Generation lives in a new engine-free
+project `EternalWars.Core.Generation`, is deterministic from its inputs, and outputs a plain
+`MapDocument`, so generated and hand-made maps share one pipeline.
+
+### ADR-024: Terrain classes and HoMM3-style roads
+**Status**: accepted (2026-10-15); per-terrain assignment pending
+Every terrain belongs to a class:
+- **Open**: no penalty for anyone.
+- **Rough**: a fixed penalty for all factions (e.g. +25 %).
+- **Native**: no penalty for armies native to it, a penalty for everyone else.
+
+Natives are defined per terrain in data (`TerrainDefinition`: class, base cost, native towns), not in
+code, so new terrains and towns are content. Roads are a separate per-tile map layer (dirt 50, gravel 65,
+cobblestone 75). Road cost replaces terrain cost, including native and rough penalties.
+
+Consequences:
+- The map format gains a road layer, with one character per tile like the terrain rows.
+- Step cost depends on the hero's army, so `StepCost` takes the moving hero/army. Pathfinding stays
+  per-hero.
+- The random map generator lays roads between towns and through zone connections.
+
+### ADR-025: Income comes only from sources; no base income
+**Status**: accepted (2026-10-15)
+The placeholder 500 gold per turn was removed. Daily income is the sum of pluggable `IIncomeSource`s
+(`MineIncome` today; towns, Estates-like skills, hero specialisations and artifacts later), collected at
+the start of the owner's turn. Nothing is published when the income is zero. New income features add a
+source instead of editing `EconomyService`.
+
+### ADR-026: Two-way and one-way gates, no random exits
+**Status**: accepted (2026-10-15)
+Two-way gates link a pair, on the same level or across levels (the existing `SubterraneanGate` is one).
+One-way gates link an entrance to exactly one exit; several entrances may share an exit, and exits are
+landing spots only. Random-exit portals are left out for now, so every link is fixed map data. That
+keeps pathfinding exact and avoids hidden randomness. If they are added later, the exit must come from
+the seeded game RNG and the pathfinder must stop at the entrance.
+Implementation plan: generalise `SubterraneanGate` into a two-way gate kind (subterranean gate and
+two-way monolith become definitions), add `OneWayGateEntrance`/`OneWayGateExit` kinds, extend
+`PathFinder` teleport edges to be directional, map format v3, and add an editor link tool and validation.

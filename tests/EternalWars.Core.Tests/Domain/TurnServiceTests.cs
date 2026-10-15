@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Scenarios;
@@ -9,7 +10,7 @@ namespace EternalWars.Core.Tests.Domain;
 public class TurnServiceTests
 {
     [Fact]
-    public void StartGame_PublishesStartSequenceAndGrantsIncomeToFirstPlayer()
+    public void StartGame_PublishesStartSequenceWithoutPlaceholderIncome()
     {
         var session = new GameSession(DemoScenario.Create());
         var events = new List<IEvent>();
@@ -21,8 +22,8 @@ public class TurnServiceTests
         Assert.IsType<GameStarted>(turnFlow[0]);
         Assert.IsType<DayStarted>(turnFlow[1]);
         Assert.Equal(new TurnStarted(new PlayerId(0), GameDate.First), turnFlow[^1]);
-        Assert.Equal(500, session.State.Players[0].Resources.Gold);
-        Assert.Equal(0, session.State.Players[1].Resources.Gold);
+        Assert.DoesNotContain(events, e => e is ResourcesChanged); // no towns or owned mines yet
+        Assert.All(session.State.Players, p => Assert.Equal(ResourceSet.Empty, p.Resources));
     }
 
     [Fact]

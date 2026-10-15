@@ -1,21 +1,20 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Economy;
 
-public sealed class EconomyService(GameState state, IEventPublisher events)
+public sealed class EconomyService(GameState state, IEventPublisher events, IReadOnlyList<IIncomeSource>? incomeSources = null)
 {
-    /// <summary>Placeholder until towns exist.</summary>
-    public static ResourceSet BaseDailyIncome { get; } = new(Gold: 500);
+    private readonly IReadOnlyList<IIncomeSource> _incomeSources = incomeSources ?? DefaultIncomeSources;
+
+    /// <summary>Income sources that exist today. Towns, skills, specialisations and artifacts add theirs later.</summary>
+    public static IReadOnlyList<IIncomeSource> DefaultIncomeSources { get; } = [new MineIncome()];
 
     /// <summary>What <paramref name="playerId"/> receives at the start of each of their turns.</summary>
     public ResourceSet DailyIncome(PlayerId playerId) =>
-        state.ObjectsOf<Mine>()
-            .Where(m => m.Owner == playerId)
-            .Aggregate(BaseDailyIncome, (total, mine) => total + ResourceSet.Of(mine.Resource, mine.DailyYield));
+        _incomeSources.Aggregate(ResourceSet.Empty, (total, source) => total + source.DailyIncome(state, playerId));
 
     public void Grant(PlayerId playerId, ResourceSet amount)
     {
@@ -39,5 +38,12 @@ public sealed class EconomyService(GameState state, IEventPublisher events)
         return true;
     }
 
-    internal void CollectDailyIncome(PlayerId playerId) => Grant(playerId, DailyIncome(playerId));
+    internal void CollectDailyIncome(PlayerId playerId)
+    {
+        var income = DailyIncome(playerId);
+        if (income != ResourceSet.Empty)
+        {
+            Grant(playerId, income);
+        }
+    }
 }

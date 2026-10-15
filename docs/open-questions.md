@@ -20,6 +20,12 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Combat**: 24 × 28–36 battlefield (Tactics), no facing/generic flanking (ability hooks instead),
   HoMM3 wait and ties, breath friendly fire (ADR-021).
 - **Camera**: 15–30° from vertical, ±45° rotation, zoom (ADR-022).
+- **Roads / native terrain**: open / rough (fixed penalty for all) / native terrain classes; HoMM3-style
+  roads (ADR-024, GDD §4.1).
+- **Income**: no placeholder income; sources are towns, mines, hero skills, specialisations and artifacts (ADR-025).
+- **Gates**: two-way gates and one-way gates (entrance → fixed exit); no random-exit portals for now (ADR-026).
+- **Map editor / random maps**: standalone editor; HotA-style templates authored in the editor;
+  both game and editor generate maps from templates (ADR-023, GDD §4.9).
 
 ## Game direction
 1. **Setting**: original world or lore? Name and theme of the world and its conflict ("Eternal Wars")?
@@ -41,12 +47,20 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Treasure rewards**: fixed (1000 gold / 500 XP now) or rolled from tiers (HoMM3: 1000/1500/2000 gold or 500/1000/1500 XP)?
 - **Mines**: guarded by neutral stacks when placed? Re-flagging rules (any hero vs. needs to defeat a guard)?
 - **Meeting heroes**: own hero on target tile → exchange screen; enemy → battle (Phase 2). Allies?
-- **Gates and teleporters**: two-way gates only, or also one-way monoliths / random-exit portals?
-- **Roads** and native-terrain bonuses per faction?
-- **Placeholder income**: every player gets 500 gold per turn until towns exist. Keep it for testing?
+- **Terrain assignment**:
+  - Confirm the proposed classes and native owners: open grass/dirt; rough +25 %; native sand
+    (Stronghold), snow (Academy), swamp (Swamp Bestiary), lava (Inferno), subterranean (Dungeon).
+  - Do Haven, Sylvan and Necropolis get new native terrains?
+  - Is "native" decided by the whole army (HoMM3) or by the hero's town group?
+  - Is there a Pathfinding skill?
+- **Roads**: does the road cost apply only road → road (HoMM3), or whenever the tile being left has a road?
 
 ## Tooling and process
 9. **2D harness scope**: debug viewer only, or also scripted scenario runner / AI sandbox (headless)?
-10. **Map editor**: separate standalone app (current) or in-game editor mode? Random map generator priority?
+10. **Random maps**:
+    - Should competitive templates support **mirrored/symmetric** generation?
+    - Water maps and islands (boats) in 1.0?
+    - Should players be able to save a generated map, or share its seed only?
+    - Import HotA templates? Their format could be converted, but we need to check licensing.
 11. **Platforms**: Windows only at first, or also Linux/macOS/Steam Deck?
 12. **Modding**: must content be moddable by players from 1.0 (affects data format choices now)?
