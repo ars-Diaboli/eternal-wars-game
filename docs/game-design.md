@@ -73,8 +73,9 @@ out of scope, but the deterministic core keeps it possible.
       belongs to the terrain's native town. Neutrals count as non-native ❓.
     - The **Pathfinding** secondary skill reduces non-native and rough penalties by 25/50/75 %
       (basic/advanced/expert).
-    - Today's implementation still uses fixed per-terrain costs (no towns yet) and lacks the three new
-      terrains. Both change with the terrain-definition follow-up and Phase 3.
+    - Implemented as data (`TerrainCatalog`, all terrains incl. the three new ones). Until armies exist
+      no army is native anywhere, so native terrain costs everyone its non-native cost. The Pathfinding
+      skill arrives with skills in Phase 3.
   - **Roads (HoMM3-style)**: a road layer on top of terrain, drawn in the editor and generated
     between towns and through zone connections. Road types and costs: **dirt 50, gravel 65,
     cobblestone 75**. The road cost replaces the terrain cost and **ignores native/rough penalties**.
@@ -102,21 +103,22 @@ out of scope, but the deterministic core keeps it possible.
 
   | Other hero | Result | Status |
   |---|---|---|
-  | **Own** | Opens the **exchange screen**: swap army stacks and artifacts. The moving hero stays on its adjacent tile. | planned (Phase 1 follow-up for the meeting, Phase 2/3 for armies/artifacts) |
-  | **Enemy** | Starts a **battle** | Phase 2 |
+  | **Own** | Opens the **exchange screen**: swap army stacks and artifacts. The moving hero stays on its adjacent tile. | meeting implemented (`HeroExchangeDecision`); swapping in Phase 2/3 |
+  | **Enemy** | Starts a **battle** | trigger implemented (`BattleTriggered`); battle in Phase 2 |
   | **Allied** (team games) | **No interaction for now**: the tile is simply blocked. Exchange with allies may come later. | decided |
 
   - **Teams**: the map (or template) defines default teams; the game setup screen may change them
     unless the map locks them (story/scenario maps). Free-for-all when nothing is defined.
-  - Under refog: a moving hero **automatically stops** when an enemy hero comes into sight. If it still
-    bumps into an unseen enemy, a **battle starts (ambush)**; the defender may get an ambush bonus ❓.
+  - Under refog (implemented): a moving hero **automatically stops** when an enemy hero comes into sight.
+    If it still bumps into an unseen enemy, a **battle starts (ambush)**; the defender may get an ambush
+    bonus ❓.
 - **Gates and teleporters**: no random-exit portals for now. Every link is fixed in the map, so
   movement and pathfinding stay deterministic and predictable.
 
   | Kind | Behaviour | Status |
   |---|---|---|
-  | **Two-way gate** | Linked pair; visiting either end moves the hero to the other. Subterranean gates connect levels; two-way monoliths work on the same level. | subterranean gate implemented; two-way monolith uses the same rules |
-  | **One-way gate** | An **entrance** linked to exactly one **exit**. Several entrances may share an exit. The exit is a landing spot only; visiting it does nothing, and it can't be entered as a gate. | planned (Phase 1 follow-up) |
+  | **Two-way gate** | Linked pair; visiting either end moves the hero to the other. Subterranean gates connect levels; two-way monoliths work on the same level. | implemented (subterranean gate, two-way monolith) |
+  | **One-way gate** | An **entrance** linked to exactly one **exit**. Several entrances may share an exit. The exit is a landing spot only; visiting it does nothing, it can't be entered as a gate, and routes may walk over it. | implemented (one-way monolith) |
 
   - Pathfinding goes through both kinds: a route continues from the linked end, and one-way gates only in
     their direction. A blocked exit (a hero standing on it) means no teleport.
@@ -130,7 +132,7 @@ out of scope, but the deterministic core keeps it possible.
      reveals at 3 tiles and refogs at 7.
   - Observers: heroes (scouting radius 5) and owned mines (radius 2).
   - Under refog, **objects out of sight show their last known state** (flag colour, chest still there),
-    updated when they come back into sight. Units are hidden entirely.
+    updated when they come back into sight. Units are hidden entirely. (Implemented: `ObjectMemory`.)
 
 ### 4.2 Heroes
 - Primary stats: Attack, Defense, Spell Power, Knowledge.
@@ -236,9 +238,25 @@ because that is content selection, not a rule.
     get bonuses when the target is already engaged by another enemy, per extra side, per number of times
     the target was hit this round, and so on. The core tracks engagement and hit history so abilities can
     use them.
-  - **Body blocking & cover**: footprints block movement. A ranged attack whose line of fire crosses
-    **any other unit (friend or foe) or an obstacle cell** suffers a cover penalty (−25 % ❓). Size matters
-    indirectly: big units block more lines of fire.
+  - **Body blocking & cover**: footprints block movement. Every **unit (friend or foe) or obstacle** that the
+    line of fire passes through between shooter and target adds a cover penalty. Each blocker counts **once**,
+    however many of its cells the line crosses:
+
+    | Blocker | Penalty |
+    |---|---|
+    | 2×2 or 3×3 creature | 1/8 |
+    | 4×4 creature | 1/4 |
+    | Small obstacle | 1/8 |
+    | Big obstacle | 1/4 |
+    | City wall (sieges) | 1/2 |
+
+    - **Penalties add up.** Ranged damage × (1 − total penalty).
+    - **If the total exceeds 7/8, the target cannot be shot at all** (it is out of line of fire).
+      Example: a wall (4/8) + a 4×4 creature (2/8) = 6/8, so the shot deals 25 % damage. Add a small obstacle
+      (1/8) and it is still allowed at 7/8 (12.5 % damage). One more blocker and the shot is impossible.
+    - Each obstacle definition declares its size class (small/big). Walls are a separate class.
+    - Open ❓: how the line of fire is traced on the cell grid (centre to centre, Bresenham-style
+      supercover) and whether creature or hero skills reduce cover penalties.
   - **Damage formula: HoMM3 baseline.** Base damage (rolled per stack within the creature's min–max) ×
     stack size; +5 % per point of Attack above the target's Defense (cap +300 %); −2.5 % per point of
     Defense above Attack (cap −70 %); then multiplicative modifiers (skills, cover, abilities, spells).
@@ -378,6 +396,6 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 11 | Terrain penalties | Native terrain per town, flat costs otherwise | Three classes: open (no penalty), rough (fixed penalty for all), native (penalty only for non-natives) | accepted |
 | 12 | Creature tiers | 7 tiers, 1 dwelling per tier, all buildable | 5 tiers, 9 dwellings, build 7 of 9 (final per town) | accepted |
 | 13 | Tactics | Larger deployment zone | Choose battlefield width (28–34) before battle; enemy Tactics reduces yours | accepted |
-| 14 | Ranged | Range and wall penalties only | Units and obstacles in the line of fire give cover | accepted |
+| 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot | accepted |
 | 15 | Fog ambush | — | Under refog, bumping into an unseen enemy starts an ambush battle | accepted |
 | … | | | *more twists to be proposed* ❓ | |

@@ -11,3 +11,12 @@ public sealed record HeroTeleported(HeroId Hero, MapPosition From, MapPosition T
 public sealed record HeroMovementRestored(HeroId Hero, int MovementPoints) : IEvent;
 
 public sealed record HeroExperienceGained(HeroId Hero, int Amount, int Total) : IEvent;
+
+/// <summary>A hero stepped towards another hero of the same owner; an exchange decision follows.</summary>
+public sealed record HeroesMet(HeroId Hero, HeroId Other) : IEvent;
+
+/// <summary>
+/// A hero attacked an enemy hero. <paramref name="IsAmbush"/>: the attacker could not see the defender
+/// (refog). Phase 2 turns this into an actual battle; for now it is a hook only.
+/// </summary>
+public sealed record BattleTriggered(HeroId Attacker, HeroId Defender, bool IsAmbush) : IEvent;

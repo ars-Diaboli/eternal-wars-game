@@ -129,8 +129,8 @@ public class PathFinderTests
         var state = CreateLevels(
             ["A....", ".....", "....."],
             [".....", ".....", "....."]);
-        var surface = Add<SubterraneanGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);    // entrance (3,1,0)
-        var underground = Add<SubterraneanGate>(state, BuiltInMapObjects.SubterraneanGate, 0, 0, 1); // entrance (1,1,1)
+        var surface = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);    // entrance (3,1,0)
+        var underground = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 0, 0, 1); // entrance (1,1,1)
         Link(surface, underground);
         var session = Start(state);
 
@@ -148,7 +148,7 @@ public class PathFinderTests
         var state = CreateLevels(
             ["A....", ".....", "....."],
             [".....", ".....", "....."]);
-        Add<SubterraneanGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);
+        Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);
         var session = Start(state);
 
         Assert.Null(session.Movement.FindPath(A, new MapPosition(4, 2, 1)));

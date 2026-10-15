@@ -6,6 +6,12 @@ public readonly record struct PlayerId(int Value)
     public override string ToString() => $"Player#{Value}";
 }
 
+/// <summary>Alliance id. Players with the same team are allies; by default every player is its own team.</summary>
+public readonly record struct TeamId(int Value)
+{
+    public override string ToString() => $"Team#{Value}";
+}
+
 /// <summary>Strongly typed id of a hero, unique within a game.</summary>
 public readonly record struct HeroId(int Value)
 {

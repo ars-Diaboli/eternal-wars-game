@@ -26,6 +26,7 @@ public sealed class GameSession
         Bus.Subscribe<HeroMoved>(visibility);
         Bus.Subscribe<HeroTeleported>(visibility);
         Bus.Subscribe<MineOwnerChanged>(visibility);
+        Bus.Subscribe<MapObjectRemoved>(visibility);
 
         Economy = new EconomyService(State, Bus);
         Interactions = new MapObjectInteractionService(State, Bus, Economy);

@@ -27,9 +27,11 @@ public static class DemoScenario
             {
                 < 6 => TerrainType.Water,
                 < 10 => TerrainType.Rock,
-                < 18 => TerrainType.Rough,
-                < 24 => TerrainType.Sand,
-                < 28 => TerrainType.Swamp,
+                < 16 => TerrainType.Rough,
+                < 20 => TerrainType.Sand,
+                < 23 => TerrainType.Swamp,
+                < 27 => TerrainType.Highlands,
+                < 30 => TerrainType.Wasteland,
                 < 40 => TerrainType.Dirt,
                 _ => TerrainType.Grass,
             });
@@ -68,14 +70,27 @@ public static class DemoScenario
         Place(BuiltInMapObjects.MineId(ResourceType.Gold), new MapPosition((width / 2) - 1, (height / 2) - 1));
         Place(BuiltInMapObjects.TreasureChest, new MapPosition(width / 2, 2));
 
+        // A one-way shortcut from the blue side towards red.
+        var entrance = (OneWayGateEntrance)Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(1, 9));
+        var exit = Place(BuiltInMapObjects.OneWayMonolithExit, new MapPosition(width - 2, 4));
+        entrance.Exit = exit.Id;
+
         if (withUnderground)
         {
-            var surfaceGate = Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(2, height - 4));
-            var undergroundGate = Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(2, height - 4, 1));
-            ((SubterraneanGate)surfaceGate).LinkedGate = undergroundGate.Id;
-            ((SubterraneanGate)undergroundGate).LinkedGate = surfaceGate.Id;
+            var surfaceGate = (TwoWayGate)Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(2, height - 4));
+            var undergroundGate = (TwoWayGate)Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(2, height - 4, 1));
+            surfaceGate.LinkedGate = undergroundGate.Id;
+            undergroundGate.LinkedGate = surfaceGate.Id;
             Place(BuiltInMapObjects.MineId(ResourceType.Crystal), new MapPosition(width - 6, 2, 1));
             Place(BuiltInMapObjects.PileId(ResourceType.Mercury), new MapPosition(5, height - 5, 1));
+        }
+
+        // A dirt road across the valley.
+        for (var x = 1; x < width - 1; x++)
+        {
+            var tile = new MapPosition(x, 7);
+            MakeWalkable(tile);
+            map.SetRoad(tile, RoadType.Dirt);
         }
 
         // Starting tiles and object surroundings must be walkable whatever the random terrain was.
@@ -104,7 +119,7 @@ public static class DemoScenario
 
         void MakeWalkable(MapPosition position)
         {
-            if (map.Contains(position) && !map.GetTerrain(position).IsPassableOnFoot())
+            if (map.Contains(position) && !TerrainCatalog.Default.IsPassable(map.GetTerrain(position)))
             {
                 map.SetTerrain(position, position.Level == 0 ? TerrainType.Grass : TerrainType.Subterranean);
             }

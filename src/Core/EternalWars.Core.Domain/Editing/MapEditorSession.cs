@@ -92,18 +92,10 @@ public sealed class MapEditorSession
     public int PaintTerrain(MapPosition center, TerrainType terrain, int radius = 0)
     {
         var map = Scenario.Map;
-        var changes = new List<(MapPosition Position, TerrainType Previous)>();
-        for (var dy = -radius; dy <= radius; dy++)
-        {
-            for (var dx = -radius; dx <= radius; dx++)
-            {
-                var position = center.Offset(dx, dy);
-                if (map.Contains(position) && map.GetTerrain(position) != terrain)
-                {
-                    changes.Add((position, map.GetTerrain(position)));
-                }
-            }
-        }
+        var changes = Brush(center, radius)
+            .Where(p => map.GetTerrain(p) != terrain)
+            .Select(p => (Position: p, Previous: map.GetTerrain(p)))
+            .ToList();
 
         if (changes.Count == 0)
         {
@@ -130,6 +122,40 @@ public sealed class MapEditorSession
         return changes.Count;
     }
 
+    /// <summary>Paints (or, with <see cref="RoadType.None"/>, erases) roads with a square brush. Returns tiles changed.</summary>
+    public int PaintRoad(MapPosition center, RoadType road, int radius = 0)
+    {
+        var map = Scenario.Map;
+        var changes = Brush(center, radius)
+            .Where(p => map.GetRoad(p) != road)
+            .Select(p => (Position: p, Previous: map.GetRoad(p)))
+            .ToList();
+
+        if (changes.Count == 0)
+        {
+            return 0;
+        }
+
+        var positions = changes.Select(c => c.Position).ToList();
+        Run(new DelegateCommand(
+            road == RoadType.None ? "Erase road" : $"Paint {road} road",
+            () =>
+            {
+                positions.ForEach(p => map.SetRoad(p, road));
+                _bus.Publish(new RoadsPainted(positions, road));
+            },
+            () =>
+            {
+                foreach (var group in changes.GroupBy(c => c.Previous))
+                {
+                    var restored = group.Select(c => c.Position).ToList();
+                    restored.ForEach(p => map.SetRoad(p, group.Key));
+                    _bus.Publish(new RoadsPainted(restored, group.Key));
+                }
+            }));
+        return changes.Count;
+    }
+
     // Objects ---------------------------------------------------------------------------------
 
     public EditResult CanPlaceObject(MapObjectDefinition definition, MapPosition topLeft)
@@ -147,7 +173,7 @@ public sealed class MapEditorSession
                 return EditResult.Overlaps;
             }
 
-            if (cell == FootprintCell.Visit && !Scenario.Map.GetTerrain(position).IsPassableOnFoot())
+            if (cell == FootprintCell.Visit && !Scenario.Terrains.IsPassable(Scenario.Map.GetTerrain(position)))
             {
                 return EditResult.ImpassableTerrain;
             }
@@ -183,16 +209,19 @@ public sealed class MapEditorSession
             return EditResult.InvalidTarget;
         }
 
-        var links = SnapshotLinks(id, (mapObject as SubterraneanGate)?.LinkedGate);
+        // Whatever points at the removed object loses its link: a two-way partner, or one-way entrances.
+        var dependents = mapObject switch
+        {
+            TwoWayGate { LinkedGate: { } partner } => new List<MapObjectId> { partner },
+            OneWayGateExit => Scenario.ObjectsOf<OneWayGateEntrance>().Where(e => e.Exit == id).Select(e => e.Id).ToList(),
+            _ => new List<MapObjectId>(),
+        };
+        var links = SnapshotLinks([id, .. dependents]);
         Run(new DelegateCommand(
             $"Remove {mapObject.Definition.Name}",
             () =>
             {
-                if (mapObject is SubterraneanGate { LinkedGate: { } partner })
-                {
-                    SetLink(partner, null);
-                }
-
+                dependents.ForEach(d => SetLink(d, null));
                 RemoveObject(mapObject);
             },
             () =>
@@ -203,12 +232,26 @@ public sealed class MapEditorSession
         return EditResult.Ok;
     }
 
-    /// <summary>Links two gates both ways, unlinking whatever they were linked to before.</summary>
+    /// <summary>Points a one-way entrance at an exit (or clears it with null).</summary>
+    public EditResult SetGateExit(MapObjectId entranceId, MapObjectId? exitId)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == entranceId) is not OneWayGateEntrance entrance ||
+            (exitId is { } e && Scenario.Objects.FirstOrDefault(o => o.Id == e) is not OneWayGateExit))
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var previous = entrance.Exit;
+        Run(new DelegateCommand("Set gate exit", () => SetLink(entrance.Id, exitId), () => SetLink(entrance.Id, previous)));
+        return EditResult.Ok;
+    }
+
+    /// <summary>Links two two-way gates both ways, unlinking whatever they were linked to before.</summary>
     public EditResult LinkGates(MapObjectId first, MapObjectId second)
     {
         if (first == second ||
-            Scenario.Objects.FirstOrDefault(o => o.Id == first) is not SubterraneanGate a ||
-            Scenario.Objects.FirstOrDefault(o => o.Id == second) is not SubterraneanGate b)
+            Scenario.Objects.FirstOrDefault(o => o.Id == first) is not TwoWayGate a ||
+            Scenario.Objects.FirstOrDefault(o => o.Id == second) is not TwoWayGate b)
         {
             return EditResult.InvalidTarget;
         }
@@ -277,7 +320,7 @@ public sealed class MapEditorSession
             return EditResult.Overlaps;
         }
 
-        if (!Scenario.Map.GetTerrain(position).IsPassableOnFoot())
+        if (!Scenario.Terrains.IsPassable(Scenario.Map.GetTerrain(position)))
         {
             return EditResult.ImpassableTerrain;
         }
@@ -383,6 +426,39 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>Sets a player's default team (the setup screen may still override it unless teams are locked).</summary>
+    public EditResult SetPlayerTeam(PlayerId id, TeamId team)
+    {
+        if (!Scenario.HasPlayer(id))
+        {
+            return EditResult.UnknownPlayer;
+        }
+
+        var player = Scenario.GetPlayer(id);
+        var previous = player.Team;
+        Run(new DelegateCommand($"Set team of {player.Name}", () => Apply(team), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(TeamId value)
+        {
+            player.Team = value;
+            _bus.Publish(new PlayerSlotsChanged());
+        }
+    }
+
+    /// <summary>Locks the map's teams so the game setup cannot change them (story/scenario maps).</summary>
+    public void SetTeamsLocked(bool locked)
+    {
+        var previous = Scenario.TeamsLocked;
+        Run(new DelegateCommand(locked ? "Lock teams" : "Unlock teams", () => Apply(locked), () => Apply(previous)));
+
+        void Apply(bool value)
+        {
+            Scenario.SetTeamsLocked(value);
+            _bus.Publish(new PlayerSlotsChanged());
+        }
+    }
+
     // Plumbing --------------------------------------------------------------------------------
 
     private void Run(IEditorCommand command)
@@ -440,10 +516,21 @@ public sealed class MapEditorSession
         _bus.Publish(new HeroRemoved(hero.Id));
     }
 
+    /// <summary>Sets a two-way gate's partner or a one-way entrance's exit.</summary>
     private void SetLink(MapObjectId gateId, MapObjectId? linked)
     {
-        var gate = (SubterraneanGate)Scenario.GetObject(gateId);
-        gate.LinkedGate = linked;
+        switch (Scenario.GetObject(gateId))
+        {
+            case TwoWayGate gate:
+                gate.LinkedGate = linked;
+                break;
+            case OneWayGateEntrance entrance:
+                entrance.Exit = linked;
+                break;
+            default:
+                throw new InvalidOperationException($"{gateId} is not a linkable gate.");
+        }
+
         _bus.Publish(new GateLinkChanged(gateId, linked));
     }
 
@@ -451,8 +538,23 @@ public sealed class MapEditorSession
         gateIds.OfType<MapObjectId>()
             .Distinct()
             .Select(id => Scenario.Objects.FirstOrDefault(o => o.Id == id))
-            .OfType<SubterraneanGate>()
-            .ToDictionary(g => g.Id, g => g.LinkedGate);
+            .Where(o => o is TwoWayGate or OneWayGateEntrance)
+            .ToDictionary(o => o!.Id, o => o!.TeleportTarget);
+
+    private IEnumerable<MapPosition> Brush(MapPosition center, int radius)
+    {
+        for (var dy = -radius; dy <= radius; dy++)
+        {
+            for (var dx = -radius; dx <= radius; dx++)
+            {
+                var position = center.Offset(dx, dy);
+                if (Scenario.Map.Contains(position))
+                {
+                    yield return position;
+                }
+            }
+        }
+    }
 
     private void RestoreLinks(Dictionary<MapObjectId, MapObjectId?> links)
     {

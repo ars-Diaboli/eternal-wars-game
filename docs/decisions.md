@@ -175,12 +175,12 @@ source instead of editing `EconomyService`.
 
 ### ADR-026: Two-way and one-way gates, no random exits
 **Status**: accepted (2026-10-15)
-Two-way gates link a pair, on the same level or across levels (the existing `SubterraneanGate` is one).
+Two-way gates link a pair, on the same level or across levels (the former `SubterraneanGate`, now `TwoWayGate`).
 One-way gates link an entrance to exactly one exit; several entrances may share an exit, and exits are
 landing spots only. Random-exit portals are left out for now, so every link is fixed map data. That
 keeps pathfinding exact and avoids hidden randomness. If they are added later, the exit must come from
 the seeded game RNG and the pathfinder must stop at the entrance.
-Implementation plan: generalise `SubterraneanGate` into a two-way gate kind (subterranean gate and
+Implemented (2026-10-15) as planned: generalise `SubterraneanGate` into a two-way gate kind (subterranean gate and
 two-way monolith become definitions), add `OneWayGateEntrance`/`OneWayGateExit` kinds, extend
 `PathFinder` teleport edges to be directional, map format v3, and add an editor link tool and validation.
 
@@ -252,8 +252,8 @@ In `ShroudWithRefog`:
   for sieges. This refines ADR-021.
 - Damage uses the HoMM3 formula as a baseline (+5 %/point Attack over Defense, cap +300 %;
   −2.5 %/point Defense over Attack, cap −70 %). Rolls come from the seeded battle RNG.
-- Cover: any unit (friend or foe) or obstacle cell on the line of fire reduces ranged damage (−25 %,
-  to be tuned).
+- Cover: any unit (friend or foe) or obstacle on the line of fire reduces ranged damage. The flat
+  −25 % is superseded by ADR-035.
 
 ### ADR-034: Scope: slice towns, platforms, modding, tooling, random-map features
 **Status**: accepted (2026-10-15)
@@ -266,3 +266,12 @@ In `ShroudWithRefog`:
   scenarios, AI-vs-AI and RMG batch validation in CI.
 - Random maps for 1.0: mirrored/symmetric templates and saving generated maps. No water/islands and no
   HotA template import.
+
+### ADR-035: Cumulative ranged cover
+**Status**: accepted (2026-10-15); supersedes the flat cover value in ADR-033
+Every blocker on the line of fire between shooter and target adds a penalty, counted once per blocker:
+2×2/3×3 creature 1/8, 4×4 creature 1/4, small obstacle 1/8, big obstacle 1/4, city wall 1/2.
+Penalties add up and ranged damage is multiplied by (1 − total). Above 7/8 the shot is not allowed.
+Penalties are exact eighths, so they are stored as integer eighths (`CoverEighths`) to keep battle
+maths integer and deterministic. Units of either side count; the shooter and target never do.
+Obstacle definitions carry a cover class (small/big/wall).

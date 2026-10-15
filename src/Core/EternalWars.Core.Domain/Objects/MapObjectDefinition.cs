@@ -7,7 +7,15 @@ public enum MapObjectKind
     ResourcePile,
     Mine,
     TreasureChest,
-    SubterraneanGate,
+
+    /// <summary>Linked pair; either end leads to the other (subterranean gate, two-way monolith).</summary>
+    TwoWayGate,
+
+    /// <summary>Leads to exactly one <see cref="OneWayGateExit"/>.</summary>
+    OneWayGateEntrance,
+
+    /// <summary>Landing spot of one-way gates; visiting it does nothing.</summary>
+    OneWayGateExit,
 }
 
 /// <summary>

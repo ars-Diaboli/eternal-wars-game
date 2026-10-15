@@ -11,3 +11,9 @@ public sealed record TilesRevealed(PlayerId Player, IReadOnlyList<MapPosition> P
 /// Views show or hide other players' units on these tiles.
 /// </summary>
 public sealed record SightChanged(PlayerId Player, IReadOnlyList<MapPosition> Entered, IReadOnlyList<MapPosition> Left) : IEvent;
+
+/// <summary>
+/// <paramref name="Player"/>'s knowledge of these objects changed (first seen, seen changed, or seen gone).
+/// Views re-read <c>GameState.Memory.Get(player, id)</c>; a null result means "no longer there".
+/// </summary>
+public sealed record KnownObjectsChanged(PlayerId Player, IReadOnlyList<MapObjectId> Objects) : IEvent;

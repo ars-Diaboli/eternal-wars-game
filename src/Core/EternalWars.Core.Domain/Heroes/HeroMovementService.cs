@@ -1,7 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Pathfinding;
 using EternalWars.Core.Events;
@@ -11,18 +10,9 @@ namespace EternalWars.Core.Domain.Heroes;
 public sealed class HeroMovementService(GameState state, IEventPublisher events, MapObjectInteractionService interactions)
 {
     /// <summary>Diagonal steps cost ~√2 times more, as in HoMM.</summary>
-    private const double DiagonalMultiplier = 1.41;
+    public const double DiagonalMultiplier = 1.41;
 
     private readonly PathFinder _pathFinder = new(state);
-
-    /// <summary>
-    /// HoMM3 rule: a step costs the terrain of the tile being <b>left</b>, ×1.41 when diagonal.
-    /// </summary>
-    public static int StepCost(TerrainType origin, Direction direction)
-    {
-        var baseCost = origin.MovementCost();
-        return direction.IsDiagonal() ? (int)Math.Round(baseCost * DiagonalMultiplier) : baseCost;
-    }
 
     /// <summary>
     /// HoMM3 "last step" rule: any positive amount of movement points allows one more step,
@@ -50,11 +40,14 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
     /// <summary>
     /// Follows a planned path step by step, publishing one <see cref="HeroMoved"/> per step. Stops at the
     /// first step that cannot be made (usually <see cref="MoveResult.NotEnoughMovementPoints"/> at a day
-    /// boundary) or when a visit opens a decision. Every step is re-validated, so stale paths are safe.
+    /// boundary), when a visit or meeting opens a decision, when a battle starts, or, in refog mode, when
+    /// an enemy hero comes into sight. Every step is re-validated, so stale paths are safe.
     /// </summary>
     public MovementOutcome MoveAlong(HeroPath path)
     {
         var hero = state.GetHero(path.Hero);
+        var watchForEnemies = state.Options.FogMode == FogMode.ShroudWithRefog;
+        var knownEnemies = watchForEnemies ? VisibleEnemies(hero.Owner) : [];
         var steps = 0;
         foreach (var step in path.Steps)
         {
@@ -88,6 +81,11 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             {
                 return Outcome(MoveResult.DecisionPending);
             }
+
+            if (watchForEnemies && !VisibleEnemies(hero.Owner).IsSubsetOf(knownEnemies))
+            {
+                return Outcome(MoveResult.EnemySpotted);
+            }
         }
 
         return Outcome(MoveResult.Moved);
@@ -95,6 +93,11 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
         MovementOutcome Outcome(MoveResult reason) => new(steps, reason, hero.Position == path.Destination);
     }
 
+    /// <summary>
+    /// One step. Stepping towards another hero is an encounter instead of a move: own hero → exchange
+    /// (<see cref="MoveResult.Met"/>), enemy → battle (<see cref="MoveResult.BattleStarted"/>, an ambush if
+    /// the enemy was unseen), ally → <see cref="MoveResult.Occupied"/>.
+    /// </summary>
     public MoveResult TryStep(HeroId heroId, Direction direction)
     {
         var hero = state.GetHero(heroId);
@@ -105,18 +108,33 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
         }
 
         var target = hero.Position.Step(direction);
-        var enter = MovementRules.CheckEnter(state, target);
-        if (enter != MoveResult.Moved)
+        var tile = MovementRules.CheckTile(state, target);
+        if (tile != MoveResult.Moved)
         {
-            return enter;
+            return tile;
         }
 
-        var cost = StepCost(state.Map.GetTerrain(hero.Position), direction);
         if (!CanAffordStep(hero.MovementPoints))
         {
             return MoveResult.NotEnoughMovementPoints;
         }
 
+        if (state.HeroAt(target) is { } other)
+        {
+            switch (MovementRules.Classify(state, hero.Owner, other))
+            {
+                case HeroEncounter.Own:
+                    interactions.Meet(hero, other);
+                    return MoveResult.Met;
+                case HeroEncounter.Enemy:
+                    interactions.StartBattle(hero, other, isAmbush: !state.CanSee(hero.Owner, other));
+                    return MoveResult.BattleStarted;
+                default:
+                    return MoveResult.Occupied;
+            }
+        }
+
+        var cost = MovementRules.StepCost(state, hero, hero.Position, target, direction);
         var from = hero.Position;
         hero.Position = target;
         hero.MovementPoints = Math.Max(0, hero.MovementPoints - cost);
@@ -139,6 +157,9 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             events.Publish(new HeroMovementRestored(hero.Id, hero.MovementPoints));
         }
     }
+
+    private HashSet<HeroId> VisibleEnemies(PlayerId viewer) =>
+        state.Heroes.Where(h => state.AreEnemies(viewer, h.Owner) && state.CanSee(viewer, h)).Select(h => h.Id).ToHashSet();
 
     private MoveResult CheckCanAct(Hero hero)
     {

@@ -3,12 +3,14 @@ using EternalWars.Core.Domain.Common;
 namespace EternalWars.Core.Domain.Map;
 
 /// <summary>
-/// The strategic (adventure) map: a square grid with one or two levels (surface + underground).
+/// The strategic (adventure) map: a square grid with one or two levels (surface + underground),
+/// a terrain layer and a road layer.
 /// Plain data; rules live in services that publish events when they change it.
 /// </summary>
 public sealed class AdventureMap
 {
     private readonly TerrainType[][] _terrain;
+    private readonly RoadType[][] _roads;
 
     public AdventureMap(int width, int height, int levels = 1, TerrainType fill = TerrainType.Grass)
     {
@@ -23,9 +25,11 @@ public sealed class AdventureMap
         Height = height;
         Levels = levels;
         _terrain = new TerrainType[levels][];
+        _roads = new RoadType[levels][];
         for (var level = 0; level < levels; level++)
         {
             _terrain[level] = Enumerable.Repeat(fill, width * height).ToArray();
+            _roads[level] = new RoadType[width * height];
         }
     }
 
@@ -47,6 +51,12 @@ public sealed class AdventureMap
     public TerrainType GetTerrain(MapPosition position) => _terrain[position.Level][Index(position)];
 
     public void SetTerrain(MapPosition position, TerrainType terrain) => _terrain[position.Level][Index(position)] = terrain;
+
+    public RoadType GetRoad(MapPosition position) => _roads[position.Level][Index(position)];
+
+    public void SetRoad(MapPosition position, RoadType road) => _roads[position.Level][Index(position)] = road;
+
+    public bool HasRoads => _roads.Any(level => level.Any(r => r != RoadType.None));
 
     public IEnumerable<MapPosition> Positions(int level)
     {

@@ -47,9 +47,10 @@ Each app is a standalone Godot project:
 - State setters are `internal`; mutate state only through services.
 - Tests: xUnit v3 on Microsoft.Testing.Platform, `MethodUnderTest_Scenario[_Expected]` naming.
   Build adventure-map situations with `TestWorld` ASCII maps (`.` grass, `~` water, `#` rock,
-  `s` swamp, `A`/`B` heroes) and `TestWorld.Start(state)`, which pre-reveals the map unless the test
-  is about fog.
-- Map files are `*.ewmap.json` (format v2). Object definitions can be extended with a JSON list of
+  `s` swamp, `l` lava, `A`/`C` Blue heroes, `B` Red hero), `TestWorld.Road(...)` for roads, and
+  `TestWorld.Start(state)`, which pre-reveals the map unless the test is about fog.
+- Map files are `*.ewmap.json` (format v3: terrain + optional road rows, teams, objects incl. one-way
+  gates). Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
 - CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` on every push to main and on PRs.
 - Core builds with warnings as errors; keep Godot projects warning-free as well.
