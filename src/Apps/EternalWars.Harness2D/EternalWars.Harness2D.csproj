@@ -1,0 +1,12 @@
+<Project Sdk="Godot.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj" />
+    <ProjectReference Include="..\..\Godot\EternalWars.Godot.UI\EternalWars.Godot.UI.csproj" />
+  </ItemGroup>
+
+</Project>

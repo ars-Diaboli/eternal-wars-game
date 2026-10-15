@@ -55,3 +55,16 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Godot
+.godot/
+*.translation
+export_presets.cfg
+export/
+# Shared asset links created by tools/link-shared-assets.ps1
+src/Apps/*/shared
+
+# IDEs
+.idea/
+.vs/
+*.user

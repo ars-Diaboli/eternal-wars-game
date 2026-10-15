@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Game model and rules: adventure map, heroes, economy, turns. No engine dependencies.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EternalWars.Core.Events\EternalWars.Core.Events.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EternalWars.Core.Tests" />
+  </ItemGroup>
+
+</Project>

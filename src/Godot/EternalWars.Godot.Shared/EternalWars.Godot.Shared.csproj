@@ -1,0 +1,11 @@
+<Project Sdk="Godot.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Godot-side building blocks shared by the game, editor and harness: views of core state, coordinate mapping, event-bus glue.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

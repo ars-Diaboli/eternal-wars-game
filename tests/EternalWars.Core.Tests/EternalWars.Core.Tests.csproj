@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Core\EternalWars.Core.Events\EternalWars.Core.Events.csproj" />
+    <ProjectReference Include="..\..\src\Core\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj" />
+  </ItemGroup>
+
+</Project>

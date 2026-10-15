@@ -1,0 +1,17 @@
+<Project Sdk="Godot.NET.Sdk">
+
+  <PropertyGroup>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Shared assets are linked in via tools/link-shared-assets.ps1 and never contain game code. -->
+    <Compile Remove="shared/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj" />
+    <ProjectReference Include="..\..\Godot\EternalWars.Godot.UI\EternalWars.Godot.UI.csproj" />
+  </ItemGroup>
+
+</Project>
