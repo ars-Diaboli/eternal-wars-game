@@ -124,6 +124,33 @@ out of scope, but the deterministic core keeps it possible.
 ### 4.3 Towns and economy
 - **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (implemented as `ResourceSet`).
 - One building per town per day; building tree per faction.
+- **Creature tech tree** (accepted; details ❓ below):
+  - Creatures have **5 tiers** (not HoMM3's 7).
+  - Each playable town offers **9 creature dwellings**: **2 alternatives at each of tiers 1–4** and
+    **1 at tier 5**.
+  - A town may build **7 of the 9**, with **at least one dwelling per tier**. Since tier 5 has only one,
+    every town ends up with the tier-5 dwelling, and **both** alternatives at two of tiers 1–4 but
+    **one** at the other two. Example: T1 a+b, T2 a, T3 a+b, T4 b, T5. These **7 creature types** fill
+    exactly the hero's 7 army slots.
+  - **All creatures of playable towns are upgradeable** (per dwelling).
+  - **Neutral creatures** (and the non-playable Conflux / Dragon Utopia) **may** lack upgrades.
+
+  | Tier | Dwellings offered | Must build | Can build |
+  |---|---|---|---|
+  | 1–4 | 2 alternatives each | ≥ 1 | 1 or 2 |
+  | 5 | 1 | 1 | 1 |
+  | **Total** | **9** | **5** | **7** |
+
+  - **The choice is final, per town.** Once 7 are built, the remaining 2 are locked forever in that
+    town. Dwellings can't be demolished. Another town of the same type may choose differently.
+  - **Upgrades: one per dwelling** (HoMM3-style). Each dwelling has a single upgrade building; an
+    upgraded dwelling produces upgraded creatures, and existing stacks can be upgraded in that town for
+    the price difference.
+  - **Locked-out creatures are still obtainable** from external dwellings on the adventure map and
+    from other towns of the same type that built them. The town choice shapes your core army; it is
+    not a hard ban.
+  - **Neutral creatures use the same 1–5 tier scale**, which is used for guard strength, treasure value
+    and random-map balancing. Some have upgrades, most don't.
 - Weekly creature growth, dwellings on the map.
 - **Income** is paid at the start of the owner's turn. **There is no base or placeholder income**:
   players earn only what their sources produce. Sources:
@@ -150,7 +177,8 @@ because that is content selection, not a rule.
 | 3 · Wild | **Stronghold** (orcs), **Swamp Bestiary** | yes |
 | 4 · Primordial | **Conflux** (elementals), **Dragon Utopia** (all dragons except bone dragons) | **no**: not balanced for PvP; campaign and neutral (map guardians, dwellings) only |
 
-- 8 playable towns + 2 special towns. Each town has 7 creature tiers with upgrades ❓.
+- 8 playable towns + 2 special towns. Each playable town has 9 creature lines over 5 tiers (2+2+2+2+1),
+  all upgradeable; a town builds 7 of them (§4.3).
 - Bone dragons belong to Necropolis, not Dragon Utopia.
 - **Rivalries are lore only.** Opposition between towns or groups (e.g. Haven vs Necropolis) exists
   in story and campaign, but has **no combat or rules effect**. There are no hate/enmity damage bonuses
