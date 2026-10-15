@@ -26,6 +26,9 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Gates**: two-way gates and one-way gates (entrance → fixed exit); no random-exit portals for now (ADR-026).
 - **Town groups**: lore and campaign only; no rule effect in standard games (ADR-028).
 - **Town rivalries**: lore only; no hate bonuses or alignment effects in combat (ADR-029).
+- **Tech tree**: 5 tiers; 9 dwellings (2 per tier 1–4, 1 at tier 5); build 7, at least one per tier;
+  playable creatures all upgradeable; the choice is final per town; one upgrade per dwelling;
+  locked creatures are still available from map dwellings and other towns; neutrals use tiers 1–5 (ADR-030).
 - **Meeting heroes**: own → exchange; enemy → battle; allies → no exchange for now (ADR-027).
 - **Map editor / random maps**: standalone editor; HotA-style templates authored in the editor;
   both game and editor generate maps from templates (ADR-023, GDD §4.9).
@@ -41,7 +44,7 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 5. **Tactics → width**: exact width per Tactics level (30 default, up to 36, down to 28 when?). Movement 8-way?
 6. **Cover**: what counts as cover for ranged attacks (any unit in the line of fire, or only larger ones)?
 7. **Damage formula**: HoMM3 attack/defense formula as a baseline, or our own?
-8. **Creature roster** for the first two towns (7 tiers + upgrades, sizes, abilities).
+8. **Creature roster** for the first two towns (9 creatures over 5 tiers + upgrades, sizes, abilities).
 
 ## Adventure map
 - **Refog**: should a moving hero stop automatically when an enemy unit comes into sight?

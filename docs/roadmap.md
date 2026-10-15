@@ -63,7 +63,8 @@ will be refined once the open questions are answered.
 
 ## Phase 2: Armies and combat (~6–8 weeks)
 - Command pipeline (serializable commands, deterministic RNG in state, replay from command log)
-- Creature definitions (data), stacks, hero army (7 slots)
+- Creature definitions (data: tier 1–5, base/upgraded, size, speed, initiative, abilities, tags), stacks,
+  hero army (7 slots)
 - Tactical battle on a square cell grid with 2×2 / 3×3 / 4×4 unit footprints: deployment,
   footprint-aware pathfinding (clearance maps), initiative order, melee/ranged, retaliation, wait/defend,
   flanking and body-blocking/cover, area abilities (breath, cleave/multi-head), obstacles,
@@ -76,6 +77,7 @@ will be refined once the open questions are answered.
 
 ## Phase 3: Towns and progression (~6–8 weeks)
 - Towns: building tree, one build per day, weekly growth, recruiting, garrison
+- Dwelling choice: 9 dwellings (2 per tier 1–4, 1 at tier 5), build 7, at least one per tier; upgrades (ADR-030)
 - Native terrain: penalty waived for native armies, Pathfinding skill ❓ (ADR-024)
 - Income sources beyond mines: towns, Estates-like skills, hero specialisations, artifacts (ADR-025)
 - Hero levels, primary stats, secondary skills, level-up choices

@@ -208,3 +208,19 @@ Rivalries such as Haven vs Necropolis are story and campaign material only. The 
 hate/enmity bonuses and no alignment or group modifiers. Creature abilities key off creature
 *properties* (tags such as `Undead`, `Flying`, `Large`), never off town or group identity. This keeps
 balance independent of pairings and lets any town be designed and balanced on its own.
+
+### ADR-030: Five creature tiers, choose 7 of 9 dwellings
+**Status**: accepted (2026-10-15); open details in game-design §4.3
+Creatures have 5 tiers. Every playable town offers 9 dwellings: 2 alternatives at each of tiers 1–4
+and 1 at tier 5. A town builds at most 7, at least one per tier, giving 7 creature types to match 7 army
+slots, and making town builds a strategic choice. All playable-town creatures are upgradeable;
+neutrals and the non-playable towns may not be. Data model: a town definition lists dwellings
+`(tier, creature, upgradedCreature?)`. Build validation enforces the limits so the AI, the editor
+(pre-built towns) and random maps share one rule. The constraint is "≤ 7 built, ≥ 1 per tier as the
+goal": a town can be mid-build with fewer.
+- Final per town: no demolition; the unbuilt alternatives are locked once 7 are built. The build
+  validator must also refuse a build that would leave a tier impossible to fill. Example: with 6
+  built and tier 3 still empty, only a tier-3 dwelling may be built.
+- One upgrade building per dwelling; stacks can be upgraded in a town with that upgrade.
+- Creatures from unbuilt dwellings remain available from map dwellings and other towns.
+- Neutral creatures share the 1–5 tier scale (`CreatureDefinition.Tier`); `Upgrade` is optional.
