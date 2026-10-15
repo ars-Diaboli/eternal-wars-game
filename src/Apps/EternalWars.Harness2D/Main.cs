@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Scenarios;
@@ -33,6 +34,15 @@ public partial class Main : Node2D
 
         this.SubscribeWhileInTree<HeroMoved>(_session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<TerrainPainted>(_session.Events, _ => QueueRedraw());
+
+        // TODO(Phase 1 UI): prompt instead. Until then always take the gold so the session never stalls.
+        this.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
+        {
+            if (e.Decision is TreasureChestDecision)
+            {
+                _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
+            }
+        });
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
             _selectedHero = _session.State.HeroesOf(e.Player).FirstOrDefault()?.Id;

@@ -1,6 +1,9 @@
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Turns;
+using EternalWars.Core.Domain.Visibility;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Game;
@@ -17,8 +20,16 @@ public sealed class GameSession
         State = state ?? throw new ArgumentNullException(nameof(state));
         Bus = bus ?? new EventBus();
 
+        // Core handlers subscribe first so their follow-up events are queued before views react.
+        var visibility = new VisibilityService(State, Bus);
+        Bus.Subscribe<GameStarted>(visibility);
+        Bus.Subscribe<HeroMoved>(visibility);
+        Bus.Subscribe<HeroTeleported>(visibility);
+        Bus.Subscribe<MineOwnerChanged>(visibility);
+
         Economy = new EconomyService(State, Bus);
-        Movement = new HeroMovementService(State, Bus);
+        Interactions = new MapObjectInteractionService(State, Bus, Economy);
+        Movement = new HeroMovementService(State, Bus, Interactions);
         Turns = new TurnService(State, Bus, Economy, Movement);
     }
 
@@ -27,6 +38,8 @@ public sealed class GameSession
     public IEventSubscriber Events => Bus;
 
     public EconomyService Economy { get; }
+
+    public MapObjectInteractionService Interactions { get; }
 
     public HeroMovementService Movement { get; }
 

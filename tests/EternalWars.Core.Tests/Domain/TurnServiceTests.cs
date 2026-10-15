@@ -17,9 +17,10 @@ public class TurnServiceTests
 
         session.Turns.StartGame();
 
-        Assert.IsType<GameStarted>(events[0]);
-        Assert.IsType<DayStarted>(events[1]);
-        Assert.Equal(new TurnStarted(new PlayerId(0), GameDate.First), events[^1]);
+        var turnFlow = events.Where(e => e is not TilesRevealed).ToList();
+        Assert.IsType<GameStarted>(turnFlow[0]);
+        Assert.IsType<DayStarted>(turnFlow[1]);
+        Assert.Equal(new TurnStarted(new PlayerId(0), GameDate.First), turnFlow[^1]);
         Assert.Equal(500, session.State.Players[0].Resources.Gold);
         Assert.Equal(0, session.State.Players[1].Resources.Gold);
     }

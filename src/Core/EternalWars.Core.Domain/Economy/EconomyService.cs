@@ -1,14 +1,21 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Economy;
 
 public sealed class EconomyService(GameState state, IEventPublisher events)
 {
-    /// <summary>Placeholder until towns and mines exist.</summary>
+    /// <summary>Placeholder until towns exist.</summary>
     public static ResourceSet BaseDailyIncome { get; } = new(Gold: 500);
+
+    /// <summary>What <paramref name="playerId"/> receives at the start of each of their turns.</summary>
+    public ResourceSet DailyIncome(PlayerId playerId) =>
+        state.ObjectsOf<Mine>()
+            .Where(m => m.Owner == playerId)
+            .Aggregate(BaseDailyIncome, (total, mine) => total + ResourceSet.Of(mine.Resource, mine.DailyYield));
 
     public void Grant(PlayerId playerId, ResourceSet amount)
     {
@@ -32,5 +39,5 @@ public sealed class EconomyService(GameState state, IEventPublisher events)
         return true;
     }
 
-    internal void CollectDailyIncome(PlayerId playerId) => Grant(playerId, BaseDailyIncome);
+    internal void CollectDailyIncome(PlayerId playerId) => Grant(playerId, DailyIncome(playerId));
 }

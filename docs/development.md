@@ -35,7 +35,7 @@ Each app is a standalone Godot project:
 | | Game | Editor | Harness |
 |---|---|---|---|
 | Move hero | Arrows / numpad (8-way) | — | Arrows / numpad, click adjacent tile |
-| Camera | WASD pan, wheel zoom | WASD pan, wheel zoom | — |
+| Camera | WASD pan, Q/E rotate (±45°), wheel zoom | same | — |
 | Paint | — | LMB (choose terrain + radius in toolbar) | — |
 
 ## Conventions
@@ -46,6 +46,12 @@ Each app is a standalone Godot project:
 - Events: see [event-system.md](event-system.md). Past tense, `sealed record`, publish after mutation.
 - State setters are `internal`; mutate state only through services.
 - Tests: xUnit v3 on Microsoft.Testing.Platform, `MethodUnderTest_Scenario[_Expected]` naming.
+  Build adventure-map situations with `TestWorld` ASCII maps (`.` grass, `~` water, `#` rock,
+  `s` swamp, `A`/`B` heroes) and `TestWorld.Start(state)`, which pre-reveals the map unless the test
+  is about fog.
+- Map files are `*.ewmap.json` (format v2). Object definitions can be extended with a JSON list of
+  definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
+- CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` on every push to main and on PRs.
 - Core builds with warnings as errors; keep Godot projects warning-free as well.
 - Commits: imperative mood, small and focused.
 - Binary assets (`*.glb`, `*.png`, `*.wav`, `*.ogg`, ...) go through **Git LFS** once we start adding

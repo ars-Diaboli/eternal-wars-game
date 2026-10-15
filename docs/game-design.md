@@ -45,14 +45,35 @@ out of scope, but the deterministic core keeps it possible.
 ## 4. Feature set (target for 1.0)
 
 ### 4.1 Adventure map
-- Square grid, up to 2 levels (surface + underground) connected by portals/gates (HoMM3 model).
-- Terrain types with movement costs (implemented: grass, dirt, sand, snow, swamp, rough, lava,
-  subterranean, water, rock).
-- 8-way movement, diagonal steps cost ×1.41, daily movement points per hero.
-- Map objects: towns, mines, resource piles, treasure chests, artifacts, dwellings, shrines,
-  teleporters, guarded neutral stacks, boats/shipyards.
-- Fog of war / shroud per player ❓ (HoMM3: permanent reveal vs. re-fogging).
-- Pathfinding with path preview and per-day move markers.
+- **Map sizes**: square presets 48, 72, 96, 128, 160, 192 and 256 (max), each with an optional
+  underground level. **Up to 8 players.**
+- Square grid, up to 2 levels (surface + underground) connected by **subterranean gates** (implemented).
+- **Movement (HoMM3 rules, implemented)**:
+  - Terrain costs: grass/dirt/lava/subterranean 100, rough 125, sand/snow 150, swamp 175;
+    water/rock impassable on foot. A step costs the terrain of the tile being **left**. Roads ❓.
+  - 8-way movement; diagonal steps cost ×1.41.
+  - **Last step**: a hero with any movement points left may make one more step, whatever it costs,
+    and ends with 0.
+  - **Daily movement points** = base from the **slowest creature in the army** (speed ≤3: 1500, 4: 1560,
+    5: 1630, 6: 1700, 7: 1760, 8: 1830, 9: 1900, 10: 1960, ≥11: 2000) × (100 % + skill bonus, e.g.
+    Logistics) + flat artifact bonus. Recomputed at the start of the owner's turn. Without an army, 1500.
+    Native-terrain penalties per faction ❓.
+- **Pathfinding** (implemented): cheapest route; visible heroes and object bodies block; routes may only
+  *end* on an object's entrance (except gates, which continue on the other side); unexplored tiles are
+  never used. Every step carries a day index for HoMM-style day markers. Heroes the player can't see
+  don't affect the plan; movement stops when it bumps into one.
+- **Map objects** (implemented): resource piles (picked up), mines (flagged, daily income), treasure
+  chest (choose gold 1000 *or* 500 XP), subterranean gate (two-way link). Objects have a footprint and
+  are entered only through their entrance tile, usually from below.
+  Planned: towns, artifacts, dwellings, shrines, teleporters, guarded neutral stacks, boats/shipyards.
+- **Fog of war** (implemented): two modes, **chosen when the game is created** (`GameOptions.FogMode`):
+  1. **Permanent reveal** (HoMM3): once explored, terrain, objects and units stay visible.
+  2. **Shroud + refog for units**: terrain and objects stay revealed once explored, but other players'
+     heroes (later also armies) are only visible on tiles currently **in sight**. Sight has hysteresis:
+     a tile comes into sight within an observer's scouting radius, but only drops out once every observer
+     is farther than radius + **refog margin** (default 2, configurable). Example: radius 3 + margin 4
+     reveals at 3 tiles and refogs at 7.
+  - Observers: heroes (scouting radius 5) and owned mines (radius 2).
 
 ### 4.2 Heroes
 - Primary stats: Attack, Defense, Spell Power, Knowledge.
@@ -62,10 +83,12 @@ out of scope, but the deterministic core keeps it possible.
 - Spell book, mana.
 
 ### 4.3 Towns and economy
-- Seven resources: gold, wood, ore, mercury, sulfur, crystal, gems (implemented as `ResourceSet`).
+- **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (implemented as `ResourceSet`).
 - One building per town per day; building tree per faction.
 - Weekly creature growth, dwellings on the map.
-- Mines produce daily income; towns produce gold by hall level.
+- Mines produce daily income (implemented: gold 1000, lumber/ore 2, rare resources 1, paid to the owner
+  at the start of their turn); towns produce gold by hall level. Until towns exist every player gets
+  a placeholder 500 gold per turn.
 
 ### 4.4 Factions and towns
 Towns are organised into four groups. Group names are working titles ❓, and so is whether a group has
@@ -93,19 +116,33 @@ gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
   | Large | 4×4 cells | dragons, behemoths, titans |
   - The fine cell grid lets units of different sizes share one board. Positions refer to the top-left
     cell of the footprint.
-  - Battlefield size ❓ (e.g. 30×22 cells ≈ HoMM3's 15×11 hexes at small-unit scale).
+  - **Battlefield**: **24 cells tall**, **28–36 cells wide**, depending on the hero's learned
+    *Tactics* skill (default **30**). Exact width per Tactics level ❓ (e.g. none 30, basic 32,
+    advanced 34, expert 36; or does a defender's Tactics shrink it toward 28?). 8-way movement assumed ❓.
   - **Surround / flanking**: a unit's perimeter grows with its size, so more attackers fit around a
-    large unit. Attacks from the flank or rear get bonuses ❓ (values; is "facing" tracked, or does
-    flanking count attackers on opposite/adjacent sides?).
+    large unit. **No generic flanking bonus**: damage is the same from any side, however many units
+    surround the target. **No facing.** Engagement is a hook for **special abilities**: some creatures
+    get bonuses when the target is already engaged by another enemy, per extra side, per number of times
+    the target was hit this round, and so on. The core tracks engagement and hit history so abilities can
+    use them.
   - **Body blocking & cover**: footprints block movement. Ranged attacks whose line of fire crosses a
     unit (friend or foe) larger than the target ❓ suffer a cover penalty.
-  - Not adopted: reach/cleave by size, trample/push.
-  - Open ❓: 4-way vs 8-way movement, diagonal squeeze rules, how flyers and teleporters use footprints.
+  - Size alone does not grant reach, cleave or trample/push.
+  - **Area attacks are creature abilities**, independent of size:
+    - **Breath** (dragon- or phoenix-like): also hits the cells directly behind the target in the
+      line of attack.
+    - **Cleave / multi-head** (cerberus- or hydra-like): also hits enemies adjacent to the attacker
+      (cerberus: up to 3 in front, hydra: all around).
+    - **HoMM3-style friendly fire**: breath also hits friendly units in its line; cleave/multi-head
+      hits enemies only. Only the primary target retaliates.
+    - A unit whose footprint touches the area is hit once (assumed ❓).
+  - Open ❓: diagonal squeeze rules between units/obstacles, how flyers and teleporters use footprints.
 - **Turn order: initiative decides order, not frequency.** Each round every stack acts **exactly
   once**, in descending **Initiative** (a stat separate from **Speed**, which is movement range).
   A HoMM5-style timeline bar shows the order. Unlike HoMM5, no unit acts twice in a round.
-  - Open ❓: tie-breaking (attacker first? higher speed?), *Wait* (move to end of round? reverse
-    initiative order among waiting units?), spells and morale that change initiative mid-round.
+  - **Ties**: attacker's side first, then higher speed, then a deterministic seeded roll.
+  - **Wait** (HoMM3): waiting units act at the end of the round, in **reverse** initiative order.
+  - Open ❓: spells and morale that change initiative mid-round.
 - Wait/defend, retaliation, ranged units, flyers, obstacles.
 - Hero casts one spell per round; catapult, ballista, first-aid tent as war machines ❓.
 - Auto-combat and quick-combat options.
@@ -122,8 +159,10 @@ gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
 - Online multiplayer: not planned (core determinism keeps the door open).
 
 ### 4.8 Tools
-- **Map editor**: terrain painting (implemented: brush with radius), object placement, player
-  setup, victory/loss conditions, events/triggers, random-map generator (later).
+- **Map editor**: implemented in core with undo/redo: terrain painting (brush radius, drag
+  strokes), object placement/removal, gate linking, mine owners, hero placement, player slots, map
+  name/description, validation. Godot UI for most of it is pending. Later: victory/loss conditions,
+  events/triggers, map resize, random-map generator.
 - **2D harness**: a top-down debug front-end over the same core, used for rule development,
   scenario scripting and visual debugging of AI.
 
@@ -143,7 +182,8 @@ gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
     core tile data, so visual height must not contradict them (cliffs = Rock tiles, etc.).
   - Post-processing: subtle colour grading, bloom on magic only, vignette.
   - Placeholder until then: coloured tiles and capsules.
-- **Camera**: angled perspective, ~55° pitch, pan/zoom; optional rotation ❓.
+- **Camera**: classic strategy camera, tilted **15–30° from vertical** (more tilted when zoomed in,
+  more top-down when zoomed out), **rotatable ±45°** around the vertical axis, zoom in/out, pan.
 - **Terrain rendering**: start with per-tile meshes/colours; later blended terrain shader with
   heightmap and transitions.
 - **UI**: HoMM-style right-side panel (minimap, hero/town list, end turn) and bottom status bar.
@@ -162,4 +202,7 @@ gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
 | 4 | Unit size | Mostly cosmetic (1 vs 2 hexes) | Size drives flanking exposure, body blocking and ranged cover | accepted |
 | 5 | Towns | 9 towns, all playable | 8 playable in 3 groups + 2 non-playable "primordial" towns for campaign/neutrals | accepted |
 | 6 | Terrain | Painted tiles | Smooth 3D terrain with on-demand grid overlay | accepted |
+| 7 | Resources | 7 (incl. gems) | 6: gold, lumber, ore, crystal, mercury, sulfur | accepted |
+| 8 | Fog of war | Permanent reveal only | Choice per game: permanent reveal, or shroud + unit refog with hysteresis | accepted |
+| 9 | Map scale | Up to 144×144 | Presets up to 256×256, 8 players | accepted |
 | … | | | *more twists to be proposed* ❓ | |

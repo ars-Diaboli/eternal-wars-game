@@ -37,6 +37,11 @@ public sealed class TurnService(
             throw new InvalidOperationException("The game has not started yet.");
         }
 
+        if (state.PendingDecision is not null)
+        {
+            throw new InvalidOperationException("Resolve the pending decision before ending the turn.");
+        }
+
         events.Publish(new TurnEnded(state.CurrentPlayer.Id, state.Date));
 
         state.CurrentPlayerIndex++;

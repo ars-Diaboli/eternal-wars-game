@@ -9,9 +9,17 @@ namespace EternalWars.Core.Domain.Scenarios;
 /// <summary>Starting point for a new map in the editor: plain terrain, two players in opposite corners.</summary>
 public static class BlankScenario
 {
-    public static GameState Create(int width, int height, TerrainType fill = TerrainType.Grass)
+    public static GameState Create(int width, int height, int levels = 1, TerrainType fill = TerrainType.Grass)
     {
-        var map = new AdventureMap(width, height, fill: fill) { Name = "Untitled" };
+        var map = new AdventureMap(width, height, levels, fill) { Name = "Untitled" };
+        for (var level = 1; level < levels; level++)
+        {
+            foreach (var position in map.Positions(level))
+            {
+                map.SetTerrain(position, TerrainType.Subterranean);
+            }
+        }
+
         var players = new[]
         {
             new Player(new PlayerId(0), "Blue", isHuman: true),

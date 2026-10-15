@@ -15,6 +15,8 @@ public enum Direction
 
 public static class DirectionExtensions
 {
+    public static IReadOnlyList<Direction> All { get; } = Enum.GetValues<Direction>();
+
     public static (int Dx, int Dy) ToOffset(this Direction direction) => direction switch
     {
         Direction.North => (0, -1),
@@ -30,7 +32,7 @@ public static class DirectionExtensions
 
     /// <summary>Finds the direction of a single-tile step, if (<paramref name="dx"/>, <paramref name="dy"/>) is one.</summary>
     public static Direction? FromOffset(int dx, int dy) =>
-        Enum.GetValues<Direction>().Cast<Direction?>().FirstOrDefault(d => d!.Value.ToOffset() == (dx, dy));
+        All.Cast<Direction?>().FirstOrDefault(d => d!.Value.ToOffset() == (dx, dy));
 
     public static bool IsDiagonal(this Direction direction) =>
         direction is Direction.NorthEast or Direction.SouthEast or Direction.SouthWest or Direction.NorthWest;

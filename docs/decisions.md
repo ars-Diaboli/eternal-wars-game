@@ -34,6 +34,16 @@ reach), and one coordinate type serves both map and battle maths.
 Consequences: combat pathfinding has to test footprint clearance (precompute clearance maps per
 size), and AI and UI must handle footprints rather than single cells.
 
+### ADR-006: Text-friendly map format
+**Status**: accepted
+`*.ewmap.json` with terrain stored as one string per row so maps can be reviewed and merged in git.
+Versioned via `formatVersion`.
+
+### ADR-007: Code-first Godot nodes in libraries
+**Status**: accepted, pending Phase 0 spike
+Library node classes are instantiated from code and configured through `Bind(...)`. Avoids Godot's
+`res://` script-path requirement for scripts in referenced assemblies.
+
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
 **Status**: accepted (2026-10-15)
 We keep HoMM3's loop and structure but take deliberate departures, logged in game-design.md §7.
@@ -59,12 +69,73 @@ AI can filter on them.
 Rendering: heightmapped, splat-textured terrain. Logic: unchanged `AdventureMap` tiles. The map
 format will grow a height/decoration layer that is purely visual. Core never reads it.
 
-### ADR-006: Text-friendly map format
-**Status**: accepted
-`*.ewmap.json` with terrain stored as one string per row so maps can be reviewed and merged in git.
-Versioned via `formatVersion`.
+### ADR-012: Map objects = data definitions + per-kind instance classes
+**Status**: accepted (2026-10-15)
+Definitions (footprint, kind parameters) are data: built-in defaults in code, overridable/extendable
+from JSON, which keeps the door open for modding. Behaviour is selected by `MapObjectKind` and lives in
+`MapObjectInteractionService`. A plugin/behaviour registry is deferred until there are many kinds.
 
-### ADR-007: Code-first Godot nodes in libraries
-**Status**: accepted, pending Phase 0 spike
-Library node classes are instantiated from code and configured through `Bind(...)`. Avoids Godot's
-`res://` script-path requirement for scripts in referenced assemblies.
+### ADR-013: Visiting is mandatory; routes end at entrances
+**Status**: accepted (2026-10-15)
+Stepping onto an entrance always visits the object, so the pathfinder never routes *through* one.
+Gates are the exception: the route continues from the partner gate. Pathfinding state is
+(tile, arrived-by-teleport) so a gate exit can be walked away from without bouncing back.
+
+### ADR-014: Choices are pending decisions, not callbacks
+**Status**: accepted (2026-10-15)
+When a rule needs player input, it stores a `PendingDecision` in `GameState` and publishes
+`DecisionRequested`. Movement and End Turn are refused until it is resolved. The core never
+blocks or calls back into the UI; AI, UI and future network/replay resolve decisions the same way.
+They will become commands in Phase 2.
+
+### ADR-015: Editor edits are undoable commands over a scenario GameState
+**Status**: accepted (2026-10-15)
+The editor edits the same `GameState` type the game starts from. This avoids a second map model.
+Each edit is an execute/undo closure pair recorded in `UndoHistory`. Commands publish domain events,
+so editor views reuse game views.
+
+### ADR-016: Fog of war is per-player permanent shroud (provisional)
+**Status**: superseded by ADR-017
+Matches HoMM3. Stored in `GameState.Fog`, updated by `VisibilityService` reacting to movement events.
+Re-fogging would add a "currently visible" layer computed from heroes, towns and mines.
+
+### ADR-017: Fog mode is chosen per game; refog uses hysteresis
+**Status**: accepted (2026-10-15)
+`GameOptions.FogMode` is set at game creation and stored in `GameState` (it is a game rule, not
+map data). `PermanentReveal` = HoMM3. `ShroudWithRefog` keeps terrain and objects explored, but other
+players' units are only visible on tiles in sight. A tile enters sight within an observer's radius and
+leaves only beyond radius + `RefogMargin`, so units at the edge of vision don't flicker. Sight is a
+pure function of current observers and is recomputed per affected player, stored as a set (cheap even
+on 256×256 maps). The planner ignores unseen heroes; real movement bumps into them.
+
+### ADR-018: HoMM3 movement rules
+**Status**: accepted (2026-10-15)
+A step costs the terrain being left (×1.41 diagonally). Any positive remainder allows one last step.
+Daily points come from the slowest creature's speed (HoMM3 table), then a percentage bonus (skills),
+then a flat bonus (artifacts), recomputed at the owner's turn start (`MovementAllowance`). Until
+armies exist `Hero.SlowestCreatureSpeed` is a stored placeholder; Phase 2 derives it from the army.
+
+### ADR-019: Six resources
+**Status**: accepted (2026-10-15)
+Gold, lumber, ore, crystal, mercury, sulfur. No gems. Rare resources are crystal, mercury and sulfur.
+
+### ADR-020: Map size presets up to 256, max 8 players
+**Status**: accepted (2026-10-15)
+Square presets 48, 72, 96, 128, 160, 192, 256 (`MapSizes`); `AdventureMap` rejects dimensions above
+256 and `GameState` more than 8 players. Data structures were checked for 256×256×2 levels: pathfinding
+arrays are ~260k entries per search; fog sight is set-based.
+
+### ADR-021: Combat ground rules
+**Status**: accepted (2026-10-15)
+- Battlefield 24 cells tall × 28–36 wide, set by the hero's Tactics skill (default 30).
+- No facing and no generic flanking bonus. Engagement (which enemies are adjacent, on how many sides)
+  and per-round hit counts are tracked so **creature abilities** can use them.
+- HoMM3 Wait (end of round, reverse initiative order) and ties (attacker side, then speed, then a
+  seeded roll).
+- Breath has HoMM3 friendly fire; cleave/multi-head hits enemies only; only the primary target retaliates.
+
+### ADR-022: Strategy camera
+**Status**: accepted (2026-10-15)
+Tilt 15–30° from vertical, coupled to zoom (zoomed in = 30°, zoomed out = 15°); rotation limited to ±45°
+around the vertical axis, so the map never appears upside down and art can assume a "south-ish"
+viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared), not yet verified in Godot.

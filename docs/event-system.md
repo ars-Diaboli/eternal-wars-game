@@ -53,7 +53,13 @@ Helpers:
 - Include enough data for a view to update **without** querying state when practical (e.g.
   `ResourcesChanged` carries both `Previous` and `Current`, so UI can animate the delta).
 - **Publish after mutating.** By the time a handler runs, `GameState` already reflects the event.
-- Group events per feature in `Core.Domain/Events/` (currently `GameEvents.cs`; split per area as it grows).
+- Group events per area in `Core.Domain/Events/` (`TurnEvents`, `EconomyEvents`, `HeroEvents`,
+  `MapObjectEvents`, `VisibilityEvents`, `DecisionEvents`, `EditorEvents`).
+- **Core handlers that react to events use the event's data, not current state** (e.g.
+  `VisibilityService` reveals around `HeroMoved.To`, not the hero's position). When a move is made
+  from inside another handler, its events are queued and delivered after the hero has walked on.
+- Core handlers are subscribed in the composition root **before** any view, so their follow-up
+  events (e.g. `TilesRevealed`) are queued before views react to the original event.
 - Domain services take `IEventPublisher`; views take `IEventSubscriber`. Only composition roots
   (`GameSession`, app `Main`) see `IEventBus`.
 
@@ -72,12 +78,14 @@ this.SubscribeWhileInTree<HeroMoved>(session.Events, e =>
         CreateTween().TweenProperty(this, "position", MapSpace.ToWorld(e.To), 0.15f);
 });
 
-// Dedicated handler class (core-side rules reacting to other rules, e.g. weekly growth):
-public sealed class WeeklyGrowthHandler(GameState state, IEventPublisher events) : IEventHandler<WeekStarted>
+// Dedicated handler class: core rules reacting to other rules. Real example: fog of war.
+public sealed class VisibilityService(GameState state, IEventPublisher events)
+    : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>, IEventHandler<MineOwnerChanged>
 {
-    public void Handle(WeekStarted e) { /* add creatures to dwellings, publish CreaturesGrown */ }
+    public void Handle(HeroMoved e) => RevealAround(state.GetHero(e.Hero), e.To); // publishes TilesRevealed
+    ...
 }
-bus.Subscribe(new WeeklyGrowthHandler(state, bus));
+bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 ```
 
 ## Current event catalogue
@@ -89,9 +97,24 @@ bus.Subscribe(new WeeklyGrowthHandler(state, bus));
 | `WeekStarted(Date)` | `TurnService` | day 8, 15, ... |
 | `TurnStarted(Player, Date)` / `TurnEnded(...)` | `TurnService` | each player turn |
 | `ResourcesChanged(Player, Previous, Current)` | `EconomyService` | any resource change |
-| `HeroMoved(Hero, From, To, RemainingMP)` | `HeroMovementService` | each successful step |
+| `HeroMoved(Hero, From, To, RemainingMP)` | `HeroMovementService` | each successful step (a `MoveTo` publishes one per step) |
+| `HeroTeleported(Hero, From, To)` | `MapObjectInteractionService` | a gate moved the hero |
 | `HeroMovementRestored(Hero, MP)` | `HeroMovementService` | owner's turn start |
-| `TerrainPainted(Positions, Terrain)` | `TerrainBrush` (editor) | after a paint stroke changes tiles |
+| `HeroExperienceGained(Hero, Amount, Total)` | `MapObjectInteractionService` | chest reward taken as XP |
+| `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
+| `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
+| `MineOwnerChanged(Mine, Previous, Current)` | interactions / editor | mine flagged |
+| `MapObjectRemoved(Object)` | interactions / editor | pile/chest consumed, or deleted in editor |
+| `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
+| `GateLinkChanged(Gate, LinkedGate)` | editor | gate (un)linked |
+| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | `MapObjectInteractionService` | e.g. chest gold-or-XP choice |
+| `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
+| `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
+| `TerrainPainted(Positions, Terrain)` | `MapEditorSession` | paint and its undo/redo |
+| `HeroPlaced` / `HeroRemoved` | `MapEditorSession` | editor hero placement |
+| `MapPropertiesChanged(Name, Description)` | `MapEditorSession` | |
+| `PlayerSlotsChanged` | `MapEditorSession` | slot added/removed/edited |
+| `UndoHistoryChanged(UndoDescription, RedoDescription)` | `MapEditorSession` | after every recorded edit, undo or redo |
 
 ## Future extensions (only when needed)
 - **Animation gating**: front-ends may want to delay presenting events until an animation ends.
