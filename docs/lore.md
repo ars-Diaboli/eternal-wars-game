@@ -27,20 +27,54 @@ the "dark" often tells the truth.
 | **The Unbound** | Stronghold, Swamp Bestiary | Rejects both. Survives, raids, and endures whatever age comes |
 | **The Firstborn** (non-playable) | Conflux, Dragon Utopia | The Wheel's ancient keepers. They intervene only when the cycle itself is threatened |
 
+## Rivalries
+
+Each Dawn Covenant town has **two sworn enemies** in the Ashen Court, so every dark town is hated by two
+light ones. The rivalries interlock into a ring:
+
+```
+          Haven
+        ╱       ╲
+  Necropolis   Inferno
+      │             │
+   Sylvan ───── Academy
+        ╲       ╱
+         Dungeon
+```
+
+| Town | Sworn enemies | Why |
+|---|---|---|
+| **Haven** | Necropolis, Inferno | The faithful against the defilers of the dead and the burners of the living |
+| **Sylvan** | Dungeon, Necropolis | The forest's roots are poisoned from below by the Dungeon and by grave-rot from Necropolis |
+| **Academy** | Inferno, Dungeon | Rival seekers of forbidden power: demonic pacts and the lightless depths |
+| **Necropolis** | Haven, Sylvan | (mirror of the above) |
+| **Inferno** | Haven, Academy | |
+| **Dungeon** | Academy, Sylvan | |
+
+Stronghold and the Swamp Bestiary have **no sworn enemies**; they raid anyone. The Firstborn stand apart.
+These rivalries are story only: they drive campaign alliances, scenario setups and flavour text, and
+have **no combat or rules effect** (ADR-029).
+
 ## Towns
 
 - **Haven**: a crumbling human theocracy holding the last lit cities. Iron discipline, flagellant
-  zeal, war machines. They burn heretics to "feed the light". Native terrain: **highlands**.
+  zeal, war machines. They burn heretics to "feed the light". Sworn enemies: **Necropolis**, whose
+  armies are Haven's own dead, and **Inferno**, which harvests the provinces Haven loses.
+  Native terrain: **highlands**.
 - **Sylvan**: elves of the last old-growth forests, which are dying from the root. Archers and
-  wardens who trade their memories to keep the trees alive. Native terrain: **forest floor**.
+  wardens who trade their memories to keep the trees alive. Sworn enemies: **Dungeon**, which tunnels
+  beneath the groves and drains them, and **Necropolis**, whose blight rots what the Dungeon leaves.
+  Native terrain: **forest floor**.
 - **Academy**: mage-cities on frozen peaks that study the Wheel itself. Constructs, bound
-  elementals, and rumours that they want to *control* the turning, not stop it. Native terrain: **snow**.
+  elementals, and rumours that they want to *control* the turning, not stop it. Sworn enemies:
+  **Inferno**, whose pact-magic tempts and corrupts their apprentices, and **Dungeon**, rival hoarders
+  of forbidden lore in the deep places. Native terrain: **snow**.
 - **Necropolis**: the dead who remember every previous age and know the Wheel cannot be stopped,
-  only ruled. Native terrain: **wasteland**.
+  only ruled. Hated by **Haven** and **Sylvan**. Native terrain: **wasteland**.
 - **Inferno**: demons of the ash beneath the world, born from each burned age. They see every war as
-  harvest. Native terrain: **lava**.
+  harvest. Hated by **Haven** and **Academy**. Native terrain: **lava**.
 - **Dungeon**: dark elves and the lightless things they serve, untouched by the dying sun and
-  ready to inherit. Native terrain: **subterranean**.
+  ready to inherit. Hated by **Academy** and **Sylvan**. Native terrain: **subterranean**.
 - **Stronghold**: orc clans who have survived several turnings by never building anything worth burning.
   Native terrain: **sand**.
 - **Swamp Bestiary**: beast-cults of the drowned lowlands, where old-age ruins sink into the mire.
@@ -54,7 +88,15 @@ A border province where the Waning Eye has gone dark for good: Haven's crusade m
 while Inferno pours out of the cracks to harvest the dying land. Good for a first campaign prologue
 and for skirmish flavour text.
 
+## Campaign hooks from the ring
+- Each light town has a two-front war, so natural campaign arcs come in pairs: e.g. Haven holds the
+  border against Inferno while its own graveyards rise for Necropolis.
+- Uneasy alliances come from sharing an enemy: Haven and Academy against Inferno; Academy and Sylvan
+  against Dungeon; Sylvan and Haven against Necropolis.
+
 ## Open for review
 - World and sun names (Vael, the Waning Eye), group names, and the "Wheel" premise as a whole.
+- The rivalry ring above (user direction, 2026-10-15): Haven vs Necropolis & Inferno, Academy vs Inferno
+  & Dungeon, Sylvan vs Dungeon & Necropolis.
 - Should the campaign reveal what the Wheel really is (and whether ending it is good)?
 - Hero names/archetypes per town; tone of in-game text (terse chronicle vs. character voices).
