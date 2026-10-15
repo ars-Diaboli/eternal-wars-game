@@ -437,7 +437,7 @@ public sealed class MapEditorSession
 
         var monster = new MonsterGuard(Scenario.NextObjectId(), definition, position, creature, count, disposition, neverFlees);
         id = monster.Id;
-        Run(new DelegateCommand($"Place {creature}", () => AddObject(monster), () => RemoveObject(monster)));
+        Run(new DelegateCommand($"Place {Scenario.Creatures.Get(creature).Name}", () => AddObject(monster), () => RemoveObject(monster)));
         return EditResult.Ok;
     }
 

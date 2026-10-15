@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Map;
+using EternalWars.Core.Domain.Objects;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Map;
@@ -38,4 +39,35 @@ public static class Palette
     };
 
     public static Color ForPlayer(PlayerId player) => PlayerColors[player.Value % PlayerColors.Length];
+
+    public static Color Neutral { get; } = new(0.6f, 0.6f, 0.6f);
+
+    public static Color ForRoad(RoadType road) => road switch
+    {
+        RoadType.Dirt => new Color(0.42f, 0.30f, 0.18f),
+        RoadType.Gravel => new Color(0.55f, 0.53f, 0.50f),
+        RoadType.Cobblestone => new Color(0.35f, 0.35f, 0.38f),
+        _ => Colors.Transparent,
+    };
+
+    public static Color ForObject(MapObjectKind kind) => kind switch
+    {
+        MapObjectKind.ResourcePile => new Color(0.95f, 0.80f, 0.25f),
+        MapObjectKind.Mine => new Color(0.40f, 0.36f, 0.32f),
+        MapObjectKind.TreasureChest => new Color(0.55f, 0.32f, 0.12f),
+        MapObjectKind.TwoWayGate => new Color(0.50f, 0.30f, 0.75f),
+        MapObjectKind.OneWayGateEntrance => new Color(0.65f, 0.25f, 0.80f),
+        MapObjectKind.OneWayGateExit => new Color(0.80f, 0.60f, 0.90f),
+        MapObjectKind.Monster => new Color(0.80f, 0.12f, 0.10f),
+        _ => Colors.Magenta,
+    };
+
+    /// <summary>Path markers: today green, tomorrow yellow, the day after orange, later red (HoMM-style).</summary>
+    public static Color ForPathDay(int day) => day switch
+    {
+        0 => new Color(0.30f, 0.90f, 0.30f),
+        1 => new Color(0.95f, 0.85f, 0.20f),
+        2 => new Color(0.95f, 0.55f, 0.15f),
+        _ => new Color(0.90f, 0.20f, 0.20f),
+    };
 }

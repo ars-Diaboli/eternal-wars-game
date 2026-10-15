@@ -4,7 +4,9 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Pathfinding;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Controls;
@@ -28,10 +30,18 @@ public partial class Main : Node2D
     private static readonly Vector2 MapOrigin = new(16, 120);
 
     private GameSession _session = null!;
+    private static readonly Color Unexplored = new(0.05f, 0.05f, 0.06f);
+
     private HeroId? _selectedHero;
+    private HeroPath? _preview;
 
     public override void _Ready()
     {
+        if (AutoInput.FromLaunchArguments() is { } autoInput)
+        {
+            AddChild(autoInput);
+        }
+
         _session = new GameSession(LoadState());
         BuildUi();
 
@@ -42,6 +52,7 @@ public partial class Main : Node2D
         this.SubscribeWhileInTree<DecisionResolved>(_session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
+            _preview = null;
             _selectedHero = _session.State.HeroesOf(e.Player).FirstOrDefault()?.Id;
             QueueRedraw();
         });
@@ -53,9 +64,22 @@ public partial class Main : Node2D
     {
         var state = _session.State;
         var map = state.Map;
+        var viewer = state.CurrentPlayer.Id;
         foreach (var position in map.Positions(level: 0))
         {
-            DrawRect(TileRect(position), Palette.ForTerrain(map.GetTerrain(position)));
+            var color = !state.Fog.IsExplored(viewer, position) ? Unexplored
+                : state.Fog.IsInSight(viewer, position) ? Palette.ForTerrain(map.GetTerrain(position))
+                : Palette.ForTerrain(map.GetTerrain(position)).Darkened(0.45f);
+            DrawRect(TileRect(position), color);
+            if (map.GetRoad(position) != RoadType.None && state.Fog.IsExplored(viewer, position))
+            {
+                DrawRect(TileRect(position).Grow(-9), Palette.ForRoad(map.GetRoad(position)));
+            }
+        }
+
+        foreach (var step in _preview?.Steps.Where(s => s.Position.Level == 0) ?? [])
+        {
+            DrawCircle(TileRect(step.Position).GetCenter(), step == _preview!.Steps[^1] ? 7 : 4, Palette.ForPathDay(step.Day));
         }
 
         foreach (var known in state.Memory.Of(state.CurrentPlayer.Id))
@@ -105,14 +129,29 @@ public partial class Main : Node2D
         if (_session.State.HeroAt(target) is { } clicked && clicked.Owner == player)
         {
             _selectedHero = clicked.Id;
+            _preview = null;
             QueueRedraw();
             return;
         }
 
-        if (_selectedHero is { } hero)
+        if (_selectedHero is not { } hero)
         {
+            return;
+        }
+
+        // First click previews the route (day-coloured dots), a second click on the same tile goes.
+        if (_preview is { } planned && planned.Hero == hero && planned.Destination == target)
+        {
+            _preview = null;
             Report(_session.Execute(new MoveHeroCommand(player, hero, target)));
         }
+        else
+        {
+            _preview = _session.Movement.FindPath(hero, target);
+            GetNode<Label>("Ui/Top/Status").Text = _preview is { } path ? $"{path.Steps.Count} steps, {path.Turns} day(s): click again to go" : "No route";
+        }
+
+        QueueRedraw();
     }
 
     /// <summary>Battle keys: W wait, D defend, R retreat, Q quick combat.</summary>
@@ -172,12 +211,12 @@ public partial class Main : Node2D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        top.AddChild(new Label { Name = "Status", Text = "Click hero / tile, arrows & numpad. Battle: click, W wait, D defend, R retreat, Q quick" });
+        top.AddChild(new Label { Name = "Status", Text = "Click hero, click tile twice to move, arrows & numpad. Battle: click, W wait, D defend, R retreat, Q quick" });
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
         decisions.Bind(_session);
 
-        var board = new BattleBoard2D { Position = MapOrigin };
+        var board = new BattleBoard2D { Position = MapOrigin + new Vector2(0, 50) };
         ui.AddChild(board);
         board.Bind(_session);
         board.CellClicked += HandleBattleClick;

@@ -84,6 +84,14 @@ public sealed class PathFinder(GameState state)
             // Entering a guarded tile starts an encounter, so a route can end there but never pass through (ADR-040).
             if (current != start && state.IsGuarded(position))
             {
+                // Except towards the guarding monster itself: clicking a monster routes up to it (HoMM3).
+                if (state.GuardsOf(position).Any(m => m.VisitPosition == target) &&
+                    DirectionExtensions.FromOffset(target.X - position.X, target.Y - position.Y) is { } toMonster &&
+                    target.Level == position.Level)
+                {
+                    Relax(current, Node(target, teleported: false), MovementRules.StepCost(state, hero, position, target, toMonster), target);
+                }
+
                 continue;
             }
 

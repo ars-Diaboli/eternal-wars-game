@@ -19,7 +19,7 @@ subscriptions) and must be engine-agnostic. Godot signals would leak the engine 
 async/threading semantics we don't want. ~100 lines, fully tested. See [event-system.md](event-system.md).
 
 ### ADR-004: Separate Godot projects per app, assets shared via links
-**Status**: accepted, revisit after Phase 0 spike
+**Status**: accepted; confirmed by the Phase 0 spike (ADR-043)
 User-facing apps stay independent (own settings, renderer, export presets). Shared assets live once in
 `EternalWars.Godot.Assets` and are linked as `res://shared`.
 *Alternative considered*: a single Godot project with three main scenes (simpler asset sharing, one
@@ -40,7 +40,7 @@ size), and AI and UI must handle footprints rather than single cells.
 Versioned via `formatVersion`.
 
 ### ADR-007: Code-first Godot nodes in libraries
-**Status**: accepted, pending Phase 0 spike
+**Status**: accepted; confirmed by the Phase 0 spike (ADR-043)
 Library node classes are instantiated from code and configured through `Bind(...)`. Avoids Godot's
 `res://` script-path requirement for scripts in referenced assemblies.
 
@@ -402,3 +402,25 @@ keep their values as fixed values, and their heroes start without an army.
   and succubus mistress ranged retaliation, archer/monk/succubus melee penalty, mind/fire/curse immunities,
   priest/seraph/pit lord casters.
 - Battle events report a shot back as `BattleAttackKind.RangedRetaliation`.
+
+### ADR-043: Phase 0 spike results; Godot smoke tests
+**Status**: accepted (2026-10-15)
+Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
+- All three import, build and run; the 2D harness on Compatibility, game and editor on Forward+.
+- **Library nodes created in code work** (views, HUD, camera, panels from `Godot.Shared`/`Godot.UI`), including
+  `_Ready`/`_Process`/`_Draw`/`_GuiInput` overrides and C# events. ADR-007 stands.
+- **`[GlobalClass]` does not register classes from referenced assemblies**: a probe class left
+  `global_script_class_cache.cfg` empty. Classes that must be attachable in the Godot editor stay in the app
+  project; prefabs cannot carry library scripts.
+- Separate projects with linked shared assets (ADR-004) work; the junctions import cleanly.
+- Godot rewrites app `.csproj` files on import: it pins `Godot.NET.Sdk/4.7.2` and inserts
+  `<TargetFramework>net8.0</TargetFramework>` because it cannot see `Directory.Build.props`. The apps therefore
+  state `net10.0` explicitly; Godot keeps it, and .NET 10 assemblies load fine. Godot 4.4+ `*.cs.uid` files are
+  committed.
+- Smoke testing: Godot's Movie Maker (`--write-movie`, `--fixed-fps`, `--quit-after`) renders frames to PNGs, and
+  `AutoInput` (`-- --autoinput=frame:click:x,y;frame:key:Name`) feeds scripted input through the normal input
+  pipeline. `tools/smoke-godot.ps1` runs scripted scenarios for every app and fails on Godot/C# errors. It needs a
+  GPU, so it runs locally, not in CI (yet).
+- The first runs found two core bugs, now fixed and tested: no route could reach a monster (all its neighbours
+  are guarded; the pathfinder now allows the last step from a tile guarded by the target monster), and
+  `DecisionRequested` for a battle was published before the width-choice phase was set.

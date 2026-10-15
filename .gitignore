@@ -68,3 +68,4 @@ src/Apps/*/shared
 .idea/
 .vs/
 *.user
+.shots/

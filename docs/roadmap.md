@@ -11,11 +11,11 @@ will be refined once the open questions are answered.
 - [x] Game: 3D tile map, hero capsules, strategy camera, HUD, keyboard movement, end turn
 - [x] Map editor: terrain palette, brush radius, paint by mouse, save/load
 - [x] 2D harness: top-down map, click/keyboard movement, live event log
-- [ ] **Spike**: open all three projects in the Godot 4.7.2 .NET editor and run them; confirm
-      library-node instantiation and `[GlobalClass]` behaviour for referenced assemblies
+- [x] **Spike** (ADR-043): all three projects run in Godot 4.7.2 .NET; library nodes created in code work;
+      `[GlobalClass]` is not registered for referenced assemblies (code-first stays); apps pin `net10.0`
 - [x] CI (GitHub Actions): `dotnet build` + `dotnet test` on push/PR (`.github/workflows/ci.yml`)
 
-## Phase 1: Adventure map (~4–6 weeks): core done, Godot front-ends pending
+## Phase 1: Adventure map (~4–6 weeks) ✅
 
 ### Core (Tier 1) ✅
 - [x] Pathfinding: A*/Dijkstra, terrain costs, diagonals, heroes and object cells as blockers,
@@ -57,22 +57,26 @@ will be refined once the open questions are answered.
       town (`MovementRules.ArmyTown`, Phase 2/3)
 - [x] Map format v3: roads, teams + `teamsLocked`, one-way gates; v1/v2 still load; null fields omitted
 
-### Godot (Tier 2/3): needs the Godot editor to build and verify visually
-- [ ] Render map objects (from `ObjectMemory` for the viewing player), roads and both levels (level
-      switch), fog overlay; hide unseen enemy heroes (`CanSee`)
-- [ ] New-game setup screen: map, players, teams (unless locked), fog mode/refog margin (`GameOptions`)
-- [ ] Exchange screen bound to `HeroExchangeDecision` (a placeholder `DecisionPanel` can close it; stack
-      moves exist as `MoveStackCommand`); battle placeholder is quick combat in the game app
-- [ ] Editor: road brush, gate link tools, team/lock editing UI
-- [ ] Mouse picking → hero selection; path preview with day-coloured markers; click twice to move
-- [ ] `HeroView`: queue per-step animations (one tween per `HeroMoved`), handle `HeroTeleported`
-- [ ] Treasure chest dialog bound to `DecisionRequested`; resource bar already follows `ResourcesChanged`
-- [ ] Hero list panel, minimap widget (colours from `Minimap.Build`)
-- [ ] Editor UI: object palette, hero/player/property panels, gate linking tool, validation panel
-      (undo/redo buttons and stroke-based painting are already wired)
-- [ ] 2D harness: draw objects, fog and path preview; decision prompt
+### Godot (Tier 2/3) ✅ (verified in Godot 4.7.2 with `tools/smoke-godot.ps1`)
+- [x] `AdventureWorldView` + `MapViewContext`: terrain and roads, map objects from the viewer's `ObjectMemory`
+      (live state in the editor), fog overlay (unexplored black, out of sight dimmed), both levels with a level
+      switch (L, button, follows gates), unseen enemy heroes hidden (`CanSee`); hot-seat switches the viewer
+- [x] New-game setup screen (`NewGameScreen`): demo, `--map`, editor maps; teams unless locked; fog mode, refog
+      margin, seed
+- [x] Exchange screen (`ExchangePanel`): both armies, click-to-move stacks, split, close; battles fall back to quick
+      combat in the 3D game (see Phase 2)
+- [x] Editor: road brush, gate link tool, players with teams and teams-locked
+- [x] Mouse picking and hero selection; path preview with day-coloured markers; click twice to move; Tab, arrows
+- [x] `HeroView`: one queued tween per `HeroMoved`, `HeroTeleported` jumps in order, selection ring, level/sight
+      visibility
+- [x] Decision prompts (`DecisionPanel`): treasure chest, guard offers, battle width, quick combat
+- [x] Hero list panel (`HeroListPanel`) and minimap (`MinimapWidget`, click to look there)
+- [x] Editor UI: tool palette (terrain, road, object, monster, hero, erase, link gates, select), map
+      properties, players, inspector, validation panel, two-level maps, Ctrl+Z/Ctrl+Y
+- [x] 2D harness: objects from memory, fog, roads, path preview, decision prompt
 
-**Exit**: a hot-seat game on an editor-made map where players race to collect resources.
+**Exit**: a hot-seat game on an editor-made map where players race to collect resources. Playable in the game app (hot-seat,
+fog, guards, quick-combat battles); final art and a real exchange/battle screen come later.
 
 ## Phase 2: Armies and combat (~6–8 weeks): core done, 3D presentation pending
 
@@ -106,10 +110,10 @@ will be refined once the open questions are answered.
 
 ### Godot (Tier 2/3)
 - [x] 2D harness: battle board (`BattleBoard2D`) with click-to-move/attack/shoot, wait/defend/retreat/quick
-      keys, decision prompts (`DecisionPanel`); the game and harness issue commands only (not yet run in the
-      Godot editor)
+      keys, width choice and quick combat; verified in Godot 4.7.2 (smoke scenario `harness-guard-battle`)
 - [ ] Battle presentation in 3D (the game app falls back to quick combat through `DecisionPanel`)
-- [ ] Editor UI for armies, monsters, mine guards, guard mode and chest values
+- [x] Editor UI for armies, hero stats, monsters, mine guards, guard mode and chest values (`InspectorPanel`,
+      `MapPropertiesPanel`)
 
 **Exit**: heroes fight neutral stacks and each other; battles are replayable from logs. Core-side met
 (`sim selftest`, replay tests); the 3D battle scene is still missing.

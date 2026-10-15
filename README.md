@@ -20,10 +20,14 @@ dotnet test --solution EternalWars.sln
 dotnet run --project tools/EternalWars.Tools.Sim -- selftest
 ```
 Then open `src/Apps/<App>/project.godot` in the Godot 4.7.2 .NET editor and press F5.
+With Godot installed, `./tools/smoke-godot.ps1 -Godot <path to the console exe>` runs scripted smoke scenarios
+of every app and saves screenshots to `.shots/`.
 
 ## Status
-Phase 1 core (adventure map) and Phase 2 core (armies, tactical battles with HoMM4-style creature
-capabilities, neutral guards, commands and replays) are done; the Godot front-ends are catching up.
+Phases 0 and 1 are done: all three apps run in Godot 4.7.2 (setup screen, fog, objects, path preview, minimap,
+hero list, exchange, full editor UI). Phase 2 core (armies, tactical battles with HoMM4-style creature
+capabilities, neutral guards, commands and replays) is done; the 3D battle scene is next (the game uses quick
+combat meanwhile, the 2D harness has a battle board).
 See [docs/roadmap.md](docs/roadmap.md).
 
 ## Documentation

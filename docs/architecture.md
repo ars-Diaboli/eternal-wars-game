@@ -164,8 +164,17 @@ reports problems that single edits cannot prevent (hero on water after painting,
   app's project, so **library nodes are created from code** (`new HeroView()`), not attached to
   scenes in the Godot editor. Classes that must be attachable in the editor (`[GlobalClass]`,
   inspector `[Export]`s) live in the app project.
-  - *Phase 0 spike*: confirm `[GlobalClass]` behaviour for referenced assemblies in Godot 4.7. If it
-    works, prefabs can carry library scripts.
+  - *Phase 0 spike (ADR-043)*: confirmed. `[GlobalClass]` classes in referenced assemblies are **not** registered,
+    so prefabs cannot carry library scripts; code-first nodes work fine.
+- App `.csproj` files state `<TargetFramework>net10.0</TargetFramework>` explicitly: Godot cannot see
+  `Directory.Build.props` and would otherwise insert `net8.0` on import.
+- **View composition** (`Godot.Shared/Map`): `MapViewContext` holds presentation state (viewing player, shown
+  level) and raises a C# event when it changes. `AdventureWorldView` composes per level `AdventureMapView`
+  (terrain + roads), `MapObjectsView` (the viewer's `ObjectMemory`, or live objects without a viewer) and
+  `FogView`, plus `HeroView`s and the `PathPreview`. The game and the editor both use it, with a viewer and
+  without one. HUD and editor panels live in `Godot.UI` (`Hud`, `Setup`, `Editor`, `Battle`).
+- **Smoke tests**: `AutoInput` (`-- --autoinput=...`) replays clicks and keys through the input pipeline;
+  `tools/smoke-godot.ps1` runs scripted scenarios under Movie Maker and fails on errors.
 - Assets can't live in a class library. `EternalWars.Godot.Assets` is mounted into each app as
   `res://shared/` by `tools/link-shared-assets.ps1` (junction/symlink, git-ignored).
 

@@ -93,6 +93,22 @@ public class GuardTests
         Assert.DoesNotContain(path.Steps, s => open.IsGuarded(s.Position) && s.Position != path.Destination);
     }
 
+    [Fact]
+    public void RouteToAMonster_EndsOnIt_AndTheFirstGuardedTileStartsTheEncounter()
+    {
+        var state = Create("A......", ".......", ".......", "......B");
+        var monster = Monster(state, 5, 1, BuiltInCreatures.Troll, 20, GuardDisposition.Savage);
+        var session = Start(state);
+
+        var path = session.Movement.FindPath(A, monster.VisitPosition);
+        var outcome = session.MoveTo(A, monster.VisitPosition);
+
+        Assert.Equal(monster.VisitPosition, path!.Destination);
+        Assert.Equal(MoveResult.GuardEncountered, outcome.StopReason);
+        Assert.Equal(new MapPosition(3, 0), state.GetHero(A).Position); // stopped before the guarded column
+        Assert.Equal(monster.Id, state.Battle!.Defender.Guard);
+    }
+
     [Theory]
     [InlineData(GuardDisposition.Compliant, 100, GuardOffer.Join)] // joins whatever the ratio
     [InlineData(GuardDisposition.Friendly, 10, GuardOffer.Join)] // R = 1
