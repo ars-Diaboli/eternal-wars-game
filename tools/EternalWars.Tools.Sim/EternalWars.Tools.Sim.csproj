@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Description>Headless simulator over the core (no Godot): battle statistics, scripted games, replay verification.</Description>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj" />
+  </ItemGroup>
+
+</Project>

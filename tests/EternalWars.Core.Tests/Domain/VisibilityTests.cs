@@ -46,7 +46,7 @@ public class VisibilityTests
         var revealed = new List<TilesRevealed>();
         session.Events.Subscribe<TilesRevealed>(revealed.Add);
 
-        session.Movement.TryStep(A, Direction.East);
+        session.Step(A, Direction.East);
 
         var reveal = Assert.Single(revealed);
         Assert.Equal(Blue, reveal.Player);
@@ -82,13 +82,13 @@ public class VisibilityTests
 
         Assert.False(state.CanSee(Blue, enemy)); // distance 10
 
-        session.Movement.MoveTo(A, new MapPosition(5, 2));
+        session.MoveTo(A, new MapPosition(5, 2));
         Assert.True(state.CanSee(Blue, enemy)); // distance 5 = scouting radius
 
-        session.Movement.MoveTo(A, new MapPosition(3, 2));
+        session.MoveTo(A, new MapPosition(3, 2));
         Assert.True(state.CanSee(Blue, enemy)); // distance 7 = radius + margin: still remembered
 
-        session.Movement.TryStep(A, Direction.West);
+        session.Step(A, Direction.West);
         Assert.False(state.CanSee(Blue, enemy)); // distance 8: refogged
         Assert.True(state.Fog.IsExplored(Blue, enemy.Position)); // terrain stays revealed
         Assert.Contains(sightChanges, c => c.Left.Contains(enemy.Position));
@@ -103,8 +103,8 @@ public class VisibilityTests
         var sightChanges = 0;
         session.Events.Subscribe<SightChanged>(_ => sightChanges++);
 
-        session.Movement.MoveTo(A, new MapPosition(5, 2));
-        session.Movement.MoveTo(A, new MapPosition(0, 2));
+        session.MoveTo(A, new MapPosition(5, 2));
+        session.MoveTo(A, new MapPosition(0, 2));
 
         Assert.True(session.State.CanSee(Blue, enemy));
         Assert.Equal(0, sightChanges);
@@ -118,7 +118,7 @@ public class VisibilityTests
         Assert.False(session.State.CanSee(Blue, session.State.GetHero(B)));
         Assert.NotNull(session.Movement.FindPath(A, new MapPosition(10, 0))); // planner doesn't know about B
 
-        var outcome = session.Movement.MoveTo(A, new MapPosition(10, 0));
+        var outcome = session.MoveTo(A, new MapPosition(10, 0));
 
         // After 2 steps B is 5 tiles away = scouting radius: the hero halts.
         Assert.Equal(new MovementOutcome(2, MoveResult.EnemySpotted, Arrived: false), outcome);
@@ -135,7 +135,7 @@ public class VisibilityTests
         BattleTriggered? battle = null;
         session.Events.Subscribe<BattleTriggered>(e => battle = e);
 
-        var result = session.Movement.TryStep(A, Direction.East);
+        var result = session.Step(A, Direction.East);
 
         Assert.Equal(MoveResult.BattleStarted, result);
         Assert.Equal(new BattleTriggered(A, B, IsAmbush: true), battle);
@@ -153,9 +153,9 @@ public class VisibilityTests
     /// <summary>Blue walks to x=5 (object in sight) and back home (out of sight), then hands the turn to Red, who knows the map.</summary>
     private static void BlueGlancesAndLeaves(GameSession session)
     {
-        session.Movement.MoveTo(A, new MapPosition(5, 1));
-        session.Movement.MoveTo(A, new MapPosition(0, 1));
-        session.Turns.EndTurn();
+        session.MoveTo(A, new MapPosition(5, 1));
+        session.MoveTo(A, new MapPosition(0, 1));
+        session.EndTurn();
         session.State.Fog.RevealAll(Red);
     }
 
@@ -171,12 +171,12 @@ public class VisibilityTests
         Assert.NotNull(state.Memory.Get(Blue, mine.Id));
 
         state.GetHero(B).Position = new MapPosition(13, 2);
-        session.Movement.MoveTo(B, mine.VisitPosition); // Red flags it while Blue can't see
+        session.MoveTo(B, mine.VisitPosition); // Red flags it while Blue can't see
         Assert.Equal(Red, mine.Owner);
         Assert.Null(state.Memory.Get(Blue, mine.Id)!.Owner); // Blue still sees it unflagged
 
-        session.Turns.EndTurn();
-        session.Movement.MoveTo(A, new MapPosition(5, 1));
+        session.EndTurn();
+        session.MoveTo(A, new MapPosition(5, 1));
         Assert.Equal(Red, state.Memory.Get(Blue, mine.Id)!.Owner); // updated once back in sight
     }
 
@@ -189,14 +189,14 @@ public class VisibilityTests
 
         BlueGlancesAndLeaves(session);
         state.GetHero(B).Position = new MapPosition(12, 1);
-        session.Movement.MoveTo(B, pile.VisitPosition); // Red takes it unseen
+        session.MoveTo(B, pile.VisitPosition); // Red takes it unseen
 
         Assert.Empty(state.Objects);
         Assert.NotNull(state.Memory.Get(Blue, pile.Id));
         Assert.Equal(MinimapMarker.Object, Minimap.Build(state, Blue, 0)[(1 * 30) + 10].Marker);
 
-        session.Turns.EndTurn();
-        session.Movement.MoveTo(A, new MapPosition(5, 1));
+        session.EndTurn();
+        session.MoveTo(A, new MapPosition(5, 1));
         Assert.Null(state.Memory.Get(Blue, pile.Id));
     }
 

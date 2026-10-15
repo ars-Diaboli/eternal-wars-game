@@ -44,7 +44,7 @@ public class MapSerializerTests
 
         Assert.Null(document.Roads);
         Assert.DoesNotContain("\"roads\"", MapSerializer.Serialize(document));
-        Assert.Equal(3, document.FormatVersion);
+        Assert.Equal(MapDocument.CurrentFormatVersion, document.FormatVersion);
     }
 
     [Fact]
@@ -169,8 +169,9 @@ public class MapSerializerTests
         objects.Select(o => o switch
         {
             ResourcePile p => $"{p.Id} {p.Definition.Id} {p.Position} {p.Amount}",
-            Mine m => $"{m.Id} {m.Definition.Id} {m.Position} {m.Owner}",
-            TreasureChest c => $"{c.Id} {c.Definition.Id} {c.Position} {c.Gold}/{c.Experience}",
+            Mine m => $"{m.Id} {m.Definition.Id} {m.Position} {m.Owner} {m.Guard}",
+            TreasureChest c => $"{c.Id} {c.Definition.Id} {c.Position} {c.FixedValues}",
+            MonsterGuard m => $"{m.Id} {m.Position} {m.Creature}:{m.Count} {m.Disposition} {m.NeverFlees}",
             TwoWayGate g => $"{g.Id} {g.Definition.Id} {g.Position} <-> {g.LinkedGate}",
             OneWayGateEntrance e => $"{e.Id} {e.Definition.Id} {e.Position} -> {e.Exit}",
             OneWayGateExit x => $"{x.Id} {x.Definition.Id} {x.Position}",

@@ -16,6 +16,9 @@ public enum MapObjectKind
 
     /// <summary>Landing spot of one-way gates; visiting it does nothing.</summary>
     OneWayGateExit,
+
+    /// <summary>A neutral creature stack guarding its surroundings (<see cref="MonsterGuard"/>).</summary>
+    Monster,
 }
 
 /// <summary>

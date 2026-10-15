@@ -1,6 +1,6 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Scenarios;
@@ -47,21 +47,7 @@ public partial class Main : Node3D
         BuildHud();
 
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, OnTurnStarted);
-
-        // TODO(Phase 1 UI): replace with chest and exchange dialogs. Until then take the gold / close the exchange so the game never stalls.
-        this.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
-        {
-            switch (e.Decision)
-            {
-                case TreasureChestDecision:
-                    _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
-                    break;
-                case HeroExchangeDecision:
-                    _session.Interactions.CompleteExchange();
-                    break;
-            }
-        });
-        _session.Turns.StartGame();
+        _session.Start();
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -69,7 +55,7 @@ public partial class Main : Node3D
         if (@event is InputEventKey { Pressed: true } key && _selectedHero is { } hero &&
             KeyboardDirections.ToDirection(key.Keycode) is { } direction)
         {
-            _session.Movement.TryStep(hero, direction);
+            _session.Execute(new StepHeroCommand(_session.State.CurrentPlayer.Id, hero, direction));
             GetViewport().SetInputAsHandled();
         }
     }
@@ -101,10 +87,15 @@ public partial class Main : Node3D
         resources.Bind(_session);
 
         top.AddChild(new Label { Text = "Arrows / numpad: move hero   WASD: pan   Q/E: rotate   Wheel: zoom" });
+
+        // Placeholder until real dialogs and the 3D battle scene exist: battles are fought by quick combat.
+        var decisions = new DecisionPanel();
+        top.AddChild(decisions);
+        decisions.Bind(_session);
     }
 
     private static GameState LoadState() =>
         LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path))
+            ? MapConverter.ToGameState(MapSerializer.Load(path), options: new GameOptions(Seed: (ulong)Random.Shared.NextInt64()))
             : DemoScenario.Create();
 }

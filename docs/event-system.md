@@ -47,7 +47,7 @@ Helpers:
 ## Conventions
 
 - Events are **facts in the past tense**: `HeroMoved`, `DayStarted`, `ResourcesChanged`. Requests
-  ("please move") are not events; they are service calls today and commands later.
+  ("please move") are not events; they are commands (`GameCommand`, executed by `GameSession.Execute`).
 - Events are **immutable `sealed record`s** carrying ids and values, not mutable domain objects.
   Exception: read-only lists of value types (`TerrainPainted.Positions`).
 - Include enough data for a view to update **without** querying state when practical (e.g.
@@ -107,16 +107,28 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectRemoved(Object)` | interactions / editor | pile/chest consumed, or deleted in editor |
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
-| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | `MapObjectInteractionService` | e.g. chest gold-or-XP choice |
+| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService` | chest, exchange, guard offer, battle (resolved when it ends) |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
 | `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
 | `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone) |
 | `HeroesMet(Hero, Other)` | `MapObjectInteractionService` | own heroes met; `HeroExchangeDecision` follows |
-| `BattleTriggered(Attacker, Defender, IsAmbush)` | `MapObjectInteractionService` | hero stepped onto an enemy hero (hook until Phase 2) |
+| `BattleTriggered(Attacker, Defender, IsAmbush)` | `MapObjectInteractionService` | hero stepped onto an enemy hero; the battle follows |
+| `BattleStarted(AttackerHero, DefenderHero, Guard, Width, Height, IsAmbush, Units, Obstacles)` | `BattleService` | battlefield set up (after the width choice) |
+| `BattleRoundStarted(Round)` / `BattleTurnStarted(Unit, Round)` | `BattleEngine` | new round / a unit's turn |
+| `BattleUnitMoved(Unit, From, To)` | `BattleEngine` | a unit moved (also before a melee attack) |
+| `BattleUnitAttacked(Attacker, Target, Kind, Damage, Killed, RemainingCount)` | `BattleEngine` | each hit: melee, ranged, retaliation, ranged retaliation, area |
+| `BattleUnitDied(Unit)` / `BattleUnitWaited(Unit)` / `BattleUnitDefended(Unit)` | `BattleEngine` | |
+| `BattleEnded(Winner, Reason, Casualties, Experience)` | `BattleService` | before its map consequences; `DecisionResolved(BattleDecision)` comes last |
+| `ArmyChanged(Hero, Slots)` | `ArmyService`, `BattleService`, `GuardService`, editor | stacks moved, casualties, neutrals joined, editor edit |
+| `HeroDefeated(Hero, Owner, Retreated)` | `BattleService` | a hero lost or fled a battle and left the map |
+| `GuardJoined(Hero, Guard, Creature, Count)` / `GuardFled(Hero, Guard)` | `GuardService` | a guard offer was accepted (then `MapObjectRemoved`) |
+| `MineGuardDefeated(Mine)` | `BattleService` | the mine can now be flagged (`MineOwnerChanged` follows) |
+| `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster, mine guard, chest values) |
 | `RoadsPainted(Positions, Road)` | `MapEditorSession` | road paint/erase and its undo/redo |
 | `TerrainPainted(Positions, Terrain)` | `MapEditorSession` | paint and its undo/redo |
 | `HeroPlaced` / `HeroRemoved` | `MapEditorSession` | editor hero placement |
 | `MapPropertiesChanged(Name, Description)` | `MapEditorSession` | |
+| `HeroStatsChanged(Hero, Attack, Defense, Tactics)` / `GuardModeChanged(Mode)` | `MapEditorSession` | |
 | `PlayerSlotsChanged` | `MapEditorSession` | slot added/removed/edited |
 | `UndoHistoryChanged(UndoDescription, RedoDescription)` | `MapEditorSession` | after every recorded edit, undo or redo |
 

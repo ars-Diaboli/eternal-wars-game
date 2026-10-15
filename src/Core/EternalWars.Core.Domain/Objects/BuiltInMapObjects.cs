@@ -13,6 +13,7 @@ public static class BuiltInMapObjects
     public const string TwoWayMonolith = "monolith.two-way";
     public const string OneWayMonolithEntrance = "monolith.entrance";
     public const string OneWayMonolithExit = "monolith.exit";
+    public const string Monster = "monster";
 
     private static readonly Footprint MineFootprint = new(["BBB", "BVB"]);
     private static readonly Footprint GateFootprint = new(["BBB", "BVB"]);
@@ -35,6 +36,7 @@ public static class BuiltInMapObjects
         new(TwoWayMonolith, "Two-way monolith", MapObjectKind.TwoWayGate, MonolithFootprint),
         new(OneWayMonolithEntrance, "One-way monolith entrance", MapObjectKind.OneWayGateEntrance, MonolithFootprint),
         new(OneWayMonolithExit, "One-way monolith exit", MapObjectKind.OneWayGateExit, MonolithFootprint),
+        new(Monster, "Monster", MapObjectKind.Monster, Footprint.Single),
     ];
 
     public static string PileId(ResourceType resource) => $"pile.{resource.ToString().ToLowerInvariant()}";

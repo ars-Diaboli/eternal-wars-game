@@ -275,3 +275,130 @@ Penalties add up and ranged damage is multiplied by (1 − total). Above 7/8 the
 Penalties are exact eighths, so they are stored as integer eighths (`CoverEighths`) to keep battle
 maths integer and deterministic. Units of either side count; the shooter and target never do.
 Obstacle definitions carry a cover class (small/big/wall).
+
+### ADR-036: Commands only, seeded RNG, replays
+**Status**: accepted (2026-10-15)
+- Every player intent is a serializable `GameCommand` record (`Core.Domain/Commands`) executed by
+  `GameSession.Execute`. The services' mutating methods are `internal`: front-ends, AI, tests and the
+  simulator all go through commands, so nothing can bypass the log (user decision).
+- `Execute` authorizes the command (the player whose turn it is on the map, or the commander of the active
+  battle side), dispatches it, and appends it to `GameSession.CommandLog` only when accepted. A refusal returns
+  `CommandResult.Rejected(reason)` and changes nothing; rule outcomes that are not refusals (a step into
+  water) come back as `CommandResult.Outcome` (`MoveResult`, `MovementOutcome`). Services validate before
+  they mutate, so a refusal never leaves half-applied state.
+- `session.Start()` is not a command: every game has it.
+- Randomness: `GameRandom` (SplitMix64; its whole state is one `ulong`) seeded from `GameOptions.Seed`, owned
+  by `GameState` and drawn only by Domain services, in command order. Each battle forks its own generator from
+  it. `System.Random` is banned from rules.
+- Replays: `GameRecordDocument` (`*.ewreplay.json`, `Core.Data/Records`) = initial map + options + commands +
+  final `GameStateDigest`. `GameReplay.Replay` re-executes the commands and throws if one is refused or the
+  digest differs. The command hierarchy is registered for JSON in `Core.Data` (a resolver modifier), so
+  Domain stays free of serialization attributes.
+
+### ADR-037: Creatures as data; two speeds; draft slice rosters
+**Status**: accepted (2026-10-15); roster numbers are a draft for review
+- `CreatureDefinition` (data): tier 1–5, size class (Small 2×2, Medium 3×3, Large 4×4), Attack, Defense,
+  damage range, health, Initiative, shots, growth, cost, optional `UpgradesTo`, free-form tags (ADR-029) and
+  abilities (`Flying`, `DoubleStrike`, `NoEnemyRetaliation`, `UnlimitedRetaliation`, `NoMeleePenalty`,
+  `Breath`, `Cleave`, `MultiHead`, plus the hook abilities `PackHunter` (engagement) and `Relentless` (hit
+  history)). `CreatureCatalog` and `CreatureDefinitionSerializer` follow the map-object pattern (built-ins
+  plus JSON overrides).
+- **Two speeds** (user decision): `Speed` is battlefield cells per turn; `MapSpeed` is the HoMM3-scale value
+  the adventure movement table uses (`MovementAllowance`, slowest creature of the army). This replaces the
+  `Hero.SlowestCreatureSpeed` placeholder. `MovementRules.ArmyTown` returns the army's town when every creature
+  shares one, which activates native terrain (ADR-032).
+- The Haven and Inferno rosters (`BuiltInCreatures`) come from the reference project, rearranged into 9 lines
+  over 5 tiers, all upgradeable. Haven: footman, pikeman | zealot, archer | monk, griffin | lancer, paladin |
+  radiant spirit. Inferno: imp, horned demon | hell hound, tormentor | succubus, hell charger | pit fiend,
+  juggernaut | devil. Neutrals: wolf, bandit, troll, wyvern, and a Dragon Utopia red dragon. Stats are a first
+  pass to tune with `sim battle`.
+- `Value` (health × average damage × (20 + Attack + Defense) / 40, ×1.5 for shooters, ×1.2 for flyers) is the
+  shared strength estimate of the battle AI and neutral dispositions.
+
+### ADR-038: Tactical battle baseline
+**Status**: accepted (2026-10-15); defaults confirmed by the user, tunable
+- Field 24 tall, width 30; the side with effective Tactics picks the width first (ADR-033), the AI keeps 30.
+  Units deploy automatically in slot order, in columns at their edge. 2–5 obstacles (small 2×2 = 1/8 cover, big
+  3×3 = 1/4) are rolled between the deployment zones, never touching each other.
+- Movement: 8-way, one cell per step, up to Speed. A footprint needs all its cells free (clearance by prefix
+  sums); a diagonal step needs one of the two orthogonal placements free, so no squeezing through corners.
+  Flyers land on any free placement within Speed.
+- Turn order (ADR-009, ADR-021): Initiative, then the attacker's side, then Speed, then a seeded roll per round.
+  Wait: once per round; waiting units act after everyone, in reverse order. Defend: +20 % Defense (at least
+  +1) until the unit's next turn.
+- Melee: move next to the target (8-way footprint adjacency) and strike; one retaliation per round unless
+  `UnlimitedRetaliation`; `NoEnemyRetaliation` suppresses it; `DoubleStrike` strikes again afterwards.
+- Ranged: needs shots and no adjacent enemy; half damage beyond 15 cells; shooters in melee deal half unless
+  `NoMeleePenalty`. Line of fire = supercover of the segment between the footprint centres (cells touched only
+  at a corner count too); cover per ADR-035; above 7/8 no shot. No skill reduces cover yet.
+- Area: breath hits every unit, either side, touching the target-sized area behind the target; cleave hits up
+  to two other enemies next to both attacker and target; multi-head hits every other adjacent enemy. One roll
+  for all victims, each unit hit once, only the primary target retaliates.
+- Damage: ADR-033 in integer maths, with the hero's Attack/Defense added. Only the top creature carries
+  damage; stacks heal after the battle; dead stacks leave the army.
+- End: a side without living units loses. The winning hero gains the HP of the enemy creatures killed, +500
+  for defeating (not routing) a hero. Losing heroes leave the map. Safety net: a battle still undecided after
+  100 rounds is won by the defender.
+- Control: each human commands their own side, also during another player's turn (hot-seat). Neutrals and
+  computer players use `BattleAi` (greedy, deterministic). Quick combat (`AutoResolveBattleCommand`) may be
+  requested by either participant and hands both sides to the AI.
+- Retreat (user decision): a hero may retreat; the army is lost, the hero leaves the map, and the winner gets
+  no +500. Surrender comes with taverns in Phase 3.
+- A hero without creatures cannot attack (`MoveResult.NoArmy`); an army-less defender is overrun without a
+  battlefield. No ambush bonus, morale/luck, hero spells or war machines in Phase 2.
+
+### ADR-039: Treasure chest rolls
+**Status**: accepted (2026-10-15)
+Unfixed chests roll from the game RNG when opened: 1000 gold or 500 XP / 1500 or 1000 / 2000 or 1500,
+equally likely (HoMM3's tiers without the artifact outcome, normalised). Values fixed in the editor override
+the roll.
+
+### ADR-040: Neutral guards: two guard modes, deterministic dispositions
+**Status**: accepted (2026-10-15)
+- Monsters are map objects (`MonsterGuard`: creature, count, disposition, never-flees). Their tile is the
+  entrance (attacked from where the hero stands) and they guard the 8 tiles around them. The pathfinder ends a
+  route on a guarded tile and never passes through one.
+- **The guard mode is a map setting chosen in the editor** (user decision). `Classic` = HoMM3 zone of control:
+  entering a guarded tile starts the encounter, but pickups (piles, chests) on guarded tiles can be taken from
+  outside without a fight ("stealing"). `Area` = the whole 3×3 area is guarded, pickups included. In both modes
+  the intercepted hero stays where it was.
+- Dispositions use HoMM3's names without randomness. R = hero army power ÷ guard power. A free join is offered
+  when the army has room and the guard is Compliant (always), Friendly (R ≥ 1), Aggressive (R ≥ 2) or Hostile
+  (R ≥ 4); Savage never joins. Otherwise the guard offers to flee when R ≥ 3, unless it never flees. Otherwise
+  battle. Offers are a `GuardEncounterDecision`, answered with `RespondToGuardCommand` (accept = join, or let it
+  go without XP; decline = fight).
+- Counts left open are rolled at game start from the creature tier: T1 20–50, T2 12–25, T3 8–16, T4 4–10,
+  T5 1–4. In battle a guard splits into min(count, 5) stacks.
+- Mine guards (ADR-034) always fight; beating them flags the mine for the winner.
+
+### ADR-041: Map format v4
+**Status**: accepted (2026-10-15)
+Adds hero `attack`/`defense`/`tactics`/`army` (slot, creature, count), `guardMode`, `monster` objects, a mine
+`guard`, and makes chest `gold`/`experience` optional (both omitted = rolled). v1–v3 still load: their chests
+keep their values as fixed values, and their heroes start without an army.
+
+### ADR-042: HoMM4-style creature capabilities, at most five
+**Status**: accepted (2026-10-15); refines ADR-037 and ADR-038
+- Creature special rules are called **capabilities** (`CreatureCapability`, `CapabilityKind`; JSON
+  `"capabilities"`). Every one counts, flying and area attacks included: **at most 5 per creature**, no
+  duplicates, enforced when definitions are validated (user decisions).
+- A capability is `(Kind, Value, Parameter)`: the value is a percentage (pack hunter, relentless) or casts per
+  battle (caster); the parameter is a spell tag (immunity) or a spell id (caster).
+- New combat capabilities (HoMM4 rules, confirmed by the user):
+  - `FirstStrike`: the defender retaliates **before** the attacker's blow, using its retaliation for the
+    round; if both have it, normal order; an attacker killed this way does not strike.
+  - `RangedRetaliation`: a shooter that is shot at fires back if it could shoot the attacker right now (shots
+    left, not engaged, cover ≤ 7/8); it spends a shot and its retaliation for the round.
+  - `ShootsTwice`: a second shot after the (ranged) retaliation, one shot of ammunition each.
+    `DoubleStrike` is the melee equivalent.
+  - `MeleePenalty` is now **opt-in**: only shooters that have it deal 50 % in melee. It replaces
+    `NoMeleePenalty`. Shooter-only capabilities on a creature without shots are invalid.
+  - `NoEnemyRetaliation` now also prevents ranged retaliation.
+- Spell capabilities are **data and hooks only** until magic exists (user decision): `SpellImmunity(tag)` with
+  `CreatureDefinition.IsImmuneTo(tags)` (well-known tags in `SpellTags`: all, mind, fire, curse; the magic
+  system will tag its spells), and `Caster(spell, casts)` with `CreatureDefinition.SpellCasts` and
+  `BattleUnit.CastsLeft`. They change no battle outcome yet.
+- The draft rosters now use them, e.g. guardian and lacerator first strike, marksman shoots twice, monk/priest
+  and succubus mistress ranged retaliation, archer/monk/succubus melee penalty, mind/fire/curse immunities,
+  priest/seraph/pit lord casters.
+- Battle events report a shot back as `BattleAttackKind.RangedRetaliation`.

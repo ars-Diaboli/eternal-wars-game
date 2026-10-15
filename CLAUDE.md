@@ -18,6 +18,8 @@ HoMM3-like 3D turn-based strategy. Godot 4.7.2 .NET, C# on .NET 10. Read `docs/a
 - Add/adjust tests in `tests/EternalWars.Core.Tests` for every core rule change. Use `TestWorld`
   ASCII maps for adventure-map scenarios.
 - Player choices go through `GameState.PendingDecision` + `DecisionRequested` (never callbacks).
+- Front-ends, AI, tools and tests change a running game only via `session.Execute(command)` (ADR-036); rules
+  draw randomness only from `GameState.Random` (never `System.Random`).
 - Editor changes go through `MapEditorSession` so they are undoable and publish events.
 - Bump `MapDocument.CurrentFormatVersion` when the map format changes, and keep older versions loading.
 - Record significant decisions in `docs/decisions.md`; update `docs/roadmap.md` checkboxes.

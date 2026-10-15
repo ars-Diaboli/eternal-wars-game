@@ -1,5 +1,7 @@
 using System.Text;
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
@@ -18,9 +20,12 @@ public static class MapConverter
                 .Select(p => new PlayerSlotDocument(p.Name, p.IsHuman, p.Team.Value == p.Id.Value ? null : p.Team.Value))
                 .ToList(),
             TeamsLocked = state.TeamsLocked,
+            GuardMode = state.GuardMode == GuardMode.Classic ? null : state.GuardMode,
             Heroes = state.Heroes
                 .Select(h => new HeroPlacementDocument(
-                    h.Id.Value, h.Name, h.Owner.Value, h.Position.X, h.Position.Y, h.Position.Level))
+                    h.Id.Value, h.Name, h.Owner.Value, h.Position.X, h.Position.Y, h.Position.Level,
+                    h.Attack, h.Defense, h.Tactics == SkillLevel.None ? null : h.Tactics,
+                    h.Army.IsEmpty ? null : h.Army.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList()))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
         };
@@ -68,25 +73,50 @@ public static class MapConverter
         MapDocument document,
         MapObjectCatalog? catalog = null,
         GameOptions? options = null,
-        TerrainCatalog? terrains = null)
+        TerrainCatalog? terrains = null,
+        CreatureCatalog? creatures = null)
     {
         catalog ??= MapObjectCatalog.Default;
+        creatures ??= CreatureCatalog.Default;
         var map = ToMap(document);
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
-        var heroes = document.Heroes.Select(h =>
-            new Hero(new HeroId(h.Id), h.Name, new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level)));
+        var heroes = document.Heroes.Select(h => new Hero(
+            new HeroId(h.Id), h.Name, new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level),
+            ToArmy(h, creatures), h.Attack, h.Defense, h.Tactics ?? SkillLevel.None));
         var objects = document.Objects.Select(o => ToObject(o, catalog));
         try
         {
-            var state = new GameState(map, players, heroes, objects, options, terrains);
+            var state = new GameState(map, players, heroes, objects, options, terrains, creatures);
             state.SetTeamsLocked(document.TeamsLocked);
+            state.SetGuardMode(document.GuardMode ?? GuardMode.Classic);
             return state;
         }
         catch (ArgumentException e)
         {
             throw new FormatException($"Invalid map '{document.Name}': {e.Message}", e);
         }
+    }
+
+    private static Army ToArmy(HeroPlacementDocument hero, CreatureCatalog creatures)
+    {
+        var army = new CreatureStack?[Army.SlotCount];
+        foreach (var slot in hero.Army ?? [])
+        {
+            if (!Army.IsValidSlot(slot.Slot) || army[slot.Slot] is not null || slot.Count < 1)
+            {
+                throw new FormatException($"Hero {hero.Id} has an invalid or duplicate army slot {slot.Slot}.");
+            }
+
+            if (!creatures.Contains(slot.Creature))
+            {
+                throw new FormatException($"Hero {hero.Id} has unknown creature '{slot.Creature}'.");
+            }
+
+            army[slot.Slot] = new CreatureStack(slot.Creature, slot.Count);
+        }
+
+        return new Army(army);
     }
 
     private static List<IReadOnlyList<string>> WriteLayer(AdventureMap map, Func<MapPosition, char> code)
@@ -156,10 +186,11 @@ public static class MapConverter
             Mine mine => new MineDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Owner = mine.Owner?.Value,
+                Guard = mine.Guard is { } guard ? new GuardDocument(guard.Creature, guard.Count) : null,
             },
             TreasureChest chest => new TreasureChestDocument
             {
-                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Gold = chest.Gold, Experience = chest.Experience,
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Gold = chest.FixedValues?.Gold, Experience = chest.FixedValues?.Experience,
             },
             TwoWayGate gate => new GateDocument
             {
@@ -172,6 +203,11 @@ public static class MapConverter
             OneWayGateExit => new GateExitDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            MonsterGuard monster => new MonsterDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+                Creature = monster.Creature, Count = monster.Count, Disposition = monster.Disposition, NeverFlees = monster.NeverFlees,
             },
             _ => throw new NotSupportedException($"Cannot save {mapObject.GetType().Name}."),
         };
@@ -191,8 +227,13 @@ public static class MapConverter
             return document switch
             {
                 ResourcePileDocument pile => new ResourcePile(id, definition, position, pile.Amount),
-                MineDocument mine => new Mine(id, definition, position, mine.Owner is { } owner ? new PlayerId(owner) : null),
-                TreasureChestDocument chest => new TreasureChest(id, definition, position, chest.Gold, chest.Experience),
+                MineDocument mine => new Mine(
+                    id, definition, position, mine.Owner is { } owner ? new PlayerId(owner) : null,
+                    mine.Guard is { } guard ? new GuardStack(guard.Creature, guard.Count) : null),
+                TreasureChestDocument { Gold: { } gold, Experience: { } experience } => new TreasureChest(id, definition, position, new ChestValues(gold, experience)),
+                TreasureChestDocument { Gold: null, Experience: null } => new TreasureChest(id, definition, position),
+                TreasureChestDocument => throw new FormatException("A chest needs both gold and experience, or neither."),
+                MonsterDocument monster => new MonsterGuard(id, definition, position, monster.Creature, monster.Count, monster.Disposition, monster.NeverFlees),
                 GateDocument gate => new TwoWayGate(id, definition, position, ToId(gate.LinkedGate)),
                 GateEntranceDocument entrance => new OneWayGateEntrance(id, definition, position, ToId(entrance.Exit)),
                 GateExitDocument => new OneWayGateExit(id, definition, position),

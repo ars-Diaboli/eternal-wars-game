@@ -70,12 +70,11 @@ out of scope, but the deterministic core keeps it possible.
     | Swamp | Swamp Bestiary | 175 |
 
     - **Native = the whole army** (HoMM3): the penalty is waived only if **every** creature in the army
-      belongs to the terrain's native town. Neutrals count as non-native ❓.
+      belongs to the terrain's native town. Neutrals count as non-native (decided).
     - The **Pathfinding** secondary skill reduces non-native and rough penalties by 25/50/75 %
       (basic/advanced/expert).
-    - Implemented as data (`TerrainCatalog`, all terrains incl. the three new ones). Until armies exist
-      no army is native anywhere, so native terrain costs everyone its non-native cost. The Pathfinding
-      skill arrives with skills in Phase 3.
+    - Implemented as data (`TerrainCatalog`, all terrains incl. the three new ones); an all-native army
+      (`MovementRules.ArmyTown`) pays 100 on its terrain. The Pathfinding skill arrives with skills in Phase 3.
   - **Roads (HoMM3-style)**: a road layer on top of terrain, drawn in the editor and generated
     between towns and through zone connections. Road types and costs: **dirt 50, gravel 65,
     cobblestone 75**. The road cost replaces the terrain cost and **ignores native/rough penalties**.
@@ -86,6 +85,8 @@ out of scope, but the deterministic core keeps it possible.
   - **Daily movement points** = base from the **slowest creature in the army** (speed ≤3: 1500, 4: 1560,
     5: 1630, 6: 1700, 7: 1760, 8: 1830, 9: 1900, 10: 1960, ≥11: 2000) × (100 % + skill bonus, e.g.
     Logistics) + flat artifact bonus. Recomputed at the start of the owner's turn. Without an army, 1500.
+    The table uses each creature's adventure **map speed** (`MapSpeed`, HoMM3 scale), which is separate from
+    its battlefield Speed in cells (ADR-037).
 - **Pathfinding** (implemented): cheapest route; visible heroes and object bodies block; routes may only
   *end* on an object's entrance (except gates, which continue on the other side); unexplored tiles are
   never used. Every step carries a day index for HoMM-style day markers. Heroes the player can't see
@@ -94,24 +95,33 @@ out of scope, but the deterministic core keeps it possible.
   chest (choose gold *or* XP), subterranean gate (two-way link). Objects have a footprint and
   are entered only through their entrance tile, usually from below.
   - **Treasure chests roll their reward** (seeded game RNG): 1000/1500/2000 gold *or* 500/1000/1500 XP
-    (HoMM3 odds ❓); later a small artifact chance. Map authors may fix the values. Today values are fixed.
+    (implemented: the three tiers are equally likely, ADR-039); later a small artifact chance. Map authors may
+    fix the values.
   - **Mines may be guarded**: the editor or random map generator can attach a guard stack. The guard must be
-    defeated before the first flagging; after that any hero re-flags the mine by visiting it (Phase 2).
-  Planned: towns, artifacts, dwellings, shrines, guarded neutral stacks, boats/shipyards.
+    defeated before the first flagging; after that any hero re-flags the mine by visiting it (implemented;
+    mine guards always fight).
+  - **Neutral monsters** (implemented, ADR-040): a creature stack on a tile; stepping onto it attacks it, and it
+    guards the 8 tiles around it. The **guard mode** is a map setting chosen in the editor:
+    - **Classic** (HoMM3): entering a guarded tile starts the encounter, but pickups lying on guarded tiles
+      can be grabbed from outside without a fight ("stealing").
+    - **Area**: the whole 3×3 area is guarded; touching anything inside it, pickups included, starts the fight.
+    - Dispositions (HoMM3 names, deterministic): Compliant, Friendly, Aggressive, Hostile, Savage decide whether
+      the stack offers to **join** (free, needs room) or tries to **flee** from a much stronger army (≥ 3×), else
+      it fights. The player accepts or fights. Unset counts are rolled by tier at game start.
+  Planned: towns, artifacts, dwellings, shrines, boats/shipyards.
 - **Meeting heroes**: moving onto a tile with another hero is an interaction, like visiting an
   object, so routes may **end** on that hero's tile (never pass through it):
 
   | Other hero | Result | Status |
   |---|---|---|
-  | **Own** | Opens the **exchange screen**: swap army stacks and artifacts. The moving hero stays on its adjacent tile. | meeting implemented (`HeroExchangeDecision`); swapping in Phase 2/3 |
-  | **Enemy** | Starts a **battle** | trigger implemented (`BattleTriggered`); battle in Phase 2 |
+  | **Own** | Opens the **exchange screen**: swap army stacks and artifacts. The moving hero stays on its adjacent tile. | implemented: stacks move with `MoveStackCommand` (split, merge, swap; a hero keeps one stack); artifacts in Phase 3; screen UI pending |
+  | **Enemy** | Starts a **battle**; the loser (or a hero that retreats) leaves the map | implemented (Phase 2) |
   | **Allied** (team games) | **No interaction for now**: the tile is simply blocked. Exchange with allies may come later. | decided |
 
   - **Teams**: the map (or template) defines default teams; the game setup screen may change them
     unless the map locks them (story/scenario maps). Free-for-all when nothing is defined.
   - Under refog (implemented): a moving hero **automatically stops** when an enemy hero comes into sight.
-    If it still bumps into an unseen enemy, a **battle starts (ambush)**; the defender may get an ambush
-    bonus ❓.
+    If it still bumps into an unseen enemy, a **battle starts (ambush)**; no ambush bonus for now (decided).
 - **Gates and teleporters**: no random-exit portals for now. Every link is fixed in the map, so
   movement and pathfinding stay deterministic and predictable.
 
@@ -135,9 +145,11 @@ out of scope, but the deterministic core keeps it possible.
     updated when they come back into sight. Units are hidden entirely. (Implemented: `ObjectMemory`.)
 
 ### 4.2 Heroes
-- Primary stats: Attack, Defense, Spell Power, Knowledge.
+- Primary stats: Attack, Defense, Spell Power, Knowledge. Attack and Defense exist (set in the map, added to
+  every stack in battle); growth and the other two arrive with levels in Phase 3.
 - Secondary skills (levels Basic/Advanced/Expert), level-up choice between two skills.
-- Army of up to 7 creature stacks.
+- Army of up to 7 creature stacks (implemented). A hero without creatures cannot attack.
+- Tactics exists as a skill level for the battlefield-width choice; other skills arrive in Phase 3.
 - Artifacts with paper-doll slots and backpack.
 - Spell book, mana.
 
@@ -204,7 +216,7 @@ because that is content selection, not a rule.
   [lore.md](lore.md): Haven vs Necropolis & Inferno, Academy vs Inferno & Dungeon, Sylvan vs Dungeon &
   Necropolis) exists
   in story and campaign, but has **no combat or rules effect**. There are no hate/enmity damage bonuses
-  (unlike HoMM3 Angels vs Devils) and no alignment modifiers. Creature abilities target *properties*
+  (unlike HoMM3 Angels vs Devils) and no alignment modifiers. Creature capabilities target *properties*
   (undead, flying, size, …), never town or group membership.
 - **Vertical slice: Haven and Inferno** (decided). The holy-vs-demonic contrast reads instantly in a dark,
   realistic art style; the rivalry is story only.
@@ -219,7 +231,9 @@ because that is content selection, not a rule.
   | Large | 4×4 cells | dragons, behemoths, titans |
   - The fine cell grid lets units of different sizes share one board. Positions refer to the top-left
     cell of the footprint.
-  - **Battlefield**: **24 cells tall**, **30 cells wide** by default. 8-way movement assumed ❓.
+  - **Battlefield**: **24 cells tall**, **30 cells wide** by default. 8-way movement, one cell per step up to
+    the creature's Speed; a diagonal step needs one of the two orthogonal placements free (no squeezing
+    through corners); flyers land on any free placement within their Speed (decided, ADR-038).
     - **Tactics lets its owner choose the width before the battle**:
 
       | Effective Tactics | Width choices |
@@ -255,31 +269,51 @@ because that is content selection, not a rule.
       Example: a wall (4/8) + a 4×4 creature (2/8) = 6/8, so the shot deals 25 % damage. Add a small obstacle
       (1/8) and it is still allowed at 7/8 (12.5 % damage). One more blocker and the shot is impossible.
     - Each obstacle definition declares its size class (small/big). Walls are a separate class.
-    - Open ❓: how the line of fire is traced on the cell grid (centre to centre, Bresenham-style
-      supercover) and whether creature or hero skills reduce cover penalties.
+    - Line of fire: supercover of the segment from footprint centre to footprint centre; cells touched only at
+      a corner count too (decided). No skill reduces cover penalties yet.
   - **Damage formula: HoMM3 baseline.** Base damage (rolled per stack within the creature's min–max) ×
     stack size; +5 % per point of Attack above the target's Defense (cap +300 %); −2.5 % per point of
     Defense above Attack (cap −70 %); then multiplicative modifiers (skills, cover, abilities, spells).
     Rolls use the seeded battle RNG.
   - Size alone does not grant reach, cleave or trample/push.
-  - **Area attacks are creature abilities**, independent of size:
+  - **Area attacks are creature capabilities**, independent of size:
     - **Breath** (dragon- or phoenix-like): also hits the cells directly behind the target in the
       line of attack.
     - **Cleave / multi-head** (cerberus- or hydra-like): also hits enemies adjacent to the attacker
       (cerberus: up to 3 in front, hydra: all around).
     - **HoMM3-style friendly fire**: breath also hits friendly units in its line; cleave/multi-head
       hits enemies only. Only the primary target retaliates.
-    - A unit whose footprint touches the area is hit once (assumed ❓).
-  - Open ❓: diagonal squeeze rules between units/obstacles, how flyers and teleporters use footprints.
+    - A unit whose footprint touches the area is hit once (decided). Breath's area is a target-sized block
+      directly behind the target; cleave takes up to two extra enemies next to both attacker and target.
+  - Open ❓: how teleporting creatures use footprints.
 - **Turn order: initiative decides order, not frequency.** Each round every stack acts **exactly
   once**, in descending **Initiative** (a stat separate from **Speed**, which is movement range).
   A HoMM5-style timeline bar shows the order. Unlike HoMM5, no unit acts twice in a round.
   - **Ties**: attacker's side first, then higher speed, then a deterministic seeded roll.
   - **Wait** (HoMM3): waiting units act at the end of the round, in **reverse** initiative order.
   - Open ❓: spells and morale that change initiative mid-round.
-- Wait/defend, retaliation, ranged units, flyers, obstacles.
+- Wait/defend (+20 % Defense), retaliation (once per round unless a capability says otherwise), ranged units
+  (no shot while engaged, half damage beyond 15 cells), flyers, rolled obstacles. Implemented (ADR-038).
+- **Creature capabilities** (HoMM4-style, implemented, ADR-042): each creature has **at most 5** special rules,
+  shown as its capability list. Every rule counts, flying and area attacks included.
+
+  | Capability | Effect |
+  |---|---|
+  | Flying | Lands on any free spot within its speed |
+  | Strikes twice / Shoots twice | A second blow or shot after the retaliation |
+  | First strike | Retaliates before the attacker's blow (normal order if both have it) |
+  | Ranged retaliation | A shooter that is shot at fires back if it can shoot the attacker |
+  | Unlimited retaliation / No enemy retaliation | Retaliates every time / provokes no retaliation (melee and ranged) |
+  | Melee penalty | Shooter deals 50 % in melee; shooters without it fight at full strength |
+  | Breath, cleave, multi-head | Area attacks (see above) |
+  | Pack hunter (x %), relentless (x %) | Engagement and hit-history damage bonuses |
+  | Spell immunity (tag) | Unaffected by spells with that tag (all, mind, fire, curse, …); takes effect with magic |
+  | Caster (spell, n) | Casts the spell n times per battle; takes effect with magic |
+- **Retreat**: a hero may leave the battle; its army is lost and it leaves the map. Surrender (paying gold)
+  comes with taverns in Phase 3.
 - Hero casts one spell per round; catapult, ballista, first-aid tent as war machines ❓.
-- Auto-combat and quick-combat options.
+- Quick combat: either side may hand the rest of the battle to the deterministic battle AI (implemented).
+  Neutrals and computer players always use it.
 - Siege battles with walls and towers (post-1.0 ❓).
 
 ### 4.6 Magic
@@ -398,4 +432,6 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 13 | Tactics | Larger deployment zone | Choose battlefield width (28–34) before battle; enemy Tactics reduces yours | accepted |
 | 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot | accepted |
 | 15 | Fog ambush | — | Under refog, bumping into an unseen enemy starts an ambush battle | accepted |
+| 16 | Neutral guards | Zone of control (pickups can be stolen) | Map setting: classic zone of control, or a fully guarded 3×3 area | accepted |
+| 17 | Speed | One speed for battle and map | Battle Speed in cells, separate adventure map speed | accepted |
 | … | | | *more twists to be proposed* ❓ | |

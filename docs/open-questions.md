@@ -50,6 +50,16 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Harness**: Godot 2D viewer + headless .NET simulator (ADR-034).
 - **Random maps 1.0**: mirrored templates, save generated maps; no water/islands, no HotA import (ADR-034).
 - **Lore**: Claude drafts a proposal for review → [lore.md](lore.md).
+- **Rosters**: Claude drafted Haven and Inferno from the reference project (ADR-037); review pending, see below.
+- **Combat tuning**: no ambush bonus; neutrals non-native everywhere; 8-way
+  combat movement without corner squeezing; supercover line of fire; no skill reduces cover yet; area hits a
+  unit once (ADR-038).
+- **Chest odds**: HoMM3 tiers without the artifact, equally likely (ADR-039).
+- **Speeds**: separate battle Speed (cells) and adventure map speed (ADR-037).
+- **Battle end**: retreat now, surrender with taverns (ADR-038).
+- **Neutral guards**: two map-level guard modes (classic zone of control with stealing, or guarded area) and
+  HoMM3 dispositions with deterministic thresholds (ADR-040).
+- **Hero stats**: Attack, Defense and Tactics are map data from Phase 2 (ADR-041).
 
 ## Still open
 
@@ -57,12 +67,15 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 1. **Lore review**: premise, world/group names in [lore.md](lore.md).
 2. **Twists** beyond combat: which systems do we deliberately change (hero skills, magic, town building,
    morale/luck)?
-3. **Creature rosters** for Haven and Inferno: 9 creatures each over 5 tiers (2+2+2+2+1), with
-   upgrades, size class, speed, initiative and abilities. Should Claude draft them?
+3. **Roster review**: the Haven and Inferno drafts in `BuiltInCreatures` (names, sizes, capabilities, numbers).
+   `sim battle` gives win rates for any matchup; the demo armies currently favour Haven about 95 % to 5 %.
 
-### Tuning (defaults chosen; confirm or change)
-4. Ambush defender bonus (none?), non-native cost for new terrains (150), neutral creatures count as
-   non-native on all terrains, combat movement 8-way.
-   Cover details: how the line of fire is traced on the grid (centre-to-centre supercover?); can skills
-   reduce cover penalties?
-5. Treasure chest roll odds per tier (copy HoMM3's after checking them, or set our own).
+### Rules still open
+4. Teleporting creatures on the battlefield: how they use footprints (none in the slice yet).
+5. Morale and luck: keep HoMM3's, change them, or drop them (part of the "twists" question)?
+6. Off-native cost of the new terrains (highlands, forest floor, wasteland): 150 is the current default.
+
+### For the magic system (Phase 5)
+7. Spell schools and tags: immunities use free-form tags today (`all`, `mind`, `fire`, `curse`); which schools
+   and categories should spells carry? Which spells do creature casters get (`cure`, `resurrection`,
+   `fireball` are placeholders)?

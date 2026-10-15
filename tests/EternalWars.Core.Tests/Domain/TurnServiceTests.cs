@@ -16,7 +16,7 @@ public class TurnServiceTests
         var events = new List<IEvent>();
         session.Events.Subscribe<IEvent>(events.Add);
 
-        session.Turns.StartGame();
+        session.Start();
 
         var turnFlow = events.Where(e => e is not (TilesRevealed or SightChanged or KnownObjectsChanged)).ToList();
         Assert.IsType<GameStarted>(turnFlow[0]);
@@ -30,12 +30,12 @@ public class TurnServiceTests
     public void EndTurn_ByLastPlayer_AdvancesDay()
     {
         var session = new GameSession(DemoScenario.Create());
-        session.Turns.StartGame();
+        session.Start();
         var days = new List<GameDate>();
         session.Events.Subscribe<DayStarted>(e => days.Add(e.Date));
 
-        session.Turns.EndTurn(); // Blue -> Red, same day
-        session.Turns.EndTurn(); // Red -> Blue, next day
+        session.EndTurn(); // Blue -> Red, same day
+        session.EndTurn(); // Red -> Blue, next day
 
         Assert.Equal([new GameDate(2)], days);
         Assert.Equal(new PlayerId(0), session.State.CurrentPlayer.Id);
@@ -45,13 +45,13 @@ public class TurnServiceTests
     public void WeekStarted_IsPublishedOnDayEight()
     {
         var session = new GameSession(DemoScenario.Create());
-        session.Turns.StartGame();
+        session.Start();
         var weeks = new List<GameDate>();
         session.Events.Subscribe<WeekStarted>(e => weeks.Add(e.Date));
 
         for (var i = 0; i < 7 * session.State.Players.Count; i++)
         {
-            session.Turns.EndTurn();
+            session.EndTurn();
         }
 
         Assert.Equal([new GameDate(8)], weeks);

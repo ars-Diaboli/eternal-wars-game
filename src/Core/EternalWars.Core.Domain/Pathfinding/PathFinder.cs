@@ -22,6 +22,7 @@ namespace EternalWars.Core.Domain.Pathfinding;
 /// harmless to walk over (<see cref="MapObject.EndsRoute"/>), or it is a usable gate, in which case the
 /// route continues from the gate's target (two-way partner or one-way exit).</item>
 /// <item>With <c>respectFog</c>, only tiles the hero's owner has explored are used.</item>
+/// <item>Tiles guarded by a monster end the route (the encounter happens there), like the monster itself.</item>
 /// </list>
 /// Search state is (tile, arrived-by-teleport): a gate entrance reached on foot must teleport,
 /// but the same tile reached by teleport may be walked away from.
@@ -78,6 +79,12 @@ public sealed class PathFinder(GameState state)
             if (position == target)
             {
                 return BuildPath(hero, current, cost, parent);
+            }
+
+            // Entering a guarded tile starts an encounter, so a route can end there but never pass through (ADR-040).
+            if (current != start && state.IsGuarded(position))
+            {
+                continue;
             }
 
             if (current != start && !teleported && state.ObjectCellAt(position) is { Cell: FootprintCell.Visit } visit)
@@ -168,7 +175,7 @@ public sealed class PathFinder(GameState state)
             if (!teleported && !HeroMovementService.CanAffordStep(movementLeft))
             {
                 day++;
-                movementLeft = MovementAllowance.Daily(hero);
+                movementLeft = MovementAllowance.Daily(state, hero);
             }
 
             movementLeft = Math.Max(0, movementLeft - stepCost);

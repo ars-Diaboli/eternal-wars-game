@@ -22,3 +22,7 @@ jobs:
 
       - name: Test
         run: dotnet test --solution EternalWars.sln --configuration Release --no-build
+
+      # Headless simulator: same seed → same game, and a recorded game replays to the same state.
+      - name: Simulator self-test
+        run: dotnet run --project tools/EternalWars.Tools.Sim --configuration Release --no-build -- selftest

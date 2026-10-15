@@ -17,6 +17,6 @@ public sealed record HeroesMet(HeroId Hero, HeroId Other) : IEvent;
 
 /// <summary>
 /// A hero attacked an enemy hero. <paramref name="IsAmbush"/>: the attacker could not see the defender
-/// (refog). Phase 2 turns this into an actual battle; for now it is a hook only.
+/// (refog). The battle itself follows (<see cref="BattleStarted"/>), unless the defender has no army.
 /// </summary>
 public sealed record BattleTriggered(HeroId Attacker, HeroId Defender, bool IsAmbush) : IEvent;

@@ -1,3 +1,6 @@
+using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
@@ -10,11 +13,14 @@ namespace EternalWars.Core.Domain.Game;
 
 /// <summary>
 /// Composition root of a running game: one state, one bus, the services that mutate the state.
-/// Front-ends (3D game, 2D harness, tests, AI) talk to the game exclusively through this object
-/// and observe it exclusively through <see cref="Events"/>.
+/// Front-ends (3D game, 2D harness, tests, AI, simulator) change the game exclusively through
+/// <see cref="Execute"/> and observe it exclusively through <see cref="Events"/>. Every accepted command is
+/// recorded in <see cref="CommandLog"/>; seed + map + log reproduce the game exactly (ADR-036).
 /// </summary>
 public sealed class GameSession
 {
+    private readonly List<GameCommand> _log = [];
+
     public GameSession(GameState state, IEventBus? bus = null)
     {
         State = state ?? throw new ArgumentNullException(nameof(state));
@@ -27,24 +33,175 @@ public sealed class GameSession
         Bus.Subscribe<HeroTeleported>(visibility);
         Bus.Subscribe<MineOwnerChanged>(visibility);
         Bus.Subscribe<MapObjectRemoved>(visibility);
+        Bus.Subscribe<HeroDefeated>(visibility);
 
         Economy = new EconomyService(State, Bus);
-        Interactions = new MapObjectInteractionService(State, Bus, Economy);
+        Armies = new ArmyService(State, Bus);
+        Battles = new BattleService(State, Bus, Armies);
+        Guards = new GuardService(State, Bus, Battles);
+        Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards);
         Movement = new HeroMovementService(State, Bus, Interactions);
-        Turns = new TurnService(State, Bus, Economy, Movement);
+        Turns = new TurnService(State, Bus, Economy, Movement, Guards);
     }
 
     public GameState State { get; }
 
     public IEventSubscriber Events => Bus;
 
+    /// <summary>Accepted commands in order. Together with the map and <see cref="GameOptions.Seed"/> this replays the game.</summary>
+    public IReadOnlyList<GameCommand> CommandLog => _log;
+
+    /// <summary>Queries: daily income.</summary>
     public EconomyService Economy { get; }
 
-    public MapObjectInteractionService Interactions { get; }
-
+    /// <summary>Queries: route planning (<see cref="HeroMovementService.FindPath"/>).</summary>
     public HeroMovementService Movement { get; }
 
-    public TurnService Turns { get; }
+    /// <summary>Queries: who commands a battle side.</summary>
+    public BattleService Battles { get; }
+
+    /// <summary>Queries: army power (dispositions).</summary>
+    public GuardService Guards { get; }
+
+    internal ArmyService Armies { get; }
+
+    internal MapObjectInteractionService Interactions { get; }
+
+    internal TurnService Turns { get; }
 
     private IEventBus Bus { get; }
+
+    /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
+    public void Start() => Turns.StartGame();
+
+    /// <summary>
+    /// Validates and applies a command. Refused commands change nothing and are not logged; game-rule outcomes
+    /// that are not refusals (a step into a wall) come back in <see cref="CommandResult.Outcome"/>.
+    /// </summary>
+    public CommandResult Execute(GameCommand command)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        if (!State.IsStarted)
+        {
+            return CommandResult.Rejected("The game has not started yet.");
+        }
+
+        if (Authorize(command) is { } refusal)
+        {
+            return CommandResult.Rejected(refusal);
+        }
+
+        object? outcome;
+        try
+        {
+            // Services validate before they mutate, so a refusal leaves the state untouched.
+            outcome = Dispatch(command);
+        }
+        catch (InvalidOperationException e)
+        {
+            return CommandResult.Rejected(e.Message);
+        }
+
+        _log.Add(command);
+        return CommandResult.Accepted(outcome);
+    }
+
+    private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleMoveCommand
+        or BattleAttackCommand or BattleShootCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand
+        or AutoResolveBattleCommand;
+
+    private string? Authorize(GameCommand command)
+    {
+        if (!State.HasPlayer(command.Player))
+        {
+            return $"Unknown player {command.Player}.";
+        }
+
+        // In battle each side is commanded by its own player, whoever's turn it is on the map.
+        if (IsBattleCommand(command))
+        {
+            return State.Battle is null ? "No battle is being fought." : null;
+        }
+
+        if (command.Player != State.CurrentPlayer.Id)
+        {
+            return $"It is not {command.Player}'s turn.";
+        }
+
+        var hero = command switch
+        {
+            StepHeroCommand step => step.Hero,
+            MoveHeroCommand move => move.Hero,
+            MoveStackCommand stack => stack.FromHero,
+            _ => (Common.HeroId?)null,
+        };
+        if (hero is { } id && State.Heroes.All(h => h.Id != id))
+        {
+            return $"Unknown hero {id}.";
+        }
+
+        if (hero is { } owned && State.GetHero(owned).Owner != command.Player)
+        {
+            return $"{owned} does not belong to {command.Player}.";
+        }
+
+        if (command is MoveStackCommand { ToHero: var to } && State.Heroes.All(h => h.Id != to))
+        {
+            return $"Unknown hero {to}.";
+        }
+
+        return null;
+    }
+
+    private object? Dispatch(GameCommand command)
+    {
+        switch (command)
+        {
+            case StepHeroCommand step:
+                return Movement.TryStep(step.Hero, step.Direction);
+            case MoveHeroCommand move:
+                return Movement.MoveTo(move.Hero, move.Target);
+            case EndTurnCommand:
+                Turns.EndTurn();
+                return null;
+            case ResolveTreasureChestCommand chest:
+                Interactions.ResolveTreasureChest(chest.Reward);
+                return null;
+            case CompleteExchangeCommand:
+                Interactions.CompleteExchange();
+                return null;
+            case MoveStackCommand stack:
+                Armies.MoveStack(stack.Player, stack.FromHero, stack.FromSlot, stack.ToHero, stack.ToSlot, stack.Count);
+                return null;
+            case RespondToGuardCommand guard:
+                Guards.Respond(guard.Accept);
+                return null;
+            case ChooseBattleWidthCommand width:
+                Battles.ChooseWidth(width.Player, width.Width);
+                return null;
+            case BattleMoveCommand move:
+                Battles.Act(move.Player, new MoveAction(move.To));
+                return null;
+            case BattleAttackCommand attack:
+                Battles.Act(attack.Player, new AttackAction(attack.Target, attack.From));
+                return null;
+            case BattleShootCommand shoot:
+                Battles.Act(shoot.Player, new ShootAction(shoot.Target));
+                return null;
+            case BattleWaitCommand wait:
+                Battles.Act(wait.Player, new WaitAction());
+                return null;
+            case BattleDefendCommand defend:
+                Battles.Act(defend.Player, new DefendAction());
+                return null;
+            case BattleRetreatCommand retreat:
+                Battles.Retreat(retreat.Player);
+                return null;
+            case AutoResolveBattleCommand auto:
+                Battles.AutoResolve(auto.Player);
+                return null;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(command), command, "Unknown command type.");
+        }
+    }
 }

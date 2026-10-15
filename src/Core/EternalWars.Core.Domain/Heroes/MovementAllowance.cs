@@ -1,3 +1,6 @@
+using EternalWars.Core.Domain.Creatures;
+using EternalWars.Core.Domain.Game;
+
 namespace EternalWars.Core.Domain.Heroes;
 
 /// <summary>
@@ -7,7 +10,7 @@ namespace EternalWars.Core.Domain.Heroes;
 /// </summary>
 public static class MovementAllowance
 {
-    /// <summary>Base points when the hero has no army (until armies exist in Phase 2, always).</summary>
+    /// <summary>Base points when the hero has no army.</summary>
     public const int NoArmyBase = 1500;
 
     /// <summary>HoMM3 table: slowest speed ≤ 3 → 1500 … ≥ 11 → 2000.</summary>
@@ -27,5 +30,12 @@ public static class MovementAllowance
     public static int Daily(int? slowestSpeed, int bonusPercent = 0, int flatBonus = 0) =>
         (BaseForSlowestSpeed(slowestSpeed) * (100 + bonusPercent) / 100) + flatBonus;
 
-    public static int Daily(Hero hero) => Daily(hero.SlowestCreatureSpeed, hero.MovementBonusPercent, hero.MovementBonusFlat);
+    /// <summary>Uses the slowest <see cref="CreatureDefinition.MapSpeed"/> in the hero's army (null without one).</summary>
+    public static int Daily(Hero hero, CreatureCatalog creatures) =>
+        Daily(SlowestMapSpeed(hero, creatures), hero.MovementBonusPercent, hero.MovementBonusFlat);
+
+    public static int Daily(GameState state, Hero hero) => Daily(hero, state.Creatures);
+
+    public static int? SlowestMapSpeed(Hero hero, CreatureCatalog creatures) =>
+        hero.Army.IsEmpty ? null : hero.Army.Stacks.Min(s => creatures.Get(s.Stack.Creature).MapSpeed);
 }

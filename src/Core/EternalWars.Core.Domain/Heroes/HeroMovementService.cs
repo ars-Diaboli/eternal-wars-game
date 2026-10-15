@@ -24,7 +24,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
     public HeroPath? FindPath(HeroId heroId, MapPosition target) => _pathFinder.FindPath(heroId, target);
 
     /// <summary>Plans and follows a route as far as movement points allow (click-to-move).</summary>
-    public MovementOutcome MoveTo(HeroId heroId, MapPosition target)
+    internal MovementOutcome MoveTo(HeroId heroId, MapPosition target)
     {
         var refusal = CheckCanAct(state.GetHero(heroId));
         if (refusal != MoveResult.Moved)
@@ -43,7 +43,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
     /// boundary), when a visit or meeting opens a decision, when a battle starts, or, in refog mode, when
     /// an enemy hero comes into sight. Every step is re-validated, so stale paths are safe.
     /// </summary>
-    public MovementOutcome MoveAlong(HeroPath path)
+    internal MovementOutcome MoveAlong(HeroPath path)
     {
         var hero = state.GetHero(path.Hero);
         var watchForEnemies = state.Options.FogMode == FogMode.ShroudWithRefog;
@@ -98,7 +98,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
     /// (<see cref="MoveResult.Met"/>), enemy → battle (<see cref="MoveResult.BattleStarted"/>, an ambush if
     /// the enemy was unseen), ally → <see cref="MoveResult.Occupied"/>.
     /// </summary>
-    public MoveResult TryStep(HeroId heroId, Direction direction)
+    internal MoveResult TryStep(HeroId heroId, Direction direction)
     {
         var hero = state.GetHero(heroId);
         var refusal = CheckCanAct(hero);
@@ -126,6 +126,8 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
                 case HeroEncounter.Own:
                     interactions.Meet(hero, other);
                     return MoveResult.Met;
+                case HeroEncounter.Enemy when hero.Army.IsEmpty:
+                    return MoveResult.NoArmy;
                 case HeroEncounter.Enemy:
                     interactions.StartBattle(hero, other, isAmbush: !state.CanSee(hero.Owner, other));
                     return MoveResult.BattleStarted;
@@ -135,6 +137,44 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
         }
 
         var cost = MovementRules.StepCost(state, hero, hero.Position, target, direction);
+        var entrance = state.ObjectCellAt(target) is { Cell: FootprintCell.Visit } cell ? cell.Object : null;
+
+        // Monsters are attacked from where the hero stands; guards intercept anyone entering their area (ADR-040).
+        if (entrance is MonsterGuard monster)
+        {
+            if (hero.Army.IsEmpty)
+            {
+                return MoveResult.NoArmy;
+            }
+
+            interactions.Visit(hero, monster);
+            return MoveResult.GuardEncountered;
+        }
+
+        if (state.GuardsOf(target).FirstOrDefault() is { } guard)
+        {
+            if (state.GuardMode == GuardMode.Classic && entrance is ResourcePile or TreasureChest)
+            {
+                // HoMM3: a pickup next to a monster can be grabbed from outside its zone without a fight.
+                hero.MovementPoints = Math.Max(0, hero.MovementPoints - cost);
+                interactions.Visit(hero, entrance);
+                return MoveResult.CollectedFromAdjacent;
+            }
+
+            if (hero.Army.IsEmpty)
+            {
+                return MoveResult.NoArmy;
+            }
+
+            interactions.Visit(hero, guard);
+            return MoveResult.GuardEncountered;
+        }
+
+        if (entrance is Mine { Guard: not null } && hero.Army.IsEmpty)
+        {
+            return MoveResult.NoArmy;
+        }
+
         var from = hero.Position;
         hero.Position = target;
         hero.MovementPoints = Math.Max(0, hero.MovementPoints - cost);
@@ -152,7 +192,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
     {
         foreach (var hero in state.HeroesOf(owner))
         {
-            hero.MaxMovementPoints = MovementAllowance.Daily(hero);
+            hero.MaxMovementPoints = MovementAllowance.Daily(state, hero);
             hero.MovementPoints = hero.MaxMovementPoints;
             events.Publish(new HeroMovementRestored(hero.Id, hero.MovementPoints));
         }

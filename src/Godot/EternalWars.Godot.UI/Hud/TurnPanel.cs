@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.Shared.Events;
@@ -19,7 +20,7 @@ public partial class TurnPanel : HBoxContainer
         AddChild(_player);
 
         var endTurn = new Button { Text = "End turn" };
-        endTurn.Pressed += session.Turns.EndTurn;
+        endTurn.Pressed += () => session.Execute(new EndTurnCommand(session.State.CurrentPlayer.Id));
         AddChild(endTurn);
 
         Refresh(session);

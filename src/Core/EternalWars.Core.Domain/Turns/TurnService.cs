@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Turns;
@@ -14,9 +15,10 @@ public sealed class TurnService(
     GameState state,
     IEventPublisher events,
     EconomyService economy,
-    HeroMovementService movement)
+    HeroMovementService movement,
+    GuardService guards)
 {
-    public void StartGame()
+    internal void StartGame()
     {
         if (state.IsStarted)
         {
@@ -25,12 +27,13 @@ public sealed class TurnService(
 
         state.IsStarted = true;
         state.CurrentPlayerIndex = 0;
+        guards.RollUnsetCounts();
         events.Publish(new GameStarted(state.Date));
         events.Publish(new DayStarted(state.Date));
         BeginTurn();
     }
 
-    public void EndTurn()
+    internal void EndTurn()
     {
         if (!state.IsStarted)
         {

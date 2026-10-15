@@ -18,16 +18,16 @@ public class MeetingAndTeamTests
         var events = new List<IEvent>();
         session.Events.Subscribe<IEvent>(events.Add);
 
-        var result = session.Movement.TryStep(A, Direction.East);
+        var result = session.Step(A, Direction.East);
 
         Assert.Equal(MoveResult.Met, result);
         Assert.Equal(new MapPosition(0, 0), session.State.GetHero(A).Position);
         Assert.Equal(1500, session.State.GetHero(A).MovementPoints);
         Assert.Equal(new HeroExchangeDecision(A, C), session.State.PendingDecision);
         Assert.Contains(new HeroesMet(A, C), events);
-        Assert.Throws<InvalidOperationException>(session.Turns.EndTurn);
+        Assert.Throws<InvalidOperationException>(session.EndTurn);
 
-        session.Interactions.CompleteExchange();
+        session.CompleteExchange();
 
         Assert.Null(session.State.PendingDecision);
     }
@@ -38,7 +38,7 @@ public class MeetingAndTeamTests
         var session = Start(Create("A....C", ".....B"));
 
         var path = session.Movement.FindPath(A, new MapPosition(5, 0))!;
-        var outcome = session.Movement.MoveTo(A, new MapPosition(5, 0));
+        var outcome = session.MoveTo(A, new MapPosition(5, 0));
 
         Assert.Equal(new MapPosition(5, 0), path.Destination);
         Assert.Equal(new MovementOutcome(4, MoveResult.Met, Arrived: false), outcome);
@@ -52,7 +52,7 @@ public class MeetingAndTeamTests
         BattleTriggered? battle = null;
         session.Events.Subscribe<BattleTriggered>(e => battle = e);
 
-        var outcome = session.Movement.MoveTo(A, new MapPosition(4, 0));
+        var outcome = session.MoveTo(A, new MapPosition(4, 0));
 
         Assert.Equal(MoveResult.BattleStarted, outcome.StopReason);
         Assert.Equal(new BattleTriggered(A, B, IsAmbush: false), battle);
@@ -67,7 +67,7 @@ public class MeetingAndTeamTests
 
         Assert.True(state.AreAllies(Blue, Red));
         Assert.False(state.AreEnemies(Blue, Red));
-        Assert.Equal(MoveResult.Occupied, session.Movement.TryStep(A, Direction.East));
+        Assert.Equal(MoveResult.Occupied, session.Step(A, Direction.East));
         Assert.Null(session.Movement.FindPath(A, new MapPosition(1, 0)));
     }
 

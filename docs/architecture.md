@@ -26,12 +26,13 @@
 ┌──────────────┴───────────── Tier 1 · Core (plain .NET 10, no Godot) ──────────────────────────┐
 │  EternalWars.Core.Data       file formats (maps, content definitions; later saves, templates)  │
 │  EternalWars.Core.Generation (planned, Phase 4) random map templates + deterministic generator │
-│  EternalWars.Core.Domain     model + rules: map, heroes, economy, turns, editing, scenarios    │
+│  EternalWars.Core.Domain     model + rules: map, heroes, armies, battles, commands, editing     │
 │  EternalWars.Core.Events     pub/sub primitives: IEvent, IEventHandler, IEventPublisher, bus   │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
          tests/EternalWars.Core.Tests  (xUnit v3, covers Tier 1)
-         tools/EternalWars.Tools.Sim   (planned, Phase 2) headless console app over Tier 1 only:
-                                       scripted scenarios, AI-vs-AI, RMG batch validation; runs in CI
+         tools/EternalWars.Tools.Sim   headless console app over Tier 1 only: battle statistics, scripted
+                                       games, replay verification (selftest runs in CI); AI-vs-AI and
+                                       RMG batch validation later
 ```
 
 ### Dependency rules
@@ -69,32 +70,44 @@ These are enforced by:
 ```
 
 - **`GameSession`** is the composition root of a running game: one `GameState`, one `IEventBus`,
-  and the services that mutate the state. Front-ends call services and subscribe to `session.Events`.
-  Core handlers (`VisibilityService`) are subscribed first, before any view.
-- **Call chain for a click-to-move**: `Movement.MoveTo` → `PathFinder` → per step `TryStep`
+  and the services that mutate the state. Front-ends change the game **only** with commands
+  (`session.Execute(new MoveHeroCommand(...))`, ADR-036) and observe it through `session.Events`; the services'
+  mutators are `internal`. Accepted commands go to `session.CommandLog`, which with the map and the seed
+  replays the game (`GameReplay`). Core handlers (`VisibilityService`) are subscribed first, before any view.
+- **Call chain for a click-to-move**: `Execute(MoveHeroCommand)` → `Movement.MoveTo` → `PathFinder` → per step `TryStep`
   (validates via the shared `MovementRules`, publishes `HeroMoved`) → on an entrance tile
-  `MapObjectInteractionService.Visit` → outcome events / `DecisionRequested`.
-- **Pending decisions.** Some outcomes need a player choice (chest now; level-ups, battle results
+  `MapObjectInteractionService.Visit` → outcome events / `DecisionRequested`. A step towards a monster or into
+  its guarded area goes to `GuardService` (offer or battle); a step onto an enemy hero to `BattleService`.
+- **Pending decisions.** Some outcomes need a player choice (chest, exchange, guard offer, battle; level-ups
   later). `GameState.PendingDecision` is set, `DecisionRequested` is published, and movement and
-  End Turn are refused until the matching `Resolve…` call. The core never waits or blocks: the UI
+  End Turn are refused until the matching command resolves it. A battle is a `BattleDecision` that resolves
+  itself when the battle ends. The core never waits or blocks: the UI
   (or AI) answers whenever it wants.
 - **Services** validate, mutate `GameState`, then publish past-tense events. They depend on
   `IEventPublisher` only.
 - **`GameState`** is plain data. Setters are `internal` so only Domain services can mutate it.
-  It also carries the **`GameOptions`** chosen at game creation (fog mode, refog margin). Those are game
-  rules, not map data, so they are passed to `MapConverter.ToGameState(document, catalog, options)`.
+  It also carries the **`GameOptions`** chosen at game creation (fog mode, refog margin, RNG seed) and the
+  game's `GameRandom`. Options are game rules, not map data, so they are passed to `MapConverter.ToGameState(document, catalog, options)`.
 - **Views** (`AdventureMapView`, `HeroView`, `ResourceBar`, ...) subscribe with
   `node.SubscribeWhileInTree<T>(...)`, which disposes the subscription when the node leaves the tree.
 - **Apps** contain composition and input mapping only. If an app needs logic, it probably belongs
   in core.
 
+### Battles (Phase 2)
+- `BattleState` (`GameState.Battle`) holds the field (width × 24 cells), units with footprints, obstacles,
+  round, acting queue and its own forked RNG. `BattleGrid` answers geometry (reachable placements,
+  adjacency, line of fire, cover) as pure functions; `BattleEngine` applies the rules for the active unit;
+  `BattleAi` plays computer sides; `BattleService` connects battles to the map (start from encounters,
+  commanders per side, survivors, experience, defeated heroes and guards).
+- Creature special rules are data (`CreatureCapability`, at most 5 per creature, ADR-042). The engine and
+  `DamageCalculator` ask `creature.Has(kind)`; spell immunity and casting are queries (`IsImmuneTo`,
+  `SpellCasts`, `BattleUnit.CastsLeft`) waiting for the magic system.
+- Battle commands are authorized per side, not per map turn: in hot-seat the defender commands its units
+  during the attacker's turn.
+
 ### Planned evolution
-- **Commands.** Player intents (`MoveHero`, `BuildStructure`, `EndTurn`) become serializable command
-  objects dispatched through a command processor. Then UI, AI and network all submit the same thing,
-  and a game can be replayed from its seed plus its command log. Today services expose methods directly;
-  the change is mechanical and planned for Phase 2 (see roadmap).
-- **Deterministic RNG.** Replace `System.Random` with a seeded, serializable PRNG stored in `GameState`.
-- **Content definitions.** Factions, creatures, spells and artifacts load from JSON in `Core.Data`,
+- **Content definitions.** Factions, spells and artifacts will load from JSON in `Core.Data` as creatures
+  already do (`CreatureCatalog`, `CreatureDefinitionSerializer`),
   following the map-object pattern: built-in defaults in Domain code (`BuiltInMapObjects`), JSON
   overrides/additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`.
 
@@ -172,20 +185,22 @@ docs/
 src/
   Core/
     EternalWars.Core.Events/
-    EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Pathfinding, Players, Economy, Turns,
-                                Visibility, Decisions, Editing, Game, Events, Scenarios
-    EternalWars.Core.Data/      Maps (MapDocument v2, MapConverter, MapSerializer), Content (definition JSON)
+    EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Battles, Commands, Pathfinding,
+                                Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios
+    EternalWars.Core.Data/      Maps (MapDocument v4, MapConverter, MapSerializer), Content (definition JSON),
+                                Records (replays)
   Godot/
     EternalWars.Godot.Shared/   Map, Cameras, Controls, Events
-    EternalWars.Godot.UI/       Hud, Debugging
+    EternalWars.Godot.UI/       Hud (incl. DecisionPanel), Battle (BattleBoard2D), Debugging
     EternalWars.Godot.Assets/   (linked into apps as res://shared)
   Apps/
     EternalWars.Game/           project.godot + Main.tscn/Main.cs
     EternalWars.MapEditor/
     EternalWars.Harness2D/
 tests/
-  EternalWars.Core.Tests/       TestWorld (ASCII maps), Events, Domain, Data
+  EternalWars.Core.Tests/       TestWorld (ASCII maps), TestBattle, Events, Domain, Battles, Data
 tools/
   link-shared-assets.ps1
-.github/workflows/ci.yml        build + test on push/PR (no Godot needed)
+  EternalWars.Tools.Sim/        headless simulator (battle, record, replay, selftest)
+.github/workflows/ci.yml        build + test + simulator self-test on push/PR (no Godot needed)
 ```
