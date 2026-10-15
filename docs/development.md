@@ -43,11 +43,13 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 ## Controls (placeholder)
 | | Game | Editor | Harness |
 |---|---|---|---|
-| Move hero | Arrows / numpad (8-way) | — | Arrows / numpad, click any tile (route) |
+| Select hero | Click it, Tab, hero list | Select tool | Click it |
+| Move hero | Click tile (route preview), click again to go; arrows / numpad | — | Same |
+| Level | L or button (follows gates) | L or button | — |
 | Camera | WASD pan, Q/E rotate (±45°), wheel zoom | same | — |
-| Paint | — | LMB (choose terrain + radius in toolbar) | — |
+| Edit | — | LMB with the active tool (terrain, road, object, monster, hero, erase, link gates, select); Ctrl+Z / Ctrl+Y | — |
 | Battle | Quick combat button | — | Click: move / attack / shoot; W wait, D defend, R retreat, Q quick combat |
-| Decisions | Prompt buttons | — | Prompt buttons |
+| Decisions | Prompt buttons, exchange screen | — | Prompt buttons, exchange screen |
 
 ## Conventions
 - **Where does code go?** If it can be written without `using Godot;`, it goes in Tier 1.

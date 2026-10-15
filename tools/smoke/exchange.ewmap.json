@@ -1,0 +1,20 @@
+{
+  "formatVersion": 4,
+  "name": "Exchange test",
+  "width": 10,
+  "height": 8,
+  "terrain": [
+    [ "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg" ],
+    [ "uuuuuuuuuu", "uuuuuuuuuu", "uuuuuuuuuu", "uuuuuuuuuu", "uuuuuuuuuu", "uuuuuuuuuu", "uuuuuuuuuu", "uuuuuuuuuu" ]
+  ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": true } ],
+  "heroes": [
+    { "id": 1, "name": "Orrin", "owner": 0, "x": 1, "y": 1, "army": [ { "slot": 0, "creature": "haven.footman", "count": 10 } ] },
+    { "id": 2, "name": "Valeska", "owner": 0, "x": 2, "y": 1, "army": [ { "slot": 0, "creature": "haven.archer", "count": 8 }, { "slot": 1, "creature": "haven.griffin", "count": 2 } ] },
+    { "id": 3, "name": "Sandro", "owner": 1, "x": 8, "y": 6, "army": [ { "slot": 0, "creature": "inferno.imp", "count": 15 } ] }
+  ],
+  "objects": [
+    { "kind": "gate", "id": 1, "definition": "gate.subterranean", "x": 4, "y": 3, "linkedGate": 2 },
+    { "kind": "gate", "id": 2, "definition": "gate.subterranean", "x": 4, "y": 3, "level": 1, "linkedGate": 1 }
+  ]
+}

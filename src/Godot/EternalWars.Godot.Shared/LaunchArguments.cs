@@ -7,6 +7,9 @@ public static class LaunchArguments
 {
     public static string? MapPath => Value("--map=");
 
+    /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
+    public static string? AutoInput => Value("--autoinput=");
+
     private static string? Value(string prefix) =>
         OS.GetCmdlineUserArgs()
             .Where(a => a.StartsWith(prefix, StringComparison.Ordinal))

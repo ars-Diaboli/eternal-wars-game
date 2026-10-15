@@ -164,19 +164,23 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         battle.PendingStacks = (attackers, defenders);
         var decision = new BattleDecision(attacker.Id);
         state.PendingDecision = decision;
-        events.Publish(new DecisionRequested(decision));
 
+        // The phase is settled before anyone hears of the battle, so views see the width choice (publish after mutating).
         var (chooser, level) = BattleSetup.EffectiveTactics(battle.Attacker.Tactics, battle.Defender.Tactics);
-        if (chooser is { } side && !battle.IsComputerControlled(side))
+        var choosing = chooser is { } side && !battle.IsComputerControlled(side);
+        if (choosing)
         {
             battle.Phase = BattlePhase.ChoosingWidth;
-            battle.WidthChooser = side;
+            battle.WidthChooser = chooser;
             battle.WidthOptions = BattleSetup.WidthOptions(level);
-            return;
         }
 
-        // The AI keeps the default width.
-        Deploy(battle, BattleState.DefaultWidth);
+        events.Publish(new DecisionRequested(decision));
+        if (!choosing)
+        {
+            // The AI keeps the default width.
+            Deploy(battle, BattleState.DefaultWidth);
+        }
     }
 
     private void Deploy(BattleState battle, int width)

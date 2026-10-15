@@ -9,7 +9,7 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// Placeholder prompt for every <see cref="PendingDecision"/>: chest reward, exchange, guard offers, the battle
+/// Placeholder prompt for pending decisions: chest reward, guard offers, the battle
 /// width and quick combat. Answers are commands; the panel hides itself when the decision is resolved.
 /// </summary>
 public partial class DecisionPanel : PanelContainer
@@ -51,13 +51,13 @@ public partial class DecisionPanel : PanelContainer
                 Button("Experience", new ResolveTreasureChestCommand(player, TreasureChestReward.Experience));
                 break;
             case HeroExchangeDecision:
-                _prompt.Text = "Heroes meet. (Exchange screen pending: drag stacks with MoveStack commands.)";
-                Button("Close", new CompleteExchangeCommand(player));
+                Visible = false; // ExchangePanel handles it
                 break;
             case GuardEncounterDecision guard:
+                var creature = state.Creatures.TryGet(guard.Creature, out var definition) ? definition.Name : guard.Creature;
                 _prompt.Text = guard.Offer == GuardOffer.Join
-                    ? $"{guard.Count} {guard.Creature} offer to join you."
-                    : $"{guard.Count} {guard.Creature} try to flee.";
+                    ? $"{guard.Count} × {creature} offer to join you."
+                    : $"{guard.Count} × {creature} try to flee.";
                 Button(guard.Offer == GuardOffer.Join ? "Accept" : "Let them go", new RespondToGuardCommand(player, true));
                 Button("Fight", new RespondToGuardCommand(player, false));
                 break;

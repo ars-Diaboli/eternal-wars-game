@@ -130,8 +130,12 @@ public class BattleFlowTests
         state.GetHero(A).Tactics = SkillLevel.Expert;
         state.GetHero(B).Tactics = SkillLevel.Basic; // effective: Advanced for the attacker
         var session = Start(state);
+        BattlePhase? phaseWhenAnnounced = null;
+        session.Events.Subscribe<DecisionRequested>(_ => phaseWhenAnnounced = state.Battle?.Phase);
 
         session.MoveTo(A, new MapPosition(2, 0));
+
+        Assert.Equal(BattlePhase.ChoosingWidth, phaseWhenAnnounced); // views see the choice when they hear of the battle
 
         var battle = state.Battle!;
         Assert.Equal(BattlePhase.ChoosingWidth, battle.Phase);
