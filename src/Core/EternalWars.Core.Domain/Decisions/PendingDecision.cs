@@ -15,3 +15,9 @@ public enum TreasureChestReward
 }
 
 public sealed record TreasureChestDecision(HeroId Hero, MapObjectId Chest, int Gold, int Experience) : PendingDecision(Hero);
+
+/// <summary>
+/// Two own heroes met: the exchange screen is open. Swapping stacks and artifacts arrives with armies and
+/// artifacts (Phases 2–3); closing the screen resolves the decision.
+/// </summary>
+public sealed record HeroExchangeDecision(HeroId Hero, HeroId Other) : PendingDecision(Hero);

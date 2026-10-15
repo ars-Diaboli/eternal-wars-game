@@ -230,5 +230,5 @@ public class MapEditorSessionTests
         Assert.DoesNotContain(issues, i => i.Severity == IssueSeverity.Error);
     }
 
-    private static SubterraneanGate Gate(MapEditorSession editor, MapObjectId id) => (SubterraneanGate)editor.Scenario.GetObject(id);
+    private static TwoWayGate Gate(MapEditorSession editor, MapObjectId id) => (TwoWayGate)editor.Scenario.GetObject(id);
 }

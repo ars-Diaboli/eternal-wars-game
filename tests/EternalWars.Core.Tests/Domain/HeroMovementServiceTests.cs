@@ -95,7 +95,7 @@ public class HeroMovementServiceTests
 
     [Theory]
     [InlineData(Direction.East, MoveResult.Impassable)]
-    [InlineData(Direction.North, MoveResult.Occupied)]
+    [InlineData(Direction.North, MoveResult.BattleStarted)] // enemy hero: battle hook, no move
     public void TryStep_RejectsInvalidTargets(Direction direction, MoveResult expected)
     {
         var session = CreateSession();

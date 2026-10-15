@@ -31,7 +31,7 @@ public static class MapValidator
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} belongs to a missing player.", hero.Position));
             }
 
-            if (!map.Contains(hero.Position) || !map.GetTerrain(hero.Position).IsPassableOnFoot())
+            if (!map.Contains(hero.Position) || !scenario.Terrains.IsPassable(map.GetTerrain(hero.Position)))
             {
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} stands on impassable terrain.", hero.Position));
             }
@@ -43,23 +43,45 @@ public static class MapValidator
 
         foreach (var mapObject in scenario.Objects)
         {
-            if (!map.GetTerrain(mapObject.VisitPosition).IsPassableOnFoot())
+            if (!scenario.Terrains.IsPassable(map.GetTerrain(mapObject.VisitPosition)))
             {
                 issues.Add(new(IssueSeverity.Error, $"{mapObject.Definition.Name} has an impassable entrance.", mapObject.VisitPosition));
             }
 
+            var name = mapObject.Definition.Name;
             switch (mapObject)
             {
                 case Mine { Owner: { } owner } mine when !scenario.HasPlayer(owner):
-                    issues.Add(new(IssueSeverity.Error, $"{mine.Definition.Name} belongs to a missing player.", mine.Position));
+                    issues.Add(new(IssueSeverity.Error, $"{name} belongs to a missing player.", mine.Position));
                     break;
-                case SubterraneanGate { LinkedGate: null } gate:
-                    issues.Add(new(IssueSeverity.Warning, "Subterranean gate is not linked.", gate.Position));
+                case TwoWayGate { LinkedGate: null } gate:
+                    issues.Add(new(IssueSeverity.Warning, $"{name} is not linked.", gate.Position));
                     break;
-                case SubterraneanGate { LinkedGate: { } link } gate
-                    when scenario.Objects.FirstOrDefault(o => o.Id == link) is not SubterraneanGate partner || partner.LinkedGate != gate.Id:
-                    issues.Add(new(IssueSeverity.Error, "Subterranean gate link is not mutual.", gate.Position));
+                case TwoWayGate { LinkedGate: { } link } gate
+                    when scenario.Objects.FirstOrDefault(o => o.Id == link) is not TwoWayGate partner || partner.LinkedGate != gate.Id:
+                    issues.Add(new(IssueSeverity.Error, $"{name} link is not mutual.", gate.Position));
                     break;
+                case OneWayGateEntrance { Exit: null } entrance:
+                    issues.Add(new(IssueSeverity.Warning, $"{name} has no exit.", entrance.Position));
+                    break;
+                case OneWayGateEntrance { Exit: { } exit } entrance
+                    when scenario.Objects.FirstOrDefault(o => o.Id == exit) is not OneWayGateExit:
+                    issues.Add(new(IssueSeverity.Error, $"{name} points at something that is not a one-way exit.", entrance.Position));
+                    break;
+                case OneWayGateExit exit when !scenario.ObjectsOf<OneWayGateEntrance>().Any(e => e.Exit == exit.Id):
+                    issues.Add(new(IssueSeverity.Warning, $"{name} is not used by any entrance.", exit.Position));
+                    break;
+            }
+        }
+
+        for (var level = 0; level < map.Levels; level++)
+        {
+            foreach (var position in map.Positions(level))
+            {
+                if (map.GetRoad(position) != RoadType.None && !scenario.Terrains.IsPassable(map.GetTerrain(position)))
+                {
+                    issues.Add(new(IssueSeverity.Warning, "Road on impassable terrain.", position));
+                }
             }
         }
 

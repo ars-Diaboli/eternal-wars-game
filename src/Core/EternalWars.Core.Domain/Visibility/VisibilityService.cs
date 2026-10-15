@@ -8,12 +8,13 @@ using EternalWars.Core.Events;
 namespace EternalWars.Core.Domain.Visibility;
 
 /// <summary>
-/// Keeps <see cref="FogOfWar"/> up to date by reacting to other rules' events: a core-side
-/// <see cref="IEventHandler{TEvent}"/> example. Publishes <see cref="TilesRevealed"/> and, in
-/// <see cref="FogMode.ShroudWithRefog"/>, <see cref="SightChanged"/>.
+/// Keeps <see cref="FogOfWar"/> and <see cref="ObjectMemory"/> up to date by reacting to other rules'
+/// events: a core-side <see cref="IEventHandler{TEvent}"/> example. Publishes <see cref="TilesRevealed"/>,
+/// <see cref="SightChanged"/> (refog mode) and <see cref="KnownObjectsChanged"/>.
 /// </summary>
 public sealed class VisibilityService(GameState state, IEventPublisher events)
-    : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>, IEventHandler<MineOwnerChanged>
+    : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
+      IEventHandler<MineOwnerChanged>, IEventHandler<MapObjectRemoved>
 {
     /// <summary>Owned mines reveal and watch a small area around them.</summary>
     public const int MineScoutingRadius = 2;
@@ -35,7 +36,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
         foreach (var player in state.Players)
         {
-            UpdateSight(player.Id);
+            ObserversChanged(player.Id);
         }
     }
 
@@ -51,19 +52,27 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         if (@event.Current is { } owner)
         {
             Reveal(owner, mine.VisitPosition, MineScoutingRadius);
-            UpdateSight(owner);
         }
 
-        if (@event.Previous is { } previous)
+        // The flag change is news for everyone who can see the mine; the owners' sight changes too.
+        foreach (var player in state.Players)
         {
-            UpdateSight(previous);
+            ObserversChanged(player.Id);
+        }
+    }
+
+    public void Handle(MapObjectRemoved @event)
+    {
+        foreach (var player in state.Players)
+        {
+            RefreshMemory(player.Id);
         }
     }
 
     private void OnHeroRelocated(Hero hero, MapPosition at)
     {
         Reveal(hero.Owner, at, hero.ScoutingRadius);
-        UpdateSight(hero.Owner);
+        ObserversChanged(hero.Owner);
     }
 
     private void Reveal(PlayerId player, MapPosition center, int radius)
@@ -75,10 +84,21 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         }
     }
 
+    private void ObserversChanged(PlayerId player)
+    {
+        if (!state.HasPlayer(player))
+        {
+            return;
+        }
+
+        UpdateSight(player);
+        RefreshMemory(player);
+    }
+
     /// <summary>Sight is a pure function of current observers, so recomputing from state is always correct.</summary>
     private void UpdateSight(PlayerId player)
     {
-        if (state.Options.FogMode != FogMode.ShroudWithRefog || !state.HasPlayer(player))
+        if (state.Options.FogMode != FogMode.ShroudWithRefog)
         {
             return;
         }
@@ -91,6 +111,15 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         if (entered.Count > 0 || left.Count > 0)
         {
             events.Publish(new SightChanged(player, entered, left));
+        }
+    }
+
+    private void RefreshMemory(PlayerId player)
+    {
+        var changed = state.Memory.Refresh(state, player);
+        if (changed.Count > 0)
+        {
+            events.Publish(new KnownObjectsChanged(player, changed));
         }
     }
 }

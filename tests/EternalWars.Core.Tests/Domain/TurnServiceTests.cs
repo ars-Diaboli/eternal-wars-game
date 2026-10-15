@@ -18,7 +18,7 @@ public class TurnServiceTests
 
         session.Turns.StartGame();
 
-        var turnFlow = events.Where(e => e is not TilesRevealed).ToList();
+        var turnFlow = events.Where(e => e is not (TilesRevealed or SightChanged or KnownObjectsChanged)).ToList();
         Assert.IsType<GameStarted>(turnFlow[0]);
         Assert.IsType<DayStarted>(turnFlow[1]);
         Assert.Equal(new TurnStarted(new PlayerId(0), GameDate.First), turnFlow[^1]);

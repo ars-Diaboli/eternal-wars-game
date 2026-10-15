@@ -36,24 +36,33 @@ will be refined once the open questions are answered.
 - [x] Two-level maps end to end (domain, pathfinding, map format v2, demo scenario)
 - [x] Map format v2 (description + polymorphic objects, still loads v1)
 
-### Core follow-ups
-- [ ] Meeting heroes (ADR-027): teams/alliances in `GameState` and map player slots (map default,
-      overridable at setup unless locked, ADR-032); routes may end on own/enemy heroes; own → exchange
-      session (`HeroesMet` + exchange decision), enemy → battle hook (Phase 2), ally → blocked
-- [ ] Refog (ADR-031): `MoveResult.EnemySpotted` auto-stop; ambush battle hook when bumping into an
-      unseen enemy; per-player last-known object snapshots
-- [ ] Terrain: add highlands, forest floor, wasteland (codes, editor, demo) (ADR-032)
-- [ ] Gates: generalise the subterranean gate into a two-way gate kind (+ two-way monolith definition);
-      add one-way gate entrance/exit with directional pathfinding, editor link tool, validation,
-      map format v3 (ADR-026)
-- [ ] Roads: road layer in `AdventureMap` + map format (one char per tile), road → road step costs in
-      movement and pathfinding, editor road brush with undo (ADR-024, ADR-032)
-- [ ] Terrain definitions as data (class, base cost, native towns); native/rough penalties switch on
-      when towns/factions exist (Phase 3)
+### Core follow-ups ✅
+- [x] Meeting heroes (ADR-027): teams in `Player.Team` / map player slots (map default, overridable at
+      setup via `GameState.AssignTeams` unless `TeamsLocked`, ADR-032); routes may end on own/visible
+      enemy heroes; own → `HeroesMet` + `HeroExchangeDecision` (`CompleteExchange`), enemy →
+      `BattleTriggered` hook (Phase 2 resolves), ally → `Occupied`
+- [x] Refog (ADR-031): `MoveResult.EnemySpotted` auto-stop; `BattleTriggered.IsAmbush` when bumping into
+      an unseen enemy; per-player `ObjectMemory` (last known state) + `KnownObjectsChanged`; minimap
+      draws objects from memory
+- [x] Terrain: highlands, forest floor, wasteland (codes `h`/`f`/`x`, colours, demo) (ADR-032)
+- [x] Gates: `TwoWayGate` kind (subterranean gate + two-way monolith definitions), one-way
+      `OneWayGateEntrance` → `OneWayGateExit` (exits are walkable landing spots), directional
+      pathfinding, editor `LinkGates` / `SetGateExit` with link-safe removal and undo, validator checks;
+      dangling links are dead ends, not crashes (ADR-026)
+- [x] Roads: road layer in `AdventureMap`, dirt 50 / gravel 65 / cobblestone 75 road → road costs in
+      movement and pathfinding (A* heuristic uses road cost), editor `PaintRoad` with undo, validator
+      warning on impassable terrain (ADR-024, ADR-032)
+- [x] Terrain definitions as data: `TerrainCatalog` (class open/rough/native/impassable, cost, native
+      towns), JSON overrides via `TerrainDefinitionSerializer`; native cost applies once armies have a
+      town (`MovementRules.ArmyTown`, Phase 2/3)
+- [x] Map format v3: roads, teams + `teamsLocked`, one-way gates; v1/v2 still load; null fields omitted
 
 ### Godot (Tier 2/3): needs the Godot editor to build and verify visually
-- [ ] Render map objects and both levels (level switch), fog overlay; hide unseen enemy heroes (`CanSee`)
-- [ ] New-game setup screen: map, players, fog mode/refog margin (`GameOptions`)
+- [ ] Render map objects (from `ObjectMemory` for the viewing player), roads and both levels (level
+      switch), fog overlay; hide unseen enemy heroes (`CanSee`)
+- [ ] New-game setup screen: map, players, teams (unless locked), fog mode/refog margin (`GameOptions`)
+- [ ] Exchange screen bound to `HeroExchangeDecision` (apps currently auto-close it); battle placeholder for `BattleTriggered`
+- [ ] Editor: road brush, gate link tools, team/lock editing UI
 - [ ] Mouse picking → hero selection; path preview with day-coloured markers; click twice to move
 - [ ] `HeroView`: queue per-step animations (one tween per `HeroMoved`), handle `HeroTeleported`
 - [ ] Treasure chest dialog bound to `DecisionRequested`; resource bar already follows `ResourcesChanged`
@@ -72,7 +81,8 @@ will be refined once the open questions are answered.
   hero army (7 slots)
 - Tactical battle on a square cell grid with 2×2 / 3×3 / 4×4 unit footprints: deployment,
   footprint-aware pathfinding (clearance maps), initiative order, melee/ranged, retaliation, wait/defend,
-  engagement tracking for ability hooks, body-blocking and cover from units/obstacles, area abilities
+  engagement tracking for ability hooks, body-blocking, cumulative cover in eighths with the
+  > 7/8 no-shot rule (ADR-035), obstacle cover classes, area abilities
   (breath with friendly fire, cleave/multi-head), obstacles, HoMM3 damage formula, Tactics width
   choice (28–34), victory/defeat, casualties and experience (ADR-021, ADR-033)
 - Army speed drives `MovementAllowance` (replaces the `Hero.SlowestCreatureSpeed` placeholder)

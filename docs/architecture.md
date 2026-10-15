@@ -104,8 +104,24 @@ These are enforced by:
   mutable state (pile amount, mine owner, chest rewards, gate link).
 - **Footprint** rows use `B` blocked, `V` entrance (exactly one), `.` free. `GameState` indexes
   occupied cells, so "what is on this tile" is O(1) for movement and pathfinding.
+- Movement-relevant behaviour is declared on the instance, so the pathfinder and movement need no
+  per-kind code: `EndsRoute` (false = walkable entrance, e.g. one-way exits) and `TeleportTarget`
+  (two-way partner / one-way exit). Kinds: piles, mines, chests, `TwoWayGate`, `OneWayGateEntrance`,
+  `OneWayGateExit`.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
+
+### Terrain, roads, teams, knowledge
+- **Terrain rules are data**: `GameState.Terrains` (`TerrainCatalog`) gives class (open/rough/native/
+  impassable), cost and native towns. All movement code goes through `MovementRules.StepCost`
+  (road → road, else terrain being left for the hero's army, ×1.41 diagonal). `MovementRules.ArmyTown`
+  returns null until armies exist, so nobody is native yet.
+- **Roads** are a second per-tile layer on `AdventureMap`.
+- **Teams**: `Player.Team`; `AreAllies` / `AreEnemies` drive hero encounters (own → exchange,
+  enemy → battle hook, ally → blocked).
+- **Knowledge**: `FogOfWar` (explored + in sight) and `ObjectMemory` (last known object state per
+  player) are both maintained by `VisibilityService`. Views of a player draw objects from memory, never
+  from live state, which is what makes "last known state" under refog work.
 
 ### Random map generation (planned, Phase 4)
 - `EternalWars.Core.Generation` holds the template model (`MapTemplate`, `TemplateZone`,

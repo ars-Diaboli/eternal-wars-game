@@ -1,8 +1,10 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Visibility;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
@@ -109,17 +111,93 @@ public class VisibilityTests
     }
 
     [Fact]
-    public void Refog_PlannerIgnoresUnseenEnemy_MovementBumpsIntoIt()
+    public void Refog_MovementStopsWhenAnEnemyComesIntoSight()
     {
         var session = Start(Create(Refog, "A......B....", "############"), revealAll: true);
 
         Assert.False(session.State.CanSee(Blue, session.State.GetHero(B)));
-        Assert.NotNull(session.Movement.FindPath(A, new MapPosition(10, 0)));
+        Assert.NotNull(session.Movement.FindPath(A, new MapPosition(10, 0))); // planner doesn't know about B
 
         var outcome = session.Movement.MoveTo(A, new MapPosition(10, 0));
 
-        Assert.Equal(new MovementOutcome(6, MoveResult.Occupied, Arrived: false), outcome);
-        Assert.Null(session.Movement.FindPath(A, new MapPosition(10, 0))); // now seen, so it blocks
+        // After 2 steps B is 5 tiles away = scouting radius: the hero halts.
+        Assert.Equal(new MovementOutcome(2, MoveResult.EnemySpotted, Arrived: false), outcome);
+        Assert.Null(session.Movement.FindPath(A, new MapPosition(10, 0))); // now seen, so it blocks the corridor
+    }
+
+    [Fact]
+    public void Refog_BumpingIntoAnUnseenEnemyStartsAnAmbush()
+    {
+        var session = Start(Create(Refog, "AB..", "...."), revealAll: true);
+        var attacker = session.State.GetHero(A);
+        attacker.ScoutingRadius = 0; // blind: can't see the adjacent enemy
+        session.State.Fog.UpdateSight(Blue, [(attacker.Position, 0)], margin: 0);
+        BattleTriggered? battle = null;
+        session.Events.Subscribe<BattleTriggered>(e => battle = e);
+
+        var result = session.Movement.TryStep(A, Direction.East);
+
+        Assert.Equal(MoveResult.BattleStarted, result);
+        Assert.Equal(new BattleTriggered(A, B, IsAmbush: true), battle);
+        Assert.Equal(new MapPosition(0, 0), attacker.Position);
+    }
+
+    // 30×3 strip: Blue starts at (0,1), Red at (29,1); objects sit around x = 10, out of both start sights.
+    private static readonly string[] Strip =
+    [
+        new string('.', 30),
+        "A" + new string('.', 28) + "B",
+        new string('.', 30),
+    ];
+
+    /// <summary>Blue walks to x=5 (object in sight) and back home (out of sight), then hands the turn to Red, who knows the map.</summary>
+    private static void BlueGlancesAndLeaves(GameSession session)
+    {
+        session.Movement.MoveTo(A, new MapPosition(5, 1));
+        session.Movement.MoveTo(A, new MapPosition(0, 1));
+        session.Turns.EndTurn();
+        session.State.Fog.RevealAll(Red);
+    }
+
+    [Fact]
+    public void Refog_OutOfSightMineShowsLastKnownOwner()
+    {
+        var state = Create(Refog, Strip);
+        var mine = Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Gold), 10, 0); // entrance (11,1)
+        var session = Start(state, revealAll: false);
+        Assert.Null(state.Memory.Get(Blue, mine.Id));
+
+        BlueGlancesAndLeaves(session);
+        Assert.NotNull(state.Memory.Get(Blue, mine.Id));
+
+        state.GetHero(B).Position = new MapPosition(13, 2);
+        session.Movement.MoveTo(B, mine.VisitPosition); // Red flags it while Blue can't see
+        Assert.Equal(Red, mine.Owner);
+        Assert.Null(state.Memory.Get(Blue, mine.Id)!.Owner); // Blue still sees it unflagged
+
+        session.Turns.EndTurn();
+        session.Movement.MoveTo(A, new MapPosition(5, 1));
+        Assert.Equal(Red, state.Memory.Get(Blue, mine.Id)!.Owner); // updated once back in sight
+    }
+
+    [Fact]
+    public void Refog_TakenPileIsRememberedUntilSeenAgain()
+    {
+        var state = Create(Refog, Strip);
+        var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 10, 1);
+        var session = Start(state, revealAll: false);
+
+        BlueGlancesAndLeaves(session);
+        state.GetHero(B).Position = new MapPosition(12, 1);
+        session.Movement.MoveTo(B, pile.VisitPosition); // Red takes it unseen
+
+        Assert.Empty(state.Objects);
+        Assert.NotNull(state.Memory.Get(Blue, pile.Id));
+        Assert.Equal(MinimapMarker.Object, Minimap.Build(state, Blue, 0)[(1 * 30) + 10].Marker);
+
+        session.Turns.EndTurn();
+        session.Movement.MoveTo(A, new MapPosition(5, 1));
+        Assert.Null(state.Memory.Get(Blue, pile.Id));
     }
 
     [Fact]

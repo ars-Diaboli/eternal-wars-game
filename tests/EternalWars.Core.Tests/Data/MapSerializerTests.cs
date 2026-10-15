@@ -15,6 +15,10 @@ public class MapSerializerTests
     {
         var original = DemoScenario.Create(width: 20, height: 14, seed: 42);
         original.ObjectsOf<Mine>().First().Owner = new PlayerId(1);
+        original.Map.SetTerrain(new MapPosition(0, 0, 1), TerrainType.ForestFloor);
+        original.Map.SetRoad(new MapPosition(1, 0, 1), RoadType.Cobblestone);
+        original.AssignTeams(new Dictionary<PlayerId, TeamId> { [new PlayerId(1)] = new(0) });
+        original.SetTeamsLocked(true);
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(original));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
@@ -23,12 +27,42 @@ public class MapSerializerTests
         Assert.Equal((20, 14, 2), (restored.Map.Width, restored.Map.Height, restored.Map.Levels));
         for (var level = 0; level < original.Map.Levels; level++)
         {
-            Assert.All(original.Map.Positions(level), p => Assert.Equal(original.Map.GetTerrain(p), restored.Map.GetTerrain(p)));
+            Assert.All(original.Map.Positions(level), p =>
+                Assert.Equal((original.Map.GetTerrain(p), original.Map.GetRoad(p)), (restored.Map.GetTerrain(p), restored.Map.GetRoad(p))));
         }
 
-        Assert.Equal(original.Players.Select(p => p.Name), restored.Players.Select(p => p.Name));
+        Assert.Equal(original.Players.Select(p => (p.Name, p.Team)), restored.Players.Select(p => (p.Name, p.Team)));
+        Assert.True(restored.TeamsLocked);
         Assert.Equal(original.Heroes.Select(h => (h.Id, h.Owner, h.Position)), restored.Heroes.Select(h => (h.Id, h.Owner, h.Position)));
         Assert.Equal(Describe(original.Objects), Describe(restored.Objects));
+    }
+
+    [Fact]
+    public void MapsWithoutRoads_OmitTheRoadLayer()
+    {
+        var document = MapConverter.ToDocument(BlankScenario.Create(8, 6));
+
+        Assert.Null(document.Roads);
+        Assert.DoesNotContain("\"roads\"", MapSerializer.Serialize(document));
+        Assert.Equal(3, document.FormatVersion);
+    }
+
+    [Fact]
+    public void Version2Map_StillLoads()
+    {
+        const string json = """
+            {
+              "formatVersion": 2, "name": "Old", "width": 3, "height": 2, "terrain": [ [ "ggg", "ggg" ] ],
+              "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": false } ],
+              "objects": [ { "kind": "gate", "id": 1, "definition": "gate.subterranean", "x": 0, "y": 0, "linkedGate": null } ]
+            }
+            """;
+
+        var state = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+
+        Assert.IsType<TwoWayGate>(Assert.Single(state.Objects));
+        Assert.False(state.Map.HasRoads);
+        Assert.True(state.AreEnemies(new PlayerId(0), new PlayerId(1)));
     }
 
     [Fact]
@@ -137,7 +171,9 @@ public class MapSerializerTests
             ResourcePile p => $"{p.Id} {p.Definition.Id} {p.Position} {p.Amount}",
             Mine m => $"{m.Id} {m.Definition.Id} {m.Position} {m.Owner}",
             TreasureChest c => $"{c.Id} {c.Definition.Id} {c.Position} {c.Gold}/{c.Experience}",
-            SubterraneanGate g => $"{g.Id} {g.Definition.Id} {g.Position} -> {g.LinkedGate}",
+            TwoWayGate g => $"{g.Id} {g.Definition.Id} {g.Position} <-> {g.LinkedGate}",
+            OneWayGateEntrance e => $"{e.Id} {e.Definition.Id} {e.Position} -> {e.Exit}",
+            OneWayGateExit x => $"{x.Id} {x.Definition.Id} {x.Position}",
             _ => o.ToString()!,
         });
 }

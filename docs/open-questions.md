@@ -41,7 +41,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Tactics**: choose the width before battle (Basic 30/32, Advanced 28/30/32, Expert 28–34); enemy
   Tactics reduces yours; 36 only for sieges (ADR-033).
 - **Damage**: HoMM3 formula as baseline (ADR-033).
-- **Cover**: any unit or obstacle on the line of fire (ADR-033).
+- **Cover**: cumulative per blocker on the line of fire: 2×2/3×3 creature 1/8, 4×4 creature 1/4, small
+  obstacle 1/8, big obstacle 1/4, city wall 1/2; above 7/8 no ranged attack (ADR-035).
 - **Vertical slice**: Haven and Inferno (ADR-034).
 - **Treasure**: rolled HoMM3-style tiers; map authors may fix values (ADR-034).
 - **Mines**: optional guards; after that, re-flag by visiting (ADR-034).
@@ -60,6 +61,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
    upgrades, size class, speed, initiative and abilities. Should Claude draft them?
 
 ### Tuning (defaults chosen; confirm or change)
-4. Cover penalty (−25 %), ambush defender bonus (none?), non-native cost for new terrains (150),
-   neutral creatures count as non-native on all terrains, combat movement 8-way.
+4. Ambush defender bonus (none?), non-native cost for new terrains (150), neutral creatures count as
+   non-native on all terrains, combat movement 8-way.
+   Cover details: how the line of fire is traced on the grid (centre-to-centre supercover?); can skills
+   reduce cover penalties?
 5. Treasure chest roll odds per tier (copy HoMM3's after checking them, or set our own).

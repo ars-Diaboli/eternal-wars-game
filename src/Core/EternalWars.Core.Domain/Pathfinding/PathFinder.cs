@@ -12,11 +12,15 @@ namespace EternalWars.Core.Domain.Pathfinding;
 /// <remarks>
 /// Rules:
 /// <list type="bullet">
-/// <item>8-way movement; step cost from <see cref="HeroMovementService.StepCost"/> (terrain being left, diagonal ×1.41).</item>
-/// <item>Impassable terrain, blocked object cells and other heroes the owner can see are obstacles.
-/// Unseen heroes are unknown to the planner; movement stops when it bumps into them.</item>
-/// <item>An object's visit tile ends the route (visiting is mandatory), except a linked gate, whose
-/// visit continues from the partner gate's entrance on the other side.</item>
+/// <item>8-way movement; step cost from <see cref="MovementRules.StepCost"/> (road → road, else terrain
+/// being left; diagonal ×1.41).</item>
+/// <item>Impassable terrain, blocked object cells and heroes the owner can see are obstacles. Unseen heroes
+/// are unknown to the planner; movement runs into them.</item>
+/// <item>A route may <b>end</b> on an own or visible enemy hero (meeting or battle), never pass through one.
+/// Allied heroes simply block.</item>
+/// <item>An object's visit tile ends the route (visiting is mandatory, ADR-013) unless the object is
+/// harmless to walk over (<see cref="MapObject.EndsRoute"/>), or it is a usable gate, in which case the
+/// route continues from the gate's target (two-way partner or one-way exit).</item>
 /// <item>With <c>respectFog</c>, only tiles the hero's owner has explored are used.</item>
 /// </list>
 /// Search state is (tile, arrived-by-teleport): a gate entrance reached on foot must teleport,
@@ -24,18 +28,29 @@ namespace EternalWars.Core.Domain.Pathfinding;
 /// </remarks>
 public sealed class PathFinder(GameState state)
 {
-    private const int StraightCost = 100;
-    private const int DiagonalExtra = 41;
+    private const int CheapestOrthogonal = 50; // dirt road
+    private const int CheapestDiagonalExtra = 21;
 
     public HeroPath? FindPath(HeroId heroId, MapPosition target, bool respectFog = true)
     {
         var hero = state.GetHero(heroId);
         var map = state.Map;
-        PlayerId? viewer = respectFog ? hero.Owner : null;
-        if (target == hero.Position || MovementRules.CheckEnter(state, target, viewer) != MoveResult.Moved ||
+        if (target == hero.Position || MovementRules.CheckTile(state, target) != MoveResult.Moved ||
             (respectFog && !state.Fog.IsExplored(hero.Owner, target)))
         {
             return null;
+        }
+
+        // A hero on the target turns the route into a meeting/battle, or makes it impossible (ally).
+        var targetIsEncounter = false;
+        if (state.HeroAt(target) is { } targetHero && IsKnown(targetHero))
+        {
+            if (MovementRules.Classify(state, hero.Owner, targetHero) == HeroEncounter.Ally)
+            {
+                return null;
+            }
+
+            targetIsEncounter = true;
         }
 
         var nodeCount = map.Levels * map.Width * map.Height * 2;
@@ -45,7 +60,7 @@ public sealed class PathFinder(GameState state)
         Array.Fill(cost, int.MaxValue);
         Array.Fill(parent, -1);
 
-        var useHeuristic = !state.ObjectsOf<SubterraneanGate>().Any(g => g.LinkedGate is not null);
+        var useHeuristic = !state.Objects.Any(o => o.TeleportTarget is not null);
         var start = Node(hero.Position, teleported: false);
         cost[start] = 0;
         var open = new PriorityQueue<int, int>();
@@ -67,34 +82,40 @@ public sealed class PathFinder(GameState state)
 
             if (current != start && !teleported && state.ObjectCellAt(position) is { Cell: FootprintCell.Visit } visit)
             {
-                // Entering an object's entrance visits it, so the route can only continue through a gate.
-                if (visit.Object is SubterraneanGate { LinkedGate: { } link })
+                if (visit.Object.TeleportTarget is not null)
                 {
-                    var exit = state.GetObject(link).VisitPosition;
-                    if (CanUse(exit))
+                    if (state.TeleportDestination(visit.Object) is { } exit && CanStandOn(exit))
                     {
                         Relax(current, Node(exit, teleported: true), 0, exit);
                     }
+
+                    continue;
                 }
 
-                continue;
+                if (visit.Object.EndsRoute)
+                {
+                    continue;
+                }
             }
 
             foreach (var direction in DirectionExtensions.All)
             {
                 var next = position.Step(direction);
-                if (CanUse(next))
+                if (CanStandOn(next) || (targetIsEncounter && next == target))
                 {
-                    Relax(current, Node(next, teleported: false), HeroMovementService.StepCost(map.GetTerrain(position), direction), next);
+                    Relax(current, Node(next, teleported: false), MovementRules.StepCost(state, hero, position, next, direction), next);
                 }
             }
         }
 
         return null;
 
-        bool CanUse(MapPosition position) =>
-            MovementRules.CheckEnter(state, position, viewer) == MoveResult.Moved &&
-            (!respectFog || state.Fog.IsExplored(hero.Owner, position));
+        bool IsKnown(Hero other) => !respectFog || state.CanSee(hero.Owner, other);
+
+        bool CanStandOn(MapPosition position) =>
+            MovementRules.CheckTile(state, position) == MoveResult.Moved &&
+            (!respectFog || state.Fog.IsExplored(hero.Owner, position)) &&
+            (state.HeroAt(position) is not { } other || !IsKnown(other));
 
         void Relax(int from, int to, int stepCost, MapPosition toPosition)
         {
@@ -110,7 +131,7 @@ public sealed class PathFinder(GameState state)
         }
     }
 
-    /// <summary>Admissible lower bound: octile distance at the cheapest terrain cost.</summary>
+    /// <summary>Admissible lower bound: octile distance at the cheapest possible (road) cost.</summary>
     private static int Heuristic(MapPosition from, MapPosition to)
     {
         if (from.Level != to.Level)
@@ -120,7 +141,7 @@ public sealed class PathFinder(GameState state)
 
         var dx = Math.Abs(from.X - to.X);
         var dy = Math.Abs(from.Y - to.Y);
-        return (StraightCost * Math.Max(dx, dy)) + (DiagonalExtra * Math.Min(dx, dy));
+        return (CheapestOrthogonal * Math.Max(dx, dy)) + (CheapestDiagonalExtra * Math.Min(dx, dy));
     }
 
     private HeroPath BuildPath(Hero hero, int end, int[] cost, int[] parent)
@@ -142,6 +163,7 @@ public sealed class PathFinder(GameState state)
             var (position, teleported) = Decode(node);
             var stepCost = cost[node] - previousCost;
             previousCost = cost[node];
+
             // Teleports happen during the previous step's visit, so they never start a new day.
             if (!teleported && !HeroMovementService.CanAffordStep(movementLeft))
             {

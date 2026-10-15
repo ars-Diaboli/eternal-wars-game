@@ -35,12 +35,17 @@ public partial class Main : Node2D
         this.SubscribeWhileInTree<HeroMoved>(_session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<TerrainPainted>(_session.Events, _ => QueueRedraw());
 
-        // TODO(Phase 1 UI): prompt instead. Until then always take the gold so the session never stalls.
+        // TODO(Phase 1 UI): prompt instead. Until then take the gold / close the exchange so the session never stalls.
         this.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
         {
-            if (e.Decision is TreasureChestDecision)
+            switch (e.Decision)
             {
-                _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
+                case TreasureChestDecision:
+                    _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
+                    break;
+                case HeroExchangeDecision:
+                    _session.Interactions.CompleteExchange();
+                    break;
             }
         });
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>

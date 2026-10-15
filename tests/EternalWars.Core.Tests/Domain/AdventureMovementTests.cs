@@ -115,8 +115,8 @@ public class AdventureMovementTests
         var state = CreateLevels(
             ["A....", ".....", "....B"],
             [".....", ".....", "....."]);
-        var surface = Add<SubterraneanGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);
-        var underground = Add<SubterraneanGate>(state, BuiltInMapObjects.SubterraneanGate, 0, 0, 1);
+        var surface = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);
+        var underground = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 0, 0, 1);
         Link(surface, underground);
         var session = Start(state);
         HeroTeleported? teleported = null;
@@ -135,8 +135,8 @@ public class AdventureMovementTests
         var state = CreateLevels(
             ["A....", ".....", "....."],
             [".....", ".....", "....."]);
-        var surface = Add<SubterraneanGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);
-        var underground = Add<SubterraneanGate>(state, BuiltInMapObjects.SubterraneanGate, 0, 0, 1);
+        var surface = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);
+        var underground = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 0, 0, 1);
         Link(surface, underground);
         state.GetHero(A).Position = new MapPosition(2, 2);
         var session = Start(state);

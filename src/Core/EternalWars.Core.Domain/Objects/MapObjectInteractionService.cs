@@ -57,9 +57,9 @@ public sealed class MapObjectInteractionService(GameState state, IEventPublisher
                 events.Publish(new DecisionRequested(decision));
                 break;
 
-            case SubterraneanGate { LinkedGate: { } link }:
-                var exit = state.GetObject(link).VisitPosition;
-                if (state.HeroAt(exit) is null)
+            case { TeleportTarget: not null }:
+                // Two-way partner or one-way exit; a hero standing on the landing tile blocks the jump.
+                if (state.TeleportDestination(mapObject) is { } exit && state.HeroAt(exit) is null)
                 {
                     var from = hero.Position;
                     hero.Position = exit;
@@ -69,6 +69,30 @@ public sealed class MapObjectInteractionService(GameState state, IEventPublisher
                 break;
         }
     }
+
+    /// <summary>Closes the exchange screen opened by a meeting of two own heroes.</summary>
+    public void CompleteExchange()
+    {
+        if (state.PendingDecision is not HeroExchangeDecision decision)
+        {
+            throw new InvalidOperationException("No hero exchange is open.");
+        }
+
+        state.PendingDecision = null;
+        events.Publish(new DecisionResolved(decision));
+    }
+
+    internal void Meet(Hero hero, Hero other)
+    {
+        var decision = new HeroExchangeDecision(hero.Id, other.Id);
+        state.PendingDecision = decision;
+        events.Publish(new HeroesMet(hero.Id, other.Id));
+        events.Publish(new DecisionRequested(decision));
+    }
+
+    /// <summary>Battle hook (Phase 2 resolves it); nothing on the map changes yet.</summary>
+    internal void StartBattle(Hero attacker, Hero defender, bool isAmbush) =>
+        events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
 
     private void RemoveFromMap(MapObject mapObject)
     {

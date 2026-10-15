@@ -26,10 +26,12 @@ public sealed class GameState
         IEnumerable<Player> players,
         IEnumerable<Hero> heroes,
         IEnumerable<MapObject>? objects = null,
-        GameOptions? options = null)
+        GameOptions? options = null,
+        TerrainCatalog? terrains = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
         Options = options ?? GameOptions.Default;
+        Terrains = terrains ?? TerrainCatalog.Default;
         Fog = new FogOfWar(map, Options.FogMode);
         _players = players.ToList();
         if (_players.Count is 0 or > MaxPlayers)
@@ -52,7 +54,16 @@ public sealed class GameState
 
     public GameOptions Options { get; }
 
+    /// <summary>Terrain movement rules in effect for this game.</summary>
+    public TerrainCatalog Terrains { get; }
+
     public FogOfWar Fog { get; }
+
+    /// <summary>Per-player last known state of objects (refog mode).</summary>
+    public ObjectMemory Memory { get; } = new();
+
+    /// <summary>Set by the map author: teams from the map may not be changed at game setup.</summary>
+    public bool TeamsLocked { get; private set; }
 
     public IReadOnlyList<Player> Players => _players;
 
@@ -83,7 +94,51 @@ public sealed class GameState
     /// <summary>Whether <paramref name="viewer"/> currently sees <paramref name="hero"/> (own heroes always).</summary>
     public bool CanSee(PlayerId viewer, Hero hero) => hero.Owner == viewer || Fog.IsInSight(viewer, hero.Position);
 
+    /// <summary>Different players on the same team.</summary>
+    public bool AreAllies(PlayerId a, PlayerId b) => a != b && GetPlayer(a).Team == GetPlayer(b).Team;
+
+    public bool AreEnemies(PlayerId a, PlayerId b) => GetPlayer(a).Team != GetPlayer(b).Team;
+
+    /// <summary>
+    /// Game setup: overrides the map's default teams. Refused once the game started or when the map locks
+    /// its teams (story/scenario maps).
+    /// </summary>
+    public void AssignTeams(IReadOnlyDictionary<PlayerId, TeamId> teams)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("Teams can only be changed before the game starts.");
+        }
+
+        if (TeamsLocked)
+        {
+            throw new InvalidOperationException("This map locks its teams.");
+        }
+
+        foreach (var (player, team) in teams)
+        {
+            GetPlayer(player).Team = team;
+        }
+    }
+
+    /// <summary>Scenario setting (map loading, editor): whether game setup may change the teams.</summary>
+    public void SetTeamsLocked(bool locked)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("Teams can only be locked before the game starts.");
+        }
+
+        TeamsLocked = locked;
+    }
+
     public MapObject GetObject(MapObjectId id) => _objects.First(o => o.Id == id);
+
+    public MapObject? FindObject(MapObjectId id) => _objects.FirstOrDefault(o => o.Id == id);
+
+    /// <summary>Where a gate delivers heroes, or null if it is unlinked or its link dangles.</summary>
+    public MapPosition? TeleportDestination(MapObject gate) =>
+        gate.TeleportTarget is { } target && FindObject(target) is { } landing ? landing.VisitPosition : null;
 
     public IEnumerable<T> ObjectsOf<T>()
         where T : MapObject => _objects.OfType<T>();

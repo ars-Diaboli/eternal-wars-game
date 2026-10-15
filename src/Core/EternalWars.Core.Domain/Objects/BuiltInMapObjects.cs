@@ -10,9 +10,13 @@ public static class BuiltInMapObjects
 {
     public const string TreasureChest = "chest";
     public const string SubterraneanGate = "gate.subterranean";
+    public const string TwoWayMonolith = "monolith.two-way";
+    public const string OneWayMonolithEntrance = "monolith.entrance";
+    public const string OneWayMonolithExit = "monolith.exit";
 
     private static readonly Footprint MineFootprint = new(["BBB", "BVB"]);
     private static readonly Footprint GateFootprint = new(["BBB", "BVB"]);
+    private static readonly Footprint MonolithFootprint = new(["B", "V"]);
 
     public static IReadOnlyList<MapObjectDefinition> All { get; } =
     [
@@ -27,7 +31,10 @@ public static class BuiltInMapObjects
         Mine(ResourceType.Sulfur, "Sulfur dune", 1),
 
         new(TreasureChest, "Treasure chest", MapObjectKind.TreasureChest, Footprint.Single),
-        new(SubterraneanGate, "Subterranean gate", MapObjectKind.SubterraneanGate, GateFootprint),
+        new(SubterraneanGate, "Subterranean gate", MapObjectKind.TwoWayGate, GateFootprint),
+        new(TwoWayMonolith, "Two-way monolith", MapObjectKind.TwoWayGate, MonolithFootprint),
+        new(OneWayMonolithEntrance, "One-way monolith entrance", MapObjectKind.OneWayGateEntrance, MonolithFootprint),
+        new(OneWayMonolithExit, "One-way monolith exit", MapObjectKind.OneWayGateExit, MonolithFootprint),
     ];
 
     public static string PileId(ResourceType resource) => $"pile.{resource.ToString().ToLowerInvariant()}";

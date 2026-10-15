@@ -37,6 +37,15 @@ public abstract class MapObject
     public IEnumerable<(MapPosition Position, FootprintCell Cell)> OccupiedCells() =>
         Definition.Footprint.OccupiedCells.Select(c => (Position.Offset(c.Dx, c.Dy), c.Cell));
 
+    /// <summary>
+    /// Whether stepping onto the entrance ends a route (ADR-013: visiting is mandatory). Objects whose visit
+    /// does nothing (one-way gate exits) can be walked through.
+    /// </summary>
+    public virtual bool EndsRoute => true;
+
+    /// <summary>The object whose entrance a visit teleports the hero to, if this is a usable gate.</summary>
+    public virtual MapObjectId? TeleportTarget => null;
+
     public override string ToString() => $"{Definition.Name} {Id} at {Position}";
 
     /// <summary>Creates an instance of the right subclass with default per-instance values.</summary>
@@ -45,7 +54,9 @@ public abstract class MapObject
         MapObjectKind.ResourcePile => new ResourcePile(id, definition, position, ResourcePile.DefaultAmount(definition.Resource!.Value)),
         MapObjectKind.Mine => new Mine(id, definition, position),
         MapObjectKind.TreasureChest => new TreasureChest(id, definition, position),
-        MapObjectKind.SubterraneanGate => new SubterraneanGate(id, definition, position),
+        MapObjectKind.TwoWayGate => new TwoWayGate(id, definition, position),
+        MapObjectKind.OneWayGateEntrance => new OneWayGateEntrance(id, definition, position),
+        MapObjectKind.OneWayGateExit => new OneWayGateExit(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }
@@ -94,9 +105,30 @@ public sealed class TreasureChest(
     public int Experience { get; internal set; } = experience;
 }
 
-/// <summary>Teleports the visiting hero to the entrance of <see cref="LinkedGate"/> (usually on the other level).</summary>
-public sealed class SubterraneanGate(MapObjectId id, MapObjectDefinition definition, MapPosition position, MapObjectId? linkedGate = null)
-    : MapObject(id, definition, position, MapObjectKind.SubterraneanGate)
+/// <summary>
+/// One end of a linked pair: teleports the visiting hero to the entrance of <see cref="LinkedGate"/>.
+/// Subterranean gates (across levels) and two-way monoliths (same level) are definitions of this kind.
+/// </summary>
+public sealed class TwoWayGate(MapObjectId id, MapObjectDefinition definition, MapPosition position, MapObjectId? linkedGate = null)
+    : MapObject(id, definition, position, MapObjectKind.TwoWayGate)
 {
     public MapObjectId? LinkedGate { get; internal set; } = linkedGate;
+
+    public override MapObjectId? TeleportTarget => LinkedGate;
+}
+
+/// <summary>Teleports the visiting hero to <see cref="Exit"/>; there is no way back through it.</summary>
+public sealed class OneWayGateEntrance(MapObjectId id, MapObjectDefinition definition, MapPosition position, MapObjectId? exit = null)
+    : MapObject(id, definition, position, MapObjectKind.OneWayGateEntrance)
+{
+    public MapObjectId? Exit { get; internal set; } = exit;
+
+    public override MapObjectId? TeleportTarget => Exit;
+}
+
+/// <summary>Where one-way gates deliver heroes. Visiting it does nothing, so routes may pass over it.</summary>
+public sealed class OneWayGateExit(MapObjectId id, MapObjectDefinition definition, MapPosition position)
+    : MapObject(id, definition, position, MapObjectKind.OneWayGateExit)
+{
+    public override bool EndsRoute => false;
 }

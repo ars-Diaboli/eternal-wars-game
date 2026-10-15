@@ -16,7 +16,7 @@ public enum MoveResult
     /// <summary>A blocked cell of a map object.</summary>
     Blocked,
 
-    /// <summary>Another hero stands there (meeting/battles come later).</summary>
+    /// <summary>An allied hero stands there (no interaction with allies for now).</summary>
     Occupied,
 
     /// <summary>The hero has no movement points left at all (any positive amount allows one last step).</summary>
@@ -25,39 +25,69 @@ public enum MoveResult
 
     /// <summary>The world changed under a planned path (e.g. a gate exit got occupied).</summary>
     Interrupted,
+
+    /// <summary>Stepped towards an own hero: an exchange was opened; the hero did not move.</summary>
+    Met,
+
+    /// <summary>Stepped towards an enemy hero: a battle was triggered; the hero did not move.</summary>
+    BattleStarted,
+
+    /// <summary>Refog mode: the move stopped because a previously unseen enemy hero came into sight.</summary>
+    EnemySpotted,
 }
 
 /// <summary>Result of following a path: how far the hero got and why it stopped.</summary>
 public sealed record MovementOutcome(int StepsTaken, MoveResult StopReason, bool Arrived);
 
-/// <summary>Single source of truth for "may a hero stand on this tile", shared by movement and pathfinding.</summary>
+/// <summary>How a hero relates to another hero it runs into.</summary>
+public enum HeroEncounter
+{
+    Own,
+    Ally,
+    Enemy,
+}
+
+/// <summary>Single source of truth for movement rules shared by movement and pathfinding.</summary>
 internal static class MovementRules
 {
-    /// <param name="state">The game.</param>
-    /// <param name="target">Tile to enter.</param>
-    /// <param name="viewer">
-    /// When planning for a player, heroes that player cannot currently see do not block, because the player
-    /// doesn't know about them. Actual movement passes null and bumps into them.
-    /// </param>
-    public static MoveResult CheckEnter(GameState state, MapPosition target, PlayerId? viewer = null)
+    /// <summary>Bounds, terrain and objects (heroes are handled separately as encounters).</summary>
+    public static MoveResult CheckTile(GameState state, MapPosition target)
     {
         if (!state.Map.Contains(target))
         {
             return MoveResult.OutOfBounds;
         }
 
-        if (!state.Map.GetTerrain(target).IsPassableOnFoot())
+        if (!state.Terrains.IsPassable(state.Map.GetTerrain(target)))
         {
             return MoveResult.Impassable;
         }
 
-        if (state.ObjectCellAt(target) is { Cell: FootprintCell.Blocked })
-        {
-            return MoveResult.Blocked;
-        }
-
-        return state.HeroAt(target) is { } hero && (viewer is not { } player || state.CanSee(player, hero))
-            ? MoveResult.Occupied
-            : MoveResult.Moved;
+        return state.ObjectCellAt(target) is { Cell: FootprintCell.Blocked } ? MoveResult.Blocked : MoveResult.Moved;
     }
+
+    public static HeroEncounter Classify(GameState state, PlayerId mover, Hero other) =>
+        other.Owner == mover ? HeroEncounter.Own
+        : state.AreAllies(mover, other.Owner) ? HeroEncounter.Ally
+        : HeroEncounter.Enemy;
+
+    /// <summary>
+    /// HoMM3 rules: a road → road step costs the road of the tile being left; otherwise the terrain being
+    /// left (native/rough rules from <see cref="GameState.Terrains"/>); diagonal ×1.41.
+    /// </summary>
+    public static int StepCost(GameState state, Hero hero, MapPosition from, MapPosition to, Direction direction)
+    {
+        var map = state.Map;
+        var fromRoad = map.GetRoad(from);
+        var baseCost = fromRoad != RoadType.None && map.GetRoad(to) != RoadType.None
+            ? fromRoad.MovementCost()
+            : state.Terrains.MovementCost(map.GetTerrain(from), ArmyTown(hero));
+        return direction.IsDiagonal() ? (int)Math.Round(baseCost * HeroMovementService.DiagonalMultiplier) : baseCost;
+    }
+
+    /// <summary>
+    /// The town every creature of the hero's army belongs to, or null (mixed/neutral/no army).
+    /// Armies arrive in Phase 2; until then no army is native anywhere.
+    /// </summary>
+    public static string? ArmyTown(Hero hero) => null;
 }

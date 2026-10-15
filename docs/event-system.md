@@ -106,10 +106,14 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MineOwnerChanged(Mine, Previous, Current)` | interactions / editor | mine flagged |
 | `MapObjectRemoved(Object)` | interactions / editor | pile/chest consumed, or deleted in editor |
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
-| `GateLinkChanged(Gate, LinkedGate)` | editor | gate (un)linked |
+| `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
 | `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | `MapObjectInteractionService` | e.g. chest gold-or-XP choice |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
 | `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
+| `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone) |
+| `HeroesMet(Hero, Other)` | `MapObjectInteractionService` | own heroes met; `HeroExchangeDecision` follows |
+| `BattleTriggered(Attacker, Defender, IsAmbush)` | `MapObjectInteractionService` | hero stepped onto an enemy hero (hook until Phase 2) |
+| `RoadsPainted(Positions, Road)` | `MapEditorSession` | road paint/erase and its undo/redo |
 | `TerrainPainted(Positions, Terrain)` | `MapEditorSession` | paint and its undo/redo |
 | `HeroPlaced` / `HeroRemoved` | `MapEditorSession` | editor hero placement |
 | `MapPropertiesChanged(Name, Description)` | `MapEditorSession` | |

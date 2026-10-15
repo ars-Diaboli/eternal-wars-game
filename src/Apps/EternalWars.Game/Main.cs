@@ -48,12 +48,17 @@ public partial class Main : Node3D
 
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, OnTurnStarted);
 
-        // TODO(Phase 1 UI): replace with a chest dialog. Until then always take the gold so the game never stalls.
+        // TODO(Phase 1 UI): replace with chest and exchange dialogs. Until then take the gold / close the exchange so the game never stalls.
         this.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
         {
-            if (e.Decision is TreasureChestDecision)
+            switch (e.Decision)
             {
-                _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
+                case TreasureChestDecision:
+                    _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
+                    break;
+                case HeroExchangeDecision:
+                    _session.Interactions.CompleteExchange();
+                    break;
             }
         });
         _session.Turns.StartGame();

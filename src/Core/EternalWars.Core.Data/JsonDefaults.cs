@@ -10,6 +10,9 @@ internal static class JsonDefaults
     {
         WriteIndented = true,
 
+        // Optional data (roads, mine owners, gate links, teams) is simply absent when unset.
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+
         // Hand-edited files need not put the "kind" discriminator first.
         AllowOutOfOrderMetadataProperties = true,
         Converters = { new JsonStringEnumConverter() },

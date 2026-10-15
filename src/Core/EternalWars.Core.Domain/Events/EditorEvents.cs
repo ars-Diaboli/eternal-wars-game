@@ -6,6 +6,8 @@ namespace EternalWars.Core.Domain.Events;
 
 public sealed record TerrainPainted(IReadOnlyList<MapPosition> Positions, TerrainType Terrain) : IEvent;
 
+public sealed record RoadsPainted(IReadOnlyList<MapPosition> Positions, RoadType Road) : IEvent;
+
 public sealed record HeroPlaced(HeroId Hero, PlayerId Owner, MapPosition Position) : IEvent;
 
 public sealed record HeroRemoved(HeroId Hero) : IEvent;
