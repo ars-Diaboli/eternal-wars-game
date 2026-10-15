@@ -24,7 +24,8 @@
 └──────────────▲─────────────────────────────────────────────────────────────────────────────────┘
                │
 ┌──────────────┴───────────── Tier 1 · Core (plain .NET 10, no Godot) ──────────────────────────┐
-│  EternalWars.Core.Data       file formats (maps; later saves, content definitions)             │
+│  EternalWars.Core.Data       file formats (maps, content definitions; later saves, templates)  │
+│  EternalWars.Core.Generation (planned, Phase 4) random map templates + deterministic generator │
 │  EternalWars.Core.Domain     model + rules: map, heroes, economy, turns, editing, scenarios    │
 │  EternalWars.Core.Events     pub/sub primitives: IEvent, IEventHandler, IEventPublisher, bus   │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -33,14 +34,15 @@
 
 ### Dependency rules
 
-| From \ To | Core.Events | Core.Domain | Core.Data | Godot.Shared | Godot.UI | Apps |
-|---|---|---|---|---|---|---|
-| Core.Events | — | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Core.Domain | ✓ | — | ✗ | ✗ | ✗ | ✗ |
-| Core.Data | ✓ | ✓ | — | ✗ | ✗ | ✗ |
-| Godot.Shared | ✓ | ✓ | (avoid) | — | ✗ | ✗ |
-| Godot.UI | ✓ | ✓ | (avoid) | ✓ | — | ✗ |
-| Apps | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ (apps never reference each other) |
+| From \ To | Core.Events | Core.Domain | Core.Generation | Core.Data | Godot.Shared | Godot.UI | Apps |
+|---|---|---|---|---|---|---|---|
+| Core.Events | — | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Core.Domain | ✓ | — | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Core.Generation | ✓ | ✓ | — | ✗ | ✗ | ✗ | ✗ |
+| Core.Data | ✓ | ✓ | ✓ (template format) | — | ✗ | ✗ | ✗ |
+| Godot.Shared | ✓ | ✓ | (avoid) | (avoid) | — | ✗ | ✗ |
+| Godot.UI | ✓ | ✓ | (avoid) | (avoid) | ✓ | — | ✗ |
+| Apps | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ (apps never reference each other) |
 
 These are enforced by:
 - `Directory.Build.targets`: the build **fails** if any project under `src/Core` uses
@@ -102,6 +104,19 @@ These are enforced by:
   occupied cells, so "what is on this tile" is O(1) for movement and pathfinding.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
+
+### Random map generation (planned, Phase 4)
+- `EternalWars.Core.Generation` holds the template model (`MapTemplate`, `TemplateZone`,
+  `TemplateConnection`), a `TemplateValidator`, and `MapGenerator.Generate(template, size, players,
+  seed, catalogs) → MapDocument`. Its only randomness is a seeded PRNG, so the same inputs always give the
+  same map, on every platform.
+- Output is an ordinary `MapDocument`: the game starts it through `MapConverter.ToGameState(...)`, the
+  editor opens it in a `MapEditorSession` for hand-editing. There is no separate "generated map" type.
+- Template file format (`*.ewtemplate.json`, versioned like maps) lives in `Core.Data`.
+- The template editor reuses the editor's command/undo pattern on a template document (zone graph
+  edits instead of tile edits).
+- Generation must stay fast (target: under 5 s for 256×256×2 on a mid-range PC) and runs off the main thread;
+  it touches no shared state.
 
 ### Map editor model
 `MapEditorSession` (Core.Domain/Editing) wraps a scenario `GameState` that never starts. Every edit is an

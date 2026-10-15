@@ -82,12 +82,12 @@ public class AdventureMovementTests
         session.Turns.EndTurn();
 
         Assert.Equal(new MineOwnerChanged(mine.Id, null, Blue), captured);
-        Assert.Equal(500 + 500 + 1000, session.State.GetPlayer(Blue).Resources.Gold);
+        Assert.Equal(1000, session.State.GetPlayer(Blue).Resources.Gold); // no base income, only the mine
     }
 
     [Theory]
-    [InlineData(TreasureChestReward.Gold, 500 + TreasureChest.DefaultGold, 0)]
-    [InlineData(TreasureChestReward.Experience, 500, TreasureChest.DefaultExperience)]
+    [InlineData(TreasureChestReward.Gold, TreasureChest.DefaultGold, 0)]
+    [InlineData(TreasureChestReward.Experience, 0, TreasureChest.DefaultExperience)]
     public void TreasureChest_AsksForChoiceAndBlocksUntilResolved(TreasureChestReward reward, int expectedGold, int expectedExperience)
     {
         var state = Create("A...", "...B");

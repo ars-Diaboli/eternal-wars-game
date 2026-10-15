@@ -36,6 +36,15 @@ will be refined once the open questions are answered.
 - [x] Two-level maps end to end (domain, pathfinding, map format v2, demo scenario)
 - [x] Map format v2 (description + polymorphic objects, still loads v1)
 
+### Core follow-ups
+- [ ] Gates: generalise the subterranean gate into a two-way gate kind (+ two-way monolith definition);
+      add one-way gate entrance/exit with directional pathfinding, editor link tool, validation,
+      map format v3 (ADR-026)
+- [ ] Roads: road layer in `AdventureMap` + map format (one char per tile), road step costs in movement
+      and pathfinding, editor road brush with undo (ADR-024)
+- [ ] Terrain definitions as data (class, base cost, native towns); native/rough penalties switch on
+      when towns/factions exist (Phase 3)
+
 ### Godot (Tier 2/3): needs the Godot editor to build and verify visually
 - [ ] Render map objects and both levels (level switch), fog overlay; hide unseen enemy heroes (`CanSee`)
 - [ ] New-game setup screen: map, players, fog mode/refog margin (`GameOptions`)
@@ -64,6 +73,8 @@ will be refined once the open questions are answered.
 
 ## Phase 3: Towns and progression (~6–8 weeks)
 - Towns: building tree, one build per day, weekly growth, recruiting, garrison
+- Native terrain: penalty waived for native armies, Pathfinding skill ❓ (ADR-024)
+- Income sources beyond mines: towns, Estates-like skills, hero specialisations, artifacts (ADR-025)
 - Hero levels, primary stats, secondary skills, level-up choices
 - Artifacts (slots, backpack, stat effects)
 - Basic AI: economy + exploration + attacks it can win
@@ -71,15 +82,32 @@ will be refined once the open questions are answered.
 
 **Exit**: complete small-map game vs. AI from start to victory.
 
-## Phase 4: Content and polish
+## Phase 4: Random map generation (~5–7 weeks)
+Needs towns, guards and treasure from Phases 2–3. The template *format* and validator can start earlier.
+- New core project `EternalWars.Core.Generation` (engine-free, deterministic from seed)
+- Template model + `*.ewtemplate.json` format: zones, connections, richness, towns, guards, terrain
+  (see game-design §4.9), plus a template validator
+- Generator pipeline: zone layout → terrain → borders/obstacles → connections and guards → towns
+  → mines/resources → treasure → neutral monsters → connectivity validation. The output is an
+  ordinary `MapDocument`, editable in the map editor
+- Headless batch tool/tests: generate N maps per template × size × seed and validate them
+  (reachability, fairness metrics between start zones)
+- Editor: **template editor** (zone graph: add zones, set properties, draw connections) and
+  "generate map from template" into an editable map
+- Game: new-game screen lets players pick template, size, players, seed and game options, then generate
+- Ship a starter set of templates (e.g. 2-player duel, 4-player free-for-all, 2v2, 8-player)
+
+**Exit**: a player picks a template in the game and gets a fair, playable random map; designers
+author templates in the editor.
+
+## Phase 5: Content and polish
 - Magic (schools, mage guild, combat and adventure spells)
-- Second faction, siege battles ❓
+- Remaining towns, siege battles ❓
 - Art pass (dark fantasy, realistic lighting): terrain splat shader, PBR models, fog/volumetrics,
   UI theme, audio. An early **look-dev spike** (one terrain biome + one creature + lighting setup)
   should run in parallel with Phase 1 to lock the visual target and its performance budget.
-- Random map generator ❓
 
-## Phase 5: Story campaign
+## Phase 6: Story campaign
 - Scenario chaining, hero carry-over, map triggers/events and dialogue, editor support for scripting
 
 ## Risks
@@ -88,4 +116,5 @@ will be refined once the open questions are answered.
 | Godot C# library limitations (scripts in referenced assemblies) | Phase 0 spike; code-first nodes; app-side wrappers for editor-attachable scripts |
 | 3D readability on dense maps | Early camera and art-style prototypes; keep the 2D harness as the logic reference |
 | AI complexity | Deterministic core + commands give headless simulation for AI tuning |
+| Random maps unfair or broken | Batch generation + automated validation/fairness metrics in CI; templates versioned like maps |
 | Asset production cost | Look-dev spike early; buy/adapt PBR asset packs where the dark-fantasy style allows |

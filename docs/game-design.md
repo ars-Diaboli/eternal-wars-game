@@ -49,15 +49,32 @@ out of scope, but the deterministic core keeps it possible.
   underground level. **Up to 8 players.**
 - Square grid, up to 2 levels (surface + underground) connected by **subterranean gates** (implemented).
 - **Movement (HoMM3 rules, implemented)**:
-  - Terrain costs: grass/dirt/lava/subterranean 100, rough 125, sand/snow 150, swamp 175;
-    water/rock impassable on foot. A step costs the terrain of the tile being **left**. Roads ❓.
+  - A step costs the terrain of the tile being **left**. Water/rock are impassable on foot.
+  - **Terrain classes** (accepted; the per-terrain assignment below is a proposal ❓):
+
+    | Class | Rule | Proposed terrains |
+    |---|---|---|
+    | **Open** | cost 100 for everyone | grass, dirt |
+    | **Rough** | fixed penalty for **all** factions, e.g. +25 % (125) | rough |
+    | **Native** | 100 for armies **native** to it; penalty for everyone else | sand 150, snow 150, swamp 175, lava 150, subterranean 150 |
+
+    - Proposed native owners ❓: Academy (snow), Swamp Bestiary (swamp), Inferno (lava),
+      Dungeon (subterranean), Stronghold (sand). Haven, Sylvan and Necropolis may need native
+      terrains of their own (e.g. new *highlands*, *forest floor*, *wasteland* types), or they could live on open terrain.
+    - **Who counts as native** ❓: HoMM3 rule is that the penalty is waived only if **every** creature in
+      the army is native. A *Pathfinding* skill reduces non-native penalties (HoMM3: 25/50/75 %).
+    - Today's implementation still uses fixed per-terrain costs (no factions yet). It switches to
+      classes when towns/factions exist (Phase 3).
+  - **Roads (HoMM3-style)**: a road layer on top of terrain, drawn in the editor and generated
+    between towns and through zone connections. Road types and costs: **dirt 50, gravel 65,
+    cobblestone 75**. The road cost replaces the terrain cost and **ignores native/rough penalties**.
+    It applies when the step goes from a road tile to a road tile ❓ (HoMM3 behaviour); diagonals ×1.41 as usual.
   - 8-way movement; diagonal steps cost ×1.41.
   - **Last step**: a hero with any movement points left may make one more step, whatever it costs,
     and ends with 0.
   - **Daily movement points** = base from the **slowest creature in the army** (speed ≤3: 1500, 4: 1560,
     5: 1630, 6: 1700, 7: 1760, 8: 1830, 9: 1900, 10: 1960, ≥11: 2000) × (100 % + skill bonus, e.g.
     Logistics) + flat artifact bonus. Recomputed at the start of the owner's turn. Without an army, 1500.
-    Native-terrain penalties per faction ❓.
 - **Pathfinding** (implemented): cheapest route; visible heroes and object bodies block; routes may only
   *end* on an object's entrance (except gates, which continue on the other side); unexplored tiles are
   never used. Every step carries a day index for HoMM-style day markers. Heroes the player can't see
@@ -65,7 +82,18 @@ out of scope, but the deterministic core keeps it possible.
 - **Map objects** (implemented): resource piles (picked up), mines (flagged, daily income), treasure
   chest (choose gold 1000 *or* 500 XP), subterranean gate (two-way link). Objects have a footprint and
   are entered only through their entrance tile, usually from below.
-  Planned: towns, artifacts, dwellings, shrines, teleporters, guarded neutral stacks, boats/shipyards.
+  Planned: towns, artifacts, dwellings, shrines, guarded neutral stacks, boats/shipyards.
+- **Gates and teleporters**: no random-exit portals for now. Every link is fixed in the map, so
+  movement and pathfinding stay deterministic and predictable.
+
+  | Kind | Behaviour | Status |
+  |---|---|---|
+  | **Two-way gate** | Linked pair; visiting either end moves the hero to the other. Subterranean gates connect levels; two-way monoliths work on the same level. | subterranean gate implemented; two-way monolith uses the same rules |
+  | **One-way gate** | An **entrance** linked to exactly one **exit**. Several entrances may share an exit. The exit is a landing spot only; visiting it does nothing, and it can't be entered as a gate. | planned (Phase 1 follow-up) |
+
+  - Pathfinding goes through both kinds: a route continues from the linked end, and one-way gates only in
+    their direction. A blocked exit (a hero standing on it) means no teleport.
+  - Editor: link tool for both kinds; the validator flags unlinked gates and exits that no entrance uses.
 - **Fog of war** (implemented): two modes, **chosen when the game is created** (`GameOptions.FogMode`):
   1. **Permanent reveal** (HoMM3): once explored, terrain, objects and units stay visible.
   2. **Shroud + refog for units**: terrain and objects stay revealed once explored, but other players'
@@ -86,9 +114,15 @@ out of scope, but the deterministic core keeps it possible.
 - **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (implemented as `ResourceSet`).
 - One building per town per day; building tree per faction.
 - Weekly creature growth, dwellings on the map.
-- Mines produce daily income (implemented: gold 1000, lumber/ore 2, rare resources 1, paid to the owner
-  at the start of their turn); towns produce gold by hall level. Until towns exist every player gets
-  a placeholder 500 gold per turn.
+- **Income** is paid at the start of the owner's turn. **There is no base or placeholder income**:
+  players earn only what their sources produce. Sources:
+  - **Mines** (implemented): gold 1000, lumber/ore 2, rare resources 1.
+  - **Towns**: gold by hall level, plus resource buildings (Phase 3).
+  - **Hero secondary skills**, Estates-like (Phase 3).
+  - **Hero specialisations**, e.g. +N of a resource per day (Phase 3).
+  - **Artifacts**, e.g. resource-producing items (Phase 3).
+
+  Each source is a pluggable `IIncomeSource`, and `EconomyService.DailyIncome` sums them.
 
 ### 4.4 Factions and towns
 Towns are organised into four groups. Group names are working titles ❓, and so is whether a group has
@@ -159,12 +193,50 @@ gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
 - Online multiplayer: not planned (core determinism keeps the door open).
 
 ### 4.8 Tools
-- **Map editor**: implemented in core with undo/redo: terrain painting (brush radius, drag
-  strokes), object placement/removal, gate linking, mine owners, hero placement, player slots, map
-  name/description, validation. Godot UI for most of it is pending. Later: victory/loss conditions,
-  events/triggers, map resize, random-map generator.
+- **Map editor**: a **separate standalone app** (not an in-game mode). Implemented in core with
+  undo/redo: terrain painting (brush radius, drag strokes), object placement/removal, gate linking,
+  mine owners, hero placement, player slots, map name/description, validation. Godot UI for most of it
+  is pending. Later: victory/loss conditions, events/triggers, map resize, and the **template editor**
+  plus "generate map from template" (§4.9).
 - **2D harness**: a top-down debug front-end over the same core, used for rule development,
   scenario scripting and visual debugging of AI.
+
+### 4.9 Random map generation (templates)
+Modelled on the Heroes 3: Horn of the Abyss template system.
+
+- **Both the game and the editor generate maps.** The game's new-game screen picks a template from the
+  available ones, a map size, players, a seed and game options, then generates and starts. The editor
+  generates into an **editable** map, so designers can hand-polish a generated map and save it.
+- **Templates are authored in the editor** (template editor: a zone graph) and saved as
+  `*.ewtemplate.json`. The game lists every template it can find, both built-in and user/mod folders.
+- **A template** defines:
+  - Supported map sizes, player-count range, whether an underground level is used, and human/AI
+    restrictions.
+  - **Zones** (map areas), each with:
+    - Type: player start, AI-only start, treasure, junction.
+    - Owner slot for start zones.
+    - Relative size.
+    - Level: surface or underground.
+    - **Towns**: player towns and neutral towns (min/max), allowed town groups or "same as zone owner".
+    - **Resource richness**: minimum mines per resource, extra resource piles.
+    - **Treasure**: value bands with density (e.g. 500–3000 ×9, 3000–6000 ×6, 10000–15000 ×1).
+    - **Monster strength**: none/weak/average/strong, plus allowed terrain types.
+  - **Connections** between zones: which zones connect, how strongly the passage is guarded,
+    and the passage type: normal, wide (unguarded), border guard/gate, or portal/subterranean
+    gate across levels. A connection may also be optional or randomly present.
+- **Generation is deterministic** from (template, size, players, seed), so a map can be shared by its seed.
+- **Pipeline**:
+  1. Place zones on the grid from the connection graph.
+  2. Paint terrain per zone.
+  3. Raise borders and obstacles.
+  4. Cut connections and place their guards.
+  5. Place towns.
+  6. Place mines and resources.
+  7. Place treasure by value band.
+  8. Place neutral monsters.
+  9. Validate: every start zone can reach the others, and start zones are fair against each other.
+- Open ❓: symmetric generation for competitive templates; water/islands; how the slowest-creature and
+  native-terrain rules feed into treasure/guard values; template-level restrictions per town group.
 
 ## 5. Presentation
 
@@ -205,4 +277,6 @@ gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
 | 7 | Resources | 7 (incl. gems) | 6: gold, lumber, ore, crystal, mercury, sulfur | accepted |
 | 8 | Fog of war | Permanent reveal only | Choice per game: permanent reveal, or shroud + unit refog with hysteresis | accepted |
 | 9 | Map scale | Up to 144×144 | Presets up to 256×256, 8 players | accepted |
+| 10 | Random maps | Fixed templates (HotA adds a template editor) | Template editor in our map editor; game and editor both generate | accepted |
+| 11 | Terrain penalties | Native terrain per town, flat costs otherwise | Three classes: open (no penalty), rough (fixed penalty for all), native (penalty only for non-natives) | accepted |
 | … | | | *more twists to be proposed* ❓ | |
