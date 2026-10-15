@@ -1,4 +1,6 @@
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
@@ -27,11 +29,14 @@ public sealed class GameState
         IEnumerable<Hero> heroes,
         IEnumerable<MapObject>? objects = null,
         GameOptions? options = null,
-        TerrainCatalog? terrains = null)
+        TerrainCatalog? terrains = null,
+        CreatureCatalog? creatures = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
         Options = options ?? GameOptions.Default;
         Terrains = terrains ?? TerrainCatalog.Default;
+        Creatures = creatures ?? CreatureCatalog.Default;
+        Random = new GameRandom(Options.Seed);
         Fog = new FogOfWar(map, Options.FogMode);
         _players = players.ToList();
         if (_players.Count is 0 or > MaxPlayers)
@@ -56,6 +61,21 @@ public sealed class GameState
 
     /// <summary>Terrain movement rules in effect for this game.</summary>
     public TerrainCatalog Terrains { get; }
+
+    /// <summary>Creature definitions in effect for this game.</summary>
+    public CreatureCatalog Creatures { get; }
+
+    /// <summary>The game RNG; only Domain services draw from it, in command order, so games replay exactly.</summary>
+    internal GameRandom Random { get; }
+
+    /// <summary>Current state of the game RNG (saves, replay checks).</summary>
+    public ulong RandomState => Random.State;
+
+    /// <summary>Map setting: how neutral monsters guard their surroundings.</summary>
+    public GuardMode GuardMode { get; internal set; }
+
+    /// <summary>The battle being fought, if any (a <see cref="Decisions.BattleDecision"/> is pending meanwhile).</summary>
+    public BattleState? Battle { get; internal set; }
 
     public FogOfWar Fog { get; }
 
@@ -131,6 +151,30 @@ public sealed class GameState
 
         TeamsLocked = locked;
     }
+
+    /// <summary>Scenario setting (map loading, editor): how neutral monsters guard their surroundings.</summary>
+    public void SetGuardMode(GuardMode mode)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("The guard mode can only be changed before the game starts.");
+        }
+
+        GuardMode = mode;
+    }
+
+    /// <summary>
+    /// Monsters guarding <paramref name="position"/>: those on one of its eight neighbours (the monster's own tile
+    /// is its entrance, not a guarded tile). Lowest id first.
+    /// </summary>
+    public IEnumerable<MonsterGuard> GuardsOf(MapPosition position) =>
+        DirectionExtensions.All
+            .Select(d => ObjectCellAt(position.Step(d)))
+            .Select(c => c?.Object)
+            .OfType<MonsterGuard>()
+            .OrderBy(m => m.Id.Value);
+
+    public bool IsGuarded(MapPosition position) => GuardsOf(position).Any();
 
     public MapObject GetObject(MapObjectId id) => _objects.First(o => o.Id == id);
 

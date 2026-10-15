@@ -54,7 +54,7 @@ public class TerrainAndRoadTests
             terrains: terrains);
         var session = Start(state);
 
-        session.Movement.TryStep(A, Direction.East);
+        session.Step(A, Direction.East);
 
         Assert.Equal(1500 - 140, state.GetHero(A).MovementPoints);
         Assert.Contains("\"class\": \"Native\"", TerrainDefinitionSerializer.Serialize(TerrainCatalog.Default.All));
@@ -65,8 +65,8 @@ public class TerrainAndRoadTests
     {
         var session = Start(Create("Al..", "...B"));
 
-        session.Movement.TryStep(A, Direction.East);  // leaving grass: 100
-        session.Movement.TryStep(A, Direction.East);  // leaving lava: 150 (no army is native yet)
+        session.Step(A, Direction.East);  // leaving grass: 100
+        session.Step(A, Direction.East);  // leaving lava: 150 (no army is native yet)
 
         Assert.Equal(1500 - 100 - 150, session.State.GetHero(A).MovementPoints);
     }
@@ -79,9 +79,9 @@ public class TerrainAndRoadTests
         var session = Start(state);
         var hero = state.GetHero(A);
 
-        session.Movement.TryStep(A, Direction.East); // grass -> road: pays grass 100
-        session.Movement.TryStep(A, Direction.East); // road -> road: gravel 65
-        session.Movement.TryStep(A, Direction.East); // road -> grass: pays the terrain under the road, 100
+        session.Step(A, Direction.East); // grass -> road: pays grass 100
+        session.Step(A, Direction.East); // road -> road: gravel 65
+        session.Step(A, Direction.East); // road -> grass: pays the terrain under the road, 100
 
         Assert.Equal(1500 - 100 - 65 - 100, hero.MovementPoints);
     }

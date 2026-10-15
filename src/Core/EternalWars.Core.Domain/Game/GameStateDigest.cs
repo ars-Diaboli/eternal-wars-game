@@ -1,0 +1,60 @@
+using System.Security.Cryptography;
+using System.Text;
+using EternalWars.Core.Domain.Objects;
+
+namespace EternalWars.Core.Domain.Game;
+
+/// <summary>
+/// Fingerprint of everything that matters in a running game (calendar, RNG, players, heroes and armies, objects,
+/// pending decision, battle). Two games with equal digests are in the same state; replays and the simulator
+/// use it to prove determinism.
+/// </summary>
+public static class GameStateDigest
+{
+    public static string Compute(GameState state) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Describe(state))))[..16];
+
+    /// <summary>The canonical text the digest is computed from (handy when two digests differ).</summary>
+    public static string Describe(GameState state)
+    {
+        var text = new StringBuilder();
+        Line($"date {state.Date} player {state.CurrentPlayerIndex} rng {state.RandomState} started {state.IsStarted}");
+        foreach (var player in state.Players)
+        {
+            Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources}");
+        }
+
+        foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
+        {
+            var army = string.Join(",", hero.Army.Slots.Select(s => s is null ? "-" : $"{s.Creature}:{s.Count}"));
+            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.Tactics} army {army}");
+        }
+
+        foreach (var mapObject in state.Objects.OrderBy(o => o.Id.Value))
+        {
+            var detail = mapObject switch
+            {
+                ResourcePile pile => $"amount {pile.Amount}",
+                Mine mine => $"owner {mine.Owner?.Value} guard {mine.Guard}",
+                TreasureChest chest => $"fixed {chest.FixedValues}",
+                MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
+                _ => mapObject.TeleportTarget?.ToString() ?? "",
+            };
+            Line($"object {mapObject.Id.Value} {mapObject.Definition.Id} at {mapObject.Position} {detail}");
+        }
+
+        Line($"decision {state.PendingDecision}");
+        if (state.Battle is { } battle)
+        {
+            Line($"battle {battle.Phase} width {battle.Width} round {battle.Round} active {battle.ActiveUnit?.Id}");
+            foreach (var unit in battle.Units)
+            {
+                Line($"unit {unit.Id} {unit.Side} {unit.Creature.Id} {unit.Count}/{unit.TopHealth} at {unit.Position} shots {unit.ShotsLeft}");
+            }
+        }
+
+        return text.ToString();
+
+        void Line(FormattableString line) => text.Append(FormattableString.Invariant(line)).Append('\n');
+    }
+}

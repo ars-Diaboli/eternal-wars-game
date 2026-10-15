@@ -61,7 +61,8 @@ will be refined once the open questions are answered.
 - [ ] Render map objects (from `ObjectMemory` for the viewing player), roads and both levels (level
       switch), fog overlay; hide unseen enemy heroes (`CanSee`)
 - [ ] New-game setup screen: map, players, teams (unless locked), fog mode/refog margin (`GameOptions`)
-- [ ] Exchange screen bound to `HeroExchangeDecision` (apps currently auto-close it); battle placeholder for `BattleTriggered`
+- [ ] Exchange screen bound to `HeroExchangeDecision` (a placeholder `DecisionPanel` can close it; stack
+      moves exist as `MoveStackCommand`); battle placeholder is quick combat in the game app
 - [ ] Editor: road brush, gate link tools, team/lock editing UI
 - [ ] Mouse picking → hero selection; path preview with day-coloured markers; click twice to move
 - [ ] `HeroView`: queue per-step animations (one tween per `HeroMoved`), handle `HeroTeleported`
@@ -73,24 +74,45 @@ will be refined once the open questions are answered.
 
 **Exit**: a hot-seat game on an editor-made map where players race to collect resources.
 
-## Phase 2: Armies and combat (~6–8 weeks)
-- Command pipeline (serializable commands, deterministic RNG in state, replay from command log)
-- Headless simulator `tools/EternalWars.Tools.Sim` (scripted scenarios, replays, AI-vs-AI later) in CI
-- Treasure chests roll HoMM3-style reward tiers from the game RNG (ADR-034)
-- Creature definitions (data: tier 1–5, base/upgraded, size, speed, initiative, abilities, tags), stacks,
-  hero army (7 slots)
-- Tactical battle on a square cell grid with 2×2 / 3×3 / 4×4 unit footprints: deployment,
-  footprint-aware pathfinding (clearance maps), initiative order, melee/ranged, retaliation, wait/defend,
-  engagement tracking for ability hooks, body-blocking, cumulative cover in eighths with the
-  > 7/8 no-shot rule (ADR-035), obstacle cover classes, area abilities
-  (breath with friendly fire, cleave/multi-head), obstacles, HoMM3 damage formula, Tactics width
-  choice (28–34), victory/defeat, casualties and experience (ADR-021, ADR-033)
-- Army speed drives `MovementAllowance` (replaces the `Hero.SlowestCreatureSpeed` placeholder)
-- Battle presentation in 3D + battle view in the 2D harness
-- Neutral guards on the adventure map, optional mine guards; quick combat; ambush battles (ADR-031)
-- First creatures: **Haven and Inferno** rosters (9 each, 5 tiers, upgrades) + a few neutrals
+## Phase 2: Armies and combat (~6–8 weeks): core done, 3D presentation pending
 
-**Exit**: heroes fight neutral stacks and each other; battles are replayable from logs.
+### Core (Tier 1) ✅
+- [x] Command pipeline (ADR-036): serializable `GameCommand`s through `GameSession.Execute` only (services'
+      mutators are internal), command log, `GameRandom` (seeded SplitMix64) in state, replay files
+      (`*.ewreplay.json`) verified by `GameStateDigest`
+- [x] Headless simulator `tools/EternalWars.Tools.Sim`: `battle` statistics, `record`/`replay`, `selftest`
+      (runs in CI). AI-vs-AI games follow with the adventure AI in Phase 3
+- [x] Treasure chests roll HoMM3-style reward tiers from the game RNG; map authors may fix values (ADR-039)
+- [x] Creature definitions as data (ADR-037): tier 1–5, base/upgraded, size, battle `Speed` + adventure
+      `MapSpeed`, initiative, shots, capabilities, tags; JSON overrides; stacks; hero army (7 slots); exchange
+      (`MoveStackCommand`: split, merge, swap, keep one stack)
+- [x] Tactical battle (ADR-038) on a 24 × 28–34 cell grid with 2×2 / 3×3 / 4×4 footprints: automatic
+      deployment, rolled obstacles with cover classes, footprint-aware movement (clearance, no corner
+      squeezing, flyers), initiative order with HoMM3 wait/ties, defend, melee/ranged, retaliation,
+      engagement and hit-history hooks (`PackHunter`, `Relentless`), body-blocking, cumulative cover in
+      eighths with the > 7/8 no-shot rule (ADR-035), breath with friendly fire, cleave, multi-head, HoMM3
+      damage formula, Tactics width choice, victory/defeat, retreat, casualties and experience
+- [x] Deterministic battle AI for neutrals and computer players; quick combat for either side
+- [x] Army speed drives `MovementAllowance`; all-native armies get native terrain costs
+- [x] Neutral monsters with two map-level guard modes (HoMM3 zone of control with stealing, or a guarded
+      3×3 area), HoMM3 dispositions (join / flee / fight, ADR-040), counts rolled by tier; optional mine guards;
+      ambush battles (ADR-031); hero vs hero battles with hot-seat control of both sides
+- [x] **Haven and Inferno** draft rosters (9 lines each, 5 tiers, all upgradeable) + 5 neutrals
+- [x] HoMM4-style creature capabilities, at most 5 per creature (ADR-042): first strike, ranged retaliation,
+      strikes/shoots twice, opt-in melee penalty, unlimited/no retaliation, area attacks, engagement hooks;
+      spell immunity and casting as data + hooks until magic (Phase 5)
+- [x] Map format v4 (armies, hero stats, monsters, mine guards, guard mode, optional chest values) and editor
+      commands for all of it with undo; validator checks
+
+### Godot (Tier 2/3)
+- [x] 2D harness: battle board (`BattleBoard2D`) with click-to-move/attack/shoot, wait/defend/retreat/quick
+      keys, decision prompts (`DecisionPanel`); the game and harness issue commands only (not yet run in the
+      Godot editor)
+- [ ] Battle presentation in 3D (the game app falls back to quick combat through `DecisionPanel`)
+- [ ] Editor UI for armies, monsters, mine guards, guard mode and chest values
+
+**Exit**: heroes fight neutral stacks and each other; battles are replayable from logs. Core-side met
+(`sim selftest`, replay tests); the 3D battle scene is still missing.
 
 ## Phase 3: Towns and progression (~6–8 weeks)
 - Towns: building tree, one build per day, weekly growth, recruiting, garrison

@@ -34,6 +34,15 @@ public enum MoveResult
 
     /// <summary>Refog mode: the move stopped because a previously unseen enemy hero came into sight.</summary>
     EnemySpotted,
+
+    /// <summary>Stepped onto a monster or into its guarded area: a guard offer or a battle followed; the hero did not move.</summary>
+    GuardEncountered,
+
+    /// <summary>Classic guard mode: took a pickup lying in a guarded tile from outside, without entering it.</summary>
+    CollectedFromAdjacent,
+
+    /// <summary>A hero without creatures cannot attack.</summary>
+    NoArmy,
 }
 
 /// <summary>Result of following a path: how far the hero got and why it stopped.</summary>
@@ -81,13 +90,17 @@ internal static class MovementRules
         var fromRoad = map.GetRoad(from);
         var baseCost = fromRoad != RoadType.None && map.GetRoad(to) != RoadType.None
             ? fromRoad.MovementCost()
-            : state.Terrains.MovementCost(map.GetTerrain(from), ArmyTown(hero));
+            : state.Terrains.MovementCost(map.GetTerrain(from), ArmyTown(state, hero));
         return direction.IsDiagonal() ? (int)Math.Round(baseCost * HeroMovementService.DiagonalMultiplier) : baseCost;
     }
 
     /// <summary>
-    /// The town every creature of the hero's army belongs to, or null (mixed/neutral/no army).
-    /// Armies arrive in Phase 2; until then no army is native anywhere.
+    /// The town every creature of the hero's army belongs to, or null (mixed, neutral or no army): native terrain
+    /// only waives its penalty for an all-native army (ADR-032).
     /// </summary>
-    public static string? ArmyTown(Hero hero) => null;
+    public static string? ArmyTown(GameState state, Hero hero)
+    {
+        var towns = hero.Army.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature).Town).Distinct().ToList();
+        return towns is [{ } town] ? town : null;
+    }
 }

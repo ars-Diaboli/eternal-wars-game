@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
@@ -7,10 +8,15 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Objects;
 
-/// <summary>What happens when a hero visits a map object, and the follow-up decisions it opens.</summary>
-public sealed class MapObjectInteractionService(GameState state, IEventPublisher events, EconomyService economy)
+/// <summary>What happens when a hero visits a map object or meets a hero, and the follow-up decisions it opens.</summary>
+public sealed class MapObjectInteractionService(
+    GameState state,
+    IEventPublisher events,
+    EconomyService economy,
+    BattleService battles,
+    GuardService guards)
 {
-    public void ResolveTreasureChest(TreasureChestReward reward)
+    internal void ResolveTreasureChest(TreasureChestReward reward)
     {
         if (state.PendingDecision is not TreasureChestDecision decision)
         {
@@ -45,6 +51,10 @@ public sealed class MapObjectInteractionService(GameState state, IEventPublisher
                 events.Publish(new ResourcePileCollected(hero.Id, pile.Id, pile.Resource, pile.Amount));
                 break;
 
+            case Mine { Guard: not null } guarded:
+                guards.Encounter(hero, guarded);
+                break;
+
             case Mine mine when mine.Owner != hero.Owner:
                 var previous = mine.Owner;
                 mine.Owner = hero.Owner;
@@ -52,9 +62,14 @@ public sealed class MapObjectInteractionService(GameState state, IEventPublisher
                 break;
 
             case TreasureChest chest:
-                var decision = new TreasureChestDecision(hero.Id, chest.Id, chest.Gold, chest.Experience);
+                var values = chest.FixedValues ?? TreasureChest.RollTable[state.Random.Next(TreasureChest.RollTable.Count)];
+                var decision = new TreasureChestDecision(hero.Id, chest.Id, values.Gold, values.Experience);
                 state.PendingDecision = decision;
                 events.Publish(new DecisionRequested(decision));
+                break;
+
+            case MonsterGuard monster:
+                guards.Encounter(hero, monster);
                 break;
 
             case { TeleportTarget: not null }:
@@ -71,7 +86,7 @@ public sealed class MapObjectInteractionService(GameState state, IEventPublisher
     }
 
     /// <summary>Closes the exchange screen opened by a meeting of two own heroes.</summary>
-    public void CompleteExchange()
+    internal void CompleteExchange()
     {
         if (state.PendingDecision is not HeroExchangeDecision decision)
         {
@@ -90,9 +105,12 @@ public sealed class MapObjectInteractionService(GameState state, IEventPublisher
         events.Publish(new DecisionRequested(decision));
     }
 
-    /// <summary>Battle hook (Phase 2 resolves it); nothing on the map changes yet.</summary>
-    internal void StartBattle(Hero attacker, Hero defender, bool isAmbush) =>
+    /// <summary>A hero attacks an enemy hero: <see cref="BattleTriggered"/>, then the battle itself.</summary>
+    internal void StartBattle(Hero attacker, Hero defender, bool isAmbush)
+    {
         events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
+        battles.BeginHeroBattle(attacker, defender, isAmbush);
+    }
 
     private void RemoveFromMap(MapObject mapObject)
     {

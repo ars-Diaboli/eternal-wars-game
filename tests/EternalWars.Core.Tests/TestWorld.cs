@@ -1,4 +1,6 @@
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
@@ -11,6 +13,7 @@ namespace EternalWars.Core.Tests;
 /// Builds small worlds from ASCII art so tests read like the situation they describe.
 /// Legend: <c>.</c> grass, <c>d</c> dirt, <c>s</c> swamp, <c>r</c> rough, <c>l</c> lava, <c>~</c> water, <c>#</c> rock,
 /// <c>A</c>/<c>C</c> heroes <see cref="A"/>/<see cref="C"/> (player 0), <c>B</c> hero <see cref="B"/> (player 1), all on grass.
+/// Every hero starts with <see cref="DefaultArmy"/> (map speed 3, so 1500 movement points a day).
 /// Roads: <see cref="Road"/>.
 /// </summary>
 internal static class TestWorld
@@ -20,6 +23,9 @@ internal static class TestWorld
     public static readonly HeroId C = new(3);
     public static readonly PlayerId Blue = new(0);
     public static readonly PlayerId Red = new(1);
+
+    /// <summary>10 footmen: slow enough (map speed 3) to keep the no-army movement base of 1500.</summary>
+    public static Army DefaultArmy() => Army.Of(new CreatureStack(BuiltInCreatures.Footman, 10));
 
     public static GameState Create(params string[] rows) => CreateLevels(rows);
 
@@ -52,15 +58,15 @@ internal static class TestWorld
 
                     if (symbol == 'A')
                     {
-                        heroes.Add(new Hero(A, "Alpha", Blue, position));
+                        heroes.Add(new Hero(A, "Alpha", Blue, position, DefaultArmy()));
                     }
                     else if (symbol == 'B')
                     {
-                        heroes.Add(new Hero(B, "Bravo", Red, position));
+                        heroes.Add(new Hero(B, "Bravo", Red, position, DefaultArmy()));
                     }
                     else if (symbol == 'C')
                     {
-                        heroes.Add(new Hero(C, "Charlie", Blue, position));
+                        heroes.Add(new Hero(C, "Charlie", Blue, position, DefaultArmy()));
                     }
                 }
             }
@@ -82,7 +88,7 @@ internal static class TestWorld
         }
 
         var session = new GameSession(state);
-        session.Turns.StartGame();
+        session.Start();
         return session;
     }
 

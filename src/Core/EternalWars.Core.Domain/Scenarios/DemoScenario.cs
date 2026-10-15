@@ -1,4 +1,6 @@
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
@@ -10,7 +12,8 @@ namespace EternalWars.Core.Domain.Scenarios;
 
 /// <summary>
 /// Small deterministic sandbox used by the game, the 2D harness and tests until real maps exist:
-/// two players, resource piles, mines, a chest, and an underground level reached through linked gates.
+/// two players with Haven and Inferno armies, resource piles, mines (one guarded), a chest, neutral monsters,
+/// and an underground level reached through linked gates.
 /// </summary>
 public static class DemoScenario
 {
@@ -55,8 +58,14 @@ public static class DemoScenario
         var redStart = new MapPosition(width - 3, height - 3);
         var heroes = new[]
         {
-            new Hero(new HeroId(1), "Orrin", players[0].Id, blueStart),
-            new Hero(new HeroId(2), "Sandro", players[1].Id, redStart),
+            new Hero(
+                new HeroId(1), "Orrin", players[0].Id, blueStart,
+                Army.Of(new(BuiltInCreatures.Pikeman, 20), new(BuiltInCreatures.Archer, 12), new(BuiltInCreatures.Griffin, 4)),
+                attack: 2, defense: 1, tactics: SkillLevel.Basic),
+            new Hero(
+                new HeroId(2), "Sandro", players[1].Id, redStart,
+                Army.Of(new(BuiltInCreatures.HornedDemon, 22), new(BuiltInCreatures.HellHound, 8), new(BuiltInCreatures.Succubus, 5)),
+                attack: 1, defense: 2),
         };
 
         var catalog = MapObjectCatalog.Default;
@@ -69,6 +78,12 @@ public static class DemoScenario
         Place(BuiltInMapObjects.MineId(ResourceType.Ore), redStart.Offset(-6, -1));
         Place(BuiltInMapObjects.MineId(ResourceType.Gold), new MapPosition((width / 2) - 1, (height / 2) - 1));
         Place(BuiltInMapObjects.TreasureChest, new MapPosition(width / 2, 2));
+
+        // Neutrals: wolves near the blue start guard a gold pile, bandits sit on the road, trolls guard the centre mine.
+        Monster(BuiltInCreatures.Wolf, 12, GuardDisposition.Aggressive, new MapPosition(4, 5));
+        Place(BuiltInMapObjects.PileId(ResourceType.Gold), new MapPosition(5, 6));
+        Monster(BuiltInCreatures.Bandit, null, GuardDisposition.Hostile, new MapPosition((width / 2) + 4, 6));
+        ((Mine)objects.Single(o => o.Definition.Id == BuiltInMapObjects.MineId(ResourceType.Gold))).Guard = new GuardStack(BuiltInCreatures.Troll, 6);
 
         // A one-way shortcut from the blue side towards red.
         var entrance = (OneWayGateEntrance)Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(1, 9));
@@ -100,6 +115,12 @@ public static class DemoScenario
         }
 
         return new GameState(map, players, heroes, objects);
+
+        void Monster(string creature, int? count, GuardDisposition disposition, MapPosition position)
+        {
+            var monster = (MonsterGuard)Place(BuiltInMapObjects.Monster, position);
+            (monster.Creature, monster.Count, monster.Disposition) = (creature, count, disposition);
+        }
 
         MapObject Place(string definitionId, MapPosition topLeft)
         {

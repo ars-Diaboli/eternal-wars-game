@@ -1,13 +1,16 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI.Battle;
 using EternalWars.Godot.UI.Debugging;
 using EternalWars.Godot.UI.Hud;
 using Godot;
@@ -17,12 +20,12 @@ namespace EternalWars.Harness2D;
 /// <summary>
 /// Top-down 2D front-end over the exact same <see cref="GameSession"/> the 3D game uses.
 /// Purpose: exercise and debug core rules quickly, without 3D assets, cameras or picking getting in the way.
-/// Every event on the bus is listed in the log panel on the right.
+/// Every event on the bus is listed in the log panel on the right. Input is mapped to commands only.
 /// </summary>
 public partial class Main : Node2D
 {
     private const int TileSize = 26;
-    private static readonly Vector2 MapOrigin = new(16, 96);
+    private static readonly Vector2 MapOrigin = new(16, 120);
 
     private GameSession _session = null!;
     private HeroId? _selectedHero;
@@ -33,39 +36,40 @@ public partial class Main : Node2D
         BuildUi();
 
         this.SubscribeWhileInTree<HeroMoved>(_session.Events, _ => QueueRedraw());
-        this.SubscribeWhileInTree<TerrainPainted>(_session.Events, _ => QueueRedraw());
-
-        // TODO(Phase 1 UI): prompt instead. Until then take the gold / close the exchange so the session never stalls.
-        this.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
-        {
-            switch (e.Decision)
-            {
-                case TreasureChestDecision:
-                    _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
-                    break;
-                case HeroExchangeDecision:
-                    _session.Interactions.CompleteExchange();
-                    break;
-            }
-        });
+        this.SubscribeWhileInTree<HeroTeleported>(_session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<KnownObjectsChanged>(_session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<HeroDefeated>(_session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<DecisionResolved>(_session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
             _selectedHero = _session.State.HeroesOf(e.Player).FirstOrDefault()?.Id;
             QueueRedraw();
         });
 
-        _session.Turns.StartGame();
+        _session.Start();
     }
 
     public override void _Draw()
     {
-        var map = _session.State.Map;
+        var state = _session.State;
+        var map = state.Map;
         foreach (var position in map.Positions(level: 0))
         {
             DrawRect(TileRect(position), Palette.ForTerrain(map.GetTerrain(position)));
         }
 
-        foreach (var hero in _session.State.Heroes.Where(h => h.Position.Level == 0))
+        foreach (var known in state.Memory.Of(state.CurrentPlayer.Id))
+        {
+            foreach (var cell in known.Cells().Where(c => c.Level == 0))
+            {
+                var color = known.Definition.Kind == MapObjectKind.Monster ? new Color(0.85f, 0.1f, 0.1f)
+                    : known.Owner is { } owner ? Palette.ForPlayer(owner)
+                    : new Color(0.9f, 0.85f, 0.6f);
+                DrawRect(TileRect(cell).Grow(-6), color);
+            }
+        }
+
+        foreach (var hero in state.Heroes.Where(h => h.Position.Level == 0 && state.CanSee(state.CurrentPlayer.Id, h)))
         {
             var rect = TileRect(hero.Position);
             DrawCircle(rect.GetCenter(), TileSize * 0.35f, Palette.ForPlayer(hero.Owner));
@@ -78,6 +82,12 @@ public partial class Main : Node2D
 
     public override void _UnhandledInput(InputEvent @event)
     {
+        if (_session.State.Battle is not null)
+        {
+            HandleBattleKey(@event);
+            return;
+        }
+
         if (@event is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click)
         {
             HandleClick(ToMapPosition(click.Position));
@@ -85,31 +95,69 @@ public partial class Main : Node2D
         else if (@event is InputEventKey { Pressed: true } key && _selectedHero is { } hero &&
                  KeyboardDirections.ToDirection(key.Keycode) is { } direction)
         {
-            Report(_session.Movement.TryStep(hero, direction).ToString());
+            Report(_session.Execute(new StepHeroCommand(_session.State.CurrentPlayer.Id, hero, direction)));
         }
     }
 
     private void HandleClick(MapPosition target)
     {
-        if (_session.State.HeroAt(target) is { } clicked && clicked.Owner == _session.State.CurrentPlayer.Id)
+        var player = _session.State.CurrentPlayer.Id;
+        if (_session.State.HeroAt(target) is { } clicked && clicked.Owner == player)
         {
             _selectedHero = clicked.Id;
             QueueRedraw();
             return;
         }
 
-        if (_selectedHero is not { } heroId)
+        if (_selectedHero is { } hero)
+        {
+            Report(_session.Execute(new MoveHeroCommand(player, hero, target)));
+        }
+    }
+
+    /// <summary>Battle keys: W wait, D defend, R retreat, Q quick combat.</summary>
+    private void HandleBattleKey(InputEvent @event)
+    {
+        if (@event is not InputEventKey { Pressed: true } key || ActiveCommander() is not { } player)
         {
             return;
         }
 
-        var from = _session.State.GetHero(heroId).Position;
-        Report(DirectionExtensions.FromOffset(target.X - from.X, target.Y - from.Y) is { } direction
-            ? _session.Movement.TryStep(heroId, direction).ToString()
-            : "Click an adjacent tile to step");
+        GameCommand? command = key.Keycode switch
+        {
+            Key.W => new BattleWaitCommand(player),
+            Key.D => new BattleDefendCommand(player),
+            Key.R => new BattleRetreatCommand(player),
+            Key.Q => new AutoResolveBattleCommand(player),
+            _ => null,
+        };
+        if (command is not null)
+        {
+            Report(_session.Execute(command));
+        }
     }
 
-    private void Report(string message) => GetNode<Label>("Ui/Top/Status").Text = message;
+    /// <summary>Click on an enemy: shoot it if possible, else attack it; click elsewhere: move there.</summary>
+    private void HandleBattleClick(CellPosition cell)
+    {
+        if (_session.State.Battle is not { ActiveUnit: { } active } battle || ActiveCommander() is not { } player)
+        {
+            return;
+        }
+
+        GameCommand command = battle.UnitAt(cell) is { } target && target.Side != active.Side
+            ? BattleGrid.CanShoot(battle, active, target, out _)
+                ? new BattleShootCommand(player, target.Id)
+                : new BattleAttackCommand(player, target.Id)
+            : new BattleMoveCommand(player, cell);
+        Report(_session.Execute(command));
+    }
+
+    private PlayerId? ActiveCommander() =>
+        _session.State.Battle is { ActiveUnit: { } active } ? _session.Battles.Commander(active.Side) : null;
+
+    private void Report(CommandResult result) =>
+        GetNode<Label>("Ui/Top/Status").Text = result.IsAccepted ? $"{result.Outcome}" : $"Refused: {result.Error}";
 
     private void BuildUi()
     {
@@ -124,7 +172,15 @@ public partial class Main : Node2D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        top.AddChild(new Label { Name = "Status", Text = "Click hero / adjacent tile, or use arrows & numpad" });
+        top.AddChild(new Label { Name = "Status", Text = "Click hero / tile, arrows & numpad. Battle: click, W wait, D defend, R retreat, Q quick" });
+        var decisions = new DecisionPanel();
+        top.AddChild(decisions);
+        decisions.Bind(_session);
+
+        var board = new BattleBoard2D { Position = MapOrigin };
+        ui.AddChild(board);
+        board.Bind(_session);
+        board.CellClicked += HandleBattleClick;
 
         var log = new EventLogPanel
         {
@@ -151,6 +207,6 @@ public partial class Main : Node2D
 
     private static GameState LoadState() =>
         LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path))
+            ? MapConverter.ToGameState(MapSerializer.Load(path), options: new GameOptions(Seed: (ulong)Random.Shared.NextInt64()))
             : DemoScenario.Create();
 }

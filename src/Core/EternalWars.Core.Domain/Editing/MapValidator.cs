@@ -39,6 +39,16 @@ public static class MapValidator
             {
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} stands inside an object.", hero.Position));
             }
+
+            if (hero.Army.IsEmpty)
+            {
+                issues.Add(new(IssueSeverity.Warning, $"Hero {hero.Name} has no army and cannot fight.", hero.Position));
+            }
+
+            foreach (var (_, stack) in hero.Army.Stacks.Where(s => !scenario.Creatures.Contains(s.Stack.Creature)))
+            {
+                issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} has unknown creature '{stack.Creature}'.", hero.Position));
+            }
         }
 
         foreach (var mapObject in scenario.Objects)
@@ -70,6 +80,12 @@ public static class MapValidator
                     break;
                 case OneWayGateExit exit when !scenario.ObjectsOf<OneWayGateEntrance>().Any(e => e.Exit == exit.Id):
                     issues.Add(new(IssueSeverity.Warning, $"{name} is not used by any entrance.", exit.Position));
+                    break;
+                case MonsterGuard monster when !scenario.Creatures.Contains(monster.Creature):
+                    issues.Add(new(IssueSeverity.Error, $"Monster uses unknown creature '{monster.Creature}'.", monster.Position));
+                    break;
+                case Mine { Guard: { } guard } mine when !scenario.Creatures.Contains(guard.Creature):
+                    issues.Add(new(IssueSeverity.Error, $"{name} guard uses unknown creature '{guard.Creature}'.", mine.Position));
                     break;
             }
         }

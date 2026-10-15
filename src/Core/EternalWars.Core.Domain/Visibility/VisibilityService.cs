@@ -14,7 +14,7 @@ namespace EternalWars.Core.Domain.Visibility;
 /// </summary>
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
-      IEventHandler<MineOwnerChanged>, IEventHandler<MapObjectRemoved>
+      IEventHandler<MineOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>
 {
     /// <summary>Owned mines reveal and watch a small area around them.</summary>
     public const int MineScoutingRadius = 2;
@@ -66,6 +66,15 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         foreach (var player in state.Players)
         {
             RefreshMemory(player.Id);
+        }
+    }
+
+    // The defeated hero no longer observes anything; others may notice it is gone.
+    public void Handle(HeroDefeated @event)
+    {
+        foreach (var player in state.Players)
+        {
+            ObserversChanged(player.Id);
         }
     }
 

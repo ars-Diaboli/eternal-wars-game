@@ -19,7 +19,11 @@ public enum FogMode
 /// observer's scouting radius, but only drops out of sight once every observer is farther than
 /// scouting radius + margin, so units at the edge of vision don't flicker in and out.
 /// </param>
-public sealed record GameOptions(FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2)
+/// <param name="Seed">
+/// Seed of the game's <see cref="Common.GameRandom"/>. Together with the map and the command log it fully
+/// determines the game (replays). Front-ends pick a random seed; tests use the default.
+/// </param>
+public sealed record GameOptions(FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1)
 {
     public static GameOptions Default { get; } = new();
 }

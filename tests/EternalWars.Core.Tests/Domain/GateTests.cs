@@ -65,7 +65,7 @@ public class GateTests
 
         Assert.Equal(200, path.TotalCost);
         Assert.Contains(path.Steps, s => s.Position == exit.VisitPosition);
-        Assert.True(session.Movement.MoveTo(A, new MapPosition(9, 1)).Arrived);
+        Assert.True(session.MoveTo(A, new MapPosition(9, 1)).Arrived);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class GateTests
         HeroTeleported? teleported = null;
         session.Events.Subscribe<HeroTeleported>(e => teleported = e);
 
-        var outcome = session.Movement.MoveTo(A, new MapPosition(9, 2));
+        var outcome = session.MoveTo(A, new MapPosition(9, 2));
 
         Assert.True(outcome.Arrived);
         Assert.Equal(new HeroTeleported(A, entrance.VisitPosition, exit.VisitPosition), teleported);
@@ -90,7 +90,7 @@ public class GateTests
         var session = Start(state);
 
         Assert.DoesNotContain(session.Movement.FindPath(A, new MapPosition(9, 2))!.Steps, s => s.Kind == PathStepKind.Teleport);
-        Assert.True(session.Movement.MoveTo(A, entrance.VisitPosition).Arrived);
+        Assert.True(session.MoveTo(A, entrance.VisitPosition).Arrived);
     }
 
     [Fact]

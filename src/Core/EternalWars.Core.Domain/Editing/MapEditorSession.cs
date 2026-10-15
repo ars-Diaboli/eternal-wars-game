@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -29,6 +30,12 @@ public enum EditResult
 
     /// <summary>Already <see cref="GameState.MaxPlayers"/> player slots.</summary>
     TooManyPlayers,
+
+    /// <summary>The creature id is not in the scenario's creature catalog.</summary>
+    UnknownCreature,
+
+    /// <summary>A number is out of range (negative stats, empty stacks, bad slot).</summary>
+    InvalidValue,
 }
 
 /// <summary>
@@ -340,6 +347,192 @@ public sealed class MapEditorSession
 
         Run(new DelegateCommand($"Remove hero {hero.Name}", () => RemoveHero(hero), () => AddHero(hero)));
         return EditResult.Ok;
+    }
+
+    public EditResult SetHeroStats(HeroId id, int attack, int defense, SkillLevel tactics)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (attack < 0 || defense < 0 || !Enum.IsDefined(tactics))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = (hero.Attack, hero.Defense, hero.Tactics);
+        Run(new DelegateCommand($"Edit {hero.Name}", () => Apply((attack, defense, tactics)), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply((int Attack, int Defense, SkillLevel Tactics) stats)
+        {
+            (hero.Attack, hero.Defense, hero.Tactics) = stats;
+            _bus.Publish(new HeroStatsChanged(hero.Id, stats.Attack, stats.Defense, stats.Tactics));
+        }
+    }
+
+    /// <summary>Puts a stack into (or, with null, clears) one of a hero's army slots.</summary>
+    public EditResult SetArmySlot(HeroId id, int slot, CreatureStack? stack)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (!Army.IsValidSlot(slot))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        if (stack is not null && !Scenario.Creatures.Contains(stack.Creature))
+        {
+            return EditResult.UnknownCreature;
+        }
+
+        var previous = hero.Army[slot];
+        Run(new DelegateCommand($"Edit army of {hero.Name}", () => Apply(stack), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(CreatureStack? value)
+        {
+            hero.Army.Set(slot, value);
+            _bus.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+        }
+    }
+
+    // Guards and chests -----------------------------------------------------------------------
+
+    /// <summary>Places a neutral monster; a null <paramref name="count"/> is rolled from its tier at game start.</summary>
+    public EditResult PlaceMonster(
+        MapPosition position,
+        string creature,
+        int? count,
+        GuardDisposition disposition,
+        bool neverFlees,
+        out MapObjectId id)
+    {
+        id = default;
+        if (!Scenario.Creatures.Contains(creature))
+        {
+            return EditResult.UnknownCreature;
+        }
+
+        if (count < 1)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var definition = Catalog.OfKind(MapObjectKind.Monster).FirstOrDefault();
+        if (definition is null)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var check = CanPlaceObject(definition, position);
+        if (check != EditResult.Ok)
+        {
+            return check;
+        }
+
+        var monster = new MonsterGuard(Scenario.NextObjectId(), definition, position, creature, count, disposition, neverFlees);
+        id = monster.Id;
+        Run(new DelegateCommand($"Place {creature}", () => AddObject(monster), () => RemoveObject(monster)));
+        return EditResult.Ok;
+    }
+
+    public EditResult SetMonster(MapObjectId id, string creature, int? count, GuardDisposition disposition, bool neverFlees)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not MonsterGuard monster)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (!Scenario.Creatures.Contains(creature))
+        {
+            return EditResult.UnknownCreature;
+        }
+
+        if (count < 1)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = (monster.Creature, monster.Count, monster.Disposition, monster.NeverFlees);
+        Run(new DelegateCommand("Edit monster", () => Apply((creature, count, disposition, neverFlees)), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply((string Creature, int? Count, GuardDisposition Disposition, bool NeverFlees) value)
+        {
+            (monster.Creature, monster.Count, monster.Disposition, monster.NeverFlees) = value;
+            _bus.Publish(new MapObjectChanged(monster.Id));
+        }
+    }
+
+    /// <summary>Gives a mine a guard that must be beaten before the first flagging (null removes it).</summary>
+    public EditResult SetMineGuard(MapObjectId id, GuardStack? guard)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Mine mine)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (guard is not null && !Scenario.Creatures.Contains(guard.Creature))
+        {
+            return EditResult.UnknownCreature;
+        }
+
+        if (guard?.Count < 1)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = mine.Guard;
+        Run(new DelegateCommand("Set mine guard", () => Apply(guard), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(GuardStack? value)
+        {
+            mine.Guard = value;
+            _bus.Publish(new MapObjectChanged(mine.Id));
+        }
+    }
+
+    /// <summary>Fixes what a chest offers (null = rolled when opened).</summary>
+    public EditResult SetChestValues(MapObjectId id, ChestValues? values)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not TreasureChest chest)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (values is { Gold: < 0 } or { Experience: < 0 })
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = chest.FixedValues;
+        Run(new DelegateCommand("Set chest values", () => Apply(values), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(ChestValues? value)
+        {
+            chest.FixedValues = value;
+            _bus.Publish(new MapObjectChanged(chest.Id));
+        }
+    }
+
+    /// <summary>Map-wide guard rule: HoMM3 zone of control (pickups can be stolen) or fully guarded area.</summary>
+    public void SetGuardMode(GuardMode mode)
+    {
+        var previous = Scenario.GuardMode;
+        Run(new DelegateCommand($"Guard mode {mode}", () => Apply(mode), () => Apply(previous)));
+
+        void Apply(GuardMode value)
+        {
+            Scenario.SetGuardMode(value);
+            _bus.Publish(new GuardModeChanged(value));
+        }
     }
 
     // Map properties and player slots -----------------------------------------------------------

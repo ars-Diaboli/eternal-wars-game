@@ -1,4 +1,7 @@
+using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
@@ -21,11 +24,11 @@ public class HeroMovementServiceTests
         var players = new[] { new Player(new PlayerId(0), "Blue", true), new Player(new PlayerId(1), "Red", true) };
         var heroes = new[]
         {
-            new Hero(Blue, "Blue hero", players[0].Id, new MapPosition(2, 1)),
-            new Hero(Red, "Red hero", players[1].Id, new MapPosition(2, 0)),
+            new Hero(Blue, "Blue hero", players[0].Id, new MapPosition(2, 1), TestWorld.DefaultArmy()),
+            new Hero(Red, "Red hero", players[1].Id, new MapPosition(2, 0), TestWorld.DefaultArmy()),
         };
         var session = new GameSession(new GameState(map, players, heroes));
-        session.Turns.StartGame();
+        session.Start();
         return session;
     }
 
@@ -36,7 +39,7 @@ public class HeroMovementServiceTests
         HeroMoved? moved = null;
         session.Events.Subscribe<HeroMoved>(e => moved = e);
 
-        var result = session.Movement.TryStep(Blue, Direction.West);
+        var result = session.Step(Blue, Direction.West);
 
         Assert.Equal(MoveResult.Moved, result);
         Assert.Equal(new HeroMoved(Blue, new MapPosition(2, 1), new MapPosition(1, 1), 1400), moved);
@@ -48,10 +51,10 @@ public class HeroMovementServiceTests
         var session = CreateSession();
         var hero = session.State.GetHero(Blue);
 
-        session.Movement.TryStep(Blue, Direction.SouthWest); // grass -> swamp: pays grass, diagonal
+        session.Step(Blue, Direction.SouthWest); // grass -> swamp: pays grass, diagonal
         Assert.Equal(1500 - 141, hero.MovementPoints);
 
-        session.Movement.TryStep(Blue, Direction.South);     // swamp -> grass: pays swamp
+        session.Step(Blue, Direction.South);     // swamp -> grass: pays swamp
         Assert.Equal(1500 - 141 - 175, hero.MovementPoints);
     }
 
@@ -62,9 +65,9 @@ public class HeroMovementServiceTests
         var hero = session.State.GetHero(Blue);
         hero.MovementPoints = 30;
 
-        Assert.Equal(MoveResult.Moved, session.Movement.TryStep(Blue, Direction.West));
+        Assert.Equal(MoveResult.Moved, session.Step(Blue, Direction.West));
         Assert.Equal(0, hero.MovementPoints);
-        Assert.Equal(MoveResult.NotEnoughMovementPoints, session.Movement.TryStep(Blue, Direction.West));
+        Assert.Equal(MoveResult.NotEnoughMovementPoints, session.Step(Blue, Direction.West));
     }
 
     [Theory]
@@ -85,22 +88,23 @@ public class HeroMovementServiceTests
     {
         var session = CreateSession();
         var hero = session.State.GetHero(Blue);
-        hero.SlowestCreatureSpeed = 9;
+        hero.Army.Set(1, new CreatureStack(BuiltInCreatures.Griffin, 2)); // griffins only: map speed 7
+        hero.Army.Set(0, null);
 
-        session.Turns.EndTurn();
-        session.Turns.EndTurn();
+        session.EndTurn();
+        session.EndTurn();
 
-        Assert.Equal((1900, 1900), (hero.MaxMovementPoints, hero.MovementPoints));
+        Assert.Equal((1760, 1760), (hero.MaxMovementPoints, hero.MovementPoints));
     }
 
     [Theory]
     [InlineData(Direction.East, MoveResult.Impassable)]
-    [InlineData(Direction.North, MoveResult.BattleStarted)] // enemy hero: battle hook, no move
+    [InlineData(Direction.North, MoveResult.BattleStarted)] // enemy hero: a battle, no move
     public void TryStep_RejectsInvalidTargets(Direction direction, MoveResult expected)
     {
         var session = CreateSession();
 
-        Assert.Equal(expected, session.Movement.TryStep(Blue, direction));
+        Assert.Equal(expected, session.Step(Blue, direction));
         Assert.Equal(new MapPosition(2, 1), session.State.GetHero(Blue).Position);
     }
 
@@ -109,17 +113,20 @@ public class HeroMovementServiceTests
     {
         var session = CreateSession();
 
-        Assert.Equal(MoveResult.NotYourTurn, session.Movement.TryStep(Red, Direction.West));
+        var result = session.Execute(new StepHeroCommand(new PlayerId(1), Red, Direction.West));
+
+        Assert.False(result.IsAccepted);
+        Assert.Empty(session.CommandLog);
     }
 
     [Fact]
     public void MovementPoints_AreRestoredAtOwnersNextTurn()
     {
         var session = CreateSession();
-        session.Movement.TryStep(Blue, Direction.West);
+        session.Step(Blue, Direction.West);
 
-        session.Turns.EndTurn();
-        session.Turns.EndTurn();
+        session.EndTurn();
+        session.EndTurn();
 
         Assert.Equal(MovementAllowance.NoArmyBase, session.State.GetHero(Blue).MovementPoints);
     }
