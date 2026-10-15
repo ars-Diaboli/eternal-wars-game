@@ -1,0 +1,27 @@
+previous command - 1: S:\Dev\eternal-wars-game\reference\ew directory contains my previous sandbox /demo stuff - explore it use terrain surfaces from it and units . note most units have copy-pasted stats - put realistic ones. explore other things that may be useful
+
+there are mage type heroes and warrior type for every faction
+every hero mage or warrior has a prferred creature that gets combat bonuses
+hero also has a specialization like in homm3 (skill bonus, spell or resouce generation bonus)
+
+
+hero skills:
+similar to homm4
+skills are grouped into groupes
+4 skills per group
+10 skill points/levels is needed to fully learn all skills in the group
+hero can learn up to 6 groups of skills
+for haven, sylvian, academy, undead, inferno, dungeon - each has its magic school/skill group
+there are 4 sepell levels (and 4 magic guild levels)
+each spell has 3 levels on its own meaning it can be upgraded 2 times 
+for magic skill groups 1st skill has 4 tiers - allows to learn spells of relevant level
+second skill adds bonus points to total heroes mana pull and mana regeneration (3 levels)
+third skill allows to upgrade learned spell (2 levels)
+forth skill is unique to every spell school/skill group - it is learned last
+
+non spell focused skills 
+offensive group (melee attack, archery, speed on battlefield + bonus skill(decide later/put placeholder))
+deffensive (deffence, spell resistance, combat initiative + bonus skill(decide later/put placeholder))
+estates (flat gold income skill, skill that generates other resouces, skill that reduces player expenses at town with given hero, skill that every day gives 1.5% of current gold amount to the economy)
+pathfinding (logistics -bonus to hero movement, pathfinding - reduce terrain penalty, troops management - flat adventure map speed bonus to hero troops + bonus skill(decide later/put placeholder))
+tactics (skill that affects battlefield size, skill that allows to rearrange troops before combat start(similar to homm3 tactics))
