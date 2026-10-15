@@ -24,14 +24,16 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
   roads (ADR-024, GDD §4.1).
 - **Income**: no placeholder income; sources are towns, mines, hero skills, specialisations and artifacts (ADR-025).
 - **Gates**: two-way gates and one-way gates (entrance → fixed exit); no random-exit portals for now (ADR-026).
+- **Town groups**: lore and campaign only; no rule effect in standard games (ADR-028).
+- **Town rivalries**: lore only; no hate bonuses or alignment effects in combat (ADR-029).
+- **Meeting heroes**: own → exchange; enemy → battle; allies → no exchange for now (ADR-027).
 - **Map editor / random maps**: standalone editor; HotA-style templates authored in the editor;
   both game and editor generate maps from templates (ADR-023, GDD §4.9).
 
 ## Game direction
 1. **Setting**: original world or lore? Name and theme of the world and its conflict ("Eternal Wars")?
    Group names (Light / Darkness / Wild / Primordial are placeholders)?
-2. **Groups**: do they matter in gameplay (alliances, shared skills, diplomacy) or only in lore?
-3. **Vertical slice**: Haven vs Necropolis (proposed)?
+3. **Vertical slice**: build Haven and Necropolis first (proposed), or another pair? (The rivalry itself is lore only, ADR-029.)
 4. **Twists**: which systems do we deliberately change beyond combat (economy, hero skills, magic,
    town building, morale/luck)?
 
@@ -46,12 +48,13 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
   Should mine ownership flags also show "last known" state under refog?
 - **Treasure rewards**: fixed (1000 gold / 500 XP now) or rolled from tiers (HoMM3: 1000/1500/2000 gold or 500/1000/1500 XP)?
 - **Mines**: guarded by neutral stacks when placed? Re-flagging rules (any hero vs. needs to defeat a guard)?
-- **Meeting heroes**: own hero on target tile → exchange screen; enemy → battle (Phase 2). Allies?
+- **Unseen enemy under refog**: a blocked step (current) or an ambush battle?
+- **Teams**: team setup in the map file (fixed alliances) or chosen at game start?
 - **Terrain assignment**:
   - Confirm the proposed classes and native owners: open grass/dirt; rough +25 %; native sand
     (Stronghold), snow (Academy), swamp (Swamp Bestiary), lava (Inferno), subterranean (Dungeon).
   - Do Haven, Sylvan and Necropolis get new native terrains?
-  - Is "native" decided by the whole army (HoMM3) or by the hero's town group?
+  - Is "native" decided by the whole army (HoMM3) or by the hero's own town? (Not by group: groups have no rule effect.)
   - Is there a Pathfinding skill?
 - **Roads**: does the road cost apply only road → road (HoMM3), or whenever the tile being left has a road?
 

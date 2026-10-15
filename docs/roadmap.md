@@ -37,6 +37,9 @@ will be refined once the open questions are answered.
 - [x] Map format v2 (description + polymorphic objects, still loads v1)
 
 ### Core follow-ups
+- [ ] Meeting heroes (ADR-027): teams/alliances in `GameState` and map player slots; routes may end on
+      own/enemy heroes; own → exchange session (`HeroesMet` + exchange decision), enemy → battle hook
+      (Phase 2), ally → blocked
 - [ ] Gates: generalise the subterranean gate into a two-way gate kind (+ two-way monolith definition);
       add one-way gate entrance/exit with directional pathfinding, editor link tool, validation,
       map format v3 (ADR-026)
