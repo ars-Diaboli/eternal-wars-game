@@ -11,16 +11,16 @@ using Godot;
 namespace EternalWars.MapEditor;
 
 /// <summary>
-/// Map editor entry point. Editing operations (<see cref="TerrainBrush"/>, later objects/undo) live in core;
+/// Map editor entry point. Editing operations and undo/redo live in core (<see cref="MapEditorSession"/>);
 /// this class owns the 3D view, the tool palette and file I/O.
 /// </summary>
 public partial class Main : Node3D
 {
     private const string MapsDirectory = "user://maps";
 
-    private readonly EventBus _events = new();
-    private GameState _state = null!;
-    private TerrainBrush _brush = null!;
+    private MapEditorSession _editor = null!;
+    private TerrainType _brushTerrain = TerrainType.Grass;
+    private int _brushRadius;
     private StrategyCamera _camera = null!;
     private Node3D _world = null!;
     private LineEdit _fileName = null!;
@@ -41,10 +41,16 @@ public partial class Main : Node3D
         switch (@event)
         {
             case InputEventMouseButton { ButtonIndex: MouseButton.Left } button:
-                _painting = button.Pressed;
-                if (_painting)
+                if (button.Pressed && !_painting)
                 {
+                    _painting = true;
+                    _editor.BeginStroke($"Paint {_brushTerrain}");
                     PaintAt(button.Position);
+                }
+                else if (!button.Pressed && _painting)
+                {
+                    _painting = false;
+                    _editor.EndStroke();
                 }
 
                 break;
@@ -56,9 +62,9 @@ public partial class Main : Node3D
 
     private void PaintAt(Vector2 screenPoint)
     {
-        if (MapSpace.PickTile(_camera, screenPoint) is { } tile && _state.Map.Contains(tile))
+        if (MapSpace.PickTile(_camera, screenPoint) is { } tile && _editor.Scenario.Map.Contains(tile))
         {
-            _brush.Paint(tile);
+            _editor.PaintTerrain(tile, _brushTerrain, _brushRadius);
         }
     }
 
@@ -68,23 +74,17 @@ public partial class Main : Node3D
         _world = new Node3D { Name = "World" };
         AddChild(_world);
 
-        var previous = _brush;
-        _state = state;
-        _brush = new TerrainBrush(state.Map, _events)
-        {
-            Terrain = previous?.Terrain ?? TerrainType.Grass,
-            Radius = previous?.Radius ?? 0,
-        };
+        _editor = new MapEditorSession(state);
 
         var mapView = new AdventureMapView { Name = "Map" };
         _world.AddChild(mapView);
-        mapView.Bind(state.Map, _events);
+        mapView.Bind(state.Map, _editor.Events);
 
         foreach (var hero in state.Heroes)
         {
             var heroView = new HeroView();
             _world.AddChild(heroView);
-            heroView.Bind(hero, _events);
+            heroView.Bind(hero, _editor.Events);
         }
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
@@ -105,7 +105,7 @@ public partial class Main : Node3D
         {
             var button = new Button { Text = terrain.ToString(), ToggleMode = true, ButtonGroup = group };
             button.AddThemeColorOverride("font_color", Palette.ForTerrain(terrain).Lightened(0.3f));
-            button.Pressed += () => _brush.Terrain = terrain;
+            button.Pressed += () => _brushTerrain = terrain;
             button.ButtonPressed = terrain == TerrainType.Grass;
             terrainRow.AddChild(button);
         }
@@ -115,7 +115,7 @@ public partial class Main : Node3D
 
         fileRow.AddChild(new Label { Text = "Brush radius" });
         var radius = new SpinBox { MinValue = 0, MaxValue = 5 };
-        radius.ValueChanged += value => _brush.Radius = (int)value;
+        radius.ValueChanged += value => _brushRadius = (int)value;
         fileRow.AddChild(radius);
 
         _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0) };
@@ -123,17 +123,25 @@ public partial class Main : Node3D
         AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36)));
         AddButton(fileRow, "Save", Save);
         AddButton(fileRow, "Load", Load);
+        AddButton(fileRow, "Undo", () => _editor.Undo());
+        AddButton(fileRow, "Redo", () => _editor.Redo());
 
         _status = new Label();
         rows.AddChild(_status);
-        rows.AddChild(new Label { Text = "LMB: paint   WASD: pan   Wheel: zoom" });
+        rows.AddChild(new Label { Text = "LMB: paint   WASD: pan   Q/E: rotate   Wheel: zoom" });
     }
 
     private void Save()
     {
-        _state.Map.Name = _fileName.Text.Trim();
-        var path = MapPath(_state.Map.Name);
-        MapSerializer.Save(MapConverter.ToDocument(_state), path);
+        var map = _editor.Scenario.Map;
+        var name = _fileName.Text.Trim();
+        if (name != map.Name)
+        {
+            _editor.SetMapProperties(name, map.Description);
+        }
+
+        var path = MapPath(name);
+        MapSerializer.Save(MapConverter.ToDocument(_editor.Scenario), path);
         _status.Text = $"Saved {path}";
     }
 

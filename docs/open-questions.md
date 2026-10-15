@@ -8,9 +8,18 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Modes**: single-player vs AI → hot-seat → story campaign. No online multiplayer.
 - **Battles**: separate battlefield, square grid, unit footprints 2×2 / 3×3 / 4×4 (ADR-005).
 - **Turn order**: initiative decides order; one action per unit per round (ADR-009).
-- **Size rules**: surround/flanking and body blocking/cover; no cleave, no trample.
+- **Size rules**: surround/flanking and body blocking/cover; size gives no cleave/trample. Breath and
+  cleave exist as **creature abilities** (dragon/phoenix, cerberus/hydra).
 - **Towns**: 8 playable in 3 groups + Conflux and Dragon Utopia as non-playable (ADR-010).
 - **Terrain**: smooth terrain with grid overlay (ADR-011).
+- **Movement**: HoMM3 rules: pay for the tile being left, last step with any points left (ADR-018).
+- **Movement points**: slowest creature speed + skills + artifacts (ADR-018).
+- **Fog of war**: chosen per game: permanent reveal, or shroud + unit refog with hysteresis (ADR-017).
+- **Resources**: gold, lumber, ore, crystal, mercury, sulfur (ADR-019).
+- **Map scale**: 48, 72, 96, 128, 160, 192, 256; max 8 players (ADR-020).
+- **Combat**: 24 × 28–36 battlefield (Tactics), no facing/generic flanking (ability hooks instead),
+  HoMM3 wait and ties, breath friendly fire (ADR-021).
+- **Camera**: 15–30° from vertical, ±45° rotation, zoom (ADR-022).
 
 ## Game direction
 1. **Setting**: original world or lore? Name and theme of the world and its conflict ("Eternal Wars")?
@@ -20,14 +29,21 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 4. **Twists**: which systems do we deliberately change beyond combat (economy, hero skills, magic,
    town building, morale/luck)?
 
-## Rules
-5. **Combat details**: battlefield size; 4- vs 8-way movement; flanking model (facing or sides);
-   cover threshold; initiative tie-breaks and *Wait*.
-6. **Fog of war**: permanent reveal (HoMM3) or re-fogging?
-7. **Map scale**: target map sizes (36×36 … 144×144?) and max players (8?).
+## Combat (answered: ADR-021; remaining details)
+5. **Tactics → width**: exact width per Tactics level (30 default, up to 36, down to 28 when?). Movement 8-way?
+6. **Cover**: what counts as cover for ranged attacks (any unit in the line of fire, or only larger ones)?
+7. **Damage formula**: HoMM3 attack/defense formula as a baseline, or our own?
+8. **Creature roster** for the first two towns (7 tiers + upgrades, sizes, abilities).
 
-## Presentation
-8. **Camera**: fixed angle (HoMM-like) or free rotation?
+## Adventure map
+- **Refog**: should a moving hero stop automatically when an enemy unit comes into sight?
+  Should mine ownership flags also show "last known" state under refog?
+- **Treasure rewards**: fixed (1000 gold / 500 XP now) or rolled from tiers (HoMM3: 1000/1500/2000 gold or 500/1000/1500 XP)?
+- **Mines**: guarded by neutral stacks when placed? Re-flagging rules (any hero vs. needs to defeat a guard)?
+- **Meeting heroes**: own hero on target tile → exchange screen; enemy → battle (Phase 2). Allies?
+- **Gates and teleporters**: two-way gates only, or also one-way monoliths / random-exit portals?
+- **Roads** and native-terrain bonuses per faction?
+- **Placeholder income**: every player gets 500 gold per turn until towns exist. Keep it for testing?
 
 ## Tooling and process
 9. **2D harness scope**: debug viewer only, or also scripted scenario runner / AI sandbox (headless)?

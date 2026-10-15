@@ -7,9 +7,9 @@ public sealed class Player(PlayerId id, string name, bool isHuman)
 {
     public PlayerId Id { get; } = id;
 
-    public string Name { get; } = name;
+    public string Name { get; internal set; } = name;
 
-    public bool IsHuman { get; } = isHuman;
+    public bool IsHuman { get; internal set; } = isHuman;
 
     public ResourceSet Resources { get; internal set; }
 }

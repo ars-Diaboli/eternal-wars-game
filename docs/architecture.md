@@ -55,19 +55,30 @@ These are enforced by:
                                      │  calls                           ▲
                                      ▼                                  │ subscribe
                                GameSession (Core.Domain)                │
-                         ┌──────────┼─────────────┐                     │
-                    TurnService  HeroMovement  EconomyService ...       │
-                         └──────────┼─────────────┘                     │
-                                    │ mutate GameState, then publish    │
-                                    ▼                                   │
-                               EventBus (Core.Events) ──────────────────┘
+            ┌─────────────┬─────────┼──────────────┬────────────┐     │
+       TurnService  HeroMovement  MapObject      Economy   Visibility │
+                    (+PathFinder) Interactions   Service   Service    │
+            └─────────────┴─────────┼──────────────┴──────▲─────┘     │
+                                    │ mutate GameState,   │ handles   │
+                                    ▼ then publish        │ events    │
+                               EventBus (Core.Events) ────┴───────────┘
 ```
 
 - **`GameSession`** is the composition root of a running game: one `GameState`, one `IEventBus`,
   and the services that mutate the state. Front-ends call services and subscribe to `session.Events`.
+  Core handlers (`VisibilityService`) are subscribed first, before any view.
+- **Call chain for a click-to-move**: `Movement.MoveTo` → `PathFinder` → per step `TryStep`
+  (validates via the shared `MovementRules`, publishes `HeroMoved`) → on an entrance tile
+  `MapObjectInteractionService.Visit` → outcome events / `DecisionRequested`.
+- **Pending decisions.** Some outcomes need a player choice (chest now; level-ups, battle results
+  later). `GameState.PendingDecision` is set, `DecisionRequested` is published, and movement and
+  End Turn are refused until the matching `Resolve…` call. The core never waits or blocks: the UI
+  (or AI) answers whenever it wants.
 - **Services** validate, mutate `GameState`, then publish past-tense events. They depend on
   `IEventPublisher` only.
 - **`GameState`** is plain data. Setters are `internal` so only Domain services can mutate it.
+  It also carries the **`GameOptions`** chosen at game creation (fog mode, refog margin). Those are game
+  rules, not map data, so they are passed to `MapConverter.ToGameState(document, catalog, options)`.
 - **Views** (`AdventureMapView`, `HeroView`, `ResourceBar`, ...) subscribe with
   `node.SubscribeWhileInTree<T>(...)`, which disposes the subscription when the node leaves the tree.
 - **Apps** contain composition and input mapping only. If an app needs logic, it probably belongs
@@ -79,7 +90,25 @@ These are enforced by:
   and a game can be replayed from its seed plus its command log. Today services expose methods directly;
   the change is mechanical and planned for Phase 2 (see roadmap).
 - **Deterministic RNG.** Replace `System.Random` with a seeded, serializable PRNG stored in `GameState`.
-- **Content definitions.** Factions, creatures, spells and artifacts load from JSON in `Core.Data`.
+- **Content definitions.** Factions, creatures, spells and artifacts load from JSON in `Core.Data`,
+  following the map-object pattern: built-in defaults in Domain code (`BuiltInMapObjects`), JSON
+  overrides/additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`.
+
+### Map objects
+- **Definition** (`MapObjectDefinition`, data): id, name, `Kind`, footprint and kind parameters
+  (resource, daily yield). **Instance** (`MapObject` subclass per kind): id, top-left position,
+  mutable state (pile amount, mine owner, chest rewards, gate link).
+- **Footprint** rows use `B` blocked, `V` entrance (exactly one), `.` free. `GameState` indexes
+  occupied cells, so "what is on this tile" is O(1) for movement and pathfinding.
+- Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
+  map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
+
+### Map editor model
+`MapEditorSession` (Core.Domain/Editing) wraps a scenario `GameState` that never starts. Every edit is an
+`IEditorCommand` (execute/undo closures) recorded in `UndoHistory`. Commands publish the same kind
+of events as the game (`TerrainPainted`, `MapObjectPlaced`, …), so editor views are ordinary bus
+subscribers. `BeginStroke`/`EndStroke` merge a mouse drag into one undo step. `MapValidator`
+reports problems that single edits cannot prevent (hero on water after painting, unlinked gates).
 
 ## 4. Godot libraries: constraints
 
@@ -110,8 +139,9 @@ docs/
 src/
   Core/
     EternalWars.Core.Events/
-    EternalWars.Core.Domain/    Common, Map, Heroes, Players, Economy, Turns, Editing, Game, Events, Scenarios
-    EternalWars.Core.Data/      Maps (MapDocument, MapConverter, MapSerializer)
+    EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Pathfinding, Players, Economy, Turns,
+                                Visibility, Decisions, Editing, Game, Events, Scenarios
+    EternalWars.Core.Data/      Maps (MapDocument v2, MapConverter, MapSerializer), Content (definition JSON)
   Godot/
     EternalWars.Godot.Shared/   Map, Cameras, Controls, Events
     EternalWars.Godot.UI/       Hud, Debugging
@@ -121,7 +151,8 @@ src/
     EternalWars.MapEditor/
     EternalWars.Harness2D/
 tests/
-  EternalWars.Core.Tests/
+  EternalWars.Core.Tests/       TestWorld (ASCII maps), Events, Domain, Data
 tools/
   link-shared-assets.ps1
+.github/workflows/ci.yml        build + test on push/PR (no Godot needed)
 ```

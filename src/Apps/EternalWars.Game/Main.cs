@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Scenarios;
@@ -46,6 +47,15 @@ public partial class Main : Node3D
         BuildHud();
 
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, OnTurnStarted);
+
+        // TODO(Phase 1 UI): replace with a chest dialog. Until then always take the gold so the game never stalls.
+        this.SubscribeWhileInTree<DecisionRequested>(_session.Events, e =>
+        {
+            if (e.Decision is TreasureChestDecision)
+            {
+                _session.Interactions.ResolveTreasureChest(TreasureChestReward.Gold);
+            }
+        });
         _session.Turns.StartGame();
     }
 
@@ -85,7 +95,7 @@ public partial class Main : Node3D
         top.AddChild(resources);
         resources.Bind(_session);
 
-        top.AddChild(new Label { Text = "Arrows / numpad: move hero   WASD: pan   Wheel: zoom" });
+        top.AddChild(new Label { Text = "Arrows / numpad: move hero   WASD: pan   Q/E: rotate   Wheel: zoom" });
     }
 
     private static GameState LoadState() =>

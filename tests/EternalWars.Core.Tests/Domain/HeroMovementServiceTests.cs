@@ -43,13 +43,54 @@ public class HeroMovementServiceTests
     }
 
     [Fact]
-    public void TryStep_Diagonally_OntoSwamp_CostsMore()
+    public void TryStep_CostIsPaidForTheTileBeingLeft()
     {
         var session = CreateSession();
+        var hero = session.State.GetHero(Blue);
 
-        session.Movement.TryStep(Blue, Direction.SouthWest);
+        session.Movement.TryStep(Blue, Direction.SouthWest); // grass -> swamp: pays grass, diagonal
+        Assert.Equal(1500 - 141, hero.MovementPoints);
 
-        Assert.Equal(1500 - 247, session.State.GetHero(Blue).MovementPoints);
+        session.Movement.TryStep(Blue, Direction.South);     // swamp -> grass: pays swamp
+        Assert.Equal(1500 - 141 - 175, hero.MovementPoints);
+    }
+
+    [Fact]
+    public void TryStep_AnyPointsLeftAllowOneLastStep()
+    {
+        var session = CreateSession();
+        var hero = session.State.GetHero(Blue);
+        hero.MovementPoints = 30;
+
+        Assert.Equal(MoveResult.Moved, session.Movement.TryStep(Blue, Direction.West));
+        Assert.Equal(0, hero.MovementPoints);
+        Assert.Equal(MoveResult.NotEnoughMovementPoints, session.Movement.TryStep(Blue, Direction.West));
+    }
+
+    [Theory]
+    [InlineData(null, 0, 0, 1500)]
+    [InlineData(3, 0, 0, 1500)]
+    [InlineData(7, 0, 0, 1760)]
+    [InlineData(11, 0, 0, 2000)]
+    [InlineData(15, 0, 0, 2000)]
+    [InlineData(7, 20, 0, 2112)]   // Advanced Logistics-style +20 %
+    [InlineData(7, 20, 300, 2412)] // plus boots-style flat bonus
+    public void MovementAllowance_FollowsSlowestSpeedAndBonuses(int? slowestSpeed, int percent, int flat, int expected)
+    {
+        Assert.Equal(expected, MovementAllowance.Daily(slowestSpeed, percent, flat));
+    }
+
+    [Fact]
+    public void DailyAllowance_IsRecomputedAtOwnersTurnStart()
+    {
+        var session = CreateSession();
+        var hero = session.State.GetHero(Blue);
+        hero.SlowestCreatureSpeed = 9;
+
+        session.Turns.EndTurn();
+        session.Turns.EndTurn();
+
+        Assert.Equal((1900, 1900), (hero.MaxMovementPoints, hero.MovementPoints));
     }
 
     [Theory]
@@ -80,6 +121,6 @@ public class HeroMovementServiceTests
         session.Turns.EndTurn();
         session.Turns.EndTurn();
 
-        Assert.Equal(Hero.DefaultMaxMovementPoints, session.State.GetHero(Blue).MovementPoints);
+        Assert.Equal(MovementAllowance.NoArmyBase, session.State.GetHero(Blue).MovementPoints);
     }
 }

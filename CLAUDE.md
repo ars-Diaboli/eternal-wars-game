@@ -15,5 +15,9 @@ HoMM3-like 3D turn-based strategy. Godot 4.7.2 .NET, C# on .NET 10. Read `docs/a
   mutating. Views subscribe via `node.SubscribeWhileInTree<T>(...)`; they never poll.
 - Godot node classes must be `partial`. Library nodes are created in code and configured via `Bind(...)`.
 - Apps (`src/Apps/*`) contain composition and input mapping only.
-- Add/adjust tests in `tests/EternalWars.Core.Tests` for every core rule change.
+- Add/adjust tests in `tests/EternalWars.Core.Tests` for every core rule change. Use `TestWorld`
+  ASCII maps for adventure-map scenarios.
+- Player choices go through `GameState.PendingDecision` + `DecisionRequested` (never callbacks).
+- Editor changes go through `MapEditorSession` so they are undoable and publish events.
+- Bump `MapDocument.CurrentFormatVersion` when the map format changes, and keep older versions loading.
 - Record significant decisions in `docs/decisions.md`; update `docs/roadmap.md` checkboxes.

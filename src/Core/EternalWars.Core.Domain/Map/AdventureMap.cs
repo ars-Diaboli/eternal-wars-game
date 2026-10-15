@@ -14,6 +14,8 @@ public sealed class AdventureMap
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(width, MapSizes.MaxDimension);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(height, MapSizes.MaxDimension);
         ArgumentOutOfRangeException.ThrowIfLessThan(levels, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(levels, 2);
 
@@ -28,6 +30,8 @@ public sealed class AdventureMap
     }
 
     public string Name { get; set; } = "Untitled";
+
+    public string Description { get; set; } = "";
 
     public int Width { get; }
 

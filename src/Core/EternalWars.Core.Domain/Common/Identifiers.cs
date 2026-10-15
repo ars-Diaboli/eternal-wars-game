@@ -11,3 +11,9 @@ public readonly record struct HeroId(int Value)
 {
     public override string ToString() => $"Hero#{Value}";
 }
+
+/// <summary>Strongly typed id of an adventure-map object, unique within a game.</summary>
+public readonly record struct MapObjectId(int Value)
+{
+    public override string ToString() => $"Object#{Value}";
+}
