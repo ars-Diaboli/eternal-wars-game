@@ -23,4 +23,5 @@ Rules:
 - Reference assets by `res://shared/...` paths only.
 - Scenes here must not attach scripts that live in an app project. Scripts for prefabs belong in
   `EternalWars.Godot.Shared` / `EternalWars.Godot.UI` (see docs/architecture.md, "Godot libraries").
-- Large binaries go through Git LFS (see docs/conventions.md).
+- Large binaries go through Git LFS (`.gitattributes` at the repository root; see docs/development.md).
+- Record the source and licence of every third-party asset next to it (e.g. `textures/terrain/CREDITS.md`).

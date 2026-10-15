@@ -127,6 +127,14 @@ public static class CreatureTags
     public const string Beast = "beast";
     public const string Mounted = "mounted";
     public const string Dragon = "dragon";
+    public const string Undead = "undead";
+    public const string Construct = "construct";
+    public const string Elemental = "elemental";
+    public const string Elf = "elf";
+    public const string Fey = "fey";
+    public const string Orc = "orc";
+    public const string Giant = "giant";
+    public const string Reptile = "reptile";
 }
 
 /// <summary>

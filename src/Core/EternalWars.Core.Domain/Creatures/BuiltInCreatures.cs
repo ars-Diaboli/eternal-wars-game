@@ -12,7 +12,7 @@ namespace EternalWars.Core.Domain.Creatures;
 /// be tuned with the simulator. Caster spell ids name spells the magic system will define.
 /// Extra or overriding definitions load from JSON (<c>CreatureDefinitionSerializer</c>).
 /// </summary>
-public static class BuiltInCreatures
+public static partial class BuiltInCreatures
 {
     // Haven ----------------------------------------------------------------------------------
     public const string Footman = "haven.footman";
@@ -56,12 +56,16 @@ public static class BuiltInCreatures
 
     // Neutrals -------------------------------------------------------------------------------
     public const string Wolf = "neutral.wolf";
+    public const string DireWolf = "neutral.dire-wolf";
     public const string Bandit = "neutral.bandit";
     public const string Troll = "neutral.troll";
     public const string Wyvern = "neutral.wyvern";
     public const string RedDragon = "dragon-utopia.red-dragon";
 
-    public static IReadOnlyList<CreatureDefinition> All { get; } =
+    /// <summary>Every built-in creature: the slice towns and neutrals here, the other towns in <c>BuiltInCreatures.Towns.cs</c>.</summary>
+    public static IReadOnlyList<CreatureDefinition> All { get; } = [.. Slice(), .. OtherTowns(), .. MoreNeutrals()];
+
+    private static CreatureDefinition[] Slice() =>
     [
         // id, name, tier, size, attack, defense, damage, health, speed (cells), map speed, initiative
         Haven(Footman, "Footman", 1, Small, 6, 5, (4, 6), 14, 10, 3, 10, 60, 18) with { UpgradesTo = Crusader },
@@ -142,13 +146,13 @@ public static class BuiltInCreatures
                 Cost = new ResourceSet(Gold: 4500, Mercury: 2),
             },
 
-        Neutral(Wolf, "Wolf", 1, Small, 6, 4, (3, 5), 12, 14, 7, 13, 60, 12) with
-            { Tags = [CreatureTags.Beast], Capabilities = [new(PackHunter, 20)] },
+        Neutral(Wolf, "Timber wolf", 1, Small, 6, 4, (3, 5), 12, 14, 7, 13, 60, 12) with
+            { UpgradesTo = DireWolf, Tags = [CreatureTags.Beast], Capabilities = [new(PackHunter, 20)] },
         Neutral(Bandit, "Bandit", 2, Small, 9, 7, (5, 9), 25, 11, 6, 11, 150, 8) with { Tags = [CreatureTags.Human] },
         Neutral(Troll, "Troll", 3, Medium, 14, 10, (10, 16), 55, 11, 6, 9, 500, 4) with
             { Capabilities = [new(UnlimitedRetaliation)] },
         Neutral(Wyvern, "Wyvern", 4, Large, 16, 15, (16, 24), 120, 18, 8, 12, 1100, 2) with
-            { Tags = [CreatureTags.Beast], Capabilities = [new(Flying)] },
+            { Town = TownIds.DragonUtopia, Tags = [CreatureTags.Beast, CreatureTags.Dragon], Capabilities = [new(Flying)] },
         new CreatureDefinition(RedDragon, "Red dragon", 5, Large)
         {
             Town = TownIds.DragonUtopia, Attack = 28, Defense = 26, MinDamage = 40, MaxDamage = 50, Health = 250,
