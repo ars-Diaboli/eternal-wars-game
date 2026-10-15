@@ -83,6 +83,17 @@ out of scope, but the deterministic core keeps it possible.
   chest (choose gold 1000 *or* 500 XP), subterranean gate (two-way link). Objects have a footprint and
   are entered only through their entrance tile, usually from below.
   Planned: towns, artifacts, dwellings, shrines, guarded neutral stacks, boats/shipyards.
+- **Meeting heroes**: moving onto a tile with another hero is an interaction, like visiting an
+  object, so routes may **end** on that hero's tile (never pass through it):
+
+  | Other hero | Result | Status |
+  |---|---|---|
+  | **Own** | Opens the **exchange screen**: swap army stacks and artifacts. The moving hero stays on its adjacent tile. | planned (Phase 1 follow-up for the meeting, Phase 2/3 for armies/artifacts) |
+  | **Enemy** | Starts a **battle** | Phase 2 |
+  | **Allied** (team games) | **No interaction for now**: the tile is simply blocked. Exchange with allies may come later. | decided |
+
+  - Under refog, an unseen enemy hero blocks the step (`Occupied`) instead of starting a battle ❓.
+    Alternatively, bumping into it could start the battle (ambush).
 - **Gates and teleporters**: no random-exit portals for now. Every link is fixed in the map, so
   movement and pathfinding stay deterministic and predictable.
 
@@ -125,8 +136,12 @@ out of scope, but the deterministic core keeps it possible.
   Each source is a pluggable `IIncomeSource`, and `EconomyService.DailyIncome` sums them.
 
 ### 4.4 Factions and towns
-Towns are organised into four groups. Group names are working titles ❓, and so is whether a group has
-gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
+Towns are organised into four groups (names are working titles ❓). **Groups matter only in lore and
+the campaign**: story, scenario setup, campaign alliances and scripted events. In standard and random-map
+games they have **no rule effect**. There are no automatic alliances, shared skills, diplomacy or
+group-based bonuses; teams are set per game, and native terrain belongs to individual towns.
+Templates and the random map generator may still use groups as a *filter* for which towns appear,
+because that is content selection, not a rule.
 
 | Group | Towns | Playable |
 |---|---|---|
@@ -137,8 +152,12 @@ gameplay meaning (alliances, diplomacy, shared skills) or is only thematic.
 
 - 8 playable towns + 2 special towns. Each town has 7 creature tiers with upgrades ❓.
 - Bone dragons belong to Necropolis, not Dragon Utopia.
-- Vertical slice: **2 towns from opposing groups**. Proposal: Haven vs Necropolis, the most iconic
-  pairing and the best showcase for the dark tone ❓.
+- **Rivalries are lore only.** Opposition between towns or groups (e.g. Haven vs Necropolis) exists
+  in story and campaign, but has **no combat or rules effect**. There are no hate/enmity damage bonuses
+  (unlike HoMM3 Angels vs Devils) and no alignment modifiers. Creature abilities target *properties*
+  (undead, flying, size, …), never town or group membership.
+- Vertical slice: 2 towns. Proposal: Haven and Necropolis, the most iconic pairing and the best
+  showcase for the dark tone. Their rivalry is story only ❓.
 
 ### 4.5 Combat
 - **Separate battlefield** (HoMM3-style cut to an arena themed by the terrain where the battle starts).

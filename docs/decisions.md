@@ -183,3 +183,28 @@ the seeded game RNG and the pathfinder must stop at the entrance.
 Implementation plan: generalise `SubterraneanGate` into a two-way gate kind (subterranean gate and
 two-way monolith become definitions), add `OneWayGateEntrance`/`OneWayGateExit` kinds, extend
 `PathFinder` teleport edges to be directional, map format v3, and add an editor link tool and validation.
+
+### ADR-027: Meeting heroes
+**Status**: accepted (2026-10-15)
+Stepping onto another hero's tile is an interaction, not a move: the moving hero stays where it is.
+- Own hero: exchange (opened as a `PendingDecision`-style exchange session, resolved by the UI/AI).
+- Enemy: battle (Phase 2).
+- Ally: no interaction for now (blocked).
+
+The pathfinder lets a route *end* on an own or visible enemy hero, never pass through. This needs
+**teams/alliances** in `GameState` (player → team) so "ally" is defined; free-for-all is the default
+(every player their own team).
+
+### ADR-028: Town groups are lore and campaign only
+**Status**: accepted (2026-10-15)
+The four town groups carry no gameplay rules in standard or random-map games: no automatic alliances,
+shared skills, diplomacy or group bonuses. Teams come from game setup (ADR-027); native terrain is
+per town (ADR-024). Groups are used by the campaign (story, scripted alliances and events) and as
+content filters (setup screens, random map templates). `Group` stays on the town definition as metadata.
+
+### ADR-029: Town rivalries do not affect combat
+**Status**: accepted (2026-10-15)
+Rivalries such as Haven vs Necropolis are story and campaign material only. The combat engine has no
+hate/enmity bonuses and no alignment or group modifiers. Creature abilities key off creature
+*properties* (tags such as `Undead`, `Flying`, `Large`), never off town or group identity. This keeps
+balance independent of pairings and lets any town be designed and balanced on its own.
