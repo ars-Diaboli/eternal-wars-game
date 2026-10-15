@@ -3,7 +3,7 @@
 Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md).
 
 ## Answered (2026-10-15)
-- **Fidelity**: HoMM-inspired with our own twists (ADR-008, GDD §7).
+- **Fidelity**: HoMM-inspired with our own twists (ADR-008, GDD §8).
 - **Art**: realistic lighting and textures, dark and grim fantasy atmosphere, nods to the original (GDD §5).
 - **Modes**: single-player vs AI → hot-seat → story campaign. No online multiplayer.
 - **Battles**: separate battlefield, square grid, unit footprints 2×2 / 3×3 / 4×4 (ADR-005).
@@ -32,41 +32,34 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Meeting heroes**: own → exchange; enemy → battle; allies → no exchange for now (ADR-027).
 - **Map editor / random maps**: standalone editor; HotA-style templates authored in the editor;
   both game and editor generate maps from templates (ADR-023, GDD §4.9).
+- **Refog**: auto-stop when an enemy comes into sight; bumping into an unseen enemy starts an ambush
+  battle; out-of-sight objects show their last known state (ADR-031).
+- **Teams**: map/template defaults, editable at setup unless locked (ADR-032).
+- **Native terrain**: whole army must be native; Pathfinding skill 25/50/75 %; new terrains highlands
+  (Haven), forest floor (Sylvan), wasteland (Necropolis) (ADR-032).
+- **Roads**: road cost only road → road (ADR-032).
+- **Tactics**: choose the width before battle (Basic 30/32, Advanced 28/30/32, Expert 28–34); enemy
+  Tactics reduces yours; 36 only for sieges (ADR-033).
+- **Damage**: HoMM3 formula as baseline (ADR-033).
+- **Cover**: any unit or obstacle on the line of fire (ADR-033).
+- **Vertical slice**: Haven and Inferno (ADR-034).
+- **Treasure**: rolled HoMM3-style tiers; map authors may fix values (ADR-034).
+- **Mines**: optional guards; after that, re-flag by visiting (ADR-034).
+- **Platforms**: Windows + Linux/Steam Deck for 1.0; modding not required for 1.0 (ADR-034).
+- **Harness**: Godot 2D viewer + headless .NET simulator (ADR-034).
+- **Random maps 1.0**: mirrored templates, save generated maps; no water/islands, no HotA import (ADR-034).
+- **Lore**: Claude drafts a proposal for review → [lore.md](lore.md).
 
-## Game direction
-1. **Setting**: original world or lore? Name and theme of the world and its conflict ("Eternal Wars")?
-   Group names (Light / Darkness / Wild / Primordial are placeholders)?
-3. **Vertical slice**: build Haven and Necropolis first (proposed), or another pair? (The rivalry itself is lore only, ADR-029.)
-4. **Twists**: which systems do we deliberately change beyond combat (economy, hero skills, magic,
-   town building, morale/luck)?
+## Still open
 
-## Combat (answered: ADR-021; remaining details)
-5. **Tactics → width**: exact width per Tactics level (30 default, up to 36, down to 28 when?). Movement 8-way?
-6. **Cover**: what counts as cover for ranged attacks (any unit in the line of fire, or only larger ones)?
-7. **Damage formula**: HoMM3 attack/defense formula as a baseline, or our own?
-8. **Creature roster** for the first two towns (9 creatures over 5 tiers + upgrades, sizes, abilities).
+### Content
+1. **Lore review**: premise, world/group names in [lore.md](lore.md).
+2. **Twists** beyond combat: which systems do we deliberately change (hero skills, magic, town building,
+   morale/luck)?
+3. **Creature rosters** for Haven and Inferno: 9 creatures each over 5 tiers (2+2+2+2+1), with
+   upgrades, size class, speed, initiative and abilities. Should Claude draft them?
 
-## Adventure map
-- **Refog**: should a moving hero stop automatically when an enemy unit comes into sight?
-  Should mine ownership flags also show "last known" state under refog?
-- **Treasure rewards**: fixed (1000 gold / 500 XP now) or rolled from tiers (HoMM3: 1000/1500/2000 gold or 500/1000/1500 XP)?
-- **Mines**: guarded by neutral stacks when placed? Re-flagging rules (any hero vs. needs to defeat a guard)?
-- **Unseen enemy under refog**: a blocked step (current) or an ambush battle?
-- **Teams**: team setup in the map file (fixed alliances) or chosen at game start?
-- **Terrain assignment**:
-  - Confirm the proposed classes and native owners: open grass/dirt; rough +25 %; native sand
-    (Stronghold), snow (Academy), swamp (Swamp Bestiary), lava (Inferno), subterranean (Dungeon).
-  - Do Haven, Sylvan and Necropolis get new native terrains?
-  - Is "native" decided by the whole army (HoMM3) or by the hero's own town? (Not by group: groups have no rule effect.)
-  - Is there a Pathfinding skill?
-- **Roads**: does the road cost apply only road → road (HoMM3), or whenever the tile being left has a road?
-
-## Tooling and process
-9. **2D harness scope**: debug viewer only, or also scripted scenario runner / AI sandbox (headless)?
-10. **Random maps**:
-    - Should competitive templates support **mirrored/symmetric** generation?
-    - Water maps and islands (boats) in 1.0?
-    - Should players be able to save a generated map, or share its seed only?
-    - Import HotA templates? Their format could be converted, but we need to check licensing.
-11. **Platforms**: Windows only at first, or also Linux/macOS/Steam Deck?
-12. **Modding**: must content be moddable by players from 1.0 (affects data format choices now)?
+### Tuning (defaults chosen; confirm or change)
+4. Cover penalty (−25 %), ambush defender bonus (none?), non-native cost for new terrains (150),
+   neutral creatures count as non-native on all terrains, combat movement 8-way.
+5. Treasure chest roll odds per tier (copy HoMM3's after checking them, or set our own).

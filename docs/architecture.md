@@ -30,6 +30,8 @@
 │  EternalWars.Core.Events     pub/sub primitives: IEvent, IEventHandler, IEventPublisher, bus   │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
          tests/EternalWars.Core.Tests  (xUnit v3, covers Tier 1)
+         tools/EternalWars.Tools.Sim   (planned, Phase 2) headless console app over Tier 1 only:
+                                       scripted scenarios, AI-vs-AI, RMG batch validation; runs in CI
 ```
 
 ### Dependency rules

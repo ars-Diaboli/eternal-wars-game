@@ -46,7 +46,7 @@ Library node classes are instantiated from code and configured through `Bind(...
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
 **Status**: accepted (2026-10-15)
-We keep HoMM3's loop and structure but take deliberate departures, logged in game-design.md §7.
+We keep HoMM3's loop and structure but take deliberate departures, logged in game-design.md §8.
 Art: realistic lighting and PBR materials, dark and grim atmosphere, recognisable nods to the
 original. Modes in priority order: single-player vs AI, hot-seat, story campaign. Online multiplayer is
 out of scope.
@@ -224,3 +224,45 @@ goal": a town can be mid-build with fewer.
 - One upgrade building per dwelling; stacks can be upgraded in a town with that upgrade.
 - Creatures from unbuilt dwellings remain available from map dwellings and other towns.
 - Neutral creatures share the 1–5 tier scale (`CreatureDefinition.Tier`); `Upgrade` is optional.
+
+### ADR-031: Refog behaviour: auto-stop, ambush, last-known objects
+**Status**: accepted (2026-10-15)
+In `ShroudWithRefog`:
+- `MoveAlong` stops after a step when a previously unseen enemy hero comes into sight
+  (new `MoveResult.EnemySpotted`).
+- Bumping into an unseen enemy hero starts a battle (ambush) instead of returning `Occupied`.
+- Players see the **last known state** of out-of-sight objects. Each player keeps a per-object
+  snapshot (owner, present/removed), refreshed when the object is in sight. Views read that snapshot,
+  never live state, for objects out of sight.
+
+### ADR-032: Teams, native terrain, Pathfinding, roads
+**Status**: accepted (2026-10-15)
+- Teams: maps/templates define default teams; setup may change them unless the map locks them.
+  Stored in `GameState` (player → team id) and map player slots.
+- Terrain: three new native terrains: **highlands** (Haven), **forest floor** (Sylvan), **wasteland**
+  (Necropolis). Each needs a terrain code, colour and editor brush. A terrain is native to an army
+  only if **every** creature in it belongs to that terrain's town.
+- The Pathfinding skill reduces non-native and rough penalties by 25/50/75 %.
+- Roads: the road cost applies only road → road (HoMM3).
+
+### ADR-033: Combat baseline: Tactics width choice, HoMM3 damage, cover
+**Status**: accepted (2026-10-15)
+- Battlefield 24 tall. The side with effective Tactics (own level − enemy level) picks the width before
+  battle: Basic {30, 32}, Advanced {28, 30, 32}, Expert {28, 30, 32, 34}; otherwise 30. 36 is reserved
+  for sieges. This refines ADR-021.
+- Damage uses the HoMM3 formula as a baseline (+5 %/point Attack over Defense, cap +300 %;
+  −2.5 %/point Defense over Attack, cap −70 %). Rolls come from the seeded battle RNG.
+- Cover: any unit (friend or foe) or obstacle cell on the line of fire reduces ranged damage (−25 %,
+  to be tuned).
+
+### ADR-034: Scope: slice towns, platforms, modding, tooling, random-map features
+**Status**: accepted (2026-10-15)
+- Vertical slice towns: **Haven and Inferno**.
+- Treasure chests roll HoMM3-style tiers using the seeded game RNG; map authors may fix values.
+- Mines may carry an optional guard; after the guard is beaten, any hero re-flags by visiting.
+- Platforms for 1.0: Windows, Linux/Steam Deck. macOS later.
+- Player modding is not a 1.0 requirement; formats stay data-driven and versioned anyway.
+- Harness: the Godot 2D viewer plus a headless .NET simulator (`EternalWars.Tools.Sim`) for scripted
+  scenarios, AI-vs-AI and RMG batch validation in CI.
+- Random maps for 1.0: mirrored/symmetric templates and saving generated maps. No water/islands and no
+  HotA template import.
