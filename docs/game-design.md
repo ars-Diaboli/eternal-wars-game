@@ -10,7 +10,7 @@ recruit armies and fight tactical battles on a square grid where creatures occup
 cells.
 
 It is **HoMM-inspired, not a clone**: we keep the proven loop (heroes, towns, weekly growth, tactical
-battles) and deliberately change systems where we can add identity. Every twist is logged in §7.
+battles) and deliberately change systems where we can add identity. Every twist is logged in §8.
 
 The 3D presentation is meant to **add atmosphere without hurting readability**: the camera, map and
 battles must stay as legible as HoMM3's hand-painted 2D.
@@ -50,25 +50,35 @@ out of scope, but the deterministic core keeps it possible.
 - Square grid, up to 2 levels (surface + underground) connected by **subterranean gates** (implemented).
 - **Movement (HoMM3 rules, implemented)**:
   - A step costs the terrain of the tile being **left**. Water/rock are impassable on foot.
-  - **Terrain classes** (accepted; the per-terrain assignment below is a proposal ❓):
+  - **Terrain classes** (accepted):
 
-    | Class | Rule | Proposed terrains |
+    | Class | Rule | Terrains |
     |---|---|---|
     | **Open** | cost 100 for everyone | grass, dirt |
-    | **Rough** | fixed penalty for **all** factions, e.g. +25 % (125) | rough |
-    | **Native** | 100 for armies **native** to it; penalty for everyone else | sand 150, snow 150, swamp 175, lava 150, subterranean 150 |
+    | **Rough** | fixed penalty for **all** factions (+25 %, 125) | rough |
+    | **Native** | 100 for **native** armies; penalty for everyone else | see below |
 
-    - Proposed native owners ❓: Academy (snow), Swamp Bestiary (swamp), Inferno (lava),
-      Dungeon (subterranean), Stronghold (sand). Haven, Sylvan and Necropolis may need native
-      terrains of their own (e.g. new *highlands*, *forest floor*, *wasteland* types), or they could live on open terrain.
-    - **Who counts as native** ❓: HoMM3 rule is that the penalty is waived only if **every** creature in
-      the army is native. A *Pathfinding* skill reduces non-native penalties (HoMM3: 25/50/75 %).
-    - Today's implementation still uses fixed per-terrain costs (no factions yet). It switches to
-      classes when towns/factions exist (Phase 3).
+    | Native terrain | Native town | Non-native cost |
+    |---|---|---|
+    | **Highlands** (new) | Haven | 150 ❓ |
+    | **Forest floor** (new) | Sylvan | 150 ❓ |
+    | **Wasteland** (new) | Necropolis | 150 ❓ |
+    | Snow | Academy | 150 |
+    | Lava | Inferno | 150 |
+    | Subterranean | Dungeon | 150 |
+    | Sand | Stronghold | 150 |
+    | Swamp | Swamp Bestiary | 175 |
+
+    - **Native = the whole army** (HoMM3): the penalty is waived only if **every** creature in the army
+      belongs to the terrain's native town. Neutrals count as non-native ❓.
+    - The **Pathfinding** secondary skill reduces non-native and rough penalties by 25/50/75 %
+      (basic/advanced/expert).
+    - Today's implementation still uses fixed per-terrain costs (no towns yet) and lacks the three new
+      terrains. Both change with the terrain-definition follow-up and Phase 3.
   - **Roads (HoMM3-style)**: a road layer on top of terrain, drawn in the editor and generated
     between towns and through zone connections. Road types and costs: **dirt 50, gravel 65,
     cobblestone 75**. The road cost replaces the terrain cost and **ignores native/rough penalties**.
-    It applies when the step goes from a road tile to a road tile ❓ (HoMM3 behaviour); diagonals ×1.41 as usual.
+    It applies only when the step goes **from a road tile to a road tile** (HoMM3); diagonals ×1.41 as usual.
   - 8-way movement; diagonal steps cost ×1.41.
   - **Last step**: a hero with any movement points left may make one more step, whatever it costs,
     and ends with 0.
@@ -80,8 +90,12 @@ out of scope, but the deterministic core keeps it possible.
   never used. Every step carries a day index for HoMM-style day markers. Heroes the player can't see
   don't affect the plan; movement stops when it bumps into one.
 - **Map objects** (implemented): resource piles (picked up), mines (flagged, daily income), treasure
-  chest (choose gold 1000 *or* 500 XP), subterranean gate (two-way link). Objects have a footprint and
+  chest (choose gold *or* XP), subterranean gate (two-way link). Objects have a footprint and
   are entered only through their entrance tile, usually from below.
+  - **Treasure chests roll their reward** (seeded game RNG): 1000/1500/2000 gold *or* 500/1000/1500 XP
+    (HoMM3 odds ❓); later a small artifact chance. Map authors may fix the values. Today values are fixed.
+  - **Mines may be guarded**: the editor or random map generator can attach a guard stack. The guard must be
+    defeated before the first flagging; after that any hero re-flags the mine by visiting it (Phase 2).
   Planned: towns, artifacts, dwellings, shrines, guarded neutral stacks, boats/shipyards.
 - **Meeting heroes**: moving onto a tile with another hero is an interaction, like visiting an
   object, so routes may **end** on that hero's tile (never pass through it):
@@ -92,8 +106,10 @@ out of scope, but the deterministic core keeps it possible.
   | **Enemy** | Starts a **battle** | Phase 2 |
   | **Allied** (team games) | **No interaction for now**: the tile is simply blocked. Exchange with allies may come later. | decided |
 
-  - Under refog, an unseen enemy hero blocks the step (`Occupied`) instead of starting a battle ❓.
-    Alternatively, bumping into it could start the battle (ambush).
+  - **Teams**: the map (or template) defines default teams; the game setup screen may change them
+    unless the map locks them (story/scenario maps). Free-for-all when nothing is defined.
+  - Under refog: a moving hero **automatically stops** when an enemy hero comes into sight. If it still
+    bumps into an unseen enemy, a **battle starts (ambush)**; the defender may get an ambush bonus ❓.
 - **Gates and teleporters**: no random-exit portals for now. Every link is fixed in the map, so
   movement and pathfinding stay deterministic and predictable.
 
@@ -113,6 +129,8 @@ out of scope, but the deterministic core keeps it possible.
      is farther than radius + **refog margin** (default 2, configurable). Example: radius 3 + margin 4
      reveals at 3 tiles and refogs at 7.
   - Observers: heroes (scouting radius 5) and owned mines (radius 2).
+  - Under refog, **objects out of sight show their last known state** (flag colour, chest still there),
+    updated when they come back into sight. Units are hidden entirely.
 
 ### 4.2 Heroes
 - Primary stats: Attack, Defense, Spell Power, Knowledge.
@@ -184,8 +202,8 @@ because that is content selection, not a rule.
   in story and campaign, but has **no combat or rules effect**. There are no hate/enmity damage bonuses
   (unlike HoMM3 Angels vs Devils) and no alignment modifiers. Creature abilities target *properties*
   (undead, flying, size, …), never town or group membership.
-- Vertical slice: 2 towns. Proposal: Haven and Necropolis, the most iconic pairing and the best
-  showcase for the dark tone. Their rivalry is story only ❓.
+- **Vertical slice: Haven and Inferno** (decided). The holy-vs-demonic contrast reads instantly in a dark,
+  realistic art style; the rivalry is story only.
 
 ### 4.5 Combat
 - **Separate battlefield** (HoMM3-style cut to an arena themed by the terrain where the battle starts).
@@ -197,17 +215,32 @@ because that is content selection, not a rule.
   | Large | 4×4 cells | dragons, behemoths, titans |
   - The fine cell grid lets units of different sizes share one board. Positions refer to the top-left
     cell of the footprint.
-  - **Battlefield**: **24 cells tall**, **28–36 cells wide**, depending on the hero's learned
-    *Tactics* skill (default **30**). Exact width per Tactics level ❓ (e.g. none 30, basic 32,
-    advanced 34, expert 36; or does a defender's Tactics shrink it toward 28?). 8-way movement assumed ❓.
+  - **Battlefield**: **24 cells tall**, **30 cells wide** by default. 8-way movement assumed ❓.
+    - **Tactics lets its owner choose the width before the battle**:
+
+      | Effective Tactics | Width choices |
+      |---|---|
+      | none | 30 |
+      | Basic | 30, 32 |
+      | Advanced | 28, 30, 32 |
+      | Expert | 28, 30, 32, 34 |
+
+    - **The enemy hero's Tactics reduces yours**: effective level = your level − enemy level (minimum
+      none). At most one side can have an effective level above none, and that side chooses.
+    - **36 wide is reserved for town sieges.**
   - **Surround / flanking**: a unit's perimeter grows with its size, so more attackers fit around a
     large unit. **No generic flanking bonus**: damage is the same from any side, however many units
     surround the target. **No facing.** Engagement is a hook for **special abilities**: some creatures
     get bonuses when the target is already engaged by another enemy, per extra side, per number of times
     the target was hit this round, and so on. The core tracks engagement and hit history so abilities can
     use them.
-  - **Body blocking & cover**: footprints block movement. Ranged attacks whose line of fire crosses a
-    unit (friend or foe) larger than the target ❓ suffer a cover penalty.
+  - **Body blocking & cover**: footprints block movement. A ranged attack whose line of fire crosses
+    **any other unit (friend or foe) or an obstacle cell** suffers a cover penalty (−25 % ❓). Size matters
+    indirectly: big units block more lines of fire.
+  - **Damage formula: HoMM3 baseline.** Base damage (rolled per stack within the creature's min–max) ×
+    stack size; +5 % per point of Attack above the target's Defense (cap +300 %); −2.5 % per point of
+    Defense above Attack (cap −70 %); then multiplicative modifiers (skills, cover, abilities, spells).
+    Rolls use the seeded battle RNG.
   - Size alone does not grant reach, cleave or trample/push.
   - **Area attacks are creature abilities**, independent of size:
     - **Breath** (dragon- or phoenix-like): also hits the cells directly behind the target in the
@@ -245,8 +278,12 @@ because that is content selection, not a rule.
   mine owners, hero placement, player slots, map name/description, validation. Godot UI for most of it
   is pending. Later: victory/loss conditions, events/triggers, map resize, and the **template editor**
   plus "generate map from template" (§4.9).
-- **2D harness**: a top-down debug front-end over the same core, used for rule development,
-  scenario scripting and visual debugging of AI.
+- **2D harness**: two parts:
+  - **Viewer** (Godot 2D app): a top-down debug front-end over the same core, for rule development and
+    visual debugging of AI.
+  - **Headless simulator** (plain .NET console, no Godot): runs scripted scenarios, AI-vs-AI games and
+    random-map batch generation/validation. It is fast enough for CI and for tuning balance and AI over
+    thousands of games.
 
 ### 4.9 Random map generation (templates)
 Modelled on the Heroes 3: Horn of the Abyss template system.
@@ -282,8 +319,13 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
   7. Place treasure by value band.
   8. Place neutral monsters.
   9. Validate: every start zone can reach the others, and start zones are fair against each other.
-- Open ❓: symmetric generation for competitive templates; water/islands; how the slowest-creature and
-  native-terrain rules feed into treasure/guard values; template-level restrictions per town group.
+- **In scope for 1.0**:
+  - **Mirrored/symmetric generation**: a template can mark zones as mirrored, so competitive maps are
+    generated symmetrically (point or axis symmetry) for fairness.
+  - **Saving generated maps**: a generated map can be saved as an ordinary map file, as well as
+    reproduced from its seed.
+- **Not in 1.0**: water zones/islands/boats in templates, and importing HotA templates.
+- Open ❓: how army speed and native-terrain rules feed into treasure/guard values.
 
 ## 5. Presentation
 
@@ -308,10 +350,16 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 - **UI**: HoMM-style right-side panel (minimap, hero/town list, end turn) and bottom status bar.
 - **Audio**: per-terrain ambient music, faction town themes.
 
-## 6. Non-goals (for now)
-- Real-time elements, online multiplayer, procedural campaign, mobile touch UI.
+## 6. Platforms and scope
+- **Platforms for 1.0: Windows and Linux / Steam Deck** (controller-friendly UI and Deck performance
+  budget to test). macOS later.
+- **Player modding is not a 1.0 requirement.** Content stays data-driven, with versioned JSON formats,
+  because that helps us. A supported mod loader and mod folder may come after 1.0.
 
-## 7. Deliberate departures from HoMM3
+## 7. Non-goals (for now)
+- Real-time elements, online multiplayer, procedural campaign, mobile touch UI, official mod support.
+
+## 8. Deliberate departures from HoMM3
 
 | # | Area | HoMM3 | Eternal Wars | Status |
 |---|---|---|---|---|
@@ -326,4 +374,8 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 9 | Map scale | Up to 144×144 | Presets up to 256×256, 8 players | accepted |
 | 10 | Random maps | Fixed templates (HotA adds a template editor) | Template editor in our map editor; game and editor both generate | accepted |
 | 11 | Terrain penalties | Native terrain per town, flat costs otherwise | Three classes: open (no penalty), rough (fixed penalty for all), native (penalty only for non-natives) | accepted |
+| 12 | Creature tiers | 7 tiers, 1 dwelling per tier, all buildable | 5 tiers, 9 dwellings, build 7 of 9 (final per town) | accepted |
+| 13 | Tactics | Larger deployment zone | Choose battlefield width (28–34) before battle; enemy Tactics reduces yours | accepted |
+| 14 | Ranged | Range and wall penalties only | Units and obstacles in the line of fire give cover | accepted |
+| 15 | Fog ambush | — | Under refog, bumping into an unseen enemy starts an ambush battle | accepted |
 | … | | | *more twists to be proposed* ❓ | |
