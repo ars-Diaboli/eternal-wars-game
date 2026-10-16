@@ -51,6 +51,7 @@ public partial class Main : Node3D
     private HeroListPanel _heroList = null!;
     private TownListPanel _townList = null!;
     private TownPanel _townScreen = null!;
+    private HeroPanel _heroScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
@@ -113,9 +114,9 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_townScreen.Visible)
+        if (_townScreen.Visible || _heroScreen.Visible)
         {
-            return; // the town screen takes the input (Escape closes it)
+            return; // a full-screen panel takes the input (Escape closes it)
         }
 
         if (_session.State.PendingDecision is not null)
@@ -140,6 +141,9 @@ public partial class Main : Node3D
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.T }:
                 OpenNextTown();
+                break;
+            case InputEventKey { Pressed: true, Keycode: Key.H }:
+                ShowHero(_selectedHero);
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.L }:
                 _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
@@ -418,6 +422,18 @@ public partial class Main : Node3D
         _townScreen.Open(id);
     }
 
+    /// <summary>The hero screen of an own hero (H: the selected one).</summary>
+    private void ShowHero(HeroId? id)
+    {
+        if (id is not { } hero || _session.State.HeroesOf(_session.State.CurrentPlayer.Id).All(h => h.Id != hero))
+        {
+            _status.Text = "Select a hero first.";
+            return;
+        }
+
+        _heroScreen.Open(hero);
+    }
+
     /// <summary>T: the town screen of the next own town.</summary>
     private void OpenNextTown()
     {
@@ -634,6 +650,7 @@ public partial class Main : Node3D
         side.AddChild(_heroList);
         _heroList.Bind(_session);
         _heroList.HeroSelected += hero => Select(hero, focus: true);
+        _heroList.HeroInfoRequested += hero => ShowHero(hero);
         _townList = new TownListPanel();
         side.AddChild(_townList);
         _townList.Bind(_session);
@@ -645,6 +662,9 @@ public partial class Main : Node3D
         _townScreen = new TownPanel { FullScreen = true };
         townLayer.AddChild(_townScreen);
         _townScreen.Bind(_session);
+        _heroScreen = new HeroPanel { FullScreen = true };
+        townLayer.AddChild(_heroScreen);
+        _heroScreen.Bind(_session);
         _game.SubscribeWhileInTree<MapObjectVisited>(_session.Events, e =>
         {
             if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Core.Domain.Towns.Town town

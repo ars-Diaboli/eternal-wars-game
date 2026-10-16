@@ -246,7 +246,7 @@ src/
                                 Records (replays)
   Godot/
     EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events
-    EternalWars.Godot.UI/       Hud (incl. DecisionPanel, TownPanel, TownListPanel), Battle (BattleBoard2D, BattleHud), Debugging
+    EternalWars.Godot.UI/       Hud (incl. DecisionPanel, TownPanel, TownListPanel, HeroPanel), Battle (BattleBoard2D, BattleHud), Debugging
     EternalWars.Godot.Assets/   (linked into apps as res://shared)
   Apps/
     EternalWars.Game/           project.godot + Main.tscn/Main.cs

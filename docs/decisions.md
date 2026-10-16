@@ -610,6 +610,11 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   steps into an own town on a human's turn, from the town list in the HUD (`TownListPanel`, next to the hero list; the map
   centres on the town) or with **T**; Escape or Close shuts it, and it takes the input while open. It also shows the
   governor with Appoint / Dismiss buttons (ADR-063).
+  **The hero screen** (`HeroPanel`, same canvas layer and the same full-screen mode) opens with **H** for the selected hero or
+  the "Info" button in the hero list; Escape or Close shuts it, "<" and ">" go through the player's heroes. It shows stats
+  with what artifacts add, mana, experience, specialty, skills with their descriptions, the army (move and split stacks
+  inside the hero), war machines, the paper doll and the backpack (click to take off or put on). All of it is commands
+  (`MoveStackCommand`, `EquipArtifactCommand`, `UnequipArtifactCommand`).
 - **Not yet**: effects of fort, marketplace trading, mage guild and tavern (the blacksmith sells war machines,
   ADR-056); town sieges; AI town play.
 
