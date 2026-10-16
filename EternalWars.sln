@@ -46,6 +46,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3C9B6E2A-5
 		docs\README.md = docs\README.md
 		docs\reference-sandbox.md = docs\reference-sandbox.md
 		docs\roadmap.md = docs\roadmap.md
+		docs\skills.md = docs\skills.md
+		docs\spells.md = docs\spells.md
+		docs\town-buildings.md = docs\town-buildings.md
+		docs\heroes.md = docs\heroes.md
+		docs\artifacts.md = docs\artifacts.md
 	EndProjectSection
 EndProject
 Global
