@@ -1,0 +1,254 @@
+{
+  "formatVersion": 11,
+  "name": "Two Towns",
+  "description": "",
+  "width": 32,
+  "height": 22,
+  "terrain": [
+    [
+      "dggggggggggggggggggggggdgggggggg",
+      "ggggggggggggggggdggggggggggggggg",
+      "gggggggggdgggggggggggggggggggggg",
+      "ggdggggggggggggggggggggggdgggggg",
+      "ggggggggggggggggggdggggggggggggg",
+      "gggggggggggdgggggggggggggggggggg",
+      "ggggdggggggggggggggggggggggdgggg",
+      "ggggggggggggggggggggdggggggggggg",
+      "gggggggggggggdgggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggg",
+      "ggggggggdggggggggggggggggggggggd",
+      "gdggggggggggggggggggggggdggggggg",
+      "gggggggggggggggggdgggggggggggggg",
+      "ggggggggggdggggggggggggggggggggg",
+      "gggdggggggggggggggggggggggdggggg",
+      "gggggggggggggggggggdgggggggggggg",
+      "ggggggggggggdggggggggggggggggggg",
+      "gggggdggggggggggggggggggggggdggg",
+      "gggggggggggggggggggggdgggggggggg",
+      "ggggggggggggggdggggggggggggggggg"
+    ]
+  ],
+  "roads": [
+    [
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      ".dddddddddddddddddddddddddddddd.",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................",
+      "................................"
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": true
+    }
+  ],
+  "teamsLocked": false,
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Orrin",
+      "owner": 0,
+      "x": 4,
+      "y": 9,
+      "level": 0,
+      "attack": 2,
+      "defense": 1,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "haven.pikeman",
+          "count": 20
+        },
+        {
+          "slot": 1,
+          "creature": "haven.archer",
+          "count": 10
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Sandro",
+      "owner": 1,
+      "x": 27,
+      "y": 9,
+      "level": 0,
+      "attack": 1,
+      "defense": 2,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "inferno.horned-demon",
+          "count": 22
+        },
+        {
+          "slot": 1,
+          "creature": "inferno.hell-hound",
+          "count": 8
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Castlebridge",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 1
+      },
+      "dwellings": {
+        "haven.footman": 1,
+        "haven.pikeman": 1
+      },
+      "available": {
+        "haven.footman": 18,
+        "haven.pikeman": 16
+      },
+      "id": 1,
+      "definition": "town.haven",
+      "x": 1,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "owner": 1,
+      "name": "Ashgate",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 1
+      },
+      "dwellings": {
+        "inferno.horned-demon": 1,
+        "inferno.imp": 1
+      },
+      "available": {
+        "inferno.horned-demon": 15,
+        "inferno.imp": 20
+      },
+      "id": 2,
+      "definition": "town.inferno",
+      "x": 24,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "name": "Grimhollow",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 1
+      },
+      "garrison": [
+        {
+          "slot": 0,
+          "creature": "necropolis.skeleton",
+          "count": 24
+        },
+        {
+          "slot": 1,
+          "creature": "necropolis.ghoul",
+          "count": 6
+        }
+      ],
+      "id": 3,
+      "definition": "town.necropolis",
+      "x": 13,
+      "y": 12,
+      "level": 0
+    },
+    {
+      "kind": "mine",
+      "owner": 0,
+      "id": 4,
+      "definition": "mine.gold",
+      "x": 1,
+      "y": 12,
+      "level": 0
+    },
+    {
+      "kind": "mine",
+      "owner": 1,
+      "id": 5,
+      "definition": "mine.gold",
+      "x": 28,
+      "y": 12,
+      "level": 0
+    },
+    {
+      "kind": "mine",
+      "id": 6,
+      "definition": "mine.lumber",
+      "x": 10,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "mine",
+      "id": 7,
+      "definition": "mine.ore",
+      "x": 19,
+      "y": 2,
+      "level": 0
+    },
+    {
+      "kind": "pile",
+      "amount": 7,
+      "id": 8,
+      "definition": "pile.lumber",
+      "x": 8,
+      "y": 8,
+      "level": 0
+    },
+    {
+      "kind": "pile",
+      "amount": 7,
+      "id": 9,
+      "definition": "pile.ore",
+      "x": 23,
+      "y": 8,
+      "level": 0
+    },
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "count": 15,
+      "disposition": "Aggressive",
+      "neverFlees": false,
+      "id": 10,
+      "definition": "monster",
+      "x": 16,
+      "y": 6,
+      "level": 0
+    }
+  ]
+}
