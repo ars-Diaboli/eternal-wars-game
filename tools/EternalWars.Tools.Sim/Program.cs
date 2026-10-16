@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Battles;
@@ -23,6 +24,7 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
+/// sim game [--map towns|demo|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file]  (the adventure AI plays every slot)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
 /// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
 /// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
@@ -53,6 +55,7 @@ public static class Program
                 ["battle", var attacker, var defender, .. var rest] => Battle(ParseArmy(attacker), ParseArmy(defender), Option(rest, "--runs", 100), (ulong)Option(rest, "--seed", 1)),
                 ["record", var path, .. var rest] => Record(path, Option(rest, "--days", 7), (ulong)Option(rest, "--seed", 1)),
                 ["replay", var path] => Replay(path),
+                ["game", .. var rest] => Game(OptionText(rest, "--map") ?? "towns", Option(rest, "--days", 40), (ulong)Option(rest, "--seed", 1), Option(rest, "--runs", 1), OptionText(rest, "--record")),
                 ["towns", .. var rest] => Towns(Option(rest, "--runs", 32), rest.Contains("--upgraded")),
                 ["creatures", "--write", var path] => WriteTable(path),
                 ["creatures"] => Creatures(),
@@ -70,7 +73,7 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file] [--days D] [--seed S] [--runs N] [--record F] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
@@ -279,6 +282,79 @@ public static class Program
         return 0;
     }
 
+    /// <summary>The adventure AI plays every slot of a map to the end or the day limit; prints how each game went.</summary>
+    private static int Game(string map, int days, ulong seed, int runs, string? recordPath)
+    {
+        var wins = new Dictionary<string, int>();
+        var refusedTotal = 0;
+        for (var run = 0; run < runs; run++)
+        {
+            var (initial, session, ai) = PlayAiGame(map, days, seed + (ulong)run);
+            var state = session.State;
+            var winner = state.Outcome is { HasWinner: true } outcome ? string.Join("+", outcome.Winners.Select(w => state.GetPlayer(w).Name)) : (state.IsOver ? "nobody" : "unfinished");
+            wins[winner] = wins.GetValueOrDefault(winner) + 1;
+            refusedTotal += ai.Refused;
+            Console.WriteLine($"run {run + 1}: {state.Date} (day {state.Date.AbsoluteDay}), {winner}{(state.Outcome is { } o ? ": " + o.Reason : string.Empty)}");
+            Console.WriteLine($"  {session.CommandLog.Count} commands, AI refused {ai.Refused}, digest {GameStateDigest.Compute(state)}");
+            foreach (var player in state.Players)
+            {
+                var towns = state.ObjectsOf<Town>().Count(t => t.Owner == player.Id);
+                var heroes = state.HeroesOf(player.Id).ToList();
+                var power = heroes.Sum(h => h.Army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value));
+                Console.WriteLine($"  {player.Name,-8} {(player.IsDefeated ? "defeated" : "playing "),-8} towns {towns}, heroes {heroes.Count} (levels {string.Join(",", heroes.Select(h => h.Level))}, at {string.Join(" ", heroes.Select(h => $"({h.Position.X},{h.Position.Y})"))}), army power {power}, {player.Resources}");
+            }
+
+            if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
+            {
+                foreach (var command in session.CommandLog.Take(0))
+                {
+                    Console.WriteLine($"    {command}");
+                }
+            }
+
+            if (recordPath is not null && run == 0)
+            {
+                GameRecordSerializer.Save(GameReplay.Record(initial, session), recordPath);
+                Console.WriteLine($"  recorded → {recordPath}");
+            }
+        }
+
+        if (runs > 1)
+        {
+            Console.WriteLine($"{runs} games: {string.Join(", ", wins.OrderBy(w => w.Key).Select(w => $"{w.Key} {w.Value}"))}; AI refused {refusedTotal} commands");
+        }
+
+        return refusedTotal == 0 ? 0 : 1;
+    }
+
+    private static (MapDocument Map, GameSession Session, AdventureAi Ai) PlayAiGame(string map, int days, ulong seed)
+    {
+        var document = map switch
+        {
+            "towns" => MapConverter.ToDocument(TownsScenario.Create(Catalog)),
+            "demo" => MapConverter.ToDocument(DemoScenario.Create()),
+            _ => MapSerializer.Load(map),
+        };
+        var session = new GameSession(MapConverter.ToGameState(document, options: new GameOptions(Seed: seed), creatures: Catalog));
+        var ai = new AdventureAi(session, controlHumanSlots: true);
+        if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
+        {
+            session.Events.Subscribe<HeroDefeated>(e => Console.WriteLine($"    day {session.State.Date.AbsoluteDay}: {e.Hero} of {e.Owner} defeated"));
+            session.Events.Subscribe<BattleStarted>(e => Console.WriteLine($"    day {session.State.Date.AbsoluteDay}: battle {e.AttackerHero} vs {e.DefenderHero?.ToString() ?? e.Guard?.ToString()} units {string.Join(",", e.Units.Select(u => $"{u.Side}:{u.Count}x{u.Creature}"))}"));
+        }
+
+        session.Start();
+        while (!session.State.IsOver && session.State.Date.AbsoluteDay <= days)
+        {
+            if (!ai.PlayTurn())
+            {
+                throw new InvalidOperationException($"The AI got stuck on {session.State.Date} ({session.State.CurrentPlayer.Name}, decision {session.State.PendingDecision}).");
+            }
+        }
+
+        return (document, session, ai);
+    }
+
     private static int Replay(string path)
     {
         var record = GameRecordSerializer.Load(path);
@@ -301,6 +377,16 @@ public static class Program
         var json = GameRecordSerializer.Serialize(GameReplay.Record(map, first));
         GameReplay.Replay(GameRecordSerializer.Deserialize(json), creatures: Catalog);
 
+        var (aiMap, aiFirst, firstAi) = PlayAiGame("towns", days: 15, seed: 7);
+        var (_, aiSecond, _) = PlayAiGame("towns", days: 15, seed: 7);
+        if (firstAi.Refused != 0 || GameStateDigest.Compute(aiFirst.State) != GameStateDigest.Compute(aiSecond.State))
+        {
+            Console.Error.WriteLine($"selftest: the AI game diverged or issued {firstAi.Refused} refused commands");
+            return 1;
+        }
+
+        GameReplay.Replay(GameRecordSerializer.Deserialize(GameRecordSerializer.Serialize(GameReplay.Record(aiMap, aiFirst))), creatures: Catalog);
+
         var army = ParseArmy($"{BuiltInCreatures.Pikeman}:20,{BuiltInCreatures.Archer}:10");
         var defender = ParseArmy($"{BuiltInCreatures.HellHound}:10");
         if (Describe(FightOnce(army, defender, 5)) != Describe(FightOnce(army, defender, 5)))
@@ -309,7 +395,7 @@ public static class Program
             return 1;
         }
 
-        Console.WriteLine($"selftest ok: {first.CommandLog.Count} commands replayed, digest {GameStateDigest.Compute(first.State)}");
+        Console.WriteLine($"selftest ok: {first.CommandLog.Count} commands replayed, digest {GameStateDigest.Compute(first.State)}; AI game {aiFirst.CommandLog.Count} commands");
         return 0;
 
         static string Describe((BattleEnded Ended, int Rounds) result) =>
@@ -385,6 +471,12 @@ public static class Program
             return new CreatureStack(creature, count);
         }).ToArray();
         return stacks.Length is > 0 and <= Army.SlotCount ? Army.Of(stacks) : throw new FormatException("An army has 1 to 7 stacks.");
+    }
+
+    private static string? OptionText(string[] args, string name)
+    {
+        var index = Array.IndexOf(args, name);
+        return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
     }
 
     private static int Option(string[] args, string name, int fallback)

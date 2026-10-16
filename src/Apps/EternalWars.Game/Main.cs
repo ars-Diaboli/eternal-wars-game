@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
+using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
@@ -43,6 +44,7 @@ public partial class Main : Node3D
     private GameMenuPanel _menu = null!;
     private string _saveFolder = "";
     private bool _turnBegan;
+    private AdventureAi? _ai;
     private MapViewContext _context = null!;
     private AdventureWorldView _world = null!;
     private StrategyCamera _camera = null!;
@@ -76,6 +78,18 @@ public partial class Main : Node3D
             layer.QueueFree();
             StartGame(state);
         };
+    }
+
+    /// <summary>
+    /// Computer players play their turns here, one a frame (ADR-059). The AI waits while a battle scene is open (it may be
+    /// a human's fight) and while the menu is.
+    /// </summary>
+    public override void _Process(double delta)
+    {
+        if (_ai is not null && !_menu.Visible && !_battle.IsOpen && AdventureAi.IsComputerTurn(_session.State))
+        {
+            _ai.PlayTurn();
+        }
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -152,6 +166,7 @@ public partial class Main : Node3D
         _session = session;
         _initialMap = initialMap;
         _selectedHero = null;
+        _ai = new AdventureAi(session);
         _menu.CanSave = true;
         var state = session.State;
         _context = new MapViewContext(state, _session.Events, state.CurrentPlayer.Id);
@@ -180,6 +195,11 @@ public partial class Main : Node3D
         });
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
+            if (!_session.State.GetPlayer(e.Player).IsHuman)
+            {
+                return; // computer turns play out unseen; the map stays with the last human
+            }
+
             // Hot-seat: the map is drawn through the eyes of whoever plays now.
             _context.SetViewer(e.Player);
             Select(_session.State.HeroesOf(e.Player).FirstOrDefault()?.Id, focus: true);

@@ -799,3 +799,37 @@ work during combat
   loaded resume without rewriting the slots until the next turn starts.
 - Not covered: saving the 2D harness, a save from the editor-made `ewreplay` files, and saving games whose state changed
   outside commands (nothing does).
+
+### ADR-059: The adventure AI
+**Status**: accepted (2026-10-16), first version; the numbers are a draft to tune with `sim game`
+- **Through commands only** (`AdventureAi` in `Core.Domain/AI`, ADR-036): it plays with `GameSession.Execute`, so its
+  turns are in the command log and replay exactly. It draws **no random numbers**; the same state gives the same turn.
+  It uses only what its player has explored (pathfinding and targets), not the whole map.
+- **Who plays**: computer players (`!IsHuman`) in the game app (`Main._Process`, one turn a frame, not while a battle
+  scene or the menu is open); with `controlHumanSlots` every slot, as in the simulator. `PlayTurn()` can be called again
+  after it returned false (a human has to act in a battle) and carries on where the turn stands.
+- **A turn**: answer pending decisions (chest: experience if it levels the hero, else gold; guard offers: accept a join,
+  fight a stack that would flee; exchange: close; level-up: the first offer, which computer heroes get anyway), run the
+  towns, move each hero, run the towns again, end the turn.
+- **Towns**: one build a day from a fixed priority (the order is the strategy): one dwelling per tier from tier 1 up
+  (the line with most weekly power), marketplace, blacksmith, mage guild, town hall, dwelling upgrades, fort, town hall,
+  second lines, tavern. It **saves gold** for the building it wants when that is within about three days of income (and
+  other resources within a week), skips buildings that need resources it will never get, upgrades stacks whose dwelling is
+  upgraded, recruits the strongest creatures first (a first garrison of the cheapest line, half of what waits), and a
+  visiting hero takes the garrison with it except the weakest stack.
+- **Heroes**: every known object gets a value in gold (piles by resource, chests 1500, mines eight days of yield, towns
+  4000+, monsters a share of their strength, much more when they would join, enemy heroes 2000 + 80 % of their army power,
+  own towns with a lot waiting). The best of `value / (0.5 + days of travel)` among the ten best candidates wins; with
+  nothing to do the hero explores the nearest reachable explored tile next to unexplored ground. A hero makes at most 24
+  moves a turn.
+- **Fights are played, not guessed** (`BattleEstimator`): before attacking a monster, a guard, a garrison or a hero the AI
+  runs three battles with the real engine on a throwaway game (fixed seeds of their own, so the game's random numbers are
+  untouched). It goes only when it wins all three and loses at most 40 % of its army power against monsters, 50 %
+  otherwise. The power sum (Σ count × creature value) is only a pre-filter: it called a fight even that was lost every
+  time, because it does not see shooters.
+- **Exploring never walks into** heroes, objects or guarded ground, which are targets with a fight check.
+- **`sim game`** plays a map with the AI in every slot (`--map towns|demo|file`, `--days`, `--seed`, `--runs`, `--record`)
+  and prints the outcome and each player's towns, heroes and army; the self-test replays an AI game through JSON.
+- **Not yet**: defending towns (a hero never stays or returns to hold one), avoiding stronger enemy heroes, several heroes
+  cooperating (they only avoid the same target within a turn), hiring heroes (no tavern yet), war machines, artifacts and
+  spells, difficulty levels, using the marketplace, stacking creatures between heroes, and sieges.
