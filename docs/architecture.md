@@ -70,7 +70,8 @@ These are enforced by:
 ```
 
 - **`GameSession`** is the composition root of a running game: one `GameState`, one `IEventBus`,
-  and the services that mutate the state. Front-ends change the game **only** with commands
+  and the services that mutate the state (the diagram shows the adventure-map ones; `ArmyService`,
+  `ProgressionService`, `BattleService`, `GuardService` and `TownService` sit beside them). Front-ends change the game **only** with commands
   (`session.Execute(new MoveHeroCommand(...))`, ADR-036) and observe it through `session.Events`; the services'
   mutators are `internal`. Accepted commands go to `session.CommandLog`, which with the map and the seed
   replays the game (`GameReplay`). Core handlers (`VisibilityService`) are subscribed first, before any view.
@@ -78,8 +79,7 @@ These are enforced by:
   (validates via the shared `MovementRules`, publishes `HeroMoved`) → on an entrance tile
   `MapObjectInteractionService.Visit` → outcome events / `DecisionRequested`. A step towards a monster or into
   its guarded area goes to `GuardService` (offer or battle); a step onto an enemy hero to `BattleService`.
-- **Pending decisions.** Some outcomes need a player choice (chest, exchange, guard offer, battle; level-ups
-  later). `GameState.PendingDecision` is set, `DecisionRequested` is published, and movement and
+- **Pending decisions.** Some outcomes need a player choice (chest, exchange, guard offer, battle, level-up). `GameState.PendingDecision` is set, `DecisionRequested` is published, and movement and
   End Turn are refused until the matching command resolves it. A battle is a `BattleDecision` that resolves
   itself when the battle ends. The core never waits or blocks: the UI
   (or AI) answers whenever it wants.
@@ -106,8 +106,9 @@ These are enforced by:
   during the attacker's turn.
 
 ### Planned evolution
-- **Content definitions.** Factions, spells and artifacts will load from data files as creatures already do
-  (the creature table `data/creatures.csv` via `CreatureTable`, ADR-044; JSON via `CreatureDefinitionSerializer`),
+- **Content definitions.** Spells and artifacts will load from data files as creatures, heroes and buildings
+  already do (the tables `data/creatures.csv`, `data/heroes.csv` and `data/buildings.csv`, embedded in core and read
+  by the apps at start-up, ADR-044, ADR-048, ADR-050; JSON via `CreatureDefinitionSerializer`),
   following the map-object pattern: built-in defaults in Domain code (`BuiltInMapObjects`), JSON
   overrides/additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`.
 
@@ -119,8 +120,9 @@ These are enforced by:
   occupied cells, so "what is on this tile" is O(1) for movement and pathfinding.
 - Movement-relevant behaviour is declared on the instance, so the pathfinder and movement need no
   per-kind code: `EndsRoute` (false = walkable entrance, e.g. one-way exits) and `TeleportTarget`
-  (two-way partner / one-way exit). Kinds: piles, mines, chests, `TwoWayGate`, `OneWayGateEntrance`,
-  `OneWayGateExit`.
+  (two-way partner / one-way exit). Kinds: piles, mines (optionally guarded), chests, `TwoWayGate`,
+  `OneWayGateEntrance`, `OneWayGateExit`, `MonsterGuard`, `Town`. Owned objects (mines, towns) implement
+  `IFlaggable`.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
 
@@ -128,7 +130,9 @@ These are enforced by:
 - **Terrain rules are data**: `GameState.Terrains` (`TerrainCatalog`) gives passability, the
   non-native cost and native towns (ADR-045). All movement code goes through `MovementRules.StepCost`
   (road → road, else terrain being left for the hero's army, ×1.41 diagonal). `MovementRules.ArmyTown`
-  returns null until armies exist, so nobody is native yet.
+  is the town of an army whose creatures all come from one town (else null); such an army pays 100 on that
+  town's native terrains, and Pathfinding cuts everyone else's penalty above 100. `PathFinder` uses the same
+  `StepCost`, so a planned route costs what walking it costs.
 - **Roads** are a second per-tile layer on `AdventureMap`.
 - **Teams**: `Player.Team`; `AreAllies` / `AreEnemies` drive hero encounters (own → exchange,
   enemy → battle hook, ally → blocked).

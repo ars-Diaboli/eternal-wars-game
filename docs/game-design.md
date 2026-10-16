@@ -73,9 +73,10 @@ out of scope, but the deterministic core keeps it possible.
 
     - **Native = the whole army** (HoMM3): the penalty is waived only if **every** creature in the army
       belongs to one of the terrain's native towns. Neutrals count as non-native (decided).
-    - The **Pathfinding** secondary skill reduces the non-native penalty by 25/50/75 % (basic/advanced/expert);
-      artifacts can remove it. Both arrive in Phase 3.
-    - Implemented as data (`TerrainCatalog`); an all-native army (`MovementRules.ArmyTown`) pays 100.
+    - The **Pathfinding** secondary skill reduces the non-native penalty by 25/50/75 % (basic/advanced/expert;
+      swamp 200 → 175/150/125); artifacts can remove it (with artifacts, Phase 3).
+    - Implemented as data (`TerrainCatalog`); an all-native army (`MovementRules.ArmyTown`) pays 100, and
+      Pathfinding applies in `MovementRules.StepCost`, which routes and steps share.
   - **Roads (HoMM3-style)**: a road layer on top of terrain, drawn in the editor and generated
     between towns and through zone connections. Road types and costs: **dirt 50, gravel 65,
     cobblestone 75**. The road cost replaces the terrain cost and **ignores native/rough penalties**.
@@ -118,7 +119,7 @@ out of scope, but the deterministic core keeps it possible.
 
   | Other hero | Result | Status |
   |---|---|---|
-  | **Own** | Opens the **exchange screen**: swap army stacks and artifacts. The moving hero stays on its adjacent tile. | implemented: stacks move with `MoveStackCommand` (split, merge, swap; a hero keeps one stack); artifacts in Phase 3; screen UI pending |
+  | **Own** | Opens the **exchange screen**: swap army stacks and artifacts. The moving hero stays on its adjacent tile. | implemented: stacks move with `MoveStackCommand` (split, merge, swap; a hero keeps one stack), `ExchangePanel` in the game; artifacts in Phase 3 |
   | **Enemy** | Starts a **battle**; the loser (or a hero that retreats) leaves the map | implemented (Phase 2) |
   | **Allied** (team games) | **No interaction for now**: the tile is simply blocked. Exchange with allies may come later. | decided |
 
@@ -217,9 +218,9 @@ out of scope, but the deterministic core keeps it possible.
   players earn only what their sources produce. Sources:
   - **Mines** (implemented): gold 1000, lumber/ore 2, rare resources 1.
   - **Towns** (implemented): town hall 500 / 1000 / 2000 gold; marketplace level 2 adds 1 ore and 1 lumber (ADR-046).
-  - **Hero secondary skills**, Estates-like (Phase 3).
-  - **Hero specialisations**, e.g. +N of a resource per day (Phase 3).
-  - **Artifacts**, e.g. resource-producing items (Phase 3).
+  - **Hero secondary skills** (implemented): Treasury and Prospecting (Estates group).
+  - **Hero specialisations** (implemented): resource specialties pay +N of a resource per day (`HeroIncome`).
+  - **Artifacts**, e.g. resource-producing items (with artifacts, Phase 3).
 
   Each source is a pluggable `IIncomeSource`, and `EconomyService.DailyIncome` sums them.
 
@@ -364,8 +365,8 @@ because that is content selection, not a rule.
 ### 4.8 Tools
 - **Map editor**: a **separate standalone app** (not an in-game mode). Implemented in core with
   undo/redo: terrain painting (brush radius, drag strokes), object placement/removal, gate linking,
-  mine owners, hero placement, player slots, map name/description, validation. Godot UI for most of it
-  is pending. Later: victory/loss conditions, events/triggers, map resize, and the **template editor**
+  mine owners, hero placement, armies, monsters, towns, player slots, map name/description, validation, all with
+  Godot UI (tool palette, inspector, properties, players, validation panel). Later: artifacts, victory/loss conditions, events/triggers, map resize, and the **template editor**
   plus "generate map from template" (§4.9).
 - **2D harness**: two parts:
   - **Viewer** (Godot 2D app): a top-down debug front-end over the same core, for rule development and

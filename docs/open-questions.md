@@ -66,7 +66,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
   terrains (beach, ice, shallow water, cursed lands, rocky ground) (ADR-045).
 - **Town footprint**: 7×7, corners free, entrance bottom-middle (ADR-046).
 - **Dwelling upgrades**: produce the upgraded creature; the upgrade gives no growth bonus (ADR-046).
-- **Magic**: six schools, four spell levels and guild levels, spells upgradable twice (ADR-047).
+- **Magic**: eight schools (one per playable town), four spell levels and guild levels, spells upgradable twice
+  (ADR-047).
 - **Rosters**: all towns in the creature table, first balance pass (ADR-044).
 - **Heroes and skills**: 16 heroes per town (mage + warrior per tier 1–4 line), flat preferred-creature bonus, eight
   schools, any school learnable with rival schools at 5 %, named levels with one point per level (ADR-047, ADR-048).
@@ -93,6 +94,6 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
     `data/heroes.csv` are drafts for review.
 
 ### For the magic system (Phase 5)
-7. Spell tags: the six schools are set (ADR-047); immunities use free-form tags today (`all`, `mind`, `fire`,
+7. Spell tags: the eight schools are set (ADR-047); immunities use free-form tags today (`all`, `mind`, `fire`,
    `curse`); which categories should spells carry? Which spells do creature casters get (`cure`, `resurrection`,
    `fireball` are placeholders)?

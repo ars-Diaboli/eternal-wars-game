@@ -547,9 +547,9 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 - **Effects now** (`SkillEffects`): melee +10 % per level, archery +10/25/50 %, armor −5 % damage taken per level,
   treasury +100/200/350/500 gold a day, prospecting +1/+2 lumber and ore (Expert also one of each rare resource),
   logistics +10 % movement per level, pathfinding −25/50/75 % of the terrain penalty, troop management +1 army map speed
-  per level, drill +1 battlefield speed per level, resource specialties pay daily (`HeroIncome`). Waiting for towns,
-  magic or a deployment screen: stewardship, spell resistance, deployment, the school skills, skill and spell
-  specialties.
+  per level, drill +1 battlefield speed per level, resource specialties pay daily (`HeroIncome`). Not implemented
+  yet: stewardship (towns exist now; it is a Phase 3 roadmap item), skill specialties; waiting for magic or a
+  deployment step: spell resistance, deployment, the school skills, spell specialties.
 
 
 ### ADR-049: Roster revision from the design notes
