@@ -40,3 +40,10 @@ looked wrong, so nobody has to mine it again.
 - The core's daily income and movement refill were never wired up; buildings were levelled before paying, and the
   spend result was ignored; a zero cost entry made a building unaffordable.
 - Fort, blacksmith, mage guild and tavern had no effect.
+
+## Trimmed (2026-10-16)
+The folder is kept for reading, not for running. Removed to save space: the third-party addons (`gdUnit4`,
+`terrain_3d` with its native binaries), the Terrain3D demo and `terrain_data`, Godot's `.uid` files, the 13 terrain
+textures already copied to `textures/terrain/` (the `.tres` materials still name them), and the two baked 6 MB images
+inside `Scenes/world_map.tscn` (the node tree is kept). Kept as candidate art: the five main menu backgrounds
+(`Resources/Backgrounds`) and four unused terrain textures (`Resources/TerrainTextures`).
