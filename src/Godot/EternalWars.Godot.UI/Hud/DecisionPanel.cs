@@ -32,6 +32,7 @@ public partial class DecisionPanel : PanelContainer
         this.SubscribeWhileInTree<BattleStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<BattleRoundStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
+        Refresh(); // a loaded game may already be waiting for an answer
     }
 
     private void Refresh()

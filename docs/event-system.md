@@ -98,6 +98,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `TurnStarted(Player, Date)` / `TurnEnded(...)` | `TurnService` | each player turn |
 | `PlayerDefeated(Player, Reason)` | `GameFlowService` | a player is eliminated; its heroes (`HeroDefeated`) and flags (`TownOwnerChanged`, `MineOwnerChanged`) were released just before |
 | `GracePeriodStarted(Player, DefeatDay)` / `GracePeriodEnded(Player)` | `GameFlowService` | a player that had a town lost its last one (countdown begins) / owns a town again |
+| `CommandExecuted(Command)` | `GameSession` | last event of every accepted command, after it is logged and settled; the state matches `CommandLog` (autosave hooks here) |
 | `GameEnded(Winners, Reason, Date)` | `GameFlowService` | a team won (or nobody did); commands are refused from now on |
 | `ResourcesChanged(Player, Previous, Current)` | `EconomyService` | any resource change |
 | `HeroMoved(Hero, From, To, RemainingMP)` | `HeroMovementService` | each successful step (a `MoveTo` publishes one per step) |

@@ -6,7 +6,7 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 
 **Where we are (2026-10-16)**: Phases 0–2 are done (the new 3D battle scene still needs a run in Godot), and Phase 3 has towns,
 dwellings, heroes, skills and every income source except artifacts. Next up in Phase 3: town building effects, the
-tavern, artifacts, save/load (victory and defeat are in, ADR-057) and the adventure AI.
+tavern, artifacts and the adventure AI (victory and defeat, ADR-057, and save/load, ADR-058, are in).
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -224,10 +224,12 @@ Content draft: [artifacts.md](artifacts.md).
       in the map format (v10) and the editor
 - [x] Player elimination: `PlayerDefeated`, `GameEnded`, skipped turns, the end of commands
 - [x] Grace period for players without towns: 7 days by default, configurable per map (HoMM3, ADR-057)
-- [ ] Save/load: save files from map + options + command log (`GameRecord`), verified by `GameStateDigest`; a state
-      snapshot if replays get too slow
+- [x] Save/load (ADR-058): save files from map + options + command log (`GameRecord`), verified by `GameStateDigest`,
+      at any moment including mid-battle
+- [x] Autosave: two slots, the start of the current and of the previous turn (ADR-058)
+- [ ] Save/load: a state snapshot if replays get too slow
 - [x] Game app: victory / defeat screen (`GameResultPanel`)
-- [ ] Game app: save / load menu
+- [x] Game app: save / load menu (F10, F5 quick save, F9 quick load; also in battle)
 - [ ] Week events ("week of X") ❓
 
 ### Adventure AI (computer players)

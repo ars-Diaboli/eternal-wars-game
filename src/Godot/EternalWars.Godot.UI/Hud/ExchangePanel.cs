@@ -41,6 +41,7 @@ public partial class ExchangePanel : PanelContainer
         this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
+        Refresh();
     }
 
     private void Refresh()

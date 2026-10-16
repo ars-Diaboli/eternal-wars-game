@@ -93,6 +93,13 @@ These are enforced by:
 - **Apps** contain composition and input mapping only. If an app needs logic, it probably belongs
   in core.
 
+### Saved games (ADR-058)
+- `GameSaves` (Core.Data) turns a session into a `GameRecordDocument` with a `SaveInfo` label and back: the initial map,
+  the options and the command log, verified by the digest on load. It works in the middle of a battle because battle
+  actions are commands. The game app keeps the map document taken before `Start`, builds all its game nodes under one
+  `Game` node (freed on load) and lets `BattleView3D.Restore` show a battle that is already under way. Autosave (two rotating slots) hooks the
+  `CommandExecuted` event, which is published after the command is logged.
+
 ### Game flow (ADR-057)
 - `GameFlowService` decides eliminations and the winner. `GameSession` runs `Flow.Evaluate()` once after `Start()` and
   after every accepted command (`Settle`), and passes the turn on when the current player has just been defeated.
