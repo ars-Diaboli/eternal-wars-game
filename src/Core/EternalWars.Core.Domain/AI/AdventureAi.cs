@@ -404,25 +404,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
     // Heroes --------------------------------------------------------------------------------------------
 
-    /// <summary>What an artifact is worth to the AI: its effects weighed (attack and defense most, income by gold).</summary>
-    public static double Score(ArtifactDefinition artifact) => artifact.Effects.Sum(e => e.Value * e.Kind switch
-    {
-        ArtifactEffectKind.Attack or ArtifactEffectKind.Defense => 10.0,
-        ArtifactEffectKind.Morale or ArtifactEffectKind.Luck => 8.0,
-        ArtifactEffectKind.BattleSpeed => 15.0,
-        ArtifactEffectKind.SpellPower or ArtifactEffectKind.Knowledge => 2.0,
-        ArtifactEffectKind.Movement => 1.5,
-        ArtifactEffectKind.MovementFlat => 0.02,
-        ArtifactEffectKind.MeleeDamage or ArtifactEffectKind.RangedDamage => 1.0,
-        ArtifactEffectKind.DamageTaken => 3.0,
-        ArtifactEffectKind.RangedDamageTaken => 1.5,
-        ArtifactEffectKind.Income => e.Target == "gold" ? 0.1 : 5.0,
-        ArtifactEffectKind.NativeTerrain => 3.0,
-        ArtifactEffectKind.TerrainPenalty => 0.2,
-        ArtifactEffectKind.Skill => 6.0,
-        ArtifactEffectKind.AllSkills => 15.0,
-        _ => 0.0,
-    });
+    /// <summary>What an artifact is worth to the AI (<see cref="ArtifactValue.Of"/>).</summary>
+    public static double Score(ArtifactDefinition artifact) => ArtifactValue.Of(artifact);
 
     /// <summary>Puts on what is in the backpack when a slot is free or the new one is clearly better than the worst worn there.</summary>
     private void EquipBest(PlayerId player, Hero hero)

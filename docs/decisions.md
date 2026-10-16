@@ -882,7 +882,7 @@ extended with HoMM3-style placeholder items
   capped at the skill's maximum). Effects the game cannot apply yet (mana, spell resistance, regeneration, re-rolls,
   initiative) are in the notes as "Not yet". Negative values are allowed (Titan's Gladius: +12 Attack, −3 Defense).
 - **Paper doll** (`ArtifactSlot`, `HeroArtifacts`): head, neck, cloak, body, weapon, shield, 2 rings, boots, 3 miscellaneous
-  and a **backpack of 12**. The rules read the sum of what is worn (`ArtifactBonuses`, kept on the hero by
+  and a **backpack of 50** (user decision; first 12). The rules read the sum of what is worn (`ArtifactBonuses`, kept on the hero by
   `GameState.RefreshArtifacts`; `Hero.TotalAttack`, `SkillLevelOf`, `Bonus`), never the artifacts one by one; base stats
   stay what they were, so taking an artifact off restores them.
 - **Commands** (the owner's turn, no movement points): `EquipArtifactCommand` (from the backpack; the one worn in a full slot
@@ -894,8 +894,9 @@ extended with HoMM3-style placeholder items
   from the definition's tier, from the game RNG, skipping artifacts that are already placed or carried, so relics stay
   unique while any are left (`ArtifactService.RollUnsetPickups`; no random numbers are drawn when nothing is open). Classic
   guard mode lets a pickup in a guarded tile be taken from outside, like piles and chests.
-- **Loot**: a hero that wins a battle against a hero (a defeat, not a retreat) gets all its artifacts, worn and carried, into
-  its backpack; what does not fit is lost. A hero that flees takes them off the map.
+- **Loot** (user decision: all of them go to the winner): a hero that wins a battle against a hero (a defeat, not a retreat) gets all its artifacts, worn and carried, into
+  its backpack; when they do not all fit, the **most valuable come first** (`ArtifactValue.BestFirst`: effects weighed, then rarer tier,
+  then id; user decision) and the rest are lost. A hero that flees takes them off the map.
 - **Map format v11**: heroes list `artifacts` (worn ids, each to the slot its definition names) and `backpack`; objects of kind
   `artifact` with an optional `artifact` id. The editor session has `SetHeroArtifacts` and `SetArtifactPickup` (undoable); the
   validator flags unknown artifacts. Games load their catalog like the other tables (`ArtifactCatalog` parameter).

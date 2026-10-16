@@ -341,7 +341,7 @@ public class ArtifactTests
         }
 
         Assert.Equal(Roll(), Roll());
-        var all = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).Select(a => a.Id).Take(ArtifactSlots.BackpackSize).ToArray();
+        var all = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).Select(a => a.Id).Take(12).ToArray();
         Assert.DoesNotContain(Roll(all)[0], all);
     }
 
@@ -357,6 +357,40 @@ public class ArtifactTests
         session.AutoResolve();
 
         Assert.Equal(["centaurs-ax", "iron-band"], state.GetHero(A).Artifacts.Backpack.Order());
+    }
+
+    [Fact]
+    public void ALootThatDoesNotFit_KeepsTheMostValuableFirst()
+    {
+        var state = Create("A.B");
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10));
+        Outfit(state, A, backpack: Enumerable.Repeat("iron-band", ArtifactSlots.BackpackSize - 2).ToArray()); // room for two
+        Outfit(state, B, worn: ["squires-shield", "ogres-club-of-havoc"], backpack: ["iron-band", "endless-sack-of-gold"]);
+        var session = Start(state);
+        var lost = new List<ArtifactLost>();
+        session.Events.Subscribe<ArtifactLost>(lost.Add);
+
+        session.MoveTo(A, new MapPosition(2, 0));
+        session.AutoResolve();
+
+        var carried = state.GetHero(A).Artifacts.Backpack;
+        Assert.Equal(ArtifactSlots.BackpackSize, carried.Count);
+        Assert.Contains("endless-sack-of-gold", carried);
+        Assert.Contains("ogres-club-of-havoc", carried);
+        Assert.Equal(["iron-band", "squires-shield"], lost.Select(l => l.Artifact).Order());
+    }
+
+    [Fact]
+    public void TheBackpack_Holds50_AndValueOrdersByEffectsThenTier()
+    {
+        var catalog = ArtifactCatalog.Default;
+
+        Assert.Equal(50, ArtifactSlots.BackpackSize);
+        Assert.Equal(
+            ["endless-sack-of-gold", "titans-gladius", "ogres-club-of-havoc", "rusted-blade"],
+            ArtifactValue.BestFirst(catalog, ["rusted-blade", "ogres-club-of-havoc", "endless-sack-of-gold", "titans-gladius"]));
+        Assert.Equal(["no-such-artifact"], ArtifactValue.BestFirst(catalog, ["no-such-artifact"]));
+        Assert.Equal("no-such-artifact", ArtifactValue.BestFirst(catalog, ["no-such-artifact", "iron-band"]).Last());
     }
 
     [Fact]

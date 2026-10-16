@@ -177,7 +177,7 @@ Full lists: [heroes.md](heroes.md) (every roster hero) and [skills.md](skills.md
   5 % of level-ups.
 - Army of up to 7 creature stacks (implemented). A hero without creatures cannot attack.
 - **Artifacts** (core implemented, ADR-061, catalog in [artifacts.md](artifacts.md)): head, neck, cloak, body, weapon, shield,
-  two rings, boots, three miscellaneous slots and a backpack of 12. They add stats, morale and luck, movement, battle speed,
+  two rings, boots, three miscellaneous slots and a backpack of 50. They add stats, morale and luck, movement, battle speed,
   damage, daily income, terrain rules and skill levels. Found on the map, looted from defeated heroes, handed over in an
   exchange. The hero screen and paper doll are Godot work.
 - Spell book, mana.
