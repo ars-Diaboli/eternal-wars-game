@@ -60,6 +60,7 @@ public abstract class MapObject
         MapObjectKind.Monster => new MonsterGuard(id, definition, position),
         MapObjectKind.Town => new Towns.Town(id, definition, position),
         MapObjectKind.Artifact => new ArtifactPickup(id, definition, position),
+        MapObjectKind.Dwelling => new CreatureDwelling(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }
@@ -141,6 +142,29 @@ public sealed class ArtifactPickup(MapObjectId id, MapObjectDefinition definitio
     public string? Artifact { get; internal set; } = artifact;
 
     public Artifacts.ArtifactTier Tier => Definition.ArtifactTier ?? Artifacts.ArtifactTier.Minor;
+}
+
+/// <summary>
+/// A dwelling of one creature line on the adventure map (ADR-054). It grows by the creature's weekly growth every Monday,
+/// owned or not; a hero standing on its entrance can recruit from it, and visiting flags it for the visitor's owner, whose
+/// towns with a caravan may then hire from it. <see cref="Available"/> null = one week's growth, filled when the game starts.
+/// </summary>
+public sealed class CreatureDwelling(
+    MapObjectId id, MapObjectDefinition definition, MapPosition position,
+    string creature = MonsterGuard.DefaultCreature, PlayerId? owner = null, int? available = null)
+    : MapObject(id, definition, position, MapObjectKind.Dwelling), IFlaggable
+{
+    /// <summary>Owned dwellings reveal and watch a small area around them, like mines.</summary>
+    public const int DwellingScoutingRadius = 2;
+
+    public int ScoutingRadius => DwellingScoutingRadius;
+
+    /// <summary>Id of the creature recruited here (the base creature of its line).</summary>
+    public string Creature { get; internal set; } = creature;
+
+    public PlayerId? Owner { get; internal set; } = owner;
+
+    public int? Available { get; internal set; } = available;
 }
 
 /// <summary>How a neutral stack reacts to a hero (HoMM3 dispositions, deterministic thresholds, ADR-040).</summary>

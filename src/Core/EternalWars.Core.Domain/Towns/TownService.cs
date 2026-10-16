@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Towns;
@@ -195,9 +196,15 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         events.Publish(new HeroHired(town.Id, hero.Id, heroId));
     }
 
-    /// <summary>Monday: every built dwelling adds its creature's weekly growth to what is waiting (owned or not).</summary>
+    /// <summary>Monday: every built dwelling, in towns and on the map, adds its creature's weekly growth to what is waiting (owned or not).</summary>
     internal void GrowWeekly()
     {
+        foreach (var dwelling in state.ObjectsOf<CreatureDwelling>().OrderBy(d => d.Id.Value))
+        {
+            dwelling.Available = (dwelling.Available ?? 0) + state.Creatures.Get(dwelling.Creature).WeeklyGrowth;
+            events.Publish(new DwellingCreaturesGrew(dwelling.Id, dwelling.Available.Value));
+        }
+
         foreach (var town in state.ObjectsOf<Town>().OrderBy(t => t.Id.Value))
         {
             var lines = TownRules.Lines(state, town).Where(l => town.DwellingLevel(l.Id) > 0).ToList();
@@ -212,6 +219,15 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             }
 
             events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));
+        }
+    }
+
+    /// <summary>Game start: a map dwelling whose waiting creatures the map did not set opens with one week of them.</summary>
+    internal void FillNewDwellings()
+    {
+        foreach (var dwelling in state.ObjectsOf<CreatureDwelling>().Where(d => d.Available is null).OrderBy(d => d.Id.Value))
+        {
+            dwelling.Available = state.Creatures.Get(dwelling.Creature).WeeklyGrowth;
         }
     }
 

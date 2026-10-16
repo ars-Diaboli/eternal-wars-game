@@ -56,6 +56,15 @@ public sealed record BuildDwellingCommand(PlayerId Player, MapObjectId Town, str
 /// </summary>
 public sealed record RecruitCommand(PlayerId Player, MapObjectId Town, string Creature, int Count, HeroId? Hero = null) : GameCommand(Player);
 
+/// <summary>A hero standing on a map dwelling's entrance buys <paramref name="Count"/> of its creatures into its army (ADR-054).</summary>
+public sealed record RecruitAtDwellingCommand(PlayerId Player, MapObjectId Dwelling, int Count) : GameCommand(Player);
+
+/// <summary>Hires <paramref name="Count"/> creatures from an owned map dwelling for a town with a caravan; they travel there (ADR-054).</summary>
+public sealed record OrderCaravanCommand(PlayerId Player, MapObjectId Town, MapObjectId Dwelling, int Count) : GameCommand(Player);
+
+/// <summary>Sends troops of a town with a caravan to another own town (<paramref name="Count"/> null = the whole stack, ADR-054).</summary>
+public sealed record SendTroopsCommand(PlayerId Player, MapObjectId FromTown, int Slot, MapObjectId ToTown, int? Count = null) : GameCommand(Player);
+
 /// <summary>Upgrades a whole stack of the garrison or the visiting hero for the price difference.</summary>
 public sealed record UpgradeStackCommand(PlayerId Player, MapObjectId Town, Towns.TownArmy Army, int Slot) : GameCommand(Player);
 

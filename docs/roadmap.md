@@ -165,12 +165,15 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
 - [ ] Town hall level 4 (capitol-like)? ❓
 - [ ] Per-town building lists or names (every town shares one table today)
-- [ ] Dwellings on the adventure map (ADR-054): flaggable map object with one creature line, weekly growth that
-      accumulates, recruiting by a visiting hero; map format and editor
-- [ ] Caravan building (ADR-054): hire from owned map dwellings within 5 days of travel at the creatures' map speed,
-      along a route no enemy hero or monster blocks, checked before paying; the creatures travel virtually and join
-      the garrison on arrival (`CaravanArrived`); the same for troops between two own towns; UI in the town screen
-- [ ] Caravan rules still open: blocked route or captured destination during travel, visibility, cost (ADR-054)
+- [x] Dwellings on the adventure map (ADR-054): `CreatureDwelling`, weekly growth, flagging, recruiting by a visiting hero
+      (`RecruitAtDwellingCommand`); map format v12; editor placement and `SetDwelling`; validator
+- [x] Caravan building (ADR-054): `OrderCaravanCommand` hires from owned map dwellings within 5 days of travel along an open
+      route, `SendTroopsCommand` moves garrison stacks between own towns; creatures arrive in the garrison (`CaravanArrived`)
+- [x] Caravan rules (user decisions): a blocked route returns the caravan with the price back, a lost destination scatters the
+      creatures, caravans are invisible; building 1000 gold + 5 lumber (placeholder)
+- [x] Town screen: caravan section (hire, send the picked stack, caravans on the way); `DwellingPanel` opens when a hero visits a dwelling
+- [ ] AI: recruit at map dwellings, hire and send caravans
+- [ ] Smoke scenario for dwellings and caravans (needs Godot); dwelling guard rules, caravan cost tuning
 
 ### Towns: Godot
 - [x] 2D harness town panel (`TownPanel`, `--scenario=towns`): build, dwellings, recruit, upgrade, garrison
@@ -192,7 +195,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Primary stat growth (ADR-055): one point per level, HoMM3-style odds by class (draft), shown in the level-up
       prompt; Spell Power and Knowledge added (roster columns, map format v8, editor), effects with magic
 - [x] Stewardship and governors (ADR-063): −5/10/15 % buildings, −10/15/20 % creatures in a town with a governor
-- [ ] Stewardship for map dwellings, caravans and marketplace trading (150 % in a governed town); a governor UI in the town screen
+- [x] Stewardship for map dwellings (the hero's level) and caravans (the town's governor); governor UI in the town screen
+- [ ] Marketplace trading with the governed town's 150 % (waits for trading)
 - [x] Treasury and Prospecting rework (ADR-062)
 - [x] Mana numbers and school attunement skills (ADR-063); casting waits for Phase 5
 - [ ] Rage and Adrenaline faction groups: design their skills (placeholders today) ❓

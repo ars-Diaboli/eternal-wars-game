@@ -24,6 +24,8 @@ public sealed class GameState
     private readonly List<Hero> _heroes = [];
     private int _highestHeroId;
     private readonly List<MapObject> _objects = [];
+    private readonly List<Towns.Caravan> _caravans = [];
+    private int _highestCaravanId;
     private readonly Dictionary<MapPosition, (MapObject Object, FootprintCell Cell)> _objectCells = [];
 
     public GameState(
@@ -108,6 +110,9 @@ public sealed class GameState
     public IReadOnlyList<Hero> Heroes => _heroes;
 
     public IReadOnlyList<MapObject> Objects => _objects;
+
+    /// <summary>Caravans on their way (ADR-054): virtual, they have no place on the map. Created by commands only, so replays rebuild them.</summary>
+    public IReadOnlyList<Towns.Caravan> Caravans => _caravans;
 
     public GameDate Date { get; internal set; } = GameDate.First;
 
@@ -235,6 +240,16 @@ public sealed class GameState
     public HeroId NextHeroId() => new(_heroes.Count == 0 ? 1 : _heroes.Max(h => h.Id.Value) + 1);
 
     public MapObjectId NextObjectId() => new(_objects.Count == 0 ? 1 : _objects.Max(o => o.Id.Value) + 1);
+
+    internal int NextCaravanId() => ++_highestCaravanId;
+
+    internal void AddCaravan(Towns.Caravan caravan) => _caravans.Add(caravan);
+
+    internal void ReplaceCaravan(Towns.Caravan old, Towns.Caravan next) => _caravans[_caravans.IndexOf(old)] = next;
+
+    internal void RemoveCaravan(Towns.Caravan caravan) => _caravans.Remove(caravan);
+
+    internal void RemoveCaravansOf(PlayerId owner) => _caravans.RemoveAll(c => c.Owner == owner);
 
     internal void AddPlayer(Player player) => _players.Add(player);
 

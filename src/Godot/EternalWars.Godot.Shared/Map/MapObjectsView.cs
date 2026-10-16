@@ -41,6 +41,7 @@ public partial class MapObjectsView : Node3D
         this.SubscribeWhileInTree<MapObjectRemoved>(events, e => RebuildLive(e.Object));
         this.SubscribeWhileInTree<MapObjectChanged>(events, e => RebuildLive(e.Object));
         this.SubscribeWhileInTree<MineOwnerChanged>(events, e => RebuildLive(e.Mine));
+        this.SubscribeWhileInTree<DwellingOwnerChanged>(events, e => RebuildLive(e.Dwelling));
     }
 
     private void RebuildLive(MapObjectId id)
@@ -101,7 +102,7 @@ public partial class MapObjectsView : Node3D
         }
 
         var top = MapSpace.ToWorld(known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
-        if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town)
+        if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town or MapObjectKind.Dwelling)
         {
             root.AddChild(Box(new Vector3(0.3f, 0.3f, 0.05f), top, known.Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral));
         }
@@ -128,6 +129,7 @@ public partial class MapObjectsView : Node3D
     {
         MonsterGuard monster => _context.Viewer is null && monster.Count is { } count ? $"{CreatureName(monster)} ×{count}" : CreatureName(monster),
         Core.Domain.Towns.Town town => town.Name,
+        CreatureDwelling dwelling => _context.State.Creatures.TryGet(dwelling.Creature, out var dwelt) ? $"{dwelt.Name} dwelling" : dwelling.Creature,
         _ => null,
     };
 

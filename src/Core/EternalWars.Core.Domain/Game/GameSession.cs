@@ -35,6 +35,7 @@ public sealed class GameSession
         Bus.Subscribe<HeroTeleported>(visibility);
         Bus.Subscribe<MineOwnerChanged>(visibility);
         Bus.Subscribe<TownOwnerChanged>(visibility);
+        Bus.Subscribe<DwellingOwnerChanged>(visibility);
         Bus.Subscribe<MapObjectRemoved>(visibility);
         Bus.Subscribe<HeroDefeated>(visibility);
         Bus.Subscribe<HeroHired>(visibility);
@@ -47,9 +48,10 @@ public sealed class GameSession
         Battles = new BattleService(State, Bus, Armies, Progression, Artifacts);
         Guards = new GuardService(State, Bus, Battles);
         Towns = new TownService(State, Bus, Economy);
+        Caravans = new CaravanService(State, Bus, Economy);
         Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression, Artifacts);
         Movement = new HeroMovementService(State, Bus, Interactions);
-        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns);
+        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans);
     }
 
     public GameState State { get; }
@@ -84,6 +86,8 @@ public sealed class GameSession
     internal TurnService Turns { get; }
 
     internal TownService Towns { get; }
+
+    internal CaravanService Caravans { get; }
 
     private IEventBus Bus { get; }
 
@@ -231,6 +235,15 @@ public sealed class GameSession
                 return null;
             case RecruitCommand recruit:
                 Towns.Recruit(recruit.Player, recruit.Town, recruit.Creature, recruit.Count, recruit.Hero);
+                return null;
+            case RecruitAtDwellingCommand dwelling:
+                Interactions.RecruitAtDwelling(dwelling.Player, dwelling.Dwelling, dwelling.Count);
+                return null;
+            case OrderCaravanCommand order:
+                Caravans.Order(order.Player, order.Town, order.Dwelling, order.Count);
+                return null;
+            case SendTroopsCommand send:
+                Caravans.Send(send.Player, send.FromTown, send.Slot, send.ToTown, send.Count);
                 return null;
             case UpgradeStackCommand upgrade:
                 Towns.UpgradeStack(upgrade.Player, upgrade.Town, upgrade.Army, upgrade.Slot);

@@ -8,6 +8,6 @@ still to decide:
 - Stronghold and Swamp Bestiary: what Rage and Adrenaline do (placeholder groups, ADR-063)
 
 Roster notes and spell resistance: moved to ADR-049 (2026-10-16). No sea travel: ADR-051.
-Morale and luck: implemented, ADR-053 (2026-10-16). Treasury and Prospecting: implemented, ADR-062 (2026-10-17). Caravans: designed in ADR-054, built with map dwellings (roadmap).
+Morale and luck: implemented, ADR-053 (2026-10-16). Treasury and Prospecting: implemented, ADR-062 (2026-10-17). Caravans and map dwellings: implemented, ADR-054 (2026-10-17).
 War machines: implemented, ADR-056 (2026-10-16).
 Stewardship and governors, starting resources (complexity), Ballistics against fortifications, six magic schools with attunement and mana, faction groups for orcs and bestiary: ADR-063 (2026-10-17).

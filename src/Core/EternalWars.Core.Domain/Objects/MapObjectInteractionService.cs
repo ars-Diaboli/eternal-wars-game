@@ -1,5 +1,7 @@
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
@@ -76,6 +78,12 @@ public sealed class MapObjectInteractionService(
                 guards.Encounter(hero, monster);
                 break;
 
+            case CreatureDwelling dwelling when dwelling.Owner != hero.Owner:
+                var before = dwelling.Owner;
+                dwelling.Owner = hero.Owner;
+                events.Publish(new DwellingOwnerChanged(dwelling.Id, before, hero.Owner));
+                break;
+
             case ArtifactPickup { Artifact: { } found } pickup:
                 if (artifacts.Grant(hero, found, ArtifactSource.Pickup))
                 {
@@ -108,6 +116,45 @@ public sealed class MapObjectInteractionService(
 
                 break;
         }
+    }
+
+    /// <summary>A hero on a map dwelling's entrance buys creatures into its army, discounted by its own Stewardship (ADR-054).</summary>
+    internal void RecruitAtDwelling(PlayerId player, MapObjectId dwellingId, int count)
+    {
+        var dwelling = state.FindObject(dwellingId) as CreatureDwelling ?? throw new InvalidOperationException($"{dwellingId} is not a dwelling.");
+        if (state.PendingDecision is not null)
+        {
+            throw new InvalidOperationException("Resolve the pending decision first.");
+        }
+
+        var hero = state.HeroAt(dwelling.VisitPosition);
+        if (hero is null || hero.Owner != player)
+        {
+            throw new InvalidOperationException($"No own hero stands at the {dwelling.Definition.Name}.");
+        }
+
+        var available = dwelling.Available ?? 0;
+        if (count < 1 || count > available)
+        {
+            throw new InvalidOperationException($"Only {available} creatures wait here.");
+        }
+
+        var creature = state.Creatures.Get(dwelling.Creature);
+        if (!hero.Army.CanAccept(creature.Id))
+        {
+            throw new InvalidOperationException($"{hero.Name} has no free slot for {creature.Name}.");
+        }
+
+        var price = StewardshipRules.DiscountCreatures(creature.Cost, hero.SkillLevelOf(BuiltInSkills.Stewardship)) * count;
+        if (!economy.TrySpend(player, price))
+        {
+            throw new InvalidOperationException("Not enough resources.");
+        }
+
+        dwelling.Available = available - count;
+        hero.Army.TryAdd(new CreatureStack(creature.Id, count));
+        events.Publish(new DwellingRecruited(dwelling.Id, hero.Id, creature.Id, count, dwelling.Available.Value));
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
     }
 
     /// <summary>Closes the exchange screen opened by a meeting of two own heroes.</summary>

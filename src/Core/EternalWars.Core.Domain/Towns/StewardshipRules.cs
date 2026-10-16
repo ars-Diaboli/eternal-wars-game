@@ -40,6 +40,9 @@ public static class StewardshipRules
     public static ResourceSet DiscountCreatures(GameState state, Town town, ResourceSet cost) =>
         Discount(cost, CreatureDiscountPercent(LevelIn(state, town)));
 
+    /// <summary>Creature costs for a hero recruiting at a map dwelling (ADR-054): its own Stewardship level counts, governed town or not.</summary>
+    public static ResourceSet DiscountCreatures(ResourceSet cost, SkillLevel level) => Discount(cost, CreatureDiscountPercent(level));
+
     /// <summary>Why the hero cannot govern the town, or null.</summary>
     public static string? CheckAppoint(GameState state, Town town, Hero hero)
     {

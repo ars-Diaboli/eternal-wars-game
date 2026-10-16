@@ -11,6 +11,15 @@ public sealed record ResourcePileCollected(HeroId Hero, MapObjectId Object, Reso
 
 public sealed record MineOwnerChanged(MapObjectId Mine, PlayerId? Previous, PlayerId? Current) : IEvent;
 
+/// <summary>A map dwelling got a new owner (a hero flagged it, its owner was defeated, or the editor set it); null = neutral.</summary>
+public sealed record DwellingOwnerChanged(MapObjectId Dwelling, PlayerId? Previous, PlayerId? Current) : IEvent;
+
+/// <summary>A new week's creatures arrived in a map dwelling; <paramref name="Available"/> is what waits there now.</summary>
+public sealed record DwellingCreaturesGrew(MapObjectId Dwelling, int Available) : IEvent;
+
+/// <summary>Creatures were bought from a map dwelling by a hero (<paramref name="Hero"/>) or for a caravan (null); <paramref name="Available"/> is what is left.</summary>
+public sealed record DwellingRecruited(MapObjectId Dwelling, HeroId? Hero, string Creature, int Count, int Available) : IEvent;
+
 /// <summary>An object appeared on the map (editor placement or undo of a removal).</summary>
 public sealed record MapObjectPlaced(MapObjectId Object, string DefinitionId, MapPosition Position) : IEvent;
 

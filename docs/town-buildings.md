@@ -49,7 +49,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading resources | ✅ silo; ⏳ trading ❓ |
 | Mage Guild | spells of its level (ADR-047); level 4 is a placeholder | ⏳ magic (Phase 5) |
 | Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest); 2500 gold each (ADR-060) | ✅ |
-| Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054) | ⏳ designed, not in the table; needs map dwellings |
+| Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054) | ✅ ADR-054: 1000 gold, 5 lumber, needs town hall 2 (placeholder) |
 
 ## Tech tree
 
@@ -218,5 +218,5 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 - What the fort does (town defence in sieges, growth bonus), marketplace trading and the mage guild
   (open question 6).
-- The caravan's cost and place in the tree (ADR-054).
+- The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
 - Per-town buildings: all towns share one list for now.

@@ -95,6 +95,9 @@ public static class MapValidator
                 case ArtifactPickup { Artifact: { } artifact } pickup when !scenario.Artifacts.Contains(artifact):
                     issues.Add(new(IssueSeverity.Error, $"{name} holds the unknown artifact '{artifact}'.", pickup.Position));
                     break;
+                case CreatureDwelling dwelling when !scenario.Creatures.Contains(dwelling.Creature):
+                    issues.Add(new(IssueSeverity.Error, $"{name} uses unknown creature '{dwelling.Creature}'.", dwelling.Position));
+                    break;
                 case MonsterGuard monster when !scenario.Creatures.Contains(monster.Creature):
                     issues.Add(new(IssueSeverity.Error, $"Monster uses unknown creature '{monster.Creature}'.", monster.Position));
                     break;

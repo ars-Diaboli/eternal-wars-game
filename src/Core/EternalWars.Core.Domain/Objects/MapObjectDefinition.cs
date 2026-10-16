@@ -25,6 +25,9 @@ public enum MapObjectKind
 
     /// <summary>An artifact lying on the map (<see cref="ArtifactPickup"/>, ADR-061).</summary>
     Artifact,
+
+    /// <summary>A dwelling of one creature line on the adventure map (<see cref="CreatureDwelling"/>, ADR-054).</summary>
+    Dwelling,
 }
 
 /// <summary>

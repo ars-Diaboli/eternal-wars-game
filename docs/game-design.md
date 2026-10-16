@@ -224,11 +224,13 @@ Full list of buildings, the tech tree and every town's dwellings: [town-building
   - **Neutral creatures use the same 1–5 tier scale**, which is used for guard strength, treasure value
     and random-map balancing. Some have upgrades, most don't.
 - Weekly creature growth (implemented): a new dwelling opens with one week of creatures, every Monday adds the
-  creature's `growth`, and unbought creatures accumulate. Dwellings on the map later.
-- **Caravans** (designed, ADR-054; needs map dwellings): a town building that hires creatures from owned dwellings on
-  the adventure map. The creatures travel virtually to the town at their map speed, along a route no enemy hero or
-  monster blocks, and a dwelling more than 5 days away cannot supply the town; both are checked before paying.
-  Caravans also move troops between two own towns.
+  creature's `growth`, and unbought creatures accumulate. Dwellings on the map: ADR-054.
+- **Map dwellings and caravans** (implemented, ADR-054): dwellings of one creature on the adventure map grow every Monday, owned or
+  not; a visiting hero flags one and recruits from it. A **caravan** (town building) hires creatures from your dwellings: they
+  travel virtually to the town at their map speed along a route no hostile hero, monster or guarded tile blocks, and a dwelling
+  more than 5 days away cannot supply it; both are checked before paying. A blocked route sends the caravan back (refund), a
+  captured destination scatters the creatures, and caravans cannot be seen or attacked. Caravans also send garrison troops
+  to another own town.
 - **Income** is paid at the start of the owner's turn. **There is no base or placeholder income**:
   players earn only what their sources produce. Sources:
   - **Mines** (implemented): gold 1000, lumber/ore 2, rare resources 1.
@@ -512,7 +514,7 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 17 | Speed | One speed for battle and map | Battle Speed in cells, separate adventure map speed | accepted |
 | 18 | Morale | Extra turn or freeze only | Also ±50 % initiative for the round when no extra action / freeze triggers | accepted |
 | 19 | Luck | Attacker only, double damage | Both sides roll: +75 % (attacker) or −50 % (defender); opposite rolls cancel | accepted |
-| 20 | External dwellings | Visit them with a hero | Caravans hire from owned dwellings within 5 days; creatures travel the map to the town | accepted (not built yet) |
+| 20 | External dwellings | Visit them with a hero | Caravans hire from owned dwellings within 5 days; creatures travel the map to the town | accepted, built (ADR-054) |
 | 21 | War machines | Ballista, tent and cart for everyone, bought anywhere | Offensive machine per town; it needs Advanced Ballistics outside sieges; tent heals every stack a little | accepted |
 | 22 | Victory | Standard victory (defeat everyone) plus one special condition, 7 days without a town | Default: no towns and no heroes means defeat, 7 days without a town too, last team wins; a map may switch these off and add several victory and defeat conditions | accepted |
 | … | | | *more twists to be proposed* ❓ | |

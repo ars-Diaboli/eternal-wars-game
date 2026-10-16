@@ -143,6 +143,23 @@ public partial class InspectorPanel : VBoxContainer
         var creatures = _editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id)).ToList();
         switch (mapObject)
         {
+            case CreatureDwelling dwelling:
+            {
+                var row = new HBoxContainer();
+                AddChild(row);
+                var creature = Options(row, "Creature", creatures, dwelling.Creature);
+                var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
+                var owner = Options(row, "Owner", owners, dwelling.Owner);
+                var amountRow = new HBoxContainer();
+                AddChild(amountRow);
+                var amount = Spin(amountRow, "Waiting (-1 = one week's growth)", dwelling.Available ?? -1, -1, 9999);
+                void Apply() => Edit(() => _editor.SetDwelling(dwelling.Id, creature.Value(), owner.Value(), amount.Value >= 0 ? (int)amount.Value : null));
+                creature.Button.ItemSelected += _ => Apply();
+                owner.Button.ItemSelected += _ => Apply();
+                amount.ValueChanged += _ => Apply();
+                break;
+            }
+
             case Mine mine:
             {
                 var row = new HBoxContainer();

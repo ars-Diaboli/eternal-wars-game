@@ -776,6 +776,48 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>
+    /// Edits a map dwelling (ADR-054): its creature, its owner and the creatures waiting in it (null = one week's growth when
+    /// the game starts).
+    /// </summary>
+    public EditResult SetDwelling(MapObjectId id, string creature, PlayerId? owner, int? available)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not CreatureDwelling dwelling)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (!Scenario.Creatures.Contains(creature))
+        {
+            return EditResult.UnknownCreature;
+        }
+
+        if (owner is { } player && !Scenario.HasPlayer(player))
+        {
+            return EditResult.UnknownPlayer;
+        }
+
+        if (available < 0)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = (dwelling.Creature, dwelling.Owner, dwelling.Available);
+        Run(new DelegateCommand("Edit dwelling", () => Apply((creature, owner, available)), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply((string Creature, PlayerId? Owner, int? Available) value)
+        {
+            var before = dwelling.Owner;
+            (dwelling.Creature, dwelling.Owner, dwelling.Available) = value;
+            _bus.Publish(new MapObjectChanged(dwelling.Id));
+            if (before != value.Owner)
+            {
+                _bus.Publish(new DwellingOwnerChanged(dwelling.Id, before, value.Owner));
+            }
+        }
+    }
+
     /// <summary>Gives a mine a guard that must be beaten before the first flagging (null removes it).</summary>
     public EditResult SetMineGuard(MapObjectId id, GuardStack? guard)
     {

@@ -18,12 +18,12 @@ namespace EternalWars.Core.Data.Maps;
 /// optional chest values (omitted = rolled). 5 = + terrain codes b (beach), i (ice), = (shallow water),
 /// c (cursed lands), k (rocky ground) (ADR-045); heroes may name a roster entry (<c>type</c>) and carry skill levels
 /// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). 6 = + towns (<c>town</c> objects: owner, name, buildings, dwellings,
-/// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056). 10 = + victory and defeat conditions (ADR-057). 11 = + hero artifacts (worn and backpack) and artifact pickups (ADR-061).
+/// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056). 10 = + victory and defeat conditions (ADR-057). 11 = + hero artifacts (worn and backpack) and artifact pickups (ADR-061). 12 = + creature dwellings (ADR-054).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 11;
+    public const int CurrentFormatVersion = 12;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -134,6 +134,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(MonsterDocument), "monster")]
 [JsonDerivedType(typeof(TownDocument), "town")]
 [JsonDerivedType(typeof(ArtifactPickupDocument), "artifact")]
+[JsonDerivedType(typeof(DwellingDocument), "dwelling")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -145,6 +146,16 @@ public abstract record MapObjectDocument
     public required int Y { get; init; }
 
     public int Level { get; init; }
+}
+
+/// <summary>A creature dwelling on the map (v12); <see cref="Available"/> omitted = one week's growth when the game starts.</summary>
+public sealed record DwellingDocument : MapObjectDocument
+{
+    public required string Creature { get; init; }
+
+    public int? Owner { get; init; }
+
+    public int? Available { get; init; }
 }
 
 /// <summary>An artifact on the map (v11); <see cref="Artifact"/> omitted = rolled from the definition's tier at game start.</summary>
