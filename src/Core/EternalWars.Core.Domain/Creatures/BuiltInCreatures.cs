@@ -55,7 +55,9 @@ public static class BuiltInCreatures
     public const string DireWolf = "neutral.dire-wolf";
     public const string Bandit = "neutral.bandit";
     public const string Troll = "neutral.troll";
-    public const string Wyvern = "neutral.wyvern";
+
+    // Dragon Utopia --------------------------------------------------------------------------
+    public const string Wyvern = "dragon-utopia.wyvern";
     public const string RedDragon = "dragon-utopia.red-dragon";
 
     /// <summary>Name of the embedded creature table in this assembly.</summary>

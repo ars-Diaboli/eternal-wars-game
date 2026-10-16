@@ -551,3 +551,22 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   magic or a deployment screen: stewardship, spell resistance, deployment, the school skills, skill and spell
   specialties.
 
+
+### ADR-049: Roster revision from the design notes
+**Status**: accepted (2026-10-16), from docs/ideas.md; amends ADR-044's roster
+- **Wyvern** moves to Dragon Utopia (`dragon-utopia.wyvern`, was `neutral.wyvern`) and upgrades to the new **Wyvern
+  Monarch** (Flying, Relentless 10 for its venom).
+- **Dragonyte** swaps Breath for **Cleave**.
+- New neutrals: **Efreet** (tier 4, elemental and demon; Flying, fire immunity, one fireball), the demonic
+  counterpart of the Djinn Sultan. It is a separate neutral and not a second Djinn upgrade, because a line has one
+  upgrade and an upgrade shares its town (ADR-030). **Golden Golem** (tier 3 construct; mind immunity, spell
+  resistance 2).
+- **Dark and Grim Raiders** are melee cavalry: the sandbox's crossbow shots are dropped (reverses that point of
+  ADR-044). Health was raised to 56 / 64 to keep the line's duel results.
+- **Shadow Horror / Shadow Reaper** lose everything dragon-like (Flying, Breath, the `dragon` tag) and become walking
+  shadows with First Strike and mind immunity (the Reaper adds Relentless 15). Stats were retuned with `sim lines`
+  to keep the tier 5 win rate where it was (about 70 %).
+- New capability **`SpellResistance n`**: unaffected by spells of level n and below (n is 1–3). A spell upgraded
+  twice (rank 3, ADR-047) counts as the next level (`SpellLevels.Effective`, `CreatureDefinition.ResistsSpell`).
+  Red, green, azure and gold dragons have `SpellResistance 3`, so only level 4 spells and twice-upgraded level 3
+  spells affect them. Like the other spell capabilities, it is data and a query until magic exists (Phase 5).

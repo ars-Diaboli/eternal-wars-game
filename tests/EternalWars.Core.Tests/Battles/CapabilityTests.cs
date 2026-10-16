@@ -115,6 +115,8 @@ public class CapabilityTests
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(SpellImmunity)] }).Validate());
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(Caster, 0, "cure")] }).Validate());
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(PackHunter)] }).Validate());
+        Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(SpellResistance)] }).Validate());
+        Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(SpellResistance, SpellLevels.Max)] }).Validate());
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(MeleePenalty)] }).Validate()); // not a shooter
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(FirstStrike), new(FirstStrike)] }).Validate());
         Assert.All(BuiltInCreatures.All, c => Assert.InRange(c.Capabilities.Count, 0, CreatureDefinition.MaxCapabilities));
@@ -137,6 +139,20 @@ public class CapabilityTests
 
         var loaded = CreatureDefinitionSerializer.Deserialize(CreatureDefinitionSerializer.Serialize([seraph])).Single();
         Assert.Equal(seraph.Capabilities, loaded.Capabilities);
+    }
+
+    [Fact]
+    public void SpellResistance_StopsLevelsUpToItsValue_ATwiceUpgradedSpellCountsAsTheNextLevel()
+    {
+        var redDragon = CreatureCatalog.Default.Get(BuiltInCreatures.RedDragon);
+
+        Assert.True(redDragon.ResistsSpell(1, 1));
+        Assert.True(redDragon.ResistsSpell(3, 2));
+        Assert.False(redDragon.ResistsSpell(3, SpellLevels.MaxRank));
+        Assert.False(redDragon.ResistsSpell(4, 1));
+        Assert.False(TestBattle.Fixed("x", 1).ResistsSpell(1, 1));
+        Assert.All(["red", "green", "azure", "gold"], color =>
+            Assert.Equal(3, CreatureCatalog.Default.Get($"dragon-utopia.{color}-dragon").CapabilityValue(SpellResistance)));
     }
 
     private static List<BattleAttackKind> Kinds(TestBattle battle) =>

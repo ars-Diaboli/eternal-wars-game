@@ -111,6 +111,8 @@ fog, guards, quick-combat battles); final art and a real exchange/battle screen 
 - [x] HoMM4-style creature capabilities, at most 5 per creature (ADR-042): first strike, ranged retaliation,
       strikes/shoots twice, opt-in melee penalty, unlimited/no retaliation, area attacks, engagement hooks;
       spell immunity and casting as data + hooks until magic (Phase 5)
+- [x] Roster revision from the design notes (ADR-049): Dragon Utopia wyvern line, Efreet and Golden Golem neutrals,
+      melee Dark/Grim Raiders, non-dragon Shadow Horror, spell resistance for the elemental dragons
 - [x] Map format v4 (armies, hero stats, monsters, mine guards, guard mode, optional chest values) and editor
       commands for all of it with undo; validator checks
 

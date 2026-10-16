@@ -33,6 +33,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{07C2787E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Tools.Sim", "tools\EternalWars.Tools.Sim\EternalWars.Tools.Sim.csproj", "{57FA76F0-A971-4F9C-9F29-F4FB549824FD}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3C9B6E2A-5D41-4F7E-9A08-B2E6C1D47F35}"
+	ProjectSection(SolutionItems) = preProject
+		docs\architecture.md = docs\architecture.md
+		docs\decisions.md = docs\decisions.md
+		docs\development.md = docs\development.md
+		docs\event-system.md = docs\event-system.md
+		docs\game-design.md = docs\game-design.md
+		docs\ideas.md = docs\ideas.md
+		docs\lore.md = docs\lore.md
+		docs\open-questions.md = docs\open-questions.md
+		docs\README.md = docs\README.md
+		docs\reference-sandbox.md = docs\reference-sandbox.md
+		docs\roadmap.md = docs\roadmap.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

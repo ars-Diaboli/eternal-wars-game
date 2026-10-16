@@ -100,8 +100,8 @@ These are enforced by:
   `BattleAi` plays computer sides; `BattleService` connects battles to the map (start from encounters,
   commanders per side, survivors, experience, defeated heroes and guards).
 - Creature special rules are data (`CreatureCapability`, at most 5 per creature, ADR-042). The engine and
-  `DamageCalculator` ask `creature.Has(kind)`; spell immunity and casting are queries (`IsImmuneTo`,
-  `SpellCasts`, `BattleUnit.CastsLeft`) waiting for the magic system.
+  `DamageCalculator` ask `creature.Has(kind)`; spell immunity, resistance and casting are queries (`IsImmuneTo`,
+  `ResistsSpell`, `SpellCasts`, `BattleUnit.CastsLeft`) waiting for the magic system.
 - Battle commands are authorized per side, not per map turn: in hot-seat the defender commands its units
   during the attacker's turn.
 
