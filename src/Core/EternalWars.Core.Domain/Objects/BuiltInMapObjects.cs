@@ -19,6 +19,16 @@ public static class BuiltInMapObjects
     private static readonly Footprint GateFootprint = new(["BBB", "BVB"]);
     private static readonly Footprint MonolithFootprint = new(["B", "V"]);
 
+    /// <summary>7×7 with the corners free, entered through the bottom-middle cell (ADR-046).</summary>
+    public static Footprint TownFootprint { get; } = new([".BBBBB.", "BBBBBBB", "BBBBBBB", "BBBBBBB", "BBBBBBB", "BBBBBBB", ".BBVBB."]);
+
+    /// <summary>The playable town types; each has a town definition <see cref="TownId"/>.</summary>
+    public static IReadOnlyList<string> PlayableTowns { get; } =
+    [
+        Towns.TownIds.Haven, Towns.TownIds.Sylvan, Towns.TownIds.Academy, Towns.TownIds.Necropolis,
+        Towns.TownIds.Inferno, Towns.TownIds.Dungeon, Towns.TownIds.Stronghold, Towns.TownIds.SwampBestiary,
+    ];
+
     public static IReadOnlyList<MapObjectDefinition> All { get; } =
     [
         .. Enum.GetValues<ResourceType>().Select(r =>
@@ -37,7 +47,15 @@ public static class BuiltInMapObjects
         new(OneWayMonolithEntrance, "One-way monolith entrance", MapObjectKind.OneWayGateEntrance, MonolithFootprint),
         new(OneWayMonolithExit, "One-way monolith exit", MapObjectKind.OneWayGateExit, MonolithFootprint),
         new(Monster, "Monster", MapObjectKind.Monster, Footprint.Single),
+
+        .. PlayableTowns.Select(t => new MapObjectDefinition(TownId(t), TownName(t), MapObjectKind.Town, TownFootprint) { Town = t }),
     ];
+
+    /// <summary>Definition id of a town type's town: <c>town.haven</c>.</summary>
+    public static string TownId(string town) => $"town.{town}";
+
+    private static string TownName(string town) =>
+        string.Join(' ', town.Split('-').Select(w => char.ToUpperInvariant(w[0]) + w[1..]));
 
     public static string PileId(ResourceType resource) => $"pile.{resource.ToString().ToLowerInvariant()}";
 

@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Data.Maps;
 
@@ -77,7 +78,8 @@ public static class MapConverter
         GameOptions? options = null,
         TerrainCatalog? terrains = null,
         CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null)
+        HeroCatalog? heroRoster = null,
+        BuildingCatalog? buildings = null)
     {
         catalog ??= MapObjectCatalog.Default;
         creatures ??= CreatureCatalog.Default;
@@ -86,10 +88,10 @@ public static class MapConverter
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
         var heroes = document.Heroes.Select(h => ToHero(h, creatures, heroRoster)).ToList();
-        var objects = document.Objects.Select(o => ToObject(o, catalog));
+        var objects = document.Objects.Select(o => ToObject(o, catalog, creatures));
         try
         {
-            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster);
+            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetGuardMode(document.GuardMode ?? GuardMode.Classic);
             return state;
@@ -122,19 +124,21 @@ public static class MapConverter
         }
     }
 
-    private static Army ToArmy(HeroPlacementDocument hero, CreatureCatalog creatures)
+    private static Army ToArmy(HeroPlacementDocument hero, CreatureCatalog creatures) => ToArmy(hero.Army, $"Hero {hero.Id}", creatures);
+
+    private static Army ToArmy(IReadOnlyList<ArmySlotDocument>? slots, string owner, CreatureCatalog creatures)
     {
         var army = new CreatureStack?[Army.SlotCount];
-        foreach (var slot in hero.Army ?? [])
+        foreach (var slot in slots ?? [])
         {
             if (!Army.IsValidSlot(slot.Slot) || army[slot.Slot] is not null || slot.Count < 1)
             {
-                throw new FormatException($"Hero {hero.Id} has an invalid or duplicate army slot {slot.Slot}.");
+                throw new FormatException($"{owner} has an invalid or duplicate army slot {slot.Slot}.");
             }
 
             if (!creatures.Contains(slot.Creature))
             {
-                throw new FormatException($"Hero {hero.Id} has unknown creature '{slot.Creature}'.");
+                throw new FormatException($"{owner} has unknown creature '{slot.Creature}'.");
             }
 
             army[slot.Slot] = new CreatureStack(slot.Creature, slot.Count);
@@ -233,11 +237,24 @@ public static class MapConverter
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
                 Creature = monster.Creature, Count = monster.Count, Disposition = monster.Disposition, NeverFlees = monster.NeverFlees,
             },
+            Town town => new TownDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Owner = town.Owner?.Value,
+                Name = town.Name == town.Definition.Name ? null : town.Name,
+                Buildings = Sorted(town.Buildings),
+                Dwellings = town.Dwellings.Count == 0 ? null : Sorted(town.Dwellings),
+                Available = town.Available.Count == 0 ? null : Sorted(town.Available),
+                Garrison = town.Garrison.IsEmpty ? null : town.Garrison.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
+                LastBuilt = town.LastBuilt?.AbsoluteDay,
+            },
             _ => throw new NotSupportedException($"Cannot save {mapObject.GetType().Name}."),
         };
     }
 
-    private static MapObject ToObject(MapObjectDocument document, MapObjectCatalog catalog)
+    private static Dictionary<string, int> Sorted(IReadOnlyDictionary<string, int> values) =>
+        values.OrderBy(v => v.Key, StringComparer.Ordinal).ToDictionary(v => v.Key, v => v.Value, StringComparer.Ordinal);
+
+    private static MapObject ToObject(MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures)
     {
         if (!catalog.TryGet(document.Definition, out var definition))
         {
@@ -261,6 +278,7 @@ public static class MapConverter
                 GateDocument gate => new TwoWayGate(id, definition, position, ToId(gate.LinkedGate)),
                 GateEntranceDocument entrance => new OneWayGateEntrance(id, definition, position, ToId(entrance.Exit)),
                 GateExitDocument => new OneWayGateExit(id, definition, position),
+                TownDocument town => ToTown(town, id, definition, position, creatures),
                 _ => throw new FormatException($"Unsupported object kind {document.GetType().Name}."),
             };
         }
@@ -270,5 +288,25 @@ public static class MapConverter
         }
 
         static MapObjectId? ToId(int? value) => value is { } v ? new MapObjectId(v) : null;
+    }
+
+    private static Town ToTown(TownDocument town, MapObjectId id, MapObjectDefinition definition, MapPosition position, CreatureCatalog creatures)
+    {
+        foreach (var line in (town.Dwellings?.Keys ?? []).Concat(town.Available?.Keys ?? []))
+        {
+            if (!creatures.Contains(line))
+            {
+                throw new FormatException($"Town {town.Id} has a dwelling for unknown creature '{line}'.");
+            }
+        }
+
+        if (town.Dwellings?.Values.Any(l => l is < 0 or > 2) == true || town.Buildings?.Values.Any(l => l < 0) == true)
+        {
+            throw new FormatException($"Town {town.Id} has an invalid building or dwelling level.");
+        }
+
+        return new Town(
+            id, definition, position, town.Owner is { } owner ? new PlayerId(owner) : null, town.Name, town.Buildings, town.Dwellings,
+            town.Available, ToArmy(town.Garrison, $"Town {town.Id}", creatures), town.LastBuilt is { } day ? new GameDate(day) : null);
     }
 }

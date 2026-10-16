@@ -88,6 +88,11 @@ public static class GameRecordSerializer
         (typeof(ChooseSkillCommand), "chooseSkill"),
         (typeof(MoveStackCommand), "moveStack"),
         (typeof(RespondToGuardCommand), "guard"),
+        (typeof(BuildCommand), "build"),
+        (typeof(BuildDwellingCommand), "buildDwelling"),
+        (typeof(RecruitCommand), "recruit"),
+        (typeof(UpgradeStackCommand), "upgradeStack"),
+        (typeof(MoveTownStackCommand), "moveTownStack"),
         (typeof(ChooseBattleWidthCommand), "battleWidth"),
         (typeof(BattleMoveCommand), "battleMove"),
         (typeof(BattleAttackCommand), "battleAttack"),
@@ -102,7 +107,8 @@ public static class GameRecordSerializer
     private static readonly JsonSerializerOptions Options = new(JsonDefaults.Options)
     {
         TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes } },
-        Converters = { new IdConverter<PlayerId>(v => new(v), id => id.Value), new IdConverter<HeroId>(v => new(v), id => id.Value) },
+        Converters = { new IdConverter<PlayerId>(v => new(v), id => id.Value), new IdConverter<HeroId>(v => new(v), id => id.Value),
+            new IdConverter<MapObjectId>(v => new(v), id => id.Value) },
     };
 
     public static string Serialize(GameRecordDocument record) => JsonSerializer.Serialize(record, Options);

@@ -37,41 +37,7 @@ public sealed class ArmyService(GameState state, IEventPublisher events)
             throw new InvalidOperationException("Resolve the pending decision first.");
         }
 
-        if (!Army.IsValidSlot(fromSlot) || !Army.IsValidSlot(toSlot) || (from == to && fromSlot == toSlot))
-        {
-            throw new InvalidOperationException("Invalid army slot.");
-        }
-
-        var source = from.Army[fromSlot] ?? throw new InvalidOperationException("The source slot is empty.");
-        var moving = count ?? source.Count;
-        if (moving < 1 || moving > source.Count)
-        {
-            throw new InvalidOperationException($"Cannot move {moving} of {source.Count} creatures.");
-        }
-
-        var target = to.Army[toSlot];
-        var whole = moving == source.Count;
-        if (target is not null && target.Creature != source.Creature && !whole)
-        {
-            throw new InvalidOperationException("A split stack can only go to an empty slot or the same creature.");
-        }
-
-        var swap = target is not null && target.Creature != source.Creature;
-        if (whole && !swap && from != to && from.Army.StackCount == 1)
-        {
-            throw new InvalidOperationException("A hero must keep at least one stack.");
-        }
-
-        if (swap)
-        {
-            from.Army.Set(fromSlot, target);
-            to.Army.Set(toSlot, source);
-        }
-        else
-        {
-            from.Army.Set(fromSlot, whole ? null : new CreatureStack(source.Creature, source.Count - moving));
-            to.Army.Set(toSlot, new CreatureStack(source.Creature, (target?.Count ?? 0) + moving));
-        }
+        Transfer(from.Army, fromSlot, to.Army, toSlot, count, keepOneStack: from != to);
 
         events.Publish(new ArmyChanged(from.Id, from.Army.Slots.ToList()));
         if (to != from)
@@ -84,4 +50,47 @@ public sealed class ArmyService(GameState state, IEventPublisher events)
     }
 
     internal void Publish(Hero hero) => events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+
+    /// <summary>
+    /// The stack move of <see cref="MoveStack"/> between any two armies (heroes, town garrisons); validates before it
+    /// mutates. <paramref name="keepOneStack"/>: the source is a hero's army leaving for another army.
+    /// </summary>
+    internal static void Transfer(Army from, int fromSlot, Army to, int toSlot, int? count, bool keepOneStack)
+    {
+        if (!Army.IsValidSlot(fromSlot) || !Army.IsValidSlot(toSlot) || (from == to && fromSlot == toSlot))
+        {
+            throw new InvalidOperationException("Invalid army slot.");
+        }
+
+        var source = from[fromSlot] ?? throw new InvalidOperationException("The source slot is empty.");
+        var moving = count ?? source.Count;
+        if (moving < 1 || moving > source.Count)
+        {
+            throw new InvalidOperationException($"Cannot move {moving} of {source.Count} creatures.");
+        }
+
+        var target = to[toSlot];
+        var whole = moving == source.Count;
+        if (target is not null && target.Creature != source.Creature && !whole)
+        {
+            throw new InvalidOperationException("A split stack can only go to an empty slot or the same creature.");
+        }
+
+        var swap = target is not null && target.Creature != source.Creature;
+        if (whole && !swap && keepOneStack && from.StackCount == 1)
+        {
+            throw new InvalidOperationException("A hero must keep at least one stack.");
+        }
+
+        if (swap)
+        {
+            from.Set(fromSlot, target);
+            to.Set(toSlot, source);
+        }
+        else
+        {
+            from.Set(fromSlot, whole ? null : new CreatureStack(source.Creature, source.Count - moving));
+            to.Set(toSlot, new CreatureStack(source.Creature, (target?.Count ?? 0) + moving));
+        }
+    }
 }

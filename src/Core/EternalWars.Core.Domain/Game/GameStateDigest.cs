@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.Game;
 
@@ -26,7 +27,7 @@ public static class GameStateDigest
 
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
         {
-            var army = string.Join(",", hero.Army.Slots.Select(s => s is null ? "-" : $"{s.Creature}:{s.Count}"));
+            var army = Slots(hero.Army);
             Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} xp {hero.Experience} stats {hero.Attack}/{hero.Defense} level {hero.Level} skills {hero.Skills} army {army}");
         }
 
@@ -38,6 +39,8 @@ public static class GameStateDigest
                 Mine mine => $"owner {mine.Owner?.Value} guard {mine.Guard}",
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
+                Town town => $"owner {town.Owner?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "
+                             + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}",
                 _ => mapObject.TeleportTarget?.ToString() ?? "",
             };
             Line($"object {mapObject.Id.Value} {mapObject.Definition.Id} at {mapObject.Position} {detail}");
@@ -57,4 +60,9 @@ public static class GameStateDigest
 
         void Line(FormattableString line) => text.Append(FormattableString.Invariant(line)).Append('\n');
     }
+
+    private static string Slots(Armies.Army army) => string.Join(",", army.Slots.Select(s => s is null ? "-" : $"{s.Creature}:{s.Count}"));
+
+    private static string Pairs(IReadOnlyDictionary<string, int> values) =>
+        string.Join(",", values.OrderBy(v => v.Key, StringComparer.Ordinal).Select(v => FormattableString.Invariant($"{v.Key}:{v.Value}")));
 }

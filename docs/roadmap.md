@@ -127,9 +127,11 @@ fog, guards, quick-combat battles); final art and a real exchange/battle screen 
 (`sim selftest`, replay tests); the 3D battle scene is still missing.
 
 ## Phase 3: Towns and progression (~6–8 weeks)
-- Towns: 7×7 map object (corners free, entrance bottom-middle), building tree (ADR-046 draft: town hall, fort,
-  blacksmith, marketplace, mage guild, tavern, dwellings), one build per day, weekly growth, recruiting, garrison
-- Dwelling choice: 9 dwellings (2 per tier 1–4, 1 at tier 5), build 7, at least one per tier; upgrades (ADR-030)
+- [x] Towns: 7×7 map object (corners free, entrance bottom-middle), building tree (ADR-046 draft: town hall, fort,
+      blacksmith, marketplace, mage guild, tavern, dwellings), one build per day, weekly growth, recruiting, garrison,
+      capture; `data/buildings.csv`, map format v6, editor inspector, 2D harness town panel (ADR-050)
+- [x] Dwelling choice: 9 dwellings (2 per tier 1–4, 1 at tier 5), build 7, at least one per tier; upgrades (ADR-030)
+- [ ] Town screen in the 3D game; effects of fort, blacksmith, marketplace trading, mage guild and tavern
 - Towns for the slice: **Haven and Inferno**
 - Native terrain: penalty waived only for all-native armies; Pathfinding skill 25/50/75 % (ADR-024, ADR-032)
 - Income sources beyond mines: towns, Estates-like skills, hero specialisations, artifacts (ADR-025)

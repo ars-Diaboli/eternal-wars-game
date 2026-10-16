@@ -101,7 +101,7 @@ public partial class MapObjectsView : Node3D
         }
 
         var top = MapSpace.ToWorld(known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
-        if (known.Definition.Kind == MapObjectKind.Mine)
+        if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town)
         {
             root.AddChild(Box(new Vector3(0.3f, 0.3f, 0.05f), top, known.Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral));
         }
@@ -123,11 +123,13 @@ public partial class MapObjectsView : Node3D
         _nodes[known.Id] = root;
     }
 
-    /// <summary>Monsters show their creature (and, in the editor, the count); other objects stay unlabelled.</summary>
-    private string? Caption(KnownObject known) =>
-        _context.State.FindObject(known.Id) is MonsterGuard monster
-            ? _context.Viewer is null && monster.Count is { } count ? $"{CreatureName(monster)} ×{count}" : CreatureName(monster)
-            : null;
+    /// <summary>Monsters show their creature (and, in the editor, the count), towns their name; other objects stay unlabelled.</summary>
+    private string? Caption(KnownObject known) => _context.State.FindObject(known.Id) switch
+    {
+        MonsterGuard monster => _context.Viewer is null && monster.Count is { } count ? $"{CreatureName(monster)} ×{count}" : CreatureName(monster),
+        Core.Domain.Towns.Town town => town.Name,
+        _ => null,
+    };
 
     private string CreatureName(MonsterGuard monster) =>
         _context.State.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature;

@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Domain.Visibility;
 using EternalWars.Core.Events;
@@ -32,6 +33,7 @@ public sealed class GameSession
         Bus.Subscribe<HeroMoved>(visibility);
         Bus.Subscribe<HeroTeleported>(visibility);
         Bus.Subscribe<MineOwnerChanged>(visibility);
+        Bus.Subscribe<TownOwnerChanged>(visibility);
         Bus.Subscribe<MapObjectRemoved>(visibility);
         Bus.Subscribe<HeroDefeated>(visibility);
 
@@ -40,9 +42,10 @@ public sealed class GameSession
         Progression = new ProgressionService(State, Bus);
         Battles = new BattleService(State, Bus, Armies, Progression);
         Guards = new GuardService(State, Bus, Battles);
+        Towns = new TownService(State, Bus, Economy);
         Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression);
         Movement = new HeroMovementService(State, Bus, Interactions);
-        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression);
+        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns);
     }
 
     public GameState State { get; }
@@ -71,6 +74,8 @@ public sealed class GameSession
     internal MapObjectInteractionService Interactions { get; }
 
     internal TurnService Turns { get; }
+
+    internal TownService Towns { get; }
 
     private IEventBus Bus { get; }
 
@@ -178,6 +183,21 @@ public sealed class GameSession
                 return null;
             case MoveStackCommand stack:
                 Armies.MoveStack(stack.Player, stack.FromHero, stack.FromSlot, stack.ToHero, stack.ToSlot, stack.Count);
+                return null;
+            case BuildCommand build:
+                Towns.Build(build.Player, build.Town, build.Building);
+                return null;
+            case BuildDwellingCommand dwelling:
+                Towns.BuildDwelling(dwelling.Player, dwelling.Town, dwelling.Line);
+                return null;
+            case RecruitCommand recruit:
+                Towns.Recruit(recruit.Player, recruit.Town, recruit.Creature, recruit.Count, recruit.Hero);
+                return null;
+            case UpgradeStackCommand upgrade:
+                Towns.UpgradeStack(upgrade.Player, upgrade.Town, upgrade.Army, upgrade.Slot);
+                return null;
+            case MoveTownStackCommand move:
+                Towns.MoveStack(move.Player, move.Town, move.From, move.FromSlot, move.To, move.ToSlot, move.Count);
                 return null;
             case RespondToGuardCommand guard:
                 Guards.Respond(guard.Accept);

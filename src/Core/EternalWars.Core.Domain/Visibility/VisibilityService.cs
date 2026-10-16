@@ -14,11 +14,8 @@ namespace EternalWars.Core.Domain.Visibility;
 /// </summary>
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
-      IEventHandler<MineOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>
+      IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>
 {
-    /// <summary>Owned mines reveal and watch a small area around them.</summary>
-    public const int MineScoutingRadius = 2;
-
     public void Handle(GameStarted @event)
     {
         foreach (var hero in state.Heroes)
@@ -26,11 +23,11 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
             Reveal(hero.Owner, hero.Position, hero.ScoutingRadius);
         }
 
-        foreach (var mine in state.ObjectsOf<Mine>())
+        foreach (var flagged in Flagged())
         {
-            if (mine.Owner is { } owner)
+            if (flagged.Owner is { } owner)
             {
-                Reveal(owner, mine.VisitPosition, MineScoutingRadius);
+                Reveal(owner, flagged.Object.VisitPosition, flagged.ScoutingRadius);
             }
         }
 
@@ -46,20 +43,9 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
     public void Handle(HeroTeleported @event) => OnHeroRelocated(state.GetHero(@event.Hero), @event.To);
 
-    public void Handle(MineOwnerChanged @event)
-    {
-        var mine = state.GetObject(@event.Mine);
-        if (@event.Current is { } owner)
-        {
-            Reveal(owner, mine.VisitPosition, MineScoutingRadius);
-        }
+    public void Handle(MineOwnerChanged @event) => OnOwnerChanged(@event.Mine, @event.Current);
 
-        // The flag change is news for everyone who can see the mine; the owners' sight changes too.
-        foreach (var player in state.Players)
-        {
-            ObserversChanged(player.Id);
-        }
-    }
+    public void Handle(TownOwnerChanged @event) => OnOwnerChanged(@event.Town, @event.Current);
 
     public void Handle(MapObjectRemoved @event)
     {
@@ -77,6 +63,24 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
             ObserversChanged(player.Id);
         }
     }
+
+    private void OnOwnerChanged(MapObjectId id, PlayerId? current)
+    {
+        var mapObject = state.GetObject(id);
+        if (current is { } owner && mapObject is IFlaggable flagged)
+        {
+            Reveal(owner, mapObject.VisitPosition, flagged.ScoutingRadius);
+        }
+
+        // The flag change is news for everyone who can see the object; the owners' sight changes too.
+        foreach (var player in state.Players)
+        {
+            ObserversChanged(player.Id);
+        }
+    }
+
+    private IEnumerable<(MapObject Object, PlayerId? Owner, int ScoutingRadius)> Flagged() =>
+        state.Objects.OfType<IFlaggable>().Select(f => ((MapObject)f, f.Owner, f.ScoutingRadius));
 
     private void OnHeroRelocated(Hero hero, MapPosition at)
     {
@@ -114,7 +118,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
         var observers = state.HeroesOf(player)
             .Select(h => (h.Position, h.ScoutingRadius))
-            .Concat(state.ObjectsOf<Mine>().Where(m => m.Owner == player).Select(m => (m.VisitPosition, MineScoutingRadius)))
+            .Concat(Flagged().Where(f => f.Owner == player).Select(f => (f.Object.VisitPosition, f.ScoutingRadius)))
             .ToList();
         var (entered, left) = state.Fog.UpdateSight(player, observers, state.Options.RefogMargin);
         if (entered.Count > 0 || left.Count > 0)

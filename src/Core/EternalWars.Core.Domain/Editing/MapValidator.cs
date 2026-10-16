@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.Editing;
 
@@ -92,6 +93,9 @@ public static class MapValidator
                 case Mine { Guard: { } guard } mine when !scenario.Creatures.Contains(guard.Creature):
                     issues.Add(new(IssueSeverity.Error, $"{name} guard uses unknown creature '{guard.Creature}'.", mine.Position));
                     break;
+                case Town town:
+                    issues.AddRange(ValidateTown(scenario, town).Select(m => new MapIssue(IssueSeverity.Error, $"{town.Name} {m}", town.Position)));
+                    break;
             }
         }
 
@@ -106,11 +110,47 @@ public static class MapValidator
             }
         }
 
-        foreach (var player in scenario.Players.Where(p => !scenario.HeroesOf(p.Id).Any()))
+        foreach (var player in scenario.Players.Where(p => !scenario.HeroesOf(p.Id).Any() && !scenario.ObjectsOf<Town>().Any(t => t.Owner == p.Id)))
         {
-            issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} has no starting hero."));
+            issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} has no starting hero or town."));
         }
 
         return issues;
+    }
+
+    private static IEnumerable<string> ValidateTown(GameState scenario, Town town)
+    {
+        if (town.Owner is { } owner && !scenario.HasPlayer(owner))
+        {
+            yield return "belongs to a missing player.";
+        }
+
+        foreach (var (building, level) in town.Buildings.Where(b => b.Value > scenario.Buildings.MaxLevel(b.Key)))
+        {
+            yield return $"has {building} level {level}, which does not exist.";
+        }
+
+        var lines = TownRules.Lines(scenario, town);
+        foreach (var (line, level) in town.Dwellings)
+        {
+            if (lines.FirstOrDefault(l => l.Id == line) is not { } definition)
+            {
+                yield return $"has a dwelling for '{line}', which is not one of its creature lines.";
+            }
+            else if (level > 1 && definition.UpgradesTo is null)
+            {
+                yield return $"has an upgraded {definition.Name} dwelling, but that line has no upgrade.";
+            }
+        }
+
+        if (town.Dwellings.Keys.FirstOrDefault() is { } any && TownRules.CheckDwellingChoice(scenario, town, any, town.DwellingLevel(any)) is { } choice)
+        {
+            yield return $"breaks the dwelling rule: {choice}";
+        }
+
+        foreach (var (_, stack) in town.Garrison.Stacks.Where(s => !scenario.Creatures.Contains(s.Stack.Creature)))
+        {
+            yield return $"garrison has unknown creature '{stack.Creature}'.";
+        }
     }
 }

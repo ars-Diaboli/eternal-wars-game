@@ -109,9 +109,10 @@ out of scope, but the deterministic core keeps it possible.
     - Dispositions (HoMM3 names, deterministic): Compliant, Friendly, Aggressive, Hostile, Savage decide whether
       the stack offers to **join** (free, needs room) or tries to **flee** from a much stronger army (≥ 3×), else
       it fights. The player accepts or fights. Unset counts are rolled by tier at game start.
-  - **Towns** (Phase 3, ADR-046): 7×7 with the corners free, entered through the bottom-middle cell
-    (`.BBBBB.`, five rows of `BBBBBBB`, `.BBVBB.`).
-  Planned: towns, artifacts, dwellings, shrines, boats/shipyards.
+  - **Towns** (implemented, ADR-046, ADR-050): 7×7 with the corners free, entered through the bottom-middle cell
+    (`.BBBBB.`, five rows of `BBBBBBB`, `.BBVBB.`). Entering an enemy or neutral town fights its garrison, if any, and
+    captures it; an own hero on the entrance is the town's visiting hero.
+  Planned: artifacts, map dwellings, shrines, boats/shipyards.
 - **Meeting heroes**: moving onto a tile with another hero is an interaction, like visiting an
   object, so routes may **end** on that hero's tile (never pass through it):
 
@@ -174,7 +175,10 @@ out of scope, but the deterministic core keeps it possible.
 
 ### 4.3 Towns and economy
 - **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (implemented as `ResourceSet`).
-- One building per town per day; building tree per faction.
+- One building per town per day (implemented, ADR-050); the building list is one table, `data/buildings.csv`, shared
+  by all towns for now. New towns start with town hall 1 and fort 1.
+- **Town turn** (implemented, HoMM3-style): at any time on the owner's turn, build, recruit into the garrison or the
+  visiting hero, upgrade stacks for the price difference, and move stacks between garrison and visiting hero.
 - **Creature tech tree** (accepted; details ❓ below):
   - Creatures have **5 tiers** (not HoMM3's 7).
   - Each playable town offers **9 creature dwellings**: **2 alternatives at each of tiers 1–4** and
@@ -206,11 +210,12 @@ out of scope, but the deterministic core keeps it possible.
     not a hard ban.
   - **Neutral creatures use the same 1–5 tier scale**, which is used for guard strength, treasure value
     and random-map balancing. Some have upgrades, most don't.
-- Weekly creature growth, dwellings on the map.
+- Weekly creature growth (implemented): a new dwelling opens with one week of creatures, every Monday adds the
+  creature's `growth`, and unbought creatures accumulate. Dwellings on the map later.
 - **Income** is paid at the start of the owner's turn. **There is no base or placeholder income**:
   players earn only what their sources produce. Sources:
   - **Mines** (implemented): gold 1000, lumber/ore 2, rare resources 1.
-  - **Towns**: town hall 500 / 1000 / 2000 gold; marketplace level 2 adds 1 ore and 1 lumber (Phase 3, ADR-046).
+  - **Towns** (implemented): town hall 500 / 1000 / 2000 gold; marketplace level 2 adds 1 ore and 1 lumber (ADR-046).
   - **Hero secondary skills**, Estates-like (Phase 3).
   - **Hero specialisations**, e.g. +N of a resource per day (Phase 3).
   - **Artifacts**, e.g. resource-producing items (Phase 3).

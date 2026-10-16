@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Editing;
@@ -25,7 +26,7 @@ public enum EditResult
     /// <summary>The target does not exist or is the wrong kind of object.</summary>
     InvalidTarget,
 
-    /// <summary>A player slot still owns heroes or mines, or it is the last slot.</summary>
+    /// <summary>A player slot still owns heroes, mines or towns, or it is the last slot.</summary>
     PlayerInUse,
 
     /// <summary>Already <see cref="GameState.MaxPlayers"/> player slots.</summary>
@@ -36,6 +37,9 @@ public enum EditResult
 
     /// <summary>A number is out of range (negative stats, empty stacks, bad slot).</summary>
     InvalidValue,
+
+    /// <summary>The line is not one of the town's, or its dwellings would break the 7-of-9 rule (ADR-030).</summary>
+    DwellingRule,
 }
 
 /// <summary>
@@ -304,6 +308,142 @@ public sealed class MapEditorSession
             var before = mine.Owner;
             mine.Owner = value;
             _bus.Publish(new MineOwnerChanged(mine.Id, before, value));
+        }
+    }
+
+    // Towns -----------------------------------------------------------------------------------
+
+    public EditResult SetTownOwner(MapObjectId id, PlayerId? owner)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (owner is { } player && !Scenario.HasPlayer(player))
+        {
+            return EditResult.UnknownPlayer;
+        }
+
+        var previous = town.Owner;
+        Run(new DelegateCommand("Set town owner", () => Apply(owner), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(PlayerId? value)
+        {
+            var before = town.Owner;
+            town.Owner = value;
+            _bus.Publish(new TownOwnerChanged(town.Id, before, value));
+        }
+    }
+
+    public EditResult SetTownName(MapObjectId id, string name)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = town.Name;
+        Run(new DelegateCommand("Rename town", () => Apply(name.Trim()), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(string value)
+        {
+            town.Name = value;
+            _bus.Publish(new MapObjectChanged(town.Id));
+        }
+    }
+
+    /// <summary>
+    /// Pre-builds a town building up to <paramref name="level"/> (0 = not built). Map authors may skip requirements; in
+    /// the game they apply to what is built next.
+    /// </summary>
+    public EditResult SetTownBuilding(MapObjectId id, string building, int level)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town ||
+            BuiltInBuildings.DwellingTier(building) is not null || !Scenario.Buildings.Contains(building))
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (level < 0 || level > Scenario.Buildings.MaxLevel(building))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = town.Level(building);
+        Run(new DelegateCommand($"Set {building} of {town.Name}", () => Apply(level), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(int value)
+        {
+            town.SetLevel(building, value);
+            _bus.Publish(new MapObjectChanged(town.Id));
+        }
+    }
+
+    /// <summary>Pre-builds a line's dwelling: 0 none, 1 built, 2 upgraded; the 7-of-9 rule applies (ADR-030).</summary>
+    public EditResult SetTownDwelling(MapObjectId id, string line, int level)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (TownRules.Lines(Scenario, town).FirstOrDefault(l => l.Id == line) is not { } definition ||
+            TownRules.CheckDwellingChoice(Scenario, town, line, level) is not null)
+        {
+            return EditResult.DwellingRule;
+        }
+
+        if (level < 0 || level > (definition.UpgradesTo is null ? 1 : 2))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = town.DwellingLevel(line);
+        Run(new DelegateCommand($"Set {definition.Name} dwelling of {town.Name}", () => Apply(level), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(int value)
+        {
+            town.SetDwelling(line, value);
+            _bus.Publish(new MapObjectChanged(town.Id));
+        }
+    }
+
+    /// <summary>Puts a stack into (or, with null, clears) one of a town's garrison slots.</summary>
+    public EditResult SetGarrisonSlot(MapObjectId id, int slot, CreatureStack? stack)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (!Army.IsValidSlot(slot))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        if (stack is not null && !Scenario.Creatures.Contains(stack.Creature))
+        {
+            return EditResult.UnknownCreature;
+        }
+
+        var previous = town.Garrison[slot];
+        Run(new DelegateCommand($"Edit garrison of {town.Name}", () => Apply(stack), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(CreatureStack? value)
+        {
+            town.Garrison.Set(slot, value);
+            _bus.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
         }
     }
 
@@ -629,7 +769,7 @@ public sealed class MapEditorSession
     {
         var player = Scenario.Players[^1];
         if (Scenario.Players.Count == 1 || Scenario.HeroesOf(player.Id).Any() ||
-            Scenario.ObjectsOf<Mine>().Any(m => m.Owner == player.Id))
+            Scenario.Objects.OfType<IFlaggable>().Any(o => o.Owner == player.Id))
         {
             return EditResult.PlayerInUse;
         }

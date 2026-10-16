@@ -47,7 +47,7 @@ public partial class Main : Node3D
         _camera = new StrategyCamera { Name = "Camera" };
         AddChild(_camera);
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
-        Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes));
+        Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -228,8 +228,8 @@ public partial class Main : Node3D
         rows.AddChild(fileRow);
         _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0) };
         fileRow.AddChild(_fileName);
-        AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes)));
-        AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes)));
+        AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
+        AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
         AddButton(fileRow, "Save", Save);
         AddButton(fileRow, "Load", Load);
         AddButton(fileRow, "Undo", () => _editor.Undo());
@@ -289,7 +289,7 @@ public partial class Main : Node3D
 
         try
         {
-            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes));
+            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
             _status.Text = $"Loaded {path}";
         }
         catch (FormatException e)

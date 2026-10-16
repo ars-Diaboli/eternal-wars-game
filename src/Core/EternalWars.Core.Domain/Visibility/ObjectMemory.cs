@@ -8,7 +8,7 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed record KnownObject(MapObjectId Id, MapObjectDefinition Definition, MapPosition Position, PlayerId? Owner)
 {
     public static KnownObject Of(MapObject mapObject) =>
-        new(mapObject.Id, mapObject.Definition, mapObject.Position, (mapObject as Mine)?.Owner);
+        new(mapObject.Id, mapObject.Definition, mapObject.Position, (mapObject as IFlaggable)?.Owner);
 
     public IEnumerable<MapPosition> Cells() =>
         Definition.Footprint.OccupiedCells.Select(c => Position.Offset(c.Dx, c.Dy));

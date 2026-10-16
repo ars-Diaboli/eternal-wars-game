@@ -8,6 +8,8 @@ still to decide:
 
 Roster notes and spell resistance: moved to ADR-049 (2026-10-16).
 
+skip navigation skills and sea travel. use waterbodies just as obstacles
+
 mechanics for morale 
 calculated at the begining of every combat round
 morale range is +/-5

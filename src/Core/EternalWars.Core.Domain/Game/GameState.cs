@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Visibility;
 
 namespace EternalWars.Core.Domain.Game;
@@ -31,13 +32,15 @@ public sealed class GameState
         GameOptions? options = null,
         TerrainCatalog? terrains = null,
         CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null)
+        HeroCatalog? heroRoster = null,
+        BuildingCatalog? buildings = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
         Options = options ?? GameOptions.Default;
         Terrains = terrains ?? TerrainCatalog.Default;
         Creatures = creatures ?? CreatureCatalog.Default;
         HeroRoster = heroRoster ?? HeroCatalog.Default;
+        Buildings = buildings ?? BuildingCatalog.Default;
         Random = new GameRandom(Options.Seed);
         Fog = new FogOfWar(map, Options.FogMode);
         _players = players.ToList();
@@ -69,6 +72,9 @@ public sealed class GameState
 
     /// <summary>Hero roster (<see cref="HeroDefinition"/>s) map heroes may be made from (ADR-048).</summary>
     public HeroCatalog HeroRoster { get; }
+
+    /// <summary>Town building levels, costs and requirements in effect for this game (ADR-046).</summary>
+    public BuildingCatalog Buildings { get; }
 
     /// <summary>The game RNG; only Domain services draw from it, in command order, so games replay exactly.</summary>
     internal GameRandom Random { get; }

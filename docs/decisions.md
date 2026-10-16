@@ -570,3 +570,37 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   twice (rank 3, ADR-047) counts as the next level (`SpellLevels.Effective`, `CreatureDefinition.ResistsSpell`).
   Red, green, azure and gold dragons have `SpellResistance 3`, so only level 4 spells and twice-upgraded level 3
   spells affect them. Like the other spell capabilities, it is data and a query until magic exists (Phase 5).
+
+### ADR-050: Towns in play: buildings table, town turn, garrisons and capture
+**Status**: accepted (2026-10-16); implements the roadmap's town and dwelling items on top of ADR-030 and ADR-046
+- **Buildings are a table** (user decision): `data/buildings.csv`, one row per building level (`id, level, name, gold,
+  resources, requires, income`), embedded in core as `BuildingCatalog.Default` and read by the apps at start-up like the
+  creature table (`--buildings=`). Dwellings are the rows `dwelling-1` … `dwelling-5`: their level 1 builds and level 2
+  upgrades any dwelling of that tier, priced as in ADR-046. A town's nine dwellings are its creature lines from the
+  creature table. The draft mage guild level 4 (7500 gold, 7 crystal, mercury and sulfur) is a placeholder.
+- **Towns are map objects** (`MapObjectKind.Town`, `town.<type>` for the eight playable towns) with the ADR-046
+  footprint (44 blocked cells and the entrance). Per instance: owner, name, building levels, dwelling levels,
+  creatures waiting per line, the garrison (seven slots) and the day of the last build.
+- **New towns start with town hall 1 and fort 1** (user decision), also when a map omits the buildings. Map authors
+  may pre-build anything in the editor without requirements (fort 1 requires the tavern in the table); requirements
+  apply to what is built in play. Pre-built dwellings follow the 7-of-9 rule.
+- **Town turn, HoMM3-style** (user decision): on the owner's turn, with no decision pending, the owner may at any time
+  build (one building per town per day, requirements and cost checked), build or upgrade a dwelling (7 of 9, a refused
+  build would leave a tier unreachable, ADR-030), recruit, upgrade whole stacks for the price difference, and move
+  stacks between the garrison and the visiting hero (an own hero on the entrance; it keeps one stack). Recruits go to
+  the garrison or to the visiting hero. All are commands (`BuildCommand`, `BuildDwellingCommand`, `RecruitCommand`,
+  `UpgradeStackCommand`, `MoveTownStackCommand`) and replay like the others.
+- **Growth**: a new dwelling opens with one week of its creature's `growth`; every Monday each built dwelling adds its
+  growth, owned or not, and unbought creatures accumulate. An upgraded dwelling sells the base or the upgraded
+  creature from the same pool. Fort growth bonuses are still open.
+- **Income**: an owned town pays the income of the highest built level of each building (town hall 500 / 1000 / 2000
+  gold, resource silo +1 lumber +1 ore), through `TownIncome`.
+- **Capture**: entering an enemy or neutral town with no garrison captures it. A garrison is fought first, as a guard
+  commanded by the town's owner (the AI for computer players and neutral towns) without hero stats or skills; beating it
+  captures the town, losing leaves the survivors in the garrison. A hero without creatures cannot attack a garrison. An
+  enemy hero standing on the entrance is a normal hero battle; the garrison does not join it (for now). Allied towns can
+  be entered but not managed. Owned towns watch a radius of 5 like heroes (mines: 2).
+- **Map format v6** adds `town` objects; older maps load unchanged.
+- **UI**: the 2D harness has a basic town panel (`TownPanel`; `--scenario=towns` loads `TownsScenario`), the editor
+  inspector edits towns, and the 3D game shows towns with flag and name. The 3D town screen comes later.
+- **Not yet**: effects of fort, blacksmith, marketplace trading, mage guild and tavern; town sieges; AI town play.

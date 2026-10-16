@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Objects;
@@ -69,6 +70,18 @@ public sealed class MapObjectInteractionService(
 
             case MonsterGuard monster:
                 guards.Encounter(hero, monster);
+                break;
+
+            // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).
+            case Town town when town.Owner is { } owner && !state.AreEnemies(hero.Owner, owner):
+                break;
+
+            case Town { Garrison.IsEmpty: false } town:
+                battles.BeginTownBattle(hero, town);
+                break;
+
+            case Town town:
+                TownService.Capture(events, town, hero.Owner);
                 break;
 
             case { TeleportTarget: not null }:
