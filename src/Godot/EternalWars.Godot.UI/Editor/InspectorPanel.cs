@@ -90,6 +90,14 @@ public partial class InspectorPanel : VBoxContainer
         defense.ValueChanged += _ => ApplyStats();
         tactics.Button.ItemSelected += _ => ApplyStats();
 
+        var spirit = new HBoxContainer();
+        AddChild(spirit);
+        var morale = Spin(spirit, "Morale", hero.Morale, -5, 5);
+        var luck = Spin(spirit, "Luck", hero.Luck, -5, 5);
+        void ApplySpirit() => Edit(() => _editor.SetHeroMoraleAndLuck(hero.Id, (int)morale.Value, (int)luck.Value));
+        morale.ValueChanged += _ => ApplySpirit();
+        luck.ValueChanged += _ => ApplySpirit();
+
         AddChild(new Label { Text = "Army" });
         var creatures = new[] { ("— empty —", "") }
             .Concat(_editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id)))

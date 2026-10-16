@@ -197,6 +197,12 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
     /// <summary>Ammunition per battle; greater than zero makes the creature a shooter.</summary>
     public int Shots { get; init; }
 
+    /// <summary>Base morale, −5…+5; the hero's is added in battle (ADR-053).</summary>
+    public int Morale { get; init; }
+
+    /// <summary>Base luck, −5…+5; the hero's is added in battle (ADR-053).</summary>
+    public int Luck { get; init; }
+
     public int WeeklyGrowth { get; init; }
 
     public ResourceSet Cost { get; init; }
@@ -281,6 +287,11 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
         if (Attack < 0 || Defense < 0 || Shots < 0)
         {
             throw new FormatException($"Creature '{Id}' has negative attack, defense or shots.");
+        }
+
+        if (Math.Abs(Morale) > Battles.MoraleAndLuck.Limit || Math.Abs(Luck) > Battles.MoraleAndLuck.Limit)
+        {
+            throw new FormatException($"Creature '{Id}' has morale or luck outside ±{Battles.MoraleAndLuck.Limit}.");
         }
 
         if (Capabilities.Count > MaxCapabilities)

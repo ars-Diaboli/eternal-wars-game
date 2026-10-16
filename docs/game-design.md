@@ -214,6 +214,10 @@ out of scope, but the deterministic core keeps it possible.
     and random-map balancing. Some have upgrades, most don't.
 - Weekly creature growth (implemented): a new dwelling opens with one week of creatures, every Monday adds the
   creature's `growth`, and unbought creatures accumulate. Dwellings on the map later.
+- **Caravans** (designed, ADR-054; needs map dwellings): a town building that hires creatures from owned dwellings on
+  the adventure map. The creatures travel virtually to the town at their map speed, along a route no enemy hero or
+  monster blocks, and a dwelling more than 5 days away cannot supply the town; both are checked before paying.
+  Caravans also move troops between two own towns.
 - **Income** is paid at the start of the owner's turn. **There is no base or placeholder income**:
   players earn only what their sources produce. Sources:
   - **Mines** (implemented): gold 1000, lumber/ore 2, rare resources 1.
@@ -325,7 +329,14 @@ because that is content selection, not a rule.
   A HoMM5-style timeline bar shows the order. Unlike HoMM5, no unit acts twice in a round.
   - **Ties**: attacker's side first, then higher speed, then a deterministic seeded roll.
   - **Wait** (HoMM3): waiting units act at the end of the round, in **reverse** initiative order.
-  - Open ❓: spells and morale that change initiative mid-round.
+  - Open ❓: spells that change initiative mid-round.
+- **Morale and luck** (implemented, ADR-053; rates are drafts): each stack has −5…+5 of each, its creature's plus its
+  hero's.
+  - **Morale**, rolled every round: 2 % per point to act twice (good) or lose the turn (bad); otherwise 4 % per point
+    for ±50 % initiative that round. The extra action is the one exception to "once per round".
+  - **Luck**, rolled on every hit by attacker and defender, 4 % per point: the attacker's good luck (or the defender's
+    bad luck) deals +75 % damage, the defender's good luck (or the attacker's bad luck) −50 %; opposite rolls cancel.
+  - Which skills, artifacts and army mixes change them is still open ❓.
 - Wait/defend (+20 % Defense), retaliation (once per round unless a capability says otherwise), ranged units
   (no shot while engaged, half damage beyond 15 cells), flyers, rolled obstacles. Implemented (ADR-038).
 - **Creature capabilities** (HoMM4-style, implemented, ADR-042): each creature has **at most 5** special rules,
@@ -473,4 +484,7 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 15 | Fog ambush | — | Under refog, bumping into an unseen enemy starts an ambush battle | accepted |
 | 16 | Neutral guards | Zone of control (pickups can be stolen) | Map setting: classic zone of control, or a fully guarded 3×3 area | accepted |
 | 17 | Speed | One speed for battle and map | Battle Speed in cells, separate adventure map speed | accepted |
+| 18 | Morale | Extra turn or freeze only | Also ±50 % initiative for the round when no extra action / freeze triggers | accepted |
+| 19 | Luck | Attacker only, double damage | Both sides roll: +75 % (attacker) or −50 % (defender); opposite rolls cancel | accepted |
+| 20 | External dwellings | Visit them with a hero | Caravans hire from owned dwellings within 5 days; creatures travel the map to the town | accepted (not built yet) |
 | … | | | *more twists to be proposed* ❓ | |

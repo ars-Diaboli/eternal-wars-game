@@ -71,6 +71,11 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Rosters**: all towns in the creature table, first balance pass (ADR-044).
 - **Heroes and skills**: 16 heroes per town (mage + warrior per tier 1–4 line), flat preferred-creature bonus, eight
   schools, any school learnable with rival schools at 5 %, named levels with one point per level (ADR-047, ADR-048).
+- **Morale and luck**: ±5 per stack (creature + hero); morale per round (extra action / lost turn, else ±50 %
+  initiative), luck per hit (+75 % / −50 %, opposite rolls cancel) (ADR-053).
+- **Caravans**: hire from owned map dwellings within 5 days of virtual travel on an open route; also between towns
+  (ADR-054).
+- **Sea travel**: none; water is an obstacle (ADR-051).
 
 ## Still open
 
@@ -83,7 +88,10 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 
 ### Rules still open
 4. Teleporting creatures on the battlefield: how they use footprints (none in the slice yet).
-5. Morale and luck: keep HoMM3's, change them, or drop them (part of the "twists" question)?
+5. Morale and luck sources (the mechanics are ADR-053): which skills, artifacts, buildings and army mixes change them;
+   do undead or constructs ignore morale; are the draft 4 % luck per point and the mirror-image bad luck right?
+11. Caravans (ADR-054): what happens when a travelling caravan's route gets blocked or its town is captured; can
+    other players see or attack caravans; what the caravan building costs.
 6. Town buildings (ADR-046 draft): what fort, blacksmith, tavern and marketplace trading do; which buildings raise
    growth; a fourth town hall level; the cost of mage guild level 4; are the sandbox's gems really mercury?
 

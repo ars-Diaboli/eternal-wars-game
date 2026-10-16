@@ -15,6 +15,8 @@ namespace EternalWars.Core.Domain.Battles;
 /// after everyone else in reverse order. Defend lasts until the unit's next turn.
 /// Retaliation is once per round (unless unlimited), in melee and, for shooters with ranged retaliation, against
 /// shots; first strike moves it before the attacker's blow (ADR-042).
+/// Morale is rolled at round start (extra action, lost turn, ±50 % initiative) and luck on every hit (ADR-053); the
+/// extra action of good morale is the one exception to "exactly once" per round.
 /// </remarks>
 internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 {
@@ -155,7 +157,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var unit = battle.ActiveUnit!;
         unit.IsDefending = true;
         events.Publish(new BattleUnitDefended(unit.Id));
-        EndTurn();
+        EndTurn(moraleMayAct: false); // defending is not an action good morale repeats
         return null;
     }
 
@@ -182,13 +184,58 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var secondary = kind == BattleAttackKind.Melee ? AreaTargets(attacker, target) : [];
         var hit = new HitModifiers(roll, kind is BattleAttackKind.Ranged or BattleAttackKind.RangedRetaliation, cover);
 
+        // Luck: the attacker rolls once per strike, every target for itself (ADR-053).
+        var attackerLuck = RollLuck(attacker);
+        var primaryHit = hit with { Luck = CombineLuck(attackerLuck, target) };
+
         // Damage for every target is computed before any of it is applied, so the order of victims does not matter.
-        var damages = secondary.Select(s => (Unit: s, Damage: DamageCalculator.Damage(battle, attacker, s, hit))).ToList();
-        Apply(attacker, target, kind, DamageCalculator.Damage(battle, attacker, target, hit));
-        foreach (var (unit, damage) in damages)
+        var damages = secondary.Select(s =>
         {
-            Apply(attacker, unit, BattleAttackKind.Area, damage);
+            var areaHit = hit with { Luck = CombineLuck(attackerLuck, s) };
+            return (Unit: s, Damage: DamageCalculator.Damage(battle, attacker, s, areaHit), areaHit.Luck);
+        }).ToList();
+        Apply(attacker, target, kind, DamageCalculator.Damage(battle, attacker, target, primaryHit), primaryHit.Luck);
+        foreach (var (unit, damage, luck) in damages)
+        {
+            Apply(attacker, unit, BattleAttackKind.Area, damage, luck);
         }
+    }
+
+    /// <summary>+1 good luck, −1 bad luck, 0 nothing; rolls only for a unit with luck.</summary>
+    private int RollLuck(BattleUnit unit)
+    {
+        var luck = battle.LuckOf(unit);
+        return luck != 0 && battle.Random.Next(100) < MoraleAndLuck.LuckPercent * Math.Abs(luck) ? Math.Sign(luck) : 0;
+    }
+
+    /// <summary>The attacker's roll against the defender's: rolls favouring each side cancel out.</summary>
+    private HitLuck CombineLuck(int attackerLuck, BattleUnit defender)
+    {
+        var favour = attackerLuck - RollLuck(defender);
+        return favour > 0 ? HitLuck.Lucky : favour < 0 ? HitLuck.Unlucky : HitLuck.None;
+    }
+
+    /// <summary>
+    /// This round's morale (ADR-053): per point, 2 % for an extra action (good) or a lost turn (bad), else 4 % for ±50 %
+    /// initiative. Rolls only for a unit with morale.
+    /// </summary>
+    private MoraleEffect RollMorale(BattleUnit unit)
+    {
+        var morale = battle.MoraleOf(unit);
+        if (morale == 0)
+        {
+            return MoraleEffect.None;
+        }
+
+        var points = Math.Abs(morale);
+        if (battle.Random.Next(100) < MoraleAndLuck.ExtraActionPercent * points)
+        {
+            return morale > 0 ? MoraleEffect.ExtraAction : MoraleEffect.SkipTurn;
+        }
+
+        return battle.Random.Next(100) < MoraleAndLuck.InitiativePercent * points
+            ? morale > 0 ? MoraleEffect.Haste : MoraleEffect.Slow
+            : MoraleEffect.None;
     }
 
     /// <summary>Breath: the target-sized area behind the target (friendly fire). Cleave / multi-head: enemies only.</summary>
@@ -220,7 +267,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         return [];
     }
 
-    private void Apply(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int damage)
+    private void Apply(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int damage, HitLuck luck)
     {
         var before = target.Count;
         var remaining = target.TotalHealth - damage;
@@ -237,7 +284,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         target.HitsThisRound++;
-        events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, before - target.Count, target.Count));
+        events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, before - target.Count, target.Count, luck));
         if (!target.IsAlive)
         {
             battle.MutableQueue.Remove(target.Id);
@@ -246,9 +293,20 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
     }
 
-    private void EndTurn()
+    /// <summary>Ends the active unit's action; with good morale rolled this round it acts once more right away (ADR-053).</summary>
+    private void EndTurn(bool moraleMayAct = true)
     {
+        var unit = battle.ActiveUnit;
         battle.ActiveUnit = null;
+        if (moraleMayAct && unit is { IsAlive: true, RoundMorale: MoraleEffect.ExtraAction } && !CheckFinished())
+        {
+            unit.RoundMorale = MoraleEffect.None;
+            battle.ActiveUnit = unit;
+            events.Publish(new BattleMoraleTriggered(unit.Id, MoraleEffect.ExtraAction));
+            events.Publish(new BattleTurnStarted(unit.Id, battle.Round));
+            return;
+        }
+
         NextTurn();
     }
 
@@ -292,6 +350,14 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             }
 
             unit.IsDefending = false;
+            if (unit.RoundMorale == MoraleEffect.SkipTurn)
+            {
+                // Bad morale: the turn passes without the unit acting.
+                unit.RoundMorale = MoraleEffect.None;
+                events.Publish(new BattleMoraleTriggered(unit.Id, MoraleEffect.SkipTurn));
+                continue;
+            }
+
             battle.ActiveUnit = unit;
             events.Publish(new BattleTurnStarted(unit.Id, battle.Round));
             return;
@@ -308,17 +374,22 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             unit.HasRetaliated = false;
             unit.HitsThisRound = 0;
             battle.TieRolls[unit.Id] = battle.Random.Next(1_000_000);
+            unit.RoundMorale = RollMorale(unit);
         }
 
         battle.MutableQueue.Clear();
         battle.MutableQueue.AddRange(battle.LivingUnits.OrderBy(Key, ActingOrder.Instance).Select(u => u.Id));
         events.Publish(new BattleRoundStarted(battle.Round));
+        foreach (var unit in battle.MutableQueue.Select(battle.GetUnit).Where(u => u.RoundMorale is MoraleEffect.Haste or MoraleEffect.Slow))
+        {
+            events.Publish(new BattleMoraleTriggered(unit.Id, unit.RoundMorale));
+        }
     }
 
     private (int Initiative, int Side, int Speed, int Roll) Key(int unitId) => Key(battle.GetUnit(unitId));
 
     private (int Initiative, int Side, int Speed, int Roll) Key(BattleUnit unit) =>
-        (unit.Creature.Initiative, unit.Side == BattleSide.Attacker ? 1 : 0, battle.SpeedOf(unit), battle.TieRolls.GetValueOrDefault(unit.Id));
+        (battle.InitiativeOf(unit), unit.Side == BattleSide.Attacker ? 1 : 0, battle.SpeedOf(unit), battle.TieRolls.GetValueOrDefault(unit.Id));
 
     private bool CheckFinished()
     {

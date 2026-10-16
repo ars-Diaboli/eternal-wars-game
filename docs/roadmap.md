@@ -165,7 +165,12 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
 - [ ] Town hall level 4 (capitol-like)? ❓
 - [ ] Per-town building lists or names (every town shares one table today)
-- [ ] Dwellings on the adventure map: recruit locked-out and neutral creatures (map object, weekly growth)
+- [ ] Dwellings on the adventure map (ADR-054): flaggable map object with one creature line, weekly growth that
+      accumulates, recruiting by a visiting hero; map format and editor
+- [ ] Caravan building (ADR-054): hire from owned map dwellings within 5 days of travel at the creatures' map speed,
+      along a route no enemy hero or monster blocks, checked before paying; the creatures travel virtually and join
+      the garrison on arrival (`CaravanArrived`); the same for troops between two own towns; UI in the town screen
+- [ ] Caravan rules still open: blocked route or captured destination during travel, visibility, cost (ADR-054)
 
 ### Towns: Godot
 - [x] 2D harness town panel (`TownPanel`, `--scenario=towns`): build, dwellings, recruit, upgrade, garrison
@@ -283,7 +288,10 @@ author templates in the editor.
 - [ ] Spell tags and creature caster spells ❓ open question 7
 
 ### Combat additions
-- [ ] Morale and luck (draft in ideas.md) ❓ open question 5
+- [x] Morale and luck (ADR-053): ±5 from creature table and hero (map format v7, editor); per round 2 %/point extra
+      action or lost turn, else 4 %/point ±50 % initiative; per hit 4 %/point luck for +75 % / −50 % damage, opposite
+      rolls cancel; shown in the 3D battle (captions, log, unit stats)
+- [ ] Morale and luck sources: skills, artifacts, buildings, army composition; undead/constructs without morale? ❓
 - [ ] War machines (catapult, ballista, first-aid tent) ❓
 - [ ] Teleporting creatures and footprints ❓ open question 4
 - [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0

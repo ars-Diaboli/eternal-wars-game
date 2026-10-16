@@ -520,6 +520,30 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>Sets a hero's morale and luck (−5…+5, ADR-053).</summary>
+    public EditResult SetHeroMoraleAndLuck(HeroId id, int morale, int luck)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (Math.Abs(morale) > Battles.MoraleAndLuck.Limit || Math.Abs(luck) > Battles.MoraleAndLuck.Limit)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = (hero.Morale, hero.Luck);
+        Run(new DelegateCommand($"Edit {hero.Name}'s morale and luck", () => Apply((morale, luck)), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply((int Morale, int Luck) values)
+        {
+            (hero.Morale, hero.Luck) = values;
+            _bus.Publish(new HeroStatsChanged(hero.Id, hero.Attack, hero.Defense, hero.Tactics));
+        }
+    }
+
     /// <summary>
     /// Makes a hero one of the roster (<see cref="GameState.HeroRoster"/>), taking over its name, class, preferred
     /// creature, specialty, stats and starting skills; null turns it back into a custom hero (identity cleared, stats kept).
