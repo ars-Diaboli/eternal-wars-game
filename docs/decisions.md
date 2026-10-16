@@ -767,3 +767,35 @@ enemy, and a map can configure other conditions in the editor
   one decided the game, has been closed.
 - Open: conditions that need artifacts or
   objects (grail, flag all mines), team-wide survival, campaign hooks, save/load (next roadmap item).
+
+### ADR-058: Saved games
+**Status**: accepted (2026-10-16), from the roadmap's save/load item and a user requirement: saving and loading must also
+work during combat
+- **A save is a game record** (ADR-036): the map as it was when the game started, the options (seed, fog) and every
+  accepted command, plus a label (`SaveInfo`: name, UTC time, calendar date, whose turn, in battle, map name). The record
+  document is version 2 (`GameRecordDocument.Save`; version 1 replays still load); saves use the extension
+  `*.ewsave.json`. `GameSaves` writes (to a temp file, then moves it over the old one), lists (newest first; damaged files
+  are listed with their error), loads and deletes.
+- **Any moment works, a battle included**: battle commands are commands, so replaying the log lands in the same
+  battle, in the same round, with the same active unit (`BattleView3D.Restore` shows it; a battle still choosing its width
+  just opens when the width is chosen). The loaded state is proved against the saved `GameStateDigest`; a save made with
+  other content (changed creature table) fails with that error instead of loading a different game.
+- **No snapshot yet**: loading replays the whole game, which is fast for a game of a few hundred commands. If it gets too
+  slow, a state snapshot taken every N days and replayed from is the planned way (roadmap).
+- **The game starts from a map document**, taken right before `Start` (after the setup screen's team choice): the
+  game app keeps it for saving. A loaded game keeps the map of its record, so saves can be saved again.
+- **Game app**: F10 or the Menu button opens the list (name field, Save, Load, Delete); F5 quick-saves and F9 quick-loads
+  (`quicksave`), on the adventure map and in battle. Saves live in `user://saves` (on Windows
+  `%APPDATA%\Godot\app_userdata\Eternal Wars\saves`). The menu is also on the new-game screen, for loading.
+  Loading rebuilds the world, HUD and battle scene from the loaded session; the battle HUD opens at the point it was
+  saved. A game that is over can be saved and loaded too.
+- **Autosave** (user decision: two slots): at the **start of every turn** (each player's turn, also at game start) the game
+  app writes `autosave-current` and first moves the one that was current to `autosave-previous`, so the start of the
+  latest turn and of the turn before are always there (`GameSaves.Autosave`; the new file is complete before the slots
+  rotate). The save is made after the command that began the turn is logged and settled, from the new event
+  `CommandExecuted(Command)` that `GameSession.Execute` publishes last: `TurnStarted` itself comes before the command
+  is logged, and a save then would not match its digest. The slots are listed in the menu as "Autosave: start of the
+  latest turn / of the turn before", cannot be written over by name, and loading one does not autosave. Games that are
+  loaded resume without rewriting the slots until the next turn starts.
+- Not covered: saving the 2D harness, a save from the editor-made `ewreplay` files, and saving games whose state changed
+  outside commands (nothing does).

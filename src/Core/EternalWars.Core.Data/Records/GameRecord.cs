@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -6,17 +7,21 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Data.Records;
 
 /// <summary>
-/// A replayable game (<c>*.ewreplay.json</c>): the map as it was at the start, the game options (incl. the
-/// seed) and every accepted command. <see cref="FinalDigest"/> lets a replay prove it reached the same state.
+/// A replayable game (<c>*.ewreplay.json</c>) or a saved game (<c>*.ewsave.json</c>, ADR-058): the map as it was at the
+/// start, the game options (incl. the seed) and every accepted command. <see cref="FinalDigest"/> lets a replay prove it
+/// reached the same state. Version 2 adds <see cref="Save"/>; version 1 files still load.
 /// </summary>
 public sealed record GameRecordDocument
 {
-    public const int CurrentFormatVersion = 1;
+    public const int CurrentFormatVersion = 2;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -28,7 +33,19 @@ public sealed record GameRecordDocument
 
     /// <summary><see cref="GameStateDigest"/> after the last command, if recorded.</summary>
     public string? FinalDigest { get; init; }
+
+    /// <summary>What the save menu shows; present in saved games.</summary>
+    public SaveInfo? Save { get; init; }
 }
+
+/// <summary>The label of a saved game: enough to pick it from a list without replaying it.</summary>
+/// <param name="Name">The name the player gave the save.</param>
+/// <param name="SavedAt">UTC time of saving, ISO 8601.</param>
+/// <param name="Date">The game's calendar date.</param>
+/// <param name="Player">Whose turn it was.</param>
+/// <param name="InBattle">Saved in the middle of a battle.</param>
+/// <param name="Map">Name of the map.</param>
+public sealed record SaveInfo(string Name, string SavedAt, string Date, string Player, bool InBattle, string Map);
 
 /// <summary>Records and replays games from their command logs (ADR-036).</summary>
 public static class GameReplay
@@ -37,12 +54,21 @@ public static class GameReplay
     /// Captures a finished or ongoing session. <paramref name="initialMap"/> must be the map document the
     /// session was created from (save it before starting: the live state has changed since).
     /// </summary>
-    public static GameRecordDocument Record(MapDocument initialMap, GameSession session) => new()
+    public static GameRecordDocument Record(MapDocument initialMap, GameSession session, string? saveName = null) => new()
     {
         Map = initialMap,
         Options = session.State.Options,
         Commands = session.CommandLog.ToList(),
         FinalDigest = GameStateDigest.Compute(session.State),
+        Save = saveName is null
+            ? null
+            : new SaveInfo(
+                saveName,
+                DateTimeOffset.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                session.State.Date.ToString(),
+                session.State.CurrentPlayer.Name,
+                session.State.Battle is not null,
+                initialMap.Name),
     };
 
     /// <summary>
@@ -52,9 +78,12 @@ public static class GameReplay
     public static GameSession Replay(
         GameRecordDocument record,
         MapObjectCatalog? catalog = null,
-        CreatureCatalog? creatures = null)
+        CreatureCatalog? creatures = null,
+        HeroCatalog? heroRoster = null,
+        BuildingCatalog? buildings = null,
+        TerrainCatalog? terrains = null)
     {
-        var session = new GameSession(MapConverter.ToGameState(record.Map, catalog, record.Options, creatures: creatures));
+        var session = new GameSession(MapConverter.ToGameState(record.Map, catalog, record.Options, terrains, creatures, heroRoster, buildings));
         session.Start();
         for (var i = 0; i < record.Commands.Count; i++)
         {
@@ -77,6 +106,9 @@ public static class GameReplay
 public static class GameRecordSerializer
 {
     public const string FileExtension = ".ewreplay.json";
+
+    /// <summary>Saved games use the same document under their own extension (ADR-058).</summary>
+    public const string SaveExtension = ".ewsave.json";
 
     private static readonly IReadOnlyList<(Type Type, string Name)> CommandTypes =
     [

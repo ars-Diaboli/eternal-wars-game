@@ -50,6 +50,7 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 | Edit | — | LMB with the active tool (terrain, road, object, monster, hero, erase, link gates, select); Ctrl+Z / Ctrl+Y | — |
 | Battle | 3D battle scene: point to preview, click to move / attack (from the side the pointer is on) / shoot; W wait, D defend, R retreat, Q quick combat (or the buttons), wheel zoom; Enter / Esc leave the result | — | Click: move / attack / shoot; W wait, D defend, R retreat, Q quick combat |
 | Decisions | Prompt buttons, exchange screen | — | Prompt buttons, exchange screen |
+| Save / load | F10 or the Menu button: list, name, Save / Load / Delete; F5 quick save, F9 quick load; in battle too; autosave at every turn start (two slots) | — | — |
 
 ## Conventions
 - **Where does code go?** If it can be written without `using Godot;`, it goes in Tier 1.
@@ -67,6 +68,7 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
   `TestWorld.DefaultArmy()` (10 footmen, 1500 movement points). Issue commands with the `SessionCommands`
   helpers (`session.Step`, `session.MoveTo`, `session.EndTurn`, `session.AutoResolve`, ...). Rule-level battle
   tests place units exactly with `TestBattle`.
+- Saved games are `*.ewsave.json` (ADR-058) in `user://saves` (Windows: `%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): a game record plus a label. Loading replays the commands and checks the digest.
 - Map files are `*.ewmap.json` (format v10: terrain + optional road rows, teams, guard mode, heroes with roster type,
   primary stats, skills, war machines, morale, luck and armies, objects incl. one-way gates, monsters, mine guards and towns, victory and defeat conditions; see the
   version history on `MapDocument`). Replays are `*.ewreplay.json`. Creature

@@ -18,5 +18,12 @@ public sealed record GracePeriodEnded(PlayerId Player) : IEvent;
 /// <summary>The game is over; no command is accepted any more. <see cref="Winners"/> is empty when nobody won.</summary>
 public sealed record GameEnded(IReadOnlyList<PlayerId> Winners, string Reason, GameDate Date) : IEvent;
 
+/// <summary>
+/// An accepted command was applied, logged and settled (victory and defeat checked): the state is consistent with
+/// <c>GameSession.CommandLog</c> now, which is when to save it (autosave, ADR-058). Events published while the command ran,
+/// such as <see cref="TurnStarted"/>, come before it.
+/// </summary>
+public sealed record CommandExecuted(Commands.GameCommand Command) : IEvent;
+
 /// <summary>The editor changed the scenario's victory and defeat conditions. Views re-read <c>GameState.Rules</c>.</summary>
 public sealed record ScenarioRulesChanged : IEvent;

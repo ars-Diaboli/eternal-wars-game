@@ -125,6 +125,7 @@ public sealed class GameSession
 
         _log.Add(command);
         Settle();
+        Bus.Publish(new CommandExecuted(command));
         return CommandResult.Accepted(outcome);
     }
 

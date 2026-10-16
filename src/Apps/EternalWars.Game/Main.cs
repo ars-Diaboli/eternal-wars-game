@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
@@ -34,7 +35,14 @@ public partial class Main : Node3D
 {
     private const string EditorMapsFolder = "Eternal Wars Map Editor/maps";
 
+    private const string SavesFolder = "user://saves";
+
     private GameSession _session = null!;
+    private Node3D? _game;
+    private MapDocument _initialMap = null!;
+    private GameMenuPanel _menu = null!;
+    private string _saveFolder = "";
+    private bool _turnBegan;
     private MapViewContext _context = null!;
     private AdventureWorldView _world = null!;
     private StrategyCamera _camera = null!;
@@ -53,6 +61,9 @@ public partial class Main : Node3D
             AddChild(autoInput);
         }
 
+        _saveFolder = ProjectSettings.GlobalizePath(SavesFolder);
+        BuildMenu();
+
         var layer = new CanvasLayer { Name = "Setup" };
         AddChild(layer);
         var center = new CenterContainer { AnchorRight = 1, AnchorBottom = 1 };
@@ -69,7 +80,13 @@ public partial class Main : Node3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_context is null)
+        if (@event is InputEventKey { Pressed: true, Echo: false } hotkey && HandleSaveKey(hotkey.Keycode))
+        {
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_context is null || _menu.Visible)
         {
             return;
         }
@@ -117,35 +134,64 @@ public partial class Main : Node3D
 
     private void StartGame(GameState state)
     {
-        _session = new GameSession(state);
-        _context = new MapViewContext(state, _session.Events, state.Players[0].Id);
+        // The map as it is now is the start of the game: saves replay from it (ADR-058).
+        var initial = MapConverter.ToDocument(state);
+        BeginGame(new GameSession(state), initial, resume: false);
+    }
+
+    /// <summary>
+    /// Builds the world and the HUD for a session. A new game is started here; a loaded one (<paramref name="resume"/>)
+    /// is already running, so the views are built from its state and a battle in progress is shown as it stands.
+    /// </summary>
+    private void BeginGame(GameSession session, MapDocument initialMap, bool resume)
+    {
+        _game?.QueueFree();
+        _game = new Node3D { Name = "Game" };
+        AddChild(_game);
+
+        _session = session;
+        _initialMap = initialMap;
+        _selectedHero = null;
+        _menu.CanSave = true;
+        var state = session.State;
+        _context = new MapViewContext(state, _session.Events, state.CurrentPlayer.Id);
 
         _world = new AdventureWorldView { Name = "World" };
-        AddChild(_world);
+        _game.AddChild(_world);
         _world.Bind(_context);
 
-        AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0), ShadowEnabled = true });
+        _game.AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0), ShadowEnabled = true });
         _camera = new StrategyCamera { Name = "Camera" };
-        AddChild(_camera);
+        _game.AddChild(_camera);
 
         BuildHud();
         BuildBattle();
         BuildResult();
 
-        this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
+        // Autosave once the command that began a turn is logged and settled (ADR-058).
+        _turnBegan = false;
+        _game.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => _turnBegan = true);
+        _game.SubscribeWhileInTree<CommandExecuted>(_session.Events, _ =>
+        {
+            if (_turnBegan)
+            {
+                Autosave();
+            }
+        });
+        _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
             // Hot-seat: the map is drawn through the eyes of whoever plays now.
             _context.SetViewer(e.Player);
             Select(_session.State.HeroesOf(e.Player).FirstOrDefault()?.Id, focus: true);
         });
-        this.SubscribeWhileInTree<HeroDefeated>(_session.Events, e =>
+        _game.SubscribeWhileInTree<HeroDefeated>(_session.Events, e =>
         {
             if (e.Hero == _selectedHero)
             {
                 Select(_session.State.HeroesOf(_session.State.CurrentPlayer.Id).FirstOrDefault()?.Id, focus: false);
             }
         });
-        this.SubscribeWhileInTree<HeroTeleported>(_session.Events, e =>
+        _game.SubscribeWhileInTree<HeroTeleported>(_session.Events, e =>
         {
             if (e.Hero == _selectedHero && e.To.Level != _context.Level)
             {
@@ -154,7 +200,129 @@ public partial class Main : Node3D
             }
         });
 
-        _session.Start();
+        if (resume)
+        {
+            Select(state.HeroesOf(state.CurrentPlayer.Id).FirstOrDefault()?.Id, focus: true);
+            _battle.Restore();
+            ShowResult();
+        }
+        else
+        {
+            _session.Start();
+            Autosave();
+        }
+    }
+
+    /// <summary>The start of a turn goes into the two autosave slots: this turn's and the previous turn's.</summary>
+    private void Autosave()
+    {
+        _turnBegan = false;
+        try
+        {
+            GameSaves.Autosave(_saveFolder, _initialMap, _session);
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _status.Text = $"Autosave failed: {e.Message}";
+        }
+    }
+
+    // Save and load (ADR-058) ---------------------------------------------------------------------
+
+    /// <summary>The menu is above everything, also above the battle scene and its HUD, so saving works in battle too.</summary>
+    private void BuildMenu()
+    {
+        var layer = new CanvasLayer { Name = "Menu", Layer = 5 };
+        AddChild(layer);
+        _menu = new GameMenuPanel();
+        layer.AddChild(_menu);
+        _menu.Bind(
+            () => GameSaves.List(_saveFolder)
+                .Select(e => e.Info is { } info
+                    ? new SaveItem(e.Path, $"{SaveTitle(e.Path, info)}   {info.Map}, {info.Date}, {info.Player}'s turn{(info.InBattle ? ", in battle" : string.Empty)}   ({LocalTime(info.SavedAt)})", GameSaves.SlotOf(e.Path) is null ? info.Name : null, true)
+                    : new SaveItem(e.Path, $"{Path.GetFileName(e.Path)}   unreadable: {e.Error}", null, false))
+                .ToList(),
+            GameSaves.Delete);
+        _menu.SaveRequested += name => Save(name);
+        _menu.LoadRequested += Load;
+
+        var button = new Button
+        {
+            Text = "Menu (F10)", AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1,
+            OffsetLeft = -120, OffsetTop = -36, OffsetRight = -8, OffsetBottom = -8,
+        };
+        button.Pressed += _menu.Toggle;
+        layer.AddChild(button);
+    }
+
+    private static string SaveTitle(string path, SaveInfo info) => GameSaves.SlotOf(path) switch
+    {
+        AutosaveSlot.Current => "Autosave: start of the latest turn",
+        AutosaveSlot.Previous => "Autosave: start of the turn before",
+        _ => info.Name,
+    };
+
+    private static string LocalTime(string iso) =>
+        DateTimeOffset.TryParse(iso, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var time)
+            ? time.ToLocalTime().ToString("yyyy-MM-dd HH:mm", System.Globalization.CultureInfo.InvariantCulture)
+            : iso;
+
+    /// <summary>F10 menu, F5 quick save, F9 quick load; they work on the adventure map and in battle.</summary>
+    private bool HandleSaveKey(Key key)
+    {
+        switch (key)
+        {
+            case Key.F10:
+                _menu.Toggle();
+                return true;
+            case Key.F5 when _context is not null:
+                Save(GameSaves.QuickSaveName);
+                return true;
+            case Key.F9:
+                if (File.Exists(GameSaves.PathFor(_saveFolder, GameSaves.QuickSaveName)))
+                {
+                    Load(GameSaves.PathFor(_saveFolder, GameSaves.QuickSaveName));
+                }
+                else
+                {
+                    _status?.SetText("There is no quick save.");
+                }
+
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void Save(string name)
+    {
+        try
+        {
+            GameSaves.Save(_saveFolder, name, _initialMap, _session);
+            _menu.SetMessage($"Saved '{name}'.");
+            _status.Text = $"Saved '{name}'.";
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            _menu.SetMessage($"Could not save: {e.Message}");
+        }
+    }
+
+    private void Load(string path)
+    {
+        try
+        {
+            var (session, record) = GameSaves.Load(
+                path, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings);
+            GetNodeOrNull("Setup")?.QueueFree();
+            _menu.Close();
+            BeginGame(session, record.Map, resume: true);
+            _status.Text = $"Loaded '{record.Save?.Name ?? Path.GetFileNameWithoutExtension(path)}'.";
+        }
+        catch (Exception e) when (e is InvalidOperationException or FormatException or System.Text.Json.JsonException or IOException or KeyNotFoundException)
+        {
+            _menu.SetMessage($"Could not load: {e.Message}");
+        }
     }
 
     private void ClickTile(MapPosition tile)
@@ -305,11 +473,11 @@ public partial class Main : Node3D
     private void BuildBattle()
     {
         _battle = new BattleView3D();
-        AddChild(_battle);
+        _game!.AddChild(_battle);
         _battle.Bind(_session);
 
         var layer = new CanvasLayer { Name = "BattleHud", Layer = 2 };
-        AddChild(layer);
+        _game.AddChild(layer);
         _battleHud = new BattleHud();
         layer.AddChild(_battleHud);
         _battleHud.Bind(_session, _battle);
@@ -336,17 +504,17 @@ public partial class Main : Node3D
     private void BuildResult()
     {
         var layer = new CanvasLayer { Name = "Result", Layer = 3 };
-        AddChild(layer);
+        _game!.AddChild(layer);
         _result = new GameResultPanel();
         layer.AddChild(_result);
 
-        this.SubscribeWhileInTree<PlayerDefeated>(_session.Events, e =>
+        _game.SubscribeWhileInTree<PlayerDefeated>(_session.Events, e =>
             _status.Text = $"{_session.State.GetPlayer(e.Player).Name} is defeated: {e.Reason}");
-        this.SubscribeWhileInTree<GracePeriodStarted>(_session.Events, e =>
+        _game.SubscribeWhileInTree<GracePeriodStarted>(_session.Events, e =>
             _status.Text = $"{_session.State.GetPlayer(e.Player).Name} lost its last town and is defeated on {e.DefeatDay} unless it owns one again.");
-        this.SubscribeWhileInTree<GracePeriodEnded>(_session.Events, e =>
+        _game.SubscribeWhileInTree<GracePeriodEnded>(_session.Events, e =>
             _status.Text = $"{_session.State.GetPlayer(e.Player).Name} owns a town again.");
-        this.SubscribeWhileInTree<GameEnded>(_session.Events, _ =>
+        _game.SubscribeWhileInTree<GameEnded>(_session.Events, _ =>
         {
             if (!_battle.IsOpen)
             {
@@ -374,7 +542,7 @@ public partial class Main : Node3D
     {
         var hud = new CanvasLayer { Name = "Hud" };
         _hud = hud;
-        AddChild(hud);
+        _game!.AddChild(hud);
 
         var top = new VBoxContainer { Position = new Vector2(12, 8) };
         hud.AddChild(top);

@@ -126,6 +126,28 @@ public partial class BattleView3D : Node3D
         }));
     }
 
+    /// <summary>
+    /// Opens the scene for a battle that is already under way (a loaded game, ADR-058): the field is built from the
+    /// core state as it is now, nothing is animated. Does nothing outside the fighting phase; a battle still choosing
+    /// its width opens on <see cref="BattleStarted"/> like any other.
+    /// </summary>
+    public void Restore()
+    {
+        if (_session.State.Battle is not { Phase: BattlePhase.Fighting } battle)
+        {
+            return;
+        }
+
+        var units = battle.LivingUnits
+            .Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Size, u.Machine))
+            .ToList();
+        Open(new BattleStarted(
+            battle.Attacker.Hero, battle.Defender.Hero, battle.Defender.Guard, battle.Width, BattleState.Height, battle.IsAmbush,
+            units, battle.Obstacles.ToList()));
+        SetActive(battle.ActiveUnit?.Id);
+        RefreshReach();
+    }
+
     /// <summary>Hides the scene after the result has been seen.</summary>
     public void Close()
     {
