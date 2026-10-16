@@ -113,7 +113,7 @@ public static class BuiltInSkills
     public static string SchoolGroup(string town) => $"magic.{town}";
 
     /// <summary>
-    /// Rival towns from the lore ring (lore.md): their schools are offered to each other's heroes only rarely
+    /// Rival towns, the sworn enemies of the lore (lore.md): their schools are offered to each other's heroes only rarely
     /// (<see cref="SkillOffers.RivalSchoolChance"/>). The one rule effect of rivalries (ADR-048, an exception to ADR-029).
     /// </summary>
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> Rivals { get; } = new Dictionary<string, IReadOnlyList<string>>

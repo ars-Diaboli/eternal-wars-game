@@ -21,9 +21,10 @@ numbers are a draft.
   ([skills.md](skills.md#primary-stats)).
 - **Hiring**: heroes are hired in a town's tavern for 2500 gold ([town-buildings.md](town-buildings.md)). A basic tavern
   offers a native hero and one of an adjacent town; the upgraded one (Brotherhood) two natives, one adjacent and one of
-  the rest. Adjacent means the town's two ring neighbours (Haven: Necropolis, Inferno; Necropolis: Haven, Sylvan; Sylvan:
-  Necropolis, Dungeon; Dungeon: Sylvan, Academy; Academy: Dungeon, Inferno; Inferno: Academy, Haven); opposing is the town
-  across the ring (Haven–Dungeon, Necropolis–Academy, Sylvan–Inferno) and is offered last. Stronghold and Swamp Bestiary
+  the rest. The towns form a ring, Sylvan – Haven – Academy – Dungeon – Necropolis – Inferno – back to Sylvan
+  ([lore.md](lore.md)). Adjacent means the town's two ring neighbours (Sylvan: Inferno, Haven; Haven: Sylvan, Academy;
+  Academy: Haven, Dungeon; Dungeon: Academy, Necropolis; Necropolis: Dungeon, Inferno; Inferno: Necropolis, Sylvan);
+  opposing is the town across the ring (Sylvan–Dungeon, Academy–Inferno, Haven–Necropolis) and is offered last. Stronghold and Swamp Bestiary
   offer their natives and the warriors of the other towns. Offers are shuffled per player every week, heroes on the map
   are not offered, and a player has at most 8 heroes (ADR-060).
 - **Morale and luck** 0 at the start (maps and the editor can set them, ADR-053).
