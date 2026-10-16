@@ -169,7 +169,7 @@ Consequences:
 ### ADR-025: Income comes only from sources; no base income
 **Status**: accepted (2026-10-15)
 The placeholder 500 gold per turn was removed. Daily income is the sum of pluggable `IIncomeSource`s
-(`MineIncome` today; towns, Estates-like skills, hero specialisations and artifacts later), collected at
+(`MineIncome`, `TownIncome`, `HeroIncome` for Estates skills and resource specialties; artifacts later), collected at
 the start of the owner's turn. Nothing is published when the income is zero. New income features add a
 source instead of editing `EconomyService`.
 
