@@ -37,6 +37,7 @@ No Godot needed; drives the core through commands only.
 dotnet run --project tools/EternalWars.Tools.Sim -- battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 --runs 200
 dotnet run --project tools/EternalWars.Tools.Sim -- record demo.ewreplay.json --days 7 --seed 1
 dotnet run --project tools/EternalWars.Tools.Sim -- replay demo.ewreplay.json
+dotnet run --project tools/EternalWars.Tools.Sim -- game --map towns --days 40 --runs 8   # the adventure AI plays every slot
 dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 ```
 

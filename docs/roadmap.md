@@ -6,7 +6,7 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 
 **Where we are (2026-10-16)**: Phases 0–2 are done (the new 3D battle scene still needs a run in Godot), and Phase 3 has towns,
 dwellings, heroes, skills and every income source except artifacts. Next up in Phase 3: town building effects, the
-tavern, artifacts and the adventure AI (victory and defeat, ADR-057, and save/load, ADR-058, are in).
+tavern, artifacts and a better adventure AI (victory and defeat, ADR-057, and save/load, ADR-058, are in).
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -233,12 +233,17 @@ Content draft: [artifacts.md](artifacts.md).
 - [ ] Week events ("week of X") ❓
 
 ### Adventure AI (computer players)
-- [ ] AI driver that plays a computer player's turn through commands only (ADR-036), deterministic from the RNG
-- [ ] Economy: build order and recruiting in its towns
-- [ ] Exploration: pick up resources, flag mines, visit chests (value per movement point)
-- [ ] Fights: attack guards and heroes it can beat (`sim battle`-style estimate); avoid stronger enemies
-- [ ] Town defence and capture of undefended enemy towns
-- [ ] Simulator: AI-vs-AI games (`sim game`) for tuning and CI
+- [x] AI driver that plays a computer player's turn through commands only (ADR-036, ADR-059), deterministic (no RNG)
+- [x] Economy: build order, saving for the next building, stack upgrades, recruiting, garrison to hero
+- [x] Exploration: pick up resources, flag mines, visit chests (value per travel time), explore the unknown
+- [x] Fights: attack guards, garrisons and heroes it wins in simulated fights (`BattleEstimator`)
+- [x] Capture of undefended and weak enemy towns
+- [x] Game app: computer players play their turns (`Main._Process`)
+- [x] Simulator: AI-vs-AI games (`sim game`) for tuning; the self-test replays one
+- [ ] Town defence: keep or bring a hero home when an enemy is near; avoid stronger enemy heroes
+- [ ] Several heroes: roles (explorer, army, carrier), exchanging armies between own heroes
+- [ ] Hire heroes, war machines, artifacts and spells once those exist; marketplace use; difficulty levels
+- [ ] Balance the AI over several maps (`sim game --runs`); a CI check that AI games on the shipped maps finish
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets

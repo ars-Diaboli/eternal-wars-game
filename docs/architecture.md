@@ -93,6 +93,12 @@ These are enforced by:
 - **Apps** contain composition and input mapping only. If an app needs logic, it probably belongs
   in core.
 
+### Adventure AI (ADR-059)
+- `AdventureAi` (`Core.Domain/AI`) plays a computer player's turn with `GameSession.Execute` only: towns (build order,
+  saving, recruiting), heroes (valued targets, exploration) and pending decisions. `BattleEstimator` runs the real
+  battle engine on a throwaway `GameState` to decide whether a fight is safe. The game app calls `PlayTurn()` once a
+  frame for computer players; the simulator (`sim game`) runs it for every slot with `controlHumanSlots`.
+
 ### Saved games (ADR-058)
 - `GameSaves` (Core.Data) turns a session into a `GameRecordDocument` with a `SaveInfo` label and back: the initial map,
   the options and the command log, verified by the digest on load. It works in the middle of a battle because battle
