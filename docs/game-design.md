@@ -213,7 +213,7 @@ Full list of buildings, the tech tree and every town's dwellings: [town-building
     (ADR-046).
   - **Buildings** (draft, ADR-046): town hall (3 levels, 500/1000/2000 gold a day), fort (3), blacksmith (sells war
     machines, ADR-056),
-    marketplace (2; level 2 adds 1 ore and 1 lumber a day), mage guild (4, ADR-047), tavern, and the dwellings
+    marketplace (2; level 2 adds 1 ore and 1 lumber a day), mage guild (4, ADR-047), tavern (2 levels: hires 2 or 4 heroes, ADR-060), and the dwellings
     (build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier).
   - **Locked-out creatures are still obtainable** from external dwellings on the adventure map and
     from other towns of the same type that built them. The town choice shapes your core army; it is
@@ -364,7 +364,7 @@ because that is content selection, not a rule.
   | Spell resistance (level n) | Unaffected by spells of level n and below; a spell upgraded twice counts as one level higher; takes effect with magic |
   | Caster (spell, n) | Casts the spell n times per battle; takes effect with magic |
 - **Retreat**: a hero may leave the battle; its army is lost and it leaves the map. Surrender (paying gold)
-  comes with taverns in Phase 3.
+  comes with a later rule (the tavern now exists, ADR-060).
 - Hero casts one spell per round (magic, Phase 5).
 - **War machines** (implemented, ADR-056): every hero owns its town's offensive machine (ballista, cannon, catapult or
   glaivethrower) and can buy a healing tent and an ammo cart at a blacksmith. They stand at the back of the field,

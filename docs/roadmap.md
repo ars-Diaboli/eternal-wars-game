@@ -6,7 +6,7 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 
 **Where we are (2026-10-16)**: Phases 0–2 are done (the new 3D battle scene still needs a run in Godot), and Phase 3 has towns,
 dwellings, heroes, skills and every income source except artifacts. Next up in Phase 3: town building effects, the
-tavern, artifacts and a better adventure AI (victory and defeat, ADR-057, and save/load, ADR-058, are in).
+artifacts and a better adventure AI (victory and defeat, ADR-057, and save/load, ADR-058, are in).
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -198,11 +198,15 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Hero screen (Godot): stats, skills with descriptions, specialty, army; opened from the hero list
 
 ### Tavern
-- [ ] Hire heroes: per-player tavern pool of two heroes from the roster, refreshed weekly; cost; hero appears on
-      the town entrance (`HireHeroCommand`)
-- [ ] Heroes who retreat or surrender return to the pool
+- [x] Hire heroes (ADR-060): per-player weekly pool by ranks (native, adjacent, not opposing, opposing; warriors for
+      Stronghold and Swamp Bestiary), 2 heroes basic and 4 with the upgraded tavern (Brotherhood), 2500 gold, hero on the
+      entrance (`HireHeroCommand`), at most 8 heroes
+- [x] Tavern as an upgradeable building (`tavern` level 2 in `buildings.csv`)
+- [x] Heroes that retreat or are defeated return to the pool (offers exclude only heroes on the map)
+- [x] The AI hires heroes
 - [ ] Surrender in battle: pay gold to leave with the army, needs an own tavern-like rule (ADR-038)
-- [ ] Hire screen in the town panel
+- [x] Hire buttons in the town panel (`TownPanel`)
+- [ ] Tavern screen in the game app with hero details (waits for the town screen)
 
 ### Artifacts
 Content draft: [artifacts.md](artifacts.md).

@@ -19,6 +19,13 @@ numbers are a draft.
 - **Primary stats** (A / D / SP / K = Attack / Defense / Spell Power / Knowledge): every roster hero starts with
   5 points; warriors 2/1/1/1 or 1/2/1/1, mages 0/0/3/2 or 0/1/2/2. Each level adds 1 to one stat, with odds by class
   ([skills.md](skills.md#primary-stats)).
+- **Hiring**: heroes are hired in a town's tavern for 2500 gold ([town-buildings.md](town-buildings.md)). A basic tavern
+  offers a native hero and one of an adjacent town; the upgraded one (Brotherhood) two natives, one adjacent and one of
+  the rest. Adjacent means the town's two ring neighbours (Haven: Necropolis, Inferno; Necropolis: Haven, Sylvan; Sylvan:
+  Necropolis, Dungeon; Dungeon: Sylvan, Academy; Academy: Dungeon, Inferno; Inferno: Academy, Haven); opposing is the town
+  across the ring (Haven–Dungeon, Necropolis–Academy, Sylvan–Inferno) and is offered last. Stronghold and Swamp Bestiary
+  offer their natives and the warriors of the other towns. Offers are shuffled per player every week, heroes on the map
+  are not offered, and a player has at most 8 heroes (ADR-060).
 - **Morale and luck** 0 at the start (maps and the editor can set them, ADR-053).
 - **Army**: up to 7 stacks. A hero without creatures cannot attack.
 - **War machines**: its town's offensive machine from the start; the healing tent and ammo cart are bought (below).

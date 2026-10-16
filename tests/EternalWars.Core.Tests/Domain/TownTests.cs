@@ -311,7 +311,7 @@ public class TownTests
 
         Assert.Equal(EditResult.Ok, editor.SetTownOwner(id, Red));
         Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.MageGuild, 2));
-        Assert.Equal(EditResult.InvalidValue, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 2));
+        Assert.Equal(EditResult.InvalidValue, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 3));
         Assert.Equal(EditResult.InvalidTarget, editor.SetTownBuilding(id, "dwelling-1", 1));
         Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.TownHall, 2)); // no blacksmith, marketplace
         Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 0)); // the fort needs it

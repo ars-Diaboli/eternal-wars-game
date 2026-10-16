@@ -15,6 +15,9 @@ public sealed record HeroExperienceGained(HeroId Hero, int Amount, int Total) : 
 /// <summary>A war machine of the hero was destroyed in battle (ADR-056).</summary>
 public sealed record WarMachineLost(HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
 
+/// <summary>A hero was hired in a town's tavern and stands at its entrance (ADR-060).</summary>
+public sealed record HeroHired(MapObjectId Town, HeroId Hero, string Definition) : IEvent;
+
 /// <summary>A hero bought a war machine at a town's blacksmith (ADR-056).</summary>
 public sealed record WarMachineBought(MapObjectId Town, HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
 
