@@ -124,7 +124,7 @@ Set pieces: wearing all of a set gives an extra bonus, listed after the individu
 
 The core is in place (ADR-061): table and catalog, hero equipment and backpack, equip, unequip and give commands, effects in
 battle, movement, income and terrain, map pickups that roll by tier, loot, map format v11, editor session calls, the AI.
-What is left: the hero screen and paper-doll UI, editor inspector rows, artifacts in chests, the "Not yet" effects.
+What is left: giving artifacts between heroes in the UI, editor inspector rows, artifacts in chests, the "Not yet" effects.
 
 ## Open
 

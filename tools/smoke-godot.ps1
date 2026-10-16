@@ -38,6 +38,9 @@ $scenarios = @(
     # The town screen (ADR-050): T opens the first own town over the map, Escape closes it, T again, Escape.
     @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
        Input = '3:click:800,569;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },
+    # The hero screen (ADR-050): select a hero, H opens it, Escape closes it, then the same through the hero list's Info button.
+    @{ Name = 'game-hero-screen'; App = 'EternalWars.Game'; Frames = 50
+       Input = '3:click:800,569;12:key:H;24:key:Escape;30:key:H;40:key:Escape' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' }
 )

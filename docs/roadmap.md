@@ -202,7 +202,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Skill specialties: what a skill specialty adds ❓ open question 9
 - [ ] Third offense and third defense skills (placeholders today) ❓ open question 9
 - [ ] Deployment: rearrange troops before battle (needs a deployment step in `BattleSetup` and UI)
-- [ ] Hero screen (Godot): stats, skills with descriptions, specialty, army; opened from the hero list
+- [x] Hero screen (Godot): stats, skills with descriptions, specialty, army; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
 
 ### Tavern
 - [x] Hire heroes (ADR-060): per-player weekly pool by ranks (native, adjacent, not opposing, opposing; warriors for
@@ -230,7 +230,7 @@ Content draft: [artifacts.md](artifacts.md).
 - [x] The AI picks up, values and equips artifacts
 - [ ] Artifact effects that wait for other systems ("Not yet" in the table: mana, spell resistance, regeneration, …)
 - [ ] Editor: inspector rows for hero artifacts and pickups (Godot)
-- [ ] Godot: paper-doll and backpack on the hero screen
+- [x] Godot: paper-doll and backpack on the hero screen (click to wear / take off, tooltips with effects; no drag and drop, no artifact exchange between heroes yet)
 
 ### Game flow
 - [x] Victory and loss conditions (ADR-057): default (defeat every enemy: no towns and no heroes); map-specific

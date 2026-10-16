@@ -7,13 +7,16 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
 
-/// <summary>Heroes of the player whose turn it is, with movement points left; clicking one selects it.</summary>
+/// <summary>Heroes of the player whose turn it is, with movement points left; clicking one selects it, "Info" opens its hero screen.</summary>
 public partial class HeroListPanel : VBoxContainer
 {
     private GameSession _session = null!;
     private HeroId? _selected;
 
     public event Action<HeroId>? HeroSelected;
+
+    /// <summary>The "Info" button of a hero: open its hero screen.</summary>
+    public event Action<HeroId>? HeroInfoRequested;
 
     public void Bind(GameSession session)
     {
@@ -53,12 +56,18 @@ public partial class HeroListPanel : VBoxContainer
                 ButtonPressed = hero.Id == _selected,
                 Alignment = HorizontalAlignment.Left,
                 ClipText = true,
-                CustomMinimumSize = new Vector2(320, 0),
+                CustomMinimumSize = new Vector2(270, 0),
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
             };
             button.AddThemeColorOverride("font_color", Palette.ForPlayer(hero.Owner).Lightened(0.4f));
             var id = hero.Id;
             button.Pressed += () => HeroSelected?.Invoke(id);
-            AddChild(button);
+            var info = new Button { Text = "Info", TooltipText = "Hero screen (H)" };
+            info.Pressed += () => HeroInfoRequested?.Invoke(id);
+            var row = new HBoxContainer();
+            row.AddChild(button);
+            row.AddChild(info);
+            AddChild(row);
         }
     }
 }
