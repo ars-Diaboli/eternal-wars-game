@@ -43,6 +43,7 @@ public sealed record BattleDecision(HeroId Hero) : PendingDecision(Hero);
 
 /// <summary>
 /// A hero reached <paramref name="Level"/>: the owner picks one of <paramref name="Options"/> (skill ids) to raise by one
-/// level (ADR-048).
+/// level (ADR-048). <paramref name="Stat"/> is the primary stat the level raises, rolled with the offers (ADR-055).
 /// </summary>
-public sealed record LevelUpDecision(HeroId Hero, int Level, IReadOnlyList<string> Options) : PendingDecision(Hero);
+public sealed record LevelUpDecision(HeroId Hero, int Level, IReadOnlyList<string> Options, Heroes.PrimaryStat Stat = Heroes.PrimaryStat.Attack)
+    : PendingDecision(Hero);

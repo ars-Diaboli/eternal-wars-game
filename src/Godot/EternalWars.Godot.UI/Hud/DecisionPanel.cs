@@ -67,7 +67,7 @@ public partial class DecisionPanel : PanelContainer
                 break;
             case LevelUpDecision levelUp:
                 var hero = state.GetHero(levelUp.Hero);
-                _prompt.Text = $"{hero.Name} reached level {levelUp.Level}. Choose a skill:";
+                _prompt.Text = $"{hero.Name} reached level {levelUp.Level}: +1 {StatName(levelUp.Stat)}. Choose a skill:";
                 foreach (var skill in levelUp.Options)
                 {
                     var skillDefinition = BuiltInSkills.Get(skill);
@@ -77,6 +77,12 @@ public partial class DecisionPanel : PanelContainer
                 break;
         }
     }
+
+    private static string StatName(PrimaryStat stat) => stat switch
+    {
+        PrimaryStat.SpellPower => "Spell Power",
+        _ => stat.ToString(),
+    };
 
     private void ShowBattle(BattleState battle)
     {

@@ -497,25 +497,27 @@ public sealed class MapEditorSession
         return EditResult.Ok;
     }
 
-    public EditResult SetHeroStats(HeroId id, int attack, int defense, SkillLevel tactics)
+    /// <summary>Sets primary stats and Tactics; Spell Power and Knowledge stay as they are when omitted.</summary>
+    public EditResult SetHeroStats(HeroId id, int attack, int defense, SkillLevel tactics, int? spellPower = null, int? knowledge = null)
     {
         if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
         {
             return EditResult.InvalidTarget;
         }
 
-        if (attack < 0 || defense < 0 || !Enum.IsDefined(tactics) || tactics > BuiltInSkills.Get(BuiltInSkills.Tactics).MaxLevel)
+        if (attack < 0 || defense < 0 || spellPower < 0 || knowledge < 0 || !Enum.IsDefined(tactics) || tactics > BuiltInSkills.Get(BuiltInSkills.Tactics).MaxLevel)
         {
             return EditResult.InvalidValue;
         }
 
-        var previous = (hero.Attack, hero.Defense, hero.Tactics);
-        Run(new DelegateCommand($"Edit {hero.Name}", () => Apply((attack, defense, tactics)), () => Apply(previous)));
+        var previous = (hero.Attack, hero.Defense, hero.Tactics, hero.SpellPower, hero.Knowledge);
+        var next = (attack, defense, tactics, spellPower ?? hero.SpellPower, knowledge ?? hero.Knowledge);
+        Run(new DelegateCommand($"Edit {hero.Name}", () => Apply(next), () => Apply(previous)));
         return EditResult.Ok;
 
-        void Apply((int Attack, int Defense, SkillLevel Tactics) stats)
+        void Apply((int Attack, int Defense, SkillLevel Tactics, int SpellPower, int Knowledge) stats)
         {
-            (hero.Attack, hero.Defense, hero.Tactics) = stats;
+            (hero.Attack, hero.Defense, hero.Tactics, hero.SpellPower, hero.Knowledge) = stats;
             _bus.Publish(new HeroStatsChanged(hero.Id, stats.Attack, stats.Defense, stats.Tactics));
         }
     }
@@ -579,18 +581,20 @@ public sealed class MapEditorSession
         }
 
         void Restore((string? Definition, string Name, HeroClass Class, string? Preferred, HeroSpecialty? Specialty, int Attack, int Defense,
-            Dictionary<string, SkillLevel> Skills) snapshot)
+            int SpellPower, int Knowledge, Dictionary<string, SkillLevel> Skills) snapshot)
         {
-            (hero.Definition, hero.Name, hero.Class, hero.PreferredCreature, hero.Specialty, hero.Attack, hero.Defense) =
-                (snapshot.Definition, snapshot.Name, snapshot.Class, snapshot.Preferred, snapshot.Specialty, snapshot.Attack, snapshot.Defense);
+            (hero.Definition, hero.Name, hero.Class, hero.PreferredCreature, hero.Specialty, hero.Attack, hero.Defense, hero.SpellPower, hero.Knowledge) =
+                (snapshot.Definition, snapshot.Name, snapshot.Class, snapshot.Preferred, snapshot.Specialty, snapshot.Attack, snapshot.Defense,
+                 snapshot.SpellPower, snapshot.Knowledge);
             hero.Skills.ReplaceWith(snapshot.Skills);
             Changed();
         }
 
         void Changed() => _bus.Publish(new HeroStatsChanged(hero.Id, hero.Attack, hero.Defense, hero.Tactics));
 
-        static (string?, string, HeroClass, string?, HeroSpecialty?, int, int, Dictionary<string, SkillLevel>) Snapshot(Hero h) =>
-            (h.Definition, h.Name, h.Class, h.PreferredCreature, h.Specialty, h.Attack, h.Defense, h.Skills.Levels.ToDictionary(s => s.Key, s => s.Value));
+        static (string?, string, HeroClass, string?, HeroSpecialty?, int, int, int, int, Dictionary<string, SkillLevel>) Snapshot(Hero h) =>
+            (h.Definition, h.Name, h.Class, h.PreferredCreature, h.Specialty, h.Attack, h.Defense, h.SpellPower, h.Knowledge,
+             h.Skills.Levels.ToDictionary(s => s.Key, s => s.Value));
     }
 
     /// <summary>Puts a stack into (or, with null, clears) one of a hero's army slots.</summary>

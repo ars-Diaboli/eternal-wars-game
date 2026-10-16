@@ -209,7 +209,7 @@ src/
     EternalWars.Core.Events/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios
-    EternalWars.Core.Data/      Maps (MapDocument v7, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v8, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (replays)
   Godot/
     EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events

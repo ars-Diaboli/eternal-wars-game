@@ -7,7 +7,7 @@ namespace EternalWars.Core.Domain.Heroes;
 
 /// <summary>
 /// Hero levels (ADR-048): every <see cref="ExperienceTable"/> level gives one skill point, spent on one of the skills
-/// <see cref="SkillOffers"/> proposes. Human players choose through a <see cref="LevelUpDecision"/>, during their own turn
+/// <see cref="SkillOffers"/> proposes, and one primary stat point (<see cref="StatGrowth"/>, ADR-055). Human players choose through a <see cref="LevelUpDecision"/>, during their own turn
 /// (a defender who levels up in the attacker's turn chooses when its turn starts); computer players take the first offer.
 /// </summary>
 public sealed class ProgressionService(GameState state, IEventPublisher events)
@@ -41,7 +41,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
             while (hero.PendingLevelUps > 0)
             {
                 var offers = Offers(hero);
-                LevelUp(hero, offers.FirstOrDefault());
+                LevelUp(hero, offers.FirstOrDefault(), RollStat(hero));
             }
         }
 
@@ -54,14 +54,15 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
         foreach (var hero in state.HeroesOf(player.Id).Where(h => h.PendingLevelUps > 0).ToList())
         {
             var options = Offers(hero);
+            var stat = RollStat(hero);
             if (options.Count == 0)
             {
-                // Everything is learned: the level counts, there is nothing to choose.
-                LevelUp(hero, null);
+                // Everything is learned: the level and its stat point count, there is nothing to choose.
+                LevelUp(hero, null, stat);
                 continue;
             }
 
-            var decision = new LevelUpDecision(hero.Id, hero.Level + 1, options);
+            var decision = new LevelUpDecision(hero.Id, hero.Level + 1, options, stat);
             state.PendingDecision = decision;
             events.Publish(new DecisionRequested(decision));
             return;
@@ -81,7 +82,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
         }
 
         state.PendingDecision = null;
-        LevelUp(state.GetHero(decision.Hero), skill);
+        LevelUp(state.GetHero(decision.Hero), skill, decision.Stat);
         events.Publish(new DecisionResolved(decision));
         OfferNext();
     }
@@ -94,7 +95,10 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
 
     private IReadOnlyList<string> Offers(Hero hero) => SkillOffers.Generate(hero, TownOf(state, hero), state.Random);
 
-    private void LevelUp(Hero hero, string? skill)
+    /// <summary>The stat the next level raises, rolled after the skill offers so the prompt can show it (ADR-055).</summary>
+    private PrimaryStat RollStat(Hero hero) => StatGrowth.Roll(hero.Class, hero.Level + 1, state.Random);
+
+    private void LevelUp(Hero hero, string? skill, PrimaryStat stat)
     {
         hero.Level++;
         if (skill is not null)
@@ -102,6 +106,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
             hero.Skills.Raise(skill);
         }
 
-        events.Publish(new HeroLeveledUp(hero.Id, hero.Level, skill, skill is null ? SkillLevel.None : hero.Skills.Level(skill)));
+        hero.Raise(stat);
+        events.Publish(new HeroLeveledUp(hero.Id, hero.Level, skill, skill is null ? SkillLevel.None : hero.Skills.Level(skill), stat, hero.Stat(stat)));
     }
 }

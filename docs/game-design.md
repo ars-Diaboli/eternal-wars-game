@@ -154,8 +154,10 @@ out of scope, but the deterministic core keeps it possible.
   eight tier 1–4 creature lines. That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield
   speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource).
   Edited in `data/heroes.csv`.
-- Primary stats: Attack, Defense, Spell Power, Knowledge. Attack and Defense exist (added to every stack in battle);
-  growth per level and the other two are open ❓.
+- **Primary stats** (implemented, ADR-055): Attack and Defense (added to every stack in battle), Spell Power and
+  Knowledge (for magic, Phase 5). Every level raises one of them by 1, HoMM3-style, with odds by class (draft): warriors
+  35/45/10/10 % (Attack/Defense/Spell Power/Knowledge) up to level 9, then 30/30/20/20; mages 10/10/40/40, then
+  20/20/30/30. The level-up prompt shows the stat with the skill choice. Roster heroes start with 5 points.
 - **Skills** (HoMM4-like, implemented, ADR-048): groups of **three** skills; **10 points** learn a group fully (usually
   4/3/3, magic 4/4/2); at most **6 groups** per hero. Levels Basic, Advanced, Expert, Master.
 

@@ -189,7 +189,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       troop management, drill, Tactics width
 - [x] Native terrain only for all-native armies; Pathfinding −25/50/75 % of the penalty; routes and steps share one
       cost rule (ADR-024, ADR-032, ADR-045)
-- [ ] Primary stat growth per level (Attack, Defense, Spell Power, Knowledge, odds by class) ❓ open question 8
+- [x] Primary stat growth (ADR-055): one point per level, HoMM3-style odds by class (draft), shown in the level-up
+      prompt; Spell Power and Knowledge added (roster columns, map format v8, editor), effects with magic
 - [ ] Stewardship: −5/10/15 % building and recruit costs in the town the hero visits
 - [ ] Skill specialties: what a skill specialty adds ❓ open question 9
 - [ ] Third offense and third defense skills (placeholders today) ❓ open question 9

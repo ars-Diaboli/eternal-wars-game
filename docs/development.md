@@ -67,8 +67,8 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
   `TestWorld.DefaultArmy()` (10 footmen, 1500 movement points). Issue commands with the `SessionCommands`
   helpers (`session.Step`, `session.MoveTo`, `session.EndTurn`, `session.AutoResolve`, ...). Rule-level battle
   tests place units exactly with `TestBattle`.
-- Map files are `*.ewmap.json` (format v7: terrain + optional road rows, teams, guard mode, heroes with roster type,
-  stats, skills, morale, luck and armies, objects incl. one-way gates, monsters, mine guards and towns; see the
+- Map files are `*.ewmap.json` (format v8: terrain + optional road rows, teams, guard mode, heroes with roster type,
+  primary stats, skills, morale, luck and armies, objects incl. one-way gates, monsters, mine guards and towns; see the
   version history on `MapDocument`). Replays are `*.ewreplay.json`. Creature
   stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
   stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
@@ -140,6 +140,6 @@ reload behaviour as the creature table (`-- --heroes=path.csv` loads another one
 | `preferred` | base id of a tier 1–4 creature line of the same town; each line has one mage and one warrior |
 | `specialty` | `skill <skill id>`, `spell <spell id>` or `resource <resource> <amount a day>` |
 | `skills` | starting skills: `offense.melee Basic; tactics.tactics Advanced` (ids in `BuiltInSkills`) |
-| `attack`, `defense` | starting primary stats |
+| `attack`, `defense`, `spell_power`, `knowledge` | starting primary stats (empty = 0) |
 | `notes` | free text |
 

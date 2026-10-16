@@ -28,7 +28,7 @@ public static class GameStateDigest
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
         {
             var army = Slots(hero.Army);
-            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} xp {hero.Experience} stats {hero.Attack}/{hero.Defense} level {hero.Level} skills {hero.Skills} army {army}");
+            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level} skills {hero.Skills} army {army}");
         }
 
         foreach (var mapObject in state.Objects.OrderBy(o => o.Id.Value))
