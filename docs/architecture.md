@@ -93,6 +93,12 @@ These are enforced by:
 - **Apps** contain composition and input mapping only. If an app needs logic, it probably belongs
   in core.
 
+### Game flow (ADR-057)
+- `GameFlowService` decides eliminations and the winner. `GameSession` runs `Flow.Evaluate()` once after `Start()` and
+  after every accepted command (`Settle`), and passes the turn on when the current player has just been defeated.
+  `TurnService` skips defeated players. `GameState.Rules` (`ScenarioRules`, from the map) says what counts;
+  `GameState.Outcome` is set once, after which `Execute` refuses everything.
+
 ### Battles (Phase 2)
 - `BattleState` (`GameState.Battle`) holds the field (width × 24 cells), units with footprints, obstacles,
   round, acting queue and its own forked RNG. `BattleGrid` answers geometry (reachable placements,
@@ -211,7 +217,7 @@ src/
     EternalWars.Core.Events/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios
-    EternalWars.Core.Data/      Maps (MapDocument v9, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v10, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (replays)
   Godot/
     EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events

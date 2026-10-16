@@ -108,6 +108,14 @@ public sealed class GameState
 
     public bool IsStarted { get; internal set; }
 
+    /// <summary>How the scenario is won and lost (ADR-057); set by the map, changed before the game starts only.</summary>
+    public ScenarioRules Rules { get; private set; } = ScenarioRules.Default;
+
+    /// <summary>How the game ended, or null while it is running.</summary>
+    public GameOutcome? Outcome { get; internal set; }
+
+    public bool IsOver => Outcome is not null;
+
     public PendingDecision? PendingDecision { get; internal set; }
 
     public Player CurrentPlayer => _players[CurrentPlayerIndex];
@@ -161,6 +169,18 @@ public sealed class GameState
         }
 
         TeamsLocked = locked;
+    }
+
+    /// <summary>Scenario setting (map loading, editor): the victory and defeat conditions.</summary>
+    public void SetRules(ScenarioRules rules)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("The rules can only be changed before the game starts.");
+        }
+
+        Rules = rules;
     }
 
     /// <summary>Scenario setting (map loading, editor): how neutral monsters guard their surroundings.</summary>

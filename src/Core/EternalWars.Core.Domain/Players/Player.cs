@@ -15,4 +15,16 @@ public sealed class Player(PlayerId id, string name, bool isHuman, TeamId? team 
     public TeamId Team { get; internal set; } = team ?? new TeamId(id.Value);
 
     public ResourceSet Resources { get; internal set; }
+
+    /// <summary>Out of the game (ADR-057): its turns are skipped and it owns nothing any more.</summary>
+    public bool IsDefeated { get; internal set; }
+
+    /// <summary>The day the player lost its last town; the grace period (<c>ScenarioRules.GraceDays</c>) runs from it. Null while it owns a town.</summary>
+    public Common.GameDate? TownlessSince { get; internal set; }
+
+    /// <summary>Owned a town at some point; only such players have a grace period.</summary>
+    internal bool HadTown { get; set; }
+
+    /// <summary>Had a hero or a town when the game started; only such players can be eliminated or win.</summary>
+    internal bool TookPart { get; set; }
 }

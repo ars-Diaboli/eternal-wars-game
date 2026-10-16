@@ -115,7 +115,66 @@ public static class MapValidator
             issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} has no starting hero or town."));
         }
 
+        issues.AddRange(ValidateRules(scenario));
         return issues;
+    }
+
+    /// <summary>Victory and defeat conditions (ADR-057): what they point at must exist, and a game should be able to end.</summary>
+    private static IEnumerable<MapIssue> ValidateRules(GameState scenario)
+    {
+        var rules = scenario.Rules;
+        foreach (var condition in rules.Victory.Concat(rules.Defeat))
+        {
+            var name = ScenarioRules.Describe(scenario, condition);
+            if (condition.Player is { } player && !scenario.HasPlayer(player))
+            {
+                yield return new(IssueSeverity.Error, $"Condition '{condition.Kind}' belongs to a missing player.");
+                continue;
+            }
+
+            var town = condition.Town is { } townId ? scenario.FindObject(townId) as Town : null;
+            var hero = condition.Hero is { } heroId ? scenario.Heroes.FirstOrDefault(h => h.Id == heroId) : null;
+            switch (condition.Kind)
+            {
+                case ConditionKind.CaptureTown or ConditionKind.LoseTown when town is null:
+                    yield return new(IssueSeverity.Error, $"Condition '{condition.Kind}' points at a town that does not exist.");
+                    break;
+                case ConditionKind.DefeatHero or ConditionKind.LoseHero when hero is null:
+                    yield return new(IssueSeverity.Error, $"Condition '{condition.Kind}' points at a hero that does not exist.");
+                    break;
+                case ConditionKind.LoseTown or ConditionKind.LoseHero when condition.Player is null:
+                    yield return new(IssueSeverity.Error, $"'{name}' needs the player who loses.");
+                    break;
+                case ConditionKind.CaptureTown when town!.Owner is { } owner && (condition.Player is null ? scenario.HasPlayer(owner) : owner == condition.Player):
+                    yield return new(IssueSeverity.Warning, $"'{name}': the town is owned from the start, so the game would end at once.", town.Position);
+                    break;
+                case ConditionKind.LoseTown when town!.Owner != condition.Player:
+                    yield return new(IssueSeverity.Warning, $"'{name}': the player does not own the town at the start, so it would lose at once.", town.Position);
+                    break;
+                case ConditionKind.DefeatHero when condition.Player is { } winner && (winner == hero!.Owner || scenario.AreAllies(winner, hero.Owner)):
+                    yield return new(IssueSeverity.Warning, $"'{name}': the hero is on the same team.", hero.Position);
+                    break;
+                case ConditionKind.GatherResources when condition.Amount < 1:
+                    yield return new(IssueSeverity.Error, "A resource condition needs an amount above zero.");
+                    break;
+                case ConditionKind.SurviveUntilDay when condition.Day < 2:
+                    yield return new(IssueSeverity.Error, "Surviving needs a day after the first.");
+                    break;
+                case ConditionKind.TimeLimit when condition.Day < 1:
+                    yield return new(IssueSeverity.Error, "A time limit needs a day of 1 or more.");
+                    break;
+            }
+        }
+
+        if (!rules.CanBeWon)
+        {
+            yield return new(IssueSeverity.Warning, "Nobody can win this scenario: the standard victory is off and there is no victory condition.");
+        }
+        else if (rules.StandardVictory && rules.Victory.Count == 0
+                 && scenario.Players.Where(p => scenario.HeroesOf(p.Id).Any() || scenario.ObjectsOf<Town>().Any(t => t.Owner == p.Id)).Select(p => p.Team).Distinct().Count() < 2)
+        {
+            yield return new(IssueSeverity.Warning, "Fewer than two teams start with a hero or a town, so the game cannot end by defeating enemies.");
+        }
     }
 
     private static IEnumerable<string> ValidateTown(GameState scenario, Town town)

@@ -96,6 +96,9 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `DayStarted(Date)` | `TurnService` | game start and after the last player ends a turn |
 | `WeekStarted(Date)` | `TurnService` | day 8, 15, ... |
 | `TurnStarted(Player, Date)` / `TurnEnded(...)` | `TurnService` | each player turn |
+| `PlayerDefeated(Player, Reason)` | `GameFlowService` | a player is eliminated; its heroes (`HeroDefeated`) and flags (`TownOwnerChanged`, `MineOwnerChanged`) were released just before |
+| `GracePeriodStarted(Player, DefeatDay)` / `GracePeriodEnded(Player)` | `GameFlowService` | a player that had a town lost its last one (countdown begins) / owns a town again |
+| `GameEnded(Winners, Reason, Date)` | `GameFlowService` | a team won (or nobody did); commands are refused from now on |
 | `ResourcesChanged(Player, Previous, Current)` | `EconomyService` | any resource change |
 | `HeroMoved(Hero, From, To, RemainingMP)` | `HeroMovementService` | each successful step (a `MoveTo` publishes one per step) |
 | `HeroTeleported(Hero, From, To)` | `MapObjectInteractionService` | a gate moved the hero |
@@ -111,6 +114,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`) |
 | `MapObjectRemoved(Object)` | interactions / editor | pile/chest consumed, or deleted in editor |
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
+| `ScenarioRulesChanged` | editor | the victory and defeat conditions changed (views re-read `GameState.Rules`) |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
 | `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService` | chest, exchange, guard offer, battle (resolved when it ends) |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |

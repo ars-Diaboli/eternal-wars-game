@@ -250,6 +250,9 @@ public partial class Main : Node3D
         var players = new PlayersPanel { Name = "Players" };
         tabs.AddChild(players);
         players.Bind(_editor);
+        var conditions = new ConditionsPanel { Name = "Conditions" };
+        tabs.AddChild(conditions);
+        conditions.Bind(_editor);
         _inspector = new InspectorPanel { Name = "Inspector" };
         tabs.AddChild(_inspector);
         _inspector.Bind(_editor);

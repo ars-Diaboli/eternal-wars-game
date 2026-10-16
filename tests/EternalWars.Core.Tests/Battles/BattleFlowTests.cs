@@ -42,7 +42,11 @@ public class BattleFlowTests
         var footman = state.Creatures.Get(BuiltInCreatures.Footman);
         Assert.Equal(10 * footman.Health + BattleService.HeroDefeatExperience, state.GetHero(A).Experience); // 10 footmen's HP + hero bonus
         Assert.Contains(events, e => e is ArmyChanged { Hero: var h } && h == A);
-        session.EndTurn();
+
+        // Red lost its only hero: the game is over (ADR-057).
+        Assert.True(state.IsOver);
+        Assert.Equal([Blue], state.Outcome!.Winners);
+        Assert.False(session.Execute(new EndTurnCommand(Blue)).IsAccepted);
     }
 
     [Fact]

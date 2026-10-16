@@ -22,7 +22,7 @@ public static class GameStateDigest
         Line($"date {state.Date} player {state.CurrentPlayerIndex} rng {state.RandomState} started {state.IsStarted}");
         foreach (var player in state.Players)
         {
-            Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources}");
+            Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources} defeated {player.IsDefeated} townless {player.TownlessSince?.AbsoluteDay}");
         }
 
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
@@ -46,6 +46,7 @@ public static class GameStateDigest
             Line($"object {mapObject.Id.Value} {mapObject.Definition.Id} at {mapObject.Position} {detail}");
         }
 
+        Line($"outcome {state.Outcome?.Winners.Count} {state.Outcome?.Date}");
         Line($"decision {state.PendingDecision}");
         if (state.Battle is { } battle)
         {

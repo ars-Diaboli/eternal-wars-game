@@ -733,3 +733,37 @@ starting values are a draft
   blacksmith.
 - Open: siege use (walls, Basic Ballistics), stats and prices after play-testing, exchanging machines between heroes,
   machines in garrisons.
+
+### ADR-057: Victory and defeat
+**Status**: accepted (2026-10-16), from the roadmap's game flow items and a user decision: the default is to defeat every
+enemy, and a map can configure other conditions in the editor
+- **Default rules** (`ScenarioRules.Default`): a player with **no towns and no heroes is eliminated at once**, and the
+  game is won when **one team is left standing**.
+- **Grace period** (HoMM3's rule, `GraceDays`, default 7, 0 = off): a player that **owned a town and has none any more**
+  is eliminated at the start of day *S + GraceDays* (*S* = the day it lost the last town) unless it owns a town again
+  before; its heroes do not save it. `GracePeriodStarted(Player, DefeatDay)` and `GracePeriodEnded` tell the UI;
+  `Player.TownlessSince` is the query. Players that never owned a town (hero-only starts) have no countdown.
+- **Per scenario** (`GameState.Rules`, map format **v10**, editor tab *Conditions*, undoable with `SetScenarioRules`):
+  - `GraceDays` sets the days a player without towns has (editor spin box, map field `graceDays`, omitted = 7).
+  - `StandardVictory` and `Elimination` can each be switched off (`ScenarioRules.Endless` is a sandbox that never ends).
+  - **Special victory conditions**, any one of which wins the game for the player's team: capture a town, defeat a hero
+    (it is gone and its owner is an enemy of the player), gather an amount of one resource, survive until a day.
+  - **Special defeat conditions**, any one of which eliminates the player: lose a town, lose a hero, a time limit (the
+    player did not win by day N).
+  - A condition may name one player; without one it applies to everybody and the first player it holds for, in turn order,
+    wins. A defeat condition about a town or hero must name the player (the editor fills in the owner).
+- **Who takes part**: only players that start with a hero or a town can be eliminated or win. A game that starts with a
+  single team never ends by defeating enemies, which keeps one-sided tests and sandboxes running.
+- **Order** (`GameFlowService.Evaluate`, after the game starts and after every accepted command): special victories, then
+  defeats (special ones and the default), then the default victory. A battle in progress is settled first.
+- **Defeat**: the player's heroes are removed (`HeroDefeated`), its towns and mines turn neutral, `PlayerDefeated` is
+  published, its turns are skipped. A player defeated in its own turn passes it on at once.
+- **The end**: `GameState.Outcome` (winners: the surviving players of the winning team; the reason in words) and
+  `GameEnded`. From then on every command is refused ("The game is over"). The digest includes defeats and the outcome,
+  so replays prove them.
+- **Maps**: `MapDocument.Rules` is omitted for the default; older maps load with it. The validator reports conditions that
+  point at a missing town, hero or player (errors), ones true at the start, and scenarios nobody can win (warnings).
+- **UI**: the game shows a result screen (Victory, Defeat or Draw, the reason and the winners) after the battle screen, if
+  one decided the game, has been closed.
+- Open: conditions that need artifacts or
+  objects (grail, flag all mines), team-wide survival, campaign hooks, save/load (next roadmap item).

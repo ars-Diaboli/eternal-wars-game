@@ -384,6 +384,12 @@ Spell catalog: [spells.md](spells.md) (design draft).
   cost or potency by school), mastery (2 levels: spell upgrades).
 
 ### 4.7 Game modes (priority order)
+**Victory and defeat** (implemented, ADR-057): by default a player with no towns and no heroes is out at once, a player that lost its last
+town has 7 days (configurable) to own one again, and the last team standing wins. A map can switch these off and add special **victory** conditions (capture a town, defeat a hero, gather
+resources, survive until a day) and **defeat** conditions (lose a town, lose a hero, a time limit); any one of them
+decides. A defeated player's heroes leave and its towns and mines turn neutral; the game then refuses commands and the
+game app shows the result.
+
 1. Single scenario vs. AI.
 2. Hot-seat multiplayer (turn structure already models it).
 3. Story campaign: chained scenarios, carry-over heroes, scripted map events and dialogue. This needs
@@ -394,7 +400,7 @@ Spell catalog: [spells.md](spells.md) (design draft).
 - **Map editor**: a **separate standalone app** (not an in-game mode). Implemented in core with
   undo/redo: terrain painting (brush radius, drag strokes), object placement/removal, gate linking,
   mine owners, hero placement, armies, monsters, towns, player slots, map name/description, validation, all with
-  Godot UI (tool palette, inspector, properties, players, validation panel). Later: artifacts, victory/loss conditions, events/triggers, map resize, and the **template editor**
+  Godot UI (tool palette, inspector, properties, players, validation panel). Victory and defeat conditions (ADR-057) are edited in the Conditions tab. Later: artifacts, events/triggers, map resize, and the **template editor**
   plus "generate map from template" (§4.9).
 - **2D harness**: two parts:
   - **Viewer** (Godot 2D app): a top-down debug front-end over the same core, for rule development and
@@ -502,4 +508,5 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 19 | Luck | Attacker only, double damage | Both sides roll: +75 % (attacker) or −50 % (defender); opposite rolls cancel | accepted |
 | 20 | External dwellings | Visit them with a hero | Caravans hire from owned dwellings within 5 days; creatures travel the map to the town | accepted (not built yet) |
 | 21 | War machines | Ballista, tent and cart for everyone, bought anywhere | Offensive machine per town; it needs Advanced Ballistics outside sieges; tent heals every stack a little | accepted |
+| 22 | Victory | Standard victory (defeat everyone) plus one special condition, 7 days without a town | Default: no towns and no heroes means defeat, 7 days without a town too, last team wins; a map may switch these off and add several victory and defeat conditions | accepted |
 | … | | | *more twists to be proposed* ❓ | |
