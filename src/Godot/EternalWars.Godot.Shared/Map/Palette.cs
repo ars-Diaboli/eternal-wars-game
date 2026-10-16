@@ -64,6 +64,7 @@ public static class Palette
         MapObjectKind.OneWayGateEntrance => new Color(0.65f, 0.25f, 0.80f),
         MapObjectKind.OneWayGateExit => new Color(0.80f, 0.60f, 0.90f),
         MapObjectKind.Monster => new Color(0.80f, 0.12f, 0.10f),
+        MapObjectKind.Town => new Color(0.62f, 0.58f, 0.50f),
         _ => Colors.Magenta,
     };
 

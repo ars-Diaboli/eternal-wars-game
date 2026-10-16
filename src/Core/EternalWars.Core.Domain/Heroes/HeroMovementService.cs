@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Pathfinding;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Heroes;
@@ -170,7 +171,8 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             return MoveResult.GuardEncountered;
         }
 
-        if (entrance is Mine { Guard: not null } && hero.Army.IsEmpty)
+        var defended = entrance is Mine { Guard: not null } || (entrance is Town { Garrison.IsEmpty: false } town && IsHostile(hero, town));
+        if (defended && hero.Army.IsEmpty)
         {
             return MoveResult.NoArmy;
         }
@@ -197,6 +199,8 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             events.Publish(new HeroMovementRestored(hero.Id, hero.MovementPoints));
         }
     }
+
+    private bool IsHostile(Hero hero, Town town) => town.Owner is not { } owner || state.AreEnemies(hero.Owner, owner);
 
     private HashSet<HeroId> VisibleEnemies(PlayerId viewer) =>
         state.Heroes.Where(h => state.AreEnemies(viewer, h.Owner) && state.CanSee(viewer, h)).Select(h => h.Id).ToHashSet();

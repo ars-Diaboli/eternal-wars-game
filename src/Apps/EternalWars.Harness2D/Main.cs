@@ -8,6 +8,7 @@ using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Pathfinding;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
@@ -50,6 +51,15 @@ public partial class Main : Node2D
         this.SubscribeWhileInTree<KnownObjectsChanged>(_session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<HeroDefeated>(_session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<DecisionResolved>(_session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<TownOwnerChanged>(_session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<MapObjectVisited>(_session.Events, e =>
+        {
+            // An own hero entering an own town opens the town screen.
+            if (_session.State.FindObject(e.Object) is Town town && town.Owner == _session.State.GetHero(e.Hero).Owner)
+            {
+                GetNode<TownPanel>("Ui/Top/Town").Open(town.Id);
+            }
+        });
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
             _preview = null;
@@ -89,7 +99,7 @@ public partial class Main : Node2D
                 var color = known.Definition.Kind == MapObjectKind.Monster ? new Color(0.85f, 0.1f, 0.1f)
                     : known.Owner is { } owner ? Palette.ForPlayer(owner)
                     : new Color(0.9f, 0.85f, 0.6f);
-                DrawRect(TileRect(cell).Grow(-6), color);
+                DrawRect(TileRect(cell).Grow(known.Definition.Kind == MapObjectKind.Town ? -2 : -6), color);
             }
         }
 
@@ -126,6 +136,12 @@ public partial class Main : Node2D
     private void HandleClick(MapPosition target)
     {
         var player = _session.State.CurrentPlayer.Id;
+        if (_session.State.ObjectCellAt(target) is { Object: Town town, Cell: FootprintCell.Blocked } && town.Owner == player)
+        {
+            GetNode<TownPanel>("Ui/Top/Town").Open(town.Id);
+            return;
+        }
+
         if (_session.State.HeroAt(target) is { } clicked && clicked.Owner == player)
         {
             _selectedHero = clicked.Id;
@@ -211,10 +227,13 @@ public partial class Main : Node2D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        top.AddChild(new Label { Name = "Status", Text = "Click hero, click tile twice to move, arrows & numpad. Battle: click, W wait, D defend, R retreat, Q quick" });
+        top.AddChild(new Label { Name = "Status", Text = "Click hero, click tile twice to move, arrows & numpad; click an own town to open it. Battle: click, W wait, D defend, R retreat, Q quick" });
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
         decisions.Bind(_session);
+        var town = new TownPanel { Name = "Town" };
+        top.AddChild(town);
+        town.Bind(_session);
 
         var board = new BattleBoard2D { Position = MapOrigin + new Vector2(0, 50) };
         ui.AddChild(board);
@@ -246,6 +265,8 @@ public partial class Main : Node2D
 
     private static GameState LoadState() =>
         LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path), options: new GameOptions(Seed: (ulong)Random.Shared.NextInt64()), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes)
-            : DemoScenario.Create(creatures: GameContent.Creatures, heroRoster: GameContent.Heroes);
+            ? MapConverter.ToGameState(MapSerializer.Load(path), options: new GameOptions(Seed: (ulong)Random.Shared.NextInt64()), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)
+            : LaunchArguments.Scenario == "towns"
+                ? TownsScenario.Create(GameContent.Creatures, GameContent.Heroes, GameContent.Buildings)
+                : DemoScenario.Create(creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings);
 }

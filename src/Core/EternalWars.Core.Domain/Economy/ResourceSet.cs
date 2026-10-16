@@ -54,4 +54,8 @@ public readonly record struct ResourceSet(
     public static ResourceSet operator -(ResourceSet a, ResourceSet b) => new(
         a.Gold - b.Gold, a.Lumber - b.Lumber, a.Ore - b.Ore,
         a.Crystal - b.Crystal, a.Mercury - b.Mercury, a.Sulfur - b.Sulfur);
+
+    public static ResourceSet operator *(ResourceSet a, int factor) => new(
+        a.Gold * factor, a.Lumber * factor, a.Ore * factor,
+        a.Crystal * factor, a.Mercury * factor, a.Sulfur * factor);
 }

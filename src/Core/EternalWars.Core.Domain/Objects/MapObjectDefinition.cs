@@ -19,6 +19,9 @@ public enum MapObjectKind
 
     /// <summary>A neutral creature stack guarding its surroundings (<see cref="MonsterGuard"/>).</summary>
     Monster,
+
+    /// <summary>A town of the type in <see cref="MapObjectDefinition.Town"/> (<see cref="Towns.Town"/>).</summary>
+    Town,
 }
 
 /// <summary>
@@ -34,12 +37,20 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>Daily production of mines.</summary>
     public int DailyYield { get; init; }
 
+    /// <summary>Town type of towns (<see cref="Towns.TownIds"/>).</summary>
+    public string? Town { get; init; }
+
     /// <summary>Throws <see cref="FormatException"/> if kind-specific properties are missing.</summary>
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Id))
         {
             throw new FormatException("Map object definition needs an id.");
+        }
+
+        if (Kind is MapObjectKind.Town && string.IsNullOrWhiteSpace(Town))
+        {
+            throw new FormatException($"Town '{Id}' needs a town type.");
         }
 
         if (Kind is MapObjectKind.ResourcePile or MapObjectKind.Mine && Resource is null)

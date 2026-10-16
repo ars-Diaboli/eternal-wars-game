@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -11,7 +12,8 @@ namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
 /// Edits the selected hero (stats, Tactics, seven army slots) or object (mine owner and guard, chest values,
-/// monster creature/count/disposition; gate links are shown). Every change is an undoable editor edit.
+/// monster creature/count/disposition, town owner, name, buildings, dwellings and garrison; gate links are shown).
+/// Every change is an undoable editor edit.
 /// </summary>
 public partial class InspectorPanel : VBoxContainer
 {
@@ -175,6 +177,62 @@ public partial class InspectorPanel : VBoxContainer
             case ResourcePile pile:
                 AddChild(new Label { Text = $"{pile.Amount} {pile.Resource}" });
                 break;
+            case Town town:
+                ShowTown(town);
+                break;
+        }
+    }
+
+    /// <summary>Owner, name, pre-built buildings and dwellings (7-of-9 rule), garrison.</summary>
+    private void ShowTown(Town town)
+    {
+        var scenario = _editor.Scenario;
+        var row = new HBoxContainer();
+        AddChild(row);
+        var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
+        var owner = Options(row, "Owner", owners, town.Owner);
+        owner.Button.ItemSelected += _ => Edit(() => _editor.SetTownOwner(town.Id, owner.Value()));
+        row.AddChild(new Label { Text = "Name" });
+        var name = new LineEdit { Text = town.Name, CustomMinimumSize = new Vector2(160, 0) };
+        name.TextSubmitted += text => Edit(() => _editor.SetTownName(town.Id, text));
+        row.AddChild(name);
+
+        AddChild(new Label { Text = "Buildings (level, 0 = not built)" });
+        var buildings = new HFlowContainer();
+        AddChild(buildings);
+        foreach (var building in scenario.Buildings.TownBuildings)
+        {
+            var id = building;
+            var level = Spin(buildings, building, town.Level(building), 0, scenario.Buildings.MaxLevel(building));
+            level.ValueChanged += value => Edit(() => _editor.SetTownBuilding(town.Id, id, (int)value));
+        }
+
+        AddChild(new Label { Text = "Dwellings (0 none, 1 built, 2 upgraded; at most 7, every tier reachable)" });
+        var dwellings = new GridContainer { Columns = 2 };
+        AddChild(dwellings);
+        foreach (var line in TownRules.Lines(scenario, town))
+        {
+            var id = line.Id;
+            var level = Spin(dwellings, $"T{line.Tier} {line.Name}", town.DwellingLevel(line.Id), 0, line.UpgradesTo is null ? 1 : 2);
+            level.ValueChanged += value => Edit(() => _editor.SetTownDwelling(town.Id, id, (int)value));
+        }
+
+        AddChild(new Label { Text = "Garrison" });
+        var creatures = new[] { ("— empty —", "") }
+            .Concat(scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id)))
+            .ToList();
+        for (var slot = 0; slot < Army.SlotCount; slot++)
+        {
+            var slotRow = new HBoxContainer();
+            AddChild(slotRow);
+            var stack = town.Garrison[slot];
+            var creature = Options(slotRow, $"{slot + 1}", creatures, stack?.Creature ?? "");
+            var count = Spin(slotRow, "×", stack?.Count ?? 1, 1, 9999);
+            var index = slot;
+            void ApplySlot() => Edit(() => _editor.SetGarrisonSlot(
+                town.Id, index, creature.Value() is { Length: > 0 } id ? new CreatureStack(id, (int)count.Value) : null));
+            creature.Button.ItemSelected += _ => ApplySlot();
+            count.ValueChanged += _ => ApplySlot();
         }
     }
 

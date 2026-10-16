@@ -106,6 +106,22 @@ spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by
 - **Tests and the default catalog** use the copy embedded at build time; `dotnet test` rebuilds it. Tests check
   the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines).
 
+## Editing town buildings
+
+Town buildings are `src/Godot/EternalWars.Godot.Assets/data/buildings.csv` (ADR-046, ADR-050), one row per building level,
+with the same file rules and reload behaviour as the creature table (`-- --buildings=path.csv` loads another one).
+
+| Column | Meaning |
+|---|---|
+| `id`, `level`, `name` | building id (`town-hall`, `fort`, …); level 1, 2, … without gaps; display name of that level |
+| `gold`, `resources` | cost: gold, and other resources like `lumber 5; ore 5` |
+| `requires` | other buildings first: `blacksmith 1; fort 2`. `dwelling-3 1` is met by any tier-3 dwelling |
+| `income` | paid every day while this is the highest level built: `gold 500`, `lumber 1; ore 1` |
+| `notes` | free text |
+
+`dwelling-1` … `dwelling-5` price the dwellings of a tier (level 1 builds, level 2 upgrades) for every creature line of
+that tier; which lines a town has comes from the creature table. The 7-of-9 rule (ADR-030) is in code, not in the table.
+
 ## Editing heroes
 
 The hero roster is `src/Godot/EternalWars.Godot.Assets/data/heroes.csv` (ADR-048), with the same file rules and

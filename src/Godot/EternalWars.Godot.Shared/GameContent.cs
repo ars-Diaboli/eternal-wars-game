@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Towns;
 using Godot;
 
 namespace EternalWars.Godot.Shared;
@@ -15,8 +16,12 @@ public static class GameContent
     /// <summary>The shipped hero roster (ADR-048), kept as a plain file like the creature table.</summary>
     public const string HeroTablePath = "res://shared/data/heroes.csv";
 
+    /// <summary>The shipped town buildings (ADR-046), kept as a plain file like the creature table.</summary>
+    public const string BuildingTablePath = "res://shared/data/buildings.csv";
+
     private static CreatureCatalog? _creatures;
     private static HeroCatalog? _heroes;
+    private static BuildingCatalog? _buildings;
 
     /// <summary>
     /// Creatures from <c>--creatures=path.csv</c>, else <see cref="CreatureTablePath"/>. A missing or broken table falls
@@ -38,6 +43,13 @@ public static class GameContent
 
         return catalog;
     }, HeroCatalog.Default, c => c.All.Count());
+
+    /// <summary>
+    /// Town buildings from <c>--buildings=path.csv</c>, else <see cref="BuildingTablePath"/>. A missing or broken table falls
+    /// back to the embedded copy and reports the error.
+    /// </summary>
+    public static BuildingCatalog Buildings => _buildings ??= Load(LaunchArguments.BuildingsPath ?? BuildingTablePath, "Building",
+        text => new BuildingCatalog(BuildingTable.Parse(text)), BuildingCatalog.Default, c => c.Buildings.Count());
 
     private static CreatureCatalog LoadCreatures() =>
         Load(LaunchArguments.CreaturesPath ?? CreatureTablePath, "Creature", text => new CreatureCatalog(CreatureTable.Parse(text)),

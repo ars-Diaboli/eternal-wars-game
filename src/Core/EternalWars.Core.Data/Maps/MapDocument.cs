@@ -14,11 +14,12 @@ namespace EternalWars.Core.Data.Maps;
 /// 3 = + roads, teams, one-way gates. 4 = + hero armies and stats, monsters, mine guards, guard mode,
 /// optional chest values (omitted = rolled). 5 = + terrain codes b (beach), i (ice), = (shallow water),
 /// c (cursed lands), k (rocky ground) (ADR-045); heroes may name a roster entry (<c>type</c>) and carry skill levels
-/// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). Older versions still load.
+/// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). 6 = + towns (<c>town</c> objects: owner, name, buildings, dwellings,
+/// waiting creatures, garrison; ADR-046). Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 5;
+    public const int CurrentFormatVersion = 6;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -91,6 +92,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(GateEntranceDocument), "gateEntrance")]
 [JsonDerivedType(typeof(GateExitDocument), "gateExit")]
 [JsonDerivedType(typeof(MonsterDocument), "monster")]
+[JsonDerivedType(typeof(TownDocument), "town")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -148,4 +150,27 @@ public sealed record MonsterDocument : MapObjectDocument
     public GuardDisposition Disposition { get; init; } = GuardDisposition.Aggressive;
 
     public bool NeverFlees { get; init; }
+}
+
+/// <summary>
+/// A town (v6). <see cref="Buildings"/> omitted = the default start (town hall 1, fort 1); <see cref="Dwellings"/> map
+/// creature lines (base creature ids) to 1 built or 2 upgraded; <see cref="Available"/> are creatures waiting per line.
+/// </summary>
+public sealed record TownDocument : MapObjectDocument
+{
+    public int? Owner { get; init; }
+
+    /// <summary>Omitted = the definition's name.</summary>
+    public string? Name { get; init; }
+
+    public IReadOnlyDictionary<string, int>? Buildings { get; init; }
+
+    public IReadOnlyDictionary<string, int>? Dwellings { get; init; }
+
+    public IReadOnlyDictionary<string, int>? Available { get; init; }
+
+    public IReadOnlyList<ArmySlotDocument>? Garrison { get; init; }
+
+    /// <summary>Absolute day of the town's last build (saved games; one build per day).</summary>
+    public int? LastBuilt { get; init; }
 }

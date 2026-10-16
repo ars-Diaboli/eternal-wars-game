@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Battles;
@@ -61,6 +62,20 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, guard.VisitPosition, isAmbush: false);
         var definition = state.Creatures.Get(creature);
         var stacks = BattleSetup.SplitGuard(count).Select(c => new BattleStackSpec(definition, c, -1)).ToList();
+        Begin(attacker, battle, Stacks(attacker), stacks);
+    }
+
+    /// <summary>
+    /// A hero attacks a town's garrison: the town's owner commands it (the AI for computer players and neutral towns),
+    /// without a hero's stats or skills. Beating it captures the town.
+    /// </summary>
+    internal void BeginTownBattle(Hero attacker, Town town)
+    {
+        var owner = town.Owner;
+        var garrison = new BattleParticipant(
+            BattleSide.Defender, owner, null, town.Id, 0, 0, SkillLevel.None, IsComputer: owner is not { } o || !state.GetPlayer(o).IsHuman);
+        var battle = Create(Participant(BattleSide.Attacker, attacker), garrison, town.VisitPosition, isAmbush: false);
+        var stacks = town.Garrison.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
         Begin(attacker, battle, Stacks(attacker), stacks);
     }
 
@@ -248,9 +263,13 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
             ApplySurvivors(battle, winner, hero);
             Award(hero, experience);
         }
-        else if (winning.Guard is { } guardId)
+        else if (winning.Guard is { } guardId && state.GetObject(guardId) is Town town)
         {
-            SetGuardCount(state.GetObject(guardId), battle.LivingUnitsOf(winner).Sum(u => u.Count));
+            ApplySurvivors(battle, winner, town);
+        }
+        else if (winning.Guard is { } guard)
+        {
+            SetGuardCount(state.GetObject(guard), battle.LivingUnitsOf(winner).Sum(u => u.Count));
         }
 
         // Loser: a hero leaves the map, a guard is gone.
@@ -284,6 +303,17 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         armies.Publish(hero);
     }
 
+    private void ApplySurvivors(BattleState battle, BattleSide side, Town town)
+    {
+        foreach (var (slot, stack) in town.Garrison.Stacks.ToList())
+        {
+            var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.Count);
+            town.Garrison.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
+        }
+
+        events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+    }
+
     private void Award(Hero hero, int experience)
     {
         if (experience <= 0)
@@ -315,7 +345,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         events.Publish(new MapObjectChanged(guard.Id));
     }
 
-    /// <summary>A beaten monster leaves the map; a beaten mine guard leaves the mine to the winner.</summary>
+    /// <summary>A beaten monster leaves the map; a beaten mine guard leaves the mine, a beaten garrison the town, to the winner.</summary>
     private void DefeatGuard(MapObject guard, Hero? winner)
     {
         switch (guard)
@@ -334,6 +364,9 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
                     events.Publish(new MineOwnerChanged(mine.Id, previous, winner.Owner));
                 }
 
+                break;
+            case Town town when winner is not null:
+                TownService.Capture(events, town, winner.Owner);
                 break;
         }
     }

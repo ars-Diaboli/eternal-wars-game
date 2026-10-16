@@ -3,13 +3,14 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Turns;
 
 /// <summary>
 /// HoMM-style sequential turns: every player acts once per day, in slot order.
-/// When the last player ends the turn the calendar advances.
+/// When the last player ends the turn the calendar advances; a new week brings the towns' creature growth.
 /// </summary>
 public sealed class TurnService(
     GameState state,
@@ -17,7 +18,8 @@ public sealed class TurnService(
     EconomyService economy,
     HeroMovementService movement,
     GuardService guards,
-    ProgressionService progression)
+    ProgressionService progression,
+    TownService towns)
 {
     internal void StartGame()
     {
@@ -57,6 +59,7 @@ public sealed class TurnService(
             if (state.Date.IsFirstDayOfWeek)
             {
                 events.Publish(new WeekStarted(state.Date));
+                towns.GrowWeekly();
             }
         }
 

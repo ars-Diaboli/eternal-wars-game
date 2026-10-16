@@ -42,6 +42,30 @@ public sealed record MoveStackCommand(PlayerId Player, HeroId FromHero, int From
 /// <summary>Answer to a <see cref="GuardEncounterDecision"/>: accept the join/flee offer, or decline and fight.</summary>
 public sealed record RespondToGuardCommand(PlayerId Player, bool Accept) : GameCommand(Player);
 
+// Towns (the owner's turn, ADR-046) --------------------------------------------------------------------
+
+/// <summary>Builds the next level of a town building (<c>Towns.BuiltInBuildings</c>); one build per town per day.</summary>
+public sealed record BuildCommand(PlayerId Player, MapObjectId Town, string Building) : GameCommand(Player);
+
+/// <summary>Builds the dwelling of a creature line (its base creature id), or upgrades it once built (ADR-030).</summary>
+public sealed record BuildDwellingCommand(PlayerId Player, MapObjectId Town, string Line) : GameCommand(Player);
+
+/// <summary>
+/// Buys <paramref name="Count"/> creatures from a dwelling (the base creature, or the upgraded one from an upgraded
+/// dwelling) into the garrison, or into the visiting hero <paramref name="Hero"/>.
+/// </summary>
+public sealed record RecruitCommand(PlayerId Player, MapObjectId Town, string Creature, int Count, HeroId? Hero = null) : GameCommand(Player);
+
+/// <summary>Upgrades a whole stack of the garrison or the visiting hero for the price difference.</summary>
+public sealed record UpgradeStackCommand(PlayerId Player, MapObjectId Town, Towns.TownArmy Army, int Slot) : GameCommand(Player);
+
+/// <summary>
+/// Moves creatures within or between the garrison and the visiting hero, with the rules of <see cref="MoveStackCommand"/>
+/// (<paramref name="Count"/> null = the whole stack; the hero keeps one stack).
+/// </summary>
+public sealed record MoveTownStackCommand(PlayerId Player, MapObjectId Town, Towns.TownArmy From, int FromSlot, Towns.TownArmy To, int ToSlot, int? Count = null)
+    : GameCommand(Player);
+
 // Battle -----------------------------------------------------------------------------------------------
 
 public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player);

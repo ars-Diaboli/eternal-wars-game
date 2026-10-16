@@ -104,13 +104,18 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
 | `MineOwnerChanged(Mine, Previous, Current)` | interactions / editor | mine flagged |
+| `TownOwnerChanged(Town, Previous, Current)` | interactions, `BattleService`, editor | town captured (empty garrison walked into, or garrison beaten) or set in the editor |
+| `TownBuilt(Town, Building, Level)` / `DwellingBuilt(Town, Line, Level, Available)` | `TownService` | a building level or a dwelling (1 built, 2 upgraded) |
+| `CreaturesRecruited(Town, Creature, Count, Hero, Available)` / `StackUpgraded(Town, Hero, Slot, From, To, Count)` | `TownService` | recruits into the garrison (Hero null) or the visiting hero; a stack upgraded for the price difference |
+| `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, editor | all seven garrison slots after any change |
+| `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`) |
 | `MapObjectRemoved(Object)` | interactions / editor | pile/chest consumed, or deleted in editor |
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
 | `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService` | chest, exchange, guard offer, battle (resolved when it ends) |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
 | `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
-| `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone) |
+| `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone); owned mines and towns observe like heroes |
 | `HeroesMet(Hero, Other)` | `MapObjectInteractionService` | own heroes met; `HeroExchangeDecision` follows |
 | `BattleTriggered(Attacker, Defender, IsAmbush)` | `MapObjectInteractionService` | hero stepped onto an enemy hero; the battle follows |
 | `BattleStarted(AttackerHero, DefenderHero, Guard, Width, Height, IsAmbush, Units, Obstacles)` | `BattleService` | battlefield set up (after the width choice) |

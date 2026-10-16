@@ -58,8 +58,18 @@ public abstract class MapObject
         MapObjectKind.OneWayGateEntrance => new OneWayGateEntrance(id, definition, position),
         MapObjectKind.OneWayGateExit => new OneWayGateExit(id, definition, position),
         MapObjectKind.Monster => new MonsterGuard(id, definition, position),
+        MapObjectKind.Town => new Towns.Town(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
+}
+
+/// <summary>An object a player can own (mines, towns): it flies the owner's flag and watches its surroundings for them.</summary>
+public interface IFlaggable
+{
+    PlayerId? Owner { get; }
+
+    /// <summary>How far around its entrance the object reveals and watches for its owner.</summary>
+    int ScoutingRadius { get; }
 }
 
 /// <summary>Picked up on visit: resources go to the hero's owner and the pile disappears.</summary>
@@ -84,8 +94,13 @@ public sealed class ResourcePile(MapObjectId id, MapObjectDefinition definition,
 /// re-flags the mine by visiting it.
 /// </summary>
 public sealed class Mine(MapObjectId id, MapObjectDefinition definition, MapPosition position, PlayerId? owner = null, GuardStack? guard = null)
-    : MapObject(id, definition, position, MapObjectKind.Mine)
+    : MapObject(id, definition, position, MapObjectKind.Mine), IFlaggable
 {
+    /// <summary>Owned mines reveal and watch a small area around them.</summary>
+    public const int MineScoutingRadius = 2;
+
+    public int ScoutingRadius => MineScoutingRadius;
+
     public ResourceType Resource => Definition.Resource!.Value;
 
     public int DailyYield => Definition.DailyYield;

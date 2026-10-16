@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Tests;
 
@@ -98,6 +99,14 @@ internal static class TestWorld
         var mapObject = MapObject.Create(state.NextObjectId(), MapObjectCatalog.Default.Get(definitionId), new MapPosition(x, y, level));
         state.AddObject(mapObject);
         return (T)mapObject;
+    }
+
+    /// <summary>Places a town of <paramref name="townType"/> with its top-left at (x, y); its entrance is (x + 3, y + 6).</summary>
+    public static Town AddTown(GameState state, string townType, int x, int y, PlayerId? owner = null)
+    {
+        var town = Add<Town>(state, BuiltInMapObjects.TownId(townType), x, y);
+        town.Owner = owner;
+        return town;
     }
 
     /// <summary>Lays a road on row <paramref name="y"/> from <paramref name="fromX"/> to <paramref name="toX"/> inclusive.</summary>
