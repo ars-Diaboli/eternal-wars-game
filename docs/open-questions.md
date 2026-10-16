@@ -76,6 +76,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Caravans**: hire from owned map dwellings within 5 days of virtual travel on an open route; also between towns
   (ADR-054).
 - **Sea travel**: none; water is an obstacle (ADR-051).
+- **Primary stats**: every level raises Attack, Defense, Spell Power or Knowledge by 1, HoMM3-style odds by class
+  (ADR-055).
 
 ## Still open
 
@@ -96,7 +98,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
    growth; a fourth town hall level; the cost of mage guild level 4; are the sandbox's gems really mercury?
 
 ### Heroes
-8. Primary stats: do levels raise Attack/Defense/Spell Power/Knowledge (HoMM3-style odds by class)?
+8. Primary stats: the draft growth odds and starting values (ADR-055); what Spell Power and Knowledge do in numbers
+   (with magic).
 9. The third offense and third defense skills; the draft numbers in ADR-048; what a skill specialty adds.
 10. Hero names, school names (Light, Nature, Arcana, Death, Chaos, Shadow, Shamanism, Primal) and specialties in
     `data/heroes.csv` are drafts for review.

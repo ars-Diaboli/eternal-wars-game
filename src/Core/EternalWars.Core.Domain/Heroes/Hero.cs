@@ -36,11 +36,36 @@ public sealed class Hero(
     /// <summary>Up to seven creature stacks. Speed (<see cref="Creatures.CreatureDefinition.MapSpeed"/>) drives movement.</summary>
     public Army Army { get; } = army ?? new Army();
 
-    /// <summary>Primary stat added to every stack's Attack in battle. Levels and stat growth arrive in Phase 3.</summary>
+    /// <summary>Primary stat added to every stack's Attack in battle; grows with levels (<see cref="StatGrowth"/>).</summary>
     public int Attack { get; internal set; } = attack;
 
     /// <summary>Primary stat added to every stack's Defense in battle.</summary>
     public int Defense { get; internal set; } = defense;
+
+    /// <summary>Primary stat: strength of the hero's spells (magic, Phase 5).</summary>
+    public int SpellPower { get; internal set; }
+
+    /// <summary>Primary stat: the hero's mana (magic, Phase 5).</summary>
+    public int Knowledge { get; internal set; }
+
+    public int Stat(PrimaryStat stat) => stat switch
+    {
+        PrimaryStat.Attack => Attack,
+        PrimaryStat.Defense => Defense,
+        PrimaryStat.SpellPower => SpellPower,
+        _ => Knowledge,
+    };
+
+    internal void Raise(PrimaryStat stat)
+    {
+        switch (stat)
+        {
+            case PrimaryStat.Attack: Attack++; break;
+            case PrimaryStat.Defense: Defense++; break;
+            case PrimaryStat.SpellPower: SpellPower++; break;
+            default: Knowledge++; break;
+        }
+    }
 
     /// <summary>Added to the morale of every stack in battle, −5…+5 (ADR-053). Map data until skills and artifacts add to it.</summary>
     public int Morale { get; internal set; }
@@ -98,8 +123,13 @@ public sealed class Hero(
     public static Hero Create(
         HeroId id, PlayerId owner, MapPosition position, Army? army, HeroDefinition? definition,
         string? name = null, int? attack = null, int? defense = null, IReadOnlyDictionary<string, SkillLevel>? skills = null,
-        int morale = 0, int luck = 0)
+        int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null)
     {
+        if (spellPower < 0 || knowledge < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(spellPower), "Spell Power and Knowledge cannot be negative.");
+        }
+
         if (Math.Abs(morale) > Battles.MoraleAndLuck.Limit || Math.Abs(luck) > Battles.MoraleAndLuck.Limit)
         {
             throw new ArgumentOutOfRangeException(nameof(morale), $"Morale and luck go from −{Battles.MoraleAndLuck.Limit} to +{Battles.MoraleAndLuck.Limit}.");
@@ -114,6 +144,8 @@ public sealed class Hero(
         hero.Name = name ?? hero.Name;
         hero.Attack = attack ?? hero.Attack;
         hero.Defense = defense ?? hero.Defense;
+        hero.SpellPower = spellPower ?? hero.SpellPower;
+        hero.Knowledge = knowledge ?? hero.Knowledge;
         hero.Morale = morale;
         hero.Luck = luck;
         if (skills is not null)
@@ -134,6 +166,8 @@ public sealed class Hero(
         Specialty = definition.Specialty;
         Attack = definition.Attack;
         Defense = definition.Defense;
+        SpellPower = definition.SpellPower;
+        Knowledge = definition.Knowledge;
         Skills.ReplaceWith(definition.StartingSkills);
     }
 

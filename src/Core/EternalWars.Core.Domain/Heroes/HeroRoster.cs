@@ -67,6 +67,10 @@ public sealed record HeroDefinition(string Id, string Name, string Town, HeroCla
     public int Attack { get; init; }
 
     public int Defense { get; init; }
+
+    public int SpellPower { get; init; }
+
+    public int Knowledge { get; init; }
 }
 
 /// <summary>The hero roster as a CSV table (<c>data/heroes.csv</c>), same conventions as the creature table.</summary>
@@ -81,9 +85,11 @@ public static class HeroTable
     public const string Skills = "skills";
     public const string Attack = "attack";
     public const string Defense = "defense";
+    public const string SpellPower = "spell_power";
+    public const string Knowledge = "knowledge";
     public const string Notes = "notes";
 
-    public static IReadOnlyList<string> Columns { get; } = [Id, Name, Town, Class, Preferred, Specialty, Skills, Attack, Defense, Notes];
+    public static IReadOnlyList<string> Columns { get; } = [Id, Name, Town, Class, Preferred, Specialty, Skills, Attack, Defense, SpellPower, Knowledge, Notes];
 
     public static IReadOnlyList<HeroDefinition> Parse(string text) =>
         CsvTable.Parse(text, "Hero", [Id, Name, Town, Class, Preferred, Specialty])
@@ -95,7 +101,8 @@ public static class HeroTable
         CsvTable.Format(Columns, heroes.Select(h => (IReadOnlyList<string>)
         [
             h.Id, h.Name, h.Town, h.Class.ToString(), h.PreferredCreature, h.Specialty.ToString(),
-            FormatSkills(h.StartingSkills), CsvTable.Number(h.Attack), CsvTable.Number(h.Defense), notes?.Invoke(h) ?? "",
+            FormatSkills(h.StartingSkills), CsvTable.Number(h.Attack), CsvTable.Number(h.Defense),
+            CsvTable.Number(h.SpellPower), CsvTable.Number(h.Knowledge), notes?.Invoke(h) ?? "",
         ]));
 
     /// <summary><c>offense.melee Basic; tactics.tactics Advanced</c>.</summary>
@@ -149,6 +156,8 @@ public static class HeroTable
             StartingSkills = skills,
             Attack = row.Int(Attack, 0),
             Defense = row.Int(Defense, 0),
+            SpellPower = row.Int(SpellPower, 0),
+            Knowledge = row.Int(Knowledge, 0),
         };
     }
 }

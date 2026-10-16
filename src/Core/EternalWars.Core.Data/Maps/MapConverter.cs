@@ -30,7 +30,9 @@ public static class MapConverter
                     h.Definition,
                     h.Skills.Levels.Count == 0 ? null : h.Skills.Levels.OrderBy(s => s.Key, StringComparer.Ordinal).ToDictionary(s => s.Key, s => s.Value),
                     h.Morale == 0 ? null : h.Morale,
-                    h.Luck == 0 ? null : h.Luck))
+                    h.Luck == 0 ? null : h.Luck,
+                    h.SpellPower == 0 ? null : h.SpellPower,
+                    h.Knowledge == 0 ? null : h.Knowledge))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
         };
@@ -118,7 +120,7 @@ public static class MapConverter
         {
             return Hero.Create(
                 new HeroId(h.Id), new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level), ToArmy(h, creatures),
-                h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0);
+                h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge);
         }
         catch (Exception e) when (e is KeyNotFoundException or ArgumentOutOfRangeException or InvalidOperationException)
         {

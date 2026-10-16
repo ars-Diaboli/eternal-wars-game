@@ -84,10 +84,15 @@ public partial class InspectorPanel : VBoxContainer
         AddChild(stats);
         var attack = Spin(stats, "Attack", hero.Attack, 0, 99);
         var defense = Spin(stats, "Defense", hero.Defense, 0, 99);
+        var spellPower = Spin(stats, "Power", hero.SpellPower, 0, 99);
+        var knowledge = Spin(stats, "Knowledge", hero.Knowledge, 0, 99);
         var tactics = Options(stats, "Tactics", Enum.GetValues<SkillLevel>().Where(s => s <= SkillLevel.Expert).Select(s => (s.ToString(), s)), hero.Tactics);
-        void ApplyStats() => Edit(() => _editor.SetHeroStats(hero.Id, (int)attack.Value, (int)defense.Value, tactics.Value()));
+        void ApplyStats() => Edit(() => _editor.SetHeroStats(
+            hero.Id, (int)attack.Value, (int)defense.Value, tactics.Value(), (int)spellPower.Value, (int)knowledge.Value));
         attack.ValueChanged += _ => ApplyStats();
         defense.ValueChanged += _ => ApplyStats();
+        spellPower.ValueChanged += _ => ApplyStats();
+        knowledge.ValueChanged += _ => ApplyStats();
         tactics.Button.ItemSelected += _ => ApplyStats();
 
         var spirit = new HBoxContainer();

@@ -544,7 +544,7 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   game RNG. A **rival town's school** (the lore ring) is offered in only **5 %** of level-ups (user decision), the one
   rule effect of rivalries (an exception to ADR-029, which is about combat). Choices happen in the owner's turn; a hero
   that levels up during another player's turn chooses when its owner's turn starts; computer players take the first
-  offer. Primary stat growth per level is not decided yet.
+  offer. Primary stat growth per level: ADR-055.
 - **Effects now** (`SkillEffects`): melee +10 % per level, archery +10/25/50 %, armor −5 % damage taken per level,
   treasury +100/200/350/500 gold a day, prospecting +1/+2 lumber and ore (Expert also one of each rare resource),
   logistics +10 % movement per level, pathfinding −25/50/75 % of the terrain penalty, troop management +1 army map speed
@@ -680,3 +680,24 @@ which do not exist yet (roadmap, Phase 3)
 - The same rules **move troops between two own towns** (from one garrison to the other).
 - Open: what happens when the route becomes blocked or the destination is captured while a caravan travels (the
   caravan waits, returns, or can be attacked?), whether caravans are visible to other players, and the caravan's cost.
+
+### ADR-055: Primary stat growth
+**Status**: accepted (2026-10-16), answers open question 8 (user decision: HoMM3-style, odds by class); odds and
+starting values are a draft
+- Heroes have four primary stats: **Attack**, **Defense**, **Spell Power** and **Knowledge**. Spell Power and Knowledge
+  are new (`Hero.SpellPower`, `Hero.Knowledge`); they do nothing until magic (Phase 5: spell strength and mana).
+- **Every level-up raises one primary stat by 1**, besides the skill point (ADR-048). The stat is drawn from the game
+  RNG with odds by class (`StatGrowth`), one table for levels 2–9 and one from level 10:
+
+  | Class | Levels 2–9 (A / D / SP / K) | Levels 10+ |
+  |---|---|---|
+  | Warrior | 35 / 45 / 10 / 10 % | 30 / 30 / 20 / 20 % |
+  | Mage | 10 / 10 / 40 / 40 % | 20 / 20 / 30 / 30 % |
+
+  HoMM3 has one table per hero class of every town; ours has one per class for now, and may get per-town tables.
+- The stat is rolled together with the skill offers, so the level-up prompt shows it ("+1 Attack. Choose a skill")
+  (`LevelUpDecision.Stat`); `HeroLeveledUp` carries the stat and its new value. Computer heroes get theirs too.
+- **Starting values** (`data/heroes.csv`, new columns `spell_power` and `knowledge`): every roster hero has 5 points;
+  warriors keep their 2/1 or 1/2 Attack/Defense and get 1/1, mages get 3/2 (with 0/0) or 2/2 (with 0/1).
+- Map format **v8**: map heroes may set `spellPower` and `knowledge` (omitted = 0 for custom heroes, the roster's values
+  for roster heroes); the editor inspector edits them. The state digest includes all four stats.

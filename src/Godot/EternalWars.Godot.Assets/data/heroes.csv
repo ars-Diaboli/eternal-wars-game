@@ -1,129 +1,129 @@
-id,name,town,class,preferred,specialty,skills,attack,defense,notes
-haven.aldric,Aldric Vane,haven,Warrior,haven.footman,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Footman
-haven.ansel,Ansel Wren,haven,Mage,haven.footman,spell light.bless,magic.haven.spells Basic; estates.treasury Basic,0,0,prefers Footman
-haven.maren,Maren Holt,haven,Warrior,haven.pikeman,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Pikeman
-haven.ilse,Ilse Varro,haven,Mage,haven.pikeman,skill magic.haven.attunement,magic.haven.spells Basic; defense.resistance Basic,0,1,prefers Pikeman
-haven.corwin,Corwin Ashby,haven,Warrior,haven.zealot,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Zealot
-haven.matthias,Matthias Crane,haven,Mage,haven.zealot,spell light.heal,magic.haven.spells Basic; pathfinding.logistics Basic,0,0,prefers Zealot
-haven.brenna,Brenna Stahl,haven,Warrior,haven.archer,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Archer
-haven.rowena,Rowena Pell,haven,Mage,haven.archer,resource mercury 1,magic.haven.spells Basic; magic.haven.attunement Basic,0,1,prefers Archer
-haven.edric,Edric Morrow,haven,Warrior,haven.monk,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Monk
-haven.fabian,Fabian Lorne,haven,Mage,haven.monk,spell light.smite,magic.haven.spells Basic; estates.prospecting Basic,0,0,prefers Monk
-haven.sabine,Sabine Kell,haven,Warrior,haven.griffin,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Griffin
-haven.agathe,Agathe Sorrel,haven,Mage,haven.griffin,skill magic.haven.attunement,magic.haven.spells Basic; defense.armor Basic,0,1,prefers Griffin
-haven.gerrit,Gerrit Hale,haven,Warrior,haven.lancer,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Lancer
-haven.cyprian,Cyprian Vey,haven,Mage,haven.lancer,spell light.sanctuary,magic.haven.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Lancer
-haven.ottilie,Ottilie Brand,haven,Warrior,haven.paladin,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Paladin
-haven.elodie,Elodie Marsh,haven,Mage,haven.paladin,resource gold 350,magic.haven.spells Basic; magic.haven.attunement Basic,0,1,prefers Paladin
-sylvan.thalion,Thalion,sylvan,Warrior,sylvan.pixie,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Pixie
-sylvan.elowen,Elowen,sylvan,Mage,sylvan.pixie,spell nature.entangle,magic.sylvan.spells Basic; estates.treasury Basic,0,0,prefers Pixie
-sylvan.faelar,Faelar,sylvan,Warrior,sylvan.satyr,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Satyr
-sylvan.taeral,Taeral,sylvan,Mage,sylvan.satyr,skill magic.sylvan.attunement,magic.sylvan.spells Basic; defense.resistance Basic,0,1,prefers Satyr
-sylvan.ilyra,Ilyra,sylvan,Warrior,sylvan.blade-dancer,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Blade Dancer
-sylvan.ysolde,Ysolde,sylvan,Mage,sylvan.blade-dancer,spell nature.regrowth,magic.sylvan.spells Basic; pathfinding.logistics Basic,0,0,prefers Blade Dancer
-sylvan.caelwyn,Caelwyn,sylvan,Warrior,sylvan.hunter,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Hunter
-sylvan.faenor,Faenor,sylvan,Mage,sylvan.hunter,resource mercury 1,magic.sylvan.spells Basic; magic.sylvan.attunement Basic,0,1,prefers Hunter
-sylvan.sylvara,Sylvara,sylvan,Warrior,sylvan.druid,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Druid
-sylvan.ithiel,Ithiel,sylvan,Mage,sylvan.druid,spell nature.swarm,magic.sylvan.spells Basic; estates.prospecting Basic,0,0,prefers Druid
-sylvan.elaith,Elaith,sylvan,Warrior,sylvan.pegasus,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Pegasus
-sylvan.sariel,Sariel,sylvan,Mage,sylvan.pegasus,skill magic.sylvan.attunement,magic.sylvan.spells Basic; defense.armor Basic,0,1,prefers Pegasus
-sylvan.varis,Varis,sylvan,Warrior,sylvan.qilin,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Qilin
-sylvan.calen,Calen,sylvan,Mage,sylvan.qilin,spell nature.barkskin,magic.sylvan.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Qilin
-sylvan.neriah,Neriah,sylvan,Warrior,sylvan.treant,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Treant
-sylvan.nymara,Nymara,sylvan,Mage,sylvan.treant,resource gold 350,magic.sylvan.spells Basic; magic.sylvan.attunement Basic,0,1,prefers Treant
-academy.corvin,Corvin Halde,academy,Warrior,academy.gremlin,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Gremlin
-academy.aurelian,Aurelian Vex,academy,Mage,academy.gremlin,spell arcana.magic-arrow,magic.academy.spells Basic; estates.treasury Basic,0,0,prefers Gremlin
-academy.stellan,Stellan Frost,academy,Warrior,academy.defender,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Defender
-academy.seraphine,Seraphine Lux,academy,Mage,academy.defender,skill magic.academy.attunement,magic.academy.spells Basic; defense.resistance Basic,0,1,prefers Defender
-academy.ingrid,Ingrid Vael,academy,Warrior,academy.gargoyle,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Gargoyle
-academy.theodric,Theodric Wynn,academy,Mage,academy.gargoyle,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,prefers Gargoyle
-academy.tobias,Tobias Rime,academy,Warrior,academy.iron-golem,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Iron Golem
-academy.isolde,Isolde Marrow,academy,Mage,academy.iron-golem,resource mercury 1,magic.academy.spells Basic; magic.academy.attunement Basic,0,1,prefers Iron Golem
-academy.hedda,Hedda Strom,academy,Warrior,academy.snow-maiden,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Snow Maiden
-academy.cassius,Cassius Thorne,academy,Mage,academy.snow-maiden,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,prefers Snow Maiden
-academy.kasimir,Kasimir Lode,academy,Warrior,academy.sorcerer,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Sorcerer
-academy.mirela,Mirela Quist,academy,Mage,academy.sorcerer,skill magic.academy.attunement,magic.academy.spells Basic; defense.armor Basic,0,1,prefers Sorcerer
-academy.runa,Runa Halvard,academy,Warrior,academy.djinn,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Djinn
-academy.lucan,Lucan Esk,academy,Mage,academy.djinn,spell arcana.dispel,magic.academy.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Djinn
-academy.dorian,Dorian Quill,academy,Warrior,academy.naga,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Naga
-academy.valeska,Valeska Rune,academy,Mage,academy.naga,resource gold 350,magic.academy.spells Basic; magic.academy.attunement Basic,0,1,prefers Naga
-necropolis.morthal,Morthal,necropolis,Warrior,necropolis.skeleton,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Skeleton
-necropolis.necrys,Necrys,necropolis,Mage,necropolis.skeleton,spell death.raise-dead,magic.necropolis.spells Basic; estates.treasury Basic,0,0,prefers Skeleton
-necropolis.vexa,Vexa,necropolis,Warrior,necropolis.plague-bearer,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Plague Bearer
-necropolis.sepulka,Sepulka,necropolis,Mage,necropolis.plague-bearer,skill magic.necropolis.attunement,magic.necropolis.spells Basic; defense.resistance Basic,0,1,prefers Plague Bearer
-necropolis.grimwald,Grimwald,necropolis,Warrior,necropolis.ghoul,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Ghoul
-necropolis.vorlath,Vorlath,necropolis,Mage,necropolis.ghoul,spell death.curse,magic.necropolis.spells Basic; pathfinding.logistics Basic,0,0,prefers Ghoul
-necropolis.ulric,Ulric Ashgrave,necropolis,Warrior,necropolis.death-weaver,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Death Weaver
-necropolis.ysmera,Ysmera,necropolis,Mage,necropolis.death-weaver,resource mercury 1,magic.necropolis.spells Basic; magic.necropolis.attunement Basic,0,1,prefers Death Weaver
-necropolis.hespera,Hespera,necropolis,Warrior,necropolis.vampire,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Vampire
-necropolis.kael,Kael Duskmire,necropolis,Mage,necropolis.vampire,spell death.drain-life,magic.necropolis.spells Basic; estates.prospecting Basic,0,0,prefers Vampire
-necropolis.corvane,Corvane,necropolis,Warrior,necropolis.wight,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Wight
-necropolis.lethe,Lethe,necropolis,Mage,necropolis.wight,skill magic.necropolis.attunement,magic.necropolis.spells Basic; defense.armor Basic,0,1,prefers Wight
-necropolis.drusa,Drusa,necropolis,Warrior,necropolis.dark-knight,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Dark Knight
-necropolis.ozmund,Ozmund,necropolis,Mage,necropolis.dark-knight,spell death.plague,magic.necropolis.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Dark Knight
-necropolis.malgrin,Malgrin,necropolis,Warrior,necropolis.lich,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Lich
-necropolis.thessaly,Thessaly,necropolis,Mage,necropolis.lich,resource gold 350,magic.necropolis.spells Basic; magic.necropolis.attunement Basic,0,1,prefers Lich
-inferno.azgaroth,Azgaroth,inferno,Warrior,inferno.imp,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Imp
-inferno.belzra,Belzra,inferno,Mage,inferno.imp,spell chaos.fireball,magic.inferno.spells Basic; estates.treasury Basic,0,0,prefers Imp
-inferno.brakka,Brakka,inferno,Warrior,inferno.horned-demon,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Horned Demon
-inferno.nyxoth,Nyxoth,inferno,Mage,inferno.horned-demon,skill magic.inferno.attunement,magic.inferno.spells Basic; defense.resistance Basic,0,1,prefers Horned Demon
-inferno.vorhaz,Vorhaz,inferno,Warrior,inferno.hell-hound,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Hell Hound
-inferno.ashmedai,Ashmedai,inferno,Mage,inferno.hell-hound,spell chaos.inferno,magic.inferno.spells Basic; pathfinding.logistics Basic,0,0,prefers Hell Hound
-inferno.skarn,Skarn,inferno,Warrior,inferno.tormentor,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Tormentor
-inferno.lilivex,Lilivex,inferno,Mage,inferno.tormentor,resource mercury 1,magic.inferno.spells Basic; magic.inferno.attunement Basic,0,1,prefers Tormentor
-inferno.ixira,Ixira,inferno,Warrior,inferno.succubus,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Succubus
-inferno.pyrrhon,Pyrrhon,inferno,Mage,inferno.succubus,spell chaos.terror,magic.inferno.spells Basic; estates.prospecting Basic,0,0,prefers Succubus
-inferno.malphor,Malphor,inferno,Warrior,inferno.hell-charger,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Hell Charger
-inferno.veshra,Veshra,inferno,Mage,inferno.hell-charger,skill magic.inferno.attunement,magic.inferno.spells Basic; defense.armor Basic,0,1,prefers Hell Charger
-inferno.zarduk,Zarduk,inferno,Warrior,inferno.pit-fiend,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Pit Fiend
-inferno.orzhul,Orzhul,inferno,Mage,inferno.pit-fiend,spell chaos.hellfire,magic.inferno.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Pit Fiend
-inferno.kezra,Kezra,inferno,Warrior,inferno.juggernaut,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Juggernaut
-inferno.sythra,Sythra,inferno,Mage,inferno.juggernaut,resource gold 350,magic.inferno.spells Basic; magic.inferno.attunement Basic,0,1,prefers Juggernaut
-dungeon.vaelrith,Vaelrith,dungeon,Warrior,dungeon.troglodyte,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Troglodyte
-dungeon.nethra,Nethra,dungeon,Mage,dungeon.troglodyte,spell shadow.blind,magic.dungeon.spells Basic; estates.treasury Basic,0,0,prefers Troglodyte
-dungeon.zhaun,Zhaun,dungeon,Warrior,dungeon.scout,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Scout
-dungeon.sabal,Sabal,dungeon,Mage,dungeon.scout,skill magic.dungeon.attunement,magic.dungeon.spells Basic; defense.resistance Basic,0,1,prefers Scout
-dungeon.ilvara,Ilvara,dungeon,Warrior,dungeon.medusa,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Medusa
-dungeon.ghaunis,Ghaunis,dungeon,Mage,dungeon.medusa,spell shadow.shadow-step,magic.dungeon.spells Basic; pathfinding.logistics Basic,0,0,prefers Medusa
-dungeon.kharis,Kharis,dungeon,Warrior,dungeon.minotaur,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Minotaur
-dungeon.zesyra,Zesyra,dungeon,Mage,dungeon.minotaur,resource mercury 1,magic.dungeon.spells Basic; magic.dungeon.attunement Basic,0,1,prefers Minotaur
-dungeon.shyntra,Shyntra,dungeon,Warrior,dungeon.dark-raider,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Dark Raider
-dungeon.dryel,Dryel,dungeon,Mage,dungeon.dark-raider,spell shadow.despair,magic.dungeon.spells Basic; estates.prospecting Basic,0,0,prefers Dark Raider
-dungeon.vorn,Vorn,dungeon,Warrior,dungeon.shadow-mistress,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Shadow Mistress
-dungeon.vhaeris,Vhaeris,dungeon,Mage,dungeon.shadow-mistress,skill magic.dungeon.attunement,magic.dungeon.spells Basic; defense.armor Basic,0,1,prefers Shadow Mistress
-dungeon.lysara,Lysara,dungeon,Warrior,dungeon.manticore,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Manticore
-dungeon.phyrra,Phyrra,dungeon,Mage,dungeon.manticore,spell shadow.dark-bolt,magic.dungeon.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Manticore
-dungeon.xundar,Xundar,dungeon,Warrior,dungeon.spectator,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Spectator
-dungeon.ilphar,Ilphar,dungeon,Mage,dungeon.spectator,resource gold 350,magic.dungeon.spells Basic; magic.dungeon.attunement Basic,0,1,prefers Spectator
-stronghold.grukk,Grukk,stronghold,Warrior,stronghold.goblin,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Goblin
-stronghold.ugra,Ugra,stronghold,Mage,stronghold.goblin,spell shamanism.bloodlust,magic.stronghold.spells Basic; estates.treasury Basic,0,0,prefers Goblin
-stronghold.mazga,Mazga,stronghold,Warrior,stronghold.harpy,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Harpy
-stronghold.zhaka,Zhaka,stronghold,Mage,stronghold.harpy,skill magic.stronghold.attunement,magic.stronghold.spells Basic; defense.resistance Basic,0,1,prefers Harpy
-stronghold.thrak,Thrak,stronghold,Warrior,stronghold.orc,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Orc
-stronghold.mograth,Mograth,stronghold,Mage,stronghold.orc,spell shamanism.ancestral-spirits,magic.stronghold.spells Basic; pathfinding.logistics Basic,0,0,prefers Orc
-stronghold.urzog,Urzog,stronghold,Warrior,stronghold.centaur,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Centaur
-stronghold.yazna,Yazna,stronghold,Mage,stronghold.centaur,resource mercury 1,magic.stronghold.spells Basic; magic.stronghold.attunement Basic,0,1,prefers Centaur
-stronghold.borka,Borka,stronghold,Warrior,stronghold.ogre,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Ogre
-stronghold.kurgh,Kurgh,stronghold,Mage,stronghold.ogre,spell shamanism.earthquake,magic.stronghold.spells Basic; estates.prospecting Basic,0,0,prefers Ogre
-stronghold.kragash,Kragash,stronghold,Warrior,stronghold.wolf-rider,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Wolf Rider
-stronghold.ashka,Ashka,stronghold,Mage,stronghold.wolf-rider,skill magic.stronghold.attunement,magic.stronghold.spells Basic; defense.armor Basic,0,1,prefers Wolf Rider
-stronghold.shara,Shara,stronghold,Warrior,stronghold.roc,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Roc
-stronghold.vrolk,Vrolk,stronghold,Mage,stronghold.roc,spell shamanism.war-cry,magic.stronghold.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Roc
-stronghold.durgash,Durgash,stronghold,Warrior,stronghold.cyclops,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Cyclops
-stronghold.nazgra,Nazgra,stronghold,Mage,stronghold.cyclops,resource gold 350,magic.stronghold.spells Basic; magic.stronghold.attunement Basic,0,1,prefers Cyclops
-swamp-bestiary.ssarkh,Ssarkh,swamp-bestiary,Warrior,swamp-bestiary.lizardman,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,prefers Lizardman
-swamp-bestiary.hissla,Hissla,swamp-bestiary,Mage,swamp-bestiary.lizardman,spell primal.venom,magic.swamp-bestiary.spells Basic; estates.treasury Basic,0,0,prefers Lizardman
-swamp-bestiary.kethra,Kethra,swamp-bestiary,Warrior,swamp-bestiary.kappa,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,prefers Kappa
-swamp-bestiary.sethek,Sethek,swamp-bestiary,Mage,swamp-bestiary.kappa,skill magic.swamp-bestiary.attunement,magic.swamp-bestiary.spells Basic; defense.resistance Basic,0,1,prefers Kappa
-swamp-bestiary.mudjaw,Mudjaw,swamp-bestiary,Warrior,swamp-bestiary.jungle-horror,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,prefers Jungle Horror
-swamp-bestiary.murra,Murra,swamp-bestiary,Mage,swamp-bestiary.jungle-horror,spell primal.mire,magic.swamp-bestiary.spells Basic; pathfinding.logistics Basic,0,0,prefers Jungle Horror
-swamp-bestiary.vessk,Vessk,swamp-bestiary,Warrior,swamp-bestiary.mantis,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,prefers Mantis
-swamp-bestiary.zhessk,Zhessk,swamp-bestiary,Mage,swamp-bestiary.mantis,resource mercury 1,magic.swamp-bestiary.spells Basic; magic.swamp-bestiary.attunement Basic,0,1,prefers Mantis
-swamp-bestiary.brakkis,Brakkis,swamp-bestiary,Warrior,swamp-bestiary.basilisk,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,prefers Basilisk
-swamp-bestiary.ilthra,Ilthra,swamp-bestiary,Mage,swamp-bestiary.basilisk,spell primal.regenerate,magic.swamp-bestiary.spells Basic; estates.prospecting Basic,0,0,prefers Basilisk
-swamp-bestiary.ylsa,Ylsa,swamp-bestiary,Warrior,swamp-bestiary.owlbear,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,prefers Owlbear
-swamp-bestiary.gossk,Gossk,swamp-bestiary,Mage,swamp-bestiary.owlbear,skill magic.swamp-bestiary.attunement,magic.swamp-bestiary.spells Basic; defense.armor Basic,0,1,prefers Owlbear
-swamp-bestiary.tharg,Tharg,swamp-bestiary,Warrior,swamp-bestiary.gorgon,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,prefers Gorgon
-swamp-bestiary.venna,Venna,swamp-bestiary,Mage,swamp-bestiary.gorgon,spell primal.beast-call,magic.swamp-bestiary.spells Basic; pathfinding.pathfinding Basic,0,0,prefers Gorgon
-swamp-bestiary.oszrak,Oszrak,swamp-bestiary,Warrior,swamp-bestiary.haspid,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,prefers Haspid
-swamp-bestiary.szask,Szask,swamp-bestiary,Mage,swamp-bestiary.haspid,resource gold 350,magic.swamp-bestiary.spells Basic; magic.swamp-bestiary.attunement Basic,0,1,prefers Haspid
+id,name,town,class,preferred,specialty,skills,attack,defense,spell_power,knowledge,notes
+haven.aldric,Aldric Vane,haven,Warrior,haven.footman,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Footman
+haven.ansel,Ansel Wren,haven,Mage,haven.footman,spell light.bless,magic.haven.spells Basic; estates.treasury Basic,0,0,3,2,prefers Footman
+haven.maren,Maren Holt,haven,Warrior,haven.pikeman,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Pikeman
+haven.ilse,Ilse Varro,haven,Mage,haven.pikeman,skill magic.haven.attunement,magic.haven.spells Basic; defense.resistance Basic,0,1,2,2,prefers Pikeman
+haven.corwin,Corwin Ashby,haven,Warrior,haven.zealot,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Zealot
+haven.matthias,Matthias Crane,haven,Mage,haven.zealot,spell light.heal,magic.haven.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Zealot
+haven.brenna,Brenna Stahl,haven,Warrior,haven.archer,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Archer
+haven.rowena,Rowena Pell,haven,Mage,haven.archer,resource mercury 1,magic.haven.spells Basic; magic.haven.attunement Basic,0,1,2,2,prefers Archer
+haven.edric,Edric Morrow,haven,Warrior,haven.monk,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Monk
+haven.fabian,Fabian Lorne,haven,Mage,haven.monk,spell light.smite,magic.haven.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Monk
+haven.sabine,Sabine Kell,haven,Warrior,haven.griffin,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Griffin
+haven.agathe,Agathe Sorrel,haven,Mage,haven.griffin,skill magic.haven.attunement,magic.haven.spells Basic; defense.armor Basic,0,1,2,2,prefers Griffin
+haven.gerrit,Gerrit Hale,haven,Warrior,haven.lancer,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Lancer
+haven.cyprian,Cyprian Vey,haven,Mage,haven.lancer,spell light.sanctuary,magic.haven.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Lancer
+haven.ottilie,Ottilie Brand,haven,Warrior,haven.paladin,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Paladin
+haven.elodie,Elodie Marsh,haven,Mage,haven.paladin,resource gold 350,magic.haven.spells Basic; magic.haven.attunement Basic,0,1,2,2,prefers Paladin
+sylvan.thalion,Thalion,sylvan,Warrior,sylvan.pixie,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Pixie
+sylvan.elowen,Elowen,sylvan,Mage,sylvan.pixie,spell nature.entangle,magic.sylvan.spells Basic; estates.treasury Basic,0,0,3,2,prefers Pixie
+sylvan.faelar,Faelar,sylvan,Warrior,sylvan.satyr,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Satyr
+sylvan.taeral,Taeral,sylvan,Mage,sylvan.satyr,skill magic.sylvan.attunement,magic.sylvan.spells Basic; defense.resistance Basic,0,1,2,2,prefers Satyr
+sylvan.ilyra,Ilyra,sylvan,Warrior,sylvan.blade-dancer,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Blade Dancer
+sylvan.ysolde,Ysolde,sylvan,Mage,sylvan.blade-dancer,spell nature.regrowth,magic.sylvan.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Blade Dancer
+sylvan.caelwyn,Caelwyn,sylvan,Warrior,sylvan.hunter,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Hunter
+sylvan.faenor,Faenor,sylvan,Mage,sylvan.hunter,resource mercury 1,magic.sylvan.spells Basic; magic.sylvan.attunement Basic,0,1,2,2,prefers Hunter
+sylvan.sylvara,Sylvara,sylvan,Warrior,sylvan.druid,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Druid
+sylvan.ithiel,Ithiel,sylvan,Mage,sylvan.druid,spell nature.swarm,magic.sylvan.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Druid
+sylvan.elaith,Elaith,sylvan,Warrior,sylvan.pegasus,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Pegasus
+sylvan.sariel,Sariel,sylvan,Mage,sylvan.pegasus,skill magic.sylvan.attunement,magic.sylvan.spells Basic; defense.armor Basic,0,1,2,2,prefers Pegasus
+sylvan.varis,Varis,sylvan,Warrior,sylvan.qilin,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Qilin
+sylvan.calen,Calen,sylvan,Mage,sylvan.qilin,spell nature.barkskin,magic.sylvan.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Qilin
+sylvan.neriah,Neriah,sylvan,Warrior,sylvan.treant,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Treant
+sylvan.nymara,Nymara,sylvan,Mage,sylvan.treant,resource gold 350,magic.sylvan.spells Basic; magic.sylvan.attunement Basic,0,1,2,2,prefers Treant
+academy.corvin,Corvin Halde,academy,Warrior,academy.gremlin,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Gremlin
+academy.aurelian,Aurelian Vex,academy,Mage,academy.gremlin,spell arcana.magic-arrow,magic.academy.spells Basic; estates.treasury Basic,0,0,3,2,prefers Gremlin
+academy.stellan,Stellan Frost,academy,Warrior,academy.defender,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Defender
+academy.seraphine,Seraphine Lux,academy,Mage,academy.defender,skill magic.academy.attunement,magic.academy.spells Basic; defense.resistance Basic,0,1,2,2,prefers Defender
+academy.ingrid,Ingrid Vael,academy,Warrior,academy.gargoyle,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Gargoyle
+academy.theodric,Theodric Wynn,academy,Mage,academy.gargoyle,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Gargoyle
+academy.tobias,Tobias Rime,academy,Warrior,academy.iron-golem,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Iron Golem
+academy.isolde,Isolde Marrow,academy,Mage,academy.iron-golem,resource mercury 1,magic.academy.spells Basic; magic.academy.attunement Basic,0,1,2,2,prefers Iron Golem
+academy.hedda,Hedda Strom,academy,Warrior,academy.snow-maiden,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Snow Maiden
+academy.cassius,Cassius Thorne,academy,Mage,academy.snow-maiden,spell arcana.frost-bolt,magic.academy.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Snow Maiden
+academy.kasimir,Kasimir Lode,academy,Warrior,academy.sorcerer,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Sorcerer
+academy.mirela,Mirela Quist,academy,Mage,academy.sorcerer,skill magic.academy.attunement,magic.academy.spells Basic; defense.armor Basic,0,1,2,2,prefers Sorcerer
+academy.runa,Runa Halvard,academy,Warrior,academy.djinn,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Djinn
+academy.lucan,Lucan Esk,academy,Mage,academy.djinn,spell arcana.dispel,magic.academy.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Djinn
+academy.dorian,Dorian Quill,academy,Warrior,academy.naga,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Naga
+academy.valeska,Valeska Rune,academy,Mage,academy.naga,resource gold 350,magic.academy.spells Basic; magic.academy.attunement Basic,0,1,2,2,prefers Naga
+necropolis.morthal,Morthal,necropolis,Warrior,necropolis.skeleton,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Skeleton
+necropolis.necrys,Necrys,necropolis,Mage,necropolis.skeleton,spell death.raise-dead,magic.necropolis.spells Basic; estates.treasury Basic,0,0,3,2,prefers Skeleton
+necropolis.vexa,Vexa,necropolis,Warrior,necropolis.plague-bearer,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Plague Bearer
+necropolis.sepulka,Sepulka,necropolis,Mage,necropolis.plague-bearer,skill magic.necropolis.attunement,magic.necropolis.spells Basic; defense.resistance Basic,0,1,2,2,prefers Plague Bearer
+necropolis.grimwald,Grimwald,necropolis,Warrior,necropolis.ghoul,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Ghoul
+necropolis.vorlath,Vorlath,necropolis,Mage,necropolis.ghoul,spell death.curse,magic.necropolis.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Ghoul
+necropolis.ulric,Ulric Ashgrave,necropolis,Warrior,necropolis.death-weaver,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Death Weaver
+necropolis.ysmera,Ysmera,necropolis,Mage,necropolis.death-weaver,resource mercury 1,magic.necropolis.spells Basic; magic.necropolis.attunement Basic,0,1,2,2,prefers Death Weaver
+necropolis.hespera,Hespera,necropolis,Warrior,necropolis.vampire,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Vampire
+necropolis.kael,Kael Duskmire,necropolis,Mage,necropolis.vampire,spell death.drain-life,magic.necropolis.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Vampire
+necropolis.corvane,Corvane,necropolis,Warrior,necropolis.wight,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Wight
+necropolis.lethe,Lethe,necropolis,Mage,necropolis.wight,skill magic.necropolis.attunement,magic.necropolis.spells Basic; defense.armor Basic,0,1,2,2,prefers Wight
+necropolis.drusa,Drusa,necropolis,Warrior,necropolis.dark-knight,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Dark Knight
+necropolis.ozmund,Ozmund,necropolis,Mage,necropolis.dark-knight,spell death.plague,magic.necropolis.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Dark Knight
+necropolis.malgrin,Malgrin,necropolis,Warrior,necropolis.lich,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Lich
+necropolis.thessaly,Thessaly,necropolis,Mage,necropolis.lich,resource gold 350,magic.necropolis.spells Basic; magic.necropolis.attunement Basic,0,1,2,2,prefers Lich
+inferno.azgaroth,Azgaroth,inferno,Warrior,inferno.imp,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Imp
+inferno.belzra,Belzra,inferno,Mage,inferno.imp,spell chaos.fireball,magic.inferno.spells Basic; estates.treasury Basic,0,0,3,2,prefers Imp
+inferno.brakka,Brakka,inferno,Warrior,inferno.horned-demon,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Horned Demon
+inferno.nyxoth,Nyxoth,inferno,Mage,inferno.horned-demon,skill magic.inferno.attunement,magic.inferno.spells Basic; defense.resistance Basic,0,1,2,2,prefers Horned Demon
+inferno.vorhaz,Vorhaz,inferno,Warrior,inferno.hell-hound,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Hell Hound
+inferno.ashmedai,Ashmedai,inferno,Mage,inferno.hell-hound,spell chaos.inferno,magic.inferno.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Hell Hound
+inferno.skarn,Skarn,inferno,Warrior,inferno.tormentor,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Tormentor
+inferno.lilivex,Lilivex,inferno,Mage,inferno.tormentor,resource mercury 1,magic.inferno.spells Basic; magic.inferno.attunement Basic,0,1,2,2,prefers Tormentor
+inferno.ixira,Ixira,inferno,Warrior,inferno.succubus,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Succubus
+inferno.pyrrhon,Pyrrhon,inferno,Mage,inferno.succubus,spell chaos.terror,magic.inferno.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Succubus
+inferno.malphor,Malphor,inferno,Warrior,inferno.hell-charger,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Hell Charger
+inferno.veshra,Veshra,inferno,Mage,inferno.hell-charger,skill magic.inferno.attunement,magic.inferno.spells Basic; defense.armor Basic,0,1,2,2,prefers Hell Charger
+inferno.zarduk,Zarduk,inferno,Warrior,inferno.pit-fiend,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Pit Fiend
+inferno.orzhul,Orzhul,inferno,Mage,inferno.pit-fiend,spell chaos.hellfire,magic.inferno.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Pit Fiend
+inferno.kezra,Kezra,inferno,Warrior,inferno.juggernaut,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Juggernaut
+inferno.sythra,Sythra,inferno,Mage,inferno.juggernaut,resource gold 350,magic.inferno.spells Basic; magic.inferno.attunement Basic,0,1,2,2,prefers Juggernaut
+dungeon.vaelrith,Vaelrith,dungeon,Warrior,dungeon.troglodyte,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Troglodyte
+dungeon.nethra,Nethra,dungeon,Mage,dungeon.troglodyte,spell shadow.blind,magic.dungeon.spells Basic; estates.treasury Basic,0,0,3,2,prefers Troglodyte
+dungeon.zhaun,Zhaun,dungeon,Warrior,dungeon.scout,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Scout
+dungeon.sabal,Sabal,dungeon,Mage,dungeon.scout,skill magic.dungeon.attunement,magic.dungeon.spells Basic; defense.resistance Basic,0,1,2,2,prefers Scout
+dungeon.ilvara,Ilvara,dungeon,Warrior,dungeon.medusa,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Medusa
+dungeon.ghaunis,Ghaunis,dungeon,Mage,dungeon.medusa,spell shadow.shadow-step,magic.dungeon.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Medusa
+dungeon.kharis,Kharis,dungeon,Warrior,dungeon.minotaur,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Minotaur
+dungeon.zesyra,Zesyra,dungeon,Mage,dungeon.minotaur,resource mercury 1,magic.dungeon.spells Basic; magic.dungeon.attunement Basic,0,1,2,2,prefers Minotaur
+dungeon.shyntra,Shyntra,dungeon,Warrior,dungeon.dark-raider,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Dark Raider
+dungeon.dryel,Dryel,dungeon,Mage,dungeon.dark-raider,spell shadow.despair,magic.dungeon.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Dark Raider
+dungeon.vorn,Vorn,dungeon,Warrior,dungeon.shadow-mistress,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Shadow Mistress
+dungeon.vhaeris,Vhaeris,dungeon,Mage,dungeon.shadow-mistress,skill magic.dungeon.attunement,magic.dungeon.spells Basic; defense.armor Basic,0,1,2,2,prefers Shadow Mistress
+dungeon.lysara,Lysara,dungeon,Warrior,dungeon.manticore,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Manticore
+dungeon.phyrra,Phyrra,dungeon,Mage,dungeon.manticore,spell shadow.dark-bolt,magic.dungeon.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Manticore
+dungeon.xundar,Xundar,dungeon,Warrior,dungeon.spectator,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Spectator
+dungeon.ilphar,Ilphar,dungeon,Mage,dungeon.spectator,resource gold 350,magic.dungeon.spells Basic; magic.dungeon.attunement Basic,0,1,2,2,prefers Spectator
+stronghold.grukk,Grukk,stronghold,Warrior,stronghold.goblin,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Goblin
+stronghold.ugra,Ugra,stronghold,Mage,stronghold.goblin,spell shamanism.bloodlust,magic.stronghold.spells Basic; estates.treasury Basic,0,0,3,2,prefers Goblin
+stronghold.mazga,Mazga,stronghold,Warrior,stronghold.harpy,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Harpy
+stronghold.zhaka,Zhaka,stronghold,Mage,stronghold.harpy,skill magic.stronghold.attunement,magic.stronghold.spells Basic; defense.resistance Basic,0,1,2,2,prefers Harpy
+stronghold.thrak,Thrak,stronghold,Warrior,stronghold.orc,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Orc
+stronghold.mograth,Mograth,stronghold,Mage,stronghold.orc,spell shamanism.ancestral-spirits,magic.stronghold.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Orc
+stronghold.urzog,Urzog,stronghold,Warrior,stronghold.centaur,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Centaur
+stronghold.yazna,Yazna,stronghold,Mage,stronghold.centaur,resource mercury 1,magic.stronghold.spells Basic; magic.stronghold.attunement Basic,0,1,2,2,prefers Centaur
+stronghold.borka,Borka,stronghold,Warrior,stronghold.ogre,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Ogre
+stronghold.kurgh,Kurgh,stronghold,Mage,stronghold.ogre,spell shamanism.earthquake,magic.stronghold.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Ogre
+stronghold.kragash,Kragash,stronghold,Warrior,stronghold.wolf-rider,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Wolf Rider
+stronghold.ashka,Ashka,stronghold,Mage,stronghold.wolf-rider,skill magic.stronghold.attunement,magic.stronghold.spells Basic; defense.armor Basic,0,1,2,2,prefers Wolf Rider
+stronghold.shara,Shara,stronghold,Warrior,stronghold.roc,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Roc
+stronghold.vrolk,Vrolk,stronghold,Mage,stronghold.roc,spell shamanism.war-cry,magic.stronghold.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Roc
+stronghold.durgash,Durgash,stronghold,Warrior,stronghold.cyclops,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Cyclops
+stronghold.nazgra,Nazgra,stronghold,Mage,stronghold.cyclops,resource gold 350,magic.stronghold.spells Basic; magic.stronghold.attunement Basic,0,1,2,2,prefers Cyclops
+swamp-bestiary.ssarkh,Ssarkh,swamp-bestiary,Warrior,swamp-bestiary.lizardman,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Lizardman
+swamp-bestiary.hissla,Hissla,swamp-bestiary,Mage,swamp-bestiary.lizardman,spell primal.venom,magic.swamp-bestiary.spells Basic; estates.treasury Basic,0,0,3,2,prefers Lizardman
+swamp-bestiary.kethra,Kethra,swamp-bestiary,Warrior,swamp-bestiary.kappa,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Kappa
+swamp-bestiary.sethek,Sethek,swamp-bestiary,Mage,swamp-bestiary.kappa,skill magic.swamp-bestiary.attunement,magic.swamp-bestiary.spells Basic; defense.resistance Basic,0,1,2,2,prefers Kappa
+swamp-bestiary.mudjaw,Mudjaw,swamp-bestiary,Warrior,swamp-bestiary.jungle-horror,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Jungle Horror
+swamp-bestiary.murra,Murra,swamp-bestiary,Mage,swamp-bestiary.jungle-horror,spell primal.mire,magic.swamp-bestiary.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Jungle Horror
+swamp-bestiary.vessk,Vessk,swamp-bestiary,Warrior,swamp-bestiary.mantis,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Mantis
+swamp-bestiary.zhessk,Zhessk,swamp-bestiary,Mage,swamp-bestiary.mantis,resource mercury 1,magic.swamp-bestiary.spells Basic; magic.swamp-bestiary.attunement Basic,0,1,2,2,prefers Mantis
+swamp-bestiary.brakkis,Brakkis,swamp-bestiary,Warrior,swamp-bestiary.basilisk,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Basilisk
+swamp-bestiary.ilthra,Ilthra,swamp-bestiary,Mage,swamp-bestiary.basilisk,spell primal.regenerate,magic.swamp-bestiary.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Basilisk
+swamp-bestiary.ylsa,Ylsa,swamp-bestiary,Warrior,swamp-bestiary.owlbear,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Owlbear
+swamp-bestiary.gossk,Gossk,swamp-bestiary,Mage,swamp-bestiary.owlbear,skill magic.swamp-bestiary.attunement,magic.swamp-bestiary.spells Basic; defense.armor Basic,0,1,2,2,prefers Owlbear
+swamp-bestiary.tharg,Tharg,swamp-bestiary,Warrior,swamp-bestiary.gorgon,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Gorgon
+swamp-bestiary.venna,Venna,swamp-bestiary,Mage,swamp-bestiary.gorgon,spell primal.beast-call,magic.swamp-bestiary.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Gorgon
+swamp-bestiary.oszrak,Oszrak,swamp-bestiary,Warrior,swamp-bestiary.haspid,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Haspid
+swamp-bestiary.szask,Szask,swamp-bestiary,Mage,swamp-bestiary.haspid,resource gold 350,magic.swamp-bestiary.spells Basic; magic.swamp-bestiary.attunement Basic,0,1,2,2,prefers Haspid
