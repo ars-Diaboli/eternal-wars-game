@@ -55,7 +55,8 @@ out of scope.
 **Status**: accepted (2026-10-15)
 Each combat round every stack acts exactly once, ordered by an Initiative stat (separate from Speed).
 HoMM5's timeline UI without its "fast units act twice". This keeps the round structure that spells
-and morale reason about, while Initiative stays a tuning lever separate from movement.
+and morale reason about, while Initiative stays a tuning lever separate from movement. Amended by ADR-053: good
+morale may give a stack a second action, and morale may raise or lower its initiative for a round.
 
 ### ADR-010: Town roster in four groups; two non-playable towns
 **Status**: accepted (2026-10-15)
@@ -637,3 +638,45 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 - **HUD** (`BattleHud`, Godot.UI): sides and round, initiative timeline (active, queue, waiting), the log in step with
   the animation, hovered or active unit stats, wait / defend / retreat / quick combat buttons (W, D, R, Q), and a
   result screen with casualties and experience. The width choice before the battle stays in `DecisionPanel`.
+
+### ADR-053: Morale and luck
+**Status**: accepted (2026-10-16), from docs/ideas.md; answers open question 5. Rates marked *draft* were filled in
+where the notes left them open
+- **Values**: every stack has morale and luck from **−5 to +5**: its creature's (`morale` and `luck` columns of
+  `data/creatures.csv`, empty = 0) plus its hero's (`Hero.Morale` / `Hero.Luck`, map data in format v7 and the
+  editor inspector), limited to ±5 (`BattleState.MoraleOf` / `LuckOf`). Guards and garrisons have only their
+  creatures'. Skills, artifacts and army composition will add to the hero's value later.
+- **Morale**, rolled for every stack at the **start of each round**:
+  - good morale: **2 % per point** to **act twice**: right after its action the stack acts again (moving, attacking or
+    shooting; defending does not trigger it, and a wait postpones it). This is the one exception to "exactly once per
+    round" (ADR-009);
+  - bad morale: 2 % per point to **lose its turn** that round (it "freezes"; its defend bonus ends);
+  - if that did not trigger: **4 % per point** for **+50 % initiative** (good) or **−50 %** (bad, at least 1) for that
+    round's acting order.
+- **Luck**, rolled on **every hit** (retaliation, area hits and ranged retaliation included) by the attacker and by
+  each target: *draft* **4 % per point**. Good luck of the attacker or bad luck of the defender means **+75 % damage**;
+  good luck of the defender or bad luck of the attacker **−50 % damage**. When both sides' rolls trigger in opposite
+  directions, nothing happens; two triggers in the same direction still count once. An area attack rolls the
+  attacker's luck once and each target's for itself. *Draft*: the user's notes covered positive luck only; bad luck as
+  the mirror image is our reading.
+- Events: `BattleMoraleTriggered(unit, effect)` (haste and slow when the round starts, the extra action as it begins, the
+  lost turn when it would have come) and `BattleUnitAttacked.Luck`. A stack with morale and luck 0 draws no random
+  numbers, so battles without either replay exactly as before.
+- Not decided yet: which skills, artifacts, buildings and army mixes change morale and luck, and whether creatures such
+  as undead or constructs ignore morale (HoMM3 does).
+
+### ADR-054: Caravans (design; needs dwellings on the adventure map)
+**Status**: accepted design (2026-10-16), from docs/ideas.md; not implemented. It needs adventure-map dwellings,
+which do not exist yet (roadmap, Phase 3)
+- **Map dwellings** are flaggable map objects with one creature line. They accumulate their creature's weekly growth
+  like town dwellings, owned or not, and a hero visiting one can recruit from it.
+- **Caravan** is a town building. In a town with a caravan, the owner can hire creatures from **owned map
+  dwellings** that are close enough. The creatures do not arrive at once: they travel **virtually across the map**
+  from the dwelling to the town, at the speed of a hero army made of them (their **map speed**, MovementAllowance, terrain
+  and roads as for heroes; no hero skills).
+- **The route must be open**: a path from the dwelling to the town that no enemy hero and no neutral monster (or its
+  guarded area) blocks. **More than 5 days** of travel means that dwelling cannot supply the town. Both checks happen
+  **before** the creatures are bought, so the player never pays for an impossible caravan.
+- The same rules **move troops between two own towns** (from one garrison to the other).
+- Open: what happens when the route becomes blocked or the destination is captured while a caravan travels (the
+  caravan waits, returns, or can be attacked?), whether caravans are visible to other players, and the caravan's cost.

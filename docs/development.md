@@ -67,8 +67,9 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
   `TestWorld.DefaultArmy()` (10 footmen, 1500 movement points). Issue commands with the `SessionCommands`
   helpers (`session.Step`, `session.MoveTo`, `session.EndTurn`, `session.AutoResolve`, ...). Rule-level battle
   tests place units exactly with `TestBattle`.
-- Map files are `*.ewmap.json` (format v4: terrain + optional road rows, teams, guard mode, heroes with stats and
-  armies, objects incl. one-way gates, monsters and mine guards). Replays are `*.ewreplay.json`. Creature
+- Map files are `*.ewmap.json` (format v7: terrain + optional road rows, teams, guard mode, heroes with roster type,
+  stats, skills, morale, luck and armies, objects incl. one-way gates, monsters, mine guards and towns; see the
+  version history on `MapDocument`). Replays are `*.ewreplay.json`. Creature
   stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
   stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
@@ -96,6 +97,7 @@ spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by
 | `attack`, `defense`, `min_damage`, `max_damage`, `health` | per creature |
 | `speed`, `map_speed`, `initiative` | battlefield cells per turn; HoMM3-scale adventure speed; turn order |
 | `shots` | ammunition; empty or 0 = melee |
+| `morale`, `luck` | −5…+5, empty = 0; the hero's are added in battle (ADR-053) |
 | `growth`, `gold`, `resources` | weekly growth; gold cost; other costs like `mercury 1` |
 | `tags` | free words separated by `;` (`human; holy`) |
 | `capabilities` | up to five, separated by `;`: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster fireball 1`, … (`CapabilityKind`) |

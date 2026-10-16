@@ -104,6 +104,9 @@ These are enforced by:
   `ResistsSpell`, `SpellCasts`, `BattleUnit.CastsLeft`) waiting for the magic system.
 - Battle commands are authorized per side, not per map turn: in hot-seat the defender commands its units
   during the attacker's turn.
+- Morale is rolled per stack when a round starts (`BattleUnit.RoundMorale`: extra action, lost turn, ±50 % initiative
+  via `BattleState.InitiativeOf`), luck per hit (`HitModifiers.Luck`); values come from `BattleState.MoraleOf` /
+  `LuckOf` (creature + hero, ADR-053). Nothing is rolled at 0, so the random sequence of other battles is unchanged.
 - `BattleTargeting.ActionAt` maps a pointed cell to the action a click performs (shoot, melee from the pointer's
   side, move); front-ends share it.
 - **Presentation** (ADR-052): the game app's `BattleView3D` (Godot.Shared/Battle) builds the battlefield from
@@ -206,7 +209,7 @@ src/
     EternalWars.Core.Events/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios
-    EternalWars.Core.Data/      Maps (MapDocument v6, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v7, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (replays)
   Godot/
     EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events

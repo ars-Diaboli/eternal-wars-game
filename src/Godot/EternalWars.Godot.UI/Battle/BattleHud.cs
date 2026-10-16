@@ -117,7 +117,10 @@ public partial class BattleHud : Control
         var capabilities = c.Capabilities.Count > 0 ? $"\n{string.Join(", ", c.Capabilities.Select(k => k.Kind))}" : string.Empty;
         _info.Text = $"{c.Name} ×{unit.Count} ({_view.SideName(unit.Side)})\n" +
                      $"Attack {c.Attack}  Defense {c.Defense}  Damage {c.MinDamage}–{c.MaxDamage}  Health {unit.TopHealth}/{c.Health}\n" +
-                     $"Speed {battle.SpeedOf(unit)}  Initiative {c.Initiative}{shots}{(unit.IsDefending ? "  defending" : string.Empty)}{capabilities}";
+                     $"Speed {battle.SpeedOf(unit)}  Initiative {battle.InitiativeOf(unit)}{shots}  Morale {Signed(battle.MoraleOf(unit))}  Luck {Signed(battle.LuckOf(unit))}" +
+                     $"{(unit.IsDefending ? "  defending" : string.Empty)}{capabilities}";
+
+        static string Signed(int value) => value > 0 ? $"+{value}" : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 
     public void Report(CommandResult result) => _status.Text = result.IsAccepted ? string.Empty : $"Refused: {result.Error}";

@@ -24,14 +24,21 @@ public sealed record BattleTurnStarted(int Unit, int Round) : IEvent;
 
 public sealed record BattleUnitMoved(int Unit, CellPosition From, CellPosition To) : IEvent;
 
-/// <summary>One hit. <paramref name="RemainingCount"/> is the target's stack size afterwards.</summary>
+/// <summary>One hit. <paramref name="RemainingCount"/> is the target's stack size afterwards; <paramref name="Luck"/> what luck did.</summary>
 public sealed record BattleUnitAttacked(
     int Attacker,
     int Target,
     BattleAttackKind Kind,
     int Damage,
     int Killed,
-    int RemainingCount) : IEvent;
+    int RemainingCount,
+    HitLuck Luck = HitLuck.None) : IEvent;
+
+/// <summary>
+/// Morale took effect (ADR-053): Haste / Slow when the round starts, an extra action as it begins, a lost turn when the
+/// unit's turn would have come.
+/// </summary>
+public sealed record BattleMoraleTriggered(int Unit, MoraleEffect Effect) : IEvent;
 
 public sealed record BattleUnitDied(int Unit) : IEvent;
 

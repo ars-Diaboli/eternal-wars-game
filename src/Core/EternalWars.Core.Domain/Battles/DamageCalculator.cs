@@ -6,13 +6,14 @@ namespace EternalWars.Core.Domain.Battles;
 /// <param name="BaseRoll">One roll in the creature's damage range, multiplied by the stack size (ADR-033).</param>
 /// <param name="IsRanged">A shot (cover and range apply) rather than a melee strike.</param>
 /// <param name="CoverEighths">Cover on the line of fire (shots only).</param>
-public sealed record HitModifiers(int BaseRoll, bool IsRanged, int CoverEighths = 0);
+/// <param name="Luck">Luck of this hit: +75 % or −50 % (ADR-053).</param>
+public sealed record HitModifiers(int BaseRoll, bool IsRanged, int CoverEighths = 0, HitLuck Luck = HitLuck.None);
 
 /// <summary>
 /// HoMM3 damage baseline in integer maths (ADR-033): base roll × stack size; +5 % per point of Attack above
 /// Defense (cap +300 %), −2.5 % per point of Defense above Attack (cap −70 %); then capability bonuses, the
 /// long-range halving, the <c>MeleePenalty</c> halving, and cover; hero skills (Melee, Archery, Armor) and the preferred
-/// creature's +Attack/+Defense (ADR-048). Never less than 1.
+/// creature's +Attack/+Defense (ADR-048); luck (ADR-053). Never less than 1.
 /// </summary>
 public static class DamageCalculator
 {
@@ -54,6 +55,7 @@ public static class DamageCalculator
         damage = damage * (100 + bonusPercent) / 100;
         damage = damage * (100 + (hit.IsRanged ? attackerBonus.RangedPercent : attackerBonus.MeleePercent)) / 100;
         damage = damage * (100 - defenderBonus.DamageTakenReductionPercent) / 100;
+        damage = damage * MoraleAndLuck.DamagePercent(hit.Luck) / 100;
 
         if (hit.IsRanged)
         {

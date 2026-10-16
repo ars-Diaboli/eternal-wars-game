@@ -42,6 +42,12 @@ public sealed class Hero(
     /// <summary>Primary stat added to every stack's Defense in battle.</summary>
     public int Defense { get; internal set; } = defense;
 
+    /// <summary>Added to the morale of every stack in battle, −5…+5 (ADR-053). Map data until skills and artifacts add to it.</summary>
+    public int Morale { get; internal set; }
+
+    /// <summary>Added to the luck of every stack in battle, −5…+5 (ADR-053).</summary>
+    public int Luck { get; internal set; }
+
     /// <summary>Skill levels by skill id (ADR-048).</summary>
     public HeroSkills Skills { get; } = HeroSkillsWith(tactics);
 
@@ -91,8 +97,14 @@ public sealed class Hero(
     /// </summary>
     public static Hero Create(
         HeroId id, PlayerId owner, MapPosition position, Army? army, HeroDefinition? definition,
-        string? name = null, int? attack = null, int? defense = null, IReadOnlyDictionary<string, SkillLevel>? skills = null)
+        string? name = null, int? attack = null, int? defense = null, IReadOnlyDictionary<string, SkillLevel>? skills = null,
+        int morale = 0, int luck = 0)
     {
+        if (Math.Abs(morale) > Battles.MoraleAndLuck.Limit || Math.Abs(luck) > Battles.MoraleAndLuck.Limit)
+        {
+            throw new ArgumentOutOfRangeException(nameof(morale), $"Morale and luck go from −{Battles.MoraleAndLuck.Limit} to +{Battles.MoraleAndLuck.Limit}.");
+        }
+
         var hero = new Hero(id, name ?? definition?.Name ?? $"Hero {id.Value}", owner, position, army);
         if (definition is not null)
         {
@@ -102,6 +114,8 @@ public sealed class Hero(
         hero.Name = name ?? hero.Name;
         hero.Attack = attack ?? hero.Attack;
         hero.Defense = defense ?? hero.Defense;
+        hero.Morale = morale;
+        hero.Luck = luck;
         if (skills is not null)
         {
             hero.Skills.ReplaceWith(skills);

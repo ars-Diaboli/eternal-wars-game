@@ -111,6 +111,7 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitMoved>(events, OnMoved);
         this.SubscribeWhileInTree<BattleUnitAttacked>(events, OnAttacked);
         this.SubscribeWhileInTree<BattleUnitDied>(events, OnDied);
+        this.SubscribeWhileInTree<BattleMoraleTriggered>(events, OnMorale);
         this.SubscribeWhileInTree<BattleUnitWaited>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} waits.")));
         this.SubscribeWhileInTree<BattleUnitDefended>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} defends.")));
         this.SubscribeWhileInTree<BattleEnded>(events, e => Step(null, () =>
@@ -272,7 +273,13 @@ public partial class BattleView3D : Node3D
             BattleAttackKind.Area => "also hits",
             _ => "attacks",
         };
-        var line = $"{attacker.Creature.Name} {verb} {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.";
+        var luck = e.Luck switch
+        {
+            HitLuck.Lucky => " Lucky strike!",
+            HitLuck.Unlucky => " Bad luck!",
+            _ => string.Empty,
+        };
+        var line = $"{attacker.Creature.Name} {verb} {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.{luck}";
         Step(
             t =>
             {
@@ -291,7 +298,9 @@ public partial class BattleView3D : Node3D
                     t.TweenCallback(Callable.From(projectile.QueueFree));
                 }
 
-                var text = FloatingText($"-{e.Killed}", to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
+                var text = FloatingText(
+                    e.Luck switch { HitLuck.Lucky => $"-{e.Killed} lucky!", HitLuck.Unlucky => $"-{e.Killed} unlucky", _ => $"-{e.Killed}" },
+                    to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
                 t.TweenCallback(Callable.From(() => text.Visible = true));
                 t.TweenProperty(target.BodyMaterial, "albedo_color", HitColor, 0.08f);
                 t.Parallel().TweenProperty(text, "position", text.Position + (Vector3.Up * 0.6f), 0.45f);
@@ -304,6 +313,35 @@ public partial class BattleView3D : Node3D
                 target.SetCount(e.RemainingCount);
                 Narrate(line);
             });
+    }
+
+    /// <summary>Morale shows as a caption over the unit and a log line.</summary>
+    private void OnMorale(BattleMoraleTriggered e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var view))
+        {
+            return;
+        }
+
+        var (caption, line) = e.Effect switch
+        {
+            MoraleEffect.ExtraAction => ("Morale!", $"High morale: {view.Creature.Name} acts again."),
+            MoraleEffect.Haste => ("Eager", $"High morale: {view.Creature.Name} is eager this round (+50 % initiative)."),
+            MoraleEffect.SkipTurn => ("Freezes", $"Low morale: {view.Creature.Name} freezes and loses its turn."),
+            MoraleEffect.Slow => ("Hesitant", $"Low morale: {view.Creature.Name} hesitates this round (−50 % initiative)."),
+            _ => (string.Empty, string.Empty),
+        };
+        var at = BattleSpace.Center(_planned[e.Unit]) + (Vector3.Up * ((view.BodyHeight * 2) + 0.6f));
+        Step(
+            t =>
+            {
+                var text = FloatingText(caption, at);
+                t.TweenCallback(Callable.From(() => text.Visible = true));
+                t.TweenProperty(text, "position", at + (Vector3.Up * 0.4f), 0.5f);
+                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.5f).SetDelay(0.2f);
+                t.TweenCallback(Callable.From(text.QueueFree));
+            },
+            () => Narrate(line));
     }
 
     private void OnDied(BattleUnitDied e)

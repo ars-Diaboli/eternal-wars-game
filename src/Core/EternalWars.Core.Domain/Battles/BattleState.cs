@@ -60,6 +60,9 @@ public sealed class BattleUnit
     /// <summary>Times it was hit this round (hit-history hook for abilities).</summary>
     public int HitsThisRound { get; internal set; }
 
+    /// <summary>What this round's morale roll did (ADR-053); an extra action turns into None once taken.</summary>
+    public MoraleEffect RoundMorale { get; internal set; }
+
     public override string ToString() => $"#{Id} {Count}× {Creature.Name} ({Side}) at {Position}";
 }
 
@@ -168,6 +171,15 @@ public sealed class BattleState
         var bonus = Participant(unit.Side).Bonus;
         return unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0);
     }
+
+    /// <summary>Creature morale plus the hero's, within ±5 (ADR-053).</summary>
+    public int MoraleOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale);
+
+    /// <summary>Creature luck plus the hero's, within ±5 (ADR-053).</summary>
+    public int LuckOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Luck + Participant(unit.Side).Bonus.Luck);
+
+    /// <summary>Initiative for this round's order, after morale's Haste or Slow.</summary>
+    public int InitiativeOf(BattleUnit unit) => MoraleAndLuck.Initiative(unit.Creature.Initiative, unit.RoundMorale);
 
     public BattleUnit GetUnit(int id) => _units.First(u => u.Id == id);
 
