@@ -205,6 +205,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Hire screen in the town panel
 
 ### Artifacts
+Content draft: [artifacts.md](artifacts.md).
+
 - [ ] Artifact table `data/artifacts.csv` (id, name, slot, tier, effects), embedded in core like creatures
 - [ ] Hero paper-doll slots and a backpack; equip / unequip / move commands
 - [ ] Stat effects: Attack, Defense, movement points, battle speed, skill levels
@@ -278,6 +280,8 @@ author templates in the editor.
 ## Phase 5: Content and polish
 
 ### Magic (ADR-047)
+Content draft: [spells.md](spells.md).
+
 - [ ] Spell table (school, level, cost, tags, three ranks); spell book and mana on heroes
 - [ ] Mage guild offers spells by level; heroes learn them by visiting
 - [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration, cost or potency), mastery

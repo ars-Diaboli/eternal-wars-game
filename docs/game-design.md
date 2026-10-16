@@ -150,6 +150,8 @@ out of scope, but the deterministic core keeps it possible.
     updated when they come back into sight. Units are hidden entirely. (Implemented: `ObjectMemory`.)
 
 ### 4.2 Heroes
+Full lists: [heroes.md](heroes.md) (every roster hero) and [skills.md](skills.md) (every skill).
+
 - **Roster** (implemented as data, ADR-048): 16 heroes per playable town, a **mage** and a **warrior** for each of its
   eight tier 1–4 creature lines. That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield
   speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource).
@@ -174,10 +176,12 @@ out of scope, but the deterministic core keeps it possible.
   skills**. Mages are offered their own school more often, warriors the general groups; a rival town's school only in
   5 % of level-ups.
 - Army of up to 7 creature stacks (implemented). A hero without creatures cannot attack.
-- Artifacts with paper-doll slots and backpack.
+- Artifacts with paper-doll slots and backpack (catalog draft: [artifacts.md](artifacts.md)).
 - Spell book, mana.
 
 ### 4.3 Towns and economy
+Full list of buildings, the tech tree and every town's dwellings: [town-buildings.md](town-buildings.md).
+
 - **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (implemented as `ResourceSet`).
 - One building per town per day (implemented, ADR-050); the building list is one table, `data/buildings.csv`, shared
   by all towns for now. New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the
@@ -372,6 +376,7 @@ because that is content selection, not a rule.
 - Siege battles with walls and towers (post-1.0 ❓).
 
 ### 4.6 Magic
+Spell catalog: [spells.md](spells.md) (design draft).
 - **Eight schools**, one per playable town (working titles: Light, Nature, Arcana, Death, Chaos, Shadow, Shamanism,
   Primal), each also a hero skill group (ADR-047). Any hero may learn any school.
 - **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice).
