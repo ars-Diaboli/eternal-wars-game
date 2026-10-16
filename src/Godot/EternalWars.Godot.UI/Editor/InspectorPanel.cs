@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
@@ -102,6 +103,20 @@ public partial class InspectorPanel : VBoxContainer
         void ApplySpirit() => Edit(() => _editor.SetHeroMoraleAndLuck(hero.Id, (int)morale.Value, (int)luck.Value));
         morale.ValueChanged += _ => ApplySpirit();
         luck.ValueChanged += _ => ApplySpirit();
+
+        var machines = new HBoxContainer();
+        AddChild(machines);
+        machines.AddChild(new Label { Text = "War machines" });
+        var boxes = Enum.GetValues<WarMachineSlot>().Select(slot =>
+        {
+            var box = new CheckBox { Text = slot.ToString(), ButtonPressed = hero.WarMachines.Contains(slot) };
+            machines.AddChild(box);
+            return (Slot: slot, Box: box);
+        }).ToList();
+        foreach (var (_, box) in boxes)
+        {
+            box.Toggled += _ => Edit(() => _editor.SetHeroWarMachines(hero.Id, boxes.Where(b => b.Box.ButtonPressed).Select(b => b.Slot).ToHashSet()));
+        }
 
         AddChild(new Label { Text = "Army" });
         var creatures = new[] { ("— empty —", "") }

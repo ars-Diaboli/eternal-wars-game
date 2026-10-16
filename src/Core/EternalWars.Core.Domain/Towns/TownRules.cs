@@ -100,6 +100,36 @@ public static class TownRules
             : null;
     }
 
+    /// <summary>
+    /// Whether the visiting hero may buy a war machine here (ADR-056): the town has a blacksmith, an own hero is on the
+    /// entrance, it does not own that machine yet, and the owner can pay.
+    /// </summary>
+    public static string? CheckBuyWarMachine(GameState state, Town town, Battles.WarMachineSlot slot)
+    {
+        if (town.Level(BuiltInBuildings.Blacksmith) < 1)
+        {
+            return $"{town.Name} has no blacksmith.";
+        }
+
+        if (VisitingHero(state, town) is not { } hero)
+        {
+            return $"No own hero is visiting {town.Name}.";
+        }
+
+        if (hero.WarMachines.Contains(slot))
+        {
+            return $"{hero.Name} already has a {WarMachineName(state, hero, slot)}.";
+        }
+
+        return town.Owner is { } owner && !state.GetPlayer(owner).Resources.CanAfford(Battles.WarMachines.Cost(slot))
+            ? $"Not enough gold for a {WarMachineName(state, hero, slot)}."
+            : null;
+    }
+
+    /// <summary>The machine a hero gets for a slot: its own town's offensive machine, wherever it is bought.</summary>
+    public static string WarMachineName(GameState state, Hero hero, Battles.WarMachineSlot slot) =>
+        Battles.WarMachines.Definition(Battles.WarMachines.KindOf(slot, ProgressionService.TownOf(state, hero))).Name;
+
     /// <summary>Gold and resources for <paramref name="count"/> creatures.</summary>
     public static ResourceSet RecruitCost(CreatureDefinition creature, int count) => creature.Cost * count;
 

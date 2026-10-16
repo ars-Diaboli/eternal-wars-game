@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
@@ -21,6 +22,7 @@ public partial class TownPanel : PanelContainer
     private readonly HFlowContainer _buildings = new();
     private readonly GridContainer _dwellings = new() { Columns = 4 };
     private readonly VBoxContainer _armies = new();
+    private readonly HBoxContainer _blacksmith = new();
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly CheckBox _toHero = new() { Text = "Recruit to visiting hero" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
@@ -46,6 +48,7 @@ public partial class TownPanel : PanelContainer
         box.AddChild(new Label { Text = "Dwellings (7 of 9, every tier)" });
         box.AddChild(_dwellings);
         box.AddChild(_armies);
+        box.AddChild(_blacksmith);
 
         var options = new HBoxContainer();
         box.AddChild(options);
@@ -69,6 +72,7 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
     }
 
     /// <summary>Shows a town of the player whose turn it is.</summary>
@@ -157,9 +161,26 @@ public partial class TownPanel : PanelContainer
 
         Clear(_armies);
         AddArmyRow(town, TownArmy.Garrison, "Garrison", town.Garrison);
+        Clear(_blacksmith);
         if (TownRules.VisitingHero(state, town) is { } hero)
         {
             AddArmyRow(town, TownArmy.VisitingHero, hero.Name, hero.Army);
+
+            // The blacksmith sells the war machines the visiting hero lacks (ADR-056).
+            _blacksmith.AddChild(new Label { Text = $"Blacksmith (war machines of {hero.Name})", CustomMinimumSize = new Vector2(240, 0) });
+            foreach (var slot in Enum.GetValues<WarMachineSlot>())
+            {
+                var name = TownRules.WarMachineName(state, hero, slot);
+                var refusal = TownRules.CheckBuyWarMachine(state, town, slot);
+                var buy = new Button
+                {
+                    Text = hero.WarMachines.Contains(slot) ? $"{name} (owned)" : $"Buy {name}\n{Cost(WarMachines.Cost(slot))}",
+                    Disabled = refusal is not null,
+                    TooltipText = refusal ?? "",
+                };
+                buy.Pressed += () => Run(new BuyWarMachineCommand(state.CurrentPlayer.Id, town.Id, slot));
+                _blacksmith.AddChild(buy);
+            }
         }
     }
 

@@ -114,6 +114,18 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         }
     }
 
+    /// <summary>The visiting hero buys a war machine at the town's blacksmith (ADR-056).</summary>
+    internal void BuyWarMachine(PlayerId player, MapObjectId townId, Battles.WarMachineSlot slot)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(TownRules.CheckBuyWarMachine(state, town, slot));
+
+        var hero = TownRules.VisitingHero(state, town)!;
+        Pay(player, Battles.WarMachines.Cost(slot));
+        hero.AddWarMachine(slot);
+        events.Publish(new WarMachineBought(town.Id, hero.Id, slot));
+    }
+
     /// <summary>Monday: every built dwelling adds its creature's weekly growth to what is waiting (owned or not).</summary>
     internal void GrowWeekly()
     {

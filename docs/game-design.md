@@ -168,6 +168,7 @@ out of scope, but the deterministic core keeps it possible.
   | Estates | Treasury (+100/200/350/500 gold a day), Prospecting (other resources), Stewardship (cheaper costs in the hero's town) |
   | Pathfinding | Logistics (+10 % movement per level), Pathfinding (−25/50/75 % terrain penalty), Troop management (+1 army map speed per level) |
   | Tactics | Tactics (battlefield width), Deployment (rearrange troops before battle), Drill (+1 battlefield speed per level) |
+  | War machines | Ballistics (offensive machine in regular battles from Advanced, +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) |
   | 8 magic schools | Magic (spell levels 1–4), Attunement (mana, regeneration, cost or potency), Mastery (spell upgrades) |
 - **Levels** (implemented): HoMM3 experience table; each level gives one skill point, spent on one of **three offered
   skills**. Mages are offered their own school more often, warriors the general groups; a rival town's school only in
@@ -206,7 +207,8 @@ out of scope, but the deterministic core keeps it possible.
     upgraded dwelling produces upgraded creatures, and existing stacks can be upgraded in that town for
     the price difference. The upgrade does not raise growth; growth bonuses come from other buildings ❓
     (ADR-046).
-  - **Buildings** (draft, ADR-046): town hall (3 levels, 500/1000/2000 gold a day), fort (3), blacksmith,
+  - **Buildings** (draft, ADR-046): town hall (3 levels, 500/1000/2000 gold a day), fort (3), blacksmith (sells war
+    machines, ADR-056),
     marketplace (2; level 2 adds 1 ore and 1 lumber a day), mage guild (4, ADR-047), tavern, and the dwellings
     (build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier).
   - **Locked-out creatures are still obtainable** from external dwellings on the adventure map and
@@ -359,7 +361,12 @@ because that is content selection, not a rule.
   | Caster (spell, n) | Casts the spell n times per battle; takes effect with magic |
 - **Retreat**: a hero may leave the battle; its army is lost and it leaves the map. Surrender (paying gold)
   comes with taverns in Phase 3.
-- Hero casts one spell per round; catapult, ballista, first-aid tent as war machines ❓.
+- Hero casts one spell per round (magic, Phase 5).
+- **War machines** (implemented, ADR-056): every hero owns its town's offensive machine (ballista, cannon, catapult or
+  glaivethrower) and can buy a healing tent and an ammo cart at a blacksmith. They stand at the back of the field,
+  never move or fight in melee, and are lost when destroyed. The offensive machine shoots on its turn, outside sieges
+  only from Advanced Ballistics; the tent heals every own stack a little each round; the cart adds shots (unlimited
+  with Advanced Ammo supply).
 - Quick combat: either side may hand the rest of the battle to the deterministic battle AI (implemented).
   Neutrals and computer players always use it.
 - Siege battles with walls and towers (post-1.0 ❓).
@@ -489,4 +496,5 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 18 | Morale | Extra turn or freeze only | Also ±50 % initiative for the round when no extra action / freeze triggers | accepted |
 | 19 | Luck | Attacker only, double damage | Both sides roll: +75 % (attacker) or −50 % (defender); opposite rolls cancel | accepted |
 | 20 | External dwellings | Visit them with a hero | Caravans hire from owned dwellings within 5 days; creatures travel the map to the town | accepted (not built yet) |
+| 21 | War machines | Ballista, tent and cart for everyone, bought anywhere | Offensive machine per town; it needs Advanced Ballistics outside sieges; tent heals every stack a little | accepted |
 | … | | | *more twists to be proposed* ❓ | |

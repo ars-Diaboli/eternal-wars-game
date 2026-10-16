@@ -68,6 +68,9 @@ public sealed record MoveTownStackCommand(PlayerId Player, MapObjectId Town, Tow
 
 // Battle -----------------------------------------------------------------------------------------------
 
+/// <summary>The town's visiting hero buys a war machine at its blacksmith (ADR-056).</summary>
+public sealed record BuyWarMachineCommand(PlayerId Player, MapObjectId Town, Battles.WarMachineSlot Slot) : GameCommand(Player);
+
 public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player);
 
 public sealed record BattleMoveCommand(PlayerId Player, CellPosition To) : GameCommand(Player);

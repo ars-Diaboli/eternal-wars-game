@@ -17,6 +17,8 @@ namespace EternalWars.Core.Domain.Battles;
 /// shots; first strike moves it before the attacker's blow (ADR-042).
 /// Morale is rolled at round start (extra action, lost turn, ±50 % initiative) and luck on every hit (ADR-053); the
 /// extra action of good morale is the one exception to "exactly once" per round.
+/// War machines (ADR-056) never move, fight in melee or retaliate; only the offensive one takes turns, the tent heals
+/// when a round starts, and a side whose creatures are all gone has lost even if machines still stand.
 /// </remarks>
 internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 {
@@ -48,6 +50,11 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         if (battle.FindUnit(targetId) is not { IsAlive: true } target || target.Side == unit.Side)
         {
             return "Not a living enemy.";
+        }
+
+        if (unit.IsMachine)
+        {
+            return $"The {unit.Creature.Name} cannot fight in melee.";
         }
 
         var positions = BattleGrid.AttackPositions(battle, unit, target);
@@ -101,7 +108,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         if (CanShootBack(target, unit, out var returnCover))
         {
             target.HasRetaliated = true;
-            target.ShotsLeft--;
+            UseShot(target);
             Strike(target, unit, BattleAttackKind.RangedRetaliation, returnCover);
         }
 
@@ -116,8 +123,17 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
     private void Fire(BattleUnit shooter, BattleUnit target, int cover)
     {
-        shooter.ShotsLeft--;
+        UseShot(shooter);
         Strike(shooter, target, BattleAttackKind.Ranged, cover);
+    }
+
+    /// <summary>War machines and shooters supplied by an ammo cart with Advanced Ammo supply never run out (ADR-056).</summary>
+    private void UseShot(BattleUnit shooter)
+    {
+        if (!battle.HasUnlimitedShots(shooter))
+        {
+            shooter.ShotsLeft--;
+        }
     }
 
     /// <summary>Ranged retaliation: a shooter that was shot at fires back if it could shoot the attacker now.</summary>
@@ -172,7 +188,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     }
 
     private bool CanRetaliate(BattleUnit defender, BattleUnit attacker) =>
-        defender.IsAlive && attacker.IsAlive &&
+        defender.IsAlive && attacker.IsAlive && !defender.IsMachine &&
         defender.Rect.IsAdjacentTo(attacker.Rect) &&
         !attacker.Creature.Has(CapabilityKind.NoEnemyRetaliation) &&
         (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation));
@@ -378,11 +394,33 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         battle.MutableQueue.Clear();
-        battle.MutableQueue.AddRange(battle.LivingUnits.OrderBy(Key, ActingOrder.Instance).Select(u => u.Id));
+        battle.MutableQueue.AddRange(battle.LivingUnits
+            .Where(u => u.Machine is not { } machine || WarMachines.TakesTurns(machine))
+            .OrderBy(Key, ActingOrder.Instance)
+            .Select(u => u.Id));
         events.Publish(new BattleRoundStarted(battle.Round));
+        Heal(BattleSide.Attacker);
+        Heal(BattleSide.Defender);
         foreach (var unit in battle.MutableQueue.Select(battle.GetUnit).Where(u => u.RoundMorale is MoraleEffect.Haste or MoraleEffect.Slow))
         {
             events.Publish(new BattleMoraleTriggered(unit.Id, unit.RoundMorale));
+        }
+    }
+
+    /// <summary>The healing tent: the top creature of every own creature stack regains health, never above its maximum (ADR-056).</summary>
+    private void Heal(BattleSide side)
+    {
+        if (battle.LivingMachine(side, WarMachineKind.HealingTent) is null)
+        {
+            return;
+        }
+
+        var amount = WarMachines.TentHealing(battle.Participant(side).Bonus.Healing);
+        foreach (var unit in battle.LivingArmyOf(side).Where(u => u.TopHealth < u.Creature.Health).ToList())
+        {
+            var healed = Math.Min(amount, unit.Creature.Health - unit.TopHealth);
+            unit.TopHealth += healed;
+            events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
         }
     }
 
@@ -398,8 +436,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             return true;
         }
 
-        var attackers = battle.LivingUnitsOf(BattleSide.Attacker).Any();
-        var defenders = battle.LivingUnitsOf(BattleSide.Defender).Any();
+        // War machines alone do not keep a side in the battle (ADR-056).
+        var attackers = battle.LivingArmyOf(BattleSide.Attacker).Any();
+        var defenders = battle.LivingArmyOf(BattleSide.Defender).Any();
         if (attackers && defenders)
         {
             return false;

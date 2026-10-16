@@ -44,6 +44,9 @@ public static class BuiltInSkills
     public const string Tactics = "tactics.tactics";
     public const string Deployment = "tactics.deployment";
     public const string Drill = "tactics.drill";
+    public const string Ballistics = "machines.ballistics";
+    public const string Healing = "machines.healing";
+    public const string AmmoSupply = "machines.ammo";
 
     /// <summary>Magic school names per town (working titles).</summary>
     public static IReadOnlyDictionary<string, string> Schools { get; } = new Dictionary<string, string>
@@ -65,6 +68,7 @@ public static class BuiltInSkills
         new("estates", "Estates"),
         new("pathfinding", "Pathfinding"),
         new("tactics", "Tactics"),
+        new("machines", "War machines"),
         .. Schools.Select(s => new SkillGroup(SchoolGroup(s.Key), s.Value, s.Key)),
     ];
 
@@ -85,6 +89,9 @@ public static class BuiltInSkills
         new(Tactics, "tactics", "Tactics", SkillLevel.Expert, "choose the battlefield width (ADR-033)"),
         new(Deployment, "tactics", "Deployment", SkillLevel.Expert, "rearrange troops before the battle (later)"),
         new(Drill, "tactics", "Drill", SkillLevel.Master, "+1/2/3/4 battlefield speed for every stack"),
+        new(Ballistics, "machines", "Ballistics", SkillLevel.Master, "offensive machine outside sieges from Advanced; +25/50 % its damage (Expert/Master) (ADR-056)"),
+        new(Healing, "machines", "Healing", SkillLevel.Master, "the healing tent restores 20/30/40/50 health per stack a round (10 without)"),
+        new(AmmoSupply, "machines", "Ammo supply", SkillLevel.Advanced, "the ammo cart gives +50 % shots / unlimited shots (+25 % without)"),
         .. Schools.SelectMany(s => SchoolSkills(s.Key, s.Value)),
     ];
 

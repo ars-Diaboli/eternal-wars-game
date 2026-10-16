@@ -13,7 +13,7 @@ public sealed record HitModifiers(int BaseRoll, bool IsRanged, int CoverEighths 
 /// HoMM3 damage baseline in integer maths (ADR-033): base roll × stack size; +5 % per point of Attack above
 /// Defense (cap +300 %), −2.5 % per point of Defense above Attack (cap −70 %); then capability bonuses, the
 /// long-range halving, the <c>MeleePenalty</c> halving, and cover; hero skills (Melee, Archery, Armor) and the preferred
-/// creature's +Attack/+Defense (ADR-048); luck (ADR-053). Never less than 1.
+/// creature's +Attack/+Defense (ADR-048); luck (ADR-053); Ballistics for war machines (ADR-056). Never less than 1.
 /// </summary>
 public static class DamageCalculator
 {
@@ -56,10 +56,15 @@ public static class DamageCalculator
         damage = damage * (100 + (hit.IsRanged ? attackerBonus.RangedPercent : attackerBonus.MeleePercent)) / 100;
         damage = damage * (100 - defenderBonus.DamageTakenReductionPercent) / 100;
         damage = damage * MoraleAndLuck.DamagePercent(hit.Luck) / 100;
+        if (attacker.IsMachine)
+        {
+            damage = damage * (100 + WarMachines.DamageBonusPercent(attackerBonus.Ballistics)) / 100;
+        }
 
         if (hit.IsRanged)
         {
-            if (attacker.Rect.GapTo(defender.Rect) > BattleState.LongRange)
+            // War machines stand at the back and have no range penalty (ADR-056).
+            if (!attacker.IsMachine && attacker.Rect.GapTo(defender.Rect) > BattleState.LongRange)
             {
                 damage /= 2;
             }

@@ -3,8 +3,14 @@ using EternalWars.Core.Domain.Heroes;
 
 namespace EternalWars.Core.Domain.Battles;
 
-/// <summary>A stack entering a battle; <see cref="SourceSlot"/> maps survivors back to the army (-1 for guards).</summary>
-public sealed record BattleStackSpec(CreatureDefinition Creature, int Count, int SourceSlot);
+/// <summary>
+/// A stack entering a battle; <see cref="SourceSlot"/> maps survivors back to the army (-1 for guards and war machines).
+/// <see cref="Machine"/> marks a war machine (ADR-056).
+/// </summary>
+public sealed record BattleStackSpec(CreatureDefinition Creature, int Count, int SourceSlot, WarMachineKind? Machine = null)
+{
+    public static BattleStackSpec Of(WarMachineKind machine) => new(WarMachines.Definition(machine), 1, -1, machine);
+}
 
 /// <summary>Width choice, deployment and obstacles (ADR-033, ADR-038).</summary>
 public static class BattleSetup
@@ -49,14 +55,56 @@ public static class BattleSetup
         var attackerExtent = DeploySide(battle, BattleSide.Attacker, attacker, ref id);
         var defenderExtent = DeploySide(battle, BattleSide.Defender, defender, ref id);
         PlaceObstacles(battle, attackerExtent + 1, battle.Width - defenderExtent - 1);
+        foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
+        {
+            SupplyShots(battle, side);
+        }
+    }
+
+    /// <summary>The ammo cart's extra shots at battle start; unlimited shots are checked as shots are used (ADR-056).</summary>
+    private static void SupplyShots(BattleState battle, BattleSide side)
+    {
+        if (battle.LivingMachine(side, WarMachineKind.AmmoCart) is null ||
+            WarMachines.CartShotBonusPercent(battle.Participant(side).Bonus.AmmoSupply) is not { } percent)
+        {
+            return;
+        }
+
+        foreach (var shooter in battle.LivingArmyOf(side).Where(u => u.Creature.IsRanged))
+        {
+            shooter.ShotsLeft += ((shooter.Creature.Shots * percent) + 99) / 100;
+        }
     }
 
     /// <summary>
     /// Columns at the side's edge in slot order; each column holds as many stacks as fit in the field's height
     /// with a one-cell gap, spread evenly. Returns how many cells deep the deployment is.
     /// </summary>
-    private static int DeploySide(BattleState battle, BattleSide side, IReadOnlyList<BattleStackSpec> stacks, ref int id)
+    private static int DeploySide(BattleState battle, BattleSide side, IReadOnlyList<BattleStackSpec> all, ref int id)
     {
+        // War machines stand in a column of their own at the back: tent at the top, offensive machine in the middle,
+        // cart at the bottom (ADR-056). The army deploys in front of them.
+        var machines = all.Where(s => s.Machine is not null).ToList();
+        var stacks = all.Where(s => s.Machine is null).ToList();
+        var depth = 0;
+        if (machines.Count > 0)
+        {
+            foreach (var machine in machines.OrderBy(m => MachineRow(m.Machine!.Value)))
+            {
+                var size = machine.Creature.Size.Cells();
+                var y = machine.Machine switch
+                {
+                    WarMachineKind.HealingTent => 1,
+                    WarMachineKind.AmmoCart => BattleState.Height - size - 1,
+                    _ => (BattleState.Height - size) / 2,
+                };
+                var x = side == BattleSide.Attacker ? 0 : battle.Width - size;
+                battle.MutableUnits.Add(new BattleUnit(id++, side, machine.Creature, 1, machine.SourceSlot, new CellPosition(x, y), machine.Machine));
+            }
+
+            depth = machines.Max(s => s.Creature.Size.Cells()) + 1;
+        }
+
         var columns = new List<List<BattleStackSpec>>();
         var current = new List<BattleStackSpec>();
         foreach (var stack in stacks)
@@ -76,7 +124,6 @@ public static class BattleSetup
             columns.Add(current);
         }
 
-        var depth = 0;
         foreach (var column in columns)
         {
             var columnWidth = column.Max(s => s.Creature.Size.Cells());
@@ -96,6 +143,13 @@ public static class BattleSetup
 
         return depth;
     }
+
+    private static int MachineRow(WarMachineKind kind) => kind switch
+    {
+        WarMachineKind.HealingTent => 0,
+        WarMachineKind.AmmoCart => 2,
+        _ => 1,
+    };
 
     /// <summary>2–5 obstacles between the deployment zones, never touching each other (passages stay open).</summary>
     private static void PlaceObstacles(BattleState battle, int fromX, int toX)

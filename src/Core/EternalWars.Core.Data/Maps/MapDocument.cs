@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 
@@ -15,11 +16,12 @@ namespace EternalWars.Core.Data.Maps;
 /// optional chest values (omitted = rolled). 5 = + terrain codes b (beach), i (ice), = (shallow water),
 /// c (cursed lands), k (rocky ground) (ADR-045); heroes may name a roster entry (<c>type</c>) and carry skill levels
 /// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). 6 = + towns (<c>town</c> objects: owner, name, buildings, dwellings,
-/// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). Older versions still load.
+/// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056).
+/// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 8;
+    public const int CurrentFormatVersion = 9;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -60,7 +62,8 @@ public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = n
 /// of the roster, whose class, preferred creature and specialty come with it; <see cref="Skills"/> (v5) are skill levels
 /// by skill id, and v4's <see cref="Tactics"/> is read into them. <see cref="Level"/> is the map level (surface 0).
 /// <see cref="Morale"/> and <see cref="Luck"/> (v7, −5…+5) are omitted when 0. <see cref="SpellPower"/> and
-/// <see cref="Knowledge"/> (v8) are omitted when 0; a roster hero then keeps the roster's values.
+/// <see cref="Knowledge"/> (v8) are omitted when 0; a roster hero then keeps the roster's values. <see cref="WarMachines"/>
+/// (v9) is omitted for the starting set (the offensive machine only).
 /// </summary>
 public sealed record HeroPlacementDocument(
     int Id,
@@ -78,7 +81,8 @@ public sealed record HeroPlacementDocument(
     int? Morale = null,
     int? Luck = null,
     int? SpellPower = null,
-    int? Knowledge = null);
+    int? Knowledge = null,
+    IReadOnlyList<WarMachineSlot>? WarMachines = null);
 
 /// <summary>One occupied army slot (0–6).</summary>
 public sealed record ArmySlotDocument(int Slot, string Creature, int Count);

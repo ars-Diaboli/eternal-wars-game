@@ -93,6 +93,7 @@ public static class GameRecordSerializer
         (typeof(RecruitCommand), "recruit"),
         (typeof(UpgradeStackCommand), "upgradeStack"),
         (typeof(MoveTownStackCommand), "moveTownStack"),
+        (typeof(BuyWarMachineCommand), "buyWarMachine"),
         (typeof(ChooseBattleWidthCommand), "battleWidth"),
         (typeof(BattleMoveCommand), "battleMove"),
         (typeof(BattleAttackCommand), "battleAttack"),

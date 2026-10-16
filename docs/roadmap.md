@@ -161,7 +161,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 ### Towns: building effects (❓ open question 6 for the numbers)
 - [ ] Fort: growth bonus per level and/or garrison defence (decide; sieges come post-1.0)
 - [ ] Marketplace trading: resource exchange rates that improve with the number of owned marketplaces
-- [ ] Blacksmith: war machines (needs the war-machine decision in Phase 5) or another effect
+- [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
 - [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
 - [ ] Town hall level 4 (capitol-like)? ❓
 - [ ] Per-town building lists or names (every town shares one table today)
@@ -293,7 +293,10 @@ author templates in the editor.
       action or lost turn, else 4 %/point ±50 % initiative; per hit 4 %/point luck for +75 % / −50 % damage, opposite
       rolls cancel; shown in the 3D battle (captions, log, unit stats)
 - [ ] Morale and luck sources: skills, artifacts, buildings, army composition; undead/constructs without morale? ❓
-- [ ] War machines (catapult, ballista, first-aid tent) ❓
+- [x] War machines (ADR-056): offensive machine per town (ballista, cannon, catapult, glaivethrower), healing tent,
+      ammo cart; War machines skill group (Ballistics, Healing, Ammo supply); units at the back of the field, offensive
+      machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle
+- [ ] War machines follow-ups: siege use (needs sieges), exchanging machines between heroes, tuning ❓
 - [ ] Teleporting creatures and footprints ❓ open question 4
 - [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0
 

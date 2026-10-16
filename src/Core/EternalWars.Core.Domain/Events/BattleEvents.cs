@@ -4,7 +4,7 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Events;
 
-public sealed record BattleUnitInfo(int Unit, BattleSide Side, string Creature, int Count, CellPosition Position, int Size);
+public sealed record BattleUnitInfo(int Unit, BattleSide Side, string Creature, int Count, CellPosition Position, int Size, WarMachineKind? Machine = null);
 
 /// <summary>The battlefield is set up and fighting begins (after the width choice, if any).</summary>
 public sealed record BattleStarted(
@@ -41,6 +41,9 @@ public sealed record BattleUnitAttacked(
 public sealed record BattleMoraleTriggered(int Unit, MoraleEffect Effect) : IEvent;
 
 public sealed record BattleUnitDied(int Unit) : IEvent;
+
+/// <summary>The healing tent restored <paramref name="Healed"/> health to the stack's top creature (ADR-056).</summary>
+public sealed record BattleUnitHealed(int Unit, int Healed, int TopHealth) : IEvent;
 
 public sealed record BattleUnitWaited(int Unit) : IEvent;
 
