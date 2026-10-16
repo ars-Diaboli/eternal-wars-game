@@ -12,4 +12,10 @@
     <InternalsVisibleTo Include="EternalWars.Core.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The shipped creature and hero rosters (ADR-044, ADR-048); the Godot apps also read these files at run time. -->
+    <EmbeddedResource Include="..\..\Godot\EternalWars.Godot.Assets\data\creatures.csv" Link="Creatures\creatures.csv" LogicalName="EternalWars.Creatures.csv" />
+    <EmbeddedResource Include="..\..\Godot\EternalWars.Godot.Assets\data\heroes.csv" Link="Heroes\heroes.csv" LogicalName="EternalWars.Heroes.csv" />
+  </ItemGroup>
+
 </Project>

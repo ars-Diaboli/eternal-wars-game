@@ -1,12 +1,12 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 
 namespace EternalWars.Core.Domain.Economy;
 
 /// <summary>
-/// One kind of daily income: mines now; towns, hero skills (Estates-like), hero specialisations and
-/// artifacts later. There is no base income: a player earns only what their sources produce.
+/// One kind of daily income: mines and heroes (skills, specialisations) now; towns and artifacts later. There is no base income: a player earns only what their sources produce.
 /// </summary>
 public interface IIncomeSource
 {
@@ -20,4 +20,16 @@ public sealed class MineIncome : IIncomeSource
         state.ObjectsOf<Mine>()
             .Where(m => m.Owner == player)
             .Aggregate(ResourceSet.Empty, (total, mine) => total + ResourceSet.Of(mine.Resource, mine.DailyYield));
+}
+
+/// <summary>Heroes on the map earn for their owner: Treasury, Prospecting and resource specialties (ADR-048).</summary>
+public sealed class HeroIncome : IIncomeSource
+{
+    public ResourceSet DailyIncome(GameState state, PlayerId player) =>
+        state.HeroesOf(player).Aggregate(ResourceSet.Empty, (total, hero) => total + Of(hero));
+
+    public static ResourceSet Of(Hero hero) =>
+        new ResourceSet(Gold: SkillEffects.TreasuryGold(hero.Skills.Level(BuiltInSkills.Treasury)))
+        + SkillEffects.Prospecting(hero.Skills.Level(BuiltInSkills.Prospecting))
+        + (hero.Specialty?.DailyIncome ?? ResourceSet.Empty);
 }

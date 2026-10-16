@@ -61,21 +61,38 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
   HoMM3 dispositions with deterministic thresholds (ADR-040).
 - **Hero stats**: Attack, Defense and Tactics are map data from Phase 2 (ADR-041).
 
+## Answered (2026-10-16)
+- **Terrain**: the sandbox model: every terrain penalises non-natives 125–200, several natives per town, five new
+  terrains (beach, ice, shallow water, cursed lands, rocky ground) (ADR-045).
+- **Town footprint**: 7×7, corners free, entrance bottom-middle (ADR-046).
+- **Dwelling upgrades**: produce the upgraded creature; the upgrade gives no growth bonus (ADR-046).
+- **Magic**: six schools, four spell levels and guild levels, spells upgradable twice (ADR-047).
+- **Rosters**: all towns in the creature table, first balance pass (ADR-044).
+- **Heroes and skills**: 16 heroes per town (mage + warrior per tier 1–4 line), flat preferred-creature bonus, eight
+  schools, any school learnable with rival schools at 5 %, named levels with one point per level (ADR-047, ADR-048).
+
 ## Still open
 
 ### Content
 1. **Lore review**: premise, world/group names in [lore.md](lore.md).
 2. **Twists** beyond combat: which systems do we deliberately change (hero skills, magic, town building,
    morale/luck)?
-3. **Roster review**: the Haven and Inferno drafts in `BuiltInCreatures` (names, sizes, capabilities, numbers).
-   `sim battle` gives win rates for any matchup; the demo armies currently favour Haven about 95 % to 5 %.
+3. **Roster review**: every roster in `data/creatures.csv` (names, sizes, capabilities, numbers); `sim towns`
+   currently has every town at 40–58 % overall.
 
 ### Rules still open
 4. Teleporting creatures on the battlefield: how they use footprints (none in the slice yet).
 5. Morale and luck: keep HoMM3's, change them, or drop them (part of the "twists" question)?
-6. Off-native cost of the new terrains (highlands, forest floor, wasteland): 150 is the current default.
+6. Town buildings (ADR-046 draft): what fort, blacksmith, tavern and marketplace trading do; which buildings raise
+   growth; a fourth town hall level; the cost of mage guild level 4; are the sandbox's gems really mercury?
+
+### Heroes
+8. Primary stats: do levels raise Attack/Defense/Spell Power/Knowledge (HoMM3-style odds by class)?
+9. The third offense and third defense skills; the draft numbers in ADR-048; what a skill specialty adds.
+10. Hero names, school names (Light, Nature, Arcana, Death, Chaos, Shadow, Shamanism, Primal) and specialties in
+    `data/heroes.csv` are drafts for review.
 
 ### For the magic system (Phase 5)
-7. Spell schools and tags: immunities use free-form tags today (`all`, `mind`, `fire`, `curse`); which schools
-   and categories should spells carry? Which spells do creature casters get (`cure`, `resurrection`,
+7. Spell tags: the six schools are set (ADR-047); immunities use free-form tags today (`all`, `mind`, `fire`,
+   `curse`); which categories should spells carry? Which spells do creature casters get (`cure`, `resurrection`,
    `fireball` are placeholders)?

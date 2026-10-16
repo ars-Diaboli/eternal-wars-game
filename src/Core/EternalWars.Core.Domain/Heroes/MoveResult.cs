@@ -82,7 +82,7 @@ internal static class MovementRules
 
     /// <summary>
     /// HoMM3 rules: a road → road step costs the road of the tile being left; otherwise the terrain being
-    /// left (native/rough rules from <see cref="GameState.Terrains"/>); diagonal ×1.41.
+    /// left (native rules from <see cref="GameState.Terrains"/>, the penalty above 100 cut by Pathfinding); diagonal ×1.41.
     /// </summary>
     public static int StepCost(GameState state, Hero hero, MapPosition from, MapPosition to, Direction direction)
     {
@@ -90,8 +90,16 @@ internal static class MovementRules
         var fromRoad = map.GetRoad(from);
         var baseCost = fromRoad != RoadType.None && map.GetRoad(to) != RoadType.None
             ? fromRoad.MovementCost()
-            : state.Terrains.MovementCost(map.GetTerrain(from), ArmyTown(state, hero));
+            : TerrainCost(state, hero, map.GetTerrain(from));
         return direction.IsDiagonal() ? (int)Math.Round(baseCost * HeroMovementService.DiagonalMultiplier) : baseCost;
+    }
+
+    private static int TerrainCost(GameState state, Hero hero, TerrainType terrain)
+    {
+        var cost = state.Terrains.MovementCost(terrain, ArmyTown(state, hero));
+        var penalty = cost - TerrainCatalog.NativeCost;
+        var reduction = SkillEffects.PenaltyReductionPercent(hero.Skills.Level(BuiltInSkills.Pathfinding));
+        return penalty <= 0 ? cost : TerrainCatalog.NativeCost + (penalty * (100 - reduction) / 100);
     }
 
     /// <summary>

@@ -54,8 +54,8 @@ public class HeroMovementServiceTests
         session.Step(Blue, Direction.SouthWest); // grass -> swamp: pays grass, diagonal
         Assert.Equal(1500 - 141, hero.MovementPoints);
 
-        session.Step(Blue, Direction.South);     // swamp -> grass: pays swamp
-        Assert.Equal(1500 - 141 - 175, hero.MovementPoints);
+        session.Step(Blue, Direction.South);     // swamp -> grass: pays swamp, 200 for non-natives
+        Assert.Equal(1500 - 141 - 200, hero.MovementPoints);
     }
 
     [Fact]

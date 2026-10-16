@@ -150,7 +150,7 @@ project `EternalWars.Core.Generation`, is deterministic from its inputs, and out
 `MapDocument`, so generated and hand-made maps share one pipeline.
 
 ### ADR-024: Terrain classes and HoMM3-style roads
-**Status**: accepted (2026-10-15); per-terrain assignment pending
+**Status**: accepted (2026-10-15); the terrain classes are superseded by ADR-045, roads stand
 Every terrain belongs to a class:
 - **Open**: no penalty for anyone.
 - **Rough**: a fixed penalty for all factions (e.g. +25 %).
@@ -236,7 +236,7 @@ In `ShroudWithRefog`:
   never live state, for objects out of sight.
 
 ### ADR-032: Teams, native terrain, Pathfinding, roads
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); native terrains and costs replaced by ADR-045
 - Teams: maps/templates define default teams; setup may change them unless the map locks them.
   Stored in `GameState` (player → team id) and map player slots.
 - Terrain: three new native terrains: **highlands** (Haven), **forest floor** (Sylvan), **wasteland**
@@ -424,3 +424,130 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 - The first runs found two core bugs, now fixed and tested: no route could reach a monster (all its neighbours
   are guarded; the pathfinder now allows the last step from a tile guarded by the target monster), and
   `DecisionRequested` for a battle was published before the width-choice phase was set.
+
+### ADR-044: All town rosters; the creature table is the source of truth
+**Status**: accepted (2026-10-16); stats are a first balance pass for review
+- **Rosters** for all eight playable towns (9 lines over 5 tiers, all upgradeable), Conflux, Dragon Utopia and
+  neutrals, taken from the sandbox (`reference/ew`, `EW.CoreLib.Data/Monsters`). Only Haven and half of Academy had
+  real numbers there; the rest were copy-pasted placeholders (all 10s, the class defaults, or Seraph copies), and
+  Bestiary, Conflux and Dragon Utopia were name lists. Corrections against the sandbox: Academy Iron Golem upgrades
+  to Animated Armor and tier 3 is Sorcerer/Mage + Snow Maiden (Thane was commented out and is now a neutral);
+  Stronghold's Roc is tier 4 next to Cyclops, a Wolf Rider line fills tier 3 and the Mammoth is a neutral; Dark
+  and Grim Raiders shoot, as in both sandbox copies; the sandbox's copy-paste flags (flying Cyclops and Behemoth,
+  shots on Djinn and Naga, Pegasus without flying, Skeleton named "Devil") are not kept. Lore neutrals the
+  sandbox had outside its live roster are in: Timber/Dire Wolf, Specter/Banshee, Thane, Gog/Magog, Breeder/Fel
+  Breeder. The Ballista and Flamethrower wait for war machines.
+- **One table, no stats in code.** Every creature is one row of `src/Godot/EternalWars.Godot.Assets/data/creatures.csv`
+  (`CreatureTable`: header-named columns in any order, comma/semicolon/tab, list cells with `;`, a free `notes`
+  column). Core embeds the file as `CreatureCatalog.Default` (tests, simulator, default `GameState`);
+  `BuiltInCreatures` keeps only the ids code refers to. The Godot apps read the file at start-up
+  (`GameContent.Creatures`, `--creatures=path.csv` overrides), so a designer edits it and restarts: no build, and
+  no import because `creatures.csv.import` uses Godot's `keep` importer (a `.csv` would otherwise be imported as
+  translations). A broken table logs the line and column and falls back to the embedded copy.
+- **Balance method.** Each line was scaled (health and damage together, so attack, defense, speed and
+  capabilities keep their character) towards a per-tier weekly power target adjusted for its capabilities, then
+  tuned with the simulator until lines win about half their duels within the tier (`sim lines`) and one-week town
+  armies win 40–60 % against each other (`sim towns`, which rotates the four seven-dwelling builds that keep both
+  lines of tiers 1–2). Gold is per tier per week (about 1000 / 1650 / 2250 / 3300 / 3300), split by growth;
+  upgrades cost +30 % and are about 1.3–1.45× as strong. Neutrals sit a little below town lines; Dragon Utopia
+  dragons above town tier 5, the black dragon about twice the others. `sim creatures` lists each line's value,
+  weekly power against its tier and gold per value.
+- Replays depend on the creature table like on any content: a record made with other stats fails its digest.
+
+### ADR-045: Sandbox terrain model: every terrain penalises non-natives
+**Status**: accepted (2026-10-16); replaces the classes of ADR-024 and the natives of ADR-032
+- **Costs** (user decision, from the sandbox `TerrainExtensions`): a step costs the terrain being left, **100 for an
+  all-native army** and the terrain's cost for everyone else. No terrain is free for everyone; only roads (ADR-024),
+  the Pathfinding skill and artifacts reduce the penalty.
+
+  | Non-native cost | Terrains (native towns) |
+  |---|---|
+  | 125 | grass (Haven, Sylvan), highlands (Haven, Conflux), forest floor (Sylvan), cursed lands (Necropolis), subterranean (Dungeon), sand/desert (none), beach (none) |
+  | 150 | dirt (none), rough (Stronghold), wasteland (Stronghold), lava (Inferno), rocky ground (Dragon Utopia) |
+  | 175 | ice (Academy), shallow water (Swamp Bestiary) |
+  | 200 | snow (Academy), swamp (Swamp Bestiary) |
+  | impassable | water (deep; boats later), rock (cliffs, borders) |
+- **A town may be native to several terrains** (`TerrainDefinition.NativeTowns`); the whole army must be native
+  (ADR-032 stands). Changes against ADR-032: Necropolis moves from wasteland to **cursed lands**, Stronghold from sand
+  to **rough + wasteland**; sand becomes a neutral desert.
+- **New terrains**: beach `b`, ice `i`, shallow water `=` (walkable), cursed lands `c`, rocky ground `k` (walkable;
+  rock stays the impassable cliff). Map format **v5** (new codes only; v1–v4 still load). `TerrainClass` is now
+  `Passable`/`Impassable`. Ice and shallow water cost 175 as in the sandbox core (its 3D client said 200).
+- Consequence: heroes with no army or a mixed army pay at least 125 everywhere, so off-road daily ranges shrink by
+  about a fifth and roads matter more.
+
+### ADR-046: Towns on the map and the building list (from the sandbox)
+**Status**: accepted (2026-10-16) for the footprint and dwelling upgrades; the building list is a draft for Phase 3
+- **Footprint**: a town is 7×7 with the four corners free (45 blocked cells) and its entrance on the bottom-middle
+  cell, the same convention as mines (`BBB`/`BVB`):
+  ```
+  .BBBBB.
+  BBBBBBB
+  BBBBBBB
+  BBBBBBB
+  BBBBBBB
+  BBBBBBB
+  .BBVBB.
+  ```
+  The sandbox core used this mask but put the entrance inside the blocked area; its 3D client used a full 7×7 block
+  entered from outside. Its mines are 3×2 like ours.
+- **Dwelling upgrades produce the upgraded creature** (ADR-030 stands). The sandbox's second dwelling level, which
+  raised growth by 50 %, is not adopted; growth bonuses come from other buildings.
+- **Draft building list** (sandbox `TownTechTreeBase`; gold / lumber / ore unless noted; the sandbox's gems are read
+  as mercury):
+
+  | Building | Levels and costs | Requires | Effect |
+  |---|---|---|---|
+  | Town hall | 2500/5/5, 5000/10/10, 10000/20/20 | L2: blacksmith, marketplace, mage guild; L3: fort L2 | 500 / 1000 / 2000 gold a day |
+  | Fort | 1500/5/5, 3000/10/10, 6000/15/15 | L1: tavern | defence, growth bonus ❓ |
+  | Blacksmith | 1000/5/5 | – | war machines ❓ |
+  | Marketplace | 1250/5 lumber, 2500/5/5 | – | L2: +1 ore and +1 lumber a day; trading ❓ |
+  | Mage guild | L1 2000 + 5 lumber + 2 mercury, L2 3500 + 3 crystal + 3 mercury, L3 5000 + 5 crystal + 5 sulfur, L4 ❓ | – | spells of that level (ADR-047) |
+  | Tavern | 750/5 lumber | – | hire heroes |
+  | Dwelling of tier t | build 500·t gold, upgrade 1000·t; + t lumber (t ≥ 2), + t ore (t ≥ 3), + 1 mercury (t ≥ 4), + 1 crystal (t = 5); the upgrade doubles the resources | – | weekly growth of its creature |
+- In the sandbox towns start without buildings; one build per day; 7 of 9 dwellings with every tier covered (as
+  ADR-030). Its weekly growth per dwelling (12, 10 / 8, 7 / 5, 4 / 3, 2 / 1) differs from the creature table's
+  `growth`; the creature table rules (ADR-044).
+
+### ADR-047: Magic structure
+**Status**: accepted (2026-10-16), from docs/ideas.md; spells and numbers come with Phase 5
+- **Eight schools**, one per playable town (user decision: Stronghold and Swamp Bestiary get one too). Working titles:
+  Light (Haven), Nature (Sylvan), Arcana (Academy), Death (Necropolis), Chaos (Inferno), Shadow (Dungeon), Shamanism
+  (Stronghold), Primal (Swamp Bestiary). Each school is also a hero skill group (ADR-048).
+- **Four spell levels**, matched by **four mage guild levels**. Every spell has **three levels of its own** (learned,
+  then upgraded twice).
+- A school's skill group (4 + 4 + 2 = 10 points): **magic** (4 levels, each allowing spells of that level),
+  **attunement** (4 levels: mana pool and/or regeneration, and per school spell cost or potency), **mastery** (2 levels:
+  upgrade learned spells).
+- Any hero may learn any school; a rival town's school is rarely offered (ADR-048).
+- Replaces "four schools, five spell levels" in the game design and the sandbox's three guild levels.
+
+### ADR-048: Heroes, skills and levels
+**Status**: accepted (2026-10-16), from docs/ideas.md; numbers are a draft
+- **Roster**: every playable town has **16 heroes**, a **mage** and a **warrior** for each of its eight tier 1–4
+  creature lines, which is that hero's **preferred creature**. The preferred line (base and upgrade) gets a **flat
+  +2 Attack, +2 Defense and +1 battlefield speed** (user decision). Each hero also has a HoMM3-style **specialty**: a
+  skill, a spell or a daily resource. The roster is a table like the creatures, `data/heroes.csv` (`HeroTable`,
+  embedded as `HeroCatalog.Default`, read by the apps at start-up, `--heroes=` overrides; ADR-044 conventions). Map
+  heroes may name a roster entry (`type`, map format v5) and take its identity, stats and starting skills.
+- **Skills** (HoMM4-like): **groups of three skills**, **10 points** to learn a group fully (usually 4/3/3; magic 4/4/2);
+  a hero learns **at most 6 groups**. Levels are **Basic, Advanced, Expert, Master** (3-level skills stop at Expert).
+  Groups: offense (melee, archery, a third skill to decide), defense (armor, spell resistance, a third to decide),
+  estates (treasury: gold; prospecting: other resources; stewardship: cheaper costs in the hero's town), pathfinding
+  (logistics: movement; pathfinding: terrain penalty; troop management: army map speed), tactics (tactics: battlefield
+  width; deployment: rearrange troops before battle; drill: battlefield speed), and the eight schools (ADR-047). The
+  Tactics skill of ADR-033 is now `tactics.tactics`; maps keep loading their old `tactics` field.
+- **Levels**: HoMM3's experience table (+20 % per level after 12). Each level gives **one skill point**: the player
+  picks one of **three offered skills** (`LevelUpDecision`, `ChooseSkillCommand`). Offers are weighted by class
+  (mages towards their own school, warriors towards the general groups, skills already started ×3) and drawn from the
+  game RNG. A **rival town's school** (the lore ring) is offered in only **5 %** of level-ups (user decision), the one
+  rule effect of rivalries (an exception to ADR-029, which is about combat). Choices happen in the owner's turn; a hero
+  that levels up during another player's turn chooses when its owner's turn starts; computer players take the first
+  offer. Primary stat growth per level is not decided yet.
+- **Effects now** (`SkillEffects`): melee +10 % per level, archery +10/25/50 %, armor −5 % damage taken per level,
+  treasury +100/200/350/500 gold a day, prospecting +1/+2 lumber and ore (Expert also one of each rare resource),
+  logistics +10 % movement per level, pathfinding −25/50/75 % of the terrain penalty, troop management +1 army map speed
+  per level, drill +1 battlefield speed per level, resource specialties pay daily (`HeroIncome`). Waiting for towns,
+  magic or a deployment screen: stewardship, spell resistance, deployment, the school skills, skill and spell
+  specialties.
+

@@ -28,11 +28,13 @@ internal sealed class TestBattle
 
     public List<IEvent> Events { get; } = [];
 
-    public static TestBattle Create(int width = BattleState.DefaultWidth, ulong seed = 7, int attackerAttack = 0, int defenderDefense = 0)
+    public static TestBattle Create(
+        int width = BattleState.DefaultWidth, ulong seed = 7, int attackerAttack = 0, int defenderDefense = 0,
+        HeroBattleBonuses? attackerBonuses = null, HeroBattleBonuses? defenderBonuses = null)
     {
         var state = new BattleState(
-            new BattleParticipant(BattleSide.Attacker, new PlayerId(0), new HeroId(1), null, attackerAttack, 0, SkillLevel.None, false),
-            new BattleParticipant(BattleSide.Defender, new PlayerId(1), new HeroId(2), null, 0, defenderDefense, SkillLevel.None, false),
+            new BattleParticipant(BattleSide.Attacker, new PlayerId(0), new HeroId(1), null, attackerAttack, 0, SkillLevel.None, false, attackerBonuses),
+            new BattleParticipant(BattleSide.Defender, new PlayerId(1), new HeroId(2), null, 0, defenderDefense, SkillLevel.None, false, defenderBonuses),
             TerrainType.Grass,
             new MapPosition(0, 0),
             isAmbush: false,

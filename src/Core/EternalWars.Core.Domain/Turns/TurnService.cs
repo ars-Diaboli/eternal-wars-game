@@ -16,7 +16,8 @@ public sealed class TurnService(
     IEventPublisher events,
     EconomyService economy,
     HeroMovementService movement,
-    GuardService guards)
+    GuardService guards,
+    ProgressionService progression)
 {
     internal void StartGame()
     {
@@ -68,5 +69,6 @@ public sealed class TurnService(
         movement.RestoreMovement(player.Id);
         economy.CollectDailyIncome(player.Id);
         events.Publish(new TurnStarted(player.Id, state.Date));
+        progression.OfferNext();
     }
 }

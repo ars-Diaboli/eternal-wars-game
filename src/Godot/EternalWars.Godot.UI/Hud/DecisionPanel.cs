@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Decisions;
+using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.Shared.Events;
@@ -63,6 +64,16 @@ public partial class DecisionPanel : PanelContainer
                 break;
             case BattleDecision when state.Battle is { } battle:
                 ShowBattle(battle);
+                break;
+            case LevelUpDecision levelUp:
+                var hero = state.GetHero(levelUp.Hero);
+                _prompt.Text = $"{hero.Name} reached level {levelUp.Level}. Choose a skill:";
+                foreach (var skill in levelUp.Options)
+                {
+                    var skillDefinition = BuiltInSkills.Get(skill);
+                    Button($"{skillDefinition.Name} → {hero.Skills.Level(skill) + 1}", new ChooseSkillCommand(player, skill));
+                }
+
                 break;
         }
     }

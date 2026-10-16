@@ -16,17 +16,23 @@ namespace EternalWars.Core.Tests.Domain;
 public class TerrainAndRoadTests
 {
     [Theory]
-    [InlineData(TerrainType.Grass, null, 100)]
-    [InlineData(TerrainType.Rough, null, 125)]
-    [InlineData(TerrainType.Rough, TownIds.Stronghold, 125)] // rough penalises everyone
-    [InlineData(TerrainType.Swamp, null, 175)]
-    [InlineData(TerrainType.Swamp, TownIds.SwampBestiary, 100)]
-    [InlineData(TerrainType.Lava, TownIds.Haven, 150)]
+    [InlineData(TerrainType.Grass, null, 125)]
+    [InlineData(TerrainType.Grass, TownIds.Haven, 100)]
+    [InlineData(TerrainType.Grass, TownIds.Sylvan, 100)]
+    [InlineData(TerrainType.Dirt, TownIds.Haven, 150)] // dirt is nobody's
+    [InlineData(TerrainType.Rough, TownIds.Stronghold, 100)]
+    [InlineData(TerrainType.Wasteland, TownIds.Stronghold, 100)]
+    [InlineData(TerrainType.Wasteland, TownIds.Necropolis, 150)]
+    [InlineData(TerrainType.CursedLands, TownIds.Necropolis, 100)]
+    [InlineData(TerrainType.Snow, TownIds.Academy, 100)]
+    [InlineData(TerrainType.Ice, TownIds.Academy, 100)]
+    [InlineData(TerrainType.Ice, null, 175)]
+    [InlineData(TerrainType.ShallowWater, TownIds.SwampBestiary, 100)]
+    [InlineData(TerrainType.Swamp, TownIds.Haven, 200)]
     [InlineData(TerrainType.Lava, TownIds.Inferno, 100)]
-    [InlineData(TerrainType.Highlands, TownIds.Haven, 100)]
-    [InlineData(TerrainType.ForestFloor, null, 150)]
-    [InlineData(TerrainType.Wasteland, TownIds.Necropolis, 100)]
-    public void TerrainCatalog_AppliesOpenRoughAndNativeClasses(TerrainType terrain, string? armyTown, int expected)
+    [InlineData(TerrainType.Sand, TownIds.Stronghold, 125)] // desert has no native town
+    [InlineData(TerrainType.RockyGround, TownIds.DragonUtopia, 100)]
+    public void TerrainCatalog_ChargesNonNativesThePenalty_AndNativesTheBaseCost(TerrainType terrain, string? armyTown, int expected)
     {
         Assert.Equal(expected, TerrainCatalog.Default.MovementCost(terrain, armyTown));
     }
@@ -36,15 +42,18 @@ public class TerrainAndRoadTests
     {
         Assert.All(Enum.GetValues<TerrainType>(), t => Assert.NotNull(TerrainCatalog.Default.Get(t)));
         Assert.False(TerrainCatalog.Default.IsPassable(TerrainType.Water));
-        Assert.Throws<FormatException>(() => new TerrainCatalog([new(TerrainType.Grass, TerrainClass.Native, 100, [])]));
-        Assert.Throws<ArgumentException>(() => new TerrainCatalog([new(TerrainType.Grass, TerrainClass.Open, 100, [])]));
+        Assert.False(TerrainCatalog.Default.IsPassable(TerrainType.Rock));
+        Assert.True(TerrainCatalog.Default.IsPassable(TerrainType.ShallowWater));
+        Assert.Throws<FormatException>(() => new TerrainCatalog([new(TerrainType.Grass, TerrainClass.Passable, 90, [])]));
+        Assert.Throws<FormatException>(() => new TerrainCatalog([new(TerrainType.Water, TerrainClass.Impassable, 0, [TownIds.Haven])]));
+        Assert.Throws<ArgumentException>(() => new TerrainCatalog([new(TerrainType.Grass, TerrainClass.Passable, 100, [])]));
     }
 
     [Fact]
     public void TerrainRules_CanBeOverriddenFromJson()
     {
         var overrides = TerrainDefinitionSerializer.Deserialize("""
-            [ { "terrain": "Rough", "class": "Rough", "cost": 140 } ]
+            [ { "terrain": "Rough", "class": "Passable", "cost": 140 } ]
             """);
         var terrains = TerrainCatalog.Default.With(overrides);
         var state = new GameState(
@@ -57,7 +66,8 @@ public class TerrainAndRoadTests
         session.Step(A, Direction.East);
 
         Assert.Equal(1500 - 140, state.GetHero(A).MovementPoints);
-        Assert.Contains("\"class\": \"Native\"", TerrainDefinitionSerializer.Serialize(TerrainCatalog.Default.All));
+        var roundTrip = TerrainDefinitionSerializer.Deserialize(TerrainDefinitionSerializer.Serialize(TerrainCatalog.Default.All));
+        Assert.Equal([TownIds.Stronghold], roundTrip.Single(d => d.Terrain == TerrainType.Wasteland).NativeTowns);
     }
 
     [Fact]
@@ -65,8 +75,8 @@ public class TerrainAndRoadTests
     {
         var session = Start(Create("Al..", "...B"));
 
-        session.Step(A, Direction.East);  // leaving grass: 100
-        session.Step(A, Direction.East);  // leaving lava: 150 (no army is native yet)
+        session.Step(A, Direction.East);  // leaving grass: 100 (the default army is Haven, native to grass)
+        session.Step(A, Direction.East);  // leaving lava: 150 (not native)
 
         Assert.Equal(1500 - 100 - 150, session.State.GetHero(A).MovementPoints);
     }

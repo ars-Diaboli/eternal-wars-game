@@ -35,6 +35,11 @@ public static class Palette
         TerrainType.Subterranean => new Color(0.35f, 0.30f, 0.28f),
         TerrainType.Water => new Color(0.16f, 0.36f, 0.66f),
         TerrainType.Rock => new Color(0.18f, 0.18f, 0.20f),
+        TerrainType.Beach => new Color(0.80f, 0.74f, 0.58f),
+        TerrainType.Ice => new Color(0.72f, 0.85f, 0.95f),
+        TerrainType.ShallowWater => new Color(0.30f, 0.55f, 0.72f),
+        TerrainType.CursedLands => new Color(0.30f, 0.26f, 0.32f),
+        TerrainType.RockyGround => new Color(0.45f, 0.43f, 0.42f),
         _ => Colors.Magenta,
     };
 

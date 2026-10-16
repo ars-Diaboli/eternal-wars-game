@@ -356,7 +356,7 @@ public sealed class MapEditorSession
             return EditResult.InvalidTarget;
         }
 
-        if (attack < 0 || defense < 0 || !Enum.IsDefined(tactics))
+        if (attack < 0 || defense < 0 || !Enum.IsDefined(tactics) || tactics > BuiltInSkills.Get(BuiltInSkills.Tactics).MaxLevel)
         {
             return EditResult.InvalidValue;
         }
@@ -370,6 +370,55 @@ public sealed class MapEditorSession
             (hero.Attack, hero.Defense, hero.Tactics) = stats;
             _bus.Publish(new HeroStatsChanged(hero.Id, stats.Attack, stats.Defense, stats.Tactics));
         }
+    }
+
+    /// <summary>
+    /// Makes a hero one of the roster (<see cref="GameState.HeroRoster"/>), taking over its name, class, preferred
+    /// creature, specialty, stats and starting skills; null turns it back into a custom hero (identity cleared, stats kept).
+    /// </summary>
+    public EditResult SetHeroType(HeroId id, string? type)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (type is not null && !Scenario.HeroRoster.Contains(type))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var before = Snapshot(hero);
+        Run(new DelegateCommand($"Make {hero.Name} {type ?? "custom"}", () => Apply(type), () => Restore(before)));
+        return EditResult.Ok;
+
+        void Apply(string? newType)
+        {
+            if (newType is null)
+            {
+                (hero.Definition, hero.Class, hero.PreferredCreature, hero.Specialty) = (null, HeroClass.Warrior, null, null);
+            }
+            else
+            {
+                hero.Apply(Scenario.HeroRoster.Get(newType));
+            }
+
+            Changed();
+        }
+
+        void Restore((string? Definition, string Name, HeroClass Class, string? Preferred, HeroSpecialty? Specialty, int Attack, int Defense,
+            Dictionary<string, SkillLevel> Skills) snapshot)
+        {
+            (hero.Definition, hero.Name, hero.Class, hero.PreferredCreature, hero.Specialty, hero.Attack, hero.Defense) =
+                (snapshot.Definition, snapshot.Name, snapshot.Class, snapshot.Preferred, snapshot.Specialty, snapshot.Attack, snapshot.Defense);
+            hero.Skills.ReplaceWith(snapshot.Skills);
+            Changed();
+        }
+
+        void Changed() => _bus.Publish(new HeroStatsChanged(hero.Id, hero.Attack, hero.Defense, hero.Tactics));
+
+        static (string?, string, HeroClass, string?, HeroSpecialty?, int, int, Dictionary<string, SkillLevel>) Snapshot(Hero h) =>
+            (h.Definition, h.Name, h.Class, h.PreferredCreature, h.Specialty, h.Attack, h.Defense, h.Skills.Levels.ToDictionary(s => s.Key, s => s.Value));
     }
 
     /// <summary>Puts a stack into (or, with null, clears) one of a hero's army slots.</summary>

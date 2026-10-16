@@ -24,8 +24,10 @@ public static class MapConverter
             Heroes = state.Heroes
                 .Select(h => new HeroPlacementDocument(
                     h.Id.Value, h.Name, h.Owner.Value, h.Position.X, h.Position.Y, h.Position.Level,
-                    h.Attack, h.Defense, h.Tactics == SkillLevel.None ? null : h.Tactics,
-                    h.Army.IsEmpty ? null : h.Army.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList()))
+                    h.Attack, h.Defense, null,
+                    h.Army.IsEmpty ? null : h.Army.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
+                    h.Definition,
+                    h.Skills.Levels.Count == 0 ? null : h.Skills.Levels.OrderBy(s => s.Key, StringComparer.Ordinal).ToDictionary(s => s.Key, s => s.Value)))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
         };
@@ -74,20 +76,20 @@ public static class MapConverter
         MapObjectCatalog? catalog = null,
         GameOptions? options = null,
         TerrainCatalog? terrains = null,
-        CreatureCatalog? creatures = null)
+        CreatureCatalog? creatures = null,
+        HeroCatalog? heroRoster = null)
     {
         catalog ??= MapObjectCatalog.Default;
         creatures ??= CreatureCatalog.Default;
+        heroRoster ??= HeroCatalog.Default;
         var map = ToMap(document);
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
-        var heroes = document.Heroes.Select(h => new Hero(
-            new HeroId(h.Id), h.Name, new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level),
-            ToArmy(h, creatures), h.Attack, h.Defense, h.Tactics ?? SkillLevel.None));
+        var heroes = document.Heroes.Select(h => ToHero(h, creatures, heroRoster)).ToList();
         var objects = document.Objects.Select(o => ToObject(o, catalog));
         try
         {
-            var state = new GameState(map, players, heroes, objects, options, terrains, creatures);
+            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetGuardMode(document.GuardMode ?? GuardMode.Classic);
             return state;
@@ -95,6 +97,28 @@ public static class MapConverter
         catch (ArgumentException e)
         {
             throw new FormatException($"Invalid map '{document.Name}': {e.Message}", e);
+        }
+    }
+
+    private static Hero ToHero(HeroPlacementDocument h, CreatureCatalog creatures, HeroCatalog heroRoster)
+    {
+        if (h.Type is { } type && !heroRoster.Contains(type))
+        {
+            throw new FormatException($"Hero {h.Name} is of unknown type '{type}'.");
+        }
+
+        var skills = h.Skills ?? (h.Tactics is { } tactics and not SkillLevel.None
+            ? new Dictionary<string, SkillLevel> { [BuiltInSkills.Tactics] = tactics }
+            : h.Type is null ? new Dictionary<string, SkillLevel>() : null);
+        try
+        {
+            return Hero.Create(
+                new HeroId(h.Id), new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level), ToArmy(h, creatures),
+                h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills);
+        }
+        catch (Exception e) when (e is KeyNotFoundException or ArgumentOutOfRangeException or InvalidOperationException)
+        {
+            throw new FormatException($"Hero {h.Name}: {e.Message}", e);
         }
     }
 

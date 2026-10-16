@@ -56,7 +56,7 @@ public partial class AdventureMapView : Node3D
     /// <summary>Textured when <c>textures/terrain/&lt;terrain&gt;.png</c> exists, else the flat palette colour.</summary>
     private static StandardMaterial3D TileMaterial(TerrainType terrain)
     {
-        var path = $"{TextureFolder}{FileName(terrain)}.png";
+        var path = $"{TextureFolder}{FileName(TextureOf(terrain))}.png";
         if (!ResourceLoader.Exists(path))
         {
             return new StandardMaterial3D { AlbedoColor = Palette.ForTerrain(terrain) };
@@ -74,9 +74,22 @@ public partial class AdventureMapView : Node3D
         };
     }
 
+    /// <summary>Terrains without a texture of their own borrow a related one and are told apart by <see cref="Tint"/>.</summary>
+    private static TerrainType TextureOf(TerrainType terrain) => terrain switch
+    {
+        TerrainType.ShallowWater => TerrainType.Water,
+        TerrainType.RockyGround => TerrainType.Rough,
+        TerrainType.CursedLands => TerrainType.Wasteland,
+        TerrainType.Ice => TerrainType.Snow,
+        _ => terrain,
+    };
+
     /// <summary>Colour multiplied into the texture: lava darker and redder, water blue, the rest untouched.</summary>
     private static Color Tint(TerrainType terrain) => terrain switch
     {
+        TerrainType.ShallowWater => new Color(0.55f, 0.75f, 0.95f),
+        TerrainType.RockyGround => new Color(0.70f, 0.70f, 0.72f),
+        TerrainType.CursedLands => new Color(0.60f, 0.50f, 0.65f),
         TerrainType.Lava => new Color(0.75f, 0.35f, 0.25f),
         TerrainType.Water => new Color(0.35f, 0.55f, 0.95f),
         TerrainType.Rock => new Color(0.55f, 0.55f, 0.58f),

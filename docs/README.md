@@ -10,3 +10,5 @@
 | [development.md](development.md) | Toolchain, build/run/test commands, coding conventions |
 | [decisions.md](decisions.md) | Architecture decision log (short ADRs) |
 | [open-questions.md](open-questions.md) | Design questions still to be answered |
+| [ideas.md](ideas.md) | Raw design notes from the owner; removed once implemented or recorded |
+| [reference-sandbox.md](reference-sandbox.md) | What was taken from the earlier sandbox project, what was left, what looked wrong |

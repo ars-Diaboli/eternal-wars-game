@@ -2,7 +2,7 @@
 
 Placeholder ground textures taken from the earlier sandbox project (`reference/ew`), one per `TerrainType`.
 Rendered with world-space triplanar UVs by `AdventureMapView`; a missing file falls back to the flat
-`Palette` colour. Snow has no texture yet.
+`Palette` colour. Snow and ice have no texture yet.
 
 | File | Source (sandbox file) | Licence |
 |---|---|---|
@@ -18,3 +18,7 @@ Rendered with world-space triplanar UVs by `AdventureMapView`; a missing file fa
 | subterranean.png | rocks_ground_06 (Poly Haven) | CC0 |
 | rock.png | rock_pitted_mossy (Poly Haven) | CC0 |
 | water.png | ganges_river_pebbles (Poly Haven), tinted blue in the material | CC0 |
+| beach.png | coast_land_rocks_01 (Poly Haven) | CC0 |
+
+Shallow water, rocky ground, cursed lands and ice borrow the water, rough, wasteland and snow textures with a
+tint (`AdventureMapView.TextureOf`); ice and snow have no texture yet, so they use their palette colours.

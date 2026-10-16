@@ -14,7 +14,8 @@ public sealed class MapObjectInteractionService(
     IEventPublisher events,
     EconomyService economy,
     BattleService battles,
-    GuardService guards)
+    GuardService guards,
+    ProgressionService progression)
 {
     internal void ResolveTreasureChest(TreasureChestReward reward)
     {
@@ -31,13 +32,11 @@ public sealed class MapObjectInteractionService(
         {
             economy.Grant(hero.Owner, new ResourceSet(Gold: decision.Gold));
         }
-        else
-        {
-            hero.Experience += decision.Experience;
-            events.Publish(new HeroExperienceGained(hero.Id, decision.Experience, hero.Experience));
-        }
-
         events.Publish(new DecisionResolved(decision));
+        if (reward == TreasureChestReward.Experience)
+        {
+            progression.GrantExperience(hero, decision.Experience);
+        }
     }
 
     internal void Visit(Hero hero, MapObject mapObject)
