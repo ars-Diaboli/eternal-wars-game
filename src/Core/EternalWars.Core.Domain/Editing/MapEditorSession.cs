@@ -40,6 +40,9 @@ public enum EditResult
 
     /// <summary>The line is not one of the town's, or its dwellings would break the 7-of-9 rule (ADR-030).</summary>
     DwellingRule,
+
+    /// <summary>A town building would lack a building it requires, or one that requires it would lose it.</summary>
+    RequirementMissing,
 }
 
 /// <summary>
@@ -361,8 +364,8 @@ public sealed class MapEditorSession
     }
 
     /// <summary>
-    /// Pre-builds a town building up to <paramref name="level"/> (0 = not built). Map authors may skip requirements; in
-    /// the game they apply to what is built next.
+    /// Pre-builds a town building up to <paramref name="level"/> (0 = not built). Requirements hold as in play: a level
+    /// needs what it requires, and nothing built may lose a building it requires.
     /// </summary>
     public EditResult SetTownBuilding(MapObjectId id, string building, int level)
     {
@@ -375,6 +378,11 @@ public sealed class MapEditorSession
         if (level < 0 || level > Scenario.Buildings.MaxLevel(building))
         {
             return EditResult.InvalidValue;
+        }
+
+        if (TownRules.UnmetRequirement(Scenario, town, building, level) is not null)
+        {
+            return EditResult.RequirementMissing;
         }
 
         var previous = town.Level(building);
