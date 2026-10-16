@@ -24,6 +24,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 
 $exchangeMap = Join-Path $PSScriptRoot 'smoke/exchange.ewmap.json'
 $battleMap = Join-Path $PSScriptRoot 'smoke/battle.ewmap.json'
+$townsMap = Join-Path $PSScriptRoot 'smoke/towns.ewmap.json'
 $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
        Input = '5:click:133,263;12:click:133,263;20:click:103,140;28:click:30,140;35:key:Q' },
@@ -34,6 +35,9 @@ $scenarios = @(
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:click:800,569;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
+    # The town screen (ADR-050): T opens the first own town over the map, Escape closes it, T again, Escape.
+    @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
+       Input = '3:click:800,569;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' }
 )

@@ -14,7 +14,9 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// Basic town screen (ADR-046) for the current player's town: build the next level of a building, build or upgrade
 /// dwellings, recruit, and manage the garrison and the visiting hero (click a stack, then a slot; "Upgrade" upgrades
-/// the picked stack). Every action is a town command; refusals show below. Opened with <see cref="Open"/>.
+/// the picked stack"), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
+/// below. Opened with <see cref="Open"/>. With <see cref="FullScreen"/> (the game app) it fills its parent and scrolls;
+/// Escape or "Close" shut it.
 /// </summary>
 public partial class TownPanel : PanelContainer
 {
@@ -24,6 +26,7 @@ public partial class TownPanel : PanelContainer
     private readonly VBoxContainer _armies = new();
     private readonly HBoxContainer _blacksmith = new();
     private readonly HBoxContainer _tavern = new();
+    private readonly HBoxContainer _governor = new();
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly CheckBox _toHero = new() { Text = "Recruit to visiting hero" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
@@ -31,11 +34,26 @@ public partial class TownPanel : PanelContainer
     private MapObjectId? _town;
     private (TownArmy Army, int Slot)? _picked;
 
+    /// <summary>Fill the parent and scroll (the game app's town screen) instead of shrinking to the content. Set before <see cref="Bind"/>.</summary>
+    public bool FullScreen { get; set; }
+
+    public event Action? Closed;
+
     public void Bind(GameSession session)
     {
         _session = session;
-        var box = new VBoxContainer();
-        AddChild(box);
+        var box = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        if (FullScreen)
+        {
+            SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+            AddChild(scroll);
+            scroll.AddChild(box);
+        }
+        else
+        {
+            AddChild(box);
+        }
 
         var header = new HBoxContainer();
         box.AddChild(header);
@@ -48,6 +66,8 @@ public partial class TownPanel : PanelContainer
         box.AddChild(_buildings);
         box.AddChild(new Label { Text = "Dwellings (7 of 9, every tier)" });
         box.AddChild(_dwellings);
+        box.AddChild(new Label { Text = "Governor (Stewardship)" });
+        box.AddChild(_governor);
         box.AddChild(_armies);
         box.AddChild(_blacksmith);
         box.AddChild(_tavern);
@@ -76,6 +96,7 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroHired>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<GovernorChanged>(session.Events, _ => Refresh());
     }
 
     /// <summary>Shows a town of the player whose turn it is.</summary>
@@ -89,9 +110,17 @@ public partial class TownPanel : PanelContainer
 
     public void Close()
     {
+        var wasOpen = _town is not null;
         _town = null;
         Visible = false;
+        if (wasOpen)
+        {
+            Closed?.Invoke();
+        }
     }
+
+    /// <summary>The town the screen shows, if it is open.</summary>
+    public MapObjectId? CurrentTown => Visible ? _town : null;
 
     private Town? Current =>
         _town is { } id && _session.State.FindObject(id) is Town town && town.Owner == _session.State.CurrentPlayer.Id ? town : null;
@@ -162,6 +191,7 @@ public partial class TownPanel : PanelContainer
             }
         }
 
+        ShowGovernor(state, town);
         Clear(_armies);
         AddArmyRow(town, TownArmy.Garrison, "Garrison", town.Garrison);
         ShowTavern(state, town);
@@ -185,6 +215,35 @@ public partial class TownPanel : PanelContainer
                 buy.Pressed += () => Run(new BuyWarMachineCommand(state.CurrentPlayer.Id, town.Id, slot));
                 _blacksmith.AddChild(buy);
             }
+        }
+    }
+
+    /// <summary>The governor and what Stewardship does here (ADR-063); appoint the visiting hero, or dismiss the governor.</summary>
+    private void ShowGovernor(GameState state, Town town)
+    {
+        Clear(_governor);
+        var player = state.CurrentPlayer.Id;
+        var governor = StewardshipRules.GovernorOf(state, town);
+        var level = StewardshipRules.LevelIn(state, town);
+        _governor.AddChild(new Label
+        {
+            Text = governor is null
+                ? "No governor: Stewardship does not apply."
+                : $"{governor.Name}: buildings -{StewardshipRules.BuildingDiscountPercent(level)} %, creatures -{StewardshipRules.CreatureDiscountPercent(level)} %",
+            CustomMinimumSize = new Vector2(360, 0),
+        });
+        if (governor is not null)
+        {
+            var dismiss = new Button { Text = "Dismiss governor" };
+            dismiss.Pressed += () => Run(new DismissGovernorCommand(player, town.Id));
+            _governor.AddChild(dismiss);
+        }
+
+        if (TownRules.VisitingHero(state, town) is { } visitor && visitor != governor && StewardshipRules.CheckAppoint(state, town, visitor) is null)
+        {
+            var appoint = new Button { Text = $"Appoint {visitor.Name}" };
+            appoint.Pressed += () => Run(new AppointGovernorCommand(player, town.Id, visitor.Id));
+            _governor.AddChild(appoint);
         }
     }
 
@@ -278,6 +337,15 @@ public partial class TownPanel : PanelContainer
     {
         var result = _session.Execute(command);
         _status.Text = result.IsAccepted ? "" : $"Refused: {result.Error}";
+    }
+
+    public override void _UnhandledKeyInput(InputEvent @event)
+    {
+        if (Visible && @event is InputEventKey { Pressed: true, Keycode: Key.Escape })
+        {
+            Close();
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     private static void Clear(Node node)

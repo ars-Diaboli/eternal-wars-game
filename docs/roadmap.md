@@ -175,12 +175,12 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 ### Towns: Godot
 - [x] 2D harness town panel (`TownPanel`, `--scenario=towns`): build, dwellings, recruit, upgrade, garrison
 - [x] Towns on the 3D map with flag and name; editor inspector for towns
-- [ ] Town screen in the game app: the 2D `TownPanel` as a full-screen panel over the map (ADR-050), opened by
-      visiting or from the town list
-- [ ] Town list in the HUD next to the hero list; select and centre on a town
+- [x] Town screen in the game app: the 2D `TownPanel` as a full-screen panel over the map (ADR-050), opened by
+      visiting, from the town list or with T; shows the governor (appoint / dismiss)
+- [x] Town list in the HUD next to the hero list; select and centre on a town (`TownListPanel`)
 - [ ] Town screen polish: building tree with requirements, cost tooltips, "built today" state, dwelling choice
       warnings (which tier would become unreachable)
-- [ ] Smoke scenario for the town screen
+- [x] Smoke scenario for the town screen (`game-town-screen`, `tools/smoke/towns.ewmap.json`; not yet run in Godot)
 
 ### Heroes and skills
 - [x] Hero roster `data/heroes.csv`: 16 per town, mage/warrior, preferred creature, specialty (ADR-048)

@@ -606,6 +606,10 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 - **UI**: the 2D harness has a basic town panel (`TownPanel`; `--scenario=towns` loads `TownsScenario`), the editor
   inspector edits towns, and the 3D game shows towns with flag and name. **The town screen is 2D in the first
   iteration** (user decision), also in the 3D game: a full-screen 2D panel over the map; a 3D town scene may come later.
+  The game app (2026-10-17) opens it (`TownPanel` with `FullScreen`, on its own canvas layer above the HUD) when an own hero
+  steps into an own town on a human's turn, from the town list in the HUD (`TownListPanel`, next to the hero list; the map
+  centres on the town) or with **T**; Escape or Close shuts it, and it takes the input while open. It also shows the
+  governor with Appoint / Dismiss buttons (ADR-063).
 - **Not yet**: effects of fort, marketplace trading, mage guild and tavern (the blacksmith sells war machines,
   ADR-056); town sieges; AI town play.
 

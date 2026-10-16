@@ -26,7 +26,7 @@ namespace EternalWars.Game;
 /// </summary>
 /// <remarks>
 /// Mouse: click an own hero to select it, click a tile to preview the route (markers coloured by day), click the
-/// same tile again to go; right-click clears the preview. Keys: arrows/numpad step, Tab next hero, L switches
+/// same tile again to go; right-click clears the preview. Keys: arrows/numpad step, Tab next hero, T next town (the town screen; Escape closes it), L switches
 /// level, WASD/QE/wheel camera. Run with <c>-- --map=&lt;path&gt;</c> to offer an editor map first.
 /// Battles open the 3D battle scene (<see cref="BattleView3D"/>): point at a cell to preview, click to move, attack (from
 /// the side the pointer is on) or shoot; W wait, D defend, R retreat, Q quick combat, wheel zoom; Enter or Escape leave
@@ -49,6 +49,8 @@ public partial class Main : Node3D
     private AdventureWorldView _world = null!;
     private StrategyCamera _camera = null!;
     private HeroListPanel _heroList = null!;
+    private TownListPanel _townList = null!;
+    private TownPanel _townScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
@@ -111,6 +113,11 @@ public partial class Main : Node3D
             return;
         }
 
+        if (_townScreen.Visible)
+        {
+            return; // the town screen takes the input (Escape closes it)
+        }
+
         if (_session.State.PendingDecision is not null)
         {
             return;
@@ -130,6 +137,9 @@ public partial class Main : Node3D
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Tab }:
                 SelectNextHero();
+                break;
+            case InputEventKey { Pressed: true, Keycode: Key.T }:
+                OpenNextTown();
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.L }:
                 _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
@@ -394,6 +404,35 @@ public partial class Main : Node3D
         }
     }
 
+    /// <summary>The town screen of a town: the map centres on it first.</summary>
+    private void ShowTown(MapObjectId id)
+    {
+        if (_session.State.FindObject(id) is not Core.Domain.Towns.Town town || town.Owner != _session.State.CurrentPlayer.Id)
+        {
+            return;
+        }
+
+        _context.SetLevel(town.VisitPosition.Level);
+        _camera.FocusOn(MapSpace.ToWorld(town.VisitPosition));
+        _world.PathPreview.Clear();
+        _townScreen.Open(id);
+    }
+
+    /// <summary>T: the town screen of the next own town.</summary>
+    private void OpenNextTown()
+    {
+        var towns = TownListPanel.TownsOf(_session.State);
+        if (towns.Count == 0)
+        {
+            _status.Text = "You have no town.";
+            return;
+        }
+
+        var open = _townScreen.CurrentTown;
+        var index = open is null ? -1 : towns.ToList().FindIndex(t => t.Id == open);
+        ShowTown(towns[(index + 1) % towns.Count].Id);
+    }
+
     private void SelectNextHero()
     {
         var heroes = _session.State.HeroesOf(_session.State.CurrentPlayer.Id).Select(h => h.Id).ToList();
@@ -595,6 +634,25 @@ public partial class Main : Node3D
         side.AddChild(_heroList);
         _heroList.Bind(_session);
         _heroList.HeroSelected += hero => Select(hero, focus: true);
+        _townList = new TownListPanel();
+        side.AddChild(_townList);
+        _townList.Bind(_session);
+        _townList.TownSelected += ShowTown;
+
+        // The town screen covers the map and the HUD (ADR-050); a hero stepping into an own town opens it.
+        var townLayer = new CanvasLayer { Name = "TownScreen", Layer = 1 };
+        _game.AddChild(townLayer);
+        _townScreen = new TownPanel { FullScreen = true };
+        townLayer.AddChild(_townScreen);
+        _townScreen.Bind(_session);
+        _game.SubscribeWhileInTree<MapObjectVisited>(_session.Events, e =>
+        {
+            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Core.Domain.Towns.Town town
+                && town.Owner == _session.State.CurrentPlayer.Id)
+            {
+                ShowTown(town.Id);
+            }
+        });
     }
 
     /// <summary>The demo, the map given with --map, and every map saved by the editor.</summary>

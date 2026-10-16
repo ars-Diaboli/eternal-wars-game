@@ -45,6 +45,7 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 | | Game | Editor | Harness |
 |---|---|---|---|
 | Select hero | Click it, Tab, hero list | Select tool | Click it |
+| Town screen | T (next own town), town list, entering an own town; Escape closes | — | Click the town |
 | Move hero | Click tile (route preview), click again to go; arrows / numpad | — | Same |
 | Level | L or button (follows gates) | L or button | — |
 | Camera | WASD pan, Q/E rotate (±45°), wheel zoom | same | — |
