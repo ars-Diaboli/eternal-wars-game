@@ -134,8 +134,11 @@ fog, guards, quick-combat battles); final art and a real exchange/battle screen 
 - [ ] Town screen in the 3D game, 2D in the first iteration (a full-screen panel over the map, ADR-050); effects of
       fort, blacksmith, marketplace trading, mage guild and tavern
 - Towns for the slice: **Haven and Inferno**
-- Native terrain: penalty waived only for all-native armies; Pathfinding skill 25/50/75 % (ADR-024, ADR-032)
-- Income sources beyond mines: towns, Estates-like skills, hero specialisations, artifacts (ADR-025)
+- [x] Native terrain: penalty waived only for all-native armies; Pathfinding skill 25/50/75 % (ADR-024, ADR-032,
+      ADR-045); routes and steps share one cost rule
+- [x] Income sources beyond mines: towns (`TownIncome`), Estates-like skills (Treasury, Prospecting), hero resource
+      specialisations (`HeroIncome`) (ADR-025, ADR-048, ADR-050)
+- [ ] Artifact income: an `IIncomeSource` for resource-producing artifacts, with the artifacts item below
 - [x] Hero roster (`data/heroes.csv`, 16 per town, mage/warrior, preferred creature, specialty), skill groups,
       levels with skill offers and rival-school odds, the skill effects that need no towns or magic (ADR-048)
 - Primary stat growth; stewardship, deployment, spell resistance, skill/spell specialties; hiring heroes in taverns
