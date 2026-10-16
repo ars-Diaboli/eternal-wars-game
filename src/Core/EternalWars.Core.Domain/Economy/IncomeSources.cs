@@ -23,16 +23,17 @@ public sealed class MineIncome : IIncomeSource
             .Aggregate(ResourceSet.Empty, (total, mine) => total + ResourceSet.Of(mine.Resource, mine.DailyYield));
 }
 
-/// <summary>Heroes on the map earn for their owner: Treasury, Prospecting and resource specialties (ADR-048).</summary>
+/// <summary>Heroes on the map earn for their owner: Treasury, Prospecting, resource specialties (ADR-048) and income artifacts (ADR-061).</summary>
 public sealed class HeroIncome : IIncomeSource
 {
     public ResourceSet DailyIncome(GameState state, PlayerId player) =>
         state.HeroesOf(player).Aggregate(ResourceSet.Empty, (total, hero) => total + Of(hero));
 
     public static ResourceSet Of(Hero hero) =>
-        new ResourceSet(Gold: SkillEffects.TreasuryGold(hero.Skills.Level(BuiltInSkills.Treasury)))
-        + SkillEffects.Prospecting(hero.Skills.Level(BuiltInSkills.Prospecting))
-        + (hero.Specialty?.DailyIncome ?? ResourceSet.Empty);
+        new ResourceSet(Gold: SkillEffects.TreasuryGold(hero.SkillLevelOf(BuiltInSkills.Treasury)))
+        + SkillEffects.Prospecting(hero.SkillLevelOf(BuiltInSkills.Prospecting))
+        + (hero.Specialty?.DailyIncome ?? ResourceSet.Empty)
+        + hero.Bonus.Income;
 }
 
 /// <summary>Owned towns pay what their buildings produce: town hall gold, the resource silo (ADR-046).</summary>

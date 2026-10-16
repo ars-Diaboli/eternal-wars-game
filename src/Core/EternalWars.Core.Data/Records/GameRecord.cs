@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
@@ -81,9 +82,10 @@ public static class GameReplay
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
         BuildingCatalog? buildings = null,
-        TerrainCatalog? terrains = null)
+        TerrainCatalog? terrains = null,
+        ArtifactCatalog? artifacts = null)
     {
-        var session = new GameSession(MapConverter.ToGameState(record.Map, catalog, record.Options, terrains, creatures, heroRoster, buildings));
+        var session = new GameSession(MapConverter.ToGameState(record.Map, catalog, record.Options, terrains, creatures, heroRoster, buildings, artifacts));
         session.Start();
         for (var i = 0; i < record.Commands.Count; i++)
         {
@@ -127,6 +129,9 @@ public static class GameRecordSerializer
         (typeof(MoveTownStackCommand), "moveTownStack"),
         (typeof(BuyWarMachineCommand), "buyWarMachine"),
         (typeof(HireHeroCommand), "hireHero"),
+        (typeof(EquipArtifactCommand), "equipArtifact"),
+        (typeof(UnequipArtifactCommand), "unequipArtifact"),
+        (typeof(GiveArtifactCommand), "giveArtifact"),
         (typeof(ChooseBattleWidthCommand), "battleWidth"),
         (typeof(BattleMoveCommand), "battleMove"),
         (typeof(BattleAttackCommand), "battleAttack"),

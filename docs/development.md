@@ -70,8 +70,8 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
   helpers (`session.Step`, `session.MoveTo`, `session.EndTurn`, `session.AutoResolve`, ...). Rule-level battle
   tests place units exactly with `TestBattle`.
 - Saved games are `*.ewsave.json` (ADR-058) in `user://saves` (Windows: `%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): a game record plus a label. Loading replays the commands and checks the digest.
-- Map files are `*.ewmap.json` (format v10: terrain + optional road rows, teams, guard mode, heroes with roster type,
-  primary stats, skills, war machines, morale, luck and armies, objects incl. one-way gates, monsters, mine guards and towns, victory and defeat conditions; see the
+- Map files are `*.ewmap.json` (format v11: terrain + optional road rows, teams, guard mode, heroes with roster type,
+  primary stats, skills, war machines, morale, luck, artifacts and armies, objects incl. one-way gates, artifact pickups, monsters, mine guards and towns, victory and defeat conditions; see the
   version history on `MapDocument`). Replays are `*.ewreplay.json`. Creature
   stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
   stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
@@ -114,6 +114,24 @@ spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by
   tier, `sim lines` duels the lines of a tier, `sim towns` plays one-week town armies against each other.
 - **Tests and the default catalog** use the copy embedded at build time; `dotnet test` rebuilds it. Tests check
   the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines).
+
+## Editing artifacts
+
+Artifacts are `src/Godot/EternalWars.Godot.Assets/data/artifacts.csv` (ADR-061), with the sets in `artifact_sets.csv`, same file
+rules and reload behaviour as the other tables (the apps read them at start-up; a mistake is reported with line and column
+and the built-in copy is used).
+
+| Column | Meaning |
+|---|---|
+| `id`, `name` | kebab-case id (maps and saves refer to it), display name |
+| `slot` | `Head`, `Neck`, `Cloak`, `Body`, `Weapon`, `Shield`, `Ring` (two fit), `Boots` or `Misc` (three fit) |
+| `tier` | `Minor`, `Major` or `Relic`: what a map pickup of that tier can roll |
+| `set` | id of a row of `artifact_sets.csv`, or empty; wearing every piece of a set adds the set's effects |
+| `effects` | separated by `;`: `attack 2`, `defense`, `spell-power`, `knowledge`, `morale`, `luck`, `movement 10` (percent), `movement-flat 300`, `battle-speed 1`, `melee-damage 10`, `ranged-damage 10`, `damage-taken 5` (percent less), `ranged-damage-taken 10`, `income gold 100`, `native-terrain swamp`, `terrain-penalty 25` (percent removed), `skill machines.ballistics 1`, `all-skills 1`; negative numbers work |
+| `notes` | free text; effects the game cannot apply yet are marked "Not yet" here |
+
+`artifact_sets.csv` has `id, name, effects, notes`; a set needs at least two pieces. Map objects `artifact.minor`,
+`artifact.major` and `artifact.relic` roll their artifact at game start; the editor can fix one (`SetArtifactPickup`).
 
 ## Editing town buildings
 

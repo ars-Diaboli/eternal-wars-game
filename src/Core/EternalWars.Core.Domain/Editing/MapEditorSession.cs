@@ -547,6 +547,63 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>
+    /// Sets what a hero wears (ids; each goes to the slot its definition names) and carries (ADR-061). Refused when an
+    /// artifact is unknown, does not fit its slots, or the backpack would overflow.
+    /// </summary>
+    public EditResult SetHeroArtifacts(HeroId id, IReadOnlyList<string> worn, IReadOnlyList<string> backpack)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var previous = (Worn: hero.Artifacts.AllWorn.Select(w => w.Id).ToList(), Backpack: hero.Artifacts.Backpack.ToList());
+        var next = (Worn: worn.ToList(), Backpack: backpack.ToList());
+        try
+        {
+            new Artifacts.HeroArtifacts().ReplaceWith(next.Worn, next.Backpack, Scenario.Artifacts); // validates without touching the hero
+        }
+        catch (Exception e) when (e is InvalidOperationException or KeyNotFoundException)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        Run(new DelegateCommand($"Edit {hero.Name}'s artifacts", () => Apply(next), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply((List<string> Worn, List<string> Backpack) set)
+        {
+            hero.Artifacts.ReplaceWith(set.Worn, set.Backpack, Scenario.Artifacts);
+            Scenario.RefreshArtifacts(hero);
+            _bus.Publish(new HeroArtifactsChanged(hero.Id));
+        }
+    }
+
+    /// <summary>Fixes which artifact a pickup holds (null = rolled from its tier when the game starts).</summary>
+    public EditResult SetArtifactPickup(MapObjectId id, string? artifact)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not ArtifactPickup pickup)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (artifact is not null && !Scenario.Artifacts.Contains(artifact))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = pickup.Artifact;
+        Run(new DelegateCommand("Set artifact", () => Apply(artifact), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(string? value)
+        {
+            pickup.Artifact = value;
+            _bus.Publish(new MapObjectChanged(pickup.Id));
+        }
+    }
+
     /// <summary>Sets a hero's morale and luck (−5…+5, ADR-053).</summary>
     public EditResult SetHeroMoraleAndLuck(HeroId id, int morale, int luck)
     {

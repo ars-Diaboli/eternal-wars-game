@@ -71,6 +71,17 @@ public sealed record MoveTownStackCommand(PlayerId Player, MapObjectId Town, Tow
 /// <summary>The town's visiting hero buys a war machine at its blacksmith (ADR-056).</summary>
 public sealed record BuyWarMachineCommand(PlayerId Player, MapObjectId Town, Battles.WarMachineSlot Slot) : GameCommand(Player);
 
+// Artifacts (the owner's turn; no movement points; ADR-061) -------------------------------------------
+
+/// <summary>Puts an artifact from the hero's backpack on; one worn in that slot goes to the backpack when none is free.</summary>
+public sealed record EquipArtifactCommand(PlayerId Player, HeroId Hero, string Artifact) : GameCommand(Player);
+
+/// <summary>Takes a worn artifact off into the backpack (which must have room).</summary>
+public sealed record UnequipArtifactCommand(PlayerId Player, HeroId Hero, string Artifact) : GameCommand(Player);
+
+/// <summary>Gives an artifact (from the backpack first, else off the body) to another own hero while their exchange is open.</summary>
+public sealed record GiveArtifactCommand(PlayerId Player, HeroId FromHero, string Artifact, HeroId ToHero) : GameCommand(Player);
+
 /// <summary>Hires a hero the town's tavern offers (roster id) for the owner; it appears on the town's entrance (ADR-060).</summary>
 public sealed record HireHeroCommand(PlayerId Player, MapObjectId Town, string Hero) : GameCommand(Player);
 

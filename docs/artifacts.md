@@ -1,13 +1,31 @@
 # Artifacts
 
-The artifact catalog for Phase 3 (roadmap, "Artifacts"). **Nothing here is implemented yet**; this is the content the
-artifact table `data/artifacts.csv` (id, name, slot, tier, effects) will start from. Rules touched: ADR-018 (movement),
-ADR-025 (income sources), ADR-039 (treasure chests), ADR-045 (terrain penalties), ADR-053 (morale and luck),
-ADR-055 (primary stats). Lore: [lore.md](lore.md). Every name and number is a draft to react to; effects use only
-things the game has or plans: primary stats, movement, battle speed, morale and luck, skill levels, daily resources,
-terrain penalties, spell power and mana (with magic, [spells.md](spells.md)).
+The artifact catalog (roadmap, "Artifacts"). **Implemented in core (ADR-061)**: the table `data/artifacts.csv` (with
+`data/artifact_sets.csv`) holds every artifact below plus 31 HoMM3-style placeholder items (67 artifacts in all), and the rules apply
+the effects the game has. This page is the design and lore; the tables are the truth for numbers (see "Editing artifacts"
+in [development.md](development.md)). Rules touched: ADR-018 (movement), ADR-025 (income sources), ADR-045 (terrain
+penalties), ADR-053 (morale and luck), ADR-055 (primary stats). Lore: [lore.md](lore.md). Every name and number is a
+draft to react to.
 
-## How artifacts work (proposal)
+**What is applied and what is not.** The rows below state the intended effect. The game applies attack, defense,
+spell power and knowledge (as stats, they matter with magic), morale, luck, movement, battle speed, melee and ranged
+damage, damage taken, daily income, native terrain, terrain penalty and skill levels. Effects that need systems that do
+not exist yet are in the table's notes as "Not yet": a mana pool (Amulet of the Deep), spell resistance and reflection
+(Aegis of Ash, Scale of the Elder Dragon, Mirror of the Lightless), regeneration (Root of the Oldest Tree), re-rolled
+morale (Dawn Banner), starting initiative (War-Drum), double damage (Bone Dragon's Fang), fire resistance, the best
+magic skill (Crown of the Waning Eye), cheaper spells and offensive spell levels (sets). Where the table substitutes a
+number (Amulet of the Deep: +2 Knowledge; Root of the Oldest Tree: 5 % less damage taken; Mirror of the Lightless:
++2 Defense, +1 luck; sets: see below) the table wins.
+
+**HoMM3 style placeholders.** Weapons (Centaur's Ax +2, Blackshard of the Dead Knight +3, Greater Gnoll's Flail +4, Ogre's
+Club of Havoc +5, Sword of Hellfire +6, Titan's Gladius +12 Attack −3 Defense), shields (Dwarven Lords +2, Buckler of the
+Gnoll King +4, Targ of the Rampaging Ogre +5, Sentinel's Shield +12 Defense −3 Attack), helms (Alabaster Unicorn,
+Skull Helmet, Helm of Chaos, Crown of the Supreme Magi), body armour (Petrified Wood, Rib Cage, Basilisk Scales, Cyclops
+King's Tunic, Brimstone, Titan's Cuirass), Pendant of Courage, Necklace of Swiftness, Cape of Velocity, Boots of Speed,
+Equestrian's Gloves, Ring of the Wayfarer, and the Endless pouches, purses, bag and sack of gold, lumber and ore. They fill
+the gaps between the lore artifacts so that every slot has items of every tier.
+
+## How artifacts work
 
 - **Paper-doll slots** (a hero wears one artifact per slot, plus a backpack for the rest):
 
@@ -27,10 +45,11 @@ terrain penalties, spell power and mana (with magic, [spells.md](spells.md)).
 - **Tiers** (what a chest, a guard or a defeated hero's pack can drop): **Minor** (common, small bonuses),
   **Major** (strong), **Relic** (one of each per game, big effects, with a story), and **Set pieces** (worn together
   for a bonus). The HoMM3 chest "artifact tier" of ADR-039 picks a tier; **Relics** are not in chests.
-- **Stacking**: bonuses add; terrain artifacts and Pathfinding together never reduce the penalty below zero. The
-  morale/luck cap of ±5 stays (ADR-053).
-- **Loot**: artifacts come from the map (pickup objects, guarded), chests, and from a defeated hero's pack (the winner
-  may take any one; open question). Owned artifacts move through the exchange screen.
+- **Stacking**: bonuses add; terrain artifacts and Pathfinding together never reduce the penalty below zero (at most 100 %).
+  The morale/luck cap of ±5 stays (ADR-053); damage-taken reductions stop at 90 %.
+- **Loot**: artifacts come from the map (pickup objects, guarded) and from a defeated hero (the winner gets all of them, what
+  does not fit in its backpack is lost; a fleeing hero takes its artifacts away). Chests do not hold artifacts yet. Heroes
+  hand artifacts to each other while their exchange is open.
 - **Not in the town**: no artifact market for now (artifacts are not for sale; a later merchant is an option).
 
 ## Minor artifacts
@@ -96,28 +115,22 @@ Set pieces: wearing all of a set gives an extra bonus, listed after the individu
 
 | Set | Pieces | Individual effects | Full set |
 |---|---|---|---|
-| **Pilgrim's Road** | Pilgrim's Boots, Weathered Cloak, Hearth Charm | movement, terrain, gold | +20 % movement points, the hero's army is native to every terrain it walks on |
-| **Armor of the Dawn Covenant** | Plate of the Faithful, Aegis of Ash, Candle of the Pious | Defense, fire resistance, Spell Power | +2 morale, Light and Nature spells cost 20 % less mana |
-| **Ash Court Regalia** | Ring of Reckoning, Sceptre of Cinders, Ledger of Debts | luck, Attack, gold | +1 level to all offensive spells, the hero's stacks heal for 5 % of the damage they deal |
-| **The Unbound's Trophies** | War-Drum, Marsh Talisman, Hunter's Mark | morale, terrain, luck | +3 morale and luck while fighting on non-native terrain |
+| **Pilgrim's Road** | Pilgrim's Boots, Weathered Cloak, Hearth Charm | movement, terrain, gold | +20 % movement points, the whole terrain penalty gone (applied) |
+| **Armor of the Dawn Covenant** | Plate of the Faithful, Aegis of Ash, Candle of the Pious | Defense, fire resistance, Spell Power | +2 morale (applied); Light and Nature spells cost 20 % less mana (not yet) |
+| **Ash Court Regalia** | Ring of Reckoning, Sceptre of Cinders, Ledger of Debts | luck, Attack, gold | +2 Spell Power, +1 luck (applied); +1 level to offensive spells, healing from damage dealt (not yet) |
+| **The Unbound's Trophies** | War-Drum, Marsh Talisman, Hunter's Mark | morale, terrain, luck | +2 morale, +2 luck (applied, always; the "only on non-native terrain" condition is not yet) |
 
-## Notes for implementation
+## Implementation
 
-- The table needs: `id`, `name`, `slot`, `tier`, `set` (empty = none), `effects` (a list of `kind value`: `attack 2`,
-  `movement 20`, `income gold 100`, `skill-level best-magic 1`, …), `notes`.
-- Effects map onto existing rules: attack/defense (hero stats), `HeroMovement` (movement percent), `HeroIncome` /
-  `IIncomeSource` (daily resources), terrain penalty (`MovementAllowance`), morale/luck (`HeroBattleBonuses`), skill
-  levels (`HeroSkills`). Spell effects wait for magic.
-- Commands: equip, unequip, move to the backpack, give to another hero (exchange screen); events are past-tense records
-  (`ArtifactEquipped`, …); the map format and editor get an artifact on a hero and an artifact on the map (bump the
-  format).
-- Artifacts on the map, in chests, and as loot are Phase 3 items in the roadmap.
+The core is in place (ADR-061): table and catalog, hero equipment and backpack, equip, unequip and give commands, effects in
+battle, movement, income and terrain, map pickups that roll by tier, loot, map format v11, editor session calls, the AI.
+What is left: the hero screen and paper-doll UI, editor inspector rows, artifacts in chests, the "Not yet" effects.
 
 ## Open
 
 - Numbers, after play-tests; whether Major artifacts need a guard.
 - Which artifacts count as Relics, and whether a campaign can reuse them.
-- Whether a winner takes one artifact from a defeated hero, and which.
+- Whether a winner should choose one artifact instead of taking all.
 - How sets work across towns (any set bonus for non-town heroes?).
-- Whether a merchant town building could sell artifacts later.
-- The artifacts' effect on morale and luck (open question 5).
+- Whether a merchant town building could sell artifacts later, and whether chests may hold one.
+- Which skills, artifacts and buildings should change morale and luck besides the artifacts (open question 5).

@@ -55,6 +55,11 @@ public static class DamageCalculator
         damage = damage * (100 + bonusPercent) / 100;
         damage = damage * (100 + (hit.IsRanged ? attackerBonus.RangedPercent : attackerBonus.MeleePercent)) / 100;
         damage = damage * (100 - defenderBonus.DamageTakenReductionPercent) / 100;
+        if (hit.IsRanged)
+        {
+            damage = damage * (100 - defenderBonus.RangedDamageTakenReductionPercent) / 100;
+        }
+
         damage = damage * MoraleAndLuck.DamagePercent(hit.Luck) / 100;
         if (attacker.IsMachine)
         {

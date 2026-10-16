@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Common;
 
 namespace EternalWars.Core.Domain.Heroes;
@@ -88,8 +89,37 @@ public sealed class Hero(
     /// <summary>War machines the hero owns (ADR-056); a new hero has its town's offensive machine.</summary>
     public IReadOnlySet<Battles.WarMachineSlot> WarMachines => _warMachines;
 
-    /// <summary>Skill levels by skill id (ADR-048).</summary>
+    /// <summary>Skill levels by skill id (ADR-048); artifacts may add to them (<see cref="SkillLevelOf"/>).</summary>
     public HeroSkills Skills { get; } = HeroSkillsWith(tactics);
+
+    /// <summary>What the hero wears and carries (ADR-061).</summary>
+    public HeroArtifacts Artifacts { get; } = new();
+
+    /// <summary>What the worn artifacts add, kept up to date by <c>GameState.RefreshArtifacts</c>.</summary>
+    public ArtifactBonuses Bonus { get; internal set; } = ArtifactBonuses.None;
+
+    public int TotalAttack => Attack + Bonus.Attack;
+
+    public int TotalDefense => Defense + Bonus.Defense;
+
+    public int TotalSpellPower => SpellPower + Bonus.SpellPower;
+
+    public int TotalKnowledge => Knowledge + Bonus.Knowledge;
+
+    public int TotalMorale => Morale + Bonus.Morale;
+
+    public int TotalLuck => Luck + Bonus.Luck;
+
+    /// <summary>
+    /// The skill level the rules use: learned levels plus what artifacts add to it (and to every started skill), up to the
+    /// skill's maximum. A skill an artifact adds to counts even if the hero has not learned it.
+    /// </summary>
+    public SkillLevel SkillLevelOf(string skill)
+    {
+        var learned = Skills.Level(skill);
+        var bonus = Bonus.SkillBonus(skill) + (learned > SkillLevel.None ? Bonus.AllSkills : 0);
+        return bonus == 0 ? learned : (SkillLevel)Math.Min((int)BuiltInSkills.Get(skill).MaxLevel, (int)learned + bonus);
+    }
 
     /// <summary>Tactics skill (<see cref="BuiltInSkills.Tactics"/>): lets the hero pick the battlefield width (ADR-033).</summary>
     public SkillLevel Tactics
@@ -139,7 +169,8 @@ public sealed class Hero(
         HeroId id, PlayerId owner, MapPosition position, Army? army, HeroDefinition? definition,
         string? name = null, int? attack = null, int? defense = null, IReadOnlyDictionary<string, SkillLevel>? skills = null,
         int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null,
-        IEnumerable<Battles.WarMachineSlot>? warMachines = null)
+        IEnumerable<Battles.WarMachineSlot>? warMachines = null,
+        IEnumerable<string>? artifacts = null, IEnumerable<string>? backpack = null, ArtifactCatalog? catalog = null)
     {
         if (spellPower < 0 || knowledge < 0)
         {
@@ -165,6 +196,11 @@ public sealed class Hero(
         if (warMachines is not null)
         {
             hero.SetWarMachines(warMachines);
+        }
+
+        if (artifacts is not null || backpack is not null)
+        {
+            hero.Artifacts.ReplaceWith(artifacts ?? [], backpack ?? [], catalog ?? ArtifactCatalog.Default);
         }
 
         hero.Morale = morale;

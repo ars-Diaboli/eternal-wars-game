@@ -95,7 +95,7 @@ public partial class MapObjectsView : Node3D
             }
             else if (cell == FootprintCell.Visit)
             {
-                var height = known.Definition.Kind is MapObjectKind.Monster or MapObjectKind.ResourcePile or MapObjectKind.TreasureChest ? 0.35f : 0.06f;
+                var height = known.Definition.Kind is MapObjectKind.Monster or MapObjectKind.ResourcePile or MapObjectKind.TreasureChest or MapObjectKind.Artifact ? 0.35f : 0.06f;
                 root.AddChild(Box(new Vector3(0.6f, height, 0.6f), at + (Vector3.Up * height / 2), color.Lightened(0.15f)));
             }
         }

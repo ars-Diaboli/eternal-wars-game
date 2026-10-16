@@ -22,6 +22,9 @@ public enum MapObjectKind
 
     /// <summary>A town of the type in <see cref="MapObjectDefinition.Town"/> (<see cref="Towns.Town"/>).</summary>
     Town,
+
+    /// <summary>An artifact lying on the map (<see cref="ArtifactPickup"/>, ADR-061).</summary>
+    Artifact,
 }
 
 /// <summary>
@@ -40,6 +43,9 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>Town type of towns (<see cref="Towns.TownIds"/>).</summary>
     public string? Town { get; init; }
 
+    /// <summary>Tier an artifact pickup rolls its artifact from when the map leaves it open.</summary>
+    public Artifacts.ArtifactTier? ArtifactTier { get; init; }
+
     /// <summary>Throws <see cref="FormatException"/> if kind-specific properties are missing.</summary>
     public void Validate()
     {
@@ -56,6 +62,11 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
         if (Kind is MapObjectKind.ResourcePile or MapObjectKind.Mine && Resource is null)
         {
             throw new FormatException($"Map object '{Id}' of kind {Kind} needs a resource.");
+        }
+
+        if (Kind is MapObjectKind.Artifact && ArtifactTier is null)
+        {
+            throw new FormatException($"Artifact object '{Id}' needs an artifact tier.");
         }
 
         if (Kind is MapObjectKind.Mine && DailyYield <= 0)

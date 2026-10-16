@@ -137,7 +137,7 @@ public sealed record BattleParticipant(
 public sealed record HeroBattleBonuses(
     int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred, int Morale = 0, int Luck = 0,
     Heroes.SkillLevel Ballistics = Heroes.SkillLevel.None, Heroes.SkillLevel Healing = Heroes.SkillLevel.None,
-    Heroes.SkillLevel AmmoSupply = Heroes.SkillLevel.None)
+    Heroes.SkillLevel AmmoSupply = Heroes.SkillLevel.None, int RangedDamageTakenReductionPercent = 0)
 {
     public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<string>());
 
@@ -155,18 +155,19 @@ public sealed record HeroBattleBonuses(
             }
         }
 
-        var skills = hero.Skills;
+        var artifacts = hero.Bonus;
         return new(
-            Heroes.SkillEffects.MeleeDamagePercent(skills.Level(Heroes.BuiltInSkills.Melee)),
-            Heroes.SkillEffects.RangedDamagePercent(skills.Level(Heroes.BuiltInSkills.Archery)),
-            Heroes.SkillEffects.DamageTakenReductionPercent(skills.Level(Heroes.BuiltInSkills.Armor)),
-            Heroes.SkillEffects.BattleSpeedBonus(skills.Level(Heroes.BuiltInSkills.Drill)),
+            Heroes.SkillEffects.MeleeDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Melee)) + artifacts.MeleePercent,
+            Heroes.SkillEffects.RangedDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Archery)) + artifacts.RangedPercent,
+            Math.Min(90, Heroes.SkillEffects.DamageTakenReductionPercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Armor)) + artifacts.DamageTakenReductionPercent),
+            Heroes.SkillEffects.BattleSpeedBonus(hero.SkillLevelOf(Heroes.BuiltInSkills.Drill)) + artifacts.BattleSpeed,
             preferred,
-            hero.Morale,
-            hero.Luck,
-            skills.Level(Heroes.BuiltInSkills.Ballistics),
-            skills.Level(Heroes.BuiltInSkills.Healing),
-            skills.Level(Heroes.BuiltInSkills.AmmoSupply));
+            hero.TotalMorale,
+            hero.TotalLuck,
+            hero.SkillLevelOf(Heroes.BuiltInSkills.Ballistics),
+            hero.SkillLevelOf(Heroes.BuiltInSkills.Healing),
+            hero.SkillLevelOf(Heroes.BuiltInSkills.AmmoSupply),
+            artifacts.RangedDamageTakenReductionPercent);
     }
 }
 

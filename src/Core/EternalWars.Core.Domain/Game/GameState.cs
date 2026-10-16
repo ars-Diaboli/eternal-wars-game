@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
@@ -34,7 +35,8 @@ public sealed class GameState
         TerrainCatalog? terrains = null,
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null)
+        BuildingCatalog? buildings = null,
+        ArtifactCatalog? artifacts = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
         Options = options ?? GameOptions.Default;
@@ -42,6 +44,7 @@ public sealed class GameState
         Creatures = creatures ?? CreatureCatalog.Default;
         HeroRoster = heroRoster ?? HeroCatalog.Default;
         Buildings = buildings ?? BuildingCatalog.Default;
+        Artifacts = artifacts ?? ArtifactCatalog.Default;
         Random = new GameRandom(Options.Seed);
         Fog = new FogOfWar(map, Options.FogMode);
         _players = players.ToList();
@@ -76,6 +79,9 @@ public sealed class GameState
 
     /// <summary>Town building levels, costs and requirements in effect for this game (ADR-046).</summary>
     public BuildingCatalog Buildings { get; }
+
+    /// <summary>Artifacts in effect for this game (ADR-061).</summary>
+    public ArtifactCatalog Artifacts { get; }
 
     /// <summary>The game RNG; only Domain services draw from it, in command order, so games replay exactly.</summary>
     internal GameRandom Random { get; }
@@ -242,8 +248,12 @@ public sealed class GameState
         }
 
         _heroes.Add(hero);
+        RefreshArtifacts(hero);
         _highestHeroId = Math.Max(_highestHeroId, hero.Id.Value);
     }
+
+    /// <summary>Recomputes what a hero's artifacts add (after anything changed what it wears).</summary>
+    internal void RefreshArtifacts(Hero hero) => hero.Bonus = ArtifactBonuses.Compute(Artifacts, hero.Artifacts);
 
     internal void RemoveHero(Hero hero) => _heroes.Remove(hero);
 

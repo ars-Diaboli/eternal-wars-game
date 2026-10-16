@@ -863,3 +863,44 @@ are drafts
   the gold beyond what it saves for a building allows; the new hero is the town's visiting hero, so recruits go to it.
 - Open: the draft numbers, whether surrender comes with taverns (ADR-038), per-town pools, hiring when an own hero stands
   at the entrance, and hero level or starter stacks for hired heroes.
+
+### ADR-061: Artifacts
+**Status**: accepted (2026-10-16), from docs/artifacts.md and the roadmap; the numbers are a draft, and the list was
+extended with HoMM3-style placeholder items
+- **Content is a table** (`data/artifacts.csv`, `data/artifact_sets.csv`, embedded in core, read by the apps at start-up,
+  `.csv.import` "keep" like the other tables): `id, name, slot, tier, set, effects, notes`. **67 artifacts**: the
+  36 lore artifacts of `artifacts.md` and 31 **HoMM3-style placeholders** (Centaur's Ax, Blackshard of the Dead
+  Knight, Ogre's Club of Havoc, Sword of Hellfire, Titan's Gladius, the Dwarven Lords' and Gnoll King's shields, Sentinel's
+  Shield, Skull Helmet, Crown of the Supreme Magi, the body armours from Petrified Wood to Titan's Cuirass, Pendant of
+  Courage, Boots of Speed, Cape of Velocity, the Endless purses, bags and sack of gold, …), marked "HoMM3 style
+  placeholder" in their notes, with our own flavour lines. Four **sets** (Pilgrim's Road, Armor of the Dawn Covenant, Ash Court
+  Regalia, The Unbound's Trophies) add a bonus when every piece is worn.
+- **Effects the game applies** (`ArtifactEffect`): Attack, Defense, Spell Power, Knowledge (only primary stats until
+  magic), morale, luck, movement percent and flat, battle speed of every stack, melee and ranged damage percent, damage
+  taken (all, and ranged only), daily income of a resource, native terrain (the hero's army walks it with no penalty),
+  terrain penalty reduction (adds to Pathfinding, at most all of it), skill levels (one skill, or every started skill,
+  capped at the skill's maximum). Effects the game cannot apply yet (mana, spell resistance, regeneration, re-rolls,
+  initiative) are in the notes as "Not yet". Negative values are allowed (Titan's Gladius: +12 Attack, −3 Defense).
+- **Paper doll** (`ArtifactSlot`, `HeroArtifacts`): head, neck, cloak, body, weapon, shield, 2 rings, boots, 3 miscellaneous
+  and a **backpack of 12**. The rules read the sum of what is worn (`ArtifactBonuses`, kept on the hero by
+  `GameState.RefreshArtifacts`; `Hero.TotalAttack`, `SkillLevelOf`, `Bonus`), never the artifacts one by one; base stats
+  stay what they were, so taking an artifact off restores them.
+- **Commands** (the owner's turn, no movement points): `EquipArtifactCommand` (from the backpack; the one worn in a full slot
+  goes to the backpack), `UnequipArtifactCommand` (needs backpack room), `GiveArtifactCommand` (to another own hero, only
+  while their exchange is open; the backpack copy goes first). Events: `ArtifactEquipped`, `ArtifactUnequipped`,
+  `ArtifactGiven`, `ArtifactGained` (pickup or loot), `ArtifactLost`, `ArtifactBackpackFull`.
+- **On the map**: `ArtifactPickup` objects (`artifact.minor`, `artifact.major`, `artifact.relic`); a hero stepping on one
+  puts it in the backpack (a full backpack leaves it there). An open pickup **rolls its artifact when the game starts**
+  from the definition's tier, from the game RNG, skipping artifacts that are already placed or carried, so relics stay
+  unique while any are left (`ArtifactService.RollUnsetPickups`; no random numbers are drawn when nothing is open). Classic
+  guard mode lets a pickup in a guarded tile be taken from outside, like piles and chests.
+- **Loot**: a hero that wins a battle against a hero (a defeat, not a retreat) gets all its artifacts, worn and carried, into
+  its backpack; what does not fit is lost. A hero that flees takes them off the map.
+- **Map format v11**: heroes list `artifacts` (worn ids, each to the slot its definition names) and `backpack`; objects of kind
+  `artifact` with an optional `artifact` id. The editor session has `SetHeroArtifacts` and `SetArtifactPickup` (undoable); the
+  validator flags unknown artifacts. Games load their catalog like the other tables (`ArtifactCatalog` parameter).
+- **AI**: it values artifacts by their effects (`AdventureAi.Score`: Attack and Defense most, battle speed, morale and luck
+  high, income by gold), goes for pickups it can reach and win, and puts on what fills a free slot or beats the worst worn
+  there by 20 %.
+- **Not yet**: artifacts in treasure chests (ADR-039 stays without the artifact outcome), the hero screen and the paper-doll
+  UI, the editor inspector rows, a merchant, artifacts that give spells or war machines, the effects marked "Not yet".

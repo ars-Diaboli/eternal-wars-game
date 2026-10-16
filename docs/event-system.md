@@ -114,6 +114,10 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, editor | all seven garrison slots after any change |
 | `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`) |
 | `HeroHired(Town, Hero, Definition)` | `TownService` | a hero was hired in a tavern and stands at the town entrance |
+| `ArtifactEquipped(Hero, Artifact, Slot)` / `ArtifactUnequipped(Hero, Artifact)` | `ArtifactService` | an artifact put on from, or taken off into, the backpack |
+| `ArtifactGiven(From, To, Artifact)` | `ArtifactService` | an artifact changed hands during a hero exchange |
+| `ArtifactGained(Hero, Artifact, Source)` / `ArtifactLost(Hero, Artifact)` / `ArtifactBackpackFull(Hero, Artifact)` | interactions, `BattleService` | picked up or looted; loot that did not fit; a pickup left because the backpack is full |
+| `HeroArtifactsChanged(Hero)` | editor | the editor changed what a hero wears and carries |
 | `MapObjectRemoved(Object)` | interactions / editor | pile/chest consumed, or deleted in editor |
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
 | `ScenarioRulesChanged` | editor | the victory and defeat conditions changed (views re-read `GameState.Rules`) |

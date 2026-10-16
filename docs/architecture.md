@@ -93,6 +93,13 @@ These are enforced by:
 - **Apps** contain composition and input mapping only. If an app needs logic, it probably belongs
   in core.
 
+### Artifacts (ADR-061)
+- `ArtifactCatalog` (`Core.Domain/Artifacts`, tables embedded from `data/artifacts.csv`) defines items, slots, tiers and sets;
+  `HeroArtifacts` holds what a hero wears and carries, and `ArtifactBonuses` is the sum the rules read
+  (`Hero.TotalAttack`, `Hero.SkillLevelOf`, `Hero.Bonus`), refreshed by `GameState.RefreshArtifacts` whenever the equipment
+  changes (also when a hero joins the game or the editor edits it). `ArtifactService` runs equip, unequip, give, pickups
+  and loot; `ArtifactPickup` objects roll their artifact at game start.
+
 ### Tavern (ADR-060)
 - `TavernRules` (Towns) decides who a tavern offers (ranks on the lore ring, a per-player weekly shuffle of the roster
   with no stored state) and whether a hire is allowed; `TownService.HireHero` creates the hero. The tavern is a building
@@ -235,7 +242,7 @@ src/
     EternalWars.Core.Events/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios
-    EternalWars.Core.Data/      Maps (MapDocument v10, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v11, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (replays)
   Godot/
     EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events

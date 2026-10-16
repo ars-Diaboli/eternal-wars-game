@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
@@ -403,6 +404,47 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
     // Heroes --------------------------------------------------------------------------------------------
 
+    /// <summary>What an artifact is worth to the AI: its effects weighed (attack and defense most, income by gold).</summary>
+    public static double Score(ArtifactDefinition artifact) => artifact.Effects.Sum(e => e.Value * e.Kind switch
+    {
+        ArtifactEffectKind.Attack or ArtifactEffectKind.Defense => 10.0,
+        ArtifactEffectKind.Morale or ArtifactEffectKind.Luck => 8.0,
+        ArtifactEffectKind.BattleSpeed => 15.0,
+        ArtifactEffectKind.SpellPower or ArtifactEffectKind.Knowledge => 2.0,
+        ArtifactEffectKind.Movement => 1.5,
+        ArtifactEffectKind.MovementFlat => 0.02,
+        ArtifactEffectKind.MeleeDamage or ArtifactEffectKind.RangedDamage => 1.0,
+        ArtifactEffectKind.DamageTaken => 3.0,
+        ArtifactEffectKind.RangedDamageTaken => 1.5,
+        ArtifactEffectKind.Income => e.Target == "gold" ? 0.1 : 5.0,
+        ArtifactEffectKind.NativeTerrain => 3.0,
+        ArtifactEffectKind.TerrainPenalty => 0.2,
+        ArtifactEffectKind.Skill => 6.0,
+        ArtifactEffectKind.AllSkills => 15.0,
+        _ => 0.0,
+    });
+
+    /// <summary>Puts on what is in the backpack when a slot is free or the new one is clearly better than the worst worn there.</summary>
+    private void EquipBest(PlayerId player, Hero hero)
+    {
+        for (var guard = 0; guard < ArtifactSlots.BackpackSize * 2 && Active(player); guard++)
+        {
+            var candidate = hero.Artifacts.Backpack
+                .Select(id => _state.Artifacts.TryGet(id, out var def) ? def : null)
+                .OfType<ArtifactDefinition>()
+                .Where(def => Score(def) > 0 && (hero.Artifacts.HasRoomToWear(def.Slot) || Score(def) > 1.2 * WorstWornScore(hero, def.Slot)))
+                .OrderByDescending(Score).ThenBy(def => def.Id, StringComparer.Ordinal)
+                .FirstOrDefault();
+            if (candidate is null || !Execute(new EquipArtifactCommand(player, hero.Id, candidate.Id)).IsAccepted)
+            {
+                return;
+            }
+        }
+    }
+
+    private double WorstWornScore(Hero hero, ArtifactSlot slot) =>
+        hero.Artifacts.Worn(slot).Select(id => _state.Artifacts.TryGet(id, out var def) ? Score(def) : 0).DefaultIfEmpty(0).Min();
+
     private bool PlayHero(PlayerId player, HeroId id)
     {
         var failed = new HashSet<MapPosition>();
@@ -413,7 +455,13 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 return false;
             }
 
-            if (!Active(player) || _state.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero || hero.MovementPoints <= 0)
+            if (!Active(player) || _state.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+            {
+                return true;
+            }
+
+            EquipBest(player, hero);
+            if (hero.MovementPoints <= 0)
             {
                 return true;
             }
@@ -528,6 +576,9 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             {
                 case ResourcePile pile when Plausible(GuardPower(visit)):
                     yield return new(visit, GoldValue(pile.Resource, pile.Amount), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit)):
+                    yield return new(visit, 800 + (80 * Score(found)), GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case TreasureChest when Plausible(GuardPower(visit)):
                     yield return new(visit, 1500, GuardArmy(visit), MaxLoss: MonsterLoss);

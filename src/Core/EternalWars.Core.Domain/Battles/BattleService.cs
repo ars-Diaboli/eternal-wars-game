@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
@@ -29,7 +30,7 @@ public sealed record DefendAction : BattleAction;
 /// sides, and applies the result to the map (survivors, experience, defeated heroes and guards).
 /// While a battle runs, a <see cref="BattleDecision"/> is pending, so the adventure map is frozen.
 /// </summary>
-public sealed class BattleService(GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression)
+public sealed class BattleService(GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts)
 {
     /// <summary>Experience for defeating (not merely routing) an enemy hero.</summary>
     public const int HeroDefeatExperience = 500;
@@ -160,7 +161,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         : null;
 
     private BattleParticipant Participant(BattleSide side, Hero hero) =>
-        new(side, hero.Owner, hero.Id, null, hero.Attack, hero.Defense, hero.Tactics, !state.GetPlayer(hero.Owner).IsHuman,
+        new(side, hero.Owner, hero.Id, null, hero.TotalAttack, hero.TotalDefense, hero.SkillLevelOf(BuiltInSkills.Tactics), !state.GetPlayer(hero.Owner).IsHuman,
             HeroBattleBonuses.For(hero, state.Creatures));
 
     /// <summary>
@@ -173,7 +174,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         var town = ProgressionService.TownOf(state, hero);
         foreach (var slot in hero.WarMachines.Order())
         {
-            if (slot != WarMachineSlot.Offensive || WarMachines.FieldsOffensive(hero.Skills.Level(BuiltInSkills.Ballistics)))
+            if (slot != WarMachineSlot.Offensive || WarMachines.FieldsOffensive(hero.SkillLevelOf(BuiltInSkills.Ballistics)))
             {
                 stacks.Add(BattleStackSpec.Of(WarMachines.KindOf(slot, town)));
             }
@@ -291,6 +292,12 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         // Loser: a hero leaves the map, a guard is gone.
         if (losing.Hero is { } loserId)
         {
+            // A defeated hero's artifacts go to the winning hero (ADR-061); a hero that flees takes them away.
+            if (reason != BattleEndReason.Retreated && winning.Hero is { } looterId)
+            {
+                artifacts.Loot(state.GetHero(loserId), state.GetHero(looterId));
+            }
+
             RemoveHero(state.GetHero(loserId), reason == BattleEndReason.Retreated);
         }
         else if (losing.Guard is { } guardId)

@@ -15,6 +15,9 @@ public static class BuiltInMapObjects
     public const string OneWayMonolithExit = "monolith.exit";
     public const string Monster = "monster";
 
+    /// <summary>Definition id of the pickup that rolls an artifact of a tier: <c>artifact.minor</c>.</summary>
+    public static string ArtifactId(Artifacts.ArtifactTier tier) => $"artifact.{tier.ToString().ToLowerInvariant()}";
+
     private static readonly Footprint MineFootprint = new(["BBB", "BVB"]);
     private static readonly Footprint GateFootprint = new(["BBB", "BVB"]);
     private static readonly Footprint MonolithFootprint = new(["B", "V"]);
@@ -47,6 +50,8 @@ public static class BuiltInMapObjects
         new(OneWayMonolithEntrance, "One-way monolith entrance", MapObjectKind.OneWayGateEntrance, MonolithFootprint),
         new(OneWayMonolithExit, "One-way monolith exit", MapObjectKind.OneWayGateExit, MonolithFootprint),
         new(Monster, "Monster", MapObjectKind.Monster, Footprint.Single),
+        .. Enum.GetValues<Artifacts.ArtifactTier>().Select(t =>
+            new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 
         .. PlayableTowns.Select(t => new MapObjectDefinition(TownId(t), TownName(t), MapObjectKind.Town, TownFootprint) { Town = t }),
     ];
