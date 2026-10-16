@@ -67,11 +67,22 @@ public partial class InspectorPanel : VBoxContainer
     private void ShowHero(Hero hero)
     {
         AddChild(new Label { Text = $"{hero.Name} ({_editor.Scenario.GetPlayer(hero.Owner).Name}) at {hero.Position}" });
+        var identity = new HBoxContainer();
+        AddChild(identity);
+        var type = Options(identity, "Hero", new[] { ("(custom)", (string?)null) }
+            .Concat(_editor.Scenario.HeroRoster.All.OrderBy(h => h.Town).ThenBy(h => h.Name)
+                .Select(h => ($"{h.Name} ({h.Town}, {h.Class})", (string?)h.Id))), hero.Definition);
+        type.Button.ItemSelected += _ => Edit(() => _editor.SetHeroType(hero.Id, type.Value()));
+        if (hero.Definition is not null)
+        {
+            AddChild(new Label { Text = $"{hero.Class}; prefers {hero.PreferredCreature}; specialty {hero.Specialty}; skills {hero.Skills}" });
+        }
+
         var stats = new HBoxContainer();
         AddChild(stats);
         var attack = Spin(stats, "Attack", hero.Attack, 0, 99);
         var defense = Spin(stats, "Defense", hero.Defense, 0, 99);
-        var tactics = Options(stats, "Tactics", Enum.GetValues<SkillLevel>().Select(s => (s.ToString(), s)), hero.Tactics);
+        var tactics = Options(stats, "Tactics", Enum.GetValues<SkillLevel>().Where(s => s <= SkillLevel.Expert).Select(s => (s.ToString(), s)), hero.Tactics);
         void ApplyStats() => Edit(() => _editor.SetHeroStats(hero.Id, (int)attack.Value, (int)defense.Value, tactics.Value()));
         attack.ValueChanged += _ => ApplyStats();
         defense.ValueChanged += _ => ApplyStats();

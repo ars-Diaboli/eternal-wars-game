@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
@@ -46,7 +47,7 @@ public partial class Main : Node3D
         _camera = new StrategyCamera { Name = "Camera" };
         AddChild(_camera);
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
-        Open(BlankScenario.Create(36, 36));
+        Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes));
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -227,8 +228,8 @@ public partial class Main : Node3D
         rows.AddChild(fileRow);
         _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0) };
         fileRow.AddChild(_fileName);
-        AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36)));
-        AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2)));
+        AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes)));
+        AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes)));
         AddButton(fileRow, "Save", Save);
         AddButton(fileRow, "Load", Load);
         AddButton(fileRow, "Undo", () => _editor.Undo());
@@ -288,7 +289,7 @@ public partial class Main : Node3D
 
         try
         {
-            Open(MapConverter.ToGameState(MapSerializer.Load(path)));
+            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes));
             _status.Text = $"Loaded {path}";
         }
         catch (FormatException e)

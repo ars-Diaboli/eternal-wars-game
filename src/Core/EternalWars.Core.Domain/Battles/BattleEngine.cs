@@ -318,7 +318,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     private (int Initiative, int Side, int Speed, int Roll) Key(int unitId) => Key(battle.GetUnit(unitId));
 
     private (int Initiative, int Side, int Speed, int Roll) Key(BattleUnit unit) =>
-        (unit.Creature.Initiative, unit.Side == BattleSide.Attacker ? 1 : 0, unit.Creature.Speed, battle.TieRolls.GetValueOrDefault(unit.Id));
+        (unit.Creature.Initiative, unit.Side == BattleSide.Attacker ? 1 : 0, battle.SpeedOf(unit), battle.TieRolls.GetValueOrDefault(unit.Id));
 
     private bool CheckFinished()
     {

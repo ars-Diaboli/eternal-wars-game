@@ -69,10 +69,55 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
   tests place units exactly with `TestBattle`.
 - Map files are `*.ewmap.json` (format v4: terrain + optional road rows, teams, guard mode, heroes with stats and
   armies, objects incl. one-way gates, monsters and mine guards). Replays are `*.ewreplay.json`. Creature
-  definitions can be extended with `CreatureDefinitionSerializer` (see `BuiltInCreatures` for ids). Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
+  stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
+  stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
 - CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` on every push to main and on PRs.
 - Core builds with warnings as errors; keep Godot projects warning-free as well.
 - Commits: imperative mood, small and focused.
 - Binary assets (`*.glb`, `*.png`, `*.wav`, `*.ogg`, ...) go through **Git LFS** once we start adding
   them (to be configured with the first asset commit).
+
+## Editing creature stats
+
+Every creature is one row of `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (ADR-044). Edit it in any
+spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by header name:
+
+| Column | Meaning |
+|---|---|
+| `id` | `town.kebab-name`; maps, saves and code refer to it, so rename with care |
+| `name`, `town`, `tier` | display name; town id (empty for neutrals); tier 1–5 |
+| `size` | `Small` (2×2 cells), `Medium` (3×3) or `Large` (4×4) |
+| `upgrade` | id of the upgraded form (same town and tier), empty on upgrades and most neutrals |
+| `attack`, `defense`, `min_damage`, `max_damage`, `health` | per creature |
+| `speed`, `map_speed`, `initiative` | battlefield cells per turn; HoMM3-scale adventure speed; turn order |
+| `shots` | ammunition; empty or 0 = melee |
+| `growth`, `gold`, `resources` | weekly growth; gold cost; other costs like `mercury 1` |
+| `tags` | free words separated by `;` (`human; holy`) |
+| `capabilities` | up to five, separated by `;`: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster fireball 1`, … (`CapabilityKind`) |
+| `notes` | free text; ignored, like any extra column |
+
+- **Game, editor and 2D harness** read the file when they start: save and restart the app. A mistake is reported
+  in the Godot output with its line and column, and the built-in copy is used instead. `-- --creatures=path.csv`
+  loads another table.
+- **Simulator** without a rebuild: `dotnet run --project tools/EternalWars.Tools.Sim -- towns --creatures
+  src/Godot/EternalWars.Godot.Assets/data/creatures.csv`. `sim creatures` shows each line's strength against its
+  tier, `sim lines` duels the lines of a tier, `sim towns` plays one-week town armies against each other.
+- **Tests and the default catalog** use the copy embedded at build time; `dotnet test` rebuilds it. Tests check
+  the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines).
+
+## Editing heroes
+
+The hero roster is `src/Godot/EternalWars.Godot.Assets/data/heroes.csv` (ADR-048), with the same file rules and
+reload behaviour as the creature table (`-- --heroes=path.csv` loads another one).
+
+| Column | Meaning |
+|---|---|
+| `id`, `name`, `town` | `town.name`; display name; town id |
+| `class` | `Warrior` or `Mage` |
+| `preferred` | base id of a tier 1–4 creature line of the same town; each line has one mage and one warrior |
+| `specialty` | `skill <skill id>`, `spell <spell id>` or `resource <resource> <amount a day>` |
+| `skills` | starting skills: `offense.melee Basic; tactics.tactics Advanced` (ids in `BuiltInSkills`) |
+| `attack`, `defense` | starting primary stats |
+| `notes` | free text |
+

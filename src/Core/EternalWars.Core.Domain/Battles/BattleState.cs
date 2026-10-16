@@ -162,6 +162,13 @@ public sealed class BattleState
 
     public BattleParticipant Participant(BattleSide side) => side == BattleSide.Attacker ? Attacker : Defender;
 
+    /// <summary>Battlefield speed: the creature's, plus the hero's Drill and the preferred-creature bonus (ADR-048).</summary>
+    public int SpeedOf(BattleUnit unit)
+    {
+        var bonus = Participant(unit.Side).Bonus;
+        return unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0);
+    }
+
     public BattleUnit GetUnit(int id) => _units.First(u => u.Id == id);
 
     public BattleUnit? FindUnit(int id) => _units.FirstOrDefault(u => u.Id == id);

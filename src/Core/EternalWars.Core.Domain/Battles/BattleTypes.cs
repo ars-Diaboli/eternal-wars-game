@@ -114,6 +114,7 @@ public sealed record BattleObstacle(int Id, CellPosition Position, ObstacleClass
 /// <param name="Defense">Hero Defense added to every stack.</param>
 /// <param name="Tactics">Hero Tactics level (width choice).</param>
 /// <param name="IsComputer">Commanded by the battle AI (neutrals, computer players, quick combat).</param>
+/// <param name="Bonuses">Hero skill and preferred-creature bonuses (none for guards).</param>
 public sealed record BattleParticipant(
     BattleSide Side,
     PlayerId? Owner,
@@ -122,7 +123,43 @@ public sealed record BattleParticipant(
     int Attack,
     int Defense,
     Heroes.SkillLevel Tactics,
-    bool IsComputer);
+    bool IsComputer,
+    HeroBattleBonuses? Bonuses = null)
+{
+    public HeroBattleBonuses Bonus => Bonuses ?? HeroBattleBonuses.None;
+}
+
+/// <summary>
+/// What a hero adds to its side in battle (ADR-048): skill percentages (Melee, Archery, Armor), Drill speed, and the flat
+/// bonus of its preferred creature line (<see cref="Heroes.SkillEffects"/>).
+/// </summary>
+public sealed record HeroBattleBonuses(int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred)
+{
+    public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<string>());
+
+    public bool Prefers(Creatures.CreatureDefinition creature) => Preferred.Contains(creature.Id);
+
+    public static HeroBattleBonuses For(Heroes.Hero hero, Creatures.CreatureCatalog creatures)
+    {
+        var preferred = new HashSet<string>(StringComparer.Ordinal);
+        if (hero.PreferredCreature is { } line && creatures.TryGet(line, out var creature))
+        {
+            preferred.Add(creature.Id);
+            if (creature.UpgradesTo is { } upgrade)
+            {
+                preferred.Add(upgrade);
+            }
+        }
+
+        var skills = hero.Skills;
+        return new(
+            Heroes.SkillEffects.MeleeDamagePercent(skills.Level(Heroes.BuiltInSkills.Melee)),
+            Heroes.SkillEffects.RangedDamagePercent(skills.Level(Heroes.BuiltInSkills.Archery)),
+            Heroes.SkillEffects.DamageTakenReductionPercent(skills.Level(Heroes.BuiltInSkills.Armor)),
+            Heroes.SkillEffects.BattleSpeedBonus(skills.Level(Heroes.BuiltInSkills.Drill)),
+            preferred);
+    }
+}
 
 public enum BattlePhase
 {

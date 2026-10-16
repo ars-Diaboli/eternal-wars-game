@@ -37,11 +37,12 @@ public sealed class GameSession
 
         Economy = new EconomyService(State, Bus);
         Armies = new ArmyService(State, Bus);
-        Battles = new BattleService(State, Bus, Armies);
+        Progression = new ProgressionService(State, Bus);
+        Battles = new BattleService(State, Bus, Armies, Progression);
         Guards = new GuardService(State, Bus, Battles);
-        Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards);
+        Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression);
         Movement = new HeroMovementService(State, Bus, Interactions);
-        Turns = new TurnService(State, Bus, Economy, Movement, Guards);
+        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression);
     }
 
     public GameState State { get; }
@@ -64,6 +65,8 @@ public sealed class GameSession
     public GuardService Guards { get; }
 
     internal ArmyService Armies { get; }
+
+    internal ProgressionService Progression { get; }
 
     internal MapObjectInteractionService Interactions { get; }
 
@@ -169,6 +172,9 @@ public sealed class GameSession
                 return null;
             case CompleteExchangeCommand:
                 Interactions.CompleteExchange();
+                return null;
+            case ChooseSkillCommand skill:
+                Progression.Choose(skill.Skill);
                 return null;
             case MoveStackCommand stack:
                 Armies.MoveStack(stack.Player, stack.FromHero, stack.FromSlot, stack.ToHero, stack.ToSlot, stack.Count);

@@ -102,6 +102,12 @@ fog, guards, quick-combat battles); final art and a real exchange/battle screen 
       3×3 area), HoMM3 dispositions (join / flee / fight, ADR-040), counts rolled by tier; optional mine guards;
       ambush battles (ADR-031); hero vs hero battles with hot-seat control of both sides
 - [x] **Haven and Inferno** draft rosters (9 lines each, 5 tiers, all upgradeable) + 5 neutrals
+- [x] **All eight town rosters**, Conflux, Dragon Utopia and lore neutrals from the sandbox, first balance pass with
+      `sim lines` / `sim towns` / `sim creatures` (ADR-044)
+- [x] Sandbox terrain model (ADR-045): every terrain penalises non-natives, several natives per town, beach / ice /
+      shallow water / cursed lands / rocky ground, map format v5
+- [x] Creature table `data/creatures.csv` as the single source of stats: embedded in core, read by the apps at
+      start-up so it can be edited without a rebuild or re-import (ADR-044)
 - [x] HoMM4-style creature capabilities, at most 5 per creature (ADR-042): first strike, ranged retaliation,
       strikes/shoots twice, opt-in melee penalty, unlimited/no retaliation, area attacks, engagement hooks;
       spell immunity and casting as data + hooks until magic (Phase 5)
@@ -119,12 +125,15 @@ fog, guards, quick-combat battles); final art and a real exchange/battle screen 
 (`sim selftest`, replay tests); the 3D battle scene is still missing.
 
 ## Phase 3: Towns and progression (~6–8 weeks)
-- Towns: building tree, one build per day, weekly growth, recruiting, garrison
+- Towns: 7×7 map object (corners free, entrance bottom-middle), building tree (ADR-046 draft: town hall, fort,
+  blacksmith, marketplace, mage guild, tavern, dwellings), one build per day, weekly growth, recruiting, garrison
 - Dwelling choice: 9 dwellings (2 per tier 1–4, 1 at tier 5), build 7, at least one per tier; upgrades (ADR-030)
 - Towns for the slice: **Haven and Inferno**
 - Native terrain: penalty waived only for all-native armies; Pathfinding skill 25/50/75 % (ADR-024, ADR-032)
 - Income sources beyond mines: towns, Estates-like skills, hero specialisations, artifacts (ADR-025)
-- Hero levels, primary stats, secondary skills, level-up choices
+- [x] Hero roster (`data/heroes.csv`, 16 per town, mage/warrior, preferred creature, specialty), skill groups,
+      levels with skill offers and rival-school odds, the skill effects that need no towns or magic (ADR-048)
+- Primary stat growth; stewardship, deployment, spell resistance, skill/spell specialties; hiring heroes in taverns
 - Artifacts (slots, backpack, stat effects)
 - Basic AI: economy + exploration + attacks it can win
 - Victory/loss conditions; save/load
@@ -152,7 +161,8 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 author templates in the editor.
 
 ## Phase 5: Content and polish
-- Magic (schools, mage guild, combat and adventure spells)
+- Magic: six schools, four spell levels and guild levels, spells upgradable twice (ADR-047); combat and adventure
+  spells
 - Remaining towns, siege battles (36-wide battlefield) ❓
 - Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)
 - Art pass (dark fantasy, realistic lighting): terrain splat shader, PBR models, fog/volumetrics,

@@ -28,7 +28,7 @@ public sealed record DefendAction : BattleAction;
 /// sides, and applies the result to the map (survivors, experience, defeated heroes and guards).
 /// While a battle runs, a <see cref="BattleDecision"/> is pending, so the adventure map is frozen.
 /// </summary>
-public sealed class BattleService(GameState state, IEventPublisher events, ArmyService armies)
+public sealed class BattleService(GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression)
 {
     /// <summary>Experience for defeating (not merely routing) an enemy hero.</summary>
     public const int HeroDefeatExperience = 500;
@@ -145,7 +145,8 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         : null;
 
     private BattleParticipant Participant(BattleSide side, Hero hero) =>
-        new(side, hero.Owner, hero.Id, null, hero.Attack, hero.Defense, hero.Tactics, !state.GetPlayer(hero.Owner).IsHuman);
+        new(side, hero.Owner, hero.Id, null, hero.Attack, hero.Defense, hero.Tactics, !state.GetPlayer(hero.Owner).IsHuman,
+            HeroBattleBonuses.For(hero, state.Creatures));
 
     private List<BattleStackSpec> Stacks(Hero hero) =>
         hero.Army.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
@@ -268,6 +269,8 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         {
             events.Publish(new DecisionResolved(decision));
         }
+
+        progression.OfferNext();
     }
 
     private void ApplySurvivors(BattleState battle, BattleSide side, Hero hero)
@@ -288,8 +291,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
             return;
         }
 
-        hero.Experience += experience;
-        events.Publish(new HeroExperienceGained(hero.Id, experience, hero.Experience));
+        progression.GrantExperience(hero, experience);
     }
 
     private void RemoveHero(Hero hero, bool retreated)

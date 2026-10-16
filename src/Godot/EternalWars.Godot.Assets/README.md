@@ -16,6 +16,7 @@ audio/
 fonts/
 themes/      UI .tres themes
 scenes/      reusable .tscn prefabs (hero, town, map objects, UI widgets)
+data/        game data read at run time: creatures.csv, heroes.csv (kept as plain files: importer "keep")
 ```
 
 Rules:

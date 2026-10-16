@@ -38,6 +38,22 @@ public class MapSerializerTests
     }
 
     [Fact]
+    public void EveryTerrain_HasACode_AndRoundTrips()
+    {
+        var terrains = Enum.GetValues<TerrainType>();
+        var map = new AdventureMap(terrains.Length, 1);
+        for (var x = 0; x < terrains.Length; x++)
+        {
+            map.SetTerrain(new MapPosition(x, 0), terrains[x]);
+        }
+
+        var restored = MapConverter.ToMap(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(map))));
+
+        Assert.Equal(terrains, Enumerable.Range(0, terrains.Length).Select(x => restored.GetTerrain(new MapPosition(x, 0))));
+        Assert.Equal(TerrainType.ShallowWater, TerrainCodes.FromCode('='));
+    }
+
+    [Fact]
     public void MapsWithoutRoads_OmitTheRoadLayer()
     {
         var document = MapConverter.ToDocument(BlankScenario.Create(8, 6));

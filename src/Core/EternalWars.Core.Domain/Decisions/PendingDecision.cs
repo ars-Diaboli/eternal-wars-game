@@ -3,8 +3,8 @@ using EternalWars.Core.Domain.Common;
 namespace EternalWars.Core.Domain.Decisions;
 
 /// <summary>
-/// A choice the game is waiting for before it can continue (treasure chest, exchange, guard offer, battle;
-/// level-ups and seer huts later). While one is pending, movement and End Turn are refused.
+/// A choice the game is waiting for before it can continue (treasure chest, exchange, guard offer, battle,
+/// level-up; seer huts later). While one is pending, movement and End Turn are refused.
 /// </summary>
 public abstract record PendingDecision(HeroId Hero);
 
@@ -40,3 +40,9 @@ public sealed record GuardEncounterDecision(HeroId Hero, MapObjectId Guard, Guar
 /// command their sides through battle commands meanwhile.
 /// </summary>
 public sealed record BattleDecision(HeroId Hero) : PendingDecision(Hero);
+
+/// <summary>
+/// A hero reached <paramref name="Level"/>: the owner picks one of <paramref name="Options"/> (skill ids) to raise by one
+/// level (ADR-048).
+/// </summary>
+public sealed record LevelUpDecision(HeroId Hero, int Level, IReadOnlyList<string> Options) : PendingDecision(Hero);

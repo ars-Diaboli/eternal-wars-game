@@ -11,14 +11,19 @@ public sealed record HitModifiers(int BaseRoll, bool IsRanged, int CoverEighths 
 /// <summary>
 /// HoMM3 damage baseline in integer maths (ADR-033): base roll × stack size; +5 % per point of Attack above
 /// Defense (cap +300 %), −2.5 % per point of Defense above Attack (cap −70 %); then capability bonuses, the
-/// long-range halving, the <c>MeleePenalty</c> halving, and cover. Never less than 1.
+/// long-range halving, the <c>MeleePenalty</c> halving, and cover; hero skills (Melee, Archery, Armor) and the preferred
+/// creature's +Attack/+Defense (ADR-048). Never less than 1.
 /// </summary>
 public static class DamageCalculator
 {
     public static int Damage(BattleState battle, BattleUnit attacker, BattleUnit defender, HitModifiers hit)
     {
-        var attack = attacker.Creature.Attack + battle.Participant(attacker.Side).Attack;
-        var defense = defender.Creature.Defense + battle.Participant(defender.Side).Defense;
+        var attackerBonus = battle.Participant(attacker.Side).Bonus;
+        var defenderBonus = battle.Participant(defender.Side).Bonus;
+        var attack = attacker.Creature.Attack + battle.Participant(attacker.Side).Attack
+                     + (attackerBonus.Prefers(attacker.Creature) ? Heroes.SkillEffects.PreferredAttack : 0);
+        var defense = defender.Creature.Defense + battle.Participant(defender.Side).Defense
+                      + (defenderBonus.Prefers(defender.Creature) ? Heroes.SkillEffects.PreferredDefense : 0);
         if (defender.IsDefending)
         {
             defense += DefendBonus(defense);
@@ -47,6 +52,8 @@ public static class DamageCalculator
         }
 
         damage = damage * (100 + bonusPercent) / 100;
+        damage = damage * (100 + (hit.IsRanged ? attackerBonus.RangedPercent : attackerBonus.MeleePercent)) / 100;
+        damage = damage * (100 - defenderBonus.DamageTakenReductionPercent) / 100;
 
         if (hit.IsRanged)
         {

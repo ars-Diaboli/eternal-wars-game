@@ -23,22 +23,40 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
-/// sim towns [--runs 20] [--upgraded]  (round robin of one-week town armies, for roster balance)
+/// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
+/// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
+/// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
 /// sim selftest                      (CI: determinism and replay round trip)
 /// </code>
+/// Any command takes <c>--creatures path/to/creatures.csv</c> to use an edited creature table without rebuilding.
 /// </summary>
 public static class Program
 {
+    private static readonly string[] PlayableTowns =
+        [TownIds.Haven, TownIds.Sylvan, TownIds.Academy, TownIds.Necropolis, TownIds.Inferno, TownIds.Dungeon, TownIds.Stronghold, TownIds.SwampBestiary];
+
+    /// <summary>The built-in creatures, or the table given with <c>--creatures</c>.</summary>
+    private static CreatureCatalog Catalog { get; set; } = CreatureCatalog.Default;
+
     public static int Main(string[] args)
     {
         try
         {
+            if (Array.IndexOf(args, "--creatures") is var index and >= 0 && index + 1 < args.Length)
+            {
+                Catalog = new CreatureCatalog(CreatureTable.Parse(File.ReadAllText(args[index + 1])));
+                args = [.. args[..index], .. args[(index + 2)..]];
+            }
+
             return args switch
             {
                 ["battle", var attacker, var defender, .. var rest] => Battle(ParseArmy(attacker), ParseArmy(defender), Option(rest, "--runs", 100), (ulong)Option(rest, "--seed", 1)),
                 ["record", var path, .. var rest] => Record(path, Option(rest, "--days", 7), (ulong)Option(rest, "--seed", 1)),
                 ["replay", var path] => Replay(path),
-                ["towns", .. var rest] => Towns(Option(rest, "--runs", 20), rest.Contains("--upgraded")),
+                ["towns", .. var rest] => Towns(Option(rest, "--runs", 32), rest.Contains("--upgraded")),
+                ["creatures", "--write", var path] => WriteTable(path),
+                ["creatures"] => Creatures(),
+                ["lines", .. var rest] => Lines(Option(rest, "--runs", 4), rest.Contains("--upgraded")),
                 ["selftest"] => SelfTest(),
                 _ => Usage(),
             };
@@ -52,7 +70,8 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | towns [--runs N] [--upgraded] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | selftest");
+        Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
     }
@@ -92,7 +111,7 @@ public static class Program
             new Hero(new HeroId(1), "Attacker", players[0].Id, new MapPosition(0, 0), Copy(attacker)),
             new Hero(new HeroId(2), "Defender", players[1].Id, new MapPosition(1, 0), Copy(defender)),
         };
-        var session = new GameSession(new GameState(map, players, heroes, options: new GameOptions(Seed: seed)));
+        var session = new GameSession(new GameState(map, players, heroes, options: new GameOptions(Seed: seed), creatures: Catalog));
         BattleEnded? ended = null;
         var rounds = 0;
         session.Events.Subscribe<BattleEnded>(e => ended = e);
@@ -105,36 +124,27 @@ public static class Program
     }
 
     /// <summary>
-    /// Every playable town against every other with a one-week army: both lines of tiers 1–2, the first line of tiers
-    /// 3–4 and the tier-5 creature, one week of growth each. Each pairing fights from both sides. Prints win rates.
+    /// Every playable town against every other with a one-week army of seven dwellings (ADR-030): both lines of tiers
+    /// 1–2, one line each of tiers 3 and 4, and tier 5, one week of growth each. The four possible builds rotate between
+    /// runs and each pairing fights from both sides. Prints army power and win rates.
     /// </summary>
     private static int Towns(int runs, bool upgraded)
     {
-        string[] towns = [TownIds.Haven, TownIds.Sylvan, TownIds.Academy, TownIds.Necropolis, TownIds.Inferno, TownIds.Dungeon, TownIds.Stronghold, TownIds.SwampBestiary];
-        var catalog = CreatureCatalog.Default;
-        var armies = towns.ToDictionary(t => t, t =>
+        var builds = PlayableTowns.ToDictionary(t => t, t => WeekArmies(t, upgraded));
+        foreach (var (town, armies) in builds)
         {
-            var lines = catalog.BaseCreaturesOf(t).ToList();
-            var picked = lines.Where(c => c.Tier <= 2)
-                .Concat(lines.Where(c => c.Tier is 3 or 4).GroupBy(c => c.Tier).Select(g => g.First()))
-                .Concat(lines.Where(c => c.Tier == 5));
-            return Army.Of(picked.Select(c => new CreatureStack(upgraded ? c.UpgradesTo! : c.Id, c.WeeklyGrowth)).ToArray());
-        });
-
-        foreach (var (town, army) in armies)
-        {
-            var stacks = army.Stacks.Select(s => (Creature: catalog.Get(s.Stack.Creature), s.Stack.Count)).ToList();
-            Console.WriteLine($"{town,-16} power {stacks.Sum(s => (long)s.Count * s.Creature.Value),7}  " +
-                              string.Join("  ", stacks.Select(s => $"T{s.Creature.Tier} {s.Creature.Name} {s.Count}×{s.Creature.Value}")));
+            var powers = armies.Select(Power).ToList();
+            Console.WriteLine($"{town,-15} power {powers.Min(),6}–{powers.Max(),-6} " +
+                              string.Join("  ", Catalog.BaseCreaturesOf(town).Select(c => $"T{c.Tier} {c.Name} {c.WeeklyGrowth}×{Catalog.Get(upgraded ? c.UpgradesTo! : c.Id).Value}")));
         }
 
         Console.WriteLine($"Win rate of the row town over the column town ({runs} battles per side, {(upgraded ? "upgraded" : "base")} one-week armies)");
-        Console.WriteLine("".PadRight(16) + string.Concat(towns.Select(t => t[..Math.Min(7, t.Length)].PadLeft(8))) + "   total");
-        foreach (var row in towns)
+        Console.WriteLine("".PadRight(16) + string.Concat(PlayableTowns.Select(t => t[..Math.Min(7, t.Length)].PadLeft(8))) + "   total");
+        foreach (var row in PlayableTowns)
         {
             var wins = 0;
             var line = row.PadRight(16);
-            foreach (var column in towns)
+            foreach (var column in PlayableTowns)
             {
                 if (row == column)
                 {
@@ -145,17 +155,116 @@ public static class Program
                 var won = 0;
                 for (var run = 0; run < runs; run++)
                 {
-                    won += FightOnce(armies[row], armies[column], (ulong)run).Ended.Winner == BattleSide.Attacker ? 1 : 0;
-                    won += FightOnce(armies[column], armies[row], (ulong)(run + 1000)).Ended.Winner == BattleSide.Defender ? 1 : 0;
+                    var (mine, theirs) = (builds[row][run % 4], builds[column][run / 4 % 4]);
+                    won += FightOnce(mine, theirs, (ulong)run).Ended.Winner == BattleSide.Attacker ? 1 : 0;
+                    won += FightOnce(theirs, mine, (ulong)(run + 1000)).Ended.Winner == BattleSide.Defender ? 1 : 0;
                 }
 
                 wins += won;
                 line += $"{100 * won / (2 * runs)}%".PadLeft(8);
             }
 
-            Console.WriteLine(line + $"{100 * wins / (2 * runs * (towns.Length - 1))}%".PadLeft(8));
+            Console.WriteLine(line + $"{100 * wins / (2 * runs * (PlayableTowns.Length - 1))}%".PadLeft(8));
         }
 
+        return 0;
+
+        static long Power(Army army) => army.Stacks.Sum(s => (long)s.Stack.Count * Catalog.Get(s.Stack.Creature).Value);
+    }
+
+    /// <summary>
+    /// Every creature line of the playable towns against every other line of its tier: one week of growth each,
+    /// both sides, <paramref name="runs"/> seeds. Prints each line's win rate, weakest first, per tier.
+    /// </summary>
+    private static int Lines(int runs, bool upgraded)
+    {
+        var lines = PlayableTowns.SelectMany(Catalog.BaseCreaturesOf).ToList();
+        foreach (var tier in lines.Select(c => c.Tier).Distinct().Order())
+        {
+            var group = lines.Where(c => c.Tier == tier).ToList();
+            var wins = group.ToDictionary(c => c.Id, _ => 0);
+            foreach (var (a, i) in group.Select((c, i) => (c, i)))
+            {
+                foreach (var b in group.Skip(i + 1))
+                {
+                    var (armyA, armyB) = (Week(a), Week(b));
+                    for (var run = 0; run < runs; run++)
+                    {
+                        var first = FightOnce(armyA, armyB, (ulong)run).Ended.Winner == BattleSide.Attacker;
+                        var second = FightOnce(armyB, armyA, (ulong)(run + 1000)).Ended.Winner == BattleSide.Defender;
+                        wins[a.Id] += (first ? 1 : 0) + (second ? 1 : 0);
+                        wins[b.Id] += (first ? 0 : 1) + (second ? 0 : 1);
+                    }
+                }
+            }
+
+            Console.WriteLine($"Tier {tier} ({(upgraded ? "upgraded" : "base")}, one week of growth, {runs} battles per side):");
+            foreach (var (id, won) in wins.OrderBy(w => w.Value))
+            {
+                Console.WriteLine($"  {id,-30} {100.0 * won / (2 * runs * (group.Count - 1)),5:0}%");
+            }
+        }
+
+        return 0;
+
+        Army Week(CreatureDefinition line) => Army.Of(new CreatureStack(upgraded ? line.UpgradesTo! : line.Id, line.WeeklyGrowth));
+    }
+
+    /// <summary>The four seven-dwelling builds of a town: either line of tier 3 × either line of tier 4.</summary>
+    private static List<Army> WeekArmies(string town, bool upgraded)
+    {
+        var lines = Catalog.BaseCreaturesOf(town).ToList();
+        return
+        [
+            .. from third in lines.Where(c => c.Tier == 3)
+               from fourth in lines.Where(c => c.Tier == 4)
+               select Army.Of(lines.Where(c => c.Tier is 1 or 2 or 5).Append(third).Append(fourth).OrderBy(c => c.Tier)
+                   .Select(c => new CreatureStack(upgraded ? c.UpgradesTo! : c.Id, c.WeeklyGrowth)).ToArray()),
+        ];
+    }
+
+    /// <summary>
+    /// Roster overview for balancing: per creature line its value (<see cref="CreatureDefinition.Value"/>), weekly
+    /// growth, weekly power (growth × value) relative to the median line of that tier in the playable towns, the upgrade's
+    /// value relative to the base, and gold per point of value.
+    /// </summary>
+    private static int Creatures()
+    {
+        var upgrades = Catalog.All.Where(c => c.UpgradesTo is not null).Select(c => c.UpgradesTo!).ToHashSet();
+        var bases = Catalog.All.Where(c => !upgrades.Contains(c.Id)).ToList();
+        var medians = Enumerable.Range(CreatureDefinition.MinTier, CreatureDefinition.MaxTier).ToDictionary(t => t, t =>
+        {
+            var powers = bases.Where(c => c.Tier == t && PlayableTowns.Contains(c.Town)).Select(Week).Order().ToList();
+            return powers.Count == 0 ? 1 : powers[powers.Count / 2];
+        });
+
+        Console.WriteLine($"{"town",-15} T {"creature",-18} {"value",6} {"grow",4} {"week",7} {"×med",5}  {"upgrade",-18} {"value",6} {"×base",5} {"gold/val",8}");
+        foreach (var creature in bases.OrderBy(c => c.Town is { } t && PlayableTowns.Contains(t) ? Array.IndexOf(PlayableTowns, t) : PlayableTowns.Length)
+                     .ThenBy(c => c.Town).ThenBy(c => c.Tier).ThenBy(c => c.Name))
+        {
+            var upgrade = creature.UpgradesTo is { } id ? Catalog.Get(id) : null;
+            Console.WriteLine($"{creature.Town ?? "neutral",-15} {creature.Tier} {creature.Name,-18} {creature.Value,6} {creature.WeeklyGrowth,4} {Week(creature),7:0} " +
+                              $"{Week(creature) / medians[creature.Tier],5:0.00}  {upgrade?.Name ?? "",-18} {upgrade?.Value.ToString() ?? "",6} " +
+                              $"{(upgrade is null ? "" : $"{(double)upgrade.Value / creature.Value:0.00}"),5} {(double)creature.Cost.Gold / creature.Value,8:0.00}");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("One-week army power (mean of the four seven-dwelling builds):");
+        foreach (var town in PlayableTowns)
+        {
+            Console.WriteLine($"  {town,-15} {WeekArmies(town, upgraded: false).Average(a => a.Stacks.Sum(s => (double)s.Stack.Count * Catalog.Get(s.Stack.Creature).Value)),8:0}");
+        }
+
+        return 0;
+
+        static double Week(CreatureDefinition creature) => (double)creature.WeeklyGrowth * creature.Value;
+    }
+
+    /// <summary>Writes the catalog (built-in or <c>--creatures</c>) as a creature table; the notes column stays empty.</summary>
+    private static int WriteTable(string path)
+    {
+        File.WriteAllText(path, CreatureTable.Format(Catalog.All));
+        Console.WriteLine($"{Catalog.All.Count()} creatures → {path}");
         return 0;
     }
 
@@ -173,7 +282,7 @@ public static class Program
     private static int Replay(string path)
     {
         var record = GameRecordSerializer.Load(path);
-        var session = GameReplay.Replay(record);
+        var session = GameReplay.Replay(record, creatures: Catalog);
         Console.WriteLine($"replayed {record.Commands.Count} commands: {session.State.Date}, digest {GameStateDigest.Compute(session.State)} (matches the record)");
         return 0;
     }
@@ -190,7 +299,7 @@ public static class Program
         }
 
         var json = GameRecordSerializer.Serialize(GameReplay.Record(map, first));
-        GameReplay.Replay(GameRecordSerializer.Deserialize(json));
+        GameReplay.Replay(GameRecordSerializer.Deserialize(json), creatures: Catalog);
 
         var army = ParseArmy($"{BuiltInCreatures.Pikeman}:20,{BuiltInCreatures.Archer}:10");
         var defender = ParseArmy($"{BuiltInCreatures.HellHound}:10");
@@ -211,7 +320,7 @@ public static class Program
     private static (MapDocument Map, GameSession Session) PlayDemo(int days, ulong seed)
     {
         var map = MapConverter.ToDocument(DemoScenario.Create());
-        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: seed)));
+        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: seed), creatures: Catalog));
         var state = session.State;
         session.Start();
         for (var turn = 0; turn < days * state.Players.Count; turn++)
@@ -257,6 +366,7 @@ public static class Program
             {
                 TreasureChestDecision => new ResolveTreasureChestCommand(player, TreasureChestReward.Gold),
                 HeroExchangeDecision => new CompleteExchangeCommand(player),
+                LevelUpDecision levelUp => new ChooseSkillCommand(player, levelUp.Options[0]),
                 GuardEncounterDecision => new RespondToGuardCommand(player, Accept: false), // always fight: exercises battles
                 _ => new AutoResolveBattleCommand(state.Battle!.Attacker.Owner ?? player),
             };
@@ -271,7 +381,7 @@ public static class Program
             var (creature, count) = part.Split(':') is [var c, var n] && int.TryParse(n, out var parsed)
                 ? (c, parsed)
                 : throw new FormatException($"'{part}' is not creature:count.");
-            CreatureCatalog.Default.Get(creature);
+            Catalog.Get(creature);
             return new CreatureStack(creature, count);
         }).ToArray();
         return stacks.Length is > 0 and <= Army.SlotCount ? Army.Of(stacks) : throw new FormatException("An army has 1 to 7 stacks.");

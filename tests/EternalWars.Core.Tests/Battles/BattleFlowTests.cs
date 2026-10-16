@@ -39,7 +39,8 @@ public class BattleFlowTests
         Assert.Equal((BattleSide.Attacker, BattleEndReason.Defeated), (ended.Winner, ended.Reason));
         Assert.Contains(new HeroDefeated(B, Red, Retreated: false), events);
         Assert.DoesNotContain(state.Heroes, h => h.Id == B);
-        Assert.Equal(10 * 14 + BattleService.HeroDefeatExperience, state.GetHero(A).Experience); // 10 footmen × 14 HP + hero bonus
+        var footman = state.Creatures.Get(BuiltInCreatures.Footman);
+        Assert.Equal(10 * footman.Health + BattleService.HeroDefeatExperience, state.GetHero(A).Experience); // 10 footmen's HP + hero bonus
         Assert.Contains(events, e => e is ArmyChanged { Hero: var h } && h == A);
         session.EndTurn();
     }

@@ -20,6 +20,11 @@ public static class TerrainCodes
         [TerrainType.Subterranean] = 'u',
         [TerrainType.Water] = '~',
         [TerrainType.Rock] = '#',
+        [TerrainType.Beach] = 'b',
+        [TerrainType.Ice] = 'i',
+        [TerrainType.ShallowWater] = '=',
+        [TerrainType.CursedLands] = 'c',
+        [TerrainType.RockyGround] = 'k',
     };
 
     private static readonly Dictionary<char, TerrainType> FromCodeMap =

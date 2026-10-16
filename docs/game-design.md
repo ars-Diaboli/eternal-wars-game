@@ -50,31 +50,32 @@ out of scope, but the deterministic core keeps it possible.
 - Square grid, up to 2 levels (surface + underground) connected by **subterranean gates** (implemented).
 - **Movement (HoMM3 rules, implemented)**:
   - A step costs the terrain of the tile being **left**. Water/rock are impassable on foot.
-  - **Terrain classes** (accepted):
+  - **Terrain costs** (accepted, ADR-045): leaving a tile costs **100 for an all-native army** and the terrain's
+    cost for everyone else. No terrain is free for everyone; only roads, Pathfinding and artifacts help.
 
-    | Class | Rule | Terrains |
+    | Terrain | Non-native cost | Native towns |
     |---|---|---|
-    | **Open** | cost 100 for everyone | grass, dirt |
-    | **Rough** | fixed penalty for **all** factions (+25 %, 125) | rough |
-    | **Native** | 100 for **native** armies; penalty for everyone else | see below |
-
-    | Native terrain | Native town | Non-native cost |
-    |---|---|---|
-    | **Highlands** (new) | Haven | 150 ❓ |
-    | **Forest floor** (new) | Sylvan | 150 ❓ |
-    | **Wasteland** (new) | Necropolis | 150 ❓ |
-    | Snow | Academy | 150 |
-    | Lava | Inferno | 150 |
-    | Subterranean | Dungeon | 150 |
-    | Sand | Stronghold | 150 |
-    | Swamp | Swamp Bestiary | 175 |
+    | Grass | 125 | Haven, Sylvan |
+    | Highlands | 125 | Haven, Conflux |
+    | Forest floor | 125 | Sylvan |
+    | Cursed lands | 125 | Necropolis |
+    | Subterranean | 125 | Dungeon |
+    | Sand (desert), beach | 125 | – |
+    | Dirt | 150 | – |
+    | Rough, wasteland | 150 | Stronghold |
+    | Lava | 150 | Inferno |
+    | Rocky ground | 150 | Dragon Utopia |
+    | Ice | 175 | Academy |
+    | Shallow water | 175 | Swamp Bestiary |
+    | Snow | 200 | Academy |
+    | Swamp | 200 | Swamp Bestiary |
+    | Water (deep), rock (cliffs) | impassable | – |
 
     - **Native = the whole army** (HoMM3): the penalty is waived only if **every** creature in the army
-      belongs to the terrain's native town. Neutrals count as non-native (decided).
-    - The **Pathfinding** secondary skill reduces non-native and rough penalties by 25/50/75 %
-      (basic/advanced/expert).
-    - Implemented as data (`TerrainCatalog`, all terrains incl. the three new ones); an all-native army
-      (`MovementRules.ArmyTown`) pays 100 on its terrain. The Pathfinding skill arrives with skills in Phase 3.
+      belongs to one of the terrain's native towns. Neutrals count as non-native (decided).
+    - The **Pathfinding** secondary skill reduces the non-native penalty by 25/50/75 % (basic/advanced/expert);
+      artifacts can remove it. Both arrive in Phase 3.
+    - Implemented as data (`TerrainCatalog`); an all-native army (`MovementRules.ArmyTown`) pays 100.
   - **Roads (HoMM3-style)**: a road layer on top of terrain, drawn in the editor and generated
     between towns and through zone connections. Road types and costs: **dirt 50, gravel 65,
     cobblestone 75**. The road cost replaces the terrain cost and **ignores native/rough penalties**.
@@ -108,6 +109,8 @@ out of scope, but the deterministic core keeps it possible.
     - Dispositions (HoMM3 names, deterministic): Compliant, Friendly, Aggressive, Hostile, Savage decide whether
       the stack offers to **join** (free, needs room) or tries to **flee** from a much stronger army (≥ 3×), else
       it fights. The player accepts or fights. Unset counts are rolled by tier at game start.
+  - **Towns** (Phase 3, ADR-046): 7×7 with the corners free, entered through the bottom-middle cell
+    (`.BBBBB.`, five rows of `BBBBBBB`, `.BBVBB.`).
   Planned: towns, artifacts, dwellings, shrines, boats/shipyards.
 - **Meeting heroes**: moving onto a tile with another hero is an interaction, like visiting an
   object, so routes may **end** on that hero's tile (never pass through it):
@@ -145,11 +148,27 @@ out of scope, but the deterministic core keeps it possible.
     updated when they come back into sight. Units are hidden entirely. (Implemented: `ObjectMemory`.)
 
 ### 4.2 Heroes
-- Primary stats: Attack, Defense, Spell Power, Knowledge. Attack and Defense exist (set in the map, added to
-  every stack in battle); growth and the other two arrive with levels in Phase 3.
-- Secondary skills (levels Basic/Advanced/Expert), level-up choice between two skills.
+- **Roster** (implemented as data, ADR-048): 16 heroes per playable town, a **mage** and a **warrior** for each of its
+  eight tier 1–4 creature lines. That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield
+  speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource).
+  Edited in `data/heroes.csv`.
+- Primary stats: Attack, Defense, Spell Power, Knowledge. Attack and Defense exist (added to every stack in battle);
+  growth per level and the other two are open ❓.
+- **Skills** (HoMM4-like, implemented, ADR-048): groups of **three** skills; **10 points** learn a group fully (usually
+  4/3/3, magic 4/4/2); at most **6 groups** per hero. Levels Basic, Advanced, Expert, Master.
+
+  | Group | Skills |
+  |---|---|
+  | Offense | Melee (+10 % melee damage per level), Archery (+10/25/50 % ranged), third skill ❓ |
+  | Defense | Armor (−5 % damage taken per level), Spell resistance, third skill ❓ |
+  | Estates | Treasury (+100/200/350/500 gold a day), Prospecting (other resources), Stewardship (cheaper costs in the hero's town) |
+  | Pathfinding | Logistics (+10 % movement per level), Pathfinding (−25/50/75 % terrain penalty), Troop management (+1 army map speed per level) |
+  | Tactics | Tactics (battlefield width), Deployment (rearrange troops before battle), Drill (+1 battlefield speed per level) |
+  | 8 magic schools | Magic (spell levels 1–4), Attunement (mana, regeneration, cost or potency), Mastery (spell upgrades) |
+- **Levels** (implemented): HoMM3 experience table; each level gives one skill point, spent on one of **three offered
+  skills**. Mages are offered their own school more often, warriors the general groups; a rival town's school only in
+  5 % of level-ups.
 - Army of up to 7 creature stacks (implemented). A hero without creatures cannot attack.
-- Tactics exists as a skill level for the battlefield-width choice; other skills arrive in Phase 3.
 - Artifacts with paper-doll slots and backpack.
 - Spell book, mana.
 
@@ -177,7 +196,11 @@ out of scope, but the deterministic core keeps it possible.
     town. Dwellings can't be demolished. Another town of the same type may choose differently.
   - **Upgrades: one per dwelling** (HoMM3-style). Each dwelling has a single upgrade building; an
     upgraded dwelling produces upgraded creatures, and existing stacks can be upgraded in that town for
-    the price difference.
+    the price difference. The upgrade does not raise growth; growth bonuses come from other buildings ❓
+    (ADR-046).
+  - **Buildings** (draft, ADR-046): town hall (3 levels, 500/1000/2000 gold a day), fort (3), blacksmith,
+    marketplace (2; level 2 adds 1 ore and 1 lumber a day), mage guild (4, ADR-047), tavern, and the dwellings
+    (build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier).
   - **Locked-out creatures are still obtainable** from external dwellings on the adventure map and
     from other towns of the same type that built them. The town choice shapes your core army; it is
     not a hard ban.
@@ -187,7 +210,7 @@ out of scope, but the deterministic core keeps it possible.
 - **Income** is paid at the start of the owner's turn. **There is no base or placeholder income**:
   players earn only what their sources produce. Sources:
   - **Mines** (implemented): gold 1000, lumber/ore 2, rare resources 1.
-  - **Towns**: gold by hall level, plus resource buildings (Phase 3).
+  - **Towns**: town hall 500 / 1000 / 2000 gold; marketplace level 2 adds 1 ore and 1 lumber (Phase 3, ADR-046).
   - **Hero secondary skills**, Estates-like (Phase 3).
   - **Hero specialisations**, e.g. +N of a resource per day (Phase 3).
   - **Artifacts**, e.g. resource-producing items (Phase 3).
@@ -217,7 +240,8 @@ because that is content selection, not a rule.
   Necropolis) exists
   in story and campaign, but has **no combat or rules effect**. There are no hate/enmity damage bonuses
   (unlike HoMM3 Angels vs Devils) and no alignment modifiers. Creature capabilities target *properties*
-  (undead, flying, size, …), never town or group membership.
+  (undead, flying, size, …), never town or group membership. The one exception outside combat: a rival town's magic
+  school is rarely offered at level-up (ADR-048).
 - **Vertical slice: Haven and Inferno** (decided). The holy-vs-demonic contrast reads instantly in a dark,
   realistic art style; the rivalry is story only.
 
@@ -317,7 +341,11 @@ because that is content selection, not a rule.
 - Siege battles with walls and towers (post-1.0 ❓).
 
 ### 4.6 Magic
-- Four schools, five spell levels, mage guild in towns.
+- **Eight schools**, one per playable town (working titles: Light, Nature, Arcana, Death, Chaos, Shadow, Shamanism,
+  Primal), each also a hero skill group (ADR-047). Any hero may learn any school.
+- **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice).
+- A school's skills: magic (4 levels, unlocking spell levels), attunement (4 levels: mana pool and regeneration, spell
+  cost or potency by school), mastery (2 levels: spell upgrades).
 
 ### 4.7 Game modes (priority order)
 1. Single scenario vs. AI.
@@ -427,7 +455,7 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
 | 8 | Fog of war | Permanent reveal only | Choice per game: permanent reveal, or shroud + unit refog with hysteresis | accepted |
 | 9 | Map scale | Up to 144×144 | Presets up to 256×256, 8 players | accepted |
 | 10 | Random maps | Fixed templates (HotA adds a template editor) | Template editor in our map editor; game and editor both generate | accepted |
-| 11 | Terrain penalties | Native terrain per town, flat costs otherwise | Three classes: open (no penalty), rough (fixed penalty for all), native (penalty only for non-natives) | accepted |
+| 11 | Terrain penalties | One native terrain per town; grass, dirt and roads free for everyone | Every terrain penalises non-natives (125–200); towns may have several native terrains; only roads, Pathfinding and artifacts help | accepted |
 | 12 | Creature tiers | 7 tiers, 1 dwelling per tier, all buildable | 5 tiers, 9 dwellings, build 7 of 9 (final per town) | accepted |
 | 13 | Tactics | Larger deployment zone | Choose battlefield width (28–34) before battle; enemy Tactics reduces yours | accepted |
 | 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot | accepted |

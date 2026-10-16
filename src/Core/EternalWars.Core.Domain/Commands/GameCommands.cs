@@ -29,6 +29,9 @@ public sealed record ResolveTreasureChestCommand(PlayerId Player, TreasureChestR
 /// <summary>Closes the exchange screen.</summary>
 public sealed record CompleteExchangeCommand(PlayerId Player) : GameCommand(Player);
 
+/// <summary>Answers a <c>LevelUpDecision</c>: raise one of the offered skills.</summary>
+public sealed record ChooseSkillCommand(PlayerId Player, string Skill) : GameCommand(Player);
+
 /// <summary>
 /// Moves creatures between army slots of one hero, or between two heroes whose exchange is open.
 /// <paramref name="Count"/> null = the whole stack (a whole stack onto a different creature swaps them).

@@ -21,7 +21,7 @@ public static class BattleGrid
     {
         var clearance = new Clearance(battle, unit);
         var size = unit.Size;
-        var speed = unit.Creature.Speed;
+        var speed = battle.SpeedOf(unit);
         var result = new Dictionary<CellPosition, int> { [unit.Position] = 0 };
 
         if (unit.Creature.IsFlying)

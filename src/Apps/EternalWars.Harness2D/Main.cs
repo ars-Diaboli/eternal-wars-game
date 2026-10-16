@@ -246,6 +246,6 @@ public partial class Main : Node2D
 
     private static GameState LoadState() =>
         LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path), options: new GameOptions(Seed: (ulong)Random.Shared.NextInt64()))
-            : DemoScenario.Create();
+            ? MapConverter.ToGameState(MapSerializer.Load(path), options: new GameOptions(Seed: (ulong)Random.Shared.NextInt64()), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes)
+            : DemoScenario.Create(creatures: GameContent.Creatures, heroRoster: GameContent.Heroes);
 }

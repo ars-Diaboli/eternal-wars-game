@@ -85,6 +85,7 @@ public static class GameRecordSerializer
         (typeof(EndTurnCommand), "endTurn"),
         (typeof(ResolveTreasureChestCommand), "chest"),
         (typeof(CompleteExchangeCommand), "closeExchange"),
+        (typeof(ChooseSkillCommand), "chooseSkill"),
         (typeof(MoveStackCommand), "moveStack"),
         (typeof(RespondToGuardCommand), "guard"),
         (typeof(ChooseBattleWidthCommand), "battleWidth"),

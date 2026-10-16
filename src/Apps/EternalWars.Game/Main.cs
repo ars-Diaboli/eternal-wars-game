@@ -243,7 +243,7 @@ public partial class Main : Node3D
             choices.Add(FromFile(path));
         }
 
-        choices.Add(new ScenarioChoice("Demo Valley", options => MapConverter.ToGameState(MapConverter.ToDocument(DemoScenario.Create()), options: options)));
+        choices.Add(new ScenarioChoice("Demo Valley", options => MapConverter.ToGameState(MapConverter.ToDocument(DemoScenario.Create()), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes)));
         var editorMaps = Path.Combine(Path.GetDirectoryName(OS.GetUserDataDir())!, EditorMapsFolder);
         if (Directory.Exists(editorMaps))
         {
@@ -253,6 +253,6 @@ public partial class Main : Node3D
         return choices;
 
         static ScenarioChoice FromFile(string file) =>
-            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), options: options));
+            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes));
     }
 }

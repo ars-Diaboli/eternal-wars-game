@@ -60,25 +60,25 @@ have **no combat or rules effect** (ADR-029).
 - **Haven**: a crumbling human theocracy holding the last lit cities. Iron discipline, flagellant
   zeal, war machines. They burn heretics to "feed the light". Sworn enemies: **Necropolis**, whose
   armies are Haven's own dead, and **Inferno**, which harvests the provinces Haven loses.
-  Native terrain: **highlands**.
+  Native terrain: **highlands** and **grass**.
 - **Sylvan**: elves of the last old-growth forests, which are dying from the root. Archers and
   wardens who trade their memories to keep the trees alive. Sworn enemies: **Dungeon**, which tunnels
   beneath the groves and drains them, and **Necropolis**, whose blight rots what the Dungeon leaves.
-  Native terrain: **forest floor**.
+  Native terrain: **forest floor** and **grass**.
 - **Academy**: mage-cities on frozen peaks that study the Wheel itself. Constructs, bound
   elementals, and rumours that they want to *control* the turning, not stop it. Sworn enemies:
   **Inferno**, whose pact-magic tempts and corrupts their apprentices, and **Dungeon**, rival hoarders
-  of forbidden lore in the deep places. Native terrain: **snow**.
+  of forbidden lore in the deep places. Native terrain: **snow** and **ice**.
 - **Necropolis**: the dead who remember every previous age and know the Wheel cannot be stopped,
-  only ruled. Hated by **Haven** and **Sylvan**. Native terrain: **wasteland**.
+  only ruled. Hated by **Haven** and **Sylvan**. Native terrain: **cursed lands**.
 - **Inferno**: demons of the ash beneath the world, born from each burned age. They see every war as
   harvest. Hated by **Haven** and **Academy**. Native terrain: **lava**.
 - **Dungeon**: dark elves and the lightless things they serve, untouched by the dying sun and
   ready to inherit. Hated by **Academy** and **Sylvan**. Native terrain: **subterranean**.
 - **Stronghold**: orc clans who have survived several turnings by never building anything worth burning.
-  Native terrain: **sand**.
+  Native terrain: **rough** and **wasteland**.
 - **Swamp Bestiary**: beast-cults of the drowned lowlands, where old-age ruins sink into the mire.
-  Native terrain: **swamp**.
+  Native terrain: **swamp** and **shallow water**.
 - **Conflux** (non-playable): elemental wardens of the Wheel's mechanism, neutral guardians.
 - **Dragon Utopia** (non-playable): the last dragons, who remember the world *before* the Wheel.
   Bone dragons belong to Necropolis: dragons that died in earlier turnings.

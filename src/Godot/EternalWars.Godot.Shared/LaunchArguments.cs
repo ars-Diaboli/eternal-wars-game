@@ -7,6 +7,12 @@ public static class LaunchArguments
 {
     public static string? MapPath => Value("--map=");
 
+    /// <summary>A creature table to use instead of the shipped one (<see cref="GameContent.Creatures"/>).</summary>
+    public static string? CreaturesPath => Value("--creatures=");
+
+    /// <summary>A hero roster to use instead of the shipped one (<see cref="GameContent.Heroes"/>).</summary>
+    public static string? HeroesPath => Value("--heroes=");
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 

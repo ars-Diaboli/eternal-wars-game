@@ -104,7 +104,8 @@ public class AdventureMovementTests
 
         session.ResolveChest(reward);
 
-        Assert.Null(session.State.PendingDecision);
+        // 1000 experience is level 2: a level-up choice follows the chest.
+        Assert.Equal(reward == TreasureChestReward.Experience ? typeof(LevelUpDecision) : null, session.State.PendingDecision?.GetType());
         Assert.Empty(session.State.Objects);
         Assert.Equal(expectedGold, session.State.GetPlayer(Blue).Resources.Gold);
         Assert.Equal(expectedExperience, session.State.GetHero(A).Experience);

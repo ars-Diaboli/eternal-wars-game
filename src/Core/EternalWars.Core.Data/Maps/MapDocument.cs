@@ -12,11 +12,13 @@ namespace EternalWars.Core.Data.Maps;
 /// <remarks>
 /// Version history: 1 = terrain, players, heroes. 2 = + description, map objects.
 /// 3 = + roads, teams, one-way gates. 4 = + hero armies and stats, monsters, mine guards, guard mode,
-/// optional chest values (omitted = rolled). Older versions still load.
+/// optional chest values (omitted = rolled). 5 = + terrain codes b (beach), i (ice), = (shallow water),
+/// c (cursed lands), k (rocky ground) (ADR-045); heroes may name a roster entry (<c>type</c>) and carry skill levels
+/// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 4;
+    public const int CurrentFormatVersion = 5;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -52,7 +54,11 @@ public sealed record MapDocument
 /// <param name="Team">Default team; null = a team of its own (free-for-all).</param>
 public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = null);
 
-/// <summary>A starting hero. Stats and army are v4; older maps place heroes without an army.</summary>
+/// <summary>
+/// A starting hero. Stats and army are v4; older maps place heroes without an army. <see cref="Type"/> (v5) names a hero
+/// of the roster, whose class, preferred creature and specialty come with it; <see cref="Skills"/> (v5) are skill levels
+/// by skill id, and v4's <see cref="Tactics"/> is read into them. <see cref="Level"/> is the map level (surface 0).
+/// </summary>
 public sealed record HeroPlacementDocument(
     int Id,
     string Name,
@@ -63,7 +69,9 @@ public sealed record HeroPlacementDocument(
     int Attack = 0,
     int Defense = 0,
     SkillLevel? Tactics = null,
-    IReadOnlyList<ArmySlotDocument>? Army = null);
+    IReadOnlyList<ArmySlotDocument>? Army = null,
+    string? Type = null,
+    IReadOnlyDictionary<string, SkillLevel>? Skills = null);
 
 /// <summary>One occupied army slot (0–6).</summary>
 public sealed record ArmySlotDocument(int Slot, string Creature, int Count);

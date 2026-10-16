@@ -30,9 +30,16 @@ public static class MovementAllowance
     public static int Daily(int? slowestSpeed, int bonusPercent = 0, int flatBonus = 0) =>
         (BaseForSlowestSpeed(slowestSpeed) * (100 + bonusPercent) / 100) + flatBonus;
 
-    /// <summary>Uses the slowest <see cref="CreatureDefinition.MapSpeed"/> in the hero's army (null without one).</summary>
-    public static int Daily(Hero hero, CreatureCatalog creatures) =>
-        Daily(SlowestMapSpeed(hero, creatures), hero.MovementBonusPercent, hero.MovementBonusFlat);
+    /// <summary>
+    /// Uses the slowest <see cref="CreatureDefinition.MapSpeed"/> in the hero's army (null without one), raised by Troop
+    /// management, then Logistics and other percentage bonuses, then flat bonuses (ADR-048).
+    /// </summary>
+    public static int Daily(Hero hero, CreatureCatalog creatures)
+    {
+        var speed = SlowestMapSpeed(hero, creatures) + SkillEffects.MapSpeedBonus(hero.Skills.Level(BuiltInSkills.TroopManagement));
+        var percent = hero.MovementBonusPercent + SkillEffects.MovementPercent(hero.Skills.Level(BuiltInSkills.Logistics));
+        return Daily(speed, percent, hero.MovementBonusFlat);
+    }
 
     public static int Daily(GameState state, Hero hero) => Daily(hero, state.Creatures);
 

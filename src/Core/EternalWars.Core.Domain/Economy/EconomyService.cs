@@ -10,7 +10,7 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
     private readonly IReadOnlyList<IIncomeSource> _incomeSources = incomeSources ?? DefaultIncomeSources;
 
     /// <summary>Income sources that exist today. Towns, skills, specialisations and artifacts add theirs later.</summary>
-    public static IReadOnlyList<IIncomeSource> DefaultIncomeSources { get; } = [new MineIncome()];
+    public static IReadOnlyList<IIncomeSource> DefaultIncomeSources { get; } = [new MineIncome(), new HeroIncome()];
 
     /// <summary>What <paramref name="playerId"/> receives at the start of each of their turns.</summary>
     public ResourceSet DailyIncome(PlayerId playerId) =>

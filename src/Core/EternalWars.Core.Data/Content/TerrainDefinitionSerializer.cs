@@ -7,7 +7,7 @@ namespace EternalWars.Core.Data.Content;
 public sealed record TerrainDefinitionDocument(TerrainType Terrain, TerrainClass Class, int Cost, IReadOnlyList<string>? NativeTowns = null);
 
 /// <summary>
-/// Loads and saves terrain rules, e.g. <c>[{ "terrain": "Swamp", "class": "Native", "cost": 175, "nativeTowns": ["swamp-bestiary"] }]</c>.
+/// Loads and saves terrain rules, e.g. <c>[{ "terrain": "Swamp", "class": "Passable", "cost": 200, "nativeTowns": ["swamp-bestiary"] }]</c>.
 /// Combine with <see cref="TerrainCatalog.With"/> to override built-in rules.
 /// </summary>
 public static class TerrainDefinitionSerializer

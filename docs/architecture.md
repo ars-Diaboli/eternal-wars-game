@@ -106,8 +106,8 @@ These are enforced by:
   during the attacker's turn.
 
 ### Planned evolution
-- **Content definitions.** Factions, spells and artifacts will load from JSON in `Core.Data` as creatures
-  already do (`CreatureCatalog`, `CreatureDefinitionSerializer`),
+- **Content definitions.** Factions, spells and artifacts will load from data files as creatures already do
+  (the creature table `data/creatures.csv` via `CreatureTable`, ADR-044; JSON via `CreatureDefinitionSerializer`),
   following the map-object pattern: built-in defaults in Domain code (`BuiltInMapObjects`), JSON
   overrides/additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`.
 
@@ -125,8 +125,8 @@ These are enforced by:
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
 
 ### Terrain, roads, teams, knowledge
-- **Terrain rules are data**: `GameState.Terrains` (`TerrainCatalog`) gives class (open/rough/native/
-  impassable), cost and native towns. All movement code goes through `MovementRules.StepCost`
+- **Terrain rules are data**: `GameState.Terrains` (`TerrainCatalog`) gives passability, the
+  non-native cost and native towns (ADR-045). All movement code goes through `MovementRules.StepCost`
   (road → road, else terrain being left for the hero's army, ×1.41 diagonal). `MovementRules.ArmyTown`
   returns null until armies exist, so nobody is native yet.
 - **Roads** are a second per-tile layer on `AdventureMap`.
