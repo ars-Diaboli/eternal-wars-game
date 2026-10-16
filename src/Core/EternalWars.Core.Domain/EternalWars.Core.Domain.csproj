@@ -17,6 +17,8 @@
     <EmbeddedResource Include="..\..\Godot\EternalWars.Godot.Assets\data\creatures.csv" Link="Creatures\creatures.csv" LogicalName="EternalWars.Creatures.csv" />
     <EmbeddedResource Include="..\..\Godot\EternalWars.Godot.Assets\data\heroes.csv" Link="Heroes\heroes.csv" LogicalName="EternalWars.Heroes.csv" />
     <EmbeddedResource Include="..\..\Godot\EternalWars.Godot.Assets\data\buildings.csv" Link="Towns\buildings.csv" LogicalName="EternalWars.Buildings.csv" />
+    <EmbeddedResource Include="..\..\Godot\EternalWars.Godot.Assets\data\artifacts.csv" Link="Artifacts\artifacts.csv" LogicalName="EternalWars.Artifacts.csv" />
+    <EmbeddedResource Include="..\..\Godot\EternalWars.Godot.Assets\data\artifact_sets.csv" Link="Artifacts\artifact_sets.csv" LogicalName="EternalWars.ArtifactSets.csv" />
   </ItemGroup>
 
 </Project>

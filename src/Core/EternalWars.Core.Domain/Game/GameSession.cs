@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Economy;
@@ -42,10 +43,11 @@ public sealed class GameSession
         Economy = new EconomyService(State, Bus);
         Armies = new ArmyService(State, Bus);
         Progression = new ProgressionService(State, Bus);
-        Battles = new BattleService(State, Bus, Armies, Progression);
+        Artifacts = new ArtifactService(State, Bus);
+        Battles = new BattleService(State, Bus, Armies, Progression, Artifacts);
         Guards = new GuardService(State, Bus, Battles);
         Towns = new TownService(State, Bus, Economy);
-        Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression);
+        Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression, Artifacts);
         Movement = new HeroMovementService(State, Bus, Interactions);
         Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns);
     }
@@ -73,6 +75,8 @@ public sealed class GameSession
 
     internal ArmyService Armies { get; }
 
+    internal ArtifactService Artifacts { get; }
+
     internal ProgressionService Progression { get; }
 
     internal MapObjectInteractionService Interactions { get; }
@@ -87,6 +91,7 @@ public sealed class GameSession
     public void Start()
     {
         Flow.Begin();
+        Artifacts.RollUnsetPickups();
         Turns.StartGame();
         Settle();
     }
@@ -232,6 +237,15 @@ public sealed class GameSession
                 return null;
             case MoveTownStackCommand move:
                 Towns.MoveStack(move.Player, move.Town, move.From, move.FromSlot, move.To, move.ToSlot, move.Count);
+                return null;
+            case EquipArtifactCommand equip:
+                Artifacts.Equip(equip.Player, equip.Hero, equip.Artifact);
+                return null;
+            case UnequipArtifactCommand unequip:
+                Artifacts.Unequip(unequip.Player, unequip.Hero, unequip.Artifact);
+                return null;
+            case GiveArtifactCommand give:
+                Artifacts.Give(give.Player, give.FromHero, give.Artifact, give.ToHero);
                 return null;
             case HireHeroCommand hire:
                 Towns.HireHero(hire.Player, hire.Town, hire.Hero);

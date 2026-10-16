@@ -176,7 +176,10 @@ Full lists: [heroes.md](heroes.md) (every roster hero) and [skills.md](skills.md
   skills**. Mages are offered their own school more often, warriors the general groups; a rival town's school only in
   5 % of level-ups.
 - Army of up to 7 creature stacks (implemented). A hero without creatures cannot attack.
-- Artifacts with paper-doll slots and backpack (catalog draft: [artifacts.md](artifacts.md)).
+- **Artifacts** (core implemented, ADR-061, catalog in [artifacts.md](artifacts.md)): head, neck, cloak, body, weapon, shield,
+  two rings, boots, three miscellaneous slots and a backpack of 12. They add stats, morale and luck, movement, battle speed,
+  damage, daily income, terrain rules and skill levels. Found on the map, looted from defeated heroes, handed over in an
+  exchange. The hero screen and paper doll are Godot work.
 - Spell book, mana.
 
 ### 4.3 Towns and economy

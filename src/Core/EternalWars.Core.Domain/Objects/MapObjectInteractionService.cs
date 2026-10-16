@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
@@ -16,7 +17,8 @@ public sealed class MapObjectInteractionService(
     EconomyService economy,
     BattleService battles,
     GuardService guards,
-    ProgressionService progression)
+    ProgressionService progression,
+    ArtifactService artifacts)
 {
     internal void ResolveTreasureChest(TreasureChestReward reward)
     {
@@ -70,6 +72,14 @@ public sealed class MapObjectInteractionService(
 
             case MonsterGuard monster:
                 guards.Encounter(hero, monster);
+                break;
+
+            case ArtifactPickup { Artifact: { } found } pickup:
+                if (artifacts.Grant(hero, found, ArtifactSource.Pickup))
+                {
+                    RemoveFromMap(pickup);
+                }
+
                 break;
 
             // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).

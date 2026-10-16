@@ -96,9 +96,14 @@ internal static class MovementRules
 
     private static int TerrainCost(GameState state, Hero hero, TerrainType terrain)
     {
+        if (hero.Bonus.NativeTerrains.Contains(terrain))
+        {
+            return TerrainCatalog.NativeCost; // an artifact makes the army at home here (ADR-061)
+        }
+
         var cost = state.Terrains.MovementCost(terrain, ArmyTown(state, hero));
         var penalty = cost - TerrainCatalog.NativeCost;
-        var reduction = SkillEffects.PenaltyReductionPercent(hero.Skills.Level(BuiltInSkills.Pathfinding));
+        var reduction = Math.Min(100, SkillEffects.PenaltyReductionPercent(hero.SkillLevelOf(BuiltInSkills.Pathfinding)) + hero.Bonus.TerrainPenaltyReductionPercent);
         return penalty <= 0 ? cost : TerrainCatalog.NativeCost + (penalty * (100 - reduction) / 100);
     }
 

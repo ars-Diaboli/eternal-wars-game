@@ -59,6 +59,7 @@ public abstract class MapObject
         MapObjectKind.OneWayGateExit => new OneWayGateExit(id, definition, position),
         MapObjectKind.Monster => new MonsterGuard(id, definition, position),
         MapObjectKind.Town => new Towns.Town(id, definition, position),
+        MapObjectKind.Artifact => new ArtifactPickup(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }
@@ -128,6 +129,18 @@ public sealed class TreasureChest(MapObjectId id, MapObjectDefinition definition
 
     /// <summary>Values chosen by the map author; null = rolled with the game RNG on opening.</summary>
     public ChestValues? FixedValues { get; internal set; } = fixedValues;
+}
+
+/// <summary>
+/// An artifact lying on the map (ADR-061). A hero that steps on it puts it in its backpack (nothing happens when that is
+/// full). <see cref="Artifact"/> null is rolled from the definition's tier when the game starts.
+/// </summary>
+public sealed class ArtifactPickup(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? artifact = null)
+    : MapObject(id, definition, position, MapObjectKind.Artifact)
+{
+    public string? Artifact { get; internal set; } = artifact;
+
+    public Artifacts.ArtifactTier Tier => Definition.ArtifactTier ?? Artifacts.ArtifactTier.Minor;
 }
 
 /// <summary>How a neutral stack reacts to a hero (HoMM3 dispositions, deterministic thresholds, ADR-040).</summary>

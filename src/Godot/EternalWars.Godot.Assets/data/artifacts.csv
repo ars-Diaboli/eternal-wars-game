@@ -1,0 +1,68 @@
+id,name,slot,tier,set,effects,notes
+ash-sigil,Ash Sigil,Neck,Minor,,morale 1,struck from a cold coal of the last Wheel fire; soldiers swear it is still warm
+pilgrims-boots,Pilgrim's Boots,Boots,Minor,pilgrims-road,movement 10,worn through three crusades; the soles remember every road
+weathered-cloak,Weathered Cloak,Cloak,Minor,pilgrims-road,terrain-penalty 25,a cloak that has been soaked in every terrain once
+iron-band,Iron Band,Ring,Minor,,luck 1,a ring of plain iron: whoever lost it never returned for it
+squires-shield,Squire's Shield,Shield,Minor,,defense 1,"dented, honest and painted over three times"
+rusted-blade,Rusted Blade,Weapon,Minor,,attack 1,an old sword; what it cut was worth the edge
+scholars-cap,Scholar's Cap,Head,Minor,,knowledge 1,the Academy's apprentices wear it until they can afford better
+hearth-charm,Hearth Charm,Misc,Minor,pilgrims-road,income gold 100,a coin worn smooth; said to always arrive on the right day
+woodcutters-axe,Woodcutter's Axe,Misc,Minor,,income lumber 1,rumoured to have felled a tree twice
+miners-lamp,Miner's Lamp,Misc,Minor,,income ore 1,the flame never goes out; even in the rain
+marsh-talisman,Marsh Talisman,Misc,Minor,unbound-trophies,native-terrain swamp; native-terrain shallow-water,strung from teeth; a Swamp Bestiary hunter's gift
+candle-of-the-pious,Candle of the Pious,Misc,Minor,dawn-covenant-armor,spell-power 1,wax and prayer; Haven's chapels burn these by the thousand
+centaurs-ax,Centaur's Ax,Weapon,Minor,,attack 2,HoMM3 style placeholder: a long-hafted ax for riders
+blackshard-of-the-dead-knight,Blackshard of the Dead Knight,Weapon,Minor,,attack 3,HoMM3 style placeholder: a notched black blade from a Necropolis barrow
+shield-of-the-dwarven-lords,Shield of the Dwarven Lords,Shield,Minor,,defense 2,HoMM3 style placeholder: a rune-bossed shield from the deep halls
+helm-of-the-alabaster-unicorn,Helm of the Alabaster Unicorn,Head,Minor,,knowledge 1,HoMM3 style placeholder: a white helm with a single horn
+skull-helmet,Skull Helmet,Head,Minor,,knowledge 2,HoMM3 style placeholder: worn by Stronghold shamans who talk to what it once held
+breastplate-of-petrified-wood,Breastplate of Petrified Wood,Body,Minor,,defense 1,HoMM3 style placeholder: a Sylvan breastplate grown rather than made
+rib-cage,Rib Cage,Body,Minor,,defense 2,HoMM3 style placeholder: the ribs of something large that no longer needs them
+ring-of-the-wayfarer,Ring of the Wayfarer,Ring,Minor,,battle-speed 1,HoMM3 style placeholder: a ring of braided road dust and thread
+equestrians-gloves,Equestrian's Gloves,Misc,Minor,,movement-flat 300,HoMM3 style placeholder: worn smooth on the reins
+endless-pouch-of-ore,Endless Pouch of Ore,Misc,Minor,,income ore 2,HoMM3 style placeholder: never empty; never explained
+crown-of-the-waning-eye,Crown of the Waning Eye,Head,Major,,knowledge 3,"forged when the sun first dimmed; the wearer sees the dark earlier than others. Not yet: +1 level to the best magic skill"
+hunters-mark,Hunter's Mark,Neck,Major,unbound-trophies,luck 2,a bone token with a hole in it; the bearer's arrows find whatever hid
+mantle-of-the-last-grove,Mantle of the Last Grove,Cloak,Major,,native-terrain grass; native-terrain forest-floor,Sylvan weavers spin it from moss that grows only in dying groves
+plate-of-the-faithful,Plate of the Faithful,Body,Major,dawn-covenant-armor,defense 4; ranged-damage-taken 10,riveted in the cathedral-forges of Haven; the rivets are blessed; the plate is not comfortable
+wardens-edge,Warden's Edge,Weapon,Major,,attack 4; melee-damage 10,a Sylvan blade-dancer's twin; the other half never found
+aegis-of-ash,Aegis of Ash,Shield,Major,dawn-covenant-armor,defense 4,quenched in the cinders of a burned city. Not yet: 10 % fire resistance
+ring-of-reckoning,Ring of Reckoning,Ring,Major,ash-court-regalia,luck 2; morale 1,Necropolis lawyers wear it; they prefer to be on the winning side of the ledger
+ring-of-pale-fire,Ring of Pale Fire,Ring,Major,,spell-power 3,a Chaos pact in a band of gold; the flame inside does not like being looked at
+boots-of-the-wheel-runner,Boots of the Wheel-Runner,Boots,Major,,movement 20; battle-speed 1,stitched from the hide of a beast that ran every circuit of the Wheel
+sceptre-of-cinders,Sceptre of Cinders,Misc,Major,ash-court-regalia,attack 2; spell-power 2,the Inferno's demons gift these; and always want them back
+amulet-of-the-deep,Amulet of the Deep,Misc,Major,,knowledge 2,Dungeon dark-elves wear it to remember the surface; they say it helps them forget. Not yet: +4 mana per Knowledge point
+war-drum,War-Drum,Misc,Major,unbound-trophies,morale 1,Stronghold clans carry these to every war; the beat is older than the clan. Not yet: +10 % initiative at the start
+alchemists-satchel,Alchemist's Satchel,Misc,Major,,income crystal 1; income mercury 1; income sulfur 1,Academy glassware; the vials never run dry; and never explain why
+ledger-of-debts,Ledger of Debts,Misc,Major,ash-court-regalia,income gold 300,a Necropolis bookkeeper's crown jewel; every entry in it is a promise
+greater-gnolls-flail,Greater Gnoll's Flail,Weapon,Major,,attack 4,HoMM3 style placeholder: three chains and a grudge
+ogres-club-of-havoc,Ogre's Club of Havoc,Weapon,Major,,attack 5,HoMM3 style placeholder: a tree trunk with opinions
+sword-of-hellfire,Sword of Hellfire,Weapon,Major,,attack 6,HoMM3 style placeholder: the blade stays warm; the hand does not
+buckler-of-the-gnoll-king,Buckler of the Gnoll King,Shield,Major,,defense 4,HoMM3 style placeholder: small; loud; effective
+targ-of-the-rampaging-ogre,Targ of the Rampaging Ogre,Shield,Major,,defense 5,HoMM3 style placeholder: a door taken off a fortress
+helm-of-chaos,Helm of Chaos,Head,Major,,knowledge 3,HoMM3 style placeholder: the horns face inward
+scales-of-the-greater-basilisk,Scales of the Greater Basilisk,Body,Major,,defense 3,HoMM3 style placeholder: scales that remember being looked at
+tunic-of-the-cyclops-king,Tunic of the Cyclops King,Body,Major,,defense 4,HoMM3 style placeholder: sized for something much taller than the wearer
+breastplate-of-brimstone,Breastplate of Brimstone,Body,Major,,defense 5; damage-taken 5,HoMM3 style placeholder: the Inferno forges these hot and sells them cold
+pendant-of-courage,Pendant of Courage,Neck,Major,,morale 2; luck 2,HoMM3 style placeholder: it asks nothing and takes the fear
+necklace-of-swiftness,Necklace of Swiftness,Neck,Major,,battle-speed 1,HoMM3 style placeholder: a feather on a thread; the wearer is always first
+cape-of-velocity,Cape of Velocity,Cloak,Major,,battle-speed 1; movement 10,HoMM3 style placeholder: it pulls the wearer forward
+boots-of-speed,Boots of Speed,Boots,Major,,movement-flat 600,HoMM3 style placeholder: the road comes to meet them
+endless-purse-of-gold,Endless Purse of Gold,Misc,Major,,income gold 500,HoMM3 style placeholder: a heavy purse; never lighter
+endless-bag-of-gold,Endless Bag of Gold,Misc,Major,,income gold 750,HoMM3 style placeholder: a bigger purse
+endless-pouch-of-lumber,Endless Pouch of Lumber,Misc,Major,,income lumber 3,HoMM3 style placeholder: sawdust that keeps arriving
+heart-of-the-wheel,Heart of the Wheel,Misc,Relic,,attack 3; defense 3; spell-power 3; knowledge 3,a splinter of the mechanism; warm; the Conflux wardens say it is not theirs to guard
+gilded-hourglass,Gilded Hourglass,Misc,Relic,,all-skills 1,gold sand that never quite finishes falling; Academy scholars have studied it for six ages
+dawn-banner,Dawn Banner,Misc,Relic,,morale 2,first raised at the Siege of the Last Light; Haven says the light was not the sun. Not yet: re-roll one failed morale roll per round
+ember-crown,Ember Crown,Head,Relic,,spell-power 5,worn by the first Archdevil; the demons say it is a loan. Not yet: fire spells cost half mana
+bone-dragons-fang,Bone Dragon's Fang,Weapon,Relic,,attack 6,a relic of a dragon that died in an earlier turning. Not yet: 10 % chance to deal double damage
+scale-of-the-elder-dragon,Scale of the Elder Dragon,Body,Relic,,defense 6,shed by a Firstborn dragon that remembers the world before the Wheel. Not yet: 25 % resistance to all spells
+root-of-the-oldest-tree,Root of the Oldest Tree,Misc,Relic,,damage-taken 5,Sylvan heartwood. Not yet: own stacks regenerate 5 % of their health each round
+mirror-of-the-lightless,Mirror of the Lightless,Misc,Relic,,defense 2; luck 1,Dungeon-made: the dark does not forgive being looked at. Not yet: reflects 20 % of enemy spells
+orcs-first-axe,Orcs' First Axe,Weapon,Relic,,attack 5; luck 1,a crude axe passed to every Stronghold chieftain; none has lost a fight with it
+eye-of-the-swamp,Eye of the Swamp,Neck,Relic,,luck 2,something looked back from the water; the cult says it is not a threat
+titans-gladius,Titan's Gladius,Weapon,Relic,,attack 12; defense -3,HoMM3 style placeholder: a sword too large to guard with
+sentinels-shield,Sentinel's Shield,Shield,Relic,,defense 12; attack -3,HoMM3 style placeholder: a wall with a handle
+titans-cuirass,Titan's Cuirass,Body,Relic,,defense 10; spell-power -2,HoMM3 style placeholder: it is very hard to think in
+crown-of-the-supreme-magi,Crown of the Supreme Magi,Head,Relic,,knowledge 4; spell-power 2,HoMM3 style placeholder: heavier than it looks
+endless-sack-of-gold,Endless Sack of Gold,Misc,Relic,,income gold 1000,HoMM3 style placeholder: the whole treasury in one hand

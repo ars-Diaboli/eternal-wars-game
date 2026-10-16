@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Towns;
@@ -19,6 +20,12 @@ public static class GameContent
     /// <summary>The shipped town buildings (ADR-046), kept as a plain file like the creature table.</summary>
     public const string BuildingTablePath = "res://shared/data/buildings.csv";
 
+    /// <summary>The shipped artifacts and artifact sets (ADR-061), kept as plain files like the other tables.</summary>
+    public const string ArtifactTablePath = "res://shared/data/artifacts.csv";
+
+    public const string ArtifactSetTablePath = "res://shared/data/artifact_sets.csv";
+
+    private static ArtifactCatalog? _artifacts;
     private static CreatureCatalog? _creatures;
     private static HeroCatalog? _heroes;
     private static BuildingCatalog? _buildings;
@@ -50,6 +57,28 @@ public static class GameContent
     /// </summary>
     public static BuildingCatalog Buildings => _buildings ??= Load(LaunchArguments.BuildingsPath ?? BuildingTablePath, "Building",
         text => new BuildingCatalog(BuildingTable.Parse(text)), BuildingCatalog.Default, c => c.Buildings.Count());
+
+    /// <summary>Artifacts from <see cref="ArtifactTablePath"/> and <see cref="ArtifactSetTablePath"/>; a missing or broken table falls back to the embedded copy.</summary>
+    public static ArtifactCatalog Artifacts => _artifacts ??= LoadArtifacts();
+
+    private static ArtifactCatalog LoadArtifacts()
+    {
+        try
+        {
+            var catalog = new ArtifactCatalog(
+                ArtifactTable.ParseArtifacts(ReadText(ArtifactTablePath)), ArtifactTable.ParseSets(ReadText(ArtifactSetTablePath)));
+            GD.Print($"Artifacts: {catalog.All.Count()} from {ArtifactTablePath}");
+            return catalog;
+        }
+        catch (Exception e) when (e is FormatException or IOException or ArgumentException or UnauthorizedAccessException)
+        {
+            GD.PushError($"Artifact tables: {e.Message} (using the built-in tables instead)");
+            return ArtifactCatalog.Default;
+        }
+    }
+
+    private static string ReadText(string path) =>
+        global::Godot.FileAccess.FileExists(path) ? global::Godot.FileAccess.GetFileAsString(path) : throw new IOException($"{path}: file not found");
 
     private static CreatureCatalog LoadCreatures() =>
         Load(LaunchArguments.CreaturesPath ?? CreatureTablePath, "Creature", text => new CreatureCatalog(CreatureTable.Parse(text)),

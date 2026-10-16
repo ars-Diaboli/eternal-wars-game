@@ -154,7 +154,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
 
         if (state.GuardsOf(target).FirstOrDefault() is { } guard)
         {
-            if (state.GuardMode == GuardMode.Classic && entrance is ResourcePile or TreasureChest)
+            if (state.GuardMode == GuardMode.Classic && entrance is ResourcePile or TreasureChest or ArtifactPickup)
             {
                 // HoMM3: a pickup next to a monster can be grabbed from outside its zone without a fight.
                 hero.MovementPoints = Math.Max(0, hero.MovementPoints - cost);

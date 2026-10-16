@@ -292,7 +292,7 @@ public partial class Main : Node3D
 
         try
         {
-            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
+            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts));
             _status.Text = $"Loaded {path}";
         }
         catch (FormatException e)

@@ -5,8 +5,8 @@ change each; `❓` marks items that wait for a design answer in [open-questions.
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
 **Where we are (2026-10-16)**: Phases 0–2 are done (the new 3D battle scene still needs a run in Godot), and Phase 3 has towns,
-dwellings, heroes, skills and every income source except artifacts. Next up in Phase 3: town building effects, the
-artifacts and a better adventure AI (victory and defeat, ADR-057, and save/load, ADR-058, are in).
+dwellings, heroes, skills and every income source. Next up in Phase 3: town building effects, map dwellings
+and caravans, and a better adventure AI (artifacts, ADR-061, are in core) (victory and defeat, ADR-057, and save/load, ADR-058, are in).
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -211,15 +211,18 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 ### Artifacts
 Content draft: [artifacts.md](artifacts.md).
 
-- [ ] Artifact table `data/artifacts.csv` (id, name, slot, tier, effects), embedded in core like creatures
-- [ ] Hero paper-doll slots and a backpack; equip / unequip / move commands
-- [ ] Stat effects: Attack, Defense, movement points, battle speed, skill levels
-- [ ] Artifact income (`ArtifactIncome`, an `IIncomeSource`) for resource-producing artifacts (ADR-025)
-- [ ] Terrain artifacts: remove the non-native penalty (ADR-045)
-- [ ] Artifacts on the map (pickup object), in treasure chests (the HoMM3 artifact tier, ADR-039) and as battle loot
-      from defeated heroes
-- [ ] Artifact exchange between own heroes (`ExchangePanel`)
-- [ ] Map format and editor: artifacts on heroes and on the map
+- [x] Artifact tables `data/artifacts.csv` and `data/artifact_sets.csv` (ADR-061): 67 artifacts, 4 sets, embedded in core
+- [x] Hero paper-doll slots and a backpack of 12; equip / unequip / give commands
+- [x] Stat effects: Attack, Defense, Spell Power, Knowledge, morale, luck, movement, battle speed, damage, skill levels
+- [x] Income artifacts (daily resources through `HeroIncome`)
+- [x] Terrain artifacts: native terrain and terrain penalty reduction (ADR-045)
+- [x] Artifact pickups on the map (rolled by tier at game start, relics unique) and loot from defeated heroes
+- [ ] Artifacts in treasure chests (the HoMM3 artifact tier, ADR-039) ❓
+- [x] Artifact exchange between own heroes (`GiveArtifactCommand`, while the exchange is open); screen pending
+- [x] Map format v11 and editor session calls (`SetHeroArtifacts`, `SetArtifactPickup`); validator
+- [x] The AI picks up, values and equips artifacts
+- [ ] Artifact effects that wait for other systems ("Not yet" in the table: mana, spell resistance, regeneration, …)
+- [ ] Editor: inspector rows for hero artifacts and pickups (Godot)
 - [ ] Godot: paper-doll and backpack on the hero screen
 
 ### Game flow
@@ -246,7 +249,7 @@ Content draft: [artifacts.md](artifacts.md).
 - [x] Simulator: AI-vs-AI games (`sim game`) for tuning; the self-test replays one
 - [ ] Town defence: keep or bring a hero home when an enemy is near; avoid stronger enemy heroes
 - [ ] Several heroes: roles (explorer, army, carrier), exchanging armies between own heroes
-- [ ] Hire heroes, war machines, artifacts and spells once those exist; marketplace use; difficulty levels
+- [ ] Hire heroes (done), artifacts (done), war machines and spells once those exist; marketplace use; difficulty levels
 - [ ] Balance the AI over several maps (`sim game --runs`); a CI check that AI games on the shipped maps finish
 
 ### Content for the slice
@@ -310,7 +313,7 @@ Content draft: [spells.md](spells.md).
 - [x] Morale and luck (ADR-053): ±5 from creature table and hero (map format v7, editor); per round 2 %/point extra
       action or lost turn, else 4 %/point ±50 % initiative; per hit 4 %/point luck for +75 % / −50 % damage, opposite
       rolls cancel; shown in the 3D battle (captions, log, unit stats)
-- [ ] Morale and luck sources: skills, artifacts, buildings, army composition; undead/constructs without morale? ❓
+- [ ] Morale and luck sources: skills, buildings, army composition (artifacts are in, ADR-061); undead/constructs without morale? ❓
 - [x] War machines (ADR-056): offensive machine per town (ballista, cannon, catapult, glaivethrower), healing tent,
       ammo cart; War machines skill group (Ballistics, Healing, Ammo supply); units at the back of the field, offensive
       machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle

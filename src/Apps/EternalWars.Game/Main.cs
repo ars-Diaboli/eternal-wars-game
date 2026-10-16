@@ -333,7 +333,7 @@ public partial class Main : Node3D
         try
         {
             var (session, record) = GameSaves.Load(
-                path, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings);
+                path, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts);
             GetNodeOrNull("Setup")?.QueueFree();
             _menu.Close();
             BeginGame(session, record.Map, resume: true);
@@ -617,6 +617,6 @@ public partial class Main : Node3D
         return choices;
 
         static ScenarioChoice FromFile(string file) =>
-            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
+            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts));
     }
 }

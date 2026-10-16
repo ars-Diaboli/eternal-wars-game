@@ -64,7 +64,7 @@ internal sealed class BattleEstimator(GameState state)
             var players = new[] { new Player(new PlayerId(0), "Attacker", isHuman: false), new Player(new PlayerId(1), "Defender", isHuman: false) };
             var heroes = new[]
             {
-                new Hero(new HeroId(1), "Attacker", players[0].Id, new MapPosition(0, 0), new Army(attacker.Army.Slots), attacker.Attack, attacker.Defense),
+                new Hero(new HeroId(1), "Attacker", players[0].Id, new MapPosition(0, 0), new Army(attacker.Army.Slots), attacker.TotalAttack, attacker.TotalDefense),
                 new Hero(new HeroId(2), "Defender", players[1].Id, new MapPosition(1, 0), new Army(defender.Slots), defenderAttack, defenderDefense),
             };
             var session = new GameSession(new GameState(

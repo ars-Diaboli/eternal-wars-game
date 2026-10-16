@@ -100,6 +100,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
     can heroes exchange machines; can towns have them in the garrison?
 13. Victory and defeat (ADR-057): which more conditions (grail artifact, flag all mines, defeat all monsters) and how a campaign hooks into them;
     does survival win for the whole team?
+15. Artifacts (ADR-061): the draft numbers and tiers; should chests hold artifacts; the winner takes all of a defeated hero's
+    artifacts (could be a choice of one); are the HoMM3-style placeholders to stay or be replaced by lore items.
 14. Tavern (ADR-060): the draft numbers (hero 2500 gold, Brotherhood 2000 gold + 5 lumber + 5 ore, 8 heroes); per-town instead of per-player pools;
     hiring while a hero stands at the entrance; a starter stack for hired heroes.
 6. Town buildings (ADR-046 draft): what fort and marketplace trading do (the blacksmith sells war machines);

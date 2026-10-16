@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
@@ -101,10 +102,11 @@ public static class GameSaves
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
         BuildingCatalog? buildings = null,
-        TerrainCatalog? terrains = null)
+        TerrainCatalog? terrains = null,
+        ArtifactCatalog? artifacts = null)
     {
         var record = GameRecordSerializer.Load(path);
-        return (GameReplay.Replay(record, catalog, creatures, heroRoster, buildings, terrains), record);
+        return (GameReplay.Replay(record, catalog, creatures, heroRoster, buildings, terrains, artifacts), record);
     }
 
     /// <summary>The saves in a folder, newest first; unreadable files are listed with their error. A missing folder is empty.</summary>

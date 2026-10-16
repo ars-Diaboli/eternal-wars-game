@@ -55,6 +55,11 @@ public static class MapValidator
             {
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} has unknown creature '{stack.Creature}'.", hero.Position));
             }
+
+            foreach (var artifact in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Where(a => !scenario.Artifacts.Contains(a)))
+            {
+                issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} has unknown artifact '{artifact}'.", hero.Position));
+            }
         }
 
         foreach (var mapObject in scenario.Objects)
@@ -86,6 +91,9 @@ public static class MapValidator
                     break;
                 case OneWayGateExit exit when !scenario.ObjectsOf<OneWayGateEntrance>().Any(e => e.Exit == exit.Id):
                     issues.Add(new(IssueSeverity.Warning, $"{name} is not used by any entrance.", exit.Position));
+                    break;
+                case ArtifactPickup { Artifact: { } artifact } pickup when !scenario.Artifacts.Contains(artifact):
+                    issues.Add(new(IssueSeverity.Error, $"{name} holds the unknown artifact '{artifact}'.", pickup.Position));
                     break;
                 case MonsterGuard monster when !scenario.Creatures.Contains(monster.Creature):
                     issues.Add(new(IssueSeverity.Error, $"Monster uses unknown creature '{monster.Creature}'.", monster.Position));

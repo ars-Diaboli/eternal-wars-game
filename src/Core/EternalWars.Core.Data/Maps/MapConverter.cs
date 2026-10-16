@@ -1,5 +1,6 @@
 using System.Text;
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
@@ -36,7 +37,9 @@ public static class MapConverter
                     h.Luck == 0 ? null : h.Luck,
                     h.SpellPower == 0 ? null : h.SpellPower,
                     h.Knowledge == 0 ? null : h.Knowledge,
-                    h.WarMachines.SetEquals(WarMachines.StartingSet) ? null : h.WarMachines.Order().ToList()))
+                    h.WarMachines.SetEquals(WarMachines.StartingSet) ? null : h.WarMachines.Order().ToList(),
+                    h.Artifacts.AllWorn.Any() ? h.Artifacts.AllWorn.Select(w => w.Id).ToList() : null,
+                    h.Artifacts.Backpack.Count == 0 ? null : h.Artifacts.Backpack.ToList()))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
         };
@@ -87,19 +90,21 @@ public static class MapConverter
         TerrainCatalog? terrains = null,
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null)
+        BuildingCatalog? buildings = null,
+        ArtifactCatalog? artifacts = null)
     {
         catalog ??= MapObjectCatalog.Default;
+        artifacts ??= ArtifactCatalog.Default;
         creatures ??= CreatureCatalog.Default;
         heroRoster ??= HeroCatalog.Default;
         var map = ToMap(document);
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
-        var heroes = document.Heroes.Select(h => ToHero(h, creatures, heroRoster)).ToList();
+        var heroes = document.Heroes.Select(h => ToHero(h, creatures, heroRoster, artifacts)).ToList();
         var objects = document.Objects.Select(o => ToObject(o, catalog, creatures));
         try
         {
-            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings);
+            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetGuardMode(document.GuardMode ?? GuardMode.Classic);
             state.SetRules(ToRules(document.Rules));
@@ -144,7 +149,7 @@ public static class MapConverter
         c.Amount ?? 0,
         c.Day ?? 0);
 
-    private static Hero ToHero(HeroPlacementDocument h, CreatureCatalog creatures, HeroCatalog heroRoster)
+    private static Hero ToHero(HeroPlacementDocument h, CreatureCatalog creatures, HeroCatalog heroRoster, ArtifactCatalog artifacts)
     {
         if (h.Type is { } type && !heroRoster.Contains(type))
         {
@@ -158,7 +163,8 @@ public static class MapConverter
         {
             return Hero.Create(
                 new HeroId(h.Id), new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level), ToArmy(h, creatures),
-                h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge, h.WarMachines);
+                h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge, h.WarMachines,
+                h.Artifacts, h.Backpack, artifacts);
         }
         catch (Exception e) when (e is KeyNotFoundException or ArgumentOutOfRangeException or InvalidOperationException)
         {
@@ -258,6 +264,10 @@ public static class MapConverter
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Owner = mine.Owner?.Value,
                 Guard = mine.Guard is { } guard ? new GuardDocument(guard.Creature, guard.Count) : null,
             },
+            ArtifactPickup pickup => new ArtifactPickupDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Artifact = pickup.Artifact,
+            },
             TreasureChest chest => new TreasureChestDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Gold = chest.FixedValues?.Gold, Experience = chest.FixedValues?.Experience,
@@ -313,6 +323,7 @@ public static class MapConverter
                 MineDocument mine => new Mine(
                     id, definition, position, mine.Owner is { } owner ? new PlayerId(owner) : null,
                     mine.Guard is { } guard ? new GuardStack(guard.Creature, guard.Count) : null),
+                ArtifactPickupDocument artifact => new ArtifactPickup(id, definition, position, artifact.Artifact),
                 TreasureChestDocument { Gold: { } gold, Experience: { } experience } => new TreasureChest(id, definition, position, new ChestValues(gold, experience)),
                 TreasureChestDocument { Gold: null, Experience: null } => new TreasureChest(id, definition, position),
                 TreasureChestDocument => throw new FormatException("A chest needs both gold and experience, or neither."),
