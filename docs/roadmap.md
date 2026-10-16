@@ -212,7 +212,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 Content draft: [artifacts.md](artifacts.md).
 
 - [x] Artifact tables `data/artifacts.csv` and `data/artifact_sets.csv` (ADR-061): 67 artifacts, 4 sets, embedded in core
-- [x] Hero paper-doll slots and a backpack of 12; equip / unequip / give commands
+- [x] Hero paper-doll slots and a backpack of 50; equip / unequip / give commands
 - [x] Stat effects: Attack, Defense, Spell Power, Knowledge, morale, luck, movement, battle speed, damage, skill levels
 - [x] Income artifacts (daily resources through `HeroIncome`)
 - [x] Terrain artifacts: native terrain and terrain penalty reduction (ADR-045)

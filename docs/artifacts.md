@@ -40,7 +40,7 @@ the gaps between the lore artifacts so that every slot has items of every tier.
   | Ring | 2 | luck, Spell Power, daily resources |
   | Boots | 1 | movement, battle speed |
   | Misc | 3 | everything else |
-  | Backpack | 12 | unworn artifacts; no effect |
+  | Backpack | 50 | unworn artifacts; no effect |
 
 - **Tiers** (what a chest, a guard or a defeated hero's pack can drop): **Minor** (common, small bonuses),
   **Major** (strong), **Relic** (one of each per game, big effects, with a story), and **Set pieces** (worn together
@@ -130,7 +130,7 @@ What is left: the hero screen and paper-doll UI, editor inspector rows, artifact
 
 - Numbers, after play-tests; whether Major artifacts need a guard.
 - Which artifacts count as Relics, and whether a campaign can reuse them.
-- Whether a winner should choose one artifact instead of taking all.
+- Loot that does not fit in a full backpack is lost; the winner always takes all of a defeated hero's artifacts (user decision); when they do not all fit in its 50 slots, the most valuable come first (`ArtifactValue`).
 - How sets work across towns (any set bonus for non-town heroes?).
 - Whether a merchant town building could sell artifacts later, and whether chests may hold one.
 - Which skills, artifacts and buildings should change morale and luck besides the artifacts (open question 5).
