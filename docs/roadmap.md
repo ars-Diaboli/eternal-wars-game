@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-16)**: Phases 0–1 are done, Phase 2 is done except the 3D battle scene, and Phase 3 has towns,
+**Where we are (2026-10-16)**: Phases 0–2 are done (the new 3D battle scene still needs a run in Godot), and Phase 3 has towns,
 dwellings, heroes, skills and every income source except artifacts. Next up in Phase 3: town building effects, the
 tavern, artifacts, game flow (victory, save/load) and the adventure AI.
 
@@ -81,7 +81,7 @@ tavern, artifacts, game flow (victory, save/load) and the adventure AI.
 **Exit** ✅: a hot-seat game on an editor-made map where players race to collect resources. Playable in the game app
 (hot-seat, fog, guards, quick-combat battles); final art comes in Phase 5.
 
-## Phase 2: Armies and combat: core done, 3D battle scene pending
+## Phase 2: Armies and combat: done (3D battle scene still to be checked in Godot)
 
 ### Core (Tier 1) ✅
 - [x] Command pipeline (ADR-036): serializable `GameCommand`s through `GameSession.Execute` only (services'
@@ -124,17 +124,24 @@ tavern, artifacts, game flow (victory, save/load) and the adventure AI.
       keys, width choice and quick combat; verified in Godot 4.7.2 (smoke scenario `harness-guard-battle`)
 - [x] Editor UI for armies, hero stats, monsters, mine guards, guard mode and chest values (`InspectorPanel`,
       `MapPropertiesPanel`)
-- [ ] 3D battle scene in the game app (today it falls back to quick combat through `DecisionPanel`):
-  - [ ] Battlefield scene: cell grid overlay, terrain-themed ground, obstacles, camera
-  - [ ] Unit views with footprints (placeholder meshes), stack counts, active-unit highlight
-  - [ ] Input: reachable cells, move / attack (with approach cell) / shoot, wait, defend, retreat, quick combat
-  - [ ] Initiative timeline bar (HoMM5-style) and a combat log
-  - [ ] Animations queued per battle event (move, attack, retaliation, area hits, death), like `HeroView`
-  - [ ] Result screen: casualties, experience
-  - [ ] Smoke scenario for the 3D battle
+- [x] 3D battle scene in the game app (ADR-052), placeholder meshes; not yet run in Godot (no Godot on the
+      development machine at the time): run `tools/smoke-godot.ps1` and check the frames
+  - [x] Battlefield scene (`BattleView3D`): ground in the battle terrain's adventure-map texture, cell grid, obstacles
+        (boulders, crags), own camera with zoom; the adventure map and its HUD are hidden meanwhile
+  - [x] Unit views (`BattleUnitView`): footprint base in the side's colour, body shaped by role (walker, shooter,
+        flyer), facing, stack count, active-unit ring
+  - [x] Input: reachable-cell overlay, hover preview, move / attack from the side the pointer is on / shoot
+        (`BattleTargeting` in core, shared with the 2D harness), wait, defend, retreat, quick combat
+  - [x] Initiative timeline (active unit, queue, waiting units), unit stats on hover, combat log (`BattleHud`)
+  - [x] Animations queued per battle event (move, melee lunge, projectile, hit flash, damage text, death), so AI turns
+        play in order; quick combat and all-AI battles skip them
+  - [x] Result screen: winner, casualties per side, experience; back to the map with Enter
+  - [x] Smoke scenario `game-battle-3d` (`tools/smoke/battle.ewmap.json`, checked by `SmokeMapTests`)
+- [ ] Battle scene follow-ups: creature models and animations (Phase 5 art), terrain-themed obstacles and
+      backdrops, flyer arcs, battle music; a deployment step for the Deployment skill (Phase 3)
 
-**Exit**: heroes fight neutral stacks and each other; battles are replayable from logs. Core-side met
-(`sim selftest`, replay tests); the 3D battle scene is still missing.
+**Exit**: heroes fight neutral stacks and each other; battles are replayable from logs. Met in core (`sim selftest`,
+replay tests) and in the game app's 3D battle scene; it still has to be checked in Godot.
 
 ## Phase 3: Towns and progression
 

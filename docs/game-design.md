@@ -253,7 +253,10 @@ because that is content selection, not a rule.
   realistic art style; the rivalry is story only.
 
 ### 4.5 Combat
-- **Separate battlefield** (HoMM3-style cut to an arena themed by the terrain where the battle starts).
+- **Separate battlefield** (HoMM3-style cut to an arena themed by the terrain where the battle starts). Implemented in
+  the game app as a 3D battle scene with placeholder meshes on that terrain's texture (ADR-052): hover previews the
+  move, attack side or shot, AI turns play as animations, a timeline shows the initiative order, and a result screen
+  ends the battle.
 - **Square grid** with **multi-cell units**. Every creature stack has a footprint:
   | Size | Footprint | Typical creatures |
   |---|---|---|

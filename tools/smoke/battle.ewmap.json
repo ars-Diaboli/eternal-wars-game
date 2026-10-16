@@ -1,0 +1,17 @@
+{
+  "formatVersion": 4,
+  "name": "Battle test",
+  "width": 10,
+  "height": 7,
+  "terrain": [
+    [ "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg" ]
+  ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": true } ],
+  "heroes": [
+    { "id": 1, "name": "Orrin", "owner": 0, "x": 2, "y": 3, "army": [ { "slot": 0, "creature": "haven.footman", "count": 12 }, { "slot": 1, "creature": "haven.archer", "count": 8 } ] },
+    { "id": 2, "name": "Sandro", "owner": 1, "x": 9, "y": 6, "army": [ { "slot": 0, "creature": "inferno.imp", "count": 15 } ] }
+  ],
+  "objects": [
+    { "kind": "monster", "id": 1, "definition": "monster", "x": 4, "y": 3, "creature": "inferno.imp", "count": 9, "disposition": "Savage", "neverFlees": true }
+  ]
+}

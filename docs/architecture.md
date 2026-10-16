@@ -104,6 +104,12 @@ These are enforced by:
   `ResistsSpell`, `SpellCasts`, `BattleUnit.CastsLeft`) waiting for the magic system.
 - Battle commands are authorized per side, not per map turn: in hot-seat the defender commands its units
   during the attacker's turn.
+- `BattleTargeting.ActionAt` maps a pointed cell to the action a click performs (shoot, melee from the pointer's
+  side, move); front-ends share it.
+- **Presentation** (ADR-052): the game app's `BattleView3D` (Godot.Shared/Battle) builds the battlefield from
+  `BattleStarted` and plays later battle events as one sequential animation queue, since a whole AI turn resolves
+  inside one command; it offers input only once the queue has caught up with the state. `BattleHud` (Godot.UI/Battle)
+  is its overlay. The 2D harness keeps `BattleBoard2D`, which redraws from the live state.
 
 ### Planned evolution
 - **Content definitions.** Spells and artifacts will load from data files as creatures, heroes and buildings
@@ -203,8 +209,8 @@ src/
     EternalWars.Core.Data/      Maps (MapDocument v6, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (replays)
   Godot/
-    EternalWars.Godot.Shared/   Map, Cameras, Controls, Events
-    EternalWars.Godot.UI/       Hud (incl. DecisionPanel, TownPanel), Battle (BattleBoard2D), Debugging
+    EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events
+    EternalWars.Godot.UI/       Hud (incl. DecisionPanel, TownPanel), Battle (BattleBoard2D, BattleHud), Debugging
     EternalWars.Godot.Assets/   (linked into apps as res://shared)
   Apps/
     EternalWars.Game/           project.godot + Main.tscn/Main.cs

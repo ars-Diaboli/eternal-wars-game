@@ -34,7 +34,7 @@ public partial class AdventureMapView : Node3D
         _level = level;
         foreach (var terrain in Enum.GetValues<TerrainType>())
         {
-            _tiles[terrain] = Layer(TileMaterial(terrain), new Vector3(MapSpace.TileSize - TileGap, TileHeight, MapSpace.TileSize - TileGap), $"Tiles_{terrain}");
+            _tiles[terrain] = Layer(TerrainMaterial(terrain, TilesPerTextureRepeat * MapSpace.TileSize), new Vector3(MapSpace.TileSize - TileGap, TileHeight, MapSpace.TileSize - TileGap), $"Tiles_{terrain}");
         }
 
         _roads = Layer(new StandardMaterial3D { VertexColorUseAsAlbedo = true }, new Vector3(RoadWidth, 0.02f, RoadWidth), "Roads");
@@ -53,8 +53,11 @@ public partial class AdventureMapView : Node3D
         this.SubscribeWhileInTree<RoadsPainted>(events, e => RefreshRoads(e.Positions));
     }
 
-    /// <summary>Textured when <c>textures/terrain/&lt;terrain&gt;.png</c> exists, else the flat palette colour.</summary>
-    private static StandardMaterial3D TileMaterial(TerrainType terrain)
+    /// <summary>
+    /// Textured when <c>textures/terrain/&lt;terrain&gt;.png</c> exists, else the flat palette colour. World-space
+    /// triplanar UVs; one texture repeat covers <paramref name="worldUnitsPerRepeat"/>. Also the battlefield ground.
+    /// </summary>
+    public static StandardMaterial3D TerrainMaterial(TerrainType terrain, float worldUnitsPerRepeat)
     {
         var path = $"{TextureFolder}{FileName(TextureOf(terrain))}.png";
         if (!ResourceLoader.Exists(path))
@@ -68,7 +71,7 @@ public partial class AdventureMapView : Node3D
             AlbedoColor = Tint(terrain),
             Uv1Triplanar = true,
             Uv1WorldTriplanar = true,
-            Uv1Scale = Vector3.One / TilesPerTextureRepeat,
+            Uv1Scale = Vector3.One / worldUnitsPerRepeat,
             Roughness = 0.95f,
             TextureFilter = BaseMaterial3D.TextureFilterEnum.LinearWithMipmapsAnisotropic,
         };
