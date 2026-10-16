@@ -21,3 +21,16 @@ applied during combat when one unit attacks another
 if attacker rolls luck +75% damage
 if deffender rolls luck 50% damage reduction
 if both roll - nothing happens
+
+caravan
+creature dwellings accumulate weekly creature growth
+caravan can be built in the town
+it allows to hire creatures from nearby dwellings
+creature do not arrive immediately to the town
+dwelling cannot be too far from the town
+path from controlled dwelling to town should not be blocked by enemy heroes or neutral creatures
+imagine creatures move virtually through the map 
+creature's caravan map speed affects caravan speed
+if it would take more than 5 days for creature's caravan to reach the town - it is impossible to hire from specific dwelling
+this should be checked before creatures are hired in the dwellin/caravan created
+caravan system also allows to transfer troops between towns with the same rules

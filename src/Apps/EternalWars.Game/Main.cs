@@ -1,14 +1,17 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Godot.Shared;
+using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI.Battle;
 using EternalWars.Godot.UI.Hud;
 using EternalWars.Godot.UI.Setup;
 using Godot;
@@ -23,6 +26,9 @@ namespace EternalWars.Game;
 /// Mouse: click an own hero to select it, click a tile to preview the route (markers coloured by day), click the
 /// same tile again to go; right-click clears the preview. Keys: arrows/numpad step, Tab next hero, L switches
 /// level, WASD/QE/wheel camera. Run with <c>-- --map=&lt;path&gt;</c> to offer an editor map first.
+/// Battles open the 3D battle scene (<see cref="BattleView3D"/>): point at a cell to preview, click to move, attack (from
+/// the side the pointer is on) or shoot; W wait, D defend, R retreat, Q quick combat, wheel zoom; Enter or Escape leave
+/// the result screen.
 /// </remarks>
 public partial class Main : Node3D
 {
@@ -34,6 +40,9 @@ public partial class Main : Node3D
     private StrategyCamera _camera = null!;
     private HeroListPanel _heroList = null!;
     private Label _status = null!;
+    private CanvasLayer _hud = null!;
+    private BattleView3D _battle = null!;
+    private BattleHud _battleHud = null!;
     private HeroId? _selectedHero;
 
     public override void _Ready()
@@ -59,7 +68,18 @@ public partial class Main : Node3D
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (_context is null || _session.State.PendingDecision is not null)
+        if (_context is null)
+        {
+            return;
+        }
+
+        if (_battle.IsOpen)
+        {
+            HandleBattleInput(@event);
+            return;
+        }
+
+        if (_session.State.PendingDecision is not null)
         {
             return;
         }
@@ -108,6 +128,7 @@ public partial class Main : Node3D
         AddChild(_camera);
 
         BuildHud();
+        BuildBattle();
 
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
@@ -196,9 +217,121 @@ public partial class Main : Node3D
     private void Report(CommandResult result) =>
         _status.Text = result.IsAccepted ? $"{result.Outcome}" : $"Refused: {result.Error}";
 
+    private void HandleBattleInput(InputEvent @event)
+    {
+        switch (@event)
+        {
+            case InputEventMouseMotion motion:
+                HoverBattle(motion.Position);
+                return;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
+                ClickBattle(click.Position);
+                break;
+            case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.Result is not null:
+                _battle.Close();
+                break;
+            case InputEventKey { Pressed: true } key when BattleKeyCommand(key.Keycode) is { } command:
+                _battleHud.Report(_session.Execute(command));
+                break;
+            default:
+                return;
+        }
+
+        GetViewport().SetInputAsHandled();
+    }
+
+    /// <summary>W wait, D defend, R retreat for the active unit's commander; Q quick combat for either human side.</summary>
+    private GameCommand? BattleKeyCommand(Key key)
+    {
+        if (_battle.Result is not null)
+        {
+            return null;
+        }
+
+        if (key == Key.Q)
+        {
+            return (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is { } any
+                ? new AutoResolveBattleCommand(any)
+                : null;
+        }
+
+        return _battle.Commander is not { } player ? null : key switch
+        {
+            Key.W => new BattleWaitCommand(player),
+            Key.D => new BattleDefendCommand(player),
+            Key.R => new BattleRetreatCommand(player),
+            _ => null,
+        };
+    }
+
+    private void HoverBattle(Vector2 screen)
+    {
+        if (_session.State.Battle is not { } battle || _battle.PickPoint(screen) is not { } point)
+        {
+            _battle.ShowIntent(null);
+            _battleHud.ShowUnit(null);
+            return;
+        }
+
+        var cell = BattleSpace.ToCell(point);
+        _battleHud.ShowUnit(battle.UnitAt(cell));
+        _battle.ShowIntent(_battle.Commander is not null ? BattleTargeting.ActionAt(battle, cell, point.X, point.Y) : null);
+    }
+
+    private void ClickBattle(Vector2 screen)
+    {
+        if (_battle.Commander is not { } player || _session.State.Battle is not { } battle || _battle.PickPoint(screen) is not { } point)
+        {
+            return;
+        }
+
+        GameCommand? command = BattleTargeting.ActionAt(battle, BattleSpace.ToCell(point), point.X, point.Y) switch
+        {
+            MoveAction move => new BattleMoveCommand(player, move.To),
+            AttackAction attack => new BattleAttackCommand(player, attack.Target, attack.From),
+            ShootAction shoot => new BattleShootCommand(player, shoot.Target),
+            _ => null,
+        };
+        if (command is not null)
+        {
+            _battle.ShowIntent(null);
+            _battleHud.Report(_session.Execute(command));
+        }
+    }
+
+    /// <summary>The battle scene replaces the adventure map and its HUD while it is open.</summary>
+    private void BuildBattle()
+    {
+        _battle = new BattleView3D();
+        AddChild(_battle);
+        _battle.Bind(_session);
+
+        var layer = new CanvasLayer { Name = "BattleHud", Layer = 2 };
+        AddChild(layer);
+        _battleHud = new BattleHud();
+        layer.AddChild(_battleHud);
+        _battleHud.Bind(_session, _battle);
+
+        _battle.Opened += () =>
+        {
+            _world.Visible = false;
+            _hud.Visible = false;
+            _camera.ProcessMode = ProcessModeEnum.Disabled;
+            _world.PathPreview.Clear();
+        };
+        _battle.Closed += () =>
+        {
+            _world.Visible = true;
+            _hud.Visible = true;
+            _camera.ProcessMode = ProcessModeEnum.Inherit;
+            _camera.MakeCurrent();
+        };
+    }
+
     private void BuildHud()
     {
         var hud = new CanvasLayer { Name = "Hud" };
+        _hud = hud;
         AddChild(hud);
 
         var top = new VBoxContainer { Position = new Vector2(12, 8) };

@@ -23,6 +23,7 @@ dotnet build (Join-Path $root 'EternalWars.sln') --nologo -v quiet
 if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 
 $exchangeMap = Join-Path $PSScriptRoot 'smoke/exchange.ewmap.json'
+$battleMap = Join-Path $PSScriptRoot 'smoke/battle.ewmap.json'
 $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
        Input = '5:click:133,263;12:click:133,263;20:click:103,140;28:click:30,140;35:key:Q' },
@@ -30,6 +31,9 @@ $scenarios = @(
        Input = '3:click:800,569;10:click:960,520;25:click:960,520' },
     @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 60; Map = $exchangeMap
        Input = '3:click:800,569;10:key:Right;16:click:258,209;20:click:258,151;24:click:194,256;30:click:960,557;36:click:960,557' },
+    # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
+    @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
+       Input = '3:click:800,569;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' }
 )

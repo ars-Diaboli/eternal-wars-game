@@ -613,3 +613,27 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   navigation skills (no Navigation-like skill in any group). Shallow water stays walkable terrain (ADR-045).
 - Replaces "boats later" (ADR-045) and the planned boats/shipyards map objects. Random maps already left out water
   zones and islands for 1.0 (ADR-034).
+
+### ADR-052: The 3D battle scene
+**Status**: accepted (2026-10-16); replaces the game app's quick-combat-only fallback (Phase 2)
+- **Same scene tree, own camera.** `BattleView3D` (Godot.Shared) lives next to the adventure map, far from it
+  (`BattleSpace.Origin`), and has its own `Camera3D`. While a battle is shown, the app hides the adventure map and its
+  HUD and pauses the strategy camera; after the result screen it switches back. No scene change, so the session,
+  views and subscriptions stay as they are.
+- **Built from events only.** The view builds the battlefield from `BattleStarted` (units, obstacles, width) and
+  follows `BattleUnitMoved` / `Attacked` / `Died` / `TurnStarted` / `Ended`. Every event is one step of a single
+  animation queue, because the core resolves a whole AI turn (or a quick combat) inside one command. Geometry of
+  queued steps uses where units *will* stand, not the live state, which is ahead of the animation. The view is busy
+  while the queue plays; reachable cells, previews and input are offered only once it has caught up. Quick combat and
+  battles without a human side skip the animation.
+- **Pointer intent is a core query.** `BattleTargeting.ActionAt` turns a pointed cell (with the exact pointer
+  position) into the `BattleAction` a click would perform: shoot an enemy if possible, else melee it from the
+  reachable side nearest the pointer, else move to the reachable placement covering the cell. Engine-free and tested;
+  the 3D game and the 2D harness both use it, and the rules still validate the command.
+- **Placeholders for now.** The ground uses the adventure-map texture of the terrain the battle is fought on
+  (`AdventureMapView.TerrainMaterial`); units are primitive meshes (capsule walkers, cylinder shooters, hovering
+  sphere flyers) with a base in the side's colour, a facing nose and a count; obstacles are boulders and crags. Real
+  models, animations and themed backdrops come with the art pass (Phase 5).
+- **HUD** (`BattleHud`, Godot.UI): sides and round, initiative timeline (active, queue, waiting), the log in step with
+  the animation, hovered or active unit stats, wait / defend / retreat / quick combat buttons (W, D, R, Q), and a
+  result screen with casualties and experience. The width choice before the battle stays in `DecisionPanel`.

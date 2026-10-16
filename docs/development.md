@@ -48,7 +48,7 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 | Level | L or button (follows gates) | L or button | — |
 | Camera | WASD pan, Q/E rotate (±45°), wheel zoom | same | — |
 | Edit | — | LMB with the active tool (terrain, road, object, monster, hero, erase, link gates, select); Ctrl+Z / Ctrl+Y | — |
-| Battle | Quick combat button | — | Click: move / attack / shoot; W wait, D defend, R retreat, Q quick combat |
+| Battle | 3D battle scene: point to preview, click to move / attack (from the side the pointer is on) / shoot; W wait, D defend, R retreat, Q quick combat (or the buttons), wheel zoom; Enter / Esc leave the result | — | Click: move / attack / shoot; W wait, D defend, R retreat, Q quick combat |
 | Decisions | Prompt buttons, exchange screen | — | Prompt buttons, exchange screen |
 
 ## Conventions
@@ -72,6 +72,10 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
   stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
   stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
+- Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
+  (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `editor-tools`)
+  and saves frames to `.shots/`. Smoke maps live in `tools/smoke/`; `SmokeMapTests` checks that they still do what the
+  scripts expect.
 - CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` on every push to main and on PRs.
 - Core builds with warnings as errors; keep Godot projects warning-free as well.
 - Commits: imperative mood, small and focused.

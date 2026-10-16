@@ -153,7 +153,7 @@ public sealed record MonsterDocument : MapObjectDocument
 }
 
 /// <summary>
-/// A town (v6). <see cref="Buildings"/> omitted = the default start (town hall 1, fort 1); <see cref="Dwellings"/> map
+/// A town (v6). <see cref="Buildings"/> omitted = the default start (town hall 1, fort 1, tavern 1); <see cref="Dwellings"/> map
 /// creature lines (base creature ids) to 1 built or 2 upgraded; <see cref="Available"/> are creatures waiting per line.
 /// </summary>
 public sealed record TownDocument : MapObjectDocument

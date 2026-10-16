@@ -192,20 +192,26 @@ public partial class Main : Node2D
         }
     }
 
-    /// <summary>Click on an enemy: shoot it if possible, else attack it; click elsewhere: move there.</summary>
+    /// <summary>Click on an enemy: shoot it if possible, else attack it; click elsewhere: move there (<see cref="BattleTargeting"/>).</summary>
     private void HandleBattleClick(CellPosition cell)
     {
-        if (_session.State.Battle is not { ActiveUnit: { } active } battle || ActiveCommander() is not { } player)
+        if (_session.State.Battle is not { } battle || ActiveCommander() is not { } player)
         {
             return;
         }
 
-        GameCommand command = battle.UnitAt(cell) is { } target && target.Side != active.Side
-            ? BattleGrid.CanShoot(battle, active, target, out _)
-                ? new BattleShootCommand(player, target.Id)
-                : new BattleAttackCommand(player, target.Id)
-            : new BattleMoveCommand(player, cell);
-        Report(_session.Execute(command));
+        GameCommand? command = BattleTargeting.ActionAt(battle, cell) switch
+        {
+            MoveAction move => new BattleMoveCommand(player, move.To),
+            AttackAction attack => new BattleAttackCommand(player, attack.Target, attack.From),
+            ShootAction shoot => new BattleShootCommand(player, shoot.Target),
+            _ => null,
+        };
+        GetNode<Label>("Ui/Top/Status").Text = command is null ? "Nothing to do there" : string.Empty;
+        if (command is not null)
+        {
+            Report(_session.Execute(command));
+        }
     }
 
     private PlayerId? ActiveCommander() =>
