@@ -167,7 +167,7 @@ Full lists: [heroes.md](heroes.md) (every roster hero) and [skills.md](skills.md
   |---|---|
   | Offense | Melee (+10 % melee damage per level), Archery (+10/25/50 % ranged), third skill ❓ |
   | Defense | Armor (−5 % damage taken per level), Spell resistance, third skill ❓ |
-  | Estates | Treasury (+100/200/350/500 gold a day), Prospecting (other resources), Stewardship (cheaper costs in the hero's town) |
+  | Estates | Treasury (+250/500/750/1000 gold a day, Expert and Master also 0.5/1 % of the gold on hand), Prospecting (other resources, and a chance of +50 % from resource piles), Stewardship (cheaper costs in the hero's town) |
   | Pathfinding | Logistics (+10 % movement per level), Pathfinding (−25/50/75 % terrain penalty), Troop management (+1 army map speed per level) |
   | Tactics | Tactics (battlefield width), Deployment (rearrange troops before battle), Drill (+1 battlefield speed per level) |
   | War machines | Ballistics (offensive machine in regular battles from Advanced, +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) |

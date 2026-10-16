@@ -76,9 +76,9 @@ public class NativeTerrainAndIncomeTests
         hero.Skills.Set(BuiltInSkills.Prospecting, SkillLevel.Basic);
         var session = Start(state);
 
-        // Mine 1000 + town hall 500 + Treasury 100 gold; resource silo 1 + Prospecting 1 lumber and ore.
-        Assert.Equal(new ResourceSet(Gold: 1600, Lumber: 2, Ore: 2), session.Economy.DailyIncome(Blue));
-        Assert.Equal(new ResourceSet(Gold: 1600, Lumber: 2, Ore: 2), state.GetPlayer(Blue).Resources); // paid on turn 1
+        // Mine 1000 + town hall 500 + Treasury 250 gold; resource silo 1 + Prospecting 1 lumber and ore.
+        Assert.Equal(new ResourceSet(Gold: 1750, Lumber: 2, Ore: 2), session.Economy.DailyIncome(Blue));
+        Assert.Equal(new ResourceSet(Gold: 1750, Lumber: 2, Ore: 2), state.GetPlayer(Blue).Resources); // paid on turn 1
         Assert.Equal(ResourceSet.Empty, session.Economy.DailyIncome(Red));
     }
 }

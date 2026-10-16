@@ -7,7 +7,7 @@ still to decide:
 - defense group: third skill (placeholder `defense.third`)
 
 Roster notes and spell resistance: moved to ADR-049 (2026-10-16). No sea travel: ADR-051.
-Morale and luck: implemented, ADR-053 (2026-10-16). Caravans: designed in ADR-054, built with map dwellings (roadmap).
+Morale and luck: implemented, ADR-053 (2026-10-16). Treasury and Prospecting: implemented, ADR-062 (2026-10-17). Caravans: designed in ADR-054, built with map dwellings (roadmap).
 War machines: implemented, ADR-056 (2026-10-16).
 
 Stewardship
@@ -26,13 +26,6 @@ affected by game complexity (selected by player during map/scenario configuratio
 use homm3 for reference values
 hardest difficulty 2500 gold, 10 ore, 10 lumber
 
-Prospecting skill has another effect
-10%,20%,30% chance to get 50% more resources when picking up resource piles
-
-Treasury skill
-following effect 250,500,750,1000 gold a day; 
-level 3 and 4 also give 0.5% and 1% of total kingdom gold bonus every day
-
 Ballistics
 without Ballistics war machine fires automatically
 by default war machine has 2/3 chance to hit towns defense structure
@@ -43,3 +36,12 @@ advanced - fires twice same target if target is destroyed in 1 shot, target for 
 expert - chance to hit a taget fortification is 100%
 master - damage is 2 to 3 hitpoints
 
+for orcs and bestiary remove magic schools
+replace them with rage/adrenaline stacks and/or other faction specific abilities
+
+second skill for all 6 magic schools
+academy/inferno : +12/25/37/50 max mana points, +1/2/3/4 mana points per day
+heaven/necropolis : +3/6/9/12 mana points per day, -1/2/3/4 to spell cost
+sylvian/dungeon : +2/4/6/8 mana points per day, +5/10/15/20 max mana points
+minimum spell cost - 25% of base value rounded upwards
+by default hero generates knowledge value divided by 10 rounded upwards spell points every day
