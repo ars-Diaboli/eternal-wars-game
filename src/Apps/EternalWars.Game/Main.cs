@@ -43,6 +43,7 @@ public partial class Main : Node3D
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
     private BattleHud _battleHud = null!;
+    private GameResultPanel _result = null!;
     private HeroId? _selectedHero;
 
     public override void _Ready()
@@ -129,6 +130,7 @@ public partial class Main : Node3D
 
         BuildHud();
         BuildBattle();
+        BuildResult();
 
         this.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
@@ -326,6 +328,46 @@ public partial class Main : Node3D
             _camera.ProcessMode = ProcessModeEnum.Inherit;
             _camera.MakeCurrent();
         };
+    }
+
+    /// <summary>
+    /// The result screen of a won or lost game (ADR-057). A battle that decided the game is shown to its end first.
+    /// </summary>
+    private void BuildResult()
+    {
+        var layer = new CanvasLayer { Name = "Result", Layer = 3 };
+        AddChild(layer);
+        _result = new GameResultPanel();
+        layer.AddChild(_result);
+
+        this.SubscribeWhileInTree<PlayerDefeated>(_session.Events, e =>
+            _status.Text = $"{_session.State.GetPlayer(e.Player).Name} is defeated: {e.Reason}");
+        this.SubscribeWhileInTree<GracePeriodStarted>(_session.Events, e =>
+            _status.Text = $"{_session.State.GetPlayer(e.Player).Name} lost its last town and is defeated on {e.DefeatDay} unless it owns one again.");
+        this.SubscribeWhileInTree<GracePeriodEnded>(_session.Events, e =>
+            _status.Text = $"{_session.State.GetPlayer(e.Player).Name} owns a town again.");
+        this.SubscribeWhileInTree<GameEnded>(_session.Events, _ =>
+        {
+            if (!_battle.IsOpen)
+            {
+                ShowResult();
+            }
+        });
+        _battle.Closed += () =>
+        {
+            if (_session.State.Outcome is not null)
+            {
+                ShowResult();
+            }
+        };
+    }
+
+    private void ShowResult()
+    {
+        if (_session.State.Outcome is { } outcome)
+        {
+            _result.ShowOutcome(_session.State, outcome);
+        }
     }
 
     private void BuildHud()

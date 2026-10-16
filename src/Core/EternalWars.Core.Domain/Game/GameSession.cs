@@ -37,6 +37,7 @@ public sealed class GameSession
         Bus.Subscribe<MapObjectRemoved>(visibility);
         Bus.Subscribe<HeroDefeated>(visibility);
 
+        Flow = new GameFlowService(State, Bus);
         Economy = new EconomyService(State, Bus);
         Armies = new ArmyService(State, Bus);
         Progression = new ProgressionService(State, Bus);
@@ -67,6 +68,8 @@ public sealed class GameSession
     /// <summary>Queries: army power (dispositions).</summary>
     public GuardService Guards { get; }
 
+    internal GameFlowService Flow { get; }
+
     internal ArmyService Armies { get; }
 
     internal ProgressionService Progression { get; }
@@ -80,7 +83,12 @@ public sealed class GameSession
     private IEventBus Bus { get; }
 
     /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
-    public void Start() => Turns.StartGame();
+    public void Start()
+    {
+        Flow.Begin();
+        Turns.StartGame();
+        Settle();
+    }
 
     /// <summary>
     /// Validates and applies a command. Refused commands change nothing and are not logged; game-rule outcomes
@@ -92,6 +100,11 @@ public sealed class GameSession
         if (!State.IsStarted)
         {
             return CommandResult.Rejected("The game has not started yet.");
+        }
+
+        if (State.IsOver)
+        {
+            return CommandResult.Rejected("The game is over.");
         }
 
         if (Authorize(command) is { } refusal)
@@ -111,7 +124,26 @@ public sealed class GameSession
         }
 
         _log.Add(command);
+        Settle();
         return CommandResult.Accepted(outcome);
+    }
+
+    /// <summary>
+    /// Checks who is out and whether the game is won (ADR-057). A player defeated in its own turn passes it on, which
+    /// may start a new day and decide more.
+    /// </summary>
+    private void Settle()
+    {
+        for (var i = 0; i < State.Players.Count + 1; i++)
+        {
+            Flow.Evaluate();
+            if (State.IsOver || !State.CurrentPlayer.IsDefeated || State.PendingDecision is not null || State.Battle is not null)
+            {
+                return;
+            }
+
+            Turns.EndTurn();
+        }
     }
 
     private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleMoveCommand

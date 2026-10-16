@@ -785,6 +785,20 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>Sets how the scenario is won and lost (ADR-057); problems with it are reported by <see cref="MapValidator"/>.</summary>
+    public void SetScenarioRules(ScenarioRules rules)
+    {
+        ArgumentNullException.ThrowIfNull(rules);
+        var previous = Scenario.Rules;
+        Run(new DelegateCommand("Edit victory and defeat conditions", () => Apply(rules), () => Apply(previous)));
+
+        void Apply(ScenarioRules value)
+        {
+            Scenario.SetRules(value);
+            _bus.Publish(new ScenarioRulesChanged());
+        }
+    }
+
     // Map properties and player slots -----------------------------------------------------------
 
     public void SetMapProperties(string name, string description)

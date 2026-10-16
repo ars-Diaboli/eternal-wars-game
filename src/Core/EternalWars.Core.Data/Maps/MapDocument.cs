@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 
@@ -16,12 +18,12 @@ namespace EternalWars.Core.Data.Maps;
 /// optional chest values (omitted = rolled). 5 = + terrain codes b (beach), i (ice), = (shallow water),
 /// c (cursed lands), k (rocky ground) (ADR-045); heroes may name a roster entry (<c>type</c>) and carry skill levels
 /// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). 6 = + towns (<c>town</c> objects: owner, name, buildings, dwellings,
-/// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056).
+/// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056). 10 = + victory and defeat conditions (ADR-057).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 9;
+    public const int CurrentFormatVersion = 10;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -47,10 +49,35 @@ public sealed record MapDocument
     /// <summary>How monsters guard their surroundings; omitted = <see cref="Domain.Objects.GuardMode.Classic"/>.</summary>
     public GuardMode? GuardMode { get; init; }
 
+    /// <summary>Victory and defeat conditions (v10); omitted = the default: defeat every enemy.</summary>
+    public ScenarioRulesDocument? Rules { get; init; }
+
     public IReadOnlyList<HeroPlacementDocument> Heroes { get; init; } = [];
 
     public IReadOnlyList<MapObjectDocument> Objects { get; init; } = [];
 }
+
+/// <summary>
+/// How a scenario is won and lost (v10, ADR-057). <see cref="StandardVictory"/> (the last team standing wins) and
+/// <see cref="Elimination"/> (no towns and no heroes: out) are on unless set to false; <see cref="GraceDays"/> omitted = 7
+/// (the days a player that lost its last town has to own one again; 0 = no countdown).
+/// </summary>
+public sealed record ScenarioRulesDocument(
+    IReadOnlyList<ConditionDocument>? Victory = null,
+    IReadOnlyList<ConditionDocument>? Defeat = null,
+    bool StandardVictory = true,
+    bool Elimination = true,
+    int? GraceDays = null);
+
+/// <summary>One condition; which fields apply depends on <see cref="Kind"/> (see <see cref="ConditionKind"/>).</summary>
+public sealed record ConditionDocument(
+    ConditionKind Kind,
+    int? Player = null,
+    int? Town = null,
+    int? Hero = null,
+    ResourceType? Resource = null,
+    int? Amount = null,
+    int? Day = null);
 
 /// <param name="Name">Player name.</param>
 /// <param name="IsHuman">Human or AI by default.</param>

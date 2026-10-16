@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
@@ -23,6 +24,7 @@ public static class MapConverter
                 .ToList(),
             TeamsLocked = state.TeamsLocked,
             GuardMode = state.GuardMode == GuardMode.Classic ? null : state.GuardMode,
+            Rules = state.Rules.IsDefault ? null : ToDocument(state.Rules),
             Heroes = state.Heroes
                 .Select(h => new HeroPlacementDocument(
                     h.Id.Value, h.Name, h.Owner.Value, h.Position.X, h.Position.Y, h.Position.Level,
@@ -100,6 +102,7 @@ public static class MapConverter
             var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetGuardMode(document.GuardMode ?? GuardMode.Classic);
+            state.SetRules(ToRules(document.Rules));
             return state;
         }
         catch (ArgumentException e)
@@ -107,6 +110,39 @@ public static class MapConverter
             throw new FormatException($"Invalid map '{document.Name}': {e.Message}", e);
         }
     }
+
+    private static ScenarioRulesDocument ToDocument(ScenarioRules rules) => new(
+        rules.Victory.Count == 0 ? null : rules.Victory.Select(ToDocument).ToList(),
+        rules.Defeat.Count == 0 ? null : rules.Defeat.Select(ToDocument).ToList(),
+        rules.StandardVictory,
+        rules.Elimination,
+        rules.GraceDays == ScenarioRules.DefaultGraceDays ? null : rules.GraceDays);
+
+    private static ConditionDocument ToDocument(ScenarioCondition c) => c.Kind switch
+    {
+        ConditionKind.CaptureTown or ConditionKind.LoseTown => new(c.Kind, c.Player?.Value, Town: c.Town?.Value),
+        ConditionKind.DefeatHero or ConditionKind.LoseHero => new(c.Kind, c.Player?.Value, Hero: c.Hero?.Value),
+        ConditionKind.GatherResources => new(c.Kind, c.Player?.Value, Resource: c.Resource, Amount: c.Amount),
+        _ => new(c.Kind, c.Player?.Value, Day: c.Day),
+    };
+
+    private static ScenarioRules ToRules(ScenarioRulesDocument? document) => document is null
+        ? ScenarioRules.Default
+        : new ScenarioRules(
+            (document.Victory ?? []).Select(ToCondition).ToList(),
+            (document.Defeat ?? []).Select(ToCondition).ToList(),
+            document.StandardVictory,
+            document.Elimination,
+            document.GraceDays ?? ScenarioRules.DefaultGraceDays);
+
+    private static ScenarioCondition ToCondition(ConditionDocument c) => new(
+        c.Kind,
+        c.Player is { } player ? new PlayerId(player) : null,
+        c.Town is { } town ? new MapObjectId(town) : null,
+        c.Hero is { } hero ? new HeroId(hero) : null,
+        c.Resource ?? ResourceType.Gold,
+        c.Amount ?? 0,
+        c.Day ?? 0);
 
     private static Hero ToHero(HeroPlacementDocument h, CreatureCatalog creatures, HeroCatalog heroRoster)
     {

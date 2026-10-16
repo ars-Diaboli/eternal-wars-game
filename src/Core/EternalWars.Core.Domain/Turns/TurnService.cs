@@ -50,6 +50,19 @@ public sealed class TurnService(
 
         events.Publish(new TurnEnded(state.CurrentPlayer.Id, state.Date));
 
+        // Defeated players have no turn (ADR-057); the bound only matters if everyone is out, which ends the game first.
+        var tries = 0;
+        do
+        {
+            AdvancePlayer();
+        }
+        while (state.CurrentPlayer.IsDefeated && ++tries <= state.Players.Count);
+
+        BeginTurn();
+    }
+
+    private void AdvancePlayer()
+    {
         state.CurrentPlayerIndex++;
         if (state.CurrentPlayerIndex >= state.Players.Count)
         {
@@ -62,8 +75,6 @@ public sealed class TurnService(
                 towns.GrowWeekly();
             }
         }
-
-        BeginTurn();
     }
 
     private void BeginTurn()

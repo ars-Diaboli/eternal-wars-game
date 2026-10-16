@@ -98,6 +98,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
     other players see or attack caravans; what the caravan building costs.
 12. War machines (ADR-056): machine stats and prices after play-testing; what Basic Ballistics does in sieges;
     can heroes exchange machines; can towns have them in the garrison?
+13. Victory and defeat (ADR-057): which more conditions (grail artifact, flag all mines, defeat all monsters) and how a campaign hooks into them;
+    does survival win for the whole team?
 6. Town buildings (ADR-046 draft): what fort, tavern and marketplace trading do (the blacksmith sells war machines);
    which buildings raise growth; a fourth town hall level; the cost of mage guild level 4; are the sandbox's gems
    really mercury?
