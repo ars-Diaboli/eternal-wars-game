@@ -1,0 +1,2 @@
+# Sandbox images are stored as plain blobs, not in Git LFS.
+*.png -filter -diff -merge binary
