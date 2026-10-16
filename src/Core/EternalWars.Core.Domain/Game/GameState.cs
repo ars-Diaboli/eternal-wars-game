@@ -21,6 +21,7 @@ public sealed class GameState
 
     private readonly List<Player> _players;
     private readonly List<Hero> _heroes = [];
+    private int _highestHeroId;
     private readonly List<MapObject> _objects = [];
     private readonly Dictionary<MapPosition, (MapObject Object, FootprintCell Cell)> _objectCells = [];
 
@@ -222,6 +223,9 @@ public sealed class GameState
     public (MapObject Object, FootprintCell Cell)? ObjectCellAt(MapPosition position) =>
         _objectCells.TryGetValue(position, out var cell) ? cell : null;
 
+    /// <summary>An id never used before in this game, also not by a hero that has since left it (hired heroes).</summary>
+    internal HeroId NextUnusedHeroId() => new(Math.Max(_highestHeroId, _heroes.Count == 0 ? 0 : _heroes.Max(h => h.Id.Value)) + 1);
+
     public HeroId NextHeroId() => new(_heroes.Count == 0 ? 1 : _heroes.Max(h => h.Id.Value) + 1);
 
     public MapObjectId NextObjectId() => new(_objects.Count == 0 ? 1 : _objects.Max(o => o.Id.Value) + 1);
@@ -238,6 +242,7 @@ public sealed class GameState
         }
 
         _heroes.Add(hero);
+        _highestHeroId = Math.Max(_highestHeroId, hero.Id.Value);
     }
 
     internal void RemoveHero(Hero hero) => _heroes.Remove(hero);

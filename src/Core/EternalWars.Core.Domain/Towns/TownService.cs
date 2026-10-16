@@ -126,6 +126,19 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         events.Publish(new WarMachineBought(town.Id, hero.Id, slot));
     }
 
+    internal void HireHero(PlayerId player, MapObjectId townId, string heroId)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(TavernRules.CheckHire(state, town, heroId));
+
+        Pay(player, TavernRules.HeroCost);
+        var hero = Hero.Create(state.NextUnusedHeroId(), player, town.VisitPosition, null, state.HeroRoster.Get(heroId));
+        hero.MaxMovementPoints = MovementAllowance.Daily(hero, state.Creatures);
+        hero.MovementPoints = hero.MaxMovementPoints;
+        state.AddHero(hero);
+        events.Publish(new HeroHired(town.Id, hero.Id, heroId));
+    }
+
     /// <summary>Monday: every built dwelling adds its creature's weekly growth to what is waiting (owned or not).</summary>
     internal void GrowWeekly()
     {

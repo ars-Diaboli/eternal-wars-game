@@ -12,7 +12,8 @@ mage-guild,1,Mage Guild,2000,lumber 5; mercury 2,,,spells of level 1 (ADR-047)
 mage-guild,2,Mage Guild 2,3500,crystal 3; mercury 3,,,
 mage-guild,3,Mage Guild 3,5000,crystal 5; sulfur 5,,,
 mage-guild,4,Mage Guild 4,7500,crystal 7; mercury 7; sulfur 7,,,placeholder: the sandbox had three levels
-tavern,1,Tavern,750,lumber 5,,,hire heroes (later)
+tavern,1,Tavern,750,lumber 5,,,hire 2 heroes: 1 native + 1 of an adjacent town (ADR-060)
+tavern,2,Brotherhood,2000,lumber 5; ore 5,fort 1,,hire 4 heroes: 2 native + 1 adjacent + 1 of the rest (ADR-060)
 dwelling-1,1,Tier 1 dwelling,500,,,,"every dwelling of the tier; level 2 is the upgrade (ADR-046: 500·t, upgrade 1000·t)"
 dwelling-1,2,Tier 1 upgrade,1000,,,,
 dwelling-2,1,Tier 2 dwelling,1000,lumber 2,,,

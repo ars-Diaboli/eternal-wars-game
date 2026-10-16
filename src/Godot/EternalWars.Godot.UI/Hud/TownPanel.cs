@@ -23,6 +23,7 @@ public partial class TownPanel : PanelContainer
     private readonly GridContainer _dwellings = new() { Columns = 4 };
     private readonly VBoxContainer _armies = new();
     private readonly HBoxContainer _blacksmith = new();
+    private readonly HBoxContainer _tavern = new();
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly CheckBox _toHero = new() { Text = "Recruit to visiting hero" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
@@ -49,6 +50,7 @@ public partial class TownPanel : PanelContainer
         box.AddChild(_dwellings);
         box.AddChild(_armies);
         box.AddChild(_blacksmith);
+        box.AddChild(_tavern);
 
         var options = new HBoxContainer();
         box.AddChild(options);
@@ -73,6 +75,7 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroHired>(session.Events, _ => Refresh());
     }
 
     /// <summary>Shows a town of the player whose turn it is.</summary>
@@ -161,6 +164,7 @@ public partial class TownPanel : PanelContainer
 
         Clear(_armies);
         AddArmyRow(town, TownArmy.Garrison, "Garrison", town.Garrison);
+        ShowTavern(state, town);
         Clear(_blacksmith);
         if (TownRules.VisitingHero(state, town) is { } hero)
         {
@@ -181,6 +185,31 @@ public partial class TownPanel : PanelContainer
                 buy.Pressed += () => Run(new BuyWarMachineCommand(state.CurrentPlayer.Id, town.Id, slot));
                 _blacksmith.AddChild(buy);
             }
+        }
+    }
+
+    /// <summary>The tavern's offers (ADR-060): who can be hired for gold at the entrance, by the tavern's level.</summary>
+    private void ShowTavern(GameState state, Town town)
+    {
+        Clear(_tavern);
+        var level = town.Level(BuiltInBuildings.Tavern);
+        if (level < 1)
+        {
+            return;
+        }
+
+        _tavern.AddChild(new Label { Text = $"Tavern {level}", CustomMinimumSize = new Vector2(110, 0) });
+        foreach (var offer in TavernRules.Offers(state, state.CurrentPlayer.Id, town))
+        {
+            var refusal = TavernRules.CheckHire(state, town, offer.Id);
+            var hire = new Button
+            {
+                Text = $"Hire {offer.Name}{System.Environment.NewLine}{offer.Class}, {offer.Town}{System.Environment.NewLine}{Cost(TavernRules.HeroCost)}",
+                Disabled = refusal is not null,
+                TooltipText = refusal ?? "",
+            };
+            hire.Pressed += () => Run(new HireHeroCommand(state.CurrentPlayer.Id, town.Id, offer.Id));
+            _tavern.AddChild(hire);
         }
     }
 

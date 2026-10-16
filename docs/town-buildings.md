@@ -39,6 +39,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | `mage-guild` | 3 | Mage Guild 3 | 5 000 gold, crystal 5, sulfur 5 | – | – |
 | `mage-guild` | 4 | Mage Guild 4 | 7 500 gold, crystal 7, mercury 7, sulfur 7 | – | – |
 | `tavern` | 1 | Tavern | 750 gold, lumber 5 | – | – |
+| `tavern` | 2 | Brotherhood | 2 000 gold, lumber 5, ore 5 | fort 1 | – |
 
 | Building | Effect | Status |
 |---|---|---|
@@ -47,7 +48,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading resources | ✅ silo; ⏳ trading ❓ |
 | Mage Guild | spells of its level (ADR-047); level 4 is a placeholder | ⏳ magic (Phase 5) |
-| Tavern | hire heroes | ⏳ (later) |
+| Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest); 2500 gold each (ADR-060) | ✅ |
 | Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054) | ⏳ designed, not in the table; needs map dwellings |
 
 ## Tech tree
@@ -62,6 +63,7 @@ graph LR
   MG1[Mage Guild 1] --> TH2
   TH2 --> TH3[Capitol]
   TV[Tavern] --> F1[Fort]
+  F1 --> TV2[Brotherhood]
   F1 --> F2[Citadel]
   F2 --> TH3
   F2 --> F3[Castle]
@@ -214,7 +216,7 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 ## Open
 
-- What the fort does (town defence in sieges, growth bonus), marketplace trading, the tavern and the mage guild
+- What the fort does (town defence in sieges, growth bonus), marketplace trading and the mage guild
   (open question 6).
 - The caravan's cost and place in the tree (ADR-054).
 - Per-town buildings: all towns share one list for now.

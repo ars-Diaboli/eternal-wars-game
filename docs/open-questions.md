@@ -100,7 +100,10 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
     can heroes exchange machines; can towns have them in the garrison?
 13. Victory and defeat (ADR-057): which more conditions (grail artifact, flag all mines, defeat all monsters) and how a campaign hooks into them;
     does survival win for the whole team?
-6. Town buildings (ADR-046 draft): what fort, tavern and marketplace trading do (the blacksmith sells war machines);
+14. Tavern (ADR-060): the draft numbers (hero 2500 gold, Brotherhood 2000 gold + 5 lumber + 5 ore, 8 heroes); is the
+    opposing town the one across the ring (our reading) or both far neighbours; per-town instead of per-player pools;
+    hiring while a hero stands at the entrance; a starter stack for hired heroes.
+6. Town buildings (ADR-046 draft): what fort and marketplace trading do (the blacksmith sells war machines);
    which buildings raise growth; a fourth town hall level; the cost of mage guild level 4; are the sandbox's gems
    really mercury?
 

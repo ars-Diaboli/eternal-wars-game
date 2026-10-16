@@ -833,3 +833,32 @@ work during combat
 - **Not yet**: defending towns (a hero never stays or returns to hold one), avoiding stronger enemy heroes, several heroes
   cooperating (they only avoid the same target within a turn), hiring heroes (no tavern yet), war machines, artifacts and
   spells, difficulty levels, using the marketplace, stacking creatures between heroes, and sieges.
+
+### ADR-060: The tavern and hiring heroes
+**Status**: accepted (2026-10-16), from user decisions on who a tavern offers; cost, upgrade price, limit and placement
+are drafts
+- **Tavern levels**: the tavern is an upgradeable building (`data/buildings.csv`): **Tavern** (750 gold, 5 lumber; every
+  new town has it) offers **2** heroes, **Brotherhood** (2000 gold, 5 lumber, 5 ore, needs the fort) offers **4**.
+- **Ranks** (`TavernRules`): the six main towns sit on the lore ring (Haven, Necropolis, Sylvan, Dungeon, Academy,
+  Inferno). For a town, a hero is **0 native**, **1 adjacent** (the town's two ring neighbours, who are also its sworn
+  enemies: user decision, "ring neighbours = adjacent"), **2 not opposing** (everything else, Stronghold and Swamp
+  Bestiary included) or **3 opposing** (the town across the ring: Haven–Dungeon, Necropolis–Academy, Sylvan–Inferno;
+  our reading, the user's wording was "the two towns across the ring" and a six-town ring has one opposite). The pool
+  order is that order.
+- **Slots**: basic = native + adjacent; upgraded = native, native, adjacent, not opposing. Opposing heroes come last,
+  only when nothing else is left. A slot with nobody left in its rank takes the next ranks, then the earlier ones.
+- **Stronghold and Swamp Bestiary** (user decision) have no ring: rank 0 native, **1 warriors of the other towns**, 2 all
+  other heroes. Basic = native + warrior (our reading); upgraded = 2 native + 2 warriors.
+- **The pool is per player and weekly**: `TavernRules.PoolOrder` shuffles the roster from the game seed, the player and the
+  week, so every player sees other heroes, the offers change every Monday, and nothing is stored or drawn from the
+  game's random numbers. A hero on the map (anyone's) is not offered; a defeated or retreated hero is back in the pool.
+  Hiring lets the next hero of that rank step forward; there is no empty slot until Monday.
+- **Hiring** (`HireHeroCommand`, `TownService.HireHero`): the owner's turn, an own town with a tavern, a hero the town
+  offers now, **2500 gold**, the entrance free, at most **8 heroes** per player. The hero stands at the entrance with its
+  roster stats and skills, no army, full movement. Heroes get ids never used before (`NextUnusedHeroId`).
+  `HeroHired(Town, Hero, Definition)` is published; visibility reacts to it.
+- **UI**: the town panel lists the offers with a hire button (and why a hire is refused).
+- **AI**: it hires the best offer (warriors first) while it has fewer heroes than one more than its towns, at most four, and
+  the gold beyond what it saves for a building allows; the new hero is the town's visiting hero, so recruits go to it.
+- Open: the draft numbers, whether surrender comes with taverns (ADR-038), per-town pools, hiring when an own hero stands
+  at the entrance, and hero level or starter stacks for hired heroes.

@@ -93,6 +93,11 @@ These are enforced by:
 - **Apps** contain composition and input mapping only. If an app needs logic, it probably belongs
   in core.
 
+### Tavern (ADR-060)
+- `TavernRules` (Towns) decides who a tavern offers (ranks on the lore ring, a per-player weekly shuffle of the roster
+  with no stored state) and whether a hire is allowed; `TownService.HireHero` creates the hero. The tavern is a building
+  level in `buildings.csv`, so upgrading it is an ordinary `BuildCommand`.
+
 ### Adventure AI (ADR-059)
 - `AdventureAi` (`Core.Domain/AI`) plays a computer player's turn with `GameSession.Execute` only: towns (build order,
   saving, recruiting), heroes (valued targets, exploration) and pending decisions. `BattleEstimator` runs the real

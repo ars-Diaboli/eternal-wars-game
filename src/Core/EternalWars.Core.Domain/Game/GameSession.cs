@@ -36,6 +36,7 @@ public sealed class GameSession
         Bus.Subscribe<TownOwnerChanged>(visibility);
         Bus.Subscribe<MapObjectRemoved>(visibility);
         Bus.Subscribe<HeroDefeated>(visibility);
+        Bus.Subscribe<HeroHired>(visibility);
 
         Flow = new GameFlowService(State, Bus);
         Economy = new EconomyService(State, Bus);
@@ -231,6 +232,9 @@ public sealed class GameSession
                 return null;
             case MoveTownStackCommand move:
                 Towns.MoveStack(move.Player, move.Town, move.From, move.FromSlot, move.To, move.ToSlot, move.Count);
+                return null;
+            case HireHeroCommand hire:
+                Towns.HireHero(hire.Player, hire.Town, hire.Hero);
                 return null;
             case BuyWarMachineCommand buy:
                 Towns.BuyWarMachine(buy.Player, buy.Town, buy.Slot);

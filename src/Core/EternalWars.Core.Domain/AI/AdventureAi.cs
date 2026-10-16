@@ -196,6 +196,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             }
 
             var reserve = Build(player, town);
+            Hire(player, town, reserve);
             UpgradeStacks(player, town, reserve);
             Recruit(player, town, reserve);
             Consolidate(player, town);
@@ -287,6 +288,28 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         yield return (false, BuiltInBuildings.Fort);
         yield return (false, BuiltInBuildings.MageGuild);
         yield return (false, BuiltInBuildings.Tavern);
+    }
+
+    /// <summary>
+    /// Hires a hero while it has fewer than one more than its towns (at most four): the best offered one, warriors first
+    /// (mages have nothing to cast yet), when the gold is there beyond what it saves for a building.
+    /// </summary>
+    private void Hire(PlayerId player, Town town, int reserve)
+    {
+        var heroes = _state.HeroesOf(player).Count();
+        var towns = _state.ObjectsOf<Town>().Count(t => t.Owner == player);
+        if (heroes >= Math.Min(1 + towns, 4) || !(_state.GetPlayer(player).Resources - new ResourceSet(Gold: reserve)).CanAfford(TavernRules.HeroCost))
+        {
+            return;
+        }
+
+        var offer = TavernRules.Offers(_state, player, town)
+            .OrderByDescending(h => h.Class == HeroClass.Warrior).ThenByDescending(h => h.Attack + h.Defense).ThenBy(h => h.Id, StringComparer.Ordinal)
+            .FirstOrDefault(h => TavernRules.CheckHire(_state, town, h.Id) is null);
+        if (offer is not null)
+        {
+            Execute(new HireHeroCommand(player, town.Id, offer.Id));
+        }
     }
 
     /// <summary>Upgrades the stacks of the garrison and the visiting hero whose dwelling is upgraded, strongest tier first.</summary>
