@@ -4,6 +4,11 @@
 |---|---|
 | [game-design.md](game-design.md) | Vision, pillars and the feature set we are aiming for (living GDD) |
 | [lore.md](lore.md) | World premise, groups and town flavour (draft for review) |
+| [skills.md](skills.md) | Every hero skill and primary stat: effects per level, status, offer weights |
+| [town-buildings.md](town-buildings.md) | Town buildings, the tech tree and every town's dwellings |
+| [heroes.md](heroes.md) | All 128 roster heroes by faction, the roster template and the war machines |
+| [spells.md](spells.md) | Spell catalog for magic: eight schools, four levels, three ranks (design, not implemented) |
+| [artifacts.md](artifacts.md) | Artifact catalog: slots, tiers, sets and lore (design, not implemented) |
 | [architecture.md](architecture.md) | Three-tier solution layout, dependency rules, runtime composition |
 | [event-system.md](event-system.md) | The custom pub/sub (event publisher / handler) used by all core logic |
 | [roadmap.md](roadmap.md) | Phased delivery plan with milestones and exit criteria |
