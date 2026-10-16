@@ -332,6 +332,7 @@ because that is content selection, not a rule.
   | Breath, cleave, multi-head | Area attacks (see above) |
   | Pack hunter (x %), relentless (x %) | Engagement and hit-history damage bonuses |
   | Spell immunity (tag) | Unaffected by spells with that tag (all, mind, fire, curse, …); takes effect with magic |
+  | Spell resistance (level n) | Unaffected by spells of level n and below; a spell upgraded twice counts as one level higher; takes effect with magic |
   | Caster (spell, n) | Casts the spell n times per battle; takes effect with magic |
 - **Retreat**: a hero may leave the battle; its army is lost and it leaves the map. Surrender (paying gold)
   comes with taverns in Phase 3.

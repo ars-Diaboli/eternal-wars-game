@@ -87,6 +87,25 @@ public class CreatureTests
     }
 
     [Fact]
+    public void ShippedTable_RosterChanges_FromTheDesignNotes()
+    {
+        var catalog = CreatureCatalog.Default;
+        var wyvern = catalog.Get(BuiltInCreatures.Wyvern);
+
+        Assert.Equal((TownIds.DragonUtopia, "dragon-utopia.wyvern-monarch"), (wyvern.Town, wyvern.UpgradesTo));
+        Assert.True(catalog.Get(wyvern.UpgradesTo!).Value > wyvern.Value);
+        Assert.Equal([CapabilityKind.Cleave], catalog.Get("dragon-utopia.dragonyte").Capabilities.Select(c => c.Kind));
+        Assert.Null(catalog.Get("neutral.efreet").Town);
+        Assert.Null(catalog.Get("neutral.golden-golem").Town);
+        Assert.All(new[] { "dungeon.dark-raider", "dungeon.grim-raider" }, id => Assert.False(catalog.Get(id).IsRanged));
+        Assert.All(new[] { "dungeon.shadow-horror", "dungeon.shadow-reaper" }, id =>
+        {
+            var shadow = catalog.Get(id);
+            Assert.False(shadow.IsFlying || shadow.Has(CapabilityKind.Breath) || shadow.HasTag(CreatureTags.Dragon), id);
+        });
+    }
+
+    [Fact]
     public void ShippedTable_HasNoCopyPastedStatLines()
     {
         var duplicates = BuiltInCreatures.All

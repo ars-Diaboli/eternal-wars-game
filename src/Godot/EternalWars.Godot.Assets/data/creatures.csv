@@ -9,14 +9,14 @@ haven.archer,Archer,haven,2,Small,haven.marksman,8,6,6,9,23,8,4,9,12,10,165,,hum
 haven.marksman,Marksman,haven,2,Small,,9,7,6,10,23,9,5,10,16,10,210,,human; holy,ShootsTwice; MeleePenalty,"sandbox: hp 15, dmg 4-8, 12 shots"
 haven.monk,Monk,haven,3,Small,haven.priest,12,9,12,17,44,8,5,9,10,5,450,,human; holy,MeleePenalty; RangedRetaliation,"sandbox: hp 30, dmg 8-12, 12 shots"
 haven.priest,Priest,haven,3,Small,,13,11,13,19,50,9,6,11,12,5,580,,human; holy,RangedRetaliation; Caster cure 1,"sandbox: hp 35, dmg 8-12, 12 shots"
-haven.griffin,Griffin,haven,3,Medium,haven.royal-griffin,13,12,9,13,54,18,7,12,,5,450,,beast,Flying,"sandbox: hp 100, dmg 16-20, flying"
-haven.royal-griffin,Royal Griffin,haven,3,Medium,,14,13,10,14,61,22,8,13,,5,580,,beast,Flying; UnlimitedRetaliation,"sandbox: hp 110, dmg 16-22, flying"
-haven.lancer,Lancer,haven,4,Medium,haven.champion,16,16,19,26,120,18,7,12,,3,1100,,human; holy; mounted,,"sandbox: hp 120, dmg 16-24"
-haven.champion,Champion,haven,4,Medium,,18,17,22,29,135,20,9,13,,3,1450,,human; holy; mounted,PackHunter 10,sandbox: identical to Lancer (copy-paste)
-haven.paladin,Paladin,haven,4,Small,haven.sacred-warrior,16,20,17,22,125,12,5,12,,3,1100,,human; holy,,"sandbox: hp 100, dmg 12-16"
-haven.sacred-warrior,Sacred Warrior,haven,4,Small,,17,22,18,23,126,13,6,13,,3,1450,,human; holy,DoubleStrike; SpellImmunity curse,sandbox: identical to Paladin (copy-paste)
-haven.radiant-spirit,Radiant Spirit,haven,5,Large,haven.seraph,22,22,58,73,255,22,10,15,,1,3300,crystal 1,holy,Flying; SpellImmunity mind,"sandbox: hp 175, flying"
-haven.seraph,Seraph,haven,5,Large,,26,26,58,73,278,26,11,16,,1,4300,crystal 2,holy,Flying; NoEnemyRetaliation; SpellImmunity mind; Caster resurrection 1,"sandbox: hp 250, flying"
+haven.griffin,Griffin,haven,3,Large,haven.royal-griffin,13,12,9,13,54,18,7,12,,5,450,,beast,Flying,"sandbox: hp 100, dmg 16-20, flying"
+haven.royal-griffin,Royal Griffin,haven,3,Large,,14,13,10,14,61,22,8,13,,5,580,,beast,Flying; UnlimitedRetaliation,"sandbox: hp 110, dmg 16-22, flying"
+haven.lancer,Lancer,haven,4,Large,haven.champion,16,16,19,26,120,18,7,12,,3,1100,,human; holy; mounted,,"sandbox: hp 120, dmg 16-24"
+haven.champion,Champion,haven,4,Large,,18,17,22,29,135,20,9,13,,3,1450,,human; holy; mounted,PackHunter 10,sandbox: identical to Lancer (copy-paste)
+haven.paladin,Paladin,haven,4,Medium,haven.sacred-warrior,16,20,17,22,125,12,5,12,,3,1100,,human; holy,,"sandbox: hp 100, dmg 12-16"
+haven.sacred-warrior,Sacred Warrior,haven,4,Medium,,17,22,18,23,126,13,6,13,,3,1450,,human; holy,DoubleStrike; SpellImmunity curse,sandbox: identical to Paladin (copy-paste)
+haven.radiant-spirit,Radiant Spirit,haven,5,Medium,haven.seraph,22,22,58,73,255,22,10,15,,1,3300,crystal 1,holy,Flying; SpellImmunity mind,"sandbox: hp 175, flying"
+haven.seraph,Seraph,haven,5,Medium,,26,26,58,73,278,26,11,16,,1,4300,crystal 2,holy,Flying; NoEnemyRetaliation; SpellImmunity mind; Caster resurrection 1,"sandbox: hp 250, flying"
 sylvan.pixie,Pixie,sylvan,1,Small,sylvan.sprite,3,2,2,6,12,12,5,14,,20,50,,fey,Flying,sandbox stats were copy-pasted; values here are new
 sylvan.sprite,Sprite,sylvan,1,Small,,4,3,4,6,13,14,6,15,,20,65,,fey,Flying; NoEnemyRetaliation,sandbox stats were copy-pasted; values here are new
 sylvan.satyr,Satyr,sylvan,1,Small,sylvan.satyr-warrior,6,5,3,6,15,10,4,11,,16,60,,fey,,sandbox stats were copy-pasted; values here are new
@@ -51,8 +51,8 @@ academy.djinn,Djinn,academy,4,Medium,academy.djinn-sultan,15,14,18,26,118,18,8,1
 academy.djinn-sultan,Djinn Sultan,academy,4,Medium,,17,16,20,29,132,20,9,14,,3,1450,,elemental,Flying; Caster confusion 1; SpellImmunity mind,sandbox stats were copy-pasted; values here are new
 academy.naga,Naga,academy,4,Large,academy.naga-queen,17,17,17,23,115,10,5,11,,2,1650,,,NoEnemyRetaliation,sandbox stats were copy-pasted; values here are new
 academy.naga-queen,Naga Queen,academy,4,Large,,19,19,19,25,131,11,6,12,,2,2150,,,NoEnemyRetaliation; Relentless 10,sandbox stats were copy-pasted; values here are new
-academy.colossus,Colossus,academy,5,Large,academy.titan,24,24,46,63,250,16,9,13,,1,3300,mercury 1,giant,SpellImmunity mind,"sandbox: hp 200, dmg 40-50"
-academy.titan,Titan,academy,5,Large,,28,27,46,63,250,18,10,14,20,1,4300,mercury 2,giant,SpellImmunity mind; RangedRetaliation,"sandbox: hp 300, dmg 40-50, 16 shots"
+academy.colossus,Colossus,academy,5,Medium,academy.titan,24,24,46,63,250,16,9,13,,1,3300,mercury 1,giant,SpellImmunity mind,"sandbox: hp 200, dmg 40-50"
+academy.titan,Titan,academy,5,Medium,,28,27,46,63,250,18,10,14,20,1,4300,mercury 2,giant,SpellImmunity mind; RangedRetaliation,"sandbox: hp 300, dmg 40-50, 16 shots"
 necropolis.skeleton,Skeleton,necropolis,1,Small,necropolis.skeleton-warrior,5,4,2,6,11,9,4,10,,20,50,,undead,SpellImmunity mind,sandbox showed it as 'Devil' (copy-paste)
 necropolis.skeleton-warrior,Skeleton Warrior,necropolis,1,Small,,6,6,3,6,12,10,5,11,,20,65,,undead,SpellImmunity mind; UnlimitedRetaliation,sandbox stats were copy-pasted; values here are new
 necropolis.plague-bearer,Plague Bearer,necropolis,1,Small,necropolis.flesh-golem,4,6,2,4,20,7,3,7,,15,65,,undead,SpellImmunity mind; Relentless 10,sandbox stats were copy-pasted; values here are new
@@ -97,16 +97,16 @@ dungeon.medusa,Medusa,dungeon,2,Small,dungeon.putrid-medusa,9,8,5,8,25,8,5,10,8,
 dungeon.putrid-medusa,Putrid Medusa,dungeon,2,Small,,10,10,5,8,28,9,5,11,10,8,270,,reptile,RangedRetaliation,sandbox stats were copy-pasted; values here are new
 dungeon.minotaur,Minotaur,dungeon,2,Medium,dungeon.minotaur-guard,11,9,7,10,37,11,6,11,,7,240,,,Relentless 10,sandbox stats were copy-pasted; values here are new
 dungeon.minotaur-guard,Minotaur Guard,dungeon,2,Medium,,12,11,7,11,42,12,6,12,,7,310,,,Relentless 10; FirstStrike,sandbox stats were copy-pasted; values here are new
-dungeon.dark-raider,Dark Raider,dungeon,3,Medium,dungeon.grim-raider,12,10,9,13,49,18,8,13,8,5,450,,elf; mounted,PackHunter 10,mounted crossbow raider: ranged as in both sandbox copies
-dungeon.grim-raider,Grim Raider,dungeon,3,Medium,,13,11,10,14,56,20,9,14,10,5,580,,elf; mounted,PackHunter 15; Relentless 10,mounted crossbow raider: ranged as in both sandbox copies
+dungeon.dark-raider,Dark Raider,dungeon,3,Medium,dungeon.grim-raider,12,10,9,13,56,18,8,13,,5,450,,elf; mounted,PackHunter 10,melee cavalry (the sandbox's crossbow shots are dropped)
+dungeon.grim-raider,Grim Raider,dungeon,3,Medium,,13,11,10,14,64,20,9,14,,5,580,,elf; mounted,PackHunter 15; Relentless 10,melee cavalry (the sandbox's crossbow shots are dropped)
 dungeon.shadow-mistress,Shadow Mistress,dungeon,3,Small,dungeon.shadow-matriarch,11,8,12,19,48,9,5,11,10,5,450,,elf,MeleePenalty; Caster blind 1,sandbox stats were copy-pasted; values here are new
 dungeon.shadow-matriarch,Shadow Matriarch,dungeon,3,Small,,12,9,14,20,55,10,6,12,12,5,580,,elf,MeleePenalty; Caster blind 1; RangedRetaliation,sandbox stats were copy-pasted; values here are new
 dungeon.manticore,Manticore,dungeon,4,Large,dungeon.scorpicore,16,14,18,27,123,16,8,12,,3,1100,,beast,Flying,sandbox stats were copy-pasted; values here are new
 dungeon.scorpicore,Scorpicore,dungeon,4,Large,,18,16,20,29,138,18,9,13,,3,1450,,beast,Flying; Relentless 15,sandbox stats were copy-pasted; values here are new
 dungeon.spectator,Spectator,dungeon,4,Medium,dungeon.beholder,16,15,16,23,92,7,4,10,12,3,1100,,,SpellImmunity mind,sandbox stats were copy-pasted; values here are new
 dungeon.beholder,Beholder,dungeon,4,Medium,,18,17,18,25,101,8,5,11,16,3,1450,,,SpellImmunity mind; RangedRetaliation,sandbox spelling 'Berholder'
-dungeon.shadow-horror,Shadow Horror,dungeon,5,Large,dungeon.shadow-reaper,24,22,45,71,257,22,11,15,,1,3300,sulfur 1,dragon,Flying; Breath,sandbox: copy of Seraph
-dungeon.shadow-reaper,Shadow Reaper,dungeon,5,Large,,28,25,50,75,300,24,11,16,,1,4300,sulfur 2,dragon,Flying; Breath; SpellImmunity mind,sandbox: copy of Seraph
+dungeon.shadow-horror,Shadow Horror,dungeon,5,Large,dungeon.shadow-reaper,24,22,44,69,250,22,11,15,,1,3300,sulfur 1,,FirstStrike; SpellImmunity mind,"walking shadow, not a dragon: no flying or breath (sandbox: copy of Seraph)"
+dungeon.shadow-reaper,Shadow Reaper,dungeon,5,Large,,28,25,49,73,292,24,11,16,,1,4300,sulfur 2,,FirstStrike; Relentless 15; SpellImmunity mind,"walking shadow, not a dragon: no flying or breath (sandbox: copy of Seraph)"
 stronghold.goblin,Goblin,stronghold,1,Small,stronghold.hobgoblin,4,2,2,5,10,11,5,12,,22,45,,orc,PackHunter 10,sandbox stats were copy-pasted; values here are new
 stronghold.hobgoblin,Hobgoblin,stronghold,1,Small,,5,3,3,5,11,12,6,13,,22,60,,orc,PackHunter 15,sandbox stats were copy-pasted; values here are new
 stronghold.harpy,Harpy,stronghold,1,Small,stronghold.fury,6,4,3,5,16,14,6,14,,14,70,,beast,Flying,sandbox stats were copy-pasted; values here are new
@@ -154,13 +154,14 @@ conflux.flame-elemental,Flame Elemental,conflux,4,Medium,,17,14,17,23,95,16,8,13
 conflux.ice-elemental,Ice Elemental,conflux,4,Medium,,15,17,12,17,84,12,6,11,10,3,1100,,elemental,SpellImmunity mind; RangedRetaliation,sandbox listed the name only; stats are new
 conflux.energy-elemental,Energy Elemental,conflux,5,Large,,24,20,36,52,196,22,10,15,,1,3300,,elemental,Flying; SpellImmunity mind; SpellImmunity lightning,sandbox listed the name only; stats are new
 conflux.magic-elemental,Magic Elemental,conflux,5,Large,,25,24,34,49,206,18,10,14,,1,3300,,elemental,SpellImmunity mind; SpellImmunity all; MultiHead,sandbox listed the name only; stats are new
-neutral.wyvern,Wyvern,dragon-utopia,4,Large,,16,15,18,27,133,18,8,12,,2,1650,,beast; dragon,Flying,sandbox listed the name only; stats are new
-dragon-utopia.red-dragon,Red Dragon,dragon-utopia,5,Large,,28,26,49,62,308,20,10,14,,1,4950,sulfur 2,dragon,Flying; Breath; SpellImmunity fire,fire (sandbox note)
-dragon-utopia.dragonyte,Dragonyte,dragon-utopia,4,Large,,17,17,17,26,141,12,6,11,,2,1650,sulfur 1,dragon,Breath,sandbox listed the name only; stats are new
+dragon-utopia.wyvern,Wyvern,dragon-utopia,4,Large,dragon-utopia.wyvern-monarch,16,15,18,27,133,18,8,12,,2,1650,,beast; dragon,Flying,was neutral.wyvern; sandbox listed the name only; stats are new
+dragon-utopia.wyvern-monarch,Wyvern Monarch,dragon-utopia,4,Large,,18,17,20,30,150,20,9,13,,2,2150,,beast; dragon,Flying; Relentless 10,new: upgrade of Wyvern (venomous sting)
+dragon-utopia.red-dragon,Red Dragon,dragon-utopia,5,Large,,28,26,49,62,308,20,10,14,,1,4950,sulfur 2,dragon,Flying; Breath; SpellImmunity fire; SpellResistance 3,fire (sandbox note)
+dragon-utopia.dragonyte,Dragonyte,dragon-utopia,4,Large,,17,17,17,26,141,12,6,11,,2,1650,sulfur 1,dragon,Cleave,sandbox listed the name only; stats are new
 dragon-utopia.faerie-dragon,Faerie Dragon,dragon-utopia,5,Medium,,20,20,36,54,233,24,11,16,,1,2300,sulfur 2,dragon,Flying; Caster lightning 2,sandbox listed the name only; stats are new
-dragon-utopia.green-dragon,Green Dragon,dragon-utopia,5,Large,,26,24,49,61,306,18,10,14,,1,4600,sulfur 2,dragon,Flying; Breath; SpellImmunity poison,acid (sandbox note)
-dragon-utopia.azure-dragon,Azure Dragon,dragon-utopia,5,Large,,27,26,50,63,326,20,10,14,,1,5300,sulfur 2,dragon,Flying; Breath; SpellImmunity ice,ice (sandbox note)
-dragon-utopia.gold-dragon,Gold Dragon,dragon-utopia,5,Large,,28,27,47,62,320,22,11,15,,1,5100,sulfur 2,dragon,Flying; Breath; SpellImmunity lightning,lightning (sandbox note)
+dragon-utopia.green-dragon,Green Dragon,dragon-utopia,5,Large,,26,24,49,61,306,18,10,14,,1,4600,sulfur 2,dragon,Flying; Breath; SpellImmunity poison; SpellResistance 3,acid (sandbox note)
+dragon-utopia.azure-dragon,Azure Dragon,dragon-utopia,5,Large,,27,26,50,63,326,20,10,14,,1,5300,sulfur 2,dragon,Flying; Breath; SpellImmunity ice; SpellResistance 3,ice (sandbox note)
+dragon-utopia.gold-dragon,Gold Dragon,dragon-utopia,5,Large,,28,27,47,62,320,22,11,15,,1,5100,sulfur 2,dragon,Flying; Breath; SpellImmunity lightning; SpellResistance 3,lightning (sandbox note)
 dragon-utopia.black-dragon,Black Dragon,dragon-utopia,5,Large,,36,34,55,74,461,24,11,15,,1,9900,sulfur 2,dragon,Flying; Breath; SpellImmunity all,about twice any other dragon (sandbox note)
 neutral.wolf,Timber Wolf,,1,Small,neutral.dire-wolf,6,4,4,6,14,14,7,13,,12,85,,beast,PackHunter 20,sandbox: Grove Timber Wolf (old copy)
 neutral.bandit,Bandit,,2,Small,,9,7,5,10,27,11,6,11,,8,210,,human,,game-only neutral
@@ -176,3 +177,5 @@ neutral.gog,Gog,,2,Small,neutral.magog,9,7,5,8,21,9,5,10,10,8,210,,demon,MeleePe
 neutral.magog,Magog,,2,Small,,10,8,6,9,24,10,5,11,12,8,270,,demon,MeleePenalty; SpellImmunity fire; Caster fireball 1,lore upgrade of Gog
 neutral.breeder,Breeder,,3,Medium,neutral.fel-breeder,12,12,9,13,65,8,5,9,,4,560,,demon,Caster summon-imps 1,"sandbox: Inferno tier 3, commented out; spawns imps (spell hook)"
 neutral.fel-breeder,Fel Breeder,,3,Medium,,13,13,10,15,77,9,5,10,,4,730,,demon,Caster summon-imps 2; SpellImmunity fire,"sandbox: Inferno tier 3, commented out"
+neutral.efreet,Efreet,,4,Medium,,18,15,21,30,125,20,9,15,,3,1450,,elemental; demon,Flying; SpellImmunity fire; Caster fireball 1,"new: demonic counterpart of the Djinn Sultan, a neutral (one upgrade per line)"
+neutral.golden-golem,Golden Golem,,3,Medium,,10,15,8,12,55,6,4,7,,4,560,,construct,SpellImmunity mind; SpellResistance 2,new

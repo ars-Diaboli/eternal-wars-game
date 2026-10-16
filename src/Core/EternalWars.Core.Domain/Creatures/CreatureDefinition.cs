@@ -72,6 +72,12 @@ public enum CapabilityKind
     SpellImmunity,
 
     /// <summary>
+    /// Unaffected by spells of level <see cref="CreatureCapability.Value"/> and below; a spell upgraded twice counts as
+    /// one level higher (<see cref="CreatureDefinition.ResistsSpell"/>). Data and query only until magic exists (Phase 5).
+    /// </summary>
+    SpellResistance,
+
+    /// <summary>
     /// Can cast the spell <see cref="CreatureCapability.Parameter"/> <see cref="CreatureCapability.Value"/> times per
     /// battle. Data and casts-left bookkeeping only until magic exists (Phase 5).
     /// </summary>
@@ -79,7 +85,7 @@ public enum CapabilityKind
 }
 
 /// <param name="Kind">The rule.</param>
-/// <param name="Value">Percentage (pack hunter, relentless) or casts per battle (caster).</param>
+/// <param name="Value">Percentage (pack hunter, relentless), highest resisted spell level (spell resistance) or casts per battle (caster).</param>
 /// <param name="Parameter">Spell tag (spell immunity) or spell id (caster).</param>
 public sealed record CreatureCapability(CapabilityKind Kind, int Value = 0, string? Parameter = null)
 {
@@ -90,6 +96,7 @@ public sealed record CreatureCapability(CapabilityKind Kind, int Value = 0, stri
         {
             CapabilityKind.PackHunter or CapabilityKind.Relentless when Value <= 0 => "needs a positive percentage",
             CapabilityKind.SpellImmunity when string.IsNullOrWhiteSpace(Parameter) => "needs a spell tag",
+            CapabilityKind.SpellResistance when Value is < 1 or >= SpellLevels.Max => $"needs a spell level from 1 to {SpellLevels.Max - 1}",
             CapabilityKind.Caster when string.IsNullOrWhiteSpace(Parameter) || Value < 1 => "needs a spell id and at least one cast",
             _ => null,
         };
@@ -116,6 +123,17 @@ public static class SpellTags
 
     /// <summary>Hostile spells that weaken a stack.</summary>
     public const string Curse = "curse";
+}
+
+/// <summary>Spell levels and ranks (ADR-047): four levels, and every spell has three ranks (learned, then upgraded twice).</summary>
+public static class SpellLevels
+{
+    public const int Max = 4;
+
+    public const int MaxRank = 3;
+
+    /// <summary>Level a spell counts as against resistance: a spell upgraded twice (rank 3) counts as the next level.</summary>
+    public static int Effective(int level, int rank) => rank >= MaxRank ? level + 1 : level;
 }
 
 /// <summary>Well-known creature tags (free-form strings so content and mods can add more).</summary>
@@ -201,6 +219,12 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
         var immunities = Capabilities.Where(c => c.Kind == CapabilityKind.SpellImmunity).Select(c => c.Parameter!).ToHashSet(StringComparer.Ordinal);
         return immunities.Contains(SpellTags.All) || spellTags.Any(immunities.Contains);
     }
+
+    /// <summary>
+    /// Hook for magic: whether <see cref="CapabilityKind.SpellResistance"/> stops a spell of this level and rank
+    /// (1 learned … 3 upgraded twice); a twice-upgraded spell counts as the next level (<see cref="SpellLevels.Effective"/>).
+    /// </summary>
+    public bool ResistsSpell(int level, int rank) => SpellLevels.Effective(level, rank) <= CapabilityValue(CapabilityKind.SpellResistance);
 
     /// <summary>Spells the creature can cast, with casts per battle (hook for magic).</summary>
     public IReadOnlyDictionary<string, int> SpellCasts =>
