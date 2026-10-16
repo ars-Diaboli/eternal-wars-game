@@ -215,7 +215,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
 
         var builtToday = town.LastBuilt == _state.Date;
-        if (!builtToday && resources.CanAfford(wanted.Next.Cost))
+        if (!builtToday && resources.CanAfford(TownRules.BuildCost(_state, town, wanted.Next)))
         {
             var command = wanted.Dwelling
                 ? (GameCommand)new BuildDwellingCommand(player, town.Id, wanted.Id)
@@ -225,7 +225,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
 
         // Save for it rather than spending everything on creatures, as long as it is within reach.
-        return wanted.Next.Cost.Gold;
+        return TownRules.BuildCost(_state, town, wanted.Next).Gold;
     }
 
     private (bool Dwelling, string Id, BuildingLevel Next)? Wanted(Town town, ResourceSet have, ResourceSet income)
@@ -238,7 +238,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             if (next is null
                 || (dwelling && next.Level == 1 && TownRules.CheckDwellingChoice(_state, town, id, 1) is not null)
                 || next.Requires.Any(r => TownRules.Level(_state, town, r.Building) < r.Level)
-                || !Reachable(next.Cost, have, income))
+                || !Reachable(TownRules.BuildCost(_state, town, next), have, income))
             {
                 continue;
             }
@@ -327,7 +327,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     continue;
                 }
 
-                var cost = TownRules.UpgradeCost(_state, line, stack.Count);
+                var cost = TownRules.UpgradeCost(_state, town, line, stack.Count);
                 var spare = _state.GetPlayer(player).Resources - new ResourceSet(Gold: reserve);
                 if (spare.CanAfford(cost))
                 {
@@ -374,7 +374,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     {
         var creature = town.DwellingLevel(line.Id) >= 2 ? line.UpgradesTo! : line.Id;
         var spare = _state.GetPlayer(player).Resources - new ResourceSet(Gold: reserve);
-        var count = TownRules.MaxAffordable(spare, _state.Creatures.Get(creature).Cost, Math.Min(limit, town.AvailableOf(line.Id)));
+        var count = TownRules.MaxAffordable(spare, TownRules.CreatureCost(_state, town, _state.Creatures.Get(creature)), Math.Min(limit, town.AvailableOf(line.Id)));
         if (count > 0)
         {
             Execute(new RecruitCommand(player, town.Id, creature, count, hero));

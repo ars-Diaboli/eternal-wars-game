@@ -17,6 +17,7 @@ public partial class NewGameScreen : PanelContainer
 {
     private readonly OptionButton _maps = new();
     private readonly OptionButton _fog = new();
+    private readonly OptionButton _complexity = new();
     private readonly SpinBox _margin = new() { MinValue = 0, MaxValue = 6, Value = GameOptions.Default.RefogMargin };
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(220, 0) };
     private readonly GridContainer _players = new() { Columns = 3 };
@@ -47,6 +48,14 @@ public partial class NewGameScreen : PanelContainer
         Row(box, "Fog of war", _fog);
         _margin.Editable = false;
         Row(box, "Refog margin", _margin);
+
+        _complexity.AddItem("Map default", -1);
+        foreach (var level in Enum.GetValues<Complexity>())
+        {
+            _complexity.AddItem($"{level} ({StartingResources.For(level).Gold} gold)", (int)level);
+        }
+
+        Row(box, "Complexity", _complexity);
 
         _seed.Text = ((ulong)Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
         Row(box, "Seed", _seed);
@@ -121,7 +130,7 @@ public partial class NewGameScreen : PanelContainer
 
         try
         {
-            var state = map.Create(new GameOptions(SelectedFog, (int)_margin.Value, seed));
+            var state = map.Create(new GameOptions(SelectedFog, (int)_margin.Value, seed, _complexity.GetSelectedId() < 0 ? null : (Complexity)_complexity.GetSelectedId()));
             if (!state.TeamsLocked)
             {
                 state.AssignTeams(_teams.ToDictionary(t => t.Key, t => new TeamId((int)t.Value.Value)));

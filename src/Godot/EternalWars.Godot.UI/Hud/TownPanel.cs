@@ -116,7 +116,7 @@ public partial class TownPanel : PanelContainer
             var level = town.Level(building);
             var button = new Button
             {
-                Text = next is null ? $"{state.Buildings.Get(building, level).Name} (max)" : $"{next.Name}\n{Cost(next.Cost)}",
+                Text = next is null ? $"{state.Buildings.Get(building, level).Name} (max)" : $"{next.Name}\n{Cost(TownRules.BuildCost(state, town, next))}",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? $"Build {next!.Name}",
             };
@@ -140,7 +140,7 @@ public partial class TownPanel : PanelContainer
             var refusal = TownRules.CheckDwelling(state, town, line.Id);
             var build = new Button
             {
-                Text = next is null ? "—" : $"{(next.Level == 1 ? "Build" : "Upgrade")} {Cost(next.Cost)}",
+                Text = next is null ? "—" : $"{(next.Level == 1 ? "Build" : "Upgrade")} {Cost(TownRules.BuildCost(state, town, next))}",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? "",
             };
@@ -150,10 +150,10 @@ public partial class TownPanel : PanelContainer
             foreach (var creature in new[] { line, line.UpgradesTo is { } up ? state.Creatures.Get(up) : null })
             {
                 var canRecruit = creature is not null && level >= (creature == line ? 1 : 2) && available > 0;
-                var count = canRecruit ? TownRules.MaxAffordable(resources, creature!.Cost, available) : 0;
+                var count = canRecruit ? TownRules.MaxAffordable(resources, TownRules.CreatureCost(state, town, creature!), available) : 0;
                 var recruit = new Button
                 {
-                    Text = creature is null ? "—" : $"Recruit {count} {creature.Name}\n{Cost(creature.Cost)} each",
+                    Text = creature is null ? "—" : $"Recruit {count} {creature.Name}\n{Cost(TownRules.CreatureCost(state, town, creature))} each",
                     Disabled = count == 0,
                 };
                 var id = creature?.Id;

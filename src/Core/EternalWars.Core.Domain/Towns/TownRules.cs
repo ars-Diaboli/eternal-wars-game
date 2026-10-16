@@ -130,16 +130,25 @@ public static class TownRules
     public static string WarMachineName(GameState state, Hero hero, Battles.WarMachineSlot slot) =>
         Battles.WarMachines.Definition(Battles.WarMachines.KindOf(slot, ProgressionService.TownOf(state, hero))).Name;
 
-    /// <summary>Gold and resources for <paramref name="count"/> creatures.</summary>
-    public static ResourceSet RecruitCost(CreatureDefinition creature, int count) => creature.Cost * count;
+    /// <summary>What a building level costs this town: its price less the governor's Stewardship discount (ADR-063).</summary>
+    public static ResourceSet BuildCost(GameState state, Town town, BuildingLevel level) =>
+        StewardshipRules.DiscountBuilding(state, town, level.Cost);
+
+    /// <summary>What one creature costs to recruit in this town, after the governor's Stewardship discount.</summary>
+    public static ResourceSet CreatureCost(GameState state, Town town, CreatureDefinition creature) =>
+        StewardshipRules.DiscountCreatures(state, town, creature.Cost);
+
+    /// <summary>Gold and resources for <paramref name="count"/> creatures recruited in this town.</summary>
+    public static ResourceSet RecruitCost(GameState state, Town town, CreatureDefinition creature, int count) =>
+        CreatureCost(state, town, creature) * count;
 
     /// <summary>How many of something costing <paramref name="each"/> the resources pay for, at most <paramref name="limit"/>.</summary>
     public static int MaxAffordable(ResourceSet resources, ResourceSet each, int limit) =>
         Math.Max(0, Enum.GetValues<ResourceType>().Where(t => each[t] > 0).Select(t => resources[t] / each[t]).Append(limit).Min());
 
     /// <summary>The price difference for upgrading <paramref name="count"/> creatures of a line.</summary>
-    public static ResourceSet UpgradeCost(GameState state, CreatureDefinition line, int count) =>
-        (state.Creatures.Get(line.UpgradesTo!).Cost - line.Cost) * count;
+    public static ResourceSet UpgradeCost(GameState state, Town town, CreatureDefinition line, int count) =>
+        StewardshipRules.DiscountCreatures(state, town, state.Creatures.Get(line.UpgradesTo!).Cost - line.Cost) * count;
 
     /// <summary>What an owned town pays every day: the income of the highest level of every building.</summary>
     public static ResourceSet DailyIncome(GameState state, Town town) =>
@@ -185,7 +194,7 @@ public static class TownRules
             return $"{level.Name} needs {state.Buildings.Get(missing.Building, missing.Level).Name} first.";
         }
 
-        return town.Owner is { } owner && !state.GetPlayer(owner).Resources.CanAfford(level.Cost)
+        return town.Owner is { } owner && !state.GetPlayer(owner).Resources.CanAfford(BuildCost(state, town, level))
             ? $"Not enough resources for {level.Name}."
             : null;
     }

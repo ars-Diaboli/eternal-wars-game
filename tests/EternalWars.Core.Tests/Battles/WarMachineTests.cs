@@ -235,4 +235,49 @@ public class WarMachineTests
         Assert.NotNull(session.State.Battle);
         return (session, A);
     }
+
+    [Fact]
+    public void BallisticsLevels_DecideControlTargetsAndExtraShots()
+    {
+        Assert.True(WarMachines.FiresAutomatically(SkillLevel.None));
+        Assert.False(WarMachines.FiresAutomatically(SkillLevel.Basic));
+        Assert.False(WarMachines.IsControlled(SkillLevel.None));
+        Assert.True(WarMachines.IsControlled(SkillLevel.Basic));
+        Assert.False(WarMachines.CanTargetTroops(SkillLevel.Basic));
+        Assert.True(WarMachines.CanTargetTroops(SkillLevel.Advanced));
+        Assert.False(WarMachines.FiresAgainAfterKill(SkillLevel.Basic));
+        Assert.True(WarMachines.FiresAgainAfterKill(SkillLevel.Advanced));
+    }
+
+    [Theory]
+    [InlineData(SkillLevel.None, 1, 2, false)]
+    [InlineData(SkillLevel.Advanced, 1, 2, false)]
+    [InlineData(SkillLevel.Expert, 1, 2, true)]
+    [InlineData(SkillLevel.Master, 2, 3, true)]
+    public void FortificationShots_HitTwoInThree_UntilExpert_AndDoOneToThreeDamage(SkillLevel level, int min, int max, bool alwaysHits)
+    {
+        var random = new GameRandom(7);
+        var hits = 0;
+        var damages = new HashSet<int>();
+        for (var i = 0; i < 3000; i++)
+        {
+            if (WarMachines.HitsFortification(level, random))
+            {
+                hits++;
+            }
+
+            damages.Add(WarMachines.FortificationDamage(level, random));
+        }
+
+        Assert.Equal(Enumerable.Range(min, max - min + 1), damages.Order());
+        Assert.True(WarMachines.MaxFortificationHealth >= max);
+        if (alwaysHits)
+        {
+            Assert.Equal(3000, hits);
+        }
+        else
+        {
+            Assert.InRange(hits, 1900, 2100); // 2 of 3
+        }
+    }
 }

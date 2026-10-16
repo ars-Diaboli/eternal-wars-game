@@ -28,7 +28,7 @@ public static class GameStateDigest
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
         {
             var army = Slots(hero.Army);
-            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}");
+            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}");
         }
 
         foreach (var mapObject in state.Objects.OrderBy(o => o.Id.Value))
@@ -40,7 +40,7 @@ public static class GameStateDigest
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
                 MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
-                Town town => $"owner {town.Owner?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "
+                Town town => $"owner {town.Owner?.Value} governor {town.Governor?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "
                              + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}",
                 _ => mapObject.TeleportTarget?.ToString() ?? "",
             };

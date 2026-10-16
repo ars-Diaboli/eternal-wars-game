@@ -57,6 +57,17 @@ public sealed class Hero(
         _ => Knowledge,
     };
 
+    private int? _mana;
+
+    /// <summary>Mana on hand (ADR-063); a hero that has not spent any has a full pool, and never more than <see cref="MaxMana"/>.</summary>
+    public int Mana
+    {
+        get => Math.Min(MaxMana, _mana ?? MaxMana);
+        internal set => _mana = Math.Max(0, value);
+    }
+
+    public int MaxMana => ManaRules.MaxMana(this);
+
     internal bool AddWarMachine(Battles.WarMachineSlot slot) => _warMachines.Add(slot);
 
     internal bool RemoveWarMachine(Battles.WarMachineSlot slot) => _warMachines.Remove(slot);

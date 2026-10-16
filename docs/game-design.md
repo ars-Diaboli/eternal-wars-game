@@ -167,10 +167,10 @@ Full lists: [heroes.md](heroes.md) (every roster hero) and [skills.md](skills.md
   |---|---|
   | Offense | Melee (+10 % melee damage per level), Archery (+10/25/50 % ranged), third skill ❓ |
   | Defense | Armor (−5 % damage taken per level), Spell resistance, third skill ❓ |
-  | Estates | Treasury (+250/500/750/1000 gold a day, Expert and Master also 0.5/1 % of the gold on hand), Prospecting (other resources, and a chance of +50 % from resource piles), Stewardship (cheaper costs in the hero's town) |
+  | Estates | Treasury (+250/500/750/1000 gold a day, Expert and Master also 0.5/1 % of the gold on hand), Prospecting (other resources, and a chance of +50 % from resource piles), Stewardship (cheaper buildings and creatures in the town the hero governs) |
   | Pathfinding | Logistics (+10 % movement per level), Pathfinding (−25/50/75 % terrain penalty), Troop management (+1 army map speed per level) |
   | Tactics | Tactics (battlefield width), Deployment (rearrange troops before battle), Drill (+1 battlefield speed per level) |
-  | War machines | Ballistics (offensive machine in regular battles from Advanced, +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) |
+  | War machines | Ballistics (siege machine: automatic, controlled, targets troops from Advanced; +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) |
   | 8 magic schools | Magic (spell levels 1–4), Attunement (mana, regeneration, cost or potency), Mastery (spell upgrades) |
 - **Levels** (implemented): HoMM3 experience table; each level gives one skill point, spent on one of **three offered
   skills**. Mages are offered their own school more often, warriors the general groups; a rival town's school only in
@@ -380,11 +380,14 @@ because that is content selection, not a rule.
 
 ### 4.6 Magic
 Spell catalog: [spells.md](spells.md) (design draft).
-- **Eight schools**, one per playable town (working titles: Light, Nature, Arcana, Death, Chaos, Shadow, Shamanism,
-  Primal), each also a hero skill group (ADR-047). Any hero may learn any school.
+- **Six schools**, one per magic town (working titles: Light, Nature, Arcana, Death, Chaos, Shadow), each also a hero skill
+  group (ADR-047); any hero may learn any school. Stronghold and Swamp Bestiary have faction groups instead, Rage and
+  Adrenaline (ADR-063, mechanics open).
 - **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice).
-- A school's skills: magic (4 levels, unlocking spell levels), attunement (4 levels: mana pool and regeneration, spell
-  cost or potency by school), mastery (2 levels: spell upgrades).
+- A school's skills: magic (4 levels, unlocking spell levels), attunement (4 levels: max mana, daily mana and spell cost by
+  school, ADR-063), mastery (2 levels: spell upgrades). The mana pool is 10 × Knowledge, a hero regains ⌈Knowledge / 10⌉ a
+  day, and a spell never costs less than 25 % of its base.
+- **Governors and Stewardship**, **complexity levels** (starting resources) and siege **Ballistics**: ADR-063.
 
 ### 4.7 Game modes (priority order)
 **Victory and defeat** (implemented, ADR-057): by default a player with no towns and no heroes is out at once, a player that lost its last

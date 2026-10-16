@@ -24,6 +24,15 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
         events.Publish(new ResourcesChanged(playerId, previous, player.Resources));
     }
 
+    /// <summary>Sets the player's resources outright (the scenario's complexity at the start of a game).</summary>
+    internal void Set(PlayerId playerId, ResourceSet amount)
+    {
+        var player = state.GetPlayer(playerId);
+        var previous = player.Resources;
+        player.Resources = amount;
+        events.Publish(new ResourcesChanged(playerId, previous, amount));
+    }
+
     public bool TrySpend(PlayerId playerId, ResourceSet cost)
     {
         var player = state.GetPlayer(playerId);

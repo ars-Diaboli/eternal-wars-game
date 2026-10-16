@@ -250,6 +250,12 @@ public sealed class GameSession
             case HireHeroCommand hire:
                 Towns.HireHero(hire.Player, hire.Town, hire.Hero);
                 return null;
+            case AppointGovernorCommand appoint:
+                Towns.AppointGovernor(appoint.Player, appoint.Town, appoint.Hero);
+                return null;
+            case DismissGovernorCommand dismiss:
+                Towns.DismissGovernor(dismiss.Player, dismiss.Town);
+                return null;
             case BuyWarMachineCommand buy:
                 Towns.BuyWarMachine(buy.Player, buy.Town, buy.Slot);
                 return null;

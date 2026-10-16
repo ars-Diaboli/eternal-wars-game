@@ -209,46 +209,46 @@ School **Shadow** · native terrain subterranean · rivals Academy, Sylvan · of
 
 ## Stronghold
 
-School **Shamanism** · native terrain rough, wasteland · rivals – · offensive machine **Catapult**
+Faction group **Rage** (no magic school, ADR-063) · native terrain rough, wasteland · rivals – · offensive machine **Catapult**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
 | Grukk | Warrior | Goblin / Hobgoblin (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
-| Ugra | Mage | Goblin / Hobgoblin (T1) | spell: Bloodlust | Shamanism magic Basic, Treasury Basic | 0 / 0 / 3 / 2 |
+| Ugra | Mage | Goblin / Hobgoblin (T1) | Rage (1st)| Rage (1st) Basic, Treasury Basic | 0 / 0 / 3 / 2 |
 | Mazga | Warrior | Harpy / Fury (T1) | +350 gold a day | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Zhaka | Mage | Harpy / Fury (T1) | Shamanism attunement | Shamanism magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
+| Zhaka | Mage | Harpy / Fury (T1) | Rage (2nd) | Rage (1st) Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Thrak | Warrior | Orc / Orc Berserker (T2) | Logistics | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
-| Mograth | Mage | Orc / Orc Berserker (T2) | spell: Ancestral Spirits | Shamanism magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
+| Mograth | Mage | Orc / Orc Berserker (T2) | Rage (1st)| Rage (1st) Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Urzog | Warrior | Centaur / Centaur Warchief (T2) | +2 ore a day | Drill Basic, Armor Basic | 1 / 2 / 1 / 1 |
-| Yazna | Mage | Centaur / Centaur Warchief (T2) | +1 mercury a day | Shamanism magic Basic, Shamanism attunement Basic | 0 / 1 / 2 / 2 |
+| Yazna | Mage | Centaur / Centaur Warchief (T2) | +1 mercury a day | Rage (1st) Basic, Rage (2nd) Basic | 0 / 1 / 2 / 2 |
 | Borka | Warrior | Ogre / Ogre Mage (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
-| Kurgh | Mage | Ogre / Ogre Mage (T3) | spell: Earthquake | Shamanism magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
+| Kurgh | Mage | Ogre / Ogre Mage (T3) | Rage (1st)| Rage (1st) Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Kragash | Warrior | Wolf Rider / Wolf Raider (T3) | +2 lumber a day | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
-| Ashka | Mage | Wolf Rider / Wolf Raider (T3) | Shamanism attunement | Shamanism magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
+| Ashka | Mage | Wolf Rider / Wolf Raider (T3) | Rage (2nd) | Rage (1st) Basic, Armor Basic | 0 / 1 / 2 / 2 |
 | Shara | Warrior | Roc / Thunderbird (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
-| Vrolk | Mage | Roc / Thunderbird (T4) | spell: War Cry | Shamanism magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
+| Vrolk | Mage | Roc / Thunderbird (T4) | Rage (1st)| Rage (1st) Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Durgash | Warrior | Cyclops / Cyclops King (T4) | +350 gold a day | Troop management Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Nazgra | Mage | Cyclops / Cyclops King (T4) | +350 gold a day | Shamanism magic Basic, Shamanism attunement Basic | 0 / 1 / 2 / 2 |
+| Nazgra | Mage | Cyclops / Cyclops King (T4) | +350 gold a day | Rage (1st) Basic, Rage (2nd) Basic | 0 / 1 / 2 / 2 |
 
 ## Swamp Bestiary
 
-School **Primal** · native terrain swamp, shallow water · rivals – · offensive machine **Catapult**
+Faction group **Adrenaline** (no magic school, ADR-063) · native terrain swamp, shallow water · rivals – · offensive machine **Catapult**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
 | Ssarkh | Warrior | Lizardman / Lizard Warrior (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
-| Hissla | Mage | Lizardman / Lizard Warrior (T1) | spell: Venom | Primal magic Basic, Treasury Basic | 0 / 0 / 3 / 2 |
+| Hissla | Mage | Lizardman / Lizard Warrior (T1) | Adrenaline (1st)| Adrenaline (1st) Basic, Treasury Basic | 0 / 0 / 3 / 2 |
 | Kethra | Warrior | Kappa / Kappa Shaman (T1) | +350 gold a day | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Sethek | Mage | Kappa / Kappa Shaman (T1) | Primal attunement | Primal magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
+| Sethek | Mage | Kappa / Kappa Shaman (T1) | Adrenaline (2nd) | Adrenaline (1st) Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Mudjaw | Warrior | Jungle Horror / Jungle Terror (T2) | Logistics | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
-| Murra | Mage | Jungle Horror / Jungle Terror (T2) | spell: Mire | Primal magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
+| Murra | Mage | Jungle Horror / Jungle Terror (T2) | Adrenaline (1st)| Adrenaline (1st) Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Vessk | Warrior | Mantis / Dragon Mantis (T2) | +2 ore a day | Drill Basic, Armor Basic | 1 / 2 / 1 / 1 |
-| Zhessk | Mage | Mantis / Dragon Mantis (T2) | +1 mercury a day | Primal magic Basic, Primal attunement Basic | 0 / 1 / 2 / 2 |
+| Zhessk | Mage | Mantis / Dragon Mantis (T2) | +1 mercury a day | Adrenaline (1st) Basic, Adrenaline (2nd) Basic | 0 / 1 / 2 / 2 |
 | Brakkis | Warrior | Basilisk / Greater Basilisk (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
-| Ilthra | Mage | Basilisk / Greater Basilisk (T3) | spell: Regenerate | Primal magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
+| Ilthra | Mage | Basilisk / Greater Basilisk (T3) | Adrenaline (1st)| Adrenaline (1st) Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Ylsa | Warrior | Owlbear / Elder Owlbear (T3) | +2 lumber a day | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
-| Gossk | Mage | Owlbear / Elder Owlbear (T3) | Primal attunement | Primal magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
+| Gossk | Mage | Owlbear / Elder Owlbear (T3) | Adrenaline (2nd) | Adrenaline (1st) Basic, Armor Basic | 0 / 1 / 2 / 2 |
 | Tharg | Warrior | Gorgon / Mighty Gorgon (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
-| Venna | Mage | Gorgon / Mighty Gorgon (T4) | spell: Beast Call | Primal magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
+| Venna | Mage | Gorgon / Mighty Gorgon (T4) | Adrenaline (1st)| Adrenaline (1st) Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Oszrak | Warrior | Haspid / Royal Haspid (T4) | +350 gold a day | Troop management Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Szask | Mage | Haspid / Royal Haspid (T4) | +350 gold a day | Primal magic Basic, Primal attunement Basic | 0 / 1 / 2 / 2 |
+| Szask | Mage | Haspid / Royal Haspid (T4) | +350 gold a day | Adrenaline (1st) Basic, Adrenaline (2nd) Basic | 0 / 1 / 2 / 2 |

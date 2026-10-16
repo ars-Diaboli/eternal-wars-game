@@ -115,6 +115,8 @@ Dark-elf magic of the lightless places: cut vision, steal footing, and make the 
 
 ## Shamanism (Stronghold)
 
+> Not a hero school any more (ADR-063): Stronghold has the Rage group. These spells are drafts to reuse as creature or faction abilities.
+
 Orc rites: no spell books, only drums, bone and ancestors, and a loud confidence that the spirits are on their side.
 
 | Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
@@ -129,6 +131,8 @@ Orc rites: no spell books, only drums, bone and ancestors, and a loud confidence
   to make others regret building.
 
 ## Primal (Swamp Bestiary)
+
+> Not a hero school any more (ADR-063): Swamp Bestiary has the Adrenaline group. These spells are drafts to reuse as creature or faction abilities.
 
 Beast-cult magic of the drowned lowlands: not spells but invitations, answered by whatever lives in the mire.
 

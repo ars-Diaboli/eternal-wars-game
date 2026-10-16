@@ -61,6 +61,9 @@ public sealed class Town : MapObject, IFlaggable
 
     public Army Garrison { get; }
 
+    /// <summary>The hero appointed governor (ADR-063); valid only while that hero is alive, owned by the town's owner and has Stewardship (<see cref="StewardshipRules.GovernorOf"/>).</summary>
+    public HeroId? Governor { get; internal set; }
+
     /// <summary>The day the town last built something; one building per town per day.</summary>
     public GameDate? LastBuilt { get; internal set; }
 
