@@ -254,9 +254,9 @@ because that is content selection, not a rule.
 - 8 playable towns + 2 special towns. Each playable town has 9 creature lines over 5 tiers (2+2+2+2+1),
   all upgradeable; a town builds 7 of them (§4.3).
 - Bone dragons belong to Necropolis, not Dragon Utopia.
-- **Rivalries are lore only.** Opposition between towns or groups (the rivalry ring in
-  [lore.md](lore.md): Haven vs Necropolis & Inferno, Academy vs Inferno & Dungeon, Sylvan vs Dungeon &
-  Necropolis) exists
+- **Rivalries are lore only.** Opposition between towns or groups (the ring of towns and the sworn enemies in
+  [lore.md](lore.md): across the ring Haven vs Necropolis, Academy vs Inferno, Sylvan vs Dungeon, plus a second enemy
+  for each light town) exists
   in story and campaign, but has **no combat or rules effect**. There are no hate/enmity damage bonuses
   (unlike HoMM3 Angels vs Devils) and no alignment modifiers. Creature capabilities target *properties*
   (undead, flying, size, …), never town or group membership. The one exception outside combat: a rival town's magic

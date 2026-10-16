@@ -23,7 +23,7 @@ Status: ✅ works in play · ⏳ defined, waits for a feature (named) · ❓ not
   | another school | 2 | 1 |
   | a group the hero has already started | ×3 | ×3 |
 
-  A **rival town's school** (the lore ring, see [heroes.md](heroes.md)) is never in the weighted pool; it takes one of
+  A **rival town's school** (the sworn enemies of [lore.md](lore.md)) is never in the weighted pool; it takes one of
   the three offers in only **5 %** of level-ups. Skills at their maximum, and new groups once 6 are learned, are not
   offered.
 - **Experience**: HoMM3's table (level 2 at 1000, 3 at 2000, 4 at 3200 … 12 at 20 600), then +20 % per level.

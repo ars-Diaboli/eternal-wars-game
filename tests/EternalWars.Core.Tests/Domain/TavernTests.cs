@@ -34,15 +34,25 @@ public class TavernTests
     [Fact]
     public void TheRing_AdjacentAreTheNeighbours_AndOpposingTheTownAcross()
     {
-        Assert.Equal([TownIds.Inferno, TownIds.Necropolis], TavernRules.Adjacent(TownIds.Haven).Order());
-        Assert.Equal(TownIds.Dungeon, TavernRules.Opposing(TownIds.Haven));
-        Assert.Equal(TownIds.Academy, TavernRules.Opposing(TownIds.Necropolis));
-        Assert.Equal(TownIds.Inferno, TavernRules.Opposing(TownIds.Sylvan));
+        Assert.Equal(
+            [TownIds.Sylvan, TownIds.Haven, TownIds.Academy, TownIds.Dungeon, TownIds.Necropolis, TownIds.Inferno],
+            TavernRules.Ring);
+        void Neighbours(string town, params string[] expected) => Assert.Equal(expected.Order(), TavernRules.Adjacent(town).Order());
+        Neighbours(TownIds.Sylvan, TownIds.Inferno, TownIds.Haven);
+        Neighbours(TownIds.Haven, TownIds.Sylvan, TownIds.Academy);
+        Neighbours(TownIds.Academy, TownIds.Haven, TownIds.Dungeon);
+        Neighbours(TownIds.Dungeon, TownIds.Academy, TownIds.Necropolis);
+        Neighbours(TownIds.Necropolis, TownIds.Dungeon, TownIds.Inferno);
+        Neighbours(TownIds.Inferno, TownIds.Necropolis, TownIds.Sylvan);
+        Assert.Equal(TownIds.Necropolis, TavernRules.Opposing(TownIds.Haven));
+        Assert.Equal(TownIds.Dungeon, TavernRules.Opposing(TownIds.Sylvan));
+        Assert.Equal(TownIds.Inferno, TavernRules.Opposing(TownIds.Academy));
         Assert.Empty(TavernRules.Adjacent(TownIds.Stronghold));
         Assert.Null(TavernRules.Opposing(TownIds.SwampBestiary));
         foreach (var town in TavernRules.Ring)
         {
-            Assert.Equal(BuiltInSkills.Rivals[town].Order(), TavernRules.Adjacent(town).Order()); // the lore rivals are the ring neighbours
+            Assert.Equal(town, TavernRules.Opposing(TavernRules.Opposing(town)!)); // across the ring both ways
+            Assert.Contains(TavernRules.Opposing(town)!, BuiltInSkills.Rivals[town]); // the arch-rival is a sworn enemy of the lore
         }
     }
 
@@ -53,7 +63,7 @@ public class TavernTests
 
         Assert.Equal(2, offers.Count);
         Assert.Equal(TownIds.Haven, offers[0].Town);
-        Assert.Contains(offers[1].Town, new[] { TownIds.Necropolis, TownIds.Inferno });
+        Assert.Contains(offers[1].Town, new[] { TownIds.Sylvan, TownIds.Academy });
     }
 
     [Fact]
@@ -63,8 +73,8 @@ public class TavernTests
 
         Assert.Equal(4, offers.Count);
         Assert.Equal([TownIds.Haven, TownIds.Haven], Towns(offers.Take(2)));
-        Assert.Contains(offers[2].Town, new[] { TownIds.Necropolis, TownIds.Inferno });
-        Assert.DoesNotContain(offers[3].Town, new[] { TownIds.Haven, TownIds.Necropolis, TownIds.Inferno, TownIds.Dungeon }); // not opposing
+        Assert.Contains(offers[2].Town, new[] { TownIds.Sylvan, TownIds.Academy });
+        Assert.DoesNotContain(offers[3].Town, new[] { TownIds.Haven, TownIds.Sylvan, TownIds.Academy, TownIds.Necropolis }); // not native, adjacent or opposing
         Assert.Equal(4, offers.Select(o => o.Id).Distinct().Count());
     }
 

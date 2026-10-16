@@ -839,12 +839,13 @@ work during combat
 are drafts
 - **Tavern levels**: the tavern is an upgradeable building (`data/buildings.csv`): **Tavern** (750 gold, 5 lumber; every
   new town has it) offers **2** heroes, **Brotherhood** (2000 gold, 5 lumber, 5 ore, needs the fort) offers **4**.
-- **Ranks** (`TavernRules`): the six main towns sit on the lore ring (Haven, Necropolis, Sylvan, Dungeon, Academy,
-  Inferno). For a town, a hero is **0 native**, **1 adjacent** (the town's two ring neighbours, who are also its sworn
-  enemies: user decision, "ring neighbours = adjacent"), **2 not opposing** (everything else, Stronghold and Swamp
-  Bestiary included) or **3 opposing** (the town across the ring: Haven–Dungeon, Necropolis–Academy, Sylvan–Inferno;
-  our reading, the user's wording was "the two towns across the ring" and a six-town ring has one opposite). The pool
-  order is that order.
+- **Ranks** (`TavernRules`): the six main towns sit on the **ring of towns** (user decision, lore.md): Sylvan, Haven,
+  Academy, Dungeon, Necropolis, Inferno, and back to Sylvan. For a town, a hero is **0 native**, **1 adjacent** (the
+  town's two ring neighbours: Sylvan: Inferno, Haven; Haven: Sylvan, Academy; Academy: Haven, Dungeon; Dungeon: Academy,
+  Necropolis; Necropolis: Dungeon, Inferno; Inferno: Necropolis, Sylvan), **2 not opposing** (the two towns two steps
+  away, Stronghold and Swamp Bestiary) or **3 opposing** (the town across the ring, user decision: Sylvan–Dungeon,
+  Academy–Inferno, Haven–Necropolis). The pool order is that order. The first version of this ADR used another ring
+  (the sworn-enemy ring) and was corrected by the user.
 - **Slots**: basic = native + adjacent; upgraded = native, native, adjacent, not opposing. Opposing heroes come last,
   only when nothing else is left. A slot with nobody left in its rank takes the next ranks, then the earlier ones.
 - **Stronghold and Swamp Bestiary** (user decision) have no ring: rank 0 native, **1 warriors of the other towns**, 2 all

@@ -27,29 +27,47 @@ the "dark" often tells the truth.
 | **The Unbound** | Stronghold, Swamp Bestiary | Rejects both. Survives, raids, and endures whatever age comes |
 | **The Firstborn** (non-playable) | Conflux, Dragon Utopia | The Wheel's ancient keepers. They intervene only when the cycle itself is threatened |
 
-## Rivalries
+## The ring and the rivalries
 
-Each Dawn Covenant town has **two sworn enemies** in the Ashen Court, so every dark town is hated by two
-light ones. The rivalries interlock into a ring:
+The six great towns stand around the Wheel in a **ring**: the Dawn Covenant on one arc, the Ashen Court on the
+other, so that each town has two neighbours and one **arch-rival** directly across from it:
 
 ```
           Haven
         ╱       ╲
-  Necropolis   Inferno
+   Sylvan       Academy
       │             │
-   Sylvan ───── Academy
+   Inferno       Dungeon
         ╲       ╱
-         Dungeon
+        Necropolis
 ```
+
+Clockwise: Sylvan, Haven, Academy, Dungeon, Necropolis, Inferno, and back to Sylvan. The two arcs meet at
+Academy–Dungeon and Inferno–Sylvan, where the Covenant and the Court share a border.
+
+| Town | Neighbours on the ring | Arch-rival (across the ring) |
+|---|---|---|
+| **Sylvan** | Inferno, Haven | **Dungeon** |
+| **Haven** | Sylvan, Academy | **Necropolis** |
+| **Academy** | Haven, Dungeon | **Inferno** |
+| **Dungeon** | Academy, Necropolis | **Sylvan** |
+| **Necropolis** | Dungeon, Inferno | **Haven** |
+| **Inferno** | Necropolis, Sylvan | **Academy** |
+
+Each Dawn Covenant town also has a **second sworn enemy** in the Ashen Court, so every dark town is hated by two
+light ones. The arch-rival is always one of the two:
 
 | Town | Sworn enemies | Why |
 |---|---|---|
-| **Haven** | Necropolis, Inferno | The faithful against the defilers of the dead and the burners of the living |
-| **Sylvan** | Dungeon, Necropolis | The forest's roots are poisoned from below by the Dungeon and by grave-rot from Necropolis |
-| **Academy** | Inferno, Dungeon | Rival seekers of forbidden power: demonic pacts and the lightless depths |
-| **Necropolis** | Haven, Sylvan | (mirror of the above) |
-| **Inferno** | Haven, Academy | |
-| **Dungeon** | Academy, Sylvan | |
+| **Haven** | **Necropolis**, Inferno | The faithful against the defilers of the dead and the burners of the living |
+| **Sylvan** | **Dungeon**, Necropolis | The forest's roots are poisoned from below by the Dungeon and by grave-rot from Necropolis |
+| **Academy** | **Inferno**, Dungeon | Rival seekers of forbidden power: demonic pacts and the lightless depths |
+| **Necropolis** | **Haven**, Sylvan | (mirror of the above) |
+| **Inferno** | **Academy**, Haven | |
+| **Dungeon** | **Sylvan**, Academy | |
+
+The ring has one rule effect outside the story: it decides which heroes a tavern offers (ADR-060). Neighbours trade
+heroes most easily, the arch-rival's heroes come last.
 
 Stronghold and the Swamp Bestiary have **no sworn enemies**; they raid anyone. The Firstborn stand apart.
 These rivalries are story only: they drive campaign alliances, scenario setups and flavour text, and
@@ -90,13 +108,16 @@ and for skirmish flavour text.
 
 ## Campaign hooks from the ring
 - Each light town has a two-front war, so natural campaign arcs come in pairs: e.g. Haven holds the
-  border against Inferno while its own graveyards rise for Necropolis.
+  border against Inferno while its own graveyards rise for Necropolis, its arch-rival across the ring.
+- The two borders where the arcs meet, Academy–Dungeon and Inferno–Sylvan, are where wars start and
+  defectors cross over.
 - Uneasy alliances come from sharing an enemy: Haven and Academy against Inferno; Academy and Sylvan
   against Dungeon; Sylvan and Haven against Necropolis.
 
 ## Open for review
 - World and sun names (Vael, the Waning Eye), group names, and the "Wheel" premise as a whole.
-- The rivalry ring above (user direction, 2026-10-15): Haven vs Necropolis & Inferno, Academy vs Inferno
-  & Dungeon, Sylvan vs Dungeon & Necropolis.
+- The ring (user direction, 2026-10-16): Sylvan, Haven, Academy, Dungeon, Necropolis, Inferno, with the arch-rivals
+  across it (Sylvan–Dungeon, Academy–Inferno, Haven–Necropolis); and the sworn enemies (user direction, 2026-10-15):
+  Haven vs Necropolis & Inferno, Academy vs Inferno & Dungeon, Sylvan vs Dungeon & Necropolis.
 - Should the campaign reveal what the Wheel really is (and whether ending it is good)?
 - Hero names/archetypes per town; tone of in-game text (terse chronicle vs. character voices).
