@@ -96,7 +96,7 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
    do undead or constructs ignore morale; are the draft 4 % luck per point and the mirror-image bad luck right?
 11. Caravans (ADR-054): what happens when a travelling caravan's route gets blocked or its town is captured; can
     other players see or attack caravans; what the caravan building costs.
-12. War machines (ADR-056): machine stats and prices after play-testing; what Basic Ballistics does in sieges;
+12. War machines (ADR-056): machine stats and prices after play-testing; sieges and fortifications (Ballistics numbers are placeholders, ADR-063);
     can heroes exchange machines; can towns have them in the garrison?
 13. Victory and defeat (ADR-057): which more conditions (grail artifact, flag all mines, defeat all monsters) and how a campaign hooks into them;
     does survival win for the whole team?
@@ -111,8 +111,10 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 8. Primary stats: the draft growth odds and starting values (ADR-055); what Spell Power and Knowledge do in numbers
    (with magic).
 9. The third offense and third defense skills; the draft numbers in ADR-048; what a skill specialty adds.
-10. Hero names, school names (Light, Nature, Arcana, Death, Chaos, Shadow, Shamanism, Primal) and specialties in
+10. Hero names, school names (Light, Nature, Arcana, Death, Chaos, Shadow) and specialties in
     `data/heroes.csv` are drafts for review.
+11. Rage (Stronghold) and Adrenaline (Swamp Bestiary): what the three skills of each faction group do (ADR-063); the
+    complexity starting resources other than Expert; the Stewardship and governor numbers.
 
 ### For the magic system (Phase 5)
 7. Spell tags: the eight schools are set (ADR-047); immunities use free-form tags today (`all`, `mind`, `fire`,

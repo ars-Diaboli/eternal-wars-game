@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -30,6 +31,14 @@ public sealed class TurnService(
 
         state.IsStarted = true;
         state.CurrentPlayerIndex = 0;
+        if (state.Options.Complexity is { } complexity)
+        {
+            foreach (var player in state.Players)
+            {
+                economy.Set(player.Id, StartingResources.For(complexity));
+            }
+        }
+
         guards.RollUnsetCounts();
         events.Publish(new GameStarted(state.Date));
         events.Publish(new DayStarted(state.Date));
@@ -77,10 +86,26 @@ public sealed class TurnService(
         }
     }
 
+    /// <summary>Every own hero regains its daily mana (ADR-063); nothing happens, and nothing is published, when the pool is full.</summary>
+    private void RestoreMana(PlayerId player)
+    {
+        foreach (var hero in state.HeroesOf(player).OrderBy(h => h.Id.Value))
+        {
+            var max = hero.MaxMana;
+            if (hero.Mana < max)
+            {
+                hero.Mana = Math.Min(max, hero.Mana + ManaRules.DailyMana(hero));
+                events.Publish(new HeroManaRestored(hero.Id, hero.Mana, max));
+            }
+        }
+    }
+
     private void BeginTurn()
     {
         var player = state.CurrentPlayer;
         movement.RestoreMovement(player.Id);
+        RestoreMana(player.Id);
+        towns.AppointVisitors(player.Id);
         economy.CollectDailyIncome(player.Id);
         events.Publish(new TurnStarted(player.Id, state.Date));
         progression.OfferNext();

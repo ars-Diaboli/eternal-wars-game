@@ -86,6 +86,7 @@ public sealed class MapObjectInteractionService(
 
             // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).
             case Town town when town.Owner is { } owner && !state.AreEnemies(hero.Owner, owner):
+                TownService.AutoAppoint(state, events, town, hero);
                 break;
 
             case Town { Garrison.IsEmpty: false } town:

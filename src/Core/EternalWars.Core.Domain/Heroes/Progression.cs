@@ -52,7 +52,7 @@ public static class SkillOffers
     public static IReadOnlyList<string> Generate(Hero hero, string? heroTown, GameRandom random)
     {
         var rivals = heroTown is not null && BuiltInSkills.Rivals.TryGetValue(heroTown, out var r) ? r : [];
-        var candidates = BuiltInSkills.All.Where(s => hero.Skills.CanRaise(s.Id)).ToList();
+        var candidates = BuiltInSkills.All.Where(s => hero.Skills.CanRaise(s.Id) && IsOffered(s, heroTown)).ToList();
         var rivalSkills = candidates.Where(s => IsSchoolOf(s, rivals)).ToList();
         var pool = candidates.Except(rivalSkills).Select(s => (s.Id, Weight: Weight(hero, heroTown, s))).ToList();
 
@@ -85,11 +85,15 @@ public static class SkillOffers
     {
         var group = BuiltInSkills.GetGroup(skill.Group);
         var mage = hero.Class == HeroClass.Mage;
-        var weight = group.School is { } school
+        var weight = group.Town is { } school
             ? school == heroTown ? (mage ? 6 : 2) : (mage ? 2 : 1)
             : mage ? 2 : 4;
         return hero.Skills.Groups.Contains(skill.Group) ? weight * 3 : weight;
     }
+
+    /// <summary>Faction ability groups are offered only to heroes of their own town.</summary>
+    private static bool IsOffered(SkillDefinition skill, string? heroTown) =>
+        BuiltInSkills.GetGroup(skill.Group).Faction is not { } faction || faction == heroTown;
 
     private static bool IsSchoolOf(SkillDefinition skill, IReadOnlyList<string> towns) =>
         BuiltInSkills.GetGroup(skill.Group).School is { } school && towns.Contains(school);

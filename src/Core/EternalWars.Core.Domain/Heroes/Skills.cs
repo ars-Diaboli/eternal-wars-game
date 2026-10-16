@@ -9,13 +9,17 @@ namespace EternalWars.Core.Domain.Heroes;
 /// </summary>
 /// <param name="Id">Group id, also the prefix of its skill ids (<c>offense.melee</c>).</param>
 /// <param name="Name">Display name.</param>
-/// <param name="School">Town whose magic school this is; null for the general groups.</param>
-public sealed record SkillGroup(string Id, string Name, string? School = null)
+/// <param name="School">Town whose magic school this is; null for the general and faction groups.</param>
+/// <param name="Faction">Town whose own abilities these are (Stronghold, Swamp Bestiary: no magic school); only its heroes are offered them.</param>
+public sealed record SkillGroup(string Id, string Name, string? School = null, string? Faction = null)
 {
     /// <summary>Levels needed to learn every skill of a group fully.</summary>
     public const int Points = 10;
 
     public bool IsMagic => School is not null;
+
+    /// <summary>The town this group belongs to: its school or its faction abilities.</summary>
+    public string? Town => School ?? Faction;
 }
 
 /// <param name="Id"><c>group.skill</c>.</param>
@@ -48,6 +52,10 @@ public static class BuiltInSkills
     public const string Healing = "machines.healing";
     public const string AmmoSupply = "machines.ammo";
 
+    // Faction groups (Stronghold and Swamp Bestiary have no magic school; mechanics undecided, ADR-063) --------
+    public const string RageGroup = "rage";
+    public const string AdrenalineGroup = "adrenaline";
+
     /// <summary>Magic school names per town (working titles).</summary>
     public static IReadOnlyDictionary<string, string> Schools { get; } = new Dictionary<string, string>
     {
@@ -57,8 +65,13 @@ public static class BuiltInSkills
         [TownIds.Necropolis] = "Death",
         [TownIds.Inferno] = "Chaos",
         [TownIds.Dungeon] = "Shadow",
-        [TownIds.Stronghold] = "Shamanism",
-        [TownIds.SwampBestiary] = "Primal",
+    };
+
+    /// <summary>Faction ability groups: group id per town without a magic school (placeholders, ADR-063).</summary>
+    public static IReadOnlyDictionary<string, (string Group, string Name)> FactionGroups { get; } = new Dictionary<string, (string, string)>
+    {
+        [TownIds.Stronghold] = (RageGroup, "Rage"),
+        [TownIds.SwampBestiary] = (AdrenalineGroup, "Adrenaline"),
     };
 
     public static IReadOnlyList<SkillGroup> Groups { get; } =
@@ -70,6 +83,7 @@ public static class BuiltInSkills
         new("tactics", "Tactics"),
         new("machines", "War machines"),
         .. Schools.Select(s => new SkillGroup(SchoolGroup(s.Key), s.Value, s.Key)),
+        .. FactionGroups.Select(f => new SkillGroup(f.Value.Group, f.Value.Name, Faction: f.Key)),
     ];
 
     public static IReadOnlyList<SkillDefinition> All { get; } =
@@ -89,10 +103,11 @@ public static class BuiltInSkills
         new(Tactics, "tactics", "Tactics", SkillLevel.Expert, "choose the battlefield width (ADR-033)"),
         new(Deployment, "tactics", "Deployment", SkillLevel.Expert, "rearrange troops before the battle (later)"),
         new(Drill, "tactics", "Drill", SkillLevel.Master, "+1/2/3/4 battlefield speed for every stack"),
-        new(Ballistics, "machines", "Ballistics", SkillLevel.Master, "offensive machine outside sieges from Advanced; +25/50 % its damage (Expert/Master) (ADR-056)"),
+        new(Ballistics, "machines", "Ballistics", SkillLevel.Master, "siege machine fires by itself (none), under control (Basic), at troops too and twice after a kill (Advanced), never misses a fortification and +25 % damage (Expert), 2-3 structure damage and +50 % (Master) (ADR-056, ADR-063)"),
         new(Healing, "machines", "Healing", SkillLevel.Master, "the healing tent restores 20/30/40/50 health per stack a round (10 without)"),
         new(AmmoSupply, "machines", "Ammo supply", SkillLevel.Advanced, "the ammo cart gives +50 % shots / unlimited shots (+25 % without)"),
         .. Schools.SelectMany(s => SchoolSkills(s.Key, s.Value)),
+        .. FactionGroups.Values.SelectMany(f => FactionSkills(f.Group, f.Name)),
     ];
 
     private static readonly Dictionary<string, SkillDefinition> ById = All.ToDictionary(s => s.Id, StringComparer.Ordinal);
@@ -128,12 +143,20 @@ public static class BuiltInSkills
         [TownIds.SwampBestiary] = [],
     };
 
+    /// <summary>Three placeholder skills per faction group (10 points: 4 + 3 + 3); what they do is open (ADR-063).</summary>
+    private static IEnumerable<SkillDefinition> FactionSkills(string group, string name)
+    {
+        yield return new($"{group}.first", group, $"{name} (first skill to be decided)", SkillLevel.Master, "no effect yet");
+        yield return new($"{group}.second", group, $"{name} (second skill to be decided)", SkillLevel.Expert, "no effect yet");
+        yield return new($"{group}.third", group, $"{name} (third skill to be decided)", SkillLevel.Expert, "no effect yet");
+    }
+
     /// <summary>Spells (4 levels), attunement (4 levels: mana, regeneration, cost or potency by school), mastery (2 levels: spell upgrades).</summary>
     private static IEnumerable<SkillDefinition> SchoolSkills(string town, string school)
     {
         var group = SchoolGroup(town);
         yield return new($"{group}.spells", group, $"{school} magic", SkillLevel.Master, $"learn {school} spells of levels 1/2/3/4");
-        yield return new($"{group}.attunement", group, $"{school} attunement", SkillLevel.Master, "mana pool and regeneration; spell cost or potency by school (Phase 5)");
+        yield return new($"{group}.attunement", group, $"{school} attunement", SkillLevel.Master, "max mana, daily mana and spell cost by school (ManaRules)");
         yield return new($"{group}.mastery", group, $"{school} mastery", SkillLevel.Advanced, "upgrade learned spells to their second / third level (Phase 5)");
     }
 }

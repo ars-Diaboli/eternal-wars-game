@@ -109,6 +109,31 @@ public static class WarMachines
     /// <summary>Outside sieges the offensive machine fights only from Advanced Ballistics (user decision).</summary>
     public static bool FieldsOffensive(SkillLevel ballistics) => ballistics >= SkillLevel.Advanced;
 
+    // Sieges (ADR-063, placeholder numbers; there are no fortifications in battle yet) ------------------------------
+
+    /// <summary>Hit points of a defence structure of a fully upgraded fortification.</summary>
+    public const int MaxFortificationHealth = 3;
+
+    /// <summary>Without Ballistics the offensive machine fires by itself, and only at fortifications.</summary>
+    public static bool FiresAutomatically(SkillLevel ballistics) => ballistics == SkillLevel.None;
+
+    /// <summary>From Basic the player controls the machine (still only against fortifications until Advanced).</summary>
+    public static bool IsControlled(SkillLevel ballistics) => ballistics >= SkillLevel.Basic;
+
+    /// <summary>From Advanced the machine may also target enemy troops.</summary>
+    public static bool CanTargetTroops(SkillLevel ballistics) => ballistics >= SkillLevel.Advanced;
+
+    /// <summary>From Advanced a shot that destroys a structure is followed by a second one, at an automatically chosen target.</summary>
+    public static bool FiresAgainAfterKill(SkillLevel ballistics) => ballistics >= SkillLevel.Advanced;
+
+    /// <summary>Expert: every shot at a fortification hits; otherwise 2 of 3 do.</summary>
+    public static bool HitsFortification(SkillLevel ballistics, Common.GameRandom random) =>
+        ballistics >= SkillLevel.Expert || random.Next(3) < 2;
+
+    /// <summary>Hit points a hit takes off a defence structure: 1–2, 2–3 at Master.</summary>
+    public static int FortificationDamage(SkillLevel ballistics, Common.GameRandom random) =>
+        (ballistics >= SkillLevel.Master ? 2 : 1) + random.Next(2);
+
     /// <summary>Ballistics: +25 % (Expert) / +50 % (Master) offensive machine damage.</summary>
     public static int DamageBonusPercent(SkillLevel ballistics) => ballistics switch
     {

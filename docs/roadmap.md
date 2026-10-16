@@ -191,7 +191,14 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       cost rule (ADR-024, ADR-032, ADR-045)
 - [x] Primary stat growth (ADR-055): one point per level, HoMM3-style odds by class (draft), shown in the level-up
       prompt; Spell Power and Knowledge added (roster columns, map format v8, editor), effects with magic
-- [ ] Stewardship: −5/10/15 % building and recruit costs in the town the hero visits
+- [x] Stewardship and governors (ADR-063): −5/10/15 % buildings, −10/15/20 % creatures in a town with a governor
+- [ ] Stewardship for map dwellings, caravans and marketplace trading (150 % in a governed town); a governor UI in the town screen
+- [x] Treasury and Prospecting rework (ADR-062)
+- [x] Mana numbers and school attunement skills (ADR-063); casting waits for Phase 5
+- [ ] Rage and Adrenaline faction groups: design their skills (placeholders today) ❓
+- [x] Complexity levels with starting resources (ADR-063); new-game screen option
+- [ ] AI that appoints governors on purpose; the `sim` tool picks a complexity
+- [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot)
 - [ ] Skill specialties: what a skill specialty adds ❓ open question 9
 - [ ] Third offense and third defense skills (placeholders today) ❓ open question 9
 - [ ] Deployment: rearrange troops before battle (needs a deployment step in `BattleSetup` and UI)
@@ -249,7 +256,7 @@ Content draft: [artifacts.md](artifacts.md).
 - [x] Simulator: AI-vs-AI games (`sim game`) for tuning; the self-test replays one
 - [ ] Town defence: keep or bring a hero home when an enemy is near; avoid stronger enemy heroes
 - [ ] Several heroes: roles (explorer, army, carrier), exchanging armies between own heroes
-- [ ] Hire heroes (done), artifacts (done), war machines and spells once those exist; marketplace use; difficulty levels
+- [ ] Hire heroes (done), artifacts (done), war machines and spells once those exist; marketplace use; complexity levels (done)
 - [ ] Balance the AI over several maps (`sim game --runs`); a CI check that AI games on the shipped maps finish
 
 ### Content for the slice

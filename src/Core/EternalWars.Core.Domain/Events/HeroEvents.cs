@@ -10,6 +10,9 @@ public sealed record HeroTeleported(HeroId Hero, MapPosition From, MapPosition T
 
 public sealed record HeroMovementRestored(HeroId Hero, int MovementPoints) : IEvent;
 
+/// <summary>A hero regained mana at the start of its owner's turn (ADR-063).</summary>
+public sealed record HeroManaRestored(HeroId Hero, int Mana, int MaxMana) : IEvent;
+
 public sealed record HeroExperienceGained(HeroId Hero, int Amount, int Total) : IEvent;
 
 /// <summary>A war machine of the hero was destroyed in battle (ADR-056).</summary>

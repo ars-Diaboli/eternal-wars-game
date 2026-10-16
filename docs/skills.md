@@ -35,7 +35,7 @@ Status: ✅ works in play · ⏳ defined, waits for a feature (named) · ❓ not
 | Attack | added to every own stack's Attack in battle | ✅ |
 | Defense | added to every own stack's Defense in battle | ✅ |
 | Spell Power | spell strength | ⏳ magic (Phase 5) |
-| Knowledge | mana | ⏳ magic (Phase 5) |
+| Knowledge | mana pool (10 each) and daily mana (⌈K / 10⌉) | ✅ numbers (`ManaRules`) · ⏳ casting |
 
 Each level-up raises one stat by 1 (`StatGrowth`, ADR-055):
 
@@ -73,7 +73,11 @@ Morale and luck (−5…+5) are hero values too (ADR-053); no skill changes them
 
 Prospecting also gives a **10 / 20 / 30 % chance** that a resource pile picked up gives **50 % more** (rounded up); the roll
 uses the game RNG. Treasury interest is paid on the gold the player holds at the start of the day, before income is added.
-| Stewardship | `estates.stewardship` | Expert | −5 % costs in the town the hero is in | −10 % | −15 % | – | ⏳ (towns exist; roadmap Phase 3) |
+| Stewardship | `estates.stewardship` | Expert | −5 % building, −10 % creature costs in the town the hero governs | −10 %, −15 % | −15 %, −20 % | – | ✅ (ADR-063) |
+
+Stewardship works only in a town with a **governor**: a hero appointed with `AppointGovernorCommand` (one town per hero), or a
+visiting hero with the skill in a town that has none. It also applies to recruiting at map dwellings and to caravans of a
+governed town, and a governed town values resources at 150 % in the marketplace; those features are not built yet.
 
 ### Pathfinding (`pathfinding`)
 
@@ -100,7 +104,10 @@ Tactics counts as the hero's Tactics level minus the enemy hero's; only the side
 
 | Skill | Id | Max | No skill | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|---|
-| Ballistics | `machines.ballistics` | Master | offensive machine in sieges only | same | also in regular battles | +25 % its damage | +50 % | ✅ (Basic waits for sieges) |
+| Ballistics | `machines.ballistics` | Master | machine fires by itself, only at fortifications (sieges) | you control it | also targets troops, in regular battles, and fires twice after a kill | never misses a fortification, +25 % damage | 2-3 structure damage, +50 % | ✅ troops · ⏳ sieges (rules in `WarMachines`, ADR-063) |
+
+Against a fortification a shot hits 2 times in 3 (always from Expert) and takes 1-2 hit points off a defence structure
+(2-3 at Master); a fully upgraded fortification gives its structures 3 hit points. Placeholders until sieges exist.
 | Healing | `machines.healing` | Master | tent heals 10 per stack a round | 20 | 30 | 40 | 50 | ✅ |
 | Ammo supply | `machines.ammo` | Advanced | cart: +25 % shots | +50 % shots | unlimited shots while the cart stands | – | – | ✅ |
 
@@ -109,7 +116,7 @@ themselves (which town has which, stats, prices) are in [heroes.md](heroes.md#wa
 
 ## Magic schools
 
-One group per playable town (ADR-047); any hero may learn any school. Working titles:
+One group per town with a school (ADR-047, six of eight, ADR-063); any hero may learn any school. Working titles:
 
 | Town | School | Group id |
 |---|---|---|
@@ -119,16 +126,33 @@ One group per playable town (ADR-047); any hero may learn any school. Working ti
 | Necropolis | Death | `magic.necropolis` |
 | Inferno | Chaos | `magic.inferno` |
 | Dungeon | Shadow | `magic.dungeon` |
-| Stronghold | Shamanism | `magic.stronghold` |
-| Swamp Bestiary | Primal | `magic.swamp-bestiary` |
+
+Stronghold and Swamp Bestiary have **no school** (ADR-063); see [Faction groups](#faction-groups).
 
 Every school has the same three skills (shown for Light):
 
 | Skill | Id | Max | Per level | Status |
 |---|---|---|---|---|
 | Light magic | `magic.haven.spells` | Master | learn spells of level 1 / 2 / 3 / 4 | ⏳ magic |
-| Light attunement | `magic.haven.attunement` | Master | mana pool and regeneration; per school spell cost or potency | ⏳ magic |
+| Light attunement | `magic.haven.attunement` | Master | max mana, daily mana and spell cost, by school (below) | ✅ numbers (`ManaRules`) · ⏳ casting |
 | Light mastery | `magic.haven.mastery` | Advanced | upgrade learned spells to their second / third level | ⏳ magic |
+
+Attunement (ADR-063; several add up):
+
+| Schools | Max mana | Mana a day | Spell cost |
+|---|---|---|---|
+| Arcana, Chaos | +12 / 25 / 37 / 50 | +1 / 2 / 3 / 4 | – |
+| Light, Death | – | +3 / 6 / 9 / 12 | −1 / 2 / 3 / 4 |
+| Nature, Shadow | +5 / 10 / 15 / 20 | +2 / 4 / 6 / 8 | – |
+
+The mana pool is 10 × Knowledge plus attunement; a hero regains ⌈Knowledge / 10⌉ mana a day plus attunement; a spell costs
+at least 25 % of its base, rounded up.
+
+## Faction groups
+
+Stronghold (**Rage**, `rage`) and Swamp Bestiary (**Adrenaline**, `adrenaline`) have no magic school. Their groups have three
+placeholder skills each (`rage.first` Master, `rage.second` and `rage.third` Expert; the same for `adrenaline`) with no effect
+yet ❓: rage / adrenaline stacks or other faction abilities are to be designed. Only heroes of the town are offered them.
 
 ## Specialties
 
@@ -145,4 +169,5 @@ Each roster hero has one HoMM3-style specialty ([heroes.md](heroes.md)):
 - The third offense and defense skills (open questions, `ideas.md`).
 - What skill specialties do.
 - Which skills raise morale and luck.
-- What Basic Ballistics does in sieges (open question 12).
+- The Rage and Adrenaline mechanics.
+- Sieges themselves (Ballistics numbers are placeholders).

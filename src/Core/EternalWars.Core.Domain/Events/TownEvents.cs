@@ -4,6 +4,9 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Events;
 
+/// <summary>A town got, lost or changed its governor (ADR-063); null = none.</summary>
+public sealed record GovernorChanged(Common.MapObjectId Town, Common.HeroId? Previous, Common.HeroId? Current) : IEvent;
+
 /// <summary>A town changed hands: captured by a hero, or set in the editor.</summary>
 public sealed record TownOwnerChanged(MapObjectId Town, PlayerId? Previous, PlayerId? Current) : IEvent;
 

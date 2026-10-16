@@ -85,6 +85,12 @@ public sealed record GiveArtifactCommand(PlayerId Player, HeroId FromHero, strin
 /// <summary>Hires a hero the town's tavern offers (roster id) for the owner; it appears on the town's entrance (ADR-060).</summary>
 public sealed record HireHeroCommand(PlayerId Player, MapObjectId Town, string Hero) : GameCommand(Player);
 
+/// <summary>Appoints an own hero with Stewardship governor of an own town (ADR-063); it stops governing any other town.</summary>
+public sealed record AppointGovernorCommand(PlayerId Player, MapObjectId Town, HeroId Hero) : GameCommand(Player);
+
+/// <summary>Dismisses the governor of an own town.</summary>
+public sealed record DismissGovernorCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
+
 public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player);
 
 public sealed record BattleMoveCommand(PlayerId Player, CellPosition To) : GameCommand(Player);

@@ -29,7 +29,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Refuse(TownRules.CheckBuild(state, town, building));
 
         var level = TownRules.NextLevel(state, town, building)!;
-        Pay(player, level.Cost);
+        Pay(player, TownRules.BuildCost(state, town, level));
         town.SetLevel(building, level.Level);
         town.LastBuilt = state.Date;
         events.Publish(new TownBuilt(town.Id, building, level.Level));
@@ -42,7 +42,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
         var definition = state.Creatures.Get(line);
         var level = TownRules.NextDwellingLevel(state, town, definition)!;
-        Pay(player, level.Cost);
+        Pay(player, TownRules.BuildCost(state, town, level));
         town.SetDwelling(line, level.Level);
         town.LastBuilt = state.Date;
         if (level.Level == 1)
@@ -75,7 +75,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             throw new InvalidOperationException("There is no free slot for the recruits.");
         }
 
-        Pay(player, TownRules.RecruitCost(state.Creatures.Get(creature), count));
+        Pay(player, TownRules.RecruitCost(state, town, state.Creatures.Get(creature), count));
         town.SetAvailable(line.Id, town.AvailableOf(line.Id) - count);
         army.TryAdd(new CreatureStack(creature, count));
         events.Publish(new CreaturesRecruited(town.Id, creature, count, hero?.Id, town.AvailableOf(line.Id)));
@@ -94,7 +94,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             throw new InvalidOperationException($"The {line.Name} dwelling is not upgraded.");
         }
 
-        Pay(player, TownRules.UpgradeCost(state, line, stack.Count));
+        Pay(player, TownRules.UpgradeCost(state, town, line, stack.Count));
         army.Set(slot, new CreatureStack(line.UpgradesTo!, stack.Count));
         events.Publish(new StackUpgraded(town.Id, hero?.Id, slot, line.Id, line.UpgradesTo!, stack.Count));
         PublishArmy(town, hero);
@@ -124,6 +124,62 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Pay(player, Battles.WarMachines.Cost(slot));
         hero.AddWarMachine(slot);
         events.Publish(new WarMachineBought(town.Id, hero.Id, slot));
+    }
+
+    /// <summary>The owner appoints one of its heroes governor of the town; the hero leaves any other town it governed.</summary>
+    internal void AppointGovernor(PlayerId player, MapObjectId townId, HeroId heroId)
+    {
+        var town = OwnTown(player, townId);
+        var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new InvalidOperationException($"{heroId} is not an own hero.");
+        Refuse(StewardshipRules.CheckAppoint(state, town, hero));
+        SetGovernor(state, events, town, hero);
+    }
+
+    /// <summary>The owner dismisses the town's governor.</summary>
+    internal void DismissGovernor(PlayerId player, MapObjectId townId)
+    {
+        var town = OwnTown(player, townId);
+        if (StewardshipRules.GovernorOf(state, town) is null)
+        {
+            throw new InvalidOperationException($"{town.Name} has no governor.");
+        }
+
+        SetGovernor(state, events, town, null);
+    }
+
+    /// <summary>A visiting hero with Stewardship takes over a town without a governor, unless it governs another town.</summary>
+    internal static void AutoAppoint(GameState state, IEventPublisher events, Town town, Hero hero)
+    {
+        if (town.Owner == hero.Owner && StewardshipRules.GovernorOf(state, town) is null
+            && StewardshipRules.CheckAppoint(state, town, hero) is null && StewardshipRules.TownGovernedBy(state, hero) is null)
+        {
+            SetGovernor(state, events, town, hero);
+        }
+    }
+
+    /// <summary>Start of the owner's turn: heroes already standing in a town without a governor are appointed.</summary>
+    internal void AppointVisitors(PlayerId player)
+    {
+        foreach (var town in state.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value))
+        {
+            if (TownRules.VisitingHero(state, town) is { } hero)
+            {
+                AutoAppoint(state, events, town, hero);
+            }
+        }
+    }
+
+    private static void SetGovernor(GameState state, IEventPublisher events, Town town, Hero? hero)
+    {
+        if (hero is not null && StewardshipRules.TownGovernedBy(state, hero) is { } other && other != town)
+        {
+            other.Governor = null;
+            events.Publish(new GovernorChanged(other.Id, hero.Id, null));
+        }
+
+        var previous = StewardshipRules.GovernorOf(state, town)?.Id;
+        town.Governor = hero?.Id;
+        events.Publish(new GovernorChanged(town.Id, previous, hero?.Id));
     }
 
     internal void HireHero(PlayerId player, MapObjectId townId, string heroId)
@@ -174,6 +230,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
         var previous = town.Owner;
         town.Owner = owner;
+        town.Governor = null;
         events.Publish(new TownOwnerChanged(town.Id, previous, owner));
     }
 

@@ -28,7 +28,8 @@ public class HeroProgressionTests
             Assert.Equal(3, skills.Count);
             Assert.Equal(SkillGroup.Points, skills.Sum(s => (int)s.MaxLevel));
         });
-        Assert.Equal(8, BuiltInSkills.Groups.Count(g => g.IsMagic));
+        Assert.Equal(6, BuiltInSkills.Groups.Count(g => g.IsMagic));
+        Assert.Equal(2, BuiltInSkills.Groups.Count(g => g.Faction is not null));
         Assert.Equal(14, BuiltInSkills.Groups.Count);
     }
 
@@ -60,7 +61,70 @@ public class HeroProgressionTests
         Assert.Equal(128, roster.All.Count());
         Assert.All(roster.All.GroupBy(h => h.Town), town => Assert.Equal(8, town.Count(h => h.Class == HeroClass.Mage)));
         Assert.All(roster.All.Where(h => h.Class == HeroClass.Mage),
-            mage => Assert.Equal(SkillLevel.Basic, mage.StartingSkills.GetValueOrDefault($"magic.{mage.Town}.spells")));
+            mage => Assert.Equal(SkillLevel.Basic, mage.StartingSkills.GetValueOrDefault(BuiltInSkills.FactionGroups.TryGetValue(mage.Town, out var faction) ? $"{faction.Group}.first" : $"magic.{mage.Town}.spells")));
+    }
+
+    [Fact]
+    public void FactionGroups_AreOfferedOnlyToHeroesOfTheirTown()
+    {
+        var orc = Hero.Create(A, Blue, default, null, HeroCatalog.Default.Get("stronghold.grukk"));
+        var human = Hero.Create(A, Blue, default, null, HeroCatalog.Default.Get("haven.aldric"));
+        var random = new GameRandom(5);
+        var orcOffers = new HashSet<string>();
+        var humanOffers = new HashSet<string>();
+        for (var i = 0; i < 300; i++)
+        {
+            orcOffers.UnionWith(SkillOffers.Generate(orc, TownIds.Stronghold, random));
+            humanOffers.UnionWith(SkillOffers.Generate(human, TownIds.Haven, random));
+        }
+
+        Assert.Contains(orcOffers, o => o.StartsWith("rage.", StringComparison.Ordinal));
+        Assert.DoesNotContain(orcOffers, o => o.StartsWith("adrenaline.", StringComparison.Ordinal) || o.StartsWith("magic.stronghold", StringComparison.Ordinal));
+        Assert.DoesNotContain(humanOffers, o => o.StartsWith("rage.", StringComparison.Ordinal) || o.StartsWith("adrenaline.", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Mana_PoolDailyRegenAndSpellCost_FollowAttunement()
+    {
+        var hero = new Hero(A, "Alpha", Blue, default) { };
+        hero.Raise(PrimaryStat.Knowledge);
+        for (var i = 0; i < 10; i++)
+        {
+            hero.Raise(PrimaryStat.Knowledge); // Knowledge 11
+        }
+
+        Assert.Equal(110, ManaRules.MaxMana(hero));
+        Assert.Equal(2, ManaRules.DailyMana(hero)); // ceil(11 / 10)
+        Assert.Equal(110, hero.Mana); // never spent: full
+
+        hero.Skills.Set("magic.academy.attunement", SkillLevel.Master);
+        hero.Skills.Set("magic.haven.attunement", SkillLevel.Advanced);
+        hero.Skills.Set("magic.sylvan.attunement", SkillLevel.Basic);
+        Assert.Equal(110 + 50 + 5, ManaRules.MaxMana(hero));
+        Assert.Equal(2 + 4 + 6 + 2, ManaRules.DailyMana(hero));
+        Assert.Equal(20 - 2, ManaRules.SpellCost(hero, 20));
+    }
+
+    [Theory]
+    [InlineData(TownIds.Academy, SkillLevel.Basic, 12, 1, 0)]
+    [InlineData(TownIds.Inferno, SkillLevel.Master, 50, 4, 0)]
+    [InlineData(TownIds.Haven, SkillLevel.Expert, 0, 9, 3)]
+    [InlineData(TownIds.Necropolis, SkillLevel.Master, 0, 12, 4)]
+    [InlineData(TownIds.Sylvan, SkillLevel.Advanced, 10, 4, 0)]
+    [InlineData(TownIds.Dungeon, SkillLevel.Master, 20, 8, 0)]
+    public void Attunement_MatchesTheTable(string town, SkillLevel level, int max, int daily, int cost) =>
+        Assert.Equal(new AttunementBonus(max, daily, cost), ManaRules.Attunement(town, level));
+
+    [Fact]
+    public void SpellCost_NeverDropsBelowAQuarterOfTheBase()
+    {
+        var hero = new Hero(A, "Alpha", Blue, default);
+        hero.Skills.Set("magic.haven.attunement", SkillLevel.Master);
+        hero.Skills.Set("magic.necropolis.attunement", SkillLevel.Master); // −8 together
+
+        Assert.Equal(3, ManaRules.SpellCost(hero, 10)); // 25 % of 10, rounded up
+        Assert.Equal(1, ManaRules.SpellCost(hero, 3));
+        Assert.Equal(12, ManaRules.SpellCost(hero, 20));
     }
 
     [Fact]

@@ -96,34 +96,34 @@ dungeon.phyrra,Phyrra,dungeon,Mage,dungeon.manticore,spell shadow.dark-bolt,magi
 dungeon.xundar,Xundar,dungeon,Warrior,dungeon.spectator,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Spectator
 dungeon.ilphar,Ilphar,dungeon,Mage,dungeon.spectator,resource gold 350,magic.dungeon.spells Basic; magic.dungeon.attunement Basic,0,1,2,2,prefers Spectator
 stronghold.grukk,Grukk,stronghold,Warrior,stronghold.goblin,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Goblin
-stronghold.ugra,Ugra,stronghold,Mage,stronghold.goblin,spell shamanism.bloodlust,magic.stronghold.spells Basic; estates.treasury Basic,0,0,3,2,prefers Goblin
+stronghold.ugra,Ugra,stronghold,Mage,stronghold.goblin,skill rage.first,rage.first Basic; estates.treasury Basic,0,0,3,2,prefers Goblin
 stronghold.mazga,Mazga,stronghold,Warrior,stronghold.harpy,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Harpy
-stronghold.zhaka,Zhaka,stronghold,Mage,stronghold.harpy,skill magic.stronghold.attunement,magic.stronghold.spells Basic; defense.resistance Basic,0,1,2,2,prefers Harpy
+stronghold.zhaka,Zhaka,stronghold,Mage,stronghold.harpy,skill rage.second,rage.first Basic; defense.resistance Basic,0,1,2,2,prefers Harpy
 stronghold.thrak,Thrak,stronghold,Warrior,stronghold.orc,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Orc
-stronghold.mograth,Mograth,stronghold,Mage,stronghold.orc,spell shamanism.ancestral-spirits,magic.stronghold.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Orc
+stronghold.mograth,Mograth,stronghold,Mage,stronghold.orc,skill rage.first,rage.first Basic; pathfinding.logistics Basic,0,0,3,2,prefers Orc
 stronghold.urzog,Urzog,stronghold,Warrior,stronghold.centaur,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Centaur
-stronghold.yazna,Yazna,stronghold,Mage,stronghold.centaur,resource mercury 1,magic.stronghold.spells Basic; magic.stronghold.attunement Basic,0,1,2,2,prefers Centaur
+stronghold.yazna,Yazna,stronghold,Mage,stronghold.centaur,resource mercury 1,rage.first Basic; rage.second Basic,0,1,2,2,prefers Centaur
 stronghold.borka,Borka,stronghold,Warrior,stronghold.ogre,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Ogre
-stronghold.kurgh,Kurgh,stronghold,Mage,stronghold.ogre,spell shamanism.earthquake,magic.stronghold.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Ogre
+stronghold.kurgh,Kurgh,stronghold,Mage,stronghold.ogre,skill rage.first,rage.first Basic; estates.prospecting Basic,0,0,3,2,prefers Ogre
 stronghold.kragash,Kragash,stronghold,Warrior,stronghold.wolf-rider,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Wolf Rider
-stronghold.ashka,Ashka,stronghold,Mage,stronghold.wolf-rider,skill magic.stronghold.attunement,magic.stronghold.spells Basic; defense.armor Basic,0,1,2,2,prefers Wolf Rider
+stronghold.ashka,Ashka,stronghold,Mage,stronghold.wolf-rider,skill rage.second,rage.first Basic; defense.armor Basic,0,1,2,2,prefers Wolf Rider
 stronghold.shara,Shara,stronghold,Warrior,stronghold.roc,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Roc
-stronghold.vrolk,Vrolk,stronghold,Mage,stronghold.roc,spell shamanism.war-cry,magic.stronghold.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Roc
+stronghold.vrolk,Vrolk,stronghold,Mage,stronghold.roc,skill rage.first,rage.first Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Roc
 stronghold.durgash,Durgash,stronghold,Warrior,stronghold.cyclops,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Cyclops
-stronghold.nazgra,Nazgra,stronghold,Mage,stronghold.cyclops,resource gold 350,magic.stronghold.spells Basic; magic.stronghold.attunement Basic,0,1,2,2,prefers Cyclops
+stronghold.nazgra,Nazgra,stronghold,Mage,stronghold.cyclops,resource gold 350,rage.first Basic; rage.second Basic,0,1,2,2,prefers Cyclops
 swamp-bestiary.ssarkh,Ssarkh,swamp-bestiary,Warrior,swamp-bestiary.lizardman,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Lizardman
-swamp-bestiary.hissla,Hissla,swamp-bestiary,Mage,swamp-bestiary.lizardman,spell primal.venom,magic.swamp-bestiary.spells Basic; estates.treasury Basic,0,0,3,2,prefers Lizardman
+swamp-bestiary.hissla,Hissla,swamp-bestiary,Mage,swamp-bestiary.lizardman,skill adrenaline.first,adrenaline.first Basic; estates.treasury Basic,0,0,3,2,prefers Lizardman
 swamp-bestiary.kethra,Kethra,swamp-bestiary,Warrior,swamp-bestiary.kappa,resource gold 350,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Kappa
-swamp-bestiary.sethek,Sethek,swamp-bestiary,Mage,swamp-bestiary.kappa,skill magic.swamp-bestiary.attunement,magic.swamp-bestiary.spells Basic; defense.resistance Basic,0,1,2,2,prefers Kappa
+swamp-bestiary.sethek,Sethek,swamp-bestiary,Mage,swamp-bestiary.kappa,skill adrenaline.second,adrenaline.first Basic; defense.resistance Basic,0,1,2,2,prefers Kappa
 swamp-bestiary.mudjaw,Mudjaw,swamp-bestiary,Warrior,swamp-bestiary.jungle-horror,skill pathfinding.logistics,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Jungle Horror
-swamp-bestiary.murra,Murra,swamp-bestiary,Mage,swamp-bestiary.jungle-horror,spell primal.mire,magic.swamp-bestiary.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Jungle Horror
+swamp-bestiary.murra,Murra,swamp-bestiary,Mage,swamp-bestiary.jungle-horror,skill adrenaline.first,adrenaline.first Basic; pathfinding.logistics Basic,0,0,3,2,prefers Jungle Horror
 swamp-bestiary.vessk,Vessk,swamp-bestiary,Warrior,swamp-bestiary.mantis,resource ore 2,tactics.drill Basic; defense.armor Basic,1,2,1,1,prefers Mantis
-swamp-bestiary.zhessk,Zhessk,swamp-bestiary,Mage,swamp-bestiary.mantis,resource mercury 1,magic.swamp-bestiary.spells Basic; magic.swamp-bestiary.attunement Basic,0,1,2,2,prefers Mantis
+swamp-bestiary.zhessk,Zhessk,swamp-bestiary,Mage,swamp-bestiary.mantis,resource mercury 1,adrenaline.first Basic; adrenaline.second Basic,0,1,2,2,prefers Mantis
 swamp-bestiary.brakkis,Brakkis,swamp-bestiary,Warrior,swamp-bestiary.basilisk,skill offense.archery,offense.archery Basic; pathfinding.pathfinding Basic,2,1,1,1,prefers Basilisk
-swamp-bestiary.ilthra,Ilthra,swamp-bestiary,Mage,swamp-bestiary.basilisk,spell primal.regenerate,magic.swamp-bestiary.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Basilisk
+swamp-bestiary.ilthra,Ilthra,swamp-bestiary,Mage,swamp-bestiary.basilisk,skill adrenaline.first,adrenaline.first Basic; estates.prospecting Basic,0,0,3,2,prefers Basilisk
 swamp-bestiary.ylsa,Ylsa,swamp-bestiary,Warrior,swamp-bestiary.owlbear,resource lumber 2,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Owlbear
-swamp-bestiary.gossk,Gossk,swamp-bestiary,Mage,swamp-bestiary.owlbear,skill magic.swamp-bestiary.attunement,magic.swamp-bestiary.spells Basic; defense.armor Basic,0,1,2,2,prefers Owlbear
+swamp-bestiary.gossk,Gossk,swamp-bestiary,Mage,swamp-bestiary.owlbear,skill adrenaline.second,adrenaline.first Basic; defense.armor Basic,0,1,2,2,prefers Owlbear
 swamp-bestiary.tharg,Tharg,swamp-bestiary,Warrior,swamp-bestiary.gorgon,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Gorgon
-swamp-bestiary.venna,Venna,swamp-bestiary,Mage,swamp-bestiary.gorgon,spell primal.beast-call,magic.swamp-bestiary.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Gorgon
+swamp-bestiary.venna,Venna,swamp-bestiary,Mage,swamp-bestiary.gorgon,skill adrenaline.first,adrenaline.first Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Gorgon
 swamp-bestiary.oszrak,Oszrak,swamp-bestiary,Warrior,swamp-bestiary.haspid,resource gold 350,pathfinding.troops Basic; offense.melee Basic,1,2,1,1,prefers Haspid
-swamp-bestiary.szask,Szask,swamp-bestiary,Mage,swamp-bestiary.haspid,resource gold 350,magic.swamp-bestiary.spells Basic; magic.swamp-bestiary.attunement Basic,0,1,2,2,prefers Haspid
+swamp-bestiary.szask,Szask,swamp-bestiary,Mage,swamp-bestiary.haspid,resource gold 350,adrenaline.first Basic; adrenaline.second Basic,0,1,2,2,prefers Haspid

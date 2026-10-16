@@ -12,6 +12,29 @@ public enum FogMode
     ShroudWithRefog,
 }
 
+/// <summary>Scenario complexity (ADR-063): how rich the players start. Chosen when a game is configured.</summary>
+public enum Complexity
+{
+    Beginner,
+    Easy,
+    Normal,
+    Hard,
+    Expert,
+}
+
+/// <summary>Starting resources per <see cref="Complexity"/> (draft numbers; the hardest is the designer's, the rest are on a HoMM3-like scale).</summary>
+public static class StartingResources
+{
+    public static Economy.ResourceSet For(Complexity complexity) => complexity switch
+    {
+        Complexity.Beginner => new(Gold: 10_000, Lumber: 30, Ore: 30, Crystal: 10, Mercury: 10, Sulfur: 10),
+        Complexity.Easy => new(Gold: 7_500, Lumber: 20, Ore: 20, Crystal: 6, Mercury: 6, Sulfur: 6),
+        Complexity.Normal => new(Gold: 5_000, Lumber: 15, Ore: 15, Crystal: 3, Mercury: 3, Sulfur: 3),
+        Complexity.Hard => new(Gold: 3_500, Lumber: 12, Ore: 12, Crystal: 1, Mercury: 1, Sulfur: 1),
+        _ => new(Gold: 2_500, Lumber: 10, Ore: 10),
+    };
+}
+
 /// <summary>Rules chosen when a game is created (not part of the map file).</summary>
 /// <param name="FogMode">How exploration and unit visibility work.</param>
 /// <param name="RefogMargin">
@@ -23,7 +46,11 @@ public enum FogMode
 /// Seed of the game's <see cref="Common.GameRandom"/>. Together with the map and the command log it fully
 /// determines the game (replays). Front-ends pick a random seed; tests use the default.
 /// </param>
-public sealed record GameOptions(FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1)
+/// <param name="Complexity">
+/// Every player starts with the <see cref="StartingResources"/> of this level instead of what the map gives; null keeps the
+/// map's own resources.
+/// </param>
+public sealed record GameOptions(FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1, Complexity? Complexity = null)
 {
     public static GameOptions Default { get; } = new();
 }

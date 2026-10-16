@@ -913,3 +913,46 @@ extended with HoMM3-style placeholder items
 - **Prospecting** keeps its daily resources and adds a **10 / 20 / 30 %** chance that a picked-up resource pile gives 50 %
   more (rounded up). The roll is drawn from `GameState.Random` only when the hero has the skill; `ResourcePileCollected`
   carries the amount actually granted.
+
+### ADR-063: Governors, complexity, mana, faction groups and siege Ballistics (2026-10-17)
+
+Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) and ADR-056 (Ballistics). Numbers are drafts.
+
+- **Governors and Stewardship**: a hero with Stewardship can be appointed governor of an own town (`AppointGovernorCommand`,
+  `DismissGovernorCommand`, event `GovernorChanged`); a hero governs one town, appointing it elsewhere moves it. The
+  assignment persists while the hero roams; it is void when the hero is gone, changes owner or loses the skill
+  (`StewardshipRules.GovernorOf`), and is cleared when the town is captured. A visiting own hero with the skill becomes
+  governor of a governor-less town by itself (on arrival and at the start of the owner's turn) unless it governs
+  another. Stewardship applies only to a town with a governor: buildings **5 / 10 / 15 %** cheaper, creatures
+  **10 / 15 / 20 %** cheaper (recruiting and upgrading; rounded up per resource). Not built yet: map dwellings, caravans
+  (the same discount when written) and marketplace trading (a governed town values resources at **150 %**,
+  `StewardshipRules.MarketplaceValuePercent`).
+- **Complexity** (`GameOptions.Complexity`, null = the map's own resources): Beginner, Easy, Normal, Hard, Expert. At the
+  start of the game every player gets `StartingResources.For(level)`: 10000 gold with 30 lumber, 30 ore and 10 of each rare
+  resource; 7500, 20, 20, 6; 5000, 15, 15, 3; 3500, 12, 12, 1; Expert 2500 gold, 10 lumber, 10 ore, no rares (the
+  designer's hardest set; the other four are guesses to tune). Chosen on the new-game screen; saved in replays.
+- **Mana** (`ManaRules`, `Hero.Mana`): the pool is **10 x Knowledge** plus attunement; every day at the start of the owner's turn a hero
+  regains **ceil(Knowledge / 10)** plus attunement (`HeroManaRestored`, only when the pool is not full); a spell costs its base
+  minus attunement but never less than **25 % of the base, rounded up**. A hero that never spent mana has a full pool.
+  Casting waits for Phase 5.
+- **School attunement** (the second skill of each of the six schools, 4 levels):
+
+  | Schools | Max mana | Mana a day | Spell cost |
+  |---|---|---|---|
+  | Arcana, Chaos | +12 / 25 / 37 / 50 | +1 / 2 / 3 / 4 | - |
+  | Light, Death | - | +3 / 6 / 9 / 12 | -1 / 2 / 3 / 4 |
+  | Nature, Shadow | +5 / 10 / 15 / 20 | +2 / 4 / 6 / 8 | - |
+
+  Several attunements add up.
+- **Stronghold and Swamp Bestiary have no magic school**: six schools remain. Each has a faction ability group instead,
+  **Rage** (`rage`, Stronghold) and **Adrenaline** (`adrenaline`, Swamp Bestiary): three placeholder skills each
+  (`rage.first/second/third`, 4 + 3 + 3 points) with no effect; the mechanics (stacks of rage / adrenaline or other
+  faction abilities) are open. Only heroes of the town are offered them; their roster mages start with `.first`, and their
+  former spell specialties are `skill rage.first` / `skill adrenaline.first` for now. The Shamanism and Primal spells in
+  [spells.md](spells.md) are drafts waiting to be reused as faction abilities.
+- **Ballistics in sieges** (rules in `WarMachines`; fortifications and sieges do not exist yet, so nothing calls them in battle):
+  without the skill the offensive machine **fires by itself, only at fortifications**; **Basic** gives control of it; **Advanced**
+  lets it also target troops (and fields it in regular battles, as ADR-056 had it) and fires a second shot at an automatically
+  chosen target when the first destroyed its structure; **Expert** never misses a fortification (otherwise 2 of 3 shots hit)
+  and keeps the +25 % damage against troops; **Master** does **2-3** structure damage instead of 1-2 (and +50 % against troops).
+  A fully upgraded fortification's defence structures have **3** hit points. Placeholder formulas.
