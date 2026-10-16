@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using Godot;
@@ -27,6 +28,7 @@ public partial class TownPanel : PanelContainer
     private readonly HBoxContainer _blacksmith = new();
     private readonly HBoxContainer _tavern = new();
     private readonly HBoxContainer _governor = new();
+    private readonly VBoxContainer _caravan = new();
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly CheckBox _toHero = new() { Text = "Recruit to visiting hero" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
@@ -69,6 +71,7 @@ public partial class TownPanel : PanelContainer
         box.AddChild(new Label { Text = "Governor (Stewardship)" });
         box.AddChild(_governor);
         box.AddChild(_armies);
+        box.AddChild(_caravan);
         box.AddChild(_blacksmith);
         box.AddChild(_tavern);
 
@@ -97,6 +100,12 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroHired>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<GovernorChanged>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<CaravanDispatched>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<CaravanArrived>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<CaravanReturned>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<CaravanLost>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<DwellingCreaturesGrew>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<DwellingOwnerChanged>(session.Events, _ => Refresh());
     }
 
     /// <summary>Shows a town of the player whose turn it is.</summary>
@@ -194,6 +203,7 @@ public partial class TownPanel : PanelContainer
         ShowGovernor(state, town);
         Clear(_armies);
         AddArmyRow(town, TownArmy.Garrison, "Garrison", town.Garrison);
+        ShowCaravan(state, town);
         ShowTavern(state, town);
         Clear(_blacksmith);
         if (TownRules.VisitingHero(state, town) is { } hero)
@@ -244,6 +254,73 @@ public partial class TownPanel : PanelContainer
             var appoint = new Button { Text = $"Appoint {visitor.Name}" };
             appoint.Pressed += () => Run(new AppointGovernorCommand(player, town.Id, visitor.Id));
             _governor.AddChild(appoint);
+        }
+    }
+
+    /// <summary>
+    /// The caravan (ADR-054): hire creatures from owned map dwellings within five days, send the picked garrison stack to
+    /// another own town, and the caravans on their way to or from this town.
+    /// </summary>
+    private void ShowCaravan(GameState state, Town town)
+    {
+        Clear(_caravan);
+        if (town.Level(BuiltInBuildings.Caravan) < 1)
+        {
+            return;
+        }
+
+        var player = state.CurrentPlayer.Id;
+        _caravan.AddChild(new Label { Text = $"Caravan: creatures travel at their map speed and arrive in {CaravanRules.MaxDays} days at most" });
+        foreach (var dwelling in state.ObjectsOf<CreatureDwelling>().Where(d => d.Owner == player && d.Available > 0).OrderBy(d => d.Id.Value))
+        {
+            var creature = state.Creatures.Get(dwelling.Creature);
+            var available = dwelling.Available!.Value;
+            var count = TownRules.MaxAffordable(state.CurrentPlayer.Resources, TownRules.CreatureCost(state, town, creature), available);
+            var refusal = CaravanRules.CheckOrder(state, town, dwelling, Math.Max(1, count));
+            var route = CaravanRules.RouteBetween(state, dwelling, town, creature, out _);
+            var row = new HBoxContainer();
+            row.AddChild(new Label
+            {
+                Text = $"{creature.Name} dwelling at {dwelling.Position.X},{dwelling.Position.Y}: {available} waiting, {(route is null ? "no route" : $"{route.Days} day(s) away")}",
+                CustomMinimumSize = new Vector2(360, 0),
+            });
+            var hire = new Button
+            {
+                Text = $"Hire {count}{System.Environment.NewLine}{Cost(TownRules.CreatureCost(state, town, creature))} each",
+                Disabled = count == 0 || refusal is not null,
+                TooltipText = refusal ?? "",
+            };
+            var dwellingId = dwelling.Id;
+            hire.Pressed += () => Run(new OrderCaravanCommand(player, town.Id, dwellingId, count));
+            row.AddChild(hire);
+            _caravan.AddChild(row);
+        }
+
+        if (_picked is { Army: TownArmy.Garrison } picked && town.Garrison[picked.Slot] is { } stack)
+        {
+            int? count = _split.ButtonPressed && stack.Count > 1 ? stack.Count / 2 : null;
+            foreach (var other in state.ObjectsOf<Town>().Where(t => t.Owner == player && t != town).OrderBy(t => t.Id.Value))
+            {
+                var refusal = CaravanRules.CheckSend(state, town, picked.Slot, other, count);
+                var send = new Button { Text = $"Send {count ?? stack.Count} {state.Creatures.Get(stack.Creature).Name} to {other.Name}", Disabled = refusal is not null, TooltipText = refusal ?? "" };
+                var target = other.Id;
+                send.Pressed += () =>
+                {
+                    _picked = null;
+                    Run(new SendTroopsCommand(player, town.Id, picked.Slot, target, count));
+                };
+                _caravan.AddChild(send);
+            }
+        }
+
+        foreach (var caravan in state.Caravans.Where(c => c.Owner == player && (c.Destination == town.Id || c.Source == town.Id)))
+        {
+            var name = state.Creatures.Get(caravan.Creature).Name;
+            _caravan.AddChild(new Label
+            {
+                Text = $"On the way: {caravan.Count} {name} {(caravan.Destination == town.Id ? "to here" : $"to {state.GetObject(caravan.Destination).Definition.Name}")}, "
+                       + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room in the garrison"),
+            });
         }
     }
 

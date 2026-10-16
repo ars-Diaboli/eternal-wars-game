@@ -175,6 +175,13 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
             events.Publish(new MineOwnerChanged(mine.Id, player.Id, null));
         }
 
+        foreach (var dwelling in state.ObjectsOf<CreatureDwelling>().Where(d => d.Owner == player.Id).ToList())
+        {
+            dwelling.Owner = null;
+            events.Publish(new DwellingOwnerChanged(dwelling.Id, player.Id, null));
+        }
+
+        state.RemoveCaravansOf(player.Id);
         events.Publish(new PlayerDefeated(player.Id, reason));
     }
 

@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Battle;
@@ -52,6 +53,7 @@ public partial class Main : Node3D
     private TownListPanel _townList = null!;
     private TownPanel _townScreen = null!;
     private HeroPanel _heroScreen = null!;
+    private DwellingPanel _dwellingScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
@@ -114,7 +116,7 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_townScreen.Visible || _heroScreen.Visible)
+        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible)
         {
             return; // a full-screen panel takes the input (Escape closes it)
         }
@@ -665,8 +667,16 @@ public partial class Main : Node3D
         _heroScreen = new HeroPanel { FullScreen = true };
         townLayer.AddChild(_heroScreen);
         _heroScreen.Bind(_session);
+        _dwellingScreen = new DwellingPanel();
+        townLayer.AddChild(_dwellingScreen);
+        _dwellingScreen.Bind(_session);
         _game.SubscribeWhileInTree<MapObjectVisited>(_session.Events, e =>
         {
+            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is CreatureDwelling dwelling)
+            {
+                _dwellingScreen.Open(dwelling.Id); // flagged by now (the visit flagged it first); recruit from it here
+            }
+
             if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Core.Domain.Towns.Town town
                 && town.Owner == _session.State.CurrentPlayer.Id)
             {

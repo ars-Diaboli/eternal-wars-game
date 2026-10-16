@@ -39,12 +39,18 @@ public static class GameStateDigest
                 Mine mine => $"owner {mine.Owner?.Value} guard {mine.Guard}",
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
+                CreatureDwelling dwelling => $"{dwelling.Creature} owner {dwelling.Owner?.Value} available {dwelling.Available}",
                 MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
                 Town town => $"owner {town.Owner?.Value} governor {town.Governor?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "
                              + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}",
                 _ => mapObject.TeleportTarget?.ToString() ?? "",
             };
             Line($"object {mapObject.Id.Value} {mapObject.Definition.Id} at {mapObject.Position} {detail}");
+        }
+
+        foreach (var caravan in state.Caravans)
+        {
+            Line($"caravan {caravan.Id} owner {caravan.Owner.Value} {caravan.Source}->{caravan.Destination} {caravan.Creature}x{caravan.Count} days {caravan.DaysLeft} paid {caravan.Paid}");
         }
 
         Line($"outcome {state.Outcome?.Winners.Count} {state.Outcome?.Date}");

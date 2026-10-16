@@ -73,8 +73,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
   schools, any school learnable with rival schools at 5 %, named levels with one point per level (ADR-047, ADR-048).
 - **Morale and luck**: ±5 per stack (creature + hero); morale per round (extra action / lost turn, else ±50 %
   initiative), luck per hit (+75 % / −50 %, opposite rolls cancel) (ADR-053).
-- **Caravans**: hire from owned map dwellings within 5 days of virtual travel on an open route; also between towns
-  (ADR-054).
+- **Caravans**: hire from owned map dwellings within 5 days of virtual travel on an open route; also between towns;
+  a blocked route returns them (refund), a lost town scatters them, invisible (ADR-054, built).
 - **Sea travel**: none; water is an obstacle (ADR-051).
 - **War machines**: offensive machine per town, healing tent, ammo cart, a War machines skill group; units on the
   field; the offensive machine needs Advanced Ballistics outside sieges (ADR-056).
@@ -94,8 +94,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 4. Teleporting creatures on the battlefield: how they use footprints (none in the slice yet).
 5. Morale and luck sources (the mechanics are ADR-053): which skills, artifacts, buildings and army mixes change them;
    do undead or constructs ignore morale; are the draft 4 % luck per point and the mirror-image bad luck right?
-11. Caravans (ADR-054): what happens when a travelling caravan's route gets blocked or its town is captured; can
-    other players see or attack caravans; what the caravan building costs.
+11. Caravans (ADR-054): answered 2026-10-17 (return, scatter, invisible); the building's cost (1000 gold, 5 lumber) and place in
+    the tree (needs town hall 2) are placeholders to tune.
 12. War machines (ADR-056): machine stats and prices after play-testing; sieges and fortifications (Ballistics numbers are placeholders, ADR-063);
     can heroes exchange machines; can towns have them in the garrison?
 13. Victory and defeat (ADR-057): which more conditions (grail artifact, flag all mines, defeat all monsters) and how a campaign hooks into them;

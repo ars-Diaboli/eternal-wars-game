@@ -20,7 +20,8 @@ public sealed class TurnService(
     HeroMovementService movement,
     GuardService guards,
     ProgressionService progression,
-    TownService towns)
+    TownService towns,
+    CaravanService caravans)
 {
     internal void StartGame()
     {
@@ -40,6 +41,7 @@ public sealed class TurnService(
         }
 
         guards.RollUnsetCounts();
+        towns.FillNewDwellings();
         events.Publish(new GameStarted(state.Date));
         events.Publish(new DayStarted(state.Date));
         BeginTurn();
@@ -106,6 +108,7 @@ public sealed class TurnService(
         movement.RestoreMovement(player.Id);
         RestoreMana(player.Id);
         towns.AppointVisitors(player.Id);
+        caravans.Advance(player.Id);
         economy.CollectDailyIncome(player.Id);
         events.Publish(new TurnStarted(player.Id, state.Date));
         progression.OfferNext();

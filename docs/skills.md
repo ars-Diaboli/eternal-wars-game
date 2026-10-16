@@ -76,8 +76,8 @@ uses the game RNG. Treasury interest is paid on the gold the player holds at the
 | Stewardship | `estates.stewardship` | Expert | −5 % building, −10 % creature costs in the town the hero governs | −10 %, −15 % | −15 %, −20 % | – | ✅ (ADR-063) |
 
 Stewardship works only in a town with a **governor**: a hero appointed with `AppointGovernorCommand` (one town per hero), or a
-visiting hero with the skill in a town that has none. It also applies to recruiting at map dwellings and to caravans of a
-governed town, and a governed town values resources at 150 % in the marketplace; those features are not built yet.
+visiting hero with the skill in a town that has none. It also applies to recruiting at map dwellings (the hero's own level) and to caravans of a
+governed town (ADR-054), and a governed town values resources at 150 % in the marketplace (not built yet).
 
 ### Pathfinding (`pathfinding`)
 

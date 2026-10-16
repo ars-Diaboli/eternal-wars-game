@@ -35,6 +35,7 @@ public static class BuiltInBuildings
     public const string Marketplace = "marketplace";
     public const string MageGuild = "mage-guild";
     public const string Tavern = "tavern";
+    public const string Caravan = "caravan";
 
     /// <summary>Name of the embedded building table in this assembly.</summary>
     public const string ResourceName = "EternalWars.Buildings.csv";

@@ -675,21 +675,36 @@ where the notes left them open
 - Not decided yet: which skills, artifacts, buildings and army mixes change morale and luck, and whether creatures such
   as undead or constructs ignore morale (HoMM3 does).
 
-### ADR-054: Caravans (design; needs dwellings on the adventure map)
-**Status**: accepted design (2026-10-16), from docs/ideas.md; not implemented. It needs adventure-map dwellings,
-which do not exist yet (roadmap, Phase 3)
-- **Map dwellings** are flaggable map objects with one creature line. They accumulate their creature's weekly growth
-  like town dwellings, owned or not, and a hero visiting one can recruit from it.
-- **Caravan** is a town building. In a town with a caravan, the owner can hire creatures from **owned map
-  dwellings** that are close enough. The creatures do not arrive at once: they travel **virtually across the map**
-  from the dwelling to the town, at the speed of a hero army made of them (their **map speed**, MovementAllowance, terrain
-  and roads as for heroes; no hero skills).
-- **The route must be open**: a path from the dwelling to the town that no enemy hero and no neutral monster (or its
-  guarded area) blocks. **More than 5 days** of travel means that dwelling cannot supply the town. Both checks happen
-  **before** the creatures are bought, so the player never pays for an impossible caravan.
-- The same rules **move troops between two own towns** (from one garrison to the other).
-- Open: what happens when the route becomes blocked or the destination is captured while a caravan travels (the
-  caravan waits, returns, or can be attacked?), whether caravans are visible to other players, and the caravan's cost.
+### ADR-054: Map dwellings and caravans
+**Status**: accepted design (2026-10-16), implemented 2026-10-17 with the open questions answered by the user. Core, editor
+and the town / dwelling screens are in; the AI does not use them yet.
+- **Map dwellings** (`CreatureDwelling`, definition `dwelling`, kind `Dwelling`, 3×2 like a mine, entrance bottom-middle) are
+  flaggable map objects with one creature (any creature of the catalog, set per instance, default wolf) and a count waiting
+  (`Available`; omitted on the map = one week's growth when the game starts). They grow by the creature's weekly growth every
+  Monday, **owned or not** (`DwellingCreaturesGrew`). An own hero that visits one flags it (`DwellingOwnerChanged`; they reveal and
+  watch a radius of 2 like mines; a defeated player's dwellings turn neutral). A hero standing on the entrance recruits from it
+  with `RecruitAtDwellingCommand` (any dwelling, owned or not; paid at the creature's price, discounted by the **hero's own**
+  Stewardship level, ADR-063; into the hero's army). **Map format v12** (`dwelling` objects: creature, owner, available); older
+  maps load. The editor places it from the object palette and edits it with `MapEditorSession.SetDwelling` (inspector rows).
+- **Caravan** is a town building (`caravan` level 1: 1000 gold, 5 lumber, needs town hall 2; placeholder numbers in
+  `buildings.csv`). A town with one can **hire creatures from owned map dwellings** (`OrderCaravanCommand`; paid at once at the
+  town's price, so the governor's Stewardship discount applies; the creatures leave the dwelling) and **send troops from its
+  garrison to another own town** (`SendTroopsCommand`, whole stack or part; the destination does not need a caravan).
+- **Travel** is virtual (`CaravanRules.FindRoute`, Dijkstra): the creatures walk like an army made of them (their map speed,
+  `MovementAllowance`, terrain and roads as for heroes; no hero skills; native terrain counts for the creature's own town),
+  8-way, diagonals ×1.41, from the source's entrance to the town's entrance. **The route must be open**: impassable terrain and
+  blocked object cells, any hostile hero, any neutral monster **and every tile it guards** block it. More than **5 days**
+  (`CaravanRules.MaxDays`) means the source cannot supply the town. Both are checked **before** paying. At least 1 day.
+- **Arrival** (`CaravanService.Advance`, at the start of the owner's turn, in id order): the creatures join the destination
+  garrison (`CaravanArrived`); with no free slot the caravan waits at the gates until there is one.
+- **User decisions (2026-10-17)**: a route that gets **blocked while travelling** makes the caravan **return** (checked every day;
+  creatures go back to the dwelling and the **price is refunded**; troops return to their town's garrison, or are lost
+  (`CaravanLost`) when it has no room); a **destination that is captured or lost** makes the creatures **scatter** (lost,
+  gold stays spent); caravans are **invisible and cannot be attacked** (they are not on the map; only the route check matters).
+- Caravans live in `GameState.Caravans` and are created only by commands, so replays rebuild them; they are not in the map file.
+  They are part of the state digest. A defeated player's caravans vanish.
+- Not yet: the AI recruiting at dwellings or using caravans, a dwelling guard (use a monster next to it), marketplace
+  trading with the governor's 150 %.
 
 ### ADR-055: Primary stat growth
 **Status**: accepted (2026-10-16), answers open question 8 (user decision: HoMM3-style, odds by class); odds and
@@ -933,8 +948,8 @@ Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) a
   (`StewardshipRules.GovernorOf`), and is cleared when the town is captured. A visiting own hero with the skill becomes
   governor of a governor-less town by itself (on arrival and at the start of the owner's turn) unless it governs
   another. Stewardship applies only to a town with a governor: buildings **5 / 10 / 15 %** cheaper, creatures
-  **10 / 15 / 20 %** cheaper (recruiting and upgrading; rounded up per resource). Not built yet: map dwellings, caravans
-  (the same discount when written) and marketplace trading (a governed town values resources at **150 %**,
+  **10 / 15 / 20 %** cheaper (recruiting and upgrading; rounded up per resource). Map dwellings use the recruiting hero's own level and caravans the
+  destination town's governor (ADR-054). Not built yet: marketplace trading (a governed town values resources at **150 %**,
   `StewardshipRules.MarketplaceValuePercent`).
 - **Complexity** (`GameOptions.Complexity`, null = the map's own resources): Beginner, Easy, Normal, Hard, Expert. At the
   start of the game every player gets `StartingResources.For(level)`: 10000 gold with 30 lumber, 30 ore and 10 of each rare
