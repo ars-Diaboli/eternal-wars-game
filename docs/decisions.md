@@ -905,3 +905,11 @@ extended with HoMM3-style placeholder items
   there by 20 %.
 - **Not yet**: artifacts in treasure chests (ADR-039 stays without the artifact outcome), the hero screen and the paper-doll
   UI, the editor inspector rows, a merchant, artifacts that give spells or war machines, the effects marked "Not yet".
+
+### ADR-062: Treasury interest and Prospecting piles (2026-10-17)
+
+- **Treasury** pays **+250 / 500 / 750 / 1000** gold a day (was 100 / 200 / 350 / 500). Expert and Master also pay **0.5 % / 1 %**
+  of the player's gold on hand at the start of the day, before income is added (rounded down, `HeroIncome.TreasuryInterest`).
+- **Prospecting** keeps its daily resources and adds a **10 / 20 / 30 %** chance that a picked-up resource pile gives 50 %
+  more (rounded up). The roll is drawn from `GameState.Random` only when the hero has the skill; `ResourcePileCollected`
+  carries the amount actually granted.

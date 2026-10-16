@@ -80,8 +80,8 @@ public static class BuiltInSkills
         new(Armor, "defense", "Armor", SkillLevel.Master, "−5/10/15/20 % damage taken"),
         new(SpellResistance, "defense", "Spell resistance", SkillLevel.Expert, "resists hostile spells (magic, Phase 5)"),
         new(DefensePlaceholder, "defense", "(defense skill to be decided)", SkillLevel.Expert, "no effect yet"),
-        new(Treasury, "estates", "Treasury", SkillLevel.Master, "+100/200/350/500 gold a day"),
-        new(Prospecting, "estates", "Prospecting", SkillLevel.Expert, "+1 lumber and ore / +2 / +2 and one of each rare resource a day"),
+        new(Treasury, "estates", "Treasury", SkillLevel.Master, "+250/500/750/1000 gold a day; Expert and Master also 0.5/1 % of the gold on hand"),
+        new(Prospecting, "estates", "Prospecting", SkillLevel.Expert, "+1 lumber and ore / +2 / +2 and one of each rare resource a day; 10/20/30 % chance of +50 % from a resource pile"),
         new(Stewardship, "estates", "Stewardship", SkillLevel.Expert, "−5/10/15 % costs in the town the hero is in (towns, Phase 3)"),
         new(Logistics, "pathfinding", "Logistics", SkillLevel.Master, "+10/20/30/40 % movement points"),
         new(Pathfinding, "pathfinding", "Pathfinding", SkillLevel.Expert, "−25/50/75 % of the non-native terrain penalty"),
@@ -155,12 +155,23 @@ public static class SkillEffects
 
     public static int TreasuryGold(SkillLevel level) => level switch
     {
-        SkillLevel.Basic => 100,
-        SkillLevel.Advanced => 200,
-        SkillLevel.Expert => 350,
-        SkillLevel.Master => 500,
+        SkillLevel.Basic => 250,
+        SkillLevel.Advanced => 500,
+        SkillLevel.Expert => 750,
+        SkillLevel.Master => 1000,
         _ => 0,
     };
+
+    /// <summary>Treasury Expert and Master also pay this share of the player's gold on hand, in tenths of a percent (0.5 %, 1 %).</summary>
+    public static int TreasuryInterestPermille(SkillLevel level) => level switch
+    {
+        SkillLevel.Expert => 5,
+        SkillLevel.Master => 10,
+        _ => 0,
+    };
+
+    /// <summary>Prospecting: chance in percent that a picked-up resource pile gives 50 % more.</summary>
+    public static int ProspectingPileChancePercent(SkillLevel level) => 10 * Math.Min(3, (int)level);
 
     public static Economy.ResourceSet Prospecting(SkillLevel level) => level switch
     {

@@ -205,7 +205,19 @@ public class HeroProgressionTests
         hero.Skills.Set(BuiltInSkills.Treasury, SkillLevel.Basic);
         hero.Skills.Set(BuiltInSkills.Prospecting, SkillLevel.Basic);
 
-        Assert.Equal(new ResourceSet(Gold: 450, Lumber: 1, Ore: 1), HeroIncome.Of(hero));
+        Assert.Equal(new ResourceSet(Gold: 600, Lumber: 1, Ore: 1), HeroIncome.Of(hero));
+    }
+
+    [Theory]
+    [InlineData(SkillLevel.Advanced, 0)]
+    [InlineData(SkillLevel.Expert, 50)]
+    [InlineData(SkillLevel.Master, 100)]
+    public void Treasury_ExpertAndMaster_PayAShareOfTheGoldOnHand(SkillLevel level, int expected)
+    {
+        var hero = Hero.Create(A, Blue, default, null, HeroCatalog.Default.Get("haven.maren"));
+        hero.Skills.Set(BuiltInSkills.Treasury, level);
+
+        Assert.Equal(new ResourceSet(Gold: expected), HeroIncome.TreasuryInterest(hero, 10_000));
     }
 
     [Fact]

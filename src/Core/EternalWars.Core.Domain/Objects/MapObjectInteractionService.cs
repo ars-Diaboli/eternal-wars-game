@@ -49,8 +49,10 @@ public sealed class MapObjectInteractionService(
         {
             case ResourcePile pile:
                 RemoveFromMap(pile);
-                economy.Grant(hero.Owner, ResourceSet.Of(pile.Resource, pile.Amount));
-                events.Publish(new ResourcePileCollected(hero.Id, pile.Id, pile.Resource, pile.Amount));
+                var chance = SkillEffects.ProspectingPileChancePercent(hero.SkillLevelOf(BuiltInSkills.Prospecting));
+                var amount = chance > 0 && state.Random.Next(100) < chance ? pile.Amount + (pile.Amount + 1) / 2 : pile.Amount;
+                economy.Grant(hero.Owner, ResourceSet.Of(pile.Resource, amount));
+                events.Publish(new ResourcePileCollected(hero.Id, pile.Id, pile.Resource, amount));
                 break;
 
             case Mine { Guard: not null } guarded:

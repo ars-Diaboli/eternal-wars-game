@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Events;
@@ -63,6 +64,27 @@ public class AdventureMovementTests
         Assert.Empty(session.State.Objects);
         Assert.Contains(new ResourcePileCollected(A, pile.Id, ResourceType.Lumber, 7), events);
         Assert.Contains(new MapObjectRemoved(pile.Id), events);
+    }
+
+    [Fact]
+    public void Prospecting_SometimesGivesHalfAgainFromAPile_AndNeverMore()
+    {
+        var amounts = new HashSet<int>();
+        for (var i = 1; i <= 40; i++)
+        {
+            var state = Create(new GameOptions(Seed: (ulong)i), "A..", "..B");
+            state.GetHero(A).Skills.Set(BuiltInSkills.Prospecting, SkillLevel.Expert);
+            var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Lumber), 2, 0);
+            var session = Start(state);
+            var events = new List<IEvent>();
+            session.Events.Subscribe<IEvent>(events.Add);
+
+            session.MoveTo(A, pile.VisitPosition);
+
+            amounts.Add(events.OfType<ResourcePileCollected>().Single().Amount);
+        }
+
+        Assert.Equal([7, 11], amounts.Order()); // 7 plus half rounded up; 30 % chance, 40 seeds
     }
 
     [Fact]

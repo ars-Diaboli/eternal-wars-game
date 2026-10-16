@@ -68,8 +68,11 @@ Morale and luck (−5…+5) are hero values too (ADR-053); no skill changes them
 
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
-| Treasury | `estates.treasury` | Master | +100 gold a day | +200 | +350 | +500 | ✅ |
+| Treasury | `estates.treasury` | Master | +250 gold a day | +500 | +750, and 0.5 % of the gold on hand | +1000, and 1 % | ✅ |
 | Prospecting | `estates.prospecting` | Expert | +1 lumber, +1 ore a day | +2 lumber, +2 ore | +2 lumber, +2 ore, +1 crystal, mercury and sulfur | – | ✅ |
+
+Prospecting also gives a **10 / 20 / 30 % chance** that a resource pile picked up gives **50 % more** (rounded up); the roll
+uses the game RNG. Treasury interest is paid on the gold the player holds at the start of the day, before income is added.
 | Stewardship | `estates.stewardship` | Expert | −5 % costs in the town the hero is in | −10 % | −15 % | – | ⏳ (towns exist; roadmap Phase 3) |
 
 ### Pathfinding (`pathfinding`)
