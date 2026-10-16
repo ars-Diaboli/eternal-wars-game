@@ -130,6 +130,11 @@ public static class MapValidator
             yield return $"has {building} level {level}, which does not exist.";
         }
 
+        if (TownRules.UnmetRequirement(scenario, town) is { } requirement)
+        {
+            yield return $"breaks a building requirement: {requirement}";
+        }
+
         var lines = TownRules.Lines(scenario, town);
         foreach (var (line, level) in town.Dwellings)
         {

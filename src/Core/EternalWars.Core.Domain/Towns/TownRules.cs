@@ -117,6 +117,32 @@ public static class TownRules
             .Where(b => state.Buildings.Contains(b.Key))
             .Aggregate(ResourceSet.Empty, (total, b) => total + state.Buildings.Get(b.Key, Math.Min(b.Value, state.Buildings.MaxLevel(b.Key))).Income);
 
+    /// <summary>
+    /// The first requirement a built level lacks (every level up to the built one counts), or null when the town is
+    /// consistent. Checks the town as it would be with <paramref name="building"/> at <paramref name="level"/>: the editor
+    /// asks before pre-building or removing something, the validator for whole maps.
+    /// </summary>
+    public static string? UnmetRequirement(GameState state, Town town, string? building = null, int level = 0)
+    {
+        int LevelOf(string id) => id == building ? level : Level(state, town, id);
+
+        var built = state.Buildings.TownBuildings.Select(b => (Building: b, Level: Math.Min(LevelOf(b), state.Buildings.MaxLevel(b))))
+            .Concat(Lines(state, town).Select(l => (Building: BuiltInBuildings.Dwelling(l.Tier), Level: town.DwellingLevel(l.Id))));
+        foreach (var (id, top) in built)
+        {
+            for (var l = 1; l <= top; l++)
+            {
+                var row = state.Buildings.Get(id, l);
+                if (row.Requires.FirstOrDefault(r => LevelOf(r.Building) < r.Level) is { } missing)
+                {
+                    return $"{row.Name} needs {state.Buildings.Get(missing.Building, missing.Level).Name}.";
+                }
+            }
+        }
+
+        return null;
+    }
+
     private static string? CheckLevel(GameState state, Town town, BuildingLevel level)
     {
         if (town.LastBuilt == state.Date)

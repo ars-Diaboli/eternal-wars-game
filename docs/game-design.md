@@ -112,7 +112,7 @@ out of scope, but the deterministic core keeps it possible.
   - **Towns** (implemented, ADR-046, ADR-050): 7×7 with the corners free, entered through the bottom-middle cell
     (`.BBBBB.`, five rows of `BBBBBBB`, `.BBVBB.`). Entering an enemy or neutral town fights its garrison, if any, and
     captures it; an own hero on the entrance is the town's visiting hero.
-  Planned: artifacts, map dwellings, shrines, boats/shipyards.
+  Planned: artifacts, map dwellings, shrines. No boats or shipyards: water is an obstacle (ADR-051).
 - **Meeting heroes**: moving onto a tile with another hero is an interaction, like visiting an
   object, so routes may **end** on that hero's tile (never pass through it):
 
@@ -176,7 +176,8 @@ out of scope, but the deterministic core keeps it possible.
 ### 4.3 Towns and economy
 - **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (implemented as `ResourceSet`).
 - One building per town per day (implemented, ADR-050); the building list is one table, `data/buildings.csv`, shared
-  by all towns for now. New towns start with town hall 1 and fort 1.
+  by all towns for now. New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the
+  requirements. The town screen is 2D in the first iteration, in the 3D game too (ADR-050).
 - **Town turn** (implemented, HoMM3-style): at any time on the owner's turn, build, recruit into the garrison or the
   visiting hero, upgrade stacks for the price difference, and move stacks between garrison and visiting hero.
 - **Creature tech tree** (accepted; details ❓ below):
@@ -412,7 +413,7 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
     generated symmetrically (point or axis symmetry) for fairness.
   - **Saving generated maps**: a generated map can be saved as an ordinary map file, as well as
     reproduced from its seed.
-- **Not in 1.0**: water zones/islands/boats in templates, and importing HotA templates.
+- **Not in 1.0**: water zones/islands in templates, and importing HotA templates. No boats at all (ADR-051).
 - Open ❓: how army speed and native-terrain rules feed into treasure/guard values.
 
 ## 5. Presentation

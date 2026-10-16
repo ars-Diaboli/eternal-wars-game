@@ -39,9 +39,9 @@ public static class BuiltInBuildings
     /// <summary>Name of the embedded building table in this assembly.</summary>
     public const string ResourceName = "EternalWars.Buildings.csv";
 
-    /// <summary>What a newly placed town has built (user decision): town hall 1 and fort 1.</summary>
+    /// <summary>What a newly placed town has built (user decision): town hall 1, fort 1 and the tavern the fort needs.</summary>
     public static IReadOnlyDictionary<string, int> DefaultStart { get; } =
-        new Dictionary<string, int>(StringComparer.Ordinal) { [TownHall] = 1, [Fort] = 1 };
+        new Dictionary<string, int>(StringComparer.Ordinal) { [TownHall] = 1, [Fort] = 1, [Tavern] = 1 };
 
     /// <summary>The building whose levels price the dwellings of a tier.</summary>
     public static string Dwelling(int tier) => $"dwelling-{tier.ToString(CultureInfo.InvariantCulture)}";

@@ -70,7 +70,7 @@ public class TownTests
         var before = blue.Resources;
         session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.Blacksmith)).ThrowIfRejected();
         Assert.Equal(before - new ResourceSet(Gold: 1000, Lumber: 5, Ore: 5), blue.Resources);
-        Assert.Contains("already built", session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.Tavern)).Error);
+        Assert.Contains("already built", session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.Fort)).Error);
 
         NextDay(session);
         session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.Marketplace)).ThrowIfRejected();
@@ -83,7 +83,7 @@ public class TownTests
         Assert.Equal(new ResourceSet(Gold: 1000), session.Economy.DailyIncome(Blue));
         Assert.Equal(new TownBuilt(town.Id, BuiltInBuildings.TownHall, 2), built[^1]);
         Assert.Equal(4, built.Count);
-        Assert.False(session.Execute(new BuildCommand(Red, town.Id, BuiltInBuildings.Tavern)).IsAccepted); // not Red's
+        Assert.False(session.Execute(new BuildCommand(Red, town.Id, BuiltInBuildings.Fort)).IsAccepted); // not Red's
     }
 
     [Fact]
@@ -91,10 +91,10 @@ public class TownTests
     {
         var (session, town) = Setup(ResourceSet.Empty);
 
-        var refused = session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.Tavern));
+        var refused = session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.Blacksmith));
 
         Assert.Contains("Not enough", refused.Error);
-        Assert.Equal(0, town.Level(BuiltInBuildings.Tavern));
+        Assert.Equal(0, town.Level(BuiltInBuildings.Blacksmith));
     }
 
     [Fact]
@@ -276,7 +276,7 @@ public class TownTests
         var state = Create(Rows);
         var town = AddTown(state, TownIds.Inferno, 0, 0, Red);
         town.Name = "Ashgate";
-        town.SetLevel(BuiltInBuildings.Tavern, 1);
+        town.SetLevel(BuiltInBuildings.Blacksmith, 1);
         town.SetDwelling("inferno.imp", 2);
         town.SetAvailable("inferno.imp", 7);
         town.Garrison.Set(4, new CreatureStack("inferno.familiar", 12));
@@ -313,6 +313,13 @@ public class TownTests
         Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.MageGuild, 2));
         Assert.Equal(EditResult.InvalidValue, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 2));
         Assert.Equal(EditResult.InvalidTarget, editor.SetTownBuilding(id, "dwelling-1", 1));
+        Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.TownHall, 2)); // no blacksmith, marketplace
+        Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 0)); // the fort needs it
+        Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.Fort, 0));
+        Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 0));
+        Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.Fort, 3));
+        Assert.True(editor.Undo());
+        Assert.True(editor.Undo());
         foreach (var line in new[] { BuiltInCreatures.Footman, BuiltInCreatures.Pikeman, BuiltInCreatures.Zealot, BuiltInCreatures.Archer, BuiltInCreatures.Monk })
         {
             Assert.Equal(EditResult.Ok, editor.SetTownDwelling(id, line, 1));
@@ -331,6 +338,18 @@ public class TownTests
         Assert.Equal(0, town.DwellingLevel(BuiltInCreatures.Lancer));
         Assert.True(town.Garrison.IsEmpty);
         Assert.Equal((Red, 2), (town.Owner!.Value, town.Level(BuiltInBuildings.MageGuild)));
+    }
+
+    [Fact]
+    public void Validator_FlagsTownsThatBreakABuildingRequirement()
+    {
+        var scenario = Create(Rows);
+        var town = AddTown(scenario, TownIds.Haven, 0, 0, Blue);
+        Assert.DoesNotContain(MapValidator.Validate(scenario), i => i.Severity == IssueSeverity.Error);
+
+        town.SetLevel(BuiltInBuildings.Tavern, 0);
+
+        Assert.Contains(MapValidator.Validate(scenario), i => i.Severity == IssueSeverity.Error && i.Message.Contains("Tavern", StringComparison.Ordinal));
     }
 
     [Fact]

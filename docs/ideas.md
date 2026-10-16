@@ -6,9 +6,7 @@ still to decide:
 - offense group: third skill (placeholder `offense.third`)
 - defense group: third skill (placeholder `defense.third`)
 
-Roster notes and spell resistance: moved to ADR-049 (2026-10-16).
-
-skip navigation skills and sea travel. use waterbodies just as obstacles
+Roster notes and spell resistance: moved to ADR-049 (2026-10-16). No sea travel: ADR-051.
 
 mechanics for morale 
 calculated at the begining of every combat round

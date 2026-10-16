@@ -466,7 +466,7 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   | 150 | dirt (none), rough (Stronghold), wasteland (Stronghold), lava (Inferno), rocky ground (Dragon Utopia) |
   | 175 | ice (Academy), shallow water (Swamp Bestiary) |
   | 200 | snow (Academy), swamp (Swamp Bestiary) |
-  | impassable | water (deep; boats later), rock (cliffs, borders) |
+  | impassable | water (deep; no boats, ADR-051), rock (cliffs, borders) |
 - **A town may be native to several terrains** (`TerrainDefinition.NativeTowns`); the whole army must be native
   (ADR-032 stands). Changes against ADR-032: Necropolis moves from wasteland to **cursed lands**, Stronghold from sand
   to **rough + wasteland**; sand becomes a neutral desert.
@@ -581,9 +581,10 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 - **Towns are map objects** (`MapObjectKind.Town`, `town.<type>` for the eight playable towns) with the ADR-046
   footprint (44 blocked cells and the entrance). Per instance: owner, name, building levels, dwelling levels,
   creatures waiting per line, the garrison (seven slots) and the day of the last build.
-- **New towns start with town hall 1 and fort 1** (user decision), also when a map omits the buildings. Map authors
-  may pre-build anything in the editor without requirements (fort 1 requires the tavern in the table); requirements
-  apply to what is built in play. Pre-built dwellings follow the 7-of-9 rule.
+- **New towns start with town hall 1, fort 1 and tavern 1** (user decision; the fort requires the tavern), also when a
+  map omits the buildings. Pre-built buildings keep the requirements as in play (user decision): the editor refuses a
+  level whose requirements are missing and the removal of a building something built requires, and the validator flags
+  maps that break them. Pre-built dwellings follow the 7-of-9 rule.
 - **Town turn, HoMM3-style** (user decision): on the owner's turn, with no decision pending, the owner may at any time
   build (one building per town per day, requirements and cost checked), build or upgrade a dwelling (7 of 9, a refused
   build would leave a tier unreachable, ADR-030), recruit, upgrade whole stacks for the price difference, and move
@@ -602,5 +603,13 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   be entered but not managed. Owned towns watch a radius of 5 like heroes (mines: 2).
 - **Map format v6** adds `town` objects; older maps load unchanged.
 - **UI**: the 2D harness has a basic town panel (`TownPanel`; `--scenario=towns` loads `TownsScenario`), the editor
-  inspector edits towns, and the 3D game shows towns with flag and name. The 3D town screen comes later.
+  inspector edits towns, and the 3D game shows towns with flag and name. **The town screen is 2D in the first
+  iteration** (user decision), also in the 3D game: a full-screen 2D panel over the map; a 3D town scene may come later.
 - **Not yet**: effects of fort, blacksmith, marketplace trading, mage guild and tavern; town sieges; AI town play.
+
+### ADR-051: No sea travel
+**Status**: accepted (2026-10-16), from docs/ideas.md (user decision)
+- Water bodies are **obstacles only**: deep water stays impassable, and there are no boats, shipyards, sea travel or
+  navigation skills (no Navigation-like skill in any group). Shallow water stays walkable terrain (ADR-045).
+- Replaces "boats later" (ADR-045) and the planned boats/shipyards map objects. Random maps already left out water
+  zones and islands for 1.0 (ADR-034).
