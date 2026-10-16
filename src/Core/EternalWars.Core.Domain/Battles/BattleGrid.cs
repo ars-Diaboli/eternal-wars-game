@@ -77,7 +77,7 @@ public static class BattleGrid
     /// (then top-to-bottom, left-to-right, so the order is deterministic).
     /// </summary>
     public static IReadOnlyList<CellPosition> AttackPositions(BattleState battle, BattleUnit unit, BattleUnit target) =>
-        Reachable(battle, unit)
+        unit.IsMachine ? [] : Reachable(battle, unit)
             .Where(r => new CellRect(r.Key, unit.Size).IsAdjacentTo(target.Rect))
             .OrderBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
             .Select(r => r.Key)

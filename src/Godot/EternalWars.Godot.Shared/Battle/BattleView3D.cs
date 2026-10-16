@@ -112,6 +112,7 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitAttacked>(events, OnAttacked);
         this.SubscribeWhileInTree<BattleUnitDied>(events, OnDied);
         this.SubscribeWhileInTree<BattleMoraleTriggered>(events, OnMorale);
+        this.SubscribeWhileInTree<BattleUnitHealed>(events, OnHealed);
         this.SubscribeWhileInTree<BattleUnitWaited>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} waits.")));
         this.SubscribeWhileInTree<BattleUnitDefended>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} defends.")));
         this.SubscribeWhileInTree<BattleEnded>(events, e => Step(null, () =>
@@ -224,7 +225,7 @@ public partial class BattleView3D : Node3D
         foreach (var info in e.Units)
         {
             var view = new BattleUnitView();
-            view.Bind(info.Unit, info.Side, state.Creatures.Get(info.Creature), info.Count, info.Size, SideColor(info.Side));
+            view.Bind(info.Unit, info.Side, battle.GetUnit(info.Unit).Creature, info.Count, info.Size, SideColor(info.Side), info.Machine);
             var rect = new CellRect(info.Position, info.Size);
             view.Position = BattleSpace.Center(rect);
             _field.AddChild(view);
@@ -313,6 +314,28 @@ public partial class BattleView3D : Node3D
                 target.SetCount(e.RemainingCount);
                 Narrate(line);
             });
+    }
+
+    /// <summary>The healing tent: a green number over the healed stack and a log line.</summary>
+    private void OnHealed(BattleUnitHealed e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var view))
+        {
+            return;
+        }
+
+        var at = BattleSpace.Center(_planned[e.Unit]) + (Vector3.Up * ((view.BodyHeight * 2) + 0.4f));
+        Step(
+            t =>
+            {
+                var text = FloatingText($"+{e.Healed}", at);
+                text.Modulate = new Color(0.45f, 1f, 0.45f);
+                t.TweenCallback(Callable.From(() => text.Visible = true));
+                t.TweenProperty(text, "position", at + (Vector3.Up * 0.4f), 0.3f);
+                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.3f).SetDelay(0.1f);
+                t.TweenCallback(Callable.From(text.QueueFree));
+            },
+            () => Narrate($"The healing tent restores {e.Healed} health to {view.Creature.Name}."));
     }
 
     /// <summary>Morale shows as a caption over the unit and a log line.</summary>

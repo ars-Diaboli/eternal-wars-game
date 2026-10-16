@@ -1,5 +1,6 @@
 using System.Text;
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
@@ -32,7 +33,8 @@ public static class MapConverter
                     h.Morale == 0 ? null : h.Morale,
                     h.Luck == 0 ? null : h.Luck,
                     h.SpellPower == 0 ? null : h.SpellPower,
-                    h.Knowledge == 0 ? null : h.Knowledge))
+                    h.Knowledge == 0 ? null : h.Knowledge,
+                    h.WarMachines.SetEquals(WarMachines.StartingSet) ? null : h.WarMachines.Order().ToList()))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
         };
@@ -120,7 +122,7 @@ public static class MapConverter
         {
             return Hero.Create(
                 new HeroId(h.Id), new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level), ToArmy(h, creatures),
-                h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge);
+                h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge, h.WarMachines);
         }
         catch (Exception e) when (e is KeyNotFoundException or ArgumentOutOfRangeException or InvalidOperationException)
         {

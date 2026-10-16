@@ -12,7 +12,16 @@ public sealed record HeroMovementRestored(HeroId Hero, int MovementPoints) : IEv
 
 public sealed record HeroExperienceGained(HeroId Hero, int Amount, int Total) : IEvent;
 
-/// <summary>A hero reached a level and raised <paramref name="Skill"/> to <paramref name="SkillLevel"/> (null: nothing left to learn).</summary>
+/// <summary>A war machine of the hero was destroyed in battle (ADR-056).</summary>
+public sealed record WarMachineLost(HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
+
+/// <summary>A hero bought a war machine at a town's blacksmith (ADR-056).</summary>
+public sealed record WarMachineBought(MapObjectId Town, HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
+
+/// <summary>
+/// A hero reached a level, raised <paramref name="Skill"/> to <paramref name="SkillLevel"/> (null: nothing left to learn)
+/// and <paramref name="Stat"/> to <paramref name="StatValue"/>.
+/// </summary>
 public sealed record HeroLeveledUp(HeroId Hero, int Level, string? Skill, Heroes.SkillLevel SkillLevel, Heroes.PrimaryStat Stat, int StatValue) : IEvent;
 
 /// <summary>A hero stepped towards another hero of the same owner; an exchange decision follows.</summary>

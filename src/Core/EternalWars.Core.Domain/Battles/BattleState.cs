@@ -6,8 +6,9 @@ namespace EternalWars.Core.Domain.Battles;
 /// <summary>A creature stack on the battlefield. Only the top creature carries damage (<see cref="TopHealth"/>).</summary>
 public sealed class BattleUnit
 {
-    internal BattleUnit(int id, BattleSide side, CreatureDefinition creature, int count, int sourceSlot, CellPosition position)
+    internal BattleUnit(int id, BattleSide side, CreatureDefinition creature, int count, int sourceSlot, CellPosition position, WarMachineKind? machine = null)
     {
+        Machine = machine;
         Id = id;
         Side = side;
         Creature = creature;
@@ -21,6 +22,11 @@ public sealed class BattleUnit
     }
 
     public int Id { get; }
+
+    /// <summary>The war machine this unit is (ADR-056); null for creature stacks.</summary>
+    public WarMachineKind? Machine { get; }
+
+    public bool IsMachine => Machine is not null;
 
     public BattleSide Side { get; }
 
@@ -168,12 +174,28 @@ public sealed class BattleState
     /// <summary>Battlefield speed: the creature's, plus the hero's Drill and the preferred-creature bonus (ADR-048).</summary>
     public int SpeedOf(BattleUnit unit)
     {
+        if (unit.IsMachine)
+        {
+            return 0; // war machines never move
+        }
+
         var bonus = Participant(unit.Side).Bonus;
         return unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0);
     }
 
-    /// <summary>Creature morale plus the hero's, within ±5 (ADR-053).</summary>
-    public int MoraleOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale);
+    /// <summary>Creature morale plus the hero's, within ±5 (ADR-053); war machines have none.</summary>
+    public int MoraleOf(BattleUnit unit) => unit.IsMachine ? 0 : MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale);
+
+    /// <summary>Living creature stacks of a side; war machines do not keep a side in the battle (ADR-056).</summary>
+    public IEnumerable<BattleUnit> LivingArmyOf(BattleSide side) => LivingUnitsOf(side).Where(u => !u.IsMachine);
+
+    /// <summary>The side's living war machine of that kind, if any.</summary>
+    public BattleUnit? LivingMachine(BattleSide side, WarMachineKind kind) => LivingUnitsOf(side).FirstOrDefault(u => u.Machine == kind);
+
+    /// <summary>A unit's shots do not run out: an offensive machine, or a shooter whose side's cart gives unlimited shots.</summary>
+    public bool HasUnlimitedShots(BattleUnit unit) =>
+        unit.IsMachine ||
+        (WarMachines.CartShotBonusPercent(Participant(unit.Side).Bonus.AmmoSupply) is null && LivingMachine(unit.Side, WarMachineKind.AmmoCart) is not null);
 
     /// <summary>Creature luck plus the hero's, within ±5 (ADR-053).</summary>
     public int LuckOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Luck + Participant(unit.Side).Bonus.Luck);

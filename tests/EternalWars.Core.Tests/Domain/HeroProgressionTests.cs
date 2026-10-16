@@ -29,7 +29,7 @@ public class HeroProgressionTests
             Assert.Equal(SkillGroup.Points, skills.Sum(s => (int)s.MaxLevel));
         });
         Assert.Equal(8, BuiltInSkills.Groups.Count(g => g.IsMagic));
-        Assert.Equal(13, BuiltInSkills.Groups.Count);
+        Assert.Equal(14, BuiltInSkills.Groups.Count);
     }
 
     [Fact]

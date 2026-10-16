@@ -7,7 +7,8 @@ namespace EternalWars.Godot.Shared.Battle;
 /// <summary>
 /// Placeholder creature stack on the battlefield: a base plate in the side's colour covering the footprint, a body
 /// whose shape tells the role (walkers are capsules, shooters cylinders, flyers hovering spheres) and whose colour comes
-/// from the creature id, a nose pointing at the enemy side, the stack count and an active-unit ring.
+/// from the creature id, a nose pointing at the enemy side, the stack count and an active-unit ring. War machines are
+/// a wooden box: with a barrel for offensive machines, a pale roof for the tent, wheels for the cart.
 /// <see cref="BattleView3D"/> moves and animates it; the view never reads the core state itself.
 /// </summary>
 public partial class BattleUnitView : Node3D
@@ -32,8 +33,11 @@ public partial class BattleUnitView : Node3D
 
     public Color BaseColor { get; private set; }
 
-    public void Bind(int unit, BattleSide side, CreatureDefinition creature, int count, int size, Color sideColor)
+    public WarMachineKind? Machine { get; private set; }
+
+    public void Bind(int unit, BattleSide side, CreatureDefinition creature, int count, int size, Color sideColor, WarMachineKind? machine = null)
     {
+        Machine = machine;
         Unit = unit;
         Side = side;
         Creature = creature;
@@ -53,10 +57,12 @@ public partial class BattleUnitView : Node3D
             Position = new Vector3(0, 0.02f, 0),
         });
 
-        BaseColor = ColorOf(creature.Id);
+        BaseColor = machine is null ? ColorOf(creature.Id) : new Color(0.50f, 0.36f, 0.22f);
         _bodyMaterial = new StandardMaterial3D { AlbedoColor = BaseColor, Roughness = 0.8f };
         var scale = extent / (2 * BattleSpace.CellSize); // 1 for small, 1.5 medium, 2 large
-        var (mesh, height) = creature switch
+        var (mesh, height) = machine is not null
+            ? ((PrimitiveMesh)new BoxMesh { Size = new Vector3(0.7f, 0.4f, 0.55f) * scale }, 0.2f * scale)
+            : creature switch
         {
             { IsFlying: true } => ((PrimitiveMesh)new SphereMesh { Radius = 0.28f * scale, Height = 0.56f * scale }, 0.75f * scale),
             { IsRanged: true } => (new CylinderMesh { TopRadius = 0.16f * scale, BottomRadius = 0.24f * scale, Height = 0.8f * scale }, 0.4f * scale),
@@ -69,6 +75,11 @@ public partial class BattleUnitView : Node3D
 
         // A nose towards the enemy: attackers face +X, defenders −X.
         var facing = side == BattleSide.Attacker ? 1 : -1;
+        if (machine is { } kind)
+        {
+            Body.AddChild(MachinePart(kind, scale, facing, height));
+        }
+
         Body.AddChild(new MeshInstance3D
         {
             Mesh = new BoxMesh { Size = new Vector3(0.18f, 0.08f, 0.08f) * scale, Material = new StandardMaterial3D { AlbedoColor = sideColor } },
@@ -104,6 +115,28 @@ public partial class BattleUnitView : Node3D
 
     /// <summary>The body material, for hit flashes.</summary>
     public StandardMaterial3D BodyMaterial => _bodyMaterial;
+
+    /// <summary>Barrel (offensive machines), roof (tent) or wheels (cart) on top of the machine's box.</summary>
+    private static MeshInstance3D MachinePart(WarMachineKind kind, float scale, int facing, float height) => kind switch
+    {
+        WarMachineKind.HealingTent => new MeshInstance3D
+        {
+            Mesh = new PrismMesh { Size = new Vector3(0.75f, 0.45f, 0.6f) * scale, Material = new StandardMaterial3D { AlbedoColor = new Color(0.9f, 0.88f, 0.8f) } },
+            Position = new Vector3(0, (height * 2) + (0.22f * scale), 0),
+        },
+        WarMachineKind.AmmoCart => new MeshInstance3D
+        {
+            Mesh = new CylinderMesh { TopRadius = 0.16f * scale, BottomRadius = 0.16f * scale, Height = 0.66f * scale, Material = new StandardMaterial3D { AlbedoColor = new Color(0.2f, 0.16f, 0.12f) } },
+            Position = new Vector3(0, 0.16f * scale, 0),
+            RotationDegrees = new Vector3(90, 0, 0),
+        },
+        _ => new MeshInstance3D
+        {
+            Mesh = new CylinderMesh { TopRadius = 0.07f * scale, BottomRadius = 0.1f * scale, Height = 0.8f * scale, Material = new StandardMaterial3D { AlbedoColor = new Color(0.25f, 0.25f, 0.28f), Metallic = 0.6f } },
+            Position = new Vector3(facing * 0.3f * scale, (height * 2) + (0.1f * scale), 0),
+            RotationDegrees = new Vector3(0, 0, -facing * 75),
+        },
+    };
 
     /// <summary>A stable, fairly saturated colour per creature id, so different creatures are told apart.</summary>
     private static Color ColorOf(string id)

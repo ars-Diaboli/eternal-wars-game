@@ -163,8 +163,24 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         new(side, hero.Owner, hero.Id, null, hero.Attack, hero.Defense, hero.Tactics, !state.GetPlayer(hero.Owner).IsHuman,
             HeroBattleBonuses.For(hero, state.Creatures));
 
-    private List<BattleStackSpec> Stacks(Hero hero) =>
-        hero.Army.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
+    /// <summary>
+    /// The hero's army and war machines (ADR-056): tent and cart when owned, the offensive machine only from Advanced
+    /// Ballistics (outside sieges, which do not exist yet).
+    /// </summary>
+    private List<BattleStackSpec> Stacks(Hero hero)
+    {
+        var stacks = hero.Army.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
+        var town = ProgressionService.TownOf(state, hero);
+        foreach (var slot in hero.WarMachines.Order())
+        {
+            if (slot != WarMachineSlot.Offensive || WarMachines.FieldsOffensive(hero.Skills.Level(BuiltInSkills.Ballistics)))
+            {
+                stacks.Add(BattleStackSpec.Of(WarMachines.KindOf(slot, town)));
+            }
+        }
+
+        return stacks;
+    }
 
     private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush) =>
         new(attacker, defender, state.Map.GetTerrain(location), location, isAmbush, state.Random.Fork());
@@ -210,7 +226,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
             battle.Width,
             BattleState.Height,
             battle.IsAmbush,
-            battle.Units.Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Size)).ToList(),
+            battle.Units.Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Size, u.Machine)).ToList(),
             battle.Obstacles.ToList()));
         Engine(battle).StartFighting();
         Continue(battle);
@@ -294,6 +310,16 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
 
     private void ApplySurvivors(BattleState battle, BattleSide side, Hero hero)
     {
+        // Destroyed war machines are lost; the blacksmith sells new ones (ADR-056).
+        foreach (var machine in battle.Units.Where(u => u.Side == side && u.Machine is not null && !u.IsAlive))
+        {
+            var slot = WarMachines.SlotOf(machine.Machine!.Value);
+            if (hero.RemoveWarMachine(slot))
+            {
+                events.Publish(new WarMachineLost(hero.Id, slot));
+            }
+        }
+
         foreach (var (slot, stack) in hero.Army.Stacks.ToList())
         {
             var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.Count);

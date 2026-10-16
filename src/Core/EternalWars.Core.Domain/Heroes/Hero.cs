@@ -56,6 +56,16 @@ public sealed class Hero(
         _ => Knowledge,
     };
 
+    internal bool AddWarMachine(Battles.WarMachineSlot slot) => _warMachines.Add(slot);
+
+    internal bool RemoveWarMachine(Battles.WarMachineSlot slot) => _warMachines.Remove(slot);
+
+    internal void SetWarMachines(IEnumerable<Battles.WarMachineSlot> slots)
+    {
+        _warMachines.Clear();
+        _warMachines.UnionWith(slots);
+    }
+
     internal void Raise(PrimaryStat stat)
     {
         switch (stat)
@@ -72,6 +82,11 @@ public sealed class Hero(
 
     /// <summary>Added to the luck of every stack in battle, −5…+5 (ADR-053).</summary>
     public int Luck { get; internal set; }
+
+    private readonly HashSet<Battles.WarMachineSlot> _warMachines = [.. Battles.WarMachines.StartingSet];
+
+    /// <summary>War machines the hero owns (ADR-056); a new hero has its town's offensive machine.</summary>
+    public IReadOnlySet<Battles.WarMachineSlot> WarMachines => _warMachines;
 
     /// <summary>Skill levels by skill id (ADR-048).</summary>
     public HeroSkills Skills { get; } = HeroSkillsWith(tactics);
@@ -123,7 +138,8 @@ public sealed class Hero(
     public static Hero Create(
         HeroId id, PlayerId owner, MapPosition position, Army? army, HeroDefinition? definition,
         string? name = null, int? attack = null, int? defense = null, IReadOnlyDictionary<string, SkillLevel>? skills = null,
-        int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null)
+        int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null,
+        IEnumerable<Battles.WarMachineSlot>? warMachines = null)
     {
         if (spellPower < 0 || knowledge < 0)
         {
@@ -146,6 +162,11 @@ public sealed class Hero(
         hero.Defense = defense ?? hero.Defense;
         hero.SpellPower = spellPower ?? hero.SpellPower;
         hero.Knowledge = knowledge ?? hero.Knowledge;
+        if (warMachines is not null)
+        {
+            hero.SetWarMachines(warMachines);
+        }
+
         hero.Morale = morale;
         hero.Luck = luck;
         if (skills is not null)

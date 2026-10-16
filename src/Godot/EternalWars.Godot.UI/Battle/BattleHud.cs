@@ -113,7 +113,14 @@ public partial class BattleHud : Control
         }
 
         var c = unit.Creature;
-        var shots = c.IsRanged ? $"  shots {unit.ShotsLeft}" : string.Empty;
+        var shots = !c.IsRanged ? string.Empty : battle.HasUnlimitedShots(unit) ? "  shots unlimited" : $"  shots {unit.ShotsLeft}";
+        if (unit.IsMachine)
+        {
+            _info.Text = $"{c.Name} ({_view.SideName(unit.Side)}): war machine, health {unit.TopHealth}/{c.Health}" +
+                         (c.IsRanged ? $"\nAttack {c.Attack}  Damage {c.MinDamage}–{c.MaxDamage}  Initiative {battle.InitiativeOf(unit)}{shots}" : string.Empty);
+            return;
+        }
+
         var capabilities = c.Capabilities.Count > 0 ? $"\n{string.Join(", ", c.Capabilities.Select(k => k.Kind))}" : string.Empty;
         _info.Text = $"{c.Name} ×{unit.Count} ({_view.SideName(unit.Side)})\n" +
                      $"Attack {c.Attack}  Defense {c.Defense}  Damage {c.MinDamage}–{c.MaxDamage}  Health {unit.TopHealth}/{c.Health}\n" +
@@ -182,6 +189,9 @@ public partial class BattleHud : Control
         ShowUnit(null);
     }
 
+    private string CreatureName(string id) =>
+        _session.State.Creatures.TryGet(id, out var creature) || WarMachines.TryGet(id, out creature) ? creature.Name : id;
+
     private PanelContainer Entry(BattleUnit unit, bool waiting, bool active)
     {
         var style = new StyleBoxFlat
@@ -213,7 +223,7 @@ public partial class BattleHud : Control
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
             var lost = ended.Casualties.Where(c => c.Side == side)
-                .Select(c => $"{c.Lost} {(_session.State.Creatures.TryGet(c.Creature, out var creature) ? creature.Name : c.Creature)}")
+                .Select(c => $"{c.Lost} {CreatureName(c.Creature)}")
                 .ToList();
             lines.Add($"{_view.SideName(side)} lost: {(lost.Count > 0 ? string.Join(", ", lost) : "nothing")}");
         }

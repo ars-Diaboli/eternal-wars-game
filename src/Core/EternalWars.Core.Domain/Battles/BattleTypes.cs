@@ -131,10 +131,13 @@ public sealed record BattleParticipant(
 
 /// <summary>
 /// What a hero adds to its side in battle (ADR-048): skill percentages (Melee, Archery, Armor), Drill speed, and the flat
-/// bonus of its preferred creature line (<see cref="Heroes.SkillEffects"/>), and its morale and luck (ADR-053).
+/// bonus of its preferred creature line (<see cref="Heroes.SkillEffects"/>), its morale and luck (ADR-053), and its war
+/// machine skills (ADR-056).
 /// </summary>
 public sealed record HeroBattleBonuses(
-    int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred, int Morale = 0, int Luck = 0)
+    int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred, int Morale = 0, int Luck = 0,
+    Heroes.SkillLevel Ballistics = Heroes.SkillLevel.None, Heroes.SkillLevel Healing = Heroes.SkillLevel.None,
+    Heroes.SkillLevel AmmoSupply = Heroes.SkillLevel.None)
 {
     public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<string>());
 
@@ -160,7 +163,10 @@ public sealed record HeroBattleBonuses(
             Heroes.SkillEffects.BattleSpeedBonus(skills.Level(Heroes.BuiltInSkills.Drill)),
             preferred,
             hero.Morale,
-            hero.Luck);
+            hero.Luck,
+            skills.Level(Heroes.BuiltInSkills.Ballistics),
+            skills.Level(Heroes.BuiltInSkills.Healing),
+            skills.Level(Heroes.BuiltInSkills.AmmoSupply));
     }
 }
 

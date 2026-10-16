@@ -437,7 +437,7 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   and Grim Raiders shoot, as in both sandbox copies; the sandbox's copy-paste flags (flying Cyclops and Behemoth,
   shots on Djinn and Naga, Pegasus without flying, Skeleton named "Devil") are not kept. Lore neutrals the
   sandbox had outside its live roster are in: Timber/Dire Wolf, Specter/Banshee, Thane, Gog/Magog, Breeder/Fel
-  Breeder. The Ballista and Flamethrower wait for war machines.
+  Breeder. The sandbox's Ballista and Flamethrower became war machines (ADR-056).
 - **One table, no stats in code.** Every creature is one row of `src/Godot/EternalWars.Godot.Assets/data/creatures.csv`
   (`CreatureTable`: header-named columns in any order, comma/semicolon/tab, list cells with `;`, a free `notes`
   column). Core embeds the file as `CreatureCatalog.Default` (tests, simulator, default `GameState`);
@@ -501,7 +501,7 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   |---|---|---|---|
   | Town hall | 2500/5/5, 5000/10/10, 10000/20/20 | L2: blacksmith, marketplace, mage guild; L3: fort L2 | 500 / 1000 / 2000 gold a day |
   | Fort | 1500/5/5, 3000/10/10, 6000/15/15 | L1: tavern | defence, growth bonus ❓ |
-  | Blacksmith | 1000/5/5 | – | war machines ❓ |
+  | Blacksmith | 1000/5/5 | – | sells war machines (ADR-056) |
   | Marketplace | 1250/5 lumber, 2500/5/5 | – | L2: +1 ore and +1 lumber a day; trading ❓ |
   | Mage guild | L1 2000 + 5 lumber + 2 mercury, L2 3500 + 3 crystal + 3 mercury, L3 5000 + 5 crystal + 5 sulfur, L4 ❓ | – | spells of that level (ADR-047) |
   | Tavern | 750/5 lumber | – | hire heroes |
@@ -606,7 +606,8 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 - **UI**: the 2D harness has a basic town panel (`TownPanel`; `--scenario=towns` loads `TownsScenario`), the editor
   inspector edits towns, and the 3D game shows towns with flag and name. **The town screen is 2D in the first
   iteration** (user decision), also in the 3D game: a full-screen 2D panel over the map; a 3D town scene may come later.
-- **Not yet**: effects of fort, blacksmith, marketplace trading, mage guild and tavern; town sieges; AI town play.
+- **Not yet**: effects of fort, marketplace trading, mage guild and tavern (the blacksmith sells war machines,
+  ADR-056); town sieges; AI town play.
 
 ### ADR-051: No sea travel
 **Status**: accepted (2026-10-16), from docs/ideas.md (user decision)
@@ -701,3 +702,34 @@ starting values are a draft
   warriors keep their 2/1 or 1/2 Attack/Defense and get 1/1, mages get 3/2 (with 0/0) or 2/2 (with 0/1).
 - Map format **v8**: map heroes may set `spellPower` and `knowledge` (omitted = 0 for custom heroes, the roster's values
   for roster heroes); the editor inspector edits them. The state digest includes all four stats.
+
+### ADR-056: War machines
+**Status**: accepted (2026-10-16), from docs/ideas.md and user decisions; numbers are a draft
+- **Three per hero**: the town's **offensive machine**, a **healing tent** and an **ammo cart** (`Hero.WarMachines`,
+  `WarMachineSlot`). Every hero starts with its offensive machine; the tent and cart are bought at a **blacksmith**
+  (`BuyWarMachineCommand`, the visiting hero, HoMM3 prices: offensive 2500, tent 750, cart 1000 gold), which also
+  replaces a lost offensive machine. A hero gets its own town's offensive machine wherever it buys it.
+- **Offensive machine by town**, paired by theme (user decision): ballista (Haven, Necropolis), cannon (Academy,
+  Inferno), catapult (Stronghold, Swamp Bestiary), glaivethrower (Sylvan, Dungeon, shoots twice). Custom heroes without
+  a town use the ballista. Stats are code (`WarMachines`), not the creature table, so machines never appear as
+  guards or recruits.
+- **War machines skill group** (`machines`, 4 + 4 + 2 = 10 points, user decision):
+  - **Ballistics** (4 levels, the group's main skill): the offensive machine fights only in **sieges** until **Advanced**
+    Ballistics, then in **regular battles** too (user decision); Expert +25 %, Master +50 % its damage. Sieges do not
+    exist yet, so Basic Ballistics has no effect for now.
+  - **Healing** (4 levels): the tent restores 10 health (no skill) + 10 per level to the top creature of **every own
+    stack** at the start of each round, never above its maximum and without reviving anyone (user decision: simpler).
+  - **Ammo supply** (2 levels): the cart gives every own shooter **+25 %** shots at battle start without the skill,
+    **+50 %** with Basic, and **unlimited** shots with Advanced while the cart stands (user decision: simpler; the
+    +25 % without the skill is our draft).
+- **Units on the field** (user decision): machines deploy in a column of their own at their side's back edge (tent at
+  the top, offensive machine in the middle, cart at the bottom), the army in front of them. They never move, never
+  fight in melee, never retaliate and have no morale; enemies can attack and destroy them. Only the offensive machine
+  takes turns (by initiative, commanded like any unit; it has unlimited shots and no long-range penalty); the tent
+  and the cart work passively. A side whose creatures are all gone has lost, machines or not. **Destroyed machines are
+  lost** (`WarMachineLost`); the hero buys new ones.
+- Map format **v9**: heroes may list `warMachines` (omitted = the offensive machine only); the editor inspector edits
+  them. The 3D battle shows machines as wooden boxes with a barrel, roof or wheels; the 2D harness town panel has the
+  blacksmith.
+- Open: siege use (walls, Basic Ballistics), stats and prices after play-testing, exchanging machines between heroes,
+  machines in garrisons.

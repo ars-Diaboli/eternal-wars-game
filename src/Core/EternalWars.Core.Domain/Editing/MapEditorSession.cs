@@ -522,6 +522,31 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>Sets which war machines a hero owns (ADR-056).</summary>
+    public EditResult SetHeroWarMachines(HeroId id, IReadOnlySet<Battles.WarMachineSlot> machines)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (machines.Any(m => !Enum.IsDefined(m)))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = hero.WarMachines.ToList();
+        var next = machines.ToList();
+        Run(new DelegateCommand($"Edit {hero.Name}'s war machines", () => Apply(next), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(List<Battles.WarMachineSlot> slots)
+        {
+            hero.SetWarMachines(slots);
+            _bus.Publish(new HeroStatsChanged(hero.Id, hero.Attack, hero.Defense, hero.Tactics));
+        }
+    }
+
     /// <summary>Sets a hero's morale and luck (−5…+5, ADR-053).</summary>
     public EditResult SetHeroMoraleAndLuck(HeroId id, int morale, int luck)
     {

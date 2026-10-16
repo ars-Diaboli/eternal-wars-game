@@ -199,6 +199,9 @@ public sealed class GameSession
             case MoveTownStackCommand move:
                 Towns.MoveStack(move.Player, move.Town, move.From, move.FromSlot, move.To, move.ToSlot, move.Count);
                 return null;
+            case BuyWarMachineCommand buy:
+                Towns.BuyWarMachine(buy.Player, buy.Town, buy.Slot);
+                return null;
             case RespondToGuardCommand guard:
                 Guards.Respond(guard.Accept);
                 return null;

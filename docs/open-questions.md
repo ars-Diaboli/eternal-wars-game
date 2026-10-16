@@ -76,6 +76,8 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
 - **Caravans**: hire from owned map dwellings within 5 days of virtual travel on an open route; also between towns
   (ADR-054).
 - **Sea travel**: none; water is an obstacle (ADR-051).
+- **War machines**: offensive machine per town, healing tent, ammo cart, a War machines skill group; units on the
+  field; the offensive machine needs Advanced Ballistics outside sieges (ADR-056).
 - **Primary stats**: every level raises Attack, Defense, Spell Power or Knowledge by 1, HoMM3-style odds by class
   (ADR-055).
 
@@ -94,8 +96,11 @@ Answers move into [game-design.md](game-design.md) / [decisions.md](decisions.md
    do undead or constructs ignore morale; are the draft 4 % luck per point and the mirror-image bad luck right?
 11. Caravans (ADR-054): what happens when a travelling caravan's route gets blocked or its town is captured; can
     other players see or attack caravans; what the caravan building costs.
-6. Town buildings (ADR-046 draft): what fort, blacksmith, tavern and marketplace trading do; which buildings raise
-   growth; a fourth town hall level; the cost of mage guild level 4; are the sandbox's gems really mercury?
+12. War machines (ADR-056): machine stats and prices after play-testing; what Basic Ballistics does in sieges;
+    can heroes exchange machines; can towns have them in the garrison?
+6. Town buildings (ADR-046 draft): what fort, tavern and marketplace trading do (the blacksmith sells war machines);
+   which buildings raise growth; a fourth town hall level; the cost of mage guild level 4; are the sandbox's gems
+   really mercury?
 
 ### Heroes
 8. Primary stats: the draft growth odds and starting values (ADR-055); what Spell Power and Knowledge do in numbers
