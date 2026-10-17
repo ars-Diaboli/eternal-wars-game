@@ -5,7 +5,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- The shipped random map templates (ADR-064); the apps will list these next to the user's own. -->
+    <EmbeddedResource Include="../../Godot/EternalWars.Godot.Assets/data/templates/*.ewtemplate.json" LogicalName="EternalWars.Templates.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj" />
+    <ProjectReference Include="..\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj" />
   </ItemGroup>
 
 </Project>

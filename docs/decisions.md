@@ -984,3 +984,48 @@ Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) a
   chosen target when the first destroyed its structure; **Expert** never misses a fortification (otherwise 2 of 3 shots hit)
   and keeps the +25 % damage against troops; **Master** does **2-3** structure damage instead of 1-2 (and +50 % against troops).
   A fully upgraded fortification's defence structures have **3** hit points. Placeholder formulas.
+
+### ADR-064: Random map generation: project layout and seed streams (2026-10-17)
+**Status**: accepted; Phase 4 preparation (the project exists, the generator does not yet)
+- `src/Core/EternalWars.Core.Generation` exists (engine-free, warning-free like every core project). It references `Core.Domain`
+  only; `Core.Data` references it (template file format). It is a dependency of the tests, and later of the `sim` tool and the apps.
+- **Refines ADR-023**: the generator outputs a **scenario `GameState`** (never started: the same object the map editor works on),
+  not a `MapDocument`, because `Core.Generation` must not depend on `Core.Data`. `MapConverter.ToDocument(GameState)` turns it
+  into the ordinary map file, and the game starts it directly. Generated and hand-made maps still share one pipeline.
+- **Seed streams** (`SeedStreams`): each pipeline step draws from its own `GameRandom` derived from the map seed, the step's name and
+  an optional index (a zone, a player), with a fixed FNV-1a hash. Tuning or adding a step does not change the numbers other steps
+  see, so a seed keeps reproducing the same map where nothing it depends on changed. The pinned test values must change only with
+  a generator version bump (shared seeds break).
+- Generation never touches `GameState.Random`; the finished map's game starts with the seed of the game options as usual.
+- Planned order: template model and validator, zone layout, terrain, borders, connections and guards, towns, mines, treasure,
+  monsters, roads, validation (roadmap, Phase 4).
+
+**Template model and file format (2026-10-17)** (`MapTemplate`, `TemplateZone`, `TemplateConnection`, `TemplateValidator`; files `*.ewtemplate.json`
+via `Core.Data/Templates/TemplateSerializer`, format version 1; the shipped ones are embedded from
+`EternalWars.Godot.Assets/data/templates`, listed by `BuiltInTemplates`; first one: `duel`). Decisions taken for the first version:
+- **Zone size is a relative weight** (at least 1): the layout will give every zone a share of the map in proportion.
+- **Guard strength is army power** (`GuardValue`, creature value × count, the AI's measure); monster strength of a zone is
+  `None / Weak / Average / Strong`, mapped to power by the generator later (tune with play-testing).
+- **Connections** are `Normal` (guarded passage), `Wide` (unguarded) or `Gate` (a pair of linked two-way gates, the only way
+  across levels). Not in the first version: portals, optional or random connections and mirroring (the format version allows adding them).
+- **Start zones**: exactly `MaxPlayers` of them (`PlayerStart` for anyone, `AiStart` computer only), each with a distinct owner slot and at
+  least one player town; other zones have no owner and no player towns. `MinPlayers` ≤ players ≤ `MaxPlayers`; with fewer players the generator
+  will leave the extra start zones out or neutral (decided with the generator).
+- The validator reports **errors** (unusable: broken references, unreachable zones, impassable terrains listed, gate-less level changes,
+  start zones that do not match the player count) and **warnings** (zones too small for the smallest size, start zones that differ in size,
+  towns, mines, treasure, monsters or distance to their rivals).
+
+**Zone layout, stage 1 (2026-10-17)** (`ZoneLayouter.Layout(template, size, seed, strategy)` → `ZoneLayout`: a zone index per tile and level, text dump,
+`UnmetConnections`). Contract: every tile belongs to a zone of its level, every zone is one 4-connected piece, zones get their weight's share of
+the map (within about ±40 %), and zones the template joins on one level **touch** (gates need no contact). Deterministic from (template, size, seed,
+strategy); it draws only from the `layout` stream per level and uses exact arithmetic (no trigonometry), so it is the same on every platform.
+- **Voronoi** (default): a spring model places the zone centres (joined zones attract, all repel; start from a random scatter or from a layered
+  embedding with the best connected zone in the middle), then a local search on a 48×48 version of the map moves centres and swaps zones until every
+  connection touches (the objective is the real contact of the area-balanced power diagram), the winner is painted at full size, re-balanced and repaired.
+  Make every connection touch on all seeds tried for the shipped templates, including the 4-player wheel graph.
+- **Rectangles**: recursive weighted bisection, the cut order a random walk over the zone graph. Blocky, fast, and only good for simple graphs; what it
+  cannot make touch is repaired the same way and otherwise reported in `UnmetConnections`.
+- **Repair** (`Join`): a connection that still does not touch gets a way cut through other zones along the shortest path, half to each side, through tiles
+  those zones can spare without falling apart and that no other contact depends on.
+- `sim layout <template> [--size N] [--seed S] [--rects]` prints a layout as text. Second shipped template: `Free for all` (4 players).
+- The validator now also refuses a template with a level that has no zone.

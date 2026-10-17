@@ -274,14 +274,14 @@ Content draft: [artifacts.md](artifacts.md).
 Needs towns, guards and treasure from Phases 2–3. The template *format* and validator can start earlier.
 
 ### Templates
-- [ ] New core project `EternalWars.Core.Generation` (engine-free, deterministic from seed)
-- [ ] Template model + `*.ewtemplate.json`: sizes, players, levels, zones (type, owner, size, level, towns, richness,
-      treasure bands, monster strength, terrains), connections (guard strength, wide / guarded / gate / portal,
-      optional) (game-design §4.9)
-- [ ] Template validator
+- [x] New core project `EternalWars.Core.Generation` (engine-free, deterministic from seed): project, `SeedStreams` (ADR-064)
+- [x] Template model + `*.ewtemplate.json` (v1): sizes, players, levels, zones (type, owner, size, level, towns, richness,
+      treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) (game-design §4.9, ADR-064)
+- [ ] Template model follow-ups: portals, optional connections, mirroring (1.0 scope)
+- [x] Template validator (`TemplateValidator`: errors and fairness warnings) and the first shipped template `duel`
 
 ### Generator pipeline
-- [ ] Zone layout from the connection graph
+- [x] Zone layout from the connection graph (`ZoneLayouter`: Voronoi and Rectangles strategies, ADR-064; `sim layout`)
 - [ ] Terrain per zone
 - [ ] Borders and obstacles
 - [ ] Connections and their guards

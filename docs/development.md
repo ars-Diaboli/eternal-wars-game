@@ -74,7 +74,8 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 - Saved games are `*.ewsave.json` (ADR-058) in `user://saves` (Windows: `%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): a game record plus a label. Loading replays the commands and checks the digest.
 - Map files are `*.ewmap.json` (format v12: terrain + optional road rows, teams, guard mode, heroes with roster type,
   primary stats, skills, war machines, morale, luck, artifacts and armies, objects incl. one-way gates, artifact pickups, creature dwellings, monsters, mine guards and towns, victory and defeat conditions; see the
-  version history on `MapDocument`). Replays are `*.ewreplay.json`. Creature
+  version history on `MapDocument`). Replays are `*.ewreplay.json`. Random map templates are `*.ewtemplate.json` (`MapTemplate`; the shipped ones are in
+  `src/Godot/EternalWars.Godot.Assets/data/templates`, embedded into `Core.Data`). Creature
   stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
   stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
@@ -114,6 +115,8 @@ spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by
 - **Simulator** without a rebuild: `dotnet run --project tools/EternalWars.Tools.Sim -- towns --creatures
   src/Godot/EternalWars.Godot.Assets/data/creatures.csv`. `sim creatures` shows each line's strength against its
   tier, `sim lines` duels the lines of a tier, `sim towns` plays one-week town armies against each other.
+- **Random map layouts**: `dotnet run --project tools/EternalWars.Tools.Sim -- layout duel --size 96 --seed 3 [--rects]` prints the zone layout of a template
+  (a shipped name or a `*.ewtemplate.json` path) as text, one letter per zone, plus the area of every zone.
 - **Tests and the default catalog** use the copy embedded at build time; `dotnet test` rebuilds it. Tests check
   the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines).
 

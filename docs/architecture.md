@@ -25,7 +25,7 @@
                │
 ┌──────────────┴───────────── Tier 1 · Core (plain .NET 10, no Godot) ──────────────────────────┐
 │  EternalWars.Core.Data       file formats (maps, content definitions; later saves, templates)  │
-│  EternalWars.Core.Generation (planned, Phase 4) random map templates + deterministic generator │
+│  EternalWars.Core.Generation (Phase 4, started: SeedStreams) random map templates + deterministic generator │
 │  EternalWars.Core.Domain     model + rules: map, heroes, armies, battles, commands, editing     │
 │  EternalWars.Core.Events     pub/sub primitives: IEvent, IEventHandler, IEventPublisher, bus   │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
@@ -185,11 +185,11 @@ These are enforced by:
 ### Random map generation (planned, Phase 4)
 - `EternalWars.Core.Generation` holds the template model (`MapTemplate`, `TemplateZone`,
   `TemplateConnection`), a `TemplateValidator`, and `MapGenerator.Generate(template, size, players,
-  seed, catalogs) → MapDocument`. Its only randomness is a seeded PRNG, so the same inputs always give the
+  seed, catalogs) → GameState` (a scenario, ADR-064; `Core.Generation` cannot see `Core.Data`'s `MapDocument`). Its only randomness is a seeded PRNG, so the same inputs always give the
   same map, on every platform.
-- Output is an ordinary `MapDocument`: the game starts it through `MapConverter.ToGameState(...)`, the
+- Output is an ordinary scenario `GameState`: the game starts it directly, `MapConverter.ToDocument` saves it as a map file, the
   editor opens it in a `MapEditorSession` for hand-editing. There is no separate "generated map" type.
-- Template file format (`*.ewtemplate.json`, versioned like maps) lives in `Core.Data`.
+- Template file format (`*.ewtemplate.json`, versioned like maps) lives in `Core.Data` (`TemplateSerializer`, `BuiltInTemplates`); the model is `MapTemplate` in `Core.Generation`.
 - The template editor reuses the editor's command/undo pattern on a template document (zone graph
   edits instead of tile edits).
 - Generation must stay fast (target: under 5 s for 256×256×2 on a mid-range PC) and runs off the main thread;
