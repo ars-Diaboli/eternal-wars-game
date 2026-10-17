@@ -5,8 +5,9 @@
 
 **Status**: the template format (v4), its validator, three shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two") and every
 generator stage including the scenario assembly are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`).
-There is no template editor, user template folder, whole-map validation or game/editor UI yet; `sim layout` prints
-generated maps.
+There is no template editor, user template folder, fairness validation or game/editor UI yet; `sim layout` prints
+generated maps, `sim game --template` plays AI-vs-AI games on them, and CI checks every shipped template with
+`sim maps` (no generator problems, deterministic, start towns reachable from every player, AI play and replay work).
 
 ## Goals
 - **Both the game and the editor generate maps.** The game's new-game screen picks a template, a map size, players,
@@ -56,7 +57,7 @@ generated maps.
 | 5 | `RoadPlacer` | Roads: towns of a zone, passages between zones, gates and the nearest lumber mill and ore mine in zones with a town | implemented |
 | 6 | `TreasurePlacer` | Treasure by value band, valuable items guarded in Area mode | implemented |
 | 7 | `ScenarioAssembler` | The scenario `GameState`: players, owners, picked town types and heroes; empty slots stay neutral | implemented |
-| 8 | – | Validate: every start zone reaches the others, start zones are fair | partly (template warnings, reachability per zone) ❓ RMG-8 |
+| 8 | – | Validate: every start zone reaches the others, start zones are fair | partly (template warnings, reachability per zone; start towns reachable from every player in `sim maps`) ❓ RMG-8 |
 
 - **No free-roaming monsters** for now (RMG-3): monsters guard passages and gates (Classic mode), mines (the mine's own
   guard) and treasure (Area mode, ADR-065).

@@ -10,7 +10,7 @@ Built with **Godot 4.7.2 (.NET)** and **C# / .NET 10**.
 | 1 · Core | `EternalWars.Core.Events` (pub/sub), `EternalWars.Core.Domain` (rules), `EternalWars.Core.Data` (file formats), `EternalWars.Core.Generation` (random maps) | **No** (enforced by the build) |
 | 2 · Godot libraries | `EternalWars.Godot.Shared` (views, camera, glue), `EternalWars.Godot.UI` (HUD/widgets), `EternalWars.Godot.Assets` (shared assets) | Yes |
 | 3 · Apps | `EternalWars.Game`, `EternalWars.MapEditor`, `EternalWars.Harness2D` | Yes (Godot projects) |
-| Tools | `EternalWars.Tools.Sim` (headless simulator: battle statistics, AI-vs-AI games, town and creature balance, random map layouts, replays, CI self-test) | No |
+| Tools | `EternalWars.Tools.Sim` (headless simulator: battle statistics, AI-vs-AI games on hand-made and generated maps, town and creature balance, random map layouts, replays, CI self-test and generated-map check) | No |
 
 ## Quick start
 ```powershell

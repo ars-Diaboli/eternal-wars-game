@@ -33,8 +33,9 @@
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
          tests/EternalWars.Core.Tests  (xUnit v3, covers Tier 1)
          tools/EternalWars.Tools.Sim   headless console app over Tier 1 only: battle statistics, AI-vs-AI
-                                       games (game), town and creature balance, random map layouts (layout),
-                                       replay verification (selftest runs in CI); RMG batch validation in CI later
+                                       games on hand-made or generated maps (game), town and creature balance,
+                                       random map layouts (layout), replay verification (selftest runs in CI),
+                                       generated-map batch check (maps runs in CI)
 ```
 
 ### Dependency rules
@@ -271,6 +272,6 @@ tools/
   link-shared-assets.ps1
   smoke-godot.ps1               scripted Godot smoke scenarios (Movie Maker frames to .shots/)
   smoke/*.ewmap.json            maps the smoke scenarios use
-  EternalWars.Tools.Sim/        headless simulator (battle, record, replay, selftest, game, towns, creatures, lines, layout)
+  EternalWars.Tools.Sim/        headless simulator (battle, record, replay, selftest, game, maps, towns, creatures, lines, layout)
 .github/workflows/ci.yml        build + test + simulator self-test on push/PR (no Godot needed)
 ```

@@ -1145,6 +1145,15 @@ teams on start zones, from 0), and no team rule in the layout: the connections d
 locked): allies share a camp behind their starts and a guarded path between them; the camps meet at a strong front and two contested flanks (128: 0 of 20 maps with problems,
 96: 1 of 20, which the retries cover).
 
+**AI games on generated maps and the CI batch (2026-10-17)**: `sim game --template <name|key|file> [--size] [--players]` generates a map per run with
+`MapGenerator.Build` (map seed = game seed, all computer players, every town "Random") and lets the adventure AI play it; `--record` keeps the generation info.
+`sim maps` is the batch check, run by the CI job `generated-maps` (6 maps per shipped template, 14 days, about 30 s): sizes and player counts cycle (most
+players first, so empty slots come up), and a map fails on generator problems after the retries, on a second generation that differs, when a player's hero
+cannot walk to another player's start town (passable terrain around blocked cells, through guards and pickups, via gates; other entrances end a route),
+on refused AI commands, or when the record does not replay through JSON to the same state. Shipped templates are found by name or file key (`BuiltInTemplates.Keys`:
+`2v2`, `duel`, `ffa-4`). Fairness between start zones stays open (RMG-8). First runs: 18 of 18 maps pass, but no game ends within 40 days and heroes stay
+at low levels: the AI hardly fights the generated guards (ADR-059 tuning).
+
 ### ADR-065: Guard mode per monster stack (2026-10-17)
 **Status**: accepted (2026-10-17), user decision on RMG-2; amends ADR-040
 - **Context**: ADR-040 made the guard mode a map-wide editor setting: Classic (HoMM3 zone of control, pickups on guarded tiles can be stolen from outside) or Area (the whole 3×3 area is

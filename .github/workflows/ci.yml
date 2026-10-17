@@ -26,3 +26,21 @@ jobs:
       # Headless simulator: same seed → same game, and a recorded game replays to the same state.
       - name: Simulator self-test
         run: dotnet run --project tools/EternalWars.Tools.Sim --configuration Release --no-build -- selftest
+
+  # Random map templates (ADR-064): N maps per shipped template over its sizes and player counts. Each must generate without
+  # problems and deterministically, let every start town reach the others, and take two weeks of AI-vs-AI play with no
+  # refused command and a replay to the same state. A failure names the template and seed: `sim maps --template <name> --seed <seed> --maps 1`.
+  generated-maps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Build simulator
+        run: dotnet build tools/EternalWars.Tools.Sim --configuration Release
+
+      - name: Generate and play maps of every template
+        run: dotnet run --project tools/EternalWars.Tools.Sim --configuration Release --no-build -- maps --maps 6 --days 14

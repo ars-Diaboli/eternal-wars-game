@@ -38,6 +38,8 @@ dotnet run --project tools/EternalWars.Tools.Sim -- battle haven.pikeman:20,have
 dotnet run --project tools/EternalWars.Tools.Sim -- record demo.ewreplay.json --days 7 --seed 1
 dotnet run --project tools/EternalWars.Tools.Sim -- replay demo.ewreplay.json
 dotnet run --project tools/EternalWars.Tools.Sim -- game --map towns --days 40 --runs 8   # the adventure AI plays every slot
+dotnet run --project tools/EternalWars.Tools.Sim -- game --template duel --size 96 --runs 4 [--players N]   # the same on a new generated map per run
+dotnet run --project tools/EternalWars.Tools.Sim -- maps [--template 2v2] --maps 6 --days 14   # what the CI generated-maps job runs
 dotnet run --project tools/EternalWars.Tools.Sim -- towns --runs 32 [--upgraded]   # round robin of one-week town armies
 dotnet run --project tools/EternalWars.Tools.Sim -- creatures [--write table.csv]  # each line's weekly power against its tier
 dotnet run --project tools/EternalWars.Tools.Sim -- lines --runs 4 [--upgraded]    # every creature line against its tier
@@ -46,7 +48,16 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 ```
 `layout` takes a shipped template name or a `*.ewtemplate.json` path and prints the zone layout as text (`--rects`: the
 Rectangles strategy; `--terrain`: the generated map with walls, passages, guards (`M`, Area-mode `A`), towns, mines, piles, chests (`c`),
-artifacts (`a`) and roads (`+`); `--seeds N`: generate N seeds in a row through every stage and report the ones with problems and the time). Any command takes `--creatures path.csv`.
+artifacts (`a`) and roads (`+`); `--seeds N`: generate N seeds in a row through every stage and report the ones with problems and the time).
+Templates are named by their name (`"Two against two"`) or file key (`2v2`, `duel`, `ffa-4`), or given as a path.
+`game --template` generates a map per run (seed = run seed, size = `--size` or the template's smallest, `--players` or the
+template's maximum, every town "Random", all computer players) as the new-game screen would, and prints the attempt kept and any
+problems; `--record` saves the first game with its generation info. `maps` checks `--maps` maps per shipped template (or
+`--template`), cycling through the template's sizes and from the most players down: each map must generate without problems and
+the same way twice, every player's hero must be able to walk to every other player's start town (through guards and pickups, via
+gates), and `--days` days of AI-vs-AI play must issue no refused command and replay through JSON to the same state. A failed line
+names the template, size, seed and player count to reproduce it (`maps --template <t> --seed <s> --maps 1`, or `game --template`).
+Any command takes `--creatures path.csv`.
 
 ## Controls (placeholder)
 | | Game | Editor | Harness |
@@ -91,7 +102,8 @@ artifacts (`a`) and roads (`+`); `--seeds N`: generate N seeds in a row through 
   `game-hero-screen`, `editor-tools`)
   and saves frames to `.shots/`. Smoke maps live in `tools/smoke/`; `SmokeMapTests` checks that they still do what the
   scripts expect.
-- CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` + `sim selftest` on every push to main and on PRs.
+- CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` + `sim selftest` on every push to main and on PRs,
+  and a parallel `generated-maps` job: `sim maps --maps 6 --days 14` (6 maps per shipped template, about 30 s).
 - Core builds with warnings as errors; keep Godot projects warning-free as well.
 - Commits: imperative mood, small and focused.
 - Binary assets (`*.png`, `*.jpg`, `*.glb`, `*.fbx`, `*.wav`, `*.ogg`, fonts, ...) go through **Git LFS** (`.gitattributes`;
