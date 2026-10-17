@@ -1029,3 +1029,15 @@ strategy); it draws only from the `layout` stream per level and uses exact arith
   those zones can spare without falling apart and that no other contact depends on.
 - `sim layout <template> [--size N] [--seed S] [--rects]` prints a layout as text. Second shipped template: `Free for all` (4 players).
 - The validator now also refuses a template with a level that has no zone.
+
+**Terrain, borders and obstacles, stage 2 (2026-10-17)** (`TerrainPainter.Paint(template, layout, seed)` → `GeneratedTerrain`: the `AdventureMap`, the layout, `Walls` per pair of
+zones and the list of `Obstacles`). User-approved defaults:
+- **Terrain**: one main terrain per zone from its `Terrains` list, else the default pool of its level (surface: grass, dirt, rough, highlands, forest floor, sand,
+  snow, swamp, wasteland; underground: subterranean, rocky ground, lava); a few patches (3-8 % of the zone each, up to four) of another allowed terrain, or
+  dirt / rough / grass for a zone without a list. Terrain is drawn from the `terrain` stream per zone. A start zone's town type is not known at this stage (players pick it at setup), so native terrain is not matched.
+- **Borders**: a tile with another zone among its **eight** neighbours becomes `Rock`, so walls are two tiles thick and nothing slips through diagonally (movement is 8-way).
+  `Walls` lists the wall tiles per pair of touching zones (a tile at a corner is in several lists): the connections stage cuts its passages there. A walkable pocket a wall
+  cuts off is filled in, so each zone keeps one 4-connected walkable piece.
+- **Obstacles**: `TemplateZone.Obstacles` (`None / Sparse / Normal / Dense`, default `Sparse`; template format unchanged otherwise): clumps of 2-6 rock tiles, 3 / 8 / 16 per
+  thousand tiles of the zone, kept three tiles from the walls and apart from each other; a clump that would cut off part of its zone is dropped (`obstacles` stream).
+- `sim layout ... --terrain` prints the painted terrain (map file terrain codes; `#` is rock).

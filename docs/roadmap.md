@@ -282,8 +282,8 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 
 ### Generator pipeline
 - [x] Zone layout from the connection graph (`ZoneLayouter`: Voronoi and Rectangles strategies, ADR-064; `sim layout`)
-- [ ] Terrain per zone
-- [ ] Borders and obstacles
+- [x] Terrain per zone (`TerrainPainter`, ADR-064)
+- [x] Borders and obstacles (walls two tiles thick between zones, rock clumps inside; `Walls` kept for the connections stage)
 - [ ] Connections and their guards
 - [ ] Towns (player and neutral)
 - [ ] Mines and resources

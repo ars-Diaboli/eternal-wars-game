@@ -41,6 +41,15 @@ public enum ConnectionKind
     Gate,
 }
 
+/// <summary>How much rock lies about inside a zone besides the walls on its borders.</summary>
+public enum ObstacleDensity
+{
+    None,
+    Sparse,
+    Normal,
+    Dense,
+}
+
 /// <summary>A minimum and a maximum count (both inclusive).</summary>
 public sealed record CountRange(int Min = 0, int Max = 0)
 {
@@ -89,6 +98,9 @@ public sealed record TemplateZone
     public IReadOnlyList<TreasureBand> Treasure { get; init; } = [];
 
     public MonsterStrength Monsters { get; init; } = MonsterStrength.Average;
+
+    /// <summary>Rock clumps inside the zone (see <see cref="TerrainPainter"/>).</summary>
+    public ObstacleDensity Obstacles { get; init; } = ObstacleDensity.Sparse;
 
     /// <summary>Terrains the zone may be painted with; null or empty = any passable terrain.</summary>
     public IReadOnlyList<TerrainType>? Terrains { get; init; }
