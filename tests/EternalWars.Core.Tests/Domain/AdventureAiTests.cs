@@ -150,6 +150,93 @@ public class AdventureAiTests
     }
 
     [Fact]
+    public void ItFlagsAMapDwelling_AndBuysCreaturesThere()
+    {
+        var state = Create("A.......B", ".........", ".........", ".........");
+        var dwelling = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 3, 0); // entrance (4, 1)
+        dwelling.Creature = BuiltInCreatures.Footman;
+        var session = Start(state);
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000);
+        var ai = Ai(session);
+
+        for (var turn = 0; turn < 8 && dwelling.Owner is null; turn++)
+        {
+            ai.PlayTurn(); // Blue and Red in turn
+        }
+
+        Assert.Equal(Blue, dwelling.Owner);
+        ai.PlayTurn();
+        Assert.Contains(session.CommandLog, c => c is RecruitAtDwellingCommand);
+        Assert.True(state.GetHero(A).Army.Stacks.Sum(s => s.Stack.Count) > 10);
+        Assert.Equal(0, ai.Refused);
+    }
+
+    [Fact]
+    public void ATownWithACaravan_HiresFromOwnedDwellings_AndSendsTroopsToAnEmptyTown()
+    {
+        var state = Create(WideMap());
+        var home = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        var outpost = AddTown(state, TownIds.Haven, 12, 0, Blue);
+        home.SetLevel(BuiltInBuildings.Caravan, 1);
+        home.SetLevel(BuiltInBuildings.Tavern, 0); // no hero is hired to take the garrison along
+        outpost.SetLevel(BuiltInBuildings.Tavern, 0);
+        outpost.LastBuilt = state.Date; // it builds nothing today, so it stays empty
+        home.Garrison.Set(0, new CreatureStack(BuiltInCreatures.Footman, 5));
+        home.Garrison.Set(1, new CreatureStack(BuiltInCreatures.Wolf, 3));
+        var dwelling = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 25, 3);
+        dwelling.Creature = BuiltInCreatures.Footman;
+        dwelling.Owner = Blue;
+        var session = Start(state);
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 50_000, Lumber: 50, Ore: 50);
+        state.GetHero(A).Position = new MapPosition(38, 8); // far from both towns: the towns act, not the hero
+
+        var ai = Ai(session);
+        ai.PlayTurn();
+
+        Assert.Contains(session.CommandLog, c => c is OrderCaravanCommand);
+        var sent = Assert.Single(session.CommandLog.OfType<SendTroopsCommand>());
+        Assert.Equal((home.Id, outpost.Id), (sent.FromTown, sent.ToTown));
+        Assert.Equal(0, ai.Refused);
+    }
+
+    [Fact]
+    public void ItBuildsACaravan_OnceItOwnsADwelling()
+    {
+        var state = Create(WideMap());
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        foreach (var building in new[] { BuiltInBuildings.Blacksmith, BuiltInBuildings.Marketplace, BuiltInBuildings.MageGuild })
+        {
+            town.SetLevel(building, 1);
+        }
+
+        town.SetLevel(BuiltInBuildings.TownHall, 2);
+        foreach (var tier in new[] { 1, 2, 3, 4, 5 })
+        {
+            var line = LinesOf(state, town).First(l => l.Tier == tier);
+            town.SetDwelling(line.Id, 1);
+        }
+
+        var dwelling = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 25, 3);
+        dwelling.Owner = Blue;
+        var session = Start(state);
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 100_000, Lumber: 100, Ore: 100, Crystal: 50, Mercury: 50, Sulfur: 50);
+
+        var ai = Ai(session);
+        for (var turn = 0; turn < 16 && town.Level(BuiltInBuildings.Caravan) == 0; turn++)
+        {
+            ai.PlayTurn();
+        }
+
+        Assert.Equal(1, town.Level(BuiltInBuildings.Caravan));
+    }
+
+    /// <summary>40 × 12 grass: Alpha at (3, 7), Bravo in the far corner.</summary>
+    private static string[] WideMap() =>
+        Enumerable.Range(0, 12).Select(y => string.Concat(Enumerable.Range(0, 40).Select(x => x == 3 && y == 7 ? 'A' : x == 39 && y == 11 ? 'B' : '.'))).ToArray();
+
+    private static IReadOnlyList<CreatureDefinition> LinesOf(GameState state, Town town) => TownRules.Lines(state, town);
+
+    [Fact]
     public void ItNeverAttacksWhenItWouldLose()
     {
         // Equal armies: the fight is not safe, so the heroes keep away from each other.
