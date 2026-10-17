@@ -8,7 +8,9 @@ public static class TemplateSerializer
 {
     public const string FileExtension = ".ewtemplate.json";
 
-    public static string Serialize(MapTemplate template) => JsonSerializer.Serialize(template, JsonDefaults.Options);
+    /// <summary>Writes the template in the current format (an older one read in is saved upgraded).</summary>
+    public static string Serialize(MapTemplate template) =>
+        JsonSerializer.Serialize(template with { FormatVersion = MapTemplate.CurrentFormatVersion }, JsonDefaults.Options);
 
     /// <summary>Throws <see cref="FormatException"/> for a broken file and <see cref="NotSupportedException"/> for one from a newer game.</summary>
     public static MapTemplate Deserialize(string json)

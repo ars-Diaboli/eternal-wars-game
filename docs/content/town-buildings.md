@@ -48,7 +48,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Building | Effect | Status |
 |---|---|---|
 | Town Hall | gold income: 500 / 1000 / 2000 a day | ✅ |
-| Fort | town defence and creature growth bonus | ⏳ sieges; growth bonus ❓ |
+| Fort | Fort: needed for every dwelling; Citadel: town dwellings grow +50 % (bonus rounded down); Castle: +100 % (`TownRules.WeeklyGrowth`). Sieges: Fort = town wall and gate, Citadel adds a keep, Castle towers and stronger walls (ADR-066) | ✅ dwellings, growth; ⏳ fortifications (sieges post-1.0) |
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading resources | ✅ silo; ⏳ trading ❓ |
 | Mage Guild | spells of its level (ADR-047); level 4 is a placeholder | ⏳ magic (Phase 5) |
@@ -68,6 +68,7 @@ graph LR
   TH2 --> TH3[Capitol]
   TV[Tavern] --> F1[Fort]
   F1 --> TV2[Brotherhood]
+  F1 --> DW[Dwellings, every tier]
   F1 --> F2[Citadel]
   F2 --> TH3
   F2 --> F3[Castle]
@@ -78,7 +79,8 @@ graph LR
 
 Since every town starts with Town Hall, Fort and Tavern, the shortest way to the Capitol is Blacksmith, Marketplace and
 Mage Guild 1 (City Hall), then Citadel, then Capitol: six days and 22 250 gold, 55 lumber, 45 ore and 2 mercury
-(the six buildings' costs added up). Dwellings have no requirements in the table.
+(the six buildings' costs added up). Every dwelling needs the Fort (`fort 1` on the `dwelling-*` level-1 rows, ADR-066);
+new towns have it, so this only matters for towns a map places without a fort.
 
 ## Dwellings
 
@@ -91,8 +93,12 @@ upgradeable.
   are locked in that town.
 - A dwelling's **level 2 is its upgrade**: it sells both the base and the upgraded creature from the same pool, and
   stacks of that line can be upgraded in the town for the price difference.
+- **Dwellings need the Fort** (ADR-066), in play and in the editor.
 - **Growth**: a new dwelling opens with one week of creatures; every Monday each built dwelling adds its creature's
-  weekly growth, owned or not, and unbought creatures accumulate. The upgrade does not raise growth.
+  weekly growth, owned or not, and unbought creatures accumulate. The upgrade does not raise growth. The fort raises
+  the growth of the town's dwellings (opening week included): **Citadel +50 %, Castle +100 %**, the bonus rounded down
+  (growth 1 stays 1 with a Citadel, 2 with a Castle; ADR-066). Map dwellings never get it. The growth numbers in the
+  tables below are the base growth.
 - Locked-out creatures can still be found in other towns of the same type and in map dwellings (ADR-054).
 
 Every dwelling of a tier costs the same (the `dwelling-1` … `dwelling-5` rows):
@@ -221,7 +227,7 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 ## Open
 
-- What the fort does (town defence in sieges, growth bonus), marketplace trading and the mage guild
-  ([TOWN-1, TOWN-3](../project/open-questions.md#towns-and-economy)).
+- Marketplace trading and the mage guild ([TOWN-3](../project/open-questions.md#towns-and-economy)). The fort's
+  fortifications only take effect with sieges (post-1.0, ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
 - Per-town buildings: all towns share one list for now.

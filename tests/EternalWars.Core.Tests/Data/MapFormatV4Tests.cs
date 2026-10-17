@@ -13,19 +13,18 @@ public class MapFormatV4Tests
     public void ArmiesStatsGuardsAndChests_RoundTrip()
     {
         var original = DemoScenario.Create();
-        original.SetGuardMode(GuardMode.Area);
+        original.ObjectsOf<MonsterGuard>().First().Mode = GuardMode.Area;
         original.ObjectsOf<TreasureChest>().First().FixedValues = new ChestValues(1234, 567);
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(original));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
-        Assert.Equal(GuardMode.Area, restored.GuardMode);
         Assert.Equal(
             original.Heroes.Select(h => (h.Id, h.Attack, h.Defense, h.Tactics, Slots: string.Join(",", h.Army.Slots))),
             restored.Heroes.Select(h => (h.Id, h.Attack, h.Defense, h.Tactics, Slots: string.Join(",", h.Army.Slots))));
         Assert.Equal(
-            original.ObjectsOf<MonsterGuard>().Select(m => (m.Id, m.Creature, m.Count, m.Disposition, m.NeverFlees)),
-            restored.ObjectsOf<MonsterGuard>().Select(m => (m.Id, m.Creature, m.Count, m.Disposition, m.NeverFlees)));
+            original.ObjectsOf<MonsterGuard>().Select(m => (m.Id, m.Creature, m.Count, m.Disposition, m.NeverFlees, m.Mode)),
+            restored.ObjectsOf<MonsterGuard>().Select(m => (m.Id, m.Creature, m.Count, m.Disposition, m.NeverFlees, m.Mode)));
         Assert.Equal(original.ObjectsOf<Mine>().Select(m => m.Guard), restored.ObjectsOf<Mine>().Select(m => m.Guard));
         Assert.Equal(new ChestValues(1234, 567), restored.ObjectsOf<TreasureChest>().First().FixedValues);
         Assert.Contains("\"kind\": \"monster\"", json);
@@ -60,7 +59,6 @@ public class MapFormatV4Tests
 
         Assert.Equal(new ChestValues(1000, 500), state.ObjectsOf<TreasureChest>().Single().FixedValues);
         Assert.True(state.Heroes.Single().Army.IsEmpty);
-        Assert.Equal(GuardMode.Classic, state.GuardMode);
     }
 
     [Theory]

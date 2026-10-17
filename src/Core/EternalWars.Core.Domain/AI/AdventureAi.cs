@@ -259,13 +259,23 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     private static bool Reachable(ResourceSet cost, ResourceSet have, ResourceSet income) =>
         Enum.GetValues<ResourceType>().All(r => cost[r] <= have[r] + (income[r] * (r == ResourceType.Gold ? 3 : 7)));
 
-    /// <summary>What a town wants built, best first (the order is the strategy): units first, then income, then the rest.</summary>
+    /// <summary>What a town wants built, best first (the order is the strategy): the fort the dwellings need, units, then income, then the rest.</summary>
     private IEnumerable<(bool Dwelling, string Id)> BuildOrder(Town town)
     {
         var lines = TownRules.Lines(_state, town);
         IEnumerable<CreatureDefinition> Best(int tier) =>
-            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.Value * l.WeeklyGrowth).ThenBy(l => l.Id, StringComparer.Ordinal);
+            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.Value * TownRules.WeeklyGrowth(town, l)).ThenBy(l => l.Id, StringComparer.Ordinal);
         bool TierBuilt(int tier) => lines.Any(l => l.Tier == tier && town.DwellingLevel(l.Id) > 0);
+
+        if (town.Level(BuiltInBuildings.Fort) < 1)
+        {
+            if (town.Level(BuiltInBuildings.Tavern) < 1)
+            {
+                yield return (false, BuiltInBuildings.Tavern); // the fort needs it
+            }
+
+            yield return (false, BuiltInBuildings.Fort); // every dwelling needs it (ADR-066)
+        }
 
         foreach (var tier in new[] { 1, 2, 3, 4, 5 }.Where(t => !TierBuilt(t)))
         {
@@ -555,8 +565,12 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
     private long ArmyPower(Army army) => army.Stacks.Sum(s => Power(s.Stack));
 
-    private long GuardPower(MapPosition position) =>
-        _state.GuardsOf(position).Sum(m => (long)(m.Count ?? 1) * _state.Creatures.Get(m.Creature).Value);
+    private long GuardPower(MapPosition position, bool pickup = false) =>
+        GuardsToBeat(position, pickup).Sum(m => (long)(m.Count ?? 1) * _state.Creatures.Get(m.Creature).Value);
+
+    /// <summary>The stacks a hero entering <paramref name="position"/> must beat: a pickup only by its Area-mode guards (ADR-065).</summary>
+    private IEnumerable<MonsterGuard> GuardsToBeat(MapPosition position, bool pickup) =>
+        _state.GuardsOf(position).Where(m => !pickup || m.Mode == GuardMode.Area);
 
     private static double GoldValue(ResourceType resource, int amount) => amount * resource switch
     {
@@ -617,9 +631,9 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         MapPosition Position, double Value, Army? Opponent = null, int OpponentAttack = 0, int OpponentDefense = 0, double MaxLoss = 0.5);
 
     /// <summary>The neutral guards of a tile as one army, or null.</summary>
-    private Army? GuardArmy(MapPosition position)
+    private Army? GuardArmy(MapPosition position, bool pickup = false)
     {
-        var stacks = _state.GuardsOf(position).Take(Army.SlotCount).Select(m => new CreatureStack(m.Creature, Math.Max(1, m.Count ?? 1))).ToArray();
+        var stacks = GuardsToBeat(position, pickup).Take(Army.SlotCount).Select(m => new CreatureStack(m.Creature, Math.Max(1, m.Count ?? 1))).ToArray();
         return stacks.Length == 0 ? null : Army.Of(stacks);
     }
 
@@ -642,14 +656,14 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
             switch (mapObject)
             {
-                case ResourcePile pile when Plausible(GuardPower(visit)):
-                    yield return new(visit, GoldValue(pile.Resource, pile.Amount), GuardArmy(visit), MaxLoss: MonsterLoss);
+                case ResourcePile pile when Plausible(GuardPower(visit, pickup: true)):
+                    yield return new(visit, GoldValue(pile.Resource, pile.Amount), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
-                case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit)):
-                    yield return new(visit, 800 + (80 * Score(found)), GuardArmy(visit), MaxLoss: MonsterLoss);
+                case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit, pickup: true)):
+                    yield return new(visit, 800 + (80 * Score(found)), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
-                case TreasureChest when Plausible(GuardPower(visit)):
-                    yield return new(visit, 1500, GuardArmy(visit), MaxLoss: MonsterLoss);
+                case TreasureChest when Plausible(GuardPower(visit, pickup: true)):
+                    yield return new(visit, 1500, GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
                 case Mine mine when !OwnTeam(owner, mine.Owner):
                     var mineGuard = mine.Guard is { } g ? new CreatureStack(g.Creature, Math.Max(1, g.Count ?? 1)) : null;

@@ -28,6 +28,8 @@ public sealed class GeneratedMap
     private readonly List<string> _problems = [];
     private readonly List<GeneratedTown> _towns = [];
     private readonly Dictionary<(int A, int B), List<MapPosition>> _walls;
+    private readonly HashSet<MapPosition> _roads = [];
+    private readonly HashSet<MapPosition> _reserved = [];
     private int _nextId = 1;
 
     private GeneratedMap(GeneratedTerrain terrain)
@@ -60,7 +62,11 @@ public sealed class GeneratedMap
 
     internal void Problem(string message) => _problems.Add(message);
 
-    internal void AddPassage(GeneratedPassage passage) => _passages.Add(passage);
+    internal void AddPassage(GeneratedPassage passage)
+    {
+        _passages.Add(passage);
+        _reserved.UnionWith(passage.Tiles);
+    }
 
     /// <summary>Whether the tile is on the map, not rock or water, and nothing stands on it.</summary>
     public bool IsFree(MapPosition position) =>
@@ -69,9 +75,21 @@ public sealed class GeneratedMap
 
     internal static TerrainCatalog Terrains => TerrainCatalog.Default;
 
-    /// <summary>Whether the object's blocked and visit cells all fall on free tiles.</summary>
+    /// <summary>
+    /// Whether the object's blocked and visit cells all fall on free tiles off the passages (stage 3) and the roads (stage 5), so nothing placed
+    /// later blocks a way between zones or stands on a road.
+    /// </summary>
     public bool Fits(MapObjectDefinition definition, MapPosition topLeft) =>
-        definition.Footprint.OccupiedCells.All(c => IsFree(topLeft.Offset(c.Dx, c.Dy)));
+        definition.Footprint.OccupiedCells.All(c => IsFree(topLeft.Offset(c.Dx, c.Dy)) && !_roads.Contains(topLeft.Offset(c.Dx, c.Dy)) && !_reserved.Contains(topLeft.Offset(c.Dx, c.Dy)));
+
+    /// <summary>The tiles the road stage painted.</summary>
+    public IReadOnlyCollection<MapPosition> Roads => _roads;
+
+    internal void AddRoad(MapPosition position, RoadType type)
+    {
+        Map.SetRoad(position, type);
+        _roads.Add(position);
+    }
 
     /// <summary>Adds an object that fits (the caller checked), taking its cells.</summary>
     internal T Add<T>(T mapObject)
@@ -92,7 +110,10 @@ public sealed class GeneratedMap
     /// Gives a start town another town type (players pick theirs at game setup): the town of the same size takes the old one's id,
     /// place and owner, with a fresh default start. Only start towns that are still unbuilt and ungarrisoned are meant for this.
     /// </summary>
-    public Town SetTownType(Town town, string townType)
+    public Town SetTownType(Town town, string townType) => Replace(town, townType, town.Owner);
+
+    /// <summary>Like <see cref="SetTownType"/>, also giving the town its owner (scenario assembly).</summary>
+    internal Town Replace(Town town, string townType, PlayerId? owner)
     {
         var at = _towns.FindIndex(t => t.Town == town);
         if (at < 0 || !BuiltInMapObjects.PlayableTowns.Contains(townType))
@@ -100,7 +121,7 @@ public sealed class GeneratedMap
             throw new ArgumentException("Not a town of this map, or not a playable town type.");
         }
 
-        var replacement = new Town(town.Id, MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(townType)), town.Position, town.Owner, town.Name == town.Definition.Name ? null : town.Name, garrison: town.Garrison);
+        var replacement = new Town(town.Id, MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(townType)), town.Position, owner, town.Name == town.Definition.Name ? null : town.Name, garrison: town.Garrison);
         _objects[_objects.IndexOf(town)] = replacement;
         _towns[at] = _towns[at] with { Town = replacement };
         return replacement;

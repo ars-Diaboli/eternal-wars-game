@@ -83,14 +83,9 @@ public static class Program
     {
         var loaded = File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
             ?? throw new FormatException($"No template '{template}' (built-in: {string.Join(", ", BuiltInTemplates.All.Select(t => t.Name))}).");
-        var layout = ZoneLayouter.Layout(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi);
-        GeneratedMap? built = null;
-        if (terrain)
-        {
-            built = GeneratedMap.From(TerrainPainter.Paint(loaded, layout, seed));
-            ConnectionPlacer.Place(loaded, built, seed);
-            SettlementPlacer.Place(loaded, built, seed);
-        }
+        var strategy = rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi;
+        var built = terrain ? MapGenerator.Generate(loaded, size, seed, strategy, Catalog) : null;
+        var layout = built?.Layout ?? ZoneLayouter.Layout(loaded, size, seed, strategy);
 
         for (var level = 0; level < layout.Levels; level++)
         {
@@ -102,11 +97,14 @@ public static class Program
             }
 
             var marks = built.Objects.SelectMany(o => o.OccupiedCells()).Where(c => c.Position.Level == level).ToDictionary(c => c.Position, c => c);
-            var kinds = built.Objects.ToDictionary(o => o.VisitPosition, o => o switch { MonsterGuard => 'M', Town => 'T', Mine => 'm', ResourcePile => 'p', _ => 'G' });
+            var kinds = built.Objects.ToDictionary(o => o.VisitPosition, o => o switch
+            {
+                MonsterGuard { Mode: GuardMode.Area } => 'A', MonsterGuard => 'M', Town => 'T', Mine => 'm', ResourcePile => 'p', TreasureChest => 'c', ArtifactPickup => 'a', _ => 'G',
+            });
             Console.WriteLine(string.Join(System.Environment.NewLine, Enumerable.Range(0, size).Select(y => string.Concat(Enumerable.Range(0, size).Select(x =>
             {
                 var p = new MapPosition(x, y, level);
-                return kinds.TryGetValue(p, out var mark) ? mark : marks.ContainsKey(p) ? 'g' : TerrainCodes.ToCode(built.Map.GetTerrain(p));
+                return kinds.TryGetValue(p, out var mark) ? mark : marks.ContainsKey(p) ? 'g' : built.Map.GetRoad(p) != RoadType.None ? '+' : TerrainCodes.ToCode(built.Map.GetTerrain(p));
             })))));
         }
 
@@ -120,6 +118,11 @@ public static class Program
             foreach (var mine in built.Objects.OfType<Mine>())
             {
                 Console.WriteLine($"  {mine.Definition.Name} at {mine.Position}{(mine.Guard is { } g ? $" guarded by {g.Count} {g.Creature}" : "")}");
+            }
+
+            foreach (var item in built.Objects.Where(o => o is TreasureChest or ArtifactPickup or ResourcePile))
+            {
+                Console.WriteLine($"  {item switch { TreasureChest c => $"chest {c.FixedValues?.Gold} gold", ArtifactPickup a => $"artifact {a.Artifact}", ResourcePile p => $"{p.Amount} {p.Resource}", _ => "" }} at {item.Position}");
             }
 
             foreach (var town in built.Towns)
@@ -153,11 +156,8 @@ public static class Program
         for (var i = 0; i < count; i++)
         {
             var seed = first + (ulong)i;
-            var layout = ZoneLayouter.Layout(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi);
-            var built = GeneratedMap.From(TerrainPainter.Paint(loaded, layout, seed));
-            ConnectionPlacer.Place(loaded, built, seed);
-            SettlementPlacer.Place(loaded, built, seed);
-            var problems = layout.UnmetConnections.Select(u => $"not touching {u.From}-{u.To}").Concat(built.Problems).ToList();
+            var built = MapGenerator.Generate(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi, Catalog);
+            var problems = built.Problems.ToList();
             if (problems.Count > 0)
             {
                 bad++;

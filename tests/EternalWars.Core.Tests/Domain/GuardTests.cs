@@ -64,8 +64,7 @@ public class GuardTests
     public void AreaMode_GuardsPickupsToo()
     {
         var state = Create("A......", ".......", "......B");
-        state.SetGuardMode(GuardMode.Area);
-        Monster(state, 3, 1, BuiltInCreatures.Troll, 20, GuardDisposition.Savage);
+        Monster(state, 3, 1, BuiltInCreatures.Troll, 20, GuardDisposition.Savage).Mode = GuardMode.Area;
         Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 2, 0);
         var session = Start(state);
         session.Step(A, Direction.East);
@@ -74,6 +73,47 @@ public class GuardTests
 
         Assert.Equal(0, state.GetPlayer(Blue).Resources.Gold);
         Assert.NotNull(state.Battle);
+    }
+
+    [Fact]
+    public void ClassicAndAreaStacks_OnTheSameMap_GuardTheirOwnPickupsDifferently()
+    {
+        var state = Create("A.........", "..........", "..........", "..........", ".........B");
+        Monster(state, 3, 1, BuiltInCreatures.Troll, 20, GuardDisposition.Savage); // Classic by default
+        var treasureGuard = Monster(state, 3, 3, BuiltInCreatures.Troll, 20, GuardDisposition.Savage);
+        treasureGuard.Mode = GuardMode.Area;
+        var stolen = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 2, 0);
+        Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 2, 4);
+        var session = Start(state);
+        session.Step(A, Direction.East);
+
+        Assert.Equal(MoveResult.CollectedFromAdjacent, session.Step(A, Direction.East)); // next to the Classic stack
+        Assert.Equal(stolen.Amount, state.GetPlayer(Blue).Resources.Gold);
+
+        Assert.Equal(MoveResult.Moved, session.Step(A, Direction.South)); // (1,1)
+        Assert.Equal(MoveResult.Moved, session.Step(A, Direction.South)); // (1,2)
+        Assert.Equal(MoveResult.Moved, session.Step(A, Direction.South)); // (1,3)
+        Assert.Equal(MoveResult.GuardEncountered, session.Step(A, Direction.SouthEast)); // the pile at (2,4) next to the Area stack
+
+        Assert.Equal(stolen.Amount, state.GetPlayer(Blue).Resources.Gold);
+        Assert.Equal(treasureGuard.Id, state.Battle!.Defender.Guard);
+    }
+
+    [Fact]
+    public void APickupGuardedByBothModes_IsDefendedByTheAreaStack()
+    {
+        var state = Create("A......", ".......", "......B");
+        Monster(state, 3, 1, BuiltInCreatures.Wolf, 5, GuardDisposition.Savage); // Classic, lower id
+        var areaGuard = Monster(state, 3, 0, BuiltInCreatures.Troll, 20, GuardDisposition.Savage);
+        areaGuard.Mode = GuardMode.Area;
+        Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 2, 1);
+        var session = Start(state);
+        session.Step(A, Direction.East); // (1,0)
+
+        Assert.Equal(MoveResult.GuardEncountered, session.Step(A, Direction.SouthEast));
+
+        Assert.Equal(0, state.GetPlayer(Blue).Resources.Gold);
+        Assert.Equal(areaGuard.Id, state.Battle!.Defender.Guard);
     }
 
     [Fact]

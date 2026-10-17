@@ -121,6 +121,23 @@ public sealed record TemplateZone
     public IReadOnlyList<TerrainType>? Terrains { get; init; }
 }
 
+/// <summary>
+/// Roads the generator lays (stage 5, RMG-4): towns of a zone, passages between zones, and with a town in the zone its gates and the mines of
+/// <see cref="Mines"/> closest to the town. The defaults are the user's: lumber mill and ore mine, gates on.
+/// </summary>
+public sealed record TemplateRoads
+{
+    public bool Enabled { get; init; } = true;
+
+    public RoadType Type { get; init; } = RoadType.Dirt;
+
+    /// <summary>For each resource, the zone's mine of it nearest the town gets a road.</summary>
+    public IReadOnlyList<ResourceType> Mines { get; init; } = [ResourceType.Lumber, ResourceType.Ore];
+
+    /// <summary>Whether gates of a zone with a town get a road.</summary>
+    public bool Gates { get; init; } = true;
+}
+
 /// <summary>A passage between two zones (undirected).</summary>
 public sealed record TemplateConnection
 {
@@ -144,7 +161,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 1;
+    public const int CurrentFormatVersion = 2;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -169,6 +186,9 @@ public sealed record MapTemplate
     public IReadOnlyList<TemplateZone> Zones { get; init; } = [];
 
     public IReadOnlyList<TemplateConnection> Connections { get; init; } = [];
+
+    /// <summary>Roads (format v2; a v1 file gets the defaults).</summary>
+    public TemplateRoads Roads { get; init; } = new();
 
     public int Levels => Underground ? 2 : 1;
 

@@ -13,7 +13,7 @@ namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
 /// Edits the selected hero (stats, Tactics, seven army slots) or object (mine owner and guard, chest values,
-/// monster creature/count/disposition, town owner, name, buildings, dwellings and garrison; gate links are shown).
+/// monster creature/count/disposition/guard mode, town owner, name, buildings, dwellings and garrison; gate links are shown).
 /// Every change is an undoable editor edit.
 /// </summary>
 public partial class InspectorPanel : VBoxContainer
@@ -213,6 +213,15 @@ public partial class InspectorPanel : VBoxContainer
                 count.ValueChanged += _ => ApplyMonster();
                 disposition.Button.ItemSelected += _ => ApplyMonster();
                 neverFlees.Toggled += _ => ApplyMonster();
+
+                var row3 = new HBoxContainer();
+                AddChild(row3);
+                var mode = Options(row3, "Guard mode", new[]
+                {
+                    ("Classic: zone of control, pickups can be stolen", GuardMode.Classic),
+                    ("Area: treasure guard, the whole 3×3 area is guarded", GuardMode.Area),
+                }, monster.Mode);
+                mode.Button.ItemSelected += _ => Edit(() => _editor.SetMonsterGuardMode(monster.Id, mode.Value()));
                 break;
             }
 

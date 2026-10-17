@@ -360,7 +360,7 @@ equally likely (HoMM3's tiers without the artifact outcome, normalised). Values 
 the roll.
 
 ### ADR-040: Neutral guards: two guard modes, deterministic dispositions
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); the guard mode became a per-stack setting (ADR-065)
 - Monsters are map objects (`MonsterGuard`: creature, count, disposition, never-flees). Their tile is the
   entrance (attacked from where the hero stands) and they guard the 8 tiles around them. The pathfinder ends a
   route on a guarded tile and never passes through one.
@@ -997,8 +997,8 @@ Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) a
   A fully upgraded fortification's defence structures have **3** hit points. Placeholder formulas.
 
 ### ADR-064: Random map generation: project layout and seed streams (2026-10-17)
-**Status**: accepted; stages 1–4 implemented (layout, terrain, connections, towns/mines); treasure, monsters, roads and the
-scenario assembly pending
+**Status**: accepted; stages 1–6 and the scenario assembly implemented (layout, terrain, connections, towns/mines, roads, treasure; `MapGenerator`);
+validation of the whole map, mirroring and the new-game screen pending
 - `src/Core/EternalWars.Core.Generation` exists (engine-free, warning-free like every core project). It references `Core.Domain`
   only; `Core.Data` references it (template file format). It is a dependency of the tests, and later of the `sim` tool and the apps.
 - **Refines ADR-023**: the generator outputs a **scenario `GameState`** (never started: the same object the map editor works on),
@@ -1083,3 +1083,46 @@ zones and the list of `Obstacles`). User-approved defaults:
 - Everything stands on free ground with a free tile all around (towns fall back to no margin in a crowded zone), objects are at least 12 tiles apart for towns, 4 for mines, 3 for piles
   (entrance to entrance), and the zone's entrances must all be reachable from each other or a problem is listed. Guard counts follow `GuardPicker`; its tier ranges are now 6-60, 2-40, 1-25, 1-15, 1-10.
 - `sim layout ... --terrain` also shows towns (`T`), mines (`m`), piles (`p`) and lists them; `--seeds N` includes this stage.
+**Roads, treasure and the scenario, stages 5–6 and assembly (2026-10-17)** (user answers RMG-1 to RMG-5; `MapGenerator.Generate(template, size, seed)` runs every stage,
+`MapGenerator.Build(..., players)` also assembles the scenario):
+- **Passages are kept free**: tiles a passage opened are reserved, so no later object stands on them (a mine on an unguarded passage blocked the way before).
+- **Roads** (`RoadPlacer`, stage 5, no random draws; RMG-4): every zone has a hub, its first town's entrance or the walkable tile nearest its middle. Roads join the other towns of a zone
+  to the hub and every passage to the hubs of both zones, so the zones are joined; where the zone has a town, also its gates and, per resource in `TemplateRoads.Mines`, the mine of that
+  resource nearest the hub. Cheapest way over walkable ground, 8 ways, existing road cheaper (roads merge), never through an object's body. Template format **v2** adds
+  `roads` (`enabled`, `type` default dirt, `mines` default lumber and ore, `gates` default on); v1 files get the defaults, and saving writes the current version.
+  Later objects keep off road tiles.
+- **Treasure** (`TreasurePlacer`, stage 6; RMG-1, user accepted the proposal): every band gives `Count` items worth a value drawn in the band. Below 4000 a pile (2 in 3) or a chest;
+  from 4000 an artifact (1 in 2: the best tier the value reaches, minor 4000, major 8000, relic 15000, a relic once per map), else a chest or a pile. The generator fixes the contents:
+  pile amounts at 1 gold, 100 per lumber or ore, 200 per rare unit (placeholder until marketplace rates, TOWN-2); chests the value as gold, 500 less as experience; the artifact.
+- **Treasure guards** (RMG-2 with ADR-065): an item worth more than 1000 in a zone with monsters gets a guard beside it in **Area** mode, 40–60 % of its value × the zone's strength
+  (weak 0.75, average 1, strong 1.5), half in start zones. Connection and gate guards stay Classic.
+- **No free-roaming monsters** (RMG-3): monsters only guard passages, gates, mines and treasure for now.
+- **Scenario assembly** (`ScenarioAssembler`, RMG-5): players in slot order from `PlayerSetup(Slot, Name, IsHuman, TownType, Hero?, Team?)`. A taken slot's towns get the picked type and the
+  player as owner; the hero the player **picked at setup** (a hero of that town; none picked: drawn from the town's heroes, stream `heroes`) stands at the first town's entrance with
+  one stack of its preferred creature worth about 1000 (placeholder). A slot nobody takes keeps its towns in place, **neutral** (user rule). Refused: no players, a slot taken twice or
+  without a town, a human on an AI-only slot, a hero of another town or picked twice, a town that is not playable. The hero choice on the new-game screen is part of the
+  new-game screen item (Godot).
+- `sim layout ... --terrain` also shows roads (`+`), chests (`c`), artifacts (`a`), Area guards (`A`); `--seeds N` runs every stage (duel at 72: 0 of 40 with problems; Free for all
+  at 96: 1 of 40, a crowded zone without room for its neutral town).
+
+### ADR-065: Guard mode per monster stack (2026-10-17)
+**Status**: accepted (2026-10-17), user decision on RMG-2; amends ADR-040
+- **Context**: ADR-040 made the guard mode a map-wide editor setting: Classic (HoMM3 zone of control, pickups on guarded tiles can be stolen from outside) or Area (the whole 3×3 area is
+  guarded). The user: Classic is the general-purpose mode, Area is mostly for guarding treasure so it cannot be picked up without a fight.
+- The guard mode is a **per-stack** setting (`MonsterGuard.Mode`, default Classic); the map-wide setting is dropped (`GameState.GuardMode`, `SetGuardMode`, `GuardModeChanged` removed).
+- Movement: a pickup on a guarded tile can be taken from outside only if every stack guarding it is Classic; otherwise the first Area stack (lowest id) fights. Any other entry into a
+  guarded tile meets the first guard, as before. Pathfinding is unchanged.
+- The AI counts only Area guards as opponents for pickups. Mine guards are unaffected (no mode; they defend only their mine).
+- Map format **v13**: monsters get an optional `mode` (omitted = Classic); the top-level `guardMode` is no longer written, and maps before v13 apply it to every monster.
+- Editor: `MapEditorSession.SetMonsterGuardMode` (undoable, publishes `MapObjectChanged`); the control moved from map properties to the monster rows of the inspector.
+- Generator: passage and gate guards are Classic, treasure guards Area (ADR-064).
+### ADR-066: What the fort does (2026-10-17)
+**Status**: accepted (2026-10-17), user decision on TOWN-1; dwelling requirement and growth bonus implemented, fortifications wait for sieges (post-1.0)
+- **Fort (level 1) unlocks the dwellings**: every `dwelling-*` level-1 row in `buildings.csv` requires `fort 1`. New towns start with fort 1 (unchanged), so this only matters for towns a
+  map places without a fort; the editor refuses such dwellings (`TownRules.UnmetDwellingRequirement`), the validator flags them, and the AI builds the tavern and fort first in a fortless town.
+- **Growth bonus (HoMM3 rule)**: a town's dwellings grow **+50 % with the Citadel** (fort 2) and **+100 % with the Castle** (fort 3). The bonus is rounded down (growth 1 → 1 with a
+  Citadel, 2 with a Castle) and also applies to the week a new dwelling opens with. One rule, `TownRules.WeeklyGrowth(town, line)`, serves `TownService`, the town screen and the AI.
+  Dwelling upgrades still do not raise growth (ADR-046).
+- **Map dwellings are unaffected**: `CreatureDwelling` keeps the creature's growth, and caravans hire from it unchanged (ADR-054).
+- **Fortifications are data only until sieges (post-1.0)**: Fort = town wall and gate, Citadel and Castle = better fortifications (proposed HoMM3 progression: a keep, then towers and
+  stronger walls; decided with sieges). No siege code yet.

@@ -48,8 +48,8 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         town.LastBuilt = state.Date;
         if (level.Level == 1)
         {
-            // HoMM3: a new dwelling opens with its first week of creatures.
-            town.SetAvailable(line, town.AvailableOf(line) + definition.WeeklyGrowth);
+            // HoMM3: a new dwelling opens with its first week of creatures, fort bonus included (ADR-066).
+            town.SetAvailable(line, town.AvailableOf(line) + TownRules.WeeklyGrowth(town, definition));
         }
 
         events.Publish(new DwellingBuilt(town.Id, line, level.Level, town.AvailableOf(line)));
@@ -196,7 +196,10 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         events.Publish(new HeroHired(town.Id, hero.Id, heroId));
     }
 
-    /// <summary>Monday: every built dwelling, in towns and on the map, adds its creature's weekly growth to what is waiting (owned or not).</summary>
+    /// <summary>
+    /// Monday: every built dwelling, in towns and on the map, adds its creature's weekly growth to what is waiting (owned
+    /// or not); town dwellings add the fort bonus too (<see cref="TownRules.WeeklyGrowth"/>, ADR-066), map dwellings do not.
+    /// </summary>
     internal void GrowWeekly()
     {
         foreach (var dwelling in state.ObjectsOf<CreatureDwelling>().OrderBy(d => d.Id.Value))
@@ -215,7 +218,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
             foreach (var line in lines)
             {
-                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + line.WeeklyGrowth);
+                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + TownRules.WeeklyGrowth(town, line));
             }
 
             events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));

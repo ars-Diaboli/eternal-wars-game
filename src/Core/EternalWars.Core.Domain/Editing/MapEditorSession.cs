@@ -396,7 +396,10 @@ public sealed class MapEditorSession
         }
     }
 
-    /// <summary>Pre-builds a line's dwelling: 0 none, 1 built, 2 upgraded; the 7-of-9 rule applies (ADR-030).</summary>
+    /// <summary>
+    /// Pre-builds a line's dwelling: 0 none, 1 built, 2 upgraded; the 7-of-9 rule (ADR-030) and the dwelling's
+    /// requirements (the fort, ADR-066) apply.
+    /// </summary>
     public EditResult SetTownDwelling(MapObjectId id, string line, int level)
     {
         if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
@@ -413,6 +416,11 @@ public sealed class MapEditorSession
         if (level < 0 || level > (definition.UpgradesTo is null ? 1 : 2))
         {
             return EditResult.InvalidValue;
+        }
+
+        if (TownRules.UnmetDwellingRequirement(Scenario, town, definition, level) is not null)
+        {
+            return EditResult.RequirementMissing;
         }
 
         var previous = town.DwellingLevel(line);
@@ -871,16 +879,30 @@ public sealed class MapEditorSession
         }
     }
 
-    /// <summary>Map-wide guard rule: HoMM3 zone of control (pickups can be stolen) or fully guarded area.</summary>
-    public void SetGuardMode(GuardMode mode)
+    /// <summary>
+    /// How one monster stack guards its surroundings (ADR-065): Classic (HoMM3 zone of control, pickups can be taken
+    /// from outside) or Area (treasure guard: touching anything in the 3×3 area starts the fight).
+    /// </summary>
+    public EditResult SetMonsterGuardMode(MapObjectId id, GuardMode mode)
     {
-        var previous = Scenario.GuardMode;
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not MonsterGuard monster)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (!Enum.IsDefined(mode))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = monster.Mode;
         Run(new DelegateCommand($"Guard mode {mode}", () => Apply(mode), () => Apply(previous)));
+        return EditResult.Ok;
 
         void Apply(GuardMode value)
         {
-            Scenario.SetGuardMode(value);
-            _bus.Publish(new GuardModeChanged(value));
+            monster.Mode = value;
+            _bus.Publish(new MapObjectChanged(monster.Id));
         }
     }
 

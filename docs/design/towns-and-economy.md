@@ -18,7 +18,7 @@
 | Building | Levels | Effect | Status |
 |---|---|---|---|
 | Town hall | 3 | 500 / 1000 / 2000 gold a day | implemented; a fourth level ❓ |
-| Fort | 3 | Requirement only; what it does (growth, garrison defence, sieges) ❓ | effect open |
+| Fort | 3 | Fort: needed for every dwelling; Citadel / Castle: town dwellings grow +50 % / +100 %. Sieges: wall and gate, then keep, then towers (ADR-066) | dwellings and growth implemented; fortifications wait for sieges (post-1.0) |
 | Blacksmith | 1 | Sells the healing tent and ammo cart (ADR-056) | implemented |
 | Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading ❓ | income implemented, trading open |
 | Mage guild | 4 | Spells by level (ADR-047, ADR-050) | built, no effect until magic (Phase 5) |
@@ -44,7 +44,7 @@
   town. Dwellings can't be demolished. Another town of the same type may choose differently.
 - **All creatures of playable towns are upgradeable**, one upgrade per dwelling (HoMM3-style). An upgraded dwelling
   produces upgraded creatures, and existing stacks can be upgraded in that town for the price difference. The upgrade
-  does not raise growth (ADR-046); which buildings raise growth is open ❓.
+  does not raise growth (ADR-046); the fort does (Citadel, Castle; ADR-066).
 - **Locked-out creatures are still obtainable** from map dwellings and from other towns of the same type that built
   them. The town choice shapes your core army; it is not a hard ban.
 - **Neutral creatures** (and the non-playable Conflux / Dragon Utopia) **may** lack upgrades. They use the same 1–5
@@ -52,7 +52,10 @@
 
 ## Growth (implemented)
 A new dwelling opens with one week of creatures, every Monday adds the creature's `growth`, and unbought creatures
-accumulate.
+accumulate. Every dwelling needs the Fort. A town's dwellings grow **+50 % with the Citadel** (fort 2) and **+100 % with
+the Castle** (fort 3), opening week included; the bonus is rounded down (growth 1 → 1 with a Citadel, 2 with a Castle).
+Map dwellings keep the creature's growth. One rule, `TownRules.WeeklyGrowth`, serves the service, town screen and AI
+(ADR-066).
 
 ## Map dwellings and caravans (implemented, ADR-054)
 - Dwellings of one creature on the adventure map grow every Monday, owned or not; a visiting hero flags one and

@@ -20,7 +20,7 @@
 | 13 | Tactics | Larger deployment zone | Choose battlefield width (28–34) before battle; enemy Tactics reduces yours | built |
 | 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot | built |
 | 15 | Fog ambush | — | Under refog, bumping into an unseen enemy starts an ambush battle | built |
-| 16 | Neutral guards | Zone of control (pickups can be stolen) | Map setting: classic zone of control, or a fully guarded 3×3 area | built |
+| 16 | Neutral guards | Zone of control (pickups can be stolen) | Per stack: classic zone of control (default), or a fully guarded 3×3 area for treasure guards (ADR-065) | built |
 | 17 | Speed | One speed for battle and map | Battle Speed in cells, separate adventure map speed | built |
 | 18 | Morale | Extra turn or freeze only | Also ±50 % initiative for the round when no extra action / freeze triggers | built |
 | 19 | Luck | Attacker only, double damage | Both sides roll: +75 % (attacker) or −50 % (defender); opposite rolls cancel | built |

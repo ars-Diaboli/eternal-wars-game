@@ -14,6 +14,44 @@ public static class TownRules
     /// <summary>A town builds at most this many of its nine dwellings (ADR-030).</summary>
     public const int MaxDwellings = 7;
 
+    /// <summary>
+    /// Extra weekly growth of a town's dwellings from its fort (ADR-066, HoMM3): +50 % with the Citadel (fort 2), +100 %
+    /// with the Castle (fort 3), none below. Map dwellings (<see cref="Objects.CreatureDwelling"/>) never get it.
+    /// </summary>
+    public static int GrowthBonusPercent(Town town) => town.Level(BuiltInBuildings.Fort) switch
+    {
+        >= 3 => 100,
+        2 => 50,
+        _ => 0,
+    };
+
+    /// <summary>
+    /// How many creatures of <paramref name="line"/> the town's dwelling adds every Monday and opens with: the creature's
+    /// weekly growth plus the fort bonus (<see cref="GrowthBonusPercent"/>), the bonus rounded down (growth 1 stays 1 with
+    /// a Citadel). Whether the dwelling is built is not checked.
+    /// </summary>
+    public static int WeeklyGrowth(Town town, CreatureDefinition line) =>
+        line.WeeklyGrowth + (line.WeeklyGrowth * GrowthBonusPercent(town) / 100);
+
+    /// <summary>
+    /// The first requirement the town lacks for a line's dwelling at <paramref name="level"/> (every level up to it counts),
+    /// or null: the editor asks before pre-building a dwelling (every dwelling needs the fort, ADR-066).
+    /// </summary>
+    public static string? UnmetDwellingRequirement(GameState state, Town town, CreatureDefinition line, int level)
+    {
+        var building = BuiltInBuildings.Dwelling(line.Tier);
+        for (var l = 1; l <= Math.Min(level, state.Buildings.MaxLevel(building)); l++)
+        {
+            var row = state.Buildings.Get(building, l);
+            if (row.Requires.FirstOrDefault(r => Level(state, town, r.Building) < r.Level) is { } missing)
+            {
+                return $"{row.Name} needs {state.Buildings.Get(missing.Building, missing.Level).Name}.";
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>The town type's creature lines (base creatures, tier order): its nine dwellings.</summary>
     public static IReadOnlyList<CreatureDefinition> Lines(GameState state, Town town) =>
         state.Creatures.BaseCreaturesOf(town.TownType).ToList();

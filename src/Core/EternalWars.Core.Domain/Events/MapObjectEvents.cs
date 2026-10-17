@@ -37,8 +37,5 @@ public sealed record GuardFled(HeroId Hero, MapObjectId Guard) : IEvent;
 /// <summary>A mine's guard was defeated; the mine can be flagged freely from now on.</summary>
 public sealed record MineGuardDefeated(MapObjectId Mine) : IEvent;
 
-/// <summary>Per-instance data of an object changed (editor: monster, mine guard, chest values; a guard that won a battle).</summary>
+/// <summary>Per-instance data of an object changed (editor: monster incl. its guard mode, mine guard, chest values; a guard that won a battle).</summary>
 public sealed record MapObjectChanged(MapObjectId Object) : IEvent;
-
-/// <summary>Editor: the map's guard mode changed.</summary>
-public sealed record GuardModeChanged(Objects.GuardMode Mode) : IEvent;

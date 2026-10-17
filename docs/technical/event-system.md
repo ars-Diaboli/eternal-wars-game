@@ -153,12 +153,12 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroDefeated(Hero, Owner, Retreated)` | `BattleService`, `GameFlowService` | a hero lost or fled a battle and left the map, or its player was eliminated |
 | `GuardJoined(Hero, Guard, Creature, Count)` / `GuardFled(Hero, Guard)` | `GuardService` | a guard offer was accepted (then `MapObjectRemoved`) |
 | `MineGuardDefeated(Mine)` | `BattleService` | the mine can now be flagged (`MineOwnerChanged` follows) |
-| `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster, mine guard, chest values) |
+| `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster incl. its guard mode, mine guard, chest values) |
 | `RoadsPainted(Positions, Road)` | `MapEditorSession` | road paint/erase and its undo/redo |
 | `TerrainPainted(Positions, Terrain)` | `MapEditorSession` | paint and its undo/redo |
 | `HeroPlaced` / `HeroRemoved` | `MapEditorSession` | editor hero placement |
 | `MapPropertiesChanged(Name, Description)` | `MapEditorSession` | |
-| `HeroStatsChanged(Hero, Attack, Defense, Tactics)` / `GuardModeChanged(Mode)` | `MapEditorSession` | |
+| `HeroStatsChanged(Hero, Attack, Defense, Tactics)` | `MapEditorSession` | (the map-wide `GuardModeChanged` is gone: a monster's guard mode is per stack and reported by `MapObjectChanged`, ADR-065) |
 | `PlayerSlotsChanged` | `MapEditorSession` | slot added/removed/edited |
 | `UndoHistoryChanged(UndoDescription, RedoDescription)` | `MapEditorSession` | after every recorded edit, undo or redo |
 
