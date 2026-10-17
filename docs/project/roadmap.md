@@ -268,7 +268,9 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Several heroes: a main hero; the others carry troops to it and hand them over in the exchange (ADR-059)
 - [x] Buy war machines at the blacksmith: tent, cart for shooters, the offensive machine back with Advanced Ballistics (ADR-059)
 - [ ] Spells (Phase 5), marketplace use (TOWN-2); hiring heroes, artifacts and complexity levels are done
-- [ ] Balance the AI over several maps (`sim game --runs`); a CI check that AI games on the shipped maps finish
+- [x] AI-vs-AI games on generated maps (`sim game --template`); CI plays two weeks on every shipped template (`sim maps`)
+- [ ] Balance the AI over several maps (`sim game --runs`); on generated maps it hardly fights guards yet (heroes still
+      level 1 after 40 days on `duel`), and no game finishes in 40 days
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets
@@ -305,12 +307,14 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       picked at setup (AI random); garrisons for empty slots; HoMM3-style start armies; retry on problems with sub-seeds
       (`GenerateBest`); standard rules; `MapGenerator.Version` in game records (v3); factions as generator input with
       native start-zone terrain, "Random" drawn first; a generated game saves as a map and replays
-- [ ] Connectivity and fairness validation of the whole map ❓ RMG-8
+- [ ] Connectivity and fairness validation of the whole map ❓ RMG-8 (whole-map reachability of start towns is checked in
+      `sim maps`, not yet by the generator itself)
 - [ ] Mirrored/symmetric zones for competitive templates (1.0 scope) ❓ RMG-9
 
 ### Tooling and UI
-- [ ] Headless batch: generate N maps per template × size × seed and validate them (reachability, fairness between
-      start zones), in CI
+- [x] Headless batch in CI: `sim maps` generates N maps per shipped template over its sizes and player counts and checks
+      them (no generator problems, deterministic, every start town reachable from every player, AI-vs-AI play with no
+      refused command, replay round trip); CI job `generated-maps`; fairness waits for RMG-8 (item above)
 - [ ] Editor: template editor (zone graph: add zones, set properties, draw connections) ❓ RMG-10
 - [ ] Editor: "generate map from template" into an editable map
 - [ ] Game: new-game screen picks template, size, players (town and hero per player), seed and options, then generates

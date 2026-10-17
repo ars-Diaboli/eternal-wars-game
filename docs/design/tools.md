@@ -18,5 +18,6 @@ triggers, map resize, the **template editor** and "generate map from template" (
 - **Viewer** (Godot 2D app): a top-down debug front-end over the same core, for rule development and visual debugging
   of AI.
 - **Headless simulator** (plain .NET console, no Godot, `tools/EternalWars.Tools.Sim`): battle statistics, scripted
-  and AI-vs-AI games, replays, balance reports (towns, creatures, lines) and template layouts. It is fast enough for CI
-  and for tuning balance and AI over thousands of games; random-map batch validation in CI is planned.
+  and AI-vs-AI games (on hand-made or generated maps), replays, balance reports (towns, creatures, lines) and template
+  layouts. It is fast enough for CI and for tuning balance and AI over thousands of games; CI generates maps of every
+  shipped template and plays them AI-vs-AI (`sim maps`). Fairness metrics between start zones are still open (RMG-8).

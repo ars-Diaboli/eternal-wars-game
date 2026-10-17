@@ -21,7 +21,8 @@ Phase 4's generator stages 1–6 and the scenario assembly are in. What still bl
 RMG-1 to RMG-7 are answered (see [Answered](#answered)).
 
 <a id="rmg-8"></a>
-**RMG-8 Fairness metrics** (blocks the CI batch validation). Which numbers compare start zones (distance to the
+**RMG-8 Fairness metrics** (blocks fairness checks in the CI batch; `sim maps` already checks problems, determinism,
+reachability and AI play). Which numbers compare start zones (distance to the
 nearest mines, treasure value, guard power on the way), what tolerance, and what happens on failure (retry or
 report)?
 

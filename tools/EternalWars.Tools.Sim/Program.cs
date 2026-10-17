@@ -10,6 +10,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Decisions;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
@@ -28,6 +29,8 @@ namespace EternalWars.Tools.Sim;
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
 /// sim game [--map towns|demo|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file]  (the adventure AI plays every slot)
+/// sim game --template duel|file.ewtemplate.json [--size N] [--players N] [...]  (the same on a map generated per run, random towns)
+/// sim maps [--template name] [--maps 3] [--days 14] [--seed 1]  (CI: generates maps of every shipped template and checks they are playable)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
 /// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
 /// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
@@ -59,7 +62,8 @@ public static class Program
                 ["battle", var attacker, var defender, .. var rest] => Battle(ParseArmy(attacker), ParseArmy(defender), Option(rest, "--runs", 100), (ulong)Option(rest, "--seed", 1)),
                 ["record", var path, .. var rest] => Record(path, Option(rest, "--days", 7), (ulong)Option(rest, "--seed", 1)),
                 ["replay", var path] => Replay(path),
-                ["game", .. var rest] => Game(OptionText(rest, "--map") ?? "towns", Option(rest, "--days", 40), (ulong)Option(rest, "--seed", 1), Option(rest, "--runs", 1), OptionText(rest, "--record")),
+                ["game", .. var rest] => Game(GameMaker(rest), Option(rest, "--days", 40), (ulong)Option(rest, "--seed", 1), Option(rest, "--runs", 1), OptionText(rest, "--record")),
+                ["maps", .. var rest] => Maps(OptionText(rest, "--template"), Option(rest, "--maps", 3), Option(rest, "--days", 14), (ulong)Option(rest, "--seed", 1)),
                 ["towns", .. var rest] => Towns(Option(rest, "--runs", 32), rest.Contains("--upgraded")),
                 ["creatures", "--write", var path] => WriteTable(path),
                 ["creatures"] => Creatures(),
@@ -71,7 +75,7 @@ public static class Program
                 _ => Usage(),
             };
         }
-        catch (Exception e) when (e is FormatException or InvalidOperationException or KeyNotFoundException or IOException)
+        catch (Exception e) when (e is FormatException or InvalidOperationException or ArgumentException or KeyNotFoundException or IOException)
         {
             Console.Error.WriteLine($"error: {e.Message}");
             return 1;
@@ -81,8 +85,7 @@ public static class Program
     /// <summary>Prints the zone layout of a template (a built-in name or a file): one character per tile, one letter per zone.</summary>
     private static int Layout(string template, int size, ulong seed, bool rectangles, bool terrain)
     {
-        var loaded = File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
-            ?? throw new FormatException($"No template '{template}' (built-in: {string.Join(", ", BuiltInTemplates.All.Select(t => t.Name))}).");
+        var loaded = LoadTemplate(template);
         var strategy = rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi;
         var built = terrain ? MapGenerator.Generate(loaded, size, seed, strategy, Catalog) : null;
         var layout = built?.Layout ?? ZoneLayouter.Layout(loaded, size, seed, strategy);
@@ -149,8 +152,7 @@ public static class Program
     /// <summary>Generates a template for N seeds in a row (layout, terrain, connections) and reports the ones with problems, and the time.</summary>
     private static int LayoutBatch(string template, int size, ulong first, int count, bool rectangles)
     {
-        var loaded = File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
-            ?? throw new FormatException($"No template '{template}'.");
+        var loaded = LoadTemplate(template);
         var clock = System.Diagnostics.Stopwatch.StartNew();
         var bad = 0;
         for (var i = 0; i < count; i++)
@@ -169,9 +171,13 @@ public static class Program
         return bad == 0 ? 0 : 1;
     }
 
+    private static MapTemplate LoadTemplate(string template) =>
+        File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
+            ?? throw new FormatException($"No template '{template}' (built-in: {string.Join(", ", BuiltInTemplates.Keys)}).");
+
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file] [--days D] [--seed S] [--runs N] [--record F] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
@@ -381,13 +387,19 @@ public static class Program
     }
 
     /// <summary>The adventure AI plays every slot of a map to the end or the day limit; prints how each game went.</summary>
-    private static int Game(string map, int days, ulong seed, int runs, string? recordPath)
+    private static int Game(Func<ulong, SimGame> make, int days, ulong seed, int runs, string? recordPath)
     {
         var wins = new Dictionary<string, int>();
         var refusedTotal = 0;
         for (var run = 0; run < runs; run++)
         {
-            var (initial, session, ai) = PlayAiGame(map, days, seed + (ulong)run);
+            var game = make(seed + (ulong)run);
+            if (game.Generated is { } generated)
+            {
+                Console.WriteLine($"map {game.State.Map.Name}: attempt {generated.Attempt}{string.Concat(game.Problems.Select(p => $"; problem: {p}"))}");
+            }
+
+            var (session, ai) = PlayAiGame(game, days);
             var state = session.State;
             var winner = state.Outcome is { HasWinner: true } outcome ? string.Join("+", outcome.Winners.Select(w => state.GetPlayer(w).Name)) : (state.IsOver ? "nobody" : "unfinished");
             wins[winner] = wins.GetValueOrDefault(winner) + 1;
@@ -412,7 +424,7 @@ public static class Program
 
             if (recordPath is not null && run == 0)
             {
-                GameRecordSerializer.Save(GameReplay.Record(initial, session), recordPath);
+                GameRecordSerializer.Save(GameReplay.Record(game.Map, session, generated: game.Generated), recordPath);
                 Console.WriteLine($"  recorded → {recordPath}");
             }
         }
@@ -425,7 +437,31 @@ public static class Program
         return refusedTotal == 0 ? 0 : 1;
     }
 
-    private static (MapDocument Map, GameSession Session, AdventureAi Ai) PlayAiGame(string map, int days, ulong seed)
+    /// <summary>
+    /// A game ready to start: its state, the map document it starts from (for records) and, on a generated map, how it was generated and the
+    /// problems of the map kept (<see cref="MapGenerator.GenerateBest"/>).
+    /// </summary>
+    private sealed record SimGame(MapDocument Map, GameState State, GenerationInfo? Generated = null, IReadOnlyList<string>? GenerationProblems = null)
+    {
+        public IReadOnlyList<string> Problems => GenerationProblems ?? [];
+    }
+
+    /// <summary>The games of <c>sim game</c>: a map generated from <c>--template</c> per seed, else the <c>--map</c> (default <c>towns</c>).</summary>
+    private static Func<ulong, SimGame> GameMaker(string[] args)
+    {
+        if (OptionText(args, "--template") is not { } name)
+        {
+            var map = OptionText(args, "--map") ?? "towns";
+            return seed => HandMadeGame(map, seed);
+        }
+
+        var template = LoadTemplate(name);
+        var size = Option(args, "--size", template.Sizes[0]);
+        var players = Option(args, "--players", template.MaxPlayers);
+        return seed => GeneratedGame(template, size, players, seed);
+    }
+
+    private static SimGame HandMadeGame(string map, ulong seed)
     {
         var document = map switch
         {
@@ -433,7 +469,28 @@ public static class Program
             "demo" => MapConverter.ToDocument(DemoScenario.Create()),
             _ => MapSerializer.Load(map),
         };
-        var session = new GameSession(MapConverter.ToGameState(document, options: new GameOptions(Seed: seed), creatures: Catalog));
+        return new SimGame(document, MapConverter.ToGameState(document, options: new GameOptions(Seed: seed), creatures: Catalog));
+    }
+
+    /// <summary>
+    /// A map generated from the template for computer players in the first <paramref name="players"/> start slots, each with a random town,
+    /// assembled like the new-game screen does (<see cref="MapGenerator.Build"/>); the map seed is the game seed.
+    /// </summary>
+    private static SimGame GeneratedGame(MapTemplate template, int size, int players, ulong seed)
+    {
+        if (players < 1 || players > template.MaxPlayers)
+        {
+            throw new FormatException($"{template.Name} has {template.MaxPlayers} start slots, not room for {players} players.");
+        }
+
+        var setups = Enumerable.Range(0, players).Select(slot => new PlayerSetup(slot, $"Player {slot + 1}", IsHuman: false, PlayerSetup.RandomTown)).ToList();
+        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(Seed: seed), Catalog);
+        return new SimGame(MapConverter.ToDocument(state), state, GenerationInfo.Of(template.Name, size, seed, generation.Attempt), generation.Problems);
+    }
+
+    private static (GameSession Session, AdventureAi Ai) PlayAiGame(SimGame game, int days)
+    {
+        var session = new GameSession(game.State);
         var ai = new AdventureAi(session, controlHumanSlots: true);
         if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
         {
@@ -450,7 +507,121 @@ public static class Program
             }
         }
 
-        return (document, session, ai);
+        return (session, ai);
+    }
+
+    /// <summary>
+    /// CI check of the shipped templates (or one): <paramref name="count"/> maps each, cycling through the template's sizes and player counts
+    /// (from the most players down, so empty slots come up too). Each map must generate without problems and the same way twice, let every
+    /// start town reach every other one, and survive <paramref name="days"/> days of AI-vs-AI play with no refused command and a replay of
+    /// the record through JSON to the same state.
+    /// </summary>
+    private static int Maps(string? only, int count, int days, ulong first)
+    {
+        var templates = only is null ? BuiltInTemplates.All : [LoadTemplate(only)];
+        var failed = 0;
+        foreach (var template in templates)
+        {
+            if (TemplateValidator.Validate(template).Where(i => i.Severity == IssueSeverity.Error).Select(i => i.Message).ToList() is { Count: > 0 } issues)
+            {
+                failed += count;
+                Console.WriteLine($"{template.Name}: invalid template: {string.Join("; ", issues)}");
+                continue;
+            }
+
+            for (var i = 0; i < count; i++)
+            {
+                var seed = first + (ulong)i;
+                var size = template.Sizes[i % template.Sizes.Count];
+                var players = template.MaxPlayers - (i % (template.MaxPlayers - template.MinPlayers + 1));
+                var clock = System.Diagnostics.Stopwatch.StartNew();
+                var label = $"{template.Name} {size}×{size} seed {seed}, {players} players";
+                try
+                {
+                    var errors = CheckMap(template, size, players, seed, days, out var summary);
+                    Console.WriteLine($"{label}: {(errors.Count == 0 ? "ok" : "FAILED")}, {summary}, {clock.ElapsedMilliseconds} ms");
+                    errors.ForEach(e => Console.WriteLine($"  {e}"));
+                    failed += errors.Count == 0 ? 0 : 1;
+                }
+                catch (Exception e) when (e is InvalidOperationException or ArgumentException or FormatException)
+                {
+                    failed++;
+                    Console.WriteLine($"{label}: FAILED: {e.Message}");
+                }
+            }
+        }
+
+        Console.WriteLine($"{templates.Count * count} maps of {templates.Count} templates: {failed} failed");
+        return failed == 0 ? 0 : 1;
+    }
+
+    private static List<string> CheckMap(MapTemplate template, int size, int players, ulong seed, int days, out string summary)
+    {
+        var errors = new List<string>();
+        var game = GeneratedGame(template, size, players, seed);
+        errors.AddRange(game.Problems.Select(p => $"generator: {p}"));
+        if (GameStateDigest.Compute(game.State) != GameStateDigest.Compute(GeneratedGame(template, size, players, seed).State))
+        {
+            errors.Add("the same seed generated two different games");
+        }
+
+        errors.AddRange(Unreachable(game.State));
+
+        var (session, ai) = PlayAiGame(game, days);
+        if (ai.Refused > 0)
+        {
+            errors.Add($"the AI issued {ai.Refused} refused commands");
+        }
+
+        var record = GameRecordSerializer.Serialize(GameReplay.Record(game.Map, session, generated: game.Generated));
+        GameReplay.Replay(GameRecordSerializer.Deserialize(record), creatures: Catalog);
+
+        var state = session.State;
+        var outcome = state.Outcome is { HasWinner: true } o ? string.Join("+", o.Winners.Select(w => state.GetPlayer(w).Name)) + " won" : state.IsOver ? "nobody won" : "unfinished";
+        summary = $"attempt {game.Generated!.Attempt}, day {state.Date.AbsoluteDay} {outcome}, {session.CommandLog.Count} commands";
+        return errors;
+    }
+
+    /// <summary>
+    /// The players' start towns another player cannot walk to from its hero: passable terrain, around blocked object cells, through guards
+    /// (they can be beaten) and pickups (they go away), via gates; any other object entrance ends a route.
+    /// </summary>
+    private static IEnumerable<string> Unreachable(GameState state)
+    {
+        foreach (var hero in state.Heroes.GroupBy(h => h.Owner).Select(g => g.First()))
+        {
+            var reached = new HashSet<MapPosition> { hero.Position };
+            var open = new Queue<MapPosition>([hero.Position]);
+            while (open.TryDequeue(out var position))
+            {
+                if (position != hero.Position && state.ObjectCellAt(position) is { Cell: FootprintCell.Visit, Object: var entered })
+                {
+                    if (entered.TeleportTarget is not null && state.TeleportDestination(entered) is { } exit && reached.Add(exit))
+                    {
+                        open.Enqueue(exit);
+                    }
+
+                    if (entered is not (MonsterGuard or ResourcePile or TreasureChest or ArtifactPickup) && entered.EndsRoute)
+                    {
+                        continue;
+                    }
+                }
+
+                foreach (var next in DirectionExtensions.All.Select(position.Step))
+                {
+                    if (state.Map.Contains(next) && state.Terrains.IsPassable(state.Map.GetTerrain(next))
+                        && state.ObjectCellAt(next) is not { Cell: FootprintCell.Blocked } && reached.Add(next))
+                    {
+                        open.Enqueue(next);
+                    }
+                }
+            }
+
+            foreach (var town in state.ObjectsOf<Town>().Where(t => t.Owner is { } owner && owner != hero.Owner && !reached.Contains(t.VisitPosition)))
+            {
+                yield return $"{state.GetPlayer(hero.Owner).Name} cannot reach the town of {state.GetPlayer(town.Owner!.Value).Name} at {town.VisitPosition}";
+            }
+        }
     }
 
     private static int Replay(string path)
@@ -475,15 +646,16 @@ public static class Program
         var json = GameRecordSerializer.Serialize(GameReplay.Record(map, first));
         GameReplay.Replay(GameRecordSerializer.Deserialize(json), creatures: Catalog);
 
-        var (aiMap, aiFirst, firstAi) = PlayAiGame("towns", days: 15, seed: 7);
-        var (_, aiSecond, _) = PlayAiGame("towns", days: 15, seed: 7);
+        var aiGame = HandMadeGame("towns", seed: 7);
+        var (aiFirst, firstAi) = PlayAiGame(aiGame, days: 15);
+        var (aiSecond, _) = PlayAiGame(HandMadeGame("towns", seed: 7), days: 15);
         if (firstAi.Refused != 0 || GameStateDigest.Compute(aiFirst.State) != GameStateDigest.Compute(aiSecond.State))
         {
             Console.Error.WriteLine($"selftest: the AI game diverged or issued {firstAi.Refused} refused commands");
             return 1;
         }
 
-        GameReplay.Replay(GameRecordSerializer.Deserialize(GameRecordSerializer.Serialize(GameReplay.Record(aiMap, aiFirst))), creatures: Catalog);
+        GameReplay.Replay(GameRecordSerializer.Deserialize(GameRecordSerializer.Serialize(GameReplay.Record(aiGame.Map, aiFirst))), creatures: Catalog);
 
         var army = ParseArmy($"{BuiltInCreatures.Pikeman}:20,{BuiltInCreatures.Archer}:10");
         var defender = ParseArmy($"{BuiltInCreatures.HellHound}:10");
