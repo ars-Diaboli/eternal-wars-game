@@ -101,6 +101,18 @@ public sealed record TemplateZone
     /// <summary>Town types the zone's neutral towns may be; null or empty = any playable town. A start zone's own town always follows its player.</summary>
     public IReadOnlyList<string>? TownTypes { get; init; }
 
+    /// <summary>
+    /// Start zones (format v3): buildings the player's towns have built at the start besides the default start (building id → level, e.g.
+    /// <c>fort: 2</c>); dwellings go in <see cref="StartDwellings"/>.
+    /// </summary>
+    public IReadOnlyDictionary<string, int>? StartBuildings { get; init; }
+
+    /// <summary>
+    /// Start zones (format v3): one tier per dwelling the player's towns have built at the start (e.g. <c>[1, 2]</c>), each a line of that tier drawn
+    /// from the seed. Without a tier-1 entry the player picks a tier-1 dwelling at setup (a computer player gets a random one).
+    /// </summary>
+    public IReadOnlyList<int>? StartDwellings { get; init; }
+
     /// <summary>At least this many mines of a resource (the generator may add more by richness).</summary>
     public IReadOnlyDictionary<ResourceType, int> Mines { get; init; } = new Dictionary<ResourceType, int>();
 
@@ -161,7 +173,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 2;
+    public const int CurrentFormatVersion = 3;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 

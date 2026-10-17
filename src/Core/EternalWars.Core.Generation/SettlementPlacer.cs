@@ -30,7 +30,8 @@ public static class SettlementPlacer
 
     private static readonly (int Dx, int Dy)[] Four = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
-    public static void Place(MapTemplate template, GeneratedMap map, ulong seed, CreatureCatalog? creatures = null)
+    /// <summary>Places the towns, mines and piles; <paramref name="startTowns"/> (player slot → town type, RMG-7) gives start towns their type at once.</summary>
+    public static void Place(MapTemplate template, GeneratedMap map, ulong seed, CreatureCatalog? creatures = null, IReadOnlyDictionary<int, string>? startTowns = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
@@ -50,7 +51,7 @@ public static class SettlementPlacer
 
             if (isStart)
             {
-                PlayerTowns(map, spec, zone, tiles, townVisits, streams.For("towns", zone));
+                PlayerTowns(map, spec, zone, tiles, townVisits, streams.For("towns", zone), spec.Owner is { } slot && startTowns?.GetValueOrDefault(slot) is { } picked ? picked : null);
             }
 
             NeutralTowns(map, spec, zone, tiles, townVisits, streams.For("towns", zone + 1000), creatures);
@@ -62,10 +63,10 @@ public static class SettlementPlacer
 
     // Towns -----------------------------------------------------------------------------------
 
-    private static void PlayerTowns(GeneratedMap map, TemplateZone spec, int zone, List<MapPosition> tiles, List<MapPosition> visits, GameRandom random)
+    private static void PlayerTowns(GeneratedMap map, TemplateZone spec, int zone, List<MapPosition> tiles, List<MapPosition> visits, GameRandom random, string? picked)
     {
         var count = Math.Max(1, spec.PlayerTowns.Min + random.Next(spec.PlayerTowns.Max - spec.PlayerTowns.Min + 1));
-        var type = spec.TownTypes is { Count: > 0 } list ? list[0] : TownIds.Haven;
+        var type = picked ?? (spec.TownTypes is { Count: > 0 } list ? list[0] : TownIds.Haven);
         var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(type));
         var centre = Centroid(tiles);
         for (var i = 0; i < count; i++)

@@ -3,7 +3,7 @@
 > Part of the [game design](overview.md). Modelled on the Heroes 3: Horn of the Abyss template system (ADR-023,
 > ADR-034, ADR-064). Open items ❓: [open-questions.md](../project/open-questions.md#random-maps-phase-4).
 
-**Status**: the template format (v2), its validator, two shipped templates (`duel`, `ffa-4` "Free for all") and every
+**Status**: the template format (v3), its validator, two shipped templates (`duel`, `ffa-4` "Free for all") and every
 generator stage including the scenario assembly are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`).
 There is no template editor, user template folder, whole-map validation or game/editor UI yet; `sim layout` prints
 generated maps.
@@ -18,14 +18,15 @@ generated maps.
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
 
-## The template (`MapTemplate`, format v2)
+## The template (`MapTemplate`, format v3)
 - Name, description, supported map sizes, player-count range, max humans, whether an underground level is used.
 - **Zones**, each with:
   - type: player start, AI-only start, treasure, junction (junction behaves like treasure; it only affects validator
     warnings);
   - owner slot for start zones; relative size; level (surface or underground);
   - **towns**: player towns and neutral towns (min/max), and the town types allowed for neutral towns (empty = any
-    playable). A start town takes the type its player picks;
+    playable). A start town takes the type its player picks; start zones may list pre-built buildings and
+    dwellings by tier (v3);
   - **mines**: minimum mines per resource, how they are guarded (`Auto`, `Always`, `Never`), extra resource piles;
   - **treasure**: value bands with a count each (e.g. 500–3000 ×9, 3000–6000 ×6, 10000–15000 ×1);
   - **monster strength**: none, weak, average, strong;
@@ -63,16 +64,28 @@ generated maps.
   chest or pile. Contents are fixed by the generator (resources at 1 gold, 100 lumber/ore, 200 rare; chests the value as
   gold, 500 less as experience). Items worth more than 1000 get a guard of 40–60 % of the value × the zone's strength
   (weak 0.75, average 1, strong 1.5), half in start zones (RMG-2).
-- **Scenario** (RMG-5): `PlayerSetup(Slot, Name, IsHuman, TownType, Hero?, Team?)` per player. A player's start towns
-  take the picked type; the picked hero (else one of the town's heroes) stands at the first town with one stack of its
-  preferred creature worth about 1000 (placeholder). A slot nobody takes keeps its towns, neutral.
+- **Scenario** (RMG-5): `PlayerSetup(Slot, Name, IsHuman, TownType, Hero?, Team?, Tier1Dwelling?)` per player.
+  - The factions are chosen before generation ("Random" is drawn from the seed first) and are an input of the
+    generator, so each start zone is painted with a mix of its town's native terrains (RMG-7). A map generated in the
+    editor without towns keeps the template's terrain.
+  - Start towns: the default start plus the start zone's `startBuildings` and `startDwellings` (by tier); without a
+    tier-1 dwelling there, the one the player picked at setup (a computer player gets a random one). Start dwellings
+    open with a week of creatures.
+  - The picked hero (else one of the town's heroes) stands at the first town with 2–3 stacks of the town's tier-1 and
+    tier-2 creatures, 1000–1500 power.
+  - Neutral towns keep the default start; a slot nobody takes keeps its town, neutral, garrisoned by the zone's strength.
+  - Standard rules; complexity and fog from the new-game screen; the map is named "template size×size #seed".
+- **Problems**: `MapGenerator.GenerateBest` retries with up to 9 sub-seeds and keeps the first clean map, else the one
+  with the fewest problems, which the new-game screen shows.
+- **Generator version**: `MapGenerator.Version` is saved with the game record (`GenerationInfo`) and shown with the seed;
+  another version warns that the seed may give another map.
 
 - **Guards** (`GuardPicker`): army power is `count × creature value`. A power maps to overlapping tier ranges
   (counts 6–60, 2–40, 1–25, 1–15, 1–10 for tiers 1–5), so one power can be a few stacks of a high tier or many of a
   lower one. Creatures come from the playable towns and neutrals, never upgraded.
 - **Zone strength** (`ZoneGuards`, placeholders): mine guards weak 800 / average 2000 / strong 4500 (gold ×1.5, rare
   ×1.25); neutral town garrisons 1500 / 4000 / 9000 in two stacks.
-- Anything a stage cannot place is listed in `GeneratedMap.Problems`, not thrown; what to do with them is open (RMG-5).
+- Anything a stage cannot place is listed in `GeneratedMap.Problems`, not thrown (and retried, see above).
 
 ## Scope
 - **In 1.0**: mirrored/symmetric generation (a template marks zones as mirrored, point or axis symmetry) ❓; saving

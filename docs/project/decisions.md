@@ -998,7 +998,7 @@ Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) a
 
 ### ADR-064: Random map generation: project layout and seed streams (2026-10-17)
 **Status**: accepted; stages 1–6 and the scenario assembly implemented (layout, terrain, connections, towns/mines, roads, treasure; `MapGenerator`);
-validation of the whole map, mirroring and the new-game screen pending
+validation of the whole map, teams, mirroring and the new-game screen pending
 - `src/Core/EternalWars.Core.Generation` exists (engine-free, warning-free like every core project). It references `Core.Domain`
   only; `Core.Data` references it (template file format). It is a dependency of the tests, and later of the `sim` tool and the apps.
 - **Refines ADR-023**: the generator outputs a **scenario `GameState`** (never started: the same object the map editor works on),
@@ -1104,6 +1104,26 @@ zones and the list of `Obstacles`). User-approved defaults:
   new-game screen item (Godot).
 - `sim layout ... --terrain` also shows roads (`+`), chests (`c`), artifacts (`a`), Area guards (`A`); `--seeds N` runs every stage (duel at 72: 0 of 40 with problems; Free for all
   at 96: 1 of 40, a crowded zone without room for its neutral town).
+
+**The scenario and native start zones (2026-10-17)** (user answers on RMG-5 and RMG-7):
+- **Factions are an input of the generator** in the game: `MapGenerator.Build` resolves "Random" (`PlayerSetup.RandomTown`, stream `factions`) first, then generates with
+  the players' towns (`startTowns`, slot → town type). A start zone is painted with a mix of its town's native terrains (`TerrainPainter.NativeTerrains`, intersected with the
+  zone's terrain list when that has any of them); other zones follow the template only. Start towns are placed as the picked type at once. Generated in the editor without
+  towns, start zones keep the template's terrain and may not match a town chosen later.
+- **Start towns**: the default start plus the start zone's `startBuildings` (building id → level) and `startDwellings` (one tier per dwelling, each a line of that tier drawn from
+  the seed), template format **v3**; the validator refuses unknown buildings or levels, dwellings among the buildings, more dwellings than the 7-of-9 rule allows, and start
+  buildings outside start zones. Without a tier-1 entry, the player's pick (`PlayerSetup.Tier1Dwelling`, chosen on the game creation screen after the faction) is built; a
+  computer player, or a player who picked none, gets a random tier-1 dwelling. Every start dwelling opens with a week of creatures, the fort's bonus included (ADR-066).
+- **Neutral towns** keep the default start. **A slot nobody takes**: its town stays in place, neutral, with a garrison by the zone's strength (two stacks, as neutral towns).
+- **Start hero army** (HoMM3-style, replaces the one-stack placeholder): 2–3 stacks of the town's tier-1 and tier-2 creatures, the preferred creature first when it is one of
+  them, 1000–1500 power shared 60/40 or 50/30/20.
+- **Problems**: `MapGenerator.GenerateBest` tries the seed, then up to 9 sub-seeds (`AttemptSeed`, deterministic), and keeps the first map without problems; if every attempt
+  has some, the one with the fewest, whose problems the new-game screen shows (`GenerationResult`).
+- **Rules**: standard (`ScenarioRules.Default`: last team standing, elimination with the 7-day grace period); complexity and fog come with the new-game screen's options. The map
+  is named "template size×size #seed".
+- **Generator version**: `MapGenerator.Version` (1), bumped when the same inputs would give another map. Game records (format **v3**) carry `GenerationInfo(Template, Size,
+  Seed, Attempt, GeneratorVersion)`; `VersionWarning` tells when the seed would give another map with this build. A generated game is saved as an ordinary map
+  (`MapConverter.ToDocument`) and replays from it.
 
 ### ADR-065: Guard mode per monster stack (2026-10-17)
 **Status**: accepted (2026-10-17), user decision on RMG-2; amends ADR-040

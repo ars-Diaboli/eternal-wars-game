@@ -12,34 +12,19 @@ Phase 4's generator stages 1–6 and the scenario assembly are in. What still bl
 
 | Id | Question | Blocks |
 |---|---|---|
-| [RMG-5](#rmg-5) | The rest of the scenario: pre-built buildings, scenario defaults, problems policy | Phase 4: new-game screen |
 | [RMG-6](#rmg-6) | Teams in templates | Phase 4: 2v2 template |
-| [RMG-7](#rmg-7) | Start zones and the player's town type | Phase 4: fair start zones |
 | [TOWN-2](#town-2) | Marketplace trading rates | Phase 3: marketplace, governor's 150 %, AI marketplace use; treasure resource values |
 | [HERO-1](#hero-1) | Third Offense and Defense skills, skill specialties | Phase 3: skills |
 | [HERO-2](#hero-2) | Rage and Adrenaline | Phase 3: faction groups |
 
 ## Random maps (Phase 4)
 
-RMG-1 to RMG-4 are answered (see [Answered](#answered)); RMG-5 partly.
-
-<a id="rmg-5"></a>
-**RMG-5 🚧 The rest of the scenario** (blocks the new-game screen). Answered: a slot nobody takes keeps its towns in
-place as neutral towns; players pick their start hero at setup, else one of the town's heroes is drawn (ADR-064). Still
-open: pre-built buildings and dwellings for start and neutral towns (today the default start: town hall 1, fort 1,
-tavern 1); should towns of empty slots get a garrison; the start hero's army (placeholder: one stack of its preferred
-creature worth 1000); scenario defaults (victory/defeat rules, grace days, complexity, name and description); what
-happens when a stage reports `Problems` (accept, fail, or retry with the next sub-seed); where the generator version is
-stored.
+RMG-1 to RMG-5 and RMG-7 are answered (see [Answered](#answered)).
 
 <a id="rmg-6"></a>
 **RMG-6 🚧 Teams in templates** (blocks the 2v2 starter template). ADR-032 says templates define default teams, but
 the format has none. A field per start zone (team) in the template format?
 
-<a id="rmg-7"></a>
-**RMG-7 🚧 Start zones and town types** (blocks fair start zones). Start-zone terrain is painted before the player picks
-a town, so it may not be native (a large cost under ADR-045). Repaint the start zone after the pick, or choose towns
-before generating? Is "random town" a setup option?
 <a id="rmg-8"></a>
 **RMG-8 Fairness metrics** (blocks the CI batch validation). Which numbers compare start zones (distance to the
 nearest mines, treasure value, guard power on the way), what tolerance, and what happens on failure (retry or
@@ -275,6 +260,25 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
 - RMG-4 roads: towns of a zone and the zones (through their passages) are joined by road; gates and the lumber mill and
   ore mine closest to the town get a road where the zone has a town; configurable per template (ADR-064).
 - RMG-5 (part): a slot nobody takes keeps its towns as neutral towns; players pick their start hero at setup (ADR-064).
+- RMG-5 (rest, 2026-10-17; implemented, ADR-064):
+  - Start towns: pre-built buildings come from a field of the template's start zone (hand-made maps already set them per
+    town in the map editor). Without a tier-1 dwelling there, the player picks one on the game creation screen after
+    picking the faction; a computer player gets a random tier-1 dwelling.
+  - Neutral towns: the default start (town hall 1, fort 1, tavern 1).
+  - A slot nobody takes: its neutral town gets a garrison by the zone's strength, like any neutral town.
+  - Start hero army: HoMM3-style, 2–3 stacks of the town's tier-1 and tier-2 creatures (the preferred creature among
+    them when it is tier 1–2), about 1000–1500 power.
+  - Problems: retry with the next sub-seed of the same seed (up to 10 times, deterministic); if all fail, use the best
+    map and show its problems on the new-game screen.
+  - Rules: standard victory, elimination with the 7-day grace period, complexity and fog from the new-game screen; the
+    map is named after the template, size and seed.
+  - Generator version: a `MapGenerator.Version` constant saved with the game record and shown with the seed; another
+    version warns that the map may differ.
+- RMG-7 start zones and town types (2026-10-17; implemented, ADR-064): in the game, factions are chosen before generation and
+  are an input of the generator ("Random" is drawn from the seed first), so start zones are painted native; generated
+  in the editor with a random or later-chosen town, the terrain may differ. A start zone is painted with a mix of its
+  town's native terrains (intersected with the template's terrain list when it has one); other zones follow the
+  template only.
 
 **Towns (2026-10-17)**
 - TOWN-1 the fort: fort 1 is needed to build creature dwellings and gives a wall and gate in sieges; Citadel +50 %,
