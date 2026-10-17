@@ -50,6 +50,18 @@ public enum ObstacleDensity
     Dense,
 }
 
+/// <summary>Whether the mines of a zone have a guard on them.</summary>
+public enum MineGuarding
+{
+    /// <summary>HoMM3 style: guarded by the zone's monster strength, except in start zones (and where the strength is none).</summary>
+    Auto,
+
+    /// <summary>Always guarded (a zone with no monsters uses weak ones).</summary>
+    Always,
+
+    Never,
+}
+
 /// <summary>A minimum and a maximum count (both inclusive).</summary>
 public sealed record CountRange(int Min = 0, int Max = 0)
 {
@@ -99,6 +111,9 @@ public sealed record TemplateZone
 
     public MonsterStrength Monsters { get; init; } = MonsterStrength.Average;
 
+    /// <summary>Guards on the zone's mines (see <see cref="MineGuarding"/>).</summary>
+    public MineGuarding MineGuards { get; init; } = MineGuarding.Auto;
+
     /// <summary>Rock clumps inside the zone (see <see cref="TerrainPainter"/>).</summary>
     public ObstacleDensity Obstacles { get; init; } = ObstacleDensity.Sparse;
 
@@ -117,6 +132,9 @@ public sealed record TemplateConnection
 
     /// <summary>Neutral army power (creature value × count, as the AI measures it) guarding a normal or gate passage; 0 = unguarded.</summary>
     public int GuardValue { get; init; }
+
+    /// <summary>How many passages the connection makes through the border (or pairs of gates, for a gate), spread along it. At least 1.</summary>
+    public int Passages { get; init; } = 1;
 }
 
 /// <summary>
