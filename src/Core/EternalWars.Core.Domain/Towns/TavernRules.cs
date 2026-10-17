@@ -6,7 +6,7 @@ using EternalWars.Core.Domain.Heroes;
 namespace EternalWars.Core.Domain.Towns;
 
 /// <summary>
-/// Who a tavern offers (ADR-060). The six main towns sit on the ring of towns (lore.md); a hero's <b>rank</b> for a town is
+/// Who a tavern offers (ADR-060). The six main towns sit on the ring of towns (docs/content/lore.md); a hero's <b>rank</b> for a town is
 /// 0 native, 1 adjacent (the two ring neighbours), 2 not opposing (everything else) or 3 opposing (the town across the
 /// ring). Stronghold and Swamp Bestiary have no ring: 0 native, 1 warriors of other towns, 2 everyone else. A basic tavern
 /// offers two heroes, an upgraded one four, each slot asking for a rank; a rank with nobody left falls through to the
@@ -22,7 +22,7 @@ public static class TavernRules
     public const int MaxHeroes = 8;
 
     /// <summary>
-    /// The ring of towns in order (lore.md): the Dawn Covenant (Sylvan, Haven, Academy) and the Ashen Court (Dungeon,
+    /// The ring of towns in order (docs/content/lore.md): the Dawn Covenant (Sylvan, Haven, Academy) and the Ashen Court (Dungeon,
     /// Necropolis, Inferno) are its two arcs, and the town across the ring is each town's arch-rival.
     /// </summary>
     public static IReadOnlyList<string> Ring { get; } =

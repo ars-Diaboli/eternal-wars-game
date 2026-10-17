@@ -96,7 +96,7 @@ public static class BuiltInSkills
         new(DefensePlaceholder, "defense", "(defense skill to be decided)", SkillLevel.Expert, "no effect yet"),
         new(Treasury, "estates", "Treasury", SkillLevel.Master, "+250/500/750/1000 gold a day; Expert and Master also 0.5/1 % of the gold on hand"),
         new(Prospecting, "estates", "Prospecting", SkillLevel.Expert, "+1 lumber and ore / +2 / +2 and one of each rare resource a day; 10/20/30 % chance of +50 % from a resource pile"),
-        new(Stewardship, "estates", "Stewardship", SkillLevel.Expert, "−5/10/15 % costs in the town the hero is in (towns, Phase 3)"),
+        new(Stewardship, "estates", "Stewardship", SkillLevel.Expert, "governed town only: buildings −5/10/15 %, creatures −10/15/20 % (StewardshipRules)"),
         new(Logistics, "pathfinding", "Logistics", SkillLevel.Master, "+10/20/30/40 % movement points"),
         new(Pathfinding, "pathfinding", "Pathfinding", SkillLevel.Expert, "−25/50/75 % of the non-native terrain penalty"),
         new(TroopManagement, "pathfinding", "Troop management", SkillLevel.Expert, "+1/2/3 to the army's adventure map speed"),
@@ -128,8 +128,9 @@ public static class BuiltInSkills
     public static string SchoolGroup(string town) => $"magic.{town}";
 
     /// <summary>
-    /// Rival towns, the sworn enemies of the lore (lore.md): their schools are offered to each other's heroes only rarely
-    /// (<see cref="SkillOffers.RivalSchoolChance"/>). The one rule effect of rivalries (ADR-048, an exception to ADR-029).
+    /// Rival towns, the sworn enemies of the lore (docs/content/lore.md): their schools are offered to each other's heroes only
+    /// rarely (<see cref="SkillOffers.RivalSchoolChance"/>, ADR-048). One of the two rule effects of rivalries, exceptions to
+    /// ADR-029; the other is the tavern ring (<see cref="TavernRules.Ring"/>, ADR-060).
     /// </summary>
     public static IReadOnlyDictionary<string, IReadOnlyList<string>> Rivals { get; } = new Dictionary<string, IReadOnlyList<string>>
     {

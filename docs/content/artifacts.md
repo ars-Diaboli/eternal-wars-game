@@ -3,14 +3,15 @@
 The artifact catalog (roadmap, "Artifacts"). **Implemented in core (ADR-061)**: the table `data/artifacts.csv` (with
 `data/artifact_sets.csv`) holds every artifact below plus 31 HoMM3-style placeholder items (67 artifacts in all), and the rules apply
 the effects the game has. This page is the design and lore; the tables are the truth for numbers (see "Editing artifacts"
-in [development.md](development.md)). Rules touched: ADR-018 (movement), ADR-025 (income sources), ADR-045 (terrain
+in [development.md](../technical/development.md)). Rules touched: ADR-018 (movement), ADR-025 (income sources), ADR-045 (terrain
 penalties), ADR-053 (morale and luck), ADR-055 (primary stats). Lore: [lore.md](lore.md). Every name and number is a
 draft to react to.
 
 **What is applied and what is not.** The rows below state the intended effect. The game applies attack, defense,
 spell power and knowledge (as stats, they matter with magic), morale, luck, movement, battle speed, melee and ranged
 damage, damage taken, daily income, native terrain, terrain penalty and skill levels. Effects that need systems that do
-not exist yet are in the table's notes as "Not yet": a mana pool (Amulet of the Deep), spell resistance and reflection
+not exist yet are in the table's notes as "Not yet": a mana effect kind (Amulet of the Deep; the mana pool exists,
+ADR-063, but no artifact effect feeds it), spell resistance and reflection
 (Aegis of Ash, Scale of the Elder Dragon, Mirror of the Lightless), regeneration (Root of the Oldest Tree), re-rolled
 morale (Dawn Banner), starting initiative (War-Drum), double damage (Bone Dragon's Fang), fire resistance, the best
 magic skill (Crown of the Waning Eye), cheaper spells and offensive spell levels (sets). Where the table substitutes a
@@ -107,7 +108,7 @@ One of each in a game; their stories are the Wheel's. Not in chests: guarded, in
 | Root of the Oldest Tree | Misc | own stacks regenerate 5 % of their health each round | Sylvan heartwood; the Treant that guarded it died with its roots in the soil |
 | Mirror of the Lightless | Misc | enemy spells have a 20 % chance to be reflected at their caster | Dungeon-made: the dark does not forgive being looked at |
 | Orcs' First Axe | Weapon | +5 Attack, +1 luck | a crude axe passed to every Stronghold chieftain; none has lost a fight with it |
-| Eye of the Swamp | Neck | +2 luck, immune to the Mire spell | something looked back from the water; the cult says it is not a threat |
+| Eye of the Swamp | Neck | +2 luck; immunity to Mire pending (Mire is no longer a school spell, ADR-063) ❓ | something looked back from the water; the cult says it is not a threat |
 
 ## Sets
 
@@ -123,14 +124,13 @@ Set pieces: wearing all of a set gives an extra bonus, listed after the individu
 ## Implementation
 
 The core is in place (ADR-061): table and catalog, hero equipment and backpack, equip, unequip and give commands, effects in
-battle, movement, income and terrain, map pickups that roll by tier, loot, map format v11, editor session calls, the AI.
-What is left: giving artifacts between heroes in the UI, editor inspector rows, artifacts in chests, the "Not yet" effects.
+battle, movement, income and terrain, map pickups that roll by tier, loot, map format v11, editor session calls, the AI,
+and the hero screen with the paper doll and backpack (`src/Godot/EternalWars.Godot.UI/Hud/HeroPanel.cs`). What is left: giving artifacts between heroes in the UI, editor inspector rows, artifacts in chests, the "Not yet" effects.
 
 ## Open
 
 - Numbers, after play-tests; whether Major artifacts need a guard.
 - Which artifacts count as Relics, and whether a campaign can reuse them.
-- Loot that does not fit in a full backpack is lost; the winner always takes all of a defeated hero's artifacts (user decision); when they do not all fit in its 50 slots, the most valuable come first (`ArtifactValue`).
 - How sets work across towns (any set bonus for non-town heroes?).
 - Whether a merchant town building could sell artifacts later, and whether chests may hold one.
-- Which skills, artifacts and buildings should change morale and luck besides the artifacts (open question 5).
+- Which skills, artifacts and buildings should change morale and luck besides the artifacts ([CMB-2](../project/open-questions.md#cmb-2)).

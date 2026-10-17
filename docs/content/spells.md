@@ -1,28 +1,32 @@
 # Spells
 
-The spell catalog for magic (Phase 5): eight schools, four spell levels, three ranks per spell. **Nothing here is
-implemented yet** (roadmap, "Magic"); this is the content the spell table `data/spells.csv` will start from. Rules:
-ADR-047 (structure), ADR-048 (skills), ADR-055 (Spell Power and Knowledge), ADR-042 (creature casters, immunities).
-Lore: [lore.md](lore.md). Skills that drive magic: [skills.md](skills.md#magic-schools). Spell ids and names are drafts;
+The spell catalog for magic (Phase 5): six schools, four spell levels, three ranks per spell. **No spells or casting
+yet** (roadmap, "Magic"); mana is in (`ManaRules`, ADR-063). This is the content the spell table `data/spells.csv` will
+start from. Rules: ADR-047 (structure), ADR-048 (skills), ADR-055 (Spell Power and Knowledge), ADR-042 (creature casters,
+immunities), ADR-063 (six schools, mana, faction groups). Lore: [lore.md](lore.md). Skills that drive magic: [skills.md](skills.md#magic-schools). Spell ids and names are drafts;
 every number is a proposal to react to.
 
-The 32 spell ids below are the ones `data/heroes.csv` already names as hero specialties (`spell light.bless`, …), so
-the roster and this catalog agree.
+The 24 school spell ids below are the ones `data/heroes.csv` already names as hero specialties (`spell light.bless`, …),
+so the roster and this catalog agree. Stronghold and Swamp Bestiary have no school (ADR-063): their sections are
+faction-ability drafts, not school spells.
 
 ## How magic works (proposal)
 
-- **Schools**: one per playable town; any hero may learn any school (a rival town's school is rarely offered, ADR-048).
+- **Schools**: six, one per ring town (Light, Nature, Arcana, Death, Chaos, Shadow; `BuiltInSkills.Schools`). Stronghold
+  and Swamp Bestiary have the faction groups Rage and Adrenaline instead (ADR-063). Any hero may learn any school (a
+  sworn enemy's school is rarely offered, ADR-048).
 - **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1 spells, Advanced → 2,
   Expert → 3, Master → 4). The **mage guild** of the same level in a town offers spells of that level; a visiting hero
   learns the ones its skills allow (a spell not in a guild can be found in map shrines, later).
 - **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill upgrades
   learned spells to rank II (Basic) and rank III (Advanced). Rank changes what a spell does, not just its strength.
-- **Mana**: pool of **10 × Knowledge**, regenerating 1 a day plus the school's **attunement** bonus; resting in a town
-  refills it. A spell costs its listed mana (rank-independent) minus the attunement discount of its school.
+- **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement; at the start of the owner's turn a
+  hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (rank-independent) minus attunement,
+  but never less than **25 %** of the base, rounded up. Refilling in a town is not in code ❓.
 - **Strength**: damage and healing scale with **Spell Power** (SP); durations are in rounds.
 - **In battle**: the hero casts **one spell per round** before or after its stacks act (exact timing ❓). Spells that target a stack cannot target war machines unless stated.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`,
-  `curse`, `blind`), already in the creature table; a spell lists its tags. `SpellResistance n` creatures ignore spells of
+  `curse`, `blind`), already in the creature table; a spell lists its tags. Proposed addition: `holy` (Smite). `SpellResistance n` creatures ignore spells of
   level n and below (rank III counts one level higher, ADR-049).
 
 ## Light (Haven)
@@ -113,7 +117,7 @@ Dark-elf magic of the lightless places: cut vision, steal footing, and make the 
 - *Blind*: the Dungeon's oldest trick: the dark is not the absence of light, it is a thing that can be thrown.
 - *Despair*: a dark-elf commander does not need to kill a stack if the stack has already stopped believing.
 
-## Shamanism (Stronghold)
+## Shamanism (Stronghold, faction-ability drafts)
 
 > Not a hero school any more (ADR-063): Stronghold has the Rage group. These spells are drafts to reuse as creature or faction abilities.
 
@@ -130,7 +134,7 @@ Orc rites: no spell books, only drums, bone and ancestors, and a loud confidence
 - *Earthquake*: the clans have survived several turnings by never building anything worth burning, and know exactly how
   to make others regret building.
 
-## Primal (Swamp Bestiary)
+## Primal (Swamp Bestiary, faction-ability drafts)
 
 > Not a hero school any more (ADR-063): Swamp Bestiary has the Adrenaline group. These spells are drafts to reuse as creature or faction abilities.
 
@@ -149,11 +153,12 @@ Beast-cult magic of the drowned lowlands: not spells but invitations, answered b
 ## Creature casters and placeholder ids
 
 The creature table already names caster spells (`Caster fireball 1`, …). Some are catalog spells; the rest become
-creature-only abilities when magic arrives (open question 7):
+creature-only abilities when magic arrives ([MAG-1](../project/open-questions.md#mag-1)):
 
 | Id in `creatures.csv` | Becomes |
 |---|---|
-| `fireball`, `frost-bolt`, `blind`, `bloodlust` | `chaos.fireball`, `arcana.frost-bolt`, `shadow.blind`, `shamanism.bloodlust` |
+| `fireball`, `frost-bolt`, `blind` | `chaos.fireball`, `arcana.frost-bolt`, `shadow.blind` |
+| `bloodlust` | `shamanism.bloodlust` (a faction-ability draft, not a school spell) |
 | `cure` | `light.heal` (rank I) |
 | `resurrection`, `rebirth` | creature-only: raise a stack (rank-limited) |
 | `lightning` | creature-only, tag `lightning` |
@@ -162,7 +167,8 @@ creature-only abilities when magic arrives (open question 7):
 ## Adventure spells (proposal)
 
 A few spells are cast on the adventure map, from the hero's spell book, at the cost of mana (and the day's movement
-where noted). These do not fit a school: every hero learns them at Basic or Advanced magic of the school.
+where noted). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic, level 3 (Town Portal,
+Dimension Door) at Expert ❓.
 
 | Spell | School | Level | Mana | Effect |
 |---|---|---|---|---|
@@ -171,14 +177,17 @@ where noted). These do not fit a school: every hero learns them at Basic or Adva
 | View Terrain | Nature | 2 | 9 | reveals the map around the hero (radius 12) until the next turn |
 | Grave Whisper | Death | 2 | 9 | shows the dead of recent battles on the map: the next battle gives +10 % raised skeletons |
 | Distant Vision | Light | 1 | 5 | reveals the creatures and heroes in a region |
-| Feast | Primal | 2 | 9 | the army gets +1 map speed until the next turn |
+| Feast | Primal (faction-ability draft) | 2 | 9 | the army gets +1 map speed until the next turn |
 
 ## Open
 
 - Numbers: mana pool, cost scale, damage formulas, durations (play-test with the simulator).
 - Timing: exactly when the hero casts (before the round or when the hero's slot comes), and spell targeting of
   machines.
-- Spell tags (open question 7), and which tags creatures resist.
+- Spell tags ([MAG-1](../project/open-questions.md#mag-1)), and which tags creatures resist.
 - Artifacts that raise spell power, knowledge or school skills, see [artifacts.md](artifacts.md).
 - Whether Raise Dead and Beast Call keep summoned creatures across battles.
-- Adventure spells and what they cost in movement.
+- Adventure spells and what they cost in movement; whether Town Portal and Dimension Door should need only Advanced magic.
+- Whether attunement also raises spell **potency** for some schools (ADR-047 says so; ADR-063 and `ManaRules` have pool,
+  daily mana and cost only).
+- Whether a town refills mana (not in code).

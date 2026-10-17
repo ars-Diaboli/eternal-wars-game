@@ -42,7 +42,7 @@ Helpers:
 | **Breadth-first re-entrancy**: events published by a handler are queued and run after the current event has reached *all* handlers. | Every listener sees `A` before anything caused by `A`; no half-updated observers. |
 | **Safe (un)subscribe during dispatch**: takes effect from the next event. A handler disposed mid-dispatch is skipped. | Views can unsubscribe themselves; no "collection modified" errors. |
 | **Fail fast**: a throwing handler aborts dispatch, discards queued events and rethrows to the outermost publisher. | Bugs surface immediately instead of corrupting later turns. |
-| **Not thread-safe.** | The simulation runs on one thread (see architecture §5). |
+| **Not thread-safe.** | The simulation runs on one thread (see [architecture §5](architecture.md#5-threading-model)). |
 
 ## Conventions
 
@@ -53,8 +53,9 @@ Helpers:
 - Include enough data for a view to update **without** querying state when practical (e.g.
   `ResourcesChanged` carries both `Previous` and `Current`, so UI can animate the delta).
 - **Publish after mutating.** By the time a handler runs, `GameState` already reflects the event.
-- Group events per area in `Core.Domain/Events/` (`TurnEvents`, `EconomyEvents`, `HeroEvents`,
-  `MapObjectEvents`, `VisibilityEvents`, `DecisionEvents`, `EditorEvents`).
+- Group events per area in `Core.Domain/Events/` (`TurnEvents`, `GameFlowEvents`, `EconomyEvents`, `HeroEvents`,
+  `ArmyEvents`, `ArtifactEvents`, `MapObjectEvents`, `TownEvents`, `BattleEvents`, `VisibilityEvents`, `DecisionEvents`,
+  `EditorEvents`).
 - **Core handlers that react to events use the event's data, not current state** (e.g.
   `VisibilityService` reveals around `HeroMoved.To`, not the hero's position). When a move is made
   from inside another handler, its events are queued and delivered after the hero has walked on.
@@ -80,7 +81,7 @@ this.SubscribeWhileInTree<HeroMoved>(session.Events, e =>
 
 // Dedicated handler class: core rules reacting to other rules. Real example: fog of war.
 public sealed class VisibilityService(GameState state, IEventPublisher events)
-    : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>, IEventHandler<MineOwnerChanged>
+    : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>, IEventHandler<MineOwnerChanged>, ...
 {
     public void Handle(HeroMoved e) => RevealAround(state.GetHero(e.Hero), e.To); // publishes TilesRevealed
     ...
@@ -104,25 +105,37 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroMoved(Hero, From, To, RemainingMP)` | `HeroMovementService` | each successful step (a `MoveTo` publishes one per step) |
 | `HeroTeleported(Hero, From, To)` | `MapObjectInteractionService` | a gate moved the hero |
 | `HeroMovementRestored(Hero, MP)` | `HeroMovementService` | owner's turn start |
-| `HeroExperienceGained(Hero, Amount, Total)` | `MapObjectInteractionService` | chest reward taken as XP |
+| `HeroManaRestored(Hero, Mana, MaxMana)` | `TurnService` | owner's turn start, daily mana (ADR-063); not published when the pool is full |
+| `HeroExperienceGained(Hero, Amount, Total)` | `ProgressionService` | chest reward taken as XP, battle won |
+| `HeroLeveledUp(Hero, Level, Skill, SkillLevel, Stat, StatValue)` | `ProgressionService` | a level-up choice applied: the skill picked (null: none) and the primary stat raised |
+| `WarMachineBought(Town, Hero, Slot)` | `TownService` | the blacksmith sold a war machine to the visiting hero (ADR-056) |
+| `WarMachineLost(Hero, Slot)` | `BattleService` | a hero's war machine was destroyed in battle |
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
-| `MineOwnerChanged(Mine, Previous, Current)` | interactions / editor | mine flagged |
-| `TownOwnerChanged(Town, Previous, Current)` | interactions, `BattleService`, editor | town captured (empty garrison walked into, or garrison beaten) or set in the editor |
+| `MineOwnerChanged(Mine, Previous, Current)` | interactions, `BattleService`, `GameFlowService`, editor | mine flagged (after its guard was beaten), released by a defeated player, or set in the editor |
+| `DwellingOwnerChanged(Dwelling, Previous, Current)` | interactions, `GameFlowService`, editor | a map dwelling flagged, released by a defeated player, or set in the editor |
+| `DwellingCreaturesGrew(Dwelling, Available)` | `TownService` | a map dwelling's weekly growth arrived (after `WeekStarted`) |
+| `DwellingRecruited(Dwelling, Hero, Creature, Count, Available)` | interactions, `CaravanService` | recruited by a visiting hero, or ordered for a caravan (Hero null) |
+| `TownOwnerChanged(Town, Previous, Current)` | `TownService.Capture` (from interactions, `BattleService`), `GameFlowService`, editor | town captured (empty garrison walked into, or garrison beaten), released by a defeated player, or set in the editor |
+| `GovernorChanged(Town, Previous, Current)` | `TownService` | a town's governor set or cleared (ADR-063); a hero governing another town leaves it first |
 | `TownBuilt(Town, Building, Level)` / `DwellingBuilt(Town, Line, Level, Available)` | `TownService` | a building level or a dwelling (1 built, 2 upgraded) |
 | `CreaturesRecruited(Town, Creature, Count, Hero, Available)` / `StackUpgraded(Town, Hero, Slot, From, To, Count)` | `TownService` | recruits into the garrison (Hero null) or the visiting hero; a stack upgraded for the price difference |
-| `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, editor | all seven garrison slots after any change |
+| `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, `CaravanService`, editor | all seven garrison slots after any change |
 | `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`) |
+| `CaravanDispatched(Caravan, Owner, Source, Destination, Creature, Count, Days)` | `CaravanService` | a caravan left a map dwelling or a town (ADR-054) |
+| `CaravanArrived(Caravan, Destination, Creature, Count)` | `CaravanService` | owner's turn start: the troops joined the destination garrison (`GarrisonChanged` just before) |
+| `CaravanReturned(Caravan, Source, Creature, Count)` | `CaravanService` | the route was blocked: troops back at the source (a dwelling refunds the price) |
+| `CaravanLost(Caravan, Destination, Creature, Count, Reason)` | `CaravanService` | the destination was lost, or the way back was closed |
 | `HeroHired(Town, Hero, Definition)` | `TownService` | a hero was hired in a tavern and stands at the town entrance |
 | `ArtifactEquipped(Hero, Artifact, Slot)` / `ArtifactUnequipped(Hero, Artifact)` | `ArtifactService` | an artifact put on from, or taken off into, the backpack |
 | `ArtifactGiven(From, To, Artifact)` | `ArtifactService` | an artifact changed hands during a hero exchange |
-| `ArtifactGained(Hero, Artifact, Source)` / `ArtifactLost(Hero, Artifact)` / `ArtifactBackpackFull(Hero, Artifact)` | interactions, `BattleService` | picked up or looted; loot that did not fit; a pickup left because the backpack is full |
+| `ArtifactGained(Hero, Artifact, Source)` / `ArtifactLost(Hero, Artifact)` / `ArtifactBackpackFull(Hero, Artifact)` | `ArtifactService` (pickups from interactions, loot from `BattleService`) | picked up or looted; loot that did not fit; a pickup left because the backpack is full |
 | `HeroArtifactsChanged(Hero)` | editor | the editor changed what a hero wears and carries |
-| `MapObjectRemoved(Object)` | interactions / editor | pile/chest consumed, or deleted in editor |
+| `MapObjectRemoved(Object)` | interactions, `GuardService`, `BattleService`, editor | pile/chest consumed, guard joined, fled or beaten, or deleted in editor |
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
 | `ScenarioRulesChanged` | editor | the victory and defeat conditions changed (views re-read `GameState.Rules`) |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
-| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService` | chest, exchange, guard offer, battle (resolved when it ends) |
+| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, exchange, guard offer, battle (resolved when it ends), level-up |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
 | `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
 | `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone); owned mines and towns observe like heroes |
@@ -131,11 +144,13 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `BattleStarted(AttackerHero, DefenderHero, Guard, Width, Height, IsAmbush, Units, Obstacles)` | `BattleService` | battlefield set up (after the width choice) |
 | `BattleRoundStarted(Round)` / `BattleTurnStarted(Unit, Round)` | `BattleEngine` | new round / a unit's turn |
 | `BattleUnitMoved(Unit, From, To)` | `BattleEngine` | a unit moved (also before a melee attack) |
-| `BattleUnitAttacked(Attacker, Target, Kind, Damage, Killed, RemainingCount)` | `BattleEngine` | each hit: melee, ranged, retaliation, ranged retaliation, area |
+| `BattleUnitAttacked(Attacker, Target, Kind, Damage, Killed, RemainingCount, Luck)` | `BattleEngine` | each hit: melee, ranged, retaliation, ranged retaliation, area; `Luck` says whether luck changed the damage |
+| `BattleMoraleTriggered(Unit, Effect)` | `BattleEngine` | morale fired: haste or slow at round start, an extra action, or a lost turn |
+| `BattleUnitHealed(Unit, Healed, TopHealth)` | `BattleEngine` | the healing tent healed a stack at round start |
 | `BattleUnitDied(Unit)` / `BattleUnitWaited(Unit)` / `BattleUnitDefended(Unit)` | `BattleEngine` | |
 | `BattleEnded(Winner, Reason, Casualties, Experience)` | `BattleService` | before its map consequences; `DecisionResolved(BattleDecision)` comes last |
-| `ArmyChanged(Hero, Slots)` | `ArmyService`, `BattleService`, `GuardService`, editor | stacks moved, casualties, neutrals joined, editor edit |
-| `HeroDefeated(Hero, Owner, Retreated)` | `BattleService` | a hero lost or fled a battle and left the map |
+| `ArmyChanged(Hero, Slots)` | `ArmyService` (also for `BattleService` casualties), `GuardService`, `TownService`, `MapObjectInteractionService`, editor | stacks moved, casualties, neutrals joined, recruits and upgrades in a town or at a map dwelling, editor edit |
+| `HeroDefeated(Hero, Owner, Retreated)` | `BattleService`, `GameFlowService` | a hero lost or fled a battle and left the map, or its player was eliminated |
 | `GuardJoined(Hero, Guard, Creature, Count)` / `GuardFled(Hero, Guard)` | `GuardService` | a guard offer was accepted (then `MapObjectRemoved`) |
 | `MineGuardDefeated(Mine)` | `BattleService` | the mine can now be flagged (`MineOwnerChanged` follows) |
 | `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster, mine guard, chest values) |

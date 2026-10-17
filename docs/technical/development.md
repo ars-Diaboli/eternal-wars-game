@@ -38,8 +38,15 @@ dotnet run --project tools/EternalWars.Tools.Sim -- battle haven.pikeman:20,have
 dotnet run --project tools/EternalWars.Tools.Sim -- record demo.ewreplay.json --days 7 --seed 1
 dotnet run --project tools/EternalWars.Tools.Sim -- replay demo.ewreplay.json
 dotnet run --project tools/EternalWars.Tools.Sim -- game --map towns --days 40 --runs 8   # the adventure AI plays every slot
+dotnet run --project tools/EternalWars.Tools.Sim -- towns --runs 32 [--upgraded]   # round robin of one-week town armies
+dotnet run --project tools/EternalWars.Tools.Sim -- creatures [--write table.csv]  # each line's weekly power against its tier
+dotnet run --project tools/EternalWars.Tools.Sim -- lines --runs 4 [--upgraded]    # every creature line against its tier
+dotnet run --project tools/EternalWars.Tools.Sim -- layout duel --size 96 --seed 1 [--rects] [--terrain] [--seeds N]
 dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
 ```
+`layout` takes a shipped template name or a `*.ewtemplate.json` path and prints the zone layout as text (`--rects`: the
+Rectangles strategy; `--terrain`: the painted map with walls, passages, guards, towns and mines; `--seeds N`: generate N seeds
+in a row and report the ones with problems and the time). Any command takes `--creatures path.csv`.
 
 ## Controls (placeholder)
 | | Game | Editor | Harness |
@@ -80,14 +87,16 @@ dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
   stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
 - Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
-  (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `editor-tools`)
+  (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `game-town-screen`,
+  `game-hero-screen`, `editor-tools`)
   and saves frames to `.shots/`. Smoke maps live in `tools/smoke/`; `SmokeMapTests` checks that they still do what the
   scripts expect.
-- CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` on every push to main and on PRs.
+- CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` + `sim selftest` on every push to main and on PRs.
 - Core builds with warnings as errors; keep Godot projects warning-free as well.
 - Commits: imperative mood, small and focused.
-- Binary assets (`*.glb`, `*.png`, `*.wav`, `*.ogg`, ...) go through **Git LFS** once we start adding
-  them (to be configured with the first asset commit).
+- Binary assets (`*.png`, `*.jpg`, `*.glb`, `*.fbx`, `*.wav`, `*.ogg`, fonts, ...) go through **Git LFS** (`.gitattributes`;
+  run `git lfs install` once). Godot's `*.import` sidecars stay plain text. Exception: `textures/terrain/beach.png` is a
+  plain blob because the GitHub LFS quota refused it.
 
 ## Editing creature stats
 
@@ -115,8 +124,9 @@ spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by
 - **Simulator** without a rebuild: `dotnet run --project tools/EternalWars.Tools.Sim -- towns --creatures
   src/Godot/EternalWars.Godot.Assets/data/creatures.csv`. `sim creatures` shows each line's strength against its
   tier, `sim lines` duels the lines of a tier, `sim towns` plays one-week town armies against each other.
-- **Random map layouts**: `dotnet run --project tools/EternalWars.Tools.Sim -- layout duel --size 96 --seed 3 [--rects]` prints the zone layout of a template
-  (a shipped name or a `*.ewtemplate.json` path) as text, one letter per zone, plus the area of every zone.
+- **Random map layouts**: `dotnet run --project tools/EternalWars.Tools.Sim -- layout duel --size 96 --seed 3 [--rects] [--terrain]`
+  prints the zone layout of a template (a shipped name or a `*.ewtemplate.json` path) as text, one letter per zone, plus the
+  area of every zone; `--terrain` prints the generated map instead.
 - **Tests and the default catalog** use the copy embedded at build time; `dotnet test` rebuilds it. Tests check
   the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines).
 

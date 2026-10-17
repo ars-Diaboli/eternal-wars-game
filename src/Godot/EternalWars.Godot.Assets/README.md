@@ -16,13 +16,18 @@ audio/
 fonts/
 themes/      UI .tres themes
 scenes/      reusable .tscn prefabs (hero, town, map objects, UI widgets)
-data/        game data read at run time: creatures.csv, heroes.csv (kept as plain files: importer "keep")
+data/        game data read at run time: creatures.csv, heroes.csv, buildings.csv, artifacts.csv, artifact_sets.csv
+             (kept as plain files: importer "keep"); templates/*.ewtemplate.json (random map templates: duel, ffa-4)
 ```
+
+The tables and templates are also embedded into the core projects at build time (the built-in copies used by tests and
+as a fallback).
 
 Rules:
 
 - Reference assets by `res://shared/...` paths only.
 - Scenes here must not attach scripts that live in an app project. Scripts for prefabs belong in
-  `EternalWars.Godot.Shared` / `EternalWars.Godot.UI` (see docs/architecture.md, "Godot libraries").
-- Large binaries go through Git LFS (`.gitattributes` at the repository root; see docs/development.md).
+  `EternalWars.Godot.Shared` / `EternalWars.Godot.UI` (see [docs/technical/architecture.md](../../../docs/technical/architecture.md), "Godot libraries").
+- Large binaries go through Git LFS (`.gitattributes` at the repository root; see
+  [docs/technical/development.md](../../../docs/technical/development.md)).
 - Record the source and licence of every third-party asset next to it (e.g. `textures/terrain/CREDITS.md`).

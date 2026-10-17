@@ -24,15 +24,17 @@
 └──────────────▲─────────────────────────────────────────────────────────────────────────────────┘
                │
 ┌──────────────┴───────────── Tier 1 · Core (plain .NET 10, no Godot) ──────────────────────────┐
-│  EternalWars.Core.Data       file formats (maps, content definitions; later saves, templates)  │
-│  EternalWars.Core.Generation (Phase 4, started: SeedStreams) random map templates + deterministic generator │
+│  EternalWars.Core.Data       file formats: maps, content definitions, saves/replays, templates │
+│  EternalWars.Core.Generation random maps (Phase 4, in progress): template model + validator,   │
+│                              ZoneLayouter, TerrainPainter, ConnectionPlacer, GuardPicker,      │
+│                              SettlementPlacer on a GeneratedMap                                │
 │  EternalWars.Core.Domain     model + rules: map, heroes, armies, battles, commands, editing     │
 │  EternalWars.Core.Events     pub/sub primitives: IEvent, IEventHandler, IEventPublisher, bus   │
 └────────────────────────────────────────────────────────────────────────────────────────────────┘
          tests/EternalWars.Core.Tests  (xUnit v3, covers Tier 1)
-         tools/EternalWars.Tools.Sim   headless console app over Tier 1 only: battle statistics, scripted
-                                       games, replay verification (selftest runs in CI); AI-vs-AI and
-                                       RMG batch validation later
+         tools/EternalWars.Tools.Sim   headless console app over Tier 1 only: battle statistics, AI-vs-AI
+                                       games (game), town and creature balance, random map layouts (layout),
+                                       replay verification (selftest runs in CI); RMG batch validation in CI later
 ```
 
 ### Dependency rules
@@ -71,7 +73,8 @@ These are enforced by:
 
 - **`GameSession`** is the composition root of a running game: one `GameState`, one `IEventBus`,
   and the services that mutate the state (the diagram shows the adventure-map ones; `ArmyService`,
-  `ProgressionService`, `BattleService`, `GuardService` and `TownService` sit beside them). Front-ends change the game **only** with commands
+  `ProgressionService`, `ArtifactService`, `BattleService`, `GuardService`, `TownService`, `CaravanService` and
+  `GameFlowService` sit beside them). Front-ends change the game **only** with commands
   (`session.Execute(new MoveHeroCommand(...))`, ADR-036) and observe it through `session.Events`; the services'
   mutators are `internal`. Accepted commands go to `session.CommandLog`, which with the map and the seed
   replays the game (`GameReplay`). Core handlers (`VisibilityService`) are subscribed first, before any view.
@@ -148,9 +151,9 @@ These are enforced by:
   is its overlay. The 2D harness keeps `BattleBoard2D`, which redraws from the live state.
 
 ### Planned evolution
-- **Content definitions.** Spells and artifacts will load from data files as creatures, heroes and buildings
-  already do (the tables `data/creatures.csv`, `data/heroes.csv` and `data/buildings.csv`, embedded in core and read
-  by the apps at start-up, ADR-044, ADR-048, ADR-050; JSON via `CreatureDefinitionSerializer`),
+- **Content definitions.** Spells will load from a data file as creatures, heroes, buildings and artifacts
+  already do (the tables `data/creatures.csv`, `data/heroes.csv`, `data/buildings.csv` and `data/artifacts.csv`, embedded
+  in core and read by the apps at start-up, ADR-044, ADR-048, ADR-050, ADR-061; JSON via `CreatureDefinitionSerializer`),
   following the map-object pattern: built-in defaults in Domain code (`BuiltInMapObjects`), JSON
   overrides/additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`.
 
@@ -182,13 +185,16 @@ These are enforced by:
   player) are both maintained by `VisibilityService`. Views of a player draw objects from memory, never
   from live state, which is what makes "last known state" under refog work.
 
-### Random map generation (planned, Phase 4)
-- `EternalWars.Core.Generation` holds the template model (`MapTemplate`, `TemplateZone`,
-  `TemplateConnection`), a `TemplateValidator`, and `MapGenerator.Generate(template, size, players,
-  seed, catalogs) → GameState` (a scenario, ADR-064; `Core.Generation` cannot see `Core.Data`'s `MapDocument`). Its only randomness is a seeded PRNG, so the same inputs always give the
-  same map, on every platform.
-- Output is an ordinary scenario `GameState`: the game starts it directly, `MapConverter.ToDocument` saves it as a map file, the
-  editor opens it in a `MapEditorSession` for hand-editing. There is no separate "generated map" type.
+### Random map generation (Phase 4, in progress)
+- `EternalWars.Core.Generation` holds the template model (`MapTemplate`, `TemplateZone`, `TemplateConnection`), a
+  `TemplateValidator` (errors and fairness warnings) and the generator stages (ADR-064), each a static call:
+  `ZoneLayouter.Layout` (zones, Voronoi or Rectangles) → `TerrainPainter.Paint` (terrain, walls, obstacles) →
+  `GeneratedMap.From` → `ConnectionPlacer.Place` (passages, gates, guards from `GuardPicker`) → `SettlementPlacer.Place`
+  (towns, mines, piles). `GeneratedMap` is the map while the stages work on it. Each stage draws from its own
+  `SeedStreams` stream, so the same inputs always give the same map, on every platform. `sim layout` runs them.
+- Planned: treasure, neutral monsters, roads, and assembling the final scenario `GameState` (`Core.Generation` cannot see
+  `Core.Data`'s `MapDocument`, ADR-064). The game will start it directly, `MapConverter.ToDocument` save it as a map file,
+  and the editor open it in a `MapEditorSession` for hand-editing.
 - Template file format (`*.ewtemplate.json`, versioned like maps) lives in `Core.Data` (`TemplateSerializer`, `BuiltInTemplates`); the model is `MapTemplate` in `Core.Generation`.
 - The template editor reuses the editor's command/undo pattern on a template document (zone graph
   edits instead of tile edits).
@@ -236,26 +242,33 @@ on a background thread against a **copy** of the state, returning commands to ap
 EternalWars.sln
 global.json                     .NET SDK 10, Godot.NET.Sdk 4.7.2, MTP test runner
 Directory.Build.props/.targets  shared settings + architecture guard
-docs/
+docs/                           design, content, technical, project
 src/
   Core/
     EternalWars.Core.Events/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
-                                Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios
+                                Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
+                                Artifacts
     EternalWars.Core.Data/      Maps (MapDocument v12, MapConverter, MapSerializer), Content (definition JSON),
-                                Records (replays)
+                                Records (saves and replays: GameRecord, GameSaves), Templates (TemplateSerializer,
+                                BuiltInTemplates)
+    EternalWars.Core.Generation/ MapTemplate, TemplateValidator, SeedStreams, ZoneLayouter, TerrainPainter, GeneratedMap,
+                                ConnectionPlacer, GuardPicker, ZoneGuards, SettlementPlacer
   Godot/
     EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events
-    EternalWars.Godot.UI/       Hud (incl. DecisionPanel, TownPanel, TownListPanel, HeroPanel), Battle (BattleBoard2D, BattleHud), Debugging
+    EternalWars.Godot.UI/       Hud (incl. DecisionPanel, TownPanel, TownListPanel, HeroPanel), Battle (BattleBoard2D, BattleHud),
+                                Editor (ToolPalette, InspectorPanel, ...), Setup (NewGameScreen), Debugging
     EternalWars.Godot.Assets/   (linked into apps as res://shared)
   Apps/
     EternalWars.Game/           project.godot + Main.tscn/Main.cs
     EternalWars.MapEditor/
     EternalWars.Harness2D/
 tests/
-  EternalWars.Core.Tests/       TestWorld (ASCII maps), TestBattle, Events, Domain, Battles, Data
+  EternalWars.Core.Tests/       TestWorld (ASCII maps), TestBattle, SessionCommands, Events, Domain, Battles, Data, Generation
 tools/
   link-shared-assets.ps1
-  EternalWars.Tools.Sim/        headless simulator (battle, record, replay, selftest)
+  smoke-godot.ps1               scripted Godot smoke scenarios (Movie Maker frames to .shots/)
+  smoke/*.ewmap.json            maps the smoke scenarios use
+  EternalWars.Tools.Sim/        headless simulator (battle, record, replay, selftest, game, towns, creatures, lines, layout)
 .github/workflows/ci.yml        build + test + simulator self-test on push/PR (no Godot needed)
 ```

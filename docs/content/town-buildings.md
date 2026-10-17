@@ -1,11 +1,11 @@
 # Town buildings and tech tree
 
 Every town building, what it costs, what it needs and what it does, and the creature dwellings of each playable town.
-Rules: ADR-030 (7 of 9 dwellings), ADR-046 (building list), ADR-050 (towns in play), ADR-056 (blacksmith). All
-towns share one building list for now; their dwellings come from their creature lines. Numbers are a draft.
+Rules: ADR-030 (7 of 9 dwellings), ADR-046 (building list), ADR-050 (towns in play), ADR-054 (caravan, map
+dwellings), ADR-056 (blacksmith), ADR-060 (tavern), ADR-063 (governors and Stewardship). All towns share one building list for now; their dwellings come from their creature lines. Numbers are a draft.
 
 Sources: `src/Godot/EternalWars.Godot.Assets/data/buildings.csv` (columns in
-[development.md](development.md#editing-town-buildings)) and `creatures.csv`. Update the tables on this page when
+[development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`. Update the tables on this page when
 those files change.
 
 Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature · ❓ not decided yet.
@@ -20,6 +20,9 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 - **Income**: an owned town pays every day the income of the highest level of each building.
 - **Town turn**: build, recruit into the garrison or the visiting hero, upgrade stacks for the price difference, move
   stacks between the garrison (7 slots) and the visiting hero (an own hero on the entrance).
+- **Governor** (ADR-063): a hero with Stewardship can govern one own town (appointed, or by itself when it visits a town
+  without one). Only a governed town gets the discount, at the governor's level: buildings **5 / 10 / 15 %** cheaper,
+  creatures **10 / 15 / 20 %** (recruiting and upgrading; rounded up per resource; `StewardshipRules`).
 
 ## Buildings
 
@@ -38,6 +41,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | `mage-guild` | 2 | Mage Guild 2 | 3 500 gold, crystal 3, mercury 3 | – | – |
 | `mage-guild` | 3 | Mage Guild 3 | 5 000 gold, crystal 5, sulfur 5 | – | – |
 | `mage-guild` | 4 | Mage Guild 4 | 7 500 gold, crystal 7, mercury 7, sulfur 7 | – | – |
+| `caravan` | 1 | Caravan | 1 000 gold, lumber 5 | town-hall 2 | – |
 | `tavern` | 1 | Tavern | 750 gold, lumber 5 | – | – |
 | `tavern` | 2 | Brotherhood | 2 000 gold, lumber 5, ore 5 | fort 1 | – |
 
@@ -48,8 +52,8 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading resources | ✅ silo; ⏳ trading ❓ |
 | Mage Guild | spells of its level (ADR-047); level 4 is a placeholder | ⏳ magic (Phase 5) |
-| Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest); 2500 gold each (ADR-060) | ✅ |
-| Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054) | ✅ ADR-054: 1000 gold, 5 lumber, needs town hall 2 (placeholder) |
+| Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060) | ✅ |
+| Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054); cost and requirement are placeholders | ✅ |
 
 ## Tech tree
 
@@ -69,6 +73,7 @@ graph LR
   F2 --> F3[Castle]
   MP1 --> MP2[Resource Silo]
   MG1 --> MG2[Mage Guild 2] --> MG3[Mage Guild 3] --> MG4[Mage Guild 4]
+  TH2 --> CV[Caravan]
 ```
 
 Since every town starts with Town Hall, Fort and Tavern, the shortest way to the Capitol is Blacksmith, Marketplace and
@@ -88,7 +93,7 @@ upgradeable.
   stacks of that line can be upgraded in the town for the price difference.
 - **Growth**: a new dwelling opens with one week of creatures; every Monday each built dwelling adds its creature's
   weekly growth, owned or not, and unbought creatures accumulate. The upgrade does not raise growth.
-- Locked-out creatures can still be found in other towns of the same type and, later, in map dwellings.
+- Locked-out creatures can still be found in other towns of the same type and in map dwellings (ADR-054).
 
 Every dwelling of a tier costs the same (the `dwelling-1` … `dwelling-5` rows):
 
@@ -217,6 +222,6 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 ## Open
 
 - What the fort does (town defence in sieges, growth bonus), marketplace trading and the mage guild
-  (open question 6).
+  ([TOWN-1, TOWN-3](../project/open-questions.md#towns-and-economy)).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
 - Per-town buildings: all towns share one list for now.

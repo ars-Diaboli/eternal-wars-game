@@ -1,8 +1,9 @@
 # Hero skills
 
 Every hero skill there is today, what each level does and whether it works yet. Rules: ADR-048 (skills and levels),
-ADR-047 (magic schools), ADR-055 (primary stats), ADR-056 (war machines). Numbers are a draft. The skills are code,
-not data: `BuiltInSkills` and `SkillEffects` in `src/Core/EternalWars.Core.Domain/Heroes/Skills.cs`.
+ADR-047 (magic schools), ADR-055 (primary stats), ADR-056 (war machines), ADR-063 (Stewardship, mana, faction
+groups). Numbers are a draft. The skills are code, not data: `BuiltInSkills` and `SkillEffects` in
+`src/Core/EternalWars.Core.Domain/Heroes/Skills.cs`.
 
 Status: ✅ works in play · ⏳ defined, waits for a feature (named) · ❓ not decided yet.
 
@@ -19,14 +20,15 @@ Status: ✅ works in play · ⏳ defined, waits for a feature (named) · ❓ not
   | Skill is in… | Mage | Warrior |
   |---|---|---|
   | a general group (offense … war machines) | 2 | 4 |
-  | the hero's own town's school | 6 | 2 |
+  | the hero's own town's school, or its faction group (Rage, Adrenaline) | 6 | 2 |
   | another school | 2 | 1 |
   | a group the hero has already started | ×3 | ×3 |
 
   A **rival town's school** (the sworn enemies of [lore.md](lore.md)) is never in the weighted pool; it takes one of
   the three offers in only **5 %** of level-ups. Skills at their maximum, and new groups once 6 are learned, are not
-  offered.
-- **Experience**: HoMM3's table (level 2 at 1000, 3 at 2000, 4 at 3200 … 12 at 20 600), then +20 % per level.
+  offered. Faction groups are offered only to heroes of their own town.
+- **Experience**: HoMM3's table (level 2 at 1000, 3 at 2000, 4 at 3200 … 12 at 20 600); after that each level's XP gap is
+  20 % larger than the one before (`ExperienceTable`).
 
 ## Primary stats
 
@@ -70,10 +72,11 @@ Morale and luck (−5…+5) are hero values too (ADR-053); no skill changes them
 |---|---|---|---|---|---|---|---|
 | Treasury | `estates.treasury` | Master | +250 gold a day | +500 | +750, and 0.5 % of the gold on hand | +1000, and 1 % | ✅ |
 | Prospecting | `estates.prospecting` | Expert | +1 lumber, +1 ore a day | +2 lumber, +2 ore | +2 lumber, +2 ore, +1 crystal, mercury and sulfur | – | ✅ |
+| Stewardship | `estates.stewardship` | Expert | −5 % building, −10 % creature costs in the town the hero governs | −10 %, −15 % | −15 %, −20 % | – | ✅ (ADR-063) |
 
 Prospecting also gives a **10 / 20 / 30 % chance** that a resource pile picked up gives **50 % more** (rounded up); the roll
-uses the game RNG. Treasury interest is paid on the gold the player holds at the start of the day, before income is added.
-| Stewardship | `estates.stewardship` | Expert | −5 % building, −10 % creature costs in the town the hero governs | −10 %, −15 % | −15 %, −20 % | – | ✅ (ADR-063) |
+uses the game RNG. Treasury interest is paid on the gold the player holds at the start of the day, before income is added
+(ADR-062).
 
 Stewardship works only in a town with a **governor**: a hero appointed with `AppointGovernorCommand` (one town per hero), or a
 visiting hero with the skill in a town that has none. It also applies to recruiting at map dwellings (the hero's own level) and to caravans of a
@@ -105,14 +108,14 @@ Tactics counts as the hero's Tactics level minus the enemy hero's; only the side
 | Skill | Id | Max | No skill | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|---|
 | Ballistics | `machines.ballistics` | Master | machine fires by itself, only at fortifications (sieges) | you control it | also targets troops, in regular battles, and fires twice after a kill | never misses a fortification, +25 % damage | 2-3 structure damage, +50 % | ✅ troops · ⏳ sieges (rules in `WarMachines`, ADR-063) |
-
-Against a fortification a shot hits 2 times in 3 (always from Expert) and takes 1-2 hit points off a defence structure
-(2-3 at Master); a fully upgraded fortification gives its structures 3 hit points. Placeholders until sieges exist.
 | Healing | `machines.healing` | Master | tent heals 10 per stack a round | 20 | 30 | 40 | 50 | ✅ |
 | Ammo supply | `machines.ammo` | Advanced | cart: +25 % shots | +50 % shots | unlimited shots while the cart stands | – | – | ✅ |
 
+Against a fortification a shot hits 2 times in 3 (always from Expert) and takes 1-2 hit points off a defence structure
+(2-3 at Master); a fully upgraded fortification gives its structures 3 hit points. Placeholders until sieges exist.
+
 The tent heals the top creature of every own stack at the start of each round, never reviving. The machines
-themselves (which town has which, stats, prices) are in [heroes.md](heroes.md#war-machines) and ADR-056.
+themselves (which town has which, stats, prices) are in [hero-roster.md](hero-roster.md#war-machines) and ADR-056.
 
 ## Magic schools
 
@@ -156,7 +159,7 @@ yet ❓: rage / adrenaline stacks or other faction abilities are to be designed.
 
 ## Specialties
 
-Each roster hero has one HoMM3-style specialty ([heroes.md](heroes.md)):
+Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)):
 
 | Kind | Example | Status |
 |---|---|---|
@@ -166,7 +169,7 @@ Each roster hero has one HoMM3-style specialty ([heroes.md](heroes.md)):
 
 ## Open
 
-- The third offense and defense skills (open questions, `ideas.md`).
+- The third offense and defense skills ([open questions](../project/open-questions.md), [ideas](../project/ideas.md)).
 - What skill specialties do.
 - Which skills raise morale and luck.
 - The Rage and Adrenaline mechanics.

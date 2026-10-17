@@ -11,7 +11,7 @@ public enum TerrainClass
     Impassable,
 }
 
-/// <summary>Movement rules of one terrain (docs/decisions.md ADR-045).</summary>
+/// <summary>Movement rules of one terrain (docs/project/decisions.md ADR-045).</summary>
 /// <param name="Terrain">Which terrain.</param>
 /// <param name="Class">Passable or not.</param>
 /// <param name="Cost">Cost of leaving a tile of this terrain orthogonally for a non-native army (at least <see cref="TerrainCatalog.NativeCost"/>).</param>
@@ -95,7 +95,7 @@ public sealed class TerrainCatalog
     /// <paramref name="armyTown"/> is the town every creature of the army belongs to, or null for a mixed
     /// army, a neutral army or no army (HoMM3: only an all-native army avoids the penalty).
     /// </summary>
-    /// <remarks>The Pathfinding skill cuts the penalty in <c>MovementRules.StepCost</c>; artifacts will too.</remarks>
+    /// <remarks>The Pathfinding skill cuts the penalty in <c>MovementRules.StepCost</c>; artifacts there too (penalty reduction, native terrains).</remarks>
     public int MovementCost(TerrainType terrain, string? armyTown = null)
     {
         var definition = Get(terrain);

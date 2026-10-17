@@ -1,8 +1,8 @@
-# Heroes
+# Hero roster
 
 All 128 roster heroes of the eight playable towns, with the rules that come with a hero. Rules: ADR-048 (roster,
 skills, levels), ADR-055 (primary stats), ADR-056 (war machines). The roster is the table
-`src/Godot/EternalWars.Godot.Assets/data/heroes.csv` (columns in [development.md](development.md#editing-heroes));
+`src/Godot/EternalWars.Godot.Assets/data/heroes.csv` (columns in [development.md](../technical/development.md#editing-heroes));
 update this page when the table changes. Skill effects
 are listed in [skills.md](skills.md), towns and dwellings in [town-buildings.md](town-buildings.md). Names and
 numbers are a draft.
@@ -25,7 +25,8 @@ numbers are a draft.
   ([lore.md](lore.md)). Adjacent means the town's two ring neighbours (Sylvan: Inferno, Haven; Haven: Sylvan, Academy;
   Academy: Haven, Dungeon; Dungeon: Academy, Necropolis; Necropolis: Dungeon, Inferno; Inferno: Necropolis, Sylvan);
   opposing is the town across the ring (Sylvan–Dungeon, Academy–Inferno, Haven–Necropolis) and is offered last. Stronghold and Swamp Bestiary
-  offer their natives and the warriors of the other towns. Offers are shuffled per player every week, heroes on the map
+  have no ring: a basic tavern offers a native and a warrior of another town, the Brotherhood two natives and two
+  warriors (`TavernRules.Slots`). Offers are shuffled per player every week, heroes on the map
   are not offered, and a player has at most 8 heroes (ADR-060).
 - **Morale and luck** 0 at the start (maps and the editor can set them, ADR-053).
 - **Army**: up to 7 stacks. A hero without creatures cannot attack.
@@ -33,7 +34,9 @@ numbers are a draft.
 
 The roster follows one template in every town: the hero for the same slot (for example the warrior who prefers the
 first tier 1 line) has the same kind of specialty, the same starting skills and the same stats everywhere; only the
-town's school and creatures differ.
+town's school and creatures differ. In Stronghold and Swamp Bestiary (no school, ADR-063) "own magic" is the faction
+group's first skill (`rage.first`, `adrenaline.first`), and "a spell" / "own attunement" specialties are
+`skill rage.first` / `skill rage.second` (Adrenaline likewise).
 
 | Slot (preferred line) | Warrior: specialty · skills · stats | Mage: specialty · skills · stats |
 |---|---|---|

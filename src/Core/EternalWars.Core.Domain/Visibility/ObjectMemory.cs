@@ -15,7 +15,7 @@ public sealed record KnownObject(MapObjectId Id, MapObjectDefinition Definition,
 }
 
 /// <summary>
-/// Per-player knowledge of map objects (docs/decisions.md ADR-031). An object is re-read whenever any of
+/// Per-player knowledge of map objects (docs/project/decisions.md ADR-031). An object is re-read whenever any of
 /// its cells is in the player's sight; out of sight, the player keeps seeing the last snapshot (old flag
 /// colour, a chest someone already took). In <see cref="FogMode.PermanentReveal"/> "in sight" means
 /// "explored", so memory simply tracks the live state of every explored object.
