@@ -1,0 +1,286 @@
+{
+  "formatVersion": 1,
+  "name": "Free for all",
+  "description": "Four players, each with a safe treasure zone; the reserves are ringed together and all lead to a rich hub.",
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "sizes": [
+    96,
+    128,
+    160
+  ],
+  "underground": false,
+  "zones": [
+    {
+      "id": "start-1",
+      "type": "PlayerStart",
+      "owner": 0,
+      "size": 3,
+      "playerTowns": {
+        "min": 1,
+        "max": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "minValue": 500,
+          "maxValue": 1500,
+          "count": 4
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-2",
+      "type": "PlayerStart",
+      "owner": 1,
+      "size": 3,
+      "playerTowns": {
+        "min": 1,
+        "max": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "minValue": 500,
+          "maxValue": 1500,
+          "count": 4
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-3",
+      "type": "PlayerStart",
+      "owner": 2,
+      "size": 3,
+      "playerTowns": {
+        "min": 1,
+        "max": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "minValue": 500,
+          "maxValue": 1500,
+          "count": 4
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-4",
+      "type": "PlayerStart",
+      "owner": 3,
+      "size": 3,
+      "playerTowns": {
+        "min": 1,
+        "max": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "minValue": 500,
+          "maxValue": 1500,
+          "count": 4
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "reserve-1",
+      "type": "Treasure",
+      "size": 2,
+      "neutralTowns": {
+        "min": 0,
+        "max": 1
+      },
+      "mines": {
+        "Crystal": 1,
+        "Gold": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "minValue": 1500,
+          "maxValue": 4000,
+          "count": 5
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-2",
+      "type": "Treasure",
+      "size": 2,
+      "neutralTowns": {
+        "min": 0,
+        "max": 1
+      },
+      "mines": {
+        "Crystal": 1,
+        "Gold": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "minValue": 1500,
+          "maxValue": 4000,
+          "count": 5
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-3",
+      "type": "Treasure",
+      "size": 2,
+      "neutralTowns": {
+        "min": 0,
+        "max": 1
+      },
+      "mines": {
+        "Crystal": 1,
+        "Gold": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "minValue": 1500,
+          "maxValue": 4000,
+          "count": 5
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-4",
+      "type": "Treasure",
+      "size": 2,
+      "neutralTowns": {
+        "min": 0,
+        "max": 1
+      },
+      "mines": {
+        "Crystal": 1,
+        "Gold": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "minValue": 1500,
+          "maxValue": 4000,
+          "count": 5
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "hub",
+      "type": "Junction",
+      "size": 3,
+      "neutralTowns": {
+        "min": 1,
+        "max": 2
+      },
+      "mines": {
+        "Mercury": 1,
+        "Sulfur": 1,
+        "Gold": 1
+      },
+      "extraPiles": 2,
+      "treasure": [],
+      "monsters": "Strong"
+    }
+  ],
+  "connections": [
+    {
+      "from": "start-1",
+      "to": "reserve-1",
+      "kind": "Wide"
+    },
+    {
+      "from": "start-2",
+      "to": "reserve-2",
+      "kind": "Wide"
+    },
+    {
+      "from": "start-3",
+      "to": "reserve-3",
+      "kind": "Wide"
+    },
+    {
+      "from": "start-4",
+      "to": "reserve-4",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-1",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 2500
+    },
+    {
+      "from": "reserve-2",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 2500
+    },
+    {
+      "from": "reserve-3",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 2500
+    },
+    {
+      "from": "reserve-4",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 2500
+    },
+    {
+      "from": "reserve-1",
+      "to": "reserve-2",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "reserve-2",
+      "to": "reserve-3",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "reserve-3",
+      "to": "reserve-4",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "reserve-4",
+      "to": "reserve-1",
+      "kind": "Normal",
+      "guardValue": 1500
+    }
+  ]
+}

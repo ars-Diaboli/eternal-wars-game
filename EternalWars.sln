@@ -53,6 +53,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3C9B6E2A-5
 		docs\artifacts.md = docs\artifacts.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Generation", "src\Core\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj", "{C56E3387-323D-4072-8F17-02E5A642C886}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -183,6 +185,18 @@ Global
 		{57FA76F0-A971-4F9C-9F29-F4FB549824FD}.Release|x64.Build.0 = Release|Any CPU
 		{57FA76F0-A971-4F9C-9F29-F4FB549824FD}.Release|x86.ActiveCfg = Release|Any CPU
 		{57FA76F0-A971-4F9C-9F29-F4FB549824FD}.Release|x86.Build.0 = Release|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Debug|x64.Build.0 = Debug|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Debug|x86.Build.0 = Debug|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Release|x64.ActiveCfg = Release|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Release|x64.Build.0 = Release|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Release|x86.ActiveCfg = Release|Any CPU
+		{C56E3387-323D-4072-8F17-02E5A642C886}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -198,5 +212,6 @@ Global
 		{AE802E48-6CB6-471D-9658-77342AF21F84} = {1787FE1D-075E-9E68-7218-25F1BD1BBEAB}
 		{21FD1308-9249-4E74-9201-07E642DB501F} = {1787FE1D-075E-9E68-7218-25F1BD1BBEAB}
 		{57FA76F0-A971-4F9C-9F29-F4FB549824FD} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{C56E3387-323D-4072-8F17-02E5A642C886} = {FBF56CC3-7AE6-AD2D-3F14-7F97FD322CD6}
 	EndGlobalSection
 EndGlobal

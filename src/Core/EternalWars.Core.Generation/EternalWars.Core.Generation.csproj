@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Random map generation (Phase 4): map templates, their validator and the deterministic generator. No engine dependencies.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EternalWars.Core.Tests" />
+  </ItemGroup>
+
+</Project>

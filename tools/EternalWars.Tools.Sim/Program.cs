@@ -1,6 +1,8 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Data.Records;
+using EternalWars.Core.Data.Templates;
+using EternalWars.Core.Generation;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
@@ -28,6 +30,7 @@ namespace EternalWars.Tools.Sim;
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
 /// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
 /// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
+/// sim layout duel|file.ewtemplate.json [--size 96] [--seed 1] [--rects]  (zone layout of a random map template as text)
 /// sim selftest                      (CI: determinism and replay round trip)
 /// </code>
 /// Any command takes <c>--creatures path/to/creatures.csv</c> to use an edited creature table without rebuilding.
@@ -60,6 +63,7 @@ public static class Program
                 ["creatures", "--write", var path] => WriteTable(path),
                 ["creatures"] => Creatures(),
                 ["lines", .. var rest] => Lines(Option(rest, "--runs", 4), rest.Contains("--upgraded")),
+                ["layout", var template, .. var rest] => Layout(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), rest.Contains("--rects")),
                 ["selftest"] => SelfTest(),
                 _ => Usage(),
             };
@@ -71,9 +75,34 @@ public static class Program
         }
     }
 
+    /// <summary>Prints the zone layout of a template (a built-in name or a file): one character per tile, one letter per zone.</summary>
+    private static int Layout(string template, int size, ulong seed, bool rectangles)
+    {
+        var loaded = File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
+            ?? throw new FormatException($"No template '{template}' (built-in: {string.Join(", ", BuiltInTemplates.All.Select(t => t.Name))}).");
+        var layout = ZoneLayouter.Layout(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi);
+        for (var level = 0; level < layout.Levels; level++)
+        {
+            Console.WriteLine($"level {level}:");
+            Console.WriteLine(layout.ToAscii(level));
+        }
+
+        for (var i = 0; i < layout.ZoneIds.Count; i++)
+        {
+            Console.WriteLine($"  {layout.ZoneIds[i],-12} area {layout.Area(i)}");
+        }
+
+        foreach (var (from, to) in layout.UnmetConnections)
+        {
+            Console.WriteLine($"  not touching: {from} - {to}");
+        }
+
+        return layout.UnmetConnections.Count == 0 ? 0 : 1;
+    }
+
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file] [--days D] [--seed S] [--runs N] [--record F] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file] [--days D] [--seed S] [--runs N] [--record F] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;

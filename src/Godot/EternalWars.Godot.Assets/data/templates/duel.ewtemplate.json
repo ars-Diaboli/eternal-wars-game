@@ -1,0 +1,54 @@
+{
+  "formatVersion": 1,
+  "name": "Duel",
+  "description": "Two players, one rich centre. Each start zone has a safe treasure zone behind it and both fight for the junction.",
+  "minPlayers": 2,
+  "maxPlayers": 2,
+  "sizes": [72, 96, 128],
+  "underground": false,
+  "zones": [
+    {
+      "id": "start-1", "type": "PlayerStart", "owner": 0, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 }, "extraPiles": 3,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 4 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-2", "type": "PlayerStart", "owner": 1, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 }, "extraPiles": 3,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 4 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "reserve-1", "type": "Treasure", "size": 2,
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Crystal": 1, "Gold": 1 }, "extraPiles": 2,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 5 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-2", "type": "Treasure", "size": 2,
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Crystal": 1, "Gold": 1 }, "extraPiles": 2,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 5 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "centre", "type": "Junction", "size": 2,
+      "neutralTowns": { "min": 1, "max": 1 },
+      "mines": { "Mercury": 1, "Sulfur": 1, "Gold": 1 }, "extraPiles": 2,
+      "treasure": [],
+      "monsters": "Strong"
+    }
+  ],
+  "connections": [
+    { "from": "start-1", "to": "reserve-1", "kind": "Wide" },
+    { "from": "start-2", "to": "reserve-2", "kind": "Wide" },
+    { "from": "start-1", "to": "centre", "kind": "Normal", "guardValue": 3000 },
+    { "from": "start-2", "to": "centre", "kind": "Normal", "guardValue": 3000 },
+    { "from": "reserve-1", "to": "centre", "kind": "Normal", "guardValue": 1500 },
+    { "from": "reserve-2", "to": "centre", "kind": "Normal", "guardValue": 1500 }
+  ]
+}
