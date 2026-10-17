@@ -478,7 +478,7 @@ public sealed class MapEditorSession
             return EditResult.OutOfBounds;
         }
 
-        if (Scenario.HeroAt(position) is not null || Scenario.ObjectCellAt(position) is not null)
+        if (Scenario.HeroAt(position) is not null || (Scenario.ObjectCellAt(position) is { } cell && !MapValidator.IsOwnTownEntrance(cell, owner)))
         {
             return EditResult.Overlaps;
         }

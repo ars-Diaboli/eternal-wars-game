@@ -1154,6 +1154,16 @@ on refused AI commands, or when the record does not replay through JSON to the s
 `2v2`, `duel`, `ffa-4`). Fairness between start zones stays open (RMG-8). First runs: 18 of 18 maps pass, but no game ends within 40 days and heroes stay
 at low levels: the AI hardly fights the generated guards (ADR-059 tuning).
 
+**Generate from template in the editor, core (2026-10-17)**: `EditorMapGenerator.Generate(template, size, seed, players?, towns?, catalogs)` returns an
+`EditorMap(Scenario, Generation, Issues)`; the editor opens the scenario in a new `MapEditorSession`, like "New" (a new map and undo history, not an undoable edit,
+since size and everything else change). It reuses `MapGenerator.Build` with one `PlayerSetup` per slot (`EditorMapGenerator.Players`): the first N slots (default
+all), named by colour, human on player-start slots up to `MaxHumans`, computer on AI-only ones, the picked town or "Random". So a generated map is the
+game's scenario, playable as it is. Refused: a template with errors, a size the template does not list, more players than slots, a town for a slot without
+a player. The map description records template, size, seed, attempt and generator version. `ScenarioAssembler.Build` and `MapGenerator.Build` now take the
+building and artifact catalogs too (the editor passes its content). Found on the way: the map validator called a start hero in its town's entrance "inside
+an object"; a hero may now stand in the entrance of a town of its own owner, in the validator and in `PlaceHero` (HoMM3 starts heroes visiting their
+town). `sim maps` also fails a generated map on validator errors. Changing a town's faction in the editor (`SetTownType`) is a follow-up.
+
 ### ADR-065: Guard mode per monster stack (2026-10-17)
 **Status**: accepted (2026-10-17), user decision on RMG-2; amends ADR-040
 - **Context**: ADR-040 made the guard mode a map-wide editor setting: Classic (HoMM3 zone of control, pickups on guarded tiles can be stolen from outside) or Area (the whole 3×3 area is

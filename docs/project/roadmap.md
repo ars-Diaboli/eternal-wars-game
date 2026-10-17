@@ -316,7 +316,11 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       them (no generator problems, deterministic, every start town reachable from every player, AI-vs-AI play with no
       refused command, replay round trip); CI job `generated-maps`; fairness waits for RMG-8 (item above)
 - [ ] Editor: template editor (zone graph: add zones, set properties, draw connections) ❓ RMG-10
-- [ ] Editor: "generate map from template" into an editable map
+- [x] Editor: "generate map from template" core (`EditorMapGenerator`): a template, size, seed, player count and optional
+      town per slot give a new editable scenario with coloured players, start towns, heroes and armies, a description
+      that records how it was made, and the generator's problems and validator issues to show
+- [ ] Editor: "generate map from template" UI (template, size, seed, players, towns; show problems and issues) (Godot)
+- [ ] Editor: change a town's faction (an undoable `SetTownType`), e.g. after generating
 - [ ] Game: new-game screen picks template, size, players (town and hero per player), seed and options, then generates
 - [ ] Starter templates: 2-player duel, 4-player free-for-all and 2v2 (shipped), 8-player
 - Not in 1.0: water zones and islands (no sea travel, ADR-051), HotA template import (ADR-034)
