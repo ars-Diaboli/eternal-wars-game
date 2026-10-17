@@ -284,9 +284,9 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Zone layout from the connection graph (`ZoneLayouter`: Voronoi and Rectangles strategies, ADR-064; `sim layout`)
 - [x] Terrain per zone (`TerrainPainter`, ADR-064)
 - [x] Borders and obstacles (walls two tiles thick between zones, rock clumps inside; `Walls` kept for the connections stage)
-- [ ] Connections and their guards
-- [ ] Towns (player and neutral)
-- [ ] Mines and resources
+- [x] Connections and their guards (`ConnectionPlacer`, `GuardPicker`; passages per connection configurable, ADR-064)
+- [x] Towns (player and neutral): `SettlementPlacer`, HoMM3-style defaults (ADR-064); start-town type swap for game setup (`SetTownType`)
+- [x] Mines and resources (guards by zone strength, piles); treasure by value band is the next stage
 - [ ] Treasure by value band
 - [ ] Neutral monsters
 - [ ] Roads between towns and through connections

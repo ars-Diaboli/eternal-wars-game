@@ -1041,3 +1041,33 @@ zones and the list of `Obstacles`). User-approved defaults:
 - **Obstacles**: `TemplateZone.Obstacles` (`None / Sparse / Normal / Dense`, default `Sparse`; template format unchanged otherwise): clumps of 2-6 rock tiles, 3 / 8 / 16 per
   thousand tiles of the zone, kept three tiles from the walls and apart from each other; a clump that would cut off part of its zone is dropped (`obstacles` stream).
 - `sim layout ... --terrain` prints the painted terrain (map file terrain codes; `#` is rock).
+
+**Connections and their guards, stage 3 (2026-10-17)** (`ConnectionPlacer.Place(template, map, seed)` on a `GeneratedMap`: the terrain of stage 2 plus objects, occupied tiles,
+`Passages` and `Problems`). User decisions:
+- **Passages per connection are configurable**: `TemplateConnection.Passages` (1 to 8, default 1; one or more, spread along the border at least `max(6, size/12)` tiles apart; the template
+  editor will expose it). Extra contact between the zones stays walled. A border too short for all of them gives as many as fit and a problem line.
+- **Guards pick a tier by army power with overlapping ranges** (`GuardPicker`): every tier has the counts that look like a guard for it (tier 1: 6–150, 2: 2–80, 3: 1–40, 4: 1–20, 5: 1–10);
+  a creature qualifies when the stack it would need (`value / creature value`) is in its tier's range and within 20 % of the wanted power. So 500 can be about ten tier-1 creatures or
+  three tier-2 ones, and 1000 five tier-2 or three tier-3 ones: the same tier in another number, or an adjacent tier. One qualifying creature is drawn (base forms of the playable
+  towns and the neutrals), the count is rolled within ±5 %. With none qualifying, the nearest is taken with its count held to the range.
+- **Normal** passage: a one-tile way through the wall with the guard on it (`Aggressive` neutral stack, `GuardValue` > 0); **Wide**: the same, five tiles wide (radius 2), never guarded;
+  **Gate**: per passage a linked pair of two-way gates (monoliths on one level, subterranean gates across levels), one in each zone, near the border, each with a guard of the full
+  value beside its entrance. A passage only opens wall tiles that touch no ground of a third zone (no leaks); if that finds nothing it is allowed to, so a corner contact still opens.
+  Thin borders are done first.
+- **Layout change**: the Voronoi search now prefers layouts where every connection shares at least about 3 tiles per 32 of map size, taking a layout where all merely touch after 16 tries.
+  `sim layout <template> --seeds N` generates N maps (layout, terrain, connections) and lists the ones with problems (Free for all at 96: about 1 in 60 leaves a connection untouched).
+
+**Towns, mines and resources, stage 4 (2026-10-17)** (`SettlementPlacer.Place(template, map, seed)` after the connections; `ZoneGuards` for the strength-to-power table). HoMM3-style defaults
+(the user asked for them):
+- **Start towns**: each start zone gets `PlayerTowns` (rolled in its range, at least one) in the middle of the zone, as unowned towns of a placeholder type (the zone's first `TownTypes`
+  entry, else Haven). `GeneratedMap.Towns` records the player slot of each (`GeneratedTown.Slot`); game setup chooses the type and `GeneratedMap.SetTownType` swaps the town (same id, place,
+  garrison) for one of the chosen type, then the owner is set when the scenario is built (last stage).
+- **Neutral towns**: `NeutralTowns` in a zone, of a type from its `TownTypes` or any playable town, with a garrison of two stacks that share `ZoneGuards.TownGarrisonValue(monsters)`
+  (weak 1500, average 4000, strong 9000; a zone without monsters still gets the weak garrison).
+- **Mines**: the zone's minimum of each resource; in a start zone within about 14 tiles of the town and unguarded, elsewhere anywhere in the zone. `TemplateZone.MineGuards`
+  (`Auto` default, `Always`, `Never`): auto guards mines outside start zones by the zone's monster strength through the mine's own guard (ADR-034), none when the strength is none.
+  Power: weak 800, average 2000, strong 4500, times 1.5 for gold, 1.25 for the rare resources, 1 for lumber and ore.
+- **Piles**: `ExtraPiles` per zone, unguarded, drawn 3:2:2:1:1:1 (gold, lumber, ore, crystal, mercury, sulfur); amounts are the defaults of the resource.
+- Everything stands on free ground with a free tile all around (towns fall back to no margin in a crowded zone), objects are at least 12 tiles apart for towns, 4 for mines, 3 for piles
+  (entrance to entrance), and the zone's entrances must all be reachable from each other or a problem is listed. Guard counts follow `GuardPicker`; its tier ranges are now 6-60, 2-40, 1-25, 1-15, 1-10.
+- `sim layout ... --terrain` also shows towns (`T`), mines (`m`), piles (`p`) and lists them; `--seeds N` includes this stage.

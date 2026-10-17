@@ -15,6 +15,9 @@ public static class TemplateValidator
     /// <summary>The largest zone count a template may have (the layout needs room for every zone on the smallest map).</summary>
     public const int MaxZones = 64;
 
+    /// <summary>The most passages (or gate pairs) one connection may make.</summary>
+    public const int MaxPassages = 8;
+
     /// <summary>At least this many tiles per unit of zone weight per level on the smallest allowed size, before a warning.</summary>
     private const int MinTilesPerZone = 200;
 
@@ -238,6 +241,11 @@ public static class TemplateValidator
             if (!pairs.Add(string.CompareOrdinal(c.From, c.To) < 0 ? (c.From, c.To) : (c.To, c.From)))
             {
                 error($"{name} is listed twice.");
+            }
+
+            if (c.Passages is < 1 or > MaxPassages)
+            {
+                error($"{name} makes {c.Passages} passages; it makes from 1 to {MaxPassages}.");
             }
 
             if (c.GuardValue < 0)

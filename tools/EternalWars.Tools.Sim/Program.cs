@@ -2,6 +2,7 @@ using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Data.Templates;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Generation;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Battles;
@@ -30,7 +31,7 @@ namespace EternalWars.Tools.Sim;
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
 /// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
 /// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
-/// sim layout duel|file.ewtemplate.json [--size 96] [--seed 1] [--rects] [--terrain]  (zone layout, or with --terrain the painted terrain with walls, of a random map template as text)
+/// sim layout duel|file.ewtemplate.json [--size 96] [--seed 1] [--rects] [--terrain] [--seeds N]  (zone layout, or with --terrain the painted terrain with walls, of a random map template as text)
 /// sim selftest                      (CI: determinism and replay round trip)
 /// </code>
 /// Any command takes <c>--creatures path/to/creatures.csv</c> to use an edited creature table without rebuilding.
@@ -63,7 +64,9 @@ public static class Program
                 ["creatures", "--write", var path] => WriteTable(path),
                 ["creatures"] => Creatures(),
                 ["lines", .. var rest] => Lines(Option(rest, "--runs", 4), rest.Contains("--upgraded")),
-                ["layout", var template, .. var rest] => Layout(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), rest.Contains("--rects"), rest.Contains("--terrain")),
+                ["layout", var template, .. var rest] => Option(rest, "--seeds", 0) is > 0 and var many
+                    ? LayoutBatch(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), many, rest.Contains("--rects"))
+                    : Layout(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), rest.Contains("--rects"), rest.Contains("--terrain")),
                 ["selftest"] => SelfTest(),
                 _ => Usage(),
             };
@@ -81,13 +84,50 @@ public static class Program
         var loaded = File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
             ?? throw new FormatException($"No template '{template}' (built-in: {string.Join(", ", BuiltInTemplates.All.Select(t => t.Name))}).");
         var layout = ZoneLayouter.Layout(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi);
-        var painted = terrain ? TerrainPainter.Paint(loaded, layout, seed).Map : null;
+        GeneratedMap? built = null;
+        if (terrain)
+        {
+            built = GeneratedMap.From(TerrainPainter.Paint(loaded, layout, seed));
+            ConnectionPlacer.Place(loaded, built, seed);
+            SettlementPlacer.Place(loaded, built, seed);
+        }
+
         for (var level = 0; level < layout.Levels; level++)
         {
             Console.WriteLine($"level {level}:");
-            Console.WriteLine(painted is null
-                ? layout.ToAscii(level)
-                : string.Join(System.Environment.NewLine, Enumerable.Range(0, size).Select(y => string.Concat(Enumerable.Range(0, size).Select(x => TerrainCodes.ToCode(painted.GetTerrain(new MapPosition(x, y, level))))))));
+            if (built is null)
+            {
+                Console.WriteLine(layout.ToAscii(level));
+                continue;
+            }
+
+            var marks = built.Objects.SelectMany(o => o.OccupiedCells()).Where(c => c.Position.Level == level).ToDictionary(c => c.Position, c => c);
+            var kinds = built.Objects.ToDictionary(o => o.VisitPosition, o => o switch { MonsterGuard => 'M', Town => 'T', Mine => 'm', ResourcePile => 'p', _ => 'G' });
+            Console.WriteLine(string.Join(System.Environment.NewLine, Enumerable.Range(0, size).Select(y => string.Concat(Enumerable.Range(0, size).Select(x =>
+            {
+                var p = new MapPosition(x, y, level);
+                return kinds.TryGetValue(p, out var mark) ? mark : marks.ContainsKey(p) ? 'g' : TerrainCodes.ToCode(built.Map.GetTerrain(p));
+            })))));
+        }
+
+        if (built is not null)
+        {
+            foreach (var monster in built.Objects.OfType<MonsterGuard>())
+            {
+                Console.WriteLine($"  guard at {monster.Position}: {monster.Count} {monster.Creature} ({monster.Count * Catalog.Get(monster.Creature).Value} power)");
+            }
+
+            foreach (var mine in built.Objects.OfType<Mine>())
+            {
+                Console.WriteLine($"  {mine.Definition.Name} at {mine.Position}{(mine.Guard is { } g ? $" guarded by {g.Count} {g.Creature}" : "")}");
+            }
+
+            foreach (var town in built.Towns)
+            {
+                Console.WriteLine($"  {town.Town.TownType} town at {town.Town.Position}, {(town.Slot is { } slot ? $"player slot {slot}" : $"neutral, garrison {string.Join(", ", town.Town.Garrison.Stacks.Select(t => $"{t.Stack.Count} {t.Stack.Creature}"))}")}");
+            }
+
+            built.Problems.ToList().ForEach(p => Console.WriteLine($"  problem: {p}"));
         }
 
         for (var i = 0; i < layout.ZoneIds.Count; i++)
@@ -103,9 +143,35 @@ public static class Program
         return layout.UnmetConnections.Count == 0 ? 0 : 1;
     }
 
+    /// <summary>Generates a template for N seeds in a row (layout, terrain, connections) and reports the ones with problems, and the time.</summary>
+    private static int LayoutBatch(string template, int size, ulong first, int count, bool rectangles)
+    {
+        var loaded = File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
+            ?? throw new FormatException($"No template '{template}'.");
+        var clock = System.Diagnostics.Stopwatch.StartNew();
+        var bad = 0;
+        for (var i = 0; i < count; i++)
+        {
+            var seed = first + (ulong)i;
+            var layout = ZoneLayouter.Layout(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi);
+            var built = GeneratedMap.From(TerrainPainter.Paint(loaded, layout, seed));
+            ConnectionPlacer.Place(loaded, built, seed);
+            SettlementPlacer.Place(loaded, built, seed);
+            var problems = layout.UnmetConnections.Select(u => $"not touching {u.From}-{u.To}").Concat(built.Problems).ToList();
+            if (problems.Count > 0)
+            {
+                bad++;
+                Console.WriteLine($"seed {seed}: {string.Join("; ", problems)}");
+            }
+        }
+
+        Console.WriteLine($"{count} maps of {loaded.Name} at {size}: {bad} with problems, {clock.ElapsedMilliseconds / count} ms each");
+        return bad == 0 ? 0 : 1;
+    }
+
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file] [--days D] [--seed S] [--runs N] [--record F] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file] [--days D] [--seed S] [--runs N] [--record F] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;

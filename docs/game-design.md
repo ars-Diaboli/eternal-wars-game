@@ -439,7 +439,7 @@ Modelled on the Heroes 3: Horn of the Abyss template system.
     - **Monster strength**: none/weak/average/strong, plus allowed terrain types.
   - **Connections** between zones: which zones connect, how strongly the passage is guarded,
     and the passage type: normal, wide (unguarded), border guard/gate, or portal/subterranean
-    gate across levels. A connection may also be optional or randomly present.
+    gate across levels, and **how many passages** it makes (one or more). A connection may also be optional or randomly present.
 - **Generation is deterministic** from (template, size, players, seed), so a map can be shared by its seed.
 - **Pipeline**:
   1. Place zones on the grid from the connection graph.

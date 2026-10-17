@@ -30,14 +30,17 @@ public static class ZoneLayouter
     /// <summary>How many starting points are tried before the best layout is repaired.</summary>
     private const int Attempts = 12;
 
+    /// <summary>After this many tries a layout where every connection touches (some only thinly) is taken; the search goes on only for one with none missing.</summary>
+    private const int SettleAfter = 16;
+
     /// <summary>Voronoi tries (cheap, on a small map).</summary>
-    private const int VoronoiAttempts = 16;
+    private const int VoronoiAttempts = 24;
 
     /// <summary>Side of the small map Voronoi searches on.</summary>
-    private const int CoarseSize = 48;
+    private const int CoarseSize = 32;
 
     /// <summary>Moves tried per Voronoi attempt to open connections.</summary>
-    private const int RefineSteps = 300;
+    private const int RefineSteps = 150;
 
     private static readonly (int Dx, int Dy)[] Around = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
@@ -74,17 +77,20 @@ public static class ZoneLayouter
             // Voronoi searches on a small map (cheap) and paints the winner at full size, where the contacts scale up with it.
             var grid = new int[size * size];
             var bestOpen = int.MaxValue;
+            var bestCoarse = int.MaxValue;
             var coarse = Math.Min(size, CoarseSize);
-            for (var attempt = 0; attempt < (strategy == LayoutStrategy.Voronoi ? VoronoiAttempts : Attempts) && bestOpen > 0; attempt++)
+            for (var attempt = 0; attempt < (strategy == LayoutStrategy.Voronoi ? VoronoiAttempts : Attempts) && bestOpen > 0 && !(bestOpen < MissingContact && attempt >= SettleAfter); attempt++)
             {
                 var tried = new int[size * size];
                 if (strategy == LayoutStrategy.Voronoi)
                 {
                     var (solution, coarseOpen) = Refine(coarse, members, levelEdges, weights, Solve(coarse, zones.Count, members, weights, levelEdges, random, layered: attempt % 2 == 0), random);
-                    if (coarseOpen > 0 && bestOpen != int.MaxValue)
+                    if (coarseOpen >= bestCoarse && bestOpen != int.MaxValue)
                     {
-                        continue; // not worth painting at full size once something is known
+                        continue; // not worth painting at full size unless it is better than what the small map gave before
                     }
+
+                    bestCoarse = Math.Min(bestCoarse, coarseOpen);
 
                     Paint(tried, size, members, weights, solution, (double)size / coarse, balance: size > coarse ? 6 : 0);
                 }
@@ -94,11 +100,11 @@ public static class ZoneLayouter
                 }
 
                 MakeContiguous(tried, size);
-                var open = CountOpen(tried, size, levelEdges);
+                var open = CountOpen(tried, size, levelEdges, MinContact(size));
                 if (open > 0 && strategy == LayoutStrategy.Voronoi)
                 {
                     Repair(tried, size, levelEdges); // a thin contact of the small map can be lost when painting at full size
-                    open = CountOpen(tried, size, levelEdges);
+                    open = CountOpen(tried, size, levelEdges, MinContact(size));
                 }
 
                 if (open < bestOpen)
@@ -267,7 +273,7 @@ public static class ZoneLayouter
                 area[zone]++;
             }
 
-            return (CountOpen(grid, size, edges) * 100) + members.Count(m => area[m] < 0.5 * target[m] || area[m] > 1.6 * target[m]);
+            return (CountOpen(grid, size, edges, MinContact(size)) * 100) + members.Count(m => area[m] < 0.5 * target[m] || area[m] > 1.6 * target[m]);
         }
 
         var best = start;
@@ -615,10 +621,16 @@ public static class ZoneLayouter
         return false;
     }
 
-    /// <summary>How many of the connections have no contact: one pass over the grid, noting which zone pairs sit side by side.</summary>
-    private static int CountOpen(int[] grid, int size, List<(int A, int B)> edges)
+    /// <summary>The score of a connection whose zones do not touch at all; one whose contact is merely thin scores 1.</summary>
+    private const int MissingContact = 1000;
+
+    /// <summary>
+    /// A score for the connections without enough contact (0 = all good; a connection that does not touch at all is far worse than a thin one): one pass over the grid, counting the tile edges two zones share. A
+    /// contact needs <paramref name="minContact"/> of them, so there is room for a passage through the wall (stage 3).
+    /// </summary>
+    private static int CountOpen(int[] grid, int size, List<(int A, int B)> edges, int minContact)
     {
-        var contact = new HashSet<(int, int)>();
+        var contact = new Dictionary<(int, int), int>();
         for (var y = 0; y < size; y++)
         {
             for (var x = 0; x < size; x++)
@@ -626,18 +638,23 @@ public static class ZoneLayouter
                 var here = grid[(y * size) + x];
                 if (x + 1 < size && grid[(y * size) + x + 1] is var right && right != here)
                 {
-                    contact.Add(here < right ? (here, right) : (right, here));
+                    var key = here < right ? (here, right) : (right, here);
+                    contact[key] = contact.GetValueOrDefault(key) + 1;
                 }
 
                 if (y + 1 < size && grid[((y + 1) * size) + x] is var below && below != here)
                 {
-                    contact.Add(here < below ? (here, below) : (below, here));
+                    var key = here < below ? (here, below) : (below, here);
+                    contact[key] = contact.GetValueOrDefault(key) + 1;
                 }
             }
         }
 
-        return edges.Count(e => !contact.Contains(e.A < e.B ? (e.A, e.B) : (e.B, e.A)));
+        return edges.Sum(e => contact.GetValueOrDefault(e.A < e.B ? (e.A, e.B) : (e.B, e.A)) is var n && n == 0 ? MissingContact : n < minContact ? 1 : 0);
     }
+
+    /// <summary>Tile edges two zones must share on a map of this size (3 on the small map the search runs on, scaled up for bigger ones).</summary>
+    private static int MinContact(int size) => Math.Max(1, 3 * size / CoarseSize);
 
     /// <summary>Locks one pair of side-by-side tiles of two zones (the first in reading order), if they touch.</summary>
     private static void LockContact(int[] grid, int size, int a, int b, bool[] locked)
