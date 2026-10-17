@@ -1,0 +1,95 @@
+{
+  "formatVersion": 4,
+  "name": "Two against two",
+  "description": "Two teams of two. Allies share a camp behind their starts and a guarded path between them; the camps meet at a strong front and two contested flanks.",
+  "minPlayers": 4,
+  "maxPlayers": 4,
+  "sizes": [96, 128, 160],
+  "underground": false,
+  "teamsLocked": true,
+  "zones": [
+    {
+      "id": "start-1", "type": "PlayerStart", "owner": 0, "team": 0, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 },
+      "extraPiles": 3,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 4 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-2", "type": "PlayerStart", "owner": 1, "team": 0, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 },
+      "extraPiles": 3,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 4 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-3", "type": "PlayerStart", "owner": 2, "team": 1, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 },
+      "extraPiles": 3,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 4 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-4", "type": "PlayerStart", "owner": 3, "team": 1, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 },
+      "extraPiles": 3,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 4 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "camp-a", "type": "Treasure", "size": 3,
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Crystal": 1, "Mercury": 1, "Gold": 1 },
+      "extraPiles": 3,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 6 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "camp-b", "type": "Treasure", "size": 3,
+      "neutralTowns": { "min": 0, "max": 1 },
+      "mines": { "Crystal": 1, "Mercury": 1, "Gold": 1 },
+      "extraPiles": 3,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 6 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "flank-1", "type": "Treasure", "size": 2,
+      "mines": { "Sulfur": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 3000, "maxValue": 6000, "count": 4 } ],
+      "monsters": "Average"
+    },
+    {
+      "id": "flank-2", "type": "Treasure", "size": 2,
+      "mines": { "Sulfur": 1 },
+      "extraPiles": 2,
+      "treasure": [ { "minValue": 3000, "maxValue": 6000, "count": 4 } ],
+      "monsters": "Average"
+    },
+    {
+      "id": "front", "type": "Junction", "size": 3,
+      "neutralTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1 },
+      "extraPiles": 2,
+      "monsters": "Strong"
+    }
+  ],
+  "connections": [
+    { "from": "start-1", "to": "camp-a", "kind": "Wide" },
+    { "from": "start-2", "to": "camp-a", "kind": "Wide" },
+    { "from": "start-1", "to": "start-2", "kind": "Normal", "guardValue": 800 },
+    { "from": "start-3", "to": "camp-b", "kind": "Wide" },
+    { "from": "start-4", "to": "camp-b", "kind": "Wide" },
+    { "from": "start-3", "to": "start-4", "kind": "Normal", "guardValue": 800 },
+    { "from": "camp-a", "to": "front", "kind": "Normal", "guardValue": 3000 },
+    { "from": "camp-b", "to": "front", "kind": "Normal", "guardValue": 3000 },
+    { "from": "camp-a", "to": "flank-1", "kind": "Normal", "guardValue": 2000 },
+    { "from": "camp-b", "to": "flank-1", "kind": "Normal", "guardValue": 2000 },
+    { "from": "camp-a", "to": "flank-2", "kind": "Normal", "guardValue": 2000 },
+    { "from": "camp-b", "to": "flank-2", "kind": "Normal", "guardValue": 2000 }
+  ]
+}

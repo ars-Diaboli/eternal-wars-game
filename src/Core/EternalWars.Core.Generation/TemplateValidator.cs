@@ -138,6 +138,11 @@ public static class TemplateValidator
             error($"{name} is not a start zone, so it has no owner.");
         }
 
+        if (zone.Team is { } team && (!isStart || team < 0))
+        {
+            error($"{name} has team {team}: only start zones have a team, numbered from 0.");
+        }
+
         Range(zone.PlayerTowns, $"{name} player towns", error);
         Range(zone.NeutralTowns, $"{name} neutral towns", error);
         if (isStart && zone.PlayerTowns.Min < 1)

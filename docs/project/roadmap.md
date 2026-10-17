@@ -281,10 +281,11 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 
 ### Templates
 - [x] New core project `EternalWars.Core.Generation` (engine-free, deterministic from seed): project, `SeedStreams` (ADR-064)
-- [x] Template model + `*.ewtemplate.json` (v1; v2 adds roads): sizes, players, levels, zones (type, owner, size, level, towns, richness,
+- [x] Template model + `*.ewtemplate.json` (v1; v2 roads, v3 start buildings, v4 teams): sizes, players, levels, zones (type, owner, size, level, towns, richness,
       treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) ([random-maps.md](../design/random-maps.md), ADR-064)
-- [ ] Template model follow-ups: teams (RMG-6), mirroring (1.0 scope, RMG-9); portals, optional connections, border guards (RMG-11)
-- [x] Template validator (`TemplateValidator`: errors and fairness warnings); shipped templates `duel` and `ffa-4` ("Free for all")
+- [x] Teams in templates: a team per start zone, `teamsLocked` (RMG-6, template v4)
+- [ ] Template model follow-ups: mirroring (1.0 scope, RMG-9); portals, optional connections, border guards (RMG-11)
+- [x] Template validator (`TemplateValidator`: errors and fairness warnings); shipped templates `duel`, `ffa-4` ("Free for all") and `2v2` ("Two against two")
 
 ### Generator pipeline
 - [x] Zone layout from the connection graph (`ZoneLayouter`: Voronoi and Rectangles strategies, ADR-064; `sim layout`)
@@ -303,7 +304,6 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       picked at setup (AI random); garrisons for empty slots; HoMM3-style start armies; retry on problems with sub-seeds
       (`GenerateBest`); standard rules; `MapGenerator.Version` in game records (v3); factions as generator input with
       native start-zone terrain, "Random" drawn first; a generated game saves as a map and replays
-- [ ] Teams in templates ❓ RMG-6
 - [ ] Connectivity and fairness validation of the whole map ❓ RMG-8
 - [ ] Mirrored/symmetric zones for competitive templates (1.0 scope) ❓ RMG-9
 
@@ -313,7 +313,7 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [ ] Editor: template editor (zone graph: add zones, set properties, draw connections) ❓ RMG-10
 - [ ] Editor: "generate map from template" into an editable map
 - [ ] Game: new-game screen picks template, size, players (town and hero per player), seed and options, then generates
-- [ ] Starter templates: 2-player duel and 4-player free-for-all (shipped), 2v2 (needs RMG-6), 8-player
+- [ ] Starter templates: 2-player duel, 4-player free-for-all and 2v2 (shipped), 8-player
 - Not in 1.0: water zones and islands (no sea travel, ADR-051), HotA template import (ADR-034)
 
 **Exit**: a player picks a template in the game and gets a fair, playable random map; designers

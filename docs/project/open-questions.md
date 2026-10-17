@@ -12,18 +12,13 @@ Phase 4's generator stages 1–6 and the scenario assembly are in. What still bl
 
 | Id | Question | Blocks |
 |---|---|---|
-| [RMG-6](#rmg-6) | Teams in templates | Phase 4: 2v2 template |
 | [TOWN-2](#town-2) | Marketplace trading rates | Phase 3: marketplace, governor's 150 %, AI marketplace use; treasure resource values |
 | [HERO-1](#hero-1) | Third Offense and Defense skills, skill specialties | Phase 3: skills |
 | [HERO-2](#hero-2) | Rage and Adrenaline | Phase 3: faction groups |
 
 ## Random maps (Phase 4)
 
-RMG-1 to RMG-5 and RMG-7 are answered (see [Answered](#answered)).
-
-<a id="rmg-6"></a>
-**RMG-6 🚧 Teams in templates** (blocks the 2v2 starter template). ADR-032 says templates define default teams, but
-the format has none. A field per start zone (team) in the template format?
+RMG-1 to RMG-7 are answered (see [Answered](#answered)).
 
 <a id="rmg-8"></a>
 **RMG-8 Fairness metrics** (blocks the CI batch validation). Which numbers compare start zones (distance to the
@@ -279,6 +274,9 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
   in the editor with a random or later-chosen town, the terrain may differ. A start zone is painted with a mix of its
   town's native terrains (intersected with the template's terrain list when it has one); other zones follow the
   template only.
+- RMG-6 teams (2026-10-17, implemented, ADR-064): an optional team per start zone (same number = allies, none = free for
+  all); players may change teams at setup unless the template locks them; no team fairness checks; the connections, not a
+  layout rule, decide where allies are.
 
 **Towns (2026-10-17)**
 - TOWN-1 the fort: fort 1 is needed to build creature dwellings and gives a wall and gate in sieges; Citadel +50 %,

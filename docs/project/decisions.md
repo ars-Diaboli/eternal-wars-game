@@ -998,7 +998,7 @@ Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) a
 
 ### ADR-064: Random map generation: project layout and seed streams (2026-10-17)
 **Status**: accepted; stages 1–6 and the scenario assembly implemented (layout, terrain, connections, towns/mines, roads, treasure; `MapGenerator`);
-validation of the whole map, teams, mirroring and the new-game screen pending
+validation of the whole map, mirroring and the new-game screen pending
 - `src/Core/EternalWars.Core.Generation` exists (engine-free, warning-free like every core project). It references `Core.Domain`
   only; `Core.Data` references it (template file format). It is a dependency of the tests, and later of the `sim` tool and the apps.
 - **Refines ADR-023**: the generator outputs a **scenario `GameState`** (never started: the same object the map editor works on),
@@ -1124,6 +1124,13 @@ zones and the list of `Obstacles`). User-approved defaults:
 - **Generator version**: `MapGenerator.Version` (1), bumped when the same inputs would give another map. Game records (format **v3**) carry `GenerationInfo(Template, Size,
   Seed, Attempt, GeneratorVersion)`; `VersionWarning` tells when the seed would give another map with this build. A generated game is saved as an ordinary map
   (`MapConverter.ToDocument`) and replays from it.
+
+**Teams in templates (2026-10-17)** (user answers on RMG-6): a start zone has an optional `team` (format **v4**); start zones with the same number are allies, none = free for all.
+The template's teams are the default: `PlayerSetup.Team` changes a player's team on the new-game screen unless the template has `teamsLocked` (then another team is refused and the
+game's teams are locked, as for maps, ADR-032). A player with no team gets one of its own, numbered past every team in use. No team fairness checks in the validator (only:
+teams on start zones, from 0), and no team rule in the layout: the connections decide where allies are. New starter template **Two against two** (`2v2.ewtemplate.json`, teams
+locked): allies share a camp behind their starts and a guarded path between them; the camps meet at a strong front and two contested flanks (128: 0 of 20 maps with problems,
+96: 1 of 20, which the retries cover).
 
 ### ADR-065: Guard mode per monster stack (2026-10-17)
 **Status**: accepted (2026-10-17), user decision on RMG-2; amends ADR-040
