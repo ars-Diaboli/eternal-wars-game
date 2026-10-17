@@ -205,7 +205,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Mana numbers and school attunement skills (ADR-063); casting waits for Phase 5
 - [ ] Rage and Adrenaline faction groups: design their skills (placeholders today) ❓ HERO-2
 - [x] Complexity levels with starting resources (ADR-063); new-game screen option
-- [ ] AI that appoints governors on purpose; the `sim` tool picks a complexity
+- [x] AI that appoints governors on purpose (ADR-059)
+- [ ] The `sim` tool picks a complexity
 - [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); needs
       sieges, post-1.0 (CMB-5)
 - [ ] Skill specialties: what a skill specialty adds ❓ HERO-1
@@ -263,10 +264,10 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Capture of undefended and weak enemy towns
 - [x] Game app: computer players play their turns (`Main._Process`)
 - [x] Simulator: AI-vs-AI games (`sim game`) for tuning; the self-test replays one
-- [ ] Town defence: keep or bring a hero home when an enemy is near; avoid stronger enemy heroes
-- [ ] Several heroes: roles (explorer, army, carrier), exchanging armies between own heroes
-- [ ] Buy war machines at the blacksmith (machines exist, ADR-056; CMB-3), spells (Phase 5), marketplace use (TOWN-2);
-      hiring heroes, artifacts and complexity levels are done
+- [x] Town defence: keep or bring a hero home when an enemy is near; avoid stronger enemy heroes (ADR-059)
+- [x] Several heroes: a main hero; the others carry troops to it and hand them over in the exchange (ADR-059)
+- [x] Buy war machines at the blacksmith: tent, cart for shooters, the offensive machine back with Advanced Ballistics (ADR-059)
+- [ ] Spells (Phase 5), marketplace use (TOWN-2); hiring heroes, artifacts and complexity levels are done
 - [ ] Balance the AI over several maps (`sim game --runs`); a CI check that AI games on the shipped maps finish
 
 ### Content for the slice

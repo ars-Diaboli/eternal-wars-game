@@ -9,6 +9,7 @@ using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
@@ -235,6 +236,116 @@ public class AdventureAiTests
         Enumerable.Range(0, 12).Select(y => string.Concat(Enumerable.Range(0, 40).Select(x => x == 3 && y == 7 ? 'A' : x == 39 && y == 11 ? 'B' : '.'))).ToArray();
 
     private static IReadOnlyList<CreatureDefinition> LinesOf(GameState state, Town town) => TownRules.Lines(state, town);
+
+    private static string Shooter => CreatureCatalog.Default.All.First(c => c.Town == TownIds.Haven && c.Shots > 0 && c.UpgradesTo is not null).Id;
+
+    [Fact]
+    public void ItBuysATentAndACartForShooters_AndItsOffensiveMachineBackOnlyWithAdvancedBallistics()
+    {
+        foreach (var ballistics in new[] { SkillLevel.None, SkillLevel.Advanced })
+        {
+            var state = Create("..........", "..........", "..........", "..........", "..........", "..........", "...A......", ".........B");
+            var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+            town.SetLevel(BuiltInBuildings.Blacksmith, 1);
+            town.LastBuilt = state.Date;
+            var hero = state.GetHero(A);
+            hero.Army.Set(1, new CreatureStack(Shooter, 10));
+            hero.SetWarMachines([]); // lost its offensive machine
+            hero.Skills.Set(BuiltInSkills.Ballistics, ballistics);
+            var session = Start(state);
+            state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000);
+
+            var ai = Ai(session);
+            ai.PlayTurn();
+
+            Assert.Contains(WarMachineSlot.Tent, hero.WarMachines);
+            Assert.Contains(WarMachineSlot.Cart, hero.WarMachines);
+            Assert.Equal(ballistics == SkillLevel.Advanced, hero.WarMachines.Contains(WarMachineSlot.Offensive));
+            Assert.Equal(0, ai.Refused);
+        }
+    }
+
+    [Fact]
+    public void AHeroWithStewardship_IsAppointedGovernorOfAnUngovernedTown()
+    {
+        var state = Create("..........", "..........", "..........", "..........", "..........", "..........", "..........", "A....C...B");
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        state.GetHero(C).Skills.Set(BuiltInSkills.Stewardship, SkillLevel.Basic);
+        var session = Start(state);
+
+        var ai = Ai(session);
+        ai.PlayTurn();
+
+        Assert.Equal(C, town.Governor);
+        Assert.Contains(session.CommandLog, c => c is AppointGovernorCommand);
+        Assert.Equal(0, ai.Refused);
+    }
+
+    /// <summary>A town at the left with its entrance at (3, 6); Blue's hero A at (12, 6); Red's hero B at (16, 6), a day's march from the town.</summary>
+    private static (GameState State, Town Town) Threatened(int heroFootmen, int garrisonFootmen, int enemyFootmen)
+    {
+        var state = Create(
+            "....................", "....................", "....................", "....................", "....................", "....................",
+            "............A...B...", "....................");
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Tavern, 0);
+        town.LastBuilt = state.Date;
+        town.Garrison.Set(0, new CreatureStack(BuiltInCreatures.Footman, garrisonFootmen));
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, heroFootmen));
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, enemyFootmen));
+        return (state, town);
+    }
+
+    [Fact]
+    public void AHero_GoesHomeToATownAnEnemyThreatens_AndStaysThere()
+    {
+        // The garrison (40) alone cannot hold against 100, the hero (50) cannot beat them alone, together they can.
+        var (state, town) = Threatened(heroFootmen: 50, garrisonFootmen: 40, enemyFootmen: 100);
+        Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 9, 2);
+        var session = Start(state);
+        var ai = Ai(session);
+
+        ai.PlayTurn();
+        Assert.Equal(town.VisitPosition, state.GetHero(A).Position);
+
+        session.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+        ai.PlayTurn();
+        Assert.Equal(town.VisitPosition, state.GetHero(A).Position); // the pile can wait
+        Assert.Contains(state.Objects, o => o is ResourcePile);
+        Assert.Equal(0, ai.Refused);
+    }
+
+    [Fact]
+    public void AHero_StaysOutOfReachOfAStrongerEnemy()
+    {
+        var state = Create("A....p.....B");
+        Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 5, 0);
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 30));
+        var session = Start(state);
+
+        Ai(session).PlayTurn();
+
+        Assert.Contains(state.Objects, o => o is ResourcePile); // the pile is in the champions' reach
+        Assert.Equal(new MapPosition(0, 0), state.GetHero(A).Position);
+    }
+
+    [Fact]
+    public void ASecondaryHero_BringsItsTroopsToTheMainHero()
+    {
+        var state = Create("A.....C..#B");
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10));
+        var footmen = (int)Math.Max(30, 1500 / CreatureCatalog.Default.Get(BuiltInCreatures.Footman).Value);
+        state.GetHero(C).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, footmen));
+        var session = Start(state);
+
+        var ai = Ai(session);
+        ai.PlayTurn();
+
+        Assert.Contains(state.GetHero(A).Army.Stacks, s => s.Stack.Creature == BuiltInCreatures.Footman && s.Stack.Count == footmen - 1);
+        Assert.Equal(1, state.GetHero(C).Army.Stacks.Sum(s => s.Stack.Count)); // it keeps one creature
+        Assert.Null(state.PendingDecision);
+        Assert.Equal(0, ai.Refused);
+    }
 
     [Fact]
     public void ItNeverAttacksWhenItWouldLose()
