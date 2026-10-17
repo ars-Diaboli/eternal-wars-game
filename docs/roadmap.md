@@ -172,7 +172,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Caravan rules (user decisions): a blocked route returns the caravan with the price back, a lost destination scatters the
       creatures, caravans are invisible; building 1000 gold + 5 lumber (placeholder)
 - [x] Town screen: caravan section (hire, send the picked stack, caravans on the way); `DwellingPanel` opens when a hero visits a dwelling
-- [ ] AI: recruit at map dwellings, hire and send caravans
+- [x] AI: heroes flag and recruit at map dwellings, towns build a caravan once the player owns a dwelling, hire from owned dwellings and send troops to an empty town (`AdventureAi`)
 - [ ] Smoke scenario for dwellings and caravans (needs Godot); dwelling guard rules, caravan cost tuning
 
 ### Towns: Godot

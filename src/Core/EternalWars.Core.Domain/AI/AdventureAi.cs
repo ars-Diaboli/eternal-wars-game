@@ -200,7 +200,13 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             Hire(player, town, reserve);
             UpgradeStacks(player, town, reserve);
             Recruit(player, town, reserve);
+            HireCaravans(player, town, reserve);
             Consolidate(player, town);
+        }
+
+        if (Active(player) && _state.PendingDecision is null)
+        {
+            SendSpareTroops(player);
         }
     }
 
@@ -267,6 +273,11 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             {
                 yield return (true, line.Id);
             }
+        }
+
+        if (_state.ObjectsOf<CreatureDwelling>().Any(d => d.Owner == town.Owner))
+        {
+            yield return (false, BuiltInBuildings.Caravan); // there is something to hire from
         }
 
         yield return (false, BuiltInBuildings.Marketplace);
@@ -381,6 +392,61 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
     }
 
+    /// <summary>
+    /// A town with a caravan hires what waits in the owned map dwellings, most valuable creatures first, with the gold beyond
+    /// what is saved for a building. At most two caravans travel to a town at a time (ADR-054).
+    /// </summary>
+    private void HireCaravans(PlayerId player, Town town, int reserve)
+    {
+        if (town.Level(BuiltInBuildings.Caravan) < 1)
+        {
+            return;
+        }
+
+        var dwellings = _state.ObjectsOf<CreatureDwelling>()
+            .Where(d => d.Owner == player && d.Available > 0)
+            .OrderByDescending(d => _state.Creatures.Get(d.Creature).Value).ThenBy(d => d.Id.Value);
+        foreach (var dwelling in dwellings)
+        {
+            if (!Active(player) || _state.Caravans.Count(c => c.Destination == town.Id) >= 2)
+            {
+                return;
+            }
+
+            var creature = _state.Creatures.Get(dwelling.Creature);
+            var spare = _state.GetPlayer(player).Resources - new ResourceSet(Gold: reserve);
+            var count = TownRules.MaxAffordable(spare, TownRules.CreatureCost(_state, town, creature), dwelling.Available!.Value);
+            if (count > 0 && CaravanRules.CheckOrder(_state, town, dwelling, count) is null)
+            {
+                Execute(new OrderCaravanCommand(player, town.Id, dwelling.Id, count));
+            }
+        }
+    }
+
+    /// <summary>
+    /// An own town with no garrison and no hero gets the weakest stack of another own town with a caravan, as long as that
+    /// town keeps at least one stack of its own: nobody can walk in for free (ADR-054).
+    /// </summary>
+    private void SendSpareTroops(PlayerId player)
+    {
+        var towns = _state.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value).ToList();
+        foreach (var empty in towns.Where(t => t.Garrison.IsEmpty && TownRules.VisitingHero(_state, t) is null
+                                               && !_state.Caravans.Any(c => c.Destination == t.Id)))
+        {
+            var source = towns.FirstOrDefault(t => t != empty && t.Level(BuiltInBuildings.Caravan) >= 1 && t.Garrison.StackCount >= 2);
+            if (source is null || !Active(player))
+            {
+                continue;
+            }
+
+            var (slot, _) = source.Garrison.Stacks.OrderBy(s => Power(s.Stack)).ThenBy(s => s.Slot).First();
+            if (CaravanRules.CheckSend(_state, source, slot, empty, null) is null)
+            {
+                Execute(new SendTroopsCommand(player, source.Id, slot, empty.Id));
+            }
+        }
+    }
+
     /// <summary>A hero in the town takes the garrison's creatures with it, leaving the weakest stack to hold the town.</summary>
     private void Consolidate(PlayerId player, Town town)
     {
@@ -444,6 +510,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             }
 
             EquipBest(player, hero);
+            RecruitHere(player, hero);
             if (hero.MovementPoints <= 0)
             {
                 return true;
@@ -464,6 +531,24 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
 
         return true;
+    }
+
+    /// <summary>A hero standing on a map dwelling buys what it can afford (keeping a third of the gold) into its army (ADR-054).</summary>
+    private void RecruitHere(PlayerId player, Hero hero)
+    {
+        if (_state.ObjectCellAt(hero.Position) is not { Object: CreatureDwelling { Available: > 0 } dwelling, Cell: FootprintCell.Visit }
+            || !_state.Creatures.TryGet(dwelling.Creature, out var creature) || !hero.Army.CanAccept(creature.Id))
+        {
+            return;
+        }
+
+        var each = StewardshipRules.DiscountCreatures(creature.Cost, hero.SkillLevelOf(BuiltInSkills.Stewardship));
+        var spare = _state.GetPlayer(player).Resources - new ResourceSet(Gold: _state.GetPlayer(player).Resources.Gold / 3);
+        var count = TownRules.MaxAffordable(spare, each, dwelling.Available!.Value);
+        if (count > 0)
+        {
+            Execute(new RecruitAtDwellingCommand(player, dwelling.Id, count));
+        }
     }
 
     private long Power(CreatureStack stack) => (long)stack.Count * _state.Creatures.Get(stack.Creature).Value;
@@ -585,6 +670,18 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     else if (Plausible(monsterPower))
                     {
                         yield return new(visit, 150 + (monsterPower * 0.35), Army.Of(stack), MaxLoss: MonsterLoss);
+                    }
+
+                    break;
+                case CreatureDwelling dwelling when Plausible(GuardPower(visit)) && visit != hero.Position:
+                    // Flag it (so caravans can hire there) and buy what waits, if the hero can pay and has room.
+                    var dwelt = _state.Creatures.Get(dwelling.Creature);
+                    var buyable = hero.Army.CanAccept(dwelt.Id)
+                        ? TownRules.MaxAffordable(_state.GetPlayer(owner).Resources, dwelt.Cost, dwelling.Available ?? 0) : 0;
+                    var worth = (OwnTeam(owner, dwelling.Owner) ? 0 : 1200) + (0.4 * buyable * dwelt.Value);
+                    if (worth > 0)
+                    {
+                        yield return new(visit, worth, GuardArmy(visit), MaxLoss: MonsterLoss);
                     }
 
                     break;

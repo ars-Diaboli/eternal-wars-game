@@ -703,7 +703,11 @@ and the town / dwelling screens are in; the AI does not use them yet.
   gold stays spent); caravans are **invisible and cannot be attacked** (they are not on the map; only the route check matters).
 - Caravans live in `GameState.Caravans` and are created only by commands, so replays rebuild them; they are not in the map file.
   They are part of the state digest. A defeated player's caravans vanish.
-- Not yet: the AI recruiting at dwellings or using caravans, a dwelling guard (use a monster next to it), marketplace
+- **AI** (`AdventureAi`): a hero values an unflagged dwelling and what it can buy there as a target and recruits when standing on it
+  (keeps a third of the gold); a town builds the caravan early once the player owns a dwelling, hires from owned dwellings with
+  its spare gold (at most two caravans on the way to a town) and sends its weakest stack to an own town that has no garrison and
+  no hero, keeping at least one stack.
+- Not yet: a dwelling guard (use a monster next to it), marketplace
   trading with the governor's 150 %.
 
 ### ADR-055: Primary stat growth
