@@ -47,6 +47,15 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     private readonly BattleEstimator _estimator = new(session.State);
     private readonly HashSet<MapPosition> _claimed = [];
 
+    /// <summary>The player's main hero this turn: the strongest army; the others carry troops to it.</summary>
+    private HeroId? _main;
+
+    /// <summary>A secondary hero hands its troops to the main hero when it carries at least this much army power (or a quarter of the main army).</summary>
+    private const long CarryThreshold = 1000;
+
+    /// <summary>A place is safe from an enemy hero when the army there has at least this share of the enemy's power.</summary>
+    private const double SafeShare = 0.8;
+
     /// <summary>Commands the AI issued, and how many of them the game refused (should stay 0).</summary>
     public int Commands { get; private set; }
 
@@ -95,7 +104,10 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
 
         ManageTowns(player);
-        foreach (var hero in _state.HeroesOf(player).OrderBy(h => h.Id.Value).Select(h => h.Id).ToList())
+        _main = _state.HeroesOf(player).OrderByDescending(h => ArmyPower(h.Army)).ThenBy(h => h.Id.Value).FirstOrDefault()?.Id;
+
+        // The main hero moves first, so the carriers head for where it ends up.
+        foreach (var hero in _state.HeroesOf(player).OrderBy(h => h.Id != _main).ThenBy(h => h.Id.Value).Select(h => h.Id).ToList())
         {
             if (!PlayHero(player, hero))
             {
@@ -153,7 +165,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     var levels = ExperienceTable.LevelFor(hero.Experience + chest.Experience) > hero.Level;
                     command = new ResolveTreasureChestCommand(player, levels ? TreasureChestReward.Experience : TreasureChestReward.Gold);
                     break;
-                case HeroExchangeDecision:
+                case HeroExchangeDecision exchange:
+                    Exchange(player, exchange.Hero, exchange.Other);
                     command = new CompleteExchangeCommand(player);
                     break;
                 case GuardEncounterDecision guard:
@@ -189,6 +202,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
     private void ManageTowns(PlayerId player)
     {
+        AppointGovernors(player);
         foreach (var town in _state.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value).ToList())
         {
             if (!Active(player) || _state.PendingDecision is not null)
@@ -200,6 +214,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             Hire(player, town, reserve);
             UpgradeStacks(player, town, reserve);
             Recruit(player, town, reserve);
+            BuyWarMachines(player, town, reserve);
             HireCaravans(player, town, reserve);
             Consolidate(player, town);
         }
@@ -403,6 +418,61 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     }
 
     /// <summary>
+    /// Heroes with Stewardship that govern nothing are appointed to the ungoverned towns that spend the most (most dwellings, then the highest
+    /// town hall), the best steward to the best town (ADR-063). A governor keeps its town while it roams.
+    /// </summary>
+    private void AppointGovernors(PlayerId player)
+    {
+        var free = _state.HeroesOf(player)
+            .Where(h => h.SkillLevelOf(BuiltInSkills.Stewardship) > SkillLevel.None && StewardshipRules.TownGovernedBy(_state, h) is null)
+            .OrderByDescending(h => h.SkillLevelOf(BuiltInSkills.Stewardship)).ThenBy(h => h.Id.Value).ToList();
+        var towns = _state.ObjectsOf<Town>().Where(t => t.Owner == player && StewardshipRules.GovernorOf(_state, t) is null)
+            .OrderByDescending(t => t.Dwellings.Count).ThenByDescending(t => t.Level(BuiltInBuildings.TownHall)).ThenBy(t => t.Id.Value).ToList();
+        foreach (var (hero, town) in free.Zip(towns))
+        {
+            if (Active(player) && _state.PendingDecision is null && StewardshipRules.CheckAppoint(_state, town, hero) is null)
+            {
+                Execute(new AppointGovernorCommand(player, town.Id, hero.Id));
+            }
+        }
+    }
+
+    /// <summary>
+    /// The visiting hero buys war machines with what is left after building and recruiting, keeping a cushion of gold (ADR-056): a healing tent,
+    /// an ammo cart when its army shoots, and its offensive machine back when it was lost and the hero can field it (Advanced Ballistics).
+    /// </summary>
+    private void BuyWarMachines(PlayerId player, Town town, int reserve)
+    {
+        if (TownRules.VisitingHero(_state, town) is not { } hero || town.Level(BuiltInBuildings.Blacksmith) < 1)
+        {
+            return;
+        }
+
+        var wanted = new List<WarMachineSlot> { WarMachineSlot.Tent };
+        if (hero.Army.Stacks.Any(s => _state.Creatures.Get(s.Stack.Creature).Shots > 0))
+        {
+            wanted.Add(WarMachineSlot.Cart);
+        }
+
+        if (WarMachines.FieldsOffensive(hero.SkillLevelOf(BuiltInSkills.Ballistics)))
+        {
+            wanted.Insert(0, WarMachineSlot.Offensive);
+        }
+
+        foreach (var slot in wanted)
+        {
+            var spare = _state.GetPlayer(player).Resources.Gold - reserve - WarMachines.Cost(slot).Gold;
+            if (Active(player) && spare >= WarMachineCushion && TownRules.CheckBuyWarMachine(_state, town, slot) is null)
+            {
+                Execute(new BuyWarMachineCommand(player, town.Id, slot));
+            }
+        }
+    }
+
+    /// <summary>Gold kept after buying a war machine: creatures and buildings come first.</summary>
+    private const int WarMachineCushion = 1500;
+
+    /// <summary>
     /// A town with a caravan hires what waits in the owned map dwellings, most valuable creatures first, with the gold beyond
     /// what is saved for a building. At most two caravans travel to a town at a time (ADR-054).
     /// </summary>
@@ -521,7 +591,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
             EquipBest(player, hero);
             RecruitHere(player, hero);
-            if (hero.MovementPoints <= 0)
+            if (hero.MovementPoints <= 0 || Defending(hero))
             {
                 return true;
             }
@@ -561,6 +631,78 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
     }
 
+    // Several heroes and defence -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Two own heroes met: the secondary one hands its troops to the main hero (ADR-059), strongest stacks first, into a slot of the same creature or a
+    /// free one, else in exchange for the main army's weakest stack when that is weaker. It keeps one creature, as a hero must keep a stack.
+    /// </summary>
+    private void Exchange(PlayerId player, HeroId first, HeroId second)
+    {
+        var a = _state.GetHero(first);
+        var b = _state.GetHero(second);
+        var (main, feeder) = a.Id == _main || (b.Id != _main && ArmyPower(a.Army) >= ArmyPower(b.Army)) ? (a, b) : (b, a);
+        foreach (var (slot, stack) in feeder.Army.Stacks.OrderByDescending(s => Power(s.Stack)).ThenBy(s => s.Slot).ToList())
+        {
+            if (!Active(player) || feeder.Army[slot] is not { } current)
+            {
+                return;
+            }
+
+            var last = feeder.Army.StackCount == 1;
+            var count = last ? current.Count - 1 : current.Count;
+            var to = Enumerable.Range(0, Army.SlotCount).FirstOrDefault(s => main.Army[s]?.Creature == current.Creature, -1);
+            if (to < 0)
+            {
+                to = Enumerable.Range(0, Army.SlotCount).FirstOrDefault(s => main.Army[s] is null, -1);
+            }
+
+            if (to < 0 && !last)
+            {
+                // A full army: swap for its weakest stack if this one is stronger.
+                var (weakSlot, weak) = main.Army.Stacks.OrderBy(s => Power(s.Stack)).ThenBy(s => s.Slot).First();
+                to = Power(weak) < Power(current) ? weakSlot : -1;
+            }
+
+            if (to >= 0 && count > 0)
+            {
+                Execute(new MoveStackCommand(player, feeder.Id, slot, main.Id, to, count == current.Count ? null : count));
+            }
+        }
+    }
+
+    /// <summary>Visible enemy heroes and how far (in tiles) each can reach in a day.</summary>
+    private IEnumerable<(Hero Enemy, long Power, int Reach)> Threats(PlayerId owner) =>
+        _state.Heroes
+            .Where(h => _state.AreEnemies(owner, h.Owner) && _state.CanSee(owner, h) && _state.Fog.IsExplored(owner, h.Position))
+            .Select(h => (h, ArmyPower(h.Army), (h.MaxMovementPoints / MovementCostPerTile) + 1));
+
+    /// <summary>A rough tile cost for how far an enemy gets in a day: between the native 100 and the dearer terrains, diagonals included.</summary>
+    private const int MovementCostPerTile = 150;
+
+    /// <summary>The strongest enemy army that can reach the place within a day, leaving out the hero at <paramref name="except"/> (the one being attacked); 0 when none can.</summary>
+    private long Danger(PlayerId owner, MapPosition position, MapPosition? except = null) =>
+        Threats(owner).Where(t => t.Enemy.Position != except && t.Enemy.Position.Level == position.Level && Distance(t.Enemy.Position, position) <= t.Reach)
+            .Select(t => t.Power).DefaultIfEmpty(0).Max();
+
+    /// <summary>What defends a place for the player: the hero's army, plus the garrison when it is the entrance of an own town.</summary>
+    private long DefenceAt(Hero hero, MapPosition position) =>
+        ArmyPower(hero.Army) + (_state.ObjectCellAt(position) is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == hero.Owner ? ArmyPower(town.Garrison) : 0);
+
+    private static bool Holds(long defence, long danger) => danger == 0 || defence >= danger * SafeShare;
+
+    /// <summary>A hero in an own town that an enemy can reach stays there when the garrison alone could not hold it but the two together can.</summary>
+    private bool Defending(Hero hero)
+    {
+        if (_state.ObjectCellAt(hero.Position) is not { Object: Town town, Cell: FootprintCell.Visit } || town.Owner != hero.Owner)
+        {
+            return false;
+        }
+
+        var danger = Danger(hero.Owner, hero.Position);
+        return danger > 0 && !Holds(ArmyPower(town.Garrison), danger) && Holds(DefenceAt(hero, hero.Position), danger);
+    }
+
     private long Power(CreatureStack stack) => (long)stack.Count * _state.Creatures.Get(stack.Creature).Value;
 
     private long ArmyPower(Army army) => army.Stacks.Sum(s => Power(s.Stack));
@@ -584,8 +726,10 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     /// <summary>The target tile of the best move, or null when there is nothing worth doing.</summary>
     private MapPosition? ChooseTarget(Hero hero, HashSet<MapPosition> failed)
     {
+        // Stay out of reach of enemy heroes too strong for the hero (with the garrison, at an own town).
         var candidates = Targets(hero)
             .Where(t => !failed.Contains(t.Position) && !_claimed.Contains(t.Position) && t.Position != hero.Position)
+            .Where(t => Holds(DefenceAt(hero, t.Position), Danger(hero.Owner, t.Position, except: t.Position)))
             .OrderByDescending(t => t.Value / (1 + (0.08 * Distance(hero.Position, t.Position))))
             .ThenBy(t => t.Position.Level).ThenBy(t => t.Position.Y).ThenBy(t => t.Position.X);
 
@@ -708,6 +852,15 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
                     break;
                 case Town own when own.Owner == owner && own.VisitPosition != hero.Position:
+                    // Defend it when an enemy can reach it, the garrison alone cannot hold it, nobody of ours is in it and the hero can.
+                    var danger = Danger(owner, visit);
+                    if (danger > 0 && !Holds(ArmyPower(own.Garrison), danger) && TownRules.VisitingHero(_state, own) is null
+                        && Holds(power + ArmyPower(own.Garrison), danger))
+                    {
+                        yield return new(visit, 6000 + (own.Dwellings.Count * 500));
+                        break;
+                    }
+
                     var waiting = ArmyPower(own.Garrison) + own.Available.Sum(a => (long)a.Value * _state.Creatures.Get(a.Key).Value);
                     if (waiting * 5 > power * 3)
                     {
@@ -716,6 +869,13 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
                     break;
             }
+        }
+
+        // A secondary hero carrying a worthwhile army brings it to the main hero (the meeting opens the exchange).
+        if (hero.Id != _main && _main is { } mainId && _state.Heroes.FirstOrDefault(h => h.Id == mainId) is { } main
+            && main.Position.Level == hero.Position.Level && (power >= CarryThreshold || power * 4 >= ArmyPower(main.Army)) && !main.Army.IsEmpty)
+        {
+            yield return new(main.Position, 0.5 * power);
         }
 
         foreach (var enemy in _state.Heroes.OrderBy(h => h.Id.Value))
@@ -744,7 +904,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             // Exploring never walks into anything: no heroes, objects or guarded ground (those are targets with a fight check).
             if (position == hero.Position || failed.Contains(position) || _claimed.Contains(position)
                 || !_state.Fog.IsExplored(owner, position) || !_state.Terrains.IsPassable(map.GetTerrain(position))
-                || _state.HeroAt(position) is not null || _state.ObjectCellAt(position) is not null || _state.IsGuarded(position))
+                || _state.HeroAt(position) is not null || _state.ObjectCellAt(position) is not null || _state.IsGuarded(position)
+                || !Holds(ArmyPower(hero.Army), Danger(owner, position)))
             {
                 continue;
             }

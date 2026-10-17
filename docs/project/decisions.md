@@ -842,7 +842,7 @@ work during combat
 
 ### ADR-059: The adventure AI
 **Status**: accepted (2026-10-16), first version; the numbers are a draft to tune with `sim game`; hiring heroes and
-artifacts built by ADR-060/ADR-061, dwellings and caravans by ADR-054
+artifacts built by ADR-060/ADR-061, dwellings and caravans by ADR-054; defence, several heroes, war machines and governors added (2026-10-17, below)
 - **Through commands only** (`AdventureAi` in `Core.Domain/AI`, ADR-036): it plays with `GameSession.Execute`, so its
   turns are in the command log and replay exactly. It draws **no random numbers**; the same state gives the same turn.
   It uses only what its player has explored (pathfinding and targets), not the whole map.
@@ -871,8 +871,21 @@ artifacts built by ADR-060/ADR-061, dwellings and caravans by ADR-054
 - **Exploring never walks into** heroes, objects or guarded ground, which are targets with a fight check.
 - **`sim game`** plays a map with the AI in every slot (`--map towns|demo|file`, `--days`, `--seed`, `--runs`, `--record`)
   and prints the outcome and each player's towns, heroes and army; the self-test replays an AI game through JSON.
-- **Not yet**: defending towns (a hero never stays or returns to hold one), avoiding stronger enemy heroes, several heroes
-  cooperating (they only avoid the same target within a turn), war machines, spells, difficulty levels, using the marketplace, stacking creatures between heroes, and sieges.
+- **Not yet**: spells, difficulty levels, using the marketplace, sieges. (Defence, several heroes, war machines and governors: below.)
+
+**Phase 3 follow-ups (2026-10-17)**:
+- **Town defence**: a visible enemy hero threatens what lies within a day's march of it (max movement / 150 tiles, a rough average). An own town it
+  threatens that its garrison alone could not hold (garrison below 80 % of the enemy's power) is a target worth 6000 for a hero that can hold it together
+  with the garrison; a hero already in such a town stays there. Heroes **avoid** places a stronger enemy can reach: a target or an exploring step is
+  taken only when the hero (with the garrison, at an own town) has at least 80 % of the strongest threat's power there, the enemy being attacked
+  left out. Without this a computer player lost its towns to whoever walked in first; the sim game matches on the towns map last longer now.
+- **Several heroes**: the strongest army is the **main hero** and moves first; the others explore and fight as before, and carry troops: one with at
+  least 1000 army power (or a quarter of the main army) goes to the main hero, and the meeting's exchange hands over its stacks, strongest first (same
+  creature, a free slot, or a swap for a weaker stack of a full army); it keeps one creature.
+- **War machines**: after building and recruiting, the visiting hero buys a healing tent, an ammo cart when its army shoots, and its offensive
+  machine back once lost when it can field it (Advanced Ballistics), each only while 1500 gold stay beyond what is saved for a building.
+- **Governors**: heroes with Stewardship that govern nothing are appointed to the ungoverned towns that spend the most (most dwellings, then the
+  highest town hall), the best steward first (ADR-063).
 
 ### ADR-060: The tavern and hiring heroes
 **Status**: accepted (2026-10-16), from user decisions on who a tavern offers; cost, upgrade price, limit and placement
