@@ -36,7 +36,7 @@ public static class MapValidator
             {
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} stands on impassable terrain.", hero.Position));
             }
-            else if (scenario.ObjectCellAt(hero.Position) is not null)
+            else if (scenario.ObjectCellAt(hero.Position) is { } cell && !IsOwnTownEntrance(cell, hero.Owner))
             {
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} stands inside an object.", hero.Position));
             }
@@ -187,6 +187,10 @@ public static class MapValidator
             yield return new(IssueSeverity.Warning, "Fewer than two teams start with a hero or a town, so the game cannot end by defeating enemies.");
         }
     }
+
+    /// <summary>A hero may start in the entrance of its own town, visiting it (HoMM3; generated maps put the start hero there).</summary>
+    internal static bool IsOwnTownEntrance((MapObject Object, FootprintCell Cell) cell, PlayerId owner) =>
+        cell is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == owner;
 
     private static IEnumerable<string> ValidateTown(GameState scenario, Town town)
     {

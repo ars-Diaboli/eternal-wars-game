@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
@@ -69,7 +70,9 @@ public static class ScenarioAssembler
         ulong seed,
         GameOptions? options = null,
         CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null)
+        HeroCatalog? heroRoster = null,
+        BuildingCatalog? buildings = null,
+        ArtifactCatalog? artifacts = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
@@ -108,7 +111,7 @@ public static class ScenarioAssembler
         }
 
         map.Map.Name = $"{template.Name} {map.Layout.Size}×{map.Layout.Size} #{seed}";
-        var state = new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster);
+        var state = new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster, buildings: buildings, artifacts: artifacts);
         state.SetTeamsLocked(template.TeamsLocked);
         return state;
     }

@@ -55,7 +55,7 @@ template's maximum, every town "Random", all computer players) as the new-game s
 problems; `--record` saves the first game with its generation info. `maps` checks `--maps` maps per shipped template (or
 `--template`), cycling through the template's sizes and from the most players down: each map must generate without problems and
 the same way twice, every player's hero must be able to walk to every other player's start town (through guards and pickups, via
-gates), and `--days` days of AI-vs-AI play must issue no refused command and replay through JSON to the same state. A failed line
+gates), the map validator must find no errors, and `--days` days of AI-vs-AI play must issue no refused command and replay through JSON to the same state. A failed line
 names the template, size, seed and player count to reproduce it (`maps --template <t> --seed <s> --maps 1`, or `game --template`).
 Any command takes `--creatures path.csv`.
 

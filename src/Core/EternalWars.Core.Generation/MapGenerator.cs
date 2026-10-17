@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Generation;
 
@@ -83,10 +84,10 @@ public static class MapGenerator
     /// </summary>
     public static (GameState State, GenerationResult Generation) Build(
         MapTemplate template, int size, ulong seed, IReadOnlyList<PlayerSetup> players, GameOptions? options = null, CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null, ArtifactCatalog? artifacts = null)
+        HeroCatalog? heroRoster = null, ArtifactCatalog? artifacts = null, BuildingCatalog? buildings = null)
     {
         var resolved = ScenarioAssembler.ResolveTowns(players, seed);
         var generation = GenerateBest(template, size, seed, creatures: creatures, artifacts: artifacts, startTowns: ScenarioAssembler.StartTowns(resolved));
-        return (ScenarioAssembler.Build(template, generation.Map, resolved, seed, options, creatures, heroRoster), generation);
+        return (ScenarioAssembler.Build(template, generation.Map, resolved, seed, options, creatures, heroRoster, buildings, artifacts), generation);
     }
 }

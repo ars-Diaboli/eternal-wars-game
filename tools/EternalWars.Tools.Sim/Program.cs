@@ -566,6 +566,7 @@ public static class Program
         }
 
         errors.AddRange(Unreachable(game.State));
+        errors.AddRange(MapValidator.Validate(game.State).Where(i => i.Severity == IssueSeverity.Error).Select(i => $"map validator: {i.Message}"));
 
         var (session, ai) = PlayAiGame(game, days);
         if (ai.Refused > 0)

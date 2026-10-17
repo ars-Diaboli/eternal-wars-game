@@ -197,7 +197,8 @@ These are enforced by:
 - `ScenarioAssembler.Build` (or `MapGenerator.Build`) turns the map into the scenario `GameState` for the players set up
   at game start (`PlayerSetup`); `Core.Generation` cannot see `Core.Data`'s `MapDocument` (ADR-064). The game will start
   the state directly, `MapConverter.ToDocument` save it as a map file, and the editor open it in a `MapEditorSession`
-  for hand-editing (planned).
+  for hand-editing: `EditorMapGenerator.Generate` makes that scenario (a player per slot, named by colour) and returns
+  the generator's problems and `MapValidator` issues with it (the editor UI is planned).
 - Template file format (`*.ewtemplate.json`, versioned like maps) lives in `Core.Data` (`TemplateSerializer`, `BuiltInTemplates`); the model is `MapTemplate` in `Core.Generation`.
 - The template editor reuses the editor's command/undo pattern on a template document (zone graph
   edits instead of tile edits).

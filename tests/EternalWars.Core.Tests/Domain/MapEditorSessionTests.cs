@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Tests.Domain;
@@ -154,6 +155,23 @@ public class MapEditorSessionTests
 
         editor.Undo();
         Assert.DoesNotContain(editor.Scenario.Heroes, h => h.Id == id);
+    }
+
+    [Fact]
+    public void PlaceHero_InTheEntranceOfItsOwnTown_IsAllowed_AndValid()
+    {
+        var editor = CreateEditor();
+        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(3, 3), out var townId));
+        var entrance = editor.Scenario.GetObject(townId).VisitPosition;
+
+        Assert.Equal(EditResult.Overlaps, editor.PlaceHero(new PlayerId(0), entrance, "Neutral town", out _));
+        editor.SetTownOwner(townId, new PlayerId(0));
+        Assert.Equal(EditResult.Overlaps, editor.PlaceHero(new PlayerId(1), entrance, "Enemy town", out _));
+        Assert.Equal(EditResult.Ok, editor.PlaceHero(new PlayerId(0), entrance, "Home", out _));
+        Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Message.Contains("inside an object", StringComparison.Ordinal));
+
+        editor.SetTownOwner(townId, new PlayerId(1));
+        Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Message == "Hero Home stands inside an object.");
     }
 
     [Fact]

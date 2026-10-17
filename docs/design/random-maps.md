@@ -5,7 +5,8 @@
 
 **Status**: the template format (v4), its validator, three shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two") and every
 generator stage including the scenario assembly are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`).
-There is no template editor, user template folder, fairness validation or game/editor UI yet; `sim layout` prints
+The editor's "generate from template" exists in core (`EditorMapGenerator`, see [Editor](#editor)). There is no
+template editor, user template folder, fairness validation or game/editor UI yet; `sim layout` prints
 generated maps, `sim game --template` plays AI-vs-AI games on them, and CI checks every shipped template with
 `sim maps` (no generator problems, deterministic, start towns reachable from every player, AI play and replay work).
 
@@ -90,6 +91,20 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 - **Zone strength** (`ZoneGuards`, placeholders): mine guards weak 800 / average 2000 / strong 4500 (gold ×1.5, rare
   ×1.25); neutral town garrisons 1500 / 4000 / 9000 in two stacks.
 - Anything a stage cannot place is listed in `GeneratedMap.Problems`, not thrown (and retried, see above).
+
+## Editor
+"Generate from template" (`EditorMapGenerator.Generate`, core done, UI planned) works like "New": it opens a new map
+(and a new undo history) instead of editing the open one.
+- Input: a template (refused if it has errors), one of its sizes, a seed, how many start slots get a player (default
+  all; the rest keep their towns, neutral) and optionally a town per slot (else drawn from the seed). Start zones are
+  painted native to the drawn or picked town; a town changed later in the editor keeps that terrain (RMG-7).
+- Players are named by colour (Blue, Red, Yellow, Green, Orange, Purple, Teal, Pink). Player-start slots are human up
+  to the template's max humans, AI-only slots are computer players; teams and locked teams come from the template.
+- Everything else is the game's scenario assembly: start towns with their buildings and dwellings, start heroes at the
+  town entrances with their armies, garrisons, standard rules. The map is playable as generated.
+- The map's description records the template, size, seed, attempt and generator version.
+- The result carries the generator's problems (if every attempt had some) and the map validator's issues for the
+  editor to show. A hero may stand in the entrance of its own town (the validator and hero placement accept it).
 
 ## Scope
 - **In 1.0**: mirrored/symmetric generation (a template marks zones as mirrored, point or axis symmetry) ❓; saving
