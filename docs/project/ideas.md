@@ -13,6 +13,14 @@ Still to decide (now in open-questions.md):
 - Offense and Defense groups: the third skills (placeholders `offense.third`, `defense.third`): HERO-1.
 - Stronghold and Swamp Bestiary: what Rage and Adrenaline do (placeholder groups, ADR-063): HERO-2.
 
+Stronghold : introduce primal fury(still placeholder name) skill group special to this faction
+skills in the group : 
+Blood rage(mechanics very close to homm5 stronghold faction), 
+warcry(instead of spells in othe magic schools from other factions) - various bufs/debufs in combat
+spell resistance(different to one in defensive group) - reduces enemy hero spell power
+level distribution in the group 4,3,3
+
+
 offense.third - leadership (morale bonus)
 defense.third - initiative bonus for troops during combat (put placeholder name for now)
 no luck related skill for now
