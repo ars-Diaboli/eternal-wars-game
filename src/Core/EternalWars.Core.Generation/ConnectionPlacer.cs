@@ -244,7 +244,8 @@ public static class ConnectionPlacer
         }
 
         var (creature, count) = GuardPicker.Pick(creatures, value, random);
-        map.Add(new MonsterGuard(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Monster), at, creature.Id, count, GuardDisposition.Aggressive));
+        // Passage guards block the way: plain HoMM3 zone of control (ADR-065); Area is for treasure guards.
+        map.Add(new MonsterGuard(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Monster), at, creature.Id, count, GuardDisposition.Aggressive, mode: GuardMode.Classic));
     }
 
     // Gates -----------------------------------------------------------------------------------

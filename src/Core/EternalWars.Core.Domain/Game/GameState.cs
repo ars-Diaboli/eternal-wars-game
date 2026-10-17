@@ -91,9 +91,6 @@ public sealed class GameState
     /// <summary>Current state of the game RNG (saves, replay checks).</summary>
     public ulong RandomState => Random.State;
 
-    /// <summary>Map setting: how neutral monsters guard their surroundings.</summary>
-    public GuardMode GuardMode { get; internal set; }
-
     /// <summary>The battle being fought, if any (a <see cref="Decisions.BattleDecision"/> is pending meanwhile).</summary>
     public BattleState? Battle { get; internal set; }
 
@@ -193,17 +190,6 @@ public sealed class GameState
         }
 
         Rules = rules;
-    }
-
-    /// <summary>Scenario setting (map loading, editor): how neutral monsters guard their surroundings.</summary>
-    public void SetGuardMode(GuardMode mode)
-    {
-        if (IsStarted)
-        {
-            throw new InvalidOperationException("The guard mode can only be changed before the game starts.");
-        }
-
-        GuardMode = mode;
     }
 
     /// <summary>

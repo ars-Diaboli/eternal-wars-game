@@ -7,7 +7,7 @@ A **separate standalone app**, not an in-game mode (ADR-023). Implemented in cor
 Godot UI (tool palette, inspector, properties, players, validation and conditions panels):
 - terrain painting (brush radius, drag strokes) and roads;
 - object placement and removal, gate linking, mine owners and guards, map dwellings;
-- heroes (type, army, war machines, morale and luck, artifacts), monsters, towns (buildings, dwellings, garrison);
+- heroes (type, army, war machines, morale and luck, artifacts), monsters (incl. each stack's guard mode, ADR-065), towns (buildings, dwellings, garrison);
 - player slots and teams, map name and description, victory and defeat conditions (ADR-057);
 - validation.
 

@@ -2,9 +2,9 @@ id,level,name,gold,resources,requires,income,notes
 town-hall,1,Town Hall,2500,lumber 5; ore 5,,gold 500,ADR-046 draft (sandbox TownTechTreeBase)
 town-hall,2,City Hall,5000,lumber 10; ore 10,blacksmith 1; marketplace 1; mage-guild 1,gold 1000,
 town-hall,3,Capitol,10000,lumber 20; ore 20,fort 2,gold 2000,
-fort,1,Fort,1500,lumber 5; ore 5,tavern 1,,defence and growth bonus to decide
-fort,2,Citadel,3000,lumber 10; ore 10,,,
-fort,3,Castle,6000,lumber 15; ore 15,,,
+fort,1,Fort,1500,lumber 5; ore 5,tavern 1,,"needed for every dwelling; siege: town wall and gate (post-1.0) (ADR-066)"
+fort,2,Citadel,3000,lumber 10; ore 10,,,"town dwellings grow +50 % (rounded down); siege: + keep (post-1.0) (ADR-066)"
+fort,3,Castle,6000,lumber 15; ore 15,,,"town dwellings grow +100 %; siege: + towers, stronger walls (post-1.0) (ADR-066)"
 blacksmith,1,Blacksmith,1000,lumber 5; ore 5,,,sells war machines to the visiting hero (ADR-056)
 marketplace,1,Marketplace,1250,lumber 5,,,trading to decide
 marketplace,2,Resource Silo,2500,lumber 5; ore 5,,lumber 1; ore 1,
@@ -15,13 +15,13 @@ mage-guild,4,Mage Guild 4,7500,crystal 7; mercury 7; sulfur 7,,,placeholder: the
 caravan,1,Caravan,1000,lumber 5,town-hall 2,,ADR-054 draft: hire from owned map dwellings within 5 days; send troops to another own town
 tavern,1,Tavern,750,lumber 5,,,hire 2 heroes: 1 native + 1 of an adjacent town (ADR-060)
 tavern,2,Brotherhood,2000,lumber 5; ore 5,fort 1,,hire 4 heroes: 2 native + 1 adjacent + 1 of the rest (ADR-060)
-dwelling-1,1,Tier 1 dwelling,500,,,,"every dwelling of the tier; level 2 is the upgrade (ADR-046: 500·t, upgrade 1000·t)"
+dwelling-1,1,Tier 1 dwelling,500,,fort 1,,"every dwelling of the tier; level 2 is the upgrade (ADR-046: 500·t, upgrade 1000·t)"
 dwelling-1,2,Tier 1 upgrade,1000,,,,
-dwelling-2,1,Tier 2 dwelling,1000,lumber 2,,,
+dwelling-2,1,Tier 2 dwelling,1000,lumber 2,fort 1,,
 dwelling-2,2,Tier 2 upgrade,2000,lumber 4,,,
-dwelling-3,1,Tier 3 dwelling,1500,lumber 3; ore 3,,,
+dwelling-3,1,Tier 3 dwelling,1500,lumber 3; ore 3,fort 1,,
 dwelling-3,2,Tier 3 upgrade,3000,lumber 6; ore 6,,,
-dwelling-4,1,Tier 4 dwelling,2000,lumber 4; ore 4; mercury 1,,,
+dwelling-4,1,Tier 4 dwelling,2000,lumber 4; ore 4; mercury 1,fort 1,,
 dwelling-4,2,Tier 4 upgrade,4000,lumber 8; ore 8; mercury 2,,,
-dwelling-5,1,Tier 5 dwelling,2500,lumber 5; ore 5; mercury 1; crystal 1,,,
+dwelling-5,1,Tier 5 dwelling,2500,lumber 5; ore 5; mercury 1; crystal 1,fort 1,,
 dwelling-5,2,Tier 5 upgrade,5000,lumber 10; ore 10; mercury 2; crystal 2,,,

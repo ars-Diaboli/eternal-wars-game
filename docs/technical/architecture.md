@@ -190,11 +190,13 @@ These are enforced by:
   `TemplateValidator` (errors and fairness warnings) and the generator stages (ADR-064), each a static call:
   `ZoneLayouter.Layout` (zones, Voronoi or Rectangles) → `TerrainPainter.Paint` (terrain, walls, obstacles) →
   `GeneratedMap.From` → `ConnectionPlacer.Place` (passages, gates, guards from `GuardPicker`) → `SettlementPlacer.Place`
-  (towns, mines, piles). `GeneratedMap` is the map while the stages work on it. Each stage draws from its own
-  `SeedStreams` stream, so the same inputs always give the same map, on every platform. `sim layout` runs them.
-- Planned: treasure, neutral monsters, roads, and assembling the final scenario `GameState` (`Core.Generation` cannot see
-  `Core.Data`'s `MapDocument`, ADR-064). The game will start it directly, `MapConverter.ToDocument` save it as a map file,
-  and the editor open it in a `MapEditorSession` for hand-editing.
+  (towns, mines, piles) → `RoadPlacer.Place` (roads) → `TreasurePlacer.Place` (treasure and its guards).
+  `MapGenerator.Generate` runs them in order; `GeneratedMap` is the map while the stages work on it. Each stage draws from
+  its own `SeedStreams` stream, so the same inputs always give the same map, on every platform. `sim layout` runs them.
+- `ScenarioAssembler.Build` (or `MapGenerator.Build`) turns the map into the scenario `GameState` for the players set up
+  at game start (`PlayerSetup`); `Core.Generation` cannot see `Core.Data`'s `MapDocument` (ADR-064). The game will start
+  the state directly, `MapConverter.ToDocument` save it as a map file, and the editor open it in a `MapEditorSession`
+  for hand-editing (planned).
 - Template file format (`*.ewtemplate.json`, versioned like maps) lives in `Core.Data` (`TemplateSerializer`, `BuiltInTemplates`); the model is `MapTemplate` in `Core.Generation`.
 - The template editor reuses the editor's command/undo pattern on a template document (zone graph
   edits instead of tile edits).

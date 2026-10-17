@@ -271,6 +271,72 @@ public class TownTests
     }
 
     [Fact]
+    public void Dwellings_NeedTheFort_InPlayAndInTheEditor()
+    {
+        var (session, town) = Setup(Rich);
+        town.SetLevel(BuiltInBuildings.Fort, 0);
+
+        Assert.Contains("Fort", session.Execute(new BuildDwellingCommand(Blue, town.Id, BuiltInCreatures.Footman)).Error);
+        Assert.Equal(0, town.DwellingLevel(BuiltInCreatures.Footman));
+
+        town.SetLevel(BuiltInBuildings.Fort, 1);
+        session.Execute(new BuildDwellingCommand(Blue, town.Id, BuiltInCreatures.Footman)).ThrowIfRejected();
+        Assert.Equal(1, town.DwellingLevel(BuiltInCreatures.Footman));
+
+        var scenario = Create(Rows);
+        var editor = new MapEditorSession(scenario);
+        editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id);
+        Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.Fort, 0));
+        Assert.Equal(EditResult.RequirementMissing, editor.SetTownDwelling(id, BuiltInCreatures.Footman, 1));
+        Assert.Equal(EditResult.RequirementMissing, editor.SetTownDwelling(id, BuiltInCreatures.Footman, 2));
+
+        var fortless = (Town)scenario.GetObject(id);
+        fortless.SetDwelling(BuiltInCreatures.Footman, 1);
+        Assert.Contains(MapValidator.Validate(scenario), i => i.Severity == IssueSeverity.Error && i.Message.Contains("Fort", StringComparison.Ordinal));
+    }
+
+    [Theory]
+    [InlineData(1, 18, 1)] // Fort: base growth
+    [InlineData(2, 27, 1)] // Citadel: +50 %, rounded down (1 → 1)
+    [InlineData(3, 36, 2)] // Castle: +100 %
+    public void FortLevel_RaisesTheWeeklyGrowthOfTownDwellings(int fort, int footmen, int spirits)
+    {
+        var state = Create(Rows);
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Fort, fort);
+        town.SetDwelling(BuiltInCreatures.RadiantSpirit, 1);
+        var session = Start(state);
+        state.GetPlayer(Blue).Resources = Rich;
+        Assert.Equal((18, 1), (state.Creatures.Get(BuiltInCreatures.Footman).WeeklyGrowth, state.Creatures.Get(BuiltInCreatures.RadiantSpirit).WeeklyGrowth));
+
+        // A new dwelling opens with one week of the bonus growth too.
+        session.Execute(new BuildDwellingCommand(Blue, town.Id, BuiltInCreatures.Footman)).ThrowIfRejected();
+        Assert.Equal(footmen, town.AvailableOf(BuiltInCreatures.Footman));
+        Assert.Equal(footmen, TownRules.WeeklyGrowth(town, state.Creatures.Get(BuiltInCreatures.Footman)));
+
+        NextWeek(session);
+
+        Assert.Equal((footmen * 2, spirits), (town.AvailableOf(BuiltInCreatures.Footman), town.AvailableOf(BuiltInCreatures.RadiantSpirit)));
+    }
+
+    [Fact]
+    public void MapDwellings_IgnoreTheFortBonus()
+    {
+        var state = Create(Rows);
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Fort, 3);
+        var dwelling = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 9, 2);
+        dwelling.Creature = BuiltInCreatures.Footman;
+        dwelling.Owner = Blue;
+        var session = Start(state);
+        Assert.Equal(18, dwelling.Available);
+
+        NextWeek(session);
+
+        Assert.Equal(36, dwelling.Available);
+    }
+
+    [Fact]
     public void Towns_RoundTripThroughTheMapFormat_AndOmittedBuildingsAreTheDefaultStart()
     {
         var state = Create(Rows);

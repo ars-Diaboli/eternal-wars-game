@@ -177,19 +177,19 @@ public enum GuardDisposition
     Savage,
 }
 
-/// <summary>Map-wide rule for the area neutral monsters guard (chosen in the editor, ADR-040).</summary>
+/// <summary>How a neutral stack guards the eight tiles around it; set per stack (ADR-040, ADR-065).</summary>
 public enum GuardMode
 {
-    /// <summary>HoMM3: entering a tile next to a monster starts the fight, but pickups there can be taken from outside.</summary>
+    /// <summary>HoMM3, the general-purpose default: entering a tile next to the monster starts the fight, but pickups there can be taken from outside.</summary>
     Classic,
 
-    /// <summary>The whole 3×3 area is guarded: any interaction inside it, pickups included, starts the fight.</summary>
+    /// <summary>For treasure guards: the whole 3×3 area is guarded; any interaction inside it, pickups included, starts the fight.</summary>
     Area,
 }
 
 /// <summary>
 /// A neutral creature stack on the adventure map. Its tile is the entrance (attack it by stepping on it) and it
-/// guards the eight tiles around it (<see cref="GuardMode"/>).
+/// guards the eight tiles around it as its own <see cref="Mode"/> says (ADR-065).
 /// </summary>
 public sealed class MonsterGuard(
     MapObjectId id,
@@ -198,7 +198,8 @@ public sealed class MonsterGuard(
     string creature = MonsterGuard.DefaultCreature,
     int? count = null,
     GuardDisposition disposition = GuardDisposition.Aggressive,
-    bool neverFlees = false)
+    bool neverFlees = false,
+    GuardMode mode = GuardMode.Classic)
     : MapObject(id, definition, position, MapObjectKind.Monster)
 {
     public const string DefaultCreature = Creatures.BuiltInCreatures.Wolf;
@@ -211,6 +212,9 @@ public sealed class MonsterGuard(
     public GuardDisposition Disposition { get; internal set; } = disposition;
 
     public bool NeverFlees { get; internal set; } = neverFlees;
+
+    /// <summary>Whether pickups next to this stack can be taken from outside (Classic) or start the fight too (Area).</summary>
+    public GuardMode Mode { get; internal set; } = mode;
 
     /// <summary>Tiles guarded besides its own (the 8 neighbours on the same level).</summary>
     public IEnumerable<MapPosition> GuardedTiles()

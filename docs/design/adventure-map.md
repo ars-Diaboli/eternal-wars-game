@@ -75,10 +75,14 @@ Objects have a footprint and are entered only through their entrance tile, usual
 - **Mines may be guarded**: the editor or random map generator can attach a guard stack. The guard must be
   defeated before the first flagging; after that any hero re-flags the mine by visiting it. Mine guards always fight.
 - **Neutral monsters** (ADR-040): a creature stack on a tile; stepping onto it attacks it, and it guards the 8 tiles
-  around it. The **guard mode** is a map setting chosen in the editor:
-  - **Classic** (HoMM3): entering a guarded tile starts the encounter, but pickups lying on guarded tiles
-    can be grabbed from outside without a fight ("stealing").
-  - **Area**: the whole 3×3 area is guarded; touching anything inside it, pickups included, starts the fight.
+  around it. Every stack has its own **guard mode** (ADR-065), set in the editor's inspector or by the generator:
+  - **Classic** (HoMM3, the default, general purpose): entering a guarded tile starts the encounter, but pickups
+    lying on guarded tiles can be grabbed from outside without a fight ("stealing"). Passage guards are Classic.
+  - **Area** (for treasure guards): the whole 3×3 area is guarded; touching anything inside it, pickups included,
+    starts the fight.
+  - A pickup next to several stacks can be stolen only when all of them are Classic; otherwise the (first) Area
+    stack defends it. Anything else in a guarded tile is defended by the first guard (lowest id). Mine guards have
+    no mode: they defend only their mine.
   - Dispositions (HoMM3 names, deterministic): Compliant, Friendly, Aggressive, Hostile, Savage decide whether
     the stack offers to **join** (free, needs room) or tries to **flee** from a much stronger army (≥ 3×), else
     it fights. The player accepts or fights. Unset counts are rolled by tier at game start.

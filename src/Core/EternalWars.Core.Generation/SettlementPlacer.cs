@@ -179,7 +179,7 @@ public static class SettlementPlacer
     /// <paramref name="avoid"/>. With <paramref name="near"/> only places within <paramref name="radius"/> of it count; <paramref name="closest"/> takes the
     /// one nearest to it, otherwise one is drawn.
     /// </summary>
-    private static MapPosition? Find(GeneratedMap map, MapObjectDefinition definition, List<MapPosition> tiles, GameRandom random, MapPosition? near, bool closest,
+    internal static MapPosition? Find(GeneratedMap map, MapObjectDefinition definition, List<MapPosition> tiles, GameRandom random, MapPosition? near, bool closest,
         List<MapPosition> avoid, int spacing, int radius = int.MaxValue, bool margin = true)
     {
         var (vx, vy) = definition.Footprint.VisitOffset;

@@ -6,9 +6,9 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 
 **Where we are (2026-10-17)**: Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
-save/load; its building effects wait for answers (TOWN-1, TOWN-2). Phase 4 has started: the template format and generator
-stages 1–4 (layout, terrain, connections, towns and mines) are in core. Next up: treasure by value band, which waits for
-RMG-1 and RMG-2 ([open-questions.md](open-questions.md#-blocking-now)).
+save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
+(layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
+whole-map validation and the new-game screen (RMG-5, RMG-7; [open-questions.md](open-questions.md#-blocking-now)).
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -103,8 +103,8 @@ RMG-1 and RMG-2 ([open-questions.md](open-questions.md#-blocking-now)).
       damage formula, Tactics width choice, victory/defeat, retreat, casualties and experience
 - [x] Deterministic battle AI for neutrals and computer players; quick combat for either side
 - [x] Army speed drives `MovementAllowance`
-- [x] Neutral monsters with two map-level guard modes (HoMM3 zone of control with stealing, or a guarded
-      3×3 area), HoMM3 dispositions (join / flee / fight, ADR-040), counts rolled by tier; optional mine guards;
+- [x] Neutral monsters with two guard modes per stack (HoMM3 zone of control with stealing, or a guarded
+      3×3 area for treasure guards; ADR-065), HoMM3 dispositions (join / flee / fight, ADR-040), counts rolled by tier; optional mine guards;
       ambush battles (ADR-031); hero vs hero battles with hot-seat control of both sides
 - [x] **Haven and Inferno** draft rosters (9 lines each, 5 tiers, all upgradeable) + 5 neutrals
 - [x] **All eight town rosters**, Conflux, Dragon Utopia and lore neutrals from the sandbox, first balance pass with
@@ -161,7 +161,9 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Editor enforces building requirements; validator flags broken requirements and the 7-of-9 rule
 
 ### Towns: building effects (❓ [TOWN-1, TOWN-2, TOWN-3](open-questions.md#towns-and-economy))
-- [ ] Fort: growth bonus per level and/or garrison defence (decide; sieges come post-1.0) ❓ TOWN-1
+- [x] Fort: unlocks the dwellings; Citadel +50 % / Castle +100 % town growth, rounded down (ADR-066); fortifications wait
+      for sieges (post-1.0)
+- [x] Guard mode per monster stack: map format v13, monster inspector control, old maps converted (ADR-065)
 - [ ] Marketplace trading: resource exchange rates that improve with the number of owned marketplaces ❓ TOWN-2
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
 - [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
@@ -279,7 +281,7 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 
 ### Templates
 - [x] New core project `EternalWars.Core.Generation` (engine-free, deterministic from seed): project, `SeedStreams` (ADR-064)
-- [x] Template model + `*.ewtemplate.json` (v1): sizes, players, levels, zones (type, owner, size, level, towns, richness,
+- [x] Template model + `*.ewtemplate.json` (v1; v2 adds roads): sizes, players, levels, zones (type, owner, size, level, towns, richness,
       treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) ([random-maps.md](../design/random-maps.md), ADR-064)
 - [ ] Template model follow-ups: teams (RMG-6), mirroring (1.0 scope, RMG-9); portals, optional connections, border guards (RMG-11)
 - [x] Template validator (`TemplateValidator`: errors and fairness warnings); shipped templates `duel` and `ffa-4` ("Free for all")
@@ -291,11 +293,14 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Connections and their guards (`ConnectionPlacer`, `GuardPicker`; passages per connection configurable, ADR-064)
 - [x] Towns (player and neutral): `SettlementPlacer`, HoMM3-style defaults (ADR-064); start-town type swap for game setup (`SetTownType`)
 - [x] Mines and resources (guards by zone strength, piles)
-- [ ] Treasure by value band ❓ RMG-1, RMG-2 (**next**)
-- [ ] Neutral monsters ❓ RMG-2, RMG-3
-- [ ] Roads between towns and through connections ❓ RMG-4
-- [ ] Scenario assembly: players, owners, start-town types, starting heroes; the output is a scenario `GameState`
-      (ADR-064), saved as an ordinary map with `MapConverter.ToDocument` and editable in the map editor ❓ RMG-5, RMG-6, RMG-7
+- [x] Roads between towns, through connections, to gates and the nearest lumber mill and ore mine (`RoadPlacer`, RMG-4)
+- [x] Treasure by value band: piles, chests, artifacts with fixed contents; Area-mode guards on valuable items
+      (`TreasurePlacer`, RMG-1, RMG-2)
+- [x] Neutral monsters: no free-roaming stacks for now (RMG-3); guards on passages, gates, mines and treasure
+- [x] Scenario assembly: players, owners, start-town types, picked or drawn start heroes, empty slots stay neutral; the
+      output is a scenario `GameState` (`ScenarioAssembler`, `MapGenerator.Build`, ADR-064)
+- [ ] Scenario follow-ups: pre-built buildings, scenario defaults, problems policy, generator version ❓ RMG-5; teams ❓ RMG-6;
+      native start-zone terrain ❓ RMG-7; saving a generated game as a map (`MapConverter.ToDocument`)
 - [ ] Connectivity and fairness validation of the whole map ❓ RMG-8
 - [ ] Mirrored/symmetric zones for competitive templates (1.0 scope) ❓ RMG-9
 
@@ -304,7 +309,7 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       start zones), in CI
 - [ ] Editor: template editor (zone graph: add zones, set properties, draw connections) ❓ RMG-10
 - [ ] Editor: "generate map from template" into an editable map
-- [ ] Game: new-game screen picks template, size, players, seed and options, then generates
+- [ ] Game: new-game screen picks template, size, players (town and hero per player), seed and options, then generates
 - [ ] Starter templates: 2-player duel and 4-player free-for-all (shipped), 2v2 (needs RMG-6), 8-player
 - Not in 1.0: water zones and islands (no sea travel, ADR-051), HotA template import (ADR-034)
 

@@ -38,7 +38,7 @@ public enum MoveResult
     /// <summary>Stepped onto a monster or into its guarded area: a guard offer or a battle followed; the hero did not move.</summary>
     GuardEncountered,
 
-    /// <summary>Classic guard mode: took a pickup lying in a guarded tile from outside, without entering it.</summary>
+    /// <summary>Took a pickup lying in a tile guarded only by Classic-mode stacks from outside, without entering it.</summary>
     CollectedFromAdjacent,
 
     /// <summary>A hero without creatures cannot attack.</summary>

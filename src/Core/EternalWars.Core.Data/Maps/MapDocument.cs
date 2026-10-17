@@ -19,11 +19,16 @@ namespace EternalWars.Core.Data.Maps;
 /// c (cursed lands), k (rocky ground) (ADR-045); heroes may name a roster entry (<c>type</c>) and carry skill levels
 /// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). 6 = + towns (<c>town</c> objects: owner, name, buildings, dwellings,
 /// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056). 10 = + victory and defeat conditions (ADR-057). 11 = + hero artifacts (worn and backpack) and artifact pickups (ADR-061). 12 = + creature dwellings (ADR-054).
+/// 13 = guard mode per monster (<c>mode</c> on monsters) instead of the map-wide <c>guardMode</c>, which v4–v12 maps still
+/// load onto every monster (ADR-065).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 12;
+    public const int CurrentFormatVersion = 13;
+
+    /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
+    public const int PerMonsterGuardModeVersion = 13;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -46,7 +51,10 @@ public sealed record MapDocument
     /// <summary>The setup screen may not change the teams in <see cref="Players"/>.</summary>
     public bool TeamsLocked { get; init; }
 
-    /// <summary>How monsters guard their surroundings; omitted = <see cref="Domain.Objects.GuardMode.Classic"/>.</summary>
+    /// <summary>
+    /// Legacy (v4–v12): how every monster guarded its surroundings; omitted = <see cref="Domain.Objects.GuardMode.Classic"/>.
+    /// Read only from older maps, where it becomes each monster's mode; never written (v13 keeps it per monster).
+    /// </summary>
     public GuardMode? GuardMode { get; init; }
 
     /// <summary>Victory and defeat conditions (v10); omitted = the default: defeat every enemy.</summary>
@@ -208,6 +216,9 @@ public sealed record MonsterDocument : MapObjectDocument
     public GuardDisposition Disposition { get; init; } = GuardDisposition.Aggressive;
 
     public bool NeverFlees { get; init; }
+
+    /// <summary>How this stack guards its surroundings (v13, ADR-065); omitted = <see cref="GuardMode.Classic"/>.</summary>
+    public GuardMode? Mode { get; init; }
 }
 
 /// <summary>

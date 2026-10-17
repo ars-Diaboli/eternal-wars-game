@@ -8,67 +8,38 @@ question that stops the named roadmap item; the others can wait or only tune num
 
 ## 🚧 Blocking now
 
-The next roadmap steps are Phase 4's generator stages 5–8 and the Phase 3 building effects. These answers are needed
-first, in this order:
+Phase 4's generator stages 1–6 and the scenario assembly are in. What still blocks the next steps:
 
 | Id | Question | Blocks |
 |---|---|---|
-| [RMG-1](#rmg-1) | What treasure is made of and what it is worth | Phase 4: treasure by value band (**next step**) |
-| [RMG-2](#rmg-2) | Guards on treasure, guard mode on generated maps | Phase 4: treasure, neutral monsters |
-| [RMG-3](#rmg-3) | Free-roaming neutral monsters per zone | Phase 4: neutral monsters |
-| [RMG-4](#rmg-4) | Roads on generated maps | Phase 4: roads |
-| [RMG-5](#rmg-5) | Building the scenario: missing players, heroes, towns, defaults | Phase 4: scenario assembly, new-game screen |
-| [RMG-6](#rmg-6) | Teams in templates | Phase 4: scenario assembly, 2v2 template |
-| [RMG-7](#rmg-7) | Start zones and the player's town type | Phase 4: scenario assembly (fairness) |
-| [TOWN-1](#town-1) | What the fort does | Phase 3: fort effect, AI town defence |
-| [TOWN-2](#town-2) | Marketplace trading rates | Phase 3: marketplace, governor's 150 %, AI marketplace use; also RMG-1 values |
+| [RMG-5](#rmg-5) | The rest of the scenario: pre-built buildings, scenario defaults, problems policy | Phase 4: new-game screen |
+| [RMG-6](#rmg-6) | Teams in templates | Phase 4: 2v2 template |
+| [RMG-7](#rmg-7) | Start zones and the player's town type | Phase 4: fair start zones |
+| [TOWN-2](#town-2) | Marketplace trading rates | Phase 3: marketplace, governor's 150 %, AI marketplace use; treasure resource values |
 | [HERO-1](#hero-1) | Third Offense and Defense skills, skill specialties | Phase 3: skills |
 | [HERO-2](#hero-2) | Rage and Adrenaline | Phase 3: faction groups |
 
 ## Random maps (Phase 4)
 
-<a id="rmg-1"></a>
-**RMG-1 🚧 Treasure objects and values** (blocks the treasure stage). A template zone has value bands with a count
-(e.g. 500–3000 ×9). Which objects fill a band: resource piles, chests, artifact pickups (minor/major/relic), map
-dwellings? What is each worth in gold (a gold value per resource needs TOWN-2 or a fixed table; artifacts have no gold
-value today)? Is `Count` exact or a density? Does the generator fix chest and artifact values, or leave them to the
-game-start roll (ADR-039, ADR-061), which makes the band approximate? Proposal: mostly piles and chests (≈60/30),
-artifacts only in bands above 4000, values fixed by the generator.
-
-<a id="rmg-2"></a>
-**RMG-2 🚧 Treasure guards and guard mode** (blocks treasure and monsters). Is every treasure above a threshold guarded
-in proportion to its value (HoMM3), or are guards placed only by the monster stage? Proposal: guard treasure worth more
-than ~1000 with 40–60 % of its value, lighter or none in start zones. Which guard mode (Classic or Area, ADR-040) do
-generated maps use: a template field, a setup option, or always Classic?
-
-<a id="rmg-3"></a>
-**RMG-3 🚧 Neutral monsters** (blocks the monster stage). How does a zone's strength (none/weak/average/strong) become
-monster power and density beyond guards; does it scale with map size or distance from the start zones? Creature
-choice: any playable town plus neutrals (as guards do), the zone's terrain or town types? Dispositions: connection
-guards are always Aggressive today; random dispositions elsewhere? Counts fixed by the generator (`GuardPicker`
-ranges) or rolled at game start (`GuardService`, tier 1 20–50)? How army speed and native terrain affect values.
-
-<a id="rmg-4"></a>
-**RMG-4 🚧 Roads** (blocks the roads stage). Which places are joined (towns, mines, passages, gates)? Road type per
-zone, per connection or by distance from the start? Roads through guarded passages? Templates have no road fields yet.
+RMG-1 to RMG-4 are answered (see [Answered](#answered)); RMG-5 partly.
 
 <a id="rmg-5"></a>
-**RMG-5 🚧 Building the scenario** (blocks the scenario assembly and the new-game screen). With fewer players than
-the template's maximum, are unused start zones dropped, left neutral, or kept as empty towns? How do `AiStart` zones
-map to computer players? Starting heroes: a random or chosen roster hero of the player's town, with what army?
-Pre-built buildings and dwellings for start and neutral towns? Scenario defaults: victory/defeat rules, grace days,
-complexity, name and description. What happens when a stage reports `Problems`: accept, fail, or retry with the next
-sub-seed? Where is the generator version stored?
+**RMG-5 🚧 The rest of the scenario** (blocks the new-game screen). Answered: a slot nobody takes keeps its towns in
+place as neutral towns; players pick their start hero at setup, else one of the town's heroes is drawn (ADR-064). Still
+open: pre-built buildings and dwellings for start and neutral towns (today the default start: town hall 1, fort 1,
+tavern 1); should towns of empty slots get a garrison; the start hero's army (placeholder: one stack of its preferred
+creature worth 1000); scenario defaults (victory/defeat rules, grace days, complexity, name and description); what
+happens when a stage reports `Problems` (accept, fail, or retry with the next sub-seed); where the generator version is
+stored.
 
 <a id="rmg-6"></a>
 **RMG-6 🚧 Teams in templates** (blocks the 2v2 starter template). ADR-032 says templates define default teams, but
-the format has none. A field per start zone (team) in template format v2?
+the format has none. A field per start zone (team) in the template format?
 
 <a id="rmg-7"></a>
-**RMG-7 🚧 Start zones and town types** (blocks fair scenario assembly). Start-zone terrain is painted before the
-player picks a town, so it may not be native (a large cost under ADR-045). Repaint the start zone after the pick, or
-choose towns before generating? Is "random town" a setup option?
-
+**RMG-7 🚧 Start zones and town types** (blocks fair start zones). Start-zone terrain is painted before the player picks
+a town, so it may not be native (a large cost under ADR-045). Repaint the start zone after the pick, or choose towns
+before generating? Is "random town" a setup option?
 <a id="rmg-8"></a>
 **RMG-8 Fairness metrics** (blocks the CI batch validation). Which numbers compare start zones (distance to the
 nearest mines, treasure value, guard power on the way), what tolerance, and what happens on failure (retry or
@@ -91,8 +62,7 @@ randomly present connections. Keep, drop, or post-1.0?
 ## Towns and economy
 
 <a id="town-1"></a>
-**TOWN-1 🚧 The fort** (blocks the fort effect). Growth bonus per level, garrison defence, or both, given that sieges
-are post-1.0? Which other buildings raise growth, and do growth bonuses reach map dwellings?
+**TOWN-1 Growth beyond the fort.** The fort is answered (ADR-066). Which other buildings raise growth, if any?
 
 <a id="town-2"></a>
 **TOWN-2 🚧 Marketplace trading** (blocks trading and the governor's 150 %). Base rates, how they improve with owned
@@ -296,3 +266,16 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
 - Guards: army power maps to overlapping tier ranges, so one power can be different counts of one tier or an
   adjacent tier (ADR-064).
 - Towns, mines, piles: HoMM3-style defaults (ADR-064).
+- RMG-1 treasure: a band's value is filled with piles and chests (2 : 1), artifacts only from 4000 (half the items
+  there); the generator fixes the contents (ADR-064).
+- RMG-2 guard modes: per monster stack, Classic for general use, Area for treasure so it cannot be picked up without a
+  fight (ADR-065); treasure worth more than 1000 is guarded with 40–60 % of its value, half in start zones (ADR-064).
+- RMG-3 neutral monsters: no free-roaming (walking) monsters for now; monsters guard passages, gates, mines and
+  treasure (ADR-064).
+- RMG-4 roads: towns of a zone and the zones (through their passages) are joined by road; gates and the lumber mill and
+  ore mine closest to the town get a road where the zone has a town; configurable per template (ADR-064).
+- RMG-5 (part): a slot nobody takes keeps its towns as neutral towns; players pick their start hero at setup (ADR-064).
+
+**Towns (2026-10-17)**
+- TOWN-1 the fort: fort 1 is needed to build creature dwellings and gives a wall and gate in sieges; Citadel +50 %,
+  Castle +100 % growth of the town's dwellings and better fortifications (ADR-066).

@@ -24,7 +24,6 @@ public static class MapConverter
                 .Select(p => new PlayerSlotDocument(p.Name, p.IsHuman, p.Team.Value == p.Id.Value ? null : p.Team.Value))
                 .ToList(),
             TeamsLocked = state.TeamsLocked,
-            GuardMode = state.GuardMode == GuardMode.Classic ? null : state.GuardMode,
             Rules = state.Rules.IsDefault ? null : ToDocument(state.Rules),
             Heroes = state.Heroes
                 .Select(h => new HeroPlacementDocument(
@@ -101,12 +100,13 @@ public static class MapConverter
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
         var heroes = document.Heroes.Select(h => ToHero(h, creatures, heroRoster, artifacts)).ToList();
-        var objects = document.Objects.Select(o => ToObject(o, catalog, creatures));
+        // Before v13 the guard mode was one map-wide setting; it becomes the mode of every monster (ADR-065).
+        var legacyGuardMode = document.FormatVersion < MapDocument.PerMonsterGuardModeVersion ? document.GuardMode : null;
+        var objects = document.Objects.Select(o => ToObject(o, catalog, creatures, legacyGuardMode));
         try
         {
             var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts);
             state.SetTeamsLocked(document.TeamsLocked);
-            state.SetGuardMode(document.GuardMode ?? GuardMode.Classic);
             state.SetRules(ToRules(document.Rules));
             return state;
         }
@@ -293,6 +293,7 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
                 Creature = monster.Creature, Count = monster.Count, Disposition = monster.Disposition, NeverFlees = monster.NeverFlees,
+                Mode = monster.Mode == GuardMode.Classic ? null : monster.Mode,
             },
             Town town => new TownDocument
             {
@@ -311,7 +312,7 @@ public static class MapConverter
     private static Dictionary<string, int> Sorted(IReadOnlyDictionary<string, int> values) =>
         values.OrderBy(v => v.Key, StringComparer.Ordinal).ToDictionary(v => v.Key, v => v.Value, StringComparer.Ordinal);
 
-    private static MapObject ToObject(MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures)
+    private static MapObject ToObject(MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures, GuardMode? legacyGuardMode)
     {
         if (!catalog.TryGet(document.Definition, out var definition))
         {
@@ -337,7 +338,11 @@ public static class MapConverter
                 TreasureChestDocument { Gold: { } gold, Experience: { } experience } => new TreasureChest(id, definition, position, new ChestValues(gold, experience)),
                 TreasureChestDocument { Gold: null, Experience: null } => new TreasureChest(id, definition, position),
                 TreasureChestDocument => throw new FormatException("A chest needs both gold and experience, or neither."),
-                MonsterDocument monster => new MonsterGuard(id, definition, position, monster.Creature, monster.Count, monster.Disposition, monster.NeverFlees),
+                MonsterDocument { Mode: { } mode } monster when !Enum.IsDefined(mode) =>
+                    throw new FormatException($"Monster {monster.Id} has an unknown guard mode {mode}."),
+                MonsterDocument monster => new MonsterGuard(
+                    id, definition, position, monster.Creature, monster.Count, monster.Disposition, monster.NeverFlees,
+                    monster.Mode ?? legacyGuardMode ?? GuardMode.Classic),
                 GateDocument gate => new TwoWayGate(id, definition, position, ToId(gate.LinkedGate)),
                 GateEntranceDocument entrance => new OneWayGateEntrance(id, definition, position, ToId(entrance.Exit)),
                 GateExitDocument => new OneWayGateExit(id, definition, position),

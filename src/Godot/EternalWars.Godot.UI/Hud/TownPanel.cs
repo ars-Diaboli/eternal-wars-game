@@ -170,7 +170,7 @@ public partial class TownPanel : PanelContainer
             var available = town.AvailableOf(line.Id);
             _dwellings.AddChild(new Label
             {
-                Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting",
+                Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting, +{TownRules.WeeklyGrowth(town, line)}/week",
                 CustomMinimumSize = new Vector2(240, 0),
             });
 

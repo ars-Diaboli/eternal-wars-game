@@ -11,7 +11,7 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Tests.Domain;
 
-/// <summary>Editor support for Phase 2 data: hero stats and armies, monsters, mine guards, chest values, guard mode.</summary>
+/// <summary>Editor support for Phase 2 data: hero stats and armies, monsters, mine guards, chest values, per-monster guard mode.</summary>
 public class EditorArmyAndGuardTests
 {
     private static MapEditorSession CreateEditor() => new(BlankScenario.Create(12, 10));
@@ -62,7 +62,7 @@ public class EditorArmyAndGuardTests
     }
 
     [Fact]
-    public void MineGuards_ChestValues_AndGuardMode_AreUndoable()
+    public void MineGuards_AndChestValues_AreUndoable()
     {
         var editor = CreateEditor();
         editor.PlaceObject(BuiltInMapObjects.MineId(ResourceType.Gold), new(4, 4), out var mineId);
@@ -72,15 +72,39 @@ public class EditorArmyAndGuardTests
 
         editor.SetMineGuard(mineId, new GuardStack(BuiltInCreatures.Troll, 8));
         editor.SetChestValues(chestId, new ChestValues(2000, 1500));
-        editor.SetGuardMode(GuardMode.Area);
 
-        Assert.Equal((new GuardStack(BuiltInCreatures.Troll, 8), new ChestValues(2000, 1500), GuardMode.Area), (mine.Guard, chest.FixedValues, editor.Scenario.GuardMode));
+        Assert.Equal((new GuardStack(BuiltInCreatures.Troll, 8), new ChestValues(2000, 1500)), (mine.Guard, chest.FixedValues));
         Assert.Equal(EditResult.InvalidTarget, editor.SetMineGuard(chestId, null));
+        Assert.Equal(EditResult.InvalidTarget, editor.SetMonsterGuardMode(mineId, GuardMode.Area)); // mine guards have no mode
 
         editor.Undo();
         editor.Undo();
-        editor.Undo();
 
-        Assert.Equal((null, null, GuardMode.Classic), (mine.Guard, chest.FixedValues, editor.Scenario.GuardMode));
+        Assert.Equal((null, null), (mine.Guard, chest.FixedValues));
+    }
+
+    [Fact]
+    public void MonsterGuardMode_IsSetPerStack_WithUndoAndRedo()
+    {
+        var editor = CreateEditor();
+        editor.PlaceMonster(new(3, 3), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out var treasureGuardId);
+        editor.PlaceMonster(new(8, 3), BuiltInCreatures.Wolf, null, GuardDisposition.Hostile, false, out var otherId);
+        var treasureGuard = (MonsterGuard)editor.Scenario.GetObject(treasureGuardId);
+        var other = (MonsterGuard)editor.Scenario.GetObject(otherId);
+        var changed = new List<IEvent>();
+        editor.Events.Subscribe<IEvent>(changed.Add);
+
+        Assert.Equal(GuardMode.Classic, treasureGuard.Mode); // the default
+        Assert.Equal(EditResult.Ok, editor.SetMonsterGuardMode(treasureGuardId, GuardMode.Area));
+        Assert.Equal(EditResult.InvalidValue, editor.SetMonsterGuardMode(treasureGuardId, (GuardMode)7));
+
+        Assert.Equal((GuardMode.Area, GuardMode.Classic), (treasureGuard.Mode, other.Mode));
+        Assert.Contains(new MapObjectChanged(treasureGuardId), changed);
+
+        editor.Undo();
+        Assert.Equal(GuardMode.Classic, treasureGuard.Mode);
+        editor.Redo();
+        Assert.Equal(GuardMode.Area, treasureGuard.Mode);
+        Assert.Equal(GuardMode.Classic, other.Mode);
     }
 }

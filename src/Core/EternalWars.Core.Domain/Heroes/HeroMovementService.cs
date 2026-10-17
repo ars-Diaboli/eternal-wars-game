@@ -152,15 +152,19 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             return MoveResult.GuardEncountered;
         }
 
-        if (state.GuardsOf(target).FirstOrDefault() is { } guard)
+        if (state.GuardsOf(target).ToList() is [var firstGuard, ..] guards)
         {
-            if (state.GuardMode == GuardMode.Classic && entrance is ResourcePile or TreasureChest or ArtifactPickup)
+            var isPickup = entrance is ResourcePile or TreasureChest or ArtifactPickup;
+            if (isPickup && entrance is not null && guards.All(g => g.Mode == GuardMode.Classic))
             {
-                // HoMM3: a pickup next to a monster can be grabbed from outside its zone without a fight.
+                // HoMM3: a pickup next to Classic monsters can be grabbed from outside their zone without a fight.
                 hero.MovementPoints = Math.Max(0, hero.MovementPoints - cost);
                 interactions.Visit(hero, entrance);
                 return MoveResult.CollectedFromAdjacent;
             }
+
+            // A pickup is defended by the Area stacks guarding it (ADR-065); anything else by the first guard.
+            var guard = isPickup ? guards.First(g => g.Mode == GuardMode.Area) : firstGuard;
 
             if (hero.Army.IsEmpty)
             {

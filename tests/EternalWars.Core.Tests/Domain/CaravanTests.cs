@@ -335,7 +335,7 @@ public class CaravanTests
 
         var copy = Assert.Single(loaded.ObjectsOf<CreatureDwelling>());
         Assert.Equal((Footman, Blue, 12), (copy.Creature, copy.Owner, copy.Available));
-        Assert.Equal(12, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 12);
 
         var editor = new MapEditorSession(loaded);
         Assert.Equal(EditResult.Ok, editor.SetDwelling(copy.Id, BuiltInCreatures.Wolf, Red, null));
