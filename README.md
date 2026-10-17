@@ -7,10 +7,10 @@ Built with **Godot 4.7.2 (.NET)** and **C# / .NET 10**.
 
 | Tier | Projects | Depends on Godot? |
 |---|---|---|
-| 1 · Core | `EternalWars.Core.Events` (pub/sub), `EternalWars.Core.Domain` (rules), `EternalWars.Core.Data` (file formats) | **No** (enforced by the build) |
+| 1 · Core | `EternalWars.Core.Events` (pub/sub), `EternalWars.Core.Domain` (rules), `EternalWars.Core.Data` (file formats), `EternalWars.Core.Generation` (random maps) | **No** (enforced by the build) |
 | 2 · Godot libraries | `EternalWars.Godot.Shared` (views, camera, glue), `EternalWars.Godot.UI` (HUD/widgets), `EternalWars.Godot.Assets` (shared assets) | Yes |
 | 3 · Apps | `EternalWars.Game`, `EternalWars.MapEditor`, `EternalWars.Harness2D` | Yes (Godot projects) |
-| Tools | `EternalWars.Tools.Sim` (headless simulator: battle statistics, replays, CI self-test) | No |
+| Tools | `EternalWars.Tools.Sim` (headless simulator: battle statistics, AI-vs-AI games, town and creature balance, random map layouts, replays, CI self-test) | No |
 
 ## Quick start
 ```powershell
@@ -24,12 +24,11 @@ With Godot installed, `./tools/smoke-godot.ps1 -Godot <path to the console exe>`
 of every app and saves screenshots to `.shots/`.
 
 ## Status
-Phases 0 and 1 are done: all three apps run in Godot 4.7.2 (setup screen, fog, objects, path preview, minimap,
-hero list, exchange, full editor UI). Phase 2 core (armies, tactical battles with HoMM4-style creature
-capabilities, neutral guards, commands and replays) is done; the 3D battle scene is next (the game uses quick
-combat meanwhile, the 2D harness has a battle board).
-See [docs/roadmap.md](docs/roadmap.md).
+Phases 0–2 are done: adventure map, editor, armies, tactical battles with a 3D battle scene, commands and replays.
+Phase 3 (towns, heroes, skills, artifacts, tavern, game flow, save/load, adventure AI) is mostly done. Phase 4 (random
+maps) is in progress: template format and validator, and the generator stages layout, terrain, connections, towns and mines.
+See [docs/project/roadmap.md](docs/project/roadmap.md).
 
 ## Documentation
-Start at [docs/README.md](docs/README.md): game design, architecture, event system, roadmap,
-development guide, decision log and open questions.
+Start at [docs/README.md](docs/README.md): game design, content, architecture, event system, development guide,
+roadmap, decision log and open questions.

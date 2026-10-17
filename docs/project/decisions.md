@@ -16,7 +16,7 @@ AI simulation, servers and tools. Enforced in `Directory.Build.targets`.
 **Status**: accepted
 Requirements are narrow (deterministic order, breadth-first re-entrancy, lifetime-scoped
 subscriptions) and must be engine-agnostic. Godot signals would leak the engine into core; MediatR/Rx add
-async/threading semantics we don't want. ~100 lines, fully tested. See [event-system.md](event-system.md).
+async/threading semantics we don't want. ~100 lines, fully tested. See [event-system.md](../technical/event-system.md).
 
 ### ADR-004: Separate Godot projects per app, assets shared via links
 **Status**: accepted; confirmed by the Phase 0 spike (ADR-043)
@@ -26,7 +26,7 @@ User-facing apps stay independent (own settings, renderer, export presets). Shar
 import cache) that splits apps with export feature tags. Still viable if links prove painful.
 
 ### ADR-005: Square adventure grid; square combat grid with multi-cell units
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); "reach" superseded by ADR-021/ADR-038 (size grants no reach: melee needs footprint adjacency)
 The adventure map uses a square grid with 8-way movement (as in HoMM3). Battles use a **separate
 battlefield** with a fine **square cell grid**: creature stacks occupy 2×2, 3×3 or 4×4 cells by size
 class. This replaces HoMM3's hex grid. Size becomes a real tactical property (blocking, surround,
@@ -46,7 +46,7 @@ Library node classes are instantiated from code and configured through `Bind(...
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
 **Status**: accepted (2026-10-15)
-We keep HoMM3's loop and structure but take deliberate departures, logged in game-design.md §8.
+We keep HoMM3's loop and structure but take deliberate departures, logged in [departures.md](../design/departures.md).
 Art: realistic lighting and PBR materials, dark and grim atmosphere, recognisable nods to the
 original. Modes in priority order: single-player vs AI, hot-seat, story campaign. Online multiplayer is
 out of scope.
@@ -59,7 +59,7 @@ and morale reason about, while Initiative stays a tuning lever separate from mov
 morale may give a stack a second action, and morale may raise or lower its initiative for a round.
 
 ### ADR-010: Town roster in four groups; two non-playable towns
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); no `Group`/`IsPlayable` field exists: `BuiltInMapObjects.PlayableTowns` lists the eight playable towns
 Playable: Haven, Sylvan, Academy | Necropolis, Inferno, Dungeon | Stronghold, Swamp Bestiary.
 Non-playable (campaign/neutral): Conflux, Dragon Utopia. Balancing effort goes to the 8 playable towns
 only. Data model: a town definition carries `Group` and `IsPlayable` so map setup, random maps and the
@@ -83,7 +83,7 @@ Gates are the exception: the route continues from the partner gate. Pathfinding 
 (tile, arrived-by-teleport) so a gate exit can be walked away from without bouncing back.
 
 ### ADR-014: Choices are pending decisions, not callbacks
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); decisions are answered by commands (ADR-036)
 When a rule needs player input, it stores a `PendingDecision` in `GameState` and publishes
 `DecisionRequested`. Movement and End Turn are refused until it is resolved. The core never
 blocks or calls back into the UI; AI, UI and future network/replay resolve decisions the same way.
@@ -110,7 +110,7 @@ pure function of current observers and is recomputed per affected player, stored
 on 256×256 maps). The planner ignores unseen heroes; real movement bumps into them.
 
 ### ADR-018: HoMM3 movement rules
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); `Hero.SlowestCreatureSpeed` replaced by the army's creature `MapSpeed` (ADR-037)
 A step costs the terrain being left (×1.41 diagonally). Any positive remainder allows one last step.
 Daily points come from the slowest creature's speed (HoMM3 table), then a percentage bonus (skills),
 then a flat bonus (artifacts), recomputed at the owner's turn start (`MovementAllowance`). Until
@@ -127,7 +127,7 @@ Square presets 48, 72, 96, 128, 160, 192, 256 (`MapSizes`); `AdventureMap` rejec
 arrays are ~260k entries per search; fog sight is set-based.
 
 ### ADR-021: Combat ground rules
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); widths refined by ADR-033 (28–34 by Tactics, 36 for sieges only)
 - Battlefield 24 cells tall × 28–36 wide, set by the hero's Tactics skill (default 30).
 - No facing and no generic flanking bonus. Engagement (which enemies are adjacent, on how many sides)
   and per-round hit counts are tracked so **creature abilities** can use them.
@@ -139,10 +139,10 @@ arrays are ~260k entries per search; fog sight is set-based.
 **Status**: accepted (2026-10-15)
 Tilt 15–30° from vertical, coupled to zoom (zoomed in = 30°, zoomed out = 15°); rotation limited to ±45°
 around the vertical axis, so the map never appears upside down and art can assume a "south-ish"
-viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared), not yet verified in Godot.
+viewing direction; zoom and pan. Implemented in `StrategyCamera` (Godot.Shared), verified in Godot by the Phase 0 spike (ADR-043).
 
 ### ADR-023: Standalone editor; template-based random maps in both game and editor
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); output refined by ADR-064 (a scenario `GameState`, saveable via `MapConverter.ToDocument`)
 The map editor stays a separate app. Random maps are generated from **templates** (HotA-style zone
 graphs: zones with towns, richness, treasure and monster strength, plus guarded connections). Templates
 are authored in the editor's template editor. The game generates from any available template on its
@@ -168,7 +168,7 @@ Consequences:
 - The random map generator lays roads between towns and through zone connections.
 
 ### ADR-025: Income comes only from sources; no base income
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); income artifacts built (ADR-061)
 The placeholder 500 gold per turn was removed. Daily income is the sum of pluggable `IIncomeSource`s
 (`MineIncome`, `TownIncome`, `HeroIncome` for Estates skills and resource specialties; artifacts later), collected at
 the start of the owner's turn. Nothing is published when the income is zero. New income features add a
@@ -186,7 +186,7 @@ two-way monolith become definitions), add `OneWayGateEntrance`/`OneWayGateExit` 
 `PathFinder` teleport edges to be directional, map format v3, and add an editor link tool and validation.
 
 ### ADR-027: Meeting heroes
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); enemy battles built (ADR-038)
 Stepping onto another hero's tile is an interaction, not a move: the moving hero stays where it is.
 - Own hero: exchange (opened as a `PendingDecision`-style exchange session, resolved by the UI/AI).
 - Enemy: battle (Phase 2).
@@ -197,7 +197,8 @@ The pathfinder lets a route *end* on an own or visible enemy hero, never pass th
 (every player their own team).
 
 ### ADR-028: Town groups are lore and campaign only
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); native terrain per town is now ADR-045 (not ADR-024); no `Group` field exists yet
+(`BuiltInMapObjects.PlayableTowns` lists the eight playable towns)
 The four town groups carry no gameplay rules in standard or random-map games: no automatic alliances,
 shared skills, diplomacy or group bonuses. Teams come from game setup (ADR-027); native terrain is
 per town (ADR-024). Groups are used by the campaign (story, scripted alliances and events) and as
@@ -211,7 +212,8 @@ hate/enmity bonuses and no alignment or group modifiers. Creature abilities key 
 balance independent of pairings and lets any town be designed and balanced on its own.
 
 ### ADR-030: Five creature tiers, choose 7 of 9 dwellings
-**Status**: accepted (2026-10-15); open details in game-design §4.3
+**Status**: accepted (2026-10-15); open details in [towns-and-economy.md](../design/towns-and-economy.md); a town's dwellings
+derive from its creature lines in `creatures.csv`, not a town definition list (ADR-044, ADR-050)
 Creatures have 5 tiers. Every playable town offers 9 dwellings: 2 alternatives at each of tiers 1–4
 and 1 at tier 5. A town builds at most 7, at least one per tier, giving 7 creature types to match 7 army
 slots, and making town builds a strategic choice. All playable-town creatures are upgradeable;
@@ -247,7 +249,7 @@ In `ShroudWithRefog`:
 - Roads: the road cost applies only road → road (HoMM3).
 
 ### ADR-033: Combat baseline: Tactics width choice, HoMM3 damage, cover
-**Status**: accepted (2026-10-15)
+**Status**: accepted (2026-10-15); cover rule replaced by ADR-035
 - Battlefield 24 tall. The side with effective Tactics (own level − enemy level) picks the width before
   battle: Basic {30, 32}, Advanced {28, 30, 32}, Expert {28, 30, 32, 34}; otherwise 30. 36 is reserved
   for sieges. This refines ADR-021.
@@ -297,7 +299,8 @@ Obstacle definitions carry a cover class (small/big/wall).
   Domain stays free of serialization attributes.
 
 ### ADR-037: Creatures as data; two speeds; draft slice rosters
-**Status**: accepted (2026-10-15); roster numbers are a draft for review
+**Status**: accepted (2026-10-15); roster numbers are a draft for review; `NoMeleePenalty` replaced by opt-in `MeleePenalty`
+(ADR-042); stats moved to `creatures.csv` (ADR-044)
 - `CreatureDefinition` (data): tier 1–5, size class (Small 2×2, Medium 3×3, Large 4×4), Attack, Defense,
   damage range, health, Initiative, shots, growth, cost, optional `UpgradesTo`, free-form tags (ADR-029) and
   abilities (`Flying`, `DoubleStrike`, `NoEnemyRetaliation`, `UnlimitedRetaliation`, `NoMeleePenalty`,
@@ -317,7 +320,9 @@ Obstacle definitions carry a cover class (small/big/wall).
   shared strength estimate of the battle AI and neutral dispositions.
 
 ### ADR-038: Tactical battle baseline
-**Status**: accepted (2026-10-15); defaults confirmed by the user, tunable
+**Status**: accepted (2026-10-15); defaults confirmed by the user, tunable; `NoMeleePenalty` replaced by opt-in
+`MeleePenalty` (ADR-042); morale/luck added by ADR-053, war machines by ADR-056; surrender deferred, still open (ADR-060,
+[open-questions.md](open-questions.md))
 - Field 24 tall, width 30; the side with effective Tactics picks the width first (ADR-033), the AI keeps 30.
   Units deploy automatically in slot order, in columns at their edge. 2–5 obstacles (small 2×2 = 1/8 cover, big
   3×3 = 1/4) are rolled between the deployment zones, never touching each other.
@@ -427,7 +432,7 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   `DecisionRequested` for a battle was published before the width-choice phase was set.
 
 ### ADR-044: All town rosters; the creature table is the source of truth
-**Status**: accepted (2026-10-16); stats are a first balance pass for review
+**Status**: accepted (2026-10-16); stats are a first balance pass for review; "Dark and Grim Raiders shoot" reversed by ADR-049
 - **Rosters** for all eight playable towns (9 lines over 5 tiers, all upgradeable), Conflux, Dragon Utopia and
   neutrals, taken from the sandbox (`reference/ew`, `EW.CoreLib.Data/Monsters`). Only Haven and half of Academy had
   real numbers there; the rest were copy-pasted placeholders (all 10s, the class defaults, or Seraph copies), and
@@ -478,8 +483,9 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   about a fifth and roads matter more.
 
 ### ADR-046: Towns on the map and the building list (from the sandbox)
-**Status**: accepted (2026-10-16) for the footprint and dwelling upgrades; the building list is a draft for Phase 3
-- **Footprint**: a town is 7×7 with the four corners free (45 blocked cells) and its entrance on the bottom-middle
+**Status**: accepted (2026-10-16) for the footprint and dwelling upgrades; the building list is a draft for Phase 3,
+amended by ADR-050 (mage guild level 4), ADR-054 (caravan) and ADR-060 (Brotherhood); the numbers live in `buildings.csv`
+- **Footprint**: a town is 7×7 with the four corners free (44 blocked cells plus the entrance) and its entrance on the bottom-middle
   cell, the same convention as mines (`BBB`/`BVB`):
   ```
   .BBBBB.
@@ -511,7 +517,8 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   `growth`; the creature table rules (ADR-044).
 
 ### ADR-047: Magic structure
-**Status**: accepted (2026-10-16), from docs/ideas.md; spells and numbers come with Phase 5
+**Status**: accepted (2026-10-16), from [ideas.md](ideas.md); spells and numbers come with Phase 5; partly superseded by
+ADR-063 (eight schools → six: Stronghold and Swamp Bestiary get faction ability groups; attunement effects)
 - **Eight schools**, one per playable town (user decision: Stronghold and Swamp Bestiary get one too). Working titles:
   Light (Haven), Nature (Sylvan), Arcana (Academy), Death (Necropolis), Chaos (Inferno), Shadow (Dungeon), Shamanism
   (Stronghold), Primal (Swamp Bestiary). Each school is also a hero skill group (ADR-048).
@@ -524,7 +531,9 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 - Replaces "four schools, five spell levels" in the game design and the sandbox's three guild levels.
 
 ### ADR-048: Heroes, skills and levels
-**Status**: accepted (2026-10-16), from docs/ideas.md; numbers are a draft
+**Status**: accepted (2026-10-16), from [ideas.md](ideas.md); numbers are a draft; Treasury numbers superseded by ADR-062;
+Stewardship (governors), attunement and the schools by ADR-063. Note: the rival schools in code are the sworn-enemy pairs of
+`BuiltInSkills.Rivals` (`Skills.cs`; two per school town, none for Stronghold and Swamp Bestiary), not the lore ring
 - **Roster**: every playable town has **16 heroes**, a **mage** and a **warrior** for each of its eight tier 1–4
   creature lines, which is that hero's **preferred creature**. The preferred line (base and upgrade) gets a **flat
   +2 Attack, +2 Defense and +1 battlefield speed** (user decision). Each hero also has a HoMM3-style **specialty**: a
@@ -554,7 +563,7 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
 
 
 ### ADR-049: Roster revision from the design notes
-**Status**: accepted (2026-10-16), from docs/ideas.md; amends ADR-044's roster
+**Status**: accepted (2026-10-16), from [ideas.md](ideas.md); amends ADR-044's roster
 - **Wyvern** moves to Dragon Utopia (`dragon-utopia.wyvern`, was `neutral.wyvern`) and upgrades to the new **Wyvern
   Monarch** (Flying, Relentless 10 for its venom).
 - **Dragonyte** swaps Breath for **Cleave**.
@@ -573,7 +582,8 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   spells affect them. Like the other spell capabilities, it is data and a query until magic exists (Phase 5).
 
 ### ADR-050: Towns in play: buildings table, town turn, garrisons and capture
-**Status**: accepted (2026-10-16); implements the roadmap's town and dwelling items on top of ADR-030 and ADR-046
+**Status**: accepted (2026-10-16); implements the roadmap's town and dwelling items on top of ADR-030 and ADR-046; tavern
+effect built by ADR-060, AI town play by ADR-059
 - **Buildings are a table** (user decision): `data/buildings.csv`, one row per building level (`id, level, name, gold,
   resources, requires, income`), embedded in core as `BuildingCatalog.Default` and read by the apps at start-up like the
   creature table (`--buildings=`). Dwellings are the rows `dwelling-1` … `dwelling-5`: their level 1 builds and level 2
@@ -615,11 +625,11 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   with what artifacts add, mana, experience, specialty, skills with their descriptions, the army (move and split stacks
   inside the hero), war machines, the paper doll and the backpack (click to take off or put on). All of it is commands
   (`MoveStackCommand`, `EquipArtifactCommand`, `UnequipArtifactCommand`).
-- **Not yet**: effects of fort, marketplace trading, mage guild and tavern (the blacksmith sells war machines,
-  ADR-056); town sieges; AI town play.
+- **Not yet**: effects of fort, marketplace trading and mage guild (the blacksmith sells war machines, ADR-056; the
+  tavern hires heroes, ADR-060); town sieges.
 
 ### ADR-051: No sea travel
-**Status**: accepted (2026-10-16), from docs/ideas.md (user decision)
+**Status**: accepted (2026-10-16), from [ideas.md](ideas.md) (user decision)
 - Water bodies are **obstacles only**: deep water stays impassable, and there are no boats, shipyards, sea travel or
   navigation skills (no Navigation-like skill in any group). Shallow water stays walkable terrain (ADR-045).
 - Replaces "boats later" (ADR-045) and the planned boats/shipyards map objects. Random maps already left out water
@@ -650,8 +660,8 @@ Ran all three apps in Godot 4.7.2 .NET (`Godot_v4.7.2-stable_mono_win64`):
   result screen with casualties and experience. The width choice before the battle stays in `DecisionPanel`.
 
 ### ADR-053: Morale and luck
-**Status**: accepted (2026-10-16), from docs/ideas.md; answers open question 5. Rates marked *draft* were filled in
-where the notes left them open
+**Status**: accepted (2026-10-16), from [ideas.md](ideas.md); answers the former open question 5 (now CMB-2 for the sources). Rates marked *draft* were filled in
+where the notes left them open; artifacts add morale and luck (ADR-061)
 - **Values**: every stack has morale and luck from **−5 to +5**: its creature's (`morale` and `luck` columns of
   `data/creatures.csv`, empty = 0) plus its hero's (`Hero.Morale` / `Hero.Luck`, map data in format v7 and the
   editor inspector), limited to ±5 (`BattleState.MoraleOf` / `LuckOf`). Guards and garrisons have only their
@@ -676,8 +686,8 @@ where the notes left them open
   as undead or constructs ignore morale (HoMM3 does).
 
 ### ADR-054: Map dwellings and caravans
-**Status**: accepted design (2026-10-16), implemented 2026-10-17 with the open questions answered by the user. Core, editor
-and the town / dwelling screens are in; the AI does not use them yet.
+**Status**: accepted design (2026-10-16), implemented 2026-10-17 with the open questions answered by the user. Core, editor,
+the town / dwelling screens and the AI (see the end) are in.
 - **Map dwellings** (`CreatureDwelling`, definition `dwelling`, kind `Dwelling`, 3×2 like a mine, entrance bottom-middle) are
   flaggable map objects with one creature (any creature of the catalog, set per instance, default wolf) and a count waiting
   (`Available`; omitted on the map = one week's growth when the game starts). They grow by the creature's weekly growth every
@@ -711,8 +721,8 @@ and the town / dwelling screens are in; the AI does not use them yet.
   trading with the governor's 150 %.
 
 ### ADR-055: Primary stat growth
-**Status**: accepted (2026-10-16), answers open question 8 (user decision: HoMM3-style, odds by class); odds and
-starting values are a draft
+**Status**: accepted (2026-10-16), answers the former open question 8 (user decision: HoMM3-style, odds by class); odds and
+starting values are a draft; Knowledge sets mana (ADR-063)
 - Heroes have four primary stats: **Attack**, **Defense**, **Spell Power** and **Knowledge**. Spell Power and Knowledge
   are new (`Hero.SpellPower`, `Hero.Knowledge`); they do nothing until magic (Phase 5: spell strength and mana).
 - **Every level-up raises one primary stat by 1**, besides the skill point (ADR-048). The stat is drawn from the game
@@ -732,7 +742,8 @@ starting values are a draft
   for roster heroes); the editor inspector edits them. The state digest includes all four stats.
 
 ### ADR-056: War machines
-**Status**: accepted (2026-10-16), from docs/ideas.md and user decisions; numbers are a draft
+**Status**: accepted (2026-10-16), from [ideas.md](ideas.md) and user decisions; numbers are a draft; Ballistics partly
+superseded by ADR-063
 - **Three per hero**: the town's **offensive machine**, a **healing tent** and an **ammo cart** (`Hero.WarMachines`,
   `WarMachineSlot`). Every hero starts with its offensive machine; the tent and cart are bought at a **blacksmith**
   (`BuyWarMachineCommand`, the visiting hero, HoMM3 prices: offensive 2500, tent 750, cart 1000 gold), which also
@@ -764,7 +775,8 @@ starting values are a draft
 
 ### ADR-057: Victory and defeat
 **Status**: accepted (2026-10-16), from the roadmap's game flow items and a user decision: the default is to defeat every
-enemy, and a map can configure other conditions in the editor
+enemy, and a map can configure other conditions in the editor; save/load built (ADR-058); a defeated player's map
+dwellings also turn neutral and its caravans vanish (ADR-054)
 - **Default rules** (`ScenarioRules.Default`): a player with **no towns and no heroes is eliminated at once**, and the
   game is won when **one team is left standing**.
 - **Grace period** (HoMM3's rule, `GraceDays`, default 7, 0 = off): a player that **owned a town and has none any more**
@@ -794,7 +806,7 @@ enemy, and a map can configure other conditions in the editor
 - **UI**: the game shows a result screen (Victory, Defeat or Draw, the reason and the winners) after the battle screen, if
   one decided the game, has been closed.
 - Open: conditions that need artifacts or
-  objects (grail, flag all mines), team-wide survival, campaign hooks, save/load (next roadmap item).
+  objects (grail, flag all mines), team-wide survival, campaign hooks.
 
 ### ADR-058: Saved games
 **Status**: accepted (2026-10-16), from the roadmap's save/load item and a user requirement: saving and loading must also
@@ -829,7 +841,8 @@ work during combat
   outside commands (nothing does).
 
 ### ADR-059: The adventure AI
-**Status**: accepted (2026-10-16), first version; the numbers are a draft to tune with `sim game`
+**Status**: accepted (2026-10-16), first version; the numbers are a draft to tune with `sim game`; hiring heroes and
+artifacts built by ADR-060/ADR-061, dwellings and caravans by ADR-054
 - **Through commands only** (`AdventureAi` in `Core.Domain/AI`, ADR-036): it plays with `GameSession.Execute`, so its
   turns are in the command log and replay exactly. It draws **no random numbers**; the same state gives the same turn.
   It uses only what its player has explored (pathfinding and targets), not the whole map.
@@ -859,15 +872,14 @@ work during combat
 - **`sim game`** plays a map with the AI in every slot (`--map towns|demo|file`, `--days`, `--seed`, `--runs`, `--record`)
   and prints the outcome and each player's towns, heroes and army; the self-test replays an AI game through JSON.
 - **Not yet**: defending towns (a hero never stays or returns to hold one), avoiding stronger enemy heroes, several heroes
-  cooperating (they only avoid the same target within a turn), hiring heroes (no tavern yet), war machines, artifacts and
-  spells, difficulty levels, using the marketplace, stacking creatures between heroes, and sieges.
+  cooperating (they only avoid the same target within a turn), war machines, spells, difficulty levels, using the marketplace, stacking creatures between heroes, and sieges.
 
 ### ADR-060: The tavern and hiring heroes
 **Status**: accepted (2026-10-16), from user decisions on who a tavern offers; cost, upgrade price, limit and placement
 are drafts
 - **Tavern levels**: the tavern is an upgradeable building (`data/buildings.csv`): **Tavern** (750 gold, 5 lumber; every
   new town has it) offers **2** heroes, **Brotherhood** (2000 gold, 5 lumber, 5 ore, needs the fort) offers **4**.
-- **Ranks** (`TavernRules`): the six main towns sit on the **ring of towns** (user decision, lore.md): Sylvan, Haven,
+- **Ranks** (`TavernRules`): the six main towns sit on the **ring of towns** (user decision, [lore.md](../content/lore.md)): Sylvan, Haven,
   Academy, Dungeon, Necropolis, Inferno, and back to Sylvan. For a town, a hero is **0 native**, **1 adjacent** (the
   town's two ring neighbours: Sylvan: Inferno, Haven; Haven: Sylvan, Academy; Academy: Haven, Dungeon; Dungeon: Academy,
   Necropolis; Necropolis: Dungeon, Inferno; Inferno: Necropolis, Sylvan), **2 not opposing** (the two towns two steps
@@ -893,11 +905,11 @@ are drafts
   at the entrance, and hero level or starter stacks for hired heroes.
 
 ### ADR-061: Artifacts
-**Status**: accepted (2026-10-16), from docs/artifacts.md and the roadmap; the numbers are a draft, and the list was
-extended with HoMM3-style placeholder items
+**Status**: accepted (2026-10-16), from [artifacts.md](../content/artifacts.md) and the roadmap; the numbers are a draft, and
+the list was extended with HoMM3-style placeholder items; hero screen with paper doll and backpack built (`HeroPanel`, ADR-050)
 - **Content is a table** (`data/artifacts.csv`, `data/artifact_sets.csv`, embedded in core, read by the apps at start-up,
   `.csv.import` "keep" like the other tables): `id, name, slot, tier, set, effects, notes`. **67 artifacts**: the
-  36 lore artifacts of `artifacts.md` and 31 **HoMM3-style placeholders** (Centaur's Ax, Blackshard of the Dead
+  36 lore artifacts of [artifacts.md](../content/artifacts.md) and 31 **HoMM3-style placeholders** (Centaur's Ax, Blackshard of the Dead
   Knight, Ogre's Club of Havoc, Sword of Hellfire, Titan's Gladius, the Dwarven Lords' and Gnoll King's shields, Sentinel's
   Shield, Skull Helmet, Crown of the Supreme Magi, the body armours from Petrified Wood to Titan's Cuirass, Pendant of
   Courage, Boots of Speed, Cape of Velocity, the Endless purses, bags and sack of gold, …), marked "HoMM3 style
@@ -931,11 +943,10 @@ extended with HoMM3-style placeholder items
 - **AI**: it values artifacts by their effects (`AdventureAi.Score`: Attack and Defense most, battle speed, morale and luck
   high, income by gold), goes for pickups it can reach and win, and puts on what fills a free slot or beats the worst worn
   there by 20 %.
-- **Not yet**: artifacts in treasure chests (ADR-039 stays without the artifact outcome), the hero screen and the paper-doll
-  UI, the editor inspector rows, a merchant, artifacts that give spells or war machines, the effects marked "Not yet".
+- **Not yet**: artifacts in treasure chests (ADR-039 stays without the artifact outcome), the editor inspector rows, a merchant, artifacts that give spells or war machines, the effects marked "Not yet".
 
 ### ADR-062: Treasury interest and Prospecting piles (2026-10-17)
-
+**Status**: accepted (2026-10-17); supersedes ADR-048's Treasury numbers
 - **Treasury** pays **+250 / 500 / 750 / 1000** gold a day (was 100 / 200 / 350 / 500). Expert and Master also pay **0.5 % / 1 %**
   of the player's gold on hand at the start of the day, before income is added (rounded down, `HeroIncome.TreasuryInterest`).
 - **Prospecting** keeps its daily resources and adds a **10 / 20 / 30 %** chance that a picked-up resource pile gives 50 %
@@ -943,7 +954,7 @@ extended with HoMM3-style placeholder items
   carries the amount actually granted.
 
 ### ADR-063: Governors, complexity, mana, faction groups and siege Ballistics (2026-10-17)
-
+**Status**: accepted (2026-10-17)
 Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) and ADR-056 (Ballistics). Numbers are drafts.
 
 - **Governors and Stewardship**: a hero with Stewardship can be appointed governor of an own town (`AppointGovernorCommand`,
@@ -977,7 +988,7 @@ Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) a
   (`rage.first/second/third`, 4 + 3 + 3 points) with no effect; the mechanics (stacks of rage / adrenaline or other
   faction abilities) are open. Only heroes of the town are offered them; their roster mages start with `.first`, and their
   former spell specialties are `skill rage.first` / `skill adrenaline.first` for now. The Shamanism and Primal spells in
-  [spells.md](spells.md) are drafts waiting to be reused as faction abilities.
+  [spells.md](../content/spells.md) are drafts waiting to be reused as faction abilities.
 - **Ballistics in sieges** (rules in `WarMachines`; fortifications and sieges do not exist yet, so nothing calls them in battle):
   without the skill the offensive machine **fires by itself, only at fortifications**; **Basic** gives control of it; **Advanced**
   lets it also target troops (and fields it in regular battles, as ADR-056 had it) and fires a second shot at an automatically
@@ -986,7 +997,8 @@ Supersedes parts of ADR-047 (eight schools), ADR-048 (Stewardship, attunement) a
   A fully upgraded fortification's defence structures have **3** hit points. Placeholder formulas.
 
 ### ADR-064: Random map generation: project layout and seed streams (2026-10-17)
-**Status**: accepted; Phase 4 preparation (the project exists, the generator does not yet)
+**Status**: accepted; stages 1–4 implemented (layout, terrain, connections, towns/mines); treasure, monsters, roads and the
+scenario assembly pending
 - `src/Core/EternalWars.Core.Generation` exists (engine-free, warning-free like every core project). It references `Core.Domain`
   only; `Core.Data` references it (template file format). It is a dependency of the tests, and later of the `sim` tool and the apps.
 - **Refines ADR-023**: the generator outputs a **scenario `GameState`** (never started: the same object the map editor works on),
@@ -1020,7 +1032,7 @@ via `Core.Data/Templates/TemplateSerializer`, format version 1; the shipped ones
 the map (within about ±40 %), and zones the template joins on one level **touch** (gates need no contact). Deterministic from (template, size, seed,
 strategy); it draws only from the `layout` stream per level and uses exact arithmetic (no trigonometry), so it is the same on every platform.
 - **Voronoi** (default): a spring model places the zone centres (joined zones attract, all repel; start from a random scatter or from a layered
-  embedding with the best connected zone in the middle), then a local search on a 48×48 version of the map moves centres and swaps zones until every
+  embedding with the best connected zone in the middle), then a local search on a 32×32 version of the map (`ZoneLayouter.CoarseSize`; first written here as 48×48) moves centres and swaps zones until every
   connection touches (the objective is the real contact of the area-balanced power diagram), the winner is painted at full size, re-balanced and repaired.
   Make every connection touch on all seeds tried for the shipped templates, including the 4-player wheel graph.
 - **Rectangles**: recursive weighted bisection, the cut order a random walk over the zone graph. Blocky, fast, and only good for simple graphs; what it
@@ -1046,7 +1058,7 @@ zones and the list of `Obstacles`). User-approved defaults:
 `Passages` and `Problems`). User decisions:
 - **Passages per connection are configurable**: `TemplateConnection.Passages` (1 to 8, default 1; one or more, spread along the border at least `max(6, size/12)` tiles apart; the template
   editor will expose it). Extra contact between the zones stays walled. A border too short for all of them gives as many as fit and a problem line.
-- **Guards pick a tier by army power with overlapping ranges** (`GuardPicker`): every tier has the counts that look like a guard for it (tier 1: 6–150, 2: 2–80, 3: 1–40, 4: 1–20, 5: 1–10);
+- **Guards pick a tier by army power with overlapping ranges** (`GuardPicker`): every tier has the counts that look like a guard for it (tier 1: 6–150, 2: 2–80, 3: 1–40, 4: 1–20, 5: 1–10; superseded by the stage 4 addendum below: 6–60, 2–40, 1–25, 1–15, 1–10, `GuardPicker.CountsFor`);
   a creature qualifies when the stack it would need (`value / creature value`) is in its tier's range and within 20 % of the wanted power. So 500 can be about ten tier-1 creatures or
   three tier-2 ones, and 1000 five tier-2 or three tier-3 ones: the same tier in another number, or an adjacent tier. One qualifying creature is drawn (base forms of the playable
   towns and the neutrals), the count is rolled within ±5 %. With none qualifying, the nearest is taken with its count held to the range.

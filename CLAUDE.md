@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-HoMM3-like 3D turn-based strategy. Godot 4.7.2 .NET, C# on .NET 10. Read `docs/architecture.md` and
-`docs/event-system.md` before changing structure or events.
+HoMM3-like 3D turn-based strategy. Godot 4.7.2 .NET, C# on .NET 10. Read `docs/technical/architecture.md` and
+`docs/technical/event-system.md` before changing structure or events.
 
 ## Commands
 - Build: `dotnet build EternalWars.sln`
@@ -22,4 +22,4 @@ HoMM3-like 3D turn-based strategy. Godot 4.7.2 .NET, C# on .NET 10. Read `docs/a
   draw randomness only from `GameState.Random` (never `System.Random`).
 - Editor changes go through `MapEditorSession` so they are undoable and publish events.
 - Bump `MapDocument.CurrentFormatVersion` when the map format changes, and keep older versions loading.
-- Record significant decisions in `docs/decisions.md`; update `docs/roadmap.md` checkboxes.
+- Record significant decisions in `docs/project/decisions.md`; update `docs/project/roadmap.md` checkboxes.

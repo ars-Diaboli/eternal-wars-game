@@ -1,7 +1,7 @@
 namespace EternalWars.Core.Domain.Towns;
 
 /// <summary>
-/// Stable ids of the town types (docs/game-design.md §4.4). Content refers to towns by these strings
+/// Stable ids of the town types (docs/design/factions.md). Content refers to towns by these strings
 /// (native terrains now; creatures and buildings later).
 /// </summary>
 public static class TownIds

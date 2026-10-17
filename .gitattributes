@@ -1,4 +1,4 @@
-# Binary assets go through Git LFS (docs/development.md). Godot's *.import sidecars stay plain text.
+# Binary assets go through Git LFS (docs/technical/development.md). Godot's *.import sidecars stay plain text.
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text

@@ -3,7 +3,7 @@ using EternalWars.Core.Domain.Map;
 
 namespace EternalWars.Core.Generation;
 
-/// <summary>What a zone is for (docs/game-design.md §4.9).</summary>
+/// <summary>What a zone is for (docs/design/random-maps.md).</summary>
 public enum ZoneType
 {
     /// <summary>A player's starting area; <see cref="TemplateZone.Owner"/> says whose.</summary>
@@ -138,7 +138,7 @@ public sealed record TemplateConnection
 }
 
 /// <summary>
-/// A random map template (ADR-023, docs/game-design.md §4.9): the zone graph a map is generated from. Pure data; the
+/// A random map template (ADR-023, docs/design/random-maps.md): the zone graph a map is generated from. Pure data; the
 /// <see cref="TemplateValidator"/> checks it, the generator (later) turns it into a map for a size, a player count and a seed.
 /// </summary>
 public sealed record MapTemplate

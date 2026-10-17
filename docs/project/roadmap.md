@@ -4,9 +4,11 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-16)**: Phases 0–2 are done (the new 3D battle scene still needs a run in Godot), and Phase 3 has towns,
-dwellings, heroes, skills and every income source. Next up in Phase 3: town building effects, map dwellings
-and caravans, and a better adventure AI (artifacts, ADR-061, are in core) (victory and defeat, ADR-057, and save/load, ADR-058, are in).
+**Where we are (2026-10-17)**: Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
+save/load; its building effects wait for answers (TOWN-1, TOWN-2). Phase 4 has started: the template format and generator
+stages 1–4 (layout, terrain, connections, towns and mines) are in core. Next up: treasure by value band, which waits for
+RMG-1 and RMG-2 ([open-questions.md](open-questions.md#-blocking-now)).
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -158,12 +160,12 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Map format v6 (`town` objects); editor places towns and edits owner, name, buildings, dwellings, garrison
 - [x] Editor enforces building requirements; validator flags broken requirements and the 7-of-9 rule
 
-### Towns: building effects (❓ open question 6 for the numbers)
-- [ ] Fort: growth bonus per level and/or garrison defence (decide; sieges come post-1.0)
-- [ ] Marketplace trading: resource exchange rates that improve with the number of owned marketplaces
+### Towns: building effects (❓ [TOWN-1, TOWN-2, TOWN-3](open-questions.md#towns-and-economy))
+- [ ] Fort: growth bonus per level and/or garrison defence (decide; sieges come post-1.0) ❓ TOWN-1
+- [ ] Marketplace trading: resource exchange rates that improve with the number of owned marketplaces ❓ TOWN-2
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
 - [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
-- [ ] Town hall level 4 (capitol-like)? ❓
+- [ ] Town hall level 4 (capitol-like)? ❓ TOWN-3
 - [ ] Per-town building lists or names (every town shares one table today)
 - [x] Dwellings on the adventure map (ADR-054): `CreatureDwelling`, weekly growth, flagging, recruiting by a visiting hero
       (`RecruitAtDwellingCommand`); map format v12; editor placement and `SetDwelling`; validator
@@ -173,7 +175,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       creatures, caravans are invisible; building 1000 gold + 5 lumber (placeholder)
 - [x] Town screen: caravan section (hire, send the picked stack, caravans on the way); `DwellingPanel` opens when a hero visits a dwelling
 - [x] AI: heroes flag and recruit at map dwellings, towns build a caravan once the player owns a dwelling, hire from owned dwellings and send troops to an empty town (`AdventureAi`)
-- [ ] Smoke scenario for dwellings and caravans (needs Godot); dwelling guard rules, caravan cost tuning
+- [ ] Smoke scenario for dwellings and caravans (needs Godot); dwelling guard rules (TOWN-5), caravan cost tuning
 
 ### Towns: Godot
 - [x] 2D harness town panel (`TownPanel`, `--scenario=towns`): build, dwellings, recruit, upgrade, garrison
@@ -199,14 +201,15 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Marketplace trading with the governed town's 150 % (waits for trading)
 - [x] Treasury and Prospecting rework (ADR-062)
 - [x] Mana numbers and school attunement skills (ADR-063); casting waits for Phase 5
-- [ ] Rage and Adrenaline faction groups: design their skills (placeholders today) ❓
+- [ ] Rage and Adrenaline faction groups: design their skills (placeholders today) ❓ HERO-2
 - [x] Complexity levels with starting resources (ADR-063); new-game screen option
 - [ ] AI that appoints governors on purpose; the `sim` tool picks a complexity
-- [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot)
-- [ ] Skill specialties: what a skill specialty adds ❓ open question 9
-- [ ] Third offense and third defense skills (placeholders today) ❓ open question 9
-- [ ] Deployment: rearrange troops before battle (needs a deployment step in `BattleSetup` and UI)
-- [x] Hero screen (Godot): stats, skills with descriptions, specialty, army; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
+- [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); needs
+      sieges, post-1.0 (CMB-5)
+- [ ] Skill specialties: what a skill specialty adds ❓ HERO-1
+- [ ] Third offense and third defense skills (placeholders today) ❓ HERO-1
+- [ ] Deployment: rearrange troops before battle (needs a deployment step in `BattleSetup` and UI) ❓ HERO-4
+- [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
 
 ### Tavern
 - [x] Hire heroes (ADR-060): per-player weekly pool by ranks (native, adjacent, not opposing, opposing; warriors for
@@ -215,12 +218,12 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Tavern as an upgradeable building (`tavern` level 2 in `buildings.csv`)
 - [x] Heroes that retreat or are defeated return to the pool (offers exclude only heroes on the map)
 - [x] The AI hires heroes
-- [ ] Surrender in battle: pay gold to leave with the army, needs an own tavern-like rule (ADR-038)
+- [ ] Surrender in battle: pay gold to leave with the army (ADR-038) ❓ CMB-1
 - [x] Hire buttons in the town panel (`TownPanel`)
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
 
 ### Artifacts
-Content draft: [artifacts.md](artifacts.md).
+Content draft: [artifacts.md](../content/artifacts.md).
 
 - [x] Artifact tables `data/artifacts.csv` and `data/artifact_sets.csv` (ADR-061): 67 artifacts, 4 sets, embedded in core
 - [x] Hero paper-doll slots and a backpack of 50; equip / unequip / give commands
@@ -228,7 +231,7 @@ Content draft: [artifacts.md](artifacts.md).
 - [x] Income artifacts (daily resources through `HeroIncome`)
 - [x] Terrain artifacts: native terrain and terrain penalty reduction (ADR-045)
 - [x] Artifact pickups on the map (rolled by tier at game start, relics unique) and loot from defeated heroes
-- [ ] Artifacts in treasure chests (the HoMM3 artifact tier, ADR-039) ❓
+- [ ] Artifacts in treasure chests (the HoMM3 artifact tier, ADR-039) ❓ CONT-3
 - [x] Artifact exchange between own heroes (`GiveArtifactCommand`, while the exchange is open); screen pending
 - [x] Map format v11 and editor session calls (`SetHeroArtifacts`, `SetArtifactPickup`); validator
 - [x] The AI picks up, values and equips artifacts
@@ -248,7 +251,7 @@ Content draft: [artifacts.md](artifacts.md).
 - [ ] Save/load: a state snapshot if replays get too slow
 - [x] Game app: victory / defeat screen (`GameResultPanel`)
 - [x] Game app: save / load menu (F10, F5 quick save, F9 quick load; also in battle)
-- [ ] Week events ("week of X") ❓
+- [ ] Week events ("week of X") ❓ FLOW-2
 
 ### Adventure AI (computer players)
 - [x] AI driver that plays a computer player's turn through commands only (ADR-036, ADR-059), deterministic (no RNG)
@@ -260,7 +263,8 @@ Content draft: [artifacts.md](artifacts.md).
 - [x] Simulator: AI-vs-AI games (`sim game`) for tuning; the self-test replays one
 - [ ] Town defence: keep or bring a hero home when an enemy is near; avoid stronger enemy heroes
 - [ ] Several heroes: roles (explorer, army, carrier), exchanging armies between own heroes
-- [ ] Hire heroes (done), artifacts (done), war machines and spells once those exist; marketplace use; complexity levels (done)
+- [ ] Buy war machines at the blacksmith (machines exist, ADR-056; CMB-3), spells (Phase 5), marketplace use (TOWN-2);
+      hiring heroes, artifacts and complexity levels are done
 - [ ] Balance the AI over several maps (`sim game --runs`); a CI check that AI games on the shipped maps finish
 
 ### Content for the slice
@@ -276,9 +280,9 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 ### Templates
 - [x] New core project `EternalWars.Core.Generation` (engine-free, deterministic from seed): project, `SeedStreams` (ADR-064)
 - [x] Template model + `*.ewtemplate.json` (v1): sizes, players, levels, zones (type, owner, size, level, towns, richness,
-      treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) (game-design §4.9, ADR-064)
-- [ ] Template model follow-ups: portals, optional connections, mirroring (1.0 scope)
-- [x] Template validator (`TemplateValidator`: errors and fairness warnings) and the first shipped template `duel`
+      treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) ([random-maps.md](../design/random-maps.md), ADR-064)
+- [ ] Template model follow-ups: teams (RMG-6), mirroring (1.0 scope, RMG-9); portals, optional connections, border guards (RMG-11)
+- [x] Template validator (`TemplateValidator`: errors and fairness warnings); shipped templates `duel` and `ffa-4` ("Free for all")
 
 ### Generator pipeline
 - [x] Zone layout from the connection graph (`ZoneLayouter`: Voronoi and Rectangles strategies, ADR-064; `sim layout`)
@@ -286,20 +290,22 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Borders and obstacles (walls two tiles thick between zones, rock clumps inside; `Walls` kept for the connections stage)
 - [x] Connections and their guards (`ConnectionPlacer`, `GuardPicker`; passages per connection configurable, ADR-064)
 - [x] Towns (player and neutral): `SettlementPlacer`, HoMM3-style defaults (ADR-064); start-town type swap for game setup (`SetTownType`)
-- [x] Mines and resources (guards by zone strength, piles); treasure by value band is the next stage
-- [ ] Treasure by value band
-- [ ] Neutral monsters
-- [ ] Roads between towns and through connections
-- [ ] Connectivity validation; the output is an ordinary `MapDocument`, editable in the map editor
-- [ ] Mirrored/symmetric zones for competitive templates (1.0 scope)
+- [x] Mines and resources (guards by zone strength, piles)
+- [ ] Treasure by value band ❓ RMG-1, RMG-2 (**next**)
+- [ ] Neutral monsters ❓ RMG-2, RMG-3
+- [ ] Roads between towns and through connections ❓ RMG-4
+- [ ] Scenario assembly: players, owners, start-town types, starting heroes; the output is a scenario `GameState`
+      (ADR-064), saved as an ordinary map with `MapConverter.ToDocument` and editable in the map editor ❓ RMG-5, RMG-6, RMG-7
+- [ ] Connectivity and fairness validation of the whole map ❓ RMG-8
+- [ ] Mirrored/symmetric zones for competitive templates (1.0 scope) ❓ RMG-9
 
 ### Tooling and UI
 - [ ] Headless batch: generate N maps per template × size × seed and validate them (reachability, fairness between
       start zones), in CI
-- [ ] Editor: template editor (zone graph: add zones, set properties, draw connections)
+- [ ] Editor: template editor (zone graph: add zones, set properties, draw connections) ❓ RMG-10
 - [ ] Editor: "generate map from template" into an editable map
 - [ ] Game: new-game screen picks template, size, players, seed and options, then generates
-- [ ] Starter templates: 2-player duel, 4-player free-for-all, 2v2, 8-player
+- [ ] Starter templates: 2-player duel and 4-player free-for-all (shipped), 2v2 (needs RMG-6), 8-player
 - Not in 1.0: water zones and islands (no sea travel, ADR-051), HotA template import (ADR-034)
 
 **Exit**: a player picks a template in the game and gets a fair, playable random map; designers
@@ -307,30 +313,30 @@ author templates in the editor.
 
 ## Phase 5: Content and polish
 
-### Magic (ADR-047)
-Content draft: [spells.md](spells.md).
+### Magic (ADR-047, ADR-063)
+Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 … MAG-6.
 
-- [ ] Spell table (school, level, cost, tags, three ranks); spell book and mana on heroes
-- [ ] Mage guild offers spells by level; heroes learn them by visiting
-- [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration, cost or potency), mastery
+- [ ] Spell table (school, level, cost, tags, three ranks); spell book (MAG-1, MAG-2); mana on heroes is done (ADR-063)
+- [ ] Mage guild offers spells by level; heroes learn them by visiting (MAG-2)
+- [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; potency? MAG-3), mastery
       (spell ranks)
 - [ ] Combat spells: hero casts one spell per round; immunity, resistance and creature casters become live (ADR-042,
       ADR-049)
-- [ ] Adventure spells
-- [ ] Spell resistance skill and spell specialties take effect
-- [ ] Spell tags and creature caster spells ❓ open question 7
+- [ ] Adventure spells (MAG-5)
+- [ ] Spell resistance skill and spell specialties take effect (MAG-6)
+- [ ] Spell tags and creature caster spells ❓ MAG-1
 
 ### Combat additions
 - [x] Morale and luck (ADR-053): ±5 from creature table and hero (map format v7, editor); per round 2 %/point extra
       action or lost turn, else 4 %/point ±50 % initiative; per hit 4 %/point luck for +75 % / −50 % damage, opposite
       rolls cancel; shown in the 3D battle (captions, log, unit stats)
-- [ ] Morale and luck sources: skills, buildings, army composition (artifacts are in, ADR-061); undead/constructs without morale? ❓
+- [ ] Morale and luck sources: skills, buildings, army composition (artifacts are in, ADR-061); undead/constructs without morale? ❓ CMB-2
 - [x] War machines (ADR-056): offensive machine per town (ballista, cannon, catapult, glaivethrower), healing tent,
       ammo cart; War machines skill group (Ballistics, Healing, Ammo supply); units at the back of the field, offensive
       machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle
-- [ ] War machines follow-ups: siege use (needs sieges), exchanging machines between heroes, tuning ❓
-- [ ] Teleporting creatures and footprints ❓ open question 4
-- [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0
+- [ ] War machines follow-ups: siege use (needs sieges), exchanging machines between heroes, tuning ❓ CMB-3
+- [ ] Teleporting creatures and footprints ❓ CMB-4
+- [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0, CMB-5
 
 ### Platform and art
 - [ ] Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)

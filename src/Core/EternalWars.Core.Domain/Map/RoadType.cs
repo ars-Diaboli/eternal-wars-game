@@ -1,6 +1,6 @@
 namespace EternalWars.Core.Domain.Map;
 
-/// <summary>HoMM3-style roads, drawn on top of terrain (docs/decisions.md ADR-024).</summary>
+/// <summary>HoMM3-style roads, drawn on top of terrain (docs/project/decisions.md ADR-024).</summary>
 public enum RoadType
 {
     None,

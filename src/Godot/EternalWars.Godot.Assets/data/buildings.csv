@@ -5,7 +5,7 @@ town-hall,3,Capitol,10000,lumber 20; ore 20,fort 2,gold 2000,
 fort,1,Fort,1500,lumber 5; ore 5,tavern 1,,defence and growth bonus to decide
 fort,2,Citadel,3000,lumber 10; ore 10,,,
 fort,3,Castle,6000,lumber 15; ore 15,,,
-blacksmith,1,Blacksmith,1000,lumber 5; ore 5,,,war machines to decide
+blacksmith,1,Blacksmith,1000,lumber 5; ore 5,,,sells war machines to the visiting hero (ADR-056)
 marketplace,1,Marketplace,1250,lumber 5,,,trading to decide
 marketplace,2,Resource Silo,2500,lumber 5; ore 5,,lumber 1; ore 1,
 mage-guild,1,Mage Guild,2000,lumber 5; mercury 2,,,spells of level 1 (ADR-047)

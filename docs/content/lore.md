@@ -1,8 +1,9 @@
 # Lore (draft proposal, for review)
 
-> Status: **draft by Claude, not approved**. Names and premise are suggestions to react to. Nothing in
-> code depends on this document. Per ADR-028/029, groups and rivalries have **no rule effect** outside
-> the campaign.
+> Status: **draft by Claude, not approved**. Names and premise are suggestions to react to. Code uses two things
+> from this document: the **ring** (`TavernRules.Ring`) and the **sworn enemies** (`BuiltInSkills.Rivals` in
+> `Skills.cs`). Per ADR-028/029, groups and rivalries have no combat effect; their only rule effects are the two
+> below (ADR-048, ADR-060).
 
 ## Premise: the Wheel of Ash
 
@@ -66,12 +67,14 @@ light ones. The arch-rival is always one of the two:
 | **Inferno** | **Academy**, Haven | |
 | **Dungeon** | **Sylvan**, Academy | |
 
-The ring has one rule effect outside the story: it decides which heroes a tavern offers (ADR-060). Neighbours trade
-heroes most easily, the arch-rival's heroes come last.
-
 Stronghold and the Swamp Bestiary have **no sworn enemies**; they raid anyone. The Firstborn stand apart.
-These rivalries are story only: they drive campaign alliances, scenario setups and flavour text, and
-have **no combat or rules effect** (ADR-029).
+The rivalries drive campaign alliances, scenario setups and flavour text, and have **no combat effect** (ADR-029).
+They have exactly two rule effects:
+
+- **Tavern offers** (ADR-060): the ring orders who a tavern offers. Neighbours trade heroes most easily, the
+  arch-rival's heroes come last.
+- **Skill offers** (ADR-048): a sworn enemy's magic school is never in the normal level-up pool; it takes one of the
+  three offers in only **5 %** of level-ups (`SkillOffers.RivalSchoolChance`).
 
 ## Towns
 
@@ -121,3 +124,4 @@ and for skirmish flavour text.
   Haven vs Necropolis & Inferno, Academy vs Inferno & Dungeon, Sylvan vs Dungeon & Necropolis.
 - Should the campaign reveal what the Wheel really is (and whether ending it is good)?
 - Hero names/archetypes per town; tone of in-game text (terse chronicle vs. character voices).
+- Naming mismatch: `data/artifact_sets.csv` calls a set "Ash Court Regalia", while the group here is the "Ashen Court".

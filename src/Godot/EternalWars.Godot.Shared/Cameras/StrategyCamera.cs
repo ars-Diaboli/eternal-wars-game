@@ -3,7 +3,7 @@ using Godot;
 namespace EternalWars.Godot.Shared.Cameras;
 
 /// <summary>
-/// Strategy camera (docs/decisions.md ADR-022): tilted 15–30° from vertical, rotatable ±45° around the
+/// Strategy camera (docs/project/decisions.md ADR-022): tilted 15–30° from vertical, rotatable ±45° around the
 /// vertical axis, zoomable. Zooming in tilts towards 30° for a more cinematic view; zooming out looks
 /// more top-down. WASD pans relative to the current rotation, Q/E rotate, mouse wheel zooms.
 /// </summary>
