@@ -88,7 +88,7 @@ public class ScenarioAssemblerTests
         Assert.Equal([1, 2], red.Dwellings.Keys.Select(l => Creatures.Get(l).Tier).Order());
         Assert.All(red.Dwellings.Keys, l => Assert.Equal(Creatures.Get(l).WeeklyGrowth * 3 / 2, red.Available[l])); // the Citadel's +50 %
         Assert.DoesNotContain(TemplateValidator.Validate(template), i => i.Severity == IssueSeverity.Error);
-        Assert.Equal(3, TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template)).FormatVersion);
+        Assert.Equal(MapTemplate.CurrentFormatVersion, TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template)).FormatVersion);
         Assert.Equal([1, 2], TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template)).Zones[0].StartDwellings);
     }
 
@@ -156,6 +156,36 @@ public class ScenarioAssemblerTests
         Assert.Throws<ArgumentException>(() => Game(Duel(), 1, Haven(0, dwelling: Tier1(TownIds.Inferno)[0].Id))); // another town's dwelling
         Assert.Throws<ArgumentException>(() => Game(Duel(), 1, new PlayerSetup(0, "X", true, "atlantis")));
         Assert.NotNull(Game(ai, 1, Haven(0), Haven(1, human: false)));
+    }
+
+    [Fact]
+    public void TemplateTeams_AreTheDefault_ChangeableUnlessLocked()
+    {
+        var template = BuiltInTemplates.Find("Two against two")!;
+        PlayerSetup[] players = [new(0, "A", true, TownIds.Haven), new(1, "B", false, TownIds.Sylvan), new(2, "C", false, TownIds.Inferno), new(3, "D", false, TownIds.Dungeon)];
+
+        Assert.DoesNotContain(TemplateValidator.Validate(template), i => i.Severity == IssueSeverity.Error);
+        var (state, _) = MapGenerator.Build(template, 128, 2, players);
+        Assert.Equal([0, 0, 1, 1], state.Players.Select(p => p.Team.Value));
+        Assert.True(state.TeamsLocked);
+        Assert.True(state.AreAllies(state.Players[0].Id, state.Players[1].Id));
+        Assert.True(state.AreEnemies(state.Players[0].Id, state.Players[2].Id));
+        Assert.Throws<ArgumentException>(() => MapGenerator.Build(template, 128, 2, [players[0] with { Team = 1 }, .. players.Skip(1)]));
+
+        var open = template with { TeamsLocked = false };
+        var changed = MapGenerator.Build(open, 128, 2, [players[0] with { Team = 1 }, .. players.Skip(1)]).State;
+        Assert.Equal([1, 0, 1, 1], changed.Players.Select(p => p.Team.Value));
+        Assert.False(changed.TeamsLocked);
+
+        var ffa = Game(Duel(), 1, new PlayerSetup(0, "A", true, TownIds.Haven), new PlayerSetup(1, "B", false, TownIds.Haven));
+        Assert.True(ffa.AreEnemies(ffa.Players[0].Id, ffa.Players[1].Id)); // no teams: free for all
+        var oneTeam = Duel() with { Zones = [.. Duel().Zones.Select(z => z.Id == "start-2" ? z with { Team = 0 } : z)] };
+        var mixed = Game(oneTeam, 1, new PlayerSetup(0, "A", true, TownIds.Haven), new PlayerSetup(1, "B", false, TownIds.Haven));
+        Assert.True(mixed.AreEnemies(mixed.Players[0].Id, mixed.Players[1].Id)); // A has no team: its own one, never B's team 0
+        Assert.Contains(TemplateValidator.Validate(Duel() with { Zones = [.. Duel().Zones.Select(z => z.Id == "centre" ? z with { Team = 0 } : z)] }), i => i.Severity == IssueSeverity.Error && i.Message.Contains("team"));
+        var loaded = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template));
+        Assert.Equal(template.Zones.Select(z => z.Team), loaded.Zones.Select(z => z.Team));
+        Assert.True(loaded.TeamsLocked);
     }
 
     [Fact]

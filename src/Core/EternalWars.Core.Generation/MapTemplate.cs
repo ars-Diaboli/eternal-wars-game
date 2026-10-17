@@ -86,6 +86,12 @@ public sealed record TemplateZone
     /// <summary>Player slot (0-based) of a start zone; null for the other types.</summary>
     public int? Owner { get; init; }
 
+    /// <summary>
+    /// Default team of a start zone's player (format v4, RMG-6): start zones with the same number are allies; none on every zone = free for all.
+    /// Players may change teams at setup unless <see cref="MapTemplate.TeamsLocked"/>.
+    /// </summary>
+    public int? Team { get; init; }
+
     /// <summary>Relative size, at least 1.</summary>
     public int Size { get; init; } = 1;
 
@@ -173,7 +179,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 3;
+    public const int CurrentFormatVersion = 4;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -194,6 +200,9 @@ public sealed record MapTemplate
 
     /// <summary>Whether the map has an underground level.</summary>
     public bool Underground { get; init; }
+
+    /// <summary>The start zones' teams (<see cref="TemplateZone.Team"/>) may not be changed at game setup (format v4; as maps, ADR-032).</summary>
+    public bool TeamsLocked { get; init; }
 
     public IReadOnlyList<TemplateZone> Zones { get; init; } = [];
 

@@ -3,7 +3,7 @@
 > Part of the [game design](overview.md). Modelled on the Heroes 3: Horn of the Abyss template system (ADR-023,
 > ADR-034, ADR-064). Open items ❓: [open-questions.md](../project/open-questions.md#random-maps-phase-4).
 
-**Status**: the template format (v3), its validator, two shipped templates (`duel`, `ffa-4` "Free for all") and every
+**Status**: the template format (v4), its validator, three shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two") and every
 generator stage including the scenario assembly are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`).
 There is no template editor, user template folder, whole-map validation or game/editor UI yet; `sim layout` prints
 generated maps.
@@ -18,7 +18,7 @@ generated maps.
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
 
-## The template (`MapTemplate`, format v3)
+## The template (`MapTemplate`, format v4)
 - Name, description, supported map sizes, player-count range, max humans, whether an underground level is used.
 - **Zones**, each with:
   - type: player start, AI-only start, treasure, junction (junction behaves like treasure; it only affects validator
@@ -40,7 +40,10 @@ generated maps.
   ore), whether gates do (default on).
 - **Validator** (`TemplateValidator`): errors for players, sizes, zones, start zones, connections, passages, empty
   levels and connectivity; warnings for unfair start zones.
-- Not in the format yet ❓: teams, mirrored zones.
+- **Teams** (v4, RMG-6): an optional team per start zone (same number = allies, none = free for all), and `teamsLocked`;
+  players may change teams at setup unless locked. The connections decide where allies are; there are no team fairness
+  checks.
+- Not in the format yet ❓: mirrored zones.
 
 ## Pipeline
 

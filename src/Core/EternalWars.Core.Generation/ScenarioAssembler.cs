@@ -23,7 +23,8 @@ public sealed record PlayerSetup(int Slot, string Name, bool IsHuman, string Tow
 /// <summary>
 /// The last stage of the generator (ADR-064, RMG-5): turns a generated map into the scenario <see cref="GameState"/>.
 /// <list type="bullet">
-/// <item>Players are made in slot order from <see cref="PlayerSetup"/> (player ids 0, 1, … in that order).</item>
+/// <item>Players are made in slot order from <see cref="PlayerSetup"/> (player ids 0, 1, … in that order); a player's team is the one set up, else the start
+/// zone's (<see cref="TemplateZone.Team"/>, RMG-6). A template with <see cref="MapTemplate.TeamsLocked"/> refuses other teams and locks them in the game.</item>
 /// <item>A taken slot's start towns get the player's town type and the player as owner, the default start plus the start zone's
 /// <see cref="TemplateZone.StartBuildings"/> and <see cref="TemplateZone.StartDwellings"/>; without a tier-1 dwelling there, the one the player picked
 /// (a computer player, or a player who picked none, gets a random one). Every start dwelling opens with a week of creatures.</item>
@@ -83,13 +84,14 @@ public static class ScenarioAssembler
         var made = new List<Player>();
         var heroes = new List<Hero>();
         var taken = ordered.Select(p => p.Hero).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        var teams = Teams(template, ordered);
         for (var i = 0; i < ordered.Count; i++)
         {
             var setup = ordered[i];
             var id = new PlayerId(i);
-            made.Add(new Player(id, setup.Name, setup.IsHuman, setup.Team is { } team ? new TeamId(team) : null));
-
             var zone = template.Zones.First(z => z.Owner == setup.Slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart);
+            made.Add(new Player(id, setup.Name, setup.IsHuman, new TeamId(teams[i])));
+
             var start = map.Towns.Where(t => t.Slot == setup.Slot).Select(t => StartTown(map, t.Town, zone, setup, id, creatures, streams.For("dwellings", setup.Slot))).ToList();
             var hero = setup.Hero is { } picked ? heroRoster.Get(picked) : Draw(heroRoster, setup.TownType, taken, heroRandom);
             heroes.Add(Hero.Create(new HeroId(i + 1), id, start[0].VisitPosition, StarterArmy(hero, setup.TownType, creatures, streams.For("armies", setup.Slot)), hero));
@@ -106,7 +108,9 @@ public static class ScenarioAssembler
         }
 
         map.Map.Name = $"{template.Name} {map.Layout.Size}×{map.Layout.Size} #{seed}";
-        return new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster);
+        var state = new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster);
+        state.SetTeamsLocked(template.TeamsLocked);
+        return state;
     }
 
     private static void Check(MapTemplate template, GeneratedMap map, IReadOnlyList<PlayerSetup> players, HeroCatalog heroRoster, CreatureCatalog creatures)
@@ -126,6 +130,11 @@ public static class ScenarioAssembler
             if (!map.Towns.Any(t => t.Slot == setup.Slot))
             {
                 throw new ArgumentException($"Start slot {setup.Slot} has no town on this map.", nameof(players));
+            }
+
+            if (template.TeamsLocked && setup.Team is { } team && template.Zones.Any(z => z.Owner == setup.Slot && z.Team != team))
+            {
+                throw new ArgumentException($"The template's teams are locked: start slot {setup.Slot} cannot change its team.", nameof(players));
             }
 
             if (setup.IsHuman && template.Zones.Any(z => z.Owner == setup.Slot && z.Type == ZoneType.AiStart))
@@ -155,7 +164,15 @@ public static class ScenarioAssembler
         }
     }
 
-    /// <summary>A player's start town: the player's type and ownership, the default start plus the zone's start buildings and dwellings.</summary>
+    /// <summary>Each player's team: set up, else its start zone's; a player with neither is on a team of its own, numbered past every team in use.</summary>
+    private static int[] Teams(MapTemplate template, IReadOnlyList<PlayerSetup> players)
+    {
+        var chosen = players.Select(p => p.Team ?? template.Zones.FirstOrDefault(z => z.Owner == p.Slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart)?.Team).ToList();
+        var next = chosen.OfType<int>().DefaultIfEmpty(-1).Max() + 1;
+        return chosen.Select(t => t ?? next++).ToArray();
+    }
+
+    /// <summary>A player's start town:the player's type and ownership, the default start plus the zone's start buildings and dwellings.</summary>
     private static Town StartTown(GeneratedMap map, Town town, TemplateZone zone, PlayerSetup setup, PlayerId owner, CreatureCatalog creatures, GameRandom random)
     {
         var buildings = new Dictionary<string, int>(BuiltInBuildings.DefaultStart, StringComparer.Ordinal);
