@@ -112,8 +112,12 @@ public sealed class GeneratedMap
     /// </summary>
     public Town SetTownType(Town town, string townType) => Replace(town, townType, town.Owner);
 
-    /// <summary>Like <see cref="SetTownType"/>, also giving the town its owner (scenario assembly).</summary>
-    internal Town Replace(Town town, string townType, PlayerId? owner)
+    /// <summary>
+    /// Like <see cref="SetTownType"/>, also giving the town its owner, its start buildings and dwellings (with a week of creatures waiting in them)
+    /// and a garrison (scenario assembly); null keeps the town's own.
+    /// </summary>
+    internal Town Replace(Town town, string townType, PlayerId? owner, IReadOnlyDictionary<string, int>? buildings = null,
+        IReadOnlyDictionary<string, int>? dwellings = null, IReadOnlyDictionary<string, int>? available = null, Domain.Armies.Army? garrison = null)
     {
         var at = _towns.FindIndex(t => t.Town == town);
         if (at < 0 || !BuiltInMapObjects.PlayableTowns.Contains(townType))
@@ -121,7 +125,8 @@ public sealed class GeneratedMap
             throw new ArgumentException("Not a town of this map, or not a playable town type.");
         }
 
-        var replacement = new Town(town.Id, MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(townType)), town.Position, owner, town.Name == town.Definition.Name ? null : town.Name, garrison: town.Garrison);
+        var replacement = new Town(town.Id, MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(townType)), town.Position, owner, town.Name == town.Definition.Name ? null : town.Name,
+            buildings ?? town.Buildings, dwellings ?? town.Dwellings, available ?? town.Available, garrison ?? town.Garrison);
         _objects[_objects.IndexOf(town)] = replacement;
         _towns[at] = _towns[at] with { Town = replacement };
         return replacement;

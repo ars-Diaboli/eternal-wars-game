@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Generation;
 
@@ -186,9 +187,46 @@ public static class TemplateValidator
             }
         }
 
+        StartBuildings(zone, name, isStart, error);
+
         if (zone.Type == ZoneType.Junction && (zone.PlayerTowns.Max > 0 || zone.Treasure.Count > 0))
         {
             warn($"{name} is a junction but holds towns or treasure.");
+        }
+    }
+
+    /// <summary>Start-zone buildings: known non-dwelling buildings within their levels; dwellings by tier, as many as the 7-of-9 rule allows (ADR-030).</summary>
+    private static void StartBuildings(TemplateZone zone, string name, bool isStart, Action<string> error)
+    {
+        if (!isStart && (zone.StartBuildings is { Count: > 0 } || zone.StartDwellings is { Count: > 0 }))
+        {
+            error($"{name} is not a start zone, so it has no start buildings.");
+        }
+
+        var buildings = BuildingCatalog.Default;
+        foreach (var (building, level) in zone.StartBuildings ?? new Dictionary<string, int>())
+        {
+            if (building.StartsWith("dwelling-", StringComparison.Ordinal))
+            {
+                error($"{name} lists '{building}' as a start building; dwellings go in the start dwellings (by tier).");
+            }
+            else if (!buildings.Contains(building) || level < 1 || level > buildings.MaxLevel(building))
+            {
+                error($"{name} starts with '{building}' at level {level}, which does not exist.");
+            }
+        }
+
+        var tiers = zone.StartDwellings ?? [];
+        if (tiers.Any(t => t is < 1 or > 5))
+        {
+            error($"{name} starts with a dwelling of a tier outside 1–5.");
+        }
+
+        var withTier1 = tiers.Contains(1) ? tiers : [.. tiers, 1]; // the tier-1 dwelling picked at setup
+        if (withTier1.GroupBy(t => t).Any(g => g.Count() > (g.Key == 5 ? 1 : 2))
+            || 5 - withTier1.Where(t => t is >= 1 and <= 5).Distinct().Count() > TownRules.MaxDwellings - withTier1.Count)
+        {
+            error($"{name} starts with more dwellings than a town can build (two per tier 1–4, one of tier 5, seven in all with every tier left reachable).");
         }
     }
 

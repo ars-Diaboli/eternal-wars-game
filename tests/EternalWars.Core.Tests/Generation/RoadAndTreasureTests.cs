@@ -98,7 +98,7 @@ public class RoadAndTreasureTests
         var gate = map.Objects.OfType<TwoWayGate>().Single(g => ZoneOf(map, g.VisitPosition) == start.Zone);
 
         Assert.Contains(gate.VisitPosition, RoadNetwork(map, start.Town.VisitPosition));
-        Assert.Equal(2, TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template with { Roads = new TemplateRoads { Gates = false } })).FormatVersion);
+        Assert.Equal(MapTemplate.CurrentFormatVersion, TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template with { Roads = new TemplateRoads { Gates = false } })).FormatVersion);
         Assert.False(TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template with { Roads = new TemplateRoads { Gates = false } })).Roads.Gates);
         Assert.True(TemplateSerializer.Deserialize("""{ "formatVersion": 1, "name": "Old", "zones": [] }""").Roads.Enabled); // v1 files get the defaults
     }

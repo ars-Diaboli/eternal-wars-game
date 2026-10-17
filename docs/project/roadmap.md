@@ -299,8 +299,11 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Neutral monsters: no free-roaming stacks for now (RMG-3); guards on passages, gates, mines and treasure
 - [x] Scenario assembly: players, owners, start-town types, picked or drawn start heroes, empty slots stay neutral; the
       output is a scenario `GameState` (`ScenarioAssembler`, `MapGenerator.Build`, ADR-064)
-- [ ] Scenario follow-ups: pre-built buildings, scenario defaults, problems policy, generator version ❓ RMG-5; teams ❓ RMG-6;
-      native start-zone terrain ❓ RMG-7; saving a generated game as a map (`MapConverter.ToDocument`)
+- [x] Scenario follow-ups (RMG-5, RMG-7): start-zone buildings and dwellings in the template (v3) + a tier-1 dwelling
+      picked at setup (AI random); garrisons for empty slots; HoMM3-style start armies; retry on problems with sub-seeds
+      (`GenerateBest`); standard rules; `MapGenerator.Version` in game records (v3); factions as generator input with
+      native start-zone terrain, "Random" drawn first; a generated game saves as a map and replays
+- [ ] Teams in templates ❓ RMG-6
 - [ ] Connectivity and fairness validation of the whole map ❓ RMG-8
 - [ ] Mirrored/symmetric zones for competitive templates (1.0 scope) ❓ RMG-9
 
