@@ -12,3 +12,18 @@ Recorded so far:
 Still to decide (now in open-questions.md):
 - Offense and Defense groups: the third skills (placeholders `offense.third`, `defense.third`): HERO-1.
 - Stronghold and Swamp Bestiary: what Rage and Adrenaline do (placeholder groups, ADR-063): HERO-2.
+
+offense.third - initiative bonus for troops during combat(placeholder name for now)
+defense.third - leadership (morale bonus)
+no luck related skill for now
+
+marketplace :
+basic resources - lumber/ore
+magic resources - crystal/sulfur/mercury
+initial cost value :
+when buying basic resources - 5000 gold
+when buying basic magic resources - 10000 gold
+when buying gold - 50 basic resources
+when buying gold - 100 magic resources
+formula for trade rate : (initial cost value) / min(X + 1, 10)
+X means current number of towns, town with governor counted as 1.5;
