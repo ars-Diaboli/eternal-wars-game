@@ -130,6 +130,7 @@ public partial class MapObjectsView : Node3D
         MonsterGuard monster => _context.Viewer is null && monster.Count is { } count ? $"{CreatureName(monster)} ×{count}" : CreatureName(monster),
         Core.Domain.Towns.Town town => town.Name,
         CreatureDwelling dwelling => _context.State.Creatures.TryGet(dwelling.Creature, out var dwelt) ? $"{dwelt.Name} dwelling" : dwelling.Creature,
+        Marketplace => "Marketplace",
         _ => null,
     };
 

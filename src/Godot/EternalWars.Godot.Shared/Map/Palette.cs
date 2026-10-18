@@ -67,6 +67,7 @@ public static class Palette
         MapObjectKind.Town => new Color(0.62f, 0.58f, 0.50f),
         MapObjectKind.Dwelling => new Color(0.30f, 0.62f, 0.40f),
         MapObjectKind.Artifact => new Color(0.35f, 0.75f, 0.95f),
+        MapObjectKind.Marketplace => new Color(0.85f, 0.65f, 0.20f),
         _ => Colors.Magenta,
     };
 

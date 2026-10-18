@@ -104,6 +104,13 @@ These are enforced by:
   changes (also when a hero joins the game or the editor edits it). `ArtifactService` runs equip, unequip, give, pickups
   and loot; `ArtifactPickup` objects roll their artifact at game start.
 
+### Marketplace (ADR-067)
+- `MarketplaceRules` (Economy) computes the rates from the player's marketplace towns (in half towns, a governed town counts
+  1.5) or the map marketplace's fixed X = 4. `TradeResourceCommand` → `EconomyService.Trade` validates (a marketplace town,
+  or one of the player's heroes on a `Marketplace` map object), moves the gold and the resource, and publishes
+  `ResourcesChanged` and `ResourcesTraded`. The UI (`MarketplacePanel`) opens from a HUD button, the town screen, or
+  `MapObjectVisited` of a marketplace; the AI does not trade.
+
 ### Tavern (ADR-060)
 - `TavernRules` (Towns) decides who a tavern offers (ranks on the lore ring, a per-player weekly shuffle of the roster
   with no stored state) and whether a hire is allowed; `TownService.HireHero` creates the hero. The tavern is a building
@@ -142,6 +149,11 @@ These are enforced by:
 - Morale is rolled per stack when a round starts (`BattleUnit.RoundMorale`: extra action, lost turn, ±50 % initiative
   via `BattleState.InitiativeOf`), luck per hit (`HitModifiers.Luck`); values come from `BattleState.MoraleOf` /
   `LuckOf` (creature + hero, ADR-053). Nothing is rolled at 0, so the random sequence of other battles is unchanged.
+- Leadership and Alertness (ADR-067) feed `Hero.TotalMorale` and `HeroBattleBonuses.InitiativePercent` (read by
+  `BattleState.InitiativeOf`). Stronghold's Primal Fury also lives in the battle: `BattleUnit.RageAttack` (Blood Rage,
+  added in `DamageCalculator`), warcries as `BattleWarcryCommand` → `BattleService.UseWarcry` → `BattleEngine.UseWarcry`
+  (timed `BattleSideEffect`s on `BattleState` that `MoraleOf` / `InitiativeOf` add up; Terror sets
+  `BattleUnit.LosesNextAction`); `BattleAi` uses them for computer heroes. Rules live in `PrimalFury`.
 - War machines are `BattleUnit`s with `Machine` set (ADR-056): speed 0, no melee or retaliation, no morale; only the
   offensive one is queued; the tent heals at round start; `BattleState.LivingArmyOf` (creatures only) decides the end.
 - `BattleTargeting.ActionAt` maps a pointed cell to the action a click performs (shoot, melee from the pointer's

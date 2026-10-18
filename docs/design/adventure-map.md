@@ -68,6 +68,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Map dwelling | Flagged, recruits one creature, supplies caravans | implemented (ADR-054) |
 | Neutral monster | Fights, joins or flees | implemented (ADR-040) |
 | Gates | Teleport (see below) | implemented |
+| Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
 | Shrines and other visitables | – | planned ❓ |
 
 - **Treasure chests roll their reward** (seeded game RNG): 1000/1500/2000 gold *or* 500/1000/1500 XP, the three tiers

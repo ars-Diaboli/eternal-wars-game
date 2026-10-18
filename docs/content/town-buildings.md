@@ -50,7 +50,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Town Hall | gold income: 500 / 1000 / 2000 a day | ✅ |
 | Fort | Fort: needed for every dwelling; Citadel: town dwellings grow +50 % (bonus rounded down); Castle: +100 % (`TownRules.WeeklyGrowth`). Sieges: Fort = town wall and gate, Citadel adds a keep, Castle towers and stronger walls (ADR-066) | ✅ dwellings, growth; ⏳ fortifications (sieges post-1.0) |
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
-| Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading resources | ✅ silo; ⏳ trading ❓ |
+| Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading gold against resources, rates by the number of marketplace towns (ADR-067, [towns-and-economy.md](../design/towns-and-economy.md#marketplace-implemented-adr-067)) | ✅ silo and trading |
 | Mage Guild | spells of its level (ADR-047); level 4 is a placeholder | ⏳ magic (Phase 5) |
 | Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060) | ✅ |
 | Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054); cost and requirement are placeholders | ✅ |
@@ -227,7 +227,7 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 ## Open
 
-- Marketplace trading and the mage guild ([TOWN-3](../project/open-questions.md#towns-and-economy)). The fort's
+- Marketplace trading details ([TOWN-2](../project/open-questions.md#town-2)) and the mage guild ([TOWN-3](../project/open-questions.md#towns-and-economy)). The fort's
   fortifications only take effect with sieges (post-1.0, ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
 - Per-town buildings: all towns share one list for now.

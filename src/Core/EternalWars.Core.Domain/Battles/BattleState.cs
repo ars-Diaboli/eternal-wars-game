@@ -69,6 +69,12 @@ public sealed class BattleUnit
     /// <summary>What this round's morale roll did (ADR-053); an extra action turns into None once taken.</summary>
     public MoraleEffect RoundMorale { get; internal set; }
 
+    /// <summary>Attack gained from kills with Blood Rage, for the rest of the battle (ADR-067).</summary>
+    public int RageAttack { get; internal set; }
+
+    /// <summary>Terror (ADR-067): the unit's next action is lost.</summary>
+    public bool LosesNextAction { get; internal set; }
+
     public override string ToString() => $"#{Id} {Count}× {Creature.Name} ({Side}) at {Position}";
 }
 
@@ -183,8 +189,37 @@ public sealed class BattleState
         return unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0);
     }
 
-    /// <summary>Creature morale plus the hero's, within ±5 (ADR-053); war machines have none.</summary>
-    public int MoraleOf(BattleUnit unit) => unit.IsMachine ? 0 : MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale);
+    /// <summary>Warcry effects still running, from <see cref="Round"/> on (ADR-067).</summary>
+    internal List<BattleSideEffect> SideEffects { get; } = [];
+
+    /// <summary>Warcries a side has used; each works once per battle.</summary>
+    internal HashSet<(BattleSide Side, Warcry Warcry)> UsedWarcries { get; } = [];
+
+    /// <summary>The round a side last used a warcry in; a side uses at most one a round.</summary>
+    internal Dictionary<BattleSide, int> WarcryRounds { get; } = [];
+
+    /// <summary>Why the side cannot use the warcry now (not known, used before, or one already this round), or null (ADR-067).</summary>
+    public string? WarcryRefusal(BattleSide side, Warcry warcry)
+    {
+        if (!PrimalFury.Knows(Participant(side).Bonus.Warcry, warcry))
+        {
+            return $"The hero does not know {warcry}.";
+        }
+
+        if (UsedWarcries.Contains((side, warcry)))
+        {
+            return $"{warcry} was already used in this battle.";
+        }
+
+        return WarcryRounds.TryGetValue(side, out var round) && round == Round ? "Only one warcry a round." : null;
+    }
+
+    private IEnumerable<BattleSideEffect> ActiveEffects(BattleSide side) => SideEffects.Where(e => e.Side == side && e.UntilRound >= Round);
+
+    /// <summary>Creature morale plus the hero's and warcries', within ±5 (ADR-053, ADR-067); war machines have none.</summary>
+    public int MoraleOf(BattleUnit unit) => unit.IsMachine
+        ? 0
+        : MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale + ActiveEffects(unit.Side).Sum(e => e.Morale));
 
     /// <summary>Living creature stacks of a side; war machines do not keep a side in the battle (ADR-056).</summary>
     public IEnumerable<BattleUnit> LivingArmyOf(BattleSide side) => LivingUnitsOf(side).Where(u => !u.IsMachine);
@@ -200,8 +235,17 @@ public sealed class BattleState
     /// <summary>Creature luck plus the hero's, within ±5 (ADR-053).</summary>
     public int LuckOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Luck + Participant(unit.Side).Bonus.Luck);
 
-    /// <summary>Initiative for this round's order, after morale's Haste or Slow.</summary>
-    public int InitiativeOf(BattleUnit unit) => MoraleAndLuck.Initiative(unit.Creature.Initiative, unit.RoundMorale);
+    /// <summary>
+    /// Initiative for this round's order: the creature's, changed by the hero's Alertness and warcries (percent), then by morale's Haste or
+    /// Slow (ADR-053, ADR-067).
+    /// </summary>
+    public int InitiativeOf(BattleUnit unit)
+    {
+        var percent = unit.IsMachine ? 0 : Participant(unit.Side).Bonus.InitiativePercent + ActiveEffects(unit.Side).Sum(e => e.InitiativePercent);
+        // Rounded to the nearest whole point (halves up), so a +5 % bonus helps from an initiative of 10.
+        var initiative = percent == 0 ? unit.Creature.Initiative : Math.Max(1, ((unit.Creature.Initiative * (100 + percent)) + 50) / 100);
+        return MoraleAndLuck.Initiative(initiative, unit.RoundMorale);
+    }
 
     public BattleUnit GetUnit(int id) => _units.First(u => u.Id == id);
 

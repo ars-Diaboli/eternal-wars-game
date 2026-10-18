@@ -61,6 +61,7 @@ public abstract class MapObject
         MapObjectKind.Town => new Towns.Town(id, definition, position),
         MapObjectKind.Artifact => new ArtifactPickup(id, definition, position),
         MapObjectKind.Dwelling => new CreatureDwelling(id, definition, position),
+        MapObjectKind.Marketplace => new Marketplace(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }
@@ -166,6 +167,13 @@ public sealed class CreatureDwelling(
 
     public int? Available { get; internal set; } = available;
 }
+
+/// <summary>
+/// A marketplace on the adventure map (ADR-067). It has no owner and no per-instance state: a hero on its entrance lets its
+/// owner trade at a fixed rate (<see cref="Economy.MarketplaceRules.MapRate"/>), whatever towns the player has.
+/// </summary>
+public sealed class Marketplace(MapObjectId id, MapObjectDefinition definition, MapPosition position)
+    : MapObject(id, definition, position, MapObjectKind.Marketplace);
 
 /// <summary>How a neutral stack reacts to a hero (HoMM3 dispositions, deterministic thresholds, ADR-040).</summary>
 public enum GuardDisposition

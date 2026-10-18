@@ -8,36 +8,8 @@ Recorded so far:
 - Treasury and Prospecting: ADR-062 (2026-10-17). Caravans and map dwellings: ADR-054 (2026-10-17).
 - Stewardship and governors, starting resources (complexity), Ballistics against fortifications, six magic schools with
   attunement and mana, faction groups for Stronghold and Swamp Bestiary: ADR-063 (2026-10-17).
+- Marketplace rates, Leadership, the defense initiative skill, the Stronghold Primal Fury group: ADR-067 (2026-10-18).
 
 Still to decide (now in open-questions.md):
-- Offense and Defense groups: the third skills (placeholders `offense.third`, `defense.third`): HERO-1.
-- Stronghold and Swamp Bestiary: what Rage and Adrenaline do (placeholder groups, ADR-063): HERO-2.
-
------------------------
-
-Stronghold : introduce primal fury(still placeholder name) skill group special to this faction
-skills in the group : 
-Blood rage(mechanics very close to homm5 stronghold faction), 
-warcry(instead of spells in othe magic schools from other factions) - various bufs/debufs in combat
-spell resistance(different to one in defensive group) - reduces enemy hero spell power
-level distribution in the group 4,3,3
-
------------------------
-offense.third - leadership (morale bonus)
-defense.third - initiative bonus for troops during combat (put placeholder name for now)
-no luck related skill for now
------------------------
-marketplace :
-
-basic resources - lumber/ore
-magic resources - crystal/sulfur/mercury
-initial cost value :
-when buying basic resources - 5000 gold
-when buying basic magic resources - 10000 gold
-formula for trade rate : (initial cost value) / min(X + 1, 10)
-X means current number of towns, town with governor counted as 1.5;
-
-when selling resources for gold - 12.5 basic resources 
-when selling resources for gold - 25 magic resources
-formula for trade rate : (initial cost value) * min(X + 1, 10) rounded down
-X means current number of towns, town with governor counted as 1.5;
+- Swamp Bestiary: what Adrenaline does (placeholder group, ADR-063): HERO-2.
+- Marketplace details: rounding, who may trade, the buy / sell spread (ADR-067): TOWN-2.

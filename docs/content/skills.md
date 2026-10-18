@@ -46,7 +46,7 @@ Each level-up raises one stat by 1 (`StatGrowth`, ADR-055):
 | Warrior | 35 / 45 / 10 / 10 % | 30 / 30 / 20 / 20 % |
 | Mage | 10 / 10 / 40 / 40 % | 20 / 20 / 30 / 30 % |
 
-Morale and luck (−5…+5) are hero values too (ADR-053); no skill changes them yet ❓.
+Morale and luck (−5…+5) are hero values too (ADR-053); Leadership raises morale (ADR-067), no skill changes luck for now.
 
 ## General groups
 
@@ -56,7 +56,7 @@ Morale and luck (−5…+5) are hero values too (ADR-053); no skill changes them
 |---|---|---|---|---|---|---|---|
 | Melee | `offense.melee` | Master | +10 % melee damage | +20 % | +30 % | +40 % | ✅ |
 | Archery | `offense.archery` | Expert | +10 % ranged damage | +25 % | +50 % | – | ✅ |
-| *(third skill)* | `offense.third` | Expert | no effect | | | – | ❓ placeholder |
+| Leadership | `offense.third` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ (ADR-067; the id still reads "third") |
 
 ### Defense (`defense`)
 
@@ -64,7 +64,7 @@ Morale and luck (−5…+5) are hero values too (ADR-053); no skill changes them
 |---|---|---|---|---|---|---|---|
 | Armor | `defense.armor` | Master | −5 % damage taken | −10 % | −15 % | −20 % | ✅ |
 | Spell resistance | `defense.resistance` | Expert | resists hostile spells | | | – | ⏳ magic |
-| *(third skill)* | `defense.third` | Expert | no effect | | | – | ❓ placeholder |
+| Alertness (working title) | `defense.third` | Expert | +5 % initiative to all own stacks in battle (rounded to the nearest point) | +10 % | +15 % | – | ✅ (ADR-067) |
 
 ### Estates (`estates`)
 
@@ -80,7 +80,8 @@ uses the game RNG. Treasury interest is paid on the gold the player holds at the
 
 Stewardship works only in a town with a **governor**: a hero appointed with `AppointGovernorCommand` (one town per hero), or a
 visiting hero with the skill in a town that has none. It also applies to recruiting at map dwellings (the hero's own level) and to caravans of a
-governed town (ADR-054), and a governed town values resources at 150 % in the marketplace (not built yet).
+governed town (ADR-054). A governed town counts 1.5 instead of 1 towards the marketplace rates (ADR-067; this
+replaces the former 150 % value).
 
 ### Pathfinding (`pathfinding`)
 
@@ -153,9 +154,26 @@ at least 25 % of its base, rounded up.
 
 ## Faction groups
 
-Stronghold (**Rage**, `rage`) and Swamp Bestiary (**Adrenaline**, `adrenaline`) have no magic school. Their groups have three
-placeholder skills each (`rage.first` Master, `rage.second` and `rage.third` Expert; the same for `adrenaline`) with no effect
-yet ❓: rage / adrenaline stacks or other faction abilities are to be designed. Only heroes of the town are offered them.
+Stronghold (**Primal Fury**, working title, id `rage`) and Swamp Bestiary (**Adrenaline**, `adrenaline`) have no magic
+school. Only heroes of the town are offered their group. Skills are 4 + 3 + 3 points. Primal Fury is built (ADR-067): its ids stay
+`rage.first`, `rage.second` and `rage.third`; the Adrenaline group still has three effect-less placeholder skills (`adrenaline.first` Master,
+`adrenaline.second` and `adrenaline.third` Expert).
+
+### Primal Fury (Stronghold, ADR-067, draft numbers)
+
+| Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
+|---|---|---|---|---|---|---|---|
+| Blood Rage (4 points) | `rage.first` | Master | an own stack that kills a creature in an attack gets +1 Attack, up to +2 until the battle ends | up to +4 | up to +6 | up to +8 | ✅ |
+| Warcry (3 points) | `rage.second` | Expert | Rally: own stacks +1 morale, 3 rounds | + Intimidate: enemy stacks −1 morale, −20 % initiative, 2 rounds | + Terror: each enemy stack loses its next action with 30 % | – | ✅ |
+| Spell resistance (3 points) | `rage.third` | Expert | the enemy hero's spells have −2 Spell Power | −4 | −6 | – | ⏳ data only, needs casting (Phase 5) |
+
+Warcries cost no mana (a Stronghold mage has no school): one warcry a round, each once per battle. A warcry is a free action of the hero:
+the player may use it whenever one of their units is up, and it does not use that unit's action (MAG-4 still decides spells). The faction's spell resistance is not the Defense skill of that name. Rally and Intimidate count from the round after the one they were used in; Terror takes effect at once. The Shamanism drafts in
+[spells.md](spells.md) are the source of the warcries.
+
+### Adrenaline (Swamp Bestiary)
+
+Placeholder skills, no effect yet ❓: adrenaline stacks or other faction abilities are still to be designed (HERO-2).
 
 ## Specialties
 
@@ -169,8 +187,7 @@ Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)
 
 ## Open
 
-- The third offense and defense skills ([open questions](../project/open-questions.md), [ideas](../project/ideas.md)).
 - What skill specialties do.
-- Which skills raise morale and luck.
-- The Rage and Adrenaline mechanics.
+- A luck skill (none for now).
+- The Adrenaline mechanics; the final name Primal Fury; Leadership and Alertness numbers are placeholders.
 - Sieges themselves (Ballistics numbers are placeholders).

@@ -54,6 +54,7 @@ public partial class Main : Node3D
     private TownPanel _townScreen = null!;
     private HeroPanel _heroScreen = null!;
     private DwellingPanel _dwellingScreen = null!;
+    private MarketplacePanel _marketScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
@@ -116,7 +117,7 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible)
+        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible)
         {
             return; // a full-screen panel takes the input (Escape closes it)
         }
@@ -670,8 +671,32 @@ public partial class Main : Node3D
         _dwellingScreen = new DwellingPanel();
         townLayer.AddChild(_dwellingScreen);
         _dwellingScreen.Bind(_session);
+        _marketScreen = new MarketplacePanel();
+        townLayer.AddChild(_marketScreen);
+        _marketScreen.Bind(_session);
+        _townScreen.TradeRequested += () => _marketScreen.Open();
+
+        // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
+        var market = new Button { Text = "Marketplace" };
+        void RefreshMarketButton()
+        {
+            market.Disabled = !MarketplacePanel.CanOpenFromTowns(_session.State);
+            market.TooltipText = market.Disabled ? "Build a marketplace in a town to trade" : "Trade gold against resources";
+        }
+
+        market.Pressed += () => _marketScreen.Open();
+        side.AddChild(market);
+        RefreshMarketButton();
+        _game.SubscribeWhileInTree<TownBuilt>(_session.Events, _ => RefreshMarketButton());
+        _game.SubscribeWhileInTree<TownOwnerChanged>(_session.Events, _ => RefreshMarketButton());
+        _game.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => RefreshMarketButton());
         _game.SubscribeWhileInTree<MapObjectVisited>(_session.Events, e =>
         {
+            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Marketplace marketplace)
+            {
+                _marketScreen.Open(marketplace.Id);
+            }
+
             if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is CreatureDwelling dwelling)
             {
                 _dwellingScreen.Open(dwelling.Id); // flagged by now (the visit flagged it first); recruit from it here

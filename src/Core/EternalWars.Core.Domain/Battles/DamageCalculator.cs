@@ -21,7 +21,7 @@ public static class DamageCalculator
     {
         var attackerBonus = battle.Participant(attacker.Side).Bonus;
         var defenderBonus = battle.Participant(defender.Side).Bonus;
-        var attack = attacker.Creature.Attack + battle.Participant(attacker.Side).Attack
+        var attack = attacker.Creature.Attack + battle.Participant(attacker.Side).Attack + attacker.RageAttack
                      + (attackerBonus.Prefers(attacker.Creature) ? Heroes.SkillEffects.PreferredAttack : 0);
         var defense = defender.Creature.Defense + battle.Participant(defender.Side).Defense
                       + (defenderBonus.Prefers(defender.Creature) ? Heroes.SkillEffects.PreferredDefense : 0);

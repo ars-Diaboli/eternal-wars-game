@@ -117,7 +117,8 @@ public sealed class Hero(
 
     public int TotalKnowledge => Knowledge + Bonus.Knowledge;
 
-    public int TotalMorale => Morale + Bonus.Morale;
+    /// <summary>Morale: the hero's own, artifacts, and Leadership (ADR-067).</summary>
+    public int TotalMorale => Morale + Bonus.Morale + SkillEffects.LeadershipMorale(SkillLevelOf(BuiltInSkills.Leadership));
 
     public int TotalLuck => Luck + Bonus.Luck;
 

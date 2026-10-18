@@ -122,6 +122,29 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         Continue(battle);
     }
 
+    /// <summary>
+    /// The player's hero uses a warcry (ADR-067) while one of the player's units is up; it does not use up the unit's action.
+    /// </summary>
+    internal void UseWarcry(PlayerId player, Warcry warcry)
+    {
+        var battle = Current(BattlePhase.Fighting);
+        var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
+        if (Commander(unit.Side) != player)
+        {
+            throw new InvalidOperationException($"{unit.Creature.Name} is not under {player}'s command.");
+        }
+
+        if (battle.Participant(unit.Side).Hero is null)
+        {
+            throw new InvalidOperationException("Only a hero uses warcries.");
+        }
+
+        if (Engine(battle).UseWarcry(unit.Side, warcry) is { } refusal)
+        {
+            throw new InvalidOperationException(refusal);
+        }
+    }
+
     /// <summary>The player's hero leaves the battle; the army is lost and the hero leaves the map.</summary>
     internal void Retreat(PlayerId player)
     {

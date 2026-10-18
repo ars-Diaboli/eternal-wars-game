@@ -113,6 +113,9 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitDied>(events, OnDied);
         this.SubscribeWhileInTree<BattleMoraleTriggered>(events, OnMorale);
         this.SubscribeWhileInTree<BattleUnitHealed>(events, OnHealed);
+        this.SubscribeWhileInTree<BattleRageGained>(events, e => Step(null, () => Narrate($"Blood Rage: {NameOf(e.Unit)} has +{e.Attack} Attack.")));
+        this.SubscribeWhileInTree<BattleWarcryUsed>(events, e => Step(null, () => Narrate(WarcryLine(e))));
+        this.SubscribeWhileInTree<BattleUnitTerrified>(events, e => Step(null, () => Narrate($"Terror: {NameOf(e.Unit)} loses its action.")));
         this.SubscribeWhileInTree<BattleUnitWaited>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} waits.")));
         this.SubscribeWhileInTree<BattleUnitDefended>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} defends.")));
         this.SubscribeWhileInTree<BattleEnded>(events, e => Step(null, () =>
@@ -359,6 +362,14 @@ public partial class BattleView3D : Node3D
             },
             () => Narrate($"The healing tent restores {e.Healed} health to {view.Creature.Name}."));
     }
+
+    /// <summary>The log line of a warcry (ADR-067).</summary>
+    private string WarcryLine(BattleWarcryUsed e) => e.Warcry switch
+    {
+        Warcry.Rally => $"{SideName(e.Side)} rallies: +{PrimalFury.RallyMorale} morale for {PrimalFury.RallyRounds} rounds.",
+        Warcry.Intimidate => $"{SideName(e.Side)} intimidates the enemy: −1 morale, −20 % initiative for {PrimalFury.IntimidateRounds} rounds.",
+        _ => $"{SideName(e.Side)} roars a terror cry: {e.Affected.Count} enemy stack(s) will lose their next action.",
+    };
 
     /// <summary>Morale shows as a caption over the unit and a log line.</summary>
     private void OnMorale(BattleMoraleTriggered e)

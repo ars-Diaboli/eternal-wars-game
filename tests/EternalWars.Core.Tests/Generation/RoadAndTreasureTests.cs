@@ -110,6 +110,7 @@ public class RoadAndTreasureTests
         ResourcePile p => p.Amount * TreasurePlacer.GoldValue(p.Resource),
         TreasureChest c => c.FixedValues!.Gold,
         ArtifactPickup a => TreasurePlacer.ArtifactValue(a.Tier),
+        Marketplace => TreasurePlacer.MarketplaceValue,
         _ => throw new ArgumentException("Not treasure."),
     };
 
@@ -182,6 +183,46 @@ public class RoadAndTreasureTests
         Assert.All(start, power => Assert.InRange(power, 3000 * 0.4 * 0.5 * 0.7, 3000 * 0.6 * 0.5 * 1.3));
         Assert.Equal(0, TreasurePlacer.GuardValue(5000, MonsterStrength.None, startZone: false, 50));
         Assert.True(TreasurePlacer.GuardValue(5000, MonsterStrength.Strong, false, 50) > TreasurePlacer.GuardValue(5000, MonsterStrength.Weak, false, 50));
+    }
+
+    [Fact]
+    public void MapMarketplaces_ComeOnlyFromValuableBands_OnePerZoneAtMost_AndAreGuardedLikeTreasure()
+    {
+        var rich = Duel() with
+        {
+            Zones = [.. Duel().Zones.Select(z => z with { Treasure = [new TreasureBand(5000, 5000, 8)], ExtraPiles = 0, Monsters = MonsterStrength.Average })],
+        };
+        var poor = Duel() with { Zones = [.. Duel().Zones.Select(z => z with { Treasure = [new TreasureBand(500, 3999, 8)] })] };
+
+        var found = 0;
+        for (ulong seed = 1; seed <= 12; seed++)
+        {
+            var (map, treasure) = WithTreasure(rich, seed);
+            var markets = treasure.OfType<Marketplace>().ToList();
+            found += markets.Count;
+            Assert.All(markets.GroupBy(m => ZoneOf(map, m.VisitPosition)), zone => Assert.Single(zone));
+            var guards = map.Objects.OfType<MonsterGuard>().Where(g => g.Mode == GuardMode.Area).ToList();
+            Assert.All(markets, m => Assert.Contains(guards, g => Math.Max(Math.Abs(g.Position.X - m.VisitPosition.X), Math.Abs(g.Position.Y - m.VisitPosition.Y)) == 1));
+            Assert.DoesNotContain(markets, m => map.Roads.Contains(m.VisitPosition));
+
+            Assert.DoesNotContain(WithTreasure(poor, seed).Treasure, t => t is Marketplace);
+        }
+
+        Assert.True(found > 0, "No map marketplace in 12 seeds.");
+    }
+
+    [Fact]
+    public void AMarketplaceWithoutMonstersInItsZone_HasNoGuard()
+    {
+        var rich = Duel() with
+        {
+            Zones = [.. Duel().Zones.Select(z => z with { Treasure = [new TreasureBand(5000, 5000, 8)], ExtraPiles = 0, Monsters = MonsterStrength.None })],
+        };
+
+        var (map, treasure) = WithTreasure(rich, 4);
+
+        Assert.DoesNotContain(map.Objects.OfType<MonsterGuard>(), g => g.Mode == GuardMode.Area);
+        Assert.NotEmpty(treasure);
     }
 
     [Fact]

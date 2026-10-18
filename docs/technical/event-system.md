@@ -102,6 +102,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `CommandExecuted(Command)` | `GameSession` | last event of every accepted command, after it is logged and settled; the state matches `CommandLog` (autosave hooks here) |
 | `GameEnded(Winners, Reason, Date)` | `GameFlowService` | a team won (or nobody did); commands are refused from now on |
 | `ResourcesChanged(Player, Previous, Current)` | `EconomyService` | any resource change |
+| `ResourcesTraded(Player, Resource, Direction, Amount, Gold, Marketplace)` | `EconomyService` | a marketplace trade (ADR-067), just after its `ResourcesChanged`; `Marketplace` is the map marketplace used, null for the player's towns |
 | `HeroMoved(Hero, From, To, RemainingMP)` | `HeroMovementService` | each successful step (a `MoveTo` publishes one per step) |
 | `HeroTeleported(Hero, From, To)` | `MapObjectInteractionService` | a gate moved the hero |
 | `HeroMovementRestored(Hero, MP)` | `HeroMovementService` | owner's turn start |
@@ -147,6 +148,8 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `BattleUnitAttacked(Attacker, Target, Kind, Damage, Killed, RemainingCount, Luck)` | `BattleEngine` | each hit: melee, ranged, retaliation, ranged retaliation, area; `Luck` says whether luck changed the damage |
 | `BattleMoraleTriggered(Unit, Effect)` | `BattleEngine` | morale fired: haste or slow at round start, an extra action, or a lost turn |
 | `BattleUnitHealed(Unit, Healed, TopHealth)` | `BattleEngine` | the healing tent healed a stack at round start |
+| `BattleRageGained(Unit, Attack)` | `BattleEngine` | Blood Rage: a stack that killed gained +1 Attack (total `Attack`, ADR-067) |
+| `BattleWarcryUsed(Side, Warcry, Affected)` / `BattleUnitTerrified(Unit)` | `BattleEngine` | a hero's warcry (Rally, Intimidate, Terror); Terror made a stack lose its action when its turn came |
 | `BattleUnitDied(Unit)` / `BattleUnitWaited(Unit)` / `BattleUnitDefended(Unit)` | `BattleEngine` | |
 | `BattleEnded(Winner, Reason, Casualties, Experience)` | `BattleService` | before its map consequences; `DecisionResolved(BattleDecision)` comes last |
 | `ArmyChanged(Hero, Slots)` | `ArmyService` (also for `BattleService` casualties), `GuardService`, `TownService`, `MapObjectInteractionService`, editor | stacks moved, casualties, neutrals joined, recruits and upgrades in a town or at a map dwelling, editor edit |
