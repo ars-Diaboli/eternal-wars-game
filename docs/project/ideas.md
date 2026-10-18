@@ -22,9 +22,20 @@ artifact tiers : Treasure, Minor, Major, Relic, Combo
 
 adventure map objects :
 
+Campfire: gives the player between 400–600 Gold and 4–6 other resources. Disappears after the visit.
+Supply crates: gives the player 2 sets of resources between 4–6 (except Gold). Disappears after the visit.
+
 Faerie Ring: gives a visiting hero +1 to luck for the next battle.
 
+Fountain of Youth: gives visiting heroes +400 movement points until the end of the day, 
+and +1 to morale for the next battle.
+
 Gold Mine: produces +1000 Gold per day for a player when flagged.
+Sawmill: produces +2 Lumber per day for a player when flagged.
+Ore mine mil: produces +2 Ore per day for a player when flagged.
+Alchemist's Lab: produces +1 Mercury per day for a player when flagged.
+Crystal pond: produces +1 Crystal per day for a player when flagged.
+Sulfur Dune: produces +1 Sulfur per day for a player when flagged.
 
 Observatory: immediately reveals terrain within a 20-square radius around the hero.
 
