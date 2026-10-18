@@ -12,6 +12,15 @@ internal static class BattleAi
         var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
         var enemies = battle.LivingUnitsOf(unit.Side.Opponent()).ToList();
 
+        // A Stronghold hero's warcries are free: use the strongest one it still has (once a round, ADR-067).
+        foreach (var warcry in new[] { Warcry.Terror, Warcry.Intimidate, Warcry.Rally })
+        {
+            if (engine.UseWarcry(unit.Side, warcry) is null)
+            {
+                break;
+            }
+        }
+
         if (BattleGrid.CanShootNow(battle, unit))
         {
             var shot = enemies

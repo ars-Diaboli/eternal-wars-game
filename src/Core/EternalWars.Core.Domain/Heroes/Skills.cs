@@ -35,10 +35,10 @@ public static class BuiltInSkills
     // General groups ---------------------------------------------------------------------------
     public const string Melee = "offense.melee";
     public const string Archery = "offense.archery";
-    public const string OffensePlaceholder = "offense.third";
+    public const string Leadership = "offense.third";
     public const string Armor = "defense.armor";
     public const string SpellResistance = "defense.resistance";
-    public const string DefensePlaceholder = "defense.third";
+    public const string Alertness = "defense.third";
     public const string Treasury = "estates.treasury";
     public const string Prospecting = "estates.prospecting";
     public const string Stewardship = "estates.stewardship";
@@ -52,9 +52,19 @@ public static class BuiltInSkills
     public const string Healing = "machines.healing";
     public const string AmmoSupply = "machines.ammo";
 
-    // Faction groups (Stronghold and Swamp Bestiary have no magic school; mechanics undecided, ADR-063) --------
+    // Faction groups (Stronghold and Swamp Bestiary have no magic school, ADR-063) --------------------------
+    /// <summary>Stronghold's Primal Fury group (working title; the id stays <c>rage</c>, ADR-067).</summary>
     public const string RageGroup = "rage";
     public const string AdrenalineGroup = "adrenaline";
+
+    /// <summary>Primal Fury, 4 points: stacks that kill gain Attack for the rest of the battle (ADR-067).</summary>
+    public const string BloodRage = "rage.first";
+
+    /// <summary>Primal Fury, 3 points: the hero's warcries, instead of spells (ADR-067).</summary>
+    public const string Warcry = "rage.second";
+
+    /// <summary>Primal Fury, 3 points: the enemy hero's spells lose Spell Power; not the Defense skill of that name (ADR-067).</summary>
+    public const string FactionSpellResistance = "rage.third";
 
     /// <summary>Magic school names per town (working titles).</summary>
     public static IReadOnlyDictionary<string, string> Schools { get; } = new Dictionary<string, string>
@@ -67,10 +77,10 @@ public static class BuiltInSkills
         [TownIds.Dungeon] = "Shadow",
     };
 
-    /// <summary>Faction ability groups: group id per town without a magic school (placeholders, ADR-063).</summary>
+    /// <summary>Faction ability groups: group id per town without a magic school (ADR-063; Primal Fury is designed, Adrenaline is a placeholder, ADR-067).</summary>
     public static IReadOnlyDictionary<string, (string Group, string Name)> FactionGroups { get; } = new Dictionary<string, (string, string)>
     {
-        [TownIds.Stronghold] = (RageGroup, "Rage"),
+        [TownIds.Stronghold] = (RageGroup, "Primal Fury"),
         [TownIds.SwampBestiary] = (AdrenalineGroup, "Adrenaline"),
     };
 
@@ -90,10 +100,10 @@ public static class BuiltInSkills
     [
         new(Melee, "offense", "Melee", SkillLevel.Master, "+10/20/30/40 % melee damage"),
         new(Archery, "offense", "Archery", SkillLevel.Expert, "+10/25/50 % ranged damage"),
-        new(OffensePlaceholder, "offense", "(offense skill to be decided)", SkillLevel.Expert, "no effect yet"),
+        new(Leadership, "offense", "Leadership", SkillLevel.Expert, "+1/2/3 morale to every own stack"),
         new(Armor, "defense", "Armor", SkillLevel.Master, "−5/10/15/20 % damage taken"),
         new(SpellResistance, "defense", "Spell resistance", SkillLevel.Expert, "resists hostile spells (magic, Phase 5)"),
-        new(DefensePlaceholder, "defense", "(defense skill to be decided)", SkillLevel.Expert, "no effect yet"),
+        new(Alertness, "defense", "Alertness", SkillLevel.Expert, "+5/10/15 % initiative to every own stack in battle (working title)"),
         new(Treasury, "estates", "Treasury", SkillLevel.Master, "+250/500/750/1000 gold a day; Expert and Master also 0.5/1 % of the gold on hand"),
         new(Prospecting, "estates", "Prospecting", SkillLevel.Expert, "+1 lumber and ore / +2 / +2 and one of each rare resource a day; 10/20/30 % chance of +50 % from a resource pile"),
         new(Stewardship, "estates", "Stewardship", SkillLevel.Expert, "governed town only: buildings −5/10/15 %, creatures −10/15/20 % (StewardshipRules)"),
@@ -144,9 +154,17 @@ public static class BuiltInSkills
         [TownIds.SwampBestiary] = [],
     };
 
-    /// <summary>Three placeholder skills per faction group (10 points: 4 + 3 + 3); what they do is open (ADR-063).</summary>
+    /// <summary>Three skills per faction group (10 points: 4 + 3 + 3): Primal Fury is designed (ADR-067), Adrenaline still has placeholders (ADR-063).</summary>
     private static IEnumerable<SkillDefinition> FactionSkills(string group, string name)
     {
+        if (group == RageGroup)
+        {
+            yield return new(BloodRage, group, "Blood Rage", SkillLevel.Master, "a stack that kills creatures in an attack gains +1 Attack, up to +2/4/6/8, until the battle ends");
+            yield return new(Warcry, group, "Warcry", SkillLevel.Expert, "warcries in battle, no mana: Rally (own +1 morale), from Advanced Intimidate (enemy −1 morale, −20 % initiative), at Expert Terror (30 % that an enemy stack loses its next action)");
+            yield return new(FactionSpellResistance, group, "Spell resistance (faction)", SkillLevel.Expert, "the enemy hero's spells have −2/4/6 Spell Power (magic, Phase 5)");
+            yield break;
+        }
+
         yield return new($"{group}.first", group, $"{name} (first skill to be decided)", SkillLevel.Master, "no effect yet");
         yield return new($"{group}.second", group, $"{name} (second skill to be decided)", SkillLevel.Expert, "no effect yet");
         yield return new($"{group}.third", group, $"{name} (third skill to be decided)", SkillLevel.Expert, "no effect yet");
@@ -212,6 +230,12 @@ public static class SkillEffects
     public static int MapSpeedBonus(SkillLevel level) => (int)level;
 
     public static int BattleSpeedBonus(SkillLevel level) => (int)level;
+
+    /// <summary>Leadership: morale of every own stack (ADR-067).</summary>
+    public static int LeadershipMorale(SkillLevel level) => Math.Min(3, (int)level);
+
+    /// <summary>Alertness: percent initiative of every own stack in battle (ADR-067, working title).</summary>
+    public static int AlertnessInitiativePercent(SkillLevel level) => 5 * Math.Min(3, (int)level);
 
     /// <summary>Flat bonus of a hero's preferred creature line (base and upgrade): Attack, Defense, battle speed.</summary>
     public const int PreferredAttack = 2;

@@ -100,6 +100,15 @@ public sealed record AppointGovernorCommand(PlayerId Player, MapObjectId Town, H
 /// <summary>Dismisses the governor of an own town.</summary>
 public sealed record DismissGovernorCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
 
+/// <summary>
+/// Trades <paramref name="Amount"/> units of a resource against gold at a marketplace (ADR-067), in the owner's turn, with no cap and no
+/// hero needed. Without <paramref name="MapMarketplace"/> the player's marketplace towns set the rate; with it one of the player's
+/// heroes must stand on that map marketplace, which trades at a fixed rate.
+/// </summary>
+public sealed record TradeResourceCommand(
+    PlayerId Player, Economy.ResourceType Resource, Economy.TradeDirection Direction, int Amount, MapObjectId? MapMarketplace = null)
+    : GameCommand(Player);
+
 public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player);
 
 public sealed record BattleMoveCommand(PlayerId Player, CellPosition To) : GameCommand(Player);
@@ -108,6 +117,9 @@ public sealed record BattleMoveCommand(PlayerId Player, CellPosition To) : GameC
 public sealed record BattleAttackCommand(PlayerId Player, int Target, CellPosition? From = null) : GameCommand(Player);
 
 public sealed record BattleShootCommand(PlayerId Player, int Target) : GameCommand(Player);
+
+/// <summary>The player's hero uses a warcry (Stronghold, ADR-067): no mana, and the active unit keeps its action.</summary>
+public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry) : GameCommand(Player);
 
 public sealed record BattleWaitCommand(PlayerId Player) : GameCommand(Player);
 

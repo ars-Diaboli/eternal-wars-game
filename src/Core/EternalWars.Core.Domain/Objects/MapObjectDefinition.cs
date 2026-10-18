@@ -28,6 +28,9 @@ public enum MapObjectKind
 
     /// <summary>A dwelling of one creature line on the adventure map (<see cref="CreatureDwelling"/>, ADR-054).</summary>
     Dwelling,
+
+    /// <summary>A marketplace on the adventure map (<see cref="Marketplace"/>, ADR-067): a visiting hero opens trading at a fixed rate.</summary>
+    Marketplace,
 }
 
 /// <summary>

@@ -210,11 +210,67 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             var areaHit = hit with { Luck = CombineLuck(attackerLuck, s) };
             return (Unit: s, Damage: DamageCalculator.Damage(battle, attacker, s, areaHit), areaHit.Luck);
         }).ToList();
-        Apply(attacker, target, kind, DamageCalculator.Damage(battle, attacker, target, primaryHit), primaryHit.Luck);
+        var killed = Apply(attacker, target, kind, DamageCalculator.Damage(battle, attacker, target, primaryHit), primaryHit.Luck);
         foreach (var (unit, damage, luck) in damages)
         {
-            Apply(attacker, unit, BattleAttackKind.Area, damage, luck);
+            killed += Apply(attacker, unit, BattleAttackKind.Area, damage, luck);
         }
+
+        GainRage(attacker, killed);
+    }
+
+    /// <summary>Blood Rage (ADR-067): a stack that killed creatures gains +1 Attack, up to the level's limit, until the battle ends.</summary>
+    private void GainRage(BattleUnit attacker, int killed)
+    {
+        if (killed <= 0 || attacker.IsMachine || attacker.RageAttack >= PrimalFury.BloodRageMaxAttack(battle.Participant(attacker.Side).Bonus.BloodRage))
+        {
+            return;
+        }
+
+        attacker.RageAttack++;
+        events.Publish(new BattleRageGained(attacker.Id, attacker.RageAttack));
+    }
+
+    /// <summary>
+    /// A hero's warcry (ADR-067): no mana, no action of the active unit. A side uses at most one warcry a round and each warcry once per
+    /// battle; the Warcry skill level says which it knows. Null on success, else why it was refused.
+    /// </summary>
+    public string? UseWarcry(BattleSide side, Warcry warcry)
+    {
+        if (battle.WarcryRefusal(side, warcry) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var affected = new List<int>();
+        switch (warcry)
+        {
+            case Warcry.Rally:
+                battle.SideEffects.Add(new BattleSideEffect(side, PrimalFury.RallyMorale, 0, battle.Round + PrimalFury.RallyRounds));
+                affected.AddRange(battle.LivingArmyOf(side).Select(u => u.Id));
+                break;
+            case Warcry.Intimidate:
+                battle.SideEffects.Add(new BattleSideEffect(
+                    side.Opponent(), PrimalFury.IntimidateMorale, PrimalFury.IntimidateInitiativePercent, battle.Round + PrimalFury.IntimidateRounds));
+                affected.AddRange(battle.LivingArmyOf(side.Opponent()).Select(u => u.Id));
+                break;
+            default:
+                foreach (var unit in battle.LivingArmyOf(side.Opponent()).OrderBy(u => u.Id))
+                {
+                    if (battle.Random.Next(100) < PrimalFury.TerrorChancePercent)
+                    {
+                        unit.LosesNextAction = true;
+                        affected.Add(unit.Id);
+                    }
+                }
+
+                break;
+        }
+
+        battle.UsedWarcries.Add((side, warcry));
+        battle.WarcryRounds[side] = battle.Round;
+        events.Publish(new BattleWarcryUsed(side, warcry, affected));
+        return null;
     }
 
     /// <summary>+1 good luck, −1 bad luck, 0 nothing; rolls only for a unit with luck.</summary>
@@ -283,7 +339,8 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         return [];
     }
 
-    private void Apply(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int damage, HitLuck luck)
+    /// <returns>How many creatures the hit killed.</returns>
+    private int Apply(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int damage, HitLuck luck)
     {
         var before = target.Count;
         var remaining = target.TotalHealth - damage;
@@ -307,6 +364,8 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             battle.MutableWaiting.Remove(target.Id);
             events.Publish(new BattleUnitDied(target.Id));
         }
+
+        return before - target.Count;
     }
 
     /// <summary>Ends the active unit's action; with good morale rolled this round it acts once more right away (ADR-053).</summary>
@@ -366,6 +425,14 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             }
 
             unit.IsDefending = false;
+            if (unit.LosesNextAction)
+            {
+                // Terror (ADR-067): the turn passes without the unit acting.
+                unit.LosesNextAction = false;
+                events.Publish(new BattleUnitTerrified(unit.Id));
+                continue;
+            }
+
             if (unit.RoundMorale == MoraleEffect.SkipTurn)
             {
                 // Bad morale: the turn passes without the unit acting.

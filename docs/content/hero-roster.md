@@ -35,8 +35,9 @@ numbers are a draft.
 The roster follows one template in every town: the hero for the same slot (for example the warrior who prefers the
 first tier 1 line) has the same kind of specialty, the same starting skills and the same stats everywhere; only the
 town's school and creatures differ. In Stronghold and Swamp Bestiary (no school, ADR-063) "own magic" is the faction
-group's first skill (`rage.first`, `adrenaline.first`), and "a spell" / "own attunement" specialties are
-`skill rage.first` / `skill rage.second` (Adrenaline likewise).
+group's first skill (`rage.first` = Blood Rage, `adrenaline.first`), and "a spell" / "own attunement" specialties are
+`skill rage.first` / `skill rage.second` (= Warcry; Adrenaline likewise). The Stronghold group is called Primal Fury
+(working title, ADR-067); the roster table below still says "Rage" and the ids stay `rage.*`.
 
 | Slot (preferred line) | Warrior: specialty · skills · stats | Mage: specialty · skills · stats |
 |---|---|---|

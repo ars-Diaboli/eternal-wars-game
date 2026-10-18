@@ -60,3 +60,15 @@ public sealed record BattleEnded(
     BattleEndReason Reason,
     IReadOnlyList<BattleCasualty> Casualties,
     int Experience) : IEvent;
+
+/// <summary>A stack gained Attack from a kill with Blood Rage (ADR-067); <paramref name="Attack"/> is the total it has gained.</summary>
+public sealed record BattleRageGained(int Unit, int Attack) : IEvent;
+
+/// <summary>
+/// A hero used a warcry (ADR-067). <paramref name="Affected"/> are the stacks it works on: all of the side's own for Rally, all enemy stacks for
+/// Intimidate, and the enemy stacks that lost their next action for Terror.
+/// </summary>
+public sealed record BattleWarcryUsed(BattleSide Side, Warcry Warcry, IReadOnlyList<int> Affected) : IEvent;
+
+/// <summary>Terror made a stack lose its action (ADR-067); its turn passed.</summary>
+public sealed record BattleUnitTerrified(int Unit) : IEvent;

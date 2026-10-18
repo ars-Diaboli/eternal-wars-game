@@ -20,7 +20,7 @@
 | Town hall | 3 | 500 / 1000 / 2000 gold a day | implemented; a fourth level ❓ |
 | Fort | 3 | Fort: needed for every dwelling; Citadel / Castle: town dwellings grow +50 % / +100 %. Sieges: wall and gate, then keep, then towers (ADR-066) | dwellings and growth implemented; fortifications wait for sieges (post-1.0) |
 | Blacksmith | 1 | Sells the healing tent and ammo cart (ADR-056) | implemented |
-| Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading ❓ | income implemented, trading open |
+| Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading: gold against resources, rates by marketplace towns (ADR-067) | income and trading implemented (ADR-067) |
 | Mage guild | 4 | Spells by level (ADR-047, ADR-050) | built, no effect until magic (Phase 5) |
 | Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060) | implemented |
 | Caravan | 1 | Hires from map dwellings, sends troops (ADR-054); 1000 gold + 5 lumber, needs town hall 2 (placeholder) | implemented |
@@ -82,7 +82,31 @@ Map dwellings keep the creature's growth. One rule, `TownRules.WeeklyGrowth`, se
 ## Governors (implemented, ADR-063)
 A hero with Stewardship can govern one own town. With a governor, that town's buildings cost 5/10/15 % less and its
 creatures (recruiting and upgrading) 10/15/20 % less, rounded up per resource. Map dwellings use the recruiting hero's
-level, caravans the destination town's governor. A governed town will trade at 150 % once the marketplace trades.
+level, caravans the destination town's governor. A governed town counts 1.5 instead of 1 towards the marketplace rates (ADR-067, replacing the former 150 % value).
+
+## Marketplace (implemented, ADR-067)
+Gold is traded against one resource at a time. Basic resources are lumber and ore, magic resources crystal, sulfur and mercury.
+**X** is the number of the player's towns with a marketplace, a governed one counting 1.5; the factor is `min(X + 1, 10)`.
+
+| | Basic | Magic |
+|---|---|---|
+| Buy 1 unit (gold) | 5000 / factor, rounded up | 10 000 / factor, rounded up |
+| Sell 1 unit (gold) | floor(12.5 × factor) | floor(25 × factor) |
+| With one marketplace (buy / sell) | 2500 / 25 | 5000 / 50 |
+| With nine or more (buy / sell) | 500 / 125 | 1000 / 250 |
+
+There is **no trade cap**. The **player** trades, not a hero: from a button in the UI or by clicking the marketplace in a town
+(unavailable while the player has no town with a marketplace). Buying is far dearer than selling, deliberately, so trading is a way out of a shortage, not a source of income;
+a single marketplace is meant to be expensive and unfair. The AI does not trade for now.
+
+**Map marketplace**: an adventure-map object ([adventure-map.md](adventure-map.md)). A visiting hero opens the trading screen for its owner at a fixed rate, as if X were 4 (factor 5):
+
+| | Basic | Magic |
+|---|---|---|
+| Buy 1 unit (gold) | 1000 | 2000 |
+| Sell 1 unit (gold) | 62 | 125 |
+
+It works for any player, also one without a marketplace town. Open: [TOWN-2](../project/open-questions.md#town-2). [TOWN-2](../project/open-questions.md#town-2).
 
 ## Income
 Paid at the start of the owner's turn. **There is no base or placeholder income** (ADR-025): players earn only what

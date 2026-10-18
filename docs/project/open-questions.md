@@ -12,9 +12,9 @@ Phase 4's generator stages 1–6 and the scenario assembly are in. What still bl
 
 | Id | Question | Blocks |
 |---|---|---|
-| [TOWN-2](#town-2) | Marketplace trading rates | Phase 3: marketplace, governor's 150 %, AI marketplace use; treasure resource values |
-| [HERO-1](#hero-1) | Third Offense and Defense skills, skill specialties | Phase 3: skills |
-| [HERO-2](#hero-2) | Rage and Adrenaline | Phase 3: faction groups |
+| [TOWN-2](#town-2) | Marketplace trading details (rates are set, ADR-067) | Phase 3: marketplace screen, AI marketplace use |
+| [HERO-1](#hero-1) | Skill specialties | Phase 3: skills |
+| [HERO-2](#hero-2) | Adrenaline (Stronghold is set, ADR-067) | Phase 3: faction groups |
 
 ## Random maps (Phase 4)
 
@@ -46,8 +46,15 @@ randomly present connections. Keep, drop, or post-1.0?
 **TOWN-1 Growth beyond the fort.** The fort is answered (ADR-066). Which other buildings raise growth, if any?
 
 <a id="town-2"></a>
-**TOWN-2 🚧 Marketplace trading** (blocks trading and the governor's 150 %). Base rates, how they improve with owned
-marketplaces, how the governor's 150 % combines with them.
+**TOWN-2 🚧 Marketplace trading** (blocks the trading code). The rates are decided (ADR-067: base 5000 / 10000 gold to buy,
+12.5 / 25 to sell, by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; the governor's 150 % is gone).
+Also decided: no trade cap, and the player trades (no hero needed) from a UI button or by clicking a marketplace in a town.
+Also decided: no town marketplace, no trading (except at a map marketplace); the harsh single-marketplace rates are intended;
+no AI trading for now; a map marketplace trades at X = 4 when a hero visits it, cannot be flagged and does not change town rates;
+the generator places it only where the zone's treasure value is high enough, guarded like other treasure; treasure resource values
+(100 gold a unit) do not follow the new rates.
+Still open: rounding of the buy price (up, placeholder); the treasure value and band threshold at which the generator may place a map
+marketplace (placeholder: 4000).
 
 <a id="town-3"></a>
 **TOWN-3 Town hall 4, mage guild 4 cost, per-town building lists.** A fourth town hall level? Is the mage guild 4
@@ -65,13 +72,15 @@ daily)? How long may a caravan wait at a full garrison? Guards on map dwellings?
 ## Heroes
 
 <a id="hero-1"></a>
-**HERO-1 🚧 Third skills and specialties** (blocks the Phase 3 skill items). The third Offense and Defense skills
-(placeholders `offense.third`, `defense.third`); what a skill specialty adds.
+**HERO-1 🚧 Skill specialties** (blocks the Phase 3 skill items). What a skill specialty adds. The third Offense and
+Defense skills are decided (ADR-067: Leadership, and the placeholder-named Alertness); their numbers are placeholders.
 
 <a id="hero-2"></a>
-**HERO-2 🚧 Rage and Adrenaline** (blocks the faction groups). What the three skills of each group do (rage or
-adrenaline stacks, or other faction abilities); whether the Shamanism and Primal spell drafts become these abilities;
-what Spell Power and Knowledge give Stronghold and Swamp mages; the offer weights (today the own-school weights).
+**HERO-2 🚧 Adrenaline** (blocks the Swamp Bestiary group). Stronghold's Primal Fury is designed (ADR-067: Blood Rage,
+Warcry, faction spell resistance, draft numbers). Open: what the three Adrenaline skills do (stacks or other faction
+abilities) and whether the Primal spell drafts become them; what Spell Power and Knowledge give Stronghold and Swamp
+mages (Warcry has no mana); the final name Primal Fury; whether a warcry uses the hero's action (MAG-4); the offer
+weights (today the own-school weights).
 
 <a id="hero-3"></a>
 **HERO-3 Rival schools.** Level-ups use the sworn-enemy pairs from the lore, the tavern uses the ring. Keep both, or
@@ -217,7 +226,7 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
 - Skills: HoMM4-like groups, named levels, one point per level, rival schools at 5 % (ADR-048).
 - Primary stats: one point per level, HoMM3-style odds by class (ADR-055). Attack and Defense are map data (ADR-041);
   Tactics became a skill (ADR-048).
-- Magic schools: six, one per ring town; Stronghold and Swamp Bestiary have Rage and Adrenaline (ADR-063, was eight in
+- Magic schools: six, one per ring town; Stronghold and Swamp Bestiary have Primal Fury and Adrenaline (ADR-063, ADR-067, was eight in
   ADR-047); four spell and guild levels, spells upgradable twice (ADR-047); mana numbers (ADR-063).
 - Artifacts: slots, a backpack of 50, loot that does not fit is lost, most valuable first (ADR-061).
 

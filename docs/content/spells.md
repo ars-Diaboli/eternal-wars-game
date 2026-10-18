@@ -119,7 +119,7 @@ Dark-elf magic of the lightless places: cut vision, steal footing, and make the 
 
 ## Shamanism (Stronghold, faction-ability drafts)
 
-> Not a hero school any more (ADR-063): Stronghold has the Rage group. These spells are drafts to reuse as creature or faction abilities.
+> Not a hero school any more (ADR-063): Stronghold has the Primal Fury group, whose Warcry skill reuses War Cry (ADR-067). These spells are drafts to reuse as creature or faction abilities.
 
 Orc rites: no spell books, only drums, bone and ancestors, and a loud confidence that the spirits are on their side.
 

@@ -164,7 +164,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Fort: unlocks the dwellings; Citadel +50 % / Castle +100 % town growth, rounded down (ADR-066); fortifications wait
       for sieges (post-1.0)
 - [x] Guard mode per monster stack: map format v13, monster inspector control, old maps converted (ADR-065)
-- [ ] Marketplace trading: resource exchange rates that improve with the number of owned marketplaces ❓ TOWN-2
+- [x] Marketplace trading: gold against one resource, rates by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; needs a town marketplace; `TradeResourceCommand`, trading screen (HUD button, town screen; Godot part not run in the editor yet); no AI trading (ADR-067); details ❓ TOWN-2
+- [x] Map marketplace object: a visiting hero trades at the fixed X = 4 rate; map format v14, editor placement, validator; the generator places it as a treasure item where the zone's treasure value allows (ADR-067)
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
 - [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
 - [ ] Town hall level 4 (capitol-like)? ❓ TOWN-3
@@ -200,17 +201,18 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       prompt; Spell Power and Knowledge added (roster columns, map format v8, editor), effects with magic
 - [x] Stewardship and governors (ADR-063): −5/10/15 % buildings, −10/15/20 % creatures in a town with a governor
 - [x] Stewardship for map dwellings (the hero's level) and caravans (the town's governor); governor UI in the town screen
-- [ ] Marketplace trading with the governed town's 150 % (waits for trading)
+- [x] Governed towns count 1.5 in the marketplace rates, replacing the 150 % value (ADR-067)
 - [x] Treasury and Prospecting rework (ADR-062)
 - [x] Mana numbers and school attunement skills (ADR-063); casting waits for Phase 5
-- [ ] Rage and Adrenaline faction groups: design their skills (placeholders today) ❓ HERO-2
+- [x] Primal Fury (Stronghold, ADR-067): Blood Rage and Warcry in battle (BattleHud buttons, AI uses them); the faction spell resistance is data until casting (Phase 5)
+- [ ] Adrenaline (Swamp Bestiary): design its skills (placeholders today) ❓ HERO-2
 - [x] Complexity levels with starting resources (ADR-063); new-game screen option
 - [x] AI that appoints governors on purpose (ADR-059)
 - [ ] The `sim` tool picks a complexity
 - [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); needs
       sieges, post-1.0 (CMB-5)
 - [ ] Skill specialties: what a skill specialty adds ❓ HERO-1
-- [ ] Third offense and third defense skills (placeholders today) ❓ HERO-1
+- [x] Leadership (`offense.third`, +1/2/3 morale) and Alertness (`defense.third`, +5/10/15 % initiative, working title) (ADR-067)
 - [ ] Deployment: rearrange troops before battle (needs a deployment step in `BattleSetup` and UI) ❓ HERO-4
 - [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
 

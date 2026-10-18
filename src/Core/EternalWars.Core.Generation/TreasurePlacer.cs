@@ -14,6 +14,8 @@ namespace EternalWars.Core.Generation;
 /// <item>below <see cref="ArtifactThreshold"/>: a resource pile (2 in 3) or a treasure chest (1 in 3);</item>
 /// <item>from it: an artifact (1 in 2), else a chest or a pile. The artifact is the best tier the value reaches (<see cref="ArtifactValue"/>),
 /// a specific artifact of that tier, relics at most once per map.</item>
+/// <item>from <see cref="MarketplaceThreshold"/>, a chest or pile may instead be a map marketplace (ADR-067): 1 in <see cref="MarketplaceOdds"/>, at most one
+/// per zone, counted as <see cref="MarketplaceValue"/> for its guard.</item>
 /// </list>
 /// The generator fixes what an item holds (pile amounts, chest gold and experience, the artifact), so a band is what the template says. An
 /// item worth more than <see cref="GuardThreshold"/> in a zone with monsters gets a guard next to it in <see cref="GuardMode.Area"/>, so it
@@ -26,6 +28,15 @@ public static class TreasurePlacer
     public const int ArtifactThreshold = 4000;
 
     public const int GuardThreshold = 1000;
+
+    /// <summary>A map marketplace (ADR-067) can replace a chest or pile only where the draw is worth this much (placeholder).</summary>
+    public const int MarketplaceThreshold = 4000;
+
+    /// <summary>What a map marketplace counts for as treasure, for its guard (placeholder).</summary>
+    public const int MarketplaceValue = 4000;
+
+    /// <summary>One chance in this many for an item that can be one; a zone gets at most one marketplace.</summary>
+    public const int MarketplaceOdds = 4;
 
     /// <summary>The share of an item's value its guard has, before the zone's strength: 40–60 %.</summary>
     public const int GuardShareMin = 40;
@@ -90,12 +101,13 @@ public static class TreasurePlacer
             var tiles = map.Layout.Tiles(zone).Select(t => new MapPosition(t.X, t.Y, t.Level)).ToList();
             var placed = new List<MapPosition>();
             var isStart = spec.Type is ZoneType.PlayerStart or ZoneType.AiStart;
+            var marketplacePlaced = false;
             foreach (var band in spec.Treasure)
             {
                 for (var i = 0; i < band.Count; i++)
                 {
                     var value = band.MinValue + random.Next(Math.Max(0, band.MaxValue - band.MinValue) + 1);
-                    if (!Item(map, spec, tiles, placed, value, isStart, random, creatures, artifacts, relics))
+                    if (!Item(map, spec, tiles, placed, value, isStart, random, creatures, artifacts, relics, ref marketplacePlaced))
                     {
                         map.Problem($"Zone '{spec.Id}': no room for treasure {i + 1} of {band.Count} ({band.MinValue}-{band.MaxValue}).");
                         break;
@@ -106,10 +118,11 @@ public static class TreasurePlacer
     }
 
     private static bool Item(GeneratedMap map, TemplateZone spec, List<MapPosition> tiles, List<MapPosition> placed, int value, bool isStart, GameRandom random,
-        CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<string> relics)
+        CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<string> relics, ref bool marketplacePlaced)
     {
         var roll = random.Next(4);
         MapObject? item = null;
+        var guardedValue = value;
         if (value >= ArtifactThreshold && roll < 2 && PickArtifact(artifacts, value, random, relics) is { } artifact)
         {
             var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.ArtifactId(artifact.Tier));
@@ -121,6 +134,14 @@ public static class TreasurePlacer
                     relics.Add(artifact.Id);
                 }
             }
+        }
+        else if (value >= MarketplaceThreshold && !marketplacePlaced && roll >= 2 && random.Next(MarketplaceOdds) == 0
+            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), tiles, placed, random) is { } market)
+        {
+            // A map marketplace (ADR-067) is a treasure item: no owner, guarded like any item of its value.
+            item = map.Add(new Marketplace(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), market));
+            marketplacePlaced = true;
+            guardedValue = MarketplaceValue;
         }
         else if (value >= ArtifactThreshold ? roll == 2 : roll == 3)
         {
@@ -150,7 +171,7 @@ public static class TreasurePlacer
         }
 
         placed.Add(item.VisitPosition);
-        var guard = GuardValue(value, spec.Monsters, isStart, GuardShareMin + random.Next(GuardShareMax - GuardShareMin + 1));
+        var guard = GuardValue(guardedValue, spec.Monsters, isStart, GuardShareMin + random.Next(GuardShareMax - GuardShareMin + 1));
         if (guard > 0)
         {
             var near = DirectionExtensions.All.Select(item.VisitPosition.Step).Where(p => map.IsFree(p) && !map.Roads.Contains(p)).OrderBy(p => p.Y).ThenBy(p => p.X).ToList();

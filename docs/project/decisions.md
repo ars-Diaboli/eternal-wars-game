@@ -1185,3 +1185,53 @@ town). `sim maps` also fails a generated map on validator errors. Changing a tow
 - **Map dwellings are unaffected**: `CreatureDwelling` keeps the creature's growth, and caravans hire from it unchanged (ADR-054).
 - **Fortifications are data only until sieges (post-1.0)**: Fort = town wall and gate, Citadel and Castle = better fortifications (proposed HoMM3 progression: a keep, then towers and
   stronger walls; decided with sieges). No siege code yet.
+
+### ADR-067: Marketplace rates, Leadership, a defense initiative skill, the Primal Fury group (2026-10-18)
+**Status**: accepted and implemented (2026-10-18), user notes in `ideas.md`; see "Implementation" at the end. Supersedes the "150 % in a governed town" part of ADR-063; settles the Stronghold half of HERO-2
+and the third Offense and Defense skills of HERO-1 (numbers are placeholders for play-testing).
+- **Marketplace trading** (TOWN-2), gold against one resource at a time; resources are not swapped directly. Resources are **basic** (lumber, ore) and **magic** (crystal, sulfur, mercury).
+  - **X** = the player's towns **that have a marketplace**; a town with a **governor** counts **1.5**, any other 1. The factor is `min(X + 1, 10)`, so it stops growing at 9 towns.
+  - **Buying 1 unit** costs `base / min(X + 1, 10)` gold, base **5000** (basic) or **10000** (magic): 2500 / 5000 gold with one marketplace, 500 / 1000 from 9. Rounded up (placeholder).
+  - **Selling 1 unit** gives `floor(base * min(X + 1, 10))` gold, base **12.5** (basic) or **25** (magic): 25 / 50 gold with one marketplace, 125 / 250 from 9.
+  - **No trade cap**: any amount, any number of trades a day (user decision on TOWN-2).
+  - **Trading belongs to the player, not to a hero**: the player opens the trading screen from a UI button or by clicking the marketplace in a town; no hero needs to be present. It is a
+    player command (`session.Execute`, ADR-036) that publishes a past-tense event. A player who owns no town with a marketplace cannot trade (user decision), except at a map marketplace (below).
+  - **Intentionally harsh**: with a single marketplace trading is meant to be expensive and unfair (user decision); it improves as marketplace towns are added.
+  - **Map marketplace** (adventure-map object): a hero that visits it opens the trading screen for its owner, at a **fixed rate as if X were 4** (factor 5): buy 1000 gold (basic) / 2000 (magic),
+    sell 62 gold (basic, 62.5 rounded down) / 125 (magic). The rate ignores the player's towns and governors, so it is available also to a player with no marketplace. Same rules otherwise (no cap).
+    It **cannot be flagged** (no owner; any hero may visit any number of times) and does **not affect** the trading rates in towns (user decisions). Trade only while the hero stands on it.
+    Whether it is guarded is a map choice; in generated maps the zone's guard strength and the treasure value decide (below). Needs a new map object kind: map format **v14**, older maps keep
+    loading, editor placement through `MapEditorSession`, and a validator check.
+  - **Generator** (RMG): a map marketplace is a treasure item, placed only if the zone's treasure draw is valuable enough (user decision; placeholder: from the 4000 band, valued 4000), guarded by the
+    usual treasure rule (items over 1000: 40–60 % of the value × zone strength).
+  - **No AI trading for now** (user decision): the AI neither uses a town marketplace nor visits map marketplaces.
+  - The governor's flat 150 % of ADR-063 is dropped: the governor's effect is now the 1.5 weight in X. `StewardshipRules.MarketplaceValuePercent` is unused and goes when trading is built.
+  - Noted for play-testing: buying is 100 times dearer than selling with one marketplace (20 times with nine), by the owner's numbers, so trading is a last resort and a gold sink. The random-map
+    treasure values (100 gold a lumber or ore unit) do **not** follow the new rates (user decision).
+- **Third Offense skill: Leadership** (`offense.third`, Expert max): all own stacks get **+1 / +2 / +3 morale** (Basic / Advanced / Expert), within the −5…+5 limit (ADR-053).
+- **Third Defense skill, working title Alertness** (`defense.third`, Expert max): all own stacks get **+5 / +10 / +15 % initiative** in battle (ADR-009). The name is a placeholder.
+- **No luck skill for now**; no skill raises luck.
+- **Stronghold's group is Primal Fury** (working title; the code keeps the id `rage` until it is built). Points **4 + 3 + 3**:
+  - **Blood Rage** (4 points, Master): close to HoMM5's Stronghold. Draft: an own stack that kills at least one creature in an attack gets +1 Attack, up to +2 / +4 / +6 / +8 (Basic … Master)
+    until the battle ends.
+  - **Warcry** (3 points, Expert), instead of the spells other towns have: the hero uses a warcry in battle, no mana: Basic Rally (own stacks +1 morale for 3 rounds), Advanced Intimidate (enemy
+    stacks −1 morale and −20 % initiative for 2 rounds, the former `shamanism.war-cry`), Expert Terror (enemy stacks lose their next action with a 30 % chance each, once). One warcry a round,
+    each once per battle; whether it uses the hero's action is MAG-4. Draft numbers.
+  - **Spell resistance of the faction** (3 points, Expert), not the Defense skill of that name: the enemy hero's spells in a battle against this hero have **−2 / −4 / −6 Spell Power**
+    (minimum 0).
+  - The Shamanism spell drafts in [spells.md](../content/spells.md) feed the Warcry skill; the group's roster mages start with its first skill (Blood Rage) as before.
+- **Adrenaline (Swamp Bestiary) stays a placeholder group** (HERO-2).
+- **Implementation (2026-10-18)**:
+  - Trading: `MarketplaceRules` (half-town maths: buy `ceil(2·base / min(halves + 2, 20))`, sell `floor(quarters · factorHalves / 8)`), `TradeResourceCommand` (`Resource`, `Direction`, `Amount`, optional `MapMarketplace`),
+    `EconomyService.Trade`, events `ResourcesChanged` + `ResourcesTraded`. The map marketplace needs one of the player's heroes on its entrance at the moment of the trade; the visit itself is the ordinary `MapObjectVisited`.
+    `StewardshipRules.MarketplaceValuePercent` is removed. UI: `MarketplacePanel`, a "Marketplace" HUD button (disabled without a marketplace town), a button in the town screen of a town with a marketplace, and it opens by itself when a hero
+    visits a map marketplace (the Godot parts build but have not been run in the editor yet).
+  - Map object: `MapObjectKind.Marketplace`, class `Marketplace`, definition id `marketplace` (3×2 footprint like a mine), map format **v14** (`marketplace` objects; v13 and older load unchanged), editor placement works through the generic `PlaceObject`.
+  - Generator: `TreasurePlacer` may turn a chest or pile of an item worth 4000+ into a map marketplace (1 in 4, at most one per zone), guarded as a 4000-value item; `MapGenerator.Version` is 2 (seeds give other maps than version 1).
+  - Skills: `offense.third` is **Leadership** (`SkillEffects.LeadershipMorale`, in `Hero.TotalMorale`); `defense.third` is **Alertness** (`SkillEffects.AlertnessInitiativePercent`, `HeroBattleBonuses.InitiativePercent`, applied in `BattleState.InitiativeOf`
+    before morale's Haste or Slow, rounded to the nearest point so +5 % helps from an initiative of 10). The ids keep `third`.
+  - Primal Fury: group `rage` named "Primal Fury"; `rage.first` Blood Rage, `rage.second` Warcry, `rage.third` faction spell resistance. Blood Rage: `BattleUnit.RageAttack` (a stack that kills in any strike, retaliation included, gains +1 Attack up to the cap), added in
+    `DamageCalculator`. Warcries: `BattleWarcryCommand` (a battle command, accepted while one of the player's units is up, it does not use the unit's action), `BattleState.WarcryRefusal`, at most one a round and each once a battle;
+    Rally and Intimidate are timed `BattleSideEffect`s counted from the round after the one they were used in (the morale and the order of a round are set when it starts), Terror rolls 30 % per enemy creature stack at once and sets `LosesNextAction`.
+    The battle AI uses the strongest available warcry each round. The spell resistance is data (`HeroBattleBonuses.EnemySpellPowerPenalty`) until casting exists (Phase 5).
+  - Not built: Adrenaline, a luck skill, AI trading.

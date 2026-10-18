@@ -27,6 +27,8 @@ public partial class BattleHud : Control
     private readonly Button _defend = new() { Text = "Defend (D)" };
     private readonly Button _retreat = new() { Text = "Retreat (R)" };
     private readonly Button _quick = new() { Text = "Quick combat (Q)" };
+    private readonly HBoxContainer _warcries = new();
+    private readonly Dictionary<Warcry, Button> _warcryButtons = [];
     private readonly PanelContainer _result = new() { Visible = false };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
     private readonly Queue<string> _lines = new();
@@ -60,6 +62,16 @@ public partial class BattleHud : Control
         foreach (var button in new[] { _wait, _defend, _retreat, _quick })
         {
             buttons.AddChild(button);
+        }
+
+        // Stronghold heroes' warcries (ADR-067): one button each, shown while the commanding hero knows it.
+        actions.AddChild(_warcries);
+        foreach (var warcry in Enum.GetValues<Warcry>())
+        {
+            var button = new Button { Text = $"{warcry} (warcry)", Visible = false };
+            button.Pressed += () => Act(player => new BattleWarcryCommand(player, warcry));
+            _warcryButtons[warcry] = button;
+            _warcries.AddChild(button);
         }
 
         _wait.Pressed += () => Act(player => new BattleWaitCommand(player));
@@ -162,6 +174,7 @@ public partial class BattleHud : Control
         _retreat.Disabled = commander is null || battle?.ActiveUnit is not { } active || battle.Participant(active.Side).Hero is null;
         _quick.Disabled = _view.Result is not null || battle is null ||
                           (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is null;
+        RefreshWarcries(battle, commander);
 
         if (battle is null || _view.IsBusy)
         {
@@ -187,6 +200,20 @@ public partial class BattleHud : Control
         }
 
         ShowUnit(null);
+    }
+
+    /// <summary>Shows the warcries the acting side's hero knows; those already used, or a second one in a round, are disabled.</summary>
+    private void RefreshWarcries(BattleState? battle, Core.Domain.Common.PlayerId? commander)
+    {
+        var side = battle?.ActiveUnit?.Side;
+        var level = battle is not null && side is { } s ? battle.Participant(s).Bonus.Warcry : Core.Domain.Heroes.SkillLevel.None;
+        foreach (var (warcry, button) in _warcryButtons)
+        {
+            button.Visible = battle is not null && PrimalFury.Knows(level, warcry);
+            var refusal = battle is not null && side is { } own ? battle.WarcryRefusal(own, warcry) : "No battle.";
+            button.Disabled = commander is null || refusal is not null;
+            button.TooltipText = refusal ?? string.Empty;
+        }
     }
 
     private string CreatureName(string id) =>

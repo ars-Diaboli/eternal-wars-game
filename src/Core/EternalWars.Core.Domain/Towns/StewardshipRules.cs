@@ -12,9 +12,6 @@ namespace EternalWars.Core.Domain.Towns;
 /// </summary>
 public static class StewardshipRules
 {
-    /// <summary>A town with a governor values resources in the marketplace at this percentage (trading is not built yet).</summary>
-    public const int MarketplaceValuePercent = 150;
-
     public static int BuildingDiscountPercent(SkillLevel level) => 5 * (int)level;
 
     public static int CreatureDiscountPercent(SkillLevel level) => level == SkillLevel.None ? 0 : 5 + (5 * (int)level);

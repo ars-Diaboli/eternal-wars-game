@@ -69,6 +69,10 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   chest or pile. Contents are fixed by the generator (resources at 1 gold, 100 lumber/ore, 200 rare; chests the value as
   gold, 500 less as experience). Items worth more than 1000 get a guard of 40–60 % of the value × the zone's strength
   (weak 0.75, average 1, strong 1.5), half in start zones (RMG-2).
+  **Map marketplace** (ADR-067): a treasure item like an artifact, placed only where a treasure draw is valuable
+  enough (placeholder: from the 4000 band, with a value of 4000); it is guarded by the same rule (a guard from
+  items worth more than 1000, scaled by the zone's strength), so the zone's guard strength and the treasure value decide whether
+  it is guarded. It has no owner, so it needs no flag.
 - **Scenario** (RMG-5): `PlayerSetup(Slot, Name, IsHuman, TownType, Hero?, Team?, Tier1Dwelling?)` per player.
   - The factions are chosen before generation ("Random" is drawn from the seed first) and are an input of the
     generator, so each start zone is painted with a mix of its town's native terrains (RMG-7). A map generated in the

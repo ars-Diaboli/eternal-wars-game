@@ -6,8 +6,8 @@
 - **Six schools** (ADR-047, ADR-063), one for each town on the ring: Light (Haven), Nature (Sylvan), Arcana (Academy),
   Death (Necropolis), Chaos (Inferno), Shadow (Dungeon); names are working titles ❓. Each school is also a hero skill
   group; any hero may learn any school, a sworn enemy's school is rarely offered ([heroes.md](heroes.md)).
-- **Stronghold and Swamp Bestiary have no school**: they have the faction groups **Rage** and **Adrenaline** instead
-  (ADR-063), whose mechanics are open ❓. What their mage guilds offer is open ❓.
+- **Stronghold and Swamp Bestiary have no school**: they have the faction groups **Primal Fury** and **Adrenaline** instead
+  (ADR-063). Primal Fury's warcries replace spells (no mana, ADR-067); Adrenaline's mechanics are open ❓. What their mage guilds offer is open ❓.
 - **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice).
 - A school's skills: **Magic** (4 levels, unlocking spell levels), **Attunement** (4 levels: max mana, daily mana and
   spell cost by school, ADR-063), **Mastery** (2 levels: spell upgrades).

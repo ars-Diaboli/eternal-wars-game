@@ -26,7 +26,7 @@
   | Tactics | Tactics (battlefield width), Deployment (rearrange troops before battle; mechanics ❓), Drill (+1 battlefield speed per level) |
   | War machines | Ballistics (offensive machine: automatic, controlled, targets troops from Advanced; +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) (ADR-056, ADR-063) |
   | 6 magic schools (Light, Nature, Arcana, Death, Chaos, Shadow) | Magic (spell levels 1–4), Attunement (mana, regeneration, spell cost), Mastery (spell upgrades) (ADR-047, ADR-063) |
-  | Rage (Stronghold), Adrenaline (Swamp Bestiary) | Three placeholder skills each, offered only to that town's heroes; what they do is open ❓ (ADR-063) |
+  | Primal Fury (Stronghold), Adrenaline (Swamp Bestiary) | Offered only to that town's heroes. Primal Fury: Blood Rage, Warcry, faction spell resistance (designed, ADR-067); Adrenaline: placeholders, open ❓ |
 - **Levels** (implemented): HoMM3 experience table; each level gives one skill point, spent on one of **three offered
   skills**. Mages are offered their own school more often, warriors the general groups; a sworn enemy's school only in
   5 % of level-ups (ADR-048).

@@ -20,12 +20,12 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>skills</c>, replacing <c>tactics</c>) (ADR-048). 6 = + towns (<c>town</c> objects: owner, name, buildings, dwellings,
 /// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056). 10 = + victory and defeat conditions (ADR-057). 11 = + hero artifacts (worn and backpack) and artifact pickups (ADR-061). 12 = + creature dwellings (ADR-054).
 /// 13 = guard mode per monster (<c>mode</c> on monsters) instead of the map-wide <c>guardMode</c>, which v4–v12 maps still
-/// load onto every monster (ADR-065).
+/// load onto every monster (ADR-065). 14 = + map marketplaces (<c>marketplace</c> objects, ADR-067).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 13;
+    public const int CurrentFormatVersion = 14;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -143,6 +143,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(TownDocument), "town")]
 [JsonDerivedType(typeof(ArtifactPickupDocument), "artifact")]
 [JsonDerivedType(typeof(DwellingDocument), "dwelling")]
+[JsonDerivedType(typeof(MarketplaceDocument), "marketplace")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -165,6 +166,9 @@ public sealed record DwellingDocument : MapObjectDocument
 
     public int? Available { get; init; }
 }
+
+/// <summary>A marketplace on the map (v14); it has no state besides its place.</summary>
+public sealed record MarketplaceDocument : MapObjectDocument;
 
 /// <summary>An artifact on the map (v11); <see cref="Artifact"/> omitted = rolled from the definition's tier at game start.</summary>
 public sealed record ArtifactPickupDocument : MapObjectDocument

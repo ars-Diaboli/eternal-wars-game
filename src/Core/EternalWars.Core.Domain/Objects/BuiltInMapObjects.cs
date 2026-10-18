@@ -18,6 +18,9 @@ public static class BuiltInMapObjects
     /// <summary>The creature dwelling of the adventure map (ADR-054); the creature is per instance.</summary>
     public const string Dwelling = "dwelling";
 
+    /// <summary>The marketplace of the adventure map (ADR-067).</summary>
+    public const string Marketplace = "marketplace";
+
     /// <summary>Definition id of the pickup that rolls an artifact of a tier: <c>artifact.minor</c>.</summary>
     public static string ArtifactId(Artifacts.ArtifactTier tier) => $"artifact.{tier.ToString().ToLowerInvariant()}";
 
@@ -54,6 +57,7 @@ public static class BuiltInMapObjects
         new(OneWayMonolithExit, "One-way monolith exit", MapObjectKind.OneWayGateExit, MonolithFootprint),
         new(Monster, "Monster", MapObjectKind.Monster, Footprint.Single),
         new(Dwelling, "Creature dwelling", MapObjectKind.Dwelling, MineFootprint),
+        new(Marketplace, "Marketplace", MapObjectKind.Marketplace, MineFootprint),
         .. Enum.GetValues<Artifacts.ArtifactTier>().Select(t =>
             new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 

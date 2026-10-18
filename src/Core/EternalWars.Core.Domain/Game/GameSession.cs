@@ -159,7 +159,7 @@ public sealed class GameSession
 
     private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleMoveCommand
         or BattleAttackCommand or BattleShootCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand
-        or AutoResolveBattleCommand;
+        or AutoResolveBattleCommand or BattleWarcryCommand;
 
     private string? Authorize(GameCommand command)
     {
@@ -269,6 +269,9 @@ public sealed class GameSession
             case DismissGovernorCommand dismiss:
                 Towns.DismissGovernor(dismiss.Player, dismiss.Town);
                 return null;
+            case TradeResourceCommand trade:
+                Economy.Trade(trade.Player, trade.Resource, trade.Direction, trade.Amount, trade.MapMarketplace);
+                return null;
             case BuyWarMachineCommand buy:
                 Towns.BuyWarMachine(buy.Player, buy.Town, buy.Slot);
                 return null;
@@ -286,6 +289,9 @@ public sealed class GameSession
                 return null;
             case BattleShootCommand shoot:
                 Battles.Act(shoot.Player, new ShootAction(shoot.Target));
+                return null;
+            case BattleWarcryCommand warcry:
+                Battles.UseWarcry(warcry.Player, warcry.Warcry);
                 return null;
             case BattleWaitCommand wait:
                 Battles.Act(wait.Player, new WaitAction());

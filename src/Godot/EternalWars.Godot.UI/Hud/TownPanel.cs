@@ -22,6 +22,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class TownPanel : PanelContainer
 {
     private readonly Label _title = new();
+    private readonly Button _trade = new() { Text = "Marketplace", TooltipText = "Trade gold against resources" };
     private readonly HFlowContainer _buildings = new();
     private readonly GridContainer _dwellings = new() { Columns = 4 };
     private readonly VBoxContainer _armies = new();
@@ -40,6 +41,9 @@ public partial class TownPanel : PanelContainer
     public bool FullScreen { get; set; }
 
     public event Action? Closed;
+
+    /// <summary>The player asked to trade from this town's marketplace (ADR-067).</summary>
+    public event Action? TradeRequested;
 
     public void Bind(GameSession session)
     {
@@ -60,6 +64,8 @@ public partial class TownPanel : PanelContainer
         var header = new HBoxContainer();
         box.AddChild(header);
         header.AddChild(_title);
+        _trade.Pressed += () => TradeRequested?.Invoke();
+        header.AddChild(_trade);
         var close = new Button { Text = "Close" };
         close.Pressed += Close;
         header.AddChild(close);
@@ -145,6 +151,7 @@ public partial class TownPanel : PanelContainer
         Visible = true;
         var state = _session.State;
         _title.Text = $"{town.Name} ({town.TownType}), {state.CurrentPlayer.Name}   income {Cost(TownRules.DailyIncome(state, town))} a day";
+        _trade.Visible = town.Level(BuiltInBuildings.Marketplace) > 0;
 
         Clear(_buildings);
         foreach (var building in state.Buildings.TownBuildings)
