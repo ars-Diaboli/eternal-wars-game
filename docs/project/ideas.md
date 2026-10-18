@@ -39,6 +39,8 @@ Sulfur Dune: produces +1 Sulfur per day for a player when flagged.
 
 Observatory: immediately reveals terrain within a 20-square radius around the hero.
 
+Sign : Displays a custom message.
+
 Resources pile: according to its type can give:
 5-10 Wood or Ore;
 3-7 Sulfur, Mercury, Crystal;
@@ -148,7 +150,7 @@ Naga Bank: a creature bank guarded by:
 Water Wheel: gives a visiting hero 500 Gold at the first week of the first month 
 and 750 Gold at the rest of the game once per week.
 
-Windmill: gives a visiting hero 3-6 of random resource (except Wood and Gold) once a week.
+Windmill: gives a visiting hero 3-6 of random resource (except Gold) once a week.
 
 Warehouse of Wood: brings 10 Wood when visited once a week.
 Warehouse of Ore: brings 10 Ore when visited once a week.
