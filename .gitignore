@@ -26,7 +26,8 @@ bld/
 # .NET Core
 project.lock.json
 project.fragment.lock.json
-artifacts/
+# Root-anchored: an unanchored pattern also hid src/**/Artifacts/ source folders
+/artifacts/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
