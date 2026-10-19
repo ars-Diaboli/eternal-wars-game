@@ -61,7 +61,7 @@ public class HeroLimitTests
         var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
-        Assert.Equal(15, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 15);
         Assert.DoesNotContain("maxHeroes", plain, StringComparison.Ordinal);
         Assert.Contains("\"maxHeroes\": 4", json, StringComparison.Ordinal);
         Assert.Equal(4, restored.Rules.MaxHeroes);

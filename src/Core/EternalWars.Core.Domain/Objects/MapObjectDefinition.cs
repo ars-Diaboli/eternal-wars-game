@@ -31,6 +31,9 @@ public enum MapObjectKind
 
     /// <summary>A marketplace on the adventure map (<see cref="Marketplace"/>, ADR-067): a visiting hero opens trading at a fixed rate.</summary>
     Marketplace,
+
+    /// <summary>A building that hands out resources once a week (<see cref="ResourceProvider"/>, ADR-068): Water Wheel, Warehouses, Windmill, Mystical Garden.</summary>
+    ResourceProvider,
 }
 
 /// <summary>
@@ -40,7 +43,7 @@ public enum MapObjectKind
 /// </summary>
 public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind Kind, Footprint Footprint)
 {
-    /// <summary>Resource of piles and mines.</summary>
+    /// <summary>Resource of piles, mines and warehouses.</summary>
     public ResourceType? Resource { get; init; }
 
     /// <summary>Daily production of mines.</summary>
@@ -52,8 +55,14 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>Tier an artifact pickup rolls its artifact from when the map leaves it open.</summary>
     public Artifacts.ArtifactTier? ArtifactTier { get; init; }
 
-    /// <summary>How often a visit gives the object's reward (ADR-068); <see cref="VisitScope.Unlimited"/> for every kind built so far.</summary>
+    /// <summary>How often a visit gives the object's reward (ADR-068); resource providers are <see cref="VisitScope.Weekly"/>.</summary>
     public VisitScope VisitScope { get; init; }
+
+    /// <summary>What a resource provider gives (ADR-068).</summary>
+    public ProviderRule? Provider { get; init; }
+
+    /// <summary>How much of <see cref="Resource"/> a warehouse gives.</summary>
+    public int Amount { get; init; }
 
     /// <summary>Throws <see cref="FormatException"/> if kind-specific properties are missing.</summary>
     public void Validate()
@@ -76,6 +85,16 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
         if (Kind is MapObjectKind.Artifact && ArtifactTier is null)
         {
             throw new FormatException($"Artifact object '{Id}' needs an artifact tier.");
+        }
+
+        if (Kind is MapObjectKind.ResourceProvider && Provider is null)
+        {
+            throw new FormatException($"Resource provider '{Id}' needs a provider rule.");
+        }
+
+        if (Provider is ProviderRule.Warehouse && (Resource is null || Amount <= 0))
+        {
+            throw new FormatException($"Warehouse '{Id}' needs a resource and a positive amount.");
         }
 
         if (Kind is MapObjectKind.Mine && DailyYield <= 0)

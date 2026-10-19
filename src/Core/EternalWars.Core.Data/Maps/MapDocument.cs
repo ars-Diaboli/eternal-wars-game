@@ -21,12 +21,13 @@ namespace EternalWars.Core.Data.Maps;
 /// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056). 10 = + victory and defeat conditions (ADR-057). 11 = + hero artifacts (worn and backpack) and artifact pickups (ADR-061). 12 = + creature dwellings (ADR-054).
 /// 13 = guard mode per monster (<c>mode</c> on monsters) instead of the map-wide <c>guardMode</c>, which v4–v12 maps still
 /// load onto every monster (ADR-065). 14 = + map marketplaces (<c>marketplace</c> objects, ADR-067).
-/// 15 = + the most heroes a player may have (<c>rules.maxHeroes</c>, omitted = 8; ADR-068).
+/// 15 = + the most heroes a player may have (<c>rules.maxHeroes</c>, omitted = 8; ADR-068). 16 = + resource providers (<c>provider</c> objects:
+/// water wheel, warehouses, windmill, mystical garden; ADR-068).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 15;
+    public const int CurrentFormatVersion = 16;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -147,6 +148,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(ArtifactPickupDocument), "artifact")]
 [JsonDerivedType(typeof(DwellingDocument), "dwelling")]
 [JsonDerivedType(typeof(MarketplaceDocument), "marketplace")]
+[JsonDerivedType(typeof(ResourceProviderDocument), "provider")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -172,6 +174,9 @@ public sealed record DwellingDocument : MapObjectDocument
 
 /// <summary>A marketplace on the map (v14); it has no state besides its place.</summary>
 public sealed record MarketplaceDocument : MapObjectDocument;
+
+/// <summary>A resource provider (v16, ADR-068); what it gives comes from its definition, the weekly visits are game state.</summary>
+public sealed record ResourceProviderDocument : MapObjectDocument;
 
 /// <summary>An artifact on the map (v11); <see cref="Artifact"/> omitted = rolled from the definition's tier at game start.</summary>
 public sealed record ArtifactPickupDocument : MapObjectDocument

@@ -124,13 +124,14 @@ public partial class MapObjectsView : Node3D
         _nodes[known.Id] = root;
     }
 
-    /// <summary>Monsters show their creature (and, in the editor, the count), towns their name; other objects stay unlabelled.</summary>
+    /// <summary>Monsters show their creature (and, in the editor, the count), towns, dwellings and buildings their name; pickups stay unlabelled.</summary>
     private string? Caption(KnownObject known) => _context.State.FindObject(known.Id) switch
     {
         MonsterGuard monster => _context.Viewer is null && monster.Count is { } count ? $"{CreatureName(monster)} ×{count}" : CreatureName(monster),
         Core.Domain.Towns.Town town => town.Name,
         CreatureDwelling dwelling => _context.State.Creatures.TryGet(dwelling.Creature, out var dwelt) ? $"{dwelt.Name} dwelling" : dwelling.Creature,
         Marketplace => "Marketplace",
+        ResourceProvider provider => provider.Definition.Name,
         _ => null,
     };
 

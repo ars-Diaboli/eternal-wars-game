@@ -52,6 +52,14 @@ public partial class DecisionPanel : PanelContainer
                 Button("Gold", new ResolveTreasureChestCommand(player, TreasureChestReward.Gold));
                 Button("Experience", new ResolveTreasureChestCommand(player, TreasureChestReward.Experience));
                 break;
+            case ResourceChoiceDecision choice:
+                _prompt.Text = $"{state.GetObject(choice.Provider).Definition.Name}: take one.";
+                for (var i = 0; i < choice.Options.Count; i++)
+                {
+                    Button(Core.Domain.Objects.ResourceProviderRules.Describe(choice.Options[i]), new ChooseResourceRewardCommand(player, i));
+                }
+
+                break;
             case HeroExchangeDecision:
                 Visible = false; // ExchangePanel handles it
                 break;

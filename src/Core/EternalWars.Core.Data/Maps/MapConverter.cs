@@ -275,6 +275,10 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
             },
+            ResourceProvider => new ResourceProviderDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
             ArtifactPickup pickup => new ArtifactPickupDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Artifact = pickup.Artifact,
@@ -341,6 +345,7 @@ public static class MapConverter
                 DwellingDocument dwelling => new CreatureDwelling(
                     id, definition, position, dwelling.Creature, dwelling.Owner is { } dwellingOwner ? new PlayerId(dwellingOwner) : null, dwelling.Available),
                 MarketplaceDocument => new Marketplace(id, definition, position),
+                ResourceProviderDocument => new ResourceProvider(id, definition, position),
                 ArtifactPickupDocument artifact => new ArtifactPickup(id, definition, position, artifact.Artifact),
                 TreasureChestDocument { Gold: { } gold, Experience: { } experience } => new TreasureChest(id, definition, position, new ChestValues(gold, experience)),
                 TreasureChestDocument { Gold: null, Experience: null } => new TreasureChest(id, definition, position),

@@ -1276,3 +1276,17 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
     warns when a player starts with more heroes than the limit (assumed: allowed, it only stops hiring); template format **v5** (`maxHeroes`,
     validated 1–8); `ScenarioAssembler`, `MapGenerator.Build` and `EditorMapGenerator.Generate` take an optional `maxHeroes` override. Assumed until
     MAP-14: one limit for every player.
+- **Implementation (2026-10-19), step 3: resource providers**:
+  - One object kind `ResourceProvider` (2×2, entrance bottom right), every definition `Weekly`; the definition's `Provider` rule (WaterWheel,
+    Warehouse, Windmill, MysticalGarden) plus `Resource` and `Amount` for warehouses say what it gives (`ResourceProviderRules.Roll`). Built-in ids
+    `provider.water-wheel`, `provider.windmill`, `provider.mystical-garden`, `warehouse.<resource>` (lumber and ore 8, magic 5, gold 2000).
+  - Water Wheel: 500 gold in the game's first week (`AbsoluteWeek` 1), 1000 later. Windmill: 3–6 of one of the five non-gold resources, evenly.
+    Mystical Garden: even odds of 500 gold or 5 of one magic resource, no choice.
+  - Warehouses of a resource other than gold offer it or 500 gold as a `ResourceChoiceDecision`, answered with `ChooseResourceRewardCommand`
+    (replay name `resourceReward`); the week is taken when the visitor chooses. That the visitor chooses is the design doc's reading of the notes.
+  - Events `ResourcesFound` (paid out) and `MapObjectFoundEmpty` (already taken). Map format **v16** (`provider` objects, no per-instance data;
+    the weekly log is game state). Editor placement through the generic `PlaceObject`; the Godot views label them; the decision panel shows the
+    warehouse choice (not run in Godot yet).
+  - AI: visits a provider it may collect from, valued by its resource values (Windmill and Garden at their average), and takes the more valuable
+    warehouse option. Not yet: the random map generator does not place providers.
+

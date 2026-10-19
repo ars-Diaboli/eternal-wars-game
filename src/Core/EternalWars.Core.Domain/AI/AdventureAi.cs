@@ -160,6 +160,11 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             {
                 case null:
                     return true;
+                case ResourceChoiceDecision choice:
+                    // The option worth the most by the AI's resource values (a warehouse: its resource or the gold).
+                    var best = Enumerable.Range(0, choice.Options.Count).MaxBy(i => Value(choice.Options[i]));
+                    command = new ChooseResourceRewardCommand(player, best);
+                    break;
                 case TreasureChestDecision chest:
                     var hero = _state.GetHero(chest.Hero);
                     var levels = ExperienceTable.LevelFor(hero.Experience + chest.Experience) > hero.Level;
@@ -714,6 +719,18 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     private IEnumerable<MonsterGuard> GuardsToBeat(MapPosition position, bool pickup) =>
         _state.GuardsOf(position).Where(m => !pickup || m.Mode == GuardMode.Area);
 
+    private static double Value(ResourceSet resources) => Enum.GetValues<ResourceType>().Sum(r => GoldValue(r, resources[r]));
+
+    /// <summary>What a visit to a resource provider is worth on average, without rolling (the roll happens on the visit).</summary>
+    private double ProviderValue(ResourceProvider provider) => provider.Rule switch
+    {
+        ProviderRule.WaterWheel => _state.Date.AbsoluteWeek == 1 ? ResourceProviderRules.WaterWheelFirstWeek : ResourceProviderRules.WaterWheelGold,
+        ProviderRule.Warehouse => Math.Max(GoldValue(provider.Definition.Resource!.Value, provider.Definition.Amount),
+            provider.Definition.Resource == ResourceType.Gold ? 0 : ResourceProviderRules.WarehouseGold),
+        ProviderRule.Windmill => 4.5 * ((2 * GoldValue(ResourceType.Ore, 1)) + (3 * GoldValue(ResourceType.Crystal, 1))) / 5,
+        _ => (ResourceProviderRules.GardenGold + GoldValue(ResourceType.Crystal, ResourceProviderRules.GardenMagic)) / 2,
+    };
+
     private static double GoldValue(ResourceType resource, int amount) => amount * resource switch
     {
         ResourceType.Gold => 1,
@@ -805,6 +822,9 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     break;
                 case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit, pickup: true)):
                     yield return new(visit, 800 + (80 * Score(found)), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
+                    break;
+                case ResourceProvider provider when provider.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    yield return new(visit, ProviderValue(provider), GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case TreasureChest when Plausible(GuardPower(visit, pickup: true)):
                     yield return new(visit, 1500, GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);

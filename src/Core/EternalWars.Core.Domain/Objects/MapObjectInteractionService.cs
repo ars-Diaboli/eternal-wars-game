@@ -44,6 +44,25 @@ public sealed class MapObjectInteractionService(
         }
     }
 
+    /// <summary>The visitor of a warehouse takes one of the offered options (ADR-068).</summary>
+    internal void ResolveResourceChoice(int option)
+    {
+        if (state.PendingDecision is not ResourceChoiceDecision decision)
+        {
+            throw new InvalidOperationException("No resource choice is pending.");
+        }
+
+        if (option < 0 || option >= decision.Options.Count)
+        {
+            throw new InvalidOperationException($"Option {option} is not offered.");
+        }
+
+        state.PendingDecision = null;
+        var hero = state.GetHero(decision.Hero);
+        GiveResources(hero, state.GetObject(decision.Provider), decision.Options[option]);
+        events.Publish(new DecisionResolved(decision));
+    }
+
     /// <summary>
     /// Takes the reward of an object with a limited <see cref="VisitScope"/> for the hero (ADR-068): false when the hero may not collect now,
     /// else the visit is recorded and <see cref="MapObjectCollected"/> published, before the caller hands out the reward.
@@ -92,6 +111,26 @@ public sealed class MapObjectInteractionService(
 
             case MonsterGuard monster:
                 guards.Encounter(hero, monster);
+                break;
+
+            case ResourceProvider provider when !provider.CanCollect(hero.Id, state.Date):
+                events.Publish(new MapObjectFoundEmpty(hero.Id, provider.Id));
+                break;
+
+            case ResourceProvider provider:
+                var options = ResourceProviderRules.Roll(provider.Definition, state.Date, state.Random);
+                if (options.Count == 1)
+                {
+                    GiveResources(hero, provider, options[0]);
+                }
+                else
+                {
+                    // The week's reward is taken only once the visitor chooses (the decision blocks everything else meanwhile).
+                    var choice = new ResourceChoiceDecision(hero.Id, provider.Id, options);
+                    state.PendingDecision = choice;
+                    events.Publish(new DecisionRequested(choice));
+                }
+
                 break;
 
             case CreatureDwelling dwelling when dwelling.Owner != hero.Owner:
@@ -198,6 +237,13 @@ public sealed class MapObjectInteractionService(
     {
         events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
         battles.BeginHeroBattle(attacker, defender, isAmbush);
+    }
+
+    private void GiveResources(Hero hero, MapObject provider, ResourceSet resources)
+    {
+        TryCollect(hero, provider);
+        economy.Grant(hero.Owner, resources);
+        events.Publish(new ResourcesFound(hero.Id, provider.Id, resources));
     }
 
     private void RemoveFromMap(MapObject mapObject)
