@@ -13,6 +13,12 @@ public sealed record MapObjectVisited(HeroId Hero, MapObjectId Object) : IEvent;
 /// </summary>
 public sealed record MapObjectCollected(HeroId Hero, MapObjectId Object) : IEvent;
 
+/// <summary>A hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068).</summary>
+public sealed record MapObjectFoundEmpty(HeroId Hero, MapObjectId Object) : IEvent;
+
+/// <summary>A hero received resources from a resource provider (ADR-068); <see cref="ResourcesChanged"/> came just before.</summary>
+public sealed record ResourcesFound(HeroId Hero, MapObjectId Object, ResourceSet Resources) : IEvent;
+
 public sealed record ResourcePileCollected(HeroId Hero, MapObjectId Object, ResourceType Resource, int Amount) : IEvent;
 
 public sealed record MineOwnerChanged(MapObjectId Mine, PlayerId? Previous, PlayerId? Current) : IEvent;

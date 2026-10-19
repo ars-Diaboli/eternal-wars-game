@@ -16,6 +16,18 @@ public enum TreasureChestReward
 
 public sealed record TreasureChestDecision(HeroId Hero, MapObjectId Chest, int Gold, int Experience) : PendingDecision(Hero);
 
+/// <summary>A warehouse offers the visitor its resource or gold (ADR-068): <c>ChooseResourceRewardCommand</c> picks one of <paramref name="Options"/>.</summary>
+public sealed record ResourceChoiceDecision(HeroId Hero, MapObjectId Provider, IReadOnlyList<Economy.ResourceSet> Options) : PendingDecision(Hero)
+{
+    // Records compare lists by reference; two decisions with the same options are equal.
+    public bool Equals(ResourceChoiceDecision? other) =>
+        other is not null && Hero == other.Hero && Provider == other.Provider && Options.SequenceEqual(other.Options);
+
+    public override int GetHashCode() => HashCode.Combine(Hero, Provider, Options.Count);
+
+    public override string ToString() => $"ResourceChoiceDecision {{ Hero = {Hero}, Provider = {Provider}, Options = {string.Join(" | ", Options)} }}";
+}
+
 /// <summary>
 /// Two own heroes met: the exchange screen is open. Stacks move with <c>MoveStackCommand</c> while it is
 /// open (artifacts in Phase 3); closing the screen resolves the decision.

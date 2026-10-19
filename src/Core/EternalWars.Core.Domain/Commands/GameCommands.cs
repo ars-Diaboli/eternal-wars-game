@@ -26,6 +26,9 @@ public sealed record EndTurnCommand(PlayerId Player) : GameCommand(Player);
 
 public sealed record ResolveTreasureChestCommand(PlayerId Player, TreasureChestReward Reward) : GameCommand(Player);
 
+/// <summary>Answers a <c>ResourceChoiceDecision</c>: takes the option at <paramref name="Option"/> (0-based) of a warehouse (ADR-068).</summary>
+public sealed record ChooseResourceRewardCommand(PlayerId Player, int Option) : GameCommand(Player);
+
 /// <summary>Closes the exchange screen.</summary>
 public sealed record CompleteExchangeCommand(PlayerId Player) : GameCommand(Player);
 

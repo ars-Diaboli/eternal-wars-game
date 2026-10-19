@@ -69,6 +69,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Neutral monster | Fights, joins or flees | implemented (ADR-040) |
 | Gates | Teleport (see below) | implemented |
 | Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
+| Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: resources once a week per object ([below](#mines-and-resource-providers)) | implemented (ADR-068), map format v16 |
 | Visitables, loot, banks, trainers, buffs, utilities | The catalogue in [Planned objects](#planned-objects-adr-068) below | planned (ADR-068) |
 
 - **Treasure chests roll their reward** (seeded game RNG): 1000/1500/2000 gold *or* 500/1000/1500 XP, the three tiers
@@ -138,15 +139,15 @@ mines, resource piles, treasure chest, artifact pickup, map dwelling and marketp
 "Adventure map objects". Every number is a draft. Questions are `MAP-n` in [open-questions.md](../project/open-questions.md).
 
 ### Rules shared by all of them
-**Built (2026-10-19)**: the shared rules below (visit scopes, hero statuses, weighted rolls, artifact draws) and the hero limit are in
-core; no object uses them yet.
+**Built (2026-10-19)**: the shared rules below (visit scopes, hero statuses, weighted rolls, artifact draws), the hero limit and the
+resource providers.
 
 - **Artifact tiers** (decided, MAP-1): **Minor** (m), **Major** (M), **Relic** (R) as in `artifacts.csv`; the notes' extra *Treasure*
   tier is dropped, so every (t) in the notes became Minor. A **Combo** artifact is never dropped, only assembled from its pieces,
   which drop as usual (the game has sets but no combination artifacts yet). Relics are drawn from a pool without repeats; when the pool is empty it is **refilled** and the draw starts anew,
   so a hero may hold two copies of one Relic.
 - **Visit scopes** (decided): *weekly* objects keep a per-object week counter that resets on Monday, so a hero gets the reward
-  once a week unless someone else has taken it that week; *once per hero* objects keep a visited-by set of hero ids; *first
+  once a week unless someone else has taken it that week (a visit to an emptied object reports so and gives nothing); *once per hero* objects keep a visited-by set of hero ids; *first
   visitor* objects are spent after one visit; *vanishing* objects are removed after the visit. The scope is data of the object
   definition and the map format records the state.
 - **Temporary effects** ("for the next battle", "until the end of the day", "for the rest of the week") are a hero status that
@@ -166,12 +167,12 @@ core; no object uses them yet.
 |---|---|
 | Gold Mine, Sawmill, Ore Mine, Alchemist's Lab, Crystal Pond, Sulfur Dune | Flagged; daily +1000 gold, +2 lumber, +2 ore, +1 mercury, +1 crystal, +1 sulfur (**implemented** as the mines; the notes only rename them) |
 | Abandoned versions of each | A **separate object** (decided, MAP-2), guarded by Troglodytes: **150–295** at the gold mine, **100–245** elsewhere, rolled when the map starts. When the guard is defeated it **turns into the normal mine** of its kind. The gold mine and the ore mine fight on **subterranean** terrain with all its native bonuses, the others on the terrain they stand on. A normal mine keeps today's optional guard with a free choice of guard. |
-| Water Wheel | A visiting hero gets **500 gold** in the first week of the first month and **1000 gold** once a week after that (weekly) |
-| Warehouse of Wood / Ore | Weekly: **8** lumber / ore **or 500 gold**, the visitor chooses |
-| Warehouse of Sulfur / Mercury / Crystal | Weekly: **5** of that resource **or 500 gold** |
-| Warehouse of Gold | Weekly: **2000 gold** |
-| Windmill | Weekly: **3–6** of one random non-gold resource |
-| Mystical Garden | Weekly: a random reward, **500 gold or 5 of one random magic resource**; the visitor does not choose (decided, MAP-3) |
+| Water Wheel | **Implemented.** A visiting hero gets **500 gold** in the game's first week and **1000 gold** once a week after that (weekly) |
+| Warehouse of Wood / Ore | **Implemented.** Weekly: **8** lumber / ore **or 500 gold**, the visitor chooses (the week counts as taken once chosen) |
+| Warehouse of Sulfur / Mercury / Crystal | **Implemented.** Weekly: **5** of that resource **or 500 gold** |
+| Warehouse of Gold | **Implemented.** Weekly: **2000 gold** |
+| Windmill | **Implemented.** Weekly: **3–6** of one random non-gold resource |
+| Mystical Garden | **Implemented.** Weekly: a random reward (even odds), **500 gold or 5 of one random magic resource**; the visitor does not choose (decided, MAP-3) |
 
 ### Treasure and one-time loot
 | Object | Effect |

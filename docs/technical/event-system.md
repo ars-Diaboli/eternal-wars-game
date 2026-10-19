@@ -113,6 +113,8 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `WarMachineBought(Town, Hero, Slot)` | `TownService` | the blacksmith sold a war machine to the visiting hero (ADR-056) |
 | `WarMachineLost(Hero, Slot)` | `BattleService` | a hero's war machine was destroyed in battle |
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
+| `MapObjectFoundEmpty(Hero, Object)` | `MapObjectInteractionService` | a hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068) |
+| `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`); for a warehouse only once the visitor chose (`ChooseResourceRewardCommand`) |
 | `MapObjectCollected(Hero, Object)` | `MapObjectInteractionService.TryCollect` | a hero took the reward of an object with a limited visit scope; its `Visits` log changed (ADR-068), the reward's events follow |
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
 | `MineOwnerChanged(Mine, Previous, Current)` | interactions, `BattleService`, `GameFlowService`, editor | mine flagged (after its guard was beaten), released by a defeated player, or set in the editor |
@@ -138,7 +140,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
 | `ScenarioRulesChanged` | editor | the victory and defeat conditions changed (views re-read `GameState.Rules`) |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
-| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, exchange, guard offer, battle (resolved when it ends), level-up |
+| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, warehouse resource choice, exchange, guard offer, battle (resolved when it ends), level-up |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
 | `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
 | `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone); owned mines and towns observe like heroes |

@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-19)**: the adventure-map object catalogue is designed (ADR-068, block in Phase 3); its shared rules and the hero limit are built, the objects are next. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+**Where we are (2026-10-19)**: the adventure-map object catalogue is designed (ADR-068, block in Phase 3); its shared rules, the hero limit and the resource providers are built, the other objects are next. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
 save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
 (layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
@@ -281,7 +281,8 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 - [x] Shared rules: visit scopes (weekly per object, once per hero, first visitor; vanishing is removal), hero statuses that expire (next
       battle, end of day, end of week), weighted rolls, artifact draw by tier (Minor, Major, Relic; the Relic pool refills when empty,
       duplicates allowed); no object uses them yet
-- [ ] Resource providers: Water Wheel, the six Warehouses, Windmill, Mystical Garden
+- [x] Resource providers: Water Wheel, the six Warehouses, Windmill, Mystical Garden (map format v16, editor placement, AI visits them;
+      warehouse choice in the decision panel, not run in Godot yet; the generator does not place them yet)
 - [ ] Abandoned mines (six, a separate object that becomes the normal mine when the guard falls; Troglodyte guards, subterranean battle terrain for gold and ore)
 - [ ] One-time loot: Campfire, Supply Crates, Traveler's Wagon, Corpse, Lean To; align the Resource Pile amounts; the new Treasure Chest
       table with a Minor artifact ❓ CONT-3

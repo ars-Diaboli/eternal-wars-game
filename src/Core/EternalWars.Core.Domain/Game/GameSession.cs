@@ -218,6 +218,9 @@ public sealed class GameSession
             case ResolveTreasureChestCommand chest:
                 Interactions.ResolveTreasureChest(chest.Reward);
                 return null;
+            case ChooseResourceRewardCommand reward:
+                Interactions.ResolveResourceChoice(reward.Option);
+                return null;
             case CompleteExchangeCommand:
                 Interactions.CompleteExchange();
                 return null;

@@ -21,12 +21,18 @@ public static class BuiltInMapObjects
     /// <summary>The marketplace of the adventure map (ADR-067).</summary>
     public const string Marketplace = "marketplace";
 
+    /// <summary>Resource providers (ADR-068); the warehouses are <see cref="WarehouseId"/>.</summary>
+    public const string WaterWheel = "provider.water-wheel";
+    public const string Windmill = "provider.windmill";
+    public const string MysticalGarden = "provider.mystical-garden";
+
     /// <summary>Definition id of the pickup that rolls an artifact of a tier: <c>artifact.minor</c>.</summary>
     public static string ArtifactId(Artifacts.ArtifactTier tier) => $"artifact.{tier.ToString().ToLowerInvariant()}";
 
     private static readonly Footprint MineFootprint = new(["BBB", "BVB"]);
     private static readonly Footprint GateFootprint = new(["BBB", "BVB"]);
     private static readonly Footprint MonolithFootprint = new(["B", "V"]);
+    private static readonly Footprint ProviderFootprint = new(["BB", "BV"]);
 
     /// <summary>7×7 with the corners free, entered through the bottom-middle cell (ADR-046).</summary>
     public static Footprint TownFootprint { get; } = new([".BBBBB.", "BBBBBBB", "BBBBBBB", "BBBBBBB", "BBBBBBB", "BBBBBBB", ".BBVBB."]);
@@ -58,6 +64,16 @@ public static class BuiltInMapObjects
         new(Monster, "Monster", MapObjectKind.Monster, Footprint.Single),
         new(Dwelling, "Creature dwelling", MapObjectKind.Dwelling, MineFootprint),
         new(Marketplace, "Marketplace", MapObjectKind.Marketplace, MineFootprint),
+
+        Provider(WaterWheel, "Water wheel", ProviderRule.WaterWheel),
+        Provider(Windmill, "Windmill", ProviderRule.Windmill),
+        Provider(MysticalGarden, "Mystical garden", ProviderRule.MysticalGarden),
+        Warehouse(ResourceType.Lumber, 8),
+        Warehouse(ResourceType.Ore, 8),
+        Warehouse(ResourceType.Sulfur, 5),
+        Warehouse(ResourceType.Mercury, 5),
+        Warehouse(ResourceType.Crystal, 5),
+        Warehouse(ResourceType.Gold, 2000),
         .. Enum.GetValues<Artifacts.ArtifactTier>().Select(t =>
             new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 
@@ -73,6 +89,15 @@ public static class BuiltInMapObjects
     public static string PileId(ResourceType resource) => $"pile.{resource.ToString().ToLowerInvariant()}";
 
     public static string MineId(ResourceType resource) => $"mine.{resource.ToString().ToLowerInvariant()}";
+
+    /// <summary>Definition id of a resource's warehouse: <c>warehouse.lumber</c>.</summary>
+    public static string WarehouseId(ResourceType resource) => $"warehouse.{resource.ToString().ToLowerInvariant()}";
+
+    private static MapObjectDefinition Provider(string id, string name, ProviderRule rule) =>
+        new(id, name, MapObjectKind.ResourceProvider, ProviderFootprint) { Provider = rule, VisitScope = VisitScope.Weekly };
+
+    private static MapObjectDefinition Warehouse(ResourceType resource, int amount) =>
+        Provider(WarehouseId(resource), $"Warehouse of {resource.ToString().ToLowerInvariant()}", ProviderRule.Warehouse) with { Resource = resource, Amount = amount };
 
     private static MapObjectDefinition Mine(ResourceType resource, string name, int dailyYield) =>
         new(MineId(resource), name, MapObjectKind.Mine, MineFootprint) { Resource = resource, DailyYield = dailyYield };

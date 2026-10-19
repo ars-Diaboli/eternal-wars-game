@@ -68,6 +68,7 @@ public abstract class MapObject
         MapObjectKind.Artifact => new ArtifactPickup(id, definition, position),
         MapObjectKind.Dwelling => new CreatureDwelling(id, definition, position),
         MapObjectKind.Marketplace => new Marketplace(id, definition, position),
+        MapObjectKind.ResourceProvider => new ResourceProvider(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }
