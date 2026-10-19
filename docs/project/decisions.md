@@ -1247,7 +1247,7 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
   then the bank is plundered.
 - **Creature names**: the notes used HoMM3 names; they are mapped to our roster (Zombie → Ghoul, Power Lich → Arch Lich, Dwarf / Battle Dwarf → Defender / Shield Guard, Medusa Queen → Putrid Medusa,
   Cavalier → Lancer). Dwarf is a placeholder until CONT-2.
-- **Treasure chest** gets the five-row table of the notes (including a 5 % Minor artifact) in place of the three equal tiers of ADR-039. **Dwellings of tier 3 / 4 / 5** are guarded by 9 / 6 / 3 base
+- **Treasure chest** gets the five-row table of the notes (including a 5 % Minor artifact) in place of the three equal tiers of ADR-039 (ADR-039 is superseded on this point). **Dwellings of tier 3 / 4 / 5** are guarded by 9 / 6 / 3 base
   stacks, which settles the dwelling-guard part of TOWN-5.
 - **Marketplace rounding** (TOWN-2): what the player gives is rounded up, what the player receives is rounded down. The implemented rule (buy price up, sale gain down) already does this.
 - **Implementation order** is the roadmap block "Adventure map objects": shared visit rules and hero statuses first, then the groups in the order resource providers, loot, buffs, trainers, banks, utilities.
@@ -1289,4 +1289,19 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
     warehouse choice (not run in Godot yet).
   - AI: visits a provider it may collect from, valued by its resource values (Windmill and Garden at their average), and takes the more valuable
     warehouse option. Not yet: the random map generator does not place providers.
+- **Answers on 2026-10-19, third round** (MAP-9, MAP-10): the Tree of Knowledge has no free option, the player pays 2500 gold or 5 crystal + 5 mercury + 5 sulfur,
+  once per hero per tree; buffs of several objects stack within the ±5 cap, the Temple's +3 is on day 7 of the week, a buff is the visiting hero's only and
+  ends after any battle (already so: every battle ends in `BattleService.Finish`).
+- **Implementation (2026-10-19), step 4 and the tomb: one-time loot**:
+  - One object kind `Loot` (`LootSite`), every definition `FirstVisitor`; the definition's `Loot` rule says what it gives (`LootRules.Roll` → resources and an
+    artifact tier, drawn with `ArtifactService.Draw`). Ids `loot.campfire`, `loot.supply-crates`, `loot.travelers-wagon` (single tile, vanish, and count as
+    pickups that Classic guards let be stolen), `loot.corpse` (single tile), `loot.lean-to` (2×1), `loot.warriors-tomb` (2×2), which stay.
+  - Campfire gold is 400, 500 or 600 (in hundreds, a reading of "400–600"). Supply Crates: two different resources. A later visitor of a site that stays gets
+    `MapObjectFoundEmpty`. The Warrior's Tomb gives every visitor, the first included, a −3 morale `NextBattle` status (source `loot.warriors-tomb`, so a second
+    visit renews it rather than adding).
+  - Treasure chest: `TreasureChest.Odds` (30 / 30 / 25 / 10 / 5); the artifact row takes a Minor artifact at once and empties the chest, without a decision.
+    Chests with fixed values (author, generator) never hold an artifact.
+  - An artifact that does not fit in a full backpack is lost (`ArtifactBackpackFull`); `ArtifactSource.Found` marks artifacts from chests and loot.
+  - Event `LootFound(Hero, Object, Resources, Artifact)`. Map format **v17** (`loot` objects). Editor placement is generic; the AI values loot sites (a spent
+    one is no target). Not yet: the generator does not place loot sites; resource piles keep fixed default amounts.
 

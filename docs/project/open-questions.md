@@ -42,7 +42,7 @@ randomly present connections. Keep, drop, or post-1.0?
 
 ## Adventure map objects
 
-The catalogue is [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068), ADR-068. MAP-1 to MAP-8 are answered (see [Answered](#answered)). Nothing blocks the first
+The catalogue is [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068), ADR-068. MAP-1 to MAP-10 are answered (see [Answered](#answered)). Nothing blocks the first
 implementation block (shared visit rules); each question blocks only its object.
 
 <a id="map-14"></a>
@@ -50,15 +50,6 @@ implementation block (shared visit rules); each question blocks only its object.
 tier rolled again and does the artifact reward come again? Does the refill apply to every bank? The hero limit (1 to 8 per
 player, a map setting, ADR-068) is built with these assumptions: one number for all players; it caps the tavern and will cap prisons;
 a map that starts a player with more heroes is allowed with a validator warning (the player just cannot hire). Confirm or change.
-
-<a id="map-9"></a>
-**MAP-9 Tree of Knowledge.** "Either for free, for 2500 gold or for 5 magic resources each": is the free level-up only the first
-visit of the player, or every option offered at once? "5 magic resources each": 5 of each of the three?
-
-<a id="map-10"></a>
-**MAP-10 Buff stacking.** Can a hero visit several morale or luck buffs before a battle and how do they add up (within the ±5 cap)?
-Does the Temple's +3 depend on the calendar day (day 7 of the week) or on the week's last day? Do visits give the buff to the
-hero only, or to heroes that meet later? Do buffs end on a battle against neutrals as well?
 
 <a id="map-11"></a>
 **MAP-11 Hill Fort.** 150 % of what: the upgrade price (the difference, as in towns) or the creature's full price? Is a hero's
@@ -337,3 +328,6 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
 - MAP-6 bank rewards: "N each" means each named resource; bank battles use the default width; the guard tier is hidden and not author-settable; a bank whose attacker retreated or died keeps its guard intact.
 - MAP-7 plundered banks: only the Churchyard gives −1 morale for the next battle on a later visit; banks refill 4 weeks after being plundered (details MAP-14).
 - MAP-8 trainers: Gazebo and Library once per hero; a Library visit below level 10 does nothing and shows a message.
+- MAP-9 Tree of Knowledge: no free level-up; the player chooses to pay 2500 gold or 5 crystal + 5 mercury + 5 sulfur; once per hero per tree.
+- MAP-10 buffs: several buffs stack up to the ±5 cap; the Temple's +3 is on day 7 of the week; the buff is the visiting hero's only; it ends after any battle (heroes, neutrals, garrisons, banks, mine guards).
+

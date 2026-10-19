@@ -34,6 +34,9 @@ public enum MapObjectKind
 
     /// <summary>A building that hands out resources once a week (<see cref="ResourceProvider"/>, ADR-068): Water Wheel, Warehouses, Windmill, Mystical Garden.</summary>
     ResourceProvider,
+
+    /// <summary>One-time loot (<see cref="LootSite"/>, ADR-068): Campfire, Supply Crates, Traveler's Wagon, Corpse, Lean To, Warrior's Tomb.</summary>
+    Loot,
 }
 
 /// <summary>
@@ -64,6 +67,9 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>How much of <see cref="Resource"/> a warehouse gives.</summary>
     public int Amount { get; init; }
 
+    /// <summary>What a loot site gives (ADR-068).</summary>
+    public LootRule? Loot { get; init; }
+
     /// <summary>Throws <see cref="FormatException"/> if kind-specific properties are missing.</summary>
     public void Validate()
     {
@@ -90,6 +96,11 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
         if (Kind is MapObjectKind.ResourceProvider && Provider is null)
         {
             throw new FormatException($"Resource provider '{Id}' needs a provider rule.");
+        }
+
+        if (Kind is MapObjectKind.Loot && Loot is null)
+        {
+            throw new FormatException($"Loot site '{Id}' needs a loot rule.");
         }
 
         if (Provider is ProviderRule.Warehouse && (Resource is null || Amount <= 0))

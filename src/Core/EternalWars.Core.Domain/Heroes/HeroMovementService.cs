@@ -154,7 +154,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
 
         if (state.GuardsOf(target).ToList() is [var firstGuard, ..] guards)
         {
-            var isPickup = entrance is ResourcePile or TreasureChest or ArtifactPickup;
+            var isPickup = entrance is ResourcePile or TreasureChest or ArtifactPickup or LootSite { Vanishes: true };
             if (isPickup && entrance is not null && guards.All(g => g.Mode == GuardMode.Classic))
             {
                 // HoMM3: a pickup next to Classic monsters can be grabbed from outside their zone without a fight.

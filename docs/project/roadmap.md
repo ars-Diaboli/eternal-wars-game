@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-19)**: the adventure-map object catalogue is designed (ADR-068, block in Phase 3); its shared rules, the hero limit and the resource providers are built, the other objects are next. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+**Where we are (2026-10-19)**: the adventure-map object catalogue is designed (ADR-068, block in Phase 3); its shared rules, the hero limit, the resource providers and the one-time loot are built, the other objects are next. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
 save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
 (layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
@@ -275,7 +275,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Balance the AI over several maps (`sim game --runs`); on generated maps it hardly fights guards yet (heroes still
       level 1 after 40 days on `duel`), and no game finishes in 40 days
 
-### Adventure map objects (ADR-068; [catalogue](../design/adventure-map.md#planned-objects-adr-068), ❓ [MAP-9 … MAP-14](open-questions.md#adventure-map-objects))
+### Adventure map objects (ADR-068; [catalogue](../design/adventure-map.md#planned-objects-adr-068), ❓ [MAP-11 … MAP-14](open-questions.md#adventure-map-objects))
 Each item is one change with core tests (`TestWorld` maps), a map format bump where needed, editor placement through
 `MapEditorSession`, a validator check, and a generator hook later. Done in this order; the first item unblocks the rest.
 - [x] Shared rules: visit scopes (weekly per object, once per hero, first visitor; vanishing is removal), hero statuses that expire (next
@@ -284,13 +284,12 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 - [x] Resource providers: Water Wheel, the six Warehouses, Windmill, Mystical Garden (map format v16, editor placement, AI visits them;
       warehouse choice in the decision panel, not run in Godot yet; the generator does not place them yet)
 - [ ] Abandoned mines (six, a separate object that becomes the normal mine when the guard falls; Troglodyte guards, subterranean battle terrain for gold and ore)
-- [ ] One-time loot: Campfire, Supply Crates, Traveler's Wagon, Corpse, Lean To; align the Resource Pile amounts; the new Treasure Chest
-      table with a Minor artifact ❓ CONT-3
-- [ ] Warrior's Tomb (artifact roll and the −3 morale status)
+- [x] One-time loot: Campfire, Supply Crates, Traveler's Wagon, Corpse, Lean To (map format v17, editor placement, AI picks them up); the new
+      Treasure Chest table with a 5 % Minor artifact
+- [ ] Resource Pile amounts rolled within the notes' ranges when the map leaves them open (today fixed defaults: 750 / 7 / 4)
+- [x] Warrior's Tomb (artifact roll, the −3 morale status for every visitor)
 - [ ] Temporary buffs: Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables (+ Lancer → Champion), Magic Well (with magic)
-      ❓ MAP-10
 - [ ] Permanent power-ups: Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi
-      ❓ MAP-9
 - [ ] Creature banks: the object kind, the rolled guard tier, win-only reward, plundered state; Churchyard, Mansion, Ruins (with the
       12-tile reveal), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank; refill after 4 weeks ❓ MAP-14, CONT-2
 - [ ] Guards for map dwellings of tier 3 / 4 / 5 (9 / 6 / 3 base stacks)

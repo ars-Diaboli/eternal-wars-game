@@ -115,6 +115,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
 | `MapObjectFoundEmpty(Hero, Object)` | `MapObjectInteractionService` | a hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068) |
 | `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`); for a warehouse only once the visitor chose (`ChooseResourceRewardCommand`) |
+| `LootFound(Hero, Object, Resources, Artifact)` | `MapObjectInteractionService` | the first visitor searched a loot site, or a chest held an artifact (ADR-068); either part may be empty; vanishing sites were removed just before |
 | `MapObjectCollected(Hero, Object)` | `MapObjectInteractionService.TryCollect` | a hero took the reward of an object with a limited visit scope; its `Visits` log changed (ADR-068), the reward's events follow |
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
 | `MineOwnerChanged(Mine, Previous, Current)` | interactions, `BattleService`, `GameFlowService`, editor | mine flagged (after its guard was beaten), released by a defeated player, or set in the editor |
@@ -134,7 +135,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroHired(Town, Hero, Definition)` | `TownService` | a hero was hired in a tavern and stands at the town entrance |
 | `ArtifactEquipped(Hero, Artifact, Slot)` / `ArtifactUnequipped(Hero, Artifact)` | `ArtifactService` | an artifact put on from, or taken off into, the backpack |
 | `ArtifactGiven(From, To, Artifact)` | `ArtifactService` | an artifact changed hands during a hero exchange |
-| `ArtifactGained(Hero, Artifact, Source)` / `ArtifactLost(Hero, Artifact)` / `ArtifactBackpackFull(Hero, Artifact)` | `ArtifactService` (pickups from interactions, loot from `BattleService`) | picked up or looted; loot that did not fit; a pickup left because the backpack is full |
+| `ArtifactGained(Hero, Artifact, Source)` / `ArtifactLost(Hero, Artifact)` / `ArtifactBackpackFull(Hero, Artifact)` | `ArtifactService` (pickups, chests and loot sites from interactions, loot from `BattleService`) | picked up, found or looted; loot that did not fit; a pickup left (or a found artifact lost) because the backpack is full |
 | `HeroArtifactsChanged(Hero)` | editor | the editor changed what a hero wears and carries |
 | `MapObjectRemoved(Object)` | interactions, `GuardService`, `BattleService`, editor | pile/chest consumed, guard joined, fled or beaten, or deleted in editor |
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |

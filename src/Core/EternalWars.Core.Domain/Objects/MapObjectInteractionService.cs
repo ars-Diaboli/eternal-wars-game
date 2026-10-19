@@ -103,10 +103,23 @@ public sealed class MapObjectInteractionService(
                 break;
 
             case TreasureChest chest:
-                var values = chest.FixedValues ?? TreasureChest.RollTable[state.Random.Next(TreasureChest.RollTable.Count)];
+                var values = chest.FixedValues ?? WeightedRoll.Pick(TreasureChest.Odds, state.Random);
+                if (values is null)
+                {
+                    // The artifact outcome (ADR-068): no choice, the chest is emptied; a full backpack loses it.
+                    RemoveFromMap(chest);
+                    var found = artifacts.Draw(ArtifactTier.Minor) is { } minor && artifacts.Grant(hero, minor, ArtifactSource.Found) ? minor : null;
+                    events.Publish(new LootFound(hero.Id, chest.Id, ResourceSet.Empty, found));
+                    break;
+                }
+
                 var decision = new TreasureChestDecision(hero.Id, chest.Id, values.Gold, values.Experience);
                 state.PendingDecision = decision;
                 events.Publish(new DecisionRequested(decision));
+                break;
+
+            case LootSite site:
+                Search(hero, site);
                 break;
 
             case MonsterGuard monster:
@@ -237,6 +250,35 @@ public sealed class MapObjectInteractionService(
     {
         events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
         battles.BeginHeroBattle(attacker, defender, isAmbush);
+    }
+
+    /// <summary>
+    /// A loot site (ADR-068): the first visitor finds what it rolls, vanishing sites go; later visitors find nothing. The Warrior's Tomb costs
+    /// every visitor morale for the next battle, the first one too.
+    /// </summary>
+    private void Search(Hero hero, LootSite site)
+    {
+        if (TryCollect(hero, site))
+        {
+            var roll = LootRules.Roll(site.Rule, state.Random);
+            if (site.Vanishes)
+            {
+                RemoveFromMap(site);
+            }
+
+            economy.Grant(hero.Owner, roll.Resources);
+            var found = roll.Artifact is { } tier && artifacts.Draw(tier) is { } artifact && artifacts.Grant(hero, artifact, ArtifactSource.Found) ? artifact : null;
+            events.Publish(new LootFound(hero.Id, site.Id, roll.Resources, found));
+        }
+        else
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, site.Id));
+        }
+
+        if (site.Rule == LootRule.WarriorsTomb)
+        {
+            progression.GrantStatus(hero, new HeroStatus(site.Definition.Id, HeroStatusKind.Morale, LootRules.TombMorale, StatusExpiry.NextBattle));
+        }
     }
 
     private void GiveResources(Hero hero, MapObject provider, ResourceSet resources)

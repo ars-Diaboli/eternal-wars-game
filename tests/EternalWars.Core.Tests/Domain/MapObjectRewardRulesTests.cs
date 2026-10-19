@@ -92,10 +92,11 @@ public class MapObjectRewardRulesTests
     }
 
     [Fact]
-    public void ResourceProvidersAreWeekly_EverythingElseHasNoVisitLimit()
+    public void ResourceProvidersAreWeekly_LootSitesFirstVisitor_EverythingElseHasNoVisitLimit()
     {
-        Assert.All(MapObjectCatalog.Default.All, d =>
-            Assert.Equal(d.Kind == MapObjectKind.ResourceProvider ? VisitScope.Weekly : VisitScope.Unlimited, d.VisitScope));
+        Assert.All(MapObjectCatalog.Default.All, d => Assert.Equal(
+            d.Kind switch { MapObjectKind.ResourceProvider => VisitScope.Weekly, MapObjectKind.Loot => VisitScope.FirstVisitor, _ => VisitScope.Unlimited },
+            d.VisitScope));
     }
 
     [Fact]

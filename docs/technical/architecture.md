@@ -180,7 +180,8 @@ These are enforced by:
   per-kind code: `EndsRoute` (false = walkable entrance, e.g. one-way exits) and `TeleportTarget`
   (two-way partner / one-way exit). Kinds: piles, mines (optionally guarded), chests, `TwoWayGate`,
   `OneWayGateEntrance`, `OneWayGateExit`, `MonsterGuard`, `Town`, `ArtifactPickup`, `CreatureDwelling`, `Marketplace`,
-  `ResourceProvider` (weekly resources; what it gives is the definition's `Provider` rule, `ResourceProviderRules`). Owned objects (mines, towns) implement
+  `ResourceProvider` (weekly resources; what it gives is the definition's `Provider` rule, `ResourceProviderRules`), `LootSite` (one-time
+  loot for the first visitor, the definition's `Loot` rule, `LootRules`). Owned objects (mines, towns) implement
   `IFlaggable`.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
@@ -274,7 +275,7 @@ src/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
                                 Artifacts
-    EternalWars.Core.Data/      Maps (MapDocument v16, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v17, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (saves and replays: GameRecord, GameSaves), Templates (TemplateSerializer,
                                 BuiltInTemplates)
     EternalWars.Core.Generation/ MapTemplate, TemplateValidator, SeedStreams, ZoneLayouter, TerrainPainter, GeneratedMap,

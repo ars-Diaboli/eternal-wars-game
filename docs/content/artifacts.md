@@ -45,11 +45,12 @@ the gaps between the lore artifacts so that every slot has items of every tier.
 
 - **Tiers** (what a chest, a guard or a defeated hero's pack can drop): **Minor** (common, small bonuses), **Major** (strong), **Relic** (big effects, with a
   story; drawn from a pool that is refilled when empty, so duplicates are possible, ADR-068), and **Combo** (set pieces, worn together
-  for a bonus; a combination artifact is assembled, never dropped; its pieces drop). Chests may hold a Minor artifact; the Warrior's Tomb may give a Relic ([adventure-map.md](../design/adventure-map.md#planned-objects-adr-068)).
+  for a bonus; a combination artifact is assembled, never dropped; its pieces drop). Chests hold a Minor artifact 5 % of the time, wagons and corpses
+  Minor ones, the Warrior's Tomb up to a Relic; a full backpack loses what is found (implemented, ADR-068) ([adventure-map.md](../design/adventure-map.md#planned-objects-adr-068)).
 - **Stacking**: bonuses add; terrain artifacts and Pathfinding together never reduce the penalty below zero (at most 100 %).
   The morale/luck cap of ±5 stays (ADR-053); damage-taken reductions stop at 90 %.
 - **Loot**: artifacts come from the map (pickup objects, guarded) and from a defeated hero (the winner gets all of them, what
-  does not fit in its backpack is lost; a fleeing hero takes its artifacts away). Chests do not hold artifacts yet. Heroes
+  does not fit in its backpack is lost; a fleeing hero takes its artifacts away), chests and loot sites (ADR-068). Heroes
   hand artifacts to each other while their exchange is open.
 - **Not in the town**: no artifact market for now (artifacts are not for sale; a later merchant is an option).
 
