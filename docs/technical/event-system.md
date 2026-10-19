@@ -164,7 +164,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroDefeated(Hero, Owner, Retreated)` | `BattleService`, `GameFlowService` | a hero lost or fled a battle and left the map, or its player was eliminated |
 | `GuardJoined(Hero, Guard, Creature, Count)` / `GuardFled(Hero, Guard)` | `GuardService` | a guard offer was accepted (then `MapObjectRemoved`) |
 | `MineGuardDefeated(Mine)` | `BattleService` | the mine can now be flagged (`MineOwnerChanged` follows) |
-| `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster incl. its guard mode, mine guard, chest values) |
+| `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster incl. its guard mode, mine or dwelling guard, chest values), or a beaten abandoned mine became the normal mine (same id, new definition, ADR-068); `VisibilityService` refreshes memory |
 | `RoadsPainted(Positions, Road)` | `MapEditorSession` | road paint/erase and its undo/redo |
 | `TerrainPainted(Positions, Terrain)` | `MapEditorSession` | paint and its undo/redo |
 | `HeroPlaced` / `HeroRemoved` | `MapEditorSession`; `GameFlowService` (`HeroRemoved` only) | editor hero placement; a surplus hero removed when the game starts (ADR-068) |

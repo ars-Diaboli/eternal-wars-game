@@ -159,6 +159,18 @@ public sealed class ArtifactPickup(MapObjectId id, MapObjectDefinition definitio
     public Artifacts.ArtifactTier Tier => Definition.ArtifactTier ?? Artifacts.ArtifactTier.Minor;
 }
 
+/// <summary>How many base creatures guard a neutral map dwelling of a tier when the game starts (ADR-068): tiers 1 and 2 are unguarded.</summary>
+public static class DwellingGuards
+{
+    public static int? Count(int tier) => tier switch
+    {
+        3 => 9,
+        4 => 6,
+        5 => 3,
+        _ => null,
+    };
+}
+
 /// <summary>
 /// A dwelling of one creature line on the adventure map (ADR-054). It grows by the creature's weekly growth every Monday,
 /// owned or not; a hero standing on its entrance can recruit from it, and visiting flags it for the visitor's owner, whose
@@ -180,6 +192,12 @@ public sealed class CreatureDwelling(
     public PlayerId? Owner { get; internal set; } = owner;
 
     public int? Available { get; internal set; } = available;
+
+    /// <summary>
+    /// The neutral guard that must be beaten before the first flagging (ADR-068): set when the game starts for an unowned dwelling of tier 3–5
+    /// (<see cref="DwellingGuards"/>), gone once beaten. Not map data.
+    /// </summary>
+    public GuardStack? Guard { get; internal set; }
 }
 
 /// <summary>

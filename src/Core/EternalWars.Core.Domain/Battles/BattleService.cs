@@ -60,7 +60,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
     internal void BeginGuardBattle(Hero attacker, MapObject guard, string creature, int count)
     {
         var neutral = new BattleParticipant(BattleSide.Defender, null, null, guard.Id, 0, 0, SkillLevel.None, IsComputer: true);
-        var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, guard.VisitPosition, isAmbush: false);
+        var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, guard.VisitPosition, isAmbush: false, guard.Definition.BattleTerrain);
         var definition = state.Creatures.Get(creature);
         var stacks = BattleSetup.SplitGuard(count).Select(c => new BattleStackSpec(definition, c, -1)).ToList();
         Begin(attacker, battle, Stacks(attacker), stacks);
@@ -206,8 +206,9 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         return stacks;
     }
 
-    private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush) =>
-        new(attacker, defender, state.Map.GetTerrain(location), location, isAmbush, state.Random.Fork());
+    /// <summary>The battlefield at <paramref name="location"/>; an object may fix the terrain (abandoned mines underground, ADR-068).</summary>
+    private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null) =>
+        new(attacker, defender, terrain ?? state.Map.GetTerrain(location), location, isAmbush, state.Random.Fork());
 
     private void Begin(Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders)
     {
@@ -399,6 +400,9 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
             case Mine { Guard: { } stack } mine:
                 mine.Guard = stack with { Count = count };
                 break;
+            case CreatureDwelling { Guard: { } stack } dwelling:
+                dwelling.Guard = stack with { Count = count };
+                break;
         }
 
         events.Publish(new MapObjectChanged(guard.Id));
@@ -415,6 +419,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
                 break;
             case Mine mine:
                 mine.Guard = null;
+                mine = ClearAbandoned(mine);
                 events.Publish(new MineGuardDefeated(mine.Id));
                 if (winner is not null && mine.Owner != winner.Owner)
                 {
@@ -424,9 +429,38 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
                 }
 
                 break;
+            case CreatureDwelling dwelling:
+                dwelling.Guard = null;
+                events.Publish(new MapObjectChanged(dwelling.Id));
+                if (winner is not null && dwelling.Owner != winner.Owner)
+                {
+                    var before = dwelling.Owner;
+                    dwelling.Owner = winner.Owner;
+                    events.Publish(new DwellingOwnerChanged(dwelling.Id, before, winner.Owner));
+                }
+
+                break;
             case Town town when winner is not null:
                 TownService.Capture(events, town, winner.Owner);
                 break;
         }
+    }
+
+    /// <summary>
+    /// A beaten abandoned mine becomes the normal mine of its resource (ADR-068): same id, place and owner, the definition it
+    /// <see cref="MapObjectDefinition.Becomes"/>. Views redraw it on <see cref="MapObjectChanged"/>.
+    /// </summary>
+    private Mine ClearAbandoned(Mine mine)
+    {
+        if (mine.Definition.Becomes is not { } becomes || !state.ObjectCatalog.TryGet(becomes, out var normal))
+        {
+            return mine;
+        }
+
+        var cleared = new Mine(mine.Id, normal, mine.Position, mine.Owner);
+        state.RemoveObject(mine);
+        state.AddObject(cleared);
+        events.Publish(new MapObjectChanged(cleared.Id));
+        return cleared;
     }
 }

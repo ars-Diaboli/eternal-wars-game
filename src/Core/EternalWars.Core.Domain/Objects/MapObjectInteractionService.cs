@@ -154,6 +154,10 @@ public sealed class MapObjectInteractionService(
 
                 break;
 
+            case CreatureDwelling { Guard: not null } guardedDwelling:
+                guards.Encounter(hero, guardedDwelling);
+                break;
+
             case CreatureDwelling dwelling when dwelling.Owner != hero.Owner:
                 var before = dwelling.Owner;
                 dwelling.Owner = hero.Owner;

@@ -38,9 +38,11 @@ public sealed class GameState
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
         BuildingCatalog? buildings = null,
-        ArtifactCatalog? artifacts = null)
+        ArtifactCatalog? artifacts = null,
+        MapObjectCatalog? objectCatalog = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
+        ObjectCatalog = objectCatalog ?? MapObjectCatalog.Default;
         Options = options ?? GameOptions.Default;
         Terrains = terrains ?? TerrainCatalog.Default;
         Creatures = creatures ?? CreatureCatalog.Default;
@@ -81,6 +83,9 @@ public sealed class GameState
 
     /// <summary>Town building levels, costs and requirements in effect for this game (ADR-046).</summary>
     public BuildingCatalog Buildings { get; }
+
+    /// <summary>Map object definitions in effect for this game (objects that turn into others, e.g. a cleared abandoned mine, ADR-068).</summary>
+    public MapObjectCatalog ObjectCatalog { get; }
 
     /// <summary>Artifacts in effect for this game (ADR-061).</summary>
     public ArtifactCatalog Artifacts { get; }

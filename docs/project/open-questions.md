@@ -74,7 +74,7 @@ stands at the entrance? A starter stack for hired heroes? Do heroes in garrisons
 <a id="town-5"></a>
 **TOWN-5 Caravan details.** Is the 5-day limit checked only when ordering (today only the route is re-checked
 daily)? How long may a caravan wait at a full garrison? (Guards on map dwellings are decided: tier 3 / 4 / 5 are guarded by
-9 / 6 / 3 base stacks, ADR-068.)
+9 / 6 / 3 base creatures, ADR-068; built.)
 
 ## Heroes
 

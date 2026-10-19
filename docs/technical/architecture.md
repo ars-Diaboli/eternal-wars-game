@@ -181,7 +181,8 @@ These are enforced by:
   (two-way partner / one-way exit). Kinds: piles, mines (optionally guarded), chests, `TwoWayGate`,
   `OneWayGateEntrance`, `OneWayGateExit`, `MonsterGuard`, `Town`, `ArtifactPickup`, `CreatureDwelling`, `Marketplace`,
   `ResourceProvider` (weekly resources; what it gives is the definition's `Provider` rule, `ResourceProviderRules`), `LootSite` (one-time
-  loot for the first visitor, the definition's `Loot` rule, `LootRules`), `BuffSite` (`BuffRules`) and `TrainingSite` (`TrainingRules`). Owned objects (mines, towns) implement
+  loot for the first visitor, the definition's `Loot` rule, `LootRules`), `BuffSite` (`BuffRules`) and `TrainingSite` (`TrainingRules`). An object may turn into another of
+  `GameState.ObjectCatalog` (an abandoned mine into the normal mine once its guard falls). Owned objects (mines, towns) implement
   `IFlaggable`.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.

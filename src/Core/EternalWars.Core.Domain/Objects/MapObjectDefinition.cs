@@ -76,6 +76,20 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>What a loot site gives (ADR-068).</summary>
     public LootRule? Loot { get; init; }
 
+    /// <summary>An abandoned mine's normal mine (definition id): what it turns into once its guard is beaten (ADR-068).</summary>
+    public string? Becomes { get; init; }
+
+    /// <summary>The creature that guards every instance unless the map sets a guard (abandoned mines: Troglodytes).</summary>
+    public string? GuardCreature { get; init; }
+
+    /// <summary>The range the guard count is rolled from when the game starts.</summary>
+    public int GuardMin { get; init; }
+
+    public int GuardMax { get; init; }
+
+    /// <summary>Fights at this object take place on this terrain, whatever the map's (abandoned gold and ore mines: subterranean).</summary>
+    public Map.TerrainType? BattleTerrain { get; init; }
+
     /// <summary>What a buff site gives (ADR-068).</summary>
     public BuffRule? Buff { get; init; }
 
@@ -123,6 +137,16 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
         if (Provider is ProviderRule.Warehouse && (Resource is null || Amount <= 0))
         {
             throw new FormatException($"Warehouse '{Id}' needs a resource and a positive amount.");
+        }
+
+        if (Becomes is not null && Kind is not MapObjectKind.Mine)
+        {
+            throw new FormatException($"Only a mine can turn into another ('{Id}').");
+        }
+
+        if (GuardCreature is not null && (GuardMin < 1 || GuardMax < GuardMin))
+        {
+            throw new FormatException($"'{Id}' needs a guard range from 1 up.");
         }
 
         if (Kind is MapObjectKind.Mine && DailyYield <= 0)

@@ -171,7 +171,7 @@ resource providers, the one-time loot, the new treasure chest, the buffs and the
 | Object | Effect |
 |---|---|
 | Gold Mine, Sawmill, Ore Mine, Alchemist's Lab, Crystal Pond, Sulfur Dune | Flagged; daily +1000 gold, +2 lumber, +2 ore, +1 mercury, +1 crystal, +1 sulfur (**implemented** as the mines; the notes only rename them) |
-| Abandoned versions of each | A **separate object** (decided, MAP-2), guarded by Troglodytes: **150–295** at the gold mine, **100–245** elsewhere, rolled when the map starts. When the guard is defeated it **turns into the normal mine** of its kind. The gold mine and the ore mine fight on **subterranean** terrain with all its native bonuses, the others on the terrain they stand on. A normal mine keeps today's optional guard with a free choice of guard. |
+| Abandoned versions of each | **Implemented.** A **separate object** (decided, MAP-2), guarded by Troglodytes: **150–295** at the gold mine, **100–245** elsewhere, rolled when the game starts (a guard the map sets is kept). When the guard is defeated it **turns into the normal mine** of its kind, flagged for the winner. The gold mine and the ore mine fight on **subterranean** terrain, the others on the terrain they stand on; battles have no native-terrain bonuses yet, so the terrain only shows. A normal mine keeps today's optional guard with a free choice of guard. |
 | Water Wheel | **Implemented.** A visiting hero gets **500 gold** in the game's first week and **1000 gold** once a week after that (weekly) |
 | Warehouse of Wood / Ore | **Implemented.** Weekly: **8** lumber / ore **or 500 gold**, the visitor chooses (the week counts as taken once chosen) |
 | Warehouse of Sulfur / Mercury / Crystal | **Implemented.** Weekly: **5** of that resource **or 500 gold** |
@@ -193,8 +193,9 @@ resource providers, the one-time loot, the new treasure chest, the buffs and the
 | Prison | A hero joins the visitor's player; vanishes. The level is rolled: **30 % level 1, 30 % level 5, 20 % level 10, 15 % level 20, 5 % level 30**, or the map author sets the hero. When the map is generated the prison's **faction is drawn at random** and the hero is picked from it, never one of the heroes the players chose as starting heroes (and not one already on the map). If the visitor already has the most heroes the map allows, the **visit fails** with a notification and the prison stays. A hero above level 1 gets the experience for its level and its skills and stats from level-ups the game chooses |
 
 ### Creature dwellings
-A map dwelling (**implemented**, ADR-054) is one creature line with its own growth. New: dwellings of **tier 3 / 4 / 5 are
-guarded by 9 / 6 / 3 base (non-upgraded) stacks** of the creature they produce; tiers 1 and 2 are unguarded. This answers the
+A map dwelling (**implemented**, ADR-054) is one creature line with its own growth. **Implemented (ADR-068)**: a neutral dwelling of
+**tier 3 / 4 / 5 is guarded by 9 / 6 / 3 base (non-upgraded) creatures** of the line it produces, set when the game starts; tiers 1
+and 2, and dwellings the map gives an owner, are unguarded. The guard always fights; beating it flags the dwelling. This answers the
 "guards on map dwellings" part of TOWN-5.
 
 ### Creature banks
