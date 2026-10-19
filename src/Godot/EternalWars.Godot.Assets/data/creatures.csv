@@ -179,3 +179,5 @@ neutral.breeder,Breeder,,3,Medium,neutral.fel-breeder,12,12,9,13,65,8,5,9,,,,4,5
 neutral.fel-breeder,Fel Breeder,,3,Medium,,13,13,10,15,77,9,5,10,,,,4,730,,demon,Caster summon-imps 2; SpellImmunity fire,"sandbox: Inferno tier 3, commented out"
 neutral.efreet,Efreet,,4,Medium,,18,15,21,30,125,20,9,15,,,,3,1450,,elemental; demon,Flying; SpellImmunity fire; Caster fireball 1,"new: demonic counterpart of the Djinn Sultan, a neutral (one upgrade per line)"
 neutral.golden-golem,Golden Golem,,3,Medium,,10,15,8,12,55,6,4,7,,,,4,560,,construct,SpellImmunity mind; SpellResistance 2,new
+neutral.dwarf,Dwarf,,2,Small,neutral.battle-dwarf,7,8,3,5,28,8,4,9,,,,8,210,,,SpellResistance 2,"new: Dwarven Treasury guard (CONT-2)"
+neutral.battle-dwarf,Battle Dwarf,,2,Small,,8,10,3,6,30,9,5,10,,,,8,270,,,SpellResistance 3,"new: upgrade of Dwarf (CONT-2)"

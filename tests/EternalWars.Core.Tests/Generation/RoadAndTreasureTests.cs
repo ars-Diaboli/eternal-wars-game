@@ -107,7 +107,7 @@ public class RoadAndTreasureTests
 
     private static int Value(MapObject item) => item switch
     {
-        ResourcePile p => p.Amount * TreasurePlacer.GoldValue(p.Resource),
+        ResourcePile p => p.Amount!.Value * TreasurePlacer.GoldValue(p.Resource),
         TreasureChest c => c.FixedValues!.Gold,
         ArtifactPickup a => TreasurePlacer.ArtifactValue(a.Tier),
         Marketplace => TreasurePlacer.MarketplaceValue,

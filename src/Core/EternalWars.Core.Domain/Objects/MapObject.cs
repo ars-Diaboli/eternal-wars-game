@@ -57,7 +57,7 @@ public abstract class MapObject
     /// <summary>Creates an instance of the right subclass with default per-instance values.</summary>
     public static MapObject Create(MapObjectId id, MapObjectDefinition definition, MapPosition position) => definition.Kind switch
     {
-        MapObjectKind.ResourcePile => new ResourcePile(id, definition, position, ResourcePile.DefaultAmount(definition.Resource!.Value)),
+        MapObjectKind.ResourcePile => new ResourcePile(id, definition, position),
         MapObjectKind.Mine => new Mine(id, definition, position),
         MapObjectKind.TreasureChest => new TreasureChest(id, definition, position),
         MapObjectKind.TwoWayGate => new TwoWayGate(id, definition, position),
@@ -92,20 +92,34 @@ public interface IFlaggable
     int ScoutingRadius { get; }
 }
 
-/// <summary>Picked up on visit: resources go to the hero's owner and the pile disappears.</summary>
-public sealed class ResourcePile(MapObjectId id, MapObjectDefinition definition, MapPosition position, int amount)
+/// <summary>
+/// Picked up on visit: resources go to the hero's owner and the pile disappears. An amount the map leaves open (null) is rolled in
+/// <see cref="AmountRange"/> when the game starts (ADR-068).
+/// </summary>
+public sealed class ResourcePile(MapObjectId id, MapObjectDefinition definition, MapPosition position, int? amount = null)
     : MapObject(id, definition, position, MapObjectKind.ResourcePile)
 {
     public ResourceType Resource => Definition.Resource!.Value;
 
-    public int Amount { get; internal set; } = amount;
+    /// <summary>The fixed amount; null until the game starts when the map leaves it open.</summary>
+    public int? Amount { get; internal set; } = amount;
 
-    public static int DefaultAmount(ResourceType resource) => resource switch
+    /// <summary>The range an open amount is rolled in: 5–10 lumber or ore, 3–7 of a magic resource, 500–1000 gold in steps of <see cref="GoldStep"/>.</summary>
+    public static (int Min, int Max) AmountRange(ResourceType resource) => resource switch
     {
-        ResourceType.Gold => 750,
-        ResourceType.Lumber or ResourceType.Ore => 7,
-        _ => 4,
+        ResourceType.Gold => (500, 1000),
+        ResourceType.Lumber or ResourceType.Ore => (5, 10),
+        _ => (3, 7),
     };
+
+    public const int GoldStep = 100;
+
+    /// <summary>Rolls an open amount from <see cref="AmountRange"/>.</summary>
+    internal static int Roll(ResourceType resource, GameRandom random)
+    {
+        var (min, max) = AmountRange(resource);
+        return resource == ResourceType.Gold ? random.NextInclusive(min / GoldStep, max / GoldStep) * GoldStep : random.NextInclusive(min, max);
+    }
 }
 
 /// <summary>

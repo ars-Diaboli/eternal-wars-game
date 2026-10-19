@@ -240,7 +240,7 @@ public class UtilityObjectTests
     }
 
     [Fact]
-    public void TheAi_FreesAPrisonerNearby_AndStaysWhenATownGateAsks()
+    public void TheAi_FreesAPrisonerNearby_AndAnswersATownGate()
     {
         var state = World();
         var prison = Add<Prison>(state, BuiltInMapObjects.Prison, 2, 1);
@@ -258,5 +258,56 @@ public class UtilityObjectTests
         ai.PlayTurn();
         Assert.Equal(0, ai.Refused);
         Assert.Null(other.PendingDecision);
+    }
+
+    [Fact]
+    public void TheAi_UpgradesAtAHillFort_WhenItCanPay()
+    {
+        var state = World(size: 30); // the enemy heroes far away, so the fort is the best thing to do
+        Add<HillFort>(state, BuiltInMapObjects.HillFort, 2, 0); // entrance (3, 1), next to the hero
+        state.GetHero(A).Army.Set(0, new CreatureStack("haven.footman", 60));
+        var session = Start(state);
+
+        var ai = new AdventureAi(session, controlHumanSlots: true);
+        ai.PlayTurn();
+
+        Assert.Equal(0, ai.Refused);
+        Assert.Contains(state.GetHero(A).Army.Stacks, s => s.Stack.Creature == state.Creatures.Get("haven.footman").UpgradesTo);
+    }
+
+    [Fact]
+    public void TheAi_BuysTheMachinesItLacks_AtAFactory()
+    {
+        var state = World(size: 30);
+        Add<WarMachineFactory>(state, BuiltInMapObjects.WarMachineFactory, 2, 0);
+        var hero = state.GetHero(A);
+        hero.Army.Set(0, new CreatureStack("haven.archer", 20)); // shooters want an ammo cart
+        var session = Start(state);
+        Assert.DoesNotContain(WarMachineSlot.Cart, hero.WarMachines);
+
+        var ai = new AdventureAi(session, controlHumanSlots: true);
+        ai.PlayTurn();
+
+        Assert.Equal(0, ai.Refused);
+        Assert.Contains(WarMachineSlot.Cart, hero.WarMachines);
+        Assert.Contains(WarMachineSlot.Tent, hero.WarMachines);
+    }
+
+    [Fact]
+    public void TheAi_TakesATownGate_ToAFarTownWithTroopsWaiting()
+    {
+        var state = World(size: 60);
+        Add<TownGate>(state, BuiltInMapObjects.TownGate, 3, 0); // entrance (4, 1)
+        var far = AddTown(state, TownIds.Haven, 45, 45, Blue);
+        far.Garrison.Set(0, new CreatureStack("haven.lancer", 10)); // worth fetching
+        var session = Start(state);
+        var teleports = new List<HeroTeleported>();
+        session.Events.Subscribe<HeroTeleported>(teleports.Add);
+
+        var ai = new AdventureAi(session, controlHumanSlots: true);
+        ai.PlayTurn();
+
+        Assert.Equal(0, ai.Refused);
+        Assert.Contains(teleports, t => t.Hero == A && t.To == far.VisitPosition);
     }
 }

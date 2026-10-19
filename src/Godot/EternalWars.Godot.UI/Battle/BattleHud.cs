@@ -137,7 +137,7 @@ public partial class BattleHud : Control
         _info.Text = $"{c.Name} ×{unit.Count} ({_view.SideName(unit.Side)})\n" +
                      $"Attack {c.Attack}  Defense {c.Defense}  Damage {c.MinDamage}–{c.MaxDamage}  Health {unit.TopHealth}/{c.Health}\n" +
                      $"Speed {battle.SpeedOf(unit)}  Initiative {battle.InitiativeOf(unit)}{shots}  Morale {Signed(battle.MoraleOf(unit))}  Luck {Signed(battle.LuckOf(unit))}" +
-                     $"{(unit.IsDefending ? "  defending" : string.Empty)}{capabilities}";
+                     $"{(unit.IsDefending ? "  defending" : string.Empty)}{(battle.IsNative(unit) ? "  native terrain (+1 Attack, Defense, Speed)" : string.Empty)}{capabilities}";
 
         static string Signed(int value) => value > 0 ? $"+{value}" : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
     }

@@ -52,6 +52,15 @@ public class CreatureBankTests
     }
 
     [Fact]
+    public void TheDwarvenTreasury_IsGuardedByDwarves()
+    {
+        var treasuries = Enumerable.Range(1, 30).Select(s => World(BuiltInMapObjects.DwarvenTreasury, seed: (ulong)s).Bank).ToList();
+
+        Assert.All(treasuries, t => Assert.All(t.Guard, s => Assert.Contains(s.Creature, new[] { "neutral.dwarf", "neutral.battle-dwarf" })));
+        Assert.Contains(treasuries, t => t.Guard.Any(s => s.Creature == "neutral.battle-dwarf"));
+    }
+
+    [Fact]
     public void HalfTheTime_AFifthOfTheGuardIsUpgraded()
     {
         var caches = Enumerable.Range(1, 80).Select(s => World(BuiltInMapObjects.ImpCache, seed: (ulong)s).Bank).ToList();
@@ -184,7 +193,7 @@ public class CreatureBankTests
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
-        Assert.Equal(20, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 20);
         Assert.Contains("\"kind\": \"bank\"", json, StringComparison.Ordinal);
         var bank = Assert.IsType<CreatureBank>(restored.GetObject(id));
         Assert.Empty(bank.Guard);

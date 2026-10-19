@@ -255,7 +255,7 @@ public partial class InspectorPanel : VBoxContainer
                 AddChild(new Label { Text = target is { } t ? $"Linked to #{t.Value} (use the LinkGates tool to change)" : "Not linked (use the LinkGates tool)" });
                 break;
             case ResourcePile pile:
-                AddChild(new Label { Text = $"{pile.Amount} {pile.Resource}" });
+                AddChild(new Label { Text = pile.Amount is { } fixedAmount ? $"{fixedAmount} {pile.Resource}" : $"{pile.Resource}, amount rolled at game start" });
                 break;
             case Town town:
                 ShowTown(town);

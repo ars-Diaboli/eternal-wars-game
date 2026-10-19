@@ -65,6 +65,12 @@
 of Attack above the target's Defense (cap +300 %); −2.5 % per point of Defense above Attack (cap −70 %); then
 multiplicative modifiers (skills, cover, abilities, spells). Rolls use the seeded battle RNG.
 
+**Native terrain** (implemented, ADR-068, HoMM3 rule): a creature whose town lists the battlefield's terrain as native
+(`TerrainDefinition.NativeTowns`, the same list the adventure map uses for movement) gets **+1 Attack, +1 Defense and +1
+Speed**. Neutral creatures and war machines have no native terrain; the whole army need not be native, each stack counts on
+its own. The battlefield is the terrain where the battle starts, or the object's own (abandoned gold and ore mines fight
+underground, so their Troglodytes are at home). The battle panel shows it.
+
 ## Area attacks
 Creature capabilities, independent of size:
 - **Breath** (dragon- or phoenix-like): also hits a target-sized block directly behind the target in the line of

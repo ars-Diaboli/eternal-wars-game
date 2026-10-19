@@ -65,12 +65,12 @@ public class AdventureAiTests
     public void ItCollectsAPickup()
     {
         var state = Create("A.......B");
-        Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 3, 0);
+        var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 3, 0);
         var session = Start(state);
 
         Ai(session).PlayTurn();
 
-        Assert.Equal(750, state.GetPlayer(Blue).Resources.Gold);
+        Assert.Equal(pile.Amount, state.GetPlayer(Blue).Resources.Gold);
         Assert.DoesNotContain(state.Objects, o => o is ResourcePile);
     }
 

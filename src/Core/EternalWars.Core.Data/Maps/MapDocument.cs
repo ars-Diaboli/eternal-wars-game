@@ -26,12 +26,13 @@ namespace EternalWars.Core.Data.Maps;
 /// corpse, lean-to, warrior's tomb; ADR-068). 18 = + buff sites (<c>buff</c>) and training sites (<c>training</c>) and a player's own hero limit
 /// (<c>maxHeroes</c> on a player slot; ADR-068). 19 = + signs (<c>sign</c>, with a message), observatories, hill forts, town gates, war machine
 /// factories (<c>observatory</c>, <c>hillFort</c>, <c>townGate</c>, <c>factory</c>) and prisons (<c>prison</c>, optional hero and level; ADR-068).
-/// 20 = + creature banks (<c>bank</c>; the tier is rolled when the game starts, ADR-068).
+/// 20 = + creature banks (<c>bank</c>; the tier is rolled when the game starts, ADR-068). 21 = a resource pile's <c>amount</c> may be left out,
+/// to be rolled when the game starts (ADR-068).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 20;
+    public const int CurrentFormatVersion = 21;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -239,7 +240,8 @@ public sealed record ArtifactPickupDocument : MapObjectDocument
 
 public sealed record ResourcePileDocument : MapObjectDocument
 {
-    public required int Amount { get; init; }
+    /// <summary>The fixed amount; left out (v21) when it is rolled at game start (ADR-068). Every pile before v21 has one.</summary>
+    public int? Amount { get; init; }
 }
 
 public sealed record MineDocument : MapObjectDocument

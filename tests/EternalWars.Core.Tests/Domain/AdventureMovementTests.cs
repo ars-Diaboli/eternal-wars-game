@@ -58,11 +58,12 @@ public class AdventureMovementTests
         var events = new List<IEvent>();
         session.Events.Subscribe<IEvent>(events.Add);
 
+        var amount = pile.Amount!.Value; // rolled at the start
         session.MoveTo(A, pile.VisitPosition);
 
-        Assert.Equal(7, session.State.GetPlayer(Blue).Resources.Lumber);
+        Assert.Equal(amount, session.State.GetPlayer(Blue).Resources.Lumber);
         Assert.Empty(session.State.Objects);
-        Assert.Contains(new ResourcePileCollected(A, pile.Id, ResourceType.Lumber, 7), events);
+        Assert.Contains(new ResourcePileCollected(A, pile.Id, ResourceType.Lumber, amount), events);
         Assert.Contains(new MapObjectRemoved(pile.Id), events);
     }
 
@@ -75,6 +76,7 @@ public class AdventureMovementTests
             var state = Create(new GameOptions(Seed: (ulong)i), "A..", "..B");
             state.GetHero(A).Skills.Set(BuiltInSkills.Prospecting, SkillLevel.Expert);
             var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Lumber), 2, 0);
+            pile.Amount = 7;
             var session = Start(state);
             var events = new List<IEvent>();
             session.Events.Subscribe<IEvent>(events.Add);

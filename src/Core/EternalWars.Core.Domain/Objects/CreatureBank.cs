@@ -51,7 +51,7 @@ public sealed class CreatureBank(MapObjectId id, MapObjectDefinition definition,
     public override string ToString() => $"{base.ToString()} guard {string.Join(',', Guard)} plundered {PlunderedOn?.AbsoluteDay}";
 }
 
-/// <summary>The banks' tables (ADR-068); creature names follow the roster (Zombie → Ghoul, Power Lich → Arch Lich, Dwarf → Defender, …).</summary>
+/// <summary>The banks' tables (ADR-068); creature names follow the roster (Zombie → Ghoul, Power Lich → Arch Lich, …); the Dwarf and Battle Dwarf are neutrals.</summary>
 public static class CreatureBankRules
 {
     /// <summary>A plundered bank fills again this many days after (MAP-14).</summary>
@@ -77,7 +77,7 @@ public static class CreatureBankRules
         [BankRule.Ruins] = [.. new[] { (20, 3, 3, 10, 1, 1000), (30, 5, 5, 10, 1, 2000), (40, 7, 7, 20, 2, 3000), (50, 9, 9, 20, 3, 4000) }.Select((t, i) =>
             new BankTier(Usual[i], [new("necropolis.skeleton", t.Item1), new("necropolis.wight", t.Item2), new("necropolis.wraith", t.Item3),
                 new("necropolis.skeleton-warrior", t.Item4), new("necropolis.arch-lich", t.Item5)], Gold(t.Item6)))],
-        [BankRule.DwarvenTreasury] = Simple("academy.defender", "academy.shield-guard", [(50, 2500, 2), (75, 4000, 4), (100, 5000, 6), (150, 7500, 10)], ResourceType.Crystal),
+        [BankRule.DwarvenTreasury] = Simple("neutral.dwarf", "neutral.battle-dwarf", [(50, 2500, 2), (75, 4000, 4), (100, 5000, 6), (150, 7500, 10)], ResourceType.Crystal),
         [BankRule.ImpCache] = Simple("inferno.imp", "inferno.familiar", [(100, 1000, 2), (150, 1500, 4), (200, 2000, 6), (300, 3000, 8)], ResourceType.Mercury),
         [BankRule.MedusaStores] = Simple("dungeon.medusa", "dungeon.putrid-medusa", [(15, 2000, 4), (30, 3000, 6), (40, 4000, 8), (50, 5000, 10)], ResourceType.Sulfur),
         [BankRule.NagaBank] = Simple("academy.naga", "academy.naga-queen", [(5, 3000, 0), (10, 6000, 0), (15, 9000, 0), (20, 12000, 0)], ResourceType.Gold),

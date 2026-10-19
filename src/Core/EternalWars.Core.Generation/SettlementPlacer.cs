@@ -18,7 +18,7 @@ namespace EternalWars.Core.Generation;
 /// garrisoned with two stacks of the zone's monster strength (<see cref="ZoneGuards.TownGarrisonValue"/>).</item>
 /// <item><b>Mines</b>: the zone's minimum of each resource, anywhere in the zone, guarded by the monster strength of the zone
 /// (<see cref="ZoneGuards.MineGuardValue"/>) unless <see cref="TemplateZone.MineGuards"/> says otherwise or it is a start zone.</item>
-/// <item><b>Piles</b>: <see cref="TemplateZone.ExtraPiles"/> resource piles (mostly gold, then lumber and ore, rarely the rare resources), unguarded.</item>
+/// <item><b>Piles</b>: <see cref="TemplateZone.ExtraPiles"/> resource piles (mostly gold, then lumber and ore, rarely the rare resources), unguarded; their amounts are rolled when the game starts.</item>
 /// </list>
 /// Everything stands on free ground with a free tile all around it, so it cannot block a way; a zone's objects must all be reachable from each other
 /// (a problem is listed otherwise). What cannot be placed is listed in <see cref="GeneratedMap.Problems"/>. Streams: <c>towns</c>, <c>mines</c>, <c>piles</c> per zone.
@@ -166,7 +166,7 @@ public static class SettlementPlacer
                 return;
             }
 
-            placed.Add(map.Add(new ResourcePile(map.NextId(), definition, spot, ResourcePile.DefaultAmount(resource))).VisitPosition);
+            placed.Add(map.Add(new ResourcePile(map.NextId(), definition, spot)).VisitPosition);
         }
     }
 
