@@ -78,6 +78,7 @@ public static class Palette
         MapObjectKind.TownGate => new Color(0.30f, 0.55f, 0.90f),
         MapObjectKind.WarMachineFactory => new Color(0.45f, 0.40f, 0.35f),
         MapObjectKind.Prison => new Color(0.30f, 0.30f, 0.35f),
+        MapObjectKind.CreatureBank => new Color(0.60f, 0.25f, 0.30f),
         _ => Colors.Magenta,
     };
 

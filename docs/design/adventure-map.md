@@ -70,6 +70,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Gates | Teleport (see below) | implemented |
 | Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
 | Utility objects | Sign, Observatory, Hill Fort, Town Gate, War Machine Factory ([below](#utility-objects)) | implemented (ADR-068), map format v19 |
+| Creature banks | Churchyard, Mansion, Ruins, Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank ([below](#creature-banks)) | implemented (ADR-068), map format v20 |
 | Prison | Frees a hero for the visitor's player ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v19 |
 | Buff sites | Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables, Magic Well: statuses for the next battle or the week, movement now ([below](#temporary-buffs)) | implemented (ADR-068), map format v18 |
 | Training sites | Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi: once per hero ([below](#permanent-hero-power-ups)) | implemented (ADR-068), map format v18 |
@@ -146,7 +147,7 @@ mines, resource piles, treasure chest, artifact pickup, map dwelling and marketp
 ### Rules shared by all of them
 **Built (2026-10-19)**: the shared rules below (visit scopes, hero statuses, weighted rolls, artifact draws), the hero limit, the
 resource providers, the one-time loot, the new treasure chest, the buffs, the power-ups, abandoned mines, dwelling guards, the
-utility objects and the prison. Still to build: the creature banks.
+utility objects, the prison and the creature banks: the whole catalogue. The random map generator does not place the new objects yet.
 
 - **Artifact tiers** (decided, MAP-1): **Minor** (m), **Major** (M), **Relic** (R) as in `artifacts.csv`; the notes' extra *Treasure*
   tier is dropped, so every (t) in the notes became Minor. A **Combo** artifact is never dropped, only assembled from its pieces,
@@ -202,11 +203,12 @@ and 2, and dwellings the map gives an owner, are unguarded. The guard always fig
 "guards on map dwellings" part of TOWN-5.
 
 ### Creature banks
-A bank is a new object kind. Entering it starts a battle against the rolled guard; guards **always fight** (no join, no flee,
+**Implemented.** A bank is a new object kind. Entering it starts a battle against the rolled guard; guards **always fight** (no join, no flee,
 unlike neutral monsters, ADR-040). The reward is paid only if the visitor wins; the bank is then **plundered**. The guard's
 tier is rolled when the map starts from the percentages below; it is **not shown** on the map and an author cannot fix it. "N each" in the
 table means N of every named resource. The battle uses the **default width** (no Tactics choice). If the hero retreats or
-perishes, the guard stays **intact** and the bank can be tried again.
+perishes, the guard stays **intact** and the bank can be tried again. A hero without an army cannot enter. Each kind of creature in the guard
+is split into a few battle stacks (at most seven stacks in all).
 
 | Bank | Guard and reward |
 |---|---|

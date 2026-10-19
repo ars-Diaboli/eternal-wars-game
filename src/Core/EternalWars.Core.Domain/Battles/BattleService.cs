@@ -30,7 +30,8 @@ public sealed record DefendAction : BattleAction;
 /// sides, and applies the result to the map (survivors, experience, defeated heroes and guards).
 /// While a battle runs, a <see cref="BattleDecision"/> is pending, so the adventure map is frozen.
 /// </summary>
-public sealed class BattleService(GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts)
+public sealed class BattleService(
+    GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts, Economy.EconomyService economy)
 {
     /// <summary>Experience for defeating (not merely routing) an enemy hero.</summary>
     public const int HeroDefeatExperience = 500;
@@ -64,6 +65,22 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         var definition = state.Creatures.Get(creature);
         var stacks = BattleSetup.SplitGuard(count).Select(c => new BattleStackSpec(definition, c, -1)).ToList();
         Begin(attacker, battle, Stacks(attacker), stacks);
+    }
+
+    /// <summary>
+    /// A hero attacks a creature bank (ADR-068): its guard always fights at the default width (no Tactics choice); each kind of creature is split into
+    /// a few stacks so that the guard has at most <see cref="BattleSetup.MaxGuardStacks"/> + 2 of them.
+    /// </summary>
+    internal void BeginBankBattle(Hero attacker, CreatureBank bank)
+    {
+        var neutral = new BattleParticipant(BattleSide.Defender, null, null, bank.Id, 0, 0, SkillLevel.None, IsComputer: true);
+        var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, bank.VisitPosition, isAmbush: false, bank.Definition.BattleTerrain);
+        var perKind = Math.Max(1, (BattleSetup.MaxGuardStacks + 2) / bank.Guard.Count);
+        var stacks = bank.Guard
+            .SelectMany(s => BattleSetup.SplitGuard(s.Count).Chunk((int)Math.Ceiling(Math.Min(s.Count, BattleSetup.MaxGuardStacks) / (double)perKind))
+                .Select(part => new BattleStackSpec(state.Creatures.Get(s.Creature), part.Sum(), -1)))
+            .ToList();
+        Begin(attacker, battle, Stacks(attacker), stacks, widthChoice: false);
     }
 
     /// <summary>
@@ -210,7 +227,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
     private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null) =>
         new(attacker, defender, terrain ?? state.Map.GetTerrain(location), location, isAmbush, state.Random.Fork());
 
-    private void Begin(Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders)
+    private void Begin(Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders, bool widthChoice = true)
     {
         if (state.Battle is not null)
         {
@@ -224,7 +241,7 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
 
         // The phase is settled before anyone hears of the battle, so views see the width choice (publish after mutating).
         var (chooser, level) = BattleSetup.EffectiveTactics(battle.Attacker.Tactics, battle.Defender.Tactics);
-        var choosing = chooser is { } side && !battle.IsComputerControlled(side);
+        var choosing = widthChoice && chooser is { } side && !battle.IsComputerControlled(side);
         if (choosing)
         {
             battle.Phase = BattlePhase.ChoosingWidth;
@@ -429,6 +446,9 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
                 }
 
                 break;
+            case CreatureBank bank when winner is not null:
+                Plunder(bank, winner);
+                break;
             case CreatureDwelling dwelling:
                 dwelling.Guard = null;
                 events.Publish(new MapObjectChanged(dwelling.Id));
@@ -444,6 +464,20 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
                 TownService.Capture(events, town, winner.Owner);
                 break;
         }
+    }
+
+    /// <summary>The bank's reward goes to the winner and the bank is empty until it refills (ADR-068).</summary>
+    private void Plunder(CreatureBank bank, Hero winner)
+    {
+        var (reward, tier) = (bank.Reward, bank.RewardArtifact);
+        bank.PlunderedOn = state.Date;
+        bank.Guard = [];
+        bank.Reward = Economy.ResourceSet.Empty;
+        bank.RewardArtifact = null;
+        economy.Grant(winner.Owner, reward);
+        var found = tier is { } t && artifacts.Draw(t) is { } artifact && artifacts.Grant(winner, artifact, ArtifactSource.Found) ? artifact : null;
+        events.Publish(new CreatureBankPlundered(bank.Id, winner.Id, reward, found));
+        events.Publish(new MapObjectChanged(bank.Id));
     }
 
     /// <summary>

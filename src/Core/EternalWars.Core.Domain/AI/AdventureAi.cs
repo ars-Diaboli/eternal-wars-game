@@ -878,6 +878,15 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 case ResourceProvider provider when provider.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, ProviderValue(provider), GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
+                case CreatureBank { IsGuarded: true } bank when visit != hero.Position && !hero.Army.IsEmpty:
+                    // Worth its reward; the simulated fight later decides whether the hero can take it (the guard stays whole if it fails).
+                    var bankGuard = Army.Of([.. bank.Guard.Take(Army.SlotCount)]);
+                    if (Plausible(ArmyPower(bankGuard)))
+                    {
+                        yield return new(visit, Value(bank.Reward) + (bank.RewardArtifact is null ? 0 : 1500), bankGuard, MaxLoss: MonsterLoss);
+                    }
+
+                    break;
                 case Prison { Hero: not null } when !_state.HeroLimitReached(owner) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, 2500, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;

@@ -300,6 +300,10 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Message = sign.Message,
             },
+            CreatureBank => new CreatureBankDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
             Observatory => new ObservatoryDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -392,6 +396,7 @@ public static class MapConverter
                 TrainingSiteDocument => new TrainingSite(id, definition, position),
                 SignDocument sign => new SignPost(id, definition, position, sign.Message),
                 ObservatoryDocument => new Observatory(id, definition, position),
+                CreatureBankDocument => new CreatureBank(id, definition, position),
                 HillFortDocument => new HillFort(id, definition, position),
                 TownGateDocument => new TownGate(id, definition, position),
                 WarMachineFactoryDocument => new WarMachineFactory(id, definition, position),

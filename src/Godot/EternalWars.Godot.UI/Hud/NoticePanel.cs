@@ -29,6 +29,9 @@ public partial class NoticePanel : PanelContainer
         this.SubscribeWhileInTree<MapObjectRefused>(session.Events, e => Show(e.Hero, e.Reason));
         this.SubscribeWhileInTree<MapObjectFoundEmpty>(session.Events, e => Show(e.Hero, $"Nothing more to find at the {NameOf(e.Object)} for now."));
         this.SubscribeWhileInTree<HeroFreed>(session.Events, e => Show(e.Hero, $"{_session.State.GetHero(e.Hero).Name} (level {e.Level}) is free and joins you."));
+        this.SubscribeWhileInTree<CreatureBankPlundered>(session.Events, e =>
+            Show(e.Hero, $"The {NameOf(e.Bank)} is yours to plunder: {Core.Domain.Objects.ResourceProviderRules.Describe(e.Resources)}"
+                         + (e.Artifact is { } artifact ? $" and {_session.State.Artifacts.Get(artifact).Name}." : ".")));
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Visible = false);
     }
 

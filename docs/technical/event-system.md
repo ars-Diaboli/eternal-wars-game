@@ -119,7 +119,8 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectFoundEmpty(Hero, Object)` | `MapObjectInteractionService` | a hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068) |
 | `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`); for a warehouse only once the visitor chose (`ChooseResourceRewardCommand`) |
 | `MapObjectRefused(Hero, Object, Reason)` | `MapObjectInteractionService` | an object turned the hero away with a reason to show (Library below level 10, a price nobody can pay; ADR-068) |
-| `SignRead(Hero, Sign, Message)` / `ObservatoryUsed(Hero, Observatory, Owner, Center, Radius)` | `MapObjectInteractionService` | a sign was read; an observatory was used (`VisibilityService` reveals around it; ADR-068) |
+| `SignRead(Hero, Sign, Message)` / `SurroundingsRevealed(Hero, Object, Owner, Center, Radius)` | `MapObjectInteractionService` | a sign was read; an observatory or the Ruins were visited (`VisibilityService` reveals around it; ADR-068) |
+| `CreatureBankPlundered(Bank, Hero, Resources, Artifact)` / `CreatureBankRefilled(Bank)` | `BattleService` / `GuardService` | a bank's guard was beaten and its reward paid; a plundered bank filled again 28 days later (ADR-068) |
 | `HillFortUpgraded(Fort, Hero, Slot, From, To, Count)` | `MapObjectInteractionService` | a stack was upgraded at a hill fort (`ArmyChanged` follows; ADR-068) |
 | `LootFound(Hero, Object, Resources, Artifact)` | `MapObjectInteractionService` | the first visitor searched a loot site, or a chest held an artifact (ADR-068); either part may be empty; vanishing sites were removed just before |
 | `MapObjectCollected(Hero, Object)` | `MapObjectInteractionService.TryCollect` | a hero took the reward of an object with a limited visit scope; its `Visits` log changed (ADR-068), the reward's events follow |

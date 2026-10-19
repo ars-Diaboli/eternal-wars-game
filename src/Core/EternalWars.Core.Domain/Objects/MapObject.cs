@@ -78,6 +78,7 @@ public abstract class MapObject
         MapObjectKind.TownGate => new TownGate(id, definition, position),
         MapObjectKind.WarMachineFactory => new WarMachineFactory(id, definition, position),
         MapObjectKind.Prison => new Prison(id, definition, position),
+        MapObjectKind.CreatureBank => new CreatureBank(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }

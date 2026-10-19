@@ -59,6 +59,9 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
                     // An abandoned mine is always guarded (ADR-068) unless the map set a guard of its own.
                     abandoned.Guard = new GuardStack(creature, state.Random.NextInclusive(abandoned.Definition.GuardMin, abandoned.Definition.GuardMax));
                     break;
+                case CreatureBank { Guard.Count: 0, PlunderedOn: null } bank:
+                    CreatureBankRules.Fill(bank, state.Random);
+                    break;
                 case CreatureDwelling { Owner: null, Guard: null } dwelling
                     when DwellingGuards.Count(state.Creatures.Get(dwelling.Creature).Tier) is { } guards:
                     dwelling.Guard = new GuardStack(dwelling.Creature, guards);
@@ -73,6 +76,17 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
         {
             var (min, max) = CountRange(state.Creatures.Get(creature).Tier);
             return state.Random.NextInclusive(min, max);
+        }
+    }
+
+    /// <summary>A new day: plundered banks whose time has come fill again with a new roll (ADR-068).</summary>
+    internal void RefillBanks()
+    {
+        foreach (var bank in state.ObjectsOf<CreatureBank>().Where(b => CreatureBankRules.RefillsOn(b, state.Date)).OrderBy(b => b.Id.Value).ToList())
+        {
+            CreatureBankRules.Fill(bank, state.Random);
+            events.Publish(new CreatureBankRefilled(bank.Id));
+            events.Publish(new MapObjectChanged(bank.Id));
         }
     }
 
