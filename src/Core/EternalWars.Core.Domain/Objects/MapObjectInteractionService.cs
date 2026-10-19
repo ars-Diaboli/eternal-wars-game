@@ -130,6 +130,24 @@ public sealed class MapObjectInteractionService(
                 Train(hero, training);
                 break;
 
+            case SignPost sign:
+                events.Publish(new SignRead(hero.Id, sign.Id, sign.Message));
+                break;
+
+            case Observatory observatory:
+                // Every visit looks out (it only reveals what is still hidden); the log tells the AI which heroes have been up there.
+                TryCollect(hero, observatory);
+                events.Publish(new ObservatoryUsed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
+                break;
+
+            case TownGate gate:
+                OfferTowns(hero, gate);
+                break;
+
+            case Prison prison:
+                Free(hero, prison);
+                break;
+
             case MonsterGuard monster:
                 guards.Encounter(hero, monster);
                 break;
@@ -262,6 +280,134 @@ public sealed class MapObjectInteractionService(
     {
         events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
         battles.BeginHeroBattle(attacker, defender, isAmbush);
+    }
+
+    /// <summary>The town gate's picker: the owner's towns, an occupied entrance listed but unavailable (ADR-068, MAP-12).</summary>
+    private void OfferTowns(Hero hero, TownGate gate)
+    {
+        var towns = state.ObjectsOf<Town>().Where(t => t.Owner == hero.Owner).OrderBy(t => t.Id.Value)
+            .Select(t => new TownGateOption(t.Id, t.Name, state.HeroAt(t.VisitPosition) is null))
+            .ToList();
+        if (towns.Count == 0)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, gate.Id, "You have no town to go to."));
+            return;
+        }
+
+        var decision = new TownGateDecision(hero.Id, gate.Id, towns);
+        state.PendingDecision = decision;
+        events.Publish(new DecisionRequested(decision));
+    }
+
+    /// <summary>The visitor of a town gate goes to the town picked, at no movement cost, or stays (ADR-068).</summary>
+    internal void ResolveTownGate(MapObjectId? townId)
+    {
+        if (state.PendingDecision is not TownGateDecision decision)
+        {
+            throw new InvalidOperationException("No town gate is open.");
+        }
+
+        var hero = state.GetHero(decision.Hero);
+        Town? town = null;
+        if (townId is { } id)
+        {
+            town = state.FindObject(id) as Town;
+            if (town is null || town.Owner != hero.Owner || decision.Towns.All(t => t.Town != id))
+            {
+                throw new InvalidOperationException("That town is not on the list.");
+            }
+
+            if (state.HeroAt(town.VisitPosition) is not null)
+            {
+                throw new InvalidOperationException($"Someone stands at the entrance of {town.Name}.");
+            }
+        }
+
+        state.PendingDecision = null;
+        if (town is not null)
+        {
+            var from = hero.Position;
+            hero.Position = town.VisitPosition;
+            events.Publish(new HeroTeleported(hero.Id, from, hero.Position));
+            TownService.AutoAppoint(state, events, town, hero);
+        }
+
+        events.Publish(new DecisionResolved(decision));
+    }
+
+    /// <summary>A prisoner joins the visitor's player where the prison stood, unless the player has all the heroes it may (ADR-068, MAP-5).</summary>
+    private void Free(Hero hero, Prison prison)
+    {
+        if (state.HeroLimitReached(hero.Owner))
+        {
+            events.Publish(new MapObjectRefused(hero.Id, prison.Id, $"You may have at most {state.HeroLimit(hero.Owner)} heroes; the prisoner stays."));
+            return;
+        }
+
+        if (prison.Hero is not { } heroId || !state.HeroRoster.Contains(heroId))
+        {
+            events.Publish(new MapObjectRefused(hero.Id, prison.Id, "The prison is empty."));
+            return;
+        }
+
+        RemoveFromMap(prison);
+        var level = Math.Max(1, prison.Level ?? 1);
+        var freed = Hero.Create(state.NextUnusedHeroId(), hero.Owner, prison.Position, null, state.HeroRoster.Get(heroId));
+        freed.Experience = ExperienceTable.For(level);
+        state.AddHero(freed);
+        progression.LevelUpAutomatically(freed);
+        freed.MaxMovementPoints = MovementAllowance.Daily(freed, state.Creatures);
+        freed.MovementPoints = 0; // it starts moving on its owner's next turn
+        events.Publish(new HeroFreed(prison.Id, freed.Id, hero.Owner, heroId, freed.Level));
+    }
+
+    /// <summary>The hero on a hill fort's entrance upgrades one of its stacks of tiers 1–3 for 150 % of the price difference (ADR-068, MAP-11).</summary>
+    internal void UpgradeAtHillFort(PlayerId player, MapObjectId fortId, int slot)
+    {
+        var hero = HeroAt<HillFort>(player, fortId, out var fort);
+        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+        var upgraded = HillFortRules.UpgradeOf(state.Creatures, stack.Creature)
+                       ?? throw new InvalidOperationException("Only stacks of tiers 1–3 that have an upgrade are upgraded here.");
+        if (!economy.TrySpend(player, HillFortRules.Cost(state.Creatures, stack)))
+        {
+            throw new InvalidOperationException("Not enough resources.");
+        }
+
+        hero.Army.Set(slot, new CreatureStack(upgraded.Id, stack.Count));
+        events.Publish(new HillFortUpgraded(fort.Id, hero.Id, slot, stack.Creature, upgraded.Id, stack.Count));
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+    }
+
+    /// <summary>The hero on a War Machine Factory's entrance buys a machine it lacks at the blacksmith's price (ADR-068, MAP-13).</summary>
+    internal void BuyAtFactory(PlayerId player, MapObjectId factoryId, Battles.WarMachineSlot slot)
+    {
+        var hero = HeroAt<WarMachineFactory>(player, factoryId, out var factory);
+        if (hero.WarMachines.Contains(slot))
+        {
+            throw new InvalidOperationException($"{hero.Name} already has that machine.");
+        }
+
+        if (!economy.TrySpend(player, Battles.WarMachines.Cost(slot)))
+        {
+            throw new InvalidOperationException("Not enough gold.");
+        }
+
+        hero.AddWarMachine(slot);
+        events.Publish(new WarMachineBought(factory.Id, hero.Id, slot));
+    }
+
+    /// <summary>The player's hero standing on the entrance of an object of type <typeparamref name="T"/>, with nothing pending.</summary>
+    private Hero HeroAt<T>(PlayerId player, MapObjectId id, out T mapObject)
+        where T : MapObject
+    {
+        mapObject = state.FindObject(id) as T ?? throw new InvalidOperationException($"{id} is not a {typeof(T).Name}.");
+        if (state.PendingDecision is not null)
+        {
+            throw new InvalidOperationException("Resolve the pending decision first.");
+        }
+
+        var hero = state.HeroAt(mapObject.VisitPosition);
+        return hero is not null && hero.Owner == player ? hero : throw new InvalidOperationException($"No own hero stands at the {mapObject.Definition.Name}.");
     }
 
     /// <summary>

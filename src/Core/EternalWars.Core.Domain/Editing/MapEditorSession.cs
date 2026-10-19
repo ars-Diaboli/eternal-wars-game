@@ -887,6 +887,55 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>The message a sign post shows (ADR-068).</summary>
+    public EditResult SetSignMessage(MapObjectId id, string message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not SignPost sign)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        var previous = sign.Message;
+        Run(new DelegateCommand("Set sign message", () => Apply(message), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(string value)
+        {
+            sign.Message = value;
+            _bus.Publish(new MapObjectChanged(sign.Id));
+        }
+    }
+
+    /// <summary>Who sits in a prison and at what level (ADR-068); null = drawn when the game starts.</summary>
+    public EditResult SetPrison(MapObjectId id, string? hero, int? level)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Prison prison)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (hero is not null && !Scenario.HeroRoster.Contains(hero))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        if (level is < 1 or > 75)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = (prison.Hero, prison.Level);
+        Run(new DelegateCommand("Set prisoner", () => Apply(hero, level), () => Apply(previous.Hero, previous.Level)));
+        return EditResult.Ok;
+
+        void Apply(string? who, int? at)
+        {
+            (prison.Hero, prison.Level) = (who, at);
+            _bus.Publish(new MapObjectChanged(prison.Id));
+        }
+    }
+
     /// <summary>
     /// How one monster stack guards its surroundings (ADR-065): Classic (HoMM3 zone of control, pickups can be taken
     /// from outside) or Area (treasure guard: touching anything in the 3×3 area starts the fight).

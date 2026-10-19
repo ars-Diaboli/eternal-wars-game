@@ -5,7 +5,7 @@ change each; `❓` marks items that wait for a design answer in [open-questions.
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
 **Where we are (2026-10-19)**: the adventure-map object catalogue is designed (ADR-068, block in Phase 3); its shared rules, the hero limit, the resource providers, the one-time loot, the buffs, the power-ups, abandoned mines and
-dwelling guards are built; banks, the Prison, the utilities and placing the objects in random maps are next. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+dwelling guards, the utilities and the prison are built; the creature banks and placing the objects in random maps are next. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
 save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
 (layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
@@ -298,13 +298,14 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 - [ ] Creature banks: the object kind, the rolled guard tier, win-only reward, plundered state; Churchyard, Mansion, Ruins (with the
       12-tile reveal), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank; refill after 4 weeks with a new roll ❓ CONT-2
 - [x] Guards for neutral map dwellings of tier 3 / 4 / 5 (9 / 6 / 3 base creatures, set at game start; the AI fights them)
-- [ ] Prison (level odds, faction drawn at generation, fails at the hero limit)
+- [x] Prison (level odds, faction drawn when the game starts for a map that leaves it open, refused at the hero limit; editor rows; map format v19)
 - [x] Hero limit per player (1 to 8) as a map rule: map format v15, the tavern respects it, editor setting (conditions panel; the Godot
       part builds but is not run in the editor yet), validator warning, template format v5 and a generator override; the Prison will use
       it; the new-game and "generate map" screens will offer the override when they exist
 - [x] Hero limit follow-ups (MAP-14): a player's own limit in the editor (players panel) and the map (v18); the editor refuses a hero or a
       limit that breaks it; surplus heroes of a map made elsewhere are removed when the game starts
-- [ ] Utilities: Sign, Observatory, Hill Fort, Town Gate, War Machine Factory
+- [x] Utilities: Sign, Observatory, Hill Fort, Town Gate (town picker), War Machine Factory (map format v19; game panels and the notice panel
+      not run in Godot yet; the AI uses the observatory, never the town gate, hill fort or factory)
 - [ ] Map format version, editor placement and inspector rows, validator checks for all of them
 - [ ] Random map generator: which objects `TreasurePlacer` and the zone rules may place, by value band (RMG-1)
 - [ ] AI: visits the objects that help it (resources, power-ups, buffs before fights, banks it can win)

@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
-      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>
+      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<ObservatoryUsed>, IEventHandler<HeroFreed>
 {
     public void Handle(GameStarted @event)
     {
@@ -66,6 +66,16 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
             RefreshMemory(player.Id);
         }
     }
+
+    // An observatory shows its surroundings for good (explored, like any revealed terrain; ADR-068).
+    public void Handle(ObservatoryUsed @event)
+    {
+        Reveal(@event.Owner, @event.Center, @event.Radius);
+        RefreshMemory(@event.Owner);
+    }
+
+    // A freed prisoner looks around from where the prison stood.
+    public void Handle(HeroFreed @event) => OnHeroRelocated(state.GetHero(@event.Hero), state.GetHero(@event.Hero).Position);
 
     // A hired hero stands at a town entrance and looks around from there.
     public void Handle(HeroHired @event) => OnHeroRelocated(state.GetHero(@event.Hero), state.GetHero(@event.Hero).Position);

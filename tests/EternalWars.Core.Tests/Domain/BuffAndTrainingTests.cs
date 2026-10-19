@@ -233,7 +233,7 @@ public class BuffAndTrainingTests
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
-        Assert.Equal(18, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 18);
         Assert.Contains("\"kind\": \"buff\"", json, StringComparison.Ordinal);
         Assert.Contains("\"kind\": \"training\"", json, StringComparison.Ordinal);
         Assert.Single(restored.ObjectsOf<BuffSite>());

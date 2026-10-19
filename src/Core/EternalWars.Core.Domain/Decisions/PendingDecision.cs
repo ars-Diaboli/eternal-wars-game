@@ -30,6 +30,19 @@ public sealed record TrainingDecision(HeroId Hero, MapObjectId Site, IReadOnlyLi
     public override string ToString() => $"TrainingDecision {{ Hero = {Hero}, Site = {Site}, Options = {string.Join(" | ", Options)}, CanDecline = {CanDecline} }}";
 }
 
+/// <summary>
+/// A town gate lists its visitor's owner's towns (ADR-068); <c>ChooseTownGateCommand</c> picks an available one, or none to stay.
+/// </summary>
+public sealed record TownGateDecision(HeroId Hero, MapObjectId Gate, IReadOnlyList<Objects.TownGateOption> Towns) : PendingDecision(Hero)
+{
+    public bool Equals(TownGateDecision? other) =>
+        other is not null && Hero == other.Hero && Gate == other.Gate && Towns.SequenceEqual(other.Towns);
+
+    public override int GetHashCode() => HashCode.Combine(Hero, Gate, Towns.Count);
+
+    public override string ToString() => $"TownGateDecision {{ Hero = {Hero}, Gate = {Gate}, Towns = {string.Join(" | ", Towns)} }}";
+}
+
 /// <summary>A warehouse offers the visitor its resource or gold (ADR-068): <c>ChooseResourceRewardCommand</c> picks one of <paramref name="Options"/>.</summary>
 public sealed record ResourceChoiceDecision(HeroId Hero, MapObjectId Provider, IReadOnlyList<Economy.ResourceSet> Options) : PendingDecision(Hero)
 {

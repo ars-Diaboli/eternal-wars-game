@@ -19,6 +19,15 @@ public sealed record MapObjectFoundEmpty(HeroId Hero, MapObjectId Object) : IEve
 /// <summary>A map object turned the hero away, with a reason to show (Library below level 10, a price the player cannot pay; ADR-068).</summary>
 public sealed record MapObjectRefused(HeroId Hero, MapObjectId Object, string Reason) : IEvent;
 
+/// <summary>A hero read a sign (ADR-068).</summary>
+public sealed record SignRead(HeroId Hero, MapObjectId Sign, string Message) : IEvent;
+
+/// <summary>A hero looked out from an observatory (ADR-068); <c>VisibilityService</c> reveals the terrain within <paramref name="Radius"/> of it.</summary>
+public sealed record ObservatoryUsed(HeroId Hero, MapObjectId Observatory, PlayerId Owner, MapPosition Center, int Radius) : IEvent;
+
+/// <summary>A hero upgraded a stack at a hill fort for 150 % of the upgrade price (ADR-068).</summary>
+public sealed record HillFortUpgraded(MapObjectId Fort, HeroId Hero, int Slot, string From, string To, int Count) : IEvent;
+
 /// <summary>A hero received resources from a resource provider (ADR-068); <see cref="ResourcesChanged"/> came just before.</summary>
 public sealed record ResourcesFound(HeroId Hero, MapObjectId Object, ResourceSet Resources) : IEvent;
 

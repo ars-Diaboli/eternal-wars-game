@@ -72,6 +72,12 @@ public abstract class MapObject
         MapObjectKind.Loot => new LootSite(id, definition, position),
         MapObjectKind.Buff => new BuffSite(id, definition, position),
         MapObjectKind.Training => new TrainingSite(id, definition, position),
+        MapObjectKind.Sign => new SignPost(id, definition, position),
+        MapObjectKind.Observatory => new Observatory(id, definition, position),
+        MapObjectKind.HillFort => new HillFort(id, definition, position),
+        MapObjectKind.TownGate => new TownGate(id, definition, position),
+        MapObjectKind.WarMachineFactory => new WarMachineFactory(id, definition, position),
+        MapObjectKind.Prison => new Prison(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }

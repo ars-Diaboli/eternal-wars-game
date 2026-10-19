@@ -723,6 +723,7 @@ public static class Program
             {
                 TreasureChestDecision => new ResolveTreasureChestCommand(player, TreasureChestReward.Gold),
                 ResourceChoiceDecision => new ChooseResourceRewardCommand(player, 0),
+                TownGateDecision => new ChooseTownGateCommand(player, null),
                 TrainingDecision training => new ChooseTrainingCommand(player, training.CanDecline ? null : training.Options[0]),
                 HeroExchangeDecision => new CompleteExchangeCommand(player),
                 LevelUpDecision levelUp => new ChooseSkillCommand(player, levelUp.Options[0]),

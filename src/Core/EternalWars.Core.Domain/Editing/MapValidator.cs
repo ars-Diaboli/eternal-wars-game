@@ -101,6 +101,15 @@ public static class MapValidator
                 case MonsterGuard monster when !scenario.Creatures.Contains(monster.Creature):
                     issues.Add(new(IssueSeverity.Error, $"Monster uses unknown creature '{monster.Creature}'.", monster.Position));
                     break;
+                case Prison { Hero: { } prisoner } prison when !scenario.HeroRoster.Contains(prisoner):
+                    issues.Add(new(IssueSeverity.Error, $"{name} holds the unknown hero '{prisoner}'.", prison.Position));
+                    break;
+                case Prison prison when !scenario.Terrains.IsPassable(scenario.Map.GetTerrain(prison.Position)):
+                    issues.Add(new(IssueSeverity.Error, $"{name}: the freed hero would stand on impassable terrain.", prison.Position));
+                    break;
+                case Prison prison when scenario.Heroes.Any(h => h.Definition is { } d && d == prison.Hero):
+                    issues.Add(new(IssueSeverity.Warning, $"{name} holds a hero who is already on the map.", prison.Position));
+                    break;
                 case Mine { Guard: { } guard } mine when !scenario.Creatures.Contains(guard.Creature):
                     issues.Add(new(IssueSeverity.Error, $"{name} guard uses unknown creature '{guard.Creature}'.", mine.Position));
                     break;

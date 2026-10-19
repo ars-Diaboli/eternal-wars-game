@@ -69,6 +69,8 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Neutral monster | Fights, joins or flees | implemented (ADR-040) |
 | Gates | Teleport (see below) | implemented |
 | Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
+| Utility objects | Sign, Observatory, Hill Fort, Town Gate, War Machine Factory ([below](#utility-objects)) | implemented (ADR-068), map format v19 |
+| Prison | Frees a hero for the visitor's player ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v19 |
 | Buff sites | Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables, Magic Well: statuses for the next battle or the week, movement now ([below](#temporary-buffs)) | implemented (ADR-068), map format v18 |
 | Training sites | Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi: once per hero ([below](#permanent-hero-power-ups)) | implemented (ADR-068), map format v18 |
 | Loot sites | Campfire, Supply Crates, Traveler's Wagon (picked up, vanish), Corpse, Lean To, Warrior's Tomb (stay): only the first visitor finds something ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v17 |
@@ -143,7 +145,8 @@ mines, resource piles, treasure chest, artifact pickup, map dwelling and marketp
 
 ### Rules shared by all of them
 **Built (2026-10-19)**: the shared rules below (visit scopes, hero statuses, weighted rolls, artifact draws), the hero limit, the
-resource providers, the one-time loot, the new treasure chest, the buffs and the power-ups.
+resource providers, the one-time loot, the new treasure chest, the buffs, the power-ups, abandoned mines, dwelling guards, the
+utility objects and the prison. Still to build: the creature banks.
 
 - **Artifact tiers** (decided, MAP-1): **Minor** (m), **Major** (M), **Relic** (R) as in `artifacts.csv`; the notes' extra *Treasure*
   tier is dropped, so every (t) in the notes became Minor. A **Combo** artifact is never dropped, only assembled from its pieces,
@@ -190,7 +193,7 @@ resource providers, the one-time loot, the new treasure chest, the buffs and the
 | Corpse | **Implemented.** First visitor: 80 % nothing, 20 % a Minor artifact; stays |
 | Warrior's Tomb | **Implemented.** First visitor: 80 % Minor, 15 % Major, 5 % Relic artifact, and **−3 morale for the next battle**. Every later visitor gets only the −3 |
 | Lean To | **Implemented.** First visitor: 1–6 of one random non-gold resource; stays |
-| Prison | A hero joins the visitor's player; vanishes. The level is rolled: **30 % level 1, 30 % level 5, 20 % level 10, 15 % level 20, 5 % level 30**, or the map author sets the hero. When the map is generated the prison's **faction is drawn at random** and the hero is picked from it, never one of the heroes the players chose as starting heroes (and not one already on the map). If the visitor already has the most heroes the map allows, the **visit fails** with a notification and the prison stays. A hero above level 1 gets the experience for its level and its skills and stats from level-ups the game chooses |
+| Prison | **Implemented.** A hero joins the visitor's player; vanishes. The level is rolled: **30 % level 1, 30 % level 5, 20 % level 10, 15 % level 20, 5 % level 30**, or the map author sets the hero. When the map is generated the prison's **faction is drawn at random** and the hero is picked from it, never one of the heroes the players chose as starting heroes (and not one already on the map). If the visitor already has the most heroes the map allows, the **visit fails** with a notification and the prison stays. A hero above level 1 gets the experience for its level and its skills and stats from level-ups the game chooses |
 
 ### Creature dwellings
 A map dwelling (**implemented**, ADR-054) is one creature line with its own growth. **Implemented (ADR-068)**: a neutral dwelling of
@@ -247,8 +250,8 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 ### Utility objects
 | Object | Effect |
 |---|---|
-| Sign | Shows a custom message |
-| Observatory | Reveals the terrain within **20 tiles** of the hero at once |
-| Hill Fort | Upgrades the hero's stacks of tiers **1–3**, the player picking stack by stack, for **150 % of the upgrade price** (the price difference, as in towns); tiers 4 and 5 are upgraded only in towns (decided, MAP-11) |
-| Town Gate | The visiting hero teleports to one of **its owner's towns** (teammates' towns not for now) at no movement cost. The player picks the town from a list; a town whose entrance is occupied is listed but unavailable. Routes do not plan through it (decided, MAP-12) |
-| War Machine Factory | Sells the visiting hero **its own offensive machine** (ballista, cannon, catapult or glaivethrower, ADR-056), the **ammo cart** and the **healing tent**, at the **blacksmith's prices**; not a machine the hero already has (decided, MAP-13) |
+| Sign | **Implemented.** Shows the map author's message |
+| Observatory | **Implemented.** Reveals the terrain within **20 tiles** of it at once (every visit; it remembers which heroes looked) |
+| Hill Fort | **Implemented.** Upgrades the hero's stacks of tiers **1–3**, the player picking stack by stack, for **150 % of the upgrade price** (the price difference, as in towns); tiers 4 and 5 are upgraded only in towns (decided, MAP-11) |
+| Town Gate | **Implemented.** The visiting hero teleports to one of **its owner's towns** (teammates' towns not for now) at no movement cost. The player picks the town from a list; a town whose entrance is occupied is listed but unavailable. Routes do not plan through it (decided, MAP-12) |
+| War Machine Factory | **Implemented.** Sells the visiting hero **its own offensive machine** (ballista, cannon, catapult or glaivethrower, ADR-056), the **ammo cart** and the **healing tent**, at the **blacksmith's prices**; not a machine the hero already has (decided, MAP-13) |

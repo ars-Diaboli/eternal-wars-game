@@ -160,6 +160,9 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             {
                 case null:
                     return true;
+                case TownGateDecision:
+                    command = new ChooseTownGateCommand(player, null);
+                    break;
                 case TrainingDecision training:
                     // A stat: the first (Attack, Spell Power); a price: gold when plenty is left, else the magic resources, else leave.
                     var gold = _state.GetPlayer(player).Resources.Gold;
@@ -874,6 +877,13 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     break;
                 case ResourceProvider provider when provider.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, ProviderValue(provider), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case Prison { Hero: not null } when !_state.HeroLimitReached(owner) && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    yield return new(visit, 2500, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case Observatory observatory when !observatory.Visits.Heroes.Any(h => _state.Heroes.Any(x => x.Id == h && x.Owner == owner))
+                                                  && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    yield return new(visit, 600, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case TrainingSite training when training.CanCollect(hero.Id, _state.Date) && TrainingValue(hero, training.Rule) is > 0 and var trainingWorth
                                                  && Plausible(GuardPower(visit)) && visit != hero.Position:

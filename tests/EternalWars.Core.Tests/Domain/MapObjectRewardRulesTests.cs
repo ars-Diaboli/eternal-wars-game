@@ -99,7 +99,7 @@ public class MapObjectRewardRulesTests
             {
                 MapObjectKind.ResourceProvider => VisitScope.Weekly,
                 MapObjectKind.Loot => VisitScope.FirstVisitor,
-                MapObjectKind.Training => VisitScope.OncePerHero,
+                MapObjectKind.Training or MapObjectKind.Observatory => VisitScope.OncePerHero,
                 MapObjectKind.Buff => d.Buff == BuffRule.Stables ? VisitScope.WeeklyPerHero : VisitScope.DailyPerHero,
                 _ => VisitScope.Unlimited,
             },

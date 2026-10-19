@@ -33,8 +33,11 @@ public sealed record WarMachineLost(HeroId Hero, Battles.WarMachineSlot Slot) : 
 /// <summary>A hero was hired in a town's tavern and stands at its entrance (ADR-060).</summary>
 public sealed record HeroHired(MapObjectId Town, HeroId Hero, string Definition) : IEvent;
 
-/// <summary>A hero bought a war machine at a town's blacksmith (ADR-056).</summary>
-public sealed record WarMachineBought(MapObjectId Town, HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
+/// <summary>A hero bought a war machine at a town's blacksmith (ADR-056) or a War Machine Factory (ADR-068): <paramref name="Seller"/>.</summary>
+public sealed record WarMachineBought(MapObjectId Seller, HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
+
+/// <summary>A prisoner joined <paramref name="Owner"/> (ADR-068): a hero of <paramref name="Definition"/> at <paramref name="Level"/>, where the prison stood.</summary>
+public sealed record HeroFreed(MapObjectId Prison, HeroId Hero, PlayerId Owner, string Definition, int Level) : IEvent;
 
 /// <summary>
 /// A hero reached a level, raised <paramref name="Skill"/> to <paramref name="SkillLevel"/> (null: nothing left to learn)
