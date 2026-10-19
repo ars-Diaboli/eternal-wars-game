@@ -43,7 +43,7 @@ randomly present connections. Keep, drop, or post-1.0?
 ## Adventure map objects
 
 The catalogue is [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068), ADR-068. All of MAP-1 to MAP-14 are answered (see [Answered](#answered)); nothing about the catalogue is open
-apart from CONT-2 (the creature names of the banks).
+(the banks' Dwarf is a new neutral line, 2026-10-19).
 
 ## Towns and economy
 

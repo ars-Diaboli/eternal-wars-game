@@ -168,7 +168,7 @@ utility objects, the prison and the creature banks: the whole catalogue. The ran
 - **Random rewards** draw from `GameState.Random` when the visit happens; a map author may fix the outcome.
 - **Resource groups**: *basic* = lumber, ore; *magic* = crystal, sulfur, mercury (ADR-067); "random resource" never means gold.
 - **Creature names** are mapped to our roster (the notes used HoMM3 names, ADR-068): Zombie → Ghoul, Power Lich → Arch Lich,
-  Dwarf / Battle Dwarf → Defender / Shield Guard (placeholder, ❓ CONT-2), Medusa Queen → Putrid Medusa, Cavalier → Lancer
+  Dwarf / Battle Dwarf are new neutral tier-2 creatures (`neutral.dwarf`, `neutral.battle-dwarf`; draft stats, decided 2026-10-19), Medusa Queen → Putrid Medusa, Cavalier → Lancer
   (its upgrade is the Champion). Troglodyte, Imp, Familiar, Medusa, Naga, Naga Queen, Skeleton, Skeleton Warrior, Wight, Wraith and
   Vampire Lord exist as written. Neutral stacks use the creature table's stats.
 
@@ -176,7 +176,7 @@ utility objects, the prison and the creature banks: the whole catalogue. The ran
 | Object | Effect |
 |---|---|
 | Gold Mine, Sawmill, Ore Mine, Alchemist's Lab, Crystal Pond, Sulfur Dune | Flagged; daily +1000 gold, +2 lumber, +2 ore, +1 mercury, +1 crystal, +1 sulfur (**implemented** as the mines; the notes only rename them) |
-| Abandoned versions of each | **Implemented.** A **separate object** (decided, MAP-2), guarded by Troglodytes: **150–295** at the gold mine, **100–245** elsewhere, rolled when the game starts (a guard the map sets is kept). When the guard is defeated it **turns into the normal mine** of its kind, flagged for the winner. The gold mine and the ore mine fight on **subterranean** terrain, the others on the terrain they stand on; battles have no native-terrain bonuses yet, so the terrain only shows. A normal mine keeps today's optional guard with a free choice of guard. |
+| Abandoned versions of each | **Implemented.** A **separate object** (decided, MAP-2), guarded by Troglodytes: **150–295** at the gold mine, **100–245** elsewhere, rolled when the game starts (a guard the map sets is kept). When the guard is defeated it **turns into the normal mine** of its kind, flagged for the winner. The gold mine and the ore mine fight on **subterranean** terrain, the others on the terrain they stand on; on subterranean ground the Troglodytes (Dungeon creatures) get the native-terrain bonus (+1 Attack, Defense and Speed, [combat.md](combat.md#damage)). A normal mine keeps today's optional guard with a free choice of guard. |
 | Water Wheel | **Implemented.** A visiting hero gets **500 gold** in the game's first week and **1000 gold** once a week after that (weekly) |
 | Warehouse of Wood / Ore | **Implemented.** Weekly: **8** lumber / ore **or 500 gold**, the visitor chooses (the week counts as taken once chosen) |
 | Warehouse of Sulfur / Mercury / Crystal | **Implemented.** Weekly: **5** of that resource **or 500 gold** |
@@ -189,7 +189,7 @@ utility objects, the prison and the creature banks: the whole catalogue. The ran
 |---|---|
 | Campfire | **Implemented.** 400, 500 or 600 gold and **4–6 of one random non-gold resource**, e.g. 5 lumber or 4 crystal; vanishes |
 | Supply Crates | **Implemented.** Two different random non-gold resources, **4–6 of each** (e.g. 6 sulfur and 4 ore); vanishes |
-| Resource Pile | **Implemented**, with fixed defaults inside the notes' ranges (750 gold, 7 lumber / ore, 4 magic; an author may set any amount). Rolling within 5–10 lumber / ore, 3–7 magic, 500–1000 gold is a follow-up; vanishes |
+| Resource Pile | **Implemented.** An amount the map leaves open (map format v21; every pile placed in the editor) is rolled when the game starts: **5–10** lumber / ore, **3–7** of a magic resource, **500–1000** gold in hundreds; a map may fix any amount (older maps keep theirs, the generator's treasure piles are fixed by their value); vanishes |
 | Traveler's Wagon | **Implemented.** First visitor: 10 % nothing, 30 % Minor artifact, 60 % 2–5 of one random non-gold resource; vanishes |
 | Treasure Chest | **Implemented.** Gold or experience, chosen by the player: 30 % 1000 gold or 500 XP; 30 % 1500 or 1000; 25 % 2000 or 1500; 10 % 2500 or 2000; **5 % a Minor artifact**; vanishes. Replaces the three-tier chest of ADR-039 (answers the chest half of CONT-3 and RMG-1) |
 | Corpse | **Implemented.** First visitor: 80 % nothing, 20 % a Minor artifact; stays |

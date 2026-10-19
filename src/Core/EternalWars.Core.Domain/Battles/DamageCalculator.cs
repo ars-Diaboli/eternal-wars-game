@@ -13,7 +13,7 @@ public sealed record HitModifiers(int BaseRoll, bool IsRanged, int CoverEighths 
 /// HoMM3 damage baseline in integer maths (ADR-033): base roll × stack size; +5 % per point of Attack above
 /// Defense (cap +300 %), −2.5 % per point of Defense above Attack (cap −70 %); then capability bonuses, the
 /// long-range halving, the <c>MeleePenalty</c> halving, and cover; hero skills (Melee, Archery, Armor) and the preferred
-/// creature's +Attack/+Defense (ADR-048); luck (ADR-053); Ballistics for war machines (ADR-056). Never less than 1.
+/// creature's +Attack/+Defense (ADR-048); native terrain's +1 Attack/+1 Defense (ADR-068); luck (ADR-053); Ballistics for war machines (ADR-056). Never less than 1.
 /// </summary>
 public static class DamageCalculator
 {
@@ -22,9 +22,11 @@ public static class DamageCalculator
         var attackerBonus = battle.Participant(attacker.Side).Bonus;
         var defenderBonus = battle.Participant(defender.Side).Bonus;
         var attack = attacker.Creature.Attack + battle.Participant(attacker.Side).Attack + attacker.RageAttack
-                     + (attackerBonus.Prefers(attacker.Creature) ? Heroes.SkillEffects.PreferredAttack : 0);
+                     + (attackerBonus.Prefers(attacker.Creature) ? Heroes.SkillEffects.PreferredAttack : 0)
+                     + (battle.IsNative(attacker) ? BattleState.NativeAttack : 0);
         var defense = defender.Creature.Defense + battle.Participant(defender.Side).Defense
-                      + (defenderBonus.Prefers(defender.Creature) ? Heroes.SkillEffects.PreferredDefense : 0);
+                      + (defenderBonus.Prefers(defender.Creature) ? Heroes.SkillEffects.PreferredDefense : 0)
+                      + (battle.IsNative(defender) ? BattleState.NativeDefense : 0);
         if (defender.IsDefending)
         {
             defense += DefendBonus(defense);

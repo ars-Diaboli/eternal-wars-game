@@ -30,7 +30,7 @@ internal sealed class TestBattle
 
     public static TestBattle Create(
         int width = BattleState.DefaultWidth, ulong seed = 7, int attackerAttack = 0, int defenderDefense = 0,
-        HeroBattleBonuses? attackerBonuses = null, HeroBattleBonuses? defenderBonuses = null)
+        HeroBattleBonuses? attackerBonuses = null, HeroBattleBonuses? defenderBonuses = null, IReadOnlyCollection<string>? nativeTowns = null)
     {
         var state = new BattleState(
             new BattleParticipant(BattleSide.Attacker, new PlayerId(0), new HeroId(1), null, attackerAttack, 0, SkillLevel.None, false, attackerBonuses),
@@ -38,7 +38,8 @@ internal sealed class TestBattle
             TerrainType.Grass,
             new MapPosition(0, 0),
             isAmbush: false,
-            new GameRandom(seed))
+            new GameRandom(seed),
+            nativeTowns)
         {
             Width = width,
         };

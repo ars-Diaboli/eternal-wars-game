@@ -1379,3 +1379,18 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
     value; creature banks and abandoned mines get no guard beside them, since they fight for themselves. Banks, abandoned mines and prisons are rolled
     when the game starts, as on hand-made maps.
   - Not placed: signs (no text to give) and map dwellings (zone rules later).
+- **Implementation (2026-10-19), follow-ups** (map format **v21**):
+  - **Native terrain in battle** (decided: the HoMM3 rule): a creature of a town that the battlefield's terrain lists as native
+    (`TerrainDefinition.NativeTowns`) gets +1 Attack, +1 Defense and +1 Speed (`BattleState.IsNative`, `NativeAttack` / `NativeDefense` /
+    `NativeSpeed`; `DamageCalculator` and `SpeedOf`). Each stack counts on its own; neutrals and war machines never. An abandoned gold or ore mine
+    fights underground, so its Troglodytes (Dungeon) are native there: the notes' "all native terrain bonuses".
+  - **Dwarf** (decided, closes the banks' part of CONT-2): a new neutral tier-2 line, `neutral.dwarf` (A7 D8, 3–5, 28 HP, speed 8, SpellResistance 2)
+    → `neutral.battle-dwarf` (A8 D10, 3–6, 30 HP, speed 9, SpellResistance 3, the most the format allows); draft numbers. The Dwarven Treasury uses
+    them instead of the Defender / Shield Guard.
+  - **Resource piles**: `ResourcePile.Amount` is optional; an open amount is rolled when the game starts (`GuardService.RollUnsetCounts`):
+    5–10 lumber or ore, 3–7 magic, 500–1000 gold in hundreds. Editor placements and the generator's extra piles leave it open; the generator's
+    treasure piles stay fixed by their value; a map file leaves `amount` out (v21), and every older file has one, so old maps keep theirs.
+  - **AI**: a hill fort is a target worth the town price of the upgrades the hero can pay for with a third of the gold kept; a factory 300 per
+    machine the hero lacks and would buy in a town (its offensive machine with Advanced Ballistics, a tent, a cart for shooters) with 1500 gold kept;
+    a town gate is worth 90 % of the most needed own town (defence or troops waiting, the same need that sends heroes to towns) with a free
+    entrance, and the gate's picker takes the hero there. Once on the entrance, the hero upgrades or buys.

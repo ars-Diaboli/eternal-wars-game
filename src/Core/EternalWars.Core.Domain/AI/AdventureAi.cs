@@ -160,8 +160,10 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             {
                 case null:
                     return true;
-                case TownGateDecision:
-                    command = new ChooseTownGateCommand(player, null);
+                case TownGateDecision gate:
+                    // The town the hero needs most, if it is on the list and free; else stay.
+                    var gateTown = GateTown(_state.GetHero(gate.Hero))?.Town.Id;
+                    command = new ChooseTownGateCommand(player, gate.Towns.Any(t => t.Town == gateTown && t.Available) ? gateTown : null);
                     break;
                 case TrainingDecision training:
                     // A stat: the first (Attack, Spell Power); a price: gold when plenty is left, else the magic resources, else leave.
@@ -610,6 +612,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
             EquipBest(player, hero);
             RecruitHere(player, hero);
+            UseServicesHere(player, hero);
             if (hero.MovementPoints <= 0 || Defending(hero))
             {
                 return true;
@@ -759,6 +762,125 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         };
     }
 
+    /// <summary>
+    /// What going to an own town is worth to the hero (0: nothing to do there): defending it when an enemy can reach it, the garrison alone cannot
+    /// hold it, nobody of ours is in it and the hero can; else picking up the troops waiting there when they are worth the trip.
+    /// </summary>
+    private double TownNeed(Hero hero, Town own)
+    {
+        var power = ArmyPower(hero.Army);
+        var danger = Danger(hero.Owner, own.VisitPosition);
+        if (danger > 0 && !Holds(ArmyPower(own.Garrison), danger) && TownRules.VisitingHero(_state, own) is null
+            && Holds(power + ArmyPower(own.Garrison), danger))
+        {
+            return 6000 + (own.Dwellings.Count * 500);
+        }
+
+        var waiting = ArmyPower(own.Garrison) + own.Available.Sum(a => (long)a.Value * _state.Creatures.Get(a.Key).Value);
+        return waiting * 5 > power * 3 ? 0.3 * Math.Min(waiting, Math.Max(power, 1000)) : 0;
+    }
+
+    /// <summary>The own town a town gate should take the hero to: the one it needs most whose entrance is free; null when none is worth it.</summary>
+    private (Town Town, double Need)? GateTown(Hero hero) =>
+        _state.ObjectsOf<Town>()
+            .Where(t => t.Owner == hero.Owner && t.VisitPosition != hero.Position && _state.HeroAt(t.VisitPosition) is null)
+            .Select(t => (Town: t, Need: TownNeed(hero, t)))
+            .Where(t => t.Need > 0)
+            .OrderByDescending(t => t.Need).ThenBy(t => t.Town.Id.Value)
+            .Select(t => ((Town, double)?)t)
+            .FirstOrDefault();
+
+    /// <summary>The gold kept back when spending at a map object: a third of the gold.</summary>
+    private ResourceSet Spare(PlayerId player)
+    {
+        var resources = _state.GetPlayer(player).Resources;
+        return resources - new ResourceSet(Gold: resources.Gold / 3);
+    }
+
+    /// <summary>The stacks a hill fort would upgrade for the hero, strongest first, while the spare resources last (ADR-068).</summary>
+    private List<(int Slot, CreatureStack Stack, ResourceSet Cost, long Gain)> HillFortUpgrades(Hero hero)
+    {
+        var spare = Spare(hero.Owner);
+        var upgrades = new List<(int, CreatureStack, ResourceSet, long)>();
+        foreach (var (slot, stack) in hero.Army.Stacks.OrderByDescending(s => Power(s.Stack)).ThenBy(s => s.Slot))
+        {
+            if (HillFortRules.UpgradeOf(_state.Creatures, stack.Creature) is not { } upgraded)
+            {
+                continue;
+            }
+
+            var cost = HillFortRules.Cost(_state.Creatures, stack);
+            if (spare.CanAfford(cost))
+            {
+                spare -= cost;
+                // Worth what the upgrade costs in a town: the army power sum barely sees what an upgrade adds.
+                upgrades.Add((slot, stack, cost, (long)Value((upgraded.Cost - _state.Creatures.Get(stack.Creature).Cost) * stack.Count)));
+            }
+        }
+
+        return upgrades;
+    }
+
+    /// <summary>What a visit to a hill fort is worth now: the town price of the upgrades the hero would buy.</summary>
+    private long HillFortGain(Hero hero) => HillFortUpgrades(hero).Sum(u => u.Gain);
+
+    /// <summary>The war machines the hero lacks and would buy at a factory, as in a town (ADR-056), with the gold cushion kept.</summary>
+    private List<WarMachineSlot> FactoryWants(Hero hero)
+    {
+        var wanted = new List<WarMachineSlot>();
+        if (WarMachines.FieldsOffensive(hero.SkillLevelOf(BuiltInSkills.Ballistics)))
+        {
+            wanted.Add(WarMachineSlot.Offensive);
+        }
+
+        wanted.Add(WarMachineSlot.Tent);
+        if (hero.Army.Stacks.Any(s => _state.Creatures.Get(s.Stack.Creature).Shots > 0))
+        {
+            wanted.Add(WarMachineSlot.Cart);
+        }
+
+        var gold = _state.GetPlayer(hero.Owner).Resources.Gold;
+        var bought = new List<WarMachineSlot>();
+        foreach (var slot in wanted.Where(s => !hero.WarMachines.Contains(s)))
+        {
+            if (gold - WarMachines.Cost(slot).Gold >= WarMachineCushion)
+            {
+                gold -= WarMachines.Cost(slot).Gold;
+                bought.Add(slot);
+            }
+        }
+
+        return bought;
+    }
+
+    /// <summary>A hero on a hill fort or war machine factory entrance uses it (ADR-068).</summary>
+    private void UseServicesHere(PlayerId player, Hero hero)
+    {
+        switch (_state.ObjectCellAt(hero.Position))
+        {
+            case { Object: HillFort fort, Cell: FootprintCell.Visit }:
+                foreach (var (slot, _, _, _) in HillFortUpgrades(hero))
+                {
+                    if (Active(player) && _state.PendingDecision is null)
+                    {
+                        Execute(new UpgradeAtHillFortCommand(player, fort.Id, slot));
+                    }
+                }
+
+                break;
+            case { Object: WarMachineFactory factory, Cell: FootprintCell.Visit }:
+                foreach (var slot in FactoryWants(hero))
+                {
+                    if (Active(player) && _state.PendingDecision is null)
+                    {
+                        Execute(new BuyWarMachineAtFactoryCommand(player, factory.Id, slot));
+                    }
+                }
+
+                break;
+        }
+    }
+
     /// <summary>A buff is worth a short detour at most; the Magic Well nothing until there are spells.</summary>
     private static double BuffValue(BuffRule rule) => rule switch
     {
@@ -870,7 +992,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             switch (mapObject)
             {
                 case ResourcePile pile when Plausible(GuardPower(visit, pickup: true)):
-                    yield return new(visit, GoldValue(pile.Resource, pile.Amount), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
+                    yield return new(visit, GoldValue(pile.Resource, pile.Amount ?? ResourcePile.AmountRange(pile.Resource).Min), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
                 case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit, pickup: true)):
                     yield return new(visit, 800 + (80 * Score(found)), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
@@ -959,22 +1081,18 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     }
 
                     break;
-                case Town own when own.Owner == owner && own.VisitPosition != hero.Position:
-                    // Defend it when an enemy can reach it, the garrison alone cannot hold it, nobody of ours is in it and the hero can.
-                    var danger = Danger(owner, visit);
-                    if (danger > 0 && !Holds(ArmyPower(own.Garrison), danger) && TownRules.VisitingHero(_state, own) is null
-                        && Holds(power + ArmyPower(own.Garrison), danger))
-                    {
-                        yield return new(visit, 6000 + (own.Dwellings.Count * 500));
-                        break;
-                    }
-
-                    var waiting = ArmyPower(own.Garrison) + own.Available.Sum(a => (long)a.Value * _state.Creatures.Get(a.Key).Value);
-                    if (waiting * 5 > power * 3)
-                    {
-                        yield return new(visit, 0.3 * Math.Min(waiting, Math.Max(power, 1000)));
-                    }
-
+                case Town own when own.Owner == owner && own.VisitPosition != hero.Position && TownNeed(hero, own) is > 0 and var need:
+                    yield return new(visit, need);
+                    break;
+                case TownGate when visit != hero.Position && GateTown(hero) is { Need: var gateNeed } && Plausible(GuardPower(visit)):
+                    // The gate is worth (a little less than) the town it leads to; going there through the gate costs no movement (ADR-068).
+                    yield return new(visit, 0.9 * gateNeed, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case HillFort when visit != hero.Position && HillFortGain(hero) is > 0 and var gain && Plausible(GuardPower(visit)):
+                    yield return new(visit, gain, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case WarMachineFactory when visit != hero.Position && FactoryWants(hero).Count is > 0 and var machines && Plausible(GuardPower(visit)):
+                    yield return new(visit, 300 * machines, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
             }
         }

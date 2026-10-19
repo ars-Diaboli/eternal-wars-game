@@ -285,10 +285,11 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
       warehouse choice in the decision panel, not run in Godot yet)
 - [x] Abandoned mines (six, a separate object that becomes the normal mine when the guard falls; Troglodyte guards, subterranean battle terrain for gold
       and ore; ordinary mine objects in the map format, no format change)
-- [ ] Native-terrain bonuses in battle (the abandoned mines' "all native terrain bonuses" need them; battles show the terrain only)
+- [x] Native-terrain bonuses in battle: +1 Attack, Defense and Speed for creatures of a town native to the battlefield's terrain (neutrals and
+      machines never; the battle panel shows it)
 - [x] One-time loot: Campfire, Supply Crates, Traveler's Wagon, Corpse, Lean To (map format v17, editor placement, AI picks them up); the new
       Treasure Chest table with a 5 % Minor artifact
-- [ ] Resource Pile amounts rolled within the notes' ranges when the map leaves them open (today fixed defaults: 750 / 7 / 4)
+- [x] Resource Pile amounts rolled within the notes' ranges when the map leaves them open (map format v21; editor and generator piles leave them open)
 - [x] Warrior's Tomb (artifact roll, the −3 morale status for every visitor)
 - [x] Temporary buffs: Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables (+ Lancer → Champion), Magic Well (map format v18;
       once a day per hero, the Stables once a week)
@@ -296,7 +297,7 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
       v18; choices in the decision panel, not run in Godot yet; the AI trains where it is worth it)
 - [x] Creature banks: the object kind, the rolled guard tier, win-only reward, plundered state; Churchyard, Mansion, Ruins (with the
       12-tile reveal), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank; refill after 4 weeks with a new roll (map format v20; the AI
-      plunders banks it can beat); the Dwarven Treasury's Defenders are placeholders ❓ CONT-2
+      plunders banks it can beat); the Dwarven Treasury is guarded by the new neutral Dwarf / Battle Dwarf
 - [x] Guards for neutral map dwellings of tier 3 / 4 / 5 (9 / 6 / 3 base creatures, set at game start; the AI fights them)
 - [x] Prison (level odds, faction drawn when the game starts for a map that leaves it open, refused at the hero limit; editor rows; map format v19)
 - [x] Hero limit per player (1 to 8) as a map rule: map format v15, the tavern respects it, editor setting (conditions panel; the Godot
@@ -305,11 +306,13 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 - [x] Hero limit follow-ups (MAP-14): a player's own limit in the editor (players panel) and the map (v18); the editor refuses a hero or a
       limit that breaks it; surplus heroes of a map made elsewhere are removed when the game starts
 - [x] Utilities: Sign, Observatory, Hill Fort, Town Gate (town picker), War Machine Factory (map format v19; game panels and the notice panel
-      not run in Godot yet; the AI uses the observatory, never the town gate, hill fort or factory)
+      not run in Godot yet; the AI uses all but the sign)
 - [ ] Map format version, editor placement and inspector rows, validator checks for all of them
 - [x] Random map generator: `TreasurePlacer` places the catalogue as treasure by value band (`TreasureSites`, placeholder values, one item in 3;
       banks and abandoned mines unguarded; not signs or map dwellings; generator version 3)
-- [ ] AI: visits the objects that help it (resources, power-ups, buffs before fights, banks it can win)
+- [x] AI: visits the objects that help it (resources, loot, power-ups, buffs, banks and guards it can beat, prisons, the observatory), upgrades at
+      hill forts and buys missing machines at factories when it can pay, and takes a town gate to the own town it needs most; buffs are
+      visited for their value, not timed before a fight
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets

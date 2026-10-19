@@ -105,7 +105,8 @@ public sealed class BattleState
         Map.TerrainType terrain,
         MapPosition location,
         bool isAmbush,
-        GameRandom random)
+        GameRandom random,
+        IReadOnlyCollection<string>? nativeTowns = null)
     {
         Attacker = attacker;
         Defender = defender;
@@ -113,7 +114,21 @@ public sealed class BattleState
         Location = location;
         IsAmbush = isAmbush;
         Random = random;
+        NativeTowns = nativeTowns ?? [];
     }
+
+    /// <summary>Native terrain (ADR-068): a creature of a town native to the battlefield's terrain gets +1 Attack, Defense and Speed.</summary>
+    public const int NativeAttack = 1;
+
+    public const int NativeDefense = 1;
+
+    public const int NativeSpeed = 1;
+
+    /// <summary>The towns whose creatures are at home on <see cref="Terrain"/> (the terrain's native towns).</summary>
+    public IReadOnlyCollection<string> NativeTowns { get; }
+
+    /// <summary>Whether the unit fights on its native terrain; neutral creatures and war machines never do.</summary>
+    public bool IsNative(BattleUnit unit) => !unit.IsMachine && unit.Creature.Town is { } town && NativeTowns.Contains(town);
 
     public BattleParticipant Attacker { get; }
 
@@ -177,7 +192,7 @@ public sealed class BattleState
 
     public BattleParticipant Participant(BattleSide side) => side == BattleSide.Attacker ? Attacker : Defender;
 
-    /// <summary>Battlefield speed: the creature's, plus the hero's Drill and the preferred-creature bonus (ADR-048).</summary>
+    /// <summary>Battlefield speed: the creature's, plus the hero's Drill, the preferred-creature bonus (ADR-048) and native terrain (ADR-068).</summary>
     public int SpeedOf(BattleUnit unit)
     {
         if (unit.IsMachine)
@@ -186,7 +201,8 @@ public sealed class BattleState
         }
 
         var bonus = Participant(unit.Side).Bonus;
-        return unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0);
+        return unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0)
+               + (IsNative(unit) ? NativeSpeed : 0);
     }
 
     /// <summary>Warcry effects still running, from <see cref="Round"/> on (ADR-067).</summary>

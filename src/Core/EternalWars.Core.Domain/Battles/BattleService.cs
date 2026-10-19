@@ -224,8 +224,11 @@ public sealed class BattleService(
     }
 
     /// <summary>The battlefield at <paramref name="location"/>; an object may fix the terrain (abandoned mines underground, ADR-068).</summary>
-    private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null) =>
-        new(attacker, defender, terrain ?? state.Map.GetTerrain(location), location, isAmbush, state.Random.Fork());
+    private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null)
+    {
+        var ground = terrain ?? state.Map.GetTerrain(location);
+        return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns);
+    }
 
     private void Begin(Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders, bool widthChoice = true)
     {

@@ -69,6 +69,9 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
                 case Mine { Guard: { Count: null } guard } mine:
                     mine.Guard = guard with { Count = Roll(guard.Creature) };
                     break;
+                case ResourcePile { Amount: null } pile:
+                    pile.Amount = ResourcePile.Roll(pile.Resource, state.Random);
+                    break;
             }
         }
 
