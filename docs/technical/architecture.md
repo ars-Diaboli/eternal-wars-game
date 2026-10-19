@@ -217,7 +217,7 @@ These are enforced by:
   `TemplateValidator` (errors and fairness warnings) and the generator stages (ADR-064), each a static call:
   `ZoneLayouter.Layout` (zones, Voronoi or Rectangles) → `TerrainPainter.Paint` (terrain, walls, obstacles) →
   `GeneratedMap.From` → `ConnectionPlacer.Place` (passages, gates, guards from `GuardPicker`) → `SettlementPlacer.Place`
-  (towns, mines, piles) → `RoadPlacer.Place` (roads) → `TreasurePlacer.Place` (treasure and its guards).
+  (towns, mines, piles) → `RoadPlacer.Place` (roads) → `TreasurePlacer.Place` (treasure, including the map objects of `TreasureSites`, and its guards).
   `MapGenerator.Generate` runs them in order; `GeneratedMap` is the map while the stages work on it. Each stage draws from
   its own `SeedStreams` stream, so the same inputs always give the same map, on every platform. `sim layout` runs them.
 - `ScenarioAssembler.Build` (or `MapGenerator.Build`) turns the map into the scenario `GameState` for the players set up
