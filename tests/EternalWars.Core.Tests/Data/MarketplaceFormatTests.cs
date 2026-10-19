@@ -38,7 +38,7 @@ public class MarketplaceFormatTests
     }
 
     [Fact]
-    public void FormatIsV14_AndAV13MapLoadsAndIsSavedAsV14()
+    public void AV13MapLoads_AndIsSavedInTheCurrentFormat()
     {
         const string old = """
             {
@@ -50,7 +50,7 @@ public class MarketplaceFormatTests
 
         var state = MapConverter.ToGameState(MapSerializer.Deserialize(old));
 
-        Assert.Equal(14, MapDocument.CurrentFormatVersion);
-        Assert.Equal(14, MapConverter.ToDocument(state).FormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 14);
+        Assert.Equal(MapDocument.CurrentFormatVersion, MapConverter.ToDocument(state).FormatVersion);
     }
 }

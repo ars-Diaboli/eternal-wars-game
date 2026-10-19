@@ -35,6 +35,40 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         }
     }
 
+    /// <summary>
+    /// Draws an artifact of a tier for a map reward (ADR-068). Minor and Major artifacts may repeat. Relics come from a pool: neither one drawn
+    /// before nor one lying on the map or carried by a hero; when none is left, the pool is refilled and the draw starts anew, so a hero may end
+    /// up with two of one relic. Null only when the catalog has no artifact of the tier.
+    /// </summary>
+    internal string? Draw(ArtifactTier tier)
+    {
+        var all = state.Artifacts.OfTier(tier).OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
+        if (all.Count == 0)
+        {
+            return null;
+        }
+
+        if (tier != ArtifactTier.Relic)
+        {
+            return all[state.Random.Next(all.Count)].Id;
+        }
+
+        var present = state.Heroes.SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
+            .Concat(state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).OfType<string>())
+            .ToHashSet(StringComparer.Ordinal);
+        var pool = all.Where(a => !state.DrawnRelics.Contains(a.Id) && !present.Contains(a.Id)).ToList();
+        if (pool.Count == 0)
+        {
+            state.DrawnRelics.Clear();
+            pool = all.Where(a => !present.Contains(a.Id)).ToList();
+            pool = pool.Count > 0 ? pool : all;
+        }
+
+        var drawn = pool[state.Random.Next(pool.Count)].Id;
+        state.DrawnRelics.Add(drawn);
+        return drawn;
+    }
+
     /// <summary>Puts a found artifact in the hero's backpack; false when it is full (nothing happens).</summary>
     internal bool Grant(Hero hero, string artifact, ArtifactSource source)
     {

@@ -296,6 +296,9 @@ public sealed class BattleService(GameState state, IEventPublisher events, ArmyS
         state.Battle = null;
         events.Publish(new BattleEnded(winner, reason, casualties, winning.Hero is null ? 0 : experience));
 
+        // "For the next battle" statuses are used up by this one, whatever its outcome (ADR-068).
+        progression.ExpireStatuses(new[] { winning.Hero, losing.Hero }.OfType<HeroId>().Select(state.GetHero), StatusExpiry.NextBattle);
+
         // Winner: survivors back into their slots, then the experience.
         if (winning.Hero is { } winnerId)
         {

@@ -3,7 +3,7 @@
 > Part of the [game design](overview.md). Modelled on the Heroes 3: Horn of the Abyss template system (ADR-023,
 > ADR-034, ADR-064). Open items ❓: [open-questions.md](../project/open-questions.md#random-maps-phase-4).
 
-**Status**: the template format (v4), its validator, three shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two") and every
+**Status**: the template format (v5), its validator, three shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two") and every
 generator stage including the scenario assembly are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`).
 The editor's "generate from template" exists in core (`EditorMapGenerator`, see [Editor](#editor)). There is no
 template editor, user template folder, fairness validation or game/editor UI yet; `sim layout` prints
@@ -20,9 +20,11 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
 
-## The template (`MapTemplate`, format v4)
+## The template (`MapTemplate`, format v5)
 - Name, description, supported map sizes, player-count range, max humans, whether an underground level is used, and the
-  **maximum number of heroes per player, 1 to 8** (planned, ADR-068; default 8). The generator writes it into the map.
+  **maximum number of heroes per player, 1 to 8** (v5, ADR-068; default 8). The generator writes it into the scenario's rules; its
+  callers (`MapGenerator.Build`, `EditorMapGenerator.Generate`) may override it with `maxHeroes`. There is no template editor or
+  generator UI yet, so the setting is in the file and in code.
 - **Zones**, each with:
   - type: player start, AI-only start, treasure, junction (junction behaves like treasure; it only affects validator
     warnings);

@@ -7,6 +7,12 @@ namespace EternalWars.Core.Domain.Events;
 /// <summary>Published first whenever a hero enters an object's visit tile; specific outcome events follow.</summary>
 public sealed record MapObjectVisited(HeroId Hero, MapObjectId Object) : IEvent;
 
+/// <summary>
+/// A hero took the reward of an object with a limited <see cref="Objects.VisitScope"/> (ADR-068), so the object's
+/// <see cref="Objects.MapObject.Visits"/> changed; the reward's own events follow.
+/// </summary>
+public sealed record MapObjectCollected(HeroId Hero, MapObjectId Object) : IEvent;
+
 public sealed record ResourcePileCollected(HeroId Hero, MapObjectId Object, ResourceType Resource, int Amount) : IEvent;
 
 public sealed record MineOwnerChanged(MapObjectId Mine, PlayerId? Previous, PlayerId? Current) : IEvent;

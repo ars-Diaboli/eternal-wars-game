@@ -83,6 +83,7 @@ public sealed class TurnService(
             if (state.Date.IsFirstDayOfWeek)
             {
                 events.Publish(new WeekStarted(state.Date));
+                progression.ExpireStatuses(state.Heroes, StatusExpiry.EndOfWeek);
                 towns.GrowWeekly();
             }
         }
@@ -105,6 +106,7 @@ public sealed class TurnService(
     private void BeginTurn()
     {
         var player = state.CurrentPlayer;
+        progression.ExpireStatuses(state.HeroesOf(player.Id), StatusExpiry.EndOfDay);
         movement.RestoreMovement(player.Id);
         RestoreMana(player.Id);
         towns.AppointVisitors(player.Id);

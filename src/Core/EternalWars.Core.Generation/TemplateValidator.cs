@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Editing;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -85,6 +86,11 @@ public static class TemplateValidator
         if (template.MinPlayers < 2 || template.MaxPlayers > Domain.Game.GameState.MaxPlayers || template.MinPlayers > template.MaxPlayers)
         {
             error($"The player count must go from 2 up to {Domain.Game.GameState.MaxPlayers}, with the minimum not above the maximum.");
+        }
+
+        if (template.MaxHeroes is < 1 or > ScenarioRules.HeroLimit)
+        {
+            error($"MaxHeroes must be 1 to {ScenarioRules.HeroLimit}.");
         }
 
         if (template.MaxHumans is < 1)

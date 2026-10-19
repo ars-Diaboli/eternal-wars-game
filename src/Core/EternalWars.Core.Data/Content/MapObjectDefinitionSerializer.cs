@@ -14,7 +14,8 @@ public sealed record MapObjectDefinitionDocument(
     ResourceType? Resource = null,
     int DailyYield = 0,
     string? Town = null,
-    ArtifactTier? ArtifactTier = null);
+    ArtifactTier? ArtifactTier = null,
+    VisitScope VisitScope = VisitScope.Unlimited);
 
 /// <summary>
 /// Loads and saves map object definitions, e.g. <c>[{ "id": "mine.gold", "kind": "Mine", "footprint": ["BBB","BVB"], ... }]</c>.
@@ -33,6 +34,7 @@ public static class MapObjectDefinitionSerializer
                 DailyYield = d.DailyYield,
                 Town = d.Town,
                 ArtifactTier = d.ArtifactTier,
+                VisitScope = d.VisitScope,
             })
             .ToList();
         definitions.ForEach(d => d.Validate());
@@ -41,7 +43,7 @@ public static class MapObjectDefinitionSerializer
 
     public static string Serialize(IEnumerable<MapObjectDefinition> definitions) =>
         JsonSerializer.Serialize(
-            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier)).ToList(),
+            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier, d.VisitScope)).ToList(),
             JsonDefaults.Options);
 
     public static MapObjectCatalog LoadInto(MapObjectCatalog catalog, string path) =>

@@ -15,6 +15,12 @@ public sealed record HeroManaRestored(HeroId Hero, int Mana, int MaxMana) : IEve
 
 public sealed record HeroExperienceGained(HeroId Hero, int Amount, int Total) : IEvent;
 
+/// <summary>A hero gained a temporary status from a map object (ADR-068); it replaced any status of the same source and kind.</summary>
+public sealed record HeroStatusGained(HeroId Hero, Heroes.HeroStatus Status) : IEvent;
+
+/// <summary>Temporary statuses of a hero ended: after its battle, at its owner's turn start, or when a week started (ADR-068).</summary>
+public sealed record HeroStatusesExpired(HeroId Hero, IReadOnlyList<Heroes.HeroStatus> Statuses) : IEvent;
+
 /// <summary>A war machine of the hero was destroyed in battle (ADR-056).</summary>
 public sealed record WarMachineLost(HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
 

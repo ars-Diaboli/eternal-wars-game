@@ -75,14 +75,21 @@ public sealed record ScenarioCondition(
 /// HoMM3's rule: a player that owned a town and has none any more is eliminated after this many days unless it owns a
 /// town again; 0 turns the countdown off. Needs <see cref="Elimination"/>.
 /// </param>
+/// <param name="MaxHeroes">
+/// How many heroes a player may have on the map at once, 1 to <see cref="HeroLimit"/> (ADR-068); hiring and prisons respect it.
+/// </param>
 public sealed record ScenarioRules(
     IReadOnlyList<ScenarioCondition> Victory,
     IReadOnlyList<ScenarioCondition> Defeat,
     bool StandardVictory = true,
     bool Elimination = true,
-    int GraceDays = ScenarioRules.DefaultGraceDays)
+    int GraceDays = ScenarioRules.DefaultGraceDays,
+    int MaxHeroes = ScenarioRules.HeroLimit)
 {
     public const int DefaultGraceDays = 7;
+
+    /// <summary>The most heroes a map may allow a player (and the default).</summary>
+    public const int HeroLimit = 8;
 
     /// <summary>The default: defeat every enemy, no towns and no heroes means defeat.</summary>
     public static ScenarioRules Default { get; } = new([], []);
@@ -90,7 +97,8 @@ public sealed record ScenarioRules(
     /// <summary>A sandbox: nobody wins or is eliminated, the game never ends (tests, experiments).</summary>
     public static ScenarioRules Endless { get; } = new([], [], StandardVictory: false, Elimination: false);
 
-    public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays;
+    public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays
+        && MaxHeroes == HeroLimit;
 
     /// <summary>Whether a scenario with these rules can be won at all.</summary>
     public bool CanBeWon => StandardVictory || Victory.Count > 0;

@@ -7,7 +7,7 @@
   eight tier 1–4 creature lines. That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield
   speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource).
   Edited in `data/heroes.csv`.
-- **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**; a tavern offers 2 heroes, the upgraded
+- **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, ADR-068); a tavern offers 2 heroes, the upgraded
   one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060).
 - **Primary stats** (implemented, ADR-055): Attack and Defense (added to every stack in battle), Spell Power (for
   spells, Phase 5) and Knowledge (sets the mana pool, see below). Every level raises one of them by 1, HoMM3-style,

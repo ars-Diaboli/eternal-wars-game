@@ -18,9 +18,6 @@ public static class TavernRules
     /// <summary>What hiring a hero costs.</summary>
     public static ResourceSet HeroCost { get; } = new(Gold: 2500);
 
-    /// <summary>A player has at most this many heroes.</summary>
-    public const int MaxHeroes = 8;
-
     /// <summary>
     /// The ring of towns in order (docs/content/lore.md): the Dawn Covenant (Sylvan, Haven, Academy) and the Ashen Court (Dungeon,
     /// Necropolis, Inferno) are its two arcs, and the town across the ring is each town's arch-rival.
@@ -125,9 +122,9 @@ public static class TavernRules
         }
 
         var owner = town.Owner ?? throw new InvalidOperationException("A town without an owner has no tavern customers.");
-        if (state.HeroesOf(owner).Count() >= MaxHeroes)
+        if (state.HeroLimitReached(owner))
         {
-            return $"A player has at most {MaxHeroes} heroes.";
+            return $"A player has at most {state.Rules.MaxHeroes} heroes on this map.";
         }
 
         if (state.HeroAt(town.VisitPosition) is { } standing)

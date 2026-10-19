@@ -46,6 +46,12 @@ public abstract class MapObject
     /// <summary>The object whose entrance a visit teleports the hero to, if this is a usable gate.</summary>
     public virtual MapObjectId? TeleportTarget => null;
 
+    /// <summary>Who collected the object's reward and when, for its <see cref="MapObjectDefinition.VisitScope"/> (ADR-068).</summary>
+    public VisitLog Visits { get; } = new();
+
+    /// <summary>Whether <paramref name="hero"/> may collect the reward now (the visit itself always happens).</summary>
+    public bool CanCollect(HeroId hero, GameDate date) => Visits.CanCollect(Definition.VisitScope, hero, date);
+
     public override string ToString() => $"{Definition.Name} {Id} at {Position}";
 
     /// <summary>Creates an instance of the right subclass with default per-instance values.</summary>

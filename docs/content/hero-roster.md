@@ -27,7 +27,7 @@ numbers are a draft.
   opposing is the town across the ring (Sylvan–Dungeon, Academy–Inferno, Haven–Necropolis) and is offered last. Stronghold and Swamp Bestiary
   have no ring: a basic tavern offers a native and a warrior of another town, the Brotherhood two natives and two
   warriors (`TavernRules.Slots`). Offers are shuffled per player every week, heroes on the map
-  are not offered, and a player has at most 8 heroes (ADR-060).
+  are not offered, and a player has at most 8 heroes, or the map's lower limit (ADR-060, ADR-068).
 - **Morale and luck** 0 at the start (maps and the editor can set them, ADR-053).
 - **Army**: up to 7 stacks. A hero without creatures cannot attack.
 - **War machines**: its town's offensive machine from the start; the healing tent and ammo cart are bought (below).

@@ -1240,7 +1240,7 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
 **Status**: accepted as a design (2026-10-19), user notes in `ideas.md`; **nothing implemented**. Numbers are drafts; unclear points are MAP-1 … MAP-13 in `open-questions.md`.
 - **Content**: about 60 objects in seven groups (resource providers, one-time loot, creature dwellings with guards, creature banks, permanent power-ups, temporary buffs, utilities), written out in
   [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068). The mines, resource piles, treasure chest, artifact pickup, map dwelling and marketplace already exist; the rest are new.
-- **Artifact tiers** (user decision, MAP-1): Minor, Major, Relic as in `artifacts.csv`; the notes' Treasure tier is dropped (every (t) became Minor). Combo (set) pieces are never dropped, only assembled. Relics come from a pool; an empty pool is refilled, so duplicates are fine.
+- **Artifact tiers** (user decision, MAP-1): Minor, Major, Relic as in `artifacts.csv`; the notes' Treasure tier is dropped (every (t) became Minor). A Combo (combination) artifact is never dropped, only assembled; its pieces drop. Relics come from a pool; an empty pool is refilled, so duplicates are fine.
 - **Visit scopes** (user decision): weekly (per object, resets on Monday), once per hero (visited-by set on the object), first visitor, vanishing. **Temporary effects** are a hero status that expires
   after the next battle, at the end of the day or of the week.
 - **Creature banks** (user decision): a new object kind, guards always fight (no join or flee), reward only on victory, the guard tier is rolled from the game RNG at map start or fixed by the map author,
@@ -1260,4 +1260,19 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
   Churchyard costs −1 morale (next battle) on later visits, banks refill 4 weeks after plundering (details MAP-14). Gazebo and Library once per hero; the Library does nothing below level 10.
 - **Hero limit** (user decision): the template editor and the map generator get a setting for the **maximum number of heroes per player, 1 to 8** (today a fixed 8, ADR-060). It becomes a map rule (map format bump)
   that hiring, the tavern and the Prison respect.
-
+- **Implementation (2026-10-19), steps 1 and 2 of the roadmap block**:
+  - Visit scopes: `MapObjectDefinition.VisitScope` (`Unlimited` for every existing kind, also in definition JSON), `MapObject.Visits` (`VisitLog`: the
+    absolute week of the last collection and the heroes that collected), `MapObjectInteractionService.TryCollect` (publishes `MapObjectCollected`).
+    Weekly means once per object per calendar week (`GameDate.AbsoluteWeek`). The log is not in the map format: games replay their commands.
+  - Hero statuses: `HeroStatus(Source, Kind, Value, Expires)`, kinds Morale, Luck, Movement (flat daily points), expiry NextBattle (ended by
+    `BattleService` for both heroes, any outcome), EndOfDay (the owner's next turn start), EndOfWeek (`WeekStarted`). Granted and expired by
+    `ProgressionService`, events `HeroStatusGained` and `HeroStatusesExpired`. Same source and kind replaces; other sources add (MAP-10 open).
+    An immediate movement bonus ("+400 until the end of the day") will be a direct grant with the objects, not a status.
+  - Rolls: `WeightedRoll.Pick` (weights need not add up to 100) and `ArtifactService.Draw(tier)`: Minor and Major may repeat; a Relic is never one
+    drawn since the last refill nor one on the map or carried, and an empty pool refills (`GameState.DrawnRelics`).
+  - Digest: statuses, visit logs and drawn relics are written only when present, so older replays keep their digests.
+  - Hero limit: `ScenarioRules.MaxHeroes` (1–8, `GameState.SetRules` refuses others), `GameState.HeroLimitReached` used by the tavern; map format
+    **v15** (`rules.maxHeroes`, omitted = 8); the editor's conditions panel has the spin box (undoable through `SetScenarioRules`); `MapValidator`
+    warns when a player starts with more heroes than the limit (assumed: allowed, it only stops hiring); template format **v5** (`maxHeroes`,
+    validated 1–8); `ScenarioAssembler`, `MapGenerator.Build` and `EditorMapGenerator.Generate` take an optional `maxHeroes` override. Assumed until
+    MAP-14: one limit for every player.

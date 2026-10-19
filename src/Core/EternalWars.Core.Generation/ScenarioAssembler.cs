@@ -33,7 +33,8 @@ public sealed record PlayerSetup(int Slot, string Name, bool IsHuman, string Tow
 /// town's tier-1 and tier-2 creatures, the hero's preferred creature among them when it is one, <see cref="StarterArmyMin"/>–<see cref="StarterArmyMax"/> power.</item>
 /// <item>A slot nobody takes keeps its towns in place, neutral, garrisoned by the zone's strength like any neutral town.</item>
 /// </list>
-/// The map is used up: its terrain and objects become the game's. The game has the standard rules (<see cref="ScenarioRules.Default"/>) and the
+/// The map is used up: its terrain and objects become the game's. The game has the standard rules (<see cref="ScenarioRules.Default"/>) with the hero
+/// limit of the template (<see cref="MapTemplate.MaxHeroes"/>) or of the caller (<c>maxHeroes</c>, ADR-068), and the
 /// options of the new-game screen; the map is named after the template, size and seed. Streams: <c>heroes</c>, <c>dwellings</c>, <c>armies</c>,
 /// <c>garrisons</c> per slot.
 /// </summary>
@@ -72,7 +73,8 @@ public static class ScenarioAssembler
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
         BuildingCatalog? buildings = null,
-        ArtifactCatalog? artifacts = null)
+        ArtifactCatalog? artifacts = null,
+        int? maxHeroes = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
@@ -113,6 +115,7 @@ public static class ScenarioAssembler
         map.Map.Name = $"{template.Name} {map.Layout.Size}×{map.Layout.Size} #{seed}";
         var state = new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster, buildings: buildings, artifacts: artifacts);
         state.SetTeamsLocked(template.TeamsLocked);
+        state.SetRules(ScenarioRules.Default with { MaxHeroes = maxHeroes ?? template.MaxHeroes });
         return state;
     }
 

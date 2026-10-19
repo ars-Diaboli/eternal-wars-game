@@ -88,6 +88,9 @@ public sealed class GameState
     /// <summary>The game RNG; only Domain services draw from it, in command order, so games replay exactly.</summary>
     internal GameRandom Random { get; }
 
+    /// <summary>Relics handed out as rewards since the pool was last refilled (<c>ArtifactService.Draw</c>, ADR-068).</summary>
+    internal SortedSet<string> DrawnRelics { get; } = new(StringComparer.Ordinal);
+
     /// <summary>Current state of the game RNG (saves, replay checks).</summary>
     public ulong RandomState => Random.State;
 
@@ -136,6 +139,9 @@ public sealed class GameState
     public Hero GetHero(HeroId id) => _heroes.First(h => h.Id == id);
 
     public IEnumerable<Hero> HeroesOf(PlayerId owner) => _heroes.Where(h => h.Owner == owner);
+
+    /// <summary>Whether the player already has as many heroes as the map allows (<see cref="ScenarioRules.MaxHeroes"/>, ADR-068).</summary>
+    public bool HeroLimitReached(PlayerId owner) => HeroesOf(owner).Count() >= Rules.MaxHeroes;
 
     public Hero? HeroAt(MapPosition position) => _heroes.FirstOrDefault(h => h.Position == position);
 
@@ -187,6 +193,11 @@ public sealed class GameState
         if (IsStarted)
         {
             throw new InvalidOperationException("The rules can only be changed before the game starts.");
+        }
+
+        if (rules.MaxHeroes is < 1 or > ScenarioRules.HeroLimit)
+        {
+            throw new ArgumentOutOfRangeException(nameof(rules), rules.MaxHeroes, $"A player may have 1 to {ScenarioRules.HeroLimit} heroes.");
         }
 
         Rules = rules;
