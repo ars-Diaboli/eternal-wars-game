@@ -55,6 +55,14 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
                 case MonsterGuard { Count: null } monster:
                     monster.Count = Roll(monster.Creature);
                     break;
+                case Mine { Guard: null, Definition.GuardCreature: { } creature } abandoned:
+                    // An abandoned mine is always guarded (ADR-068) unless the map set a guard of its own.
+                    abandoned.Guard = new GuardStack(creature, state.Random.NextInclusive(abandoned.Definition.GuardMin, abandoned.Definition.GuardMax));
+                    break;
+                case CreatureDwelling { Owner: null, Guard: null } dwelling
+                    when DwellingGuards.Count(state.Creatures.Get(dwelling.Creature).Tier) is { } guards:
+                    dwelling.Guard = new GuardStack(dwelling.Creature, guards);
+                    break;
                 case Mine { Guard: { Count: null } guard } mine:
                     mine.Guard = guard with { Count = Roll(guard.Creature) };
                     break;
@@ -97,11 +105,13 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
     }
 
     /// <summary>A hero visits a mine that still has its guard: always a fight.</summary>
-    internal void Encounter(Hero hero, Mine mine)
-    {
-        var guard = mine.Guard!;
-        battles.BeginGuardBattle(hero, mine, guard.Creature, guard.Count ?? CountRange(state.Creatures.Get(guard.Creature).Tier).Min);
-    }
+    internal void Encounter(Hero hero, Mine mine) => Fight(hero, mine, mine.Guard!);
+
+    /// <summary>A hero visits a dwelling that still has its guard (ADR-068): always a fight.</summary>
+    internal void Encounter(Hero hero, CreatureDwelling dwelling) => Fight(hero, dwelling, dwelling.Guard!);
+
+    private void Fight(Hero hero, MapObject guarded, GuardStack guard) =>
+        battles.BeginGuardBattle(hero, guarded, guard.Creature, guard.Count ?? CountRange(state.Creatures.Get(guard.Creature).Tier).Min);
 
     /// <summary>Accept the offer (join / let them go), or decline it and fight.</summary>
     internal void Respond(bool accept)

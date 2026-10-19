@@ -175,7 +175,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             return MoveResult.GuardEncountered;
         }
 
-        var defended = entrance is Mine { Guard: not null } || (entrance is Town { Garrison.IsEmpty: false } town && IsHostile(hero, town));
+        var defended = entrance is Mine { Guard: not null } or CreatureDwelling { Guard: not null } || (entrance is Town { Garrison.IsEmpty: false } town && IsHostile(hero, town));
         if (defended && hero.Army.IsEmpty)
         {
             return MoveResult.NoArmy;

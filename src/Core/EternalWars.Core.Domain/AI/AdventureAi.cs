@@ -911,6 +911,15 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     }
 
                     break;
+                case CreatureDwelling { Guard: { } dwellingGuard } guardedDwelling when visit != hero.Position:
+                    // Beat the guard to flag it (ADR-068); worth the dwelling plus the experience.
+                    var guardStack = new CreatureStack(dwellingGuard.Creature, Math.Max(1, dwellingGuard.Count ?? 1));
+                    if (Plausible(Power(guardStack) + GuardPower(visit)))
+                    {
+                        yield return new(visit, 1200 + (0.35 * Power(guardStack)), Army.Of(guardStack), MaxLoss: MonsterLoss);
+                    }
+
+                    break;
                 case CreatureDwelling dwelling when Plausible(GuardPower(visit)) && visit != hero.Position:
                     // Flag it (so caravans can hire there) and buy what waits, if the hero can pay and has room.
                     var dwelt = _state.Creatures.Get(dwelling.Creature);

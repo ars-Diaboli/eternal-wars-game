@@ -1248,7 +1248,7 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
 - **Creature names**: the notes used HoMM3 names; they are mapped to our roster (Zombie → Ghoul, Power Lich → Arch Lich, Dwarf / Battle Dwarf → Defender / Shield Guard, Medusa Queen → Putrid Medusa,
   Cavalier → Lancer). Dwarf is a placeholder until CONT-2.
 - **Treasure chest** gets the five-row table of the notes (including a 5 % Minor artifact) in place of the three equal tiers of ADR-039 (ADR-039 is superseded on this point). **Dwellings of tier 3 / 4 / 5** are guarded by 9 / 6 / 3 base
-  stacks, which settles the dwelling-guard part of TOWN-5.
+  creatures, which settles the dwelling-guard part of TOWN-5.
 - **Marketplace rounding** (TOWN-2): what the player gives is rounded up, what the player receives is rounded down. The implemented rule (buy price up, sale gain down) already does this.
 - **Implementation order** is the roadmap block "Adventure map objects": shared visit rules and hero statuses first, then the groups in the order resource providers, loot, buffs, trainers, banks, utilities.
   Map format bumps follow CLAUDE.md (new version, older versions keep loading).
@@ -1326,4 +1326,13 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
   - Map format **v18** (`buff` and `training` objects), definition JSON fields `buff` and `training`. All definitions are 2×2 with the entrance bottom right.
     Decision panel: training buttons and "Leave". AI: values buffs low (the Magic Well not at all until there are spells) and training by use (the Library
     from level 10, paid ones with 3000 gold to spare), picks the first stat, pays gold when rich, else magic resources, else leaves.
-
+- **Implementation (2026-10-19), abandoned mines and dwelling guards**:
+  - Abandoned mines are `Mine` objects of their own definitions `mine.abandoned.<resource>` (same footprint and yield), whose new definition fields say
+    what they become (`Becomes`), who guards them (`GuardCreature` `dungeon.troglodyte`, `GuardMin`–`GuardMax`) and where they are fought (`BattleTerrain`
+    Subterranean for gold and ore). `GuardService.RollUnsetCounts` gives an unguarded abandoned mine its Troglodytes when the game starts (a map's own guard
+    is kept). Beating the guard replaces the object with the normal mine (same id, position, owner; `GameState.ObjectCatalog`, new and passed by the map
+    converter) and flags it; `MapObjectChanged` follows, and `VisibilityService` now refreshes what players remember on it. No map format change.
+  - The notes' "all native terrain bonuses": battles have no terrain bonuses yet, so only the battlefield's terrain changes (roadmap item).
+  - Dwelling guards: `CreatureDwelling.Guard`, set at game start for an unowned dwelling of tier 3–5 (`DwellingGuards.Count`: 9 / 6 / 3 of its base creature).
+    The guard always fights (`GuardService.Encounter`); a hero without an army cannot enter; beating it clears the guard and flags the dwelling. Game state only.
+    The AI weighs the guard as the opponent at the dwelling.

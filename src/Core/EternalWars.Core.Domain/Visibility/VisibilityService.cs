@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
-      IEventHandler<HeroHired>
+      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>
 {
     public void Handle(GameStarted @event)
     {
@@ -51,6 +51,15 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     public void Handle(DwellingOwnerChanged @event) => OnOwnerChanged(@event.Dwelling, @event.Current);
 
     public void Handle(MapObjectRemoved @event)
+    {
+        foreach (var player in state.Players)
+        {
+            RefreshMemory(player.Id);
+        }
+    }
+
+    // An object changed in place (a cleared abandoned mine, a beaten dwelling guard): whoever sees it notices.
+    public void Handle(MapObjectChanged @event)
     {
         foreach (var player in state.Players)
         {

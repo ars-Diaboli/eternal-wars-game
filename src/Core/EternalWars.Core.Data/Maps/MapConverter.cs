@@ -105,7 +105,7 @@ public static class MapConverter
         var objects = document.Objects.Select(o => ToObject(o, catalog, creatures, legacyGuardMode));
         try
         {
-            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts);
+            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts, catalog);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetRules(ToRules(document.Rules));
             for (var i = 0; i < document.Players.Count; i++)

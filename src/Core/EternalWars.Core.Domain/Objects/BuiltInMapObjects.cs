@@ -80,6 +80,13 @@ public static class BuiltInMapObjects
         Mine(ResourceType.Mercury, "Alchemist's lab", 1),
         Mine(ResourceType.Sulfur, "Sulfur dune", 1),
 
+        AbandonedMine(ResourceType.Gold, "Abandoned gold mine", 1000, 150, 295, underground: true),
+        AbandonedMine(ResourceType.Lumber, "Abandoned sawmill", 2, 100, 245, underground: false),
+        AbandonedMine(ResourceType.Ore, "Abandoned ore pit", 2, 100, 245, underground: true),
+        AbandonedMine(ResourceType.Crystal, "Abandoned crystal cavern", 1, 100, 245, underground: false),
+        AbandonedMine(ResourceType.Mercury, "Abandoned alchemist's lab", 1, 100, 245, underground: false),
+        AbandonedMine(ResourceType.Sulfur, "Abandoned sulfur dune", 1, 100, 245, underground: false),
+
         new(TreasureChest, "Treasure chest", MapObjectKind.TreasureChest, Footprint.Single),
         new(SubterraneanGate, "Subterranean gate", MapObjectKind.TwoWayGate, GateFootprint),
         new(TwoWayMonolith, "Two-way monolith", MapObjectKind.TwoWayGate, MonolithFootprint),
@@ -135,6 +142,23 @@ public static class BuiltInMapObjects
     public static string PileId(ResourceType resource) => $"pile.{resource.ToString().ToLowerInvariant()}";
 
     public static string MineId(ResourceType resource) => $"mine.{resource.ToString().ToLowerInvariant()}";
+
+    /// <summary>Definition id of a resource's abandoned mine (ADR-068): <c>mine.abandoned.gold</c>.</summary>
+    public static string AbandonedMineId(ResourceType resource) => $"mine.abandoned.{resource.ToString().ToLowerInvariant()}";
+
+    /// <summary>The creature of abandoned mines' guards (the notes' Troglodytes).</summary>
+    public const string AbandonedMineGuard = "dungeon.troglodyte";
+
+    private static MapObjectDefinition AbandonedMine(ResourceType resource, string name, int dailyYield, int min, int max, bool underground) =>
+        Mine(resource, name, dailyYield) with
+        {
+            Id = AbandonedMineId(resource),
+            Becomes = MineId(resource),
+            GuardCreature = AbandonedMineGuard,
+            GuardMin = min,
+            GuardMax = max,
+            BattleTerrain = underground ? Map.TerrainType.Subterranean : null,
+        };
 
     /// <summary>Definition id of a resource's warehouse: <c>warehouse.lumber</c>.</summary>
     public static string WarehouseId(ResourceType resource) => $"warehouse.{resource.ToString().ToLowerInvariant()}";

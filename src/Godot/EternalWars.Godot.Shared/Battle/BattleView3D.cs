@@ -534,6 +534,7 @@ public partial class BattleView3D : Node3D
                 Town town => $"{town.Name} garrison",
                 MonsterGuard monster => state.Creatures.TryGet(monster.Creature, out var creature) ? $"Neutral {creature.Name}" : "Neutral monsters",
                 Mine mine => $"{mine.Definition.Name} guard",
+                CreatureDwelling dwelling => $"{dwelling.Definition.Name} guard",
                 _ => "Neutral",
             }
             : participant.Side.ToString();
