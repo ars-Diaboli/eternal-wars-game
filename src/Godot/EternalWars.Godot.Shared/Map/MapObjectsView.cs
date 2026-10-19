@@ -133,6 +133,7 @@ public partial class MapObjectsView : Node3D
         Marketplace => "Marketplace",
         ResourceProvider provider => provider.Definition.Name,
         LootSite { Vanishes: false } site => site.Definition.Name,
+        BuffSite or TrainingSite => _context.State.FindObject(known.Id)!.Definition.Name,
         _ => null,
     };
 

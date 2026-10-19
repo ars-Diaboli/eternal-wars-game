@@ -69,6 +69,8 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Neutral monster | Fights, joins or flees | implemented (ADR-040) |
 | Gates | Teleport (see below) | implemented |
 | Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
+| Buff sites | Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables, Magic Well: statuses for the next battle or the week, movement now ([below](#temporary-buffs)) | implemented (ADR-068), map format v18 |
+| Training sites | Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi: once per hero ([below](#permanent-hero-power-ups)) | implemented (ADR-068), map format v18 |
 | Loot sites | Campfire, Supply Crates, Traveler's Wagon (picked up, vanish), Corpse, Lean To, Warrior's Tomb (stay): only the first visitor finds something ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v17 |
 | Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: resources once a week per object ([below](#mines-and-resource-providers)) | implemented (ADR-068), map format v16 |
 | Visitables, loot, banks, trainers, buffs, utilities | The catalogue in [Planned objects](#planned-objects-adr-068) below | planned (ADR-068) |
@@ -141,7 +143,7 @@ mines, resource piles, treasure chest, artifact pickup, map dwelling and marketp
 
 ### Rules shared by all of them
 **Built (2026-10-19)**: the shared rules below (visit scopes, hero statuses, weighted rolls, artifact draws), the hero limit, the
-resource providers, the one-time loot and the new treasure chest.
+resource providers, the one-time loot, the new treasure chest, the buffs and the power-ups.
 
 - **Artifact tiers** (decided, MAP-1): **Minor** (m), **Major** (M), **Relic** (R) as in `artifacts.csv`; the notes' extra *Treasure*
   tier is dropped, so every (t) in the notes became Minor. A **Combo** artifact is never dropped, only assembled from its pieces,
@@ -212,35 +214,40 @@ perishes, the guard stays **intact** and the bank can be tried again.
 | Medusa Stores | 30 %: 15 Medusas, 2000 gold, 4 sulfur · 30 %: 30, 3000, 6 · 30 %: 40, 4000, 8 · 10 %: 50, 5000, 10. 50 % chance that a fifth are Putrid Medusas |
 | Naga Bank | 30 %: 5 Nagas, 3000 gold · 30 %: 10, 6000 · 30 %: 15, 9000 · 10 %: 20, 12000. 50 % chance that a fifth are Naga Queens |
 
-**Refill** (MAP-7, MAP-14): a plundered bank fills again **4 weeks** after it was plundered.
+**Refill** (decided, MAP-7, MAP-14): every bank fills again **4 weeks** after it was plundered; its guard tier is rolled again and the whole
+reward, the artifact included, comes back.
 
 ### Permanent hero power-ups
 | Object | Effect |
 |---|---|
-| Gazebo | The visiting hero pays **1500 gold** for **2500 experience**, once per hero |
-| Learning Stone | **+1000 experience** on the first visit of each hero |
-| Library of Enlightenment | **+2** to all four primary skills for a hero of **level 10 or more**, once per hero; a lower-level hero gets nothing and a message |
-| Tree of Knowledge | Once per hero per tree: the hero's experience rises to the next level; the player pays **2500 gold or 5 crystal, 5 mercury and 5 sulfur**, choosing which (no free option; decided, MAP-9) |
-| Arena | Once per hero: **+2 Attack or +2 Defense**, the player chooses |
-| Colosseum of the Magi | Once per hero: **+2 Spell Power or +2 Knowledge**, the player chooses |
+| Gazebo | **Implemented.** The visiting hero may pay **1500 gold** for **2500 experience**, once per hero; without the gold it is turned away |
+| Learning Stone | **Implemented.** **+1000 experience** on the first visit of each hero |
+| Library of Enlightenment | **Implemented.** **+2** to all four primary skills for a hero of **level 10 or more**, once per hero; a lower-level hero gets nothing and a message |
+| Tree of Knowledge | **Implemented.** Once per hero per tree: the hero's experience rises to the next level; the player pays **2500 gold or 5 crystal, 5 mercury and 5 sulfur**, choosing which (no free option; decided, MAP-9) |
+| Arena | **Implemented.** Once per hero: **+2 Attack or +2 Defense**, the player must choose |
+| Colosseum of the Magi | **Implemented.** Once per hero: **+2 Spell Power or +2 Knowledge**, the player must choose |
+
+A paid power-up (Gazebo, Tree) offers only the prices the player can pay and may be left without paying; a visit that trains nothing
+does not count.
 
 ### Temporary buffs
 | Object | Effect |
 |---|---|
-| Faerie Ring | +1 luck for the next battle |
-| Fountain of Youth | +400 movement points until the end of the day and +1 morale for the next battle |
-| Temple | +2 morale for the next battle, **+3 on day 7** of the week (the calendar day, MAP-10) |
-| Mineral Spring | +1 luck for the next battle and +600 movement points until the end of the day |
-| Stables | +400 movement points a day **for the rest of the week**; upgrades Lancers to Champions for free |
-| Magic Well | Restores 100 % of the hero's mana once per turn (useful with magic, Phase 5) |
+| Faerie Ring | **Implemented.** +1 luck for the next battle |
+| Fountain of Youth | **Implemented.** +400 movement points until the end of the day and +1 morale for the next battle |
+| Temple | **Implemented.** +2 morale for the next battle, **+3 on day 7** of the week (the calendar day, MAP-10) |
+| Mineral Spring | **Implemented.** +1 luck for the next battle and +600 movement points until the end of the day |
+| Stables | **Implemented.** +400 movement points at once and a day **for the rest of the week** (once a week per hero); upgrades Lancers to Champions for free on every visit |
+| Magic Well | **Implemented.** Restores 100 % of the hero's mana once a day (useful with magic, Phase 5) |
 
-Buffs of different objects stack within the ±5 battle cap; visiting the same object again only renews its buff (MAP-10).
+Buffs of different objects stack within the ±5 battle cap; visiting the same object again only renews its buff (MAP-10). Each hero
+takes a buff once a day (the Stables once a week), so walking off and on again gives nothing.
 
 ### Utility objects
 | Object | Effect |
 |---|---|
 | Sign | Shows a custom message |
 | Observatory | Reveals the terrain within **20 tiles** of the hero at once |
-| Hill Fort | Upgrades creatures of tiers **1–3** for **150 %** of the upgrade price (MAP-11) |
-| Town Gate | The visiting hero teleports to **any allied town** at no movement cost (MAP-12) |
-| War Machine Factory | Sells the visiting hero an **Ammo Cart for 1000 gold**, a **Ballista for 2500 gold** and a **First Aid Tent for 750 gold** (MAP-13) |
+| Hill Fort | Upgrades the hero's stacks of tiers **1–3**, the player picking stack by stack, for **150 % of the upgrade price** (the price difference, as in towns); tiers 4 and 5 are upgraded only in towns (decided, MAP-11) |
+| Town Gate | The visiting hero teleports to one of **its owner's towns** (teammates' towns not for now) at no movement cost. The player picks the town from a list; a town whose entrance is occupied is listed but unavailable. Routes do not plan through it (decided, MAP-12) |
+| War Machine Factory | Sells the visiting hero **its own offensive machine** (ballista, cannon, catapult or glaivethrower, ADR-056), the **ammo cart** and the **healing tent**, at the **blacksmith's prices**; not a machine the hero already has (decided, MAP-13) |

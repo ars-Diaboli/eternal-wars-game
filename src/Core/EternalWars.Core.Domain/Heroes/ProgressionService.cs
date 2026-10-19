@@ -25,6 +25,17 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
         OfferNext();
     }
 
+    /// <summary>A map object raises a primary stat (ADR-068).</summary>
+    internal void RaiseStat(Hero hero, PrimaryStat stat, int amount)
+    {
+        for (var i = 0; i < amount; i++)
+        {
+            hero.Raise(stat);
+        }
+
+        events.Publish(new HeroPrimaryStatRaised(hero.Id, stat, amount, hero.Stat(stat)));
+    }
+
     /// <summary>Gives a hero a temporary status (ADR-068); one of the same source and kind is replaced.</summary>
     internal void GrantStatus(Hero hero, HeroStatus status)
     {

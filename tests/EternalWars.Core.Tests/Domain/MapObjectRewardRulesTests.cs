@@ -92,11 +92,32 @@ public class MapObjectRewardRulesTests
     }
 
     [Fact]
-    public void ResourceProvidersAreWeekly_LootSitesFirstVisitor_EverythingElseHasNoVisitLimit()
+    public void EachKindOfTheCatalogue_HasItsVisitScope_TheOlderKindsNone()
     {
         Assert.All(MapObjectCatalog.Default.All, d => Assert.Equal(
-            d.Kind switch { MapObjectKind.ResourceProvider => VisitScope.Weekly, MapObjectKind.Loot => VisitScope.FirstVisitor, _ => VisitScope.Unlimited },
+            d.Kind switch
+            {
+                MapObjectKind.ResourceProvider => VisitScope.Weekly,
+                MapObjectKind.Loot => VisitScope.FirstVisitor,
+                MapObjectKind.Training => VisitScope.OncePerHero,
+                MapObjectKind.Buff => d.Buff == BuffRule.Stables ? VisitScope.WeeklyPerHero : VisitScope.DailyPerHero,
+                _ => VisitScope.Unlimited,
+            },
             d.VisitScope));
+    }
+
+    [Fact]
+    public void DailyAndWeeklyPerHero_CountEachHeroOnItsOwn()
+    {
+        var log = new VisitLog();
+        log.Record(A, new GameDate(3));
+
+        Assert.False(log.CanCollect(VisitScope.DailyPerHero, A, new GameDate(3)));
+        Assert.True(log.CanCollect(VisitScope.DailyPerHero, C, new GameDate(3)));
+        Assert.True(log.CanCollect(VisitScope.DailyPerHero, A, new GameDate(4)));
+        Assert.False(log.CanCollect(VisitScope.WeeklyPerHero, A, new GameDate(7)));
+        Assert.True(log.CanCollect(VisitScope.WeeklyPerHero, A, new GameDate(8)));
+        Assert.True(log.CanCollect(VisitScope.WeeklyPerHero, C, new GameDate(7)));
     }
 
     [Fact]

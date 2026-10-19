@@ -8,6 +8,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Core.Events;
 using EternalWars.Core.Generation;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -82,18 +83,63 @@ public class HeroLimitTests
     }
 
     [Fact]
-    public void TheEditor_ChangesTheLimitUndoably_AndTheValidatorWarnsAboutTooManyStartingHeroes()
+    public void TheEditor_ChangesTheLimitUndoably_ButNeverBelowTheHeroesAPlayerHas()
+    {
+        var state = Create("A.C.B"); // Blue has two heroes, Red one
+        var editor = new MapEditorSession(state);
+
+        Assert.Equal(EditResult.HeroLimit, editor.SetScenarioRules(state.Rules with { MaxHeroes = 1 }));
+        Assert.Equal(EditResult.InvalidValue, editor.SetScenarioRules(state.Rules with { MaxHeroes = 9 }));
+        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(state.Rules with { MaxHeroes = 2 }));
+        Assert.Equal(2, editor.Scenario.Rules.MaxHeroes);
+
+        Assert.Equal(EditResult.HeroLimit, editor.PlaceHero(Blue, new MapPosition(1, 0), "Third", out _));
+        Assert.Equal(EditResult.Ok, editor.PlaceHero(Red, new MapPosition(3, 0), "Second", out _));
+        editor.Undo();
+        editor.Undo();
+        Assert.Equal(8, editor.Scenario.Rules.MaxHeroes);
+    }
+
+    [Fact]
+    public void APlayer_MayHaveItsOwnLimit_ForCampaignMaps_SavedInTheMap()
     {
         var state = Create("A.C.B");
         var editor = new MapEditorSession(state);
 
-        editor.SetScenarioRules(state.Rules with { MaxHeroes = 1 });
+        Assert.Equal(EditResult.HeroLimit, editor.SetPlayerHeroLimit(Blue, 1));
+        Assert.Equal(EditResult.InvalidValue, editor.SetPlayerHeroLimit(Red, 0));
+        Assert.Equal(EditResult.Ok, editor.SetPlayerHeroLimit(Red, 1));
+        Assert.Equal(1, state.HeroLimit(Red));
+        Assert.Equal(8, state.HeroLimit(Blue));
+        Assert.Equal(EditResult.HeroLimit, editor.PlaceHero(Red, new MapPosition(3, 0), "Second", out _));
+        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(state.Rules with { MaxHeroes = 2 })); // Red's own limit is not the map's
 
-        Assert.Equal(1, editor.Scenario.Rules.MaxHeroes);
-        var issue = Assert.Single(MapValidator.Validate(editor.Scenario), i => i.Message.Contains("more heroes than the map allows", StringComparison.Ordinal));
-        Assert.Equal(IssueSeverity.Warning, issue.Severity);
+        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        Assert.Equal(1, restored.HeroLimit(new PlayerId(1)));
+        Assert.Equal(2, restored.HeroLimit(Blue));
+        Assert.Contains("\"maxHeroes\": 1", json, StringComparison.Ordinal);
+
         editor.Undo();
-        Assert.Equal(8, editor.Scenario.Rules.MaxHeroes);
+        editor.Undo();
+        Assert.Null(state.GetPlayer(Red).MaxHeroes);
+    }
+
+    [Fact]
+    public void AMapWithTooManyHeroes_IsFlagged_AndLosesTheNewestWhenTheGameStarts()
+    {
+        var state = Create("A.C.B");
+        state.SetRules(ScenarioRules.Default with { MaxHeroes = 1 }); // not through the editor, as a hand-written map would
+        var issue = Assert.Single(MapValidator.Validate(state), i => i.Message.Contains("more heroes than it may have", StringComparison.Ordinal));
+        Assert.Equal(IssueSeverity.Warning, issue.Severity);
+
+        var removed = new List<HeroId>();
+        var session = new GameSession(state);
+        session.Events.Subscribe<Core.Domain.Events.HeroRemoved>(e => removed.Add(e.Hero));
+        session.Start();
+
+        Assert.Equal(new[] { C }, removed); // C (id 3) is newer than A (id 1)
+        Assert.Equal(new[] { A, B }, state.Heroes.Select(h => h.Id).OrderBy(h => h.Value));
     }
 
     [Fact]

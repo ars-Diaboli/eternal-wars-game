@@ -94,6 +94,7 @@ public sealed class GameSession
     /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
     public void Start()
     {
+        Flow.RemoveSurplusHeroes();
         Flow.Begin();
         Artifacts.RollUnsetPickups();
         Turns.StartGame();
@@ -220,6 +221,9 @@ public sealed class GameSession
                 return null;
             case ChooseResourceRewardCommand reward:
                 Interactions.ResolveResourceChoice(reward.Option);
+                return null;
+            case ChooseTrainingCommand training:
+                Interactions.ResolveTraining(training.Option);
                 return null;
             case CompleteExchangeCommand:
                 Interactions.CompleteExchange();

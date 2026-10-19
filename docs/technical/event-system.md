@@ -109,12 +109,15 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroManaRestored(Hero, Mana, MaxMana)` | `TurnService` | owner's turn start, daily mana (ADR-063); not published when the pool is full |
 | `HeroExperienceGained(Hero, Amount, Total)` | `ProgressionService` | chest reward taken as XP, battle won |
 | `HeroStatusGained(Hero, Status)` / `HeroStatusesExpired(Hero, Statuses)` | `ProgressionService` (granted by map objects; expired by `BattleService` after the hero's battle, `TurnService` at the owner's turn start and when a week starts) | temporary morale, luck or daily movement from a map object (ADR-068) |
+| `HeroMovementGained(Hero, Amount, MovementPoints)` | `MapObjectInteractionService` | a buff site added movement points for today (ADR-068) |
+| `HeroPrimaryStatRaised(Hero, Stat, Amount, Value)` | `ProgressionService` | a training site raised a primary stat (Arena, Colosseum, Library; ADR-068) |
 | `HeroLeveledUp(Hero, Level, Skill, SkillLevel, Stat, StatValue)` | `ProgressionService` | a level-up choice applied: the skill picked (null: none) and the primary stat raised |
 | `WarMachineBought(Town, Hero, Slot)` | `TownService` | the blacksmith sold a war machine to the visiting hero (ADR-056) |
 | `WarMachineLost(Hero, Slot)` | `BattleService` | a hero's war machine was destroyed in battle |
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
 | `MapObjectFoundEmpty(Hero, Object)` | `MapObjectInteractionService` | a hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068) |
 | `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`); for a warehouse only once the visitor chose (`ChooseResourceRewardCommand`) |
+| `MapObjectRefused(Hero, Object, Reason)` | `MapObjectInteractionService` | an object turned the hero away with a reason to show (Library below level 10, a price nobody can pay; ADR-068) |
 | `LootFound(Hero, Object, Resources, Artifact)` | `MapObjectInteractionService` | the first visitor searched a loot site, or a chest held an artifact (ADR-068); either part may be empty; vanishing sites were removed just before |
 | `MapObjectCollected(Hero, Object)` | `MapObjectInteractionService.TryCollect` | a hero took the reward of an object with a limited visit scope; its `Visits` log changed (ADR-068), the reward's events follow |
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
@@ -141,7 +144,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
 | `ScenarioRulesChanged` | editor | the victory and defeat conditions changed (views re-read `GameState.Rules`) |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
-| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, warehouse resource choice, exchange, guard offer, battle (resolved when it ends), level-up |
+| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, warehouse resource choice, training choice, exchange, guard offer, battle (resolved when it ends), level-up |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
 | `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
 | `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone); owned mines and towns observe like heroes |
@@ -164,7 +167,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster incl. its guard mode, mine guard, chest values) |
 | `RoadsPainted(Positions, Road)` | `MapEditorSession` | road paint/erase and its undo/redo |
 | `TerrainPainted(Positions, Terrain)` | `MapEditorSession` | paint and its undo/redo |
-| `HeroPlaced` / `HeroRemoved` | `MapEditorSession` | editor hero placement |
+| `HeroPlaced` / `HeroRemoved` | `MapEditorSession`; `GameFlowService` (`HeroRemoved` only) | editor hero placement; a surplus hero removed when the game starts (ADR-068) |
 | `MapPropertiesChanged(Name, Description)` | `MapEditorSession` | |
 | `HeroStatsChanged(Hero, Attack, Defense, Tactics)` | `MapEditorSession` | (the map-wide `GuardModeChanged` is gone: a monster's guard mode is per stack and reported by `MapObjectChanged`, ADR-065) |
 | `PlayerSlotsChanged` | `MapEditorSession` | slot added/removed/edited |

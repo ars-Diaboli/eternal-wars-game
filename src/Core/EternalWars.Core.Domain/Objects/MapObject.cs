@@ -70,6 +70,8 @@ public abstract class MapObject
         MapObjectKind.Marketplace => new Marketplace(id, definition, position),
         MapObjectKind.ResourceProvider => new ResourceProvider(id, definition, position),
         MapObjectKind.Loot => new LootSite(id, definition, position),
+        MapObjectKind.Buff => new BuffSite(id, definition, position),
+        MapObjectKind.Training => new TrainingSite(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }

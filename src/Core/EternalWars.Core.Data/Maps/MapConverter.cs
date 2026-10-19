@@ -21,7 +21,7 @@ public static class MapConverter
         ToDocument(state.Map) with
         {
             Players = state.Players
-                .Select(p => new PlayerSlotDocument(p.Name, p.IsHuman, p.Team.Value == p.Id.Value ? null : p.Team.Value))
+                .Select(p => new PlayerSlotDocument(p.Name, p.IsHuman, p.Team.Value == p.Id.Value ? null : p.Team.Value, p.MaxHeroes))
                 .ToList(),
             TeamsLocked = state.TeamsLocked,
             Rules = state.Rules.IsDefault ? null : ToDocument(state.Rules),
@@ -108,6 +108,11 @@ public static class MapConverter
             var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetRules(ToRules(document.Rules));
+            for (var i = 0; i < document.Players.Count; i++)
+            {
+                state.SetHeroLimit(new PlayerId(i), document.Players[i].MaxHeroes);
+            }
+
             return state;
         }
         catch (ArgumentException e)
@@ -283,6 +288,14 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
             },
+            BuffSite => new BuffSiteDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            TrainingSite => new TrainingSiteDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
             ArtifactPickup pickup => new ArtifactPickupDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Artifact = pickup.Artifact,
@@ -351,6 +364,8 @@ public static class MapConverter
                 MarketplaceDocument => new Marketplace(id, definition, position),
                 ResourceProviderDocument => new ResourceProvider(id, definition, position),
                 LootSiteDocument => new LootSite(id, definition, position),
+                BuffSiteDocument => new BuffSite(id, definition, position),
+                TrainingSiteDocument => new TrainingSite(id, definition, position),
                 ArtifactPickupDocument artifact => new ArtifactPickup(id, definition, position, artifact.Artifact),
                 TreasureChestDocument { Gold: { } gold, Experience: { } experience } => new TreasureChest(id, definition, position, new ChestValues(gold, experience)),
                 TreasureChestDocument { Gold: null, Experience: null } => new TreasureChest(id, definition, position),

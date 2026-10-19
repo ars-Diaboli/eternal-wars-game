@@ -16,6 +16,9 @@ public sealed class Player(PlayerId id, string name, bool isHuman, TeamId? team 
 
     public ResourceSet Resources { get; internal set; }
 
+    /// <summary>The player's own hero limit (campaign-like maps, ADR-068); null = the map's <c>ScenarioRules.MaxHeroes</c>.</summary>
+    public int? MaxHeroes { get; internal set; }
+
     /// <summary>Out of the game (ADR-057): its turns are skipped and it owns nothing any more.</summary>
     public bool IsDefeated { get; internal set; }
 

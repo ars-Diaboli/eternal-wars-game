@@ -126,10 +126,11 @@ public static class MapValidator
             issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} has no starting hero or town."));
         }
 
-        // Allowed, but the player cannot hire or free a hero until it has fewer than the limit (ADR-068).
-        foreach (var player in scenario.Players.Where(p => scenario.HeroesOf(p.Id).Count() > scenario.Rules.MaxHeroes))
+        // The editor refuses this; a map made elsewhere loses the surplus when the game starts (ADR-068).
+        foreach (var player in scenario.Players.Where(p => scenario.HeroesOf(p.Id).Count() > scenario.HeroLimit(p.Id)))
         {
-            issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} starts with more heroes than the map allows ({scenario.Rules.MaxHeroes})."));
+            issues.Add(new(IssueSeverity.Warning,
+                $"Player {player.Name} starts with more heroes than it may have ({scenario.HeroLimit(player.Id)}); the newest are removed when the game starts."));
         }
 
         issues.AddRange(ValidateRules(scenario));

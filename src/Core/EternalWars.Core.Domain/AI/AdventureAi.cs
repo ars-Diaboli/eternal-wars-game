@@ -160,6 +160,17 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             {
                 case null:
                     return true;
+                case TrainingDecision training:
+                    // A stat: the first (Attack, Spell Power); a price: gold when plenty is left, else the magic resources, else leave.
+                    var gold = _state.GetPlayer(player).Resources.Gold;
+                    var site = (TrainingSite)_state.GetObject(training.Site);
+                    TrainingOption? pick = training.Options.FirstOrDefault(o => TrainingRules.Stat(o) is not null) is var stat && TrainingRules.Stat(stat) is not null
+                        ? stat
+                        : training.Options.Contains(TrainingOption.PayGold) && gold >= TrainingRules.Price(site.Rule, TrainingOption.PayGold).Gold + 3000
+                            ? TrainingOption.PayGold
+                            : training.Options.Contains(TrainingOption.PayMagicResources) ? TrainingOption.PayMagicResources : null;
+                    command = new ChooseTrainingCommand(player, pick ?? (training.CanDecline ? null : training.Options[0]));
+                    break;
                 case ResourceChoiceDecision choice:
                     // The option worth the most by the AI's resource values (a warehouse: its resource or the gold).
                     var best = Enumerable.Range(0, choice.Options.Count).MaxBy(i => Value(choice.Options[i]));
@@ -731,6 +742,29 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         _ => (ResourceProviderRules.GardenGold + GoldValue(ResourceType.Crystal, ResourceProviderRules.GardenMagic)) / 2,
     };
 
+    /// <summary>What training is worth to the hero now (0: not worth the trip, or the player cannot pay with gold to spare).</summary>
+    private double TrainingValue(Hero hero, TrainingRule rule)
+    {
+        var gold = _state.GetPlayer(hero.Owner).Resources.Gold;
+        return rule switch
+        {
+            TrainingRule.LearningStone => 1200,
+            TrainingRule.Arena or TrainingRule.ColosseumOfTheMagi => 1500,
+            TrainingRule.LibraryOfEnlightenment => hero.Level >= TrainingRules.LibraryLevel ? 3000 : 0,
+            TrainingRule.Gazebo => gold >= TrainingRules.GazeboGold + 3000 ? 1000 : 0,
+            _ => gold >= TrainingRules.TreeGold + 3000 ? 1500 : 0,
+        };
+    }
+
+    /// <summary>A buff is worth a short detour at most; the Magic Well nothing until there are spells.</summary>
+    private static double BuffValue(BuffRule rule) => rule switch
+    {
+        BuffRule.Stables => 400,
+        BuffRule.FountainOfYouth or BuffRule.MineralSpring => 300,
+        BuffRule.FaerieRing or BuffRule.Temple => 150,
+        _ => 0,
+    };
+
     /// <summary>A loot site's average worth by the AI's values (a Minor artifact counted as 1000, the tomb's morale as a cost).</summary>
     private static double LootValue(LootRule rule)
     {
@@ -840,6 +874,14 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     break;
                 case ResourceProvider provider when provider.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, ProviderValue(provider), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case TrainingSite training when training.CanCollect(hero.Id, _state.Date) && TrainingValue(hero, training.Rule) is > 0 and var trainingWorth
+                                                 && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    yield return new(visit, trainingWorth, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case BuffSite buff when buff.CanCollect(hero.Id, _state.Date) && BuffValue(buff.Rule) is > 0 and var buffWorth
+                                        && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    yield return new(visit, buffWorth, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case LootSite site when site.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit, pickup: site.Vanishes)) && visit != hero.Position:
                     yield return new(visit, LootValue(site.Rule), GuardArmy(visit, pickup: site.Vanishes), MaxLoss: MonsterLoss);

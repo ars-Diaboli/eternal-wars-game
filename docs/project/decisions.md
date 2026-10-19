@@ -1304,4 +1304,26 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
   - An artifact that does not fit in a full backpack is lost (`ArtifactBackpackFull`); `ArtifactSource.Found` marks artifacts from chests and loot.
   - Event `LootFound(Hero, Object, Resources, Artifact)`. Map format **v17** (`loot` objects). Editor placement is generic; the AI values loot sites (a spent
     one is no target). Not yet: the generator does not place loot sites; resource piles keep fixed default amounts.
+- **Answers on 2026-10-19, fourth round** (MAP-11 … MAP-14): Hill Fort at 150 % of the upgrade price, stack by stack, tiers 1–3 only; Town Gate to the owner's
+  towns only, picked from a list where an occupied entrance shows as unavailable, no route planning; War Machine Factory sells the visitor's own offensive
+  machine, the cart and the tent at the blacksmith's prices, never one the hero has; a bank's refill after 4 weeks re-rolls its tier and brings the whole
+  reward back, for every bank. Hero limit: one number for all players from the generator; the editor may set a player's own limit (campaign-like maps);
+  the editor refuses a hero or a limit that would break it; otherwise the surplus is removed. This supersedes the "allowed with a warning" assumption.
+- **Implementation (2026-10-19), hero limit follow-ups**: `Player.MaxHeroes` (null = the map's) through `GameState.SetHeroLimit`, `GameState.HeroLimit(player)`;
+  map format **v18** (`maxHeroes` on a player slot); `MapEditorSession.SetPlayerHeroLimit`, `PlaceHero` and `SetScenarioRules` refuse with the new
+  `EditResult.HeroLimit` (`SetScenarioRules` now returns an `EditResult`); the players panel has the spin box (0 = the map's). `GameFlowService.RemoveSurplusHeroes`
+  runs first in `GameSession.Start` and removes the newest heroes beyond a limit (`HeroRemoved`); the validator's warning says so.
+- **Implementation (2026-10-19), steps 5 and 6: buffs and power-ups**:
+  - New visit scopes `DailyPerHero` and `WeeklyPerHero` (the log keeps each hero's last day). Buff sites (kind `Buff`, `BuffSite`, `BuffRules`): Faerie Ring,
+    Fountain of Youth, Temple, Mineral Spring and Magic Well once a day per hero, the Stables once a week per hero. Statuses as decided; movement now is a
+    direct grant (`HeroMovementGained`); the Stables also add a +400 daily-movement status until the week ends and upgrade `haven.lancer` stacks to their
+    upgrade on every visit; the Magic Well fills the mana (`HeroManaRestored`).
+  - Training sites (kind `Training`, `TrainingSite`, `TrainingRules`), once per hero: Learning Stone +1000 XP; Library +2 to all four stats from level 10
+    (below: `MapObjectRefused`); Arena and Colosseum ask through a `TrainingDecision` that must be answered; Gazebo (1500 gold → 2500 XP) and Tree of
+    Knowledge (2500 gold or 5 crystal + 5 mercury + 5 sulfur → the next level's experience) offer only what the player can pay and may be declined
+    (`ChooseTrainingCommand` with no option, replay name `training`); nothing payable → `MapObjectRefused`. A visit that trains nothing does not count.
+    Stats are raised through `ProgressionService.RaiseStat` (`HeroPrimaryStatRaised`).
+  - Map format **v18** (`buff` and `training` objects), definition JSON fields `buff` and `training`. All definitions are 2×2 with the entrance bottom right.
+    Decision panel: training buttons and "Leave". AI: values buffs low (the Magic Well not at all until there are spells) and training by use (the Library
+    from level 10, paid ones with 3000 gold to spare), picks the first stat, pays gold when rich, else magic resources, else leaves.
 

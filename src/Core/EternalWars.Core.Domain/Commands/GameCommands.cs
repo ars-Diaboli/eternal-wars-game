@@ -29,6 +29,9 @@ public sealed record ResolveTreasureChestCommand(PlayerId Player, TreasureChestR
 /// <summary>Answers a <c>ResourceChoiceDecision</c>: takes the option at <paramref name="Option"/> (0-based) of a warehouse (ADR-068).</summary>
 public sealed record ChooseResourceRewardCommand(PlayerId Player, int Option) : GameCommand(Player);
 
+/// <summary>Answers a <c>TrainingDecision</c>: one of its options, or null to leave without training when the site allows it (ADR-068).</summary>
+public sealed record ChooseTrainingCommand(PlayerId Player, Objects.TrainingOption? Option) : GameCommand(Player);
+
 /// <summary>Closes the exchange screen.</summary>
 public sealed record CompleteExchangeCommand(PlayerId Player) : GameCommand(Player);
 

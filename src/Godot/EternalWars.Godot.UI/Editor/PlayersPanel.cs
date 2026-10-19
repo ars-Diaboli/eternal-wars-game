@@ -44,6 +44,7 @@ public partial class PlayersPanel : VBoxContainer
         _rows.AddChild(new Label { Text = "Name" });
         _rows.AddChild(new Label { Text = "Human" });
         _rows.AddChild(new Label { Text = "Team" });
+        _rows.AddChild(new Label { Text = "Max heroes (0 = map's)" });
         foreach (var player in _editor.Scenario.Players)
         {
             var id = player.Id;
@@ -59,6 +60,15 @@ public partial class PlayersPanel : VBoxContainer
             var team = new SpinBox { MinValue = 0, MaxValue = GameState.MaxPlayers - 1, Value = player.Team.Value };
             team.ValueChanged += v => _editor.SetPlayerTeam(id, new TeamId((int)v));
             _rows.AddChild(team);
+
+            // ADR-068: a player's own hero limit for campaign-like maps; 0 = the map's limit.
+            var heroes = new SpinBox { MinValue = 0, MaxValue = ScenarioRules.HeroLimit, Value = player.MaxHeroes ?? 0 };
+            heroes.ValueChanged += v =>
+            {
+                Report(_editor.SetPlayerHeroLimit(id, v == 0 ? null : (int)v));
+                heroes.SetValueNoSignal(_editor.Scenario.GetPlayer(id).MaxHeroes ?? 0);
+            };
+            _rows.AddChild(heroes);
         }
     }
 

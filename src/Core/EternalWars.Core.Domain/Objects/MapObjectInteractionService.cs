@@ -122,6 +122,14 @@ public sealed class MapObjectInteractionService(
                 Search(hero, site);
                 break;
 
+            case BuffSite buff:
+                Bless(hero, buff);
+                break;
+
+            case TrainingSite training:
+                Train(hero, training);
+                break;
+
             case MonsterGuard monster:
                 guards.Encounter(hero, monster);
                 break;
@@ -250,6 +258,152 @@ public sealed class MapObjectInteractionService(
     {
         events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
         battles.BeginHeroBattle(attacker, defender, isAmbush);
+    }
+
+    /// <summary>
+    /// A buff site (ADR-068): statuses for the next battle or the week, movement points for today, the Magic Well's mana. The Stables also upgrade
+    /// Lancers on every visit, whether the hero may take the movement again or not.
+    /// </summary>
+    private void Bless(Hero hero, BuffSite site)
+    {
+        if (site.Rule == BuffRule.Stables)
+        {
+            UpgradeAtStables(hero);
+        }
+
+        if (!TryCollect(hero, site))
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, site.Id));
+            return;
+        }
+
+        foreach (var status in BuffRules.Statuses(site.Definition, state.Date))
+        {
+            progression.GrantStatus(hero, status);
+        }
+
+        if (BuffRules.MovementNow(site.Rule) is > 0 and var points)
+        {
+            hero.MovementPoints += points;
+            events.Publish(new HeroMovementGained(hero.Id, points, hero.MovementPoints));
+        }
+
+        if (site.Rule == BuffRule.MagicWell && hero.Mana < hero.MaxMana)
+        {
+            hero.Mana = hero.MaxMana;
+            events.Publish(new HeroManaRestored(hero.Id, hero.Mana, hero.MaxMana));
+        }
+    }
+
+    private void UpgradeAtStables(Hero hero)
+    {
+        if (!state.Creatures.TryGet(BuffRules.StablesCreature, out var lancer) || lancer.UpgradesTo is not { } upgrade)
+        {
+            return;
+        }
+
+        var stacks = hero.Army.Stacks.Where(s => s.Stack.Creature == lancer.Id).ToList();
+        foreach (var (slot, stack) in stacks)
+        {
+            hero.Army.Set(slot, new CreatureStack(upgrade, stack.Count));
+        }
+
+        if (stacks.Count > 0)
+        {
+            events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+        }
+    }
+
+    /// <summary>
+    /// A training site (ADR-068): once per hero. The Learning Stone and the Library give at once (the Library only from level 10); the others ask
+    /// through a <see cref="TrainingDecision"/>, and a paid one turns the hero away when the player cannot pay any price.
+    /// </summary>
+    private void Train(Hero hero, TrainingSite site)
+    {
+        if (!site.CanCollect(hero.Id, state.Date))
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, site.Id));
+            return;
+        }
+
+        switch (site.Rule)
+        {
+            case TrainingRule.LearningStone:
+                TryCollect(hero, site);
+                progression.GrantExperience(hero, TrainingRules.LearningStoneExperience);
+                return;
+            case TrainingRule.LibraryOfEnlightenment when hero.Level < TrainingRules.LibraryLevel:
+                events.Publish(new MapObjectRefused(hero.Id, site.Id, $"Only heroes of level {TrainingRules.LibraryLevel} or more may study here."));
+                return;
+            case TrainingRule.LibraryOfEnlightenment:
+                TryCollect(hero, site);
+                foreach (var stat in Enum.GetValues<PrimaryStat>())
+                {
+                    progression.RaiseStat(hero, stat, TrainingRules.LibraryStats);
+                }
+
+                return;
+        }
+
+        var options = TrainingRules.Options(site.Rule, state.GetPlayer(hero.Owner).Resources);
+        if (options.Count == 0)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, site.Id, "Not enough resources to pay."));
+            return;
+        }
+
+        var decision = new TrainingDecision(hero.Id, site.Id, options, TrainingRules.CanDecline(site.Rule));
+        state.PendingDecision = decision;
+        events.Publish(new DecisionRequested(decision));
+    }
+
+    /// <summary>The visitor of a training site picks an option, pays for it and trains; or leaves, where the site allows it (ADR-068).</summary>
+    internal void ResolveTraining(TrainingOption? option)
+    {
+        if (state.PendingDecision is not TrainingDecision decision)
+        {
+            throw new InvalidOperationException("No training is offered.");
+        }
+
+        if (option is not { } picked)
+        {
+            if (!decision.CanDecline)
+            {
+                throw new InvalidOperationException("Choose one of the options.");
+            }
+
+            state.PendingDecision = null;
+            events.Publish(new DecisionResolved(decision));
+            return;
+        }
+
+        if (!decision.Options.Contains(picked))
+        {
+            throw new InvalidOperationException($"{picked} is not offered.");
+        }
+
+        var hero = state.GetHero(decision.Hero);
+        var site = (TrainingSite)state.GetObject(decision.Site);
+        if (!economy.TrySpend(hero.Owner, TrainingRules.Price(site.Rule, picked)))
+        {
+            throw new InvalidOperationException("Not enough resources.");
+        }
+
+        state.PendingDecision = null;
+        TryCollect(hero, site);
+        if (TrainingRules.Stat(picked) is { } stat)
+        {
+            progression.RaiseStat(hero, stat, TrainingRules.StatBonus);
+        }
+
+        events.Publish(new DecisionResolved(decision));
+        var experience = site.Rule switch
+        {
+            TrainingRule.Gazebo => TrainingRules.GazeboExperience,
+            TrainingRule.TreeOfKnowledge => TrainingRules.ExperienceToNextLevel(hero),
+            _ => 0,
+        };
+        progression.GrantExperience(hero, experience);
     }
 
     /// <summary>

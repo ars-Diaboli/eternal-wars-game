@@ -16,4 +16,4 @@ Recorded so far:
 Still to decide (now in open-questions.md):
 - Swamp Bestiary: what Adrenaline does (placeholder group, ADR-063): HERO-2.
 - Marketplace details: the map marketplace's treasure threshold (ADR-067): TOWN-2.
-- Details of the new objects: MAP-11 … MAP-14 (MAP-1 … MAP-10 are answered, ADR-068).
+- (MAP-1 … MAP-14 are all answered, ADR-068.)

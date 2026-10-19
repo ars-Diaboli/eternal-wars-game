@@ -19,6 +19,22 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
     private int _teamsAtStart;
 
     /// <summary>Who is in the game: players with a hero or a town at the start; what heroes there are (for hero conditions).</summary>
+    /// <summary>
+    /// Before the game starts: a player with more heroes than it may have (a map made that way, ADR-068) loses the surplus, the newest heroes (highest
+    /// ids) first. Each one is reported with <see cref="HeroRemoved"/>.
+    /// </summary>
+    internal void RemoveSurplusHeroes()
+    {
+        foreach (var player in state.Players)
+        {
+            foreach (var surplus in state.HeroesOf(player.Id).OrderBy(h => h.Id.Value).Skip(state.HeroLimit(player.Id)).ToList())
+            {
+                state.RemoveHero(surplus);
+                events.Publish(new HeroRemoved(surplus.Id));
+            }
+        }
+    }
+
     internal void Begin()
     {
         foreach (var player in state.Players)
