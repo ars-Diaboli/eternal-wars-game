@@ -19,6 +19,12 @@ public sealed record MapObjectFoundEmpty(HeroId Hero, MapObjectId Object) : IEve
 /// <summary>A hero received resources from a resource provider (ADR-068); <see cref="ResourcesChanged"/> came just before.</summary>
 public sealed record ResourcesFound(HeroId Hero, MapObjectId Object, ResourceSet Resources) : IEvent;
 
+/// <summary>
+/// The first visitor of a loot site searched it (ADR-068): <paramref name="Resources"/> (maybe none) and <paramref name="Artifact"/> (null: none, or
+/// lost to a full backpack, see <c>ArtifactBackpackFull</c>). Nothing at all is a possible outcome. Vanishing sites are removed just before.
+/// </summary>
+public sealed record LootFound(HeroId Hero, MapObjectId Object, ResourceSet Resources, string? Artifact) : IEvent;
+
 public sealed record ResourcePileCollected(HeroId Hero, MapObjectId Object, ResourceType Resource, int Amount) : IEvent;
 
 public sealed record MineOwnerChanged(MapObjectId Mine, PlayerId? Previous, PlayerId? Current) : IEvent;

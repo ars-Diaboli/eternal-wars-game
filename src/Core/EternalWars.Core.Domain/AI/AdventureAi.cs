@@ -731,6 +731,21 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         _ => (ResourceProviderRules.GardenGold + GoldValue(ResourceType.Crystal, ResourceProviderRules.GardenMagic)) / 2,
     };
 
+    /// <summary>A loot site's average worth by the AI's values (a Minor artifact counted as 1000, the tomb's morale as a cost).</summary>
+    private static double LootValue(LootRule rule)
+    {
+        var resource = ResourceProviderRules.NonGold.Average(r => GoldValue(r, 1));
+        return rule switch
+        {
+            LootRule.Campfire => 500 + (5 * resource),
+            LootRule.SupplyCrates => 10 * resource,
+            LootRule.TravelersWagon => (0.3 * 1000) + (0.6 * 3.5 * resource),
+            LootRule.Corpse => 0.2 * 1000,
+            LootRule.LeanTo => 3.5 * resource,
+            _ => 1200 - 400,
+        };
+    }
+
     private static double GoldValue(ResourceType resource, int amount) => amount * resource switch
     {
         ResourceType.Gold => 1,
@@ -825,6 +840,9 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     break;
                 case ResourceProvider provider when provider.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, ProviderValue(provider), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case LootSite site when site.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit, pickup: site.Vanishes)) && visit != hero.Position:
+                    yield return new(visit, LootValue(site.Rule), GuardArmy(visit, pickup: site.Vanishes), MaxLoss: MonsterLoss);
                     break;
                 case TreasureChest when Plausible(GuardPower(visit, pickup: true)):
                     yield return new(visit, 1500, GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);

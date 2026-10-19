@@ -96,7 +96,7 @@ public partial class MapObjectsView : Node3D
             }
             else if (cell == FootprintCell.Visit)
             {
-                var height = known.Definition.Kind is MapObjectKind.Monster or MapObjectKind.ResourcePile or MapObjectKind.TreasureChest or MapObjectKind.Artifact ? 0.35f : 0.06f;
+                var height = known.Definition.Kind is MapObjectKind.Monster or MapObjectKind.ResourcePile or MapObjectKind.TreasureChest or MapObjectKind.Artifact or MapObjectKind.Loot ? 0.35f : 0.06f;
                 root.AddChild(Box(new Vector3(0.6f, height, 0.6f), at + (Vector3.Up * height / 2), color.Lightened(0.15f)));
             }
         }
@@ -132,6 +132,7 @@ public partial class MapObjectsView : Node3D
         CreatureDwelling dwelling => _context.State.Creatures.TryGet(dwelling.Creature, out var dwelt) ? $"{dwelt.Name} dwelling" : dwelling.Creature,
         Marketplace => "Marketplace",
         ResourceProvider provider => provider.Definition.Name,
+        LootSite { Vanishes: false } site => site.Definition.Name,
         _ => null,
     };
 

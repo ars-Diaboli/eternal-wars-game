@@ -12,6 +12,9 @@ public enum ArtifactSource
 
     /// <summary>Looted from a defeated hero.</summary>
     Loot,
+
+    /// <summary>Found in a treasure chest or a loot site (ADR-068).</summary>
+    Found,
 }
 
 /// <summary>A hero put an artifact on (from its backpack) into <paramref name="Slot"/> (ADR-061).</summary>

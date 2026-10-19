@@ -69,6 +69,7 @@ public abstract class MapObject
         MapObjectKind.Dwelling => new CreatureDwelling(id, definition, position),
         MapObjectKind.Marketplace => new Marketplace(id, definition, position),
         MapObjectKind.ResourceProvider => new ResourceProvider(id, definition, position),
+        MapObjectKind.Loot => new LootSite(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }
@@ -127,14 +128,18 @@ public sealed record GuardStack(string Creature, int? Count = null);
 public sealed record ChestValues(int Gold, int Experience);
 
 /// <summary>
-/// On visit the hero chooses between gold and experience; then the chest disappears. Values are rolled
-/// HoMM3-style when the chest is opened (<see cref="RollTable"/>) unless the map author fixed them.
+/// On visit the hero chooses between gold and experience; then the chest disappears. The contents are rolled when the chest is
+/// opened (<see cref="Odds"/>, ADR-068): a gold-or-experience tier, or now and then a Minor artifact, unless the map author fixed the values.
 /// </summary>
 public sealed class TreasureChest(MapObjectId id, MapObjectDefinition definition, MapPosition position, ChestValues? fixedValues = null)
     : MapObject(id, definition, position, MapObjectKind.TreasureChest)
 {
-    /// <summary>HoMM3 tiers without the artifact outcome, equally likely (ADR-039).</summary>
-    public static IReadOnlyList<ChestValues> RollTable { get; } = [new(1000, 500), new(1500, 1000), new(2000, 1500)];
+    /// <summary>The owner's table (ADR-068, replacing ADR-039's three equal tiers): weight and values; null values = a Minor artifact instead.</summary>
+    public static IReadOnlyList<(int Weight, ChestValues? Values)> Odds { get; } =
+        [(30, new(1000, 500)), (30, new(1500, 1000)), (25, new(2000, 1500)), (10, new(2500, 2000)), (5, null)];
+
+    /// <summary>The gold-or-experience tiers of <see cref="Odds"/>.</summary>
+    public static IReadOnlyList<ChestValues> RollTable { get; } = [.. Odds.Select(o => o.Values).OfType<ChestValues>()];
 
     /// <summary>Values chosen by the map author; null = rolled with the game RNG on opening.</summary>
     public ChestValues? FixedValues { get; internal set; } = fixedValues;

@@ -26,6 +26,14 @@ public static class BuiltInMapObjects
     public const string Windmill = "provider.windmill";
     public const string MysticalGarden = "provider.mystical-garden";
 
+    /// <summary>Loot sites (ADR-068).</summary>
+    public const string Campfire = "loot.campfire";
+    public const string SupplyCrates = "loot.supply-crates";
+    public const string TravelersWagon = "loot.travelers-wagon";
+    public const string Corpse = "loot.corpse";
+    public const string LeanTo = "loot.lean-to";
+    public const string WarriorsTomb = "loot.warriors-tomb";
+
     /// <summary>Definition id of the pickup that rolls an artifact of a tier: <c>artifact.minor</c>.</summary>
     public static string ArtifactId(Artifacts.ArtifactTier tier) => $"artifact.{tier.ToString().ToLowerInvariant()}";
 
@@ -74,6 +82,14 @@ public static class BuiltInMapObjects
         Warehouse(ResourceType.Mercury, 5),
         Warehouse(ResourceType.Crystal, 5),
         Warehouse(ResourceType.Gold, 2000),
+
+        // Picked up like piles (single tile); the others stay and are visited from their entrance.
+        Loot(Campfire, "Campfire", LootRule.Campfire, Footprint.Single),
+        Loot(SupplyCrates, "Supply crates", LootRule.SupplyCrates, Footprint.Single),
+        Loot(TravelersWagon, "Traveler's wagon", LootRule.TravelersWagon, Footprint.Single),
+        Loot(Corpse, "Corpse", LootRule.Corpse, Footprint.Single),
+        Loot(LeanTo, "Lean-to", LootRule.LeanTo, new(["BV"])),
+        Loot(WarriorsTomb, "Warrior's tomb", LootRule.WarriorsTomb, ProviderFootprint),
         .. Enum.GetValues<Artifacts.ArtifactTier>().Select(t =>
             new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 
@@ -98,6 +114,9 @@ public static class BuiltInMapObjects
 
     private static MapObjectDefinition Warehouse(ResourceType resource, int amount) =>
         Provider(WarehouseId(resource), $"Warehouse of {resource.ToString().ToLowerInvariant()}", ProviderRule.Warehouse) with { Resource = resource, Amount = amount };
+
+    private static MapObjectDefinition Loot(string id, string name, LootRule rule, Footprint footprint) =>
+        new(id, name, MapObjectKind.Loot, footprint) { Loot = rule, VisitScope = VisitScope.FirstVisitor };
 
     private static MapObjectDefinition Mine(ResourceType resource, string name, int dailyYield) =>
         new(MineId(resource), name, MapObjectKind.Mine, MineFootprint) { Resource = resource, DailyYield = dailyYield };
