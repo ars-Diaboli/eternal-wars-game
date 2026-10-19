@@ -117,10 +117,33 @@ public sealed class Hero(
 
     public int TotalKnowledge => Knowledge + Bonus.Knowledge;
 
-    /// <summary>Morale: the hero's own, artifacts, and Leadership (ADR-067).</summary>
-    public int TotalMorale => Morale + Bonus.Morale + SkillEffects.LeadershipMorale(SkillLevelOf(BuiltInSkills.Leadership));
+    /// <summary>Morale: the hero's own, artifacts, Leadership (ADR-067) and temporary statuses (ADR-068).</summary>
+    public int TotalMorale => Morale + Bonus.Morale + SkillEffects.LeadershipMorale(SkillLevelOf(BuiltInSkills.Leadership)) + StatusTotal(HeroStatusKind.Morale);
 
-    public int TotalLuck => Luck + Bonus.Luck;
+    public int TotalLuck => Luck + Bonus.Luck + StatusTotal(HeroStatusKind.Luck);
+
+    private readonly List<HeroStatus> _statuses = [];
+
+    /// <summary>Temporary effects from map objects, in the order they were gained (ADR-068).</summary>
+    public IReadOnlyList<HeroStatus> Statuses => _statuses;
+
+    /// <summary>The sum of the statuses of one kind.</summary>
+    public int StatusTotal(HeroStatusKind kind) => _statuses.Where(s => s.Kind == kind).Sum(s => s.Value);
+
+    /// <summary>Adds a status; one of the same source and kind is replaced (the new one keeps its place at the end).</summary>
+    internal void AddStatus(HeroStatus status)
+    {
+        _statuses.RemoveAll(s => s.Source == status.Source && s.Kind == status.Kind);
+        _statuses.Add(status);
+    }
+
+    /// <summary>Removes and returns the statuses that end with <paramref name="expiry"/>.</summary>
+    internal IReadOnlyList<HeroStatus> RemoveStatuses(StatusExpiry expiry)
+    {
+        var ended = _statuses.Where(s => s.Expires == expiry).ToList();
+        _statuses.RemoveAll(s => s.Expires == expiry);
+        return ended;
+    }
 
     /// <summary>
     /// The skill level the rules use: learned levels plus what artifacts add to it (and to every started skill), up to the

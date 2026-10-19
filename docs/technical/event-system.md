@@ -108,10 +108,12 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroMovementRestored(Hero, MP)` | `HeroMovementService` | owner's turn start |
 | `HeroManaRestored(Hero, Mana, MaxMana)` | `TurnService` | owner's turn start, daily mana (ADR-063); not published when the pool is full |
 | `HeroExperienceGained(Hero, Amount, Total)` | `ProgressionService` | chest reward taken as XP, battle won |
+| `HeroStatusGained(Hero, Status)` / `HeroStatusesExpired(Hero, Statuses)` | `ProgressionService` (granted by map objects; expired by `BattleService` after the hero's battle, `TurnService` at the owner's turn start and when a week starts) | temporary morale, luck or daily movement from a map object (ADR-068) |
 | `HeroLeveledUp(Hero, Level, Skill, SkillLevel, Stat, StatValue)` | `ProgressionService` | a level-up choice applied: the skill picked (null: none) and the primary stat raised |
 | `WarMachineBought(Town, Hero, Slot)` | `TownService` | the blacksmith sold a war machine to the visiting hero (ADR-056) |
 | `WarMachineLost(Hero, Slot)` | `BattleService` | a hero's war machine was destroyed in battle |
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
+| `MapObjectCollected(Hero, Object)` | `MapObjectInteractionService.TryCollect` | a hero took the reward of an object with a limited visit scope; its `Visits` log changed (ADR-068), the reward's events follow |
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
 | `MineOwnerChanged(Mine, Previous, Current)` | interactions, `BattleService`, `GameFlowService`, editor | mine flagged (after its guard was beaten), released by a defeated player, or set in the editor |
 | `DwellingOwnerChanged(Dwelling, Previous, Current)` | interactions, `GameFlowService`, editor | a map dwelling flagged, released by a defeated player, or set in the editor |

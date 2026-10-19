@@ -138,16 +138,22 @@ mines, resource piles, treasure chest, artifact pickup, map dwelling and marketp
 "Adventure map objects". Every number is a draft. Questions are `MAP-n` in [open-questions.md](../project/open-questions.md).
 
 ### Rules shared by all of them
+**Built (2026-10-19)**: the shared rules below (visit scopes, hero statuses, weighted rolls, artifact draws) and the hero limit are in
+core; no object uses them yet.
+
 - **Artifact tiers** (decided, MAP-1): **Minor** (m), **Major** (M), **Relic** (R) as in `artifacts.csv`; the notes' extra *Treasure*
-  tier is dropped, so every (t) in the notes became Minor. A **Combo** (set) piece is never dropped, only assembled from
-  its parts. Relics are drawn from a pool without repeats; when the pool is empty it is **refilled** and the draw starts anew,
+  tier is dropped, so every (t) in the notes became Minor. A **Combo** artifact is never dropped, only assembled from its pieces,
+  which drop as usual (the game has sets but no combination artifacts yet). Relics are drawn from a pool without repeats; when the pool is empty it is **refilled** and the draw starts anew,
   so a hero may hold two copies of one Relic.
 - **Visit scopes** (decided): *weekly* objects keep a per-object week counter that resets on Monday, so a hero gets the reward
   once a week unless someone else has taken it that week; *once per hero* objects keep a visited-by set of hero ids; *first
   visitor* objects are spent after one visit; *vanishing* objects are removed after the visit. The scope is data of the object
   definition and the map format records the state.
 - **Temporary effects** ("for the next battle", "until the end of the day", "for the rest of the week") are a hero status that
-  expires at the stated moment; morale and luck stay within ±5 (ADR-053). Setting a status is a published event.
+  expires at the stated moment; morale and luck stay within ±5 in battle (ADR-053). Setting a status is a published event. A second
+  status from the same object and of the same kind replaces the first; different objects add up (until MAP-10 says otherwise).
+  "Until the end of the day" ends at the owner's next turn start, "the rest of the week" when the next week starts, "the next
+  battle" when that battle ends, whatever its outcome.
 - **Random rewards** draw from `GameState.Random` when the visit happens; a map author may fix the outcome.
 - **Resource groups**: *basic* = lumber, ore; *magic* = crystal, sulfur, mercury (ADR-067); "random resource" never means gold.
 - **Creature names** are mapped to our roster (the notes used HoMM3 names, ADR-068): Zombie → Ghoul, Power Lich → Arch Lich,

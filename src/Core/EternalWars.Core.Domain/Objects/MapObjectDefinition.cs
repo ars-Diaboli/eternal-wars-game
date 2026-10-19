@@ -52,6 +52,9 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>Tier an artifact pickup rolls its artifact from when the map leaves it open.</summary>
     public Artifacts.ArtifactTier? ArtifactTier { get; init; }
 
+    /// <summary>How often a visit gives the object's reward (ADR-068); <see cref="VisitScope.Unlimited"/> for every kind built so far.</summary>
+    public VisitScope VisitScope { get; init; }
+
     /// <summary>Throws <see cref="FormatException"/> if kind-specific properties are missing.</summary>
     public void Validate()
     {

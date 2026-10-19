@@ -183,6 +183,14 @@ These are enforced by:
   `IFlaggable`.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
+- **Shared reward rules (ADR-068)** for the objects of the catalogue: a definition's `VisitScope` (Unlimited, Weekly per object,
+  OncePerHero, FirstVisitor) and each instance's `VisitLog` (`MapObject.Visits`), checked and recorded by
+  `MapObjectInteractionService.TryCollect` (publishes `MapObjectCollected`); the log is game state only, not map data. Temporary
+  `HeroStatus`es (morale, luck, daily movement; until the next battle, the end of the day or of the week) live on the hero, are
+  granted and expired through `ProgressionService` and feed `Hero.TotalMorale` / `TotalLuck` / `MovementAllowance`. Random rewards
+  use `WeightedRoll.Pick` and `ArtifactService.Draw(tier)` (relics from a pool, `GameState.DrawnRelics`, refilled when empty).
+- **Hero limit (ADR-068)**: `ScenarioRules.MaxHeroes` (1–8, map format v15, template v5, the generator's `maxHeroes` override);
+  `GameState.HeroLimitReached` is the one check (the tavern uses it today).
 
 ### Terrain, roads, teams, knowledge
 - **Terrain rules are data**: `GameState.Terrains` (`TerrainCatalog`) gives passability, the
@@ -265,7 +273,7 @@ src/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
                                 Artifacts
-    EternalWars.Core.Data/      Maps (MapDocument v12, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v15, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (saves and replays: GameRecord, GameSaves), Templates (TemplateSerializer,
                                 BuiltInTemplates)
     EternalWars.Core.Generation/ MapTemplate, TemplateValidator, SeedStreams, ZoneLayouter, TerrainPainter, GeneratedMap,

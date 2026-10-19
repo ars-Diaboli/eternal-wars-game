@@ -12,7 +12,7 @@ namespace EternalWars.Godot.UI.Editor;
 /// <summary>
 /// How the scenario is won and lost (ADR-057): the default rules (the last team standing wins, no towns and no heroes
 /// means defeat) can be switched off, and special victory and defeat conditions added or removed. Every change goes
-/// through <see cref="MapEditorSession.SetScenarioRules"/>, so it is undoable.
+/// through <see cref="MapEditorSession.SetScenarioRules"/>, so it is undoable. The hero limit per player (ADR-068) is a rule too.
 /// </summary>
 public partial class ConditionsPanel : VBoxContainer
 {
@@ -30,6 +30,7 @@ public partial class ConditionsPanel : VBoxContainer
     private readonly CheckBox _standard = new() { Text = "Last team standing wins (defeat every enemy)" };
     private readonly CheckBox _elimination = new() { Text = "No towns and no heroes means defeat" };
     private readonly SpinBox _grace = new() { MinValue = 0, MaxValue = 99, Step = 1, Suffix = "days without a town (0 = no countdown)" };
+    private readonly SpinBox _maxHeroes = new() { MinValue = 1, MaxValue = ScenarioRules.HeroLimit, Step = 1, Prefix = "at most", Suffix = "heroes per player" };
     private readonly VBoxContainer _list = new();
     private readonly OptionButton _kind = new();
     private readonly OptionButton _player = new();
@@ -53,6 +54,8 @@ public partial class ConditionsPanel : VBoxContainer
         AddChild(_elimination);
         _grace.ValueChanged += v => Change(r => r with { GraceDays = (int)v });
         AddChild(_grace);
+        _maxHeroes.ValueChanged += v => Change(r => r with { MaxHeroes = (int)v });
+        AddChild(_maxHeroes);
         AddChild(_list);
 
         AddChild(new HSeparator());
@@ -117,6 +120,7 @@ public partial class ConditionsPanel : VBoxContainer
         _elimination.SetPressedNoSignal(rules.Elimination);
         _grace.SetValueNoSignal(rules.GraceDays);
         _grace.Editable = rules.Elimination;
+        _maxHeroes.SetValueNoSignal(rules.MaxHeroes);
 
         foreach (var child in _list.GetChildren())
         {

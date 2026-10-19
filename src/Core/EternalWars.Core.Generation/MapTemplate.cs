@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 
 namespace EternalWars.Core.Generation;
@@ -179,7 +180,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 4;
+    public const int CurrentFormatVersion = 5;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -203,6 +204,12 @@ public sealed record MapTemplate
 
     /// <summary>The start zones' teams (<see cref="TemplateZone.Team"/>) may not be changed at game setup (format v4; as maps, ADR-032).</summary>
     public bool TeamsLocked { get; init; }
+
+    /// <summary>
+    /// The most heroes a player may have on a generated map, 1 to <see cref="ScenarioRules.HeroLimit"/> (format v5, ADR-068); the generator may
+    /// override it. It becomes the scenario's <see cref="ScenarioRules.MaxHeroes"/>.
+    /// </summary>
+    public int MaxHeroes { get; init; } = ScenarioRules.HeroLimit;
 
     public IReadOnlyList<TemplateZone> Zones { get; init; } = [];
 

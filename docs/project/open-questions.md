@@ -48,8 +48,8 @@ implementation block (shared visit rules); each question blocks only its object.
 <a id="map-14"></a>
 **MAP-14 Bank refill and the hero limit.** Banks refill 4 weeks after being plundered (assumed from "in 4 weeks?"): is the guard
 tier rolled again and does the artifact reward come again? Does the refill apply to every bank? The hero limit (1 to 8 per
-player, a map setting, ADR-068): one number for all players; does it also cap the tavern and heroes from prisons, and what about a
-map that starts players with more heroes?
+player, a map setting, ADR-068) is built with these assumptions: one number for all players; it caps the tavern and will cap prisons;
+a map that starts a player with more heroes is allowed with a validator warning (the player just cannot hire). Confirm or change.
 
 <a id="map-9"></a>
 **MAP-9 Tree of Knowledge.** "Either for free, for 2500 gold or for 5 magic resources each": is the free level-up only the first
@@ -329,7 +329,7 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
   Castle +100 % growth of the town's dwellings and better fortifications (ADR-066).
 
 **Adventure map objects (2026-10-19, ADR-068)**
-- MAP-1 artifact tiers: Minor, Major, Relic (no Treasure tier); Combo pieces are assembled, never dropped; the Relic pool is refilled when empty, duplicates are fine.
+- MAP-1 artifact tiers: Minor, Major, Relic (no Treasure tier); a Combo (combination) artifact is assembled, never dropped (its pieces drop); the Relic pool is refilled when empty, duplicates are fine.
 - MAP-2 abandoned mines: a separate object that turns into the normal mine when its guard is defeated; the guard count is rolled at map start; normal mines keep the free guard choice.
 - MAP-3 Mystical Garden: a random reward (500 gold or 5 of one random magic resource), no choice.
 - MAP-4 amounts: Campfire gold plus 4–6 of one random resource, Supply Crates two different resources 4–6 each, Lean To one kind; Resource Pile and Traveler's Wagon amounts match the notes.

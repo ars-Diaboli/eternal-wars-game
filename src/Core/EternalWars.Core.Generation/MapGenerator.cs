@@ -80,14 +80,14 @@ public static class MapGenerator
 
     /// <summary>
     /// Resolves "Random" towns, generates the best map for the players' towns and assembles the scenario. The problems of the map used (if every
-    /// attempt had some) are in the result for the new-game screen to show.
+    /// attempt had some) are in the result for the new-game screen to show. <paramref name="maxHeroes"/> overrides the template's hero limit.
     /// </summary>
     public static (GameState State, GenerationResult Generation) Build(
         MapTemplate template, int size, ulong seed, IReadOnlyList<PlayerSetup> players, GameOptions? options = null, CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null, ArtifactCatalog? artifacts = null, BuildingCatalog? buildings = null)
+        HeroCatalog? heroRoster = null, ArtifactCatalog? artifacts = null, BuildingCatalog? buildings = null, int? maxHeroes = null)
     {
         var resolved = ScenarioAssembler.ResolveTowns(players, seed);
         var generation = GenerateBest(template, size, seed, creatures: creatures, artifacts: artifacts, startTowns: ScenarioAssembler.StartTowns(resolved));
-        return (ScenarioAssembler.Build(template, generation.Map, resolved, seed, options, creatures, heroRoster, buildings, artifacts), generation);
+        return (ScenarioAssembler.Build(template, generation.Map, resolved, seed, options, creatures, heroRoster, buildings, artifacts, maxHeroes), generation);
     }
 }

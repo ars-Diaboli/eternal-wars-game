@@ -21,11 +21,12 @@ namespace EternalWars.Core.Data.Maps;
 /// waiting creatures, garrison; ADR-046). 7 = + hero morale and luck (ADR-053). 8 = + hero Spell Power and Knowledge (ADR-055). 9 = + hero war machines (ADR-056). 10 = + victory and defeat conditions (ADR-057). 11 = + hero artifacts (worn and backpack) and artifact pickups (ADR-061). 12 = + creature dwellings (ADR-054).
 /// 13 = guard mode per monster (<c>mode</c> on monsters) instead of the map-wide <c>guardMode</c>, which v4–v12 maps still
 /// load onto every monster (ADR-065). 14 = + map marketplaces (<c>marketplace</c> objects, ADR-067).
+/// 15 = + the most heroes a player may have (<c>rules.maxHeroes</c>, omitted = 8; ADR-068).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 14;
+    public const int CurrentFormatVersion = 15;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -68,14 +69,16 @@ public sealed record MapDocument
 /// <summary>
 /// How a scenario is won and lost (v10, ADR-057). <see cref="StandardVictory"/> (the last team standing wins) and
 /// <see cref="Elimination"/> (no towns and no heroes: out) are on unless set to false; <see cref="GraceDays"/> omitted = 7
-/// (the days a player that lost its last town has to own one again; 0 = no countdown).
+/// (the days a player that lost its last town has to own one again; 0 = no countdown). <see cref="MaxHeroes"/> (v15) omitted = 8
+/// (the most heroes a player may have at once).
 /// </summary>
 public sealed record ScenarioRulesDocument(
     IReadOnlyList<ConditionDocument>? Victory = null,
     IReadOnlyList<ConditionDocument>? Defeat = null,
     bool StandardVictory = true,
     bool Elimination = true,
-    int? GraceDays = null);
+    int? GraceDays = null,
+    int? MaxHeroes = null);
 
 /// <summary>One condition; which fields apply depends on <see cref="Kind"/> (see <see cref="ConditionKind"/>).</summary>
 public sealed record ConditionDocument(

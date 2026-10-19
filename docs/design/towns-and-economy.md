@@ -67,7 +67,7 @@ Map dwellings keep the creature's growth. One rule, `TownRules.WeeklyGrowth`, se
   be seen or attacked. Caravans also send garrison troops to another own town.
 
 ## Tavern (implemented, ADR-060)
-- A hero costs **2500 gold** and appears on the town's entrance (which must be free). A player has at most **8 heroes**.
+- A hero costs **2500 gold** and appears on the town's entrance (which must be free). A player has at most **8 heroes**, or the map's lower limit (ADR-068).
 - A tavern offers **2** heroes, the Brotherhood (level 2) **4**. Offers come from a per-player pool, reshuffled every
   week, ranked by the town: on the ring of towns ([lore.md](../content/lore.md)) native, adjacent, not opposing,
   opposing; Stronghold and Swamp Bestiary rank native, warriors, everyone else.

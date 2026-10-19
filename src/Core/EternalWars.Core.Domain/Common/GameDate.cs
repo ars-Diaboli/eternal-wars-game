@@ -16,6 +16,9 @@ public readonly record struct GameDate(int AbsoluteDay)
 
     public int Month => ((AbsoluteDay - 1) / (DaysPerWeek * WeeksPerMonth)) + 1;
 
+    /// <summary>Weeks since the game began, counting from 1 (unlike <see cref="Week"/>, it does not restart every month).</summary>
+    public int AbsoluteWeek => ((AbsoluteDay - 1) / DaysPerWeek) + 1;
+
     public bool IsFirstDayOfWeek => Day == 1;
 
     public bool IsFirstDayOfMonth => Day == 1 && Week == 1;

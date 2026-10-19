@@ -126,6 +126,12 @@ public static class MapValidator
             issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} has no starting hero or town."));
         }
 
+        // Allowed, but the player cannot hire or free a hero until it has fewer than the limit (ADR-068).
+        foreach (var player in scenario.Players.Where(p => scenario.HeroesOf(p.Id).Count() > scenario.Rules.MaxHeroes))
+        {
+            issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} starts with more heroes than the map allows ({scenario.Rules.MaxHeroes})."));
+        }
+
         issues.AddRange(ValidateRules(scenario));
         return issues;
     }

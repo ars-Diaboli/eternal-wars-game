@@ -121,7 +121,8 @@ public static class MapConverter
         rules.Defeat.Count == 0 ? null : rules.Defeat.Select(ToDocument).ToList(),
         rules.StandardVictory,
         rules.Elimination,
-        rules.GraceDays == ScenarioRules.DefaultGraceDays ? null : rules.GraceDays);
+        rules.GraceDays == ScenarioRules.DefaultGraceDays ? null : rules.GraceDays,
+        rules.MaxHeroes == ScenarioRules.HeroLimit ? null : rules.MaxHeroes);
 
     private static ConditionDocument ToDocument(ScenarioCondition c) => c.Kind switch
     {
@@ -138,7 +139,8 @@ public static class MapConverter
             (document.Defeat ?? []).Select(ToCondition).ToList(),
             document.StandardVictory,
             document.Elimination,
-            document.GraceDays ?? ScenarioRules.DefaultGraceDays);
+            document.GraceDays ?? ScenarioRules.DefaultGraceDays,
+            document.MaxHeroes ?? ScenarioRules.HeroLimit);
 
     private static ScenarioCondition ToCondition(ConditionDocument c) => new(
         c.Kind,

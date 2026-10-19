@@ -44,6 +44,22 @@ public sealed class MapObjectInteractionService(
         }
     }
 
+    /// <summary>
+    /// Takes the reward of an object with a limited <see cref="VisitScope"/> for the hero (ADR-068): false when the hero may not collect now,
+    /// else the visit is recorded and <see cref="MapObjectCollected"/> published, before the caller hands out the reward.
+    /// </summary>
+    internal bool TryCollect(Hero hero, MapObject mapObject)
+    {
+        if (!mapObject.CanCollect(hero.Id, state.Date))
+        {
+            return false;
+        }
+
+        mapObject.Visits.Record(hero.Id, state.Date);
+        events.Publish(new MapObjectCollected(hero.Id, mapObject.Id));
+        return true;
+    }
+
     internal void Visit(Hero hero, MapObject mapObject)
     {
         events.Publish(new MapObjectVisited(hero.Id, mapObject.Id));

@@ -65,7 +65,8 @@ public static class EditorMapGenerator
 
     /// <summary>
     /// Generates the map. Refuses (with <see cref="ArgumentException"/>) a template with errors, a size the template does not support, and the
-    /// player and town choices <see cref="Players"/> or <see cref="ScenarioAssembler"/> refuse.
+    /// player and town choices <see cref="Players"/> or <see cref="ScenarioAssembler"/> refuse. <paramref name="maxHeroes"/> overrides the template's
+    /// hero limit (ADR-068).
     /// </summary>
     public static EditorMap Generate(
         MapTemplate template,
@@ -76,7 +77,8 @@ public static class EditorMapGenerator
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
         BuildingCatalog? buildings = null,
-        ArtifactCatalog? artifacts = null)
+        ArtifactCatalog? artifacts = null,
+        int? maxHeroes = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         if (TemplateValidator.Validate(template).FirstOrDefault(i => i.Severity == IssueSeverity.Error) is { } error)
@@ -89,7 +91,7 @@ public static class EditorMapGenerator
             throw new ArgumentOutOfRangeException(nameof(size), size, $"{template.Name} supports the sizes {string.Join(", ", template.Sizes)}.");
         }
 
-        var (scenario, generation) = MapGenerator.Build(template, size, seed, Players(template, players, towns), new GameOptions(Seed: seed), creatures, heroRoster, artifacts, buildings);
+        var (scenario, generation) = MapGenerator.Build(template, size, seed, Players(template, players, towns), new GameOptions(Seed: seed), creatures, heroRoster, artifacts, buildings, maxHeroes);
         scenario.Map.Description = Describe(template, size, seed, generation);
         return new EditorMap(scenario, generation, MapValidator.Validate(scenario));
     }

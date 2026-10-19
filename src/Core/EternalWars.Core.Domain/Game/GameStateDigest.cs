@@ -28,7 +28,9 @@ public static class GameStateDigest
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
         {
             var army = Slots(hero.Army);
-            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}");
+            // Statuses and visits (ADR-068) are written only when there are any, so older replays keep their digests.
+            var statuses = hero.Statuses.Count == 0 ? "" : $" statuses {string.Join(',', hero.Statuses)}";
+            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}");
         }
 
         foreach (var mapObject in state.Objects.OrderBy(o => o.Id.Value))
@@ -45,7 +47,13 @@ public static class GameStateDigest
                              + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}",
                 _ => mapObject.TeleportTarget?.ToString() ?? "",
             };
-            Line($"object {mapObject.Id.Value} {mapObject.Definition.Id} at {mapObject.Position} {detail}");
+            var visits = mapObject.Visits.IsSpent ? $" visits {mapObject.Visits}" : "";
+            Line($"object {mapObject.Id.Value} {mapObject.Definition.Id} at {mapObject.Position} {detail}{visits}");
+        }
+
+        if (state.DrawnRelics.Count > 0)
+        {
+            Line($"relics drawn {string.Join(',', state.DrawnRelics)}");
         }
 
         foreach (var caravan in state.Caravans)

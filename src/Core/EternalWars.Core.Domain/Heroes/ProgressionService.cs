@@ -25,6 +25,25 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
         OfferNext();
     }
 
+    /// <summary>Gives a hero a temporary status (ADR-068); one of the same source and kind is replaced.</summary>
+    internal void GrantStatus(Hero hero, HeroStatus status)
+    {
+        hero.AddStatus(status);
+        events.Publish(new HeroStatusGained(hero.Id, status));
+    }
+
+    /// <summary>Ends the statuses of the given heroes that last until <paramref name="expiry"/>; quiet for heroes without any.</summary>
+    internal void ExpireStatuses(IEnumerable<Hero> heroes, StatusExpiry expiry)
+    {
+        foreach (var hero in heroes.OrderBy(h => h.Id.Value).ToList())
+        {
+            if (hero.RemoveStatuses(expiry) is { Count: > 0 } ended)
+            {
+                events.Publish(new HeroStatusesExpired(hero.Id, ended));
+            }
+        }
+    }
+
     /// <summary>
     /// Resolves computer heroes' level-ups at once and, if nothing else is pending, asks the current human player
     /// about the first of its heroes with a level-up due.
