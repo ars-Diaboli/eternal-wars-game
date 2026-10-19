@@ -56,7 +56,6 @@ Morale and luck (−5…+5) are hero values too (ADR-053); Leadership raises mor
 |---|---|---|---|---|---|---|---|
 | Melee | `offense.melee` | Master | +10 % melee damage | +20 % | +30 % | +40 % | ✅ |
 | Archery | `offense.archery` | Expert | +10 % ranged damage | +25 % | +50 % | – | ✅ |
-| Leadership | `offense.third` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ (ADR-067; the id still reads "third") |
 
 ### Defense (`defense`)
 
@@ -64,7 +63,7 @@ Morale and luck (−5…+5) are hero values too (ADR-053); Leadership raises mor
 |---|---|---|---|---|---|---|---|
 | Armor | `defense.armor` | Master | −5 % damage taken | −10 % | −15 % | −20 % | ✅ |
 | Spell resistance | `defense.resistance` | Expert | resists hostile spells | | | – | ⏳ magic |
-| Alertness (working title) | `defense.third` | Expert | +5 % initiative to all own stacks in battle (rounded to the nearest point) | +10 % | +15 % | – | ✅ (ADR-067) |
+| Leadership | `offense.third` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ (ADR-067; the id still reads "third") |
 
 ### Estates (`estates`)
 
