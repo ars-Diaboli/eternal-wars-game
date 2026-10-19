@@ -40,6 +40,39 @@ where user and mod templates are saved and scanned; live validation and a previe
 types, ADR-028 says groups may filter), "richness" beyond the mine minimums, border guards (keymasters), optional or
 randomly present connections. Keep, drop, or post-1.0?
 
+## Adventure map objects
+
+The catalogue is [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068), ADR-068. MAP-1 to MAP-8 are answered (see [Answered](#answered)). Nothing blocks the first
+implementation block (shared visit rules); each question blocks only its object.
+
+<a id="map-14"></a>
+**MAP-14 Bank refill and the hero limit.** Banks refill 4 weeks after being plundered (assumed from "in 4 weeks?"): is the guard
+tier rolled again and does the artifact reward come again? Does the refill apply to every bank? The hero limit (1 to 8 per
+player, a map setting, ADR-068): one number for all players; does it also cap the tavern and heroes from prisons, and what about a
+map that starts players with more heroes?
+
+<a id="map-9"></a>
+**MAP-9 Tree of Knowledge.** "Either for free, for 2500 gold or for 5 magic resources each": is the free level-up only the first
+visit of the player, or every option offered at once? "5 magic resources each": 5 of each of the three?
+
+<a id="map-10"></a>
+**MAP-10 Buff stacking.** Can a hero visit several morale or luck buffs before a battle and how do they add up (within the ±5 cap)?
+Does the Temple's +3 depend on the calendar day (day 7 of the week) or on the week's last day? Do visits give the buff to the
+hero only, or to heroes that meet later? Do buffs end on a battle against neutrals as well?
+
+<a id="map-11"></a>
+**MAP-11 Hill Fort.** 150 % of what: the upgrade price (the difference, as in towns) or the creature's full price? Is a hero's
+whole army upgraded at the player's choice per stack? Which creatures count as tier 1–3 (ours have five tiers)?
+
+<a id="map-12"></a>
+**MAP-12 Town Gate.** "Allied town": own towns only, or teammates' too (allies do not meet, ADR-027)? Does the player choose the
+town? What if the town's entrance is occupied? Do routes plan through it (like gates, ADR-026) or is it a decision after arrival?
+
+<a id="map-13"></a>
+**MAP-13 War Machine Factory.** "Ballista" is the hero's town machine in our game (ballista, cannon, catapult or glaivethrower,
+ADR-056): is it the visitor's own machine for 2500 gold, or always a ballista? How do the prices relate to the blacksmith's? May
+the visitor buy a machine they own already?
+
 ## Towns and economy
 
 <a id="town-1"></a>
@@ -53,7 +86,8 @@ Also decided: no town marketplace, no trading (except at a map marketplace); the
 no AI trading for now; a map marketplace trades at X = 4 when a hero visits it, cannot be flagged and does not change town rates;
 the generator places it only where the zone's treasure value is high enough, guarded like other treasure; treasure resource values
 (100 gold a unit) do not follow the new rates.
-Still open: rounding of the buy price (up, placeholder); the treasure value and band threshold at which the generator may place a map
+Rounding is decided (ADR-068): what the player gives is rounded up, what the player receives is rounded down; the implemented rule does this.
+Still open: the treasure value and band threshold at which the generator may place a map
 marketplace (placeholder: 4000).
 
 <a id="town-3"></a>
@@ -67,7 +101,8 @@ stands at the entrance? A starter stack for hired heroes? Do heroes in garrisons
 
 <a id="town-5"></a>
 **TOWN-5 Caravan details.** Is the 5-day limit checked only when ordering (today only the route is re-checked
-daily)? How long may a caravan wait at a full garrison? Guards on map dwellings?
+daily)? How long may a caravan wait at a full garrison? (Guards on map dwellings are decided: tier 3 / 4 / 5 are guarded by
+9 / 6 / 3 base stacks, ADR-068.)
 
 ## Heroes
 
@@ -163,7 +198,8 @@ titles (Light, Darkness, Wild, Primordial), lore and the artifact sets use Dawn 
 `sim towns` for the current balance.
 
 <a id="cont-3"></a>
-**CONT-3 Artifacts.** The draft numbers and tiers (ADR-061); should chests hold artifacts (also RMG-1); are the
+**CONT-3 Artifacts.** The draft numbers and tiers (ADR-061, ADR-068: Minor / Major / Relic, no Treasure tier);
+chests hold a Minor artifact 5 % of the time (ADR-068, also RMG-1); are the
 HoMM3-style placeholders to stay or be replaced by lore items; Crown of the Waning Eye's "best magic skill" and ties.
 
 <a id="cont-4"></a>
@@ -291,3 +327,13 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
 **Towns (2026-10-17)**
 - TOWN-1 the fort: fort 1 is needed to build creature dwellings and gives a wall and gate in sieges; Citadel +50 %,
   Castle +100 % growth of the town's dwellings and better fortifications (ADR-066).
+
+**Adventure map objects (2026-10-19, ADR-068)**
+- MAP-1 artifact tiers: Minor, Major, Relic (no Treasure tier); Combo pieces are assembled, never dropped; the Relic pool is refilled when empty, duplicates are fine.
+- MAP-2 abandoned mines: a separate object that turns into the normal mine when its guard is defeated; the guard count is rolled at map start; normal mines keep the free guard choice.
+- MAP-3 Mystical Garden: a random reward (500 gold or 5 of one random magic resource), no choice.
+- MAP-4 amounts: Campfire gold plus 4–6 of one random resource, Supply Crates two different resources 4–6 each, Lean To one kind; Resource Pile and Traveler's Wagon amounts match the notes.
+- MAP-5 Prison: level odds 30 / 30 / 20 / 15 / 5 % for levels 1 / 5 / 10 / 20 / 30; the faction is drawn when the map is generated, the hero is any hero except the players' chosen start heroes; the visit fails with a notification at the hero limit; a hero above level 1 gets experience and game-chosen level-ups.
+- MAP-6 bank rewards: "N each" means each named resource; bank battles use the default width; the guard tier is hidden and not author-settable; a bank whose attacker retreated or died keeps its guard intact.
+- MAP-7 plundered banks: only the Churchyard gives −1 morale for the next battle on a later visit; banks refill 4 weeks after being plundered (details MAP-14).
+- MAP-8 trainers: Gazebo and Library once per hero; a Library visit below level 10 does nothing and shows a message.

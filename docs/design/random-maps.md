@@ -21,7 +21,8 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
 
 ## The template (`MapTemplate`, format v4)
-- Name, description, supported map sizes, player-count range, max humans, whether an underground level is used.
+- Name, description, supported map sizes, player-count range, max humans, whether an underground level is used, and the
+  **maximum number of heroes per player, 1 to 8** (planned, ADR-068; default 8). The generator writes it into the map.
 - **Zones**, each with:
   - type: player start, AI-only start, treasure, junction (junction behaves like treasure; it only affects validator
     warnings);
