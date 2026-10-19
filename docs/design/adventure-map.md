@@ -147,7 +147,8 @@ mines, resource piles, treasure chest, artifact pickup, map dwelling and marketp
 ### Rules shared by all of them
 **Built (2026-10-19)**: the shared rules below (visit scopes, hero statuses, weighted rolls, artifact draws), the hero limit, the
 resource providers, the one-time loot, the new treasure chest, the buffs, the power-ups, abandoned mines, dwelling guards, the
-utility objects, the prison and the creature banks: the whole catalogue. The random map generator does not place the new objects yet.
+utility objects, the prison and the creature banks: the whole catalogue. The random map generator places them as treasure by value
+(all but signs and map dwellings, [random-maps.md](random-maps.md); generator version 3).
 
 - **Artifact tiers** (decided, MAP-1): **Minor** (m), **Major** (M), **Relic** (R) as in `artifacts.csv`; the notes' extra *Treasure*
   tier is dropped, so every (t) in the notes became Minor. A **Combo** artifact is never dropped, only assembled from its pieces,

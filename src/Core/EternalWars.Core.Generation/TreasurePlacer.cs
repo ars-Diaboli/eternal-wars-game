@@ -17,6 +17,8 @@ namespace EternalWars.Core.Generation;
 /// <item>from <see cref="MarketplaceThreshold"/>, a chest or pile may instead be a map marketplace (ADR-067): 1 in <see cref="MarketplaceOdds"/>, at most one
 /// per zone, counted as <see cref="MarketplaceValue"/> for its guard.</item>
 /// </list>
+/// Before that, one item in <see cref="SiteOdds"/> is an object of the catalogue (ADR-068, <see cref="TreasureSites"/>) worth between half the
+/// drawn value and the value, drawn by weight within the zone's and the map's limits; creature banks and abandoned mines get no extra guard.
 /// The generator fixes what an item holds (pile amounts, chest gold and experience, the artifact), so a band is what the template says. An
 /// item worth more than <see cref="GuardThreshold"/> in a zone with monsters gets a guard next to it in <see cref="GuardMode.Area"/>, so it
 /// cannot be picked up without a fight (user rule): <see cref="GuardShareMin"/>–<see cref="GuardShareMax"/> % of the value (by the zone's strength, half in start zones).
@@ -37,6 +39,9 @@ public static class TreasurePlacer
 
     /// <summary>One chance in this many for an item that can be one; a zone gets at most one marketplace.</summary>
     public const int MarketplaceOdds = 4;
+
+    /// <summary>One item in this many is an adventure-map object from <see cref="TreasureSites"/> when one fits its value (placeholder).</summary>
+    public const int SiteOdds = 3;
 
     /// <summary>The share of an item's value its guard has, before the zone's strength: 40–60 %.</summary>
     public const int GuardShareMin = 40;
@@ -94,6 +99,7 @@ public static class TreasurePlacer
 
         var streams = new SeedStreams(seed);
         var relics = new HashSet<string>(map.Objects.OfType<ArtifactPickup>().Select(p => p.Artifact).OfType<string>(), StringComparer.Ordinal);
+        var mapSites = new Dictionary<string, int>(StringComparer.Ordinal);
         for (var zone = 0; zone < template.Zones.Count; zone++)
         {
             var spec = template.Zones[zone];
@@ -102,12 +108,13 @@ public static class TreasurePlacer
             var placed = new List<MapPosition>();
             var isStart = spec.Type is ZoneType.PlayerStart or ZoneType.AiStart;
             var marketplacePlaced = false;
+            var sites = new Sites(new Dictionary<string, int>(StringComparer.Ordinal), mapSites);
             foreach (var band in spec.Treasure)
             {
                 for (var i = 0; i < band.Count; i++)
                 {
                     var value = band.MinValue + random.Next(Math.Max(0, band.MaxValue - band.MinValue) + 1);
-                    if (!Item(map, spec, tiles, placed, value, isStart, random, creatures, artifacts, relics, ref marketplacePlaced))
+                    if (!Item(map, spec, tiles, placed, value, isStart, random, creatures, artifacts, relics, sites, ref marketplacePlaced))
                     {
                         map.Problem($"Zone '{spec.Id}': no room for treasure {i + 1} of {band.Count} ({band.MinValue}-{band.MaxValue}).");
                         break;
@@ -118,12 +125,20 @@ public static class TreasurePlacer
     }
 
     private static bool Item(GeneratedMap map, TemplateZone spec, List<MapPosition> tiles, List<MapPosition> placed, int value, bool isStart, GameRandom random,
-        CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<string> relics, ref bool marketplacePlaced)
+        CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<string> relics, Sites sites, ref bool marketplacePlaced)
     {
         var roll = random.Next(4);
         MapObject? item = null;
         var guardedValue = value;
-        if (value >= ArtifactThreshold && roll < 2 && PickArtifact(artifacts, value, random, relics) is { } artifact)
+        if (random.Next(SiteOdds) == 0 && PickSite(sites, value, random) is { } site
+            && Spot(map, MapObjectCatalog.Default.Get(site.Definition), tiles, placed, random) is { } siteAt)
+        {
+            item = map.Add(MapObject.Create(map.NextId(), MapObjectCatalog.Default.Get(site.Definition), siteAt));
+            sites.Zone[site.Definition] = sites.Zone.GetValueOrDefault(site.Definition) + 1;
+            sites.Map[site.Definition] = sites.Map.GetValueOrDefault(site.Definition) + 1;
+            guardedValue = site.OwnGuard ? 0 : site.Value;
+        }
+        else if (value >= ArtifactThreshold && roll < 2 && PickArtifact(artifacts, value, random, relics) is { } artifact)
         {
             var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.ArtifactId(artifact.Tier));
             if (Spot(map, definition, tiles, placed, random) is { } at)
@@ -186,6 +201,23 @@ public static class TreasurePlacer
         }
 
         return true;
+    }
+
+    /// <summary>How many of each site the zone and the map hold so far.</summary>
+    private sealed record Sites(Dictionary<string, int> Zone, Dictionary<string, int> Map);
+
+    /// <summary>A site that fits the value and the limits, drawn by weight; none when nothing fits.</summary>
+    private static TreasureSite? PickSite(Sites sites, int value, GameRandom random)
+    {
+        var choices = TreasureSites.All.Where(s => TreasureSites.Fits(s, value) && sites.Zone.GetValueOrDefault(s.Definition) < s.ZoneLimit
+            && (s.MapLimit is not { } limit || sites.Map.GetValueOrDefault(s.Definition) < limit)).ToList();
+        if (choices.Count == 0)
+        {
+            return null;
+        }
+
+        var roll = random.Next(choices.Sum(s => s.Weight));
+        return choices.First(s => (roll -= s.Weight) < 0);
     }
 
     /// <summary>A place with room around it (for the item and a guard next to it), three tiles from the zone's other treasure.</summary>

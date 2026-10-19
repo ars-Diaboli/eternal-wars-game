@@ -111,8 +111,11 @@ public class RoadAndTreasureTests
         TreasureChest c => c.FixedValues!.Gold,
         ArtifactPickup a => TreasurePlacer.ArtifactValue(a.Tier),
         Marketplace => TreasurePlacer.MarketplaceValue,
-        _ => throw new ArgumentException("Not treasure."),
+        _ => TreasureSites.Of(item.Definition.Id)?.Value ?? throw new ArgumentException("Not treasure."),
     };
+
+    /// <summary>Whether the item gets a guard next to it: everything but the sites that fight for themselves.</summary>
+    private static bool NeedsGuard(MapObject item) => TreasureSites.Of(item.Definition.Id) is not { OwnGuard: true };
 
     private static (GeneratedMap Map, List<MapObject> Treasure) WithTreasure(MapTemplate template, ulong seed = 3)
     {
@@ -172,13 +175,18 @@ public class RoadAndTreasureTests
         var guards = map.Objects.OfType<MonsterGuard>().Where(g => g.Mode == GuardMode.Area).ToList();
         var creatures = CreatureCatalog.Default;
 
-        Assert.All(treasure.Where(t => Value(t) > TreasurePlacer.GuardThreshold && template.Zones[ZoneOf(map, t.VisitPosition)].Monsters != MonsterStrength.None), t =>
+        Assert.All(treasure.Where(t => NeedsGuard(t) && Value(t) > TreasurePlacer.GuardThreshold && template.Zones[ZoneOf(map, t.VisitPosition)].Monsters != MonsterStrength.None), t =>
             Assert.Contains(guards, g => Math.Max(Math.Abs(g.Position.X - t.VisitPosition.X), Math.Abs(g.Position.Y - t.VisitPosition.Y)) == 1));
         Assert.All(treasure.Where(t => Value(t) <= 900), t =>
             Assert.DoesNotContain(guards, g => Math.Max(Math.Abs(g.Position.X - t.VisitPosition.X), Math.Abs(g.Position.Y - t.VisitPosition.Y)) == 1));
         Assert.All(map.Objects.OfType<MonsterGuard>().Where(g => g.Mode == GuardMode.Classic), g => Assert.Contains(map.Passages, p => p.Anchor == g.Position));
 
-        var start = guards.Where(g => template.Zones[ZoneOf(map, g.Position)].Type == ZoneType.PlayerStart).Select(g => g.Count!.Value * creatures.Get(g.Creature).Value).ToList();
+        // Sites are guarded by their own value (half to all of the draw), so only the guards of the other items are worth exactly 3000.
+        var ordinary = treasure.Where(t => TreasureSites.Of(t.Definition.Id) is null).ToList();
+        var start = guards.Where(g => template.Zones[ZoneOf(map, g.Position)].Type == ZoneType.PlayerStart)
+            .Where(g => ordinary.Any(t => Math.Max(Math.Abs(g.Position.X - t.VisitPosition.X), Math.Abs(g.Position.Y - t.VisitPosition.Y)) == 1)
+                        && !treasure.Except(ordinary).Any(t => Math.Max(Math.Abs(g.Position.X - t.VisitPosition.X), Math.Abs(g.Position.Y - t.VisitPosition.Y)) == 1))
+            .Select(g => g.Count!.Value * creatures.Get(g.Creature).Value).ToList();
         Assert.NotEmpty(start);
         Assert.All(start, power => Assert.InRange(power, 3000 * 0.4 * 0.5 * 0.7, 3000 * 0.6 * 0.5 * 1.3));
         Assert.Equal(0, TreasurePlacer.GuardValue(5000, MonsterStrength.None, startZone: false, 50));
@@ -223,6 +231,76 @@ public class RoadAndTreasureTests
 
         Assert.DoesNotContain(map.Objects.OfType<MonsterGuard>(), g => g.Mode == GuardMode.Area);
         Assert.NotEmpty(treasure);
+    }
+
+    // Map objects as treasure (ADR-068) -----------------------------------------------------------
+
+    [Fact]
+    public void CatalogueObjects_FillPartOfTheBands_WorthHalfToAllOfTheDrawnValue_WithinTheirLimits()
+    {
+        var template = Duel() with
+        {
+            Zones = [.. Duel().Zones.Select(z => z with { Treasure = [new TreasureBand(500, 3000, 12), new TreasureBand(8000, 12000, 3)], ExtraPiles = 0 })],
+        };
+
+        var kinds = new HashSet<string>(StringComparer.Ordinal);
+        for (ulong seed = 1; seed <= 6; seed++)
+        {
+            var (map, treasure) = WithTreasure(template, seed);
+            var sites = treasure.Where(t => TreasureSites.Of(t.Definition.Id) is not null).ToList();
+            Assert.NotEmpty(sites);
+            Assert.True(sites.Count < treasure.Count / 2, "Sites should be about a third of the items.");
+            Assert.All(sites.GroupBy(s => (ZoneOf(map, s.VisitPosition), s.Definition.Id)), g => Assert.True(g.Count() <= TreasureSites.Of(g.Key.Id)!.ZoneLimit));
+            Assert.True(sites.Count(s => s.Definition.Id == BuiltInMapObjects.TownGate) <= 1);
+            Assert.All(sites, s => Assert.InRange(Value(s), 250, 12000));
+            Assert.DoesNotContain(sites, s => map.Roads.Contains(s.VisitPosition));
+            kinds.UnionWith(sites.Select(s => s.Definition.Id));
+        }
+
+        Assert.True(kinds.Count >= 10, $"Only {kinds.Count} kinds of objects in 6 maps.");
+        Assert.All(TreasureSites.All, s => Assert.NotNull(MapObjectCatalog.Default.Get(s.Definition)));
+    }
+
+    [Fact]
+    public void BanksAndAbandonedMines_GetNoGuardBesideThem_OtherSitesAreGuardedLikeTreasure()
+    {
+        var template = Duel() with
+        {
+            Zones = [.. Duel().Zones.Select(z => z with { Treasure = [new TreasureBand(2500, 4000, 14)], ExtraPiles = 0, Monsters = MonsterStrength.Average })],
+        };
+
+        var selfGuarded = 0;
+        for (ulong seed = 1; seed <= 6; seed++)
+        {
+            var (map, treasure) = WithTreasure(template, seed);
+            var guards = map.Objects.OfType<MonsterGuard>().Where(g => g.Mode == GuardMode.Area).ToList();
+            bool Guarded(MapObject o) => guards.Any(g => Math.Max(Math.Abs(g.Position.X - o.VisitPosition.X), Math.Abs(g.Position.Y - o.VisitPosition.Y)) == 1);
+            var own = treasure.Where(t => !NeedsGuard(t)).ToList();
+            selfGuarded += own.Count;
+            Assert.All(own.Where(o => !treasure.Any(t => t != o && NeedsGuard(t) && Math.Max(Math.Abs(t.VisitPosition.X - o.VisitPosition.X), Math.Abs(t.VisitPosition.Y - o.VisitPosition.Y)) <= 2)),
+                o => Assert.False(Guarded(o)));
+            Assert.All(treasure.Where(t => NeedsGuard(t) && TreasureSites.Of(t.Definition.Id) is not null), t => Assert.True(Guarded(t)));
+        }
+
+        Assert.True(selfGuarded > 0, "No bank or abandoned mine in 6 maps.");
+    }
+
+    [Fact]
+    public void AGeneratedMapWithCatalogueObjects_StartsAGame_WithBanksAndMinesRolled()
+    {
+        var template = Duel() with
+        {
+            Zones = [.. Duel().Zones.Select(z => z with { Treasure = [new TreasureBand(2500, 4000, 14)] })],
+        };
+        var players = template.Zones.Where(z => z.Owner is not null).Select(z => new PlayerSetup(z.Owner!.Value, $"P{z.Owner}", IsHuman: false, EternalWars.Core.Domain.Towns.TownIds.Haven)).ToList();
+
+        var (state, _) = MapGenerator.Build(template, 96, 7, players);
+        var session = new EternalWars.Core.Domain.Game.GameSession(state);
+        session.Start();
+
+        Assert.All(state.Objects.OfType<CreatureBank>(), b => Assert.True(b.IsGuarded));
+        Assert.All(state.Objects.OfType<Mine>().Where(m => m.Definition.Becomes is not null), m => Assert.NotNull(m.Guard));
+        Assert.Contains(state.Objects, o => TreasureSites.Of(o.Definition.Id) is not null);
     }
 
     [Fact]

@@ -76,6 +76,13 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   enough (placeholder: from the 4000 band, with a value of 4000); it is guarded by the same rule (a guard from
   items worth more than 1000, scaled by the zone's strength), so the zone's guard strength and the treasure value decide whether
   it is guarded. It has no owner, so it needs no flag.
+  **Map objects** (ADR-068): before the roll above, one item in 3 (`TreasurePlacer.SiteOdds`) is an object of the
+  catalogue worth between half the drawn value and the value, drawn by weight (`TreasureSites`, placeholder values):
+  loot (Lean To 600 … Warrior's Tomb 4000), resource providers (1000–4000), buffs (500, Stables 1000), power-ups (1500–3000,
+  Library 10000), Observatory 750, Factory 1500, Town Gate 3000 (once per map), Prison 5000, Hill Fort 7000, creature
+  banks (2500–4000, Mansion 10000) and abandoned mines (2500–3500, gold 6000). Most kinds appear once per zone, loot twice.
+  The object is guarded like other treasure by its own value, except banks and abandoned mines, which fight for themselves;
+  their guards (and a prison's hero) are rolled when the game starts. Signs and map dwellings are not placed.
 - **Scenario** (RMG-5): `PlayerSetup(Slot, Name, IsHuman, TownType, Hero?, Team?, Tier1Dwelling?)` per player.
   - The factions are chosen before generation ("Random" is drawn from the seed first) and are an input of the
     generator, so each start zone is painted with a mix of its town's native terrains (RMG-7). A map generated in the
@@ -90,7 +97,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 - **Problems**: `MapGenerator.GenerateBest` retries with up to 9 sub-seeds and keeps the first clean map, else the one
   with the fewest problems, which the new-game screen shows.
 - **Generator version**: `MapGenerator.Version` is saved with the game record (`GenerationInfo`) and shown with the seed;
-  another version warns that the seed may give another map.
+  another version warns that the seed may give another map. Version 3 places the map objects of ADR-068.
 
 - **Guards** (`GuardPicker`): army power is `count × creature value`. A power maps to overlapping tier ranges
   (counts 6–60, 2–40, 1–25, 1–15, 1–10 for tiers 1–5), so one power can be a few stacks of a high tier or many of a

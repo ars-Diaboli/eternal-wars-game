@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-19)**: the whole adventure-map object catalogue (ADR-068, block in Phase 3) is built in core; the random map generator does not place it yet. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+**Where we are (2026-10-19)**: the whole adventure-map object catalogue (ADR-068, block in Phase 3) is built in core, and the random map generator places it as treasure. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
 save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
 (layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
@@ -282,7 +282,7 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
       battle, end of day, end of week), weighted rolls, artifact draw by tier (Minor, Major, Relic; the Relic pool refills when empty,
       duplicates allowed); no object uses them yet
 - [x] Resource providers: Water Wheel, the six Warehouses, Windmill, Mystical Garden (map format v16, editor placement, AI visits them;
-      warehouse choice in the decision panel, not run in Godot yet; the generator does not place them yet)
+      warehouse choice in the decision panel, not run in Godot yet)
 - [x] Abandoned mines (six, a separate object that becomes the normal mine when the guard falls; Troglodyte guards, subterranean battle terrain for gold
       and ore; ordinary mine objects in the map format, no format change)
 - [ ] Native-terrain bonuses in battle (the abandoned mines' "all native terrain bonuses" need them; battles show the terrain only)
@@ -307,7 +307,8 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 - [x] Utilities: Sign, Observatory, Hill Fort, Town Gate (town picker), War Machine Factory (map format v19; game panels and the notice panel
       not run in Godot yet; the AI uses the observatory, never the town gate, hill fort or factory)
 - [ ] Map format version, editor placement and inspector rows, validator checks for all of them
-- [ ] Random map generator: which objects `TreasurePlacer` and the zone rules may place, by value band (RMG-1)
+- [x] Random map generator: `TreasurePlacer` places the catalogue as treasure by value band (`TreasureSites`, placeholder values, one item in 3;
+      banks and abandoned mines unguarded; not signs or map dwellings; generator version 3)
 - [ ] AI: visits the objects that help it (resources, power-ups, buffs before fights, banks it can win)
 
 ### Content for the slice

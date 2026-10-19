@@ -97,7 +97,7 @@ public class ResourceProviderTests
         goldSession.Step(A, Direction.North);
         Assert.Null(goldSession.State.PendingDecision);
         Assert.Equal(gold + 2000, Resources(goldSession).Gold);
-        Assert.Equal(sulfur.Kind, MapObjectKind.ResourceProvider);
+        Assert.Equal(MapObjectKind.ResourceProvider, sulfur.Kind);
     }
 
     [Fact]

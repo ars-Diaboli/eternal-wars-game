@@ -1371,3 +1371,11 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
   - The Ruins publish `SurroundingsRevealed` (radius 12) on every visit; `ObservatoryUsed` was renamed to `SurroundingsRevealed` for both.
   - AI: a full bank is a target worth its reward (+1500 for an artifact) against the guard as the opponent, so the simulated fight decides.
 
+- **Implementation (2026-10-19), random maps** (`MapGenerator.Version` **3**: the same seed gives another map than version 2):
+  - `TreasurePlacer` turns one item in 3 (`SiteOdds`) into an object of the catalogue: a `TreasureSite` from `TreasureSites.All` worth between half
+    the drawn value and the value, drawn by weight within its zone limit (1, loot 2) and map limit (the Town Gate once). When nothing fits or there is no
+    room, the item is a pile, chest, artifact or marketplace as before. No template field: every template gets them, and the bands decide.
+  - Values are placeholders (gold equivalents of the rewards; weekly providers count about two weeks). A site is guarded like other treasure by its own
+    value; creature banks and abandoned mines get no guard beside them, since they fight for themselves. Banks, abandoned mines and prisons are rolled
+    when the game starts, as on hand-made maps.
+  - Not placed: signs (no text to give) and map dwellings (zone rules later).
