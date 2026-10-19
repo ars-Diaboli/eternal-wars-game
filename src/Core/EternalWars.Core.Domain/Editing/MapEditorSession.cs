@@ -43,6 +43,9 @@ public enum EditResult
 
     /// <summary>A town building would lack a building it requires, or one that requires it would lose it.</summary>
     RequirementMissing,
+
+    /// <summary>The player would have more heroes than it may (ADR-068).</summary>
+    HeroLimit,
 }
 
 /// <summary>
@@ -488,6 +491,11 @@ public sealed class MapEditorSession
             return EditResult.ImpassableTerrain;
         }
 
+        if (Scenario.HeroLimitReached(owner))
+        {
+            return EditResult.HeroLimit;
+        }
+
         var hero = new Hero(Scenario.NextHeroId(), name, owner, position);
         id = hero.Id;
         Run(new DelegateCommand($"Place hero {name}", () => AddHero(hero), () => RemoveHero(hero)));
@@ -906,12 +914,26 @@ public sealed class MapEditorSession
         }
     }
 
-    /// <summary>Sets how the scenario is won and lost (ADR-057); problems with it are reported by <see cref="MapValidator"/>.</summary>
-    public void SetScenarioRules(ScenarioRules rules)
+    /// <summary>
+    /// Sets how the scenario is won and lost (ADR-057) and the map's hero limit (ADR-068); problems with the conditions are reported by
+    /// <see cref="MapValidator"/>. Refused when the limit is out of range or below the heroes a player (without a limit of its own) already has.
+    /// </summary>
+    public EditResult SetScenarioRules(ScenarioRules rules)
     {
         ArgumentNullException.ThrowIfNull(rules);
+        if (rules.MaxHeroes is < 1 or > ScenarioRules.HeroLimit)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        if (Scenario.Players.Any(p => p.MaxHeroes is null && Scenario.HeroesOf(p.Id).Count() > rules.MaxHeroes))
+        {
+            return EditResult.HeroLimit;
+        }
+
         var previous = Scenario.Rules;
         Run(new DelegateCommand("Edit victory and defeat conditions", () => Apply(rules), () => Apply(previous)));
+        return EditResult.Ok;
 
         void Apply(ScenarioRules value)
         {
@@ -1000,6 +1022,38 @@ public sealed class MapEditorSession
         void Apply(string n, bool human)
         {
             (player.Name, player.IsHuman) = (n, human);
+            _bus.Publish(new PlayerSlotsChanged());
+        }
+    }
+
+    /// <summary>
+    /// Gives a player its own hero limit (campaign-like maps, ADR-068), or null for the map's. Refused below the heroes it already has.
+    /// </summary>
+    public EditResult SetPlayerHeroLimit(PlayerId id, int? limit)
+    {
+        if (!Scenario.HasPlayer(id))
+        {
+            return EditResult.UnknownPlayer;
+        }
+
+        if (limit is < 1 or > ScenarioRules.HeroLimit)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        if (Scenario.HeroesOf(id).Count() > (limit ?? Scenario.Rules.MaxHeroes))
+        {
+            return EditResult.HeroLimit;
+        }
+
+        var player = Scenario.GetPlayer(id);
+        var previous = player.MaxHeroes;
+        Run(new DelegateCommand($"Set hero limit of {player.Name}", () => Apply(limit), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(int? value)
+        {
+            Scenario.SetHeroLimit(id, value);
             _bus.Publish(new PlayerSlotsChanged());
         }
     }

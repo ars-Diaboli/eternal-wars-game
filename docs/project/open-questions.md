@@ -42,27 +42,8 @@ randomly present connections. Keep, drop, or post-1.0?
 
 ## Adventure map objects
 
-The catalogue is [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068), ADR-068. MAP-1 to MAP-10 are answered (see [Answered](#answered)). Nothing blocks the first
-implementation block (shared visit rules); each question blocks only its object.
-
-<a id="map-14"></a>
-**MAP-14 Bank refill and the hero limit.** Banks refill 4 weeks after being plundered (assumed from "in 4 weeks?"): is the guard
-tier rolled again and does the artifact reward come again? Does the refill apply to every bank? The hero limit (1 to 8 per
-player, a map setting, ADR-068) is built with these assumptions: one number for all players; it caps the tavern and will cap prisons;
-a map that starts a player with more heroes is allowed with a validator warning (the player just cannot hire). Confirm or change.
-
-<a id="map-11"></a>
-**MAP-11 Hill Fort.** 150 % of what: the upgrade price (the difference, as in towns) or the creature's full price? Is a hero's
-whole army upgraded at the player's choice per stack? Which creatures count as tier 1–3 (ours have five tiers)?
-
-<a id="map-12"></a>
-**MAP-12 Town Gate.** "Allied town": own towns only, or teammates' too (allies do not meet, ADR-027)? Does the player choose the
-town? What if the town's entrance is occupied? Do routes plan through it (like gates, ADR-026) or is it a decision after arrival?
-
-<a id="map-13"></a>
-**MAP-13 War Machine Factory.** "Ballista" is the hero's town machine in our game (ballista, cannon, catapult or glaivethrower,
-ADR-056): is it the visitor's own machine for 2500 gold, or always a ballista? How do the prices relate to the blacksmith's? May
-the visitor buy a machine they own already?
+The catalogue is [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068), ADR-068. All of MAP-1 to MAP-14 are answered (see [Answered](#answered)); nothing about the catalogue is open
+apart from CONT-2 (the creature names of the banks).
 
 ## Towns and economy
 
@@ -330,4 +311,9 @@ Grouped by topic; the ADR holds the detail. Later ADRs that changed an answer ar
 - MAP-8 trainers: Gazebo and Library once per hero; a Library visit below level 10 does nothing and shows a message.
 - MAP-9 Tree of Knowledge: no free level-up; the player chooses to pay 2500 gold or 5 crystal + 5 mercury + 5 sulfur; once per hero per tree.
 - MAP-10 buffs: several buffs stack up to the ±5 cap; the Temple's +3 is on day 7 of the week; the buff is the visiting hero's only; it ends after any battle (heroes, neutrals, garrisons, banks, mine guards).
-
+- MAP-11 Hill Fort: 150 % of the upgrade price (the difference); the player picks stack by stack; only tiers 1–3, tiers 4 and 5 only in towns.
+- MAP-12 Town Gate: own towns only for now; the player picks from a list, an occupied entrance shows as unavailable; no route planning through it.
+- MAP-13 War Machine Factory: the visitor's own offensive machine, at the blacksmith's prices like the tent and cart; not a machine the hero has.
+- MAP-14 banks and the hero limit: a refill after 4 weeks re-rolls the guard tier and brings the whole reward back, for every bank. The generator uses one
+  limit for all players; the editor may give a player its own (campaign-like maps); the editor refuses a hero or a limit that would break it, and a map
+  that breaks it anyway loses the newest heroes when the game starts.

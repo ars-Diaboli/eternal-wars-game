@@ -124,7 +124,7 @@ public static class TavernRules
         var owner = town.Owner ?? throw new InvalidOperationException("A town without an owner has no tavern customers.");
         if (state.HeroLimitReached(owner))
         {
-            return $"A player has at most {state.Rules.MaxHeroes} heroes on this map.";
+            return $"{state.GetPlayer(owner).Name} may have at most {state.HeroLimit(owner)} heroes on this map.";
         }
 
         if (state.HeroAt(town.VisitPosition) is { } standing)

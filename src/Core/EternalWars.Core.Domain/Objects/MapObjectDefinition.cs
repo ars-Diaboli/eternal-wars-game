@@ -37,6 +37,12 @@ public enum MapObjectKind
 
     /// <summary>One-time loot (<see cref="LootSite"/>, ADR-068): Campfire, Supply Crates, Traveler's Wagon, Corpse, Lean To, Warrior's Tomb.</summary>
     Loot,
+
+    /// <summary>A temporary buff (<see cref="BuffSite"/>, ADR-068): Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables, Magic Well.</summary>
+    Buff,
+
+    /// <summary>A permanent power-up (<see cref="TrainingSite"/>, ADR-068): Learning Stone, Gazebo, Library, Tree of Knowledge, Arena, Colosseum.</summary>
+    Training,
 }
 
 /// <summary>
@@ -70,6 +76,12 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>What a loot site gives (ADR-068).</summary>
     public LootRule? Loot { get; init; }
 
+    /// <summary>What a buff site gives (ADR-068).</summary>
+    public BuffRule? Buff { get; init; }
+
+    /// <summary>What a training site gives (ADR-068).</summary>
+    public TrainingRule? Training { get; init; }
+
     /// <summary>Throws <see cref="FormatException"/> if kind-specific properties are missing.</summary>
     public void Validate()
     {
@@ -101,6 +113,11 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
         if (Kind is MapObjectKind.Loot && Loot is null)
         {
             throw new FormatException($"Loot site '{Id}' needs a loot rule.");
+        }
+
+        if ((Kind is MapObjectKind.Buff && Buff is null) || (Kind is MapObjectKind.Training && Training is null))
+        {
+            throw new FormatException($"Map object '{Id}' of kind {Kind} needs its rule.");
         }
 
         if (Provider is ProviderRule.Warehouse && (Resource is null || Amount <= 0))

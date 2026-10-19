@@ -140,8 +140,27 @@ public sealed class GameState
 
     public IEnumerable<Hero> HeroesOf(PlayerId owner) => _heroes.Where(h => h.Owner == owner);
 
-    /// <summary>Whether the player already has as many heroes as the map allows (<see cref="ScenarioRules.MaxHeroes"/>, ADR-068).</summary>
-    public bool HeroLimitReached(PlayerId owner) => HeroesOf(owner).Count() >= Rules.MaxHeroes;
+    /// <summary>How many heroes the player may have: its own limit, else the map's (<see cref="ScenarioRules.MaxHeroes"/>, ADR-068).</summary>
+    public int HeroLimit(PlayerId owner) => GetPlayer(owner).MaxHeroes ?? Rules.MaxHeroes;
+
+    /// <summary>Whether the player already has as many heroes as it may (<see cref="HeroLimit"/>).</summary>
+    public bool HeroLimitReached(PlayerId owner) => HeroesOf(owner).Count() >= HeroLimit(owner);
+
+    /// <summary>Scenario setting (map loading, editor): a player's own hero limit, 1 to 8, or null for the map's (ADR-068).</summary>
+    public void SetHeroLimit(PlayerId owner, int? limit)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("Hero limits can only be changed before the game starts.");
+        }
+
+        if (limit is < 1 or > ScenarioRules.HeroLimit)
+        {
+            throw new ArgumentOutOfRangeException(nameof(limit), limit, $"A player may have 1 to {ScenarioRules.HeroLimit} heroes.");
+        }
+
+        GetPlayer(owner).MaxHeroes = limit;
+    }
 
     public Hero? HeroAt(MapPosition position) => _heroes.FirstOrDefault(h => h.Position == position);
 

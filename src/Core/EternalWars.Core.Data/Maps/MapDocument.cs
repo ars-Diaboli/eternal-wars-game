@@ -23,12 +23,13 @@ namespace EternalWars.Core.Data.Maps;
 /// load onto every monster (ADR-065). 14 = + map marketplaces (<c>marketplace</c> objects, ADR-067).
 /// 15 = + the most heroes a player may have (<c>rules.maxHeroes</c>, omitted = 8; ADR-068). 16 = + resource providers (<c>provider</c> objects:
 /// water wheel, warehouses, windmill, mystical garden; ADR-068). 17 = + loot sites (<c>loot</c> objects: campfire, supply crates, traveler's wagon,
-/// corpse, lean-to, warrior's tomb; ADR-068).
+/// corpse, lean-to, warrior's tomb; ADR-068). 18 = + buff sites (<c>buff</c>) and training sites (<c>training</c>) and a player's own hero limit
+/// (<c>maxHeroes</c> on a player slot; ADR-068).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 17;
+    public const int CurrentFormatVersion = 18;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -95,7 +96,8 @@ public sealed record ConditionDocument(
 /// <param name="Name">Player name.</param>
 /// <param name="IsHuman">Human or AI by default.</param>
 /// <param name="Team">Default team; null = a team of its own (free-for-all).</param>
-public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = null);
+/// <param name="MaxHeroes">The player's own hero limit (v18, ADR-068); null = the map's.</param>
+public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = null, int? MaxHeroes = null);
 
 /// <summary>
 /// A starting hero. Stats and army are v4; older maps place heroes without an army. <see cref="Type"/> (v5) names a hero
@@ -151,6 +153,8 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(MarketplaceDocument), "marketplace")]
 [JsonDerivedType(typeof(ResourceProviderDocument), "provider")]
 [JsonDerivedType(typeof(LootSiteDocument), "loot")]
+[JsonDerivedType(typeof(BuffSiteDocument), "buff")]
+[JsonDerivedType(typeof(TrainingSiteDocument), "training")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -182,6 +186,12 @@ public sealed record ResourceProviderDocument : MapObjectDocument;
 
 /// <summary>A loot site (v17, ADR-068); what it gives comes from its definition and is rolled on the first visit.</summary>
 public sealed record LootSiteDocument : MapObjectDocument;
+
+/// <summary>A buff site (v18, ADR-068); what it gives comes from its definition.</summary>
+public sealed record BuffSiteDocument : MapObjectDocument;
+
+/// <summary>A training site (v18, ADR-068); what it gives comes from its definition.</summary>
+public sealed record TrainingSiteDocument : MapObjectDocument;
 
 /// <summary>An artifact on the map (v11); <see cref="Artifact"/> omitted = rolled from the definition's tier at game start.</summary>
 public sealed record ArtifactPickupDocument : MapObjectDocument

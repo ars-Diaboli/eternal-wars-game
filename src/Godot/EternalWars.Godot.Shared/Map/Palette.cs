@@ -70,6 +70,8 @@ public static class Palette
         MapObjectKind.Marketplace => new Color(0.85f, 0.65f, 0.20f),
         MapObjectKind.ResourceProvider => new Color(0.55f, 0.70f, 0.30f),
         MapObjectKind.Loot => new Color(0.70f, 0.55f, 0.35f),
+        MapObjectKind.Buff => new Color(0.45f, 0.75f, 0.85f),
+        MapObjectKind.Training => new Color(0.80f, 0.45f, 0.70f),
         _ => Colors.Magenta,
     };
 

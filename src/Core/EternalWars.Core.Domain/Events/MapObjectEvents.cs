@@ -16,6 +16,9 @@ public sealed record MapObjectCollected(HeroId Hero, MapObjectId Object) : IEven
 /// <summary>A hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068).</summary>
 public sealed record MapObjectFoundEmpty(HeroId Hero, MapObjectId Object) : IEvent;
 
+/// <summary>A map object turned the hero away, with a reason to show (Library below level 10, a price the player cannot pay; ADR-068).</summary>
+public sealed record MapObjectRefused(HeroId Hero, MapObjectId Object, string Reason) : IEvent;
+
 /// <summary>A hero received resources from a resource provider (ADR-068); <see cref="ResourcesChanged"/> came just before.</summary>
 public sealed record ResourcesFound(HeroId Hero, MapObjectId Object, ResourceSet Resources) : IEvent;
 

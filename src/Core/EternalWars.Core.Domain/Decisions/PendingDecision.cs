@@ -16,6 +16,20 @@ public enum TreasureChestReward
 
 public sealed record TreasureChestDecision(HeroId Hero, MapObjectId Chest, int Gold, int Experience) : PendingDecision(Hero);
 
+/// <summary>
+/// A training site asks what the visitor takes (ADR-068): a stat (Arena, Colosseum) or a way to pay (Gazebo, Tree of Knowledge). <c>ChooseTrainingCommand</c>
+/// answers; with <paramref name="CanDecline"/> it may also answer nothing and leave.
+/// </summary>
+public sealed record TrainingDecision(HeroId Hero, MapObjectId Site, IReadOnlyList<Objects.TrainingOption> Options, bool CanDecline) : PendingDecision(Hero)
+{
+    public bool Equals(TrainingDecision? other) =>
+        other is not null && Hero == other.Hero && Site == other.Site && CanDecline == other.CanDecline && Options.SequenceEqual(other.Options);
+
+    public override int GetHashCode() => HashCode.Combine(Hero, Site, Options.Count, CanDecline);
+
+    public override string ToString() => $"TrainingDecision {{ Hero = {Hero}, Site = {Site}, Options = {string.Join(" | ", Options)}, CanDecline = {CanDecline} }}";
+}
+
 /// <summary>A warehouse offers the visitor its resource or gold (ADR-068): <c>ChooseResourceRewardCommand</c> picks one of <paramref name="Options"/>.</summary>
 public sealed record ResourceChoiceDecision(HeroId Hero, MapObjectId Provider, IReadOnlyList<Economy.ResourceSet> Options) : PendingDecision(Hero)
 {

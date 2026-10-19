@@ -258,7 +258,7 @@ public class LootTests
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
-        Assert.Equal(17, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 17);
         Assert.Contains("\"kind\": \"loot\"", json, StringComparison.Ordinal);
         Assert.Equal(new[] { BuiltInMapObjects.Campfire, BuiltInMapObjects.WarriorsTomb }, restored.ObjectsOf<LootSite>().Select(s => s.Definition.Id));
     }

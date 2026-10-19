@@ -34,6 +34,22 @@ public static class BuiltInMapObjects
     public const string LeanTo = "loot.lean-to";
     public const string WarriorsTomb = "loot.warriors-tomb";
 
+    /// <summary>Buff sites (ADR-068).</summary>
+    public const string FaerieRing = "buff.faerie-ring";
+    public const string FountainOfYouth = "buff.fountain-of-youth";
+    public const string Temple = "buff.temple";
+    public const string MineralSpring = "buff.mineral-spring";
+    public const string Stables = "buff.stables";
+    public const string MagicWell = "buff.magic-well";
+
+    /// <summary>Training sites (ADR-068).</summary>
+    public const string LearningStone = "training.learning-stone";
+    public const string Gazebo = "training.gazebo";
+    public const string LibraryOfEnlightenment = "training.library";
+    public const string TreeOfKnowledge = "training.tree-of-knowledge";
+    public const string Arena = "training.arena";
+    public const string ColosseumOfTheMagi = "training.colosseum";
+
     /// <summary>Definition id of the pickup that rolls an artifact of a tier: <c>artifact.minor</c>.</summary>
     public static string ArtifactId(Artifacts.ArtifactTier tier) => $"artifact.{tier.ToString().ToLowerInvariant()}";
 
@@ -90,6 +106,20 @@ public static class BuiltInMapObjects
         Loot(Corpse, "Corpse", LootRule.Corpse, Footprint.Single),
         Loot(LeanTo, "Lean-to", LootRule.LeanTo, new(["BV"])),
         Loot(WarriorsTomb, "Warrior's tomb", LootRule.WarriorsTomb, ProviderFootprint),
+
+        Buff(FaerieRing, "Faerie ring", BuffRule.FaerieRing, VisitScope.DailyPerHero),
+        Buff(FountainOfYouth, "Fountain of youth", BuffRule.FountainOfYouth, VisitScope.DailyPerHero),
+        Buff(Temple, "Temple", BuffRule.Temple, VisitScope.DailyPerHero),
+        Buff(MineralSpring, "Mineral spring", BuffRule.MineralSpring, VisitScope.DailyPerHero),
+        Buff(Stables, "Stables", BuffRule.Stables, VisitScope.WeeklyPerHero),
+        Buff(MagicWell, "Magic well", BuffRule.MagicWell, VisitScope.DailyPerHero),
+
+        Training(LearningStone, "Learning stone", TrainingRule.LearningStone),
+        Training(Gazebo, "Gazebo", TrainingRule.Gazebo),
+        Training(LibraryOfEnlightenment, "Library of enlightenment", TrainingRule.LibraryOfEnlightenment),
+        Training(TreeOfKnowledge, "Tree of knowledge", TrainingRule.TreeOfKnowledge),
+        Training(Arena, "Arena", TrainingRule.Arena),
+        Training(ColosseumOfTheMagi, "Colosseum of the magi", TrainingRule.ColosseumOfTheMagi),
         .. Enum.GetValues<Artifacts.ArtifactTier>().Select(t =>
             new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 
@@ -114,6 +144,12 @@ public static class BuiltInMapObjects
 
     private static MapObjectDefinition Warehouse(ResourceType resource, int amount) =>
         Provider(WarehouseId(resource), $"Warehouse of {resource.ToString().ToLowerInvariant()}", ProviderRule.Warehouse) with { Resource = resource, Amount = amount };
+
+    private static MapObjectDefinition Buff(string id, string name, BuffRule rule, VisitScope scope) =>
+        new(id, name, MapObjectKind.Buff, ProviderFootprint) { Buff = rule, VisitScope = scope };
+
+    private static MapObjectDefinition Training(string id, string name, TrainingRule rule) =>
+        new(id, name, MapObjectKind.Training, ProviderFootprint) { Training = rule, VisitScope = VisitScope.OncePerHero };
 
     private static MapObjectDefinition Loot(string id, string name, LootRule rule, Footprint footprint) =>
         new(id, name, MapObjectKind.Loot, footprint) { Loot = rule, VisitScope = VisitScope.FirstVisitor };

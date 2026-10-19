@@ -60,6 +60,24 @@ public partial class DecisionPanel : PanelContainer
                 }
 
                 break;
+            case TrainingDecision training:
+                var site = (Core.Domain.Objects.TrainingSite)state.GetObject(training.Site);
+                _prompt.Text = $"{site.Definition.Name}: {state.GetHero(training.Hero).Name} may train once here.";
+                foreach (var option in training.Options)
+                {
+                    var price = Core.Domain.Objects.TrainingRules.Price(site.Rule, option);
+                    var label = Core.Domain.Objects.TrainingRules.Stat(option) is { } trained
+                        ? $"+{Core.Domain.Objects.TrainingRules.StatBonus} {StatName(trained)}"
+                        : $"Pay {Core.Domain.Objects.ResourceProviderRules.Describe(price)}";
+                    Button(label, new ChooseTrainingCommand(player, option));
+                }
+
+                if (training.CanDecline)
+                {
+                    Button("Leave", new ChooseTrainingCommand(player, null));
+                }
+
+                break;
             case HeroExchangeDecision:
                 Visible = false; // ExchangePanel handles it
                 break;

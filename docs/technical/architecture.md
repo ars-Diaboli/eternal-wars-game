@@ -181,7 +181,7 @@ These are enforced by:
   (two-way partner / one-way exit). Kinds: piles, mines (optionally guarded), chests, `TwoWayGate`,
   `OneWayGateEntrance`, `OneWayGateExit`, `MonsterGuard`, `Town`, `ArtifactPickup`, `CreatureDwelling`, `Marketplace`,
   `ResourceProvider` (weekly resources; what it gives is the definition's `Provider` rule, `ResourceProviderRules`), `LootSite` (one-time
-  loot for the first visitor, the definition's `Loot` rule, `LootRules`). Owned objects (mines, towns) implement
+  loot for the first visitor, the definition's `Loot` rule, `LootRules`), `BuffSite` (`BuffRules`) and `TrainingSite` (`TrainingRules`). Owned objects (mines, towns) implement
   `IFlaggable`.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
   map-format subtype. If kinds multiply, move to a per-kind behaviour registry.
@@ -192,7 +192,8 @@ These are enforced by:
   granted and expired through `ProgressionService` and feed `Hero.TotalMorale` / `TotalLuck` / `MovementAllowance`. Random rewards
   use `WeightedRoll.Pick` and `ArtifactService.Draw(tier)` (relics from a pool, `GameState.DrawnRelics`, refilled when empty).
 - **Hero limit (ADR-068)**: `ScenarioRules.MaxHeroes` (1–8, map format v15, template v5, the generator's `maxHeroes` override);
-  `GameState.HeroLimitReached` is the one check (the tavern uses it today).
+  a player may have its own (`Player.MaxHeroes`, `GameState.HeroLimit`, map v18). `GameState.HeroLimitReached` is the one check (the tavern and the
+  editor use it); `GameSession.Start` removes surplus heroes first.
 
 ### Terrain, roads, teams, knowledge
 - **Terrain rules are data**: `GameState.Terrains` (`TerrainCatalog`) gives passability, the
@@ -275,7 +276,7 @@ src/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
                                 Artifacts
-    EternalWars.Core.Data/      Maps (MapDocument v17, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v18, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (saves and replays: GameRecord, GameSaves), Templates (TemplateSerializer,
                                 BuiltInTemplates)
     EternalWars.Core.Generation/ MapTemplate, TemplateValidator, SeedStreams, ZoneLayouter, TerrainPainter, GeneratedMap,

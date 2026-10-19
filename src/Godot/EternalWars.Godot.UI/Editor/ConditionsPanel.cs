@@ -197,5 +197,12 @@ public partial class ConditionsPanel : VBoxContainer
         Change(r => condition.IsVictory ? r with { Victory = [.. r.Victory, condition] } : r with { Defeat = [.. r.Defeat, condition] });
     }
 
-    private void Change(Func<ScenarioRules, ScenarioRules> change) => _editor.SetScenarioRules(change(Scenario.Rules));
+    private void Change(Func<ScenarioRules, ScenarioRules> change)
+    {
+        if (_editor.SetScenarioRules(change(Scenario.Rules)) is var result and not EditResult.Ok)
+        {
+            _status.Text = result == EditResult.HeroLimit ? "A player already has more heroes than that." : result.ToString();
+            Refresh();
+        }
+    }
 }
