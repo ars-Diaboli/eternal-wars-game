@@ -24,12 +24,13 @@ namespace EternalWars.Core.Data.Maps;
 /// 15 = + the most heroes a player may have (<c>rules.maxHeroes</c>, omitted = 8; ADR-068). 16 = + resource providers (<c>provider</c> objects:
 /// water wheel, warehouses, windmill, mystical garden; ADR-068). 17 = + loot sites (<c>loot</c> objects: campfire, supply crates, traveler's wagon,
 /// corpse, lean-to, warrior's tomb; ADR-068). 18 = + buff sites (<c>buff</c>) and training sites (<c>training</c>) and a player's own hero limit
-/// (<c>maxHeroes</c> on a player slot; ADR-068).
+/// (<c>maxHeroes</c> on a player slot; ADR-068). 19 = + signs (<c>sign</c>, with a message), observatories, hill forts, town gates, war machine
+/// factories (<c>observatory</c>, <c>hillFort</c>, <c>townGate</c>, <c>factory</c>) and prisons (<c>prison</c>, optional hero and level; ADR-068).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 18;
+    public const int CurrentFormatVersion = 19;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -155,6 +156,12 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(LootSiteDocument), "loot")]
 [JsonDerivedType(typeof(BuffSiteDocument), "buff")]
 [JsonDerivedType(typeof(TrainingSiteDocument), "training")]
+[JsonDerivedType(typeof(SignDocument), "sign")]
+[JsonDerivedType(typeof(ObservatoryDocument), "observatory")]
+[JsonDerivedType(typeof(HillFortDocument), "hillFort")]
+[JsonDerivedType(typeof(TownGateDocument), "townGate")]
+[JsonDerivedType(typeof(WarMachineFactoryDocument), "factory")]
+[JsonDerivedType(typeof(PrisonDocument), "prison")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -192,6 +199,32 @@ public sealed record BuffSiteDocument : MapObjectDocument;
 
 /// <summary>A training site (v18, ADR-068); what it gives comes from its definition.</summary>
 public sealed record TrainingSiteDocument : MapObjectDocument;
+
+/// <summary>A sign post (v19, ADR-068) and its message.</summary>
+public sealed record SignDocument : MapObjectDocument
+{
+    public string Message { get; init; } = "";
+}
+
+/// <summary>An observatory (v19, ADR-068).</summary>
+public sealed record ObservatoryDocument : MapObjectDocument;
+
+/// <summary>A hill fort (v19, ADR-068).</summary>
+public sealed record HillFortDocument : MapObjectDocument;
+
+/// <summary>A town gate (v19, ADR-068).</summary>
+public sealed record TownGateDocument : MapObjectDocument;
+
+/// <summary>A war machine factory (v19, ADR-068).</summary>
+public sealed record WarMachineFactoryDocument : MapObjectDocument;
+
+/// <summary>A prison (v19, ADR-068); <see cref="Hero"/> (a roster id) and <see cref="PrisonerLevel"/> omitted = drawn when the game starts.</summary>
+public sealed record PrisonDocument : MapObjectDocument
+{
+    public string? Hero { get; init; }
+
+    public int? PrisonerLevel { get; init; }
+}
 
 /// <summary>An artifact on the map (v11); <see cref="Artifact"/> omitted = rolled from the definition's tier at game start.</summary>
 public sealed record ArtifactPickupDocument : MapObjectDocument

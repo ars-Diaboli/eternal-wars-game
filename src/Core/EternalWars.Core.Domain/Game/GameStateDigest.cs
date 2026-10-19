@@ -41,6 +41,7 @@ public static class GameStateDigest
                 Mine mine => $"owner {mine.Owner?.Value} guard {mine.Guard}",
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
+                Prison prison => $"prisoner {prison.Hero} level {prison.Level}",
                 CreatureDwelling dwelling => $"{dwelling.Creature} owner {dwelling.Owner?.Value} available {dwelling.Available}" + (dwelling.Guard is { } g ? $" guard {g}" : ""),
                 MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
                 Town town => $"owner {town.Owner?.Value} governor {town.Governor?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "

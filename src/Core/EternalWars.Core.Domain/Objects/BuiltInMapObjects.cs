@@ -50,6 +50,14 @@ public static class BuiltInMapObjects
     public const string Arena = "training.arena";
     public const string ColosseumOfTheMagi = "training.colosseum";
 
+    /// <summary>Utility objects and the prison (ADR-068).</summary>
+    public const string Sign = "sign";
+    public const string Observatory = "observatory";
+    public const string HillFort = "hill-fort";
+    public const string TownGate = "town-gate";
+    public const string WarMachineFactory = "war-machine-factory";
+    public const string Prison = "prison";
+
     /// <summary>Definition id of the pickup that rolls an artifact of a tier: <c>artifact.minor</c>.</summary>
     public static string ArtifactId(Artifacts.ArtifactTier tier) => $"artifact.{tier.ToString().ToLowerInvariant()}";
 
@@ -127,6 +135,13 @@ public static class BuiltInMapObjects
         Training(TreeOfKnowledge, "Tree of knowledge", TrainingRule.TreeOfKnowledge),
         Training(Arena, "Arena", TrainingRule.Arena),
         Training(ColosseumOfTheMagi, "Colosseum of the magi", TrainingRule.ColosseumOfTheMagi),
+
+        new(Sign, "Sign", MapObjectKind.Sign, new(["BV"])),
+        new(Observatory, "Observatory", MapObjectKind.Observatory, ProviderFootprint) { VisitScope = VisitScope.OncePerHero },
+        new(HillFort, "Hill fort", MapObjectKind.HillFort, MineFootprint),
+        new(TownGate, "Town gate", MapObjectKind.TownGate, MonolithFootprint),
+        new(WarMachineFactory, "War machine factory", MapObjectKind.WarMachineFactory, MineFootprint),
+        new(Prison, "Prison", MapObjectKind.Prison, new(["BV"])),
         .. Enum.GetValues<Artifacts.ArtifactTier>().Select(t =>
             new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 

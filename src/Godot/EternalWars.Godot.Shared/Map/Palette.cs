@@ -72,6 +72,12 @@ public static class Palette
         MapObjectKind.Loot => new Color(0.70f, 0.55f, 0.35f),
         MapObjectKind.Buff => new Color(0.45f, 0.75f, 0.85f),
         MapObjectKind.Training => new Color(0.80f, 0.45f, 0.70f),
+        MapObjectKind.Sign => new Color(0.55f, 0.45f, 0.30f),
+        MapObjectKind.Observatory => new Color(0.75f, 0.75f, 0.85f),
+        MapObjectKind.HillFort => new Color(0.50f, 0.45f, 0.40f),
+        MapObjectKind.TownGate => new Color(0.30f, 0.55f, 0.90f),
+        MapObjectKind.WarMachineFactory => new Color(0.45f, 0.40f, 0.35f),
+        MapObjectKind.Prison => new Color(0.30f, 0.30f, 0.35f),
         _ => Colors.Magenta,
     };
 

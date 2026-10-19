@@ -55,6 +55,7 @@ public partial class Main : Node3D
     private HeroPanel _heroScreen = null!;
     private DwellingPanel _dwellingScreen = null!;
     private MarketplacePanel _marketScreen = null!;
+    private ObjectServicePanel _serviceScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
@@ -117,7 +118,7 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible)
+        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible || _serviceScreen.Visible)
         {
             return; // a full-screen panel takes the input (Escape closes it)
         }
@@ -635,6 +636,9 @@ public partial class Main : Node3D
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
         decisions.Bind(_session);
+        var notice = new NoticePanel();
+        top.AddChild(notice);
+        notice.Bind(_session);
         var exchange = new ExchangePanel();
         top.AddChild(exchange);
         exchange.Bind(_session);
@@ -674,6 +678,9 @@ public partial class Main : Node3D
         _marketScreen = new MarketplacePanel();
         townLayer.AddChild(_marketScreen);
         _marketScreen.Bind(_session);
+        _serviceScreen = new ObjectServicePanel();
+        townLayer.AddChild(_serviceScreen);
+        _serviceScreen.Bind(_session);
         _townScreen.TradeRequested += () => _marketScreen.Open();
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
@@ -695,6 +702,11 @@ public partial class Main : Node3D
             if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Marketplace marketplace)
             {
                 _marketScreen.Open(marketplace.Id);
+            }
+
+            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is { } served && ObjectServicePanel.Serves(served))
+            {
+                _serviceScreen.Open(served.Id); // Hill Fort, War Machine Factory (ADR-068)
             }
 
             if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is CreatureDwelling dwelling)

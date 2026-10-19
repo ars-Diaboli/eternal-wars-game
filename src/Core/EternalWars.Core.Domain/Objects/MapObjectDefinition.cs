@@ -43,6 +43,24 @@ public enum MapObjectKind
 
     /// <summary>A permanent power-up (<see cref="TrainingSite"/>, ADR-068): Learning Stone, Gazebo, Library, Tree of Knowledge, Arena, Colosseum.</summary>
     Training,
+
+    /// <summary>A sign post with a map author's message (<see cref="SignPost"/>, ADR-068).</summary>
+    Sign,
+
+    /// <summary>Reveals the terrain around it (<see cref="Objects.Observatory"/>, ADR-068).</summary>
+    Observatory,
+
+    /// <summary>Upgrades tier 1–3 stacks for 150 % (<see cref="Objects.HillFort"/>, ADR-068).</summary>
+    HillFort,
+
+    /// <summary>Moves the visitor to one of its owner's towns (<see cref="Objects.TownGate"/>, ADR-068).</summary>
+    TownGate,
+
+    /// <summary>Sells war machines (<see cref="Objects.WarMachineFactory"/>, ADR-068).</summary>
+    WarMachineFactory,
+
+    /// <summary>Frees a hero for the visitor's player (<see cref="Objects.Prison"/>, ADR-068).</summary>
+    Prison,
 }
 
 /// <summary>

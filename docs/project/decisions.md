@@ -1336,3 +1336,26 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
   - Dwelling guards: `CreatureDwelling.Guard`, set at game start for an unowned dwelling of tier 3–5 (`DwellingGuards.Count`: 9 / 6 / 3 of its base creature).
     The guard always fights (`GuardService.Encounter`); a hero without an army cannot enter; beating it clears the guard and flags the dwelling. Game state only.
     The AI weighs the guard as the opponent at the dwelling.
+- **Implementation (2026-10-19), utilities and the prison** (map format **v19**):
+  - Sign (`SignPost.Message`, map data, `MapEditorSession.SetSignMessage`, inspector text field): a visit publishes `SignRead`.
+  - Observatory: every visit publishes `ObservatoryUsed`; `VisibilityService` reveals radius 20 around its entrance (explored terrain, as any
+    reveal) and records the hero (`OncePerHero` log, which the AI reads to go there once).
+  - Hill Fort: `UpgradeAtHillFortCommand(Player, Fort, Slot)` for the player's hero on the entrance; `HillFortRules`: tier 1–3 creatures with an
+    upgrade, 150 % of the price difference rounded up per resource (no Stewardship); `HillFortUpgraded` + `ArmyChanged`.
+  - Town Gate: a `TownGateDecision` lists the owner's towns (`TownGateOption`, unavailable when a hero stands at the entrance);
+    `ChooseTownGateCommand(Player, Town?)` moves the hero there (`HeroTeleported`, no movement cost; a hero with Stewardship takes a governor-less
+    town as usual) or stays. A player without towns is turned away (`MapObjectRefused`).
+  - War Machine Factory: `BuyWarMachineAtFactoryCommand(Player, Factory, Slot)`, the blacksmith's prices (`WarMachines.Cost`) and the hero's own
+    offensive machine; refused for a machine the hero has. `WarMachineBought`'s first field is now `Seller` (a town or a factory).
+  - Prison (`Prison.Hero`, `Prison.Level`, map data; `SetPrison` and inspector rows): `PrisonRules.Prepare` fills what the map left open when the
+    game starts (a random playable faction, then one of its heroes neither on the map nor in another prison, else any; the level by 30 / 30 / 20 /
+    15 / 5 %). A generated map would do the same at generation once the generator places prisons. Freeing: refused with a notice at the hero limit;
+    otherwise the prison goes and the hero (roster stats, no army) stands where the prison stood, with the level's experience and the game's level-up
+    choices (`ProgressionService.LevelUpAutomatically`), moving from its owner's next turn (`HeroFreed`). The validator checks the prisoner, the
+    tile the hero will stand on, and warns when the prisoner is already on the map.
+  - UI: `ObjectServicePanel` (Hill Fort upgrades, factory purchases) opens on a visit; the decision panel lists the town gate's towns; a
+    `NoticePanel` shows signs, refusals, emptied objects and freed prisoners. Replay names `townGate`, `hillFort`, `factory`.
+  - AI: frees prisoners and visits an observatory once per hero; answers a town gate by staying; does not use hill forts or factories yet.
+  - Assumed (not in the notes): the freed hero has no army (only its roster stats and skills), and the Prison's footprint is two tiles so the hero
+    has a place to stand.
+

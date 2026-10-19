@@ -296,6 +296,30 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
             },
+            SignPost sign => new SignDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Message = sign.Message,
+            },
+            Observatory => new ObservatoryDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            HillFort => new HillFortDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            TownGate => new TownGateDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            WarMachineFactory => new WarMachineFactoryDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            Prison prison => new PrisonDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Hero = prison.Hero, PrisonerLevel = prison.Level,
+            },
             ArtifactPickup pickup => new ArtifactPickupDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Artifact = pickup.Artifact,
@@ -366,6 +390,12 @@ public static class MapConverter
                 LootSiteDocument => new LootSite(id, definition, position),
                 BuffSiteDocument => new BuffSite(id, definition, position),
                 TrainingSiteDocument => new TrainingSite(id, definition, position),
+                SignDocument sign => new SignPost(id, definition, position, sign.Message),
+                ObservatoryDocument => new Observatory(id, definition, position),
+                HillFortDocument => new HillFort(id, definition, position),
+                TownGateDocument => new TownGate(id, definition, position),
+                WarMachineFactoryDocument => new WarMachineFactory(id, definition, position),
+                PrisonDocument prison => new Prison(id, definition, position, prison.Hero, prison.PrisonerLevel),
                 ArtifactPickupDocument artifact => new ArtifactPickup(id, definition, position, artifact.Artifact),
                 TreasureChestDocument { Gold: { } gold, Experience: { } experience } => new TreasureChest(id, definition, position, new ChestValues(gold, experience)),
                 TreasureChestDocument { Gold: null, Experience: null } => new TreasureChest(id, definition, position),

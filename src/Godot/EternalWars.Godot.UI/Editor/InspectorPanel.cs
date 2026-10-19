@@ -180,6 +180,32 @@ public partial class InspectorPanel : VBoxContainer
                 break;
             }
 
+            case SignPost sign:
+            {
+                var row = new HBoxContainer();
+                AddChild(row);
+                row.AddChild(new Label { Text = "Message" });
+                var text = new LineEdit { Text = sign.Message, CustomMinimumSize = new Vector2(260, 0), PlaceholderText = "What the sign says" };
+                text.TextSubmitted += value => Edit(() => _editor.SetSignMessage(sign.Id, value));
+                text.FocusExited += () => Edit(() => _editor.SetSignMessage(sign.Id, text.Text));
+                row.AddChild(text);
+                break;
+            }
+
+            case Prison prison:
+            {
+                var row = new HBoxContainer();
+                AddChild(row);
+                var heroes = new[] { ("Random (drawn at start)", (string?)null) }
+                    .Concat(_editor.Scenario.HeroRoster.All.OrderBy(h => h.Town).ThenBy(h => h.Name).Select(h => ($"{h.Name} ({h.Town})", (string?)h.Id)));
+                var who = Options(row, "Prisoner", heroes, prison.Hero);
+                var level = Spin(row, "Level (0 = rolled)", prison.Level ?? 0, 0, 75);
+                void ApplyPrison() => Edit(() => _editor.SetPrison(prison.Id, who.Value(), level.Value == 0 ? null : (int)level.Value));
+                who.Button.ItemSelected += _ => ApplyPrison();
+                level.ValueChanged += _ => ApplyPrison();
+                break;
+            }
+
             case TreasureChest chest:
             {
                 var row = new HBoxContainer();

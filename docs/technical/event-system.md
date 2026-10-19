@@ -112,12 +112,15 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroMovementGained(Hero, Amount, MovementPoints)` | `MapObjectInteractionService` | a buff site added movement points for today (ADR-068) |
 | `HeroPrimaryStatRaised(Hero, Stat, Amount, Value)` | `ProgressionService` | a training site raised a primary stat (Arena, Colosseum, Library; ADR-068) |
 | `HeroLeveledUp(Hero, Level, Skill, SkillLevel, Stat, StatValue)` | `ProgressionService` | a level-up choice applied: the skill picked (null: none) and the primary stat raised |
-| `WarMachineBought(Town, Hero, Slot)` | `TownService` | the blacksmith sold a war machine to the visiting hero (ADR-056) |
+| `WarMachineBought(Seller, Hero, Slot)` | `TownService`, `MapObjectInteractionService` | a town's blacksmith (ADR-056) or a War Machine Factory (ADR-068) sold a war machine to the hero |
+| `HeroFreed(Prison, Hero, Owner, Definition, Level)` | `MapObjectInteractionService` | a prisoner joined the visitor's player where the prison stood (ADR-068); `MapObjectRemoved` of the prison came just before |
 | `WarMachineLost(Hero, Slot)` | `BattleService` | a hero's war machine was destroyed in battle |
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
 | `MapObjectFoundEmpty(Hero, Object)` | `MapObjectInteractionService` | a hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068) |
 | `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`); for a warehouse only once the visitor chose (`ChooseResourceRewardCommand`) |
 | `MapObjectRefused(Hero, Object, Reason)` | `MapObjectInteractionService` | an object turned the hero away with a reason to show (Library below level 10, a price nobody can pay; ADR-068) |
+| `SignRead(Hero, Sign, Message)` / `ObservatoryUsed(Hero, Observatory, Owner, Center, Radius)` | `MapObjectInteractionService` | a sign was read; an observatory was used (`VisibilityService` reveals around it; ADR-068) |
+| `HillFortUpgraded(Fort, Hero, Slot, From, To, Count)` | `MapObjectInteractionService` | a stack was upgraded at a hill fort (`ArmyChanged` follows; ADR-068) |
 | `LootFound(Hero, Object, Resources, Artifact)` | `MapObjectInteractionService` | the first visitor searched a loot site, or a chest held an artifact (ADR-068); either part may be empty; vanishing sites were removed just before |
 | `MapObjectCollected(Hero, Object)` | `MapObjectInteractionService.TryCollect` | a hero took the reward of an object with a limited visit scope; its `Visits` log changed (ADR-068), the reward's events follow |
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
@@ -144,7 +147,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
 | `ScenarioRulesChanged` | editor | the victory and defeat conditions changed (views re-read `GameState.Rules`) |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
-| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, warehouse resource choice, training choice, exchange, guard offer, battle (resolved when it ends), level-up |
+| `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, warehouse resource choice, training choice, town gate, exchange, guard offer, battle (resolved when it ends), level-up |
 | `TilesRevealed(Player, Positions)` | `VisibilityService` | newly explored tiles only |
 | `SightChanged(Player, Entered, Left)` | `VisibilityService` | `ShroudWithRefog` only: tiles entering/leaving live sight (show/hide units) |
 | `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone); owned mines and towns observe like heroes |

@@ -40,6 +40,8 @@ public sealed class GameSession
         Bus.Subscribe<HeroDefeated>(visibility);
         Bus.Subscribe<HeroHired>(visibility);
         Bus.Subscribe<MapObjectChanged>(visibility);
+        Bus.Subscribe<ObservatoryUsed>(visibility);
+        Bus.Subscribe<HeroFreed>(visibility);
 
         Flow = new GameFlowService(State, Bus);
         Economy = new EconomyService(State, Bus);
@@ -98,6 +100,7 @@ public sealed class GameSession
         Flow.RemoveSurplusHeroes();
         Flow.Begin();
         Artifacts.RollUnsetPickups();
+        PrisonRules.Prepare(State);
         Turns.StartGame();
         Settle();
     }
@@ -225,6 +228,15 @@ public sealed class GameSession
                 return null;
             case ChooseTrainingCommand training:
                 Interactions.ResolveTraining(training.Option);
+                return null;
+            case ChooseTownGateCommand gate:
+                Interactions.ResolveTownGate(gate.Town);
+                return null;
+            case UpgradeAtHillFortCommand fort:
+                Interactions.UpgradeAtHillFort(fort.Player, fort.Fort, fort.Slot);
+                return null;
+            case BuyWarMachineAtFactoryCommand factory:
+                Interactions.BuyAtFactory(factory.Player, factory.Factory, factory.Slot);
                 return null;
             case CompleteExchangeCommand:
                 Interactions.CompleteExchange();

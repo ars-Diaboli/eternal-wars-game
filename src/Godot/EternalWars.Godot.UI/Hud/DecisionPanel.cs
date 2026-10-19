@@ -60,6 +60,15 @@ public partial class DecisionPanel : PanelContainer
                 }
 
                 break;
+            case TownGateDecision gate:
+                _prompt.Text = "Town gate: go to which town?";
+                foreach (var town in gate.Towns)
+                {
+                    Button(town.Available ? town.Name : $"{town.Name} (entrance blocked)", new ChooseTownGateCommand(player, town.Town), disabled: !town.Available);
+                }
+
+                Button("Stay", new ChooseTownGateCommand(player, null));
+                break;
             case TrainingDecision training:
                 var site = (Core.Domain.Objects.TrainingSite)state.GetObject(training.Site);
                 _prompt.Text = $"{site.Definition.Name}: {state.GetHero(training.Hero).Name} may train once here.";
@@ -133,9 +142,9 @@ public partial class DecisionPanel : PanelContainer
         }
     }
 
-    private void Button(string text, GameCommand command)
+    private void Button(string text, GameCommand command, bool disabled = false)
     {
-        var button = new Button { Text = text };
+        var button = new Button { Text = text, Disabled = disabled };
         button.Pressed += () => _session.Execute(command);
         _buttons.AddChild(button);
     }

@@ -32,6 +32,15 @@ public sealed record ChooseResourceRewardCommand(PlayerId Player, int Option) : 
 /// <summary>Answers a <c>TrainingDecision</c>: one of its options, or null to leave without training when the site allows it (ADR-068).</summary>
 public sealed record ChooseTrainingCommand(PlayerId Player, Objects.TrainingOption? Option) : GameCommand(Player);
 
+/// <summary>Answers a <c>TownGateDecision</c>: the town to go to, or null to stay (ADR-068).</summary>
+public sealed record ChooseTownGateCommand(PlayerId Player, MapObjectId? Town) : GameCommand(Player);
+
+/// <summary>The player's hero on a hill fort's entrance upgrades the stack in <paramref name="Slot"/> (ADR-068).</summary>
+public sealed record UpgradeAtHillFortCommand(PlayerId Player, MapObjectId Fort, int Slot) : GameCommand(Player);
+
+/// <summary>The player's hero on a War Machine Factory's entrance buys the machine of <paramref name="Slot"/> (ADR-068).</summary>
+public sealed record BuyWarMachineAtFactoryCommand(PlayerId Player, MapObjectId Factory, Battles.WarMachineSlot Slot) : GameCommand(Player);
+
 /// <summary>Closes the exchange screen.</summary>
 public sealed record CompleteExchangeCommand(PlayerId Player) : GameCommand(Player);
 

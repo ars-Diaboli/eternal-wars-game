@@ -25,6 +25,15 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
         OfferNext();
     }
 
+    /// <summary>Takes every level-up due now with the game's choices (the first skill offered), for a hero freed from a prison (ADR-068).</summary>
+    internal void LevelUpAutomatically(Hero hero)
+    {
+        while (hero.PendingLevelUps > 0)
+        {
+            LevelUp(hero, Offers(hero).FirstOrDefault(), RollStat(hero));
+        }
+    }
+
     /// <summary>A map object raises a primary stat (ADR-068).</summary>
     internal void RaiseStat(Hero hero, PrimaryStat stat, int amount)
     {
