@@ -1235,3 +1235,29 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
     Rally and Intimidate are timed `BattleSideEffect`s counted from the round after the one they were used in (the morale and the order of a round are set when it starts), Terror rolls 30 % per enemy creature stack at once and sets `LosesNextAction`.
     The battle AI uses the strongest available warcry each round. The spell resistance is data (`HeroBattleBonuses.EnemySpellPowerPenalty`) until casting exists (Phase 5).
   - Not built: Adrenaline, a luck skill, AI trading.
+
+### ADR-068: The adventure-map object catalogue (2026-10-19)
+**Status**: accepted as a design (2026-10-19), user notes in `ideas.md`; **nothing implemented**. Numbers are drafts; unclear points are MAP-1 … MAP-13 in `open-questions.md`.
+- **Content**: about 60 objects in seven groups (resource providers, one-time loot, creature dwellings with guards, creature banks, permanent power-ups, temporary buffs, utilities), written out in
+  [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068). The mines, resource piles, treasure chest, artifact pickup, map dwelling and marketplace already exist; the rest are new.
+- **Artifact tiers** (user decision, MAP-1): Minor, Major, Relic as in `artifacts.csv`; the notes' Treasure tier is dropped (every (t) became Minor). Combo (set) pieces are never dropped, only assembled. Relics come from a pool; an empty pool is refilled, so duplicates are fine.
+- **Visit scopes** (user decision): weekly (per object, resets on Monday), once per hero (visited-by set on the object), first visitor, vanishing. **Temporary effects** are a hero status that expires
+  after the next battle, at the end of the day or of the week.
+- **Creature banks** (user decision): a new object kind, guards always fight (no join or flee), reward only on victory, the guard tier is rolled from the game RNG at map start or fixed by the map author,
+  then the bank is plundered.
+- **Creature names**: the notes used HoMM3 names; they are mapped to our roster (Zombie → Ghoul, Power Lich → Arch Lich, Dwarf / Battle Dwarf → Defender / Shield Guard, Medusa Queen → Putrid Medusa,
+  Cavalier → Lancer). Dwarf is a placeholder until CONT-2.
+- **Treasure chest** gets the five-row table of the notes (including a 5 % Minor artifact) in place of the three equal tiers of ADR-039. **Dwellings of tier 3 / 4 / 5** are guarded by 9 / 6 / 3 base
+  stacks, which settles the dwelling-guard part of TOWN-5.
+- **Marketplace rounding** (TOWN-2): what the player gives is rounded up, what the player receives is rounded down. The implemented rule (buy price up, sale gain down) already does this.
+- **Implementation order** is the roadmap block "Adventure map objects": shared visit rules and hero statuses first, then the groups in the order resource providers, loot, buffs, trainers, banks, utilities.
+  Map format bumps follow CLAUDE.md (new version, older versions keep loading).
+- **Answers on 2026-10-19** (MAP-1 … MAP-4): abandoned mines are separate objects that turn into the normal mine once the guard is defeated (the guard count is rolled at map start; a normal mine keeps its free
+  guard choice); Mystical Garden is a random reward, 500 gold or 5 of one random magic resource, no choice; Campfire gives gold plus 4–6 of one random resource; Supply Crates give two different resources, 4–6
+  each; Lean To one kind; Resource Pile and Traveler's Wagon amounts already match.
+- **Answers on 2026-10-19, second round** (MAP-5 … MAP-8): Prison levels 1 / 5 / 10 / 20 / 30 at 30 / 30 / 20 / 15 / 5 %, faction drawn at map generation, never a player's chosen start hero, the visit fails at the hero limit,
+  a higher level gets experience and game-chosen level-ups. Banks: "N each", default battle width, hidden and fixed-by-RNG guard tier (an author cannot set it), a retreat or defeat leaves the guard intact, only the
+  Churchyard costs −1 morale (next battle) on later visits, banks refill 4 weeks after plundering (details MAP-14). Gazebo and Library once per hero; the Library does nothing below level 10.
+- **Hero limit** (user decision): the template editor and the map generator get a setting for the **maximum number of heroes per player, 1 to 8** (today a fixed 8, ADR-060). It becomes a map rule (map format bump)
+  that hiring, the tavern and the Prison respect.
+

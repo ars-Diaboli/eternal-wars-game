@@ -69,10 +69,11 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Neutral monster | Fights, joins or flees | implemented (ADR-040) |
 | Gates | Teleport (see below) | implemented |
 | Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
-| Shrines and other visitables | – | planned ❓ |
+| Visitables, loot, banks, trainers, buffs, utilities | The catalogue in [Planned objects](#planned-objects-adr-068) below | planned (ADR-068) |
 
 - **Treasure chests roll their reward** (seeded game RNG): 1000/1500/2000 gold *or* 500/1000/1500 XP, the three tiers
-  equally likely (ADR-039). Map authors may fix the values. Whether chests may hold artifacts is open ❓.
+  equally likely (ADR-039). Map authors may fix the values. **Planned change (ADR-068)**: the chest gets the five-row
+  table below, including a Minor artifact.
 - **Mines may be guarded**: the editor or random map generator can attach a guard stack. The guard must be
   defeated before the first flagging; after that any hero re-flags the mine by visiting it. Mine guards always fight.
 - **Neutral monsters** (ADR-040): a creature stack on a tile; stepping onto it attacks it, and it guards the 8 tiles
@@ -130,3 +131,106 @@ Two modes, **chosen when the game is created** (`GameOptions.FogMode`):
 - Observers: heroes and owned towns (radius 5), owned mines and map dwellings (radius 2).
 - Under refog, **objects out of sight show their last known state** (flag colour, chest still there),
   updated when they come back into sight. Units are hidden entirely (`ObjectMemory`).
+
+## Planned objects (ADR-068)
+The owner's catalogue of adventure-map objects (from `ideas.md`, 2026-10-19). **Nothing here is built yet** apart from the
+mines, resource piles, treasure chest, artifact pickup, map dwelling and marketplace in the table above; see the roadmap block
+"Adventure map objects". Every number is a draft. Questions are `MAP-n` in [open-questions.md](../project/open-questions.md).
+
+### Rules shared by all of them
+- **Artifact tiers** (decided, MAP-1): **Minor** (m), **Major** (M), **Relic** (R) as in `artifacts.csv`; the notes' extra *Treasure*
+  tier is dropped, so every (t) in the notes became Minor. A **Combo** (set) piece is never dropped, only assembled from
+  its parts. Relics are drawn from a pool without repeats; when the pool is empty it is **refilled** and the draw starts anew,
+  so a hero may hold two copies of one Relic.
+- **Visit scopes** (decided): *weekly* objects keep a per-object week counter that resets on Monday, so a hero gets the reward
+  once a week unless someone else has taken it that week; *once per hero* objects keep a visited-by set of hero ids; *first
+  visitor* objects are spent after one visit; *vanishing* objects are removed after the visit. The scope is data of the object
+  definition and the map format records the state.
+- **Temporary effects** ("for the next battle", "until the end of the day", "for the rest of the week") are a hero status that
+  expires at the stated moment; morale and luck stay within ±5 (ADR-053). Setting a status is a published event.
+- **Random rewards** draw from `GameState.Random` when the visit happens; a map author may fix the outcome.
+- **Resource groups**: *basic* = lumber, ore; *magic* = crystal, sulfur, mercury (ADR-067); "random resource" never means gold.
+- **Creature names** are mapped to our roster (the notes used HoMM3 names, ADR-068): Zombie → Ghoul, Power Lich → Arch Lich,
+  Dwarf / Battle Dwarf → Defender / Shield Guard (placeholder, ❓ CONT-2), Medusa Queen → Putrid Medusa, Cavalier → Lancer
+  (its upgrade is the Champion). Troglodyte, Imp, Familiar, Medusa, Naga, Naga Queen, Skeleton, Skeleton Warrior, Wight, Wraith and
+  Vampire Lord exist as written. Neutral stacks use the creature table's stats.
+
+### Mines and resource providers
+| Object | Effect |
+|---|---|
+| Gold Mine, Sawmill, Ore Mine, Alchemist's Lab, Crystal Pond, Sulfur Dune | Flagged; daily +1000 gold, +2 lumber, +2 ore, +1 mercury, +1 crystal, +1 sulfur (**implemented** as the mines; the notes only rename them) |
+| Abandoned versions of each | A **separate object** (decided, MAP-2), guarded by Troglodytes: **150–295** at the gold mine, **100–245** elsewhere, rolled when the map starts. When the guard is defeated it **turns into the normal mine** of its kind. The gold mine and the ore mine fight on **subterranean** terrain with all its native bonuses, the others on the terrain they stand on. A normal mine keeps today's optional guard with a free choice of guard. |
+| Water Wheel | A visiting hero gets **500 gold** in the first week of the first month and **1000 gold** once a week after that (weekly) |
+| Warehouse of Wood / Ore | Weekly: **8** lumber / ore **or 500 gold**, the visitor chooses |
+| Warehouse of Sulfur / Mercury / Crystal | Weekly: **5** of that resource **or 500 gold** |
+| Warehouse of Gold | Weekly: **2000 gold** |
+| Windmill | Weekly: **3–6** of one random non-gold resource |
+| Mystical Garden | Weekly: a random reward, **500 gold or 5 of one random magic resource**; the visitor does not choose (decided, MAP-3) |
+
+### Treasure and one-time loot
+| Object | Effect |
+|---|---|
+| Campfire | 400–600 gold and **4–6 of one random non-gold resource**, e.g. 5 lumber or 4 crystal; vanishes |
+| Supply Crates | Two different random non-gold resources, **4–6 of each** (e.g. 6 sulfur and 4 ore); vanishes |
+| Resource Pile | **Implemented**; today's amounts match the notes (5–10 lumber / ore, 3–7 magic, 500–1000 gold); vanishes |
+| Traveler's Wagon | First visitor: 10 % nothing, 30 % Minor artifact, 60 % 2–5 of one random non-gold resource; vanishes |
+| Treasure Chest | Gold or experience, chosen by the player: 30 % 1000 gold or 500 XP; 30 % 1500 or 1000; 25 % 2000 or 1500; 10 % 2500 or 2000; **5 % a Minor artifact**; vanishes. Replaces the three-tier chest of ADR-039 (answers the chest half of CONT-3 and RMG-1) |
+| Corpse | First visitor: 80 % nothing, 20 % a Minor artifact |
+| Warrior's Tomb | First visitor: 80 % Minor, 15 % Major, 5 % Relic artifact, and **−3 morale for the next battle**. Every later visitor gets only the −3 |
+| Lean To | First visitor: 1–6 of one random non-gold resource |
+| Prison | A hero joins the visitor's player; vanishes. The level is rolled: **30 % level 1, 30 % level 5, 20 % level 10, 15 % level 20, 5 % level 30**, or the map author sets the hero. When the map is generated the prison's **faction is drawn at random** and the hero is picked from it, never one of the heroes the players chose as starting heroes (and not one already on the map). If the visitor already has the most heroes the map allows, the **visit fails** with a notification and the prison stays. A hero above level 1 gets the experience for its level and its skills and stats from level-ups the game chooses |
+
+### Creature dwellings
+A map dwelling (**implemented**, ADR-054) is one creature line with its own growth. New: dwellings of **tier 3 / 4 / 5 are
+guarded by 9 / 6 / 3 base (non-upgraded) stacks** of the creature they produce; tiers 1 and 2 are unguarded. This answers the
+"guards on map dwellings" part of TOWN-5.
+
+### Creature banks
+A bank is a new object kind. Entering it starts a battle against the rolled guard; guards **always fight** (no join, no flee,
+unlike neutral monsters, ADR-040). The reward is paid only if the visitor wins; the bank is then **plundered**. The guard's
+tier is rolled when the map starts from the percentages below; it is **not shown** on the map and an author cannot fix it. "N each" in the
+table means N of every named resource. The battle uses the **default width** (no Tactics choice). If the hero retreats or
+perishes, the guard stays **intact** and the bank can be tried again.
+
+| Bank | Guard and reward |
+|---|---|
+| Churchyard | 100 %: 90 Ghouls, 2500 gold, a Minor artifact. A later visit to the plundered bank gives **−1 morale for the next battle**; no other bank has such a penalty |
+| Mansion | 30 %: 40 Vampire Lords, 2500 gold, 2 each of mercury / sulfur / crystal, a Major artifact · 30 %: 60, 5000 gold, 3 each, Major · 30 %: 80, 7500 gold, 4 each, Major · 10 %: 100, 10000 gold, 5 each, Major |
+| Ruins | 30 %: 20 Skeletons, 3 Wights, 3 Wraiths, 10 Skeleton Warriors, 1 Arch Lich, 1000 gold · 30 %: 30 / 5 / 5 / 10 / 1, 2000 gold · 30 %: 40 / 7 / 7 / 20 / 2, 3000 gold · 10 %: 50 / 9 / 9 / 20 / 3, 4000 gold. Also **removes the fog within 12 tiles** of the ruins, even when they were visited before |
+| Dwarven Treasury | 30 %: 50 Defenders, 2500 gold, 2 crystal · 30 %: 75, 4000, 4 · 30 %: 100, 5000, 6 · 10 %: 150, 7500, 10. 50 % chance that a fifth of the guard are Shield Guards |
+| Imp Cache | 30 %: 100 Imps, 1000 gold, 2 mercury · 30 %: 150, 1500, 4 · 30 %: 200, 2000, 6 · 10 %: 300, 3000, 8. 50 % chance that a fifth are Familiars |
+| Medusa Stores | 30 %: 15 Medusas, 2000 gold, 4 sulfur · 30 %: 30, 3000, 6 · 30 %: 40, 4000, 8 · 10 %: 50, 5000, 10. 50 % chance that a fifth are Putrid Medusas |
+| Naga Bank | 30 %: 5 Nagas, 3000 gold · 30 %: 10, 6000 · 30 %: 15, 9000 · 10 %: 20, 12000. 50 % chance that a fifth are Naga Queens |
+
+**Refill** (MAP-7, MAP-14): a plundered bank fills again **4 weeks** after it was plundered.
+
+### Permanent hero power-ups
+| Object | Effect |
+|---|---|
+| Gazebo | The visiting hero pays **1500 gold** for **2500 experience**, once per hero |
+| Learning Stone | **+1000 experience** on the first visit of each hero |
+| Library of Enlightenment | **+2** to all four primary skills for a hero of **level 10 or more**, once per hero; a lower-level hero gets nothing and a message |
+| Tree of Knowledge | Once per hero: the hero's experience rises to the next level for free, for 2500 gold or for 5 of each magic resource; the free level-up cannot be refused (MAP-9) |
+| Arena | Once per hero: **+2 Attack or +2 Defense**, the player chooses |
+| Colosseum of the Magi | Once per hero: **+2 Spell Power or +2 Knowledge**, the player chooses |
+
+### Temporary buffs
+| Object | Effect |
+|---|---|
+| Faerie Ring | +1 luck for the next battle |
+| Fountain of Youth | +400 movement points until the end of the day and +1 morale for the next battle |
+| Temple | +2 morale for the next battle, **+3 on the 7th day** of the week |
+| Mineral Spring | +1 luck for the next battle and +600 movement points until the end of the day |
+| Stables | +400 movement points a day **for the rest of the week**; upgrades Lancers to Champions for free |
+| Magic Well | Restores 100 % of the hero's mana once per turn (useful with magic, Phase 5) |
+
+Whether a buff can be visited again before it is used, and whether two visits stack, is MAP-10.
+
+### Utility objects
+| Object | Effect |
+|---|---|
+| Sign | Shows a custom message |
+| Observatory | Reveals the terrain within **20 tiles** of the hero at once |
+| Hill Fort | Upgrades creatures of tiers **1–3** for **150 %** of the upgrade price (MAP-11) |
+| Town Gate | The visiting hero teleports to **any allied town** at no movement cost (MAP-12) |
+| War Machine Factory | Sells the visiting hero an **Ammo Cart for 1000 gold**, a **Ballista for 2500 gold** and a **First Aid Tent for 750 gold** (MAP-13) |

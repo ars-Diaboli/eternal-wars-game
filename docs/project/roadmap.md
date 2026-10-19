@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-17)**: Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+**Where we are (2026-10-19)**: the adventure-map object catalogue is designed (ADR-068, block in Phase 3), not built. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
 save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
 (layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
@@ -178,7 +178,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       creatures, caravans are invisible; building 1000 gold + 5 lumber (placeholder)
 - [x] Town screen: caravan section (hire, send the picked stack, caravans on the way); `DwellingPanel` opens when a hero visits a dwelling
 - [x] AI: heroes flag and recruit at map dwellings, towns build a caravan once the player owns a dwelling, hire from owned dwellings and send troops to an empty town (`AdventureAi`)
-- [ ] Smoke scenario for dwellings and caravans (needs Godot); dwelling guard rules (TOWN-5), caravan cost tuning
+- [ ] Smoke scenario for dwellings and caravans (needs Godot); caravan rules (TOWN-5), caravan cost tuning; dwelling guards are
+      in the objects block below (ADR-068)
 
 ### Towns: Godot
 - [x] 2D harness town panel (`TownPanel`, `--scenario=towns`): build, dwellings, recruit, upgrade, garrison
@@ -273,6 +274,31 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] AI-vs-AI games on generated maps (`sim game --template`); CI plays two weeks on every shipped template (`sim maps`)
 - [ ] Balance the AI over several maps (`sim game --runs`); on generated maps it hardly fights guards yet (heroes still
       level 1 after 40 days on `duel`), and no game finishes in 40 days
+
+### Adventure map objects (ADR-068; [catalogue](../design/adventure-map.md#planned-objects-adr-068), ❓ [MAP-9 … MAP-14](open-questions.md#adventure-map-objects))
+Each item is one change with core tests (`TestWorld` maps), a map format bump where needed, editor placement through
+`MapEditorSession`, a validator check, and a generator hook later. Done in this order; the first item unblocks the rest.
+- [ ] Shared rules: visit scopes (weekly per object, once per hero, first visitor, vanishing), hero statuses that expire (next battle,
+      end of day, end of week), artifact roll by tier (Minor, Major, Relic; the Relic pool refills when empty, duplicates allowed)
+- [ ] Resource providers: Water Wheel, the six Warehouses, Windmill, Mystical Garden
+- [ ] Abandoned mines (six, a separate object that becomes the normal mine when the guard falls; Troglodyte guards, subterranean battle terrain for gold and ore)
+- [ ] One-time loot: Campfire, Supply Crates, Traveler's Wagon, Corpse, Lean To; align the Resource Pile amounts; the new Treasure Chest
+      table with a Minor artifact ❓ CONT-3
+- [ ] Warrior's Tomb (artifact roll and the −3 morale status)
+- [ ] Temporary buffs: Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables (+ Lancer → Champion), Magic Well (with magic)
+      ❓ MAP-10
+- [ ] Permanent power-ups: Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi
+      ❓ MAP-9
+- [ ] Creature banks: the object kind, the rolled guard tier, win-only reward, plundered state; Churchyard, Mansion, Ruins (with the
+      12-tile reveal), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank; refill after 4 weeks ❓ MAP-14, CONT-2
+- [ ] Guards for map dwellings of tier 3 / 4 / 5 (9 / 6 / 3 base stacks)
+- [ ] Prison (level odds, faction drawn at generation, fails at the hero limit)
+- [ ] Hero limit per player (1 to 8) as a map rule: map format bump, hiring / tavern / Prison respect it, setting in the map properties, the
+      template (format bump) and the generator ❓ MAP-14
+- [ ] Utilities: Sign, Observatory, Hill Fort, Town Gate, War Machine Factory ❓ MAP-11, MAP-12, MAP-13
+- [ ] Map format version, editor placement and inspector rows, validator checks for all of them
+- [ ] Random map generator: which objects `TreasurePlacer` and the zone rules may place, by value band (RMG-1)
+- [ ] AI: visits the objects that help it (resources, power-ups, buffs before fights, banks it can win)
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets
