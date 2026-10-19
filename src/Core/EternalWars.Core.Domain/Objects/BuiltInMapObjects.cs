@@ -58,6 +58,15 @@ public static class BuiltInMapObjects
     public const string WarMachineFactory = "war-machine-factory";
     public const string Prison = "prison";
 
+    /// <summary>Creature banks (ADR-068).</summary>
+    public const string Churchyard = "bank.churchyard";
+    public const string Mansion = "bank.mansion";
+    public const string Ruins = "bank.ruins";
+    public const string DwarvenTreasury = "bank.dwarven-treasury";
+    public const string ImpCache = "bank.imp-cache";
+    public const string MedusaStores = "bank.medusa-stores";
+    public const string NagaBank = "bank.naga-bank";
+
     /// <summary>Definition id of the pickup that rolls an artifact of a tier: <c>artifact.minor</c>.</summary>
     public static string ArtifactId(Artifacts.ArtifactTier tier) => $"artifact.{tier.ToString().ToLowerInvariant()}";
 
@@ -142,6 +151,14 @@ public static class BuiltInMapObjects
         new(TownGate, "Town gate", MapObjectKind.TownGate, MonolithFootprint),
         new(WarMachineFactory, "War machine factory", MapObjectKind.WarMachineFactory, MineFootprint),
         new(Prison, "Prison", MapObjectKind.Prison, new(["BV"])),
+
+        Bank(Churchyard, "Churchyard", BankRule.Churchyard),
+        Bank(Mansion, "Mansion", BankRule.Mansion),
+        Bank(Ruins, "Ruins", BankRule.Ruins),
+        Bank(DwarvenTreasury, "Dwarven treasury", BankRule.DwarvenTreasury),
+        Bank(ImpCache, "Imp cache", BankRule.ImpCache),
+        Bank(MedusaStores, "Medusa stores", BankRule.MedusaStores),
+        Bank(NagaBank, "Naga bank", BankRule.NagaBank),
         .. Enum.GetValues<Artifacts.ArtifactTier>().Select(t =>
             new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 
@@ -183,6 +200,9 @@ public static class BuiltInMapObjects
 
     private static MapObjectDefinition Warehouse(ResourceType resource, int amount) =>
         Provider(WarehouseId(resource), $"Warehouse of {resource.ToString().ToLowerInvariant()}", ProviderRule.Warehouse) with { Resource = resource, Amount = amount };
+
+    private static MapObjectDefinition Bank(string id, string name, BankRule rule) =>
+        new(id, name, MapObjectKind.CreatureBank, MineFootprint) { Bank = rule };
 
     private static MapObjectDefinition Buff(string id, string name, BuffRule rule, VisitScope scope) =>
         new(id, name, MapObjectKind.Buff, ProviderFootprint) { Buff = rule, VisitScope = scope };

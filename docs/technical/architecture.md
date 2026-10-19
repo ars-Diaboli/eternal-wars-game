@@ -182,7 +182,8 @@ These are enforced by:
   `OneWayGateEntrance`, `OneWayGateExit`, `MonsterGuard`, `Town`, `ArtifactPickup`, `CreatureDwelling`, `Marketplace`,
   `ResourceProvider` (weekly resources; what it gives is the definition's `Provider` rule, `ResourceProviderRules`), `LootSite` (one-time
   loot for the first visitor, the definition's `Loot` rule, `LootRules`), `BuffSite` (`BuffRules`), `TrainingSite` (`TrainingRules`), `SignPost`, `Observatory`, `HillFort` (`HillFortRules`), `TownGate`,
-  `WarMachineFactory` and `Prison` (`PrisonRules`, filled in at game start). An object may turn into another of
+  `WarMachineFactory`, `Prison` (`PrisonRules`, filled in at game start) and `CreatureBank` (`CreatureBankRules`; its battle is
+  `BattleService.BeginBankBattle`, refills `GuardService.RefillBanks`). An object may turn into another of
   `GameState.ObjectCatalog` (an abandoned mine into the normal mine once its guard falls). Owned objects (mines, towns) implement
   `IFlaggable`.
 - Adding a new kind = enum value + subclass + a `case` in `MapObjectInteractionService.Visit` +
@@ -278,7 +279,7 @@ src/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
                                 Artifacts
-    EternalWars.Core.Data/      Maps (MapDocument v19, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v20, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (saves and replays: GameRecord, GameSaves), Templates (TemplateSerializer,
                                 BuiltInTemplates)
     EternalWars.Core.Generation/ MapTemplate, TemplateValidator, SeedStreams, ZoneLayouter, TerrainPainter, GeneratedMap,

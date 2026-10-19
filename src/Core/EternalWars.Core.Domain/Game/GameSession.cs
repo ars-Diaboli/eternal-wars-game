@@ -40,7 +40,7 @@ public sealed class GameSession
         Bus.Subscribe<HeroDefeated>(visibility);
         Bus.Subscribe<HeroHired>(visibility);
         Bus.Subscribe<MapObjectChanged>(visibility);
-        Bus.Subscribe<ObservatoryUsed>(visibility);
+        Bus.Subscribe<SurroundingsRevealed>(visibility);
         Bus.Subscribe<HeroFreed>(visibility);
 
         Flow = new GameFlowService(State, Bus);
@@ -48,7 +48,7 @@ public sealed class GameSession
         Armies = new ArmyService(State, Bus);
         Progression = new ProgressionService(State, Bus);
         Artifacts = new ArtifactService(State, Bus);
-        Battles = new BattleService(State, Bus, Armies, Progression, Artifacts);
+        Battles = new BattleService(State, Bus, Armies, Progression, Artifacts, Economy);
         Guards = new GuardService(State, Bus, Battles);
         Towns = new TownService(State, Bus, Economy);
         Caravans = new CaravanService(State, Bus, Economy);

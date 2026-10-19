@@ -137,7 +137,7 @@ public sealed class MapObjectInteractionService(
             case Observatory observatory:
                 // Every visit looks out (it only reveals what is still hidden); the log tells the AI which heroes have been up there.
                 TryCollect(hero, observatory);
-                events.Publish(new ObservatoryUsed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
+                events.Publish(new SurroundingsRevealed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
                 break;
 
             case TownGate gate:
@@ -146,6 +146,10 @@ public sealed class MapObjectInteractionService(
 
             case Prison prison:
                 Free(hero, prison);
+                break;
+
+            case CreatureBank bank:
+                EnterBank(hero, bank);
                 break;
 
             case MonsterGuard monster:
@@ -280,6 +284,30 @@ public sealed class MapObjectInteractionService(
     {
         events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
         battles.BeginHeroBattle(attacker, defender, isAmbush);
+    }
+
+    /// <summary>
+    /// A creature bank (ADR-068): the Ruins show their surroundings on every visit; a full bank means a fight; a plundered one gives nothing, and the
+    /// Churchyard's costs the next battle's morale.
+    /// </summary>
+    private void EnterBank(Hero hero, CreatureBank bank)
+    {
+        if (bank.Rule == BankRule.Ruins)
+        {
+            events.Publish(new SurroundingsRevealed(hero.Id, bank.Id, hero.Owner, bank.VisitPosition, CreatureBankRules.RuinsRevealRadius));
+        }
+
+        if (bank.IsGuarded)
+        {
+            battles.BeginBankBattle(hero, bank);
+            return;
+        }
+
+        events.Publish(new MapObjectFoundEmpty(hero.Id, bank.Id));
+        if (bank.Rule == BankRule.Churchyard)
+        {
+            progression.GrantStatus(hero, new HeroStatus(bank.Definition.Id, HeroStatusKind.Morale, CreatureBankRules.ChurchyardMorale, StatusExpiry.NextBattle));
+        }
     }
 
     /// <summary>The town gate's picker: the owner's towns, an occupied entrance listed but unavailable (ADR-068, MAP-12).</summary>

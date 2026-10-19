@@ -1338,7 +1338,7 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
     The AI weighs the guard as the opponent at the dwelling.
 - **Implementation (2026-10-19), utilities and the prison** (map format **v19**):
   - Sign (`SignPost.Message`, map data, `MapEditorSession.SetSignMessage`, inspector text field): a visit publishes `SignRead`.
-  - Observatory: every visit publishes `ObservatoryUsed`; `VisibilityService` reveals radius 20 around its entrance (explored terrain, as any
+  - Observatory: every visit publishes `SurroundingsRevealed`; `VisibilityService` reveals radius 20 around its entrance (explored terrain, as any
     reveal) and records the hero (`OncePerHero` log, which the AI reads to go there once).
   - Hill Fort: `UpgradeAtHillFortCommand(Player, Fort, Slot)` for the player's hero on the entrance; `HillFortRules`: tier 1–3 creatures with an
     upgrade, 150 % of the price difference rounded up per resource (no Stewardship); `HillFortUpgraded` + `ArmyChanged`.
@@ -1358,4 +1358,16 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
   - AI: frees prisoners and visits an observatory once per hero; answers a town gate by staying; does not use hill forts or factories yet.
   - Assumed (not in the notes): the freed hero has no army (only its roster stats and skills), and the Prison's footprint is two tiles so the hero
     has a place to stand.
+- **Implementation (2026-10-19), creature banks** (map format **v20**, `bank` objects without instance data):
+  - Kind `CreatureBank`, definitions `bank.<name>` (3×2), `BankRule` and `CreatureBankRules.Tables` (the notes' tables with the roster's creatures:
+    Ghoul, Vampire Lord, Skeleton / Wight / Wraith / Skeleton Warrior / Arch Lich, Defender / Shield Guard (placeholder, CONT-2), Imp / Familiar,
+    Medusa / Putrid Medusa, Naga / Naga Queen). `GuardService.RollUnsetCounts` rolls each bank's tier when the game starts (30 / 30 / 30 / 10, the
+    Churchyard 100), and with an upgrade a coin flip turns a fifth (rounded down) of the guard into the upgraded creature.
+  - A visit to a full bank starts `BattleService.BeginBankBattle`: the guard always fights, at the default width (no Tactics choice); each kind of
+    creature is split into a few battle stacks, at most seven in all. Winning plunders it (`Plunder`: resources to the winner, the artifact drawn by
+    tier and lost to a full backpack, `CreatureBankPlundered`); losing or fleeing leaves the guard whole. `BattleService` now takes the `EconomyService`.
+  - A plundered bank gives nothing (`MapObjectFoundEmpty`); the Churchyard's costs −1 morale for the next battle. `GuardService.RefillBanks` runs on
+    every new day and refills a bank 28 days after it was plundered, with a new roll (`CreatureBankRefilled`, `MapObjectChanged`).
+  - The Ruins publish `SurroundingsRevealed` (radius 12) on every visit; `ObservatoryUsed` was renamed to `SurroundingsRevealed` for both.
+  - AI: a full bank is a target worth its reward (+1500 for an artifact) against the guard as the opponent, so the simulated fight decides.
 

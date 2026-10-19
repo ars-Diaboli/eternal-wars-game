@@ -90,8 +90,8 @@ Any command takes `--creatures path.csv`.
   helpers (`session.Step`, `session.MoveTo`, `session.EndTurn`, `session.AutoResolve`, ...). Rule-level battle
   tests place units exactly with `TestBattle`.
 - Saved games are `*.ewsave.json` (ADR-058) in `user://saves` (Windows: `%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): a game record plus a label. Loading replays the commands and checks the digest.
-- Map files are `*.ewmap.json` (format v19: terrain + optional road rows, teams, heroes with roster type,
-  primary stats, skills, war machines, morale, luck, artifacts and armies, objects incl. one-way gates, artifact pickups, creature dwellings, marketplaces, resource providers, loot, buff and training sites, signs, prisons and other utility objects, monsters with their guard mode, mine guards and towns, victory and defeat conditions, the hero limits; see the
+- Map files are `*.ewmap.json` (format v20: terrain + optional road rows, teams, heroes with roster type,
+  primary stats, skills, war machines, morale, luck, artifacts and armies, objects incl. one-way gates, artifact pickups, creature dwellings, marketplaces, resource providers, loot, buff and training sites, signs, prisons and other utility objects, creature banks, monsters with their guard mode, mine guards and towns, victory and defeat conditions, the hero limits; see the
   version history on `MapDocument`). Replays are `*.ewreplay.json`. Random map templates are `*.ewtemplate.json` (`MapTemplate`; the shipped ones are in
   `src/Godot/EternalWars.Godot.Assets/data/templates`, embedded into `Core.Data`). Creature
   stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature

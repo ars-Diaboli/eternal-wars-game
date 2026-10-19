@@ -26,11 +26,12 @@ namespace EternalWars.Core.Data.Maps;
 /// corpse, lean-to, warrior's tomb; ADR-068). 18 = + buff sites (<c>buff</c>) and training sites (<c>training</c>) and a player's own hero limit
 /// (<c>maxHeroes</c> on a player slot; ADR-068). 19 = + signs (<c>sign</c>, with a message), observatories, hill forts, town gates, war machine
 /// factories (<c>observatory</c>, <c>hillFort</c>, <c>townGate</c>, <c>factory</c>) and prisons (<c>prison</c>, optional hero and level; ADR-068).
+/// 20 = + creature banks (<c>bank</c>; the tier is rolled when the game starts, ADR-068).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 19;
+    public const int CurrentFormatVersion = 20;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -162,6 +163,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(TownGateDocument), "townGate")]
 [JsonDerivedType(typeof(WarMachineFactoryDocument), "factory")]
 [JsonDerivedType(typeof(PrisonDocument), "prison")]
+[JsonDerivedType(typeof(CreatureBankDocument), "bank")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -205,6 +207,9 @@ public sealed record SignDocument : MapObjectDocument
 {
     public string Message { get; init; } = "";
 }
+
+/// <summary>A creature bank (v20, ADR-068); which bank comes from its definition, the tier is rolled in the game.</summary>
+public sealed record CreatureBankDocument : MapObjectDocument;
 
 /// <summary>An observatory (v19, ADR-068).</summary>
 public sealed record ObservatoryDocument : MapObjectDocument;

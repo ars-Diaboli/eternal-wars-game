@@ -232,7 +232,7 @@ public class UtilityObjectTests
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = (Prison)MapConverter.ToGameState(MapSerializer.Deserialize(json)).GetObject(id);
 
-        Assert.Equal(19, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 19);
         Assert.Equal((hero, 20), (restored.Hero, restored.Level));
         Assert.Contains("\"prisonerLevel\": 20", json, StringComparison.Ordinal);
         ((Prison)editor.Scenario.GetObject(id)).Hero = "nobody";

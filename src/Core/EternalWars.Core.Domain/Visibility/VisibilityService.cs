@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
-      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<ObservatoryUsed>, IEventHandler<HeroFreed>
+      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<HeroFreed>
 {
     public void Handle(GameStarted @event)
     {
@@ -68,7 +68,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     }
 
     // An observatory shows its surroundings for good (explored, like any revealed terrain; ADR-068).
-    public void Handle(ObservatoryUsed @event)
+    public void Handle(SurroundingsRevealed @event)
     {
         Reveal(@event.Owner, @event.Center, @event.Radius);
         RefreshMemory(@event.Owner);

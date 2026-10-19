@@ -61,6 +61,9 @@ public enum MapObjectKind
 
     /// <summary>Frees a hero for the visitor's player (<see cref="Objects.Prison"/>, ADR-068).</summary>
     Prison,
+
+    /// <summary>A guard that always fights and a reward for beating it (<see cref="Objects.CreatureBank"/>, ADR-068).</summary>
+    CreatureBank,
 }
 
 /// <summary>
@@ -108,6 +111,9 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>Fights at this object take place on this terrain, whatever the map's (abandoned gold and ore mines: subterranean).</summary>
     public Map.TerrainType? BattleTerrain { get; init; }
 
+    /// <summary>Which bank a creature bank is (ADR-068).</summary>
+    public BankRule? Bank { get; init; }
+
     /// <summary>What a buff site gives (ADR-068).</summary>
     public BuffRule? Buff { get; init; }
 
@@ -145,6 +151,11 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
         if (Kind is MapObjectKind.Loot && Loot is null)
         {
             throw new FormatException($"Loot site '{Id}' needs a loot rule.");
+        }
+
+        if (Kind is MapObjectKind.CreatureBank && Bank is null)
+        {
+            throw new FormatException($"Creature bank '{Id}' needs its bank rule.");
         }
 
         if ((Kind is MapObjectKind.Buff && Buff is null) || (Kind is MapObjectKind.Training && Training is null))

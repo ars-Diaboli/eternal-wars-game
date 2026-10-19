@@ -22,8 +22,17 @@ public sealed record MapObjectRefused(HeroId Hero, MapObjectId Object, string Re
 /// <summary>A hero read a sign (ADR-068).</summary>
 public sealed record SignRead(HeroId Hero, MapObjectId Sign, string Message) : IEvent;
 
-/// <summary>A hero looked out from an observatory (ADR-068); <c>VisibilityService</c> reveals the terrain within <paramref name="Radius"/> of it.</summary>
-public sealed record ObservatoryUsed(HeroId Hero, MapObjectId Observatory, PlayerId Owner, MapPosition Center, int Radius) : IEvent;
+/// <summary>
+/// A hero looked out from an observatory or visited the Ruins (ADR-068); <c>VisibilityService</c> reveals the terrain within <paramref name="Radius"/>
+/// of <paramref name="Center"/> to <paramref name="Owner"/>.
+/// </summary>
+public sealed record SurroundingsRevealed(HeroId Hero, MapObjectId Object, PlayerId Owner, MapPosition Center, int Radius) : IEvent;
+
+/// <summary>A hero beat a creature bank's guard and took its reward (ADR-068); <paramref name="Artifact"/> null: none, or lost to a full backpack.</summary>
+public sealed record CreatureBankPlundered(MapObjectId Bank, HeroId Hero, ResourceSet Resources, string? Artifact) : IEvent;
+
+/// <summary>A plundered creature bank filled again with a newly rolled guard and reward (ADR-068).</summary>
+public sealed record CreatureBankRefilled(MapObjectId Bank) : IEvent;
 
 /// <summary>A hero upgraded a stack at a hill fort for 150 % of the upgrade price (ADR-068).</summary>
 public sealed record HillFortUpgraded(MapObjectId Fort, HeroId Hero, int Slot, string From, string To, int Count) : IEvent;

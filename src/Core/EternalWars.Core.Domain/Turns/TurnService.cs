@@ -80,6 +80,7 @@ public sealed class TurnService(
             state.CurrentPlayerIndex = 0;
             state.Date = state.Date.Next();
             events.Publish(new DayStarted(state.Date));
+            guards.RefillBanks();
             if (state.Date.IsFirstDayOfWeek)
             {
                 events.Publish(new WeekStarted(state.Date));

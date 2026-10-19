@@ -4,8 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-19)**: the adventure-map object catalogue is designed (ADR-068, block in Phase 3); its shared rules, the hero limit, the resource providers, the one-time loot, the buffs, the power-ups, abandoned mines and
-dwelling guards, the utilities and the prison are built; the creature banks and placing the objects in random maps are next. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+**Where we are (2026-10-19)**: the whole adventure-map object catalogue (ADR-068, block in Phase 3) is built in core; the random map generator does not place it yet. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
 save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
 (layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
@@ -295,8 +294,9 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
       once a day per hero, the Stables once a week)
 - [x] Permanent power-ups: Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi (map format
       v18; choices in the decision panel, not run in Godot yet; the AI trains where it is worth it)
-- [ ] Creature banks: the object kind, the rolled guard tier, win-only reward, plundered state; Churchyard, Mansion, Ruins (with the
-      12-tile reveal), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank; refill after 4 weeks with a new roll ❓ CONT-2
+- [x] Creature banks: the object kind, the rolled guard tier, win-only reward, plundered state; Churchyard, Mansion, Ruins (with the
+      12-tile reveal), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank; refill after 4 weeks with a new roll (map format v20; the AI
+      plunders banks it can beat); the Dwarven Treasury's Defenders are placeholders ❓ CONT-2
 - [x] Guards for neutral map dwellings of tier 3 / 4 / 5 (9 / 6 / 3 base creatures, set at game start; the AI fights them)
 - [x] Prison (level odds, faction drawn when the game starts for a map that leaves it open, refused at the hero limit; editor rows; map format v19)
 - [x] Hero limit per player (1 to 8) as a map rule: map format v15, the tavern respects it, editor setting (conditions panel; the Godot

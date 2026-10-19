@@ -26,7 +26,8 @@ public sealed record MapObjectDefinitionDocument(
     string? GuardCreature = null,
     int GuardMin = 0,
     int GuardMax = 0,
-    TerrainType? BattleTerrain = null);
+    TerrainType? BattleTerrain = null,
+    BankRule? Bank = null);
 
 /// <summary>
 /// Loads and saves map object definitions, e.g. <c>[{ "id": "mine.gold", "kind": "Mine", "footprint": ["BBB","BVB"], ... }]</c>.
@@ -56,6 +57,7 @@ public static class MapObjectDefinitionSerializer
                 GuardMin = d.GuardMin,
                 GuardMax = d.GuardMax,
                 BattleTerrain = d.BattleTerrain,
+                Bank = d.Bank,
             })
             .ToList();
         definitions.ForEach(d => d.Validate());
@@ -64,7 +66,7 @@ public static class MapObjectDefinitionSerializer
 
     public static string Serialize(IEnumerable<MapObjectDefinition> definitions) =>
         JsonSerializer.Serialize(
-            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier, d.VisitScope, d.Provider, d.Amount, d.Loot, d.Buff, d.Training, d.Becomes, d.GuardCreature, d.GuardMin, d.GuardMax, d.BattleTerrain)).ToList(),
+            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier, d.VisitScope, d.Provider, d.Amount, d.Loot, d.Buff, d.Training, d.Becomes, d.GuardCreature, d.GuardMin, d.GuardMax, d.BattleTerrain, d.Bank)).ToList(),
             JsonDefaults.Options);
 
     public static MapObjectCatalog LoadInto(MapObjectCatalog catalog, string path) =>
