@@ -13,33 +13,72 @@ Recorded so far:
 Still to decide (now in open-questions.md):
 - Swamp Bestiary: what Adrenaline does (placeholder group, ADR-063): HERO-2.
 - Marketplace details: rounding, who may trade, the buy / sell spread (ADR-067): TOWN-2.
+- 
 --------------------
 
 marketplace rounding : for resources that player is going to sell - round upwards
-for resources that player recieves during trade - round down
+for resources that player recives during trade - round down
 
 artifact tiers : Treasure, Minor, Major, Relic, Combo
 
-adventure map objects :
+--------------------
 
-Campfire: gives the player between 400–600 Gold and 4–6 other resources. Disappears after the visit.
-Supply crates: gives the player 2 sets of resources between 4–6 (except Gold). Disappears after the visit.
+# adventure map objects
 
-Faerie Ring: gives a visiting hero +1 to luck for the next battle.
-
-Fountain of Youth: gives visiting heroes +400 movement points until the end of the day, 
-and +1 to morale for the next battle.
+## mines and resource providing structures
 
 Gold Mine: produces +1000 Gold per day for a player when flagged.
 Sawmill: produces +2 Lumber per day for a player when flagged.
-Ore mine mil: produces +2 Ore per day for a player when flagged.
+Ore mine: produces +2 Ore per day for a player when flagged.
 Alchemist's Lab: produces +1 Mercury per day for a player when flagged.
 Crystal pond: produces +1 Crystal per day for a player when flagged.
 Sulfur Dune: produces +1 Sulfur per day for a player when flagged.
 
-Observatory: immediately reveals terrain within a 20-square radius around the hero.
+Abandoned Gold Mine: guarded by 150-295 Troglodytes.
+After being released works as Gold Mine.
+Combat taking place in Abandoned Mine will always use subterranean terrain with all native terrain bonuses.
 
-Sign : Displays a custom message.
+Abandoned Sawmill: guarded by 100-245 Troglodytes.
+After being released works as Sawmill.
+Combat taking place in current terrain.
+
+Abandoned Ore mine: guarded by 100-245 Troglodytes.
+After being released works as Ore mine.
+Combat taking place in Abandoned Mine will always use subterranean terrain with all native terrain bonuses.
+
+Abandoned Alchemist's Lab: guarded by 100-245 Troglodytes.
+After being released works as Alchemist's Lab.
+Combat taking place in current terrain.
+
+Abandoned Crystal pond: guarded by 100-245 Troglodytes.
+After being released works as Crystal pond.
+Combat taking place in current terrain.
+
+Abandoned Sulfur Dune: guarded by 100-245 Troglodytes.
+After being released works as Sulfur Dune.
+Combat taking place in current terrain.
+
+Water Wheel: gives a visiting hero 500 Gold at the first week of the first month
+and 1000 Gold at the rest of the game once per week.
+
+Warehouse of Wood: brings 8 Wood or 500 Gold when visited once a week.
+Warehouse of Ore: brings 8 Ore or 500 Gold when visited once a week.
+Warehouse of Sulfur: brings 5 Sulfur or 500 Gold when visited once a week.
+Warehouse of Mercury: brings 5 Mercury or 500 Gold when visited once a week.
+Warehouse of Crystal: brings 5 Crystal or 500 Gold when visited once a week.
+Warehouse of Gold: brings 2000 Gold when visited once a week.
+
+Windmill: gives a visiting hero 3-6 of random resource (except Gold) once a week.
+
+Mystical Garden: brings 500 Gold or 5 random magic resource to a visiting hero once a week.
+
+## Treasure and one-time lootables
+
+Campfire: gives the player between 400–600 Gold and 4–6 other resources. 
+Disappears after the visit.
+
+Supply crates: gives the player 2 sets of resources between 4–6 (except Gold). 
+Disappears after the visit.
 
 Resources pile: according to its type can give:
 5-10 Wood or Ore;
@@ -47,56 +86,12 @@ Resources pile: according to its type can give:
 500-1000 Gold.
 Disappears after being visited.
 
-Prison: a "loot" object that will reward you with a random hero 
-of 1/5/10/20/30 level or a hero set by map-maker. 
-Disappears after being visited.
-
-Mineral Spring: a hero receives +1 luck for the next battle and +600 movement points until the end of the day.
-
-Mystical Garden: brings 500 Gold or 5 random magic resource to a visiting hero once a week.
-
-Creature dwelling: 
-enables a visiting hero to hire one type of creatures. 
-Each creature in the game has a different structure. 
-Creature dwellings of level 3/4/5 are guarded by 9/6/3 
-non-upgraded versions of the creatures the dwelling produces.
-
-Arena: when visited, offers once for every hero to increase either their attack or defense skill by 2.
-Colosseum of the Magi: when visited, offers once for every hero to increase either their spell power or knowledge by 2.
-Corpse: gives the first visiting hero:80% : nothing, 20% : Artifact (t) or Artifact (m)
-
-Churchyard: a creature bank guarded by:
-100% : Zombie x90 for 2500 Gold, Artifact (m)
-Visiting a previously plundered Churchyard inflicts a -1 penalty to morale.
-
-Abandoned Mine: guarded by 100-245 Troglodytes. 
-After being released works as a random mine (except Sawmill). 
-Combat taking place in Abandoned Mine will always use subterranean terrain with all native terrain bonuses.
-
-Hill Fort: allows a hero to upgrade creatures of 1-3 levels for the 150% price
-Stables: give the visiting hero a bonus of +400 movement points per day for the rest of the week. 
-Can upgrade Cavaliers to Champions for free.
-
-Town Gate: allows visiting hero to teleport to any allied town. 
-This does not cost any additional movement points.
-
-Temple: gives a visiting hero the bonus to morale for the next combat. 
-On the week's first 6 days the bonus is +2, but on 7th day the bonus is +3.
-
-Tree of Knowledge: increases the visiting hero's experience right to the next 
-level once per game either for free, for 2500 Gold or for 5 magic resources each. 
-(The free level-up cannot be rejected).
-
-War Machine Factory: enables visiting hero to buy:
-Ammo Cart for 1000 Gold,
-Ballista for 2500 Gold
-First Aid Tent for 750 Gold.
-
-Wagon: may give the first visiting hero:
+Travelers Wagon: may give the first visiting hero:
 10% : nothing
 20% : Artifact (t)
 10% : Artifact (m)
 60% : 2-5 any resource (except gold).
+Disappears after being visited.
 
 Treasure Chest: a loot item which can offer:
 30% : 1000 Gold or 500 Experience
@@ -104,6 +99,36 @@ Treasure Chest: a loot item which can offer:
 25% : 2000 Gold or 1500 Experience
 10% : 2500 Gold or 2000 Experience
 5% : Artifact (t)
+Disappears after being visited.
+
+Corpse: gives the first visiting hero:80% : nothing, 20% : Artifact (t) or Artifact (m)
+
+Warrior's Tomb: gives the first visiting hero:
+30% : Artifact (t)
+50% : Artifact (m)
+15% : Artifact (M)
+5% : Artifact (R)
+and -3 to morale for the next battle. All the next visitors will get -3 morale.
+
+Lean To: gives the first visiting hero 1–6 units of resources other than gold.
+
+Prison: a "loot" object that will reward you with a random hero 
+of 1/5/10/20/30 level or a hero set by map-maker. 
+Disappears after being visited.
+
+## Creature dwelling
+
+Creature dwelling: 
+enables a visiting hero to hire one type of creatures. 
+Each creature in the game has a different structure. 
+Creature dwellings of level 3/4/5 are guarded by 9/6/3 
+non-upgraded versions of the creatures the dwelling produces.
+
+## creature banks
+
+Churchyard: a creature bank guarded by:
+100% : Zombie x90 for 2500 Gold, Artifact (m)
+Visiting a previously plundered Churchyard inflicts a -1 penalty to morale.
 
 Mansion: a creature bank guarded by:
 30% : Vampire Lord Vampire Lord x40 for 2500 Gold, Mercury Sulfur Crystal x 2 and Artifact (M)
@@ -147,32 +172,47 @@ Naga Bank: a creature bank guarded by:
 10% : Naga Naga x20 for 12000 Gold
 50% probability for 1/5 of the guards to be Naga Queen Naga Queens.
 
-Water Wheel: gives a visiting hero 500 Gold at the first week of the first month 
-and 750 Gold at the rest of the game once per week.
-
-Windmill: gives a visiting hero 3-6 of random resource (except Gold) once a week.
-
-Warehouse of Wood: brings 10 Wood when visited once a week.
-Warehouse of Ore: brings 10 Ore when visited once a week.
-Warehouse of Sulfur: brings 6 Sulfur when visited once a week.
-Warehouse of Mercury: brings 6 Mercury when visited once a week.
-Warehouse of Crystal: brings 6 Crystal when visited once a week.
-Warehouse of Gold: brings 2000 Gold when visited once a week.
-
-Warrior's Tomb: gives the first visiting hero:
-30% : Artifact (t)
-50% : Artifact (m)
-15% : Artifact (M)
-5% : Artifact (R)
-and -3 to morale for the next battle. All the next visitors will get -3 morale.
-
-Lean To: gives the first visiting hero 1–6 units of resources other than gold.
+## hero permanent power-ups 
 
 Gazebo: a visiting hero receives 2500 experience for 1500 Gold.
 Learning Stone: gives visiting heroes +1000 experience upon their first visit.
 
 Library of Enlightenment: increases all four primary 
-skills of visiting heroes by +2 if they have reached level 10
+skills of visiting heroes by +2 if heroes have reached level 10
+
+Tree of Knowledge: increases the visiting hero's experience right to the next level once per game either for free, for 2500 Gold or for 5 magic resources each. (The free level-up cannot be rejected).
+
+Arena: when visited, offers once for every hero to increase either their attack or defense skill by 2.
+
+Colosseum of the Magi: when visited, offers once for every hero to increase either their spell power or knowledge by 2.
+
+## temprorary bufs
+
+Faerie Ring: gives a visiting hero +1 to luck for the next battle.
+
+Fountain of Youth: gives visiting heroes +400 movement points until the end of the day,
+and +1 to morale for the next battle.
+
+Temple: gives a visiting hero the bonus to morale for the next combat.
+On the week's first 6 days the bonus is +2, but on 7th day the bonus is +3.
+
+Mineral Spring: a hero receives +1 luck for the next battle and +600 movement points until the end of the day.
+
+Stables: give the visiting hero a bonus of +400 movement points per day for the rest of the week. Can upgrade Cavaliers to Champions for free.
 
 Magic Well: a hero can restore 100% of mana reserves here once per turn.
 
+## Misc
+
+Sign : Displays a custom message.
+
+Observatory: immediately reveals terrain within a 20-square radius around the hero.
+
+Hill Fort: allows a hero to upgrade creatures of 1-3 levels for the 150% price
+
+Town Gate: allows visiting hero to teleport to any allied town. This does not cost any additional movement points.
+
+War Machine Factory: enables visiting hero to buy:
+Ammo Cart for 1000 Gold,
+Ballista for 2500 Gold
+First Aid Tent for 750 Gold.
