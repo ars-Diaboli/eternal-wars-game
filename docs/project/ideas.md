@@ -52,14 +52,15 @@ gives 5% additional Necromancy bonus to all players heroes with that skill
 eg with one Necromancy amplifier necromancer hero has following table 10% / 15% / 20% / 25%
 if player owns more than one Necromancy amplifier necromancer hero gets no additional bonuses
 
+## hero mana calculation
 currently :
 The mana pool is 10 × Knowledge plus attunement; a hero regains ⌈Knowledge / 10⌉ mana a day plus attunement; a spell costs
 at least 25 % of its base, rounded up.
 
 additionally hero should get 10 * roundUp( (current level) / 10) of mana
 meaning on levels 1,11,21,31 and so on, hero gets 10 additional points of mana
- 
-rework pathfinding
+
+## rework pathfinding
 new table
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
@@ -67,7 +68,7 @@ new table
 | Logistics | `pathfinding.logistics` | Expert | +10 % movement points | +20 % | +30 % | – | ✅ |
 | Scouting | `pathfinding.scouting` | Expert | +2 map visibility radius | +4 | +6 | – | ✅ |
 
-rework tactics
+## rework tactics
 new table
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
@@ -76,7 +77,7 @@ new table
 // troops rearrangement buffer/width 4 /5 /6 cells
 | Alertness (working title) | `tactics.alert` | Expert | +1 initiative to all own stacks in battle | +2 | +3 | – | ✅ (ADR-067) |
 
-rework defense
+## rework defense
 new table
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
@@ -84,7 +85,7 @@ new table
 | Spell resistance | `defense.resistance` | Expert | −10 % | −15 % | −20 % | – | ⏳ magic | // reduces damage or duration
 | Leadership | `defense.leadership` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ (ADR-067; the id still reads "third") |
 
-rework offense
+## rework offense
 new table
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
@@ -92,3 +93,62 @@ new table
 | Archery | `offense.archery` | Expert | +15 % ranged damage | +25 % | +35 % | – | ✅ |
 | Marksmanship | `offense.marksmanship` | Expert | -1/4 to ranged penalty | -1/2 | -3/4 | // reduces ranged penalty
 also need to introduce distance penalty for ranged attacks - every 10 cells 1/8 penalty 
+
+## additional adventure map objects :
+
+Mage's Chest - A Mage's Chest often contains minor artifacts.
+
+Window of the Magi - Reveals the area around each Eye of the Magi of the corresponding colour.
+
+Tavern - A visiting hero can purchase heroes.
+
+Portal - Transports the hero to another portal of the same type.
+
+One-Way Portal - Transports the hero to a corresponding exit. The exit cannot be entered.
+
+Garrison - The owner can garrison creatures inside. Enemies have to defeat the guards to pass through.
+
+Keymaster tent - Allows passage through border guards and border gates of the corresponding colour.
+
+Wood Pile - Can be turned into a Sawmill after paying.
+
+Ore Deposit - Can be turned into a Ore Pit after paying
+
+Gold Vein - Can be turned into a Gold Mine after paying.
+
+Crystal Vein - Can be turned into a Crystal Mine after paying.
+
+Cinnabar Deposit - Can be turned into a Alchemist's Lab after paying.
+
+Ruins - The hero fights orcs and is rewarded with gold.
+
+Lair - The hero fights evil eyes and is rewarded with gold and artifacts.
+
+Keep - The hero fights crossbowmen and pikemen and is rewarded with gold and item artifacts.
+
+Hideout - The hero fights bandits and is rewarded with gold.
+
+Forest Glenn - The hero fights wolves and is rewarded with gold and wood.
+
+Dragon City - The hero fights black dragons and is rewarded with gold, and relic and major artifacts.
+
+Mana vortex - Doubles the hero's maximum spell points.
+
+Fountain of Magic - Restores the hero's spell points equal to 50% of the maximum amount.
+
+Shrine (level 1 to 3) - Teaches a spell of the appropriate level and school, as long as the hero has the correct skills needed to learn it.
+
+Clover Field - Provides +1 luck for the next battle that the hero fights.
+Rainbow - Provides +2 luck for the next battle that the hero fights.
+
+Rally Flag: gives a visiting heroes +400 movement points until the end of the day and +1 to luck and morale for the next battle.
+
+Dream Teacher - Gives 500 experience to a visiting hero, plus 500 more for each other Dream Teacher they've visited this map. Can be visited once per hero.
+
+Training Grounds: gives all visiting heroes +1 to attack skill upon their first visit.
+
+Marletto Tower: gives all visiting heroes +1 to defense skill upon their first visit.
+
+Star Axis: gives all visiting heroes +1 to power skill upon their first visit.
+
+Garden of Revelation: gives a visiting hero +1 to knowledge skill upon his first visit.
