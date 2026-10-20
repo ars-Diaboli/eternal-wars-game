@@ -19,14 +19,18 @@
 
   | Group | Skills |
   |---|---|
-  | Offense | Melee (+10 % melee damage per level), Archery (+10/25/50 % ranged), third skill ❓ |
-  | Defense | Armor (−5 % damage taken per level), Spell resistance, third skill ❓ |
+  The groups as reworked by ADR-069 (2026-10-20, not built yet; [skills.md](../content/skills.md) shows today's numbers next to the new ones):
+
+  | Group | Skills |
+  |---|---|
+  | Offense | Melee (+9/16/23/30 % melee damage), Archery (+15/25/35 % ranged), Marksmanship (smaller ranged penalty) |
+  | Defense | Armor (−5 % damage taken per level), Spell resistance (−10/15/20 % to hostile spells), Leadership (+1/2/3 morale, ADR-067) |
   | Estates | Treasury (+250/500/750/1000 gold a day, Expert and Master also 0.5/1 % of the gold on hand, ADR-062), Prospecting (other resources, and a chance of +50 % from resource piles), Stewardship (cheaper buildings and creatures in the town the hero governs, ADR-063) |
-  | Pathfinding | Logistics (+10 % movement per level), Pathfinding (−25/50/75 % terrain penalty), Troop management (+1 army map speed per level) |
-  | Tactics | Tactics (battlefield width), Deployment (rearrange troops before battle; mechanics ❓), Drill (+1 battlefield speed per level) |
+  | Pathfinding | Pathfinding (−25/50/75/100 % terrain penalty), Logistics (+10/20/30 % movement), Scouting (+2/4/6 sight radius) |
+  | Tactics | War Tempo (+1 battlefield speed per level), Tactics (deployment before battle, battlefield width from Advanced), Alertness (+1/2/3 initiative) |
   | War machines | Ballistics (offensive machine: automatic, controlled, targets troops from Advanced; +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) (ADR-056, ADR-063) |
-  | 6 magic schools (Light, Nature, Arcana, Death, Chaos, Shadow) | Magic (spell levels 1–4), Attunement (mana, regeneration, spell cost), Mastery (spell upgrades) (ADR-047, ADR-063) |
-  | Primal Fury (Stronghold), Adrenaline (Swamp Bestiary) | Offered only to that town's heroes. Primal Fury: Blood Rage, Warcry, faction spell resistance (designed, ADR-067); Adrenaline: placeholders, open ❓ |
+  | 6 magic schools (Light, Nature, Arcana, Death, Chaos, Shadow) | Magic (spell levels 1–4), Attunement (mana, regeneration, spell cost; Death: Necromancy), Mastery (spell upgrades) (ADR-047, ADR-063, ADR-069) |
+  | Primal Fury (Stronghold and Swamp Bestiary) | Offered only to those towns' heroes, meant for their mages: Blood Rage, Warcry, Interference (ADR-067, ADR-069; Adrenaline is dropped) |
 - **Levels** (implemented): HoMM3 experience table; each level gives one skill point, spent on one of **three offered
   skills**. Mages are offered their own school more often, warriors the general groups; a sworn enemy's school only in
   5 % of level-ups (ADR-048).
@@ -40,6 +44,6 @@
 - **Hero screen** (implemented): stats, mana, experience, specialty, skills, army, paper doll and backpack, war
   machines; opened with H or from the hero list. Drag and drop is pending.
 - **Mana** (implemented, ADR-063): the pool is 10 × Knowledge (plus attunement); a hero regains ⌈Knowledge / 10⌉ (plus
-  attunement) at the start of its owner's turn. **Spell book** and casting: Phase 5 ([magic.md](magic.md)).
+  attunement) at the start of its owner's turn. ADR-069 adds 10 × ⌈level / 10⌉ to the pool (not built yet). **Spell book** and casting: Phase 5 ([magic.md](magic.md)).
 - **Governors** (ADR-063): a hero may govern a town; with Stewardship that town's buildings and creatures are cheaper
   ([towns-and-economy.md](towns-and-economy.md)).

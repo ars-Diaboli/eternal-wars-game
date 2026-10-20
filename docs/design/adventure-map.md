@@ -34,7 +34,7 @@
   - **Native = the whole army** (HoMM3): the penalty is waived only if **every** creature in the army
     belongs to one of the terrain's native towns. Neutrals count as non-native.
   - The **Pathfinding** skill reduces the non-native penalty by 25/50/75 % (Basic/Advanced/Expert;
-    swamp 200 → 175/150/125). Artifacts reduce it or make terrains native (implemented, ADR-061).
+    swamp 200 → 175/150/125); ADR-069 adds Master, −100 % (not built). Artifacts reduce it or make terrains native (implemented, ADR-061).
   - Implemented as data (`TerrainCatalog`); an all-native army (`MovementRules.ArmyTown`) pays 100, and
     Pathfinding applies in `MovementRules.StepCost`, which routes and steps share.
 - **Roads (HoMM3-style, ADR-024/032)**: a road layer on top of terrain, drawn in the editor (generated roads
@@ -76,7 +76,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Training sites | Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi: once per hero ([below](#permanent-hero-power-ups)) | implemented (ADR-068), map format v18 |
 | Loot sites | Campfire, Supply Crates, Traveler's Wagon (picked up, vanish), Corpse, Lean To, Warrior's Tomb (stay): only the first visitor finds something ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v17 |
 | Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: resources once a week per object ([below](#mines-and-resource-providers)) | implemented (ADR-068), map format v16 |
-| Visitables, loot, banks, trainers, buffs, utilities | The catalogue in [Planned objects](#planned-objects-adr-068) below | planned (ADR-068) |
+| Second catalogue | Mage's Chest, Windows and Eyes of the Magi, Tavern, Garrison, Keymaster's Tent, deposits, six more banks, magic sites, three buffs, five power-ups ([below](#second-object-catalogue-adr-069)) | planned (ADR-069) |
 
 - **Treasure chests roll their reward** (seeded game RNG, ADR-068, replacing ADR-039's three equal tiers): the five-row table
   [below](#treasure-and-one-time-loot), gold *or* XP, or 5 % a Minor artifact taken at once. Map authors (and the generator) may fix the
@@ -135,7 +135,8 @@ Two modes, **chosen when the game is created** (`GameOptions.FogMode`):
    observer's scouting radius, but only drops out once every observer is farther than radius + **refog margin**
    (default 2, configurable). Example: radius 3 + margin 4 reveals at 3 tiles and refogs at 7.
 
-- Observers: heroes and owned towns (radius 5), owned mines and map dwellings (radius 2).
+- Observers: heroes and owned towns (radius 5), owned mines and map dwellings (radius 2). The Scouting skill will add
+  2 / 4 / 6 to a hero's radius (ADR-069, not built).
 - Under refog, **objects out of sight show their last known state** (flag colour, chest still there),
   updated when they come back into sight. Units are hidden entirely (`ObjectMemory`).
 
@@ -258,3 +259,73 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 | Hill Fort | **Implemented.** Upgrades the hero's stacks of tiers **1–3**, the player picking stack by stack, for **150 % of the upgrade price** (the price difference, as in towns); tiers 4 and 5 are upgraded only in towns (decided, MAP-11) |
 | Town Gate | **Implemented.** The visiting hero teleports to one of **its owner's towns** (teammates' towns not for now) at no movement cost. The player picks the town from a list; a town whose entrance is occupied is listed but unavailable. Routes do not plan through it (decided, MAP-12) |
 | War Machine Factory | **Implemented.** Sells the visiting hero **its own offensive machine** (ballista, cannon, catapult or glaivethrower, ADR-056), the **ammo cart** and the **healing tent**, at the **blacksmith's prices**; not a machine the hero already has (decided, MAP-13) |
+
+## Second object catalogue (ADR-069)
+The owner's second list (`ideas.md`, 2026-10-20). **Nothing here is built.** The shared rules above (visit scopes, statuses, rolls, artifact
+tiers, creature names) apply. Open points are MAP-15 … MAP-24 in [open-questions.md](../project/open-questions.md#adventure-map-objects); every
+number is a draft.
+
+### Loot
+| Object | Effect | Open |
+|---|---|---|
+| Mage's Chest | Often holds a **Minor artifact** | MAP-15: odds, what else it holds, whether it vanishes |
+
+### Utilities and travel
+| Object | Effect | Open |
+|---|---|---|
+| Window of the Magi / Eye of the Magi | Visiting a Window reveals the area around every Eye of the Magi of its colour | MAP-16: colours, radius, visit scope |
+| Tavern | A visiting hero can hire heroes, as in a town's tavern (ADR-060) | MAP-17: which offers, where the hero appears |
+| Portal | Takes the hero to another portal of the same type. A linked pair is today's **two-way monolith** (implemented) | MAP-18: three or more of one type |
+| One-Way Portal | Takes the hero to its exit, which cannot be entered: today's **one-way monolith** (implemented) | MAP-18: anything beyond the generator placing them |
+| Garrison | The owner can station creatures in it; enemies must defeat them to pass through | MAP-19 |
+| Keymaster's Tent | Lets the visitor through border guards and border gates of its colour (RMG-11) | MAP-20 |
+
+### Deposits (become mines)
+Visiting and paying turns the deposit into the mine of its kind (MAP-21: prices, who may pay, guards, a sulfur deposit):
+
+| Deposit | Becomes |
+|---|---|
+| Wood Pile | Sawmill |
+| Ore Deposit | Ore Pit (the Ore Mine) |
+| Gold Vein | Gold Mine |
+| Crystal Vein | Crystal Mine (the Crystal Pond) |
+| Cinnabar Deposit | Alchemist's Lab |
+
+### Creature banks
+Like the banks above: the guard always fights, the reward only on victory. Guard tables and rewards are MAP-22.
+
+| Bank | Guard (roster creatures) | Reward (notes) |
+|---|---|---|
+| Ruins (orcs; the name is taken by the undead Ruins) | Orc / Orc Berserker | gold |
+| Lair | evil eyes: Spectator / Beholder | gold and artifacts |
+| Keep | crossbowmen and pikemen: Archer / Marksman and Pikeman / Guardian | gold and artifacts ("item artifacts") |
+| Hideout | Bandit (neutral, no upgrade) | gold |
+| Forest Glen | Timber Wolf / Dire Wolf (neutral) | gold and lumber |
+| Dragon City | Black Dragon (Dragon Utopia, no upgrade) | gold, a Relic and Major artifacts |
+
+### Magic
+| Object | Effect | Open |
+|---|---|---|
+| Mana Vortex | Doubles the hero's maximum mana | MAP-23: until when, visit scope |
+| Fountain of Magic | Restores 50 % of the hero's maximum mana | MAP-23: visit scope |
+| Shrine (levels 1–3) | Teaches a spell of its level and school if the hero has the skill to learn it | MAP-24, needs spells (Phase 5) |
+
+### Temporary buffs
+Same rules as the buffs above (once a day per hero, gone after the next battle, ±5 cap):
+
+| Object | Effect |
+|---|---|
+| Clover Field | +1 luck for the next battle |
+| Rainbow | +2 luck for the next battle |
+| Rally Flag | +400 movement points until the end of the day, +1 luck and +1 morale for the next battle |
+
+### Permanent power-ups
+Once per hero, like the Learning Stone:
+
+| Object | Effect |
+|---|---|
+| Dream Teacher | 500 experience, plus 500 for every other Dream Teacher the hero has visited on this map |
+| Training Grounds | +1 Attack |
+| Marletto Tower | +1 Defense |
+| Star Axis | +1 Spell Power |
+| Garden of Revelation | +1 Knowledge |

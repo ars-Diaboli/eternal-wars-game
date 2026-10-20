@@ -32,6 +32,9 @@
   - **The enemy hero's Tactics reduces yours**: effective level = your level − enemy level (minimum none). At most one
     side can have an effective level above none, and that side chooses. A computer player keeps 30.
   - **36 wide is reserved for town sieges** (sieges are post-1.0 ❓).
+  - **ADR-069 (not built)**: Tactics also **deploys** troops before the battle, in a zone 4 / 5 / 6 cells deep (Basic / Advanced /
+    Expert), and chooses the width only from Advanced: Advanced 30 or 32, Expert 28, 30, 32 or 34. Who deploys when both heroes
+    have Tactics, and how a human and the AI deploy, is HERO-4.
 
 ## Engagement and blocking
 - **Surround / flanking**: a unit's perimeter grows with its size, so more attackers fit around a large unit. **No
@@ -59,6 +62,10 @@
   - Each obstacle definition declares its size class (small/big). Walls are a separate class.
   - Line of fire: supercover of the segment from footprint centre to footprint centre; cells touched only at a corner
     count too (ADR-038). No skill reduces cover penalties yet.
+- **Distance penalty** (ADR-069, not built): every 10 cells between shooter and target add a **1/8 ranged penalty**. The Offense
+  skill **Marksmanship** reduces the ranged penalty (−1/4, −1/2, −3/4). Open (CMB-6): whether this replaces the half damage
+  beyond 15 cells, how distance is counted, whether it adds to cover and its 7/8 limit, and whether Marksmanship takes a share
+  of the penalty off or a fixed amount, from distance only or from cover too.
 
 ## Damage
 **HoMM3 baseline** (ADR-033). Base damage (rolled per stack within the creature's min–max) × stack size; +5 % per point
@@ -102,7 +109,7 @@ Each stack has −5…+5 of each, its creature's plus its hero's (and the hero's
 - **Defend**: +20 % Defense (at least +1) until the unit's next turn. **Wait**: see turn order.
 - **Retaliation**: once per round unless a capability says otherwise.
 - **Ranged units**: no shot while engaged; half damage when more than 15 cells separate the footprints (war machines
-  exempt).
+  exempt). ADR-069's distance penalty may replace the half damage (CMB-6, above).
 - Flyers, rolled obstacles.
 
 ## Creature capabilities (HoMM4-style, implemented, ADR-042)
