@@ -130,3 +130,43 @@ amplifier help its new owner's heroes (yes, assumed: "a player who owns one")?
 A15: use building cost - 1500 gold, 5 mercury, needs mage guild 1;
 Does a captured amplifier help its new owner's heroes (yes, assumed: "a player who owns one")? - assumption correct;
 It is the first building only one town has - all towns will have their unique building. Will be added at later stages;
+
+
+Q16 : CMB-1 Surrender.** Price formula, allowed against neutrals, where the hero goes (back to the tavern pool?), may the
+AI surrender or retreat (it never does today)?
+A16: allowed against neutrals - no;
+where the hero goes (back to the tavern pool?) - yes;
+may the AI surrender or retreat - should be able to retreat if army is almost defeated
+Price formula: (total gold cost of current/survived creatures) / 2
+
+Q17: CMB-3 War machines.** Machine stats and prices after play-testing; can heroes exchange machines; can towns hold
+them in the garrison; which machines the AI buys.
+A17: can heroes exchange machines - yes;
+can towns hold them in the garrison - no if there is no hero in the garnison;
+
+Q18: CMB-4 Teleporting creatures** (Phase 5). How they use footprints.
+A18: same way as flying units;
+
+Q19: CMB-6 🚧 Distance penalty and Marksmanship** (blocks both, ADR-069). "Every 10 cells 1/8 penalty":
+- Does it **replace** today's half damage beyond 15 cells (ADR-038)? On a 30-wide field a shot across is about 25 cells: 2/8 with the new rule,
+  1/2 today.
+- Counting: whole tens of cells between the footprints (0–9 none, 10–19 1/8, 20–29 2/8), or started tens (1–10 is 1/8)?
+- Does it **add to cover** (ADR-035) and count towards the 7/8 limit beyond which a target cannot be shot?
+- Marksmanship "−1/4 / −1/2 / −3/4 to ranged penalty": a **share** of the penalty taken off (Expert leaves a quarter, like Pathfinding's "−25 %
+  of the penalty"), or a **fixed amount** subtracted (−2/8 / −4/8 / −6/8, which at Expert would cancel nearly any penalty)? Of the distance
+  penalty only, or of cover too? Does it also soften the Melee penalty capability (shooters in melee)?
+- War machines: exempt from the distance penalty as they are from the half damage (assumed yes)?
+A19: Does it **replace** today's half damage beyond 15 cells (ADR-038)? - yes;
+- Does it **add to cover** (ADR-035) and count towards the 7/8 limit beyond which a target cannot be shot? - yes;
+- Marksmanship "−1/4 / −1/2 / −3/4 to ranged penalty": a **share** of the penalty taken off (Expert leaves a quarter, like Pathfinding's "−25 %
+  of the penalty"), or a **fixed amount** subtracted (−2/8 / −4/8 / −6/8, which at Expert would cancel nearly any penalty)? - yes, intention to have almost no penalty;
+- War machines: exempt from the distance penalty as they are from the half damage (assumed yes)? - yes;
+- Counting: whole tens of cells between the footprints (0–9 none, 10–19 1/8, 20–29 2/8) - use following 0-9 no penalty, 10–19 1/8, 20–29 2/8;
+- note distance and obstacle penalties add-up to overall penalty;
+
+Q20: MAG-4 Casting in battle.** Does the hero's spell use a turn in the initiative order or happen outside it; spells
+that change initiative mid-round; area shapes against 2×2–4×4 footprints; can spells target war machines.
+A20: hero can cast spells once a round during the turn of his troops(that he can control, eg war machines without apropriate skill fire automatically)
+can spells target war machines. - yes, but war machines are mechanical so that they have resistance to many spells;
+spells that change initiative mid-round - should not affect hero casting ability other than specified above;
+area shapes against 2×2–4×4 footprints - unclear question, needs more details;
