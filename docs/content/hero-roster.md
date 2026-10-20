@@ -50,6 +50,10 @@ group's first skill (`rage.first` = Blood Rage, `adrenaline.first`), and "a spel
 | Tier 4, first line | Tactics · Tactics, Armor · 2/1/1/1 | a spell · own magic, Pathfinding · 0/0/3/2 |
 | Tier 4, second line | +350 gold · Troop management, Melee · 1/2/1/1 | +350 gold · own magic, own attunement · 0/1/2/2 |
 
+**ADR-069 (2026-10-20, not built)** changes this table once `heroes.csv` follows: Drill becomes War Tempo, Troop management is
+dropped (its warriors need another starting skill, HERO-6), Swamp Bestiary's "own magic" becomes Primal Fury like Stronghold's
+(Adrenaline is dropped), and the warriors of both towns start with an Offense skill (HERO-7).
+
 "First" and "second" line follow the creature table's order. Open: whether heroes should differ more between towns
 (per-town stat odds, as in HoMM3, are an option in ADR-055).
 

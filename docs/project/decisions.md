@@ -1394,3 +1394,60 @@ and the third Offense and Defense skills of HERO-1 (numbers are placeholders for
     machine the hero lacks and would buy in a town (its offensive machine with Advanced Ballistics, a tent, a cart for shooters) with 1500 gold kept;
     a town gate is worth 90 % of the most needed own town (defence or troops waiting, the same need that sends heroes to towns) with a free
     entrance, and the gate's picker takes the hero there. Once on the entrance, the hero upgrades or buys.
+
+### ADR-069: Skill rework, Necromancy, mana by level, one faction group, a second object catalogue (2026-10-20)
+**Status**: accepted as a design (2026-10-20), user notes in `ideas.md`; **nothing implemented**. Numbers are drafts. Supersedes parts of ADR-048 (skill
+numbers and groups), ADR-063 (attunement table, the Adrenaline group), ADR-067 (Leadership and Alertness ids and numbers, the faction spell resistance) and
+ADR-038 (the ranged half-damage rule, if CMB-6 says so). Open points: HERO-4, HERO-6, HERO-7, CMB-6, MAG-7, MAG-8, TOWN-6, MAP-15 … MAP-24 in `open-questions.md`.
+- **Skill groups** (every group keeps three skills and 4 + 3 + 3 points; the Master skill is the 4-point one):
+
+  | Group | Skills (max level: Basic / Advanced / Expert / Master) |
+  |---|---|
+  | Offense | Melee (Master: +9 / 16 / 23 / 30 % melee damage), Archery (Expert: +15 / 25 / 35 % ranged damage), **Marksmanship** (new, Expert: ranged penalty −1/4 / −1/2 / −3/4) |
+  | Defense | Armor (unchanged), Spell resistance (Expert: −10 / 15 / 20 % to hostile spells' damage or duration, Phase 5), **Leadership** (moved here from Offense, +1 / 2 / 3 morale) |
+  | Pathfinding | **Pathfinding** (now Master: −25 / 50 / 75 / 100 % of the non-native penalty), **Logistics** (now Expert: +10 / 20 / 30 % movement), **Scouting** (new, Expert: +2 / 4 / 6 sight radius); Troop management is dropped |
+  | Tactics | **War Tempo** (Drill renamed, Master: +1 / 2 / 3 / 4 battlefield speed), **Tactics** (Expert: Basic rearranges troops before battle; Advanced also chooses width 30 or 32; Expert 28–34; the deployment zone is 4 / 5 / 6 cells deep), **Alertness** (moved here from Defense, working title, Expert: **+1 / 2 / 3 initiative**, flat instead of percent) |
+
+  - The Deployment skill is merged into Tactics. Tactics Basic no longer chooses a width (it was 30 / 32); Advanced loses 28.
+  - **Distance penalty for ranged attacks**: every 10 cells of distance add a **1/8 ranged penalty**. How it meets cover and the 15-cell half-damage rule
+    (ADR-038), and what Marksmanship reduces, is CMB-6.
+  - Skill ids: `offense.marksmanship`, `defense.leadership`, `pathfinding.scouting`, `tactics.wartempo`, `tactics.alert`; the rest keep theirs. How older maps
+    and saved games with `offense.third`, `defense.third`, `tactics.drill`, `tactics.deployment`, `pathfinding.troops` and `adrenaline.*` load is HERO-6.
+- **Attunement** (replaces the ADR-063 table; several add up):
+
+  | Schools | Max mana | Mana a day | Spell cost |
+  |---|---|---|---|
+  | Arcana, Chaos | +10 / 20 / 30 / 40 | +1 / 2 / 3 / 4 | – |
+  | Light | – | +2 / 4 / 6 / 8 | −1 / 2 / 3 / 4 |
+  | Death | – | +2 / 4 / 6 / 8 | – (Necromancy instead) |
+  | Nature, Shadow | +5 / 10 / 15 / 20 | +2 / 4 / 6 / 8 | – |
+
+- **Mana by level**: the pool also grows by **10 × ⌈level / 10⌉** (+10 at levels 1–10, +20 at 11–20, …).
+- **Necromancy** (Death attunement): after a **victory**, 5 / 10 / 15 / 20 % (Basic … Master) of the **value of the enemy creatures slain** comes back as undead
+  in the hero's army. The attunement level caps the undead tier and maps enemy tiers to it:
+
+  | Level | Undead raised | Enemy tier → undead tier |
+  |---|---|---|
+  | Basic | tier 1 | all → 1 (tier-1 lines in random proportion) |
+  | Advanced | tiers 1–2 | 1–3 → 1, 4–5 → 2 |
+  | Expert | tiers 1–3 | 1–2 → 1, 3–4 → 2, 5 → 3 |
+  | Master | tiers 1–4 | 1–2 → 1, 3 → 2, 4 → 3, 5 → 4 |
+
+  - **Necromancy Amplifier**, a Necropolis building: +5 % Necromancy for **every hero of its owner** that has the skill (10 / 15 / 20 / 25 %); a second amplifier
+    adds nothing. It would be the first town-specific building (TOWN-3). Details: MAG-7, TOWN-6.
+- **Faction group**: Primal Fury is the group of **both Stronghold and Swamp Bestiary**; **Adrenaline is dropped** (answers most of HERO-2). Its skills:
+  Blood Rage (unchanged), Warcry (working names "Warcry / Spiritual Totems", unchanged), and **Interference** (replaces the faction spell resistance, `rage.third`):
+  the enemy hero's spells have −2 / −4 / −6 Spell Power and cost +1 / +2 / +2 mana (Phase 5). The group is for the towns' **mage** heroes; their **warrior**
+  heroes start with the **Offense** group (HERO-7).
+- **Second object catalogue** (the owner's list, written out in [adventure-map.md](../design/adventure-map.md#second-object-catalogue-adr-069)):
+  - Loot: Mage's Chest (minor artifacts).
+  - Utilities: Window and Eye of the Magi, Tavern, Portal, One-Way Portal (both exist as monoliths, ADR-026), Garrison, Keymaster's Tent with border guards
+    and gates (RMG-11).
+  - Deposits that become mines after paying: Wood Pile → Sawmill, Ore Deposit → Ore Pit, Gold Vein → Gold Mine, Crystal Vein → Crystal Mine, Cinnabar Deposit
+    → Alchemist's Lab.
+  - Creature banks: Ruins with orcs (the name is taken, MAP-22), Lair (evil eyes), Keep (crossbowmen and pikemen), Hideout (bandits), Forest Glen (wolves),
+    Dragon City (Black Dragons).
+  - Magic: Mana Vortex (doubles the maximum mana), Fountain of Magic (restores 50 %), Shrines of levels 1–3 (teach a spell; Phase 5).
+  - Buffs: Clover Field (+1 luck), Rainbow (+2 luck), Rally Flag (+400 movement today, +1 luck and morale) for the next battle.
+  - Power-ups: Dream Teacher (500 XP, +500 for each other Dream Teacher the hero visited; once per hero), Training Grounds (+1 Attack), Marletto Tower
+    (+1 Defense), Star Axis (+1 Spell Power), Garden of Revelation (+1 Knowledge), once per hero.

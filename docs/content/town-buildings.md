@@ -230,4 +230,6 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 - Marketplace trading details ([TOWN-2](../project/open-questions.md#town-2)) and the mage guild ([TOWN-3](../project/open-questions.md#towns-and-economy)). The fort's
   fortifications only take effect with sieges (post-1.0, ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
-- Per-town buildings: all towns share one list for now.
+- Per-town buildings: all towns share one list for now. The first town-specific building is decided (ADR-069, not built): the
+  Necropolis **Necromancy Amplifier**, +5 % Necromancy for every hero of its owner with Death attunement; more than one adds nothing.
+  Its cost and requirements are [TOWN-6](../project/open-questions.md#town-6).

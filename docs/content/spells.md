@@ -13,7 +13,7 @@ faction-ability drafts, not school spells.
 ## How magic works (proposal)
 
 - **Schools**: six, one per ring town (Light, Nature, Arcana, Death, Chaos, Shadow; `BuiltInSkills.Schools`). Stronghold
-  and Swamp Bestiary have the faction groups Rage and Adrenaline instead (ADR-063). Any hero may learn any school (a
+  and Swamp Bestiary have the faction group Primal Fury instead (ADR-063, ADR-069; Adrenaline is dropped). Any hero may learn any school (a
   sworn enemy's school is rarely offered, ADR-048).
 - **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1 spells, Advanced → 2,
   Expert → 3, Master → 4). The **mage guild** of the same level in a town offers spells of that level; a visiting hero
@@ -136,7 +136,7 @@ Orc rites: no spell books, only drums, bone and ancestors, and a loud confidence
 
 ## Primal (Swamp Bestiary, faction-ability drafts)
 
-> Not a hero school any more (ADR-063): Swamp Bestiary has the Adrenaline group. These spells are drafts to reuse as creature or faction abilities.
+> Not a hero school any more (ADR-063): Swamp Bestiary has the Primal Fury group, like Stronghold (ADR-069; the Adrenaline group is dropped). These spells are drafts to reuse as creature or faction abilities, perhaps for the "Spiritual Totems" name of the Warcry skill (HERO-7).
 
 Beast-cult magic of the drowned lowlands: not spells but invitations, answered by whatever lives in the mire.
 

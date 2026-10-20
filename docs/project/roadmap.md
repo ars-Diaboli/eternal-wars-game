@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-19)**: the whole adventure-map object catalogue (ADR-068, block in Phase 3) is built in core, and the random map generator places it as treasure. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
+**Where we are (2026-10-20)**: the whole adventure-map object catalogue (ADR-068, block in Phase 3) is built in core, and the random map generator places it as treasure. ADR-069 (decided, not built) reworks the skills, adds Necromancy and gives Swamp Bestiary Primal Fury (Phase 3 "Skill rework"), and adds a second object catalogue; its open questions are listed under "New on 2026-10-20" in open-questions.md. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
 dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
 save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
 (layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
@@ -206,7 +206,6 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Treasury and Prospecting rework (ADR-062)
 - [x] Mana numbers and school attunement skills (ADR-063); casting waits for Phase 5
 - [x] Primal Fury (Stronghold, ADR-067): Blood Rage and Warcry in battle (BattleHud buttons, AI uses them); the faction spell resistance is data until casting (Phase 5)
-- [ ] Adrenaline (Swamp Bestiary): design its skills (placeholders today) ❓ HERO-2
 - [x] Complexity levels with starting resources (ADR-063); new-game screen option
 - [x] AI that appoints governors on purpose (ADR-059)
 - [ ] The `sim` tool picks a complexity
@@ -214,7 +213,22 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       sieges, post-1.0 (CMB-5)
 - [ ] Skill specialties: what a skill specialty adds ❓ HERO-1
 - [x] Leadership (`offense.third`, +1/2/3 morale) and Alertness (`defense.third`, +5/10/15 % initiative, working title) (ADR-067)
-- [ ] Deployment: rearrange troops before battle (needs a deployment step in `BattleSetup` and UI) ❓ HERO-4
+- [ ] Deployment: rearrange troops before battle, now part of Tactics with a 4 / 5 / 6-cell zone (ADR-069; needs a deployment step in
+      `BattleSetup` and UI) ❓ HERO-4
+
+#### Skill rework (ADR-069, decided 2026-10-20)
+- [ ] New numbers: Melee 9/16/23/30 %, Archery 15/25/35 %, Pathfinding to Master (−100 %), Logistics to Expert (30 %), Alertness flat +1/2/3
+      initiative, Tactics width from Advanced (30/32) and Expert (28–34)
+- [ ] Regrouping and new ids: Leadership to Defense (`defense.leadership`), Alertness to Tactics (`tactics.alert`), Drill → War Tempo
+      (`tactics.wartempo`), Deployment merged into Tactics, Troop management dropped; old ids keep loading ❓ HERO-6
+- [ ] Scouting (`pathfinding.scouting`): +2/4/6 sight radius
+- [ ] Distance penalty for ranged attacks (1/8 per 10 cells) and Marksmanship (`offense.marksmanship`) ❓ CMB-6
+- [ ] Primal Fury for Swamp Bestiary, Adrenaline removed; Interference (`rage.third`) with the spell-cost part (data until Phase 5); roster
+      starting skills (warriors with Offense) ❓ HERO-7
+- [ ] Attunement table of ADR-069 and mana by level (+10 × ⌈level / 10⌉) in `ManaRules` ❓ MAG-8
+- [ ] Necromancy (Death attunement): raise undead after victories; the AI values it ❓ MAG-7
+- [ ] Necropolis Necromancy Amplifier, the first town-specific building ❓ TOWN-6
+- [ ] Docs: `heroes.csv` and [hero-roster.md](../content/hero-roster.md) follow (Drill, Troop management, Adrenaline names)
 - [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
 
 ### Tavern
@@ -313,6 +327,20 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 - [x] AI: visits the objects that help it (resources, loot, power-ups, buffs, banks and guards it can beat, prisons, the observatory), upgrades at
       hill forts and buys missing machines at factories when it can pay, and takes a town gate to the own town it needs most; buffs are
       visited for their value, not timed before a fight
+
+#### Second catalogue (ADR-069, decided 2026-10-20; [catalogue](../design/adventure-map.md#second-object-catalogue-adr-069))
+Same steps per object as above (map format bump, editor, validator, AI, generator values in `TreasureSites`).
+- [ ] Buffs: Clover Field, Rainbow, Rally Flag (clear, no open question)
+- [ ] Power-ups: Dream Teacher, Training Grounds, Marletto Tower, Star Axis, Garden of Revelation (clear, no open question)
+- [ ] Mage's Chest ❓ MAP-15
+- [ ] Deposits that become mines (Wood Pile, Ore Deposit, Gold Vein, Crystal Vein, Cinnabar Deposit) ❓ MAP-21
+- [ ] Six creature banks: orc Ruins, Lair, Keep, Hideout, Forest Glen, Dragon City ❓ MAP-22
+- [ ] Window and Eye of the Magi ❓ MAP-16
+- [ ] Map tavern ❓ MAP-17
+- [ ] Portals beyond today's monoliths ❓ MAP-18
+- [ ] Garrison ❓ MAP-19
+- [ ] Keymaster's Tent, border guards and border gates ❓ MAP-20, RMG-11
+- [ ] Mana Vortex, Fountain of Magic (useful with Phase 5) ❓ MAP-23; Shrines with spells (Phase 5) ❓ MAP-24
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets

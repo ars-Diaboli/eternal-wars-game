@@ -6,6 +6,9 @@ Design questions still to answer. Answers move into the [design docs](../design/
 Every question has a stable id (`RMG-1`, `TOWN-2`, …) so the roadmap and ADRs can point at it. **🚧 Blocking** marks a
 question that stops the named roadmap item; the others can wait or only tune numbers.
 
+**New on 2026-10-20** (ADR-069, the skill rework and the second object catalogue): HERO-6, HERO-7, CMB-6, MAG-7, MAG-8, TOWN-6, MAP-15 … MAP-24; HERO-4
+and MAG-6 are updated, HERO-2 is mostly answered.
+
 ## 🚧 Blocking now
 
 Phase 4's generator stages 1–6 and the scenario assembly are in. What still blocks the next steps:
@@ -14,7 +17,12 @@ Phase 4's generator stages 1–6 and the scenario assembly are in. What still bl
 |---|---|---|
 | [TOWN-2](#town-2) | Marketplace trading details (rates are set, ADR-067) | Phase 3: marketplace screen, AI marketplace use |
 | [HERO-1](#hero-1) | Skill specialties | Phase 3: skills |
-| [HERO-2](#hero-2) | Adrenaline (Stronghold is set, ADR-067) | Phase 3: faction groups |
+| [HERO-6](#hero-6) | Old skill ids and the roster after the ADR-069 rework | Phase 3: the skill rework |
+| [HERO-7](#hero-7) | Primal Fury for two towns: offers, warriors, names | Phase 3: Swamp Bestiary's group |
+| [CMB-6](#cmb-6) | Distance penalty and Marksmanship | Phase 3: Marksmanship, the distance penalty |
+| [HERO-4](#hero-4) | The deployment step of Tactics | Phase 3: deployment |
+| [MAG-7](#mag-7) | Necromancy details | Necromancy, the Necromancy Amplifier |
+| [MAP-15 … MAP-24](#adventure-map-objects) | The second object catalogue | each object named in its question |
 
 ## Random maps (Phase 4)
 
@@ -44,6 +52,62 @@ randomly present connections. Keep, drop, or post-1.0?
 
 The catalogue is [adventure-map.md](../design/adventure-map.md#planned-objects-adr-068), ADR-068. All of MAP-1 to MAP-14 are answered (see [Answered](#answered)); nothing about the catalogue is open
 (the banks' Dwarf is a new neutral line, 2026-10-19).
+
+The **second catalogue** (ADR-069, [adventure-map.md](../design/adventure-map.md#second-object-catalogue-adr-069)) raises MAP-15 … MAP-24. The buffs (Clover
+Field, Rainbow, Rally Flag) and the power-ups (Dream Teacher, Training Grounds, Marletto Tower, Star Axis, Garden of Revelation) are clear and follow
+the existing rules; nothing below blocks them.
+
+<a id="map-15"></a>
+**MAP-15 Mage's Chest.** "Often a Minor artifact": what are the odds, and what is in it otherwise (gold, experience, nothing)? Does it vanish like
+the Treasure Chest? Proposal: 70 % a Minor artifact, 30 % 1000–1500 gold; vanishes.
+
+<a id="map-16"></a>
+**MAP-16 Window and Eye of the Magi.** How many colours (HoMM3 has one kind; the notes say "of the corresponding colour")? What radius around
+each Eye (proposal: 5, like a hero's sight)? Every visit, or once per hero like the Observatory? Does the generator place them, and how many Eyes
+per Window?
+
+<a id="map-17"></a>
+**MAP-17 Map Tavern.** Does it offer the player's weekly tavern pool like a basic town tavern (2 heroes, 2500 gold, ADR-060), or its own offers?
+Where does the hired hero appear (next to the tavern, or the visitor must stand at the entrance like in towns)? Does the hero limit apply (yes,
+assumed)?
+
+<a id="map-18"></a>
+**MAP-18 Portals.** A linked pair is today's two-way monolith and the one-way portal is today's one-way monolith (ADR-026). Is anything new meant:
+three or more portals of one type (ADR-026 rules out a random exit; proposal: the player picks the exit from a list, like the Town Gate), new
+art and names only, or generator placement (RMG-11 lists portals in templates)?
+
+<a id="map-19"></a>
+**MAP-19 Garrison.** Is it flagged by its owner like a mine, and is it captured by beating its guards? Can a neutral garrison have guards set by
+the map or generator? Can an own hero walk through it (both directions, or one-way like some HoMM3 garrisons)? Can heroes leave and take
+creatures there at any time? Does the generator put garrisons in zone connections?
+
+<a id="map-20"></a>
+**MAP-20 Keymasters, border guards and border gates.** How many colours (HoMM3: 8)? Is the key the player's (HoMM3) or the hero's? Does a border
+guard vanish after the first key holder passes (HoMM3) while a border gate stays and lets only key holders through? Does the generator use them
+in connections (RMG-11)?
+
+<a id="map-21"></a>
+**MAP-21 Deposits.** The price of each (proposal: about two weeks of the mine's income in gold plus building material: Gold Vein 5000 gold and 10 ore,
+the others 2000–3000 gold and 5 lumber or ore)? Who may pay (any visiting hero; the new mine is flagged for its player)? May a deposit be
+guarded? There is no sulfur deposit in the list (Cinnabar is mercury): add one (a Sulfur Vent becoming the Sulfur Dune)? Does the generator place
+deposits instead of some mines?
+
+<a id="map-22"></a>
+**MAP-22 New creature banks.** Their guard tables and rewards (the notes name only the guards and the kind of reward): may the agent draft them
+like the existing banks (four rows at 30 / 30 / 30 / 10 %, rewards scaled to the guard's value)? Names: the orc bank needs another name than the
+undead Ruins (proposal: Orc Ruins, or rename the undead one to Crypt). Which creatures: Keep = Archers / Marksmen and Pikemen / Guardians (Haven);
+Lair = Spectators / Beholders (Dungeon); Forest Glen = Timber / Dire Wolves (neutral); Hideout = Bandits (neutral); Ruins = Orcs / Orc Berserkers
+(Stronghold); Dragon City = Black Dragons (Dragon Utopia, 9900 gold each, so a very strong bank). "Item artifacts" for the Keep means Minor
+artifacts?
+
+<a id="map-23"></a>
+**MAP-23 Mana Vortex and Fountain of Magic.** Does the Vortex set the current mana to twice the maximum, lasting until spent (HoMM3 style), or
+raise the maximum for a while? Is it once a week for the first visitor? Is the Fountain once a day per hero like the Magic Well? Both are only
+useful once spells exist (Phase 5): build them now or with magic?
+
+<a id="map-24"></a>
+**MAP-24 Shrines** (Phase 5). Is the spell fixed by the map or rolled at game start from the shrine's level and school? "The correct skills" =
+the school's Magic skill at the spell's level? Once per hero, any number of visits?
 
 ## Towns and economy
 
@@ -76,6 +140,11 @@ stands at the entrance? A starter stack for hired heroes? Do heroes in garrisons
 daily)? How long may a caravan wait at a full garrison? (Guards on map dwellings are decided: tier 3 / 4 / 5 are guarded by
 9 / 6 / 3 base creatures, ADR-068; built.)
 
+<a id="town-6"></a>
+**TOWN-6 Necromancy Amplifier** (ADR-069, blocks the building). Its cost and requirements (proposal: 2500 gold, 5 mercury, needs mage guild 1),
+and its id in `buildings.csv`. It is the first building only one town has: does `buildings.csv` get a town column (part of TOWN-3)? Does a captured
+amplifier help its new owner's heroes (yes, assumed: "a player who owns one")?
+
 ## Heroes
 
 <a id="hero-1"></a>
@@ -83,18 +152,40 @@ daily)? How long may a caravan wait at a full garrison? (Guards on map dwellings
 Defense skills are decided (ADR-067: Leadership, and the placeholder-named Alertness); their numbers are placeholders.
 
 <a id="hero-2"></a>
-**HERO-2 🚧 Adrenaline** (blocks the Swamp Bestiary group). Stronghold's Primal Fury is designed (ADR-067: Blood Rage,
-Warcry, faction spell resistance, draft numbers). Open: what the three Adrenaline skills do (stacks or other faction
-abilities) and whether the Primal spell drafts become them; what Spell Power and Knowledge give Stronghold and Swamp
-mages (Warcry has no mana); the final name Primal Fury; whether a warcry uses the hero's action (MAG-4); the offer
-weights (today the own-school weights).
+**HERO-2 Adrenaline**: mostly answered (ADR-069): Adrenaline is dropped and Swamp Bestiary uses Primal Fury. Still open, now in HERO-7: what Spell
+Power and Knowledge give these mages (Warcry has no mana), the final names, the offer weights. Whether a warcry uses the hero's action stays MAG-4.
 
 <a id="hero-3"></a>
 **HERO-3 Rival schools.** Level-ups use the sworn-enemy pairs from the lore, the tavern uses the ring. Keep both, or
 use one relation for both?
 
 <a id="hero-4"></a>
-**HERO-4 Deployment skill** (blocks the Deployment item). Zone size per level; how a human deploys and how the AI does.
+**HERO-4 🚧 Deployment** (blocks the deployment step). ADR-069 merges Deployment into Tactics, with a zone 4 / 5 / 6 cells deep (Basic / Advanced /
+Expert). Open: what the depth measures. Today's automatic placement already fills the first 6–10 columns (a machine column, then one or two
+columns of stacks), and a 4-cell zone would not hold a 4×4 creature beside the machines. Is it extra depth forward of the normal zone, so a
+stack may be put up to 4 / 5 / 6 cells further forward, or a zone counted from the side's edge, which would have to grow? Does the enemy's Tactics cancel it like the width (only the side ahead deploys), or may both deploy, and in which order (the
+defender first, the attacker seeing it)? How a human deploys (drag stacks in the battle scene before round 1, a "Start battle" button) and the AI
+(keep today's automatic placement, or shooters back and fast units forward)? Does Tactics deployment work against neutrals and banks?
+
+<a id="hero-6"></a>
+**HERO-6 🚧 Old skill ids and the roster** (blocks the skill rework). The rework changes ids: `offense.third` → `defense.leadership`, `defense.third`
+→ `tactics.alert`, `tactics.drill` → `tactics.wartempo`; `tactics.deployment`, `pathfinding.troops` and `adrenaline.*` go away. Proposal: maps and
+saved games keep loading by reading the old ids as their successors (Deployment → Tactics, Troop management → Scouting, `adrenaline.first/second/third`
+→ `rage.first/second/third`), with no map format bump since only the ids change; a level above the new maximum (Logistics Master) drops to Expert.
+Replays of saved games made before the change may still diverge, because the numbers change: accept that? And which starting skill replaces
+Troop management for the tier-4 second-line warriors in `heroes.csv` (proposal: Scouting)? Do any specialties change (none uses the dropped skills)?
+
+<a id="hero-7"></a>
+**HERO-7 🚧 Primal Fury for two towns** (blocks Swamp Bestiary's group). "Use this skill group for mage heroes for both, warrior heroes should
+start with the offense group":
+- Are the towns' **warriors** offered Primal Fury at all (today at the own-school weight for mages, 6, and 2 for warriors), or never?
+- "Start with the offense group": should every Stronghold and Swamp Bestiary warrior have an Offense skill (Melee, Archery or Marksmanship) among
+  its two starting skills (today 3 of 8 do), or should all warriors of all towns, or does it mean the Offense group takes the faction group's
+  higher offer weight for these warriors?
+- Names: keep one name "Primal Fury" for both towns, or a Swamp name? "Warcry / Spiritual Totems": one skill with a name per town (Warcry for
+  Stronghold, Spiritual Totems for Swamp), or one name for both?
+- Interference: Expert "−6, +2": is the cost +2 at Expert as written, or +3? Does the cost rise per spell cast (+1 mana) or by a percent?
+- What Spell Power and Knowledge give these mages (they have no spells; Knowledge only fills a pool they cannot use).
 
 <a id="hero-5"></a>
 **HERO-5 Names and drafts.** Hero names, school names (Light, Nature, Arcana, Death, Chaos, Shadow) and specialties in
@@ -117,6 +208,17 @@ them in the garrison; which machines the AI buys.
 
 <a id="cmb-4"></a>
 **CMB-4 Teleporting creatures** (Phase 5). How they use footprints.
+
+<a id="cmb-6"></a>
+**CMB-6 🚧 Distance penalty and Marksmanship** (blocks both, ADR-069). "Every 10 cells 1/8 penalty":
+- Does it **replace** today's half damage beyond 15 cells (ADR-038)? On a 30-wide field a shot across is about 25 cells: 2/8 with the new rule,
+  1/2 today.
+- Counting: whole tens of cells between the footprints (0–9 none, 10–19 1/8, 20–29 2/8), or started tens (1–10 is 1/8)?
+- Does it **add to cover** (ADR-035) and count towards the 7/8 limit beyond which a target cannot be shot?
+- Marksmanship "−1/4 / −1/2 / −3/4 to ranged penalty": a **share** of the penalty taken off (Expert leaves a quarter, like Pathfinding's "−25 %
+  of the penalty"), or a **fixed amount** subtracted (−2/8 / −4/8 / −6/8, which at Expert would cancel nearly any penalty)? Of the distance
+  penalty only, or of cover too? Does it also soften the Melee penalty capability (shooters in melee)?
+- War machines: exempt from the distance penalty as they are from the half damage (assumed yes)?
 
 <a id="cmb-5"></a>
 **CMB-5 Sieges** (post-1.0). Confirm sieges are after 1.0; until then the siege Ballistics rules (ADR-063) stay unused.
@@ -148,8 +250,29 @@ that change initiative mid-round; area shapes against 2×2–4×4 footprints; ca
 are level 3); movement cost; how they interact with fog, the AI and replays.
 
 <a id="mag-6"></a>
-**MAG-6 Spell resistance and spell specialties.** The Spell resistance skill's numbers; how strong a spell specialty
-is.
+**MAG-6 Spell resistance and spell specialties.** The Spell resistance skill's numbers are set (ADR-069: −10 / 15 / 20 %, "reduces damage or
+duration"): damage spells lose that share of damage and timed spells of duration, both, or the caster's choice? Rounding of durations. How strong
+a spell specialty is.
+
+<a id="mag-7"></a>
+**MAG-7 🚧 Necromancy** (blocks Necromancy, ADR-069):
+- **Value**: the creatures' gold price (Footman 55, Black Dragon 9900), or another value?
+- **Who**: any hero with Death attunement (any hero may learn any school), or Necropolis heroes only?
+- **What is raised**: the base creature of a tier (Skeleton, not Skeleton Warrior)? Necropolis has two lines in tiers 1–4 (tier 1 Skeleton and
+  Plague Bearer, tier 2 Ghoul and Death Weaver, tier 3 Vampire and Wight, tier 4 Dark Knight and Lich): "random proportion" for every level
+  or only Basic? Per slain enemy stack or for the whole battle? Upgraded if the hero already has the upgraded stack?
+- **Count**: raised = ⌊share × slain value ÷ undead price⌋ per undead tier, the rest lost? Proposal: sum the value per undead tier, then round down.
+- **Who cannot be raised**: undead, constructs (Flesh Golem, Golden Golem), elementals, war machines, the hero's own losses (HoMM3 excludes the
+  first three; proposal: same, by the creature tags)?
+- **Army room**: raised creatures join a stack of the same creature or a free slot; with no room they are lost (HoMM3)? With two lines, one of
+  them may not fit.
+- **Which battles**: every victory (heroes, neutrals, garrisons, banks, mine guards), not after a retreat (assumed)? Automatic, or shown as a
+  result the player confirms?
+- **Amplifier**: counts only while the player owns the Necropolis that has it; a hero's skill must be at least Basic (+5 % never without the skill).
+
+<a id="mag-8"></a>
+**MAG-8 Mana by level.** "10 × roundUp(level / 10) of mana": added to the maximum pool only (assumed), or to the daily regeneration too? Level 1
+already gets +10, so every hero, warriors included, has at least 10 mana: intended?
 
 ## Game flow and content
 
