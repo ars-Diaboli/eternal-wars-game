@@ -94,3 +94,39 @@ A9: draft them like the existing banks
 rename the undead bank to Crypt
 Re-draft all creature banks (including existing ones) so they would be more faction-aligned. use 2-3 creature types of the same faction as guards;
 Dragon City - yes it should be the strongest bank by far;
+
+Q10: MAP-23 Mana Vortex and Fountain of Magic.** Does the Vortex set the current mana to twice the maximum, lasting until spent (HoMM3 style), or
+raise the maximum for a while? Is it once a week for the first visitor? Is the Fountain once a day per hero like the Magic Well? Both are only
+useful once spells exist (Phase 5): build them now or with magic?
+A10: Does the Vortex set the current mana to twice the maximum, lasting until spent (HoMM3 style) - yes;
+Is it once a week for the first visitor? - once a week for a hero;
+
+Q11: MAP-24 Shrines** (Phase 5). Is the spell fixed by the map or rolled at game start from the shrine's level and school? "The correct skills" =
+the school's Magic skill at the spell's level? Once per hero, any number of visits?
+A11:  Is the spell fixed by the map or rolled at game start from the shrine's level and school? - either specified in the editor , if not the rolled at the game start.
+"The correct skills" = the school's Magic skill at the spell's level? - yes;
+Once per hero, any number of visits? - any hero, unlimited visits; 
+if hero lacks appropriate skill/magic school or spell is already in hero's spell book - display message;
+
+Q12: TOWN-2 - Still open: the treasure value and band threshold at which the generator may place a map
+marketplace (placeholder: 4000). - use placeholder value for now.
+
+Q13: TOWN-3 - Do towns get their own building lists or names? - yes;
+A fourth town hall level? - yes Capitol, one per player, if player captures new town with Capitol it gets destroyed;
+Is the mage guild 4 placeholder  right? - use that placeholder for now;
+- create table, similar to creatures table where i can adjust cost values, set building names and set tech requirements - looks like there is buildings.csv already
+
+Q14: TOWN-4 Tavern.** Are the numbers right (hero 2500 gold; Brotherhood 2000 gold + 5 lumber + 5 ore; at most 8 heroes
+per player; a tavern offers 2 heroes, the Brotherhood 4)? Per-town instead of per-player pools? Hiring while a hero
+stands at the entrance? A starter stack for hired heroes? Do heroes in garrisons or prisons count towards the 8?
+A14: Per-town instead of per-player pools? - use current Per-town logic (2 native heroes, 2 adjacent) for towns, use same pool for players towns of the same faction; 
+tavern on map should have its own pool with random heroes;
+A starter stack for hired heroes? - yes, and it should consider hero's preffered creature;
+upgrade should be cheaper - Brotherhood 1000 gold + 5 ore;
+
+Q15: TOWN-6 Necromancy Amplifier** (ADR-069, blocks the building). Its cost and requirements (proposal: 2500 gold, 5 mercury, needs mage guild 1),
+and its id in `buildings.csv`. It is the first building only one town has: does `buildings.csv` get a town column (part of TOWN-3)? Does a captured
+amplifier help its new owner's heroes (yes, assumed: "a player who owns one")?
+A15: use building cost - 1500 gold, 5 mercury, needs mage guild 1;
+Does a captured amplifier help its new owner's heroes (yes, assumed: "a player who owns one")? - assumption correct;
+It is the first building only one town has - all towns will have their unique building. Will be added at later stages;
