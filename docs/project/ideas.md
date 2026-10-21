@@ -170,3 +170,19 @@ A20: hero can cast spells once a round during the turn of his troops(that he can
 can spells target war machines. - yes, but war machines are mechanical so that they have resistance to many spells;
 spells that change initiative mid-round - should not affect hero casting ability other than specified above;
 area shapes against 2×2–4×4 footprints - unclear question, needs more details;
+
+-------------------------
+found multiple .csv files (heroes, creatures etc) across the project 
+- advice on the approach on how to store them, so that there is only single source of thruth and fewer places to copy them; 
+maybe csv is not the best format
+maybe store them as embedded resource in one of the core assemblies?
+-------------------------
+docs starting to accumulate some churn related to already answered questions - clean them, ubdate other docs apropriately
+some questions are unclear, and some question groups have multiple questions that cover different game design areas - rework questions
+-------------------------
+regarding creature sizes in combat - I expect that 95% of the creatures have 2x2 or 3x3 size (except for dragons)
+- revise the list, adjust the values to have fewer 4x4 (large) creatures.
+-------------------------
+teams : minimum 2 , maximum 8(essentially free for all)
+teams restrictions and defaults could be configured in both map editor and template creator
+map editor allows to override restrictions and teams configuration posed by template
