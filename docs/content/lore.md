@@ -1,8 +1,8 @@
 # Lore (draft proposal, for review)
 
 > Status: **draft by Claude, not approved**. Names and premise are suggestions to react to. Code uses two things
-> from this document: the **ring** (`TavernRules.Ring`) and the **sworn enemies** (`BuiltInSkills.Rivals` in
-> `Skills.cs`). Per ADR-028/029, groups and rivalries have no combat effect; their only rule effects are the two
+> from this document: the **ring** (`TavernRules.Ring`) and the **rivals** (`BuiltInSkills.Rivals` in
+> `Skills.cs`; today the sworn enemies, the arch-rivals across the ring from ADR-072). Per ADR-028/029, groups and rivalries have no combat effect; their only rule effects are the two
 > below (ADR-048, ADR-060).
 
 ## Premise: the Wheel of Ash
@@ -73,8 +73,9 @@ They have exactly two rule effects:
 
 - **Tavern offers** (ADR-060): the ring orders who a tavern offers. Neighbours trade heroes most easily, the
   arch-rival's heroes come last.
-- **Skill offers** (ADR-048): a sworn enemy's magic school is never in the normal level-up pool; it takes one of the
-  three offers in only **5 %** of level-ups (`SkillOffers.RivalSchoolChance`).
+- **Skill offers** (ADR-048, ADR-072): the **arch-rival's** magic school (the town across the ring) is never in the normal
+  level-up pool; it takes one of the three offers in only **5 %** of level-ups (`SkillOffers.RivalSchoolChance`). Both rules
+  use the ring (user decision, HERO-3); the second sworn enemy is flavour only. Not built: the code still uses both sworn enemies.
 
 ## Towns
 

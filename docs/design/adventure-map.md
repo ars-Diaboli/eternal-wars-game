@@ -319,7 +319,7 @@ faction**; the creatures below are the notes' starting point and the **drafts ar
 | Object | Effect |
 |---|---|
 | Mana Vortex | Sets the hero's mana to **twice the maximum** until it is spent (HoMM3); once a week per hero (ADR-070, MAP-23) |
-| Fountain of Magic | Restores 50 % of the hero's maximum mana; once a day per hero *(assumed)* (ADR-070) |
+| Fountain of Magic | Restores 50 % of the hero's maximum mana; **once a week per hero** (ADR-070, ADR-072) |
 | Shrine (levels 1–3) | Teaches its spell, set in the editor or rolled at game start. Learning needs the school's Magic skill at the spell's level; any hero, any number of visits; a hero without the skill or with the spell already gets a message (ADR-070, MAP-24; needs spells, Phase 5) |
 
 ### Temporary buffs

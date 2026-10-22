@@ -10,8 +10,8 @@ code still has the earlier rule, shown as "today" · ❓ not decided yet.
 
 **ADR-069 rework** (2026-10-20): the tables below show the new design. It moves Leadership to Defense and Alertness to Tactics,
 adds Marksmanship and Scouting, drops Troop management and merges Deployment into Tactics. It also changes the attunement
-table, adds Necromancy and gives Swamp Bestiary the Primal Fury group (Adrenaline is dropped). Open: HERO-6 (old ids),
-HERO-7 (faction group), HERO-4 (deployment), CMB-6 (ranged penalties), MAG-7 (Necromancy).
+table, adds Necromancy and gives Swamp Bestiary the Primal Fury group (Adrenaline is dropped). ADR-072 settles its
+details (old ids, the faction group, deployment, ranged penalties, Necromancy); only HERO-4's war machines are open.
 
 ## How skills work
 
@@ -26,12 +26,14 @@ HERO-7 (faction group), HERO-4 (deployment), CMB-6 (ranged penalties), MAG-7 (Ne
   | Skill is in… | Mage | Warrior |
   |---|---|---|
   | a general group (offense … war machines) | 2 | 4 |
-  | the hero's own town's school, or its faction group (Primal Fury) | 6 | 2 |
+  | the hero's own town's school | 6 | 2 |
+  | the hero's faction group (Primal Fury) | 6 | 6 🔜 (today 2; ADR-072, to confirm) |
   | another school | 2 | 1 |
   | a group the hero has already started | ×3 | ×3 |
 
-  A **rival town's school** (the sworn enemies of [lore.md](lore.md)) is never in the weighted pool; it takes one of
-  the three offers in only **5 %** of level-ups. Skills at their maximum, and new groups once 6 are learned, are not
+  A **rival town's school** is never in the weighted pool; it takes one of the three offers in only **5 %** of level-ups.
+  The rival is the town **across the ring** of [lore.md](lore.md), one per town (ADR-072, HERO-3; 🔜 today two sworn enemies each):
+  Sylvan–Dungeon, Haven–Necropolis, Academy–Inferno. The tavern uses the same ring. Skills at their maximum, and new groups once 6 are learned, are not
   offered. Faction groups are offered only to heroes of their own town.
 - **Experience**: HoMM3's table (level 2 at 1000, 3 at 2000, 4 at 3200 … 12 at 20 600); after that each level's XP gap is
   20 % larger than the one before (`ExperienceTable`).
@@ -67,7 +69,8 @@ Morale and luck (−5…+5) are hero values too (ADR-053); Leadership raises mor
 Ranged attacks get a **distance penalty** (ADR-069, ADR-070), replacing the half damage beyond 15 cells: 0–9 cells between the
 footprints none, 10–19 1/8, 20–29 2/8, and so on; it adds to the cover penalty, and above 7/8 the target cannot be shot. War
 machines ignore it ([combat.md](../design/combat.md#engagement-and-blocking)). Marksmanship subtracts a fixed amount from the total
-ranged penalty; "almost no penalty" at Expert is intended. Whether the 7/8 check comes before the reduction is CMB-6.
+ranged penalty; "almost no penalty" at Expert is intended. The order (ADR-072, CMB-6): add distance and cover, subtract Marksmanship, then
+check the 7/8 limit, so a marksman can shoot past cover that would stop others.
 
 ### Defense (`defense`)
 
@@ -75,9 +78,9 @@ ranged penalty; "almost no penalty" at Expert is intended. Whether the 7/8 check
 |---|---|---|---|---|---|---|---|
 | Armor | `defense.armor` | Master | −5 % damage taken | −10 % | −15 % | −20 % | ✅ |
 | Spell resistance | `defense.resistance` | Expert | hostile spells −8 % damage and duration | −14 % | −20 % | – | ⏳ magic; 🔜 numbers (ADR-071, was −10 / 15 / 20 %) |
+| Leadership | `defense.leadership` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ effect (ADR-067); 🔜 moves from Offense (today `offense.third`) |
 
 Spell resistance cuts both a hostile spell's damage and its duration; durations round away from zero, at least 1 round (ADR-071, MAG-6).
-| Leadership | `defense.leadership` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ effect (ADR-067); 🔜 moves from Offense (today `offense.third`) |
 
 ### Estates (`estates`)
 
@@ -111,11 +114,16 @@ There is no navigation skill: there is no sea travel (ADR-051). A hero's sight r
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
 | War Tempo | `tactics.wartempo` | Master | +1 battlefield speed for every stack | +2 | +3 | +4 | ✅ effect; 🔜 renamed from Drill (`tactics.drill`) |
-| Tactics | `tactics.tactics` | Expert | rearrange troops before the battle (zone 4 cells deep) | also choose width 30 or 32 (zone 5 cells) | width 28–34 (zone 6 cells) | – | ✅ width (today Basic 30 / 32, Advanced 28–32); 🔜 deployment step (HERO-4), merges the Deployment skill |
+| Tactics | `tactics.tactics` | Expert | rearrange troops before the battle (4 columns) | also choose width 30 or 32 (5 columns) | width 28–34 (6 columns) | – | ✅ width (today Basic 30 / 32, Advanced 28–32); 🔜 deployment step (ADR-072), merges the Deployment skill |
 | Alertness (working title) | `tactics.alert` | Expert | +1 initiative to all own stacks in battle | +2 | +3 | – | 🔜 moves from Defense (today `defense.third`, +5 / 10 / 15 %) |
 
 Tactics counts as the hero's Tactics level minus the enemy hero's; only the side ahead chooses, otherwise the width is
-30 (36 is kept for sieges). Whether the same rule decides who deploys is HERO-4.
+30 (36 is kept for sieges).
+
+**Deployment** (ADR-072, HERO-4; not built): the zone is the number of columns, counted from the hero's own edge of the battlefield, in
+which the player may place the troops. Only the side with the higher Tactics deploys; on a tie nobody does. The player drags stacks in the
+battle scene and presses "Start battle"; troops that are not deployed, and every computer player's, are placed automatically at the very edge.
+It works against heroes and neutral monsters, not in creature banks.
 
 ### War machines (`machines`)
 
@@ -171,8 +179,8 @@ spell "potency" (ADR-071); it changes only the mana numbers in the table above (
 
 ### Necromancy (Death attunement, ADR-069, not built)
 
-After a victory, a hero with Death attunement raises **5 / 10 / 15 / 20 %** (Basic … Master) of the value of the enemy creatures slain as
-Necropolis undead. The level also caps the tier raised:
+After a victory, any hero with Death attunement raises **5 / 10 / 15 / 20 %** (Basic … Master) of the **hit points** of the enemy
+creatures slain as Necropolis undead. The level also caps the tier raised:
 
 | Death attunement | Undead raised | Enemy tier → undead tier |
 |---|---|---|
@@ -183,14 +191,29 @@ Necropolis undead. The level also caps the tier raised:
 
 A player who owns a Necropolis with the **Necromancy Amplifier** gives every one of their heroes with the skill +5 % (10 / 15 / 20 / 25 %);
 more amplifiers add nothing. It costs 1500 gold + 5 mercury, needs mage guild 1, and a captured one helps its new owner (ADR-070,
-[town-buildings.md](town-buildings.md#open)). Open (MAG-7): which value, which creatures (base or upgraded, which line), what cannot be raised, army room, rounding.
+[town-buildings.md](town-buildings.md#open)).
+
+Rules (ADR-072, MAG-7):
+- **Counted**: only the enemy's losses, enemy undead included; constructs and elementals (by the creature tags) and war machines are not. The
+  hero's own losses never count.
+- **Count**: the slain hit points are summed per undead tier (by the table), times the share, divided by the undead creature's hit points,
+  rounded down. A tier with two lines (tier 1 Skeleton and Plague Bearer, tier 2 Ghoul and Death Weaver, tier 3 Vampire and Wight, tier 4 Dark
+  Knight and Lich) is split between them in a random proportion (game RNG), at every level.
+- **Base or upgraded**: the base creature is raised; it joins a stack of the same creature or a free slot. Only when there is neither, and the
+  army has the upgraded creature's stack, it is raised as the upgrade, at **3/4** of the base count (rounded down). Otherwise it is lost.
+- **When**: after every victory, never after a retreat or a surrender; automatic. A separate screen shows what rose, after the battle result
+  and before any level-up.
 
 ## Faction groups
 
 Stronghold and Swamp Bestiary have no magic school. Since ADR-069 both have **Primal Fury** (working title, id `rage`); the **Adrenaline**
 group is dropped (🔜: the code still has its three effect-less placeholders `adrenaline.first`, `.second`, `.third`). Only heroes of the two
-towns are offered the group, meant for their **mage** heroes; their **warrior** heroes start with the Offense group (HERO-7). Skills are
+towns are offered the group. Their **mages** start with it; their **warriors** do not, but are offered it at a high weight so they learn it
+soon (ADR-072, HERO-7). Stronghold warriors start with an **Offense** skill, Swamp Bestiary warriors with a **Defense** skill. Skills are
 4 + 3 + 3 points; the ids stay `rage.first`, `rage.second` and `rage.third`.
+
+These mages have no spells (ADR-072, MAG-10): their **Spell Power** strengthens Blood Rage and the warcries (numbers when built), Knowledge
+does nothing, and their level-ups favour Attack and Defense.
 
 ### Primal Fury (Stronghold and Swamp Bestiary, ADR-067, ADR-069, draft numbers)
 
@@ -198,7 +221,7 @@ towns are offered the group, meant for their **mage** heroes; their **warrior** 
 |---|---|---|---|---|---|---|---|
 | Blood Rage (4 points) | `rage.first` | Master | an own stack that kills a creature in an attack gets +1 Attack, up to +2 until the battle ends | up to +4 | up to +6 | up to +8 | ✅ (Stronghold; 🔜 Swamp Bestiary) |
 | Warcry / Spiritual Totems (working names, 3 points) | `rage.second` | Expert | Rally: own stacks +1 morale, 3 rounds | + Intimidate: enemy stacks −1 morale, −20 % initiative, 2 rounds | + Terror: each enemy stack loses its next action with 30 % | – | ✅ (Stronghold; 🔜 Swamp Bestiary) |
-| Interference (3 points) | `rage.third` | Expert | the enemy hero's spells have −2 Spell Power and cost +1 mana | −4, +2 | −6, +2 | – | ⏳ data only, needs casting (Phase 5); 🔜 the cost part (today "Spell resistance (faction)", Spell Power only) |
+| Interference (3 points) | `rage.third` | Expert | the enemy hero's spells have −2 Spell Power and cost +1 mana | −4, +2 | −6, +3 | – | ⏳ data only, needs casting (Phase 5); 🔜 the cost part (today "Spell resistance (faction)", Spell Power only) |
 
 Warcries cost no mana (the group's mages have no school): one warcry a round, each once per battle. A warcry is a free action of the hero:
 the player may use it whenever one of their units is up, and it does not use that unit's action (the same holds for spells, ADR-071, MAG-4). Rally and
@@ -212,14 +235,13 @@ Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)
 | Kind | Example | Status |
 |---|---|---|
 | Resource | `resource gold 350`: +350 gold a day | ✅ (`HeroIncome`) |
-| Skill | `skill offense.melee`: a stronger version of the skill | ⏳ effect not designed ❓ |
-| Spell | `spell light.bless`: a stronger version of the spell | ⏳ magic |
+| Skill | `skill offense.melee`: the skill's effect +5 % per hero level (HoMM3-like, ADR-072, HERO-1) | 🔜 |
+| Spell | `spell light.bless`: the spell's effect +3 % per hero level (ADR-072, MAG-6) | ⏳ magic |
 
 ## Open
 
-- What skill specialties do.
 - A luck skill (none for now).
-- The final names Primal Fury, Warcry / Spiritual Totems and Alertness; Leadership and Alertness numbers are placeholders.
-- ADR-069 details: old skill ids (HERO-6), the faction group's offers and starting skills (HERO-7), the deployment step (HERO-4),
-  ranged penalties (CMB-6), Necromancy (MAG-7).
+- The final names Primal Fury, Warcry / Spiritual Totems and Alertness (CONT-5); Leadership and Alertness numbers are placeholders.
+- Details still to confirm from ADR-072 (listed in [open-questions.md](../project/open-questions.md#to-confirm)): the warriors' offer
+  weight for Primal Fury, the Primal Fury mages' stat odds, the war machines at the battlefield edge during deployment.
 - Sieges themselves (Ballistics numbers are placeholders).

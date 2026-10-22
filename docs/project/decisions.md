@@ -1540,3 +1540,50 @@ ADR-044 (where the tables live), ADR-069 (the Spell resistance numbers) and the 
 - **MAG-4**: the unit whose turn the hero cast in still acts (HoMM3).
 - **MAG-5 (part)**: Town Portal and Dimension Door are level-4 spells.
 - **MAG-6 (part)**: Spell resistance is −8 / 14 / 20 % (was −10 / 15 / 20 %) to both damage and duration; durations round away from zero, at least 1 round.
+
+### ADR-072: Answers on deployment, Necromancy, skill ids, rivals, taverns and spells (2026-10-22)
+**Status**: accepted as a design (2026-10-22), user answers in `open-questions.md`; **nothing implemented**. Numbers are drafts. Supersedes parts of
+ADR-048 (rival schools: the arch-rival only), ADR-060 (the basic tavern's offers), ADR-069 (Interference at Expert, Necromancy by value) and ADR-070
+(the Fountain of Magic, CMB-6's check order). Points marked *(assumed)* are listed under "To confirm" in `open-questions.md`.
+
+- **HERO-1 skill specialties**: the skill's effect +5 % per hero level (HoMM3-like), for now.
+- **HERO-3 rivals**: the ring decides both rules. A town's rival school is that of the town **across the ring** (Sylvan–Dungeon, Haven–Necropolis,
+  Academy–Inferno), one per town instead of two sworn enemies; the tavern keeps using the ring.
+- **HERO-4 deployment** (Tactics): the zone is the number of **columns from the hero's own edge** in which the player may place troops (4 / 5 / 6).
+  Only the side with the higher Tactics deploys; a tie lets nobody. The player drags stacks in the battle scene, then "Start battle"; the AI and a
+  side that does not deploy are placed automatically at the very edge. Against heroes and neutral monsters, **not in creature banks**.
+- **HERO-6 skill ids**: maps and saves read the old ids as their successors (`offense.third` → `defense.leadership`, `defense.third` →
+  `tactics.alert`, `tactics.drill` → `tactics.wartempo`, `tactics.deployment` → `tactics.tactics`, `pathfinding.troops` → `pathfinding.scouting`,
+  `adrenaline.*` → `rage.*`), no map format bump; a level above a skill's new maximum drops to it. Replays recorded before the change may diverge.
+  Troop management's roster warriors start with Scouting.
+- **HERO-7 Primal Fury and warriors**: the towns' mages start with the group; their warriors are offered it with a high weight so they learn it
+  quickly *(assumed: the warrior weight 6, as a mage's own school)*. Every **Stronghold** warrior starts with an **Offense** skill, every **Swamp
+  Bestiary** warrior with a **Defense** skill *(assumed: one of its two starting skills is swapped where it has none)*.
+- **TOWN-7 basic tavern**: 1 native + 1 adjacent hero, the adjacent one from either ring neighbour at random.
+- **TOWN-8 hero limit**: prisoners belong to nobody and do not count; heroes in a town garrison do not count either, but cannot leave the garrison
+  while the player is at the limit.
+- **RMG-11 town groups in templates**: post-1.0.
+- **MAP-23**: the Fountain of Magic works **once a week per hero** (not once a day).
+- **CMB-6 order**: 1. add the distance and cover penalties, 2. subtract Marksmanship, 3. apply the 7/8 "no shot" limit. Marksmanship can therefore
+  make a target shootable that cover would hide.
+- **MAG-1 Spell Power** (for now): damage × (1 + SP / 10), duration × (1 + SP / 10). The spell list stays open.
+- **MAG-3 spell ranks**: Mastery does not upgrade spells by itself; it allows a known spell to rise (rank 2 at Basic, 3 at Advanced). The spell rises,
+  at no cost, when the hero visits a town whose mage guild (or spell building) offers it *(assumed: straight to the rank Mastery allows)*.
+- **MAG-5 adventure spells**: casting costs a quarter of the hero's daily movement points (500 of 2000) besides mana *(assumed: of the day's full
+  points; a hero with fewer left cannot cast)*; Dimension Door lands only on explored tiles.
+- **MAG-6 spell specialties**: the spell's effect +3 % per hero level.
+- **MAG-7 Necromancy**:
+  - The value is **hit points**: the share of the slain enemies' hit points, summed per undead tier, divided by the undead creature's hit points,
+    rounded down.
+  - Any hero with Death attunement.
+  - Only the enemy's losses count, enemy undead included; constructs and elementals do not (war machines are not creatures). The hero's own losses never count.
+  - The base creature of the tier is raised and joins its stack or a free slot; a tier's two lines split in a random proportion at every level.
+    Only when there is neither, and the army has the upgraded creature's stack, it is raised as the upgrade at **3/4** of the count. Otherwise lost.
+  - After every victory, never after a retreat or a surrender; automatic; shown on its own screen after the battle result and before any level-up.
+- **MAG-8**: mana by level adds to the maximum only; every hero has at least 10 (intended).
+- **MAG-9 Interference**: +1 / +2 / +3 mana per enemy spell (Expert +3, not +2).
+- **MAG-10 Primal Fury mages**: Spell Power strengthens Blood Rage and the warcries (numbers when built); Knowledge does nothing; their level-ups
+  favour Attack and Defense *(assumed: the warrior odds)*.
+- **MAG-11 area spells**: a fixed area whatever the target's size; a creature with any cell inside is hit once.
+- **MAG-12 spell buildings**: one building for each of the two schools next to the town's own on the ring, each adding 1 spell per guild level the
+  town has; placeholder cost 2000 gold + 5 of the school's resource, needs mage guild 2.

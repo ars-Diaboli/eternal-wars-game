@@ -53,8 +53,11 @@ group's first skill (`rage.first` = Blood Rage, `adrenaline.first`), and "a spel
 | Tier 4, second line | +350 gold · Troop management, Melee · 1/2/1/1 | +350 gold · own magic, own attunement · 0/1/2/2 |
 
 **ADR-069 (2026-10-20, not built)** changes this table once `heroes.csv` follows: Drill becomes War Tempo, Troop management is
-dropped (its warriors need another starting skill, HERO-6), Swamp Bestiary's "own magic" becomes Primal Fury like Stronghold's
-(Adrenaline is dropped), and the warriors of both towns start with an Offense skill (HERO-7).
+dropped (its tier-4 second-line warriors start with **Scouting** instead, ADR-072, HERO-6), Swamp Bestiary's "own magic" becomes
+Primal Fury like Stronghold's (Adrenaline is dropped). ADR-072 (HERO-7): every **Stronghold** warrior starts with an **Offense** skill
+and every **Swamp Bestiary** warrior with a **Defense** skill (one of its two starting skills is swapped where needed); their mages
+start with Primal Fury, and their warriors are offered it often. The rival schools below become the arch-rival across the ring only
+(ADR-072, HERO-3).
 
 "First" and "second" line follow the creature table's order. Open: whether heroes should differ more between towns
 (per-town stat odds, as in HoMM3, are an option in ADR-055).
@@ -81,7 +84,7 @@ Every hero has up to three machines (ADR-056). Draft numbers:
 
 ## Haven
 
-School **Light** · native terrain highlands, grass · rivals Necropolis, Inferno · offensive machine **Ballista**
+School **Light** · native terrain highlands, grass · rival Necropolis (ADR-072; today also Inferno) · offensive machine **Ballista**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
@@ -104,7 +107,7 @@ School **Light** · native terrain highlands, grass · rivals Necropolis, Infern
 
 ## Sylvan
 
-School **Nature** · native terrain forest floor, grass · rivals Dungeon, Necropolis · offensive machine **Glaivethrower**
+School **Nature** · native terrain forest floor, grass · rival Dungeon (ADR-072; today also Necropolis) · offensive machine **Glaivethrower**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
@@ -127,7 +130,7 @@ School **Nature** · native terrain forest floor, grass · rivals Dungeon, Necro
 
 ## Academy
 
-School **Arcana** · native terrain snow, ice · rivals Inferno, Dungeon · offensive machine **Cannon**
+School **Arcana** · native terrain snow, ice · rival Inferno (ADR-072; today also Dungeon) · offensive machine **Cannon**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
@@ -150,7 +153,7 @@ School **Arcana** · native terrain snow, ice · rivals Inferno, Dungeon · offe
 
 ## Necropolis
 
-School **Death** · native terrain cursed lands · rivals Haven, Sylvan · offensive machine **Ballista**
+School **Death** · native terrain cursed lands · rival Haven (ADR-072; today also Sylvan) · offensive machine **Ballista**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
@@ -173,7 +176,7 @@ School **Death** · native terrain cursed lands · rivals Haven, Sylvan · offen
 
 ## Inferno
 
-School **Chaos** · native terrain lava · rivals Haven, Academy · offensive machine **Cannon**
+School **Chaos** · native terrain lava · rival Academy (ADR-072; today also Haven) · offensive machine **Cannon**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
@@ -196,7 +199,7 @@ School **Chaos** · native terrain lava · rivals Haven, Academy · offensive ma
 
 ## Dungeon
 
-School **Shadow** · native terrain subterranean · rivals Academy, Sylvan · offensive machine **Glaivethrower**
+School **Shadow** · native terrain subterranean · rival Sylvan (ADR-072; today also Academy) · offensive machine **Glaivethrower**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|
@@ -242,7 +245,7 @@ Faction group **Rage** (no magic school, ADR-063) · native terrain rough, waste
 
 ## Swamp Bestiary
 
-Faction group **Adrenaline** (no magic school, ADR-063) · native terrain swamp, shallow water · rivals – · offensive machine **Catapult**
+Faction group **Adrenaline**, to become Primal Fury (no magic school, ADR-063, ADR-069) · native terrain swamp, shallow water · rivals – · offensive machine **Catapult**
 
 | Hero | Class | Preferred creature | Specialty | Starting skills | A / D / SP / K |
 |---|---|---|---|---|---|

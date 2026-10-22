@@ -238,8 +238,9 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 - **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two per town, one adds **+5 a week** to tier-1 growth, the other
   **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the bonus *(assumed)*.
   Ids, costs and requirements are not set.
-- **Spell buildings** (ADR-071, MAG-2; not built): two more buildings add spells of other schools by the magic circle (HoMM4-like;
-  details MAG-12). Stronghold and Swamp Bestiary get a **3-level placeholder building** that teaches warcries / spiritual totems
+- **Spell buildings** (ADR-071, MAG-2; not built): two more buildings add spells of other schools by the magic circle (HoMM4-like,
+  ADR-072, MAG-12): one for each of the two schools next to the town's own on the ring, each adding **1 spell per guild level**
+  the town has; placeholder cost **2000 gold + 5 of the school's resource**, needs **mage guild 2**. Stronghold and Swamp Bestiary get a **3-level placeholder building** that teaches warcries / spiritual totems
   instead of a mage guild.
 - **Necromancy Amplifier** (ADR-069, ADR-070; not built): Necropolis only, the first unique building. +5 % Necromancy for every hero of
   its owner with Death attunement; more than one adds nothing. **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its

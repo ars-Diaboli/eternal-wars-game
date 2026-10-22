@@ -33,7 +33,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
     warnings);
   - owner slot for start zones; relative size; level (surface or underground);
   - **towns**: player towns and neutral towns (min/max), and the town types allowed for neutral towns (empty = any
-    playable). A start town takes the type its player picks; start zones may list pre-built buildings and
+    playable; filtering by town *group*, as ADR-028 allows, is post-1.0, ADR-072, RMG-11). A start town takes the type its player picks; start zones may list pre-built buildings and
     dwellings by tier (v3);
   - **mines**: minimum mines per resource, how they are guarded (`Auto`, `Always`, `Never`), extra resource piles;
   - **treasure**: value bands with a count each (e.g. 500–3000 ×9, 3000–6000 ×6, 10000–15000 ×1);

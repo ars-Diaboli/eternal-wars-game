@@ -7,11 +7,11 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 **Where we are (2026-10-22)**: no code since 2026-10-19; three design rounds are decided and waiting to be built. ADR-069
 reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
-and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
+and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
 Phase 4 has every generator stage in core. **Next up** (in this order): the data-table move and the creature size pass
 (DATA-1, decided), the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
-once HERO-6 / HERO-7 / MAG-8 are answered, then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
+(its questions are answered, ADR-072; only HERO-4's war machines are open), then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [ ] One home for the data tables: move `*.csv` to a core-owned folder, embed in core, apps read the embedded copy with
@@ -184,7 +184,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       spell book (500 gold) (ADR-071)
 - [ ] Growth buildings (placeholder, ADR-071): +5 a week for tier 1, +2 for tier 2, per town in `buildings.csv`; the AI builds them
 - [ ] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071)
-- [ ] Two guild extensions per town adding spells by the magic circle ❓ MAG-12
+- [ ] Two spell buildings per town, one per ring neighbour's school, 1 spell per guild level each (2000 gold + 5 of the school's resource,
+      needs guild 2; ADR-072)
 - [ ] Capitol (town hall 4, ADR-070): one per player; a captured second Capitol drops to town hall 3; income and AI
 - [ ] Per-town building lists and names (ADR-070; the table is in "Data and content groundwork"); every town's unique
       building comes later
@@ -229,27 +230,31 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] The `sim` tool picks a complexity
 - [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); needs
       sieges, post-1.0 (CMB-5)
-- [ ] Skill specialties: what a skill specialty adds ❓ HERO-1
+- [ ] Skill specialties: the skill's effect +5 % per hero level (ADR-072)
+- [ ] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3)
 - [x] Leadership (`offense.third`, +1/2/3 morale) and Alertness (`defense.third`, +5/10/15 % initiative, working title) (ADR-067)
-- [ ] Deployment: rearrange troops before battle, now part of Tactics with a 4 / 5 / 6-cell zone (ADR-069; needs a deployment step in
-      `BattleSetup` and UI) ❓ HERO-4
+- [ ] Deployment: part of Tactics, the first 4 / 5 / 6 columns from the own edge; only the higher Tactics deploys; drag stacks, then "Start
+      battle"; heroes and neutrals, not banks (ADR-072; a deployment step in `BattleSetup` and UI) ❓ HERO-4 (the war machines)
 
 #### Skill rework (ADR-069, decided 2026-10-20)
 - [ ] New numbers: Melee 9/16/23/30 %, Archery 15/25/35 %, Pathfinding to Master (−100 %), Logistics to Expert (30 %), Alertness flat +1/2/3
       initiative, Tactics width from Advanced (30/32) and Expert (28–34)
 - [ ] Regrouping and new ids: Leadership to Defense (`defense.leadership`), Alertness to Tactics (`tactics.alert`), Drill → War Tempo
-      (`tactics.wartempo`), Deployment merged into Tactics, Troop management dropped; old ids keep loading ❓ HERO-6
+      (`tactics.wartempo`), Deployment merged into Tactics, Troop management dropped; old ids are read as their successors, no map format bump (ADR-072)
 - [ ] Scouting (`pathfinding.scouting`): +2/4/6 sight radius
 - [ ] Distance penalty for ranged attacks (ADR-070: 1/8 per whole 10 cells, adds to cover, replaces the 15-cell half
-      damage, machines exempt) and Marksmanship (`offense.marksmanship`, −2/8 / −4/8 / −6/8); the order against the 7/8 check
-      is CMB-6 (proposal: check first)
-- [ ] Primal Fury for Swamp Bestiary, Adrenaline removed; Interference (`rage.third`) with the spell-cost part (data until Phase 5); roster
-      starting skills (warriors with Offense) ❓ HERO-7 (numbers MAG-9, names CONT-5)
-- [ ] Attunement table of ADR-069 and mana by level (+10 × ⌈level / 10⌉) in `ManaRules` ❓ MAG-8
-- [ ] Necromancy (Death attunement): raise undead after victories; the AI values it ❓ MAG-7
+      damage, machines exempt) and Marksmanship (`offense.marksmanship`, −2/8 / −4/8 / −6/8); order: add distance and cover,
+      subtract Marksmanship, then the 7/8 check (ADR-072)
+- [ ] Primal Fury for Swamp Bestiary, Adrenaline removed; Interference (`rage.third`) with the spell-cost part (data until Phase 5); Interference
+      +1 / +2 / +3 mana; mages start with the group, warriors are offered it often; Stronghold warriors start with Offense, Swamp
+      warriors with Defense; Spell Power strengthens Blood Rage and warcries (ADR-072; names CONT-5)
+- [ ] Attunement table of ADR-069 and mana by level (+10 × ⌈level / 10⌉) in `ManaRules` (maximum only, ADR-072)
+- [ ] Necromancy (Death attunement): raise undead from the slain enemies' hit points after victories (ADR-072 rules), its screen
+      between the battle result and level-ups; the AI values it
 - [ ] Necropolis Necromancy Amplifier, the first town-specific building (1500 gold + 5 mercury, mage guild 1, ADR-070);
-      needs the per-town table and Necromancy (MAG-7)
-- [ ] Docs: `heroes.csv` and [hero-roster.md](../content/hero-roster.md) follow (Drill, Troop management, Adrenaline names)
+      needs the per-town table and Necromancy
+- [ ] Docs: `heroes.csv` and [hero-roster.md](../content/hero-roster.md) follow (Drill, Troop management → Scouting, Adrenaline names,
+      warriors' Offense / Defense starting skills)
 - [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
 
 ### Tavern
@@ -263,7 +268,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       tavern pool; battle HUD button
 - [ ] The battle AI retreats when its army is almost beaten (threshold: tuning)
 - [ ] Tavern pools per player and faction: a town offers native and adjacent heroes, same-faction towns share the pool
-      (ADR-070; basic tavern mix TOWN-7, limit counting TOWN-8)
+      (ADR-070); the basic tavern offers 1 native + 1 adjacent from a random ring neighbour (ADR-072)
+- [ ] Hero limit: prisoners and town-garrison heroes do not count; a garrisoned hero cannot leave at the limit (ADR-072)
 - [ ] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack of their preferred creature (ADR-070)
 - [x] Hire buttons in the town panel (`TownPanel`)
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
@@ -367,7 +373,7 @@ Same steps per object as above (map format bump, editor, validator, AI, generato
 - [ ] Map tavern (4 offers from its own weekly pool of random heroes shared by all players; hire at the entrance, hero on the
       next free cell, hero limit; ADR-070, ADR-071)
 - [ ] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
-- [ ] Mana Vortex (twice the maximum until spent, weekly per hero), Fountain of Magic (daily per hero)
+- [ ] Mana Vortex (twice the maximum until spent, weekly per hero), Fountain of Magic (weekly per hero, ADR-072)
 - [ ] Keymaster's Tent, border guards and border gates (four colours, the player's key, guards vanish, gates stay; ADR-071)
 - [ ] Shrines (spell set in the editor or rolled at start, school Magic at the spell's level, unlimited visits) (Phase 5)
 
@@ -436,20 +442,21 @@ author templates in the editor.
 ## Phase 5: Content and polish
 
 ### Magic (ADR-047, ADR-063)
-Content draft: [spells.md](../content/spells.md). Open questions: MAG-1, MAG-3, MAG-5, MAG-6, MAG-11, MAG-12.
+Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spell list).
 
 - [ ] Spell table (school, level, cost, tags, three ranks; Town Portal and Dimension Door level 4) ❓ MAG-1; mana on heroes is done (ADR-063)
 - [ ] Spell book: mages start with one, warriors buy it for 500 gold in a guild (ADR-071)
 - [ ] Guild offers 3 / 3 / 2 / 2 spells of the town's school per level; a hero learns a spell when the school's Magic skill is at least
       its level (ADR-071)
-- [ ] Spell Power multiplies damage and buff / debuff duration (numbers with MAG-1)
+- [ ] Spell Power multiplies damage and buff / debuff duration: × (1 + SP / 10) for now (ADR-072)
 - [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; no potency, ADR-071), mastery
-      (spell ranks)
+      (allows ranks 2 / 3; a spell rises, free, on a visit to a guild that offers it, ADR-072)
 - [ ] Combat spells: the hero casts once a round during a controlled unit's turn (ADR-070); the unit still acts (ADR-071); machines can be
       targeted and resist as `mechanical`; immunity, resistance and creature casters become live (ADR-042, ADR-049)
-- [ ] Adventure spells (MAG-5)
+- [ ] Adventure spells: a quarter of the day's movement besides mana; Dimension Door only to explored tiles (ADR-072)
+- [ ] Area spells: a fixed area; a big creature with any cell inside is hit once (ADR-072)
 - [ ] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
-      specialties ❓ MAG-6
+      specialties +3 % of the effect per hero level (ADR-072)
 - [ ] Spell tags and creature caster spells ❓ MAG-1
 
 ### Combat additions
