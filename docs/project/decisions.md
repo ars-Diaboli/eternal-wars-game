@@ -1451,3 +1451,61 @@ ADR-038 (the ranged half-damage rule, if CMB-6 says so). Open points: HERO-4, HE
   - Buffs: Clover Field (+1 luck), Rainbow (+2 luck), Rally Flag (+400 movement today, +1 luck and morale) for the next battle.
   - Power-ups: Dream Teacher (500 XP, +500 for each other Dream Teacher the hero visited; once per hero), Training Grounds (+1 Attack), Marletto Tower
     (+1 Defense), Star Axis (+1 Spell Power), Garden of Revelation (+1 Knowledge), once per hero.
+
+### ADR-070: Answers to the ADR-069 questions, teams, creature sizes, mirrored templates, template editor (2026-10-22)
+**Status**: accepted as a design (2026-10-22), user answers in `ideas.md`; **nothing implemented**. Numbers are drafts. Supersedes parts of ADR-038 (ranged
+half damage), ADR-060 (tavern pools and price), ADR-026 (portal naming), ADR-068 (the undead Ruins bank's name and every bank's guards). Points marked
+*(assumed)* are the agent's reading of a short answer; they are listed again in `open-questions.md` to be confirmed.
+
+- **Teams**: a game has 2 to 8 teams (8 = free for all). Templates and maps set team defaults and restrictions (fixed teams, allowed team counts); the map
+  editor may override what the template set, e.g. on a generated map.
+- **Creature sizes**: about 95 % of creatures are Small (2×2) or Medium (3×3); Large (4×4) is kept mostly for dragons. Today 42 of 182 lines are Large;
+  the roster pass moves the others down and re-checks `sim towns`.
+- **RMG-9 mirrored templates**: only for 2, 4 or 8 players (8 uses the underground). Two players: axis symmetry, the axis vertical, horizontal or
+  diagonal; four or eight players: point symmetry around the map centre. The template picks the symmetry *(assumed; "random axis" allowed)*. Mirrored
+  zones share their rolls.
+- **RMG-10 template editor**: no undo needed (unlike `MapEditorSession`); works like the HotA template editor (zone graph, zone and connection
+  properties); "Generate" in the editor shows the result. User templates live in the user data folder *(assumed)*.
+- **RMG-11 (part)**: a template may enable portals (monoliths) so the generator links zones with them; a connection's guard is a monster guard or a
+  **garrison**, per template.
+- **MAP-15 Mage's Chest**: 5 % nothing, 5 % a Major artifact, 60 % a Minor artifact, 30 % a Minor artifact and 500–1000 gold; vanishes.
+- **MAP-16 Window and Eye of the Magi**: four colours (red, green, blue, black); a Window reveals radius 6 around each Eye of its colour, up to 4 Eyes a
+  colour; placed only in the map editor, never by the generator. Every visit *(assumed, like HoMM3)*.
+- **MAP-17 / TOWN-4 taverns**:
+  - Town taverns: the per-player pool becomes **per player and faction**: a town offers its native and adjacent heroes (2 native + 2 adjacent with the
+    Brotherhood), and the player's towns of one faction share that pool.
+  - Brotherhood costs **1000 gold + 5 ore** (was 2000 gold + 5 lumber + 5 ore).
+  - Hired heroes get a **starter stack** that follows the hero's preferred creature.
+  - The **map tavern** works like a Brotherhood (4 offers); the hero must stand on its entrance and the new hero appears on a free cell next to it (one cell
+    below by default). The hero limit applies; with the limit reached or no free cell, hiring is refused. Its pool: the answers differ (the player's pool
+    or its own random heroes), open as TOWN-4.
+- **MAP-18 portals**: "portal" and "monolith" are one thing (ADR-026); a portal type has exactly two ends, no groups of three or more.
+- **MAP-19 garrison**: flagged like a mine, captured by beating its guards; a neutral garrison's guards come from the map or the generator; own heroes
+  pass both ways; heroes leave and take creatures at any time; the generator may use it as a connection guard (RMG-11).
+- **MAP-21 deposits**: the proposed prices (Gold Vein 5000 gold + 10 ore, the others 2000–3000 gold + 5 lumber or ore), paid from the player's resources by
+  any visiting hero; the mine is flagged for that player; guarded by a normal monster guard; a **Sulfur Vent** (→ sulfur mine) is added; the generator
+  places deposits separately, like abandoned mines.
+- **MAP-22 creature banks**: the agent drafts tables like the existing banks (four rows at 30 / 30 / 30 / 10 %, rewards scaled to the guard's value).
+  **Every bank, old and new, is re-drafted with 2–3 creature types of one faction.** The undead Ruins is renamed **Crypt** (`bank.crypt`, old maps load
+  `bank.ruins` as the Crypt); the orc bank takes the name Ruins. Dragon City is the strongest bank by far.
+- **MAP-23 Mana Vortex**: sets mana to twice the maximum until spent (HoMM3), once a week per hero. The Fountain of Magic: once a day per hero *(assumed)*.
+- **MAP-24 shrines**: the spell is set in the editor or rolled at game start; learning needs the school's Magic skill at the spell's level; any hero, any
+  number of visits; a hero without the skill or with the spell already shows a message.
+- **TOWN-2**: the map marketplace's threshold stays the placeholder 4000. Nothing about trading is open.
+- **TOWN-3 buildings**:
+  - Towns get **their own building lists and names**: `buildings.csv` gains a town column (like `creatures.csv`); designers set names, costs and
+    requirements there. Every town later gets a unique building.
+  - **Capitol** (town hall 4): one per player; capturing a town with a Capitol when the player already has one downgrades it to town hall 3 *(assumed)*.
+  - The mage guild 4 placeholder stays.
+- **TOWN-6 Necromancy Amplifier**: 1500 gold + 5 mercury, needs mage guild 1; a captured one helps its new owner; Necropolis-only (the first unique building).
+- **CMB-1 surrender**: not against neutrals; price = half the gold cost of the surviving creatures; the hero returns to the tavern pool. The AI **retreats**
+  when its army is almost beaten (threshold: tuning); AI surrender is not planned.
+- **CMB-3 war machines**: heroes exchange machines; a town garrison holds machines only through a hero in it.
+- **CMB-4 teleporting creatures**: move like flyers (footprint must fit at the destination).
+- **CMB-6 distance penalty** (replaces ADR-038's half damage beyond 15 cells):
+  - Cells between the footprints: 0–9 no penalty, 10–19 1/8, 20–29 2/8, and so on.
+  - Distance and cover penalties add up to one ranged penalty; above 7/8 the target cannot be shot (ADR-035).
+  - Marksmanship subtracts a fixed −2/8 / −4/8 / −6/8; "almost no penalty" at Expert is intended.
+  - War machines ignore the distance penalty.
+- **MAG-4 casting in battle (part)**: the hero casts at most once a round, during the turn of one of the units the hero controls (machines that fire on their
+  own do not count); spells that change initiative do not change this. Spells may target war machines; machines are `mechanical` and resist many spells.

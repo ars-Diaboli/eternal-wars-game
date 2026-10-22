@@ -8,7 +8,9 @@
   speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource).
   Edited in `data/heroes.csv`.
 - **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, also per player on campaign-like maps, ADR-068); a tavern offers 2 heroes, the upgraded
-  one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060).
+  one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060). ADR-070 (not
+  built): the offers come from a pool per player and faction, a hired hero gets a **starter stack** of its preferred
+  creature, a map tavern hires like a Brotherhood, and a hero who surrenders returns to the pool.
 - **Primary stats** (implemented, ADR-055): Attack and Defense (added to every stack in battle), Spell Power (for
   spells, Phase 5) and Knowledge (sets the mana pool, see below). Every level raises one of them by 1, HoMM3-style,
   with odds by class (draft): warriors 35/45/10/10 % (Attack/Defense/Spell Power/Knowledge) up to level 9, then
@@ -23,7 +25,7 @@
 
   | Group | Skills |
   |---|---|
-  | Offense | Melee (+9/16/23/30 % melee damage), Archery (+15/25/35 % ranged), Marksmanship (smaller ranged penalty) |
+  | Offense | Melee (+9/16/23/30 % melee damage), Archery (+15/25/35 % ranged), Marksmanship (ranged penalty −2/8 / −4/8 / −6/8, ADR-070) |
   | Defense | Armor (−5 % damage taken per level), Spell resistance (−10/15/20 % to hostile spells), Leadership (+1/2/3 morale, ADR-067) |
   | Estates | Treasury (+250/500/750/1000 gold a day, Expert and Master also 0.5/1 % of the gold on hand, ADR-062), Prospecting (other resources, and a chance of +50 % from resource piles), Stewardship (cheaper buildings and creatures in the town the hero governs, ADR-063) |
   | Pathfinding | Pathfinding (−25/50/75/100 % terrain penalty), Logistics (+10/20/30 % movement), Scouting (+2/4/6 sight radius) |

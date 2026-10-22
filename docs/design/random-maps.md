@@ -16,6 +16,9 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   hand-polish a generated map and save it.
 - **Templates are authored in the editor** (template editor: a zone graph) and saved as `*.ewtemplate.json`. The game
   lists every template it can find, built-in and user/mod folders. Today only the built-in (embedded) templates load.
+- **Template editor** (ADR-070, RMG-10; not built): works like the HotA template editor (zone graph, zone and connection
+  properties); **no undo** (unlike `MapEditorSession`); "Generate" in the editor shows the result. User templates are saved in
+  the user data folder and listed next to the shipped ones *(assumed)*.
 - **Generation is deterministic** from (template, size, players, seed, generator version), so a map can be shared by
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
@@ -40,15 +43,21 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   - kind: **normal** (a one-tile passage guarded by `GuardValue` army power), **wide** (five tiles, unguarded) or
     **gate** (linked two-way gates, guarded on both ends; the only way across levels);
   - **passages**: 1–8 per connection, spread along the border.
-  - Planned ❓: border guards, optional or randomly present connections.
+  - Planned (ADR-070, RMG-11 part; not built): a template may **enable portals** (monoliths, two ends each) so the generator
+    links zones with them, and a connection's guard is a **monster guard or a garrison** ([adventure-map.md](adventure-map.md#utilities-and-travel)),
+    per template.
+  - Open ❓: border guards and Keymasters (MAP-20), optional or randomly present connections (RMG-13).
 - **Roads** (v2, whole template): on or off, the road type (default dirt), which mines get a road (default lumber and
   ore), whether gates do (default on).
 - **Validator** (`TemplateValidator`): errors for players, sizes, zones, start zones, connections, passages, empty
   levels and connectivity; warnings for unfair start zones.
 - **Teams** (v4, RMG-6): an optional team per start zone (same number = allies, none = free for all), and `teamsLocked`;
   players may change teams at setup unless locked. The connections decide where allies are; there are no team fairness
-  checks.
-- Not in the format yet ❓: mirrored zones.
+  checks. ADR-070 (not built): a game has **2 to 8 teams** (8 = free for all); a template sets team defaults and restrictions
+  (fixed teams, allowed team counts), and the map editor may override them on a generated map.
+- **Mirrored templates** (ADR-070, RMG-9; not in the format yet): only for **2, 4 or 8 players** (8 uses the underground). Two
+  players: **axis symmetry**, the axis vertical, horizontal or diagonal; four or eight: **point symmetry** around the map centre.
+  The template picks the symmetry, "random axis" allowed *(assumed)*. Mirrored zones share their rolls.
 
 ## Pipeline
 
@@ -83,6 +92,8 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   banks (2500–4000, Mansion 10000) and abandoned mines (2500–3500, gold 6000). Most kinds appear once per zone, loot twice.
   The object is guarded like other treasure by its own value, except banks and abandoned mines, which fight for themselves;
   their guards (and a prison's hero) are rolled when the game starts. Signs and map dwellings are not placed.
+  Second catalogue (ADR-070, not built): deposits are placed separately, like abandoned mines; Windows and Eyes of the Magi are
+  never placed by the generator.
 - **Scenario** (RMG-5): `PlayerSetup(Slot, Name, IsHuman, TownType, Hero?, Team?, Tier1Dwelling?)` per player.
   - The factions are chosen before generation ("Random" is drawn from the seed first) and are an input of the
     generator, so each start zone is painted with a mix of its town's native terrains (RMG-7). A map generated in the
@@ -113,7 +124,8 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   all; the rest keep their towns, neutral) and optionally a town per slot (else drawn from the seed). Start zones are
   painted native to the drawn or picked town; a town changed later in the editor keeps that terrain (RMG-7).
 - Players are named by colour (Blue, Red, Yellow, Green, Orange, Purple, Teal, Pink). Player-start slots are human up
-  to the template's max humans, AI-only slots are computer players; teams and locked teams come from the template.
+  to the template's max humans, AI-only slots are computer players; teams and locked teams come from the template. The
+  editor may then override the template's teams (ADR-070).
 - Everything else is the game's scenario assembly: start towns with their buildings and dwellings, start heroes at the
   town entrances with their armies, garrisons, standard rules. The map is playable as generated.
 - The map's description records the template, size, seed, attempt and generator version.
@@ -121,7 +133,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   editor to show. A hero may stand in the entrance of its own town (the validator and hero placement accept it).
 
 ## Scope
-- **In 1.0**: mirrored/symmetric generation (a template marks zones as mirrored, point or axis symmetry) ❓; saving
-  generated maps as ordinary map files as well as reproducing them from the seed.
+- **In 1.0**: mirrored generation (2, 4 or 8 players, axis or point symmetry, [above](#the-template-maptemplate-format-v5), ADR-070);
+  saving generated maps as ordinary map files as well as reproducing them from the seed.
 - **Not in 1.0**: water zones/islands, boats (ADR-051), importing HotA templates.
 - Open ❓: how army speed and native terrain feed into treasure and guard values.

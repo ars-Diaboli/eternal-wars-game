@@ -70,7 +70,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Gates | Teleport (see below) | implemented |
 | Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
 | Utility objects | Sign, Observatory, Hill Fort, Town Gate, War Machine Factory ([below](#utility-objects)) | implemented (ADR-068), map format v19 |
-| Creature banks | Churchyard, Mansion, Ruins, Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank ([below](#creature-banks)) | implemented (ADR-068), map format v20 |
+| Creature banks | Churchyard, Mansion, Crypt (built as the undead "Ruins", renamed by ADR-070), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank ([below](#creature-banks)) | implemented (ADR-068), map format v20; guards to be re-drafted (ADR-070) |
 | Prison | Frees a hero for the visitor's player ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v19 |
 | Buff sites | Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables, Magic Well: statuses for the next battle or the week, movement now ([below](#temporary-buffs)) | implemented (ADR-068), map format v18 |
 | Training sites | Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi: once per hero ([below](#permanent-hero-power-ups)) | implemented (ADR-068), map format v18 |
@@ -109,14 +109,16 @@ tile (never pass through it):
 | **Enemy** | Starts a **battle**; the loser (or a hero that retreats) leaves the map | implemented |
 | **Allied** (team games) | **No interaction for now**: the tile is simply blocked. Exchange with allies may come later. | decided (ADR-027) |
 
-- **Teams**: the map defines default teams; the game setup screen may change them unless the map locks them
-  (story/scenario maps). Free-for-all when nothing is defined. Templates have no teams yet ❓.
+- **Teams**: a game has **2 to 8 teams** (8 = free for all, ADR-070). The map or template defines default teams and
+  restrictions (fixed teams, allowed team counts); the game setup screen may change them unless they are locked
+  (story/scenario maps). Free-for-all when nothing is defined. The map editor may override what a template set, e.g. on a
+  generated map ([random-maps.md](random-maps.md)).
 - Under refog: a moving hero **automatically stops** when an enemy hero comes into sight. If it still bumps into an
   unseen enemy, a **battle starts (ambush)**; no ambush bonus (ADR-031, ADR-038).
 
 ## Gates and teleporters
 No random-exit portals for now (ADR-026). Every link is fixed in the map, so movement and pathfinding stay
-deterministic and predictable.
+deterministic and predictable. "Portal" and "monolith" name the same thing (ADR-070, MAP-18).
 
 | Kind | Behaviour | Status |
 |---|---|---|
@@ -216,7 +218,7 @@ is split into a few battle stacks (at most seven stacks in all).
 |---|---|
 | Churchyard | 100 %: 90 Ghouls, 2500 gold, a Minor artifact. A later visit to the plundered bank gives **−1 morale for the next battle**; no other bank has such a penalty |
 | Mansion | 30 %: 40 Vampire Lords, 2500 gold, 2 each of mercury / sulfur / crystal, a Major artifact · 30 %: 60, 5000 gold, 3 each, Major · 30 %: 80, 7500 gold, 4 each, Major · 10 %: 100, 10000 gold, 5 each, Major |
-| Ruins | 30 %: 20 Skeletons, 3 Wights, 3 Wraiths, 10 Skeleton Warriors, 1 Arch Lich, 1000 gold · 30 %: 30 / 5 / 5 / 10 / 1, 2000 gold · 30 %: 40 / 7 / 7 / 20 / 2, 3000 gold · 10 %: 50 / 9 / 9 / 20 / 3, 4000 gold. Also **removes the fog within 12 tiles** of the ruins, even when they were visited before |
+| Crypt (built as "Ruins", `bank.ruins`) | 30 %: 20 Skeletons, 3 Wights, 3 Wraiths, 10 Skeleton Warriors, 1 Arch Lich, 1000 gold · 30 %: 30 / 5 / 5 / 10 / 1, 2000 gold · 30 %: 40 / 7 / 7 / 20 / 2, 3000 gold · 10 %: 50 / 9 / 9 / 20 / 3, 4000 gold. Also **removes the fog within 12 tiles** of the ruins, even when they were visited before |
 | Dwarven Treasury | 30 %: 50 Defenders, 2500 gold, 2 crystal · 30 %: 75, 4000, 4 · 30 %: 100, 5000, 6 · 10 %: 150, 7500, 10. 50 % chance that a fifth of the guard are Shield Guards |
 | Imp Cache | 30 %: 100 Imps, 1000 gold, 2 mercury · 30 %: 150, 1500, 4 · 30 %: 200, 2000, 6 · 10 %: 300, 3000, 8. 50 % chance that a fifth are Familiars |
 | Medusa Stores | 30 %: 15 Medusas, 2000 gold, 4 sulfur · 30 %: 30, 3000, 6 · 30 %: 40, 4000, 8 · 10 %: 50, 5000, 10. 50 % chance that a fifth are Putrid Medusas |
@@ -224,6 +226,10 @@ is split into a few battle stacks (at most seven stacks in all).
 
 **Refill** (decided, MAP-7, MAP-14): every bank fills again **4 weeks** after it was plundered; its guard tier is rolled again and the whole
 reward, the artifact included, comes back.
+
+**Re-draft (ADR-070, not built)**: every bank, these and the [second catalogue's](#creature-banks-1), gets a new guard of **2–3 creature
+types of one faction**; the tables above are the built state until the drafts are written. The undead Ruins is renamed **Crypt**
+(`bank.crypt`; older maps load `bank.ruins` as the Crypt), and the name Ruins goes to the orc bank.
 
 ### Permanent hero power-ups
 | Object | Effect |
@@ -262,26 +268,29 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 
 ## Second object catalogue (ADR-069)
 The owner's second list (`ideas.md`, 2026-10-20). **Nothing here is built.** The shared rules above (visit scopes, statuses, rolls, artifact
-tiers, creature names) apply. Open points are MAP-15 … MAP-24 in [open-questions.md](../project/open-questions.md#adventure-map-objects); every
-number is a draft.
+tiers, creature names) apply. MAP-15 … MAP-24 were answered by ADR-070 except MAP-20 (Keymasters) and the map tavern's pool;
+points marked *(assumed)* are a reading of a short answer, to be confirmed ([open-questions.md](../project/open-questions.md#adventure-map-objects)).
+Every number is a draft.
 
 ### Loot
-| Object | Effect | Open |
-|---|---|---|
-| Mage's Chest | Often holds a **Minor artifact** | MAP-15: odds, what else it holds, whether it vanishes |
+| Object | Effect |
+|---|---|
+| Mage's Chest | 5 % nothing, 5 % a Major artifact, 60 % a Minor artifact, 30 % a Minor artifact and 500–1000 gold; vanishes (ADR-070, MAP-15) |
 
 ### Utilities and travel
 | Object | Effect | Open |
 |---|---|---|
-| Window of the Magi / Eye of the Magi | Visiting a Window reveals the area around every Eye of the Magi of its colour | MAP-16: colours, radius, visit scope |
-| Tavern | A visiting hero can hire heroes, as in a town's tavern (ADR-060) | MAP-17: which offers, where the hero appears |
-| Portal | Takes the hero to another portal of the same type. A linked pair is today's **two-way monolith** (implemented) | MAP-18: three or more of one type |
-| One-Way Portal | Takes the hero to its exit, which cannot be entered: today's **one-way monolith** (implemented) | MAP-18: anything beyond the generator placing them |
-| Garrison | The owner can station creatures in it; enemies must defeat them to pass through | MAP-19 |
+| Window of the Magi / Eye of the Magi | Four colours (red, green, blue, black). Visiting a Window reveals **radius 6** around every Eye of its colour; at most **4 Eyes** a colour. Works on every visit *(assumed, like HoMM3)*. Placed only in the map editor, never by the generator (ADR-070) | – |
+| Tavern | Works like a **Brotherhood** (4 offers, ADR-060). The hero must stand on its entrance; the new hero appears on a free cell next to it (one cell below by default). The hero limit applies; with the limit reached or no free cell, hiring is refused (ADR-070) | TOWN-4: whether it offers the player's pool or its own random heroes |
+| Portal | Takes the hero to the other end of its type: today's **two-way monolith** (implemented). A type has **exactly two ends**, no groups of three or more (ADR-070, MAP-18) | – |
+| One-Way Portal | Takes the hero to its exit, which cannot be entered: today's **one-way monolith** (implemented). Templates may let the generator link zones with portals (RMG-11, [random-maps.md](random-maps.md)) | – |
+| Garrison | **Flagged like a mine** and captured by beating its guards; a neutral garrison's guards come from the map or the generator. The owner's heroes pass both ways and may leave or take creatures at any time; enemies must defeat the guards to pass. The generator may use it as a connection guard (ADR-070, MAP-19, RMG-11) | – |
 | Keymaster's Tent | Lets the visitor through border guards and border gates of its colour (RMG-11) | MAP-20 |
 
 ### Deposits (become mines)
-Visiting and paying turns the deposit into the mine of its kind (MAP-21: prices, who may pay, guards, a sulfur deposit):
+A visiting hero pays from its player's resources and the deposit turns into the mine of its kind, flagged for that player. Any hero
+may pay; a deposit may have a normal monster guard. The generator places deposits separately, like abandoned mines (ADR-070,
+MAP-21). Prices (drafts): Gold Vein **5000 gold + 10 ore**, the others **2000–3000 gold + 5 lumber or ore**.
 
 | Deposit | Becomes |
 |---|---|
@@ -290,13 +299,16 @@ Visiting and paying turns the deposit into the mine of its kind (MAP-21: prices,
 | Gold Vein | Gold Mine |
 | Crystal Vein | Crystal Mine (the Crystal Pond) |
 | Cinnabar Deposit | Alchemist's Lab |
+| Sulfur Vent | Sulfur mine (the Sulfur Dune; added by ADR-070) |
 
 ### Creature banks
-Like the banks above: the guard always fights, the reward only on victory. Guard tables and rewards are MAP-22.
+Like the banks above: the guard always fights, the reward only on victory. Tables follow the existing banks: four rows at
+30 / 30 / 30 / 10 %, rewards scaled to the guard's value (ADR-070, MAP-22). Like every bank, each guard is **2–3 creature types of one
+faction**; the creatures below are the notes' starting point and the **drafts are pending**. Dragon City is the strongest bank by far.
 
-| Bank | Guard (roster creatures) | Reward (notes) |
+| Bank | Guard (notes, roster creatures) | Reward (notes) |
 |---|---|---|
-| Ruins (orcs; the name is taken by the undead Ruins) | Orc / Orc Berserker | gold |
+| Ruins (orcs; the undead bank became the Crypt, ADR-070) | Orc / Orc Berserker | gold |
 | Lair | evil eyes: Spectator / Beholder | gold and artifacts |
 | Keep | crossbowmen and pikemen: Archer / Marksman and Pikeman / Guardian | gold and artifacts ("item artifacts") |
 | Hideout | Bandit (neutral, no upgrade) | gold |
@@ -304,11 +316,11 @@ Like the banks above: the guard always fights, the reward only on victory. Guard
 | Dragon City | Black Dragon (Dragon Utopia, no upgrade) | gold, a Relic and Major artifacts |
 
 ### Magic
-| Object | Effect | Open |
-|---|---|---|
-| Mana Vortex | Doubles the hero's maximum mana | MAP-23: until when, visit scope |
-| Fountain of Magic | Restores 50 % of the hero's maximum mana | MAP-23: visit scope |
-| Shrine (levels 1–3) | Teaches a spell of its level and school if the hero has the skill to learn it | MAP-24, needs spells (Phase 5) |
+| Object | Effect |
+|---|---|
+| Mana Vortex | Sets the hero's mana to **twice the maximum** until it is spent (HoMM3); once a week per hero (ADR-070, MAP-23) |
+| Fountain of Magic | Restores 50 % of the hero's maximum mana; once a day per hero *(assumed)* (ADR-070) |
+| Shrine (levels 1–3) | Teaches its spell, set in the editor or rolled at game start. Learning needs the school's Magic skill at the spell's level; any hero, any number of visits; a hero without the skill or with the spell already gets a message (ADR-070, MAP-24; needs spells, Phase 5) |
 
 ### Temporary buffs
 Same rules as the buffs above (once a day per hero, gone after the next battle, ±5 cap):

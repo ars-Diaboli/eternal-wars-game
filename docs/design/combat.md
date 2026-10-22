@@ -13,10 +13,12 @@
   |---|---|---|
   | Small | 2×2 cells | infantry, archers, imps |
   | Medium | 3×3 cells | cavalry, griffins, golems |
-  | Large | 4×4 cells | dragons, behemoths, titans |
+  | Large | 4×4 cells | mostly dragons |
 
   The fine cell grid lets units of different sizes share one board. Positions refer to the top-left cell of the
   footprint.
+- **Size policy** (ADR-070, not applied yet): about **95 %** of creatures are Small or Medium; Large is kept mostly for
+  dragons. Today 42 of 182 lines are Large; the roster pass moves the others down and re-checks `sim towns`.
 - **Size**: **24 cells tall**, **30 cells wide** by default (ADR-021, ADR-033). 8-way movement, one cell per step up to
   the creature's Speed; a diagonal step needs one of the two orthogonal placements free (no squeezing through
   corners); flyers land on any free placement within their Speed (ADR-038).
@@ -61,11 +63,13 @@
     7/8 (12.5 % damage). One more blocker and the shot is impossible.
   - Each obstacle definition declares its size class (small/big). Walls are a separate class.
   - Line of fire: supercover of the segment from footprint centre to footprint centre; cells touched only at a corner
-    count too (ADR-038). No skill reduces cover penalties yet.
-- **Distance penalty** (ADR-069, not built): every 10 cells between shooter and target add a **1/8 ranged penalty**. The Offense
-  skill **Marksmanship** reduces the ranged penalty (−1/4, −1/2, −3/4). Open (CMB-6): whether this replaces the half damage
-  beyond 15 cells, how distance is counted, whether it adds to cover and its 7/8 limit, and whether Marksmanship takes a share
-  of the penalty off or a fixed amount, from distance only or from cover too.
+    count too (ADR-038).
+- **Distance penalty** (ADR-069, ADR-070, CMB-6; not built): replaces the half damage beyond 15 cells (ADR-038). Counted in
+  cells between the two footprints: **0–9 no penalty, 10–19 1/8, 20–29 2/8**, and so on. Distance and cover add up to **one
+  ranged penalty** with the same limit: above 7/8 the target cannot be shot. War machines ignore the distance penalty.
+- **Marksmanship** (Offense skill, ADR-070): subtracts a **fixed −2/8 / −4/8 / −6/8** (Basic / Advanced / Expert) from the ranged
+  penalty, so an Expert marksman shoots with almost no penalty (intended). Open ❓ (CMB-6): whether the 7/8 "no shot" check comes
+  before the reduction (proposal) or after.
 
 ## Damage
 **HoMM3 baseline** (ADR-033). Base damage (rolled per stack within the creature's min–max) × stack size; +5 % per point
@@ -87,7 +91,7 @@ Creature capabilities, independent of size:
 - **HoMM3-style friendly fire**: breath also hits friendly units in its line; cleave/multi-head hits enemies only. Only
   the primary target retaliates.
 - A unit whose footprint touches the area is hit once (ADR-038).
-- Open ❓: how teleporting creatures use footprints.
+- **Teleporting creatures** move like flyers: the footprint must fit at the destination (ADR-070, CMB-4).
 
 ## Turn order
 - **Initiative decides order, not frequency** (ADR-009). Each round every stack acts **once**, in descending
@@ -95,7 +99,8 @@ Creature capabilities, independent of size:
   The only extra action is a good-morale roll (ADR-053).
 - **Ties**: attacker's side first, then higher speed, then a deterministic seeded roll.
 - **Wait** (HoMM3): waiting units act at the end of the round, in **reverse** initiative order.
-- Open ❓: spells that change initiative mid-round.
+- Spells that change initiative do not change when the hero may cast (ADR-070, below); their other effects on the
+  order are open ❓.
 
 ## Morale and luck (implemented, ADR-053; rates are drafts)
 Each stack has −5…+5 of each, its creature's plus its hero's (and the hero's artifacts, ADR-061).
@@ -109,7 +114,7 @@ Each stack has −5…+5 of each, its creature's plus its hero's (and the hero's
 - **Defend**: +20 % Defense (at least +1) until the unit's next turn. **Wait**: see turn order.
 - **Retaliation**: once per round unless a capability says otherwise.
 - **Ranged units**: no shot while engaged; half damage when more than 15 cells separate the footprints (war machines
-  exempt). ADR-069's distance penalty may replace the half damage (CMB-6, above).
+  exempt). This is the built rule; ADR-070 replaces it with the distance penalty (CMB-6, above).
 - Flyers, rolled obstacles.
 
 ## Creature capabilities (HoMM4-style, implemented, ADR-042)
@@ -132,7 +137,10 @@ attacks included.
 
 ## Leaving a battle
 - **Retreat** (implemented): a hero may leave the battle; its army is lost and it leaves the map.
-- **Surrender** (paying gold to keep the army): open ❓, deferred by ADR-038 and ADR-060.
+- **Surrender** (ADR-070, CMB-1; not built): a hero keeps its army by paying **half the gold cost of its surviving
+  creatures** and leaves the map; the hero returns to the tavern pool. Not possible against neutrals.
+- The AI **retreats** when its army is almost beaten (threshold: tuning, *assumed* 20 % of the enemy's value); AI surrender is
+  not planned (ADR-070).
 
 ## War machines (implemented, ADR-056, ADR-063)
 Every hero owns its town's offensive machine (ballista, cannon, catapult or glaivethrower) and can buy a healing tent
@@ -141,9 +149,13 @@ destroyed. The offensive machine shoots on its turn, outside sieges only from Ad
 every own stack a little each round; the cart adds shots (unlimited with Advanced Ammo supply). Siege Ballistics rules
 exist (ADR-063) but sieges do not.
 
+ADR-070 (not built): heroes **exchange** machines like stacks; a town garrison holds machines only through a hero in it.
+Spells may target machines; they are `mechanical` and resist many spells (CMB-3, MAG-4).
+
 ## Other
 - **Quick combat**: either side may hand the rest of the battle to the deterministic battle AI (implemented).
-  Neutrals and computer players always use it. The battle AI never retreats.
-- The hero casts one spell per round ([magic.md](magic.md), Phase 5); whether that uses a turn in the initiative order
-  is open ❓.
+  Neutrals and computer players always use it. The battle AI never retreats (ADR-070 plans an AI retreat, above).
+- The hero casts **at most once a round**, during the turn of one of the units the hero controls; machines that fire on
+  their own do not count, and spells that change initiative do not change this ([magic.md](magic.md), ADR-070 MAG-4 part,
+  Phase 5). Whether that unit still acts afterwards is open ❓ (MAG-4).
 - **Siege battles** with walls and towers: post-1.0 ❓.

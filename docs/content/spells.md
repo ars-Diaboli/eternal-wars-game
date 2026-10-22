@@ -17,14 +17,17 @@ faction-ability drafts, not school spells.
   sworn enemy's school is rarely offered, ADR-048).
 - **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1 spells, Advanced → 2,
   Expert → 3, Master → 4). The **mage guild** of the same level in a town offers spells of that level; a visiting hero
-  learns the ones its skills allow (a spell not in a guild can be found in map shrines, later).
+  learns the ones its skills allow (a spell not in a guild can be found in map shrines: a Shrine of level 1–3 teaches its spell,
+  set in the editor or rolled at game start, to a hero with the school's magic skill at the spell's level, ADR-070).
 - **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill upgrades
   learned spells to rank II (Basic) and rank III (Advanced). Rank changes what a spell does, not just its strength.
 - **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement; at the start of the owner's turn a
   hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (rank-independent) minus attunement,
   but never less than **25 %** of the base, rounded up. Refilling in a town is not in code ❓.
 - **Strength**: damage and healing scale with **Spell Power** (SP); durations are in rounds.
-- **In battle**: the hero casts **one spell per round** before or after its stacks act (exact timing ❓). Spells that target a stack cannot target war machines unless stated.
+- **In battle** (ADR-070, MAG-4 part): the hero casts **at most one spell per round**, during the turn of one of the units it
+  controls (machines that fire on their own do not count); spells that change initiative do not change this. Whether that unit
+  still acts afterwards is open ❓ (MAG-4). Spells may target war machines; machines are `mechanical` and resist many spells.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`,
   `curse`, `blind`), already in the creature table; a spell lists its tags. Proposed addition: `holy` (Smite). `SpellResistance n` creatures ignore spells of
   level n and below (rank III counts one level higher, ADR-049).

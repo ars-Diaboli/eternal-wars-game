@@ -7,9 +7,11 @@
 **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (ADR-019, `ResourceSet`). No gems.
 
 ## Town turn (implemented, ADR-050)
-- One building per town per day; the building list is one table, `data/buildings.csv`, shared by all towns for now
-  (per-town lists ❓). New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the
-  requirements. The town screen is 2D in the first iteration, in the 3D game too.
+- One building per town per day; the building list is one table, `data/buildings.csv`, shared by all towns for now.
+  ADR-070 (not built): towns get **their own building lists and names**; `buildings.csv` gains a town column (like
+  `creatures.csv`) where designers set names, costs and requirements, and every town later gets a unique building. New towns
+  start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the requirements. The town screen is 2D in the first
+  iteration, in the 3D game too.
 - At any time on the owner's turn: build, recruit into the garrison or the visiting hero, upgrade stacks for the price
   difference, and move stacks between garrison and visiting hero.
 
@@ -17,14 +19,18 @@
 
 | Building | Levels | Effect | Status |
 |---|---|---|---|
-| Town hall | 3 | 500 / 1000 / 2000 gold a day | implemented; a fourth level ❓ |
+| Town hall | 3 | 500 / 1000 / 2000 gold a day | implemented; a fourth level, the **Capitol**, decided (ADR-070, below) |
 | Fort | 3 | Fort: needed for every dwelling; Citadel / Castle: town dwellings grow +50 % / +100 %. Sieges: wall and gate, then keep, then towers (ADR-066) | dwellings and growth implemented; fortifications wait for sieges (post-1.0) |
 | Blacksmith | 1 | Sells the healing tent and ammo cart (ADR-056) | implemented |
 | Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading: gold against resources, rates by marketplace towns (ADR-067) | income and trading implemented (ADR-067) |
-| Mage guild | 4 | Spells by level (ADR-047, ADR-050) | built, no effect until magic (Phase 5) |
-| Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060) | implemented |
+| Mage guild | 4 | Spells by level (ADR-047, ADR-050); level 4 stays a placeholder (ADR-070) | built, no effect until magic (Phase 5) |
+| Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060); Brotherhood **1000 gold + 5 ore** (ADR-070) | implemented; new price and pools not built |
 | Caravan | 1 | Hires from map dwellings, sends troops (ADR-054); 1000 gold + 5 lumber, needs town hall 2 (placeholder) | implemented |
 | Dwellings | 9 + upgrades | Build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier | implemented |
+| Necromancy Amplifier | 1 | Necropolis only: +5 % Necromancy for every hero of its owner with the skill (ADR-069); **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its new owner (ADR-070, TOWN-6) | planned |
+
+- **Capitol** (town hall 4, ADR-070, not built): one per player; capturing a town with a Capitol when the player already has
+  one downgrades it to town hall 3 *(assumed)*. Its income and cost are not set yet.
 
 ## Creature tech tree (implemented, ADR-030, ADR-050)
 - Creatures have **5 tiers** (not HoMM3's 7).
@@ -77,7 +83,15 @@ Map dwellings keep the creature's growth. One rule, `TownRules.WeeklyGrowth`, se
   | Tavern | native + adjacent | native + warrior |
   | Brotherhood | 2 native + adjacent + not opposing | 2 native + 2 warriors |
 
-- Heroes on the map are never offered. Surrender (paying to leave a battle) is still open ❓.
+- Heroes on the map are never offered. A hero who **surrenders** returns to the tavern pool (ADR-070,
+  [combat.md](combat.md#leaving-a-battle)).
+- **ADR-070 (not built)**:
+  - The pool becomes **per player and faction**: a town offers its native and adjacent heroes (2 native + 2 adjacent with the
+    Brotherhood; the basic tavern's two offers are TOWN-7), and the player's towns of one faction share that pool.
+  - The Brotherhood costs **1000 gold + 5 ore** (was 2000 gold + 5 lumber + 5 ore).
+  - A hired hero gets a **starter stack** that follows its preferred creature.
+  - The **map tavern** works like a Brotherhood ([adventure-map.md](adventure-map.md#utilities-and-travel)); whether it uses the
+    player's pool or its own random heroes is still open (TOWN-4).
 
 ## Governors (implemented, ADR-063)
 A hero with Stewardship can govern one own town. With a governor, that town's buildings cost 5/10/15 % less and its
@@ -106,7 +120,8 @@ a single marketplace is meant to be expensive and unfair. The AI does not trade 
 | Buy 1 unit (gold) | 1000 | 2000 |
 | Sell 1 unit (gold) | 62 | 125 |
 
-It works for any player, also one without a marketplace town. Open: [TOWN-2](../project/open-questions.md#town-2). [TOWN-2](../project/open-questions.md#town-2).
+It works for any player, also one without a marketplace town. The generator places one only from the **4000** treasure band;
+that threshold stays a placeholder to tune (ADR-070, TOWN-2). Nothing about trading is open.
 
 ## Income
 Paid at the start of the owner's turn. **There is no base or placeholder income** (ADR-025): players earn only what
