@@ -21,6 +21,7 @@
 - Online multiplayer: not planned (core determinism keeps the door open).
 
 ## Game options
-Chosen on the new-game screen: map or template, players and teams, fog mode ([adventure-map.md](adventure-map.md)),
+Chosen on the new-game screen: map or template, players and teams (**2 to 8 teams**, 8 = free for all; the map or template
+sets defaults and may fix the teams or limit the team count, ADR-070), fog mode ([adventure-map.md](adventure-map.md)),
 complexity (starting resources, [towns-and-economy.md](towns-and-economy.md)), seed. Saves and replays record them
 (ADR-058).

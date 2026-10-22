@@ -18,7 +18,7 @@
 | 11 | Terrain penalties | One native terrain per town; grass, dirt and roads free for everyone | Every terrain penalises non-natives (125–200); towns may have several native terrains; only roads, Pathfinding and artifacts help | built |
 | 12 | Creature tiers | 7 tiers, 1 dwelling per tier, all buildable | 5 tiers, 9 dwellings, build 7 of 9 (final per town) | built |
 | 13 | Tactics | Larger deployment zone | Choose battlefield width (28–34) before battle; enemy Tactics reduces yours | built |
-| 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot | built |
+| 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot. Planned (ADR-070): a distance penalty of 1/8 per 10 cells joins the same total instead of half damage beyond 15 cells; Marksmanship lowers it | built; distance planned |
 | 15 | Fog ambush | — | Under refog, bumping into an unseen enemy starts an ambush battle | built |
 | 16 | Neutral guards | Zone of control (pickups can be stolen) | Per stack: classic zone of control (default), or a fully guarded 3×3 area for treasure guards (ADR-065) | built |
 | 17 | Speed | One speed for battle and map | Battle Speed in cells, separate adventure map speed | built |
@@ -29,6 +29,6 @@
 | 22 | Victory | Standard victory (defeat everyone) plus one special condition, 7 days without a town | Default: no towns and no heroes means defeat, 7 days without a town too, last team wins; a map may switch these off and add several victory and defeat conditions | built (ADR-057) |
 | 23 | Skills | 28 secondary skills, 8 slots, 3 levels | HoMM4-like groups of three skills, 4 levels, 10 points per group, at most 6 groups | built (ADR-048) |
 | 24 | Magic | Four elemental schools, every town's guild mixes them | Six schools tied to towns; Stronghold and Swamp Bestiary get faction abilities instead | accepted (ADR-047, ADR-063) |
-| 25 | Hiring heroes | Two random heroes per player | Offers ranked by the town's place on the ring; the upgraded tavern offers four | built (ADR-060) |
+| 25 | Hiring heroes | Two random heroes per player | Offers ranked by the town's place on the ring; the upgraded tavern offers four. Planned (ADR-070): one pool per player and faction, a starter stack of the hero's preferred creature | built (ADR-060); pools planned |
 | 26 | Town governors | — | A hero with Stewardship governs a town and makes it cheaper | built (ADR-063) |
 | … | | | *more twists to be proposed* ❓ | |

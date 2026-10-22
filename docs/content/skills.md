@@ -62,10 +62,12 @@ Morale and luck (−5…+5) are hero values too (ADR-053); Leadership raises mor
 |---|---|---|---|---|---|---|---|
 | Melee | `offense.melee` | Master | +9 % melee damage | +16 % | +23 % | +30 % | 🔜 (today +10 / 20 / 30 / 40 %) |
 | Archery | `offense.archery` | Expert | +15 % ranged damage | +25 % | +35 % | – | 🔜 (today +10 / 25 / 50 %) |
-| Marksmanship | `offense.marksmanship` | Expert | ranged penalty −1/4 | −1/2 | −3/4 | – | 🔜 new; what it reduces is CMB-6 |
+| Marksmanship | `offense.marksmanship` | Expert | ranged penalty −2/8 | −4/8 | −6/8 | – | 🔜 new (ADR-070) |
 
-Ranged attacks get a **distance penalty** (ADR-069): every 10 cells add 1/8 ([combat.md](../design/combat.md#engagement-and-blocking)).
-Marksmanship reduces the ranged penalty.
+Ranged attacks get a **distance penalty** (ADR-069, ADR-070), replacing the half damage beyond 15 cells: 0–9 cells between the
+footprints none, 10–19 1/8, 20–29 2/8, and so on; it adds to the cover penalty, and above 7/8 the target cannot be shot. War
+machines ignore it ([combat.md](../design/combat.md#engagement-and-blocking)). Marksmanship subtracts a fixed amount from the total
+ranged penalty; "almost no penalty" at Expert is intended. Whether the 7/8 check comes before the reduction is CMB-6.
 
 ### Defense (`defense`)
 
@@ -177,7 +179,8 @@ Necropolis undead. The level also caps the tier raised:
 | Master | tiers 1–4 | 1–2 → 1, 3 → 2, 4 → 3, 5 → 4 |
 
 A player who owns a Necropolis with the **Necromancy Amplifier** gives every one of their heroes with the skill +5 % (10 / 15 / 20 / 25 %);
-more amplifiers add nothing. Open (MAG-7): which value, which creatures (base or upgraded, which line), what cannot be raised, army room, rounding.
+more amplifiers add nothing. It costs 1500 gold + 5 mercury, needs mage guild 1, and a captured one helps its new owner (ADR-070,
+[town-buildings.md](town-buildings.md#open)). Open (MAG-7): which value, which creatures (base or upgraded, which line), what cannot be raised, army room, rounding.
 
 ## Faction groups
 

@@ -4,11 +4,24 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-20)**: the whole adventure-map object catalogue (ADR-068, block in Phase 3) is built in core, and the random map generator places it as treasure. ADR-069 (decided, not built) reworks the skills, adds Necromancy and gives Swamp Bestiary Primal Fury (Phase 3 "Skill rework"), and adds a second object catalogue; its open questions are listed under "New on 2026-10-20" in open-questions.md. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns,
-dwellings, map dwellings and caravans, heroes, skills, the tavern, artifacts, every income source, victory and defeat, and
-save/load, and the fort's effect; trading waits for TOWN-2. Phase 4: the template format (v2) and every generator stage
-(layout, terrain, connections, towns and mines, roads, treasure, scenario assembly, MapGenerator) are in core. Next up:
-whole-map validation and the new-game screen (RMG-5, RMG-7; [open-questions.md](open-questions.md#-blocking-now)).
+**Where we are (2026-10-22)**: no code since 2026-10-19; two design rounds are decided and waiting to be built. ADR-069
+reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
+the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
+and the template editor. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
+caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
+Phase 4 has every generator stage in core. **Next up** (in this order): the data-table move and the creature size pass
+(DATA-1), the ADR-070 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
+once HERO-6 / HERO-7 / MAG-8 are answered, then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
+
+## Data and content groundwork (ADR-070, new 2026-10-22)
+- [ ] One home for the data tables: move `*.csv` to a core-owned folder, embed in core, apps read the embedded copy with
+      override flags for designers, a schema test per table ❓ DATA-1
+- [ ] Creature size pass: about 95 % Small / Medium, Large mostly for dragons (42 of 182 Large today); re-run `sim towns`,
+      fix battle tests that rely on a creature's size
+- [ ] `buildings.csv` gets a town column: per-town names, costs and requirements (TOWN-3); `BuildingCatalog` per town type;
+      the town screen and editor follow
+- [ ] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks); undead Ruins → Crypt with old
+      maps loading `bank.ruins` (MAP-22)
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -160,16 +173,17 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Map format v6 (`town` objects); editor places towns and edits owner, name, buildings, dwellings, garrison
 - [x] Editor enforces building requirements; validator flags broken requirements and the 7-of-9 rule
 
-### Towns: building effects (❓ [TOWN-1, TOWN-2, TOWN-3](open-questions.md#towns-and-economy))
+### Towns: building effects (ADR-066, ADR-067, ADR-070)
 - [x] Fort: unlocks the dwellings; Citadel +50 % / Castle +100 % town growth, rounded down (ADR-066); fortifications wait
       for sieges (post-1.0)
 - [x] Guard mode per monster stack: map format v13, monster inspector control, old maps converted (ADR-065)
-- [x] Marketplace trading: gold against one resource, rates by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; needs a town marketplace; `TradeResourceCommand`, trading screen (HUD button, town screen; Godot part not run in the editor yet); no AI trading (ADR-067); details ❓ TOWN-2
+- [x] Marketplace trading: gold against one resource, rates by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; needs a town marketplace; `TradeResourceCommand`, trading screen (HUD button, town screen; Godot part not run in the editor yet); no AI trading (ADR-067); nothing open (ADR-070)
 - [x] Map marketplace object: a visiting hero trades at the fixed X = 4 rate; map format v14, editor placement, validator; the generator places it as a treasure item where the zone's treasure value allows (ADR-067)
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
 - [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
-- [ ] Town hall level 4 (capitol-like)? ❓ TOWN-3
-- [ ] Per-town building lists or names (every town shares one table today)
+- [ ] Capitol (town hall 4, ADR-070): one per player; a captured second Capitol drops to town hall 3; income and AI
+- [ ] Per-town building lists and names (ADR-070; the table is in "Data and content groundwork"); every town's unique
+      building comes later
 - [x] Dwellings on the adventure map (ADR-054): `CreatureDwelling`, weekly growth, flagging, recruiting by a visiting hero
       (`RecruitAtDwellingCommand`); map format v12; editor placement and `SetDwelling`; validator
 - [x] Caravan building (ADR-054): `OrderCaravanCommand` hires from owned map dwellings within 5 days of travel along an open
@@ -222,12 +236,15 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Regrouping and new ids: Leadership to Defense (`defense.leadership`), Alertness to Tactics (`tactics.alert`), Drill → War Tempo
       (`tactics.wartempo`), Deployment merged into Tactics, Troop management dropped; old ids keep loading ❓ HERO-6
 - [ ] Scouting (`pathfinding.scouting`): +2/4/6 sight radius
-- [ ] Distance penalty for ranged attacks (1/8 per 10 cells) and Marksmanship (`offense.marksmanship`) ❓ CMB-6
+- [ ] Distance penalty for ranged attacks (ADR-070: 1/8 per whole 10 cells, adds to cover, replaces the 15-cell half
+      damage, machines exempt) and Marksmanship (`offense.marksmanship`, −2/8 / −4/8 / −6/8); the order against the 7/8 check
+      is CMB-6 (proposal: check first)
 - [ ] Primal Fury for Swamp Bestiary, Adrenaline removed; Interference (`rage.third`) with the spell-cost part (data until Phase 5); roster
-      starting skills (warriors with Offense) ❓ HERO-7
+      starting skills (warriors with Offense) ❓ HERO-7 (numbers MAG-9, names CONT-5)
 - [ ] Attunement table of ADR-069 and mana by level (+10 × ⌈level / 10⌉) in `ManaRules` ❓ MAG-8
 - [ ] Necromancy (Death attunement): raise undead after victories; the AI values it ❓ MAG-7
-- [ ] Necropolis Necromancy Amplifier, the first town-specific building ❓ TOWN-6
+- [ ] Necropolis Necromancy Amplifier, the first town-specific building (1500 gold + 5 mercury, mage guild 1, ADR-070);
+      needs the per-town table and Necromancy (MAG-7)
 - [ ] Docs: `heroes.csv` and [hero-roster.md](../content/hero-roster.md) follow (Drill, Troop management, Adrenaline names)
 - [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
 
@@ -238,7 +255,12 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Tavern as an upgradeable building (`tavern` level 2 in `buildings.csv`)
 - [x] Heroes that retreat or are defeated return to the pool (offers exclude only heroes on the map)
 - [x] The AI hires heroes
-- [ ] Surrender in battle: pay gold to leave with the army (ADR-038) ❓ CMB-1
+- [ ] Surrender in battle (ADR-070): not against neutrals, half the gold cost of the survivors, the hero returns to the
+      tavern pool; battle HUD button
+- [ ] The battle AI retreats when its army is almost beaten (threshold: tuning)
+- [ ] Tavern pools per player and faction: a town offers native and adjacent heroes, same-faction towns share the pool
+      (ADR-070; basic tavern mix TOWN-7, limit counting TOWN-8)
+- [ ] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack of their preferred creature (ADR-070)
 - [x] Hire buttons in the town panel (`TownPanel`)
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
 
@@ -284,7 +306,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Town defence: keep or bring a hero home when an enemy is near; avoid stronger enemy heroes (ADR-059)
 - [x] Several heroes: a main hero; the others carry troops to it and hand them over in the exchange (ADR-059)
 - [x] Buy war machines at the blacksmith: tent, cart for shooters, the offensive machine back with Advanced Ballistics (ADR-059)
-- [ ] Spells (Phase 5), marketplace use (TOWN-2); hiring heroes, artifacts and complexity levels are done
+- [ ] Spells (Phase 5), marketplace use (later; no AI trading for now, ADR-067); hiring heroes, artifacts and complexity levels are done
 - [x] AI-vs-AI games on generated maps (`sim game --template`); CI plays two weeks on every shipped template (`sim maps`)
 - [ ] Balance the AI over several maps (`sim game --runs`); on generated maps it hardly fights guards yet (heroes still
       level 1 after 40 days on `duel`), and no game finishes in 40 days
@@ -332,15 +354,17 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 Same steps per object as above (map format bump, editor, validator, AI, generator values in `TreasureSites`).
 - [ ] Buffs: Clover Field, Rainbow, Rally Flag (clear, no open question)
 - [ ] Power-ups: Dream Teacher, Training Grounds, Marletto Tower, Star Axis, Garden of Revelation (clear, no open question)
-- [ ] Mage's Chest ❓ MAP-15
-- [ ] Deposits that become mines (Wood Pile, Ore Deposit, Gold Vein, Crystal Vein, Cinnabar Deposit) ❓ MAP-21
-- [ ] Six creature banks: orc Ruins, Lair, Keep, Hideout, Forest Glen, Dragon City ❓ MAP-22
-- [ ] Window and Eye of the Magi ❓ MAP-16
-- [ ] Map tavern ❓ MAP-17
-- [ ] Portals beyond today's monoliths ❓ MAP-18
-- [ ] Garrison ❓ MAP-19
-- [ ] Keymaster's Tent, border guards and border gates ❓ MAP-20, RMG-11
-- [ ] Mana Vortex, Fountain of Magic (useful with Phase 5) ❓ MAP-23; Shrines with spells (Phase 5) ❓ MAP-24
+- [ ] Mage's Chest (5 % nothing, 5 % Major, 60 % Minor, 30 % Minor + 500–1000 gold; vanishes)
+- [ ] Deposits that become mines (Wood Pile, Ore Deposit, Gold Vein, Crystal Vein, Cinnabar Deposit, **Sulfur Vent**); paid by
+      any visiting hero, normal monster guards, the generator places them like abandoned mines
+- [ ] Six creature banks: Ruins (orcs), Lair, Keep, Hideout, Forest Glen, Dragon City (the strongest), with the faction re-draft
+- [ ] Window and Eye of the Magi (four colours, radius 6, up to 4 Eyes a colour; editor only, not generated)
+- [ ] Garrison (flagged, captured by its guards, both ways, leave and take troops); generator option for connections
+- [ ] Map tavern (4 offers, hire at the entrance, hero on the next free cell, hero limit) ❓ TOWN-4 (its pool)
+- [ ] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
+- [ ] Mana Vortex (twice the maximum until spent, weekly per hero), Fountain of Magic (daily per hero)
+- [ ] Keymaster's Tent, border guards and border gates ❓ MAP-20
+- [ ] Shrines (spell set in the editor or rolled at start, school Magic at the spell's level, unlimited visits) (Phase 5)
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets
@@ -357,7 +381,10 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Template model + `*.ewtemplate.json` (v1; v2 roads, v3 start buildings, v4 teams): sizes, players, levels, zones (type, owner, size, level, towns, richness,
       treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) ([random-maps.md](../design/random-maps.md), ADR-064)
 - [x] Teams in templates: a team per start zone, `teamsLocked` (RMG-6, template v4)
-- [ ] Template model follow-ups: mirroring (1.0 scope, RMG-9); portals, optional connections, border guards (RMG-11)
+- [ ] Template model follow-ups (ADR-070): portals (monoliths) linking zones, garrisons as a connection guard; optional
+      connections ❓ RMG-13, border guards ❓ MAP-20
+- [ ] Teams 2–8 (ADR-070): team defaults and restrictions in templates and maps; the map editor may override the template's;
+      new-game screen respects them
 - [x] Template validator (`TemplateValidator`: errors and fairness warnings); shipped templates `duel`, `ffa-4` ("Free for all") and `2v2` ("Two against two")
 
 ### Generator pipeline
@@ -379,13 +406,15 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       native start-zone terrain, "Random" drawn first; a generated game saves as a map and replays
 - [ ] Connectivity and fairness validation of the whole map ❓ RMG-8 (whole-map reachability of start towns is checked in
       `sim maps`, not yet by the generator itself)
-- [ ] Mirrored/symmetric zones for competitive templates (1.0 scope) ❓ RMG-9
+- [ ] Mirrored templates (1.0 scope, ADR-070): 2 players by an axis (vertical, horizontal, diagonal), 4 and 8 players by the
+      centre point (8 with the underground); mirrored zones share their rolls; layout search keeps the symmetry
 
 ### Tooling and UI
 - [x] Headless batch in CI: `sim maps` generates N maps per shipped template over its sizes and player counts and checks
       them (no generator problems, deterministic, every start town reachable from every player, AI-vs-AI play with no
       refused command, replay round trip); CI job `generated-maps`; fairness waits for RMG-8 (item above)
-- [ ] Editor: template editor (zone graph: add zones, set properties, draw connections) ❓ RMG-10
+- [ ] Editor: template editor like HotA's (zone graph: add zones, set properties, draw connections; live validation; no
+      undo) with "Generate" to see the result (ADR-070)
 - [x] Editor: "generate map from template" core (`EditorMapGenerator`): a template, size, seed, player count and optional
       town per slot give a new editable scenario with coloured players, start towns, heroes and armies, a description
       that records how it was made, and the generator's problems and validator issues to show
@@ -401,14 +430,14 @@ author templates in the editor.
 ## Phase 5: Content and polish
 
 ### Magic (ADR-047, ADR-063)
-Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 … MAG-6.
+Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 … MAG-3, MAG-5, MAG-6, MAG-11.
 
 - [ ] Spell table (school, level, cost, tags, three ranks); spell book (MAG-1, MAG-2); mana on heroes is done (ADR-063)
 - [ ] Mage guild offers spells by level; heroes learn them by visiting (MAG-2)
 - [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; potency? MAG-3), mastery
       (spell ranks)
-- [ ] Combat spells: hero casts one spell per round; immunity, resistance and creature casters become live (ADR-042,
-      ADR-049)
+- [ ] Combat spells: the hero casts once a round during a controlled unit's turn (ADR-070, MAG-4); machines can be
+      targeted and resist as `mechanical`; immunity, resistance and creature casters become live (ADR-042, ADR-049)
 - [ ] Adventure spells (MAG-5)
 - [ ] Spell resistance skill and spell specialties take effect (MAG-6)
 - [ ] Spell tags and creature caster spells ❓ MAG-1
@@ -417,12 +446,13 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 … MAG-
 - [x] Morale and luck (ADR-053): ±5 from creature table and hero (map format v7, editor); per round 2 %/point extra
       action or lost turn, else 4 %/point ±50 % initiative; per hit 4 %/point luck for +75 % / −50 % damage, opposite
       rolls cancel; shown in the 3D battle (captions, log, unit stats)
-- [ ] Morale and luck sources: skills, buildings, army composition (artifacts are in, ADR-061); undead/constructs without morale? ❓ CMB-2
+- [ ] Morale and luck sources: skills, buildings, army composition (artifacts are in, ADR-061) ❓ CMB-2; undead/constructs
+      without morale ❓ CMB-7
 - [x] War machines (ADR-056): offensive machine per town (ballista, cannon, catapult, glaivethrower), healing tent,
       ammo cart; War machines skill group (Ballistics, Healing, Ammo supply); units at the back of the field, offensive
       machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle
-- [ ] War machines follow-ups: siege use (needs sieges), exchanging machines between heroes, tuning ❓ CMB-3
-- [ ] Teleporting creatures and footprints ❓ CMB-4
+- [ ] Exchanging war machines between heroes (ADR-070; towns keep machines only through a garrison hero); tuning
+- [ ] Teleporting creatures move like flyers (ADR-070)
 - [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0, CMB-5
 
 ### Platform and art
