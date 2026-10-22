@@ -5,9 +5,9 @@
 
 - **Roster** (implemented as data, ADR-048): 16 heroes per playable town, a **mage** and a **warrior** for each of its
   eight tier 1–4 creature lines. That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield
-  speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource).
+  speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource); a skill specialty adds +5 % of the skill's effect per hero level, a spell specialty +3 % (ADR-072, not built).
   Edited in `data/heroes.csv`.
-- **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, also per player on campaign-like maps, ADR-068); a tavern offers 2 heroes, the upgraded
+- **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, also per player on campaign-like maps, ADR-068; prisoners and heroes in a town garrison do not count, but a garrisoned hero cannot leave while the player is at the limit, ADR-072); a tavern offers 2 heroes, the upgraded
   one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060). ADR-070 (not
   built): the offers come from a pool per player and faction, a hired hero gets a **starter stack** of its preferred
   creature, a map tavern hires like a Brotherhood (from its own weekly pool of 4 random heroes shared by all players,
@@ -33,10 +33,10 @@
   | Tactics | War Tempo (+1 battlefield speed per level), Tactics (deployment before battle, battlefield width from Advanced), Alertness (+1/2/3 initiative) |
   | War machines | Ballistics (offensive machine: automatic, controlled, targets troops from Advanced; +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) (ADR-056, ADR-063) |
   | 6 magic schools (Light, Nature, Arcana, Death, Chaos, Shadow) | Magic (spell levels 1–4), Attunement (mana, regeneration, spell cost; Death: Necromancy), Mastery (spell upgrades) (ADR-047, ADR-063, ADR-069) |
-  | Primal Fury (Stronghold and Swamp Bestiary) | Offered only to those towns' heroes, meant for their mages: Blood Rage, Warcry, Interference (ADR-067, ADR-069; Adrenaline is dropped) |
+  | Primal Fury (Stronghold and Swamp Bestiary) | Offered only to those towns' heroes: their mages start with it, their warriors are offered it often (ADR-072). Blood Rage, Warcry, Interference (ADR-067, ADR-069; Adrenaline is dropped) |
 - **Levels** (implemented): HoMM3 experience table; each level gives one skill point, spent on one of **three offered
-  skills**. Mages are offered their own school more often, warriors the general groups; a sworn enemy's school only in
-  5 % of level-ups (ADR-048).
+  skills**. Mages are offered their own school more often, warriors the general groups; the arch-rival's school (across the ring) only in
+  5 % of level-ups (ADR-048, ADR-072).
 - **Army** of up to 7 creature stacks (implemented). A hero without creatures cannot attack.
 - **War machines** (ADR-056): every hero owns its town's offensive machine; tent and cart are bought at a blacksmith
   ([combat.md](combat.md#war-machines-implemented-adr-056-adr-063)).

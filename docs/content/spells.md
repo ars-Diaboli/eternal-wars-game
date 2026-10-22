@@ -14,23 +14,26 @@ faction-ability drafts, not school spells.
 ## How magic works (proposal)
 
 - **Schools**: six, one per ring town (Light, Nature, Arcana, Death, Chaos, Shadow; `BuiltInSkills.Schools`). Stronghold
-  and Swamp Bestiary have the faction group Primal Fury instead (ADR-063, ADR-069; Adrenaline is dropped). Any hero may learn any school (a
-  sworn enemy's school is rarely offered, ADR-048).
+  and Swamp Bestiary have the faction group Primal Fury instead (ADR-063, ADR-069; Adrenaline is dropped). Any hero may learn any school (the
+  school of the town across the ring is rarely offered, ADR-048, ADR-072).
 - **Spell books** (ADR-071, MAG-2; not built): mage heroes start with one; warriors buy one in a mage guild for **500 gold**.
 - **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1 spells, Advanced → 2,
   Expert → 3, Master → 4): a hero learns a spell when that skill is at least the spell's level (ADR-071). The **mage guild**
   of the same level in a town offers spells of that level, of the town's own school: **3** at levels 1 and 2, **2** at levels
-  3 and 4; two more town buildings add spells from other schools by the magic circle (HoMM4-like, MAG-12; ADR-071). A
+  3 and 4; two more town buildings add spells from the two schools next to the town's own on the ring, 1 spell per guild level each
+  (HoMM4-like; ADR-071, ADR-072). A
   visiting hero learns the ones its skills allow (a spell not in a guild can be found in map shrines: a Shrine of level 1–3 teaches its spell,
   set in the editor or rolled at game start, to a hero with the school's magic skill at the spell's level, ADR-070).
-- **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill upgrades
-  learned spells to rank II (Basic) and rank III (Advanced). Rank changes what a spell does, not just its strength.
+- **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill allows
+  learned spells to rise to rank II (Basic) and rank III (Advanced); a spell rises, free, when the hero visits a town whose guild
+  offers it (ADR-072, MAG-3). Rank changes what a spell does, not just its strength.
 - **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement; at the start of the owner's turn a
   hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (rank-independent) minus attunement,
   but never less than **25 %** of the base, rounded up. A hero in a town with a mage guild refills its mana (ADR-071, MAG-3;
   not in code). Attunement does not raise spell "potency" (ADR-071).
-- **Strength**: **Spell Power** (SP) multiplies damage spells' damage and buffs' and debuffs' duration (ADR-071, MAG-3; the
-  multipliers come with the spell list, MAG-1); durations are in rounds.
+- **Strength**: **Spell Power** (SP) multiplies damage spells' damage and buffs' and debuffs' duration: for now damage × (1 + SP / 10) and
+  duration × (1 + SP / 10) (ADR-071, ADR-072, MAG-1); durations are in rounds. A spell specialty adds +3 % of the spell's effect per
+  hero level (ADR-072, MAG-6). An area spell's area has a fixed size; a big creature with any cell inside is hit once (MAG-11).
 - **In battle** (ADR-070, ADR-071, MAG-4): the hero casts **at most one spell per round**, during the turn of one of the units it
   controls (machines that fire on their own do not count); spells that change initiative do not change this. Casting does not
   use that unit's action: it still acts afterwards (HoMM3). Spells may target war machines; machines are `mechanical` and resist many spells.
@@ -146,7 +149,7 @@ Orc rites: no spell books, only drums, bone and ancestors, and a loud confidence
 
 ## Primal (Swamp Bestiary, faction-ability drafts)
 
-> Not a hero school any more (ADR-063): Swamp Bestiary has the Primal Fury group, like Stronghold (ADR-069; the Adrenaline group is dropped). These spells are drafts to reuse as creature or faction abilities, perhaps for the "Spiritual Totems" name of the Warcry skill (HERO-7).
+> Not a hero school any more (ADR-063): Swamp Bestiary has the Primal Fury group, like Stronghold (ADR-069; the Adrenaline group is dropped). These spells are drafts to reuse as creature or faction abilities, perhaps for the "Spiritual Totems" name of the Warcry skill (CONT-5).
 
 Beast-cult magic of the drowned lowlands: not spells but invitations, answered by whatever lives in the mire.
 
@@ -176,14 +179,13 @@ creature-only abilities when magic arrives ([MAG-1](../project/open-questions.md
 
 ## Adventure spells (proposal)
 
-A few spells are cast on the adventure map, from the hero's spell book, at the cost of mana (and the day's movement
-where noted). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic; **Town Portal and
+A few spells are cast on the adventure map, from the hero's spell book, at the cost of mana and **a quarter of the hero's daily movement points** (500 of 2000, ADR-072, MAG-5). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic; **Town Portal and
 Dimension Door are level 4**, so they need Master magic (ADR-071, MAG-5; was level 3).
 
 | Spell | School | Level | Mana | Effect |
 |---|---|---|---|---|
-| Town Portal | Arcana | 4 | 16 ❓ | the hero returns to the nearest own town (costs half its movement points) |
-| Dimension Door | Shadow | 4 | 16 ❓ | the hero moves up to 6 cells in a straight line, ignoring terrain and objects; once a day |
+| Town Portal | Arcana | 4 | 25 | the hero returns to the nearest own town |
+| Dimension Door | Shadow | 4 | 25 | the hero moves up to 6 cells in a straight line to an explored tile, ignoring terrain and objects; once a day |
 | View Terrain | Nature | 2 | 9 | reveals the map around the hero (radius 12) until the next turn |
 | Grave Whisper | Death | 2 | 9 | shows the dead of recent battles on the map: the next battle gives +10 % raised skeletons |
 | Distant Vision | Light | 1 | 5 | reveals the creatures and heroes in a region |
@@ -195,7 +197,5 @@ Dimension Door are level 4**, so they need Master magic (ADR-071, MAG-5; was lev
 - Spell tags ([MAG-1](../project/open-questions.md#mag-1)), and which tags creatures resist.
 - Artifacts that raise spell power, knowledge or school skills, see [artifacts.md](artifacts.md).
 - Whether Raise Dead and Beast Call keep summoned creatures across battles.
-- Adventure spells and what they cost in movement; the mana of Town Portal and Dimension Door still shows the level-3 cost
-  (16) after their move to level 4 (ADR-071; other level-4 spells cost 25).
-- The Spell Power multipliers (ADR-071: SP multiplies damage and buff/debuff duration; numbers come with MAG-1). The
-  "a + b·SP" formulas in the tables above predate that rule.
+- The "a + b·SP" formulas in the tables above predate the Spell Power multiplier (ADR-072: × (1 + SP / 10)); they are rewritten
+  with the spell list (MAG-1).

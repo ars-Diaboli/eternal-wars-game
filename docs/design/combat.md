@@ -34,9 +34,12 @@
   - **The enemy hero's Tactics reduces yours**: effective level = your level − enemy level (minimum none). At most one
     side can have an effective level above none, and that side chooses. A computer player keeps 30.
   - **36 wide is reserved for town sieges** (sieges are post-1.0 ❓).
-  - **ADR-069 (not built)**: Tactics also **deploys** troops before the battle, in a zone 4 / 5 / 6 cells deep (Basic / Advanced /
-    Expert), and chooses the width only from Advanced: Advanced 30 or 32, Expert 28, 30, 32 or 34. Who deploys when both heroes
-    have Tactics, and how a human and the AI deploy, is HERO-4.
+  - **ADR-069 (not built)**: Tactics also **deploys** troops before the battle and chooses the width only from Advanced: Advanced
+    30 or 32, Expert 28, 30, 32 or 34.
+  - **Deployment** (ADR-072, HERO-4; not built): the player may place the troops within the first **4 / 5 / 6 columns** (Basic /
+    Advanced / Expert) from their own edge. Only the side with the higher Tactics deploys (a tie: nobody). The player drags stacks
+    in the battle scene, then presses "Start battle"; computer players, and every side that does not deploy, are placed
+    automatically at the very edge. Against heroes and neutral monsters, not in creature banks.
 
 ## Engagement and blocking
 - **Surround / flanking**: a unit's perimeter grows with its size, so more attackers fit around a large unit. **No
@@ -68,8 +71,9 @@
   cells between the two footprints: **0–9 no penalty, 10–19 1/8, 20–29 2/8**, and so on. Distance and cover add up to **one
   ranged penalty** with the same limit: above 7/8 the target cannot be shot. War machines ignore the distance penalty.
 - **Marksmanship** (Offense skill, ADR-070): subtracts a **fixed −2/8 / −4/8 / −6/8** (Basic / Advanced / Expert) from the ranged
-  penalty, so an Expert marksman shoots with almost no penalty (intended). Open ❓ (CMB-6): whether the 7/8 "no shot" check comes
-  before the reduction (proposal) or after.
+  penalty, so an Expert marksman shoots with almost no penalty (intended). **Order** (ADR-072, CMB-6): 1. add the distance and
+  cover penalties, 2. subtract Marksmanship, 3. check the 7/8 limit. So Marksmanship can make a target shootable that cover would
+  hide from others.
 
 ## Damage
 **HoMM3 baseline** (ADR-033). Base damage (rolled per stack within the creature's min–max) × stack size; +5 % per point
@@ -90,7 +94,9 @@ Creature capabilities, independent of size:
   (hydra-like): every adjacent enemy.
 - **HoMM3-style friendly fire**: breath also hits friendly units in its line; cleave/multi-head hits enemies only. Only
   the primary target retaliates.
-- A unit whose footprint touches the area is hit once (ADR-038).
+- A unit whose footprint touches the area is hit once (ADR-038). Area **spells** follow the same rule: their area has a
+  fixed size whatever the target's footprint, and a 3×3 or 4×4 creature with any cell inside is hit once (ADR-072, MAG-11;
+  Phase 5).
 - **Teleporting creatures** move like flyers: the footprint must fit at the destination (ADR-070, CMB-4).
 
 ## Turn order
@@ -141,6 +147,9 @@ attacks included.
 - **Retreat** (implemented): a hero may leave the battle; its army is lost and it leaves the map.
 - **Surrender** (ADR-070, CMB-1; not built): a hero keeps its army by paying **half the gold cost of its surviving
   creatures** and leaves the map; the hero returns to the tavern pool. Not possible against neutrals.
+- **Necromancy** (ADR-069, ADR-072): after a victory, a hero with Death attunement raises undead from the enemy's losses;
+  a screen after the battle result, before any level-up, shows them ([skills.md](../content/skills.md#necromancy-death-attunement-adr-069-not-built)).
+  Not after a retreat or a surrender.
 - The AI **retreats** when its army is almost beaten (threshold: tuning, *assumed* 20 % of the enemy's value); AI surrender is
   not planned (ADR-070).
 

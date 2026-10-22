@@ -24,9 +24,9 @@ eight playable towns.
   there are no hate/enmity damage bonuses (unlike HoMM3 Angels vs Devils) and no alignment modifiers. Creature
   capabilities target *properties* (undead, flying, size, …), never town or group membership.
 - **Two rule effects outside combat**:
-  - a town's **sworn enemies** (two per town, [lore.md](../content/lore.md)) have their magic school offered in only
-    5 % of level-ups (ADR-048, `BuiltInSkills` in `Skills.cs`);
+  - a town's **arch-rival** (the town across the ring, [lore.md](../content/lore.md)) has its magic school offered in only
+    5 % of level-ups (ADR-048, ADR-072, `BuiltInSkills` in `Skills.cs`; the code still uses the two sworn enemies);
   - the **ring of towns** orders the heroes a tavern offers (ADR-060, `TavernRules.Ring`).
-  Whether both should use the same relation is open ❓.
+  Both use the ring (ADR-072, HERO-3).
 - **Vertical slice: Haven and Inferno** (ADR-034). The holy-vs-demonic contrast reads instantly in a dark,
   realistic art style; the rivalry is story only.

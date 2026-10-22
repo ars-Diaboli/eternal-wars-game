@@ -92,9 +92,14 @@ bonus *(assumed)*.
 
 - Heroes on the map are never offered. A hero who **surrenders** returns to the tavern pool (ADR-070,
   [combat.md](combat.md#leaving-a-battle)).
+- **Who counts towards the hero limit** (ADR-072, TOWN-8): heroes on the map. A hero in a **prison** belongs to nobody and does
+  not count. A hero in a **town's garrison** (once heroes can stand there) does not count either, but cannot leave the garrison
+  while the player is at the limit.
 - **ADR-070 (not built)**:
-  - The pool becomes **per player and faction**: a town offers its native and adjacent heroes (2 native + 2 adjacent with the
-    Brotherhood; the basic tavern's two offers are TOWN-7), and the player's towns of one faction share that pool.
+  - The pool becomes **per player and faction**: a town offers its native and adjacent heroes, and the player's towns of one
+    faction share that pool. The basic tavern offers **1 native + 1 adjacent**, the adjacent hero from either ring neighbour at
+    random; the Brotherhood **2 native + 2 adjacent** (ADR-072, TOWN-7). Stronghold and Swamp Bestiary, off the ring, keep
+    "native + a warrior of another town" *(assumed)*.
   - The Brotherhood costs **1000 gold + 5 ore** (was 2000 gold + 5 lumber + 5 ore).
   - A hired hero gets a **starter stack** that follows its preferred creature.
   - The **map tavern** works like a Brotherhood ([adventure-map.md](adventure-map.md#utilities-and-travel)) with **its own
