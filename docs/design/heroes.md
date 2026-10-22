@@ -10,9 +10,10 @@
 - **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, also per player on campaign-like maps, ADR-068); a tavern offers 2 heroes, the upgraded
   one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060). ADR-070 (not
   built): the offers come from a pool per player and faction, a hired hero gets a **starter stack** of its preferred
-  creature, a map tavern hires like a Brotherhood, and a hero who surrenders returns to the pool.
-- **Primary stats** (implemented, ADR-055): Attack and Defense (added to every stack in battle), Spell Power (for
-  spells, Phase 5) and Knowledge (sets the mana pool, see below). Every level raises one of them by 1, HoMM3-style,
+  creature, a map tavern hires like a Brotherhood (from its own weekly pool of 4 random heroes shared by all players,
+  ADR-071), and a hero who surrenders returns to the pool.
+- **Primary stats** (implemented, ADR-055): Attack and Defense (added to every stack in battle), Spell Power (multiplies
+  spell damage and buff/debuff duration, ADR-071; Phase 5) and Knowledge (sets the mana pool, see below). Every level raises one of them by 1, HoMM3-style,
   with odds by class (draft): warriors 35/45/10/10 % (Attack/Defense/Spell Power/Knowledge) up to level 9, then
   30/30/20/20; mages 10/10/40/40, then 20/20/30/30. The level-up prompt shows the stat with the skill choice. Roster
   heroes start with 5 points.
@@ -26,7 +27,7 @@
   | Group | Skills |
   |---|---|
   | Offense | Melee (+9/16/23/30 % melee damage), Archery (+15/25/35 % ranged), Marksmanship (ranged penalty −2/8 / −4/8 / −6/8, ADR-070) |
-  | Defense | Armor (−5 % damage taken per level), Spell resistance (−10/15/20 % to hostile spells), Leadership (+1/2/3 morale, ADR-067) |
+  | Defense | Armor (−5 % damage taken per level), Spell resistance (−8/14/20 % to hostile spells' damage and duration, ADR-071), Leadership (+1/2/3 morale, ADR-067) |
   | Estates | Treasury (+250/500/750/1000 gold a day, Expert and Master also 0.5/1 % of the gold on hand, ADR-062), Prospecting (other resources, and a chance of +50 % from resource piles), Stewardship (cheaper buildings and creatures in the town the hero governs, ADR-063) |
   | Pathfinding | Pathfinding (−25/50/75/100 % terrain penalty), Logistics (+10/20/30 % movement), Scouting (+2/4/6 sight radius) |
   | Tactics | War Tempo (+1 battlefield speed per level), Tactics (deployment before battle, battlefield width from Advanced), Alertness (+1/2/3 initiative) |
@@ -47,5 +48,7 @@
   machines; opened with H or from the hero list. Drag and drop is pending.
 - **Mana** (implemented, ADR-063): the pool is 10 × Knowledge (plus attunement); a hero regains ⌈Knowledge / 10⌉ (plus
   attunement) at the start of its owner's turn. ADR-069 adds 10 × ⌈level / 10⌉ to the pool (not built yet). **Spell book** and casting: Phase 5 ([magic.md](magic.md)).
+  ADR-071 (not built): mage heroes start with a spell book, warriors buy one in a mage guild for 500 gold; mana refills in a
+  town with a mage guild.
 - **Governors** (ADR-063): a hero may govern a town; with Stewardship that town's buildings and creatures are cheaper
   ([towns-and-economy.md](towns-and-economy.md)).

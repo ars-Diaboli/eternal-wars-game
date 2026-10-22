@@ -23,7 +23,10 @@
 | Fort | 3 | Fort: needed for every dwelling; Citadel / Castle: town dwellings grow +50 % / +100 %. Sieges: wall and gate, then keep, then towers (ADR-066) | dwellings and growth implemented; fortifications wait for sieges (post-1.0) |
 | Blacksmith | 1 | Sells the healing tent and ammo cart (ADR-056) | implemented |
 | Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading: gold against resources, rates by marketplace towns (ADR-067) | income and trading implemented (ADR-067) |
-| Mage guild | 4 | Spells by level (ADR-047, ADR-050); level 4 stays a placeholder (ADR-070) | built, no effect until magic (Phase 5) |
+| Mage guild | 4 | Spells of the town's own school: **3** each at levels 1 and 2, **2** each at levels 3 and 4 (ADR-071, MAG-2); sells a **spell book for 500 gold**; a hero in the town refills its mana (ADR-071, MAG-3); level 4 stays a placeholder (ADR-070) | built, no effect until magic (Phase 5) |
+| Extra spell buildings | 2 | Add spells of **other schools**, chosen by the magic circle (HoMM4-like; details MAG-12) (ADR-071) | planned |
+| Warcry / totem building | 3 | **Stronghold and Swamp Bestiary** instead of a mage guild: teaches warcries / spiritual totems (placeholder, ADR-071, MAG-2) | planned |
+| Growth buildings | 1 each | Two per town (placeholders): one adds **+5 a week** to tier-1 growth, the other **+2** to tier-2 (ADR-071, TOWN-1) | planned |
 | Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060); Brotherhood **1000 gold + 5 ore** (ADR-070) | implemented; new price and pools not built |
 | Caravan | 1 | Hires from map dwellings, sends troops (ADR-054); 1000 gold + 5 lumber, needs town hall 2 (placeholder) | implemented |
 | Dwellings | 9 + upgrades | Build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier | implemented |
@@ -63,6 +66,10 @@ the Castle** (fort 3), opening week included; the bonus is rounded down (growth 
 Map dwellings keep the creature's growth. One rule, `TownRules.WeeklyGrowth`, serves the service, town screen and AI
 (ADR-066).
 
+**Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two buildings per town, one adding **+5 a week** to tier-1
+growth, the other **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the
+bonus *(assumed)*.
+
 ## Map dwellings and caravans (implemented, ADR-054)
 - Dwellings of one creature on the adventure map grow every Monday, owned or not; a visiting hero flags one and
   recruits from it.
@@ -90,8 +97,8 @@ Map dwellings keep the creature's growth. One rule, `TownRules.WeeklyGrowth`, se
     Brotherhood; the basic tavern's two offers are TOWN-7), and the player's towns of one faction share that pool.
   - The Brotherhood costs **1000 gold + 5 ore** (was 2000 gold + 5 lumber + 5 ore).
   - A hired hero gets a **starter stack** that follows its preferred creature.
-  - The **map tavern** works like a Brotherhood ([adventure-map.md](adventure-map.md#utilities-and-travel)); whether it uses the
-    player's pool or its own random heroes is still open (TOWN-4).
+  - The **map tavern** works like a Brotherhood ([adventure-map.md](adventure-map.md#utilities-and-travel)) with **its own
+    weekly pool of 4 random heroes of any faction**, shared by all players (ADR-071, TOWN-4).
 
 ## Governors (implemented, ADR-063)
 A hero with Stewardship can govern one own town. With a governor, that town's buildings cost 5/10/15 % less and its
