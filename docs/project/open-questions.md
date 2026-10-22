@@ -46,11 +46,20 @@ Short answers the agent read one way (ADR-070 … ADR-072). Say "no" to any of t
 | MAG-10 | Primal Fury mages level up with the warrior's stat odds (35 / 45 / 10 / 10 %, then 30 / 30 / 20 / 20 %). |
 | CMB-1 | The AI retreats when its surviving army is worth less than 20 % of the enemy's (tuning). |
 
+Answer - yes to all above except MAG-10;
+MAG-10 - for Primal Fury mages level use more even skill distribution like 25%/25%/25%/25%;
+MAG-5 - use fixed 500 points;
+
+regarding creature dwelling - there should be no dwellings for upgraded creatures for now; (only for base/unupgraded ones)
+
 ## Towns and economy
 
 <a id="town-5"></a>
 **TOWN-5 Caravan details.** Is the 5-day limit checked only when ordering (today only the route is re-checked daily)? How long may a caravan wait at a
 full garrison? Proposal: only when ordering; it waits until there is room.
+Answer : Is the 5-day limit checked only when ordering - it is reasonable to check twice, first when dwelling is captured just for raw distance so that it is not presented in the caravan's dwelling list;
+For the rest use proposal;
+also display the queue of creatueres that are awaiting free space or are on their way to the town;
 
 ## Heroes
 
@@ -86,9 +95,22 @@ spells.md tables still use "a + b·SP" and are rewritten with the list.
 - a. More conditions: the Grail, flag all mines, defeat all monsters?
 - b. Does one ally's survival win for the whole team?
 - c. How does a campaign hook into them? (Phase 6)
+- Answer - possible additional conditions: capture certain town, defeat certain hero/ capture certain map object/ obtain certain artifact/release certain hero from prison
+- there also should be loose conditions like do not loose a certain(starting) town/hero/item
+- there should be time constraints configurable like defeat an enemy within 3 months;
+- Does one ally's survival win for the whole team? - yes if that is real player;
 
 <a id="flow-2"></a>
 **FLOW-2 Week events** ("week of X"): which events and how likely.
+- Answer - (similar to homm3)
+- creature weeks - probability 75%, certain creature gets double growth, upgraded creature also counts; 
+- remaining 25% that nothing happens;
+monthly events (month is 4 weeks): 
+- creature months - probability 45%, creature months also double the growth for a random creature, creatures of that type spawn across the map near random map objects as guard
+- plague months - probability 15%, no creature growth at the begining of the week, amount of unrecruited unit count in the town is halfed;
+- starvation month - probability 15%, no creature growth at the begining of the week, no other effects
+- during monthly event at the end of the month - weekly event is not rolled;
+- creature factions configurable in map editor/template editor for both weekly and monthly events; default - playable factions only;
 
 <a id="cont-1"></a>
 **CONT-1 Lore names.** Working titles (Light, Darkness, Wild, Primordial) or the lore names (Dawn Covenant, Ashen Court, Unbound, Firstborn)?
