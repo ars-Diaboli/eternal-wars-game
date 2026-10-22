@@ -3,11 +3,11 @@
 Every town building, what it costs, what it needs and what it does, and the creature dwellings of each playable town.
 Rules: ADR-030 (7 of 9 dwellings), ADR-046 (building list), ADR-050 (towns in play), ADR-054 (caravan, map
 dwellings), ADR-056 (blacksmith), ADR-060 (tavern), ADR-063 (governors and Stewardship), ADR-070 (per-town lists, Capitol,
-Brotherhood price, Necromancy Amplifier). All towns share one building list for now; their dwellings come from their creature lines. Numbers are a draft.
+Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building). All towns share one building list for now; their dwellings come from their creature lines. Numbers are a draft.
 
 Sources: `src/Godot/EternalWars.Godot.Assets/data/buildings.csv` (columns in
-[development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`. Update the tables on this page when
-those files change.
+[development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`; both move to a core-owned folder
+embedded in `EternalWars.Core.Domain` (ADR-071, DATA-1, not done yet). Update the tables on this page when those files change.
 
 Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature · ❓ not decided yet.
 
@@ -52,8 +52,8 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Fort | Fort: needed for every dwelling; Citadel: town dwellings grow +50 % (bonus rounded down); Castle: +100 % (`TownRules.WeeklyGrowth`). Sieges: Fort = town wall and gate, Citadel adds a keep, Castle towers and stronger walls (ADR-066) | ✅ dwellings, growth; ⏳ fortifications (sieges post-1.0) |
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading gold against resources, rates by the number of marketplace towns (ADR-067, [towns-and-economy.md](../design/towns-and-economy.md#marketplace-implemented-adr-067)) | ✅ silo and trading |
-| Mage Guild | spells of its level (ADR-047); level 4 is a placeholder | ⏳ magic (Phase 5) |
-| Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060). ADR-070, not built: the Brotherhood costs **1000 gold + 5 ore** and offers 2 native + 2 adjacent; the pool is per player and faction; hired heroes get a starter stack ([towns-and-economy.md](../design/towns-and-economy.md#tavern-implemented-adr-060)) | ✅; ADR-070 changes ❓ |
+| Mage Guild | spells of its level, of the town's own school: 3 each at levels 1 and 2, 2 each at levels 3 and 4 (ADR-047, ADR-071); sells a spell book for **500 gold**; a hero in a town with a guild refills its mana (ADR-071); level 4 is a placeholder | ⏳ magic (Phase 5) |
+| Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060). ADR-070, not built: the Brotherhood costs **1000 gold + 5 ore** and offers 2 native + 2 adjacent; the pool is per player and faction; hired heroes get a starter stack; the map tavern has its own weekly pool of 4 random heroes of any faction, shared by all players (ADR-071) ([towns-and-economy.md](../design/towns-and-economy.md#tavern-implemented-adr-060)) | ✅; ADR-070 changes ❓ |
 | Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054); cost and requirement are placeholders | ✅ |
 
 ## Tech tree
@@ -235,6 +235,12 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
   above stay the shared list until then.
 - **Capitol** (ADR-070, not built): a **town hall 4**, one per player; capturing a town with a Capitol when the player already has one
   downgrades it to town hall 3 *(assumed)*. Today the name Capitol belongs to town hall 3 above; its cost and income are not set.
+- **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two per town, one adds **+5 a week** to tier-1 growth, the other
+  **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the bonus *(assumed)*.
+  Ids, costs and requirements are not set.
+- **Spell buildings** (ADR-071, MAG-2; not built): two more buildings add spells of other schools by the magic circle (HoMM4-like;
+  details MAG-12). Stronghold and Swamp Bestiary get a **3-level placeholder building** that teaches warcries / spiritual totems
+  instead of a mage guild.
 - **Necromancy Amplifier** (ADR-069, ADR-070; not built): Necropolis only, the first unique building. +5 % Necromancy for every hero of
   its owner with Death attunement; more than one adds nothing. **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its
   new owner. Id `necromancy-amplifier` *(assumed)*.

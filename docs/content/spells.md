@@ -3,7 +3,8 @@
 The spell catalog for magic (Phase 5): six schools, four spell levels, three ranks per spell. **No spells or casting
 yet** (roadmap, "Magic"); mana is in (`ManaRules`, ADR-063). This is the content the spell table `data/spells.csv` will
 start from. Rules: ADR-047 (structure), ADR-048 (skills), ADR-055 (Spell Power and Knowledge), ADR-042 (creature casters,
-immunities), ADR-063 (six schools, mana, faction groups). Lore: [lore.md](lore.md). Skills that drive magic: [skills.md](skills.md#magic-schools). Spell ids and names are drafts;
+immunities), ADR-063 (six schools, mana, faction groups), ADR-070 and ADR-071 (casting in battle, spell books, guilds, Spell Power, levels of
+Town Portal and Dimension Door). Lore: [lore.md](lore.md). Skills that drive magic: [skills.md](skills.md#magic-schools). Spell ids and names are drafts;
 every number is a proposal to react to.
 
 The 24 school spell ids below are the ones `data/heroes.csv` already names as hero specialties (`spell light.bless`, …),
@@ -15,22 +16,28 @@ faction-ability drafts, not school spells.
 - **Schools**: six, one per ring town (Light, Nature, Arcana, Death, Chaos, Shadow; `BuiltInSkills.Schools`). Stronghold
   and Swamp Bestiary have the faction group Primal Fury instead (ADR-063, ADR-069; Adrenaline is dropped). Any hero may learn any school (a
   sworn enemy's school is rarely offered, ADR-048).
+- **Spell books** (ADR-071, MAG-2; not built): mage heroes start with one; warriors buy one in a mage guild for **500 gold**.
 - **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1 spells, Advanced → 2,
-  Expert → 3, Master → 4). The **mage guild** of the same level in a town offers spells of that level; a visiting hero
-  learns the ones its skills allow (a spell not in a guild can be found in map shrines: a Shrine of level 1–3 teaches its spell,
+  Expert → 3, Master → 4): a hero learns a spell when that skill is at least the spell's level (ADR-071). The **mage guild**
+  of the same level in a town offers spells of that level, of the town's own school: **3** at levels 1 and 2, **2** at levels
+  3 and 4; two more town buildings add spells from other schools by the magic circle (HoMM4-like, MAG-12; ADR-071). A
+  visiting hero learns the ones its skills allow (a spell not in a guild can be found in map shrines: a Shrine of level 1–3 teaches its spell,
   set in the editor or rolled at game start, to a hero with the school's magic skill at the spell's level, ADR-070).
 - **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill upgrades
   learned spells to rank II (Basic) and rank III (Advanced). Rank changes what a spell does, not just its strength.
 - **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement; at the start of the owner's turn a
   hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (rank-independent) minus attunement,
-  but never less than **25 %** of the base, rounded up. Refilling in a town is not in code ❓.
-- **Strength**: damage and healing scale with **Spell Power** (SP); durations are in rounds.
-- **In battle** (ADR-070, MAG-4 part): the hero casts **at most one spell per round**, during the turn of one of the units it
-  controls (machines that fire on their own do not count); spells that change initiative do not change this. Whether that unit
-  still acts afterwards is open ❓ (MAG-4). Spells may target war machines; machines are `mechanical` and resist many spells.
+  but never less than **25 %** of the base, rounded up. A hero in a town with a mage guild refills its mana (ADR-071, MAG-3;
+  not in code). Attunement does not raise spell "potency" (ADR-071).
+- **Strength**: **Spell Power** (SP) multiplies damage spells' damage and buffs' and debuffs' duration (ADR-071, MAG-3; the
+  multipliers come with the spell list, MAG-1); durations are in rounds.
+- **In battle** (ADR-070, ADR-071, MAG-4): the hero casts **at most one spell per round**, during the turn of one of the units it
+  controls (machines that fire on their own do not count); spells that change initiative do not change this. Casting does not
+  use that unit's action: it still acts afterwards (HoMM3). Spells may target war machines; machines are `mechanical` and resist many spells.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`,
   `curse`, `blind`), already in the creature table; a spell lists its tags. Proposed addition: `holy` (Smite). `SpellResistance n` creatures ignore spells of
-  level n and below (rank III counts one level higher, ADR-049).
+  level n and below (rank III counts one level higher, ADR-049). The hero skill **Spell resistance** cuts hostile spells'
+  damage and duration by **8 / 14 / 20 %**; durations round away from zero, at least 1 round (ADR-071, MAG-6).
 
 ## Light (Haven)
 
@@ -170,13 +177,13 @@ creature-only abilities when magic arrives ([MAG-1](../project/open-questions.md
 ## Adventure spells (proposal)
 
 A few spells are cast on the adventure map, from the hero's spell book, at the cost of mana (and the day's movement
-where noted). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic, level 3 (Town Portal,
-Dimension Door) at Expert ❓.
+where noted). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic; **Town Portal and
+Dimension Door are level 4**, so they need Master magic (ADR-071, MAG-5; was level 3).
 
 | Spell | School | Level | Mana | Effect |
 |---|---|---|---|---|
-| Town Portal | Arcana | 3 | 16 | the hero returns to the nearest own town (costs half its movement points) |
-| Dimension Door | Shadow | 3 | 16 | the hero moves up to 6 cells in a straight line, ignoring terrain and objects; once a day |
+| Town Portal | Arcana | 4 | 16 ❓ | the hero returns to the nearest own town (costs half its movement points) |
+| Dimension Door | Shadow | 4 | 16 ❓ | the hero moves up to 6 cells in a straight line, ignoring terrain and objects; once a day |
 | View Terrain | Nature | 2 | 9 | reveals the map around the hero (radius 12) until the next turn |
 | Grave Whisper | Death | 2 | 9 | shows the dead of recent battles on the map: the next battle gives +10 % raised skeletons |
 | Distant Vision | Light | 1 | 5 | reveals the creatures and heroes in a region |
@@ -185,12 +192,10 @@ Dimension Door) at Expert ❓.
 ## Open
 
 - Numbers: mana pool, cost scale, damage formulas, durations (play-test with the simulator).
-- Timing: exactly when the hero casts (before the round or when the hero's slot comes), and spell targeting of
-  machines.
 - Spell tags ([MAG-1](../project/open-questions.md#mag-1)), and which tags creatures resist.
 - Artifacts that raise spell power, knowledge or school skills, see [artifacts.md](artifacts.md).
 - Whether Raise Dead and Beast Call keep summoned creatures across battles.
-- Adventure spells and what they cost in movement; whether Town Portal and Dimension Door should need only Advanced magic.
-- Whether attunement also raises spell **potency** for some schools (ADR-047 says so; ADR-063 and `ManaRules` have pool,
-  daily mana and cost only).
-- Whether a town refills mana (not in code).
+- Adventure spells and what they cost in movement; the mana of Town Portal and Dimension Door still shows the level-3 cost
+  (16) after their move to level 4 (ADR-071; other level-4 spells cost 25).
+- The Spell Power multipliers (ADR-071: SP multiplies damage and buff/debuff duration; numbers come with MAG-1). The
+  "a + b·SP" formulas in the tables above predate that rule.

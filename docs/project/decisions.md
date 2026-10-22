@@ -1509,3 +1509,34 @@ half damage), ADR-060 (tavern pools and price), ADR-026 (portal naming), ADR-068
   - War machines ignore the distance penalty.
 - **MAG-4 casting in battle (part)**: the hero casts at most once a round, during the turn of one of the units the hero controls (machines that fire on their
   own do not count); spells that change initiative do not change this. Spells may target war machines; machines are `mechanical` and resist many spells.
+
+### ADR-071: Data tables, fairness, keymasters, growth buildings, morale exemptions, spell books and guilds (2026-10-22)
+**Status**: accepted as a design (2026-10-22), user answers in `open-questions.md`; **nothing implemented**. Numbers are drafts. Supersedes parts of
+ADR-044 (where the tables live), ADR-069 (the Spell resistance numbers) and the spells.md levels of Town Portal and Dimension Door. Points marked
+*(assumed)* are listed under "To confirm" in `open-questions.md`.
+
+- **DATA-1 data tables**: the `*.csv` tables move to a core-owned folder, embedded in `EternalWars.Core.Domain`; the apps read the embedded copy, with
+  `--creatures=`-style flags for designers' edited files; the `res://shared/data` copy goes. CSV stays for flat tables, JSON for nested data. A schema
+  test per table checks ids, references and columns.
+- **RMG-8 fairness**: start zones are compared by distance to the nearest mines, treasure value and guard power on the way, within ±15 %; a map that
+  fails is retried with the next sub-seed, then reported.
+- **RMG-12**: "richness" is dropped; treasure bands and mine minimums are enough.
+- **RMG-13 optional connections**: every connection has a presence probability, 100 % by default.
+- **MAP-20 keymasters**: four colours (like the Eyes of the Magi); the key belongs to the player; a border guard vanishes after the first key holder passes,
+  a border gate stays and lets key holders through; templates may use them in connections (an option per connection).
+- **TOWN-1 growth buildings** (placeholder): two buildings per town, one adds +5 a week to tier-1 growth, the other +2 to tier-2, whether the town has
+  one or two dwellings of that tier *(assumed: each dwelling of the tier gets the bonus)*.
+- **TOWN-4 map tavern**: its own weekly pool of 4 random heroes of any faction, shared by all players.
+- **CMB-7**: undead, constructs and elementals have no morale. **CMB-8**: war machines have no morale but roll the hero's luck (as built).
+- **MAG-2 spell books and guilds**:
+  - Mage heroes start with a spell book; warriors buy one in a mage guild for 500 gold.
+  - A hero learns a spell when the school's first skill (its Magic skill) is at least the spell's level.
+  - A guild offers 3 spells at levels 1 and 2 and 2 spells at levels 3 and 4, of the town's own school. Two more buildings add spells from other
+    schools by the magic circle (HoMM4-like; details MAG-12).
+  - Stronghold and Swamp Bestiary: a 3-level placeholder building teaches warcries / spiritual totems instead of a guild.
+- **MAG-3 (part)**: mana refills in a town with a mage guild. Spell Power multiplies damage spells' damage and buffs' and debuffs' duration (numbers with
+  the spell list, MAG-1). Attunement "potency" is skipped; the ADR-069 attunement table stays as it is (mana pool, regeneration, Light's cost
+  reduction, Death's Necromancy).
+- **MAG-4**: the unit whose turn the hero cast in still acts (HoMM3).
+- **MAG-5 (part)**: Town Portal and Dimension Door are level-4 spells.
+- **MAG-6 (part)**: Spell resistance is −8 / 14 / 20 % (was −10 / 15 / 20 %) to both damage and duration; durations round away from zero, at least 1 round.

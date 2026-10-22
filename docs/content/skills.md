@@ -5,7 +5,7 @@ ADR-047 (magic schools), ADR-055 (primary stats), ADR-056 (war machines), ADR-06
 groups). Numbers are a draft. The skills are code, not data: `BuiltInSkills` and `SkillEffects` in
 `src/Core/EternalWars.Core.Domain/Heroes/Skills.cs`.
 
-Status: ✅ works in play · ⏳ defined, waits for a feature (named) · 🔜 decided in ADR-069 (2026-10-20), not built yet; the
+Status: ✅ works in play · ⏳ defined, waits for a feature (named) · 🔜 decided in ADR-069 (2026-10-20) or later (ADR-070, ADR-071), not built yet; the
 code still has the earlier rule, shown as "today" · ❓ not decided yet.
 
 **ADR-069 rework** (2026-10-20): the tables below show the new design. It moves Leadership to Defense and Alertness to Tactics,
@@ -42,7 +42,7 @@ HERO-7 (faction group), HERO-4 (deployment), CMB-6 (ranged penalties), MAG-7 (Ne
 |---|---|---|
 | Attack | added to every own stack's Attack in battle | ✅ |
 | Defense | added to every own stack's Defense in battle | ✅ |
-| Spell Power | spell strength | ⏳ magic (Phase 5) |
+| Spell Power | multiplies damage spells' damage and buffs' and debuffs' duration (ADR-071; numbers with the spell list, MAG-1) | ⏳ magic (Phase 5) |
 | Knowledge | mana pool (10 each) and daily mana (⌈K / 10⌉) | ✅ numbers (`ManaRules`) · ⏳ casting |
 
 Each level-up raises one stat by 1 (`StatGrowth`, ADR-055):
@@ -74,7 +74,9 @@ ranged penalty; "almost no penalty" at Expert is intended. Whether the 7/8 check
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
 | Armor | `defense.armor` | Master | −5 % damage taken | −10 % | −15 % | −20 % | ✅ |
-| Spell resistance | `defense.resistance` | Expert | hostile spells −10 % damage or duration | −15 % | −20 % | – | ⏳ magic (MAG-6) |
+| Spell resistance | `defense.resistance` | Expert | hostile spells −8 % damage and duration | −14 % | −20 % | – | ⏳ magic; 🔜 numbers (ADR-071, was −10 / 15 / 20 %) |
+
+Spell resistance cuts both a hostile spell's damage and its duration; durations round away from zero, at least 1 round (ADR-071, MAG-6).
 | Leadership | `defense.leadership` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ effect (ADR-067); 🔜 moves from Offense (today `offense.third`) |
 
 ### Estates (`estates`)
@@ -148,7 +150,7 @@ Every school has the same three skills (shown for Light):
 
 | Skill | Id | Max | Per level | Status |
 |---|---|---|---|---|
-| Light magic | `magic.haven.spells` | Master | learn spells of level 1 / 2 / 3 / 4 | ⏳ magic |
+| Light magic | `magic.haven.spells` | Master | learn spells of level 1 / 2 / 3 / 4 (a spell is learned when this skill is at least its level, ADR-071) | ⏳ magic |
 | Light attunement | `magic.haven.attunement` | Master | max mana, daily mana and spell cost, by school (below) | ✅ numbers (`ManaRules`) · ⏳ casting |
 | Light mastery | `magic.haven.mastery` | Advanced | upgrade learned spells to their second / third level | ⏳ magic |
 
@@ -164,7 +166,8 @@ Attunement (ADR-069, replacing ADR-063's table; several add up), 🔜:
 Today (ADR-063): Arcana and Chaos +12 / 25 / 37 / 50 max mana; Light and Death +3 / 6 / 9 / 12 a day and −1 / 2 / 3 / 4 cost.
 
 The mana pool is 10 × Knowledge plus attunement, plus **10 × ⌈level / 10⌉** (ADR-069, 🔜: +10 up to level 10, +20 up to 20, …); a hero regains
-⌈Knowledge / 10⌉ mana a day plus attunement; a spell costs at least 25 % of its base, rounded up.
+⌈Knowledge / 10⌉ mana a day plus attunement; a spell costs at least 25 % of its base, rounded up. Attunement does not raise
+spell "potency" (ADR-071); it changes only the mana numbers in the table above (and gives Necromancy).
 
 ### Necromancy (Death attunement, ADR-069, not built)
 
@@ -198,7 +201,7 @@ towns are offered the group, meant for their **mage** heroes; their **warrior** 
 | Interference (3 points) | `rage.third` | Expert | the enemy hero's spells have −2 Spell Power and cost +1 mana | −4, +2 | −6, +2 | – | ⏳ data only, needs casting (Phase 5); 🔜 the cost part (today "Spell resistance (faction)", Spell Power only) |
 
 Warcries cost no mana (the group's mages have no school): one warcry a round, each once per battle. A warcry is a free action of the hero:
-the player may use it whenever one of their units is up, and it does not use that unit's action (MAG-4 still decides spells). Rally and
+the player may use it whenever one of their units is up, and it does not use that unit's action (the same holds for spells, ADR-071, MAG-4). Rally and
 Intimidate count from the round after the one they were used in; Terror takes effect at once. The Shamanism drafts in
 [spells.md](spells.md) are the source of the warcries.
 

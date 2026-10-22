@@ -95,7 +95,7 @@ Any command takes `--creatures path.csv`.
   version history on `MapDocument`). Replays are `*.ewreplay.json`. Random map templates are `*.ewtemplate.json` (`MapTemplate`; the shipped ones are in
   `src/Godot/EternalWars.Godot.Assets/data/templates`, embedded into `Core.Data`). Creature
   stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
-  stats" below); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
+  stats" below; the tables move to core, ADR-071); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
 - Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
   (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `game-town-screen`,
@@ -114,6 +114,11 @@ Any command takes `--creatures path.csv`.
 
 Every creature is one row of `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (ADR-044). Edit it in any
 spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by header name:
+
+> **Planned move** (ADR-071, DATA-1; not done yet): every `*.csv` table of this page moves to a core-owned folder embedded in
+> `EternalWars.Core.Domain`. The apps will read only the embedded copy, plus designers' edited files through the
+> `--creatures=`-style flags; the `res://shared/data` copy and the read-at-start-up reload below go. A schema test per table
+> will check ids, references and columns. Until then the paths below are current.
 
 | Column | Meaning |
 |---|---|

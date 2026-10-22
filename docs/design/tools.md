@@ -20,4 +20,10 @@ triggers, map resize, the **template editor** and "generate map from template" (
 - **Headless simulator** (plain .NET console, no Godot, `tools/EternalWars.Tools.Sim`): battle statistics, scripted
   and AI-vs-AI games (on hand-made or generated maps), replays, balance reports (towns, creatures, lines) and template
   layouts. It is fast enough for CI and for tuning balance and AI over thousands of games; CI generates maps of every
-  shipped template and plays them AI-vs-AI (`sim maps`). Fairness metrics between start zones are still open (RMG-8).
+  shipped template and plays them AI-vs-AI (`sim maps`). Fairness between start zones (distance to mines, treasure value, guard power on the way, within ±15 %; ADR-071, RMG-8)
+  is decided but not built.
+
+## Data tables
+Creatures, heroes, buildings and artifacts are CSV tables (JSON for nested data). ADR-071 (DATA-1, not done yet) moves them
+from `EternalWars.Godot.Assets/data` to a core-owned folder embedded in `EternalWars.Core.Domain`; designers edit a copy and
+load it with `--creatures=`-style flags ([development.md](../technical/development.md#editing-creature-stats)).

@@ -4,18 +4,18 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-22)**: no code since 2026-10-19; two design rounds are decided and waiting to be built. ADR-069
+**Where we are (2026-10-22)**: no code since 2026-10-19; three design rounds are decided and waiting to be built. ADR-069
 reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
-and the template editor. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
+and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
 Phase 4 has every generator stage in core. **Next up** (in this order): the data-table move and the creature size pass
-(DATA-1), the ADR-070 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
+(DATA-1, decided), the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
 once HERO-6 / HERO-7 / MAG-8 are answered, then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [ ] One home for the data tables: move `*.csv` to a core-owned folder, embed in core, apps read the embedded copy with
-      override flags for designers, a schema test per table ❓ DATA-1
+      override flags for designers, a schema test per table (DATA-1, ADR-071)
 - [ ] Creature size pass: about 95 % Small / Medium, Large mostly for dragons (42 of 182 Large today); re-run `sim towns`,
       fix battle tests that rely on a creature's size
 - [ ] `buildings.csv` gets a town column: per-town names, costs and requirements (TOWN-3); `BuildingCatalog` per town type;
@@ -180,7 +180,11 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Marketplace trading: gold against one resource, rates by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; needs a town marketplace; `TradeResourceCommand`, trading screen (HUD button, town screen; Godot part not run in the editor yet); no AI trading (ADR-067); nothing open (ADR-070)
 - [x] Map marketplace object: a visiting hero trades at the fixed X = 4 rate; map format v14, editor placement, validator; the generator places it as a treasure item where the zone's treasure value allows (ADR-067)
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
-- [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only
+- [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only; refills mana; sells the
+      spell book (500 gold) (ADR-071)
+- [ ] Growth buildings (placeholder, ADR-071): +5 a week for tier 1, +2 for tier 2, per town in `buildings.csv`; the AI builds them
+- [ ] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071)
+- [ ] Two guild extensions per town adding spells by the magic circle ❓ MAG-12
 - [ ] Capitol (town hall 4, ADR-070): one per player; a captured second Capitol drops to town hall 3; income and AI
 - [ ] Per-town building lists and names (ADR-070; the table is in "Data and content groundwork"); every town's unique
       building comes later
@@ -360,10 +364,11 @@ Same steps per object as above (map format bump, editor, validator, AI, generato
 - [ ] Six creature banks: Ruins (orcs), Lair, Keep, Hideout, Forest Glen, Dragon City (the strongest), with the faction re-draft
 - [ ] Window and Eye of the Magi (four colours, radius 6, up to 4 Eyes a colour; editor only, not generated)
 - [ ] Garrison (flagged, captured by its guards, both ways, leave and take troops); generator option for connections
-- [ ] Map tavern (4 offers, hire at the entrance, hero on the next free cell, hero limit) ❓ TOWN-4 (its pool)
+- [ ] Map tavern (4 offers from its own weekly pool of random heroes shared by all players; hire at the entrance, hero on the
+      next free cell, hero limit; ADR-070, ADR-071)
 - [ ] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
 - [ ] Mana Vortex (twice the maximum until spent, weekly per hero), Fountain of Magic (daily per hero)
-- [ ] Keymaster's Tent, border guards and border gates ❓ MAP-20
+- [ ] Keymaster's Tent, border guards and border gates (four colours, the player's key, guards vanish, gates stay; ADR-071)
 - [ ] Shrines (spell set in the editor or rolled at start, school Magic at the spell's level, unlimited visits) (Phase 5)
 
 ### Content for the slice
@@ -382,7 +387,7 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) ([random-maps.md](../design/random-maps.md), ADR-064)
 - [x] Teams in templates: a team per start zone, `teamsLocked` (RMG-6, template v4)
 - [ ] Template model follow-ups (ADR-070): portals (monoliths) linking zones, garrisons as a connection guard; optional
-      connections ❓ RMG-13, border guards ❓ MAP-20
+      connections with a presence probability (100 % default), border guards and gates as a connection option (ADR-071)
 - [ ] Teams 2–8 (ADR-070): team defaults and restrictions in templates and maps; the map editor may override the template's;
       new-game screen respects them
 - [x] Template validator (`TemplateValidator`: errors and fairness warnings); shipped templates `duel`, `ffa-4` ("Free for all") and `2v2` ("Two against two")
@@ -404,7 +409,8 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       picked at setup (AI random); garrisons for empty slots; HoMM3-style start armies; retry on problems with sub-seeds
       (`GenerateBest`); standard rules; `MapGenerator.Version` in game records (v3); factions as generator input with
       native start-zone terrain, "Random" drawn first; a generated game saves as a map and replays
-- [ ] Connectivity and fairness validation of the whole map ❓ RMG-8 (whole-map reachability of start towns is checked in
+- [ ] Connectivity and fairness validation of the whole map (ADR-071: distance to mines, treasure value, guard power on the way
+      within ±15 %; retry with the next sub-seed, then report) (whole-map reachability of start towns is checked in
       `sim maps`, not yet by the generator itself)
 - [ ] Mirrored templates (1.0 scope, ADR-070): 2 players by an axis (vertical, horizontal, diagonal), 4 and 8 players by the
       centre point (8 with the underground); mirrored zones share their rolls; layout search keeps the symmetry
@@ -412,7 +418,7 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 ### Tooling and UI
 - [x] Headless batch in CI: `sim maps` generates N maps per shipped template over its sizes and player counts and checks
       them (no generator problems, deterministic, every start town reachable from every player, AI-vs-AI play with no
-      refused command, replay round trip); CI job `generated-maps`; fairness waits for RMG-8 (item above)
+      refused command, replay round trip); CI job `generated-maps`; fairness is the item above
 - [ ] Editor: template editor like HotA's (zone graph: add zones, set properties, draw connections; live validation; no
       undo) with "Generate" to see the result (ADR-070)
 - [x] Editor: "generate map from template" core (`EditorMapGenerator`): a template, size, seed, player count and optional
@@ -430,16 +436,20 @@ author templates in the editor.
 ## Phase 5: Content and polish
 
 ### Magic (ADR-047, ADR-063)
-Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 … MAG-3, MAG-5, MAG-6, MAG-11.
+Content draft: [spells.md](../content/spells.md). Open questions: MAG-1, MAG-3, MAG-5, MAG-6, MAG-11, MAG-12.
 
-- [ ] Spell table (school, level, cost, tags, three ranks); spell book (MAG-1, MAG-2); mana on heroes is done (ADR-063)
-- [ ] Mage guild offers spells by level; heroes learn them by visiting (MAG-2)
-- [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; potency? MAG-3), mastery
+- [ ] Spell table (school, level, cost, tags, three ranks; Town Portal and Dimension Door level 4) ❓ MAG-1; mana on heroes is done (ADR-063)
+- [ ] Spell book: mages start with one, warriors buy it for 500 gold in a guild (ADR-071)
+- [ ] Guild offers 3 / 3 / 2 / 2 spells of the town's school per level; a hero learns a spell when the school's Magic skill is at least
+      its level (ADR-071)
+- [ ] Spell Power multiplies damage and buff / debuff duration (numbers with MAG-1)
+- [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; no potency, ADR-071), mastery
       (spell ranks)
-- [ ] Combat spells: the hero casts once a round during a controlled unit's turn (ADR-070, MAG-4); machines can be
+- [ ] Combat spells: the hero casts once a round during a controlled unit's turn (ADR-070); the unit still acts (ADR-071); machines can be
       targeted and resist as `mechanical`; immunity, resistance and creature casters become live (ADR-042, ADR-049)
 - [ ] Adventure spells (MAG-5)
-- [ ] Spell resistance skill and spell specialties take effect (MAG-6)
+- [ ] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
+      specialties ❓ MAG-6
 - [ ] Spell tags and creature caster spells ❓ MAG-1
 
 ### Combat additions
@@ -447,7 +457,7 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 … MAG-
       action or lost turn, else 4 %/point ±50 % initiative; per hit 4 %/point luck for +75 % / −50 % damage, opposite
       rolls cancel; shown in the 3D battle (captions, log, unit stats)
 - [ ] Morale and luck sources: skills, buildings, army composition (artifacts are in, ADR-061) ❓ CMB-2; undead/constructs
-      without morale ❓ CMB-7
+      without morale (undead, constructs, elementals; ADR-071)
 - [x] War machines (ADR-056): offensive machine per town (ballista, cannon, catapult, glaivethrower), healing tent,
       ammo cart; War machines skill group (Ballistics, Healing, Ammo supply); units at the back of the field, offensive
       machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle

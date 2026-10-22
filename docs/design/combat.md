@@ -105,10 +105,12 @@ Creature capabilities, independent of size:
 ## Morale and luck (implemented, ADR-053; rates are drafts)
 Each stack has −5…+5 of each, its creature's plus its hero's (and the hero's artifacts, ADR-061).
 - **Morale**, rolled every round: 2 % per point to act twice (good) or lose the turn (bad); otherwise 4 % per point
-  for ±50 % initiative that round. War machines have no morale.
+  for ±50 % initiative that round. War machines have no morale (ADR-071, CMB-8, as built). **Undead, constructs and
+  elementals have no morale** either (ADR-071, CMB-7; not built).
 - **Luck**, rolled on every hit by attacker and defender, 4 % per point: the attacker's good luck (or the defender's
   bad luck) deals +75 % damage, the defender's good luck (or the attacker's bad luck) −50 %; opposite rolls cancel.
-- Which skills, buildings and army mixes change them, and whether undead ignore morale, is open ❓.
+  War machines roll their hero's luck (ADR-071, CMB-8, as built).
+- Which skills, buildings and army mixes change them is open ❓ (CMB-2).
 
 ## Actions (implemented, ADR-038)
 - **Defend**: +20 % Defense (at least +1) until the unit's next turn. **Wait**: see turn order.
@@ -157,5 +159,5 @@ Spells may target machines; they are `mechanical` and resist many spells (CMB-3,
   Neutrals and computer players always use it. The battle AI never retreats (ADR-070 plans an AI retreat, above).
 - The hero casts **at most once a round**, during the turn of one of the units the hero controls; machines that fire on
   their own do not count, and spells that change initiative do not change this ([magic.md](magic.md), ADR-070 MAG-4 part,
-  Phase 5). Whether that unit still acts afterwards is open ❓ (MAG-4).
+  Phase 5). Casting does not use that unit's action: it still acts afterwards, as in HoMM3 (ADR-071, MAG-4; not built).
 - **Siege battles** with walls and towers: post-1.0 ❓.

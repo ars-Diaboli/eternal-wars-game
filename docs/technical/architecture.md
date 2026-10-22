@@ -169,6 +169,12 @@ These are enforced by:
   in core and read by the apps at start-up, ADR-044, ADR-048, ADR-050, ADR-061; JSON via `CreatureDefinitionSerializer`),
   following the map-object pattern: built-in defaults in Domain code (`BuiltInMapObjects`), JSON
   overrides/additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`.
+- **Where the tables live** (ADR-071, DATA-1; decided, not done yet; supersedes ADR-044's location). Today the `*.csv`
+  tables sit in `src/Godot/EternalWars.Godot.Assets/data/`, are embedded into core from there, and the apps read the
+  `res://shared/data` copy at start-up. Target: the tables move to a **core-owned folder embedded in
+  `EternalWars.Core.Domain`**; the apps read the embedded copy and load designers' edited files only through
+  `--creatures=`-style flags; the `res://shared/data` copy goes. CSV stays for flat tables, JSON for nested data. A schema
+  test per table checks ids, references and columns.
 
 ### Map objects
 - **Definition** (`MapObjectDefinition`, data): id, name, `Kind`, footprint and kind parameters
@@ -258,7 +264,8 @@ reports problems that single edits cannot prevent (hero on water after painting,
 - **Smoke tests**: `AutoInput` (`-- --autoinput=...`) replays clicks and keys through the input pipeline;
   `tools/smoke-godot.ps1` runs scripted scenarios under Movie Maker and fails on errors.
 - Assets can't live in a class library. `EternalWars.Godot.Assets` is mounted into each app as
-  `res://shared/` by `tools/link-shared-assets.ps1` (junction/symlink, git-ignored).
+  `res://shared/` by `tools/link-shared-assets.ps1` (junction/symlink, git-ignored). The data tables in its `data/` folder
+  move to core (ADR-071, see [Planned evolution](#planned-evolution)); textures and other assets stay.
 
 ## 5. Threading model
 

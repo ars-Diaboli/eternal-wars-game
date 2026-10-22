@@ -6,7 +6,7 @@
 **Status**: the template format (v5), its validator, three shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two") and every
 generator stage including the scenario assembly are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`).
 The editor's "generate from template" exists in core (`EditorMapGenerator`, see [Editor](#editor)). There is no
-template editor, user template folder, fairness validation or game/editor UI yet; `sim layout` prints
+template editor, user template folder, fairness validation (decided, ADR-071) or game/editor UI yet; `sim layout` prints
 generated maps, `sim game --template` plays AI-vs-AI games on them, and CI checks every shipped template with
 `sim maps` (no generator problems, deterministic, start towns reachable from every player, AI play and replay work).
 
@@ -46,7 +46,9 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   - Planned (ADR-070, RMG-11 part; not built): a template may **enable portals** (monoliths, two ends each) so the generator
     links zones with them, and a connection's guard is a **monster guard or a garrison** ([adventure-map.md](adventure-map.md#utilities-and-travel)),
     per template.
-  - Open ❓: border guards and Keymasters (MAP-20), optional or randomly present connections (RMG-13).
+  - Planned (ADR-071, not built): a connection may be guarded by a **border guard or border gate** of one of the four
+    Keymaster colours, an option per connection ([adventure-map.md](adventure-map.md#utilities-and-travel), MAP-20); every
+    connection has a **presence probability**, 100 % by default, so a template can make a connection optional (RMG-13).
 - **Roads** (v2, whole template): on or off, the road type (default dirt), which mines get a road (default lumber and
   ore), whether gates do (default on).
 - **Validator** (`TemplateValidator`): errors for players, sizes, zones, start zones, connections, passages, empty
@@ -70,7 +72,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 | 5 | `RoadPlacer` | Roads: towns of a zone, passages between zones, gates and the nearest lumber mill and ore mine in zones with a town | implemented |
 | 6 | `TreasurePlacer` | Treasure by value band, valuable items guarded in Area mode | implemented |
 | 7 | `ScenarioAssembler` | The scenario `GameState`: players, owners, picked town types and heroes; empty slots stay neutral | implemented |
-| 8 | – | Validate: every start zone reaches the others, start zones are fair | partly (template warnings, reachability per zone; start towns reachable from every player in `sim maps`) ❓ RMG-8 |
+| 8 | – | Validate: every start zone reaches the others, start zones are fair | partly (template warnings, reachability per zone; start towns reachable from every player in `sim maps`); fairness metrics decided, not built (ADR-071, RMG-8, below) |
 
 - **No free-roaming monsters** for now (RMG-3): monsters guard passages and gates (Classic mode), mines (the mine's own
   guard) and treasure (Area mode, ADR-065).
@@ -105,6 +107,10 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
     tier-2 creatures, 1000–1500 power.
   - Neutral towns keep the default start; a slot nobody takes keeps its town, neutral, garrisoned by the zone's strength.
   - Standard rules; complexity and fog from the new-game screen; the map is named "template size×size #seed".
+- **Fairness** (ADR-071, RMG-8; not built): start zones are compared by distance to the nearest
+  mines, treasure value and guard power on the way; they must agree within **±15 %**. A map that fails is retried with the next
+  sub-seed (like other problems, below), then reported. There is no separate "richness" setting (RMG-12, dropped): treasure bands
+  and mine minimums decide how rich a zone is.
 - **Problems**: `MapGenerator.GenerateBest` retries with up to 9 sub-seeds and keeps the first clean map, else the one
   with the fewest problems, which the new-game screen shows.
 - **Generator version**: `MapGenerator.Version` is saved with the game record (`GenerationInfo`) and shown with the seed;

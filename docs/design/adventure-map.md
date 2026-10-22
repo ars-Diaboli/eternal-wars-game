@@ -268,7 +268,7 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 
 ## Second object catalogue (ADR-069)
 The owner's second list (`ideas.md`, 2026-10-20). **Nothing here is built.** The shared rules above (visit scopes, statuses, rolls, artifact
-tiers, creature names) apply. MAP-15 … MAP-24 were answered by ADR-070 except MAP-20 (Keymasters) and the map tavern's pool;
+tiers, creature names) apply. MAP-15 … MAP-24 were answered by ADR-070; MAP-20 (Keymasters) and the map tavern's pool (TOWN-4) by ADR-071;
 points marked *(assumed)* are a reading of a short answer, to be confirmed ([open-questions.md](../project/open-questions.md#adventure-map-objects)).
 Every number is a draft.
 
@@ -281,11 +281,11 @@ Every number is a draft.
 | Object | Effect | Open |
 |---|---|---|
 | Window of the Magi / Eye of the Magi | Four colours (red, green, blue, black). Visiting a Window reveals **radius 6** around every Eye of its colour; at most **4 Eyes** a colour. Works on every visit *(assumed, like HoMM3)*. Placed only in the map editor, never by the generator (ADR-070) | – |
-| Tavern | Works like a **Brotherhood** (4 offers, ADR-060). The hero must stand on its entrance; the new hero appears on a free cell next to it (one cell below by default). The hero limit applies; with the limit reached or no free cell, hiring is refused (ADR-070) | TOWN-4: whether it offers the player's pool or its own random heroes |
+| Tavern | Works like a **Brotherhood** (4 offers, ADR-060). The hero must stand on its entrance; the new hero appears on a free cell next to it (one cell below by default). The hero limit applies; with the limit reached or no free cell, hiring is refused (ADR-070). Its pool is **its own**: 4 random heroes of any faction, rolled weekly and shared by all players (ADR-071, TOWN-4) | – |
 | Portal | Takes the hero to the other end of its type: today's **two-way monolith** (implemented). A type has **exactly two ends**, no groups of three or more (ADR-070, MAP-18) | – |
 | One-Way Portal | Takes the hero to its exit, which cannot be entered: today's **one-way monolith** (implemented). Templates may let the generator link zones with portals (RMG-11, [random-maps.md](random-maps.md)) | – |
 | Garrison | **Flagged like a mine** and captured by beating its guards; a neutral garrison's guards come from the map or the generator. The owner's heroes pass both ways and may leave or take creatures at any time; enemies must defeat the guards to pass. The generator may use it as a connection guard (ADR-070, MAP-19, RMG-11) | – |
-| Keymaster's Tent | Lets the visitor through border guards and border gates of its colour (RMG-11) | MAP-20 |
+| Keymaster's Tent | **Four colours** (like the Eyes of the Magi). A visit gives the **player** the key of its colour (every hero of that player holds it). A **border guard** of that colour vanishes after the first key holder passes; a **border gate** stays and lets every key holder through. Templates may guard a connection with either, an option per connection (ADR-071, MAP-20, [random-maps.md](random-maps.md)) | – |
 
 ### Deposits (become mines)
 A visiting hero pays from its player's resources and the deposit turns into the mine of its kind, flagged for that player. Any hero
