@@ -44,10 +44,15 @@ Short answers the agent read one way. Say "no" to any of them; otherwise they st
 | MAG-5 | Town Portal and Dimension Door cost 25 mana like other level-4 spells (16 today). |
 | CMB-1 | The AI retreats when its surviving army is worth less than 20 % of the enemy's (tuning). |
 
+
+MAP-23 | The Fountain of Magic works once a day per hero; both magic objects are built with the second catalogue (mana exists already).
+Answer - The Fountain of Magic works once a week per hero;
+
 ## Random maps (Phase 4)
 
 <a id="rmg-11"></a>
 **RMG-11 Town groups in templates.** ADR-028 says a zone may filter towns by group; the format lists town types. Proposal: post-1.0.
+Answer - use proposal
 
 ## Towns and economy
 
@@ -58,17 +63,21 @@ full garrison? Proposal: only when ordering; it waits until there is room.
 <a id="town-7"></a>
 **TOWN-7 The basic tavern's offers.** With the Brotherhood a town offers 2 native + 2 adjacent heroes. What does the basic tavern (2 offers) show?
 Proposal: 1 native + 1 adjacent.
+Answer - use proposal, 1 adjacent hero is from any(random) adjacent faction;
 
 <a id="town-8"></a>
 **TOWN-8 Who counts towards the hero limit.** Heroes in a town garrison? Heroes in prisons? Proposal: garrison heroes count, prisoners do not.
+Answer - Heroes in prisons - do not belong to the player and do not counted; Heroes in a town garrison also do not counted - they just cannot leave the garrison if hero limit is reached;
 
 ## Heroes
 
 <a id="hero-1"></a>
 **HERO-1 🚧 Skill specialties.** What does a skill specialty add? Proposal: +5 % of the skill's effect per hero level, like HoMM3.
+Answer - yes, use proposal for now;
 
 <a id="hero-3"></a>
 **HERO-3 Rival schools.** Level-ups use the sworn-enemy pairs from the lore, the tavern uses the ring. Keep both, or one relation for both?
+Answer - use circle/ring for both, sworn-enemy pairs sit on opposite side of the ring;
 
 <a id="hero-4"></a>
 **HERO-4 🚧 Deployment** (Tactics, ADR-069: zone 4 / 5 / 6 cells deep).
@@ -76,6 +85,10 @@ Proposal: 1 native + 1 adjacent.
 - b. Does the enemy's Tactics cancel it, as for the width? Proposal: the side with the higher Tactics deploys; on a tie nobody does.
 - c. Controls: drag stacks in the battle scene, then "Start battle". The AI keeps automatic placement. Agreed?
 - d. Also against neutrals and banks? Proposal: yes.
+  Answer - d. against neutrals yes, no against banks;
+- c. use proposal;
+- b. use proposal;
+- a. depth measures amount of columns that is available to the player to deploy his troops, counted from the edge of the battlefield on which side hero stands, automatic placement puts troops to the very edge without ability to change it;
 
 <a id="hero-5"></a>
 **HERO-5 Names and drafts.** Hero names, school names and specialties in `heroes.csv`; primary stat odds and starting values (ADR-055).
@@ -86,11 +99,12 @@ Proposal: 1 native + 1 adjacent.
   a level above the new maximum drops to it. Agreed?
 - b. Replays recorded before the change may diverge (the numbers change). Accept?
 - c. Which starting skill replaces Troop management in `heroes.csv`? Proposal: Scouting.
+- Answer - yes, use proposal for now;
 
 <a id="hero-7"></a>
 **HERO-7 🚧 Primal Fury and warriors** (Stronghold, Swamp Bestiary).
-- a. Are these towns' warriors offered Primal Fury at all? Proposal: no, mages only.
-- b. Must every warrior of these towns start with an Offense skill (today 3 of 8 do)? Proposal: yes, these two towns only.
+- a. Are these towns' warriors offered Primal Fury at all? Proposal: no, mages only. - Answer - mages start with these skill groups, warriors have high probability to learn them quickly;
+- b. Must every warrior of these towns start with an Offense skill (today 3 of 8 do)? Proposal: yes, these two towns only. Answer - orc warrior starts with offence; swamp warrior starts with defence;
 
 ## Combat
 
@@ -104,6 +118,7 @@ mixed-factions penalty (−1 per extra faction) and a tavern +1 morale for defen
 <a id="cmb-6"></a>
 **CMB-6 Marksmanship and cover.** Marksmanship subtracts −2/8 / −4/8 / −6/8 from the ranged penalty (ADR-070). Is the >7/8 "no shot" check made before
 the reduction (so Marksmanship never shoots through a wall) or after? Proposal: before.
+Answer - order : 1. sum distance and obstacle penalties 2. subtract Marksmanship bonus from penalty to reduce it 3. 7/8 "no shot" check can be performed;
 
 ## Magic (Phase 5)
 
@@ -111,23 +126,31 @@ the reduction (so Marksmanship never shoots through a wall) or after? Proposal: 
 **MAG-1 Spell list.** The spells and numbers per school ([spells.md](../content/spells.md)); spell tags beyond `all`, `mind`, `fire`, `curse`,
 `holy`; which spells creature casters get. Spell Power is now a multiplier (ADR-071): the formulas in spells.md ("10 + 8·SP") need
 rewriting with it; proposal: damage × (1 + SP / 10), duration × (1 + SP / 10).
+Answer - use proposal for now;
 
 <a id="mag-12"></a>
 **MAG-12 Extra guild buildings by the magic circle** (ADR-071: a town may build two buildings that add spells "by the magic circle", HoMM4-like).
 - a. Which schools: the two neighbours of the town's school in the ring? Proposal: yes, one building per neighbour.
 - b. How many spells each adds per guild level? Proposal: 1 per level the guild has.
 - c. Cost and requirements? Proposal: placeholders in `buildings.csv` (2000 gold + 5 of the school's resource, needs guild 2).
+- Answer - a. yes, use proposal;
+  b. use proposal;
+- c. use proposal;
 
 <a id="mag-3"></a>
 **MAG-3 Mastery ranks.** Spells upgrade twice (ADR-047). What raises a spell's rank: the school's mastery skill level? Proposal: rank = mastery skill
 level (none → rank 1, Basic/Advanced → 2, Expert/Master → 3). Spell Power numbers come with the spell list (MAG-1).
+Answer - spells do not leve-up automatically when hero reaches certain mastery level. mastery unlocks ability to do so. spells leve-up automatically when hero visits town where in the mage guild that spell is available to learn at no cost;
 
 <a id="mag-5"></a>
 **MAG-5 Adventure spells.** Town Portal and Dimension Door are level 4 (ADR-071). Still open: the movement cost of casting; how they interact with fog,
 the AI and replays. Proposal: casting costs the spell's mana and ends no movement; Dimension Door only to explored tiles.
+Answer - if heroes starting movement pool is 2000 then cost should be 500 (1/4 of daily movement).
+how they interact with fog - hero cannot use un-explored tiles when casting Dimension Door/ Dimension Door only to explored tiles - yes;
 
 <a id="mag-6"></a>
 **MAG-6 Spell specialties.** How strong is a spell specialty? Proposal: +3 % of the spell's effect per hero level, HoMM3-like.
+Answer - use proposal;
 
 <a id="mag-7"></a>
 **MAG-7 🚧 Necromancy.**
@@ -139,21 +162,33 @@ the AI and replays. Proposal: casting costs the spell's mana and ends no movemen
 - e. Who cannot be raised: undead, constructs, elementals, war machines, the hero's own losses (by tags). Agreed?
 - f. Army room: same creature's stack or a free slot, else lost. Agreed?
 - g. Which battles: every victory, not a retreat; automatic, shown on the result screen. Agreed?
+- Answer - a. use creature's hit points;
+b. use proposal;
+c. What is raised: the base creature of the tier - if there are free slots in hero's army; two lines in a tier split in a random proportion at every level - correct; pgraded if the hero has the
+  upgraded stack - upgraded is raised only if hero does not have free stacks (at 3/4 of non upgraded value)
+d. use hitpoints as value, rest is correct;
+e. hero's own losses cannot be raised, only enemy losses are counted; enemy undead are counted; constructs, elementals are excluded;
+f. use proposal;
+g. every victory - correct; not a retreat or surrender; automatic - correct; shown on the result screen - shown on separate screen presented after result screen, before level-up screen;
 
 <a id="mag-8"></a>
 **MAG-8 🚧 Mana by level.** "+10 × ⌈level / 10⌉": the maximum only, or the daily regeneration too? Every hero, warriors included, gets at least 10.
 Proposal: maximum only; intended.
+Answer - use proposal;
 
 <a id="mag-9"></a>
 **MAG-9 Interference numbers.** Expert "−6, +2": is the extra cost +2 at Expert or +3? Per spell (+N mana), not a percent? Proposal: +1 / +2 / +3 mana.
+Answer - use proposal;
 
 <a id="mag-10"></a>
 **MAG-10 Spell Power and Knowledge for Primal Fury mages.** They have no spells. Proposal: Spell Power raises Blood Rage and Warcry strength;
 Knowledge does nothing; their level-up odds favour Attack and Defense instead.
+Answer - use both proposals for now;
 
 <a id="mag-11"></a>
 **MAG-11 Area spells and big creatures.** An area spell covers cells (say 3×3 around the target cell). A 3×3 or 4×4 creature is hit when any of its
 cells is inside (like breath today), and only once. Should area sizes grow with the target's footprint? Proposal: no; any overlap hits once.
+Answer - use proposal;
 
 ## Game flow and content
 
