@@ -1634,3 +1634,19 @@ marked *(assumed)* are listed under "To confirm" in `open-questions.md`.
   - No event in the game's first week *(assumed)*.
   - The map editor and the template editor choose which **factions' creatures** may be picked, separately for weekly and monthly events;
     default: the playable factions only. Rolls use `GameState.Random`.
+
+### ADR-074: Size pass, per-town building rows and the Capitol (implementation, 2026-10-23)
+**Status**: implemented (2026-10-23). Carries out parts of ADR-070 (size policy, TOWN-3) and ADR-073 (City Hall); choices the earlier ADRs left
+open are recorded here.
+
+- **Size pass**: 9 of 182 creatures stay Large: the five Dragon Utopia dragons, the Bone and Ghost Dragon, and Behemoth / Ancient Behemoth; the other
+  33 that were Large are Medium. Whether a non-dragon line stays Large is revisited once there are visuals (CONT-2). `sim towns` keeps a similar
+  spread (town totals 37–76 % against 36–74 % before).
+- **Town column** in `buildings.csv` (after `id`): empty = shared by every town. A town type's rows of a building replace **all** shared levels of
+  that building for that town, or add a building only that town has (the Necromancy Amplifier later). Each town's merged list is checked like the
+  shared one (levels without gaps, known requirements, dwellings for every tier). `BuildingCatalog.For(town)` gives the list, `TownRules.Buildings`
+  is what rules, the town screen, the editor and the validator use. Templates' start buildings are checked against the shared list.
+- **Town hall names** (HoMM3): Village Hall, Town Hall, City Hall, **Capitol**. Capitol placeholder: 15 000 gold + 25 lumber + 25 ore, needs the
+  **Castle** (fort 3), 4000 gold a day.
+- **One Capitol per player**: building a second is refused; a captured Capitol drops to City Hall when the captor has one (`TownBuildingDowngraded`,
+  after `TownOwnerChanged`); the map validator reports a second Capitol of one player. The AI builds the Capitol last.

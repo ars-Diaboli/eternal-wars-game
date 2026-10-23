@@ -23,6 +23,7 @@ public partial class TownListPanel : VBoxContainer
         this.SubscribeWhileInTree<TownOwnerChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<GovernorChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TownBuilt>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<TownBuildingDowngraded>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DwellingBuilt>(session.Events, _ => Refresh());
     }
 

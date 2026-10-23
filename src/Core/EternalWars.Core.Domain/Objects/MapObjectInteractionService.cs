@@ -205,7 +205,7 @@ public sealed class MapObjectInteractionService(
                 break;
 
             case Town town:
-                TownService.Capture(events, town, hero.Owner);
+                TownService.Capture(state, events, town, hero.Owner);
                 break;
 
             case { TeleportTarget: not null }:

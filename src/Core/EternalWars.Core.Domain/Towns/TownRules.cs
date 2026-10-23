@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
@@ -40,17 +41,35 @@ public static class TownRules
     public static string? UnmetDwellingRequirement(GameState state, Town town, CreatureDefinition line, int level)
     {
         var building = BuiltInBuildings.Dwelling(line.Tier);
-        for (var l = 1; l <= Math.Min(level, state.Buildings.MaxLevel(building)); l++)
+        for (var l = 1; l <= Math.Min(level, Buildings(state, town).MaxLevel(building)); l++)
         {
-            var row = state.Buildings.Get(building, l);
+            var row = Buildings(state, town).Get(building, l);
             if (row.Requires.FirstOrDefault(r => Level(state, town, r.Building) < r.Level) is { } missing)
             {
-                return $"{row.Name} needs {state.Buildings.Get(missing.Building, missing.Level).Name}.";
+                return $"{row.Name} needs {Buildings(state, town).Get(missing.Building, missing.Level).Name}.";
             }
         }
 
         return null;
     }
+
+    /// <summary>The buildings of the town's type: the shared list with its own rows (ADR-070, TOWN-3).</summary>
+    public static BuildingCatalog Buildings(GameState state, Town town) => state.Buildings.For(town.TownType);
+
+    /// <summary>
+    /// Why the town may not have this level because it is a second Capitol of its owner (ADR-070, TOWN-3), or null. A town
+    /// without an owner never refuses.
+    /// </summary>
+    public static string? CheckCapitol(GameState state, Town town, BuildingLevel level) =>
+        level.Building == BuiltInBuildings.TownHall && level.Level >= BuiltInBuildings.CapitolLevel && town.Owner is { } owner
+        && CapitolOf(state, owner, except: town) is { } other
+            ? $"{other.Name} is already your Capitol; a player has only one."
+            : null;
+
+    /// <summary>The owner's town with a Capitol (town hall 4), other than <paramref name="except"/>, or null.</summary>
+    public static Town? CapitolOf(GameState state, PlayerId owner, Town? except = null) =>
+        state.ObjectsOf<Town>().Where(t => t.Owner == owner && t != except && t.Level(BuiltInBuildings.TownHall) >= BuiltInBuildings.CapitolLevel)
+            .OrderBy(t => t.Id.Value).FirstOrDefault();
 
     /// <summary>The town type's creature lines (base creatures, tier order): its nine dwellings.</summary>
     public static IReadOnlyList<CreatureDefinition> Lines(GameState state, Town town) =>
@@ -74,7 +93,7 @@ public static class TownRules
     public static BuildingLevel? NextLevel(GameState state, Town town, string building)
     {
         var level = town.Level(building) + 1;
-        return level <= state.Buildings.MaxLevel(building) ? state.Buildings.Get(building, level) : null;
+        return level <= Buildings(state, town).MaxLevel(building) ? Buildings(state, town).Get(building, level) : null;
     }
 
     /// <summary>The next level of a line's dwelling (build, then upgrade), or null when there is none.</summary>
@@ -82,15 +101,15 @@ public static class TownRules
     {
         var level = town.DwellingLevel(line.Id) + 1;
         var building = BuiltInBuildings.Dwelling(line.Tier);
-        return level > state.Buildings.MaxLevel(building) || (level >= 2 && line.UpgradesTo is null)
+        return level > Buildings(state, town).MaxLevel(building) || (level >= 2 && line.UpgradesTo is null)
             ? null
-            : state.Buildings.Get(building, level);
+            : Buildings(state, town).Get(building, level);
     }
 
     /// <summary>Whether the town may build the next level of <paramref name="building"/> today.</summary>
     public static string? CheckBuild(GameState state, Town town, string building)
     {
-        if (BuiltInBuildings.DwellingTier(building) is not null || !state.Buildings.Contains(building))
+        if (BuiltInBuildings.DwellingTier(building) is not null || !Buildings(state, town).Contains(building))
         {
             return $"Unknown town building '{building}'.";
         }
@@ -191,8 +210,8 @@ public static class TownRules
     /// <summary>What an owned town pays every day: the income of the highest level of every building.</summary>
     public static ResourceSet DailyIncome(GameState state, Town town) =>
         town.Buildings
-            .Where(b => state.Buildings.Contains(b.Key))
-            .Aggregate(ResourceSet.Empty, (total, b) => total + state.Buildings.Get(b.Key, Math.Min(b.Value, state.Buildings.MaxLevel(b.Key))).Income);
+            .Where(b => Buildings(state, town).Contains(b.Key))
+            .Aggregate(ResourceSet.Empty, (total, b) => total + Buildings(state, town).Get(b.Key, Math.Min(b.Value, Buildings(state, town).MaxLevel(b.Key))).Income);
 
     /// <summary>
     /// The first requirement a built level lacks (every level up to the built one counts), or null when the town is
@@ -203,16 +222,16 @@ public static class TownRules
     {
         int LevelOf(string id) => id == building ? level : Level(state, town, id);
 
-        var built = state.Buildings.TownBuildings.Select(b => (Building: b, Level: Math.Min(LevelOf(b), state.Buildings.MaxLevel(b))))
+        var built = Buildings(state, town).TownBuildings.Select(b => (Building: b, Level: Math.Min(LevelOf(b), Buildings(state, town).MaxLevel(b))))
             .Concat(Lines(state, town).Select(l => (Building: BuiltInBuildings.Dwelling(l.Tier), Level: town.DwellingLevel(l.Id))));
         foreach (var (id, top) in built)
         {
             for (var l = 1; l <= top; l++)
             {
-                var row = state.Buildings.Get(id, l);
+                var row = Buildings(state, town).Get(id, l);
                 if (row.Requires.FirstOrDefault(r => LevelOf(r.Building) < r.Level) is { } missing)
                 {
-                    return $"{row.Name} needs {state.Buildings.Get(missing.Building, missing.Level).Name}.";
+                    return $"{row.Name} needs {Buildings(state, town).Get(missing.Building, missing.Level).Name}.";
                 }
             }
         }
@@ -229,7 +248,12 @@ public static class TownRules
 
         if (level.Requires.FirstOrDefault(r => Level(state, town, r.Building) < r.Level) is { } missing)
         {
-            return $"{level.Name} needs {state.Buildings.Get(missing.Building, missing.Level).Name} first.";
+            return $"{level.Name} needs {Buildings(state, town).Get(missing.Building, missing.Level).Name} first.";
+        }
+
+        if (CheckCapitol(state, town, level) is { } capitol)
+        {
+            return capitol;
         }
 
         return town.Owner is { } owner && !state.GetPlayer(owner).Resources.CanAfford(BuildCost(state, town, level))

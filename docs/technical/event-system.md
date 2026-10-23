@@ -132,6 +132,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `TownOwnerChanged(Town, Previous, Current)` | `TownService.Capture` (from interactions, `BattleService`), `GameFlowService`, editor | town captured (empty garrison walked into, or garrison beaten), released by a defeated player, or set in the editor |
 | `GovernorChanged(Town, Previous, Current)` | `TownService` | a town's governor set or cleared (ADR-063); a hero governing another town leaves it first |
 | `TownBuilt(Town, Building, Level)` / `DwellingBuilt(Town, Line, Level, Available)` | `TownService` | a building level or a dwelling (1 built, 2 upgraded) |
+| `TownBuildingDowngraded(Town, Building, Level)` | `TownService.Capture` | a captured Capitol dropped to town hall 3 because its new owner already has one (ADR-070); published after `TownOwnerChanged` |
 | `CreaturesRecruited(Town, Creature, Count, Hero, Available)` / `StackUpgraded(Town, Hero, Slot, From, To, Count)` | `TownService` | recruits into the garrison (Hero null) or the visiting hero; a stack upgraded for the price difference |
 | `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, `CaravanService`, editor | all seven garrison slots after any change |
 | `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`) |

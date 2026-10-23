@@ -13,6 +13,9 @@ public sealed record TownOwnerChanged(MapObjectId Town, PlayerId? Previous, Play
 /// <summary>A town building reached <paramref name="Level"/> (dwellings: <see cref="DwellingBuilt"/>).</summary>
 public sealed record TownBuilt(MapObjectId Town, string Building, int Level) : IEvent;
 
+/// <summary>A town building dropped to <paramref name="Level"/>: a captured Capitol whose new owner already has one (ADR-070).</summary>
+public sealed record TownBuildingDowngraded(MapObjectId Town, string Building, int Level) : IEvent;
+
 /// <summary>
 /// The dwelling of a creature line was built (level 1, with its first week of creatures in
 /// <paramref name="Available"/>) or upgraded (level 2).

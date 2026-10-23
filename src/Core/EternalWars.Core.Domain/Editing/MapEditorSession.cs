@@ -373,12 +373,12 @@ public sealed class MapEditorSession
     public EditResult SetTownBuilding(MapObjectId id, string building, int level)
     {
         if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town ||
-            BuiltInBuildings.DwellingTier(building) is not null || !Scenario.Buildings.Contains(building))
+            BuiltInBuildings.DwellingTier(building) is not null || !TownRules.Buildings(Scenario, town).Contains(building))
         {
             return EditResult.InvalidTarget;
         }
 
-        if (level < 0 || level > Scenario.Buildings.MaxLevel(building))
+        if (level < 0 || level > TownRules.Buildings(Scenario, town).MaxLevel(building))
         {
             return EditResult.InvalidValue;
         }

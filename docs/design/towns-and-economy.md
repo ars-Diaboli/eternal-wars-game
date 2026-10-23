@@ -7,7 +7,7 @@
 **Six resources**: gold, lumber, ore, crystal, mercury, sulfur (ADR-019, `ResourceSet`). No gems.
 
 ## Town turn (implemented, ADR-050)
-- One building per town per day; the building list is one table, `data/buildings.csv`, shared by all towns for now.
+- One building per town per day; the building list is one table, `src/Core/data/buildings.csv`; its rows are shared by all towns for now, and a town may get rows of its own (ADR-074).
   ADR-070 (not built): towns get **their own building lists and names**; `buildings.csv` gains a town column (like
   `creatures.csv`) where designers set names, costs and requirements, and every town later gets a unique building. New towns
   start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the requirements. The town screen is 2D in the first
@@ -19,7 +19,7 @@
 
 | Building | Levels | Effect | Status |
 |---|---|---|---|
-| Town hall | 3 | 500 / 1000 / 2000 gold a day | implemented; a fourth level, the **Capitol**, decided (ADR-070, below) |
+| Town hall | 4 | Village Hall, Town Hall, City Hall, **Capitol**: 500 / 1000 / 2000 / 4000 gold a day; one Capitol per player (ADR-070, below) | implemented |
 | Fort | 3 | Fort: needed for every dwelling; Citadel / Castle: town dwellings grow +50 % / +100 %. Sieges: wall and gate, then keep, then towers (ADR-066) | dwellings and growth implemented; fortifications wait for sieges (post-1.0) |
 | Blacksmith | 1 | Sells the healing tent and ammo cart (ADR-056) | implemented |
 | Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading: gold against resources, rates by marketplace towns (ADR-067) | income and trading implemented (ADR-067) |
@@ -32,8 +32,11 @@
 | Dwellings | 9 + upgrades | Build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier | implemented |
 | Necromancy Amplifier | 1 | Necropolis only: +5 % Necromancy for every hero of its owner with the skill (ADR-069); **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its new owner (ADR-070, TOWN-6) | planned |
 
-- **Capitol** (town hall 4, ADR-070, not built): one per player; capturing a town with a Capitol when the player already has
-  one downgrades it to town hall 3; town hall 3 is renamed City Hall (ADR-073). Its income and cost are not set yet.
+- **Capitol** (town hall 4, ADR-070, ADR-074, implemented): one per player; a second one cannot be built, and capturing a town
+  with a Capitol when the player already has one drops it to City Hall (town hall 3). Cost 15 000 gold + 25 lumber + 25 ore,
+  needs the Castle, 4000 gold a day (placeholders).
+- **Per-town lists** (ADR-070, ADR-074): `buildings.csv` has a `town` column; a town's own rows of a building replace the shared
+  ones for that town or add a building only it has. Every row is still shared.
 
 ## Creature tech tree (implemented, ADR-030, ADR-050)
 - Creatures have **5 tiers** (not HoMM3's 7).
@@ -162,7 +165,7 @@ that threshold stays a placeholder to tune (ADR-070, TOWN-2). Nothing about trad
 Paid at the start of the owner's turn. **There is no base or placeholder income** (ADR-025): players earn only what
 their sources produce. Each source is a pluggable `IIncomeSource`, and `EconomyService.DailyIncome` sums them.
 - **Mines**: gold 1000, lumber/ore 2, rare resources 1.
-- **Towns**: town hall 500 / 1000 / 2000 gold; marketplace level 2 adds 1 ore and 1 lumber.
+- **Towns**: town hall 500 / 1000 / 2000 / 4000 gold; marketplace level 2 adds 1 ore and 1 lumber.
 - **Hero skills**: Treasury and Prospecting (Estates group, ADR-062).
 - **Hero specialties**: resource specialties pay +N of a resource per day (`HeroIncome`).
 - **Artifacts**: daily resources through `HeroIncome` (ADR-061).
