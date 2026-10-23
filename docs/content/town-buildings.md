@@ -234,9 +234,10 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
   (like `creatures.csv`) where designers set names, costs and requirements, and every town later gets a unique building. The tables
   above stay the shared list until then.
 - **Capitol** (ADR-070, not built): a **town hall 4**, one per player; capturing a town with a Capitol when the player already has one
-  downgrades it to town hall 3 *(assumed)*. Today the name Capitol belongs to town hall 3 above; its cost and income are not set.
+  downgrades it to town hall 3 (ADR-073). Today the name Capitol belongs to town hall 3 above, which is renamed **City Hall**; its cost and
+  income are not set.
 - **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two per town, one adds **+5 a week** to tier-1 growth, the other
-  **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the bonus *(assumed)*.
+  **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the bonus (ADR-073).
   Ids, costs and requirements are not set.
 - **Spell buildings** (ADR-071, MAG-2; not built): two more buildings add spells of other schools by the magic circle (HoMM4-like,
   ADR-072, MAG-12): one for each of the two schools next to the town's own on the ring, each adding **1 spell per guild level**
@@ -244,4 +245,4 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
   instead of a mage guild.
 - **Necromancy Amplifier** (ADR-069, ADR-070; not built): Necropolis only, the first unique building. +5 % Necromancy for every hero of
   its owner with Death attunement; more than one adds nothing. **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its
-  new owner. Id `necromancy-amplifier` *(assumed)*.
+  new owner. Id `necromancy-amplifier`.

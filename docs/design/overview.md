@@ -56,7 +56,7 @@ out of scope, but the deterministic core keeps it possible.
  │ Experience, artifacts ─► stronger heroes           │
  │ Towns: build 1 structure/day, recruit weekly growth│
  └──────────────── End turn ─────────────────────────┘
-        Week start: creature growth ("week of X" events planned ❓)
+        Week start: creature growth (week and month events planned, ADR-073)
 ```
 
 ## 4. Platforms and scope

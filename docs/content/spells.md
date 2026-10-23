@@ -179,7 +179,7 @@ creature-only abilities when magic arrives ([MAG-1](../project/open-questions.md
 
 ## Adventure spells (proposal)
 
-A few spells are cast on the adventure map, from the hero's spell book, at the cost of mana and **a quarter of the hero's daily movement points** (500 of 2000, ADR-072, MAG-5). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic; **Town Portal and
+A few spells are cast on the adventure map, from the hero's spell book, at the cost of mana and a fixed **500 movement points** (ADR-073, MAG-5; a hero with fewer left cannot cast). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic; **Town Portal and
 Dimension Door are level 4**, so they need Master magic (ADR-071, MAG-5; was level 3).
 
 | Spell | School | Level | Mana | Effect |

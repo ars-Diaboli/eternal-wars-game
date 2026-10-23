@@ -1587,3 +1587,49 @@ ADR-048 (rival schools: the arch-rival only), ADR-060 (the basic tavern's offers
 - **MAG-11 area spells**: a fixed area whatever the target's size; a creature with any cell inside is hit once.
 - **MAG-12 spell buildings**: one building for each of the two schools next to the town's own on the ring, each adding 1 spell per guild level the
   town has; placeholder cost 2000 gold + 5 of the school's resource, needs mage guild 2.
+
+### ADR-073: Confirmations, war machine footprints, caravan reach, base-creature map dwellings, victory conditions, week events (2026-10-23)
+**Status**: accepted as a design (2026-10-23), user answers in `open-questions.md`; **nothing implemented**. Numbers are drafts. Supersedes parts of
+ADR-056 (war machine sizes and the machine column), ADR-057 (conditions, team victory), ADR-072 (MAG-5's movement cost, MAG-10's stat odds). Points
+marked *(assumed)* are listed under "To confirm" in `open-questions.md`.
+
+- **Confirmed**: every "To confirm" assumption of ADR-070 … ADR-072 stands (RMG-9, RMG-10, MAP-16, MAP-18, MAP-20, TOWN-1, TOWN-3 ×2, TOWN-4,
+  TOWN-6, TOWN-7, DATA-1, MAG-3, MAG-5's 25 mana, HERO-7 ×2, CMB-1), except the two below.
+- **MAG-10 Primal Fury mages**: level-ups use **even odds, 25 / 25 / 25 / 25 %** at every level (not the warrior odds).
+- **MAG-5 adventure spells**: the movement cost is a **fixed 500 points**, whatever the hero's daily total; a hero with fewer than 500 left cannot
+  cast.
+- **HERO-4 war machines** (HoMM3-like: the machine stands mostly outside the grid): every machine occupies **one column only**, the outermost one
+  of its side. The offensive machine and the healing tent are **1 × 3** cells, the ammo cart **1 × 2** *(assumed: every offensive machine —
+  ballista, cannon, catapult, glaivethrower — is 1 × 3)*. Their models may overhang the grid edge. Stacks start in the next column (today the
+  machine column is as wide as the largest machine plus a gap). The deployment zone of 4 / 5 / 6 columns **includes the machine column**; stacks
+  may use its free cells *(assumed)*. Battle units get rectangular footprints for this (creatures stay square).
+- **Map dwellings sell base creatures only** for now: no map dwelling of an upgraded creature. The editor offers only base creatures and the
+  validator rejects an upgraded one; a map that has one loads it as its line's base creature *(assumed)*. Town dwellings keep their upgrade
+  (level 2 sells both, ADR-046).
+- **TOWN-5 caravans**: the 5-day reach is checked twice. When a dwelling is **flagged** (and when a town gets a caravan), the raw distance — the
+  travel days at the creature's speed ignoring hostile heroes, monsters and guards *(assumed)* — decides whether the dwelling appears in that
+  town's caravan list at all. When **ordering**, the full check (open route, 5 days) runs as today; on the way only the route is re-checked. A
+  caravan waits at a full garrison until there is room (as built). The town's caravan screen shows a **queue**: caravans on their way (creature,
+  count, days left) and those waiting for room.
+- **FLOW-1 victory conditions**:
+  - New victory conditions: **capture a given map object** *(assumed: an ownable one — mine, dwelling, town)*, **obtain a given artifact** (a hero
+    of the player carries it), **release a given hero** from its prison. Capture a town and defeat a hero exist.
+  - New defeat conditions: **lose a given artifact** *(assumed: no hero of the player carries it any more)*, next to lose a town and lose a hero
+    (which can be the starting ones).
+  - **Time limits**: a victory condition may carry a deadline ("defeat the enemy within 3 months"); missing it defeats the player *(assumed)*.
+    The plain "time limit" defeat condition stays.
+  - **Teams**: a team wins while at least one of its **human** players survives; eliminated human teammates share the win. A computer ally's
+    survival does not win for the human players *(assumed: they have lost)*.
+  - Campaign hooks stay open (Phase 6).
+- **FLOW-2 week and month events** (HoMM3-like; a month is 4 weeks), announced at the start of the week:
+  - **Weekly** (every week but a month's first): **75 % week of a creature** — a random creature's weekly growth doubles; picking either the base
+    or the upgraded creature doubles its line *(assumed: in towns and map dwellings, that week only)*. **25 %** nothing.
+  - **Monthly** (first week of a month; replaces that week's weekly roll):
+    - **45 % month of a creature**: a random creature's growth doubles *(assumed: as the weekly one, that week)*, and stacks of it **spawn across
+      the map next to random map objects** as their guards (numbers when built).
+    - **15 % plague**: no growth that week, and the creatures waiting in every town's dwellings are **halved** (rounded down).
+    - **15 % starvation**: no growth that week, nothing else.
+    - **25 %** nothing *(assumed: then the weekly roll is made as usual)*.
+  - No event in the game's first week *(assumed)*.
+  - The map editor and the template editor choose which **factions' creatures** may be picked, separately for weekly and monthly events;
+    default: the playable factions only. Rolls use `GameState.Random`.

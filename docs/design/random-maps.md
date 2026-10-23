@@ -18,7 +18,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   lists every template it can find, built-in and user/mod folders. Today only the built-in (embedded) templates load.
 - **Template editor** (ADR-070, RMG-10; not built): works like the HotA template editor (zone graph, zone and connection
   properties); **no undo** (unlike `MapEditorSession`); "Generate" in the editor shows the result. User templates are saved in
-  the user data folder and listed next to the shipped ones *(assumed)*.
+  the user data folder and listed next to the shipped ones (ADR-073).
 - **Generation is deterministic** from (template, size, players, seed, generator version), so a map can be shared by
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
@@ -59,7 +59,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   (fixed teams, allowed team counts), and the map editor may override them on a generated map.
 - **Mirrored templates** (ADR-070, RMG-9; not in the format yet): only for **2, 4 or 8 players** (8 uses the underground). Two
   players: **axis symmetry**, the axis vertical, horizontal or diagonal; four or eight: **point symmetry** around the map centre.
-  The template picks the symmetry, "random axis" allowed *(assumed)*. Mirrored zones share their rolls.
+  The template picks the symmetry, "random axis" allowed (ADR-073). Mirrored zones share their rolls.
 
 ## Pipeline
 

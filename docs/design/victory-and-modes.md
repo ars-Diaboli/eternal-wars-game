@@ -10,7 +10,16 @@
   decides.
 - A defeated player's heroes leave, its towns, mines and map dwellings turn neutral and its caravans vanish; the game
   then refuses commands and the game app shows the result.
-- More conditions (grail, flag all mines, defeat all monsters), team survival and campaign hooks are open ❓.
+- **ADR-073 (not built)**:
+  - New victory conditions: capture a given map object *(assumed: an ownable one — mine, dwelling, town)*, obtain a given
+    artifact (a hero of the player carries it), release a given hero from its prison.
+  - New defeat condition: lose a given artifact *(assumed: no hero of the player carries it any more)*; lose a town and lose a
+    hero already cover the starting ones.
+  - **Deadlines**: a victory condition may carry a time limit ("defeat the enemy within 3 months"); missing it defeats the
+    player *(assumed)*.
+  - **Teams**: a team wins while at least one of its **human** players survives; eliminated human teammates share the win. A
+    computer ally's survival does not win for them *(assumed: they have lost)*.
+- Campaign hooks are open ❓ (FLOW-1, Phase 6).
 
 ## Game modes (priority order)
 1. **Single scenario vs. AI** (implemented).

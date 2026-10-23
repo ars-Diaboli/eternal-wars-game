@@ -4,14 +4,14 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-22)**: no code since 2026-10-19; three design rounds are decided and waiting to be built. ADR-069
+**Where we are (2026-10-23)**: no code since 2026-10-19; four design rounds are decided and waiting to be built. ADR-069
 reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
-and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
+and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
 Phase 4 has every generator stage in core. **Next up** (in this order): the data-table move and the creature size pass
 (DATA-1, decided), the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
-(its questions are answered, ADR-072; only HERO-4's war machines are open), then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
+(answered, ADR-072 / ADR-073; nothing blocks it), then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [ ] One home for the data tables: move `*.csv` to a core-owned folder, embed in core, apps read the embedded copy with
@@ -186,7 +186,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071)
 - [ ] Two spell buildings per town, one per ring neighbour's school, 1 spell per guild level each (2000 gold + 5 of the school's resource,
       needs guild 2; ADR-072)
-- [ ] Capitol (town hall 4, ADR-070): one per player; a captured second Capitol drops to town hall 3; income and AI
+- [ ] Capitol (town hall 4, ADR-070): one per player; a captured second Capitol drops to town hall 3; town hall 3 renamed City Hall (ADR-073); income and AI
 - [ ] Per-town building lists and names (ADR-070; the table is in "Data and content groundwork"); every town's unique
       building comes later
 - [x] Dwellings on the adventure map (ADR-054): `CreatureDwelling`, weekly growth, flagging, recruiting by a visiting hero
@@ -197,7 +197,12 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       creatures, caravans are invisible; building 1000 gold + 5 lumber (placeholder)
 - [x] Town screen: caravan section (hire, send the picked stack, caravans on the way); `DwellingPanel` opens when a hero visits a dwelling
 - [x] AI: heroes flag and recruit at map dwellings, towns build a caravan once the player owns a dwelling, hire from owned dwellings and send troops to an empty town (`AdventureAi`)
-- [ ] Smoke scenario for dwellings and caravans (needs Godot); caravan rules (TOWN-5), caravan cost tuning; dwelling guards are
+- [ ] Caravan reach (ADR-073, TOWN-5): a dwelling beyond 5 days of raw distance (ignoring hostile blockers) is left out of the town's
+      caravan list, decided when it is flagged or the town gets a caravan; ordering keeps the full check
+- [ ] Caravan queue on the town screen: caravans on their way (creature, count, days left) and those waiting at a full garrison (ADR-073)
+- [ ] Map dwellings sell base creatures only: the editor offers base creatures, the validator rejects upgrades, older maps load the line's
+      base creature (ADR-073)
+- [ ] Smoke scenario for dwellings and caravans (needs Godot); caravan cost tuning; dwelling guards are
       in the objects block below (ADR-068)
 
 ### Towns: Godot
@@ -234,7 +239,9 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3)
 - [x] Leadership (`offense.third`, +1/2/3 morale) and Alertness (`defense.third`, +5/10/15 % initiative, working title) (ADR-067)
 - [ ] Deployment: part of Tactics, the first 4 / 5 / 6 columns from the own edge; only the higher Tactics deploys; drag stacks, then "Start
-      battle"; heroes and neutrals, not banks (ADR-072; a deployment step in `BattleSetup` and UI) ❓ HERO-4 (the war machines)
+      battle"; heroes and neutrals, not banks (ADR-072; a deployment step in `BattleSetup` and UI); the zone includes the machine column (ADR-073)
+- [ ] War machine footprints (ADR-073): one column at the outer edge, offensive machine and tent 1 × 3, ammo cart 1 × 2, stacks from the
+      next column; rectangular battle footprints for machines; models overhang the grid (Godot)
 
 #### Skill rework (ADR-069, decided 2026-10-20)
 - [ ] New numbers: Melee 9/16/23/30 %, Archery 15/25/35 %, Pathfinding to Master (−100 %), Logistics to Expert (30 %), Alertness flat +1/2/3
@@ -247,7 +254,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       subtract Marksmanship, then the 7/8 check (ADR-072)
 - [ ] Primal Fury for Swamp Bestiary, Adrenaline removed; Interference (`rage.third`) with the spell-cost part (data until Phase 5); Interference
       +1 / +2 / +3 mana; mages start with the group, warriors are offered it often; Stronghold warriors start with Offense, Swamp
-      warriors with Defense; Spell Power strengthens Blood Rage and warcries (ADR-072; names CONT-5)
+      warriors with Defense; Spell Power strengthens Blood Rage and warcries (ADR-072); their mages level up with even odds 25 / 25 / 25 / 25 % (ADR-073; names CONT-5)
 - [ ] Attunement table of ADR-069 and mana by level (+10 × ⌈level / 10⌉) in `ManaRules` (maximum only, ADR-072)
 - [ ] Necromancy (Death attunement): raise undead from the slain enemies' hit points after victories (ADR-072 rules), its screen
       between the battle result and level-ups; the AI values it
@@ -303,7 +310,13 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Save/load: a state snapshot if replays get too slow
 - [x] Game app: victory / defeat screen (`GameResultPanel`)
 - [x] Game app: save / load menu (F10, F5 quick save, F9 quick load; also in battle)
-- [ ] Week events ("week of X") ❓ FLOW-2
+- [ ] Week and month events (ADR-073): weekly 75 % week of a creature (its line's growth doubles); monthly 45 % month of a creature
+      (doubled growth, guards spawn next to random objects), 15 % plague (no growth, town stocks halved), 15 % starvation (no growth);
+      announcement at week start; the AI accounts for them
+- [ ] Event creature factions per map and template (weekly and monthly separately; default playable factions); map format bump
+- [ ] More conditions (ADR-073): capture a map object, obtain an artifact, release a prisoner; lose an artifact; deadlines on victory
+      conditions; editor support; map format bump
+- [ ] Team victory: a team wins while one of its human players survives; eliminated human teammates share the win (ADR-073)
 
 ### Adventure AI (computer players)
 - [x] AI driver that plays a computer player's turn through commands only (ADR-036, ADR-059), deterministic (no RNG)
@@ -453,7 +466,7 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
       (allows ranks 2 / 3; a spell rises, free, on a visit to a guild that offers it, ADR-072)
 - [ ] Combat spells: the hero casts once a round during a controlled unit's turn (ADR-070); the unit still acts (ADR-071); machines can be
       targeted and resist as `mechanical`; immunity, resistance and creature casters become live (ADR-042, ADR-049)
-- [ ] Adventure spells: a quarter of the day's movement besides mana; Dimension Door only to explored tiles (ADR-072)
+- [ ] Adventure spells: a fixed 500 movement points besides mana (fewer left: no cast); Dimension Door only to explored tiles (ADR-072)
 - [ ] Area spells: a fixed area; a big creature with any cell inside is hit once (ADR-072)
 - [ ] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
       specialties +3 % of the effect per hero level (ADR-072)

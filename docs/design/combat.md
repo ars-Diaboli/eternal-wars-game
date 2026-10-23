@@ -39,7 +39,8 @@
   - **Deployment** (ADR-072, HERO-4; not built): the player may place the troops within the first **4 / 5 / 6 columns** (Basic /
     Advanced / Expert) from their own edge. Only the side with the higher Tactics deploys (a tie: nobody). The player drags stacks
     in the battle scene, then presses "Start battle"; computer players, and every side that does not deploy, are placed
-    automatically at the very edge. Against heroes and neutral monsters, not in creature banks.
+    automatically at the very edge. Against heroes and neutral monsters, not in creature banks. The war machines keep the
+    outermost column (ADR-073, below); the zone includes it, and stacks may use its free cells *(assumed)*.
 
 ## Engagement and blocking
 - **Surround / flanking**: a unit's perimeter grows with its size, so more attackers fit around a large unit. **No
@@ -150,7 +151,7 @@ attacks included.
 - **Necromancy** (ADR-069, ADR-072): after a victory, a hero with Death attunement raises undead from the enemy's losses;
   a screen after the battle result, before any level-up, shows them ([skills.md](../content/skills.md#necromancy-death-attunement-adr-069-not-built)).
   Not after a retreat or a surrender.
-- The AI **retreats** when its army is almost beaten (threshold: tuning, *assumed* 20 % of the enemy's value); AI surrender is
+- The AI **retreats** when its army is almost beaten (threshold: tuning, 20 % of the enemy's value, ADR-073); AI surrender is
   not planned (ADR-070).
 
 ## War machines (implemented, ADR-056, ADR-063)
@@ -162,6 +163,11 @@ exist (ADR-063) but sieges do not.
 
 ADR-070 (not built): heroes **exchange** machines like stacks; a town garrison holds machines only through a hero in it.
 Spells may target machines; they are `mechanical` and resist many spells (CMB-3, MAG-4).
+
+ADR-073 (HERO-4, not built): like HoMM3, a machine stands mostly outside the grid and occupies **only the outermost column**
+of its side: the offensive machine and the tent **1 × 3** cells, the ammo cart **1 × 2** (tent at the top, offensive machine in
+the middle, cart at the bottom, as today). Stacks start in the next column. Today the machine column is as wide as the largest
+machine (2–3 cells) plus a gap, and machines are square.
 
 ## Other
 - **Quick combat**: either side may hand the rest of the battle to the deterministic battle AI (implemented).
