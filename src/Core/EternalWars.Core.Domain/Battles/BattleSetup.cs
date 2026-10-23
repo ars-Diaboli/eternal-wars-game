@@ -18,12 +18,11 @@ public static class BattleSetup
     /// <summary>A neutral guard is split into at most this many stacks.</summary>
     public const int MaxGuardStacks = 5;
 
-    /// <summary>Widths offered for an effective Tactics level; none = the default only.</summary>
+    /// <summary>Widths offered for an effective Tactics level (ADR-069): Advanced 30 / 32, Expert 28–34; below Advanced the default only.</summary>
     public static IReadOnlyList<int> WidthOptions(SkillLevel effectiveTactics) => effectiveTactics switch
     {
-        SkillLevel.Basic => [30, 32],
-        SkillLevel.Advanced => [28, 30, 32],
-        SkillLevel.Expert => [28, 30, 32, 34],
+        SkillLevel.Advanced => [30, 32],
+        >= SkillLevel.Expert => [28, 30, 32, 34],
         _ => [BattleState.DefaultWidth],
     };
 

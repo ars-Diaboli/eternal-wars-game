@@ -132,17 +132,17 @@ public sealed record BattleParticipant(
 }
 
 /// <summary>
-/// What a hero adds to its side in battle (ADR-048): skill percentages (Melee, Archery, Armor), Drill speed, and the flat
+/// What a hero adds to its side in battle (ADR-048): skill percentages (Melee, Archery, Armor), War Tempo speed, and the flat
 /// bonus of its preferred creature line (<see cref="Heroes.SkillEffects"/>), its morale and luck (ADR-053), and its war
-/// machine skills (ADR-056), Alertness' initiative and the Primal Fury skills of Stronghold heroes (ADR-067).
-/// <see cref="EnemySpellPowerPenalty"/> waits for casting (Phase 5).
+/// machine skills (ADR-056), Alertness' initiative (flat, ADR-069), Marksmanship and the Primal Fury skills (ADR-067).
+/// <see cref="EnemySpellPowerPenalty"/> and <see cref="EnemySpellCostPenalty"/> (Interference) wait for casting (Phase 5).
 /// </summary>
 public sealed record HeroBattleBonuses(
     int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred, int Morale = 0, int Luck = 0,
     Heroes.SkillLevel Ballistics = Heroes.SkillLevel.None, Heroes.SkillLevel Healing = Heroes.SkillLevel.None,
     Heroes.SkillLevel AmmoSupply = Heroes.SkillLevel.None, int RangedDamageTakenReductionPercent = 0,
-    int InitiativePercent = 0, Heroes.SkillLevel BloodRage = Heroes.SkillLevel.None, Heroes.SkillLevel Warcry = Heroes.SkillLevel.None,
-    int EnemySpellPowerPenalty = 0)
+    int Initiative = 0, Heroes.SkillLevel BloodRage = Heroes.SkillLevel.None, Heroes.SkillLevel Warcry = Heroes.SkillLevel.None,
+    int EnemySpellPowerPenalty = 0, int EnemySpellCostPenalty = 0, int MarksmanshipEighths = 0)
 {
     public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<string>());
 
@@ -165,7 +165,7 @@ public sealed record HeroBattleBonuses(
             Heroes.SkillEffects.MeleeDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Melee)) + artifacts.MeleePercent,
             Heroes.SkillEffects.RangedDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Archery)) + artifacts.RangedPercent,
             Math.Min(90, Heroes.SkillEffects.DamageTakenReductionPercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Armor)) + artifacts.DamageTakenReductionPercent),
-            Heroes.SkillEffects.BattleSpeedBonus(hero.SkillLevelOf(Heroes.BuiltInSkills.Drill)) + artifacts.BattleSpeed,
+            Heroes.SkillEffects.BattleSpeedBonus(hero.SkillLevelOf(Heroes.BuiltInSkills.WarTempo)) + artifacts.BattleSpeed,
             preferred,
             hero.TotalMorale,
             hero.TotalLuck,
@@ -173,10 +173,12 @@ public sealed record HeroBattleBonuses(
             hero.SkillLevelOf(Heroes.BuiltInSkills.Healing),
             hero.SkillLevelOf(Heroes.BuiltInSkills.AmmoSupply),
             artifacts.RangedDamageTakenReductionPercent,
-            Heroes.SkillEffects.AlertnessInitiativePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Alertness)),
+            Heroes.SkillEffects.AlertnessInitiative(hero.SkillLevelOf(Heroes.BuiltInSkills.Alertness)),
             hero.SkillLevelOf(Heroes.BuiltInSkills.BloodRage),
             hero.SkillLevelOf(Heroes.BuiltInSkills.Warcry),
-            PrimalFury.SpellPowerPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.FactionSpellResistance)));
+            PrimalFury.SpellPowerPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
+            PrimalFury.SpellCostPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
+            Heroes.SkillEffects.MarksmanshipEighths(hero.SkillLevelOf(Heroes.BuiltInSkills.Marksmanship)));
     }
 }
 

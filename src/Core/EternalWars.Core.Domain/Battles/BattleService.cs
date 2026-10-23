@@ -261,7 +261,7 @@ public sealed class BattleService(
 
         // The phase is settled before anyone hears of the battle, so views see the width choice (publish after mutating).
         var (chooser, level) = BattleSetup.EffectiveTactics(battle.Attacker.Tactics, battle.Defender.Tactics);
-        var choosing = widthChoice && chooser is { } side && !battle.IsComputerControlled(side);
+        var choosing = widthChoice && chooser is { } side && !battle.IsComputerControlled(side) && BattleSetup.WidthOptions(level).Count > 1;
         if (choosing)
         {
             battle.Phase = BattlePhase.ChoosingWidth;
@@ -400,11 +400,16 @@ public sealed class BattleService(
         // "For the next battle" statuses are used up by this one, whatever its outcome (ADR-068).
         progression.ExpireStatuses(new[] { winning.Hero, losing.Hero }.OfType<HeroId>().Select(state.GetHero), StatusExpiry.NextBattle);
 
-        // Winner: survivors back into their slots, then the experience.
+        // Winner: survivors back into their slots, then Necromancy, then the experience (its level-ups come after the raised undead).
         if (winning.Hero is { } winnerId)
         {
             var hero = state.GetHero(winnerId);
             ApplySurvivors(battle, winner, hero);
+            if (reason == BattleEndReason.Defeated)
+            {
+                RaiseUndead(battle, loser, hero);
+            }
+
             Award(hero, experience);
         }
         else if (winning.Guard is { } guardId && state.GetObject(guardId) is Town town)
@@ -461,6 +466,44 @@ public sealed class BattleService(
         }
 
         armies.Publish(hero);
+    }
+
+    /// <summary>
+    /// Necromancy (ADR-072, MAG-7): after a victory over a defeated enemy (not one that retreated), the base undead raised from the enemy's
+    /// slain creatures join a stack of their own or a free slot; with neither, an army stack of the upgrade takes 3/4 of them; otherwise they
+    /// are lost.
+    /// </summary>
+    private void RaiseUndead(BattleState battle, BattleSide enemy, Hero hero)
+    {
+        var level = hero.SkillLevelOf(NecromancyRules.Skill);
+        if (level == SkillLevel.None)
+        {
+            return;
+        }
+
+        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine).Select(u => (u.Creature, u.InitialCount - u.Count));
+        var joined = new List<RaisedUndead>();
+        foreach (var raised in NecromancyRules.Raise(slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, state.Random))
+        {
+            if (hero.Army.TryAdd(new CreatureStack(raised.Creature, raised.Count)))
+            {
+                joined.Add(raised);
+            }
+            else if (state.Creatures.Get(raised.Creature).UpgradesTo is { } upgrade && hero.Army.Stacks.Any(s => s.Stack.Creature == upgrade)
+                     && raised.Count * 3 / 4 is > 0 and var count)
+            {
+                hero.Army.TryAdd(new CreatureStack(upgrade, count));
+                joined.Add(new RaisedUndead(upgrade, count));
+            }
+        }
+
+        if (joined.Count == 0)
+        {
+            return;
+        }
+
+        armies.Publish(hero);
+        events.Publish(new UndeadRaised(hero.Id, joined));
     }
 
     private void ApplySurvivors(BattleState battle, BattleSide side, Town town)

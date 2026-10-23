@@ -187,8 +187,14 @@ public sealed class Hero(
     /// <summary>Flat movement bonus from artifacts.</summary>
     public int MovementBonusFlat { get; internal set; }
 
-    /// <summary>Tiles revealed around the hero, in tiles (rounded circle).</summary>
-    public int ScoutingRadius { get; internal set; } = DefaultScoutingRadius;
+    private int _baseScoutingRadius = DefaultScoutingRadius;
+
+    /// <summary>Tiles revealed around the hero, in tiles (rounded circle): 5, plus Scouting's 2 / 4 / 6 (ADR-069). Setting it sets the base.</summary>
+    public int ScoutingRadius
+    {
+        get => _baseScoutingRadius + SkillEffects.ScoutingRadius(SkillLevelOf(BuiltInSkills.Scouting));
+        internal set => _baseScoutingRadius = value;
+    }
 
     /// <summary>Accumulated experience; each <see cref="ExperienceTable"/> level brings a skill choice.</summary>
     public int Experience { get; internal set; }

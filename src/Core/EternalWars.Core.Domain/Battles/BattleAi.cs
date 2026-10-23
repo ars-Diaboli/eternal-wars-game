@@ -24,9 +24,9 @@ internal static class BattleAi
         if (BattleGrid.CanShootNow(battle, unit))
         {
             var shot = enemies
-                .Select(e => (Target: e, CanShoot: BattleGrid.CanShoot(battle, unit, e, out var cover), Cover: cover))
+                .Select(e => (Target: e, CanShoot: BattleGrid.CanShoot(battle, unit, e, out var penalty), Penalty: penalty))
                 .Where(s => s.CanShoot)
-                .OrderByDescending(s => Score(battle, unit, s.Target, isRanged: true, s.Cover))
+                .OrderByDescending(s => Score(battle, unit, s.Target, isRanged: true, s.Penalty))
                 .ThenBy(s => s.Target.Id)
                 .FirstOrDefault();
             if (shot.Target is not null && engine.Shoot(shot.Target.Id) is null)
@@ -54,9 +54,9 @@ internal static class BattleAi
         engine.Defend();
     }
 
-    private static long Score(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int cover = 0)
+    private static long Score(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int penalty = 0)
     {
-        var damage = Math.Min(DamageCalculator.Expected(battle, unit, target, isRanged, cover), target.TotalHealth);
+        var damage = Math.Min(DamageCalculator.Expected(battle, unit, target, isRanged, penalty), target.TotalHealth);
         return (long)damage * target.Creature.Value / target.Creature.Health;
     }
 

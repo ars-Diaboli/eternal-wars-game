@@ -15,7 +15,8 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
-      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<HeroFreed>
+      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<HeroFreed>,
+      IEventHandler<HeroLeveledUp>
 {
     public void Handle(GameStarted @event)
     {
@@ -76,6 +77,15 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
     // A freed prisoner looks around from where the prison stood.
     public void Handle(HeroFreed @event) => OnHeroRelocated(state.GetHero(@event.Hero), state.GetHero(@event.Hero).Position);
+
+    // Scouting widens the hero's sight at once (ADR-069).
+    public void Handle(HeroLeveledUp @event)
+    {
+        if (@event.Skill is { } skill && BuiltInSkills.Resolve(skill) == BuiltInSkills.Scouting && state.Heroes.FirstOrDefault(h => h.Id == @event.Hero) is { } hero)
+        {
+            OnHeroRelocated(hero, hero.Position);
+        }
+    }
 
     // A hired hero stands at a town entrance and looks around from there.
     public void Handle(HeroHired @event) => OnHeroRelocated(state.GetHero(@event.Hero), state.GetHero(@event.Hero).Position);
