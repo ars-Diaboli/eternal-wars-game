@@ -5,8 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- The shipped random map templates (ADR-064); the apps will list these next to the user's own. -->
-    <EmbeddedResource Include="../../Godot/EternalWars.Godot.Assets/data/templates/*.ewtemplate.json" LogicalName="EternalWars.Templates.%(Filename)%(Extension)" />
+    <!-- The shipped random map templates (ADR-064), next to the data tables (ADR-071); the apps will list these next to the user's own. -->
+    <EmbeddedResource Include="../data/templates/*.ewtemplate.json" LogicalName="EternalWars.Templates.%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

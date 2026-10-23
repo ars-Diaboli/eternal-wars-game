@@ -7,42 +7,24 @@ using Godot;
 namespace EternalWars.Godot.Shared;
 
 /// <summary>
-/// Content the apps read at start-up rather than from the build, so designers can edit it and just restart (ADR-044).
+/// The content tables the apps use: the copies embedded in core (<c>src/Core/data</c>, ADR-071), or a designer's edited file
+/// given with <c>--creatures=</c>, <c>--heroes=</c>, <c>--buildings=</c>, <c>--artifacts=</c> or <c>--artifact-sets=</c>, so an
+/// edit needs only a restart. A missing or broken file falls back to the embedded copy and reports the error to the Godot output.
 /// </summary>
 public static class GameContent
 {
-    /// <summary>The shipped creature table; Godot keeps it as a plain file (<c>creatures.csv.import</c>: importer "keep").</summary>
-    public const string CreatureTablePath = "res://shared/data/creatures.csv";
-
-    /// <summary>The shipped hero roster (ADR-048), kept as a plain file like the creature table.</summary>
-    public const string HeroTablePath = "res://shared/data/heroes.csv";
-
-    /// <summary>The shipped town buildings (ADR-046), kept as a plain file like the creature table.</summary>
-    public const string BuildingTablePath = "res://shared/data/buildings.csv";
-
-    /// <summary>The shipped artifacts and artifact sets (ADR-061), kept as plain files like the other tables.</summary>
-    public const string ArtifactTablePath = "res://shared/data/artifacts.csv";
-
-    public const string ArtifactSetTablePath = "res://shared/data/artifact_sets.csv";
-
     private static ArtifactCatalog? _artifacts;
     private static CreatureCatalog? _creatures;
     private static HeroCatalog? _heroes;
     private static BuildingCatalog? _buildings;
 
-    /// <summary>
-    /// Creatures from <c>--creatures=path.csv</c>, else <see cref="CreatureTablePath"/>. A missing or broken table falls
-    /// back to the copy embedded at build time and reports the error to the Godot output.
-    /// </summary>
-    public static CreatureCatalog Creatures => _creatures ??= LoadCreatures();
+    public static CreatureCatalog Creatures => _creatures ??= Load(LaunchArguments.CreaturesPath, "Creature",
+        path => new CreatureCatalog(CreatureTable.Parse(ReadText(path))), CreatureCatalog.Default, c => c.All.Count());
 
-    /// <summary>
-    /// Heroes from <c>--heroes=path.csv</c>, else <see cref="HeroTablePath"/>; checked against <see cref="Creatures"/>
-    /// (preferred creatures). A missing or broken table falls back to the embedded copy and reports the error.
-    /// </summary>
-    public static HeroCatalog Heroes => _heroes ??= Load(LaunchArguments.HeroesPath ?? HeroTablePath, "Hero", text =>
+    /// <summary>Heroes, checked against <see cref="Creatures"/> (preferred creatures).</summary>
+    public static HeroCatalog Heroes => _heroes ??= Load(LaunchArguments.HeroesPath, "Hero", path =>
     {
-        var catalog = new HeroCatalog(HeroTable.Parse(text));
+        var catalog = new HeroCatalog(HeroTable.Parse(ReadText(path)));
         foreach (var problem in catalog.Check(Creatures))
         {
             GD.PushWarning($"Hero table: {problem}");
@@ -51,47 +33,43 @@ public static class GameContent
         return catalog;
     }, HeroCatalog.Default, c => c.All.Count());
 
-    /// <summary>
-    /// Town buildings from <c>--buildings=path.csv</c>, else <see cref="BuildingTablePath"/>. A missing or broken table falls
-    /// back to the embedded copy and reports the error.
-    /// </summary>
-    public static BuildingCatalog Buildings => _buildings ??= Load(LaunchArguments.BuildingsPath ?? BuildingTablePath, "Building",
-        text => new BuildingCatalog(BuildingTable.Parse(text)), BuildingCatalog.Default, c => c.Buildings.Count());
+    public static BuildingCatalog Buildings => _buildings ??= Load(LaunchArguments.BuildingsPath, "Building",
+        path => new BuildingCatalog(BuildingTable.Parse(ReadText(path))), BuildingCatalog.Default, c => c.Buildings.Count());
 
-    /// <summary>Artifacts from <see cref="ArtifactTablePath"/> and <see cref="ArtifactSetTablePath"/>; a missing or broken table falls back to the embedded copy.</summary>
+    /// <summary>Artifacts and their sets; either flag replaces its table, the other stays embedded.</summary>
     public static ArtifactCatalog Artifacts => _artifacts ??= LoadArtifacts();
 
     private static ArtifactCatalog LoadArtifacts()
     {
-        try
+        var artifactsPath = LaunchArguments.ArtifactsPath;
+        var setsPath = LaunchArguments.ArtifactSetsPath;
+        if (artifactsPath is null && setsPath is null)
         {
-            var catalog = new ArtifactCatalog(
-                ArtifactTable.ParseArtifacts(ReadText(ArtifactTablePath)), ArtifactTable.ParseSets(ReadText(ArtifactSetTablePath)));
-            GD.Print($"Artifacts: {catalog.All.Count()} from {ArtifactTablePath}");
-            return catalog;
-        }
-        catch (Exception e) when (e is FormatException or IOException or ArgumentException or UnauthorizedAccessException)
-        {
-            GD.PushError($"Artifact tables: {e.Message} (using the built-in tables instead)");
             return ArtifactCatalog.Default;
         }
+
+        return Load($"{artifactsPath} {setsPath}".Trim(), "Artifact", _ => new ArtifactCatalog(
+                ArtifactTable.ParseArtifacts(artifactsPath is null ? BuiltInArtifacts.EmbeddedTable(BuiltInArtifacts.ArtifactsResource) : ReadText(artifactsPath)),
+                ArtifactTable.ParseSets(setsPath is null ? BuiltInArtifacts.EmbeddedTable(BuiltInArtifacts.SetsResource) : ReadText(setsPath))),
+            ArtifactCatalog.Default, c => c.All.Count());
     }
 
     private static string ReadText(string path) =>
-        global::Godot.FileAccess.FileExists(path) ? global::Godot.FileAccess.GetFileAsString(path) : throw new IOException($"{path}: file not found");
+        path.StartsWith("res://", StringComparison.Ordinal) || path.StartsWith("user://", StringComparison.Ordinal)
+            ? global::Godot.FileAccess.FileExists(path) ? global::Godot.FileAccess.GetFileAsString(path) : throw new IOException("file not found")
+            : File.ReadAllText(path);
 
-    private static CreatureCatalog LoadCreatures() =>
-        Load(LaunchArguments.CreaturesPath ?? CreatureTablePath, "Creature", text => new CreatureCatalog(CreatureTable.Parse(text)),
-            CreatureCatalog.Default, c => c.All.Count());
-
-    private static T Load<T>(string path, string what, Func<string, T> parse, T fallback, Func<T, int> count)
+    /// <summary>The embedded <paramref name="fallback"/> without a flag; otherwise the parsed file, or the fallback if it is broken.</summary>
+    private static T Load<T>(string? path, string what, Func<string, T> parse, T fallback, Func<T, int> count)
     {
+        if (path is null)
+        {
+            return fallback;
+        }
+
         try
         {
-            var text = path.StartsWith("res://", StringComparison.Ordinal) || path.StartsWith("user://", StringComparison.Ordinal)
-                ? global::Godot.FileAccess.FileExists(path) ? global::Godot.FileAccess.GetFileAsString(path) : throw new IOException("file not found")
-                : File.ReadAllText(path);
-            var loaded = parse(text);
+            var loaded = parse(path);
             GD.Print($"{what}s: {count(loaded)} from {path}");
             return loaded;
         }

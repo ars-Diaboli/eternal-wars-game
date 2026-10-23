@@ -24,6 +24,5 @@ triggers, map resize, the **template editor** and "generate map from template" (
   is decided but not built.
 
 ## Data tables
-Creatures, heroes, buildings and artifacts are CSV tables (JSON for nested data). ADR-071 (DATA-1, not done yet) moves them
-from `EternalWars.Godot.Assets/data` to a core-owned folder embedded in `EternalWars.Core.Domain`; designers edit a copy and
-load it with `--creatures=`-style flags ([development.md](../technical/development.md#editing-creature-stats)).
+Creatures, heroes, buildings and artifacts are CSV tables (JSON for nested data). Since ADR-071 (DATA-1) they live in `src/Core/data`,
+embedded in `EternalWars.Core.Domain`; designers edit a copy and load it with `--creatures=`-style flags ([development.md](../technical/development.md#editing-creature-stats)).

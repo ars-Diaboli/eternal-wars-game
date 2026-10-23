@@ -2,8 +2,8 @@ namespace EternalWars.Core.Domain.Creatures;
 
 /// <summary>
 /// Creatures that ship with the game. The roster and every stat live in the creature table
-/// <c>src/Godot/EternalWars.Godot.Assets/data/creatures.csv</c> (<see cref="CreatureTable"/>, ADR-044), embedded in this
-/// assembly as the default; the Godot apps read the file itself at start-up so designers can edit it without a rebuild.
+/// <c>src/Core/data/creatures.csv</c> (<see cref="CreatureTable"/>, ADR-044), embedded in this
+/// assembly as the default (ADR-071); the Godot apps read an edited copy only when given <c>--creatures=</c>.
 /// Eight playable towns with 9 lines over 5 tiers (2+2+2+2+1), every line with an upgrade (ADR-030, ADR-037), at most five
 /// capabilities each (ADR-042); Conflux, Dragon Utopia and neutrals besides. Caster spell ids name spells the magic system
 /// will define. The constants below are the ids code and tests refer to.

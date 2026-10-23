@@ -19,6 +19,12 @@ public static class LaunchArguments
     /// <summary>A building table to use instead of the shipped one (<see cref="GameContent.Buildings"/>).</summary>
     public static string? BuildingsPath => Value("--buildings=");
 
+    /// <summary>An artifact table to use instead of the shipped one (<see cref="GameContent.Artifacts"/>).</summary>
+    public static string? ArtifactsPath => Value("--artifacts=");
+
+    /// <summary>An artifact set table to use instead of the shipped one (<see cref="GameContent.Artifacts"/>).</summary>
+    public static string? ArtifactSetsPath => Value("--artifact-sets=");
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 

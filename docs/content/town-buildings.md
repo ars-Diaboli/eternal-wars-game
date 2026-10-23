@@ -5,7 +5,7 @@ Rules: ADR-030 (7 of 9 dwellings), ADR-046 (building list), ADR-050 (towns in pl
 dwellings), ADR-056 (blacksmith), ADR-060 (tavern), ADR-063 (governors and Stewardship), ADR-070 (per-town lists, Capitol,
 Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building). All towns share one building list for now; their dwellings come from their creature lines. Numbers are a draft.
 
-Sources: `src/Godot/EternalWars.Godot.Assets/data/buildings.csv` (columns in
+Sources: `src/Core/data/buildings.csv` (columns in
 [development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`; both move to a core-owned folder
 embedded in `EternalWars.Core.Domain` (ADR-071, DATA-1, not done yet). Update the tables on this page when those files change.
 

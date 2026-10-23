@@ -65,7 +65,7 @@ public static class BuiltInBuildings
 }
 
 /// <summary>
-/// The building table (<c>EternalWars.Godot.Assets/data/buildings.csv</c>), one row per building level, in the
+/// The building table (<c>src/Core/data/buildings.csv</c>), one row per building level, in the
 /// <see cref="CsvTable"/> conventions: <c>id, level, name, gold, resources, requires, income, notes</c>. Requirements read
 /// <c>fort 2; tavern 1</c>; a dwelling requirement (<c>dwelling-3 1</c>) is met by any dwelling of that tier.
 /// </summary>
@@ -78,6 +78,10 @@ public static class BuildingTable
     public const string Resources = "resources";
     public const string Requires = "requires";
     public const string Income = "income";
+    public const string Notes = "notes";
+
+    /// <summary>The columns of the shipped table, in order.</summary>
+    public static IReadOnlyList<string> Columns { get; } = [Id, Level, Name, Gold, Resources, Requires, Income, Notes];
 
     private static readonly string[] Required = [Id, Level, Name];
 
