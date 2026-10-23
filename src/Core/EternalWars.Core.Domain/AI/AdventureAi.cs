@@ -280,6 +280,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             if (next is null
                 || (dwelling && next.Level == 1 && TownRules.CheckDwellingChoice(_state, town, id, 1) is not null)
                 || next.Requires.Any(r => TownRules.Level(_state, town, r.Building) < r.Level)
+                || TownRules.CheckCapitol(_state, town, next) is not null
                 || !Reachable(TownRules.BuildCost(_state, town, next), have, income))
             {
                 continue;
@@ -346,6 +347,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         yield return (false, BuiltInBuildings.Fort);
         yield return (false, BuiltInBuildings.MageGuild);
         yield return (false, BuiltInBuildings.Tavern);
+        yield return (false, BuiltInBuildings.TownHall); // the Capitol, once the Castle stands
     }
 
     /// <summary>

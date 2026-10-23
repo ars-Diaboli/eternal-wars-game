@@ -464,7 +464,7 @@ public sealed class BattleService(
 
                 break;
             case Town town when winner is not null:
-                TownService.Capture(events, town, winner.Owner);
+                TownService.Capture(state, events, town, winner.Owner);
                 break;
         }
     }

@@ -66,7 +66,8 @@ spells.md tables still use "a + b·SP" and are rewritten with the list.
 **CONT-1 Lore names.** Working titles (Light, Darkness, Wild, Primordial) or the lore names (Dawn Covenant, Ashen Court, Unbound, Firstborn)?
 
 <a id="cont-2"></a>
-**CONT-2 Roster review.** Names, capabilities and numbers in `creatures.csv`; the size pass of ADR-070 comes first.
+**CONT-2 Roster review.** Names, capabilities and numbers in `creatures.csv`. The size pass is done (ADR-074): 9 Large, the seven dragons and
+the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or none) is decided once there are visuals.
 
 <a id="cont-3"></a>
 **CONT-3 Artifacts.** The draft numbers; HoMM3-style placeholders or lore items; Crown of the Waning Eye's "best magic skill" and ties.

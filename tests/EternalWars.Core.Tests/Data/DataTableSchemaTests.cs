@@ -51,8 +51,9 @@ public class DataTableSchemaTests
         var text = BuiltInBuildings.EmbeddedTable();
         Assert.Equal(BuildingTable.Columns, Header(text, "Building"));
 
-        // The catalog rejects level gaps, repeats, unknown requirements and missing dwelling tiers.
+        // The catalog rejects level gaps, repeats, unknown requirements and missing dwelling tiers, for the shared list and every town's.
         var catalog = new BuildingCatalog(BuildingTable.Parse(text));
+        Assert.All(catalog.TownTypes, town => Assert.Contains(town, Towns));
         string[] referencedByCode =
         [
             BuiltInBuildings.TownHall, BuiltInBuildings.Fort, BuiltInBuildings.Blacksmith, BuiltInBuildings.Marketplace,

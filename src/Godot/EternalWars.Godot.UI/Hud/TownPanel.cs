@@ -92,6 +92,7 @@ public partial class TownPanel : PanelContainer
         Visible = false;
 
         this.SubscribeWhileInTree<TownBuilt>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<TownBuildingDowngraded>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DwellingBuilt>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<CreaturesRecruited>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<StackUpgraded>(session.Events, _ => Refresh());
@@ -154,14 +155,15 @@ public partial class TownPanel : PanelContainer
         _trade.Visible = town.Level(BuiltInBuildings.Marketplace) > 0;
 
         Clear(_buildings);
-        foreach (var building in state.Buildings.TownBuildings)
+        var catalog = TownRules.Buildings(state, town);
+        foreach (var building in catalog.TownBuildings)
         {
             var next = TownRules.NextLevel(state, town, building);
             var refusal = TownRules.CheckBuild(state, town, building);
             var level = town.Level(building);
             var button = new Button
             {
-                Text = next is null ? $"{state.Buildings.Get(building, level).Name} (max)" : $"{next.Name}\n{Cost(TownRules.BuildCost(state, town, next))}",
+                Text = next is null ? $"{catalog.Get(building, level).Name} (max)" : $"{next.Name}\n{Cost(TownRules.BuildCost(state, town, next))}",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? $"Build {next!.Name}",
             };

@@ -280,10 +280,11 @@ public partial class InspectorPanel : VBoxContainer
         AddChild(new Label { Text = "Buildings (level, 0 = not built)" });
         var buildings = new HFlowContainer();
         AddChild(buildings);
-        foreach (var building in scenario.Buildings.TownBuildings)
+        var catalog = TownRules.Buildings(scenario, town);
+        foreach (var building in catalog.TownBuildings)
         {
             var id = building;
-            var level = Spin(buildings, building, town.Level(building), 0, scenario.Buildings.MaxLevel(building));
+            var level = Spin(buildings, building, town.Level(building), 0, catalog.MaxLevel(building));
             level.ValueChanged += value => Edit(() => _editor.SetTownBuilding(town.Id, id, (int)value));
         }
 

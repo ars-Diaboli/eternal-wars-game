@@ -234,8 +234,11 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         }
     }
 
-    /// <summary>A town falls to <paramref name="owner"/>: an empty garrison was walked into, or the garrison was beaten.</summary>
-    internal static void Capture(IEventPublisher events, Town town, PlayerId owner)
+    /// <summary>
+    /// A town falls to <paramref name="owner"/>: an empty garrison was walked into, or the garrison was beaten. A Capitol drops to
+    /// town hall 3 when the new owner already has one (ADR-070, TOWN-3).
+    /// </summary>
+    internal static void Capture(GameState state, IEventPublisher events, Town town, PlayerId owner)
     {
         if (!town.Garrison.IsEmpty)
         {
@@ -251,6 +254,12 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         town.Owner = owner;
         town.Governor = null;
         events.Publish(new TownOwnerChanged(town.Id, previous, owner));
+
+        if (town.Level(BuiltInBuildings.TownHall) >= BuiltInBuildings.CapitolLevel && TownRules.CapitolOf(state, owner, except: town) is not null)
+        {
+            town.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel - 1);
+            events.Publish(new TownBuildingDowngraded(town.Id, BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel - 1));
+        }
     }
 
     private Town OwnTown(PlayerId player, MapObjectId townId)

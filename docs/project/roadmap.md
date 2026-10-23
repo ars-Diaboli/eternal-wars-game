@@ -9,7 +9,7 @@ reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answe
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
-Phase 4 has every generator stage in core. **Next up** (in this order): the data-table move and the size pass are done; next the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
+Phase 4 has every generator stage in core. **Next up** (in this order): the groundwork is done (data tables, size pass, per-town building column, Capitol); next the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns), then the skill rework
 (answered, ADR-072 / ADR-073; nothing blocks it), then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -18,8 +18,8 @@ Phase 4 has every generator stage in core. **Next up** (in this order): the data
       (DATA-1, ADR-071)
 - [x] Creature size pass (ADR-070): 9 of 182 Large (the seven dragons and the Behemoth line), the other 33 Large → Medium;
       `sim towns` re-run (similar spread, tuning stays CONT-2)
-- [ ] `buildings.csv` gets a town column: per-town names, costs and requirements (TOWN-3); `BuildingCatalog` per town type;
-      the town screen and editor follow
+- [x] `buildings.csv` town column (TOWN-3, ADR-074): a town's rows replace a shared building or add one only it has; `BuildingCatalog.For`,
+      `TownRules.Buildings`; the town screen, editor, validator and AI use the town's list (every row still shared)
 - [ ] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks); undead Ruins → Crypt with old
       maps loading `bank.ruins` (MAP-22)
 
@@ -186,8 +186,10 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071)
 - [ ] Two spell buildings per town, one per ring neighbour's school, 1 spell per guild level each (2000 gold + 5 of the school's resource,
       needs guild 2; ADR-072)
-- [ ] Capitol (town hall 4, ADR-070): one per player; a captured second Capitol drops to town hall 3; town hall 3 renamed City Hall (ADR-073); income and AI
-- [ ] Per-town building lists and names (ADR-070; the table is in "Data and content groundwork"); every town's unique
+- [x] Capitol (town hall 4, ADR-070, ADR-074): Village / Town / City Hall / Capitol; one per player (build refused, captured one drops to
+      City Hall, `TownBuildingDowngraded`, validator error); placeholder 15 000 gold + 25 lumber + 25 ore, needs the Castle, 4000 a day; the AI
+      builds it last
+- [ ] Per-town names, costs and requirements filled in `buildings.csv` (the column exists, ADR-074); every town's unique
       building comes later
 - [x] Dwellings on the adventure map (ADR-054): `CreatureDwelling`, weekly growth, flagging, recruiting by a visiting hero
       (`RecruitAtDwellingCommand`); map format v12; editor placement and `SetDwelling`; validator

@@ -215,7 +215,7 @@ public static class MapValidator
             yield return "belongs to a missing player.";
         }
 
-        foreach (var (building, level) in town.Buildings.Where(b => b.Value > scenario.Buildings.MaxLevel(b.Key)))
+        foreach (var (building, level) in town.Buildings.Where(b => b.Value > TownRules.Buildings(scenario, town).MaxLevel(b.Key)))
         {
             yield return $"has {building} level {level}, which does not exist.";
         }
@@ -223,6 +223,12 @@ public static class MapValidator
         if (TownRules.UnmetRequirement(scenario, town) is { } requirement)
         {
             yield return $"breaks a building requirement: {requirement}";
+        }
+
+        if (town.Owner is { } capitolOwner && town.Level(BuiltInBuildings.TownHall) >= BuiltInBuildings.CapitolLevel
+            && TownRules.CapitolOf(scenario, capitolOwner, except: town) is { } first && first.Id.Value < town.Id.Value)
+        {
+            yield return $"is a second Capitol of its owner ({first.Name} is one); a player has only one.";
         }
 
         var lines = TownRules.Lines(scenario, town);

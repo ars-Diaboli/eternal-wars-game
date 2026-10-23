@@ -3,11 +3,11 @@
 Every town building, what it costs, what it needs and what it does, and the creature dwellings of each playable town.
 Rules: ADR-030 (7 of 9 dwellings), ADR-046 (building list), ADR-050 (towns in play), ADR-054 (caravan, map
 dwellings), ADR-056 (blacksmith), ADR-060 (tavern), ADR-063 (governors and Stewardship), ADR-070 (per-town lists, Capitol,
-Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building). All towns share one building list for now; their dwellings come from their creature lines. Numbers are a draft.
+Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building). All towns share one building list for now (the table can give a town its own rows, ADR-074); their dwellings come from their creature lines. Numbers are a draft.
 
 Sources: `src/Core/data/buildings.csv` (columns in
-[development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`; both move to a core-owned folder
-embedded in `EternalWars.Core.Domain` (ADR-071, DATA-1, not done yet). Update the tables on this page when those files change.
+[development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`, embedded in core (ADR-071). Update the
+tables on this page when those files change.
 
 Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature · ❓ not decided yet.
 
@@ -15,7 +15,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 
 - **One building per town per day**, on the owner's turn, if its requirements are built and the owner can pay
   (`BuildCommand`, `BuildDwellingCommand`). Higher levels need the level below.
-- **New towns** start with **Town Hall, Fort and Tavern** (level 1), also when a map does not list buildings. The editor
+- **New towns** start with **Village Hall, Fort and Tavern** (level 1), also when a map does not list buildings. The editor
   can pre-build more, but keeps the requirements.
 - **Nothing is demolished.** Choices are final per town; another town of the same type may choose differently.
 - **Income**: an owned town pays every day the income of the highest level of each building.
@@ -29,9 +29,10 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 
 | Id | Level | Name | Cost | Requires | Income a day |
 |---|---|---|---|---|---|
-| `town-hall` | 1 | Town Hall | 2 500 gold, lumber 5, ore 5 | – | gold 500 |
-| `town-hall` | 2 | City Hall | 5 000 gold, lumber 10, ore 10 | blacksmith 1, marketplace 1, mage-guild 1 | gold 1000 |
-| `town-hall` | 3 | Capitol | 10 000 gold, lumber 20, ore 20 | fort 2 | gold 2000 |
+| `town-hall` | 1 | Village Hall | 2 500 gold, lumber 5, ore 5 | – | gold 500 |
+| `town-hall` | 2 | Town Hall | 5 000 gold, lumber 10, ore 10 | blacksmith 1, marketplace 1, mage-guild 1 | gold 1000 |
+| `town-hall` | 3 | City Hall | 10 000 gold, lumber 20, ore 20 | fort 2 | gold 2000 |
+| `town-hall` | 4 | Capitol | 15 000 gold, lumber 25, ore 25 (placeholder) | fort 3 | gold 4000 (placeholder) |
 | `fort` | 1 | Fort | 1 500 gold, lumber 5, ore 5 | tavern 1 | – |
 | `fort` | 2 | Citadel | 3 000 gold, lumber 10, ore 10 | – | – |
 | `fort` | 3 | Castle | 6 000 gold, lumber 15, ore 15 | – | – |
@@ -48,7 +49,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 
 | Building | Effect | Status |
 |---|---|---|
-| Town Hall | gold income: 500 / 1000 / 2000 a day | ✅ |
+| Village Hall … Capitol | gold income: 500 / 1000 / 2000 / 4000 a day. The **Capitol** (level 4) is one per player: a second one cannot be built, and a captured one drops to City Hall when the captor already has one (ADR-070, ADR-074) | ✅ |
 | Fort | Fort: needed for every dwelling; Citadel: town dwellings grow +50 % (bonus rounded down); Castle: +100 % (`TownRules.WeeklyGrowth`). Sieges: Fort = town wall and gate, Citadel adds a keep, Castle towers and stronger walls (ADR-066) | ✅ dwellings, growth; ⏳ fortifications (sieges post-1.0) |
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading gold against resources, rates by the number of marketplace towns (ADR-067, [towns-and-economy.md](../design/towns-and-economy.md#marketplace-implemented-adr-067)) | ✅ silo and trading |
@@ -62,25 +63,26 @@ Arrows point from a requirement to what it unlocks. Each level also needs the le
 
 ```mermaid
 graph LR
-  TH1[Town Hall] --> TH2[City Hall]
+  TH1[Village Hall] --> TH2[Town Hall]
   BS[Blacksmith] --> TH2
   MP1[Marketplace] --> TH2
   MG1[Mage Guild 1] --> TH2
-  TH2 --> TH3[Capitol]
+  TH2 --> TH3[City Hall] --> TH4[Capitol]
   TV[Tavern] --> F1[Fort]
   F1 --> TV2[Brotherhood]
   F1 --> DW[Dwellings, every tier]
   F1 --> F2[Citadel]
   F2 --> TH3
   F2 --> F3[Castle]
+  F3 --> TH4
   MP1 --> MP2[Resource Silo]
   MG1 --> MG2[Mage Guild 2] --> MG3[Mage Guild 3] --> MG4[Mage Guild 4]
   TH2 --> CV[Caravan]
 ```
 
-Since every town starts with Town Hall, Fort and Tavern, the shortest way to the Capitol is Blacksmith, Marketplace and
-Mage Guild 1 (City Hall), then Citadel, then Capitol: six days and 22 250 gold, 55 lumber, 45 ore and 2 mercury
-(the six buildings' costs added up). Every dwelling needs the Fort (`fort 1` on the `dwelling-*` level-1 rows, ADR-066);
+Since every town starts with Village Hall, Fort and Tavern, the shortest way to the Capitol is Blacksmith, Marketplace and
+Mage Guild 1 (Town Hall), then Citadel, City Hall, Castle and Capitol: eight days and 43 250 gold, 95 lumber, 85 ore and
+2 mercury (the eight buildings' costs added up). Every dwelling needs the Fort (`fort 1` on the `dwelling-*` level-1 rows, ADR-066);
 new towns have it, so this only matters for towns a map places without a fort.
 
 ## Dwellings
@@ -230,12 +232,9 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 - The mage guild 4 stays a placeholder (ADR-070). The fort's fortifications only take effect with sieges (post-1.0, ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
-- **Per-town buildings** (ADR-070, not built): each town gets its own building list and names; `buildings.csv` gains a town column
-  (like `creatures.csv`) where designers set names, costs and requirements, and every town later gets a unique building. The tables
-  above stay the shared list until then.
-- **Capitol** (ADR-070, not built): a **town hall 4**, one per player; capturing a town with a Capitol when the player already has one
-  downgrades it to town hall 3 (ADR-073). Today the name Capitol belongs to town hall 3 above, which is renamed **City Hall**; its cost and
-  income are not set.
+- **Per-town names and costs** (ADR-070): the `town` column is built (ADR-074) but every row is still shared; designers fill in
+  town rows, and every town later gets a unique building.
+- The Capitol's cost and income are placeholders.
 - **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two per town, one adds **+5 a week** to tier-1 growth, the other
   **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the bonus (ADR-073).
   Ids, costs and requirements are not set.
