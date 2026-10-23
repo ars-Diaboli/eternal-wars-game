@@ -83,9 +83,11 @@ HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `G
 | Monthly (a month's first week, instead of the weekly roll) | 45 % | **Month of a creature**: growth doubles as above, and stacks of it spawn next to random map objects as their guards |
 | | 15 % | **Plague**: no growth that week; the creatures waiting in every town's dwellings are halved (rounded down) |
 | | 15 % | **Starvation**: no growth that week |
-| | 25 % | nothing *(assumed: the weekly roll is made as usual)* |
+| | 25 % | nothing; the weekly roll is made as usual |
 
-- *(Assumed)*: the doubling applies to towns and map dwellings for that one week; no event in the game's first week.
+- The doubling applies to towns and map dwellings for that one week (confirmed, ADR-075).
+- **When events start** (ADR-075): by default no event in the game's first week. The map editor and the template may turn
+  week and month events off, or skip up to **8 weeks** (2 months) before the first one.
 - The map editor and the template editor choose which factions' creatures may be picked, separately for weekly and monthly
   events; default: the playable factions only.
 
@@ -93,17 +95,18 @@ HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `G
 - Dwellings of one creature on the adventure map grow every Monday, owned or not; a visiting hero flags one and
   recruits from it.
 - A **caravan** (town building) hires creatures from your dwellings: they travel virtually to the town at their map
-  speed along a route no hostile hero, monster or guarded tile blocks, and a dwelling more than 5 days away cannot
-  supply it; both are checked before paying.
+  speed along a route no hostile hero, monster or guarded tile blocks; both are checked before paying.
+- **Reach** (ADR-073, ADR-075, built): **7500 movement points**, every step at the plain cost (100, diagonals 141), so
+  terrain, roads and the creature's speed do not matter. The town lists only dwellings within the **raw** reach, which
+  ignores hostile heroes, monsters and guards (rock, water and objects still count); ordering needs an open route
+  within the reach. The travel days still follow the creatures' map speed, so slow creatures over bad ground may take
+  more than 5 days.
 - A blocked route sends the caravan back (refund), a captured destination scatters the creatures, and caravans cannot
   be seen or attacked. Caravans also send garrison troops to another own town.
 - At a full garrison a caravan waits at the gates until there is room.
-- **ADR-073 (TOWN-5, not built)**:
-  - The reach is checked twice. When a dwelling is flagged (and when a town gets a caravan), the **raw distance** — travel days at
-    the creature's speed, ignoring hostile heroes, monsters and guards *(assumed)* — decides whether the dwelling appears in that
-    town's caravan list at all; ordering then runs the full check as today.
-  - The caravan screen shows a **queue**: caravans on their way (creature, count, days left) and those waiting for room.
-  - Map dwellings sell base creatures only ([adventure-map.md](adventure-map.md#creature-dwellings)).
+- The caravan screen shows the town's **queue** (built, ADR-073): caravans coming here, on their way first (fewest days
+  left) and then those waiting for room; the caravans sent from the town are listed apart.
+- Map dwellings sell base creatures only (built, ADR-073; [adventure-map.md](adventure-map.md#creature-dwellings)).
 
 ## Tavern (implemented, ADR-060)
 - A hero costs **2500 gold** and appears on the town's entrance (which must be free). A player has at most **8 heroes**, or the map's lower limit (ADR-068).

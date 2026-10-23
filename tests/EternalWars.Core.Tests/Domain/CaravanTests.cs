@@ -15,7 +15,7 @@ using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
 
-/// <summary>Map dwellings and caravans (ADR-054).</summary>
+/// <summary>Map dwellings and caravans (ADR-054, the reach and queue of ADR-073 / ADR-075).</summary>
 public class CaravanTests
 {
     private const string Footman = BuiltInCreatures.Footman;
@@ -128,7 +128,7 @@ public class CaravanTests
         Assert.Equal(100_000 - (5 * footman.Cost.Gold), state.GetPlayer(Blue).Resources.Gold);
         var caravan = Assert.Single(state.Caravans);
         Assert.Equal(route.Days, caravan.DaysLeft);
-        Assert.InRange(route.Days, 2, CaravanRules.MaxDays);
+        Assert.True(route.Days >= 2);
         Assert.Equal(0, town.Garrison.StackCount);
 
         for (var day = 1; day < route.Days; day++)
@@ -188,15 +188,83 @@ public class CaravanTests
     }
 
     [Fact]
-    public void ADwellingMoreThanFiveDaysAway_CannotSupplyTheTown_AndNothingIsPaid()
+    public void ADwellingBeyondTheReach_IsNotListed_AndCannotSupplyTheTown()
     {
-        var (session, town, dwelling) = Setup(width: 110, dwellingX: 100);
+        var (session, town, dwelling) = Setup(width: 110, dwellingX: 100); // about 98 steps: 9800 points
         var gold = session.State.GetPlayer(Blue).Resources.Gold;
 
         var result = session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 1));
 
-        Assert.Contains("days away", result.Error);
+        Assert.Contains("beyond the reach", result.Error);
         Assert.Equal(gold, session.State.GetPlayer(Blue).Resources.Gold);
+        Assert.Empty(CaravanRules.Dwellings(session.State, town));
+    }
+
+    [Fact]
+    public void TheReach_IgnoresTerrain_SoSlowGroundOnlyMakesTheTripLonger()
+    {
+        // Swamp everywhere: 70 steps are 7000 + points of plain movement whatever the ground, many days for footmen.
+        var (session, town, dwelling) = Setup(width: 80, dwellingX: 72, special: (x, y) => x == 3 && y == 7 ? 'A' : x == 79 && y == 11 ? 'B' : 's');
+        var state = session.State;
+        var distance = CaravanRules.Distance(state, null, dwelling.VisitPosition, town.VisitPosition);
+        var route = CaravanRules.FindRoute(state, Blue, dwelling.VisitPosition, town.VisitPosition, state.Creatures.Get(Footman))!;
+
+        Assert.InRange(distance!.Value, 6900, CaravanRules.MaxReach);
+        Assert.True(route.Days > 5, $"{route.Days} days");
+        Assert.Equal([dwelling], CaravanRules.Dwellings(state, town));
+
+        session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 2)).ThrowIfRejected();
+        Assert.Equal(route.Days, Assert.Single(state.Caravans).DaysLeft);
+    }
+
+    [Fact]
+    public void TheRawReach_IgnoresHostiles_ButAnOrderNeedsAnOpenRoute()
+    {
+        // A rock wall at x = 12 with a gap at y = 5, and a second dwelling behind a wall without a gap.
+        char? Walls(int x, int y) => (x == 12 && y != 5) || (x == 30 && y < 11) || (x > 30 && y == 10) ? '#' : null;
+        var (session, town, dwelling) = Setup(special: Walls);
+        var state = session.State;
+        var closedIn = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 34, 3);
+        closedIn.Creature = Footman;
+        closedIn.Owner = Blue;
+        state.GetHero(B).Position = new MapPosition(12, 5); // an enemy in the gap
+
+        Assert.Equal([dwelling], CaravanRules.Dwellings(state, town)); // the hero does not matter for the list, the rock does
+        Assert.Contains("No open route", CaravanRules.CheckOrder(state, town, dwelling, 1));
+        Assert.Contains("beyond the reach", CaravanRules.CheckOrder(state, town, closedIn, 1));
+    }
+
+    [Fact]
+    public void TheTownsQueue_ListsCaravansOnTheirWay_ThenThoseWaitingForRoom()
+    {
+        var (session, town, near) = Setup(dwellingX: 10);
+        var state = session.State;
+        var far = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 30, 3);
+        far.Creature = BuiltInCreatures.Wolf;
+        far.Owner = Blue;
+        far.Available = 10;
+        session.Execute(new OrderCaravanCommand(Blue, town.Id, far.Id, 2)).ThrowIfRejected();
+        session.Execute(new OrderCaravanCommand(Blue, town.Id, near.Id, 2)).ThrowIfRejected();
+        var (first, second) = (state.Caravans[0], state.Caravans[1]);
+        Assert.True(first.DaysLeft > second.DaysLeft);
+
+        Assert.Equal([second, first], CaravanRules.Queue(state, town)); // fewest days left first
+
+        var other = state.Creatures.All.Where(c => c.Id != Footman && c.Id != BuiltInCreatures.Wolf).Take(Army.SlotCount).ToList();
+        for (var slot = 0; slot < Army.SlotCount; slot++)
+        {
+            town.Garrison.Set(slot, new CreatureStack(other[slot].Id, 1));
+        }
+
+        for (var day = 0; day < second.DaysLeft; day++)
+        {
+            NextDay(session);
+        }
+
+        var queue = CaravanRules.Queue(state, town);
+        Assert.Equal(2, queue.Count);
+        Assert.Equal(first.Id, queue[0].Id); // still on its way
+        Assert.Equal((second.Id, 0), (queue[1].Id, queue[1].DaysLeft)); // waiting at the gates
     }
 
     [Fact]
@@ -268,7 +336,7 @@ public class CaravanTests
             town.Garrison.Set(slot, new CreatureStack(other[slot].Id, 1)); // the garrison fills up meanwhile
         }
 
-        for (var day = 0; day < CaravanRules.MaxDays + 1; day++)
+        for (var day = 0; day < 8; day++)
         {
             NextDay(session);
         }
@@ -347,6 +415,26 @@ public class CaravanTests
 
         editor.Undo();
         Assert.Equal((Footman, Blue, 12), (copy.Creature, copy.Owner, copy.Available));
+    }
+
+    [Fact]
+    public void MapDwellings_SellBaseCreaturesOnly()
+    {
+        var state = Create(Grass(20));
+        var dwelling = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 6, 5);
+        dwelling.Creature = Footman;
+        var crusader = state.Creatures.Get(Footman).UpgradesTo!;
+        var editor = new MapEditorSession(state);
+
+        Assert.Equal(EditResult.UpgradedCreature, editor.SetDwelling(dwelling.Id, crusader, null, null));
+        Assert.Equal(Footman, dwelling.Creature);
+
+        // A map made before the rule: the validator rejects the upgrade, and loading turns it into its line's base creature.
+        dwelling.Creature = crusader;
+        Assert.Contains(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error && i.Message.Contains("base creatures only", StringComparison.Ordinal));
+        var loaded = MapConverter.ToGameState(MapConverter.ToDocument(state));
+        Assert.Equal(Footman, Assert.Single(loaded.ObjectsOf<CreatureDwelling>()).Creature);
+        Assert.Equal((Footman, Footman), (state.Creatures.BaseOf(crusader), state.Creatures.BaseOf(Footman)));
     }
 
     [Fact]

@@ -46,6 +46,9 @@ public enum EditResult
 
     /// <summary>The player would have more heroes than it may (ADR-068).</summary>
     HeroLimit,
+
+    /// <summary>Map dwellings sell base creatures only (ADR-073); the creature is an upgrade.</summary>
+    UpgradedCreature,
 }
 
 /// <summary>
@@ -794,7 +797,7 @@ public sealed class MapEditorSession
 
     /// <summary>
     /// Edits a map dwelling (ADR-054): its creature, its owner and the creatures waiting in it (null = one week's growth when
-    /// the game starts).
+    /// the game starts). Map dwellings sell base creatures only (ADR-073).
     /// </summary>
     public EditResult SetDwelling(MapObjectId id, string creature, PlayerId? owner, int? available)
     {
@@ -806,6 +809,11 @@ public sealed class MapEditorSession
         if (!Scenario.Creatures.Contains(creature))
         {
             return EditResult.UnknownCreature;
+        }
+
+        if (Scenario.Creatures.IsUpgrade(creature))
+        {
+            return EditResult.UpgradedCreature;
         }
 
         if (owner is { } player && !Scenario.HasPlayer(player))

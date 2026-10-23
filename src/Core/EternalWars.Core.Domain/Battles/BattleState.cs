@@ -232,10 +232,14 @@ public sealed class BattleState
 
     private IEnumerable<BattleSideEffect> ActiveEffects(BattleSide side) => SideEffects.Where(e => e.Side == side && e.UntilRound >= Round);
 
-    /// <summary>Creature morale plus the hero's and warcries', within ±5 (ADR-053, ADR-067); war machines have none.</summary>
-    public int MoraleOf(BattleUnit unit) => unit.IsMachine
+    /// <summary>
+    /// Creature morale plus the hero's, the army's (ADR-075) and warcries', within ±5 (ADR-053, ADR-067); war machines, undead,
+    /// constructs and elementals have none (ADR-071).
+    /// </summary>
+    public int MoraleOf(BattleUnit unit) => unit.IsMachine || !MoraleAndLuck.HasMorale(unit.Creature)
         ? 0
-        : MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale + ActiveEffects(unit.Side).Sum(e => e.Morale));
+        : MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale + Participant(unit.Side).ArmyMorale
+                              + ActiveEffects(unit.Side).Sum(e => e.Morale));
 
     /// <summary>Living creature stacks of a side; war machines do not keep a side in the battle (ADR-056).</summary>
     public IEnumerable<BattleUnit> LivingArmyOf(BattleSide side) => LivingUnitsOf(side).Where(u => !u.IsMachine);

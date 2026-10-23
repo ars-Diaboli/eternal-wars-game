@@ -4,12 +4,13 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-23)**: no code since 2026-10-19; four design rounds are decided and waiting to be built. ADR-069
+**Where we are (2026-10-23)**: five design rounds are decided; building them started with the groundwork and the quick items. ADR-069
 reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
-and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
+and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events; ADR-075 confirms ADR-073's, changes the caravan reach to 7500 movement points and settles the morale sources. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
-Phase 4 has every generator stage in core. **Next up** (in this order): the groundwork is done (data tables, size pass, per-town building column, Capitol); next the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns), then the skill rework
+Phase 4 has every generator stage in core. **Next up** (in this order): the groundwork is done (data tables, size pass, per-town building column, Capitol), and so are the quick items
+(caravan reach and queue, base-creature map dwellings, army morale); next the war machine footprints and deployment, the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns), then the skill rework
 (answered, ADR-072 / ADR-073; nothing blocks it), then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -193,17 +194,19 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       building comes later
 - [x] Dwellings on the adventure map (ADR-054): `CreatureDwelling`, weekly growth, flagging, recruiting by a visiting hero
       (`RecruitAtDwellingCommand`); map format v12; editor placement and `SetDwelling`; validator
-- [x] Caravan building (ADR-054): `OrderCaravanCommand` hires from owned map dwellings within 5 days of travel along an open
+- [x] Caravan building (ADR-054): `OrderCaravanCommand` hires from owned map dwellings within reach (5 days at first, ADR-075 below) along an open
       route, `SendTroopsCommand` moves garrison stacks between own towns; creatures arrive in the garrison (`CaravanArrived`)
 - [x] Caravan rules (user decisions): a blocked route returns the caravan with the price back, a lost destination scatters the
       creatures, caravans are invisible; building 1000 gold + 5 lumber (placeholder)
 - [x] Town screen: caravan section (hire, send the picked stack, caravans on the way); `DwellingPanel` opens when a hero visits a dwelling
 - [x] AI: heroes flag and recruit at map dwellings, towns build a caravan once the player owns a dwelling, hire from owned dwellings and send troops to an empty town (`AdventureAi`)
-- [ ] Caravan reach (ADR-073, TOWN-5): a dwelling beyond 5 days of raw distance (ignoring hostile blockers) is left out of the town's
-      caravan list, decided when it is flagged or the town gets a caravan; ordering keeps the full check
-- [ ] Caravan queue on the town screen: caravans on their way (creature, count, days left) and those waiting at a full garrison (ADR-073)
-- [ ] Map dwellings sell base creatures only: the editor offers base creatures, the validator rejects upgrades, older maps load the line's
-      base creature (ADR-073)
+- [x] Caravan reach (ADR-073, ADR-075): 7500 movement points at the plain step cost (terrain and speed ignored); the town lists dwellings
+      within the raw reach (hostile blockers ignored, `CaravanRules.Dwellings`), ordering needs an open route within it; travel days still
+      follow the map speed; the AI builds and hires within reach
+- [x] Caravan queue on the town screen: caravans coming here, on their way (fewest days left first) then waiting at a full garrison
+      (`CaravanRules.Queue`), and those sent from here (ADR-073; Godot part not run yet)
+- [x] Map dwellings sell base creatures only: the editor offers and accepts base creatures (`EditResult.UpgradedCreature`), the validator
+      rejects upgrades, older maps load the line's base creature (ADR-073, ADR-075)
 - [ ] Smoke scenario for dwellings and caravans (needs Godot); caravan cost tuning; dwelling guards are
       in the objects block below (ADR-068)
 
@@ -315,7 +318,10 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Week and month events (ADR-073): weekly 75 % week of a creature (its line's growth doubles); monthly 45 % month of a creature
       (doubled growth, guards spawn next to random objects), 15 % plague (no growth, town stocks halved), 15 % starvation (no growth);
       announcement at week start; the AI accounts for them
-- [ ] Event creature factions per map and template (weekly and monthly separately; default playable factions); map format bump
+- [ ] Event creature factions per map and template (weekly and monthly separately; default playable factions); events on or off and the
+      first one after 1 to 8 weeks (default: from the second week, ADR-075); map format bump
+- [x] Players without a town on campaign-like maps (ADR-075): grace period 0 and a "lose a hero" condition (both existed); validator warning
+      when a player starts without a town while the grace period is on
 - [ ] More conditions (ADR-073): capture a map object, obtain an artifact, release a prisoner; lose an artifact; deadlines on victory
       conditions; editor support; map format bump
 - [ ] Team victory: a team wins while one of its human players survives; eliminated human teammates share the win (ADR-073)
@@ -478,8 +484,9 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [x] Morale and luck (ADR-053): ±5 from creature table and hero (map format v7, editor); per round 2 %/point extra
       action or lost turn, else 4 %/point ±50 % initiative; per hit 4 %/point luck for +75 % / −50 % damage, opposite
       rolls cancel; shown in the 3D battle (captions, log, unit stats)
-- [ ] Morale and luck sources: skills, buildings, army composition (artifacts are in, ADR-061) ❓ CMB-2; undead/constructs
-      without morale (undead, constructs, elementals; ADR-071)
+- [x] Morale sources (ADR-075, CMB-2): −1 per faction beyond the first in an army (neutrals one faction), +1 for a town's defenders with
+      the Brotherhood (`BattleParticipant.ArmyMorale`); undead, constructs and elementals have no morale (ADR-071, CMB-7); Leadership,
+      warcries, artifacts and buffs were in
 - [x] War machines (ADR-056): offensive machine per town (ballista, cannon, catapult, glaivethrower), healing tent,
       ammo cart; War machines skill group (Ballistics, Healing, Ammo supply); units at the back of the field, offensive
       machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle

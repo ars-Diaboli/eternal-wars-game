@@ -22,73 +22,61 @@ public sealed record CaravanRoute(int Cost, int Days);
 /// <summary>
 /// Caravan rules as queries (ADR-054), shared by <see cref="CaravanService"/>, views and the AI. A caravan walks like an
 /// army made of its creatures (their map speed, terrain and roads; no hero skills), but virtually: it never visits objects and
-/// cannot be seen or attacked. A route is open when no hostile hero, neutral monster or tile guarded by one is on it; more than
-/// <see cref="MaxDays"/> days of travel is too far.
+/// cannot be seen or attacked. A route is open when no hostile hero, neutral monster or tile guarded by one is on it.
+/// <para>
+/// Reach (ADR-073, TOWN-5): a source farther than <see cref="MaxReach"/> movement points, every step costing as on plain terrain
+/// (terrain and roads ignored), cannot supply a town. The <b>raw</b> distance also ignores hostile heroes, monsters and guards:
+/// it decides which dwellings a town's caravan lists at all (<see cref="Dwellings"/>). Ordering checks the open route within
+/// the reach; the travel days come from the creatures' map speed along the cheapest open route.
+/// </para>
 /// </summary>
 public static class CaravanRules
 {
-    /// <summary>A source farther away than this many days of travel cannot supply a town.</summary>
-    public const int MaxDays = 5;
+    /// <summary>How far a caravan reaches, in movement points with every step at the plain cost (100, diagonals 141).</summary>
+    public const int MaxReach = 7500;
 
     /// <summary>The cheapest open route between two tiles for creatures of the given speed, or null when there is none.</summary>
-    public static CaravanRoute? FindRoute(GameState state, PlayerId owner, MapPosition from, MapPosition to, CreatureDefinition creature)
-    {
-        if (from == to)
-        {
-            return new CaravanRoute(0, 1);
-        }
+    public static CaravanRoute? FindRoute(GameState state, PlayerId owner, MapPosition from, MapPosition to, CreatureDefinition creature) =>
+        from == to ? new CaravanRoute(0, 1)
+        : Search(state, from, to, p => CanPass(state, owner, p), (a, b, d) => StepCost(state, creature, a, b, d), int.MaxValue) is { } cost
+            ? new CaravanRoute(cost, Math.Max(1, DaysFor(cost, creature)))
+            : null;
 
-        var map = state.Map;
-        int Node(MapPosition p) => (((p.Level * map.Height) + p.Y) * map.Width) + p.X;
-        var cost = new int[map.Levels * map.Width * map.Height];
-        Array.Fill(cost, int.MaxValue);
-        var closed = new bool[cost.Length];
-        var open = new PriorityQueue<MapPosition, int>();
-        cost[Node(from)] = 0;
-        open.Enqueue(from, 0);
+    /// <summary>
+    /// The distance a caravan's reach is measured in (every step at the plain cost), or null when it is beyond
+    /// <see cref="MaxReach"/> or there is no way. With an <paramref name="owner"/> only open routes count; without one hostile
+    /// heroes, monsters and guards are ignored (the raw distance).
+    /// </summary>
+    public static int? Distance(GameState state, PlayerId? owner, MapPosition from, MapPosition to) =>
+        Search(state, from, to, p => owner is { } player ? CanPass(state, player, p) : MovementRules.CheckTile(state, p) == MoveResult.Moved,
+            (_, _, direction) => PlainStep(direction), MaxReach);
 
-        while (open.TryDequeue(out var position, out _))
-        {
-            var current = Node(position);
-            if (closed[current])
-            {
-                continue;
-            }
+    /// <summary>Whether a source is within the caravan's raw reach of a town: the town lists it at all (ADR-073).</summary>
+    public static bool InReach(GameState state, MapObject source, Town town) => Distance(state, null, source.VisitPosition, town.VisitPosition) is not null;
 
-            closed[current] = true;
-            if (position == to)
-            {
-                return new CaravanRoute(cost[current], Math.Max(1, DaysFor(cost[current], creature)));
-            }
+    /// <summary>The owner's map dwellings the town's caravan lists: within its raw reach, by id.</summary>
+    public static IReadOnlyList<CreatureDwelling> Dwellings(GameState state, Town town) =>
+        town.Owner is not { } owner ? []
+        : state.ObjectsOf<CreatureDwelling>().Where(d => d.Owner == owner && InReach(state, d, town)).OrderBy(d => d.Id.Value).ToList();
 
-            foreach (var direction in DirectionExtensions.All)
-            {
-                var next = position.Step(direction);
-                if (!map.Contains(next) || (next != to && !CanPass(state, owner, next)))
-                {
-                    continue;
-                }
+    /// <summary>
+    /// The town's caravan queue (ADR-073): the caravans coming to it, those on their way first (fewest days left, then the order
+    /// they were sent), then those waiting at the gates for room in the garrison.
+    /// </summary>
+    public static IReadOnlyList<Caravan> Queue(GameState state, Town town) =>
+        state.Caravans.Where(c => c.Destination == town.Id && c.Owner == town.Owner)
+            .OrderBy(c => c.DaysLeft == 0).ThenBy(c => c.DaysLeft).ThenBy(c => c.Id).ToList();
 
-                var candidate = cost[current] + StepCost(state, creature, position, next, direction);
-                if (candidate < cost[Node(next)])
-                {
-                    cost[Node(next)] = candidate;
-                    open.Enqueue(next, candidate);
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>Open route from a source's entrance to a town's entrance, within <see cref="MaxDays"/>; null refusal text otherwise via <paramref name="refusal"/>.</summary>
+    /// <summary>Open route from a source's entrance to a town's entrance, within <see cref="MaxReach"/>; null refusal text otherwise via <paramref name="refusal"/>.</summary>
     public static CaravanRoute? RouteBetween(GameState state, MapObject source, Town destination, CreatureDefinition creature, out string? refusal)
     {
-        var route = FindRoute(state, destination.Owner!.Value, source.VisitPosition, destination.VisitPosition, creature);
-        refusal = route is null ? $"No open route from {source.Definition.Name} to {destination.Name}."
-            : route.Days > MaxDays ? $"{destination.Name} is {route.Days} days away from {source.Definition.Name}; a caravan travels at most {MaxDays}."
-            : null;
-        return refusal is null ? route : null;
+        var owner = destination.Owner!.Value;
+        refusal = !InReach(state, source, destination)
+            ? $"{source.Definition.Name} is beyond the reach of {destination.Name}'s caravan ({MaxReach} movement points)."
+            : Distance(state, owner, source.VisitPosition, destination.VisitPosition) is null
+                ? $"No open route from {source.Definition.Name} to {destination.Name} within the caravan's reach."
+                : null;
+        return refusal is null ? FindRoute(state, owner, source.VisitPosition, destination.VisitPosition, creature) : null;
     }
 
     /// <summary>Whether the town may hire <paramref name="count"/> creatures from the dwelling; null when it may.</summary>
@@ -102,6 +90,11 @@ public static class CaravanRules
         if (dwelling.Owner is null || dwelling.Owner != town.Owner)
         {
             return $"The {dwelling.Definition.Name} is not yours.";
+        }
+
+        if (!InReach(state, dwelling, town))
+        {
+            return $"The {dwelling.Definition.Name} is beyond the reach of {town.Name}'s caravan ({MaxReach} movement points).";
         }
 
         var available = dwelling.Available ?? 0;
@@ -157,6 +150,56 @@ public static class CaravanRules
         RouteBetween(state, from, to, state.Creatures.Get(stack.Creature), out var refusal);
         return refusal;
     }
+
+    /// <summary>Dijkstra over the map's tiles; the target may be entered even when it would not pass. Null beyond <paramref name="limit"/>.</summary>
+    private static int? Search(
+        GameState state, MapPosition from, MapPosition to, Func<MapPosition, bool> canPass, Func<MapPosition, MapPosition, Direction, int> stepCost, int limit)
+    {
+        var map = state.Map;
+        int Node(MapPosition p) => (((p.Level * map.Height) + p.Y) * map.Width) + p.X;
+        var cost = new int[map.Levels * map.Width * map.Height];
+        Array.Fill(cost, int.MaxValue);
+        var closed = new bool[cost.Length];
+        var open = new PriorityQueue<MapPosition, int>();
+        cost[Node(from)] = 0;
+        open.Enqueue(from, 0);
+
+        while (open.TryDequeue(out var position, out _))
+        {
+            var current = Node(position);
+            if (closed[current])
+            {
+                continue;
+            }
+
+            closed[current] = true;
+            if (position == to)
+            {
+                return cost[current];
+            }
+
+            foreach (var direction in DirectionExtensions.All)
+            {
+                var next = position.Step(direction);
+                if (!map.Contains(next) || (next != to && !canPass(next)))
+                {
+                    continue;
+                }
+
+                var candidate = cost[current] + stepCost(position, next, direction);
+                if (candidate <= limit && candidate < cost[Node(next)])
+                {
+                    cost[Node(next)] = candidate;
+                    open.Enqueue(next, candidate);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static int PlainStep(Direction direction) =>
+        direction.IsDiagonal() ? (int)Math.Round(TerrainCatalog.NativeCost * HeroMovementService.DiagonalMultiplier) : TerrainCatalog.NativeCost;
 
     private static int DaysFor(int cost, CreatureDefinition creature) =>
         (cost + MovementAllowance.Daily(creature.MapSpeed) - 1) / MovementAllowance.Daily(creature.MapSpeed);

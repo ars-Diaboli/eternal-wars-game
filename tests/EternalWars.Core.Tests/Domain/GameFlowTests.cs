@@ -323,6 +323,17 @@ public class GameFlowTests
     }
 
     [Fact]
+    public void APlayerStartingWithoutATown_IsWarnedAbout_UnlessTheGracePeriodIsOff()
+    {
+        // A campaign-like map (ADR-075): heroes only, no towns.
+        var state = Create("A........B");
+        Assert.Equal(2, MapValidator.Validate(state).Count(i => i.Message.Contains("starts without a town", StringComparison.Ordinal)));
+
+        state.SetRules(ScenarioRules.Default with { GraceDays = 0 });
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("starts without a town", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void APlayerWhoNeverHadATown_HasNoCountdown()
     {
         var state = Create("A.B");

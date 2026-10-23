@@ -91,7 +91,8 @@ public sealed class BattleService(
     {
         var owner = town.Owner;
         var garrison = new BattleParticipant(
-            BattleSide.Defender, owner, null, town.Id, 0, 0, SkillLevel.None, IsComputer: owner is not { } o || !state.GetPlayer(o).IsHuman);
+            BattleSide.Defender, owner, null, town.Id, 0, 0, SkillLevel.None, IsComputer: owner is not { } o || !state.GetPlayer(o).IsHuman,
+            ArmyMorale: MoraleAndLuck.MixedFactions(town.Garrison.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature))) + DefenderMorale(town));
         var battle = Create(Participant(BattleSide.Attacker, attacker), garrison, town.VisitPosition, isAmbush: false);
         var stacks = town.Garrison.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
         Begin(attacker, battle, Stacks(attacker), stacks);
@@ -202,7 +203,15 @@ public sealed class BattleService(
 
     private BattleParticipant Participant(BattleSide side, Hero hero) =>
         new(side, hero.Owner, hero.Id, null, hero.TotalAttack, hero.TotalDefense, hero.SkillLevelOf(BuiltInSkills.Tactics), !state.GetPlayer(hero.Owner).IsHuman,
-            HeroBattleBonuses.For(hero, state.Creatures));
+            HeroBattleBonuses.For(hero, state.Creatures),
+            MoraleAndLuck.MixedFactions(hero.Army.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature)))
+            + (side == BattleSide.Defender && state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position) is { } home
+                ? DefenderMorale(home)
+                : 0));
+
+    /// <summary>A town's defenders get the Brotherhood's morale (ADR-075, CMB-2): its garrison, or an own hero standing at its entrance.</summary>
+    private static int DefenderMorale(Town town) =>
+        town.Level(BuiltInBuildings.Tavern) >= MoraleAndLuck.BrotherhoodLevel ? MoraleAndLuck.BrotherhoodDefenderMorale : 0;
 
     /// <summary>
     /// The hero's army and war machines (ADR-056): tent and cart when owned, the offensive machine only from Advanced

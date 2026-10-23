@@ -1650,3 +1650,37 @@ open are recorded here.
   **Castle** (fort 3), 4000 gold a day.
 - **One Capitol per player**: building a second is refused; a captured Capitol drops to City Hall when the captor has one (`TownBuildingDowngraded`,
   after `TownOwnerChanged`); the map validator reports a second Capitol of one player. The AI builds the Capitol last.
+
+### ADR-075: Fifth-round answers; caravan reach and queue, base-creature map dwellings, army morale (2026-10-23)
+**Status**: accepted (2026-10-23), user answers in `open-questions.md` and a note in `ideas.md`; the caravan, dwelling and morale parts are
+**implemented**. Supersedes ADR-073's 5-day caravan reach (TOWN-5) and its "no event in the first week" assumption (FLOW-2). Every other "To
+confirm" assumption of ADR-073 stands.
+
+- **TOWN-5 caravan reach**: no "days at the creature's speed" any more. The reach is **7500 movement points** with every step at the plain cost
+  (100, diagonals 141): terrain and roads are ignored, and it is the same for every creature (`CaravanRules.MaxReach`, `Distance`).
+  - The **raw** distance ignores hostile heroes, monsters and guarded tiles (confirmed) but not rock, water or blocked object cells; a dwelling
+    beyond it is not in the town's caravan list (`CaravanRules.Dwellings`). Nothing moves that it counts, so it is a query, not a value stored
+    when the dwelling is flagged.
+  - **Ordering** needs an open route within the reach, as before; the **travel days** still come from the creatures' map speed along the cheapest
+    open route, so a slow stack over swamp may take more than 5 days *(choice made here)*. Sending troops between towns uses the same reach.
+  - The **queue** (`CaravanRules.Queue`): the caravans coming to a town, on their way first (fewest days left, then the order sent), then those
+    waiting at the gates. The town screen shows it and, apart, the caravans sent from the town.
+  - The AI builds a caravan only when a dwelling is within reach and hires only from the town's list.
+- **Base-creature map dwellings** (ADR-073, built): `MapEditorSession.SetDwelling` refuses an upgrade (`EditResult.UpgradedCreature`), the editor
+  lists base creatures only, the validator reports an upgrade as an error, and loading a map turns an upgraded dwelling into its line's base
+  creature (`CreatureCatalog.BaseOf`; no format change).
+- **CMB-2 army morale** (built, `BattleParticipant.ArmyMorale`, set when the battle starts):
+  - **Mixed factions**: −1 morale per faction beyond the first among the army's creatures (HoMM3); neutral creatures count as one faction, war
+    machines do not count. Applies to heroes' armies and town garrisons, not to neutral guards or banks.
+  - **Brotherhood**: +1 morale for a town's defenders when the town has the upgraded tavern (tavern level 2): its garrison, or an own hero standing
+    at its entrance when attacked.
+  - With it, **CMB-7** is built: undead, constructs and elementals have no morale (their creature's, the hero's and warcries' included).
+- **FLOW-2**: "no event in the first week" is the default, and the map editor (and the template) may also turn week and month events **off**, or
+  start them later: skip up to **8 weeks** (2 months). Built with the week events (map format bump).
+- **Campaign-like maps** may start a player **without a town**; losing a hero is then the defeat condition. This already works: a grace period of
+  0 turns the town rule off and "lose a hero" is a defeat condition. The validator now warns when a player starts with heroes but no town while the
+  grace period is on.
+- **MAG-5**: the fixed 500 movement points stand; nothing to build before adventure spells (Phase 5).
+- **Terrain relief** (art direction, `ideas.md`): the rules stay on the 2D grid, but the 3D map is **not flat**, Warcraft III-like: walkable ground
+  lies between 0 and 4 cell widths of height; below that is water, above it cliffs that are cut off or mountains. Recorded in
+  [presentation.md](../design/presentation.md); built with the terrain look-dev (Phase 5).
