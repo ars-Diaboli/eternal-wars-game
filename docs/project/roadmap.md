@@ -9,15 +9,15 @@ reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answe
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
-Phase 4 has every generator stage in core. **Next up** (in this order): the data-table move and the creature size pass
-(DATA-1, decided), the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
+Phase 4 has every generator stage in core. **Next up** (in this order): the data-table move and the size pass are done; next the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns, per-town buildings), then the skill rework
 (answered, ADR-072 / ADR-073; nothing blocks it), then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
-- [ ] One home for the data tables: move `*.csv` to a core-owned folder, embed in core, apps read the embedded copy with
-      override flags for designers, a schema test per table (DATA-1, ADR-071)
-- [ ] Creature size pass: about 95 % Small / Medium, Large mostly for dragons (42 of 182 Large today); re-run `sim towns`,
-      fix battle tests that rely on a creature's size
+- [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
+      copy, `--creatures=` / `--heroes=` / `--buildings=` / `--artifacts=` / `--artifact-sets=` for designers; `DataTableSchemaTests`
+      (DATA-1, ADR-071)
+- [x] Creature size pass (ADR-070): 9 of 182 Large (the seven dragons and the Behemoth line), the other 33 Large → Medium;
+      `sim towns` re-run (similar spread, tuning stays CONT-2)
 - [ ] `buildings.csv` gets a town column: per-town names, costs and requirements (TOWN-3); `BuildingCatalog` per town type;
       the town screen and editor follow
 - [ ] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks); undead Ruins → Crypt with old

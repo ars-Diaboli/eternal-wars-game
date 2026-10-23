@@ -6,7 +6,7 @@ namespace EternalWars.Core.Domain.Creatures;
 
 /// <summary>
 /// Creature definitions as a CSV table, one row per creature (ADR-044): the format of the shipped roster
-/// (<c>EternalWars.Godot.Assets/data/creatures.csv</c>) so designers can edit stats in a spreadsheet or text editor.
+/// (<c>src/Core/data/creatures.csv</c>) so designers can edit stats in a spreadsheet or text editor.
 /// The file conventions are <see cref="CsvTable"/>'s. List cells: tags <c>human; holy</c>, resources <c>mercury 1</c>,
 /// capabilities <c>Flying; PackHunter 20; SpellImmunity mind; Caster lightning 2</c>.
 /// </summary>

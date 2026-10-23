@@ -222,7 +222,7 @@ public sealed class HeroCatalog
     }
 }
 
-/// <summary>The shipped hero roster: <c>data/heroes.csv</c>, embedded at build time (the apps read the file itself).</summary>
+/// <summary>The shipped hero roster: <c>data/heroes.csv</c>, embedded at build time (<c>src/Core/data</c>, ADR-071).</summary>
 public static class BuiltInHeroes
 {
     public const string ResourceName = "EternalWars.Heroes.csv";

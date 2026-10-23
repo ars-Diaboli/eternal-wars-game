@@ -93,9 +93,9 @@ Any command takes `--creatures path.csv`.
 - Map files are `*.ewmap.json` (format v21: terrain + optional road rows, teams, heroes with roster type,
   primary stats, skills, war machines, morale, luck, artifacts and armies, objects incl. one-way gates, artifact pickups, creature dwellings, marketplaces, resource providers, loot, buff and training sites, signs, prisons and other utility objects, creature banks, monsters with their guard mode, mine guards and towns, victory and defeat conditions, the hero limits; see the
   version history on `MapDocument`). Replays are `*.ewreplay.json`. Random map templates are `*.ewtemplate.json` (`MapTemplate`; the shipped ones are in
-  `src/Godot/EternalWars.Godot.Assets/data/templates`, embedded into `Core.Data`). Creature
-  stats live in the creature table `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (see "Editing creature
-  stats" below; the tables move to core, ADR-071); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
+  `src/Core/data/templates`, embedded into `Core.Data`). Creature
+  stats live in the creature table `src/Core/data/creatures.csv` (see "Editing creature
+  stats" below; ADR-071); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
 - Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
   (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `game-town-screen`,
@@ -112,13 +112,8 @@ Any command takes `--creatures path.csv`.
 
 ## Editing creature stats
 
-Every creature is one row of `src/Godot/EternalWars.Godot.Assets/data/creatures.csv` (ADR-044). Edit it in any
+Every creature is one row of `src/Core/data/creatures.csv` (ADR-044; every table lives in `src/Core/data`, ADR-071). Edit it in any
 spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by header name:
-
-> **Planned move** (ADR-071, DATA-1; not done yet): every `*.csv` table of this page moves to a core-owned folder embedded in
-> `EternalWars.Core.Domain`. The apps will read only the embedded copy, plus designers' edited files through the
-> `--creatures=`-style flags; the `res://shared/data` copy and the read-at-start-up reload below go. A schema test per table
-> will check ids, references and columns. Until then the paths below are current.
 
 | Column | Meaning |
 |---|---|
@@ -135,22 +130,23 @@ spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by
 | `capabilities` | up to five, separated by `;`: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster fireball 1`, … (`CapabilityKind`) |
 | `notes` | free text; ignored, like any extra column |
 
-- **Game, editor and 2D harness** read the file when they start: save and restart the app. A mistake is reported
-  in the Godot output with its line and column, and the built-in copy is used instead. `-- --creatures=path.csv`
-  loads another table.
+- **Game, editor and 2D harness** use the copy embedded at build time. To try an edit without a rebuild, start the app
+  with `-- --creatures=path.csv` (also `--heroes=`, `--buildings=`, `--artifacts=`, `--artifact-sets=`); a mistake is
+  reported in the Godot output with its line and column, and the embedded copy is used instead.
 - **Simulator** without a rebuild: `dotnet run --project tools/EternalWars.Tools.Sim -- towns --creatures
-  src/Godot/EternalWars.Godot.Assets/data/creatures.csv`. `sim creatures` shows each line's strength against its
+  src/Core/data/creatures.csv`. `sim creatures` shows each line's strength against its
   tier, `sim lines` duels the lines of a tier, `sim towns` plays one-week town armies against each other.
 - **Random map layouts**: `dotnet run --project tools/EternalWars.Tools.Sim -- layout duel --size 96 --seed 3 [--rects] [--terrain]`
   prints the zone layout of a template (a shipped name or a `*.ewtemplate.json` path) as text, one letter per zone, plus the
   area of every zone; `--terrain` prints the generated map instead.
 - **Tests and the default catalog** use the copy embedded at build time; `dotnet test` rebuilds it. Tests check
-  the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines).
+  the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines), and
+  `DataTableSchemaTests` checks every shipped table's columns, ids and references.
 
 ## Editing artifacts
 
-Artifacts are `src/Godot/EternalWars.Godot.Assets/data/artifacts.csv` (ADR-061), with the sets in `artifact_sets.csv`, same file
-rules and reload behaviour as the other tables (the apps read them at start-up; a mistake is reported with line and column
+Artifacts are `src/Core/data/artifacts.csv` (ADR-061), with the sets in `artifact_sets.csv`, same file
+rules and loading as the other tables (`--artifacts=` and `--artifact-sets=`; a mistake is reported with line and column
 and the built-in copy is used).
 
 | Column | Meaning |
@@ -167,8 +163,8 @@ and the built-in copy is used).
 
 ## Editing town buildings
 
-Town buildings are `src/Godot/EternalWars.Godot.Assets/data/buildings.csv` (ADR-046, ADR-050), one row per building level,
-with the same file rules and reload behaviour as the creature table (`-- --buildings=path.csv` loads another one).
+Town buildings are `src/Core/data/buildings.csv` (ADR-046, ADR-050), one row per building level,
+with the same file rules and loading as the creature table (`-- --buildings=path.csv` loads another one).
 
 | Column | Meaning |
 |---|---|
@@ -183,8 +179,8 @@ that tier; which lines a town has comes from the creature table. The 7-of-9 rule
 
 ## Editing heroes
 
-The hero roster is `src/Godot/EternalWars.Godot.Assets/data/heroes.csv` (ADR-048), with the same file rules and
-reload behaviour as the creature table (`-- --heroes=path.csv` loads another one).
+The hero roster is `src/Core/data/heroes.csv` (ADR-048), with the same file rules and
+loading as the creature table (`-- --heroes=path.csv` loads another one).
 
 | Column | Meaning |
 |---|---|

@@ -166,14 +166,12 @@ These are enforced by:
 ### Planned evolution
 - **Content definitions.** Spells will load from a data file as creatures, heroes, buildings and artifacts
   already do (the tables `data/creatures.csv`, `data/heroes.csv`, `data/buildings.csv` and `data/artifacts.csv`, embedded
-  in core and read by the apps at start-up, ADR-044, ADR-048, ADR-050, ADR-061; JSON via `CreatureDefinitionSerializer`),
+  in core, ADR-044, ADR-048, ADR-050, ADR-061; JSON via `CreatureDefinitionSerializer`),
   following the map-object pattern: built-in defaults in Domain code (`BuiltInMapObjects`), JSON
   overrides/additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`.
-- **Where the tables live** (ADR-071, DATA-1; decided, not done yet; supersedes ADR-044's location). Today the `*.csv`
-  tables sit in `src/Godot/EternalWars.Godot.Assets/data/`, are embedded into core from there, and the apps read the
-  `res://shared/data` copy at start-up. Target: the tables move to a **core-owned folder embedded in
-  `EternalWars.Core.Domain`**; the apps read the embedded copy and load designers' edited files only through
-  `--creatures=`-style flags; the `res://shared/data` copy goes. CSV stays for flat tables, JSON for nested data. A schema
+- **Where the tables live** (ADR-071, DATA-1; done; supersedes ADR-044's location). The `*.csv` tables sit in
+  `src/Core/data/`, embedded into `EternalWars.Core.Domain` (the templates in `data/templates` into `Core.Data`). The apps
+  use the embedded copy (`GameContent`) and load designers' edited files only through `--creatures=`-style flags. CSV stays for flat tables, JSON for nested data. A schema
   test per table checks ids, references and columns.
 
 ### Map objects
@@ -264,8 +262,8 @@ reports problems that single edits cannot prevent (hero on water after painting,
 - **Smoke tests**: `AutoInput` (`-- --autoinput=...`) replays clicks and keys through the input pipeline;
   `tools/smoke-godot.ps1` runs scripted scenarios under Movie Maker and fails on errors.
 - Assets can't live in a class library. `EternalWars.Godot.Assets` is mounted into each app as
-  `res://shared/` by `tools/link-shared-assets.ps1` (junction/symlink, git-ignored). The data tables in its `data/` folder
-  move to core (ADR-071, see [Planned evolution](#planned-evolution)); textures and other assets stay.
+  `res://shared/` by `tools/link-shared-assets.ps1` (junction/symlink, git-ignored). The data tables live in core
+  (`src/Core/data`, ADR-071, see [Planned evolution](#planned-evolution)).
 
 ## 5. Threading model
 
@@ -282,6 +280,7 @@ Directory.Build.props/.targets  shared settings + architecture guard
 docs/                           design, content, technical, project
 src/
   Core/
+    data/                       the data tables (*.csv) and templates/*.ewtemplate.json, embedded at build time
     EternalWars.Core.Events/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,

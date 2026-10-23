@@ -86,7 +86,7 @@ public class BattleGridTests
         var battle = TestBattle.Create();
         var archer = battle.Add(Attacker, BuiltInCreatures.Archer, 10, 0, 10);
         var target = battle.Add(Defender, BuiltInCreatures.Footman, 10, 26, 10);
-        battle.Add(Attacker, BuiltInCreatures.Juggernaut, 1, 4, 9); // 4×4 friend in the way: 2/8
+        battle.Add(Attacker, BuiltInCreatures.RedDragon, 1, 4, 9); // 4×4 friend in the way: 2/8
         battle.AddObstacle(ObstacleClass.Big, 10, 10); // 2/8
         battle.AddObstacle(ObstacleClass.Big, 15, 10); // 2/8
 

@@ -17,8 +17,9 @@
 
   The fine cell grid lets units of different sizes share one board. Positions refer to the top-left cell of the
   footprint.
-- **Size policy** (ADR-070, not applied yet): about **95 %** of creatures are Small or Medium; Large is kept mostly for
-  dragons. Today 42 of 182 lines are Large; the roster pass moves the others down and re-checks `sim towns`.
+- **Size policy** (ADR-070, applied 2026-10-23): about **95 %** of creatures are Small or Medium; Large is kept mostly for
+  dragons. 9 of 182 are Large: the five Dragon Utopia dragons, the Bone and Ghost Dragon and the Behemoth line; the 33
+  others that were Large are Medium (80 Small, 93 Medium). `sim towns` keeps a similar spread.
 - **Size**: **24 cells tall**, **30 cells wide** by default (ADR-021, ADR-033). 8-way movement, one cell per step up to
   the creature's Speed; a diagonal step needs one of the two orthogonal placements free (no squeezing through
   corners); flyers land on any free placement within their Speed (ADR-038).

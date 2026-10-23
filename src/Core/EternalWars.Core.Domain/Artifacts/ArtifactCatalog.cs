@@ -15,18 +15,25 @@ public static class ArtifactTable
     public const string Tier = "tier";
     public const string Set = "set";
     public const string Effects = "effects";
+    public const string Notes = "notes";
+
+    /// <summary>The columns of the shipped artifact table, in order.</summary>
+    public static IReadOnlyList<string> ArtifactColumns { get; } = [Id, Name, Slot, Tier, Set, Effects, Notes];
+
+    /// <summary>The columns of the shipped artifact set table, in order.</summary>
+    public static IReadOnlyList<string> SetColumns { get; } = [Id, Name, Effects, Notes];
 
     public static IReadOnlyList<ArtifactDefinition> ParseArtifacts(string text) =>
         CsvTable.Parse(text, "Artifact", [Id, Name, Slot, Tier])
             .Read(row => row.Text(Id) is { Length: > 0 } id
-                ? new ArtifactDefinition(id, row.Text(Name), row.Enum<ArtifactSlot>(Slot), row.Enum<ArtifactTier>(Tier), row.Optional(Set), ReadEffects(row), row.Optional("notes") ?? "")
+                ? new ArtifactDefinition(id, row.Text(Name), row.Enum<ArtifactSlot>(Slot), row.Enum<ArtifactTier>(Tier), row.Optional(Set), ReadEffects(row), row.Optional(Notes) ?? "")
                 : null)
             .OfType<ArtifactDefinition>()
             .ToList();
 
     public static IReadOnlyList<ArtifactSetDefinition> ParseSets(string text) =>
         CsvTable.Parse(text, "Artifact set", [Id, Name])
-            .Read(row => row.Text(Id) is { Length: > 0 } id ? new ArtifactSetDefinition(id, row.Text(Name), ReadEffects(row), row.Optional("notes") ?? "") : null)
+            .Read(row => row.Text(Id) is { Length: > 0 } id ? new ArtifactSetDefinition(id, row.Text(Name), ReadEffects(row), row.Optional(Notes) ?? "") : null)
             .OfType<ArtifactSetDefinition>()
             .ToList();
 

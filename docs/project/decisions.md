@@ -1517,7 +1517,8 @@ ADR-044 (where the tables live), ADR-069 (the Spell resistance numbers) and the 
 
 - **DATA-1 data tables**: the `*.csv` tables move to a core-owned folder, embedded in `EternalWars.Core.Domain`; the apps read the embedded copy, with
   `--creatures=`-style flags for designers' edited files; the `res://shared/data` copy goes. CSV stays for flat tables, JSON for nested data. A schema
-  test per table checks ids, references and columns.
+  test per table checks ids, references and columns. **Done 2026-10-23**: the folder is `src/Core/data` (templates in `data/templates`);
+  artifacts got `--artifacts=` and `--artifact-sets=`; `DataTableSchemaTests`.
 - **RMG-8 fairness**: start zones are compared by distance to the nearest mines, treasure value and guard power on the way, within ±15 %; a map that
   fails is retried with the next sub-seed, then reported.
 - **RMG-12**: "richness" is dropped; treasure bands and mine minimums are enough.

@@ -16,12 +16,9 @@ audio/
 fonts/
 themes/      UI .tres themes
 scenes/      reusable .tscn prefabs (hero, town, map objects, UI widgets)
-data/        game data read at run time: creatures.csv, heroes.csv, buildings.csv, artifacts.csv, artifact_sets.csv
-             (kept as plain files: importer "keep"); templates/*.ewtemplate.json (random map templates: duel, ffa-4, 2v2)
 ```
 
-The tables and templates are also embedded into the core projects at build time (the built-in copies used by tests and
-as a fallback).
+The data tables and random map templates are not here: they live in `src/Core/data` and are embedded into core (ADR-071).
 
 Rules:
 

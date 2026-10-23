@@ -2,7 +2,7 @@ using EternalWars.Core.Generation;
 
 namespace EternalWars.Core.Data.Templates;
 
-/// <summary>The templates that ship with the game (embedded files in <c>data/templates</c>).</summary>
+/// <summary>The templates that ship with the game (embedded files in <c>src/Core/data/templates</c>).</summary>
 public static class BuiltInTemplates
 {
     private const string Prefix = "EternalWars.Templates.";

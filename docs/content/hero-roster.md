@@ -2,7 +2,7 @@
 
 All 128 roster heroes of the eight playable towns, with the rules that come with a hero. Rules: ADR-048 (roster,
 skills, levels), ADR-055 (primary stats), ADR-056 (war machines). The roster is the table
-`src/Godot/EternalWars.Godot.Assets/data/heroes.csv` (columns in [development.md](../technical/development.md#editing-heroes);
+`src/Core/data/heroes.csv` (columns in [development.md](../technical/development.md#editing-heroes);
 it moves to a core-owned folder, ADR-071, not done yet); update this page when the table changes. Skill effects
 are listed in [skills.md](skills.md), towns and dwellings in [town-buildings.md](town-buildings.md). Names and
 numbers are a draft.
