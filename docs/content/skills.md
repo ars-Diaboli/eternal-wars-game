@@ -11,7 +11,7 @@ code still has the earlier rule, shown as "today" · ❓ not decided yet.
 **ADR-069 rework** (2026-10-20): the tables below show the new design. It moves Leadership to Defense and Alertness to Tactics,
 adds Marksmanship and Scouting, drops Troop management and merges Deployment into Tactics. It also changes the attunement
 table, adds Necromancy and gives Swamp Bestiary the Primal Fury group (Adrenaline is dropped). ADR-072 settles its
-details (old ids, the faction group, deployment, ranged penalties, Necromancy); only HERO-4's war machines are open.
+details (old ids, the faction group, deployment, ranged penalties, Necromancy); ADR-073 the war machines and the Primal Fury mages' odds.
 
 ## How skills work
 
@@ -27,7 +27,7 @@ details (old ids, the faction group, deployment, ranged penalties, Necromancy); 
   |---|---|---|
   | a general group (offense … war machines) | 2 | 4 |
   | the hero's own town's school | 6 | 2 |
-  | the hero's faction group (Primal Fury) | 6 | 6 🔜 (today 2; ADR-072, to confirm) |
+  | the hero's faction group (Primal Fury) | 6 | 6 🔜 (today 2; ADR-072, ADR-073) |
   | another school | 2 | 1 |
   | a group the hero has already started | ×3 | ×3 |
 
@@ -123,7 +123,8 @@ Tactics counts as the hero's Tactics level minus the enemy hero's; only the side
 **Deployment** (ADR-072, HERO-4; not built): the zone is the number of columns, counted from the hero's own edge of the battlefield, in
 which the player may place the troops. Only the side with the higher Tactics deploys; on a tie nobody does. The player drags stacks in the
 battle scene and presses "Start battle"; troops that are not deployed, and every computer player's, are placed automatically at the very edge.
-It works against heroes and neutral monsters, not in creature banks.
+It works against heroes and neutral monsters, not in creature banks. The war machines keep the outermost column, one cell wide (ADR-073);
+the zone includes that column and stacks may use its free cells *(assumed)*.
 
 ### War machines (`machines`)
 
@@ -213,7 +214,7 @@ soon (ADR-072, HERO-7). Stronghold warriors start with an **Offense** skill, Swa
 4 + 3 + 3 points; the ids stay `rage.first`, `rage.second` and `rage.third`.
 
 These mages have no spells (ADR-072, MAG-10): their **Spell Power** strengthens Blood Rage and the warcries (numbers when built), Knowledge
-does nothing, and their level-ups favour Attack and Defense.
+does nothing, and their level-ups use **even odds, 25 / 25 / 25 / 25 %** at every level (ADR-073).
 
 ### Primal Fury (Stronghold and Swamp Bestiary, ADR-067, ADR-069, draft numbers)
 
@@ -242,6 +243,5 @@ Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)
 
 - A luck skill (none for now).
 - The final names Primal Fury, Warcry / Spiritual Totems and Alertness (CONT-5); Leadership and Alertness numbers are placeholders.
-- Details still to confirm from ADR-072 (listed in [open-questions.md](../project/open-questions.md#to-confirm)): the warriors' offer
-  weight for Primal Fury, the Primal Fury mages' stat odds, the war machines at the battlefield edge during deployment.
+- To confirm (ADR-073, [open-questions.md](../project/open-questions.md#to-confirm)): the deployment zone includes the war machines' column.
 - Sieges themselves (Ballistics numbers are placeholders).

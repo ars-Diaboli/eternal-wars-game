@@ -47,5 +47,5 @@
 - The hero skill **Spell resistance** cuts hostile spells' damage and duration by **8 / 14 / 20 %** (ADR-071, MAG-6; was
   10 / 15 / 20 %); durations round away from zero, at least 1 round. Not built.
 - **Adventure spells** Town Portal and Dimension Door are **level 4** (ADR-071, MAG-5; [spells.md](../content/spells.md#adventure-spells-proposal)).
-  Casting one costs **a quarter of the hero's daily movement points** (500 of 2000) besides its mana; Dimension Door lands only on
+  Casting one costs a fixed **500 movement points** besides its mana, and a hero with fewer left cannot cast (ADR-073); Dimension Door lands only on
   explored tiles (ADR-072, MAG-5).

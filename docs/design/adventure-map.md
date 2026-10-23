@@ -206,6 +206,9 @@ A map dwelling (**implemented**, ADR-054) is one creature line with its own grow
 and 2, and dwellings the map gives an owner, are unguarded. The guard always fights; beating it flags the dwelling. This answers the
 "guards on map dwellings" part of TOWN-5.
 
+**Base creatures only** (ADR-073, not enforced yet): for now a map dwelling always sells a base (non-upgraded) creature. The editor offers
+only base creatures and the validator rejects an upgraded one; a map that has one loads it as the line's base creature *(assumed)*.
+
 ### Creature banks
 **Implemented.** A bank is a new object kind. Entering it starts a battle against the rolled guard; guards **always fight** (no join, no flee,
 unlike neutral monsters, ADR-040). The reward is paid only if the visitor wins; the bank is then **plundered**. The guard's
@@ -269,7 +272,7 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 ## Second object catalogue (ADR-069)
 The owner's second list (`ideas.md`, 2026-10-20). **Nothing here is built.** The shared rules above (visit scopes, statuses, rolls, artifact
 tiers, creature names) apply. MAP-15 … MAP-24 were answered by ADR-070; MAP-20 (Keymasters) and the map tavern's pool (TOWN-4) by ADR-071;
-points marked *(assumed)* are a reading of a short answer, to be confirmed ([open-questions.md](../project/open-questions.md#adventure-map-objects)).
+the points once marked *(assumed)* were confirmed in ADR-073.
 Every number is a draft.
 
 ### Loot
@@ -280,7 +283,7 @@ Every number is a draft.
 ### Utilities and travel
 | Object | Effect | Open |
 |---|---|---|
-| Window of the Magi / Eye of the Magi | Four colours (red, green, blue, black). Visiting a Window reveals **radius 6** around every Eye of its colour; at most **4 Eyes** a colour. Works on every visit *(assumed, like HoMM3)*. Placed only in the map editor, never by the generator (ADR-070) | – |
+| Window of the Magi / Eye of the Magi | Four colours (red, green, blue, black). Visiting a Window reveals **radius 6** around every Eye of its colour; at most **4 Eyes** a colour. Works on every visit (like HoMM3; ADR-073). Placed only in the map editor, never by the generator (ADR-070) | – |
 | Tavern | Works like a **Brotherhood** (4 offers, ADR-060). The hero must stand on its entrance; the new hero appears on a free cell next to it (one cell below by default). The hero limit applies; with the limit reached or no free cell, hiring is refused (ADR-070). Its pool is **its own**: 4 random heroes of any faction, rolled weekly and shared by all players (ADR-071, TOWN-4) | – |
 | Portal | Takes the hero to the other end of its type: today's **two-way monolith** (implemented). A type has **exactly two ends**, no groups of three or more (ADR-070, MAP-18) | – |
 | One-Way Portal | Takes the hero to its exit, which cannot be entered: today's **one-way monolith** (implemented). Templates may let the generator link zones with portals (RMG-11, [random-maps.md](random-maps.md)) | – |

@@ -33,7 +33,7 @@
 | Necromancy Amplifier | 1 | Necropolis only: +5 % Necromancy for every hero of its owner with the skill (ADR-069); **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its new owner (ADR-070, TOWN-6) | planned |
 
 - **Capitol** (town hall 4, ADR-070, not built): one per player; capturing a town with a Capitol when the player already has
-  one downgrades it to town hall 3 *(assumed)*. Its income and cost are not set yet.
+  one downgrades it to town hall 3; town hall 3 is renamed City Hall (ADR-073). Its income and cost are not set yet.
 
 ## Creature tech tree (implemented, ADR-030, ADR-050)
 - Creatures have **5 tiers** (not HoMM3's 7).
@@ -63,12 +63,28 @@
 A new dwelling opens with one week of creatures, every Monday adds the creature's `growth`, and unbought creatures
 accumulate. Every dwelling needs the Fort. A town's dwellings grow **+50 % with the Citadel** (fort 2) and **+100 % with
 the Castle** (fort 3), opening week included; the bonus is rounded down (growth 1 → 1 with a Citadel, 2 with a Castle).
-Map dwellings keep the creature's growth. One rule, `TownRules.WeeklyGrowth`, serves the service, town screen and AI
+Map dwellings keep the creature's growth. Week and month events change growth ([below](#week-and-month-events-adr-073-not-built)). One rule, `TownRules.WeeklyGrowth`, serves the service, town screen and AI
 (ADR-066).
 
 **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two buildings per town, one adding **+5 a week** to tier-1
 growth, the other **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the
-bonus *(assumed)*.
+bonus (ADR-073).
+
+## Week and month events (ADR-073, not built)
+HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `GameState.Random`; numbers are drafts.
+
+| Roll | Chance | Effect |
+|---|---|---|
+| Weekly (every week but a month's first) | 75 % | **Week of a creature**: its line's weekly growth doubles (base or upgrade picked, the line counts) |
+| | 25 % | nothing |
+| Monthly (a month's first week, instead of the weekly roll) | 45 % | **Month of a creature**: growth doubles as above, and stacks of it spawn next to random map objects as their guards |
+| | 15 % | **Plague**: no growth that week; the creatures waiting in every town's dwellings are halved (rounded down) |
+| | 15 % | **Starvation**: no growth that week |
+| | 25 % | nothing *(assumed: the weekly roll is made as usual)* |
+
+- *(Assumed)*: the doubling applies to towns and map dwellings for that one week; no event in the game's first week.
+- The map editor and the template editor choose which factions' creatures may be picked, separately for weekly and monthly
+  events; default: the playable factions only.
 
 ## Map dwellings and caravans (implemented, ADR-054)
 - Dwellings of one creature on the adventure map grow every Monday, owned or not; a visiting hero flags one and
@@ -78,6 +94,13 @@ bonus *(assumed)*.
   supply it; both are checked before paying.
 - A blocked route sends the caravan back (refund), a captured destination scatters the creatures, and caravans cannot
   be seen or attacked. Caravans also send garrison troops to another own town.
+- At a full garrison a caravan waits at the gates until there is room.
+- **ADR-073 (TOWN-5, not built)**:
+  - The reach is checked twice. When a dwelling is flagged (and when a town gets a caravan), the **raw distance** — travel days at
+    the creature's speed, ignoring hostile heroes, monsters and guards *(assumed)* — decides whether the dwelling appears in that
+    town's caravan list at all; ordering then runs the full check as today.
+  - The caravan screen shows a **queue**: caravans on their way (creature, count, days left) and those waiting for room.
+  - Map dwellings sell base creatures only ([adventure-map.md](adventure-map.md#creature-dwellings)).
 
 ## Tavern (implemented, ADR-060)
 - A hero costs **2500 gold** and appears on the town's entrance (which must be free). A player has at most **8 heroes**, or the map's lower limit (ADR-068).
@@ -99,7 +122,7 @@ bonus *(assumed)*.
   - The pool becomes **per player and faction**: a town offers its native and adjacent heroes, and the player's towns of one
     faction share that pool. The basic tavern offers **1 native + 1 adjacent**, the adjacent hero from either ring neighbour at
     random; the Brotherhood **2 native + 2 adjacent** (ADR-072, TOWN-7). Stronghold and Swamp Bestiary, off the ring, keep
-    "native + a warrior of another town" *(assumed)*.
+    "native + a warrior of another town" (ADR-073).
   - The Brotherhood costs **1000 gold + 5 ore** (was 2000 gold + 5 lumber + 5 ore).
   - A hired hero gets a **starter stack** that follows its preferred creature.
   - The **map tavern** works like a Brotherhood ([adventure-map.md](adventure-map.md#utilities-and-travel)) with **its own
