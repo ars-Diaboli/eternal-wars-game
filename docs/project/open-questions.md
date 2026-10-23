@@ -41,6 +41,8 @@ Answers/additional suggestions:
 | TOWN-5 | "Raw distance" is the travel days at the creature's speed, ignoring hostile heroes, monsters and guards. remove 5 days of creature speed at all, use 7500(ignore terrain) movement points for distance evaluation;
  ignoring hostile heroes, monsters and guards. - assumption is correct;
  For campaign like scenarios/maps allow player not to have a town at all; loosing a hero becomes a defeat condition instead;
+ 
+ For the rest of the section use assumptions;
 
 ## Heroes
 

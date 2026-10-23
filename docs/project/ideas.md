@@ -23,3 +23,7 @@ Recorded so far:
 
 Still to decide: see [open-questions.md](open-questions.md) ("Blocking now" and "To confirm").
 
+On visuals and graphics;
+main engine is 2d based - that is absolutely correct; However 3d representation should not be flat for better fidelity and possibly better visals for water bodies;
+Thinking of doing it similarly to WC3; Walkable min/max height should be between 0 and 4 cell widths; below that - for water bodies; above - either trimmed or for mountains;
+
