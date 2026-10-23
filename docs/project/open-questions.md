@@ -36,6 +36,12 @@ Short answers the agent read one way (ADR-073). Say "no" to any of them; otherwi
 | FLOW-2 | A month roll of "nothing" (25 %) lets the weekly roll happen as usual. |
 | FLOW-2 | No event in the game's first week. |
 
+Answers/additional suggestions:
+| FLOW-2 | No event in the game's first week. - default yes; make it configurable in map editor so there could be no meekly/monthly events at all or skip up to 2 months/8 weeks;
+| TOWN-5 | "Raw distance" is the travel days at the creature's speed, ignoring hostile heroes, monsters and guards. remove 5 days of creature speed at all, use 7500(ignore terrain) movement points for distance evaluation;
+ ignoring hostile heroes, monsters and guards. - assumption is correct;
+ For campaign like scenarios/maps allow player not to have a town at all; loosing a hero becomes a defeat condition instead;
+
 ## Heroes
 
 <a id="hero-5"></a>
@@ -46,6 +52,7 @@ Short answers the agent read one way (ADR-073). Say "no" to any of them; otherwi
 <a id="cmb-2"></a>
 **CMB-2 Morale and luck sources.** Which skills, buildings and army mixes add or remove them (artifacts and Leadership exist)? Proposal: HoMM3's
 mixed-factions penalty (−1 per extra faction) and a tavern +1 morale for defenders.
+Answer - tavern +1 morale for defenders : use upgraded tavern; rest of the proposal is correct;
 
 <a id="cmb-5"></a>
 **CMB-5 Sieges** (post-1.0). Confirm sieges come after 1.0; until then the siege Ballistics rules (ADR-063) stay unused.
