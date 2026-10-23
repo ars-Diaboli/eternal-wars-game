@@ -99,32 +99,32 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     public string? Shoot(int targetId)
     {
         var unit = battle.ActiveUnit!;
-        if (battle.FindUnit(targetId) is not { } target || !BattleGrid.CanShoot(battle, unit, target, out var cover))
+        if (battle.FindUnit(targetId) is not { } target || !BattleGrid.CanShoot(battle, unit, target, out var penalty))
         {
             return $"{unit.Creature.Name} cannot shoot that target.";
         }
 
-        Fire(unit, target, cover);
-        if (CanShootBack(target, unit, out var returnCover))
+        Fire(unit, target, penalty);
+        if (CanShootBack(target, unit, out var returnPenalty))
         {
             target.HasRetaliated = true;
             UseShot(target);
-            Strike(target, unit, BattleAttackKind.RangedRetaliation, returnCover);
+            Strike(target, unit, BattleAttackKind.RangedRetaliation, returnPenalty);
         }
 
-        if (unit.IsAlive && target.IsAlive && unit.Creature.Has(CapabilityKind.ShootsTwice) && BattleGrid.CanShoot(battle, unit, target, out cover))
+        if (unit.IsAlive && target.IsAlive && unit.Creature.Has(CapabilityKind.ShootsTwice) && BattleGrid.CanShoot(battle, unit, target, out penalty))
         {
-            Fire(unit, target, cover);
+            Fire(unit, target, penalty);
         }
 
         EndTurn();
         return null;
     }
 
-    private void Fire(BattleUnit shooter, BattleUnit target, int cover)
+    private void Fire(BattleUnit shooter, BattleUnit target, int penalty)
     {
         UseShot(shooter);
-        Strike(shooter, target, BattleAttackKind.Ranged, cover);
+        Strike(shooter, target, BattleAttackKind.Ranged, penalty);
     }
 
     /// <summary>War machines and shooters supplied by an ammo cart with Advanced Ammo supply never run out (ADR-056).</summary>
@@ -137,14 +137,14 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     }
 
     /// <summary>Ranged retaliation: a shooter that was shot at fires back if it could shoot the attacker now.</summary>
-    private bool CanShootBack(BattleUnit defender, BattleUnit shooter, out int cover)
+    private bool CanShootBack(BattleUnit defender, BattleUnit shooter, out int penalty)
     {
-        cover = 0;
+        penalty = 0;
         return defender.IsAlive && shooter.IsAlive &&
                defender.Creature.Has(CapabilityKind.RangedRetaliation) &&
                !shooter.Creature.Has(CapabilityKind.NoEnemyRetaliation) &&
                (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation)) &&
-               BattleGrid.CanShoot(battle, defender, shooter, out cover);
+               BattleGrid.CanShoot(battle, defender, shooter, out penalty);
     }
 
     private void Retaliate(BattleUnit defender, BattleUnit attacker)
@@ -194,11 +194,11 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation));
 
     /// <summary>One hit plus, for a melee strike, the attacker's area ability with the same roll.</summary>
-    private void Strike(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int cover = 0)
+    private void Strike(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int penalty = 0)
     {
         var roll = battle.Random.NextInclusive(attacker.Creature.MinDamage, attacker.Creature.MaxDamage);
         var secondary = kind == BattleAttackKind.Melee ? AreaTargets(attacker, target) : [];
-        var hit = new HitModifiers(roll, kind is BattleAttackKind.Ranged or BattleAttackKind.RangedRetaliation, cover);
+        var hit = new HitModifiers(roll, kind is BattleAttackKind.Ranged or BattleAttackKind.RangedRetaliation, penalty);
 
         // Luck: the attacker rolls once per strike, every target for itself (ADR-053).
         var attackerLuck = RollLuck(attacker);

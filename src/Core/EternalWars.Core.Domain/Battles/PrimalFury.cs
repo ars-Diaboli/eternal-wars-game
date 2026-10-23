@@ -21,7 +21,7 @@ public enum Warcry
 /// </summary>
 public sealed record BattleSideEffect(BattleSide Side, int Morale, int InitiativePercent, int UntilRound);
 
-/// <summary>Stronghold's Primal Fury group (ADR-067, draft numbers): Blood Rage, Warcry and the faction's spell resistance.</summary>
+/// <summary>Primal Fury, the group of Stronghold and Swamp Bestiary (ADR-067, ADR-069, draft numbers): Blood Rage, Warcry and Interference.</summary>
 public static class PrimalFury
 {
     public const int RallyMorale = 1;
@@ -47,6 +47,9 @@ public static class PrimalFury
         _ => SkillLevel.Expert,
     };
 
-    /// <summary>The faction's spell resistance: Spell Power the enemy hero's spells lose, 2 per level. Magic (Phase 5) reads it.</summary>
+    /// <summary>Interference: Spell Power the enemy hero's spells lose, 2 per level. Magic (Phase 5) reads it.</summary>
     public static int SpellPowerPenalty(SkillLevel level) => 2 * Math.Min(3, (int)level);
+
+    /// <summary>Interference: mana the enemy hero's spells cost more, 1 per level (ADR-072, MAG-9). Magic (Phase 5) reads it.</summary>
+    public static int SpellCostPenalty(SkillLevel level) => Math.Min(3, (int)level);
 }

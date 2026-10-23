@@ -99,11 +99,11 @@ public sealed class BattleState
     public const int DefaultWidth = 30;
     public const int SiegeWidth = 36;
 
-    /// <summary>Melee by a shooter and shots over this distance (in cells) deal half damage.</summary>
-    public const int LongRange = 15;
+    /// <summary>Every whole this many cells between the footprints adds 1/8 to a shot's ranged penalty (ADR-070, CMB-6).</summary>
+    public const int DistancePenaltyCells = 10;
 
-    /// <summary>Cover above this many eighths makes a shot impossible (ADR-035).</summary>
-    public const int MaxCoverEighths = 7;
+    /// <summary>A ranged penalty (distance and cover, less Marksmanship) above this many eighths makes a shot impossible (ADR-035, ADR-070).</summary>
+    public const int MaxRangedPenaltyEighths = 7;
 
     private readonly List<BattleUnit> _units = [];
     private readonly List<BattleObstacle> _obstacles = [];
@@ -284,14 +284,15 @@ public sealed class BattleState
     public int LuckOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Luck + Participant(unit.Side).Bonus.Luck);
 
     /// <summary>
-    /// Initiative for this round's order: the creature's, changed by the hero's Alertness and warcries (percent), then by morale's Haste or
-    /// Slow (ADR-053, ADR-067).
+    /// Initiative for this round's order: the creature's plus the hero's Alertness (flat, ADR-069), changed by warcries (percent), then by
+    /// morale's Haste or Slow (ADR-053, ADR-067).
     /// </summary>
     public int InitiativeOf(BattleUnit unit)
     {
-        var percent = unit.IsMachine ? 0 : Participant(unit.Side).Bonus.InitiativePercent + ActiveEffects(unit.Side).Sum(e => e.InitiativePercent);
-        // Rounded to the nearest whole point (halves up), so a +5 % bonus helps from an initiative of 10.
-        var initiative = percent == 0 ? unit.Creature.Initiative : Math.Max(1, ((unit.Creature.Initiative * (100 + percent)) + 50) / 100);
+        var flat = unit.Creature.Initiative + (unit.IsMachine ? 0 : Participant(unit.Side).Bonus.Initiative);
+        var percent = unit.IsMachine ? 0 : ActiveEffects(unit.Side).Sum(e => e.InitiativePercent);
+        // Rounded to the nearest whole point (halves up), so a +5 % change counts from an initiative of 10.
+        var initiative = percent == 0 ? flat : Math.Max(1, ((flat * (100 + percent)) + 50) / 100);
         return MoraleAndLuck.Initiative(initiative, unit.RoundMorale);
     }
 

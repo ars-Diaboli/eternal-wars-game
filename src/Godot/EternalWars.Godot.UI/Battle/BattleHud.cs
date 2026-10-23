@@ -10,7 +10,8 @@ namespace EternalWars.Godot.UI.Battle;
 /// <summary>
 /// Screen overlay of the 3D battle scene: the sides and round, an initiative timeline (active unit, then the queue,
 /// then waiting units), the combat log as the animation plays it, the hovered or active unit's stats, action buttons
-/// (wait, defend, retreat, quick combat), "Start battle" during the deployment step (ADR-072) and the result screen. Refreshes when <see cref="BattleView3D"/> is idle, so it
+/// (wait, defend, retreat, quick combat), "Start battle" during the deployment step (ADR-072), the result screen and, after it, the
+/// Necromancy screen (ADR-072, MAG-7). Refreshes when <see cref="BattleView3D"/> is idle, so it
 /// matches what is shown. Buttons are commands; the root lets mouse input through to the battlefield.
 /// </summary>
 public partial class BattleHud : Control
@@ -32,7 +33,9 @@ public partial class BattleHud : Control
     private readonly Dictionary<Warcry, Button> _warcryButtons = [];
     private readonly PanelContainer _result = new() { Visible = false };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
+    private readonly Button _close = new() { Text = "Return to the map (Enter)" };
     private readonly Queue<string> _lines = new();
+    private string? _raised;
     private GameSession _session = null!;
     private BattleView3D _view = null!;
 
@@ -94,12 +97,14 @@ public partial class BattleHud : Control
         var resultBox = new VBoxContainer();
         _result.AddChild(resultBox);
         resultBox.AddChild(_resultText);
-        var close = new Button { Text = "Return to the map (Enter)" };
-        close.Pressed += () => _view.Close();
-        resultBox.AddChild(close);
+        _close.Pressed += Continue;
+        resultBox.AddChild(_close);
+        this.SubscribeWhileInTree<UndeadRaised>(session.Events, e => _raised =
+            $"Necromancy\n\n{_session.State.GetHero(e.Hero).Name} raises {string.Join(", ", e.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature)}"))}.");
 
         view.Opened += () =>
         {
+            _raised = null;
             _lines.Clear();
             _log.Text = string.Empty;
             _result.Visible = false;
@@ -148,6 +153,20 @@ public partial class BattleHud : Control
                      $"{(unit.IsDefending ? "  defending" : string.Empty)}{(battle.IsNative(unit) ? "  native terrain (+1 Attack, Defense, Speed)" : string.Empty)}{capabilities}";
 
         static string Signed(int value) => value > 0 ? $"+{value}" : value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>"Return to the map" on the result screen: first the Necromancy screen if undead were raised, then the map.</summary>
+    public void Continue()
+    {
+        if (_raised is { } text)
+        {
+            _raised = null;
+            _title.Text = "Necromancy";
+            _resultText.Text = text;
+            return;
+        }
+
+        _view.Close();
     }
 
     public void Report(CommandResult result) => _status.Text = result.IsAccepted ? string.Empty : $"Refused: {result.Error}";

@@ -80,20 +80,23 @@ public static class SkillOffers
         return offers;
     }
 
-    /// <summary>Weights: skills already being learned ×3; own school 6 (mage) / 2 (warrior); other schools 2 / 1; general groups 2 / 4.</summary>
+    /// <summary>
+    /// Weights: skills already being learned ×3; own school 6 (mage) / 2 (warrior); the own faction group (Primal Fury) 6 for both, so
+    /// warriors learn it soon (ADR-072, HERO-7); other schools 2 / 1; general groups 2 / 4.
+    /// </summary>
     private static int Weight(Hero hero, string? heroTown, SkillDefinition skill)
     {
         var group = BuiltInSkills.GetGroup(skill.Group);
         var mage = hero.Class == HeroClass.Mage;
-        var weight = group.Town is { } school
-            ? school == heroTown ? (mage ? 6 : 2) : (mage ? 2 : 1)
+        var weight = group.IsFaction ? 6
+            : group.IsMagic ? group.BelongsTo(heroTown) ? (mage ? 6 : 2) : (mage ? 2 : 1)
             : mage ? 2 : 4;
         return hero.Skills.Groups.Contains(skill.Group) ? weight * 3 : weight;
     }
 
-    /// <summary>Faction ability groups are offered only to heroes of their own town.</summary>
+    /// <summary>Faction ability groups are offered only to heroes of their own towns.</summary>
     private static bool IsOffered(SkillDefinition skill, string? heroTown) =>
-        BuiltInSkills.GetGroup(skill.Group).Faction is not { } faction || faction == heroTown;
+        BuiltInSkills.GetGroup(skill.Group) is not { IsFaction: true } group || group.BelongsTo(heroTown);
 
     private static bool IsSchoolOf(SkillDefinition skill, IReadOnlyList<string> towns) =>
         BuiltInSkills.GetGroup(skill.Group).School is { } school && towns.Contains(school);

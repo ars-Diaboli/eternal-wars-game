@@ -115,6 +115,8 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
             throw new InvalidOperationException("No level-up is pending.");
         }
 
+        // A replay recorded before the rework names the old id (ADR-072).
+        skill = BuiltInSkills.Resolve(skill);
         if (!decision.Options.Contains(skill))
         {
             throw new InvalidOperationException($"'{skill}' is not one of the offered skills.");
@@ -135,7 +137,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
     private IReadOnlyList<string> Offers(Hero hero) => SkillOffers.Generate(hero, TownOf(state, hero), state.Random);
 
     /// <summary>The stat the next level raises, rolled after the skill offers so the prompt can show it (ADR-055).</summary>
-    private PrimaryStat RollStat(Hero hero) => StatGrowth.Roll(hero.Class, hero.Level + 1, state.Random);
+    private PrimaryStat RollStat(Hero hero) => StatGrowth.Roll(hero.Class, hero.Level + 1, state.Random, TownOf(state, hero));
 
     private void LevelUp(Hero hero, string? skill, PrimaryStat stat)
     {

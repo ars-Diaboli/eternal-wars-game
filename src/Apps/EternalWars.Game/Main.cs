@@ -477,7 +477,7 @@ public partial class Main : Node3D
                 ClickBattle(click.Position);
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.Result is not null:
-                _battle.Close();
+                _battleHud.Continue();
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter } when _battle.Deployer is { } deployer:
                 _battleHud.Report(_session.Execute(new BattleStartCommand(deployer)));

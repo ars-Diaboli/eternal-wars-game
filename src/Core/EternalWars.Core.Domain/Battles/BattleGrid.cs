@@ -97,18 +97,31 @@ public static class BattleGrid
     public static bool CanShootNow(BattleState battle, BattleUnit unit) =>
         unit.Creature.IsRanged && unit.ShotsLeft > 0 && !AdjacentEnemies(battle, unit).Any();
 
-    /// <summary>Whether <paramref name="unit"/> can shoot <paramref name="target"/>; <paramref name="coverEighths"/> is the cover on the line of fire.</summary>
-    public static bool CanShoot(BattleState battle, BattleUnit unit, BattleUnit target, out int coverEighths)
+    /// <summary>Whether <paramref name="unit"/> can shoot <paramref name="target"/>; <paramref name="penaltyEighths"/> is the shot's ranged penalty (<see cref="RangedPenaltyEighths"/>).</summary>
+    public static bool CanShoot(BattleState battle, BattleUnit unit, BattleUnit target, out int penaltyEighths)
     {
-        coverEighths = 0;
+        penaltyEighths = 0;
         if (!target.IsAlive || target.Side == unit.Side || !CanShootNow(battle, unit))
         {
             return false;
         }
 
-        coverEighths = CoverEighths(battle, unit, target);
-        return coverEighths <= BattleState.MaxCoverEighths;
+        penaltyEighths = RangedPenaltyEighths(battle, unit, target);
+        return penaltyEighths <= BattleState.MaxRangedPenaltyEighths;
     }
+
+    /// <summary>
+    /// A shot's ranged penalty in eighths (ADR-070, ADR-072, CMB-6): the distance penalty and the cover add up, the shooter's Marksmanship is
+    /// taken off (not below 0); above 7/8 the target cannot be shot. War machines have no distance penalty.
+    /// </summary>
+    public static int RangedPenaltyEighths(BattleState battle, BattleUnit shooter, BattleUnit target)
+    {
+        var distance = shooter.IsMachine ? 0 : DistancePenaltyEighths(shooter.Rect.GapTo(target.Rect));
+        return Math.Max(0, distance + CoverEighths(battle, shooter, target) - battle.Participant(shooter.Side).Bonus.MarksmanshipEighths);
+    }
+
+    /// <summary>The distance penalty: 1/8 per whole 10 cells between the footprints (0–9 none, 10–19 1/8, …).</summary>
+    public static int DistancePenaltyEighths(int cellsBetween) => Math.Max(0, cellsBetween) / BattleState.DistancePenaltyCells;
 
     /// <summary>
     /// Sum of cover from every unit (either side) and obstacle the line of fire passes through, each counted once

@@ -4,15 +4,15 @@ namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>Everything that modifies one hit, besides the attacker/defender stats.</summary>
 /// <param name="BaseRoll">One roll in the creature's damage range, multiplied by the stack size (ADR-033).</param>
-/// <param name="IsRanged">A shot (cover and range apply) rather than a melee strike.</param>
-/// <param name="CoverEighths">Cover on the line of fire (shots only).</param>
+/// <param name="IsRanged">A shot (the ranged penalty applies) rather than a melee strike.</param>
+/// <param name="PenaltyEighths">The shot's ranged penalty: distance and cover, less Marksmanship (<see cref="BattleGrid.RangedPenaltyEighths"/>).</param>
 /// <param name="Luck">Luck of this hit: +75 % or −50 % (ADR-053).</param>
-public sealed record HitModifiers(int BaseRoll, bool IsRanged, int CoverEighths = 0, HitLuck Luck = HitLuck.None);
+public sealed record HitModifiers(int BaseRoll, bool IsRanged, int PenaltyEighths = 0, HitLuck Luck = HitLuck.None);
 
 /// <summary>
 /// HoMM3 damage baseline in integer maths (ADR-033): base roll × stack size; +5 % per point of Attack above
 /// Defense (cap +300 %), −2.5 % per point of Defense above Attack (cap −70 %); then capability bonuses, the
-/// long-range halving, the <c>MeleePenalty</c> halving, and cover; hero skills (Melee, Archery, Armor) and the preferred
+/// ranged penalty (distance and cover, ADR-070), the <c>MeleePenalty</c> halving; hero skills (Melee, Archery, Armor) and the preferred
 /// creature's +Attack/+Defense (ADR-048); native terrain's +1 Attack/+1 Defense (ADR-068); luck (ADR-053); Ballistics for war machines (ADR-056). Never less than 1.
 /// </summary>
 public static class DamageCalculator
@@ -70,13 +70,7 @@ public static class DamageCalculator
 
         if (hit.IsRanged)
         {
-            // War machines stand at the back and have no range penalty (ADR-056).
-            if (!attacker.IsMachine && attacker.Rect.GapTo(defender.Rect) > BattleState.LongRange)
-            {
-                damage /= 2;
-            }
-
-            damage = damage * (8 - hit.CoverEighths) / 8;
+            damage = damage * (8 - hit.PenaltyEighths) / 8;
         }
         else if (attacker.Creature.Has(CapabilityKind.MeleePenalty))
         {
@@ -90,9 +84,9 @@ public static class DamageCalculator
     public static int DefendBonus(int defense) => Math.Max(1, defense / 5);
 
     /// <summary>Damage expected from an average roll; the AI uses it to compare options.</summary>
-    public static int Expected(BattleState battle, BattleUnit attacker, BattleUnit defender, bool isRanged, int coverEighths = 0)
+    public static int Expected(BattleState battle, BattleUnit attacker, BattleUnit defender, bool isRanged, int penaltyEighths = 0)
     {
         var average = (attacker.Creature.MinDamage + attacker.Creature.MaxDamage) / 2;
-        return Damage(battle, attacker, defender, new HitModifiers(Math.Max(1, average), isRanged, coverEighths));
+        return Damage(battle, attacker, defender, new HitModifiers(Math.Max(1, average), isRanged, penaltyEighths));
     }
 }

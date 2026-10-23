@@ -71,6 +71,9 @@ public sealed record BattleCasualty(BattleSide Side, string Creature, int Lost);
 /// The battle is over. <paramref name="Experience"/> went to the winning hero (if any). Map consequences
 /// (armies, defeated heroes, guards) follow as their own events, then <see cref="DecisionResolved"/>.
 /// </summary>
+/// <summary>Necromancy raised undead after the battle (ADR-072, MAG-7); published after <see cref="BattleEnded"/> and before any level-up.</summary>
+public sealed record UndeadRaised(HeroId Hero, IReadOnlyList<RaisedUndead> Raised) : IEvent;
+
 public sealed record BattleEnded(
     BattleSide Winner,
     BattleEndReason Reason,

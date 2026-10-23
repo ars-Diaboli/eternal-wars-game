@@ -42,6 +42,7 @@ public sealed class GameSession
         Bus.Subscribe<MapObjectChanged>(visibility);
         Bus.Subscribe<SurroundingsRevealed>(visibility);
         Bus.Subscribe<HeroFreed>(visibility);
+        Bus.Subscribe<HeroLeveledUp>(visibility);
 
         Flow = new GameFlowService(State, Bus);
         Economy = new EconomyService(State, Bus);
