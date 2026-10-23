@@ -36,6 +36,9 @@ public partial class Main : Node2D
     private HeroId? _selectedHero;
     private HeroPath? _preview;
 
+    /// <summary>The stack picked for placing during a battle's deployment step.</summary>
+    private int? _deployPick;
+
     public override void _Ready()
     {
         if (AutoInput.FromLaunchArguments() is { } autoInput)
@@ -170,9 +173,27 @@ public partial class Main : Node2D
         QueueRedraw();
     }
 
-    /// <summary>Battle keys: W wait, D defend, R retreat, Q quick combat.</summary>
+    /// <summary>Battle keys: W wait, D defend, R retreat, Q quick combat; Enter starts the battle after deployment.</summary>
     private void HandleBattleKey(InputEvent @event)
     {
+        if (@event is InputEventKey { Pressed: true } deploying && _session.State.Battle is { Phase: BattlePhase.Deploying, Deployer: { } side }
+            && _session.Battles.Commander(side) is { } deployer)
+        {
+            GameCommand? step = deploying.Keycode switch
+            {
+                Key.Enter or Key.KpEnter => new BattleStartCommand(deployer),
+                Key.Q => new AutoResolveBattleCommand(deployer),
+                _ => null,
+            };
+            if (step is not null)
+            {
+                _deployPick = null;
+                Report(_session.Execute(step));
+            }
+
+            return;
+        }
+
         if (@event is not InputEventKey { Pressed: true } key || ActiveCommander() is not { } player)
         {
             return;
@@ -192,9 +213,28 @@ public partial class Main : Node2D
         }
     }
 
-    /// <summary>Click on an enemy: shoot it if possible, else attack it; click elsewhere: move there (<see cref="BattleTargeting"/>).</summary>
+    /// <summary>
+    /// Click on an enemy: shoot it if possible, else attack it; click elsewhere: move there (<see cref="BattleTargeting"/>). During the
+    /// deployment step (ADR-072) a click on an own stack picks it and the next click puts it there; Enter starts the battle.
+    /// </summary>
     private void HandleBattleClick(CellPosition cell)
     {
+        if (_session.State.Battle is { Phase: BattlePhase.Deploying, Deployer: { } side } deploying && _session.Battles.Commander(side) is { } deployer)
+        {
+            if (deploying.UnitAt(cell) is { IsMachine: false } own && own.Side == side && own.Id != _deployPick)
+            {
+                _deployPick = own.Id;
+            }
+            else if (_deployPick is { } id && deploying.FindUnit(id) is { } picked)
+            {
+                var result = _session.Execute(new BattleDeployCommand(deployer, id, BattleTargeting.DeploymentPlacement(deploying, picked, cell.X + 0.5f, cell.Y + 0.5f)));
+                Report(result);
+                _deployPick = result.IsAccepted ? null : _deployPick;
+            }
+
+            return;
+        }
+
         if (_session.State.Battle is not { } battle || ActiveCommander() is not { } player)
         {
             return;

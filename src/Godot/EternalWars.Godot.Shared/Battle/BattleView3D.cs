@@ -20,6 +20,8 @@ namespace EternalWars.Godot.Shared.Battle;
 /// once it catches up with the core state it shows where a human-commanded active unit can go and raises
 /// <see cref="Idle"/>. After <see cref="BattleEnded"/> has played, <see cref="Finished"/> is raised and the view stays
 /// open until <see cref="Close"/>. Input is mapped by the app: <see cref="PickPoint"/> and <see cref="ShowIntent"/>.
+/// During the deployment step (ADR-072) the zone is shaded, <see cref="Pick"/> marks the stack being placed and
+/// <see cref="ShowPlacement"/> previews where it would go.
 /// </summary>
 public partial class BattleView3D : Node3D
 {
@@ -33,6 +35,7 @@ public partial class BattleView3D : Node3D
     private static readonly Color AttackColor = new(0.95f, 0.25f, 0.20f, 0.50f);
     private static readonly Color ShootColor = new(0.95f, 0.60f, 0.15f, 0.50f);
     private static readonly Color HitColor = new(1.0f, 0.15f, 0.10f);
+    private static readonly Color ZoneColor = new(0.35f, 0.65f, 1.0f, 0.18f);
 
     private readonly Dictionary<int, BattleUnitView> _units = [];
 
@@ -83,6 +86,33 @@ public partial class BattleView3D : Node3D
             ? _session.Battles.Commander(active.Side)
             : null;
 
+    /// <summary>Who places stacks now: the deployer's commander during the deployment step once the view has caught up, else null.</summary>
+    public PlayerId? Deployer =>
+        IsOpen && !IsBusy && Result is null && _session.State.Battle is { Phase: BattlePhase.Deploying, Deployer: { } side }
+            ? _session.Battles.Commander(side)
+            : null;
+
+    /// <summary>The stack picked for placing during the deployment step.</summary>
+    public int? Picked { get; private set; }
+
+    /// <summary>Marks the stack being placed (or none).</summary>
+    public void Pick(int? unit)
+    {
+        Picked = unit;
+        SetActive(unit);
+    }
+
+    /// <summary>Previews a placement during deployment: green when allowed, red when refused; null hides it.</summary>
+    public void ShowPlacement(CellRect? rect, bool allowed)
+    {
+        _target.Visible = false;
+        _ghost.Visible = false;
+        if (rect is { } r)
+        {
+            ShowOverlay(_ghost, r, allowed ? MoveColor : AttackColor);
+        }
+    }
+
     public string SideName(BattleSide side) => _sideNames.GetValueOrDefault(side, side.ToString());
 
     public Color SideColor(BattleSide side) => _sideColors.GetValueOrDefault(side, Palette.Neutral);
@@ -109,6 +139,15 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleRoundStarted>(events, e => Step(null, () => Narrate($"Round {e.Round}.")));
         this.SubscribeWhileInTree<BattleTurnStarted>(events, e => Step(null, () => SetActive(e.Unit)));
         this.SubscribeWhileInTree<BattleUnitMoved>(events, OnMoved);
+        this.SubscribeWhileInTree<BattleDeploymentStarted>(events, e => Step(null, () =>
+            Narrate($"{SideName(e.Side)} deploys within {e.Columns} columns: click a stack, then where it should stand; then start the battle.")));
+        this.SubscribeWhileInTree<BattleUnitDeployed>(events, OnDeployed);
+        this.SubscribeWhileInTree<BattleDeploymentEnded>(events, _ => Step(null, () =>
+        {
+            Pick(null);
+            ShowPlacement(null, false);
+            Narrate("The battle begins.");
+        }));
         this.SubscribeWhileInTree<BattleUnitAttacked>(events, OnAttacked);
         this.SubscribeWhileInTree<BattleUnitDied>(events, OnDied);
         this.SubscribeWhileInTree<BattleMoraleTriggered>(events, OnMorale);
@@ -131,18 +170,18 @@ public partial class BattleView3D : Node3D
 
     /// <summary>
     /// Opens the scene for a battle that is already under way (a loaded game, ADR-058): the field is built from the
-    /// core state as it is now, nothing is animated. Does nothing outside the fighting phase; a battle still choosing
+    /// core state as it is now, nothing is animated. Does nothing before the field is set up; a battle still choosing
     /// its width opens on <see cref="BattleStarted"/> like any other.
     /// </summary>
     public void Restore()
     {
-        if (_session.State.Battle is not { Phase: BattlePhase.Fighting } battle)
+        if (_session.State.Battle is not { Phase: BattlePhase.Fighting or BattlePhase.Deploying } battle)
         {
             return;
         }
 
         var units = battle.LivingUnits
-            .Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Size, u.Machine))
+            .Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Width, u.Height, u.Machine))
             .ToList();
         Open(new BattleStarted(
             battle.Attacker.Hero, battle.Defender.Hero, battle.Defender.Guard, battle.Width, BattleState.Height, battle.IsAmbush,
@@ -183,13 +222,13 @@ public partial class BattleView3D : Node3D
         switch (action)
         {
             case MoveAction move:
-                ShowOverlay(_ghost, new CellRect(move.To, active.Size), MoveColor);
+                ShowOverlay(_ghost, active.RectAt(move.To), MoveColor);
                 break;
             case AttackAction attack:
                 ShowOverlay(_target, battle.GetUnit(attack.Target).Rect, AttackColor);
                 if (attack.From is { } from && from != active.Position)
                 {
-                    ShowOverlay(_ghost, new CellRect(from, active.Size), MoveColor);
+                    ShowOverlay(_ghost, active.RectAt(from), MoveColor);
                 }
 
                 break;
@@ -250,8 +289,8 @@ public partial class BattleView3D : Node3D
         foreach (var info in e.Units)
         {
             var view = new BattleUnitView();
-            view.Bind(info.Unit, info.Side, battle.GetUnit(info.Unit).Creature, info.Count, info.Size, SideColor(info.Side), info.Machine);
-            var rect = new CellRect(info.Position, info.Size);
+            view.Bind(info.Unit, info.Side, battle.GetUnit(info.Unit).Creature, info.Count, info.Width, info.Height, SideColor(info.Side), info.Machine);
+            var rect = info.Rect;
             view.Position = BattleSpace.Center(rect);
             _field.AddChild(view);
             _units[info.Unit] = view;
@@ -274,12 +313,25 @@ public partial class BattleView3D : Node3D
             return;
         }
 
-        var rect = new CellRect(e.To, view.Size);
+        var rect = new CellRect(e.To.X, e.To.Y, view.Width, view.Height);
         _planned[e.Unit] = rect;
         var cells = Math.Max(Math.Abs(e.To.X - e.From.X), Math.Abs(e.To.Y - e.From.Y));
         Step(
             t => t.TweenProperty(view, "position", BattleSpace.Center(rect), Mathf.Clamp(cells * 0.05f, 0.15f, 0.6f)).SetTrans(Tween.TransitionType.Sine),
             () => view.Position = BattleSpace.Center(rect));
+    }
+
+    /// <summary>A stack placed elsewhere during deployment jumps there.</summary>
+    private void OnDeployed(BattleUnitDeployed e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var view))
+        {
+            return;
+        }
+
+        var rect = new CellRect(e.To.X, e.To.Y, view.Width, view.Height);
+        _planned[e.Unit] = rect;
+        Step(null, () => view.Position = BattleSpace.Center(rect));
     }
 
     private void OnAttacked(BattleUnitAttacked e)
@@ -477,15 +529,25 @@ public partial class BattleView3D : Node3D
         }
     }
 
-    /// <summary>Every cell a human-commanded active unit can cover this turn, as a faint overlay.</summary>
+    /// <summary>
+    /// Every cell a human-commanded active unit can cover this turn, as a faint overlay; during the deployment step the
+    /// deployer's zone instead.
+    /// </summary>
     private void RefreshReach()
     {
         var cells = new HashSet<CellPosition>();
-        if (Commander is not null && _session.State.Battle is { ActiveUnit: { } active } battle)
+        var color = ReachColor;
+        if (Deployer is not null && _session.State.Battle is { } deploying)
+        {
+            var from = deploying.Deployer == BattleSide.Attacker ? 0 : deploying.Width - deploying.DeploymentColumns;
+            cells.UnionWith(new CellRect(from, 0, deploying.DeploymentColumns, BattleState.Height).Cells());
+            color = ZoneColor;
+        }
+        else if (Commander is not null && _session.State.Battle is { ActiveUnit: { } active } battle)
         {
             foreach (var placement in BattleGrid.Reachable(battle, active).Keys)
             {
-                cells.UnionWith(new CellRect(placement, active.Size).Cells());
+                cells.UnionWith(active.RectAt(placement).Cells());
             }
         }
 
@@ -494,7 +556,7 @@ public partial class BattleView3D : Node3D
         foreach (var cell in cells)
         {
             _reach.SetInstanceTransform(i, new Transform3D(Basis.Identity, BattleSpace.ToWorld(cell) + (Vector3.Up * 0.015f)));
-            _reach.SetInstanceColor(i, ReachColor);
+            _reach.SetInstanceColor(i, color);
             i++;
         }
 

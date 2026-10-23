@@ -162,7 +162,7 @@ public sealed class GameSession
         }
     }
 
-    private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleMoveCommand
+    private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleDeployCommand or BattleStartCommand or BattleMoveCommand
         or BattleAttackCommand or BattleShootCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand
         or AutoResolveBattleCommand or BattleWarcryCommand;
 
@@ -300,6 +300,12 @@ public sealed class GameSession
                 return null;
             case ChooseBattleWidthCommand width:
                 Battles.ChooseWidth(width.Player, width.Width);
+                return null;
+            case BattleDeployCommand deploy:
+                Battles.Redeploy(deploy.Player, deploy.Unit, deploy.To);
+                return null;
+            case BattleStartCommand start:
+                Battles.EndDeployment(start.Player);
                 return null;
             case BattleMoveCommand move:
                 Battles.Act(move.Player, new MoveAction(move.To));

@@ -156,6 +156,11 @@ These are enforced by:
   `BattleUnit.LosesNextAction`); `BattleAi` uses them for computer heroes. Rules live in `PrimalFury`.
 - War machines are `BattleUnit`s with `Machine` set (ADR-056): speed 0, no melee or retaliation, no morale; only the
   offensive one is queued; the tent heals at round start; `BattleState.LivingArmyOf` (creatures only) decides the end.
+  Their footprint is one column (`WarMachines.Footprint`, `BattleUnit.Width` × `Height`, ADR-073); creatures stay square.
+- Deployment step (ADR-072, ADR-076): `BattlePhase.Deploying` between the width choice and the first round, for a human side
+  with the higher Tactics (`BattleState.Deployer`, `DeploymentColumns`); `BattleDeployCommand` → `BattleService.Redeploy`
+  (checked by `BattleSetup.DeploymentRefusal`), `BattleStartCommand` → `EndDeployment`; front-ends place by
+  `BattleTargeting.DeploymentPlacement`.
 - `BattleTargeting.ActionAt` maps a pointed cell to the action a click performs (shoot, melee from the pointer's
   side, move); front-ends share it.
 - **Presentation** (ADR-052): the game app's `BattleView3D` (Godot.Shared/Battle) builds the battlefield from

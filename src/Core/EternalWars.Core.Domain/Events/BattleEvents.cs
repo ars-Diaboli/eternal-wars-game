@@ -4,9 +4,16 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Events;
 
-public sealed record BattleUnitInfo(int Unit, BattleSide Side, string Creature, int Count, CellPosition Position, int Size, WarMachineKind? Machine = null);
+/// <summary>A unit as the battle starts: its footprint is <paramref name="Width"/> × <paramref name="Height"/> cells from <paramref name="Position"/>.</summary>
+public sealed record BattleUnitInfo(int Unit, BattleSide Side, string Creature, int Count, CellPosition Position, int Width, int Height, WarMachineKind? Machine = null)
+{
+    public CellRect Rect => new(Position.X, Position.Y, Width, Height);
+}
 
-/// <summary>The battlefield is set up and fighting begins (after the width choice, if any).</summary>
+/// <summary>
+/// The battlefield is set up (after the width choice, if any). Fighting begins at once, or after the deployment step
+/// (<see cref="BattleDeploymentStarted"/> … <see cref="BattleDeploymentEnded"/>).
+/// </summary>
 public sealed record BattleStarted(
     HeroId? AttackerHero,
     HeroId? DefenderHero,
@@ -16,6 +23,15 @@ public sealed record BattleStarted(
     bool IsAmbush,
     IReadOnlyList<BattleUnitInfo> Units,
     IReadOnlyList<BattleObstacle> Obstacles) : IEvent;
+
+/// <summary>The side with the higher Tactics may place its stacks within <paramref name="Columns"/> columns of its edge (ADR-072).</summary>
+public sealed record BattleDeploymentStarted(BattleSide Side, int Columns) : IEvent;
+
+/// <summary>A stack was placed elsewhere during the deployment step.</summary>
+public sealed record BattleUnitDeployed(int Unit, CellPosition From, CellPosition To) : IEvent;
+
+/// <summary>The deployer pressed "Start battle" (or handed the battle to quick combat); the first round follows.</summary>
+public sealed record BattleDeploymentEnded(BattleSide Side) : IEvent;
 
 public sealed record BattleRoundStarted(int Round) : IEvent;
 

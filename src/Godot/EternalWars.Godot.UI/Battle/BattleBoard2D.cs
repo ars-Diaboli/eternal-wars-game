@@ -10,7 +10,7 @@ namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
 /// Top-down debug view of the current battle (2D harness): grid, obstacles, units with their counts, the active
-/// unit and, for a human-commanded unit, where it can move. Shown while a battle runs, hidden afterwards.
+/// unit and, for a human-commanded unit, where it can move; during the deployment step (ADR-072) the deployer's zone. Shown while a battle runs, hidden afterwards.
 /// Clicks are reported through <see cref="CellClicked"/>; the app maps them to battle commands.
 /// </summary>
 public partial class BattleBoard2D : Control
@@ -18,6 +18,7 @@ public partial class BattleBoard2D : Control
     private static readonly Color Grid = new(1, 1, 1, 0.08f);
     private static readonly Color Neutral = new(0.55f, 0.55f, 0.55f);
     private static readonly Color Reach = new(1, 1, 1, 0.12f);
+    private static readonly Color Zone = new(0.35f, 0.65f, 1.0f, 0.18f);
 
     private GameSession _session = null!;
 
@@ -49,13 +50,16 @@ public partial class BattleBoard2D : Control
 
         this.SubscribeWhileInTree<BattleTurnStarted>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitMoved>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleDeploymentStarted>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitDeployed>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleDeploymentEnded>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitAttacked>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitDied>(session.Events, _ => QueueRedraw());
     }
 
     public override void _Draw()
     {
-        if (_session.State.Battle is not { Phase: BattlePhase.Fighting } battle)
+        if (_session.State.Battle is not { Phase: BattlePhase.Fighting or BattlePhase.Deploying } battle)
         {
             return;
         }
@@ -71,7 +75,12 @@ public partial class BattleBoard2D : Control
             DrawLine(new Vector2(0, y * CellSize), new Vector2(battle.Width * CellSize, y * CellSize), Grid);
         }
 
-        if (battle.ActiveUnit is { } active && _session.Battles.Commander(active.Side) is not null)
+        if (battle is { Phase: BattlePhase.Deploying, Deployer: { } deployer })
+        {
+            var from = deployer == BattleSide.Attacker ? 0 : battle.Width - battle.DeploymentColumns;
+            DrawRect(ToRect(new CellRect(from, 0, battle.DeploymentColumns, BattleState.Height)), Zone);
+        }
+        else if (battle.ActiveUnit is { } active && _session.Battles.Commander(active.Side) is not null)
         {
             foreach (var placement in BattleGrid.Reachable(battle, active).Keys)
             {

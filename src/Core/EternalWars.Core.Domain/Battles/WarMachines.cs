@@ -95,6 +95,12 @@ public static class WarMachines
         _ => WarMachineSlot.Offensive,
     };
 
+    /// <summary>
+    /// Battlefield footprint (ADR-073): every machine occupies one column, the outermost of its side; the offensive machine and the tent
+    /// are 1 × 3 cells, the ammo cart 1 × 2. The model may overhang the grid's edge.
+    /// </summary>
+    public static (int Width, int Height) Footprint(WarMachineKind kind) => kind == WarMachineKind.AmmoCart ? (1, 2) : (1, 3);
+
     /// <summary>Tent and cart work without taking turns; only the offensive machine acts.</summary>
     public static bool TakesTurns(WarMachineKind kind) => SlotOf(kind) == WarMachineSlot.Offensive;
 

@@ -479,6 +479,9 @@ public partial class Main : Node3D
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.Result is not null:
                 _battle.Close();
                 break;
+            case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter } when _battle.Deployer is { } deployer:
+                _battleHud.Report(_session.Execute(new BattleStartCommand(deployer)));
+                break;
             case InputEventKey { Pressed: true } key when BattleKeyCommand(key.Keycode) is { } command:
                 _battleHud.Report(_session.Execute(command));
                 break;
@@ -524,11 +527,26 @@ public partial class Main : Node3D
 
         var cell = BattleSpace.ToCell(point);
         _battleHud.ShowUnit(battle.UnitAt(cell));
+        if (_battle.Deployer is not null)
+        {
+            // Deployment step (ADR-072): preview where the picked stack would stand.
+            var picked = _battle.Picked is { } id ? battle.FindUnit(id) : null;
+            var at = picked is null ? (CellPosition?)null : BattleTargeting.DeploymentPlacement(battle, picked, point.X, point.Y);
+            _battle.ShowPlacement(at is { } p ? picked!.RectAt(p) : null, at is { } q && BattleSetup.DeploymentRefusal(battle, picked!, q) is null);
+            return;
+        }
+
         _battle.ShowIntent(_battle.Commander is not null ? BattleTargeting.ActionAt(battle, cell, point.X, point.Y) : null);
     }
 
     private void ClickBattle(Vector2 screen)
     {
+        if (_battle.Deployer is { } deployer && _session.State.Battle is { } deploying && _battle.PickPoint(screen) is { } spot)
+        {
+            DeployAt(deployer, deploying, spot);
+            return;
+        }
+
         if (_battle.Commander is not { } player || _session.State.Battle is not { } battle || _battle.PickPoint(screen) is not { } point)
         {
             return;
@@ -545,6 +563,27 @@ public partial class Main : Node3D
         {
             _battle.ShowIntent(null);
             _battleHud.Report(_session.Execute(command));
+        }
+    }
+
+    /// <summary>Deployment step: a click on an own stack picks it, a click elsewhere puts the picked stack there.</summary>
+    private void DeployAt(PlayerId player, BattleState battle, Vector2 point)
+    {
+        if (battle.UnitAt(BattleSpace.ToCell(point)) is { IsMachine: false } own && own.Side == battle.Deployer && own.Id != _battle.Picked)
+        {
+            _battle.Pick(own.Id);
+            return;
+        }
+
+        if (_battle.Picked is { } id && battle.FindUnit(id) is { } picked)
+        {
+            var result = _session.Execute(new BattleDeployCommand(player, id, BattleTargeting.DeploymentPlacement(battle, picked, point.X, point.Y)));
+            _battleHud.Report(result);
+            if (result.IsAccepted)
+            {
+                _battle.Pick(null);
+                _battle.ShowPlacement(null, false);
+            }
         }
     }
 

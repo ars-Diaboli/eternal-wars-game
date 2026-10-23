@@ -45,10 +45,11 @@ public class WarMachineTests
         var machines = battle.Units.Where(u => u.Side == Attacker && u.IsMachine).ToDictionary(u => u.Machine!.Value);
 
         Assert.Equal([WarMachineKind.Ballista, WarMachineKind.HealingTent, WarMachineKind.AmmoCart], machines.Keys.Order());
-        Assert.All(machines.Values, m => Assert.Equal(0, m.Position.X)); // a column of their own at the back
-        Assert.Equal(1, machines[WarMachineKind.HealingTent].Position.Y);
-        Assert.Equal(BattleState.Height - 2 - 1, machines[WarMachineKind.AmmoCart].Position.Y);
-        Assert.All(battle.Units.Where(u => u.Side == Attacker && !u.IsMachine), u => Assert.True(u.Position.X >= 4)); // army in front
+        Assert.All(machines.Values, m => Assert.Equal((0, 1), (m.Position.X, m.Width))); // the outermost column only (ADR-073)
+        Assert.Equal((1, 3), (machines[WarMachineKind.HealingTent].Position.Y, machines[WarMachineKind.HealingTent].Height));
+        Assert.Equal(3, machines[WarMachineKind.Ballista].Height);
+        Assert.Equal((BattleState.Height - 2 - 1, 2), (machines[WarMachineKind.AmmoCart].Position.Y, machines[WarMachineKind.AmmoCart].Height));
+        Assert.All(battle.Units.Where(u => u.Side == Attacker && !u.IsMachine), u => Assert.Equal(1, u.Position.X)); // the army from the next column
         Assert.Equal(WarMachineKind.Ballista, Assert.Single(battle.Units, u => u.Machine is not null && WarMachines.TakesTurns(u.Machine.Value)).Machine);
         Assert.Equal(attacker, battle.Attacker.Hero);
     }
@@ -67,7 +68,7 @@ public class WarMachineTests
         Assert.Equal(1, ballista.ShotsLeft);
 
         // Attacked in melee, the machine does not hit back.
-        enemy.Position = new CellPosition(3, 10);
+        enemy.Position = new CellPosition(1, 10);
         battle.State.ActiveUnit = enemy;
         Assert.Null(battle.Engine.Attack(ballista.Id, enemy.Position));
         Assert.DoesNotContain(battle.Events.OfType<BattleUnitAttacked>(), a => a.Attacker == ballista.Id && a.Kind == BattleAttackKind.Retaliation);

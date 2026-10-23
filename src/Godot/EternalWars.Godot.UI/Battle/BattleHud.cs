@@ -10,7 +10,7 @@ namespace EternalWars.Godot.UI.Battle;
 /// <summary>
 /// Screen overlay of the 3D battle scene: the sides and round, an initiative timeline (active unit, then the queue,
 /// then waiting units), the combat log as the animation plays it, the hovered or active unit's stats, action buttons
-/// (wait, defend, retreat, quick combat) and the result screen. Refreshes when <see cref="BattleView3D"/> is idle, so it
+/// (wait, defend, retreat, quick combat), "Start battle" during the deployment step (ADR-072) and the result screen. Refreshes when <see cref="BattleView3D"/> is idle, so it
 /// matches what is shown. Buttons are commands; the root lets mouse input through to the battlefield.
 /// </summary>
 public partial class BattleHud : Control
@@ -27,6 +27,7 @@ public partial class BattleHud : Control
     private readonly Button _defend = new() { Text = "Defend (D)" };
     private readonly Button _retreat = new() { Text = "Retreat (R)" };
     private readonly Button _quick = new() { Text = "Quick combat (Q)" };
+    private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
     private readonly HBoxContainer _warcries = new();
     private readonly Dictionary<Warcry, Button> _warcryButtons = [];
     private readonly PanelContainer _result = new() { Visible = false };
@@ -59,7 +60,7 @@ public partial class BattleHud : Control
         actions.AddChild(_info);
         var buttons = new HBoxContainer();
         actions.AddChild(buttons);
-        foreach (var button in new[] { _wait, _defend, _retreat, _quick })
+        foreach (var button in new[] { _start, _wait, _defend, _retreat, _quick })
         {
             buttons.AddChild(button);
         }
@@ -78,6 +79,13 @@ public partial class BattleHud : Control
         _defend.Pressed += () => Act(player => new BattleDefendCommand(player));
         _retreat.Pressed += () => Act(player => new BattleRetreatCommand(player));
         _quick.Pressed += QuickCombat;
+        _start.Pressed += () =>
+        {
+            if (_view.Deployer is { } player)
+            {
+                Report(_session.Execute(new BattleStartCommand(player)));
+            }
+        };
 
         var center = new CenterContainer { MouseFilter = MouseFilterEnum.Ignore };
         center.SetAnchorsPreset(LayoutPreset.FullRect);
@@ -175,6 +183,9 @@ public partial class BattleHud : Control
         _quick.Disabled = _view.Result is not null || battle is null ||
                           (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is null;
         RefreshWarcries(battle, commander);
+        var deployer = _view.Deployer;
+        _start.Visible = deployer is not null;
+        _wait.Visible = _defend.Visible = _retreat.Visible = deployer is null;
 
         if (battle is null || _view.IsBusy)
         {
@@ -182,9 +193,11 @@ public partial class BattleHud : Control
         }
 
         _title.Text = $"{_view.SideName(BattleSide.Attacker)}  vs  {_view.SideName(BattleSide.Defender)}   ·   round {battle.Round}";
-        _status.Text = commander is not null && battle.ActiveUnit is { } acting
-            ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
-            : string.Empty;
+        _status.Text = deployer is { } placing
+            ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (click a stack, then a cell), then start the battle."
+            : commander is not null && battle.ActiveUnit is { } acting
+                ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
+                : string.Empty;
 
         var order = new List<(BattleUnit Unit, bool Waiting)>();
         if (battle.ActiveUnit is { } current)

@@ -80,7 +80,7 @@ public sealed class BattleService(
             .SelectMany(s => BattleSetup.SplitGuard(s.Count).Chunk((int)Math.Ceiling(Math.Min(s.Count, BattleSetup.MaxGuardStacks) / (double)perKind))
                 .Select(part => new BattleStackSpec(state.Creatures.Get(s.Creature), part.Sum(), -1)))
             .ToList();
-        Begin(attacker, battle, Stacks(attacker), stacks, widthChoice: false);
+        Begin(attacker, battle, Stacks(attacker), stacks, widthChoice: false, deployment: false);
     }
 
     /// <summary>
@@ -193,6 +193,12 @@ public sealed class BattleService(
             return;
         }
 
+        if (battle.Phase == BattlePhase.Deploying)
+        {
+            StartFighting(battle);
+            return;
+        }
+
         Continue(battle);
     }
 
@@ -239,7 +245,8 @@ public sealed class BattleService(
         return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns);
     }
 
-    private void Begin(Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders, bool widthChoice = true)
+    private void Begin(
+        Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders, bool widthChoice = true, bool deployment = true)
     {
         if (state.Battle is not null)
         {
@@ -248,6 +255,7 @@ public sealed class BattleService(
 
         state.Battle = battle;
         battle.PendingStacks = (attackers, defenders);
+        battle.DeploymentAllowed = deployment;
         var decision = new BattleDecision(attacker.Id);
         state.PendingDecision = decision;
 
@@ -269,9 +277,61 @@ public sealed class BattleService(
         }
     }
 
+    /// <summary>
+    /// Deployment step (ADR-072): the deployer moves one of its stacks within its zone. Machines keep their column; another
+    /// stack's cells, obstacles and cells outside the zone are refused.
+    /// </summary>
+    internal void Redeploy(PlayerId player, int unitId, CellPosition to)
+    {
+        var battle = Deploying(player);
+        var unit = battle.FindUnit(unitId) ?? throw new InvalidOperationException($"No unit {unitId}.");
+        if (BattleSetup.DeploymentRefusal(battle, unit, to) is { } refusal)
+        {
+            throw new InvalidOperationException(refusal);
+        }
+
+        var from = unit.Position;
+        unit.Position = to;
+        events.Publish(new BattleUnitDeployed(unit.Id, from, to));
+    }
+
+    /// <summary>"Start battle": the deployment step ends and the first round begins.</summary>
+    internal void EndDeployment(PlayerId player) => StartFighting(Deploying(player));
+
+    private BattleState Deploying(PlayerId player)
+    {
+        var battle = Current(BattlePhase.Deploying);
+        if (Commander(battle.Deployer!.Value) != player)
+        {
+            throw new InvalidOperationException("Only the side with the higher Tactics deploys.");
+        }
+
+        return battle;
+    }
+
+    private void StartFighting(BattleState battle)
+    {
+        if (battle.Phase == BattlePhase.Deploying)
+        {
+            events.Publish(new BattleDeploymentEnded(battle.Deployer!.Value));
+        }
+
+        Engine(battle).StartFighting();
+        Continue(battle);
+    }
+
     private void Deploy(BattleState battle, int width)
     {
         battle.Width = width;
+
+        // Only the side with the higher Tactics deploys, and only when a person commands it (ADR-072); a tie lets nobody.
+        var (chooser, _) = BattleSetup.EffectiveTactics(battle.Attacker.Tactics, battle.Defender.Tactics);
+        if (battle.DeploymentAllowed && chooser is { } side && !battle.IsComputerControlled(side))
+        {
+            battle.Deployer = side;
+            battle.DeploymentColumns = BattleSetup.DeploymentColumns(battle.Participant(side).Tactics);
+        }
+
         BattleSetup.Deploy(battle, battle.PendingStacks.Attackers, battle.PendingStacks.Defenders);
         events.Publish(new BattleStarted(
             battle.Attacker.Hero,
@@ -280,10 +340,16 @@ public sealed class BattleService(
             battle.Width,
             BattleState.Height,
             battle.IsAmbush,
-            battle.Units.Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Size, u.Machine)).ToList(),
+            battle.Units.Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Width, u.Height, u.Machine)).ToList(),
             battle.Obstacles.ToList()));
-        Engine(battle).StartFighting();
-        Continue(battle);
+        if (battle.Deployer is { } deployer)
+        {
+            battle.Phase = BattlePhase.Deploying;
+            events.Publish(new BattleDeploymentStarted(deployer, battle.DeploymentColumns));
+            return;
+        }
+
+        StartFighting(battle);
     }
 
     /// <summary>Lets the AI play its units until a human has to act or the battle is over.</summary>
@@ -305,7 +371,12 @@ public sealed class BattleService(
     private BattleState Current(BattlePhase phase) =>
         state.Battle is { } battle && battle.Phase == phase
             ? battle
-            : throw new InvalidOperationException(phase == BattlePhase.Fighting ? "No battle is being fought." : "No battlefield width to choose.");
+            : throw new InvalidOperationException(phase switch
+            {
+                BattlePhase.Fighting => "No battle is being fought.",
+                BattlePhase.Deploying => "No stacks to deploy.",
+                _ => "No battlefield width to choose.",
+            });
 
     private void Finish(BattleState battle)
     {

@@ -27,6 +27,36 @@ public static class BattleSetup
         _ => [BattleState.DefaultWidth],
     };
 
+    /// <summary>Deployment zone depth in columns from the own edge for a Tactics level (ADR-072): 4 / 5 / 6; none = no deployment.</summary>
+    public static int DeploymentColumns(SkillLevel tactics) => tactics switch
+    {
+        SkillLevel.None => 0,
+        SkillLevel.Basic => 4,
+        SkillLevel.Advanced => 5,
+        _ => 6,
+    };
+
+    /// <summary>Why the deployer may not put the unit at <paramref name="to"/>, or null (ADR-072, ADR-073).</summary>
+    public static string? DeploymentRefusal(BattleState battle, BattleUnit unit, CellPosition to)
+    {
+        if (battle.Phase != BattlePhase.Deploying || unit.Side != battle.Deployer)
+        {
+            return "Only the deploying side places its stacks before the battle.";
+        }
+
+        if (unit.IsMachine || !unit.IsAlive)
+        {
+            return "War machines keep their column.";
+        }
+
+        if (!battle.IsInDeploymentZone(unit.RectAt(to)))
+        {
+            return $"{unit.Creature.Name} must stand within the first {battle.DeploymentColumns} columns.";
+        }
+
+        return BattleGrid.IsFree(battle, unit, to) ? null : $"{unit.Creature.Name} does not fit at {to}.";
+    }
+
     /// <summary>
     /// Effective Tactics = own level − enemy level; at most one side ends up above none, and that side chooses.
     /// </summary>
@@ -52,8 +82,9 @@ public static class BattleSetup
     internal static void Deploy(BattleState battle, IReadOnlyList<BattleStackSpec> attacker, IReadOnlyList<BattleStackSpec> defender)
     {
         var id = 1;
-        var attackerExtent = DeploySide(battle, BattleSide.Attacker, attacker, ref id);
-        var defenderExtent = DeploySide(battle, BattleSide.Defender, defender, ref id);
+        // The deployer's zone stays free of obstacles (ADR-072).
+        var attackerExtent = Math.Max(DeploySide(battle, BattleSide.Attacker, attacker, ref id), battle.Deployer == BattleSide.Attacker ? battle.DeploymentColumns : 0);
+        var defenderExtent = Math.Max(DeploySide(battle, BattleSide.Defender, defender, ref id), battle.Deployer == BattleSide.Defender ? battle.DeploymentColumns : 0);
         PlaceObstacles(battle, attackerExtent + 1, battle.Width - defenderExtent - 1);
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
@@ -82,8 +113,8 @@ public static class BattleSetup
     /// </summary>
     private static int DeploySide(BattleState battle, BattleSide side, IReadOnlyList<BattleStackSpec> all, ref int id)
     {
-        // War machines stand in a column of their own at the back: tent at the top, offensive machine in the middle,
-        // cart at the bottom (ADR-056). The army deploys in front of them.
+        // War machines stand in the outermost column (ADR-073): tent at the top, offensive machine in the middle, cart at the
+        // bottom (ADR-056). The army deploys from the next column.
         var machines = all.Where(s => s.Machine is not null).ToList();
         var stacks = all.Where(s => s.Machine is null).ToList();
         var depth = 0;
@@ -91,18 +122,18 @@ public static class BattleSetup
         {
             foreach (var machine in machines.OrderBy(m => MachineRow(m.Machine!.Value)))
             {
-                var size = machine.Creature.Size.Cells();
+                var (width, height) = WarMachines.Footprint(machine.Machine!.Value);
                 var y = machine.Machine switch
                 {
                     WarMachineKind.HealingTent => 1,
-                    WarMachineKind.AmmoCart => BattleState.Height - size - 1,
-                    _ => (BattleState.Height - size) / 2,
+                    WarMachineKind.AmmoCart => BattleState.Height - height - 1,
+                    _ => (BattleState.Height - height) / 2,
                 };
-                var x = side == BattleSide.Attacker ? 0 : battle.Width - size;
+                var x = side == BattleSide.Attacker ? 0 : battle.Width - width;
                 battle.MutableUnits.Add(new BattleUnit(id++, side, machine.Creature, 1, machine.SourceSlot, new CellPosition(x, y), machine.Machine));
             }
 
-            depth = machines.Max(s => s.Creature.Size.Cells()) + 1;
+            depth = 1;
         }
 
         var columns = new List<List<BattleStackSpec>>();

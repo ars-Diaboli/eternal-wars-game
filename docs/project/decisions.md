@@ -1684,3 +1684,26 @@ confirm" assumption of ADR-073 stands.
 - **Terrain relief** (art direction, `ideas.md`): the rules stay on the 2D grid, but the 3D map is **not flat**, Warcraft III-like: walkable ground
   lies between 0 and 4 cell widths of height; below that is water, above it cliffs that are cut off or mountains. Recorded in
   [presentation.md](../design/presentation.md); built with the terrain look-dev (Phase 5).
+
+### ADR-076: War machine footprints and the deployment step (implementation, 2026-10-23)
+**Status**: implemented (2026-10-23). Carries out ADR-073's war machine footprints and ADR-072's deployment (HERO-4); choices those ADRs left
+open are recorded here.
+
+- **Footprints**: `WarMachines.Footprint` gives 1 × 3 for every offensive machine and the tent, 1 × 2 for the cart; `BattleUnit.Width` ×
+  `Height` (creatures stay square, `Size` is their side) and `RectAt` are what the grid, cover, breath areas and the views use.
+  `BattleUnitInfo` carries `Width` and `Height` instead of `Size`. Machines stand in column 0 (the defender's last column), tent at row 1,
+  offensive machine in the middle, cart at the bottom; stacks start in the next column (no gap). Without machines stacks start at the edge.
+  In the 3D scene a machine's model is as long as its footprint and is pushed outwards, so it overhangs the edge.
+- **Deployment step**: `BattlePhase.Deploying`, after the width choice and before the first round.
+  - The deployer is the side ahead in Tactics (the same comparison as the width choice); a tie lets nobody. A computer side, and quick
+    combat, never deploy (the AI keeps the automatic placement).
+  - The zone depth follows the deployer's **own** Tactics level (Basic 4, Advanced 5, Expert 6 columns), not the effective level
+    *(choice made here)*. It includes the machine column; obstacles are rolled outside the zone.
+  - Before the step the army is placed as always; the player moves one stack at a time (`BattleDeployCommand`) to any free placement
+    entirely inside the zone, then presses "Start battle" (`BattleStartCommand`, Enter). Machines stay where they are. Stacks the automatic
+    placement left outside the zone may stay there *(choice made here)*.
+  - Not in creature banks (they also have no width choice). Quick combat during the step ends it and fights the battle.
+  - Front-ends: click a stack to pick it, then click where its footprint should be centred (`BattleTargeting.DeploymentPlacement`); a green
+    or red preview in the 3D scene, the zone shaded. Drag and drop can come with the battle UI polish.
+  - Events: `BattleDeploymentStarted`, `BattleUnitDeployed`, `BattleDeploymentEnded`. The step uses the Tactics skill already; the separate
+    Deployment skill merges into Tactics with the skill rework (step 4).

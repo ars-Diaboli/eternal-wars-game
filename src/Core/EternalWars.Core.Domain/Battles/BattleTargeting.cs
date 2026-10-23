@@ -36,7 +36,7 @@ public static class BattleTargeting
 
             // Closest first, so ties keep the rules' preferred placement.
             var from = BattleGrid.AttackPositions(battle, active, unit)
-                .Select((p, i) => (Placement: p, Order: i, Distance: Distance(new CellRect(p, active.Size), x, y)))
+                .Select((p, i) => (Placement: p, Order: i, Distance: Distance(active.RectAt(p), x, y)))
                 .OrderBy(c => c.Distance).ThenBy(c => c.Order)
                 .Select(c => (CellPosition?)c.Placement)
                 .FirstOrDefault();
@@ -44,12 +44,20 @@ public static class BattleTargeting
         }
 
         var move = BattleGrid.Reachable(battle, active)
-            .Where(r => r.Key != active.Position && new CellRect(r.Key, active.Size).Contains(cell))
-            .OrderBy(r => Distance(new CellRect(r.Key, active.Size), x, y)).ThenBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
+            .Where(r => r.Key != active.Position && active.RectAt(r.Key).Contains(cell))
+            .OrderBy(r => Distance(active.RectAt(r.Key), x, y)).ThenBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
             .Select(r => (CellPosition?)r.Key)
             .FirstOrDefault();
         return move is { } to ? new MoveAction(to) : null;
     }
+
+    /// <summary>
+    /// Deployment step (ADR-072): the top-left cell that puts the unit's footprint centre nearest the pointer (in cell units), kept
+    /// inside the field. <see cref="BattleSetup.DeploymentRefusal"/> says whether it may stand there.
+    /// </summary>
+    public static CellPosition DeploymentPlacement(BattleState battle, BattleUnit unit, float pointerX, float pointerY) =>
+        new(Math.Clamp((int)MathF.Round(pointerX - (unit.Width / 2f)), 0, battle.Width - unit.Width),
+            Math.Clamp((int)MathF.Round(pointerY - (unit.Height / 2f)), 0, BattleState.Height - unit.Height));
 
     /// <summary>Squared distance from a footprint's centre to a point in cell units.</summary>
     private static float Distance(CellRect rect, float x, float y)

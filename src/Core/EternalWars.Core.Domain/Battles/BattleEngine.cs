@@ -319,7 +319,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             var (ax, ay) = attacker.Rect.Center2;
             var (tx, ty) = target.Rect.Center2;
             var (dx, dy) = (Math.Sign(tx - ax), Math.Sign(ty - ay));
-            var area = new CellRect(target.Position.X + (dx * target.Size), target.Position.Y + (dy * target.Size), target.Size, target.Size);
+            var area = new CellRect(target.Position.X + (dx * target.Width), target.Position.Y + (dy * target.Height), target.Width, target.Height);
             return battle.LivingUnits.Where(u => u != attacker && u != target && u.Rect.Intersects(area)).ToList();
         }
 

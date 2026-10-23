@@ -37,7 +37,7 @@
   - **36 wide is reserved for town sieges** (sieges are post-1.0 ❓).
   - **ADR-069 (not built)**: Tactics also **deploys** troops before the battle and chooses the width only from Advanced: Advanced
     30 or 32, Expert 28, 30, 32 or 34.
-  - **Deployment** (ADR-072, HERO-4; not built): the player may place the troops within the first **4 / 5 / 6 columns** (Basic /
+  - **Deployment** (ADR-072, HERO-4; built, ADR-076): the player may place the troops within the first **4 / 5 / 6 columns** (Basic /
     Advanced / Expert) from their own edge. Only the side with the higher Tactics deploys (a tie: nobody). The player drags stacks
     in the battle scene, then presses "Start battle"; computer players, and every side that does not deploy, are placed
     automatically at the very edge. Against heroes and neutral monsters, not in creature banks. The war machines keep the
@@ -170,10 +170,10 @@ exist (ADR-063) but sieges do not.
 ADR-070 (not built): heroes **exchange** machines like stacks; a town garrison holds machines only through a hero in it.
 Spells may target machines; they are `mechanical` and resist many spells (CMB-3, MAG-4).
 
-ADR-073 (HERO-4, not built): like HoMM3, a machine stands mostly outside the grid and occupies **only the outermost column**
-of its side: the offensive machine and the tent **1 × 3** cells, the ammo cart **1 × 2** (tent at the top, offensive machine in
-the middle, cart at the bottom, as today). Stacks start in the next column. Today the machine column is as wide as the largest
-machine (2–3 cells) plus a gap, and machines are square.
+ADR-073 (HERO-4, built with ADR-076): like HoMM3, a machine stands mostly outside the grid and occupies **only the outermost
+column** of its side: the offensive machine and the tent **1 × 3** cells, the ammo cart **1 × 2** (tent at the top, offensive
+machine in the middle, cart at the bottom). Stacks start in the next column. The models are as long as the footprint and
+overhang the grid's edge.
 
 ## Other
 - **Quick combat**: either side may hand the rest of the battle to the deterministic battle AI (implemented).

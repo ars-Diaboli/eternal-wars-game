@@ -114,15 +114,15 @@ There is no navigation skill: there is no sea travel (ADR-051). A hero's sight r
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
 | War Tempo | `tactics.wartempo` | Master | +1 battlefield speed for every stack | +2 | +3 | +4 | ✅ effect; 🔜 renamed from Drill (`tactics.drill`) |
-| Tactics | `tactics.tactics` | Expert | rearrange troops before the battle (4 columns) | also choose width 30 or 32 (5 columns) | width 28–34 (6 columns) | – | ✅ width (today Basic 30 / 32, Advanced 28–32); 🔜 deployment step (ADR-072), merges the Deployment skill |
+| Tactics | `tactics.tactics` | Expert | rearrange troops before the battle (4 columns) | also choose width 30 or 32 (5 columns) | width 28–34 (6 columns) | – | ✅ width (today Basic 30 / 32, Advanced 28–32); ✅ deployment step (ADR-072, ADR-076); 🔜 merges the Deployment skill |
 | Alertness (working title) | `tactics.alert` | Expert | +1 initiative to all own stacks in battle | +2 | +3 | – | 🔜 moves from Defense (today `defense.third`, +5 / 10 / 15 %) |
 
 Tactics counts as the hero's Tactics level minus the enemy hero's; only the side ahead chooses, otherwise the width is
 30 (36 is kept for sieges).
 
-**Deployment** (ADR-072, HERO-4; not built): the zone is the number of columns, counted from the hero's own edge of the battlefield, in
+**Deployment** (ADR-072, HERO-4; built, ADR-076): the zone is the number of columns, counted from the hero's own edge of the battlefield, in
 which the player may place the troops. Only the side with the higher Tactics deploys; on a tie nobody does. The player drags stacks in the
-battle scene and presses "Start battle"; troops that are not deployed, and every computer player's, are placed automatically at the very edge.
+battle scene (click a stack, then where it should stand) and presses "Start battle"; troops that are not deployed, and every computer player's, are placed automatically at the very edge.
 It works against heroes and neutral monsters, not in creature banks. The war machines keep the outermost column, one cell wide (ADR-073);
 the zone includes that column and stacks may use its free cells (confirmed, ADR-075).
 

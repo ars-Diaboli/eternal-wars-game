@@ -126,6 +126,12 @@ public sealed record TradeResourceCommand(
 
 public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player);
 
+/// <summary>Deployment step (ADR-072): put the own stack <paramref name="Unit"/> at <paramref name="To"/> within the deployment zone.</summary>
+public sealed record BattleDeployCommand(PlayerId Player, int Unit, CellPosition To) : GameCommand(Player);
+
+/// <summary>Ends the deployment step ("Start battle").</summary>
+public sealed record BattleStartCommand(PlayerId Player) : GameCommand(Player);
+
 public sealed record BattleMoveCommand(PlayerId Player, CellPosition To) : GameCommand(Player);
 
 /// <summary>Melee attack; <paramref name="From"/> is where to stand (null = closest placement next to the target).</summary>
