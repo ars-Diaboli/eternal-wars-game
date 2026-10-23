@@ -13,6 +13,10 @@
     transitions). The logical square grid stays invisible and appears as an overlay only for hover, path preview,
     movement range and in the editor. Walkability and costs still come from core tile data, so visual height must not
     contradict them (cliffs = rock tiles, etc.).
+  - **Relief, Warcraft III-like** (ADR-075): the rules stay on the 2D grid, but the 3D map is not flat, for fidelity and
+    better water. Walkable ground lies between **0 and 4 cell widths** of height; below that are water bodies, above it
+    cliffs that are cut off or mountains. Height is presentation data that follows the tile terrain (an editor height
+    brush and the generator's height pass come with the terrain look-dev).
   - Post-processing: subtle colour grading, bloom on magic only, vignette.
 - **Now**: textured per-tile terrain meshes (triplanar), placeholder meshes for objects and units. Later: the
   heightmapped, blended terrain shader.

@@ -387,8 +387,9 @@ public static class MapConverter
                 DwellingDocument dwelling when !creatures.Contains(dwelling.Creature) =>
                     throw new FormatException($"Dwelling {dwelling.Id} has unknown creature '{dwelling.Creature}'."),
                 DwellingDocument { Available: < 0 } dwelling => throw new FormatException($"Dwelling {dwelling.Id} has a negative number of creatures."),
+                // Map dwellings sell base creatures only (ADR-073): an older map's upgraded dwelling loads as its line's base creature.
                 DwellingDocument dwelling => new CreatureDwelling(
-                    id, definition, position, dwelling.Creature, dwelling.Owner is { } dwellingOwner ? new PlayerId(dwellingOwner) : null, dwelling.Available),
+                    id, definition, position, creatures.BaseOf(dwelling.Creature), dwelling.Owner is { } dwellingOwner ? new PlayerId(dwellingOwner) : null, dwelling.Available),
                 MarketplaceDocument => new Marketplace(id, definition, position),
                 ResourceProviderDocument => new ResourceProvider(id, definition, position),
                 LootSiteDocument => new LootSite(id, definition, position),

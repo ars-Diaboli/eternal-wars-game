@@ -41,7 +41,7 @@
     Advanced / Expert) from their own edge. Only the side with the higher Tactics deploys (a tie: nobody). The player drags stacks
     in the battle scene, then presses "Start battle"; computer players, and every side that does not deploy, are placed
     automatically at the very edge. Against heroes and neutral monsters, not in creature banks. The war machines keep the
-    outermost column (ADR-073, below); the zone includes it, and stacks may use its free cells *(assumed)*.
+    outermost column (ADR-073, below); the zone includes it, and stacks may use its free cells (confirmed, ADR-075).
 
 ## Engagement and blocking
 - **Surround / flanking**: a unit's perimeter grows with its size, so more attackers fit around a large unit. **No
@@ -111,14 +111,19 @@ Creature capabilities, independent of size:
   order are open ❓.
 
 ## Morale and luck (implemented, ADR-053; rates are drafts)
-Each stack has −5…+5 of each, its creature's plus its hero's (and the hero's artifacts, ADR-061).
+Each stack has −5…+5 of each, its creature's plus its hero's (and the hero's artifacts, ADR-061) and its army's (below).
 - **Morale**, rolled every round: 2 % per point to act twice (good) or lose the turn (bad); otherwise 4 % per point
   for ±50 % initiative that round. War machines have no morale (ADR-071, CMB-8, as built). **Undead, constructs and
-  elementals have no morale** either (ADR-071, CMB-7; not built).
+  elementals have no morale** either, whatever the hero or a warcry gives (ADR-071, CMB-7; built with ADR-075).
 - **Luck**, rolled on every hit by attacker and defender, 4 % per point: the attacker's good luck (or the defender's
   bad luck) deals +75 % damage, the defender's good luck (or the attacker's bad luck) −50 %; opposite rolls cancel.
   War machines roll their hero's luck (ADR-071, CMB-8, as built).
-- Which skills, buildings and army mixes change them is open ❓ (CMB-2).
+- **Army morale** (ADR-075, CMB-2, built), set when the battle starts:
+  - **Mixed factions** (HoMM3): −1 morale per faction beyond the first among the army's creatures; neutral creatures
+    count as one faction, war machines not at all. Heroes' armies and town garrisons; not neutral guards or banks.
+  - **Brotherhood**: +1 morale for a town's defenders when it has the upgraded tavern: its garrison, or an own hero
+    standing at its entrance.
+  - Skills and artifacts that change morale: Leadership, warcries, artifacts and map buffs (built).
 
 ## Actions (implemented, ADR-038)
 - **Defend**: +20 % Defense (at least +1) until the unit's next turn. **Wait**: see turn order.

@@ -147,7 +147,8 @@ public partial class InspectorPanel : VBoxContainer
             {
                 var row = new HBoxContainer();
                 AddChild(row);
-                var creature = Options(row, "Creature", creatures, dwelling.Creature);
+                var lines = creatures.Where(c => !_editor.Scenario.Creatures.IsUpgrade(c.Id)).ToList(); // base creatures only (ADR-073)
+                var creature = Options(row, "Creature", lines, dwelling.Creature);
                 var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
                 var owner = Options(row, "Owner", owners, dwelling.Owner);
                 var amountRow = new HBoxContainer();

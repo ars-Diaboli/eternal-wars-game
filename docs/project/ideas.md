@@ -20,10 +20,7 @@ Recorded so far:
   shrines, Capitol, per-town buildings, tavern pools, Necromancy Amplifier cost, surrender, distance penalty, casting once a round), teams 2–8,
   creature sizes, mirrored templates and the template editor: ADR-070 (2026-10-22). The data-table note is DATA-1; the question clean-up is done
   (open-questions.md, 2026-10-22).
+- Warcraft III-like terrain relief (walkable 0–4 cell widths of height, water below, cliffs or mountains above): ADR-075 (2026-10-23),
+  [presentation.md](../design/presentation.md).
 
-Still to decide: see [open-questions.md](open-questions.md) ("Blocking now" and "To confirm").
-
-On visuals and graphics;
-main engine is 2d based - that is absolutely correct; However 3d representation should not be flat for better fidelity and possibly better visals for water bodies;
-Thinking of doing it similarly to WC3; Walkable min/max height should be between 0 and 4 cell widths; below that - for water bodies; above - either trimmed or for mountains;
-
+Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).

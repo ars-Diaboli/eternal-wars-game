@@ -206,8 +206,9 @@ A map dwelling (**implemented**, ADR-054) is one creature line with its own grow
 and 2, and dwellings the map gives an owner, are unguarded. The guard always fights; beating it flags the dwelling. This answers the
 "guards on map dwellings" part of TOWN-5.
 
-**Base creatures only** (ADR-073, not enforced yet): for now a map dwelling always sells a base (non-upgraded) creature. The editor offers
-only base creatures and the validator rejects an upgraded one; a map that has one loads it as the line's base creature *(assumed)*.
+**Base creatures only** (ADR-073, built with ADR-075): for now a map dwelling always sells a base (non-upgraded) creature. The editor offers
+only base creatures and refuses an upgrade, the validator reports one as an error, and loading a map turns an upgraded dwelling into its
+line's base creature.
 
 ### Creature banks
 **Implemented.** A bank is a new object kind. Entering it starts a battle against the rolled guard; guards **always fight** (no join, no flee,

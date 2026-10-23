@@ -7,6 +7,7 @@ namespace EternalWars.Core.Domain.Creatures;
 public sealed class CreatureCatalog
 {
     private readonly Dictionary<string, CreatureDefinition> _definitions;
+    private readonly Dictionary<string, string> _baseOf = new(StringComparer.Ordinal);
 
     public CreatureCatalog(IEnumerable<CreatureDefinition> definitions)
     {
@@ -32,6 +33,8 @@ public sealed class CreatureCatalog
                 throw new FormatException(
                     $"Upgrade '{upgrade.Id}' of '{definition.Id}' must have the same tier and town and no further upgrade.");
             }
+
+            _baseOf.TryAdd(upgrade.Id, definition.Id);
         }
     }
 
@@ -47,6 +50,12 @@ public sealed class CreatureCatalog
     public bool TryGet(string id, out CreatureDefinition definition) => _definitions.TryGetValue(id, out definition!);
 
     public bool Contains(string id) => _definitions.ContainsKey(id);
+
+    /// <summary>Whether the creature is the upgraded form of a line.</summary>
+    public bool IsUpgrade(string id) => _baseOf.ContainsKey(id);
+
+    /// <summary>The base creature of the creature's line: itself unless it is an upgrade.</summary>
+    public string BaseOf(string id) => _baseOf.TryGetValue(id, out var line) ? line : id;
 
     /// <summary>Base forms (not upgrades) of a town's creatures, by tier.</summary>
     public IEnumerable<CreatureDefinition> BaseCreaturesOf(string town)

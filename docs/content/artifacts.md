@@ -134,4 +134,4 @@ and the hero screen with the paper doll and backpack (`src/Godot/EternalWars.God
 - Which artifacts count as Relics, and whether a campaign can reuse them.
 - How sets work across towns (any set bonus for non-town heroes?).
 - Whether a merchant town building could sell artifacts later, and whether chests may hold one.
-- Which skills, artifacts and buildings should change morale and luck besides the artifacts ([CMB-2](../project/open-questions.md#cmb-2)).
+- Morale sources besides the artifacts are settled (ADR-075: mixed factions, the Brotherhood for defenders).

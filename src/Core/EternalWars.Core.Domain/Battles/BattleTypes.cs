@@ -115,6 +115,7 @@ public sealed record BattleObstacle(int Id, CellPosition Position, ObstacleClass
 /// <param name="Tactics">Hero Tactics level (width choice).</param>
 /// <param name="IsComputer">Commanded by the battle AI (neutrals, computer players, quick combat).</param>
 /// <param name="Bonuses">Hero skill and preferred-creature bonuses (none for guards).</param>
+/// <param name="ArmyMorale">Morale the whole army gets from its make-up and where it fights: mixed factions, a town's Brotherhood (ADR-075).</param>
 public sealed record BattleParticipant(
     BattleSide Side,
     PlayerId? Owner,
@@ -124,7 +125,8 @@ public sealed record BattleParticipant(
     int Defense,
     Heroes.SkillLevel Tactics,
     bool IsComputer,
-    HeroBattleBonuses? Bonuses = null)
+    HeroBattleBonuses? Bonuses = null,
+    int ArmyMorale = 0)
 {
     public HeroBattleBonuses Bonus => Bonuses ?? HeroBattleBonuses.None;
 }

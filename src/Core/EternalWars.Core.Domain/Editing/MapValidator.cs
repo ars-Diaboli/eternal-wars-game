@@ -98,6 +98,11 @@ public static class MapValidator
                 case CreatureDwelling dwelling when !scenario.Creatures.Contains(dwelling.Creature):
                     issues.Add(new(IssueSeverity.Error, $"{name} uses unknown creature '{dwelling.Creature}'.", dwelling.Position));
                     break;
+                case CreatureDwelling dwelling when scenario.Creatures.IsUpgrade(dwelling.Creature):
+                    issues.Add(new(IssueSeverity.Error,
+                        $"{name} sells the upgraded '{dwelling.Creature}'; map dwellings sell base creatures only ('{scenario.Creatures.BaseOf(dwelling.Creature)}').",
+                        dwelling.Position));
+                    break;
                 case MonsterGuard monster when !scenario.Creatures.Contains(monster.Creature):
                     issues.Add(new(IssueSeverity.Error, $"Monster uses unknown creature '{monster.Creature}'.", monster.Position));
                     break;
@@ -133,6 +138,16 @@ public static class MapValidator
         foreach (var player in scenario.Players.Where(p => !scenario.HeroesOf(p.Id).Any() && !scenario.ObjectsOf<Town>().Any(t => t.Owner == p.Id)))
         {
             issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} has no starting hero or town."));
+        }
+
+        // Campaign-like maps may start a player without a town (ADR-075): then the grace period should be off.
+        if (scenario.Rules.Elimination && scenario.Rules.GraceDays > 0)
+        {
+            foreach (var player in scenario.Players.Where(p => scenario.HeroesOf(p.Id).Any() && !scenario.ObjectsOf<Town>().Any(t => t.Owner == p.Id)))
+            {
+                issues.Add(new(IssueSeverity.Warning,
+                    $"Player {player.Name} starts without a town and loses after {scenario.Rules.GraceDays} days; for a map without towns set the grace period to 0 and add a 'lose a hero' condition."));
+            }
         }
 
         // The editor refuses this; a map made elsewhere loses the surplus when the game starts (ADR-068).

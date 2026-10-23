@@ -24,7 +24,7 @@
 | 17 | Speed | One speed for battle and map | Battle Speed in cells, separate adventure map speed | built |
 | 18 | Morale | Extra turn or freeze only | Also ±50 % initiative for the round when no extra action / freeze triggers | built |
 | 19 | Luck | Attacker only, double damage | Both sides roll: +75 % (attacker) or −50 % (defender); opposite rolls cancel | built |
-| 20 | External dwellings | Visit them with a hero | Caravans hire from owned dwellings within 5 days; creatures travel the map to the town | built (ADR-054) |
+| 20 | External dwellings | Visit them with a hero | Caravans hire from owned dwellings within 7500 movement points (terrain ignored); creatures travel the map to the town | built (ADR-054, ADR-075) |
 | 21 | War machines | Ballista, tent and cart bought at blacksmiths (one kind per town) or the War Machine Factory; catapult in every siege | Offensive machine per town, owned by every hero; it needs Advanced Ballistics outside sieges; tent heals every stack a little | built (ADR-056) |
 | 22 | Victory | Standard victory (defeat everyone) plus one special condition, 7 days without a town | Default: no towns and no heroes means defeat, 7 days without a town too, last team wins; a map may switch these off and add several victory and defeat conditions | built (ADR-057) |
 | 23 | Skills | 28 secondary skills, 8 slots, 3 levels | HoMM4-like groups of three skills, 4 levels, 10 points per group, at most 6 groups | built (ADR-048) |

@@ -1,3 +1,5 @@
+using EternalWars.Core.Domain.Creatures;
+
 namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>What a unit's morale did this round (ADR-053).</summary>
@@ -36,6 +38,11 @@ public enum HitLuck
 /// a lost turn (bad); otherwise <see cref="InitiativePercent"/> per point for ±50 % initiative. Luck is rolled on every
 /// hit by both sides with <see cref="LuckPercent"/> per point; rolls in the attacker's favour and in the defender's
 /// cancel out. Nothing is rolled for a value of 0, so battles without morale or luck draw the same random numbers.
+/// <para>
+/// Army morale (ADR-075, CMB-2): an army of creatures from several factions gets <see cref="MixedFactionsMorale"/> per faction
+/// beyond the first (neutrals count as one faction; war machines are not creatures); the defenders of a town with the upgraded
+/// tavern (Brotherhood) get <see cref="BrotherhoodDefenderMorale"/>. Undead, constructs and elementals have no morale at all (ADR-071, CMB-7).
+/// </para>
 /// </summary>
 public static class MoraleAndLuck
 {
@@ -51,7 +58,24 @@ public static class MoraleAndLuck
 
     public const int UnluckyDamagePercent = 50;
 
+    /// <summary>Morale per faction beyond the first in one army (HoMM3).</summary>
+    public const int MixedFactionsMorale = -1;
+
+    /// <summary>Morale for the defenders of a town with the Brotherhood (tavern level 2).</summary>
+    public const int BrotherhoodDefenderMorale = 1;
+
+    /// <summary>The tavern level that gives a town's defenders <see cref="BrotherhoodDefenderMorale"/>.</summary>
+    public const int BrotherhoodLevel = 2;
+
     public static int Clamp(int value) => Math.Clamp(value, -Limit, Limit);
+
+    /// <summary>Whether a creature's morale counts; undead, constructs and elementals have none (ADR-071, CMB-7).</summary>
+    public static bool HasMorale(CreatureDefinition creature) =>
+        !creature.HasTag(CreatureTags.Undead) && !creature.HasTag(CreatureTags.Construct) && !creature.HasTag(CreatureTags.Elemental);
+
+    /// <summary>The mixed-factions morale of an army (0 for one faction or none): neutrals count as one faction.</summary>
+    public static int MixedFactions(IEnumerable<CreatureDefinition> creatures) =>
+        MixedFactionsMorale * Math.Max(0, creatures.Select(c => c.Town ?? "").Distinct(StringComparer.Ordinal).Count() - 1);
 
     /// <summary>Initiative for this round's order after Haste (+50 %) or Slow (−50 %, at least 1).</summary>
     public static int Initiative(int initiative, MoraleEffect effect) => effect switch

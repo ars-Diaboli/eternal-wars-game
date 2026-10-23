@@ -267,8 +267,8 @@ public partial class TownPanel : PanelContainer
     }
 
     /// <summary>
-    /// The caravan (ADR-054): hire creatures from owned map dwellings within five days, send the picked garrison stack to
-    /// another own town, and the caravans on their way to or from this town.
+    /// The caravan (ADR-054): hire creatures from owned map dwellings within its reach (ADR-073), send the picked garrison stack
+    /// to another own town, the queue of caravans coming here and those sent from here.
     /// </summary>
     private void ShowCaravan(GameState state, Town town)
     {
@@ -279,8 +279,8 @@ public partial class TownPanel : PanelContainer
         }
 
         var player = state.CurrentPlayer.Id;
-        _caravan.AddChild(new Label { Text = $"Caravan: creatures travel at their map speed and arrive in {CaravanRules.MaxDays} days at most" });
-        foreach (var dwelling in state.ObjectsOf<CreatureDwelling>().Where(d => d.Owner == player && d.Available > 0).OrderBy(d => d.Id.Value))
+        _caravan.AddChild(new Label { Text = $"Caravan: hires from your dwellings within {CaravanRules.MaxReach} movement points; creatures travel at their map speed" });
+        foreach (var dwelling in CaravanRules.Dwellings(state, town).Where(d => d.Available > 0))
         {
             var creature = state.Creatures.Get(dwelling.Creature);
             var available = dwelling.Available!.Value;
@@ -322,16 +322,32 @@ public partial class TownPanel : PanelContainer
             }
         }
 
-        foreach (var caravan in state.Caravans.Where(c => c.Owner == player && (c.Destination == town.Id || c.Source == town.Id)))
+        var queue = CaravanRules.Queue(state, town);
+        if (queue.Count > 0)
         {
-            var name = state.Creatures.Get(caravan.Creature).Name;
+            _caravan.AddChild(new Label { Text = "Queue:" });
+        }
+
+        foreach (var caravan in queue)
+        {
             _caravan.AddChild(new Label
             {
-                Text = $"On the way: {caravan.Count} {name} {(caravan.Destination == town.Id ? "to here" : $"to {state.GetObject(caravan.Destination).Definition.Name}")}, "
+                Text = $"  {caravan.Count} {state.Creatures.Get(caravan.Creature).Name} from {PlaceName(state.GetObject(caravan.Source))}: "
                        + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room in the garrison"),
             });
         }
+
+        foreach (var caravan in state.Caravans.Where(c => c.Owner == player && c.Source == town.Id))
+        {
+            _caravan.AddChild(new Label
+            {
+                Text = $"Sent: {caravan.Count} {state.Creatures.Get(caravan.Creature).Name} to {PlaceName(state.GetObject(caravan.Destination))}, "
+                       + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room there"),
+            });
+        }
     }
+
+    private static string PlaceName(MapObject place) => place is Town town ? town.Name : place.Definition.Name;
 
     /// <summary>The tavern's offers (ADR-060): who can be hired for gold at the entrance, by the tavern's level.</summary>
     private void ShowTavern(GameState state, Town town)

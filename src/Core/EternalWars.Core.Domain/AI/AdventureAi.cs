@@ -322,9 +322,9 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             }
         }
 
-        if (_state.ObjectsOf<CreatureDwelling>().Any(d => d.Owner == town.Owner))
+        if (town.Level(BuiltInBuildings.Caravan) < 1 && CaravanRules.Dwellings(_state, town).Count > 0)
         {
-            yield return (false, BuiltInBuildings.Caravan); // there is something to hire from
+            yield return (false, BuiltInBuildings.Caravan); // there is something to hire from within reach
         }
 
         yield return (false, BuiltInBuildings.Marketplace);
@@ -506,8 +506,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             return;
         }
 
-        var dwellings = _state.ObjectsOf<CreatureDwelling>()
-            .Where(d => d.Owner == player && d.Available > 0)
+        var dwellings = CaravanRules.Dwellings(_state, town)
+            .Where(d => d.Available > 0)
             .OrderByDescending(d => _state.Creatures.Get(d.Creature).Value).ThenBy(d => d.Id.Value);
         foreach (var dwelling in dwellings)
         {
