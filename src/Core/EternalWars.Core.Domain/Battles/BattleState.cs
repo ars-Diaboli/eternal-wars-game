@@ -16,6 +16,7 @@ public sealed class BattleUnit
         InitialCount = count;
         SourceSlot = sourceSlot;
         Position = position;
+        (Width, Height) = machine is { } kind ? WarMachines.Footprint(kind) : (creature.Size.Cells(), creature.Size.Cells());
         TopHealth = creature.Health;
         ShotsLeft = creature.Shots;
         CastsLeft = new Dictionary<string, int>(creature.SpellCasts, StringComparer.Ordinal);
@@ -44,9 +45,19 @@ public sealed class BattleUnit
     /// <summary>Top-left cell of the footprint.</summary>
     public CellPosition Position { get; internal set; }
 
+    /// <summary>Side of a creature's square footprint (2 / 3 / 4 cells); a machine's footprint is <see cref="Width"/> × <see cref="Height"/>.</summary>
     public int Size => Creature.Size.Cells();
 
-    public CellRect Rect => new(Position, Size);
+    /// <summary>Footprint width in cells: the creature's size, 1 for war machines (ADR-073).</summary>
+    public int Width { get; }
+
+    /// <summary>Footprint height in cells: the creature's size, 3 or 2 for war machines (ADR-073).</summary>
+    public int Height { get; }
+
+    public CellRect Rect => RectAt(Position);
+
+    /// <summary>The footprint if the unit stood at <paramref name="topLeft"/>.</summary>
+    public CellRect RectAt(CellPosition topLeft) => new(topLeft.X, topLeft.Y, Width, Height);
 
     public int ShotsLeft { get; internal set; }
 
@@ -149,6 +160,23 @@ public sealed class BattleState
     public IReadOnlyList<int> WidthOptions { get; internal set; } = [DefaultWidth];
 
     public BattleSide? WidthChooser { get; internal set; }
+
+    /// <summary>The side placing its stacks while <see cref="BattlePhase.Deploying"/> (ADR-072); null when nobody deploys.</summary>
+    public BattleSide? Deployer { get; internal set; }
+
+    /// <summary>How many columns from its own edge the <see cref="Deployer"/> may use (4 / 5 / 6, the machine column included).</summary>
+    public int DeploymentColumns { get; internal set; }
+
+    /// <summary>Whether the cell rectangle lies in the deployer's zone.</summary>
+    public bool IsInDeploymentZone(CellRect rect) => Deployer switch
+    {
+        BattleSide.Attacker => rect.X >= 0 && rect.Right <= DeploymentColumns,
+        BattleSide.Defender => rect.X >= Width - DeploymentColumns && rect.Right <= Width,
+        _ => false,
+    };
+
+    /// <summary>Whether this battle allows a deployment step at all (heroes and neutral monsters, not creature banks).</summary>
+    internal bool DeploymentAllowed { get; set; }
 
     public int Round { get; internal set; }
 

@@ -155,7 +155,8 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `KnownObjectsChanged(Player, Objects)` | `VisibilityService` | a player's last-known view of objects changed (seen, changed, or seen gone); owned mines and towns observe like heroes |
 | `HeroesMet(Hero, Other)` | `MapObjectInteractionService` | own heroes met; `HeroExchangeDecision` follows |
 | `BattleTriggered(Attacker, Defender, IsAmbush)` | `MapObjectInteractionService` | hero stepped onto an enemy hero; the battle follows |
-| `BattleStarted(AttackerHero, DefenderHero, Guard, Width, Height, IsAmbush, Units, Obstacles)` | `BattleService` | battlefield set up (after the width choice) |
+| `BattleStarted(AttackerHero, DefenderHero, Guard, Width, Height, IsAmbush, Units, Obstacles)` | `BattleService` | battlefield set up (after the width choice); `Units` carry their footprint (`Width` × `Height`, machines 1 × 3 / 1 × 2) |
+| `BattleDeploymentStarted(Side, Columns)` / `BattleUnitDeployed(Unit, From, To)` / `BattleDeploymentEnded(Side)` | `BattleService` | deployment step (ADR-072): the side with the higher Tactics places its stacks, then starts the battle (or quick combat ends the step) |
 | `BattleRoundStarted(Round)` / `BattleTurnStarted(Unit, Round)` | `BattleEngine` | new round / a unit's turn |
 | `BattleUnitMoved(Unit, From, To)` | `BattleEngine` | a unit moved (also before a melee attack) |
 | `BattleUnitAttacked(Attacker, Target, Kind, Damage, Killed, RemainingCount, Luck)` | `BattleEngine` | each hit: melee, ranged, retaliation, ranged retaliation, area; `Luck` says whether luck changed the damage |

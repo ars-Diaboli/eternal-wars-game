@@ -148,7 +148,9 @@ public class BattleFlowTests
         Assert.False(session.Execute(new ChooseBattleWidthCommand(Red, 28)).IsAccepted);
         Assert.False(session.Execute(new ChooseBattleWidthCommand(Blue, 34)).IsAccepted);
         Assert.True(session.Execute(new ChooseBattleWidthCommand(Blue, 32)).IsAccepted);
-        Assert.Equal((BattlePhase.Fighting, 32), (battle.Phase, battle.Width));
+        Assert.Equal((BattlePhase.Deploying, 32), (battle.Phase, battle.Width)); // the better Tactics also deploys (ADR-072)
+        session.Execute(new BattleStartCommand(Blue)).ThrowIfRejected();
+        Assert.Equal(BattlePhase.Fighting, battle.Phase);
         Assert.All(battle.Units.Where(u => u.Side == BattleSide.Defender), u => Assert.Equal(32, u.Rect.Right));
     }
 

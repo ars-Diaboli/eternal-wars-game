@@ -184,6 +184,9 @@ public enum BattlePhase
 {
     /// <summary>The side with effective Tactics picks the battlefield width.</summary>
     ChoosingWidth,
+
+    /// <summary>The side with the higher Tactics places its stacks in its deployment zone before the first round (ADR-072).</summary>
+    Deploying,
     Fighting,
     Finished,
 }

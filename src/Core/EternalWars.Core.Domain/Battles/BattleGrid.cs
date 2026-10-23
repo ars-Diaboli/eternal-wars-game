@@ -78,10 +78,13 @@ public static class BattleGrid
     /// </summary>
     public static IReadOnlyList<CellPosition> AttackPositions(BattleState battle, BattleUnit unit, BattleUnit target) =>
         unit.IsMachine ? [] : Reachable(battle, unit)
-            .Where(r => new CellRect(r.Key, unit.Size).IsAdjacentTo(target.Rect))
+            .Where(r => unit.RectAt(r.Key).IsAdjacentTo(target.Rect))
             .OrderBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
             .Select(r => r.Key)
             .ToList();
+
+    /// <summary>Whether the unit's footprint fits at <paramref name="topLeft"/>: inside the field, no obstacle, no other living unit.</summary>
+    public static bool IsFree(BattleState battle, BattleUnit unit, CellPosition topLeft) => new Clearance(battle, unit).IsFree(topLeft, unit.Size);
 
     public static IEnumerable<BattleUnit> AdjacentEnemies(BattleState battle, BattleUnit unit) =>
         battle.LivingUnits.Where(u => u.Side != unit.Side && u.Rect.IsAdjacentTo(unit.Rect));

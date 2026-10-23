@@ -101,7 +101,7 @@ public class CreatureBankTests
     }
 
     [Fact]
-    public void BankBattles_UseTheDefaultWidth_EvenWithTactics()
+    public void BankBattles_UseTheDefaultWidth_AndSkipDeployment_EvenWithTactics()
     {
         var (session, _) = World(BuiltInMapObjects.NagaBank);
         session.State.GetHero(A).Tactics = SkillLevel.Expert;

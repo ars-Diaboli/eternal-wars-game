@@ -65,7 +65,7 @@ internal static class BattleAi
     {
         var nearest = enemies.OrderBy(e => unit.Rect.GapTo(e.Rect)).ThenBy(e => e.Id).First();
         var best = BattleGrid.Reachable(battle, unit)
-            .Select(r => (Position: r.Key, Steps: r.Value, Gap: new CellRect(r.Key, unit.Size).GapTo(nearest.Rect)))
+            .Select(r => (Position: r.Key, Steps: r.Value, Gap: unit.RectAt(r.Key).GapTo(nearest.Rect)))
             .OrderBy(r => r.Gap).ThenBy(r => r.Steps).ThenBy(r => r.Position.Y).ThenBy(r => r.Position.X)
             .First();
         return best.Gap < unit.Rect.GapTo(nearest.Rect) ? best.Position : null;

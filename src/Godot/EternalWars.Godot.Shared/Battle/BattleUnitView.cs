@@ -8,7 +8,8 @@ namespace EternalWars.Godot.Shared.Battle;
 /// Placeholder creature stack on the battlefield: a base plate in the side's colour covering the footprint, a body
 /// whose shape tells the role (walkers are capsules, shooters cylinders, flyers hovering spheres) and whose colour comes
 /// from the creature id, a nose pointing at the enemy side, the stack count and an active-unit ring. War machines are
-/// a wooden box: with a barrel for offensive machines, a pale roof for the tent, wheels for the cart.
+/// a wooden box: with a barrel for offensive machines, a pale roof for the tent, wheels for the cart. A machine's footprint is one
+/// column (1 × 3 or 1 × 2, ADR-073); its model is sized by the footprint's length and overhangs the grid's edge.
 /// <see cref="BattleView3D"/> moves and animates it; the view never reads the core state itself.
 /// </summary>
 public partial class BattleUnitView : Node3D
@@ -23,7 +24,10 @@ public partial class BattleUnitView : Node3D
 
     public CreatureDefinition Creature { get; private set; } = null!;
 
-    public int Size { get; private set; }
+    /// <summary>Footprint in cells (creatures are square).</summary>
+    public int Width { get; private set; }
+
+    public int Height { get; private set; }
 
     /// <summary>The body, which attacks lunge and hits flash.</summary>
     public Node3D Body { get; } = new() { Name = "Body" };
@@ -35,32 +39,30 @@ public partial class BattleUnitView : Node3D
 
     public WarMachineKind? Machine { get; private set; }
 
-    public void Bind(int unit, BattleSide side, CreatureDefinition creature, int count, int size, Color sideColor, WarMachineKind? machine = null)
+    public void Bind(int unit, BattleSide side, CreatureDefinition creature, int count, int width, int height, Color sideColor, WarMachineKind? machine = null)
     {
         Machine = machine;
         Unit = unit;
         Side = side;
         Creature = creature;
-        Size = size;
+        Width = width;
+        Height = height;
         Name = $"Unit_{unit}";
 
-        var extent = size * BattleSpace.CellSize;
+        var extent = Math.Max(width, height) * BattleSpace.CellSize;
+        var plateMaterial = new StandardMaterial3D { AlbedoColor = sideColor };
         AddChild(new MeshInstance3D
         {
-            Mesh = new CylinderMesh
-            {
-                TopRadius = extent * 0.45f,
-                BottomRadius = extent * 0.45f,
-                Height = 0.04f,
-                Material = new StandardMaterial3D { AlbedoColor = sideColor },
-            },
+            Mesh = width == height
+                ? new CylinderMesh { TopRadius = extent * 0.45f, BottomRadius = extent * 0.45f, Height = 0.04f, Material = plateMaterial }
+                : new BoxMesh { Size = new Vector3(width * BattleSpace.CellSize * 0.9f, 0.04f, height * BattleSpace.CellSize * 0.9f), Material = plateMaterial },
             Position = new Vector3(0, 0.02f, 0),
         });
 
         BaseColor = machine is null ? ColorOf(creature.Id) : new Color(0.50f, 0.36f, 0.22f);
         _bodyMaterial = new StandardMaterial3D { AlbedoColor = BaseColor, Roughness = 0.8f };
         var scale = extent / (2 * BattleSpace.CellSize); // 1 for small, 1.5 medium, 2 large
-        var (mesh, height) = machine is not null
+        var (mesh, bodyHeight) = machine is not null
             ? ((PrimitiveMesh)new BoxMesh { Size = new Vector3(0.7f, 0.4f, 0.55f) * scale }, 0.2f * scale)
             : creature switch
         {
@@ -69,21 +71,24 @@ public partial class BattleUnitView : Node3D
             _ => (new CapsuleMesh { Radius = 0.24f * scale, Height = 0.85f * scale }, 0.43f * scale),
         };
         mesh.Material = _bodyMaterial;
-        BodyHeight = height;
+        BodyHeight = bodyHeight;
         AddChild(Body);
-        Body.AddChild(new MeshInstance3D { Mesh = mesh, Position = new Vector3(0, height, 0) });
+        Body.AddChild(new MeshInstance3D { Mesh = mesh, Position = new Vector3(0, bodyHeight, 0) });
 
         // A nose towards the enemy: attackers face +X, defenders −X.
         var facing = side == BattleSide.Attacker ? 1 : -1;
+
+        // A machine's model is as long as its footprint and sticks out over its side's edge (ADR-073).
+        Body.Position = new Vector3(-facing * (Math.Max(width, height) - width) * 0.5f * BattleSpace.CellSize, 0, 0);
         if (machine is { } kind)
         {
-            Body.AddChild(MachinePart(kind, scale, facing, height));
+            Body.AddChild(MachinePart(kind, scale, facing, bodyHeight));
         }
 
         Body.AddChild(new MeshInstance3D
         {
             Mesh = new BoxMesh { Size = new Vector3(0.18f, 0.08f, 0.08f) * scale, Material = new StandardMaterial3D { AlbedoColor = sideColor } },
-            Position = new Vector3(facing * 0.24f * scale, height + (0.12f * scale), 0),
+            Position = new Vector3(facing * 0.24f * scale, bodyHeight + (0.12f * scale), 0),
         });
 
         _ring.Mesh = new TorusMesh
@@ -100,7 +105,7 @@ public partial class BattleUnitView : Node3D
         _count.FontSize = 40;
         _count.OutlineSize = 10;
         _count.NoDepthTest = true;
-        _count.Position = new Vector3(0, (height * 2) + 0.25f, 0);
+        _count.Position = new Vector3(0, (bodyHeight * 2) + 0.25f, 0);
         AddChild(_count);
         SetCount(count);
     }

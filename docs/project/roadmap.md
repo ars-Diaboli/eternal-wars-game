@@ -10,7 +10,7 @@ the creature size pass, per-town buildings and the Capitol, tavern changes, surr
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events; ADR-075 confirms ADR-073's, changes the caravan reach to 7500 movement points and settles the morale sources. Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
 Phase 4 has every generator stage in core. **Next up** (in this order): the groundwork is done (data tables, size pass, per-town building column, Capitol), and so are the quick items
-(caravan reach and queue, base-creature map dwellings, army morale); next the war machine footprints and deployment, the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns), then the skill rework
+(caravan reach and queue, base-creature map dwellings, army morale) and the war machine footprints with deployment; next the ADR-070 / ADR-071 items that need no answer (surrender, distance penalty, taverns), then the skill rework
 (answered, ADR-072 / ADR-073; nothing blocks it), then the second catalogue; see [open-questions.md](open-questions.md#-blocking-now).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -154,7 +154,7 @@ Phase 4 has every generator stage in core. **Next up** (in this order): the grou
   - [x] Result screen: winner, casualties per side, experience; back to the map with Enter
   - [x] Smoke scenario `game-battle-3d` (`tools/smoke/battle.ewmap.json`, checked by `SmokeMapTests`)
 - [ ] Battle scene follow-ups: creature models and animations (Phase 5 art), terrain-themed obstacles and
-      backdrops, flyer arcs, battle music; a deployment step for the Deployment skill (Phase 3)
+      backdrops, flyer arcs, battle music; the deployment step is in (ADR-076), drag and drop instead of click-to-place later
 
 **Exit**: heroes fight neutral stacks and each other; battles are replayable from logs. Met in core (`sim selftest`,
 replay tests) and in the game app's 3D battle scene; it still has to be checked in Godot.
@@ -243,10 +243,12 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Skill specialties: the skill's effect +5 % per hero level (ADR-072)
 - [ ] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3)
 - [x] Leadership (`offense.third`, +1/2/3 morale) and Alertness (`defense.third`, +5/10/15 % initiative, working title) (ADR-067)
-- [ ] Deployment: part of Tactics, the first 4 / 5 / 6 columns from the own edge; only the higher Tactics deploys; drag stacks, then "Start
-      battle"; heroes and neutrals, not banks (ADR-072; a deployment step in `BattleSetup` and UI); the zone includes the machine column (ADR-073)
-- [ ] War machine footprints (ADR-073): one column at the outer edge, offensive machine and tent 1 × 3, ammo cart 1 × 2, stacks from the
-      next column; rectangular battle footprints for machines; models overhang the grid (Godot)
+- [x] Deployment (ADR-072, ADR-076): `BattlePhase.Deploying`, the first 4 / 5 / 6 columns from the own edge by the deployer's Tactics; only
+      the higher Tactics deploys, and only a human side; heroes and neutrals, not banks; the zone includes the machine column and has no
+      obstacles; `BattleDeployCommand` / `BattleStartCommand`; click a stack, then a cell, then "Start battle" (3D scene and 2D harness; Godot
+      part not run yet)
+- [x] War machine footprints (ADR-073, ADR-076): one column at the outer edge, offensive machine and tent 1 × 3, ammo cart 1 × 2, stacks from
+      the next column; `BattleUnit.Width` × `Height`; the 3D models overhang the grid's edge (not run in Godot yet)
 
 #### Skill rework (ADR-069, decided 2026-10-20)
 - [ ] New numbers: Melee 9/16/23/30 %, Archery 15/25/35 %, Pathfinding to Master (−100 %), Logistics to Expert (30 %), Alertness flat +1/2/3
