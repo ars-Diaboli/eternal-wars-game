@@ -40,3 +40,16 @@ appointed governor to the town increases size of the caravan's queue to 8;
 
 UI: there should be a screen/window that allows to view consolidate view of player economy/income eg towns/mines/warehouses/artifacts/heroes that contribute to income + totals;
 
+thieves guild view in the tavern: same as homm3; shows how player ranks compared to other players by number of towns, heroes, gold, wood and ore, rare resources, artifacts, income, kingdom army strength, best hero, best creature;
+
+some adventure map building(may be already added) :
+Subterranean gate -	Transports the hero to the dungeon level of the map.
+Sphinx - Gives hero a chance to guess the Sphinx's riddle. The Sphinx will reward a hero for the correct answer, but punish him or her for failure.
+Sanctuary - Allows heroes to take refuge in this holy place.
+Sacrificial Altar - Magnetic and terrifying place where heroes can be enlightened by mysterious forces if they are willing to sacrifice their own creatures or artifacts, depending on their faction.
+Refugee Camp - Some high level creatures may be recruited at this building.
+Den of Thieves - Provides information on local affairs.
+Cartographer - An old cartographer who was once a famous traveler can sell you a copy of his maps.
+Astrologer's Tower - The Astrologer observing the movement of celestial bodies is the one who can foretell the future. He can disclose the effect of future weeks and even change it for an appropriate reward.
+Artifact Merchant - Smugglers in this wagon can sell you artifacts at a steep cost.
+Witch Hut - Allows hero to learn a new skill or improve a known one. Note hero can get one additional secondary skill upgrade(or learn new one) per level
