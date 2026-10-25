@@ -24,3 +24,19 @@ Recorded so far:
   [presentation.md](../design/presentation.md).
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
+
+
+adventure map:
+generate a set of static/non interactable map objects to act as obstacles 
+- rocks, trees, dead trees(various size and type), ponds, bushes, mushrooms, flowers, fissures, mounds, ruined buildings, creature bones, castle walls;
+add rivers, similars to how it is implemented in homm3;
+
+waterwheel, windmill, resource warehouses that generate resources weekly should be flaggable, same as creature dwellings;
+caravans in the towns should be able to pick up resources from resource warehouses in the same fashion as for creature dwellings;
+
+caravans: hired caravans with creatures and resources should move across the map 2500 move points daily, ignoring terrain penalties;
+town caravan allows to order/hire up to 6 caravans to the down simultaneously; follows simple queue mechanism;
+appointed governor to the town increases size of the caravan's queue to 8;
+
+UI: there should be a screen/window that allows to view consolidate view of player economy/income eg towns/mines/warehouses/artifacts/heroes that contribute to income + totals;
+
