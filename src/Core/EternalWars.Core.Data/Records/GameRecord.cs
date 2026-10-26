@@ -180,6 +180,7 @@ public static class GameRecordSerializer
         (typeof(BattleWaitCommand), "battleWait"),
         (typeof(BattleDefendCommand), "battleDefend"),
         (typeof(BattleRetreatCommand), "battleRetreat"),
+        (typeof(BattleSurrenderCommand), "battleSurrender"),
         (typeof(AutoResolveBattleCommand), "battleAuto"),
     ];
 

@@ -180,6 +180,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <summary>The side's hero leaves the field; the other side wins.</summary>
     public void Retreat(BattleSide side) => Finish(side.Opponent(), BattleEndReason.Retreated);
 
+    /// <summary>The side's hero leaves the field with its army, paid for by <c>BattleService.Surrender</c>; the other side wins.</summary>
+    public void Surrender(BattleSide side) => Finish(side.Opponent(), BattleEndReason.Surrendered);
+
     private void MoveUnit(BattleUnit unit, CellPosition to)
     {
         var from = unit.Position;

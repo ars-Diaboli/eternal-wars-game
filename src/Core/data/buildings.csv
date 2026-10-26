@@ -16,7 +16,7 @@ mage-guild,,4,Mage Guild 4,7500,crystal 7; mercury 7; sulfur 7,,,placeholder: th
 caravan,,1,Caravan,1000,lumber 5,town-hall 2,,ADR-054 draft: hire from owned map dwellings within 7500 movement points (ADR-075); send troops to another own town
 necromancy-amplifier,necropolis,1,Necromancy Amplifier,1500,mercury 5,mage-guild 1,,"+5 % Necromancy for every hero of its owner with the skill; more add nothing (ADR-069, ADR-070, TOWN-6)"
 tavern,,1,Tavern,750,lumber 5,,,hire 2 heroes: 1 native + 1 of an adjacent town (ADR-060)
-tavern,,2,Brotherhood,2000,lumber 5; ore 5,fort 1,,hire 4 heroes: 2 native + 1 adjacent + 1 of the rest (ADR-060)
+tavern,,2,Brotherhood,1000,ore 5,fort 1,,hire 4 heroes: 2 native + 2 adjacent (ADR-060; price and offers ADR-070)
 dwelling-1,,1,Tier 1 dwelling,500,,fort 1,,"every dwelling of the tier; level 2 is the upgrade (ADR-046: 500·t, upgrade 1000·t)"
 dwelling-1,,2,Tier 1 upgrade,1000,,,,
 dwelling-2,,1,Tier 2 dwelling,1000,lumber 2,fort 1,,

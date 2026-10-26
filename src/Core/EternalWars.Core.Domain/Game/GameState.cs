@@ -22,6 +22,7 @@ public sealed class GameState
 
     private readonly List<Player> _players;
     private readonly List<Hero> _heroes = [];
+    private readonly List<Hero> _retiredHeroes = [];
     private int _highestHeroId;
     private readonly List<MapObject> _objects = [];
     private readonly List<Towns.Caravan> _caravans = [];
@@ -113,6 +114,14 @@ public sealed class GameState
     public IReadOnlyList<Player> Players => _players;
 
     public IReadOnlyList<Hero> Heroes => _heroes;
+
+    /// <summary>
+    /// Heroes that retreated or surrendered (ADR-081): off the map, waiting in their player's taverns as they were, oldest first. They do not
+    /// count towards the hero limit.
+    /// </summary>
+    public IReadOnlyList<Hero> RetiredHeroes => _retiredHeroes;
+
+    public IEnumerable<Hero> RetiredHeroesOf(PlayerId owner) => _retiredHeroes.Where(h => h.Owner == owner);
 
     public IReadOnlyList<MapObject> Objects => _objects;
 
@@ -292,6 +301,12 @@ public sealed class GameState
     internal void RefreshArtifacts(Hero hero) => hero.Bonus = ArtifactBonuses.Compute(Artifacts, hero.Artifacts);
 
     internal void RemoveHero(Hero hero) => _heroes.Remove(hero);
+
+    internal void Retire(Hero hero) => _retiredHeroes.Add(hero);
+
+    internal void Unretire(Hero hero) => _retiredHeroes.Remove(hero);
+
+    internal void RemoveRetiredHeroesOf(PlayerId owner) => _retiredHeroes.RemoveAll(h => h.Owner == owner);
 
     internal void AddObject(MapObject mapObject)
     {

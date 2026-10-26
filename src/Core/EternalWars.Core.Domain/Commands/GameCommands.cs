@@ -167,8 +167,14 @@ public sealed record BattleWaitCommand(PlayerId Player) : GameCommand(Player);
 
 public sealed record BattleDefendCommand(PlayerId Player) : GameCommand(Player);
 
-/// <summary>The player's hero flees: its army is lost and it leaves the map (ADR-038).</summary>
+/// <summary>The player's hero flees: its army is lost and it leaves the map for the player's taverns (ADR-038, ADR-081).</summary>
 public sealed record BattleRetreatCommand(PlayerId Player) : GameCommand(Player);
+
+/// <summary>
+/// The player's hero surrenders to the other player (ADR-070, ADR-081): half the gold cost of its surviving creatures goes to that player, and
+/// the hero leaves the map with its army for the player's taverns. Not against neutrals.
+/// </summary>
+public sealed record BattleSurrenderCommand(PlayerId Player) : GameCommand(Player);
 
 /// <summary>Quick combat: the AI fights the rest of the battle for both sides.</summary>
 public sealed record AutoResolveBattleCommand(PlayerId Player) : GameCommand(Player);

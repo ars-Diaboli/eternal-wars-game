@@ -356,8 +356,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     }
 
     /// <summary>
-    /// Hires a hero while it has fewer than one more than its towns (at most four): the best offered one, warriors first
-    /// (mages have nothing to cast yet), when the gold is there beyond what it saves for a building.
+    /// Hires a hero while it has fewer than one more than its towns (at most four): the best offered one, its own returning heroes first
+    /// (ADR-081), then warriors (mages have nothing to cast yet), when the gold is there beyond what it saves for a building.
     /// </summary>
     private void Hire(PlayerId player, Town town, int reserve)
     {
@@ -369,7 +369,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
 
         var offer = TavernRules.Offers(_state, player, town)
-            .OrderByDescending(h => h.Class == HeroClass.Warrior).ThenByDescending(h => h.Attack + h.Defense).ThenBy(h => h.Id, StringComparer.Ordinal)
+            .OrderByDescending(h => TavernRules.Returning(_state, player, h.Id) is not null)
+            .ThenByDescending(h => h.Class == HeroClass.Warrior).ThenByDescending(h => h.Attack + h.Defense).ThenBy(h => h.Id, StringComparer.Ordinal)
             .FirstOrDefault(h => TavernRules.CheckHire(_state, town, h.Id) is null);
         if (offer is not null)
         {

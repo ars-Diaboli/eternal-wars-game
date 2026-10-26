@@ -45,7 +45,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | `mage-guild` | 4 | Mage Guild 4 | 7 500 gold, crystal 7, mercury 7, sulfur 7 | – | – |
 | `caravan` | 1 | Caravan | 1 000 gold, lumber 5 | town-hall 2 | – |
 | `tavern` | 1 | Tavern | 750 gold, lumber 5 | – | – |
-| `tavern` | 2 | Brotherhood | 2 000 gold, lumber 5, ore 5 | fort 1 | – |
+| `tavern` | 2 | Brotherhood | 1 000 gold, ore 5 | fort 1 | – |
 | `necromancy-amplifier` | 1 | Necromancy Amplifier (Necropolis only) | 1 500 gold, mercury 5 | mage-guild 1 | – |
 
 | Building | Effect | Status |
@@ -55,7 +55,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading gold against resources, rates by the number of marketplace towns (ADR-067, [towns-and-economy.md](../design/towns-and-economy.md#marketplace-implemented-adr-067)) | ✅ silo and trading |
 | Mage Guild | spells of its level, of the town's own school: 3 each at levels 1 and 2, 2 each at levels 3 and 4 (ADR-047, ADR-071); sells a spell book for **500 gold**; a hero in a town with a guild refills its mana (ADR-071); level 4 is a placeholder | ⏳ magic (Phase 5) |
-| Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060). ADR-070, not built: the Brotherhood costs **1000 gold + 5 ore** and offers 2 native + 2 adjacent; the pool is per player and faction; hired heroes get a starter stack; the map tavern has its own weekly pool of 4 random heroes of any faction, shared by all players (ADR-071) ([towns-and-economy.md](../design/towns-and-economy.md#tavern-implemented-adr-060)) | ✅; ADR-070 changes ❓ |
+| Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood (**1000 gold + 5 ore**): 4 heroes (2 native, 2 adjacent). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060); the pool is per player and faction, hired heroes get a starter stack, retreated and surrendered heroes come back as they were (ADR-070, ADR-081). Not built: the map tavern has its own weekly pool of 4 random heroes of any faction, shared by all players (ADR-071) ([towns-and-economy.md](../design/towns-and-economy.md#tavern-implemented-adr-060)) | ✅ (ADR-081); map tavern ⏳ |
 | Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054); cost and requirement are placeholders | ✅ |
 | Necromancy Amplifier | Necropolis only, the first town-specific building: +5 % Necromancy for every hero of its owner with Death attunement; more than one adds nothing; a captured one helps its new owner (ADR-069, ADR-070, TOWN-6) | ✅ (ADR-078) |
 

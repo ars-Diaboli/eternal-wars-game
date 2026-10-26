@@ -29,6 +29,6 @@
 | 22 | Victory | Standard victory (defeat everyone) plus one special condition, 7 days without a town | Default: no towns and no heroes means defeat, 7 days without a town too, last team wins; a map may switch these off and add several victory and defeat conditions | built (ADR-057) |
 | 23 | Skills | 28 secondary skills, 8 slots, 3 levels | HoMM4-like groups of three skills, 4 levels, 10 points per group, at most 6 groups | built (ADR-048) |
 | 24 | Magic | Four elemental schools, every town's guild mixes them | Six schools tied to towns; Stronghold and Swamp Bestiary get faction abilities instead | accepted (ADR-047, ADR-063) |
-| 25 | Hiring heroes | Two random heroes per player | Offers ranked by the town's place on the ring; the upgraded tavern offers four. Planned (ADR-070): one pool per player and faction, a starter stack of the hero's preferred creature | built (ADR-060); pools planned |
+| 25 | Hiring heroes | Two random heroes per player | Offers ranked by the town's place on the ring; the upgraded tavern offers four. ADR-070 / ADR-081: one pool per player and faction, a starter stack of the hero's preferred creature | built (ADR-060, ADR-081) |
 | 26 | Town governors | — | A hero with Stewardship governs a town and makes it cheaper | built (ADR-063) |
 | … | | | *more twists to be proposed* ❓ | |

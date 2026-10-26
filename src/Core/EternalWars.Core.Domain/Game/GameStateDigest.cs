@@ -33,6 +33,11 @@ public static class GameStateDigest
             Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level}{(hero.WitchHutLevel is { } hut ? $" hut {hut}" : "")} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}");
         }
 
+        foreach (var hero in state.RetiredHeroes)
+        {
+            Line($"retired {hero.Id.Value} {hero.Definition} owner {hero.Owner.Value} xp {hero.Experience} level {hero.Level} skills {hero.Skills} artifacts {hero.Artifacts} army {Slots(hero.Army)}");
+        }
+
         foreach (var mapObject in state.Objects.OrderBy(o => o.Id.Value))
         {
             var detail = mapObject switch

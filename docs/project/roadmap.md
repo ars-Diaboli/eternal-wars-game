@@ -15,7 +15,7 @@ Phase 4 has every generator stage in core. **Next up** (in this order): the grou
 (caravan reach and queue, base-creature map dwellings, army morale) and the war machine footprints with deployment. The **skill rework is
 done** (ADR-078): new ids and numbers, Scouting, the distance penalty with Marksmanship, Primal Fury for both towns, the attunement table,
 mana by level, Necromancy with its screen and the Necromancy Amplifier (the Necromancy screen still needs a run in Godot). Next: the
-ADR-070 / ADR-071 items that need no answer (surrender, taverns), then the second catalogue. The ADR-077 items are answered and built
+ADR-070 / ADR-071 items that need no answer (surrender, taverns: done, ADR-081), then the second catalogue. The ADR-077 items are answered and built
 (ADR-079, ADR-080): flaggable providers with resource caravans, caravan speed and limit, the Thieves' Guild, rivers, scenery and the third
 catalogue except the Astrologer's Tower (their Godot screens still need a run); the kingdom overview is still open.
 
@@ -292,13 +292,15 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Tavern as an upgradeable building (`tavern` level 2 in `buildings.csv`)
 - [x] Heroes that retreat or are defeated return to the pool (offers exclude only heroes on the map)
 - [x] The AI hires heroes
-- [ ] Surrender in battle (ADR-070): not against neutrals, half the gold cost of the survivors, the hero returns to the
-      tavern pool; battle HUD button
-- [ ] The battle AI retreats when its army is almost beaten (threshold: tuning)
-- [ ] Tavern pools per player and faction: a town offers native and adjacent heroes, same-faction towns share the pool
-      (ADR-070); the basic tavern offers 1 native + 1 adjacent from a random ring neighbour (ADR-072)
-- [ ] Hero limit: prisoners and town-garrison heroes do not count; a garrisoned hero cannot leave at the limit (ADR-072)
-- [ ] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack of their preferred creature (ADR-070)
+- [x] Surrender in battle (ADR-070, ADR-081): not against neutrals, half the gold cost of the survivors paid to the enemy; retreated and
+      surrendered heroes wait in their player's taverns as they were (the army only after a surrender); battle HUD button (not run in
+      Godot yet)
+- [x] The battle AI retreats when its army is worth 20 % of the enemy's or less (ADR-081; threshold: tuning)
+- [x] Tavern pools per player and faction (ADR-070, ADR-081): same-faction towns share the offers; basic 1 native + 1 adjacent, the
+      Brotherhood 2 native + 2 adjacent
+- [ ] Hero limit: prisoners and waiting heroes do not count (done); heroes in a town garrison wait for garrison heroes, which do not exist
+      yet (ADR-072, ADR-081)
+- [x] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack: a week's growth of their preferred creature (ADR-070, ADR-081)
 - [x] Hire buttons in the town panel (`TownPanel`)
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
 - [x] Thieves' Guild in the tavern (ADR-079, TOWN-11): `ThievesGuild` ranks by towns, heroes, gold, lumber and ore, rare resources,

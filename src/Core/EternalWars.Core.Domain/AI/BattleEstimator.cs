@@ -69,6 +69,7 @@ internal sealed class BattleEstimator(GameState state)
             };
             var session = new GameSession(new GameState(
                 new AdventureMap(3, 1), players, heroes, options: new GameOptions(Seed: seed), creatures: state.Creatures, heroRoster: state.HeroRoster));
+            session.Battles.AiMayRetreat = false; // guards never retreat; the estimate is a fight to the end
             session.Start();
             session.Execute(new StepHeroCommand(players[0].Id, heroes[0].Id, Direction.East));
 

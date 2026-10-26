@@ -161,9 +161,12 @@ public partial class BattleView3D : Node3D
         {
             Result = e;
             SetActive(null);
-            Narrate(e.Reason == BattleEndReason.Retreated
-                ? $"{SideName(e.Winner.Opponent())} retreats. {SideName(e.Winner)} wins."
-                : $"{SideName(e.Winner)} wins.");
+            Narrate(e.Reason switch
+            {
+                BattleEndReason.Retreated => $"{SideName(e.Winner.Opponent())} retreats. {SideName(e.Winner)} wins.",
+                BattleEndReason.Surrendered => $"{SideName(e.Winner.Opponent())} surrenders. {SideName(e.Winner)} wins.",
+                _ => $"{SideName(e.Winner)} wins.",
+            });
             Finished?.Invoke(e);
         }));
     }

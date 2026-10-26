@@ -1845,3 +1845,35 @@ MAP-34 (ADR-077); the Den of Thieves and the sanctuary are in ADR-079. Map forma
   the altar (not run in Godot yet). The generator's treasure sites include all six (values are drafts). The map editor places them; editing a
   sphinx's riddle or a hut's skills in the inspector is not built yet (the map file holds them).
 - Tests: `ThirdCatalogueTests`.
+
+### ADR-081: Surrender, the AI's retreat, returning heroes, tavern pools per faction, the Brotherhood price and starter stacks (2026-10-26)
+**Status**: implemented (2026-10-26). Builds the ADR-070 / ADR-072 tavern and surrender answers (CMB-1, MAP-17 / TOWN-4 town taverns,
+TOWN-7, TOWN-8); the map tavern stays with the second catalogue. Choices made here are marked *(choice)*; numbers are drafts.
+
+- **Surrender** (`BattleSurrenderCommand`, `BattleService.Surrender`, `SurrenderRules`): during the fight, a side with a hero facing a
+  player (a hero or an owned town's garrison, never neutrals) pays **half the gold cost of its surviving creatures**, rounded up (war
+  machines free), **to the other player** *(choice, as HoMM3)*; refused without the gold. `HeroSurrendered(Hero, Owner, To, Gold)`, then
+  `BattleEnded` with the new reason `Surrendered`. The winner gets the experience for what it killed, no hero bonus and no loot; the
+  hero keeps its surviving creatures and machines.
+- **Returning heroes** *(choice: HoMM3, needed for surrender to differ from a retreat)*: a roster hero that **retreats or surrenders** is not
+  lost: it waits off the map (`GameState.RetiredHeroes`) as it was (level, experience, skills, artifacts, surviving machines; the army only
+  after a surrender) and stops governing. Its player's taverns offer it **first**, in every town of the player, until it is hired; other
+  players never see it. Hiring it (2500 gold) brings back the same hero with the same id. It does not count towards the hero limit; a
+  defeated player's waiting heroes go back to the roster. Heroes made in the map editor without a roster entry still just leave.
+  `HeroDefeated.Retreated` is true for both. Saves are replays; the digest lists waiting heroes only when there are any.
+- **The AI retreats** (ADR-070): a computer player's hero, when one of its units is to act, gives the battle up once its army is worth
+  **20 % of the enemy's or less** (creature value, machines excluded; `SurrenderRules.RetreatBelowShare`, tuning). Quick combat never
+  retreats for a person; the AI's estimate fights go to the end (`BattleService.AiMayRetreat`). The AI does not surrender, and it hires
+  its own returning heroes first.
+- **Tavern pools** (ADR-070, TOWN-7): the weekly shuffle is per player **and town faction** (`TavernRules.PoolOrder(state, player,
+  town)`), so the player's towns of one faction show the same offers and other factions their own. Basic tavern 1 native + 1 adjacent (from
+  either ring neighbour, by the shuffle); the **Brotherhood 2 native + 2 adjacent** (`TavernRules.Slots`), for Stronghold and Swamp
+  Bestiary 2 native + 2 warriors as before. Ranks with nobody left still fall through.
+- **Brotherhood** costs **1000 gold + 5 ore** (`buildings.csv`).
+- **Starter stack** (MAP-17): a hired hero with an empty army gets **one week's growth of its preferred creature** (`TavernRules.StarterStack`,
+  placeholder *(choice)*); a returning hero that kept its army gets none. Freed prisoners get none.
+- **Hero limit** (TOWN-8): prisoners never counted (they are objects); heroes in a town's garrison do not exist yet (no garrison hero
+  slot), so that part waits for them. Waiting heroes do not count.
+- UI: a "Surrender (N gold)" button in the battle HUD with the refusal as tooltip (S in the 2D harness); the result screen names a
+  surrender; the town panel marks a returning hero with its level and "with its army" (not run in Godot yet).
+- Tests: `SurrenderTests`, `TavernTests`.

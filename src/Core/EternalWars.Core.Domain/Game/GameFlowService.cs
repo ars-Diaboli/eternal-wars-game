@@ -179,6 +179,9 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
             events.Publish(new HeroDefeated(hero.Id, hero.Owner, Retreated: false));
         }
 
+        // Heroes waiting in its taverns go back to the roster (ADR-081).
+        state.RemoveRetiredHeroesOf(player.Id);
+
         foreach (var town in state.ObjectsOf<Town>().Where(t => t.Owner == player.Id).ToList())
         {
             town.Owner = null;

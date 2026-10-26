@@ -178,7 +178,7 @@ public partial class Main : Node2D
         QueueRedraw();
     }
 
-    /// <summary>Battle keys: W wait, D defend, R retreat, Q quick combat; Enter starts the battle after deployment.</summary>
+    /// <summary>Battle keys: W wait, D defend, R retreat, S surrender, Q quick combat; Enter starts the battle after deployment.</summary>
     private void HandleBattleKey(InputEvent @event)
     {
         if (@event is InputEventKey { Pressed: true } deploying && _session.State.Battle is { Phase: BattlePhase.Deploying, Deployer: { } side }
@@ -209,6 +209,7 @@ public partial class Main : Node2D
             Key.W => new BattleWaitCommand(player),
             Key.D => new BattleDefendCommand(player),
             Key.R => new BattleRetreatCommand(player),
+            Key.S => new BattleSurrenderCommand(player),
             Key.Q => new AutoResolveBattleCommand(player),
             _ => null,
         };
@@ -278,7 +279,7 @@ public partial class Main : Node2D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        top.AddChild(new Label { Name = "Status", Text = "Click hero, click tile twice to move, arrows & numpad; click an own town to open it. Battle: click, W wait, D defend, R retreat, Q quick" });
+        top.AddChild(new Label { Name = "Status", Text = "Click hero, click tile twice to move, arrows & numpad; click an own town to open it. Battle: click, W wait, D defend, R retreat, S surrender, Q quick" });
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
         decisions.Bind(_session);

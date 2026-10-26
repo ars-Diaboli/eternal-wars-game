@@ -189,11 +189,30 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Refuse(TavernRules.CheckHire(state, town, heroId));
 
         Pay(player, TavernRules.HeroCost);
-        var hero = Hero.Create(state.NextUnusedHeroId(), player, town.VisitPosition, null, state.HeroRoster.Get(heroId));
+        var definition = state.HeroRoster.Get(heroId);
+        Hero hero;
+        if (TavernRules.Returning(state, player, heroId) is { } returning)
+        {
+            // Back as it left (ADR-081): level, skills, artifacts, machines, and the army a surrender kept.
+            state.Unretire(returning);
+            hero = returning;
+            hero.Position = town.VisitPosition;
+        }
+        else
+        {
+            hero = Hero.Create(state.NextUnusedHeroId(), player, town.VisitPosition, null, definition);
+        }
+
+        if (hero.Army.IsEmpty && TavernRules.StarterStack(state, definition) is { } starter)
+        {
+            hero.Army.TryAdd(starter);
+        }
+
         hero.MaxMovementPoints = MovementAllowance.Daily(hero, state.Creatures);
         hero.MovementPoints = hero.MaxMovementPoints;
         state.AddHero(hero);
         events.Publish(new HeroHired(town.Id, hero.Id, heroId));
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
     }
 
     /// <summary>
