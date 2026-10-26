@@ -11,7 +11,7 @@ namespace EternalWars.Godot.UI.Battle;
 /// <summary>
 /// Screen overlay of the 3D battle scene: the sides and round, an initiative timeline (active unit, then the queue,
 /// then waiting units), the combat log as the animation plays it, the hovered or active unit's stats, action buttons
-/// (wait, defend, retreat, quick combat), "Start battle" during the deployment step (ADR-072), the result screen and, after it, the
+/// (wait, defend, retreat, surrender, quick combat), "Start battle" during the deployment step (ADR-072), the result screen and, after it, the
 /// Necromancy screen (ADR-072, MAG-7). Refreshes when <see cref="BattleView3D"/> is idle, so it
 /// matches what is shown. Buttons are commands; the root lets mouse input through to the battlefield.
 /// </summary>
@@ -28,6 +28,7 @@ public partial class BattleHud : Control
     private readonly Button _wait = new() { Text = "Wait (W)" };
     private readonly Button _defend = new() { Text = "Defend (D)" };
     private readonly Button _retreat = new() { Text = "Retreat (R)" };
+    private readonly Button _surrender = new() { Text = "Surrender" };
     private readonly Button _quick = new() { Text = "Quick combat (Q)" };
     private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
     private readonly HBoxContainer _warcries = new();
@@ -64,7 +65,7 @@ public partial class BattleHud : Control
         actions.AddChild(_info);
         var buttons = new HBoxContainer();
         actions.AddChild(buttons);
-        foreach (var button in new[] { _start, _wait, _defend, _retreat, _quick })
+        foreach (var button in new[] { _start, _wait, _defend, _retreat, _surrender, _quick })
         {
             buttons.AddChild(button);
         }
@@ -82,6 +83,7 @@ public partial class BattleHud : Control
         _wait.Pressed += () => Act(player => new BattleWaitCommand(player));
         _defend.Pressed += () => Act(player => new BattleDefendCommand(player));
         _retreat.Pressed += () => Act(player => new BattleRetreatCommand(player));
+        _surrender.Pressed += () => Act(player => new BattleSurrenderCommand(player));
         _quick.Pressed += QuickCombat;
         _start.Pressed += () =>
         {
@@ -200,12 +202,13 @@ public partial class BattleHud : Control
         _wait.Disabled = commander is null;
         _defend.Disabled = commander is null;
         _retreat.Disabled = commander is null || battle?.ActiveUnit is not { } active || battle.Participant(active.Side).Hero is null;
+        RefreshSurrender(battle, commander);
         _quick.Disabled = _view.Result is not null || battle is null ||
                           (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is null;
         RefreshWarcries(battle, commander);
         var deployer = _view.Deployer;
         _start.Visible = deployer is not null;
-        _wait.Visible = _defend.Visible = _retreat.Visible = deployer is null;
+        _wait.Visible = _defend.Visible = _retreat.Visible = _surrender.Visible = deployer is null;
 
         if (battle is null || _view.IsBusy)
         {
@@ -233,6 +236,21 @@ public partial class BattleHud : Control
         }
 
         ShowUnit(null);
+    }
+
+    /// <summary>Surrender (ADR-070, ADR-081): its price, or why the acting side's hero cannot surrender.</summary>
+    private void RefreshSurrender(BattleState? battle, Core.Domain.Common.PlayerId? commander)
+    {
+        if (battle?.ActiveUnit is not { } active || commander is null)
+        {
+            _surrender.Disabled = true;
+            return;
+        }
+
+        var refusal = SurrenderRules.Check(_session.State, battle, active.Side);
+        _surrender.Text = $"Surrender ({SurrenderRules.Price(battle, active.Side)} gold)";
+        _surrender.Disabled = refusal is not null;
+        _surrender.TooltipText = refusal ?? "Pay the enemy and leave with your army; the hero waits in your taverns.";
     }
 
     /// <summary>Shows the warcries the acting side's hero knows; those already used, or a second one in a round, are disabled.</summary>
@@ -275,9 +293,12 @@ public partial class BattleHud : Control
         Refresh();
         var lines = new List<string>
         {
-            ended.Reason == BattleEndReason.Retreated
-                ? $"{_view.SideName(ended.Winner.Opponent())} retreated: {_view.SideName(ended.Winner)} wins."
-                : $"{_view.SideName(ended.Winner)} wins the battle.",
+            ended.Reason switch
+            {
+                BattleEndReason.Retreated => $"{_view.SideName(ended.Winner.Opponent())} retreated: {_view.SideName(ended.Winner)} wins.",
+                BattleEndReason.Surrendered => $"{_view.SideName(ended.Winner.Opponent())} surrendered: {_view.SideName(ended.Winner)} wins.",
+                _ => $"{_view.SideName(ended.Winner)} wins the battle.",
+            },
             string.Empty,
         };
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })

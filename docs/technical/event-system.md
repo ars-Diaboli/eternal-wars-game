@@ -176,7 +176,8 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `BattleEnded(Winner, Reason, Casualties, Experience)` | `BattleService` | before its map consequences; `DecisionResolved(BattleDecision)` comes last |
 | `UndeadRaised(Hero, Raised)` | `BattleService` | Necromancy (ADR-072, MAG-7): after `BattleEnded` and the winner's `ArmyChanged`, before its `HeroExperienceGained`; only when undead joined the army |
 | `ArmyChanged(Hero, Slots)` | `ArmyService` (also for `BattleService` casualties), `GuardService`, `TownService`, `MapObjectInteractionService`, editor | stacks moved, casualties, neutrals joined, recruits and upgrades in a town or at a map dwelling, editor edit |
-| `HeroDefeated(Hero, Owner, Retreated)` | `BattleService`, `GameFlowService` | a hero lost or fled a battle and left the map, or its player was eliminated |
+| `HeroDefeated(Hero, Owner, Retreated)` | `BattleService`, `GameFlowService` | a hero lost, fled or surrendered a battle and left the map, or its player was eliminated; `Retreated` (retreat or surrender): a roster hero waits in its player's taverns (ADR-081) |
+| `HeroSurrendered(Hero, Owner, To, Gold)` | `BattleService` | a hero surrendered: its owner paid `Gold` to `To` (`ResourcesChanged` for both just before); `BattleEnded` with reason `Surrendered` follows (ADR-081) |
 | `GuardJoined(Hero, Guard, Creature, Count)` / `GuardFled(Hero, Guard)` | `GuardService` | a guard offer was accepted (then `MapObjectRemoved`) |
 | `MineGuardDefeated(Mine)` | `BattleService` | the mine can now be flagged (`MineOwnerChanged` follows) |
 | `MapObjectChanged(Object)` | editor, `BattleService` | per-instance data changed (monster incl. its guard mode, mine or dwelling guard, chest values), or a beaten abandoned mine became the normal mine (same id, new definition, ADR-068); `VisibilityService` refreshes memory |

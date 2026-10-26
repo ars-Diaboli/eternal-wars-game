@@ -46,7 +46,7 @@ public sealed class BattleService(
         {
             // Nobody to fight: the defender is overrun without a battlefield.
             Award(attacker, HeroDefeatExperience);
-            RemoveHero(defender, retreated: false);
+            RemoveHero(defender, BattleEndReason.Defeated);
             return;
         }
 
@@ -163,7 +163,10 @@ public sealed class BattleService(
         }
     }
 
-    /// <summary>The player's hero leaves the battle; the army is lost and the hero leaves the map.</summary>
+    /// <summary>Whether computer players' heroes retreat from lost battles (off in the AI's throwaway estimate fights).</summary>
+    internal bool AiMayRetreat { get; set; } = true;
+
+    /// <summary>The player's hero leaves the battle; the army is lost and the hero leaves the map for the tavern (ADR-081).</summary>
     internal void Retreat(PlayerId player)
     {
         var battle = Current(BattlePhase.Fighting);
@@ -174,6 +177,32 @@ public sealed class BattleService(
         }
 
         Engine(battle).Retreat(side);
+        Continue(battle);
+    }
+
+    /// <summary>
+    /// The player's hero surrenders to the other player (ADR-070, CMB-1): it pays half the gold cost of its surviving creatures to that player
+    /// and leaves the map with its army for the tavern (ADR-081).
+    /// </summary>
+    internal void Surrender(PlayerId player)
+    {
+        var battle = Current(BattlePhase.Fighting);
+        var side = SideOf(battle, player) ?? throw new InvalidOperationException($"{player} does not fight in this battle.");
+        if (SurrenderRules.Check(state, battle, side) is { } refusal)
+        {
+            throw new InvalidOperationException(refusal);
+        }
+
+        var price = SurrenderRules.Price(battle, side);
+        var winner = battle.Participant(side.Opponent()).Owner!.Value;
+        if (!economy.TrySpend(player, new Economy.ResourceSet(Gold: price)))
+        {
+            throw new InvalidOperationException($"Surrendering costs {price} gold.");
+        }
+
+        economy.Grant(winner, new Economy.ResourceSet(Gold: price));
+        events.Publish(new HeroSurrendered(battle.Participant(side).Hero!.Value, player, winner, price));
+        Engine(battle).Surrender(side);
         Continue(battle);
     }
 
@@ -357,6 +386,13 @@ public sealed class BattleService(
     {
         while (battle.Phase == BattlePhase.Fighting && battle.ActiveUnit is { } unit && battle.IsComputerControlled(unit.Side))
         {
+            // A computer player's hero gives up a lost battle (ADR-070); quick combat never retreats for a person.
+            if (AiMayRetreat && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
+            {
+                Engine(battle).Retreat(unit.Side);
+                break;
+            }
+
             BattleAi.Act(battle, Engine(battle));
         }
 
@@ -424,13 +460,20 @@ public sealed class BattleService(
         // Loser: a hero leaves the map, a guard is gone.
         if (losing.Hero is { } loserId)
         {
-            // A defeated hero's artifacts go to the winning hero (ADR-061); a hero that flees takes them away.
-            if (reason != BattleEndReason.Retreated && winning.Hero is { } looterId)
+            // A defeated hero's artifacts go to the winning hero (ADR-061); a hero that flees or surrenders takes them away.
+            if (reason == BattleEndReason.Defeated && winning.Hero is { } looterId)
             {
                 artifacts.Loot(state.GetHero(loserId), state.GetHero(looterId));
             }
 
-            RemoveHero(state.GetHero(loserId), reason == BattleEndReason.Retreated);
+            var loserHero = state.GetHero(loserId);
+            if (reason != BattleEndReason.Defeated)
+            {
+                // It keeps what lived (a surrender) and loses the machines destroyed in the battle.
+                ApplySurvivors(battle, loser, loserHero);
+            }
+
+            RemoveHero(loserHero, reason);
         }
         else if (losing.Guard is { } guardId)
         {
@@ -527,10 +570,35 @@ public sealed class BattleService(
         progression.GrantExperience(hero, experience);
     }
 
-    private void RemoveHero(Hero hero, bool retreated)
+    /// <summary>
+    /// The losing hero leaves the map. One that retreated or surrendered and comes from the roster waits in its player's taverns as it is
+    /// (ADR-081): a retreat costs it its army, a surrender does not. It stops governing.
+    /// </summary>
+    private void RemoveHero(Hero hero, BattleEndReason reason)
     {
+        var governed = StewardshipRules.TownGovernedBy(state, hero);
         state.RemoveHero(hero);
-        events.Publish(new HeroDefeated(hero.Id, hero.Owner, retreated));
+        var left = reason != BattleEndReason.Defeated;
+        if (left && hero.Definition is not null)
+        {
+            if (reason == BattleEndReason.Retreated)
+            {
+                for (var slot = 0; slot < Army.SlotCount; slot++)
+                {
+                    hero.Army.Set(slot, null);
+                }
+            }
+
+            state.Retire(hero);
+        }
+
+        if (governed is not null)
+        {
+            governed.Governor = null;
+            events.Publish(new GovernorChanged(governed.Id, hero.Id, null));
+        }
+
+        events.Publish(new HeroDefeated(hero.Id, hero.Owner, left));
     }
 
     private void SetGuardCount(MapObject guard, int count)

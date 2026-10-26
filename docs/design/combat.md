@@ -149,14 +149,16 @@ attacks included.
 | Caster (spell, n) | Casts the spell n times per battle; takes effect with magic |
 
 ## Leaving a battle
-- **Retreat** (implemented): a hero may leave the battle; its army is lost and it leaves the map.
-- **Surrender** (ADR-070, CMB-1; not built): a hero keeps its army by paying **half the gold cost of its surviving
-  creatures** and leaves the map; the hero returns to the tavern pool. Not possible against neutrals.
+- **Retreat** (implemented): a hero may leave the battle; its army is lost and it leaves the map. A roster hero waits in its
+  player's taverns as it was and can be hired back (ADR-081).
+- **Surrender** (ADR-070, CMB-1; built ADR-081): a hero keeps its army by paying **half the gold cost of its surviving
+  creatures** (rounded up, to the enemy player) and leaves the map; it waits in its player's taverns with its army. Not possible
+  against neutrals. The winner gets no hero bonus and no loot.
 - **Necromancy** (ADR-069, ADR-072): after a victory, a hero with Death attunement raises undead from the enemy's losses;
   a screen after the battle result, before any level-up, shows them ([skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078)).
   Not when the enemy retreated or surrendered. Built (ADR-078): `NecromancyRules`, the `UndeadRaised` event and its screen.
-- The AI **retreats** when its army is almost beaten (threshold: tuning, 20 % of the enemy's value, ADR-073); AI surrender is
-  not planned (ADR-070).
+- The AI **retreats** when its army is almost beaten: worth 20 % of the enemy's or less (threshold: tuning, built ADR-081); AI
+  surrender is not planned (ADR-070).
 
 ## War machines (implemented, ADR-056, ADR-063)
 Every hero owns its town's offensive machine (ballista, cannon, catapult or glaivethrower) and can buy a healing tent

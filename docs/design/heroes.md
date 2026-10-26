@@ -8,10 +8,10 @@
   speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource); a skill specialty adds +5 % of the skill's effect per hero level, a spell specialty +3 % (ADR-072, not built).
   Edited in `data/heroes.csv`.
 - **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, also per player on campaign-like maps, ADR-068; prisoners and heroes in a town garrison do not count, but a garrisoned hero cannot leave while the player is at the limit, ADR-072); a tavern offers 2 heroes, the upgraded
-  one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060). ADR-070 (not
-  built): the offers come from a pool per player and faction, a hired hero gets a **starter stack** of its preferred
-  creature, a map tavern hires like a Brotherhood (from its own weekly pool of 4 random heroes shared by all players,
-  ADR-071), and a hero who surrenders returns to the pool.
+  one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060). The offers come
+  from a pool per player and faction, a hired hero gets a **starter stack** of its preferred creature, and a hero who retreats
+  or surrenders waits in its player's taverns as it was (ADR-070, ADR-081). Not built: a map tavern hires like a Brotherhood
+  (from its own weekly pool of 4 random heroes shared by all players, ADR-071).
 - **Primary stats** (implemented, ADR-055): Attack and Defense (added to every stack in battle), Spell Power (multiplies
   spell damage and buff/debuff duration, ADR-071; Phase 5) and Knowledge (sets the mana pool, see below). Every level raises one of them by 1, HoMM3-style,
   with odds by class (draft): warriors 35/45/10/10 % (Attack/Defense/Spell Power/Knowledge) up to level 9, then

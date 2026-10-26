@@ -20,16 +20,15 @@ numbers are a draft.
   5 points; warriors 2/1/1/1 or 1/2/1/1, mages 0/0/3/2 or 0/1/2/2. Each level adds 1 to one stat, with odds by class
   ([skills.md](skills.md#primary-stats)).
 - **Hiring**: heroes are hired in a town's tavern for 2500 gold ([town-buildings.md](town-buildings.md)). A basic tavern
-  offers a native hero and one of an adjacent town; the upgraded one (Brotherhood) two natives, one adjacent and one of
-  the rest. The towns form a ring, Sylvan – Haven – Academy – Dungeon – Necropolis – Inferno – back to Sylvan
+  offers a native hero and one of an adjacent town; the upgraded one (Brotherhood) two natives and two adjacent heroes (ADR-070). The towns form a ring, Sylvan – Haven – Academy – Dungeon – Necropolis – Inferno – back to Sylvan
   ([lore.md](lore.md)). Adjacent means the town's two ring neighbours (Sylvan: Inferno, Haven; Haven: Sylvan, Academy;
   Academy: Haven, Dungeon; Dungeon: Academy, Necropolis; Necropolis: Dungeon, Inferno; Inferno: Necropolis, Sylvan);
   opposing is the town across the ring (Sylvan–Dungeon, Academy–Inferno, Haven–Necropolis) and is offered last. Stronghold and Swamp Bestiary
   have no ring: a basic tavern offers a native and a warrior of another town, the Brotherhood two natives and two
-  warriors (`TavernRules.Slots`). Offers are shuffled per player every week, heroes on the map
-  are not offered, and a player has at most 8 heroes, or the map's lower limit (ADR-060, ADR-068). ADR-070 (not built): the
-  pool becomes per player and faction (the player's towns of one faction share it), the Brotherhood offers two natives and
-  two adjacent heroes, and a hired hero gets a **starter stack** of its preferred creature.
+  warriors (`TavernRules.Slots`). Offers are shuffled per player and town faction every week (the
+  player's towns of one faction share them), heroes on the map are not offered, and a player has at most 8 heroes, or the map's
+  lower limit (ADR-060, ADR-068). A hired hero gets a **starter stack**: a week's growth of its preferred creature; a hero that
+  retreated or surrendered comes back as it was (ADR-070, ADR-081).
 - **Morale and luck** 0 at the start (maps and the editor can set them, ADR-053).
 - **Army**: up to 7 stacks. A hero without creatures cannot attack.
 - **War machines**: its town's offensive machine from the start; the healing tent and ammo cart are bought (below).

@@ -197,6 +197,9 @@ public enum BattleEndReason
 {
     Defeated,
     Retreated,
+
+    /// <summary>The side's hero paid the other side to leave with its army (ADR-081).</summary>
+    Surrendered,
 }
 
 public enum BattleAttackKind

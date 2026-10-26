@@ -27,7 +27,7 @@
 | Extra spell buildings | 2 | Add spells of **other schools**, chosen by the magic circle (HoMM4-like; details MAG-12) (ADR-071) | planned |
 | Warcry / totem building | 3 | **Stronghold and Swamp Bestiary** instead of a mage guild: teaches warcries / spiritual totems (placeholder, ADR-071, MAG-2) | planned |
 | Growth buildings | 1 each | Two per town (placeholders): one adds **+5 a week** to tier-1 growth, the other **+2** to tier-2 (ADR-071, TOWN-1) | planned |
-| Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060); Brotherhood **1000 gold + 5 ore** (ADR-070) | implemented; new price and pools not built |
+| Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060); Brotherhood **1000 gold + 5 ore** (ADR-070) | implemented (ADR-060, ADR-081) |
 | Caravan | 1 | Hires from map dwellings, sends troops (ADR-054); 1000 gold + 5 lumber, needs town hall 2 (placeholder) | implemented |
 | Dwellings | 9 + upgrades | Build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier | implemented |
 | Necromancy Amplifier | 1 | Necropolis only: +5 % Necromancy for every hero of its owner with the skill (ADR-069); **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its new owner (ADR-070, TOWN-6) | implemented (ADR-078) |
@@ -129,27 +129,25 @@ so it always matches what the turn pays.
 
 ## Tavern (implemented, ADR-060)
 - A hero costs **2500 gold** and appears on the town's entrance (which must be free). A player has at most **8 heroes**, or the map's lower limit (ADR-068).
-- A tavern offers **2** heroes, the Brotherhood (level 2) **4**. Offers come from a per-player pool, reshuffled every
-  week, ranked by the town: on the ring of towns ([lore.md](../content/lore.md)) native, adjacent, not opposing,
-  opposing; Stronghold and Swamp Bestiary rank native, warriors, everyone else.
+- A tavern offers **2** heroes, the Brotherhood (level 2, **1000 gold + 5 ore**) **4**. Offers come from a pool per player
+  and town faction, reshuffled every week (ADR-070, ADR-081): the player's towns of one faction show the same offers. They are
+  ranked by the town: on the ring of towns ([lore.md](../content/lore.md)) native, adjacent, not opposing, opposing (a rank with
+  nobody left falls through); Stronghold and Swamp Bestiary rank native, warriors, everyone else.
 
   | Tavern | Ring towns | Stronghold, Swamp Bestiary |
   |---|---|---|
-  | Tavern | native + adjacent | native + warrior |
-  | Brotherhood | 2 native + adjacent + not opposing | 2 native + 2 warriors |
+  | Tavern | native + adjacent (either ring neighbour) | native + warrior |
+  | Brotherhood | 2 native + 2 adjacent | 2 native + 2 warriors |
 
-- Heroes on the map are never offered. A hero who **surrenders** returns to the tavern pool (ADR-070,
+- Heroes on the map are never offered. A hired hero gets a **starter stack**: one week's growth of its preferred creature
+  (placeholder, ADR-081).
+- A hero who **retreats or surrenders** waits in its player's taverns as it was (level, skills, artifacts; its army only after a
+  surrender) and is offered **first** in every town of that player until hired back; other players do not see it (ADR-081,
   [combat.md](combat.md#leaving-a-battle)).
 - **Who counts towards the hero limit** (ADR-072, TOWN-8): heroes on the map. A hero in a **prison** belongs to nobody and does
-  not count. A hero in a **town's garrison** (once heroes can stand there) does not count either, but cannot leave the garrison
-  while the player is at the limit.
-- **ADR-070 (not built)**:
-  - The pool becomes **per player and faction**: a town offers its native and adjacent heroes, and the player's towns of one
-    faction share that pool. The basic tavern offers **1 native + 1 adjacent**, the adjacent hero from either ring neighbour at
-    random; the Brotherhood **2 native + 2 adjacent** (ADR-072, TOWN-7). Stronghold and Swamp Bestiary, off the ring, keep
-    "native + a warrior of another town" (ADR-073).
-  - The Brotherhood costs **1000 gold + 5 ore** (was 2000 gold + 5 lumber + 5 ore).
-  - A hired hero gets a **starter stack** that follows its preferred creature.
+  not count, nor does a hero waiting in the tavern after a retreat or surrender (ADR-081). A hero in a **town's garrison** (once
+  heroes can stand there) does not count either, but cannot leave the garrison while the player is at the limit.
+- **Not built**:
   - The **map tavern** works like a Brotherhood ([adventure-map.md](adventure-map.md#utilities-and-travel)) with **its own
     weekly pool of 4 random heroes of any faction**, shared by all players (ADR-071, TOWN-4).
 

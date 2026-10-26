@@ -1,6 +1,7 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.AI;
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
@@ -13,7 +14,7 @@ using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
 
-/// <summary>The tavern (ADR-060): who it offers, upgrading it, hiring, and the AI hiring.</summary>
+/// <summary>The tavern (ADR-060, ADR-070): who it offers, upgrading it, hiring, and the AI hiring.</summary>
 public class TavernTests
 {
     private static GameState World(string townType, int tavernLevel = 1, int gold = 10_000)
@@ -67,14 +68,13 @@ public class TavernTests
     }
 
     [Fact]
-    public void AnUpgradedTavern_OffersTwoNatives_OneAdjacent_AndOneNotOpposing()
+    public void TheBrotherhood_OffersTwoNativesAndTwoAdjacentHeroes()
     {
         var offers = Offers(World(TownIds.Haven, tavernLevel: 2));
 
         Assert.Equal(4, offers.Count);
         Assert.Equal([TownIds.Haven, TownIds.Haven], Towns(offers.Take(2)));
-        Assert.Contains(offers[2].Town, new[] { TownIds.Sylvan, TownIds.Academy });
-        Assert.DoesNotContain(offers[3].Town, new[] { TownIds.Haven, TownIds.Sylvan, TownIds.Academy, TownIds.Necropolis }); // not native, adjacent or opposing
+        Assert.All(offers.Skip(2), h => Assert.Contains(h.Town, new[] { TownIds.Sylvan, TownIds.Academy })); // ADR-070
         Assert.Equal(4, offers.Select(o => o.Id).Distinct().Count());
     }
 
@@ -128,8 +128,23 @@ public class TavernTests
 
         Assert.True(weeks.Count > 1);
         Assert.NotEqual(
-            string.Join(",", TavernRules.PoolOrder(state, Blue).Select(h => h.Id)),
-            string.Join(",", TavernRules.PoolOrder(state, Red).Select(h => h.Id)));
+            string.Join(",", TavernRules.PoolOrder(state, Blue, TownIds.Haven).Select(h => h.Id)),
+            string.Join(",", TavernRules.PoolOrder(state, Red, TownIds.Haven).Select(h => h.Id)));
+    }
+
+    [Fact]
+    public void ThePlayersTownsOfOneFaction_ShareAPool_AndOtherFactionsHaveTheirOwn()
+    {
+        var state = Create(Enumerable.Repeat(new string('.', 20), 9).ToArray());
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        var second = AddTown(state, TownIds.Haven, 10, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Tavern, 2);
+        second.SetLevel(BuiltInBuildings.Tavern, 2);
+
+        Assert.Equal(TavernRules.Offers(state, Blue, town).Select(h => h.Id), TavernRules.Offers(state, Blue, second).Select(h => h.Id));
+        Assert.NotEqual(
+            string.Join(",", TavernRules.PoolOrder(state, Blue, TownIds.Haven).Select(h => h.Id)),
+            string.Join(",", TavernRules.PoolOrder(state, Blue, TownIds.Sylvan).Select(h => h.Id)));
     }
 
     [Fact]
@@ -160,7 +175,8 @@ public class TavernTests
         Assert.Equal(Blue, hero.Owner);
         Assert.Equal(offer.Name, hero.Name);
         Assert.Equal(offer.Attack, hero.Attack);
-        Assert.True(hero.Army.IsEmpty);
+        var preferred = state.Creatures.Get(offer.PreferredCreature);
+        Assert.Equal(new CreatureStack(preferred.Id, preferred.WeeklyGrowth), Assert.Single(hero.Army.Stacks).Stack); // the starter stack (ADR-070)
         Assert.True(hero.MovementPoints > 0);
         Assert.Equal(gold - 2500, state.GetPlayer(Blue).Resources.Gold);
         Assert.Equal([new HeroHired(town.Id, hero.Id, offer.Id)], hired);
@@ -216,7 +232,9 @@ public class TavernTests
 
         Assert.Equal(2, town.Level(BuiltInBuildings.Tavern));
         Assert.Equal(4, Offers(state).Count);
-        Assert.Equal(gold - 2000, state.GetPlayer(Blue).Resources.Gold);
+        Assert.Equal(gold - 1000, state.GetPlayer(Blue).Resources.Gold); // the Brotherhood: 1000 gold + 5 ore (ADR-070)
+        Assert.Equal(5, state.GetPlayer(Blue).Resources.Ore);
+        Assert.Equal(10, state.GetPlayer(Blue).Resources.Lumber);
 
         var blocked = World(TownIds.Haven, tavernLevel: 1);
         TownOf(blocked).SetLevel(BuiltInBuildings.Fort, 0);

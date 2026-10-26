@@ -402,9 +402,13 @@ public partial class TownPanel : PanelContainer
         foreach (var offer in TavernRules.Offers(state, state.CurrentPlayer.Id, town))
         {
             var refusal = TavernRules.CheckHire(state, town, offer.Id);
+            var returning = TavernRules.Returning(state, state.CurrentPlayer.Id, offer.Id);
+            var details = returning is null
+                ? $"{offer.Class}, {offer.Town}"
+                : $"returns: level {returning.Level}{(returning.Army.IsEmpty ? "" : ", with its army")}"; // ADR-081
             var hire = new Button
             {
-                Text = $"Hire {offer.Name}{System.Environment.NewLine}{offer.Class}, {offer.Town}{System.Environment.NewLine}{Cost(TavernRules.HeroCost)}",
+                Text = $"Hire {offer.Name}{System.Environment.NewLine}{details}{System.Environment.NewLine}{Cost(TavernRules.HeroCost)}",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? "",
             };
