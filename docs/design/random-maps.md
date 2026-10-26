@@ -66,7 +66,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 | Stage | Class | Does | Status |
 |---|---|---|---|
 | 1 | `ZoneLayouter` | Places zones on the grid from the connection graph (Voronoi with area balancing, or rectangles) | implemented |
-| 2 | `TerrainPainter` | Terrain per zone, walls between zones, obstacles | implemented |
+| 2 | `TerrainPainter` | Terrain per zone, walls between zones, obstacles (scenery objects and rivers planned, ADR-077, MAP-25, MAP-26) | implemented |
 | 3 | `ConnectionPlacer` | Cuts passages, places their guards (`GuardPicker`) and gates | implemented |
 | 4 | `SettlementPlacer` | Player towns, neutral towns with garrisons, mines with guards, resource piles | implemented |
 | 5 | `RoadPlacer` | Roads: towns of a zone, passages between zones, gates and the nearest lumber mill and ore mine in zones with a town | implemented |

@@ -107,6 +107,21 @@ HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `G
 - The caravan screen shows the town's **queue** (built, ADR-073): caravans coming here, on their way first (fewest days
   left) and then those waiting for room; the caravans sent from the town are listed apart.
 - Map dwellings sell base creatures only (built, ADR-073; [adventure-map.md](adventure-map.md#creature-dwellings)).
+- **Planned (ADR-077; open points TOWN-9, TOWN-10)**:
+  - Caravans move **2500 movement points a day** at the plain step cost, whatever they carry, instead of at the creatures' map speed; within
+    the 7500-point reach that is at most 3 days.
+  - A town has at most **6 caravans** coming to it at once, **8** with a governor.
+  - Flagged **resource providers** (Water Wheel, Windmill, Warehouses) supply caravans too: a caravan fetches the provider's week's output for
+    the town's owner.
+
+## Thieves' Guild (ADR-077)
+**Not built**; open point TOWN-11. The tavern shows how the player ranks against the others, like HoMM3: towns, heroes, gold, lumber and
+ore, rare resources, artifacts, income, army strength, best hero, best creature. The Den of Thieves on the map shows the same table.
+
+## Kingdom overview (ADR-077)
+**Not built.** One screen with the player's whole economy: every town, mine, flagged provider, income artifact and hero skill or specialty that
+brings resources, each with its daily (or weekly) amount, and the totals. It reads the income rules (`TownIncome`, `HeroIncome`, the providers),
+so it always matches what the turn pays.
 
 ## Tavern (implemented, ADR-060)
 - A hero costs **2500 gold** and appears on the town's entrance (which must be free). A player has at most **8 heroes**, or the map's lower limit (ADR-068).

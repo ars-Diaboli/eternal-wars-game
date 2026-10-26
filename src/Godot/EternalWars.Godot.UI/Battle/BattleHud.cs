@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.Shared.Battle;
+using EternalWars.Godot.Shared.Events;
 using Godot;
 
 namespace EternalWars.Godot.UI.Battle;

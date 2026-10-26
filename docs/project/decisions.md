@@ -1707,3 +1707,24 @@ open are recorded here.
     or red preview in the 3D scene, the zone shaded. Drag and drop can come with the battle UI polish.
   - Events: `BattleDeploymentStarted`, `BattleUnitDeployed`, `BattleDeploymentEnded`. The step uses the Tactics skill already; the separate
     Deployment skill merges into Tactics with the skill rework (step 4).
+
+### ADR-077: Map scenery, rivers, flaggable providers, resource caravans, caravan speed and limits, kingdom overview, Thieves' Guild, third object catalogue (2026-10-26)
+**Status**: accepted as a design (2026-10-26), owner notes in `ideas.md`; **nothing implemented**. Numbers are drafts. Supersedes parts of ADR-054
+and ADR-075 (caravan travel time) and ADR-068 (resource providers are visited, not flagged). The open points are MAP-25 … MAP-34 and TOWN-9 …
+TOWN-11 in `open-questions.md`, each with a proposal.
+
+- **Map scenery**: static objects that only block and decorate: rocks, trees, dead trees (several sizes and kinds), ponds, bushes, mushrooms,
+  flowers, fissures, mounds, ruined buildings, creature bones, castle walls. The generator places them as a zone's obstacles (today rock
+  terrain clumps); the editor paints them. Which ones block is MAP-25.
+- **Rivers**: like HoMM3 (MAP-26).
+- **Resource providers become flaggable** like map dwellings: the Water Wheel, the Windmill and the Warehouses (whether the Mystical Garden too is
+  part of TOWN-9). A town's **caravan** picks up their resources the way it hires creatures from flagged dwellings (TOWN-9).
+- **Caravan speed**: a hired caravan, with creatures or resources, moves **2500 movement points a day**, ignoring terrain penalties (replacing
+  the creature's map speed, ADR-075). With the 7500-point reach that is at most 3 days (TOWN-10).
+- **Caravan limit**: a town has at most **6 caravans** ordered to it at once, **8** while it has a governor; further orders queue (TOWN-10).
+- **Kingdom overview**: a screen with the player's whole economy: towns, mines, providers, artifacts and heroes that bring income, with totals.
+- **Thieves' Guild** in the tavern, like HoMM3: how the player ranks against the others by towns, heroes, gold, lumber and ore, rare resources,
+  artifacts, income, army strength, best hero and best creature (TOWN-11).
+- **Third object catalogue** (adventure-map.md): Sphinx (MAP-27), Sanctuary (MAP-28), Sacrificial Altar (MAP-29), Refugee Camp (MAP-30), Den of
+  Thieves (TOWN-11), Cartographer (MAP-31), Astrologer's Tower (MAP-32, needs the week events), Artifact Merchant (MAP-33), Witch Hut (MAP-34).
+  The Subterranean Gate exists already (two-way gate between levels).

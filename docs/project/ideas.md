@@ -22,34 +22,9 @@ Recorded so far:
   (open-questions.md, 2026-10-22).
 - Warcraft III-like terrain relief (walkable 0–4 cell widths of height, water below, cliffs or mountains above): ADR-075 (2026-10-23),
   [presentation.md](../design/presentation.md).
+- Map scenery, rivers, flaggable resource providers and resource caravans, caravan speed (2500 a day) and limit (6, 8 with a governor), the
+  kingdom overview, the Thieves' Guild, and the third object catalogue (Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves,
+  Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut; the Subterranean Gate exists): ADR-077 (2026-10-26), questions MAP-25 …
+  MAP-34 and TOWN-9 … TOWN-11; [adventure-map.md](../design/adventure-map.md#third-object-catalogue-adr-077).
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
-
-
-adventure map:
-generate a set of static/non interactable map objects to act as obstacles 
-- rocks, trees, dead trees(various size and type), ponds, bushes, mushrooms, flowers, fissures, mounds, ruined buildings, creature bones, castle walls;
-add rivers, similars to how it is implemented in homm3;
-
-waterwheel, windmill, resource warehouses that generate resources weekly should be flaggable, same as creature dwellings;
-caravans in the towns should be able to pick up resources from resource warehouses in the same fashion as for creature dwellings;
-
-caravans: hired caravans with creatures and resources should move across the map 2500 move points daily, ignoring terrain penalties;
-town caravan allows to order/hire up to 6 caravans to the down simultaneously; follows simple queue mechanism;
-appointed governor to the town increases size of the caravan's queue to 8;
-
-UI: there should be a screen/window that allows to view consolidate view of player economy/income eg towns/mines/warehouses/artifacts/heroes that contribute to income + totals;
-
-thieves guild view in the tavern: same as homm3; shows how player ranks compared to other players by number of towns, heroes, gold, wood and ore, rare resources, artifacts, income, kingdom army strength, best hero, best creature;
-
-some adventure map building(may be already added) :
-Subterranean gate -	Transports the hero to the dungeon level of the map.
-Sphinx - Gives hero a chance to guess the Sphinx's riddle. The Sphinx will reward a hero for the correct answer, but punish him or her for failure.
-Sanctuary - Allows heroes to take refuge in this holy place.
-Sacrificial Altar - Magnetic and terrifying place where heroes can be enlightened by mysterious forces if they are willing to sacrifice their own creatures or artifacts, depending on their faction.
-Refugee Camp - Some high level creatures may be recruited at this building.
-Den of Thieves - Provides information on local affairs.
-Cartographer - An old cartographer who was once a famous traveler can sell you a copy of his maps.
-Astrologer's Tower - The Astrologer observing the movement of celestial bodies is the one who can foretell the future. He can disclose the effect of future weeks and even change it for an appropriate reward.
-Artifact Merchant - Smugglers in this wagon can sell you artifacts at a steep cost.
-Witch Hut - Allows hero to learn a new skill or improve a known one. Note hero can get one additional secondary skill upgrade(or learn new one) per level
