@@ -117,7 +117,14 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `WarMachineLost(Hero, Slot)` | `BattleService` | a hero's war machine was destroyed in battle |
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
 | `MapObjectFoundEmpty(Hero, Object)` | `MapObjectInteractionService` | a hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068) |
-| `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`); for a warehouse only once the visitor chose (`ChooseResourceRewardCommand`) |
+| `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`): its store to the owner's hero, or a week at the first flagging (ADR-079) |
+| `ProviderOwnerChanged(Provider, Previous, Current)` / `ProviderStockChanged(Provider, Stored)` | interactions, `GameFlowService`, editor / `EconomyService`, interactions, `CaravanService` | a resource provider flagged, released or set in the editor; what waits there changed (a new week, a visit, a capture, a resource caravan; ADR-079) |
+| `ThievesDenVisited(Hero, Den)` | `MapObjectInteractionService` | a Den of Thieves was visited: the front-end shows the whole Thieves' Guild table (ADR-079) |
+| `MapBought(Cartographer, Hero, Owner, Level)` | `MapObjectInteractionService` | a cartographer's map was bought; `SurroundingsRevealed` over the level follows (ADR-080) |
+| `MerchantRestocked(Merchant, Stock)` / `ArtifactBought(Merchant, Hero, Slot, Artifact, Price)` | `MapObjectInteractionService` | an artifact merchant's stock at game start and each month; a hero bought one (`ArtifactGained` just before; ADR-080) |
+| `RefugeesArrived(Camp, Creature, Available)` | `MapObjectInteractionService` | a refugee camp's week (game start and every week; ADR-080); buying publishes `DwellingRecruited` |
+| `SacrificeMade(Altar, Hero, Experience, Creature, Count, Artifact)` | `MapObjectInteractionService` | creatures or an artifact went on an altar; the experience follows (ADR-080) |
+| `SphinxAnswered(Sphinx, Hero, Right, Artifact, Experience)` / `WitchHutSkillLearned(Hut, Hero, Skill, Level)` | `MapObjectInteractionService` | a sphinx's riddle answered (the reward or the morale status follows); a skill learned at a witch hut (ADR-080) |
 | `MapObjectRefused(Hero, Object, Reason)` | `MapObjectInteractionService` | an object turned the hero away with a reason to show (Library below level 10, a price nobody can pay; ADR-068) |
 | `SignRead(Hero, Sign, Message)` / `SurroundingsRevealed(Hero, Object, Owner, Center, Radius)` | `MapObjectInteractionService` | a sign was read; an observatory or the Ruins were visited (`VisibilityService` reveals around it; ADR-068) |
 | `CreatureBankPlundered(Bank, Hero, Resources, Artifact)` / `CreatureBankRefilled(Bank)` | `BattleService` / `GuardService` | a bank's guard was beaten and its reward paid; a plundered bank filled again 28 days later (ADR-068) |
@@ -127,6 +134,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `ResourcePileCollected(Hero, Object, Resource, Amount)` | `MapObjectInteractionService` | pile picked up |
 | `MineOwnerChanged(Mine, Previous, Current)` | interactions, `BattleService`, `GameFlowService`, editor | mine flagged (after its guard was beaten), released by a defeated player, or set in the editor |
 | `DwellingOwnerChanged(Dwelling, Previous, Current)` | interactions, `GameFlowService`, editor | a map dwelling flagged, released by a defeated player, or set in the editor |
+| `RiversPainted(Positions, River)` | `MapEditorSession` | the editor painted or erased rivers (ADR-079), like `RoadsPainted` |
 | `DwellingCreaturesGrew(Dwelling, Available)` | `TownService` | a map dwelling's weekly growth arrived (after `WeekStarted`) |
 | `DwellingRecruited(Dwelling, Hero, Creature, Count, Available)` | interactions, `CaravanService` | recruited by a visiting hero, or ordered for a caravan (Hero null) |
 | `TownOwnerChanged(Town, Previous, Current)` | `TownService.Capture` (from interactions, `BattleService`), `GameFlowService`, editor | town captured (empty garrison walked into, or garrison beaten), released by a defeated player, or set in the editor |
@@ -136,10 +144,10 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `CreaturesRecruited(Town, Creature, Count, Hero, Available)` / `StackUpgraded(Town, Hero, Slot, From, To, Count)` | `TownService` | recruits into the garrison (Hero null) or the visiting hero; a stack upgraded for the price difference |
 | `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, `CaravanService`, editor | all seven garrison slots after any change |
 | `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`) |
-| `CaravanDispatched(Caravan, Owner, Source, Destination, Creature, Count, Days)` | `CaravanService` | a caravan left a map dwelling or a town (ADR-054) |
-| `CaravanArrived(Caravan, Destination, Creature, Count)` | `CaravanService` | owner's turn start: the troops joined the destination garrison (`GarrisonChanged` just before) |
-| `CaravanReturned(Caravan, Source, Creature, Count)` | `CaravanService` | the route was blocked: troops back at the source (a dwelling refunds the price) |
-| `CaravanLost(Caravan, Destination, Creature, Count, Reason)` | `CaravanService` | the destination was lost, or the way back was closed |
+| `CaravanDispatched(Caravan, Owner, Source, Destination, Creature, Count, Days, Cargo)` | `CaravanService` | a caravan left a map dwelling, a town or a resource provider (ADR-054; `Cargo` set for a resource caravan, ADR-079) |
+| `CaravanArrived(Caravan, Destination, Creature, Count, Cargo)` | `CaravanService` | owner's turn start: the troops joined the destination garrison (`GarrisonChanged` just before), or the cargo the treasury (`ResourcesChanged` just before) |
+| `CaravanReturned(Caravan, Source, Creature, Count, Cargo)` | `CaravanService` | the route was blocked: troops or cargo back at the source (a dwelling or provider refunds the price) |
+| `CaravanLost(Caravan, Destination, Creature, Count, Reason, Cargo)` | `CaravanService` | the destination was lost, or the way back was closed |
 | `HeroHired(Town, Hero, Definition)` | `TownService` | a hero was hired in a tavern and stands at the town entrance |
 | `ArtifactEquipped(Hero, Artifact, Slot)` / `ArtifactUnequipped(Hero, Artifact)` | `ArtifactService` | an artifact put on from, or taken off into, the backpack |
 | `ArtifactGiven(From, To, Artifact)` | `ArtifactService` | an artifact changed hands during a hero exchange |

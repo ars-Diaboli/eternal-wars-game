@@ -75,10 +75,10 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Buff sites | Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables, Magic Well: statuses for the next battle or the week, movement now ([below](#temporary-buffs)) | implemented (ADR-068), map format v18 |
 | Training sites | Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi: once per hero ([below](#permanent-hero-power-ups)) | implemented (ADR-068), map format v18 |
 | Loot sites | Campfire, Supply Crates, Traveler's Wagon (picked up, vanish), Corpse, Lean To, Warrior's Tomb (stay): only the first visitor finds something ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v17 |
-| Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: resources once a week per object ([below](#mines-and-resource-providers)) | implemented (ADR-068), map format v16 |
+| Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: flagged, a week's output stored every week for the owner ([below](#mines-and-resource-providers)) | implemented (ADR-068, ADR-079), map format v16 / v22 |
 | Second catalogue | Mage's Chest, Windows and Eyes of the Magi, Tavern, Garrison, Keymaster's Tent, deposits, six more banks, magic sites, three buffs, five power-ups ([below](#second-object-catalogue-adr-069)) | planned (ADR-069) |
-| Third catalogue | Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves, Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut ([below](#third-object-catalogue-adr-077)) | planned (ADR-077), questions open |
-| Scenery | Rocks, trees, dead trees, ponds, bushes, mushrooms, flowers, fissures, mounds, ruins, bones, castle walls: decoration and obstacles ([below](#scenery-and-rivers-adr-077)) | planned (ADR-077, MAP-25) |
+| Third catalogue | Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves, Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut ([below](#third-object-catalogue-adr-077)) | implemented (ADR-079, ADR-080) except the Astrologer's Tower, map format v22 |
+| Scenery | Rocks, trees, dead trees, ponds, bushes, mushrooms, flowers, fissures, mounds, ruins, bones, castle walls: obstacles, all blocking, from `scenery.csv` ([below](#scenery-and-rivers-adr-077-built-adr-079)); rivers too | implemented (ADR-079), map format v22 |
 
 - **Treasure chests roll their reward** (seeded game RNG, ADR-068, replacing ADR-039's three equal tiers): the five-row table
   [below](#treasure-and-one-time-loot), gold *or* XP, or 5 % a Minor artifact taken at once. Map authors (and the generator) may fix the
@@ -182,13 +182,13 @@ utility objects, the prison and the creature banks: the whole catalogue. The ran
 |---|---|
 | Gold Mine, Sawmill, Ore Mine, Alchemist's Lab, Crystal Pond, Sulfur Dune | Flagged; daily +1000 gold, +2 lumber, +2 ore, +1 mercury, +1 crystal, +1 sulfur (**implemented** as the mines; the notes only rename them) |
 | Abandoned versions of each | **Implemented.** A **separate object** (decided, MAP-2), guarded by Troglodytes: **150–295** at the gold mine, **100–245** elsewhere, rolled when the game starts (a guard the map sets is kept). When the guard is defeated it **turns into the normal mine** of its kind, flagged for the winner. The gold mine and the ore mine fight on **subterranean** terrain, the others on the terrain they stand on; on subterranean ground the Troglodytes (Dungeon creatures) get the native-terrain bonus (+1 Attack, Defense and Speed, [combat.md](combat.md#damage)). A normal mine keeps today's optional guard with a free choice of guard. |
-| Water Wheel | **Implemented.** A visiting hero gets **500 gold** in the game's first week and **1000 gold** once a week after that (weekly) |
-| Warehouse of Wood / Ore | **Implemented.** Weekly: **8** lumber / ore **or 500 gold**, the visitor chooses (the week counts as taken once chosen) |
-| Warehouse of Sulfur / Mercury / Crystal | **Implemented.** Weekly: **5** of that resource **or 500 gold** |
-| Warehouse of Gold | **Implemented.** Weekly: **2000 gold** |
-| Windmill | **Implemented.** Weekly: **3–6** of one random non-gold resource |
-| *All providers* | **Planned (ADR-077, TOWN-9)**: flagged like map dwellings, so the week's output is the owner's; a town's caravan can fetch it the way it hires creatures from flagged dwellings ([towns-and-economy.md](towns-and-economy.md#map-dwellings-and-caravans-implemented-adr-054)) |
-| Mystical Garden | **Implemented.** Weekly: a random reward (even odds), **500 gold or 5 of one random magic resource**; the visitor does not choose (decided, MAP-3) |
+| Water Wheel | **Implemented.** A week's output: **500 gold** in the game's first week, **1000 gold** after that |
+| Warehouse of Wood / Ore | **Implemented.** A week: **8** lumber / ore **or 500 gold**, decided at random each week (no choice, ADR-079) |
+| Warehouse of Sulfur / Mercury / Crystal | **Implemented.** A week: **5** of that resource **or 500 gold**, at random |
+| Warehouse of Gold | **Implemented.** A week: **2000 gold** |
+| Windmill | **Implemented.** A week: **3–6** of one random non-gold resource |
+| Mystical Garden | **Implemented.** A week: **500 gold or 5 of one random magic resource** at even odds (MAP-3) |
+| *All providers* | **Implemented (ADR-079, TOWN-9)**: flagged like mines (scouting radius 2). While flagged, a week's output is added to the provider's store at the start of every week (and at game start when owned from the start); it piles up. The first flagging of a neutral provider brings one week at once; capturing an enemy's takes what it stored. An own hero's visit takes the whole store; a town's caravan can fetch it for 100 gold ([towns-and-economy.md](towns-and-economy.md#map-dwellings-and-caravans-implemented-adr-054)). A defeated player's providers turn neutral and keep their store. |
 
 ### Treasure and one-time loot
 | Object | Effect |
@@ -349,25 +349,28 @@ Once per hero, like the Learning Stone:
 | Star Axis | +1 Spell Power |
 | Garden of Revelation | +1 Knowledge |
 
-## Scenery and rivers (ADR-077)
-**Not built**; open points MAP-25 and MAP-26 (proposals there).
-- **Scenery**: static objects with no interaction: rocks, trees, dead trees (several sizes and kinds), ponds, bushes, mushrooms, flowers,
-  fissures, mounds, ruined buildings, creature bones, castle walls. They block movement like terrain obstacles (whether the small ones only
-  decorate is MAP-25). The generator uses them for a zone's obstacles instead of plain rock clumps; the editor places them.
-- **Rivers**: drawn on the terrain like HoMM3's (MAP-26).
+## Scenery and rivers (ADR-077, built ADR-079)
+- **Scenery** (MAP-25): static objects with no interaction and no entrance, from `src/Core/data/scenery.csv`: rocks, trees, dead trees,
+  ponds, bushes, mushrooms, flowers, fissures, mounds, ruined buildings, creature bones and castle walls, each kind in two or more sizes.
+  **Every cell blocks** (no passable decoration for now). Castle walls are 1×N straight pieces: horizontal, vertical and diagonal both ways.
+  Each row lists the terrains it suits; the generator fills its obstacle clumps with fitting scenery; the editor places any of them.
+- **Rivers** (MAP-26): a tile overlay like roads, four looks (clear, icy, muddy, lava). The opposite of a road: **leaving a river tile
+  costs 25 % more** (Pathfinding does not cut it); a road-to-road step is a bridge and ignores the river. Caravans ignore rivers. The editor
+  paints them with a brush; the generator runs some across zones from wall to wall.
 
 ## Third object catalogue (ADR-077)
-The owner's third list (`ideas.md`, 2026-10-25). **Nothing here is built**; every row has an open question with a proposal. The shared rules
-above apply. The **Subterranean Gate** on the list exists already (two-way gate between levels, [above](#gates-and-teleporters)).
+The owner's third list (`ideas.md`, 2026-10-25), answered and built in ADR-079 and ADR-080 except the Astrologer's Tower. The shared rules
+above apply. The **Subterranean Gate** on the list exists already (two-way gate between levels, [above](#gates-and-teleporters)). Numbers are
+drafts.
 
-| Object | Notes | Open |
+| Object | Rules | Status |
 |---|---|---|
-| Sphinx | Asks the visiting hero a riddle; rewards a right answer, punishes a wrong one | MAP-27 |
-| Sanctuary | A hero standing in it cannot be attacked | MAP-28 |
-| Sacrificial Altar | The hero sacrifices creatures or artifacts, depending on its faction, for experience | MAP-29 |
-| Refugee Camp | Sells some high-tier creatures, a new kind every week | MAP-30 |
-| Den of Thieves | Shows the Thieves' Guild table ([towns-and-economy.md](towns-and-economy.md#thieves-guild-adr-077)) | TOWN-11 |
-| Cartographer | Sells a copy of his map: reveals a whole level | MAP-31 |
-| Astrologer's Tower | Tells next week's event and can change it for a price; needs the week events (FLOW-2) | MAP-32 |
-| Artifact Merchant | Sells artifacts at a steep price (HoMM3's Black Market) | MAP-33 |
-| Witch Hut | Teaches its skill or improves it; one such upgrade per hero level | MAP-34 |
+| Sphinx | One riddle per hero: the map author's or one from `riddles.csv`, three answers. Right: a **Major artifact or 5000 experience** (even odds). Wrong: the hero's movement ends for the day and it has **−3 morale** in its next battle | implemented (MAP-27) |
+| Sanctuary | A hero on its entrance **cannot be attacked**; it stays as long as it likes, one hero at a time; nothing else | implemented (MAP-28) |
+| Sacrificial Altar | Necropolis, Inferno, Dungeon heroes sacrifice creatures for **hit points × 2** experience (keeping one creature); Haven, Sylvan, Academy heroes artifacts for **2000 / 5000 / 10 000** by tier; Stronghold and Swamp Bestiary heroes either; any number of times | implemented (MAP-29) |
+| Refugee Camp | Each week a random **tier 3–5 base creature** of the playable towns, one week's growth, at the normal price; not flaggable, unsold creatures leave | implemented (MAP-30) |
+| Den of Thieves | Shows the **whole** Thieves' Guild table on every visit ([towns-and-economy.md](towns-and-economy.md#thieves-guild-adr-077)) | implemented (TOWN-11) |
+| Cartographer | Surface or underground; **3000 gold** reveals that whole level for the player, once per player | implemented (MAP-31) |
+| Astrologer's Tower | A visit shows next week's event; no re-roll | waits for the week events (MAP-32) |
+| Artifact Merchant | **7** Minor or Major artifacts for **twice their worth** (Minor 2000, Major 5000), restocked on the first day of every month; a sold slot stays empty until then | implemented (MAP-33) |
+| Witch Hut | **Two skills** of any group (set by the map or rolled); a visit raises one a level, or the same group's next skill where the hero cannot; **one lesson per hero level** | implemented (MAP-34) |
