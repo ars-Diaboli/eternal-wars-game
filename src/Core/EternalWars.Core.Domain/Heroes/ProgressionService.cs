@@ -8,7 +8,7 @@ namespace EternalWars.Core.Domain.Heroes;
 /// <summary>
 /// Hero levels (ADR-048): every <see cref="ExperienceTable"/> level gives one skill point, spent on one of the skills
 /// <see cref="SkillOffers"/> proposes, and one primary stat point (<see cref="StatGrowth"/>, ADR-055). Human players choose through a <see cref="LevelUpDecision"/>, during their own turn
-/// (a defender who levels up in the attacker's turn chooses when its turn starts); computer players take the first offer.
+/// (a defender who levels up in the attacker's turn chooses when its turn starts); computer players take <see cref="SkillOffers.ComputerChoice"/>.
 /// </summary>
 public sealed class ProgressionService(GameState state, IEventPublisher events)
 {
@@ -80,7 +80,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
             while (hero.PendingLevelUps > 0)
             {
                 var offers = Offers(hero);
-                LevelUp(hero, offers.FirstOrDefault(), RollStat(hero));
+                LevelUp(hero, SkillOffers.ComputerChoice(offers), RollStat(hero));
             }
         }
 

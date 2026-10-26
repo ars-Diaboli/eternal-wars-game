@@ -149,11 +149,14 @@ These are enforced by:
 - Morale is rolled per stack when a round starts (`BattleUnit.RoundMorale`: extra action, lost turn, ±50 % initiative
   via `BattleState.InitiativeOf`), luck per hit (`HitModifiers.Luck`); values come from `BattleState.MoraleOf` /
   `LuckOf` (creature + hero, ADR-053). Nothing is rolled at 0, so the random sequence of other battles is unchanged.
-- Leadership and Alertness (ADR-067) feed `Hero.TotalMorale` and `HeroBattleBonuses.InitiativePercent` (read by
-  `BattleState.InitiativeOf`). Stronghold's Primal Fury also lives in the battle: `BattleUnit.RageAttack` (Blood Rage,
+- Leadership and Alertness (ADR-067, ADR-078) feed `Hero.TotalMorale` and `HeroBattleBonuses.Initiative` (flat, read by
+  `BattleState.InitiativeOf`); Marksmanship feeds `HeroBattleBonuses.MarksmanshipEighths` (read by `BattleGrid.RangedPenaltyEighths`).
+  Primal Fury (Stronghold and Swamp Bestiary) also lives in the battle: `BattleUnit.RageAttack` (Blood Rage,
   added in `DamageCalculator`), warcries as `BattleWarcryCommand` → `BattleService.UseWarcry` → `BattleEngine.UseWarcry`
   (timed `BattleSideEffect`s on `BattleState` that `MoraleOf` / `InitiativeOf` add up; Terror sets
   `BattleUnit.LosesNextAction`); `BattleAi` uses them for computer heroes. Rules live in `PrimalFury`.
+- Necromancy (ADR-078): `BattleService.Finish` asks `NecromancyRules.Raise` after the survivors are back and before the experience, adds the
+  undead to the army and publishes `UndeadRaised`; `BattleHud` shows it after the result screen.
 - War machines are `BattleUnit`s with `Machine` set (ADR-056): speed 0, no melee or retaliation, no morale; only the
   offensive one is queued; the tent heals at round start; `BattleState.LivingArmyOf` (creatures only) decides the end.
   Their footprint is one column (`WarMachines.Footprint`, `BattleUnit.Width` × `Height`, ADR-073); creatures stay square.

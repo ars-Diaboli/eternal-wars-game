@@ -8,7 +8,7 @@ using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Battles;
 
-/// <summary>Leadership, Alertness and Stronghold's Primal Fury: Blood Rage and warcries (ADR-067).</summary>
+/// <summary>Leadership, Alertness and Primal Fury (Stronghold and Swamp Bestiary): Blood Rage, warcries, Interference (ADR-067, ADR-069).</summary>
 public class PrimalFuryAndLeadershipTests
 {
     // Leadership and Alertness -----------------------------------------------------------------------
@@ -39,27 +39,25 @@ public class PrimalFuryAndLeadershipTests
 
     [Theory]
     [InlineData(SkillLevel.None, 0)]
-    [InlineData(SkillLevel.Basic, 5)]
-    [InlineData(SkillLevel.Advanced, 10)]
-    [InlineData(SkillLevel.Expert, 15)]
-    public void Alertness_GivesInitiativePercent_ToTheHeroesBattleBonuses(SkillLevel level, int percent)
+    [InlineData(SkillLevel.Basic, 1)]
+    [InlineData(SkillLevel.Advanced, 2)]
+    [InlineData(SkillLevel.Expert, 3)]
+    public void Alertness_GivesFlatInitiative_ToTheHeroesBattleBonuses(SkillLevel level, int initiative)
     {
         var state = Create("A.........B");
         state.GetHero(A).Skills.Set(BuiltInSkills.Alertness, level);
 
-        Assert.Equal(percent, SkillEffects.AlertnessInitiativePercent(level));
-        Assert.Equal(percent, HeroBattleBonuses.For(state.GetHero(A), state.Creatures).InitiativePercent);
+        Assert.Equal(initiative, SkillEffects.AlertnessInitiative(level));
+        Assert.Equal(initiative, HeroBattleBonuses.For(state.GetHero(A), state.Creatures).Initiative);
     }
 
     [Theory]
-    [InlineData(5, 10, 11)] // 10.5 rounds up
-    [InlineData(10, 10, 11)]
-    [InlineData(15, 10, 12)] // 11.5
-    [InlineData(5, 9, 9)] // 9.45
-    [InlineData(15, 16, 18)] // 18.4
-    public void Alertness_RaisesInitiative_RoundedToTheNearestPoint_ForCreatureStacksOnly(int percent, int initiative, int expected)
+    [InlineData(1, 10, 11)]
+    [InlineData(3, 10, 13)]
+    [InlineData(3, 4, 7)]
+    public void Alertness_RaisesInitiativeByFlatPoints_ForCreatureStacksOnly(int bonus, int initiative, int expected)
     {
-        var battle = TestBattle.Create(attackerBonuses: HeroBattleBonuses.None with { InitiativePercent = percent });
+        var battle = TestBattle.Create(attackerBonuses: HeroBattleBonuses.None with { Initiative = bonus });
         var unit = battle.Add(Attacker, TestBattle.Fixed("quick", 1, initiative: initiative), 1, 0, 0);
         var enemy = battle.Add(Defender, TestBattle.Fixed("plain", 1, initiative: initiative), 1, 20, 0);
 
@@ -241,13 +239,16 @@ public class PrimalFuryAndLeadershipTests
     // The Primal Fury skills -----------------------------------------------------------------------
 
     [Fact]
-    public void StrongholdsGroup_IsPrimalFury_WithBloodRageWarcryAndFactionSpellResistance()
+    public void PrimalFury_BelongsToStrongholdAndSwampBestiary_WithBloodRageWarcryAndInterference()
     {
         var group = BuiltInSkills.GetGroup(BuiltInSkills.RageGroup);
 
         Assert.Equal("Primal Fury", group.Name);
-        Assert.Equal(TownIds.Stronghold, group.Faction);
-        Assert.Equal(["Blood Rage", "Warcry", "Spell resistance (faction)"], BuiltInSkills.SkillsOf(BuiltInSkills.RageGroup).Select(s => s.Name));
+        Assert.True(group.IsFaction);
+        Assert.True(group.BelongsTo(TownIds.Stronghold));
+        Assert.True(group.BelongsTo(TownIds.SwampBestiary));
+        Assert.False(group.BelongsTo(TownIds.Haven));
+        Assert.Equal(["Blood Rage", "Warcry", "Interference"], BuiltInSkills.SkillsOf(BuiltInSkills.RageGroup).Select(s => s.Name));
         Assert.Equal(
             [SkillLevel.Master, SkillLevel.Expert, SkillLevel.Expert],
             BuiltInSkills.SkillsOf(BuiltInSkills.RageGroup).Select(s => s.MaxLevel)); // 4 + 3 + 3 points
@@ -255,17 +256,18 @@ public class PrimalFuryAndLeadershipTests
     }
 
     [Theory]
-    [InlineData(SkillLevel.None, 0)]
-    [InlineData(SkillLevel.Basic, 2)]
-    [InlineData(SkillLevel.Advanced, 4)]
-    [InlineData(SkillLevel.Expert, 6)]
-    public void FactionSpellResistance_LowersTheEnemyHeroesSpellPower_ForCasting(SkillLevel level, int penalty)
+    [InlineData(SkillLevel.None, 0, 0)]
+    [InlineData(SkillLevel.Basic, 2, 1)]
+    [InlineData(SkillLevel.Advanced, 4, 2)]
+    [InlineData(SkillLevel.Expert, 6, 3)]
+    public void Interference_LowersTheEnemyHeroesSpellPower_AndRaisesItsSpellCost(SkillLevel level, int power, int cost)
     {
         var state = Create("A.........B");
-        state.GetHero(A).Skills.Set(BuiltInSkills.FactionSpellResistance, level);
+        state.GetHero(A).Skills.Set(BuiltInSkills.Interference, level);
+        var bonuses = HeroBattleBonuses.For(state.GetHero(A), state.Creatures);
 
-        Assert.Equal(penalty, PrimalFury.SpellPowerPenalty(level));
-        Assert.Equal(penalty, HeroBattleBonuses.For(state.GetHero(A), state.Creatures).EnemySpellPowerPenalty);
+        Assert.Equal((power, cost), (PrimalFury.SpellPowerPenalty(level), PrimalFury.SpellCostPenalty(level)));
+        Assert.Equal((power, cost), (bonuses.EnemySpellPowerPenalty, bonuses.EnemySpellCostPenalty));
     }
 
     [Fact]

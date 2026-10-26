@@ -30,7 +30,7 @@
 | Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060); Brotherhood **1000 gold + 5 ore** (ADR-070) | implemented; new price and pools not built |
 | Caravan | 1 | Hires from map dwellings, sends troops (ADR-054); 1000 gold + 5 lumber, needs town hall 2 (placeholder) | implemented |
 | Dwellings | 9 + upgrades | Build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier | implemented |
-| Necromancy Amplifier | 1 | Necropolis only: +5 % Necromancy for every hero of its owner with the skill (ADR-069); **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its new owner (ADR-070, TOWN-6) | planned |
+| Necromancy Amplifier | 1 | Necropolis only: +5 % Necromancy for every hero of its owner with the skill (ADR-069); **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its new owner (ADR-070, TOWN-6) | implemented (ADR-078) |
 
 - **Capitol** (town hall 4, ADR-070, ADR-074, implemented): one per player; a second one cannot be built, and capturing a town
   with a Capitol when the player already has one drops it to City Hall (town hall 3). Cost 15 000 gold + 25 lumber + 25 ore,

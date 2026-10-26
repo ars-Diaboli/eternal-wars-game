@@ -27,16 +27,14 @@
 
   | Effective Tactics | Width choices |
   |---|---|
-  | none | 30 |
-  | Basic | 30, 32 |
-  | Advanced | 28, 30, 32 |
+  | none, Basic | 30 |
+  | Advanced | 30, 32 |
   | Expert | 28, 30, 32, 34 |
 
   - **The enemy hero's Tactics reduces yours**: effective level = your level − enemy level (minimum none). At most one
     side can have an effective level above none, and that side chooses. A computer player keeps 30.
   - **36 wide is reserved for town sieges** (sieges are post-1.0 ❓).
-  - **ADR-069 (not built)**: Tactics also **deploys** troops before the battle and chooses the width only from Advanced: Advanced
-    30 or 32, Expert 28, 30, 32 or 34.
+  - Since ADR-069 (built, ADR-078) Tactics also **deploys** troops before the battle and chooses the width only from Advanced.
   - **Deployment** (ADR-072, HERO-4; built, ADR-076): the player may place the troops within the first **4 / 5 / 6 columns** (Basic /
     Advanced / Expert) from their own edge. Only the side with the higher Tactics deploys (a tie: nobody). The player drags stacks
     in the battle scene, then presses "Start battle"; computer players, and every side that does not deploy, are placed
@@ -69,13 +67,13 @@
   - Each obstacle definition declares its size class (small/big). Walls are a separate class.
   - Line of fire: supercover of the segment from footprint centre to footprint centre; cells touched only at a corner
     count too (ADR-038).
-- **Distance penalty** (ADR-069, ADR-070, CMB-6; not built): replaces the half damage beyond 15 cells (ADR-038). Counted in
+- **Distance penalty** (ADR-069, ADR-070, CMB-6; built, ADR-078): replaces the half damage beyond 15 cells (ADR-038). Counted in
   cells between the two footprints: **0–9 no penalty, 10–19 1/8, 20–29 2/8**, and so on. Distance and cover add up to **one
   ranged penalty** with the same limit: above 7/8 the target cannot be shot. War machines ignore the distance penalty.
 - **Marksmanship** (Offense skill, ADR-070): subtracts a **fixed −2/8 / −4/8 / −6/8** (Basic / Advanced / Expert) from the ranged
   penalty, so an Expert marksman shoots with almost no penalty (intended). **Order** (ADR-072, CMB-6): 1. add the distance and
   cover penalties, 2. subtract Marksmanship, 3. check the 7/8 limit. So Marksmanship can make a target shootable that cover would
-  hide from others.
+  hide from others. A shot deals (8 − penalty)/8 of its damage (`BattleGrid.RangedPenaltyEighths`).
 
 ## Damage
 **HoMM3 baseline** (ADR-033). Base damage (rolled per stack within the creature's min–max) × stack size; +5 % per point
@@ -128,8 +126,8 @@ Each stack has −5…+5 of each, its creature's plus its hero's (and the hero's
 ## Actions (implemented, ADR-038)
 - **Defend**: +20 % Defense (at least +1) until the unit's next turn. **Wait**: see turn order.
 - **Retaliation**: once per round unless a capability says otherwise.
-- **Ranged units**: no shot while engaged; half damage when more than 15 cells separate the footprints (war machines
-  exempt). This is the built rule; ADR-070 replaces it with the distance penalty (CMB-6, above).
+- **Ranged units**: no shot while engaged; the distance penalty and cover lower the damage (above; war machines have no
+  distance penalty).
 - Flyers, rolled obstacles.
 
 ## Creature capabilities (HoMM4-style, implemented, ADR-042)
@@ -155,8 +153,8 @@ attacks included.
 - **Surrender** (ADR-070, CMB-1; not built): a hero keeps its army by paying **half the gold cost of its surviving
   creatures** and leaves the map; the hero returns to the tavern pool. Not possible against neutrals.
 - **Necromancy** (ADR-069, ADR-072): after a victory, a hero with Death attunement raises undead from the enemy's losses;
-  a screen after the battle result, before any level-up, shows them ([skills.md](../content/skills.md#necromancy-death-attunement-adr-069-not-built)).
-  Not after a retreat or a surrender.
+  a screen after the battle result, before any level-up, shows them ([skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078)).
+  Not when the enemy retreated or surrendered. Built (ADR-078): `NecromancyRules`, the `UndeadRaised` event and its screen.
 - The AI **retreats** when its army is almost beaten (threshold: tuning, 20 % of the enemy's value, ADR-073); AI surrender is
   not planned (ADR-070).
 

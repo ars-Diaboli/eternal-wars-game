@@ -29,8 +29,8 @@ public class HeroProgressionTests
             Assert.Equal(SkillGroup.Points, skills.Sum(s => (int)s.MaxLevel));
         });
         Assert.Equal(6, BuiltInSkills.Groups.Count(g => g.IsMagic));
-        Assert.Equal(2, BuiltInSkills.Groups.Count(g => g.Faction is not null));
-        Assert.Equal(14, BuiltInSkills.Groups.Count);
+        Assert.Equal(BuiltInSkills.RageGroup, Assert.Single(BuiltInSkills.Groups, g => g.IsFaction).Id);
+        Assert.Equal(13, BuiltInSkills.Groups.Count);
     }
 
     [Fact]
@@ -61,7 +61,7 @@ public class HeroProgressionTests
         Assert.Equal(128, roster.All.Count());
         Assert.All(roster.All.GroupBy(h => h.Town), town => Assert.Equal(8, town.Count(h => h.Class == HeroClass.Mage)));
         Assert.All(roster.All.Where(h => h.Class == HeroClass.Mage),
-            mage => Assert.Equal(SkillLevel.Basic, mage.StartingSkills.GetValueOrDefault(BuiltInSkills.FactionGroups.TryGetValue(mage.Town, out var faction) ? $"{faction.Group}.first" : $"magic.{mage.Town}.spells")));
+            mage => Assert.Equal(SkillLevel.Basic, mage.StartingSkills.GetValueOrDefault(BuiltInSkills.IsPrimalFuryTown(mage.Town) ? BuiltInSkills.BloodRage : $"magic.{mage.Town}.spells")));
     }
 
     [Fact]
@@ -93,23 +93,41 @@ public class HeroProgressionTests
             hero.Raise(PrimaryStat.Knowledge); // Knowledge 11
         }
 
-        Assert.Equal(110, ManaRules.MaxMana(hero));
+        Assert.Equal(110 + 10, ManaRules.MaxMana(hero)); // + 10 for level 1
         Assert.Equal(2, ManaRules.DailyMana(hero)); // ceil(11 / 10)
-        Assert.Equal(110, hero.Mana); // never spent: full
+        Assert.Equal(120, hero.Mana); // never spent: full
 
         hero.Skills.Set("magic.academy.attunement", SkillLevel.Master);
         hero.Skills.Set("magic.haven.attunement", SkillLevel.Advanced);
         hero.Skills.Set("magic.sylvan.attunement", SkillLevel.Basic);
-        Assert.Equal(110 + 50 + 5, ManaRules.MaxMana(hero));
-        Assert.Equal(2 + 4 + 6 + 2, ManaRules.DailyMana(hero));
+        Assert.Equal(120 + 40 + 5, ManaRules.MaxMana(hero));
+        Assert.Equal(2 + 4 + 4 + 2, ManaRules.DailyMana(hero));
         Assert.Equal(20 - 2, ManaRules.SpellCost(hero, 20));
     }
 
     [Theory]
-    [InlineData(TownIds.Academy, SkillLevel.Basic, 12, 1, 0)]
-    [InlineData(TownIds.Inferno, SkillLevel.Master, 50, 4, 0)]
-    [InlineData(TownIds.Haven, SkillLevel.Expert, 0, 9, 3)]
-    [InlineData(TownIds.Necropolis, SkillLevel.Master, 0, 12, 4)]
+    [InlineData(1, 10)]
+    [InlineData(10, 10)]
+    [InlineData(11, 20)]
+    [InlineData(25, 30)]
+    public void LevelMana_IsTenForEveryStartedTenLevels(int level, int mana) =>
+        Assert.Equal(mana, ManaRules.LevelMana(level));
+
+    [Fact]
+    public void NecromancySchool_GivesDailyManaButNoCheaperSpells()
+    {
+        var hero = new Hero(A, "Alpha", Blue, default);
+        hero.Skills.Set("magic.necropolis.attunement", SkillLevel.Master);
+
+        Assert.Equal(20, ManaRules.SpellCost(hero, 20));
+        Assert.Equal(8, ManaRules.DailyMana(hero)); // Knowledge 0: attunement only
+    }
+
+    [Theory]
+    [InlineData(TownIds.Academy, SkillLevel.Basic, 10, 1, 0)]
+    [InlineData(TownIds.Inferno, SkillLevel.Master, 40, 4, 0)]
+    [InlineData(TownIds.Haven, SkillLevel.Expert, 0, 6, 3)]
+    [InlineData(TownIds.Necropolis, SkillLevel.Master, 0, 8, 0)]
     [InlineData(TownIds.Sylvan, SkillLevel.Advanced, 10, 4, 0)]
     [InlineData(TownIds.Dungeon, SkillLevel.Master, 20, 8, 0)]
     public void Attunement_MatchesTheTable(string town, SkillLevel level, int max, int daily, int cost) =>
@@ -119,12 +137,11 @@ public class HeroProgressionTests
     public void SpellCost_NeverDropsBelowAQuarterOfTheBase()
     {
         var hero = new Hero(A, "Alpha", Blue, default);
-        hero.Skills.Set("magic.haven.attunement", SkillLevel.Master);
-        hero.Skills.Set("magic.necropolis.attunement", SkillLevel.Master); // −8 together
+        hero.Skills.Set("magic.haven.attunement", SkillLevel.Master); // −4
 
-        Assert.Equal(3, ManaRules.SpellCost(hero, 10)); // 25 % of 10, rounded up
+        Assert.Equal(2, ManaRules.SpellCost(hero, 5)); // 25 % of 5, rounded up
         Assert.Equal(1, ManaRules.SpellCost(hero, 3));
-        Assert.Equal(12, ManaRules.SpellCost(hero, 20));
+        Assert.Equal(16, ManaRules.SpellCost(hero, 20));
     }
 
     [Fact]
@@ -152,7 +169,7 @@ public class HeroProgressionTests
             var offers = SkillOffers.Generate(mage, TownIds.Haven, random);
             Assert.Equal(SkillOffers.OfferCount, offers.Distinct().Count());
             Assert.All(offers, o => Assert.True(mage.Skills.CanRaise(o)));
-            withRival += offers.Any(o => o.StartsWith("magic.necropolis", StringComparison.Ordinal) || o.StartsWith("magic.inferno", StringComparison.Ordinal)) ? 1 : 0;
+            withRival += offers.Any(o => o.StartsWith("magic.necropolis", StringComparison.Ordinal)) ? 1 : 0; // Haven's arch-rival
         }
 
         Assert.InRange(100.0 * withRival / levelUps, 3.5, 6.5);
@@ -244,15 +261,14 @@ public class HeroProgressionTests
     }
 
     [Fact]
-    public void Logistics_TroopManagement_AndPathfinding_ChangeMovement()
+    public void Logistics_AndPathfinding_ChangeMovement()
     {
         var state = Create("Ass..", ".....", "....B");
         var hero = state.GetHero(A);
         var before = MovementAllowance.Daily(state, hero);
 
-        hero.Skills.Set(BuiltInSkills.TroopManagement, SkillLevel.Basic); // footman map speed 3 → 4: 1500 → 1560
-        hero.Skills.Set(BuiltInSkills.Logistics, SkillLevel.Advanced);     // +20 %
-        Assert.Equal((1500, 1560 * 120 / 100), (before, MovementAllowance.Daily(state, hero)));
+        hero.Skills.Set(BuiltInSkills.Logistics, SkillLevel.Expert); // +30 %
+        Assert.Equal((1500, 1500 * 130 / 100), (before, MovementAllowance.Daily(state, hero)));
 
         hero.Skills.Set(BuiltInSkills.Pathfinding, SkillLevel.Advanced);  // swamp 200: penalty 100 halved
         var session = Start(state);

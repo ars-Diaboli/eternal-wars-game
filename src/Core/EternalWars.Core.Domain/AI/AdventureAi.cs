@@ -195,7 +195,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     command = new RespondToGuardCommand(player, guard.Offer == GuardOffer.Join);
                     break;
                 case LevelUpDecision levelUp:
-                    command = new ChooseSkillCommand(player, levelUp.Options[0]);
+                    command = new ChooseSkillCommand(player, SkillOffers.ComputerChoice(levelUp.Options)!);
                     break;
                 case BattleDecision when _state.Battle is not null:
                     var commander = session.Battles.Commander(BattleSide.Attacker) ?? session.Battles.Commander(BattleSide.Defender);

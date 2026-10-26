@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-23)**: five design rounds are decided; building them started with the groundwork and the quick items. ADR-069
+**Where we are (2026-10-26)**: five design rounds are decided; building them started with the groundwork and the quick items. ADR-069
 reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events; ADR-075 confirms ADR-073's, changes the caravan reach to 7500 movement points and settles the morale sources; ADR-077 adds map scenery, rivers,
@@ -13,10 +13,9 @@ flaggable providers with resource caravans, caravan speed and limits, the kingdo
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
 Phase 4 has every generator stage in core. **Next up** (in this order): the groundwork is done (data tables, size pass, per-town building column, Capitol), and so are the quick items
 (caravan reach and queue, base-creature map dwellings, army morale) and the war machine footprints with deployment. The **skill rework is
-half done** (2026-10-26, commit "partial skill rework"): the code has the new ids and numbers, Scouting, the distance penalty with Marksmanship,
-Primal Fury for both towns, the attunement table, mana by level and Necromancy with its screen; the tests, the roster, the Amplifier and the
-docs are not updated yet, so the test project does not compile. Next: finish it, then the ADR-070 / ADR-071 items that need no answer
-(surrender, taverns), then the second catalogue; the ADR-077 items wait for their questions
+done** (ADR-078): new ids and numbers, Scouting, the distance penalty with Marksmanship, Primal Fury for both towns, the attunement table,
+mana by level, Necromancy with its screen and the Necromancy Amplifier (the Necromancy screen still needs a run in Godot). Next: the
+ADR-070 / ADR-071 items that need no answer (surrender, taverns), then the second catalogue; the ADR-077 items wait for their questions
 ([open-questions.md](open-questions.md#-blocking-now)).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -26,7 +25,7 @@ docs are not updated yet, so the test project does not compile. Next: finish it,
 - [x] Creature size pass (ADR-070): 9 of 182 Large (the seven dragons and the Behemoth line), the other 33 Large → Medium;
       `sim towns` re-run (similar spread, tuning stays CONT-2)
 - [x] `buildings.csv` town column (TOWN-3, ADR-074): a town's rows replace a shared building or add one only it has; `BuildingCatalog.For`,
-      `TownRules.Buildings`; the town screen, editor, validator and AI use the town's list (every row still shared)
+      `TownRules.Buildings`; the town screen, editor, validator and AI use the town's list (the Necromancy Amplifier is the first town row)
 - [ ] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks); undead Ruins → Crypt with old
       maps loading `bank.ruins` (MAP-22)
 
@@ -253,7 +252,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); needs
       sieges, post-1.0 (CMB-5)
 - [ ] Skill specialties: the skill's effect +5 % per hero level (ADR-072)
-- [ ] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3)
+- [x] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3; ADR-078)
 - [x] Leadership (`offense.third`, +1/2/3 morale) and Alertness (`defense.third`, +5/10/15 % initiative, working title) (ADR-067)
 - [x] Deployment (ADR-072, ADR-076): `BattlePhase.Deploying`, the first 4 / 5 / 6 columns from the own edge by the deployer's Tactics; only
       the higher Tactics deploys, and only a human side; heroes and neutrals, not banks; the zone includes the machine column and has no
@@ -262,24 +261,25 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] War machine footprints (ADR-073, ADR-076): one column at the outer edge, offensive machine and tent 1 × 3, ammo cart 1 × 2, stacks from
       the next column; `BattleUnit.Width` × `Height`; the 3D models overhang the grid's edge (not run in Godot yet)
 
-#### Skill rework (ADR-069, decided 2026-10-20)
-- [ ] New numbers: Melee 9/16/23/30 %, Archery 15/25/35 %, Pathfinding to Master (−100 %), Logistics to Expert (30 %), Alertness flat +1/2/3
+#### Skill rework (ADR-069, decided 2026-10-20; built 2026-10-26, ADR-078)
+- [x] New numbers: Melee 9/16/23/30 %, Archery 15/25/35 %, Pathfinding to Master (−100 %), Logistics to Expert (30 %), Alertness flat +1/2/3
       initiative, Tactics width from Advanced (30/32) and Expert (28–34)
-- [ ] Regrouping and new ids: Leadership to Defense (`defense.leadership`), Alertness to Tactics (`tactics.alert`), Drill → War Tempo
+- [x] Regrouping and new ids: Leadership to Defense (`defense.leadership`), Alertness to Tactics (`tactics.alert`), Drill → War Tempo
       (`tactics.wartempo`), Deployment merged into Tactics, Troop management dropped; old ids are read as their successors, no map format bump (ADR-072)
-- [ ] Scouting (`pathfinding.scouting`): +2/4/6 sight radius
-- [ ] Distance penalty for ranged attacks (ADR-070: 1/8 per whole 10 cells, adds to cover, replaces the 15-cell half
+- [x] Scouting (`pathfinding.scouting`): +2/4/6 sight radius, revealed at once when learned
+- [x] Distance penalty for ranged attacks (ADR-070: 1/8 per whole 10 cells, adds to cover, replaces the 15-cell half
       damage, machines exempt) and Marksmanship (`offense.marksmanship`, −2/8 / −4/8 / −6/8); order: add distance and cover,
       subtract Marksmanship, then the 7/8 check (ADR-072)
-- [ ] Primal Fury for Swamp Bestiary, Adrenaline removed; Interference (`rage.third`) with the spell-cost part (data until Phase 5); Interference
+- [x] Primal Fury for Swamp Bestiary, Adrenaline removed; Interference (`rage.third`) with the spell-cost part (data until Phase 5); Interference
       +1 / +2 / +3 mana; mages start with the group, warriors are offered it often; Stronghold warriors start with Offense, Swamp
-      warriors with Defense; Spell Power strengthens Blood Rage and warcries (ADR-072); their mages level up with even odds 25 / 25 / 25 / 25 % (ADR-073; names CONT-5)
-- [ ] Attunement table of ADR-069 and mana by level (+10 × ⌈level / 10⌉) in `ManaRules` (maximum only, ADR-072)
-- [ ] Necromancy (Death attunement): raise undead from the slain enemies' hit points after victories (ADR-072 rules), its screen
-      between the battle result and level-ups; the AI values it
-- [ ] Necropolis Necromancy Amplifier, the first town-specific building (1500 gold + 5 mercury, mage guild 1, ADR-070);
+      warriors with Defense; their mages level up with even odds 25 / 25 / 25 / 25 % (ADR-073; names CONT-5)
+- [ ] Spell Power strengthens Blood Rage and warcries for Primal Fury mages (ADR-072, MAG-10; numbers not set)
+- [x] Attunement table of ADR-069 and mana by level (+10 × ⌈level / 10⌉) in `ManaRules` (maximum only, ADR-072)
+- [x] Necromancy (Death attunement): raise undead from the slain enemies' hit points after victories (ADR-072 rules), its screen
+      between the battle result and level-ups (`UndeadRaised`; not run in Godot yet); computer heroes take it whenever offered
+- [x] Necropolis Necromancy Amplifier, the first town-specific building (1500 gold + 5 mercury, mage guild 1, ADR-070);
       needs the per-town table and Necromancy
-- [ ] Docs: `heroes.csv` and [hero-roster.md](../content/hero-roster.md) follow (Drill, Troop management → Scouting, Adrenaline names,
+- [x] Docs: `heroes.csv` and [hero-roster.md](../content/hero-roster.md) follow (Drill, Troop management → Scouting, Adrenaline names,
       warriors' Offense / Defense starting skills)
 - [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
 

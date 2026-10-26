@@ -1728,3 +1728,41 @@ TOWN-11 in `open-questions.md`, each with a proposal.
 - **Third object catalogue** (adventure-map.md): Sphinx (MAP-27), Sanctuary (MAP-28), Sacrificial Altar (MAP-29), Refugee Camp (MAP-30), Den of
   Thieves (TOWN-11), Cartographer (MAP-31), Astrologer's Tower (MAP-32, needs the week events), Artifact Merchant (MAP-33), Witch Hut (MAP-34).
   The Subterranean Gate exists already (two-way gate between levels).
+
+### ADR-078: The skill rework, Necromancy and the Necromancy Amplifier (implementation, 2026-10-26)
+**Status**: implemented (2026-10-26). Carries out ADR-069's skill rework with ADR-070's distance penalty, ADR-072's details (HERO-1 … HERO-7,
+MAG-7 … MAG-10, CMB-6, TOWN-6) and ADR-073's Primal Fury mage odds; choices those ADRs left open are recorded here.
+
+- **Ids** (HERO-6): `BuiltInSkills.Renamed` maps `offense.third` → `defense.leadership`, `defense.third` → `tactics.alert`, `tactics.drill` →
+  `tactics.wartempo`, `tactics.deployment` → `tactics.tactics`, `pathfinding.troops` → `pathfinding.scouting` and `adrenaline.*` → `rage.*`.
+  `Resolve`/`Migrate` apply it wherever skills are read: hero skills, the hero table (skills and specialties), map and save heroes, artifact
+  effects and `ChooseSkillCommand` in old replays. A level above the new maximum drops to it; two old skills that became one keep the higher
+  level. No map format bump. `heroes.csv` uses the new ids.
+- **Groups**: 13 (six general, six schools, Primal Fury). `SkillGroup.Factions` lists the towns of a faction group (`BelongsTo`); Primal Fury
+  belongs to Stronghold and Swamp Bestiary and weighs 6 in the offers for mages and warriors alike. Rivals: one arch-rival per town (HERO-3).
+- **Numbers**: Melee 9/16/23/30 %, Archery 15/25/35 %, Pathfinding −25 % a level up to Master, Logistics 10/20/30 % up to Expert, Alertness
+  +1/2/3 initiative added to the creature's before the warcry percentages, Tactics width only from Advanced (30/32; Expert 28–34). Troop
+  management is gone without a replacement effect.
+- **Scouting**: `Hero.ScoutingRadius` is the base radius (5, or what maps and artifacts set) plus 2/4/6. `VisibilityService` reveals the wider
+  circle on `HeroLeveledUp` for Scouting *(choice made here: at once, not at the next step)*.
+- **Ranged penalty** (CMB-6): `BattleGrid.RangedPenaltyEighths` = distance (cells between the footprints / 10, none for machines) + cover −
+  Marksmanship (2/4/6 eighths, not below 0); above 7/8 there is no shot (`BattleState.MaxRangedPenaltyEighths`). A shot deals (8 − penalty)/8;
+  `HitModifiers.PenaltyEighths` replaces `CoverEighths`, and the 15-cell halving (`LongRange`) is gone.
+- **Primal Fury**: Interference (`rage.third`) carries the Spell Power penalty and the +1/2/3 spell cost (`HeroBattleBonuses.EnemySpellCostPenalty`),
+  data until casting. Primal Fury mages roll 25/25/25/25 at every level (`StatGrowth.Odds` takes the hero's town). Their Spell Power does not
+  strengthen Blood Rage and warcries yet (no numbers; roadmap). Roster: Stronghold warriors Urzog, Kragash and Shara now start with Melee
+  instead of Armor or Tactics; Swamp Bestiary warriors Ssarkh, Mudjaw and Oszrak with Armor, Brakkis with Leadership and Ylsa with Spell
+  resistance *(choices made here: one starting skill swapped, the specialty kept)*.
+- **Mana**: the ADR-069 attunement table; `ManaRules.LevelMana` = 10 × ⌈level / 10⌉ added to the maximum only (MAG-8).
+- **Necromancy** (`NecromancyRules`, applied in `BattleService.Finish`): only after the enemy was **defeated** (heroes and neutral guards); not
+  when it retreated *(choice made here; surrender does not exist yet)*. Order: `BattleEnded`, the survivors' `ArmyChanged`, then the raised
+  undead (`ArmyChanged` and `UndeadRaised(Hero, Raised)`), then `HeroExperienceGained` and level-ups. The random split of a tier between its two
+  lines is 0–100 % in whole percent (one game-RNG draw per tier). `UndeadRaised` lists what joined, with the upgrade id where 3/4 went to an
+  upgraded stack; nothing is published when nothing joined.
+- **Necromancy screen**: `BattleHud` keeps the last `UndeadRaised` text; "Return to the map" (Enter) first shows it on the result panel, then
+  closes the battle. Not run in Godot yet.
+- **Necromancy Amplifier**: the first town row in `buildings.csv` (`necromancy-amplifier`, Necropolis, 1500 gold + 5 mercury, mage guild 1).
+  `NecromancyRules.IsAmplified` asks whether the player owns any town with it, so a captured one helps its new owner.
+- **AI**: computer heroes take Necromancy (Death attunement) whenever a level-up offers it, otherwise the first offer
+  (`SkillOffers.ComputerChoice`) *(choice made here; how much the AI should value other skills is AI tuning)*.
+- Tests: `SkillReworkTests`, `NecromancyTests` and updated battle, mana and progression tests; `sim selftest` passes with a new digest.

@@ -39,13 +39,13 @@ public sealed record HeroSpecialty(SpecialtyKind Kind, string Target, int Amount
         _ => $"{Kind.ToString().ToLowerInvariant()} {Target}",
     };
 
-    /// <summary>Parses <c>skill offense.melee</c>, <c>spell light.bless</c> or <c>resource gold 350</c>.</summary>
+    /// <summary>Parses <c>skill offense.melee</c>, <c>spell light.bless</c> or <c>resource gold 350</c>; an old skill id reads as its successor (ADR-072).</summary>
     public static HeroSpecialty Parse(string text)
     {
         var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return words switch
         {
-            ["skill", var skill] when BuiltInSkills.Contains(skill) => new(SpecialtyKind.Skill, skill),
+            ["skill", var skill] when BuiltInSkills.Contains(skill) => new(SpecialtyKind.Skill, BuiltInSkills.Resolve(skill)),
             ["skill", var skill] => throw new FormatException($"unknown skill '{skill}'"),
             ["spell", var spell] => new(SpecialtyKind.Spell, spell),
             ["resource", var name, var amount] when Enum.TryParse<ResourceType>(name, ignoreCase: true, out _)
@@ -117,7 +117,7 @@ public static class HeroTable
             var parts = item.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if (parts is not [var id, var name] || !BuiltInSkills.Contains(id)
                 || !Enum.TryParse<SkillLevel>(name, ignoreCase: true, out var level) || level == SkillLevel.None
-                || level > BuiltInSkills.Get(id).MaxLevel)
+                || (level > BuiltInSkills.Get(id).MaxLevel && !BuiltInSkills.Renamed.ContainsKey(id)))
             {
                 throw new FormatException($"'{item}' is not '<skill id> <Basic|Advanced|Expert|Master>' within the skill's maximum");
             }
@@ -125,8 +125,10 @@ public static class HeroTable
             skills[id] = level;
         }
 
-        var groups = skills.Keys.Select(k => BuiltInSkills.Get(k).Group).Distinct().Count();
-        return groups <= HeroSkills.MaxGroups ? skills : throw new FormatException($"more than {HeroSkills.MaxGroups} skill groups");
+        // Old ids read as their successors, capped at the new maximum (ADR-072, HERO-6).
+        var migrated = BuiltInSkills.Migrate(skills);
+        var groups = migrated.Keys.Select(k => BuiltInSkills.Get(k).Group).Distinct().Count();
+        return groups <= HeroSkills.MaxGroups ? migrated : throw new FormatException($"more than {HeroSkills.MaxGroups} skill groups");
     }
 
     private static HeroDefinition Read(CsvTable.Row row, string id)

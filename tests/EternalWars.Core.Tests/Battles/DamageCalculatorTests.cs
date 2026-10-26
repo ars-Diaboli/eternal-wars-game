@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Creatures;
+using EternalWars.Core.Domain.Heroes;
 using static EternalWars.Core.Domain.Battles.BattleSide;
 
 namespace EternalWars.Core.Tests.Battles;
@@ -35,16 +36,64 @@ public class DamageCalculatorTests
     }
 
     [Fact]
-    public void Ranged_HalvesBeyondLongRange_AndAppliesCover()
+    public void Ranged_LosesTheRangedPenaltyInEighths()
     {
         var battle = TestBattle.Create();
         var shooter = battle.Add(Attacker, TestBattle.Fixed("s", 10, shots: 5), 8, 0, 0);
-        var near = battle.Add(Defender, TestBattle.Fixed("n", 1), 1, 10, 0);
-        var far = battle.Add(Defender, TestBattle.Fixed("f", 1), 1, 20, 0);
+        var target = battle.Add(Defender, TestBattle.Fixed("t", 1), 1, 10, 0);
 
-        Assert.Equal(80, DamageCalculator.Damage(battle.State, shooter, near, new HitModifiers(10, true)));
-        Assert.Equal(40, DamageCalculator.Damage(battle.State, shooter, far, new HitModifiers(10, true)));
-        Assert.Equal(60, DamageCalculator.Damage(battle.State, shooter, near, new HitModifiers(10, true, CoverEighths: 2)));
+        Assert.Equal(80, DamageCalculator.Damage(battle.State, shooter, target, new HitModifiers(10, true)));
+        Assert.Equal(60, DamageCalculator.Damage(battle.State, shooter, target, new HitModifiers(10, true, PenaltyEighths: 2)));
+        Assert.Equal(10, DamageCalculator.Damage(battle.State, shooter, target, new HitModifiers(10, true, PenaltyEighths: 7)));
+    }
+
+    [Theory]
+    [InlineData(11, 0)] // 9 cells between the 2-cell footprints: none
+    [InlineData(12, 1)] // 10 cells: 1/8
+    [InlineData(22, 2)] // 20 cells: 2/8
+    [InlineData(28, 2)]
+    public void DistancePenalty_IsAnEighthPerWholeTenCellsBetween(int x, int eighths)
+    {
+        var battle = TestBattle.Create();
+        var shooter = battle.Add(Attacker, TestBattle.Fixed("s", 10, shots: 5), 8, 0, 0);
+        var target = battle.Add(Defender, TestBattle.Fixed("t", 1), 1, x, 0);
+
+        Assert.True(BattleGrid.CanShoot(battle.State, shooter, target, out var penalty));
+        Assert.Equal(eighths, penalty);
+    }
+
+    [Theory]
+    [InlineData(0, 2)]
+    [InlineData(2, 0)]
+    [InlineData(6, 0)] // never below 0
+    public void Marksmanship_TakesEighthsOffTheRangedPenalty(int marksmanship, int eighths)
+    {
+        var battle = TestBattle.Create(attackerBonuses: HeroBattleBonuses.None with { MarksmanshipEighths = marksmanship });
+        var shooter = battle.Add(Attacker, TestBattle.Fixed("s", 10, shots: 5), 8, 0, 0);
+        var target = battle.Add(Defender, TestBattle.Fixed("t", 1), 1, 22, 0); // 20 cells: 2/8
+
+        Assert.Equal(eighths, BattleGrid.RangedPenaltyEighths(battle.State, shooter, target));
+    }
+
+    [Fact]
+    public void Marksmanship_ComesFromTheHerosSkill()
+    {
+        Assert.Equal([0, 2, 4, 6], new[] { SkillLevel.None, SkillLevel.Basic, SkillLevel.Advanced, SkillLevel.Expert }.Select(SkillEffects.MarksmanshipEighths));
+        var state = TestWorld.Create("A.........B");
+        state.GetHero(TestWorld.A).Skills.Set(BuiltInSkills.Marksmanship, SkillLevel.Advanced);
+        Assert.Equal(4, HeroBattleBonuses.For(state.GetHero(TestWorld.A), state.Creatures).MarksmanshipEighths);
+    }
+
+    [Fact]
+    public void APenaltyAboveSevenEighths_MakesTheShotImpossible()
+    {
+        Assert.Equal(7, BattleState.MaxRangedPenaltyEighths);
+        var battle = TestBattle.Create(width: 100);
+        var shooter = battle.Add(Attacker, TestBattle.Fixed("s", 10, shots: 5), 8, 0, 0);
+        var target = battle.Add(Defender, TestBattle.Fixed("t", 1), 1, 82, 0); // 80 cells: 8/8
+
+        Assert.False(BattleGrid.CanShoot(battle.State, shooter, target, out var penalty));
+        Assert.Equal(8, penalty);
     }
 
     [Fact]

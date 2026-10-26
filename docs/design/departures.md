@@ -18,7 +18,7 @@
 | 11 | Terrain penalties | One native terrain per town; grass, dirt and roads free for everyone | Every terrain penalises non-natives (125–200); towns may have several native terrains; only roads, Pathfinding and artifacts help | built |
 | 12 | Creature tiers | 7 tiers, 1 dwelling per tier, all buildable | 5 tiers, 9 dwellings, build 7 of 9 (final per town) | built |
 | 13 | Tactics | Larger deployment zone | Choose battlefield width (28–34) before battle; enemy Tactics reduces yours | built |
-| 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot. Planned (ADR-070): a distance penalty of 1/8 per 10 cells joins the same total instead of half damage beyond 15 cells; Marksmanship lowers it | built; distance planned |
+| 14 | Ranged | Range and wall penalties only | Cumulative cover from units (1/8, 4×4: 1/4), obstacles (1/8, 1/4) and walls (1/2); above 7/8 no shot. A distance penalty of 1/8 per 10 cells joins the same total instead of half damage beyond 15 cells; Marksmanship lowers it (ADR-070) | built |
 | 15 | Fog ambush | — | Under refog, bumping into an unseen enemy starts an ambush battle | built |
 | 16 | Neutral guards | Zone of control (pickups can be stolen) | Per stack: classic zone of control (default), or a fully guarded 3×3 area for treasure guards (ADR-065) | built |
 | 17 | Speed | One speed for battle and map | Battle Speed in cells, separate adventure map speed | built |

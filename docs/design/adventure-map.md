@@ -139,8 +139,8 @@ Two modes, **chosen when the game is created** (`GameOptions.FogMode`):
    observer's scouting radius, but only drops out once every observer is farther than radius + **refog margin**
    (default 2, configurable). Example: radius 3 + margin 4 reveals at 3 tiles and refogs at 7.
 
-- Observers: heroes and owned towns (radius 5), owned mines and map dwellings (radius 2). The Scouting skill will add
-  2 / 4 / 6 to a hero's radius (ADR-069, not built).
+- Observers: heroes and owned towns (radius 5), owned mines and map dwellings (radius 2). The Scouting skill adds
+  2 / 4 / 6 to a hero's radius (ADR-069), revealed at once when the hero learns a level.
 - Under refog, **objects out of sight show their last known state** (flag colour, chest still there),
   updated when they come back into sight. Units are hidden entirely (`ObjectMemory`).
 
