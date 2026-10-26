@@ -66,10 +66,12 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 | Stage | Class | Does | Status |
 |---|---|---|---|
 | 1 | `ZoneLayouter` | Places zones on the grid from the connection graph (Voronoi with area balancing, or rectangles) | implemented |
-| 2 | `TerrainPainter` | Terrain per zone, walls between zones, obstacles (scenery objects and rivers planned, ADR-077, MAP-25, MAP-26) | implemented |
+| 2 | `TerrainPainter` | Terrain per zone, walls between zones, obstacle clumps | implemented |
+| 2b | `SceneryPlacer` | Gives each obstacle clump back the ground around it and fills exactly its tiles with scenery for that ground, larger pieces first (ADR-079, MAP-25) | implemented |
 | 3 | `ConnectionPlacer` | Cuts passages, places their guards (`GuardPicker`) and gates | implemented |
 | 4 | `SettlementPlacer` | Player towns, neutral towns with garrisons, mines with guards, resource piles | implemented |
 | 5 | `RoadPlacer` | Roads: towns of a zone, passages between zones, gates and the nearest lumber mill and ore mine in zones with a town | implemented |
+| 5b | `RiverPlacer` | About half the zones get a river from the foot of one wall to the farthest foot of another, over free ground; its look from the terrain (ADR-079, MAP-26) | implemented |
 | 6 | `TreasurePlacer` | Treasure by value band, valuable items guarded in Area mode | implemented |
 | 7 | `ScenarioAssembler` | The scenario `GameState`: players, owners, picked town types and heroes; empty slots stay neutral | implemented |
 | 8 | – | Validate: every start zone reaches the others, start zones are fair | partly (template warnings, reachability per zone; start towns reachable from every player in `sim maps`); fairness metrics decided, not built (ADR-071, RMG-8, below) |

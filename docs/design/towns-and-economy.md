@@ -94,29 +94,33 @@ HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `G
 ## Map dwellings and caravans (implemented, ADR-054)
 - Dwellings of one creature on the adventure map grow every Monday, owned or not; a visiting hero flags one and
   recruits from it.
-- A **caravan** (town building) hires creatures from your dwellings: they travel virtually to the town at their map
-  speed along a route no hostile hero, monster or guarded tile blocks; both are checked before paying.
+- A **caravan** (town building) hires creatures from your dwellings: they travel virtually to the town along a route no
+  hostile hero, monster or guarded tile blocks; both are checked before paying.
 - **Reach** (ADR-073, ADR-075, built): **7500 movement points**, every step at the plain cost (100, diagonals 141), so
   terrain, roads and the creature's speed do not matter. The town lists only dwellings within the **raw** reach, which
   ignores hostile heroes, monsters and guards (rock, water and objects still count); ordering needs an open route
-  within the reach. The travel days still follow the creatures' map speed, so slow creatures over bad ground may take
-  more than 5 days.
+  within the reach.
+- **Speed** (ADR-079, TOWN-10): every caravan moves **2500 movement points a day** at the plain step cost (terrain, roads
+  and rivers ignored), so the reach takes at most **3 days**.
+- **Limit** (ADR-079, TOWN-10): a town takes at most **6 caravans** at once, **8** while it has a governor, counting those
+  on their way and those waiting at the gates; troops sent between own towns count at the destination. Orders at the
+  limit are refused with a message.
+- **Resource caravans** (ADR-079, TOWN-9): the caravan also fetches everything stored at an own flagged resource provider
+  within its reach ([adventure-map.md](adventure-map.md#mines-and-resource-providers)) for a flat **100 gold**
+  (placeholder); same route rules, it counts towards the limit, and the resources join the treasury on arrival. A blocked
+  route puts them back in the store and refunds the 100 gold.
 - A blocked route sends the caravan back (refund), a captured destination scatters the creatures, and caravans cannot
   be seen or attacked. Caravans also send garrison troops to another own town.
 - At a full garrison a caravan waits at the gates until there is room.
 - The caravan screen shows the town's **queue** (built, ADR-073): caravans coming here, on their way first (fewest days
   left) and then those waiting for room; the caravans sent from the town are listed apart.
 - Map dwellings sell base creatures only (built, ADR-073; [adventure-map.md](adventure-map.md#creature-dwellings)).
-- **Planned (ADR-077; open points TOWN-9, TOWN-10)**:
-  - Caravans move **2500 movement points a day** at the plain step cost, whatever they carry, instead of at the creatures' map speed; within
-    the 7500-point reach that is at most 3 days.
-  - A town has at most **6 caravans** coming to it at once, **8** with a governor.
-  - Flagged **resource providers** (Water Wheel, Windmill, Warehouses) supply caravans too: a caravan fetches the provider's week's output for
-    the town's owner.
 
 ## Thieves' Guild (ADR-077)
-**Not built**; open point TOWN-11. The tavern shows how the player ranks against the others, like HoMM3: towns, heroes, gold, lumber and
-ore, rare resources, artifacts, income, army strength, best hero, best creature. The Den of Thieves on the map shows the same table.
+**Implemented (ADR-079, TOWN-11).** The tavern shows how the player ranks against every other player still in the game (computers and
+teammates too), like HoMM3; equal values share a place. The rows grow with the player's **taverns**: 1 — towns and heroes; 2 — also gold,
+lumber and ore, rare resources; 3 — also artifacts and income; 4 or more — also army strength, best hero (highest level) and best creature
+(most valuable). The Den of Thieves on the map shows the whole table on every visit.
 
 ## Kingdom overview (ADR-077)
 **Not built.** One screen with the player's whole economy: every town, mine, flagged provider, income artifact and hero skill or specialty that

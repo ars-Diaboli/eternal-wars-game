@@ -9,14 +9,15 @@ reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answe
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events; ADR-075 confirms ADR-073's, changes the caravan reach to 7500 movement points and settles the morale sources; ADR-077 adds map scenery, rivers,
 flaggable providers with resource caravans, caravan speed and limits, the kingdom overview, the Thieves' Guild and a third object catalogue
-(questions MAP-25 … MAP-34, TOWN-9 … TOWN-11). Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
+(questions MAP-25 … MAP-34, TOWN-9 … TOWN-11, answered in ADR-079 and ADR-080). Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
 Phase 4 has every generator stage in core. **Next up** (in this order): the groundwork is done (data tables, size pass, per-town building column, Capitol), and so are the quick items
 (caravan reach and queue, base-creature map dwellings, army morale) and the war machine footprints with deployment. The **skill rework is
 done** (ADR-078): new ids and numbers, Scouting, the distance penalty with Marksmanship, Primal Fury for both towns, the attunement table,
 mana by level, Necromancy with its screen and the Necromancy Amplifier (the Necromancy screen still needs a run in Godot). Next: the
-ADR-070 / ADR-071 items that need no answer (surrender, taverns), then the second catalogue; the ADR-077 items wait for their questions
-([open-questions.md](open-questions.md#-blocking-now)).
+ADR-070 / ADR-071 items that need no answer (surrender, taverns), then the second catalogue. The ADR-077 items are answered and built
+(ADR-079, ADR-080): flaggable providers with resource caravans, caravan speed and limit, the Thieves' Guild, rivers, scenery and the third
+catalogue except the Astrologer's Tower (their Godot screens still need a run); the kingdom overview is still open.
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -206,18 +207,19 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Town screen: caravan section (hire, send the picked stack, caravans on the way); `DwellingPanel` opens when a hero visits a dwelling
 - [x] AI: heroes flag and recruit at map dwellings, towns build a caravan once the player owns a dwelling, hire from owned dwellings and send troops to an empty town (`AdventureAi`)
 - [x] Caravan reach (ADR-073, ADR-075): 7500 movement points at the plain step cost (terrain and speed ignored); the town lists dwellings
-      within the raw reach (hostile blockers ignored, `CaravanRules.Dwellings`), ordering needs an open route within it; travel days still
-      follow the map speed; the AI builds and hires within reach
+      within the raw reach (hostile blockers ignored, `CaravanRules.Dwellings`), ordering needs an open route within it; the AI builds and
+      hires within reach (travel days by the map speed until ADR-079)
 - [x] Caravan queue on the town screen: caravans coming here, on their way (fewest days left first) then waiting at a full garrison
       (`CaravanRules.Queue`), and those sent from here (ADR-073; Godot part not run yet)
 - [x] Map dwellings sell base creatures only: the editor offers and accepts base creatures (`EditResult.UpgradedCreature`), the validator
       rejects upgrades, older maps load the line's base creature (ADR-073, ADR-075)
 - [ ] Smoke scenario for dwellings and caravans (needs Godot); caravan cost tuning; dwelling guards are
       in the objects block below (ADR-068)
-- [ ] Caravan speed (ADR-077, TOWN-10): 2500 movement points a day at the plain step cost for every caravan, instead of the map speed
-- [ ] Caravan limit (ADR-077, TOWN-10): 6 caravans coming to a town at once, 8 with a governor; the queue screen shows the limit
-- [ ] Flaggable resource providers and resource caravans (ADR-077, TOWN-9): Water Wheel, Windmill, Warehouses (and Mystical Garden) flagged
-      like dwellings; the caravan fetches their week's output; map format bump; the AI flags them and orders resource caravans
+- [x] Caravan speed (ADR-079, TOWN-10): 2500 movement points a day at the plain step cost for every caravan (3 days at most)
+- [x] Caravan limit (ADR-079, TOWN-10): 6 caravans coming to a town at once, 8 with a governor, refused at the limit; the caravan section
+      shows the count
+- [x] Flaggable resource providers and resource caravans (ADR-079, TOWN-9): all four flagged like mines, storing a week's output every week;
+      own visits and `FetchResourcesCommand` (100 gold) collect it; map format v22; the AI flags them and fetches large stores
 - [ ] Kingdom overview screen (ADR-077): every income source with its amount and the totals, from the income rules (Godot, a core query
       for the rows)
 
@@ -299,8 +301,9 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack of their preferred creature (ADR-070)
 - [x] Hire buttons in the town panel (`TownPanel`)
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
-- [ ] Thieves' Guild in the tavern (ADR-077, TOWN-11): ranks by towns, heroes, gold, lumber and ore, rare resources, artifacts, income, army
-      strength, best hero, best creature; rows by the number of taverns (proposal); core ranking query with tests, screen in Godot
+- [x] Thieves' Guild in the tavern (ADR-079, TOWN-11): `ThievesGuild` ranks by towns, heroes, gold, lumber and ore, rare resources,
+      artifacts, income, army strength, best hero, best creature; rows by the number of taverns; `ThievesGuildPanel` from the town screen
+      (not run in Godot yet)
 
 ### Artifacts
 Content draft: [artifacts.md](../content/artifacts.md).
@@ -365,7 +368,7 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
       battle, end of day, end of week), weighted rolls, artifact draw by tier (Minor, Major, Relic; the Relic pool refills when empty,
       duplicates allowed); no object uses them yet
 - [x] Resource providers: Water Wheel, the six Warehouses, Windmill, Mystical Garden (map format v16, editor placement, AI visits them;
-      warehouse choice in the decision panel, not run in Godot yet)
+      warehouse choice in the decision panel; flagged instead since ADR-079)
 - [x] Abandoned mines (six, a separate object that becomes the normal mine when the guard falls; Troglodyte guards, subterranean battle terrain for gold
       and ore; ordinary mine objects in the map format, no format change)
 - [x] Native-terrain bonuses in battle: +1 Attack, Defense and Speed for creatures of a town native to the battlefield's terrain (neutrals and
@@ -414,17 +417,18 @@ Same steps per object as above (map format bump, editor, validator, AI, generato
 - [ ] Keymaster's Tent, border guards and border gates (four colours, the player's key, guards vanish, gates stay; ADR-071)
 - [ ] Shrines (spell set in the editor or rolled at start, school Magic at the spell's level, unlimited visits) (Phase 5)
 
-#### Third catalogue (ADR-077, decided 2026-10-26; [catalogue](../design/adventure-map.md#third-object-catalogue-adr-077))
-Every item waits for its question (each has a proposal). Same steps per object as above.
-- [ ] Witch Hut (one general skill per hut, +1 level, one per hero level) ❓ MAP-34
-- [ ] Refugee Camp (a weekly tier 3–5 creature to buy) ❓ MAP-30
-- [ ] Cartographer (surface / underground, reveals the level) ❓ MAP-31
-- [ ] Artifact Merchant (7 artifacts, monthly refresh) ❓ MAP-33
-- [ ] Sacrificial Altar (creatures or artifacts for experience by faction) ❓ MAP-29
-- [ ] Sanctuary (a hero inside cannot be attacked) ❓ MAP-28
-- [ ] Den of Thieves (the Thieves' Guild table) ❓ TOWN-11
-- [ ] Sphinx (riddles, reward and punishment) ❓ MAP-27
-- [ ] Astrologer's Tower (next week's event, re-roll; after the week events) ❓ MAP-32
+#### Third catalogue (ADR-077; built 2026-10-26, ADR-079 / ADR-080; [catalogue](../design/adventure-map.md#third-object-catalogue-adr-077))
+Core, map format v22, editor placement, generator sites and tests for each; the Godot screens are not run yet.
+- [x] Witch Hut (two skills of any group, the same group's next where the hero cannot, one lesson per hero level; MAP-34)
+- [x] Refugee Camp (a weekly tier 3–5 base creature at the normal price; MAP-30)
+- [x] Cartographer (surface / underground, 3000 gold reveals the level, once per player; MAP-31)
+- [x] Artifact Merchant (7 Minor or Major artifacts for twice their worth, monthly restock; MAP-33)
+- [x] Sacrificial Altar (creatures for Darkness, artifacts for Light, either for Wild heroes; MAP-29)
+- [x] Sanctuary (a hero inside cannot be attacked; MAP-28)
+- [x] Den of Thieves (the whole Thieves' Guild table; TOWN-11)
+- [x] Sphinx (author's or table riddle, three answers; Major artifact or 5000 experience, or the day's movement and −3 morale; MAP-27)
+- [ ] Astrologer's Tower (a visit shows next week's event, no re-roll; MAP-32) — after the week events
+- [ ] Editor inspector for a sphinx's riddle and a witch hut's skills (the map format holds them)
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets
@@ -451,9 +455,10 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Zone layout from the connection graph (`ZoneLayouter`: Voronoi and Rectangles strategies, ADR-064; `sim layout`)
 - [x] Terrain per zone (`TerrainPainter`, ADR-064)
 - [x] Borders and obstacles (walls two tiles thick between zones, rock clumps inside; `Walls` kept for the connections stage)
-- [ ] Scenery objects (ADR-077, MAP-25): a `scenery` object kind from a data table (kinds, sizes, terrains, blocking); the generator uses them
-      for obstacles instead of rock clumps; editor palette; map format bump
-- [ ] Rivers (ADR-077, MAP-26): a terrain overlay like roads; editor brush; the generator draws some; 3D view
+- [x] Scenery objects (ADR-079, MAP-25): `Scenery` from `scenery.csv` (12 kinds in several sizes, 1×N walls in four directions, all
+      blocking, terrains per row); `SceneryPlacer` turns the rock clumps into scenery; editor palette; map format v22
+- [x] Rivers (ADR-079, MAP-26): an overlay like roads, +25 % for leaving a river tile unless road to road; editor brush; `RiverPlacer`
+      runs some across zones; 3D view and the 2D harness draw them (generator version 4)
 - [x] Connections and their guards (`ConnectionPlacer`, `GuardPicker`; passages per connection configurable, ADR-064)
 - [x] Towns (player and neutral): `SettlementPlacer`, HoMM3-style defaults (ADR-064); start-town type swap for game setup (`SetTownType`)
 - [x] Mines and resources (guards by zone strength, piles)
