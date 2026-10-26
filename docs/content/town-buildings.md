@@ -3,7 +3,7 @@
 Every town building, what it costs, what it needs and what it does, and the creature dwellings of each playable town.
 Rules: ADR-030 (7 of 9 dwellings), ADR-046 (building list), ADR-050 (towns in play), ADR-054 (caravan, map
 dwellings), ADR-056 (blacksmith), ADR-060 (tavern), ADR-063 (governors and Stewardship), ADR-070 (per-town lists, Capitol,
-Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building). All towns share one building list for now (the table can give a town its own rows, ADR-074); their dwellings come from their creature lines. Numbers are a draft.
+Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building). All towns share one building list, except the Necropolis's own Necromancy Amplifier (the table can give a town its own rows, ADR-074); their dwellings come from their creature lines. Numbers are a draft.
 
 Sources: `src/Core/data/buildings.csv` (columns in
 [development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`, embedded in core (ADR-071). Update the
@@ -46,6 +46,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | `caravan` | 1 | Caravan | 1 000 gold, lumber 5 | town-hall 2 | – |
 | `tavern` | 1 | Tavern | 750 gold, lumber 5 | – | – |
 | `tavern` | 2 | Brotherhood | 2 000 gold, lumber 5, ore 5 | fort 1 | – |
+| `necromancy-amplifier` | 1 | Necromancy Amplifier (Necropolis only) | 1 500 gold, mercury 5 | mage-guild 1 | – |
 
 | Building | Effect | Status |
 |---|---|---|
@@ -56,6 +57,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Mage Guild | spells of its level, of the town's own school: 3 each at levels 1 and 2, 2 each at levels 3 and 4 (ADR-047, ADR-071); sells a spell book for **500 gold**; a hero in a town with a guild refills its mana (ADR-071); level 4 is a placeholder | ⏳ magic (Phase 5) |
 | Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood: 4 heroes (2 native, 1 adjacent, 1 of the rest). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060). ADR-070, not built: the Brotherhood costs **1000 gold + 5 ore** and offers 2 native + 2 adjacent; the pool is per player and faction; hired heroes get a starter stack; the map tavern has its own weekly pool of 4 random heroes of any faction, shared by all players (ADR-071) ([towns-and-economy.md](../design/towns-and-economy.md#tavern-implemented-adr-060)) | ✅; ADR-070 changes ❓ |
 | Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054); cost and requirement are placeholders | ✅ |
+| Necromancy Amplifier | Necropolis only, the first town-specific building: +5 % Necromancy for every hero of its owner with Death attunement; more than one adds nothing; a captured one helps its new owner (ADR-069, ADR-070, TOWN-6) | ✅ (ADR-078) |
 
 ## Tech tree
 
@@ -232,8 +234,8 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 - The mage guild 4 stays a placeholder (ADR-070). The fort's fortifications only take effect with sieges (post-1.0, ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
-- **Per-town names and costs** (ADR-070): the `town` column is built (ADR-074) but every row is still shared; designers fill in
-  town rows, and every town later gets a unique building.
+- **Per-town names and costs** (ADR-070): the `town` column is built (ADR-074); the only town row so far is the Necropolis's
+  Necromancy Amplifier. Designers fill in the other town rows, and every town later gets a unique building.
 - The Capitol's cost and income are placeholders.
 - **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two per town, one adds **+5 a week** to tier-1 growth, the other
   **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the bonus (ADR-073).
@@ -242,6 +244,3 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
   ADR-072, MAG-12): one for each of the two schools next to the town's own on the ring, each adding **1 spell per guild level**
   the town has; placeholder cost **2000 gold + 5 of the school's resource**, needs **mage guild 2**. Stronghold and Swamp Bestiary get a **3-level placeholder building** that teaches warcries / spiritual totems
   instead of a mage guild.
-- **Necromancy Amplifier** (ADR-069, ADR-070; not built): Necropolis only, the first unique building. +5 % Necromancy for every hero of
-  its owner with Death attunement; more than one adds nothing. **1500 gold + 5 mercury**, needs mage guild 1; a captured one helps its
-  new owner. Id `necromancy-amplifier`.

@@ -49,6 +49,13 @@ public static class SkillOffers
     /// <summary>Percentage chance that one offer of a level-up is a rival town's school.</summary>
     public const int RivalSchoolChance = 5;
 
+    /// <summary>
+    /// The offer a computer player takes: Necromancy (Death attunement) whenever it is offered, since raised undead grow the army with every
+    /// victory (ADR-072); otherwise the first offer. Null when nothing is offered.
+    /// </summary>
+    public static string? ComputerChoice(IReadOnlyList<string> offers) =>
+        offers.FirstOrDefault(o => o == Battles.NecromancyRules.Skill) ?? offers.FirstOrDefault();
+
     public static IReadOnlyList<string> Generate(Hero hero, string? heroTown, GameRandom random)
     {
         var rivals = heroTown is not null && BuiltInSkills.Rivals.TryGetValue(heroTown, out var r) ? r : [];

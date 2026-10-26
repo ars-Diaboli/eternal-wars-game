@@ -72,7 +72,7 @@ public class ComplexityAndManaTests
         hero.Raise(PrimaryStat.Knowledge);
         for (var i = 0; i < 14; i++)
         {
-            hero.Raise(PrimaryStat.Knowledge); // Knowledge 15: pool 150, 2 a day
+            hero.Raise(PrimaryStat.Knowledge); // Knowledge 15: pool 150 + 10 for level 1, 2 a day
         }
 
         var session = Start(state);
@@ -83,12 +83,12 @@ public class ComplexityAndManaTests
         session.EndTurn();
         session.EndTurn();
         Assert.Equal(102, hero.Mana);
-        Assert.Equal(new HeroManaRestored(A, 102, 150), Assert.Single(restored));
+        Assert.Equal(new HeroManaRestored(A, 102, 160), Assert.Single(restored));
 
-        hero.Mana = 149;
+        hero.Mana = 159;
         session.EndTurn();
         session.EndTurn();
-        Assert.Equal(150, hero.Mana);
+        Assert.Equal(160, hero.Mana);
 
         session.EndTurn();
         session.EndTurn();

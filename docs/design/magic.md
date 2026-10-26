@@ -26,10 +26,10 @@
 - **Mana** (implemented, `ManaRules`): the pool is 10 × Knowledge plus attunement; a hero regains ⌈Knowledge / 10⌉
   plus attunement at the start of its owner's turn; a spell costs its base minus attunement, never less than 25 % of
   the base (rounded up). ADR-069 adds **10 × ⌈level / 10⌉** to the maximum pool only, not to the daily regeneration, so every hero has at least 10
-  (ADR-072, MAG-8; not built yet). A hero in a town with a mage guild refills its mana (ADR-071, MAG-3; not built).
-- **Necromancy** (ADR-069, not built): after a victory a hero with Death attunement raises 5–20 % of the slain enemies' hit points
+  (ADR-072, MAG-8; built). A hero in a town with a mage guild refills its mana (ADR-071, MAG-3; not built).
+- **Necromancy** (ADR-069; built, ADR-078): after a victory a hero with Death attunement raises 5–20 % of the slain enemies' hit points
   as undead, of tiers capped by the attunement level; a Necropolis building, the Necromancy Amplifier, adds 5 %. Rules
-  (ADR-072, MAG-7) in [skills.md](../content/skills.md#necromancy-death-attunement-adr-069-not-built).
+  (ADR-072, MAG-7) in [skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078).
 - **Map objects for magic** (ADR-069, ADR-070; not built; [adventure-map.md](adventure-map.md#magic)):
   - **Mana Vortex**: sets the hero's mana to twice the maximum until it is spent, once a week per hero.
   - **Fountain of Magic**: restores 50 % of the maximum, **once a week per hero** (ADR-072, MAP-23).

@@ -83,7 +83,8 @@ public class BattleGridTests
     [Fact]
     public void Cover_AddsEachBlockerOnce_AndAboveSevenEighthsForbidsTheShot()
     {
-        var battle = TestBattle.Create();
+        // Marksmanship 2/8 cancels the distance penalty (24 cells: 2/8), so only the cover counts.
+        var battle = TestBattle.Create(attackerBonuses: HeroBattleBonuses.None with { MarksmanshipEighths = 2 });
         var archer = battle.Add(Attacker, BuiltInCreatures.Archer, 10, 0, 10);
         var target = battle.Add(Defender, BuiltInCreatures.Footman, 10, 26, 10);
         battle.Add(Attacker, BuiltInCreatures.RedDragon, 1, 4, 9); // 4×4 friend in the way: 2/8

@@ -166,6 +166,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `BattleWarcryUsed(Side, Warcry, Affected)` / `BattleUnitTerrified(Unit)` | `BattleEngine` | a hero's warcry (Rally, Intimidate, Terror); Terror made a stack lose its action when its turn came |
 | `BattleUnitDied(Unit)` / `BattleUnitWaited(Unit)` / `BattleUnitDefended(Unit)` | `BattleEngine` | |
 | `BattleEnded(Winner, Reason, Casualties, Experience)` | `BattleService` | before its map consequences; `DecisionResolved(BattleDecision)` comes last |
+| `UndeadRaised(Hero, Raised)` | `BattleService` | Necromancy (ADR-072, MAG-7): after `BattleEnded` and the winner's `ArmyChanged`, before its `HeroExperienceGained`; only when undead joined the army |
 | `ArmyChanged(Hero, Slots)` | `ArmyService` (also for `BattleService` casualties), `GuardService`, `TownService`, `MapObjectInteractionService`, editor | stacks moved, casualties, neutrals joined, recruits and upgrades in a town or at a map dwelling, editor edit |
 | `HeroDefeated(Hero, Owner, Retreated)` | `BattleService`, `GameFlowService` | a hero lost or fled a battle and left the map, or its player was eliminated |
 | `GuardJoined(Hero, Guard, Creature, Count)` / `GuardFled(Hero, Guard)` | `GuardService` | a guard offer was accepted (then `MapObjectRemoved`) |

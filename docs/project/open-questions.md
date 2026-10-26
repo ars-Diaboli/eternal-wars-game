@@ -40,6 +40,12 @@ e) Does a resource caravan cost anything, and does it count towards TOWN-10's li
 **Proposal**: a) one week's output waits, it does not pile up (no hoarding without visiting or a caravan); b) yes, any visit by the owner's
 hero collects, an enemy hero flags it and takes what waits; c) all four, the Mystical Garden too; d) chosen when ordering; e) a flat 100 gold
 per caravan (placeholder) and it counts towards the limit. Reach and route as for creature caravans (7500 points, open route).
+Answer : Does it pile up over several weeks - yes it accumulates resources when flagged;
+Does a visiting hero still collect it - yes everything that is accumulated so far;
+Which providers - all that are permanent(all four, the Mystical Garden too);
+it accumulates only when flagged by player; when captured for the first time - gives player one week's resources;
+The Warehouses' choice - drop the choice option, should be decided randomly at the start of the week;
+e) - use proposal;
 
 <a id="town-10"></a>
 **TOWN-10 Caravan speed and limit** (ADR-077).
@@ -50,6 +56,7 @@ own town count towards the destination's limit?
 c) "Further orders queue": refused at the limit, or ordered and held until a place frees (paid now, leaving later)?
 **Proposal**: a) keep 7500 (3 days at most); b) both count, troops sent between own towns count at the destination; c) refused at the limit
 with a message (simplest; the queue screen shows what is coming).
+Answer : use proposals
 
 <a id="town-11"></a>
 **TOWN-11 Thieves' Guild and the Den of Thieves** (ADR-077).
@@ -57,6 +64,8 @@ a) HoMM3 shows more rows the more taverns the player has. Same here, or the full
 b) The Den of Thieves (map object): the full table while the hero stands there, or as if the player had one more tavern for the week?
 **Proposal**: a) HoMM3-like: 1 tavern towns and heroes; 2 also gold, lumber and ore, rare resources; 3 also artifacts and income; 4 or more
 also army strength, best hero and best creature (computer and teammate players included); b) the full table on every visit, nothing kept.
+Answer : use proposals
+
 
 ## Combat
 
@@ -81,12 +90,20 @@ c) Terrain themes: which kinds the generator uses on which terrain?
 **Proposal**: a) flowers, mushrooms and small bushes are passable decoration (no effect); the rest block; b) several sizes per kind, each a
 fixed footprint like other objects; castle walls as 1×N straight pieces; c) a terrain list per kind in a new `scenery.csv` (trees on grass
 and forest-like terrains, dead trees and bones on wasteland, …); the generator replaces today's rock clumps with them.
+Answer :
+a) do not create passable decorations for now; make all of them blocking;
+b) Sizes: use several variations for every kind of scenery with different sizes; walls as straight pieces - yes 1×N straight pieces(vertical, horizontal, diagonal)
+use proposals for the rest
+c) use proposal;
+
 
 <a id="map-26"></a>
 **MAP-26 Rivers** (ADR-077). In HoMM3 rivers are drawn on the terrain like roads and change nothing. Same here, or do they block and need
 bridges or fords?
 **Proposal**: HoMM3: a tile overlay like roads (four kinds for looks), passable, no movement effect; the editor paints them, the generator
 draws some between zones' lakes and borders. No map format change beyond the overlay layer (one version bump).
+Answer : make them opposite of roads - they will add fixed 25% movement penalty; use proposal for the rest; 
+
 
 <a id="map-27"></a>
 **MAP-27 Sphinx.** A riddle: who writes the riddles (a list in data, map author's own), how is the answer typed (free text, or one of three
@@ -97,6 +114,7 @@ Sphinx; one try per hero; right: a Major artifact or 5000 experience (rolled); w
 <a id="map-28"></a>
 **MAP-28 Sanctuary.** A hero standing in it cannot be attacked. How long may it stay, and may it leave its army there?
 **Proposal**: as long as it likes, one hero at a time; enemies cannot enter while it is occupied; nothing else (no healing, no army storage).
+Answer : use proposals
 
 <a id="map-29"></a>
 **MAP-29 Sacrificial Altar.** Which factions sacrifice creatures and which artifacts, and how much experience?
