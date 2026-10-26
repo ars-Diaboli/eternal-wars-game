@@ -77,6 +77,8 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Loot sites | Campfire, Supply Crates, Traveler's Wagon (picked up, vanish), Corpse, Lean To, Warrior's Tomb (stay): only the first visitor finds something ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v17 |
 | Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: resources once a week per object ([below](#mines-and-resource-providers)) | implemented (ADR-068), map format v16 |
 | Second catalogue | Mage's Chest, Windows and Eyes of the Magi, Tavern, Garrison, Keymaster's Tent, deposits, six more banks, magic sites, three buffs, five power-ups ([below](#second-object-catalogue-adr-069)) | planned (ADR-069) |
+| Third catalogue | Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves, Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut ([below](#third-object-catalogue-adr-077)) | planned (ADR-077), questions open |
+| Scenery | Rocks, trees, dead trees, ponds, bushes, mushrooms, flowers, fissures, mounds, ruins, bones, castle walls: decoration and obstacles ([below](#scenery-and-rivers-adr-077)) | planned (ADR-077, MAP-25) |
 
 - **Treasure chests roll their reward** (seeded game RNG, ADR-068, replacing ADR-039's three equal tiers): the five-row table
   [below](#treasure-and-one-time-loot), gold *or* XP, or 5 % a Minor artifact taken at once. Map authors (and the generator) may fix the
@@ -185,6 +187,7 @@ utility objects, the prison and the creature banks: the whole catalogue. The ran
 | Warehouse of Sulfur / Mercury / Crystal | **Implemented.** Weekly: **5** of that resource **or 500 gold** |
 | Warehouse of Gold | **Implemented.** Weekly: **2000 gold** |
 | Windmill | **Implemented.** Weekly: **3–6** of one random non-gold resource |
+| *All providers* | **Planned (ADR-077, TOWN-9)**: flagged like map dwellings, so the week's output is the owner's; a town's caravan can fetch it the way it hires creatures from flagged dwellings ([towns-and-economy.md](towns-and-economy.md#map-dwellings-and-caravans-implemented-adr-054)) |
 | Mystical Garden | **Implemented.** Weekly: a random reward (even odds), **500 gold or 5 of one random magic resource**; the visitor does not choose (decided, MAP-3) |
 
 ### Treasure and one-time loot
@@ -345,3 +348,26 @@ Once per hero, like the Learning Stone:
 | Marletto Tower | +1 Defense |
 | Star Axis | +1 Spell Power |
 | Garden of Revelation | +1 Knowledge |
+
+## Scenery and rivers (ADR-077)
+**Not built**; open points MAP-25 and MAP-26 (proposals there).
+- **Scenery**: static objects with no interaction: rocks, trees, dead trees (several sizes and kinds), ponds, bushes, mushrooms, flowers,
+  fissures, mounds, ruined buildings, creature bones, castle walls. They block movement like terrain obstacles (whether the small ones only
+  decorate is MAP-25). The generator uses them for a zone's obstacles instead of plain rock clumps; the editor places them.
+- **Rivers**: drawn on the terrain like HoMM3's (MAP-26).
+
+## Third object catalogue (ADR-077)
+The owner's third list (`ideas.md`, 2026-10-25). **Nothing here is built**; every row has an open question with a proposal. The shared rules
+above apply. The **Subterranean Gate** on the list exists already (two-way gate between levels, [above](#gates-and-teleporters)).
+
+| Object | Notes | Open |
+|---|---|---|
+| Sphinx | Asks the visiting hero a riddle; rewards a right answer, punishes a wrong one | MAP-27 |
+| Sanctuary | A hero standing in it cannot be attacked | MAP-28 |
+| Sacrificial Altar | The hero sacrifices creatures or artifacts, depending on its faction, for experience | MAP-29 |
+| Refugee Camp | Sells some high-tier creatures, a new kind every week | MAP-30 |
+| Den of Thieves | Shows the Thieves' Guild table ([towns-and-economy.md](towns-and-economy.md#thieves-guild-adr-077)) | TOWN-11 |
+| Cartographer | Sells a copy of his map: reveals a whole level | MAP-31 |
+| Astrologer's Tower | Tells next week's event and can change it for a price; needs the week events (FLOW-2) | MAP-32 |
+| Artifact Merchant | Sells artifacts at a steep price (HoMM3's Black Market) | MAP-33 |
+| Witch Hut | Teaches its skill or improves it; one such upgrade per hero level | MAP-34 |
