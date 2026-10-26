@@ -36,6 +36,7 @@ public sealed class GameSession
         Bus.Subscribe<MineOwnerChanged>(visibility);
         Bus.Subscribe<TownOwnerChanged>(visibility);
         Bus.Subscribe<DwellingOwnerChanged>(visibility);
+        Bus.Subscribe<ProviderOwnerChanged>(visibility);
         Bus.Subscribe<MapObjectRemoved>(visibility);
         Bus.Subscribe<HeroDefeated>(visibility);
         Bus.Subscribe<HeroHired>(visibility);
@@ -55,7 +56,7 @@ public sealed class GameSession
         Caravans = new CaravanService(State, Bus, Economy);
         Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression, Artifacts);
         Movement = new HeroMovementService(State, Bus, Interactions);
-        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans);
+        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions);
     }
 
     public GameState State { get; }
@@ -102,6 +103,7 @@ public sealed class GameSession
         Flow.Begin();
         Artifacts.RollUnsetPickups();
         PrisonRules.Prepare(State);
+        Interactions.PrepareObjects();
         Turns.StartGame();
         Settle();
     }
@@ -224,8 +226,26 @@ public sealed class GameSession
             case ResolveTreasureChestCommand chest:
                 Interactions.ResolveTreasureChest(chest.Reward);
                 return null;
-            case ChooseResourceRewardCommand reward:
-                Interactions.ResolveResourceChoice(reward.Option);
+            case AnswerCartographerCommand cartographer:
+                Interactions.ResolveCartographer(cartographer.Buy);
+                return null;
+            case AnswerSphinxCommand sphinx:
+                Interactions.ResolveSphinx(sphinx.Option);
+                return null;
+            case ChooseWitchHutSkillCommand hut:
+                Interactions.ResolveWitchHut(hut.Skill);
+                return null;
+            case BuyArtifactCommand buy:
+                Interactions.BuyArtifact(buy.Player, buy.Merchant, buy.Slot);
+                return null;
+            case RecruitAtRefugeeCampCommand camp:
+                Interactions.RecruitAtRefugeeCamp(camp.Player, camp.Camp, camp.Count);
+                return null;
+            case SacrificeCreaturesCommand sacrifice:
+                Interactions.SacrificeCreatures(sacrifice.Player, sacrifice.Altar, sacrifice.Slot, sacrifice.Count);
+                return null;
+            case SacrificeArtifactCommand offering:
+                Interactions.SacrificeArtifact(offering.Player, offering.Altar, offering.Artifact);
                 return null;
             case ChooseTrainingCommand training:
                 Interactions.ResolveTraining(training.Option);
@@ -262,6 +282,9 @@ public sealed class GameSession
                 return null;
             case OrderCaravanCommand order:
                 Caravans.Order(order.Player, order.Town, order.Dwelling, order.Count);
+                return null;
+            case FetchResourcesCommand fetch:
+                Caravans.Fetch(fetch.Player, fetch.Town, fetch.Provider);
                 return null;
             case SendTroopsCommand send:
                 Caravans.Send(send.Player, send.FromTown, send.Slot, send.ToTown, send.Count);

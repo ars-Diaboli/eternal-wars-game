@@ -27,7 +27,8 @@ public sealed record MapObjectDefinitionDocument(
     int GuardMin = 0,
     int GuardMax = 0,
     TerrainType? BattleTerrain = null,
-    BankRule? Bank = null);
+    BankRule? Bank = null,
+    IReadOnlyList<TerrainType>? Terrains = null);
 
 /// <summary>
 /// Loads and saves map object definitions, e.g. <c>[{ "id": "mine.gold", "kind": "Mine", "footprint": ["BBB","BVB"], ... }]</c>.
@@ -40,7 +41,7 @@ public static class MapObjectDefinitionSerializer
         var documents = JsonSerializer.Deserialize<List<MapObjectDefinitionDocument>>(json, JsonDefaults.Options)
                         ?? throw new FormatException("Definition file is empty.");
         var definitions = documents
-            .Select(d => new MapObjectDefinition(d.Id, d.Name, d.Kind, new Footprint(d.Footprint))
+            .Select(d => new MapObjectDefinition(d.Id, d.Name, d.Kind, d.Kind == MapObjectKind.Scenery ? Footprint.Obstacle(d.Footprint) : new Footprint(d.Footprint))
             {
                 Resource = d.Resource,
                 DailyYield = d.DailyYield,
@@ -58,6 +59,7 @@ public static class MapObjectDefinitionSerializer
                 GuardMax = d.GuardMax,
                 BattleTerrain = d.BattleTerrain,
                 Bank = d.Bank,
+                Terrains = d.Terrains ?? [],
             })
             .ToList();
         definitions.ForEach(d => d.Validate());
@@ -66,7 +68,7 @@ public static class MapObjectDefinitionSerializer
 
     public static string Serialize(IEnumerable<MapObjectDefinition> definitions) =>
         JsonSerializer.Serialize(
-            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier, d.VisitScope, d.Provider, d.Amount, d.Loot, d.Buff, d.Training, d.Becomes, d.GuardCreature, d.GuardMin, d.GuardMax, d.BattleTerrain, d.Bank)).ToList(),
+            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier, d.VisitScope, d.Provider, d.Amount, d.Loot, d.Buff, d.Training, d.Becomes, d.GuardCreature, d.GuardMin, d.GuardMax, d.BattleTerrain, d.Bank, d.Terrains.Count == 0 ? null : d.Terrains)).ToList(),
             JsonDefaults.Options);
 
     public static MapObjectCatalog LoadInto(MapObjectCatalog catalog, string path) =>

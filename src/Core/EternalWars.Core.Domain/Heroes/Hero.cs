@@ -176,6 +176,9 @@ public sealed class Hero(
     /// <summary>Levels gained and chosen so far; <see cref="ExperienceTable.LevelFor"/> may be higher until the choices are made.</summary>
     public int Level { get; internal set; } = 1;
 
+    /// <summary>The level the hero last learned at a witch hut (ADR-079, MAP-34): one witch hut upgrade per level.</summary>
+    public int? WitchHutLevel { get; internal set; }
+
     /// <summary>Today's allowance, recomputed at the start of the owner's turn (<see cref="MovementAllowance"/>).</summary>
     public int MaxMovementPoints { get; internal set; } = MovementAllowance.NoArmyBase;
 

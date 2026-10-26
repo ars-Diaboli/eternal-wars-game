@@ -113,11 +113,11 @@ public class CaravanTests
     [Fact]
     public void ACaravan_HiresFromAnOwnedDwelling_AndArrivesAfterTheTravelTime()
     {
-        var (session, town, dwelling) = Setup();
+        var (session, town, dwelling) = Setup(width: 60, dwellingX: 40);
         var state = session.State;
         var footman = state.Creatures.Get(Footman);
         var waiting = dwelling.Available!.Value;
-        var route = CaravanRules.FindRoute(state, Blue, dwelling.VisitPosition, town.VisitPosition, footman)!;
+        var route = CaravanRules.FindRoute(state, Blue, dwelling.VisitPosition, town.VisitPosition)!;
         var events = new List<IEvent>();
         session.Events.Subscribe<CaravanDispatched>(events.Add);
         session.Events.Subscribe<CaravanArrived>(events.Add);
@@ -201,16 +201,16 @@ public class CaravanTests
     }
 
     [Fact]
-    public void TheReach_IgnoresTerrain_SoSlowGroundOnlyMakesTheTripLonger()
+    public void TheReachAndTheSpeed_IgnoreTerrain_SoEvenSwampAtTheEdgeOfTheReachTakesThreeDays()
     {
-        // Swamp everywhere: 70 steps are 7000 + points of plain movement whatever the ground, many days for footmen.
+        // Swamp everywhere: 70 steps are 7000 + points of plain movement whatever the ground, three days at 2500 a day.
         var (session, town, dwelling) = Setup(width: 80, dwellingX: 72, special: (x, y) => x == 3 && y == 7 ? 'A' : x == 79 && y == 11 ? 'B' : 's');
         var state = session.State;
         var distance = CaravanRules.Distance(state, null, dwelling.VisitPosition, town.VisitPosition);
-        var route = CaravanRules.FindRoute(state, Blue, dwelling.VisitPosition, town.VisitPosition, state.Creatures.Get(Footman))!;
+        var route = CaravanRules.FindRoute(state, Blue, dwelling.VisitPosition, town.VisitPosition)!;
 
         Assert.InRange(distance!.Value, 6900, CaravanRules.MaxReach);
-        Assert.True(route.Days > 5, $"{route.Days} days");
+        Assert.Equal(3, route.Days);
         Assert.Equal([dwelling], CaravanRules.Dwellings(state, town));
 
         session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 2)).ThrowIfRejected();
@@ -381,7 +381,7 @@ public class CaravanTests
     [Fact]
     public void AGameWithCaravans_ReplaysExactly()
     {
-        var (session, town, dwelling) = Setup();
+        var (session, town, dwelling) = Setup(width: 60, dwellingX: 40);
         session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 5)).ThrowIfRejected();
         NextDay(session);
         var digest = GameStateDigest.Describe(session.State);
@@ -451,5 +451,138 @@ public class CaravanTests
 
         Assert.Null(dwelling.Owner);
         Assert.Empty(state.Caravans);
+    }
+
+    [Fact]
+    public void ACaravan_Covers2500PointsADay_SoTheWholeReachTakesAtMostThreeDays()
+    {
+        Assert.Equal(new CaravanRoute(0, 1), CaravanRules.FindRoute(Create(Grass(5)), Blue, new(1, 1), new(1, 1)));
+        var (session, town, dwelling) = Setup(width: 60, dwellingX: 22); // 2500 points or less: one day
+        Assert.Equal(1, CaravanRules.RouteBetween(session.State, dwelling, town, out _)!.Days);
+        Assert.Equal(3, CaravanRules.MaxReach / CaravanRules.DailyMovement);
+    }
+
+    [Fact]
+    public void ATown_TakesSixCaravansAtOnce_EightWithAGovernor()
+    {
+        var (session, town, dwelling) = Setup();
+        var state = session.State;
+        dwelling.Available = 50;
+        for (var i = 0; i < CaravanRules.MaxCaravans; i++)
+        {
+            session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 1)).ThrowIfRejected();
+        }
+
+        Assert.Contains("already has 6 caravans", session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 1)).Error);
+        Assert.Equal(6, state.Caravans.Count);
+
+        state.GetHero(A).Skills.Set(BuiltInSkills.Stewardship, SkillLevel.Basic);
+        town.Governor = A;
+        Assert.Equal(CaravanRules.GovernedMaxCaravans, CaravanRules.Limit(state, town));
+        session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 1)).ThrowIfRejected();
+        session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 1)).ThrowIfRejected();
+        Assert.Contains("already has 8 caravans", session.Execute(new OrderCaravanCommand(Blue, town.Id, dwelling.Id, 1)).Error);
+    }
+
+    [Fact]
+    public void TroopsSentBetweenOwnTowns_CountAtTheDestination()
+    {
+        var state = Create(Grass(40));
+        var first = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        var second = AddTown(state, TownIds.Haven, 12, 0, Blue);
+        first.SetLevel(BuiltInBuildings.Caravan, 1);
+        second.SetLevel(BuiltInBuildings.Caravan, 1);
+        first.Garrison.Set(0, new CreatureStack(Footman, 20));
+        second.Garrison.Set(0, new CreatureStack(Footman, 20));
+        var session = Start(state);
+        for (var i = 0; i < CaravanRules.MaxCaravans; i++)
+        {
+            session.Execute(new SendTroopsCommand(Blue, first.Id, 0, second.Id, 1)).ThrowIfRejected();
+        }
+
+        Assert.Contains("already has 6 caravans", session.Execute(new SendTroopsCommand(Blue, first.Id, 0, second.Id, 1)).Error);
+        Assert.Empty(CaravanRules.Queue(state, first));
+        session.Execute(new SendTroopsCommand(Blue, second.Id, 0, first.Id, 1)).ThrowIfRejected(); // the other way is free
+    }
+
+    [Fact]
+    public void AResourceCaravan_FetchesWhatWaitsAtAnOwnProvider_For100Gold_AndCountsTowardsTheLimit()
+    {
+        var (session, town, _) = Setup(width: 60);
+        var state = session.State;
+        var wheel = Add<ResourceProvider>(state, BuiltInMapObjects.WaterWheel, 40, 3);
+        Assert.Empty(CaravanRules.Providers(state, town));
+        wheel.Owner = Blue;
+        wheel.Stored = new ResourceSet(Gold: 2500);
+        var gold = state.GetPlayer(Blue).Resources.Gold;
+        var events = new List<IEvent>();
+        session.Events.Subscribe<CaravanDispatched>(events.Add);
+        session.Events.Subscribe<CaravanArrived>(events.Add);
+
+        Assert.Equal([wheel], CaravanRules.Providers(state, town));
+        session.Execute(new FetchResourcesCommand(Blue, town.Id, wheel.Id)).ThrowIfRejected();
+
+        Assert.True(wheel.Stored.IsEmpty);
+        Assert.Equal(gold - 100, state.GetPlayer(Blue).Resources.Gold);
+        var caravan = Assert.Single(CaravanRules.Queue(state, town));
+        Assert.Equal((new ResourceSet(Gold: 2500), 2), (caravan.Cargo, caravan.DaysLeft));
+        Assert.Contains("Nothing waits", session.Execute(new FetchResourcesCommand(Blue, town.Id, wheel.Id)).Error);
+
+        NextDay(session);
+        NextDay(session);
+
+        Assert.Empty(state.Caravans);
+        Assert.Equal(gold - 100 + 2500 + (2 * TownRules.DailyIncome(state, town).Gold), state.GetPlayer(Blue).Resources.Gold);
+        Assert.Equal(new CaravanArrived(caravan.Id, town.Id, "", 0, new ResourceSet(Gold: 2500)), events[1]);
+    }
+
+    [Fact]
+    public void AResourceCaravan_NeedsAnOwnProvider_TheMoney_AndAnOpenRoute_AndReturnsItsCargoWhenBlocked()
+    {
+        char? Wall(int x, int y) => x == 12 && y != 5 ? '#' : null;
+        var (session, town, _) = Setup(special: Wall);
+        var state = session.State;
+        var mill = Add<ResourceProvider>(state, BuiltInMapObjects.Windmill, 20, 6);
+        mill.Stored = new ResourceSet(Ore: 5);
+        Assert.Contains("not yours", session.Execute(new FetchResourcesCommand(Blue, town.Id, mill.Id)).Error);
+
+        mill.Owner = Blue;
+        var resources = new ResourceSet(Gold: 50);
+        state.GetPlayer(Blue).Resources = resources;
+        Assert.Contains("costs 100 gold", session.Execute(new FetchResourcesCommand(Blue, town.Id, mill.Id)).Error);
+
+        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 1000);
+        state.GetHero(B).Position = new MapPosition(12, 5);
+        Assert.Contains("No open route", session.Execute(new FetchResourcesCommand(Blue, town.Id, mill.Id)).Error);
+
+        state.GetHero(B).Position = new MapPosition(39, 11);
+        session.Execute(new FetchResourcesCommand(Blue, town.Id, mill.Id)).ThrowIfRejected();
+        state.GetHero(B).Position = new MapPosition(12, 5);
+        NextDay(session);
+
+        Assert.Empty(state.Caravans);
+        Assert.Equal(new ResourceSet(Ore: 5), mill.Stored);
+        Assert.Equal(1000 + TownRules.DailyIncome(state, town).Gold, state.GetPlayer(Blue).Resources.Gold); // the 100 gold refunded
+    }
+
+    [Fact]
+    public void AGameWithAResourceCaravan_ReplaysExactly()
+    {
+        var state = Create(Grass(40));
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Caravan, 1);
+        Add<ResourceProvider>(state, BuiltInMapObjects.WaterWheel, 20, 3).Owner = Blue;
+        var map = MapConverter.ToDocument(state);
+        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 3)));
+        session.Start();
+        var wheel = session.State.ObjectsOf<ResourceProvider>().Single();
+        session.Execute(new FetchResourcesCommand(Blue, town.Id, wheel.Id)).ThrowIfRejected();
+
+        var json = Core.Data.Records.GameRecordSerializer.Serialize(Core.Data.Records.GameReplay.Record(map, session));
+        var replayed = Core.Data.Records.GameReplay.Replay(Core.Data.Records.GameRecordSerializer.Deserialize(json));
+
+        Assert.Contains("fetchResources", json, StringComparison.Ordinal);
+        Assert.Contains("cargo", GameStateDigest.Describe(session.State), StringComparison.Ordinal);
+        Assert.Equal(GameStateDigest.Describe(session.State), GameStateDigest.Describe(replayed.State));
     }
 }

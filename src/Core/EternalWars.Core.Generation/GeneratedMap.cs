@@ -29,6 +29,7 @@ public sealed class GeneratedMap
     private readonly List<GeneratedTown> _towns = [];
     private readonly Dictionary<(int A, int B), List<MapPosition>> _walls;
     private readonly HashSet<MapPosition> _roads = [];
+    private readonly HashSet<MapPosition> _rivers = [];
     private readonly HashSet<MapPosition> _reserved = [];
     private int _nextId = 1;
 
@@ -89,6 +90,15 @@ public sealed class GeneratedMap
     {
         Map.SetRoad(position, type);
         _roads.Add(position);
+    }
+
+    /// <summary>The tiles the river stage painted (ADR-079).</summary>
+    public IReadOnlyCollection<MapPosition> Rivers => _rivers;
+
+    internal void AddRiver(MapPosition position, RiverType type)
+    {
+        Map.SetRiver(position, type);
+        _rivers.Add(position);
     }
 
     /// <summary>Adds an object that fits (the caller checked), taking its cells.</summary>

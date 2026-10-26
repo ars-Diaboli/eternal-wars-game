@@ -26,8 +26,26 @@ public sealed record EndTurnCommand(PlayerId Player) : GameCommand(Player);
 
 public sealed record ResolveTreasureChestCommand(PlayerId Player, TreasureChestReward Reward) : GameCommand(Player);
 
-/// <summary>Answers a <c>ResourceChoiceDecision</c>: takes the option at <paramref name="Option"/> (0-based) of a warehouse (ADR-068).</summary>
-public sealed record ChooseResourceRewardCommand(PlayerId Player, int Option) : GameCommand(Player);
+/// <summary>Answers a <c>CartographerDecision</c>: buy the map of the level or leave (ADR-079).</summary>
+public sealed record AnswerCartographerCommand(PlayerId Player, bool Buy) : GameCommand(Player);
+
+/// <summary>Answers a <c>SphinxDecision</c> with the option at <paramref name="Option"/> (0-based; ADR-079).</summary>
+public sealed record AnswerSphinxCommand(PlayerId Player, int Option) : GameCommand(Player);
+
+/// <summary>Answers a <c>WitchHutDecision</c>: one of its skills, or null to leave without learning (ADR-079).</summary>
+public sealed record ChooseWitchHutSkillCommand(PlayerId Player, string? Skill) : GameCommand(Player);
+
+/// <summary>The hero on an artifact merchant's entrance buys the artifact in slot <paramref name="Slot"/> (ADR-079).</summary>
+public sealed record BuyArtifactCommand(PlayerId Player, MapObjectId Merchant, int Slot) : GameCommand(Player);
+
+/// <summary>The hero on a refugee camp's entrance buys <paramref name="Count"/> of its creatures at the normal price (ADR-079).</summary>
+public sealed record RecruitAtRefugeeCampCommand(PlayerId Player, MapObjectId Camp, int Count) : GameCommand(Player);
+
+/// <summary>The hero on a sacrificial altar's entrance sacrifices <paramref name="Count"/> creatures of an army slot (ADR-079).</summary>
+public sealed record SacrificeCreaturesCommand(PlayerId Player, MapObjectId Altar, int Slot, int Count) : GameCommand(Player);
+
+/// <summary>The hero on a sacrificial altar's entrance sacrifices an artifact it wears or carries (ADR-079).</summary>
+public sealed record SacrificeArtifactCommand(PlayerId Player, MapObjectId Altar, string Artifact) : GameCommand(Player);
 
 /// <summary>Answers a <c>TrainingDecision</c>: one of its options, or null to leave without training when the site allows it (ADR-068).</summary>
 public sealed record ChooseTrainingCommand(PlayerId Player, Objects.TrainingOption? Option) : GameCommand(Player);
@@ -76,6 +94,9 @@ public sealed record RecruitAtDwellingCommand(PlayerId Player, MapObjectId Dwell
 
 /// <summary>Hires <paramref name="Count"/> creatures from an owned map dwelling for a town with a caravan; they travel there (ADR-054).</summary>
 public sealed record OrderCaravanCommand(PlayerId Player, MapObjectId Town, MapObjectId Dwelling, int Count) : GameCommand(Player);
+
+/// <summary>Sends a town's caravan for what waits at an own resource provider (ADR-079, TOWN-9); the resources travel to the town.</summary>
+public sealed record FetchResourcesCommand(PlayerId Player, MapObjectId Town, MapObjectId Provider) : GameCommand(Player);
 
 /// <summary>Sends troops of a town with a caravan to another own town (<paramref name="Count"/> null = the whole stack, ADR-054).</summary>
 public sealed record SendTroopsCommand(PlayerId Player, MapObjectId FromTown, int Slot, MapObjectId ToTown, int? Count = null) : GameCommand(Player);

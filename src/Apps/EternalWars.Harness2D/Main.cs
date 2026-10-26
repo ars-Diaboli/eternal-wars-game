@@ -84,6 +84,11 @@ public partial class Main : Node2D
                 : state.Fog.IsInSight(viewer, position) ? Palette.ForTerrain(map.GetTerrain(position))
                 : Palette.ForTerrain(map.GetTerrain(position)).Darkened(0.45f);
             DrawRect(TileRect(position), color);
+            if (map.GetRiver(position) != RiverType.None && state.Fog.IsExplored(viewer, position))
+            {
+                DrawRect(TileRect(position).Grow(-5), Palette.ForRiver(map.GetRiver(position)));
+            }
+
             if (map.GetRoad(position) != RoadType.None && state.Fog.IsExplored(viewer, position))
             {
                 DrawRect(TileRect(position).Grow(-9), Palette.ForRoad(map.GetRoad(position)));

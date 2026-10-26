@@ -12,22 +12,28 @@ namespace EternalWars.Core.Domain.Towns;
 /// A caravan on its way (ADR-054): <see cref="Count"/> creatures of <see cref="Creature"/> from <see cref="Source"/> (an own map
 /// dwelling, or the town whose troops were sent) to the garrison of the town <see cref="Destination"/>. They arrive when
 /// <see cref="DaysLeft"/> runs out at the start of the owner's turns. <see cref="Paid"/> is what a dwelling's creatures cost,
-/// refunded when the caravan has to return.
+/// refunded when the caravan has to return. A resource caravan (ADR-079, TOWN-9) carries <see cref="Cargo"/> from an own resource
+/// provider to the owner's treasury instead; its <see cref="Creature"/> is empty and <see cref="Count"/> 0.
 /// </summary>
-public sealed record Caravan(int Id, PlayerId Owner, MapObjectId Source, MapObjectId Destination, string Creature, int Count, int DaysLeft, ResourceSet Paid);
+public sealed record Caravan(
+    int Id, PlayerId Owner, MapObjectId Source, MapObjectId Destination, string Creature, int Count, int DaysLeft, ResourceSet Paid, ResourceSet? Cargo = null)
+{
+    public bool CarriesResources => Cargo is not null;
+}
 
 /// <summary>A route found for a caravan: what it costs in movement points and how many days it takes.</summary>
 public sealed record CaravanRoute(int Cost, int Days);
 
 /// <summary>
-/// Caravan rules as queries (ADR-054), shared by <see cref="CaravanService"/>, views and the AI. A caravan walks like an
-/// army made of its creatures (their map speed, terrain and roads; no hero skills), but virtually: it never visits objects and
-/// cannot be seen or attacked. A route is open when no hostile hero, neutral monster or tile guarded by one is on it.
+/// Caravan rules as queries (ADR-054), shared by <see cref="CaravanService"/>, views and the AI. A caravan moves
+/// <see cref="DailyMovement"/> points a day, every step at the plain cost (terrain, roads and rivers ignored; ADR-079, TOWN-10), but
+/// virtually: it never visits objects and cannot be seen or attacked. A route is open when no hostile hero, neutral monster or tile
+/// guarded by one is on it.
 /// <para>
-/// Reach (ADR-073, TOWN-5): a source farther than <see cref="MaxReach"/> movement points, every step costing as on plain terrain
-/// (terrain and roads ignored), cannot supply a town. The <b>raw</b> distance also ignores hostile heroes, monsters and guards:
-/// it decides which dwellings a town's caravan lists at all (<see cref="Dwellings"/>). Ordering checks the open route within
-/// the reach; the travel days come from the creatures' map speed along the cheapest open route.
+/// Reach (ADR-073, TOWN-5): a source farther than <see cref="MaxReach"/> movement points cannot supply a town. The <b>raw</b> distance
+/// ignores hostile heroes, monsters and guards: it decides which dwellings and providers a town's caravan lists at all
+/// (<see cref="Dwellings"/>, <see cref="Providers"/>). Ordering checks the open route within the reach. A town has at most
+/// <see cref="Limit"/> caravans coming to it (ADR-079, TOWN-10).
 /// </para>
 /// </summary>
 public static class CaravanRules
@@ -35,12 +41,65 @@ public static class CaravanRules
     /// <summary>How far a caravan reaches, in movement points with every step at the plain cost (100, diagonals 141).</summary>
     public const int MaxReach = 7500;
 
-    /// <summary>The cheapest open route between two tiles for creatures of the given speed, or null when there is none.</summary>
-    public static CaravanRoute? FindRoute(GameState state, PlayerId owner, MapPosition from, MapPosition to, CreatureDefinition creature) =>
+    /// <summary>Movement points a caravan covers a day (ADR-077, TOWN-10): the reach takes at most 3 days.</summary>
+    public const int DailyMovement = 2500;
+
+    /// <summary>Caravans coming to a town at once, on their way or waiting at the gates (ADR-077, TOWN-10).</summary>
+    public const int MaxCaravans = 6;
+
+    /// <summary>The limit while the town has a governor.</summary>
+    public const int GovernedMaxCaravans = 8;
+
+    /// <summary>What a resource caravan costs (ADR-079, TOWN-9; placeholder), refunded when it has to return.</summary>
+    public static ResourceSet ResourceCaravanCost { get; } = new(Gold: 100);
+
+    /// <summary>The cheapest open route between two tiles, or null when there is none; a route takes at least a day.</summary>
+    public static CaravanRoute? FindRoute(GameState state, PlayerId owner, MapPosition from, MapPosition to) =>
         from == to ? new CaravanRoute(0, 1)
-        : Search(state, from, to, p => CanPass(state, owner, p), (a, b, d) => StepCost(state, creature, a, b, d), int.MaxValue) is { } cost
-            ? new CaravanRoute(cost, Math.Max(1, DaysFor(cost, creature)))
+        : Search(state, from, to, p => CanPass(state, owner, p), (_, _, d) => PlainStep(d), int.MaxValue) is { } cost
+            ? new CaravanRoute(cost, Math.Max(1, (cost + DailyMovement - 1) / DailyMovement))
             : null;
+
+    /// <summary>How many caravans may come to the town at once: <see cref="MaxCaravans"/>, <see cref="GovernedMaxCaravans"/> with a governor.</summary>
+    public static int Limit(GameState state, Town town) => StewardshipRules.GovernorOf(state, town) is null ? MaxCaravans : GovernedMaxCaravans;
+
+    /// <summary>Whether another caravan may be ordered or sent to the town; null when it may.</summary>
+    public static string? CheckLimit(GameState state, Town town) =>
+        Queue(state, town).Count >= Limit(state, town)
+            ? $"{town.Name} already has {Limit(state, town)} caravans coming (the most it takes at once)."
+            : null;
+
+    /// <summary>The owner's flagged resource providers the town's caravan lists: within its raw reach, by id (ADR-079, TOWN-9).</summary>
+    public static IReadOnlyList<ResourceProvider> Providers(GameState state, Town town) =>
+        town.Owner is not { } owner ? []
+        : state.ObjectsOf<ResourceProvider>().Where(p => p.Owner == owner && InReach(state, p, town)).OrderBy(p => p.Id.Value).ToList();
+
+    /// <summary>Whether the town may send a caravan for what waits at the provider; null when it may.</summary>
+    public static string? CheckFetch(GameState state, Town town, ResourceProvider provider)
+    {
+        if (town.Level(BuiltInBuildings.Caravan) < 1)
+        {
+            return $"{town.Name} has no caravan.";
+        }
+
+        if (provider.Owner is null || provider.Owner != town.Owner)
+        {
+            return $"The {provider.Definition.Name} is not yours.";
+        }
+
+        if (provider.Stored.IsEmpty)
+        {
+            return $"Nothing waits at the {provider.Definition.Name}.";
+        }
+
+        if (!state.GetPlayer(town.Owner!.Value).Resources.CanAfford(ResourceCaravanCost))
+        {
+            return $"A caravan costs {ResourceProviderRules.Describe(ResourceCaravanCost)}.";
+        }
+
+        RouteBetween(state, provider, town, out var refusal);
+        return refusal ?? CheckLimit(state, town);
+    }
 
     /// <summary>
     /// The distance a caravan's reach is measured in (every step at the plain cost), or null when it is beyond
@@ -68,7 +127,7 @@ public static class CaravanRules
             .OrderBy(c => c.DaysLeft == 0).ThenBy(c => c.DaysLeft).ThenBy(c => c.Id).ToList();
 
     /// <summary>Open route from a source's entrance to a town's entrance, within <see cref="MaxReach"/>; null refusal text otherwise via <paramref name="refusal"/>.</summary>
-    public static CaravanRoute? RouteBetween(GameState state, MapObject source, Town destination, CreatureDefinition creature, out string? refusal)
+    public static CaravanRoute? RouteBetween(GameState state, MapObject source, Town destination, out string? refusal)
     {
         var owner = destination.Owner!.Value;
         refusal = !InReach(state, source, destination)
@@ -76,7 +135,7 @@ public static class CaravanRules
             : Distance(state, owner, source.VisitPosition, destination.VisitPosition) is null
                 ? $"No open route from {source.Definition.Name} to {destination.Name} within the caravan's reach."
                 : null;
-        return refusal is null ? FindRoute(state, owner, source.VisitPosition, destination.VisitPosition, creature) : null;
+        return refusal is null ? FindRoute(state, owner, source.VisitPosition, destination.VisitPosition) : null;
     }
 
     /// <summary>Whether the town may hire <paramref name="count"/> creatures from the dwelling; null when it may.</summary>
@@ -114,8 +173,8 @@ public static class CaravanRules
             return $"Not enough resources for {count} {creature.Name}.";
         }
 
-        RouteBetween(state, dwelling, town, creature, out var refusal);
-        return refusal;
+        RouteBetween(state, dwelling, town, out var refusal);
+        return refusal ?? CheckLimit(state, town);
     }
 
     /// <summary>Whether troops of <paramref name="from"/>'s garrison slot may be sent to another own town; null when they may.</summary>
@@ -147,8 +206,8 @@ public static class CaravanRules
             return $"{to.Name}'s garrison has no free slot.";
         }
 
-        RouteBetween(state, from, to, state.Creatures.Get(stack.Creature), out var refusal);
-        return refusal;
+        RouteBetween(state, from, to, out var refusal);
+        return refusal ?? CheckLimit(state, to);
     }
 
     /// <summary>Dijkstra over the map's tiles; the target may be entered even when it would not pass. Null beyond <paramref name="limit"/>.</summary>
@@ -201,9 +260,6 @@ public static class CaravanRules
     private static int PlainStep(Direction direction) =>
         direction.IsDiagonal() ? (int)Math.Round(TerrainCatalog.NativeCost * HeroMovementService.DiagonalMultiplier) : TerrainCatalog.NativeCost;
 
-    private static int DaysFor(int cost, CreatureDefinition creature) =>
-        (cost + MovementAllowance.Daily(creature.MapSpeed) - 1) / MovementAllowance.Daily(creature.MapSpeed);
-
     private static bool CanPass(GameState state, PlayerId owner, MapPosition position)
     {
         if (MovementRules.CheckTile(state, position) != MoveResult.Moved || state.IsGuarded(position))
@@ -217,16 +273,5 @@ public static class CaravanRules
         }
 
         return state.HeroAt(position) is not { } hero || !state.AreEnemies(owner, hero.Owner);
-    }
-
-    /// <summary>Like a hero's step (road to road, else the terrain being left, diagonals ×1.41), without hero skills; native terrain counts for the creature's own town.</summary>
-    private static int StepCost(GameState state, CreatureDefinition creature, MapPosition from, MapPosition to, Direction direction)
-    {
-        var map = state.Map;
-        var fromRoad = map.GetRoad(from);
-        var baseCost = fromRoad != RoadType.None && map.GetRoad(to) != RoadType.None
-            ? fromRoad.MovementCost()
-            : state.Terrains.MovementCost(map.GetTerrain(from), creature.Town);
-        return direction.IsDiagonal() ? (int)Math.Round(baseCost * HeroMovementService.DiagonalMultiplier) : baseCost;
     }
 }

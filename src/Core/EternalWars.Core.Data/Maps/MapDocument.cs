@@ -27,12 +27,14 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>maxHeroes</c> on a player slot; ADR-068). 19 = + signs (<c>sign</c>, with a message), observatories, hill forts, town gates, war machine
 /// factories (<c>observatory</c>, <c>hillFort</c>, <c>townGate</c>, <c>factory</c>) and prisons (<c>prison</c>, optional hero and level; ADR-068).
 /// 20 = + creature banks (<c>bank</c>; the tier is rolled when the game starts, ADR-068). 21 = a resource pile's <c>amount</c> may be left out,
-/// to be rolled when the game starts (ADR-068).
+/// to be rolled when the game starts (ADR-068). 22 = a resource provider may have an <c>owner</c> (ADR-079, TOWN-9) and the map may have
+/// <c>rivers</c> (same shape as <c>roads</c>; ADR-079, MAP-26); + the Den of Thieves and the sanctuary (<c>denOfThieves</c>, <c>sanctuary</c>) and scenery (<c>scenery</c>, from <c>scenery.csv</c>); + cartographers, artifact merchants, refugee camps, sacrificial altars, sphinxes
+/// (an optional riddle) and witch huts (optional skills).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 21;
+    public const int CurrentFormatVersion = 22;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -52,6 +54,9 @@ public sealed record MapDocument
 
     /// <summary>Same shape as <see cref="Terrain"/>; omitted when the map has no roads.</summary>
     public IReadOnlyList<IReadOnlyList<string>>? Roads { get; init; }
+
+    /// <summary>Same shape as <see cref="Terrain"/> (<see cref="RiverCodes"/>); omitted when the map has no rivers (v22).</summary>
+    public IReadOnlyList<IReadOnlyList<string>>? Rivers { get; init; }
 
     public IReadOnlyList<PlayerSlotDocument> Players { get; init; } = [];
 
@@ -165,6 +170,15 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(WarMachineFactoryDocument), "factory")]
 [JsonDerivedType(typeof(PrisonDocument), "prison")]
 [JsonDerivedType(typeof(CreatureBankDocument), "bank")]
+[JsonDerivedType(typeof(DenOfThievesDocument), "denOfThieves")]
+[JsonDerivedType(typeof(SanctuaryDocument), "sanctuary")]
+[JsonDerivedType(typeof(SceneryDocument), "scenery")]
+[JsonDerivedType(typeof(CartographerDocument), "cartographer")]
+[JsonDerivedType(typeof(ArtifactMerchantDocument), "artifactMerchant")]
+[JsonDerivedType(typeof(RefugeeCampDocument), "refugeeCamp")]
+[JsonDerivedType(typeof(SacrificialAltarDocument), "altar")]
+[JsonDerivedType(typeof(SphinxDocument), "sphinx")]
+[JsonDerivedType(typeof(WitchHutDocument), "witchHut")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -192,7 +206,10 @@ public sealed record DwellingDocument : MapObjectDocument
 public sealed record MarketplaceDocument : MapObjectDocument;
 
 /// <summary>A resource provider (v16, ADR-068); what it gives comes from its definition, the weekly visits are game state.</summary>
-public sealed record ResourceProviderDocument : MapObjectDocument;
+public sealed record ResourceProviderDocument : MapObjectDocument
+{
+    public int? Owner { get; init; }
+}
 
 /// <summary>A loot site (v17, ADR-068); what it gives comes from its definition and is rolled on the first visit.</summary>
 public sealed record LootSiteDocument : MapObjectDocument;
@@ -211,6 +228,45 @@ public sealed record SignDocument : MapObjectDocument
 
 /// <summary>A creature bank (v20, ADR-068); which bank comes from its definition, the tier is rolled in the game.</summary>
 public sealed record CreatureBankDocument : MapObjectDocument;
+
+/// <summary>A Den of Thieves (v22, ADR-079).</summary>
+public sealed record DenOfThievesDocument : MapObjectDocument;
+
+/// <summary>A sanctuary (v22, ADR-079).</summary>
+public sealed record SanctuaryDocument : MapObjectDocument;
+
+/// <summary>Scenery (v22, ADR-079): which piece comes from its definition.</summary>
+public sealed record SceneryDocument : MapObjectDocument;
+
+/// <summary>A cartographer (v22, ADR-079); the level comes from its definition.</summary>
+public sealed record CartographerDocument : MapObjectDocument;
+
+/// <summary>An artifact merchant (v22, ADR-079); its stock is rolled in the game.</summary>
+public sealed record ArtifactMerchantDocument : MapObjectDocument;
+
+/// <summary>A refugee camp (v22, ADR-079); its creatures are rolled every week.</summary>
+public sealed record RefugeeCampDocument : MapObjectDocument;
+
+/// <summary>A sacrificial altar (v22, ADR-079).</summary>
+public sealed record SacrificialAltarDocument : MapObjectDocument;
+
+/// <summary>A sphinx (v22, ADR-079); a riddle of the author's needs all four texts, none = drawn from the riddle table.</summary>
+public sealed record SphinxDocument : MapObjectDocument
+{
+    public string? Question { get; init; }
+
+    public string? Answer { get; init; }
+
+    public string? Wrong1 { get; init; }
+
+    public string? Wrong2 { get; init; }
+}
+
+/// <summary>A witch hut (v22, ADR-079); <see cref="Skills"/> omitted = two rolled when the game starts.</summary>
+public sealed record WitchHutDocument : MapObjectDocument
+{
+    public IReadOnlyList<string>? Skills { get; init; }
+}
 
 /// <summary>An observatory (v19, ADR-068).</summary>
 public sealed record ObservatoryDocument : MapObjectDocument;

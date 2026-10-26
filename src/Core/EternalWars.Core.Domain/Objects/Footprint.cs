@@ -14,11 +14,17 @@ public enum FootprintCell
 
 /// <summary>
 /// Shape of a map object, relative to its top-left tile. Written as rows of characters:
-/// <c>B</c> blocked, <c>V</c> visit (entrance), <c>.</c> free. Example mine: <c>["BBB", "BVB"]</c>.
+/// <c>B</c> blocked, <c>V</c> visit (entrance), <c>.</c> free. Example mine: <c>["BBB", "BVB"]</c>. Scenery (<see cref="Obstacle"/>) has no
+/// entrance at all (ADR-079).
 /// </summary>
 public sealed class Footprint
 {
     public Footprint(IReadOnlyList<string> rows)
+        : this(rows, needsVisit: true)
+    {
+    }
+
+    private Footprint(IReadOnlyList<string> rows, bool needsVisit)
     {
         ArgumentNullException.ThrowIfNull(rows);
         if (rows.Count == 0 || rows[0].Length == 0 || rows.Any(r => r.Length != rows[0].Length))
@@ -51,9 +57,20 @@ public sealed class Footprint
             }
         }
 
-        if (cells.Count(c => c.Item3 == FootprintCell.Visit) != 1)
+        if (needsVisit && cells.Count(c => c.Item3 == FootprintCell.Visit) != 1)
         {
             throw new FormatException("Footprint must contain exactly one visit cell 'V'.");
+        }
+
+        if (!needsVisit && (cells.Count == 0 || cells.Any(c => c.Item3 == FootprintCell.Visit)))
+        {
+            throw new FormatException("An obstacle's footprint has blocked cells 'B' and no visit cell.");
+        }
+
+        HasVisit = needsVisit;
+        if (!needsVisit)
+        {
+            VisitOffset = (cells[0].Item1, cells[0].Item2); // no entrance: the first blocked cell stands for the object
         }
 
         Rows = rows.ToArray();
@@ -61,6 +78,12 @@ public sealed class Footprint
     }
 
     public static Footprint Single { get; } = new(["V"]);
+
+    /// <summary>A shape with no entrance that only blocks (scenery, ADR-079): <c>B</c> and <c>.</c> cells only.</summary>
+    public static Footprint Obstacle(IReadOnlyList<string> rows) => new(rows, needsVisit: false);
+
+    /// <summary>Whether heroes can visit the object; false for scenery.</summary>
+    public bool HasVisit { get; }
 
     public IReadOnlyList<string> Rows { get; }
 

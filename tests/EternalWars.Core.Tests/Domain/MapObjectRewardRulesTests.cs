@@ -97,9 +97,8 @@ public class MapObjectRewardRulesTests
         Assert.All(MapObjectCatalog.Default.All, d => Assert.Equal(
             d.Kind switch
             {
-                MapObjectKind.ResourceProvider => VisitScope.Weekly,
                 MapObjectKind.Loot => VisitScope.FirstVisitor,
-                MapObjectKind.Training or MapObjectKind.Observatory => VisitScope.OncePerHero,
+                MapObjectKind.Training or MapObjectKind.Observatory or MapObjectKind.Sphinx => VisitScope.OncePerHero,
                 MapObjectKind.Buff => d.Buff == BuffRule.Stables ? VisitScope.WeeklyPerHero : VisitScope.DailyPerHero,
                 _ => VisitScope.Unlimited,
             },

@@ -51,6 +51,7 @@ public static class MapConverter
         Height = map.Height,
         Terrain = WriteLayer(map, p => TerrainCodes.ToCode(map.GetTerrain(p))),
         Roads = map.HasRoads ? WriteLayer(map, p => RoadCodes.ToCode(map.GetRoad(p))) : null,
+        Rivers = map.HasRivers ? WriteLayer(map, p => RiverCodes.ToCode(map.GetRiver(p))) : null,
     };
 
     public static AdventureMap ToMap(MapDocument document)
@@ -71,6 +72,11 @@ public static class MapConverter
         if (document.Roads is { } roads)
         {
             ReadLayer(document, roads, "Roads", (p, c) => map.SetRoad(p, RoadCodes.FromCode(c)));
+        }
+
+        if (document.Rivers is { } rivers)
+        {
+            ReadLayer(document, rivers, "Rivers", (p, c) => map.SetRiver(p, RiverCodes.FromCode(c)));
         }
 
         return map;
@@ -280,9 +286,9 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
             },
-            ResourceProvider => new ResourceProviderDocument
+            ResourceProvider provider => new ResourceProviderDocument
             {
-                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Owner = provider.Owner?.Value,
             },
             LootSite => new LootSiteDocument
             {
@@ -307,6 +313,43 @@ public static class MapConverter
             Observatory => new ObservatoryDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            DenOfThieves => new DenOfThievesDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            Sanctuary => new SanctuaryDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            Scenery => new SceneryDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            Cartographer => new CartographerDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            ArtifactMerchant => new ArtifactMerchantDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            RefugeeCamp => new RefugeeCampDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            SacrificialAltar => new SacrificialAltarDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            Sphinx sphinx => new SphinxDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+                Question = sphinx.Riddle?.Question, Answer = sphinx.Riddle?.Answer, Wrong1 = sphinx.Riddle?.Wrong1, Wrong2 = sphinx.Riddle?.Wrong2,
+            },
+            WitchHut hut => new WitchHutDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Skills = hut.Skills.Count == 0 ? null : hut.Skills,
             },
             HillFort => new HillFortDocument
             {
@@ -391,12 +434,25 @@ public static class MapConverter
                 DwellingDocument dwelling => new CreatureDwelling(
                     id, definition, position, creatures.BaseOf(dwelling.Creature), dwelling.Owner is { } dwellingOwner ? new PlayerId(dwellingOwner) : null, dwelling.Available),
                 MarketplaceDocument => new Marketplace(id, definition, position),
-                ResourceProviderDocument => new ResourceProvider(id, definition, position),
+                ResourceProviderDocument provider => new ResourceProvider(id, definition, position, provider.Owner is { } providerOwner ? new PlayerId(providerOwner) : null),
                 LootSiteDocument => new LootSite(id, definition, position),
                 BuffSiteDocument => new BuffSite(id, definition, position),
                 TrainingSiteDocument => new TrainingSite(id, definition, position),
                 SignDocument sign => new SignPost(id, definition, position, sign.Message),
                 ObservatoryDocument => new Observatory(id, definition, position),
+                DenOfThievesDocument => new DenOfThieves(id, definition, position),
+                SanctuaryDocument => new Sanctuary(id, definition, position),
+                SceneryDocument => new Scenery(id, definition, position),
+                CartographerDocument => new Cartographer(id, definition, position),
+                ArtifactMerchantDocument => new ArtifactMerchant(id, definition, position),
+                RefugeeCampDocument => new RefugeeCamp(id, definition, position),
+                SacrificialAltarDocument => new SacrificialAltar(id, definition, position),
+                SphinxDocument { Question: { } q, Answer: { } a, Wrong1: { } w1, Wrong2: { } w2 } => new Sphinx(id, definition, position, new Riddle(q, a, w1, w2)),
+                SphinxDocument { Question: null, Answer: null, Wrong1: null, Wrong2: null } => new Sphinx(id, definition, position),
+                SphinxDocument => throw new FormatException("A sphinx's riddle needs a question, the answer and two wrong answers, or none of them."),
+                WitchHutDocument { Skills: { Count: not 0 and not WitchHut.SkillCount } } => throw new FormatException($"A witch hut has {WitchHut.SkillCount} skills, or none to roll."),
+                WitchHutDocument { Skills: { } skills } when skills.Any(s => !BuiltInSkills.Contains(s)) => throw new FormatException("A witch hut names an unknown skill."),
+                WitchHutDocument hut => new WitchHut(id, definition, position, hut.Skills?.Select(BuiltInSkills.Resolve).ToList()),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
                 HillFortDocument => new HillFort(id, definition, position),
                 TownGateDocument => new TownGate(id, definition, position),

@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Events;
@@ -34,14 +35,18 @@ public sealed record GarrisonChanged(MapObjectId Town, IReadOnlyList<CreatureSta
 /// <summary>A new week's creatures arrived in a town's dwellings; <paramref name="Available"/> per creature line.</summary>
 public sealed record TownCreaturesGrew(MapObjectId Town, IReadOnlyDictionary<string, int> Available) : IEvent;
 
-/// <summary>A caravan left its source (a map dwelling or a town) for the town <paramref name="Destination"/>; it arrives in <paramref name="Days"/> days (ADR-054).</summary>
-public sealed record CaravanDispatched(int Caravan, PlayerId Owner, MapObjectId Source, MapObjectId Destination, string Creature, int Count, int Days) : IEvent;
+/// <summary>
+/// A caravan left its source (a map dwelling, a town or a resource provider) for the town <paramref name="Destination"/>; it arrives in
+/// <paramref name="Days"/> days (ADR-054). A resource caravan (ADR-079) has <paramref name="Cargo"/>, no creature and a count of 0.
+/// </summary>
+public sealed record CaravanDispatched(
+    int Caravan, PlayerId Owner, MapObjectId Source, MapObjectId Destination, string Creature, int Count, int Days, ResourceSet? Cargo = null) : IEvent;
 
-/// <summary>A caravan reached its town and its creatures joined the garrison.</summary>
-public sealed record CaravanArrived(int Caravan, MapObjectId Destination, string Creature, int Count) : IEvent;
+/// <summary>A caravan reached its town: its creatures joined the garrison, or its cargo the owner's resources.</summary>
+public sealed record CaravanArrived(int Caravan, MapObjectId Destination, string Creature, int Count, ResourceSet? Cargo = null) : IEvent;
 
-/// <summary>The route of a caravan got blocked: it went back to its source (a dwelling gets the creatures and the price back).</summary>
-public sealed record CaravanReturned(int Caravan, MapObjectId Source, string Creature, int Count) : IEvent;
+/// <summary>The route of a caravan got blocked: it went back to its source (a dwelling or provider gets its goods and the price back).</summary>
+public sealed record CaravanReturned(int Caravan, MapObjectId Source, string Creature, int Count, ResourceSet? Cargo = null) : IEvent;
 
-/// <summary>A caravan's creatures scattered: its destination was lost, or the way back had no room.</summary>
-public sealed record CaravanLost(int Caravan, MapObjectId Destination, string Creature, int Count, string Reason) : IEvent;
+/// <summary>A caravan's goods were lost: its destination was lost, or the way back had no room.</summary>
+public sealed record CaravanLost(int Caravan, MapObjectId Destination, string Creature, int Count, string Reason, ResourceSet? Cargo = null) : IEvent;

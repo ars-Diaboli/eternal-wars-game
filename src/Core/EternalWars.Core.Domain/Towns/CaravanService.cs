@@ -24,7 +24,7 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
         Refuse(CaravanRules.CheckOrder(state, town, dwelling, count));
 
         var creature = state.Creatures.Get(dwelling.Creature);
-        var route = CaravanRules.RouteBetween(state, dwelling, town, creature, out _)!;
+        var route = CaravanRules.RouteBetween(state, dwelling, town, out _)!;
         var price = TownRules.RecruitCost(state, town, creature, count);
         if (!economy.TrySpend(player, price))
         {
@@ -45,10 +45,32 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
 
         var stack = from.Garrison[slot]!;
         var number = count ?? stack.Count;
-        var route = CaravanRules.RouteBetween(state, from, to, state.Creatures.Get(stack.Creature), out _)!;
+        var route = CaravanRules.RouteBetween(state, from, to, out _)!;
         from.Garrison.Set(slot, number == stack.Count ? null : new CreatureStack(stack.Creature, stack.Count - number));
         events.Publish(new GarrisonChanged(from.Id, from.Garrison.Slots.ToList()));
         Dispatch(new Caravan(state.NextCaravanId(), player, from.Id, to.Id, stack.Creature, number, route.Days, ResourceSet.Empty));
+    }
+
+    /// <summary>
+    /// Sends the town's caravan for everything stored at an own resource provider (ADR-079, TOWN-9). It costs
+    /// <see cref="CaravanRules.ResourceCaravanCost"/>, refunded with the cargo put back when the caravan has to return.
+    /// </summary>
+    internal void Fetch(PlayerId player, MapObjectId townId, MapObjectId providerId)
+    {
+        var town = OwnTown(player, townId);
+        var provider = state.FindObject(providerId) as ResourceProvider ?? throw new InvalidOperationException($"{providerId} is not a resource provider.");
+        Refuse(CaravanRules.CheckFetch(state, town, provider));
+
+        var route = CaravanRules.RouteBetween(state, provider, town, out _)!;
+        if (!economy.TrySpend(player, CaravanRules.ResourceCaravanCost))
+        {
+            throw new InvalidOperationException("Not enough resources.");
+        }
+
+        var cargo = provider.Stored;
+        provider.Stored = ResourceSet.Empty;
+        events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
+        Dispatch(new Caravan(state.NextCaravanId(), player, provider.Id, town.Id, "", 0, route.Days, CaravanRules.ResourceCaravanCost, cargo));
     }
 
     /// <summary>Start of the owner's turn: every caravan of theirs checks its route, travels a day and may arrive.</summary>
@@ -65,8 +87,7 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
             if (caravan.DaysLeft > 0)
             {
                 var source = state.GetObject(caravan.Source);
-                var creature = state.Creatures.Get(caravan.Creature);
-                if (CaravanRules.FindRoute(state, player, source.VisitPosition, destination.VisitPosition, creature) is null)
+                if (CaravanRules.FindRoute(state, player, source.VisitPosition, destination.VisitPosition) is null)
                 {
                     GoBack(caravan);
                     continue;
@@ -77,6 +98,14 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
                     state.ReplaceCaravan(caravan, caravan with { DaysLeft = caravan.DaysLeft - 1 });
                     continue;
                 }
+            }
+
+            if (caravan.Cargo is { } cargo)
+            {
+                state.RemoveCaravan(caravan);
+                economy.Grant(player, cargo);
+                events.Publish(new CaravanArrived(caravan.Id, destination.Id, "", 0, cargo));
+                continue;
             }
 
             // Arriving; with no free slot it waits at the gates until there is one.
@@ -96,15 +125,28 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
     private void Dispatch(Caravan caravan)
     {
         state.AddCaravan(caravan);
-        events.Publish(new CaravanDispatched(caravan.Id, caravan.Owner, caravan.Source, caravan.Destination, caravan.Creature, caravan.Count, caravan.DaysLeft));
+        events.Publish(new CaravanDispatched(
+            caravan.Id, caravan.Owner, caravan.Source, caravan.Destination, caravan.Creature, caravan.Count, caravan.DaysLeft, caravan.Cargo));
     }
 
-    /// <summary>The route is blocked: creatures go back to a dwelling (with the price refunded) or a town's garrison.</summary>
+    /// <summary>
+    /// The route is blocked: creatures go back to a dwelling (with the price refunded) or a town's garrison; resources go back to their
+    /// provider while the owner still holds it, with the caravan's price refunded.
+    /// </summary>
     private void GoBack(Caravan caravan)
     {
         state.RemoveCaravan(caravan);
         switch (state.FindObject(caravan.Source))
         {
+            case ResourceProvider provider when caravan.Cargo is { } cargo && provider.Owner == caravan.Owner:
+                provider.Stored += cargo;
+                events.Publish(new ProviderStockChanged(provider.Id, provider.Stored));
+                economy.Grant(caravan.Owner, caravan.Paid);
+                events.Publish(new CaravanReturned(caravan.Id, provider.Id, "", 0, cargo));
+                break;
+            case ResourceProvider:
+                events.Publish(new CaravanLost(caravan.Id, caravan.Destination, "", 0, "the way back was closed", caravan.Cargo));
+                break;
             case CreatureDwelling dwelling:
                 dwelling.Available = (dwelling.Available ?? 0) + caravan.Count;
                 economy.Grant(caravan.Owner, caravan.Paid);
@@ -123,7 +165,7 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
     private void Lose(Caravan caravan, string reason)
     {
         state.RemoveCaravan(caravan);
-        events.Publish(new CaravanLost(caravan.Id, caravan.Destination, caravan.Creature, caravan.Count, reason));
+        events.Publish(new CaravanLost(caravan.Id, caravan.Destination, caravan.Creature, caravan.Count, reason, caravan.Cargo));
     }
 
     private Town OwnTown(PlayerId player, MapObjectId id)

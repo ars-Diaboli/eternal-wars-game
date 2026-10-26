@@ -64,6 +64,33 @@ public enum MapObjectKind
 
     /// <summary>A guard that always fights and a reward for beating it (<see cref="Objects.CreatureBank"/>, ADR-068).</summary>
     CreatureBank,
+
+    /// <summary>Shows the whole Thieves' Guild table to the visitor (<see cref="Objects.DenOfThieves"/>, ADR-079).</summary>
+    DenOfThieves,
+
+    /// <summary>A hero standing in it cannot be attacked (<see cref="Objects.Sanctuary"/>, ADR-079).</summary>
+    Sanctuary,
+
+    /// <summary>Rocks, trees, ponds, ruins, walls…: blocks and decorates, nothing else (<see cref="Objects.Scenery"/>, <c>scenery.csv</c>; ADR-079).</summary>
+    Scenery,
+
+    /// <summary>Sells the map of a level (<see cref="Objects.Cartographer"/>, ADR-079).</summary>
+    Cartographer,
+
+    /// <summary>Sells seven artifacts, restocked monthly (<see cref="Objects.ArtifactMerchant"/>, ADR-079).</summary>
+    ArtifactMerchant,
+
+    /// <summary>A weekly creature to buy (<see cref="Objects.RefugeeCamp"/>, ADR-079).</summary>
+    RefugeeCamp,
+
+    /// <summary>Creatures or artifacts for experience (<see cref="Objects.SacrificialAltar"/>, ADR-079).</summary>
+    SacrificialAltar,
+
+    /// <summary>A riddle, once per hero (<see cref="Objects.Sphinx"/>, ADR-079).</summary>
+    Sphinx,
+
+    /// <summary>One of two skills, once per hero level (<see cref="Objects.WitchHut"/>, ADR-079).</summary>
+    WitchHut,
 }
 
 /// <summary>
@@ -85,7 +112,7 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>Tier an artifact pickup rolls its artifact from when the map leaves it open.</summary>
     public Artifacts.ArtifactTier? ArtifactTier { get; init; }
 
-    /// <summary>How often a visit gives the object's reward (ADR-068); resource providers are <see cref="VisitScope.Weekly"/>.</summary>
+    /// <summary>How often a visit gives the object's reward (ADR-068); resource providers store their output instead (ADR-079).</summary>
     public VisitScope VisitScope { get; init; }
 
     /// <summary>What a resource provider gives (ADR-068).</summary>
@@ -120,12 +147,23 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>What a training site gives (ADR-068).</summary>
     public TrainingRule? Training { get; init; }
 
+    /// <summary>The level a cartographer sells the map of: 0 the surface, 1 the underground (ADR-079, MAP-31).</summary>
+    public int RevealsLevel { get; init; }
+
+    /// <summary>The terrains the generator puts this scenery on (ADR-079, MAP-25).</summary>
+    public IReadOnlyList<Map.TerrainType> Terrains { get; init; } = [];
+
     /// <summary>Throws <see cref="FormatException"/> if kind-specific properties are missing.</summary>
     public void Validate()
     {
         if (string.IsNullOrWhiteSpace(Id))
         {
             throw new FormatException("Map object definition needs an id.");
+        }
+
+        if ((Kind == MapObjectKind.Scenery) == Footprint.HasVisit)
+        {
+            throw new FormatException(Kind == MapObjectKind.Scenery ? $"Scenery '{Id}' cannot have an entrance." : $"Map object '{Id}' needs an entrance.");
         }
 
         if (Kind is MapObjectKind.Town && string.IsNullOrWhiteSpace(Town))

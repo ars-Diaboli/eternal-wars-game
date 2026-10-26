@@ -8,7 +8,7 @@ public enum VisitScope
     /// <summary>Every visit counts (mines, gates, marketplaces, piles that vanish anyway): the default.</summary>
     Unlimited,
 
-    /// <summary>Once a week per object: the first visit of a week collects, any later one that week gets nothing (Water Wheel, Windmill).</summary>
+    /// <summary>Once a week per object: the first visit of a week collects, any later one that week gets nothing (no built-in object since ADR-079).</summary>
     Weekly,
 
     /// <summary>Once per hero: every hero may collect once (Learning Stone, Arena).</summary>

@@ -61,7 +61,7 @@ public class ResourcePileAmountTests
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
-        Assert.Equal(21, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 21);
         Assert.DoesNotContain("\"amount\"", json, StringComparison.Ordinal);
         Assert.Null(Assert.IsType<ResourcePile>(restored.GetObject(id)).Amount);
 

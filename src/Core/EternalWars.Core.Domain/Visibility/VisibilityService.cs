@@ -14,7 +14,7 @@ namespace EternalWars.Core.Domain.Visibility;
 /// </summary>
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
-      IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
+      IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<ProviderOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
       IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<HeroFreed>,
       IEventHandler<HeroLeveledUp>
 {
@@ -50,6 +50,8 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     public void Handle(TownOwnerChanged @event) => OnOwnerChanged(@event.Town, @event.Current);
 
     public void Handle(DwellingOwnerChanged @event) => OnOwnerChanged(@event.Dwelling, @event.Current);
+
+    public void Handle(ProviderOwnerChanged @event) => OnOwnerChanged(@event.Provider, @event.Current);
 
     public void Handle(MapObjectRemoved @event)
     {

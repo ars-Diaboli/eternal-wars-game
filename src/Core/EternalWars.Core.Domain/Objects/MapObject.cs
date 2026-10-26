@@ -79,6 +79,15 @@ public abstract class MapObject
         MapObjectKind.WarMachineFactory => new WarMachineFactory(id, definition, position),
         MapObjectKind.Prison => new Prison(id, definition, position),
         MapObjectKind.CreatureBank => new CreatureBank(id, definition, position),
+        MapObjectKind.DenOfThieves => new DenOfThieves(id, definition, position),
+        MapObjectKind.Sanctuary => new Sanctuary(id, definition, position),
+        MapObjectKind.Scenery => new Scenery(id, definition, position),
+        MapObjectKind.Cartographer => new Cartographer(id, definition, position),
+        MapObjectKind.ArtifactMerchant => new ArtifactMerchant(id, definition, position),
+        MapObjectKind.RefugeeCamp => new RefugeeCamp(id, definition, position),
+        MapObjectKind.SacrificialAltar => new SacrificialAltar(id, definition, position),
+        MapObjectKind.Sphinx => new Sphinx(id, definition, position),
+        MapObjectKind.WitchHut => new WitchHut(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }

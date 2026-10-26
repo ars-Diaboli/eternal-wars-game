@@ -1766,3 +1766,82 @@ MAG-7 … MAG-10, CMB-6, TOWN-6) and ADR-073's Primal Fury mage odds; choices th
 - **AI**: computer heroes take Necromancy (Death attunement) whenever a level-up offers it, otherwise the first offer
   (`SkillOffers.ComputerChoice`) *(choice made here; how much the AI should value other skills is AI tuning)*.
 - Tests: `SkillReworkTests`, `NecromancyTests` and updated battle, mana and progression tests; `sim selftest` passes with a new digest.
+
+### ADR-079: Flaggable providers, resource caravans, caravan speed and limit, Thieves' Guild, sanctuary, rivers and scenery (2026-10-26)
+**Status**: implemented (2026-10-26). The owner's answers to TOWN-9, TOWN-10, TOWN-11, MAP-25, MAP-26 and MAP-28 (ADR-077's questions);
+supersedes ADR-068's weekly visits of resource providers and ADR-075's travel time by the creatures' map speed. Map format **v22**; random map
+generator version **4** (rivers and scenery change every generated map). Choices made here are marked *(choice)*.
+
+- **Flaggable providers** (TOWN-9): the Water Wheel, the Windmill, the six Warehouses and the Mystical Garden are flagged like mines
+  (`ResourceProvider.Owner`, `IFlaggable`, scouting radius 2). While flagged, a week's output is added to `Stored` at the start of every week
+  (`EconomyService.StockProviders`, after the towns' growth; also at game start for providers owned from the start *(choice)*); it piles up.
+  The first flagging of a neutral provider gives one week's output at once (`WasClaimed`); a later capture takes what the former owner left
+  *(choice: no extra week)*; a defeated player's providers turn neutral and keep their store. An own hero's visit takes everything stored
+  (`MapObjectFoundEmpty` when empty). The Warehouses' choice is gone: each week is, at random, the resource or 500 gold
+  (`ResourceChoiceDecision` and `ChooseResourceRewardCommand` removed, so **replays that used `resourceReward` no longer load**). Events
+  `ProviderOwnerChanged`, `ProviderStockChanged`. The editor sets an owner (`SetProviderOwner`); format v22 `owner` on `provider` objects.
+- **Resource caravans** (TOWN-9): `FetchResourcesCommand` sends a town's caravan for everything stored at an own provider in the caravan's
+  raw reach (`CaravanRules.Providers`, `CheckFetch`): a flat 100 gold (placeholder, `ResourceCaravanCost`), the same reach and open-route rules
+  as creature caravans, and it counts towards the limit. A `Caravan` with `Cargo` (no creature); on arrival the cargo joins the owner's
+  resources (no garrison slot needed); a blocked route puts the cargo back in the store and refunds the 100 gold, unless the provider changed
+  hands (then the cargo is lost *(choice)*). The caravan events carry an optional `Cargo`. The AI fetches stores worth five times the price.
+- **Caravan speed and limit** (TOWN-10): every caravan moves 2500 movement points a day at the plain step cost (terrain, roads and rivers
+  ignored), so the 7500-point reach takes at most 3 days. A town takes at most 6 caravans at once (8 while it has a governor), counting those
+  on their way and those waiting at the gates; troops sent between own towns count at the destination. Orders at the limit are refused with a
+  message (`CaravanRules.Limit`, `CheckLimit`).
+- **Thieves' Guild** (TOWN-11): `ThievesGuild.Table` ranks every player still in the game (computers and teammates too) row by row; equal
+  values share a place. Rows by the player's taverns: 1 — towns, heroes; 2 — + gold, lumber and ore, rare resources; 3 — + artifacts, income;
+  4 or more — + army strength (creature value of armies and garrisons), best hero (highest level), best creature (most valuable). A "Thieves'
+  guild" button on the town screen of a town with a tavern opens `ThievesGuildPanel` (not run in Godot yet). The **Den of Thieves** map
+  object (`den-of-thieves`) shows the whole table on every visit (`ThievesDenVisited`); nothing is kept.
+- **Sanctuary** (MAP-28, `sanctuary`): a hero standing on its entrance cannot be attacked; an enemy stepping in is refused
+  (`MapObjectRefused`, `MoveResult.Occupied`) and the AI does not target it. A hero may stay as long as it likes, one at a time; nothing else.
+- **Rivers** (MAP-26): an overlay like roads (`RiverType` Clear, Icy, Muddy, Lava; looks only). Leaving a river tile costs 25 % more
+  (`RiverRules.PenaltyPercent`; Pathfinding does not cut it *(choice)*); a road-to-road step ignores the river (a bridge). Format v22 `rivers`
+  layer (`RiverCodes`); editor River brush (`PaintRiver`, `RiversPainted`); the 3D view draws them under the roads. The generator
+  (`RiverPlacer`, after the roads) runs a river through about half the zones, from the foot of one wall to the farthest foot of another, over
+  free ground, its look from the terrain where it starts *(choice: there are no lakes yet, so it joins borders)*.
+- **Scenery** (MAP-25): a `Scenery` object kind from `src/Core/data/scenery.csv` (`SceneryTable`): rocks, trees, dead trees, ponds, bushes,
+  mushrooms, flowers, fissures, mounds, ruins, bones and castle walls, every kind in two or more sizes, every cell blocking, no entrance
+  (`Footprint.Obstacle`). Walls are 1×N straight pieces: horizontal and vertical (2–4) and diagonal both ways (2–3). Each row lists the
+  terrains it suits. The generator (`SceneryPlacer`, right after the terrain) gives each rock clump back the ground around it and fills exactly
+  the clump's tiles with fitting scenery, larger pieces first (a small rock where nothing else fits), so connectivity stays as checked.
+  Format v22 `scenery` objects; the editor places them from the object palette.
+- Tests: `ResourceProviderTests`, `CaravanTests`, `ThievesGuildAndSanctuaryTests`, `RiverTests`, `SceneryTests`.
+
+### ADR-080: The third object catalogue: cartographer, artifact merchant, refugee camp, sacrificial altar, sphinx, witch hut (2026-10-26)
+**Status**: implemented (2026-10-26), except the Astrologer's Tower (waits for the week events). The owner's answers to MAP-27 and MAP-29 …
+MAP-34 (ADR-077); the Den of Thieves and the sanctuary are in ADR-079. Map format v22 (same bump as ADR-079). Choices made here are marked
+*(choice)*; numbers are drafts.
+
+- **Cartographer** (MAP-31): `cartographer.surface` and `cartographer.underground` (`RevealsLevel`). A visit asks the visitor's player whether
+  to buy the map of that level for **3000 gold** (`CartographerDecision`, `AnswerCartographerCommand`); buying reveals the whole level
+  (`MapBought`, then `SurroundingsRevealed` over the level). Once per player; the underground one on a single-level map, or a player short of
+  gold, is refused (`MapObjectRefused`). The generator places at most one surface cartographer *(choice)*; the AI buys with three times the
+  price in hand.
+- **Artifact merchant** (MAP-33, `artifact-merchant`): 7 artifacts, each Minor or Major at even odds *(choice)*, rolled at game start and on
+  the first day of every month (`MerchantRestocked`); price twice the artifact's worth, with worth by tier Minor 2000, Major 5000
+  (`ArtifactMerchantRules`, *choice: there were no artifact prices*); a sold slot stays empty until the restock. The hero on the entrance buys
+  (`BuyArtifactCommand`, `ArtifactBought`, `ArtifactSource.Bought`) with room in its backpack.
+- **Refugee camp** (MAP-30, `refugee-camp`): every week (and at game start) a random base creature of tiers 3–5 from the playable towns
+  (`RefugeeCampRules.Candidates`) with one week's growth (`RefugeesArrived`); unsold ones leave. Bought by the hero on the entrance at the
+  normal price, no Stewardship discount *(choice)* (`RecruitAtRefugeeCampCommand`, `DwellingRecruited`). Not flaggable.
+- **Sacrificial altar** (MAP-29, `sacrificial-altar`): by the hero's town (`ProgressionService.TownOf`): Necropolis, Inferno and Dungeon
+  heroes sacrifice creatures for their hit points × 2 in experience (`SacrificeCreaturesCommand`; the hero keeps at least one creature
+  *(choice)*); Haven, Sylvan and Academy heroes artifacts, worn or carried, for 2000 / 5000 / 10 000 by tier (`SacrificeArtifactCommand`);
+  Stronghold and Swamp Bestiary heroes either. Any number of times (`SacrificeMade`, then the experience and any level-ups).
+- **Sphinx** (MAP-27, `sphinx`): one riddle per hero (`VisitScope.OncePerHero`): the map author's (`question`, `answer`, `wrong1`, `wrong2` on
+  the object, all or none) or one drawn from `src/Core/data/riddles.csv` (`RiddleTable`, ten drafts). Three answers, the right one's place
+  rolled (`SphinxDecision`, `AnswerSphinxCommand`). Right: a Major artifact or 5000 experience at even odds (a full backpack loses the
+  artifact). Wrong: the hero's movement points drop to 0 for the day and it gets −3 morale for its next battle (a `HeroStatus`). Event
+  `SphinxAnswered`. The AI answers the first option.
+- **Witch hut** (MAP-34, `witch-hut`): two skills of two groups, any group (general, school or faction), set in the map (`skills`) or rolled
+  at game start. A visit offers each skill the hero can raise; where it cannot (maxed, or no free group), the first skill of the same group it
+  can raise stands in (`WitchHutRules.Options`). Choosing raises it a level (Basic when new) (`WitchHutDecision`,
+  `ChooseWitchHutSkillCommand`, `WitchHutSkillLearned`); a hero takes one witch hut lesson per hero level (`Hero.WitchHutLevel`), leaving
+  without choosing uses nothing. The AI takes Necromancy when offered, else the first option.
+- **Astrologer's Tower** (MAP-32): the answer is recorded (a visit shows next week's event; no re-roll); built after the week events.
+- UI: the decision panel asks the cartographer, sphinx and witch hut questions; `ObjectServicePanel` serves the merchant, the refugee camp and
+  the altar (not run in Godot yet). The generator's treasure sites include all six (values are drafts). The map editor places them; editing a
+  sphinx's riddle or a hut's skills in the inspector is not built yet (the map file holds them).
+- Tests: `ThirdCatalogueTests`.

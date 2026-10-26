@@ -42,6 +42,7 @@ public partial class MapObjectsView : Node3D
         this.SubscribeWhileInTree<MapObjectChanged>(events, e => RebuildLive(e.Object));
         this.SubscribeWhileInTree<MineOwnerChanged>(events, e => RebuildLive(e.Mine));
         this.SubscribeWhileInTree<DwellingOwnerChanged>(events, e => RebuildLive(e.Dwelling));
+        this.SubscribeWhileInTree<ProviderOwnerChanged>(events, e => RebuildLive(e.Provider));
     }
 
     private void RebuildLive(MapObjectId id)
@@ -102,7 +103,7 @@ public partial class MapObjectsView : Node3D
         }
 
         var top = MapSpace.ToWorld(known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
-        if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town or MapObjectKind.Dwelling)
+        if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town or MapObjectKind.Dwelling or MapObjectKind.ResourceProvider)
         {
             root.AddChild(Box(new Vector3(0.3f, 0.3f, 0.05f), top, known.Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral));
         }
@@ -133,7 +134,8 @@ public partial class MapObjectsView : Node3D
         Marketplace => "Marketplace",
         ResourceProvider provider => provider.Definition.Name,
         LootSite { Vanishes: false } site => site.Definition.Name,
-        BuffSite or TrainingSite or Observatory or HillFort or TownGate or WarMachineFactory or Prison or CreatureBank => _context.State.FindObject(known.Id)!.Definition.Name,
+        BuffSite or TrainingSite or Observatory or HillFort or TownGate or WarMachineFactory or Prison or CreatureBank or DenOfThieves or Sanctuary
+            or Cartographer or ArtifactMerchant or RefugeeCamp or SacrificialAltar or Sphinx or WitchHut => _context.State.FindObject(known.Id)!.Definition.Name,
         _ => null,
     };
 

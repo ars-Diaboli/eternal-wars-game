@@ -13,8 +13,11 @@ public enum ArtifactSource
     /// <summary>Looted from a defeated hero.</summary>
     Loot,
 
-    /// <summary>Found in a treasure chest or a loot site (ADR-068).</summary>
+    /// <summary>Found in a treasure chest or a loot site (ADR-068), or a sphinx's reward.</summary>
     Found,
+
+    /// <summary>Bought from an artifact merchant (ADR-079).</summary>
+    Bought,
 }
 
 /// <summary>A hero put an artifact on (from its backpack) into <paramref name="Slot"/> (ADR-061).</summary>
@@ -35,5 +38,5 @@ public sealed record ArtifactLost(HeroId Hero, string Artifact) : IEvent;
 /// <summary>A hero stepped on an artifact it has no room for; the artifact stays where it is.</summary>
 public sealed record ArtifactBackpackFull(HeroId Hero, string Artifact) : IEvent;
 
-/// <summary>The editor changed what a hero wears and carries.</summary>
+/// <summary>What a hero wears and carries changed: the editor, or an artifact sacrificed at an altar (ADR-079).</summary>
 public sealed record HeroArtifactsChanged(HeroId Hero) : IEvent;

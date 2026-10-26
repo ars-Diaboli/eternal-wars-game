@@ -64,7 +64,7 @@ public static class MapValidator
 
         foreach (var mapObject in scenario.Objects)
         {
-            if (!scenario.Terrains.IsPassable(map.GetTerrain(mapObject.VisitPosition)))
+            if (mapObject.Definition.Footprint.HasVisit && !scenario.Terrains.IsPassable(map.GetTerrain(mapObject.VisitPosition)))
             {
                 issues.Add(new(IssueSeverity.Error, $"{mapObject.Definition.Name} has an impassable entrance.", mapObject.VisitPosition));
             }
@@ -131,6 +131,11 @@ public static class MapValidator
                 if (map.GetRoad(position) != RoadType.None && !scenario.Terrains.IsPassable(map.GetTerrain(position)))
                 {
                     issues.Add(new(IssueSeverity.Warning, "Road on impassable terrain.", position));
+                }
+
+                if (map.GetRiver(position) != RiverType.None && !scenario.Terrains.IsPassable(map.GetTerrain(position)))
+                {
+                    issues.Add(new(IssueSeverity.Warning, "River on impassable terrain.", position));
                 }
             }
         }

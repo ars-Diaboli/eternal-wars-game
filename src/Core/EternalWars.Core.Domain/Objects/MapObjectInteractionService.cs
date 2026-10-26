@@ -44,25 +44,6 @@ public sealed class MapObjectInteractionService(
         }
     }
 
-    /// <summary>The visitor of a warehouse takes one of the offered options (ADR-068).</summary>
-    internal void ResolveResourceChoice(int option)
-    {
-        if (state.PendingDecision is not ResourceChoiceDecision decision)
-        {
-            throw new InvalidOperationException("No resource choice is pending.");
-        }
-
-        if (option < 0 || option >= decision.Options.Count)
-        {
-            throw new InvalidOperationException($"Option {option} is not offered.");
-        }
-
-        state.PendingDecision = null;
-        var hero = state.GetHero(decision.Hero);
-        GiveResources(hero, state.GetObject(decision.Provider), decision.Options[option]);
-        events.Publish(new DecisionResolved(decision));
-    }
-
     /// <summary>
     /// Takes the reward of an object with a limited <see cref="VisitScope"/> for the hero (ADR-068): false when the hero may not collect now,
     /// else the visit is recorded and <see cref="MapObjectCollected"/> published, before the caller hands out the reward.
@@ -145,6 +126,22 @@ public sealed class MapObjectInteractionService(
                 OfferTowns(hero, gate);
                 break;
 
+            case Cartographer cartographer:
+                OfferMap(hero, cartographer);
+                break;
+
+            case Sphinx sphinx:
+                AskRiddle(hero, sphinx);
+                break;
+
+            case WitchHut hut:
+                OfferSkills(hero, hut);
+                break;
+
+            case DenOfThieves den:
+                events.Publish(new ThievesDenVisited(hero.Id, den.Id));
+                break;
+
             case Prison prison:
                 Free(hero, prison);
                 break;
@@ -157,24 +154,19 @@ public sealed class MapObjectInteractionService(
                 guards.Encounter(hero, monster);
                 break;
 
-            case ResourceProvider provider when !provider.CanCollect(hero.Id, state.Date):
+            case ResourceProvider provider when provider.Owner != hero.Owner:
+                Flag(hero, provider);
+                break;
+
+            case ResourceProvider provider when provider.Stored.IsEmpty:
                 events.Publish(new MapObjectFoundEmpty(hero.Id, provider.Id));
                 break;
 
             case ResourceProvider provider:
-                var options = ResourceProviderRules.Roll(provider.Definition, state.Date, state.Random);
-                if (options.Count == 1)
-                {
-                    GiveResources(hero, provider, options[0]);
-                }
-                else
-                {
-                    // The week's reward is taken only once the visitor chooses (the decision blocks everything else meanwhile).
-                    var choice = new ResourceChoiceDecision(hero.Id, provider.Id, options);
-                    state.PendingDecision = choice;
-                    events.Publish(new DecisionRequested(choice));
-                }
-
+                var stored = provider.Stored;
+                provider.Stored = ResourceSet.Empty;
+                events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
+                GiveResources(hero, provider, stored);
                 break;
 
             case CreatureDwelling { Guard: not null } guardedDwelling:
@@ -612,6 +604,335 @@ public sealed class MapObjectInteractionService(
         {
             progression.GrantStatus(hero, new HeroStatus(site.Definition.Id, HeroStatusKind.Morale, LootRules.TombMorale, StatusExpiry.NextBattle));
         }
+    }
+
+    /// <summary>
+    /// A hero flags a provider (ADR-079, TOWN-9): the first flagging of a neutral one brings a week's output at once; otherwise the hero takes
+    /// whatever its former owner had left there.
+    /// </summary>
+    private void Flag(Hero hero, ResourceProvider provider)
+    {
+        var previous = provider.Owner;
+        var taken = provider.WasClaimed ? provider.Stored : ResourceProviderRules.Roll(provider.Definition, state.Date, state.Random);
+        provider.Owner = hero.Owner;
+        provider.WasClaimed = true;
+        events.Publish(new ProviderOwnerChanged(provider.Id, previous, hero.Owner));
+        if (!provider.Stored.IsEmpty)
+        {
+            provider.Stored = ResourceSet.Empty;
+            events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
+        }
+
+        if (!taken.IsEmpty)
+        {
+            GiveResources(hero, provider, taken);
+        }
+    }
+
+    /// <summary>
+    /// Game start (ADR-079): witch huts the map left open roll their skills, refugee camps get their first week and artifact merchants their stock.
+    /// </summary>
+    internal void PrepareObjects()
+    {
+        foreach (var hut in state.ObjectsOf<WitchHut>().Where(h => h.Skills.Count == 0).OrderBy(h => h.Id.Value).ToList())
+        {
+            hut.Skills = WitchHutRules.Roll(state.Random);
+        }
+
+        StartWeek(restock: true);
+    }
+
+    /// <summary>The first day of a week: new refugees in every camp; on the first day of a month also new merchant stock (ADR-079).</summary>
+    internal void StartWeek(bool restock)
+    {
+        var candidates = RefugeeCampRules.Candidates(state.Creatures);
+        foreach (var camp in state.ObjectsOf<RefugeeCamp>().OrderBy(c => c.Id.Value).ToList())
+        {
+            if (candidates.Count == 0)
+            {
+                break;
+            }
+
+            var creature = candidates[state.Random.Next(candidates.Count)];
+            camp.Creature = creature.Id;
+            camp.Available = creature.WeeklyGrowth;
+            events.Publish(new RefugeesArrived(camp.Id, creature.Id, camp.Available));
+        }
+
+        if (!restock)
+        {
+            return;
+        }
+
+        foreach (var merchant in state.ObjectsOf<ArtifactMerchant>().OrderBy(m => m.Id.Value).ToList())
+        {
+            merchant.Stock.Clear();
+            for (var i = 0; i < ArtifactMerchant.StockSize; i++)
+            {
+                merchant.Stock.Add(artifacts.Draw(state.Random.Next(2) == 0 ? ArtifactTier.Minor : ArtifactTier.Major));
+            }
+
+            events.Publish(new MerchantRestocked(merchant.Id, merchant.Stock.ToList()));
+        }
+    }
+
+    /// <summary>The visitor's player buys the cartographer's map of its level, or leaves (ADR-079, MAP-31).</summary>
+    internal void ResolveCartographer(bool buy)
+    {
+        if (state.PendingDecision is not CartographerDecision decision)
+        {
+            throw new InvalidOperationException("No cartographer is waiting for an answer.");
+        }
+
+        var hero = state.GetHero(decision.Hero);
+        if (buy && !economy.TrySpend(hero.Owner, new ResourceSet(Gold: decision.Price)))
+        {
+            throw new InvalidOperationException("Not enough gold.");
+        }
+
+        state.PendingDecision = null;
+        events.Publish(new DecisionResolved(decision));
+        if (!buy)
+        {
+            return;
+        }
+
+        var cartographer = (Cartographer)state.GetObject(decision.Cartographer);
+        cartographer.Buyers.Add(hero.Owner);
+        events.Publish(new MapBought(cartographer.Id, hero.Id, hero.Owner, decision.Level));
+        var map = state.Map;
+        events.Publish(new SurroundingsRevealed(hero.Id, cartographer.Id, hero.Owner, new MapPosition(map.Width / 2, map.Height / 2, decision.Level), map.Width + map.Height));
+    }
+
+    /// <summary>
+    /// The hero answers the sphinx (ADR-079, MAP-27): right brings a Major artifact or 5000 experience (even odds; a full backpack loses the
+    /// artifact); wrong ends the hero's movement for the day and costs 3 morale in its next battle.
+    /// </summary>
+    internal void ResolveSphinx(int option)
+    {
+        if (state.PendingDecision is not SphinxDecision decision)
+        {
+            throw new InvalidOperationException("No sphinx is waiting for an answer.");
+        }
+
+        if (option < 0 || option >= decision.Options.Count)
+        {
+            throw new InvalidOperationException($"Option {option} is not offered.");
+        }
+
+        var hero = state.GetHero(decision.Hero);
+        var sphinx = (Sphinx)state.GetObject(decision.Sphinx);
+        state.PendingDecision = null;
+        TryCollect(hero, sphinx);
+        events.Publish(new DecisionResolved(decision));
+        if (option != decision.Correct)
+        {
+            hero.MovementPoints = 0;
+            events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: false));
+            progression.GrantStatus(hero, new HeroStatus(sphinx.Definition.Id, HeroStatusKind.Morale, Sphinx.WrongMorale, StatusExpiry.NextBattle));
+            return;
+        }
+
+        if (state.Random.Next(2) == 0 && artifacts.Draw(ArtifactTier.Major) is { } artifact)
+        {
+            var kept = artifacts.Grant(hero, artifact, ArtifactSource.Found);
+            events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: true, Artifact: kept ? artifact : null));
+            return;
+        }
+
+        events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: true, Experience: Sphinx.Experience));
+        progression.GrantExperience(hero, Sphinx.Experience);
+    }
+
+    /// <summary>The hero learns or improves one of the witch hut's skills, or leaves without (ADR-079, MAP-34).</summary>
+    internal void ResolveWitchHut(string? skill)
+    {
+        if (state.PendingDecision is not WitchHutDecision decision)
+        {
+            throw new InvalidOperationException("No witch hut is waiting for an answer.");
+        }
+
+        if (skill is not null && !decision.Options.Contains(skill))
+        {
+            throw new InvalidOperationException($"'{skill}' is not offered.");
+        }
+
+        var hero = state.GetHero(decision.Hero);
+        state.PendingDecision = null;
+        if (skill is not null)
+        {
+            hero.Skills.Raise(skill);
+            hero.WitchHutLevel = hero.Level;
+        }
+
+        events.Publish(new DecisionResolved(decision));
+        if (skill is not null)
+        {
+            events.Publish(new WitchHutSkillLearned(decision.Hut, hero.Id, skill, hero.Skills.Level(skill)));
+        }
+    }
+
+    /// <summary>The hero on an artifact merchant's entrance buys the artifact of a slot for twice its value (ADR-079, MAP-33).</summary>
+    internal void BuyArtifact(PlayerId player, MapObjectId merchantId, int slot)
+    {
+        var hero = HeroAt<ArtifactMerchant>(player, merchantId, out var merchant);
+        var artifact = (slot >= 0 && slot < merchant.Stock.Count ? merchant.Stock[slot] : null)
+                       ?? throw new InvalidOperationException("Nothing is for sale in that slot.");
+        if (hero.Artifacts.BackpackFull)
+        {
+            throw new InvalidOperationException($"{hero.Name}'s backpack is full.");
+        }
+
+        var price = ArtifactMerchantRules.Price(state.Artifacts.Get(artifact));
+        if (!economy.TrySpend(player, price))
+        {
+            throw new InvalidOperationException("Not enough gold.");
+        }
+
+        merchant.Stock[slot] = null;
+        artifacts.Grant(hero, artifact, ArtifactSource.Bought);
+        events.Publish(new ArtifactBought(merchant.Id, hero.Id, slot, artifact, price));
+    }
+
+    /// <summary>The hero on a refugee camp's entrance buys its creatures at the normal price (ADR-079, MAP-30; no Stewardship discount).</summary>
+    internal void RecruitAtRefugeeCamp(PlayerId player, MapObjectId campId, int count)
+    {
+        var hero = HeroAt<RefugeeCamp>(player, campId, out var camp);
+        if (camp.Creature is not { } id || count < 1 || count > camp.Available)
+        {
+            throw new InvalidOperationException($"Only {camp.Available} creatures wait here.");
+        }
+
+        var creature = state.Creatures.Get(id);
+        if (!hero.Army.CanAccept(id))
+        {
+            throw new InvalidOperationException($"{hero.Name} has no free slot for {creature.Name}.");
+        }
+
+        if (!economy.TrySpend(player, creature.Cost * count))
+        {
+            throw new InvalidOperationException("Not enough resources.");
+        }
+
+        camp.Available -= count;
+        hero.Army.TryAdd(new CreatureStack(id, count));
+        events.Publish(new DwellingRecruited(camp.Id, hero.Id, id, count, camp.Available));
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+    }
+
+    /// <summary>
+    /// Creatures of an army slot go on the altar for twice their hit points in experience (ADR-079, MAP-29): Darkness and Wild heroes only, and the
+    /// hero keeps at least one creature *(choice)*.
+    /// </summary>
+    internal void SacrificeCreatures(PlayerId player, MapObjectId altarId, int slot, int count)
+    {
+        var hero = HeroAt<SacrificialAltar>(player, altarId, out var altar);
+        if (!SacrificeRules.For(ProgressionService.TownOf(state, hero)).HasFlag(SacrificeKind.Creatures))
+        {
+            throw new InvalidOperationException($"{hero.Name} cannot sacrifice creatures.");
+        }
+
+        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+        if (count < 1 || count > stack.Count)
+        {
+            throw new InvalidOperationException($"The stack has {stack.Count} creatures.");
+        }
+
+        if (count == hero.Army.Stacks.Sum(s => s.Stack.Count))
+        {
+            throw new InvalidOperationException($"{hero.Name} must keep at least one creature.");
+        }
+
+        hero.Army.Set(slot, count == stack.Count ? null : new CreatureStack(stack.Creature, stack.Count - count));
+        var experience = SacrificeRules.Experience(state.Creatures.Get(stack.Creature), count);
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+        events.Publish(new SacrificeMade(altar.Id, hero.Id, experience, stack.Creature, count));
+        progression.GrantExperience(hero, experience);
+    }
+
+    /// <summary>An artifact the hero wears or carries goes on the altar for 2000 / 5000 / 10 000 experience by tier (Light and Wild heroes only).</summary>
+    internal void SacrificeArtifact(PlayerId player, MapObjectId altarId, string artifact)
+    {
+        var hero = HeroAt<SacrificialAltar>(player, altarId, out var altar);
+        if (!SacrificeRules.For(ProgressionService.TownOf(state, hero)).HasFlag(SacrificeKind.Artifacts))
+        {
+            throw new InvalidOperationException($"{hero.Name} cannot sacrifice artifacts.");
+        }
+
+        if (!hero.Artifacts.Has(artifact))
+        {
+            throw new InvalidOperationException($"{hero.Name} has no '{artifact}'.");
+        }
+
+        if (!hero.Artifacts.RemoveFromBackpack(artifact))
+        {
+            hero.Artifacts.RemoveWorn(artifact);
+            state.RefreshArtifacts(hero);
+        }
+
+        var experience = SacrificeRules.Experience(state.Artifacts.Get(artifact));
+        events.Publish(new HeroArtifactsChanged(hero.Id));
+        events.Publish(new SacrificeMade(altar.Id, hero.Id, experience, Artifact: artifact));
+        progression.GrantExperience(hero, experience);
+    }
+
+    private void OfferMap(Hero hero, Cartographer cartographer)
+    {
+        if (cartographer.Level >= state.Map.Levels)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, cartographer.Id, "This map has no underground to chart."));
+        }
+        else if (cartographer.Buyers.Contains(hero.Owner))
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, cartographer.Id));
+        }
+        else if (!state.GetPlayer(hero.Owner).Resources.CanAfford(new ResourceSet(Gold: Cartographer.Price)))
+        {
+            events.Publish(new MapObjectRefused(hero.Id, cartographer.Id, $"The cartographer's map costs {Cartographer.Price} gold."));
+        }
+        else
+        {
+            Ask(new CartographerDecision(hero.Id, cartographer.Id, cartographer.Level, Cartographer.Price));
+        }
+    }
+
+    /// <summary>Each hero gets one riddle per sphinx: the author's, or one from the table; the right answer's place among the three is rolled.</summary>
+    private void AskRiddle(Hero hero, Sphinx sphinx)
+    {
+        if (!sphinx.CanCollect(hero.Id, state.Date))
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, sphinx.Id));
+            return;
+        }
+
+        var riddle = sphinx.Riddle ?? RiddleTable.Default[state.Random.Next(RiddleTable.Default.Count)];
+        var correct = state.Random.Next(3);
+        var options = new List<string> { riddle.Wrong1, riddle.Wrong2 };
+        options.Insert(correct, riddle.Answer);
+        Ask(new SphinxDecision(hero.Id, sphinx.Id, riddle.Question, options, correct));
+    }
+
+    private void OfferSkills(Hero hero, WitchHut hut)
+    {
+        var options = WitchHutRules.Options(hero, hut);
+        if (hero.WitchHutLevel == hero.Level)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, hut.Id, $"{hero.Name} learned at a witch hut at this level already."));
+        }
+        else if (options.Count == 0)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, hut.Id, $"The witch has nothing to teach {hero.Name}."));
+        }
+        else
+        {
+            Ask(new WitchHutDecision(hero.Id, hut.Id, options));
+        }
+    }
+
+    private void Ask(PendingDecision decision)
+    {
+        state.PendingDecision = decision;
+        events.Publish(new DecisionRequested(decision));
     }
 
     private void GiveResources(Hero hero, MapObject provider, ResourceSet resources)

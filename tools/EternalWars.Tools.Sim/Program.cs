@@ -102,12 +102,12 @@ public static class Program
             var marks = built.Objects.SelectMany(o => o.OccupiedCells()).Where(c => c.Position.Level == level).ToDictionary(c => c.Position, c => c);
             var kinds = built.Objects.ToDictionary(o => o.VisitPosition, o => o switch
             {
-                MonsterGuard { Mode: GuardMode.Area } => 'A', MonsterGuard => 'M', Town => 'T', Mine => 'm', ResourcePile => 'p', TreasureChest => 'c', ArtifactPickup => 'a', ResourceProvider => 'r', LootSite => 'l', BuffSite => 'b', TrainingSite => 't', _ => 'G',
+                MonsterGuard { Mode: GuardMode.Area } => 'A', MonsterGuard => 'M', Town => 'T', Mine => 'm', ResourcePile => 'p', TreasureChest => 'c', ArtifactPickup => 'a', ResourceProvider => 'r', LootSite => 'l', BuffSite => 'b', TrainingSite => 't', Scenery => '#', _ => 'G',
             });
             Console.WriteLine(string.Join(System.Environment.NewLine, Enumerable.Range(0, size).Select(y => string.Concat(Enumerable.Range(0, size).Select(x =>
             {
                 var p = new MapPosition(x, y, level);
-                return kinds.TryGetValue(p, out var mark) ? mark : marks.ContainsKey(p) ? 'g' : built.Map.GetRoad(p) != RoadType.None ? '+' : TerrainCodes.ToCode(built.Map.GetTerrain(p));
+                return kinds.TryGetValue(p, out var mark) ? mark : marks.ContainsKey(p) ? 'g' : built.Map.GetRoad(p) != RoadType.None ? '+' : built.Map.GetRiver(p) != RiverType.None ? '%' : TerrainCodes.ToCode(built.Map.GetTerrain(p));
             })))));
         }
 
@@ -722,8 +722,10 @@ public static class Program
             GameCommand command = decision switch
             {
                 TreasureChestDecision => new ResolveTreasureChestCommand(player, TreasureChestReward.Gold),
-                ResourceChoiceDecision => new ChooseResourceRewardCommand(player, 0),
                 TownGateDecision => new ChooseTownGateCommand(player, null),
+                CartographerDecision => new AnswerCartographerCommand(player, Buy: false),
+                SphinxDecision => new AnswerSphinxCommand(player, 0),
+                WitchHutDecision hut => new ChooseWitchHutSkillCommand(player, hut.Options[0]),
                 TrainingDecision training => new ChooseTrainingCommand(player, training.CanDecline ? null : training.Options[0]),
                 HeroExchangeDecision => new CompleteExchangeCommand(player),
                 LevelUpDecision levelUp => new ChooseSkillCommand(player, levelUp.Options[0]),

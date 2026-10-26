@@ -30,7 +30,7 @@ public static class GameStateDigest
             var army = Slots(hero.Army);
             // Statuses and visits (ADR-068) are written only when there are any, so older replays keep their digests.
             var statuses = hero.Statuses.Count == 0 ? "" : $" statuses {string.Join(',', hero.Statuses)}";
-            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}");
+            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level}{(hero.WitchHutLevel is { } hut ? $" hut {hut}" : "")} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}");
         }
 
         foreach (var mapObject in state.Objects.OrderBy(o => o.Id.Value))
@@ -39,6 +39,12 @@ public static class GameStateDigest
             {
                 ResourcePile pile => $"amount {pile.Amount}",
                 Mine mine => $"owner {mine.Owner?.Value} guard {mine.Guard}",
+                ResourceProvider provider => $"owner {provider.Owner?.Value} stored {provider.Stored} claimed {provider.WasClaimed}",
+                Cartographer cartographer => $"buyers {string.Join(',', cartographer.Buyers.Select(p => p.Value).Order())}",
+                ArtifactMerchant merchant => $"stock {string.Join(',', merchant.Stock.Select(a => a ?? "-"))}",
+                RefugeeCamp camp => $"{camp.Creature} available {camp.Available}",
+                Sphinx sphinx => $"riddle {sphinx.Riddle?.Question}",
+                WitchHut hut => $"skills {string.Join(',', hut.Skills)}",
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
                 Prison prison => $"prisoner {prison.Hero} level {prison.Level}",
@@ -60,7 +66,7 @@ public static class GameStateDigest
 
         foreach (var caravan in state.Caravans)
         {
-            Line($"caravan {caravan.Id} owner {caravan.Owner.Value} {caravan.Source}->{caravan.Destination} {caravan.Creature}x{caravan.Count} days {caravan.DaysLeft} paid {caravan.Paid}");
+            Line($"caravan {caravan.Id} owner {caravan.Owner.Value} {caravan.Source}->{caravan.Destination} {caravan.Creature}x{caravan.Count} days {caravan.DaysLeft} paid {caravan.Paid}{(caravan.Cargo is { } cargo ? $" cargo {cargo}" : "")}");
         }
 
         Line($"outcome {state.Outcome?.Winners.Count} {state.Outcome?.Date}");

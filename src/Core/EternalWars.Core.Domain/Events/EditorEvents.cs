@@ -8,6 +8,9 @@ public sealed record TerrainPainted(IReadOnlyList<MapPosition> Positions, Terrai
 
 public sealed record RoadsPainted(IReadOnlyList<MapPosition> Positions, RoadType Road) : IEvent;
 
+/// <summary>The editor painted or erased rivers (ADR-079).</summary>
+public sealed record RiversPainted(IReadOnlyList<MapPosition> Positions, RiverType River) : IEvent;
+
 public sealed record HeroPlaced(HeroId Hero, PlayerId Owner, MapPosition Position) : IEvent;
 
 public sealed record HeroRemoved(HeroId Hero) : IEvent;

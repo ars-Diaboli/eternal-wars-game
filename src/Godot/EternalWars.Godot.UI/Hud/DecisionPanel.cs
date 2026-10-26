@@ -52,13 +52,28 @@ public partial class DecisionPanel : PanelContainer
                 Button("Gold", new ResolveTreasureChestCommand(player, TreasureChestReward.Gold));
                 Button("Experience", new ResolveTreasureChestCommand(player, TreasureChestReward.Experience));
                 break;
-            case ResourceChoiceDecision choice:
-                _prompt.Text = $"{state.GetObject(choice.Provider).Definition.Name}: take one.";
-                for (var i = 0; i < choice.Options.Count; i++)
+            case CartographerDecision cartographer:
+                _prompt.Text = $"The cartographer sells the map of the {(cartographer.Level == 0 ? "surface" : "underground")} for {cartographer.Price} gold.";
+                Button("Buy", new AnswerCartographerCommand(player, Buy: true));
+                Button("Leave", new AnswerCartographerCommand(player, Buy: false));
+                break;
+            case SphinxDecision sphinx:
+                _prompt.Text = $"The sphinx asks: {sphinx.Question}";
+                for (var i = 0; i < sphinx.Options.Count; i++)
                 {
-                    Button(Core.Domain.Objects.ResourceProviderRules.Describe(choice.Options[i]), new ChooseResourceRewardCommand(player, i));
+                    Button(sphinx.Options[i], new AnswerSphinxCommand(player, i));
                 }
 
+                break;
+            case WitchHutDecision hut:
+                _prompt.Text = $"The witch offers to teach {state.GetHero(hut.Hero).Name} one skill (one witch hut lesson per level).";
+                foreach (var skill in hut.Options)
+                {
+                    var level = state.GetHero(hut.Hero).Skills.Level(skill) + 1;
+                    Button($"{BuiltInSkills.Get(skill).Name} ({level})", new ChooseWitchHutSkillCommand(player, skill));
+                }
+
+                Button("Leave", new ChooseWitchHutSkillCommand(player, null));
                 break;
             case TownGateDecision gate:
                 _prompt.Text = "Town gate: go to which town?";

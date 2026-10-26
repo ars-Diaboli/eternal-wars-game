@@ -176,6 +176,40 @@ public sealed class MapEditorSession
         return changes.Count;
     }
 
+    /// <summary>Paints (or, with <see cref="RiverType.None"/>, erases) rivers with a square brush (ADR-079). Returns tiles changed.</summary>
+    public int PaintRiver(MapPosition center, RiverType river, int radius = 0)
+    {
+        var map = Scenario.Map;
+        var changes = Brush(center, radius)
+            .Where(p => map.GetRiver(p) != river)
+            .Select(p => (Position: p, Previous: map.GetRiver(p)))
+            .ToList();
+
+        if (changes.Count == 0)
+        {
+            return 0;
+        }
+
+        var positions = changes.Select(c => c.Position).ToList();
+        Run(new DelegateCommand(
+            river == RiverType.None ? "Erase river" : $"Paint {river} river",
+            () =>
+            {
+                positions.ForEach(p => map.SetRiver(p, river));
+                _bus.Publish(new RiversPainted(positions, river));
+            },
+            () =>
+            {
+                foreach (var group in changes.GroupBy(c => c.Previous))
+                {
+                    var restored = group.Select(c => c.Position).ToList();
+                    restored.ForEach(p => map.SetRiver(p, group.Key));
+                    _bus.Publish(new RiversPainted(restored, group.Key));
+                }
+            }));
+        return changes.Count;
+    }
+
     // Objects ---------------------------------------------------------------------------------
 
     public EditResult CanPlaceObject(MapObjectDefinition definition, MapPosition topLeft)
@@ -317,6 +351,32 @@ public sealed class MapEditorSession
             var before = mine.Owner;
             mine.Owner = value;
             _bus.Publish(new MineOwnerChanged(mine.Id, before, value));
+        }
+    }
+
+    /// <summary>Flags a resource provider for a player from the start (null = neutral; ADR-079).</summary>
+    public EditResult SetProviderOwner(MapObjectId id, PlayerId? owner)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not ResourceProvider provider)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (owner is { } player && !Scenario.HasPlayer(player))
+        {
+            return EditResult.UnknownPlayer;
+        }
+
+        var previous = provider.Owner;
+        Run(new DelegateCommand("Set provider owner", () => SetOwner(owner), () => SetOwner(previous)));
+        return EditResult.Ok;
+
+        void SetOwner(PlayerId? value)
+        {
+            var before = provider.Owner;
+            provider.Owner = value;
+            provider.WasClaimed = value is not null;
+            _bus.Publish(new ProviderOwnerChanged(provider.Id, before, value));
         }
     }
 
