@@ -176,10 +176,14 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                             : training.Options.Contains(TrainingOption.PayMagicResources) ? TrainingOption.PayMagicResources : null;
                     command = new ChooseTrainingCommand(player, pick ?? (training.CanDecline ? null : training.Options[0]));
                     break;
-                case ResourceChoiceDecision choice:
-                    // The option worth the most by the AI's resource values (a warehouse: its resource or the gold).
-                    var best = Enumerable.Range(0, choice.Options.Count).MaxBy(i => Value(choice.Options[i]));
-                    command = new ChooseResourceRewardCommand(player, best);
+                case CartographerDecision cartographer:
+                    command = new AnswerCartographerCommand(player, _state.GetPlayer(player).Resources.Gold >= 3 * cartographer.Price);
+                    break;
+                case SphinxDecision:
+                    command = new AnswerSphinxCommand(player, 0); // no knowledge of riddles: the first answer (its place is rolled)
+                    break;
+                case WitchHutDecision hut:
+                    command = new ChooseWitchHutSkillCommand(player, SkillOffers.ComputerChoice(hut.Options));
                     break;
                 case TreasureChestDecision chest:
                     var hero = _state.GetHero(chest.Hero);
@@ -237,6 +241,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             Recruit(player, town, reserve);
             BuyWarMachines(player, town, reserve);
             HireCaravans(player, town, reserve);
+            FetchResources(player, town);
             Consolidate(player, town);
         }
 
@@ -527,6 +532,27 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     }
 
     /// <summary>
+    /// Sends the town's caravan for what waits at own resource providers (ADR-079, TOWN-9) when it is worth well over the caravan's price,
+    /// most valuable first, as far as the caravan limit allows.
+    /// </summary>
+    private void FetchResources(PlayerId player, Town town)
+    {
+        var worth = 5 * Value(CaravanRules.ResourceCaravanCost);
+        foreach (var provider in CaravanRules.Providers(_state, town).Where(p => Value(p.Stored) >= worth).OrderByDescending(p => Value(p.Stored)).ThenBy(p => p.Id.Value).ToList())
+        {
+            if (!Active(player))
+            {
+                return;
+            }
+
+            if (CaravanRules.CheckFetch(_state, town, provider) is null)
+            {
+                Execute(new FetchResourcesCommand(player, town.Id, provider.Id));
+            }
+        }
+    }
+
+    /// <summary>
     /// An own town with no garrison and no hero gets the weakest stack of another own town with a caravan, as long as that
     /// town keeps at least one stack of its own: nobody can walk in for free (ADR-054).
     /// </summary>
@@ -740,12 +766,19 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
     private static double Value(ResourceSet resources) => Enum.GetValues<ResourceType>().Sum(r => GoldValue(r, resources[r]));
 
-    /// <summary>What a visit to a resource provider is worth on average, without rolling (the roll happens on the visit).</summary>
-    private double ProviderValue(ResourceProvider provider) => provider.Rule switch
+    /// <summary>
+    /// What a visit to a resource provider is worth: what waits at an own one; for another's, a week's output on average (what flagging a
+    /// neutral one brings at once), doubled for the weeks to come (ADR-079).
+    /// </summary>
+    private double ProviderValue(Hero hero, ResourceProvider provider) =>
+        provider.Owner == hero.Owner ? Value(provider.Stored) : 2 * Math.Max(Value(provider.Stored), WeeklyValue(provider));
+
+    /// <summary>A provider's average week, without rolling.</summary>
+    private double WeeklyValue(ResourceProvider provider) => provider.Rule switch
     {
         ProviderRule.WaterWheel => _state.Date.AbsoluteWeek == 1 ? ResourceProviderRules.WaterWheelFirstWeek : ResourceProviderRules.WaterWheelGold,
-        ProviderRule.Warehouse => Math.Max(GoldValue(provider.Definition.Resource!.Value, provider.Definition.Amount),
-            provider.Definition.Resource == ResourceType.Gold ? 0 : ResourceProviderRules.WarehouseGold),
+        ProviderRule.Warehouse when provider.Definition.Resource == ResourceType.Gold => provider.Definition.Amount,
+        ProviderRule.Warehouse => (GoldValue(provider.Definition.Resource!.Value, provider.Definition.Amount) + ResourceProviderRules.WarehouseGold) / 2,
         ProviderRule.Windmill => 4.5 * ((2 * GoldValue(ResourceType.Ore, 1)) + (3 * GoldValue(ResourceType.Crystal, 1))) / 5,
         _ => (ResourceProviderRules.GardenGold + GoldValue(ResourceType.Crystal, ResourceProviderRules.GardenMagic)) / 2,
     };
@@ -999,8 +1032,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit, pickup: true)):
                     yield return new(visit, 800 + (80 * Score(found)), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
-                case ResourceProvider provider when provider.CanCollect(hero.Id, _state.Date) && Plausible(GuardPower(visit)) && visit != hero.Position:
-                    yield return new(visit, ProviderValue(provider), GuardArmy(visit), MaxLoss: MonsterLoss);
+                case ResourceProvider provider when (provider.Owner != hero.Owner || !provider.Stored.IsEmpty) && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    yield return new(visit, ProviderValue(hero, provider), GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case CreatureBank { IsGuarded: true } bank when visit != hero.Position && !hero.Army.IsEmpty:
                     // Worth its reward; the simulated fight later decides whether the hero can take it (the guard stays whole if it fails).
@@ -1108,7 +1141,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
         foreach (var enemy in _state.Heroes.OrderBy(h => h.Id.Value))
         {
-            if (!_state.AreEnemies(owner, enemy.Owner) || !_state.CanSee(owner, enemy) || !_state.Fog.IsExplored(owner, enemy.Position))
+            if (!_state.AreEnemies(owner, enemy.Owner) || !_state.CanSee(owner, enemy) || !_state.Fog.IsExplored(owner, enemy.Position) || Sanctuary.Protects(_state, enemy.Position))
             {
                 continue;
             }

@@ -63,7 +63,7 @@ public partial class Main : Node3D
                 if (_tools.Tool.IsBrush)
                 {
                     _painting = true;
-                    _editor.BeginStroke(_tools.Tool.Kind == ToolKind.Road ? "Paint road" : $"Paint {_tools.Tool.Terrain}");
+                    _editor.BeginStroke(_tools.Tool.Kind switch { ToolKind.Road => "Paint road", ToolKind.River => "Paint river", _ => $"Paint {_tools.Tool.Terrain}" });
                     Paint(tile);
                 }
                 else
@@ -109,6 +109,10 @@ public partial class Main : Node3D
         if (tool.Kind == ToolKind.Road)
         {
             _editor.PaintRoad(tile, tool.Road, tool.Radius);
+        }
+        else if (tool.Kind == ToolKind.River)
+        {
+            _editor.PaintRiver(tile, tool.River, tool.Radius);
         }
         else
         {

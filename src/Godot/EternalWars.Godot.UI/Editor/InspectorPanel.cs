@@ -161,6 +161,16 @@ public partial class InspectorPanel : VBoxContainer
                 break;
             }
 
+            case ResourceProvider provider:
+            {
+                var row = new HBoxContainer();
+                AddChild(row);
+                var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
+                var owner = Options(row, "Owner", owners, provider.Owner);
+                owner.Button.ItemSelected += _ => Edit(() => _editor.SetProviderOwner(provider.Id, owner.Value()));
+                break;
+            }
+
             case Mine mine:
             {
                 var row = new HBoxContainer();

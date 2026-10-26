@@ -226,7 +226,7 @@ public static class SettlementPlacer
     private static void CheckReachable(GeneratedMap map, TemplateZone spec, List<MapPosition> tiles)
     {
         var inZone = tiles.ToHashSet();
-        var entrances = map.Objects.Where(o => inZone.Contains(o.Position)).Select(o => o.VisitPosition).ToList();
+        var entrances = map.Objects.Where(o => inZone.Contains(o.Position) && o.Definition.Footprint.HasVisit).Select(o => o.VisitPosition).ToList();
         if (entrances.Count < 2)
         {
             return;

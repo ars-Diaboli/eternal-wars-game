@@ -127,6 +127,9 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
                 case HeroEncounter.Own:
                     interactions.Meet(hero, other);
                     return MoveResult.Met;
+                case HeroEncounter.Enemy when Sanctuary.Protects(state, target):
+                    events.Publish(new MapObjectRefused(hero.Id, state.ObjectCellAt(target)!.Value.Object.Id, $"{other.Name} is safe in the sanctuary."));
+                    return MoveResult.Occupied;
                 case HeroEncounter.Enemy when hero.Army.IsEmpty:
                     return MoveResult.NoArmy;
                 case HeroEncounter.Enemy:

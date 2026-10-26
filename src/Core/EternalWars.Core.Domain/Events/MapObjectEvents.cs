@@ -37,7 +37,7 @@ public sealed record CreatureBankRefilled(MapObjectId Bank) : IEvent;
 /// <summary>A hero upgraded a stack at a hill fort for 150 % of the upgrade price (ADR-068).</summary>
 public sealed record HillFortUpgraded(MapObjectId Fort, HeroId Hero, int Slot, string From, string To, int Count) : IEvent;
 
-/// <summary>A hero received resources from a resource provider (ADR-068); <see cref="ResourcesChanged"/> came just before.</summary>
+/// <summary>A hero received resources from a resource provider (ADR-068, ADR-079); <see cref="ResourcesChanged"/> came just before.</summary>
 public sealed record ResourcesFound(HeroId Hero, MapObjectId Object, ResourceSet Resources) : IEvent;
 
 /// <summary>
@@ -49,6 +49,36 @@ public sealed record LootFound(HeroId Hero, MapObjectId Object, ResourceSet Reso
 public sealed record ResourcePileCollected(HeroId Hero, MapObjectId Object, ResourceType Resource, int Amount) : IEvent;
 
 public sealed record MineOwnerChanged(MapObjectId Mine, PlayerId? Previous, PlayerId? Current) : IEvent;
+
+/// <summary>A player bought a cartographer's map of a level (ADR-079); <c>SurroundingsRevealed</c> follows.</summary>
+public sealed record MapBought(MapObjectId Cartographer, HeroId Hero, PlayerId Owner, int Level) : IEvent;
+
+/// <summary>An artifact merchant laid out new stock (game start, first day of a month; ADR-079).</summary>
+public sealed record MerchantRestocked(MapObjectId Merchant, IReadOnlyList<string?> Stock) : IEvent;
+
+/// <summary>A hero bought an artifact from a merchant (ADR-079); <c>ArtifactGained</c> came just before.</summary>
+public sealed record ArtifactBought(MapObjectId Merchant, HeroId Hero, int Slot, string Artifact, ResourceSet Price) : IEvent;
+
+/// <summary>A refugee camp's week: <paramref name="Available"/> creatures of <paramref name="Creature"/> to buy (ADR-079).</summary>
+public sealed record RefugeesArrived(MapObjectId Camp, string Creature, int Available) : IEvent;
+
+/// <summary>A hero sacrificed creatures or an artifact at an altar (ADR-079); the experience follows.</summary>
+public sealed record SacrificeMade(MapObjectId Altar, HeroId Hero, int Experience, string? Creature = null, int Count = 0, string? Artifact = null) : IEvent;
+
+/// <summary>A hero answered a sphinx (ADR-079): right brings an artifact or experience, wrong costs the day's movement and morale.</summary>
+public sealed record SphinxAnswered(MapObjectId Sphinx, HeroId Hero, bool Right, string? Artifact = null, int Experience = 0) : IEvent;
+
+/// <summary>A hero learned or improved a skill at a witch hut (ADR-079).</summary>
+public sealed record WitchHutSkillLearned(MapObjectId Hut, HeroId Hero, string Skill, Heroes.SkillLevel Level) : IEvent;
+
+/// <summary>A hero visited a Den of Thieves (ADR-079): the front-end shows its player the whole <c>ThievesGuild</c> table.</summary>
+public sealed record ThievesDenVisited(HeroId Hero, MapObjectId Den) : IEvent;
+
+/// <summary>A resource provider got a new owner (a hero flagged it, its owner was defeated, or the editor set it); null = neutral (ADR-079).</summary>
+public sealed record ProviderOwnerChanged(MapObjectId Provider, PlayerId? Previous, PlayerId? Current) : IEvent;
+
+/// <summary>What waits at a resource provider changed (a new week, a visit, a capture, a resource caravan; ADR-079).</summary>
+public sealed record ProviderStockChanged(MapObjectId Provider, ResourceSet Stored) : IEvent;
 
 /// <summary>A map dwelling got a new owner (a hero flagged it, its owner was defeated, or the editor set it); null = neutral.</summary>
 public sealed record DwellingOwnerChanged(MapObjectId Dwelling, PlayerId? Previous, PlayerId? Current) : IEvent;

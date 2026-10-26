@@ -17,6 +17,18 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
     public ResourceSet DailyIncome(PlayerId playerId) =>
         _incomeSources.Aggregate(ResourceSet.Empty, (total, source) => total + source.DailyIncome(state, playerId));
 
+    /// <summary>
+    /// The start of a week, and of the game: every flagged resource provider adds a week's output to what waits there (ADR-079, TOWN-9).
+    /// </summary>
+    internal void StockProviders()
+    {
+        foreach (var provider in state.ObjectsOf<ResourceProvider>().Where(p => p.Owner is not null).OrderBy(p => p.Id.Value))
+        {
+            provider.Stored += ResourceProviderRules.Roll(provider.Definition, state.Date, state.Random);
+            events.Publish(new ProviderStockChanged(provider.Id, provider.Stored));
+        }
+    }
+
     public void Grant(PlayerId playerId, ResourceSet amount)
     {
         var player = state.GetPlayer(playerId);

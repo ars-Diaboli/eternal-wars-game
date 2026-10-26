@@ -55,6 +55,15 @@ public static class Palette
         _ => Colors.Transparent,
     };
 
+    public static Color ForRiver(RiverType river) => river switch
+    {
+        RiverType.Clear => new Color(0.30f, 0.60f, 0.95f),
+        RiverType.Icy => new Color(0.75f, 0.90f, 1.00f),
+        RiverType.Muddy => new Color(0.40f, 0.35f, 0.20f),
+        RiverType.Lava => new Color(0.95f, 0.40f, 0.10f),
+        _ => Colors.Transparent,
+    };
+
     public static Color ForObject(MapObjectKind kind) => kind switch
     {
         MapObjectKind.ResourcePile => new Color(0.95f, 0.80f, 0.25f),
@@ -79,6 +88,15 @@ public static class Palette
         MapObjectKind.WarMachineFactory => new Color(0.45f, 0.40f, 0.35f),
         MapObjectKind.Prison => new Color(0.30f, 0.30f, 0.35f),
         MapObjectKind.CreatureBank => new Color(0.60f, 0.25f, 0.30f),
+        MapObjectKind.DenOfThieves => new Color(0.35f, 0.30f, 0.40f),
+        MapObjectKind.Sanctuary => new Color(0.90f, 0.90f, 0.75f),
+        MapObjectKind.Scenery => new Color(0.45f, 0.45f, 0.42f),
+        MapObjectKind.Cartographer => new Color(0.85f, 0.80f, 0.60f),
+        MapObjectKind.ArtifactMerchant => new Color(0.70f, 0.50f, 0.85f),
+        MapObjectKind.RefugeeCamp => new Color(0.60f, 0.55f, 0.40f),
+        MapObjectKind.SacrificialAltar => new Color(0.55f, 0.15f, 0.15f),
+        MapObjectKind.Sphinx => new Color(0.85f, 0.70f, 0.35f),
+        MapObjectKind.WitchHut => new Color(0.35f, 0.50f, 0.30f),
         _ => Colors.Magenta,
     };
 

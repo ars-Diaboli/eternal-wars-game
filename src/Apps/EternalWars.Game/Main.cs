@@ -721,6 +721,10 @@ public partial class Main : Node3D
         townLayer.AddChild(_serviceScreen);
         _serviceScreen.Bind(_session);
         _townScreen.TradeRequested += () => _marketScreen.Open();
+        var guild = new ThievesGuildPanel();
+        townLayer.AddChild(guild);
+        guild.Bind(_session);
+        _townScreen.ThievesGuildRequested += () => guild.Open(_session.State.CurrentPlayer.Id);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
         var market = new Button { Text = "Marketplace" };

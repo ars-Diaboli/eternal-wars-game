@@ -58,6 +58,17 @@ public static class BuiltInMapObjects
     public const string WarMachineFactory = "war-machine-factory";
     public const string Prison = "prison";
 
+    /// <summary>The third catalogue (ADR-077, ADR-079).</summary>
+    public const string DenOfThieves = "den-of-thieves";
+    public const string Sanctuary = "sanctuary";
+    public const string SurfaceCartographer = "cartographer.surface";
+    public const string UndergroundCartographer = "cartographer.underground";
+    public const string ArtifactMerchant = "artifact-merchant";
+    public const string RefugeeCamp = "refugee-camp";
+    public const string SacrificialAltar = "sacrificial-altar";
+    public const string Sphinx = "sphinx";
+    public const string WitchHut = "witch-hut";
+
     /// <summary>Creature banks (ADR-068).</summary>
     public const string Churchyard = "bank.churchyard";
     public const string Mansion = "bank.mansion";
@@ -151,6 +162,15 @@ public static class BuiltInMapObjects
         new(TownGate, "Town gate", MapObjectKind.TownGate, MonolithFootprint),
         new(WarMachineFactory, "War machine factory", MapObjectKind.WarMachineFactory, MineFootprint),
         new(Prison, "Prison", MapObjectKind.Prison, new(["BV"])),
+        new(DenOfThieves, "Den of thieves", MapObjectKind.DenOfThieves, ProviderFootprint),
+        new(Sanctuary, "Sanctuary", MapObjectKind.Sanctuary, MineFootprint),
+        new(SurfaceCartographer, "Cartographer", MapObjectKind.Cartographer, ProviderFootprint),
+        new(UndergroundCartographer, "Cartographer of the deep", MapObjectKind.Cartographer, ProviderFootprint) { RevealsLevel = 1 },
+        new(ArtifactMerchant, "Artifact merchant", MapObjectKind.ArtifactMerchant, MineFootprint),
+        new(RefugeeCamp, "Refugee camp", MapObjectKind.RefugeeCamp, ProviderFootprint),
+        new(SacrificialAltar, "Sacrificial altar", MapObjectKind.SacrificialAltar, ProviderFootprint),
+        new(Sphinx, "Sphinx", MapObjectKind.Sphinx, MineFootprint) { VisitScope = VisitScope.OncePerHero },
+        new(WitchHut, "Witch hut", MapObjectKind.WitchHut, ProviderFootprint),
 
         Bank(Churchyard, "Churchyard", BankRule.Churchyard),
         Bank(Mansion, "Mansion", BankRule.Mansion),
@@ -163,6 +183,9 @@ public static class BuiltInMapObjects
             new MapObjectDefinition(ArtifactId(t), $"{t} artifact", MapObjectKind.Artifact, Footprint.Single) { ArtifactTier = t }),
 
         .. PlayableTowns.Select(t => new MapObjectDefinition(TownId(t), TownName(t), MapObjectKind.Town, TownFootprint) { Town = t }),
+
+        // Scenery comes from data (scenery.csv, ADR-079).
+        .. SceneryTable.Parse(SceneryTable.EmbeddedTable()),
     ];
 
     /// <summary>Definition id of a town type's town: <c>town.haven</c>.</summary>
@@ -196,7 +219,7 @@ public static class BuiltInMapObjects
     public static string WarehouseId(ResourceType resource) => $"warehouse.{resource.ToString().ToLowerInvariant()}";
 
     private static MapObjectDefinition Provider(string id, string name, ProviderRule rule) =>
-        new(id, name, MapObjectKind.ResourceProvider, ProviderFootprint) { Provider = rule, VisitScope = VisitScope.Weekly };
+        new(id, name, MapObjectKind.ResourceProvider, ProviderFootprint) { Provider = rule };
 
     private static MapObjectDefinition Warehouse(ResourceType resource, int amount) =>
         Provider(WarehouseId(resource), $"Warehouse of {resource.ToString().ToLowerInvariant()}", ProviderRule.Warehouse) with { Resource = resource, Amount = amount };

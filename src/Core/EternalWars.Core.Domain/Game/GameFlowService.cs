@@ -197,6 +197,12 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
             events.Publish(new DwellingOwnerChanged(dwelling.Id, player.Id, null));
         }
 
+        foreach (var provider in state.ObjectsOf<ResourceProvider>().Where(p => p.Owner == player.Id).ToList())
+        {
+            provider.Owner = null;
+            events.Publish(new ProviderOwnerChanged(provider.Id, player.Id, null));
+        }
+
         state.RemoveCaravansOf(player.Id);
         events.Publish(new PlayerDefeated(player.Id, reason));
     }

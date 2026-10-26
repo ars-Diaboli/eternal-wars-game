@@ -11,6 +11,7 @@ public enum ToolKind
 {
     Terrain,
     Road,
+    River,
     Object,
     Monster,
     Hero,
@@ -31,8 +32,11 @@ public sealed record EditorTool(
     GuardDisposition Disposition,
     PlayerId Player)
 {
+    /// <summary>The river kind the River tool paints (ADR-079).</summary>
+    public RiverType River { get; init; } = RiverType.Clear;
+
     /// <summary>Drag painting (one undo step per stroke) rather than one edit per click.</summary>
-    public bool IsBrush => Kind is ToolKind.Terrain or ToolKind.Road;
+    public bool IsBrush => Kind is ToolKind.Terrain or ToolKind.Road or ToolKind.River;
 }
 
 /// <summary>Tool buttons plus the options of the selected tool. Raises <see cref="ToolChanged"/> on every change.</summary>
@@ -102,6 +106,10 @@ public partial class ToolPalette : VBoxContainer
                 break;
             case ToolKind.Road:
                 Choice("Road", Enum.GetValues<RoadType>().Select(r => (r.ToString(), r)), _tool.Road, r => _tool with { Road = r });
+                Radius();
+                break;
+            case ToolKind.River:
+                Choice("River", Enum.GetValues<RiverType>().Select(r => (r.ToString(), r)), _tool.River, r => _tool with { River = r });
                 Radius();
                 break;
             case ToolKind.Object:

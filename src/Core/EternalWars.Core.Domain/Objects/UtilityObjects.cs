@@ -21,6 +21,26 @@ public sealed class Observatory(MapObjectId id, MapObjectDefinition definition, 
     public const int Radius = 20;
 }
 
+/// <summary>Scenery (ADR-079, MAP-25): a rock, a tree, a pond, a ruin, a piece of wall… It only blocks; it has no entrance and no data.</summary>
+public sealed class Scenery(MapObjectId id, MapObjectDefinition definition, MapPosition position)
+    : MapObject(id, definition, position, MapObjectKind.Scenery);
+
+/// <summary>The Den of Thieves (ADR-079, TOWN-11): every visit shows the whole Thieves' Guild table; nothing is kept.</summary>
+public sealed class DenOfThieves(MapObjectId id, MapObjectDefinition definition, MapPosition position)
+    : MapObject(id, definition, position, MapObjectKind.DenOfThieves);
+
+/// <summary>
+/// A sanctuary (ADR-079, MAP-28): a hero standing on its entrance cannot be attacked, so enemies cannot enter while it is occupied. A hero may
+/// stay as long as it likes; one hero at a time (the entrance holds one); nothing else (no healing, no army storage).
+/// </summary>
+public sealed class Sanctuary(MapObjectId id, MapObjectDefinition definition, MapPosition position)
+    : MapObject(id, definition, position, MapObjectKind.Sanctuary)
+{
+    /// <summary>Whether a hero on <paramref name="position"/> is safe from attack: it is a sanctuary's entrance.</summary>
+    public static bool Protects(GameState state, MapPosition position) =>
+        state.ObjectCellAt(position) is { Cell: FootprintCell.Visit, Object: Sanctuary };
+}
+
 /// <summary>A hill fort (ADR-068): the hero on its entrance upgrades stacks of tiers 1–3, stack by stack, for 150 % of the upgrade price.</summary>
 public sealed class HillFort(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.HillFort);

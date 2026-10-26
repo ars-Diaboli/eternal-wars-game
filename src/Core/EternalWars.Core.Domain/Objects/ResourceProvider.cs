@@ -11,8 +11,8 @@ public enum ProviderRule
     WaterWheel,
 
     /// <summary>
-    /// <see cref="MapObjectDefinition.Amount"/> of <see cref="MapObjectDefinition.Resource"/>; for a resource other than gold the visitor may take
-    /// <see cref="ResourceProviderRules.WarehouseGold"/> gold instead.
+    /// <see cref="MapObjectDefinition.Amount"/> of <see cref="MapObjectDefinition.Resource"/>; for a resource other than gold every week is, at
+    /// random, either that or <see cref="ResourceProviderRules.WarehouseGold"/> gold (no choice; ADR-079, TOWN-9).
     /// </summary>
     Warehouse,
 
@@ -24,19 +24,33 @@ public enum ProviderRule
 }
 
 /// <summary>
-/// A visitable building that hands out resources once a week (Water Wheel, Warehouses, Windmill, Mystical Garden; ADR-068). It has no owner
-/// and no per-instance data: the definition says what it gives and its <see cref="MapObject.Visits"/> log when it was last taken.
+/// A building that produces resources every week (Water Wheel, Warehouses, Windmill, Mystical Garden; ADR-068). It is flagged like a mine
+/// (ADR-079, TOWN-9): while it has an owner a week's output is added to <see cref="Stored"/> at the start of every week, and an own hero's
+/// visit or a town's resource caravan takes what is stored. The definition says what a week brings.
 /// </summary>
-public sealed class ResourceProvider(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.ResourceProvider)
+public sealed class ResourceProvider(MapObjectId id, MapObjectDefinition definition, MapPosition position, PlayerId? owner = null)
+    : MapObject(id, definition, position, MapObjectKind.ResourceProvider), IFlaggable
 {
+    /// <summary>Owned providers reveal and watch a small area around them, like mines.</summary>
+    public const int ProviderScoutingRadius = 2;
+
     public ProviderRule Rule => Definition.Provider!.Value;
+
+    public int ScoutingRadius => ProviderScoutingRadius;
+
+    public PlayerId? Owner { get; internal set; } = owner;
+
+    /// <summary>What waits to be collected.</summary>
+    public ResourceSet Stored { get; internal set; }
+
+    /// <summary>Whether it has ever had an owner: only the first flagging of a neutral provider brings a week's output at once.</summary>
+    public bool WasClaimed { get; internal set; } = owner is not null;
 }
 
 /// <summary>The rewards of <see cref="ResourceProvider"/>s (ADR-068).</summary>
 public static class ResourceProviderRules
 {
-    /// <summary>What a warehouse of a resource other than gold offers instead of the resource.</summary>
+    /// <summary>What a warehouse of a resource other than gold produces instead of the resource in half the weeks.</summary>
     public const int WarehouseGold = 500;
 
     public const int WaterWheelFirstWeek = 500;
@@ -59,22 +73,22 @@ public static class ResourceProviderRules
     public static IReadOnlyList<ResourceType> Magic { get; } = [ResourceType.Crystal, ResourceType.Mercury, ResourceType.Sulfur];
 
     /// <summary>
-    /// The reward of a visit on <paramref name="date"/>: one option is simply given, two let the visitor choose (warehouses). Draws from
-    /// <paramref name="random"/> only for the Windmill and the Mystical Garden.
+    /// One week's output in the week of <paramref name="date"/>. Draws from <paramref name="random"/> for the Windmill, the Mystical Garden and
+    /// a warehouse of a resource other than gold.
     /// </summary>
-    public static IReadOnlyList<ResourceSet> Roll(MapObjectDefinition definition, GameDate date, GameRandom random)
+    public static ResourceSet Roll(MapObjectDefinition definition, GameDate date, GameRandom random)
     {
         ArgumentNullException.ThrowIfNull(definition);
         ArgumentNullException.ThrowIfNull(random);
         return definition.Provider switch
         {
-            ProviderRule.WaterWheel => [new ResourceSet(Gold: date.AbsoluteWeek == 1 ? WaterWheelFirstWeek : WaterWheelGold)],
-            ProviderRule.Warehouse when definition.Resource is ResourceType.Gold => [new ResourceSet(Gold: definition.Amount)],
-            ProviderRule.Warehouse => [ResourceSet.Of(definition.Resource!.Value, definition.Amount), new ResourceSet(Gold: WarehouseGold)],
-            ProviderRule.Windmill => [ResourceSet.Of(NonGold[random.Next(NonGold.Count)], random.NextInclusive(WindmillMin, WindmillMax))],
+            ProviderRule.WaterWheel => new ResourceSet(Gold: date.AbsoluteWeek == 1 ? WaterWheelFirstWeek : WaterWheelGold),
+            ProviderRule.Warehouse when definition.Resource is ResourceType.Gold => new ResourceSet(Gold: definition.Amount),
+            ProviderRule.Warehouse => random.Next(2) == 0 ? ResourceSet.Of(definition.Resource!.Value, definition.Amount) : new ResourceSet(Gold: WarehouseGold),
+            ProviderRule.Windmill => ResourceSet.Of(NonGold[random.Next(NonGold.Count)], random.NextInclusive(WindmillMin, WindmillMax)),
             ProviderRule.MysticalGarden => random.Next(2) == 0
-                ? [new ResourceSet(Gold: GardenGold)]
-                : [ResourceSet.Of(Magic[random.Next(Magic.Count)], GardenMagic)],
+                ? new ResourceSet(Gold: GardenGold)
+                : ResourceSet.Of(Magic[random.Next(Magic.Count)], GardenMagic),
             _ => throw new ArgumentException($"'{definition.Id}' is not a resource provider.", nameof(definition)),
         };
     }

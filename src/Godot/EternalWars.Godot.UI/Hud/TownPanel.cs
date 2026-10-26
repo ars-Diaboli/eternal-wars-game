@@ -23,6 +23,7 @@ public partial class TownPanel : PanelContainer
 {
     private readonly Label _title = new();
     private readonly Button _trade = new() { Text = "Marketplace", TooltipText = "Trade gold against resources" };
+    private readonly Button _guild = new() { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" };
     private readonly HFlowContainer _buildings = new();
     private readonly GridContainer _dwellings = new() { Columns = 4 };
     private readonly VBoxContainer _armies = new();
@@ -45,6 +46,9 @@ public partial class TownPanel : PanelContainer
     /// <summary>The player asked to trade from this town's marketplace (ADR-067).</summary>
     public event Action? TradeRequested;
 
+    /// <summary>The player opened the Thieves' Guild from this town's tavern (ADR-079).</summary>
+    public event Action? ThievesGuildRequested;
+
     public void Bind(GameSession session)
     {
         _session = session;
@@ -66,6 +70,8 @@ public partial class TownPanel : PanelContainer
         header.AddChild(_title);
         _trade.Pressed += () => TradeRequested?.Invoke();
         header.AddChild(_trade);
+        _guild.Pressed += () => ThievesGuildRequested?.Invoke();
+        header.AddChild(_guild);
         var close = new Button { Text = "Close" };
         close.Pressed += Close;
         header.AddChild(close);
@@ -113,6 +119,8 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<CaravanLost>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DwellingCreaturesGrew>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DwellingOwnerChanged>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<ProviderOwnerChanged>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<ProviderStockChanged>(session.Events, _ => Refresh());
     }
 
     /// <summary>Shows a town of the player whose turn it is.</summary>
@@ -153,6 +161,7 @@ public partial class TownPanel : PanelContainer
         var state = _session.State;
         _title.Text = $"{town.Name} ({town.TownType}), {state.CurrentPlayer.Name}   income {Cost(TownRules.DailyIncome(state, town))} a day";
         _trade.Visible = town.Level(BuiltInBuildings.Marketplace) > 0;
+        _guild.Visible = town.Level(BuiltInBuildings.Tavern) > 0;
 
         Clear(_buildings);
         var catalog = TownRules.Buildings(state, town);
@@ -267,8 +276,8 @@ public partial class TownPanel : PanelContainer
     }
 
     /// <summary>
-    /// The caravan (ADR-054): hire creatures from owned map dwellings within its reach (ADR-073), send the picked garrison stack
-    /// to another own town, the queue of caravans coming here and those sent from here.
+    /// The caravan (ADR-054): hire creatures from owned map dwellings within its reach (ADR-073), fetch what waits at own resource providers
+    /// (ADR-079), send the picked garrison stack to another own town, the queue of caravans coming here and those sent from here.
     /// </summary>
     private void ShowCaravan(GameState state, Town town)
     {
@@ -279,14 +288,18 @@ public partial class TownPanel : PanelContainer
         }
 
         var player = state.CurrentPlayer.Id;
-        _caravan.AddChild(new Label { Text = $"Caravan: hires from your dwellings within {CaravanRules.MaxReach} movement points; creatures travel at their map speed" });
+        _caravan.AddChild(new Label
+        {
+            Text = $"Caravan: reaches {CaravanRules.MaxReach} movement points, {CaravanRules.DailyMovement} a day; "
+                   + $"{CaravanRules.Queue(state, town).Count} of {CaravanRules.Limit(state, town)} caravans coming",
+        });
         foreach (var dwelling in CaravanRules.Dwellings(state, town).Where(d => d.Available > 0))
         {
             var creature = state.Creatures.Get(dwelling.Creature);
             var available = dwelling.Available!.Value;
             var count = TownRules.MaxAffordable(state.CurrentPlayer.Resources, TownRules.CreatureCost(state, town, creature), available);
             var refusal = CaravanRules.CheckOrder(state, town, dwelling, Math.Max(1, count));
-            var route = CaravanRules.RouteBetween(state, dwelling, town, creature, out _);
+            var route = CaravanRules.RouteBetween(state, dwelling, town, out _);
             var row = new HBoxContainer();
             row.AddChild(new Label
             {
@@ -302,6 +315,29 @@ public partial class TownPanel : PanelContainer
             var dwellingId = dwelling.Id;
             hire.Pressed += () => Run(new OrderCaravanCommand(player, town.Id, dwellingId, count));
             row.AddChild(hire);
+            _caravan.AddChild(row);
+        }
+
+        foreach (var provider in CaravanRules.Providers(state, town).Where(p => !p.Stored.IsEmpty))
+        {
+            var refusal = CaravanRules.CheckFetch(state, town, provider);
+            var route = CaravanRules.RouteBetween(state, provider, town, out _);
+            var row = new HBoxContainer();
+            row.AddChild(new Label
+            {
+                Text = $"{provider.Definition.Name} at {provider.Position.X},{provider.Position.Y}: {ResourceProviderRules.Describe(provider.Stored)}, "
+                       + (route is null ? "no route" : $"{route.Days} day(s) away"),
+                CustomMinimumSize = new Vector2(360, 0),
+            });
+            var fetch = new Button
+            {
+                Text = $"Fetch{System.Environment.NewLine}{Cost(CaravanRules.ResourceCaravanCost)}",
+                Disabled = refusal is not null,
+                TooltipText = refusal ?? "",
+            };
+            var providerId = provider.Id;
+            fetch.Pressed += () => Run(new FetchResourcesCommand(player, town.Id, providerId));
+            row.AddChild(fetch);
             _caravan.AddChild(row);
         }
 
@@ -332,7 +368,7 @@ public partial class TownPanel : PanelContainer
         {
             _caravan.AddChild(new Label
             {
-                Text = $"  {caravan.Count} {state.Creatures.Get(caravan.Creature).Name} from {PlaceName(state.GetObject(caravan.Source))}: "
+                Text = $"  {Goods(state, caravan)} from {PlaceName(state.GetObject(caravan.Source))}: "
                        + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room in the garrison"),
             });
         }
@@ -346,6 +382,9 @@ public partial class TownPanel : PanelContainer
             });
         }
     }
+
+    private static string Goods(GameState state, Caravan caravan) =>
+        caravan.Cargo is { } cargo ? ResourceProviderRules.Describe(cargo) : $"{caravan.Count} {state.Creatures.Get(caravan.Creature).Name}";
 
     private static string PlaceName(MapObject place) => place is Town town ? town.Name : place.Definition.Name;
 

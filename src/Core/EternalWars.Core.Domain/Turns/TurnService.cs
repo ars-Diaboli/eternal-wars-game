@@ -21,7 +21,8 @@ public sealed class TurnService(
     GuardService guards,
     ProgressionService progression,
     TownService towns,
-    CaravanService caravans)
+    CaravanService caravans,
+    MapObjectInteractionService objects)
 {
     internal void StartGame()
     {
@@ -42,6 +43,7 @@ public sealed class TurnService(
 
         guards.RollUnsetCounts();
         towns.FillNewDwellings();
+        economy.StockProviders();
         events.Publish(new GameStarted(state.Date));
         events.Publish(new DayStarted(state.Date));
         BeginTurn();
@@ -86,6 +88,8 @@ public sealed class TurnService(
                 events.Publish(new WeekStarted(state.Date));
                 progression.ExpireStatuses(state.Heroes, StatusExpiry.EndOfWeek);
                 towns.GrowWeekly();
+                economy.StockProviders();
+                objects.StartWeek(state.Date.IsFirstDayOfMonth);
             }
         }
     }

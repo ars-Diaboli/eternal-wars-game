@@ -18,6 +18,7 @@ public partial class AdventureMapView : Node3D
     private const float TileHeight = 0.1f;
     private const float TileGap = 0.02f;
     private const float RoadWidth = 0.45f;
+    private const float RiverWidth = 0.8f;
     private const string TextureFolder = "res://shared/textures/terrain/";
 
     /// <summary>How many tiles one texture repeat covers.</summary>
@@ -27,6 +28,7 @@ public partial class AdventureMapView : Node3D
     private AdventureMap? _map;
     private int _level;
     private MultiMesh? _roads;
+    private MultiMesh? _rivers;
 
     public void Bind(AdventureMap map, IEventSubscriber events, int level = 0)
     {
@@ -39,8 +41,11 @@ public partial class AdventureMapView : Node3D
 
         _roads = Layer(new StandardMaterial3D { VertexColorUseAsAlbedo = true }, new Vector3(RoadWidth, 0.02f, RoadWidth), "Roads");
         _roads.InstanceCount = map.Width * map.Height;
+        _rivers = Layer(new StandardMaterial3D { VertexColorUseAsAlbedo = true }, new Vector3(RiverWidth, 0.015f, RiverWidth), "Rivers");
+        _rivers.InstanceCount = map.Width * map.Height;
         RebuildTerrain();
         RefreshRoads(map.Positions(level));
+        RefreshRivers(map.Positions(level));
 
         // A paint stroke can change any terrain into any other; regrouping the instances is cheap.
         this.SubscribeWhileInTree<TerrainPainted>(events, e =>
@@ -51,6 +56,7 @@ public partial class AdventureMapView : Node3D
             }
         });
         this.SubscribeWhileInTree<RoadsPainted>(events, e => RefreshRoads(e.Positions));
+        this.SubscribeWhileInTree<RiversPainted>(events, e => RefreshRivers(e.Positions));
     }
 
     /// <summary>
@@ -134,6 +140,20 @@ public partial class AdventureMapView : Node3D
         foreach (var (terrain, tiles) in _tiles.Where(t => !present.Contains(t.Key)))
         {
             tiles.InstanceCount = 0;
+        }
+    }
+
+    // Rivers lie under the roads, wider, so a road over a river reads as a bridge.
+    private void RefreshRivers(IEnumerable<MapPosition> positions)
+    {
+        var map = _map!;
+        foreach (var position in positions.Where(p => p.Level == _level))
+        {
+            var river = map.GetRiver(position);
+            var scale = river == RiverType.None ? Vector3.Zero : Vector3.One;
+            var index = (position.Y * map.Width) + position.X;
+            _rivers!.SetInstanceTransform(index, new Transform3D(Basis.Identity.Scaled(scale), MapSpace.ToWorld(position) + (Vector3.Up * 0.005f)));
+            _rivers.SetInstanceColor(index, Palette.ForRiver(river));
         }
     }
 

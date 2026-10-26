@@ -21,6 +21,8 @@ public readonly record struct ResourceSet(
 {
     public static ResourceSet Empty { get; } = new();
 
+    public bool IsEmpty => this == Empty;
+
     public static ResourceSet Of(ResourceType type, int amount) => type switch
     {
         ResourceType.Gold => new(Gold: amount),

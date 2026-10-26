@@ -23,7 +23,7 @@ public static class MapGenerator
     /// Bumped whenever a change makes a template, size, players and seed give another map; saved with generated games and shown with the seed, so a
     /// shared seed from another version can be warned about.
     /// </summary>
-    public const int Version = 3;
+    public const int Version = 4;
 
     /// <summary>How many seeds <see cref="GenerateBest"/> tries: the seed, then sub-seeds of it.</summary>
     public const int Attempts = 10;
@@ -34,7 +34,9 @@ public static class MapGenerator
     {
         ArgumentNullException.ThrowIfNull(template);
         var layout = ZoneLayouter.Layout(template, size, seed, strategy);
-        var map = GeneratedMap.From(TerrainPainter.Paint(template, layout, seed, startTowns));
+        var terrain = TerrainPainter.Paint(template, layout, seed, startTowns);
+        var map = GeneratedMap.From(terrain);
+        SceneryPlacer.Place(map, terrain.Obstacles, seed);
         foreach (var (from, to) in layout.UnmetConnections)
         {
             map.Problem($"Zones {from} and {to} do not touch.");
@@ -43,6 +45,7 @@ public static class MapGenerator
         ConnectionPlacer.Place(template, map, seed, creatures);
         SettlementPlacer.Place(template, map, seed, creatures, startTowns);
         RoadPlacer.Place(template, map);
+        RiverPlacer.Place(template, map, seed);
         TreasurePlacer.Place(template, map, seed, creatures, artifacts);
         return map;
     }
