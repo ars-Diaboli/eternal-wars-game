@@ -69,6 +69,23 @@ public class BattleGridTests
     }
 
     [Fact]
+    public void Reachable_Teleporter_MovesLikeAFlyer()
+    {
+        var battle = TestBattle.Create();
+        var walker = TestBattle.Fixed("walker", 1, speed: 8);
+        var teleporter = TestBattle.Fixed("teleporter", 1, speed: 8, capabilities: new CreatureCapability(CapabilityKind.Teleporting));
+        var unit = battle.Add(Attacker, teleporter, 1, 0, 10);
+        for (var y = 0; y < 24; y += 3)
+        {
+            battle.AddObstacle(ObstacleClass.Big, 3, y);
+        }
+
+        Assert.True(BattleGrid.Reachable(battle.State, unit).ContainsKey(new CellPosition(7, 10)));
+        Assert.True(teleporter.MovesFreely);
+        Assert.Equal(walker.Value * 6 / 5, teleporter.Value);
+    }
+
+    [Fact]
     public void LineOfFire_ThroughExactCorner_IncludesBothSideCells()
     {
         // Centres (1,1) and (5,5): the diagonal passes through grid corners (2,2), (3,3), (4,4).

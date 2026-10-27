@@ -37,7 +37,7 @@ public static class MovementAllowance
     public static int Daily(Hero hero, CreatureCatalog creatures)
     {
         var speed = SlowestMapSpeed(hero, creatures);
-        var percent = hero.MovementBonusPercent + hero.Bonus.MovementPercent + SkillEffects.MovementPercent(hero.SkillLevelOf(BuiltInSkills.Logistics));
+        var percent = hero.MovementBonusPercent + hero.Bonus.MovementPercent + SkillEffects.WithSpecialty(hero, BuiltInSkills.Logistics, SkillEffects.MovementPercent(hero.SkillLevelOf(BuiltInSkills.Logistics)));
         return Daily(speed, percent, hero.MovementBonusFlat + hero.Bonus.MovementFlat + hero.StatusTotal(HeroStatusKind.Movement));
     }
 

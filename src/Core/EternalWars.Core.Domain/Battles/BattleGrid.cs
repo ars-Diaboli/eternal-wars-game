@@ -24,7 +24,7 @@ public static class BattleGrid
         var speed = battle.SpeedOf(unit);
         var result = new Dictionary<CellPosition, int> { [unit.Position] = 0 };
 
-        if (unit.Creature.IsFlying)
+        if (unit.Creature.MovesFreely)
         {
             for (var y = unit.Position.Y - speed; y <= unit.Position.Y + speed; y++)
             {

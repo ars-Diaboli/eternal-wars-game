@@ -322,4 +322,30 @@ public class HeroProgressionTests
             """;
         Assert.Equal(SkillLevel.Advanced, MapConverter.ToGameState(MapSerializer.Deserialize(v4)).GetHero(A).Tactics);
     }
+
+    [Fact]
+    public void SkillSpecialty_RaisesItsSkillsEffectByFivePercentPerHeroLevel()
+    {
+        var state = Create("A..");
+        var hero = state.GetHero(A);
+        hero.Skills.Set(BuiltInSkills.Melee, SkillLevel.Master); // 30 %
+        hero.Skills.Set(BuiltInSkills.Archery, SkillLevel.Expert); // 35 %
+        hero.Skills.Set(BuiltInSkills.Logistics, SkillLevel.Expert); // 30 %
+        hero.Skills.Set(ManaRules.AttunementSkill(TownIds.Academy), SkillLevel.Basic); // +10 pool, +1 a day
+        hero.Level = 10;
+        var plainMovement = MovementAllowance.Daily(state, hero);
+        var plainMana = ManaRules.MaxMana(hero);
+
+        hero.Specialty = HeroSpecialty.Parse("skill offense.melee");
+        Assert.Equal((45, 35), (HeroBattleBonuses.For(hero, state.Creatures).MeleePercent, HeroBattleBonuses.For(hero, state.Creatures).RangedPercent));
+
+        hero.Specialty = HeroSpecialty.Parse("skill pathfinding.logistics"); // 30 % × 1.5 = 45 %
+        Assert.Equal(plainMovement * 145 / 130, MovementAllowance.Daily(state, hero));
+
+        hero.Specialty = HeroSpecialty.Parse("skill magic.academy.attunement"); // +15 pool
+        Assert.Equal(plainMana + 5, ManaRules.MaxMana(hero));
+
+        hero.Specialty = HeroSpecialty.Parse("resource gold 350");
+        Assert.Equal((30, 35), (HeroBattleBonuses.For(hero, state.Creatures).MeleePercent, HeroBattleBonuses.For(hero, state.Creatures).RangedPercent));
+    }
 }

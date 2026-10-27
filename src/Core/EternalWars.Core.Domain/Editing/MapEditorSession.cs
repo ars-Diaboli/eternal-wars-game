@@ -438,6 +438,63 @@ public sealed class MapEditorSession
     }
 
     /// <summary>
+    /// Gives a town another playable town type, e.g. after generating a map: a town of the new type takes its id, place, owner, garrison and,
+    /// unless it kept the old type's default name, its name. Buildings the new type also has stay (at most its top level); each dwelling, and the
+    /// creatures waiting in it, moves to the new type's line at the same place in the same tier. Refused when the result lacks a requirement.
+    /// </summary>
+    public EditResult SetTownType(MapObjectId id, string townType)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town || !BuiltInMapObjects.PlayableTowns.Contains(townType) ||
+            !Catalog.TryGet(BuiltInMapObjects.TownId(townType), out var definition))
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (townType == town.TownType)
+        {
+            return EditResult.Ok;
+        }
+
+        var buildings = Scenario.Buildings.For(townType);
+        var lines = MatchLines(Scenario.Creatures.BaseCreaturesOf(town.TownType).ToList(), Scenario.Creatures.BaseCreaturesOf(townType).ToList());
+        var replacement = new Town(town.Id, definition, town.Position, town.Owner, town.Name == town.Definition.Name ? null : town.Name,
+            town.Buildings.Where(b => buildings.TownBuildings.Contains(b.Key)).ToDictionary(b => b.Key, b => Math.Min(b.Value, buildings.MaxLevel(b.Key))),
+            Moved(town.Dwellings), Moved(town.Available), new Army(town.Garrison.Slots), town.LastBuilt) { Governor = town.Governor };
+        if (TownRules.UnmetRequirement(Scenario, replacement) is not null)
+        {
+            return EditResult.RequirementMissing;
+        }
+
+        Run(new DelegateCommand($"Make {town.Name} a {townType} town", () => Swap(town, replacement), () => Swap(replacement, town)));
+        return EditResult.Ok;
+
+        Dictionary<string, int> Moved(IReadOnlyDictionary<string, int> values) =>
+            values.Where(v => lines.ContainsKey(v.Key)).ToDictionary(v => lines[v.Key], v => v.Value);
+
+        void Swap(Town from, Town to)
+        {
+            RemoveObject(from);
+            AddObject(to);
+        }
+    }
+
+    /// <summary>Pairs each old line with the new type's line of the same tier at the same place in tier order; lines without a partner drop out.</summary>
+    private static Dictionary<string, string> MatchLines(IReadOnlyList<Creatures.CreatureDefinition> from, IReadOnlyList<Creatures.CreatureDefinition> to)
+    {
+        var pairs = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var tier in from.Select(l => l.Tier).Distinct())
+        {
+            var newLines = to.Where(l => l.Tier == tier).ToList();
+            foreach (var (line, index) in from.Where(l => l.Tier == tier).Select((l, i) => (l, i)).Where(p => p.i < newLines.Count))
+            {
+                pairs[line.Id] = newLines[index].Id;
+            }
+        }
+
+        return pairs;
+    }
+
+    /// <summary>
     /// Pre-builds a town building up to <paramref name="level"/> (0 = not built). Requirements hold as in play: a level
     /// needs what it requires, and nothing built may lose a building it requires.
     /// </summary>

@@ -298,6 +298,8 @@ public partial class InspectorPanel : VBoxContainer
         var name = new LineEdit { Text = town.Name, CustomMinimumSize = new Vector2(160, 0) };
         name.TextSubmitted += text => Edit(() => _editor.SetTownName(town.Id, text));
         row.AddChild(name);
+        var type = Options(row, "Faction", BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), town.TownType);
+        type.Button.ItemSelected += _ => Edit(() => _editor.SetTownType(town.Id, type.Value()));
 
         AddChild(new Label { Text = "Buildings (level, 0 = not built)" });
         var buildings = new HFlowContainer();

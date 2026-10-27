@@ -295,6 +295,42 @@ public class TownTests
         Assert.Contains(MapValidator.Validate(scenario), i => i.Severity == IssueSeverity.Error && i.Message.Contains("Fort", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void Editor_SetTownType_KeepsSharedBuildingsAndMovesDwellingsToTheSameTier_Undoably()
+    {
+        var scenario = Create(Rows);
+        var editor = new MapEditorSession(scenario);
+        var placed = new List<MapObjectPlaced>();
+        editor.Events.Subscribe<MapObjectPlaced>(placed.Add);
+        editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id);
+        editor.SetTownOwner(id, Blue);
+        editor.SetTownName(id, "Brightwater");
+        editor.SetTownDwelling(id, BuiltInCreatures.Pikeman, 2);
+        editor.SetGarrisonSlot(id, 0, new CreatureStack(BuiltInCreatures.Pikeman, 5));
+        var haven = (Town)scenario.GetObject(id);
+        haven.SetAvailable(BuiltInCreatures.Pikeman, 12);
+        var infernoTierOne = scenario.Creatures.BaseCreaturesOf(TownIds.Inferno).Where(c => c.Tier == 1).ToList();
+        var havenTierOne = scenario.Creatures.BaseCreaturesOf(TownIds.Haven).Where(c => c.Tier == 1).ToList();
+        var expectedLine = infernoTierOne[havenTierOne.FindIndex(c => c.Id == BuiltInCreatures.Pikeman)].Id;
+
+        Assert.Equal(EditResult.Ok, editor.SetTownType(id, TownIds.Inferno));
+
+        var inferno = (Town)scenario.GetObject(id);
+        Assert.Equal((TownIds.Inferno, Blue, "Brightwater", haven.Position), (inferno.TownType, inferno.Owner, inferno.Name, inferno.Position));
+        Assert.Equal(haven.Level(BuiltInBuildings.Fort), inferno.Level(BuiltInBuildings.Fort));
+        Assert.Equal((2, 12), (inferno.DwellingLevel(expectedLine), inferno.AvailableOf(expectedLine)));
+        Assert.Equal(new CreatureStack(BuiltInCreatures.Pikeman, 5), inferno.Garrison[0]);
+        Assert.Contains(placed, e => e.Object == id && e.DefinitionId == BuiltInMapObjects.TownId(TownIds.Inferno));
+
+        Assert.True(editor.Undo());
+        Assert.Same(haven, scenario.GetObject(id));
+        Assert.True(editor.Redo());
+        Assert.Same(inferno, scenario.GetObject(id));
+
+        Assert.Equal(EditResult.InvalidTarget, editor.SetTownType(id, "atlantis"));
+        Assert.Equal(EditResult.InvalidTarget, editor.SetTownType(new MapObjectId(999), TownIds.Haven));
+    }
+
     [Theory]
     [InlineData(1, 18, 1)] // Fort: base growth
     [InlineData(2, 27, 1)] // Citadel: +50 %, rounded down (1 → 1)
