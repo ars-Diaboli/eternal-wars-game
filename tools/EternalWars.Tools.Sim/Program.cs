@@ -28,7 +28,7 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
-/// sim game [--map towns|demo|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file]  (the adventure AI plays every slot)
+/// sim game [--map towns|demo|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal]  (the adventure AI plays every slot)
 /// sim game --template duel|file.ewtemplate.json [--size N] [--players N] [...]  (the same on a map generated per run, random towns)
 /// sim maps [--template name] [--maps 3] [--days 14] [--seed 1]  (CI: generates maps of every shipped template and checks they are playable)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
@@ -177,7 +177,7 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
@@ -449,19 +449,28 @@ public static class Program
     /// <summary>The games of <c>sim game</c>: a map generated from <c>--template</c> per seed, else the <c>--map</c> (default <c>towns</c>).</summary>
     private static Func<ulong, SimGame> GameMaker(string[] args)
     {
+        var complexity = ParseComplexity(OptionText(args, "--complexity"));
         if (OptionText(args, "--template") is not { } name)
         {
             var map = OptionText(args, "--map") ?? "towns";
-            return seed => HandMadeGame(map, seed);
+            return seed => HandMadeGame(map, seed, complexity);
         }
 
         var template = LoadTemplate(name);
         var size = Option(args, "--size", template.Sizes[0]);
         var players = Option(args, "--players", template.MaxPlayers);
-        return seed => GeneratedGame(template, size, players, seed);
+        return seed => GeneratedGame(template, size, players, seed, complexity);
     }
 
-    private static SimGame HandMadeGame(string map, ulong seed)
+    /// <summary>The <c>--complexity</c> level (beginner, easy, normal, hard, expert); none keeps the map's own resources.</summary>
+    private static Complexity? ParseComplexity(string? text) => text switch
+    {
+        null => null,
+        _ when Enum.TryParse<Complexity>(text, ignoreCase: true, out var complexity) && Enum.IsDefined(complexity) => complexity,
+        _ => throw new FormatException($"'{text}' is not a complexity ({string.Join(", ", Enum.GetNames<Complexity>().Select(n => n.ToLowerInvariant()))})."),
+    };
+
+    private static SimGame HandMadeGame(string map, ulong seed, Complexity? complexity = null)
     {
         var document = map switch
         {
@@ -469,14 +478,14 @@ public static class Program
             "demo" => MapConverter.ToDocument(DemoScenario.Create()),
             _ => MapSerializer.Load(map),
         };
-        return new SimGame(document, MapConverter.ToGameState(document, options: new GameOptions(Seed: seed), creatures: Catalog));
+        return new SimGame(document, MapConverter.ToGameState(document, options: new GameOptions(Seed: seed, Complexity: complexity), creatures: Catalog));
     }
 
     /// <summary>
     /// A map generated from the template for computer players in the first <paramref name="players"/> start slots, each with a random town,
     /// assembled like the new-game screen does (<see cref="MapGenerator.Build"/>); the map seed is the game seed.
     /// </summary>
-    private static SimGame GeneratedGame(MapTemplate template, int size, int players, ulong seed)
+    private static SimGame GeneratedGame(MapTemplate template, int size, int players, ulong seed, Complexity? complexity = null)
     {
         if (players < 1 || players > template.MaxPlayers)
         {
@@ -484,7 +493,7 @@ public static class Program
         }
 
         var setups = Enumerable.Range(0, players).Select(slot => new PlayerSetup(slot, $"Player {slot + 1}", IsHuman: false, PlayerSetup.RandomTown)).ToList();
-        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(Seed: seed), Catalog);
+        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(Seed: seed, Complexity: complexity), Catalog);
         return new SimGame(MapConverter.ToDocument(state), state, GenerationInfo.Of(template.Name, size, seed, generation.Attempt), generation.Problems);
     }
 

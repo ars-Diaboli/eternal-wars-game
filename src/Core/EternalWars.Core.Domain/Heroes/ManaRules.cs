@@ -52,9 +52,18 @@ public static class ManaRules
         };
     }
 
-    /// <summary>The sum of the hero's attunement skills.</summary>
+    /// <summary>The sum of the hero's attunement skills; an attunement specialty raises its pool and daily mana (ADR-072, HERO-1).</summary>
     public static AttunementBonus Bonus(Hero hero) =>
-        BuiltInSkills.Schools.Keys.Aggregate(default(AttunementBonus), (total, town) => total + Attunement(town, hero.SkillLevelOf(AttunementSkill(town))));
+        BuiltInSkills.Schools.Keys.Aggregate(default(AttunementBonus), (total, town) =>
+        {
+            var skill = AttunementSkill(town);
+            var bonus = Attunement(town, hero.SkillLevelOf(skill));
+            return total + bonus with
+            {
+                MaxMana = SkillEffects.WithSpecialty(hero, skill, bonus.MaxMana),
+                DailyMana = SkillEffects.WithSpecialty(hero, skill, bonus.DailyMana),
+            };
+        });
 
     public static int MaxMana(Hero hero) => (ManaPerKnowledge * hero.TotalKnowledge) + Bonus(hero).MaxMana + LevelMana(hero.Level);
 

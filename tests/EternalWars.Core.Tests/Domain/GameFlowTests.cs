@@ -130,6 +130,35 @@ public class GameFlowTests
         Assert.Equal([Blue, Green], state.Outcome!.Winners);
     }
 
+    [Theory]
+    [InlineData(true, new[] { 0, 2 })] // a human survivor: the eliminated human ally shares the win
+    [InlineData(false, new[] { 0 })] // only a computer ally survives: the eliminated human has lost
+    public void EliminatedHumanTeammates_ShareTheWin_OnlyWhileAHumanOfTheTeamSurvives(bool survivorIsHuman, int[] winners)
+    {
+        var state = ThreePlayers(s =>
+        {
+            s.GetPlayer(Blue).Team = new TeamId(7);
+            s.GetPlayer(Green).Team = new TeamId(7);
+            s.GetPlayer(Blue).IsHuman = survivorIsHuman;
+            s.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 40));
+            s.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 3));
+            s.GetHero(D).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 1));
+        });
+        var session = Start(state);
+        session.EndTurn(); // Blue
+
+        session.MoveTo(B, new MapPosition(0, 2)); // Red beats Green
+        session.AutoResolve();
+        Assert.True(state.GetPlayer(Green).IsDefeated);
+        session.EndTurn(); // Red; Green is skipped
+
+        session.MoveTo(A, state.GetHero(B).Position);
+        session.AutoResolve();
+
+        Assert.True(state.IsOver);
+        Assert.Equal(winners.Select(w => new PlayerId(w)), state.Outcome!.Winners);
+    }
+
     [Fact]
     public void ALoneSide_NeverEndsTheGame_AndPlayersWithoutAnythingAreNotEliminated()
     {

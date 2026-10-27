@@ -82,6 +82,9 @@ public enum CapabilityKind
     /// battle. Data and casts-left bookkeeping only until magic exists (Phase 5).
     /// </summary>
     Caster,
+
+    /// <summary>Teleports: moves like <see cref="Flying"/> (to any free spot within its speed, ignoring what lies between; ADR-070, CMB-4).</summary>
+    Teleporting,
 }
 
 /// <param name="Kind">The rule.</param>
@@ -215,6 +218,11 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
 
     public bool IsFlying => Has(CapabilityKind.Flying);
 
+    public bool IsTeleporting => Has(CapabilityKind.Teleporting);
+
+    /// <summary>Flyers and teleporters reach any free spot within their speed, whatever stands between (ADR-070).</summary>
+    public bool MovesFreely => IsFlying || IsTeleporting;
+
     public bool Has(CapabilityKind kind) => Capabilities.Any(a => a.Kind == kind);
 
     public int CapabilityValue(CapabilityKind kind) => Capabilities.FirstOrDefault(a => a.Kind == kind)?.Value ?? 0;
@@ -252,7 +260,7 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
                 value = value * 3 / 2;
             }
 
-            if (IsFlying)
+            if (MovesFreely)
             {
                 value = value * 6 / 5;
             }

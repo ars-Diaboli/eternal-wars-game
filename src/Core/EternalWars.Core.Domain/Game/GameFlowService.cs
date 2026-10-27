@@ -217,9 +217,17 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         events.Publish(new PlayerDefeated(player.Id, reason));
     }
 
+    /// <summary>
+    /// Ends the game for the team's players still in it. While one of its human players survives, the team's eliminated human players share the
+    /// win (ADR-073); eliminated computer players never do, and a computer ally's survival alone wins nothing for eliminated humans.
+    /// </summary>
     private void End(TeamId? winningTeam, string reason)
     {
-        IReadOnlyList<PlayerId> winners = winningTeam is { } team ? InGame().Where(p => p.Team == team).Select(p => p.Id).ToList() : [];
+        IReadOnlyList<PlayerId> winners = winningTeam is { } team
+            ? state.Players.Where(p => p.TookPart && p.Team == team)
+                .Where(p => !p.IsDefeated || (p.IsHuman && InGame().Any(o => o.Team == team && o.IsHuman)))
+                .Select(p => p.Id).ToList()
+            : [];
         state.Outcome = new GameOutcome(winners, reason, state.Date);
         events.Publish(new GameEnded(winners, reason, state.Date));
     }

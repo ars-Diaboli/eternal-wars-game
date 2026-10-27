@@ -206,6 +206,18 @@ public static class BuiltInSkills
 /// <summary>Draft numbers of the skills that work before towns and magic exist (ADR-048, ADR-069).</summary>
 public static class SkillEffects
 {
+    /// <summary>A skill specialty raises its skill's effect by this many percent per hero level (ADR-072, HERO-1).</summary>
+    public const int SpecialtyPercentPerLevel = 5;
+
+    /// <summary>
+    /// <paramref name="effect"/> of <paramref name="skill"/>, raised by <see cref="SpecialtyPercentPerLevel"/> per hero level when it is the hero's
+    /// skill specialty (rounded down). Used for the effects that are amounts: Melee, Archery, Logistics and the attunements' mana.
+    /// </summary>
+    public static int WithSpecialty(Hero hero, string skill, int effect) =>
+        hero.Specialty is { Kind: SpecialtyKind.Skill } specialty && specialty.Target == skill
+            ? effect * (100 + (SpecialtyPercentPerLevel * hero.Level)) / 100
+            : effect;
+
     public static int MeleeDamagePercent(SkillLevel level) => level switch
     {
         SkillLevel.Basic => 9,

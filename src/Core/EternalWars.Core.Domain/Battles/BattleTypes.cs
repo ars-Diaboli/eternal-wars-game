@@ -162,8 +162,8 @@ public sealed record HeroBattleBonuses(
 
         var artifacts = hero.Bonus;
         return new(
-            Heroes.SkillEffects.MeleeDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Melee)) + artifacts.MeleePercent,
-            Heroes.SkillEffects.RangedDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Archery)) + artifacts.RangedPercent,
+            Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.Melee, Heroes.SkillEffects.MeleeDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Melee))) + artifacts.MeleePercent,
+            Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.Archery, Heroes.SkillEffects.RangedDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Archery))) + artifacts.RangedPercent,
             Math.Min(90, Heroes.SkillEffects.DamageTakenReductionPercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Armor)) + artifacts.DamageTakenReductionPercent),
             Heroes.SkillEffects.BattleSpeedBonus(hero.SkillLevelOf(Heroes.BuiltInSkills.WarTempo)) + artifacts.BattleSpeed,
             preferred,
