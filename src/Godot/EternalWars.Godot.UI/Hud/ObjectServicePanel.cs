@@ -14,7 +14,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// What an own hero can buy at a map building it stands at (ADR-068): a Hill Fort's upgrades of tier 1–3 stacks for 150 % of the upgrade price,
 /// a War Machine Factory's machines at the blacksmith's prices, an artifact merchant's stock, a refugee camp's creatures, or what it may
-/// sacrifice at an altar (ADR-079). Closes with Escape or "Close", and when the hero leaves.
+/// sacrifice at an altar (ADR-079), a map tavern's heroes and the troops of an own garrison (ADR-082). Closes with Escape or "Close", and when the hero leaves.
 /// </summary>
 public partial class ObjectServicePanel : PanelContainer
 {
@@ -48,10 +48,12 @@ public partial class ObjectServicePanel : PanelContainer
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<GarrisonChanged>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroHired>(session.Events, _ => Refresh());
     }
 
     /// <summary>Whether the panel serves this kind of object.</summary>
-    public static bool Serves(MapObject mapObject) => mapObject is HillFort or WarMachineFactory or ArtifactMerchant or RefugeeCamp or SacrificialAltar;
+    public static bool Serves(MapObject mapObject) => mapObject is HillFort or WarMachineFactory or ArtifactMerchant or RefugeeCamp or SacrificialAltar or MapTavern or MapGarrison;
 
     public void Open(MapObjectId id)
     {
@@ -107,6 +109,12 @@ public partial class ObjectServicePanel : PanelContainer
                 return;
             case SacrificialAltar altar:
                 ShowAltar(altar, hero);
+                return;
+            case MapTavern tavern:
+                ShowTavern(tavern, player);
+                return;
+            case MapGarrison garrison:
+                ShowGarrison(garrison, hero, player);
                 return;
         }
 
@@ -228,6 +236,54 @@ public partial class ObjectServicePanel : PanelContainer
                 button.Pressed += () => Run(new SacrificeArtifactCommand(player, altar.Id, id));
                 _rows.AddChild(button);
             }
+        }
+    }
+
+    private void ShowTavern(MapTavern tavern, Core.Domain.Players.Player player)
+    {
+        var state = _session.State;
+        _rows.AddChild(new Label { Text = $"Heroes of any faction, the same for every player; a new pool every week. {ResourceProviderRules.Describe(TavernRules.HeroCost)} each." });
+        var refusal = state.HeroLimitReached(player.Id) ? $"You have all {state.HeroLimit(player.Id)} heroes you may."
+            : MapTavernRules.Arrival(state, tavern) is null ? "There is no free cell next to the tavern." : null;
+        foreach (var offer in MapTavernRules.Offers(state, tavern))
+        {
+            var button = new Button
+            {
+                Text = $"Hire {offer.Name} ({offer.Town}, {offer.Class})",
+                Disabled = refusal is not null || !player.Resources.CanAfford(TavernRules.HeroCost),
+                TooltipText = refusal ?? "",
+            };
+            var id = offer.Id;
+            button.Pressed += () => Run(new HireAtMapTavernCommand(player.Id, tavern.Id, id));
+            _rows.AddChild(button);
+        }
+    }
+
+    private void ShowGarrison(MapGarrison garrison, Core.Domain.Heroes.Hero hero, Core.Domain.Players.Player player)
+    {
+        var state = _session.State;
+        if (garrison.Owner != player.Id)
+        {
+            _rows.AddChild(new Label { Text = "Only the garrison's owner moves troops in or out." });
+            return;
+        }
+
+        _rows.AddChild(new Label { Text = $"{hero.Name}'s army (a hero keeps one stack):" });
+        foreach (var (slot, stack) in hero.Army.Stacks)
+        {
+            var button = new Button { Text = $"Leave {stack.Count} × {state.Creatures.Get(stack.Creature).Name}", Disabled = hero.Army.Stacks.Count() == 1 };
+            var at = slot;
+            button.Pressed += () => Run(new MoveGarrisonStackCommand(player.Id, garrison.Id, at, ToGarrison: true));
+            _rows.AddChild(button);
+        }
+
+        _rows.AddChild(new Label { Text = "In the garrison:" });
+        foreach (var (slot, stack) in garrison.Troops.Stacks)
+        {
+            var button = new Button { Text = $"Take {stack.Count} × {state.Creatures.Get(stack.Creature).Name}", Disabled = !hero.Army.CanAccept(stack.Creature) };
+            var at = slot;
+            button.Pressed += () => Run(new MoveGarrisonStackCommand(player.Id, garrison.Id, at, ToGarrison: false));
+            _rows.AddChild(button);
         }
     }
 

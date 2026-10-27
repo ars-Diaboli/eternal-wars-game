@@ -140,6 +140,13 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             }
         }
 
+        // Border guards and gates let only key holders onto their tile (ADR-071).
+        if (BorderRules.Barring(state, hero.Owner, target) is { } post)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, post.Id, $"Only the holder of the {post.Colour.ToString().ToLowerInvariant()} key may pass."));
+            return MoveResult.Blocked;
+        }
+
         var cost = MovementRules.StepCost(state, hero, hero.Position, target, direction);
         var entrance = state.ObjectCellAt(target) is { Cell: FootprintCell.Visit } cell ? cell.Object : null;
 
@@ -178,7 +185,9 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             return MoveResult.GuardEncountered;
         }
 
-        var defended = entrance is Mine { Guard: not null } or CreatureDwelling { Guard: not null } or CreatureBank { IsGuarded: true } || (entrance is Town { Garrison.IsEmpty: false } town && IsHostile(hero, town));
+        var defended = entrance is Mine { Guard: not null } or CreatureDwelling { Guard: not null } or CreatureBank { IsGuarded: true }
+                       || (entrance is Town { Garrison.IsEmpty: false } town && IsHostile(hero, town))
+                       || (entrance is MapGarrison { Troops.IsEmpty: false } garrison && !garrison.LetsThrough(state, hero.Owner));
         if (defended && hero.Army.IsEmpty)
         {
             return MoveResult.NoArmy;

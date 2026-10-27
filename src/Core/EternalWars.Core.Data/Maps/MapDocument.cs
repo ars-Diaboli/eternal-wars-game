@@ -29,12 +29,14 @@ namespace EternalWars.Core.Data.Maps;
 /// 20 = + creature banks (<c>bank</c>; the tier is rolled when the game starts, ADR-068). 21 = a resource pile's <c>amount</c> may be left out,
 /// to be rolled when the game starts (ADR-068). 22 = a resource provider may have an <c>owner</c> (ADR-079, TOWN-9) and the map may have
 /// <c>rivers</c> (same shape as <c>roads</c>; ADR-079, MAP-26); + the Den of Thieves and the sanctuary (<c>denOfThieves</c>, <c>sanctuary</c>) and scenery (<c>scenery</c>, from <c>scenery.csv</c>); + cartographers, artifact merchants, refugee camps, sacrificial altars, sphinxes
-/// (an optional riddle) and witch huts (optional skills).
+/// (an optional riddle) and witch huts (optional skills). 23 = + deposits (<c>deposit</c>), Windows and Eyes of the Magi (<c>magiWindow</c>,
+/// <c>magiEye</c>), Keymaster's Tents and border posts (<c>keymaster</c>, <c>borderPost</c>), map taverns (<c>tavern</c>) and garrisons
+/// (<c>garrison</c>, optional owner and troops; ADR-082); the undead bank <c>bank.ruins</c> is <c>bank.crypt</c> (older ids still load).
 /// Older versions still load.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 22;
+    public const int CurrentFormatVersion = 23;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -179,6 +181,13 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(SacrificialAltarDocument), "altar")]
 [JsonDerivedType(typeof(SphinxDocument), "sphinx")]
 [JsonDerivedType(typeof(WitchHutDocument), "witchHut")]
+[JsonDerivedType(typeof(DepositDocument), "deposit")]
+[JsonDerivedType(typeof(MagiWindowDocument), "magiWindow")]
+[JsonDerivedType(typeof(MagiEyeDocument), "magiEye")]
+[JsonDerivedType(typeof(KeymasterDocument), "keymaster")]
+[JsonDerivedType(typeof(BorderPostDocument), "borderPost")]
+[JsonDerivedType(typeof(MapTavernDocument), "tavern")]
+[JsonDerivedType(typeof(GarrisonDocument), "garrison")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -228,6 +237,32 @@ public sealed record SignDocument : MapObjectDocument
 
 /// <summary>A creature bank (v20, ADR-068); which bank comes from its definition, the tier is rolled in the game.</summary>
 public sealed record CreatureBankDocument : MapObjectDocument;
+
+/// <summary>A deposit (v23, ADR-070): which mine it becomes and its price come from its definition.</summary>
+public sealed record DepositDocument : MapObjectDocument;
+
+/// <summary>A Window of the Magi (v23, ADR-070); the colour comes from its definition.</summary>
+public sealed record MagiWindowDocument : MapObjectDocument;
+
+/// <summary>An Eye of the Magi (v23, ADR-070); the colour comes from its definition.</summary>
+public sealed record MagiEyeDocument : MapObjectDocument;
+
+/// <summary>A Keymaster's Tent (v23, ADR-071); the colour comes from its definition, the keys players hold are game state.</summary>
+public sealed record KeymasterDocument : MapObjectDocument;
+
+/// <summary>A border guard or gate (v23, ADR-071); colour and kind come from its definition.</summary>
+public sealed record BorderPostDocument : MapObjectDocument;
+
+/// <summary>A map tavern (v23, ADR-070); its weekly pool is drawn in the game.</summary>
+public sealed record MapTavernDocument : MapObjectDocument;
+
+/// <summary>A garrison (v23, ADR-070): its owner, if any, and the troops inside (a neutral garrison's guards).</summary>
+public sealed record GarrisonDocument : MapObjectDocument
+{
+    public int? Owner { get; init; }
+
+    public IReadOnlyList<ArmySlotDocument>? Troops { get; init; }
+}
 
 /// <summary>A Den of Thieves (v22, ADR-079).</summary>
 public sealed record DenOfThievesDocument : MapObjectDocument;

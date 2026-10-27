@@ -118,6 +118,15 @@ public static class MapValidator
                 case Mine { Guard: { } guard } mine when !scenario.Creatures.Contains(guard.Creature):
                     issues.Add(new(IssueSeverity.Error, $"{name} guard uses unknown creature '{guard.Creature}'.", mine.Position));
                     break;
+                case MapGarrison { Owner: { } garrisonOwner } garrison when !scenario.HasPlayer(garrisonOwner):
+                    issues.Add(new(IssueSeverity.Error, $"{name} belongs to a missing player.", garrison.Position));
+                    break;
+                case MapGarrison garrison when garrison.Troops.Stacks.Any(s => !scenario.Creatures.Contains(s.Stack.Creature)):
+                    issues.Add(new(IssueSeverity.Error, $"{name} holds an unknown creature.", garrison.Position));
+                    break;
+                case MapGarrison { Owner: null, Troops.IsEmpty: true } garrison:
+                    issues.Add(new(IssueSeverity.Warning, $"{name} is neutral and empty: the first hero to arrive takes it.", garrison.Position));
+                    break;
                 case Town town:
                     issues.AddRange(ValidateTown(scenario, town).Select(m => new MapIssue(IssueSeverity.Error, $"{town.Name} {m}", town.Position)));
                     break;
@@ -136,6 +145,30 @@ public static class MapValidator
                 if (map.GetRiver(position) != RiverType.None && !scenario.Terrains.IsPassable(map.GetTerrain(position)))
                 {
                     issues.Add(new(IssueSeverity.Warning, "River on impassable terrain.", position));
+                }
+            }
+        }
+
+        // Eyes of the Magi (ADR-070): at most four a colour, and a window needs an eye to show.
+        foreach (var colour in Enum.GetValues<ObjectColour>())
+        {
+            var eyes = scenario.ObjectsOf<MagiEye>().Count(e => e.Colour == colour);
+            if (eyes > MagiWindow.MaxEyes)
+            {
+                issues.Add(new(IssueSeverity.Error, $"{eyes} {colour.ToString().ToLowerInvariant()} Eyes of the Magi; a colour has at most {MagiWindow.MaxEyes}."));
+            }
+
+            foreach (var window in scenario.ObjectsOf<MagiWindow>().Where(w => w.Colour == colour && eyes == 0))
+            {
+                issues.Add(new(IssueSeverity.Warning, $"{window.Definition.Name} has no Eye of its colour to look through.", window.Position));
+            }
+
+            // Border posts no Keymaster's Tent opens (ADR-071).
+            if (!scenario.ObjectsOf<KeymasterTent>().Any(t => t.Colour == colour))
+            {
+                foreach (var post in scenario.ObjectsOf<BorderPost>().Where(p => p.Colour == colour))
+                {
+                    issues.Add(new(IssueSeverity.Warning, $"{post.Definition.Name} has no Keymaster's Tent of its colour: nobody can pass.", post.Position));
                 }
             }
         }

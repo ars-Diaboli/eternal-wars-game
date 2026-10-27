@@ -24,6 +24,9 @@ public enum LootRule
 
     /// <summary>First visitor: an artifact (80 % Minor, 15 % Major, 5 % Relic); every visitor: −3 morale for the next battle; stays.</summary>
     WarriorsTomb,
+
+    /// <summary>5 % nothing, 5 % a Major artifact, 60 % a Minor artifact, 30 % a Minor artifact and 500–1000 gold (in hundreds); vanishes (ADR-070, MAP-15).</summary>
+    MagesChest,
 }
 
 /// <summary>
@@ -51,7 +54,7 @@ public static class LootRules
     /// <summary>The Warrior's Tomb's morale for the next battle, for the first visitor and everyone after.</summary>
     public const int TombMorale = -3;
 
-    public static bool Vanishes(LootRule rule) => rule is LootRule.Campfire or LootRule.SupplyCrates or LootRule.TravelersWagon;
+    public static bool Vanishes(LootRule rule) => rule is LootRule.Campfire or LootRule.SupplyCrates or LootRule.TravelersWagon or LootRule.MagesChest;
 
     public static LootRoll Roll(LootRule rule, GameRandom random)
     {
@@ -80,6 +83,14 @@ public static class LootRules
                 return new(Some(1, 6));
             case LootRule.WarriorsTomb:
                 return new(ResourceSet.Empty, WeightedRoll.Pick<ArtifactTier>([(80, ArtifactTier.Minor), (15, ArtifactTier.Major), (5, ArtifactTier.Relic)], random));
+            case LootRule.MagesChest:
+                return WeightedRoll.Pick<int>([(5, 0), (5, 1), (60, 2), (30, 3)], random) switch
+                {
+                    0 => LootRoll.Nothing,
+                    1 => new(ResourceSet.Empty, ArtifactTier.Major),
+                    2 => new(ResourceSet.Empty, ArtifactTier.Minor),
+                    _ => new(new ResourceSet(Gold: 100 * random.NextInclusive(5, 10)), ArtifactTier.Minor),
+                };
             default:
                 throw new ArgumentOutOfRangeException(nameof(rule), rule, null);
         }

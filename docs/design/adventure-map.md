@@ -77,6 +77,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Loot sites | Campfire, Supply Crates, Traveler's Wagon (picked up, vanish), Corpse, Lean To, Warrior's Tomb (stay): only the first visitor finds something ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v17 |
 | Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: flagged, a week's output stored every week for the owner ([below](#mines-and-resource-providers)) | implemented (ADR-068, ADR-079), map format v16 / v22 |
 | Second catalogue | Mage's Chest, Windows and Eyes of the Magi, Tavern, Garrison, Keymaster's Tent, deposits, six more banks, magic sites, three buffs, five power-ups ([below](#second-object-catalogue-adr-069)) | planned (ADR-069) |
+| Second catalogue | Mage's Chest, deposits, Windows and Eyes of the Magi, map tavern, portals, garrisons, Keymasters and border posts, six banks, mana sites, buffs, power-ups ([below](#second-object-catalogue-adr-069)) | implemented (ADR-082) except the Shrines, map format v23 |
 | Third catalogue | Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves, Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut ([below](#third-object-catalogue-adr-077)) | implemented (ADR-079, ADR-080) except the Astrologer's Tower, map format v22 |
 | Scenery | Rocks, trees, dead trees, ponds, bushes, mushrooms, flowers, fissures, mounds, ruins, bones, castle walls: obstacles, all blocking, from `scenery.csv` ([below](#scenery-and-rivers-adr-077-built-adr-079)); rivers too | implemented (ADR-079), map format v22 |
 
@@ -225,7 +226,7 @@ is split into a few battle stacks (at most seven stacks in all).
 |---|---|
 | Churchyard | 100 %: 90 Ghouls, 2500 gold, a Minor artifact. A later visit to the plundered bank gives **−1 morale for the next battle**; no other bank has such a penalty |
 | Mansion | 30 %: 40 Vampire Lords, 2500 gold, 2 each of mercury / sulfur / crystal, a Major artifact · 30 %: 60, 5000 gold, 3 each, Major · 30 %: 80, 7500 gold, 4 each, Major · 10 %: 100, 10000 gold, 5 each, Major |
-| Crypt (built as "Ruins", `bank.ruins`) | 30 %: 20 Skeletons, 3 Wights, 3 Wraiths, 10 Skeleton Warriors, 1 Arch Lich, 1000 gold · 30 %: 30 / 5 / 5 / 10 / 1, 2000 gold · 30 %: 40 / 7 / 7 / 20 / 2, 3000 gold · 10 %: 50 / 9 / 9 / 20 / 3, 4000 gold. Also **removes the fog within 12 tiles** of the ruins, even when they were visited before |
+| Crypt (`bank.crypt`; `bank.ruins` before ADR-082) | 30 %: 20 Skeletons, 3 Wights, 3 Wraiths, 10 Skeleton Warriors, 1 Arch Lich, 1000 gold · 30 %: 30 / 5 / 5 / 10 / 1, 2000 gold · 30 %: 40 / 7 / 7 / 20 / 2, 3000 gold · 10 %: 50 / 9 / 9 / 20 / 3, 4000 gold. Also **removes the fog within 12 tiles** of the ruins, even when they were visited before |
 | Dwarven Treasury | 30 %: 50 Defenders, 2500 gold, 2 crystal · 30 %: 75, 4000, 4 · 30 %: 100, 5000, 6 · 10 %: 150, 7500, 10. 50 % chance that a fifth of the guard are Shield Guards |
 | Imp Cache | 30 %: 100 Imps, 1000 gold, 2 mercury · 30 %: 150, 1500, 4 · 30 %: 200, 2000, 6 · 10 %: 300, 3000, 8. 50 % chance that a fifth are Familiars |
 | Medusa Stores | 30 %: 15 Medusas, 2000 gold, 4 sulfur · 30 %: 30, 3000, 6 · 30 %: 40, 4000, 8 · 10 %: 50, 5000, 10. 50 % chance that a fifth are Putrid Medusas |
@@ -236,7 +237,8 @@ reward, the artifact included, comes back.
 
 **Re-draft (ADR-070, not built)**: every bank, these and the [second catalogue's](#creature-banks-1), gets a new guard of **2–3 creature
 types of one faction**; the tables above are the built state until the drafts are written. The undead Ruins is renamed **Crypt**
-(`bank.crypt`; older maps load `bank.ruins` as the Crypt), and the name Ruins goes to the orc bank.
+(`bank.crypt`; older maps load `bank.ruins` as the Crypt), and the name Ruins goes to the orc bank (`bank.orc-ruins`); the rename is built
+(ADR-082).
 
 ### Permanent hero power-ups
 | Object | Effect |
@@ -274,7 +276,8 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 | War Machine Factory | **Implemented.** Sells the visiting hero **its own offensive machine** (ballista, cannon, catapult or glaivethrower, ADR-056), the **ammo cart** and the **healing tent**, at the **blacksmith's prices**; not a machine the hero already has (decided, MAP-13) |
 
 ## Second object catalogue (ADR-069)
-The owner's second list (`ideas.md`, 2026-10-20). **Nothing here is built.** The shared rules above (visit scopes, statuses, rolls, artifact
+The owner's second list (`ideas.md`, 2026-10-20). **Built** (ADR-082, map format v23) except the Shrines (Phase 5) and the faction
+re-draft of the banks' guards; the prices and bank tables below are ADR-082's drafts. The shared rules above (visit scopes, statuses, rolls, artifact
 tiers, creature names) apply. MAP-15 … MAP-24 were answered by ADR-070; MAP-20 (Keymasters) and the map tavern's pool (TOWN-4) by ADR-071;
 the points once marked *(assumed)* were confirmed in ADR-073.
 Every number is a draft.
@@ -297,7 +300,8 @@ Every number is a draft.
 ### Deposits (become mines)
 A visiting hero pays from its player's resources and the deposit turns into the mine of its kind, flagged for that player. Any hero
 may pay; a deposit may have a normal monster guard. The generator places deposits separately, like abandoned mines (ADR-070,
-MAP-21). Prices (drafts): Gold Vein **5000 gold + 10 ore**, the others **2000–3000 gold + 5 lumber or ore**.
+MAP-21). Prices (drafts, ADR-082): Gold Vein **5000 gold + 10 ore**; Wood Pile **2000 + 5 ore**; Ore Deposit **2000 + 5 lumber**; Crystal Vein,
+Cinnabar Deposit and Sulfur Vent **3000 + 5 ore**. The player is asked before paying.
 
 | Deposit | Becomes |
 |---|---|
@@ -312,6 +316,11 @@ MAP-21). Prices (drafts): Gold Vein **5000 gold + 10 ore**, the others **2000–
 Like the banks above: the guard always fights, the reward only on victory. Tables follow the existing banks: four rows at
 30 / 30 / 30 / 10 %, rewards scaled to the guard's value (ADR-070, MAP-22). Like every bank, each guard is **2–3 creature types of one
 faction**; the creatures below are the notes' starting point and the **drafts are pending**. Dragon City is the strongest bank by far.
+**Built (ADR-082)** with the notes' creatures: Ruins 20 / 30 / 40 / 60 Orcs (a fifth Berserkers half the time) for 2000–6000 gold; Lair
+4 / 6 / 8 / 12 Spectators (a fifth Beholders) for 2000–6000 gold and a Minor artifact (Major in the top row); Keep 20–60 Pikemen and 10–30
+Archers for 1500–5000 gold and a Minor (Major) artifact; Hideout 15–50 Bandits for 1500–5000 gold; Forest Glen 30–100 Timber Wolves (a
+fifth Dire Wolves) for 1000–3000 gold and 5–20 lumber; Dragon City 3 / 4 / 5 / 6 Black Dragons for 10000–30000 gold, a Relic and 1–3 Major
+artifacts.
 
 | Bank | Guard (notes, roster creatures) | Reward (notes) |
 |---|---|---|

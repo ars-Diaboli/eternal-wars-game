@@ -42,6 +42,23 @@ public static class BuiltInMapObjects
     public const string Stables = "buff.stables";
     public const string MagicWell = "buff.magic-well";
 
+    /// <summary>The second catalogue's buffs and mana sites (ADR-069, ADR-070).</summary>
+    public const string CloverField = "buff.clover-field";
+    public const string Rainbow = "buff.rainbow";
+    public const string RallyFlag = "buff.rally-flag";
+    public const string ManaVortex = "buff.mana-vortex";
+    public const string FountainOfMagic = "buff.fountain-of-magic";
+
+    /// <summary>The second catalogue's power-ups (ADR-069).</summary>
+    public const string DreamTeacher = "training.dream-teacher";
+    public const string TrainingGrounds = "training.training-grounds";
+    public const string MarlettoTower = "training.marletto-tower";
+    public const string StarAxis = "training.star-axis";
+    public const string GardenOfRevelation = "training.garden-of-revelation";
+
+    /// <summary>The Mage's Chest (ADR-070, MAP-15).</summary>
+    public const string MagesChest = "loot.mages-chest";
+
     /// <summary>Training sites (ADR-068).</summary>
     public const string LearningStone = "training.learning-stone";
     public const string Gazebo = "training.gazebo";
@@ -69,10 +86,32 @@ public static class BuiltInMapObjects
     public const string Sphinx = "sphinx";
     public const string WitchHut = "witch-hut";
 
+    /// <summary>The second catalogue's travel and utility objects (ADR-069 … ADR-071); the coloured ones are <see cref="ColouredId"/>.</summary>
+    public const string MapTavern = "tavern";
+    public const string Garrison = "garrison";
+    public const string VerticalGarrison = "garrison.vertical";
+    public const string MagiWindow = "magi.window";
+    public const string MagiEye = "magi.eye";
+    public const string KeymasterTent = "keymaster";
+    public const string BorderGuard = "border.guard";
+    public const string BorderGate = "border.gate";
+
+    /// <summary>Definition id of a coloured object: <c>magi.eye.red</c>, <c>keymaster.blue</c>, <c>border.gate.black</c>.</summary>
+    public static string ColouredId(string kind, ObjectColour colour) => $"{kind}.{colour.ToString().ToLowerInvariant()}";
+
     /// <summary>Creature banks (ADR-068).</summary>
     public const string Churchyard = "bank.churchyard";
     public const string Mansion = "bank.mansion";
-    public const string Ruins = "bank.ruins";
+    /// <summary>The undead bank, called Ruins until ADR-070 (older maps' <c>bank.ruins</c> load as it).</summary>
+    public const string Crypt = "bank.crypt";
+
+    /// <summary>The second catalogue's banks (ADR-069, ADR-070); the orc bank took the name Ruins.</summary>
+    public const string Ruins = "bank.orc-ruins";
+    public const string Lair = "bank.lair";
+    public const string Keep = "bank.keep";
+    public const string Hideout = "bank.hideout";
+    public const string ForestGlen = "bank.forest-glen";
+    public const string DragonCity = "bank.dragon-city";
     public const string DwarvenTreasury = "bank.dwarven-treasury";
     public const string ImpCache = "bank.imp-cache";
     public const string MedusaStores = "bank.medusa-stores";
@@ -117,9 +156,10 @@ public static class BuiltInMapObjects
 
         new(TreasureChest, "Treasure chest", MapObjectKind.TreasureChest, Footprint.Single),
         new(SubterraneanGate, "Subterranean gate", MapObjectKind.TwoWayGate, GateFootprint),
-        new(TwoWayMonolith, "Two-way monolith", MapObjectKind.TwoWayGate, MonolithFootprint),
-        new(OneWayMonolithEntrance, "One-way monolith entrance", MapObjectKind.OneWayGateEntrance, MonolithFootprint),
-        new(OneWayMonolithExit, "One-way monolith exit", MapObjectKind.OneWayGateExit, MonolithFootprint),
+        // Called portals since ADR-070 (MAP-18); the ids keep the old monolith names so older maps load.
+        new(TwoWayMonolith, "Portal", MapObjectKind.TwoWayGate, MonolithFootprint),
+        new(OneWayMonolithEntrance, "One-way portal", MapObjectKind.OneWayGateEntrance, MonolithFootprint),
+        new(OneWayMonolithExit, "One-way portal exit", MapObjectKind.OneWayGateExit, MonolithFootprint),
         new(Monster, "Monster", MapObjectKind.Monster, Footprint.Single),
         new(Dwelling, "Creature dwelling", MapObjectKind.Dwelling, MineFootprint),
         new(Marketplace, "Marketplace", MapObjectKind.Marketplace, MineFootprint),
@@ -141,6 +181,7 @@ public static class BuiltInMapObjects
         Loot(Corpse, "Corpse", LootRule.Corpse, Footprint.Single),
         Loot(LeanTo, "Lean-to", LootRule.LeanTo, new(["BV"])),
         Loot(WarriorsTomb, "Warrior's tomb", LootRule.WarriorsTomb, ProviderFootprint),
+        Loot(MagesChest, "Mage's chest", LootRule.MagesChest, Footprint.Single),
 
         Buff(FaerieRing, "Faerie ring", BuffRule.FaerieRing, VisitScope.DailyPerHero),
         Buff(FountainOfYouth, "Fountain of youth", BuffRule.FountainOfYouth, VisitScope.DailyPerHero),
@@ -148,6 +189,11 @@ public static class BuiltInMapObjects
         Buff(MineralSpring, "Mineral spring", BuffRule.MineralSpring, VisitScope.DailyPerHero),
         Buff(Stables, "Stables", BuffRule.Stables, VisitScope.WeeklyPerHero),
         Buff(MagicWell, "Magic well", BuffRule.MagicWell, VisitScope.DailyPerHero),
+        Buff(CloverField, "Clover field", BuffRule.CloverField, VisitScope.DailyPerHero),
+        Buff(Rainbow, "Rainbow", BuffRule.Rainbow, VisitScope.DailyPerHero),
+        Buff(RallyFlag, "Rally flag", BuffRule.RallyFlag, VisitScope.DailyPerHero),
+        Buff(ManaVortex, "Mana vortex", BuffRule.ManaVortex, VisitScope.WeeklyPerHero),
+        Buff(FountainOfMagic, "Fountain of magic", BuffRule.FountainOfMagic, VisitScope.WeeklyPerHero),
 
         Training(LearningStone, "Learning stone", TrainingRule.LearningStone),
         Training(Gazebo, "Gazebo", TrainingRule.Gazebo),
@@ -155,6 +201,11 @@ public static class BuiltInMapObjects
         Training(TreeOfKnowledge, "Tree of knowledge", TrainingRule.TreeOfKnowledge),
         Training(Arena, "Arena", TrainingRule.Arena),
         Training(ColosseumOfTheMagi, "Colosseum of the magi", TrainingRule.ColosseumOfTheMagi),
+        Training(DreamTeacher, "Dream teacher", TrainingRule.DreamTeacher),
+        Training(TrainingGrounds, "Training grounds", TrainingRule.TrainingGrounds),
+        Training(MarlettoTower, "Marletto tower", TrainingRule.MarlettoTower),
+        Training(StarAxis, "Star axis", TrainingRule.StarAxis),
+        Training(GardenOfRevelation, "Garden of revelation", TrainingRule.GardenOfRevelation),
 
         new(Sign, "Sign", MapObjectKind.Sign, new(["BV"])),
         new(Observatory, "Observatory", MapObjectKind.Observatory, ProviderFootprint) { VisitScope = VisitScope.OncePerHero },
@@ -172,9 +223,29 @@ public static class BuiltInMapObjects
         new(Sphinx, "Sphinx", MapObjectKind.Sphinx, MineFootprint) { VisitScope = VisitScope.OncePerHero },
         new(WitchHut, "Witch hut", MapObjectKind.WitchHut, ProviderFootprint),
 
+        // The second catalogue (ADR-069 … ADR-071).
+        .. new[] { ResourceType.Lumber, ResourceType.Ore, ResourceType.Gold, ResourceType.Crystal, ResourceType.Mercury, ResourceType.Sulfur }.Select(Deposit),
+        new(MapTavern, "Tavern", MapObjectKind.MapTavern, MineFootprint),
+        new(Garrison, "Garrison", MapObjectKind.Garrison, new(["BVB"])),
+        new(VerticalGarrison, "Garrison (vertical)", MapObjectKind.Garrison, new(["B", "V", "B"])),
+        .. Enum.GetValues<ObjectColour>().SelectMany(c => new MapObjectDefinition[]
+        {
+            new(ColouredId(MagiWindow, c), $"Window of the magi ({Lower(c)})", MapObjectKind.MagiWindow, ProviderFootprint) { Colour = c },
+            new(ColouredId(MagiEye, c), $"Eye of the magi ({Lower(c)})", MapObjectKind.MagiEye, Footprint.Single) { Colour = c },
+            new(ColouredId(KeymasterTent, c), $"Keymaster's tent ({Lower(c)})", MapObjectKind.KeymasterTent, ProviderFootprint) { Colour = c },
+            new(ColouredId(BorderGuard, c), $"Border guard ({Lower(c)})", MapObjectKind.BorderPost, Footprint.Single) { Colour = c },
+            new(ColouredId(BorderGate, c), $"Border gate ({Lower(c)})", MapObjectKind.BorderPost, Footprint.Single) { Colour = c, Stays = true },
+        }),
+
         Bank(Churchyard, "Churchyard", BankRule.Churchyard),
         Bank(Mansion, "Mansion", BankRule.Mansion),
+        Bank(Crypt, "Crypt", BankRule.Crypt),
         Bank(Ruins, "Ruins", BankRule.Ruins),
+        Bank(Lair, "Lair", BankRule.Lair),
+        Bank(Keep, "Keep", BankRule.Keep),
+        Bank(Hideout, "Hideout", BankRule.Hideout),
+        Bank(ForestGlen, "Forest glen", BankRule.ForestGlen),
+        Bank(DragonCity, "Dragon city", BankRule.DragonCity),
         Bank(DwarvenTreasury, "Dwarven treasury", BankRule.DwarvenTreasury),
         Bank(ImpCache, "Imp cache", BankRule.ImpCache),
         Bank(MedusaStores, "Medusa stores", BankRule.MedusaStores),
@@ -213,6 +284,25 @@ public static class BuiltInMapObjects
             GuardMin = min,
             GuardMax = max,
             BattleTerrain = underground ? Map.TerrainType.Subterranean : null,
+        };
+
+    private static string Lower(ObjectColour colour) => colour.ToString().ToLowerInvariant();
+
+    private static string DepositName(ResourceType resource) => resource switch
+    {
+        ResourceType.Lumber => "Wood pile",
+        ResourceType.Ore => "Ore deposit",
+        ResourceType.Gold => "Gold vein",
+        ResourceType.Crystal => "Crystal vein",
+        ResourceType.Mercury => "Cinnabar deposit",
+        _ => "Sulfur vent",
+    };
+
+    /// <summary>A deposit that becomes the resource's mine (ADR-070, MAP-21).</summary>
+    private static MapObjectDefinition Deposit(ResourceType resource) =>
+        new(DepositRules.Id(resource), DepositName(resource), MapObjectKind.Deposit, MineFootprint)
+        {
+            Resource = resource, Becomes = MineId(resource), Price = DepositRules.Price(resource),
         };
 
     /// <summary>Definition id of a resource's warehouse: <c>warehouse.lumber</c>.</summary>

@@ -88,6 +88,13 @@ public abstract class MapObject
         MapObjectKind.SacrificialAltar => new SacrificialAltar(id, definition, position),
         MapObjectKind.Sphinx => new Sphinx(id, definition, position),
         MapObjectKind.WitchHut => new WitchHut(id, definition, position),
+        MapObjectKind.Deposit => new Deposit(id, definition, position),
+        MapObjectKind.MagiWindow => new MagiWindow(id, definition, position),
+        MapObjectKind.MagiEye => new MagiEye(id, definition, position),
+        MapObjectKind.KeymasterTent => new KeymasterTent(id, definition, position),
+        MapObjectKind.BorderPost => new BorderPost(id, definition, position),
+        MapObjectKind.MapTavern => new MapTavern(id, definition, position),
+        MapObjectKind.Garrison => new MapGarrison(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }

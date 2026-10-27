@@ -15,7 +15,8 @@ Phase 4 has every generator stage in core. **Next up** (in this order): the grou
 (caravan reach and queue, base-creature map dwellings, army morale) and the war machine footprints with deployment. The **skill rework is
 done** (ADR-078): new ids and numbers, Scouting, the distance penalty with Marksmanship, Primal Fury for both towns, the attunement table,
 mana by level, Necromancy with its screen and the Necromancy Amplifier (the Necromancy screen still needs a run in Godot). Next: the
-ADR-070 / ADR-071 items that need no answer (surrender, taverns: done, ADR-081), then the second catalogue. The ADR-077 items are answered and built
+ADR-070 / ADR-071 items that need no answer (surrender, taverns: done, ADR-081), then the second catalogue (built, ADR-082, except the
+Shrines and the bank re-draft). The ADR-077 items are answered and built
 (ADR-079, ADR-080): flaggable providers with resource caravans, caravan speed and limit, the Thieves' Guild, rivers, scenery and the third
 catalogue except the Astrologer's Tower (their Godot screens still need a run); the kingdom overview is still open.
 
@@ -27,8 +28,8 @@ catalogue except the Astrologer's Tower (their Godot screens still need a run); 
       `sim towns` re-run (similar spread, tuning stays CONT-2)
 - [x] `buildings.csv` town column (TOWN-3, ADR-074): a town's rows replace a shared building or add one only it has; `BuildingCatalog.For`,
       `TownRules.Buildings`; the town screen, editor, validator and AI use the town's list (the Necromancy Amplifier is the first town row)
-- [ ] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks); undead Ruins → Crypt with old
-      maps loading `bank.ruins` (MAP-22)
+- [ ] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks; MAP-22); the undead Ruins → Crypt
+      rename with old maps loading `bank.ruins` is done (ADR-082)
 
 ## Phase 0: Foundation ✅
 - [x] Three-tier solution, .NET 10, Godot 4.7.2 (`Godot.NET.Sdk`), architecture guard in MSBuild
@@ -402,21 +403,22 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
       hill forts and buys missing machines at factories when it can pay, and takes a town gate to the own town it needs most; buffs are
       visited for their value, not timed before a fight
 
-#### Second catalogue (ADR-069, decided 2026-10-20; [catalogue](../design/adventure-map.md#second-object-catalogue-adr-069))
-Same steps per object as above (map format bump, editor, validator, AI, generator values in `TreasureSites`).
-- [ ] Buffs: Clover Field, Rainbow, Rally Flag (clear, no open question)
-- [ ] Power-ups: Dream Teacher, Training Grounds, Marletto Tower, Star Axis, Garden of Revelation (clear, no open question)
-- [ ] Mage's Chest (5 % nothing, 5 % Major, 60 % Minor, 30 % Minor + 500–1000 gold; vanishes)
-- [ ] Deposits that become mines (Wood Pile, Ore Deposit, Gold Vein, Crystal Vein, Cinnabar Deposit, **Sulfur Vent**); paid by
+#### Second catalogue (ADR-069, decided 2026-10-20; built 2026-10-27, ADR-082; [catalogue](../design/adventure-map.md#second-object-catalogue-adr-069))
+Same steps per object as above (map format v23, editor, validator, AI, generator values in `TreasureSites`); the Godot screens are not run yet.
+- [x] Buffs: Clover Field, Rainbow, Rally Flag
+- [x] Power-ups: Dream Teacher, Training Grounds, Marletto Tower, Star Axis, Garden of Revelation
+- [x] Mage's Chest (5 % nothing, 5 % Major, 60 % Minor, 30 % Minor + 500–1000 gold; vanishes)
+- [x] Deposits that become mines (Wood Pile, Ore Deposit, Gold Vein, Crystal Vein, Cinnabar Deposit, **Sulfur Vent**); paid by
       any visiting hero, normal monster guards, the generator places them like abandoned mines
-- [ ] Six creature banks: Ruins (orcs), Lair, Keep, Hideout, Forest Glen, Dragon City (the strongest), with the faction re-draft
-- [ ] Window and Eye of the Magi (four colours, radius 6, up to 4 Eyes a colour; editor only, not generated)
-- [ ] Garrison (flagged, captured by its guards, both ways, leave and take troops); generator option for connections
-- [ ] Map tavern (4 offers from its own weekly pool of random heroes shared by all players; hire at the entrance, hero on the
+- [x] Six creature banks: Ruins (orcs), Lair, Keep, Hideout, Forest Glen, Dragon City (the strongest); the undead Ruins renamed Crypt
+- [x] Window and Eye of the Magi (four colours, radius 6, up to 4 Eyes a colour; editor only, not generated)
+- [x] Garrison (flagged, captured by its guards, both ways, leave and take troops)
+- [ ] Generator option to guard connections with garrisons, border guards or gates (RMG-11, template format)
+- [x] Map tavern (4 offers from its own weekly pool of random heroes shared by all players; hire at the entrance, hero on the
       next free cell, hero limit; ADR-070, ADR-071)
-- [ ] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
-- [ ] Mana Vortex (twice the maximum until spent, weekly per hero), Fountain of Magic (weekly per hero, ADR-072)
-- [ ] Keymaster's Tent, border guards and border gates (four colours, the player's key, guards vanish, gates stay; ADR-071)
+- [x] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
+- [x] Mana Vortex (twice the maximum until spent, weekly per hero), Fountain of Magic (weekly per hero, ADR-072)
+- [x] Keymaster's Tent, border guards and border gates (four colours, the player's key, guards vanish, gates stay; ADR-071)
 - [ ] Shrines (spell set in the editor or rolled at start, school Magic at the spell's level, unlimited visits) (Phase 5)
 
 #### Third catalogue (ADR-077; built 2026-10-26, ADR-079 / ADR-080; [catalogue](../design/adventure-map.md#third-object-catalogue-adr-077))

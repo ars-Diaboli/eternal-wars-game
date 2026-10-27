@@ -91,6 +91,27 @@ public enum MapObjectKind
 
     /// <summary>One of two skills, once per hero level (<see cref="Objects.WitchHut"/>, ADR-079).</summary>
     WitchHut,
+
+    /// <summary>Becomes a mine for whoever pays (<see cref="Objects.Deposit"/>, ADR-070).</summary>
+    Deposit,
+
+    /// <summary>Reveals the land around the Eyes of its colour (<see cref="Objects.MagiWindow"/>, ADR-070).</summary>
+    MagiWindow,
+
+    /// <summary>What a Window of the Magi shows (<see cref="Objects.MagiEye"/>, ADR-070).</summary>
+    MagiEye,
+
+    /// <summary>Gives the key of its colour (<see cref="Objects.KeymasterTent"/>, ADR-071).</summary>
+    KeymasterTent,
+
+    /// <summary>A border guard or gate only key holders pass (<see cref="Objects.BorderPost"/>, ADR-071).</summary>
+    BorderPost,
+
+    /// <summary>Hires heroes from a weekly pool shared by all players (<see cref="Objects.MapTavern"/>, ADR-070, ADR-071).</summary>
+    MapTavern,
+
+    /// <summary>A flagged pass with troops inside (<see cref="Objects.MapGarrison"/>, ADR-070).</summary>
+    Garrison,
 }
 
 /// <summary>
@@ -150,6 +171,15 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
     /// <summary>The level a cartographer sells the map of: 0 the surface, 1 the underground (ADR-079, MAP-31).</summary>
     public int RevealsLevel { get; init; }
 
+    /// <summary>What a deposit costs to turn into its mine (ADR-070).</summary>
+    public ResourceSet Price { get; init; }
+
+    /// <summary>The colour of Magi windows and eyes, keymaster tents and border posts (ADR-070, ADR-071).</summary>
+    public ObjectColour? Colour { get; init; }
+
+    /// <summary>A border post that stays after a key holder passes: a gate, not a guard (ADR-071).</summary>
+    public bool Stays { get; init; }
+
     /// <summary>The terrains the generator puts this scenery on (ADR-079, MAP-25).</summary>
     public IReadOnlyList<Map.TerrainType> Terrains { get; init; } = [];
 
@@ -206,7 +236,17 @@ public sealed record MapObjectDefinition(string Id, string Name, MapObjectKind K
             throw new FormatException($"Warehouse '{Id}' needs a resource and a positive amount.");
         }
 
-        if (Becomes is not null && Kind is not MapObjectKind.Mine)
+        if (Kind is MapObjectKind.MagiWindow or MapObjectKind.MagiEye or MapObjectKind.KeymasterTent or MapObjectKind.BorderPost && Colour is null)
+        {
+            throw new FormatException($"Map object '{Id}' of kind {Kind} needs a colour.");
+        }
+
+        if (Kind is MapObjectKind.Deposit && (Becomes is null || Price.IsEmpty))
+        {
+            throw new FormatException($"Deposit '{Id}' needs the mine it becomes and a price.");
+        }
+
+        if (Becomes is not null && Kind is not MapObjectKind.Mine and not MapObjectKind.Deposit)
         {
             throw new FormatException($"Only a mine can turn into another ('{Id}').");
         }

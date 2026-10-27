@@ -22,6 +22,8 @@ namespace EternalWars.Core.Domain.Pathfinding;
 /// harmless to walk over (<see cref="MapObject.EndsRoute"/>), or it is a usable gate, in which case the
 /// route continues from the gate's target (two-way partner or one-way exit).</item>
 /// <item>With <c>respectFog</c>, only tiles the hero's owner has explored are used.</item>
+/// <item>Border guards and gates are walls to heroes without their key and open ground to key holders (ADR-071); own and allied garrisons are
+/// passes (ADR-070).</item>
 /// <item>Tiles guarded by a monster end the route (the encounter happens there), like the monster itself.</item>
 /// </list>
 /// Search state is (tile, arrived-by-teleport): a gate entrance reached on foot must teleport,
@@ -107,7 +109,8 @@ public sealed class PathFinder(GameState state)
                     continue;
                 }
 
-                if (visit.Object.EndsRoute)
+                // Own and allied garrisons are passes (ADR-070).
+                if (visit.Object.EndsRoute && !(visit.Object is MapGarrison garrison && garrison.LetsThrough(state, hero.Owner)))
                 {
                     continue;
                 }
@@ -129,6 +132,7 @@ public sealed class PathFinder(GameState state)
 
         bool CanStandOn(MapPosition position) =>
             MovementRules.CheckTile(state, position) == MoveResult.Moved &&
+            BorderRules.Barring(state, hero.Owner, position) is null &&
             (!respectFog || state.Fog.IsExplored(hero.Owner, position)) &&
             (state.HeroAt(position) is not { } other || !IsKnown(other));
 

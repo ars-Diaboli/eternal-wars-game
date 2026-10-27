@@ -179,6 +179,10 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 case CartographerDecision cartographer:
                     command = new AnswerCartographerCommand(player, _state.GetPlayer(player).Resources.Gold >= 3 * cartographer.Price);
                     break;
+                case DepositDecision deposit:
+                    // A mine is worth it while the price leaves the usual cushion.
+                    command = new AnswerDepositCommand(player, Spare(player).CanAfford(deposit.Price));
+                    break;
                 case SphinxDecision:
                     command = new AnswerSphinxCommand(player, 0); // no knowledge of riddles: the first answer (its place is rolled)
                     break;
@@ -794,6 +798,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             TrainingRule.Arena or TrainingRule.ColosseumOfTheMagi => 1500,
             TrainingRule.LibraryOfEnlightenment => hero.Level >= TrainingRules.LibraryLevel ? 3000 : 0,
             TrainingRule.Gazebo => gold >= TrainingRules.GazeboGold + 3000 ? 1000 : 0,
+            TrainingRule.DreamTeacher => 600,
+            TrainingRule.TrainingGrounds or TrainingRule.MarlettoTower or TrainingRule.StarAxis or TrainingRule.GardenOfRevelation => 750,
             _ => gold >= TrainingRules.TreeGold + 3000 ? 1500 : 0,
         };
     }
@@ -921,8 +927,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     private static double BuffValue(BuffRule rule) => rule switch
     {
         BuffRule.Stables => 400,
-        BuffRule.FountainOfYouth or BuffRule.MineralSpring => 300,
-        BuffRule.FaerieRing or BuffRule.Temple => 150,
+        BuffRule.FountainOfYouth or BuffRule.MineralSpring or BuffRule.RallyFlag => 300,
+        BuffRule.FaerieRing or BuffRule.Temple or BuffRule.CloverField or BuffRule.Rainbow => 150,
         _ => 0,
     };
 
@@ -937,6 +943,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             LootRule.TravelersWagon => (0.3 * 1000) + (0.6 * 3.5 * resource),
             LootRule.Corpse => 0.2 * 1000,
             LootRule.LeanTo => 3.5 * resource,
+            LootRule.MagesChest => (0.9 * 1000) + (0.05 * 2500) + (0.3 * 750),
             _ => 1200 - 400,
         };
     }
@@ -1041,7 +1048,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     var bankGuard = Army.Of([.. bank.Guard.Take(Army.SlotCount)]);
                     if (Plausible(ArmyPower(bankGuard)))
                     {
-                        yield return new(visit, Value(bank.Reward) + (bank.RewardArtifact is null ? 0 : 1500), bankGuard, MaxLoss: MonsterLoss);
+                        yield return new(visit, Value(bank.Reward) + (bank.RewardArtifact is null ? 0 : 1500) + (1500 * bank.MoreArtifacts.Count), bankGuard, MaxLoss: MonsterLoss);
                     }
 
                     break;
@@ -1065,6 +1072,16 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     break;
                 case TreasureChest when Plausible(GuardPower(visit, pickup: true)):
                     yield return new(visit, 1500, GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
+                    break;
+                case Deposit deposit when Spare(owner).CanAfford(deposit.Price) && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    var mineYield = _state.ObjectCatalog.Get(deposit.Definition.Becomes!);
+                    yield return new(visit, (8 * mineYield.DailyYield * GoldValue(mineYield.Resource!.Value, 1)) - (0.5 * Value(deposit.Price)), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case KeymasterTent tent when !_state.GetPlayer(owner).Keys.Contains(tent.Colour) && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    yield return new(visit, 1500, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case MapGarrison mapGarrison when !OwnTeam(owner, mapGarrison.Owner) && visit != hero.Position && Plausible(ArmyPower(mapGarrison.Troops)):
+                    yield return new(visit, 1000 + (0.35 * ArmyPower(mapGarrison.Troops)), mapGarrison.Troops.IsEmpty ? null : mapGarrison.Troops, MaxLoss: MonsterLoss);
                     break;
                 case Mine mine when !OwnTeam(owner, mine.Owner):
                     var mineGuard = mine.Guard is { } g ? new CreatureStack(g.Creature, Math.Max(1, g.Count ?? 1)) : null;

@@ -103,6 +103,18 @@ public sealed record GuardJoined(HeroId Hero, MapObjectId Guard, string Creature
 /// <summary>The hero let a fleeing neutral guard go; it left the map (no experience).</summary>
 public sealed record GuardFled(HeroId Hero, MapObjectId Guard) : IEvent;
 
+/// <summary>A player paid for a deposit, which became the mine <paramref name="Mine"/> (same id, ADR-070); <see cref="MapObjectChanged"/> and <see cref="MineOwnerChanged"/> follow.</summary>
+public sealed record DepositBought(MapObjectId Mine, HeroId Hero, PlayerId Owner, ResourceSet Price) : IEvent;
+
+/// <summary>A Keymaster's Tent gave a player the key of its colour (ADR-071).</summary>
+public sealed record KeyReceived(MapObjectId Tent, HeroId Hero, PlayerId Owner, Objects.ObjectColour Colour) : IEvent;
+
+/// <summary>A key holder passed a border guard, which left the map (ADR-071); <see cref="MapObjectRemoved"/> follows.</summary>
+public sealed record BorderGuardPassed(MapObjectId Guard, HeroId Hero) : IEvent;
+
+/// <summary>A garrison changed hands (ADR-070): beaten troops, or an empty one flagged.</summary>
+public sealed record GarrisonOwnerChanged(MapObjectId Garrison, PlayerId? Previous, PlayerId? Current) : IEvent;
+
 /// <summary>A mine's guard was defeated; the mine can be flagged freely from now on.</summary>
 public sealed record MineGuardDefeated(MapObjectId Mine) : IEvent;
 

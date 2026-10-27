@@ -23,7 +23,7 @@ public static class MapGenerator
     /// Bumped whenever a change makes a template, size, players and seed give another map; saved with generated games and shown with the seed, so a
     /// shared seed from another version can be warned about.
     /// </summary>
-    public const int Version = 4;
+    public const int Version = 5;
 
     /// <summary>How many seeds <see cref="GenerateBest"/> tries: the seed, then sub-seeds of it.</summary>
     public const int Attempts = 10;

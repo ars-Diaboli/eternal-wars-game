@@ -351,6 +351,35 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Skills = hut.Skills.Count == 0 ? null : hut.Skills,
             },
+            Deposit => new DepositDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            MagiWindow => new MagiWindowDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            MagiEye => new MagiEyeDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            KeymasterTent => new KeymasterDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            BorderPost => new BorderPostDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            MapTavern => new MapTavernDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
+            MapGarrison garrison => new GarrisonDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Owner = garrison.Owner?.Value,
+                Troops = garrison.Troops.IsEmpty ? null : garrison.Troops.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
+            },
             HillFort => new HillFortDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -410,9 +439,16 @@ public static class MapConverter
     private static Dictionary<string, int> Sorted(IReadOnlyDictionary<string, int> values) =>
         values.OrderBy(v => v.Key, StringComparer.Ordinal).ToDictionary(v => v.Key, v => v.Value, StringComparer.Ordinal);
 
+    /// <summary>Definition ids older maps use for what has another id now: the undead Ruins are the Crypt since ADR-070.</summary>
+    private static readonly Dictionary<string, string> RenamedDefinitions = new(StringComparer.Ordinal)
+    {
+        ["bank.ruins"] = BuiltInMapObjects.Crypt,
+    };
+
     private static MapObject ToObject(MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures, GuardMode? legacyGuardMode)
     {
-        if (!catalog.TryGet(document.Definition, out var definition))
+        if (!catalog.TryGet(document.Definition, out var definition)
+            && !(RenamedDefinitions.TryGetValue(document.Definition, out var renamed) && catalog.TryGet(renamed, out definition)))
         {
             throw new FormatException($"Object {document.Id} uses unknown definition '{document.Definition}'.");
         }
@@ -454,6 +490,15 @@ public static class MapConverter
                 WitchHutDocument { Skills: { } skills } when skills.Any(s => !BuiltInSkills.Contains(s)) => throw new FormatException("A witch hut names an unknown skill."),
                 WitchHutDocument hut => new WitchHut(id, definition, position, hut.Skills?.Select(BuiltInSkills.Resolve).ToList()),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
+                DepositDocument => new Deposit(id, definition, position),
+                MagiWindowDocument => new MagiWindow(id, definition, position),
+                MagiEyeDocument => new MagiEye(id, definition, position),
+                KeymasterDocument => new KeymasterTent(id, definition, position),
+                BorderPostDocument => new BorderPost(id, definition, position),
+                MapTavernDocument => new MapTavern(id, definition, position),
+                GarrisonDocument garrison => new MapGarrison(
+                    id, definition, position, garrison.Owner is { } garrisonOwner ? new PlayerId(garrisonOwner) : null,
+                    ToArmy(garrison.Troops, $"Garrison {garrison.Id}", creatures)),
                 HillFortDocument => new HillFort(id, definition, position),
                 TownGateDocument => new TownGate(id, definition, position),
                 WarMachineFactoryDocument => new WarMachineFactory(id, definition, position),

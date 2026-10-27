@@ -98,6 +98,21 @@ public sealed class BattleService(
         Begin(attacker, battle, Stacks(attacker), stacks);
     }
 
+    /// <summary>
+    /// A hero attacks the troops in a garrison (ADR-070): like a town's garrison, its owner commands them (the AI for computer players and neutral
+    /// garrisons) without a hero. Beating them flags the garrison for the winner.
+    /// </summary>
+    internal void BeginGarrisonBattle(Hero attacker, MapGarrison garrison)
+    {
+        var owner = garrison.Owner;
+        var defender = new BattleParticipant(
+            BattleSide.Defender, owner, null, garrison.Id, 0, 0, SkillLevel.None, IsComputer: owner is not { } o || !state.GetPlayer(o).IsHuman,
+            ArmyMorale: MoraleAndLuck.MixedFactions(garrison.Troops.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature))));
+        var battle = Create(Participant(BattleSide.Attacker, attacker), defender, garrison.VisitPosition, isAmbush: false);
+        var stacks = garrison.Troops.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
+        Begin(attacker, battle, Stacks(attacker), stacks);
+    }
+
     internal void ChooseWidth(PlayerId player, int width)
     {
         var battle = Current(BattlePhase.ChoosingWidth);
@@ -452,6 +467,10 @@ public sealed class BattleService(
         {
             ApplySurvivors(battle, winner, town);
         }
+        else if (winning.Guard is { } held && state.GetObject(held) is MapGarrison kept)
+        {
+            ApplySurvivors(battle, winner, kept.Id, kept.Troops);
+        }
         else if (winning.Guard is { } guard)
         {
             SetGuardCount(state.GetObject(guard), battle.LivingUnitsOf(winner).Sum(u => u.Count));
@@ -549,15 +568,18 @@ public sealed class BattleService(
         events.Publish(new UndeadRaised(hero.Id, joined));
     }
 
-    private void ApplySurvivors(BattleState battle, BattleSide side, Town town)
+    private void ApplySurvivors(BattleState battle, BattleSide side, Town town) => ApplySurvivors(battle, side, town.Id, town.Garrison);
+
+    /// <summary>The troops of a town or a map garrison keep what lived.</summary>
+    private void ApplySurvivors(BattleState battle, BattleSide side, MapObjectId holder, Army troops)
     {
-        foreach (var (slot, stack) in town.Garrison.Stacks.ToList())
+        foreach (var (slot, stack) in troops.Stacks.ToList())
         {
             var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.Count);
-            town.Garrison.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
+            troops.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
         }
 
-        events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+        events.Publish(new GarrisonChanged(holder, troops.Slots.ToList()));
     }
 
     private void Award(Hero hero, int experience)
@@ -657,19 +679,44 @@ public sealed class BattleService(
             case Town town when winner is not null:
                 TownService.Capture(state, events, town, winner.Owner);
                 break;
+            case MapGarrison garrison:
+                for (var slot = 0; slot < Army.SlotCount; slot++)
+                {
+                    garrison.Troops.Set(slot, null);
+                }
+
+                events.Publish(new GarrisonChanged(garrison.Id, garrison.Troops.Slots.ToList()));
+                if (winner is not null)
+                {
+                    var previous = garrison.Owner;
+                    garrison.Owner = winner.Owner;
+                    events.Publish(new GarrisonOwnerChanged(garrison.Id, previous, winner.Owner));
+                }
+
+                break;
         }
     }
 
     /// <summary>The bank's reward goes to the winner and the bank is empty until it refills (ADR-068).</summary>
     private void Plunder(CreatureBank bank, Hero winner)
     {
-        var (reward, tier) = (bank.Reward, bank.RewardArtifact);
+        var (reward, tier, more) = (bank.Reward, bank.RewardArtifact, bank.MoreArtifacts);
         bank.PlunderedOn = state.Date;
         bank.Guard = [];
         bank.Reward = Economy.ResourceSet.Empty;
         bank.RewardArtifact = null;
+        bank.MoreArtifacts = [];
         economy.Grant(winner.Owner, reward);
         var found = tier is { } t && artifacts.Draw(t) is { } artifact && artifacts.Grant(winner, artifact, ArtifactSource.Found) ? artifact : null;
+        foreach (var extra in more)
+        {
+            // Further artifacts (Dragon City) go the same way; a full backpack loses them.
+            if (artifacts.Draw(extra) is { } drawn)
+            {
+                artifacts.Grant(winner, drawn, ArtifactSource.Found);
+            }
+        }
+
         events.Publish(new CreatureBankPlundered(bank.Id, winner.Id, reward, found));
         events.Publish(new MapObjectChanged(bank.Id));
     }

@@ -59,10 +59,13 @@ public sealed class Hero(
 
     private int? _mana;
 
-    /// <summary>Mana on hand (ADR-063); a hero that has not spent any has a full pool, and never more than <see cref="MaxMana"/>.</summary>
+    /// <summary>
+    /// Mana on hand (ADR-063); a hero that has not spent any has a full pool. Only a Mana Vortex takes it above <see cref="MaxMana"/>, to at most
+    /// twice that, until it is spent (ADR-070).
+    /// </summary>
     public int Mana
     {
-        get => Math.Min(MaxMana, _mana ?? MaxMana);
+        get => Math.Min(2 * MaxMana, _mana ?? MaxMana);
         internal set => _mana = Math.Max(0, value);
     }
 

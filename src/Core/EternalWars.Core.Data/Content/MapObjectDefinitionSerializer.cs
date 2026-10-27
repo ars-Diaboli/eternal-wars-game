@@ -28,7 +28,10 @@ public sealed record MapObjectDefinitionDocument(
     int GuardMax = 0,
     TerrainType? BattleTerrain = null,
     BankRule? Bank = null,
-    IReadOnlyList<TerrainType>? Terrains = null);
+    IReadOnlyList<TerrainType>? Terrains = null,
+    ResourceSet? Price = null,
+    ObjectColour? Colour = null,
+    bool Stays = false);
 
 /// <summary>
 /// Loads and saves map object definitions, e.g. <c>[{ "id": "mine.gold", "kind": "Mine", "footprint": ["BBB","BVB"], ... }]</c>.
@@ -60,6 +63,9 @@ public static class MapObjectDefinitionSerializer
                 BattleTerrain = d.BattleTerrain,
                 Bank = d.Bank,
                 Terrains = d.Terrains ?? [],
+                Price = d.Price ?? ResourceSet.Empty,
+                Colour = d.Colour,
+                Stays = d.Stays,
             })
             .ToList();
         definitions.ForEach(d => d.Validate());
@@ -68,7 +74,8 @@ public static class MapObjectDefinitionSerializer
 
     public static string Serialize(IEnumerable<MapObjectDefinition> definitions) =>
         JsonSerializer.Serialize(
-            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier, d.VisitScope, d.Provider, d.Amount, d.Loot, d.Buff, d.Training, d.Becomes, d.GuardCreature, d.GuardMin, d.GuardMax, d.BattleTerrain, d.Bank, d.Terrains.Count == 0 ? null : d.Terrains)).ToList(),
+            definitions.Select(d => new MapObjectDefinitionDocument(d.Id, d.Name, d.Kind, d.Footprint.Rows, d.Resource, d.DailyYield, d.Town, d.ArtifactTier, d.VisitScope, d.Provider, d.Amount, d.Loot, d.Buff, d.Training, d.Becomes, d.GuardCreature, d.GuardMin, d.GuardMax, d.BattleTerrain, d.Bank, d.Terrains.Count == 0 ? null : d.Terrains,
+                d.Price.IsEmpty ? null : d.Price, d.Colour, d.Stays)).ToList(),
             JsonDefaults.Options);
 
     public static MapObjectCatalog LoadInto(MapObjectCatalog catalog, string path) =>

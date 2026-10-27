@@ -163,7 +163,7 @@ public class CreatureBankTests
     [Fact]
     public void TheRuins_RevealTheirSurroundings_OnEveryVisit()
     {
-        var (session, ruins) = World(BuiltInMapObjects.Ruins, size: 40);
+        var (session, ruins) = World(BuiltInMapObjects.Crypt, size: 40);
         var state = session.State;
         Assert.Equal(5, ruins.Guard.Count); // skeletons, wights, wraiths, skeleton warriors, arch liches
         Assert.False(state.Fog.IsExplored(Blue, new MapPosition(14, 1)));

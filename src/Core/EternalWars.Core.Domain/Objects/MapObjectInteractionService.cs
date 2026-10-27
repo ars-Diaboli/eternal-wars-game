@@ -142,6 +142,41 @@ public sealed class MapObjectInteractionService(
                 events.Publish(new ThievesDenVisited(hero.Id, den.Id));
                 break;
 
+            case Deposit deposit:
+                OfferDeposit(hero, deposit);
+                break;
+
+            case MagiWindow window:
+                // Every visit looks through every Eye of the window's colour (ADR-073).
+                foreach (var eye in state.ObjectsOf<MagiEye>().Where(e => e.Colour == window.Colour).OrderBy(e => e.Id.Value))
+                {
+                    events.Publish(new SurroundingsRevealed(hero.Id, window.Id, hero.Owner, eye.Position, MagiWindow.Radius));
+                }
+
+                break;
+
+            case KeymasterTent tent when state.GetPlayer(hero.Owner).AddKey(tent.Colour):
+                events.Publish(new KeyReceived(tent.Id, hero.Id, hero.Owner, tent.Colour));
+                break;
+
+            case KeymasterTent tent:
+                events.Publish(new MapObjectFoundEmpty(hero.Id, tent.Id));
+                break;
+
+            case BorderPost { IsGate: false } guard:
+                // Only key holders get onto a border post (the move refuses the others); a guard leaves after the first.
+                RemoveFromMap(guard);
+                events.Publish(new BorderGuardPassed(guard.Id, hero.Id));
+                break;
+
+            case MapGarrison garrison when !garrison.LetsThrough(state, hero.Owner) && !garrison.Troops.IsEmpty:
+                battles.BeginGarrisonBattle(hero, garrison);
+                break;
+
+            case MapGarrison garrison when garrison.Owner != hero.Owner && !garrison.LetsThrough(state, hero.Owner):
+                FlagGarrison(garrison, hero.Owner);
+                break;
+
             case Prison prison:
                 Free(hero, prison);
                 break;
@@ -285,9 +320,9 @@ public sealed class MapObjectInteractionService(
     /// </summary>
     private void EnterBank(Hero hero, CreatureBank bank)
     {
-        if (bank.Rule == BankRule.Ruins)
+        if (bank.Rule == BankRule.Crypt)
         {
-            events.Publish(new SurroundingsRevealed(hero.Id, bank.Id, hero.Owner, bank.VisitPosition, CreatureBankRules.RuinsRevealRadius));
+            events.Publish(new SurroundingsRevealed(hero.Id, bank.Id, hero.Owner, bank.VisitPosition, CreatureBankRules.CryptRevealRadius));
         }
 
         if (bank.IsGuarded)
@@ -459,9 +494,9 @@ public sealed class MapObjectInteractionService(
             events.Publish(new HeroMovementGained(hero.Id, points, hero.MovementPoints));
         }
 
-        if (site.Rule == BuffRule.MagicWell && hero.Mana < hero.MaxMana)
+        if (BuffRules.ManaAfter(site.Rule, hero.Mana, hero.MaxMana) is var mana && mana > hero.Mana)
         {
-            hero.Mana = hero.MaxMana;
+            hero.Mana = mana;
             events.Publish(new HeroManaRestored(hero.Id, hero.Mana, hero.MaxMana));
         }
     }
@@ -513,6 +548,15 @@ public sealed class MapObjectInteractionService(
                     progression.RaiseStat(hero, stat, TrainingRules.LibraryStats);
                 }
 
+                return;
+            case TrainingRule.DreamTeacher:
+                var others = state.ObjectsOf<TrainingSite>().Count(t => t != site && t.Rule == TrainingRule.DreamTeacher && t.Visits.Heroes.Contains(hero.Id));
+                TryCollect(hero, site);
+                progression.GrantExperience(hero, TrainingRules.DreamTeacher(others));
+                return;
+            case var rule when TrainingRules.SingleStat(rule) is { } single:
+                TryCollect(hero, site);
+                progression.RaiseStat(hero, single, 1);
                 return;
         }
 
@@ -674,6 +718,122 @@ public sealed class MapObjectInteractionService(
 
             events.Publish(new MerchantRestocked(merchant.Id, merchant.Stock.ToList()));
         }
+    }
+
+    /// <summary>A deposit offers itself for its price; a player who cannot pay is told the price (ADR-070, MAP-21).</summary>
+    private void OfferDeposit(Hero hero, Deposit deposit)
+    {
+        if (!state.GetPlayer(hero.Owner).Resources.CanAfford(deposit.Price))
+        {
+            events.Publish(new MapObjectRefused(hero.Id, deposit.Id, $"Opening the {deposit.Definition.Name.ToLowerInvariant()} costs {ResourceProviderRules.Describe(deposit.Price)}."));
+            return;
+        }
+
+        Ask(new DepositDecision(hero.Id, deposit.Id, deposit.Price));
+    }
+
+    /// <summary>The visitor's player pays for the deposit, which becomes the mine of its kind with the same id, flagged for the player; or leaves.</summary>
+    internal void ResolveDeposit(bool buy)
+    {
+        if (state.PendingDecision is not DepositDecision decision)
+        {
+            throw new InvalidOperationException("No deposit is waiting for an answer.");
+        }
+
+        var hero = state.GetHero(decision.Hero);
+        if (buy && !economy.TrySpend(hero.Owner, decision.Price))
+        {
+            throw new InvalidOperationException("Not enough resources.");
+        }
+
+        state.PendingDecision = null;
+        events.Publish(new DecisionResolved(decision));
+        if (!buy)
+        {
+            return;
+        }
+
+        var deposit = (Deposit)state.GetObject(decision.Deposit);
+        var mine = new Mine(deposit.Id, state.ObjectCatalog.Get(deposit.Definition.Becomes!), deposit.Position, hero.Owner);
+        state.RemoveObject(deposit);
+        state.AddObject(mine);
+        events.Publish(new DepositBought(mine.Id, hero.Id, hero.Owner, decision.Price));
+        events.Publish(new MapObjectChanged(mine.Id));
+        events.Publish(new MineOwnerChanged(mine.Id, null, hero.Owner));
+    }
+
+    /// <summary>An empty garrison is flagged by the first hero of another side that enters it (ADR-070).</summary>
+    internal void FlagGarrison(MapGarrison garrison, PlayerId owner)
+    {
+        var previous = garrison.Owner;
+        garrison.Owner = owner;
+        events.Publish(new GarrisonOwnerChanged(garrison.Id, previous, owner));
+    }
+
+    /// <summary>
+    /// The owner's hero on a garrison's entrance moves a whole stack between its army and the garrison (ADR-070); the hero keeps at least one
+    /// stack, and the stack joins one of the same creature or a free slot.
+    /// </summary>
+    internal void MoveGarrisonStack(PlayerId player, MapObjectId garrisonId, int slot, bool toGarrison)
+    {
+        var hero = HeroAt<MapGarrison>(player, garrisonId, out var garrison);
+        if (garrison.Owner != player)
+        {
+            throw new InvalidOperationException("Only the garrison's owner moves troops in or out.");
+        }
+
+        var (from, to) = toGarrison ? (hero.Army, garrison.Troops) : (garrison.Troops, hero.Army);
+        var stack = (Army.IsValidSlot(slot) ? from[slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+        if (toGarrison && hero.Army.Stacks.Count() == 1)
+        {
+            throw new InvalidOperationException($"{hero.Name} must keep at least one stack.");
+        }
+
+        if (!to.CanAccept(stack.Creature))
+        {
+            throw new InvalidOperationException("There is no free slot for that stack.");
+        }
+
+        from.Set(slot, null);
+        to.TryAdd(stack);
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+        events.Publish(new GarrisonChanged(garrison.Id, garrison.Troops.Slots.ToList()));
+    }
+
+    /// <summary>
+    /// The hero on a map tavern's entrance hires one of its offers for its player (ADR-070, ADR-071): the hero limit applies, and the new hero
+    /// needs a free cell next to the entrance; it brings a starter stack and moves from the player's next turn on.
+    /// </summary>
+    internal void HireAtMapTavern(PlayerId player, MapObjectId tavernId, string heroId)
+    {
+        HeroAt<MapTavern>(player, tavernId, out var tavern);
+        if (MapTavernRules.Offers(state, tavern).FirstOrDefault(h => h.Id == heroId) is not { } definition)
+        {
+            throw new InvalidOperationException($"{heroId} is not offered here this week.");
+        }
+
+        if (state.HeroLimitReached(player))
+        {
+            throw new InvalidOperationException($"You may have at most {state.HeroLimit(player)} heroes.");
+        }
+
+        var arrival = MapTavernRules.Arrival(state, tavern) ?? throw new InvalidOperationException("There is no free cell next to the tavern.");
+        if (!economy.TrySpend(player, TavernRules.HeroCost))
+        {
+            throw new InvalidOperationException($"A hero costs {TavernRules.HeroCost}.");
+        }
+
+        var hero = Hero.Create(state.NextUnusedHeroId(), player, arrival, null, definition);
+        if (TavernRules.StarterStack(state, definition) is { } starter)
+        {
+            hero.Army.TryAdd(starter);
+        }
+
+        hero.MaxMovementPoints = MovementAllowance.Daily(hero, state.Creatures);
+        hero.MovementPoints = hero.MaxMovementPoints; // like a hero hired in a town
+        state.AddHero(hero);
+        events.Publish(new HeroHired(tavern.Id, hero.Id, definition.Id));
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
     }
 
     /// <summary>The visitor's player buys the cartographer's map of its level, or leaves (ADR-079, MAP-31).</summary>
