@@ -22,7 +22,9 @@ public static class GameStateDigest
         Line($"date {state.Date} player {state.CurrentPlayerIndex} rng {state.RandomState} started {state.IsStarted}");
         foreach (var player in state.Players)
         {
-            Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources} defeated {player.IsDefeated} townless {player.TownlessSince?.AbsoluteDay}");
+            // Keys (ADR-071) only when there are any, so older replays keep their digests.
+            var keys = player.Keys.Count == 0 ? "" : $" keys {string.Join(',', player.Keys)}";
+            Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources} defeated {player.IsDefeated} townless {player.TownlessSince?.AbsoluteDay}{keys}");
         }
 
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
@@ -53,7 +55,8 @@ public static class GameStateDigest
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
                 Prison prison => $"prisoner {prison.Hero} level {prison.Level}",
-                CreatureBank bank => $"guard {string.Join(',', bank.Guard)} reward {bank.Reward} {bank.RewardArtifact} plundered {bank.PlunderedOn?.AbsoluteDay}",
+                CreatureBank bank => $"guard {string.Join(',', bank.Guard)} reward {bank.Reward} {bank.RewardArtifact}{(bank.MoreArtifacts.Count == 0 ? "" : $"+{string.Join('+', bank.MoreArtifacts)}")} plundered {bank.PlunderedOn?.AbsoluteDay}",
+                MapGarrison garrison => $"owner {garrison.Owner?.Value} troops {Slots(garrison.Troops)}",
                 CreatureDwelling dwelling => $"{dwelling.Creature} owner {dwelling.Owner?.Value} available {dwelling.Available}" + (dwelling.Guard is { } g ? $" guard {g}" : ""),
                 MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
                 Town town => $"owner {town.Owner?.Value} governor {town.Governor?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "

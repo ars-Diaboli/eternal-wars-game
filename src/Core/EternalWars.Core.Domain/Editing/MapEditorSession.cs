@@ -49,6 +49,9 @@ public enum EditResult
 
     /// <summary>Map dwellings sell base creatures only (ADR-073); the creature is an upgrade.</summary>
     UpgradedCreature,
+
+    /// <summary>A colour already has <see cref="MagiWindow.MaxEyes"/> Eyes of the Magi (ADR-070).</summary>
+    TooManyEyes,
 }
 
 /// <summary>
@@ -248,6 +251,11 @@ public sealed class MapEditorSession
         if (check != EditResult.Ok)
         {
             return check;
+        }
+
+        if (definition.Kind == MapObjectKind.MagiEye && Scenario.Objects.OfType<MagiEye>().Count(e => e.Colour == definition.Colour) >= MagiWindow.MaxEyes)
+        {
+            return EditResult.TooManyEyes;
         }
 
         var mapObject = MapObject.Create(Scenario.NextObjectId(), definition, topLeft);
@@ -500,10 +508,16 @@ public sealed class MapEditorSession
         }
     }
 
-    /// <summary>Puts a stack into (or, with null, clears) one of a town's garrison slots.</summary>
+    /// <summary>Puts a stack into (or, with null, clears) one of the garrison slots of a town or a map garrison (ADR-070).</summary>
     public EditResult SetGarrisonSlot(MapObjectId id, int slot, CreatureStack? stack)
     {
-        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
+        var (troops, name) = Scenario.Objects.FirstOrDefault(o => o.Id == id) switch
+        {
+            Town t => (t.Garrison, t.Name),
+            MapGarrison g => (g.Troops, g.Definition.Name.ToLowerInvariant()),
+            _ => (null, ""),
+        };
+        if (troops is null)
         {
             return EditResult.InvalidTarget;
         }
@@ -518,14 +532,39 @@ public sealed class MapEditorSession
             return EditResult.UnknownCreature;
         }
 
-        var previous = town.Garrison[slot];
-        Run(new DelegateCommand($"Edit garrison of {town.Name}", () => Apply(stack), () => Apply(previous)));
+        var previous = troops[slot];
+        Run(new DelegateCommand($"Edit garrison of {name}", () => Apply(stack), () => Apply(previous)));
         return EditResult.Ok;
 
         void Apply(CreatureStack? value)
         {
-            town.Garrison.Set(slot, value);
-            _bus.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+            troops.Set(slot, value);
+            _bus.Publish(new GarrisonChanged(id, troops.Slots.ToList()));
+        }
+    }
+
+    /// <summary>Flags a map garrison for a player from the start (null = neutral; ADR-070).</summary>
+    public EditResult SetMapGarrisonOwner(MapObjectId id, PlayerId? owner)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not MapGarrison garrison)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (owner is { } player && !Scenario.HasPlayer(player))
+        {
+            return EditResult.UnknownPlayer;
+        }
+
+        var previous = garrison.Owner;
+        Run(new DelegateCommand("Set garrison owner", () => SetOwner(owner), () => SetOwner(previous)));
+        return EditResult.Ok;
+
+        void SetOwner(PlayerId? value)
+        {
+            var before = garrison.Owner;
+            garrison.Owner = value;
+            _bus.Publish(new GarrisonOwnerChanged(garrison.Id, before, value));
         }
     }
 

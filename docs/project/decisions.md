@@ -1877,3 +1877,51 @@ TOWN-7, TOWN-8); the map tavern stays with the second catalogue. Choices made he
 - UI: a "Surrender (N gold)" button in the battle HUD with the refusal as tooltip (S in the 2D harness); the result screen names a
   surrender; the town panel marks a returning hero with its level and "with its army" (not run in Godot yet).
 - Tests: `SurrenderTests`, `TavernTests`.
+
+### ADR-082: The second object catalogue (2026-10-27)
+**Status**: implemented (2026-10-27). Builds the ADR-069 catalogue with the answers of ADR-070 … ADR-073, except the Shrines (they need
+spells, Phase 5) and the faction re-draft of every bank's guard (still pending). Map format **v23**, generator **version 5**. Choices made
+here are marked *(choice)*; every number is a draft.
+
+- **Buffs** (`BuffRule`): Clover Field +1 luck, Rainbow +2 luck, Rally Flag +400 movement now with +1 luck and +1 morale, all for the next
+  battle and once a day per hero. **Mana Vortex** sets the mana to twice the maximum, once a week per hero; the extra mana stays until it is
+  spent (`Hero.Mana` may now reach 2 × `MaxMana`; daily regeneration never lowers it). **Fountain of Magic** gives half the maximum back, up
+  to it, once a week per hero (`BuffRules.ManaAfter`).
+- **Power-ups** (`TrainingRule`), once per hero: Dream Teacher 500 experience + 500 for every other Dream Teacher the hero learnt at; Training
+  Grounds, Marletto Tower, Star Axis, Garden of Revelation +1 Attack / Defense / Spell Power / Knowledge, without a choice.
+- **Mage's Chest** (`LootRule.MagesChest`): 5 % nothing, 5 % Major, 60 % Minor, 30 % Minor + 500–1000 gold *(choice: in hundreds, like the
+  campfire)*; vanishes.
+- **Deposits** (`Deposit`, `DepositRules`): Wood Pile, Ore Deposit, Gold Vein, Crystal Vein, Cinnabar Deposit, Sulfur Vent. A visitor's
+  player is asked (`DepositDecision` / `AnswerDepositCommand`) to pay; the deposit becomes the mine of its kind with the same id, flagged
+  for that player (`DepositBought`). Prices *(choice within the drafts)*: Gold Vein 5000 gold + 10 ore; Wood Pile 2000 + 5 ore; Ore Deposit
+  2000 + 5 lumber; the magic veins 3000 + 5 ore. The generator places them as treasure with an ordinary guard.
+- **Windows and Eyes of the Magi** (`MagiWindow`, `MagiEye`; red, green, blue, black, a definition per colour): every visit to a Window
+  reveals radius 6 around each Eye of its colour. The editor refuses a fifth Eye of a colour (`EditResult.TooManyEyes`); the validator reports
+  more than four and a Window without an Eye. Never generated.
+- **Keymaster's Tents, border guards and border gates** (`KeymasterTent`, `BorderPost`, four colours): a tent gives the hero's **player** the
+  key (`Player.Keys`, `KeyReceived`). A border post is a one-tile barrier: heroes of a player without the key cannot step on it (the move is
+  refused with a message, routes go round it); key holders walk through. A guard leaves after the first key holder passes
+  (`BorderGuardPassed`), a gate stays. The validator warns about posts with no tent of their colour. The template option to guard
+  connections with them is not built yet (RMG-11).
+- **Map tavern** (`MapTavern`, `MapTavernRules`, `HireAtMapTavernCommand`): four heroes of any faction, the same for every player, a new pool
+  each week (a shuffle seeded from the game, the tavern and the week, so no stored state); a hired hero leaves the pool. The hero on the
+  entrance hires for 2500 gold; the new hero appears below the entrance or on the next free neighbour, with a starter stack and full
+  movement *(choice, as in a town)*; refused at the hero limit or without a free cell. The service panel lists the offers.
+- **Garrisons** (`MapGarrison`; a horizontal and a vertical definition): flagged like a mine. Its owner's and allies' heroes pass through
+  both ways (routes go through it); anyone else stops there and fights the troops (`BattleService.BeginGarrisonBattle`, the owner commands
+  them, the AI for neutrals and computer players) or flags an empty one (`GarrisonOwnerChanged`). Beating the troops flags it for the winner.
+  The owner's hero on the entrance moves whole stacks in or out (`MoveGarrisonStackCommand`), keeping one stack. A defeated player's
+  garrisons turn neutral and keep their troops *(choice)*. The editor sets owner and troops (`SetMapGarrisonOwner`, `SetGarrisonSlot`). The
+  generator does not use them as connection guards yet (RMG-11).
+- **Banks**: the undead Ruins are the **Crypt** (`bank.crypt`; older maps' `bank.ruins` load as it). New: Ruins (orcs, `bank.orc-ruins`),
+  Lair (Spectators, a fifth Beholders), Keep (Pikemen and Archers), Hideout (Bandits), Forest Glen (Timber Wolves, a fifth Dire Wolves; gold
+  and lumber), Dragon City (3–6 Black Dragons, a Relic and 1–3 Major artifacts, `BankTier.MoreArtifacts`). Tables at 30 / 30 / 30 / 10 %,
+  rewards about half the guard's gold value *(choice)*; the notes' creatures, not yet the "2–3 types of one faction" re-draft.
+- **Portals**: the monoliths are called Portal / One-way portal (ids unchanged).
+- **Generator**: the new loot, buffs, power-ups, deposits, banks and one map tavern are treasure sites (`TreasureSites`); a guarded site is
+  only placed where its guard has room beside the entrance.
+- **AI**: values the new buffs, power-ups and the Mage's Chest; buys deposits it can afford with its gold cushion; fetches keys; attacks
+  garrisons it can beat; plunders the new banks like the old.
+- UI: deposit question in the decision panel; map tavern and garrison in the object service panel; garrison owner and troops in the editor
+  inspector; palette colours (none run in Godot yet).
+- Tests: `SecondCatalogueTests`, `SecondCatalogueObjectTests`.

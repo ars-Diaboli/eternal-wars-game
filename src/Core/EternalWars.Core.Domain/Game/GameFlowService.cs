@@ -206,6 +206,13 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
             events.Publish(new ProviderOwnerChanged(provider.Id, player.Id, null));
         }
 
+        // A defeated player's garrisons turn neutral and keep their troops (ADR-082).
+        foreach (var garrison in state.ObjectsOf<MapGarrison>().Where(g => g.Owner == player.Id).ToList())
+        {
+            garrison.Owner = null;
+            events.Publish(new GarrisonOwnerChanged(garrison.Id, player.Id, null));
+        }
+
         state.RemoveCaravansOf(player.Id);
         events.Publish(new PlayerDefeated(player.Id, reason));
     }

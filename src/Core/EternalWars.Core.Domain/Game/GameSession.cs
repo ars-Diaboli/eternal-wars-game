@@ -229,6 +229,15 @@ public sealed class GameSession
             case AnswerCartographerCommand cartographer:
                 Interactions.ResolveCartographer(cartographer.Buy);
                 return null;
+            case AnswerDepositCommand deposit:
+                Interactions.ResolveDeposit(deposit.Buy);
+                return null;
+            case HireAtMapTavernCommand tavern:
+                Interactions.HireAtMapTavern(tavern.Player, tavern.Tavern, tavern.Hero);
+                return null;
+            case MoveGarrisonStackCommand garrison:
+                Interactions.MoveGarrisonStack(garrison.Player, garrison.Garrison, garrison.Slot, garrison.ToGarrison);
+                return null;
             case AnswerSphinxCommand sphinx:
                 Interactions.ResolveSphinx(sphinx.Option);
                 return null;

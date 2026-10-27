@@ -724,6 +724,7 @@ public static class Program
                 TreasureChestDecision => new ResolveTreasureChestCommand(player, TreasureChestReward.Gold),
                 TownGateDecision => new ChooseTownGateCommand(player, null),
                 CartographerDecision => new AnswerCartographerCommand(player, Buy: false),
+                DepositDecision => new AnswerDepositCommand(player, Buy: false),
                 SphinxDecision => new AnswerSphinxCommand(player, 0),
                 WitchHutDecision hut => new ChooseWitchHutSkillCommand(player, hut.Options[0]),
                 TrainingDecision training => new ChooseTrainingCommand(player, training.CanDecline ? null : training.Options[0]),

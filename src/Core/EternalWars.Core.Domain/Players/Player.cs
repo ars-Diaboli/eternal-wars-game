@@ -19,6 +19,13 @@ public sealed class Player(PlayerId id, string name, bool isHuman, TeamId? team 
     /// <summary>The player's own hero limit (campaign-like maps, ADR-068); null = the map's <c>ScenarioRules.MaxHeroes</c>.</summary>
     public int? MaxHeroes { get; internal set; }
 
+    private readonly SortedSet<Objects.ObjectColour> _keys = [];
+
+    /// <summary>The keys a Keymaster's Tent gave the player (ADR-071); every hero of the player holds them.</summary>
+    public IReadOnlySet<Objects.ObjectColour> Keys => _keys;
+
+    internal bool AddKey(Objects.ObjectColour colour) => _keys.Add(colour);
+
     /// <summary>Out of the game (ADR-057): its turns are skipped and it owns nothing any more.</summary>
     public bool IsDefeated { get; internal set; }
 

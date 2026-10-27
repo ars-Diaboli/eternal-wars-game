@@ -30,6 +30,9 @@ public sealed record TrainingDecision(HeroId Hero, MapObjectId Site, IReadOnlyLi
     public override string ToString() => $"TrainingDecision {{ Hero = {Hero}, Site = {Site}, Options = {string.Join(" | ", Options)}, CanDecline = {CanDecline} }}";
 }
 
+/// <summary>A deposit offers to become its mine for <paramref name="Price"/> (ADR-070, MAP-21): <c>AnswerDepositCommand</c>.</summary>
+public sealed record DepositDecision(HeroId Hero, MapObjectId Deposit, Economy.ResourceSet Price) : PendingDecision(Hero);
+
 /// <summary>A cartographer offers the map of a level for <paramref name="Price"/> gold (ADR-079): <c>AnswerCartographerCommand</c>.</summary>
 public sealed record CartographerDecision(HeroId Hero, MapObjectId Cartographer, int Level, int Price) : PendingDecision(Hero);
 

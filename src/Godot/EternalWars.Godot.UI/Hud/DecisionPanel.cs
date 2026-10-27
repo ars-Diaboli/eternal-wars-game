@@ -57,6 +57,11 @@ public partial class DecisionPanel : PanelContainer
                 Button("Buy", new AnswerCartographerCommand(player, Buy: true));
                 Button("Leave", new AnswerCartographerCommand(player, Buy: false));
                 break;
+            case DepositDecision deposit:
+                _prompt.Text = $"Open the {_session.State.GetObject(deposit.Deposit).Definition.Name.ToLowerInvariant()} as a mine for {Core.Domain.Objects.ResourceProviderRules.Describe(deposit.Price)}?";
+                Button("Pay", new AnswerDepositCommand(player, Buy: true));
+                Button("Leave", new AnswerDepositCommand(player, Buy: false));
+                break;
             case SphinxDecision sphinx:
                 _prompt.Text = $"The sphinx asks: {sphinx.Question}";
                 for (var i = 0; i < sphinx.Options.Count; i++)

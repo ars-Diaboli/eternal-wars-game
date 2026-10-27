@@ -76,6 +76,6 @@ public class RiverTests
         Assert.Contains(maps, m => m.Rivers.Count >= RiverPlacer.MinLength);
         Assert.All(maps, m => Assert.All(m.Rivers, p => Assert.True(TerrainCatalog.Default.IsPassable(m.Map.GetTerrain(p)))));
         Assert.Equal(maps[0].Rivers.OrderBy(p => (p.Level, p.Y, p.X)).ToList(), MapGenerator.Generate(template, 72, 1).Rivers.OrderBy(p => (p.Level, p.Y, p.X)).ToList());
-        Assert.Equal(4, MapGenerator.Version);
+        Assert.Equal(5, MapGenerator.Version);
     }
 }

@@ -24,6 +24,21 @@ public enum TrainingRule
 
     /// <summary>+2 Spell Power or +2 Knowledge, the player's choice.</summary>
     ColosseumOfTheMagi,
+
+    /// <summary>500 experience, plus 500 for every other Dream Teacher the hero has learnt at on this map (ADR-069).</summary>
+    DreamTeacher,
+
+    /// <summary>+1 Attack (ADR-069).</summary>
+    TrainingGrounds,
+
+    /// <summary>+1 Defense (ADR-069).</summary>
+    MarlettoTower,
+
+    /// <summary>+1 Spell Power (ADR-069).</summary>
+    StarAxis,
+
+    /// <summary>+1 Knowledge (ADR-069).</summary>
+    GardenOfRevelation,
 }
 
 /// <summary>What the visitor of a training site may pick (<c>TrainingDecision</c>).</summary>
@@ -43,7 +58,7 @@ public enum TrainingOption
 
 /// <summary>
 /// A permanent power-up on the adventure map (ADR-068): Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of
-/// the Magi. Each hero may train at each site once; a visit that pays nothing or is declined does not count.
+/// the Magi; the second catalogue's Dream Teacher, Training Grounds, Marletto Tower, Star Axis and Garden of Revelation (ADR-069). Each hero may train at each site once; a visit that pays nothing or is declined does not count.
 /// </summary>
 public sealed class TrainingSite(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Training)
@@ -67,6 +82,21 @@ public static class TrainingRules
     public const int TreeGold = 2500;
 
     public const int StatBonus = 2;
+
+    public const int DreamTeacherExperience = 500;
+
+    /// <summary>The stat a one-stat site raises by 1: Training Grounds, Marletto Tower, Star Axis, Garden of Revelation (ADR-069).</summary>
+    public static PrimaryStat? SingleStat(TrainingRule rule) => rule switch
+    {
+        TrainingRule.TrainingGrounds => PrimaryStat.Attack,
+        TrainingRule.MarlettoTower => PrimaryStat.Defense,
+        TrainingRule.StarAxis => PrimaryStat.SpellPower,
+        TrainingRule.GardenOfRevelation => PrimaryStat.Knowledge,
+        _ => null,
+    };
+
+    /// <summary>A Dream Teacher's lesson: 500 experience, and 500 more for each other one the hero has learnt at (<paramref name="others"/>).</summary>
+    public static int DreamTeacher(int others) => DreamTeacherExperience * (1 + others);
 
     /// <summary>The Tree of Knowledge's other price.</summary>
     public static ResourceSet TreeMagicResources { get; } = new(Crystal: 5, Mercury: 5, Sulfur: 5);

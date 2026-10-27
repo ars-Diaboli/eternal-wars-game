@@ -131,7 +131,8 @@ public static class TreasurePlacer
         MapObject? item = null;
         var guardedValue = value;
         if (random.Next(SiteOdds) == 0 && PickSite(sites, value, random) is { } site
-            && Spot(map, MapObjectCatalog.Default.Get(site.Definition), tiles, placed, random) is { } siteAt)
+            && Spot(map, MapObjectCatalog.Default.Get(site.Definition), tiles, placed, random) is { } siteAt
+            && (site.OwnGuard || HasGuardRoom(map, MapObjectCatalog.Default.Get(site.Definition), siteAt)))
         {
             item = map.Add(MapObject.Create(map.NextId(), MapObjectCatalog.Default.Get(site.Definition), siteAt));
             sites.Zone[site.Definition] = sites.Zone.GetValueOrDefault(site.Definition) + 1;
@@ -221,6 +222,14 @@ public static class TreasurePlacer
     }
 
     /// <summary>A place with room around it (for the item and a guard next to it), three tiles from the zone's other treasure.</summary>
+    /// <summary>Whether a wide site placed at <paramref name="topLeft"/> leaves a free cell next to its entrance for its guard.</summary>
+    private static bool HasGuardRoom(GeneratedMap map, MapObjectDefinition definition, MapPosition topLeft)
+    {
+        var probe = MapObject.Create(default, definition, topLeft);
+        var own = probe.OccupiedCells().Select(c => c.Position).ToHashSet();
+        return DirectionExtensions.All.Select(probe.VisitPosition.Step).Any(p => !own.Contains(p) && map.IsFree(p) && !map.Roads.Contains(p));
+    }
+
     private static MapPosition? Spot(GeneratedMap map, MapObjectDefinition definition, List<MapPosition> tiles, List<MapPosition> placed, GameRandom random) =>
         SettlementPlacer.Find(map, definition, tiles, random, null, closest: false, avoid: placed, spacing: 3);
 

@@ -29,6 +29,18 @@ public sealed record ResolveTreasureChestCommand(PlayerId Player, TreasureChestR
 /// <summary>Answers a <c>CartographerDecision</c>: buy the map of the level or leave (ADR-079).</summary>
 public sealed record AnswerCartographerCommand(PlayerId Player, bool Buy) : GameCommand(Player);
 
+/// <summary>Answers a <c>DepositDecision</c>: pay and turn the deposit into a mine, or leave (ADR-070).</summary>
+public sealed record AnswerDepositCommand(PlayerId Player, bool Buy) : GameCommand(Player);
+
+/// <summary>The hero on a map tavern's entrance hires a hero of its pool for 2500 gold (ADR-070, ADR-071).</summary>
+public sealed record HireAtMapTavernCommand(PlayerId Player, MapObjectId Tavern, string Hero) : GameCommand(Player);
+
+/// <summary>
+/// The owner's hero on a garrison's entrance moves the whole stack in <paramref name="Slot"/> into the garrison (<paramref name="ToGarrison"/>) or
+/// out of it into its army, joining a stack of the same creature or a free slot (ADR-070).
+/// </summary>
+public sealed record MoveGarrisonStackCommand(PlayerId Player, MapObjectId Garrison, int Slot, bool ToGarrison) : GameCommand(Player);
+
 /// <summary>Answers a <c>SphinxDecision</c> with the option at <paramref name="Option"/> (0-based; ADR-079).</summary>
 public sealed record AnswerSphinxCommand(PlayerId Player, int Option) : GameCommand(Player);
 

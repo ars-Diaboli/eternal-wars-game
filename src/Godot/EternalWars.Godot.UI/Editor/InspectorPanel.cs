@@ -191,6 +191,17 @@ public partial class InspectorPanel : VBoxContainer
                 break;
             }
 
+            case MapGarrison garrison:
+            {
+                var row = new HBoxContainer();
+                AddChild(row);
+                var owners = new[] { ("Neutral", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
+                var owner = Options(row, "Owner", owners, garrison.Owner);
+                owner.Button.ItemSelected += _ => Edit(() => _editor.SetMapGarrisonOwner(garrison.Id, owner.Value()));
+                GarrisonRows(garrison.Id, garrison.Troops);
+                break;
+            }
+
             case SignPost sign:
             {
                 var row = new HBoxContainer();
@@ -309,20 +320,26 @@ public partial class InspectorPanel : VBoxContainer
             level.ValueChanged += value => Edit(() => _editor.SetTownDwelling(town.Id, id, (int)value));
         }
 
+        GarrisonRows(town.Id, town.Garrison);
+    }
+
+    /// <summary>The seven garrison slots of a town or a map garrison (ADR-070).</summary>
+    private void GarrisonRows(MapObjectId holder, Army troops)
+    {
         AddChild(new Label { Text = "Garrison" });
         var creatures = new[] { ("— empty —", "") }
-            .Concat(scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id)))
+            .Concat(_editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id)))
             .ToList();
         for (var slot = 0; slot < Army.SlotCount; slot++)
         {
             var slotRow = new HBoxContainer();
             AddChild(slotRow);
-            var stack = town.Garrison[slot];
+            var stack = troops[slot];
             var creature = Options(slotRow, $"{slot + 1}", creatures, stack?.Creature ?? "");
             var count = Spin(slotRow, "×", stack?.Count ?? 1, 1, 9999);
             var index = slot;
             void ApplySlot() => Edit(() => _editor.SetGarrisonSlot(
-                town.Id, index, creature.Value() is { Length: > 0 } id ? new CreatureStack(id, (int)count.Value) : null));
+                holder, index, creature.Value() is { Length: > 0 } id ? new CreatureStack(id, (int)count.Value) : null));
             creature.Button.ItemSelected += _ => ApplySlot();
             count.ValueChanged += _ => ApplySlot();
         }
