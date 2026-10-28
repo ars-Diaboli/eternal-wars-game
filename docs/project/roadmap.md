@@ -21,8 +21,8 @@ Shrines and the bank re-draft). The ADR-077 items are answered and built
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
-UI-1, FLOW-3, MP-1 and MP-2. **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a small random map
-(Phase 3), then CMB-9 once answered.
+UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089). **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
+small random map (Phase 3).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -546,8 +546,9 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [ ] Towns keep machines only through a garrison hero (waits for garrison heroes); war machine tuning
 - [x] Teleporting creatures move like flyers (ADR-070, ADR-083: `Teleporting` capability; no creature has it yet)
 - [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0, CMB-5
-- [ ] Diagonal battle steps cost √2 of Speed (ADR-088): `BattleGrid` reach, flyers, the battle AI, the reach overlay; replay digests
-      change ❓ CMB-9
+- [x] Battle movement as a circle (ADR-088, ADR-089, CMB-9): reach within Speed + 0.25 cells at any angle (Theta* around obstacles),
+      flyers and teleporters by straight-line distance, the distance penalty measured the same way, battle speeds +10 %; old replay
+      digests change
 
 ### Platform and art
 - [ ] Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)

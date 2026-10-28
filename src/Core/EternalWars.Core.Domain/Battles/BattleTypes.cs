@@ -52,6 +52,17 @@ public readonly record struct CellRect(int X, int Y, int Width, int Height)
         return Math.Max(dx, dy);
     }
 
+    /// <summary>
+    /// Straight-line gap between two footprints in thousandths of a cell (<see cref="BattleGrid.Unit"/>; 0 = touching or overlapping): the
+    /// cells between them across and down, measured like movement (CMB-9).
+    /// </summary>
+    public int DistanceTo(CellRect other)
+    {
+        var dx = Math.Max(0, Math.Max(other.X - Right, X - other.Right));
+        var dy = Math.Max(0, Math.Max(other.Y - Bottom, Y - other.Bottom));
+        return BattleGrid.Length(dx, dy);
+    }
+
     /// <summary>Centre in doubled coordinates, so it is always integral.</summary>
     public (int X2, int Y2) Center2 => ((2 * X) + Width, (2 * Y) + Height);
 

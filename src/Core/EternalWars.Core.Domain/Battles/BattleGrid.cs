@@ -7,33 +7,69 @@ namespace EternalWars.Core.Domain.Battles;
 /// Pure functions of <see cref="BattleState"/>; used by the rules, the battle AI and views alike.
 /// </summary>
 /// <remarks>
-/// Movement is 8-way, one cell per step, up to the creature's Speed. A footprint may only stand where all of
-/// its cells are inside the field and free of obstacles and other units (clearance, checked in O(1) with a
-/// prefix-sum table). A diagonal step needs at least one of the two orthogonal intermediate placements to be
-/// free, so units cannot squeeze through corners. Flyers may land on any free placement within their speed.
+/// Movement is measured as a circle (ADR-089, CMB-9): a unit reaches a placement whose path from where it stands is at most its Speed + 0.25
+/// cells long (<see cref="ReachSlack"/>), the path running at any angle (the straight-line distance on an open field, the way around obstacles
+/// otherwise). Lengths are in thousandths of a cell (<see cref="Unit"/>), integers, so every machine computes the same. A footprint may only
+/// stand where all of its cells are inside the field and free of obstacles and other units (clearance, checked in O(1) with a prefix-sum
+/// table). A diagonal step needs at least one of the two orthogonal intermediate placements to be free, so units cannot squeeze through
+/// corners. Flyers and teleporters land on any free placement within the same straight-line distance.
 /// </remarks>
 public static class BattleGrid
 {
+    /// <summary>Lengths on the battlefield are in thousandths of a cell.</summary>
+    public const int Unit = 1000;
+
+    /// <summary>What a unit may move beyond its Speed (0.25 of a cell), so the reach is a round circle rather than one with spikes (CMB-9).</summary>
+    public const int ReachSlack = 250;
+
     private static readonly (int Dx, int Dy)[] Steps = [(0, -1), (1, -1), (1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1)];
 
-    /// <summary>Every placement the unit can move to this turn (top-left cell → steps), including where it stands (0).</summary>
+    /// <summary>The straight-line length of (<paramref name="dx"/>, <paramref name="dy"/>) cells in <see cref="Unit"/>s, rounded down.</summary>
+    public static int Length(int dx, int dy)
+    {
+        var squared = (((long)dx * dx) + ((long)dy * dy)) * Unit * Unit;
+        var root = (long)Math.Sqrt(squared);
+        while (root * root > squared)
+        {
+            root--;
+        }
+
+        while ((root + 1) * (root + 1) <= squared)
+        {
+            root++;
+        }
+
+        return (int)root;
+    }
+
+    /// <summary>How far a unit may move this turn, in <see cref="Unit"/>s: its Speed plus <see cref="ReachSlack"/>.</summary>
+    public static int MoveLimit(BattleState battle, BattleUnit unit) => (battle.SpeedOf(unit) * Unit) + ReachSlack;
+
+    /// <summary>
+    /// Every placement the unit can move to this turn (top-left cell → path length in <see cref="Unit"/>s), including where it stands (0).
+    /// Walkers: the shortest path at any angle (Theta*: a path may go straight on from an earlier placement when the line from there is clear).
+    /// Flyers and teleporters: the straight-line distance.
+    /// </summary>
     public static IReadOnlyDictionary<CellPosition, int> Reachable(BattleState battle, BattleUnit unit)
     {
         var clearance = new Clearance(battle, unit);
         var size = unit.Size;
-        var speed = battle.SpeedOf(unit);
-        var result = new Dictionary<CellPosition, int> { [unit.Position] = 0 };
+        var limit = MoveLimit(battle, unit);
+        var speed = limit / Unit;
+        var start = unit.Position;
+        var result = new Dictionary<CellPosition, int> { [start] = 0 };
 
         if (unit.Creature.MovesFreely)
         {
-            for (var y = unit.Position.Y - speed; y <= unit.Position.Y + speed; y++)
+            for (var y = start.Y - speed; y <= start.Y + speed; y++)
             {
-                for (var x = unit.Position.X - speed; x <= unit.Position.X + speed; x++)
+                for (var x = start.X - speed; x <= start.X + speed; x++)
                 {
                     var p = new CellPosition(x, y);
-                    if (clearance.IsFree(p, size))
+                    var length = Length(x - start.X, y - start.Y);
+                    if (length <= limit && clearance.IsFree(p, size))
                     {
-                        result.TryAdd(p, Math.Max(Math.Abs(x - unit.Position.X), Math.Abs(y - unit.Position.Y)));
+                        result.TryAdd(p, length);
                     }
                 }
             }
@@ -41,12 +77,13 @@ public static class BattleGrid
             return result;
         }
 
-        var frontier = new Queue<CellPosition>();
-        frontier.Enqueue(unit.Position);
-        while (frontier.TryDequeue(out var current))
+        var parent = new Dictionary<CellPosition, CellPosition> { [start] = start };
+        var done = new HashSet<CellPosition>();
+        var frontier = new PriorityQueue<CellPosition, (int Length, int Y, int X)>();
+        frontier.Enqueue(start, (0, start.Y, start.X));
+        while (frontier.TryDequeue(out var current, out var priority))
         {
-            var steps = result[current];
-            if (steps == speed)
+            if (priority.Length != result[current] || !done.Add(current))
             {
                 continue;
             }
@@ -54,7 +91,7 @@ public static class BattleGrid
             foreach (var (dx, dy) in Steps)
             {
                 var next = current.Offset(dx, dy);
-                if (result.ContainsKey(next) || !clearance.IsFree(next, size))
+                if (done.Contains(next) || !clearance.IsFree(next, size))
                 {
                     continue;
                 }
@@ -64,8 +101,21 @@ public static class BattleGrid
                     continue;
                 }
 
-                result[next] = steps + 1;
-                frontier.Enqueue(next);
+                var from = parent[current];
+                if (from == current || !IsClearLine(clearance, from, next, size))
+                {
+                    from = current;
+                }
+
+                var length = result[from] + Length(next.X - from.X, next.Y - from.Y);
+                if (length > limit || (result.TryGetValue(next, out var known) && known <= length))
+                {
+                    continue;
+                }
+
+                result[next] = length;
+                parent[next] = from;
+                frontier.Enqueue(next, (length, next.Y, next.X));
             }
         }
 
@@ -116,12 +166,15 @@ public static class BattleGrid
     /// </summary>
     public static int RangedPenaltyEighths(BattleState battle, BattleUnit shooter, BattleUnit target)
     {
-        var distance = shooter.IsMachine ? 0 : DistancePenaltyEighths(shooter.Rect.GapTo(target.Rect));
+        var distance = shooter.IsMachine ? 0 : DistancePenaltyEighths(shooter.Rect.DistanceTo(target.Rect));
         return Math.Max(0, distance + CoverEighths(battle, shooter, target) - battle.Participant(shooter.Side).Bonus.MarksmanshipEighths);
     }
 
-    /// <summary>The distance penalty: 1/8 per whole 10 cells between the footprints (0–9 none, 10–19 1/8, …).</summary>
-    public static int DistancePenaltyEighths(int cellsBetween) => Math.Max(0, cellsBetween) / BattleState.DistancePenaltyCells;
+    /// <summary>
+    /// The distance penalty: 1/8 per whole 10 cells between the footprints (0–9 none, 10–19 1/8, …), the distance measured like movement, as a
+    /// straight line (<see cref="CellRect.DistanceTo"/>, in <see cref="Unit"/>s; CMB-9).
+    /// </summary>
+    public static int DistancePenaltyEighths(int distanceBetween) => Math.Max(0, distanceBetween) / (BattleState.DistancePenaltyCells * Unit);
 
     /// <summary>
     /// Sum of cover from every unit (either side) and obstacle the line of fire passes through, each counted once
@@ -189,6 +242,51 @@ public static class BattleGrid
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Whether the footprint can slide straight from <paramref name="from"/> to <paramref name="to"/>: every placement its top-left cell passes
+    /// through is free. Where the line crosses a grid corner exactly, one of the two placements beside the corner is enough (as for a diagonal
+    /// step).
+    /// </summary>
+    private static bool IsClearLine(Clearance clearance, CellPosition from, CellPosition to, int size)
+    {
+        int nx = Math.Abs(to.X - from.X), ny = Math.Abs(to.Y - from.Y);
+        int sx = Math.Sign(to.X - from.X), sy = Math.Sign(to.Y - from.Y);
+        var (x, y) = (from.X, from.Y);
+        for (int ix = 0, iy = 0; ix < nx || iy < ny;)
+        {
+            var decision = ((1 + (2L * ix)) * ny) - ((1 + (2L * iy)) * nx);
+            if (decision == 0)
+            {
+                if (!clearance.IsFree(new CellPosition(x + sx, y), size) && !clearance.IsFree(new CellPosition(x, y + sy), size))
+                {
+                    return false;
+                }
+
+                x += sx;
+                y += sy;
+                ix++;
+                iy++;
+            }
+            else if (decision < 0)
+            {
+                x += sx;
+                ix++;
+            }
+            else
+            {
+                y += sy;
+                iy++;
+            }
+
+            if (!clearance.IsFree(new CellPosition(x, y), size))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>Free-cell lookup for placing one unit's footprint: obstacles and every other living unit block.</summary>
