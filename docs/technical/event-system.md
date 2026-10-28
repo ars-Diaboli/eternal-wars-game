@@ -96,6 +96,8 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `GameStarted(Date)` | `TurnService.StartGame` | once |
 | `DayStarted(Date)` | `TurnService` | game start and after the last player ends a turn |
 | `WeekStarted(Date)` | `TurnService` | day 8, 15, ... |
+| `WeekEventAnnounced(Date, Event)` | `TurnService` | the week has an event (ADR-073, ADR-084): after `WeekStarted` (or `DayStarted` at game start), before the growth |
+| `MonstersSpawned(Creature, Monsters)` | `GuardService` | a month of a creature put stacks on the map; each had its `MapObjectPlaced` first (ADR-084) |
 | `TurnStarted(Player, Date)` / `TurnEnded(...)` | `TurnService` | each player turn |
 | `PlayerDefeated(Player, Reason)` | `GameFlowService` | a player is eliminated; its heroes (`HeroDefeated`) and flags (`TownOwnerChanged`, `MineOwnerChanged`) were released just before |
 | `GracePeriodStarted(Player, DefeatDay)` / `GracePeriodEnded(Player)` | `GameFlowService` | a player that had a town lost its last one (countdown begins) / owns a town again |
@@ -121,6 +123,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`): its store to the owner's hero, or a week at the first flagging (ADR-079) |
 | `ProviderOwnerChanged(Provider, Previous, Current)` / `ProviderStockChanged(Provider, Stored)` | interactions, `GameFlowService`, editor / `EconomyService`, interactions, `CaravanService` | a resource provider flagged, released or set in the editor; what waits there changed (a new week, a visit, a capture, a resource caravan; ADR-079) |
 | `ThievesDenVisited(Hero, Den)` | `MapObjectInteractionService` | a Den of Thieves was visited: the front-end shows the whole Thieves' Guild table (ADR-079) |
+| `AstrologerConsulted(Hero, Tower, Next)` | `MapObjectInteractionService` | an Astrologer's Tower told next week's event (`WeekEvent.None` for an ordinary week; ADR-084) |
 | `MapBought(Cartographer, Hero, Owner, Level)` | `MapObjectInteractionService` | a cartographer's map was bought; `SurroundingsRevealed` over the level follows (ADR-080) |
 | `DepositBought(Mine, Hero, Owner, Price)` | `MapObjectInteractionService` | a deposit became the mine `Mine` (same id); `MapObjectChanged` and `MineOwnerChanged` follow (ADR-082) |
 | `KeyReceived(Tent, Hero, Owner, Colour)` / `BorderGuardPassed(Guard, Hero)` | `MapObjectInteractionService` | a Keymaster gave a key; a key holder passed a border guard, which left (`MapObjectRemoved` first; ADR-082) |
@@ -147,7 +150,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `TownBuildingDowngraded(Town, Building, Level)` | `TownService.Capture` | a captured Capitol dropped to town hall 3 because its new owner already has one (ADR-070); published after `TownOwnerChanged` |
 | `CreaturesRecruited(Town, Creature, Count, Hero, Available)` / `StackUpgraded(Town, Hero, Slot, From, To, Count)` | `TownService` | recruits into the garrison (Hero null) or the visiting hero; a stack upgraded for the price difference |
 | `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, `CaravanService`, editor | all seven garrison slots after any change |
-| `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`) |
+| `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`), or a plague halved the stock (ADR-084) |
 | `CaravanDispatched(Caravan, Owner, Source, Destination, Creature, Count, Days, Cargo)` | `CaravanService` | a caravan left a map dwelling, a town or a resource provider (ADR-054; `Cargo` set for a resource caravan, ADR-079) |
 | `CaravanArrived(Caravan, Destination, Creature, Count, Cargo)` | `CaravanService` | owner's turn start: the troops joined the destination garrison (`GarrisonChanged` just before), or the cargo the treasury (`ResourcesChanged` just before) |
 | `CaravanReturned(Caravan, Source, Creature, Count, Cargo)` | `CaravanService` | the route was blocked: troops or cargo back at the source (a dwelling or provider refunds the price) |
@@ -158,7 +161,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `ArtifactGained(Hero, Artifact, Source)` / `ArtifactLost(Hero, Artifact)` / `ArtifactBackpackFull(Hero, Artifact)` | `ArtifactService` (pickups, chests and loot sites from interactions, loot from `BattleService`) | picked up, found or looted; loot that did not fit; a pickup left (or a found artifact lost) because the backpack is full |
 | `HeroArtifactsChanged(Hero)` | editor | the editor changed what a hero wears and carries |
 | `MapObjectRemoved(Object)` | interactions, `GuardService`, `BattleService`, editor | pile/chest consumed, guard joined, fled or beaten, or deleted in editor |
-| `MapObjectPlaced(Object, DefinitionId, Position)` | editor | placed or restored by undo |
+| `MapObjectPlaced(Object, DefinitionId, Position)` | editor, `GuardService` | placed or restored by undo; in a game, a month's monster stack (ADR-084) |
 | `ScenarioRulesChanged` | editor | the victory and defeat conditions changed (views re-read `GameState.Rules`) |
 | `GateLinkChanged(Gate, LinkedGate)` | editor | two-way partner or one-way exit changed |
 | `DecisionRequested(Decision)` / `DecisionResolved(Decision)` | interactions, `GuardService`, `BattleService`, `ProgressionService` | chest, warehouse resource choice, training choice, town gate, exchange, guard offer, battle (resolved when it ends), level-up |

@@ -1,13 +1,14 @@
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
 
-/// <summary>Calendar, active player and the End Turn button.</summary>
+/// <summary>Calendar with the week's event (ADR-073), active player and the End Turn button.</summary>
 public partial class TurnPanel : HBoxContainer
 {
     private readonly Label _date = new();
@@ -30,7 +31,14 @@ public partial class TurnPanel : HBoxContainer
     private void Refresh(GameSession session)
     {
         var state = session.State;
-        _date.Text = state.Date.ToString();
+        _date.Text = state.WeekEvent.Kind switch
+        {
+            WeekEventKind.WeekOfCreature or WeekEventKind.MonthOfCreature when state.Creatures.TryGet(state.WeekEvent.Creature!, out var creature) =>
+                $"{state.Date} ({(state.WeekEvent.IsMonthly ? "month" : "week")} of the {creature.Name})",
+            WeekEventKind.Plague => $"{state.Date} (plague)",
+            WeekEventKind.Starvation => $"{state.Date} (starvation)",
+            _ => state.Date.ToString(),
+        };
         _player.Text = $"Turn: {state.CurrentPlayer.Name}";
         _player.AddThemeColorOverride("font_color", Palette.ForPlayer(state.CurrentPlayer.Id));
     }

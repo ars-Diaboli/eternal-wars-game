@@ -80,6 +80,7 @@ public abstract class MapObject
         MapObjectKind.Prison => new Prison(id, definition, position),
         MapObjectKind.CreatureBank => new CreatureBank(id, definition, position),
         MapObjectKind.DenOfThieves => new DenOfThieves(id, definition, position),
+        MapObjectKind.AstrologersTower => new AstrologersTower(id, definition, position),
         MapObjectKind.Sanctuary => new Sanctuary(id, definition, position),
         MapObjectKind.Scenery => new Scenery(id, definition, position),
         MapObjectKind.Cartographer => new Cartographer(id, definition, position),

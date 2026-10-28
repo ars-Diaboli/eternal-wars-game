@@ -203,6 +203,24 @@ public static class MapValidator
     private static IEnumerable<MapIssue> ValidateRules(GameState scenario)
     {
         var rules = scenario.Rules;
+        if (rules.WeekEvents.Problem() is { } weekEvents)
+        {
+            yield return new(IssueSeverity.Error, weekEvents);
+        }
+        else if (rules.WeekEvents.Enabled)
+        {
+            // Without creatures to pick, a week or month of a creature quietly becomes an ordinary week.
+            if (Turns.WeekEventRules.Candidates(scenario.Creatures, rules.WeekEvents.Weekly).Count == 0)
+            {
+                yield return new(IssueSeverity.Warning, "No faction is chosen for the weekly events: there will be no week of a creature.");
+            }
+
+            if (Turns.WeekEventRules.Candidates(scenario.Creatures, rules.WeekEvents.Monthly).Count == 0)
+            {
+                yield return new(IssueSeverity.Warning, "No faction is chosen for the monthly events: there will be no month of a creature.");
+            }
+        }
+
         foreach (var condition in rules.Victory.Concat(rules.Defeat))
         {
             var name = ScenarioRules.Describe(scenario, condition);

@@ -426,7 +426,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             Buy(player, town, cheap, null, reserve, (town.AvailableOf(cheap.Id) + 1) / 2);
         }
 
-        foreach (var line in lines.OrderByDescending(l => l.Tier).ThenByDescending(l => l.Value))
+        // The week's creature first (ADR-073): its doubled stock is the cheapest strength on offer this week.
+        foreach (var line in lines.OrderByDescending(l => _state.WeekEvent.Growth(_state.Creatures, l.Id, 1) > 1).ThenByDescending(l => l.Tier).ThenByDescending(l => l.Value))
         {
             if (!Active(player) || town.AvailableOf(line.Id) <= 0)
             {

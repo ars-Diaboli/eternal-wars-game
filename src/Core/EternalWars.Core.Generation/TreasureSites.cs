@@ -74,6 +74,7 @@ public static class TreasureSites
         new(BuiltInMapObjects.HillFort, 7000, Weight: 1),
         new(BuiltInMapObjects.Prison, 5000, Weight: 1),
         new(BuiltInMapObjects.DenOfThieves, 500, Weight: 1, MapLimit: 2),
+        new(BuiltInMapObjects.AstrologersTower, 500, Weight: 1, MapLimit: 1),
         new(BuiltInMapObjects.Sanctuary, 500, Weight: 1),
         new(BuiltInMapObjects.SurfaceCartographer, 3000, Weight: 1, MapLimit: 1),
         new(BuiltInMapObjects.ArtifactMerchant, 3000, Weight: 1, MapLimit: 2),

@@ -97,8 +97,11 @@ public sealed record ScenarioRules(
     /// <summary>A sandbox: nobody wins or is eliminated, the game never ends (tests, experiments).</summary>
     public static ScenarioRules Endless { get; } = new([], [], StandardVictory: false, Elimination: false);
 
+    /// <summary>The week and month events (ADR-073, ADR-075): on by default, from the second week, creatures of the playable towns.</summary>
+    public Turns.WeekEventSettings WeekEvents { get; init; } = Turns.WeekEventSettings.Default;
+
     public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays
-        && MaxHeroes == HeroLimit;
+        && MaxHeroes == HeroLimit && WeekEvents.IsDefault;
 
     /// <summary>Whether a scenario with these rules can be won at all.</summary>
     public bool CanBeWon => StandardVictory || Victory.Count > 0;

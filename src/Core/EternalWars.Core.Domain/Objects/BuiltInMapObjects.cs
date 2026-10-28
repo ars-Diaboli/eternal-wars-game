@@ -85,6 +85,7 @@ public static class BuiltInMapObjects
     public const string SacrificialAltar = "sacrificial-altar";
     public const string Sphinx = "sphinx";
     public const string WitchHut = "witch-hut";
+    public const string AstrologersTower = "astrologers-tower";
 
     /// <summary>The second catalogue's travel and utility objects (ADR-069 … ADR-071); the coloured ones are <see cref="ColouredId"/>.</summary>
     public const string MapTavern = "tavern";
@@ -222,6 +223,7 @@ public static class BuiltInMapObjects
         new(SacrificialAltar, "Sacrificial altar", MapObjectKind.SacrificialAltar, ProviderFootprint),
         new(Sphinx, "Sphinx", MapObjectKind.Sphinx, MineFootprint) { VisitScope = VisitScope.OncePerHero },
         new(WitchHut, "Witch hut", MapObjectKind.WitchHut, ProviderFootprint),
+        new(AstrologersTower, "Astrologer's tower", MapObjectKind.AstrologersTower, ProviderFootprint),
 
         // The second catalogue (ADR-069 … ADR-071).
         .. new[] { ResourceType.Lumber, ResourceType.Ore, ResourceType.Gold, ResourceType.Crystal, ResourceType.Mercury, ResourceType.Sulfur }.Select(Deposit),

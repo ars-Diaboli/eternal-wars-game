@@ -1949,3 +1949,42 @@ here are marked *(choice)*; every number is a draft.
   garrison hero, which does not exist yet.
 - **`sim game --complexity beginner|easy|normal|hard|expert`** starts every player with that level's resources (`GameOptions.Complexity`);
   without it the map's resources stay.
+
+### ADR-084: Week and month events, the Astrologer's Tower and the kingdom overview (2026-10-28)
+**Status**: implemented (2026-10-28). Carries out ADR-073's and ADR-075's week and month events (FLOW-2), ADR-077's kingdom overview and MAP-32
+(ADR-080). Map format **v24**, template format **v6**, random map generator version **6**. Choices made here are marked *(choice)*; the chances
+are ADR-073's drafts.
+
+- **Rolls** (`WeekEventRules.Roll`, `GameState.Random`): a month's first week rolls 45 % month of a creature, 15 % plague, 15 % starvation, else
+  the weekly table; every other week 75 % week of a creature, else nothing. The creature is any growing creature (base or upgrade, by id) of the
+  chosen factions; none to pick means an ordinary week. Nothing is drawn while events are off or the week is skipped.
+- **A week ahead** *(choice, for MAP-32's "no re-roll")*: `GameState.NextWeekEvent` is rolled when the week before starts (week 2's at game
+  start), and becomes `GameState.WeekEvent` when its week starts. So the Astrologer's Tower tells what will happen, and visiting changes nothing.
+- **Effects**, at the week's start after `WeekStarted` and before the growth (`WeekEventAnnounced`): the week's creature's **line** grows twice its
+  growth (fort bonus included) in towns and map dwellings (`WeekEvent.Growth`); plague and starvation stop all growth; plague also halves the
+  creatures waiting in every **town** (rounded down; map dwellings keep theirs, `TownCreaturesGrew`). A new dwelling still opens with one plain
+  week *(choice)*. Refugee camps are not dwellings and are not affected.
+- **Month of a creature stacks** (`GuardService.SpawnMonthly`, numbers *(choice)*): one stack per 10 map objects it could guard (at least 1, at most
+  16). Those objects have an entrance that is not guarded yet. Towns, monsters, gates, garrisons, border posts and scenery are left out. Each
+  stack stands on a random free tile beside the entrance, with no hero within one tile, and its count is rolled by tier like any unset guard
+  (`GuardService.CountRange`). Classic guard mode, Aggressive. Events: `MapObjectPlaced` for each stack, then `MonstersSpawned`.
+  `VisibilityService` refreshes memories on `MapObjectPlaced`.
+- **Settings** (`ScenarioRules.WeekEvents`, `WeekEventSettings`): on or off, `SkipWeeks` 0–8 (default 1, so the first week has none) and the
+  weekly and monthly factions (town ids incl. Conflux and Dragon Utopia, or `neutral`; default the playable towns). Map v24 `rules.weekEvents`
+  (omitted when default; older maps get the default). Template v6 `weekEvents` (`TemplateWeekEvents`), passed to the scenario. The editor's
+  conditions panel edits them (undoable, `SetScenarioRules` refuses a bad skip or an unknown faction). The map and template validators check
+  them, and the map validator warns when a table has no creature to pick.
+- **Game start**: with `SkipWeeks` 0 the first week can have an event. A plague then halves the map's town stocks and a month brings its stacks,
+  but there is no growth to double.
+- **AI**: it recruits the week's creature first; spawned stacks are ordinary guards to it.
+- **Astrologer's Tower** (`astrologers-tower`, 2×2 like the Den of Thieves; `AstrologerConsulted(Hero, Tower, Next)` on every visit). It is in
+  the map format v24 (`astrologersTower`) and the generator's treasure sites (value 500, one a map), hence generator version 6.
+- **Kingdom overview** (`KingdomOverviews.For`): rows for the player's towns (`TownRules.DailyIncome`, with the paying buildings), mines,
+  flagged providers (what a week brings in words, `ResourceProviderRules.DescribeWeek`, and what waits there) and heroes. Each hero source is its
+  own row: Treasury with its interest, Prospecting, specialty, artifacts. The daily total equals `EconomyService.DailyIncome` with the default
+  sources. Game app: `KingdomOverviewPanel` from the "Kingdom (K)" button or K (not run in Godot yet).
+- **Front-ends**: `NoticePanel` shows the week's event on each human's first turn of the week and what an Astrologer's Tower says. `TurnPanel`
+  shows the event next to the date. The editor's conditions panel has the settings. None of this has been run in Godot yet.
+- **Compatibility**: games now draw week event rolls, so **saves and replays made before this change no longer match their digests** (as with
+  ADR-079). `GameStateDigest` lists the week events only when one is set.
+- Tests: `WeekEventTests`, `KingdomOverviewTests`.

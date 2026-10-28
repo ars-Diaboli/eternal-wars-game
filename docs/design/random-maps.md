@@ -23,11 +23,13 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
 
-## The template (`MapTemplate`, format v5)
+## The template (`MapTemplate`, format v6)
 - Name, description, supported map sizes, player-count range, max humans, whether an underground level is used, and the
   **maximum number of heroes per player, 1 to 8** (v5, ADR-068; default 8). The generator writes it into the scenario's rules; its
   callers (`MapGenerator.Build`, `EditorMapGenerator.Generate`) may override it with `maxHeroes`. There is no template editor or
   generator UI yet, so the setting is in the file and in code. Generated maps use one limit for every player.
+- **Week and month events** (v6, ADR-084): `weekEvents` with `enabled`, `skipWeeks` (0–8) and `weeklyFactions` / `monthlyFactions`
+  (town ids or `neutral`; omitted = the playable towns), written into the scenario's rules like a map's.
 - **Zones**, each with:
   - type: player start, AI-only start, treasure, junction (junction behaves like treasure; it only affects validator
     warnings);
@@ -141,7 +143,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   editor to show. A hero may stand in the entrance of its own town (the validator and hero placement accept it).
 
 ## Scope
-- **In 1.0**: mirrored generation (2, 4 or 8 players, axis or point symmetry, [above](#the-template-maptemplate-format-v5), ADR-070);
+- **In 1.0**: mirrored generation (2, 4 or 8 players, axis or point symmetry, [above](#the-template-maptemplate-format-v6), ADR-070);
   saving generated maps as ordinary map files as well as reproducing them from the seed.
 - **Not in 1.0**: water zones/islands, boats (ADR-051), importing HotA templates.
 - Open ❓: how army speed and native terrain feed into treasure and guard values.

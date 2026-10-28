@@ -142,6 +142,10 @@ public sealed class MapObjectInteractionService(
                 events.Publish(new ThievesDenVisited(hero.Id, den.Id));
                 break;
 
+            case AstrologersTower tower:
+                events.Publish(new AstrologerConsulted(hero.Id, tower.Id, state.NextWeekEvent));
+                break;
+
             case Deposit deposit:
                 OfferDeposit(hero, deposit);
                 break;

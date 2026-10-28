@@ -89,6 +89,7 @@ public static class Palette
         MapObjectKind.Prison => new Color(0.30f, 0.30f, 0.35f),
         MapObjectKind.CreatureBank => new Color(0.60f, 0.25f, 0.30f),
         MapObjectKind.DenOfThieves => new Color(0.35f, 0.30f, 0.40f),
+        MapObjectKind.AstrologersTower => new Color(0.25f, 0.30f, 0.55f),
         MapObjectKind.Sanctuary => new Color(0.90f, 0.90f, 0.75f),
         MapObjectKind.Scenery => new Color(0.45f, 0.45f, 0.42f),
         MapObjectKind.Cartographer => new Color(0.85f, 0.80f, 0.60f),

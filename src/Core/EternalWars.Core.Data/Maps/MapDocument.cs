@@ -32,11 +32,12 @@ namespace EternalWars.Core.Data.Maps;
 /// (an optional riddle) and witch huts (optional skills). 23 = + deposits (<c>deposit</c>), Windows and Eyes of the Magi (<c>magiWindow</c>,
 /// <c>magiEye</c>), Keymaster's Tents and border posts (<c>keymaster</c>, <c>borderPost</c>), map taverns (<c>tavern</c>) and garrisons
 /// (<c>garrison</c>, optional owner and troops; ADR-082); the undead bank <c>bank.ruins</c> is <c>bank.crypt</c> (older ids still load).
-/// Older versions still load.
+/// 24 = + week and month events (<c>rules.weekEvents</c>: on or off, weeks skipped, factions; omitted = the default) and the Astrologer's Tower
+/// (<c>astrologersTower</c>; ADR-084). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 23;
+    public const int CurrentFormatVersion = 24;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -83,7 +84,7 @@ public sealed record MapDocument
 /// How a scenario is won and lost (v10, ADR-057). <see cref="StandardVictory"/> (the last team standing wins) and
 /// <see cref="Elimination"/> (no towns and no heroes: out) are on unless set to false; <see cref="GraceDays"/> omitted = 7
 /// (the days a player that lost its last town has to own one again; 0 = no countdown). <see cref="MaxHeroes"/> (v15) omitted = 8
-/// (the most heroes a player may have at once).
+/// (the most heroes a player may have at once). <see cref="WeekEvents"/> (v24) omitted = the default week and month events.
 /// </summary>
 public sealed record ScenarioRulesDocument(
     IReadOnlyList<ConditionDocument>? Victory = null,
@@ -91,7 +92,18 @@ public sealed record ScenarioRulesDocument(
     bool StandardVictory = true,
     bool Elimination = true,
     int? GraceDays = null,
-    int? MaxHeroes = null);
+    int? MaxHeroes = null,
+    WeekEventsDocument? WeekEvents = null);
+
+/// <summary>
+/// Week and month events (v24, ADR-073, ADR-075): <see cref="Enabled"/> false turns them off; <see cref="SkipWeeks"/> (0–8, omitted = 1) weeks pass
+/// before the first; the factions (town ids or <c>neutral</c>) whose creatures may be picked, omitted = the playable towns.
+/// </summary>
+public sealed record WeekEventsDocument(
+    bool Enabled = true,
+    int? SkipWeeks = null,
+    IReadOnlyList<string>? WeeklyFactions = null,
+    IReadOnlyList<string>? MonthlyFactions = null);
 
 /// <summary>One condition; which fields apply depends on <see cref="Kind"/> (see <see cref="ConditionKind"/>).</summary>
 public sealed record ConditionDocument(
@@ -173,6 +185,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(PrisonDocument), "prison")]
 [JsonDerivedType(typeof(CreatureBankDocument), "bank")]
 [JsonDerivedType(typeof(DenOfThievesDocument), "denOfThieves")]
+[JsonDerivedType(typeof(AstrologersTowerDocument), "astrologersTower")]
 [JsonDerivedType(typeof(SanctuaryDocument), "sanctuary")]
 [JsonDerivedType(typeof(SceneryDocument), "scenery")]
 [JsonDerivedType(typeof(CartographerDocument), "cartographer")]
@@ -266,6 +279,9 @@ public sealed record GarrisonDocument : MapObjectDocument
 
 /// <summary>A Den of Thieves (v22, ADR-079).</summary>
 public sealed record DenOfThievesDocument : MapObjectDocument;
+
+/// <summary>An Astrologer's Tower (v24, ADR-084).</summary>
+public sealed record AstrologersTowerDocument : MapObjectDocument;
 
 /// <summary>A sanctuary (v22, ADR-079).</summary>
 public sealed record SanctuaryDocument : MapObjectDocument;

@@ -66,15 +66,16 @@
 A new dwelling opens with one week of creatures, every Monday adds the creature's `growth`, and unbought creatures
 accumulate. Every dwelling needs the Fort. A town's dwellings grow **+50 % with the Citadel** (fort 2) and **+100 % with
 the Castle** (fort 3), opening week included; the bonus is rounded down (growth 1 → 1 with a Citadel, 2 with a Castle).
-Map dwellings keep the creature's growth. Week and month events change growth ([below](#week-and-month-events-adr-073-not-built)). One rule, `TownRules.WeeklyGrowth`, serves the service, town screen and AI
+Map dwellings keep the creature's growth. Week and month events change growth ([below](#week-and-month-events-adr-073-built-adr-084)). One rule, `TownRules.WeeklyGrowth`, serves the service, town screen and AI
 (ADR-066).
 
 **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two buildings per town, one adding **+5 a week** to tier-1
 growth, the other **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the
 bonus (ADR-073).
 
-## Week and month events (ADR-073, not built)
-HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `GameState.Random`; numbers are drafts.
+## Week and month events (ADR-073, built ADR-084)
+HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `GameState.Random`; numbers are drafts. Each week's event is
+rolled when the week before starts, so the Astrologer's Tower can tell it.
 
 | Roll | Chance | Effect |
 |---|---|---|
@@ -85,7 +86,10 @@ HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `G
 | | 15 % | **Starvation**: no growth that week |
 | | 25 % | nothing; the weekly roll is made as usual |
 
-- The doubling applies to towns and map dwellings for that one week (confirmed, ADR-075).
+- The doubling applies to towns and map dwellings for that one week (confirmed, ADR-075); it doubles the line's growth with the fort
+  bonus. A dwelling built during the week still opens with one plain week. A plague halves only the towns' stock.
+- **Spawned stacks** of a month of a creature (ADR-084, draft): one per 10 map objects that could take a guard (1 to 16), beside the object's
+  entrance, the count rolled by tier like any unset guard.
 - **When events start** (ADR-075): by default no event in the game's first week. The map editor and the template may turn
   week and month events off, or skip up to **8 weeks** (2 months) before the first one.
 - The map editor and the template editor choose which factions' creatures may be picked, separately for weekly and monthly
@@ -123,7 +127,7 @@ lumber and ore, rare resources; 3 — also artifacts and income; 4 or more — a
 (most valuable). The Den of Thieves on the map shows the whole table on every visit.
 
 ## Kingdom overview (ADR-077)
-**Not built.** One screen with the player's whole economy: every town, mine, flagged provider, income artifact and hero skill or specialty that
+**Implemented (ADR-084)**, Godot screen not run yet. One screen with the player's whole economy: every town, mine, flagged provider, income artifact and hero skill or specialty that
 brings resources, each with its daily (or weekly) amount, and the totals. It reads the income rules (`TownIncome`, `HeroIncome`, the providers),
 so it always matches what the turn pays.
 

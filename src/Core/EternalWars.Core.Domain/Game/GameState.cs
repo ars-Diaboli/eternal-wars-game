@@ -130,6 +130,15 @@ public sealed class GameState
 
     public GameDate Date { get; internal set; } = GameDate.First;
 
+    /// <summary>This week's event (ADR-073), announced when the week starts.</summary>
+    public Turns.WeekEvent WeekEvent { get; internal set; } = Turns.WeekEvent.None;
+
+    /// <summary>
+    /// Next week's event, rolled a week ahead so the Astrologer's Tower can tell it (ADR-077, MAP-32: no re-roll). Front-ends show it only when a
+    /// tower is consulted (<see cref="Events.AstrologerConsulted"/>).
+    /// </summary>
+    public Turns.WeekEvent NextWeekEvent { get; internal set; } = Turns.WeekEvent.None;
+
     public int CurrentPlayerIndex { get; internal set; }
 
     public bool IsStarted { get; internal set; }

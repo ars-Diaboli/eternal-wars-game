@@ -55,6 +55,7 @@ public partial class Main : Node3D
     private HeroPanel _heroScreen = null!;
     private DwellingPanel _dwellingScreen = null!;
     private MarketplacePanel _marketScreen = null!;
+    private KingdomOverviewPanel _kingdomScreen = null!;
     private ObjectServicePanel _serviceScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
@@ -118,7 +119,7 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible || _serviceScreen.Visible)
+        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible || _serviceScreen.Visible || _kingdomScreen.Visible)
         {
             return; // a full-screen panel takes the input (Escape closes it)
         }
@@ -148,6 +149,9 @@ public partial class Main : Node3D
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.H }:
                 ShowHero(_selectedHero);
+                break;
+            case InputEventKey { Pressed: true, Keycode: Key.K } when _session.State.CurrentPlayer.IsHuman:
+                _kingdomScreen.Open(_session.State.CurrentPlayer.Id);
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.L }:
                 _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
@@ -670,7 +674,7 @@ public partial class Main : Node3D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        _status = new Label { Text = "Click: route, click again: go. Tab: next hero  L: level  WASD/QE/wheel: camera" };
+        _status = new Label { Text = "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  WASD/QE/wheel: camera" };
         top.AddChild(_status);
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
@@ -725,6 +729,12 @@ public partial class Main : Node3D
         townLayer.AddChild(guild);
         guild.Bind(_session);
         _townScreen.ThievesGuildRequested += () => guild.Open(_session.State.CurrentPlayer.Id);
+        _kingdomScreen = new KingdomOverviewPanel();
+        townLayer.AddChild(_kingdomScreen);
+        _kingdomScreen.Bind(_session);
+        var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" };
+        kingdom.Pressed += () => _kingdomScreen.Open(_session.State.CurrentPlayer.Id);
+        side.AddChild(kingdom);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
         var market = new Button { Text = "Marketplace" };
