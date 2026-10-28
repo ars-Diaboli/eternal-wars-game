@@ -13,7 +13,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 ## Goals
 - **Both the game and the editor generate maps.** The game's new-game screen picks a template, a map size, players,
   a seed and game options, then generates and starts (built, ADR-086: per player human or computer, town, hero and team). The editor generates into an **editable** map, so designers can
-  hand-polish a generated map and save it.
+  hand-polish a generated map and save it (built: the "Generate" tab, ADR-087).
 - **Templates are authored in the editor** (template editor: a zone graph) and saved as `*.ewtemplate.json`. The game
   lists every template it can find, built-in and user/mod folders. Today only the built-in (embedded) templates load.
 - **Template editor** (ADR-070, RMG-10; not built): works like the HotA template editor (zone graph, zone and connection
@@ -26,8 +26,8 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 ## The template (`MapTemplate`, format v6)
 - Name, description, supported map sizes, player-count range, max humans, whether an underground level is used, and the
   **maximum number of heroes per player, 1 to 8** (v5, ADR-068; default 8). The generator writes it into the scenario's rules; its
-  callers (`MapGenerator.Build`, `EditorMapGenerator.Generate`) may override it with `maxHeroes`. There is no template editor yet and the
-  new-game screen does not offer the override (ADR-086), so the setting is in the file and in code. Generated maps use one limit for every player.
+  callers (`MapGenerator.Build`, `EditorMapGenerator.Generate`) may override it with `maxHeroes`. There is no template editor yet; the editor's
+  "Generate" tab offers the override (ADR-087), the new-game screen does not (ADR-086). Generated maps use one limit for every player.
 - **Week and month events** (v6, ADR-084): `weekEvents` with `enabled`, `skipWeeks` (0–8) and `weeklyFactions` / `monthlyFactions`
   (town ids or `neutral`; omitted = the playable towns), written into the scenario's rules like a map's.
 - **Zones**, each with:

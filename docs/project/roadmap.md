@@ -19,7 +19,8 @@ ADR-070 / ADR-071 items that need no answer (surrender, taverns: done, ADR-081),
 Shrines and the bank re-draft). The ADR-077 items are answered and built
 (ADR-079, ADR-080): flaggable providers with resource caravans, caravan speed and limit, the Thieves' Guild, rivers, scenery and the third
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
-(ADR-084). The Godot smoke pass ran (ADR-085), and the new-game screen starts random maps from the shipped templates (ADR-086).
+(ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
+(ADR-087).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -393,7 +394,7 @@ Each item is one change with core tests (`TestWorld` maps), a map format bump wh
 - [x] Prison (level odds, faction drawn when the game starts for a map that leaves it open, refused at the hero limit; editor rows; map format v19)
 - [x] Hero limit per player (1 to 8) as a map rule: map format v15, the tavern respects it, editor setting (conditions panel; the Godot
       part builds but is not run in the editor yet), validator warning, template format v5 and a generator override; the Prison will use
-      it; the new-game and "generate map" screens will offer the override when they exist
+      it; the editor's "Generate" tab offers the override (ADR-087), the new-game screen not yet
 - [x] Hero limit follow-ups (MAP-14): a player's own limit in the editor (players panel) and the map (v18); the editor refuses a hero or a
       limit that breaks it; surplus heroes of a map made elsewhere are removed when the game starts
 - [x] Utilities: Sign, Observatory, Hill Fort, Town Gate (town picker), War Machine Factory (map format v19; game panels and the notice panel
@@ -493,7 +494,8 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Editor: "generate map from template" core (`EditorMapGenerator`): a template, size, seed, player count and optional
       town per slot give a new editable scenario with coloured players, start towns, heroes and armies, a description
       that records how it was made, and the generator's problems and validator issues to show
-- [ ] Editor: "generate map from template" UI (template, size, seed, players, towns; show problems and issues) (Godot)
+- [x] Editor: "generate map from template" UI (template, size, seed, players, towns, hero limit; problems and issues on the status line
+      and the Validation tab): the "Generate" tab and "From template" (ADR-087; smoke scenario `editor-generate`)
 - [x] Editor: change a town's faction (an undoable `SetTownType`), e.g. after generating (ADR-083; inspector not run in Godot yet)
 - [x] Game: new-game screen picks template, size, players (human or computer, town and hero per player, team), seed and options, then
       generates; problems of the best attempt are shown with "Start anyway"; saves keep the generation info (ADR-086; smoke scenario
