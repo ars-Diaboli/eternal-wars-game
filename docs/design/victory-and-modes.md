@@ -31,10 +31,18 @@
    on the same screen).
 3. **Story campaign**: chained scenarios, carry-over heroes, scripted map events and dialogue. This needs editor
    support for triggers and a script/event format (Phase 6).
-- Online multiplayer: not planned (core determinism keeps the door open).
+- **LAN multiplayer** (ADR-088, planned; when and how: MP-1 ❓): the host is the source of truth. Players pick a map or generate a random one
+  when they create the game. A multiplayer save loads in multiplayer, single player (the player picks one of the colours that were human,
+  the computer plays the rest) or hot-seat. The first week may be played **simultaneously** while players stay in their start zones and do
+  not touch the same object; when that breaks, the turn is played again in the normal order (MP-2 ❓). Online play over the internet is
+  not planned.
 
 ## Game options
 Chosen on the new-game screen: map or template, players and teams (**2 to 8 teams**, 8 = free for all; the map or template
 sets defaults and may fix the teams or limit the team count, ADR-070), fog mode ([adventure-map.md](adventure-map.md)),
 complexity (starting resources, [towns-and-economy.md](towns-and-economy.md)), seed. Saves and replays record them
 (ADR-058).
+Random maps (ADR-086): template, size, players (human or computer, town, hero, team).
+
+**Turn timer** (ADR-088, planned, FLOW-3 ❓): off by default, 1 to 30 minutes a turn, for human players. When it runs out, the turn ends on
+its own. It runs on the adventure map and in battle; if it runs out during a battle, the battle is finished first.

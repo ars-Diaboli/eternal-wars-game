@@ -25,3 +25,8 @@
 - **UI**: HoMM-style right-side panel (minimap, hero/town list, end turn) and bottom status bar; full-screen town and
   hero screens.
 - **Audio**: per-terrain ambient music, faction town themes.
+
+## Speed settings (ADR-088, planned)
+The player sets how fast heroes move on the adventure map and how fast battle animations play. These are player settings, kept per
+computer and not in saves, and they change nothing in the game. Steps, separate settings for the computer's moves, and walking
+animation: UI-1 ❓.

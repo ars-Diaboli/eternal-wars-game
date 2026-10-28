@@ -32,8 +32,8 @@ battles) and deliberately change systems where we can add identity. Every twist 
 The 3D presentation is meant to **add atmosphere without hurting readability**: the camera, map and
 battles must stay as legible as HoMM3's hand-painted 2D.
 
-**Modes, in priority order**: single-player vs AI → hot-seat → story campaign. Online multiplayer is
-out of scope, but the deterministic core keeps it possible.
+**Modes, in priority order**: single-player vs AI → hot-seat → story campaign. **LAN multiplayer** is planned (ADR-088; when is
+MP-1 ❓); the deterministic core makes it possible. Online play over the internet stays out of scope.
 
 ## 2. Pillars
 
@@ -66,5 +66,5 @@ out of scope, but the deterministic core keeps it possible.
   because that helps us. A supported mod loader and mod folder may come after 1.0.
 
 ## 5. Non-goals (for now)
-- Real-time elements, online multiplayer, procedural campaign, mobile touch UI, official mod support, sea travel
+- Real-time elements, online (internet) multiplayer, procedural campaign, mobile touch UI, official mod support, sea travel
   (ADR-051).

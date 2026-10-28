@@ -2056,3 +2056,27 @@ seed and options, then generates" (ADR-064, RMG-5, RMG-7). Choices made here are
   longer runs under them, and the sixth tab fits (seen in ADR-085).
 - No core change. The generator core is covered by `EditorMapGeneratorTests`. Smoke scenario `editor-generate` (Sylvan for Blue, Two against
   two at 128, then the tab again).
+
+### ADR-088: Diagonal battle movement, speed settings, turn timer, auto combat, LAN multiplayer (2026-10-28)
+**Status**: accepted as a design (2026-10-28), owner notes in `ideas.md`; **nothing implemented**. The open points are CMB-9, CMB-10, UI-1,
+FLOW-3, MP-1 and MP-2 in `open-questions.md`, each with a proposal. **Changes ADR-008's scope**: online multiplayer was out; LAN multiplayer is now
+planned (when is MP-1).
+
+- **Diagonal battle movement** (CMB-9): a diagonal step on the battlefield costs **√2 ≈ 1.41** of a creature's Speed instead of 1, as on the
+  adventure map. Today a stack moves up to Speed steps in any of the 8 directions (`BattleGrid`, Chebyshev distance), so diagonals are
+  ~41 % too cheap. This changes reach, the AI and every replay digest.
+- **Speed settings** (UI-1): the player sets how fast heroes move on the adventure map and how fast battle animations play. These are player
+  settings, not rules: they change no game state and are not saved with a game.
+- **Turn timer** (FLOW-3): an option on the new-game screen, off by default, **1 to 30 minutes** a turn, for **human** players only. When it
+  runs out the player's turn ends on its own. It runs on the adventure map and in battle. If it runs out during a battle, the battle is finished
+  first and the turn ends after it.
+- **Auto combat** (CMB-10): a setting that skips a battle the player starts. The battle AI plays **both sides**, a screen shows the outcome,
+  and the player **accepts** it or **rejects** it. Rejecting plays the battle by hand as usual. This is a step before the battle; the quick
+  combat button during a battle stays.
+- **LAN multiplayer** (MP-1, MP-2): over a local network for now. The **host is the source of truth**. Players pick a map or generate a
+  random one when they create the game. A multiplayer game can be saved and loaded again in multiplayer, single player or hot-seat. Loaded in
+  single player, the player picks one of the colours that were human, and the computer plays the rest. The **first week may be played
+  simultaneously** while players stay in their start zones and do not touch the same object. When that is broken, the turn is played again
+  in the normal order.
+- Fits the core as it is: commands go through `session.Execute` and the game is deterministic, so a host can run the game and clients can
+  send commands (MP-1). The timer's end of turn is an ordinary `EndTurnCommand`, and auto combat can preview a battle on a copy of the state.
