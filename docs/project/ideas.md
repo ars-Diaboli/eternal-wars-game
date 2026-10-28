@@ -29,6 +29,10 @@ Recorded so far:
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
 
+combat - unit diagonal movement should be counted correctly as 1.41 cost;
+
 Multiplayer (over LAN for now)
 players can select custom map or generate random one upon creation of the game;
-
+multiplayer map can be saved and then loaded  in multiplayer , single player or hot seat;
+in multiplayer save loaded in single player - user selects any color of original non ai players - rest are played by ai;
+in multiplayer - 1st week could be played simultaneously

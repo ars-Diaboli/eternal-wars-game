@@ -2036,3 +2036,23 @@ seed and options, then generates" (ADR-064, RMG-5, RMG-7). Choices made here are
 - **Not yet**: the tier-1 dwelling pick (RMG-7; drawn at random as for a computer player), the hero limit override (ADR-068), user template
   folders, and the human or computer choice for hand-made maps (they keep the map's players). Town ids are shown as they are.
 - Tests: `StartSlotsTests`. Smoke scenario `game-random-map` (Duel, Necropolis and its first hero, Start, K, end turn: the computer plays).
+
+### ADR-087: "Generate from template" in the map editor (2026-10-28)
+**Status**: implemented (2026-10-28). The UI for the editor's generator core (`EditorMapGenerator`, ADR-064 / ADR-083).
+
+- **Where**: a "Generate" tab, the last one on the right-hand side. A "From template" button in the file row opens it. It offers the shipped
+  templates (`BuiltInTemplates.All`) with the template's description, size (the middle one by default), seed (with "New seed"), the number of
+  players (the template's minimum to its start slots), the **hero limit** (the template's by default; another value is passed as the
+  `maxHeroes` override, ADR-068) and a **town per player** ("Random" = drawn from the seed; a picked town paints its start zone native).
+- **Generate** works like "New": a new map and a new undo history replace the open one, unsaved changes included *(choice; the tab says to
+  save first)*. The status line tells the template, size, seed and attempt, the generator's problems when every attempt had some, and how many
+  validator issues there are (they are on the Validation tab). A refused request (a size or slot the template does not have) is shown under
+  the button. The tab keeps its settings after generating, so the next seed is one click away.
+- **Players** are `EditorMapGenerator.Players`: every player start is human (up to `MaxHumans`), which the designer can change on the
+  Players tab. The game's new-game screen sets its players up itself (ADR-086).
+- **Layering**: as for ADR-086, `GeneratePanel` (Godot.UI) takes plain records (`GeneratorTemplate`, `GenerateRequest`), and the editor app
+  calls `EditorMapGenerator.Generate`.
+- **Layout fix**: the right-hand tabs now start below the tool rows and are a little wider. A tool's second row (terrains, objects) no
+  longer runs under them, and the sixth tab fits (seen in ADR-085).
+- No core change. The generator core is covered by `EditorMapGeneratorTests`. Smoke scenario `editor-generate` (Sylvan for Blue, Two against
+  two at 128, then the tab again).

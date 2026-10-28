@@ -1,10 +1,12 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Generation;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Controls;
@@ -36,6 +38,8 @@ public partial class Main : Node3D
     private Label _history = null!;
     private bool _painting;
     private MapObjectId? _linkFrom;
+    private GenerateRequest? _lastGenerate;
+    private TabContainer _tabs = null!;
 
     public override void _Ready()
     {
@@ -234,6 +238,7 @@ public partial class Main : Node3D
         fileRow.AddChild(_fileName);
         AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
         AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
+        AddButton(fileRow, "From template", () => _tabs.CurrentTab = _tabs.GetTabCount() - 1);
         AddButton(fileRow, "Save", Save);
         AddButton(fileRow, "Load", Load);
         AddButton(fileRow, "Undo", () => _editor.Undo());
@@ -246,7 +251,9 @@ public partial class Main : Node3D
         rows.AddChild(_history);
         rows.AddChild(new Label { Text = "LMB: use tool   Ctrl+Z / Ctrl+Y: undo / redo   L: level   WASD/QE/wheel: camera" });
 
-        var tabs = new TabContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -480, OffsetTop = 8, OffsetRight = -8, OffsetBottom = 560 };
+        // Below the tool rows: a tool's second row (terrains, objects) runs under the right-hand side.
+        var tabs = new TabContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -560, OffsetTop = 84, OffsetRight = -8, OffsetBottom = 700 };
+        _tabs = tabs;
         _ui.AddChild(tabs);
         var properties = new MapPropertiesPanel { Name = "Map" };
         tabs.AddChild(properties);
@@ -268,6 +275,39 @@ public partial class Main : Node3D
             _context.SetLevel(position.Level);
             _camera.FocusOn(MapSpace.ToWorld(position));
         };
+        var generate = new GeneratePanel { Name = "Generate" }; // the last tab ("From template" opens it)
+        tabs.AddChild(generate);
+        generate.Bind(
+            BuiltInTemplates.All.Select(t => new GeneratorTemplate(t.Name, t.Description, t.Sizes, t.MinPlayers, t.MaxHeroes, StartSlots.Of(t).Select(s => s.Name).ToList())).ToList(),
+            Generate,
+            _lastGenerate);
+    }
+
+    /// <summary>
+    /// "Generate from template" (ADR-087): a new map like "New", from <see cref="EditorMapGenerator"/>; the status line tells how it was made, the
+    /// generator's problems if every attempt had some, and how many validator issues there are. A refused request returns its reason to the panel.
+    /// </summary>
+    private string? Generate(GenerateRequest request)
+    {
+        var template = BuiltInTemplates.All[request.Template];
+        EditorMap map;
+        try
+        {
+            map = EditorMapGenerator.Generate(
+                template, request.Size, request.Seed, request.Players, request.Towns, GameContent.Creatures, GameContent.Heroes, GameContent.Buildings, GameContent.Artifacts, request.MaxHeroes);
+        }
+        catch (ArgumentException e)
+        {
+            return e.Message;
+        }
+
+        _lastGenerate = request;
+        Open(map.Scenario);
+        var attempt = map.Generation.Attempt == 0 ? "" : $" (attempt {map.Generation.Attempt})";
+        var problems = map.Problems.Count == 0 ? "" : $" Generator problems: {string.Join(" ", map.Problems)}";
+        var issues = map.Issues.Count == 0 ? "" : $" {map.Issues.Count} validator issue(s), see Validation.";
+        _status.Text = $"Generated {template.Name} {request.Size}×{request.Size}, seed {request.Seed}{attempt}.{problems}{issues}";
+        return null;
     }
 
     private void Save()

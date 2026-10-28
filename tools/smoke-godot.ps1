@@ -56,6 +56,9 @@ $scenarios = @(
        Input = '4:click:750,314;8:click:783,428;12:click:765,578;16:click:749,719;20:click:925,578;24:click:925,638;28:click:798,648;45:key:K;55:key:Escape;60:click:342,24' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' },
+    # Generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
+    @{ Name = 'editor-generate'; App = 'EternalWars.MapEditor'; Frames = 50
+       Input = '3:click:470,94;8:click:1225,465;12:click:1210,552;16:click:1316,605;30:click:470,94' },
     # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' }
