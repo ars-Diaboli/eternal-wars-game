@@ -20,10 +20,11 @@
 - **Size policy** (ADR-070, applied 2026-10-23): about **95 %** of creatures are Small or Medium; Large is kept mostly for
   dragons. 9 of 182 are Large: the five Dragon Utopia dragons, the Bone and Ghost Dragon and the Behemoth line; the 33
   others that were Large are Medium (80 Small, 93 Medium). `sim towns` keeps a similar spread.
-- **Size**: **24 cells tall**, **30 cells wide** by default (ADR-021, ADR-033). 8-way movement, one cell per step up to
-  the creature's Speed; a diagonal step needs one of the two orthogonal placements free (no squeezing through
-  corners); flyers land on any free placement within their Speed (ADR-038).
-  **Planned (ADR-088)**: a diagonal step costs **√2** of Speed instead of 1, as on the adventure map; the details are CMB-9 ❓.
+- **Size**: **24 cells tall**, **30 cells wide** by default (ADR-021, ADR-033).
+- **Movement is a circle** (ADR-089, CMB-9): a stack reaches a placement whose path is at most **Speed + 0.25 cells** long, the path
+  running at any angle: on an open field a circle, around obstacles the way round. A diagonal step needs one of the two orthogonal
+  placements free (no squeezing through corners). Flyers and teleporters land on any free placement within the same straight-line
+  distance (ADR-038). Battle speeds were raised by 10 % with this change.
 - **Tactics lets its owner choose the width before the battle**:
 
   | Effective Tactics | Width choices |
@@ -69,7 +70,7 @@
   - Line of fire: supercover of the segment from footprint centre to footprint centre; cells touched only at a corner
     count too (ADR-038).
 - **Distance penalty** (ADR-069, ADR-070, CMB-6; built, ADR-078): replaces the half damage beyond 15 cells (ADR-038). Counted in
-  cells between the two footprints: **0–9 no penalty, 10–19 1/8, 20–29 2/8**, and so on. Distance and cover add up to **one
+  cells between the two footprints, as a straight line like movement (ADR-089: 8 across and 8 down is 11.3): **0–9 no penalty, 10–19 1/8, 20–29 2/8**, and so on. Distance and cover add up to **one
   ranged penalty** with the same limit: above 7/8 the target cannot be shot. War machines ignore the distance penalty.
 - **Marksmanship** (Offense skill, ADR-070): subtracts a **fixed −2/8 / −4/8 / −6/8** (Basic / Advanced / Expert) from the ranged
   penalty, so an Expert marksman shoots with almost no penalty (intended). **Order** (ADR-072, CMB-6): 1. add the distance and

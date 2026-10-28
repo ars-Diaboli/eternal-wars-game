@@ -2062,8 +2062,8 @@ seed and options, then generates" (ADR-064, RMG-5, RMG-7). Choices made here are
 FLOW-3, MP-1 and MP-2 in `open-questions.md`, each with a proposal. **Changes ADR-008's scope**: online multiplayer was out; LAN multiplayer is now
 planned (when is MP-1).
 
-- **Diagonal battle movement** (CMB-9): a diagonal step on the battlefield costs **√2 ≈ 1.41** of a creature's Speed instead of 1, as on the
-  adventure map. Today a stack moves up to Speed steps in any of the 8 directions (`BattleGrid`, Chebyshev distance), so diagonals are
+- **Diagonal battle movement** (CMB-9; built as a circle, ADR-089): a diagonal step on the battlefield costs **√2 ≈ 1.41** of a creature's Speed
+  instead of 1, as on the adventure map. Today a stack moves up to Speed steps in any of the 8 directions (`BattleGrid`, Chebyshev distance), so diagonals are
   ~41 % too cheap. This changes reach, the AI and every replay digest.
 - **Speed settings** (UI-1): the player sets how fast heroes move on the adventure map and how fast battle animations play. These are player
   settings, not rules: they change no game state and are not saved with a game.
@@ -2080,3 +2080,24 @@ planned (when is MP-1).
   in the normal order.
 - Fits the core as it is: commands go through `session.Execute` and the game is deterministic, so a host can run the game and clients can
   send commands (MP-1). The timer's end of turn is an ordinary `EndTurnCommand`, and auto combat can preview a battle on a copy of the state.
+
+### ADR-089: Battle movement as a circle (CMB-9, 2026-10-28)
+**Status**: implemented (2026-10-28). Answers CMB-9 (ADR-088); the owner's answers, with the reach shape picked from drawn examples.
+
+- **Reach** (`BattleGrid.Reachable`): a stack reaches a placement whose path is at most **Speed + 0.25 cells** long (`ReachSlack`). The path may
+  run **at any angle**: on an open field the reach is the circle of that radius (Speed 5: 88 cells, Speed 10: 332). Around obstacles it is the
+  way round, found by Theta* (a path goes straight on from an earlier placement when the line from there is clear; nearly the shortest). The
+  owner rejected both octagon variants (a diagonal step at 1.41 with or without a free last step) and a circle without the 0.25: the 0.25
+  removes the single cells that stuck out on the axes and rounds the edge.
+- **Lengths** are integers in thousandths of a cell (`BattleGrid.Unit`, `Length`: the exact square root rounded down), so every machine
+  computes the same reach. `Reachable` now maps a placement to its path length in those units, not to a number of steps.
+- **Flyers and teleporters**: any free placement within the same straight-line distance (CMB-9 c).
+- **The distance penalty** for shooting measures the gap between the footprints the same way (`CellRect.DistanceTo`; 1/8 per whole 10 cells,
+  CMB-9 d). Diagonal shots get a penalty sooner than before: 8 cells across and 8 down is 11.3 cells, 1/8.
+- Still as before: a footprint must fit at every placement it passes, and a diagonal step needs one of the two orthogonal placements free.
+- **Speeds +10 %** (CMB-9 e): every creature's battle speed in `creatures.csv` × 1.1, rounded half up (6 → 7, 10 → 11, 15 → 17, 28 → 31). Map
+  speeds are unchanged. The speed bonuses (War Tempo, the preferred creature, artifacts) stay whole cells.
+- A Speed of 1 can no longer step diagonally (1.41 > 1.25); no creature is that slow.
+- **Compatibility**: battles play differently, so **saves and replays made before this change no longer match their digests** (as with
+  ADR-084).
+- Tests: `BattleGridTests` (the circle for walkers and flyers, the way round an obstacle, lengths, the straight-line distance penalty).

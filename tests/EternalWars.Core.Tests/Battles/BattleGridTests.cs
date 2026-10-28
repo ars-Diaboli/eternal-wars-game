@@ -22,15 +22,17 @@ public class BattleGridTests
     public void Reachable_RespectsSpeedAndFootprintClearance()
     {
         var battle = TestBattle.Create();
-        var footman = battle.Add(Attacker, BuiltInCreatures.Footman, 5, 0, 0); // 2×2, speed 10
+        var footman = battle.Add(Attacker, TestBattle.Fixed("walker", 1, speed: 10), 5, 0, 0); // 2×2
         battle.AddObstacle(ObstacleClass.Big, 4, 0); // cells 4..6 × 0..2
 
         var reachable = BattleGrid.Reachable(battle.State, footman);
 
         Assert.Equal(0, reachable[footman.Position]);
-        Assert.Equal(10, reachable.Values.Max());
+        Assert.True(reachable.Values.Max() <= 10 * BattleGrid.Unit + BattleGrid.ReachSlack);
         Assert.False(reachable.ContainsKey(new CellPosition(3, 0))); // footprint 3..4 would overlap the obstacle
-        Assert.False(reachable.ContainsKey(new CellPosition(11, 0))); // 11 steps away
+        Assert.True(reachable.ContainsKey(new CellPosition(0, 10))); // 10 cells straight down
+        Assert.False(reachable.ContainsKey(new CellPosition(0, 11))); // 11 cells
+        Assert.False(reachable.ContainsKey(new CellPosition(8, 8))); // 11.3 cells diagonally
         Assert.DoesNotContain(reachable.Keys, p => p.X < 0 || p.Y < 0 || p.X + 2 > 30 || p.Y + 2 > 24);
     }
 
@@ -39,7 +41,7 @@ public class BattleGridTests
     {
         // A 2×2 unit at (2,2). The diagonal step to (3,3) is free itself but needs placement (3,2) or (2,3).
         var battle = TestBattle.Create();
-        var unit = battle.Add(Attacker, TestBattle.Fixed("slow", 1, speed: 1), 1, 2, 2);
+        var unit = battle.Add(Attacker, TestBattle.Fixed("slow", 1, speed: 2), 1, 2, 2); // a diagonal step (1.41) needs Speed 2
         battle.AddObstacle(ObstacleClass.Wall, 4, 2); // one cell: blocks placement (3,2) only
         battle.AddObstacle(ObstacleClass.Wall, 2, 4); // one cell: blocks placement (2,3) only
 
@@ -50,6 +52,72 @@ public class BattleGridTests
 
         battle.State.MutableObstacles.RemoveAt(1);
         Assert.True(BattleGrid.Reachable(battle.State, unit).ContainsKey(new CellPosition(3, 3)));
+    }
+
+    [Fact]
+    public void Reachable_IsACircle_OfSpeedAndAQuarter_ForWalkersAndFlyers()
+    {
+        // CMB-9: on an open field a placement is reachable when its straight-line distance is at most Speed + 0.25.
+        var battle = TestBattle.Create();
+        var walker = battle.Add(Attacker, TestBattle.Fixed("walker", 1, speed: 5), 1, 14, 11);
+        var expected = new HashSet<CellPosition>();
+        for (var dy = -6; dy <= 6; dy++)
+        {
+            for (var dx = -6; dx <= 6; dx++)
+            {
+                if ((dx * dx) + (dy * dy) <= 5.25 * 5.25)
+                {
+                    expected.Add(new CellPosition(14 + dx, 11 + dy));
+                }
+            }
+        }
+
+        var reachable = BattleGrid.Reachable(battle.State, walker);
+        Assert.Equal(89, expected.Count); // 88 cells around the stack
+        Assert.Equal(expected.OrderBy(p => (p.Y, p.X)), reachable.Keys.OrderBy(p => (p.Y, p.X)));
+        Assert.Equal(BattleGrid.Length(5, 1), reachable[new CellPosition(19, 12)]);
+        Assert.False(reachable.ContainsKey(new CellPosition(18, 15))); // (4, 4) is 5.66 away
+
+        var flying = TestBattle.Create();
+        var flyer = flying.Add(Attacker, TestBattle.Fixed("flyer", 1, speed: 5, capabilities: new CreatureCapability(CapabilityKind.Flying)), 1, 14, 11);
+        Assert.Equal(expected.OrderBy(p => (p.Y, p.X)), BattleGrid.Reachable(flying.State, flyer).Keys.OrderBy(p => (p.Y, p.X)));
+    }
+
+    [Fact]
+    public void Reachable_AroundAnObstacle_CountsTheWayAround()
+    {
+        var battle = TestBattle.Create();
+        var walker = battle.Add(Attacker, TestBattle.Fixed("walker", 1, speed: 9), 1, 2, 10); // 2×2
+        battle.AddObstacle(ObstacleClass.Big, 5, 9); // cells 5..7 × 9..11, straight in the way
+
+        var behind = new CellPosition(9, 10); // 7 cells in a straight line, which the block cuts
+        var reachable = BattleGrid.Reachable(battle.State, walker);
+
+        Assert.True(reachable.ContainsKey(behind));
+        Assert.True(reachable[behind] > BattleGrid.Length(7, 0));
+        Assert.True(reachable[behind] < BattleGrid.Length(7, 0) + (3 * BattleGrid.Unit)); // a short way round, not a staircase
+    }
+
+    [Fact]
+    public void Lengths_AreThousandthsOfACell_RoundedDown()
+    {
+        Assert.Equal(5000, BattleGrid.Length(3, 4));
+        Assert.Equal(1414, BattleGrid.Length(1, 1));
+        Assert.Equal(1414, BattleGrid.Length(-1, 1));
+        Assert.Equal(0, BattleGrid.Length(0, 0));
+        Assert.Equal(BattleGrid.Length(8, 8), new CellRect(new CellPosition(0, 0), 2).DistanceTo(new CellRect(new CellPosition(10, 10), 2)));
+    }
+
+    [Fact]
+    public void DistancePenalty_MeasuresTheGapAsAStraightLine()
+    {
+        // 8 cells across and 8 down between the footprints: 11.3 cells, so 1/8 (counted 8 before CMB-9: none).
+        var battle = TestBattle.Create();
+        var archer = battle.Add(Attacker, BuiltInCreatures.Archer, 10, 0, 0);
+        var target = battle.Add(Defender, BuiltInCreatures.Footman, 10, 10, 10);
+
+        Assert.Equal(1, BattleGrid.RangedPenaltyEighths(battle.State, archer, target));
+        Assert.Equal(0, BattleGrid.DistancePenaltyEighths(BattleGrid.Length(9, 4))); // 9.8 cells
     }
 
     [Fact]
