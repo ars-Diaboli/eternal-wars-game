@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
+using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
@@ -8,6 +9,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Generation;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Cameras;
@@ -42,6 +44,12 @@ public partial class Main : Node3D
     private GameSession _session = null!;
     private Node3D? _game;
     private MapDocument _initialMap = null!;
+
+    /// <summary>How the map of the game being played was generated (null for a hand-made map); saves keep it.</summary>
+    private GenerationInfo? _generated;
+
+    /// <summary>The last map the new-game screen had generated and how; used when that is the state the game starts with.</summary>
+    private (GameState State, GenerationInfo Info)? _lastGenerated;
     private GameMenuPanel _menu = null!;
     private string _saveFolder = "";
     private bool _turnBegan;
@@ -80,10 +88,11 @@ public partial class Main : Node3D
         layer.AddChild(center);
         var setup = new NewGameScreen();
         center.AddChild(setup);
-        setup.Bind(Scenarios());
+        setup.Bind(Scenarios(), RandomMaps(), town => StartSlots.Heroes(GameContent.Heroes, town));
         setup.Started += state =>
         {
             layer.QueueFree();
+            _generated = _lastGenerated is { } last && ReferenceEquals(last.State, state) ? last.Info : null;
             StartGame(state);
         };
     }
@@ -261,7 +270,7 @@ public partial class Main : Node3D
         _turnBegan = false;
         try
         {
-            GameSaves.Autosave(_saveFolder, _initialMap, _session);
+            GameSaves.Autosave(_saveFolder, _initialMap, _session, _generated);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -340,7 +349,7 @@ public partial class Main : Node3D
     {
         try
         {
-            GameSaves.Save(_saveFolder, name, _initialMap, _session);
+            GameSaves.Save(_saveFolder, name, _initialMap, _session, _generated);
             _menu.SetMessage($"Saved '{name}'.");
             _status.Text = $"Saved '{name}'.";
         }
@@ -358,8 +367,10 @@ public partial class Main : Node3D
                 path, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts);
             GetNodeOrNull("Setup")?.QueueFree();
             _menu.Close();
+            _generated = record.Generated;
             BeginGame(session, record.Map, resume: true);
-            _status.Text = $"Loaded '{record.Save?.Name ?? Path.GetFileNameWithoutExtension(path)}'.";
+            _status.Text = $"Loaded '{record.Save?.Name ?? Path.GetFileNameWithoutExtension(path)}'." +
+                (record.Generated is { } generated ? $" {generated.Template} {generated.Size}×{generated.Size}, seed {generated.Seed}. {generated.VersionWarning}" : "");
         }
         catch (Exception e) when (e is InvalidOperationException or FormatException or System.Text.Json.JsonException or IOException or KeyNotFoundException)
         {
@@ -797,4 +808,24 @@ public partial class Main : Node3D
         static ScenarioChoice FromFile(string file) =>
             new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts));
     }
+
+    /// <summary>The shipped templates (ADR-086): generated on "Start" for the players set up, the map seed being the game seed.</summary>
+    private List<RandomMapChoice> RandomMaps() => BuiltInTemplates.All.Select(template => new RandomMapChoice(
+        template.Name,
+        template.Description,
+        template.Sizes,
+        template.MinPlayers,
+        template.TeamsLocked,
+        StartSlots.Of(template).Select(s => new RandomMapSlot(s.Name, s.HumanAllowed, s.HumanByDefault, s.Team)).ToList(),
+        request =>
+        {
+            var slots = StartSlots.Of(template);
+            var players = request.Players
+                .Select(p => new PlayerSetup(p.Slot, slots[p.Slot].Name, p.IsHuman, p.Town ?? PlayerSetup.RandomTown, p.Hero, p.Team))
+                .ToList();
+            var (state, generation) = MapGenerator.Build(
+                template, request.Size, request.Options.Seed, players, request.Options, GameContent.Creatures, GameContent.Heroes, GameContent.Artifacts, GameContent.Buildings);
+            _lastGenerated = (state, GenerationInfo.Of(template.Name, request.Size, request.Options.Seed, generation.Attempt));
+            return new RandomMapResult(state, generation.Problems);
+        })).ToList();
 }

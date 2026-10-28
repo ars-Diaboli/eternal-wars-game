@@ -131,6 +131,11 @@ public static class ScenarioAssembler
             throw new ArgumentException("Two players take the same start slot.", nameof(players));
         }
 
+        if (template.MaxHumans is { } most && players.Count(p => p.IsHuman) > most)
+        {
+            throw new ArgumentException($"{template.Name} allows at most {most} human player(s).", nameof(players));
+        }
+
         foreach (var setup in players)
         {
             if (!map.Towns.Any(t => t.Slot == setup.Slot))
@@ -171,7 +176,7 @@ public static class ScenarioAssembler
     }
 
     /// <summary>Each player's team: set up, else its start zone's; a player with neither is on a team of its own, numbered past every team in use.</summary>
-    private static int[] Teams(MapTemplate template, IReadOnlyList<PlayerSetup> players)
+    internal static int[] Teams(MapTemplate template, IReadOnlyList<PlayerSetup> players)
     {
         var chosen = players.Select(p => p.Team ?? template.Zones.FirstOrDefault(z => z.Owner == p.Slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart)?.Team).ToList();
         var next = chosen.OfType<int>().DefaultIfEmpty(-1).Max() + 1;

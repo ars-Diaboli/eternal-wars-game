@@ -46,14 +46,14 @@ public static class GameSaves
     /// <summary>
     /// Autosave at the start of a turn, with two slots: the new save becomes the current one and the one that was current
     /// becomes the previous one, so the start of this turn and of the turn before are always there. The new save is written
-    /// completely before the slots are rotated.
+    /// completely before the slots are rotated. <paramref name="generated"/> is how a random map was made (null for a hand-made map).
     /// </summary>
-    public static void Autosave(string folder, MapDocument initialMap, GameSession session)
+    public static void Autosave(string folder, MapDocument initialMap, GameSession session, GenerationInfo? generated = null)
     {
         Directory.CreateDirectory(folder);
         var current = PathFor(folder, AutosaveCurrentName);
         var temp = current + ".tmp";
-        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, "Autosave"), temp);
+        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, "Autosave", generated), temp);
         if (File.Exists(current))
         {
             File.Move(current, PathFor(folder, AutosavePreviousName), overwrite: true);
@@ -74,9 +74,10 @@ public static class GameSaves
 
     /// <summary>
     /// Writes the session as <paramref name="name"/> in <paramref name="folder"/>, replacing a save of that name; the old
-    /// file stays until the new one is complete. <paramref name="initialMap"/> is the map the game started from.
+    /// file stays until the new one is complete. <paramref name="initialMap"/> is the map the game started from, <paramref name="generated"/>
+    /// how it was generated (null for a hand-made map).
     /// </summary>
-    public static string Save(string folder, string name, MapDocument initialMap, GameSession session)
+    public static string Save(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null)
     {
         var path = PathFor(folder, name);
         if (SlotOf(path) is not null)
@@ -86,7 +87,7 @@ public static class GameSaves
 
         Directory.CreateDirectory(folder);
         var temp = path + ".tmp";
-        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, name.Trim()), temp);
+        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, name.Trim(), generated), temp);
         File.Move(temp, path, overwrite: true);
         return path;
     }
