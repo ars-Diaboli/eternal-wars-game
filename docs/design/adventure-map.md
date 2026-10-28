@@ -78,7 +78,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Resource providers | Water Wheel, Warehouses, Windmill, Mystical Garden: flagged, a week's output stored every week for the owner ([below](#mines-and-resource-providers)) | implemented (ADR-068, ADR-079), map format v16 / v22 |
 | Second catalogue | Mage's Chest, Windows and Eyes of the Magi, Tavern, Garrison, Keymaster's Tent, deposits, six more banks, magic sites, three buffs, five power-ups ([below](#second-object-catalogue-adr-069)) | planned (ADR-069) |
 | Second catalogue | Mage's Chest, deposits, Windows and Eyes of the Magi, map tavern, portals, garrisons, Keymasters and border posts, six banks, mana sites, buffs, power-ups ([below](#second-object-catalogue-adr-069)) | implemented (ADR-082) except the Shrines, map format v23 |
-| Third catalogue | Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves, Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut ([below](#third-object-catalogue-adr-077)) | implemented (ADR-079, ADR-080) except the Astrologer's Tower, map format v22 |
+| Third catalogue | Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves, Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut ([below](#third-object-catalogue-adr-077)) | implemented (ADR-079, ADR-080; the Astrologer's Tower ADR-084), map format v22 (the tower v24) |
 | Scenery | Rocks, trees, dead trees, ponds, bushes, mushrooms, flowers, fissures, mounds, ruins, bones, castle walls: obstacles, all blocking, from `scenery.csv` ([below](#scenery-and-rivers-adr-077-built-adr-079)); rivers too | implemented (ADR-079), map format v22 |
 
 - **Treasure chests roll their reward** (seeded game RNG, ADR-068, replacing ADR-039's three equal tiers): the five-row table
@@ -368,7 +368,7 @@ Once per hero, like the Learning Stone:
   paints them with a brush; the generator runs some across zones from wall to wall.
 
 ## Third object catalogue (ADR-077)
-The owner's third list (`ideas.md`, 2026-10-25), answered and built in ADR-079 and ADR-080 except the Astrologer's Tower. The shared rules
+The owner's third list (`ideas.md`, 2026-10-25), answered and built in ADR-079 and ADR-080, the Astrologer's Tower in ADR-084. The shared rules
 above apply. The **Subterranean Gate** on the list exists already (two-way gate between levels, [above](#gates-and-teleporters)). Numbers are
 drafts.
 
@@ -380,6 +380,6 @@ drafts.
 | Refugee Camp | Each week a random **tier 3–5 base creature** of the playable towns, one week's growth, at the normal price; not flaggable, unsold creatures leave | implemented (MAP-30) |
 | Den of Thieves | Shows the **whole** Thieves' Guild table on every visit ([towns-and-economy.md](towns-and-economy.md#thieves-guild-adr-077)) | implemented (TOWN-11) |
 | Cartographer | Surface or underground; **3000 gold** reveals that whole level for the player, once per player | implemented (MAP-31) |
-| Astrologer's Tower | A visit shows next week's event; no re-roll | waits for the week events (MAP-32) |
+| Astrologer's Tower | A visit shows next week's event; no re-roll (the event is rolled a week ahead) | implemented (MAP-32, ADR-084) |
 | Artifact Merchant | **7** Minor or Major artifacts for **twice their worth** (Minor 2000, Major 5000), restocked on the first day of every month; a sold slot stays empty until then | implemented (MAP-33) |
 | Witch Hut | **Two skills** of any group (set by the map or rolled); a visit raises one a level, or the same group's next skill where the hero cannot; **one lesson per hero level** | implemented (MAP-34) |

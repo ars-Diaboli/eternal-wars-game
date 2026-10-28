@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -81,6 +82,69 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
             return state.Random.NextInclusive(min, max);
         }
     }
+
+    /// <summary>
+    /// A month of a creature (ADR-073): stacks of it appear next to random map objects as their guards, one per
+    /// <see cref="Turns.WeekEventRules.ObjectsPerSpawnedStack"/> objects that could take one (<see cref="SpawnSites"/>), each on a free tile beside
+    /// the object's entrance, its count rolled by tier like any unset guard.
+    /// </summary>
+    internal void SpawnMonthly()
+    {
+        if (state.WeekEvent is not { Kind: Turns.WeekEventKind.MonthOfCreature, Creature: { } creature }
+            || !state.ObjectCatalog.TryGet(BuiltInMapObjects.Monster, out var definition))
+        {
+            return;
+        }
+
+        var sites = SpawnSites(state);
+        var spawned = new List<MapObjectId>();
+        for (var stacks = Turns.WeekEventRules.SpawnedStacks(sites.Count); stacks > 0 && sites.Count > 0; stacks--)
+        {
+            var site = sites[state.Random.Next(sites.Count)];
+            sites.Remove(site);
+            var tiles = SpawnTiles(state, site).ToList();
+            if (tiles.Count == 0)
+            {
+                continue; // an earlier stack took the last free tile
+            }
+
+            var (min, max) = CountRange(state.Creatures.Get(creature).Tier);
+            var monster = new MonsterGuard(state.NextObjectId(), definition, tiles[state.Random.Next(tiles.Count)], creature, state.Random.NextInclusive(min, max));
+            state.AddObject(monster);
+            spawned.Add(monster.Id);
+            events.Publish(new MapObjectPlaced(monster.Id, definition.Id, monster.Position));
+        }
+
+        if (spawned.Count > 0)
+        {
+            events.Publish(new MonstersSpawned(creature, spawned));
+        }
+    }
+
+    /// <summary>
+    /// The objects a month's stack may guard: those with an entrance nobody guards yet and a free tile beside it, by id. Towns, monsters, gates,
+    /// garrisons and border posts are passages or guards themselves, so they are left out.
+    /// </summary>
+    public static List<MapObject> SpawnSites(GameState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.Objects
+            .Where(o => o.Definition.Footprint.HasVisit
+                        && o.Kind is not (MapObjectKind.Town or MapObjectKind.Monster or MapObjectKind.TwoWayGate or MapObjectKind.OneWayGateEntrance
+                            or MapObjectKind.OneWayGateExit or MapObjectKind.Garrison or MapObjectKind.BorderPost or MapObjectKind.Scenery)
+                        && !state.IsGuarded(o.VisitPosition) && SpawnTiles(state, o).Any())
+            .OrderBy(o => o.Id.Value)
+            .ToList();
+    }
+
+    /// <summary>
+    /// The free tiles beside an object's entrance where a stack could stand: on the map, passable, no object cell, no hero within its reach
+    /// (so nobody is caught standing in its zone).
+    /// </summary>
+    private static IEnumerable<MapPosition> SpawnTiles(GameState state, MapObject site) =>
+        DirectionExtensions.All.Select(d => site.VisitPosition.Step(d))
+            .Where(p => state.Map.Contains(p) && state.Terrains.IsPassable(state.Map.GetTerrain(p)) && state.ObjectCellAt(p) is null
+                        && state.HeroAt(p) is null && !DirectionExtensions.All.Any(d => state.HeroAt(p.Step(d)) is not null));
 
     /// <summary>A new day: plundered banks whose time has come fill again with a new roll (ADR-068).</summary>
     internal void RefillBanks()

@@ -88,6 +88,11 @@ public static class TemplateValidator
             error($"The player count must go from 2 up to {Domain.Game.GameState.MaxPlayers}, with the minimum not above the maximum.");
         }
 
+        if (template.WeekEvents.ToSettings().Problem() is { } weekEvents)
+        {
+            error(weekEvents);
+        }
+
         if (template.MaxHeroes is < 1 or > ScenarioRules.HeroLimit)
         {
             error($"MaxHeroes must be 1 to {ScenarioRules.HeroLimit}.");

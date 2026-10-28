@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
+using EternalWars.Core.Domain.Turns;
 
 namespace EternalWars.Core.Generation;
 
@@ -157,6 +158,23 @@ public sealed record TemplateRoads
     public bool Gates { get; init; } = true;
 }
 
+/// <summary>
+/// The week and month events of a template's maps (format v6, ADR-073, ADR-075; as <see cref="WeekEventSettings"/> in a map): on or off, the
+/// weeks before the first (0–8), the factions (town ids or <c>neutral</c>) whose creatures may be picked; null = the playable towns.
+/// </summary>
+public sealed record TemplateWeekEvents
+{
+    public bool Enabled { get; init; } = true;
+
+    public int SkipWeeks { get; init; } = WeekEventSettings.DefaultSkipWeeks;
+
+    public IReadOnlyList<string>? WeeklyFactions { get; init; }
+
+    public IReadOnlyList<string>? MonthlyFactions { get; init; }
+
+    public WeekEventSettings ToSettings() => new(Enabled, SkipWeeks, WeeklyFactions, MonthlyFactions);
+}
+
 /// <summary>A passage between two zones (undirected).</summary>
 public sealed record TemplateConnection
 {
@@ -180,7 +198,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 5;
+    public const int CurrentFormatVersion = 6;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -210,6 +228,12 @@ public sealed record MapTemplate
     /// override it. It becomes the scenario's <see cref="ScenarioRules.MaxHeroes"/>.
     /// </summary>
     public int MaxHeroes { get; init; } = ScenarioRules.HeroLimit;
+
+    /// <summary>
+    /// The week and month events of generated maps (format v6, ADR-073, ADR-075): on or off, the weeks skipped and the factions. They become the
+    /// scenario's <see cref="ScenarioRules.WeekEvents"/>.
+    /// </summary>
+    public TemplateWeekEvents WeekEvents { get; init; } = new();
 
     public IReadOnlyList<TemplateZone> Zones { get; init; } = [];
 

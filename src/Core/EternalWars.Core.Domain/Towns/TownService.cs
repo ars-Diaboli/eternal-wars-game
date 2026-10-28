@@ -218,12 +218,19 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     /// <summary>
     /// Monday: every built dwelling, in towns and on the map, adds its creature's weekly growth to what is waiting (owned
     /// or not); town dwellings add the fort bonus too (<see cref="TownRules.WeeklyGrowth"/>, ADR-066), map dwellings do not.
+    /// The week's event doubles a line's growth or stops all growth (<see cref="Turns.WeekEvent.Growth"/>, ADR-073).
     /// </summary>
     internal void GrowWeekly()
     {
+        var week = state.WeekEvent;
+        if (week.StopsGrowth)
+        {
+            return;
+        }
+
         foreach (var dwelling in state.ObjectsOf<CreatureDwelling>().OrderBy(d => d.Id.Value))
         {
-            dwelling.Available = (dwelling.Available ?? 0) + state.Creatures.Get(dwelling.Creature).WeeklyGrowth;
+            dwelling.Available = (dwelling.Available ?? 0) + week.Growth(state.Creatures, dwelling.Creature, state.Creatures.Get(dwelling.Creature).WeeklyGrowth);
             events.Publish(new DwellingCreaturesGrew(dwelling.Id, dwelling.Available.Value));
         }
 
@@ -237,7 +244,26 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
             foreach (var line in lines)
             {
-                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + TownRules.WeeklyGrowth(town, line));
+                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + week.Growth(state.Creatures, line.Id, TownRules.WeeklyGrowth(town, line)));
+            }
+
+            events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));
+        }
+    }
+
+    /// <summary>A plague week (ADR-073): the creatures waiting in every town's dwellings are halved, rounded down; map dwellings keep theirs.</summary>
+    internal void ApplyPlague()
+    {
+        if (state.WeekEvent.Kind != Turns.WeekEventKind.Plague)
+        {
+            return;
+        }
+
+        foreach (var town in state.ObjectsOf<Town>().Where(t => t.Available.Values.Any(v => v > 0)).OrderBy(t => t.Id.Value))
+        {
+            foreach (var (line, count) in town.Available.ToList())
+            {
+                town.SetAvailable(line, count / 2);
             }
 
             events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));

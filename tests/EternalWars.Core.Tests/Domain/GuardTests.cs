@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -309,6 +310,8 @@ public class GuardTests
     {
         var state = Create("A..", "..B");
         Add<TreasureChest>(state, BuiltInMapObjects.TreasureChest, 1, 0);
+        // Without week events the default seed rolls a table row, not the table's 5 % artifact.
+        state.SetRules(ScenarioRules.Default with { WeekEvents = new WeekEventSettings(Enabled: false) });
         var session = Start(state);
 
         session.Step(A, Direction.East);

@@ -147,7 +147,7 @@ public class HeroLimitTests
     {
         var duel = BuiltInTemplates.Find("duel")!;
         Assert.Equal(8, duel.MaxHeroes);
-        Assert.Equal(5, MapTemplate.CurrentFormatVersion);
+        Assert.Equal(6, MapTemplate.CurrentFormatVersion);
 
         var limited = duel with { MaxHeroes = 2 };
         var restored = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(limited));

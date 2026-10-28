@@ -115,7 +115,7 @@ public static class ScenarioAssembler
         map.Map.Name = $"{template.Name} {map.Layout.Size}×{map.Layout.Size} #{seed}";
         var state = new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster, buildings: buildings, artifacts: artifacts);
         state.SetTeamsLocked(template.TeamsLocked);
-        state.SetRules(ScenarioRules.Default with { MaxHeroes = maxHeroes ?? template.MaxHeroes });
+        state.SetRules(ScenarioRules.Default with { MaxHeroes = maxHeroes ?? template.MaxHeroes, WeekEvents = template.WeekEvents.ToSettings() });
         return state;
     }
 

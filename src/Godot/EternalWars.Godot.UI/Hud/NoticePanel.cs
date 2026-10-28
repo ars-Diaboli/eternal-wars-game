@@ -7,7 +7,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// A short message from the map for the player whose turn it is (ADR-068): a sign's text, why an object turned the hero away, an emptied
-/// object, a freed prisoner. Hidden again by "OK", Escape or the hero's next step.
+/// object, a freed prisoner, what an Astrologer's Tower foretells, and the week's event when a human's first turn of the week starts (ADR-073).
+/// Hidden again by "OK", Escape or the hero's next step.
 /// </summary>
 public partial class NoticePanel : PanelContainer
 {
@@ -32,6 +33,11 @@ public partial class NoticePanel : PanelContainer
         this.SubscribeWhileInTree<CreatureBankPlundered>(session.Events, e =>
             Show(e.Hero, $"The {NameOf(e.Bank)} is yours to plunder: {Core.Domain.Objects.ResourceProviderRules.Describe(e.Resources)}"
                          + (e.Artifact is { } artifact ? $" and {_session.State.Artifacts.Get(artifact).Name}." : ".")));
+        this.SubscribeWhileInTree<AstrologerConsulted>(session.Events, e =>
+            Show(e.Hero, e.Next.Kind == Core.Domain.Turns.WeekEventKind.None
+                ? "The astrologer reads nothing unusual in the stars: next week will be an ordinary week."
+                : $"The astrologer reads the stars. Next week: {e.Next.Describe(_session.State.Creatures)}"));
+        this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => AnnounceWeek());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Visible = false);
     }
 
@@ -41,6 +47,17 @@ public partial class NoticePanel : PanelContainer
         {
             Visible = false;
             GetViewport().SetInputAsHandled();
+        }
+    }
+
+    /// <summary>Each human sees the week's event on its first turn of the week (hot-seat players each get it).</summary>
+    private void AnnounceWeek()
+    {
+        var state = _session.State;
+        if (state.Date.IsFirstDayOfWeek && state.CurrentPlayer.IsHuman && state.WeekEvent.Kind != Core.Domain.Turns.WeekEventKind.None)
+        {
+            _text.Text = $"{(state.Date.Week == 1 ? "A new month" : "A new week")} begins. {state.WeekEvent.Describe(state.Creatures)}";
+            Visible = true;
         }
     }
 

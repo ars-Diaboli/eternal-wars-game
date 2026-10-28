@@ -93,6 +93,21 @@ public static class ResourceProviderRules
         };
     }
 
+    /// <summary>What a week in the week of <paramref name="date"/> brings, in words, without rolling it (the kingdom overview, ADR-084).</summary>
+    public static string DescribeWeek(MapObjectDefinition definition, GameDate date)
+    {
+        ArgumentNullException.ThrowIfNull(definition);
+        return definition.Provider switch
+        {
+            ProviderRule.WaterWheel => Describe(new ResourceSet(Gold: date.AbsoluteWeek == 1 ? WaterWheelFirstWeek : WaterWheelGold)),
+            ProviderRule.Warehouse when definition.Resource is ResourceType.Gold => Describe(new ResourceSet(Gold: definition.Amount)),
+            ProviderRule.Warehouse => $"{Describe(ResourceSet.Of(definition.Resource!.Value, definition.Amount))} or {Describe(new ResourceSet(Gold: WarehouseGold))}",
+            ProviderRule.Windmill => string.Create(CultureInfo.InvariantCulture, $"{WindmillMin}–{WindmillMax} of a resource other than gold"),
+            ProviderRule.MysticalGarden => string.Create(CultureInfo.InvariantCulture, $"{GardenGold} gold or {GardenMagic} of a magic resource"),
+            _ => "nothing",
+        };
+    }
+
     /// <summary>"8 lumber", "500 gold", "2 crystal and 3 ore" for prompts and logs.</summary>
     public static string Describe(ResourceSet resources)
     {

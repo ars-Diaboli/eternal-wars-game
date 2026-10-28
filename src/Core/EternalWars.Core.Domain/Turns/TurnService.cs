@@ -46,6 +46,10 @@ public sealed class TurnService(
         economy.StockProviders();
         events.Publish(new GameStarted(state.Date));
         events.Publish(new DayStarted(state.Date));
+
+        // The first week has no growth to change, but a map that starts its events at once still gets its plague or its stacks.
+        state.NextWeekEvent = Roll(state.Date);
+        StartWeekEvent();
         BeginTurn();
     }
 
@@ -87,12 +91,33 @@ public sealed class TurnService(
             {
                 events.Publish(new WeekStarted(state.Date));
                 progression.ExpireStatuses(state.Heroes, StatusExpiry.EndOfWeek);
+                StartWeekEvent();
                 towns.GrowWeekly();
                 economy.StockProviders();
                 objects.StartWeek(state.Date.IsFirstDayOfMonth);
             }
         }
     }
+
+    /// <summary>
+    /// The week's event is the one rolled a week ago, and the next one is rolled now (so the Astrologer's Tower knows it, MAP-32). The announcement
+    /// comes before the growth it changes; a month of a creature puts its stacks on the map.
+    /// </summary>
+    private void StartWeekEvent()
+    {
+        state.WeekEvent = state.NextWeekEvent;
+        state.NextWeekEvent = Roll(new GameDate(state.Date.AbsoluteDay + GameDate.DaysPerWeek));
+        if (state.WeekEvent.Kind == WeekEventKind.None)
+        {
+            return;
+        }
+
+        events.Publish(new WeekEventAnnounced(state.Date, state.WeekEvent));
+        towns.ApplyPlague();
+        guards.SpawnMonthly();
+    }
+
+    private WeekEvent Roll(GameDate weekStart) => WeekEventRules.Roll(state.Rules.WeekEvents, state.Creatures, weekStart, state.Random);
 
     /// <summary>Every own hero regains its daily mana (ADR-063); nothing happens, and nothing is published, when the pool is full.</summary>
     private void RestoreMana(PlayerId player)

@@ -20,6 +20,11 @@ public static class GameStateDigest
     {
         var text = new StringBuilder();
         Line($"date {state.Date} player {state.CurrentPlayerIndex} rng {state.RandomState} started {state.IsStarted}");
+        if (state.WeekEvent.Kind != Turns.WeekEventKind.None || state.NextWeekEvent.Kind != Turns.WeekEventKind.None)
+        {
+            Line($"week {state.WeekEvent.Kind} {state.WeekEvent.Creature} next {state.NextWeekEvent.Kind} {state.NextWeekEvent.Creature}");
+        }
+
         foreach (var player in state.Players)
         {
             // Keys (ADR-071) only when there are any, so older replays keep their digests.

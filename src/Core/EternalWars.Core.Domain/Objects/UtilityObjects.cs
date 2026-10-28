@@ -30,6 +30,13 @@ public sealed class DenOfThieves(MapObjectId id, MapObjectDefinition definition,
     : MapObject(id, definition, position, MapObjectKind.DenOfThieves);
 
 /// <summary>
+/// The Astrologer's Tower (ADR-077, MAP-32): every visit tells next week's event (<see cref="Game.GameState.NextWeekEvent"/>, rolled a week ahead, so
+/// what it says comes true; no re-roll). Nothing is kept.
+/// </summary>
+public sealed class AstrologersTower(MapObjectId id, MapObjectDefinition definition, MapPosition position)
+    : MapObject(id, definition, position, MapObjectKind.AstrologersTower);
+
+/// <summary>
 /// A sanctuary (ADR-079, MAP-28): a hero standing on its entrance cannot be attacked, so enemies cannot enter while it is occupied. A hero may
 /// stay as long as it likes; one hero at a time (the entrance holds one); nothing else (no healing, no army storage).
 /// </summary>

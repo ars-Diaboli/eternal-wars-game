@@ -11,6 +11,7 @@ using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Core.Domain.Turns;
 
 namespace EternalWars.Core.Data.Maps;
 
@@ -133,7 +134,14 @@ public static class MapConverter
         rules.StandardVictory,
         rules.Elimination,
         rules.GraceDays == ScenarioRules.DefaultGraceDays ? null : rules.GraceDays,
-        rules.MaxHeroes == ScenarioRules.HeroLimit ? null : rules.MaxHeroes);
+        rules.MaxHeroes == ScenarioRules.HeroLimit ? null : rules.MaxHeroes,
+        rules.WeekEvents.IsDefault ? null : ToDocument(rules.WeekEvents));
+
+    private static WeekEventsDocument ToDocument(WeekEventSettings events) => new(
+        events.Enabled,
+        events.SkipWeeks == WeekEventSettings.DefaultSkipWeeks ? null : events.SkipWeeks,
+        events.WeeklyFactions?.ToList(),
+        events.MonthlyFactions?.ToList());
 
     private static ConditionDocument ToDocument(ScenarioCondition c) => c.Kind switch
     {
@@ -151,7 +159,12 @@ public static class MapConverter
             document.StandardVictory,
             document.Elimination,
             document.GraceDays ?? ScenarioRules.DefaultGraceDays,
-            document.MaxHeroes ?? ScenarioRules.HeroLimit);
+            document.MaxHeroes ?? ScenarioRules.HeroLimit)
+        {
+            WeekEvents = document.WeekEvents is { } events
+                ? new WeekEventSettings(events.Enabled, events.SkipWeeks ?? WeekEventSettings.DefaultSkipWeeks, events.WeeklyFactions?.ToList(), events.MonthlyFactions?.ToList())
+                : WeekEventSettings.Default,
+        };
 
     private static ScenarioCondition ToCondition(ConditionDocument c) => new(
         c.Kind,
@@ -318,6 +331,10 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
             },
+            AstrologersTower => new AstrologersTowerDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
             Sanctuary => new SanctuaryDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -477,6 +494,7 @@ public static class MapConverter
                 SignDocument sign => new SignPost(id, definition, position, sign.Message),
                 ObservatoryDocument => new Observatory(id, definition, position),
                 DenOfThievesDocument => new DenOfThieves(id, definition, position),
+                AstrologersTowerDocument => new AstrologersTower(id, definition, position),
                 SanctuaryDocument => new Sanctuary(id, definition, position),
                 SceneryDocument => new Scenery(id, definition, position),
                 CartographerDocument => new Cartographer(id, definition, position),

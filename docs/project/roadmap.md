@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-26)**: five design rounds are decided; building them started with the groundwork and the quick items. ADR-069
+**Where we are (2026-10-28)**: five design rounds are decided; building them started with the groundwork and the quick items. ADR-069
 reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events; ADR-075 confirms ADR-073's, changes the caravan reach to 7500 movement points and settles the morale sources; ADR-077 adds map scenery, rivers,
@@ -18,7 +18,8 @@ mana by level, Necromancy with its screen and the Necromancy Amplifier (the Necr
 ADR-070 / ADR-071 items that need no answer (surrender, taverns: done, ADR-081), then the second catalogue (built, ADR-082, except the
 Shrines and the bank re-draft). The ADR-077 items are answered and built
 (ADR-079, ADR-080): flaggable providers with resource caravans, caravan speed and limit, the Thieves' Guild, rivers, scenery and the third
-catalogue except the Astrologer's Tower (their Godot screens still need a run); the kingdom overview is still open.
+catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
+(ADR-084).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -221,8 +222,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       shows the count
 - [x] Flaggable resource providers and resource caravans (ADR-079, TOWN-9): all four flagged like mines, storing a week's output every week;
       own visits and `FetchResourcesCommand` (100 gold) collect it; map format v22; the AI flags them and fetches large stores
-- [ ] Kingdom overview screen (ADR-077): every income source with its amount and the totals, from the income rules (Godot, a core query
-      for the rows)
+- [x] Kingdom overview screen (ADR-077, ADR-084): every income source with its amount and the totals, from the income rules
+      (`KingdomOverviews.For`; `KingdomOverviewPanel` from the HUD or K, not run in Godot yet)
 
 ### Towns: Godot
 - [x] 2D harness town panel (`TownPanel`, `--scenario=towns`): build, dwellings, recruit, upgrade, garrison
@@ -338,11 +339,11 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Save/load: a state snapshot if replays get too slow
 - [x] Game app: victory / defeat screen (`GameResultPanel`)
 - [x] Game app: save / load menu (F10, F5 quick save, F9 quick load; also in battle)
-- [ ] Week and month events (ADR-073): weekly 75 % week of a creature (its line's growth doubles); monthly 45 % month of a creature
+- [x] Week and month events (ADR-073, ADR-084): weekly 75 % week of a creature (its line's growth doubles); monthly 45 % month of a creature
       (doubled growth, guards spawn next to random objects), 15 % plague (no growth, town stocks halved), 15 % starvation (no growth);
-      announcement at week start; the AI accounts for them
-- [ ] Event creature factions per map and template (weekly and monthly separately; default playable factions); events on or off and the
-      first one after 1 to 8 weeks (default: from the second week, ADR-075); map format bump
+      announcement at week start (rolled a week ahead); the AI recruits the week's creature first (Godot parts not run yet)
+- [x] Event creature factions per map and template (weekly and monthly separately; default playable factions); events on or off and the
+      first one after 0 to 8 skipped weeks (default: from the second week, ADR-075); map format v24, template v6, editor conditions panel (ADR-084)
 - [x] Players without a town on campaign-like maps (ADR-075): grace period 0 and a "lose a hero" condition (both existed); validator warning
       when a player starts without a town while the grace period is on
 - [ ] More conditions (ADR-073): capture a map object, obtain an artifact, release a prisoner; lose an artifact; deadlines on victory
@@ -432,7 +433,7 @@ Core, map format v22, editor placement, generator sites and tests for each; the 
 - [x] Sanctuary (a hero inside cannot be attacked; MAP-28)
 - [x] Den of Thieves (the whole Thieves' Guild table; TOWN-11)
 - [x] Sphinx (author's or table riddle, three answers; Major artifact or 5000 experience, or the day's movement and −3 morale; MAP-27)
-- [ ] Astrologer's Tower (a visit shows next week's event, no re-roll; MAP-32) — after the week events
+- [x] Astrologer's Tower (a visit shows next week's event, no re-roll; MAP-32, ADR-084; map format v24, generator version 6)
 - [ ] Editor inspector for a sphinx's riddle and a witch hut's skills (the map format holds them)
 
 ### Content for the slice

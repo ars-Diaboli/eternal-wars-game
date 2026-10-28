@@ -41,6 +41,7 @@ public sealed class GameSession
         Bus.Subscribe<HeroDefeated>(visibility);
         Bus.Subscribe<HeroHired>(visibility);
         Bus.Subscribe<MapObjectChanged>(visibility);
+        Bus.Subscribe<MapObjectPlaced>(visibility);
         Bus.Subscribe<SurroundingsRevealed>(visibility);
         Bus.Subscribe<HeroFreed>(visibility);
         Bus.Subscribe<HeroLeveledUp>(visibility);

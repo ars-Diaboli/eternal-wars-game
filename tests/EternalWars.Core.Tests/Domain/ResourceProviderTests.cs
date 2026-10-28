@@ -165,7 +165,7 @@ public class ResourceProviderTests
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
-        Assert.Equal(23, MapDocument.CurrentFormatVersion);
+        Assert.Equal(24, MapDocument.CurrentFormatVersion);
         Assert.Contains("\"kind\": \"provider\"", json, StringComparison.Ordinal);
         Assert.Equal(
             new[] { (BuiltInMapObjects.WaterWheel, (PlayerId?)player), (BuiltInMapObjects.WarehouseId(ResourceType.Ore), null) },

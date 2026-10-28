@@ -1134,7 +1134,7 @@ public sealed class MapEditorSession
     public EditResult SetScenarioRules(ScenarioRules rules)
     {
         ArgumentNullException.ThrowIfNull(rules);
-        if (rules.MaxHeroes is < 1 or > ScenarioRules.HeroLimit)
+        if (rules.MaxHeroes is < 1 or > ScenarioRules.HeroLimit || rules.WeekEvents.Problem() is not null)
         {
             return EditResult.InvalidValue;
         }

@@ -74,6 +74,9 @@ public sealed record WitchHutSkillLearned(MapObjectId Hut, HeroId Hero, string S
 /// <summary>A hero visited a Den of Thieves (ADR-079): the front-end shows its player the whole <c>ThievesGuild</c> table.</summary>
 public sealed record ThievesDenVisited(HeroId Hero, MapObjectId Den) : IEvent;
 
+/// <summary>An Astrologer's Tower told the visitor next week's event (ADR-077, MAP-32); <see cref="Turns.WeekEvent.None"/> when there is none.</summary>
+public sealed record AstrologerConsulted(HeroId Hero, MapObjectId Tower, Turns.WeekEvent Next) : IEvent;
+
 /// <summary>A resource provider got a new owner (a hero flagged it, its owner was defeated, or the editor set it); null = neutral (ADR-079).</summary>
 public sealed record ProviderOwnerChanged(MapObjectId Provider, PlayerId? Previous, PlayerId? Current) : IEvent;
 

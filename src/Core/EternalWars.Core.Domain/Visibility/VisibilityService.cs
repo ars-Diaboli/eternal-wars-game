@@ -16,7 +16,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<ProviderOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
       IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<HeroFreed>,
-      IEventHandler<HeroLeveledUp>
+      IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>
 {
     public void Handle(GameStarted @event)
     {
@@ -54,6 +54,15 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     public void Handle(ProviderOwnerChanged @event) => OnOwnerChanged(@event.Provider, @event.Current);
 
     public void Handle(MapObjectRemoved @event)
+    {
+        foreach (var player in state.Players)
+        {
+            RefreshMemory(player.Id);
+        }
+    }
+
+    // An object appeared during the game (a month's monster stack, ADR-073): whoever sees the tile notices.
+    public void Handle(MapObjectPlaced @event)
     {
         foreach (var player in state.Players)
         {

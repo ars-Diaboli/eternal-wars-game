@@ -112,6 +112,9 @@ public enum MapObjectKind
 
     /// <summary>A flagged pass with troops inside (<see cref="Objects.MapGarrison"/>, ADR-070).</summary>
     Garrison,
+
+    /// <summary>Tells next week's event (<see cref="Objects.AstrologersTower"/>, ADR-077, MAP-32).</summary>
+    AstrologersTower,
 }
 
 /// <summary>
