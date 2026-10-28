@@ -28,3 +28,7 @@ Recorded so far:
   MAP-34 and TOWN-9 … TOWN-11; [adventure-map.md](../design/adventure-map.md#third-object-catalogue-adr-077).
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
+
+Multiplayer (over LAN for now)
+players can select custom map or generate random one upon creation of the game;
+

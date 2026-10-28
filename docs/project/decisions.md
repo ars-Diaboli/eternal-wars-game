@@ -2009,3 +2009,30 @@ are ADR-073's drafts.
   Necromancy and caravan screens, the exchange panel's war machines and the editor's town faction change. None of them has a scenario yet.
 - **Seen but not fixed**: in the editor the terrain tool's second row of buttons runs under the right-hand panel. The exchange scenario's
   status line shows a raw `MovementOutcome { ... }` record.
+
+### ADR-086: Random maps on the new-game screen (2026-10-28)
+**Status**: implemented (2026-10-28). Carries out the Phase 4 item "new-game screen picks template, size, players (town and hero per player),
+seed and options, then generates" (ADR-064, RMG-5, RMG-7). Choices made here are marked *(choice)*.
+
+- **One list** *(choice)*: the map dropdown lists the maps first, then each shipped template as "Random map: <name>" (`BuiltInTemplates.All`). A
+  template shows its description, a **size** (its sizes; the middle one by default *(choice)*), the **number of players** (the template's
+  minimum to its start slots; the first slots are taken, the others stay neutral as before), and the fog, complexity and seed rows the maps
+  have. The seed is both the map's seed and the game's (as in `sim game --template`).
+- **Players**, one row per taken slot: **human or computer**, **town** ("Random" or a playable town), **hero** ("Random" or one of the town's
+  heroes, `StartSlots.Heroes`, by name; only "Random" while the town is random) and **team** (the start zones' teams by default; not editable
+  when the template locks them). An AI-only start offers only "Computer".
+- **Defaults** (`StartSlots.Of`) *(choice)*: the first slot a human may take is human, the others are computer players, as in HoMM3 (the editor's
+  generator keeps making every player start human). Names by colour (`EditorMapGenerator.PlayerNames`).
+- **New rule**: `ScenarioAssembler` refuses more humans than the template's `MaxHumans` (it was only respected by the editor's defaults).
+  Refused setups (too many humans, the same hero twice, ...) show their message on the screen.
+- **Generating**: on "Start", a frame after "Generating the map…" is shown. `MapGenerator.Build` already retries with sub-seeds. When even the
+  best attempt has problems, the screen lists them and the button becomes **"Start anyway"** *(choice)*; any change of a setting drops that
+  map.
+- **Saves**: the game keeps the `GenerationInfo` (template, size, seed, attempt, generator version) of a generated game and writes it into every
+  save and autosave (`GameSaves.Save` / `Autosave` take it). Loading shows the template, size and seed, and `VersionWarning` when the
+  generator has changed since.
+- **Layering**: `Godot.UI` does not reference `Core.Generation` (architecture table), so the screen takes plain records (`RandomMapChoice`,
+  `RandomMapSlot`, `RandomMapRequest`, `RandomMapResult`), and the game app connects them to `MapGenerator.Build`.
+- **Not yet**: the tier-1 dwelling pick (RMG-7; drawn at random as for a computer player), the hero limit override (ADR-068), user template
+  folders, and the human or computer choice for hand-made maps (they keep the map's players). Town ids are shown as they are.
+- Tests: `StartSlotsTests`. Smoke scenario `game-random-map` (Duel, Necropolis and its first hero, Start, K, end turn: the computer plays).

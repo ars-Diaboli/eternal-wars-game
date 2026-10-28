@@ -19,7 +19,7 @@ ADR-070 / ADR-071 items that need no answer (surrender, taverns: done, ADR-081),
 Shrines and the bank re-draft). The ADR-077 items are answered and built
 (ADR-079, ADR-080): flaggable providers with resource caravans, caravan speed and limit, the Thieves' Guild, rivers, scenery and the third
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
-(ADR-084).
+(ADR-084). The Godot smoke pass ran (ADR-085), and the new-game screen starts random maps from the shipped templates (ADR-086).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -495,7 +495,9 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       that records how it was made, and the generator's problems and validator issues to show
 - [ ] Editor: "generate map from template" UI (template, size, seed, players, towns; show problems and issues) (Godot)
 - [x] Editor: change a town's faction (an undoable `SetTownType`), e.g. after generating (ADR-083; inspector not run in Godot yet)
-- [ ] Game: new-game screen picks template, size, players (town and hero per player), seed and options, then generates
+- [x] Game: new-game screen picks template, size, players (human or computer, town and hero per player, team), seed and options, then
+      generates; problems of the best attempt are shown with "Start anyway"; saves keep the generation info (ADR-086; smoke scenario
+      `game-random-map`). Still open: the tier-1 dwelling pick and the hero limit override
 - [ ] Starter templates: 2-player duel, 4-player free-for-all and 2v2 (shipped), 8-player
 - Not in 1.0: water zones and islands (no sea travel, ADR-051), HotA template import (ADR-034)
 

@@ -50,6 +50,10 @@ $scenarios = @(
     # The Thieves' Guild (ADR-079) from the town screen's button, closed with Escape, then the town screen too.
     @{ Name = 'game-thieves-guild'; App = 'EternalWars.Game'; Frames = 40; Map = $townsMap
        Input = '3:key:Enter;10:key:T;16:click:446,16;26:key:Escape;32:key:Escape' },
+    # A random map (ADR-086): pick "Random map: Duel", Necropolis and its first hero for Blue, Start (Red is a computer player), K, end the
+    # turn so the computer plays its turn.
+    @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 90
+       Input = '4:click:750,314;8:click:783,428;12:click:765,578;16:click:749,719;20:click:925,578;24:click:925,638;28:click:798,648;45:key:K;55:key:Escape;60:click:342,24' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' },
     # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
