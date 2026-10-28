@@ -7,7 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-26** (ADR-079, ADR-080): sixth round: TOWN-9 … TOWN-11 and MAP-25 … MAP-34 answered and built (the Astrologer's
+**Updated 2026-10-28** (ADR-088): new ideas bring CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)).
+Before that (2026-10-26, ADR-079, ADR-080), the sixth round: TOWN-9 … TOWN-11 and MAP-25 … MAP-34 answered and built (the Astrologer's
 Tower waits for the week events). Before that (ADR-077): new ideas (scenery, rivers, flaggable providers, caravans, Thieves' Guild, the third object catalogue) bring
 MAP-25 … MAP-34 and TOWN-9 … TOWN-11. Fifth round (ADR-075): the ADR-073 assumptions confirmed (TOWN-5's reach and FLOW-2's first week
 changed); CMB-2 answered; town-less campaign players.
@@ -20,7 +21,8 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work. The ADR-077 questions are answered (ADR-079, ADR-080).
+Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). The ADR-088 questions stop only their own
+roadmap items; CMB-9 is the cheapest to build, and MP-1 (a) decides where multiplayer goes in the plan.
 
 ## Heroes
 
@@ -59,6 +61,75 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
+
+## New ideas (ADR-088, 2026-10-28)
+
+<a id="cmb-9"></a>
+**CMB-9 Diagonal steps in battle.** A diagonal step costs √2 of Speed (ADR-088). (a) **Units**: integer points like the adventure map (a straight step
+100, a diagonal 141, Speed × 100 a turn), or real numbers? (b) **Remainder**: may a stack take a last step it cannot fully pay for (the adventure
+map's "any positive remainder allows one last step"), or only steps it can pay? (c) **Flyers and teleporters** land within their Speed: measured
+the same way (the cheapest 8-way path ignoring obstacles), or as a straight line (√(dx² + dy²))? (d) Does the **distance penalty** for shooting
+(cells between the footprints, 10 per 1/8) also count diagonals as 1.41? (e) Speeds were tuned on the old rule (ADR-037): leave the creature
+speeds as they are, or raise them by about 20 % to keep battles as long?
+*Proposal*: (a) integer 100 / 141; (b) only steps it can pay, so no stack goes further than its Speed; (c) the same 8-way measure; (d) no, the
+penalty stays as it is (it is tuned and built); (e) leave the speeds, re-check with `sim` battles and tune under CONT-2.
+
+<a id="cmb-10"></a>
+**CMB-10 Auto combat.** The setting and the outcome screen (ADR-088). (a) **Where** is the setting: per human player in the game menu,
+changeable any time (proposal), or on the new-game screen for the whole game? Values: off, ask before each battle, always. (b) **Which
+battles**: against neutrals and computer players only, or also against another human in hot-seat (then whose setting counts)? (c) **Peeking**:
+the preview is played with the game's randomness, so the player sees one outcome before choosing. Accept that? Or play the manual battle with
+the same draws, so rejecting cannot be used to re-roll luck? (d) **Choices inside the battle** (Tactics deployment, width, surrender, retreat):
+the AI takes them for the player in the preview? (e) **The outcome screen**: casualties of both sides, experience, raised undead and artifacts
+won, like the result screen? (f) Once rejected, can the player ask for auto combat again during that battle (the quick combat button)?
+*Proposal*: (a) per player in the game menu: off / ask / always (default off); (b) neutrals and computer players only; (c) accept the peek, but
+the manual battle starts from the state before the preview (the preview leaves no trace); (d) yes, with the computer player's rules (it never
+retreats or surrenders, ADR-070); (e) like the result screen, with Accept and Fight; (f) yes, quick combat stays and its result is final.
+
+<a id="ui-1"></a>
+**UI-1 Speed settings.** How fast heroes move on the adventure map and how fast battles play (ADR-088). (a) **Steps**: slow / normal / fast /
+instant for both, or a slider? (b) **Separate** settings for the player's own heroes and for the computer's moves (HoMM3 has "show enemy moves")?
+(c) **Where**: a settings screen in the game menu, kept per computer in the user data folder (not in saves)? (d) Today a hero jumps from tile to
+tile; animated walking comes first, then the setting?
+*Proposal*: (a) four steps, normal = today's battle animation speed; (b) yes: own heroes, computer heroes (with "don't show"), battle
+animations; (c) yes, a settings file in the user data folder; (d) yes: build walking with the setting.
+
+<a id="flow-3"></a>
+**FLOW-3 Turn timer.** On the new-game screen, 1 to 30 minutes, human players only (ADR-088). (a) **A turn's time**: the same every turn, or a
+bank that carries unused time over (a chess clock)? (b) **A battle between two humans** (hot-seat, LAN): whose time runs, the attacker's
+only, or each player's while it is their stack's turn? (c) **When it runs out** with a question open (level-up, chest, guards that offer to
+join): the computer player's choice is taken? And a hero in the middle of a move stops after the step it is taking? (d) A **warning** at
+1 minute and 10 seconds left? (e) **Saves**: a loaded game starts the current turn with a full timer? (f) Is the timer a game option saved with
+the game (so replays end turns where the timer did), or does each machine run its own? (g) Steps of 1 minute, or also 30 seconds?
+*Proposal*: (a) the same every turn; (b) the attacker's time runs (the defender plays inside the attacker's turn); (c) yes to both; (d) yes;
+(e) yes; (f) a game option in the save; the timer's end of turn is an ordinary `EndTurnCommand` in the log, so replays need no clock; (g) 1
+minute.
+
+<a id="mp-1"></a>
+**MP-1 LAN multiplayer: scope and model.** (ADR-088) (a) **When**: before 1.0 (after the Phase 3/4 exits, before the campaign), or after 1.0?
+(b) **Model**: clients send commands to the host; the host checks and runs them with `session.Execute` and sends every accepted command to all
+clients, which run it too (the core is deterministic) and compare `GameStateDigest` now and then. Or the host sends state? (c) **Finding a game**:
+LAN broadcast discovery plus typing an address? (d) **Lobby**: the host picks the map or the template and its options (ADR-086). Each client picks
+a free colour; the host may set the other colours to computer. (e) **A battle between two remote humans**: each controls its own side live?
+(f) **A player who drops out**: the game pauses for everyone, and the host may let the computer take over or wait for a rejoin? (g) **Fog and
+cheating**: every client has the whole state (a modified client could see through the fog). Fine on a LAN? (h) **Saves**: only the host saves;
+the save records which colours were human. Loaded in hot-seat, the player chooses which colours are human. (i) **Chat**: in 1.0 or not?
+*Proposal*: (a) after 1.0 unless you want it sooner. It needs a stable game first, and hot-seat covers playing together until then; (b) commands
+from the host, digest check every turn; (c) yes; (d) yes; (e) yes; (f) pause, then the host chooses; (g) fine on a LAN; (h) yes; (i) a simple
+text chat.
+
+<a id="mp-2"></a>
+**MP-2 Simultaneous first week.** (ADR-088) (a) **Start zone** on a hand-made map: maps have no zones. The tiles within some distance of the
+player's start towns, zones painted in the editor, or random maps only? (b) **Conflicts** that end it: entering another player's start zone,
+touching an object another player touched this day, seeing another player's hero? (c) **"Played again in the normal order"**: discard the whole
+day for everyone and replay it turn by turn (the players lose what they did that day), or keep everything done before the conflict and finish
+the day turn by turn from there (proposal)? (d) Is it a lobby option (on or off), and how long: always the first week, or settable (1 to 2
+weeks)? (e) The **turn timer** in simultaneous days: one timer for all, the day ending when everyone ended their turn or the time is up? (f)
+Hot-seat cannot do it (one screen): multiplayer only?
+*Proposal*: (a) random maps: the template's start zone; hand-made maps: tiles within 10 of a start town until the editor can paint zones; (b)
+entering another start zone or touching an object another player touched that day; (c) keep what was done and finish the day in turn order,
+with the player who caused the conflict last; (d) a lobby option, the first week, on by default; (e) one timer, the day ends when all have
+ended their turn; (f) multiplayer only.
 
 ## Numbers to tune (not questions)
 Placeholders that wait for play-testing: caravan cost (ADR-054); complexity starting resources (ADR-063); Stewardship and governor percentages

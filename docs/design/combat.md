@@ -23,6 +23,7 @@
 - **Size**: **24 cells tall**, **30 cells wide** by default (ADR-021, ADR-033). 8-way movement, one cell per step up to
   the creature's Speed; a diagonal step needs one of the two orthogonal placements free (no squeezing through
   corners); flyers land on any free placement within their Speed (ADR-038).
+  **Planned (ADR-088)**: a diagonal step costs **√2** of Speed instead of 1, as on the adventure map; the details are CMB-9 ❓.
 - **Tactics lets its owner choose the width before the battle**:
 
   | Effective Tactics | Width choices |
@@ -178,6 +179,8 @@ machine in the middle, cart at the bottom). Stacks start in the next column. The
 overhang the grid's edge.
 
 ## Other
+- **Auto combat** (ADR-088, planned, CMB-10 ❓): a player setting that skips a battle the player starts. The battle AI plays both sides,
+  a screen shows the outcome, and the player accepts it or rejects it to fight the battle by hand.
 - **Quick combat**: either side may hand the rest of the battle to the deterministic battle AI (implemented).
   Neutrals and computer players always use it. The battle AI never retreats (ADR-070 plans an AI retreat, above).
 - The hero casts **at most once a round**, during the turn of one of the units the hero controls; machines that fire on

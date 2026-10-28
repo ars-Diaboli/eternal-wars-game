@@ -26,13 +26,8 @@ Recorded so far:
   kingdom overview, the Thieves' Guild, and the third object catalogue (Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves,
   Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut; the Subterranean Gate exists): ADR-077 (2026-10-26), questions MAP-25 …
   MAP-34 and TOWN-9 … TOWN-11; [adventure-map.md](../design/adventure-map.md#third-object-catalogue-adr-077).
+- Diagonal battle steps at √2, hero and battle speed settings, the turn timer, auto combat with accept or reject, and LAN multiplayer (host as the
+  source of truth, saves that load in multiplayer, single player or hot-seat, a simultaneous first week): ADR-088 (2026-10-28), questions
+  CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2.
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
-
-combat - unit diagonal movement should be counted correctly as 1.41 cost;
-
-Multiplayer (over LAN for now)
-players can select custom map or generate random one upon creation of the game;
-multiplayer map can be saved and then loaded  in multiplayer , single player or hot seat;
-in multiplayer save loaded in single player - user selects any color of original non ai players - rest are played by ai;
-in multiplayer - 1st week could be played simultaneously

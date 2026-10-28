@@ -20,7 +20,9 @@ Shrines and the bank re-draft). The ADR-077 items are answered and built
 (ADR-079, ADR-080): flaggable providers with resource caravans, caravan speed and limit, the Thieves' Guild, rivers, scenery and the third
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
-(ADR-087).
+(ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
+UI-1, FLOW-3, MP-1 and MP-2. **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a small random map
+(Phase 3), then CMB-9 once answered.
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -350,6 +352,10 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] More conditions (ADR-073): capture a map object, obtain an artifact, release a prisoner; lose an artifact; deadlines on victory
       conditions; editor support; map format bump
 - [x] Team victory: a team wins while one of its human players survives; eliminated human teammates share the win (ADR-073, ADR-083)
+- [ ] Turn timer (ADR-088): a new-game option, 1 to 30 minutes, human players only; the turn ends on its own when it runs out, after a
+      battle in progress; saved with the game ❓ FLOW-3
+- [ ] Auto combat (ADR-088): a player setting; the battle AI plays both sides of a battle the player starts, an outcome screen with
+      Accept or Fight (fight by hand from the state before the preview) ❓ CMB-10
 
 ### Adventure AI (computer players)
 - [x] AI driver that plays a computer player's turn through commands only (ADR-036, ADR-059), deterministic (no RNG)
@@ -540,6 +546,8 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [ ] Towns keep machines only through a garrison hero (waits for garrison heroes); war machine tuning
 - [x] Teleporting creatures move like flyers (ADR-070, ADR-083: `Teleporting` capability; no creature has it yet)
 - [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0, CMB-5
+- [ ] Diagonal battle steps cost √2 of Speed (ADR-088): `BattleGrid` reach, flyers, the battle AI, the reach overlay; replay digests
+      change ❓ CMB-9
 
 ### Platform and art
 - [ ] Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)
@@ -547,6 +555,8 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [ ] Terrain: heightmapped landscape with splat shader and blended biome transitions; grid only as overlay
 - [ ] PBR models for heroes, creatures, towns and map objects; fog/volumetrics
 - [ ] UI theme (HoMM-style right-side panel, status bar)
+- [ ] Speed settings (ADR-088): hero movement on the map (with walking animation) and battle animation speed, a settings screen kept
+      per computer ❓ UI-1
 - [ ] Audio: per-terrain ambient music, town themes
 
 ## Phase 6: Story campaign
@@ -554,11 +564,25 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [ ] Map triggers and events, dialogue
 - [ ] Editor support for triggers and scripting
 
+## LAN multiplayer (ADR-088; where it goes in the plan: MP-1 ❓)
+- [ ] Host and clients over the LAN: the host runs the game, clients send commands, every accepted command goes to all clients;
+      digest checks (MP-1)
+- [ ] Lobby: discovery and address, map or random map with its options (ADR-086), colours, computer players (MP-1)
+- [ ] Battles between two remote humans; a player who drops out (pause, computer takes over, rejoin) (MP-1)
+- [ ] Saves: a multiplayer save loads in multiplayer, single player (pick a colour that was human, the computer plays the rest) or
+      hot-seat (MP-1)
+- [ ] Simultaneous first week while players stay in their start zones and touch no common object; on a conflict the turn goes on in the
+      normal order ❓ MP-2
+- [ ] The turn timer in multiplayer and in simultaneous days (FLOW-3, MP-2)
+
+**Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
+
 ## Risks
 | Risk | Mitigation |
 |---|---|
 | Godot C# library limitations (scripts in referenced assemblies) | Phase 0 spike; code-first nodes; app-side wrappers for editor-attachable scripts |
 | 3D readability on dense maps | Early camera and art-style prototypes; keep the 2D harness as the logic reference |
 | AI complexity | Deterministic core + commands give headless simulation for AI tuning |
+| LAN multiplayer desyncs | Every change is a command and the core is deterministic; clients compare `GameStateDigest` with the host |
 | Random maps unfair or broken | Batch generation + automated validation/fairness metrics in CI; templates versioned like maps |
 | Asset production cost | Look-dev spike early; buy/adapt PBR asset packs where the dark-fantasy style allows |
