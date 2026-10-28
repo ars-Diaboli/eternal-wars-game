@@ -1988,3 +1988,24 @@ are ADR-073's drafts.
 - **Compatibility**: games now draw week event rolls, so **saves and replays made before this change no longer match their digests** (as with
   ADR-079). `GameStateDigest` lists the week events only when one is set.
 - Tests: `WeekEventTests`, `KingdomOverviewTests`.
+
+### ADR-085: Godot smoke pass (2026-10-28)
+**Status**: done (2026-10-28), in Godot 4.7.2 .NET with `tools/smoke-godot.ps1`.
+
+- **Assets**: a fresh clone has no `.godot/imported`, so every texture load failed (`game-battle-3d` failed on the terrain textures). Each
+  app needs one `--headless --import` first (now in `development.md`).
+- **False passes**: four of the five game scenarios clicked "Start" at a fixed point. The new-game screen had grown a row, so they never left
+  it and still passed, because the script only looks for errors. The Start button now takes the focus, and the scenarios start with
+  `key:Enter`. A passing run still needs a look at the frames.
+- **Screens over the map**: Godot's default panel is translucent, so the HUD's text ran into the town and hero screens. The centred
+  pop-ups (kingdom overview, Thieves' Guild, marketplace, dwelling, object service) grew right and down from the screen's middle, past its
+  edge. `Screens.UseOpaqueBackground` / `Screens.CenterAsScreen` give them an opaque background and make them grow to both sides.
+- **New scenarios**: `game-kingdom` (K, Escape), `game-weeks` (a week of "End turn": the week's notice and the event next to the date),
+  `game-thieves-guild` (from the town screen), `editor-week-events` (tick a faction, one more skipped week, undo both). The skip-weeks box
+  now reads "1 week(s) without events at the start".
+- **Seen working**: the 3D battle scene, the town, hero, kingdom and Thieves' Guild screens, the week notice and the date's event, and the
+  editor's week event settings with undo.
+- **Not covered yet**: the Astrologer's Tower notice, a month's spawned stacks on the map, the marketplace, dwelling, object service,
+  Necromancy and caravan screens, the exchange panel's war machines and the editor's town faction change. None of them has a scenario yet.
+- **Seen but not fixed**: in the editor the terrain tool's second row of buttons runs under the right-hand panel. The exchange scenario's
+  status line shows a raw `MovementOutcome { ... }` record.

@@ -34,7 +34,7 @@ public partial class ConditionsPanel : VBoxContainer
     private readonly SpinBox _grace = new() { MinValue = 0, MaxValue = 99, Step = 1, Suffix = "days without a town (0 = no countdown)" };
     private readonly SpinBox _maxHeroes = new() { MinValue = 1, MaxValue = ScenarioRules.HeroLimit, Step = 1, Prefix = "at most", Suffix = "heroes per player" };
     private readonly CheckBox _weekEvents = new() { Text = "Week and month events" };
-    private readonly SpinBox _skipWeeks = new() { MinValue = 0, MaxValue = WeekEventSettings.MaxSkipWeeks, Step = 1, Suffix = "weeks before the first event" };
+    private readonly SpinBox _skipWeeks = new() { MinValue = 0, MaxValue = WeekEventSettings.MaxSkipWeeks, Step = 1, Suffix = "week(s) without events at the start" };
     private readonly HFlowContainer _weeklyFactions = new();
     private readonly HFlowContainer _monthlyFactions = new();
     private readonly VBoxContainer _list = new();

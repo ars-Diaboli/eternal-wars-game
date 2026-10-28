@@ -29,20 +29,32 @@ $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
        Input = '5:click:133,263;12:click:133,263;20:click:103,140;28:click:30,140;35:key:Q' },
     @{ Name = 'game-route-and-move'; App = 'EternalWars.Game'; Frames = 60
-       Input = '3:click:800,569;10:click:960,520;25:click:960,520' },
+       Input = '3:key:Enter;10:click:960,520;25:click:960,520' },
     @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 60; Map = $exchangeMap
-       Input = '3:click:800,569;10:key:Right;16:click:258,209;20:click:258,151;24:click:194,256;30:click:960,557;36:click:960,557' },
+       Input = '3:key:Enter;10:key:Right;16:click:258,209;20:click:258,151;24:click:194,256;30:click:960,557;36:click:960,557' },
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
-       Input = '3:click:800,569;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
+       Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
     # The town screen (ADR-050): T opens the first own town over the map, Escape closes it, T again, Escape.
     @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
-       Input = '3:click:800,569;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },
+       Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },
     # The hero screen (ADR-050): select a hero, H opens it, Escape closes it, then the same through the hero list's Info button.
     @{ Name = 'game-hero-screen'; App = 'EternalWars.Game'; Frames = 50
-       Input = '3:click:800,569;12:key:H;24:key:Escape;30:key:H;40:key:Escape' },
+       Input = '3:key:Enter;12:key:H;24:key:Escape;30:key:H;40:key:Escape' },
+    # The kingdom overview (ADR-084): K opens it on the towns map, Escape closes it, K again, Escape.
+    @{ Name = 'game-kingdom'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
+       Input = '3:key:Enter;12:key:K;24:key:Escape;30:key:K;40:key:Escape' },
+    # A week of turns through "End turn" (two human seats, 14 clicks): the new week's notice and its event next to the date (ADR-084).
+    @{ Name = 'game-weeks'; App = 'EternalWars.Game'; Frames = 100
+       Input = (@('3:key:Enter') + (0..13 | ForEach-Object { "$(10 + 6 * $_):click:342,24" })) -join ';' },
+    # The Thieves' Guild (ADR-079) from the town screen's button, closed with Escape, then the town screen too.
+    @{ Name = 'game-thieves-guild'; App = 'EternalWars.Game'; Frames = 40; Map = $townsMap
+       Input = '3:key:Enter;10:key:T;16:click:446,16;26:key:Escape;32:key:Escape' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
-       Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' }
+       Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' },
+    # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
+    @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
+       Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' }
 )
 
 $failed = 0

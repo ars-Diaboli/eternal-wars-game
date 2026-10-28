@@ -9,7 +9,7 @@ reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answe
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events; ADR-075 confirms ADR-073's, changes the caravan reach to 7500 movement points and settles the morale sources; ADR-077 adds map scenery, rivers,
 flaggable providers with resource caravans, caravan speed and limits, the kingdom overview, the Thieves' Guild and a third object catalogue
-(questions MAP-25 … MAP-34, TOWN-9 … TOWN-11, answered in ADR-079 and ADR-080). Phases 0–2 are done (the 3D battle scene still needs a run in Godot). Phase 3 has towns, dwellings,
+(questions MAP-25 … MAP-34, TOWN-9 … TOWN-11, answered in ADR-079 and ADR-080). Phases 0–2 are done (the 3D battle scene ran in Godot 4.7.2, ADR-085). Phase 3 has towns, dwellings,
 caravans, heroes, skills, the tavern, artifacts, income, victory and defeat, save/load, trading and the first object catalogue.
 Phase 4 has every generator stage in core. **Next up** (in this order): the groundwork is done (data tables, size pass, per-town building column, Capitol), and so are the quick items
 (caravan reach and queue, base-creature map dwellings, army morale) and the war machine footprints with deployment. The **skill rework is
@@ -148,8 +148,8 @@ catalogue (their Godot screens still need a run). The week and month events, the
       keys, width choice and quick combat; verified in Godot 4.7.2 (smoke scenario `harness-guard-battle`)
 - [x] Editor UI for armies, hero stats, monsters, mine guards, guard mode and chest values (`InspectorPanel`,
       `MapPropertiesPanel`)
-- [x] 3D battle scene in the game app (ADR-052), placeholder meshes; not yet run in Godot (no Godot on the
-      development machine at the time): run `tools/smoke-godot.ps1` and check the frames
+- [x] 3D battle scene in the game app (ADR-052), placeholder meshes; verified in Godot 4.7.2 (smoke scenario
+      `game-battle-3d`, ADR-085)
   - [x] Battlefield scene (`BattleView3D`): ground in the battle terrain's adventure-map texture, cell grid, obstacles
         (boulders, crags), own camera with zoom; the adventure map and its HUD are hidden meanwhile
   - [x] Unit views (`BattleUnitView`): footprint base in the side's colour, body shaped by role (walker, shooter,
@@ -223,7 +223,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Flaggable resource providers and resource caravans (ADR-079, TOWN-9): all four flagged like mines, storing a week's output every week;
       own visits and `FetchResourcesCommand` (100 gold) collect it; map format v22; the AI flags them and fetches large stores
 - [x] Kingdom overview screen (ADR-077, ADR-084): every income source with its amount and the totals, from the income rules
-      (`KingdomOverviews.For`; `KingdomOverviewPanel` from the HUD or K, not run in Godot yet)
+      (`KingdomOverviews.For`; `KingdomOverviewPanel` from the HUD or K; smoke scenario `game-kingdom`, ADR-085)
 
 ### Towns: Godot
 - [x] 2D harness town panel (`TownPanel`, `--scenario=towns`): build, dwellings, recruit, upgrade, garrison
@@ -233,7 +233,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Town list in the HUD next to the hero list; select and centre on a town (`TownListPanel`)
 - [ ] Town screen polish: building tree with requirements, cost tooltips, "built today" state, dwelling choice
       warnings (which tier would become unreachable)
-- [x] Smoke scenario for the town screen (`game-town-screen`, `tools/smoke/towns.ewmap.json`; not yet run in Godot)
+- [x] Smoke scenario for the town screen (`game-town-screen`, `tools/smoke/towns.ewmap.json`; run in Godot 4.7.2, ADR-085)
 
 ### Heroes and skills
 - [x] Hero roster `data/heroes.csv`: 16 per town, mage/warrior, preferred creature, specialty (ADR-048)
@@ -286,7 +286,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       needs the per-town table and Necromancy
 - [x] Docs: `heroes.csv` and [hero-roster.md](../content/hero-roster.md) follow (Drill, Troop management → Scouting, Adrenaline names,
       warriors' Offense / Defense starting skills)
-- [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, not yet run in Godot)
+- [x] Hero screen (Godot): stats, mana, skills with descriptions, specialty, army, paper doll, war machines; opened from the hero list (`HeroPanel`, H or "Info"; smoke scenario `game-hero-screen`, run in Godot 4.7.2, ADR-085)
 
 ### Tavern
 - [x] Hire heroes (ADR-060): per-player weekly pool by ranks (native, adjacent, not opposing, opposing; warriors for
@@ -308,7 +308,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
 - [x] Thieves' Guild in the tavern (ADR-079, TOWN-11): `ThievesGuild` ranks by towns, heroes, gold, lumber and ore, rare resources,
       artifacts, income, army strength, best hero, best creature; rows by the number of taverns; `ThievesGuildPanel` from the town screen
-      (not run in Godot yet)
+      (smoke scenario `game-thieves-guild`, ADR-085)
 
 ### Artifacts
 Content draft: [artifacts.md](../content/artifacts.md).
@@ -341,9 +341,9 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Game app: save / load menu (F10, F5 quick save, F9 quick load; also in battle)
 - [x] Week and month events (ADR-073, ADR-084): weekly 75 % week of a creature (its line's growth doubles); monthly 45 % month of a creature
       (doubled growth, guards spawn next to random objects), 15 % plague (no growth, town stocks halved), 15 % starvation (no growth);
-      announcement at week start (rolled a week ahead); the AI recruits the week's creature first (Godot parts not run yet)
+      announcement at week start (rolled a week ahead); the AI recruits the week's creature first (notice and date: smoke scenario `game-weeks`, ADR-085)
 - [x] Event creature factions per map and template (weekly and monthly separately; default playable factions); events on or off and the
-      first one after 0 to 8 skipped weeks (default: from the second week, ADR-075); map format v24, template v6, editor conditions panel (ADR-084)
+      first one after 0 to 8 skipped weeks (default: from the second week, ADR-075); map format v24, template v6, editor conditions panel (ADR-084; smoke scenario `editor-week-events`)
 - [x] Players without a town on campaign-like maps (ADR-075): grace period 0 and a "lose a hero" condition (both existed); validator warning
       when a player starts without a town while the grace period is on
 - [ ] More conditions (ADR-073): capture a map object, obtain an artifact, release a prisoner; lose an artifact; deadlines on victory

@@ -56,6 +56,7 @@ public partial class TownPanel : PanelContainer
         if (FullScreen)
         {
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            this.UseOpaqueBackground();
             var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill };
             AddChild(scroll);
             scroll.AddChild(box);
