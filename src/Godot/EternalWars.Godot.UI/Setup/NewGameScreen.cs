@@ -64,6 +64,7 @@ public partial class NewGameScreen : PanelContainer
         var start = new Button { Text = "Start" };
         start.Pressed += Start;
         box.AddChild(start);
+        start.CallDeferred(Control.MethodName.GrabFocus); // Enter starts (and the smoke scripts need no coordinates)
         box.AddChild(_status);
         ShowPlayers();
     }

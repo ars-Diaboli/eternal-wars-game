@@ -22,7 +22,7 @@ public partial class KingdomOverviewPanel : PanelContainer
     public void Bind(GameSession session)
     {
         _session = session;
-        SetAnchorsAndOffsetsPreset(LayoutPreset.Center);
+        this.CenterAsScreen();
         var box = new VBoxContainer();
         AddChild(box);
         var header = new HBoxContainer();

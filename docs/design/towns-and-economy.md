@@ -127,7 +127,7 @@ lumber and ore, rare resources; 3 — also artifacts and income; 4 or more — a
 (most valuable). The Den of Thieves on the map shows the whole table on every visit.
 
 ## Kingdom overview (ADR-077)
-**Implemented (ADR-084)**, Godot screen not run yet. One screen with the player's whole economy: every town, mine, flagged provider, income artifact and hero skill or specialty that
+**Implemented (ADR-084)**, checked in Godot by the `game-kingdom` smoke scenario. One screen with the player's whole economy: every town, mine, flagged provider, income artifact and hero skill or specialty that
 brings resources, each with its daily (or weekly) amount, and the totals. It reads the income rules (`TownIncome`, `HeroIncome`, the providers),
 so it always matches what the turn pays.
 
