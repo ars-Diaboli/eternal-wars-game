@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -12,7 +13,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// Exchange screen for a <see cref="HeroExchangeDecision"/>: both heroes' seven slots. Click a stack, then a
 /// slot (either hero) to move it there; with "Split" only half moves. Every move is a <see cref="MoveStackCommand"/>;
-/// refusals (e.g. the last stack) are shown. Close resolves the decision.
+/// refusals (e.g. the last stack) are shown. A hero's war machine button gives it to the other hero (<see cref="GiveWarMachineCommand"/>).
+/// Close resolves the decision.
 /// </summary>
 public partial class ExchangePanel : PanelContainer
 {
@@ -41,6 +43,7 @@ public partial class ExchangePanel : PanelContainer
         this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<WarMachineGiven>(session.Events, _ => Refresh());
         Refresh();
     }
 
@@ -77,6 +80,18 @@ public partial class ExchangePanel : PanelContainer
                 var target = (heroId, slot);
                 button.Pressed += () => Click(target);
                 row.AddChild(button);
+            }
+
+            var other = heroId == exchange.Hero ? exchange.Other : exchange.Hero;
+            foreach (var machine in hero.WarMachines.Order())
+            {
+                var give = new Button { Text = $"{TownRules.WarMachineName(_session.State, hero, machine)} →", TooltipText = "Give to the other hero" };
+                give.Pressed += () =>
+                {
+                    var result = _session.Execute(new GiveWarMachineCommand(_session.State.CurrentPlayer.Id, heroId, machine, other));
+                    _status.Text = result.IsAccepted ? "" : result.Error ?? "";
+                };
+                row.AddChild(give);
             }
 
             _rows.AddChild(row);

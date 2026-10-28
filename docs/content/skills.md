@@ -248,7 +248,7 @@ Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)
 | Kind | Example | Status |
 |---|---|---|
 | Resource | `resource gold 350`: +350 gold a day | ✅ (`HeroIncome`) |
-| Skill | `skill offense.melee`: the skill's effect +5 % per hero level (HoMM3-like, ADR-072, HERO-1) | 🔜 |
+| Skill | `skill offense.melee`: the skill's effect +5 % per hero level (HoMM3-like, ADR-072, HERO-1) | ✅ Melee, Archery, Logistics, attunement mana (ADR-083); 🔜 Tactics, Blood Rage, Warcry, Necromancy |
 | Spell | `spell light.bless`: the spell's effect +3 % per hero level (ADR-072, MAG-6) | ⏳ magic |
 
 ## Open

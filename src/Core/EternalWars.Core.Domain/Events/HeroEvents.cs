@@ -30,6 +30,9 @@ public sealed record HeroStatusesExpired(HeroId Hero, IReadOnlyList<Heroes.HeroS
 /// <summary>A war machine of the hero was destroyed in battle (ADR-056).</summary>
 public sealed record WarMachineLost(HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
 
+/// <summary>A hero handed a war machine to another hero of its player in their exchange (ADR-070); an offensive machine becomes the receiver's town's kind.</summary>
+public sealed record WarMachineGiven(HeroId From, HeroId To, Battles.WarMachineSlot Slot) : IEvent;
+
 /// <summary>A hero was hired in a town's tavern and stands at its entrance (ADR-060).</summary>
 public sealed record HeroHired(MapObjectId Town, HeroId Hero, string Definition) : IEvent;
 

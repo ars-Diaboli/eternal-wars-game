@@ -313,6 +313,9 @@ public sealed class GameSession
             case GiveArtifactCommand give:
                 Artifacts.Give(give.Player, give.FromHero, give.Artifact, give.ToHero);
                 return null;
+            case GiveWarMachineCommand machine:
+                Armies.GiveWarMachine(machine.Player, machine.FromHero, machine.Slot, machine.ToHero);
+                return null;
             case HireHeroCommand hire:
                 Towns.HireHero(hire.Player, hire.Town, hire.Hero);
                 return null;

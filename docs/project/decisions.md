@@ -1925,3 +1925,27 @@ here are marked *(choice)*; every number is a draft.
 - UI: deposit question in the decision panel; map tavern and garrison in the object service panel; garrison owner and troops in the editor
   inspector; palette colours (none run in Godot yet).
 - Tests: `SecondCatalogueTests`, `SecondCatalogueObjectTests`.
+
+### ADR-083: Smaller roadmap items: town type in the editor, team victory, skill specialties, teleporters, machine exchange, sim complexity (2026-10-28)
+**Status**: implemented (2026-10-28). Carries out ADR-070 (CMB-3, CMB-4), ADR-072 (HERO-1) and ADR-073 (teams). Choices made here are marked
+*(choice)*.
+
+- **Editor: change a town's faction** (`MapEditorSession.SetTownType`, undoable; the inspector's "Faction" list): a town of the new type takes the
+  old one's id, place, owner, garrison and a custom name. Buildings the new type also has stay (at most its top level); each dwelling and the
+  creatures waiting in it move to the new type's line **at the same place in the same tier** *(choice)*; town-specific buildings drop out.
+  Refused (`RequirementMissing`) when the result would lack a requirement. Views see `MapObjectRemoved` + `MapObjectPlaced`.
+- **Team victory** (`GameFlowService.End`): the winners are the winning team's players still in the game plus, while one of its **human** players
+  survives, its eliminated human players. Eliminated computer players never share the win; when only a computer ally survives, the eliminated
+  humans have lost.
+- **Skill specialties** (`SkillEffects.WithSpecialty`): the skill's effect × (100 + 5 × hero level) / 100, rounded down, for the effects that
+  are amounts: Melee and Archery damage percent, Logistics movement percent, and an attunement's pool and daily mana. Not scaled yet *(choice)*:
+  Tactics (columns and widths are steps, not amounts), Blood Rage and Warcry (MAG-10's numbers are not set), Death attunement's Necromancy
+  share and spell cost reduction (with magic).
+- **Teleporting creatures** (`CapabilityKind.Teleporting`, CMB-4): move like flyers (`CreatureDefinition.MovesFreely`: any free spot within the
+  speed, the footprint must fit) and are valued like them (+20 %). No creature has it yet.
+- **War machine exchange** (`GiveWarMachineCommand`, `WarMachineGiven`, CMB-3): while two heroes' exchange is open, either hands a machine to
+  the other when the receiver has none in that slot. Machines are slots, so an offensive machine becomes the receiver's town's kind *(choice)*.
+  Buttons in the exchange panel (not run in Godot yet); the AI's main hero takes the machines it lacks. Town garrisons keep machines through a
+  garrison hero, which does not exist yet.
+- **`sim game --complexity beginner|easy|normal|hard|expert`** starts every player with that level's resources (`GameOptions.Complexity`);
+  without it the map's resources stay.

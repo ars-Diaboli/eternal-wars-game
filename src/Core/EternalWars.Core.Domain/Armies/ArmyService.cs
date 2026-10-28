@@ -45,9 +45,43 @@ public sealed class ArmyService(GameState state, IEventPublisher events)
             events.Publish(new ArmyChanged(to.Id, to.Army.Slots.ToList()));
         }
 
-        static bool IsBetween(HeroExchangeDecision decision, HeroId a, HeroId b) =>
-            (decision.Hero == a && decision.Other == b) || (decision.Hero == b && decision.Other == a);
     }
+
+    /// <summary>
+    /// Hands a war machine to the other hero of an open exchange (ADR-070, CMB-3) when the receiver has none in that slot. Machines are slots, so an
+    /// offensive machine becomes the receiver's town's kind (<see cref="Battles.WarMachines.OffensiveByTown"/>).
+    /// </summary>
+    internal void GiveWarMachine(PlayerId player, HeroId fromHeroId, Battles.WarMachineSlot slot, HeroId toHeroId)
+    {
+        var from = state.GetHero(fromHeroId);
+        var to = state.GetHero(toHeroId);
+        if (from.Owner != player || to.Owner != player)
+        {
+            throw new InvalidOperationException("Both heroes must belong to the player.");
+        }
+
+        if (from == to || state.PendingDecision is not HeroExchangeDecision exchange || !IsBetween(exchange, from.Id, to.Id))
+        {
+            throw new InvalidOperationException("War machines change hands only while the exchange of the two heroes is open.");
+        }
+
+        if (!from.WarMachines.Contains(slot))
+        {
+            throw new InvalidOperationException($"{from.Name} has no {slot} machine.");
+        }
+
+        if (to.WarMachines.Contains(slot))
+        {
+            throw new InvalidOperationException($"{to.Name} already has a {slot} machine.");
+        }
+
+        from.RemoveWarMachine(slot);
+        to.AddWarMachine(slot);
+        events.Publish(new WarMachineGiven(from.Id, to.Id, slot));
+    }
+
+    private static bool IsBetween(HeroExchangeDecision decision, HeroId a, HeroId b) =>
+        (decision.Hero == a && decision.Other == b) || (decision.Hero == b && decision.Other == a);
 
     internal void Publish(Hero hero) => events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
 

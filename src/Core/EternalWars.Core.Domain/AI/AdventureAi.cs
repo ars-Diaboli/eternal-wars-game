@@ -697,6 +697,13 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         var a = _state.GetHero(first);
         var b = _state.GetHero(second);
         var (main, feeder) = a.Id == _main || (b.Id != _main && ArmyPower(a.Army) >= ArmyPower(b.Army)) ? (a, b) : (b, a);
+
+        // The main hero takes the war machines it lacks (ADR-070).
+        foreach (var machine in feeder.WarMachines.Except(main.WarMachines).Order().ToList())
+        {
+            Execute(new GiveWarMachineCommand(player, feeder.Id, machine, main.Id));
+        }
+
         foreach (var (slot, stack) in feeder.Army.Stacks.OrderByDescending(s => Power(s.Stack)).ThenBy(s => s.Slot).ToList())
         {
             if (!Active(player) || feeder.Army[slot] is not { } current)
