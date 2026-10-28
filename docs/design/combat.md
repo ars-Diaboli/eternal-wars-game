@@ -97,7 +97,8 @@ Creature capabilities, independent of size:
 - A unit whose footprint touches the area is hit once (ADR-038). Area **spells** follow the same rule: their area has a
   fixed size whatever the target's footprint, and a 3×3 or 4×4 creature with any cell inside is hit once (ADR-072, MAG-11;
   Phase 5).
-- **Teleporting creatures** move like flyers: the footprint must fit at the destination (ADR-070, CMB-4).
+- **Teleporting creatures** move like flyers: the footprint must fit at the destination (ADR-070, CMB-4; the `Teleporting` capability,
+  ADR-083).
 
 ## Turn order
 - **Initiative decides order, not frequency** (ADR-009). Each round every stack acts **once**, in descending
@@ -167,7 +168,8 @@ destroyed. The offensive machine shoots on its turn, outside sieges only from Ad
 every own stack a little each round; the cart adds shots (unlimited with Advanced Ammo supply). Siege Ballistics rules
 exist (ADR-063) but sieges do not.
 
-ADR-070 (not built): heroes **exchange** machines like stacks; a town garrison holds machines only through a hero in it.
+Heroes **exchange** machines in their exchange: one moves to the other hero when it has none in that slot; an offensive machine becomes the
+receiver's town's kind (ADR-070, ADR-083). A town garrison holds machines only through a hero in it (not built: no garrison heroes yet).
 Spells may target machines; they are `mechanical` and resist many spells (CMB-3, MAG-4).
 
 ADR-073 (HERO-4, built with ADR-076): like HoMM3, a machine stands mostly outside the grid and occupies **only the outermost

@@ -18,7 +18,7 @@
   - **Deadlines**: a victory condition may carry a time limit ("defeat the enemy within 3 months"); missing it defeats the
     player.
   - **Teams**: a team wins while at least one of its **human** players survives; eliminated human teammates share the win. A
-    computer ally's survival does not win for them: they have lost.
+    computer ally's survival does not win for them: they have lost (built, ADR-083).
   - The assumptions above were confirmed in ADR-075.
 - **Players without a town** (ADR-075): a campaign-like map may start a player with heroes only; losing a hero is then the
   defeat condition. Set the grace period to 0 (the town rule is off) and add "lose a hero"; the validator warns about a

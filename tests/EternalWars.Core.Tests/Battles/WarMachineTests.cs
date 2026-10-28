@@ -281,4 +281,27 @@ public class WarMachineTests
             Assert.InRange(hits, 1900, 2100); // 2 of 3
         }
     }
+
+    [Fact]
+    public void WarMachines_ChangeHandsInAnOpenExchange_OnlyIntoAFreeSlot()
+    {
+        var state = Create("AC.B");
+        state.GetHero(A).SetWarMachines([WarMachineSlot.Offensive, WarMachineSlot.Tent]);
+        state.GetHero(C).SetWarMachines([WarMachineSlot.Offensive]);
+        var session = Start(state);
+        var given = new List<WarMachineGiven>();
+        session.Events.Subscribe<WarMachineGiven>(given.Add);
+
+        Assert.False(session.Execute(new GiveWarMachineCommand(Blue, A, WarMachineSlot.Tent, C)).IsAccepted); // no exchange yet
+        session.Step(A, Direction.East); // meets C
+        Assert.IsType<EternalWars.Core.Domain.Decisions.HeroExchangeDecision>(state.PendingDecision);
+
+        Assert.Contains("already", session.Execute(new GiveWarMachineCommand(Blue, A, WarMachineSlot.Offensive, C)).Error);
+        Assert.False(session.Execute(new GiveWarMachineCommand(Blue, A, WarMachineSlot.Cart, C)).IsAccepted);
+        Assert.True(session.Execute(new GiveWarMachineCommand(Blue, A, WarMachineSlot.Tent, C)).IsAccepted);
+
+        Assert.Equal([WarMachineSlot.Offensive], state.GetHero(A).WarMachines.Order());
+        Assert.Equal([WarMachineSlot.Offensive, WarMachineSlot.Tent], state.GetHero(C).WarMachines.Order());
+        Assert.Equal(new WarMachineGiven(A, C, WarMachineSlot.Tent), Assert.Single(given));
+    }
 }

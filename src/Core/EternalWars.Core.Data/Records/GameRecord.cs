@@ -173,6 +173,7 @@ public static class GameRecordSerializer
         (typeof(EquipArtifactCommand), "equipArtifact"),
         (typeof(UnequipArtifactCommand), "unequipArtifact"),
         (typeof(GiveArtifactCommand), "giveArtifact"),
+        (typeof(GiveWarMachineCommand), "giveWarMachine"),
         (typeof(ChooseBattleWidthCommand), "battleWidth"),
         (typeof(BattleDeployCommand), "battleDeploy"),
         (typeof(BattleStartCommand), "battleStart"),

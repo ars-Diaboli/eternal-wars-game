@@ -115,6 +115,7 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `WarMachineBought(Seller, Hero, Slot)` | `TownService`, `MapObjectInteractionService` | a town's blacksmith (ADR-056) or a War Machine Factory (ADR-068) sold a war machine to the hero |
 | `HeroFreed(Prison, Hero, Owner, Definition, Level)` | `MapObjectInteractionService` | a prisoner joined the visitor's player where the prison stood (ADR-068); `MapObjectRemoved` of the prison came just before |
 | `WarMachineLost(Hero, Slot)` | `BattleService` | a hero's war machine was destroyed in battle |
+| `WarMachineGiven(From, To, Slot)` | `ArmyService` | a hero handed a war machine to another hero of its player in their exchange (ADR-083) |
 | `MapObjectVisited(Hero, Object)` | `MapObjectInteractionService` | hero stepped onto an entrance (before the outcome events) |
 | `MapObjectFoundEmpty(Hero, Object)` | `MapObjectInteractionService` | a hero visited an object whose reward was already taken (this week, by this hero, or by the first visitor; ADR-068) |
 | `ResourcesFound(Hero, Object, Resources)` | `MapObjectInteractionService` | a resource provider paid out (after `ResourcesChanged`): its store to the owner's hero, or a week at the first flagging (ADR-079) |
