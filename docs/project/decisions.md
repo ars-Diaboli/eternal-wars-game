@@ -2240,3 +2240,61 @@ ADR-075). Map format **v25**. Choices made here are marked *(choice)*.
 - Tests: `SettingsFileTests` (round trip, broken and missing files, partial files, step lengths). Smoke: `game-speed-settings` (the menu sets
   "Your heroes" to Slow, then the hero walks a route); the `game-auto-combat` clicks moved with the taller menu; `smoke-godot.ps1 -Only`
   runs some scenarios.
+
+### ADR-096: Pandora's Box and map events (HotA-like extended events) (2026-10-29)
+**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. The open points are MAP-35 and
+EVT-1 … EVT-6 in `open-questions.md`, each with a proposal. Reference: the "Extended event system" chapter of the HotA documentation
+(h3hota.com/en/documentation).
+
+- **Pandora's Box** (MAP-35): a map object, as in HoMM3 and HoMM4, that holds what the map author put in it (gold, resources, experience,
+  skills, artifacts, creatures, …). A visiting hero is asked whether to open it; it is opened once and then vanishes.
+- **Map events**: events the map author writes in the editor, as in HotA: a tree of **actions** and **conditions** over map-wide
+  integer **variables**. Four types:
+  - **Hero events**: run when a hero steps onto an event cell (an invisible map object) or opens a Pandora's Box; they act on that hero.
+  - **Player events**: run at the start of a player's turn; they act on that player.
+  - **Town events**: run at the start of the town owner's turn (neutral towns too); they act on that town.
+  - **Quest events**: the quests of three new objects: the **Seer's Hut** (quests one after another, with a reward), the **Quest Guard**
+    (blocks the way until its quest is done, then vanishes) and the **Quest Gate** (lets through the heroes that meet its quest). A quest has
+    stages with a proposal, a progress and a completion message, and an entry in a **quest log**.
+- **Conditions**: and / or / not and comparisons of expressions over resources, creature counts, primary and secondary skills, artifacts,
+  the hero, its class, the player, human or computer, the player's starting town, the date, the difficulty, town owners, monsters and heroes
+  defeated by a player, and variables. Expressions add, subtract, multiply, divide and draw random numbers.
+- **Actions**: resources; creatures in a hero's army or a town's garrison; creatures to hire; a building; experience, primary and secondary
+  skills, artifacts, war machines, spell book and spells, mana and movement points; morale and luck until the next battle; a battle against an
+  army the author sets; messages, messages with rewards and questions with two or three answers; variables, branches, loops and running
+  another event; for quests, quest stages, the quest log entry and "finish the quest".
+- **Synchronised events**: copies of one hero event on several cells share one state and act as one event (one entry point per cell); a
+  quest object always has its own copy.
+- **The AI** runs events as a human does: it picks the answer worth the most, does a Seer's Hut quest when the reward outweighs the cost,
+  takes Quest Guards and Gates as obstacles, and weighs a Pandora's Box by its contents.
+- **Naming**: in this project an "event" is already a domain event of the pub/sub ([event-system.md](../technical/event-system.md)) and the
+  weekly or monthly event (ADR-073); the docs call the author's events **map events** (EVT-1).
+- **Fits the core as it is**: an event is data in the map file, run by a core service at its trigger; a question or a full army is a pending
+  decision (`DecisionRequested`), as the Sphinx's riddle already is; random numbers draw from `GameState.Random`; morale and luck until the
+  next battle are hero statuses (the Warrior's Tomb, the Sphinx); a battle against a set army is a guard battle; the difficulty is the
+  complexity (ADR-063). New are variables, event cells, turn-start actions written by the author, quest objects, the quest log and a record of
+  who defeated which monster or hero. Spells wait for Phase 5; campaign variables ("kept for the next map") wait for the campaign (FLOW-1).
+- **Where in the plan** (EVT-1): Phase 6 lists "map triggers and events" for the campaign. The Pandora's Box with its own contents can come
+  with the Phase 3 objects; the map events are a bigger step.
+
+### ADR-097: Arena mode (HotA-like) (2026-10-29)
+**Status**: accepted as a design (2026-10-29), owner note in `ideas.md`; **nothing implemented**. The open points are ARN-1 and ARN-2 in
+`open-questions.md`, each with a proposal. Reference: the "Arena mode" chapter of the HotA documentation (h3hota.com/en/documentation).
+
+- **The mode** (HotA): a game is **one battle between two heroes**. The map sets the armies, skills, artifacts and objects, and may let the
+  players choose some of it.
+- **Day 1 is preparation**: heroes have (nearly) unlimited movement, towns may build any number of buildings, and some objects show what they
+  hold (Pandora's Boxes, quests, scrolls, a university's skills). Players visit objects, hire armies and get their heroes ready. The map must
+  keep the players from meeting on day 1.
+- **Day 2 is the battle**, which starts by itself: the map has **combat places** (a new object: a main cell where the defending hero stands
+  and an attack cell, blocked on day 1, from where the attacker comes). The defender is chosen among the owners of heroes standing on combat
+  places (else the first player in turn order is the attacker and the next non-allied one the defender); each side fights with its strongest
+  hero by army value; heroes are moved to the combat place. The **winner of the battle wins the game**; no winner, or no hero, is a loss for
+  both.
+- **Other rules**: battles give no experience; the AI never retreats or surrenders; the enemy hero's army is shown only roughly (Expert
+  Disguise); map event messages for players and towns are not shown; the game is not ranked.
+- **Map**: an "Arena" switch on the map; it removes the victory and loss conditions; a map without a combat place is faulty.
+- **Fits the core as it is**: the hero against hero battle, quick and auto combat (ADR-090), the AI's turn and army values (`BattleEstimator`)
+  exist. New are the mode switch in the map, the combat place object, unlimited movement and building on day 1 (today one building a town a
+  day, ADR-046), the automatic battle at the start of day 2 and its result as the game's end (ADR-057). There is no sea (ADR-051), so HotA's
+  boat case does not arise. Related: MAP-35 and EVT-5 (contents shown), FLOW-4 (not ranked), MP-2 (simultaneous turns on day 1).

@@ -42,7 +42,11 @@
 2. **Hot-seat multiplayer** (implemented: several human players share the machine; battles between humans are played
    on the same screen).
 3. **Story campaign**: chained scenarios, carry-over heroes, scripted map events and dialogue. This needs editor
-   support for triggers and a script/event format (Phase 6).
+   support for triggers and a script/event format (Phase 6): the map events of ADR-096 (HotA-like, [adventure-map.md](adventure-map.md#pandoras-box-and-map-events-adr-096-planned)),
+   with variables kept from one map to the next.
+- **Arena** (ADR-097, planned; the rules: ARN-1, ARN-2 ❓): as in HotA, one battle decides the game. Day 1 is preparation (unlimited
+  movement and building, objects show what they hold); at the start of day 2 each side's strongest hero is moved to a **combat place** and
+  they fight; the winner wins the game. An arena map has no victory or loss conditions; it is not ranked.
 - **LAN multiplayer** (ADR-088, planned; when and how: MP-1 ❓): the host is the source of truth. Players pick a map or generate a random one
   when they create the game. A multiplayer save loads in multiplayer, single player (the player picks one of the colours that were human,
   the computer plays the rest) or hot-seat. The first week may be played **simultaneously** while players stay in their start zones and do
