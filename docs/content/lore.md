@@ -125,4 +125,4 @@ and for skirmish flavour text.
   Haven vs Necropolis & Inferno, Academy vs Inferno & Dungeon, Sylvan vs Dungeon & Necropolis.
 - Should the campaign reveal what the Wheel really is (and whether ending it is good)?
 - Hero names/archetypes per town; tone of in-game text (terse chronicle vs. character voices).
-- Naming mismatch: `data/artifact_sets.csv` calls a set "Ash Court Regalia", while the group here is the "Ashen Court".
+- The artifact set "Ash Court Regalia" becomes "Ashen Court Regalia" with the artifact re-draft (ADR-099).

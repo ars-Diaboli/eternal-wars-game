@@ -4,198 +4,265 @@ The spell catalog for magic (Phase 5): six schools, four spell levels, three ran
 yet** (roadmap, "Magic"); mana is in (`ManaRules`, ADR-063). This is the content the spell table `data/spells.csv` will
 start from. Rules: ADR-047 (structure), ADR-048 (skills), ADR-055 (Spell Power and Knowledge), ADR-042 (creature casters,
 immunities), ADR-063 (six schools, mana, faction groups), ADR-070 and ADR-071 (casting in battle, spell books, guilds, Spell Power, levels of
-Town Portal and Dimension Door). Lore: [lore.md](lore.md). Skills that drive magic: [skills.md](skills.md#magic-schools). Spell ids and names are drafts;
-every number is a proposal to react to.
+Town Portal and Dimension Door), ADR-072 (Spell Power formula, ranks). Lore: [lore.md](lore.md). Skills that drive magic:
+[skills.md](skills.md#magic-schools).
 
-The 24 school spell ids below are the ones `data/heroes.csv` already names as hero specialties (`spell light.bless`, …),
-so the roster and this catalog agree. Stronghold and Swamp Bestiary have no school (ADR-063): their sections are
-faction-ability drafts, not school spells.
+**Re-draft (ADR-099, MAG-1, 2026-10-29)**: the list is re-drafted to fit the lore, with the HoMM3, HoMM4, HoMM5 and Olden Era spell books as
+reference: **17 spells a school, 102 in all** (5 / 5 / 4 / 3 by level, adventure spells included), so a guild draws a selection and two towns
+of one school can differ (MAG-13 ❓). The 24 spells of the first draft keep their ids (`data/heroes.csv` names them as hero specialties).
+Numbers are drafts; final tuning waits for decent visuals (the owner's answer). Each spell's line in the tables reads: base numbers, the
+rank II and III changes.
 
-## How magic works (proposal)
+## How magic works
 
 - **Schools**: six, one per ring town (Light, Nature, Arcana, Death, Chaos, Shadow; `BuiltInSkills.Schools`). Stronghold
-  and Swamp Bestiary have the faction group Primal Fury instead (ADR-063, ADR-069; Adrenaline is dropped). Any hero may learn any school (the
-  school of the town across the ring is rarely offered, ADR-048, ADR-072).
+  and Swamp Bestiary have the faction group Primal Fury instead (ADR-063, ADR-069): warcries, no spells ([below](#stronghold-and-swamp-bestiary)).
+  Any hero may learn any school (the arch-rival's school is rarely offered, ADR-048, ADR-072).
 - **Spell books** (ADR-071, MAG-2; not built): mage heroes start with one; warriors buy one in a mage guild for **500 gold**.
-- **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1 spells, Advanced → 2,
-  Expert → 3, Master → 4): a hero learns a spell when that skill is at least the spell's level (ADR-071). The **mage guild**
-  of the same level in a town offers spells of that level, of the town's own school: **3** at levels 1 and 2, **2** at levels
-  3 and 4; two more town buildings add spells from the two schools next to the town's own on the ring, 1 spell per guild level each
-  (HoMM4-like; ADR-071, ADR-072). A
-  visiting hero learns the ones its skills allow (a spell not in a guild can be found in map shrines: a Shrine of level 1–3 teaches its spell,
-  set in the editor or rolled at game start, to a hero with the school's magic skill at the spell's level, ADR-070).
-- **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill allows
-  learned spells to rise to rank II (Basic) and rank III (Advanced); a spell rises, free, when the hero visits a town whose guild
-  offers it (ADR-072, MAG-3). Rank changes what a spell does, not just its strength.
-- **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement; at the start of the owner's turn a
-  hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (rank-independent) minus attunement,
-  but never less than **25 %** of the base, rounded up. A hero in a town with a mage guild refills its mana (ADR-071, MAG-3;
-  not in code). Attunement does not raise spell "potency" (ADR-071).
-- **Strength**: **Spell Power** (SP) multiplies damage spells' damage and buffs' and debuffs' duration: for now damage × (1 + SP / 10) and
-  duration × (1 + SP / 10) (ADR-071, ADR-072, MAG-1); durations are in rounds. A spell specialty adds +3 % of the spell's effect per
-  hero level (ADR-072, MAG-6). An area spell's area has a fixed size; a big creature with any cell inside is hit once (MAG-11).
-- **In battle** (ADR-070, ADR-071, MAG-4): the hero casts **at most one spell per round**, during the turn of one of the units it
-  controls (machines that fire on their own do not count); spells that change initiative do not change this. Casting does not
-  use that unit's action: it still acts afterwards (HoMM3). Spells may target war machines; machines are `mechanical` and resist many spells.
-- **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`,
-  `curse`, `blind`), already in the creature table; a spell lists its tags. Proposed addition: `holy` (Smite). `SpellResistance n` creatures ignore spells of
-  level n and below (rank III counts one level higher, ADR-049). The hero skill **Spell resistance** cuts hostile spells'
-  damage and duration by **8 / 14 / 20 %**; durations round away from zero, at least 1 round (ADR-071, MAG-6).
+- **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1, Advanced → 2, Expert → 3, Master → 4): a
+  hero learns a spell when that skill is at least the spell's level (ADR-071). The **mage guild** of the same level offers spells of that
+  level, of the town's own school: **3** at levels 1 and 2, **2** at levels 3 and 4; two more town buildings add spells from the two schools
+  next to the town's own on the ring, 1 spell per guild level each (HoMM4-like; ADR-071, ADR-072). Map **Shrines** of level 1–3 teach one
+  spell (ADR-070).
+- **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill allows a learned spell to rise to
+  rank II (Basic) and rank III (Advanced); it rises, free, when the hero visits a town whose guild offers it (ADR-072, MAG-3). A rank changes
+  what a spell does, not just its strength.
+- **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement plus 10 × ⌈level / 10⌉; at the start of the owner's
+  turn a hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (the same at every rank) minus attunement, never
+  less than **25 %** of the base, rounded up. A hero in a town with a mage guild refills its mana (ADR-071; not built).
+- **Strength** (ADR-072): **Spell Power** (SP) multiplies every damage, healing and summoned amount by **(1 + SP / 10)** and every duration
+  by **(1 + SP / 10)**, rounded down, at least 1 round. The tables give the **base** numbers (at SP 0); "a + b·SP" is gone. A spell specialty
+  adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once
+  (MAG-11). Areas are in battlefield cells (the field is 30 × 20; a Small creature is one cell, ADR-070).
+- **In battle** (ADR-070, ADR-071): the hero casts **at most one spell a round**, during the turn of one of the units it controls; casting
+  does not use that unit's action. Spells may target war machines, which are `mechanical` and resist every `mind`, `poison` and healing spell.
+- **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`, `curse`, `blind`);
+  a spell lists its tags. New tags: `holy` (double against undead and demons; creatures tagged `holy` ignore it),
+  `summon` (summoned creatures vanish when the battle ends and give no experience). `SpellResistance n` creatures ignore spells of level n
+  and below (rank III counts one level higher, ADR-049). The hero skill **Spell resistance** cuts hostile spells' damage and duration by
+  **8 / 14 / 20 %** (ADR-071).
+- **Words**: *stack* is a unit on the battlefield; *own* and *enemy* are from the caster's side; *rounds* are battle rounds.
 
 ## Light (Haven)
 
-The faithful call it the "lamp": prayer shaped into wards and flame, answered by something that is not entirely kind.
+The faithful call it the "lamp": prayer shaped into wards and flame, answered by something that is not entirely kind. Light is the
+cheapest school to cast (Light attunement lowers costs) and the best at keeping an army standing; it hurts the dead and the demons most.
 
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
+| Lvl | Spell (id) | Mana | Tags | Rank I | Rank II | Rank III |
 |---|---|---|---|---|---|---|
-| 1 | Bless (`light.bless`) | 5 | – | one stack deals maximum damage, 3 rounds | all own stacks | all own stacks, 5 rounds |
-| 2 | Heal (`light.heal`) | 9 | – | restore 20 + 8·SP health to a stack | + 50 % more, cures bad status | also revives up to a quarter of the lost creatures |
-| 3 | Smite (`light.smite`) | 16 | holy | 30 + 12·SP damage to a stack, double to undead and demons | also hits adjacent stacks at half | ignores resistance, all enemy undead and demons take half |
-| 4 | Sanctuary (`light.sanctuary`) | 25 | – | one stack cannot be attacked in melee for 2 rounds | all own stacks | all own stacks, 3 rounds, ranged attackers also need to see the stack |
+| 1 | **Bless** (`light.bless`) | 5 | – | an own stack deals maximum damage, 3 rounds | all own stacks | all own stacks, +10 % damage |
+| 1 | **Shield of Faith** (`light.shield-of-faith`) | 5 | – | an own stack takes −15 % melee damage, 3 rounds | −25 % | all own stacks |
+| 1 | **Purge** (`light.purge`) | 5 | – | removes the enemy's spells from an own stack | also heals 20 | all own stacks |
+| 1 | **Steadfast** (`light.steadfast`) | 4 | mind | an own stack +1 morale and cannot be made to flee (Terror), 3 rounds | +2 morale | all own stacks |
+| 1 | **Distant Vision** (`light.distant-vision`, adventure) | 5 | – | shows the creatures, heroes and their armies in radius 10 around a cell in sight, until the next turn | radius 14 | also under the fog |
+| 2 | **Heal** (`light.heal`) | 9 | – | an own stack regains 40 health | + 50 %, cures negative spells | also revives the dead of the stack up to a quarter of those lost |
+| 2 | **Righteous Might** (`light.righteous-might`) | 8 | – | an own stack +3 Attack, 3 rounds | +5 | all own stacks |
+| 2 | **Deflect Missiles** (`light.deflect-missiles`) | 9 | – | an own stack takes −40 % ranged damage, 3 rounds | −50 % | all own stacks |
+| 2 | **Vigil** (`light.vigil`) | 8 | – | an own stack retaliates against every attack this round | 2 rounds | all own stacks, 1 round |
+| 2 | **Consecrate** (`light.consecrate`) | 10 | holy | a 3 × 3 area: enemy undead and demons in it take 15 a round, 3 rounds | 5 × 5 | own stacks in it also heal 10 a round |
+| 3 | **Smite** (`light.smite`) | 16 | holy | 80 damage to an enemy stack, double to undead and demons | also hits the stacks next to it at half | ignores spell resistance |
+| 3 | **Prayer** (`light.prayer`) | 16 | – | an own stack +2 Attack, Defense and speed, 3 rounds | all own stacks | all own stacks, +3 |
+| 3 | **Martyrdom** (`light.martyrdom`) | 14 | – | an own stack takes half of the damage meant for another own stack, 3 rounds | all of it | also +2 Defense for the martyr |
+| 3 | **Holy Word** (`light.holy-word`) | 18 | holy | every enemy undead and demon stack takes 50 | 70 | they also lose their next action with 30 % |
+| 4 | **Sanctuary** (`light.sanctuary`) | 25 | – | an own stack cannot be attacked in melee, 2 rounds | all own stacks | 3 rounds; shooters need a clear line too |
+| 4 | **Resurrection** (`light.resurrection`) | 25 | – | revives 150 health of an own stack's dead (lost again after the battle) | the revived stay | also from a stack destroyed this battle |
+| 4 | **Wrath of the Eye** (`light.wrath-of-the-eye`) | 30 | holy | every enemy stack takes 60, undead and demons double; own stacks are spared | 80 | enemy stacks also −1 morale for the battle |
 
-- *Bless*: the cathedral-cities of Haven chant over the army before the march; the soldiers swear that the chant is
-  warm.
+- *Bless*: the cathedral-cities of Haven chant over the army before the march; the soldiers swear the chant is warm.
 - *Smite*: a flagellant's prayer, loud enough to hurt what the dead remember.
-- *Sanctuary*: "No blade shall find you while you carry the light"; the light is a rented thing, and the lender
-  collects.
+- *Martyrdom*: Haven canonises the dead of every battle; volunteers are never lacking.
+- *Sanctuary*: "No blade shall find you while you carry the light"; the light is a rented thing, and the lender collects.
+- *Wrath of the Eye*: the dying sun opens once more, for a moment, and looks at the field.
 
 ## Nature (Sylvan)
 
-Root-and-branch magic: the forests do not obey, they answer, and the price is memory (see Sylvan in the lore).
+Root-and-branch magic: the forests do not obey, they answer, and the price is memory (see Sylvan in the lore). Nature holds the enemy in place,
+calls beasts and storms, and makes its own stacks hard to kill.
 
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
+| Lvl | Spell (id) | Mana | Tags | Rank I | Rank II | Rank III |
 |---|---|---|---|---|---|---|
-| 1 | Entangle (`nature.entangle`) | 5 | – | roots hold an enemy stack: it loses its next move | 2 stacks | 3 stacks, they also take 5 + 3·SP damage |
-| 2 | Regrowth (`nature.regrowth`) | 9 | – | a stack regenerates 5 + 3·SP health at the start of each round, 3 rounds | all own stacks | all own stacks, 5 rounds |
-| 3 | Swarm (`nature.swarm`) | 16 | – | a cloud of insects: enemy stack −3 Attack and Defense, 3 rounds | 2 stacks | all enemy stacks, 4 rounds |
-| 4 | Barkskin (`nature.barkskin`) | 25 | – | an own stack takes −30 % damage, 3 rounds | all own stacks | all own stacks, −40 %, melee attackers take thorns damage |
+| 1 | **Entangle** (`nature.entangle`) | 5 | – | roots hold an enemy stack: it loses its next move (it can still shoot or attack next to it) | 2 stacks | 3 stacks, they also take 15 |
+| 1 | **Wasp Swarm** (`nature.wasp-swarm`) | 5 | – | 30 damage to an enemy stack and −20 % initiative, 1 round | 40 | 2 stacks |
+| 1 | **Bear's Strength** (`nature.bears-strength`) | 5 | – | an own stack +20 % melee damage, 3 rounds | +30 % | all own melee stacks |
+| 1 | **Hunter's Sight** (`nature.hunters-sight`) | 5 | – | an own shooting stack ignores the distance penalty and cover, 3 rounds | +10 % ranged damage | all own shooters |
+| 1 | **Pathfinder's Call** (`nature.pathfinders-call`, adventure) | 5 | – | until the end of the day the hero's army moves on forest floor, grass and swamp as native terrain | every terrain | also +10 % movement |
+| 2 | **Regrowth** (`nature.regrowth`) | 9 | – | an own stack regains 15 health at the start of each round, 3 rounds | all own stacks | 5 rounds |
+| 2 | **Call Lightning** (`nature.call-lightning`) | 10 | lightning | 60 damage to an enemy stack | 80 | jumps to a second stack at half |
+| 2 | **Fleetfoot** (`nature.fleetfoot`) | 8 | – | an own stack +2 speed and can pass through other stacks this round | 2 rounds | all own stacks, 1 round |
+| 2 | **Thornwall** (`nature.thornwall`) | 10 | – | a line of 5 cells of thorns, 3 rounds: blocks movement, a stack walking out of it takes 20 | 7 cells | also blocks shots through it |
+| 2 | **View Terrain** (`nature.view-terrain`, adventure) | 9 | – | reveals the map around the hero, radius 12, until the next turn | radius 18 | the revealed area stays explored |
+| 3 | **Swarm** (`nature.swarm`) | 16 | – | a cloud of insects: an enemy stack −3 Attack and Defense, 3 rounds | 2 stacks | all enemy stacks |
+| 3 | **Summon the Pack** (`nature.summon-pack`) | 16 | summon | a stack of wolves for the battle, 150 health worth | 220 | the wolves strike first in their round |
+| 3 | **Chain Lightning** (`nature.chain-lightning`) | 18 | lightning | 70 damage to an enemy stack, then 35 and 17 to the two nearest stacks (own stacks too) | 90 / 45 / 22 | only enemy stacks are chained |
+| 3 | **Oakheart** (`nature.oakheart`) | 15 | – | an own stack +4 Defense and immune to `mind`, 3 rounds | +6 | all own stacks, +4 |
+| 4 | **Barkskin** (`nature.barkskin`) | 25 | – | an own stack takes −30 % damage, 3 rounds | all own stacks | −40 %, melee attackers take 10 % of their damage back |
+| 4 | **Earthquake** (`nature.earthquake`) | 25 | – | every stack on the ground takes 40 and loses 20 % initiative; in a siege, 2 wall sections take 1 damage each | flyers are spared | enemy stacks only; 3 wall sections |
+| 4 | **Awaken the Grove** (`nature.awaken-grove`) | 30 | summon | a stack of treants for the battle, 400 health worth; they root and cannot move | 550 | they can move |
 
 - *Entangle*: old-growth roots, tended for centuries and quick to grip.
 - *Barkskin*: the elf who casts it ages a year in that moment; the Sylvan do not talk about the count.
+- *Earthquake*: the Sylvan learned it from the Dungeon's tunnels, and use it on the Dungeon's walls.
+- *Awaken the Grove*: each treant called is a tree that does not go back to sleep in the old place.
 
 ## Arcana (Academy)
 
-Cold, exact and precise: the Academy's cities study the Wheel itself, and their spells read like equations.
+Cold, exact and precise: the Academy's cities study the Wheel itself, and their spells read like equations. Arcana bends time and space,
+binds elementals and undoes other magic; it has the most mana (Arcana attunement raises the pool).
 
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
+| Lvl | Spell (id) | Mana | Tags | Rank I | Rank II | Rank III |
 |---|---|---|---|---|---|---|
-| 1 | Magic Arrow (`arcana.magic-arrow`) | 5 | – | 10 + 8·SP damage to one stack, never misses or is blocked by cover | + 50 % | two arrows, two targets |
-| 2 | Haste (`arcana.haste`) | 9 | – | an own stack gets +3 battlefield speed and +50 % initiative for 3 rounds | 2 stacks | all own stacks, 5 rounds |
-| 3 | Frost Bolt (`arcana.frost-bolt`) | 16 | ice | 25 + 12·SP damage, the target is slowed (−2 speed) for 2 rounds | hits 2 stacks | 3 stacks, frozen stacks lose a turn |
-| 4 | Dispel (`arcana.dispel`) | 25 | – | removes every spell from one stack | an area of stacks, friend or foe | every spell from the battlefield; costs half mana if only enemy spells are removed |
+| 1 | **Magic Arrow** (`arcana.magic-arrow`) | 5 | – | 40 damage to an enemy stack; never misses, ignores cover | 60 | two arrows, two targets |
+| 1 | **Slow** (`arcana.slow`) | 6 | – | an enemy stack −30 % speed and initiative, 3 rounds | −40 % | 2 stacks |
+| 1 | **Arcane Ward** (`arcana.arcane-ward`) | 5 | – | an own stack takes −30 % spell damage, 3 rounds | −50 % | all own stacks |
+| 1 | **Precision** (`arcana.precision`) | 5 | – | an own shooting stack +25 % ranged damage, 3 rounds | +35 % | all own shooters |
+| 1 | **Detect Magic** (`arcana.detect-magic`, adventure) | 4 | – | shows every map object's contents (chests, banks' guards, Pandora's Boxes, shrines' spells) in radius 10 | radius 15 | also creature banks' rewards |
+| 2 | **Haste** (`arcana.haste`) | 9 | – | an own stack +3 speed and +50 % initiative, 3 rounds | 2 stacks | all own stacks |
+| 2 | **Frost Ring** (`arcana.frost-ring`) | 10 | ice | 40 damage to every stack in the ring of cells around a centre cell (not the centre) | 55 | own stacks are spared |
+| 2 | **Mirror Image** (`arcana.mirror-image`) | 10 | – | a copy of an own stack fights for 2 rounds; it deals full damage and vanishes when hit | 3 rounds | the copy survives one hit |
+| 2 | **Unravel** (`arcana.unravel`) | 8 | – | removes the own spells from an enemy stack | all enemy stacks | also −1 Spell Power for the enemy hero, the battle |
+| 2 | **Teleport** (`arcana.teleport`) | 9 | – | moves an own stack to a free cell within 10 | anywhere | the stack can still act this round |
+| 3 | **Frost Bolt** (`arcana.frost-bolt`) | 16 | ice | 90 damage to an enemy stack, −2 speed, 2 rounds | 2 stacks | 3 stacks; a frozen stack loses its next action |
+| 3 | **Bind Elemental** (`arcana.bind-elemental`) | 18 | summon | a stack of air, earth, fire or ice elementals (the caster's choice) for the battle, 200 health worth | 280 | two kinds |
+| 3 | **Anti-Magic** (`arcana.anti-magic`) | 15 | – | an own stack is immune to every spell of level 1–3 (also the own), 3 rounds | level 1–4 | all own stacks, levels 1–2 |
+| 3 | **Clockwork Precision** (`arcana.clockwork`) | 14 | – | own war machines +50 % damage and act twice, 2 rounds | 3 rounds | the offensive machine ignores cover |
+| 4 | **Dispel** (`arcana.dispel`) | 25 | – | removes every spell from one stack | every stack in a 5 × 5 area | every spell on the battlefield; half the mana if only enemy spells are removed |
+| 4 | **Stasis** (`arcana.stasis`) | 25 | – | an enemy stack is taken out of time: it cannot act or be harmed, 2 rounds | 3 rounds | 2 stacks |
+| 4 | **Town Portal** (`arcana.town-portal`, adventure) | 25 | – | the hero returns to the nearest own town | any own town | costs no movement points beyond the 500 |
 
 - *Magic Arrow*: the first spell every apprentice learns; the Academy teaches that it is always the same arrow.
+- *Stasis*: the Academy's proof that the Wheel can be stopped, for a moment, for one stack.
 - *Dispel*: the Academy's real secret, kept from outsiders: they claim they can undo whatever the Wheel has done.
 
 ## Death (Necropolis)
 
-Necromancy as accounting: the dead remember every age and are patient creditors. This is the school Haven and Sylvan
-hate most.
+Necromancy as accounting: the dead remember every age and are patient creditors. Death weakens the living, drains them, and puts the dead
+back into the ranks; it is the school Haven and Sylvan hate most. Death attunement gives Necromancy (ADR-069).
 
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
+| Lvl | Spell (id) | Mana | Tags | Rank I | Rank II | Rank III |
 |---|---|---|---|---|---|---|
-| 1 | Curse (`death.curse`) | 5 | curse, mind | an enemy stack deals minimum damage for 3 rounds | 2 stacks | 3 stacks, 5 rounds |
-| 2 | Drain Life (`death.drain-life`) | 9 | – | 15 + 6·SP damage; the hero's stack heals for half of it | hits 2 stacks | hits 3 stacks, healing may exceed the stack's health by a quarter |
-| 3 | Raise Dead (`death.raise-dead`) | 16 | – | after the battle, 20 + 5·SP skeletons per the dead's total health join the army | also raises during the battle, once | during the battle each round |
-| 4 | Plague (`death.plague`) | 25 | poison | an enemy stack loses 5 % of its creatures every round for 3 rounds; living only | 2 stacks | all enemy stacks, 4 rounds |
+| 1 | **Curse** (`death.curse`) | 5 | curse | an enemy stack deals minimum damage, 3 rounds | 2 stacks | 3 stacks, −10 % damage |
+| 1 | **Weakness** (`death.weakness`) | 5 | curse | an enemy stack −3 Attack, 3 rounds | −5 | 2 stacks |
+| 1 | **Grave Chill** (`death.grave-chill`) | 5 | – | an enemy stack −20 % initiative and −1 speed, 3 rounds; living only | −30 % | 2 stacks |
+| 1 | **Unholy Vigour** (`death.unholy-vigour`) | 5 | – | an own undead stack +2 Attack and Defense, 3 rounds | +3 | all own undead stacks |
+| 1 | **Grave Whisper** (`death.grave-whisper`, adventure) | 5 | – | marks the dead of the last battles in radius 10: the hero's next battle there raises +10 % with Necromancy | +15 % | also shows the guards' numbers in radius 10 |
+| 2 | **Drain Life** (`death.drain-life`) | 9 | – | 50 damage to a living enemy stack; an own stack (the caster's choice) heals half of it | 2 stacks | the healing can revive the stack's dead |
+| 2 | **Animate Dead** (`death.animate-dead`) | 9 | – | revives 60 health of an own undead stack's dead (they stay) | 90 | 2 stacks |
+| 2 | **Death Cloud** (`death.death-cloud`) | 10 | poison | 30 damage to every living stack in a 3 × 3 area (own too) | 45 | living enemy stacks only |
+| 2 | **Sorrow** (`death.sorrow`) | 9 | mind, curse | an enemy stack −2 morale and −1 luck, 3 rounds | 2 stacks | all enemy stacks, 2 rounds |
+| 2 | **Ledger of Ages** (`death.ledger-of-ages`, adventure) | 10 | – | shows the next week's event and the armies of the enemy heroes in sight | also of the heroes in towns | lasts a week |
+| 3 | **Raise Dead** (`death.raise-dead`) | 16 | – | after the battle, skeletons worth 15 % of the slain enemies' health join the army (on top of Necromancy) | also once during the battle, from a destroyed stack | each round during the battle |
+| 3 | **Death Ripple** (`death.death-ripple`) | 16 | – | every living stack on the battlefield takes 30 (own too) | 45 | living enemy stacks only |
+| 3 | **Call the Debt** (`death.call-the-debt`) | 18 | curse | an enemy stack takes 50 % of the damage it has dealt this battle | 70 % | 2 stacks |
+| 3 | **Bone Wall** (`death.bone-wall`) | 15 | – | a line of 5 cells of bone, 3 rounds: blocks movement and shots; own undead walk through it | 7 cells | it also deals 20 to a living stack next to it each round |
+| 4 | **Plague** (`death.plague`) | 25 | poison | an enemy stack loses 5 % of its creatures each round, 3 rounds; living only | 2 stacks | all living enemy stacks |
+| 4 | **Vampirism** (`death.vampirism`) | 25 | – | an own stack heals 30 % of the damage it deals and can revive its dead, 3 rounds | 50 % | all own stacks, 30 % |
+| 4 | **Final Reckoning** (`death.final-reckoning`) | 30 | – | every living stack loses 10 % of its creatures (own too; at least 1) | 15 % | living enemy stacks only |
 
 - *Curse*: a debt called in on the field; the Necropolis keeps a ledger of every blade that ever struck it.
 - *Raise Dead*: Necromancers do not raise the dead; they remind the dead that they once fought.
+- *Call the Debt*: the Ashen Court's lawyers say no spell is crueller than an honest account.
+- *Final Reckoning*: every age ends with one; the Necropolis only brings it forward.
 
 ## Chaos (Inferno)
 
-Pact-magic: the demons of the ash beneath the world treat every war as a harvest, and teach the fire to count.
+Pact-magic: the demons of the ash beneath the world treat every war as a harvest, and teach the fire to count. Chaos burns: the strongest
+damage, fire that stays on the field, fury and summoned demons.
 
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
+| Lvl | Spell (id) | Mana | Tags | Rank I | Rank II | Rank III |
 |---|---|---|---|---|---|---|
-| 1 | Fireball (`chaos.fireball`) | 5 | fire | 15 + 8·SP damage to a stack and its neighbours (area 3×3) | area 5×5 | area 5×5, no damage to own stacks |
-| 2 | Terror (`chaos.terror`) | 9 | mind | an enemy stack flees: it cannot attack for 2 rounds, retaliates at half damage | 2 stacks | 3 stacks |
-| 3 | Inferno (`chaos.inferno`) | 16 | fire | 40 + 14·SP damage to a stack, burning for 3 rounds | 2 stacks | 3 stacks, burning stacks take 20 % more damage |
-| 4 | Hellfire (`chaos.hellfire`) | 25 | fire | a column of flame: 60 + 18·SP damage to every stack in a column of the battlefield | 2 columns | all enemy stacks, half damage to own |
+| 1 | **Fireball** (`chaos.fireball`) | 6 | fire | 35 damage to every stack in a 3 × 3 area | 5 × 5 | 5 × 5, own stacks spared |
+| 1 | **Bloodlust** (`chaos.bloodlust`) | 5 | – | an own stack +30 % melee damage, 3 rounds | 2 stacks | all own melee stacks |
+| 1 | **Brand** (`chaos.brand`) | 5 | fire, curse | an enemy stack takes +20 % damage from every attack, 3 rounds | +30 % | 2 stacks |
+| 1 | **Firebolt** (`chaos.firebolt`) | 5 | fire | 45 damage to an enemy stack | 65 | sets it burning: 10 a round, 2 rounds |
+| 1 | **Ashwalk** (`chaos.ashwalk`, adventure) | 5 | – | until the end of the day the hero's army moves on lava, wasteland and cursed lands as native terrain | every terrain | also +10 % movement |
+| 2 | **Terror** (`chaos.terror`) | 9 | mind | an enemy stack flees: it cannot attack, 2 rounds, and retaliates at half | 2 stacks | 3 stacks |
+| 2 | **Frenzy** (`chaos.frenzy`) | 9 | mind | an enemy stack attacks the nearest stack, friend or foe, on its next turn | 2 turns | it also takes +20 % damage while frenzied |
+| 2 | **Fire Wall** (`chaos.fire-wall`) | 10 | fire | a line of 5 burning cells, 3 rounds; a stack entering or starting in it takes 30 | 7 cells | 3 × 5 area |
+| 2 | **Hellgate** (`chaos.hellgate`) | 10 | summon | imps for the battle, 80 health worth | 120 | familiars (they steal 1 enemy hero mana for each own attack) |
+| 2 | **Blood Price** (`chaos.blood-price`) | 0 | – | an own stack loses 10 % of its creatures (at least 1); the hero gains mana equal to the health lost / 5 | / 4 | / 3 |
+| 3 | **Inferno** (`chaos.inferno`) | 16 | fire | 100 damage to a stack, burning 15 a round, 3 rounds | 2 stacks | 3 stacks; burning stacks take +20 % damage |
+| 3 | **Meteor Shower** (`chaos.meteor-shower`) | 18 | – | 70 damage to every stack in a 3 × 3 area | 5 × 5 | the area's cells become rubble (an obstacle) |
+| 3 | **Pact of Ash** (`chaos.pact-of-ash`) | 15 | – | an own stack +5 Attack and +2 speed; it loses 10 % of its creatures at the end of each round, 3 rounds | 5 % | 2 stacks |
+| 3 | **Summon Demons** (`chaos.summon-demons`) | 18 | summon | a stack of demons for the battle, 250 health worth | 350 | they stay with the army after the battle (up to the slots) |
+| 4 | **Hellfire** (`chaos.hellfire`) | 25 | fire | 160 damage to every stack in a column of the battlefield | 2 columns | every enemy stack, half to own |
+| 4 | **Ashfall** (`chaos.ashfall`) | 30 | fire | every stack on the battlefield takes 120 (Armageddon) | 160 | own demons spared |
+| 4 | **Harvest** (`chaos.harvest`) | 25 | – | an enemy stack below 25 % of its starting health is destroyed; else 100 damage | 33 % | 2 stacks |
 
 - *Fireball*: the first thing a demon teaches a mortal, and usually the last the mortal enjoys.
-- *Hellfire*: legend says it does not burn, only reminds the ground that it was once ash.
+- *Blood Price*: no demon gives mana away; it is bought, with the same coin every time.
+- *Ashfall*: the Wheel turning for one battle: everything burns, and the Inferno calls it spring.
 
 ## Shadow (Dungeon)
 
-Dark-elf magic of the lightless places: cut vision, steal footing, and make the enemy afraid of the dark it brought.
+Dark-elf magic of the lightless places: cut vision, steal footing, and make the enemy afraid of the dark it brought. Shadow blinds, misleads
+and takes control; its damage spell ignores armour.
 
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
+| Lvl | Spell (id) | Mana | Tags | Rank I | Rank II | Rank III |
 |---|---|---|---|---|---|---|
-| 1 | Blind (`shadow.blind`) | 5 | blind, mind | an enemy stack cannot see: its shots miss, melee hits halved; breaks when hit | 2 stacks | 3 stacks, does not break |
-| 2 | Shadow Step (`shadow.shadow-step`) | 9 | – | teleport an own stack to a free cell on the battlefield | 2 stacks | the stack can still attack this round |
-| 3 | Despair (`shadow.despair`) | 16 | mind | an enemy stack has −2 morale for the battle | 2 stacks | all enemy stacks, −3 |
-| 4 | Dark Bolt (`shadow.dark-bolt`) | 25 | – | 50 + 16·SP damage, ignores Defense | + a damage over time of 5 + 2·SP per round, 2 rounds | hits 2 stacks |
+| 1 | **Blind** (`shadow.blind`) | 5 | blind, mind | an enemy stack cannot see: it does not act until hit or 2 rounds pass, retaliates at half | 3 rounds | 2 stacks |
+| 1 | **Shroud** (`shadow.shroud`) | 5 | – | an own stack takes −50 % ranged damage and cannot be targeted by spells of level 1, 3 rounds | levels 1–2 | all own stacks |
+| 1 | **Forgetfulness** (`shadow.forgetfulness`) | 5 | mind | an enemy shooting stack forgets how to shoot (melee only), 3 rounds | 2 stacks | all enemy shooters, 2 rounds |
+| 1 | **Shadow Dart** (`shadow.shadow-dart`) | 5 | – | 30 damage to an enemy stack, ignores Defense | 45 | 2 stacks |
+| 1 | **Veil** (`shadow.veil`, adventure) | 5 | – | the hero's army shows only as "a few", "many" … to other players, a week | also its artifacts hidden | its hero hidden on the map from heroes farther than 3 cells |
+| 2 | **Shadow Step** (`shadow.shadow-step`) | 9 | – | moves an own stack to a free cell in shadow (not next to an enemy) | anywhere | the stack can still attack this round |
+| 2 | **Confusion** (`shadow.confusion`) | 9 | mind | an enemy stack moves and attacks at random, 1 round | 2 rounds | 2 stacks |
+| 2 | **Darkness** (`shadow.darkness`) | 10 | – | a 5 × 5 area: shots into or out of it are halved, 3 rounds | 7 × 7 | own stacks inside also +2 Defense |
+| 2 | **Night Terrors** (`shadow.night-terrors`) | 9 | mind | an enemy stack −2 morale and loses retaliation, 2 rounds | 3 rounds | 2 stacks |
+| 2 | **Eavesdrop** (`shadow.eavesdrop`, adventure) | 8 | – | shows the town screen (buildings, garrison, the hero inside) of an enemy town in sight | any enemy town | for a week |
+| 3 | **Despair** (`shadow.despair`) | 16 | mind | an enemy stack −2 morale for the battle | 2 stacks | all enemy stacks, −3 |
+| 3 | **Hypnotize** (`shadow.hypnotize`) | 18 | mind | the caster controls an enemy stack of up to 300 health for its next turn | 450 | 2 turns |
+| 3 | **Eclipse** (`shadow.eclipse`) | 16 | – | every enemy stack −20 % initiative and −1 luck, 2 rounds | 3 rounds | also −2 Attack |
+| 3 | **Unseen** (`shadow.unseen`) | 15 | – | an own stack cannot be targeted by attacks or spells until it acts, 2 rounds | 3 rounds | it deals +25 % damage on its first attack out of hiding |
+| 4 | **Dark Bolt** (`shadow.dark-bolt`) | 25 | – | 140 damage, ignores Defense | + 20 a round for 2 rounds | hits 2 stacks |
+| 4 | **Puppet Master** (`shadow.puppet-master`) | 30 | mind | an enemy stack fights for the caster for 2 rounds (not against its own hero's stacks once it would die) | 3 rounds | up to 600 health; the rest stays on its side |
+| 4 | **Dimension Door** (`shadow.dimension-door`, adventure) | 25 | – | the hero moves up to 6 cells in a straight line to an explored tile, ignoring terrain and objects; once a day | 9 cells | twice a day |
 
 - *Blind*: the Dungeon's oldest trick: the dark is not the absence of light, it is a thing that can be thrown.
 - *Despair*: a dark-elf commander does not need to kill a stack if the stack has already stopped believing.
+- *Puppet Master*: the lightless things the Dungeon serves taught it; nobody asks what they control.
 
-## Shamanism (Stronghold, faction-ability drafts)
+## Stronghold and Swamp Bestiary
 
-> Not a hero school any more (ADR-063): Stronghold has the Primal Fury group, whose Warcry skill reuses War Cry (ADR-067). These spells are drafts to reuse as creature or faction abilities.
+No school and no spells (ADR-063, ADR-072): their heroes use **Primal Fury**, whose **warcries** cost no mana
+([skills.md](skills.md#primal-fury-stronghold-and-swamp-bestiary-adr-067-adr-069-draft-numbers)). The first draft's Shamanism and Primal
+spells are spread out:
 
-Orc rites: no spell books, only drums, bone and ancestors, and a loud confidence that the spirits are on their side.
+| First draft | Now |
+|---|---|
+| Bloodlust (`shamanism.bloodlust`) | Chaos, `chaos.bloodlust` (the Ogre Mage's caster spell) |
+| War Cry (`shamanism.war-cry`) | the Warcry skill's Intimidate (built) |
+| Earthquake (`shamanism.earthquake`) | Nature, `nature.earthquake` (sieges come before 1.0, ADR-099) |
+| Ancestral Spirits, Venom, Mire, Regenerate, Beast Call, Feast | material for the 3-level warcry / totem building (ADR-071, not built) and creature abilities |
 
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
-|---|---|---|---|---|---|---|
-| 1 | Bloodlust (`shamanism.bloodlust`) | 5 | – | an own melee stack deals +30 % damage, 3 rounds | 2 stacks | all own melee stacks, +40 % |
-| 2 | Ancestral Spirits (`shamanism.ancestral-spirits`) | 9 | – | spirits guard an own stack: +4 Defense, 3 rounds | 2 stacks | all own stacks, 5 rounds |
-| 3 | War Cry (`shamanism.war-cry`) | 16 | mind | all enemy stacks −1 morale and their initiative −20 % for 2 rounds | −2 morale | −2 morale, own stacks +1 morale |
-| 4 | Earthquake (`shamanism.earthquake`) | 25 | – | the battlefield shakes: damages every stack for 20 + 8·SP, **and** weakens walls in sieges | a larger tremor, flyers take half | all enemy stacks, 30 % chance to knock each prone (loses its turn) |
+## Creature casters
 
-- *Bloodlust*: the clan drums do not ask whether you want it.
-- *Earthquake*: the clans have survived several turnings by never building anything worth burning, and know exactly how
-  to make others regret building.
-
-## Primal (Swamp Bestiary, faction-ability drafts)
-
-> Not a hero school any more (ADR-063): Swamp Bestiary has the Primal Fury group, like Stronghold (ADR-069; the Adrenaline group is dropped). These spells are drafts to reuse as creature or faction abilities, perhaps for the "Spiritual Totems" name of the Warcry skill (CONT-5).
-
-Beast-cult magic of the drowned lowlands: not spells but invitations, answered by whatever lives in the mire.
-
-| Lvl | Spell | Mana | Tags | Rank I | Rank II | Rank III |
-|---|---|---|---|---|---|---|
-| 1 | Venom (`primal.venom`) | 5 | poison | an enemy stack takes 5 + 3·SP damage a round for 3 rounds; living only | 2 stacks | 3 stacks, 4 rounds |
-| 2 | Mire (`primal.mire`) | 9 | – | a patch of bog on the battlefield: stacks in it have −2 speed, 3 rounds | larger patch | no flying over it, flyers land and slow too |
-| 3 | Regenerate (`primal.regenerate`) | 16 | – | an own stack regenerates fully each round, 3 rounds | 2 stacks | all own stacks |
-| 4 | Beast Call (`primal.beast-call`) | 25 | – | summon a stack of swamp beasts for the battle, strength 20 + 10·SP health | two stacks | three stacks, they persist as a neutral reinforcement for the next battle |
-
-- *Venom*: the cults brew it from what the old-age ruins sank into the mire.
-- *Beast Call*: no one is quite sure the beasts answered a call; some say they were already coming.
-
-## Creature casters and placeholder ids
-
-The creature table already names caster spells (`Caster fireball 1`, …). Some are catalog spells; the rest become
-creature-only abilities when magic arrives ([MAG-1](../project/open-questions.md#mag-1)):
+The creature table names caster spells (`Caster fireball 1`, …; the number is the rank). With this list they become:
 
 | Id in `creatures.csv` | Becomes |
 |---|---|
-| `fireball`, `frost-bolt`, `blind` | `chaos.fireball`, `arcana.frost-bolt`, `shadow.blind` |
-| `bloodlust` | `shamanism.bloodlust` (a faction-ability draft, not a school spell) |
-| `cure` | `light.heal` (rank I) |
-| `resurrection`, `rebirth` | creature-only: raise a stack (rank-limited) |
-| `lightning` | creature-only, tag `lightning` |
-| `confusion`, `death-cloud`, `summon-imps` | creature-only: confuse a stack, a poison cloud, imps for the battle |
+| `fireball`, `frost-bolt`, `blind`, `bloodlust` | `chaos.fireball`, `arcana.frost-bolt`, `shadow.blind`, `chaos.bloodlust` |
+| `cure` | `light.heal` |
+| `lightning` | `nature.call-lightning` |
+| `confusion`, `death-cloud` | `shadow.confusion`, `death.death-cloud` |
+| `resurrection` | `light.resurrection` |
+| `rebirth` (Phoenix), `summon-imps` (Breeder) | creature-only abilities: the Phoenix rises once with 30 % of its stack; the Breeder calls imps like `chaos.hellgate` |
 
-## Adventure spells (proposal)
+## Adventure spells
 
-A few spells are cast on the adventure map, from the hero's spell book, at the cost of mana and a fixed **500 movement points** (ADR-073, MAG-5; a hero with fewer left cannot cast). They belong to a school and follow its levels: level 1–2 at Basic or Advanced magic; **Town Portal and
-Dimension Door are level 4**, so they need Master magic (ADR-071, MAG-5; was level 3).
+Cast on the adventure map from the spell book, for mana and a fixed **500 movement points** (ADR-073, MAG-5; a hero with fewer left cannot
+cast). Each school has two or three, at its levels:
 
-| Spell | School | Level | Mana | Effect |
-|---|---|---|---|---|
-| Town Portal | Arcana | 4 | 25 | the hero returns to the nearest own town |
-| Dimension Door | Shadow | 4 | 25 | the hero moves up to 6 cells in a straight line to an explored tile, ignoring terrain and objects; once a day |
-| View Terrain | Nature | 2 | 9 | reveals the map around the hero (radius 12) until the next turn |
-| Grave Whisper | Death | 2 | 9 | shows the dead of recent battles on the map: the next battle gives +10 % raised skeletons |
-| Distant Vision | Light | 1 | 5 | reveals the creatures and heroes in a region |
-| Feast | Primal (faction-ability draft) | 2 | 9 | the army gets +1 map speed until the next turn |
+| School | Spells |
+|---|---|
+| Light | Distant Vision (1) |
+| Nature | Pathfinder's Call (1), View Terrain (2) |
+| Arcana | Detect Magic (1), Town Portal (4) |
+| Death | Grave Whisper (1), Ledger of Ages (2) |
+| Chaos | Ashwalk (1) |
+| Shadow | Veil (1), Eavesdrop (2), Dimension Door (4) |
 
 ## Open
 
-- Numbers: mana pool, cost scale, damage formulas, durations (play-test with the simulator).
-- Spell tags ([MAG-1](../project/open-questions.md#mag-1)), and which tags creatures resist.
-- Artifacts that raise spell power, knowledge or school skills, see [artifacts.md](artifacts.md).
-- Whether Raise Dead and Beast Call keep summoned creatures across battles.
-- The "a + b·SP" formulas in the tables above predate the Spell Power multiplier (ADR-072: × (1 + SP / 10)); they are rewritten
-  with the spell list (MAG-1).
+- Numbers: costs, base damage and durations, after the visuals (the owner's answer to MAG-1); the simulator checks damage per mana.
+- How a guild picks its spells from the school's list, and the review of this draft: MAG-13 ❓.
+- Summoned creatures' stats (wolves, treants, elementals, imps, demons): reuse creature table rows (neutral or town creatures).

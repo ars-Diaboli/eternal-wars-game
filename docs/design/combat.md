@@ -35,7 +35,7 @@
 
   - **The enemy hero's Tactics reduces yours**: effective level = your level − enemy level (minimum none). At most one
     side can have an effective level above none, and that side chooses. A computer player keeps 30.
-  - **36 wide is reserved for town sieges** (sieges are post-1.0 ❓).
+  - **36 wide is reserved for town sieges** (sieges come before 1.0, ADR-099; rules CMB-11 ❓).
   - Since ADR-069 (built, ADR-078) Tactics also **deploys** troops before the battle and chooses the width only from Advanced.
   - **Deployment** (ADR-072, HERO-4; built, ADR-076): the player may place the troops within the first **4 / 5 / 6 columns** (Basic /
     Advanced / Expert) from their own edge. Only the side with the higher Tactics deploys (a tie: nobody). The player drags stacks
@@ -168,7 +168,7 @@ Every hero owns its town's offensive machine (ballista, cannon, catapult or glai
 and an ammo cart at a blacksmith. They stand at the back of the field, never move or fight in melee, and are lost when
 destroyed. The offensive machine shoots on its turn, outside sieges only from Advanced Ballistics; the tent heals
 every own stack a little each round; the cart adds shots (unlimited with Advanced Ammo supply). Siege Ballistics rules
-exist (ADR-063) but sieges do not.
+exist (ADR-063) but sieges do not yet (before 1.0, ADR-099).
 
 Heroes **exchange** machines in their exchange: one moves to the other hero when it has none in that slot; an offensive machine becomes the
 receiver's town's kind (ADR-070, ADR-083). A town garrison holds machines only through a hero in it (not built: no garrison heroes yet).
@@ -189,4 +189,4 @@ overhang the grid's edge.
 - The hero casts **at most once a round**, during the turn of one of the units the hero controls; machines that fire on
   their own do not count, and spells that change initiative do not change this ([magic.md](magic.md), ADR-070 MAG-4 part,
   Phase 5). Casting does not use that unit's action: it still acts afterwards, as in HoMM3 (ADR-071, MAG-4; not built).
-- **Siege battles** with walls and towers: post-1.0 ❓.
+- **Siege battles** with walls, gate and towers: before 1.0 (ADR-099); the rules are CMB-11 ❓.

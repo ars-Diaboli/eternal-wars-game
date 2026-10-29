@@ -22,7 +22,8 @@ catalogue (their Godot screens still need a run). The week and month events, the
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
 UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, MP-3 and MP-4 still open); CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
-replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. ADR-073's remaining victory conditions
+replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. ADR-099 brings sieges before 1.0
+(CMB-11) and re-drafts the spells and artifacts (MAG-13, CONT-6). ADR-073's remaining victory conditions
 and deadlines are built (ADR-094). Pandora's Box and HotA-like map events with quests (ADR-096) wait for MAP-35 and EVT-1 … EVT-6; the arena mode (ADR-097) for ARN-1 and ARN-2.
 **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
@@ -190,7 +191,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 
 ### Towns: building effects (ADR-066, ADR-067, ADR-070)
 - [x] Fort: unlocks the dwellings; Citadel +50 % / Castle +100 % town growth, rounded down (ADR-066); fortifications wait
-      for sieges (post-1.0)
+      for sieges (before 1.0 since ADR-099)
 - [x] Guard mode per monster stack: map format v13, monster inspector control, old maps converted (ADR-065)
 - [x] Marketplace trading: gold against one resource, rates by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; needs a town marketplace; `TradeResourceCommand`, trading screen (HUD button, town screen; Godot part not run in the editor yet); no AI trading (ADR-067); nothing open (ADR-070)
 - [x] Map marketplace object: a visiting hero trades at the fixed X = 4 rate; map format v14, editor placement, validator; the generator places it as a treasure item where the zone's treasure value allows (ADR-067)
@@ -262,7 +263,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] AI that appoints governors on purpose (ADR-059)
 - [x] The `sim` tool picks a complexity (`sim game --complexity`, ADR-083)
 - [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); needs
-      sieges, post-1.0 (CMB-5)
+      sieges (ADR-099, CMB-11)
 - [x] Skill specialties: the skill's effect +5 % per hero level (ADR-072, ADR-083: Melee, Archery, Logistics, attunement mana)
 - [ ] Skill specialties for Tactics, Blood Rage and Warcry (numbers not set) and Necromancy (ADR-083)
 - [x] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3; ADR-078)
@@ -334,6 +335,10 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Artifact effects that wait for other systems ("Not yet" in the table: mana, spell resistance, regeneration, …)
 - [ ] Editor: inspector rows for hero artifacts and pickups (Godot)
 - [x] Godot: paper-doll and backpack on the hero screen (click to wear / take off, tooltips with effects; no drag and drop, no artifact exchange between heroes yet)
+
+- [ ] Artifact table: the re-draft (ADR-099, [artifacts.md](../content/artifacts.md)): rename the 31 placeholders (ids, names; tests follow),
+      add the rows whose effects exist, "Ashen Court Regalia"; then the new effect kinds with their rows (sight, experience, mana, creature
+      health, Necromancy, growth, no retreat, surrender, war machines, immunities) ❓ CONT-6; the magic ones with Phase 5
 
 ### Game flow
 - [x] Victory and loss conditions (ADR-057): default (defeat every enemy: no towns and no heroes); map-specific
@@ -536,9 +541,12 @@ author templates in the editor.
 ## Phase 5: Content and polish
 
 ### Magic (ADR-047, ADR-063)
-Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spell list).
+Content draft: [spells.md](../content/spells.md), re-drafted (ADR-099): 17 spells a school, base numbers × Spell Power. Open: MAG-13.
 
-- [ ] Spell table (school, level, cost, tags, three ranks; Town Portal and Dimension Door level 4) ❓ MAG-1; mana on heroes is done (ADR-063)
+- [ ] Spell table `data/spells.csv` from the re-draft (school, level, cost, tags, three ranks; adventure spells; final numbers after the
+      visuals); mana on heroes is done (ADR-063)
+- [ ] Guild spell selection (3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3), the extra-school buildings ❓ MAG-13
+- [ ] Summoned creatures (`summon`: vanish after the battle, no experience) ❓ MAG-13
 - [ ] Spell book: mages start with one, warriors buy it for 500 gold in a guild (ADR-071)
 - [ ] Guild offers 3 / 3 / 2 / 2 spells of the town's school per level; a hero learns a spell when the school's Magic skill is at least
       its level (ADR-071)
@@ -551,7 +559,7 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [ ] Area spells: a fixed area; a big creature with any cell inside is hit once (ADR-072)
 - [ ] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
       specialties +3 % of the effect per hero level (ADR-072)
-- [ ] Spell tags and creature caster spells ❓ MAG-1
+- [ ] Spell tags (`holy`, `summon` new) and creature caster spells mapped onto the list (ADR-099)
 
 ### Combat additions
 - [x] Morale and luck (ADR-053): ±5 from creature table and hero (map format v7, editor); per round 2 %/point extra
@@ -566,7 +574,9 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [x] Exchanging war machines between heroes (ADR-070, ADR-083: `GiveWarMachineCommand`, exchange panel, AI)
 - [ ] Towns keep machines only through a garrison hero (waits for garrison heroes); war machine tuning
 - [x] Teleporting creatures move like flyers (ADR-070, ADR-083: `Teleporting` capability; no creature has it yet)
-- [ ] Siege battles (36-wide battlefield, walls 1/2 cover, towers) ❓ post-1.0, CMB-5
+- [ ] Siege battles before 1.0 (ADR-099): a battle at a town with a Fort; 36-wide field, wall sections and gate, keep and towers that
+      shoot, moat, siege catapult, 1/2 cover behind walls; fortifications by Fort / Citadel / Castle (ADR-066) ❓ CMB-11
+- [ ] Sieges: the 3D battle scene (walls, gate, towers, breaches), the AI attacking and defending fortified towns ❓ CMB-11
 - [x] Battle movement as a circle (ADR-088, ADR-089, CMB-9): reach within Speed + 0.25 cells at any angle (Theta* around obstacles),
       flyers and teleporters by straight-line distance, the distance penalty measured the same way, battle speeds +10 %; old replay
       digests change
@@ -583,6 +593,8 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 ### Platform and art
 - [ ] Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)
 - [ ] Look-dev spike: one terrain biome + one creature + lighting setup, to lock the visual target and budget
+- [ ] Smooth fog (ADR-099): a soft fade from the visible to the hidden area; objects half under the fog show their explored part
+      correctly (rendering only; the rules keep cell-by-cell visibility)
 - [ ] Terrain: heightmapped landscape with splat shader and blended biome transitions; grid only as overlay
 - [ ] PBR models for heroes, creatures, towns and map objects; fog/volumetrics
 - [ ] UI theme (HoMM-style right-side panel, status bar)
@@ -593,14 +605,17 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 
 ## LAN multiplayer (ADR-088, ADR-098; before 1.0, after the Phase 3 and 4 exits)
 - [ ] Network layer: host and clients over the LAN; clients send commands, the host runs them and plays the computer players (MP-1)
-- [ ] Per-player view: a client starts from the map's static content; the host sends each client only the state and events it may see
-      (fog), and the client's views draw from that partial state ❓ MP-3
+- [ ] Per-player view: a client starts from the map's static content; the host sends each client only the events it may see (fog);
+      the client keeps a partial copy of the state for its views; under the fog stays as last seen; both sides see a whole battle, others
+      its result (MP-3, ADR-099)
 - [ ] Lobby: LAN discovery and typing an address, map or random map with its options (ADR-086), colours, computer players, the
       simultaneous first week on or off; text chat (MP-1)
 - [ ] Battles between two remote humans, each side live; a player who drops out (pause, the host lets the computer take over or waits
       for a rejoin) (MP-1)
-- [ ] Saves: the host's save resumes in multiplayer; a client's save loads in single player ❓ MP-3
-- [ ] Start zones in the map: the generator writes them, the editor paints them, validator; map format bump ❓ MP-4
+- [ ] Saves: the host's save loads in multiplayer, single player or hot-seat; a client's save (the whole record, sent by the host)
+      loads in single player; replays are the host's record (MP-3, ADR-099)
+- [ ] Start zones in the map: the generator writes them, the editor paints them, validator (touching, overlapping, no start town);
+      map format bump (MP-4, ADR-099)
 - [ ] Simultaneous first week on maps with start zones: conflicts (entering another start zone, touching an object another player touched
       that day, seeing another player's hero) discard the day for everyone, which is played again turn by turn (MP-2, ADR-098)
 - [ ] The turn timer in multiplayer and in simultaneous days: one timer, the day ends when all have ended their turn (FLOW-3, MP-2)

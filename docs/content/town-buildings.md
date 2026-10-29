@@ -51,7 +51,7 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Building | Effect | Status |
 |---|---|---|
 | Village Hall … Capitol | gold income: 500 / 1000 / 2000 / 4000 a day. The **Capitol** (level 4) is one per player: a second one cannot be built, and a captured one drops to City Hall when the captor already has one (ADR-070, ADR-074) | ✅ |
-| Fort | Fort: needed for every dwelling; Citadel: town dwellings grow +50 % (bonus rounded down); Castle: +100 % (`TownRules.WeeklyGrowth`). Sieges: Fort = town wall and gate, Citadel adds a keep, Castle towers and stronger walls (ADR-066) | ✅ dwellings, growth; ⏳ fortifications (sieges post-1.0) |
+| Fort | Fort: needed for every dwelling; Citadel: town dwellings grow +50 % (bonus rounded down); Castle: +100 % (`TownRules.WeeklyGrowth`). Sieges: Fort = town wall and gate, Citadel adds a keep, Castle towers and stronger walls (ADR-066) | ✅ dwellings, growth; ⏳ fortifications (sieges before 1.0, ADR-099) |
 | Blacksmith | sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056) | ✅ |
 | Marketplace | level 2 (Resource Silo): +1 lumber, +1 ore a day; trading gold against resources, rates by the number of marketplace towns (ADR-067, [towns-and-economy.md](../design/towns-and-economy.md#marketplace-implemented-adr-067)) | ✅ silo and trading |
 | Mage Guild | spells of its level, of the town's own school: 3 each at levels 1 and 2, 2 each at levels 3 and 4 (ADR-047, ADR-071); sells a spell book for **500 gold**; a hero in a town with a guild refills its mana (ADR-071); level 4 is a placeholder | ⏳ magic (Phase 5) |
@@ -232,7 +232,7 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 ## Open
 
-- The mage guild 4 stays a placeholder (ADR-070). The fort's fortifications only take effect with sieges (post-1.0, ADR-066).
+- The mage guild 4 stays a placeholder (ADR-070). The fort's fortifications only take effect with sieges (before 1.0 since ADR-099; ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
 - **Per-town names and costs** (ADR-070): the `town` column is built (ADR-074); the only town row so far is the Necropolis's
   Necromancy Amplifier. Designers fill in the other town rows, and every town later gets a unique building.

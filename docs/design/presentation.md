@@ -5,6 +5,8 @@
 - **Art direction**: **grim, dark fantasy** with **realistic lighting and PBR textures**, plus nods to the original
   game (recognisable silhouettes for archetypal creatures and buildings, heraldic player colours, iconic map objects).
   - Lighting: physically based, low sun angles, volumetric fog, strong shadows. Day/night tint per in-game day ❓.
+  - **Fog of war** (ADR-099): a smooth fade from the visible area to the hidden one, never a hard cell edge; an object partly explored (a
+    town or mine at the fog's edge) shows its explored part correctly. Rendering only: the rules keep cell-by-cell visibility.
     Godot Forward+ with SDFGI/VoxelGI or baked lightmaps, to be decided by a perf spike.
   - Palette: desaturated earth tones. Player colours and interactive objects stay saturated so the map remains
     readable in a dark scene (readability pillar).
