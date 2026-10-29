@@ -7,7 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-090, ADR-091): CMB-10 (auto combat, built), UI-1 (speed settings) and FLOW-3 (turn timer, built) answered. Before that (2026-10-28, ADR-088), new
+**Updated 2026-10-29** (ADR-092): new ideas bring FLOW-4 (victory screen and ranking) and UI-2 (replays) ([below](#new-ideas-adr-092-2026-10-29)).
+Before that (ADR-090, ADR-091): CMB-10 (auto combat, built), UI-1 (speed settings) and FLOW-3 (turn timer, built) answered. Before that (2026-10-28, ADR-088), new
 ideas brought CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)); CMB-9 is answered and built (ADR-089).
 Before that (2026-10-26, ADR-079, ADR-080), the sixth round: TOWN-9 … TOWN-11 and MAP-25 … MAP-34 answered and built (the Astrologer's
 Tower waits for the week events). Before that (ADR-077): new ideas (scenery, rivers, flaggable providers, caravans, Thieves' Guild, the third object catalogue) bring
@@ -23,7 +24,7 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 ## 🚧 Blocking now
 
 Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). The ADR-088 questions stop only their own
-roadmap items; MP-1 (a) decides where multiplayer goes in the plan.
+roadmap items, and so do FLOW-4 and UI-2 (ADR-092); MP-1 (a) decides where multiplayer goes in the plan.
 
 ## Heroes
 
@@ -63,29 +64,90 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
+## New ideas (ADR-092, 2026-10-29)
+
+<a id="flow-4"></a>
+**FLOW-4 Victory screen and ranking.** A HoMM3-like score on winning a map that is not campaign-like; ranking tables, separate for random maps
+and shipped maps (ADR-092).
+(a) **Which games count**: how does the game know a map is campaign-like? A flag the editor sets on the map, or worked out (a human player
+starts without a town, ADR-075)? And a game lost, or won by a computer only: no score?
+(b) **Difficulty**: the game has no AI levels yet, only the complexity (starting resources, ADR-063). Is the difficulty the complexity, and
+does "Map default" count as Normal? Does anything else change the score: the number of computer opponents, the map size, the fog mode, the
+turn timer?
+(c) **The score**: HoMM3 gives points for few days, times a difficulty factor (80 % … 200 %). Take that, or another formula?
+(d) **Rank titles**: HoMM3 names each score band after a creature, the best after a dragon. Our own creatures, weakest to strongest?
+(e) **Several humans**: in a hot-seat game each human winner (a team's surviving humans, ADR-083) gets a row? Is a hot-seat game ranked at all?
+(f) **Maps made in the editor** (neither random nor shipped): their own table, the shipped maps' table, or not ranked?
+(g) **The row**: which columns besides the map (the template and size for a random map), the difficulty, the days and the score? The player's
+name (asked on the victory screen), the faction, the date played?
+(h) **The tables**: how many rows (HoMM3 keeps the top 10 or so)? Kept per computer in the user data folder (like the speed settings, ADR-090)?
+Where are they seen: the victory screen (the new row highlighted) and a "High scores" entry in the main menu?
+*Proposal*:
+(a) worked out: a map is campaign-like when a human player starts without a town, and the editor can also mark a map as not ranked; only a
+won game scores;
+(b) the difficulty is the complexity, "Map default" counts as Normal; nothing else changes the score for now;
+(c) HoMM3's: base points = max(10, 200 − days) for maps, the factor by complexity Beginner 80 %, Easy 100 %, Normal 130 %, Hard 160 %, Expert
+200 %;
+(d) yes, 14 bands named after our creatures from the weakest to a dragon;
+(e) each human winner gets a row, hot-seat included;
+(f) the shipped maps' table, marked "custom";
+(g) rank, player name, faction, map or template (with size), difficulty, days, score, title, date;
+(h) the top 20 per table, kept per computer in the user data folder; on the victory screen and under "High scores" in the main menu.
+
+<a id="ui-2"></a>
+**UI-2 Replays and the main menu.** The end screen offers to save the replay; the main menu gets "Watch a replay" (ADR-092).
+(a) **The file**: a replay is the game record a save already is (start map, options, every command, ADR-058). Its own folder and extension
+(`*.ewreplay.json`, as the simulator's), or simply a save named after the game? Offered on every end screen (victory, defeat, draw), or on
+victory only?
+(b) **The main menu**: today the game opens on the new-game screen. A main menu with New game, Load, Watch a replay, High scores, Quit?
+(c) **Whose view**: fog of war hides what the player did not see. Watch through one player's eyes (switchable), or with the whole map revealed?
+(d) **Controls**: play and pause, a speed (the UI-1 steps), jump to the next turn or day? Going back (the game is replayed from the start to
+that day, ADR-058)?
+(e) **Battles**: shown move by move, or only their result unless the viewer opens them? And the computer's turns: shown in full?
+(f) **Take over**: may the viewer stop the replay and play on from there, as from a save?
+(g) **Other content**: a replay made with other creature tables or rules no longer replays the same game (ADR-058 refuses such a save). The
+same error, or replays keep the content they were made with?
+*Proposal*:
+(a) its own folder (`user://replays`) and extension `*.ewreplay.json`; offered on every end screen;
+(b) yes;
+(c) the whole map revealed by default, and a choice of any player's eyes;
+(d) play, pause, the four speeds, next turn, next day; going back to the start of any day;
+(e) battles shown move by move at the battle speed, with "skip to the result"; computer turns in full;
+(f) yes, "Play from here" starts a game at that moment (it is then an ordinary game, not ranked);
+(g) the same error as a save: "made with other content".
+
 ## New ideas (ADR-088, 2026-10-28)
 
 <a id="mp-1"></a>
-**MP-1 LAN multiplayer: scope and model.** (ADR-088) (a) **When**: before 1.0 (after the Phase 3/4 exits, before the campaign), or after 1.0?
+**MP-1 LAN multiplayer: scope and model.** (ADR-088) 
+(a) **When**: before 1.0 (after the Phase 3/4 exits, before the campaign), or after 1.0?
 (b) **Model**: clients send commands to the host; the host checks and runs them with `session.Execute` and sends every accepted command to all
-clients, which run it too (the core is deterministic) and compare `GameStateDigest` now and then. Or the host sends state? (c) **Finding a game**:
-LAN broadcast discovery plus typing an address? (d) **Lobby**: the host picks the map or the template and its options (ADR-086). Each client picks
-a free colour; the host may set the other colours to computer. (e) **A battle between two remote humans**: each controls its own side live?
-(f) **A player who drops out**: the game pauses for everyone, and the host may let the computer take over or wait for a rejoin? (g) **Fog and
-cheating**: every client has the whole state (a modified client could see through the fog). Fine on a LAN? (h) **Saves**: only the host saves;
-the save records which colours were human. Loaded in hot-seat, the player chooses which colours are human. (i) **Chat**: in 1.0 or not?
-*Proposal*: (a) after 1.0 unless you want it sooner. It needs a stable game first, and hot-seat covers playing together until then; (b) commands
-from the host, digest check every turn; (c) yes; (d) yes; (e) yes; (f) pause, then the host chooses; (g) fine on a LAN; (h) yes; (i) a simple
-text chat.
+clients, which run it too (the core is deterministic) and compare `GameStateDigest` now and then. Or the host sends state? 
+(c) **Finding a game**: LAN broadcast discovery plus typing an address? 
+(d) **Lobby**: the host picks the map or the template and its options (ADR-086). Each client picks
+a free colour; the host may set the other colours to computer. 
+(e) **A battle between two remote humans**: each controls its own side live?
+(f) **A player who drops out**: the game pauses for everyone, and the host may let the computer take over or wait for a rejoin? 
+(g) **Fog and
+cheating**: every client has the whole state (a modified client could see through the fog). Fine on a LAN? 
+(h) **Saves**: only the host saves; the save records which colours were human. Loaded in hot-seat, the player chooses which colours are human. 
+(i) **Chat**: in 1.0 or not? 
+*Proposal*: (a) after 1.0 unless you want it sooner. It needs a stable game first, and hot-seat covers playing together until then; 
+(b) commands from the host, digest check every turn; (c) yes; (d) yes; (e) yes; (f) pause, then the host chooses; 
+(g) fine on a LAN; (h) yes; (i) a simple text chat.
 
 <a id="mp-2"></a>
-**MP-2 Simultaneous first week.** (ADR-088) (a) **Start zone** on a hand-made map: maps have no zones. The tiles within some distance of the
-player's start towns, zones painted in the editor, or random maps only? (b) **Conflicts** that end it: entering another player's start zone,
-touching an object another player touched this day, seeing another player's hero? (c) **"Played again in the normal order"**: discard the whole
-day for everyone and replay it turn by turn (the players lose what they did that day), or keep everything done before the conflict and finish
-the day turn by turn from there (proposal)? (d) Is it a lobby option (on or off), and how long: always the first week, or settable (1 to 2
-weeks)? (e) The **turn timer** in simultaneous days: one timer for all, the day ending when everyone ended their turn or the time is up? (f)
-Hot-seat cannot do it (one screen): multiplayer only?
+**MP-2 Simultaneous first week.** (ADR-088) 
+(a) **Start zone** on a hand-made map: maps have no zones. The tiles within some distance of the
+player's start towns, zones painted in the editor, or random maps only? 
+(b) **Conflicts** that end it: entering another player's start zone,
+touching an object another player touched this day, seeing another player's hero? 
+(c) **"Played again in the normal order"**: discard the whole day for everyone and replay it turn by turn 
+(the players lose what they did that day), or keep everything done before the conflict and finish
+the day turn by turn from there (proposal)? 
+(d) Is it a lobby option (on or off), and how long: always the first week, or settable (1 to 2 weeks)? 
+(e) The **turn timer** in simultaneous days: one timer for all, the day ending when everyone ended their turn or the time is up? 
+(f) Hot-seat cannot do it (one screen): multiplayer only?
 *Proposal*: (a) random maps: the template's start zone; hand-made maps: tiles within 10 of a start town until the editor can paint zones; (b)
 entering another start zone or touching an object another player touched that day; (c) keep what was done and finish the day in turn order,
 with the player who caused the conflict last; (d) a lobby option, the first week, on by default; (e) one timer, the day ends when all have

@@ -2162,3 +2162,18 @@ and (d).
   end of the turn, the next turn's full time; off by default and for computer players; a chest gives gold; a level-up waits for the player;
   the front-end holds the end; the clock stops between two humans; a battle against the computer is finished first; saves and replays keep the
   option). Smoke: `game-turn-timer` (1 minute, the hero screen open: the warnings, then Red's turn with the full time).
+
+### ADR-092: Victory screen with a ranking, saved replays and a replay viewer (2026-10-29)
+**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. The open points are FLOW-4 and UI-2 in
+`open-questions.md`, each with a proposal.
+
+- **Victory screen with a score** (FLOW-4): a won game on a map that is **not campaign-like** ends on a HoMM3-like victory screen: the days
+  taken, the difficulty, a score and a rank title. Today's result screen (ADR-057) only says who won and why.
+- **Ranking tables**: the score goes into a table of the best games. **Random maps** and the **maps shipped with the game** have separate
+  tables. A row shows the map's name (the template's for a random map), the difficulty, the days taken, the score and more (FLOW-4).
+- **Save the replay**: the end screen offers to save the game's replay.
+- **Watch a replay** (UI-2): the main menu gets an entry that plays a saved replay back on the map and in battles.
+- Fits the core as it is: a save is already the game's record (the start map, the options and every command, ADR-058), so a replay file is
+  that record, and playing it back is `session.Execute` of each command in turn while the views show the events. The score needs the days
+  taken (`GameState.Date`), the difficulty and how the map was made (`GenerationInfo` for random maps). There is no main menu yet: the game
+  app opens on the new-game screen, with the F10 menu for loading.
