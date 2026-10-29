@@ -148,7 +148,8 @@ the zone includes that column and stacks may use its free cells (confirmed, ADR-
 | Ammo supply | `machines.ammo` | Advanced | cart: +25 % shots | +50 % shots | unlimited shots while the cart stands | – | – | ✅ |
 
 Against a fortification a shot hits 2 times in 3 (always from Expert) and takes 1-2 hit points off a defence structure
-(2-3 at Master); a fully upgraded fortification gives its structures 3 hit points. Placeholders until sieges exist.
+(2-3 at Master); a fully upgraded fortification gives its structures 3 hit points. Placeholders until sieges exist (before 1.0, ADR-099;
+CMB-11).
 
 The tent heals the top creature of every own stack at the start of each round, never reviving. The machines
 themselves (which town has which, stats, prices) are in [hero-roster.md](hero-roster.md#war-machines) and ADR-056.

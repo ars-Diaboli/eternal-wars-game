@@ -1183,7 +1183,7 @@ town). `sim maps` also fails a generated map on validator errors. Changing a tow
   Citadel, 2 with a Castle) and also applies to the week a new dwelling opens with. One rule, `TownRules.WeeklyGrowth(town, line)`, serves `TownService`, the town screen and the AI.
   Dwelling upgrades still do not raise growth (ADR-046).
 - **Map dwellings are unaffected**: `CreatureDwelling` keeps the creature's growth, and caravans hire from it unchanged (ADR-054).
-- **Fortifications are data only until sieges (post-1.0)**: Fort = town wall and gate, Citadel and Castle = better fortifications (proposed HoMM3 progression: a keep, then towers and
+- **Fortifications are data only until sieges (post-1.0; sieges moved before 1.0 by ADR-099)**: Fort = town wall and gate, Citadel and Castle = better fortifications (proposed HoMM3 progression: a keep, then towers and
   stronger walls; decided with sieges). No siege code yet.
 
 ### ADR-067: Marketplace rates, Leadership, a defense initiative skill, the Primal Fury group (2026-10-18)
@@ -2330,3 +2330,33 @@ EVT-1 … EVT-6 in `open-questions.md`, each with a proposal. Reference: the "Ex
 - **Fits the core as it is**: commands and the deterministic core suit a host; fog (`Visibility`) already says what a player sees. New are the
   network layer, a per-player view of the state and of the events (what the views subscribe to on a client), start zones in the map and a way
   back to the start of a day.
+
+### ADR-099: Sieges before 1.0; spells and artifacts re-drafted; clients' view, smooth fog, start zones (2026-10-29)
+**Status**: accepted (2026-10-29), the owner's answers to CMB-5, MAG-1, CONT-3, MP-3 and MP-4; the re-drafts are **content drafts** (docs),
+nothing in code. New questions: CMB-11 (siege rules), MAG-13 (guild selection, spell review), CONT-6 (artifact review).
+
+- **Sieges come before 1.0** (CMB-5; changes ADR-066's and ADR-063's "post-1.0"): a battle at a town with a Fort is a siege on the
+  36-wide field with walls, gate and towers; the Fort, Citadel and Castle fortifications and the siege Ballistics rules (ADR-063) take effect.
+  The rules are CMB-11.
+- **Spells re-drafted** (MAG-1: "draft / update the list according to the lore, with the HoMM3, 4, 5 and Olden Era spell books as reference;
+  final tuning when there are decent visuals"): [spells.md](../content/spells.md) now has **17 spells a school** (5 / 5 / 4 / 3 by level,
+  102 in all), adventure spells included; the 24 first-draft spells keep their ids (hero specialties name them). Base numbers only: Spell
+  Power multiplies them (ADR-072), so the old "a + b·SP" formulas are gone. New tags `holy` and `summon`. The Shamanism and Primal drafts move
+  to Chaos (Bloodlust), Nature (Earthquake, now for sieges), the warcries and creature abilities. Creature caster ids map onto the list.
+  A guild offers fewer spells than a school has, so which ones it offers is MAG-13.
+- **Artifacts re-drafted** (CONT-3: "according to the lore, with the HoMM3, 4, 5 and Olden Era lists"): [artifacts.md](../content/artifacts.md)
+  replaces the 31 HoMM3 placeholders with lore items of the **same slot, tier and effect** (a rename in the table) and adds **23** items with
+  new effect kinds (sight, experience, mana, creature health, school orbs, a spell tome, no retreat, surrender cost, war machines,
+  Necromancy, growth, immunities): 90 in all, 7 sets ("Ash Court Regalia" renamed "Ashen Court Regalia", the lore's name). Crown of the
+  Waning Eye's "best magic skill" is the school with the most skill points, a tie going to the first in ring order from the hero's town.
+  `artifacts.csv` keeps the first draft until the roadmap's re-draft items are built.
+- **Clients' view** (MP-3, all proposals): the client runs no rules and keeps a partial copy of the state, from the events the host sends
+  it; no digest check; what is under the fog stays as last seen; of other players only what the Thieves' Guild and the kingdom overview
+  show; both sides see a whole battle, others only its result where they see it; the host's save loads anywhere (multiplayer, single player,
+  hot-seat); a client's save is the whole record the host sends (fine on a LAN); a replay is the host's full record at the end.
+- **Smooth fog** (the owner's note with MP-3): the fog fades from the visible area to the hidden one, and objects at the edge are drawn
+  correctly when only part of them is explored (a town or a mine half under the fog shows its explored part, not a hard tile cut). For
+  rendering only: the rules keep their cell-by-cell visibility ([presentation.md](../design/presentation.md)).
+- **Start zones** (MP-4, all proposals): the generator writes each player's start zone (the template zone of its start town) into the map;
+  the editor paints one per player (a cell layer, map format bump); the validator warns when zones touch, overlap or miss the player's start
+  town; a step into another player's zone is the conflict.

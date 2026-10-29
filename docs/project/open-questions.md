@@ -7,8 +7,10 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-098): MP-1 and MP-2 (LAN multiplayer) answered; they bring MP-3 (clients that see only their own view)
-and MP-4 (start zones) ([below](#lan-multiplayer-adr-098-2026-10-29)).
+**Updated 2026-10-29** (ADR-099): CMB-5 (sieges before 1.0), MAG-1 and CONT-3 (spells and artifacts re-drafted), MP-3 and MP-4
+answered; new: CMB-11 (siege rules), MAG-13 (guild selection, spell review), CONT-6 (artifact review).
+Before that (ADR-098): MP-1 and MP-2 (LAN multiplayer) answered; they bring MP-3 (clients that see only their own view)
+and MP-4 (start zones).
 Before that (ADR-097), the arena mode brought ARN-1 and ARN-2 ([below](#new-ideas-adr-097-2026-10-29)).
 Before that (ADR-096), new ideas brought MAP-35 (Pandora's Box) and EVT-1 … EVT-6 (map events like HotA's extended events,
 quests) ([below](#new-ideas-adr-096-2026-10-29)).
@@ -30,7 +32,7 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). MP-3 and MP-4 stop only the LAN items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093) and MAP-35, EVT-1 … EVT-6 (ADR-096) and ARN-1, ARN-2 (ADR-097);
+Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). CMB-11 stops only the siege items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093) and MAP-35, EVT-1 … EVT-6 (ADR-096) and ARN-1, ARN-2 (ADR-097);
 EVT-1 (b) and ARN-1 (a) decide where the map events and the arena go in the plan.
 
 ## Heroes
@@ -40,15 +42,41 @@ EVT-1 (b) and ARN-1 (a) decide where the map events and the arena go in the plan
 
 ## Combat
 
-<a id="cmb-5"></a>
-**CMB-5 Sieges** (post-1.0). Confirm sieges come after 1.0; until then the siege Ballistics rules (ADR-063) stay unused.
+<a id="cmb-11"></a>
+**CMB-11 Siege rules** (ADR-099: sieges before 1.0). Decided so far: a Fort gives a wall and a gate, the Citadel a keep, the Castle towers
+and stronger walls (ADR-066); 36 wide is the siege field (ADR-063); walls give 1/2 cover (combat.md); siege Ballistics (ADR-063: the
+machine fires by itself at the fortifications without the skill, 2 hits in 3, 1–2 structure points, 3 points a structure when fully built).
+(a) **When**: every battle at a town with a Fort, whether a hero is inside or only the garrison? A town without a Fort is an ordinary battle?
+(b) **Walls**: how many sections (HoMM3: 4 sections and the gate), their points (2 at Fort, 3 at Castle?), and a broken section is a gap the
+attackers walk through?
+(c) **The gate**: the defenders pass, the attackers break it (as a wall section)?
+(d) **Keep and towers**: the keep (Citadel) and two towers (Castle) shoot once a round each, damage growing with the town's buildings (HoMM3:
+the number of buildings)? Can they be destroyed?
+(e) **Moat**: HoMM3's moat (a creature entering stops and takes damage), with the Citadel? Or none?
+(f) **The catapult**: HoMM3 gives every attacker a free catapult in a siege. Ours: each town has one offensive machine (one of them is the
+catapult, ADR-056). A free siege catapult for every attacker, or only an offensive machine that fires at walls (Ballistics)?
+(g) **Flyers and teleporters** cross the walls; shooters behind the walls get the 1/2 cover; the defender's shooters in towers?
+(h) **The AI**: attacks a fortified town only when its estimate wins against the walls; defends behind them?
+*Proposal*: (a) yes, yes; (b) 4 sections and the gate, 2 points each at Fort, 3 at Castle; a broken section is a gap; (c) yes; (d) yes, the
+keep and towers shoot (base 10 damage + 2 per town building, the keep double), they can be destroyed (3 points); (e) a moat with the Citadel:
+a creature entering it stops and takes 10 % of its health; (f) a free siege catapult (Ballistics drives it), the offensive machine as usual;
+(g) yes, defenders' shooters may stand in the keep (one stack); (h) yes.
 
 ## Magic (Phase 5)
 
-<a id="mag-1"></a>
-**MAG-1 Spell list.** The spells and numbers per school ([spells.md](../content/spells.md)); spell tags beyond `all`, `mind`, `fire`, `curse`,
-`holy`; which spells creature casters get. The Spell Power formula is set for now (ADR-072: damage and duration × (1 + SP / 10)); the
-spells.md tables still use "a + b·SP" and are rewritten with the list.
+<a id="mag-13"></a>
+**MAG-13 Guild selection and the spell list review** (ADR-099). [spells.md](../content/spells.md) has 17 spells a school (5 / 5 / 4 / 3 by
+level); a guild offers 3 / 3 / 2 / 2.
+(a) **Which spells a guild offers**: drawn per town when the game starts from the game's random source (HoMM3), or set by the map (the editor
+may fix them, the rest drawn)?
+(b) **Adventure spells** count as the level's spells in the draw, or does every guild level that has one always offer it (Town Portal in every
+Academy guild 4)?
+(c) **The extra-school buildings** (1 spell per guild level from each neighbouring school): drawn the same way?
+(d) **The list itself**: anything to drop, rename or move (e.g. Earthquake in Nature for sieges, Bloodlust in Chaos, the summons), and the new
+tags `holy` and `summon`?
+(e) **Summoned creatures** (wolves, treants, elementals, imps, demons): reuse creature table rows, or their own rows?
+*Proposal*: (a) drawn at game start, the editor may fix them; (b) counted in the draw; (c) yes; (d) as drafted; (e) existing creature rows
+(Wolf as a new neutral, the Sylvan Treant, Conflux elementals, Inferno Imp and Demon).
 
 ## Game flow and content
 
@@ -62,8 +90,18 @@ spells.md tables still use "a + b·SP" and are rewritten with the list.
 **CONT-2 Roster review.** Names, capabilities and numbers in `creatures.csv`. The size pass is done (ADR-074): 9 Large, the seven dragons and
 the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or none) is decided once there are visuals.
 
-<a id="cont-3"></a>
-**CONT-3 Artifacts.** The draft numbers; HoMM3-style placeholders or lore items; Crown of the Waning Eye's "best magic skill" and ties.
+<a id="cont-6"></a>
+**CONT-6 The artifact re-draft review** (ADR-099). [artifacts.md](../content/artifacts.md): the placeholders renamed to lore items with the
+same effects, 23 new items, 7 sets.
+(a) **Names and flavour**: anything to change?
+(b) **New effect kinds** (sight, experience, mana a day and maximum, creature health, school orbs, spells known while worn, no spells above
+level 2, no retreat, surrender cost, war machines, Necromancy, growth, immunities): all wanted, and in which order?
+(c) **Strong items**: the Unwritten Codex (every level 1–2 spell), the Wellspring Chalice (full mana each turn), the Cloak of Silence and the
+Chain of the Unyielding (rules for both sides), the Banner of the Legion (growth): keep as Relics, make them Major, or drop?
+(d) **Sets**: the two new sets (Shroud of the Last Debt for Necromancy, the Last Grove's Bow for shooters) and the Firstborn regalia (four
+Relics); a set per town instead?
+*Proposal*: (a) as drafted; (b) all, in the order sight, experience, mana, creature health, Necromancy, growth, no retreat, surrender, war
+machines, then the magic ones with Phase 5; (c) keep as Relics, the Cloak and the Chain as Major; (d) as drafted.
 
 <a id="cont-4"></a>
 **CONT-4 More twists.** Which other systems should depart from HoMM3 ([departures.md](../design/departures.md))?
@@ -308,35 +346,6 @@ attunements) keep +5 % per level, or become flat too?
 skill, stacking with the Amplifier; only with the skill;
 (g) +10 % movement on land even without the skill; the other skill specialties keep +5 % per level.
 
-## LAN multiplayer (ADR-098, 2026-10-29)
-
-<a id="mp-3"></a>
-**MP-3 Clients that see only their own view.** (ADR-098) Your MP-1 (g) answer: clients get the map's static content and the host sends each
-one the actual state it may see. MP-1 (b)'s proposal had every client run every command itself and compare state digests, which needs the
-whole state on every client.
-(a) **The model**: the client runs no rules; the host sends each client the events it may see (a hero moving in its sight, its own
-resources, a battle it is in, …) and the client keeps a partial copy of the state for drawing. Agreed, with no digest check (nothing to
-compare)?
-(b) **What a client is told** of what it does not see: nothing (the fog stays as it was last seen, as on a single computer), and of other
-players only what the Thieves' Guild and the kingdom overview show?
-(c) **Battles**: the two sides of a battle see the whole battle; other players see only its result, if they see the place?
-(d) **Saves** (MP-1 h): may the host's save also load in single player and hot-seat (ADR-088)? A client's save, to load in single player,
-needs the whole game: the host sends the whole record when a client saves (the file could then be read to see through the fog), or a client
-cannot save and only the host saves for everyone?
-(e) **Replays** (UI-2): a client's replay is only its own view, or the host's full record at the end?
-*Proposal*: (a) yes; (b) yes; (c) yes; (d) the host's save loads anywhere; a client's save is the whole record sent by the host, fine on a
-LAN with friends; (e) the host's full record at the end of the game.
-
-<a id="mp-4"></a>
-**MP-4 Start zones on maps.** (ADR-098) The simultaneous first week works only on maps that define a start zone for each player (MP-2 a).
-Maps have no zones today.
-(a) **Random maps**: the generator writes each player's start zone (the template zone of its start town) into the map?
-(b) **Hand-made maps**: the editor paints a start zone per player (a cell layer like the terrain, map format bump)?
-(c) **Fair zones**: the validator warns when zones touch, overlap or leave a player without its start town inside?
-(d) **"Entering"**: a hero ends a step inside another player's zone, or a route that would pass through it is refused and the conflict
-comes only when the hero stands in it?
-*Proposal*: (a) yes; (b) yes; (c) yes; (d) a step into it is the conflict.
-
 ## Numbers to tune (not questions)
 Placeholders that wait for play-testing: caravan cost (ADR-054); complexity starting resources (ADR-063); Stewardship and governor percentages
 (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064); building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices
@@ -353,13 +362,15 @@ One line per question; the ADR holds the detail.
   ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
   CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073.
-- **Combat**: grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
+- **Combat**: CMB-5 (sieges before 1.0) ADR-099; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
   morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090.
-- **Magic**: MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
+- **Magic**: MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.
 - **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095.
-- **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098.
+- **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098;
+  MP-3 (clients' view, saves, smooth fog) and MP-4 (start zones) ADR-099.
+- **Content**: CONT-3 (artifacts re-drafted) ADR-099.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091.

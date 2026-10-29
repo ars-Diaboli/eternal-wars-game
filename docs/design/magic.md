@@ -1,6 +1,6 @@
 # Magic
 
-> Part of the [game design](overview.md). Spell catalog: [spells.md](../content/spells.md) (design draft). Open items ❓:
+> Part of the [game design](overview.md). Spell catalog: [spells.md](../content/spells.md) (re-drafted, ADR-099: 17 spells a school). Open items ❓:
 > [open-questions.md](../project/open-questions.md). Casting is Phase 5; mana and the school skills exist.
 
 - **Six schools** (ADR-047, ADR-063), one for each town on the ring: Light (Haven), Nature (Sylvan), Arcana (Academy),
@@ -10,7 +10,8 @@
   Swamp Bestiary's Adrenaline group is dropped). Its warcries replace spells (no mana, ADR-067); its Interference skill
   weakens and raises the cost of the enemy hero's spells. Instead of a mage guild they get a **3-level placeholder
   building** that teaches warcries / spiritual totems (ADR-071, MAG-2; not built).
-- **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice).
+- **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice). Each school has
+  17 spells (5 / 5 / 4 / 3 by level, ADR-099); a guild offers 3 / 3 / 2 / 2 of them (which ones: MAG-13 ❓).
 - **Spell books and learning** (ADR-071, MAG-2; not built): mage heroes start with a spell book; warriors buy one in a mage
   guild for **500 gold**. A hero learns a spell when its school's Magic skill is at least the spell's level. A guild offers
   spells of the town's own school: **3** at each of levels 1 and 2, **2** at each of levels 3 and 4. Two more town buildings
@@ -36,7 +37,7 @@
   - **Shrines** (levels 1–3): teach their spell (set in the editor or rolled at game start) to any hero with the school's
     Magic skill at the spell's level; any number of visits; a hero without the skill or with the spell gets a message.
 - **Spell Power** (ADR-071, MAG-3; not built): multiplies damage spells' damage and buffs' and debuffs' duration, for now
-  **damage × (1 + SP / 10)** and **duration × (1 + SP / 10)** (ADR-072, MAG-1). The spell list itself is still MAG-1.
+  **damage × (1 + SP / 10)** and **duration × (1 + SP / 10)** (ADR-072); the spell list's numbers are base numbers at SP 0 (ADR-099).
 - **Spell specialties** (ADR-072, MAG-6): the spell's effect +3 % per hero level.
 - **Area spells** have a fixed area whatever the target's size; a big creature with any cell inside is hit once (ADR-072, MAG-11).
 - The hero casts **at most once a round** in battle, during the turn of one of the units it controls (machines firing on
@@ -46,6 +47,6 @@
 - Spell resistance and immunity tags exist on creatures and take effect with magic.
 - The hero skill **Spell resistance** cuts hostile spells' damage and duration by **8 / 14 / 20 %** (ADR-071, MAG-6; was
   10 / 15 / 20 %); durations round away from zero, at least 1 round. Not built.
-- **Adventure spells** Town Portal and Dimension Door are **level 4** (ADR-071, MAG-5; [spells.md](../content/spells.md#adventure-spells-proposal)).
+- **Adventure spells** Town Portal and Dimension Door are **level 4** (ADR-071, MAG-5; [spells.md](../content/spells.md#adventure-spells)).
   Casting one costs a fixed **500 movement points** besides its mana, and a hero with fewer left cannot cast (ADR-073); Dimension Door lands only on
   explored tiles (ADR-072, MAG-5).
