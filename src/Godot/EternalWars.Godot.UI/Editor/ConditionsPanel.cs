@@ -15,7 +15,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// How the scenario is won and lost (ADR-057): the default rules (the last team standing wins, no towns and no heroes
 /// means defeat) can be switched off, and special victory and defeat conditions added or removed. Every change goes
 /// through <see cref="MapEditorSession.SetScenarioRules"/>, so it is undoable. The hero limit per player (ADR-068) and the week and month events
-/// (on or off, weeks without events first, the factions whose creatures they pick; ADR-073, ADR-075) are rules too.
+/// (on or off, weeks without events first, the factions whose creatures they pick; ADR-073, ADR-075) are rules too, and so is the map's
+/// difficulty: what a game with "Map default" complexity counts as in the ranking (ADR-101).
 /// </summary>
 public partial class ConditionsPanel : VBoxContainer
 {
@@ -38,6 +39,7 @@ public partial class ConditionsPanel : VBoxContainer
     private readonly CheckBox _elimination = new() { Text = "No towns and no heroes means defeat" };
     private readonly SpinBox _grace = new() { MinValue = 0, MaxValue = 99, Step = 1, Suffix = "days without a town (0 = no countdown)" };
     private readonly SpinBox _maxHeroes = new() { MinValue = 1, MaxValue = ScenarioRules.HeroLimit, Step = 1, Prefix = "at most", Suffix = "heroes per player" };
+    private readonly OptionButton _difficulty = new() { TooltipText = "What a game with \"Map default\" complexity counts as in the ranking" };
     private readonly CheckBox _weekEvents = new() { Text = "Week and month events" };
     private readonly SpinBox _skipWeeks = new() { MinValue = 0, MaxValue = WeekEventSettings.MaxSkipWeeks, Step = 1, Suffix = "week(s) without events at the start" };
     private readonly HFlowContainer _weeklyFactions = new();
@@ -72,6 +74,17 @@ public partial class ConditionsPanel : VBoxContainer
         AddChild(_grace);
         _maxHeroes.ValueChanged += v => Change(r => r with { MaxHeroes = (int)v });
         AddChild(_maxHeroes);
+        _difficulty.AddItem("Difficulty: not set (Normal)", -1);
+        foreach (var level in Enum.GetValues<Complexity>())
+        {
+            _difficulty.AddItem($"Difficulty: {level}", (int)level);
+        }
+
+        _difficulty.ItemSelected += index => Change(r => r with
+        {
+            Difficulty = _difficulty.GetItemId((int)index) is var id and >= 0 ? (Complexity)id : null,
+        });
+        AddChild(_difficulty);
         _weekEvents.Toggled += on => Change(r => r with { WeekEvents = r.WeekEvents with { Enabled = on } });
         AddChild(_weekEvents);
         _skipWeeks.ValueChanged += v => Change(r => r with { WeekEvents = r.WeekEvents with { SkipWeeks = (int)v } });
@@ -177,6 +190,7 @@ public partial class ConditionsPanel : VBoxContainer
         _grace.SetValueNoSignal(rules.GraceDays);
         _grace.Editable = rules.Elimination;
         _maxHeroes.SetValueNoSignal(rules.MaxHeroes);
+        _difficulty.Selected = _difficulty.GetItemIndex(rules.Difficulty is { } difficulty ? (int)difficulty : -1);
         _weekEvents.SetPressedNoSignal(rules.WeekEvents.Enabled);
         _skipWeeks.SetValueNoSignal(rules.WeekEvents.SkipWeeks);
         _skipWeeks.Editable = rules.WeekEvents.Enabled;

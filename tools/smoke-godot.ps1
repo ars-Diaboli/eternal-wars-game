@@ -67,6 +67,10 @@ $scenarios = @(
     # turn so the computer plays its turn.
     @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 90
        Input = '4:click:750,314;8:click:783,428;12:click:765,578;16:click:749,719;20:click:925,578;24:click:925,638;28:click:798,648;45:key:K;55:key:Escape;60:click:342,24' },
+    # The main menu (ADR-101), by keyboard: two Downs skip the disabled items to Leaderboard, Enter opens it, Escape returns, Enter on
+    # New game, Enter on Start. The only game scenario without --new-game.
+    @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 50; MainMenu = $true
+       Input = '3:key:Down;6:key:Down;9:key:Enter;20:key:Escape;26:key:Enter;34:key:Enter' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' },
     # Generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
@@ -86,6 +90,8 @@ foreach ($scenario in $scenarios | Where-Object { $_.Name -like $Only }) {
     Remove-Item $settings -ErrorAction SilentlyContinue
     $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings")
     if ($scenario.Map) { $userArgs += "--map=$($scenario.Map)" }
+    # The game opens on the main menu; the scenarios start on the new-game screen unless they test the menu.
+    if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu) { $userArgs += '--new-game' }
 
     $log = & $Godot --path (Join-Path $root "src/Apps/$($scenario.App)") --write-movie (Join-Path $dir 'frame.png') `
         --fixed-fps 10 --quit-after $scenario.Frames -- @userArgs 2>&1 | Out-String

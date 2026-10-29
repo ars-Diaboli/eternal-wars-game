@@ -34,11 +34,12 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>garrison</c>, optional owner and troops; ADR-082); the undead bank <c>bank.ruins</c> is <c>bank.crypt</c> (older ids still load).
 /// 24 = + week and month events (<c>rules.weekEvents</c>: on or off, weeks skipped, factions; omitted = the default) and the Astrologer's Tower
 /// (<c>astrologersTower</c>; ADR-084). 25 = + conditions to capture a map object, obtain or lose an artifact and release a prisoner, and deadlines
-/// on victory conditions (<c>target</c>, <c>artifact</c>, <c>deadline</c>; ADR-094). Older versions still load (with the default events).
+/// on victory conditions (<c>target</c>, <c>artifact</c>, <c>deadline</c>; ADR-094). 26 = + the map's difficulty (<c>rules.difficulty</c>, the
+/// complexity the map's starting resources stand for in the ranking; omitted = Normal; ADR-101). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 25;
+    public const int CurrentFormatVersion = 26;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -86,6 +87,7 @@ public sealed record MapDocument
 /// <see cref="Elimination"/> (no towns and no heroes: out) are on unless set to false; <see cref="GraceDays"/> omitted = 7
 /// (the days a player that lost its last town has to own one again; 0 = no countdown). <see cref="MaxHeroes"/> (v15) omitted = 8
 /// (the most heroes a player may have at once). <see cref="WeekEvents"/> (v24) omitted = the default week and month events.
+/// <see cref="Difficulty"/> (v26) omitted = none (the ranking counts "Map default" as Normal).
 /// </summary>
 public sealed record ScenarioRulesDocument(
     IReadOnlyList<ConditionDocument>? Victory = null,
@@ -94,7 +96,8 @@ public sealed record ScenarioRulesDocument(
     bool Elimination = true,
     int? GraceDays = null,
     int? MaxHeroes = null,
-    WeekEventsDocument? WeekEvents = null);
+    WeekEventsDocument? WeekEvents = null,
+    Complexity? Difficulty = null);
 
 /// <summary>
 /// Week and month events (v24, ADR-073, ADR-075): <see cref="Enabled"/> false turns them off; <see cref="SkipWeeks"/> (0–8, omitted = 1) weeks pass

@@ -100,10 +100,11 @@ Any command takes `--creatures path.csv`.
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
 - Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
   (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `game-town-screen`,
-  `game-hero-screen`, `game-kingdom`, `game-weeks`, `game-thieves-guild`, `game-random-map`, `editor-tools`, `editor-generate`, `editor-week-events`)
+  `game-hero-screen`, `game-kingdom`, `game-weeks`, `game-thieves-guild`, `game-random-map`, `game-main-menu`, `editor-tools`, `editor-generate`, `editor-week-events`)
   and saves frames to `.shots/`. In a fresh clone import the assets once per app first
   (`<Godot console exe> --headless --path src/Apps/<App> --import`), or every texture load fails. A passing run only means
-  no errors: look at the frames too. The game scenarios start with `key:Enter` (the Start button has the focus), so they
+  no errors: look at the frames too. The game opens on the main menu; the game scenarios pass `--new-game` to open on the new-game
+  screen (all but `game-main-menu`) and start with `key:Enter` (the Start button has the focus), so they
   do not depend on the new-game screen's layout. Smoke maps live in `tools/smoke/`; `SmokeMapTests` checks that they still do what the
   scripts expect.
 - CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` + `sim selftest` on every push to main and on PRs,

@@ -28,6 +28,9 @@ public static class LaunchArguments
     /// <summary>An artifact set table to use instead of the shipped one (<see cref="GameContent.Artifacts"/>).</summary>
     public static string? ArtifactSetsPath => Value("--artifact-sets=");
 
+    /// <summary><c>--new-game</c>: the game opens on the new-game screen instead of the main menu (the smoke scripts, a map tried from the editor).</summary>
+    public static bool NewGame => OS.GetCmdlineUserArgs().Contains("--new-game");
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 

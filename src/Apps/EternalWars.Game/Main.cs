@@ -27,11 +27,11 @@ using Godot;
 namespace EternalWars.Game;
 
 /// <summary>
-/// Game entry point: the new-game screen, then a <see cref="GameSession"/> wired to the 3D world view and the
+/// Game entry point: the main menu (ADR-101) and the new-game screen, then a <see cref="GameSession"/> wired to the 3D world view and the
 /// HUD. This class only composes and maps input to commands; all rules live in core.
 /// </summary>
 /// <remarks>
-/// Mouse: click an own hero to select it, click a tile to preview the route (markers coloured by day), click the
+/// Run with <c>-- --new-game</c> to open on the new-game screen. Mouse: click an own hero to select it, click a tile to preview the route (markers coloured by day), click the
 /// same tile again to go; right-click clears the preview. Keys: arrows/numpad step, Tab next hero, T next town (the town screen; Escape closes it), L switches
 /// level, WASD/QE/wheel camera. Run with <c>-- --map=&lt;path&gt;</c> to offer an editor map first.
 /// Battles open the 3D battle scene (<see cref="BattleView3D"/>): point at a cell to preview, click to move, attack (from
@@ -44,6 +44,11 @@ public partial class Main : Node3D
 
     private const string SavesFolder = "user://saves";
 
+    private const string ReplaysFolder = "user://replays";
+
+    /// <summary>The maps that ship with the game (by name); every other hand-made map is "custom" in the ranking (ADR-101).</summary>
+    private static readonly HashSet<string> ShippedMaps = ["Demo Valley", "Two Towns"];
+
     private GameSession _session = null!;
     private Node3D? _game;
     private MapDocument _initialMap = null!;
@@ -54,6 +59,12 @@ public partial class Main : Node3D
     /// <summary>The last map the new-game screen had generated and how; used when that is the state the game starts with.</summary>
     private (GameState State, GenerationInfo Info)? _lastGenerated;
     private GameMenuPanel _menu = null!;
+
+    /// <summary>The layer of the main menu, the new-game screen and the leaderboard; null during a game.</summary>
+    private CanvasLayer? _setup;
+
+    /// <summary>What Escape does on the screen shown in <see cref="_setup"/>.</summary>
+    private Action? _setupBack;
     private string _saveFolder = "";
     private bool _turnBegan;
     private AdventureAi? _ai;
@@ -77,6 +88,9 @@ public partial class Main : Node3D
     private TurnTimer? _timer;
     private TurnTimerPanel? _timerPanel;
     private GameResultPanel _result = null!;
+
+    /// <summary>The session last put into the ranking, so a game is entered once.</summary>
+    private GameSession? _rankedSession;
     private HeroId? _selectedHero;
     private string _settingsPath = "";
     private SpeedSettings _speeds = SpeedSettings.Default;
@@ -96,20 +110,102 @@ public partial class Main : Node3D
 
         _saveFolder = ProjectSettings.GlobalizePath(SavesFolder);
         BuildMenu();
+        if (LaunchArguments.NewGame)
+        {
+            ShowNewGame();
+        }
+        else
+        {
+            ShowMainMenu();
+        }
+    }
 
-        var layer = new CanvasLayer { Name = "Setup" };
-        AddChild(layer);
-        var center = new CenterContainer { AnchorRight = 1, AnchorBottom = 1 };
-        layer.AddChild(center);
+    // The main menu and the screens before a game (ADR-101, UI-2) ---------------------------------------
+
+    /// <summary>The main menu; a game being played is left (its autosave stays).</summary>
+    private void ShowMainMenu()
+    {
+        LeaveGame();
+        var menu = new MainMenuScreen();
+        ShowSetup(menu, back: null);
+        menu.NewGameRequested += ShowNewGame;
+        menu.LoadRequested += _menu.Open;
+        menu.LeaderboardRequested += ShowLeaderboard;
+        menu.QuitRequested += () => GetTree().Quit();
+    }
+
+    private void ShowNewGame()
+    {
         var setup = new NewGameScreen();
-        center.AddChild(setup);
+        ShowSetup(setup, back: ShowMainMenu);
         setup.Bind(Scenarios(), RandomMaps(), town => StartSlots.Heroes(GameContent.Heroes, town));
+        setup.BackRequested += ShowMainMenu;
         setup.Started += state =>
         {
-            layer.QueueFree();
+            CloseSetup();
             _generated = _lastGenerated is { } last && ReferenceEquals(last.State, state) ? last.Info : null;
             StartGame(state);
         };
+    }
+
+    private void ShowLeaderboard()
+    {
+        var board = new LeaderboardPanel();
+        ShowSetup(board, back: ShowMainMenu);
+        var ranking = RankingFile.Load(Path.Combine(ProjectSettings.GlobalizePath("user://"), RankingFile.FileName));
+        var none = new HashSet<int>();
+        board.Bind([RankingViewOf(RankingTable.Maps, ranking.Maps, none), RankingViewOf(RankingTable.RandomMaps, ranking.RandomMaps, none)]);
+        board.BackRequested += ShowMainMenu;
+    }
+
+    /// <summary>Puts a screen in the middle of the setup layer in place of the one shown; Escape does <paramref name="back"/> (none on the main menu).</summary>
+    private void ShowSetup(Control screen, Action? back)
+    {
+        if (_setup is null)
+        {
+            _setup = new CanvasLayer { Name = "Setup" };
+            AddChild(_setup);
+        }
+
+        foreach (var child in _setup.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        var center = new CenterContainer { AnchorRight = 1, AnchorBottom = 1 };
+        _setup.AddChild(center);
+        center.AddChild(screen);
+        _setupBack = back;
+    }
+
+    private void CloseSetup()
+    {
+        _setup?.QueueFree();
+        _setup = null;
+        _setupBack = null;
+    }
+
+    /// <summary>Takes the game being played down: its world, HUD and screens. Nothing runs until a new game or a load builds them again.</summary>
+    private void LeaveGame()
+    {
+        _menu.Close();
+        _menu.CanSave = false;
+        if (_game is null)
+        {
+            return;
+        }
+
+        _game.QueueFree();
+        _game = null;
+        _context = null!;
+        _status = null!;
+        _ai = null;
+        _timer = null;
+        _timerPanel = null;
+        _autoCombat = null;
+        _selectedHero = null;
+        _turnToShow = null;
+        _followed = null;
     }
 
     /// <summary>
@@ -165,6 +261,13 @@ public partial class Main : Node3D
         if (@event is InputEventKey { Pressed: true, Echo: false } hotkey && HandleSaveKey(hotkey.Keycode))
         {
             GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && _setupBack is { } back && !_menu.Visible)
+        {
+            GetViewport().SetInputAsHandled();
+            back();
             return;
         }
 
@@ -384,6 +487,7 @@ public partial class Main : Node3D
             GameSaves.Delete);
         _menu.SaveRequested += name => Save(name);
         _menu.LoadRequested += Load;
+        _menu.MainMenuRequested += ShowMainMenu;
         _menu.Opened += () => _menu.ShowAutoCombat(
             AutoCombatSettingPlayer() is { } player ? _session.State.GetPlayer(player).Name : null,
             AutoCombatSettingPlayer() is { } shown ? (int)_session.State.GetPlayer(shown).AutoCombat : 0);
@@ -516,7 +620,7 @@ public partial class Main : Node3D
         {
             var (session, record) = GameSaves.Load(
                 path, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts);
-            GetNodeOrNull("Setup")?.QueueFree();
+            CloseSetup();
             _menu.Close();
             _generated = record.Generated;
             BeginGame(session, record.Map, resume: true);
@@ -798,6 +902,8 @@ public partial class Main : Node3D
         _game!.AddChild(layer);
         _result = new GameResultPanel();
         layer.AddChild(_result);
+        _result.Bind(EnterRanking, SaveReplay);
+        _result.MainMenuRequested += ShowMainMenu;
 
         _game.SubscribeWhileInTree<PlayerDefeated>(_session.Events, e =>
             _status.Text = $"{_session.State.GetPlayer(e.Player).Name} is defeated: {e.Reason}");
@@ -826,6 +932,73 @@ public partial class Main : Node3D
         if (_session.State.Outcome is { } outcome)
         {
             _result.ShowOutcome(_session.State, outcome);
+        }
+    }
+
+    /// <summary>
+    /// Puts the finished game into the ranking in the user data folder (ADR-101) under the names the winners typed; the table it went into, with
+    /// its rows highlighted, or null when no row made it. A session is entered once.
+    /// </summary>
+    private RankingView? EnterRanking(IReadOnlyDictionary<PlayerId, string> names)
+    {
+        if (ReferenceEquals(_rankedSession, _session))
+        {
+            return null;
+        }
+
+        _rankedSession = _session;
+        var folder = ProjectSettings.GlobalizePath("user://");
+        try
+        {
+            var record = GameReplay.Record(_initialMap, _session, generated: _generated);
+            var places = RankingFile.AddGame(
+                folder, record, _session.State, custom: !ShippedMaps.Contains(_initialMap.Name), DateTimeOffset.UtcNow,
+                id => names.TryGetValue(id, out var name) ? name : _session.State.GetPlayer(id).Name);
+            if (places.Count == 0)
+            {
+                return null;
+            }
+
+            var table = places[0].Table;
+            var rows = RankingFile.Load(Path.Combine(folder, RankingFile.FileName))[table];
+            return RankingViewOf(table, rows, places.Select(p => p.Row).ToHashSet());
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _status.Text = $"Could not write the ranking: {e.Message}";
+            return null;
+        }
+    }
+
+    /// <summary>A ranking table as the victory screen and the leaderboard show it; <paramref name="highlight"/> are the rows to mark.</summary>
+    private static RankingView RankingViewOf(RankingTable table, IReadOnlyList<RankingEntry> rows, IReadOnlySet<int> highlight) => new(
+        table == RankingTable.RandomMaps ? "Random maps" : "Maps",
+        rows.Select((e, i) => new RankingRowView(
+            i + 1, e.Player, FactionName(e.Faction), MapLabel(e), e.Difficulty.ToString(), e.Days, e.Score, e.Title,
+            LocalTime(e.Date), highlight.Contains(i))).ToList());
+
+    private static string MapLabel(RankingEntry e) =>
+        e.Template is { } template ? $"{template} {e.Size}×{e.Size}" : e.Custom ? $"{e.Map} (custom)" : e.Map;
+
+    private static string FactionName(string town) =>
+        MapObjectCatalog.Default.TryGet(BuiltInMapObjects.TownId(town), out var definition) ? definition.Name : town;
+
+    /// <summary>"Save replay" on the end screen (ADR-101): the game's record in <c>user://replays</c>.</summary>
+    private string SaveReplay(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            name = $"{_initialMap.Name} day {_session.State.Date.AbsoluteDay}";
+        }
+
+        try
+        {
+            var path = GameSaves.SaveReplay(ProjectSettings.GlobalizePath(ReplaysFolder), name, _initialMap, _session, _generated);
+            return $"Replay saved as {Path.GetFileName(path)}.";
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            return $"Could not save the replay: {e.Message}";
         }
     }
 

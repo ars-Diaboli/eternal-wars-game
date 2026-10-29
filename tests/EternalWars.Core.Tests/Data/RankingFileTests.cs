@@ -163,6 +163,24 @@ public sealed class RankingFileTests : IDisposable
     }
 
     [Fact]
+    public void SaveReplay_WritesTheGameUnderTheNameGiven()
+    {
+        var state = Create("A.B", "...");
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10));
+        var initial = MapConverter.ToDocument(state);
+        var session = Start(state, revealAll: false);
+        session.MoveTo(A, new EternalWars.Core.Domain.Common.MapPosition(2, 0));
+        session.AutoResolve();
+
+        var path = GameSaves.SaveReplay(_folder, "My/win day 1", initial, session);
+
+        Assert.Equal("My_win day 1" + GameRecordSerializer.FileExtension, Path.GetFileName(path));
+        var record = GameRecordSerializer.Load(path);
+        Assert.Null(record.Save);
+        Assert.True(GameReplay.Replay(record).State.IsOver);
+    }
+
+    [Fact]
     public void AGameThatDoesNotMakeTheTable_WritesNothing()
     {
         var (record, finished) = WonGame();

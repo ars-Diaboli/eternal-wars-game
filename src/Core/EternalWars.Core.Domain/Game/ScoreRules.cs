@@ -54,8 +54,11 @@ public static class ScoreRules
     public static bool IsRanked(GameState state) =>
         state.IsStarted && state.Players.Where(p => p.TookPart && p.IsHuman).All(p => p.StartTown is not null);
 
-    /// <summary>The difficulty a game counts as: its complexity; "Map default" (none chosen) counts as Normal.</summary>
-    public static Complexity Difficulty(GameOptions options) => options.Complexity ?? Complexity.Normal;
+    /// <summary>
+    /// The difficulty a game counts as: its complexity; with "Map default" (none chosen), the map's difficulty (<see cref="ScenarioRules.Difficulty"/>),
+    /// Normal when the map sets none.
+    /// </summary>
+    public static Complexity Difficulty(GameState state) => state.Options.Complexity ?? state.Rules.Difficulty ?? Complexity.Normal;
 
     /// <summary>The difficulty factor in percent (HoMM3's): Beginner 80, Easy 100, Normal 130, Hard 160, Expert 200.</summary>
     public static int DifficultyPercent(Complexity difficulty) => difficulty switch
@@ -94,7 +97,7 @@ public static class ScoreRules
             return [];
         }
 
-        var difficulty = Difficulty(state.Options);
+        var difficulty = Difficulty(state);
         var timer = state.Options.TurnTimerMinutes;
         var days = outcome.Date.AbsoluteDay;
         var score = Score(days, difficulty, timer);

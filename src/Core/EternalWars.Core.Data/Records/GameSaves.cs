@@ -93,6 +93,20 @@ public static class GameSaves
     }
 
     /// <summary>
+    /// Writes the session's replay (ADR-101: "Save replay" on an end screen) as <paramref name="name"/><c>.ewreplay.json</c> in
+    /// <paramref name="folder"/>, replacing one of that name; the same record as a save, without the save label.
+    /// </summary>
+    public static string SaveReplay(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null)
+    {
+        var path = Path.Combine(folder, Sanitize(name) + GameRecordSerializer.FileExtension);
+        Directory.CreateDirectory(folder);
+        var temp = path + ".tmp";
+        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, generated: generated), temp);
+        File.Move(temp, path, overwrite: true);
+        return path;
+    }
+
+    /// <summary>
     /// Replays a saved game to where it was saved; the session is started and mid-battle if it was saved there. Throws
     /// <see cref="InvalidOperationException"/> when the content has changed since (the digest differs) and
     /// <see cref="FormatException"/>/<see cref="System.Text.Json.JsonException"/> for damaged files.

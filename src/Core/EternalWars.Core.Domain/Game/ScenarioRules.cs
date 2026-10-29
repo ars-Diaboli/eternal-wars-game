@@ -131,8 +131,14 @@ public sealed record ScenarioRules(
     /// <summary>The week and month events (ADR-073, ADR-075): on by default, from the second week, creatures of the playable towns.</summary>
     public Turns.WeekEventSettings WeekEvents { get; init; } = Turns.WeekEventSettings.Default;
 
+    /// <summary>
+    /// The difficulty the map's own starting resources stand for (ADR-101): what a game with "Map default" complexity counts as in the ranking.
+    /// Null counts as Normal. It changes no rule (the AI plays the same at every difficulty).
+    /// </summary>
+    public Complexity? Difficulty { get; init; }
+
     public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays
-        && MaxHeroes == HeroLimit && WeekEvents.IsDefault;
+        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null;
 
     /// <summary>Whether a scenario with these rules can be won at all.</summary>
     public bool CanBeWon => StandardVictory || Victory.Count > 0;

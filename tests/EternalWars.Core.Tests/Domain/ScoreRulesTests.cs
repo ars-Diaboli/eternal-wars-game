@@ -48,10 +48,29 @@ public class ScoreRulesTests
         Assert.Equal(expected, ScoreRules.Score(days, difficulty, timer));
 
     [Fact]
-    public void MapDefault_CountsAsNormal()
+    public void MapDefault_CountsAsTheMapsDifficultyOrNormal()
     {
-        Assert.Equal(Complexity.Normal, ScoreRules.Difficulty(GameOptions.Default));
-        Assert.Equal(Complexity.Hard, ScoreRules.Difficulty(new GameOptions(Complexity: Complexity.Hard)));
+        Assert.Equal(Complexity.Normal, ScoreRules.Difficulty(Duel()));
+        Assert.Equal(Complexity.Hard, ScoreRules.Difficulty(Duel(new GameOptions(Complexity: Complexity.Hard))));
+        Assert.Equal(Complexity.Expert, ScoreRules.Difficulty(Duel(adjust: s => s.SetRules(s.Rules with { Difficulty = Complexity.Expert }))));
+    }
+
+    [Fact]
+    public void AChosenComplexity_OverridesTheMapsDifficulty()
+    {
+        var state = Duel(new GameOptions(Complexity: Complexity.Easy), s => s.SetRules(s.Rules with { Difficulty = Complexity.Expert }));
+
+        Assert.Equal(Complexity.Easy, ScoreRules.Difficulty(state));
+    }
+
+    [Fact]
+    public void TheMapsDifficulty_CountsInTheScore()
+    {
+        var state = Won(Duel(adjust: s => s.SetRules(s.Rules with { Difficulty = Complexity.Beginner })));
+
+        var score = Assert.Single(ScoreRules.Scores(state));
+        Assert.Equal(Complexity.Beginner, score.Difficulty);
+        Assert.Equal(159, score.Score); // 199 × 0.8
     }
 
     [Fact]
