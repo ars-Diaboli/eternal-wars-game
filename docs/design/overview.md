@@ -32,8 +32,8 @@ battles) and deliberately change systems where we can add identity. Every twist 
 The 3D presentation is meant to **add atmosphere without hurting readability**: the camera, map and
 battles must stay as legible as HoMM3's hand-painted 2D.
 
-**Modes, in priority order**: single-player vs AI → hot-seat → story campaign. **LAN multiplayer** is planned (ADR-088; when is
-MP-1 ❓); the deterministic core makes it possible. Online play over the internet stays out of scope.
+**Modes, in priority order**: single-player vs AI → hot-seat → story campaign. **LAN multiplayer** is planned before 1.0 (ADR-088,
+ADR-098): the host runs the game and clients see only their own view. Online play over the internet stays out of scope.
 
 ## 2. Pillars
 

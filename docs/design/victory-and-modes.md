@@ -47,11 +47,14 @@
 - **Arena** (ADR-097, planned; the rules: ARN-1, ARN-2 ❓): as in HotA, one battle decides the game. Day 1 is preparation (unlimited
   movement and building, objects show what they hold); at the start of day 2 each side's strongest hero is moved to a **combat place** and
   they fight; the winner wins the game. An arena map has no victory or loss conditions; it is not ranked.
-- **LAN multiplayer** (ADR-088, planned; when and how: MP-1 ❓): the host is the source of truth. Players pick a map or generate a random one
-  when they create the game. A multiplayer save loads in multiplayer, single player (the player picks one of the colours that were human,
-  the computer plays the rest) or hot-seat. The first week may be played **simultaneously** while players stay in their start zones and do
-  not touch the same object; when that breaks, the turn is played again in the normal order (MP-2 ❓). Online play over the internet is
-  not planned.
+- **LAN multiplayer** (ADR-088, ADR-098, planned before 1.0; open: MP-3, MP-4 ❓): the **host** runs the game and the computer players;
+  clients send commands. A client starts with the map's static content and gets from the host only what it may see, so it cannot see through
+  the fog. The host creates the game in a lobby (LAN discovery or an address; the map or a random map and its options; colours; computer
+  players); a battle between two remote humans is played live by both; a player who drops out pauses the game until the host lets the
+  computer take over or the player rejoins; a text chat. The host's save resumes in multiplayer, a client's save loads in single player.
+  The **first week may be played simultaneously** (the host's choice) on maps that define start zones: a hero entering another player's
+  zone, touching an object another player touched that day, or seeing another player's hero discards that whole day for everyone, and the
+  day is played again turn by turn. One turn timer for all; multiplayer only. Online play over the internet is not planned.
 
 ## Game options
 Chosen on the new-game screen: map or template, players and teams (**2 to 8 teams**, 8 = free for all; the map or template
