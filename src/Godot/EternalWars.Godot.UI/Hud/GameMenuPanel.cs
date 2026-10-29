@@ -21,6 +21,7 @@ public partial class GameMenuPanel : CenterContainer
     private readonly Button _save = new() { Text = "Save" };
     private readonly Button _load = new() { Text = "Load" };
     private readonly Button _delete = new() { Text = "Delete" };
+    private readonly Button _mainMenu = new() { Text = "Main menu", TooltipText = "Leave the game; the autosave keeps the start of this turn", Visible = false };
     private readonly HBoxContainer _autoCombatRow = new() { Visible = false };
     private readonly Label _autoCombatLabel = new();
     private readonly OptionButton _autoCombat = new();
@@ -48,7 +49,10 @@ public partial class GameMenuPanel : CenterContainer
     /// <summary>The player changed a speed setting (the app keeps it in the settings file and applies it).</summary>
     public event Action<SpeedSettings>? SpeedsChanged;
 
-    /// <summary>Whether there is a running game to save (false on the new-game screen).</summary>
+    /// <summary>The player asked to leave the game for the main menu (offered only in a game).</summary>
+    public event Action? MainMenuRequested;
+
+    /// <summary>Whether there is a running game to save or leave (false on the main menu and the new-game screen).</summary>
     public bool CanSave
     {
         get => _canSave;
@@ -57,6 +61,7 @@ public partial class GameMenuPanel : CenterContainer
             _canSave = value;
             _save.Disabled = !value;
             _name.Editable = value;
+            _mainMenu.Visible = value;
         }
     }
 
@@ -87,6 +92,8 @@ public partial class GameMenuPanel : CenterContainer
         var close = new Button { Text = "Close (Esc)" };
         close.Pressed += Close;
         actions.AddChild(close);
+        _mainMenu.Pressed += () => MainMenuRequested?.Invoke();
+        actions.AddChild(_mainMenu);
         rows.AddChild(actions);
         rows.AddChild(_message);
 

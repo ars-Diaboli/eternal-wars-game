@@ -70,6 +70,9 @@ public partial class NewGameScreen : PanelContainer
 
     public event Action<GameState>? Started;
 
+    /// <summary>The player asked to go back to the main menu (Back, or Escape, which the app maps).</summary>
+    public event Action? BackRequested;
+
     /// <summary>Binds the maps, the random map templates and the heroes a player of a town can pick (for the templates' hero choice).</summary>
     public void Bind(IReadOnlyList<ScenarioChoice> choices, IReadOnlyList<RandomMapChoice>? templates = null, Func<string, IReadOnlyList<HeroDefinition>>? heroesOf = null)
     {
@@ -129,7 +132,13 @@ public partial class NewGameScreen : PanelContainer
 
         box.AddChild(_players);
         _start.Pressed += Start;
-        box.AddChild(_start);
+        var buttons = new HBoxContainer();
+        _start.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        buttons.AddChild(_start);
+        var back = new Button { Text = "Back (Esc)" };
+        back.Pressed += () => BackRequested?.Invoke();
+        buttons.AddChild(back);
+        box.AddChild(buttons);
         _start.CallDeferred(Control.MethodName.GrabFocus); // Enter starts (and the smoke scripts need no coordinates)
         box.AddChild(_status);
         ShowPlayers();

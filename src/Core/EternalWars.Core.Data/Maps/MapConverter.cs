@@ -135,7 +135,8 @@ public static class MapConverter
         rules.Elimination,
         rules.GraceDays == ScenarioRules.DefaultGraceDays ? null : rules.GraceDays,
         rules.MaxHeroes == ScenarioRules.HeroLimit ? null : rules.MaxHeroes,
-        rules.WeekEvents.IsDefault ? null : ToDocument(rules.WeekEvents));
+        rules.WeekEvents.IsDefault ? null : ToDocument(rules.WeekEvents),
+        rules.Difficulty);
 
     private static WeekEventsDocument ToDocument(WeekEventSettings events) => new(
         events.Enabled,
@@ -166,6 +167,7 @@ public static class MapConverter
             WeekEvents = document.WeekEvents is { } events
                 ? new WeekEventSettings(events.Enabled, events.SkipWeeks ?? WeekEventSettings.DefaultSkipWeeks, events.WeeklyFactions?.ToList(), events.MonthlyFactions?.ToList())
                 : WeekEventSettings.Default,
+            Difficulty = document.Difficulty,
         };
 
     private static ScenarioCondition ToCondition(ConditionDocument c) => new(

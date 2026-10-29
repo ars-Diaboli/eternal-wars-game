@@ -2408,7 +2408,7 @@ content draft in the docs). New question: CONT-7 (assembled relics, the dropped 
 
 ### ADR-101: Victory screen, ranking, replays and the main menu (FLOW-4, UI-2, 2026-10-29)
 **Status**: accepted (2026-10-29), the owner's answers to FLOW-4 and UI-2 (ADR-092); the score and ranking core is built (ADR-102), the
-screens are not. Points marked *(assumed)* are
+map's difficulty and the victory screen too (ADR-103), the main menu (ADR-104); the replay viewer is not. Points marked *(assumed)* are
 the agent's reading of a short answer; numbers marked *(placeholder)* wait for play-testing.
 
 - **Which games are ranked** (FLOW-4 a, changed): worked out from the map, with **no "not ranked" flag** in the editor *(assumed: the answer
@@ -2464,3 +2464,36 @@ replay viewer are later items. Choices made here are marked *(choice)*.
 - Tests: `ScoreRulesTests` (the formula, the factors, the titles, start towns, campaign-like maps, computer and allied winners),
   `RankingFileTests` (order and ties, the 20-row cap, the file round trip and broken files, rows of hand-made and random maps, the record
   written and replayed, records of rows that fall out deleted, nothing written for a game that does not make the table).
+
+### ADR-103: The map's difficulty and the victory screen (implementation, 2026-10-29)
+**Status**: implemented (2026-10-29); the Godot screens build but have not been run (no Godot on the machine that built them, no smoke
+scenario yet). Carries out ADR-101's map difficulty and victory screen. Map format **v26**. Choices made here are marked *(choice)*.
+
+- **The map's difficulty**: `ScenarioRules.Difficulty` (a `Complexity`, null = not set), in the map file as `rules.difficulty` (v26, left out
+  when not set; older maps load without). `ScoreRules.Difficulty` is the game's complexity, else the map's, else Normal. It changes no rule.
+  The editor's conditions panel has a "Difficulty" row (not set, Beginner … Expert) through `SetScenarioRules`, so it is undoable.
+- **Victory screen** (`GameResultPanel`): after the reason, winners and day, each human winner's score line (points, rank title, day,
+  difficulty, turn timer) and a name field (the player's name to start with). "Enter the ranking", or closing the panel, enters the game
+  once *(choice: closing enters it too, so a win is never lost)*; the table it went into is then shown with this game's rows highlighted,
+  or "did not make the ranking". A human win on a campaign-like map says "This map is not ranked".
+- **Save replay** on every end screen: a name field and a button; `GameSaves.SaveReplay` writes the record to `user://replays` as
+  `<name>.ewreplay.json` (an empty name gives "<map> day <n>") *(choice)*.
+- **Shipped or custom**: the game app counts a hand-made map as shipped when its name is one of the built-in scenarios (Demo Valley, Two
+  Towns), custom otherwise *(choice; a save does not record where its map came from)*. The ranking is in the user data folder.
+- Tests: `MapDifficultyTests` (editor and undo, the map file, older maps), `ScoreRulesTests` (the map's difficulty and the chosen complexity),
+  `RankingFileTests` (a saved replay replays to the end).
+
+### ADR-104: The main menu (implementation, 2026-10-29)
+**Status**: implemented (2026-10-29); builds, not run in Godot yet (smoke scenario `game-main-menu` written, not run). Carries out
+ADR-101's main menu (UI-2). Choices made here are marked *(choice)*.
+
+- **The game opens on the main menu** (`MainMenuScreen`): New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard, Quit.
+  Multiplayer, Campaign and **Watch a replay** are disabled with a tooltip until they exist *(choice: Watch a replay waits for the replay
+  viewer)*; disabled items take no focus, New game has it, so the menu works with the arrow keys and Enter.
+- **New game** opens the new-game screen, which got a Back button; **Load** opens the save list of the F10 menu (as before a game);
+  **Leaderboard** (`LeaderboardPanel`) shows the two ranking tables, Maps and Random maps, one tab each, through the same table view as the
+  victory screen (`RankingTableView`); **Quit** quits. Escape goes back from the new-game screen and the leaderboard.
+- **Back to the main menu** from a game: "Main menu" on the end screen (it enters the ranking first, like closing it) and in the F10 menu
+  during a game *(choice: no confirmation; the autosave keeps the start of the turn)*. Leaving takes the game's world and HUD down.
+- **`--new-game`** opens the game on the new-game screen *(choice)*: the smoke scenarios pass it, so their clicks and keys are unchanged.
+- Save replay on every end screen was already built (ADR-103); the arena's result screen will offer it when the arena exists (ADR-100).

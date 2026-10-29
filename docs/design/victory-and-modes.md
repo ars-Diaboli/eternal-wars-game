@@ -28,7 +28,7 @@
   player that starts without a town while the grace period is on.
 - Campaign hooks are open ❓ (FLOW-1, Phase 6).
 
-## Victory screen, ranking and replays (ADR-092, ADR-101, planned)
+## Victory screen, ranking and replays (ADR-092, ADR-101; built in ADR-102 to ADR-104, the replay viewer planned)
 - A won game on a map that is not campaign-like ends on a HoMM3-like **victory screen**: the days taken, the difficulty, the **score** and
   a rank title. A lost game, or one won only by computer players, has no score.
 - **Campaign-like** (not ranked) is worked out: a human player starts without a town, or the map events give something only to human
@@ -44,7 +44,8 @@
   date. The new row is highlighted on the victory screen.
 - **Replays**: each row keeps its game's record; "Save replay" writes it to `user://replays` as `*.ewreplay.json`. Every end screen (a defeat,
   an unranked game, the arena) offers "Save replay" too. A replay made with other content fails like a save.
-- **Main menu**: New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard, Quit (Multiplayer and Campaign disabled until built).
+- **Main menu** (built, ADR-104): New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard, Quit (Multiplayer, Campaign and
+  Watch a replay disabled until built); "Main menu" on the end screen and in the F10 menu goes back to it.
 - **Replay viewer**: two tabs, Replays and Saves (autosaves too; a save plays to its last command and stops). The whole map revealed by
   default, or any player's eyes; play, pause, the four speeds, next turn, next day, back to the start of any day; battles move by move with
   "skip to the result"; computer turns in full. **"Play from here"** only in a battle for now: the viewer plays that battle on by hand, as a

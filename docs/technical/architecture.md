@@ -293,7 +293,7 @@ src/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
                                 Artifacts
-    EternalWars.Core.Data/      Maps (MapDocument v25, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v26, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (saves, replays, the ranking: GameRecord, GameSaves, RankingFile),
                                 Templates (TemplateSerializer,
                                 BuiltInTemplates)
@@ -302,7 +302,7 @@ src/
   Godot/
     EternalWars.Godot.Shared/   Map, Battle (BattleView3D, BattleUnitView, BattleSpace), Cameras, Controls, Events
     EternalWars.Godot.UI/       Hud (incl. DecisionPanel, TownPanel, TownListPanel, HeroPanel), Battle (BattleBoard2D, BattleHud),
-                                Editor (ToolPalette, InspectorPanel, ...), Setup (NewGameScreen), Debugging
+                                Editor (ToolPalette, InspectorPanel, ...), Setup (MainMenuScreen, NewGameScreen, LeaderboardPanel), Debugging
     EternalWars.Godot.Assets/   (linked into apps as res://shared)
   Apps/
     EternalWars.Game/           project.godot + Main.tscn/Main.cs
