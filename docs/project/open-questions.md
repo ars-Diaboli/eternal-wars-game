@@ -7,7 +7,9 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-092): new ideas bring FLOW-4 (victory screen and ranking) and UI-2 (replays) ([below](#new-ideas-adr-092-2026-10-29)).
+**Updated 2026-10-29** (ADR-092, ADR-093): new ideas bring FLOW-4 (victory screen and ranking), UI-2 (replays) and HERO-8 (specialties)
+([below](#new-ideas-adr-092-2026-10-29)); UI-2 follows the owner's revised note (the replay saved from the ranking table, a leaderboard
+in the main menu, unfinished saves watched too).
 Before that (ADR-090, ADR-091): CMB-10 (auto combat, built), UI-1 (speed settings) and FLOW-3 (turn timer, built) answered. Before that (2026-10-28, ADR-088), new
 ideas brought CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)); CMB-9 is answered and built (ADR-089).
 Before that (2026-10-26, ADR-079, ADR-080), the sixth round: TOWN-9 … TOWN-11 and MAP-25 … MAP-34 answered and built (the Astrologer's
@@ -24,7 +26,7 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 ## 🚧 Blocking now
 
 Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). The ADR-088 questions stop only their own
-roadmap items, and so do FLOW-4 and UI-2 (ADR-092); MP-1 (a) decides where multiplayer goes in the plan.
+roadmap items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093); MP-1 (a) decides where multiplayer goes in the plan.
 
 ## Heroes
 
@@ -95,11 +97,13 @@ won game scores;
 (h) the top 20 per table, kept per computer in the user data folder; on the victory screen and under "High scores" in the main menu.
 
 <a id="ui-2"></a>
-**UI-2 Replays and the main menu.** The end screen offers to save the replay; the main menu gets "Watch a replay" (ADR-092).
-(a) **The file**: a replay is the game record a save already is (start map, options, every command, ADR-058). Its own folder and extension
-(`*.ewreplay.json`, as the simulator's), or simply a save named after the game? Offered on every end screen (victory, defeat, draw), or on
-victory only?
-(b) **The main menu**: today the game opens on the new-game screen. A main menu with New game, Load, Watch a replay, High scores, Quit?
+**UI-2 Replays and the main menu.** The ranking table offers to save a game's replay; the main menu gets "Watch a replay" (a finished game's
+replay, or an unfinished game's save up to the moment it was saved) and "Leaderboard" (ADR-092).
+(a) **The file**: a replay is the game record a save already is (start map, options, every command, ADR-058). "Save replay" on the ranking
+table means each row keeps its game's record (written when the row is made), and the button copies it out under a name the player gives?
+Its own folder and extension (`*.ewreplay.json`, as the simulator's)? Can a game that is not ranked (lost, campaign-like) be saved as a
+replay at all, from its end screen?
+(b) **The main menu**: today the game opens on the new-game screen. A main menu with New game, Load, Watch a replay, Leaderboard, Quit?
 (c) **Whose view**: fog of war hides what the player did not see. Watch through one player's eyes (switchable), or with the whole map revealed?
 (d) **Controls**: play and pause, a speed (the UI-1 steps), jump to the next turn or day? Going back (the game is replayed from the start to
 that day, ADR-058)?
@@ -107,14 +111,46 @@ that day, ADR-058)?
 (f) **Take over**: may the viewer stop the replay and play on from there, as from a save?
 (g) **Other content**: a replay made with other creature tables or rules no longer replays the same game (ADR-058 refuses such a save). The
 same error, or replays keep the content they were made with?
+(h) **Watching a save**: "Watch a replay" lists the replays and the saves (autosaves too) in one list, or has two tabs? A save plays up to
+the moment it was saved and then stops (with "Play from here", f)?
 *Proposal*:
-(a) its own folder (`user://replays`) and extension `*.ewreplay.json`; offered on every end screen;
+(a) each ranking row keeps its game's record; "Save replay" writes it to `user://replays` as `*.ewreplay.json` under a name the player gives;
+every end screen (also a defeat or a game that is not ranked) offers "Save replay" too;
 (b) yes;
 (c) the whole map revealed by default, and a choice of any player's eyes;
 (d) play, pause, the four speeds, next turn, next day; going back to the start of any day;
 (e) battles shown move by move at the battle speed, with "skip to the result"; computer turns in full;
 (f) yes, "Play from here" starts a game at that moment (it is then an ordinary game, not ranked);
-(g) the same error as a save: "made with other content".
+(g) the same error as a save: "made with other content";
+(h) two tabs, Replays and Saves; a save plays to its last command, then stops with "Play from here".
+
+<a id="hero-8"></a>
+**HERO-8 Rarer resource specialties; Necromancy and Logistics specialists.** (ADR-093) The note: 4 heroes with +350 gold a day (random, one per
+faction), 6 with +1 rare resource a day (no two of one faction; 2 sulfur, 2 crystal, 2 mercury), 2 Necromancy specialists (a mage and a
+warrior, a flat +5 %), 2 Logistics specialists (random, a flat +10 %). Resource specialties exist already: the roster template gives every town
+3 heroes with +350 gold (24 in all), one each with +2 ore, +2 lumber and +1 mercury (8 each), 1 Logistics specialist (+5 % per level, 8 in
+all), and 2 Necropolis mages with a Death attunement specialty (its Necromancy effect is not built).
+(a) **The whole roster**: are the note's numbers for all 128 heroes, so they replace today's 48 resource specialists and 8 Logistics
+specialists?
+(b) **Ore and lumber**: no hero gives them any more?
+(c) **The heroes that lose their specialty** (about 50): what do they get: a specialty in one of their starting skills, a spell, their own
+attunement, a creature specialty (HoMM3: a creature line stronger)?
+(d) **Random**: drawn once into `heroes.csv` (the same heroes every game, listed in the roster), or drawn per game from the seed?
+(e) **One per faction**: 4 gold heroes from 4 different towns and 6 rare-resource heroes from 6 different towns; may a town have one of each?
+Do Stronghold and Swamp Bestiary take part? Any class?
+(f) **Necromancy**: both Necropolis heroes (only Necropolis has Death attunement)? A flat +5 points on top of the skill (Basic 5 → 10 % …
+Master 20 → 25 %), stacking with the Necromancy Amplifier (up to 30 %)? Only with the skill?
+(g) **Logistics**: +10 % movement on land with or without the Logistics skill? Do the other skill specialties (Melee, Archery, Tactics, the
+attunements) keep +5 % per level, or become flat too?
+*Proposal*:
+(a) yes, the whole roster;
+(b) yes, no ore or lumber specialists (their mines are common);
+(c) a specialty in their first starting skill (+5 % per level), its effect built where it is missing (Armor, Treasury, War Tempo, …);
+(d) drawn once into `heroes.csv` with a fixed seed, listed in `hero-roster.md`;
+(e) one of each may share a town; all eight towns take part; any class;
+(f) both Necropolis heroes, the slots that today have Death attunement as their specialty (the mage) and a warrior; +5 points on top of the
+skill, stacking with the Amplifier; only with the skill;
+(g) +10 % movement on land even without the skill; the other skill specialties keep +5 % per level.
 
 ## New ideas (ADR-088, 2026-10-28)
 

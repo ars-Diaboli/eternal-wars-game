@@ -21,8 +21,8 @@ Shrines and the bank re-draft). The ADR-077 items are answered and built
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
-UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), UI-1 is decided. More ideas (ADR-092): a victory screen with a ranking, saved
-replays and a replay viewer, waiting for FLOW-4 and UI-2. **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
+UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), UI-1 is decided. More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
+replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -241,6 +241,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 
 ### Heroes and skills
 - [x] Hero roster `data/heroes.csv`: 16 per town, mage/warrior, preferred creature, specialty (ADR-048)
+- [ ] Rarer resource specialties (4 gold, 6 rare resources in the roster), 2 Necromancy (+5 %) and 2 Logistics (+10 %) specialists with flat
+      bonuses (ADR-093) ❓ HERO-8
 - [x] Skill groups, levels, level-ups with three offers and rival-school odds (`LevelUpDecision`)
 - [x] Skill effects without towns or magic: melee, archery, armor, treasury, prospecting, logistics, pathfinding,
       troop management, drill, Tactics width
@@ -341,7 +343,8 @@ Content draft: [artifacts.md](../content/artifacts.md).
       at any moment including mid-battle
 - [ ] Victory screen with a score and rank title for maps that are not campaign-like; ranking tables per computer, separate for random
       and shipped maps (ADR-092) ❓ FLOW-4
-- [ ] Save the replay from the end screen; a main menu with "Watch a replay" and a replay viewer on the map and in battles (ADR-092) ❓ UI-2
+- [ ] Save a replay from the ranking table; a main menu with "Watch a replay" (finished games and unfinished saves) and "Leaderboard"; a
+      replay viewer on the map and in battles (ADR-092) ❓ UI-2
 - [x] Autosave: two slots, the start of the current and of the previous turn (ADR-058)
 - [ ] Save/load: a state snapshot if replays get too slow
 - [x] Game app: victory / defeat screen (`GameResultPanel`)

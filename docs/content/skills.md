@@ -251,6 +251,9 @@ Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)
 | Skill | `skill offense.melee`: the skill's effect +5 % per hero level (HoMM3-like, ADR-072, HERO-1) | ✅ Melee, Archery, Logistics, attunement mana (ADR-083); 🔜 Tactics, Blood Rage, Warcry, Necromancy |
 | Spell | `spell light.bless`: the spell's effect +3 % per hero level (ADR-072, MAG-6) | ⏳ magic |
 
+Planned (ADR-093, HERO-8 ❓): only 4 heroes with +350 gold and 6 with +1 sulfur, crystal or mercury a day (no two of one faction each); 2
+Necromancy specialists (a mage and a warrior, a flat +5 %) and 2 Logistics specialists (a flat +10 %).
+
 ## Open
 
 - A luck skill (none for now).

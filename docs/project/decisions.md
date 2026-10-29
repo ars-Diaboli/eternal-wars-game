@@ -2171,9 +2171,25 @@ and (d).
   taken, the difficulty, a score and a rank title. Today's result screen (ADR-057) only says who won and why.
 - **Ranking tables**: the score goes into a table of the best games. **Random maps** and the **maps shipped with the game** have separate
   tables. A row shows the map's name (the template's for a random map), the difficulty, the days taken, the score and more (FLOW-4).
-- **Save the replay**: the end screen offers to save the game's replay.
-- **Watch a replay** (UI-2): the main menu gets an entry that plays a saved replay back on the map and in battles.
+- **Save the replay**: the ranking table offers to save a game's replay (owner note, revised the same day; at first the end screen did).
+- **Main menu** (UI-2): "Watch a replay", which plays a replay back on the map and in battles, and "Leaderboard", which opens the ranking
+  tables. Watching works for a finished game's replay **and for an unfinished game's save**, up to the moment it was saved.
 - Fits the core as it is: a save is already the game's record (the start map, the options and every command, ADR-058), so a replay file is
   that record, and playing it back is `session.Execute` of each command in turn while the views show the events. The score needs the days
   taken (`GameState.Date`), the difficulty and how the map was made (`GenerationInfo` for random maps). There is no main menu yet: the game
   app opens on the new-game screen, with the F10 menu for loading.
+
+### ADR-093: Rarer resource specialties, Necromancy and Logistics specialties (2026-10-29)
+**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. The open points are HERO-8 in
+`open-questions.md`, with a proposal. Changes the roster template (ADR-048) and the specialty table in `skills.md`.
+
+- **Resource specialties become rare**: across the whole roster, **4 heroes** give **+350 gold a day** (picked at random, no two of one
+  faction) and **6 heroes** give **+1 of a rare resource a day** (no two of one faction): 2 sulfur, 2 crystal, 2 mercury.
+- **Necromancy specialty**: **2 heroes**, one mage and one warrior, raise a **flat +5 %** more with Necromancy.
+- **Logistics specialty**: **2 heroes**, picked at random, move a **flat +10 %** farther.
+- Today the roster template gives every town the same specialties: 3 heroes with +350 gold (24 in all), one each with +2 ore, +2 lumber and
+  +1 mercury (8 each), 1 Logistics specialist (+5 % per level, 8 in all) and the Necropolis mages' Death attunement specialty (Necromancy's
+  specialty effect is not built). What happens to the heroes that lose their specialty, and whether the flat bonuses replace the per-level
+  ones, is HERO-8.
+- Fits the core as it is: `HeroSpecialty` already has resource specialties (`HeroIncome`) and skill specialties; the change is mostly the table
+  `heroes.csv`, plus a flat amount for a skill specialty (`HeroSpecialty.Amount`) and the Necromancy effect.

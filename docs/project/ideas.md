@@ -29,16 +29,10 @@ Recorded so far:
 - Diagonal battle steps at √2, hero and battle speed settings, the turn timer, auto combat with accept or reject, and LAN multiplayer (host as the
   source of truth, saves that load in multiplayer, single player or hot-seat, a simultaneous first week): ADR-088 (2026-10-28), questions
   CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2.
+- A HoMM3-like victory screen with a score for maps that are not campaign-like, ranking tables separate for random and shipped maps, saving
+  a replay from the ranking table, a leaderboard and "watch a replay" (finished games and unfinished saves) in the main menu: ADR-092
+  (2026-10-29), questions FLOW-4 and UI-2.
+- Rarer resource specialties (4 gold, 6 rare resources), 2 Necromancy and 2 Logistics specialists with flat bonuses: ADR-093 (2026-10-29),
+  question HERO-8.
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
-
-
-game victory screen for non campaign-like maps
-with similar to homm3 ranking system;
-ranking for random maps and maps shipped with the game is separate;
-ranking table shows map name(template for random), difficulty, time in days taken etc; 
-option to save replay on leader board;
-in main menu - option to watch replay another to open a leaderboard;
-watch replay in menu allows to watch both completed game record and unfinished save file(until the save happened);
-
-
