@@ -34,5 +34,10 @@ Recorded so far:
   (2026-10-29), questions FLOW-4 and UI-2.
 - Rarer resource specialties (4 gold, 6 rare resources), 2 Necromancy and 2 Logistics specialists with flat bonuses: ADR-093 (2026-10-29),
   question HERO-8.
+- Pandora's Box (HoMM3 / HoMM4-like) and map events like HotA's extended event system (hero, player, town and quest events with
+  conditions, actions and variables; Seer's Huts, Quest Guards and Quest Gates; the AI weighing them): ADR-096 (2026-10-29), questions
+  MAP-35 and EVT-1 … EVT-6.
+- Arena mode like HotA's (a day of preparation, then one battle between two heroes decides the game): ADR-097 (2026-10-29), questions ARN-1
+  and ARN-2.
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).

@@ -23,7 +23,8 @@ catalogue (their Godot screens still need a run). The week and month events, the
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
 UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
 replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. ADR-073's remaining victory conditions
-and deadlines are built (ADR-094). **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
+and deadlines are built (ADR-094). Pandora's Box and HotA-like map events with quests (ADR-096) wait for MAP-35 and EVT-1 … EVT-6; the arena mode (ADR-097) for ARN-1 and ARN-2.
+**Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -365,6 +366,14 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Auto combat (ADR-088, ADR-090, CMB-10): each human player's setting (off / ask / always) in the game menu, saved with the game; a
       preview on a copy of the battle, an outcome screen with Accept (quick combat, same result) or Fight (by hand, nothing re-rolled)
 
+### Arena mode (ADR-097; where it goes: ARN-1 ❓)
+- [ ] Core: the arena switch in the map (no victory or loss conditions), combat places; day 1 with unlimited movement and building; the
+      battle at the start of day 2 (heroes chosen and moved, no experience), its winner wins the game; map format bump ❓ ARN-1, ARN-2
+- [ ] Game app: arena maps on the new-game screen; the battle starts by itself; result screen with "Play again" ❓ ARN-1
+- [ ] AI: prepares on day 1 (visits, hires, builds) for the battle; never leaves the battle
+- [ ] Editor: the arena switch, combat places; validator (no combat place, players that can meet on day 1) ❓ ARN-2
+- [ ] Two shipped arena maps ❓ ARN-1
+
 ### Adventure AI (computer players)
 - [x] AI driver that plays a computer player's turn through commands only (ADR-036, ADR-059), deterministic (no RNG)
 - [x] Economy: build order, saving for the next building, stack upgrades, recruiting, garrison to hero
@@ -450,6 +459,10 @@ Core, map format v22, editor placement, generator sites and tests for each; the 
 - [x] Sphinx (author's or table riddle, three answers; Major artifact or 5000 experience, or the day's movement and −3 morale; MAP-27)
 - [x] Astrologer's Tower (a visit shows next week's event, no re-roll; MAP-32, ADR-084; map format v24, generator version 6)
 - [ ] Editor inspector for a sphinx's riddle and a witch hut's skills (the map format holds them)
+
+#### Pandora's Box (ADR-096)
+- [ ] Pandora's Box: the author's contents (resources, experience, mana, morale and luck, skills, artifacts, creatures), an optional guard
+      army and message, "open?", vanishes; map format bump, editor rows, validator, AI value, generator values ❓ MAP-35
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets
@@ -558,6 +571,15 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
       flyers and teleporters by straight-line distance, the distance penalty measured the same way, battle speeds +10 %; old replay
       digests change
 
+### Map events (ADR-096; HotA's extended events; where they go: EVT-1 ❓)
+- [ ] Core: map events as data (hero, player and town events), variables, conditions and expressions, the main actions, messages and
+      questions as pending decisions; event cells (synchronised copies); turn-start runs; map format bump ❓ EVT-1, EVT-2, EVT-3, EVT-4
+- [ ] Quests: Seer's Hut, Quest Guard, Quest Gate, quest stages, the quest log screen; HoMM3's quest forms ❓ EVT-5
+- [ ] Loops and "run another event"; a Pandora's Box that runs a hero event (MAP-35)
+- [ ] AI: answers by value, Seer's Hut quests worth doing, Quest Guards and Gates as obstacles ❓ EVT-6
+- [ ] Editor: an "Events" tab (the tree, variables, shared events, ready forms for HoMM3's simple events), object inspector links,
+      validator checks ❓ EVT-6
+
 ### Platform and art
 - [ ] Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)
 - [ ] Look-dev spike: one terrain biome + one creature + lighting setup, to lock the visual target and budget
@@ -571,8 +593,8 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 
 ## Phase 6: Story campaign
 - [ ] Scenario chaining and hero carry-over
-- [ ] Map triggers and events, dialogue
-- [ ] Editor support for triggers and scripting
+- [ ] Map triggers and events, dialogue: built on the map events (ADR-096); campaign variables kept from one map to the next (FLOW-1, EVT-1)
+- [ ] Editor support for triggers and scripting: the map events' "Events" tab (ADR-096)
 
 ## LAN multiplayer (ADR-088; where it goes in the plan: MP-1 ❓)
 - [ ] Host and clients over the LAN: the host runs the game, clients send commands, every accepted command goes to all clients;

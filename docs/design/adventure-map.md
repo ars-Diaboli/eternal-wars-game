@@ -383,3 +383,16 @@ drafts.
 | Astrologer's Tower | A visit shows next week's event; no re-roll (the event is rolled a week ahead) | implemented (MAP-32, ADR-084) |
 | Artifact Merchant | **7** Minor or Major artifacts for **twice their worth** (Minor 2000, Major 5000), restocked on the first day of every month; a sold slot stays empty until then | implemented (MAP-33) |
 | Witch Hut | **Two skills** of any group (set by the map or rolled); a visit raises one a level, or the same group's next skill where the hero cannot; **one lesson per hero level** | implemented (MAP-34) |
+
+## Pandora's Box and map events (ADR-096, planned)
+Not built; the open points are MAP-35 and EVT-1 … EVT-6 ❓ ([open-questions.md](../project/open-questions.md#new-ideas-adr-096-2026-10-29)).
+
+- **Pandora's Box** (HoMM3 / HoMM4): the map author fills it (resources, experience, skills, artifacts, creatures, …); a visiting hero is asked
+  whether to open it, it opens once and vanishes. Guards, hidden contents and the generator: MAP-35.
+- **Map events** (HotA's extended events): the author's events as a tree of conditions and actions over map-wide variables, in four types:
+  hero events (an invisible event cell, or a Pandora's Box), player events (the start of a player's turn), town events (the start of the
+  owner's turn) and quest events. Copies of a hero event on several cells act as one event.
+- **Quest objects**: the **Seer's Hut** (quests one after another, each with a reward), the **Quest Guard** (blocks the way until its quest
+  is done, then vanishes) and the **Quest Gate** (lets through the heroes that meet its quest, like a border gate with a quest for a key).
+  Active quests are listed in a quest log.
+- The AI picks answers by value, does Seer's Hut quests worth doing and takes guards and gates as obstacles (EVT-6).
