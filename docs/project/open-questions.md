@@ -7,7 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-100): CONT-6 (artifacts with HoMM names, assembled relics), ARN-1 and ARN-2 (the arena before 1.0, with
+**Updated 2026-10-29** (ADR-101): FLOW-4 (victory screen and ranking) and UI-2 (replays and the main menu) answered.
+Before that (ADR-100): CONT-6 (artifacts with HoMM names, assembled relics), ARN-1 and ARN-2 (the arena before 1.0, with
 LAN and three shipped maps) and MAP-35 (Pandora's Box) answered; new: CONT-7 (assembled relics, the dropped effects).
 Before that (ADR-099): CMB-5 (sieges before 1.0), MAG-1 and CONT-3 (spells and artifacts re-drafted), MP-3 and MP-4
 answered; new: CMB-11 (siege rules), MAG-13 (guild selection, spell review), CONT-6 (artifact review).
@@ -34,7 +35,7 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). CMB-11 stops only the siege items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093) and EVT-1 … EVT-6 (ADR-096);
+Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). CMB-11 stops only the siege items, HERO-8 (ADR-093) only the specialty item, and EVT-1 … EVT-6 (ADR-096) the map events;
 CONT-7 stops only the assembled relics. EVT-1 (b) decides where the map events go in the plan.
 
 ## Heroes
@@ -210,62 +211,6 @@ quest nobody can finish (warning where it can tell)?
 
 ## New ideas (ADR-092, 2026-10-29)
 
-<a id="flow-4"></a>
-**FLOW-4 Victory screen and ranking.** A HoMM3-like score on winning a map that is not campaign-like; ranking tables, separate for random maps
-and shipped maps (ADR-092).
-(a) **Which games count**: how does the game know a map is campaign-like? A flag the editor sets on the map, or worked out (a human player
-starts without a town, ADR-075)? And a game lost, or won by a computer only: no score?
-(b) **Difficulty**: the game has no AI levels yet, only the complexity (starting resources, ADR-063). Is the difficulty the complexity, and
-does "Map default" count as Normal? Does anything else change the score: the number of computer opponents, the map size, the fog mode, the
-turn timer?
-(c) **The score**: HoMM3 gives points for few days, times a difficulty factor (80 % … 200 %). Take that, or another formula?
-(d) **Rank titles**: HoMM3 names each score band after a creature, the best after a dragon. Our own creatures, weakest to strongest?
-(e) **Several humans**: in a hot-seat game each human winner (a team's surviving humans, ADR-083) gets a row? Is a hot-seat game ranked at all?
-(f) **Maps made in the editor** (neither random nor shipped): their own table, the shipped maps' table, or not ranked?
-(g) **The row**: which columns besides the map (the template and size for a random map), the difficulty, the days and the score? The player's
-name (asked on the victory screen), the faction, the date played?
-(h) **The tables**: how many rows (HoMM3 keeps the top 10 or so)? Kept per computer in the user data folder (like the speed settings, ADR-090)?
-Where are they seen: the victory screen (the new row highlighted) and a "High scores" entry in the main menu?
-*Proposal*:
-(a) worked out: a map is campaign-like when a human player starts without a town, and the editor can also mark a map as not ranked; only a
-won game scores;
-(b) the difficulty is the complexity, "Map default" counts as Normal; nothing else changes the score for now;
-(c) HoMM3's: base points = max(10, 200 − days) for maps, the factor by complexity Beginner 80 %, Easy 100 %, Normal 130 %, Hard 160 %, Expert
-200 %;
-(d) yes, 14 bands named after our creatures from the weakest to a dragon;
-(e) each human winner gets a row, hot-seat included;
-(f) the shipped maps' table, marked "custom";
-(g) rank, player name, faction, map or template (with size), difficulty, days, score, title, date;
-(h) the top 20 per table, kept per computer in the user data folder; on the victory screen and under "High scores" in the main menu.
-
-<a id="ui-2"></a>
-**UI-2 Replays and the main menu.** The ranking table offers to save a game's replay; the main menu gets "Watch a replay" (a finished game's
-replay, or an unfinished game's save up to the moment it was saved) and "Leaderboard" (ADR-092).
-(a) **The file**: a replay is the game record a save already is (start map, options, every command, ADR-058). "Save replay" on the ranking
-table means each row keeps its game's record (written when the row is made), and the button copies it out under a name the player gives?
-Its own folder and extension (`*.ewreplay.json`, as the simulator's)? Can a game that is not ranked (lost, campaign-like) be saved as a
-replay at all, from its end screen?
-(b) **The main menu**: today the game opens on the new-game screen. A main menu with New game, Load, Watch a replay, Leaderboard, Quit?
-(c) **Whose view**: fog of war hides what the player did not see. Watch through one player's eyes (switchable), or with the whole map revealed?
-(d) **Controls**: play and pause, a speed (the UI-1 steps), jump to the next turn or day? Going back (the game is replayed from the start to
-that day, ADR-058)?
-(e) **Battles**: shown move by move, or only their result unless the viewer opens them? And the computer's turns: shown in full?
-(f) **Take over**: may the viewer stop the replay and play on from there, as from a save?
-(g) **Other content**: a replay made with other creature tables or rules no longer replays the same game (ADR-058 refuses such a save). The
-same error, or replays keep the content they were made with?
-(h) **Watching a save**: "Watch a replay" lists the replays and the saves (autosaves too) in one list, or has two tabs? A save plays up to
-the moment it was saved and then stops (with "Play from here", f)?
-*Proposal*:
-(a) each ranking row keeps its game's record; "Save replay" writes it to `user://replays` as `*.ewreplay.json` under a name the player gives;
-every end screen (also a defeat or a game that is not ranked) offers "Save replay" too;
-(b) yes;
-(c) the whole map revealed by default, and a choice of any player's eyes;
-(d) play, pause, the four speeds, next turn, next day; going back to the start of any day;
-(e) battles shown move by move at the battle speed, with "skip to the result"; computer turns in full;
-(f) yes, "Play from here" starts a game at that moment (it is then an ordinary game, not ranked);
-(g) the same error as a save: "made with other content";
-(h) two tabs, Replays and Saves; a save plays to its last command, then stops with "Play from here".
-
 <a id="hero-8"></a>
 **HERO-8 Rarer resource specialties; Necromancy and Logistics specialists.** (ADR-093) The note: 4 heroes with +350 gold a day (random, one per
 faction), 6 with +1 rare resource a day (no two of one faction; 2 sulfur, 2 crystal, 2 mercury), 2 Necromancy specialists (a mage and a
@@ -315,12 +260,12 @@ One line per question; the ADR holds the detail.
 - **Magic**: MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.
-- **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095.
+- **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095; UI-2 (replays, main menu) ADR-101.
 - **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098;
   MP-3 (clients' view, saves, smooth fog) and MP-4 (start zones) ADR-099.
 - **Content**: CONT-3 (artifacts re-drafted) ADR-099; CONT-6 (HoMM names, assembled relics) ADR-100.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
-- **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091.
+- **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091; FLOW-4 (victory screen, ranking) ADR-101.
 - **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.

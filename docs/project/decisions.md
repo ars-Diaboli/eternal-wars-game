@@ -2164,8 +2164,7 @@ and (d).
   option). Smoke: `game-turn-timer` (1 minute, the hero screen open: the warnings, then Red's turn with the full time).
 
 ### ADR-092: Victory screen with a ranking, saved replays and a replay viewer (2026-10-29)
-**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. The open points are FLOW-4 and UI-2 in
-`open-questions.md`, each with a proposal.
+**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. FLOW-4 and UI-2 answered in ADR-101.
 
 - **Victory screen with a score** (FLOW-4): a won game on a map that is **not campaign-like** ends on a HoMM3-like victory screen: the days
   taken, the difficulty, a score and a rank title. Today's result screen (ADR-057) only says who won and why.
@@ -2406,3 +2405,62 @@ content draft in the docs). New question: CONT-7 (assembled relics, the dropped 
   validator error, the generator fills its own; the contents are **hidden** from the players until opened, the AI (which knows them) weighs
   them against the guards; random maps place boxes by value band in `TreasureSites` (gold, experience, creatures; spells after Phase 5); a box
   may run a hero event instead once the map events exist (EVT).
+
+### ADR-101: Victory screen, ranking, replays and the main menu (FLOW-4, UI-2, 2026-10-29)
+**Status**: accepted (2026-10-29), the owner's answers to FLOW-4 and UI-2 (ADR-092); the score and ranking core is built (ADR-102), the
+screens are not. Points marked *(assumed)* are
+the agent's reading of a short answer; numbers marked *(placeholder)* wait for play-testing.
+
+- **Which games are ranked** (FLOW-4 a, changed): worked out from the map, with **no "not ranked" flag** in the editor *(assumed: the answer
+  kept "worked out" and not the flag)*. A map is campaign-like, and not ranked, when a human player starts without a town (ADR-075), **or
+  when its map events favour human players over computer players**: an event that gives something only to humans (a "player is human"
+  condition, or the ready forms' "computer may trigger" left off, EVT-2 c) *(assumed reading)*. The event check comes with the map events
+  (ADR-096); until then only the town rule applies. Only a won game scores; arena maps are never ranked (ADR-100).
+- **Difficulty** (FLOW-4 b, changed): the difficulty is the complexity (ADR-063). **"Map default"** (the map's own starting resources) counts as
+  **Normal**, unless the map author sets the map's difficulty in the editor (a map property: which complexity the map's starting resources
+  stand for; map format bump). The difficulty **does not change the AI**: the computer plays the same at every level, as today.
+- **The turn timer raises the score** (FLOW-4 b, changed): a shorter timer is worth more. Factor *(placeholder)*: off or over 10 minutes
+  ×1.0, 6–10 minutes ×1.05, 3–5 minutes ×1.10, 1–2 minutes ×1.20. Nothing else changes the score (opponents, map size, fog).
+- **The rest of FLOW-4 as proposed**: score = max(10, 200 − days) × the difficulty factor (Beginner 80 %, Easy 100 %, Normal 130 %, Hard
+  160 %, Expert 200 %) × the timer factor (c); 14 rank titles named after our creatures, weakest to a dragon (d); each human winner gets a row,
+  hot-seat included (e); maps made in the editor go into the shipped maps' table marked "custom" (f); the row: rank, player name (asked on
+  the victory screen), faction, map or template (with size), difficulty, days, score, title, date (g); the top 20 per table, kept per
+  computer in the user data folder, shown on the victory screen (the new row highlighted) and under "Leaderboard" in the main menu (h).
+- **Replay files** (UI-2 a, g, as proposed): each ranking row keeps its game's record (written when the row is made); "Save replay" writes it
+  to `user://replays` as `*.ewreplay.json` under a name the player gives. **Every end screen** (a defeat, a game that is not ranked, the
+  arena) offers "Save replay" too. A replay made with other content fails like a save: "made with other content" (ADR-058).
+- **Main menu** (UI-2 b, changed): the game opens on a main menu: **New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard,
+  Quit**. Multiplayer (LAN, ADR-098) and Campaign (Phase 6) are shown disabled until they exist *(assumed)*.
+- **The viewer** (UI-2 c, d, e, h, as proposed): the whole map revealed by default, or any player's eyes; play, pause, the four speeds
+  (ADR-095), next turn, next day, and back to the start of any day (replayed from the start, ADR-058); battles move by move at the battle
+  speed with "skip to the result"; computer turns in full; two tabs, Replays and Saves (autosaves too); a save plays to its last command and
+  stops.
+- **Take over only in battles** (UI-2 f, changed): "Play from here" exists **only in a battle** for now: the viewer stops the replay in a
+  battle and plays that battle on by hand from that moment, as a separate game that is not ranked and does not change the replay *(assumed
+  reading)*. Taking over on the adventure map comes later; until then a save is played on with Load.
+- Fits the core as it is: the record is already the replay (`GameRecordDocument`), the viewer runs its commands with `session.Execute`
+  one at a time while the views show the events; "back to a day" replays from the start; a battle taken over starts a session from the record
+  cut at that command. New are the ranking file, the score rules (core), the map's difficulty property, the main menu, the viewer's controls
+  and the reveal-all view.
+
+### ADR-102: Score and ranking core (implementation, 2026-10-29)
+**Status**: implemented (2026-10-29). Carries out ADR-101's score and ranking rules (FLOW-4) in core; the victory screen, the main menu and the
+replay viewer are later items. Choices made here are marked *(choice)*.
+
+- **Start town**: `Player.StartTown` is the town type of the player's first town (lowest id) when the game starts (`GameFlowService.Begin`),
+  null without one. It is the row's faction and the campaign-like check. It is not in the digest: no rule reads it.
+- **Score** (`ScoreRules`, Domain): `IsRanked` is false when a human player that took part started without a town (the map-events check
+  waits for the map events); `Scores` gives one `GameScore` per human winner of a finished game (none when nobody won, only computers won or
+  the map is campaign-like). Score = max(10, 200 − days) × difficulty % × turn timer %, rounded down; days is the day the game ended;
+  "Map default" counts as Normal (the map's own difficulty is the next roadmap item). Rank titles: 14 bands, lower bounds 0, 20, 40, 60, 80,
+  100, 125, 150, 175, 200, 230, 260, 300, 350, named Imp, Goblin, Skeleton, Pikeman, Centaur, Medusa, Griffin, Vampire, Ogre, Naga, Pit Lord,
+  Phoenix, Titan, Black Dragon *(choice; placeholders)*.
+- **Ranking file** (`RankingFile`, Core.Data): `ranking.json` in the folder the front-end passes (the user data folder), two tables
+  (`RandomMaps` for generated games, `Maps` for the rest, editor maps marked `custom` by the caller, since there are no shipped maps yet),
+  the best 20 each. A new row goes below rows with the same score *(choice)*. `AddGame` writes the rows, the game's record once in
+  `ranking/<id>.ewreplay.json` (several human winners share it) and deletes the records no row names any more; it returns the places for the
+  victory screen to highlight. Player names come from the caller (the victory screen asks), else the player's name. A missing or broken file
+  is an empty ranking. The title is stored as the creature's name at the time *(choice: the row is a record of what was shown)*.
+- Tests: `ScoreRulesTests` (the formula, the factors, the titles, start towns, campaign-like maps, computer and allied winners),
+  `RankingFileTests` (order and ties, the 20-row cap, the file round trip and broken files, rows of hand-made and random maps, the record
+  written and replayed, records of rows that fall out deleted, nothing written for a game that does not make the table).

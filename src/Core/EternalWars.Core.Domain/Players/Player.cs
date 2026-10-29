@@ -35,6 +35,12 @@ public sealed class Player(PlayerId id, string name, bool isHuman, TeamId? team 
     /// <summary>The day the player lost its last town; the grace period (<c>ScenarioRules.GraceDays</c>) runs from it. Null while it owns a town.</summary>
     public Common.GameDate? TownlessSince { get; internal set; }
 
+    /// <summary>
+    /// The town type of the first town the player owned when the game started, or null when it started without one (a campaign-like map,
+    /// ADR-075). The ranking's faction and its "campaign-like" check (ADR-101) read it.
+    /// </summary>
+    public string? StartTown { get; internal set; }
+
     /// <summary>Owned a town at some point; only such players have a grace period.</summary>
     internal bool HadTown { get; set; }
 

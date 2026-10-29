@@ -22,7 +22,7 @@ catalogue (their Godot screens still need a run). The week and month events, the
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
 UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, MP-3 and MP-4 still open); CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
-replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. ADR-099 brings sieges before 1.0
+replays and a replay viewer (FLOW-4 and UI-2 answered in ADR-101), and rarer hero specialties, waiting for HERO-8. ADR-099 brings sieges before 1.0
 (CMB-11) and re-drafts the spells and artifacts (MAG-13; CONT-6 answered in ADR-100). ADR-073's remaining victory conditions
 and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096) wait for EVT-1 … EVT-6. ADR-100 settles Pandora's Box
 (MAP-35) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7).
@@ -352,10 +352,14 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Grace period for players without towns: 7 days by default, configurable per map (HoMM3, ADR-057)
 - [x] Save/load (ADR-058): save files from map + options + command log (`GameRecord`), verified by `GameStateDigest`,
       at any moment including mid-battle
-- [ ] Victory screen with a score and rank title for maps that are not campaign-like; ranking tables per computer, separate for random
-      and shipped maps (ADR-092) ❓ FLOW-4
-- [ ] Save a replay from the ranking table; a main menu with "Watch a replay" (finished games and unfinished saves) and "Leaderboard"; a
-      replay viewer on the map and in battles (ADR-092) ❓ UI-2
+- [x] Score and ranking core (ADR-101, ADR-102, FLOW-4): campaign-like check (a human without a town; the map-events check comes with
+      EVT), score = max(10, 200 − days) × difficulty × turn timer factor, 14 rank titles (`ScoreRules`), ranking file (top 20 per table,
+      random / shipped + custom) in the user data folder with each row's game record (`RankingFile`); tests
+- [ ] The map's difficulty in the editor ("Map default" counts as it, Normal when unset); map format bump (ADR-101)
+- [ ] Victory screen with the score, rank title, player name and the highlighted row; "Save replay" on every end screen (ADR-101)
+- [ ] Main menu: New game, Load, Multiplayer and Campaign (disabled until built), Watch a replay, Leaderboard, Quit (ADR-101, UI-2)
+- [ ] Replay viewer: Replays and Saves tabs; reveal-all or a player's eyes; play, pause, speeds, next turn / day, back to a day; battles
+      with "skip to the result"; "Play from here" in battles only (ADR-101, UI-2)
 - [x] Autosave: two slots, the start of the current and of the previous turn (ADR-058)
 - [ ] Save/load: a state snapshot if replays get too slow
 - [x] Game app: victory / defeat screen (`GameResultPanel`)

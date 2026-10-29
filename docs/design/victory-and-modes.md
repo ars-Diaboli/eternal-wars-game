@@ -28,14 +28,27 @@
   player that starts without a town while the grace period is on.
 - Campaign hooks are open ❓ (FLOW-1, Phase 6).
 
-## Victory screen, ranking and replays (ADR-092, planned)
+## Victory screen, ranking and replays (ADR-092, ADR-101, planned)
 - A won game on a map that is not campaign-like ends on a HoMM3-like **victory screen**: the days taken, the difficulty, the **score** and
-  a rank title. Which games count, the formula and the titles: FLOW-4 ❓.
-- The score goes into a **ranking table**, kept per computer. Random maps and the maps shipped with the game have **separate tables**. A
-  row shows the map (the template for a random map), the difficulty, the days taken and the score (the full list of columns: FLOW-4 ❓).
-- The ranking table offers to **save the replay** of a game. The **main menu** gets "Watch a replay", which plays a replay back on the map
-  and in battles (a finished game's replay, or an unfinished game's save up to the moment it was saved), and "Leaderboard", which opens the
-  ranking tables (whose view, the controls: UI-2 ❓).
+  a rank title. A lost game, or one won only by computer players, has no score.
+- **Campaign-like** (not ranked) is worked out: a human player starts without a town, or the map events give something only to human
+  players (once map events exist). Arena maps are not ranked. There is no "not ranked" switch in the editor.
+- **Difficulty** is the complexity. "Map default" counts as Normal unless the map author sets the map's difficulty in the editor. The
+  difficulty never changes the AI.
+- **Score** = max(10, 200 − days) × difficulty factor (Beginner 80 %, Easy 100 %, Normal 130 %, Hard 160 %, Expert 200 %) × turn timer
+  factor (off or over 10 minutes ×1.0, 6–10 ×1.05, 3–5 ×1.10, 1–2 ×1.20; placeholders). Nothing else counts. **14 rank titles** named after
+  our creatures, weakest to a dragon.
+- The score goes into a **ranking table**, kept per computer in the user data folder (top 20). Random maps and the maps shipped with the
+  game have **separate tables**; maps made in the editor go into the shipped maps' table marked "custom". Every human winner gets a row
+  (hot-seat too): rank, player name (asked on the victory screen), faction, map or template (with size), difficulty, days, score, title,
+  date. The new row is highlighted on the victory screen.
+- **Replays**: each row keeps its game's record; "Save replay" writes it to `user://replays` as `*.ewreplay.json`. Every end screen (a defeat,
+  an unranked game, the arena) offers "Save replay" too. A replay made with other content fails like a save.
+- **Main menu**: New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard, Quit (Multiplayer and Campaign disabled until built).
+- **Replay viewer**: two tabs, Replays and Saves (autosaves too; a save plays to its last command and stops). The whole map revealed by
+  default, or any player's eyes; play, pause, the four speeds, next turn, next day, back to the start of any day; battles move by move with
+  "skip to the result"; computer turns in full. **"Play from here"** only in a battle for now: the viewer plays that battle on by hand, as a
+  separate unranked game; taking over on the adventure map comes later.
 
 ## Game modes (priority order)
 1. **Single scenario vs. AI** (implemented).
