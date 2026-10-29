@@ -2360,3 +2360,49 @@ nothing in code. New questions: CMB-11 (siege rules), MAG-13 (guild selection, s
 - **Start zones** (MP-4, all proposals): the generator writes each player's start zone (the template zone of its start town) into the map;
   the editor paints one per player (a cell layer, map format bump); the validator warns when zones touch, overlap or miss the player's start
   town; a step into another player's zone is the conflict.
+
+### ADR-100: Artifacts with HoMM names and assembled relics; the arena before 1.0 with LAN; Pandora's Box (2026-10-29)
+**Status**: accepted (2026-10-29), the owner's answers to CONT-6, ARN-1, ARN-2 and MAP-35; **nothing implemented** (the artifact list is a
+content draft in the docs). New question: CONT-7 (assembled relics, the dropped effects).
+
+- **Artifacts** (CONT-6; changes ADR-099's re-draft, [artifacts.md](../content/artifacts.md)):
+  - **Names and flavour closer to HoMM3 and HoMM4** (a): the 31 HoMM3 placeholders keep their names and ids, except the two gnoll items (Vael
+    has no gnolls: Lizard Warrior's Flail, Buckler of the Lizard King). Lore items take a HoMM name where one fits (Badge of Courage; Charm,
+    Talisman and Mystic Orb of Mana; Spyglass; Speculum; Pendant of Free Will; Bow of Elven Cherrywood; Bowstring of the Unicorn's Mane; Vial
+    of Lifeblood; Dragon Scale Armor; Recanter's Cloak) and keep their own name otherwise. The bow and Necromancy sets become the Bow of the
+    Sharpshooter and the Regalia of the Undead King. The table change is now a few renames instead of 31.
+  - **New effect kinds** (b), in this order: sight; mana a day and maximum; creature health; elemental orbs (one school's spells +25 %);
+    spells known while worn; no spells above level 2; no retreat; Necromancy; growth; immunities. **Not wanted**: experience, surrender
+    cost, war machines, so the Novice's Primer, the Statesman's Seal and the Engineer's Toolbelt are dropped. Effects the question did not
+    list (no distance penalty, initiative, morale re-rolls, cheaper spells, spell reflection, regeneration, …) are dropped from their items;
+    an item that would be too weak without them gets an existing effect instead *(assumed; CONT-7)*.
+  - **Strong items** (c): the Unwritten Codex and the Recanter's Cloak (was the Cloak of Silence, a Major) are Relics. The Wellspring
+    Chalice, the Chain of the Unyielding and the Banner of the Legion become **assembled relics** (HoMM3's combination artifacts): the
+    **Wizard's Well** (Charm, Talisman and Mystic Orb of Mana; full mana each turn), the **Shackles of War** (Collar, Shackle and Chain of War;
+    no retreat or surrender for either side) and the **Statue of Legion** (Head, Torso and Legs of Legion; growth). Each piece is an ordinary
+    artifact with its own effect and tier. A hero wearing all three may join them; the relic keeps the pieces' effects and adds its own, sits
+    in the first piece's slot with the other pieces' slots blocked, and can be taken apart again; it is never found whole, only its pieces
+    drop *(HoMM3's rules; the details are CONT-7)*. The Wizard's Well needs one more effect kind, full mana.
+  - **Sets** (d): as drafted (7 sets).
+  - **95 artifacts**: 25 Minor, 49 Major (the pieces included), 18 Relics, 3 assembled relics. `artifacts.csv` keeps the first draft until the
+    roadmap's re-draft items are built.
+- **Arena** (ARN-1, ARN-2; ADR-097): the proposals, with two changes:
+  - **LAN before 1.0** (ARN-1 b; the proposal said "LAN later"): the arena is played hot-seat, against the computer and over the LAN, all
+    before 1.0. Over the LAN each player sees only its own view (MP-3), so day 1 hides one player's preparation from the other whatever the
+    map; day 1 is played turn by turn, or simultaneously on an arena map with start zones (MP-2), as on any map.
+  - **Three shipped arena maps** (ARN-2 d; ARN-1 a proposed two), hand-made and ready when the mode ships; **no arena template** for the
+    generator.
+  - The rest as proposed. ARN-1: before 1.0, after the Phase 3 exit (a); two players, or two teams each fighting with its strongest hero (b);
+    the map keeps the players apart on day 1 and the validator warns when one player's heroes can reach the other's area (c); preparation as
+    HotA (unlimited movement and building) with the map's starting resources, one day (d); HotA's hero choice (e); the fog as usual, the
+    battle screen shows both armies (f); the battle on the combat place's terrain, no experience, retreat and surrender allowed (the player who
+    leaves loses), the AI never leaves, auto and quick combat as usual (g); the winner wins the game, a draw or no hero is a loss for both,
+    "Play again" and "Save replay", not ranked (h). ARN-2: an "Arena" switch on the editor's conditions tab and the combat place object, map
+    format bump (a); no special objects (b); shown on day 1: Pandora's Boxes, quests, Witch Huts' skills, Shrines' spells (c); validator: an
+    error without a combat place, warnings when the players can meet on day 1 and for map events that run only on later days (e).
+- **Pandora's Box** (MAP-35, all proposals): HoMM3's contents (gold, the other resources, experience, mana, morale and luck until the next
+  battle, primary and secondary skills, artifacts, creatures; spells with Phase 5), **gains only** (losses come with the map events); an
+  optional **guard army** fought after "open?", the box opening only when the hero wins, and an optional message; a box without contents is a
+  validator error, the generator fills its own; the contents are **hidden** from the players until opened, the AI (which knows them) weighs
+  them against the guards; random maps place boxes by value band in `TreasureSites` (gold, experience, creatures; spells after Phase 5); a box
+  may run a hero event instead once the map events exist (EVT).

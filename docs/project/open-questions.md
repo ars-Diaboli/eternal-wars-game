@@ -7,11 +7,13 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-099): CMB-5 (sieges before 1.0), MAG-1 and CONT-3 (spells and artifacts re-drafted), MP-3 and MP-4
+**Updated 2026-10-29** (ADR-100): CONT-6 (artifacts with HoMM names, assembled relics), ARN-1 and ARN-2 (the arena before 1.0, with
+LAN and three shipped maps) and MAP-35 (Pandora's Box) answered; new: CONT-7 (assembled relics, the dropped effects).
+Before that (ADR-099): CMB-5 (sieges before 1.0), MAG-1 and CONT-3 (spells and artifacts re-drafted), MP-3 and MP-4
 answered; new: CMB-11 (siege rules), MAG-13 (guild selection, spell review), CONT-6 (artifact review).
 Before that (ADR-098): MP-1 and MP-2 (LAN multiplayer) answered; they bring MP-3 (clients that see only their own view)
 and MP-4 (start zones).
-Before that (ADR-097), the arena mode brought ARN-1 and ARN-2 ([below](#new-ideas-adr-097-2026-10-29)).
+Before that (ADR-097), the arena mode brought ARN-1 and ARN-2.
 Before that (ADR-096), new ideas brought MAP-35 (Pandora's Box) and EVT-1 … EVT-6 (map events like HotA's extended events,
 quests) ([below](#new-ideas-adr-096-2026-10-29)).
 Before that (ADR-092, ADR-093), new ideas bring FLOW-4 (victory screen and ranking), UI-2 (replays) and HERO-8 (specialties)
@@ -32,8 +34,8 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). CMB-11 stops only the siege items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093) and MAP-35, EVT-1 … EVT-6 (ADR-096) and ARN-1, ARN-2 (ADR-097);
-EVT-1 (b) and ARN-1 (a) decide where the map events and the arena go in the plan.
+Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). CMB-11 stops only the siege items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093) and EVT-1 … EVT-6 (ADR-096);
+CONT-7 stops only the assembled relics. EVT-1 (b) decides where the map events go in the plan.
 
 ## Heroes
 
@@ -90,89 +92,35 @@ tags `holy` and `summon`?
 **CONT-2 Roster review.** Names, capabilities and numbers in `creatures.csv`. The size pass is done (ADR-074): 9 Large, the seven dragons and
 the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or none) is decided once there are visuals.
 
-<a id="cont-6"></a>
-**CONT-6 The artifact re-draft review** (ADR-099). [artifacts.md](../content/artifacts.md): the placeholders renamed to lore items with the
-same effects, 23 new items, 7 sets.
-(a) **Names and flavour**: anything to change?
-(b) **New effect kinds** (sight, experience, mana a day and maximum, creature health, school orbs, spells known while worn, no spells above
-level 2, no retreat, surrender cost, war machines, Necromancy, growth, immunities): all wanted, and in which order?
-(c) **Strong items**: the Unwritten Codex (every level 1–2 spell), the Wellspring Chalice (full mana each turn), the Cloak of Silence and the
-Chain of the Unyielding (rules for both sides), the Banner of the Legion (growth): keep as Relics, make them Major, or drop?
-(d) **Sets**: the two new sets (Shroud of the Last Debt for Necromancy, the Last Grove's Bow for shooters) and the Firstborn regalia (four
-Relics); a set per town instead?
-*Proposal*: (a) as drafted; (b) all, in the order sight, experience, mana, creature health, Necromancy, growth, no retreat, surrender, war
-machines, then the magic ones with Phase 5; (c) keep as Relics, the Cloak and the Chain as Major; (d) as drafted.
-
 <a id="cont-4"></a>
 **CONT-4 More twists.** Which other systems should depart from HoMM3 ([departures.md](../design/departures.md))?
 
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
-## New ideas (ADR-097, 2026-10-29)
-
-<a id="arn-1"></a>
-**ARN-1 Arena mode: the rules.** (ADR-097) A day of preparation, then one battle between two heroes decides the game (HotA).
-(a) **When**: before 1.0 (it needs little that is new: a mode switch, combat places, the day-2 battle) or after? Shipped arena maps too?
-(b) **Players**: two only, or also more with teams (HotA picks the attacker and one defender; the others just lose)? Hot-seat and against the
-computer; later LAN (MP-1)?
-(c) **Day 1 in hot-seat**: the players take turns, so the second player sees nothing of the first's turn only if the map keeps them apart.
-Is "the map must keep them apart" enough, or are the players' areas hidden from each other on day 1 whatever the fog setting?
-(d) **Preparation**: unlimited movement and any number of buildings on day 1, as HotA. Also: everything costs nothing, or only the map's
-starting resources? A longer preparation (the map sets 1 to 3 days)?
-(e) **Choosing the heroes**: HotA's rules (the defender among heroes on combat places; the strongest hero by army value; a hero in a town
-when none is on the map)? Or each player marks the hero that fights?
-(f) **The enemy shown**: HotA shows the enemy hero's army only roughly (Expert Disguise). We have no Disguise; show the enemy as fog shows
-it (nothing outside sight), or the enemy hero's army roughly once day 2 starts?
-(g) **The battle**: on the combat place's terrain; no experience; retreat and surrender allowed (the player who leaves loses), and the AI
-never leaves? Auto combat (ADR-090) and quick combat as usual?
-(h) **The end**: the battle's winner wins the game; a draw or no hero is a loss for both. The result screen offers "Play again" (the same
-map, a new seed) and "Save replay" (UI-2)? Not ranked (FLOW-4)?
+<a id="cont-7"></a>
+**CONT-7 Assembled relics and the dropped effects** (ADR-100). [artifacts.md](../content/artifacts.md#assembled-relics): the Wizard's Well,
+the Statue of Legion and the Shackles of War, each joined from three pieces.
+(a) **Joining**: the game asks when the hero puts on the last piece (HoMM3), or an "Assemble" button on the hero screen, or both?
+(b) **Slots**: the relic sits in the first piece's slot and the other pieces' slots stay blocked (HoMM3), or those slots are free again?
+(c) **Taking apart**: any time on the hero screen, the pieces going back to their slots (HoMM3)?
+(d) **Loot and trade**: a defeated hero's relic goes to the winner whole when its slots are free, otherwise as pieces into the backpack; the
+Artifact Merchant and the Sacrificial Altar take and sell pieces only?
+(e) **AI**: always joins; values a piece more when it already has the others?
+(f) **More**: HoMM3 has more combinations (Elixir of Life, Ring of the Magi, Cornucopia, Angelic Alliance, …); also turn the Necromancy and
+bow sets into assembled relics, or keep these three?
+(g) **Dropped effects**: the effects your list left out are gone from their items (artifacts.md, "Dropped by CONT-6"), and weak items got an
+existing effect instead. Confirm, or bring some back?
 *Proposal*:
-(a) before 1.0, after the Phase 3 exit; two shipped arena maps;
-(b) two players (or two teams, each fighting with its strongest hero); hot-seat and against the computer, LAN later;
-(c) the map keeps them apart; the validator warns when one player's heroes can reach the other's area on day 1;
-(d) as HotA, the map's resources; preparation is one day;
-(e) HotA's rules;
-(f) fog as usual; on day 2 the battle screen shows both armies;
-(g) yes; auto and quick combat as usual;
-(h) yes, with "Play again" and "Save replay"; not ranked.
-
-<a id="arn-2"></a>
-**ARN-2 Arena maps and the editor.**
-(a) **Map**: an "Arena" switch on the editor's conditions tab that removes the victory and loss conditions (HotA), and a **combat place**
-object (a main cell and an attack cell with an obstacle on day 1)? Map format bump.
-(b) **Choices on day 1**: HotA leaves them to ordinary objects (towns, dwellings, Pandora's Boxes, Seer's Huts, Witch Huts, universities).
-Anything special for the arena, e.g. a "choose one of three heroes" object or a creature market with a budget?
-(c) **Contents shown on day 1**: Pandora's Boxes (MAP-35), quests (EVT-5), Witch Huts' skills, Shrines' spells; anything else (creature
-banks' guards, chests)?
-(d) **Random arena maps**: an arena template for the generator (two halves, a town and objects each, a combat place in the middle), or
-hand-made maps only?
-(e) **Validator**: an error without a combat place; a warning when the players can meet on day 1; a warning for each map event that only
-runs on later days?
-*Proposal*: (a) yes; (b) nothing special: ordinary objects; (c) the HotA list plus Witch Huts and Shrines; (d) hand-made only for now;
-(e) yes.
+(a) both;
+(b) blocked;
+(c) yes;
+(d) yes;
+(e) yes;
+(f) these three for now;
+(g) confirm as drafted.
 
 ## New ideas (ADR-096, 2026-10-29)
-
-<a id="map-35"></a>
-**MAP-35 Pandora's Box.** (ADR-096) A box the hero is asked to open; it gives what the map author put in it and vanishes.
-(a) **Contents**: HoMM3's list (gold, the other resources, experience, mana, morale and luck until the next battle, primary skills, secondary
-skills, artifacts, spells, creatures)? Gains only, or losses too (HoMM3 allows taking resources away)?
-(b) **Guards**: an army the hero fights before the box opens (HoMM3 has one), and the author's message?
-(c) **Left open in the editor**: a box without contents is an error, or its contents are rolled when the game starts (as resource piles
-and prisons, ADR-068)?
-(d) **Hidden**: the player sees only "Pandora's Box" until it is opened (HoMM3)? The AI weighs it by its contents (it knows them)?
-(e) **Random maps**: HoMM3's generator places boxes with 5000 … 20 000 gold, 5000 … 20 000 experience, creatures or spells. Ours too, by
-value band in `TreasureSites`?
-(f) **With map events** (EVT): a box may run a hero event instead of its list (HotA)?
-*Proposal*:
-(a) HoMM3's list, gains only (losses come with the map events); spells once magic exists (Phase 5);
-(b) yes, an optional guard army fought after "open?", the box opened only when the hero wins, and an optional message;
-(c) an error in the validator; the generator fills its own boxes;
-(d) hidden from the players; the AI weighs the contents against the guards;
-(e) yes: gold, experience and creatures by value band (spells after Phase 5);
-(f) yes, once the map events exist.
 
 <a id="evt-1"></a>
 **EVT-1 Map events: scope, form and place in the plan.** (ADR-096) The author's events in the editor, like HotA's extended event system.
@@ -357,7 +305,7 @@ One line per question; the ADR holds the detail.
 - **Scope**: fidelity ADR-008; art [presentation.md](../design/presentation.md); modes, platforms, harness, slice ADR-034; lore drafted by Claude.
 - **Adventure map**: scale ADR-020, camera ADR-022, terrain ADR-011/045, native terrain ADR-032, roads ADR-024/032, movement ADR-018/037, fog
   ADR-017/031, gates ADR-026, meeting heroes ADR-027, resources ADR-019, chests ADR-039, mines ADR-034, guards ADR-040/065, no sea ADR-051.
-- **Objects**: MAP-1 … MAP-14 ADR-068; MAP-15 … MAP-19, MAP-21 … MAP-24 ADR-070; MAP-20 ADR-071; MAP-23 corrected ADR-072.
+- **Objects**: MAP-1 … MAP-14 ADR-068; MAP-15 … MAP-19, MAP-21 … MAP-24 ADR-070; MAP-20 ADR-071; MAP-23 corrected ADR-072; MAP-35 (Pandora's Box) ADR-100.
 - **Towns**: groups ADR-010/028/029, tech tree ADR-030/046, income ADR-025, caravans ADR-054, tavern ADR-060/070, governors ADR-063, TOWN-1 fort
   ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
@@ -370,8 +318,9 @@ One line per question; the ADR holds the detail.
 - **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095.
 - **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098;
   MP-3 (clients' view, saves, smooth fog) and MP-4 (start zones) ADR-099.
-- **Content**: CONT-3 (artifacts re-drafted) ADR-099.
+- **Content**: CONT-3 (artifacts re-drafted) ADR-099; CONT-6 (HoMM names, assembled relics) ADR-100.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091.
+- **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.

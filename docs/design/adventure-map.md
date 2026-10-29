@@ -385,10 +385,13 @@ drafts.
 | Witch Hut | **Two skills** of any group (set by the map or rolled); a visit raises one a level, or the same group's next skill where the hero cannot; **one lesson per hero level** | implemented (MAP-34) |
 
 ## Pandora's Box and map events (ADR-096, planned)
-Not built; the open points are MAP-35 and EVT-1 … EVT-6 ❓ ([open-questions.md](../project/open-questions.md#new-ideas-adr-096-2026-10-29)).
+Not built. Pandora's Box is decided (ADR-100, MAP-35); the map events' open points are EVT-1 … EVT-6 ❓ ([open-questions.md](../project/open-questions.md#new-ideas-adr-096-2026-10-29)).
 
 - **Pandora's Box** (HoMM3 / HoMM4): the map author fills it (resources, experience, skills, artifacts, creatures, …); a visiting hero is asked
-  whether to open it, it opens once and vanishes. Guards, hidden contents and the generator: MAP-35.
+  whether to open it, it opens once and vanishes. HoMM3's contents, gains only (spells with Phase 5); an optional guard army is fought after
+  "open?" and the box opens only when the hero wins; an optional message. The contents are hidden until opened (the AI knows them and
+  weighs them against the guards); an empty box is a validator error; the generator places boxes by value band (gold, experience,
+  creatures). Once the map events exist, a box may run a hero event instead.
 - **Map events** (HotA's extended events): the author's events as a tree of conditions and actions over map-wide variables, in four types:
   hero events (an invisible event cell, or a Pandora's Box), player events (the start of a player's turn), town events (the start of the
   owner's turn) and quest events. Copies of a hero event on several cells act as one event.

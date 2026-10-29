@@ -23,8 +23,9 @@ catalogue (their Godot screens still need a run). The week and month events, the
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
 UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, MP-3 and MP-4 still open); CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
 replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. ADR-099 brings sieges before 1.0
-(CMB-11) and re-drafts the spells and artifacts (MAG-13, CONT-6). ADR-073's remaining victory conditions
-and deadlines are built (ADR-094). Pandora's Box and HotA-like map events with quests (ADR-096) wait for MAP-35 and EVT-1 … EVT-6; the arena mode (ADR-097) for ARN-1 and ARN-2.
+(CMB-11) and re-drafts the spells and artifacts (MAG-13; CONT-6 answered in ADR-100). ADR-073's remaining victory conditions
+and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096) wait for EVT-1 … EVT-6. ADR-100 settles Pandora's Box
+(MAP-35) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7).
 **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
 
@@ -336,9 +337,12 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Editor: inspector rows for hero artifacts and pickups (Godot)
 - [x] Godot: paper-doll and backpack on the hero screen (click to wear / take off, tooltips with effects; no drag and drop, no artifact exchange between heroes yet)
 
-- [ ] Artifact table: the re-draft (ADR-099, [artifacts.md](../content/artifacts.md)): rename the 31 placeholders (ids, names; tests follow),
-      add the rows whose effects exist, "Ashen Court Regalia"; then the new effect kinds with their rows (sight, experience, mana, creature
-      health, Necromancy, growth, no retreat, surrender, war machines, immunities) ❓ CONT-6; the magic ones with Phase 5
+- [ ] Artifact table: the re-draft (ADR-099, ADR-100, [artifacts.md](../content/artifacts.md)): the few renamed rows (the gnoll items, lore
+      items with HoMM names; tests follow), the rows whose effects exist, "Ashen Court Regalia"; then the new effect kinds with their rows in
+      the owner's order (sight, mana a day and maximum, creature health, no retreat, Necromancy, growth, immunities); the magic ones
+      (elemental orbs, spells known while worn, no spells above level 2) with Phase 5
+- [ ] Assembled relics (ADR-100): Wizard's Well, Statue of Legion, Shackles of War; joining, blocked slots, taking apart, loot as pieces,
+      the AI, the hero screen ❓ CONT-7
 
 ### Game flow
 - [x] Victory and loss conditions (ADR-057): default (defeat every enemy: no towns and no heroes); map-specific
@@ -371,13 +375,17 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Auto combat (ADR-088, ADR-090, CMB-10): each human player's setting (off / ask / always) in the game menu, saved with the game; a
       preview on a copy of the battle, an outcome screen with Accept (quick combat, same result) or Fight (by hand, nothing re-rolled)
 
-### Arena mode (ADR-097; where it goes: ARN-1 ❓)
-- [ ] Core: the arena switch in the map (no victory or loss conditions), combat places; day 1 with unlimited movement and building; the
-      battle at the start of day 2 (heroes chosen and moved, no experience), its winner wins the game; map format bump ❓ ARN-1, ARN-2
-- [ ] Game app: arena maps on the new-game screen; the battle starts by itself; result screen with "Play again" ❓ ARN-1
+### Arena mode (ADR-097, ADR-100; before 1.0, after the Phase 3 exit)
+- [ ] Core: the arena switch in the map (no victory or loss conditions), combat places; day 1 with unlimited movement and building (the
+      map's starting resources); the battle at the start of day 2 (HotA's hero choice, heroes moved, no experience, retreat and surrender
+      lose), its winner wins the game, a draw is a loss for both; map format bump (ARN-1, ARN-2)
+- [ ] Game app: arena maps on the new-game screen, hot-seat and against the computer; the battle starts by itself, both armies shown;
+      result screen with "Play again" and "Save replay", not ranked (ARN-1)
 - [ ] AI: prepares on day 1 (visits, hires, builds) for the battle; never leaves the battle
-- [ ] Editor: the arena switch, combat places; validator (no combat place, players that can meet on day 1) ❓ ARN-2
-- [ ] Two shipped arena maps ❓ ARN-1
+- [ ] Editor: the arena switch on the conditions tab, combat places; validator (no combat place, players that can meet on day 1, map
+      events that run only later); Pandora's Boxes, quests, Witch Huts and Shrines show their contents on day 1 (ARN-2)
+- [ ] Three shipped arena maps, hand-made; no arena template for the generator (ARN-2)
+- [ ] Arena over the LAN: see [LAN multiplayer](#lan-multiplayer-adr-088-adr-098-before-10-after-the-phase-3-and-4-exits) (ADR-100)
 
 ### Adventure AI (computer players)
 - [x] AI driver that plays a computer player's turn through commands only (ADR-036, ADR-059), deterministic (no RNG)
@@ -466,8 +474,9 @@ Core, map format v22, editor placement, generator sites and tests for each; the 
 - [ ] Editor inspector for a sphinx's riddle and a witch hut's skills (the map format holds them)
 
 #### Pandora's Box (ADR-096)
-- [ ] Pandora's Box: the author's contents (resources, experience, mana, morale and luck, skills, artifacts, creatures), an optional guard
-      army and message, "open?", vanishes; map format bump, editor rows, validator, AI value, generator values ❓ MAP-35
+- [ ] Pandora's Box (MAP-35, ADR-100): the author's contents, gains only (resources, experience, mana, morale and luck, skills, artifacts,
+      creatures; spells with Phase 5), "open?", then an optional guard army (opens only when the hero wins) and message, vanishes; contents
+      hidden; map format bump, editor rows, validator (an empty box is an error), AI value against the guards, generator boxes by value band
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets
@@ -619,6 +628,7 @@ Content draft: [spells.md](../content/spells.md), re-drafted (ADR-099): 17 spell
 - [ ] Simultaneous first week on maps with start zones: conflicts (entering another start zone, touching an object another player touched
       that day, seeing another player's hero) discard the day for everyone, which is played again turn by turn (MP-2, ADR-098)
 - [ ] The turn timer in multiplayer and in simultaneous days: one timer, the day ends when all have ended their turn (FLOW-3, MP-2)
+- [ ] Arena maps in the lobby (ADR-100, ARN-1): day 1 hidden by each player's own view, turn by turn or simultaneous with start zones
 
 **Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
 

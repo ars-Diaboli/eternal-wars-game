@@ -44,9 +44,11 @@
 3. **Story campaign**: chained scenarios, carry-over heroes, scripted map events and dialogue. This needs editor
    support for triggers and a script/event format (Phase 6): the map events of ADR-096 (HotA-like, [adventure-map.md](adventure-map.md#pandoras-box-and-map-events-adr-096-planned)),
    with variables kept from one map to the next.
-- **Arena** (ADR-097, planned; the rules: ARN-1, ARN-2 ❓): as in HotA, one battle decides the game. Day 1 is preparation (unlimited
+- **Arena** (ADR-097, ADR-100; planned before 1.0, hot-seat, against the computer and over the LAN): as in HotA, one battle decides the game. Day 1 is preparation (unlimited
   movement and building, objects show what they hold); at the start of day 2 each side's strongest hero is moved to a **combat place** and
-  they fight; the winner wins the game. An arena map has no victory or loss conditions; it is not ranked.
+  they fight; the winner wins the game. An arena map has no victory or loss conditions; it is not ranked. The fog works as usual and the
+  battle screen shows both armies; the battle gives no experience; a player who retreats or surrenders loses. **Three hand-made arena maps**
+  ship with the mode; the generator has no arena template.
 - **LAN multiplayer** (ADR-088, ADR-098, planned before 1.0; open: MP-3, MP-4 ❓): the **host** runs the game and the computer players;
   clients send commands. A client starts with the map's static content and gets from the host only what it may see, so it cannot see through
   the fog. The host creates the game in a lobby (LAN discovery or an address; the map or a random map and its options; colours; computer
