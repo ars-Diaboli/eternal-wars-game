@@ -7,7 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-28** (ADR-088): new ideas bring CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)).
+**Updated 2026-10-29** (ADR-090): CMB-10 (auto combat, built) and UI-1 (speed settings) answered. Before that (2026-10-28, ADR-088), new
+ideas brought CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)); CMB-9 is answered and built (ADR-089).
 Before that (2026-10-26, ADR-079, ADR-080), the sixth round: TOWN-9 … TOWN-11 and MAP-25 … MAP-34 answered and built (the Astrologer's
 Tower waits for the week events). Before that (ADR-077): new ideas (scenery, rivers, flaggable providers, caravans, Thieves' Guild, the third object catalogue) bring
 MAP-25 … MAP-34 and TOWN-9 … TOWN-11. Fifth round (ADR-075): the ADR-073 assumptions confirmed (TOWN-5's reach and FLOW-2's first week
@@ -22,7 +23,7 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 ## 🚧 Blocking now
 
 Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). The ADR-088 questions stop only their own
-roadmap items; CMB-9 is the cheapest to build, and MP-1 (a) decides where multiplayer goes in the plan.
+roadmap items; MP-1 (a) decides where multiplayer goes in the plan.
 
 ## Heroes
 
@@ -63,51 +64,6 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
 ## New ideas (ADR-088, 2026-10-28)
-
-<a id="cmb-9"></a>
-**CMB-9 Diagonal steps in battle.** A diagonal step costs √2 of Speed (ADR-088). 
-(a) **Units**: integer points like the adventure map (a straight step
-100, a diagonal 141, Speed × 100 a turn), or real numbers? 
-(b) **Remainder**: may a stack take a last step it cannot fully pay for (the adventure
-map's "any positive remainder allows one last step"), or only steps it can pay? 
-(c) **Flyers and teleporters** land within their Speed: measured
-the same way (the cheapest 8-way path ignoring obstacles), or as a straight line (√(dx² + dy²))? 
-(d) Does the **distance penalty** for shooting
-(cells between the footprints, 10 per 1/8) also count diagonals as 1.41? 
-(e) Speeds were tuned on the old rule (ADR-037): leave the creature
-speeds as they are, or raise them by about 20 % to keep battles as long?
-*Proposal*: (a) integer 100 / 141; (b) only steps it can pay, so no stack goes further than its Speed; (c) the same 8-way measure; (d) no, the
-penalty stays as it is (it is tuned and built); (e) leave the speeds, re-check with `sim` battles and tune under CONT-2.
-Answer : a - doesent matter integers or not as long as movement follow circular rule on square grid;
-b - round diagonal movement points upward / proposal is wrong;
-c - measure distance same way for Flyers and teleporters;
-d - use same diagonal calculation method for shooting penalty as for movement;
-e - increase speeds by 10% approximately;
-
-<a id="cmb-10"></a>
-**CMB-10 Auto combat.** The setting and the outcome screen (ADR-088). 
-(a) **Where** is the setting: per human player in the game menu,
-changeable any time (proposal), or on the new-game screen for the whole game? Values: off, ask before each battle, always. 
-(b) **Which battles**: against neutrals and computer players only, or also against another human in hot-seat (then whose setting counts)? 
-(c) **Peeking**:the preview is played with the game's randomness, so the player sees one outcome before choosing. Accept that? 
-Or play the manual battle with the same draws, so rejecting cannot be used to re-roll luck? 
-(d) **Choices inside the battle** (Tactics deployment, width, surrender, retreat):
-the AI takes them for the player in the preview? 
-(e) **The outcome screen**: casualties of both sides, experience, raised undead and artifacts won, like the result screen? 
-(f) Once rejected, can the player ask for auto combat again during that battle (the quick combat button)?
-*Proposal*: (a) per player in the game menu: off / ask / always (default off); (b) neutrals and computer players only; (c) accept the peek, but
-the manual battle starts from the state before the preview (the preview leaves no trace); (d) yes, with the computer player's rules (it never
-retreats or surrenders, ADR-070); (e) like the result screen, with Accept and Fight; (f) yes, quick combat stays and its result is final.
-Answer : proposals are correct; 
-
-<a id="ui-1"></a>
-**UI-1 Speed settings.** How fast heroes move on the adventure map and how fast battles play (ADR-088). (a) **Steps**: slow / normal / fast /
-instant for both, or a slider? (b) **Separate** settings for the player's own heroes and for the computer's moves (HoMM3 has "show enemy moves")?
-(c) **Where**: a settings screen in the game menu, kept per computer in the user data folder (not in saves)? (d) Today a hero jumps from tile to
-tile; animated walking comes first, then the setting?
-*Proposal*: (a) four steps, normal = today's battle animation speed; (b) yes: own heroes, computer heroes (with "don't show"), battle
-animations; (c) yes, a settings file in the user data folder; (d) yes: build walking with the setting.
-Answer : proposals are correct;
 
 <a id="flow-3"></a>
 **FLOW-3 Turn timer.** On the new-game screen, 1 to 30 minutes, human players only (ADR-088). (a) **A turn's time**: the same every turn, or a
@@ -163,10 +119,11 @@ One line per question; the ADR holds the detail.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
   CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073.
 - **Combat**: grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
-  morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075.
+  morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090.
 - **Magic**: MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.
+- **Presentation**: UI-1 (speed settings) ADR-090.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073; FLOW-2 event start and town-less players ADR-075.

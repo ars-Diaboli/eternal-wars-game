@@ -194,6 +194,9 @@ public sealed record BattleSurrenderCommand(PlayerId Player) : GameCommand(Playe
 /// <summary>Quick combat: the AI fights the rest of the battle for both sides.</summary>
 public sealed record AutoResolveBattleCommand(PlayerId Player) : GameCommand(Player);
 
+/// <summary>A human player's auto combat setting (ADR-090, CMB-10); allowed at any time, also outside the player's turn.</summary>
+public sealed record SetAutoCombatCommand(PlayerId Player, Battles.AutoCombatMode Mode) : GameCommand(Player);
+
 /// <summary>Outcome of <see cref="Game.GameSession.Execute"/>.</summary>
 /// <param name="IsAccepted">False when the command was refused; then nothing changed and it was not logged.</param>
 /// <param name="Error">Why it was refused.</param>

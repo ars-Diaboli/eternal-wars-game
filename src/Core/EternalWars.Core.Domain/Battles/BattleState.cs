@@ -62,7 +62,7 @@ public sealed class BattleUnit
     public int ShotsLeft { get; internal set; }
 
     /// <summary>Spell id → casts left this battle (Caster capability; used once magic exists).</summary>
-    public IReadOnlyDictionary<string, int> CastsLeft { get; }
+    public IReadOnlyDictionary<string, int> CastsLeft { get; private init; }
 
     public bool IsAlive => Count > 0;
 
@@ -87,6 +87,21 @@ public sealed class BattleUnit
     public bool LosesNextAction { get; internal set; }
 
     public override string ToString() => $"#{Id} {Count}× {Creature.Name} ({Side}) at {Position}";
+
+    /// <summary>The unit as it is now, for a battle copy (<see cref="BattleState.Copy"/>).</summary>
+    internal BattleUnit Copy() => new(Id, Side, Creature, InitialCount, SourceSlot, Position, Machine)
+    {
+        Count = Count,
+        TopHealth = TopHealth,
+        ShotsLeft = ShotsLeft,
+        CastsLeft = new Dictionary<string, int>(CastsLeft, StringComparer.Ordinal),
+        HasRetaliated = HasRetaliated,
+        IsDefending = IsDefending,
+        HitsThisRound = HitsThisRound,
+        RoundMorale = RoundMorale,
+        RageAttack = RageAttack,
+        LosesNextAction = LosesNextAction,
+    };
 }
 
 /// <summary>
@@ -219,6 +234,48 @@ public sealed class BattleState
     internal List<int> MutableWaiting => _waiting;
 
     public BattleParticipant Participant(BattleSide side) => side == BattleSide.Attacker ? Attacker : Defender;
+
+    /// <summary>
+    /// A copy that plays on by itself (the auto combat preview, ADR-090): its own units, queues and random generator, all as they are now,
+    /// so it draws the same numbers as this battle would.
+    /// </summary>
+    internal BattleState Copy()
+    {
+        var copy = new BattleState(Attacker, Defender, Terrain, Location, IsAmbush, new GameRandom(Random.State), NativeTowns)
+        {
+            Phase = Phase,
+            Width = Width,
+            WidthOptions = WidthOptions,
+            WidthChooser = WidthChooser,
+            Deployer = Deployer,
+            DeploymentColumns = DeploymentColumns,
+            DeploymentAllowed = DeploymentAllowed,
+            Round = Round,
+            AutoResolve = AutoResolve,
+            Winner = Winner,
+            EndReason = EndReason,
+            PendingStacks = PendingStacks,
+        };
+        copy._units.AddRange(_units.Select(u => u.Copy()));
+        copy._obstacles.AddRange(_obstacles);
+        copy._queue.AddRange(_queue);
+        copy._waiting.AddRange(_waiting);
+        copy.ActiveUnit = ActiveUnit is { } active ? copy.GetUnit(active.Id) : null;
+        foreach (var (unit, roll) in TieRolls)
+        {
+            copy.TieRolls[unit] = roll;
+        }
+
+        copy.WaitedThisRound.UnionWith(WaitedThisRound);
+        copy.SideEffects.AddRange(SideEffects);
+        copy.UsedWarcries.UnionWith(UsedWarcries);
+        foreach (var (side, round) in WarcryRounds)
+        {
+            copy.WarcryRounds[side] = round;
+        }
+
+        return copy;
+    }
 
     /// <summary>Battlefield speed: the creature's, plus the hero's Drill, the preferred-creature bonus (ADR-048) and native terrain (ADR-068).</summary>
     public int SpeedOf(BattleUnit unit)

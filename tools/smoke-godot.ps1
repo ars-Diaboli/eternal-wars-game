@@ -35,6 +35,10 @@ $scenarios = @(
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
+    # Auto combat (ADR-090): the menu sets "Ask before each battle", the step into the monster asks, Auto combat shows the outcome, Accept
+    # returns to the map without a second result screen. The question waits until the imps' first moves have played.
+    @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
+       Input = '3:key:Enter;8:key:F10;12:click:1020,634;15:click:1028,694;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
     # The town screen (ADR-050): T opens the first own town over the map, Escape closes it, T again, Escape.
     @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
        Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },

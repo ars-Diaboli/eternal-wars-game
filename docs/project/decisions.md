@@ -2065,12 +2065,12 @@ planned (when is MP-1).
 - **Diagonal battle movement** (CMB-9; built as a circle, ADR-089): a diagonal step on the battlefield costs **√2 ≈ 1.41** of a creature's Speed
   instead of 1, as on the adventure map. Today a stack moves up to Speed steps in any of the 8 directions (`BattleGrid`, Chebyshev distance), so diagonals are
   ~41 % too cheap. This changes reach, the AI and every replay digest.
-- **Speed settings** (UI-1): the player sets how fast heroes move on the adventure map and how fast battle animations play. These are player
+- **Speed settings** (UI-1; decided in ADR-090): the player sets how fast heroes move on the adventure map and how fast battle animations play. These are player
   settings, not rules: they change no game state and are not saved with a game.
 - **Turn timer** (FLOW-3): an option on the new-game screen, off by default, **1 to 30 minutes** a turn, for **human** players only. When it
   runs out the player's turn ends on its own. It runs on the adventure map and in battle. If it runs out during a battle, the battle is finished
   first and the turn ends after it.
-- **Auto combat** (CMB-10): a setting that skips a battle the player starts. The battle AI plays **both sides**, a screen shows the outcome,
+- **Auto combat** (CMB-10; built, ADR-090): a setting that skips a battle the player starts. The battle AI plays **both sides**, a screen shows the outcome,
   and the player **accepts** it or **rejects** it. Rejecting plays the battle by hand as usual. This is a step before the battle; the quick
   combat button during a battle stays.
 - **LAN multiplayer** (MP-1, MP-2): over a local network for now. The **host is the source of truth**. Players pick a map or generate a
@@ -2101,3 +2101,36 @@ planned (when is MP-1).
 - **Compatibility**: battles play differently, so **saves and replays made before this change no longer match their digests** (as with
   ADR-084).
 - Tests: `BattleGridTests` (the circle for walkers and flyers, the way round an obstacle, lengths, the straight-line distance penalty).
+
+### ADR-090: Auto combat and speed settings (CMB-10, UI-1, 2026-10-29)
+**Status**: auto combat implemented (2026-10-29); the speed settings are decided, not built. Answers CMB-10 and UI-1 (ADR-088): the owner
+accepted both proposals.
+
+**Auto combat** (CMB-10):
+- **The setting** (a): per human player, **off** (default), **ask before each battle** or **always**, in the game menu (F10) and changeable at
+  any time. It is player state (`Player.AutoCombat`) set by `SetAutoCombatCommand`, which any human player may send outside its turn too, so it
+  is saved with the game and kept by replays. It changes no rule; the digest shows it only when it is on, so older digests hold.
+- **Which battles** (b): a battle between one human player and a computer player or neutrals, attacking or defending
+  (`BattleService.AutoCombatPlayer`). Two humans (hot-seat) fight by hand.
+- **The preview leaves no trace** (c): `BattleService.Preview` plays a copy of the battle (`BattleState.Copy`: units, queues and its random
+  generator as they are) to the end as quick combat would, with no events heard and the game untouched. **Accept** sends the ordinary
+  `AutoResolveBattleCommand`, which ends the battle exactly as previewed (the same numbers are drawn); **Fight** plays on by hand from the state
+  before the preview, so rejecting re-rolls nothing.
+- **Choices inside the battle** (d): the AI takes them as in quick combat: the default width, no deployment. The computer side's hero may
+  retreat as usual; the human's side never retreats or surrenders.
+- **The outcome screen** (e): like the result screen: who wins and how, both sides' casualties, the experience, the undead Necromancy would
+  raise (a copy of the game's random generator gives the same draw) and the defeated hero's artifacts. Accepting returns to the map without a
+  second result screen.
+- **Quick combat** (f) stays during the battle; its result is final.
+- **When it asks**: the battle scene opens as usual, and the question (or the outcome) comes once the scene has played the moves made so far, so
+  the computer's opening moves have happened; a battle still choosing its width is asked about over the map. A battle loaded from a save is not
+  asked about.
+- Front-end: `AutoCombatPanel` (game app, above the battle scene); the setting row in `GameMenuPanel`. Tests: `AutoCombatTests` (the preview
+  changes nothing and quick combat matches it, also mid-battle and with a width choice and deployment; Necromancy and artifacts foreseen; which
+  battles; the setting at any time and in replays; refused for a computer player). Smoke: `game-auto-combat`.
+
+**Speed settings** (UI-1), to build:
+- Four steps, **slow / normal / fast / instant**; normal is today's battle animation speed.
+- Three settings: the player's own heroes on the map, the computer's heroes (with "don't show"), battle animations.
+- A settings screen in the game menu, kept per computer in a settings file in the user data folder, not in saves.
+- Animated hero walking is built together with the setting (today a hero jumps from tile to tile).

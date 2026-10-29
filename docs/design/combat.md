@@ -180,8 +180,10 @@ machine in the middle, cart at the bottom). Stacks start in the next column. The
 overhang the grid's edge.
 
 ## Other
-- **Auto combat** (ADR-088, planned, CMB-10 ❓): a player setting that skips a battle the player starts. The battle AI plays both sides,
-  a screen shows the outcome, and the player accepts it or rejects it to fight the battle by hand.
+- **Auto combat** (ADR-088, ADR-090): each human player's setting in the game menu: off, ask before each battle, or always. It covers battles
+  against computer players and neutrals. The battle AI plays a copy of the battle for both sides and a screen shows the outcome (casualties,
+  experience, raised undead, artifacts taken). **Accept** ends the battle exactly so (quick combat); **Fight** fights it by hand from where it
+  stands, so rejecting re-rolls nothing.
 - **Quick combat**: either side may hand the rest of the battle to the deterministic battle AI (implemented).
   Neutrals and computer players always use it. The battle AI never retreats (ADR-070 plans an AI retreat, above).
 - The hero casts **at most once a round**, during the turn of one of the units the hero controls; machines that fire on
