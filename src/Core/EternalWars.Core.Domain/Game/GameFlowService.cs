@@ -42,6 +42,7 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         {
             player.TookPart = state.HeroesOf(player.Id).Any() || OwnsTown(player);
             player.HadTown = OwnsTown(player);
+            player.StartTown = state.ObjectsOf<Town>().Where(t => t.Owner == player.Id).OrderBy(t => t.Id.Value).FirstOrDefault()?.TownType;
             player.TownlessSince = null;
         }
 

@@ -90,6 +90,7 @@ Any command takes `--creatures path.csv`.
   helpers (`session.Step`, `session.MoveTo`, `session.EndTurn`, `session.AutoResolve`, ...). Rule-level battle
   tests place units exactly with `TestBattle`.
 - Saved games are `*.ewsave.json` (ADR-058) in `user://saves` (Windows: `%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): a game record plus a label. Loading replays the commands and checks the digest.
+- The ranking tables (ADR-101, ADR-102) are `ranking.json` in the user data folder (`RankingFile`), each row's game record in `ranking/*.ewreplay.json` next to it.
 - Map files are `*.ewmap.json` (format v22: terrain + optional road and river rows, teams, heroes with roster type,
   primary stats, skills, war machines, morale, luck, artifacts and armies, objects incl. one-way gates, artifact pickups, creature dwellings, marketplaces, resource providers, loot, buff and training sites, signs, prisons and other utility objects, creature banks, scenery, the third catalogue's objects, monsters with their guard mode, mine guards and towns, victory and defeat conditions, the hero limits; see the
   version history on `MapDocument`). Replays are `*.ewreplay.json`. Random map templates are `*.ewtemplate.json` (`MapTemplate`; the shipped ones are in

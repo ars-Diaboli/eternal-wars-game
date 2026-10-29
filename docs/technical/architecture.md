@@ -294,7 +294,8 @@ src/
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
                                 Artifacts
     EternalWars.Core.Data/      Maps (MapDocument v25, MapConverter, MapSerializer), Content (definition JSON),
-                                Records (saves and replays: GameRecord, GameSaves), Templates (TemplateSerializer,
+                                Records (saves, replays, the ranking: GameRecord, GameSaves, RankingFile),
+                                Templates (TemplateSerializer,
                                 BuiltInTemplates)
     EternalWars.Core.Generation/ MapTemplate, TemplateValidator, SeedStreams, ZoneLayouter, TerrainPainter, GeneratedMap,
                                 ConnectionPlacer, GuardPicker, ZoneGuards, SettlementPlacer
