@@ -69,6 +69,7 @@ public partial class Main : Node3D
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
     private BattleHud _battleHud = null!;
+    private AutoCombatPanel? _autoCombat;
     private GameResultPanel _result = null!;
     private HeroId? _selectedHero;
 
@@ -103,7 +104,7 @@ public partial class Main : Node3D
     /// </summary>
     public override void _Process(double delta)
     {
-        if (_ai is not null && !_menu.Visible && !_battle.IsOpen && AdventureAi.IsComputerTurn(_session.State))
+        if (_ai is not null && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true && AdventureAi.IsComputerTurn(_session.State))
         {
             _ai.PlayTurn();
         }
@@ -117,7 +118,7 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_context is null || _menu.Visible)
+        if (_context is null || _menu.Visible || _autoCombat?.Visible == true)
         {
             return;
         }
@@ -296,6 +297,17 @@ public partial class Main : Node3D
             GameSaves.Delete);
         _menu.SaveRequested += name => Save(name);
         _menu.LoadRequested += Load;
+        _menu.Opened += () => _menu.ShowAutoCombat(
+            AutoCombatSettingPlayer() is { } player ? _session.State.GetPlayer(player).Name : null,
+            AutoCombatSettingPlayer() is { } shown ? (int)_session.State.GetPlayer(shown).AutoCombat : 0);
+        _menu.AutoCombatSelected += mode =>
+        {
+            if (AutoCombatSettingPlayer() is { } player)
+            {
+                var result = _session.Execute(new SetAutoCombatCommand(player, (AutoCombatMode)mode));
+                _menu.SetMessage(result.IsAccepted ? $"Auto combat: {(AutoCombatMode)mode}." : $"Refused: {result.Error}");
+            }
+        };
 
         var button = new Button
         {
@@ -305,6 +317,14 @@ public partial class Main : Node3D
         button.Pressed += _menu.Toggle;
         layer.AddChild(button);
     }
+
+    /// <summary>
+    /// Whose auto combat setting the menu shows (ADR-090): the human in the battle against the computer, else the current player if human; null
+    /// before a game or on a computer's turn.
+    /// </summary>
+    private PlayerId? AutoCombatSettingPlayer() =>
+        _context is null ? null
+        : _session.Battles.AutoCombatPlayer() ?? (_session.State.CurrentPlayer.IsHuman ? _session.State.CurrentPlayer.Id : null);
 
     private static string SaveTitle(string path, SaveInfo info) => GameSaves.SlotOf(path) switch
     {
@@ -614,6 +634,13 @@ public partial class Main : Node3D
         _battleHud = new BattleHud();
         layer.AddChild(_battleHud);
         _battleHud.Bind(_session, _battle);
+
+        // Auto combat (ADR-090) asks above the battle scene and above the map (a battle still choosing its width).
+        var autoLayer = new CanvasLayer { Name = "AutoCombat", Layer = 4 };
+        _game.AddChild(autoLayer);
+        _autoCombat = new AutoCombatPanel();
+        autoLayer.AddChild(_autoCombat);
+        _autoCombat.Bind(_session, _battle);
 
         _battle.Opened += () =>
         {

@@ -26,6 +26,9 @@ public sealed class Player(PlayerId id, string name, bool isHuman, TeamId? team 
 
     internal bool AddKey(Objects.ObjectColour colour) => _keys.Add(colour);
 
+    /// <summary>Auto combat against computer players and neutrals (ADR-090, CMB-10); a human player's setting, off by default.</summary>
+    public Battles.AutoCombatMode AutoCombat { get; internal set; }
+
     /// <summary>Out of the game (ADR-057): its turns are skipped and it owns nothing any more.</summary>
     public bool IsDefeated { get; internal set; }
 

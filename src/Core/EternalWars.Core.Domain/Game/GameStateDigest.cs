@@ -29,7 +29,9 @@ public static class GameStateDigest
         {
             // Keys (ADR-071) only when there are any, so older replays keep their digests.
             var keys = player.Keys.Count == 0 ? "" : $" keys {string.Join(',', player.Keys)}";
-            Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources} defeated {player.IsDefeated} townless {player.TownlessSince?.AbsoluteDay}{keys}");
+            // Likewise auto combat (ADR-090) only when it is on.
+            var auto = player.AutoCombat == Battles.AutoCombatMode.Off ? "" : $" auto {player.AutoCombat}";
+            Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources} defeated {player.IsDefeated} townless {player.TownlessSince?.AbsoluteDay}{keys}{auto}");
         }
 
         foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))

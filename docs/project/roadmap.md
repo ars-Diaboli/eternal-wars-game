@@ -21,7 +21,7 @@ Shrines and the bank re-draft). The ADR-077 items are answered and built
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
-UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089). **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
+UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089), auto combat too (ADR-090), UI-1 is decided. **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -354,8 +354,8 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Team victory: a team wins while one of its human players survives; eliminated human teammates share the win (ADR-073, ADR-083)
 - [ ] Turn timer (ADR-088): a new-game option, 1 to 30 minutes, human players only; the turn ends on its own when it runs out, after a
       battle in progress; saved with the game ❓ FLOW-3
-- [ ] Auto combat (ADR-088): a player setting; the battle AI plays both sides of a battle the player starts, an outcome screen with
-      Accept or Fight (fight by hand from the state before the preview) ❓ CMB-10
+- [x] Auto combat (ADR-088, ADR-090, CMB-10): each human player's setting (off / ask / always) in the game menu, saved with the game; a
+      preview on a copy of the battle, an outcome screen with Accept (quick combat, same result) or Fight (by hand, nothing re-rolled)
 
 ### Adventure AI (computer players)
 - [x] AI driver that plays a computer player's turn through commands only (ADR-036, ADR-059), deterministic (no RNG)
@@ -556,8 +556,8 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [ ] Terrain: heightmapped landscape with splat shader and blended biome transitions; grid only as overlay
 - [ ] PBR models for heroes, creatures, towns and map objects; fog/volumetrics
 - [ ] UI theme (HoMM-style right-side panel, status bar)
-- [ ] Speed settings (ADR-088): hero movement on the map (with walking animation) and battle animation speed, a settings screen kept
-      per computer ❓ UI-1
+- [ ] Speed settings (ADR-088, ADR-090, UI-1): slow / normal / fast / instant for own heroes, computer heroes (with "don't show") and battle
+      animations; a settings screen kept per computer; animated hero walking
 - [ ] Audio: per-terrain ambient music, town themes
 
 ## Phase 6: Story campaign

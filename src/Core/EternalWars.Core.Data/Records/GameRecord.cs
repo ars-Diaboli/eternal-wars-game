@@ -186,6 +186,7 @@ public static class GameRecordSerializer
         (typeof(BattleRetreatCommand), "battleRetreat"),
         (typeof(BattleSurrenderCommand), "battleSurrender"),
         (typeof(AutoResolveBattleCommand), "battleAuto"),
+        (typeof(SetAutoCombatCommand), "autoCombat"),
     ];
 
     /// <summary>Map JSON settings plus the command hierarchy (kept out of Domain) and compact ids.</summary>

@@ -67,6 +67,9 @@ public sealed record BattleUnitDefended(int Unit) : IEvent;
 
 public sealed record BattleCasualty(BattleSide Side, string Creature, int Lost);
 
+/// <summary>A human player changed its auto combat setting (ADR-090, CMB-10).</summary>
+public sealed record AutoCombatChanged(PlayerId Player, AutoCombatMode Mode) : IEvent;
+
 /// <summary>Necromancy raised undead after the battle (ADR-072, MAG-7); published after <see cref="BattleEnded"/> and before any level-up.</summary>
 public sealed record UndeadRaised(HeroId Hero, IReadOnlyList<RaisedUndead> Raised) : IEvent;
 

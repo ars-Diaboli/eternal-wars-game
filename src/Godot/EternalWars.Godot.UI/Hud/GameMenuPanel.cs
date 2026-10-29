@@ -8,7 +8,8 @@ public sealed record SaveItem(string Path, string Label, string? Name, bool Load
 /// <summary>
 /// Save and load (ADR-058): the saves in a folder, newest first, a name field and Save / Load / Delete. Works on the
 /// adventure map and in battle, because a save is the game's command log. The app lists the saves and answers the
-/// events; the panel only shows and asks. Saving under an existing name replaces that save.
+/// events; the panel only shows and asks. Saving under an existing name replaces that save. Below the saves, the current human player's
+/// auto combat setting (ADR-090, CMB-10), which the app turns into a command.
 /// </summary>
 public partial class GameMenuPanel : CenterContainer
 {
@@ -18,6 +19,9 @@ public partial class GameMenuPanel : CenterContainer
     private readonly Button _save = new() { Text = "Save" };
     private readonly Button _load = new() { Text = "Load" };
     private readonly Button _delete = new() { Text = "Delete" };
+    private readonly HBoxContainer _autoCombatRow = new() { Visible = false };
+    private readonly Label _autoCombatLabel = new();
+    private readonly OptionButton _autoCombat = new();
     private IReadOnlyList<SaveItem> _entries = [];
     private Func<IReadOnlyList<SaveItem>> _listSaves = null!;
     private Action<string> _deleteSave = null!;
@@ -28,6 +32,12 @@ public partial class GameMenuPanel : CenterContainer
 
     /// <summary>The player asked to load this file.</summary>
     public event Action<string>? LoadRequested;
+
+    /// <summary>The menu was opened (the app shows the current player's settings).</summary>
+    public event Action? Opened;
+
+    /// <summary>The player picked an auto combat setting: 0 off, 1 ask before each battle, 2 always.</summary>
+    public event Action<int>? AutoCombatSelected;
 
     /// <summary>Whether there is a running game to save (false on the new-game screen).</summary>
     public bool CanSave
@@ -70,6 +80,14 @@ public partial class GameMenuPanel : CenterContainer
         actions.AddChild(close);
         rows.AddChild(actions);
         rows.AddChild(_message);
+
+        _autoCombat.AddItem("Off");
+        _autoCombat.AddItem("Ask before each battle");
+        _autoCombat.AddItem("Always");
+        _autoCombat.ItemSelected += index => AutoCombatSelected?.Invoke((int)index);
+        _autoCombatRow.AddChild(_autoCombatLabel);
+        _autoCombatRow.AddChild(_autoCombat);
+        rows.AddChild(_autoCombatRow);
 
         _list.ItemSelected += index =>
         {
@@ -130,6 +148,18 @@ public partial class GameMenuPanel : CenterContainer
     {
         Visible = true;
         Refresh();
+        Opened?.Invoke();
+    }
+
+    /// <summary>
+    /// Shows <paramref name="player"/>'s auto combat setting against computer players and neutrals (0 off, 1 ask, 2 always); null hides it
+    /// (no game, or no human player's turn).
+    /// </summary>
+    public void ShowAutoCombat(string? player, int mode)
+    {
+        _autoCombatRow.Visible = player is not null;
+        _autoCombatLabel.Text = $"Auto combat for {player} against the computer and neutrals:";
+        _autoCombat.Selected = mode;
     }
 
     public void Close() => Visible = false;

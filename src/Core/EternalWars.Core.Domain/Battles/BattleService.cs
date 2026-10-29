@@ -246,6 +246,93 @@ public sealed class BattleService(
         Continue(battle);
     }
 
+    /// <summary>
+    /// Auto combat (ADR-090, CMB-10): the human player whose auto combat setting applies to the current battle, or null. That is a battle between
+    /// one human player and a computer player or neutrals, not yet handed to quick combat; two humans fight by hand.
+    /// </summary>
+    public PlayerId? AutoCombatPlayer()
+    {
+        if (state.Battle is not { AutoResolve: false } battle || battle.Phase == BattlePhase.Finished || battle.Attacker.IsComputer == battle.Defender.IsComputer)
+        {
+            return null;
+        }
+
+        return battle.Participant(battle.Attacker.IsComputer ? BattleSide.Defender : BattleSide.Attacker).Owner;
+    }
+
+    /// <summary>
+    /// Auto combat's preview (ADR-090, CMB-10): plays a copy of the current battle to its end as quick combat would, with the same random numbers,
+    /// and tells how it ends. The game is not touched, so the player may still fight the battle by hand; quick combat
+    /// (<see cref="Commands.AutoResolveBattleCommand"/>) right after this ends the battle exactly so.
+    /// </summary>
+    public AutoCombatPreview Preview()
+    {
+        var battle = (state.Battle ?? throw new InvalidOperationException("No battle is being fought.")).Copy();
+        var unheard = new EventBus();
+        battle.AutoResolve = true;
+        switch (battle.Phase)
+        {
+            case BattlePhase.ChoosingWidth:
+                Deploy(battle, BattleState.DefaultWidth, unheard);
+                break;
+            case BattlePhase.Deploying:
+                StartFighting(battle, unheard);
+                break;
+            default:
+                Continue(battle, unheard);
+                break;
+        }
+
+        var winner = battle.Winner!.Value;
+        var reason = battle.EndReason!.Value;
+        var winning = battle.Participant(winner);
+        var losing = battle.Participant(winner.Opponent());
+        var raised = new List<RaisedUndead>();
+        var artifacts = new List<string>();
+        if (winning.Hero is { } heroId && reason == BattleEndReason.Defeated)
+        {
+            var hero = state.GetHero(heroId);
+            if (hero.SkillLevelOf(NecromancyRules.Skill) is var level and not SkillLevel.None)
+            {
+                // The survivors' army and a copy of the game's random generator: the end of the real battle draws the same numbers.
+                var army = new Army(hero.Army.Slots);
+                foreach (var (slot, stack) in hero.Army.Stacks.ToList())
+                {
+                    var survivors = battle.Units.Where(u => u.Side == winner && u.SourceSlot == slot).Sum(u => u.Count);
+                    army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
+                }
+
+                raised = JoinUndead(battle, winner.Opponent(), hero, level, army, new GameRandom(state.Random.State));
+            }
+
+            if (losing.Hero is { } loserId)
+            {
+                var loser = state.GetHero(loserId);
+                artifacts = ArtifactValue.BestFirst(state.Artifacts, loser.Artifacts.AllWorn.Select(w => w.Id).Concat(loser.Artifacts.Backpack)).ToList();
+            }
+        }
+
+        return new AutoCombatPreview(winner, reason, Casualties(battle), winning.Hero is null ? 0 : Experience(battle), raised, artifacts);
+    }
+
+    /// <summary>A human player's auto combat setting (ADR-090, CMB-10): a player setting that changes no rule.</summary>
+    internal void SetAutoCombat(PlayerId player, AutoCombatMode mode)
+    {
+        var who = state.GetPlayer(player);
+        if (!who.IsHuman)
+        {
+            throw new InvalidOperationException("Only a human player sets auto combat.");
+        }
+
+        if (who.AutoCombat == mode)
+        {
+            return;
+        }
+
+        who.AutoCombat = mode;
+        events.Publish(new AutoCombatChanged(player, mode));
+    }
+
     private static BattleSide? SideOf(BattleState battle, PlayerId player) =>
         battle.Attacker.Owner == player ? BattleSide.Attacker
         : battle.Defender.Owner == player ? BattleSide.Defender
@@ -353,18 +440,19 @@ public sealed class BattleService(
         return battle;
     }
 
-    private void StartFighting(BattleState battle)
+    // The methods below take the events' bus so that the auto combat preview plays a copy unheard (null: the game's bus).
+    private void StartFighting(BattleState battle, IEventPublisher? bus = null)
     {
         if (battle.Phase == BattlePhase.Deploying)
         {
-            events.Publish(new BattleDeploymentEnded(battle.Deployer!.Value));
+            (bus ?? events).Publish(new BattleDeploymentEnded(battle.Deployer!.Value));
         }
 
-        Engine(battle).StartFighting();
-        Continue(battle);
+        Engine(battle, bus).StartFighting();
+        Continue(battle, bus);
     }
 
-    private void Deploy(BattleState battle, int width)
+    private void Deploy(BattleState battle, int width, IEventPublisher? bus = null)
     {
         battle.Width = width;
 
@@ -377,7 +465,7 @@ public sealed class BattleService(
         }
 
         BattleSetup.Deploy(battle, battle.PendingStacks.Attackers, battle.PendingStacks.Defenders);
-        events.Publish(new BattleStarted(
+        (bus ?? events).Publish(new BattleStarted(
             battle.Attacker.Hero,
             battle.Defender.Hero,
             battle.Defender.Guard,
@@ -389,35 +477,35 @@ public sealed class BattleService(
         if (battle.Deployer is { } deployer)
         {
             battle.Phase = BattlePhase.Deploying;
-            events.Publish(new BattleDeploymentStarted(deployer, battle.DeploymentColumns));
+            (bus ?? events).Publish(new BattleDeploymentStarted(deployer, battle.DeploymentColumns));
             return;
         }
 
-        StartFighting(battle);
+        StartFighting(battle, bus);
     }
 
-    /// <summary>Lets the AI play its units until a human has to act or the battle is over.</summary>
-    private void Continue(BattleState battle)
+    /// <summary>Lets the AI play its units until a human has to act or the battle is over; only the game's own battle is then finished.</summary>
+    private void Continue(BattleState battle, IEventPublisher? bus = null)
     {
         while (battle.Phase == BattlePhase.Fighting && battle.ActiveUnit is { } unit && battle.IsComputerControlled(unit.Side))
         {
             // A computer player's hero gives up a lost battle (ADR-070); quick combat never retreats for a person.
             if (AiMayRetreat && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
             {
-                Engine(battle).Retreat(unit.Side);
+                Engine(battle, bus).Retreat(unit.Side);
                 break;
             }
 
-            BattleAi.Act(battle, Engine(battle));
+            BattleAi.Act(battle, Engine(battle, bus));
         }
 
-        if (battle.Phase == BattlePhase.Finished)
+        if (battle.Phase == BattlePhase.Finished && ReferenceEquals(battle, state.Battle))
         {
             Finish(battle);
         }
     }
 
-    private BattleEngine Engine(BattleState battle) => new(battle, events);
+    private BattleEngine Engine(BattleState battle, IEventPublisher? bus = null) => new(battle, bus ?? events);
 
     private BattleState Current(BattlePhase phase) =>
         state.Battle is { } battle && battle.Phase == phase
@@ -437,13 +525,8 @@ public sealed class BattleService(
         var winning = battle.Participant(winner);
         var losing = battle.Participant(loser);
 
-        var killedHealth = battle.Units.Where(u => u.Side == loser).Sum(u => (long)(u.InitialCount - u.Count) * u.Creature.Health);
-        var experience = (int)Math.Min(int.MaxValue, killedHealth + (losing.Hero is not null && reason == BattleEndReason.Defeated ? HeroDefeatExperience : 0));
-        var casualties = battle.Units
-            .GroupBy(u => (u.Side, u.Creature.Id))
-            .Select(g => new BattleCasualty(g.Key.Side, g.Key.Id, g.Sum(u => u.InitialCount - u.Count)))
-            .Where(c => c.Lost > 0)
-            .ToList();
+        var experience = Experience(battle);
+        var casualties = Casualties(battle);
 
         state.Battle = null;
         events.Publish(new BattleEnded(winner, reason, casualties, winning.Hero is null ? 0 : experience));
@@ -509,6 +592,21 @@ public sealed class BattleService(
         progression.OfferNext();
     }
 
+    /// <summary>What a finished battle is worth to the winner: the health of the creatures it killed, and a defeated hero.</summary>
+    private static int Experience(BattleState battle)
+    {
+        var loser = battle.Winner!.Value.Opponent();
+        var killedHealth = battle.Units.Where(u => u.Side == loser).Sum(u => (long)(u.InitialCount - u.Count) * u.Creature.Health);
+        var heroDefeated = battle.Participant(loser).Hero is not null && battle.EndReason == BattleEndReason.Defeated;
+        return (int)Math.Min(int.MaxValue, killedHealth + (heroDefeated ? HeroDefeatExperience : 0));
+    }
+
+    private static List<BattleCasualty> Casualties(BattleState battle) => battle.Units
+        .GroupBy(u => (u.Side, u.Creature.Id))
+        .Select(g => new BattleCasualty(g.Key.Side, g.Key.Id, g.Sum(u => u.InitialCount - u.Count)))
+        .Where(c => c.Lost > 0)
+        .ToList();
+
     private void ApplySurvivors(BattleState battle, BattleSide side, Hero hero)
     {
         // Destroyed war machines are lost; the blacksmith sells new ones (ADR-056).
@@ -543,22 +641,7 @@ public sealed class BattleService(
             return;
         }
 
-        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine).Select(u => (u.Creature, u.InitialCount - u.Count));
-        var joined = new List<RaisedUndead>();
-        foreach (var raised in NecromancyRules.Raise(slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, state.Random))
-        {
-            if (hero.Army.TryAdd(new CreatureStack(raised.Creature, raised.Count)))
-            {
-                joined.Add(raised);
-            }
-            else if (state.Creatures.Get(raised.Creature).UpgradesTo is { } upgrade && hero.Army.Stacks.Any(s => s.Stack.Creature == upgrade)
-                     && raised.Count * 3 / 4 is > 0 and var count)
-            {
-                hero.Army.TryAdd(new CreatureStack(upgrade, count));
-                joined.Add(new RaisedUndead(upgrade, count));
-            }
-        }
-
+        var joined = JoinUndead(battle, enemy, hero, level, hero.Army, state.Random);
         if (joined.Count == 0)
         {
             return;
@@ -566,6 +649,28 @@ public sealed class BattleService(
 
         armies.Publish(hero);
         events.Publish(new UndeadRaised(hero.Id, joined));
+    }
+
+    /// <summary>Raises the undead from the enemy's slain creatures into <paramref name="army"/> and returns what joined it.</summary>
+    private List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, SkillLevel level, Army army, GameRandom random)
+    {
+        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine).Select(u => (u.Creature, u.InitialCount - u.Count));
+        var joined = new List<RaisedUndead>();
+        foreach (var raised in NecromancyRules.Raise(slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random))
+        {
+            if (army.TryAdd(new CreatureStack(raised.Creature, raised.Count)))
+            {
+                joined.Add(raised);
+            }
+            else if (state.Creatures.Get(raised.Creature).UpgradesTo is { } upgrade && army.Stacks.Any(s => s.Stack.Creature == upgrade)
+                     && raised.Count * 3 / 4 is > 0 and var count)
+            {
+                army.TryAdd(new CreatureStack(upgrade, count));
+                joined.Add(new RaisedUndead(upgrade, count));
+            }
+        }
+
+        return joined;
     }
 
     private void ApplySurvivors(BattleState battle, BattleSide side, Town town) => ApplySurvivors(battle, side, town.Id, town.Garrison);

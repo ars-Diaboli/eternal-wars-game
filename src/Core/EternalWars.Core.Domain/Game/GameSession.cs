@@ -183,6 +183,12 @@ public sealed class GameSession
             return State.Battle is null ? "No battle is being fought." : null;
         }
 
+        // A player setting, changed whenever the player likes.
+        if (command is SetAutoCombatCommand)
+        {
+            return null;
+        }
+
         if (command.Player != State.CurrentPlayer.Id)
         {
             return $"It is not {command.Player}'s turn.";
@@ -370,6 +376,9 @@ public sealed class GameSession
                 return null;
             case AutoResolveBattleCommand auto:
                 Battles.AutoResolve(auto.Player);
+                return null;
+            case SetAutoCombatCommand setting:
+                Battles.SetAutoCombat(setting.Player, setting.Mode);
                 return null;
             default:
                 throw new ArgumentOutOfRangeException(nameof(command), command, "Unknown command type.");
