@@ -25,6 +25,14 @@
   player that starts without a town while the grace period is on.
 - Campaign hooks are open ❓ (FLOW-1, Phase 6).
 
+## Victory screen, ranking and replays (ADR-092, planned)
+- A won game on a map that is not campaign-like ends on a HoMM3-like **victory screen**: the days taken, the difficulty, the **score** and
+  a rank title. Which games count, the formula and the titles: FLOW-4 ❓.
+- The score goes into a **ranking table**, kept per computer. Random maps and the maps shipped with the game have **separate tables**. A
+  row shows the map (the template for a random map), the difficulty, the days taken and the score (the full list of columns: FLOW-4 ❓).
+- The end screen offers to **save the replay** of the game. The **main menu** gets "Watch a replay", which plays a saved replay back on
+  the map and in battles (whose view, the controls: UI-2 ❓).
+
 ## Game modes (priority order)
 1. **Single scenario vs. AI** (implemented).
 2. **Hot-seat multiplayer** (implemented: several human players share the machine; battles between humans are played

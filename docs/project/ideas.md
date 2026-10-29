@@ -37,5 +37,8 @@ game victory screen for non campaign-like maps
 with similar to homm3 ranking system;
 ranking for random maps and maps shipped with the game is separate;
 ranking table shows map name(template for random), difficulty, time in days taken etc; 
-option to save replay;
-in main menu - option to watch replay;
+option to save replay on leader board;
+in main menu - option to watch replay another to open a leaderboard;
+watch replay in menu allows to watch both completed game record and unfinished save file(until the save happened);
+
+
