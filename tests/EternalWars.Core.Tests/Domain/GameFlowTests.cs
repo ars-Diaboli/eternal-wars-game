@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
@@ -420,6 +421,169 @@ public class GameFlowTests
         session.MoveTo(A, town.VisitPosition);
 
         Assert.Null(mine.Owner);
+    }
+
+    // ADR-073 conditions and deadlines (ADR-094) ----------------------------------------------------------
+
+    [Fact]
+    public void CaptureObject_WinsWhenTheTeamFlagsIt()
+    {
+        var state = Create("......", "......", "A....B");
+        var mine = Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Gold), 1, 0);
+        state.SetRules(new ScenarioRules([ScenarioCondition.CaptureObject(mine.Id)], []));
+        var session = Start(state);
+        Assert.False(state.IsOver);
+
+        session.MoveTo(A, mine.VisitPosition);
+
+        Assert.Equal([Blue], state.Outcome!.Winners);
+        Assert.Contains("captured the Gold Mine", state.Outcome.Reason, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void ObtainArtifact_WinsOnceAHeroOfTheTeamCarriesIt()
+    {
+        var state = Create("A.B");
+        Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), 1, 0).Artifact = "rusted-blade";
+        state.SetRules(new ScenarioRules([ScenarioCondition.ObtainArtifact("rusted-blade")], []));
+        var session = Start(state);
+        Assert.False(state.IsOver);
+
+        session.MoveTo(A, new MapPosition(1, 0));
+
+        Assert.Equal([Blue], state.Outcome!.Winners);
+        Assert.Contains(state.Artifacts.Get("rusted-blade").Name, state.Outcome.Reason, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)] // the map leaves the prisoner open: drawn when the game starts
+    public void ReleaseHero_WinsForTheTeamThatFreesThePrisoner(bool namedByTheMap)
+    {
+        var state = Create("......", "......", "...A..", "......", ".....B");
+        var prison = Add<Prison>(state, BuiltInMapObjects.Prison, 2, 1); // entrance (3, 1)
+        if (namedByTheMap)
+        {
+            prison.Hero = state.HeroRoster.All.First().Id;
+        }
+
+        state.SetRules(new ScenarioRules([ScenarioCondition.ReleaseHero(prison.Id)], []));
+        var session = Start(state);
+        var prisoner = state.HeroRoster.Get(prison.Hero!).Name;
+        Assert.Equal($"Release {prisoner} from prison", ScenarioRules.Describe(state, state.Rules.Victory[0]));
+
+        session.Step(A, Direction.North);
+
+        Assert.Equal([Blue], state.Outcome!.Winners);
+        Assert.Equal($"Blue released {prisoner}.", state.Outcome.Reason);
+    }
+
+    [Fact]
+    public void LoseArtifact_DefeatsThePlayerWhoseHeroesNoLongerCarryIt()
+    {
+        var state = ThreePlayers(s =>
+        {
+            s.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10));
+            s.GetHero(B).Artifacts.AddToBackpack("iron-band");
+            s.AddHero(new Hero(new HeroId(5), "Echo", Red, new MapPosition(2, 2), DefaultArmy()));
+        });
+        state.SetRules(new ScenarioRules([], [ScenarioCondition.LoseArtifact("iron-band", Red)]));
+        var session = Start(state);
+        var events = Record(session);
+        Assert.False(state.GetPlayer(Red).IsDefeated);
+
+        session.MoveTo(A, new MapPosition(2, 0));
+        session.AutoResolve();
+
+        Assert.True(state.GetPlayer(Red).IsDefeated); // Echo is still on the map, but the band went to the winner
+        Assert.Contains(events, e => e is PlayerDefeated { Player: var p, Reason: var reason } && p == Red
+                                     && reason == $"Lost {state.Artifacts.Get("iron-band").Name}.");
+    }
+
+    [Fact]
+    public void AVictoryCondition_MissedByItsDeadline_DefeatsItsPlayer()
+    {
+        var state = Create("A.B");
+        var condition = ScenarioCondition.GatherResources(ResourceType.Gold, 1_000_000, Blue).By(2);
+        state.SetRules(new ScenarioRules([condition], []));
+        var session = Start(state);
+        var events = Record(session);
+        Assert.Equal("Blue: Gather 1000000 gold by day 2", ScenarioRules.Describe(state, condition));
+
+        session.EndTurn();
+        session.EndTurn(); // day 2: still in time
+        Assert.False(state.GetPlayer(Blue).IsDefeated);
+        session.EndTurn();
+        session.EndTurn(); // day 3
+
+        Assert.True(state.GetPlayer(Blue).IsDefeated);
+        Assert.Contains(events, e => e is PlayerDefeated { Reason: "Missed the deadline: Gather 1000000 gold by day 2." });
+        Assert.Equal([Red], state.Outcome!.Winners);
+    }
+
+    [Fact]
+    public void AVictoryCondition_MetByItsDeadline_Wins()
+    {
+        var state = Create("A.B");
+        state.SetRules(new ScenarioRules([ScenarioCondition.GatherResources(ResourceType.Gold, 1500).By(2)], []));
+        var session = Start(state);
+
+        state.GetPlayer(Red).Resources = new ResourceSet(Gold: 2000);
+        session.EndTurn();
+
+        Assert.Equal([Red], state.Outcome!.Winners);
+    }
+
+    [Fact]
+    public void TheNewConditions_RoundTripThroughTheMapFile_AndOlderMapsStillLoad()
+    {
+        var state = Create("......", "......", "A....B");
+        var mine = Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Gold), 1, 0);
+        var prison = Add<Prison>(state, BuiltInMapObjects.Prison, 4, 0);
+        var rules = new ScenarioRules(
+            [ScenarioCondition.CaptureObject(mine.Id, Blue).By(30), ScenarioCondition.ObtainArtifact("rusted-blade"), ScenarioCondition.ReleaseHero(prison.Id, Red).By(60)],
+            [ScenarioCondition.LoseArtifact("iron-band", Blue)]);
+        state.SetRules(rules);
+
+        var document = MapConverter.ToDocument(state);
+        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(document)));
+        var older = MapConverter.ToGameState(document with { FormatVersion = 24, Rules = document.Rules! with { Victory = [new(ConditionKind.CaptureTown, Town: 3)] } });
+
+        Assert.Equal(MapDocument.CurrentFormatVersion, document.FormatVersion);
+        Assert.Equal(rules.Victory, loaded.Rules.Victory);
+        Assert.Equal(rules.Defeat, loaded.Rules.Defeat);
+        Assert.Equal([ScenarioCondition.CaptureTown(new MapObjectId(3))], older.Rules.Victory);
+    }
+
+    [Fact]
+    public void TheValidator_ChecksTheNewConditions()
+    {
+        var state = Create("......", "......", "A....B");
+        var mine = Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Gold), 1, 0);
+        mine.Owner = Blue;
+        var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 4, 1);
+        state.GetHero(A).Artifacts.AddToBackpack("rusted-blade");
+        state.SetRules(new ScenarioRules(
+            [
+                ScenarioCondition.CaptureObject(pile.Id), // error: nothing to own
+                ScenarioCondition.CaptureObject(mine.Id), // warning: owned from the start
+                ScenarioCondition.ReleaseHero(mine.Id), // error: not a prison
+                ScenarioCondition.ObtainArtifact("no-such-artifact"), // error
+                ScenarioCondition.ObtainArtifact("rusted-blade"), // warning: carried from the start
+                ScenarioCondition.SurviveUntilDay(10).By(5), // error: surviving has its own day
+                ScenarioCondition.GatherResources(ResourceType.Gold, 10).By(1), // error: too early
+            ],
+            [
+                new ScenarioCondition(ConditionKind.LoseArtifact, Artifact: "iron-band"), // error: who loses
+                ScenarioCondition.LoseArtifact("iron-band", Red), // warning: nobody carries it
+            ]));
+
+        var issues = MapValidator.Validate(state).ToList();
+
+        Assert.Equal(6, issues.Count(i => i.Severity == IssueSeverity.Error));
+        Assert.Contains(issues, i => i.Message.Contains("object is owned from the start", StringComparison.Ordinal));
+        Assert.Contains(issues, i => i.Message.Contains("carries it from the start", StringComparison.Ordinal));
+        Assert.Contains(issues, i => i.Message.Contains("would lose at once", StringComparison.Ordinal));
     }
 
     [Fact]

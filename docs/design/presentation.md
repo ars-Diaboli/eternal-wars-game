@@ -26,8 +26,9 @@
   hero screens.
 - **Audio**: per-terrain ambient music, faction town themes.
 
-## Speed settings (ADR-088, ADR-090, planned)
+## Speed settings (ADR-088, ADR-090, built ADR-095)
 The player sets how fast heroes move on the adventure map and how fast battle animations play. These are player settings, kept per
-computer in a settings file in the user data folder and not in saves, and they change nothing in the game. Four steps: slow, normal (today's
-battle speed), fast, instant. Three settings: own heroes, computer heroes (with "don't show") and battle animations, on a settings screen in
-the game menu. Animated hero walking is built with them.
+computer in `settings.json` in the user data folder and not in saves, and they change nothing in the game. Four steps: slow (half speed),
+normal (the speed the views were made with), fast (double), instant. Three settings: own heroes (every human player's), computer heroes
+(with "don't show") and battle animations, in the game menu (F10). Heroes walk with a small hop. A computer turn is played back hero by
+hero where the player can see it, the camera following; the next turn waits for the playback.

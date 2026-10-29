@@ -55,6 +55,9 @@ public partial class AdventureWorldView : Node3D
         ShowLevel();
     }
 
+    /// <summary>The context's clock runs on the frame time, like the hero views' tweens.</summary>
+    public override void _Process(double delta) => _context?.Advance(delta);
+
     public HeroView? HeroViewOf(HeroId hero) => _heroes.GetValueOrDefault(hero);
 
     /// <summary>Highlights one hero (or none).</summary>

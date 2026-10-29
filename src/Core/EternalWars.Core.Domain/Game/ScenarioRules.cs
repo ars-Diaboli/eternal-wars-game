@@ -29,12 +29,25 @@ public enum ConditionKind
 
     /// <summary>Defeat: the calendar passed absolute day <see cref="ScenarioCondition.Day"/> without the player winning.</summary>
     TimeLimit,
+
+    /// <summary>Victory: the player's team owns <see cref="ScenarioCondition.Target"/>, an object with a flag (mine, dwelling, provider, garrison, town; ADR-073).</summary>
+    CaptureObject,
+
+    /// <summary>Victory: a hero of the player's team carries <see cref="ScenarioCondition.Artifact"/>, worn or in the backpack (ADR-073).</summary>
+    ObtainArtifact,
+
+    /// <summary>Victory: the player's team freed the hero held in the prison <see cref="ScenarioCondition.Target"/> (ADR-073).</summary>
+    ReleaseHero,
+
+    /// <summary>Defeat: no hero of the player carries <see cref="ScenarioCondition.Artifact"/> any more (ADR-073).</summary>
+    LoseArtifact,
 }
 
 /// <summary>
 /// One victory or defeat condition of a scenario (ADR-057). Which fields matter depends on <see cref="Kind"/>.
 /// <see cref="Player"/> restricts the condition to one player; without it the condition applies to every player
 /// (defeat conditions that name a town or hero then apply to its starting owner: the editor fills it in).
+/// <see cref="Deadline"/> (ADR-073): a victory condition not met by that absolute day defeats the players it applies to.
 /// </summary>
 public sealed record ScenarioCondition(
     ConditionKind Kind,
@@ -43,9 +56,16 @@ public sealed record ScenarioCondition(
     HeroId? Hero = null,
     ResourceType Resource = ResourceType.Gold,
     int Amount = 0,
-    int Day = 0)
+    int Day = 0,
+    MapObjectId? Target = null,
+    string? Artifact = null,
+    int? Deadline = null)
 {
-    public bool IsVictory => Kind is ConditionKind.CaptureTown or ConditionKind.DefeatHero or ConditionKind.GatherResources or ConditionKind.SurviveUntilDay;
+    public bool IsVictory => Kind is ConditionKind.CaptureTown or ConditionKind.DefeatHero or ConditionKind.GatherResources or ConditionKind.SurviveUntilDay
+        or ConditionKind.CaptureObject or ConditionKind.ObtainArtifact or ConditionKind.ReleaseHero;
+
+    /// <summary>Whether a deadline makes sense: every victory condition but surviving, which has its own day.</summary>
+    public bool CanHaveDeadline => IsVictory && Kind != ConditionKind.SurviveUntilDay;
 
     public static ScenarioCondition CaptureTown(MapObjectId town, PlayerId? player = null) => new(ConditionKind.CaptureTown, player, Town: town);
 
@@ -61,6 +81,17 @@ public sealed record ScenarioCondition(
     public static ScenarioCondition LoseHero(HeroId hero, PlayerId player) => new(ConditionKind.LoseHero, player, Hero: hero);
 
     public static ScenarioCondition TimeLimit(int day, PlayerId? player = null) => new(ConditionKind.TimeLimit, player, Day: day);
+
+    public static ScenarioCondition CaptureObject(MapObjectId target, PlayerId? player = null) => new(ConditionKind.CaptureObject, player, Target: target);
+
+    public static ScenarioCondition ObtainArtifact(string artifact, PlayerId? player = null) => new(ConditionKind.ObtainArtifact, player, Artifact: artifact);
+
+    public static ScenarioCondition ReleaseHero(MapObjectId prison, PlayerId? player = null) => new(ConditionKind.ReleaseHero, player, Target: prison);
+
+    public static ScenarioCondition LoseArtifact(string artifact, PlayerId player) => new(ConditionKind.LoseArtifact, player, Artifact: artifact);
+
+    /// <summary>The same condition, to be met by absolute day <paramref name="day"/>.</summary>
+    public ScenarioCondition By(int day) => this with { Deadline = day };
 }
 
 /// <summary>
@@ -118,8 +149,17 @@ public sealed record ScenarioRules(
             ConditionKind.LoseTown => $"Lose {TownName(state, condition.Town)}",
             ConditionKind.LoseHero => $"Lose {HeroName(state, condition.Hero)}",
             ConditionKind.TimeLimit => $"Fail to win by day {condition.Day.ToString(CultureInfo.InvariantCulture)}",
+            ConditionKind.CaptureObject => $"Capture {ObjectName(state, condition.Target)}",
+            ConditionKind.ObtainArtifact => $"Obtain {ArtifactName(state, condition.Artifact)}",
+            ConditionKind.ReleaseHero => $"Release {PrisonerName(state, condition.Target)} from prison",
+            ConditionKind.LoseArtifact => $"Lose {ArtifactName(state, condition.Artifact)}",
             _ => condition.Kind.ToString(),
         };
+        if (condition.Deadline is { } deadline)
+        {
+            what += $" by day {deadline.ToString(CultureInfo.InvariantCulture)}";
+        }
+
         return condition.Player is { } player && state.HasPlayer(player) ? $"{state.GetPlayer(player).Name}: {what}" : what;
     }
 
@@ -129,6 +169,9 @@ public sealed record ScenarioRules(
         ConditionKind.CaptureTown => $"{player.Name} captured {TownName(state, condition.Town)}.",
         ConditionKind.DefeatHero => $"{player.Name} defeated {heroName ?? HeroName(state, condition.Hero)}.",
         ConditionKind.GatherResources => $"{player.Name} gathered {condition.Amount.ToString(CultureInfo.InvariantCulture)} {condition.Resource.ToString().ToLowerInvariant()}.",
+        ConditionKind.CaptureObject => $"{player.Name} captured {ObjectName(state, condition.Target)}.",
+        ConditionKind.ObtainArtifact => $"{player.Name} obtained {ArtifactName(state, condition.Artifact)}.",
+        ConditionKind.ReleaseHero => $"{player.Name} released {heroName ?? "the prisoner"}.",
         _ => $"{player.Name} survived until day {condition.Day.ToString(CultureInfo.InvariantCulture)}.",
     };
 
@@ -137,11 +180,27 @@ public sealed record ScenarioRules(
     {
         ConditionKind.LoseTown => $"Lost {TownName(state, condition.Town)}.",
         ConditionKind.LoseHero => $"Lost {heroName ?? HeroName(state, condition.Hero)}.",
+        ConditionKind.LoseArtifact => $"Lost {ArtifactName(state, condition.Artifact)}.",
         _ => $"Ran out of time (day {condition.Day.ToString(CultureInfo.InvariantCulture)}).",
     };
 
+    /// <summary>Why a missed deadline eliminated a player (ADR-073).</summary>
+    internal static string Missed(GameState state, ScenarioCondition condition) =>
+        $"Missed the deadline: {Describe(state, condition with { Player = null })}.";
+
     private static string TownName(GameState state, MapObjectId? id) =>
         id is { } town && state.FindObject(town) is Towns.Town found ? found.Name : "a town";
+
+    private static string ObjectName(GameState state, MapObjectId? id) => id is { } target && state.FindObject(target) is { } found
+        ? found is Towns.Town town ? town.Name : $"the {found.Definition.Name} at {found.Position.X.ToString(CultureInfo.InvariantCulture)}, {found.Position.Y.ToString(CultureInfo.InvariantCulture)}"
+        : "an object";
+
+    private static string ArtifactName(GameState state, string? id) =>
+        id is not null && state.Artifacts.TryGet(id, out var artifact) ? artifact.Name : "an artifact";
+
+    /// <summary>The roster hero held in a prison, while the prison stands and its prisoner is known.</summary>
+    private static string PrisonerName(GameState state, MapObjectId? id) =>
+        id is { } prison && state.FindObject(prison) is Prison { Hero: { } hero } && state.HeroRoster.Contains(hero) ? state.HeroRoster.Get(hero).Name : "the prisoner";
 
     private static string HeroName(GameState state, HeroId? id) =>
         id is { } hero && state.Heroes.FirstOrDefault(h => h.Id == hero) is { } found ? found.Name : "a hero";

@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
+using EternalWars.Core.Data.Settings;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Battles;
@@ -9,6 +10,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Settings;
 using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Generation;
 using EternalWars.Godot.Shared;
@@ -76,6 +78,14 @@ public partial class Main : Node3D
     private TurnTimerPanel? _timerPanel;
     private GameResultPanel _result = null!;
     private HeroId? _selectedHero;
+    private string _settingsPath = "";
+    private SpeedSettings _speeds = SpeedSettings.Default;
+
+    /// <summary>The computer hero the camera last followed (ADR-090).</summary>
+    private HeroId? _followed;
+
+    /// <summary>A human player's turn that started while computer moves were still shown: the map turns to them once they are.</summary>
+    private PlayerId? _turnToShow;
 
     public override void _Ready()
     {
@@ -105,13 +115,15 @@ public partial class Main : Node3D
     /// <summary>
     /// Computer players play their turns here, one a frame (ADR-059). The AI waits while a battle scene is open (it may be
     /// a human's fight) and while the menu is. The turn timer's clock runs here too (ADR-091); it ends a turn only once the battle scene,
-    /// the auto combat question and the menu are closed.
+    /// the auto combat question and the menu are closed. While computer heroes' moves are being shown (ADR-090), the AI, the clock and the
+    /// next human turn wait for them.
     /// </summary>
     public override void _Process(double delta)
     {
+        var showing = ShowingComputerMoves;
         if (_timer is not null && _timerPanel is not null)
         {
-            if (_timer.Tick(delta, canEnd: !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true) is { } warning)
+            if (_timer.Tick(showing ? 0 : delta, canEnd: !showing && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true) is { } warning)
             {
                 _timerPanel.Warn(warning);
             }
@@ -119,10 +131,33 @@ public partial class Main : Node3D
             _timerPanel.ShowTime(_timer.SecondsLeft, _timer.IsStopped, _timer.IsUp, delta);
         }
 
+        if (showing)
+        {
+            return;
+        }
+
+        if (_turnToShow is { } player)
+        {
+            _turnToShow = null;
+            ShowTurn(player);
+        }
+
         if (_ai is not null && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true && AdventureAi.IsComputerTurn(_session.State))
         {
             _ai.PlayTurn();
         }
+    }
+
+    /// <summary>Hot-seat: the map is drawn through the eyes of whoever plays now, with their first hero selected.</summary>
+    private void ShowTurn(PlayerId player)
+    {
+        if (_session.State.CurrentPlayer.Id != player)
+        {
+            return; // the turn has passed on meanwhile
+        }
+
+        _context.SetViewer(player);
+        Select(_session.State.HeroesOf(player).FirstOrDefault()?.Id, focus: true);
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -133,7 +168,7 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_context is null || _menu.Visible || _autoCombat?.Visible == true)
+        if (_context is null || _menu.Visible || _autoCombat?.Visible == true || ShowingComputerMoves || _turnToShow is not null)
         {
             return;
         }
@@ -230,6 +265,9 @@ public partial class Main : Node3D
         BuildBattle();
         BuildResult();
         BuildTimer();
+        _turnToShow = null;
+        _followed = null;
+        ApplySpeeds();
 
         // Autosave once the command that began a turn is logged and settled (ADR-058).
         _turnBegan = false;
@@ -244,15 +282,21 @@ public partial class Main : Node3D
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
             CloseScreens(); // the turn may have ended on the timer with a screen open
+            _followed = null;
             if (!_session.State.GetPlayer(e.Player).IsHuman)
             {
-                return; // computer turns play out unseen; the map stays with the last human
+                return; // the map stays with the last human, who watches the computer heroes it can see (ADR-090)
             }
 
-            // Hot-seat: the map is drawn through the eyes of whoever plays now.
-            _context.SetViewer(e.Player);
-            Select(_session.State.HeroesOf(e.Player).FirstOrDefault()?.Id, focus: true);
+            if (ShowingComputerMoves)
+            {
+                _turnToShow = e.Player; // once the computer's moves have been shown
+                return;
+            }
+
+            ShowTurn(e.Player);
         });
+        _context.HeroStepShown += FollowStep;
         _game.SubscribeWhileInTree<HeroDefeated>(_session.Events, e =>
         {
             if (e.Hero == _selectedHero)
@@ -352,6 +396,24 @@ public partial class Main : Node3D
             }
         };
 
+        // The speed settings (ADR-090, UI-1) live in the settings file, not in the game.
+        _settingsPath = LaunchArguments.SettingsPath ?? Path.Combine(ProjectSettings.GlobalizePath("user://"), SettingsFile.FileName);
+        _speeds = SettingsFile.Load(_settingsPath);
+        _menu.ShowSpeeds(_speeds);
+        _menu.SpeedsChanged += speeds =>
+        {
+            _speeds = speeds;
+            ApplySpeeds();
+            try
+            {
+                SettingsFile.Save(_settingsPath, speeds);
+            }
+            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+            {
+                _menu.SetMessage($"Could not keep the settings: {e.Message}");
+            }
+        };
+
         var button = new Button
         {
             Text = "Menu (F10)", AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1,
@@ -360,6 +422,32 @@ public partial class Main : Node3D
         button.Pressed += _menu.Toggle;
         layer.AddChild(button);
     }
+
+    private void ApplySpeeds()
+    {
+        if (_context is not null)
+        {
+            _context.Speeds = _speeds;
+            _battle.Speed = _speeds.Battle;
+        }
+    }
+
+    /// <summary>
+    /// Follows a computer hero with the camera when it starts walking where the player can see it (ADR-090), unless computer heroes are not
+    /// shown.
+    /// </summary>
+    private void FollowStep(Core.Domain.Heroes.Hero hero, MapPosition to)
+    {
+        if (_speeds.ShowComputerHeroes && hero.Id != _followed && !_session.State.GetPlayer(hero.Owner).IsHuman
+            && to.Level == _context.Level && _context.IsInSight(to))
+        {
+            _followed = hero.Id;
+            _camera.FocusOn(MapSpace.ToWorld(to));
+        }
+    }
+
+    /// <summary>Whether computer heroes' moves are still being shown: the next turn, the AI and the turn clock wait for them.</summary>
+    private bool ShowingComputerMoves => _context is not null && _context.IsShowingComputer;
 
     /// <summary>
     /// Whose auto combat setting the menu shows (ADR-090): the human in the battle against the computer, else the current player if human; null

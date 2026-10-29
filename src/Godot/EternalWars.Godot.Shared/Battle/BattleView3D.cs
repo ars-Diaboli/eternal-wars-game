@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Settings;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
@@ -16,7 +17,7 @@ namespace EternalWars.Godot.Shared.Battle;
 /// and placeholder units (<see cref="BattleUnitView"/>), with its own camera. It opens on <see cref="BattleStarted"/>
 /// and builds everything from that event; later battle events become steps of one animation queue (moves, lunges,
 /// projectiles, hit flashes, deaths), so a whole AI turn that the core resolved at once plays in order. Quick combat
-/// and battles without a human side skip the animation. While the queue plays the view is <see cref="IsBusy"/>;
+/// and battles without a human side skip the animation; <see cref="Speed"/> plays it slower, faster or not at all (ADR-090). While the queue plays the view is <see cref="IsBusy"/>;
 /// once it catches up with the core state it shows where a human-commanded active unit can go and raises
 /// <see cref="Idle"/>. After <see cref="BattleEnded"/> has played, <see cref="Finished"/> is raised and the view stays
 /// open until <see cref="Close"/>. Input is mapped by the app: <see cref="PickPoint"/> and <see cref="ShowIntent"/>.
@@ -53,6 +54,7 @@ public partial class BattleView3D : Node3D
     private Tween? _queue;
     private int _pending;
     private bool _instant;
+    private AnimationSpeed _speed = AnimationSpeed.Normal;
     private int _width;
     private float _zoom = 1f;
 
@@ -72,6 +74,20 @@ public partial class BattleView3D : Node3D
     public event Action? Closed;
 
     public bool IsOpen { get; private set; }
+
+    /// <summary>How fast the battle animations play (ADR-090, UI-1); instant shows each step's result at once. A change applies to the queue playing.</summary>
+    public AnimationSpeed Speed
+    {
+        get => _speed;
+        set
+        {
+            _speed = value;
+            if (_queue is not null && _queue.IsValid() && value != AnimationSpeed.Instant)
+            {
+                _queue.SetSpeedScale((float)SpeedSettings.Scale(value));
+            }
+        }
+    }
 
     /// <summary>Animations are still playing; the shown battlefield is behind the core state.</summary>
     public bool IsBusy => _pending > 0;
@@ -483,7 +499,8 @@ public partial class BattleView3D : Node3D
         }
 
         _instant |= _session.State.Battle?.AutoResolve == true;
-        if ((_instant || animate is null) && _pending == 0)
+        var instant = _instant || _speed == AnimationSpeed.Instant;
+        if ((instant || animate is null) && _pending == 0)
         {
             apply();
             OnIdle();
@@ -498,9 +515,10 @@ public partial class BattleView3D : Node3D
         if (_queue is null || !_queue.IsValid() || !_queue.IsRunning())
         {
             _queue = CreateTween();
+            _queue.SetSpeedScale((float)SpeedSettings.Scale(_speed == AnimationSpeed.Instant ? AnimationSpeed.Normal : _speed));
         }
 
-        if (!_instant)
+        if (!instant)
         {
             animate?.Invoke(_queue);
         }

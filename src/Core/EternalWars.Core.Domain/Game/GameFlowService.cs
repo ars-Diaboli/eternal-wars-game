@@ -16,6 +16,7 @@ namespace EternalWars.Core.Domain.Game;
 public sealed class GameFlowService(GameState state, IEventPublisher events)
 {
     private readonly Dictionary<HeroId, (PlayerId Owner, string Name)> _heroes = [];
+    private readonly Dictionary<MapObjectId, string> _prisoners = [];
     private int _teamsAtStart;
 
     /// <summary>Who is in the game: players with a hero or a town at the start; what heroes there are (for hero conditions).</summary>
@@ -46,6 +47,7 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
 
         _teamsAtStart = state.Players.Where(p => p.TookPart).Select(p => p.Team).Distinct().Count();
         _heroes.Clear();
+        _prisoners.Clear();
         foreach (var hero in state.Heroes)
         {
             _heroes[hero.Id] = (hero.Owner, hero.Name);
@@ -61,11 +63,12 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         }
 
         var rules = state.Rules;
+        WatchPrisons();
         foreach (var player in InGame())
         {
             if (rules.Victory.Where(c => c.Player is null || c.Player == player.Id).FirstOrDefault(c => HoldsFor(c, player)) is { } won)
             {
-                End(player.Team, ScenarioRules.Achieved(state, player, won, HeroNameOf(won)));
+                End(player.Team, ScenarioRules.Achieved(state, player, won, won.Kind == ConditionKind.ReleaseHero ? PrisonerOf(won) : HeroNameOf(won)));
                 return;
             }
         }
@@ -100,6 +103,12 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
                                     && state.Heroes.All(h => h.Id != hero) && state.AreEnemies(known.Owner, player.Id),
         ConditionKind.GatherResources => c.Amount > 0 && player.Resources[c.Resource] >= c.Amount,
         ConditionKind.SurviveUntilDay => state.Date.AbsoluteDay >= c.Day,
+        ConditionKind.CaptureObject => c.Target is { } id && state.FindObject(id) is IFlaggable { Owner: { } owner }
+                                       && (owner == player.Id || state.AreAllies(owner, player.Id)),
+        ConditionKind.ObtainArtifact => c.Artifact is { } artifact
+                                        && state.Heroes.Any(h => h.Artifacts.Has(artifact) && (h.Owner == player.Id || state.AreAllies(h.Owner, player.Id))),
+        ConditionKind.ReleaseHero => c.Target is { } prison && state.FindObject(prison) is null && _prisoners.TryGetValue(prison, out var prisoner)
+                                     && state.Heroes.Any(h => h.Definition == prisoner && (h.Owner == player.Id || state.AreAllies(h.Owner, player.Id))),
         _ => false,
     };
 
@@ -113,12 +122,19 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
                 ConditionKind.LoseTown => c.Town is { } id && state.FindObject(id) is Town town && town.Owner != player.Id,
                 ConditionKind.LoseHero => c.Hero is { } hero && _heroes.ContainsKey(hero) && state.Heroes.All(h => h.Id != hero),
                 ConditionKind.TimeLimit => state.Date.AbsoluteDay > c.Day,
+                ConditionKind.LoseArtifact => c.Artifact is { } artifact && !state.HeroesOf(player.Id).Any(h => h.Artifacts.Has(artifact)),
                 _ => false,
             };
             if (holds)
             {
                 return ScenarioRules.Lost(state, c, HeroNameOf(c));
             }
+        }
+
+        // A victory condition with a deadline not met in time (ADR-073); met in time, the game would have ended above.
+        if (state.Rules.Victory.FirstOrDefault(c => c.Deadline is { } day && state.Date.AbsoluteDay > day && (c.Player is null || c.Player == player.Id)) is { } missed)
+        {
+            return ScenarioRules.Missed(state, missed);
         }
 
         if (!state.Rules.Elimination)
@@ -163,6 +179,24 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
     }
 
     private string? HeroNameOf(ScenarioCondition c) => c.Hero is { } hero && _heroes.TryGetValue(hero, out var known) ? known.Name : null;
+
+    /// <summary>
+    /// Remembers who sits in each prison a condition names: freeing the hero removes the prison, and a prisoner left open by the map is drawn
+    /// after <see cref="Begin"/> (<see cref="PrisonRules.Prepare"/>).
+    /// </summary>
+    private void WatchPrisons()
+    {
+        foreach (var c in state.Rules.Victory)
+        {
+            if (c is { Kind: ConditionKind.ReleaseHero, Target: { } id } && state.FindObject(id) is Prison { Hero: { } hero })
+            {
+                _prisoners[id] = hero;
+            }
+        }
+    }
+
+    private string? PrisonerOf(ScenarioCondition c) =>
+        c.Target is { } id && _prisoners.TryGetValue(id, out var hero) && state.HeroRoster.Contains(hero) ? state.HeroRoster.Get(hero).Name : null;
 
     /// <summary>A defeated player leaves: its heroes are removed, its towns and mines turn neutral.</summary>
     private void Defeat(Player player, string reason)
