@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Settings;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -9,7 +10,8 @@ public sealed record SaveItem(string Path, string Label, string? Name, bool Load
 /// Save and load (ADR-058): the saves in a folder, newest first, a name field and Save / Load / Delete. Works on the
 /// adventure map and in battle, because a save is the game's command log. The app lists the saves and answers the
 /// events; the panel only shows and asks. Saving under an existing name replaces that save. Below the saves, the current human player's
-/// auto combat setting (ADR-090, CMB-10), which the app turns into a command.
+/// auto combat setting (ADR-090, CMB-10), which the app turns into a command, and the speed settings (ADR-090, UI-1), which the app keeps in
+/// the settings file.
 /// </summary>
 public partial class GameMenuPanel : CenterContainer
 {
@@ -22,6 +24,10 @@ public partial class GameMenuPanel : CenterContainer
     private readonly HBoxContainer _autoCombatRow = new() { Visible = false };
     private readonly Label _autoCombatLabel = new();
     private readonly OptionButton _autoCombat = new();
+    private readonly OptionButton _ownSpeed = SpeedButton(withHidden: false);
+    private readonly OptionButton _computerSpeed = SpeedButton(withHidden: true);
+    private readonly OptionButton _battleSpeed = SpeedButton(withHidden: false);
+    private SpeedSettings _speeds = SpeedSettings.Default;
     private IReadOnlyList<SaveItem> _entries = [];
     private Func<IReadOnlyList<SaveItem>> _listSaves = null!;
     private Action<string> _deleteSave = null!;
@@ -38,6 +44,9 @@ public partial class GameMenuPanel : CenterContainer
 
     /// <summary>The player picked an auto combat setting: 0 off, 1 ask before each battle, 2 always.</summary>
     public event Action<int>? AutoCombatSelected;
+
+    /// <summary>The player changed a speed setting (the app keeps it in the settings file and applies it).</summary>
+    public event Action<SpeedSettings>? SpeedsChanged;
 
     /// <summary>Whether there is a running game to save (false on the new-game screen).</summary>
     public bool CanSave
@@ -88,6 +97,18 @@ public partial class GameMenuPanel : CenterContainer
         _autoCombatRow.AddChild(_autoCombatLabel);
         _autoCombatRow.AddChild(_autoCombat);
         rows.AddChild(_autoCombatRow);
+
+        rows.AddChild(new HSeparator());
+        rows.AddChild(new Label { Text = "Speed (kept on this computer)" });
+        rows.AddChild(SpeedRow("Your heroes", _ownSpeed));
+        rows.AddChild(SpeedRow("Computer heroes", _computerSpeed));
+        rows.AddChild(SpeedRow("Battle animations", _battleSpeed));
+        _ownSpeed.ItemSelected += index => ChangeSpeeds(_speeds with { OwnHeroes = (AnimationSpeed)index });
+        _computerSpeed.ItemSelected += index => ChangeSpeeds(index == HiddenItem
+            ? _speeds with { ShowComputerHeroes = false }
+            : _speeds with { ComputerHeroes = (AnimationSpeed)index, ShowComputerHeroes = true });
+        _battleSpeed.ItemSelected += index => ChangeSpeeds(_speeds with { Battle = (AnimationSpeed)index });
+        ShowSpeeds(_speeds);
 
         _list.ItemSelected += index =>
         {
@@ -162,7 +183,49 @@ public partial class GameMenuPanel : CenterContainer
         _autoCombat.Selected = mode;
     }
 
+    /// <summary>Shows the speed settings read from the settings file.</summary>
+    public void ShowSpeeds(SpeedSettings speeds)
+    {
+        _speeds = speeds;
+        _ownSpeed.Selected = (int)speeds.OwnHeroes;
+        _computerSpeed.Selected = speeds.ShowComputerHeroes ? (int)speeds.ComputerHeroes : HiddenItem;
+        _battleSpeed.Selected = (int)speeds.Battle;
+    }
+
     public void Close() => Visible = false;
+
+    /// <summary>The computer heroes' extra choice, after the four speeds: "Don't show".</summary>
+    private const int HiddenItem = 4;
+
+    private static OptionButton SpeedButton(bool withHidden)
+    {
+        var button = new OptionButton { CustomMinimumSize = new Vector2(160, 0) };
+        foreach (var label in new[] { "Slow", "Normal", "Fast", "Instant" })
+        {
+            button.AddItem(label);
+        }
+
+        if (withHidden)
+        {
+            button.AddItem("Don't show");
+        }
+
+        return button;
+    }
+
+    private static HBoxContainer SpeedRow(string label, OptionButton button)
+    {
+        var row = new HBoxContainer();
+        row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(180, 0) });
+        row.AddChild(button);
+        return row;
+    }
+
+    private void ChangeSpeeds(SpeedSettings speeds)
+    {
+        _speeds = speeds;
+        SpeedsChanged?.Invoke(speeds);
+    }
 
     public void SetMessage(string text) => _message.Text = text;
 

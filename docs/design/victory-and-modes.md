@@ -10,7 +10,7 @@
   decides.
 - A defeated player's heroes leave, its towns, mines and map dwellings turn neutral and its caravans vanish; the game
   then refuses commands and the game app shows the result.
-- **ADR-073 (not built)**:
+- **ADR-073 (built, ADR-094)**:
   - New victory conditions: capture a given map object (an ownable one — mine, dwelling, town), obtain a given
     artifact (a hero of the player carries it), release a given hero from its prison.
   - New defeat condition: lose a given artifact (no hero of the player carries it any more); lose a town and lose a
@@ -20,6 +20,9 @@
   - **Teams**: a team wins while at least one of its **human** players survives; eliminated human teammates share the win. A
     computer ally's survival does not win for them: they have lost (built, ADR-083).
   - The assumptions above were confirmed in ADR-075.
+  - As built (ADR-094): "capture a map object" counts any object with a flag (mine, dwelling, provider, garrison, town) owned by the team;
+    "obtain an artifact" counts a hero of the team carrying it, worn or in the backpack; "release a prisoner" names the prison. A deadline is
+    an absolute day; on the day after it, the players the condition applies to are defeated. Map format v25.
 - **Players without a town** (ADR-075): a campaign-like map may start a player with heroes only; losing a hero is then the
   defeat condition. Set the grace period to 0 (the town rule is off) and add "lose a hero"; the validator warns about a
   player that starts without a town while the grace period is on.

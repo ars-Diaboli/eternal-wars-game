@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Events;
@@ -24,8 +25,12 @@ public partial class ConditionsPanel : VBoxContainer
         (ConditionKind.DefeatHero, "Victory: defeat a hero"),
         (ConditionKind.GatherResources, "Victory: gather resources"),
         (ConditionKind.SurviveUntilDay, "Victory: survive until a day"),
+        (ConditionKind.CaptureObject, "Victory: capture a map object"),
+        (ConditionKind.ObtainArtifact, "Victory: obtain an artifact"),
+        (ConditionKind.ReleaseHero, "Victory: release a prisoner"),
         (ConditionKind.LoseTown, "Defeat: lose a town"),
         (ConditionKind.LoseHero, "Defeat: lose a hero"),
+        (ConditionKind.LoseArtifact, "Defeat: lose an artifact"),
         (ConditionKind.TimeLimit, "Defeat: time limit"),
     ];
 
@@ -45,7 +50,12 @@ public partial class ConditionsPanel : VBoxContainer
     private readonly OptionButton _resource = new();
     private readonly SpinBox _amount = new() { MinValue = 1, MaxValue = 1_000_000, Step = 1, Value = 1000, Prefix = "x " };
     private readonly SpinBox _day = new() { MinValue = 1, MaxValue = 1000, Step = 1, Value = 30, Prefix = "day " };
+    private readonly OptionButton _object = new();
+    private readonly OptionButton _prison = new();
+    private readonly OptionButton _artifact = new();
+    private readonly SpinBox _deadline = new() { MinValue = 0, MaxValue = 1000, Step = 1, Prefix = "by day", Suffix = "(0 = no deadline)" };
     private readonly Label _status = new();
+    private List<string> _artifactIds = [];
     private MapEditorSession _editor = null!;
 
     private GameState Scenario => _editor.Scenario;
@@ -95,8 +105,12 @@ public partial class ConditionsPanel : VBoxContainer
         }
 
         AddChild(Row("Resource", _resource));
+        AddChild(Row("Object", _object));
+        AddChild(Row("Prison", _prison));
+        AddChild(Row("Artifact", _artifact));
         AddChild(_amount);
         AddChild(_day);
+        AddChild(_deadline);
         var add = new Button { Text = "Add condition" };
         add.Pressed += Add;
         AddChild(add);
@@ -149,6 +163,10 @@ public partial class ConditionsPanel : VBoxContainer
         _resource.GetParent<Control>().Visible = kind == ConditionKind.GatherResources;
         _amount.Visible = kind == ConditionKind.GatherResources;
         _day.Visible = kind is ConditionKind.SurviveUntilDay or ConditionKind.TimeLimit;
+        _object.GetParent<Control>().Visible = kind == ConditionKind.CaptureObject;
+        _prison.GetParent<Control>().Visible = kind == ConditionKind.ReleaseHero;
+        _artifact.GetParent<Control>().Visible = kind is ConditionKind.ObtainArtifact or ConditionKind.LoseArtifact;
+        _deadline.Visible = new ScenarioCondition(kind).CanHaveDeadline;
     }
 
     private void Refresh()
@@ -186,6 +204,13 @@ public partial class ConditionsPanel : VBoxContainer
         Fill(_player, [(-1, "Any player"), .. Scenario.Players.Select(p => (p.Id.Value, p.Name))]);
         Fill(_town, Scenario.ObjectsOf<Town>().Select(t => (t.Id.Value, t.Name)));
         Fill(_hero, Scenario.Heroes.Select(h => (h.Id.Value, h.Name)));
+        // Towns have their own kind; the other objects with a flag: mines, dwellings, providers, garrisons (ADR-073).
+        Fill(_object, Scenario.Objects.Where(o => o is IFlaggable and not Town)
+            .Select(o => (o.Id.Value, $"{o.Definition.Name} ({o.Position.X}, {o.Position.Y})")));
+        Fill(_prison, Scenario.ObjectsOf<Prison>()
+            .Select(p => (p.Id.Value, $"{(p.Hero is { } h && Scenario.HeroRoster.Contains(h) ? Scenario.HeroRoster.Get(h).Name : "Drawn prisoner")} ({p.Position.X}, {p.Position.Y})")));
+        _artifactIds = Scenario.Artifacts.All.OrderBy(a => a.Name, StringComparer.Ordinal).Select(a => a.Id).ToList();
+        Fill(_artifact, _artifactIds.Select((id, i) => (i, Scenario.Artifacts.Get(id).Name)));
     }
 
     private void AddRows(string heading, IReadOnlyList<ScenarioCondition> conditions, Func<ScenarioRules, ScenarioCondition, ScenarioRules> remove)
@@ -224,6 +249,10 @@ public partial class ConditionsPanel : VBoxContainer
         MapObjectId? town = _town.Selected >= 0 ? new MapObjectId(_town.GetItemId(_town.Selected)) : null;
         HeroId? hero = _hero.Selected >= 0 ? new HeroId(_hero.GetItemId(_hero.Selected)) : null;
         var resource = (ResourceType)_resource.GetItemId(Math.Max(0, _resource.Selected));
+        MapObjectId? target = _object.Selected >= 0 ? new MapObjectId(_object.GetItemId(_object.Selected)) : null;
+        MapObjectId? prison = _prison.Selected >= 0 ? new MapObjectId(_prison.GetItemId(_prison.Selected)) : null;
+        var artifact = _artifact.Selected >= 0 ? _artifactIds[_artifact.GetItemId(_artifact.Selected)] : null;
+        PlayerId? carrier = artifact is null ? null : Scenario.Heroes.FirstOrDefault(h => h.Artifacts.Has(artifact))?.Owner;
 
         ScenarioCondition? condition = kind switch
         {
@@ -234,12 +263,21 @@ public partial class ConditionsPanel : VBoxContainer
             ConditionKind.LoseTown when town is { } t && (player ?? (Scenario.FindObject(t) as Town)?.Owner) is { } loser => ScenarioCondition.LoseTown(t, loser),
             ConditionKind.LoseHero when hero is { } h && (player ?? Scenario.Heroes.FirstOrDefault(x => x.Id == h)?.Owner) is { } loser => ScenarioCondition.LoseHero(h, loser),
             ConditionKind.TimeLimit => ScenarioCondition.TimeLimit((int)_day.Value, player),
+            ConditionKind.CaptureObject when target is { } o => ScenarioCondition.CaptureObject(o, player),
+            ConditionKind.ObtainArtifact when artifact is not null => ScenarioCondition.ObtainArtifact(artifact, player),
+            ConditionKind.ReleaseHero when prison is { } p => ScenarioCondition.ReleaseHero(p, player),
+            ConditionKind.LoseArtifact when artifact is not null && (player ?? carrier) is { } loser => ScenarioCondition.LoseArtifact(artifact, loser),
             _ => null,
         };
         if (condition is null)
         {
-            _status.Text = "Pick what the condition is about (and a player who loses, for a town or hero without an owner).";
+            _status.Text = "Pick what the condition is about (and a player who loses, for a town, hero or artifact without an owner).";
             return;
+        }
+
+        if (condition.CanHaveDeadline && (int)_deadline.Value > 0)
+        {
+            condition = condition.By((int)_deadline.Value);
         }
 
         _status.Text = string.Empty;

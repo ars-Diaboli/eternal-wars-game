@@ -9,7 +9,9 @@
 
 param(
     [string]$Godot = $env:GODOT,
-    [string]$Out = (Join-Path (Split-Path -Parent $PSScriptRoot) '.shots')
+    [string]$Out = (Join-Path (Split-Path -Parent $PSScriptRoot) '.shots'),
+    # Run only the scenarios whose name matches this wildcard (e.g. 'game-*').
+    [string]$Only = '*'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -38,7 +40,10 @@ $scenarios = @(
     # Auto combat (ADR-090): the menu sets "Ask before each battle", the step into the monster asks, Auto combat shows the outcome, Accept
     # returns to the map without a second result screen. The question waits until the imps' first moves have played.
     @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;12:click:1020,634;15:click:1028,694;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
+       Input = '3:key:Enter;8:key:F10;12:click:1020,554;15:click:1028,614;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
+    # Speed settings (ADR-090): the menu sets "Your heroes" to Slow, then the hero walks a route (its steps take twice as long).
+    @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 70
+       Input = '3:key:Enter;8:key:F10;12:click:733,636;15:click:733,666;19:key:Escape;24:click:960,520;30:click:960,520' },
     # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
     # to Red with the full time and the hero screen closes.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 640
@@ -73,10 +78,13 @@ $scenarios = @(
 )
 
 $failed = 0
-foreach ($scenario in $scenarios) {
+foreach ($scenario in $scenarios | Where-Object { $_.Name -like $Only }) {
     $dir = Join-Path $Out $scenario.Name
     New-Item -ItemType Directory -Force $dir | Out-Null
-    $userArgs = @("--autoinput=$($scenario.Input)")
+    # Every game scenario starts from the default settings (ADR-090), whatever this computer's settings file says.
+    $settings = Join-Path $dir 'settings.json'
+    Remove-Item $settings -ErrorAction SilentlyContinue
+    $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings")
     if ($scenario.Map) { $userArgs += "--map=$($scenario.Map)" }
 
     $log = & $Godot --path (Join-Path $root "src/Apps/$($scenario.App)") --write-movie (Join-Path $dir 'frame.png') `

@@ -232,8 +232,43 @@ public static class MapValidator
 
             var town = condition.Town is { } townId ? scenario.FindObject(townId) as Town : null;
             var hero = condition.Hero is { } heroId ? scenario.Heroes.FirstOrDefault(h => h.Id == heroId) : null;
+            var target = condition.Target is { } targetId ? scenario.FindObject(targetId) : null;
+            var artifactKnown = condition.Artifact is { } artifactId && scenario.Artifacts.Contains(artifactId);
+            if (condition.Deadline is { } deadline)
+            {
+                if (!condition.CanHaveDeadline)
+                {
+                    yield return new(IssueSeverity.Error, $"'{name}': only a victory condition other than surviving may have a deadline.");
+                }
+                else if (deadline < 2)
+                {
+                    yield return new(IssueSeverity.Error, $"'{name}': a deadline needs a day after the first.");
+                }
+            }
+
             switch (condition.Kind)
             {
+                case ConditionKind.CaptureObject when target is not IFlaggable:
+                    yield return new(IssueSeverity.Error, $"Condition '{condition.Kind}' points at no object a player can own (a mine, dwelling, provider, garrison or town).");
+                    break;
+                case ConditionKind.CaptureObject when ((IFlaggable)target).Owner is { } owner && (condition.Player is null ? scenario.HasPlayer(owner) : owner == condition.Player):
+                    yield return new(IssueSeverity.Warning, $"'{name}': the object is owned from the start, so the game would end at once.", target!.Position);
+                    break;
+                case ConditionKind.ReleaseHero when target is not Prison:
+                    yield return new(IssueSeverity.Error, $"Condition '{condition.Kind}' points at a prison that does not exist.");
+                    break;
+                case ConditionKind.ObtainArtifact or ConditionKind.LoseArtifact when !artifactKnown:
+                    yield return new(IssueSeverity.Error, $"Condition '{condition.Kind}' names an unknown artifact.");
+                    break;
+                case ConditionKind.LoseArtifact when condition.Player is null:
+                    yield return new(IssueSeverity.Error, $"'{name}' needs the player who loses.");
+                    break;
+                case ConditionKind.LoseArtifact when !scenario.HeroesOf(condition.Player!.Value).Any(h => h.Artifacts.Has(condition.Artifact!)):
+                    yield return new(IssueSeverity.Warning, $"'{name}': no hero of the player carries it at the start, so it would lose at once.");
+                    break;
+                case ConditionKind.ObtainArtifact when scenario.Heroes.Any(h => h.Artifacts.Has(condition.Artifact!) && (condition.Player is null ? scenario.HasPlayer(h.Owner) : h.Owner == condition.Player)):
+                    yield return new(IssueSeverity.Warning, $"'{name}': a hero carries it from the start, so the game would end at once.");
+                    break;
                 case ConditionKind.CaptureTown or ConditionKind.LoseTown when town is null:
                     yield return new(IssueSeverity.Error, $"Condition '{condition.Kind}' points at a town that does not exist.");
                     break;

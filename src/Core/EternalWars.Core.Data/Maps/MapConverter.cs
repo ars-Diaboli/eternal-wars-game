@@ -143,13 +143,15 @@ public static class MapConverter
         events.WeeklyFactions?.ToList(),
         events.MonthlyFactions?.ToList());
 
-    private static ConditionDocument ToDocument(ScenarioCondition c) => c.Kind switch
+    private static ConditionDocument ToDocument(ScenarioCondition c) => (c.Kind switch
     {
-        ConditionKind.CaptureTown or ConditionKind.LoseTown => new(c.Kind, c.Player?.Value, Town: c.Town?.Value),
+        ConditionKind.CaptureTown or ConditionKind.LoseTown => new ConditionDocument(c.Kind, c.Player?.Value, Town: c.Town?.Value),
         ConditionKind.DefeatHero or ConditionKind.LoseHero => new(c.Kind, c.Player?.Value, Hero: c.Hero?.Value),
         ConditionKind.GatherResources => new(c.Kind, c.Player?.Value, Resource: c.Resource, Amount: c.Amount),
+        ConditionKind.CaptureObject or ConditionKind.ReleaseHero => new(c.Kind, c.Player?.Value, Target: c.Target?.Value),
+        ConditionKind.ObtainArtifact or ConditionKind.LoseArtifact => new(c.Kind, c.Player?.Value, Artifact: c.Artifact),
         _ => new(c.Kind, c.Player?.Value, Day: c.Day),
-    };
+    }) with { Deadline = c.Deadline };
 
     private static ScenarioRules ToRules(ScenarioRulesDocument? document) => document is null
         ? ScenarioRules.Default
@@ -173,7 +175,10 @@ public static class MapConverter
         c.Hero is { } hero ? new HeroId(hero) : null,
         c.Resource ?? ResourceType.Gold,
         c.Amount ?? 0,
-        c.Day ?? 0);
+        c.Day ?? 0,
+        c.Target is { } target ? new MapObjectId(target) : null,
+        c.Artifact,
+        c.Deadline);
 
     private static Hero ToHero(HeroPlacementDocument h, CreatureCatalog creatures, HeroCatalog heroRoster, ArtifactCatalog artifacts)
     {

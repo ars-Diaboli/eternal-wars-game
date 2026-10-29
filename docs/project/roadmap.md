@@ -21,8 +21,9 @@ Shrines and the bank re-draft). The ADR-077 items are answered and built
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
-UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), UI-1 is decided. More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
-replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
+UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
+replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. ADR-073's remaining victory conditions
+and deadlines are built (ADR-094). **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
@@ -356,8 +357,8 @@ Content draft: [artifacts.md](../content/artifacts.md).
       first one after 0 to 8 skipped weeks (default: from the second week, ADR-075); map format v24, template v6, editor conditions panel (ADR-084; smoke scenario `editor-week-events`)
 - [x] Players without a town on campaign-like maps (ADR-075): grace period 0 and a "lose a hero" condition (both existed); validator warning
       when a player starts without a town while the grace period is on
-- [ ] More conditions (ADR-073): capture a map object, obtain an artifact, release a prisoner; lose an artifact; deadlines on victory
-      conditions; editor support; map format bump
+- [x] More conditions (ADR-073, ADR-094): capture a map object, obtain an artifact, release a prisoner; lose an artifact; deadlines on
+      victory conditions; editor conditions panel; validator; map format v25
 - [x] Team victory: a team wins while one of its human players survives; eliminated human teammates share the win (ADR-073, ADR-083)
 - [x] Turn timer (ADR-088, ADR-091, FLOW-3): a new-game option, 1 to 30 minutes, human players only, saved with the game; warnings,
       defaults for pending choices, a battle against the computer finished first, stopped in a battle between two humans
@@ -563,8 +564,9 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 - [ ] Terrain: heightmapped landscape with splat shader and blended biome transitions; grid only as overlay
 - [ ] PBR models for heroes, creatures, towns and map objects; fog/volumetrics
 - [ ] UI theme (HoMM-style right-side panel, status bar)
-- [ ] Speed settings (ADR-088, ADR-090, UI-1): slow / normal / fast / instant for own heroes, computer heroes (with "don't show") and battle
-      animations; a settings screen kept per computer; animated hero walking
+- [x] Speed settings (ADR-088, ADR-090, ADR-095, UI-1): slow / normal / fast / instant for own heroes, computer heroes (with "don't show")
+      and battle animations; rows in the game menu, kept in `settings.json`; hero walking with a hop; computer turns played back hero by
+      hero (smoke scenario `game-speed-settings`)
 - [ ] Audio: per-terrain ambient music, town themes
 
 ## Phase 6: Story campaign

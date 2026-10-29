@@ -2103,7 +2103,7 @@ planned (when is MP-1).
 - Tests: `BattleGridTests` (the circle for walkers and flyers, the way round an obstacle, lengths, the straight-line distance penalty).
 
 ### ADR-090: Auto combat and speed settings (CMB-10, UI-1, 2026-10-29)
-**Status**: auto combat implemented (2026-10-29); the speed settings are decided, not built. Answers CMB-10 and UI-1 (ADR-088): the owner
+**Status**: auto combat implemented (2026-10-29); the speed settings are built too (ADR-095). Answers CMB-10 and UI-1 (ADR-088): the owner
 accepted both proposals.
 
 **Auto combat** (CMB-10):
@@ -2193,3 +2193,50 @@ and (d).
   ones, is HERO-8.
 - Fits the core as it is: `HeroSpecialty` already has resource specialties (`HeroIncome`) and skill specialties; the change is mostly the table
   `heroes.csv`, plus a flat amount for a skill specialty (`HeroSpecialty.Amount`) and the Necromancy effect.
+
+### ADR-094: Capture an object, obtain or lose an artifact, release a prisoner, deadlines (implementation, 2026-10-29)
+**Status**: implemented (2026-10-29). Carries out ADR-073's remaining victory and defeat conditions (FLOW-1; its assumptions were confirmed in
+ADR-075). Map format **v25**. Choices made here are marked *(choice)*.
+
+- **New kinds** (`ConditionKind`, appended so older maps keep their numbers):
+  - **Capture a map object** (`CaptureObject`, victory): the player's team owns the object `Target`. Any object with a flag counts: mine,
+    creature dwelling, resource provider, garrison, town *(choice: the editor lists the non-town ones; towns keep "capture a town")*.
+  - **Obtain an artifact** (`ObtainArtifact`, victory): a hero of the player's **team** carries `Artifact`, worn or in the backpack *(choice:
+    the team, as "capture a town" does)*.
+  - **Release a prisoner** (`ReleaseHero`, victory): the player's team frees the hero held in the prison `Target`. Freeing removes the prison,
+    so `GameFlowService` remembers who sits in it (also a prisoner the map left open, drawn at the start) and looks for that roster hero among
+    the team's heroes once the prison is gone. A prisoner freed by an enemy makes the condition impossible; nothing else happens *(choice)*.
+  - **Lose an artifact** (`LoseArtifact`, defeat): no hero of the player carries `Artifact` any more. Like "lose a town", it needs the player
+    who loses.
+- **Deadlines**: every victory condition but "survive until a day" may carry `Deadline`, an absolute day. Met on that day or before, it wins as
+  usual; on the day after, the players it applies to are defeated ("Missed the deadline: …"), all of them when it names no player
+  *(choice; HoMM3-like)*. The plain "time limit" defeat stays.
+- **Map format v25**: `ConditionDocument` gains `target` (an object or prison id), `artifact` and `deadline`; older maps load unchanged.
+- **Validator**: errors for an object nobody can own, a target that is not a prison, an unknown artifact, "lose an artifact" without a player,
+  a deadline on "survive" or before day 2; warnings for an object or artifact already owned or carried at the start (the game would end at
+  once) and an artifact the losing player does not carry at the start (it would lose at once).
+- **Editor**: the conditions panel offers the four kinds with an object, prison or artifact list and a "by day" field for the deadline (0 = none);
+  "lose an artifact" without a chosen player goes to the player whose hero carries it.
+- Tests: `GameFlowTests` (each kind wins or defeats; a prisoner named by the map or drawn at the start; a deadline missed and met; the map file
+  round trip and an older version; the validator).
+
+### ADR-095: Speed settings and hero walking (implementation, 2026-10-29)
+**Status**: implemented (2026-10-29). Carries out ADR-090's speed settings (UI-1). Choices made here are marked *(choice)*.
+
+- **Settings**: `SpeedSettings` (core, `Settings`): own heroes, computer heroes, "show computer heroes" and battle animations, each **slow,
+  normal, fast or instant** (`AnimationSpeed`; 0.5×, 1×, 2×, no animation *(choice)*). "Own heroes" means every human player's heroes (hot-seat
+  included); "don't show" is the computer heroes' fifth choice. Defaults: normal everywhere, computer heroes shown *(choice)*.
+- **The file**: `SettingsFile` (Core.Data) keeps them in `settings.json` in the user data folder (`{"speed": {...}}`, room for later settings);
+  a missing or broken file, or a missing value, gives the default. `--settings=<file>` uses another file (the smoke scenarios start from the
+  defaults). Not in saves; no rule reads them.
+- **Screen**: three rows under the save list and auto combat in the game menu (F10); a change applies at once and is written to the file.
+- **Hero walking**: a step is 0.15 s at normal speed, as before, now with a small hop of the placeholder capsule. A computer hero's step is
+  shown only when computer heroes are shown and the viewer sees one end of the step; otherwise it happens at once.
+- **Computer turns**: the AI still plays a whole turn in one go. The hero views play the steps back one hero after another on one clock
+  (`MapViewContext.Schedule`, advanced by the world view's frame time, so Movie Maker runs keep step). While computer steps are shown, the game
+  app holds the AI, the next human turn, the input and the turn clock, and the camera follows each computer hero the viewer can see when it
+  starts to walk; the map turns to the next human player when the playback ends.
+- **Battles**: `BattleView3D.Speed` scales the animation queue; instant applies each step at once, like quick combat.
+- Tests: `SettingsFileTests` (round trip, broken and missing files, partial files, step lengths). Smoke: `game-speed-settings` (the menu sets
+  "Your heroes" to Slow, then the hero walks a route); the `game-auto-combat` clicks moved with the taller menu; `smoke-godot.ps1 -Only`
+  runs some scenarios.

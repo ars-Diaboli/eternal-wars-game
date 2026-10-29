@@ -33,11 +33,12 @@ namespace EternalWars.Core.Data.Maps;
 /// <c>magiEye</c>), Keymaster's Tents and border posts (<c>keymaster</c>, <c>borderPost</c>), map taverns (<c>tavern</c>) and garrisons
 /// (<c>garrison</c>, optional owner and troops; ADR-082); the undead bank <c>bank.ruins</c> is <c>bank.crypt</c> (older ids still load).
 /// 24 = + week and month events (<c>rules.weekEvents</c>: on or off, weeks skipped, factions; omitted = the default) and the Astrologer's Tower
-/// (<c>astrologersTower</c>; ADR-084). Older versions still load (with the default events).
+/// (<c>astrologersTower</c>; ADR-084). 25 = + conditions to capture a map object, obtain or lose an artifact and release a prisoner, and deadlines
+/// on victory conditions (<c>target</c>, <c>artifact</c>, <c>deadline</c>; ADR-094). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 24;
+    public const int CurrentFormatVersion = 25;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -105,7 +106,10 @@ public sealed record WeekEventsDocument(
     IReadOnlyList<string>? WeeklyFactions = null,
     IReadOnlyList<string>? MonthlyFactions = null);
 
-/// <summary>One condition; which fields apply depends on <see cref="Kind"/> (see <see cref="ConditionKind"/>).</summary>
+/// <summary>
+/// One condition; which fields apply depends on <see cref="Kind"/> (see <see cref="ConditionKind"/>). <see cref="Target"/> (an object or a
+/// prison), <see cref="Artifact"/> and a victory condition's <see cref="Deadline"/> (an absolute day) are v25 (ADR-094).
+/// </summary>
 public sealed record ConditionDocument(
     ConditionKind Kind,
     int? Player = null,
@@ -113,7 +117,10 @@ public sealed record ConditionDocument(
     int? Hero = null,
     ResourceType? Resource = null,
     int? Amount = null,
-    int? Day = null);
+    int? Day = null,
+    int? Target = null,
+    string? Artifact = null,
+    int? Deadline = null);
 
 /// <param name="Name">Player name.</param>
 /// <param name="IsHuman">Human or AI by default.</param>
