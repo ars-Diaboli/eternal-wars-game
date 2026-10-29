@@ -21,7 +21,7 @@ Shrines and the bank re-draft). The ADR-077 items are answered and built
 catalogue (their Godot screens still need a run). The week and month events, the Astrologer's Tower and the kingdom overview are built
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
-UI-1, FLOW-3, MP-1 and MP-2; CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
+UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, MP-3 and MP-4 still open); CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
 replays and a replay viewer, and rarer hero specialties, waiting for FLOW-4, UI-2 and HERO-8. ADR-073's remaining victory conditions
 and deadlines are built (ADR-094). Pandora's Box and HotA-like map events with quests (ADR-096) wait for MAP-35 and EVT-1 … EVT-6; the arena mode (ADR-097) for ARN-1 and ARN-2.
 **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
@@ -591,23 +591,26 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
       hero (smoke scenario `game-speed-settings`)
 - [ ] Audio: per-terrain ambient music, town themes
 
+## LAN multiplayer (ADR-088, ADR-098; before 1.0, after the Phase 3 and 4 exits)
+- [ ] Network layer: host and clients over the LAN; clients send commands, the host runs them and plays the computer players (MP-1)
+- [ ] Per-player view: a client starts from the map's static content; the host sends each client only the state and events it may see
+      (fog), and the client's views draw from that partial state ❓ MP-3
+- [ ] Lobby: LAN discovery and typing an address, map or random map with its options (ADR-086), colours, computer players, the
+      simultaneous first week on or off; text chat (MP-1)
+- [ ] Battles between two remote humans, each side live; a player who drops out (pause, the host lets the computer take over or waits
+      for a rejoin) (MP-1)
+- [ ] Saves: the host's save resumes in multiplayer; a client's save loads in single player ❓ MP-3
+- [ ] Start zones in the map: the generator writes them, the editor paints them, validator; map format bump ❓ MP-4
+- [ ] Simultaneous first week on maps with start zones: conflicts (entering another start zone, touching an object another player touched
+      that day, seeing another player's hero) discard the day for everyone, which is played again turn by turn (MP-2, ADR-098)
+- [ ] The turn timer in multiplayer and in simultaneous days: one timer, the day ends when all have ended their turn (FLOW-3, MP-2)
+
+**Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
+
 ## Phase 6: Story campaign
 - [ ] Scenario chaining and hero carry-over
 - [ ] Map triggers and events, dialogue: built on the map events (ADR-096); campaign variables kept from one map to the next (FLOW-1, EVT-1)
 - [ ] Editor support for triggers and scripting: the map events' "Events" tab (ADR-096)
-
-## LAN multiplayer (ADR-088; where it goes in the plan: MP-1 ❓)
-- [ ] Host and clients over the LAN: the host runs the game, clients send commands, every accepted command goes to all clients;
-      digest checks (MP-1)
-- [ ] Lobby: discovery and address, map or random map with its options (ADR-086), colours, computer players (MP-1)
-- [ ] Battles between two remote humans; a player who drops out (pause, computer takes over, rejoin) (MP-1)
-- [ ] Saves: a multiplayer save loads in multiplayer, single player (pick a colour that was human, the computer plays the rest) or
-      hot-seat (MP-1)
-- [ ] Simultaneous first week while players stay in their start zones and touch no common object; on a conflict the turn goes on in the
-      normal order ❓ MP-2
-- [ ] The turn timer in multiplayer and in simultaneous days (FLOW-3, MP-2)
-
-**Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
 
 ## Risks
 | Risk | Mitigation |
@@ -615,6 +618,6 @@ Content draft: [spells.md](../content/spells.md). Open questions: MAG-1 (the spe
 | Godot C# library limitations (scripts in referenced assemblies) | Phase 0 spike; code-first nodes; app-side wrappers for editor-attachable scripts |
 | 3D readability on dense maps | Early camera and art-style prototypes; keep the 2D harness as the logic reference |
 | AI complexity | Deterministic core + commands give headless simulation for AI tuning |
-| LAN multiplayer desyncs | Every change is a command and the core is deterministic; clients compare `GameStateDigest` with the host |
+| LAN multiplayer: a client's partial view drifts from the host's state, or leaks what is under the fog | Only the host runs rules; tests that compare a client's view with the host's state filtered by fog |
 | Random maps unfair or broken | Batch generation + automated validation/fairness metrics in CI; templates versioned like maps |
 | Asset production cost | Look-dev spike early; buy/adapt PBR asset packs where the dark-fantasy style allows |

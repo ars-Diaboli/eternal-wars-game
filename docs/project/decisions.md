@@ -49,7 +49,7 @@ Library node classes are instantiated from code and configured through `Bind(...
 We keep HoMM3's loop and structure but take deliberate departures, logged in [departures.md](../design/departures.md).
 Art: realistic lighting and PBR materials, dark and grim atmosphere, recognisable nods to the
 original. Modes in priority order: single-player vs AI, hot-seat, story campaign. Online multiplayer is
-out of scope.
+out of scope (LAN multiplayer added by ADR-088, ADR-098).
 
 ### ADR-009: Initiative orders turns, one action per round
 **Status**: accepted (2026-10-15)
@@ -2060,7 +2060,7 @@ seed and options, then generates" (ADR-064, RMG-5, RMG-7). Choices made here are
 ### ADR-088: Diagonal battle movement, speed settings, turn timer, auto combat, LAN multiplayer (2026-10-28)
 **Status**: accepted as a design (2026-10-28), owner notes in `ideas.md`; **nothing implemented**. The open points are CMB-9, CMB-10, UI-1,
 FLOW-3, MP-1 and MP-2 in `open-questions.md`, each with a proposal. **Changes ADR-008's scope**: online multiplayer was out; LAN multiplayer is now
-planned (when is MP-1).
+planned (before 1.0, ADR-098).
 
 - **Diagonal battle movement** (CMB-9; built as a circle, ADR-089): a diagonal step on the battlefield costs **√2 ≈ 1.41** of a creature's Speed
   instead of 1, as on the adventure map. Today a stack moves up to Speed steps in any of the 8 directions (`BattleGrid`, Chebyshev distance), so diagonals are
@@ -2298,3 +2298,35 @@ EVT-1 … EVT-6 in `open-questions.md`, each with a proposal. Reference: the "Ex
   exist. New are the mode switch in the map, the combat place object, unlimited movement and building on day 1 (today one building a town a
   day, ADR-046), the automatic battle at the start of day 2 and its result as the game's end (ADR-057). There is no sea (ADR-051), so HotA's
   boat case does not arise. Related: MAP-35 and EVT-5 (contents shown), FLOW-4 (not ranked), MP-2 (simultaneous turns on day 1).
+
+### ADR-098: LAN multiplayer: a host that hides the fog, saves, a simultaneous first week (MP-1, MP-2, 2026-10-29)
+**Status**: accepted as a design (2026-10-29), the owner's answers to MP-1 and MP-2 (ADR-088); **nothing implemented**. Points marked
+*(assumed)* are the agent's reading of a short answer; they and the new questions are MP-3 and MP-4 in `open-questions.md`.
+
+- **When** (MP-1 a): **before 1.0**, after the Phase 3 and 4 exits and before the campaign.
+- **Host** (MP-1 b): clients send commands; the host checks them and runs them with `session.Execute`. The host also plays the computer
+  players.
+- **Clients see only their own view** (MP-1 g): a client starts with the map's **static** content (terrain, scenery, the objects as placed)
+  for drawing. The host sends each client the **actual state it may see**; a client never gets what is under its fog, so a modified client
+  cannot see through it. This replaces the part of MP-1 (b)'s proposal where every client runs every command itself and compares
+  `GameStateDigest`: a client has too little state to run the game *(assumed; MP-3)*.
+- **Finding a game, lobby, battles, chat** (MP-1 c, d, e, i): LAN broadcast discovery plus typing an address; the host picks the map or
+  the template and its options, each client a free colour, and the host may set the other colours to computer; in a battle between two
+  remote humans each controls its own side live; a simple text chat.
+- **A player who drops out** (MP-1 f): the game pauses for everyone; the host chooses to let the computer take over or to wait for a rejoin.
+- **Saves** (MP-1 h): the **host's** save resumes in multiplayer. A **client's** save loads in single player only (the client's colour,
+  the computer playing the rest). Whether the host's save also loads in single player or hot-seat, as ADR-088 said, and what a client's
+  save holds (the client knows only its own view): MP-3.
+- **Simultaneous first week** (MP-2):
+  - only on maps that define a **start zone** for each player (MP-2 a); how a map defines one: MP-4;
+  - the **conflicts** that end it: a hero entering another player's start zone, touching an object another player touched that day, or
+    seeing another player's hero (MP-2 b);
+  - on a conflict the **whole day is discarded** for everyone and played again turn by turn in the normal order; the players lose what they
+    did that day (MP-2 c). The host goes back to the state at the start of the day (the game is deterministic: the start map and the
+    commands before that day rebuild it, ADR-058);
+  - the host turns it on or off when it creates the game; always the first week for now (MP-2 d);
+  - one turn timer for all; the day ends when everyone has ended the turn (MP-2 e);
+  - multiplayer only; hot-seat cannot hide one player's day from another (MP-2 f).
+- **Fits the core as it is**: commands and the deterministic core suit a host; fog (`Visibility`) already says what a player sees. New are the
+  network layer, a per-player view of the state and of the events (what the views subscribe to on a client), start zones in the map and a way
+  back to the start of a day.

@@ -7,7 +7,9 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-097): the arena mode brings ARN-1 and ARN-2 ([below](#new-ideas-adr-097-2026-10-29)).
+**Updated 2026-10-29** (ADR-098): MP-1 and MP-2 (LAN multiplayer) answered; they bring MP-3 (clients that see only their own view)
+and MP-4 (start zones) ([below](#lan-multiplayer-adr-098-2026-10-29)).
+Before that (ADR-097), the arena mode brought ARN-1 and ARN-2 ([below](#new-ideas-adr-097-2026-10-29)).
 Before that (ADR-096), new ideas brought MAP-35 (Pandora's Box) and EVT-1 … EVT-6 (map events like HotA's extended events,
 quests) ([below](#new-ideas-adr-096-2026-10-29)).
 Before that (ADR-092, ADR-093), new ideas bring FLOW-4 (victory screen and ranking), UI-2 (replays) and HERO-8 (specialties)
@@ -28,9 +30,8 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). The ADR-088 questions stop only their own
-roadmap items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093) and MAP-35, EVT-1 … EVT-6 (ADR-096) and ARN-1, ARN-2 (ADR-097);
-MP-1 (a), EVT-1 (b) and ARN-1 (a) decide where multiplayer, the map events and the arena go in the plan.
+Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). MP-3 and MP-4 stop only the LAN items, and so do FLOW-4, UI-2 and HERO-8 (ADR-092, ADR-093) and MAP-35, EVT-1 … EVT-6 (ADR-096) and ARN-1, ARN-2 (ADR-097);
+EVT-1 (b) and ARN-1 (a) decide where the map events and the arena go in the plan.
 
 ## Heroes
 
@@ -307,42 +308,34 @@ attunements) keep +5 % per level, or become flat too?
 skill, stacking with the Amplifier; only with the skill;
 (g) +10 % movement on land even without the skill; the other skill specialties keep +5 % per level.
 
-## New ideas (ADR-088, 2026-10-28)
+## LAN multiplayer (ADR-098, 2026-10-29)
 
-<a id="mp-1"></a>
-**MP-1 LAN multiplayer: scope and model.** (ADR-088) 
-(a) **When**: before 1.0 (after the Phase 3/4 exits, before the campaign), or after 1.0?
-(b) **Model**: clients send commands to the host; the host checks and runs them with `session.Execute` and sends every accepted command to all
-clients, which run it too (the core is deterministic) and compare `GameStateDigest` now and then. Or the host sends state? 
-(c) **Finding a game**: LAN broadcast discovery plus typing an address? 
-(d) **Lobby**: the host picks the map or the template and its options (ADR-086). Each client picks
-a free colour; the host may set the other colours to computer. 
-(e) **A battle between two remote humans**: each controls its own side live?
-(f) **A player who drops out**: the game pauses for everyone, and the host may let the computer take over or wait for a rejoin? 
-(g) **Fog and
-cheating**: every client has the whole state (a modified client could see through the fog). Fine on a LAN? 
-(h) **Saves**: only the host saves; the save records which colours were human. Loaded in hot-seat, the player chooses which colours are human. 
-(i) **Chat**: in 1.0 or not? 
-*Proposal*: (a) after 1.0 unless you want it sooner. It needs a stable game first, and hot-seat covers playing together until then; 
-(b) commands from the host, digest check every turn; (c) yes; (d) yes; (e) yes; (f) pause, then the host chooses; 
-(g) fine on a LAN; (h) yes; (i) a simple text chat.
+<a id="mp-3"></a>
+**MP-3 Clients that see only their own view.** (ADR-098) Your MP-1 (g) answer: clients get the map's static content and the host sends each
+one the actual state it may see. MP-1 (b)'s proposal had every client run every command itself and compare state digests, which needs the
+whole state on every client.
+(a) **The model**: the client runs no rules; the host sends each client the events it may see (a hero moving in its sight, its own
+resources, a battle it is in, …) and the client keeps a partial copy of the state for drawing. Agreed, with no digest check (nothing to
+compare)?
+(b) **What a client is told** of what it does not see: nothing (the fog stays as it was last seen, as on a single computer), and of other
+players only what the Thieves' Guild and the kingdom overview show?
+(c) **Battles**: the two sides of a battle see the whole battle; other players see only its result, if they see the place?
+(d) **Saves** (MP-1 h): may the host's save also load in single player and hot-seat (ADR-088)? A client's save, to load in single player,
+needs the whole game: the host sends the whole record when a client saves (the file could then be read to see through the fog), or a client
+cannot save and only the host saves for everyone?
+(e) **Replays** (UI-2): a client's replay is only its own view, or the host's full record at the end?
+*Proposal*: (a) yes; (b) yes; (c) yes; (d) the host's save loads anywhere; a client's save is the whole record sent by the host, fine on a
+LAN with friends; (e) the host's full record at the end of the game.
 
-<a id="mp-2"></a>
-**MP-2 Simultaneous first week.** (ADR-088) 
-(a) **Start zone** on a hand-made map: maps have no zones. The tiles within some distance of the
-player's start towns, zones painted in the editor, or random maps only? 
-(b) **Conflicts** that end it: entering another player's start zone,
-touching an object another player touched this day, seeing another player's hero? 
-(c) **"Played again in the normal order"**: discard the whole day for everyone and replay it turn by turn 
-(the players lose what they did that day), or keep everything done before the conflict and finish
-the day turn by turn from there (proposal)? 
-(d) Is it a lobby option (on or off), and how long: always the first week, or settable (1 to 2 weeks)? 
-(e) The **turn timer** in simultaneous days: one timer for all, the day ending when everyone ended their turn or the time is up? 
-(f) Hot-seat cannot do it (one screen): multiplayer only?
-*Proposal*: (a) random maps: the template's start zone; hand-made maps: tiles within 10 of a start town until the editor can paint zones; (b)
-entering another start zone or touching an object another player touched that day; (c) keep what was done and finish the day in turn order,
-with the player who caused the conflict last; (d) a lobby option, the first week, on by default; (e) one timer, the day ends when all have
-ended their turn; (f) multiplayer only.
+<a id="mp-4"></a>
+**MP-4 Start zones on maps.** (ADR-098) The simultaneous first week works only on maps that define a start zone for each player (MP-2 a).
+Maps have no zones today.
+(a) **Random maps**: the generator writes each player's start zone (the template zone of its start town) into the map?
+(b) **Hand-made maps**: the editor paints a start zone per player (a cell layer like the terrain, map format bump)?
+(c) **Fair zones**: the validator warns when zones touch, overlap or leave a player without its start town inside?
+(d) **"Entering"**: a hero ends a step inside another player's zone, or a route that would pass through it is refused and the conflict
+comes only when the hero stands in it?
+*Proposal*: (a) yes; (b) yes; (c) yes; (d) a step into it is the conflict.
 
 ## Numbers to tune (not questions)
 Placeholders that wait for play-testing: caravan cost (ADR-054); complexity starting resources (ADR-063); Stewardship and governor percentages
@@ -366,6 +359,7 @@ One line per question; the ADR holds the detail.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.
 - **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095.
+- **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091.
