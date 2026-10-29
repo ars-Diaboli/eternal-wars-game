@@ -44,5 +44,8 @@ complexity (starting resources, [towns-and-economy.md](towns-and-economy.md)), s
 (ADR-058).
 Random maps (ADR-086): template, size, players (human or computer, town, hero, team).
 
-**Turn timer** (ADR-088, planned, FLOW-3 ❓): off by default, 1 to 30 minutes a turn, for human players. When it runs out, the turn ends on
-its own. It runs on the adventure map and in battle; if it runs out during a battle, the battle is finished first.
+**Turn timer** (ADR-088, ADR-091): off by default, 1 to 30 minutes a turn (the same every turn), for human players; a loaded game starts the
+turn with the full time. Warnings at 1 minute, 30, 15 and 5 seconds left. It runs on the adventure map and in a battle against the computer or
+neutrals (if it runs out there, the battle is finished first); it stops during a battle between two humans. When it runs out, pending choices
+get their default (a chest gives gold; leave or stay where offered; neutrals' offers are taken), a level-up or a riddle waits for the player,
+and then the turn ends on its own.

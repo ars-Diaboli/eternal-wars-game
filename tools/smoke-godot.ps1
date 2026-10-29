@@ -39,6 +39,10 @@ $scenarios = @(
     # returns to the map without a second result screen. The question waits until the imps' first moves have played.
     @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
        Input = '3:key:Enter;8:key:F10;12:click:1020,634;15:click:1028,694;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
+    # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
+    # to Red with the full time and the hero screen closes.
+    @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 640
+       Input = '3:click:1025,419;8:click:1025,100;12:click:798,586;30:key:H' },
     # The town screen (ADR-050): T opens the first own town over the map, Escape closes it, T again, Escape.
     @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
        Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },

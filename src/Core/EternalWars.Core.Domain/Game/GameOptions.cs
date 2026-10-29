@@ -50,7 +50,12 @@ public static class StartingResources
 /// Every player starts with the <see cref="StartingResources"/> of this level instead of what the map gives; null keeps the
 /// map's own resources.
 /// </param>
-public sealed record GameOptions(FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1, Complexity? Complexity = null)
+/// <param name="TurnTimerMinutes">
+/// The turn timer (ADR-091): a human player's turn lasts this many minutes (1 to <see cref="Turns.TurnTimer.MaxMinutes"/>); null is off. The
+/// clock is the front-end's (<see cref="Turns.TurnTimer"/>); what it does is ordinary commands in the log, so replays need no clock.
+/// </param>
+public sealed record GameOptions(
+    FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1, Complexity? Complexity = null, int? TurnTimerMinutes = null)
 {
     public static GameOptions Default { get; } = new();
 }

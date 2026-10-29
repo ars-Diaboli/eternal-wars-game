@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Map;
 using Godot;
 
@@ -37,7 +38,7 @@ public sealed record RandomMapChoice(
     Func<RandomMapRequest, RandomMapResult> Create);
 
 /// <summary>
-/// New-game setup: a map or a random map template, fog mode and refog margin, complexity, seed. For a map: its players, with teams unless the map
+/// New-game setup: a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
 /// locks them (ADR-032). For a template (ADR-086): the size, the number of players and for each player human or computer, town, hero and team
 /// (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
 /// change something. Raises <see cref="Started"/> with the ready state; the app then builds the session and the world.
@@ -52,6 +53,7 @@ public partial class NewGameScreen : PanelContainer
     private readonly SpinBox _playerCount = new() { MinValue = 1, MaxValue = 8, Step = 1 };
     private readonly OptionButton _fog = new();
     private readonly OptionButton _complexity = new();
+    private readonly OptionButton _timer = new();
     private readonly SpinBox _margin = new() { MinValue = 0, MaxValue = 6, Value = GameOptions.Default.RefogMargin };
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(220, 0) };
     private readonly GridContainer _players = new() { Columns = 3 };
@@ -110,7 +112,16 @@ public partial class NewGameScreen : PanelContainer
             _complexity.AddItem($"{level} ({StartingResources.For(level).Gold} gold)", (int)level);
         }
 
-        Row(box, "Complexity", _complexity);
+        // The turn timer (ADR-091) shares the complexity's row: off, or 1 to 30 minutes a human player's turn.
+        var complexityRow = Row(box, "Complexity", _complexity);
+        _timer.AddItem("Off", 0);
+        for (var minutes = 1; minutes <= TurnTimer.MaxMinutes; minutes++)
+        {
+            _timer.AddItem($"{minutes} min", minutes);
+        }
+
+        complexityRow.AddChild(new Label { Text = "  Turn timer" });
+        complexityRow.AddChild(_timer);
 
         _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
         _seed.TextChanged += _ => Changed();
@@ -275,7 +286,9 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
-        var options = new GameOptions(SelectedFog, (int)_margin.Value, seed, _complexity.GetSelectedId() < 0 ? null : (Complexity)_complexity.GetSelectedId());
+        var options = new GameOptions(
+            SelectedFog, (int)_margin.Value, seed, _complexity.GetSelectedId() < 0 ? null : (Complexity)_complexity.GetSelectedId(),
+            _timer.GetSelectedId() > 0 ? _timer.GetSelectedId() : null);
         if (SelectedTemplate is { } template)
         {
             StartRandom(template, options);

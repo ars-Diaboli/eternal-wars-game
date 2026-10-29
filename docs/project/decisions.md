@@ -2067,7 +2067,7 @@ planned (when is MP-1).
   ~41 % too cheap. This changes reach, the AI and every replay digest.
 - **Speed settings** (UI-1; decided in ADR-090): the player sets how fast heroes move on the adventure map and how fast battle animations play. These are player
   settings, not rules: they change no game state and are not saved with a game.
-- **Turn timer** (FLOW-3): an option on the new-game screen, off by default, **1 to 30 minutes** a turn, for **human** players only. When it
+- **Turn timer** (FLOW-3; built, ADR-091): an option on the new-game screen, off by default, **1 to 30 minutes** a turn, for **human** players only. When it
   runs out the player's turn ends on its own. It runs on the adventure map and in battle. If it runs out during a battle, the battle is finished
   first and the turn ends after it.
 - **Auto combat** (CMB-10; built, ADR-090): a setting that skips a battle the player starts. The battle AI plays **both sides**, a screen shows the outcome,
@@ -2134,3 +2134,31 @@ accepted both proposals.
 - Three settings: the player's own heroes on the map, the computer's heroes (with "don't show"), battle animations.
 - A settings screen in the game menu, kept per computer in a settings file in the user data folder, not in saves.
 - Animated hero walking is built together with the setting (today a hero jumps from tile to tile).
+
+### ADR-091: Turn timer (FLOW-3, 2026-10-29)
+**Status**: implemented (2026-10-29). Answers FLOW-3 (ADR-088): the owner accepted the proposal for (a), (e), (f) and (g) and changed (b), (c)
+and (d).
+
+- **The option** (f, g): on the new-game screen, next to the complexity: **off** (default) or **1 to 30 minutes** in steps of 1 minute. It is a
+  game option (`GameOptions.TurnTimerMinutes`), so saves and replays keep it. It changes no rule and the digest does not show it.
+- **A turn's time** (a): the same every turn, for human players only; nothing carries over. A loaded game starts the current turn with the full
+  time (e).
+- **Battles** (b, changed): the clock **stops during a battle between two human players** (hot-seat, later LAN). In a battle against a computer
+  player or neutrals it runs on; if the time runs out there, the battle is fought to its end first (ADR-088) and the turn ends after it.
+- **When the time is up** (c, changed): what is pending gets its screen's default, and then the turn ends:
+  - a treasure chest gives **gold**;
+  - where a screen offers to leave or stay, that is taken: a training site that may be declined, the cartographer, a deposit, a witch hut, a
+    town gate; the exchange screen closes;
+  - neutrals that offer to join or try to flee: the offer is taken (they join, or are let go), so no battle starts;
+  - a **level-up** and a sphinx's riddle have no default: the player chooses, and the turn ends once the screen is closed;
+  - a hero's move is one command, so a moving hero always finishes its move to the destination (it does not stop at the next tile).
+- **Warnings** (d, changed): at **1 minute, 30, 15 and 5 seconds** left. The clock shows at the top of the screen, over the map and the battle
+  scene; the last minute is red.
+- **Replays need no clock** (f): the defaults and the end of the turn are ordinary commands in the log.
+- Core: `TurnTimer` (Turns) runs on the time the front-end passes in (`Tick`), tells the warnings and ends the turn through `session.Execute`;
+  its `Default` names each decision's default answer. The front-end holds the end of the turn while the battle scene (a battle's last moves, the
+  result screen), the auto combat question or the menu is open, and closes the screens over the map when a turn starts.
+- Front-end: the option on `NewGameScreen`, `TurnTimerPanel`, the clock in the game app's `_Process`. Tests: `TurnTimerTests` (warnings and the
+  end of the turn, the next turn's full time; off by default and for computer players; a chest gives gold; a level-up waits for the player;
+  the front-end holds the end; the clock stops between two humans; a battle against the computer is finished first; saves and replays keep the
+  option). Smoke: `game-turn-timer` (1 minute, the hero screen open: the warnings, then Red's turn with the full time).
