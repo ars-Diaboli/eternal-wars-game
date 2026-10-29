@@ -7,7 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-090): CMB-10 (auto combat, built) and UI-1 (speed settings) answered. Before that (2026-10-28, ADR-088), new
+**Updated 2026-10-29** (ADR-090, ADR-091): CMB-10 (auto combat, built), UI-1 (speed settings) and FLOW-3 (turn timer, built) answered. Before that (2026-10-28, ADR-088), new
 ideas brought CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)); CMB-9 is answered and built (ADR-089).
 Before that (2026-10-26, ADR-079, ADR-080), the sixth round: TOWN-9 … TOWN-11 and MAP-25 … MAP-34 answered and built (the Astrologer's
 Tower waits for the week events). Before that (ADR-077): new ideas (scenery, rivers, flaggable providers, caravans, Thieves' Guild, the third object catalogue) bring
@@ -65,17 +65,6 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 
 ## New ideas (ADR-088, 2026-10-28)
 
-<a id="flow-3"></a>
-**FLOW-3 Turn timer.** On the new-game screen, 1 to 30 minutes, human players only (ADR-088). (a) **A turn's time**: the same every turn, or a
-bank that carries unused time over (a chess clock)? (b) **A battle between two humans** (hot-seat, LAN): whose time runs, the attacker's
-only, or each player's while it is their stack's turn? (c) **When it runs out** with a question open (level-up, chest, guards that offer to
-join): the computer player's choice is taken? And a hero in the middle of a move stops after the step it is taking? (d) A **warning** at
-1 minute and 10 seconds left? (e) **Saves**: a loaded game starts the current turn with a full timer? (f) Is the timer a game option saved with
-the game (so replays end turns where the timer did), or does each machine run its own? (g) Steps of 1 minute, or also 30 seconds?
-*Proposal*: (a) the same every turn; (b) the attacker's time runs (the defender plays inside the attacker's turn); (c) yes to both; (d) yes;
-(e) yes; (f) a game option in the save; the timer's end of turn is an ordinary `EndTurnCommand` in the log, so replays need no clock; (g) 1
-minute.
-
 <a id="mp-1"></a>
 **MP-1 LAN multiplayer: scope and model.** (ADR-088) (a) **When**: before 1.0 (after the Phase 3/4 exits, before the campaign), or after 1.0?
 (b) **Model**: clients send commands to the host; the host checks and runs them with `session.Execute` and sends every accepted command to all
@@ -126,5 +115,5 @@ One line per question; the ADR holds the detail.
 - **Presentation**: UI-1 (speed settings) ADR-090.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
-- **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073; FLOW-2 event start and town-less players ADR-075.
+- **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.

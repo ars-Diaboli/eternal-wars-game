@@ -9,6 +9,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Generation;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Battle;
@@ -65,11 +66,14 @@ public partial class Main : Node3D
     private MarketplacePanel _marketScreen = null!;
     private KingdomOverviewPanel _kingdomScreen = null!;
     private ObjectServicePanel _serviceScreen = null!;
+    private ThievesGuildPanel _guildScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
     private BattleHud _battleHud = null!;
     private AutoCombatPanel? _autoCombat;
+    private TurnTimer? _timer;
+    private TurnTimerPanel? _timerPanel;
     private GameResultPanel _result = null!;
     private HeroId? _selectedHero;
 
@@ -100,10 +104,21 @@ public partial class Main : Node3D
 
     /// <summary>
     /// Computer players play their turns here, one a frame (ADR-059). The AI waits while a battle scene is open (it may be
-    /// a human's fight) and while the menu is.
+    /// a human's fight) and while the menu is. The turn timer's clock runs here too (ADR-091); it ends a turn only once the battle scene,
+    /// the auto combat question and the menu are closed.
     /// </summary>
     public override void _Process(double delta)
     {
+        if (_timer is not null && _timerPanel is not null)
+        {
+            if (_timer.Tick(delta, canEnd: !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true) is { } warning)
+            {
+                _timerPanel.Warn(warning);
+            }
+
+            _timerPanel.ShowTime(_timer.SecondsLeft, _timer.IsStopped, _timer.IsUp, delta);
+        }
+
         if (_ai is not null && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true && AdventureAi.IsComputerTurn(_session.State))
         {
             _ai.PlayTurn();
@@ -214,6 +229,7 @@ public partial class Main : Node3D
         BuildHud();
         BuildBattle();
         BuildResult();
+        BuildTimer();
 
         // Autosave once the command that began a turn is logged and settled (ADR-058).
         _turnBegan = false;
@@ -227,6 +243,7 @@ public partial class Main : Node3D
         });
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
+            CloseScreens(); // the turn may have ended on the timer with a screen open
             if (!_session.State.GetPlayer(e.Player).IsHuman)
             {
                 return; // computer turns play out unseen; the map stays with the last human
@@ -263,6 +280,32 @@ public partial class Main : Node3D
             _session.Start();
             Autosave();
         }
+    }
+
+    /// <summary>
+    /// The turn timer (ADR-091), when the game has one: the clock over the map and the battle scene. A loaded game starts the current turn with
+    /// the full time.
+    /// </summary>
+    private void BuildTimer()
+    {
+        _timer = _session.State.Options.TurnTimerMinutes is null ? null : new TurnTimer(_session);
+        var layer = new CanvasLayer { Name = "TurnTimer", Layer = 4 };
+        _game!.AddChild(layer);
+        _timerPanel = new TurnTimerPanel();
+        layer.AddChild(_timerPanel);
+        _timerPanel.Bind();
+    }
+
+    /// <summary>Closes the screens over the map (town, hero, dwelling, market, services, kingdom, Thieves' Guild).</summary>
+    private void CloseScreens()
+    {
+        _townScreen.Close();
+        _heroScreen.Close();
+        _dwellingScreen.Close();
+        _marketScreen.Close();
+        _serviceScreen.Close();
+        _kingdomScreen.Hide();
+        _guildScreen.Hide();
     }
 
     /// <summary>The start of a turn goes into the two autosave slots: this turn's and the previous turn's.</summary>
@@ -763,10 +806,10 @@ public partial class Main : Node3D
         townLayer.AddChild(_serviceScreen);
         _serviceScreen.Bind(_session);
         _townScreen.TradeRequested += () => _marketScreen.Open();
-        var guild = new ThievesGuildPanel();
-        townLayer.AddChild(guild);
-        guild.Bind(_session);
-        _townScreen.ThievesGuildRequested += () => guild.Open(_session.State.CurrentPlayer.Id);
+        _guildScreen = new ThievesGuildPanel();
+        townLayer.AddChild(_guildScreen);
+        _guildScreen.Bind(_session);
+        _townScreen.ThievesGuildRequested += () => _guildScreen.Open(_session.State.CurrentPlayer.Id);
         _kingdomScreen = new KingdomOverviewPanel();
         townLayer.AddChild(_kingdomScreen);
         _kingdomScreen.Bind(_session);

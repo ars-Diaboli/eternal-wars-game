@@ -33,19 +33,9 @@ Recorded so far:
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
 
 
-<a id="flow-3"></a>
-**FLOW-3 Turn timer.** On the new-game screen, 1 to 30 minutes, human players only (ADR-088). 
-(a) **A turn's time**: the same every turn, or a bank that carries unused time over (a chess clock)? 
-(b) **A battle between two humans** (hot-seat, LAN): whose time runs, the attacker's only, or each player's while it is their stack's turn? 
-(c) **When it runs out** with a question open (level-up, chest, guards that offer to join): the computer player's choice is taken? And a hero in the middle of a move stops after the step it is taking? 
-(d) A **warning** at 1 minute and 10 seconds left? (e) **Saves**: a loaded game starts the current turn with a full timer? 
-(f) Is the timer a game option saved with the game (so replays end turns where the timer did), or does each machine run its own? 
-(g) Steps of 1 minute, or also 30 seconds?
-*Proposal*: 
-(a) the same every turn; 
-(b) the attacker's time runs (the defender plays inside the attacker's turn); 
-(c) yes to both; 
-(d) yes;
-(e) yes; 
-(f) a game option in the save; the timer's end of turn is an ordinary `EndTurnCommand` in the log, so replays need no clock; 
-(g) 1 minute.
+game victory screen for non campaign-like maps
+with similar to homm3 ranking system;
+ranking for random maps and maps shipped with the game is separate;
+ranking table shows map name(template for random), difficulty, time in days taken etc; 
+option to save replay;
+in main menu - option to watch replay;
