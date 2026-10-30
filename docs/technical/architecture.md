@@ -293,7 +293,7 @@ src/
     EternalWars.Core.Domain/    Common, Map, Objects, Heroes, Armies, Creatures, Towns, Battles, Commands, Pathfinding,
                                 Players, Economy, Turns, Visibility, Decisions, Editing, Game, Events, Scenarios, AI,
                                 Artifacts
-    EternalWars.Core.Data/      Maps (MapDocument v26, MapConverter, MapSerializer), Content (definition JSON),
+    EternalWars.Core.Data/      Maps (MapDocument v27, MapConverter, MapSerializer), Content (definition JSON),
                                 Records (saves, replays, the ranking: GameRecord, GameSaves, RankingFile),
                                 Templates (TemplateSerializer,
                                 BuiltInTemplates)

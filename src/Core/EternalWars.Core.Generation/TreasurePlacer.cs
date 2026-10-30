@@ -17,6 +17,8 @@ namespace EternalWars.Core.Generation;
 /// <item>from <see cref="MarketplaceThreshold"/>, a chest or pile may instead be a map marketplace (ADR-067): 1 in <see cref="MarketplaceOdds"/>, at most one
 /// per zone, counted as <see cref="MarketplaceValue"/> for its guard.</item>
 /// </list>
+/// From <see cref="BoxThreshold"/>, one item in <see cref="BoxOdds"/> that is not a site is a Pandora's Box of gold, experience or creatures worth the
+/// value (ADR-100), guarded like any item of its value.
 /// Before that, one item in <see cref="SiteOdds"/> is an object of the catalogue (ADR-068, <see cref="TreasureSites"/>) worth between half the
 /// drawn value and the value, drawn by weight within the zone's and the map's limits; creature banks and abandoned mines get no extra guard.
 /// The generator fixes what an item holds (pile amounts, chest gold and experience, the artifact), so a band is what the template says. An
@@ -42,6 +44,11 @@ public static class TreasurePlacer
 
     /// <summary>One item in this many is an adventure-map object from <see cref="TreasureSites"/> when one fits its value (placeholder).</summary>
     public const int SiteOdds = 3;
+
+    /// <summary>From this value an item may be a Pandora's Box (ADR-100; HoMM3's smallest boxes hold 5000 gold), one in <see cref="BoxOdds"/> (placeholders).</summary>
+    public const int BoxThreshold = 5000;
+
+    public const int BoxOdds = 5;
 
     /// <summary>The share of an item's value its guard has, before the zone's strength: 40–60 %.</summary>
     public const int GuardShareMin = 40;
@@ -139,6 +146,11 @@ public static class TreasurePlacer
             sites.Map[site.Definition] = sites.Map.GetValueOrDefault(site.Definition) + 1;
             guardedValue = site.OwnGuard ? 0 : site.Value;
         }
+        else if (value >= BoxThreshold && random.Next(BoxOdds) == 0
+            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), tiles, placed, random) is { } boxAt)
+        {
+            item = map.Add(new PandorasBox(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), boxAt, BoxContentsFor(value, creatures, random)));
+        }
         else if (value >= ArtifactThreshold && roll < 2 && PickArtifact(artifacts, value, random, relics) is { } artifact)
         {
             var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.ArtifactId(artifact.Tier));
@@ -202,6 +214,24 @@ public static class TreasurePlacer
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// A generated box's contents (ADR-100), one kind drawn evenly: gold (the value, in steps of 500), experience (four fifths of it) or one stack of
+    /// creatures worth the value (<see cref="GuardPicker"/>'s measure). Spells come after Phase 5.
+    /// </summary>
+    private static BoxContents BoxContentsFor(int value, CreatureCatalog creatures, GameRandom random)
+    {
+        switch (random.Next(3))
+        {
+            case 0:
+                return new BoxContents { Resources = new ResourceSet(Gold: Math.Max(500, value / 500 * 500)) };
+            case 1:
+                return new BoxContents { Experience = Math.Max(500, value * 4 / 5 / 500 * 500) };
+            default:
+                var (creature, count) = GuardPicker.Pick(creatures, value, random);
+                return new BoxContents { Creatures = [new Domain.Armies.CreatureStack(creature.Id, count)] };
+        }
     }
 
     /// <summary>How many of each site the zone and the map hold so far.</summary>

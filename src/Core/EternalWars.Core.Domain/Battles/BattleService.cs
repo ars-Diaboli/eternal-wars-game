@@ -75,12 +75,28 @@ public sealed class BattleService(
     {
         var neutral = new BattleParticipant(BattleSide.Defender, null, null, bank.Id, 0, 0, SkillLevel.None, IsComputer: true);
         var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, bank.VisitPosition, isAmbush: false, bank.Definition.BattleTerrain);
-        var perKind = Math.Max(1, (BattleSetup.MaxGuardStacks + 2) / bank.Guard.Count);
-        var stacks = bank.Guard
+        Begin(attacker, battle, Stacks(attacker), GuardStacks(bank.Guard), widthChoice: false, deployment: false);
+    }
+
+    /// <summary>
+    /// A hero opens a guarded Pandora's Box (ADR-100): the guard fights like a creature bank's (split the same way, no Tactics choice); winning opens
+    /// the box, a lost or fled battle leaves the guard whole.
+    /// </summary>
+    internal void BeginBoxBattle(Hero attacker, PandorasBox box)
+    {
+        var neutral = new BattleParticipant(BattleSide.Defender, null, null, box.Id, 0, 0, SkillLevel.None, IsComputer: true);
+        var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, box.VisitPosition, isAmbush: false, box.Definition.BattleTerrain);
+        Begin(attacker, battle, Stacks(attacker), GuardStacks(box.Guard), widthChoice: false, deployment: false);
+    }
+
+    /// <summary>Each kind of creature split into a few stacks, so that the guard has at most <see cref="BattleSetup.MaxGuardStacks"/> + 2 of them.</summary>
+    private List<BattleStackSpec> GuardStacks(IReadOnlyList<CreatureStack> guard)
+    {
+        var perKind = Math.Max(1, (BattleSetup.MaxGuardStacks + 2) / guard.Count);
+        return guard
             .SelectMany(s => BattleSetup.SplitGuard(s.Count).Chunk((int)Math.Ceiling(Math.Min(s.Count, BattleSetup.MaxGuardStacks) / (double)perKind))
                 .Select(part => new BattleStackSpec(state.Creatures.Get(s.Creature), part.Sum(), -1)))
             .ToList();
-        Begin(attacker, battle, Stacks(attacker), stacks, widthChoice: false, deployment: false);
     }
 
     /// <summary>
@@ -769,6 +785,9 @@ public sealed class BattleService(
                 break;
             case CreatureBank bank when winner is not null:
                 Plunder(bank, winner);
+                break;
+            case PandorasBox box when winner is not null:
+                PandorasBoxRules.Open(state, events, economy, progression, artifacts, winner, box);
                 break;
             case CreatureDwelling dwelling:
                 dwelling.Guard = null;

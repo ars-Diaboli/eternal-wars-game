@@ -130,6 +130,9 @@ public static class MapValidator
                 case Town town:
                     issues.AddRange(ValidateTown(scenario, town).Select(m => new MapIssue(IssueSeverity.Error, $"{town.Name} {m}", town.Position)));
                     break;
+                case PandorasBox box:
+                    issues.AddRange(ValidateBox(scenario, box).Select(m => new MapIssue(IssueSeverity.Error, $"{name} {m}", box.Position)));
+                    break;
             }
         }
 
@@ -313,6 +316,29 @@ public static class MapValidator
     /// <summary>A hero may start in the entrance of its own town, visiting it (HoMM3; generated maps put the start hero there).</summary>
     internal static bool IsOwnTownEntrance((MapObject Object, FootprintCell Cell) cell, PlayerId owner) =>
         cell is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == owner;
+
+    /// <summary>A Pandora's Box (ADR-100): it must hold something, only gains, and only what exists.</summary>
+    private static IEnumerable<string> ValidateBox(GameState scenario, PandorasBox box)
+    {
+        if (box.Contents.IsEmpty)
+        {
+            yield return "is empty; give it something to hold.";
+        }
+        else if (box.Contents.Problem() is { } problem)
+        {
+            yield return problem;
+        }
+
+        foreach (var artifact in box.Contents.Artifacts.Where(a => !scenario.Artifacts.Contains(a)))
+        {
+            yield return $"holds the unknown artifact '{artifact}'.";
+        }
+
+        foreach (var stack in box.Contents.Creatures.Concat(box.Guard).Where(s => !scenario.Creatures.Contains(s.Creature)))
+        {
+            yield return $"has unknown creature '{stack.Creature}'.";
+        }
+    }
 
     private static IEnumerable<string> ValidateTown(GameState scenario, Town town)
     {

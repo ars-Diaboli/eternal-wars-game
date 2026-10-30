@@ -44,6 +44,9 @@ public sealed record MoveGarrisonStackCommand(PlayerId Player, MapObjectId Garri
 /// <summary>Answers a <c>SphinxDecision</c> with the option at <paramref name="Option"/> (0-based; ADR-079).</summary>
 public sealed record AnswerSphinxCommand(PlayerId Player, int Option) : GameCommand(Player);
 
+/// <summary>Answers a <c>PandorasBoxDecision</c>: open the box (fighting its guard first, if any) or leave it (ADR-100).</summary>
+public sealed record AnswerPandorasBoxCommand(PlayerId Player, bool Open) : GameCommand(Player);
+
 /// <summary>Answers a <c>WitchHutDecision</c>: one of its skills, or null to leave without learning (ADR-079).</summary>
 public sealed record ChooseWitchHutSkillCommand(PlayerId Player, string? Skill) : GameCommand(Player);
 

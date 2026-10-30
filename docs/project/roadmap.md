@@ -25,7 +25,7 @@ UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, 
 replays and a replay viewer (FLOW-4 and UI-2 answered in ADR-101; all but the viewer built, ADR-102 to ADR-104), and rarer hero specialties, waiting for HERO-8. ADR-099 brings sieges before 1.0
 (CMB-11) and re-drafts the spells and artifacts (MAG-13; CONT-6 answered in ADR-100). ADR-073's remaining victory conditions
 and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096) wait for EVT-1 … EVT-6. ADR-100 settles Pandora's Box
-(MAP-35) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7).
+(MAP-35, built in ADR-105) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7).
 **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
 
@@ -481,9 +481,10 @@ Core, map format v22, editor placement, generator sites and tests for each; the 
 - [ ] Editor inspector for a sphinx's riddle and a witch hut's skills (the map format holds them)
 
 #### Pandora's Box (ADR-096)
-- [ ] Pandora's Box (MAP-35, ADR-100): the author's contents, gains only (resources, experience, mana, morale and luck, skills, artifacts,
+- [x] Pandora's Box (MAP-35, ADR-100, ADR-105): the author's contents, gains only (resources, experience, mana, morale and luck, skills, artifacts,
       creatures; spells with Phase 5), "open?", then an optional guard army (opens only when the hero wins) and message, vanishes; contents
-      hidden; map format bump, editor rows, validator (an empty box is an error), AI value against the guards, generator boxes by value band
+      hidden; map format v27, editor rows, validator (an empty box is an error), AI value against the guards, generator boxes by value band
+      (generator version 7; Godot parts not run in Godot yet)
 
 ### Content for the slice
 - [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets

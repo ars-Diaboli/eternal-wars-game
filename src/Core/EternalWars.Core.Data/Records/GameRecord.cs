@@ -141,6 +141,7 @@ public static class GameRecordSerializer
         (typeof(ChooseTrainingCommand), "training"),
         (typeof(AnswerCartographerCommand), "cartographer"),
         (typeof(AnswerSphinxCommand), "sphinx"),
+        (typeof(AnswerPandorasBoxCommand), "pandorasBox"),
         (typeof(AnswerDepositCommand), "deposit"),
         (typeof(HireAtMapTavernCommand), "hireAtTavern"),
         (typeof(MoveGarrisonStackCommand), "garrisonStack"),

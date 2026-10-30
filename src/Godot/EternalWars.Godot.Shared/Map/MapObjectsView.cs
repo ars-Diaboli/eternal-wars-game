@@ -135,7 +135,7 @@ public partial class MapObjectsView : Node3D
         ResourceProvider provider => provider.Definition.Name,
         LootSite { Vanishes: false } site => site.Definition.Name,
         BuffSite or TrainingSite or Observatory or HillFort or TownGate or WarMachineFactory or Prison or CreatureBank or DenOfThieves or AstrologersTower or Sanctuary
-            or Cartographer or ArtifactMerchant or RefugeeCamp or SacrificialAltar or Sphinx or WitchHut
+            or Cartographer or ArtifactMerchant or RefugeeCamp or SacrificialAltar or Sphinx or WitchHut or PandorasBox
             or Deposit or MagiWindow or MagiEye or KeymasterTent or BorderPost or MapTavern or MapGarrison => _context.State.FindObject(known.Id)!.Definition.Name,
         _ => null,
     };

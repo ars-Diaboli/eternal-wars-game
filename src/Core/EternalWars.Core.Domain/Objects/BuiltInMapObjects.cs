@@ -87,6 +87,9 @@ public static class BuiltInMapObjects
     public const string WitchHut = "witch-hut";
     public const string AstrologersTower = "astrologers-tower";
 
+    /// <summary>Pandora's Box (ADR-100, MAP-35).</summary>
+    public const string PandorasBox = "pandoras-box";
+
     /// <summary>The second catalogue's travel and utility objects (ADR-069 … ADR-071); the coloured ones are <see cref="ColouredId"/>.</summary>
     public const string MapTavern = "tavern";
     public const string Garrison = "garrison";
@@ -224,6 +227,7 @@ public static class BuiltInMapObjects
         new(Sphinx, "Sphinx", MapObjectKind.Sphinx, MineFootprint) { VisitScope = VisitScope.OncePerHero },
         new(WitchHut, "Witch hut", MapObjectKind.WitchHut, ProviderFootprint),
         new(AstrologersTower, "Astrologer's tower", MapObjectKind.AstrologersTower, ProviderFootprint),
+        new(PandorasBox, "Pandora's box", MapObjectKind.PandorasBox, Footprint.Single),
 
         // The second catalogue (ADR-069 … ADR-071).
         .. new[] { ResourceType.Lumber, ResourceType.Ore, ResourceType.Gold, ResourceType.Crystal, ResourceType.Mercury, ResourceType.Sulfur }.Select(Deposit),

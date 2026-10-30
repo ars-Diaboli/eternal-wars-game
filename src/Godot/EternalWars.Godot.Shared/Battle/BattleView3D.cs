@@ -619,6 +619,7 @@ public partial class BattleView3D : Node3D
                 Mine mine => $"{mine.Definition.Name} guard",
                 CreatureDwelling dwelling => $"{dwelling.Definition.Name} guard",
                 CreatureBank bank => $"{bank.Definition.Name} guard",
+                PandorasBox => "Pandora's box guard",
                 _ => "Neutral",
             }
             : participant.Side.ToString();

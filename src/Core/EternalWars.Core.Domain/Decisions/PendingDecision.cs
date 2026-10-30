@@ -47,6 +47,9 @@ public sealed record SphinxDecision(HeroId Hero, MapObjectId Sphinx, string Ques
     public override string ToString() => $"SphinxDecision {{ Hero = {Hero}, Sphinx = {Sphinx}, Question = {Question}, Options = {string.Join(" | ", Options)} }}";
 }
 
+/// <summary>A Pandora's Box asks whether to open it (ADR-100); the contents and any guard stay hidden. <c>AnswerPandorasBoxCommand</c> answers.</summary>
+public sealed record PandorasBoxDecision(HeroId Hero, MapObjectId Box) : PendingDecision(Hero);
+
 /// <summary>A witch hut offers up to two skills (ADR-079): <c>ChooseWitchHutSkillCommand</c> takes one, or none to leave.</summary>
 public sealed record WitchHutDecision(HeroId Hero, MapObjectId Hut, IReadOnlyList<string> Options) : PendingDecision(Hero)
 {

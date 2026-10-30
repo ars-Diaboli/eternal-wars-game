@@ -138,6 +138,14 @@ public sealed class MapObjectInteractionService(
                 OfferSkills(hero, hut);
                 break;
 
+            case PandorasBox { IsGuarded: true } box when hero.Army.IsEmpty:
+                events.Publish(new MapObjectRefused(hero.Id, box.Id, $"{hero.Name} has no army to face what may guard the box."));
+                break;
+
+            case PandorasBox box:
+                Ask(new PandorasBoxDecision(hero.Id, box.Id));
+                break;
+
             case DenOfThieves den:
                 events.Publish(new ThievesDenVisited(hero.Id, den.Id));
                 break;
@@ -906,6 +914,32 @@ public sealed class MapObjectInteractionService(
 
         events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: true, Experience: Sphinx.Experience));
         progression.GrantExperience(hero, Sphinx.Experience);
+    }
+
+    /// <summary>The hero opens the Pandora's Box, fighting its guard first if it has one, or leaves it closed (ADR-100, MAP-35).</summary>
+    internal void ResolvePandorasBox(bool open)
+    {
+        if (state.PendingDecision is not PandorasBoxDecision decision)
+        {
+            throw new InvalidOperationException("No Pandora's Box is waiting for an answer.");
+        }
+
+        state.PendingDecision = null;
+        events.Publish(new DecisionResolved(decision));
+        if (!open)
+        {
+            return;
+        }
+
+        var hero = state.GetHero(decision.Hero);
+        var box = (PandorasBox)state.GetObject(decision.Box);
+        if (box.IsGuarded)
+        {
+            battles.BeginBoxBattle(hero, box);
+            return;
+        }
+
+        PandorasBoxRules.Open(state, events, economy, progression, artifacts, hero, box);
     }
 
     /// <summary>The hero learns or improves one of the witch hut's skills, or leaves without (ADR-079, MAP-34).</summary>
