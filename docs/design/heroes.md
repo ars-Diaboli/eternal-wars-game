@@ -6,7 +6,7 @@
 - **Roster** (implemented as data, ADR-048): 16 heroes per playable town, a **mage** and a **warrior** for each of its
   eight tier 1–4 creature lines. That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield
   speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource; resource specialties become rare and Necromancy and Logistics get flat
-  specialties, ADR-093, HERO-8 ❓); a skill specialty adds +5 % of the skill's effect per hero level (built for Melee, Archery, Logistics and attunement mana, ADR-083), a
+  specialties, ADR-093, ADR-107); a skill specialty adds +5 % of the skill's effect per hero level (built for Melee, Archery, Logistics and attunement mana, ADR-083), a
   spell specialty +3 % (ADR-072, with magic).
   Edited in `data/heroes.csv`.
 - **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, also per player on campaign-like maps, ADR-068; prisoners and heroes in a town garrison do not count, but a garrisoned hero cannot leave while the player is at the limit, ADR-072); a tavern offers 2 heroes, the upgraded

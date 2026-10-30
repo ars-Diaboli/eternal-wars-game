@@ -2179,8 +2179,8 @@ and (d).
   app opens on the new-game screen, with the F10 menu for loading.
 
 ### ADR-093: Rarer resource specialties, Necromancy and Logistics specialties (2026-10-29)
-**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. The open points are HERO-8 in
-`open-questions.md`, with a proposal. Changes the roster template (ADR-048) and the specialty table in `skills.md`.
+**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. The open points were HERO-8, answered
+in ADR-107 (the proposals, for now). Changes the roster template (ADR-048) and the specialty table in `skills.md`.
 
 - **Resource specialties become rare**: across the whole roster, **4 heroes** give **+350 gold a day** (picked at random, no two of one
   faction) and **6 heroes** give **+1 of a rare resource a day** (no two of one faction): 2 sulfur, 2 crystal, 2 mercury.
@@ -2362,7 +2362,7 @@ nothing in code. New questions: CMB-11 (siege rules), MAG-13 (guild selection, s
 
 ### ADR-100: Artifacts with HoMM names and assembled relics; the arena before 1.0 with LAN; Pandora's Box (2026-10-29)
 **Status**: accepted (2026-10-29), the owner's answers to CONT-6, ARN-1, ARN-2 and MAP-35; **nothing implemented** (the artifact list is a
-content draft in the docs). New question: CONT-7 (assembled relics, the dropped effects).
+content draft in the docs). New question: CONT-7 (assembled relics, the dropped effects), answered in ADR-108.
 
 - **Artifacts** (CONT-6; changes ADR-099's re-draft, [artifacts.md](../content/artifacts.md)):
   - **Names and flavour closer to HoMM3 and HoMM4** (a): the 31 HoMM3 placeholders keep their names and ids, except the two gnoll items (Vael
@@ -2527,3 +2527,80 @@ ADR-101's main menu (UI-2). Choices made here are marked *(choice)*.
 - **Front-end**: a decision prompt with Open and Leave, a notice with the message and what was inside, and the guard named "Pandora's box
   guard" in battle. Not built: spells (Phase 5), running a hero event instead (map events, EVT), and showing the contents on arena day 1
   (the arena).
+
+### ADR-106: Siege rules; guild spell draw, spell elements and summons (CMB-11, MAG-13, 2026-10-30)
+**Status**: accepted (2026-10-30), the owner's answers to CMB-11 and MAG-13 (ADR-099): the proposals, with the changes below. **Nothing
+implemented** (sieges and magic are not built). Points marked *(assumed)* are the agent's reading of a short answer; numbers are
+placeholders.
+
+- **Sieges** (CMB-11; [combat.md](../design/combat.md#sieges-adr-099-adr-106-not-built)):
+  - As proposed: every battle at a town with a Fort is a siege, hero inside or garrison only; a town without one has an ordinary battle (a).
+    **4 wall sections and the gate**, 2 hit points a section at Fort and Citadel, 3 at Castle; a destroyed section is a gap (b). The keep
+    (Citadel) and the two towers (Castle) shoot once a round each, **10 + 2 per town building**, the keep double, and can be destroyed (3
+    points) (d). Flyers and teleporters cross the walls, shooters behind them get the 1/2 cover, one defending shooting stack may stand in the
+    keep (g). The AI attacks a fortified town only when its estimate wins against the walls, and defends behind them (h).
+  - **The gate** (c): the defenders pass, the attackers break it; it has **1 hit point**. A machine **firing by itself** aims at the gate
+    only once **all four wall sections are destroyed**; a player in control may aim at it any time *(assumed)*. After the gate, the keep and
+    towers *(assumed order)*.
+  - **The moat** (e; with the Citadel): a creature entering it stops and takes damage worth **about two tower shots**: placeholder
+    **2 × (10 + 2 per town building)** to the stack, each time it enters (the proposal had 10 % of its health).
+  - **No free siege catapult** (f; the proposal had one for every attacker): the attacking hero's **own offensive machine** (ballista,
+    cannon, catapult or glaivethrower) is what hits the walls, under ADR-063's siege Ballistics. The catapult is only Stronghold's and Swamp
+    Bestiary's offensive machine, with no siege role of its own. The owner's answer says "ballista" for the attacking machine; it is read
+    as any town's offensive machine *(assumed)*. An attacker whose machine was destroyed (and not bought again at a blacksmith) cannot break
+    walls; Earthquake still can.
+- **Guild spells** (MAG-13; [spells.md](../content/spells.md), [magic.md](../design/magic.md)):
+  - As proposed: a guild's 3 / 3 / 2 / 2 spells are **drawn per town when the game starts** from the game's random source, the editor may
+    fix some (a, a map format bump with the item); the extra-school buildings draw theirs the same way, from their own school (c).
+  - **Adventure spells** are drawn like the others (b): no guild level always offers one (no guaranteed Town Portal in Academy guild 4).
+- **The list** (MAG-13 d): as drafted, with the new tags `holy` and `summon`, and **every spell gets an element**: air, earth, fire or water
+  (a new "Element" column in spells.md, one per spell, drafted with HoMM3's spell elements as reference; Magic Arrow is all four, Bind
+  Elemental takes the bound elemental's). The element is not an immunity tag. The **elemental orbs** now raise an **element's** spells of
+  any school: ADR-100's six school orbs become four (Orb of the Firmament, Orb of Silt, Orb of Tempestuous Fire, Orb of Driving Rain; effect
+  kind `element-power`, was `school-power`), so the artifact list has **92** items (46 Major; ADR-100's count of 49 Major was one too high).
+- **Summoned creatures** (MAG-13 e; the proposal had a new neutral Wolf): summons call **town creatures**, never neutrals; elementals are the
+  exception (Conflux rows). Summon the Pack becomes **Call the Herd** (same id `nature.summon-pack`): Sylvan Pegasi, Silver Pegasi at rank
+  III *(assumed creature)*; Summon Demons calls Inferno Horned Demons *(assumed creature)*; Awaken the Grove Sylvan Treants (Ancient at rank
+  III); Hellgate Inferno Imps (Familiars); Bind Elemental Conflux air, earth, fire and water elementals (was "ice").
+
+### ADR-107: Rarer specialties: the HERO-8 proposals, for now (2026-10-30)
+**Status**: accepted for now (2026-10-30): the owner's answer to HERO-8 (ADR-093) is "use the proposals for now", so they may still change
+once the roster is play-tested. **Nothing implemented.**
+
+- **The whole roster** (a): ADR-093's numbers are for all 128 heroes and replace today's 48 resource specialists and 8 Logistics
+  specialists: 4 heroes with +350 gold a day, 6 with +1 rare resource a day (2 sulfur, 2 crystal, 2 mercury), 2 Necromancy and 2 Logistics
+  specialists.
+- **No ore or lumber specialists** (b): their mines are common.
+- **Heroes that lose their specialty** (c; about 50): get a specialty in their **first starting skill** (+5 % per hero level); its effect is
+  built where it is missing (Armor, Treasury, War Tempo, …).
+- **Drawn once** (d) into `heroes.csv` with a fixed seed (the same heroes every game), and listed in `hero-roster.md`.
+- **Factions** (e): no two gold heroes and no two rare-resource heroes of one town, but a town may have one of each; all eight towns take
+  part; any class.
+- **Necromancy** (f): both specialists are Necropolis heroes: the mage slot that has Death attunement as its specialty today, and a warrior.
+  **+5 points on top of the skill** (Basic 5 → 10 % … Master 20 → 25 %), stacking with the Necromancy Amplifier; only with the skill.
+- **Logistics** (g): a flat **+10 % movement on land**, even without the Logistics skill. The other skill specialties (Melee, Archery,
+  Tactics, the attunements) keep +5 % per hero level.
+
+### ADR-108: Assembled relics: the rules, and six more relics (CONT-7, 2026-10-30)
+**Status**: accepted (2026-10-30), the owner's answer to CONT-7 (ADR-100): the proposals, except (f). **Nothing implemented**; the new
+relics are a content draft in [artifacts.md](../content/artifacts.md#assembled-relics).
+
+- **As proposed**: the game asks to join when the hero puts on the last piece, and the hero screen has an "Assemble" button too (a); the
+  relic sits in the first piece's slot and the other pieces' slots stay blocked (b); it can be taken apart any time on the hero screen, the
+  pieces going back to their slots (c); a defeated hero's relic goes to the winner whole when its slots are free, otherwise as pieces into
+  the backpack, and the Artifact Merchant and the Sacrificial Altar take and sell pieces only (d); the AI always joins and values a piece
+  more when it already has the others (e); the dropped effects stay dropped (g).
+- **More assembled relics** (f; the proposal kept three): HoMM3's combinations named in the question, and the bow and Necromancy sets turned
+  into relics. Drafted *(the pieces, effects and numbers are the agent's draft)*:
+  - **Elixir of Life**: Ring of Vitality, Ring of Life (new) and Vial of Lifeblood; creature health, +30 % in all (HoMM3's regeneration was
+    dropped by CONT-6).
+  - **Ring of the Magi**: Collar, Ring and Cape of Conjuring (new, +1 Spell Power each); +3 Spell Power more. HoMM3's longer spells come
+    from Spell Power, which already lengthens spells (ADR-072).
+  - **Cornucopia**: Everflowing Crystal Cloak, Eversmoking Ring of Sulfur, Everpouring Vial of Mercury (new, +1 a day each); +2 of each more.
+  - **Angelic Alliance**: Sword of Judgement, Lion's Shield of Courage, Celestial Necklace of Bliss (new); +2 to every primary stat and no
+    morale loss for mixed factions (a new effect kind, `no-faction-penalty`; HoMM3's Prayer at the battle start is left out). Three pieces,
+    not HoMM3's six.
+  - **Regalia of the Undead King** and **Bow of the Sharpshooter**: no longer sets but assembled relics of the same pieces, the set bonus
+    becoming the relic's added effect (+10 Necromancy points; +15 % ranged damage, +1 battle speed).
+- **Counts** (with ADR-106's four orbs): **109 artifacts**: 29 Minor, 53 Major (the pieces included), 18 Relics, 9 assembled relics; **5
+  sets**.

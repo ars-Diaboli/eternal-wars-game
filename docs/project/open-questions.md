@@ -7,7 +7,10 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-29** (ADR-101): FLOW-4 (victory screen and ranking) and UI-2 (replays and the main menu) answered.
+**Updated 2026-10-30** (ADR-107, ADR-108): HERO-8 (rarer specialties) answered: the proposals, for now; CONT-7 (assembled relics)
+answered, with six more relics.
+Before that (ADR-106): CMB-11 (siege rules) and MAG-13 (guild spell draw, spell elements, summons) answered.
+Before that (ADR-101): FLOW-4 (victory screen and ranking) and UI-2 (replays and the main menu) answered.
 Before that (ADR-100): CONT-6 (artifacts with HoMM names, assembled relics), ARN-1 and ARN-2 (the arena before 1.0, with
 LAN and three shipped maps) and MAP-35 (Pandora's Box) answered; new: CONT-7 (assembled relics, the dropped effects).
 Before that (ADR-099): CMB-5 (sieges before 1.0), MAG-1 and CONT-3 (spells and artifacts re-drafted), MP-3 and MP-4
@@ -17,8 +20,8 @@ and MP-4 (start zones).
 Before that (ADR-097), the arena mode brought ARN-1 and ARN-2.
 Before that (ADR-096), new ideas brought MAP-35 (Pandora's Box) and EVT-1 … EVT-6 (map events like HotA's extended events,
 quests) ([below](#new-ideas-adr-096-2026-10-29)).
-Before that (ADR-092, ADR-093), new ideas bring FLOW-4 (victory screen and ranking), UI-2 (replays) and HERO-8 (specialties)
-([below](#new-ideas-adr-092-2026-10-29)); UI-2 follows the owner's revised note (the replay saved from the ranking table, a leaderboard
+Before that (ADR-092, ADR-093), new ideas bring FLOW-4 (victory screen and ranking), UI-2 (replays) and HERO-8 (specialties);
+UI-2 follows the owner's revised note (the replay saved from the ranking table, a leaderboard
 in the main menu, unfinished saves watched too).
 Before that (ADR-090, ADR-091): CMB-10 (auto combat, built), UI-1 (speed settings, built ADR-095) and FLOW-3 (turn timer, built) answered. Before that (2026-10-28, ADR-088), new
 ideas brought CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)); CMB-9 is answered and built (ADR-089).
@@ -35,51 +38,12 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). CMB-11 stops only the siege items, HERO-8 (ADR-093) only the specialty item, and EVT-1 … EVT-6 (ADR-096) the map events;
-CONT-7 stops only the assembled relics. EVT-1 (b) decides where the map events go in the plan.
+Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). EVT-1 … EVT-6 (ADR-096) stop only the map events; EVT-1 (b) decides where the map events go in the plan.
 
 ## Heroes
 
 <a id="hero-5"></a>
 **HERO-5 Names and drafts.** Hero names, school names and specialties in `heroes.csv`; primary stat odds and starting values (ADR-055).
-
-## Combat
-
-<a id="cmb-11"></a>
-**CMB-11 Siege rules** (ADR-099: sieges before 1.0). Decided so far: a Fort gives a wall and a gate, the Citadel a keep, the Castle towers
-and stronger walls (ADR-066); 36 wide is the siege field (ADR-063); walls give 1/2 cover (combat.md); siege Ballistics (ADR-063: the
-machine fires by itself at the fortifications without the skill, 2 hits in 3, 1–2 structure points, 3 points a structure when fully built).
-(a) **When**: every battle at a town with a Fort, whether a hero is inside or only the garrison? A town without a Fort is an ordinary battle?
-(b) **Walls**: how many sections (HoMM3: 4 sections and the gate), their points (2 at Fort, 3 at Castle?), and a broken section is a gap the
-attackers walk through?
-(c) **The gate**: the defenders pass, the attackers break it (as a wall section)?
-(d) **Keep and towers**: the keep (Citadel) and two towers (Castle) shoot once a round each, damage growing with the town's buildings (HoMM3:
-the number of buildings)? Can they be destroyed?
-(e) **Moat**: HoMM3's moat (a creature entering stops and takes damage), with the Citadel? Or none?
-(f) **The catapult**: HoMM3 gives every attacker a free catapult in a siege. Ours: each town has one offensive machine (one of them is the
-catapult, ADR-056). A free siege catapult for every attacker, or only an offensive machine that fires at walls (Ballistics)?
-(g) **Flyers and teleporters** cross the walls; shooters behind the walls get the 1/2 cover; the defender's shooters in towers?
-(h) **The AI**: attacks a fortified town only when its estimate wins against the walls; defends behind them?
-*Proposal*: (a) yes, yes; (b) 4 sections and the gate, 2 points each at Fort, 3 at Castle; a broken section is a gap; (c) yes; (d) yes, the
-keep and towers shoot (base 10 damage + 2 per town building, the keep double), they can be destroyed (3 points); (e) a moat with the Citadel:
-a creature entering it stops and takes 10 % of its health; (f) a free siege catapult (Ballistics drives it), the offensive machine as usual;
-(g) yes, defenders' shooters may stand in the keep (one stack); (h) yes.
-
-## Magic (Phase 5)
-
-<a id="mag-13"></a>
-**MAG-13 Guild selection and the spell list review** (ADR-099). [spells.md](../content/spells.md) has 17 spells a school (5 / 5 / 4 / 3 by
-level); a guild offers 3 / 3 / 2 / 2.
-(a) **Which spells a guild offers**: drawn per town when the game starts from the game's random source (HoMM3), or set by the map (the editor
-may fix them, the rest drawn)?
-(b) **Adventure spells** count as the level's spells in the draw, or does every guild level that has one always offer it (Town Portal in every
-Academy guild 4)?
-(c) **The extra-school buildings** (1 spell per guild level from each neighbouring school): drawn the same way?
-(d) **The list itself**: anything to drop, rename or move (e.g. Earthquake in Nature for sieges, Bloodlust in Chaos, the summons), and the new
-tags `holy` and `summon`?
-(e) **Summoned creatures** (wolves, treants, elementals, imps, demons): reuse creature table rows, or their own rows?
-*Proposal*: (a) drawn at game start, the editor may fix them; (b) counted in the draw; (c) yes; (d) as drafted; (e) existing creature rows
-(Wolf as a new neutral, the Sylvan Treant, Conflux elementals, Inferno Imp and Demon).
 
 ## Game flow and content
 
@@ -98,28 +62,6 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
-
-<a id="cont-7"></a>
-**CONT-7 Assembled relics and the dropped effects** (ADR-100). [artifacts.md](../content/artifacts.md#assembled-relics): the Wizard's Well,
-the Statue of Legion and the Shackles of War, each joined from three pieces.
-(a) **Joining**: the game asks when the hero puts on the last piece (HoMM3), or an "Assemble" button on the hero screen, or both?
-(b) **Slots**: the relic sits in the first piece's slot and the other pieces' slots stay blocked (HoMM3), or those slots are free again?
-(c) **Taking apart**: any time on the hero screen, the pieces going back to their slots (HoMM3)?
-(d) **Loot and trade**: a defeated hero's relic goes to the winner whole when its slots are free, otherwise as pieces into the backpack; the
-Artifact Merchant and the Sacrificial Altar take and sell pieces only?
-(e) **AI**: always joins; values a piece more when it already has the others?
-(f) **More**: HoMM3 has more combinations (Elixir of Life, Ring of the Magi, Cornucopia, Angelic Alliance, …); also turn the Necromancy and
-bow sets into assembled relics, or keep these three?
-(g) **Dropped effects**: the effects your list left out are gone from their items (artifacts.md, "Dropped by CONT-6"), and weak items got an
-existing effect instead. Confirm, or bring some back?
-*Proposal*:
-(a) both;
-(b) blocked;
-(c) yes;
-(d) yes;
-(e) yes;
-(f) these three for now;
-(g) confirm as drafted.
 
 ## New ideas (ADR-096, 2026-10-29)
 
@@ -209,36 +151,6 @@ quest nobody can finish (warning where it can tell)?
 (d) **Trying an event**: a "test" button in the editor that runs an event on a chosen hero, or test by playing the map?
 *Proposal*: (a) yes; (b) yes; (c) yes; (d) by playing the map for now.
 
-## New ideas (ADR-092, 2026-10-29)
-
-<a id="hero-8"></a>
-**HERO-8 Rarer resource specialties; Necromancy and Logistics specialists.** (ADR-093) The note: 4 heroes with +350 gold a day (random, one per
-faction), 6 with +1 rare resource a day (no two of one faction; 2 sulfur, 2 crystal, 2 mercury), 2 Necromancy specialists (a mage and a
-warrior, a flat +5 %), 2 Logistics specialists (random, a flat +10 %). Resource specialties exist already: the roster template gives every town
-3 heroes with +350 gold (24 in all), one each with +2 ore, +2 lumber and +1 mercury (8 each), 1 Logistics specialist (+5 % per level, 8 in
-all), and 2 Necropolis mages with a Death attunement specialty (its Necromancy effect is not built).
-(a) **The whole roster**: are the note's numbers for all 128 heroes, so they replace today's 48 resource specialists and 8 Logistics
-specialists?
-(b) **Ore and lumber**: no hero gives them any more?
-(c) **The heroes that lose their specialty** (about 50): what do they get: a specialty in one of their starting skills, a spell, their own
-attunement, a creature specialty (HoMM3: a creature line stronger)?
-(d) **Random**: drawn once into `heroes.csv` (the same heroes every game, listed in the roster), or drawn per game from the seed?
-(e) **One per faction**: 4 gold heroes from 4 different towns and 6 rare-resource heroes from 6 different towns; may a town have one of each?
-Do Stronghold and Swamp Bestiary take part? Any class?
-(f) **Necromancy**: both Necropolis heroes (only Necropolis has Death attunement)? A flat +5 points on top of the skill (Basic 5 → 10 % …
-Master 20 → 25 %), stacking with the Necromancy Amplifier (up to 30 %)? Only with the skill?
-(g) **Logistics**: +10 % movement on land with or without the Logistics skill? Do the other skill specialties (Melee, Archery, Tactics, the
-attunements) keep +5 % per level, or become flat too?
-*Proposal*:
-(a) yes, the whole roster;
-(b) yes, no ore or lumber specialists (their mines are common);
-(c) a specialty in their first starting skill (+5 % per level), its effect built where it is missing (Armor, Treasury, War Tempo, …);
-(d) drawn once into `heroes.csv` with a fixed seed, listed in `hero-roster.md`;
-(e) one of each may share a town; all eight towns take part; any class;
-(f) both Necropolis heroes, the slots that today have Death attunement as their specialty (the mage) and a warrior; +5 points on top of the
-skill, stacking with the Amplifier; only with the skill;
-(g) +10 % movement on land even without the skill; the other skill specialties keep +5 % per level.
-
 ## Numbers to tune (not questions)
 Placeholders that wait for play-testing: caravan cost (ADR-054); complexity starting resources (ADR-063); Stewardship and governor percentages
 (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064); building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices
@@ -254,16 +166,16 @@ One line per question; the ADR holds the detail.
 - **Towns**: groups ADR-010/028/029, tech tree ADR-030/046, income ADR-025, caravans ADR-054, tavern ADR-060/070, governors ADR-063, TOWN-1 fort
   ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
-  CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073.
-- **Combat**: CMB-5 (sieges before 1.0) ADR-099; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
+  CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073; HERO-8 (rarer specialties, the proposals for now) ADR-107.
+- **Combat**: CMB-5 (sieges before 1.0) ADR-099; CMB-11 (siege rules) ADR-106; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
   morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090.
-- **Magic**: MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
+- **Magic**: MAG-13 (guild spell draw, spell elements, summons) ADR-106; MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.
 - **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095; UI-2 (replays, main menu) ADR-101.
 - **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098;
   MP-3 (clients' view, saves, smooth fog) and MP-4 (start zones) ADR-099.
-- **Content**: CONT-3 (artifacts re-drafted) ADR-099; CONT-6 (HoMM names, assembled relics) ADR-100.
+- **Content**: CONT-3 (artifacts re-drafted) ADR-099; CONT-6 (HoMM names, assembled relics) ADR-100; CONT-7 (assembled relic rules, six more relics) ADR-108.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091; FLOW-4 (victory screen, ranking) ADR-101.
