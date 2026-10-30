@@ -149,11 +149,16 @@ public sealed record KnownSpell(Magic.SpellDefinition Spell, int Rank, int Cost)
 
 /// <summary>
 /// What a hero brings to cast in battle (ADR-110), copied when the battle starts: Spell Power, level (spell specialties grow with it), the
-/// spells of its book, its specialty spell and its mana.
+/// spells of its book (and those its artifacts teach while worn, ADR-111), its specialty spell, its mana, and the percent its elemental orbs add to
+/// spells of their element.
 /// </summary>
-public sealed record BattleCaster(int SpellPower, int Level, IReadOnlyList<KnownSpell> Spells, string? Specialty, int Mana)
+public sealed record BattleCaster(
+    int SpellPower, int Level, IReadOnlyList<KnownSpell> Spells, string? Specialty, int Mana, IReadOnlyDictionary<Magic.SpellElement, int>? ElementPercent = null)
 {
     public KnownSpell? Find(string spell) => Spells.FirstOrDefault(s => s.Spell.Id == spell);
+
+    /// <summary>The percent the hero's artifacts add to the effect of the spell's element.</summary>
+    public int ElementBonus(Magic.SpellDefinition spell) => ElementPercent?.GetValueOrDefault(spell.Element) ?? 0;
 
     public static BattleCaster? For(Heroes.Hero hero, Magic.SpellCatalog spells)
     {
@@ -162,13 +167,12 @@ public sealed record BattleCaster(int SpellPower, int Level, IReadOnlyList<Known
             return null;
         }
 
-        var known = hero.Spells
-            .Where(s => spells.Contains(s.Key))
-            .Select(s => spells.Get(s.Key))
-            .Select(s => new KnownSpell(s, hero.Spells[s.Id], Heroes.ManaRules.SpellCost(hero, s.Mana)))
+        var known = Magic.MagicRules.Known(hero, spells)
+            .Select(s => new KnownSpell(s.Spell, s.Rank, Heroes.ManaRules.SpellCost(hero, s.Spell.Mana)))
             .ToList();
         var specialty = hero.Specialty is { Kind: Heroes.SpecialtyKind.Spell } special ? special.Target : null;
-        return new BattleCaster(hero.TotalSpellPower, hero.Level, known, specialty, hero.Mana);
+        var elements = Enum.GetValues<Magic.SpellElement>().Where(e => hero.Bonus.ElementBonus(e) != 0).ToDictionary(e => e, hero.Bonus.ElementBonus);
+        return new BattleCaster(hero.TotalSpellPower, hero.Level, known, specialty, hero.Mana, elements);
     }
 }
 
@@ -177,17 +181,22 @@ public sealed record BattleCaster(int SpellPower, int Level, IReadOnlyList<Known
 /// bonus of its preferred creature line (<see cref="Heroes.SkillEffects"/>), its morale and luck (ADR-053), and its war
 /// machine skills (ADR-056), Alertness' initiative (flat, ADR-069), Marksmanship and the Primal Fury skills (ADR-067).
 /// <see cref="EnemySpellPowerPenalty"/> and <see cref="EnemySpellCostPenalty"/> (Interference) weaken the enemy hero's spells, and Spell resistance cuts hostile spells' damage and duration (ADR-110).
+/// Artifacts (ADR-111) make the army immune to spells with some tags, forbid retreat and surrender to both sides, and cap the spell level both sides may cast.
 /// </summary>
 public sealed record HeroBattleBonuses(
     int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred, int Morale = 0, int Luck = 0,
     Heroes.SkillLevel Ballistics = Heroes.SkillLevel.None, Heroes.SkillLevel Healing = Heroes.SkillLevel.None,
     Heroes.SkillLevel AmmoSupply = Heroes.SkillLevel.None, int RangedDamageTakenReductionPercent = 0,
     int Initiative = 0, Heroes.SkillLevel BloodRage = Heroes.SkillLevel.None, Heroes.SkillLevel Warcry = Heroes.SkillLevel.None,
-    int EnemySpellPowerPenalty = 0, int EnemySpellCostPenalty = 0, int MarksmanshipEighths = 0, int SpellResistancePercent = 0)
+    int EnemySpellPowerPenalty = 0, int EnemySpellCostPenalty = 0, int MarksmanshipEighths = 0, int SpellResistancePercent = 0,
+    IReadOnlySet<string>? Immunities = null, bool NoRetreat = false, int? SpellLevelCap = null)
 {
     public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<string>());
 
     public bool Prefers(Creatures.CreatureDefinition creature) => Preferred.Contains(creature.Id);
+
+    /// <summary>Whether the army is immune to a spell with any of these tags.</summary>
+    public bool IsImmuneTo(IEnumerable<string> tags) => Immunities is { Count: > 0 } immune && tags.Any(immune.Contains);
 
     public static HeroBattleBonuses For(Heroes.Hero hero, Creatures.CreatureCatalog creatures)
     {
@@ -220,7 +229,10 @@ public sealed record HeroBattleBonuses(
             PrimalFury.SpellPowerPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
             PrimalFury.SpellCostPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
             Heroes.SkillEffects.MarksmanshipEighths(hero.SkillLevelOf(Heroes.BuiltInSkills.Marksmanship)),
-            Heroes.SkillEffects.SpellResistancePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.SpellResistance)));
+            Heroes.SkillEffects.SpellResistancePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.SpellResistance)),
+            artifacts.Immunities,
+            artifacts.NoRetreat,
+            artifacts.SpellLevelCap);
     }
 }
 

@@ -28,9 +28,9 @@ public static class NecromancyRules
     /// <summary>Necromancy comes with Death attunement (the Necropolis school).</summary>
     public static string Skill { get; } = ManaRules.AttunementSkill(TownIds.Necropolis);
 
-    /// <summary>The share of the slain hit points raised, in percent; none without the skill.</summary>
-    public static int Percent(SkillLevel level, bool amplified) =>
-        level == SkillLevel.None ? 0 : (PercentPerLevel * (int)level) + (amplified ? AmplifierPercent : 0);
+    /// <summary>The share of the slain hit points raised, in percent, with the artifacts' Necromancy points (ADR-111); none without the skill.</summary>
+    public static int Percent(SkillLevel level, bool amplified, int artifactPercent = 0) =>
+        level == SkillLevel.None ? 0 : (PercentPerLevel * (int)level) + (amplified ? AmplifierPercent : 0) + artifactPercent;
 
     /// <summary>Whether the player owns a town with the Necromancy Amplifier (a captured one helps its new owner).</summary>
     public static bool IsAmplified(GameState state, PlayerId player) =>
@@ -57,9 +57,10 @@ public static class NecromancyRules
     /// a random proportion (game RNG), each part divided by its creature's hit points, rounded down. Lines in tier and id order.
     /// </summary>
     public static IReadOnlyList<RaisedUndead> Raise(
-        IEnumerable<(CreatureDefinition Creature, int Slain)> slain, SkillLevel level, bool amplified, CreatureCatalog creatures, GameRandom random)
+        IEnumerable<(CreatureDefinition Creature, int Slain)> slain, SkillLevel level, bool amplified, CreatureCatalog creatures, GameRandom random,
+        int artifactPercent = 0)
     {
-        var percent = Percent(level, amplified);
+        var percent = Percent(level, amplified, artifactPercent);
         if (percent == 0)
         {
             return [];

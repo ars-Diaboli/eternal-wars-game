@@ -65,13 +65,14 @@ public static class ManaRules
             };
         });
 
-    public static int MaxMana(Hero hero) => (ManaPerKnowledge * hero.TotalKnowledge) + Bonus(hero).MaxMana + LevelMana(hero.Level);
+    /// <summary>The pool: 10 × Knowledge, attunement, the level's mana and artifacts' maximum mana (ADR-111).</summary>
+    public static int MaxMana(Hero hero) => (ManaPerKnowledge * hero.TotalKnowledge) + Bonus(hero).MaxMana + LevelMana(hero.Level) + hero.Bonus.ManaMax;
 
     /// <summary>Mana by level: +10 at levels 1–10, +20 at 11–20, and so on (every hero has at least 10).</summary>
     public static int LevelMana(int level) => ManaPerTenLevels * ((Math.Max(1, level) + 9) / 10);
 
-    /// <summary>Mana regained each day: ⌈Knowledge / 10⌉ plus attunement.</summary>
-    public static int DailyMana(Hero hero) => (hero.TotalKnowledge + 9) / 10 + Bonus(hero).DailyMana;
+    /// <summary>Mana regained each day: ⌈Knowledge / 10⌉ plus attunement plus artifacts' mana a day (ADR-111).</summary>
+    public static int DailyMana(Hero hero) => (hero.TotalKnowledge + 9) / 10 + Bonus(hero).DailyMana + hero.Bonus.ManaADay;
 
     /// <summary>Mana cost of a spell for this hero: attunement takes it down, but never below 25 % of the base, rounded up.</summary>
     public static int SpellCost(Hero hero, int baseCost)

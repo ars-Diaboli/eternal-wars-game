@@ -184,7 +184,20 @@ public partial class HeroPanel : PanelContainer
             $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {hero.Mana}/{hero.MaxMana}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}",
             $"Experience {hero.Experience}/{next}" + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : "") + $"   Scouting {hero.ScoutingRadius}",
             hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe()}",
-            !hero.HasSpellBook ? "No spell book." : hero.Spells.Count == 0 ? "Spell book: empty." : $"Spells: {string.Join(", ", hero.Spells.Keys.Select(SpellName))}");
+            SpellsText(hero));
+    }
+
+    /// <summary>The learned spells by name, and how many more the worn artifacts teach (the Unwritten Codex, ADR-111).</summary>
+    private static string SpellsText(Hero hero)
+    {
+        if (!hero.HasSpellBook)
+        {
+            return "No spell book.";
+        }
+
+        var lent = EternalWars.Core.Domain.Magic.MagicRules.Known(hero, EternalWars.Core.Domain.Magic.SpellCatalog.Default).Count() - hero.Spells.Count;
+        var learned = hero.Spells.Count == 0 ? "Spell book: empty." : $"Spells: {string.Join(", ", hero.Spells.Keys.Select(SpellName))}";
+        return lent > 0 ? $"{learned}   (+{lent} while its artifacts are worn)" : learned;
     }
 
     private static string SpellName(string spell) =>

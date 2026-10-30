@@ -2677,4 +2677,38 @@ agent's choices where the earlier ADRs say nothing.
   the field (Esc cancels). The 2D harness arms spells with C. The hero panel lists the book's spells.
 - **Not built**: ranks II / III and Mastery; adventure spells; summons, control, resurrection and the other effects without a battle line;
   creature casters; shrines; the extra-school spell buildings and the Primal Fury building; guild spells set by the map; spell books and
-  spells in the map format; the AI's buffs; the orbs' element power.
+  spells in the map format; the AI's buffs; the orbs' element power (built since, ADR-111).
+
+### ADR-111: Artifacts, the re-draft: the table and the new effect kinds (ADR-061, ADR-099, ADR-100, ADR-106, ADR-108, 2026-10-30)
+**Status**: accepted (2026-10-30), built. The roadmap item "Artifact table: the re-draft": `data/artifacts.csv` now holds the catalog of
+[artifacts.md](../content/artifacts.md), so the table is the truth for numbers again. Points marked *(assumed)* are the agent's choices.
+
+- **Table**: 101 artifacts and 5 sets. Ids renamed: `ash-sigil` → `badge-of-courage`, `greater-gnolls-flail` → `lizard-warriors-flail`,
+  `buckler-of-the-gnoll-king` → `buckler-of-the-lizard-king`, `scale-of-the-elder-dragon` → `dragon-scale-armor` (no shipped map used them;
+  older saves and maps naming them fail to load them like any unknown artifact). New rows: every ✅ / 🆕 / ⏳ row of the draft, the
+  assembled relics' pieces with their own effects (the relics themselves are the next roadmap item), the four orbs, the Spyglass and
+  Speculum, the Seed of the World Tree, the Unwritten Codex and the Recanter's Cloak. Changed numbers: Dawn Banner +1 luck, Ember Crown +6 Spell
+  Power, Bone Dragon's Fang +2 luck, Dragon Scale Armor +2 Attack, Mirror +3 Defense / +2 luck, Aegis −5 % damage taken, Amulet of the Deep
+  +10 maximum mana; the dropped "Not yet" notes are gone. Sets: the Armor of the Dawn Covenant adds +2 Spell Power, "Ashen Court Regalia" is
+  renamed (id kept), the Unbound's Trophies lose their terrain condition, and the **Regalia of the Firstborn** is new (+3 Attack, +3 Defense,
+  +2 Spell Power, immune to `mind`).
+- **New effect words** (`ArtifactEffect.Parse`, summed in `ArtifactBonuses`): `sight N` (scouting radius), `mana-a-day N`, `mana-max N`,
+  `creature-health N` (percent), `no-retreat`, `necromancy N` (percent points), `growth N` (percent), `immune <tag>`, `element-power
+  <air|earth|fire|water> N` (percent), `spells L1-L2`, `no-spells-above L`.
+- **Rules**:
+  - Mana: added to `ManaRules.MaxMana` / `DailyMana`. Sight: added to `Hero.ScoutingRadius` (seen on the next reveal, *(assumed)* not at once).
+  - Creature health: the hero's creatures (not war machines) fight with health × (100 + N) / 100, rounded down, for the battle; Necromancy
+    counts the slain with the table's health.
+  - Growth: the sum over the owner's heroes on the map adds to the Monday growth of every town of the owner, like the fort bonus *(assumed:
+    not to a new dwelling's first week)*.
+  - Necromancy points add to the share only for a hero with the skill *(assumed)*.
+  - Immunities: the enemy's hostile spells with the tag do not reach the army (own buffs with the tag still do: Steadfast is `mind`).
+  - No retreat: either hero's artifact forbids retreat and surrender to both sides (`SurrenderRules.CheckRetreat`); the AI does not try.
+  - No spells above L: neither side casts a spell above the lower cap of the two heroes (`BattleMagic.SpellLevelCap`).
+  - Element power: multiplies the amount of the hero's damage and healing spells of that element (Magic Arrow's "all" gets none
+    *(assumed)*).
+  - Spells known while worn: with a spell book, every spell of those levels of every school is castable at rank 1 (`MagicRules.Known`);
+    nothing is learned for good. The hero panel counts them.
+- **AI**: the new kinds have weights in `ArtifactValue` (placeholders).
+- **Not built**: the Crown of the Waning Eye's +1 to the best magic skill; the assembled relics (joining, blocked slots, `full-mana`,
+  `no-faction-penalty`); creature casters' spells against artifact immunities (creature casters are not built).

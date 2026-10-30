@@ -59,6 +59,26 @@ public static class MagicRules
         }
     }
 
+    /// <summary>
+    /// The spells the hero can cast, by id: those it has learned at their rank, and while it wears an artifact that teaches spells (the Unwritten
+    /// Codex, ADR-111) every spell of those levels of every school at rank 1. Nothing without a spell book.
+    /// </summary>
+    public static IEnumerable<(SpellDefinition Spell, int Rank)> Known(Hero hero, SpellCatalog spells)
+    {
+        if (!hero.HasSpellBook)
+        {
+            return [];
+        }
+
+        var known = hero.Spells.Where(s => spells.Contains(s.Key)).ToDictionary(s => s.Key, s => (Spell: spells.Get(s.Key), Rank: s.Value), StringComparer.Ordinal);
+        foreach (var spell in spells.All.Where(s => hero.Bonus.SpellLevels.Contains(s.Level)))
+        {
+            known.TryAdd(spell.Id, (spell, 1));
+        }
+
+        return known.Values.OrderBy(k => k.Spell.Id, StringComparer.Ordinal);
+    }
+
     /// <summary>The spells the town's guild teaches now: its drawn spells up to the guild's level.</summary>
     public static IEnumerable<string> Offered(Town town) =>
         town.GuildSpells.Where(l => l.Key <= town.Level(BuiltInBuildings.MageGuild)).OrderBy(l => l.Key).SelectMany(l => l.Value);

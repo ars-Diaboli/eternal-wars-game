@@ -270,7 +270,9 @@ public partial class BattleHud : Control
         var commander = _view.Commander;
         _wait.Disabled = commander is null;
         _defend.Disabled = commander is null;
-        _retreat.Disabled = commander is null || battle?.ActiveUnit is not { } active || battle.Participant(active.Side).Hero is null;
+        var retreatRefusal = commander is null || battle?.ActiveUnit is not { } active ? "" : SurrenderRules.CheckRetreat(battle, active.Side);
+        _retreat.Disabled = retreatRefusal is not null;
+        _retreat.TooltipText = retreatRefusal is { Length: > 0 } why ? why : "";
         RefreshSurrender(battle, commander);
         _quick.Disabled = _view.Result is not null || battle is null ||
                           (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is null;

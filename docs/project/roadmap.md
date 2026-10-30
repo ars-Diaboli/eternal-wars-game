@@ -327,7 +327,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 ### Artifacts
 Content draft: [artifacts.md](../content/artifacts.md).
 
-- [x] Artifact tables `data/artifacts.csv` and `data/artifact_sets.csv` (ADR-061): 67 artifacts, 4 sets, embedded in core
+- [x] Artifact tables `data/artifacts.csv` and `data/artifact_sets.csv` (ADR-061): 67 artifacts, 4 sets, embedded in core (101 and 5 since the re-draft, ADR-111)
 - [x] Hero paper-doll slots and a backpack of 50; equip / unequip / give commands
 - [x] Stat effects: Attack, Defense, Spell Power, Knowledge, morale, luck, movement, battle speed, damage, skill levels
 - [x] Income artifacts (daily resources through `HeroIncome`)
@@ -337,11 +337,11 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Artifact exchange between own heroes (`GiveArtifactCommand`, while the exchange is open); screen pending
 - [x] Map format v11 and editor session calls (`SetHeroArtifacts`, `SetArtifactPickup`); validator
 - [x] The AI picks up, values and equips artifacts
-- [ ] Artifact effects that wait for other systems ("Not yet" in the table: mana, spell resistance, regeneration, …)
+- [x] Artifact effects that wait for other systems: mana, sight, creature health, immunities and the magic ones are in (ADR-111); regeneration, spell resistance and the like were dropped by CONT-6; the Crown of the Waning Eye's +1 best magic skill is still "Not yet"
 - [ ] Editor: inspector rows for hero artifacts and pickups (Godot)
 - [x] Godot: paper-doll and backpack on the hero screen (click to wear / take off, tooltips with effects; no drag and drop, no artifact exchange between heroes yet)
 
-- [ ] Artifact table: the re-draft (ADR-099, ADR-100, [artifacts.md](../content/artifacts.md)): the few renamed rows (the gnoll items, lore
+- [x] Artifact table: the re-draft (ADR-099, ADR-100, ADR-111, [artifacts.md](../content/artifacts.md); 101 artifacts, 5 sets): the few renamed rows (the gnoll items, lore
       items with HoMM names; tests follow), the rows whose effects exist, "Ashen Court Regalia"; then the new effect kinds with their rows in
       the owner's order (sight, mana a day and maximum, creature health, no retreat, Necromancy, growth, immunities); the magic ones
       (the four elemental orbs by spell element, ADR-106; spells known while worn, no spells above level 2) with Phase 5

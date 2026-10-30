@@ -42,7 +42,7 @@ public class ArtifactTests
         Assert.All(ArtifactSlots.All, slot => Assert.Contains(catalog.All, a => a.Slot == slot));
         Assert.All(catalog.All, a => Assert.NotEmpty(a.Effects));
         Assert.All(catalog.Sets, set => Assert.True(catalog.PiecesOf(set.Id).Count() >= 2));
-        Assert.Equal(4, catalog.Sets.Count());
+        Assert.Equal(5, catalog.Sets.Count());
         Assert.Equal(catalog.All.Count(), catalog.All.Select(a => a.Id).Distinct().Count());
     }
 
@@ -62,6 +62,12 @@ public class ArtifactTests
     [InlineData("native-terrain forest-floor", ArtifactEffectKind.NativeTerrain, 1, "ForestFloor")]
     [InlineData("skill machines.ballistics 1", ArtifactEffectKind.Skill, 1, "machines.ballistics")]
     [InlineData("all-skills 1", ArtifactEffectKind.AllSkills, 1, null)]
+    [InlineData("sight 2", ArtifactEffectKind.Sight, 2, null)]
+    [InlineData("immune mind", ArtifactEffectKind.Immune, 1, "mind")]
+    [InlineData("element-power fire 25", ArtifactEffectKind.ElementPower, 25, "fire")]
+    [InlineData("spells 1-2", ArtifactEffectKind.Spells, 2, "1")]
+    [InlineData("no-retreat", ArtifactEffectKind.NoRetreat, 1, null)]
+    [InlineData("no-spells-above 2", ArtifactEffectKind.NoSpellsAbove, 2, null)]
     public void EffectsParse(string text, ArtifactEffectKind kind, int value, string? target) =>
         Assert.Equal(new ArtifactEffect(kind, value, target), ArtifactEffect.Parse(text));
 
@@ -72,6 +78,11 @@ public class ArtifactTests
     [InlineData("income gold")]
     [InlineData("native-terrain moon")]
     [InlineData("skill no.such 1")]
+    [InlineData("element-power all 25")]
+    [InlineData("spells 2-1")]
+    [InlineData("spells 1-5")]
+    [InlineData("no-retreat 1")]
+    [InlineData("immune")]
     public void BadEffects_AreRefused(string text) => Assert.Throws<FormatException>(() => ArtifactEffect.Parse(text));
 
     [Fact]
@@ -88,7 +99,7 @@ public class ArtifactTests
     public void WornArtifacts_AddUp_AndCompleteSetsAddTheirBonus()
     {
         var state = Create("A.B");
-        Outfit(state, A, worn: ["rusted-blade", "squires-shield", "ash-sigil"]);
+        Outfit(state, A, worn: ["rusted-blade", "squires-shield", "badge-of-courage"]);
         var hero = state.GetHero(A);
 
         Assert.Equal(hero.Attack + 1, hero.TotalAttack);

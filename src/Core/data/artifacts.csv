@@ -1,68 +1,102 @@
 id,name,slot,tier,set,effects,notes
-ash-sigil,Ash Sigil,Neck,Minor,,morale 1,struck from a cold coal of the last Wheel fire; soldiers swear it is still warm
+badge-of-courage,Badge of Courage,Neck,Minor,,morale 1,struck from a cold coal of the last Wheel fire; soldiers swear it is still warm
+charm-of-mana,Charm of Mana,Neck,Minor,,mana-a-day 1,"a coal in a cage of wire, fed by whoever wears it. A piece of the Wizard's Well"
 pilgrims-boots,Pilgrim's Boots,Boots,Minor,pilgrims-road,movement 10,worn through three crusades; the soles remember every road
-weathered-cloak,Weathered Cloak,Cloak,Minor,pilgrims-road,terrain-penalty 25,a cloak that has been soaked in every terrain once
+weathered-cloak,Weathered Cloak,Cloak,Minor,pilgrims-road,terrain-penalty 25,soaked in every terrain once
 iron-band,Iron Band,Ring,Minor,,luck 1,a ring of plain iron: whoever lost it never returned for it
+ring-of-the-wayfarer,Ring of the Wayfarer,Ring,Minor,,battle-speed 1,Academy messengers wear it between the peaks
 squires-shield,Squire's Shield,Shield,Minor,,defense 1,"dented, honest and painted over three times"
+shield-of-the-dwarven-lords,Shield of the Dwarven Lords,Shield,Minor,,defense 2,"the dwarves sold their last shields to Haven, and then their halls"
 rusted-blade,Rusted Blade,Weapon,Minor,,attack 1,an old sword; what it cut was worth the edge
+centaurs-ax,Centaur's Axe,Weapon,Minor,,attack 2,Stronghold axes are made to be lost and taken back
+blackshard-of-the-dead-knight,Blackshard of the Dead Knight,Weapon,Minor,,attack 3,the Necropolis arms its dead with what they were buried with. A piece of the Regalia of the Undead King
 scholars-cap,Scholar's Cap,Head,Minor,,knowledge 1,the Academy's apprentices wear it until they can afford better
-hearth-charm,Hearth Charm,Misc,Minor,pilgrims-road,income gold 100,a coin worn smooth; said to always arrive on the right day
+helm-of-the-alabaster-unicorn,Helm of the Alabaster Unicorn,Head,Minor,,knowledge 1,"the Sylvan carved it for a unicorn's rider, who did not come back"
+skull-helmet,Skull Helmet,Head,Minor,,knowledge 2,the scribe kept writing after he died; the helmet kept him company. A piece of the Regalia of the Undead King
+breastplate-of-petrified-wood,Breastplate of Petrified Wood,Body,Minor,,defense 1,"Sylvan bark, given freely by a tree that was dying anyway"
+rib-cage,Rib Cage,Body,Minor,,defense 2,"ribs of an earlier owner, fitted to the next. A piece of the Regalia of the Undead King"
+hearth-charm,Hearth Charm,Misc,Minor,pilgrims-road,income gold 100,"a coin worn smooth, said to always arrive on the right day"
 woodcutters-axe,Woodcutter's Axe,Misc,Minor,,income lumber 1,rumoured to have felled a tree twice
-miners-lamp,Miner's Lamp,Misc,Minor,,income ore 1,the flame never goes out; even in the rain
+miners-lamp,Miner's Lamp,Misc,Minor,,income ore 1,"the flame never goes out, even in the rain"
+endless-pouch-of-ore,Endless Pouch of Ore,Misc,Minor,,income ore 2,Dungeon-sewn; the ore in it is never quite the ore that went in
 marsh-talisman,Marsh Talisman,Misc,Minor,unbound-trophies,native-terrain swamp; native-terrain shallow-water,strung from teeth; a Swamp Bestiary hunter's gift
 candle-of-the-pious,Candle of the Pious,Misc,Minor,dawn-covenant-armor,spell-power 1,wax and prayer; Haven's chapels burn these by the thousand
-centaurs-ax,Centaur's Ax,Weapon,Minor,,attack 2,HoMM3 style placeholder: a long-hafted ax for riders
-blackshard-of-the-dead-knight,Blackshard of the Dead Knight,Weapon,Minor,,attack 3,HoMM3 style placeholder: a notched black blade from a Necropolis barrow
-shield-of-the-dwarven-lords,Shield of the Dwarven Lords,Shield,Minor,,defense 2,HoMM3 style placeholder: a rune-bossed shield from the deep halls
-helm-of-the-alabaster-unicorn,Helm of the Alabaster Unicorn,Head,Minor,,knowledge 1,HoMM3 style placeholder: a white helm with a single horn
-skull-helmet,Skull Helmet,Head,Minor,,knowledge 2,HoMM3 style placeholder: worn by Stronghold shamans who talk to what it once held
-breastplate-of-petrified-wood,Breastplate of Petrified Wood,Body,Minor,,defense 1,HoMM3 style placeholder: a Sylvan breastplate grown rather than made
-rib-cage,Rib Cage,Body,Minor,,defense 2,HoMM3 style placeholder: the ribs of something large that no longer needs them
-ring-of-the-wayfarer,Ring of the Wayfarer,Ring,Minor,,battle-speed 1,HoMM3 style placeholder: a ring of braided road dust and thread
-equestrians-gloves,Equestrian's Gloves,Misc,Minor,,movement-flat 300,HoMM3 style placeholder: worn smooth on the reins
-endless-pouch-of-ore,Endless Pouch of Ore,Misc,Minor,,income ore 2,HoMM3 style placeholder: never empty; never explained
-crown-of-the-waning-eye,Crown of the Waning Eye,Head,Major,,knowledge 3,"forged when the sun first dimmed; the wearer sees the dark earlier than others. Not yet: +1 level to the best magic skill"
+equestrians-gloves,Equestrian's Gloves,Misc,Minor,,movement-flat 300,Haven's outriders carry the news of every lost province first
+spyglass,Spyglass,Misc,Minor,,sight 1,"brass from a drowned ruin; the lens shows what is there, mostly"
+bowstring-of-the-unicorns-mane,Bowstring of the Unicorn's Mane,Misc,Minor,,ranged-damage 5,the unicorn gave it; the Sylvan do not say what they gave back. A piece of the Bow of the Sharpshooter
+ring-of-vitality,Ring of Vitality,Ring,Minor,,creature-health 5,"a green band; the Sylvan say it was a vine, and still is. A piece of the Elixir of Life"
+collar-of-conjuring,Collar of Conjuring,Neck,Minor,,spell-power 1,"an apprentice's collar, worn until the spells stop slipping. A piece of the Ring of the Magi"
+ring-of-conjuring,Ring of Conjuring,Ring,Minor,,spell-power 1,"Academy brass, engraved on the inside with a proof nobody has finished. A piece of the Ring of the Magi"
+cape-of-conjuring,Cape of Conjuring,Cloak,Minor,,spell-power 1,the lining is a star chart of a sky Vael no longer has. A piece of the Ring of the Magi
+crown-of-the-waning-eye,Crown of the Waning Eye,Head,Major,,knowledge 3,"forged when the sun first dimmed; the wearer sees the dark earlier than others. Not yet: +1 level to the hero's best magic skill"
+helm-of-chaos,Helm of Chaos,Head,Major,,knowledge 3,"Inferno iron; it thinks along with the wearer, and disagrees"
 hunters-mark,Hunter's Mark,Neck,Major,unbound-trophies,luck 2,a bone token with a hole in it; the bearer's arrows find whatever hid
-mantle-of-the-last-grove,Mantle of the Last Grove,Cloak,Major,,native-terrain grass; native-terrain forest-floor,Sylvan weavers spin it from moss that grows only in dying groves
-plate-of-the-faithful,Plate of the Faithful,Body,Major,dawn-covenant-armor,defense 4; ranged-damage-taken 10,riveted in the cathedral-forges of Haven; the rivets are blessed; the plate is not comfortable
-wardens-edge,Warden's Edge,Weapon,Major,,attack 4; melee-damage 10,a Sylvan blade-dancer's twin; the other half never found
-aegis-of-ash,Aegis of Ash,Shield,Major,dawn-covenant-armor,defense 4,quenched in the cinders of a burned city. Not yet: 10 % fire resistance
-ring-of-reckoning,Ring of Reckoning,Ring,Major,ash-court-regalia,luck 2; morale 1,Necropolis lawyers wear it; they prefer to be on the winning side of the ledger
+pendant-of-courage,Pendant of Courage,Neck,Major,,morale 2; luck 2,"holds a finger bone of a saint, or of whoever was nearest"
+necklace-of-swiftness,Necklace of Swiftness,Neck,Major,,battle-speed 1,Sylvan silver; the hunt it was made for never ended. A piece of the Bow of the Sharpshooter
+pendant-of-free-will,Pendant of Free Will,Neck,Major,,immune mind,a pebble from the Conflux's mechanism; thoughts slide off it
+talisman-of-mana,Talisman of Mana,Misc,Major,,mana-a-day 2,Academy glass with a spark in it that never settles. A piece of the Wizard's Well
+mystic-orb-of-mana,Mystic Orb of Mana,Misc,Major,,mana-a-day 3,"it hums at dawn, the only thing on Vael that still does. A piece of the Wizard's Well"
+mantle-of-the-last-grove,Mantle of the Last Grove,Cloak,Major,,native-terrain grass; native-terrain forest-floor,spun from moss that grows only in dying groves
+cape-of-velocity,Cape of Velocity,Cloak,Major,,battle-speed 1; movement 10,it pulls toward wherever the wind is going
+plate-of-the-faithful,Plate of the Faithful,Body,Major,dawn-covenant-armor,defense 4; ranged-damage-taken 10,"riveted in the cathedral-forges of Haven; the rivets are blessed, the plate is not comfortable"
+scales-of-the-greater-basilisk,Scales of the Greater Basilisk,Body,Major,,defense 3,the basilisk was not dead when the cult began to sew
+tunic-of-the-cyclops-king,Tunic of the Cyclops King,Body,Major,,defense 4,every clan that wore it added a strap
+breastplate-of-brimstone,Breastplate of Brimstone,Body,Major,,defense 5; damage-taken 5,"still smoking; Inferno smiths call that ""fresh"""
+wardens-edge,Warden's Edge,Weapon,Major,,attack 4; melee-damage 10,"a Sylvan blade-dancer's twin, the other half never found"
+lizard-warriors-flail,Lizard Warrior's Flail,Weapon,Major,,attack 4,swung by the swamp's champions; the spikes are teeth
+ogres-club-of-havoc,Ogre's Club of Havoc,Weapon,Major,,attack 5,a stone on a log; the clans have never needed better
+sword-of-hellfire,Sword of Hellfire,Weapon,Major,,attack 6,the Inferno reaps every age; this is the tool
+bow-of-elven-cherrywood,Bow of Elven Cherrywood,Weapon,Major,,ranged-damage 10,strung with the hair of an elf who forgot whose it was. A piece of the Bow of the Sharpshooter
+aegis-of-ash,Aegis of Ash,Shield,Major,dawn-covenant-armor,defense 4; damage-taken 5,quenched in the cinders of a burned city
+buckler-of-the-lizard-king,Buckler of the Lizard King,Shield,Major,,defense 4,it stays wet; the swamp cults say that is how you know it is alive
+targ-of-the-rampaging-ogre,Targ of the Rampaging Ogre,Shield,Major,,defense 5,"a gate of a Haven city that fell, cut down to a shield"
+ring-of-reckoning,Ring of Reckoning,Ring,Major,ash-court-regalia,luck 2; morale 1,Necropolis lawyers wear it; they prefer the winning side of the ledger
 ring-of-pale-fire,Ring of Pale Fire,Ring,Major,,spell-power 3,a Chaos pact in a band of gold; the flame inside does not like being looked at
+ring-of-the-wellspring,Ring of the Wellspring,Ring,Major,,mana-a-day 2; mana-max 10,Academy-cut from a spring that runs upward
 boots-of-the-wheel-runner,Boots of the Wheel-Runner,Boots,Major,,movement 20; battle-speed 1,stitched from the hide of a beast that ran every circuit of the Wheel
-sceptre-of-cinders,Sceptre of Cinders,Misc,Major,ash-court-regalia,attack 2; spell-power 2,the Inferno's demons gift these; and always want them back
-amulet-of-the-deep,Amulet of the Deep,Misc,Major,,knowledge 2,Dungeon dark-elves wear it to remember the surface; they say it helps them forget. Not yet: +4 mana per Knowledge point
-war-drum,War-Drum,Misc,Major,unbound-trophies,morale 1,Stronghold clans carry these to every war; the beat is older than the clan. Not yet: +10 % initiative at the start
-alchemists-satchel,Alchemist's Satchel,Misc,Major,,income crystal 1; income mercury 1; income sulfur 1,Academy glassware; the vials never run dry; and never explain why
+boots-of-speed,Boots of Speed,Boots,Major,,movement-flat 600,"the outriders' second pair, for the last road"
+sceptre-of-cinders,Sceptre of Cinders,Misc,Major,ash-court-regalia,attack 2; spell-power 2,"the Inferno's demons gift these, and always want them back"
+amulet-of-the-deep,Amulet of the Deep,Misc,Major,,knowledge 2; mana-max 10,dark-elves wear it to remember the surface; they say it helps them forget
+war-drum,War-Drum,Misc,Major,unbound-trophies,morale 1,Stronghold clans carry these to every war; the beat is older than the clan
+alchemists-satchel,Alchemist's Satchel,Misc,Major,,income crystal 1; income mercury 1; income sulfur 1,"Academy glassware; the vials never run dry, and never explain why"
 ledger-of-debts,Ledger of Debts,Misc,Major,ash-court-regalia,income gold 300,a Necropolis bookkeeper's crown jewel; every entry in it is a promise
-greater-gnolls-flail,Greater Gnoll's Flail,Weapon,Major,,attack 4,HoMM3 style placeholder: three chains and a grudge
-ogres-club-of-havoc,Ogre's Club of Havoc,Weapon,Major,,attack 5,HoMM3 style placeholder: a tree trunk with opinions
-sword-of-hellfire,Sword of Hellfire,Weapon,Major,,attack 6,HoMM3 style placeholder: the blade stays warm; the hand does not
-buckler-of-the-gnoll-king,Buckler of the Gnoll King,Shield,Major,,defense 4,HoMM3 style placeholder: small; loud; effective
-targ-of-the-rampaging-ogre,Targ of the Rampaging Ogre,Shield,Major,,defense 5,HoMM3 style placeholder: a door taken off a fortress
-helm-of-chaos,Helm of Chaos,Head,Major,,knowledge 3,HoMM3 style placeholder: the horns face inward
-scales-of-the-greater-basilisk,Scales of the Greater Basilisk,Body,Major,,defense 3,HoMM3 style placeholder: scales that remember being looked at
-tunic-of-the-cyclops-king,Tunic of the Cyclops King,Body,Major,,defense 4,HoMM3 style placeholder: sized for something much taller than the wearer
-breastplate-of-brimstone,Breastplate of Brimstone,Body,Major,,defense 5; damage-taken 5,HoMM3 style placeholder: the Inferno forges these hot and sells them cold
-pendant-of-courage,Pendant of Courage,Neck,Major,,morale 2; luck 2,HoMM3 style placeholder: it asks nothing and takes the fear
-necklace-of-swiftness,Necklace of Swiftness,Neck,Major,,battle-speed 1,HoMM3 style placeholder: a feather on a thread; the wearer is always first
-cape-of-velocity,Cape of Velocity,Cloak,Major,,battle-speed 1; movement 10,HoMM3 style placeholder: it pulls the wearer forward
-boots-of-speed,Boots of Speed,Boots,Major,,movement-flat 600,HoMM3 style placeholder: the road comes to meet them
-endless-purse-of-gold,Endless Purse of Gold,Misc,Major,,income gold 500,HoMM3 style placeholder: a heavy purse; never lighter
-endless-bag-of-gold,Endless Bag of Gold,Misc,Major,,income gold 750,HoMM3 style placeholder: a bigger purse
-endless-pouch-of-lumber,Endless Pouch of Lumber,Misc,Major,,income lumber 3,HoMM3 style placeholder: sawdust that keeps arriving
-heart-of-the-wheel,Heart of the Wheel,Misc,Relic,,attack 3; defense 3; spell-power 3; knowledge 3,a splinter of the mechanism; warm; the Conflux wardens say it is not theirs to guard
+endless-purse-of-gold,Endless Purse of Gold,Misc,Major,,income gold 500,"Haven collects for the light; the purse is never empty, and never full"
+endless-bag-of-gold,Endless Bag of Gold,Misc,Major,,income gold 750,paid into by every age that ended
+endless-pouch-of-lumber,Endless Pouch of Lumber,Misc,Major,,income lumber 3,windfall only; the wardens never cut
+vial-of-lifeblood,Vial of Lifeblood,Misc,Major,,creature-health 10,sap from a tree the Sylvan will not name. A piece of the Elixir of Life
+speculum,Speculum,Misc,Major,,sight 2,"ground in the Academy, focused on the edge of every map"
+head-of-legion,Head of Legion,Misc,Major,,growth 5,"a statue of the army that held the last lit city for a year, broken up so that no one lord would own it. A piece of the Statue of Legion"
+torso-of-legion,Torso of Legion,Misc,Major,,growth 5,"a statue of the army that held the last lit city for a year, broken up so that no one lord would own it. A piece of the Statue of Legion"
+legs-of-legion,Legs of Legion,Misc,Major,,growth 5,"a statue of the army that held the last lit city for a year, broken up so that no one lord would own it. A piece of the Statue of Legion"
+collar-of-war,Collar of War,Neck,Major,,defense 2,Stronghold chains a chieftain to the field; the field remembers. A piece of the Shackles of War
+shackle-of-war,Shackle of War,Misc,Major,,attack 2,Stronghold chains a chieftain to the field; the field remembers. A piece of the Shackles of War
+chain-of-war,Chain of War,Misc,Major,,morale 1,Stronghold chains a chieftain to the field; the field remembers. A piece of the Shackles of War
+ring-of-life,Ring of Life,Ring,Major,,creature-health 5; morale 1,Haven's healers pass it hand to hand down the line of the wounded. A piece of the Elixir of Life
+everflowing-crystal-cloak,Everflowing Crystal Cloak,Cloak,Major,,income crystal 1,it sheds a shard at every dawn and is never the lighter for it. A piece of the Cornucopia
+eversmoking-ring-of-sulfur,Eversmoking Ring of Sulfur,Ring,Major,,income sulfur 1,the Inferno's smiths wear it to keep their forges honest. A piece of the Cornucopia
+everpouring-vial-of-mercury,Everpouring Vial of Mercury,Misc,Major,,income mercury 1,the stopper is the hard part; nobody has made a second. A piece of the Cornucopia
+sword-of-judgement,Sword of Judgement,Weapon,Major,,attack 4; morale 1,Haven forged it to judge the dead; it has never found one innocent. A piece of the Angelic Alliance
+lions-shield-of-courage,Lion's Shield of Courage,Shield,Major,,defense 4; morale 1,"the lion on it was painted over a dragon, and over something older under that. A piece of the Angelic Alliance"
+celestial-necklace-of-bliss,Celestial Necklace of Bliss,Neck,Major,,spell-power 2; knowledge 2,"strung with the last light of the sun, which is why the sun is dimmer. A piece of the Angelic Alliance"
+orb-of-the-firmament,Orb of the Firmament,Misc,Major,,element-power air 25,"the Firstborn made one for each of the four things the world is made of, and do not say what the fifth would be"
+orb-of-silt,Orb of Silt,Misc,Major,,element-power earth 25,"the Firstborn made one for each of the four things the world is made of, and do not say what the fifth would be"
+orb-of-tempestuous-fire,Orb of Tempestuous Fire,Misc,Major,,element-power fire 25,"the Firstborn made one for each of the four things the world is made of, and do not say what the fifth would be"
+orb-of-driving-rain,Orb of Driving Rain,Misc,Major,,element-power water 25,"the Firstborn made one for each of the four things the world is made of, and do not say what the fifth would be"
+heart-of-the-wheel,Heart of the Wheel,Misc,Relic,,attack 3; defense 3; spell-power 3; knowledge 3,"a splinter of the mechanism, warm; the Conflux wardens say it is not theirs to guard"
 gilded-hourglass,Gilded Hourglass,Misc,Relic,,all-skills 1,gold sand that never quite finishes falling; Academy scholars have studied it for six ages
-dawn-banner,Dawn Banner,Misc,Relic,,morale 2,first raised at the Siege of the Last Light; Haven says the light was not the sun. Not yet: re-roll one failed morale roll per round
-ember-crown,Ember Crown,Head,Relic,,spell-power 5,worn by the first Archdevil; the demons say it is a loan. Not yet: fire spells cost half mana
-bone-dragons-fang,Bone Dragon's Fang,Weapon,Relic,,attack 6,a relic of a dragon that died in an earlier turning. Not yet: 10 % chance to deal double damage
-scale-of-the-elder-dragon,Scale of the Elder Dragon,Body,Relic,,defense 6,shed by a Firstborn dragon that remembers the world before the Wheel. Not yet: 25 % resistance to all spells
-root-of-the-oldest-tree,Root of the Oldest Tree,Misc,Relic,,damage-taken 5,Sylvan heartwood. Not yet: own stacks regenerate 5 % of their health each round
-mirror-of-the-lightless,Mirror of the Lightless,Misc,Relic,,defense 2; luck 1,Dungeon-made: the dark does not forgive being looked at. Not yet: reflects 20 % of enemy spells
-orcs-first-axe,Orcs' First Axe,Weapon,Relic,,attack 5; luck 1,a crude axe passed to every Stronghold chieftain; none has lost a fight with it
-eye-of-the-swamp,Eye of the Swamp,Neck,Relic,,luck 2,something looked back from the water; the cult says it is not a threat
-titans-gladius,Titan's Gladius,Weapon,Relic,,attack 12; defense -3,HoMM3 style placeholder: a sword too large to guard with
-sentinels-shield,Sentinel's Shield,Shield,Relic,,defense 12; attack -3,HoMM3 style placeholder: a wall with a handle
-titans-cuirass,Titan's Cuirass,Body,Relic,,defense 10; spell-power -2,HoMM3 style placeholder: it is very hard to think in
-crown-of-the-supreme-magi,Crown of the Supreme Magi,Head,Relic,,knowledge 4; spell-power 2,HoMM3 style placeholder: heavier than it looks
-endless-sack-of-gold,Endless Sack of Gold,Misc,Relic,,income gold 1000,HoMM3 style placeholder: the whole treasury in one hand
+dawn-banner,Dawn Banner,Misc,Relic,,morale 2; luck 1,first raised at the Siege of the Last Light; Haven says the light was not the sun
+ember-crown,Ember Crown,Head,Relic,,spell-power 6,worn by the first Archdevil; the demons say it is a loan
+crown-of-the-supreme-magi,Crown of the Supreme Magi,Head,Relic,firstborn-regalia,knowledge 4; spell-power 2,every scholar who wore it wrote one page of the same book
+bone-dragons-fang,Bone Dragon's Fang,Weapon,Relic,,attack 6; luck 2,a relic of a dragon that died in an earlier turning
+titans-gladius,Titan's Gladius,Weapon,Relic,firstborn-regalia,attack 12; defense -3,it cut the first age from the second; nobody has cleaned it since
+orcs-first-axe,Orcs' First Axe,Weapon,Relic,,attack 5; luck 1,passed to every Stronghold chieftain; none has lost a fight with it
+dragon-scale-armor,Dragon Scale Armor,Body,Relic,,defense 6; attack 2,shed by a Firstborn dragon that remembers the world before the Wheel
+titans-cuirass,Titan's Cuirass,Body,Relic,firstborn-regalia,defense 10; spell-power -2,a plate of the Wheel's housing; magic does not like to touch it
+sentinels-shield,Sentinel's Shield,Shield,Relic,firstborn-regalia,defense 12; attack -3,"a stone from the first city's wall, still standing somewhere without it"
+recanters-cloak,Recanter's Cloak,Cloak,Relic,,no-spells-above 2,woven by the Dungeon from the dark between two words
+root-of-the-oldest-tree,Root of the Oldest Tree,Misc,Relic,,damage-taken 5; creature-health 10,Sylvan heartwood; the treant that guarded it died with its roots in the soil
+mirror-of-the-lightless,Mirror of the Lightless,Misc,Relic,,defense 3; luck 2,Dungeon-made: the dark does not forgive being looked at
+eye-of-the-swamp,Eye of the Swamp,Neck,Relic,,luck 2; immune poison,something looked back from the water; the cult says it is not a threat
+endless-sack-of-gold,Endless Sack of Gold,Misc,Relic,,income gold 1000,"the last dragon's hoard; the dragon is not quite the last, and wants it back"
+seed-of-the-world-tree,Seed of the World Tree,Misc,Relic,,income gold 100; income lumber 1; income ore 1; income crystal 1; income mercury 1; income sulfur 1,it will not sprout on Vael; the Sylvan keep trying
+unwritten-codex,Unwritten Codex,Misc,Relic,,spells 1-2,the pages fill as they are read and are blank again when it is closed

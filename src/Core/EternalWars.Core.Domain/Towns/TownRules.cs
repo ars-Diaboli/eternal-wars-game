@@ -31,8 +31,15 @@ public static class TownRules
     /// weekly growth plus the fort bonus (<see cref="GrowthBonusPercent"/>), the bonus rounded down (growth 1 stays 1 with
     /// a Citadel). Whether the dwelling is built is not checked.
     /// </summary>
-    public static int WeeklyGrowth(Town town, CreatureDefinition line) =>
-        line.WeeklyGrowth + (line.WeeklyGrowth * GrowthBonusPercent(town) / 100);
+    public static int WeeklyGrowth(Town town, CreatureDefinition line, int extraPercent = 0) =>
+        line.WeeklyGrowth + (line.WeeklyGrowth * (GrowthBonusPercent(town) + extraPercent) / 100);
+
+    /// <summary>
+    /// The growth percent the owner's heroes' artifacts add to every town of the owner (the Legion pieces, ADR-111): the sum over its heroes on the
+    /// map, none for a neutral town.
+    /// </summary>
+    public static int ArtifactGrowthPercent(GameState state, Town town) =>
+        town.Owner is { } owner ? state.HeroesOf(owner).Sum(h => h.Bonus.GrowthPercent) : 0;
 
     /// <summary>
     /// The first requirement the town lacks for a line's dwelling at <paramref name="level"/> (every level up to it counts),
