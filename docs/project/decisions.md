@@ -2529,11 +2529,11 @@ ADR-101's main menu (UI-2). Choices made here are marked *(choice)*.
   (the arena).
 
 ### ADR-106: Siege rules; guild spell draw, spell elements and summons (CMB-11, MAG-13, 2026-10-30)
-**Status**: accepted (2026-10-30), the owner's answers to CMB-11 and MAG-13 (ADR-099): the proposals, with the changes below. **Nothing
-implemented** (sieges and magic are not built). Points marked *(assumed)* are the agent's reading of a short answer; numbers are
+**Status**: accepted (2026-10-30), the owner's answers to CMB-11 and MAG-13 (ADR-099): the proposals, with the changes below. The sieges
+are **built in ADR-109**; the magic part is not (magic is not built). Points marked *(assumed)* are the agent's reading of a short answer; numbers are
 placeholders.
 
-- **Sieges** (CMB-11; [combat.md](../design/combat.md#sieges-adr-099-adr-106-not-built)):
+- **Sieges** (CMB-11; [combat.md](../design/combat.md#sieges-adr-099-adr-106-built-adr-109)):
   - As proposed: every battle at a town with a Fort is a siege, hero inside or garrison only; a town without one has an ordinary battle (a).
     **4 wall sections and the gate**, 2 hit points a section at Fort and Citadel, 3 at Castle; a destroyed section is a gap (b). The keep
     (Citadel) and the two towers (Castle) shoot once a round each, **10 + 2 per town building**, the keep double, and can be destroyed (3
@@ -2604,3 +2604,33 @@ relics are a content draft in [artifacts.md](../content/artifacts.md#assembled-r
     becoming the relic's added effect (+10 Necromancy points; +15 % ranged damage, +1 battle speed).
 - **Counts** (with ADR-106's four orbs): **109 artifacts**: 29 Minor, 53 Major (the pieces included), 18 Relics, 9 assembled relics; **5
   sets**.
+
+### ADR-109: Sieges built (ADR-099, ADR-106, 2026-10-30)
+**Status**: accepted (2026-10-30), built. ADR-106's siege rules in core, the battle AI and the adventure AI's estimate, with the 2D board and the
+3D battle scene drawing them (the 3D part is not run in Godot yet). Points marked *(assumed)* are the agent's choices where ADR-106 says
+nothing; numbers stay placeholders.
+
+- **When** (as ADR-106): a hero attacking a town's garrison, or an enemy hero standing at the entrance of its own town, fights a siege when
+  the town has a Fort (`SiegeRules.SpecOf`); the field is 36 wide, with no width choice; deployment works as before. Map garrisons are not
+  besieged. New towns start with a Fort, so **every town battle is a siege now**: saves and replays of older games that fought one replay
+  differently.
+- **Layout** *(assumed)*: the wall line is column 24 of 36 (24 columns for the attackers, 11 behind the walls, room for two columns of 4 × 4
+  defenders). Four sections of 5 rows and the gate of 4 rows in the middle (a 4 × 4 creature passes). The moat is the 2 columns in front of
+  the walls, bridged in the gate's rows. The **keep and towers stand off the grid**: the keep behind the defenders' edge, the towers above and
+  below the wall line; they block nothing, and only the siege engine reaches them. Random obstacles stay in front of the moat.
+- **Walls and gate**: standing sections block both sides, the gate only the attackers; flyers and teleporters land beyond them. An attacker's
+  shot whose line crosses a standing section or the gate takes the wall's 1/2 once; the defenders shoot out freely *(assumed)*.
+- **The moat**: only the attackers stop in it and take its damage *(assumed)*. A stack stops as soon as its footprint touches the moat
+  (walking; a flyer landing in it is hurt too), and moves on freely from there; leaving and coming back is a new entry.
+- **Keep and towers**: they shoot **when each round starts** *(assumed)*, a flat 10 + 2 per building (the keep double), at the attacking
+  creature stack worth most to hit. **Buildings** count every built level of every building and dwelling *(assumed)*.
+- **The siege engine**: the attacker's offensive machine always joins a siege, whatever its Ballistics. Without Ballistics it fires by
+  itself, even for a person (walls, the gate after all four, the keep, the towers); from Basic the player aims it
+  (`BattleShootStructureCommand`, a click on a structure); troops only from Advanced, which also adds the second shot after a kill. Events:
+  `SiegeStructureShot`, `BattleUnitSiegeDamaged`; `BattleStarted` carries the `SiegeLayout`.
+- **AI**: the estimate fights (`BattleEstimator`) are sieges for fortified towns and heroes in their own towns, with the hero's own machines.
+  In battle the defenders hold the walls (they fight what they can reach but do not advance out); walking attackers take the way round the walls to a
+  breach or the broken gate, and while the walls hold close up to the moat without entering it; the AI's engine always fires at the walls
+  first.
+- **Not built**: one defending shooting stack in the keep (ADR-106 g); Earthquake (with magic); a Godot run and a smoke scenario for the
+  siege scene; the town's own look on the siege field.

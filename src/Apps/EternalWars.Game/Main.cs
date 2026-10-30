@@ -827,6 +827,7 @@ public partial class Main : Node3D
             MoveAction move => new BattleMoveCommand(player, move.To),
             AttackAction attack => new BattleAttackCommand(player, attack.Target, attack.From),
             ShootAction shoot => new BattleShootCommand(player, shoot.Target),
+            ShootStructureAction structure => new BattleShootStructureCommand(player, structure.Structure),
             _ => null,
         };
         if (command is not null)

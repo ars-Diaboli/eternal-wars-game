@@ -19,6 +19,8 @@ namespace EternalWars.Core.Domain.Battles;
 /// extra action of good morale is the one exception to "exactly once" per round.
 /// War machines (ADR-056) never move, fight in melee or retaliate; only the offensive one takes turns, the tent heals
 /// when a round starts, and a side whose creatures are all gone has lost even if machines still stand.
+/// In a siege (ADR-106) the attacker's offensive machine fires at the fortifications, the keep and towers shoot when a round starts, and an
+/// attacker entering the moat takes its damage.
 /// </remarks>
 internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 {
@@ -121,6 +123,78 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         return null;
     }
 
+    /// <summary>
+    /// The siege engine fires at a structure (ADR-063, ADR-106): 2 hits in 3 (all from Expert), 1–2 hit points a hit (2–3 at Master); from Advanced
+    /// a shot that destroys a structure is followed by one more at the next automatic target.
+    /// </summary>
+    public string? ShootStructure(int structureId)
+    {
+        var unit = battle.ActiveUnit!;
+        if (SiegeRules.ShotRefusal(battle, unit, structureId) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var ballistics = battle.Participant(unit.Side).Bonus.Ballistics;
+        if (FireAt(unit, battle.Siege!.Find(structureId)!, ballistics) && WarMachines.FiresAgainAfterKill(ballistics) && battle.Siege.AutoTarget() is { } next)
+        {
+            FireAt(unit, next, ballistics);
+        }
+
+        EndTurn();
+        return null;
+    }
+
+    /// <returns>Whether the shot destroyed the structure.</returns>
+    private bool FireAt(BattleUnit machine, SiegeStructure structure, Heroes.SkillLevel ballistics)
+    {
+        var hit = WarMachines.HitsFortification(ballistics, battle.Random);
+        var damage = hit ? Math.Min(structure.Health, WarMachines.FortificationDamage(ballistics, battle.Random)) : 0;
+        structure.Health -= damage;
+        events.Publish(new SiegeStructureShot(machine.Id, structure.Id, hit, damage, structure.Health));
+        return !structure.IsStanding;
+    }
+
+    /// <summary>The keep and the towers each shoot once a round, as it starts, at the attacking stack worth most to hit (ADR-106; timing assumed).</summary>
+    private void TowersFire()
+    {
+        if (battle.Siege is not { } siege)
+        {
+            return;
+        }
+
+        foreach (var tower in siege.Structures.Where(s => s.IsStanding && s.Shoots))
+        {
+            var damage = siege.ShotDamage(tower);
+            var target = battle.LivingArmyOf(BattleSide.Attacker)
+                .OrderByDescending(u => (long)Math.Min(damage, u.TotalHealth) * u.Creature.Value / u.Creature.Health)
+                .ThenBy(u => u.Id)
+                .FirstOrDefault();
+            if (target is null)
+            {
+                return;
+            }
+
+            var killed = Wound(target, damage);
+            events.Publish(new BattleUnitSiegeDamaged(target.Id, SiegeDamageSource.Tower, tower.Id, damage, killed, target.Count));
+            Bury(target);
+        }
+    }
+
+    /// <summary>An attacker entering the moat stops there (<see cref="BattleGrid.Reachable"/>) and takes its damage (ADR-106).</summary>
+    private void EnterMoat(BattleUnit unit, CellPosition from)
+    {
+        if (!SiegeRules.FearsMoat(battle, unit.Side) || battle.Siege!.InMoat(unit.RectAt(from)) || !battle.Siege.InMoat(unit.Rect))
+        {
+            return;
+        }
+
+        var damage = battle.Siege.MoatDamage;
+        var killed = Wound(unit, damage);
+        events.Publish(new BattleUnitSiegeDamaged(unit.Id, SiegeDamageSource.Moat, null, damage, killed, unit.Count));
+        Bury(unit);
+    }
+
     private void Fire(BattleUnit shooter, BattleUnit target, int penalty)
     {
         UseShot(shooter);
@@ -188,6 +262,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var from = unit.Position;
         unit.Position = to;
         events.Publish(new BattleUnitMoved(unit.Id, from, to));
+        EnterMoat(unit, from);
     }
 
     private bool CanRetaliate(BattleUnit defender, BattleUnit attacker) =>
@@ -345,6 +420,17 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <returns>How many creatures the hit killed.</returns>
     private int Apply(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int damage, HitLuck luck)
     {
+        var killed = Wound(target, damage);
+        target.HitsThisRound++;
+        events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, killed, target.Count, luck));
+        Bury(target);
+        return killed;
+    }
+
+    /// <summary>Takes the damage off the stack, top creature first.</summary>
+    /// <returns>How many creatures it killed.</returns>
+    private static int Wound(BattleUnit target, int damage)
+    {
         var before = target.Count;
         var remaining = target.TotalHealth - damage;
         if (remaining <= 0)
@@ -359,16 +445,18 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             target.TopHealth = remaining - ((target.Count - 1) * health);
         }
 
-        target.HitsThisRound++;
-        events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, before - target.Count, target.Count, luck));
+        return before - target.Count;
+    }
+
+    /// <summary>A stack that is gone leaves the round's order.</summary>
+    private void Bury(BattleUnit target)
+    {
         if (!target.IsAlive)
         {
             battle.MutableQueue.Remove(target.Id);
             battle.MutableWaiting.Remove(target.Id);
             events.Publish(new BattleUnitDied(target.Id));
         }
-
-        return before - target.Count;
     }
 
     /// <summary>Ends the active unit's action; with good morale rolled this round it acts once more right away (ADR-053).</summary>
@@ -406,6 +494,10 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 }
 
                 StartRound();
+                if (CheckFinished())
+                {
+                    return; // the towers' shots ended it
+                }
             }
 
             int next;
@@ -471,6 +563,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         events.Publish(new BattleRoundStarted(battle.Round));
         Heal(BattleSide.Attacker);
         Heal(BattleSide.Defender);
+        TowersFire();
         foreach (var unit in battle.MutableQueue.Select(battle.GetUnit).Where(u => u.RoundMorale is MoraleEffect.Haste or MoraleEffect.Slow))
         {
             events.Publish(new BattleMoraleTriggered(unit.Id, unit.RoundMorale));

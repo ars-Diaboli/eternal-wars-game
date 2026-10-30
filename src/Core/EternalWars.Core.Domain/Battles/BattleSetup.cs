@@ -84,7 +84,9 @@ public static class BattleSetup
         // The deployer's zone stays free of obstacles (ADR-072).
         var attackerExtent = Math.Max(DeploySide(battle, BattleSide.Attacker, attacker, ref id), battle.Deployer == BattleSide.Attacker ? battle.DeploymentColumns : 0);
         var defenderExtent = Math.Max(DeploySide(battle, BattleSide.Defender, defender, ref id), battle.Deployer == BattleSide.Defender ? battle.DeploymentColumns : 0);
-        PlaceObstacles(battle, attackerExtent + 1, battle.Width - defenderExtent - 1);
+        // In a siege the obstacles stay in front of the moat; nothing stands behind the walls but the defenders (ADR-106).
+        PlaceObstacles(battle, attackerExtent + 1,
+            battle.Siege is null ? battle.Width - defenderExtent - 1 : SiegeRules.WallX - SiegeRules.MoatColumns - 1);
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
             SupplyShots(battle, side);

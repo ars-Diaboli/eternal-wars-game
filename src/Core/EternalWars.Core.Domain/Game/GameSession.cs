@@ -167,7 +167,7 @@ public sealed class GameSession
     }
 
     private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleDeployCommand or BattleStartCommand or BattleMoveCommand
-        or BattleAttackCommand or BattleShootCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand or BattleSurrenderCommand
+        or BattleAttackCommand or BattleShootCommand or BattleShootStructureCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand or BattleSurrenderCommand
         or AutoResolveBattleCommand or BattleWarcryCommand;
 
     private string? Authorize(GameCommand command)
@@ -361,6 +361,9 @@ public sealed class GameSession
                 return null;
             case BattleShootCommand shoot:
                 Battles.Act(shoot.Player, new ShootAction(shoot.Target));
+                return null;
+            case BattleShootStructureCommand structure:
+                Battles.Act(structure.Player, new ShootStructureAction(structure.Structure));
                 return null;
             case BattleWarcryCommand warcry:
                 Battles.UseWarcry(warcry.Player, warcry.Warcry);

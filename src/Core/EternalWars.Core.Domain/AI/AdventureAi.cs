@@ -1011,7 +1011,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
             // Fights are played out before going: the army power sum does not see shooters, speed and defence.
             if (candidate.Opponent is { } opponent
-                && !_estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense).IsSafe(candidate.MaxLoss))
+                && !_estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense, candidate.Siege).IsSafe(candidate.MaxLoss))
             {
                 continue;
             }
@@ -1036,9 +1036,10 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     private static int Distance(MapPosition a, MapPosition b) =>
         a.Level != b.Level ? 40 + Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y)) : Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y));
 
-    /// <summary>A place worth going to. <see cref="Opponent"/> is who has to be beaten there, if anyone.</summary>
+    /// <summary>A place worth going to. <see cref="Opponent"/> is who has to be beaten there, if anyone; <see cref="Siege"/> the walls it holds (ADR-106).</summary>
     private readonly record struct Target(
-        MapPosition Position, double Value, Army? Opponent = null, int OpponentAttack = 0, int OpponentDefense = 0, double MaxLoss = 0.5);
+        MapPosition Position, double Value, Army? Opponent = null, int OpponentAttack = 0, int OpponentDefense = 0, double MaxLoss = 0.5,
+        SiegeSpec? Siege = null);
 
     /// <summary>The neutral guards of a tile as one army, or null.</summary>
     private Army? GuardArmy(MapPosition position, bool pickup = false)
@@ -1171,7 +1172,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     var garrison = ArmyPower(town.Garrison);
                     if (Plausible(garrison))
                     {
-                        yield return new(visit, 4000 + (0.3 * garrison) + (town.Owner is null ? 0 : 2000) + (town.Dwellings.Count * 500), town.Garrison.IsEmpty ? null : town.Garrison);
+                        yield return new(visit, 4000 + (0.3 * garrison) + (town.Owner is null ? 0 : 2000) + (town.Dwellings.Count * 500), town.Garrison.IsEmpty ? null : town.Garrison,
+                            Siege: SiegeRules.SpecOf(town));
                     }
 
                     break;
@@ -1208,7 +1210,9 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             var theirs = ArmyPower(enemy.Army);
             if (!hero.Army.IsEmpty && power * 10 >= theirs * 7)
             {
-                yield return new(enemy.Position, 2000 + (0.8 * theirs), enemy.Army, enemy.Attack, enemy.Defense);
+                // One standing in its own town defends it behind the walls (ADR-106).
+                var home = _state.ObjectCellAt(enemy.Position) is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == enemy.Owner ? SiegeRules.SpecOf(town) : null;
+                yield return new(enemy.Position, 2000 + (0.8 * theirs), enemy.Army, enemy.Attack, enemy.Defense, Siege: home);
             }
         }
     }

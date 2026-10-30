@@ -35,7 +35,7 @@
 
   - **The enemy hero's Tactics reduces yours**: effective level = your level − enemy level (minimum none). At most one
     side can have an effective level above none, and that side chooses. A computer player keeps 30.
-  - **36 wide is reserved for town sieges** (sieges come before 1.0, ADR-099; rules ADR-106, [below](#sieges-adr-099-adr-106-not-built)).
+  - **36 wide is reserved for town sieges** (sieges come before 1.0, ADR-099; rules ADR-106, [below](#sieges-adr-099-adr-106-built-adr-109)).
   - Since ADR-069 (built, ADR-078) Tactics also **deploys** troops before the battle and chooses the width only from Advanced.
   - **Deployment** (ADR-072, HERO-4; built, ADR-076): the player may place the troops within the first **4 / 5 / 6 columns** (Basic /
     Advanced / Expert) from their own edge. Only the side with the higher Tactics deploys (a tie: nobody). The player drags stacks
@@ -168,7 +168,7 @@ Every hero owns its town's offensive machine (ballista, cannon, catapult or glai
 and an ammo cart at a blacksmith. They stand at the back of the field, never move or fight in melee, and are lost when
 destroyed. The offensive machine shoots on its turn, outside sieges only from Advanced Ballistics; the tent heals
 every own stack a little each round; the cart adds shots (unlimited with Advanced Ammo supply). Siege Ballistics rules
-exist (ADR-063) but sieges do not yet (before 1.0, ADR-099; the offensive machine is the siege engine, ADR-106, below).
+apply in sieges (ADR-063, ADR-106, built ADR-109): the attacker's offensive machine is the siege engine and always joins a siege (below).
 
 Heroes **exchange** machines in their exchange: one moves to the other hero when it has none in that slot; an offensive machine becomes the
 receiver's town's kind (ADR-070, ADR-083). A town garrison holds machines only through a hero in it (not built: no garrison heroes yet).
@@ -179,15 +179,22 @@ column** of its side: the offensive machine and the tent **1 × 3** cells, the a
 machine in the middle, cart at the bottom). Stacks start in the next column. The models are as long as the footprint and
 overhang the grid's edge.
 
-## Sieges (ADR-099, ADR-106; not built)
-The owner's answers to CMB-11. Numbers are placeholders.
+## Sieges (ADR-099, ADR-106; built, ADR-109)
+The owner's answers to CMB-11; built in ADR-109 (core, battle AI, adventure AI, 2D board and 3D scene; the 3D scene is not run in Godot yet).
+Numbers are placeholders; *(assumed)* marks choices made while building.
 
 - **When**: every battle at a town with a **Fort**, whether a hero is inside or only the garrison, is a siege on the 36-wide field. A town
-  without a Fort has an ordinary battle.
+  without a Fort has an ordinary battle. "Inside" is a hero standing at the entrance of its own town; map garrisons are not besieged. The
+  width is fixed (no Tactics choice); deployment works as in other battles.
 - **Fortifications** by the town's fort level (ADR-066): Fort: four wall sections and the gate; Citadel: also the keep and the moat; Castle:
   also two towers, and stronger walls.
 - **Walls**: **4 sections and the gate**. A section has **2** hit points (Fort, Citadel) or **3** (Castle). A destroyed section is a gap the
-  attackers walk through. Shooters shooting across a wall take the 1/2 cover penalty (cover table above).
+  attackers walk through. Shooters shooting across a wall take the 1/2 cover penalty (cover table above), once per shot; only the attackers'
+  shots *(assumed: the defenders shoot out freely)*.
+- **Layout** *(assumed)*: the wall line is column 24 of the 36 (24 columns for the attackers, 11 behind the walls). Four sections of 5 rows,
+  the gate of 4 rows in the middle (a 4 × 4 creature passes). The moat is the 2 columns in front of the walls, bridged in the gate's rows.
+  The keep stands behind the defenders' edge and the towers above and below the wall line, **off the grid**: they block nothing and only the
+  siege engine reaches them. Random obstacles stay in front of the moat.
 - **The gate**: the defenders pass through it, the attackers break it. It has **1** hit point.
 - **Who breaks the walls**: there is **no free siege catapult**. The attacking hero's own **offensive machine** (ballista, cannon, catapult or
   glaivethrower, [hero-roster.md](../content/hero-roster.md#war-machines)) fires at the fortifications; the catapult is only Stronghold's and
@@ -195,14 +202,19 @@ The owner's answers to CMB-11. Numbers are placeholders.
   as drafted: without the skill the machine fires by itself, only at fortifications, 2 hits in 3, 1–2 hit points a hit; Basic gives control.
   **Firing by itself** it aims at the wall sections, at the gate only when all four sections are destroyed, then at the keep and towers *(the
   order after the gate is assumed)*; a player in control may aim at any of them. An attacker without an offensive machine (destroyed and not
-  bought again) breaks nothing; Earthquake still damages wall sections ([spells.md](../content/spells.md)).
+  bought again) breaks nothing; Earthquake still damages wall sections ([spells.md](../content/spells.md); with magic). In a siege the
+  attacker's offensive machine always joins, whatever its Ballistics; without the skill it fires by itself for a person too.
 - **Keep and towers**: the keep (Citadel) and the two towers (Castle) each shoot **once a round** at an attacking stack. Damage: **10 + 2 per
-  building in the town**, the keep double. They can be destroyed: **3** hit points each.
+  building in the town**, the keep double, flat damage to the attacking creature stack worth most to hit, **when each round starts**
+  *(assumed)*. They can be destroyed: **3** hit points each. **Buildings** count every built level of every building and dwelling *(assumed)*.
 - **Moat** (Citadel): a band of cells in front of the walls. A creature entering it (walking or landing) stops there and takes damage worth
-  about **two tower shots**: placeholder **2 × (10 + 2 per town building)** to the stack, once each time it enters.
+  about **two tower shots**: placeholder **2 × (10 + 2 per town building)** to the stack, once each time it enters. Only the attackers
+  *(assumed)*; a walking stack stops as soon as its footprint touches the moat and moves on freely from there.
 - **Flyers and teleporters** cross the walls. The defenders' shooters behind the walls get the 1/2 cover against attacking shooters; one
-  defending shooting stack may stand in the keep.
-- **The AI** attacks a fortified town only when its battle estimate wins against the walls, towers and moat, and defends behind them.
+  defending shooting stack may stand in the keep (**not built**).
+- **The AI** attacks a fortified town only when its battle estimate wins against the walls, towers and moat, and defends behind them: the
+  estimate fights are sieges; in battle the defenders do not advance out of the walls (they fight what they can reach), walking attackers take the way round to a breach or the
+  broken gate and, while the walls hold, close up to the moat without entering it.
 
 ## Other
 - **Auto combat** (ADR-088, ADR-090): each human player's setting in the game menu: off, ask before each battle, or always. It covers battles
@@ -214,4 +226,4 @@ The owner's answers to CMB-11. Numbers are placeholders.
 - The hero casts **at most once a round**, during the turn of one of the units the hero controls; machines that fire on
   their own do not count, and spells that change initiative do not change this ([magic.md](magic.md), ADR-070 MAG-4 part,
   Phase 5). Casting does not use that unit's action: it still acts afterwards, as in HoMM3 (ADR-071, MAG-4; not built).
-- **Siege battles** with walls, gate and towers: before 1.0 (ADR-099); rules [above](#sieges-adr-099-adr-106-not-built) (ADR-106).
+- **Siege battles** with walls, gate and towers: built (ADR-109); rules [above](#sieges-adr-099-adr-106-built-adr-109) (ADR-106).

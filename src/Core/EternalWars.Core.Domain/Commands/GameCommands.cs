@@ -178,6 +178,9 @@ public sealed record BattleAttackCommand(PlayerId Player, int Target, CellPositi
 
 public sealed record BattleShootCommand(PlayerId Player, int Target) : GameCommand(Player);
 
+/// <summary>The siege engine, controlled from Basic Ballistics, fires at a wall section, the gate, the keep or a tower (ADR-106).</summary>
+public sealed record BattleShootStructureCommand(PlayerId Player, int Structure) : GameCommand(Player);
+
 /// <summary>The player's hero uses a warcry (Stronghold, ADR-067): no mana, and the active unit keeps its action.</summary>
 public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry) : GameCommand(Player);
 

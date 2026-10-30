@@ -87,7 +87,7 @@ public enum ObstacleClass
     /// <summary>3×3 cells, 1/4 cover.</summary>
     Big,
 
-    /// <summary>City wall segment (sieges, later), 1/2 cover.</summary>
+    /// <summary>City wall (sieges, <see cref="SiegeStructure"/>), 1/2 cover.</summary>
     Wall,
 }
 
@@ -224,4 +224,14 @@ public enum BattleAttackKind
 
     /// <summary>A secondary target of breath, cleave or multi-head.</summary>
     Area,
+}
+
+/// <summary>Where a siege's damage to a stack came from (ADR-106).</summary>
+public enum SiegeDamageSource
+{
+    /// <summary>A shot of the keep or a tower.</summary>
+    Tower,
+
+    /// <summary>Entering the moat.</summary>
+    Moat,
 }

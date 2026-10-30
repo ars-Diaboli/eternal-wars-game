@@ -94,6 +94,11 @@ public static class GameStateDigest
             {
                 Line($"unit {unit.Id} {unit.Side} {unit.Creature.Id} {unit.Count}/{unit.TopHealth} at {unit.Position} shots {unit.ShotsLeft}");
             }
+
+            foreach (var structure in battle.Siege?.Structures ?? [])
+            {
+                Line($"siege {structure.Id} {structure.Kind} {structure.Health}/{structure.MaxHealth}");
+            }
         }
 
         return text.ToString();

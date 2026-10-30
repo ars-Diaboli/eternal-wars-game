@@ -143,14 +143,15 @@ the zone includes that column and stacks may use its free cells (confirmed, ADR-
 
 | Skill | Id | Max | No skill | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|---|
-| Ballistics | `machines.ballistics` | Master | machine fires by itself, only at fortifications (sieges) | you control it | also targets troops, in regular battles, and fires twice after a kill | never misses a fortification, +25 % damage | 2-3 structure damage, +50 % | ✅ troops · ⏳ sieges (rules in `WarMachines`, ADR-063) |
+| Ballistics | `machines.ballistics` | Master | machine fires by itself, only at fortifications (sieges) | you control it | also targets troops, in regular battles, and fires twice after a kill | never misses a fortification, +25 % damage | 2-3 structure damage, +50 % | ✅ (sieges ADR-109) |
 | Healing | `machines.healing` | Master | tent heals 10 per stack a round | 20 | 30 | 40 | 50 | ✅ |
 | Ammo supply | `machines.ammo` | Advanced | cart: +25 % shots | +50 % shots | unlimited shots while the cart stands | – | – | ✅ |
 
 Against a fortification a shot hits 2 times in 3 (always from Expert) and takes 1-2 hit points off a defence structure
-(2-3 at Master); a fully upgraded fortification gives its structures 3 hit points. Placeholders until sieges exist (before 1.0, ADR-099;
-siege rules ADR-106). There is no free siege catapult: the attacking hero's own offensive machine, whatever its kind, is what fires at the
-walls; firing by itself it aims at the gate only once all four wall sections are down ([combat.md](../design/combat.md#sieges-adr-099-adr-106-not-built)).
+(2-3 at Master); a Castle's wall sections, the keep and the towers have 3 hit points. Placeholders (sieges built in ADR-109; siege rules
+ADR-106). There is no free siege catapult: the attacking hero's own offensive machine, whatever its kind, is what fires at the
+walls, and it joins every siege whatever the hero's Ballistics; firing by itself it aims at the gate only once all four wall sections are
+down ([combat.md](../design/combat.md#sieges-adr-099-adr-106-built-adr-109)).
 
 The tent heals the top creature of every own stack at the start of each round, never reviving. The machines
 themselves (which town has which, stats, prices) are in [hero-roster.md](hero-roster.md#war-machines) and ADR-056.

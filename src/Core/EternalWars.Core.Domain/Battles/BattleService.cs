@@ -21,6 +21,9 @@ public sealed record AttackAction(int Target, CellPosition? From = null) : Battl
 
 public sealed record ShootAction(int Target) : BattleAction;
 
+/// <summary>The siege engine fires at a wall section, the gate, the keep or a tower (ADR-106).</summary>
+public sealed record ShootStructureAction(int Structure) : BattleAction;
+
 public sealed record WaitAction : BattleAction;
 
 public sealed record DefendAction : BattleAction;
@@ -55,8 +58,16 @@ public sealed class BattleService(
             Participant(BattleSide.Defender, defender),
             defender.Position,
             isAmbush);
-        Begin(attacker, battle, Stacks(attacker), Stacks(defender));
+
+        // A hero standing in its own town with a Fort defends it behind the walls (ADR-106).
+        var siege = EstimateSiege ?? (state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == defender.Owner && t.VisitPosition == defender.Position) is { } home
+            ? SiegeRules.SpecOf(home)
+            : null);
+        Begin(attacker, battle, Stacks(attacker, siege is not null), Stacks(defender), siege: siege);
     }
+
+    /// <summary>The AI's throwaway estimate fights play a hero battle as a siege of these fortifications (<see cref="AI.BattleEstimator"/>).</summary>
+    internal SiegeSpec? EstimateSiege { get; set; }
 
     internal void BeginGuardBattle(Hero attacker, MapObject guard, string creature, int count)
     {
@@ -101,7 +112,7 @@ public sealed class BattleService(
 
     /// <summary>
     /// A hero attacks a town's garrison: the town's owner commands it (the AI for computer players and neutral towns),
-    /// without a hero's stats or skills. Beating it captures the town.
+    /// without a hero's stats or skills. Beating it captures the town. A town with a Fort is besieged (ADR-106).
     /// </summary>
     internal void BeginTownBattle(Hero attacker, Town town)
     {
@@ -111,7 +122,8 @@ public sealed class BattleService(
             ArmyMorale: MoraleAndLuck.MixedFactions(town.Garrison.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature))) + DefenderMorale(town));
         var battle = Create(Participant(BattleSide.Attacker, attacker), garrison, town.VisitPosition, isAmbush: false);
         var stacks = town.Garrison.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
-        Begin(attacker, battle, Stacks(attacker), stacks);
+        var siege = SiegeRules.SpecOf(town);
+        Begin(attacker, battle, Stacks(attacker, siege is not null), stacks, siege: siege);
     }
 
     /// <summary>
@@ -159,6 +171,9 @@ public sealed class BattleService(
             MoveAction move => Engine(battle).Move(move.To),
             AttackAction attack => Engine(battle).Attack(attack.Target, attack.From),
             ShootAction shoot => Engine(battle).Shoot(shoot.Target),
+            ShootStructureAction structure => WarMachines.IsControlled(battle.Participant(unit.Side).Bonus.Ballistics)
+                ? Engine(battle).ShootStructure(structure.Structure)
+                : $"Without Ballistics the {unit.Creature.Name} fires by itself.",
             WaitAction => Engine(battle).Wait(),
             DefendAction => Engine(battle).Defend(),
             _ => throw new ArgumentOutOfRangeException(nameof(action), action, null),
@@ -368,15 +383,15 @@ public sealed class BattleService(
 
     /// <summary>
     /// The hero's army and war machines (ADR-056): tent and cart when owned, the offensive machine only from Advanced
-    /// Ballistics (outside sieges, which do not exist yet).
+    /// Ballistics, except for the attacker of a siege, whose offensive machine is the siege engine (ADR-106).
     /// </summary>
-    private List<BattleStackSpec> Stacks(Hero hero)
+    private List<BattleStackSpec> Stacks(Hero hero, bool besieging = false)
     {
         var stacks = hero.Army.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
         var town = ProgressionService.TownOf(state, hero);
         foreach (var slot in hero.WarMachines.Order())
         {
-            if (slot != WarMachineSlot.Offensive || WarMachines.FieldsOffensive(hero.SkillLevelOf(BuiltInSkills.Ballistics)))
+            if (slot != WarMachineSlot.Offensive || besieging || WarMachines.FieldsOffensive(hero.SkillLevelOf(BuiltInSkills.Ballistics)))
             {
                 stacks.Add(BattleStackSpec.Of(WarMachines.KindOf(slot, town)));
             }
@@ -392,8 +407,12 @@ public sealed class BattleService(
         return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns);
     }
 
+    /// <summary>
+    /// Sets the battle up; a <paramref name="siege"/> fixes the 36-wide field (no width choice) and raises the town's fortifications (ADR-106).
+    /// </summary>
     private void Begin(
-        Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders, bool widthChoice = true, bool deployment = true)
+        Hero attacker, BattleState battle, List<BattleStackSpec> attackers, List<BattleStackSpec> defenders, bool widthChoice = true, bool deployment = true,
+        SiegeSpec? siege = null)
     {
         if (state.Battle is not null)
         {
@@ -403,12 +422,13 @@ public sealed class BattleService(
         state.Battle = battle;
         battle.PendingStacks = (attackers, defenders);
         battle.DeploymentAllowed = deployment;
+        battle.Siege = siege is null ? null : SiegeRules.Create(siege);
         var decision = new BattleDecision(attacker.Id);
         state.PendingDecision = decision;
 
         // The phase is settled before anyone hears of the battle, so views see the width choice (publish after mutating).
         var (chooser, level) = BattleSetup.EffectiveTactics(battle.Attacker.Tactics, battle.Defender.Tactics);
-        var choosing = widthChoice && chooser is { } side && !battle.IsComputerControlled(side) && BattleSetup.WidthOptions(level).Count > 1;
+        var choosing = widthChoice && siege is null && chooser is { } side && !battle.IsComputerControlled(side) && BattleSetup.WidthOptions(level).Count > 1;
         if (choosing)
         {
             battle.Phase = BattlePhase.ChoosingWidth;
@@ -420,7 +440,7 @@ public sealed class BattleService(
         if (!choosing)
         {
             // The AI keeps the default width.
-            Deploy(battle, BattleState.DefaultWidth);
+            Deploy(battle, siege is null ? BattleState.DefaultWidth : BattleState.SiegeWidth);
         }
     }
 
@@ -489,7 +509,8 @@ public sealed class BattleService(
             BattleState.Height,
             battle.IsAmbush,
             battle.Units.Select(u => new BattleUnitInfo(u.Id, u.Side, u.Creature.Id, u.Count, u.Position, u.Width, u.Height, u.Machine)).ToList(),
-            battle.Obstacles.ToList()));
+            battle.Obstacles.ToList(),
+            battle.Siege is { } siege ? SiegeLayout.Of(siege) : null));
         if (battle.Deployer is { } deployer)
         {
             battle.Phase = BattlePhase.Deploying;
@@ -500,10 +521,14 @@ public sealed class BattleService(
         StartFighting(battle, bus);
     }
 
-    /// <summary>Lets the AI play its units until a human has to act or the battle is over; only the game's own battle is then finished.</summary>
+    /// <summary>
+    /// Lets the AI play its units until a human has to act or the battle is over; only the game's own battle is then finished. A siege engine
+    /// without Ballistics fires by itself for a person too (ADR-106).
+    /// </summary>
     private void Continue(BattleState battle, IEventPublisher? bus = null)
     {
-        while (battle.Phase == BattlePhase.Fighting && battle.ActiveUnit is { } unit && battle.IsComputerControlled(unit.Side))
+        while (battle.Phase == BattlePhase.Fighting && battle.ActiveUnit is { } unit
+               && (battle.IsComputerControlled(unit.Side) || SiegeRules.FiresByItself(battle, unit)))
         {
             // A computer player's hero gives up a lost battle (ADR-070); quick combat never retreats for a person.
             if (AiMayRetreat && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
