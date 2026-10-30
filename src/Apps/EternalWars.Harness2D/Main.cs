@@ -38,6 +38,7 @@ public partial class Main : Node2D
 
     /// <summary>The stack picked for placing during a battle's deployment step.</summary>
     private int? _deployPick;
+    private string? _armedSpell;
 
     public override void _Ready()
     {
@@ -204,6 +205,12 @@ public partial class Main : Node2D
             return;
         }
 
+        if (key.Keycode == Key.C)
+        {
+            ArmNextSpell();
+            return;
+        }
+
         GameCommand? command = key.Keycode switch
         {
             Key.W => new BattleWaitCommand(player),
@@ -246,6 +253,14 @@ public partial class Main : Node2D
             return;
         }
 
+        if (_armedSpell is { } spell)
+        {
+            // C armed a spell (ADR-110): this click is its target.
+            _armedSpell = null;
+            Report(_session.Execute(new BattleCastCommand(player, spell, battle.UnitAt(cell)?.Id, cell)));
+            return;
+        }
+
         GameCommand? command = BattleTargeting.ActionAt(battle, cell) switch
         {
             MoveAction move => new BattleMoveCommand(player, move.To),
@@ -261,6 +276,29 @@ public partial class Main : Node2D
         }
     }
 
+    /// <summary>C: arms the acting hero's next battle spell (cycling, then none); a spell for a side or the field is cast right away.</summary>
+    private void ArmNextSpell()
+    {
+        if (_session.State.Battle is not { ActiveUnit: { } active } battle || battle.Participant(active.Side).Caster is not { } caster
+            || ActiveCommander() is not { } player)
+        {
+            return;
+        }
+
+        var spells = caster.Spells.Where(s => s.Spell.Effect is not null).ToList();
+        var next = _armedSpell is null ? 0 : spells.FindIndex(s => s.Spell.Id == _armedSpell) + 1;
+        _armedSpell = next < spells.Count ? spells[next].Spell.Id : null;
+        if (_armedSpell is not null && spells[next].Spell.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
+        {
+            _armedSpell = null;
+            Report(_session.Execute(new BattleCastCommand(player, spells[next].Spell.Id)));
+            return;
+        }
+
+        GetNode<Label>("Ui/Top/Status").Text = _armedSpell is null
+            ? "No spell armed"
+            : $"{spells[next].Spell.Name} ({BattleMagic.Cost(battle, active.Side, spells[next])} of {battle.ManaOf(active.Side)} mana): click a target, C for the next";
+    }
     private PlayerId? ActiveCommander() =>
         _session.State.Battle is { ActiveUnit: { } active } ? _session.Battles.Commander(active.Side) : null;
 
@@ -280,7 +318,7 @@ public partial class Main : Node2D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        top.AddChild(new Label { Name = "Status", Text = "Click hero, click tile twice to move, arrows & numpad; click an own town to open it. Battle: click, W wait, D defend, R retreat, S surrender, Q quick" });
+        top.AddChild(new Label { Name = "Status", Text = "Click hero, click tile twice to move, arrows & numpad; click an own town to open it. Battle: click, W wait, D defend, R retreat, S surrender, Q quick, C spell" });
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
         decisions.Bind(_session);

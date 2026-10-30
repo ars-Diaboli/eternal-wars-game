@@ -2634,3 +2634,47 @@ nothing; numbers stay placeholders.
   first.
 - **Not built**: one defending shooting stack in the keep (ADR-106 g); Earthquake (with magic); a Godot run and a smoke scenario for the
   siege scene; the town's own look on the siege field.
+
+### ADR-110: Magic, first slice: spell table, guilds, spell books, casting in battle (ADR-047, ADR-071, ADR-072, ADR-106, 2026-10-30)
+**Status**: accepted (2026-10-30), built. The first Phase 5 magic slice: rank I only, numbers placeholders. Points marked *(assumed)* are the
+agent's choices where the earlier ADRs say nothing.
+
+- **Spell table**: `data/spells.csv` (embedded, `SpellTable`, `SpellCatalog`, `GameState.Spells`) holds all 102 spells of the re-draft: id,
+  name, school (the town id), level, mana, element, tags, whether it is an adventure spell, its rank I battle effect and its notes. The
+  **battle effect** is a small grammar (`SpellEffect.Parse`): `damage N`, `heal N`, `buff …` and `curse …` with the stats they change
+  (`attack`, `defense`, `speed`, `speed%`, `initiative%`, `melee%`, `ranged%`, `taken%`, `melee-taken%`, `ranged-taken%`, `spell-taken%`,
+  `morale`, `luck`, `roll max|min`), `rounds N|battle`, the reach (`area N`, `enemies` / `allies`, `all`) and a filter (`living`, `undead`,
+  `undead-demon`, `shooter`). 37 spells have one; the rest (summons, control, resurrection, adventure spells, ranks II / III) wait. The table
+  is generated from `spells.md` for now.
+- **Spell books**: a Mage of a magic town starts with a book holding its specialty spell; warriors and Primal Fury heroes have none. A book
+  costs **500 gold** in a mage guild (`BuySpellBookCommand`, the town's visiting hero). Books and known spells are not part of the map format
+  yet: roster heroes get theirs from the class, the rest come from play.
+- **Guilds** (ADR-106): when the game starts, every town by id draws 3 / 3 / 2 / 2 of its school's spells per level, without repeats, from
+  `GameState.Random` (`MagicRules.DrawGuilds`), whether the guild is built or not; Stronghold and Swamp Bestiary towns draw none. A guild of
+  level L teaches levels 1 to L. The map cannot fix guild spells yet.
+- **Learning and mana**: an own hero on a town's entrance with a mage guild learns the guild's spells its school's **Magic** skill allows
+  (Basic level 1 … Master level 4): on entering or capturing the town, at the start of the owner's turn, when a guild is built or a book
+  bought while it stands there, and when it is hired there *(assumed: all of these)*. Its mana fills to the maximum only after **a night in
+  the town**: at the start of the owner's turn with the hero still on the entrance, not on entering (the user's rule).
+- **Casting** (ADR-071): once a round per side, during the turn of one of its own units, which keeps its action (`BattleCastCommand`; the AI
+  too). The battle copies the hero's book, Spell Power, level and mana (`BattleCaster`); mana spent is written back when the battle ends
+  (`HeroManaSpent`). Stack spells aim at an enemy stack (damage, curses) or an own one (healing, buffs) they work on; area spells at a cell
+  (a square of N cells centred there, hitting both sides); side spells at the enemy or own side; field spells at every stack.
+- **Numbers** (ADR-072, MAG-6): damage and healing are base × (10 + Spell Power) / 10; a spell specialty adds 3 % a hero level to the amount
+  (not the duration) *(assumed)*; holy spells do double damage to undead and demons. Durations are rounds × (10 + Spell Power) / 10, at least 1,
+  and count **after the round of the cast** *(assumed, like warcries)*: the effect lasts the rest of this round and that many more. The enemy
+  hero's **Spell resistance** (8 / 14 / 20 %) cuts hostile damage and duration (rounded up, at least 1); **Interference** takes its Spell
+  Power off and adds its mana to the cost. A spell cast again on a stack replaces its earlier effect; different spells add up.
+- **What stops a spell**: creature immunities to the spell's tags; creature spell resistance against hostile spells; holy creatures ignore
+  holy spells; war machines take only damage spells without a filter *(assumed)*; the filters. Such stacks are refused as targets, and
+  reported (`BattleSpellResisted`) when an area or side spell reaches them.
+- **Effects in battle**: Attack and Defense add to the damage formula's; melee, ranged and damage-taken percents multiply the damage; speed is
+  flat then percent (at least 1); initiative percent joins the warcries'; morale and luck add; Bless rolls the maximum and Curse the
+  minimum (no random draw). Effects end as a round starts (`BattleSpellExpired`).
+- **AI**: the battle AI casts the damage spell and aim worth most (the creature value of the hit points taken off enemy stacks, less its own),
+  if any is worth something; it does not buff yet. The adventure AI buys a book for a visiting hero with a Magic skill when it has gold to spare.
+- **Front-ends**: the battle HUD shows the acting hero's mana and one button per battle spell; a stack or area spell then waits for a click on
+  the field (Esc cancels). The 2D harness arms spells with C. The hero panel lists the book's spells.
+- **Not built**: ranks II / III and Mastery; adventure spells; summons, control, resurrection and the other effects without a battle line;
+  creature casters; shrines; the extra-school spell buildings and the Primal Fury building; guild spells set by the map; spell books and
+  spells in the map format; the AI's buffs; the orbs' element power.

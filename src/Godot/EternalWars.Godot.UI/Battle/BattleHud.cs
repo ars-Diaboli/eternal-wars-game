@@ -33,6 +33,7 @@ public partial class BattleHud : Control
     private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
     private readonly HBoxContainer _warcries = new();
     private readonly Dictionary<Warcry, Button> _warcryButtons = [];
+    private readonly HBoxContainer _spells = new();
     private readonly PanelContainer _result = new() { Visible = false };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
     private readonly Button _close = new() { Text = "Return to the map (Enter)" };
@@ -79,6 +80,9 @@ public partial class BattleHud : Control
             _warcryButtons[warcry] = button;
             _warcries.AddChild(button);
         }
+
+        // The acting side's hero's spells (ADR-110): a spell for a side or the field is cast at once, the others wait for a click on the field.
+        actions.AddChild(_spells);
 
         _wait.Pressed += () => Act(player => new BattleWaitCommand(player));
         _defend.Pressed += () => Act(player => new BattleDefendCommand(player));
@@ -174,6 +178,71 @@ public partial class BattleHud : Control
 
     public void Report(CommandResult result) => _status.Text = result.IsAccepted ? string.Empty : $"Refused: {result.Error}";
 
+    /// <summary>The spell waiting for its target, if a spell button was pressed (ADR-110).</summary>
+    public string? ArmedSpell { get; private set; }
+
+    /// <summary>
+    /// A click on the battlefield while a spell is armed: casts it at the stack on the cell (or at the cell, for an area) and returns true; false
+    /// when no spell is armed, so the click is an ordinary action.
+    /// </summary>
+    public bool TryCastAt(CellPosition cell)
+    {
+        if (ArmedSpell is not { } spell || _session.State.Battle is not { } battle)
+        {
+            return false;
+        }
+
+        ArmedSpell = null;
+        Act(player => new BattleCastCommand(player, spell, battle.UnitAt(cell)?.Id, cell));
+        return true;
+    }
+
+    /// <summary>Drops the armed spell (Escape).</summary>
+    public void Disarm()
+    {
+        ArmedSpell = null;
+        Refresh();
+    }
+
+    private void Arm(KnownSpell known)
+    {
+        if (known.Spell.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
+        {
+            Act(player => new BattleCastCommand(player, known.Spell.Id));
+            return;
+        }
+
+        ArmedSpell = known.Spell.Id;
+        _status.Text = $"{known.Spell.Name}: click a target (Esc cancels).";
+    }
+
+    /// <summary>One button per battle spell of the acting side's hero, with its cost; disabled while it cannot be cast at all.</summary>
+    private void RefreshSpells(BattleState? battle, Core.Domain.Common.PlayerId? commander)
+    {
+        foreach (var child in _spells.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        if (battle?.ActiveUnit is not { } active || commander is null || battle.Participant(active.Side).Caster is not { } caster)
+        {
+            return;
+        }
+
+        _spells.AddChild(new Label { Text = $"Mana {battle.ManaOf(active.Side)}" });
+        foreach (var known in caster.Spells.Where(s => s.Spell.Effect is not null))
+        {
+            var cost = BattleMagic.Cost(battle, active.Side, known);
+            var button = new Button { Text = $"{known.Spell.Name} ({cost})" };
+            var refusal = battle.HasCastThisRound(active.Side) ? "The hero has already cast a spell this round."
+                : battle.ManaOf(active.Side) < cost ? "Not enough mana." : null;
+            button.Disabled = refusal is not null;
+            button.TooltipText = refusal ?? known.Spell.Notes;
+            button.Pressed += () => Arm(known);
+            _spells.AddChild(button);
+        }
+    }
+
     private void Act(Func<Core.Domain.Common.PlayerId, GameCommand> command)
     {
         if (_view.Commander is { } player)
@@ -206,6 +275,7 @@ public partial class BattleHud : Control
         _quick.Disabled = _view.Result is not null || battle is null ||
                           (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is null;
         RefreshWarcries(battle, commander);
+        RefreshSpells(battle, commander);
         var deployer = _view.Deployer;
         _start.Visible = deployer is not null;
         _wait.Visible = _defend.Visible = _retreat.Visible = _surrender.Visible = deployer is null;
@@ -218,6 +288,8 @@ public partial class BattleHud : Control
         _title.Text = $"{_view.SideName(BattleSide.Attacker)}  vs  {_view.SideName(BattleSide.Defender)}   ·   round {battle.Round}";
         _status.Text = deployer is { } placing
             ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (click a stack, then a cell), then start the battle."
+            : ArmedSpell is { } armed && _session.State.Spells.TryGet(armed, out var spell)
+                ? $"{spell.Name}: click a target (Esc cancels)."
             : commander is not null && battle.ActiveUnit is { } acting
                 ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
                 : string.Empty;

@@ -1,7 +1,7 @@
 # Magic
 
 > Part of the [game design](overview.md). Spell catalog: [spells.md](../content/spells.md) (re-drafted, ADR-099: 17 spells a school). Open items ❓:
-> [open-questions.md](../project/open-questions.md). Casting is Phase 5; mana and the school skills exist.
+> [open-questions.md](../project/open-questions.md). Casting is Phase 5: the first slice is built (ADR-110: spell table, guilds, books, rank I casting in battle).
 
 - **Six schools** (ADR-047, ADR-063), one for each town on the ring: Light (Haven), Nature (Sylvan), Arcana (Academy),
   Death (Necropolis), Chaos (Inferno), Shadow (Dungeon); names are working titles ❓. Each school is also a hero skill
@@ -16,7 +16,7 @@
   (ADR-106, MAG-13).
 - **Elements** (ADR-106, MAG-13): besides its school, every spell has one of four elements (air, earth, fire, water); the four elemental orbs
   raise the spells of their element, whatever the school. Summons call town creatures (elementals: Conflux).
-- **Spell books and learning** (ADR-071, MAG-2; not built): mage heroes start with a spell book; warriors buy one in a mage
+- **Spell books and learning** (ADR-071, MAG-2; built, ADR-110): mage heroes of magic towns start with a spell book (holding their specialty spell); warriors buy one in a mage
   guild for **500 gold**. A hero learns a spell when its school's Magic skill is at least the spell's level. A guild offers
   spells of the town's own school: **3** at each of levels 1 and 2, **2** at each of levels 3 and 4. Two more town buildings
   add spells from other schools by the magic circle (HoMM4-like, ADR-072, MAG-12): one building for each of the two schools next to
@@ -31,7 +31,8 @@
 - **Mana** (implemented, `ManaRules`): the pool is 10 × Knowledge plus attunement; a hero regains ⌈Knowledge / 10⌉
   plus attunement at the start of its owner's turn; a spell costs its base minus attunement, never less than 25 % of
   the base (rounded up). ADR-069 adds **10 × ⌈level / 10⌉** to the maximum pool only, not to the daily regeneration, so every hero has at least 10
-  (ADR-072, MAG-8; built). A hero in a town with a mage guild refills its mana (ADR-071, MAG-3; not built).
+  (ADR-072, MAG-8; built). A hero that spends the night in a town with a mage guild (still there when its owner's turn starts) refills its mana (ADR-071,
+  MAG-3; built, ADR-110).
 - **Necromancy** (ADR-069; built, ADR-078): after a victory a hero with Death attunement raises 5–20 % of the slain enemies' hit points
   as undead, of tiers capped by the attunement level; a Necropolis building, the Necromancy Amplifier, adds 5 %. Rules
   (ADR-072, MAG-7) in [skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078).
@@ -40,7 +41,7 @@
   - **Fountain of Magic**: restores 50 % of the maximum, **once a week per hero** (ADR-072, MAP-23).
   - **Shrines** (levels 1–3): teach their spell (set in the editor or rolled at game start) to any hero with the school's
     Magic skill at the spell's level; any number of visits; a hero without the skill or with the spell gets a message.
-- **Spell Power** (ADR-071, MAG-3; not built): multiplies damage spells' damage and buffs' and debuffs' duration, for now
+- **Spell Power** (ADR-071, MAG-3; built, ADR-110): multiplies damage spells' damage and buffs' and debuffs' duration, for now
   **damage × (1 + SP / 10)** and **duration × (1 + SP / 10)** (ADR-072); the spell list's numbers are base numbers at SP 0 (ADR-099).
 - **Spell specialties** (ADR-072, MAG-6): the spell's effect +3 % per hero level.
 - **Area spells** have a fixed area whatever the target's size; a big creature with any cell inside is hit once (ADR-072, MAG-11).
@@ -48,9 +49,12 @@
   their own do not count); spells that change initiative do not change this. Spells may target war machines, which are
   `mechanical` and resist many spells (ADR-070, MAG-4 part). Casting does not use the unit's action; it still acts afterwards (HoMM3; ADR-071, MAG-4).
   Creature casters use the Caster capability ([combat.md](combat.md#creature-capabilities-homm4-style-implemented-adr-042)).
-- Spell resistance and immunity tags exist on creatures and take effect with magic.
+- Spell resistance and immunity tags on creatures take effect (ADR-110): an immune or resistant stack is not a target and is untouched by area spells.
 - The hero skill **Spell resistance** cuts hostile spells' damage and duration by **8 / 14 / 20 %** (ADR-071, MAG-6; was
-  10 / 15 / 20 %); durations round away from zero, at least 1 round. Not built.
+  10 / 15 / 20 %); durations round away from zero, at least 1 round. Built (ADR-110).
 - **Adventure spells** Town Portal and Dimension Door are **level 4** (ADR-071, MAG-5; [spells.md](../content/spells.md#adventure-spells)).
   Casting one costs a fixed **500 movement points** besides its mana, and a hero with fewer left cannot cast (ADR-073); Dimension Door lands only on
   explored tiles (ADR-072, MAG-5).
+- **Built so far** (ADR-110): rank I battle effects of 37 spells (damage, healing, buffs and curses), cast once a round; durations count after the
+  round of the cast; holy spells double against undead and demons; war machines take only damage spells. Ranks II / III, Mastery,
+  adventure spells, summons, control and resurrection, creature casters, shrines and the extra-school buildings are not built.

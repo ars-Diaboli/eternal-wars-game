@@ -90,7 +90,7 @@ check the 7/8 limit, so a marksman can shoot past cover that would stop others.
 | Skill | Id | Max | Basic | Advanced | Expert | Master | Status |
 |---|---|---|---|---|---|---|---|
 | Armor | `defense.armor` | Master | −5 % damage taken | −10 % | −15 % | −20 % | ✅ |
-| Spell resistance | `defense.resistance` | Expert | hostile spells −8 % damage and duration | −14 % | −20 % | – | ⏳ magic (numbers ADR-071) |
+| Spell resistance | `defense.resistance` | Expert | hostile spells −8 % damage and duration | −14 % | −20 % | – | ✅ (ADR-110) |
 | Leadership | `defense.leadership` | Expert | +1 morale to all own stacks | +2 | +3 | – | ✅ (ADR-067; was `offense.third`) |
 
 Spell resistance cuts both a hostile spell's damage and its duration; durations round away from zero, at least 1 round (ADR-071, MAG-6).

@@ -13,7 +13,8 @@ public sealed record HitModifiers(int BaseRoll, bool IsRanged, int PenaltyEighth
 /// HoMM3 damage baseline in integer maths (ADR-033): base roll × stack size; +5 % per point of Attack above
 /// Defense (cap +300 %), −2.5 % per point of Defense above Attack (cap −70 %); then capability bonuses, the
 /// ranged penalty (distance and cover, ADR-070), the <c>MeleePenalty</c> halving; hero skills (Melee, Archery, Armor) and the preferred
-/// creature's +Attack/+Defense (ADR-048); native terrain's +1 Attack/+1 Defense (ADR-068); luck (ADR-053); Ballistics for war machines (ADR-056). Never less than 1.
+/// creature's +Attack/+Defense (ADR-048); native terrain's +1 Attack/+1 Defense (ADR-068); spells (ADR-110); luck (ADR-053); Ballistics for war machines (ADR-056).
+/// Never less than 1.
 /// </summary>
 public static class DamageCalculator
 {
@@ -23,10 +24,10 @@ public static class DamageCalculator
         var defenderBonus = battle.Participant(defender.Side).Bonus;
         var attack = attacker.Creature.Attack + battle.Participant(attacker.Side).Attack + attacker.RageAttack
                      + (attackerBonus.Prefers(attacker.Creature) ? Heroes.SkillEffects.PreferredAttack : 0)
-                     + (battle.IsNative(attacker) ? BattleState.NativeAttack : 0);
+                     + (battle.IsNative(attacker) ? BattleState.NativeAttack : 0) + attacker.SpellModifiers.Attack;
         var defense = defender.Creature.Defense + battle.Participant(defender.Side).Defense
                       + (defenderBonus.Prefers(defender.Creature) ? Heroes.SkillEffects.PreferredDefense : 0)
-                      + (battle.IsNative(defender) ? BattleState.NativeDefense : 0);
+                      + (battle.IsNative(defender) ? BattleState.NativeDefense : 0) + defender.SpellModifiers.Defense;
         if (defender.IsDefending)
         {
             defense += DefendBonus(defense);
@@ -62,6 +63,7 @@ public static class DamageCalculator
             damage = damage * (100 - defenderBonus.RangedDamageTakenReductionPercent) / 100;
         }
 
+        damage = damage * (100 + Spells(attacker.SpellModifiers, defender.SpellModifiers, hit.IsRanged)) / 100;
         damage = damage * MoraleAndLuck.DamagePercent(hit.Luck) / 100;
         if (attacker.IsMachine)
         {
@@ -80,13 +82,25 @@ public static class DamageCalculator
         return (int)Math.Clamp(damage, 1, int.MaxValue);
     }
 
+    /// <summary>Spells (ADR-110): the attacker's melee or ranged percent plus the defender's damage-taken percents, at least −100.</summary>
+    private static int Spells(Magic.SpellModifiers attacker, Magic.SpellModifiers defender, bool isRanged) =>
+        Math.Max(-100, (isRanged ? attacker.RangedPercent + defender.RangedTakenPercent : attacker.MeleePercent + defender.MeleeTakenPercent) + defender.DamageTakenPercent);
+
     /// <summary>Defend: +20 % Defense, at least +1, until the unit's next turn.</summary>
     public static int DefendBonus(int defense) => Math.Max(1, defense / 5);
+
+    /// <summary>Bless rolls the creature's maximum damage, Curse its minimum (ADR-110); otherwise <paramref name="roll"/>.</summary>
+    public static int Roll(BattleUnit attacker, int roll) => Math.Sign(attacker.SpellModifiers.Roll) switch
+    {
+        > 0 => attacker.Creature.MaxDamage,
+        < 0 => attacker.Creature.MinDamage,
+        _ => roll,
+    };
 
     /// <summary>Damage expected from an average roll; the AI uses it to compare options.</summary>
     public static int Expected(BattleState battle, BattleUnit attacker, BattleUnit defender, bool isRanged, int penaltyEighths = 0)
     {
-        var average = (attacker.Creature.MinDamage + attacker.Creature.MaxDamage) / 2;
+        var average = Roll(attacker, (attacker.Creature.MinDamage + attacker.Creature.MaxDamage) / 2);
         return Damage(battle, attacker, defender, new HitModifiers(Math.Max(1, average), isRanged, penaltyEighths));
     }
 }

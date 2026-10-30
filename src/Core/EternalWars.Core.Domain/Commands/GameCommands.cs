@@ -131,6 +131,9 @@ public sealed record MoveTownStackCommand(PlayerId Player, MapObjectId Town, Tow
 /// <summary>The town's visiting hero buys a war machine at its blacksmith (ADR-056).</summary>
 public sealed record BuyWarMachineCommand(PlayerId Player, MapObjectId Town, Battles.WarMachineSlot Slot) : GameCommand(Player);
 
+/// <summary>The town's visiting hero buys a spell book in its mage guild for 500 gold and learns the guild's spells it may (ADR-071, ADR-110).</summary>
+public sealed record BuySpellBookCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
+
 // Artifacts (the owner's turn; no movement points; ADR-061) -------------------------------------------
 
 /// <summary>Puts an artifact from the hero's backpack on; one worn in that slot goes to the backpack when none is free.</summary>
@@ -183,6 +186,9 @@ public sealed record BattleShootStructureCommand(PlayerId Player, int Structure)
 
 /// <summary>The player's hero uses a warcry (Stronghold, ADR-067): no mana, and the active unit keeps its action.</summary>
 public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry) : GameCommand(Player);
+
+/// <summary>The hero casts a spell at a stack or a cell, as the spell needs (ADR-110); the active unit keeps its action.</summary>
+public sealed record BattleCastCommand(PlayerId Player, string Spell, int? Target = null, CellPosition? Cell = null) : GameCommand(Player);
 
 public sealed record BattleWaitCommand(PlayerId Player) : GameCommand(Player);
 

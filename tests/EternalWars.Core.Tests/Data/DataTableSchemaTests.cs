@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Generation;
 
@@ -74,6 +75,18 @@ public class DataTableSchemaTests
         // The catalog rejects duplicate ids, unknown sets and sets with fewer than two pieces.
         var catalog = new ArtifactCatalog(ArtifactTable.ParseArtifacts(artifacts), ArtifactTable.ParseSets(sets));
         Assert.NotEmpty(catalog.All);
+    }
+
+    [Fact]
+    public void Spells_HaveTheKnownColumns_UniqueIds_AndSchoolsOfTheSixMagicTowns()
+    {
+        var text = BuiltInSpells.EmbeddedTable();
+        Assert.Equal(SpellTable.Columns, Header(text, "Spell"));
+
+        // The catalog rejects duplicate ids and adventure spells with a battle effect; battle effects are checked while parsing.
+        var catalog = new SpellCatalog(SpellTable.Parse(text));
+        Assert.All(catalog.All, s => Assert.True(BuiltInSkills.Schools.ContainsKey(s.School), $"{s.Id}: '{s.School}' is no magic school's town"));
+        Assert.All(catalog.All, s => Assert.True(s.Mana >= 0, $"{s.Id} costs negative mana")); // Blood Price costs health, not mana
     }
 
     [Fact]

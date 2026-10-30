@@ -209,6 +209,26 @@ public sealed class BattleService(
         }
     }
 
+    /// <summary>
+    /// The player's hero casts a spell (ADR-110) while one of the player's units is up, at a stack or a cell as the spell needs; the unit keeps
+    /// its action.
+    /// </summary>
+    internal void Cast(PlayerId player, string spell, int? target, CellPosition? cell)
+    {
+        var battle = Current(BattlePhase.Fighting);
+        var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
+        if (Commander(unit.Side) != player)
+        {
+            throw new InvalidOperationException($"{unit.Creature.Name} is not under {player}'s command.");
+        }
+
+        if (Engine(battle).Cast(unit.Side, spell, target, cell) is { } refusal)
+        {
+            throw new InvalidOperationException(refusal);
+        }
+
+        Continue(battle);
+    }
     /// <summary>Whether computer players' heroes retreat from lost battles (off in the AI's throwaway estimate fights).</summary>
     internal bool AiMayRetreat { get; set; } = true;
 
@@ -375,7 +395,8 @@ public sealed class BattleService(
             MoraleAndLuck.MixedFactions(hero.Army.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature)))
             + (side == BattleSide.Defender && state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position) is { } home
                 ? DefenderMorale(home)
-                : 0));
+                : 0),
+            BattleCaster.For(hero, state.Spells));
 
     /// <summary>A town's defenders get the Brotherhood's morale (ADR-075, CMB-2): its garrison, or an own hero standing at its entrance.</summary>
     private static int DefenderMorale(Town town) =>
@@ -568,6 +589,17 @@ public sealed class BattleService(
 
         var experience = Experience(battle);
         var casualties = Casualties(battle);
+
+        // The mana the heroes spent is gone (ADR-110).
+        foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
+        {
+            if (battle.Participant(side) is { Hero: { } id, Caster: { } caster } && battle.ManaOf(side) != caster.Mana)
+            {
+                var hero = state.GetHero(id);
+                hero.Mana = battle.ManaOf(side);
+                events.Publish(new HeroManaSpent(id, caster.Mana - hero.Mana, hero.Mana, hero.MaxMana));
+            }
+        }
 
         state.Battle = null;
         events.Publish(new BattleEnded(winner, reason, casualties, winning.Hero is null ? 0 : experience));

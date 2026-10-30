@@ -24,7 +24,8 @@ catalogue (their Godot screens still need a run). The week and month events, the
 UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, MP-3 and MP-4 still open); CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
 replays and a replay viewer (FLOW-4 and UI-2 answered in ADR-101; all but the viewer built, ADR-102 to ADR-104), and rarer hero specialties (HERO-8 answered in ADR-107, the proposals for now). ADR-099 brings sieges before 1.0
 and re-drafts the spells and artifacts (CONT-6 answered in ADR-100); ADR-106 settles the siege rules (CMB-11) and the guild spell draw,
-spell elements and summons (MAG-13); the sieges are built (ADR-109; the 3D siege scene still needs a run in Godot). ADR-073's remaining victory conditions
+spell elements and summons (MAG-13); the sieges are built (ADR-109; the 3D siege scene still needs a run in Godot). Phase 5 magic has begun: the spell table, guild spells,
+spell books and rank I casting in battle are built (ADR-110). ADR-073's remaining victory conditions
 and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096) wait for EVT-1 … EVT-6. ADR-100 settles Pandora's Box
 (MAP-35, built in ADR-105) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7 answered in ADR-108: nine relics).
 **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
@@ -198,8 +199,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Marketplace trading: gold against one resource, rates by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; needs a town marketplace; `TradeResourceCommand`, trading screen (HUD button, town screen; Godot part not run in the editor yet); no AI trading (ADR-067); nothing open (ADR-070)
 - [x] Map marketplace object: a visiting hero trades at the fixed X = 4 rate; map format v14, editor placement, validator; the generator places it as a treasure item where the zone's treasure value allows (ADR-067)
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
-- [ ] Mage guild: spells per level (waits for magic, Phase 5); until then cost and requirements only; refills mana; sells the
-      spell book (500 gold) (ADR-071)
+- [x] Mage guild: spells per level drawn at game start, teaches them, refills mana after a night there, sells the spell book (500 gold; town screen button
+      and the guild's spells listed, Godot part not run yet) (ADR-071, ADR-110)
 - [ ] Growth buildings (placeholder, ADR-071): +5 a week for tier 1, +2 for tier 2, per town in `buildings.csv`; the AI builds them
 - [ ] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071)
 - [ ] Two spell buildings per town, one per ring neighbour's school, 1 spell per guild level each (2000 gold + 5 of the school's resource,
@@ -566,25 +567,29 @@ author templates in the editor.
 Content draft: [spells.md](../content/spells.md), re-drafted (ADR-099) and reviewed (ADR-106): 17 spells a school, base numbers × Spell
 Power, an element per spell.
 
-- [ ] Spell table `data/spells.csv` from the re-draft (school, level, cost, element, tags, three ranks; adventure spells; final numbers after
-      the visuals); mana on heroes is done (ADR-063)
-- [ ] Guild spell selection (ADR-106): 3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3 drawn per town at game start from `GameState.Random`,
-      adventure spells drawn like the others; the extra-school buildings draw theirs the same way; the editor fixes some per town (map
-      format bump), the rest drawn
+- [x] Spell table `data/spells.csv` from the re-draft: school, level, cost, element, tags, adventure spells, the rank I battle effect of 37
+      spells (ADR-110); mana on heroes is done (ADR-063)
+- [ ] Spell table follow-ups: ranks II / III, the battle effects of the other spells, final numbers after the visuals
+- [x] Guild spell selection (ADR-106, ADR-110): 3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3 drawn per town at game start from
+      `GameState.Random`, adventure spells drawn like the others
+- [ ] Guild spells fixed by the map (editor, map format bump); the extra-school buildings draw theirs the same way
 - [ ] Summoned creatures (`summon`: vanish after the battle, no experience): town creature rows (Pegasi, Treants, Imps, Horned Demons),
       Conflux elementals (ADR-106)
-- [ ] Spell book: mages start with one, warriors buy it for 500 gold in a guild (ADR-071)
-- [ ] Guild offers 3 / 3 / 2 / 2 spells of the town's school per level; a hero learns a spell when the school's Magic skill is at least
-      its level (ADR-071)
-- [ ] Spell Power multiplies damage and buff / debuff duration: × (1 + SP / 10) for now (ADR-072)
+- [x] Spell book: mages of magic towns start with one (holding their specialty spell), warriors buy it for 500 gold in a guild (ADR-071, ADR-110)
+- [x] Guild offers 3 / 3 / 2 / 2 spells of the town's school per level; a hero learns a spell when the school's Magic skill is at least
+      its level; a night in a town with a guild refills its mana (ADR-071, ADR-110)
+- [ ] Spell books and known spells in the map format (map heroes, editor)
+- [x] Spell Power multiplies damage and buff / debuff duration: × (1 + SP / 10) for now (ADR-072, ADR-110)
 - [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; no potency, ADR-071), mastery
       (allows ranks 2 / 3; a spell rises, free, on a visit to a guild that offers it, ADR-072)
-- [ ] Combat spells: the hero casts once a round during a controlled unit's turn (ADR-070); the unit still acts (ADR-071); machines can be
-      targeted and resist as `mechanical`; immunity, resistance and creature casters become live (ADR-042, ADR-049)
+- [x] Combat spells, rank I (ADR-110): the hero casts once a round during a controlled unit's turn (ADR-070); the unit still acts (ADR-071);
+      machines take damage spells only; immunity and resistance are live (ADR-042, ADR-049); the battle AI casts damage spells; HUD spell
+      buttons, C in the 2D harness
+- [ ] Combat spells, the rest: creature casters, summons, control and resurrection effects, the AI's buffs
 - [ ] Adventure spells: a fixed 500 movement points besides mana (fewer left: no cast); Dimension Door only to explored tiles (ADR-072)
-- [ ] Area spells: a fixed area; a big creature with any cell inside is hit once (ADR-072)
-- [ ] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
-      specialties +3 % of the effect per hero level (ADR-072)
+- [x] Area spells: a fixed area; a big creature with any cell inside is hit once (ADR-072, ADR-110)
+- [x] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
+      specialties +3 % of the effect per hero level (ADR-072); Interference's Spell Power and cost (ADR-110)
 - [ ] Spell tags (`holy`, `summon` new) and creature caster spells mapped onto the list (ADR-099)
 - [ ] Spell elements (air, earth, fire, water; Magic Arrow all four, Bind Elemental the bound kind) and the `element-power` effect of the
       four elemental orbs (ADR-106)

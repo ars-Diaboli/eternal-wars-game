@@ -21,6 +21,7 @@
     <EmbeddedResource Include="..\data\artifact_sets.csv" Link="Artifacts\artifact_sets.csv" LogicalName="EternalWars.ArtifactSets.csv" />
     <EmbeddedResource Include="..\data\scenery.csv" Link="Objects\scenery.csv" LogicalName="EternalWars.Scenery.csv" />
     <EmbeddedResource Include="..\data\riddles.csv" Link="Objects\riddles.csv" LogicalName="EternalWars.Riddles.csv" />
+    <EmbeddedResource Include="..\data\spells.csv" Link="Magic\spells.csv" LogicalName="EternalWars.Spells.csv" />
   </ItemGroup>
 
 </Project>

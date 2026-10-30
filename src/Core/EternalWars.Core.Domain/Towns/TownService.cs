@@ -34,6 +34,10 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         town.SetLevel(building, level.Level);
         town.LastBuilt = state.Date;
         events.Publish(new TownBuilt(town.Id, building, level.Level));
+        if (building == BuiltInBuildings.MageGuild)
+        {
+            Magic.MagicRules.VisitBy(state, events, town);
+        }
     }
 
     internal void BuildDwelling(PlayerId player, MapObjectId townId, string line)
@@ -127,6 +131,19 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         events.Publish(new WarMachineBought(town.Id, hero.Id, slot));
     }
 
+    /// <summary>The visiting hero buys a spell book in the town's mage guild and learns what the guild teaches it (ADR-071, ADR-110).</summary>
+    internal void BuySpellBook(PlayerId player, MapObjectId townId)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(Magic.MagicRules.CheckBuySpellBook(state, town));
+
+        var hero = TownRules.VisitingHero(state, town)!;
+        Pay(player, Magic.MagicRules.SpellBookCost);
+        hero.HasSpellBook = true;
+        events.Publish(new SpellBookBought(town.Id, hero.Id));
+        Magic.MagicRules.Visit(state, events, hero, town);
+    }
+
     /// <summary>The owner appoints one of its heroes governor of the town; the hero leaves any other town it governed.</summary>
     internal void AppointGovernor(PlayerId player, MapObjectId townId, HeroId heroId)
     {
@@ -158,7 +175,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         }
     }
 
-    /// <summary>Start of the owner's turn: heroes already standing in a town without a governor are appointed.</summary>
+    /// <summary>Start of the owner's turn: heroes already standing in a town without a governor are appointed, and a night in a town with a mage guild refills their mana.</summary>
     internal void AppointVisitors(PlayerId player)
     {
         foreach (var town in state.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value))
@@ -166,6 +183,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             if (TownRules.VisitingHero(state, town) is { } hero)
             {
                 AutoAppoint(state, events, town, hero);
+                Magic.MagicRules.Visit(state, events, hero, town, night: true);
             }
         }
     }
@@ -213,6 +231,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         state.AddHero(hero);
         events.Publish(new HeroHired(town.Id, hero.Id, heroId));
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+        Magic.MagicRules.Visit(state, events, hero, town);
     }
 
     /// <summary>

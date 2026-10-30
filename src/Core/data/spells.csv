@@ -1,0 +1,103 @@
+id,name,school,level,mana,element,tags,adventure,battle,notes
+light.bless,Bless,haven,1,5,water,,,buff roll max rounds 3,"an own stack deals maximum damage, 3 rounds"
+light.shield-of-faith,Shield of Faith,haven,1,5,earth,,,buff melee-taken% -15 rounds 3,"an own stack takes −15 % melee damage, 3 rounds"
+light.purge,Purge,haven,1,5,water,,,,removes the enemy's spells from an own stack
+light.steadfast,Steadfast,haven,1,4,water,mind,,,"an own stack +1 morale and cannot be made to flee (Terror), 3 rounds"
+light.distant-vision,Distant Vision,haven,1,5,air,,yes,,"shows the creatures, heroes and their armies in radius 10 around a cell in sight, until the next turn"
+light.heal,Heal,haven,2,9,water,,,heal 40,an own stack regains 40 health
+light.righteous-might,Righteous Might,haven,2,8,fire,,,buff attack 3 rounds 3,"an own stack +3 Attack, 3 rounds"
+light.deflect-missiles,Deflect Missiles,haven,2,9,air,,,buff ranged-taken% -40 rounds 3,"an own stack takes −40 % ranged damage, 3 rounds"
+light.vigil,Vigil,haven,2,8,fire,,,,an own stack retaliates against every attack this round
+light.consecrate,Consecrate,haven,2,10,fire,holy,,,"a 3 × 3 area: enemy undead and demons in it take 15 a round, 3 rounds"
+light.smite,Smite,haven,3,16,fire,holy,,damage 80,"80 damage to an enemy stack, double to undead and demons"
+light.prayer,Prayer,haven,3,16,water,,,buff attack 2 defense 2 speed 2 rounds 3,"an own stack +2 Attack, Defense and speed, 3 rounds"
+light.martyrdom,Martyrdom,haven,3,14,earth,,,,"an own stack takes half of the damage meant for another own stack, 3 rounds"
+light.holy-word,Holy Word,haven,3,18,air,holy,,damage 50 enemies undead-demon,every enemy undead and demon stack takes 50
+light.sanctuary,Sanctuary,haven,4,25,earth,,,,"an own stack cannot be attacked in melee, 2 rounds"
+light.resurrection,Resurrection,haven,4,25,earth,,,,revives 150 health of an own stack's dead (lost again after the battle)
+light.wrath-of-the-eye,Wrath of the Eye,haven,4,30,fire,holy,,damage 60 enemies,"every enemy stack takes 60, undead and demons double; own stacks are spared"
+nature.entangle,Entangle,sylvan,1,5,earth,,,,roots hold an enemy stack: it loses its next move (it can still shoot or attack next to it)
+nature.wasp-swarm,Wasp Swarm,sylvan,1,5,air,,,damage 30 initiative% -20 rounds 1,"30 damage to an enemy stack and −20 % initiative, 1 round"
+nature.bears-strength,Bear's Strength,sylvan,1,5,earth,,,buff melee% 20 rounds 3,"an own stack +20 % melee damage, 3 rounds"
+nature.hunters-sight,Hunter's Sight,sylvan,1,5,air,,,,"an own shooting stack ignores the distance penalty and cover, 3 rounds"
+nature.pathfinders-call,Pathfinder's Call,sylvan,1,5,earth,,yes,,"until the end of the day the hero's army moves on forest floor, grass and swamp as native terrain"
+nature.regrowth,Regrowth,sylvan,2,9,water,,,,"an own stack regains 15 health at the start of each round, 3 rounds"
+nature.call-lightning,Call Lightning,sylvan,2,10,air,lightning,,damage 60,60 damage to an enemy stack
+nature.fleetfoot,Fleetfoot,sylvan,2,8,air,,,,an own stack +2 speed and can pass through other stacks this round
+nature.thornwall,Thornwall,sylvan,2,10,earth,,,,"a line of 5 cells of thorns, 3 rounds: blocks movement, a stack walking out of it takes 20"
+nature.view-terrain,View Terrain,sylvan,2,9,earth,,yes,,"reveals the map around the hero, radius 12, until the next turn"
+nature.swarm,Swarm,sylvan,3,16,air,,,curse attack -3 defense -3 rounds 3,"a cloud of insects: an enemy stack −3 Attack and Defense, 3 rounds"
+nature.summon-pack,Call the Herd,sylvan,3,16,air,summon,,,"a stack of Sylvan Pegasi for the battle, 150 health worth"
+nature.chain-lightning,Chain Lightning,sylvan,3,18,air,lightning,,,"70 damage to an enemy stack, then 35 and 17 to the two nearest stacks (own stacks too)"
+nature.oakheart,Oakheart,sylvan,3,15,earth,,,,"an own stack +4 Defense and immune to `mind`, 3 rounds"
+nature.barkskin,Barkskin,sylvan,4,25,earth,,,buff taken% -30 rounds 3,"an own stack takes −30 % damage, 3 rounds"
+nature.earthquake,Earthquake,sylvan,4,25,earth,,,,"every stack on the ground takes 40 and loses 20 % initiative; in a siege, 2 wall sections take 1 damage each"
+nature.awaken-grove,Awaken the Grove,sylvan,4,30,earth,summon,,,"a stack of Sylvan Treants for the battle, 400 health worth; they root and cannot move"
+arcana.magic-arrow,Magic Arrow,academy,1,5,all,,,damage 40,"40 damage to an enemy stack; never misses, ignores cover"
+arcana.slow,Slow,academy,1,6,earth,,,curse speed% -30 initiative% -30 rounds 3,"an enemy stack −30 % speed and initiative, 3 rounds"
+arcana.arcane-ward,Arcane Ward,academy,1,5,water,,,buff spell-taken% -30 rounds 3,"an own stack takes −30 % spell damage, 3 rounds"
+arcana.precision,Precision,academy,1,5,air,,,buff ranged% 25 rounds 3 shooter,"an own shooting stack +25 % ranged damage, 3 rounds"
+arcana.detect-magic,Detect Magic,academy,1,4,air,,yes,,"shows every map object's contents (chests, banks' guards, Pandora's Boxes, shrines' spells) in radius 10"
+arcana.haste,Haste,academy,2,9,air,,,buff speed 3 initiative% 50 rounds 3,"an own stack +3 speed and +50 % initiative, 3 rounds"
+arcana.frost-ring,Frost Ring,academy,2,10,water,ice,,,40 damage to every stack in the ring of cells around a centre cell (not the centre)
+arcana.mirror-image,Mirror Image,academy,2,10,water,,,,a copy of an own stack fights for 2 rounds; it deals full damage and vanishes when hit
+arcana.unravel,Unravel,academy,2,8,water,,,,removes the own spells from an enemy stack
+arcana.teleport,Teleport,academy,2,9,water,,,,moves an own stack to a free cell within 10
+arcana.frost-bolt,Frost Bolt,academy,3,16,water,ice,,damage 90 speed -2 rounds 2,"90 damage to an enemy stack, −2 speed, 2 rounds"
+arcana.bind-elemental,Bind Elemental,academy,3,18,bound,summon,,,"a stack of Conflux air, earth, fire or water elementals (the caster's choice) for the battle, 200 health worth"
+arcana.anti-magic,Anti-Magic,academy,3,15,earth,,,,"an own stack is immune to every spell of level 1–3 (also the own), 3 rounds"
+arcana.clockwork,Clockwork Precision,academy,3,14,fire,,,,"own war machines +50 % damage and act twice, 2 rounds"
+arcana.dispel,Dispel,academy,4,25,water,,,,removes every spell from one stack
+arcana.stasis,Stasis,academy,4,25,earth,,,,"an enemy stack is taken out of time: it cannot act or be harmed, 2 rounds"
+arcana.town-portal,Town Portal,academy,4,25,earth,,yes,,the hero returns to the nearest own town
+death.curse,Curse,necropolis,1,5,fire,curse,,curse roll min rounds 3,"an enemy stack deals minimum damage, 3 rounds"
+death.weakness,Weakness,necropolis,1,5,water,curse,,curse attack -3 rounds 3,"an enemy stack −3 Attack, 3 rounds"
+death.grave-chill,Grave Chill,necropolis,1,5,water,,,curse initiative% -20 speed -1 rounds 3 living,"an enemy stack −20 % initiative and −1 speed, 3 rounds; living only"
+death.unholy-vigour,Unholy Vigour,necropolis,1,5,earth,,,buff attack 2 defense 2 rounds 3 undead,"an own undead stack +2 Attack and Defense, 3 rounds"
+death.grave-whisper,Grave Whisper,necropolis,1,5,air,,yes,,marks the dead of the last battles in radius 10: the hero's next battle there raises +10 % with Necromancy
+death.drain-life,Drain Life,necropolis,2,9,water,,,,50 damage to a living enemy stack; an own stack (the caster's choice) heals half of it
+death.animate-dead,Animate Dead,necropolis,2,9,earth,,,,revives 60 health of an own undead stack's dead (they stay)
+death.death-cloud,Death Cloud,necropolis,2,10,air,poison,,damage 30 area 3 living,30 damage to every living stack in a 3 × 3 area (own too)
+death.sorrow,Sorrow,necropolis,2,9,earth,mind;curse,,curse morale -2 luck -1 rounds 3,"an enemy stack −2 morale and −1 luck, 3 rounds"
+death.ledger-of-ages,Ledger of Ages,necropolis,2,10,air,,yes,,shows the next week's event and the armies of the enemy heroes in sight
+death.raise-dead,Raise Dead,necropolis,3,16,earth,,,,"after the battle, skeletons worth 15 % of the slain enemies' health join the army (on top of Necromancy)"
+death.death-ripple,Death Ripple,necropolis,3,16,earth,,,damage 30 all living,every living stack on the battlefield takes 30 (own too)
+death.call-the-debt,Call the Debt,necropolis,3,18,fire,curse,,,an enemy stack takes 50 % of the damage it has dealt this battle
+death.bone-wall,Bone Wall,necropolis,3,15,earth,,,,"a line of 5 cells of bone, 3 rounds: blocks movement and shots; own undead walk through it"
+death.plague,Plague,necropolis,4,25,water,poison,,,"an enemy stack loses 5 % of its creatures each round, 3 rounds; living only"
+death.vampirism,Vampirism,necropolis,4,25,water,,,,"an own stack heals 30 % of the damage it deals and can revive its dead, 3 rounds"
+death.final-reckoning,Final Reckoning,necropolis,4,30,earth,,,,every living stack loses 10 % of its creatures (own too; at least 1)
+chaos.fireball,Fireball,inferno,1,6,fire,fire,,damage 35 area 3,35 damage to every stack in a 3 × 3 area
+chaos.bloodlust,Bloodlust,inferno,1,5,fire,,,buff melee% 30 rounds 3,"an own stack +30 % melee damage, 3 rounds"
+chaos.brand,Brand,inferno,1,5,fire,fire;curse,,curse taken% 20 rounds 3,"an enemy stack takes +20 % damage from every attack, 3 rounds"
+chaos.firebolt,Firebolt,inferno,1,5,fire,fire,,damage 45,45 damage to an enemy stack
+chaos.ashwalk,Ashwalk,inferno,1,5,fire,,yes,,"until the end of the day the hero's army moves on lava, wasteland and cursed lands as native terrain"
+chaos.terror,Terror,inferno,2,9,air,mind,,,"an enemy stack flees: it cannot attack, 2 rounds, and retaliates at half"
+chaos.frenzy,Frenzy,inferno,2,9,fire,mind,,,"an enemy stack attacks the nearest stack, friend or foe, on its next turn"
+chaos.fire-wall,Fire Wall,inferno,2,10,fire,fire,,,"a line of 5 burning cells, 3 rounds; a stack entering or starting in it takes 30"
+chaos.hellgate,Hellgate,inferno,2,10,fire,summon,,,"Inferno Imps for the battle, 80 health worth"
+chaos.blood-price,Blood Price,inferno,2,0,fire,,,,an own stack loses 10 % of its creatures (at least 1); the hero gains mana equal to the health lost / 5
+chaos.inferno,Inferno,inferno,3,16,fire,fire,,,"100 damage to a stack, burning 15 a round, 3 rounds"
+chaos.meteor-shower,Meteor Shower,inferno,3,18,earth,,,damage 70 area 3,70 damage to every stack in a 3 × 3 area
+chaos.pact-of-ash,Pact of Ash,inferno,3,15,fire,,,,"an own stack +5 Attack and +2 speed; it loses 10 % of its creatures at the end of each round, 3 rounds"
+chaos.summon-demons,Summon Demons,inferno,3,18,fire,summon,,,"a stack of Inferno Horned Demons for the battle, 250 health worth"
+chaos.hellfire,Hellfire,inferno,4,25,fire,fire,,,160 damage to every stack in a column of the battlefield
+chaos.ashfall,Ashfall,inferno,4,30,fire,fire,,damage 120 all,every stack on the battlefield takes 120 (Armageddon)
+chaos.harvest,Harvest,inferno,4,25,earth,,,,an enemy stack below 25 % of its starting health is destroyed; else 100 damage
+shadow.blind,Blind,dungeon,1,5,fire,blind;mind,,,"an enemy stack cannot see: it does not act until hit or 2 rounds pass, retaliates at half"
+shadow.shroud,Shroud,dungeon,1,5,air,,,,"an own stack takes −50 % ranged damage and cannot be targeted by spells of level 1, 3 rounds"
+shadow.forgetfulness,Forgetfulness,dungeon,1,5,water,mind,,,"an enemy shooting stack forgets how to shoot (melee only), 3 rounds"
+shadow.shadow-dart,Shadow Dart,dungeon,1,5,air,,,damage 30,"30 damage to an enemy stack, ignores Defense"
+shadow.veil,Veil,dungeon,1,5,air,,yes,,"the hero's army shows only as ""a few"", ""many"" … to other players, a week"
+shadow.shadow-step,Shadow Step,dungeon,2,9,air,,,,moves an own stack to a free cell in shadow (not next to an enemy)
+shadow.confusion,Confusion,dungeon,2,9,water,mind,,,"an enemy stack moves and attacks at random, 1 round"
+shadow.darkness,Darkness,dungeon,2,10,earth,,,,"a 5 × 5 area: shots into or out of it are halved, 3 rounds"
+shadow.night-terrors,Night Terrors,dungeon,2,9,fire,mind,,,"an enemy stack −2 morale and loses retaliation, 2 rounds"
+shadow.eavesdrop,Eavesdrop,dungeon,2,8,air,,yes,,"shows the town screen (buildings, garrison, the hero inside) of an enemy town in sight"
+shadow.despair,Despair,dungeon,3,16,earth,mind,,curse morale -2 rounds battle,an enemy stack −2 morale for the battle
+shadow.hypnotize,Hypnotize,dungeon,3,18,air,mind,,,the caster controls an enemy stack of up to 300 health for its next turn
+shadow.eclipse,Eclipse,dungeon,3,16,air,,,curse initiative% -20 luck -1 rounds 2 enemies,"every enemy stack −20 % initiative and −1 luck, 2 rounds"
+shadow.unseen,Unseen,dungeon,3,15,air,,,,"an own stack cannot be targeted by attacks or spells until it acts, 2 rounds"
+shadow.dark-bolt,Dark Bolt,dungeon,4,25,earth,,,damage 140,"140 damage, ignores Defense"
+shadow.puppet-master,Puppet Master,dungeon,4,30,air,mind,,,an enemy stack fights for the caster for 2 rounds (not against its own hero's stacks once it would die)
+shadow.dimension-door,Dimension Door,dungeon,4,25,air,,yes,,"the hero moves up to 6 cells in a straight line to an explored tile, ignoring terrain and objects; once a day"

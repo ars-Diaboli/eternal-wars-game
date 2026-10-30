@@ -127,6 +127,7 @@ public sealed record BattleObstacle(int Id, CellPosition Position, ObstacleClass
 /// <param name="IsComputer">Commanded by the battle AI (neutrals, computer players, quick combat).</param>
 /// <param name="Bonuses">Hero skill and preferred-creature bonuses (none for guards).</param>
 /// <param name="ArmyMorale">Morale the whole army gets from its make-up and where it fights: mixed factions, a town's Brotherhood (ADR-075).</param>
+/// <param name="Caster">The hero's spell book, Spell Power and mana (ADR-110); null for a side whose hero has no book, or no hero.</param>
 public sealed record BattleParticipant(
     BattleSide Side,
     PlayerId? Owner,
@@ -137,23 +138,52 @@ public sealed record BattleParticipant(
     Heroes.SkillLevel Tactics,
     bool IsComputer,
     HeroBattleBonuses? Bonuses = null,
-    int ArmyMorale = 0)
+    int ArmyMorale = 0,
+    BattleCaster? Caster = null)
 {
     public HeroBattleBonuses Bonus => Bonuses ?? HeroBattleBonuses.None;
+}
+
+/// <summary>A spell the side's hero knows, at its rank, with what it costs this hero (attunement taken off, ADR-063).</summary>
+public sealed record KnownSpell(Magic.SpellDefinition Spell, int Rank, int Cost);
+
+/// <summary>
+/// What a hero brings to cast in battle (ADR-110), copied when the battle starts: Spell Power, level (spell specialties grow with it), the
+/// spells of its book, its specialty spell and its mana.
+/// </summary>
+public sealed record BattleCaster(int SpellPower, int Level, IReadOnlyList<KnownSpell> Spells, string? Specialty, int Mana)
+{
+    public KnownSpell? Find(string spell) => Spells.FirstOrDefault(s => s.Spell.Id == spell);
+
+    public static BattleCaster? For(Heroes.Hero hero, Magic.SpellCatalog spells)
+    {
+        if (!hero.HasSpellBook)
+        {
+            return null;
+        }
+
+        var known = hero.Spells
+            .Where(s => spells.Contains(s.Key))
+            .Select(s => spells.Get(s.Key))
+            .Select(s => new KnownSpell(s, hero.Spells[s.Id], Heroes.ManaRules.SpellCost(hero, s.Mana)))
+            .ToList();
+        var specialty = hero.Specialty is { Kind: Heroes.SpecialtyKind.Spell } special ? special.Target : null;
+        return new BattleCaster(hero.TotalSpellPower, hero.Level, known, specialty, hero.Mana);
+    }
 }
 
 /// <summary>
 /// What a hero adds to its side in battle (ADR-048): skill percentages (Melee, Archery, Armor), War Tempo speed, and the flat
 /// bonus of its preferred creature line (<see cref="Heroes.SkillEffects"/>), its morale and luck (ADR-053), and its war
 /// machine skills (ADR-056), Alertness' initiative (flat, ADR-069), Marksmanship and the Primal Fury skills (ADR-067).
-/// <see cref="EnemySpellPowerPenalty"/> and <see cref="EnemySpellCostPenalty"/> (Interference) wait for casting (Phase 5).
+/// <see cref="EnemySpellPowerPenalty"/> and <see cref="EnemySpellCostPenalty"/> (Interference) weaken the enemy hero's spells, and Spell resistance cuts hostile spells' damage and duration (ADR-110).
 /// </summary>
 public sealed record HeroBattleBonuses(
     int MeleePercent, int RangedPercent, int DamageTakenReductionPercent, int SpeedBonus, IReadOnlySet<string> Preferred, int Morale = 0, int Luck = 0,
     Heroes.SkillLevel Ballistics = Heroes.SkillLevel.None, Heroes.SkillLevel Healing = Heroes.SkillLevel.None,
     Heroes.SkillLevel AmmoSupply = Heroes.SkillLevel.None, int RangedDamageTakenReductionPercent = 0,
     int Initiative = 0, Heroes.SkillLevel BloodRage = Heroes.SkillLevel.None, Heroes.SkillLevel Warcry = Heroes.SkillLevel.None,
-    int EnemySpellPowerPenalty = 0, int EnemySpellCostPenalty = 0, int MarksmanshipEighths = 0)
+    int EnemySpellPowerPenalty = 0, int EnemySpellCostPenalty = 0, int MarksmanshipEighths = 0, int SpellResistancePercent = 0)
 {
     public static HeroBattleBonuses None { get; } = new(0, 0, 0, 0, new HashSet<string>());
 
@@ -189,7 +219,8 @@ public sealed record HeroBattleBonuses(
             hero.SkillLevelOf(Heroes.BuiltInSkills.Warcry),
             PrimalFury.SpellPowerPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
             PrimalFury.SpellCostPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
-            Heroes.SkillEffects.MarksmanshipEighths(hero.SkillLevelOf(Heroes.BuiltInSkills.Marksmanship)));
+            Heroes.SkillEffects.MarksmanshipEighths(hero.SkillLevelOf(Heroes.BuiltInSkills.Marksmanship)),
+            Heroes.SkillEffects.SpellResistancePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.SpellResistance)));
     }
 }
 

@@ -36,6 +36,12 @@ internal static class BattleAi
             }
         }
 
+        // A hero with a spell book casts the damage spell worth most, once a round (ADR-110); the unit still acts, unless the spell ended it.
+        Cast(battle, engine, unit.Side);
+        if (battle.ActiveUnit != unit)
+        {
+            return;
+        }
         if (BattleGrid.CanShootNow(battle, unit))
         {
             var shot = enemies
@@ -77,6 +83,58 @@ internal static class BattleAi
         return (long)damage * target.Creature.Value / target.Creature.Health;
     }
 
+    /// <summary>
+    /// The damage spell and aim worth most: the creature value of the hit points it takes off enemy stacks, less that of own stacks it hits.
+    /// Nothing is cast when no aim is worth anything.
+    /// </summary>
+    private static void Cast(BattleState battle, BattleEngine engine, BattleSide side)
+    {
+        if (battle.Participant(side).Caster is not { } caster || battle.HasCastThisRound(side))
+        {
+            return;
+        }
+
+        (long Value, string? Spell, int? Target, CellPosition? Cell) best = (0, null, null, null);
+        foreach (var known in caster.Spells.Where(s => s.Spell.Effect is { Kind: Magic.SpellEffectKind.Damage }).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
+        {
+            if (battle.ManaOf(side) < BattleMagic.Cost(battle, side, known))
+            {
+                continue;
+            }
+
+            foreach (var (target, cell) in Aims(battle, side, known.Spell.Effect!))
+            {
+                if (BattleMagic.CastRefusal(battle, side, known.Spell.Id, target, cell) is not null)
+                {
+                    continue;
+                }
+
+                var value = BattleMagic.Reach(battle, side, known.Spell.Effect!, target, cell)
+                    .Where(u => BattleMagic.Affects(battle, side, known, u))
+                    .Sum(u => (u.Side == side ? -1 : 1) * Worth(u, BattleMagic.Damage(battle, side, known, u)));
+                if (value > best.Value)
+                {
+                    best = (value, known.Spell.Id, target, cell);
+                }
+            }
+        }
+
+        if (best.Spell is { } spell)
+        {
+            engine.Cast(side, spell, best.Target, best.Cell);
+        }
+    }
+
+    /// <summary>Where a spell may be aimed: each enemy stack, the centre of each enemy stack for an area, or nowhere for a side or the field.</summary>
+    private static IEnumerable<(int? Target, CellPosition? Cell)> Aims(BattleState battle, BattleSide side, Magic.SpellEffect effect) => effect.Reach switch
+    {
+        Magic.SpellReach.Stack => battle.LivingUnitsOf(side.Opponent()).OrderBy(u => u.Id).Select(u => ((int?)u.Id, (CellPosition?)null)),
+        Magic.SpellReach.Area => battle.LivingUnitsOf(side.Opponent()).OrderBy(u => u.Id)
+            .Select(u => ((int?)null, (CellPosition?)new CellPosition(u.Position.X + (u.Width / 2), u.Position.Y + (u.Height / 2)))),
+        _ => [(null, null)],
+    };
+
+    private static long Worth(BattleUnit unit, int damage) => (long)Math.Min(damage, unit.TotalHealth) * unit.Creature.Value / unit.Creature.Health;
     /// <summary>The reachable placement closest to the nearest enemy, if it is closer than standing still.</summary>
     private static CellPosition? Advance(BattleState battle, BattleUnit unit, List<BattleUnit> enemies)
     {

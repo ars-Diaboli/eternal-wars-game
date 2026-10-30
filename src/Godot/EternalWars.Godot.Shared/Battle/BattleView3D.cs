@@ -174,6 +174,11 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitHealed>(events, OnHealed);
         this.SubscribeWhileInTree<SiegeStructureShot>(events, OnStructureShot);
         this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(events, OnSiegeDamaged);
+        this.SubscribeWhileInTree<BattleSpellCast>(events, e => Step(null, () => Narrate($"{SideName(e.Side)} casts {SpellName(e.Spell)} ({e.Cost} mana, {e.Mana} left).")));
+        this.SubscribeWhileInTree<BattleUnitSpellDamaged>(events, OnSpellDamaged);
+        this.SubscribeWhileInTree<BattleSpellApplied>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} until round {e.UntilRound}.")));
+        this.SubscribeWhileInTree<BattleSpellResisted>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} is untouched by {SpellName(e.Spell)}.")));
+        this.SubscribeWhileInTree<BattleSpellExpired>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} wears off.")));
         this.SubscribeWhileInTree<BattleRageGained>(events, e => Step(null, () => Narrate($"Blood Rage: {NameOf(e.Unit)} has +{e.Attack} Attack.")));
         this.SubscribeWhileInTree<BattleWarcryUsed>(events, e => Step(null, () => Narrate(WarcryLine(e))));
         this.SubscribeWhileInTree<BattleUnitTerrified>(events, e => Step(null, () => Narrate($"Terror: {NameOf(e.Unit)} loses its action.")));
@@ -526,6 +531,34 @@ public partial class BattleView3D : Node3D
             });
     }
 
+    /// <summary>A spell's damage to a stack (ADR-110): the stack flashes and shows its losses.</summary>
+    private void OnSpellDamaged(BattleUnitSpellDamaged e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var target))
+        {
+            return;
+        }
+
+        var to = BattleSpace.Center(_planned[e.Unit]);
+        Step(
+            t =>
+            {
+                var text = FloatingText($"-{e.Killed}", to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
+                t.TweenCallback(Callable.From(() => text.Visible = true));
+                t.TweenProperty(target.BodyMaterial, "albedo_color", HitColor, 0.08f);
+                t.Parallel().TweenProperty(text, "position", text.Position + (Vector3.Up * 0.6f), 0.45f);
+                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.45f);
+                t.Parallel().TweenProperty(target.BodyMaterial, "albedo_color", target.BaseColor, 0.15f).SetDelay(0.08f);
+                t.TweenCallback(Callable.From(text.QueueFree));
+            },
+            () =>
+            {
+                target.SetCount(e.RemainingCount);
+                Narrate($"{SpellName(e.Spell)} hits {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.");
+            });
+    }
+
+    private string SpellName(string spell) => _session.State.Spells.TryGet(spell, out var definition) ? definition.Name : spell;
     private static string StructureName(SiegeStructureKind kind) => kind switch
     {
         SiegeStructureKind.Wall => "wall section",

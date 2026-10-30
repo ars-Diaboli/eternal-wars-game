@@ -86,6 +86,16 @@ public sealed class BattleUnit
     /// <summary>Terror (ADR-067): the unit's next action is lost.</summary>
     public bool LosesNextAction { get; internal set; }
 
+    /// <summary>Buffs and curses on the stack (ADR-110), oldest first; a spell cast again replaces its earlier effect.</summary>
+    public IReadOnlyList<ActiveSpell> Spells => MutableSpells;
+
+    internal List<ActiveSpell> MutableSpells { get; private init; } = [];
+
+    /// <summary>What the stack's spells change, all added up.</summary>
+    public Magic.SpellModifiers SpellModifiers => MutableSpells.Count == 0
+        ? Magic.SpellModifiers.None
+        : MutableSpells.Aggregate(Magic.SpellModifiers.None, (total, s) => total + s.Modifiers);
+
     public override string ToString() => $"#{Id} {Count}× {Creature.Name} ({Side}) at {Position}";
 
     /// <summary>The unit as it is now, for a battle copy (<see cref="BattleState.Copy"/>).</summary>
@@ -101,8 +111,12 @@ public sealed class BattleUnit
         RoundMorale = RoundMorale,
         RageAttack = RageAttack,
         LosesNextAction = LosesNextAction,
+        MutableSpells = [.. MutableSpells],
     };
 }
+
+/// <summary>A buff or curse on a stack (ADR-110): what it changes, until the end of round <c>UntilRound</c>.</summary>
+public sealed record ActiveSpell(string Spell, BattleSide Caster, Magic.SpellModifiers Modifiers, int UntilRound);
 
 /// <summary>
 /// A battle in progress or just finished (the current one is <c>GameState.Battle</c>). Its random generator
@@ -141,7 +155,25 @@ public sealed class BattleState
         IsAmbush = isAmbush;
         Random = random;
         NativeTowns = nativeTowns ?? [];
+        foreach (var participant in new[] { attacker, defender })
+        {
+            if (participant.Caster is { } caster)
+            {
+                ManaLeft[participant.Side] = caster.Mana;
+            }
+        }
     }
+
+    /// <summary>The mana a side's hero has left (ADR-110); written back to the hero when the battle ends.</summary>
+    internal Dictionary<BattleSide, int> ManaLeft { get; } = [];
+
+    /// <summary>The round a side's hero last cast in; it casts at most once a round (ADR-071, MAG-4).</summary>
+    internal Dictionary<BattleSide, int> CastRounds { get; } = [];
+
+    public int ManaOf(BattleSide side) => ManaLeft.GetValueOrDefault(side);
+
+    /// <summary>Whether the side's hero already cast this round.</summary>
+    public bool HasCastThisRound(BattleSide side) => CastRounds.TryGetValue(side, out var round) && round == Round;
 
     /// <summary>Native terrain (ADR-068): a creature of a town native to the battlefield's terrain gets +1 Attack, Defense and Speed.</summary>
     public const int NativeAttack = 1;
@@ -278,6 +310,16 @@ public sealed class BattleState
             copy.WarcryRounds[side] = round;
         }
 
+        foreach (var (side, mana) in ManaLeft)
+        {
+            copy.ManaLeft[side] = mana;
+        }
+
+        foreach (var (side, round) in CastRounds)
+        {
+            copy.CastRounds[side] = round;
+        }
+
         return copy;
     }
 
@@ -290,8 +332,16 @@ public sealed class BattleState
         }
 
         var bonus = Participant(unit.Side).Bonus;
-        return unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0)
-               + (IsNative(unit) ? NativeSpeed : 0);
+        var speed = unit.Creature.Speed + bonus.SpeedBonus + (bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredSpeed : 0)
+                    + (IsNative(unit) ? NativeSpeed : 0);
+        if (unit.Spells.Count == 0)
+        {
+            return speed;
+        }
+
+        // Spells (ADR-110): flat first, then percent, at least 1.
+        var spells = unit.SpellModifiers;
+        return Math.Max(1, (speed + spells.Speed) * (100 + spells.SpeedPercent) / 100);
     }
 
     /// <summary>Warcry effects still running, from <see cref="Round"/> on (ADR-067).</summary>
@@ -322,13 +372,13 @@ public sealed class BattleState
     private IEnumerable<BattleSideEffect> ActiveEffects(BattleSide side) => SideEffects.Where(e => e.Side == side && e.UntilRound >= Round);
 
     /// <summary>
-    /// Creature morale plus the hero's, the army's (ADR-075) and warcries', within ±5 (ADR-053, ADR-067); war machines, undead,
+    /// Creature morale plus the hero's, the army's (ADR-075), warcries' and spells', within ±5 (ADR-053, ADR-067); war machines, undead,
     /// constructs and elementals have none (ADR-071).
     /// </summary>
     public int MoraleOf(BattleUnit unit) => unit.IsMachine || !MoraleAndLuck.HasMorale(unit.Creature)
         ? 0
         : MoraleAndLuck.Clamp(unit.Creature.Morale + Participant(unit.Side).Bonus.Morale + Participant(unit.Side).ArmyMorale
-                              + ActiveEffects(unit.Side).Sum(e => e.Morale));
+                              + ActiveEffects(unit.Side).Sum(e => e.Morale) + unit.SpellModifiers.Morale);
 
     /// <summary>Living creature stacks of a side; war machines do not keep a side in the battle (ADR-056).</summary>
     public IEnumerable<BattleUnit> LivingArmyOf(BattleSide side) => LivingUnitsOf(side).Where(u => !u.IsMachine);
@@ -341,17 +391,17 @@ public sealed class BattleState
         unit.IsMachine ||
         (WarMachines.CartShotBonusPercent(Participant(unit.Side).Bonus.AmmoSupply) is null && LivingMachine(unit.Side, WarMachineKind.AmmoCart) is not null);
 
-    /// <summary>Creature luck plus the hero's, within ±5 (ADR-053).</summary>
-    public int LuckOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Luck + Participant(unit.Side).Bonus.Luck);
+    /// <summary>Creature luck plus the hero's and spells', within ±5 (ADR-053, ADR-110).</summary>
+    public int LuckOf(BattleUnit unit) => MoraleAndLuck.Clamp(unit.Creature.Luck + Participant(unit.Side).Bonus.Luck + unit.SpellModifiers.Luck);
 
     /// <summary>
-    /// Initiative for this round's order: the creature's plus the hero's Alertness (flat, ADR-069), changed by warcries (percent), then by
+    /// Initiative for this round's order: the creature's plus the hero's Alertness (flat, ADR-069), changed by warcries and spells (percent), then by
     /// morale's Haste or Slow (ADR-053, ADR-067).
     /// </summary>
     public int InitiativeOf(BattleUnit unit)
     {
         var flat = unit.Creature.Initiative + (unit.IsMachine ? 0 : Participant(unit.Side).Bonus.Initiative);
-        var percent = unit.IsMachine ? 0 : ActiveEffects(unit.Side).Sum(e => e.InitiativePercent);
+        var percent = unit.IsMachine ? 0 : ActiveEffects(unit.Side).Sum(e => e.InitiativePercent) + unit.SpellModifiers.InitiativePercent;
         // Rounded to the nearest whole point (halves up), so a +5 % change counts from an initiative of 10.
         var initiative = percent == 0 ? flat : Math.Max(1, ((flat * (100 + percent)) + 50) / 100);
         return MoraleAndLuck.Initiative(initiative, unit.RoundMorale);

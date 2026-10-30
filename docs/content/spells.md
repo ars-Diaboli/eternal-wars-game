@@ -1,11 +1,14 @@
 # Spells
 
-The spell catalog for magic (Phase 5): six schools, four spell levels, three ranks per spell. **No spells or casting
-yet** (roadmap, "Magic"); mana is in (`ManaRules`, ADR-063). This is the content the spell table `data/spells.csv` will
-start from. Rules: ADR-047 (structure), ADR-048 (skills), ADR-055 (Spell Power and Knowledge), ADR-042 (creature casters,
+The spell catalog for magic (Phase 5): six schools, four spell levels, three ranks per spell. **The first slice is built**
+(ADR-110: spell books, guilds, rank I casting in battle); mana is in (`ManaRules`, ADR-063). This is the content of the spell table
+`data/spells.csv`. Rules: ADR-047 (structure), ADR-048 (skills), ADR-055 (Spell Power and Knowledge), ADR-042 (creature casters,
 immunities), ADR-063 (six schools, mana, faction groups), ADR-070 and ADR-071 (casting in battle, spell books, guilds, Spell Power, levels of
 Town Portal and Dimension Door), ADR-072 (Spell Power formula, ranks). Lore: [lore.md](lore.md). Skills that drive magic:
 [skills.md](skills.md#magic-schools).
+
+**Data (ADR-110)**: the list is `src/Core/data/spells.csv`, generated from the tables below for now; its `battle` column holds the
+rank I effect of the 37 spells castable in battle so far (grammar in `SpellEffect.Parse`).
 
 **Re-draft (ADR-099, MAG-1, 2026-10-29)**: the list is re-drafted to fit the lore, with the HoMM3, HoMM4, HoMM5 and Olden Era spell books as
 reference: **17 spells a school, 102 in all** (5 / 5 / 4 / 3 by level, adventure spells included), so a guild draws a selection and two towns
@@ -19,7 +22,7 @@ town creatures (and Conflux elementals).
 - **Schools**: six, one per ring town (Light, Nature, Arcana, Death, Chaos, Shadow; `BuiltInSkills.Schools`). Stronghold
   and Swamp Bestiary have the faction group Primal Fury instead (ADR-063, ADR-069): warcries, no spells ([below](#stronghold-and-swamp-bestiary)).
   Any hero may learn any school (the arch-rival's school is rarely offered, ADR-048, ADR-072).
-- **Spell books** (ADR-071, MAG-2; not built): mage heroes start with one; warriors buy one in a mage guild for **500 gold**.
+- **Spell books** (ADR-071, MAG-2; built, ADR-110): mage heroes of magic towns start with one, holding their specialty spell; warriors buy one in a mage guild for **500 gold**.
 - **Levels**: spells have levels 1–4. The school's **magic** skill unlocks them (Basic → level 1, Advanced → 2, Expert → 3, Master → 4): a
   hero learns a spell when that skill is at least the spell's level (ADR-071). The **mage guild** of the same level offers spells of that
   level, of the town's own school: **3** at levels 1 and 2, **2** at levels 3 and 4; two more town buildings add spells from the two schools
@@ -38,7 +41,7 @@ town creatures (and Conflux elementals).
   what a spell does, not just its strength.
 - **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement plus 10 × ⌈level / 10⌉; at the start of the owner's
   turn a hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (the same at every rank) minus attunement, never
-  less than **25 %** of the base, rounded up. A hero in a town with a mage guild refills its mana (ADR-071; not built).
+  less than **25 %** of the base, rounded up. A hero that spends the night in a town with a mage guild refills its mana (ADR-071; built, ADR-110).
 - **Strength** (ADR-072): **Spell Power** (SP) multiplies every damage, healing and summoned amount by **(1 + SP / 10)** and every duration
   by **(1 + SP / 10)**, rounded down, at least 1 round. The tables give the **base** numbers (at SP 0); "a + b·SP" is gone. A spell specialty
   adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once

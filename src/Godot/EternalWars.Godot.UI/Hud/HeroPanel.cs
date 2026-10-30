@@ -95,6 +95,9 @@ public partial class HeroPanel : PanelContainer
         this.SubscribeWhileInTree<HeroLeveledUp>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroExperienceGained>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroManaRestored>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroManaSpent>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<SpellsLearned>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<PandorasBoxOpened>(session.Events, _ => Refresh()); // stats and skills
         this.SubscribeWhileInTree<HeroMovementRestored>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
@@ -180,8 +183,12 @@ public partial class HeroPanel : PanelContainer
             $"Attack {WithBonus(hero.Attack, bonus.Attack)}   Defense {WithBonus(hero.Defense, bonus.Defense)}   Spell Power {WithBonus(hero.SpellPower, bonus.SpellPower)}   Knowledge {WithBonus(hero.Knowledge, bonus.Knowledge)}",
             $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {hero.Mana}/{hero.MaxMana}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}",
             $"Experience {hero.Experience}/{next}" + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : "") + $"   Scouting {hero.ScoutingRadius}",
-            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe()}");
+            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe()}",
+            !hero.HasSpellBook ? "No spell book." : hero.Spells.Count == 0 ? "Spell book: empty." : $"Spells: {string.Join(", ", hero.Spells.Keys.Select(SpellName))}");
     }
+
+    private static string SpellName(string spell) =>
+        EternalWars.Core.Domain.Magic.SpellCatalog.Default.TryGet(spell, out var definition) ? definition.Name : spell;
 
     private static string SpecialtyText(HeroSpecialty specialty) => specialty.Kind switch
     {
