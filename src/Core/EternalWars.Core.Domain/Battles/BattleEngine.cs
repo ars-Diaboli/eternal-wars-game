@@ -274,7 +274,10 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <summary>One hit plus, for a melee strike, the attacker's area ability with the same roll.</summary>
     private void Strike(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int penalty = 0)
     {
-        var roll = battle.Random.NextInclusive(attacker.Creature.MinDamage, attacker.Creature.MaxDamage);
+        // Bless and Curse fix the roll (ADR-110); nothing is drawn then.
+        var roll = attacker.SpellModifiers.Roll != 0
+            ? DamageCalculator.Roll(attacker, 0)
+            : battle.Random.NextInclusive(attacker.Creature.MinDamage, attacker.Creature.MaxDamage);
         var secondary = kind == BattleAttackKind.Melee ? AreaTargets(attacker, target) : [];
         var hit = new HitModifiers(roll, kind is BattleAttackKind.Ranged or BattleAttackKind.RangedRetaliation, penalty);
 
@@ -349,6 +352,77 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         battle.WarcryRounds[side] = battle.Round;
         events.Publish(new BattleWarcryUsed(side, warcry, affected));
         return null;
+    }
+
+    /// <summary>
+    /// The side's hero casts a spell (ADR-110): it pays the mana, then the spell works on every stack in its reach it affects, by id; a stack it
+    /// does not affect is reported as resisting. The active unit keeps its action, unless the spell killed it.
+    /// </summary>
+    public string? Cast(BattleSide side, string spellId, int? targetId, CellPosition? cell)
+    {
+        if (BattleMagic.CastRefusal(battle, side, spellId, targetId, cell) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var known = battle.Participant(side).Caster!.Find(spellId)!;
+        var effect = known.Spell.Effect!;
+        var cost = BattleMagic.Cost(battle, side, known);
+        battle.ManaLeft[side] -= cost;
+        battle.CastRounds[side] = battle.Round;
+        events.Publish(new BattleSpellCast(side, spellId, targetId, cell, cost, battle.ManaOf(side)));
+
+        foreach (var unit in BattleMagic.Reach(battle, side, effect, targetId, cell))
+        {
+            if (!BattleMagic.Affects(battle, side, known, unit))
+            {
+                events.Publish(new BattleSpellResisted(unit.Id, spellId));
+                continue;
+            }
+
+            switch (effect.Kind)
+            {
+                case Magic.SpellEffectKind.Damage:
+                    var damage = BattleMagic.Damage(battle, side, known, unit);
+                    var killed = Wound(unit, damage);
+                    events.Publish(new BattleUnitSpellDamaged(unit.Id, spellId, damage, killed, unit.Count));
+                    Bury(unit);
+                    if (unit.IsAlive && !effect.Modifiers.IsEmpty)
+                    {
+                        Enchant(unit, side, known);
+                    }
+
+                    break;
+                case Magic.SpellEffectKind.Heal:
+                    var healed = Math.Min(BattleMagic.Amount(battle, side, known), unit.Creature.Health - unit.TopHealth);
+                    if (healed > 0)
+                    {
+                        unit.TopHealth += healed;
+                        events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
+                    }
+
+                    break;
+                default:
+                    Enchant(unit, side, known);
+                    break;
+            }
+        }
+
+        if (!CheckFinished() && battle.ActiveUnit is { IsAlive: false })
+        {
+            EndTurn(moraleMayAct: false);
+        }
+
+        return null;
+    }
+
+    /// <summary>A buff or curse takes hold on the stack, replacing the same spell's earlier effect.</summary>
+    private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known)
+    {
+        var until = BattleMagic.UntilRound(battle, side, known, unit);
+        unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id);
+        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, known.Spell.Effect!.Modifiers, until));
+        events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until));
     }
 
     /// <summary>+1 good luck, −1 bad luck, 0 nothing; rolls only for a unit with luck.</summary>
@@ -547,6 +621,15 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         battle.Round++;
         battle.WaitedThisRound.Clear();
         battle.TieRolls.Clear();
+
+        // Spells that ran out go before this round's morale and order are decided (ADR-110).
+        var expired = new List<(int Unit, string Spell)>();
+        foreach (var unit in battle.LivingUnits.Where(u => u.Spells.Count > 0).OrderBy(u => u.Id))
+        {
+            expired.AddRange(unit.MutableSpells.Where(s => s.UntilRound < battle.Round).Select(s => (unit.Id, s.Spell)));
+            unit.MutableSpells.RemoveAll(s => s.UntilRound < battle.Round);
+        }
+
         foreach (var unit in battle.LivingUnits)
         {
             unit.HasRetaliated = false;
@@ -561,6 +644,11 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             .OrderBy(Key, ActingOrder.Instance)
             .Select(u => u.Id));
         events.Publish(new BattleRoundStarted(battle.Round));
+        foreach (var (unit, spell) in expired)
+        {
+            events.Publish(new BattleSpellExpired(unit, spell));
+        }
+
         Heal(BattleSide.Attacker);
         Heal(BattleSide.Defender);
         TowersFire();

@@ -71,6 +71,17 @@ public sealed class Hero(
 
     public int MaxMana => ManaRules.MaxMana(this);
 
+    private readonly SortedDictionary<string, int> _spells = new(StringComparer.Ordinal);
+
+    /// <summary>Whether the hero has a spell book (ADR-071): mages of the magic towns start with one, others buy it in a mage guild.</summary>
+    public bool HasSpellBook { get; internal set; }
+
+    /// <summary>Spells in the hero's book with their rank (1–3, ADR-072; all rank 1 until Mastery's upgrades are built).</summary>
+    public IReadOnlyDictionary<string, int> Spells => _spells;
+
+    /// <summary>Puts a spell in the book at rank 1; false when the hero already knows it.</summary>
+    internal bool Learn(string spell) => _spells.TryAdd(spell, 1);
+
     internal bool AddWarMachine(Battles.WarMachineSlot slot) => _warMachines.Add(slot);
 
     internal bool RemoveWarMachine(Battles.WarMachineSlot slot) => _warMachines.Remove(slot);
@@ -260,7 +271,10 @@ public sealed class Hero(
         return hero;
     }
 
-    /// <summary>Takes over a roster entry: identity, class, preferred creature, specialty, and its starting stats and skills.</summary>
+    /// <summary>
+    /// Takes over a roster entry: identity, class, preferred creature, specialty, and its starting stats and skills. A mage of a magic town starts
+    /// with a spell book (ADR-071; Primal Fury mages have no spells, ADR-072) holding its specialty spell, if it has one (assumed).
+    /// </summary>
     internal void Apply(HeroDefinition definition)
     {
         Definition = definition.Id;
@@ -273,6 +287,12 @@ public sealed class Hero(
         SpellPower = definition.SpellPower;
         Knowledge = definition.Knowledge;
         Skills.ReplaceWith(definition.StartingSkills);
+        HasSpellBook = definition.Class == HeroClass.Mage && !BuiltInSkills.IsPrimalFuryTown(definition.Town);
+        _spells.Clear();
+        if (HasSpellBook && definition.Specialty is { Kind: SpecialtyKind.Spell, Target: var spell })
+        {
+            Learn(spell);
+        }
     }
 
     private static HeroSkills HeroSkillsWith(SkillLevel tactics)

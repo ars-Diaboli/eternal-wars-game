@@ -47,9 +47,9 @@ public static class PrimalFury
         _ => SkillLevel.Expert,
     };
 
-    /// <summary>Interference: Spell Power the enemy hero's spells lose, 2 per level. Magic (Phase 5) reads it.</summary>
+    /// <summary>Interference: Spell Power the enemy hero's spells lose, 2 per level. <see cref="BattleMagic"/> reads it.</summary>
     public static int SpellPowerPenalty(SkillLevel level) => 2 * Math.Min(3, (int)level);
 
-    /// <summary>Interference: mana the enemy hero's spells cost more, 1 per level (ADR-072, MAG-9). Magic (Phase 5) reads it.</summary>
+    /// <summary>Interference: mana the enemy hero's spells cost more, 1 per level (ADR-072, MAG-9). <see cref="BattleMagic"/> reads it.</summary>
     public static int SpellCostPenalty(SkillLevel level) => Math.Min(3, (int)level);
 }

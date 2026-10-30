@@ -138,7 +138,7 @@ public static class BuiltInSkills
         new(Archery, "offense", "Archery", SkillLevel.Expert, "+15/25/35 % ranged damage"),
         new(Marksmanship, "offense", "Marksmanship", SkillLevel.Expert, "−2/8, −4/8, −6/8 of the ranged penalty (distance and cover)"),
         new(Armor, "defense", "Armor", SkillLevel.Master, "−5/10/15/20 % damage taken"),
-        new(SpellResistance, "defense", "Spell resistance", SkillLevel.Expert, "hostile spells −8/14/20 % damage and duration (magic, Phase 5)"),
+        new(SpellResistance, "defense", "Spell resistance", SkillLevel.Expert, "hostile spells −8/14/20 % damage and duration"),
         new(Leadership, "defense", "Leadership", SkillLevel.Expert, "+1/2/3 morale to every own stack"),
         new(Treasury, "estates", "Treasury", SkillLevel.Master, "+250/500/750/1000 gold a day; Expert and Master also 0.5/1 % of the gold on hand"),
         new(Prospecting, "estates", "Prospecting", SkillLevel.Expert, "+1 lumber and ore / +2 / +2 and one of each rare resource a day; 10/20/30 % chance of +50 % from a resource pile"),
@@ -239,6 +239,15 @@ public static class SkillEffects
     public static int MarksmanshipEighths(SkillLevel level) => 2 * Math.Min(3, (int)level);
 
     public static int DamageTakenReductionPercent(SkillLevel level) => 5 * (int)level;
+
+    /// <summary>Spell resistance: percent taken off hostile spells' damage and duration (ADR-071, MAG-6).</summary>
+    public static int SpellResistancePercent(SkillLevel level) => level switch
+    {
+        SkillLevel.Basic => 8,
+        SkillLevel.Advanced => 14,
+        >= SkillLevel.Expert => 20,
+        _ => 0,
+    };
 
     public static int TreasuryGold(SkillLevel level) => level switch
     {

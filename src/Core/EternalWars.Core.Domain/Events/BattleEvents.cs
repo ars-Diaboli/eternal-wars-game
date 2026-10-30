@@ -117,3 +117,21 @@ public sealed record BattleWarcryUsed(BattleSide Side, Warcry Warcry, IReadOnlyL
 
 /// <summary>Terror made a stack lose its action (ADR-067); its turn passed.</summary>
 public sealed record BattleUnitTerrified(int Unit) : IEvent;
+
+/// <summary>
+/// A side's hero cast a spell (ADR-110), before its effects: at a stack (<paramref name="Target"/>) or a cell (an area's centre), or at nothing
+/// for a spell that reaches a whole side or the field. <paramref name="Mana"/> is what the hero has left.
+/// </summary>
+public sealed record BattleSpellCast(BattleSide Side, string Spell, int? Target, CellPosition? Cell, int Cost, int Mana) : IEvent;
+
+/// <summary>A spell's damage to a stack (ADR-110).</summary>
+public sealed record BattleUnitSpellDamaged(int Unit, string Spell, int Damage, int Killed, int RemainingCount) : IEvent;
+
+/// <summary>A buff or curse took hold on a stack until the end of round <paramref name="UntilRound"/> (ADR-110).</summary>
+public sealed record BattleSpellApplied(int Unit, string Spell, int UntilRound) : IEvent;
+
+/// <summary>A stack in the spell's reach was not touched by it: immune, resisted, or not the kind it works on (ADR-110).</summary>
+public sealed record BattleSpellResisted(int Unit, string Spell) : IEvent;
+
+/// <summary>A buff or curse on a stack ran out as a round started (ADR-110).</summary>
+public sealed record BattleSpellExpired(int Unit, string Spell) : IEvent;

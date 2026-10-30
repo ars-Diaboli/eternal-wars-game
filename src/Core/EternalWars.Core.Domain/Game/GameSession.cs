@@ -105,6 +105,7 @@ public sealed class GameSession
         Artifacts.RollUnsetPickups();
         PrisonRules.Prepare(State);
         Interactions.PrepareObjects();
+        Magic.MagicRules.DrawGuilds(State);
         Turns.StartGame();
         Settle();
     }
@@ -168,7 +169,7 @@ public sealed class GameSession
 
     private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleDeployCommand or BattleStartCommand or BattleMoveCommand
         or BattleAttackCommand or BattleShootCommand or BattleShootStructureCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand or BattleSurrenderCommand
-        or AutoResolveBattleCommand or BattleWarcryCommand;
+        or AutoResolveBattleCommand or BattleWarcryCommand or BattleCastCommand;
 
     private string? Authorize(GameCommand command)
     {
@@ -341,6 +342,9 @@ public sealed class GameSession
             case BuyWarMachineCommand buy:
                 Towns.BuyWarMachine(buy.Player, buy.Town, buy.Slot);
                 return null;
+            case BuySpellBookCommand book:
+                Towns.BuySpellBook(book.Player, book.Town);
+                return null;
             case RespondToGuardCommand guard:
                 Guards.Respond(guard.Accept);
                 return null;
@@ -367,6 +371,9 @@ public sealed class GameSession
                 return null;
             case BattleWarcryCommand warcry:
                 Battles.UseWarcry(warcry.Player, warcry.Warcry);
+                return null;
+            case BattleCastCommand cast:
+                Battles.Cast(cast.Player, cast.Spell, cast.Target, cast.Cell);
                 return null;
             case BattleWaitCommand wait:
                 Battles.Act(wait.Player, new WaitAction());

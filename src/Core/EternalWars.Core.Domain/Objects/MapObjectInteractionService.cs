@@ -237,6 +237,7 @@ public sealed class MapObjectInteractionService(
             // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).
             case Town town when town.Owner is { } owner && !state.AreEnemies(hero.Owner, owner):
                 TownService.AutoAppoint(state, events, town, hero);
+                Magic.MagicRules.Visit(state, events, hero, town);
                 break;
 
             case Town { Garrison.IsEmpty: false } town:
@@ -245,6 +246,7 @@ public sealed class MapObjectInteractionService(
 
             case Town town:
                 TownService.Capture(state, events, town, hero.Owner);
+                Magic.MagicRules.Visit(state, events, hero, town);
                 break;
 
             case { TeleportTarget: not null }:
@@ -398,6 +400,7 @@ public sealed class MapObjectInteractionService(
             hero.Position = town.VisitPosition;
             events.Publish(new HeroTeleported(hero.Id, from, hero.Position));
             TownService.AutoAppoint(state, events, town, hero);
+            Magic.MagicRules.Visit(state, events, hero, town);
         }
 
         events.Publish(new DecisionResolved(decision));

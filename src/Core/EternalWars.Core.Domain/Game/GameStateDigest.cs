@@ -39,7 +39,8 @@ public static class GameStateDigest
             var army = Slots(hero.Army);
             // Statuses and visits (ADR-068) are written only when there are any, so older replays keep their digests.
             var statuses = hero.Statuses.Count == 0 ? "" : $" statuses {string.Join(',', hero.Statuses)}";
-            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level}{(hero.WitchHutLevel is { } hut ? $" hut {hut}" : "")} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}");
+            var book = hero.HasSpellBook ? $" book {string.Join(',', hero.Spells.Select(s => $"{s.Key}:{s.Value}"))}" : "";
+            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level}{(hero.WitchHutLevel is { } hut ? $" hut {hut}" : "")} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}{book}");
         }
 
         foreach (var hero in state.RetiredHeroes)
@@ -68,7 +69,8 @@ public static class GameStateDigest
                 CreatureDwelling dwelling => $"{dwelling.Creature} owner {dwelling.Owner?.Value} available {dwelling.Available}" + (dwelling.Guard is { } g ? $" guard {g}" : ""),
                 MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
                 Town town => $"owner {town.Owner?.Value} governor {town.Governor?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "
-                             + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}",
+                             + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}"
+                             + (town.GuildSpells.Count == 0 ? "" : $" guild {string.Join(';', town.GuildSpells.OrderBy(l => l.Key).Select(l => string.Join(',', l.Value)))}"),
                 _ => mapObject.TeleportTarget?.ToString() ?? "",
             };
             var visits = mapObject.Visits.IsSpent ? $" visits {mapObject.Visits}" : "";
@@ -90,9 +92,15 @@ public static class GameStateDigest
         if (state.Battle is { } battle)
         {
             Line($"battle {battle.Phase} width {battle.Width} round {battle.Round} active {battle.ActiveUnit?.Id}");
+            foreach (var (side, mana) in battle.ManaLeft.OrderBy(m => m.Key))
+            {
+                Line($"mana {side} {mana} cast {battle.CastRounds.GetValueOrDefault(side)}");
+            }
+
             foreach (var unit in battle.Units)
             {
-                Line($"unit {unit.Id} {unit.Side} {unit.Creature.Id} {unit.Count}/{unit.TopHealth} at {unit.Position} shots {unit.ShotsLeft}");
+                var spells = unit.Spells.Count == 0 ? "" : $" spells {string.Join(',', unit.Spells.Select(s => $"{s.Spell}:{s.UntilRound}"))}";
+                Line($"unit {unit.Id} {unit.Side} {unit.Creature.Id} {unit.Count}/{unit.TopHealth} at {unit.Position} shots {unit.ShotsLeft}{spells}");
             }
 
             foreach (var structure in battle.Siege?.Structures ?? [])

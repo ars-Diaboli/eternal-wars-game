@@ -749,6 +749,9 @@ public partial class Main : Node3D
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.Result is not null:
                 _battleHud.Continue();
                 break;
+            case InputEventKey { Pressed: true, Keycode: Key.Escape } when _battleHud.ArmedSpell is not null:
+                _battleHud.Disarm();
+                break;
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter } when _battle.Deployer is { } deployer:
                 _battleHud.Report(_session.Execute(new BattleStartCommand(deployer)));
                 break;
@@ -819,6 +822,12 @@ public partial class Main : Node3D
 
         if (_battle.Commander is not { } player || _session.State.Battle is not { } battle || _battle.PickPoint(screen) is not { } point)
         {
+            return;
+        }
+
+        if (_battleHud.TryCastAt(BattleSpace.ToCell(point)))
+        {
+            _battle.ShowIntent(null);
             return;
         }
 

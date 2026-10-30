@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
@@ -91,6 +92,40 @@ public class ReplayTests
         Assert.True(aimed > 0);
         Assert.Contains("\"type\": \"battleShootStructure\"", json);
         Assert.Contains("siege 5 Gate", GameStateDigest.Describe(session.State));
+        Assert.Equal(GameStateDigest.Describe(session.State), GameStateDigest.Describe(replayed.State));
+    }
+
+    [Fact]
+    public void ABoughtSpellBook_TheGuildsSpells_AndACast_ReplayExactly_ThroughJson()
+    {
+        var state = TestWorld.Create([.. Enumerable.Repeat("..........", 7), "...A......", "..........", ".........B"]);
+        var town = TestWorld.AddTown(state, TownIds.Haven, 0, 0, TestWorld.Blue);
+        town.SetLevel(BuiltInBuildings.MageGuild, 1);
+        state.GetHero(TestWorld.A).Skills.Set(MagicRules.MagicSkill(TownIds.Haven), SkillLevel.Basic);
+        state.GetHero(TestWorld.A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 100));
+        var monster = TestWorld.Add<MonsterGuard>(state, BuiltInMapObjects.Monster, 3, 9);
+        (monster.Creature, monster.Count, monster.Disposition) = (BuiltInCreatures.Troll, 4, GuardDisposition.Savage);
+        var map = MapConverter.ToDocument(state);
+        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 41)));
+        session.Start();
+        var blue = TestWorld.Blue;
+        var placed = session.State.ObjectsOf<Town>().Single();
+
+        session.Execute(new StepHeroCommand(blue, TestWorld.A, Direction.North)).ThrowIfRejected();
+        session.Execute(new BuySpellBookCommand(blue, placed.Id)).ThrowIfRejected();
+        session.Execute(new StepHeroCommand(blue, TestWorld.A, Direction.South)).ThrowIfRejected();
+        session.Execute(new StepHeroCommand(blue, TestWorld.A, Direction.South)).ThrowIfRejected();
+        var battle = session.State.Battle!;
+        var buff = battle.Attacker.Caster!.Spells.First(s => s.Spell.Effect is { Kind: SpellEffectKind.Buff, Reach: SpellReach.Stack, Filter: SpellFilter.None });
+        session.Execute(new BattleCastCommand(blue, buff.Spell.Id, battle.ActiveUnit!.Id)).ThrowIfRejected(); // the trolls are the AI's
+        session.Execute(new AutoResolveBattleCommand(blue)).ThrowIfRejected();
+
+        var json = GameRecordSerializer.Serialize(GameReplay.Record(map, session));
+        var replayed = GameReplay.Replay(GameRecordSerializer.Deserialize(json));
+
+        Assert.Contains("\"type\": \"buySpellBook\"", json);
+        Assert.Contains("\"type\": \"battleCast\"", json);
+        Assert.Contains(" book light.", GameStateDigest.Describe(session.State));
         Assert.Equal(GameStateDigest.Describe(session.State), GameStateDigest.Describe(replayed.State));
     }
 

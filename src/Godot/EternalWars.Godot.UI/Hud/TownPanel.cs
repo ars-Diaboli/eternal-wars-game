@@ -112,6 +112,7 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroHired>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<GovernorChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<CaravanDispatched>(session.Events, _ => Refresh());
@@ -244,6 +245,27 @@ public partial class TownPanel : PanelContainer
                 buy.Pressed += () => Run(new BuyWarMachineCommand(state.CurrentPlayer.Id, town.Id, slot));
                 _blacksmith.AddChild(buy);
             }
+
+            // The mage guild sells the spell book (ADR-071, ADR-110).
+            if (town.Level(BuiltInBuildings.MageGuild) > 0)
+            {
+                var refusal = Core.Domain.Magic.MagicRules.CheckBuySpellBook(state, town);
+                var book = new Button
+                {
+                    Text = hero.HasSpellBook ? "Spell book (owned)" : $"Buy a spell book\n{Cost(Core.Domain.Magic.MagicRules.SpellBookCost)}",
+                    Disabled = refusal is not null,
+                    TooltipText = refusal ?? "",
+                };
+                book.Pressed += () => Run(new BuySpellBookCommand(state.CurrentPlayer.Id, town.Id));
+                _blacksmith.AddChild(book);
+            }
+        }
+
+        // What the guild teaches now (ADR-110).
+        var offered = Core.Domain.Magic.MagicRules.Offered(town).Select(s => state.Spells.TryGet(s, out var spell) ? spell.Name : s).ToList();
+        if (offered.Count > 0)
+        {
+            _blacksmith.AddChild(new Label { Text = $"Mage guild: {string.Join(", ", offered)}" });
         }
     }
 

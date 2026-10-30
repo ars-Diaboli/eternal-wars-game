@@ -31,13 +31,13 @@ internal sealed class TestBattle
     public static TestBattle Create(
         int width = BattleState.DefaultWidth, ulong seed = 7, int attackerAttack = 0, int defenderDefense = 0,
         HeroBattleBonuses? attackerBonuses = null, HeroBattleBonuses? defenderBonuses = null, IReadOnlyCollection<string>? nativeTowns = null,
-        SiegeSpec? siege = null)
+        SiegeSpec? siege = null, BattleCaster? attackerCaster = null, BattleCaster? defenderCaster = null)
     {
         // A siege (ADR-106) is fought on the 36-wide field behind the town's fortifications.
         width = siege is null ? width : BattleState.SiegeWidth;
         var state = new BattleState(
-            new BattleParticipant(BattleSide.Attacker, new PlayerId(0), new HeroId(1), null, attackerAttack, 0, SkillLevel.None, false, attackerBonuses),
-            new BattleParticipant(BattleSide.Defender, new PlayerId(1), new HeroId(2), null, 0, defenderDefense, SkillLevel.None, false, defenderBonuses),
+            new BattleParticipant(BattleSide.Attacker, new PlayerId(0), new HeroId(1), null, attackerAttack, 0, SkillLevel.None, false, attackerBonuses, Caster: attackerCaster),
+            new BattleParticipant(BattleSide.Defender, new PlayerId(1), new HeroId(2), null, 0, defenderDefense, SkillLevel.None, false, defenderBonuses, Caster: defenderCaster),
             TerrainType.Grass,
             new MapPosition(0, 0),
             isAmbush: false,

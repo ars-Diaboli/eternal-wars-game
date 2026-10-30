@@ -251,6 +251,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             UpgradeStacks(player, town, reserve);
             Recruit(player, town, reserve);
             BuyWarMachines(player, town, reserve);
+            BuySpellBook(player, town, reserve);
             HireCaravans(player, town, reserve);
             FetchResources(player, town);
             Consolidate(player, town);
@@ -510,6 +511,21 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
     }
 
+    /// <summary>A visiting hero with a school's Magic skill but no spell book buys one, with the same cushion as a war machine (ADR-110).</summary>
+    private void BuySpellBook(PlayerId player, Town town, int reserve)
+    {
+        if (TownRules.VisitingHero(_state, town) is not { } hero || hero.HasSpellBook
+            || !BuiltInSkills.Schools.Keys.Any(school => hero.SkillLevelOf(Magic.MagicRules.MagicSkill(school)) > SkillLevel.None))
+        {
+            return;
+        }
+
+        var spare = _state.GetPlayer(player).Resources.Gold - reserve - Magic.MagicRules.SpellBookGold;
+        if (Active(player) && spare >= WarMachineCushion && Magic.MagicRules.CheckBuySpellBook(_state, town) is null)
+        {
+            Execute(new BuySpellBookCommand(player, town.Id));
+        }
+    }
     /// <summary>Gold kept after buying a war machine: creatures and buildings come first.</summary>
     private const int WarMachineCushion = 1500;
 

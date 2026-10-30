@@ -40,7 +40,8 @@ public sealed class GameState
         HeroCatalog? heroRoster = null,
         BuildingCatalog? buildings = null,
         ArtifactCatalog? artifacts = null,
-        MapObjectCatalog? objectCatalog = null)
+        MapObjectCatalog? objectCatalog = null,
+        Magic.SpellCatalog? spells = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
         ObjectCatalog = objectCatalog ?? MapObjectCatalog.Default;
@@ -50,6 +51,7 @@ public sealed class GameState
         HeroRoster = heroRoster ?? HeroCatalog.Default;
         Buildings = buildings ?? BuildingCatalog.Default;
         Artifacts = artifacts ?? ArtifactCatalog.Default;
+        Spells = spells ?? Magic.SpellCatalog.Default;
         Random = new GameRandom(Options.Seed);
         Fog = new FogOfWar(map, Options.FogMode);
         _players = players.ToList();
@@ -90,6 +92,9 @@ public sealed class GameState
 
     /// <summary>Artifacts in effect for this game (ADR-061).</summary>
     public ArtifactCatalog Artifacts { get; }
+
+    /// <summary>Spells in effect for this game (ADR-110).</summary>
+    public Magic.SpellCatalog Spells { get; }
 
     /// <summary>The game RNG; only Domain services draw from it, in command order, so games replay exactly.</summary>
     internal GameRandom Random { get; }

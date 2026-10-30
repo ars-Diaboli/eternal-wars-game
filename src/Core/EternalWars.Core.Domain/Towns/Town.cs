@@ -67,6 +67,14 @@ public sealed class Town : MapObject, IFlaggable
     /// <summary>The day the town last built something; one building per town per day.</summary>
     public GameDate? LastBuilt { get; internal set; }
 
+    /// <summary>
+    /// The spells its mage guild teaches, per spell level (ADR-110): drawn once at game start from the town's school, whether the guild is built
+    /// or not; a guild of level L teaches levels 1 to L.
+    /// </summary>
+    public IReadOnlyDictionary<int, IReadOnlyList<string>> GuildSpells { get; private set; } = new Dictionary<int, IReadOnlyList<string>>();
+
+    internal void SetGuildSpells(IReadOnlyDictionary<int, IReadOnlyList<string>> spells) => GuildSpells = spells;
+
     public int Level(string building) => _buildings.GetValueOrDefault(building);
 
     public int DwellingLevel(string line) => _dwellings.GetValueOrDefault(line);
