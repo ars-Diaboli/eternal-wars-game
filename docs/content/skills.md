@@ -149,7 +149,8 @@ the zone includes that column and stacks may use its free cells (confirmed, ADR-
 
 Against a fortification a shot hits 2 times in 3 (always from Expert) and takes 1-2 hit points off a defence structure
 (2-3 at Master); a fully upgraded fortification gives its structures 3 hit points. Placeholders until sieges exist (before 1.0, ADR-099;
-CMB-11).
+siege rules ADR-106). There is no free siege catapult: the attacking hero's own offensive machine, whatever its kind, is what fires at the
+walls; firing by itself it aims at the gate only once all four wall sections are down ([combat.md](../design/combat.md#sieges-adr-099-adr-106-not-built)).
 
 The tent heals the top creature of every own stack at the start of each round, never reviving. The machines
 themselves (which town has which, stats, prices) are in [hero-roster.md](hero-roster.md#war-machines) and ADR-056.
@@ -252,8 +253,11 @@ Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)
 | Skill | `skill offense.melee`: the skill's effect +5 % per hero level (HoMM3-like, ADR-072, HERO-1) | ✅ Melee, Archery, Logistics, attunement mana (ADR-083); 🔜 Tactics, Blood Rage, Warcry, Necromancy |
 | Spell | `spell light.bless`: the spell's effect +3 % per hero level (ADR-072, MAG-6) | ⏳ magic |
 
-Planned (ADR-093, HERO-8 ❓): only 4 heroes with +350 gold and 6 with +1 sulfur, crystal or mercury a day (no two of one faction each); 2
-Necromancy specialists (a mage and a warrior, a flat +5 %) and 2 Logistics specialists (a flat +10 %).
+Planned (ADR-093, ADR-107; the HERO-8 proposals, for now): only 4 heroes with +350 gold and 6 with +1 sulfur, crystal or mercury a day
+(no two of one faction each, a town may have one of each; no ore or lumber specialists); 2 Necromancy specialists (Necropolis, a mage and a
+warrior: +5 points on top of the skill, stacking with the Necromancy Amplifier, only with the skill) and 2 Logistics specialists (a flat
++10 % movement on land, even without the skill). The heroes that lose their specialty get one in their first starting skill (+5 % per
+level). Other skill specialties keep +5 % per hero level.
 
 ## Open
 

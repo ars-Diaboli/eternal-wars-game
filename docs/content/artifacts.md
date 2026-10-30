@@ -36,17 +36,22 @@ Where a row has both, the ✅ part is applied first. **Was** names the first re-
   is refilled when empty, so duplicates are possible). A set's pieces have their own tiers; wearing all of them adds the set's bonus.
   Chests hold a Minor artifact 5 % of the time, wagons and corpses Minor ones, the Warrior's Tomb up to a Relic; a full backpack loses what is
   found.
-- **Assembled relics** (ADR-100, CONT-6 c; HoMM3's combination artifacts; the details are CONT-7 ❓): three pieces that a hero wearing all of
-  them may join into one Relic. The relic keeps every piece's effect and adds its own; it sits in the first piece's slot and the other
-  pieces' slots stay blocked; it can be taken apart again. It is never found whole: only its pieces drop, by their own tiers.
+- **Assembled relics** (ADR-100, ADR-108, CONT-6 c, CONT-7; HoMM3's combination artifacts): pieces that a hero wearing all of them may join
+  into one Relic. The relic keeps every piece's effect and adds its own; it sits in the first piece's slot and the other pieces' slots stay
+  blocked. It is never found whole: only its pieces drop, by their own tiers.
+  - **Joining**: the game asks when the hero puts on the last piece (HoMM3), and the hero screen has an "Assemble" button too.
+  - **Taking apart**: any time on the hero screen; the pieces go back to their slots.
+  - **Loot and trade**: a defeated hero's relic goes to the winner whole when its slots are free, otherwise as pieces into the backpack. The
+    Artifact Merchant and the Sacrificial Altar take and sell pieces only.
+  - **AI**: always joins, and values a piece more when it already has the others.
 - **Stacking**: bonuses add; terrain artifacts and Pathfinding together never reduce the penalty below zero. The morale / luck cap of ±5
   stays (ADR-053); damage-taken reductions stop at 90 %.
 - **Loot**: from the map (pickups, guarded), a defeated hero (the winner takes what fits), chests and loot sites (ADR-068), the Artifact
   Merchant (MAP-33, built) and the Sacrificial Altar's other side (MAP-29). Heroes hand artifacts to each other in the exchange.
 - **New effect kinds** (🆕, CONT-6 b), in the owner's order: `sight 1` (scouting radius), `mana-a-day 1` and `mana-max 10`,
-  `creature-health 10` (percent), `school-power arcana 25` (the elemental orbs: percent effect of one school's spells), `spells 1-2` (known
+  `creature-health 10` (percent), `element-power fire 25` (the elemental orbs: percent effect of one element's spells, ADR-106; was `school-power`), `spells 1-2` (known
   while worn, with a spell book), `no-spells-above 2` (both sides), `no-retreat` (both sides: no retreat, no surrender), `necromancy 5`
-  (points), `growth 10` (percent in the owner's towns), `immune mind` (a spell tag). The assembled Wizard's Well also needs `full-mana`. The
+  (points), `growth 10` (percent in the owner's towns), `immune mind` (a spell tag). The assembled Wizard's Well also needs `full-mana`, and the Angelic Alliance `no-faction-penalty` (ADR-108). The
   magic ones (orbs, spells known, no spells above a level) come with Phase 5.
 
 ## Minor artifacts
@@ -65,12 +70,12 @@ Worn by the first generation of Vael's soldiers, not much more than a keepsake. 
 | Shield of the Dwarven Lords (`shield-of-the-dwarven-lords`) | Shield | +2 Defense | ✅ | the dwarves sold their last shields to Haven, and then their halls |
 | Rusted Blade (`rusted-blade`) | Weapon | +1 Attack | ✅ | an old sword; what it cut was worth the edge |
 | Centaur's Axe (`centaurs-ax`) | Weapon | +2 Attack | ✅ | Stronghold axes are made to be lost and taken back |
-| Blackshard of the Dead Knight (`blackshard-of-the-dead-knight`) | Weapon | +3 Attack | ✅ | the Necropolis arms its dead with what they were buried with |
+| Blackshard of the Dead Knight (`blackshard-of-the-dead-knight`) | Weapon | +3 Attack; a piece of the Regalia of the Undead King | ✅ | the Necropolis arms its dead with what they were buried with |
 | Scholar's Cap (`scholars-cap`) | Head | +1 Knowledge | ✅ | the Academy's apprentices wear it until they can afford better |
 | Helm of the Alabaster Unicorn (`helm-of-the-alabaster-unicorn`) | Head | +1 Knowledge | ✅ | the Sylvan carved it for a unicorn's rider, who did not come back |
-| Skull Helmet (`skull-helmet`) | Head | +2 Knowledge | ✅ | the scribe kept writing after he died; the helmet kept him company |
+| Skull Helmet (`skull-helmet`) | Head | +2 Knowledge; a piece of the Regalia of the Undead King | ✅ | the scribe kept writing after he died; the helmet kept him company |
 | Breastplate of Petrified Wood (`breastplate-of-petrified-wood`) | Body | +1 Defense | ✅ | Sylvan bark, given freely by a tree that was dying anyway |
-| Rib Cage (`rib-cage`) | Body | +2 Defense | ✅ | ribs of an earlier owner, fitted to the next |
+| Rib Cage (`rib-cage`) | Body | +2 Defense; a piece of the Regalia of the Undead King | ✅ | ribs of an earlier owner, fitted to the next |
 | Hearth Charm (`hearth-charm`) | Misc | +100 gold a day | ✅ | a coin worn smooth, said to always arrive on the right day |
 | Woodcutter's Axe (`woodcutters-axe`) | Misc | +1 lumber a day | ✅ | rumoured to have felled a tree twice |
 | Miner's Lamp (`miners-lamp`) | Misc | +1 ore a day | ✅ | the flame never goes out, even in the rain |
@@ -79,7 +84,11 @@ Worn by the first generation of Vael's soldiers, not much more than a keepsake. 
 | Candle of the Pious (`candle-of-the-pious`) | Misc | +1 Spell Power | ✅ | wax and prayer; Haven's chapels burn these by the thousand |
 | Equestrian's Gloves (`equestrians-gloves`) | Misc | +300 movement points | ✅ | Haven's outriders carry the news of every lost province first |
 | Spyglass (`spyglass`, was Scout's Spyglass) | Misc | +1 sight radius | 🆕 | brass from a drowned ruin; the lens shows what is there, mostly |
-| Bowstring of the Unicorn's Mane (`bowstring-of-the-unicorns-mane`, was Fletcher's Quiver) | Misc | +5 % ranged damage | ✅ | the unicorn gave it; the Sylvan do not say what they gave back |
+| Bowstring of the Unicorn's Mane (`bowstring-of-the-unicorns-mane`, was Fletcher's Quiver) | Misc | +5 % ranged damage; a piece of the Bow of the Sharpshooter | ✅ | the unicorn gave it; the Sylvan do not say what they gave back |
+| Ring of Vitality (`ring-of-vitality`, ADR-108) | Ring | the army's creatures +5 % health; a piece of the Elixir of Life | 🆕 | a green band; the Sylvan say it was a vine, and still is |
+| Collar of Conjuring (`collar-of-conjuring`, ADR-108) | Neck | +1 Spell Power; a piece of the Ring of the Magi | ✅ | an apprentice's collar, worn until the spells stop slipping |
+| Ring of Conjuring (`ring-of-conjuring`, ADR-108) | Ring | +1 Spell Power; a piece of the Ring of the Magi | ✅ | Academy brass, engraved on the inside with a proof nobody has finished |
+| Cape of Conjuring (`cape-of-conjuring`, ADR-108) | Cloak | +1 Spell Power; a piece of the Ring of the Magi | ✅ | the lining is a star chart of a sky Vael no longer has |
 
 ## Major artifacts
 
@@ -91,7 +100,7 @@ Made by masters, bound by oaths, and fought over in every age.
 | Helm of Chaos (`helm-of-chaos`) | Head | +3 Knowledge | ✅ | Inferno iron; it thinks along with the wearer, and disagrees |
 | Hunter's Mark (`hunters-mark`) | Neck | +2 luck | ✅ | a bone token with a hole in it; the bearer's arrows find whatever hid |
 | Pendant of Courage (`pendant-of-courage`) | Neck | +2 morale, +2 luck | ✅ | holds a finger bone of a saint, or of whoever was nearest |
-| Necklace of Swiftness (`necklace-of-swiftness`) | Neck | +1 battle speed | ✅ | Sylvan silver; the hunt it was made for never ended |
+| Necklace of Swiftness (`necklace-of-swiftness`) | Neck | +1 battle speed; a piece of the Bow of the Sharpshooter | ✅ | Sylvan silver; the hunt it was made for never ended |
 | Pendant of Free Will (`pendant-of-free-will`, was Wardstone Amulet) | Neck | the army is immune to `mind` spells | 🆕 ⏳ | a pebble from the Conflux's mechanism; thoughts slide off it |
 | Talisman of Mana (`talisman-of-mana`) | Misc | +2 mana a day; a piece of the Wizard's Well | 🆕 | Academy glass with a spark in it that never settles |
 | Mystic Orb of Mana (`mystic-orb-of-mana`) | Misc | +3 mana a day; a piece of the Wizard's Well | 🆕 | it hums at dawn, the only thing on Vael that still does |
@@ -105,7 +114,7 @@ Made by masters, bound by oaths, and fought over in every age.
 | Lizard Warrior's Flail (`lizard-warriors-flail`, was Greater Gnoll's Flail) | Weapon | +4 Attack | ✅ | swung by the swamp's champions; the spikes are teeth |
 | Ogre's Club of Havoc (`ogres-club-of-havoc`) | Weapon | +5 Attack | ✅ | a stone on a log; the clans have never needed better |
 | Sword of Hellfire (`sword-of-hellfire`) | Weapon | +6 Attack | ✅ | the Inferno reaps every age; this is the tool |
-| Bow of Elven Cherrywood (`bow-of-elven-cherrywood`, was Elvenwood Bow) | Weapon | +10 % ranged damage | ✅ | strung with the hair of an elf who forgot whose it was |
+| Bow of Elven Cherrywood (`bow-of-elven-cherrywood`, was Elvenwood Bow) | Weapon | +10 % ranged damage; a piece of the Bow of the Sharpshooter | ✅ | strung with the hair of an elf who forgot whose it was |
 | Aegis of Ash (`aegis-of-ash`) | Shield | +4 Defense, −5 % damage taken | ✅ | quenched in the cinders of a burned city |
 | Buckler of the Lizard King (`buckler-of-the-lizard-king`, was Buckler of the Gnoll King) | Shield | +4 Defense | ✅ | it stays wet; the swamp cults say that is how you know it is alive |
 | Targ of the Rampaging Ogre (`targ-of-the-rampaging-ogre`) | Shield | +5 Defense | ✅ | a gate of a Haven city that fell, cut down to a shield |
@@ -122,11 +131,18 @@ Made by masters, bound by oaths, and fought over in every age.
 | Endless Purse of Gold (`endless-purse-of-gold`) | Misc | +500 gold a day | ✅ | Haven collects for the light; the purse is never empty, and never full |
 | Endless Bag of Gold (`endless-bag-of-gold`) | Misc | +750 gold a day | ✅ | paid into by every age that ended |
 | Endless Pouch of Lumber (`endless-pouch-of-lumber`) | Misc | +3 lumber a day | ✅ | windfall only; the wardens never cut |
-| Vial of Lifeblood (`vial-of-lifeblood`, was Elixir of the Grove) | Misc | the army's creatures +10 % health | 🆕 | sap from a tree the Sylvan will not name |
+| Vial of Lifeblood (`vial-of-lifeblood`, was Elixir of the Grove) | Misc | the army's creatures +10 % health; a piece of the Elixir of Life | 🆕 | sap from a tree the Sylvan will not name |
 | Speculum (`speculum`, was Cartographer's Lens) | Misc | +2 sight radius | 🆕 | ground in the Academy, focused on the edge of every map |
 | Head, Torso and Legs of Legion (`head-of-legion`, `torso-of-legion`, `legs-of-legion`, were the Banner of the Legion) | Misc | +5 % creature growth in the owner's towns each; the pieces of the Statue of Legion | 🆕 | a statue of the army that held the last lit city for a year, broken up so that no one lord would own it |
 | Collar, Shackle and Chain of War (`collar-of-war` Neck, `shackle-of-war` Misc, `chain-of-war` Misc, were the Chain of the Unyielding) | as given | +2 Defense; +2 Attack; +1 morale; the pieces of the Shackles of War | ✅ | Stronghold chains a chieftain to the field; the field remembers |
-| Six elemental orbs: Orb of the Dawn (Light), Orb of Silt (Nature), Orb of Driving Rain (Arcana), Orb of the Grave (Death), Orb of Tempestuous Fire (Chaos), Orb of the Void (Shadow) (`orb-of-the-dawn`, …; were the school orbs) | Misc | +25 % effect of that school's spells (damage, healing, summoned amount) | 🆕 ⏳ | one for each town of the ring; the Firstborn made seven, and do not say where the seventh is |
+| Ring of Life (`ring-of-life`, ADR-108) | Ring | the army's creatures +5 % health, +1 morale; a piece of the Elixir of Life | 🆕 | Haven's healers pass it hand to hand down the line of the wounded |
+| Everflowing Crystal Cloak (`everflowing-crystal-cloak`, ADR-108) | Cloak | +1 crystal a day; a piece of the Cornucopia | ✅ | it sheds a shard at every dawn and is never the lighter for it |
+| Eversmoking Ring of Sulfur (`eversmoking-ring-of-sulfur`, ADR-108) | Ring | +1 sulfur a day; a piece of the Cornucopia | ✅ | the Inferno's smiths wear it to keep their forges honest |
+| Everpouring Vial of Mercury (`everpouring-vial-of-mercury`, ADR-108) | Misc | +1 mercury a day; a piece of the Cornucopia | ✅ | the stopper is the hard part; nobody has made a second |
+| Sword of Judgement (`sword-of-judgement`, ADR-108) | Weapon | +4 Attack, +1 morale; a piece of the Angelic Alliance | ✅ | Haven forged it to judge the dead; it has never found one innocent |
+| Lion's Shield of Courage (`lions-shield-of-courage`, ADR-108) | Shield | +4 Defense, +1 morale; a piece of the Angelic Alliance | ✅ | the lion on it was painted over a dragon, and over something older under that |
+| Celestial Necklace of Bliss (`celestial-necklace-of-bliss`, ADR-108) | Neck | +2 Spell Power, +2 Knowledge; a piece of the Angelic Alliance | ✅ | strung with the last light of the sun, which is why the sun is dimmer |
+| Four elemental orbs (ADR-106, MAG-13; were six school orbs): Orb of the Firmament (air), Orb of Silt (earth), Orb of Tempestuous Fire (fire), Orb of Driving Rain (water) (`orb-of-the-firmament`, `orb-of-silt`, `orb-of-tempestuous-fire`, `orb-of-driving-rain`) | Misc | +25 % effect of that element's spells, of any school (damage, healing, summoned amount; [spells.md](spells.md), "Element" column) | 🆕 ⏳ | the Firstborn made one for each of the four things the world is made of, and do not say what the fifth would be |
 
 ## Relics
 
@@ -156,14 +172,21 @@ a bank, the Warrior's Tomb, or the reward of a campaign.
 
 ## Assembled relics
 
-Joined from three pieces (above) by a hero who wears all of them (ADR-100; details CONT-7 ❓). Each keeps its pieces' effects and adds the
-line below. Not in the Relic pool: only the pieces drop.
+Joined from their pieces (above) by a hero who wears all of them (ADR-100, ADR-108). Each keeps its pieces' effects and adds the line below.
+Not in the Relic pool: only the pieces drop. The six added by ADR-108 (CONT-7 f: HoMM3's combinations, and the bow and Necromancy sets made
+into relics) are drafts; their numbers wait for play-testing.
 
 | Name (id) | Pieces | Added effect | Status | Story |
 |---|---|---|---|---|
 | Wizard's Well (`wizards-well`, was Wellspring Chalice) | Charm of Mana, Talisman of Mana, Mystic Orb of Mana (+6 mana a day) | the hero's mana is full at the start of each turn | 🆕 | the Academy built a city around it; the city froze, the well did not |
 | Statue of Legion (`statue-of-legion`, was Banner of the Legion) | Head, Torso and Legs of Legion (+15 % growth) | +35 % more creature growth in the owner's towns (+50 % in all) | 🆕 | whole again, it remembers the year it held the city, and the city's levies come back to it |
 | Shackles of War (`shackles-of-war`, was Chain of the Unyielding) | Collar, Shackle and Chain of War (+2 Attack, +2 Defense, +1 morale) | neither side may retreat or surrender in the hero's battles | 🆕 | the chieftain who wore all three never left a field; neither did anyone else |
+| Elixir of Life (`elixir-of-life`, ADR-108) | Ring of Vitality, Ring of Life, Vial of Lifeblood (+20 % health, +1 morale) | the army's creatures +10 % health more (+30 % in all) | 🆕 | the Sylvan brewed it once, for a war they then did not have to fight |
+| Ring of the Magi (`ring-of-the-magi`, ADR-108) | Collar, Ring and Cape of Conjuring (+3 Spell Power) | +3 Spell Power more (+6 in all; Spell Power also lengthens spells, ADR-072) | ✅ | the Academy's first chancellor wore it, and every chancellor since has claimed to |
+| Cornucopia (`cornucopia`, ADR-108) | Everflowing Crystal Cloak, Eversmoking Ring of Sulfur, Everpouring Vial of Mercury (+1 of each rare resource a day) | +2 crystal, sulfur and mercury a day more (+3 of each in all) | ✅ | a horn of the Firstborn's last harvest; it gives until the giver is forgotten |
+| Angelic Alliance (`angelic-alliance`, ADR-108) | Sword of Judgement, Lion's Shield of Courage, Celestial Necklace of Bliss (+4 Attack, +4 Defense, +2 Spell Power, +2 Knowledge, +2 morale) | +2 to every primary stat; no morale loss for mixed factions in the army | ✅ / 🆕 | Haven's last oath, sworn by angels who have not been seen since |
+| Regalia of the Undead King (`undead-king-regalia`, was a set, ADR-108) | Blackshard of the Dead Knight, Rib Cage, Skull Helmet (+3 Attack, +2 Defense, +2 Knowledge) | +10 Necromancy points (HoMM3's Cloak of the Undead King) | 🆕 | the king was buried in three graves so he would not rise; he rose three times |
+| Bow of the Sharpshooter (`bow-of-the-sharpshooter`, was a set, ADR-108) | Bow of Elven Cherrywood, Bowstring of the Unicorn's Mane, Necklace of Swiftness (+15 % ranged damage, +1 battle speed) | +15 % ranged damage more, +1 battle speed | ✅ | whoever holds it does not miss; the Sylvan say that is the curse |
 
 ## Sets
 
@@ -176,14 +199,12 @@ stay separate and use their own slots.
 | **Armor of the Dawn Covenant** (`dawn-covenant-armor`) | Plate of the Faithful, Aegis of Ash, Candle of the Pious | +2 morale, +2 Spell Power | ✅ |
 | **Ashen Court Regalia** (`ash-court-regalia`, renamed from "Ash Court Regalia" to match the lore) | Ring of Reckoning, Sceptre of Cinders, Ledger of Debts | +2 Spell Power, +1 luck | ✅ |
 | **The Unbound's Trophies** (`unbound-trophies`) | War-Drum, Marsh Talisman, Hunter's Mark | +2 morale, +2 luck | ✅ |
-| **Regalia of the Undead King** (`undead-king-regalia`, was Shroud of the Last Debt) | Blackshard of the Dead Knight, Rib Cage, Skull Helmet | +10 Necromancy points (HoMM3's Cloak of the Undead King) | 🆕 |
-| **Bow of the Sharpshooter** (`bow-of-the-sharpshooter`, was the Last Grove's Bow) | Bow of Elven Cherrywood, Bowstring of the Unicorn's Mane, Necklace of Swiftness | +15 % ranged damage, +1 battle speed | ✅ |
 | **Regalia of the Firstborn** (`firstborn-regalia`) | Titan's Gladius, Sentinel's Shield, Titan's Cuirass, Crown of the Supreme Magi | +3 Attack, +3 Defense, +2 Spell Power (the pieces' penalties made up); the army is immune to `mind` | ✅ / 🆕 |
 
 ## Dropped by CONT-6
 
 The owner's list of new effect kinds (CONT-6 b) leaves out experience, surrender cost and war machines, and the effects the question did not
-list. So:
+list. So (confirmed by CONT-7 g, ADR-108):
 
 - **Items dropped**: Novice's Primer (+5 % experience), Statesman's Seal (surrender cost), Engineer's Toolbelt (war machines).
 - **Secondary effects dropped** (the item keeps the rest, sometimes with a ✅ effect instead): the Elvenwood Bow's "no distance penalty", the
@@ -203,6 +224,5 @@ with its rows (🆕) in the order above, the assembled relics, and the magic eff
 
 ## Open
 
-- Assembled relics: the decision when the last piece is worn, blocked slots, taking apart, the AI: CONT-7 ❓.
 - Numbers, after play-tests; whether Major artifacts need a guard.
 - Whether a campaign can carry Relics between maps (FLOW-1).

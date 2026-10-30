@@ -22,10 +22,11 @@ catalogue (their Godot screens still need a run). The week and month events, the
 (ADR-084). The Godot smoke pass ran (ADR-085), the new-game screen starts random maps from the shipped templates (ADR-086) and the editor generates them
 (ADR-087). New ideas (ADR-088): diagonal battle steps, speed settings, a turn timer, auto combat and LAN multiplayer, waiting for CMB-9, CMB-10,
 UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, MP-3 and MP-4 still open); CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
-replays and a replay viewer (FLOW-4 and UI-2 answered in ADR-101; all but the viewer built, ADR-102 to ADR-104), and rarer hero specialties, waiting for HERO-8. ADR-099 brings sieges before 1.0
-(CMB-11) and re-drafts the spells and artifacts (MAG-13; CONT-6 answered in ADR-100). ADR-073's remaining victory conditions
+replays and a replay viewer (FLOW-4 and UI-2 answered in ADR-101; all but the viewer built, ADR-102 to ADR-104), and rarer hero specialties (HERO-8 answered in ADR-107, the proposals for now). ADR-099 brings sieges before 1.0
+and re-drafts the spells and artifacts (CONT-6 answered in ADR-100); ADR-106 settles the siege rules (CMB-11) and the guild spell draw,
+spell elements and summons (MAG-13). ADR-073's remaining victory conditions
 and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096) wait for EVT-1 … EVT-6. ADR-100 settles Pandora's Box
-(MAP-35, built in ADR-105) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7).
+(MAP-35, built in ADR-105) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7 answered in ADR-108: nine relics).
 **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
 small random map (Phase 3).
 
@@ -245,8 +246,10 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 
 ### Heroes and skills
 - [x] Hero roster `data/heroes.csv`: 16 per town, mage/warrior, preferred creature, specialty (ADR-048)
-- [ ] Rarer resource specialties (4 gold, 6 rare resources in the roster), 2 Necromancy (+5 %) and 2 Logistics (+10 %) specialists with flat
-      bonuses (ADR-093) ❓ HERO-8
+- [ ] Rarer resource specialties (4 gold, 6 rare resources in the whole roster, no ore or lumber), 2 Necromancy (+5 points on the skill)
+      and 2 Logistics (+10 % on land, even without the skill) specialists with flat bonuses; the other heroes get a specialty in their
+      first starting skill (effects built where missing: Armor, Treasury, War Tempo, …); drawn once into `heroes.csv` with a fixed seed
+      (ADR-093, ADR-107)
 - [x] Skill groups, levels, level-ups with three offers and rival-school odds (`LevelUpDecision`)
 - [x] Skill effects without towns or magic: melee, archery, armor, treasury, prospecting, logistics, pathfinding,
       troop management, drill, Tactics width
@@ -263,8 +266,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Complexity levels with starting resources (ADR-063); new-game screen option
 - [x] AI that appoints governors on purpose (ADR-059)
 - [x] The `sim` tool picks a complexity (`sim game --complexity`, ADR-083)
-- [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); needs
-      sieges (ADR-099, CMB-11)
+- [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); the hero's own
+      offensive machine is the siege engine, auto-fire takes the gate only after the four wall sections; needs sieges (ADR-099, ADR-106)
 - [x] Skill specialties: the skill's effect +5 % per hero level (ADR-072, ADR-083: Melee, Archery, Logistics, attunement mana)
 - [ ] Skill specialties for Tactics, Blood Rage and Warcry (numbers not set) and Necromancy (ADR-083)
 - [x] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3; ADR-078)
@@ -340,9 +343,11 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Artifact table: the re-draft (ADR-099, ADR-100, [artifacts.md](../content/artifacts.md)): the few renamed rows (the gnoll items, lore
       items with HoMM names; tests follow), the rows whose effects exist, "Ashen Court Regalia"; then the new effect kinds with their rows in
       the owner's order (sight, mana a day and maximum, creature health, no retreat, Necromancy, growth, immunities); the magic ones
-      (elemental orbs, spells known while worn, no spells above level 2) with Phase 5
-- [ ] Assembled relics (ADR-100): Wizard's Well, Statue of Legion, Shackles of War; joining, blocked slots, taking apart, loot as pieces,
-      the AI, the hero screen ❓ CONT-7
+      (the four elemental orbs by spell element, ADR-106; spells known while worn, no spells above level 2) with Phase 5
+- [ ] Assembled relics (ADR-100, ADR-108): Wizard's Well, Statue of Legion, Shackles of War, Elixir of Life, Ring of the Magi, Cornucopia,
+      Angelic Alliance, Regalia of the Undead King, Bow of the Sharpshooter (the last two were sets); joining (asked on the last piece and an
+      "Assemble" button), blocked slots, taking apart any time, loot whole or as pieces, Merchant and Altar trade pieces only, the AI always
+      joins and values a piece more with the others, the hero screen; the `full-mana` and `no-faction-penalty` effect kinds
 
 ### Game flow
 - [x] Victory and loss conditions (ADR-057): default (defeat every enemy: no towns and no heroes); map-specific
@@ -558,12 +563,16 @@ author templates in the editor.
 ## Phase 5: Content and polish
 
 ### Magic (ADR-047, ADR-063)
-Content draft: [spells.md](../content/spells.md), re-drafted (ADR-099): 17 spells a school, base numbers × Spell Power. Open: MAG-13.
+Content draft: [spells.md](../content/spells.md), re-drafted (ADR-099) and reviewed (ADR-106): 17 spells a school, base numbers × Spell
+Power, an element per spell.
 
-- [ ] Spell table `data/spells.csv` from the re-draft (school, level, cost, tags, three ranks; adventure spells; final numbers after the
-      visuals); mana on heroes is done (ADR-063)
-- [ ] Guild spell selection (3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3), the extra-school buildings ❓ MAG-13
-- [ ] Summoned creatures (`summon`: vanish after the battle, no experience) ❓ MAG-13
+- [ ] Spell table `data/spells.csv` from the re-draft (school, level, cost, element, tags, three ranks; adventure spells; final numbers after
+      the visuals); mana on heroes is done (ADR-063)
+- [ ] Guild spell selection (ADR-106): 3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3 drawn per town at game start from `GameState.Random`,
+      adventure spells drawn like the others; the extra-school buildings draw theirs the same way; the editor fixes some per town (map
+      format bump), the rest drawn
+- [ ] Summoned creatures (`summon`: vanish after the battle, no experience): town creature rows (Pegasi, Treants, Imps, Horned Demons),
+      Conflux elementals (ADR-106)
 - [ ] Spell book: mages start with one, warriors buy it for 500 gold in a guild (ADR-071)
 - [ ] Guild offers 3 / 3 / 2 / 2 spells of the town's school per level; a hero learns a spell when the school's Magic skill is at least
       its level (ADR-071)
@@ -577,6 +586,8 @@ Content draft: [spells.md](../content/spells.md), re-drafted (ADR-099): 17 spell
 - [ ] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
       specialties +3 % of the effect per hero level (ADR-072)
 - [ ] Spell tags (`holy`, `summon` new) and creature caster spells mapped onto the list (ADR-099)
+- [ ] Spell elements (air, earth, fire, water; Magic Arrow all four, Bind Elemental the bound kind) and the `element-power` effect of the
+      four elemental orbs (ADR-106)
 
 ### Combat additions
 - [x] Morale and luck (ADR-053): ±5 from creature table and hero (map format v7, editor); per round 2 %/point extra
@@ -591,9 +602,12 @@ Content draft: [spells.md](../content/spells.md), re-drafted (ADR-099): 17 spell
 - [x] Exchanging war machines between heroes (ADR-070, ADR-083: `GiveWarMachineCommand`, exchange panel, AI)
 - [ ] Towns keep machines only through a garrison hero (waits for garrison heroes); war machine tuning
 - [x] Teleporting creatures move like flyers (ADR-070, ADR-083: `Teleporting` capability; no creature has it yet)
-- [ ] Siege battles before 1.0 (ADR-099): a battle at a town with a Fort; 36-wide field, wall sections and gate, keep and towers that
-      shoot, moat, siege catapult, 1/2 cover behind walls; fortifications by Fort / Citadel / Castle (ADR-066) ❓ CMB-11
-- [ ] Sieges: the 3D battle scene (walls, gate, towers, breaches), the AI attacking and defending fortified towns ❓ CMB-11
+- [ ] Siege battles before 1.0 (ADR-099, ADR-106): every battle at a town with a Fort; 36-wide field; 4 wall sections (2 points, 3 at
+      Castle) and a 1-point gate the defenders pass; keep (Citadel) and two towers (Castle) shooting 10 + 2 per town building (keep
+      double), 3 points each; moat (Citadel) that stops a stack and deals two tower shots; no free catapult, the attacker's offensive
+      machine breaks the walls; 1/2 cover behind walls; one defending shooter in the keep
+- [ ] Sieges: the 3D battle scene (walls, gate, towers, moat, breaches), the AI attacking a fortified town only when its estimate wins and
+      defending behind the walls (ADR-106)
 - [x] Battle movement as a circle (ADR-088, ADR-089, CMB-9): reach within Speed + 0.25 cells at any angle (Theta* around obstacles),
       flyers and teleporters by straight-line distance, the distance penalty measured the same way, battle speeds +10 %; old replay
       digests change

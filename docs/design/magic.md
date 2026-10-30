@@ -11,7 +11,11 @@
   weakens and raises the cost of the enemy hero's spells. Instead of a mage guild they get a **3-level placeholder
   building** that teaches warcries / spiritual totems (ADR-071, MAG-2; not built).
 - **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice). Each school has
-  17 spells (5 / 5 / 4 / 3 by level, ADR-099); a guild offers 3 / 3 / 2 / 2 of them (which ones: MAG-13 ❓).
+  17 spells (5 / 5 / 4 / 3 by level, ADR-099); a guild offers 3 / 3 / 2 / 2 of them, **drawn per town at game start** from the game's
+  random source; the map may fix some, adventure spells are drawn like the others, and the extra-school buildings draw theirs the same way
+  (ADR-106, MAG-13).
+- **Elements** (ADR-106, MAG-13): besides its school, every spell has one of four elements (air, earth, fire, water); the four elemental orbs
+  raise the spells of their element, whatever the school. Summons call town creatures (elementals: Conflux).
 - **Spell books and learning** (ADR-071, MAG-2; not built): mage heroes start with a spell book; warriors buy one in a mage
   guild for **500 gold**. A hero learns a spell when its school's Magic skill is at least the spell's level. A guild offers
   spells of the town's own school: **3** at each of levels 1 and 2, **2** at each of levels 3 and 4. Two more town buildings

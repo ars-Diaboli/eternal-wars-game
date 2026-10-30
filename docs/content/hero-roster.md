@@ -14,8 +14,10 @@ numbers are a draft.
 - **Preferred creature**: that line, base and upgrade, gets **+2 Attack, +2 Defense and +1 battlefield speed** in the
   hero's army.
 - **Specialty** (HoMM3-style): a daily resource (works), a skill or a spell (no effect yet; see
-  [skills.md](skills.md#specialties)). Planned (ADR-093, HERO-8 ❓): resource specialties become rare (4 gold, 6 rare resources in the
-  whole roster), and 2 Necromancy and 2 Logistics specialists get flat bonuses; the template table below changes with it.
+  [skills.md](skills.md#specialties)). Planned (ADR-093, ADR-107): resource specialties become rare (4 gold, 6 rare resources in the
+  whole roster, drawn once with a fixed seed; no two of a kind in one town, all eight towns, any class), and 2 Necromancy and 2 Logistics
+  specialists get flat bonuses; the heroes that lose a resource or Logistics specialty get one in their first starting skill. The template
+  table below changes with it, and the drawn heroes are listed here then.
 - **Starting skills**: two skills at Basic.
 - **Primary stats** (A / D / SP / K = Attack / Defense / Spell Power / Knowledge): every roster hero starts with
   5 points; warriors 2/1/1/1 or 1/2/1/1, mages 0/0/3/2 or 0/1/2/2. Each level adds 1 to one stat, with odds by class
