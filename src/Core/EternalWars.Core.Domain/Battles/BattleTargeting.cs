@@ -3,7 +3,7 @@ namespace EternalWars.Core.Domain.Battles;
 /// <summary>
 /// What pointing at a battlefield cell means for the active unit, HoMM-style: an enemy is shot if possible, else
 /// attacked from the reachable side nearest the pointer; a free cell is a move to the reachable placement that covers
-/// it with its centre nearest the pointer. Shared by the battle front-ends (cursor, preview, click), so they agree
+/// it with its centre nearest the pointer; for the siege engine a standing siege structure is a shot at it. Shared by the battle front-ends (cursor, preview, click), so they agree
 /// with each other; the rules still validate the resulting command.
 /// </summary>
 public static class BattleTargeting
@@ -22,6 +22,13 @@ public static class BattleTargeting
 
         var x = pointerX ?? cell.X + 0.5f;
         var y = pointerY ?? cell.Y + 0.5f;
+
+        // The siege engine aims at the standing structure pointed at, on the wall line or off the field (keep, towers; ADR-106).
+        if (SiegeRules.IsSiegeEngine(battle, active) && battle.Siege!.Structures.FirstOrDefault(s => s.IsStanding && s.Rect.Contains(cell)) is { } structure)
+        {
+            return new ShootStructureAction(structure.Id);
+        }
+
         if (battle.UnitAt(cell) is { } unit)
         {
             if (unit.Side == active.Side)

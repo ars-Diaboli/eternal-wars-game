@@ -115,9 +115,9 @@ public static class WarMachines
     /// <summary>Outside sieges the offensive machine fights only from Advanced Ballistics (user decision).</summary>
     public static bool FieldsOffensive(SkillLevel ballistics) => ballistics >= SkillLevel.Advanced;
 
-    // Sieges (ADR-063, placeholder numbers; there are no fortifications in battle yet) ------------------------------
+    // Sieges (ADR-063, ADR-106, placeholder numbers; the fortifications are in SiegeRules) ---------------------------
 
-    /// <summary>Hit points of a defence structure of a fully upgraded fortification.</summary>
+    /// <summary>Hit points of a defence structure of a fully upgraded fortification (a Castle's walls, the keep, the towers).</summary>
     public const int MaxFortificationHealth = 3;
 
     /// <summary>Without Ballistics the offensive machine fires by itself, and only at fortifications.</summary>

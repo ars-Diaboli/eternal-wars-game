@@ -181,6 +181,7 @@ public static class GameRecordSerializer
         (typeof(BattleMoveCommand), "battleMove"),
         (typeof(BattleAttackCommand), "battleAttack"),
         (typeof(BattleShootCommand), "battleShoot"),
+        (typeof(BattleShootStructureCommand), "battleShootStructure"),
         (typeof(BattleWarcryCommand), "battleWarcry"),
         (typeof(BattleWaitCommand), "battleWait"),
         (typeof(BattleDefendCommand), "battleDefend"),

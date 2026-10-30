@@ -6,8 +6,10 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Tests.Data;
 
@@ -54,6 +56,41 @@ public class ReplayTests
 
         Assert.Contains("\"type\": \"move\"", json);
         Assert.True(session.CommandLog.Count > 8);
+        Assert.Equal(GameStateDigest.Describe(session.State), GameStateDigest.Describe(replayed.State));
+    }
+
+    [Fact]
+    public void ASiege_ReplaysExactly_WithTheAimedEngine_ThroughJson()
+    {
+        var state = TestWorld.Create([.. Enumerable.Repeat("..........", 7), "...A......", "..........", ".........B"]);
+        var town = TestWorld.AddTown(state, TownIds.Haven, 0, 0, TestWorld.Red);
+        town.SetLevel(BuiltInBuildings.Fort, 3);
+        town.Garrison.Set(0, new CreatureStack(BuiltInCreatures.Archer, 6));
+        state.GetHero(TestWorld.A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 100)); // lasts through the towers' shots
+        state.GetHero(TestWorld.A).Skills.Set(BuiltInSkills.Ballistics, SkillLevel.Basic);
+        var map = MapConverter.ToDocument(state);
+        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 31)));
+        session.Start();
+
+        session.Execute(new StepHeroCommand(TestWorld.Blue, TestWorld.A, Direction.North)).ThrowIfRejected();
+        var aimed = 0;
+        for (var turn = 0; turn < 12 && session.State.Battle is { Siege: { } siege } battle; turn++)
+        {
+            var active = battle.ActiveUnit!;
+            var player = battle.Participant(active.Side).Owner!.Value;
+            GameCommand command = active.IsMachine && siege.Find(5) is { IsStanding: true }
+                ? new BattleShootStructureCommand(player, 5)
+                : new BattleDefendCommand(player);
+            aimed += command is BattleShootStructureCommand ? 1 : 0;
+            session.Execute(command).ThrowIfRejected();
+        }
+
+        var json = GameRecordSerializer.Serialize(GameReplay.Record(map, session));
+        var replayed = GameReplay.Replay(GameRecordSerializer.Deserialize(json));
+
+        Assert.True(aimed > 0);
+        Assert.Contains("\"type\": \"battleShootStructure\"", json);
+        Assert.Contains("siege 5 Gate", GameStateDigest.Describe(session.State));
         Assert.Equal(GameStateDigest.Describe(session.State), GameStateDigest.Describe(replayed.State));
     }
 

@@ -24,7 +24,7 @@ catalogue (their Godot screens still need a run). The week and month events, the
 UI-1, FLOW-3, MP-1 and MP-2 (MP-1 and MP-2 answered in ADR-098: LAN before 1.0, MP-3 and MP-4 still open); CMB-9 is built (ADR-089), auto combat too (ADR-090) and the turn timer (ADR-091), and so are the speed settings (ADR-095). More ideas (ADR-092, ADR-093): a victory screen with a ranking, saved
 replays and a replay viewer (FLOW-4 and UI-2 answered in ADR-101; all but the viewer built, ADR-102 to ADR-104), and rarer hero specialties (HERO-8 answered in ADR-107, the proposals for now). ADR-099 brings sieges before 1.0
 and re-drafts the spells and artifacts (CONT-6 answered in ADR-100); ADR-106 settles the siege rules (CMB-11) and the guild spell draw,
-spell elements and summons (MAG-13). ADR-073's remaining victory conditions
+spell elements and summons (MAG-13); the sieges are built (ADR-109; the 3D siege scene still needs a run in Godot). ADR-073's remaining victory conditions
 and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096) wait for EVT-1 … EVT-6. ADR-100 settles Pandora's Box
 (MAP-35, built in ADR-105) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7 answered in ADR-108: nine relics).
 **Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
@@ -192,8 +192,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Editor enforces building requirements; validator flags broken requirements and the 7-of-9 rule
 
 ### Towns: building effects (ADR-066, ADR-067, ADR-070)
-- [x] Fort: unlocks the dwellings; Citadel +50 % / Castle +100 % town growth, rounded down (ADR-066); fortifications wait
-      for sieges (before 1.0 since ADR-099)
+- [x] Fort: unlocks the dwellings; Citadel +50 % / Castle +100 % town growth, rounded down (ADR-066); its fortifications
+      fight in sieges (ADR-109)
 - [x] Guard mode per monster stack: map format v13, monster inspector control, old maps converted (ADR-065)
 - [x] Marketplace trading: gold against one resource, rates by `min(X + 1, 10)` with X the marketplace towns, governed ones 1.5; needs a town marketplace; `TradeResourceCommand`, trading screen (HUD button, town screen; Godot part not run in the editor yet); no AI trading (ADR-067); nothing open (ADR-070)
 - [x] Map marketplace object: a visiting hero trades at the fixed X = 4 rate; map format v14, editor placement, validator; the generator places it as a treasure item where the zone's treasure value allows (ADR-067)
@@ -266,8 +266,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Complexity levels with starting resources (ADR-063); new-game screen option
 - [x] AI that appoints governors on purpose (ADR-059)
 - [x] The `sim` tool picks a complexity (`sim game --complexity`, ADR-083)
-- [ ] Siege Ballistics: use the `WarMachines` rules once fortifications exist (auto-fire, control, second shot); the hero's own
-      offensive machine is the siege engine, auto-fire takes the gate only after the four wall sections; needs sieges (ADR-099, ADR-106)
+- [x] Siege Ballistics: the `WarMachines` rules in sieges (auto-fire, control, second shot); the hero's own offensive machine is the
+      siege engine, auto-fire takes the gate only after the four wall sections (ADR-099, ADR-106, ADR-109)
 - [x] Skill specialties: the skill's effect +5 % per hero level (ADR-072, ADR-083: Melee, Archery, Logistics, attunement mana)
 - [ ] Skill specialties for Tactics, Blood Rage and Warcry (numbers not set) and Necromancy (ADR-083)
 - [x] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3; ADR-078)
@@ -602,12 +602,16 @@ Power, an element per spell.
 - [x] Exchanging war machines between heroes (ADR-070, ADR-083: `GiveWarMachineCommand`, exchange panel, AI)
 - [ ] Towns keep machines only through a garrison hero (waits for garrison heroes); war machine tuning
 - [x] Teleporting creatures move like flyers (ADR-070, ADR-083: `Teleporting` capability; no creature has it yet)
-- [ ] Siege battles before 1.0 (ADR-099, ADR-106): every battle at a town with a Fort; 36-wide field; 4 wall sections (2 points, 3 at
-      Castle) and a 1-point gate the defenders pass; keep (Citadel) and two towers (Castle) shooting 10 + 2 per town building (keep
-      double), 3 points each; moat (Citadel) that stops a stack and deals two tower shots; no free catapult, the attacker's offensive
-      machine breaks the walls; 1/2 cover behind walls; one defending shooter in the keep
-- [ ] Sieges: the 3D battle scene (walls, gate, towers, moat, breaches), the AI attacking a fortified town only when its estimate wins and
-      defending behind the walls (ADR-106)
+- [x] Siege battles (ADR-099, ADR-106, ADR-109): every battle at a town with a Fort (garrison or a hero in its own town); 36-wide field;
+      4 wall sections (2 points, 3 at Castle) and a 1-point gate the defenders pass; keep (Citadel) and two towers (Castle) shooting
+      10 + 2 per town building (keep double) when a round starts, 3 points each; moat (Citadel) that stops an attacker and deals two tower
+      shots; no free catapult, the attacker's offensive machine always joins and breaks the walls (`BattleShootStructureCommand` from
+      Basic Ballistics); 1/2 cover for attackers' shots across walls; `SiegeTests`, a siege replay test
+- [ ] Sieges: one defending shooter in the keep (ADR-106 g); Earthquake (with magic)
+- [x] Sieges: the AI attacking a fortified town only when its estimate (a siege fight) wins, defending behind the walls, walking to a
+      breach (ADR-109)
+- [ ] Sieges: the 3D battle scene (walls, gate, keep, towers, moat, rubble, shots, aiming the engine at a structure) is built but not run
+      in Godot yet; a smoke scenario; the town's own look on the siege field
 - [x] Battle movement as a circle (ADR-088, ADR-089, CMB-9): reach within Speed + 0.25 cells at any angle (Theta* around obstacles),
       flyers and teleporters by straight-line distance, the distance penalty measured the same way, battle speeds +10 %; old replay
       digests change

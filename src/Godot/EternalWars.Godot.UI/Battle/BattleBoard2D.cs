@@ -10,7 +10,8 @@ namespace EternalWars.Godot.UI.Battle;
 
 /// <summary>
 /// Top-down debug view of the current battle (2D harness): grid, obstacles, units with their counts, the active
-/// unit and, for a human-commanded unit, where it can move; during the deployment step (ADR-072) the deployer's zone. Shown while a battle runs, hidden afterwards.
+/// unit and, for a human-commanded unit, where it can move; during the deployment step (ADR-072) the deployer's zone; in a siege the walls, gate
+/// and moat (ADR-106). Shown while a battle runs, hidden afterwards.
 /// Clicks are reported through <see cref="CellClicked"/>; the app maps them to battle commands.
 /// </summary>
 public partial class BattleBoard2D : Control
@@ -55,6 +56,8 @@ public partial class BattleBoard2D : Control
         this.SubscribeWhileInTree<BattleDeploymentEnded>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitAttacked>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitDied>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<SiegeStructureShot>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(session.Events, _ => QueueRedraw());
     }
 
     public override void _Draw()
@@ -91,6 +94,22 @@ public partial class BattleBoard2D : Control
         foreach (var obstacle in battle.Obstacles)
         {
             DrawRect(ToRect(obstacle.Rect).Grow(-1), new Color(0.35f, 0.30f, 0.25f));
+        }
+
+        // A siege (ADR-106): the moat, then the wall sections and the gate on the wall line; the keep and towers stand off the board.
+        if (battle.Siege is { } siege)
+        {
+            foreach (var moat in siege.Moat)
+            {
+                DrawRect(ToRect(moat), new Color(0.20f, 0.35f, 0.60f, 0.55f));
+            }
+
+            foreach (var structure in siege.Structures.Where(s => s.OnField))
+            {
+                var color = !structure.IsStanding ? new Color(0.30f, 0.28f, 0.25f, 0.6f)
+                    : structure.Kind == SiegeStructureKind.Gate ? new Color(0.50f, 0.33f, 0.18f) : new Color(0.62f, 0.60f, 0.56f);
+                DrawRect(ToRect(structure.Rect).Grow(-1), color);
+            }
         }
 
         var font = ThemeDB.FallbackFont;

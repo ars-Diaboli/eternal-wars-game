@@ -77,13 +77,18 @@ public static class BattleGrid
             return result;
         }
 
+        // In a siege an attacker that walks into the moat stops there (ADR-106); one already in it moves on freely.
+        var siege = battle.Siege;
+        var moatStops = SiegeRules.FearsMoat(battle, unit.Side) && !siege!.InMoat(unit.Rect);
+        bool StopsAt(CellPosition p) => moatStops && siege!.InMoat(unit.RectAt(p));
+
         var parent = new Dictionary<CellPosition, CellPosition> { [start] = start };
         var done = new HashSet<CellPosition>();
         var frontier = new PriorityQueue<CellPosition, (int Length, int Y, int X)>();
         frontier.Enqueue(start, (0, start.Y, start.X));
         while (frontier.TryDequeue(out var current, out var priority))
         {
-            if (priority.Length != result[current] || !done.Add(current))
+            if (priority.Length != result[current] || !done.Add(current) || StopsAt(current))
             {
                 continue;
             }
@@ -102,7 +107,7 @@ public static class BattleGrid
                 }
 
                 var from = parent[current];
-                if (from == current || !IsClearLine(clearance, from, next, size))
+                if (from == current || !IsClearLine(clearance, from, next, size, moatStops ? StopsAt : null))
                 {
                     from = current;
                 }
@@ -156,6 +161,12 @@ public static class BattleGrid
             return false;
         }
 
+        // The siege engine fires at troops only from Advanced Ballistics (ADR-063).
+        if (SiegeRules.IsSiegeEngine(battle, unit) && !WarMachines.CanTargetTroops(battle.Participant(unit.Side).Bonus.Ballistics))
+        {
+            return false;
+        }
+
         penaltyEighths = RangedPenaltyEighths(battle, unit, target);
         return penaltyEighths <= BattleState.MaxRangedPenaltyEighths;
     }
@@ -178,14 +189,20 @@ public static class BattleGrid
 
     /// <summary>
     /// Sum of cover from every unit (either side) and obstacle the line of fire passes through, each counted once
-    /// (ADR-035). The line runs from the centre of the shooter's footprint to the centre of the target's.
+    /// (ADR-035). The line runs from the centre of the shooter's footprint to the centre of the target's. In a siege an attacker's shot across a
+    /// standing wall section or the gate takes the wall's 1/2 once (ADR-106; the defenders shoot out freely, assumed).
     /// </summary>
     public static int CoverEighths(BattleState battle, BattleUnit shooter, BattleUnit target)
     {
         var units = new HashSet<BattleUnit>();
         var obstacles = new HashSet<BattleObstacle>();
+        var wall = false;
+        var walls = shooter.Side == BattleSide.Attacker && battle.Siege is { } siege
+            ? siege.Structures.Where(s => s.IsStanding && s.OnField).ToList()
+            : [];
         foreach (var cell in LineOfFireCells(shooter.Rect, target.Rect))
         {
+            wall |= walls.Any(s => s.Rect.Contains(cell));
             if (battle.UnitAt(cell) is { } unit && unit != shooter && unit != target)
             {
                 units.Add(unit);
@@ -197,7 +214,7 @@ public static class BattleGrid
             }
         }
 
-        return units.Sum(u => u.Creature.Size.CoverEighths()) + obstacles.Sum(o => o.Class.CoverEighths());
+        return units.Sum(u => u.Creature.Size.CoverEighths()) + obstacles.Sum(o => o.Class.CoverEighths()) + (wall ? ObstacleClass.Wall.CoverEighths() : 0);
     }
 
     /// <summary>
@@ -247,19 +264,20 @@ public static class BattleGrid
     /// <summary>
     /// Whether the footprint can slide straight from <paramref name="from"/> to <paramref name="to"/>: every placement its top-left cell passes
     /// through is free. Where the line crosses a grid corner exactly, one of the two placements beside the corner is enough (as for a diagonal
-    /// step).
+    /// step). A placement where the mover would have to stop (<paramref name="stops"/>: the moat) ends the line unless it is <paramref name="to"/>.
     /// </summary>
-    private static bool IsClearLine(Clearance clearance, CellPosition from, CellPosition to, int size)
+    private static bool IsClearLine(Clearance clearance, CellPosition from, CellPosition to, int size, Func<CellPosition, bool>? stops = null)
     {
         int nx = Math.Abs(to.X - from.X), ny = Math.Abs(to.Y - from.Y);
         int sx = Math.Sign(to.X - from.X), sy = Math.Sign(to.Y - from.Y);
         var (x, y) = (from.X, from.Y);
+        bool Passable(CellPosition p) => clearance.IsFree(p, size) && (stops is null || p == to || !stops(p));
         for (int ix = 0, iy = 0; ix < nx || iy < ny;)
         {
             var decision = ((1 + (2L * ix)) * ny) - ((1 + (2L * iy)) * nx);
             if (decision == 0)
             {
-                if (!clearance.IsFree(new CellPosition(x + sx, y), size) && !clearance.IsFree(new CellPosition(x, y + sy), size))
+                if (!Passable(new CellPosition(x + sx, y)) && !Passable(new CellPosition(x, y + sy)))
                 {
                     return false;
                 }
@@ -280,7 +298,7 @@ public static class BattleGrid
                 iy++;
             }
 
-            if (!clearance.IsFree(new CellPosition(x, y), size))
+            if (!Passable(new CellPosition(x, y)))
             {
                 return false;
             }
@@ -289,18 +307,67 @@ public static class BattleGrid
         return true;
     }
 
-    /// <summary>Free-cell lookup for placing one unit's footprint: obstacles and every other living unit block.</summary>
+    /// <summary>
+    /// Steps (8-way, one per placement) from each placement to the nearest one next to any of <paramref name="targets"/>, around obstacles and a
+    /// siege's walls but through units (they move): the battle AI's way to a breach (ADR-106). Placements that cannot get there are missing.
+    /// </summary>
+    public static IReadOnlyDictionary<CellPosition, int> ApproachSteps(BattleState battle, BattleUnit unit, IEnumerable<BattleUnit> targets)
+    {
+        var clearance = new Clearance(battle, unit, ignoreUnits: true);
+        var size = unit.Size;
+        var rects = targets.Select(t => t.Rect).ToList();
+        var steps = new Dictionary<CellPosition, int>();
+        var frontier = new Queue<CellPosition>();
+        for (var y = 0; y <= BattleState.Height - size; y++)
+        {
+            for (var x = 0; x <= battle.Width - size; x++)
+            {
+                var p = new CellPosition(x, y);
+                if (clearance.IsFree(p, size) && rects.Any(r => unit.RectAt(p).IsAdjacentTo(r)))
+                {
+                    steps[p] = 0;
+                    frontier.Enqueue(p);
+                }
+            }
+        }
+
+        while (frontier.TryDequeue(out var current))
+        {
+            foreach (var (dx, dy) in Steps)
+            {
+                var next = current.Offset(dx, dy);
+                if (steps.ContainsKey(next) || !clearance.IsFree(next, size)
+                    || (dx != 0 && dy != 0 && !clearance.IsFree(current.Offset(dx, 0), size) && !clearance.IsFree(current.Offset(0, dy), size)))
+                {
+                    continue;
+                }
+
+                steps[next] = steps[current] + 1;
+                frontier.Enqueue(next);
+            }
+        }
+
+        return steps;
+    }
+
+    /// <summary>
+    /// Free-cell lookup for placing one unit's footprint: obstacles, a siege's standing walls (the gate only for attackers) and every other living
+    /// unit block.
+    /// </summary>
     private sealed class Clearance
     {
         private readonly int[,] _blockedPrefix;
         private readonly BattleState _battle;
 
-        public Clearance(BattleState battle, BattleUnit mover)
+        public Clearance(BattleState battle, BattleUnit mover, bool ignoreUnits = false)
         {
             _battle = battle;
             var blocked = new bool[battle.Width, BattleState.Height];
-            foreach (var rect in battle.Obstacles.Select(o => o.Rect)
-                         .Concat(battle.LivingUnits.Where(u => u != mover).Select(u => u.Rect)))
+            var walls = battle.Siege?.Structures
+                .Where(s => s.IsStanding && s.OnField && (s.Kind == SiegeStructureKind.Wall || mover.Side == BattleSide.Attacker))
+                .Select(s => s.Rect) ?? [];
+            foreach (var rect in battle.Obstacles.Select(o => o.Rect).Concat(walls)
+                         .Concat(ignoreUnits ? [] : battle.LivingUnits.Where(u => u != mover).Select(u => u.Rect)))
             {
                 foreach (var cell in rect.Cells().Where(c => c.X >= 0 && c.Y >= 0 && c.X < battle.Width && c.Y < BattleState.Height))
                 {

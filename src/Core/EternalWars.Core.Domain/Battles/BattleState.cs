@@ -167,6 +167,9 @@ public sealed class BattleState
 
     public bool IsAmbush { get; }
 
+    /// <summary>The town's fortifications when the battle is a siege (ADR-099, ADR-106); null for an ordinary battle.</summary>
+    public SiegeState? Siege { get; internal set; }
+
     public BattlePhase Phase { get; internal set; }
 
     public int Width { get; internal set; } = DefaultWidth;
@@ -255,6 +258,7 @@ public sealed class BattleState
             Winner = Winner,
             EndReason = EndReason,
             PendingStacks = PendingStacks,
+            Siege = Siege?.Copy(),
         };
         copy._units.AddRange(_units.Select(u => u.Copy()));
         copy._obstacles.AddRange(_obstacles);

@@ -34,13 +34,17 @@ internal sealed class BattleEstimator(GameState state)
 
     public void Clear() => _cache.Clear();
 
-    /// <summary>A hero army attacking another army (a monster stack, a garrison or an enemy hero's troops).</summary>
-    public BattleEstimate Fight(Hero attacker, Army defender, int defenderAttack = 0, int defenderDefense = 0)
+    /// <summary>
+    /// A hero army attacking another army (a monster stack, a garrison or an enemy hero's troops); behind a town's fortifications when
+    /// <paramref name="siege"/> is set (ADR-106), with the hero's own war machines.
+    /// </summary>
+    public BattleEstimate Fight(Hero attacker, Army defender, int defenderAttack = 0, int defenderDefense = 0, Battles.SiegeSpec? siege = null)
     {
-        var key = $"{Describe(attacker.Army)}|{attacker.Attack}/{attacker.Defense}|{Describe(defender)}|{defenderAttack}/{defenderDefense}";
+        var key = $"{Describe(attacker.Army)}|{attacker.Attack}/{attacker.Defense}|{Describe(defender)}|{defenderAttack}/{defenderDefense}"
+                  + (siege is null ? "" : $"|siege {siege.FortLevel}/{siege.Buildings} {string.Join(",", attacker.WarMachines.Order())}");
         if (!_cache.TryGetValue(key, out var estimate))
         {
-            estimate = Simulate(attacker, defender, defenderAttack, defenderDefense);
+            estimate = Simulate(attacker, defender, defenderAttack, defenderDefense, siege);
             _cache[key] = estimate;
         }
 
@@ -49,7 +53,7 @@ internal sealed class BattleEstimator(GameState state)
 
     private static string Describe(Army army) => string.Join(",", army.Slots.Select(s => s is null ? "-" : $"{s.Creature}:{s.Count}"));
 
-    private BattleEstimate Simulate(Hero attacker, Army defender, int defenderAttack, int defenderDefense)
+    private BattleEstimate Simulate(Hero attacker, Army defender, int defenderAttack, int defenderDefense, Battles.SiegeSpec? siege)
     {
         var start = Power(attacker.Army);
         if (start == 0)
@@ -67,9 +71,16 @@ internal sealed class BattleEstimator(GameState state)
                 new Hero(new HeroId(1), "Attacker", players[0].Id, new MapPosition(0, 0), new Army(attacker.Army.Slots), attacker.TotalAttack, attacker.TotalDefense),
                 new Hero(new HeroId(2), "Defender", players[1].Id, new MapPosition(1, 0), new Army(defender.Slots), defenderAttack, defenderDefense),
             };
+            if (siege is not null)
+            {
+                // Without its offensive machine a hero breaks no walls.
+                heroes[0].SetWarMachines(attacker.WarMachines);
+            }
+
             var session = new GameSession(new GameState(
                 new AdventureMap(3, 1), players, heroes, options: new GameOptions(Seed: seed), creatures: state.Creatures, heroRoster: state.HeroRoster));
             session.Battles.AiMayRetreat = false; // guards never retreat; the estimate is a fight to the end
+            session.Battles.EstimateSiege = siege;
             session.Start();
             session.Execute(new StepHeroCommand(players[0].Id, heroes[0].Id, Direction.East));
 

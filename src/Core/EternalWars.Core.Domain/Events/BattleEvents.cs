@@ -10,9 +10,19 @@ public sealed record BattleUnitInfo(int Unit, BattleSide Side, string Creature, 
     public CellRect Rect => new(Position.X, Position.Y, Width, Height);
 }
 
+/// <summary>A siege structure as the battle starts (ADR-106).</summary>
+public sealed record SiegeStructureInfo(int Structure, SiegeStructureKind Kind, CellRect Rect, int Health);
+
+/// <summary>A siege's fortifications as the battle starts: the town's fort level, its structures and the moat's cells (ADR-106).</summary>
+public sealed record SiegeLayout(int FortLevel, IReadOnlyList<SiegeStructureInfo> Structures, IReadOnlyList<CellRect> Moat)
+{
+    public static SiegeLayout Of(SiegeState siege) =>
+        new(siege.FortLevel, siege.Structures.Select(s => new SiegeStructureInfo(s.Id, s.Kind, s.Rect, s.Health)).ToList(), siege.Moat);
+}
+
 /// <summary>
 /// The battlefield is set up (after the width choice, if any). Fighting begins at once, or after the deployment step
-/// (<see cref="BattleDeploymentStarted"/> … <see cref="BattleDeploymentEnded"/>).
+/// (<see cref="BattleDeploymentStarted"/> … <see cref="BattleDeploymentEnded"/>). <paramref name="Siege"/> is set for a siege (ADR-106).
 /// </summary>
 public sealed record BattleStarted(
     HeroId? AttackerHero,
@@ -22,7 +32,20 @@ public sealed record BattleStarted(
     int Height,
     bool IsAmbush,
     IReadOnlyList<BattleUnitInfo> Units,
-    IReadOnlyList<BattleObstacle> Obstacles) : IEvent;
+    IReadOnlyList<BattleObstacle> Obstacles,
+    SiegeLayout? Siege = null) : IEvent;
+
+/// <summary>
+/// The attacker's offensive machine fired at a siege structure (ADR-106): <paramref name="Hit"/> whether it hit, <paramref name="Damage"/> the hit
+/// points it took off, <paramref name="Health"/> what is left (0: destroyed; a wall section is a gap now).
+/// </summary>
+public sealed record SiegeStructureShot(int Machine, int Structure, bool Hit, int Damage, int Health) : IEvent;
+
+/// <summary>
+/// The fortifications hurt a stack (ADR-106): a shot of the keep or a tower (<paramref name="Structure"/>), or the moat it entered.
+/// <paramref name="RemainingCount"/> is the stack's size afterwards.
+/// </summary>
+public sealed record BattleUnitSiegeDamaged(int Unit, SiegeDamageSource Source, int? Structure, int Damage, int Killed, int RemainingCount) : IEvent;
 
 /// <summary>The side with the higher Tactics may place its stacks within <paramref name="Columns"/> columns of its edge (ADR-072).</summary>
 public sealed record BattleDeploymentStarted(BattleSide Side, int Columns) : IEvent;

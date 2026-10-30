@@ -22,7 +22,8 @@ namespace EternalWars.Godot.Shared.Battle;
 /// <see cref="Idle"/>. After <see cref="BattleEnded"/> has played, <see cref="Finished"/> is raised and the view stays
 /// open until <see cref="Close"/>. Input is mapped by the app: <see cref="PickPoint"/> and <see cref="ShowIntent"/>.
 /// During the deployment step (ADR-072) the zone is shaded, <see cref="Pick"/> marks the stack being placed and
-/// <see cref="ShowPlacement"/> previews where it would go.
+/// <see cref="ShowPlacement"/> previews where it would go. A siege (ADR-106) adds the wall sections, the gate and the moat on the field and the
+/// keep and towers beside it; destroyed structures fall to rubble.
 /// </summary>
 public partial class BattleView3D : Node3D
 {
@@ -39,6 +40,9 @@ public partial class BattleView3D : Node3D
     private static readonly Color ZoneColor = new(0.35f, 0.65f, 1.0f, 0.18f);
 
     private readonly Dictionary<int, BattleUnitView> _units = [];
+
+    /// <summary>A siege's structures by id (ADR-106).</summary>
+    private readonly Dictionary<int, (SiegeStructureKind Kind, CellRect Rect, MeshInstance3D Node)> _structures = [];
 
     /// <summary>Where each unit will stand once the queue has played: the geometry of steps queued after a move.</summary>
     private readonly Dictionary<int, CellRect> _planned = [];
@@ -168,6 +172,8 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitDied>(events, OnDied);
         this.SubscribeWhileInTree<BattleMoraleTriggered>(events, OnMorale);
         this.SubscribeWhileInTree<BattleUnitHealed>(events, OnHealed);
+        this.SubscribeWhileInTree<SiegeStructureShot>(events, OnStructureShot);
+        this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(events, OnSiegeDamaged);
         this.SubscribeWhileInTree<BattleRageGained>(events, e => Step(null, () => Narrate($"Blood Rage: {NameOf(e.Unit)} has +{e.Attack} Attack.")));
         this.SubscribeWhileInTree<BattleWarcryUsed>(events, e => Step(null, () => Narrate(WarcryLine(e))));
         this.SubscribeWhileInTree<BattleUnitTerrified>(events, e => Step(null, () => Narrate($"Terror: {NameOf(e.Unit)} loses its action.")));
@@ -204,7 +210,7 @@ public partial class BattleView3D : Node3D
             .ToList();
         Open(new BattleStarted(
             battle.Attacker.Hero, battle.Defender.Hero, battle.Defender.Guard, battle.Width, BattleState.Height, battle.IsAmbush,
-            units, battle.Obstacles.ToList()));
+            units, battle.Obstacles.ToList(), battle.Siege is { } siege ? SiegeLayout.Of(siege) : null));
         SetActive(battle.ActiveUnit?.Id);
         RefreshReach();
     }
@@ -221,10 +227,11 @@ public partial class BattleView3D : Node3D
         Closed?.Invoke();
     }
 
-    /// <summary>The ground point under the screen position, in cell units (fractions kept), or null off the field.</summary>
+    /// <summary>The ground point under the screen position, in cell units (fractions kept), or null off the field and a siege's structures.</summary>
     public Vector2? PickPoint(Vector2 screenPoint) =>
         IsOpen && BattleSpace.PickPoint(_camera, screenPoint) is { } point &&
-        point.X >= 0 && point.Y >= 0 && point.X < _width && point.Y < BattleState.Height
+        ((point.X >= 0 && point.Y >= 0 && point.X < _width && point.Y < BattleState.Height)
+         || _structures.Values.Any(s => s.Rect.Contains(BattleSpace.ToCell(point))))
             ? point
             : null;
 
@@ -253,6 +260,9 @@ public partial class BattleView3D : Node3D
                 break;
             case ShootAction shoot:
                 ShowOverlay(_target, battle.GetUnit(shoot.Target).Rect, ShootColor);
+                break;
+            case ShootStructureAction aim when _structures.TryGetValue(aim.Structure, out var structure):
+                ShowOverlay(_target, structure.Rect, ShootColor);
                 break;
         }
     }
@@ -303,6 +313,11 @@ public partial class BattleView3D : Node3D
         foreach (var obstacle in e.Obstacles)
         {
             _field.AddChild(ObstacleNode(obstacle));
+        }
+
+        if (e.Siege is { } layout)
+        {
+            BuildSiege(layout);
         }
 
         foreach (var info in e.Units)
@@ -433,6 +448,91 @@ public partial class BattleView3D : Node3D
             },
             () => Narrate($"The healing tent restores {e.Healed} health to {view.Creature.Name}."));
     }
+
+    /// <summary>The siege engine's shot at a structure (ADR-106): a projectile and a shudder, or a miss; a destroyed structure falls to rubble.</summary>
+    private void OnStructureShot(SiegeStructureShot e)
+    {
+        if (!_units.TryGetValue(e.Machine, out var machine) || !_structures.TryGetValue(e.Structure, out var structure))
+        {
+            return;
+        }
+
+        var from = BattleSpace.Center(_planned[e.Machine]) + (Vector3.Up * machine.BodyHeight * 1.4f);
+        var to = BattleSpace.Center(structure.Rect) + (Vector3.Up * 0.5f);
+        var name = StructureName(structure.Kind);
+        var line = !e.Hit ? $"The {machine.Creature.Name} misses the {name}."
+            : e.Health == 0 ? $"The {machine.Creature.Name} destroys the {name}."
+            : $"The {machine.Creature.Name} hits the {name}: {e.Health} hit point(s) left.";
+        Step(
+            t =>
+            {
+                var projectile = Projectile(from);
+                t.TweenCallback(Callable.From(() => projectile.Visible = true));
+                t.TweenProperty(projectile, "position", to, Mathf.Clamp(from.DistanceTo(to) * 0.05f, 0.2f, 0.5f));
+                t.TweenCallback(Callable.From(projectile.QueueFree));
+                if (e.Hit)
+                {
+                    t.TweenProperty(structure.Node, "scale", new Vector3(1.08f, 0.92f, 1.08f), 0.06f);
+                    t.TweenProperty(structure.Node, "scale", Vector3.One, 0.08f);
+                }
+            },
+            () =>
+            {
+                if (e.Health == 0)
+                {
+                    Ruin(structure.Node);
+                }
+
+                Narrate(line);
+            });
+    }
+
+    /// <summary>A tower's shot at a stack or the moat's damage to one that entered it (ADR-106).</summary>
+    private void OnSiegeDamaged(BattleUnitSiegeDamaged e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var target))
+        {
+            return;
+        }
+
+        var to = BattleSpace.Center(_planned[e.Unit]);
+        var tower = e.Structure is { } id && _structures.TryGetValue(id, out var found) ? found : ((SiegeStructureKind Kind, CellRect Rect, MeshInstance3D Node)?)null;
+        var line = e.Source == SiegeDamageSource.Moat
+            ? $"{target.Creature.Name} wade into the moat: {e.Damage} damage, {e.Killed} killed."
+            : $"The {StructureName(tower?.Kind ?? SiegeStructureKind.Tower)} shoots {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.";
+        Step(
+            t =>
+            {
+                if (tower is { } shooter)
+                {
+                    var projectile = Projectile(BattleSpace.Center(shooter.Rect) + (Vector3.Up * 1.4f));
+                    t.TweenCallback(Callable.From(() => projectile.Visible = true));
+                    t.TweenProperty(projectile, "position", to + (Vector3.Up * target.BodyHeight), 0.35f);
+                    t.TweenCallback(Callable.From(projectile.QueueFree));
+                }
+
+                var text = FloatingText($"-{e.Killed}", to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
+                t.TweenCallback(Callable.From(() => text.Visible = true));
+                t.TweenProperty(target.BodyMaterial, "albedo_color", HitColor, 0.08f);
+                t.Parallel().TweenProperty(text, "position", text.Position + (Vector3.Up * 0.6f), 0.45f);
+                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.45f);
+                t.Parallel().TweenProperty(target.BodyMaterial, "albedo_color", target.BaseColor, 0.15f).SetDelay(0.08f);
+                t.TweenCallback(Callable.From(text.QueueFree));
+            },
+            () =>
+            {
+                target.SetCount(e.RemainingCount);
+                Narrate(line);
+            });
+    }
+
+    private static string StructureName(SiegeStructureKind kind) => kind switch
+    {
+        SiegeStructureKind.Wall => "wall section",
+        SiegeStructureKind.Gate => "gate",
+        SiegeStructureKind.Keep => "keep",
+        _ => "tower",
+    };
 
     /// <summary>The log line of a warcry (ADR-067).</summary>
     private string WarcryLine(BattleWarcryUsed e) => e.Warcry switch
@@ -595,6 +695,7 @@ public partial class BattleView3D : Node3D
         }
 
         _units.Clear();
+        _structures.Clear();
         _planned.Clear();
         _reach.InstanceCount = 0;
         _ghost.Visible = false;
@@ -696,6 +797,71 @@ public partial class BattleView3D : Node3D
             Mesh = mesh,
             Position = BattleSpace.Center(obstacle.Rect) + (Vector3.Up * height),
         };
+    }
+
+    /// <summary>A siege's fortifications (ADR-106): the moat as water in front of the walls, the wall sections and gate on the wall line, the keep and towers beside the field.</summary>
+    private void BuildSiege(SiegeLayout layout)
+    {
+        var water = new StandardMaterial3D
+        {
+            AlbedoColor = new Color(0.18f, 0.32f, 0.55f, 0.8f),
+            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+            Roughness = 0.2f,
+        };
+        foreach (var moat in layout.Moat)
+        {
+            _field.AddChild(new MeshInstance3D
+            {
+                Name = "Moat",
+                Mesh = new BoxMesh { Size = new Vector3(moat.Width * BattleSpace.CellSize, 0.02f, moat.Height * BattleSpace.CellSize), Material = water },
+                Position = BattleSpace.Center(moat) + (Vector3.Up * 0.012f),
+                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+            });
+        }
+
+        foreach (var structure in layout.Structures)
+        {
+            var node = StructureNode(structure);
+            _field.AddChild(node);
+            _structures[structure.Structure] = (structure.Kind, structure.Rect, node);
+            if (structure.Health == 0)
+            {
+                Ruin(node);
+            }
+        }
+    }
+
+    /// <summary>Stone blocks for the walls and the keep, a wooden gate, round towers.</summary>
+    private static MeshInstance3D StructureNode(SiegeStructureInfo structure)
+    {
+        var width = structure.Rect.Width * BattleSpace.CellSize;
+        var depth = structure.Rect.Height * BattleSpace.CellSize;
+        var (mesh, height, color) = structure.Kind switch
+        {
+            SiegeStructureKind.Gate => ((PrimitiveMesh)new BoxMesh { Size = new Vector3(width, 0.9f, depth) }, 0.9f, new Color(0.45f, 0.30f, 0.16f)),
+            SiegeStructureKind.Keep => (new BoxMesh { Size = new Vector3(width, 1.8f, depth) }, 1.8f, new Color(0.55f, 0.53f, 0.50f)),
+            SiegeStructureKind.Tower => (new CylinderMesh { TopRadius = depth * 0.45f, BottomRadius = depth * 0.5f, Height = 1.5f }, 1.5f, new Color(0.58f, 0.56f, 0.52f)),
+            _ => (new BoxMesh { Size = new Vector3(width, 1.1f, depth) }, 1.1f, new Color(0.62f, 0.60f, 0.56f)),
+        };
+        mesh.Material = new StandardMaterial3D { AlbedoColor = color, Roughness = 1f };
+        return new MeshInstance3D
+        {
+            Name = $"{structure.Kind}_{structure.Structure}",
+            Mesh = mesh,
+            Position = BattleSpace.Center(structure.Rect) + (Vector3.Up * height / 2),
+        };
+    }
+
+    /// <summary>A destroyed structure: a low, dark heap of rubble where it stood.</summary>
+    private static void Ruin(MeshInstance3D node)
+    {
+        var height = node.GetAabb().Size.Y;
+        node.Scale = new Vector3(1, 0.2f, 1);
+        node.Position = node.Position with { Y = BattleSpace.Origin.Y + (height * 0.1f) };
+        if (node.Mesh is PrimitiveMesh { Material: StandardMaterial3D material })
+        {
+            material.AlbedoColor = material.AlbedoColor.Darkened(0.45f);
+        }
     }
 
     private MeshInstance3D Projectile(Vector3 at)
