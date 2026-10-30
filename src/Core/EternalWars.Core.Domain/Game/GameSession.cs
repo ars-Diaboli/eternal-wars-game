@@ -40,6 +40,7 @@ public sealed class GameSession
         Bus.Subscribe<MapObjectRemoved>(visibility);
         Bus.Subscribe<HeroDefeated>(visibility);
         Bus.Subscribe<HeroHired>(visibility);
+        Bus.Subscribe<HeroLeftGarrison>(visibility);
         Bus.Subscribe<MapObjectChanged>(visibility);
         Bus.Subscribe<MapObjectPlaced>(visibility);
         Bus.Subscribe<SurroundingsRevealed>(visibility);
@@ -344,6 +345,12 @@ public sealed class GameSession
                 return null;
             case BuySpellBookCommand book:
                 Towns.BuySpellBook(book.Player, book.Town);
+                return null;
+            case EnterGarrisonCommand enter:
+                Towns.EnterGarrison(enter.Player, enter.Town);
+                return null;
+            case LeaveGarrisonCommand leave:
+                Towns.LeaveGarrison(leave.Player, leave.Town);
                 return null;
             case RespondToGuardCommand guard:
                 Guards.Respond(guard.Accept);

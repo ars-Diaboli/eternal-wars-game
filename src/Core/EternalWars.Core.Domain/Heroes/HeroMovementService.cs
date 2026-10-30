@@ -186,7 +186,7 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
         }
 
         var defended = entrance is Mine { Guard: not null } or CreatureDwelling { Guard: not null } or CreatureBank { IsGuarded: true }
-                       || (entrance is Town { Garrison.IsEmpty: false } town && IsHostile(hero, town))
+                       || (entrance is Town town && (!town.Garrison.IsEmpty || town.GarrisonHero is not null) && IsHostile(hero, town))
                        || (entrance is MapGarrison { Troops.IsEmpty: false } garrison && !garrison.LetsThrough(state, hero.Owner));
         if (defended && hero.Army.IsEmpty)
         {
@@ -213,6 +213,12 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
             hero.MaxMovementPoints = MovementAllowance.Daily(state, hero);
             hero.MovementPoints = hero.MaxMovementPoints;
             events.Publish(new HeroMovementRestored(hero.Id, hero.MovementPoints));
+        }
+
+        // A garrison hero rests too (ADR-112); its allowance is worked out again from the army it leads out (TownService.LeaveGarrison).
+        foreach (var hero in state.GarrisonHeroes.Where(h => h.Owner == owner))
+        {
+            hero.MovementPoints = hero.MaxMovementPoints;
         }
     }
 

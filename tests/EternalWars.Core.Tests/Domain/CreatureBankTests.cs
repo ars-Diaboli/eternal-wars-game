@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
@@ -41,14 +42,33 @@ public class CreatureBankTests
     public void TheGuardAndReward_AreRolledFromTheTable_WhenTheGameStarts()
     {
         var (_, churchyard) = World(BuiltInMapObjects.Churchyard);
-        Assert.Equal(new[] { new CreatureStack("necropolis.ghoul", 90) }, churchyard.Guard);
-        Assert.Equal(new ResourceSet(Gold: 2500), churchyard.Reward);
-        Assert.Equal(ArtifactTier.Minor, churchyard.RewardArtifact);
+        Assert.Contains(CreatureBankRules.Tables[BankRule.Churchyard], t => t.Guard.SequenceEqual(churchyard.Guard) && t.Reward == churchyard.Reward && t.Artifact == churchyard.RewardArtifact);
 
         var mansions = Enumerable.Range(1, 60).Select(s => World(BuiltInMapObjects.Mansion, seed: (ulong)s).Bank).ToList();
-        Assert.All(mansions, m => Assert.Contains(m.Guard.Single().Count, new[] { 40, 60, 80, 100 }));
+        Assert.All(mansions, m => Assert.Contains(m.Guard[0].Count, new[] { 25, 35, 45, 60 }));
         Assert.All(mansions, m => Assert.Equal(ArtifactTier.Major, m.RewardArtifact));
-        Assert.Contains(mansions, m => m.Reward == new ResourceSet(Gold: 5000, Crystal: 3, Mercury: 3, Sulfur: 3));
+        Assert.Contains(mansions, m => m.Reward == new ResourceSet(Gold: 12000, Crystal: 3, Mercury: 3, Sulfur: 3));
+    }
+
+    [Fact]
+    public void EveryBank_HasFourRowsOfTwoOrThreeTypesOfOneFaction_PayingAboutHalfTheGuardsWorth()
+    {
+        var creatures = CreatureCatalog.Default;
+        foreach (var (rule, rows) in CreatureBankRules.Tables)
+        {
+            Assert.Equal(new[] { 30, 30, 30, 10 }, rows.Select(r => r.Weight));
+            foreach (var row in rows)
+            {
+                var types = row.Guard.Select(s => s.Creature).Append(row.Upgraded).OfType<string>().Distinct().ToList();
+                Assert.InRange(types.Count, 2, 3);
+                Assert.Single(types.Select(c => creatures.Get(c).Town).Distinct());
+                var worth = row.Guard.Sum(s => creatures.Get(s.Creature).Cost.Gold * s.Count);
+                Assert.InRange(row.Reward.Gold * 100 / worth, 25, 60);
+            }
+        }
+
+        double Expected(BankRule rule) => CreatureBankRules.Tables[rule].Sum(r => r.Weight * r.Guard.Sum(s => creatures.Get(s.Creature).Cost.Gold * s.Count));
+        Assert.All(CreatureBankRules.Tables.Keys.Where(r => r != BankRule.DragonCity), r => Assert.True(Expected(BankRule.DragonCity) > 1.3 * Expected(r), r.ToString()));
     }
 
     [Fact]
@@ -56,7 +76,7 @@ public class CreatureBankTests
     {
         var treasuries = Enumerable.Range(1, 30).Select(s => World(BuiltInMapObjects.DwarvenTreasury, seed: (ulong)s).Bank).ToList();
 
-        Assert.All(treasuries, t => Assert.All(t.Guard, s => Assert.Contains(s.Creature, new[] { "neutral.dwarf", "neutral.battle-dwarf" })));
+        Assert.All(treasuries, t => Assert.All(t.Guard, s => Assert.Contains(s.Creature, new[] { "neutral.dwarf", "neutral.battle-dwarf", "neutral.thane" })));
         Assert.Contains(treasuries, t => t.Guard.Any(s => s.Creature == "neutral.battle-dwarf"));
     }
 
@@ -81,6 +101,7 @@ public class CreatureBankTests
         var (session, bank) = World(BuiltInMapObjects.Churchyard);
         var state = session.State;
         var gold = state.GetPlayer(Blue).Resources.Gold;
+        var (reward, tier) = (bank.Reward.Gold, bank.RewardArtifact);
         var plundered = new List<CreatureBankPlundered>();
         session.Events.Subscribe<CreatureBankPlundered>(plundered.Add);
 
@@ -88,9 +109,9 @@ public class CreatureBankTests
         Assert.Equal(BattlePhase.Fighting, state.Battle!.Phase);
         session.AutoResolve();
 
-        Assert.Equal(gold + 2500, state.GetPlayer(Blue).Resources.Gold);
+        Assert.Equal(gold + reward, state.GetPlayer(Blue).Resources.Gold);
         var artifact = Assert.Single(state.GetHero(A).Artifacts.Backpack);
-        Assert.Equal(ArtifactTier.Minor, state.Artifacts.Get(artifact).Tier);
+        Assert.Equal(tier, state.Artifacts.Get(artifact).Tier);
         Assert.Equal(artifact, Assert.Single(plundered).Artifact);
         Assert.False(bank.IsGuarded);
         Assert.Equal(GameDate.First, bank.PlunderedOn);
@@ -165,7 +186,7 @@ public class CreatureBankTests
     {
         var (session, ruins) = World(BuiltInMapObjects.Crypt, size: 40);
         var state = session.State;
-        Assert.Equal(5, ruins.Guard.Count); // skeletons, wights, wraiths, skeleton warriors, arch liches
+        Assert.Equal(3, ruins.Guard.Count); // skeletons, wights, liches (ADR-112)
         Assert.False(state.Fog.IsExplored(Blue, new MapPosition(14, 1)));
 
         session.Step(A, Direction.North);

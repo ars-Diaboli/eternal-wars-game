@@ -57,7 +57,7 @@ public static class TownsScenario
             foreach (var line in lines.BaseCreaturesOf(town.TownType).Where(l => l.Tier == 1))
             {
                 town.SetDwelling(line.Id, 1);
-                town.SetAvailable(line.Id, TownRules.WeeklyGrowth(town, line));
+                town.SetAvailable(line.Id, TownRules.WeeklyGrowth(buildings ?? BuildingCatalog.Default, town, line));
             }
         }
 

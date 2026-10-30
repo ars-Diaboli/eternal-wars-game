@@ -164,9 +164,20 @@ public sealed class GameState
 
     public bool HasPlayer(PlayerId id) => _players.Any(p => p.Id == id);
 
-    public Hero GetHero(HeroId id) => _heroes.First(h => h.Id == id);
+    /// <summary>A hero on the map or in a town's garrison (ADR-112).</summary>
+    public Hero GetHero(HeroId id) => _heroes.FirstOrDefault(h => h.Id == id) ?? GarrisonHeroes.First(h => h.Id == id);
 
+    /// <summary>The player's heroes on the map (garrison heroes are not, ADR-112).</summary>
     public IEnumerable<Hero> HeroesOf(PlayerId owner) => _heroes.Where(h => h.Owner == owner);
+
+    /// <summary>The heroes in towns' garrisons, by town id (ADR-112): off the map, not counted towards the hero limit.</summary>
+    public IEnumerable<Hero> GarrisonHeroes => ObjectsOf<Towns.Town>().OrderBy(t => t.Id.Value).Select(t => t.GarrisonHero).OfType<Hero>();
+
+    /// <summary>Every hero of the player: on the map, then in garrisons (income, mana, movement and statuses count them all, ADR-112).</summary>
+    public IEnumerable<Hero> AllHeroesOf(PlayerId owner) => HeroesOf(owner).Concat(GarrisonHeroes.Where(h => h.Owner == owner));
+
+    /// <summary>The town whose garrison holds the hero, or null (ADR-112).</summary>
+    public Towns.Town? GarrisonOf(HeroId hero) => ObjectsOf<Towns.Town>().FirstOrDefault(t => t.GarrisonHero?.Id == hero);
 
     /// <summary>How many heroes the player may have: its own limit, else the map's (<see cref="ScenarioRules.MaxHeroes"/>, ADR-068).</summary>
     public int HeroLimit(PlayerId owner) => GetPlayer(owner).MaxHeroes ?? Rules.MaxHeroes;

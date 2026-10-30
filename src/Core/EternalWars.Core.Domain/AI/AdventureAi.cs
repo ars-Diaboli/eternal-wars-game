@@ -318,7 +318,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     {
         var lines = TownRules.Lines(_state, town);
         IEnumerable<CreatureDefinition> Best(int tier) =>
-            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.Value * TownRules.WeeklyGrowth(town, l)).ThenBy(l => l.Id, StringComparer.Ordinal);
+            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.Value * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id, StringComparer.Ordinal);
         bool TierBuilt(int tier) => lines.Any(l => l.Tier == tier && town.DwellingLevel(l.Id) > 0);
 
         if (town.Level(BuiltInBuildings.Fort) < 1)
@@ -347,11 +347,15 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         yield return (false, BuiltInBuildings.Marketplace);
         yield return (false, BuiltInBuildings.Blacksmith);
         yield return (false, BuiltInBuildings.MageGuild);
+        yield return (false, BuiltInBuildings.WarLodge); // Stronghold and Swamp Bestiary instead of the guild (ADR-071)
         yield return (false, BuiltInBuildings.TownHall);
         foreach (var line in lines.Where(l => town.DwellingLevel(l.Id) == 1 && l.UpgradesTo is not null).OrderBy(l => l.Tier))
         {
             yield return (true, line.Id);
         }
+
+        yield return (false, BuiltInBuildings.Growth(1)); // the growth buildings (ADR-071), once their tier has a dwelling
+        yield return (false, BuiltInBuildings.Growth(2));
 
         yield return (false, BuiltInBuildings.Fort);
         yield return (false, BuiltInBuildings.TownHall);
@@ -363,6 +367,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
         yield return (false, BuiltInBuildings.Fort);
         yield return (false, BuiltInBuildings.MageGuild);
+        yield return (false, BuiltInBuildings.WarLodge);
         yield return (false, BuiltInBuildings.Tavern);
         yield return (false, BuiltInBuildings.TownHall); // the Capitol, once the Castle stands
     }

@@ -73,7 +73,7 @@ public static class ThievesGuild
     {
         detail = null;
         var resources = state.GetPlayer(player).Resources;
-        var heroes = state.HeroesOf(player).ToList();
+        var heroes = state.AllHeroesOf(player).ToList();
         switch (row)
         {
             case ThievesGuildRow.Towns:

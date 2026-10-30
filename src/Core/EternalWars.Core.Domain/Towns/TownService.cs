@@ -34,7 +34,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         town.SetLevel(building, level.Level);
         town.LastBuilt = state.Date;
         events.Publish(new TownBuilt(town.Id, building, level.Level));
-        if (building == BuiltInBuildings.MageGuild)
+        if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge)
         {
             Magic.MagicRules.VisitBy(state, events, town);
         }
@@ -53,7 +53,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         if (level.Level == 1)
         {
             // HoMM3: a new dwelling opens with its first week of creatures, fort bonus included (ADR-066).
-            town.SetAvailable(line, town.AvailableOf(line) + TownRules.WeeklyGrowth(town, definition));
+            town.SetAvailable(line, town.AvailableOf(line) + TownRules.WeeklyGrowth(state, town, definition));
         }
 
         events.Publish(new DwellingBuilt(town.Id, line, level.Level, town.AvailableOf(line)));
@@ -144,6 +144,49 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Magic.MagicRules.Visit(state, events, hero, town);
     }
 
+    /// <summary>The visiting hero moves into the garrison (ADR-112): its stacks join the garrison's, and it leaves the map.</summary>
+    internal void EnterGarrison(PlayerId player, MapObjectId townId)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(TownRules.CheckEnterGarrison(state, town));
+
+        var hero = TownRules.VisitingHero(state, town)!;
+        var merged = TownRules.Merged(town.Garrison, hero.Army)!;
+        for (var slot = 0; slot < Army.SlotCount; slot++)
+        {
+            town.Garrison.Set(slot, merged[slot]);
+            hero.Army.Set(slot, null);
+        }
+
+        state.RemoveHero(hero);
+        town.GarrisonHero = hero;
+        events.Publish(new HeroEnteredGarrison(town.Id, hero.Id));
+        events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+    }
+
+    /// <summary>The garrison hero comes out onto the entrance and leads the whole garrison as its army (ADR-112, HoMM3).</summary>
+    internal void LeaveGarrison(PlayerId player, MapObjectId townId)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(TownRules.CheckLeaveGarrison(state, town));
+
+        var hero = town.GarrisonHero!;
+        for (var slot = 0; slot < Army.SlotCount; slot++)
+        {
+            hero.Army.Set(slot, town.Garrison[slot]);
+            town.Garrison.Set(slot, null);
+        }
+
+        town.GarrisonHero = null;
+        hero.Position = town.VisitPosition;
+        hero.MaxMovementPoints = MovementAllowance.Daily(state, hero);
+        hero.MovementPoints = Math.Min(hero.MovementPoints, hero.MaxMovementPoints);
+        state.AddHero(hero);
+        events.Publish(new HeroLeftGarrison(town.Id, hero.Id, hero.Position));
+        events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
+    }
+
     /// <summary>The owner appoints one of its heroes governor of the town; the hero leaves any other town it governed.</summary>
     internal void AppointGovernor(PlayerId player, MapObjectId townId, HeroId heroId)
     {
@@ -175,12 +218,15 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         }
     }
 
-    /// <summary>Start of the owner's turn: heroes already standing in a town without a governor are appointed, and a night in a town with a mage guild refills their mana.</summary>
+    /// <summary>
+    /// Start of the owner's turn: heroes already standing in a town (or in its garrison, ADR-112) without a governor are appointed, and a night in a
+    /// town with a mage guild refills their mana.
+    /// </summary>
     internal void AppointVisitors(PlayerId player)
     {
         foreach (var town in state.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value))
         {
-            if (TownRules.VisitingHero(state, town) is { } hero)
+            foreach (var hero in new[] { TownRules.VisitingHero(state, town), town.GarrisonHero }.OfType<Hero>())
             {
                 AutoAppoint(state, events, town, hero);
                 Magic.MagicRules.Visit(state, events, hero, town, night: true);
@@ -236,7 +282,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
     /// <summary>
     /// Monday: every built dwelling, in towns and on the map, adds its creature's weekly growth to what is waiting (owned
-    /// or not); town dwellings add the fort bonus too (<see cref="TownRules.WeeklyGrowth"/>, ADR-066) and the owner's heroes' growth artifacts
+    /// or not); town dwellings add the fort bonus too (<see cref="TownRules.WeeklyGrowth(GameState, Town, Creatures.CreatureDefinition, int)"/>, ADR-066) and the owner's heroes' growth artifacts
     /// (ADR-111), map dwellings do not.
     /// The week's event doubles a line's growth or stops all growth (<see cref="Turns.WeekEvent.Growth"/>, ADR-073).
     /// </summary>
@@ -265,7 +311,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             var artifacts = TownRules.ArtifactGrowthPercent(state, town);
             foreach (var line in lines)
             {
-                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + week.Growth(state.Creatures, line.Id, TownRules.WeeklyGrowth(town, line, artifacts)));
+                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + week.Growth(state.Creatures, line.Id, TownRules.WeeklyGrowth(state, town, line, artifacts)));
             }
 
             events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));

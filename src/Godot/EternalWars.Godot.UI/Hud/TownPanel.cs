@@ -114,6 +114,8 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroHired>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroEnteredGarrison>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroLeftGarrison>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<GovernorChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<CaravanDispatched>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<CaravanArrived>(session.Events, _ => Refresh());
@@ -190,7 +192,7 @@ public partial class TownPanel : PanelContainer
             var available = town.AvailableOf(line.Id);
             _dwellings.AddChild(new Label
             {
-                Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting, +{TownRules.WeeklyGrowth(town, line)}/week",
+                Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting, +{TownRules.WeeklyGrowth(state, town, line)}/week",
                 CustomMinimumSize = new Vector2(240, 0),
             });
 
@@ -222,7 +224,8 @@ public partial class TownPanel : PanelContainer
 
         ShowGovernor(state, town);
         Clear(_armies);
-        AddArmyRow(town, TownArmy.Garrison, "Garrison", town.Garrison);
+        AddArmyRow(town, TownArmy.Garrison, town.GarrisonHero is { } inside ? $"Garrison ({inside.Name})" : "Garrison", town.Garrison);
+        ShowGarrisonHero(state, town);
         ShowCaravan(state, town);
         ShowTavern(state, town);
         Clear(_blacksmith);
@@ -267,6 +270,34 @@ public partial class TownPanel : PanelContainer
         {
             _blacksmith.AddChild(new Label { Text = $"Mage guild: {string.Join(", ", offered)}" });
         }
+    }
+
+    /// <summary>The garrison hero (ADR-112): the visiting hero moves in, or the garrison hero leads the garrison out.</summary>
+    private void ShowGarrisonHero(GameState state, Town town)
+    {
+        var player = state.CurrentPlayer.Id;
+        var row = new HBoxContainer();
+        if (town.GarrisonHero is { } inside)
+        {
+            var refusal = TownRules.CheckLeaveGarrison(state, town);
+            var leave = new Button { Text = $"Lead {inside.Name} out", Disabled = refusal is not null, TooltipText = refusal ?? "The garrison becomes its army." };
+            leave.Pressed += () => Run(new LeaveGarrisonCommand(player, town.Id));
+            row.AddChild(leave);
+        }
+        else if (TownRules.VisitingHero(state, town) is { } visitor)
+        {
+            var refusal = TownRules.CheckEnterGarrison(state, town);
+            var enter = new Button
+            {
+                Text = $"{visitor.Name} into the garrison",
+                Disabled = refusal is not null,
+                TooltipText = refusal ?? "Its army joins the garrison; it defends the town with its skills and war machines.",
+            };
+            enter.Pressed += () => Run(new EnterGarrisonCommand(player, town.Id));
+            row.AddChild(enter);
+        }
+
+        _armies.AddChild(row);
     }
 
     /// <summary>The governor and what Stewardship does here (ADR-063); appoint the visiting hero, or dismiss the governor.</summary>

@@ -348,7 +348,7 @@ public class TownTests
         // A new dwelling opens with one week of the bonus growth too.
         session.Execute(new BuildDwellingCommand(Blue, town.Id, BuiltInCreatures.Footman)).ThrowIfRejected();
         Assert.Equal(footmen, town.AvailableOf(BuiltInCreatures.Footman));
-        Assert.Equal(footmen, TownRules.WeeklyGrowth(town, state.Creatures.Get(BuiltInCreatures.Footman)));
+        Assert.Equal(footmen, TownRules.WeeklyGrowth(state, town, state.Creatures.Get(BuiltInCreatures.Footman)));
 
         NextWeek(session);
 

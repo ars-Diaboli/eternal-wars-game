@@ -69,7 +69,7 @@ public static class KingdomOverviews
         }
 
         var gold = state.GetPlayer(player).Resources.Gold;
-        foreach (var hero in state.HeroesOf(player).OrderBy(h => h.Id.Value))
+        foreach (var hero in state.AllHeroesOf(player).OrderBy(h => h.Id.Value))
         {
             var treasury = new ResourceSet(Gold: SkillEffects.TreasuryGold(hero.SkillLevelOf(BuiltInSkills.Treasury))) + HeroIncome.TreasuryInterest(hero, gold);
             Add(hero, "Treasury", treasury);

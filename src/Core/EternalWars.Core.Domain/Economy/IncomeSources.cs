@@ -27,7 +27,7 @@ public sealed class MineIncome : IIncomeSource
 public sealed class HeroIncome : IIncomeSource
 {
     public ResourceSet DailyIncome(GameState state, PlayerId player) =>
-        state.HeroesOf(player).Aggregate(ResourceSet.Empty, (total, hero) => total + Of(hero) + TreasuryInterest(hero, state.GetPlayer(player).Resources.Gold));
+        state.AllHeroesOf(player).Aggregate(ResourceSet.Empty, (total, hero) => total + Of(hero) + TreasuryInterest(hero, state.GetPlayer(player).Resources.Gold));
 
     /// <summary>Treasury Expert and Master: a share of the gold on hand at the start of the day, before any income is added.</summary>
     public static ResourceSet TreasuryInterest(Hero hero, int goldOnHand) =>

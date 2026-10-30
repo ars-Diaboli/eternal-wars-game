@@ -168,6 +168,8 @@ public static class GameRecordSerializer
         (typeof(MoveTownStackCommand), "moveTownStack"),
         (typeof(BuyWarMachineCommand), "buyWarMachine"),
         (typeof(BuySpellBookCommand), "buySpellBook"),
+        (typeof(EnterGarrisonCommand), "enterGarrison"),
+        (typeof(LeaveGarrisonCommand), "leaveGarrison"),
         (typeof(TradeResourceCommand), "tradeResource"),
         (typeof(HireHeroCommand), "hireHero"),
         (typeof(AppointGovernorCommand), "appointGovernor"),

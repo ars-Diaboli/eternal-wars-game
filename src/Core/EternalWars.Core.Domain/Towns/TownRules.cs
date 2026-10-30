@@ -28,18 +28,36 @@ public static class TownRules
 
     /// <summary>
     /// How many creatures of <paramref name="line"/> the town's dwelling adds every Monday and opens with: the creature's
-    /// weekly growth plus the fort bonus (<see cref="GrowthBonusPercent"/>), the bonus rounded down (growth 1 stays 1 with
-    /// a Citadel). Whether the dwelling is built is not checked.
+    /// weekly growth plus the fort bonus (<see cref="GrowthBonusPercent"/>) and <paramref name="extraPercent"/>, the bonus rounded down
+    /// (growth 1 stays 1 with a Citadel), then the flat bonus of the tier's growth building (<see cref="GrowthBuildingBonus"/>, not raised by
+    /// the fort). Whether the dwelling is built is not checked.
     /// </summary>
-    public static int WeeklyGrowth(Town town, CreatureDefinition line, int extraPercent = 0) =>
-        line.WeeklyGrowth + (line.WeeklyGrowth * (GrowthBonusPercent(town) + extraPercent) / 100);
+    public static int WeeklyGrowth(GameState state, Town town, CreatureDefinition line, int extraPercent = 0) =>
+        WeeklyGrowth(state.Buildings, town, line, extraPercent);
+
+    /// <inheritdoc cref="WeeklyGrowth(GameState, Town, CreatureDefinition, int)"/>
+    public static int WeeklyGrowth(BuildingCatalog buildings, Town town, CreatureDefinition line, int extraPercent = 0) =>
+        line.WeeklyGrowth + (line.WeeklyGrowth * (GrowthBonusPercent(town) + extraPercent) / 100) + GrowthBuildingBonus(buildings, town, line.Tier);
+
+    /// <summary>
+    /// The flat weekly bonus the town's growth buildings give every dwelling of <paramref name="tier"/> (ADR-071, TOWN-1; placeholder +5 for
+    /// tier 1, +2 for tier 2): the <see cref="BuildingLevel.Growth"/> of each built building's highest level.
+    /// </summary>
+    public static int GrowthBuildingBonus(BuildingCatalog buildings, Town town, int tier)
+    {
+        var own = buildings.For(town.TownType);
+        return own.TownBuildings.Where(b => town.Level(b) > 0)
+            .Select(b => own.Get(b, Math.Min(town.Level(b), own.MaxLevel(b))).Growth)
+            .Where(g => g is not null && g.Tier == tier)
+            .Sum(g => g!.Amount);
+    }
 
     /// <summary>
     /// The growth percent the owner's heroes' artifacts add to every town of the owner (the Legion pieces, ADR-111): the sum over its heroes on the
     /// map, none for a neutral town.
     /// </summary>
     public static int ArtifactGrowthPercent(GameState state, Town town) =>
-        town.Owner is { } owner ? state.HeroesOf(owner).Sum(h => h.Bonus.GrowthPercent) : 0;
+        town.Owner is { } owner ? state.AllHeroesOf(owner).Sum(h => h.Bonus.GrowthPercent) : 0;
 
     /// <summary>
     /// The first requirement the town lacks for a line's dwelling at <paramref name="level"/> (every level up to it counts),
@@ -188,6 +206,56 @@ public static class TownRules
         return town.Owner is { } owner && !state.GetPlayer(owner).Resources.CanAfford(Battles.WarMachines.Cost(slot))
             ? $"Not enough gold for a {WarMachineName(state, hero, slot)}."
             : null;
+    }
+
+    /// <summary>
+    /// Why the visiting hero cannot move into the town's garrison (ADR-112), or null: the town has no garrison hero yet and the hero's stacks fit into
+    /// the garrison's (merging with stacks of the same creature).
+    /// </summary>
+    public static string? CheckEnterGarrison(GameState state, Town town)
+    {
+        if (VisitingHero(state, town) is not { } hero)
+        {
+            return $"No own hero is visiting {town.Name}.";
+        }
+
+        if (town.GarrisonHero is { } inside)
+        {
+            return $"{inside.Name} already holds the garrison of {town.Name}.";
+        }
+
+        return Merged(town.Garrison, hero.Army) is null ? $"{hero.Name}'s army does not fit into the garrison." : null;
+    }
+
+    /// <summary>
+    /// Why the garrison hero cannot come out (ADR-112), or null: someone stands on the entrance, the garrison it would lead is empty, or the player
+    /// already has as many heroes on the map as it may (TOWN-8).
+    /// </summary>
+    public static string? CheckLeaveGarrison(GameState state, Town town)
+    {
+        if (town.GarrisonHero is not { } hero)
+        {
+            return $"{town.Name} has no garrison hero.";
+        }
+
+        if (state.HeroAt(town.VisitPosition) is not null)
+        {
+            return $"Someone stands at the entrance of {town.Name}.";
+        }
+
+        if (town.Garrison.IsEmpty)
+        {
+            return $"{hero.Name} has no troops to lead out.";
+        }
+
+        return state.HeroLimitReached(hero.Owner) ? $"You already have {state.HeroLimit(hero.Owner)} heroes on the map." : null;
+    }
+
+    /// <summary>The garrison with <paramref name="army"/>'s stacks added, or null when they do not fit.</summary>
+    internal static Armies.Army? Merged(Armies.Army garrison, Armies.Army army)
+    {
+        var merged = new Armies.Army(garrison.Slots);
+        return army.Stacks.All(s => merged.TryAdd(s.Stack)) ? merged : null;
     }
 
     /// <summary>The machine a hero gets for a slot: its own town's offensive machine, wherever it is bought.</summary>

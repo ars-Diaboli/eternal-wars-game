@@ -123,7 +123,7 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
                 ConditionKind.LoseTown => c.Town is { } id && state.FindObject(id) is Town town && town.Owner != player.Id,
                 ConditionKind.LoseHero => c.Hero is { } hero && _heroes.ContainsKey(hero) && state.Heroes.All(h => h.Id != hero),
                 ConditionKind.TimeLimit => state.Date.AbsoluteDay > c.Day,
-                ConditionKind.LoseArtifact => c.Artifact is { } artifact && !state.HeroesOf(player.Id).Any(h => h.Artifacts.Has(artifact)),
+                ConditionKind.LoseArtifact => c.Artifact is { } artifact && !state.AllHeroesOf(player.Id).Any(h => h.Artifacts.Has(artifact)),
                 _ => false,
             };
             if (holds)

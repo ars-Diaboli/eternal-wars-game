@@ -740,7 +740,7 @@ public partial class BattleView3D : Node3D
     private string NameOf(BattleParticipant participant)
     {
         var state = _session.State;
-        if (participant.Hero is { } hero && state.Heroes.FirstOrDefault(h => h.Id == hero) is { } found)
+        if (participant.Hero is { } hero && state.Heroes.Concat(state.GarrisonHeroes).FirstOrDefault(h => h.Id == hero) is { } found)
         {
             return found.Name;
         }

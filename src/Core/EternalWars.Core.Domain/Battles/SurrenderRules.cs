@@ -23,7 +23,15 @@ public static class SurrenderRules
 
     /// <summary>Why the side cannot retreat now, or null when it can.</summary>
     public static string? CheckRetreat(BattleState battle, BattleSide side) =>
-        battle.Participant(side).Hero is null ? "Only a hero can retreat." : IsLocked(battle) ? LockedRefusal : null;
+        battle.Participant(side).Hero is null ? "Only a hero can retreat."
+        : IsGarrisonHero(battle.Participant(side)) ? GarrisonRefusal
+        : IsLocked(battle) ? LockedRefusal
+        : null;
+
+    public const string GarrisonRefusal = "A garrison hero does not leave its town.";
+
+    /// <summary>A town's garrison hero (ADR-112): a hero side that also holds the town; it neither retreats nor surrenders.</summary>
+    public static bool IsGarrisonHero(BattleParticipant participant) => participant is { Hero: not null, Guard: not null };
 
     /// <summary>Why the side cannot surrender now, or null when it can.</summary>
     public static string? Check(GameState state, BattleState battle, BattleSide side)
@@ -32,6 +40,11 @@ public static class SurrenderRules
         if (participant.Hero is null || participant.Owner is not { } owner)
         {
             return "Only a hero can surrender.";
+        }
+
+        if (IsGarrisonHero(participant))
+        {
+            return GarrisonRefusal;
         }
 
         if (IsLocked(battle))

@@ -61,6 +61,12 @@ public sealed class Town : MapObject, IFlaggable
 
     public Army Garrison { get; }
 
+    /// <summary>
+    /// The hero in the town's garrison (ADR-112), off the map: it commands <see cref="Garrison"/> when the town is attacked, with its skills, spells and war
+    /// machines. It is not one of <see cref="Game.GameState.Heroes"/> and does not count towards the hero limit.
+    /// </summary>
+    public Heroes.Hero? GarrisonHero { get; internal set; }
+
     /// <summary>The hero appointed governor (ADR-063); valid only while that hero is alive, owned by the town's owner and has Stewardship (<see cref="StewardshipRules.GovernorOf"/>).</summary>
     public HeroId? Governor { get; internal set; }
 

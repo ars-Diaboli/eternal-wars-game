@@ -27,6 +27,18 @@ public sealed record BuildingLevel(string Building, int Level, string Name)
 
     /// <summary>Paid every day to the town's owner while this is the highest level built.</summary>
     public ResourceSet Income { get; init; }
+
+    /// <summary>
+    /// A growth building's flat weekly bonus (ADR-071, TOWN-1): every built dwelling of <see cref="BuildingGrowth.Tier"/> grows this many more
+    /// creatures a week while this level is the highest built; null for other buildings.
+    /// </summary>
+    public BuildingGrowth? Growth { get; init; }
+}
+
+/// <summary>A growth building's bonus: <see cref="Amount"/> more creatures a week for every dwelling of <see cref="Tier"/> (ADR-071, TOWN-1).</summary>
+public sealed record BuildingGrowth(int Tier, int Amount)
+{
+    public override string ToString() => $"{BuiltInBuildings.Dwelling(Tier)} {Amount.ToString(CultureInfo.InvariantCulture)}";
 }
 
 /// <summary>Ids of the buildings code refers to; the levels and numbers live in <c>data/buildings.csv</c>.</summary>
@@ -39,6 +51,15 @@ public static class BuiltInBuildings
     public const string MageGuild = "mage-guild";
     public const string Tavern = "tavern";
     public const string Caravan = "caravan";
+
+    /// <summary>
+    /// Stronghold's and Swamp Bestiary's 3-level building instead of a mage guild (ADR-071, MAG-2; placeholder): a level teaches the warcry of that
+    /// level (<see cref="Battles.PrimalFury.LevelOf"/>) to the owner's heroes in the town.
+    /// </summary>
+    public const string WarLodge = "war-lodge";
+
+    /// <summary>The growth building of a dwelling tier (ADR-071, TOWN-1): <c>growth-1</c>, <c>growth-2</c>; each town names its own.</summary>
+    public static string Growth(int tier) => $"growth-{tier.ToString(CultureInfo.InvariantCulture)}";
 
     /// <summary>The town hall level that is the Capitol: one per player (ADR-070, TOWN-3).</summary>
     public const int CapitolLevel = 4;
@@ -72,10 +93,11 @@ public static class BuiltInBuildings
 
 /// <summary>
 /// The building table (<c>src/Core/data/buildings.csv</c>), one row per building level, in the
-/// <see cref="CsvTable"/> conventions: <c>id, town, level, name, gold, resources, requires, income, notes</c>. Requirements read
-/// <c>fort 2; tavern 1</c>; a dwelling requirement (<c>dwelling-3 1</c>) is met by any dwelling of that tier. An empty
-/// <c>town</c> is a row every town shares; a town type's own rows of a building replace the shared ones for that town, or add a
-/// building only that town has (ADR-070, TOWN-3).
+/// <see cref="CsvTable"/> conventions: <c>id, town, level, name, gold, resources, requires, income, growth, notes</c>. Requirements read
+/// <c>fort 2; tavern 1</c>; a dwelling requirement (<c>dwelling-3 1</c>) is met by any dwelling of that tier. <c>growth</c> reads
+/// <c>dwelling-1 5</c>: every dwelling of the tier grows 5 more a week (ADR-071). An empty <c>town</c> is a row every town shares; a town
+/// type's own rows of a building replace the shared ones for that town, or add a building only that town has (ADR-070, TOWN-3). A town's
+/// row at level 0 takes a shared building away from that town (Stronghold and Swamp Bestiary have no mage guild, ADR-071).
 /// </summary>
 public static class BuildingTable
 {
@@ -87,10 +109,11 @@ public static class BuildingTable
     public const string Resources = "resources";
     public const string Requires = "requires";
     public const string Income = "income";
+    public const string Growth = "growth";
     public const string Notes = "notes";
 
     /// <summary>The columns of the shipped table, in order.</summary>
-    public static IReadOnlyList<string> Columns { get; } = [Id, Town, Level, Name, Gold, Resources, Requires, Income, Notes];
+    public static IReadOnlyList<string> Columns { get; } = [Id, Town, Level, Name, Gold, Resources, Requires, Income, Growth, Notes];
 
     private static readonly string[] Required = [Id, Level, Name];
 
@@ -107,6 +130,7 @@ public static class BuildingTable
             Cost = new ResourceSet(Gold: row.Int(Gold, 0)) + CreatureTable.ParseResources(row, Resources),
             Requires = row.List(Requires).Select(r => ParseRequirement(row, r)).ToList(),
             Income = CreatureTable.ParseResources(row, Income),
+            Growth = row.Optional(Growth) is { } growth ? ParseGrowth(row, growth) : null,
         };
 
     private static BuildingRequirement ParseRequirement(CsvTable.Row row, string text) =>
@@ -114,6 +138,13 @@ public static class BuildingTable
         && int.TryParse(level, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number)
             ? new BuildingRequirement(building, number)
             : throw row.Error(Requires, $"'{text}' is not '<building> <level>', e.g. 'fort 2'");
+
+    private static BuildingGrowth ParseGrowth(CsvTable.Row row, string text) =>
+        text.Split(' ', StringSplitOptions.RemoveEmptyEntries) is [var building, var amount]
+        && BuiltInBuildings.DwellingTier(building) is { } tier and >= CreatureDefinition.MinTier and <= CreatureDefinition.MaxTier
+        && int.TryParse(amount, NumberStyles.Integer, CultureInfo.InvariantCulture, out var number) && number > 0
+            ? new BuildingGrowth(tier, number)
+            : throw row.Error(Growth, $"'{text}' is not '<dwelling> <amount>', e.g. 'dwelling-1 5'");
 }
 
 /// <summary>
@@ -133,9 +164,10 @@ public sealed class BuildingCatalog
         Validate(_buildings, "");
         foreach (var town in all.Select(l => l.Town).OfType<string>().Distinct(StringComparer.Ordinal))
         {
-            var own = Group(all.Where(l => l.Town == town));
+            var removed = all.Where(l => l.Town == town && l.Level == 0).Select(l => l.Building).ToHashSet(StringComparer.Ordinal);
+            var own = Group(all.Where(l => l.Town == town && l.Level != 0));
             var merged = new Dictionary<string, List<BuildingLevel>>(StringComparer.Ordinal);
-            foreach (var (id, list) in _buildings)
+            foreach (var (id, list) in _buildings.Where(b => !removed.Contains(b.Key)))
             {
                 merged[id] = own.TryGetValue(id, out var replaced) ? replaced : list;
             }

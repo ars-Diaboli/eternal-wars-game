@@ -19,7 +19,7 @@ public static class StewardshipRules
     /// <summary>The town's governor: the appointed hero if it is still around, still the owner's and still has the skill.</summary>
     public static Hero? GovernorOf(GameState state, Town town) =>
         town.Governor is { } id && town.Owner is { } owner
-        && state.Heroes.FirstOrDefault(h => h.Id == id) is { } hero
+        && (state.Heroes.FirstOrDefault(h => h.Id == id) ?? state.GarrisonHeroes.FirstOrDefault(h => h.Id == id)) is { } hero
         && hero.Owner == owner && hero.SkillLevelOf(BuiltInSkills.Stewardship) > SkillLevel.None
             ? hero
             : null;
