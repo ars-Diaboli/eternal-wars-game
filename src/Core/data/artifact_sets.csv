@@ -1,5 +1,6 @@
 id,name,effects,notes
 pilgrims-road,Pilgrim's Road,movement 20; terrain-penalty 100,"the hero's army is native to every terrain it walks on"
-dawn-covenant-armor,Armor of the Dawn Covenant,morale 2,"Not yet: Light and Nature spells cost 20 % less mana"
-ash-court-regalia,Ash Court Regalia,spell-power 2; luck 1,"Not yet: +1 level to all offensive spells; the hero's stacks heal for 5 % of the damage they deal"
-unbound-trophies,The Unbound's Trophies,morale 2; luck 2,"Not yet: only while fighting on non-native terrain"
+dawn-covenant-armor,Armor of the Dawn Covenant,morale 2; spell-power 2,
+ash-court-regalia,Ashen Court Regalia,spell-power 2; luck 1,
+unbound-trophies,The Unbound's Trophies,morale 2; luck 2,
+firstborn-regalia,Regalia of the Firstborn,attack 3; defense 3; spell-power 2; immune mind,the pieces' penalties made up

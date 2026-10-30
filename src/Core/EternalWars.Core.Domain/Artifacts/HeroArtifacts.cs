@@ -160,8 +160,37 @@ public sealed record ArtifactBonuses
 
     public IReadOnlyDictionary<string, int> Skills { get; init; } = new Dictionary<string, int>();
 
+    public int Sight { get; init; }
+
+    public int ManaADay { get; init; }
+
+    public int ManaMax { get; init; }
+
+    public int CreatureHealthPercent { get; init; }
+
+    public bool NoRetreat { get; init; }
+
+    public int NecromancyPercent { get; init; }
+
+    public int GrowthPercent { get; init; }
+
+    /// <summary>Spell tags the army is immune to.</summary>
+    public IReadOnlySet<string> Immunities { get; init; } = new HashSet<string>();
+
+    /// <summary>Percent more effect of the hero's spells by element (lower-case: <c>fire</c>).</summary>
+    public IReadOnlyDictionary<string, int> ElementPercent { get; init; } = new Dictionary<string, int>();
+
+    /// <summary>The spell levels known while worn (every school), none when empty.</summary>
+    public IReadOnlySet<int> SpellLevels { get; init; } = new HashSet<int>();
+
+    /// <summary>The highest spell level either side may cast in the hero's battles, or null.</summary>
+    public int? SpellLevelCap { get; init; }
+
     /// <summary>Levels the artifacts add to one skill (not counting <see cref="AllSkills"/>).</summary>
     public int SkillBonus(string skill) => Skills.GetValueOrDefault(skill);
+
+    /// <summary>The percent the artifacts add to spells of the element (none for Magic Arrow's "all" or a bound element).</summary>
+    public int ElementBonus(Magic.SpellElement element) => ElementPercent.GetValueOrDefault(element.ToString().ToLowerInvariant());
 
     /// <summary>Adds up the effects of everything worn, and the bonus of every set whose pieces are all worn.</summary>
     public static ArtifactBonuses Compute(ArtifactCatalog catalog, HeroArtifacts artifacts)
@@ -196,10 +225,30 @@ public sealed record ArtifactBonuses
         var income = ResourceSet.Empty;
         var terrains = new HashSet<TerrainType>();
         var skills = new Dictionary<string, int>(StringComparer.Ordinal);
+        var immunities = new HashSet<string>(StringComparer.Ordinal);
+        var elements = new Dictionary<string, int>(StringComparer.Ordinal);
+        var spellLevels = new HashSet<int>();
+        int? cap = null;
         foreach (var e in list)
         {
             switch (e.Kind)
             {
+                case ArtifactEffectKind.Immune when e.Target is { } tag:
+                    immunities.Add(tag);
+                    break;
+                case ArtifactEffectKind.ElementPower when e.Target is { } element:
+                    elements[element] = elements.GetValueOrDefault(element) + e.Value;
+                    break;
+                case ArtifactEffectKind.Spells when int.TryParse(e.Target, NumberStyles.Integer, CultureInfo.InvariantCulture, out var from):
+                    for (var level = from; level <= e.Value; level++)
+                    {
+                        spellLevels.Add(level);
+                    }
+
+                    break;
+                case ArtifactEffectKind.NoSpellsAbove:
+                    cap = Math.Min(cap ?? int.MaxValue, e.Value);
+                    break;
                 case ArtifactEffectKind.Income when Enum.TryParse<ResourceType>(e.Target, true, out var resource):
                     income += ResourceSet.Of(resource, e.Value);
                     break;
@@ -232,6 +281,17 @@ public sealed record ArtifactBonuses
             AllSkills = Sum(ArtifactEffectKind.AllSkills),
             NativeTerrains = terrains,
             Skills = skills,
+            Sight = Sum(ArtifactEffectKind.Sight),
+            ManaADay = Sum(ArtifactEffectKind.ManaADay),
+            ManaMax = Sum(ArtifactEffectKind.ManaMax),
+            CreatureHealthPercent = Sum(ArtifactEffectKind.CreatureHealth),
+            NoRetreat = list.Any(e => e.Kind == ArtifactEffectKind.NoRetreat),
+            NecromancyPercent = Sum(ArtifactEffectKind.Necromancy),
+            GrowthPercent = Sum(ArtifactEffectKind.Growth),
+            Immunities = immunities,
+            ElementPercent = elements,
+            SpellLevels = spellLevels,
+            SpellLevelCap = cap,
         };
     }
 
@@ -261,7 +321,39 @@ public sealed record ArtifactBonuses
         Add(DamageTakenReductionPercent, "% less damage taken");
         Add(RangedDamageTakenReductionPercent, "% less ranged damage taken");
         Add(Income.Gold, "gold a day");
+        foreach (var resource in Enum.GetValues<ResourceType>().Where(r => r != ResourceType.Gold))
+        {
+            Add(Income[resource], $"{resource.ToString().ToLowerInvariant()} a day");
+        }
+
         Add(AllSkills, "to every skill");
+        Add(Sight, "sight radius");
+        Add(ManaADay, "mana a day");
+        Add(ManaMax, "maximum mana");
+        Add(CreatureHealthPercent, "% creature health");
+        Add(NecromancyPercent, "% Necromancy");
+        Add(GrowthPercent, "% creature growth");
+        foreach (var (element, percent) in ElementPercent.OrderBy(e => e.Key, StringComparer.Ordinal))
+        {
+            Add(percent, $"% {element} spells");
+        }
+
+        parts.AddRange(Immunities.Order(StringComparer.Ordinal).Select(tag => $"immune to {tag} spells"));
+        if (SpellLevels.Count > 0)
+        {
+            parts.Add($"knows every level {SpellLevels.Min()}–{SpellLevels.Max()} spell");
+        }
+
+        if (SpellLevelCap is { } cap)
+        {
+            parts.Add($"no spells above level {cap} in its battles");
+        }
+
+        if (NoRetreat)
+        {
+            parts.Add("no retreat or surrender in its battles");
+        }
+
         return parts.Count == 0 ? "no bonuses" : string.Join(", ", parts);
     }
 }

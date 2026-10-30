@@ -9,10 +9,12 @@ placeholders keep their names and ids, except the two gnoll items (Vael has no g
 keep their names where HoMM has nothing close and take the HoMM name where it has (Ash Sigil → Badge of Courage). New effect kinds are only
 those the owner chose (CONT-6 b); the items and secondary effects that needed others are dropped (list at the end). The Unwritten Codex and
 the Recanter's Cloak are Relics; the other strong items are **assembled relics** (CONT-6 c), HoMM3's combination artifacts. **The table still
-holds the first draft** until the roadmap item "Artifact table: the re-draft" is done; then the table is the truth for numbers again (see
-"Editing artifacts" in [development.md](../technical/development.md)). Every number is a draft.
+holds this re-draft** since ADR-111 (101 artifacts, 5 sets): the table is the truth for numbers again (see "Editing artifacts" in
+[development.md](../technical/development.md)). Every number is a draft. Still missing: the assembled relics themselves (their pieces are in) and
+the Crown of the Waning Eye's +1 best magic skill.
 
-**Status column**: ✅ the table can say it today (an existing effect kind); 🆕 needs a new effect kind; ⏳ needs magic (Phase 5).
+**Status column** (the draft's plan; since ADR-111 every 🆕 and ⏳ row is built except the assembled relics and the Crown's skill level): ✅ an
+effect kind that existed; 🆕 a new effect kind; ⏳ needed magic (Phase 5).
 Where a row has both, the ✅ part is applied first. **Was** names the first re-draft's (ADR-099) name or id where it changed.
 
 ## How artifacts work
@@ -51,8 +53,8 @@ Where a row has both, the ✅ part is applied first. **Was** names the first re-
 - **New effect kinds** (🆕, CONT-6 b), in the owner's order: `sight 1` (scouting radius), `mana-a-day 1` and `mana-max 10`,
   `creature-health 10` (percent), `element-power fire 25` (the elemental orbs: percent effect of one element's spells, ADR-106; was `school-power`), `spells 1-2` (known
   while worn, with a spell book), `no-spells-above 2` (both sides), `no-retreat` (both sides: no retreat, no surrender), `necromancy 5`
-  (points), `growth 10` (percent in the owner's towns), `immune mind` (a spell tag). The assembled Wizard's Well also needs `full-mana`, and the Angelic Alliance `no-faction-penalty` (ADR-108). The
-  magic ones (orbs, spells known, no spells above a level) come with Phase 5.
+  (points), `growth 10` (percent in the owner's towns), `immune mind` (a spell tag). The assembled Wizard's Well also needs `full-mana`, and the Angelic Alliance `no-faction-penalty` (ADR-108). All of them are
+  built (ADR-111), the magic ones too.
 
 ## Minor artifacts
 
@@ -218,9 +220,9 @@ list. So (confirmed by CONT-7 g, ADR-108):
 
 The core is in place (ADR-061): table and catalog, hero equipment and backpack, equip, unequip and give commands, effects in
 battle, movement, income and terrain, map pickups that roll by tier, loot, map format v11, editor session calls, the AI,
-and the hero screen with the paper doll and backpack (`src/Godot/EternalWars.Godot.UI/Hud/HeroPanel.cs`). The re-draft's steps
-(roadmap, "Artifacts"): rename the few changed rows (ids and names; tests that name them follow), add the ✅ rows, then each new effect kind
-with its rows (🆕) in the order above, the assembled relics, and the magic effects with Phase 5 (⏳).
+and the hero screen with the paper doll and backpack (`src/Godot/EternalWars.Godot.UI/Hud/HeroPanel.cs`). The re-draft is in the table
+(ADR-111): the renamed rows, the ✅ rows, every new effect kind with its rows, and the magic effects. Next: the assembled relics (roadmap,
+"Artifacts").
 
 ## Open
 

@@ -236,7 +236,8 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
     /// <summary>
     /// Monday: every built dwelling, in towns and on the map, adds its creature's weekly growth to what is waiting (owned
-    /// or not); town dwellings add the fort bonus too (<see cref="TownRules.WeeklyGrowth"/>, ADR-066), map dwellings do not.
+    /// or not); town dwellings add the fort bonus too (<see cref="TownRules.WeeklyGrowth"/>, ADR-066) and the owner's heroes' growth artifacts
+    /// (ADR-111), map dwellings do not.
     /// The week's event doubles a line's growth or stops all growth (<see cref="Turns.WeekEvent.Growth"/>, ADR-073).
     /// </summary>
     internal void GrowWeekly()
@@ -261,9 +262,10 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
                 continue;
             }
 
+            var artifacts = TownRules.ArtifactGrowthPercent(state, town);
             foreach (var line in lines)
             {
-                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + week.Growth(state.Creatures, line.Id, TownRules.WeeklyGrowth(town, line)));
+                town.SetAvailable(line.Id, town.AvailableOf(line.Id) + week.Growth(state.Creatures, line.Id, TownRules.WeeklyGrowth(town, line, artifacts)));
             }
 
             events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));

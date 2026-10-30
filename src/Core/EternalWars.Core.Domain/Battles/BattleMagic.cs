@@ -46,6 +46,11 @@ public static class BattleMagic
             return $"{known.Spell.Name} cannot be cast in battle.";
         }
 
+        if (SpellLevelCap(battle) is { } cap && known.Spell.Level > cap)
+        {
+            return $"No spell above level {cap} can be cast in this battle.";
+        }
+
         if (battle.HasCastThisRound(side))
         {
             return "The hero has already cast a spell this round.";
@@ -79,6 +84,14 @@ public static class BattleMagic
         }
     }
 
+    /// <summary>The highest spell level either side may cast: the lower cap of the two heroes' artifacts (the Recanter's Cloak, ADR-111), or null.</summary>
+    public static int? SpellLevelCap(BattleState battle) =>
+        (battle.Attacker.Bonus.SpellLevelCap, battle.Defender.Bonus.SpellLevelCap) switch
+        {
+            ({ } a, { } d) => Math.Min(a, d),
+            (var a, var d) => a ?? d,
+        };
+
     /// <summary>The square an area spell covers around its centre cell (the same size whatever the targets' sizes, ADR-072, MAG-11).</summary>
     public static CellRect Area(SpellEffect effect, CellPosition centre) =>
         new(centre.X - (effect.AreaSize / 2), centre.Y - (effect.AreaSize / 2), effect.AreaSize, effect.AreaSize);
@@ -101,7 +114,8 @@ public static class BattleMagic
 
     /// <summary>
     /// Whether the spell works on the stack: war machines only take damage; the spell's filter (living, undead, undead and demons, shooters);
-    /// creature immunities to the spell's tags; creature spell resistance against hostile spells; holy creatures ignore holy spells.
+    /// creature immunities to the spell's tags; creature spell resistance and the stack's hero's artifact immunities (ADR-111) against the enemy's
+    /// hostile spells; holy creatures ignore holy spells.
     /// </summary>
     public static bool Affects(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit)
     {
@@ -126,7 +140,8 @@ public static class BattleMagic
             return false;
         }
 
-        return !(effect.IsHostile && unit.Side != side && creature.ResistsSpell(spell.Level, known.Rank));
+        var enemy = effect.IsHostile && unit.Side != side;
+        return !(enemy && (creature.ResistsSpell(spell.Level, known.Rank) || battle.Participant(unit.Side).Bonus.IsImmuneTo(spell.Tags)));
     }
 
     /// <summary>
@@ -151,13 +166,21 @@ public static class BattleMagic
         return (int)Math.Clamp(damage, 1, int.MaxValue);
     }
 
-    /// <summary>A damage or healing spell's amount from the side's hero: base × (10 + Spell Power) / 10, with its specialty.</summary>
+    /// <summary>
+    /// A damage or healing spell's amount from the side's hero: base × (10 + Spell Power) / 10, with its specialty and its elemental orbs' percent
+    /// (ADR-111).
+    /// </summary>
     public static int Amount(BattleState battle, BattleSide side, KnownSpell known)
     {
         var amount = (long)known.Spell.Effect!.Amount * (10 + SpellPower(battle, side)) / 10;
-        if (battle.Participant(side).Caster is { } caster && caster.Specialty == known.Spell.Id)
+        if (battle.Participant(side).Caster is { } caster)
         {
-            amount = amount * (100 + (SpecialtyPercentPerLevel * caster.Level)) / 100;
+            if (caster.Specialty == known.Spell.Id)
+            {
+                amount = amount * (100 + (SpecialtyPercentPerLevel * caster.Level)) / 100;
+            }
+
+            amount = amount * (100 + caster.ElementBonus(known.Spell)) / 100;
         }
 
         return (int)Math.Min(int.MaxValue, amount);

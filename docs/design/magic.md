@@ -58,3 +58,6 @@
 - **Built so far** (ADR-110): rank I battle effects of 37 spells (damage, healing, buffs and curses), cast once a round; durations count after the
   round of the cast; holy spells double against undead and demons; war machines take only damage spells. Ranks II / III, Mastery,
   adventure spells, summons, control and resurrection, creature casters, shrines and the extra-school buildings are not built.
+- **Magic artifacts** (ADR-111; built): the four elemental orbs (+25 % to their element's damage and healing), the Unwritten Codex (every level 1–2
+  spell known while worn, with a book), the Recanter's Cloak (no spells above level 2 in the hero's battles, both sides), `mind` / `poison`
+  immunities for the army, and mana artifacts (mana a day, maximum mana).

@@ -91,6 +91,42 @@ public enum ArtifactEffectKind
 
     /// <summary>Levels added to every skill the hero has started.</summary>
     AllSkills,
+
+    /// <summary>Tiles added to the hero's scouting radius (ADR-111).</summary>
+    Sight,
+
+    /// <summary>Mana the hero regains each day.</summary>
+    ManaADay,
+
+    /// <summary>Mana added to the hero's pool.</summary>
+    ManaMax,
+
+    /// <summary>Percent more health for every creature of the hero's army in battle (not war machines).</summary>
+    CreatureHealth,
+
+    /// <summary>Neither side may retreat or surrender in the hero's battles (value 1).</summary>
+    NoRetreat,
+
+    /// <summary>Percent points added to the hero's Necromancy share; nothing without the skill.</summary>
+    Necromancy,
+
+    /// <summary>Percent more weekly growth in every town of the hero's owner.</summary>
+    Growth,
+
+    /// <summary><c>Target</c> is a spell tag (<c>mind</c>, <c>poison</c>): the hero's army is immune to spells with it (value 1).</summary>
+    Immune,
+
+    /// <summary><c>Target</c> is a spell element: percent more damage and healing from the hero's spells of it, of any school.</summary>
+    ElementPower,
+
+    /// <summary>
+    /// Every spell of every school from level <c>Target</c> to <see cref="ArtifactEffect.Value"/> is known while worn, for a hero with a spell book
+    /// (<c>spells 1-2</c>).
+    /// </summary>
+    Spells,
+
+    /// <summary>No spell above this level can be cast by either side in the hero's battles.</summary>
+    NoSpellsAbove,
 }
 
 /// <param name="Kind">What changes.</param>
@@ -118,14 +154,26 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
         ["terrain-penalty"] = ArtifactEffectKind.TerrainPenalty,
         ["skill"] = ArtifactEffectKind.Skill,
         ["all-skills"] = ArtifactEffectKind.AllSkills,
+        ["sight"] = ArtifactEffectKind.Sight,
+        ["mana-a-day"] = ArtifactEffectKind.ManaADay,
+        ["mana-max"] = ArtifactEffectKind.ManaMax,
+        ["creature-health"] = ArtifactEffectKind.CreatureHealth,
+        ["no-retreat"] = ArtifactEffectKind.NoRetreat,
+        ["necromancy"] = ArtifactEffectKind.Necromancy,
+        ["growth"] = ArtifactEffectKind.Growth,
+        ["immune"] = ArtifactEffectKind.Immune,
+        ["element-power"] = ArtifactEffectKind.ElementPower,
+        ["spells"] = ArtifactEffectKind.Spells,
+        ["no-spells-above"] = ArtifactEffectKind.NoSpellsAbove,
     };
 
     /// <summary>The word of a kind in the table: <c>spell-power</c>.</summary>
     public static string WordOf(ArtifactEffectKind kind) => Words.First(w => w.Value == kind).Key;
 
     /// <summary>
-    /// Parses <c>attack 2</c>, <c>income gold 100</c>, <c>native-terrain grass</c> (value 1), <c>skill machines.ballistics 1</c> or
-    /// <c>all-skills 1</c>. Throws <see cref="FormatException"/> for anything else.
+    /// Parses <c>attack 2</c>, <c>income gold 100</c>, <c>native-terrain grass</c> (value 1), <c>skill machines.ballistics 1</c>,
+    /// <c>all-skills 1</c>, <c>immune mind</c> (value 1), <c>element-power fire 25</c>, <c>spells 1-2</c> or <c>no-retreat</c> (value 1).
+    /// Throws <see cref="FormatException"/> for anything else.
     /// </summary>
     public static ArtifactEffect Parse(string text)
     {
@@ -143,8 +191,20 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
                 => new(kind, 1, t.ToString()),
             ArtifactEffectKind.Skill when parts is [_, var skill, var levels] && BuiltInSkills.Contains(skill) && Int(levels) is { } n
                 => new(kind, n, skill),
-            ArtifactEffectKind.Income or ArtifactEffectKind.NativeTerrain or ArtifactEffectKind.Skill
-                => throw new FormatException($"'{text}': {parts[0]} needs a resource/terrain/skill and (for income and skill) a number"),
+            ArtifactEffectKind.Immune when parts is [_, var tag]
+                => new(kind, 1, tag.ToLowerInvariant()),
+            ArtifactEffectKind.ElementPower when parts is [_, var element, var percent] && Enum.TryParse<Magic.SpellElement>(element, true, out var el)
+                                                 && el <= Magic.SpellElement.Water && Int(percent) is { } n
+                => new(kind, n, el.ToString().ToLowerInvariant()),
+            ArtifactEffectKind.Spells when parts is [_, var range] && range.Split('-') is [var from, var to] && Int(from) is { } low && Int(to) is { } high
+                                           && low >= 1 && low <= high && high <= Creatures.SpellLevels.Max
+                => new(kind, high, low.ToString(CultureInfo.InvariantCulture)),
+            ArtifactEffectKind.NoRetreat when parts is [_]
+                => new(kind, 1),
+            ArtifactEffectKind.Income or ArtifactEffectKind.NativeTerrain or ArtifactEffectKind.Skill or ArtifactEffectKind.Immune
+                or ArtifactEffectKind.ElementPower or ArtifactEffectKind.Spells or ArtifactEffectKind.NoRetreat
+                => throw new FormatException(
+                    $"'{text}': {parts[0]} needs a resource/terrain/skill/tag/element (and for income, skill and element-power a number), spells a level range, no-retreat nothing"),
             _ when parts is [_, var value] && Int(value) is { } n => new(kind, n),
             _ => throw new FormatException($"'{text}' is not '<effect> <number>'"),
         };
@@ -154,8 +214,10 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
 
     public override string ToString() => Kind switch
     {
-        ArtifactEffectKind.Income or ArtifactEffectKind.Skill => $"{WordOf(Kind)} {Target} {Value.ToString(CultureInfo.InvariantCulture)}",
-        ArtifactEffectKind.NativeTerrain => $"{WordOf(Kind)} {Target}",
+        ArtifactEffectKind.Income or ArtifactEffectKind.Skill or ArtifactEffectKind.ElementPower => $"{WordOf(Kind)} {Target} {Value.ToString(CultureInfo.InvariantCulture)}",
+        ArtifactEffectKind.NativeTerrain or ArtifactEffectKind.Immune => $"{WordOf(Kind)} {Target}",
+        ArtifactEffectKind.Spells => $"{WordOf(Kind)} {Target}-{Value.ToString(CultureInfo.InvariantCulture)}",
+        ArtifactEffectKind.NoRetreat => WordOf(Kind),
         _ => $"{WordOf(Kind)} {Value.ToString(CultureInfo.InvariantCulture)}",
     };
 }

@@ -23,6 +23,15 @@ public static class ArtifactValue
         ArtifactEffectKind.TerrainPenalty => 0.2,
         ArtifactEffectKind.Skill => 6.0,
         ArtifactEffectKind.AllSkills => 15.0,
+        ArtifactEffectKind.Sight => 3.0,
+        ArtifactEffectKind.ManaADay => 3.0,
+        ArtifactEffectKind.ManaMax => 0.3,
+        ArtifactEffectKind.CreatureHealth => 2.0,
+        ArtifactEffectKind.Necromancy => 1.5,
+        ArtifactEffectKind.Growth => 2.0,
+        ArtifactEffectKind.Immune => 12.0,
+        ArtifactEffectKind.ElementPower => 0.4,
+        ArtifactEffectKind.Spells => 20.0,
         _ => 0.0,
     });
 

@@ -16,6 +16,15 @@ public static class SurrenderRules
     public static int Price(BattleState battle, BattleSide side) =>
         (int)Math.Min(int.MaxValue, (battle.LivingArmyOf(side).Sum(u => (long)u.Count * u.Creature.Cost.Gold) + 1) / 2);
 
+    /// <summary>Whether a hero's artifact (the Shackles of War, ADR-111) keeps both sides on the field: no retreat, no surrender.</summary>
+    public static bool IsLocked(BattleState battle) => battle.Attacker.Bonus.NoRetreat || battle.Defender.Bonus.NoRetreat;
+
+    public const string LockedRefusal = "Nobody may leave this battle.";
+
+    /// <summary>Why the side cannot retreat now, or null when it can.</summary>
+    public static string? CheckRetreat(BattleState battle, BattleSide side) =>
+        battle.Participant(side).Hero is null ? "Only a hero can retreat." : IsLocked(battle) ? LockedRefusal : null;
+
     /// <summary>Why the side cannot surrender now, or null when it can.</summary>
     public static string? Check(GameState state, BattleState battle, BattleSide side)
     {
@@ -23,6 +32,11 @@ public static class SurrenderRules
         if (participant.Hero is null || participant.Owner is not { } owner)
         {
             return "Only a hero can surrender.";
+        }
+
+        if (IsLocked(battle))
+        {
+            return LockedRefusal;
         }
 
         if (battle.Participant(side.Opponent()).Owner is null)
@@ -39,7 +53,7 @@ public static class SurrenderRules
     /// enemy's. War machines do not count.
     /// </summary>
     public static bool ShouldRetreat(BattleState battle, BattleSide side) =>
-        battle.Participant(side).Hero is not null && Worth(battle, side) <= Worth(battle, side.Opponent()) * RetreatBelowShare;
+        CheckRetreat(battle, side) is null && Worth(battle, side) <= Worth(battle, side.Opponent()) * RetreatBelowShare;
 
     private static long Worth(BattleState battle, BattleSide side) => battle.LivingArmyOf(side).Sum(u => (long)u.Count * u.Creature.Value);
 }

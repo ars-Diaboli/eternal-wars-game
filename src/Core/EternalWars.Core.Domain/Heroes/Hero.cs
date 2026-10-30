@@ -206,10 +206,13 @@ public sealed class Hero(
 
     private int _baseScoutingRadius = DefaultScoutingRadius;
 
-    /// <summary>Tiles revealed around the hero, in tiles (rounded circle): 5, plus Scouting's 2 / 4 / 6 (ADR-069). Setting it sets the base.</summary>
+    /// <summary>
+    /// Tiles revealed around the hero, in tiles (rounded circle): 5, plus Scouting's 2 / 4 / 6 (ADR-069), plus artifacts' sight (ADR-111). Setting
+    /// it sets the base.
+    /// </summary>
     public int ScoutingRadius
     {
-        get => _baseScoutingRadius + SkillEffects.ScoutingRadius(SkillLevelOf(BuiltInSkills.Scouting));
+        get => _baseScoutingRadius + SkillEffects.ScoutingRadius(SkillLevelOf(BuiltInSkills.Scouting)) + Bonus.Sight;
         internal set => _baseScoutingRadius = value;
     }
 

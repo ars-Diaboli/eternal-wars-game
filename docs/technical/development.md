@@ -160,7 +160,7 @@ and the built-in copy is used).
 | `slot` | `Head`, `Neck`, `Cloak`, `Body`, `Weapon`, `Shield`, `Ring` (two fit), `Boots` or `Misc` (three fit) |
 | `tier` | `Minor`, `Major` or `Relic`: what a map pickup of that tier can roll |
 | `set` | id of a row of `artifact_sets.csv`, or empty; wearing every piece of a set adds the set's effects |
-| `effects` | separated by `;`: `attack 2`, `defense`, `spell-power`, `knowledge`, `morale`, `luck`, `movement 10` (percent), `movement-flat 300`, `battle-speed 1`, `melee-damage 10`, `ranged-damage 10`, `damage-taken 5` (percent less), `ranged-damage-taken 10`, `income gold 100`, `native-terrain swamp`, `terrain-penalty 25` (percent removed), `skill machines.ballistics 1`, `all-skills 1`; negative numbers work |
+| `effects` | separated by `;`: `attack 2`, `defense`, `spell-power`, `knowledge`, `morale`, `luck`, `movement 10` (percent), `movement-flat 300`, `battle-speed 1`, `melee-damage 10`, `ranged-damage 10`, `damage-taken 5` (percent less), `ranged-damage-taken 10`, `income gold 100`, `native-terrain swamp`, `terrain-penalty 25` (percent removed), `skill machines.ballistics 1`, `all-skills 1`, `sight 1` (scouting radius), `mana-a-day 2`, `mana-max 10`, `creature-health 10` (percent), `no-retreat`, `necromancy 10` (percent points), `growth 5` (percent), `immune mind` (a spell tag), `element-power fire 25` (percent), `spells 1-2` (known while worn), `no-spells-above 2` (ADR-111); negative numbers work |
 | `notes` | free text; effects the game cannot apply yet are marked "Not yet" here |
 
 `artifact_sets.csv` has `id, name, effects, notes`; a set needs at least two pieces. Map objects `artifact.minor`,

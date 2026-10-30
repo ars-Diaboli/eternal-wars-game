@@ -237,9 +237,9 @@ public sealed class BattleService(
     {
         var battle = Current(BattlePhase.Fighting);
         var side = SideOf(battle, player) ?? throw new InvalidOperationException($"{player} does not fight in this battle.");
-        if (battle.Participant(side).Hero is null)
+        if (SurrenderRules.CheckRetreat(battle, side) is { } refusal)
         {
-            throw new InvalidOperationException("Only a hero can retreat.");
+            throw new InvalidOperationException(refusal);
         }
 
         Engine(battle).Retreat(side);
@@ -404,11 +404,17 @@ public sealed class BattleService(
 
     /// <summary>
     /// The hero's army and war machines (ADR-056): tent and cart when owned, the offensive machine only from Advanced
-    /// Ballistics, except for the attacker of a siege, whose offensive machine is the siege engine (ADR-106).
+    /// Ballistics, except for the attacker of a siege, whose offensive machine is the siege engine (ADR-106). The hero's health artifacts give its
+    /// creatures (not its machines) more health for the battle, rounded down (ADR-111).
     /// </summary>
     private List<BattleStackSpec> Stacks(Hero hero, bool besieging = false)
     {
-        var stacks = hero.Army.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
+        var health = hero.Bonus.CreatureHealthPercent;
+        var stacks = hero.Army.Stacks
+            .Select(s => state.Creatures.Get(s.Stack.Creature) is var creature && health != 0
+                ? new BattleStackSpec(creature with { Health = Math.Max(1, creature.Health * (100 + health) / 100) }, s.Stack.Count, s.Slot)
+                : new BattleStackSpec(creature, s.Stack.Count, s.Slot))
+            .ToList();
         var town = ProgressionService.TownOf(state, hero);
         foreach (var slot in hero.WarMachines.Order())
         {
@@ -727,9 +733,11 @@ public sealed class BattleService(
     /// <summary>Raises the undead from the enemy's slain creatures into <paramref name="army"/> and returns what joined it.</summary>
     private List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, SkillLevel level, Army army, GameRandom random)
     {
-        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine).Select(u => (u.Creature, u.InitialCount - u.Count));
+        // The table's creature: the slain count with their own health, not the health an enemy's artifacts gave them in battle.
+        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine).Select(u => (state.Creatures.Get(u.Creature.Id), u.InitialCount - u.Count));
         var joined = new List<RaisedUndead>();
-        foreach (var raised in NecromancyRules.Raise(slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random))
+        foreach (var raised in NecromancyRules.Raise(
+                     slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random, hero.Bonus.NecromancyPercent))
         {
             if (army.TryAdd(new CreatureStack(raised.Creature, raised.Count)))
             {
