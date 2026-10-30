@@ -68,6 +68,12 @@ public sealed record SacrificeMade(MapObjectId Altar, HeroId Hero, int Experienc
 /// <summary>A hero answered a sphinx (ADR-079): right brings an artifact or experience, wrong costs the day's movement and morale.</summary>
 public sealed record SphinxAnswered(MapObjectId Sphinx, HeroId Hero, bool Right, string? Artifact = null, int Experience = 0) : IEvent;
 
+/// <summary>
+/// A hero opened a Pandora's Box (ADR-100): <paramref name="Received"/> is what it got (skills it had no room for, artifacts for a full backpack and
+/// creatures without a slot left out); the box was removed just before, and the experience follows.
+/// </summary>
+public sealed record PandorasBoxOpened(MapObjectId Box, HeroId Hero, Objects.BoxContents Received, string? Message) : IEvent;
+
 /// <summary>A hero learned or improved a skill at a witch hut (ADR-079).</summary>
 public sealed record WitchHutSkillLearned(MapObjectId Hut, HeroId Hero, string Skill, Heroes.SkillLevel Level) : IEvent;
 

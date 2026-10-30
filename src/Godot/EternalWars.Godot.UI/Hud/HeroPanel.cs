@@ -95,6 +95,7 @@ public partial class HeroPanel : PanelContainer
         this.SubscribeWhileInTree<HeroLeveledUp>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroExperienceGained>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroManaRestored>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<PandorasBoxOpened>(session.Events, _ => Refresh()); // stats and skills
         this.SubscribeWhileInTree<HeroMovementRestored>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());

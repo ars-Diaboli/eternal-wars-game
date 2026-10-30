@@ -385,7 +385,8 @@ drafts.
 | Witch Hut | **Two skills** of any group (set by the map or rolled); a visit raises one a level, or the same group's next skill where the hero cannot; **one lesson per hero level** | implemented (MAP-34) |
 
 ## Pandora's Box and map events (ADR-096, planned)
-Not built. Pandora's Box is decided (ADR-100, MAP-35); the map events' open points are EVT-1 … EVT-6 ❓ ([open-questions.md](../project/open-questions.md#new-ideas-adr-096-2026-10-29)).
+Pandora's Box is built (ADR-100, MAP-35; ADR-105: map format v27, guard fought like a bank's, gains the hero has no room for are lost, generator
+boxes of gold, experience or creatures from a value of 5000). The map events are not built; their open points are EVT-1 … EVT-6 ❓ ([open-questions.md](../project/open-questions.md#new-ideas-adr-096-2026-10-29)).
 
 - **Pandora's Box** (HoMM3 / HoMM4): the map author fills it (resources, experience, skills, artifacts, creatures, …); a visiting hero is asked
   whether to open it, it opens once and vanishes. HoMM3's contents, gains only (spells with Phase 5); an optional guard army is fought after

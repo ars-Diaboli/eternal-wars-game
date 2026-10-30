@@ -70,6 +70,11 @@ public partial class DecisionPanel : PanelContainer
                 }
 
                 break;
+            case PandorasBoxDecision:
+                _prompt.Text = "A Pandora's box. Nobody knows what waits inside, or what guards it. Open it?";
+                Button("Open", new AnswerPandorasBoxCommand(player, Open: true));
+                Button("Leave", new AnswerPandorasBoxCommand(player, Open: false));
+                break;
             case WitchHutDecision hut:
                 _prompt.Text = $"The witch offers to teach {state.GetHero(hut.Hero).Name} one skill (one witch hut lesson per level).";
                 foreach (var skill in hut.Options)

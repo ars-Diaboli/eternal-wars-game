@@ -2241,7 +2241,7 @@ ADR-075). Map format **v25**. Choices made here are marked *(choice)*.
   runs some scenarios.
 
 ### ADR-096: Pandora's Box and map events (HotA-like extended events) (2026-10-29)
-**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; **nothing implemented**. The open points are MAP-35 and
+**Status**: accepted as a design (2026-10-29), owner notes in `ideas.md`; Pandora's Box built (ADR-105), the map events not. The open points were MAP-35 (answered in ADR-100) and
 EVT-1 … EVT-6 in `open-questions.md`, each with a proposal. Reference: the "Extended event system" chapter of the HotA documentation
 (h3hota.com/en/documentation).
 
@@ -2497,3 +2497,33 @@ ADR-101's main menu (UI-2). Choices made here are marked *(choice)*.
   during a game *(choice: no confirmation; the autosave keeps the start of the turn)*. Leaving takes the game's world and HUD down.
 - **`--new-game`** opens the game on the new-game screen *(choice)*: the smoke scenarios pass it, so their clicks and keys are unchanged.
 - Save replay on every end screen was already built (ADR-103); the arena's result screen will offer it when the arena exists (ADR-100).
+
+### ADR-105: Pandora's Box (implementation, 2026-10-30)
+**Status**: implemented (2026-10-30); core tested, the Godot parts build but have not been run in Godot. Carries out ADR-100's Pandora's Box
+(MAP-35, ADR-096). Map format **v27**, generator version **7**. Choices made here are marked *(choice)*.
+
+- **The object** (`PandorasBox`, kind `PandorasBox`, definition `pandoras-box`, one cell): `Contents` (`BoxContents`: resources,
+  experience, mana, morale, luck, the four primary stats, skills with a level, artifacts, creature stacks), an optional `Guard` (up to seven
+  stacks) and an optional `Message`. Gains only: a negative value, morale or luck above +3, an unknown skill or a level the skill does not
+  have are refused by the editor and are format errors in a map file.
+- **A visit** asks "open?" (`PandorasBoxDecision`, answered by `AnswerPandorasBoxCommand`, record name `pandorasBox`), showing neither
+  the contents nor the guard. Leaving keeps the box. A guarded box turns away a hero without an army *(choice)*.
+- **The guard** fights after "open?", split like a creature bank's guard, with no Tactics choice and no deployment *(choice: like banks)*.
+  The box opens only when the hero wins; a lost or fled battle leaves the guard whole, as at a bank *(choice)*.
+- **Opening**: the box vanishes, then the hero gets resources, stats, mana (up to twice its maximum, as the Mana Vortex), morale and luck
+  for its next battle, and skills (raised to at least the level given). Skills whose group the hero has no room for are lost, and so are
+  artifacts that do not fit a full backpack and creatures without a slot *(choice: HoMM3 asks which stack to drop; here they are simply
+  lost)*. Then `PandorasBoxOpened` reports what the hero actually got, with the message. The experience comes last, for its level-ups.
+- **AI**: knows the contents and values them in gold: resources at their value, experience 1:1, a stat 750, morale and luck 150 a point,
+  a skill 1000 a level gained, artifacts as pickups, creatures at 85 % where they fit, mana nothing until spells exist. It weighs that
+  against the box's own guard (else the monsters next to it) through the usual simulated fight, and at the box opens only when that fight
+  is safe.
+- **Validator**: an empty box is an error; so are unknown artifacts and creatures, and contents that are not gains.
+- **Editor**: the inspector has the box's resources, experience, mana, morale, luck, stats, skills, artifacts, creatures, guard and
+  message. Each list shows its entries plus one empty row; every change is one undoable `SetPandorasBox` edit.
+- **Generator** *(placeholders)*: from a value of 5000, one treasure item in five that is not a catalogue site is a box. It holds one of
+  gold (the value, in steps of 500), experience (four fifths of it) or one stack of creatures worth the value, drawn evenly. It is guarded
+  by a monster next to it like any item of its value, and has no guard of its own.
+- **Front-end**: a decision prompt with Open and Leave, a notice with the message and what was inside, and the guard named "Pandora's box
+  guard" in battle. Not built: spells (Phase 5), running a hero event instead (map events, EVT), and showing the contents on arena day 1
+  (the arena).

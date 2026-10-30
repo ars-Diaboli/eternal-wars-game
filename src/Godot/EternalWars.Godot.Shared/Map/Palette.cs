@@ -103,6 +103,7 @@ public static class Palette
         MapObjectKind.KeymasterTent or MapObjectKind.BorderPost => new Color(0.90f, 0.85f, 0.30f),
         MapObjectKind.MapTavern => new Color(0.65f, 0.40f, 0.20f),
         MapObjectKind.Garrison => new Color(0.50f, 0.50f, 0.55f),
+        MapObjectKind.PandorasBox => new Color(0.75f, 0.30f, 0.65f),
         _ => Colors.Magenta,
     };
 

@@ -115,6 +115,9 @@ public enum MapObjectKind
 
     /// <summary>Tells next week's event (<see cref="Objects.AstrologersTower"/>, ADR-077, MAP-32).</summary>
     AstrologersTower,
+
+    /// <summary>The map author's contents, opened once, maybe behind a guard (<see cref="Objects.PandorasBox"/>, ADR-100, MAP-35).</summary>
+    PandorasBox,
 }
 
 /// <summary>

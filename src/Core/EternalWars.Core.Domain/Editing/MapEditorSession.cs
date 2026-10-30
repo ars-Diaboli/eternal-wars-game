@@ -1071,6 +1071,37 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>
+    /// What a Pandora's Box holds, its guard (empty for none, at most seven stacks) and its message (ADR-100). Contents that are not gains are
+    /// refused; an empty box is allowed while editing and is a validator error.
+    /// </summary>
+    public EditResult SetPandorasBox(MapObjectId id, BoxContents contents, IReadOnlyList<CreatureStack> guard, string? message)
+    {
+        ArgumentNullException.ThrowIfNull(contents);
+        ArgumentNullException.ThrowIfNull(guard);
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not PandorasBox box)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (contents.Problem() is not null || guard.Count > Army.SlotCount || guard.Any(s => s.Count < 1 || !Scenario.Creatures.Contains(s.Creature))
+            || contents.Creatures.Any(s => !Scenario.Creatures.Contains(s.Creature)))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        message = string.IsNullOrEmpty(message) ? null : message;
+        var previous = (box.Contents, box.Guard, box.Message);
+        Run(new DelegateCommand("Set Pandora's box", () => Apply(contents, guard, message), () => Apply(previous.Contents, previous.Guard, previous.Message)));
+        return EditResult.Ok;
+
+        void Apply(BoxContents value, IReadOnlyList<CreatureStack> stacks, string? text)
+        {
+            (box.Contents, box.Guard, box.Message) = (value, stacks, text);
+            _bus.Publish(new MapObjectChanged(box.Id));
+        }
+    }
+
     /// <summary>Who sits in a prison and at what level (ADR-068); null = drawn when the game starts.</summary>
     public EditResult SetPrison(MapObjectId id, string? hero, int? level)
     {

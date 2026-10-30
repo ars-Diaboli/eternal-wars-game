@@ -35,11 +35,12 @@ namespace EternalWars.Core.Data.Maps;
 /// 24 = + week and month events (<c>rules.weekEvents</c>: on or off, weeks skipped, factions; omitted = the default) and the Astrologer's Tower
 /// (<c>astrologersTower</c>; ADR-084). 25 = + conditions to capture a map object, obtain or lose an artifact and release a prisoner, and deadlines
 /// on victory conditions (<c>target</c>, <c>artifact</c>, <c>deadline</c>; ADR-094). 26 = + the map's difficulty (<c>rules.difficulty</c>, the
-/// complexity the map's starting resources stand for in the ranking; omitted = Normal; ADR-101). Older versions still load (with the default events).
+/// complexity the map's starting resources stand for in the ranking; omitted = Normal; ADR-101). 27 = + Pandora's Boxes (<c>pandorasBox</c>:
+/// contents, an optional guard and message; ADR-100). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 26;
+    public const int CurrentFormatVersion = 27;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -211,6 +212,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(BorderPostDocument), "borderPost")]
 [JsonDerivedType(typeof(MapTavernDocument), "tavern")]
 [JsonDerivedType(typeof(GarrisonDocument), "garrison")]
+[JsonDerivedType(typeof(PandorasBoxDocument), "pandorasBox")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -286,6 +288,45 @@ public sealed record GarrisonDocument : MapObjectDocument
 
     public IReadOnlyList<ArmySlotDocument>? Troops { get; init; }
 }
+
+/// <summary>
+/// A Pandora's Box (v27, ADR-100): what it gives (each field omitted when nothing), its <see cref="Guard"/> (omitted = none) and a
+/// <see cref="Message"/> shown when it opens. <see cref="Skills"/> are levels by skill id; <see cref="Morale"/> and <see cref="Luck"/> last until the
+/// next battle.
+/// </summary>
+public sealed record PandorasBoxDocument : MapObjectDocument
+{
+    public IReadOnlyDictionary<ResourceType, int>? Resources { get; init; }
+
+    public int? Experience { get; init; }
+
+    public int? Mana { get; init; }
+
+    public int? Morale { get; init; }
+
+    public int? Luck { get; init; }
+
+    public int? Attack { get; init; }
+
+    public int? Defense { get; init; }
+
+    public int? SpellPower { get; init; }
+
+    public int? Knowledge { get; init; }
+
+    public IReadOnlyDictionary<string, SkillLevel>? Skills { get; init; }
+
+    public IReadOnlyList<string>? Artifacts { get; init; }
+
+    public IReadOnlyList<StackDocument>? Creatures { get; init; }
+
+    public IReadOnlyList<StackDocument>? Guard { get; init; }
+
+    public string? Message { get; init; }
+}
+
+/// <summary>A creature stack outside an army's slots (a Pandora's Box's creatures and guard, v27).</summary>
+public sealed record StackDocument(string Creature, int Count);
 
 /// <summary>A Den of Thieves (v22, ADR-079).</summary>
 public sealed record DenOfThievesDocument : MapObjectDocument;

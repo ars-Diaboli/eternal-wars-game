@@ -189,6 +189,13 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 case WitchHutDecision hut:
                     command = new ChooseWitchHutSkillCommand(player, SkillOffers.ComputerChoice(hut.Options));
                     break;
+                case PandorasBoxDecision box:
+                    // The AI knows what is inside (ADR-100): open when the box is worth something to the hero and any guard can be beaten safely.
+                    var opener = _state.GetHero(box.Hero);
+                    var pandora = (PandorasBox)_state.GetObject(box.Box);
+                    command = new AnswerPandorasBoxCommand(player, BoxValue(opener, pandora.Contents) > 0
+                        && (!pandora.IsGuarded || _estimator.Fight(opener, BoxGuard(pandora)).IsSafe(MonsterLoss)));
+                    break;
                 case TreasureChestDecision chest:
                     var hero = _state.GetHero(chest.Hero);
                     var levels = ExperienceTable.LevelFor(hero.Experience + chest.Experience) > hero.Level;
@@ -931,6 +938,23 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
     }
 
+    /// <summary>A Pandora's Box's guard as one army (at most seven stacks).</summary>
+    private static Army BoxGuard(PandorasBox box) => Army.Of([.. box.Guard.Take(Army.SlotCount)]);
+
+    /// <summary>
+    /// What a Pandora's Box is worth to the hero, by the AI's values (ADR-100): resources at their gold value, experience 1:1, a primary stat as a
+    /// training site's (750), morale and luck a buff's (150 a point), a skill 1000 a level gained, artifacts as pickups (only while the backpack has
+    /// room) and creatures at 85 % of their value where they fit. Mana counts for nothing until there are spells.
+    /// </summary>
+    private double BoxValue(Hero hero, BoxContents contents)
+    {
+        var stats = Enum.GetValues<PrimaryStat>().Sum(contents.Stat);
+        var skills = contents.Skills.Where(s => hero.Skills.CanRaise(s.Key)).Sum(s => Math.Max(0, s.Value - hero.Skills.Level(s.Key)));
+        var artifacts = hero.Artifacts.BackpackFull ? 0 : contents.Artifacts.Sum(a => _state.Artifacts.TryGet(a, out var found) ? 800 + (80 * Score(found)) : 0);
+        var creatures = contents.Creatures.Where(s => hero.Army.CanAccept(s.Creature)).Sum(s => 0.85 * s.Count * _state.Creatures.Get(s.Creature).Value);
+        return Value(contents.Resources) + contents.Experience + (750 * stats) + (150 * (contents.Morale + contents.Luck)) + (1000 * skills) + artifacts + creatures;
+    }
+
     /// <summary>A buff is worth a short detour at most; the Magic Well nothing until there are spells.</summary>
     private static double BuffValue(BuffRule rule) => rule switch
     {
@@ -1057,6 +1081,15 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     if (Plausible(ArmyPower(bankGuard)))
                     {
                         yield return new(visit, Value(bank.Reward) + (bank.RewardArtifact is null ? 0 : 1500) + (1500 * bank.MoreArtifacts.Count), bankGuard, MaxLoss: MonsterLoss);
+                    }
+
+                    break;
+                case PandorasBox box when visit != hero.Position && (!box.IsGuarded || !hero.Army.IsEmpty) && BoxValue(hero, box.Contents) is > 0 and var boxWorth:
+                    // Weighed by its contents against its own guard, else the monsters next to it; the simulated fight later decides.
+                    var boxGuard = box.IsGuarded ? BoxGuard(box) : GuardArmy(visit);
+                    if (Plausible(boxGuard is null ? 0 : ArmyPower(boxGuard)))
+                    {
+                        yield return new(visit, boxWorth, boxGuard, MaxLoss: MonsterLoss);
                     }
 
                     break;

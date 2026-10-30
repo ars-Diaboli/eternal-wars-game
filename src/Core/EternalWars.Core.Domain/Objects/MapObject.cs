@@ -96,6 +96,7 @@ public abstract class MapObject
         MapObjectKind.BorderPost => new BorderPost(id, definition, position),
         MapObjectKind.MapTavern => new MapTavern(id, definition, position),
         MapObjectKind.Garrison => new MapGarrison(id, definition, position),
+        MapObjectKind.PandorasBox => new PandorasBox(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }

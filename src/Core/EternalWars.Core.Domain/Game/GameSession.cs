@@ -248,6 +248,9 @@ public sealed class GameSession
             case AnswerSphinxCommand sphinx:
                 Interactions.ResolveSphinx(sphinx.Option);
                 return null;
+            case AnswerPandorasBoxCommand box:
+                Interactions.ResolvePandorasBox(box.Open);
+                return null;
             case ChooseWitchHutSkillCommand hut:
                 Interactions.ResolveWitchHut(hut.Skill);
                 return null;

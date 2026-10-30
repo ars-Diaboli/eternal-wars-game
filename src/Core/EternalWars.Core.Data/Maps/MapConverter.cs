@@ -404,6 +404,7 @@ public static class MapConverter
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Owner = garrison.Owner?.Value,
                 Troops = garrison.Troops.IsEmpty ? null : garrison.Troops.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
             },
+            PandorasBox box => ToDocument(box),
             HillFort => new HillFortDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -458,6 +459,72 @@ public static class MapConverter
             },
             _ => throw new NotSupportedException($"Cannot save {mapObject.GetType().Name}."),
         };
+    }
+
+    private static PandorasBoxDocument ToDocument(PandorasBox box)
+    {
+        var (c, p) = (box.Contents, box.Position);
+        static int? Some(int value) => value == 0 ? null : value;
+        static List<StackDocument>? Stacks(IReadOnlyList<CreatureStack> stacks) => stacks.Count == 0 ? null : [.. stacks.Select(s => new StackDocument(s.Creature, s.Count))];
+        return new PandorasBoxDocument
+        {
+            Id = box.Id.Value, Definition = box.Definition.Id, X = p.X, Y = p.Y, Level = p.Level,
+            Resources = c.Resources.IsEmpty ? null : Enum.GetValues<ResourceType>().Where(r => c.Resources[r] != 0).ToDictionary(r => r, r => c.Resources[r]),
+            Experience = Some(c.Experience), Mana = Some(c.Mana), Morale = Some(c.Morale), Luck = Some(c.Luck),
+            Attack = Some(c.Attack), Defense = Some(c.Defense), SpellPower = Some(c.SpellPower), Knowledge = Some(c.Knowledge),
+            Skills = c.Skills.Count == 0 ? null : c.Skills.OrderBy(s => s.Key, StringComparer.Ordinal).ToDictionary(s => s.Key, s => s.Value, StringComparer.Ordinal),
+            Artifacts = c.Artifacts.Count == 0 ? null : c.Artifacts,
+            Creatures = Stacks(c.Creatures),
+            Guard = Stacks(box.Guard),
+            Message = box.Message,
+        };
+    }
+
+    /// <summary>A Pandora's Box from its document (v27); unknown creatures and contents that are not gains are format errors, unknown artifacts the validator's.</summary>
+    private static PandorasBox ToBox(PandorasBoxDocument box, MapObjectId id, MapObjectDefinition definition, MapPosition position, CreatureCatalog creatures)
+    {
+        List<CreatureStack> Stacks(IReadOnlyList<StackDocument>? stacks, string what)
+        {
+            if ((stacks?.Count ?? 0) > Army.SlotCount)
+            {
+                throw new FormatException($"Pandora's Box {box.Id} has more than {Army.SlotCount} {what} stacks.");
+            }
+
+            foreach (var stack in stacks ?? [])
+            {
+                if (!creatures.Contains(stack.Creature))
+                {
+                    throw new FormatException($"Pandora's Box {box.Id} has unknown creature '{stack.Creature}'.");
+                }
+            }
+
+            return [.. (stacks ?? []).Select(s => new CreatureStack(s.Creature, s.Count))];
+        }
+
+        if (box.Skills?.Keys.FirstOrDefault(s => !BuiltInSkills.Contains(s)) is { } unknown)
+        {
+            throw new FormatException($"Pandora's Box {box.Id} names the unknown skill '{unknown}'.");
+        }
+
+        var resources = (box.Resources ?? new Dictionary<ResourceType, int>()).Aggregate(ResourceSet.Empty, (sum, r) => sum + ResourceSet.Of(r.Key, r.Value));
+        var contents = new BoxContents
+        {
+            Resources = resources,
+            Experience = box.Experience ?? 0, Mana = box.Mana ?? 0, Morale = box.Morale ?? 0, Luck = box.Luck ?? 0,
+            Attack = box.Attack ?? 0, Defense = box.Defense ?? 0, SpellPower = box.SpellPower ?? 0, Knowledge = box.Knowledge ?? 0,
+            Skills = (box.Skills ?? new Dictionary<string, SkillLevel>()).ToDictionary(s => BuiltInSkills.Resolve(s.Key), s => s.Value, StringComparer.Ordinal),
+            Artifacts = box.Artifacts ?? [],
+            Creatures = Stacks(box.Creatures, "creature"),
+        };
+        if (contents.Problem() is { } problem)
+        {
+            throw new FormatException($"Pandora's Box {box.Id} {problem}");
+        }
+
+        var guard = Stacks(box.Guard, "guard");
+        return guard.Any(s => s.Count < 1)
+            ? throw new FormatException($"Pandora's Box {box.Id} has an empty guard stack.")
+            : new PandorasBox(id, definition, position, contents, guard, string.IsNullOrEmpty(box.Message) ? null : box.Message);
     }
 
     private static Dictionary<string, int> Sorted(IReadOnlyDictionary<string, int> values) =>
@@ -515,6 +582,7 @@ public static class MapConverter
                 WitchHutDocument { Skills: { } skills } when skills.Any(s => !BuiltInSkills.Contains(s)) => throw new FormatException("A witch hut names an unknown skill."),
                 WitchHutDocument hut => new WitchHut(id, definition, position, hut.Skills?.Select(BuiltInSkills.Resolve).ToList()),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
+                PandorasBoxDocument box => ToBox(box, id, definition, position, creatures),
                 DepositDocument => new Deposit(id, definition, position),
                 MagiWindowDocument => new MagiWindow(id, definition, position),
                 MagiEyeDocument => new MagiEye(id, definition, position),

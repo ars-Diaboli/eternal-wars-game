@@ -735,6 +735,7 @@ public static class Program
                 CartographerDecision => new AnswerCartographerCommand(player, Buy: false),
                 DepositDecision => new AnswerDepositCommand(player, Buy: false),
                 SphinxDecision => new AnswerSphinxCommand(player, 0),
+                PandorasBoxDecision => new AnswerPandorasBoxCommand(player, Open: false),
                 WitchHutDecision hut => new ChooseWitchHutSkillCommand(player, hut.Options[0]),
                 TrainingDecision training => new ChooseTrainingCommand(player, training.CanDecline ? null : training.Options[0]),
                 HeroExchangeDecision => new CompleteExchangeCommand(player),
