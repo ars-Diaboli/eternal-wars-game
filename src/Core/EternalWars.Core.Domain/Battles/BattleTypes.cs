@@ -225,7 +225,7 @@ public sealed record HeroBattleBonuses(
             artifacts.RangedDamageTakenReductionPercent,
             Heroes.SkillEffects.AlertnessInitiative(hero.SkillLevelOf(Heroes.BuiltInSkills.Alertness)),
             hero.SkillLevelOf(Heroes.BuiltInSkills.BloodRage),
-            hero.SkillLevelOf(Heroes.BuiltInSkills.Warcry),
+            PrimalFury.WarcryLevel(hero),
             PrimalFury.SpellPowerPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
             PrimalFury.SpellCostPenalty(hero.SkillLevelOf(Heroes.BuiltInSkills.Interference)),
             Heroes.SkillEffects.MarksmanshipEighths(hero.SkillLevelOf(Heroes.BuiltInSkills.Marksmanship)),

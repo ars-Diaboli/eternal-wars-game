@@ -75,7 +75,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
             return;
         }
 
-        foreach (var hero in state.Heroes.Where(h => h.PendingLevelUps > 0 && !state.GetPlayer(h.Owner).IsHuman).ToList())
+        foreach (var hero in state.Heroes.Concat(state.GarrisonHeroes).Where(h => h.PendingLevelUps > 0 && !state.GetPlayer(h.Owner).IsHuman).ToList())
         {
             while (hero.PendingLevelUps > 0)
             {
@@ -90,7 +90,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
             return;
         }
 
-        foreach (var hero in state.HeroesOf(player.Id).Where(h => h.PendingLevelUps > 0).ToList())
+        foreach (var hero in state.AllHeroesOf(player.Id).Where(h => h.PendingLevelUps > 0).ToList())
         {
             var options = Offers(hero);
             var stat = RollStat(hero);

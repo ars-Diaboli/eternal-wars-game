@@ -97,7 +97,7 @@ public static class ScenarioAssembler
             var zone = template.Zones.First(z => z.Owner == setup.Slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart);
             made.Add(new Player(id, setup.Name, setup.IsHuman, new TeamId(teams[i])));
 
-            var start = map.Towns.Where(t => t.Slot == setup.Slot).Select(t => StartTown(map, t.Town, zone, setup, id, creatures, streams.For("dwellings", setup.Slot))).ToList();
+            var start = map.Towns.Where(t => t.Slot == setup.Slot).Select(t => StartTown(map, t.Town, zone, setup, id, creatures, buildings ?? BuildingCatalog.Default, streams.For("dwellings", setup.Slot))).ToList();
             var hero = setup.Hero is { } picked ? heroRoster.Get(picked) : Draw(heroRoster, setup.TownType, taken, heroRandom);
             heroes.Add(Hero.Create(new HeroId(i + 1), id, start[0].VisitPosition, StarterArmy(hero, setup.TownType, creatures, streams.For("armies", setup.Slot)), hero));
         }
@@ -184,12 +184,14 @@ public static class ScenarioAssembler
     }
 
     /// <summary>A player's start town:the player's type and ownership, the default start plus the zone's start buildings and dwellings.</summary>
-    private static Town StartTown(GeneratedMap map, Town town, TemplateZone zone, PlayerSetup setup, PlayerId owner, CreatureCatalog creatures, GameRandom random)
+    private static Town StartTown(GeneratedMap map, Town town, TemplateZone zone, PlayerSetup setup, PlayerId owner, CreatureCatalog creatures, BuildingCatalog catalog, GameRandom random)
     {
         var buildings = new Dictionary<string, int>(BuiltInBuildings.DefaultStart, StringComparer.Ordinal);
-        foreach (var (building, level) in zone.StartBuildings ?? new Dictionary<string, int>())
+        // A start building the player's town type lacks (a mage guild in Stronghold, ADR-071) is left out.
+        var own = catalog.For(setup.TownType);
+        foreach (var (building, level) in (zone.StartBuildings ?? new Dictionary<string, int>()).Where(b => own.Contains(b.Key)))
         {
-            buildings[building] = Math.Max(level, buildings.GetValueOrDefault(building));
+            buildings[building] = Math.Min(own.MaxLevel(building), Math.Max(level, buildings.GetValueOrDefault(building)));
         }
 
         var lines = creatures.BaseCreaturesOf(setup.TownType).OrderBy(c => c.Id, StringComparer.Ordinal).ToList();
@@ -214,7 +216,7 @@ public static class ScenarioAssembler
 
         // A week of creatures waits in every start dwelling, with the fort's growth bonus (ADR-066).
         var probe = new Town(town.Id, MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(setup.TownType)), town.Position, buildings: buildings);
-        var available = dwellings.Keys.ToDictionary(l => l, l => TownRules.WeeklyGrowth(probe, creatures.Get(l)), StringComparer.Ordinal);
+        var available = dwellings.Keys.ToDictionary(l => l, l => TownRules.WeeklyGrowth(catalog, probe, creatures.Get(l)), StringComparer.Ordinal);
         return map.Replace(town, setup.TownType, owner, buildings, dwellings, available);
     }
 

@@ -240,7 +240,7 @@ public sealed class MapObjectInteractionService(
                 Magic.MagicRules.Visit(state, events, hero, town);
                 break;
 
-            case Town { Garrison.IsEmpty: false } town:
+            case Town town when !town.Garrison.IsEmpty || town.GarrisonHero is not null:
                 battles.BeginTownBattle(hero, town);
                 break;
 

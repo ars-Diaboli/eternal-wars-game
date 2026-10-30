@@ -79,6 +79,12 @@ public sealed class Hero(
     /// <summary>Spells in the hero's book with their rank (1–3, ADR-072; all rank 1 until Mastery's upgrades are built).</summary>
     public IReadOnlyDictionary<string, int> Spells => _spells;
 
+    /// <summary>
+    /// The highest war lodge level the hero has visited (0–3, ADR-071; placeholder): it may use the warcries up to that level
+    /// (<see cref="Battles.PrimalFury.LevelOf"/>) that its Warcry skill allows.
+    /// </summary>
+    public int WarcriesLearned { get; internal set; }
+
     /// <summary>Puts a spell in the book at rank 1; false when the hero already knows it.</summary>
     internal bool Learn(string spell) => _spells.TryAdd(spell, 1);
 

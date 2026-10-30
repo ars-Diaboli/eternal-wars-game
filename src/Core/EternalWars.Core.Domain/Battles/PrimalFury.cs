@@ -40,12 +40,22 @@ public static class PrimalFury
     public static int BloodRageMaxAttack(SkillLevel level) => 2 * (int)level;
 
     /// <summary>The warcries a Warcry level offers.</summary>
-    public static bool Knows(SkillLevel level, Warcry warcry) => level >= warcry switch
+    public static bool Knows(SkillLevel level, Warcry warcry) => (int)level >= LevelOf(warcry);
+
+    /// <summary>A warcry's level, 1 to 3: the Warcry skill level and the war lodge level it needs (ADR-067, ADR-071).</summary>
+    public static int LevelOf(Warcry warcry) => warcry switch
     {
-        Warcry.Rally => SkillLevel.Basic,
-        Warcry.Intimidate => SkillLevel.Advanced,
-        _ => SkillLevel.Expert,
+        Warcry.Rally => 1,
+        Warcry.Intimidate => 2,
+        _ => 3,
     };
+
+    /// <summary>
+    /// The warcry level a hero brings to battle: its Warcry skill, at most the war lodge level it learned at (<see cref="Hero.WarcriesLearned"/>;
+    /// ADR-071, placeholder).
+    /// </summary>
+    public static SkillLevel WarcryLevel(Hero hero) =>
+        (SkillLevel)Math.Min((int)hero.SkillLevelOf(BuiltInSkills.Warcry), hero.WarcriesLearned);
 
     /// <summary>Interference: Spell Power the enemy hero's spells lose, 2 per level. <see cref="BattleMagic"/> reads it.</summary>
     public static int SpellPowerPenalty(SkillLevel level) => 2 * Math.Min(3, (int)level);

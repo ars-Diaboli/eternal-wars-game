@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<ProviderOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
-      IEventHandler<HeroHired>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<HeroFreed>,
+      IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<HeroFreed>,
       IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>
 {
     public void Handle(GameStarted @event)
@@ -100,6 +100,8 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
     // A hired hero stands at a town entrance and looks around from there.
     public void Handle(HeroHired @event) => OnHeroRelocated(state.GetHero(@event.Hero), state.GetHero(@event.Hero).Position);
+
+    public void Handle(HeroLeftGarrison @event) => OnHeroRelocated(state.GetHero(@event.Hero), @event.Position);
 
     // The defeated hero no longer observes anything; others may notice it is gone.
     public void Handle(HeroDefeated @event)

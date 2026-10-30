@@ -277,11 +277,26 @@ public class PrimalFuryAndLeadershipTests
         var hero = state.GetHero(A);
         hero.Skills.Set(BuiltInSkills.BloodRage, SkillLevel.Expert);
         hero.Skills.Set(BuiltInSkills.Warcry, SkillLevel.Advanced);
+        hero.WarcriesLearned = 3;
 
         var bonuses = HeroBattleBonuses.For(hero, state.Creatures);
 
         Assert.Equal(SkillLevel.Expert, bonuses.BloodRage);
         Assert.Equal(SkillLevel.Advanced, bonuses.Warcry);
+    }
+
+    [Theory]
+    [InlineData(0, SkillLevel.None)]
+    [InlineData(1, SkillLevel.Basic)]
+    [InlineData(3, SkillLevel.Advanced)]
+    public void Warcries_NeedTheWarLodge_UpToTheSkill(int lodge, SkillLevel expected)
+    {
+        var state = Create("A.........B");
+        var hero = state.GetHero(A);
+        hero.Skills.Set(BuiltInSkills.Warcry, SkillLevel.Advanced);
+        hero.WarcriesLearned = lodge;
+
+        Assert.Equal(expected, HeroBattleBonuses.For(hero, state.Creatures).Warcry);
     }
 
     private static (TestBattle Battle, BattleUnit Own, BattleUnit Enemy) Duel(SkillLevel warcry)

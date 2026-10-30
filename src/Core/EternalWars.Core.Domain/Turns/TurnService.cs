@@ -90,7 +90,7 @@ public sealed class TurnService(
             if (state.Date.IsFirstDayOfWeek)
             {
                 events.Publish(new WeekStarted(state.Date));
-                progression.ExpireStatuses(state.Heroes, StatusExpiry.EndOfWeek);
+                progression.ExpireStatuses(state.Heroes.Concat(state.GarrisonHeroes), StatusExpiry.EndOfWeek);
                 StartWeekEvent();
                 towns.GrowWeekly();
                 economy.StockProviders();
@@ -122,7 +122,7 @@ public sealed class TurnService(
     /// <summary>Every own hero regains its daily mana (ADR-063); nothing happens, and nothing is published, when the pool is full.</summary>
     private void RestoreMana(PlayerId player)
     {
-        foreach (var hero in state.HeroesOf(player).OrderBy(h => h.Id.Value))
+        foreach (var hero in state.AllHeroesOf(player).OrderBy(h => h.Id.Value))
         {
             var max = hero.MaxMana;
             if (hero.Mana < max)
@@ -136,7 +136,7 @@ public sealed class TurnService(
     private void BeginTurn()
     {
         var player = state.CurrentPlayer;
-        progression.ExpireStatuses(state.HeroesOf(player.Id), StatusExpiry.EndOfDay);
+        progression.ExpireStatuses(state.AllHeroesOf(player.Id), StatusExpiry.EndOfDay);
         movement.RestoreMovement(player.Id);
         RestoreMana(player.Id);
         towns.AppointVisitors(player.Id);

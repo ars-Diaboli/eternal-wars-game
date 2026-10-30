@@ -29,7 +29,7 @@ public enum BankRule
 
 /// <summary>
 /// One row of a bank's table: how likely it is, the guard, and the reward for beating it. With <paramref name="Upgraded"/>, half the time a fifth
-/// of each guard stack of its base creature is the upgraded creature instead.
+/// of the first guard stack (its base creature) is the upgraded creature instead.
 /// </summary>
 public sealed record BankTier(int Weight, IReadOnlyList<CreatureStack> Guard, ResourceSet Reward, ArtifactTier? Artifact = null, string? Upgraded = null)
 {
@@ -84,49 +84,59 @@ public static class CreatureBankRules
 
     private static ResourceSet Gold(int gold) => new(Gold: gold);
 
-    private static CreatureStack[] One(string creature, int count) => [new(creature, count)];
+    private static ResourceSet Rare(int gold, int each) => new(Gold: gold, Crystal: each, Mercury: each, Sulfur: each);
 
+    /// <summary>
+    /// The faction re-draft (ADR-070, MAP-22; drafts, ADR-112): every bank's guard is 2–3 creature types of one faction (neutral banks: neutral creatures),
+    /// in four rows at 30 / 30 / 30 / 10 %, the reward about half the guard's gold value. The upgraded fifth counts as one of the types.
+    /// </summary>
     public static IReadOnlyDictionary<BankRule, IReadOnlyList<BankTier>> Tables { get; } = new Dictionary<BankRule, IReadOnlyList<BankTier>>
     {
-        [BankRule.Churchyard] = [new(100, One("necropolis.ghoul", 90), Gold(2500), ArtifactTier.Minor)],
-        [BankRule.Mansion] = [.. new[] { (40, 2500, 2), (60, 5000, 3), (80, 7500, 4), (100, 10000, 5) }.Select((t, i) =>
-            new BankTier(Usual[i], One("necropolis.vampire-lord", t.Item1), new ResourceSet(Gold: t.Item2, Crystal: t.Item3, Mercury: t.Item3, Sulfur: t.Item3), ArtifactTier.Major))],
-        [BankRule.Crypt] = [.. new[] { (20, 3, 3, 10, 1, 1000), (30, 5, 5, 10, 1, 2000), (40, 7, 7, 20, 2, 3000), (50, 9, 9, 20, 3, 4000) }.Select((t, i) =>
-            new BankTier(Usual[i], [new("necropolis.skeleton", t.Item1), new("necropolis.wight", t.Item2), new("necropolis.wraith", t.Item3),
-                new("necropolis.skeleton-warrior", t.Item4), new("necropolis.arch-lich", t.Item5)], Gold(t.Item6)))],
-        [BankRule.DwarvenTreasury] = Simple("neutral.dwarf", "neutral.battle-dwarf", [(50, 2500, 2), (75, 4000, 4), (100, 5000, 6), (150, 7500, 10)], ResourceType.Crystal),
-        [BankRule.ImpCache] = Simple("inferno.imp", "inferno.familiar", [(100, 1000, 2), (150, 1500, 4), (200, 2000, 6), (300, 3000, 8)], ResourceType.Mercury),
-        [BankRule.MedusaStores] = Simple("dungeon.medusa", "dungeon.putrid-medusa", [(15, 2000, 4), (30, 3000, 6), (40, 4000, 8), (50, 5000, 10)], ResourceType.Sulfur),
-        [BankRule.NagaBank] = Simple("academy.naga", "academy.naga-queen", [(5, 3000, 0), (10, 6000, 0), (15, 9000, 0), (20, 12000, 0)], ResourceType.Gold),
-
-        // The second catalogue (ADR-069, ADR-070): the notes' creatures, rewards about half the guard's gold value (drafts, ADR-082).
-        [BankRule.Ruins] = Simple("stronghold.orc", "stronghold.orc-berserker", [(20, 2000, 0), (30, 3000, 0), (40, 4000, 0), (60, 6000, 0)], ResourceType.Gold),
-        [BankRule.Lair] = [.. new[] { (4, 2000, ArtifactTier.Minor), (6, 3000, ArtifactTier.Minor), (8, 4000, ArtifactTier.Minor), (12, 6000, ArtifactTier.Major) }.Select((t, i) =>
-            new BankTier(Usual[i], One("dungeon.spectator", t.Item1), Gold(t.Item2), t.Item3, "dungeon.beholder"))],
-        [BankRule.Keep] = [.. new[] { (20, 10, 1500, ArtifactTier.Minor), (30, 15, 2500, ArtifactTier.Minor), (40, 20, 3500, ArtifactTier.Minor), (60, 30, 5000, ArtifactTier.Major) }.Select((t, i) =>
-            new BankTier(Usual[i], [new("haven.pikeman", t.Item1), new("haven.archer", t.Item2)], Gold(t.Item3), t.Item4))],
-        [BankRule.Hideout] = Simple("neutral.bandit", "", [(15, 1500, 0), (25, 2500, 0), (35, 3500, 0), (50, 5000, 0)], ResourceType.Gold),
-        [BankRule.ForestGlen] = Simple("neutral.wolf", "neutral.dire-wolf", [(30, 1000, 5), (50, 1500, 10), (70, 2000, 15), (100, 3000, 20)], ResourceType.Lumber),
-        [BankRule.DragonCity] = [.. new[] { (3, 10000, 1), (4, 15000, 1), (5, 20000, 2), (6, 30000, 3) }.Select((t, i) =>
-            new BankTier(Usual[i], One("dragon-utopia.black-dragon", t.Item1), Gold(t.Item2), ArtifactTier.Relic)
-            {
-                MoreArtifacts = [.. Enumerable.Repeat(ArtifactTier.Major, t.Item3)],
-            })],
+        [BankRule.Churchyard] = Bank(["necropolis.skeleton", "necropolis.ghoul"],
+            [([40, 30], Gold(3000), ArtifactTier.Minor), ([60, 40], Gold(4500), ArtifactTier.Minor), ([80, 50], Gold(6000), ArtifactTier.Minor), ([100, 70], Gold(8000), ArtifactTier.Major)]),
+        [BankRule.Mansion] = Bank(["necropolis.vampire", "necropolis.vampire-lord"],
+            [([25, 15], Rare(8000, 2), ArtifactTier.Major), ([35, 25], Rare(12000, 3), ArtifactTier.Major), ([45, 35], Rare(16000, 4), ArtifactTier.Major), ([60, 50], Rare(22000, 5), ArtifactTier.Major)]),
+        [BankRule.Crypt] = Bank(["necropolis.skeleton", "necropolis.wight", "necropolis.lich"],
+            [([30, 5, 1], Gold(2000), null), ([40, 8, 2], Gold(3500), null), ([50, 10, 3], Gold(5000), null), ([60, 15, 4], Gold(7000), null)]),
+        [BankRule.DwarvenTreasury] = Bank(["neutral.dwarf", "neutral.thane"],
+            [([40, 5], Gold(3000) + new ResourceSet(Crystal: 2), null), ([60, 8], Gold(4500) + new ResourceSet(Crystal: 4), null),
+             ([80, 12], Gold(6000) + new ResourceSet(Crystal: 6), null), ([110, 18], Gold(8500) + new ResourceSet(Crystal: 10), null)], "neutral.battle-dwarf"),
+        [BankRule.ImpCache] = Bank(["inferno.imp", "inferno.horned-demon"],
+            [([80, 20], Gold(1500) + new ResourceSet(Mercury: 2), null), ([120, 30], Gold(2000) + new ResourceSet(Mercury: 4), null),
+             ([160, 40], Gold(3000) + new ResourceSet(Mercury: 6), null), ([240, 60], Gold(4000) + new ResourceSet(Mercury: 8), null)], "inferno.familiar"),
+        [BankRule.MedusaStores] = Bank(["dungeon.medusa", "dungeon.minotaur"],
+            [([12, 5], Gold(2000) + new ResourceSet(Sulfur: 4), null), ([20, 8], Gold(3000) + new ResourceSet(Sulfur: 6), null),
+             ([28, 12], Gold(4000) + new ResourceSet(Sulfur: 8), null), ([38, 16], Gold(5000) + new ResourceSet(Sulfur: 10), null)], "dungeon.putrid-medusa"),
+        [BankRule.NagaBank] = Bank(["academy.naga", "academy.gargoyle"],
+            [([4, 15], Gold(3500), null), ([8, 20], Gold(6500), null), ([12, 30], Gold(10000), null), ([16, 40], Gold(13000), null)], "academy.naga-queen"),
+        [BankRule.Ruins] = Bank(["stronghold.orc", "stronghold.goblin", "stronghold.ogre"],
+            [([15, 20, 0], Gold(2000), null), ([20, 30, 2], Gold(3000), null), ([30, 40, 3], Gold(4000), null), ([40, 50, 5], Gold(6000), null)]),
+        [BankRule.Lair] = Bank(["dungeon.spectator", "dungeon.troglodyte"],
+            [([3, 20], Gold(2000), ArtifactTier.Minor), ([5, 25], Gold(3000), ArtifactTier.Minor), ([7, 30], Gold(4000), ArtifactTier.Minor), ([10, 40], Gold(6000), ArtifactTier.Major)], "dungeon.beholder"),
+        [BankRule.Keep] = Bank(["haven.pikeman", "haven.archer", "haven.griffin"],
+            [([20, 10, 0], Gold(1500), ArtifactTier.Minor), ([30, 15, 0], Gold(2500), ArtifactTier.Minor), ([40, 20, 3], Gold(3500), ArtifactTier.Minor), ([60, 30, 5], Gold(5000), ArtifactTier.Major)]),
+        [BankRule.Hideout] = Bank(["neutral.bandit", "neutral.troll"],
+            [([12, 2], Gold(1500), null), ([20, 3], Gold(2500), null), ([28, 4], Gold(3500), null), ([40, 6], Gold(5000), null)]),
+        [BankRule.ForestGlen] = Bank(["neutral.wolf", "neutral.mammoth"],
+            [([25, 1], Gold(1500) + new ResourceSet(Lumber: 5), null), ([40, 1], Gold(2000) + new ResourceSet(Lumber: 10), null),
+             ([55, 2], Gold(3000) + new ResourceSet(Lumber: 15), null), ([80, 3], Gold(4500) + new ResourceSet(Lumber: 20), null)], "neutral.dire-wolf"),
+        [BankRule.DragonCity] = [.. Bank(["dragon-utopia.black-dragon", "dragon-utopia.red-dragon", "dragon-utopia.green-dragon"],
+            [([2, 0, 2], Gold(10000), ArtifactTier.Relic), ([3, 2, 0], Gold(15000), ArtifactTier.Relic), ([4, 2, 2], Gold(20000), ArtifactTier.Relic), ([5, 3, 3], Gold(30000), ArtifactTier.Relic)])
+            .Select((t, i) => t with { MoreArtifacts = [.. Enumerable.Repeat(ArtifactTier.Major, new[] { 1, 1, 2, 3 }[i])] })],
     };
 
-    private static IReadOnlyList<BankTier> Simple(string creature, string upgraded, (int Count, int Gold, int Resource)[] rows, ResourceType resource) =>
-        [.. rows.Select((r, i) => new BankTier(Usual[i], One(creature, r.Count), Gold(r.Gold) + (resource == ResourceType.Gold ? ResourceSet.Empty : ResourceSet.Of(resource, r.Resource)), null, upgraded.Length == 0 ? null : upgraded))];
+    /// <summary>A bank's four rows: the counts go with <paramref name="creatures"/> (0 leaves a type out of that row).</summary>
+    private static IReadOnlyList<BankTier> Bank(string[] creatures, (int[] Counts, ResourceSet Reward, ArtifactTier? Artifact)[] rows, string? upgraded = null) =>
+        [.. rows.Select((r, i) => new BankTier(Usual[i], [.. creatures.Zip(r.Counts).Where(c => c.Second > 0).Select(c => new CreatureStack(c.First, c.Second))], r.Reward, r.Artifact, upgraded))];
 
-    /// <summary>Rolls a bank's tier (and the upgraded fifth) into its guard and reward.</summary>
+    /// <summary>Rolls a bank's tier (and the upgraded fifth of its first stack) into its guard and reward.</summary>
     internal static void Fill(CreatureBank bank, GameRandom random)
     {
         var tier = WeightedRoll.Pick([.. Tables[bank.Rule].Select(t => (t.Weight, t))], random);
         var guard = tier.Guard.ToList();
-        if (tier.Upgraded is { } upgraded && random.Next(2) == 0)
+        if (tier.Upgraded is { } upgraded && random.Next(2) == 0 && guard[0].Count / 5 is > 0 and var fifth)
         {
-            guard = [.. guard.SelectMany(s => s.Count / 5 is > 0 and var fifth
-                ? new[] { new CreatureStack(s.Creature, s.Count - fifth), new CreatureStack(upgraded, fifth) }
-                : [s])];
+            guard = [new CreatureStack(guard[0].Creature, guard[0].Count - fifth), new CreatureStack(upgraded, fifth), .. guard.Skip(1)];
         }
 
         bank.Guard = guard;

@@ -93,9 +93,9 @@ public class WeekEventTests
 
         Assert.Equal(new WeekEvent(WeekEventKind.WeekOfCreature, BuiltInCreatures.Crusader), state.WeekEvent);
         Assert.Equal([new WeekEventAnnounced(state.Date, state.WeekEvent)], announced);
-        Assert.Equal(townBefore + (2 * TownRules.WeeklyGrowth(town, footman)), town.AvailableOf(BuiltInCreatures.Footman));
+        Assert.Equal(townBefore + (2 * TownRules.WeeklyGrowth(state, town, footman)), town.AvailableOf(BuiltInCreatures.Footman));
         Assert.Equal(mapBefore + (2 * footman.WeeklyGrowth), dwelling.Available);
-        Assert.Equal(lancerBefore + TownRules.WeeklyGrowth(town, state.Creatures.Get(BuiltInCreatures.Lancer)), town.AvailableOf(BuiltInCreatures.Lancer));
+        Assert.Equal(lancerBefore + TownRules.WeeklyGrowth(state, town, state.Creatures.Get(BuiltInCreatures.Lancer)), town.AvailableOf(BuiltInCreatures.Lancer));
         Assert.Equal("Week of the Crusader: its growth doubles.", state.WeekEvent.Describe(state.Creatures));
     }
 

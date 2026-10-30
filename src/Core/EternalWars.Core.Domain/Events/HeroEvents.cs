@@ -36,6 +36,12 @@ public sealed record WarMachineGiven(HeroId From, HeroId To, Battles.WarMachineS
 /// <summary>A hero was hired in a town's tavern and stands at its entrance (ADR-060).</summary>
 public sealed record HeroHired(MapObjectId Town, HeroId Hero, string Definition) : IEvent;
 
+/// <summary>A hero moved from a town's entrance into its garrison and left the map (ADR-112); its army joined the garrison.</summary>
+public sealed record HeroEnteredGarrison(MapObjectId Town, HeroId Hero) : IEvent;
+
+/// <summary>A town's garrison hero came out onto the entrance at <paramref name="Position"/> with the garrison as its army (ADR-112).</summary>
+public sealed record HeroLeftGarrison(MapObjectId Town, HeroId Hero, MapPosition Position) : IEvent;
+
 /// <summary>A hero bought a war machine at a town's blacksmith (ADR-056) or a War Machine Factory (ADR-068): <paramref name="Seller"/>.</summary>
 public sealed record WarMachineBought(MapObjectId Seller, HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
 

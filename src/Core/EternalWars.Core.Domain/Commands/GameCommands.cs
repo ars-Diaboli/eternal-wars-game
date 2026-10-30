@@ -134,6 +134,18 @@ public sealed record BuyWarMachineCommand(PlayerId Player, MapObjectId Town, Bat
 /// <summary>The town's visiting hero buys a spell book in its mage guild for 500 gold and learns the guild's spells it may (ADR-071, ADR-110).</summary>
 public sealed record BuySpellBookCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
 
+/// <summary>
+/// The town's visiting hero moves into its garrison (ADR-112): its army joins the garrison's stacks, it leaves the map and commands the garrison
+/// when the town is attacked. Refused when the town already has a garrison hero or the army does not fit.
+/// </summary>
+public sealed record EnterGarrisonCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
+
+/// <summary>
+/// The town's garrison hero comes out onto the entrance with the whole garrison as its army (ADR-112). Refused while the entrance is taken, the
+/// garrison is empty or the player is at its hero limit (TOWN-8).
+/// </summary>
+public sealed record LeaveGarrisonCommand(PlayerId Player, MapObjectId Town) : GameCommand(Player);
+
 // Artifacts (the owner's turn; no movement points; ADR-061) -------------------------------------------
 
 /// <summary>Puts an artifact from the hero's backpack on; one worn in that slot goes to the backpack when none is free.</summary>

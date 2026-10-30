@@ -68,7 +68,7 @@ public class ArtifactEffectTests
         Assert.Equal(10, TownRules.ArtifactGrowthPercent(state, town));
         Assert.Equal(
             line.WeeklyGrowth + (line.WeeklyGrowth * (TownRules.GrowthBonusPercent(town) + 10) / 100),
-            TownRules.WeeklyGrowth(town, line, TownRules.ArtifactGrowthPercent(state, town)));
+            TownRules.WeeklyGrowth(state, town, line, TownRules.ArtifactGrowthPercent(state, town)));
     }
 
     [Fact]

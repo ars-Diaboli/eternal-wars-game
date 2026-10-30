@@ -116,6 +116,12 @@ public sealed class BattleService(
     /// </summary>
     internal void BeginTownBattle(Hero attacker, Town town)
     {
+        if (town.GarrisonHero is { } inside)
+        {
+            BeginGarrisonHeroBattle(attacker, town, inside);
+            return;
+        }
+
         var owner = town.Owner;
         var garrison = new BattleParticipant(
             BattleSide.Defender, owner, null, town.Id, 0, 0, SkillLevel.None, IsComputer: owner is not { } o || !state.GetPlayer(o).IsHuman,
@@ -124,6 +130,33 @@ public sealed class BattleService(
         var stacks = town.Garrison.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
         var siege = SiegeRules.SpecOf(town);
         Begin(attacker, battle, Stacks(attacker, siege is not null), stacks, siege: siege);
+    }
+
+    /// <summary>
+    /// A hero attacks a town with a garrison hero (ADR-112): the garrison hero commands the garrison with its stats, skills, spells and war machines,
+    /// behind the walls when the town has a Fort. A garrison hero without troops is overrun, and the town falls.
+    /// </summary>
+    private void BeginGarrisonHeroBattle(Hero attacker, Town town, Hero inside)
+    {
+        if (town.Garrison.IsEmpty)
+        {
+            Award(attacker, HeroDefeatExperience);
+            artifacts.Loot(inside, attacker);
+            DefeatGarrisonHero(town, inside, attacker);
+            return;
+        }
+
+        var battle = Create(Participant(BattleSide.Attacker, attacker), Participant(BattleSide.Defender, inside, town), town.VisitPosition, isAmbush: false);
+        var siege = SiegeRules.SpecOf(town);
+        Begin(attacker, battle, Stacks(attacker, siege is not null), Stacks(inside, army: town.Garrison), siege: siege);
+    }
+
+    /// <summary>A beaten garrison hero is gone (it never flees, ADR-112) and the town falls to the winner.</summary>
+    private void DefeatGarrisonHero(Town town, Hero inside, Hero winner)
+    {
+        town.GarrisonHero = null;
+        RemoveHero(inside, BattleEndReason.Defeated);
+        TownService.Capture(state, events, town, winner.Owner);
     }
 
     /// <summary>
@@ -389,11 +422,12 @@ public sealed class BattleService(
         : battle.Defender.Owner == player ? BattleSide.Defender
         : null;
 
-    private BattleParticipant Participant(BattleSide side, Hero hero) =>
-        new(side, hero.Owner, hero.Id, null, hero.TotalAttack, hero.TotalDefense, hero.SkillLevelOf(BuiltInSkills.Tactics), !state.GetPlayer(hero.Owner).IsHuman,
+    /// <summary>A hero's side; a garrison hero (<paramref name="garrisonOf"/>, ADR-112) leads its town's garrison and holds the town as its guard.</summary>
+    private BattleParticipant Participant(BattleSide side, Hero hero, Town? garrisonOf = null) =>
+        new(side, hero.Owner, hero.Id, garrisonOf?.Id, hero.TotalAttack, hero.TotalDefense, hero.SkillLevelOf(BuiltInSkills.Tactics), !state.GetPlayer(hero.Owner).IsHuman,
             HeroBattleBonuses.For(hero, state.Creatures),
-            MoraleAndLuck.MixedFactions(hero.Army.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature)))
-            + (side == BattleSide.Defender && state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position) is { } home
+            MoraleAndLuck.MixedFactions((garrisonOf?.Garrison ?? hero.Army).Stacks.Select(s => state.Creatures.Get(s.Stack.Creature)))
+            + (side == BattleSide.Defender && (garrisonOf ?? state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position)) is { } home
                 ? DefenderMorale(home)
                 : 0),
             BattleCaster.For(hero, state.Spells));
@@ -405,12 +439,13 @@ public sealed class BattleService(
     /// <summary>
     /// The hero's army and war machines (ADR-056): tent and cart when owned, the offensive machine only from Advanced
     /// Ballistics, except for the attacker of a siege, whose offensive machine is the siege engine (ADR-106). The hero's health artifacts give its
-    /// creatures (not its machines) more health for the battle, rounded down (ADR-111).
+    /// creatures (not its machines) more health for the battle, rounded down (ADR-111). A garrison hero leads its town's garrison (<paramref name="army"/>,
+    /// ADR-112): that is how a town keeps war machines.
     /// </summary>
-    private List<BattleStackSpec> Stacks(Hero hero, bool besieging = false)
+    private List<BattleStackSpec> Stacks(Hero hero, bool besieging = false, Army? army = null)
     {
         var health = hero.Bonus.CreatureHealthPercent;
-        var stacks = hero.Army.Stacks
+        var stacks = (army ?? hero.Army).Stacks
             .Select(s => state.Creatures.Get(s.Stack.Creature) is var creature && health != 0
                 ? new BattleStackSpec(creature with { Health = Math.Max(1, creature.Health * (100 + health) / 100) }, s.Stack.Count, s.Slot)
                 : new BattleStackSpec(creature, s.Stack.Count, s.Slot))
@@ -617,10 +652,21 @@ public sealed class BattleService(
         if (winning.Hero is { } winnerId)
         {
             var hero = state.GetHero(winnerId);
-            ApplySurvivors(battle, winner, hero);
+            var held = HeldTown(winning);
+            if (held is null)
+            {
+                ApplySurvivors(battle, winner, hero);
+            }
+            else
+            {
+                // A garrison hero's troops are the town's garrison (ADR-112).
+                LoseMachines(battle, winner, hero);
+                ApplySurvivors(battle, winner, held);
+            }
+
             if (reason == BattleEndReason.Defeated)
             {
-                RaiseUndead(battle, loser, hero);
+                RaiseUndead(battle, loser, hero, held);
             }
 
             Award(hero, experience);
@@ -648,13 +694,21 @@ public sealed class BattleService(
             }
 
             var loserHero = state.GetHero(loserId);
-            if (reason != BattleEndReason.Defeated)
+            if (HeldTown(losing) is { } fallen && winning.Hero is { } takerId)
+            {
+                ApplySurvivors(battle, loser, fallen);
+                DefeatGarrisonHero(fallen, loserHero, state.GetHero(takerId));
+            }
+            else if (reason != BattleEndReason.Defeated)
             {
                 // It keeps what lived (a surrender) and loses the machines destroyed in the battle.
                 ApplySurvivors(battle, loser, loserHero);
             }
 
-            RemoveHero(loserHero, reason);
+            if (state.Heroes.Contains(loserHero))
+            {
+                RemoveHero(loserHero, reason);
+            }
         }
         else if (losing.Guard is { } guardId)
         {
@@ -686,9 +740,13 @@ public sealed class BattleService(
         .Where(c => c.Lost > 0)
         .ToList();
 
-    private void ApplySurvivors(BattleState battle, BattleSide side, Hero hero)
+    /// <summary>The town a garrison hero side holds (ADR-112), or null for any other side.</summary>
+    private Town? HeldTown(BattleParticipant participant) =>
+        SurrenderRules.IsGarrisonHero(participant) && state.FindObject(participant.Guard!.Value) is Town town ? town : null;
+
+    /// <summary>Destroyed war machines are lost; the blacksmith sells new ones (ADR-056).</summary>
+    private void LoseMachines(BattleState battle, BattleSide side, Hero hero)
     {
-        // Destroyed war machines are lost; the blacksmith sells new ones (ADR-056).
         foreach (var machine in battle.Units.Where(u => u.Side == side && u.Machine is not null && !u.IsAlive))
         {
             var slot = WarMachines.SlotOf(machine.Machine!.Value);
@@ -697,7 +755,11 @@ public sealed class BattleService(
                 events.Publish(new WarMachineLost(hero.Id, slot));
             }
         }
+    }
 
+    private void ApplySurvivors(BattleState battle, BattleSide side, Hero hero)
+    {
+        LoseMachines(battle, side, hero);
         foreach (var (slot, stack) in hero.Army.Stacks.ToList())
         {
             var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.Count);
@@ -712,7 +774,7 @@ public sealed class BattleService(
     /// slain creatures join a stack of their own or a free slot; with neither, an army stack of the upgrade takes 3/4 of them; otherwise they
     /// are lost.
     /// </summary>
-    private void RaiseUndead(BattleState battle, BattleSide enemy, Hero hero)
+    private void RaiseUndead(BattleState battle, BattleSide enemy, Hero hero, Town? held = null)
     {
         var level = hero.SkillLevelOf(NecromancyRules.Skill);
         if (level == SkillLevel.None)
@@ -720,13 +782,22 @@ public sealed class BattleService(
             return;
         }
 
-        var joined = JoinUndead(battle, enemy, hero, level, hero.Army, state.Random);
+        // A garrison hero raises them into the town's garrison (ADR-112).
+        var joined = JoinUndead(battle, enemy, hero, level, held?.Garrison ?? hero.Army, state.Random);
         if (joined.Count == 0)
         {
             return;
         }
 
-        armies.Publish(hero);
+        if (held is null)
+        {
+            armies.Publish(hero);
+        }
+        else
+        {
+            events.Publish(new GarrisonChanged(held.Id, held.Garrison.Slots.ToList()));
+        }
+
         events.Publish(new UndeadRaised(hero.Id, joined));
     }
 

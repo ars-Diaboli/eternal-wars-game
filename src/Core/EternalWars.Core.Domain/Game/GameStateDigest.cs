@@ -34,13 +34,15 @@ public static class GameStateDigest
             Line($"player {player.Id.Value} team {player.Team.Value} {player.Resources} defeated {player.IsDefeated} townless {player.TownlessSince?.AbsoluteDay}{keys}{auto}");
         }
 
-        foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
+        // Garrison heroes (ADR-112) after the map's, marked, so older replays keep their digests.
+        foreach (var (hero, kind) in state.Heroes.OrderBy(h => h.Id.Value).Select(h => (h, "hero")).Concat(state.GarrisonHeroes.Select(h => (h, "garrison-hero"))))
         {
             var army = Slots(hero.Army);
             // Statuses and visits (ADR-068) are written only when there are any, so older replays keep their digests.
             var statuses = hero.Statuses.Count == 0 ? "" : $" statuses {string.Join(',', hero.Statuses)}";
             var book = hero.HasSpellBook ? $" book {string.Join(',', hero.Spells.Select(s => $"{s.Key}:{s.Value}"))}" : "";
-            Line($"hero {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level}{(hero.WitchHutLevel is { } hut ? $" hut {hut}" : "")} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}{book}");
+            book += hero.WarcriesLearned > 0 ? $" warcries {hero.WarcriesLearned}" : "";
+            Line($"{kind} {hero.Id.Value} owner {hero.Owner.Value} at {hero.Position} mp {hero.MovementPoints}/{hero.MaxMovementPoints} mana {hero.Mana} xp {hero.Experience} stats {hero.Attack}/{hero.Defense}/{hero.SpellPower}/{hero.Knowledge} level {hero.Level}{(hero.WitchHutLevel is { } hut ? $" hut {hut}" : "")} skills {hero.Skills} machines {string.Join(',', hero.WarMachines.Order())} artifacts {hero.Artifacts} army {army}{statuses}{book}");
         }
 
         foreach (var hero in state.RetiredHeroes)
