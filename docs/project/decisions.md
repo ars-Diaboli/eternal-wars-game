@@ -2775,3 +2775,94 @@ and `editor-generated-connections` (a map generated from `tools/smoke/connection
   section (hire, queue, arrival in the garrison a day later), the mage guild's spells and the tavern on the town screen; garrisons, border posts,
   keymasters and portals on a generated map. Still not seen: the town's own look on the siege field (there is none yet), the spell book button.
 - Walls between generated zones are flat rock terrain and hard to tell from the ground; left for the terrain look-dev (Phase 5).
+
+### ADR-114: Phase 3 close-out: spell buildings, the town screen's tree, the tavern screen, specialties, inspector rows, Ember March (ADR-072, ADR-083, ADR-093, ADR-107, 2026-11-02)
+**Status**: implemented (2026-11-02). Numbers marked *(proposal)* are the agent's, for the owner to confirm or change.
+
+- **Spell buildings** (ADR-072, MAG-12): every ring town has two `school-<town>` rows in `buildings.csv`, one per ring neighbour's school
+  (Sylvan: Inferno, Haven; …), 2000 gold + 5 of the school's resource, needing mage guild 2. *(Choice)* "The school's resource" is the rare
+  resource of the school's town (Light crystal, Shadow sulfur, Nature, Arcana, Death and Chaos mercury). Each adds one spell of its school per
+  spell level; a guild of level L teaches the first L (`MagicRules.Offered(state, town)`). *(Choice)* The spells are picked from a shuffle
+  seeded by the game seed, the town and the school (`MagicRules.SchoolSpells`, like the tavern pool), so existing games' random numbers and
+  replays stay the same and nothing is stored. Building one teaches the visiting hero at once. Stronghold and Swamp Bestiary have none.
+- **Skill specialties** (ADR-083's open ones; *(proposal)* numbers): **Tactics** +1 deployment column, +2 from hero level 10 (only with the
+  skill); **Blood Rage** the Attack cap +5 % a level (Master 8 → 12 at level 10; `HeroBattleBonuses.BloodRagePercent`); **Warcry** the
+  warcries' strength +5 % a level (Intimidate's initiative cut and Terror's chance; Terror never above 60 %; `WarcryPercent`); **Armor**, **War
+  Tempo**, **Treasury** (gold, not the interest) and **Scouting** +5 % a level, rounded down, like Melee and Archery.
+- **Flat specialties** (ADR-093, ADR-107): `skill <id> <amount>` in `heroes.csv`, only for Logistics (+N % movement even without the skill,
+  no levels) and Death attunement (+N Necromancy points with the skill, `NecromancyRules.HeroBonus`; its mana is not scaled).
+- **The roster draw** (ADR-107 d, once, seed 107, a scratch script): the 48 resource and 8 Logistics specialists were redrawn into 4 gold
+  (four towns), 6 rare (2 each, six towns), 2 Necromancy (Sepulka, the first Necropolis mage with Death attunement, and Corvane, a Necropolis
+  warrior) and 2 flat Logistics; the other 42 took their first starting skill with an effect *(choice: a school's Magic skill and Logistics
+  are skipped, so per-level Logistics specialists do not come back)*. Names in [hero-roster.md](../content/hero-roster.md).
+  `HeroSpecialty.Describe` says what a specialty does (hero and tavern screens).
+- **Town screen**: `BuildingTree.For` (core) gives each building its level, next level, cost after Stewardship, requirements met or not, a
+  status (available, complete, built today, needs buildings, cannot afford, refused) and a depth (the longest requirement chain under its
+  first level); the town screen draws one column per depth with a tooltip (cost, ✓ / ✗ requirements, income, growth, spells, the refusal) and
+  a "Built today: …" line (`Town.LastBuiltName`, kept in memory only). `BuildingTree.DwellingChoices` names, for each unbuilt dwelling, the
+  lines building it would close and, when the 7-of-9 rule refuses it, the tiers it would leave out; the dwelling rows warn with "⚠ closes …".
+- **Tavern screen** (`TavernPanel`): a card per offer with class, faction (native), specialty and what it does, skills, stats, preferred
+  creature, the starter stack or a returning hero's level and army, and the hire button with its refusal; the Thieves' Guild from there.
+  Opened from the town screen's "Visit the tavern…" (the game app); the 2D harness keeps the hire buttons only.
+- **Editor**: `SetSphinxRiddle` (trimmed texts, three different answers, null for a drawn one) and `SetWitchHutSkills` (none or two
+  different known skills, old ids resolved), both undoable; inspector rows for them, a pickup's artifact (or random by its tier) and a hero's
+  worn and backpack artifacts.
+- **Ember March** (`EmberMarchScenario`): the shipped two-player map, 36 × 30, Haven (a person) against Inferno (the computer); a rock ridge
+  with a middle pass on the road (3 rows, all in 24 wolves' zone of control) and a northern pass (8 trolls, a Major artifact); per side a gold,
+  lumber and ore mine, a guarded rare mine, a tier-2 map dwelling and loot; shared sulfur and crystal mines, a witch hut, a sphinx with the
+  author's riddle and two Learning Stones. On the new-game screen after Two Towns; `sim game --map ember`; `sim export <map> --out <file>`
+  saves a built-in map as a file.
+- **AI fixes found by playing it** (AI against AI): (1) a hero that reached an own town on its way took the garrison only at the next turn's
+  start, so the troops called it home every day; it now takes them on arrival; (2) the creatures waiting in a town's dwellings counted as
+  troops to collect even when the player could not pay for them; now only what the gold buys counts; (3) a player without heroes hires
+  before it builds and saves for a hero instead of building. Results: Two Towns 3 of 3 games to a winner (days 13–37); Ember March 18 of 18
+  (days 8–71, 9 wins each); generated `duel` maps still do not finish in 60 days (roadmap).
+- **Checked in Godot 4.7.2**: smoke scenarios `game-tavern`, `game-ember-march` and `editor-inspector-objects`; the whole suite passes (24 of
+  24). In the tavern scenario the first Escape closes the hover tooltip, as Godot does.
+- **Not done**: a person playing Ember March to the end in the app (the Phase 3 exit's last check); the 2D harness has no tavern screen.
+
+### ADR-115: Map events: the EVT-1 … EVT-6 proposals (ADR-096, 2026-11-02)
+**Status**: accepted (2026-11-02), the owner's answer to EVT-1 … EVT-6: "use the proposals". **Nothing implemented**; the roadmap's map events
+section follows it.
+
+- **Scope and plan** (EVT-1): all four event types in three steps: (1) hero, player and town events with conditions, variables, messages,
+  questions and the main actions; (2) the quest objects and the quest log; (3) loops and "run another event". A Phase 5 item, after the
+  Phase 3 and 4 exits and before the campaign, which builds on it. Called "map events" with an "Events" tab in the editor. Stored as a data
+  tree in the map file (no script language: deterministic, safe to load, easy to show). "Simple event" forms for HoMM3's timed events, event
+  cells and town events that write the same tree. Campaign variables are recorded now and built with the campaign (FLOW-1).
+- **Triggers** (EVT-2): event cells are invisible and ignored by route planning; the route stops only when the event shows something or
+  fights; a cell runs on every step until the event disables or removes itself ("once" is a ready form); who triggers is a condition (the
+  ready forms' tick boxes write them); turn-start runs after income, growth and the week's event, neutral towns at the start of the day;
+  several events at one moment in the editor's list order; a turn-start message shows when the turn begins and the camera moves to what it
+  concerns.
+- **Conditions** (EVT-3): HotA's whole list mapped to ours (complexity for difficulty, faction for starting town, four skill levels), plus
+  the team, an ally and the day of the week now; map-wide whole-number variables; random numbers from the game's source; "defeated by"
+  records only for the monsters and heroes an event names.
+- **Actions** (EVT-4): HotA's whole list with our rules (skills to Master into a free slot, our war machines, a building ignores bans and
+  adds its prerequisites, spells with Phase 5); losses as HotA (no lowering experience or skills); reveal an area and give a hero now; a
+  battle action (won: experience and the event goes on; lost: the hero is lost and the event stops; retreat and surrender stop it); a full army
+  chooses what to leave (a pending decision); messages are text with reward lines, images once there are icons.
+- **Quests** (EVT-5): Seer's Hut, Quest Guard and Quest Gate (like the border gate, a quest for a key); HoMM3's quest forms as ready forms
+  that take what they ask; a quest log per player (Q) in the game state; a hero that meets a gate's quest passes without stopping and routes
+  treat the gate as open only for such a hero; no Seer's Huts on random maps for now.
+- **AI and editor** (EVT-6): the AI answers questions by value (random numbers as their average), does quests worth their cost, treats Quest
+  Guards and Gates as obstacles until it meets them and does not look ahead at event cells or player and town events; the "Events" tab (the
+  tree, variables, shared events, undo through `MapEditorSession`), object inspectors pick or create their event; validator checks (unknown
+  names, an event that runs itself, unused events and variables, an unfinishable quest where it can tell); events are tested by playing the map.
+
+### ADR-116: New ideas: prologue, health bars, dividing obstacles, scenery, layout, information windows, icon prompts, missing mechanics (2026-11-02)
+**Status**: recorded (2026-11-02) from the owner's notes in `ideas.md`; questions CAMP-1, UI-3 and CMB-12 with proposals; the two writing tasks
+are done.
+
+- **Prologue / tutorial**: a small first campaign map, Haven against neutral creatures and the undead, placeholder lore (CAMP-1; roadmap
+  Phase 6, using the map events of ADR-115).
+- **Combat**: a health bar on each stack, green over 50 %, yellow 21–50 %, red 20 % and below (the owner's thresholds; what it measures is
+  CMB-12 a); obstacles that split the field partly, like HoMM3's long cliffs (CMB-12 b, c).
+- **Random maps**: more scenery (trees, rocks) so maps feel lived in; the scenery objects of ADR-077 exist, the generator places more (no
+  question).
+- **UI**: a spacing pass (placement, not fonts or theme), a configurable layout (initiative bar, minimap corner, hero and town lists, action
+  panel), information windows for skills, spells, artifacts and the rest, and an advanced tooltip mode (UI-3).
+- **Icon prompts**: [icon-prompts.md](../content/icon-prompts.md): the format (512 px source, 32 px readable, transparent PNG), a style block,
+  lore colours, and prompts for resources, stats, skills, schools, war machines, map and battle actions and buttons.
+- **Missing mechanics**: [missing-mechanics.md](../design/missing-mechanics.md) lists what HoMM3 with HotA and HoMM5 have and we do not, with
+  where each stands (dropped, planned, partly, missing) and candidates for next.

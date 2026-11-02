@@ -252,8 +252,11 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
   dwelling); each dwelling of the tier gets the bonus (ADR-073). Names: Haven Drill Yard / Cloister of Vigil, Sylvan Moonlit Glade /
   Hunters' Lodge, Academy Workshop Annex / Sculptors' Hall, Necropolis Unearthed Graves / Charnel Pit, Inferno Birthing Pools / Cages of
   Torment, Dungeon Mushroom Rings / Labyrinth, Stronghold Warren / Mess Hall, Swamp Bestiary Spawning Pools / Overgrown Thicket.
-- **Spell buildings** (ADR-071, MAG-2; not built): two more buildings add spells of other schools by the magic circle (HoMM4-like,
+- **Spell buildings** (ADR-071, MAG-2; built ADR-114): two more buildings add spells of other schools by the magic circle (HoMM4-like,
   ADR-072, MAG-12): one for each of the two schools next to the town's own on the ring, each adding **1 spell per guild level**
-  the town has; placeholder cost **2000 gold + 5 of the school's resource**, needs **mage guild 2**. Stronghold and Swamp Bestiary get the **war lodge** instead of a mage guild (built ADR-112):
+  the town has; placeholder cost **2000 gold + 5 of the school's resource** (the rare resource of the school's town: Light crystal,
+  Shadow sulfur, the others mercury), needs **mage guild 2**. Names: Chapel of Dawn (Light), Grove of Whispers (Nature), Arcane Archive
+  (Arcana), Shadow Library (Shadow), Bone Scriptorium (Death), Brimstone Altar (Chaos); ids `school-<town>`. Each level's spell is picked
+  once from the game seed, the town and the school (`MagicRules.SchoolSpells`), not from the game's random numbers. Stronghold and Swamp Bestiary get the **war lodge** instead of a mage guild (built ADR-112):
   War Lodge / Hall of Warcries / Drums of the Horde (Swamp: Totem Circle / Spirit Totems / Elder Totem), 2000 gold + 5 lumber + 5 ore,
   3500 + 5 lumber + 3 crystal (Swamp: sulfur), 5000 + 5 + 5; a visiting hero learns the warcries up to its level (Rally, Intimidate, Terror).

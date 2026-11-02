@@ -7,7 +7,9 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-10-30** (ADR-107, ADR-108): HERO-8 (rarer specialties) answered: the proposals, for now; CONT-7 (assembled relics)
+**Updated 2026-11-02** (ADR-115, ADR-116): EVT-1 … EVT-6 (map events) answered: the proposals; new: CAMP-1 (prologue), UI-3 (layout and
+information windows), CMB-12 (health bars, dividing obstacles).
+Before that (ADR-107, ADR-108): HERO-8 (rarer specialties) answered: the proposals, for now; CONT-7 (assembled relics)
 answered, with six more relics.
 Before that (ADR-106): CMB-11 (siege rules) and MAG-13 (guild spell draw, spell elements, summons) answered.
 Before that (ADR-101): FLOW-4 (victory screen and ranking) and UI-2 (replays and the main menu) answered.
@@ -38,7 +40,7 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work (the Phase 4 fairness check and the Phase 3 play-test). EVT-1 … EVT-6 (ADR-096) stop only the map events; EVT-1 (b) decides where the map events go in the plan.
+Nothing blocks the current work. CAMP-1 stops only the prologue, UI-3 the layout options and information windows, CMB-12 the health bars and dividing obstacles.
 
 ## Heroes
 
@@ -63,103 +65,41 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
-## New ideas (ADR-096, 2026-10-29)
+## New ideas (ADR-116, 2026-11-02)
 
-<a id="evt-1"></a>
-**EVT-1 Map events: scope, form and place in the plan.** (ADR-096) The author's events in the editor, like HotA's extended event system.
-(a) **Scope**: the whole HotA system (four event types, variables, loops, running another event, quest stages), or a first set (hero,
-player and town events with conditions, variables and the main actions), quests next, loops and "run another event" last?
-(b) **When**: before 1.0, as content after the Phase 3 and 4 exits (single maps gain from it too), or with the campaign (Phase 6)?
-(c) **Name**: "map events" in the docs and an "Events" tab in the editor (an "event" is already the code's pub/sub record and the weekly
-event)?
-(d) **Form**: a tree of actions and conditions stored as data in the map file and edited as a tree (HotA), or a small script language the
-author types?
-(e) **HoMM3's simple events**: HoMM3 has plain timed events (a day, a repeat, resources, which players) and plain event cells (a message,
-rewards, guards, which players, "computer may trigger", "once"). Should the editor offer these as ready forms that write the same tree?
-(f) **Campaign variables** ("kept for the next map", "taken from the last map"): recorded now and built with the campaign (FLOW-1)?
-*Proposal*:
-(a) all four types, in three steps: hero, player and town events with conditions, variables, messages, questions and the main actions;
-then the quest objects and the quest log; then loops and "run another event";
-(b) the Pandora's Box with its own list now (Phase 3 objects); the map events as one Phase 5 item, after the Phase 3 and 4 exits and
-before the campaign, which builds on them;
-(c) yes;
-(d) a data tree (no script language: it stays deterministic, safe to load and easy to show in the editor);
-(e) yes, "simple event" forms for timed events, event cells and town events;
-(f) yes.
-Answers : use proposals;
+<a id="camp-1"></a>
+**CAMP-1 Prologue and tutorial.** (ADR-116) A short first campaign that teaches the game: a small map, Haven against neutral creatures and
+the undead, placeholder lore.
+(a) **When**: before the campaign system (Phase 6), as one hand-made map that teaches step by step, or as the campaign's first mission?
+(b) **How it teaches**: messages at set moments (first move, first battle, first town, first week) through the map events (ADR-115), or a
+separate tutorial layer with highlights on the UI?
+(c) **Length**: one map of about two weeks (move, collect, fight, build, recruit, siege a Necropolis town), or two or three short maps?
+(d) **Enemy**: neutral monsters and one undead town held by the computer (it builds and attacks), or neutrals and a scripted undead hero only?
+(e) **Lore**: Haven scouts the border of the Ashen Court; the undead are a Necropolis vanguard (placeholder, lore.md)?
+*Proposal*: (a) the first campaign mission, playable on its own from the main menu ("Prologue") before the campaign screen exists; (b)
+messages through the map events, so it needs EVT step 1 (ADR-115), plus a "hints" setting to turn them off; (c) one map, about two weeks;
+(d) neutrals first, then one computer-held Necropolis town with a small hero; (e) yes.
 
+<a id="ui-3"></a>
+**UI-3 Layout, configuration and information windows.** (ADR-116)
+(a) **Configurable layout**: initiative bar top or bottom, minimap in any corner, hero and town lists vertical or horizontal, the action
+panel's side: a "Layout" tab in the game menu, saved with the player's settings (ADR-090), not with the game?
+(b) **Spacing pass**: one shared set of margins and gaps (theme constants) for every panel, no font or theme change (the owner's note)?
+(c) **Information windows**: right-click (or hold) on a creature, hero, skill, spell, artifact, building or map object opens a window with
+its numbers and how it works; a plain hover tooltip stays short?
+(d) **Advanced tooltips**: a setting "Detailed tooltips" that adds the formulas and the numbers behind them (damage ranges, percentages,
+what a level adds) to the hover tooltips?
+*Proposal*: (a) yes; (b) yes, first, since the layout options build on it; (c) yes, right-click as in HoMM3 and a long press for touch
+later; (d) yes, off by default.
 
-<a id="evt-2"></a>
-**EVT-2 Triggers and event cells.**
-(a) **Event cell**: invisible to the players, as in HoMM3, and ignored by route planning (it must not give itself away)? It runs when a hero
-steps onto it; does the hero's route stop there always, or only when the event shows a message, a question or a battle?
-(b) **Repeat**: an event cell runs on every step until the event disables or removes itself (HotA), with "once" as a ready form?
-(c) **Who triggers**: only through conditions ("player is human", "current player"), as HotA, or also HoMM3's tick boxes (players, "computer
-may trigger") on the cell?
-(d) **Turn start**: player events and town events run after income, growth and the week's event, before the player gets control. Neutral
-towns: at the start of each day, before the first player's turn?
-(e) **Order**: several events at the same moment run in the editor's list order?
-(f) **The screen**: a turn-start message of a human player shows when the turn begins; the camera moves to the town or hero it concerns?
-*Proposal*: (a) invisible and ignored by routes; the route stops only when the event shows something or fights; (b) yes; (c) conditions,
-with the tick boxes in the ready forms (they write the conditions); (d) yes, neutral towns at the start of the day; (e) yes; (f) yes.
-Answers : use proposals;
-
-
-<a id="evt-3"></a>
-**EVT-3 Conditions, expressions and variables.**
-(a) **HotA's list** (ADR-096) mapped to ours: the difficulty is the complexity (Beginner … Expert); "starting town" is the faction; secondary
-skills have four levels with Master. Anything to drop?
-(b) **More conditions** we have and HotA does not: the player's team, an ally, the week's event, the day of the week, the hero on the
-surface or underground, the hero's attunement, mana?
-(c) **Variables**: whole numbers, map-wide, with a starting value (HotA). Also per player?
-(d) **Random numbers**: drawn from the game's random source, so a loaded game draws the same (HotA too)?
-(e) **Records**: "monster defeated by player" and "hero defeated by player" need the game to remember who beat which map monster and hero.
-Kept for every monster and hero, or only for those an event names?
-*Proposal*: (a) take the whole list; (b) team, ally and the day of the week now, the rest on request; (c) map-wide only; (d) yes; (e) only for
-those an event names.
-Answers : use proposals;
-
-
-<a id="evt-4"></a>
-**EVT-4 Actions.**
-(a) **HotA's list** (ADR-096) with our rules: secondary skills up to Master and only into a free slot; war machines are ours (ADR-056); a
-building ignores bans and prerequisites and adds the prerequisites (HotA); spell book and spells wait for Phase 5. Anything to drop?
-(b) **Losses**: HotA cannot lower experience, primary or secondary skills, but can take resources, creatures, artifacts, mana and movement.
-The same?
-(c) **More actions**: give or take a hero (like a prison), change a town's or mine's owner, reveal an area, move a hero, change a condition?
-(d) **Battle**: the hero attacks the author's army on the cell's terrain. Won: experience and the event goes on; lost: the hero is lost and the
-event stops (HotA). Retreat and surrender as in any battle, and the event stops?
-(e) **A full army**: creatures given to a hero with no free slot: the hero chooses what to leave (a pending decision, HoMM3), or the
-creatures that do not fit are lost?
-(f) **Messages**: text only for now (no art), with lines for the rewards; images once there are icons?
-*Proposal*: (a) the whole list; (b) the same; (c) reveal an area and give a hero now, the rest later; (d) yes; (e) the hero chooses; (f) yes.
-Answers : use proposals;
-
-
-<a id="evt-5"></a>
-**EVT-5 Quests: Seer's Hut, Quest Guard, Quest Gate, quest log.**
-(a) **Objects**: the three as in HotA? The Quest Gate is like the border gate (ADR-071) with a quest in place of a key.
-(b) **HoMM3's quest forms** (reach a level, primary skills, defeat a hero, defeat a monster, bring artifacts, creatures or resources, be a
-given hero, be a given player, a deadline day): ready forms that write the quest stages?
-(c) **Items taken**: a completed HotA stage does not take what it asked for; the ready forms take it (bring resources: paid on completion)?
-(d) **Quest log**: a screen per player (a key and a button) with each active quest's hint and object; kept in the game state?
-(e) **Gates and routes**: a hero that meets a gate's quest passes without stopping (HotA's "free passage"); route planning treats a gate as
-open only for a hero that meets it now?
-(f) **Random maps**: the generator places Seer's Huts (bring an artifact or creatures for a reward) or none for now?
-*Proposal*: (a) yes; (b) yes; (c) yes; (d) yes, Q opens it; (e) yes; (f) none for now.
-
-
-<a id="evt-6"></a>
-**EVT-6 The AI and the editor.**
-(a) **AI**: as HotA: it answers questions by value (random numbers as their average), does Seer's Hut quests when the reward outweighs the
-cost, takes Quest Guards and Gates as obstacles until it meets them, and does not look ahead at event cells, player or town events?
-(b) **Editor**: an "Events" tab with the events by type, the tree of actions (add, copy, move, remove, undo through `MapEditorSession`),
-the variables, and one event shared by several objects; an object's inspector picks or creates its event?
-(c) **Validator**: unknown names, an event that runs itself (directly or through others), events and variables nobody uses (warnings), a
-quest nobody can finish (warning where it can tell)?
-(d) **Trying an event**: a "test" button in the editor that runs an event on a chosen hero, or test by playing the map?
-*Proposal*: (a) yes; (b) yes; (c) yes; (d) by playing the map for now.
-
+<a id="cmb-12"></a>
+**CMB-12 Stack health bars and dividing obstacles.** (ADR-116)
+(a) **Health bar**: the stack's total hit points against its total at the start of the battle (so losses show), or the top creature's hit
+points? Colours as the owner set them: over 50 % green, 21–50 % yellow, 20 % and below red.
+(b) **Dividing obstacles**: long cliffs or walls of 6–12 cells that split the field partly, with at least two gaps so both sides can always
+reach each other; flyers and teleporters pass over; shooters' cover as for crags (ADR-035)?
+(c) **How often**: on some terrains only (highlands, rough, rocky ground, subterranean), one battle in three there, never in sieges or banks?
+*Proposal*: (a) total hit points against the start; (b) yes; (c) yes.
 ## Numbers to tune (not questions)
 Placeholders that wait for play-testing: caravan cost (ADR-054); complexity starting resources (ADR-063); Stewardship and governor percentages
 (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064); building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices
@@ -188,5 +128,6 @@ One line per question; the ADR holds the detail.
 - **New ideas** (ADR-077): TOWN-9 … TOWN-11, MAP-25, MAP-26, MAP-28 ADR-079; MAP-27, MAP-29 … MAP-34 ADR-080 (MAP-32 built after the week
   events).
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091; FLOW-4 (victory screen, ranking) ADR-101.
+- **Map events**: EVT-1 … EVT-6 (scope and plan, triggers, conditions, actions, quests, AI and editor: the proposals) ADR-115.
 - **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.
