@@ -86,6 +86,8 @@ before the campaign, which builds on them;
 (d) a data tree (no script language: it stays deterministic, safe to load and easy to show in the editor);
 (e) yes, "simple event" forms for timed events, event cells and town events;
 (f) yes.
+Answers : use proposals;
+
 
 <a id="evt-2"></a>
 **EVT-2 Triggers and event cells.**
@@ -100,6 +102,8 @@ towns: at the start of each day, before the first player's turn?
 (f) **The screen**: a turn-start message of a human player shows when the turn begins; the camera moves to the town or hero it concerns?
 *Proposal*: (a) invisible and ignored by routes; the route stops only when the event shows something or fights; (b) yes; (c) conditions,
 with the tick boxes in the ready forms (they write the conditions); (d) yes, neutral towns at the start of the day; (e) yes; (f) yes.
+Answers : use proposals;
+
 
 <a id="evt-3"></a>
 **EVT-3 Conditions, expressions and variables.**
@@ -113,6 +117,8 @@ surface or underground, the hero's attunement, mana?
 Kept for every monster and hero, or only for those an event names?
 *Proposal*: (a) take the whole list; (b) team, ally and the day of the week now, the rest on request; (c) map-wide only; (d) yes; (e) only for
 those an event names.
+Answers : use proposals;
+
 
 <a id="evt-4"></a>
 **EVT-4 Actions.**
@@ -127,6 +133,8 @@ event stops (HotA). Retreat and surrender as in any battle, and the event stops?
 creatures that do not fit are lost?
 (f) **Messages**: text only for now (no art), with lines for the rewards; images once there are icons?
 *Proposal*: (a) the whole list; (b) the same; (c) reveal an area and give a hero now, the rest later; (d) yes; (e) the hero chooses; (f) yes.
+Answers : use proposals;
+
 
 <a id="evt-5"></a>
 **EVT-5 Quests: Seer's Hut, Quest Guard, Quest Gate, quest log.**
@@ -139,6 +147,7 @@ given hero, be a given player, a deadline day): ready forms that write the quest
 open only for a hero that meets it now?
 (f) **Random maps**: the generator places Seer's Huts (bring an artifact or creatures for a reward) or none for now?
 *Proposal*: (a) yes; (b) yes; (c) yes; (d) yes, Q opens it; (e) yes; (f) none for now.
+
 
 <a id="evt-6"></a>
 **EVT-6 The AI and the editor.**
