@@ -245,7 +245,7 @@ spells are spread out:
 | Bloodlust (`shamanism.bloodlust`) | Chaos, `chaos.bloodlust` (the Ogre Mage's caster spell) |
 | War Cry (`shamanism.war-cry`) | the Warcry skill's Intimidate (built) |
 | Earthquake (`shamanism.earthquake`) | Nature, `nature.earthquake` (sieges come before 1.0, ADR-099) |
-| Ancestral Spirits, Venom, Mire, Regenerate, Beast Call, Feast | material for the 3-level warcry / totem building (ADR-071, not built) and creature abilities |
+| Ancestral Spirits, Venom, Mire, Regenerate, Beast Call, Feast | material for later war lodge levels (the lodge is built and teaches the three warcries, ADR-112) and creature abilities |
 
 ## Creature casters
 

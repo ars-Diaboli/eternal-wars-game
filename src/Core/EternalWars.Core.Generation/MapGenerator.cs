@@ -37,7 +37,8 @@ public static class MapGenerator
         var terrain = TerrainPainter.Paint(template, layout, seed, startTowns);
         var map = GeneratedMap.From(terrain);
         SceneryPlacer.Place(map, terrain.Obstacles, seed);
-        foreach (var (from, to) in layout.UnmetConnections)
+        var present = ConnectionPlacer.Present(template, seed);
+        foreach (var (from, to) in layout.UnmetConnections.Where(u => template.Connections.Where((c, i) => present[i]).Any(c => (c.From, c.To) == u || (c.To, c.From) == u)))
         {
             map.Problem($"Zones {from} and {to} do not touch.");
         }

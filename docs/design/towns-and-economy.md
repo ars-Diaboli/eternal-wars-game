@@ -25,8 +25,8 @@
 | Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading: gold against resources, rates by marketplace towns (ADR-067) | income and trading implemented (ADR-067) |
 | Mage guild | 4 | Spells of the town's own school: **3** each at levels 1 and 2, **2** each at levels 3 and 4 (ADR-071, MAG-2); sells a **spell book for 500 gold**; a hero in the town refills its mana (ADR-071, MAG-3); level 4 stays a placeholder (ADR-070) | built, no effect until magic (Phase 5) |
 | Extra spell buildings | 2 | Add spells of **other schools**, chosen by the magic circle (HoMM4-like; details MAG-12) (ADR-071) | planned |
-| Warcry / totem building | 3 | **Stronghold and Swamp Bestiary** instead of a mage guild: teaches warcries / spiritual totems (placeholder, ADR-071, MAG-2) | planned |
-| Growth buildings | 1 each | Two per town (placeholders): one adds **+5 a week** to tier-1 growth, the other **+2** to tier-2 (ADR-071, TOWN-1) | planned |
+| War lodge | 3 | **Stronghold and Swamp Bestiary** instead of a mage guild: teaches warcries up to its level (Rally, Intimidate, Terror) to visiting heroes; town hall 2 needs it (placeholder, ADR-071, MAG-2) | implemented (ADR-112) |
+| Growth buildings | 1 each | Two per town (placeholders, own names): `growth-1` adds **+5 a week** to tier-1 growth (1000 gold + 5 lumber), `growth-2` **+2** to tier-2 (1500 gold + 5 ore + 2 of the town's rare resource) (ADR-071, TOWN-1) | implemented (ADR-112) |
 | Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060); Brotherhood **1000 gold + 5 ore** (ADR-070) | implemented (ADR-060, ADR-081) |
 | Caravan | 1 | Hires from map dwellings, sends troops (ADR-054); 1000 gold + 5 lumber, needs town hall 2 (placeholder) | implemented |
 | Dwellings | 9 + upgrades | Build 500 × tier gold, upgrade 1000 × tier, plus lumber, ore, mercury and crystal by tier | implemented |
@@ -36,7 +36,11 @@
   with a Capitol when the player already has one drops it to City Hall (town hall 3). Cost 15 000 gold + 25 lumber + 25 ore,
   needs the Castle, 4000 gold a day (placeholders).
 - **Per-town lists** (ADR-070, ADR-074): `buildings.csv` has a `town` column; a town's own rows of a building replace the shared
-  ones for that town or add a building only it has. Every row is still shared.
+  ones for that town or add a building only it has; a town row at level 0 removes a shared building from that town (ADR-112: no mage guild in
+  Stronghold and Swamp Bestiary).
+- **Garrison heroes** (ADR-112, TOWN-8): the visiting hero may enter the garrison (its army joins the garrison) and leave with the whole
+  garrison. It is off the map and does not count towards the hero limit, but earns, rests and governs like the others; it leads the garrison in a
+  siege with its skills and war machines (so a town keeps machines through it) and cannot retreat or surrender.
 
 ## Creature tech tree (implemented, ADR-030, ADR-050)
 - Creatures have **5 tiers** (not HoMM3's 7).
@@ -69,9 +73,9 @@ the Castle** (fort 3), opening week included; the bonus is rounded down (growth 
 Map dwellings keep the creature's growth. Week and month events change growth ([below](#week-and-month-events-adr-073-built-adr-084)). One rule, `TownRules.WeeklyGrowth`, serves the service, town screen and AI
 (ADR-066).
 
-**Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two buildings per town, one adding **+5 a week** to tier-1
+**Growth buildings** (ADR-071, TOWN-1; placeholders, built ADR-112): two buildings per town, one adding **+5 a week** to tier-1
 growth, the other **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the
-bonus (ADR-073).
+bonus (ADR-073). The bonus is flat, added after the fort's and artifacts' percent, and a new dwelling's opening week includes it.
 
 ## Week and month events (ADR-073, built ADR-084)
 HoMM3-like, announced at the start of the week; a month is 4 weeks. Rolls use `GameState.Random`; numbers are drafts. Each week's event is

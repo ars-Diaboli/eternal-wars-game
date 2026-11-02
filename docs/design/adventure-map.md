@@ -70,7 +70,7 @@ Objects have a footprint and are entered only through their entrance tile, usual
 | Gates | Teleport (see below) | implemented |
 | Marketplace | A visiting hero opens the trading screen for its owner at a fixed rate (as if X were 4, [towns-and-economy.md](towns-and-economy.md#marketplace-implemented-adr-067)); cannot be flagged, any number of visits, does not change town rates; guarded as the map or generator decides | implemented (ADR-067), map format v14 |
 | Utility objects | Sign, Observatory, Hill Fort, Town Gate, War Machine Factory ([below](#utility-objects)) | implemented (ADR-068), map format v19 |
-| Creature banks | Churchyard, Mansion, Crypt (built as the undead "Ruins", renamed by ADR-070), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank ([below](#creature-banks)) | implemented (ADR-068), map format v20; guards to be re-drafted (ADR-070) |
+| Creature banks | Churchyard, Mansion, Crypt (built as the undead "Ruins", renamed by ADR-070), Dwarven Treasury, Imp Cache, Medusa Stores, Naga Bank ([below](#creature-banks)) | implemented (ADR-068), map format v20; guards re-drafted per faction (ADR-112) |
 | Prison | Frees a hero for the visitor's player ([below](#treasure-and-one-time-loot)) | implemented (ADR-068), map format v19 |
 | Buff sites | Faerie Ring, Fountain of Youth, Temple, Mineral Spring, Stables, Magic Well: statuses for the next battle or the week, movement now ([below](#temporary-buffs)) | implemented (ADR-068), map format v18 |
 | Training sites | Learning Stone, Gazebo, Library of Enlightenment, Tree of Knowledge, Arena, Colosseum of the Magi: once per hero ([below](#permanent-hero-power-ups)) | implemented (ADR-068), map format v18 |
@@ -224,13 +224,13 @@ is split into a few battle stacks (at most seven stacks in all).
 
 | Bank | Guard and reward |
 |---|---|
-| Churchyard | 100 %: 90 Ghouls, 2500 gold, a Minor artifact. A later visit to the plundered bank gives **−1 morale for the next battle**; no other bank has such a penalty |
-| Mansion | 30 %: 40 Vampire Lords, 2500 gold, 2 each of mercury / sulfur / crystal, a Major artifact · 30 %: 60, 5000 gold, 3 each, Major · 30 %: 80, 7500 gold, 4 each, Major · 10 %: 100, 10000 gold, 5 each, Major |
-| Crypt (`bank.crypt`; `bank.ruins` before ADR-082) | 30 %: 20 Skeletons, 3 Wights, 3 Wraiths, 10 Skeleton Warriors, 1 Arch Lich, 1000 gold · 30 %: 30 / 5 / 5 / 10 / 1, 2000 gold · 30 %: 40 / 7 / 7 / 20 / 2, 3000 gold · 10 %: 50 / 9 / 9 / 20 / 3, 4000 gold. Also **removes the fog within 12 tiles** of the ruins, even when they were visited before |
-| Dwarven Treasury | 30 %: 50 Defenders, 2500 gold, 2 crystal · 30 %: 75, 4000, 4 · 30 %: 100, 5000, 6 · 10 %: 150, 7500, 10. 50 % chance that a fifth of the guard are Shield Guards |
-| Imp Cache | 30 %: 100 Imps, 1000 gold, 2 mercury · 30 %: 150, 1500, 4 · 30 %: 200, 2000, 6 · 10 %: 300, 3000, 8. 50 % chance that a fifth are Familiars |
-| Medusa Stores | 30 %: 15 Medusas, 2000 gold, 4 sulfur · 30 %: 30, 3000, 6 · 30 %: 40, 4000, 8 · 10 %: 50, 5000, 10. 50 % chance that a fifth are Putrid Medusas |
-| Naga Bank | 30 %: 5 Nagas, 3000 gold · 30 %: 10, 6000 · 30 %: 15, 9000 · 10 %: 20, 12000. 50 % chance that a fifth are Naga Queens |
+| Churchyard | Skeletons + Ghouls: 40 / 30, 3000 gold, a Minor artifact · 60 / 40, 4500, Minor · 80 / 50, 6000, Minor · 10 %: 100 / 70, 8000, a Major artifact. A later visit to the plundered bank gives **−1 morale for the next battle**; no other bank has such a penalty |
+| Mansion | Vampires + Vampire Lords: 25 / 15, 8000 gold, 2 each of mercury / sulfur / crystal, a Major artifact · 35 / 25, 12000, 3 each, Major · 45 / 35, 16000, 4 each, Major · 10 %: 60 / 50, 22000, 5 each, Major |
+| Crypt (`bank.crypt`; `bank.ruins` before ADR-082) | Skeletons + Wights + Liches: 30 / 5 / 1, 2000 gold · 40 / 8 / 2, 3500 · 50 / 10 / 3, 5000 · 10 %: 60 / 15 / 4, 7000. Also **removes the fog within 12 tiles** of the crypt, even when it was visited before |
+| Dwarven Treasury | Dwarves + Thanes: 40 / 5, 3000 gold, 2 crystal · 60 / 8, 4500, 4 · 80 / 12, 6000, 6 · 10 %: 110 / 18, 8500, 10. Half the time a fifth of the Dwarves are Battle Dwarves |
+| Imp Cache | Imps + Horned Demons: 80 / 20, 1500 gold, 2 mercury · 120 / 30, 2000, 4 · 160 / 40, 3000, 6 · 10 %: 240 / 60, 4000, 8. Half the time a fifth of the Imps are Familiars |
+| Medusa Stores | Medusas + Minotaurs: 12 / 5, 2000 gold, 4 sulfur · 20 / 8, 3000, 6 · 28 / 12, 4000, 8 · 10 %: 38 / 16, 5000, 10. Half the time a fifth of the Medusas are Putrid Medusas |
+| Naga Bank | Nagas + Gargoyles: 4 / 15, 3500 gold · 8 / 20, 6500 · 12 / 30, 10000 · 10 %: 16 / 40, 13000. Half the time a fifth of the Nagas are Naga Queens |
 
 **Refill** (decided, MAP-7, MAP-14): every bank fills again **4 weeks** after it was plundered; its guard tier is rolled again and the whole
 reward, the artifact included, comes back.
@@ -276,8 +276,8 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 | War Machine Factory | **Implemented.** Sells the visiting hero **its own offensive machine** (ballista, cannon, catapult or glaivethrower, ADR-056), the **ammo cart** and the **healing tent**, at the **blacksmith's prices**; not a machine the hero already has (decided, MAP-13) |
 
 ## Second object catalogue (ADR-069)
-The owner's second list (`ideas.md`, 2026-10-20). **Built** (ADR-082, map format v23) except the Shrines (Phase 5) and the faction
-re-draft of the banks' guards; the prices and bank tables below are ADR-082's drafts. The shared rules above (visit scopes, statuses, rolls, artifact
+The owner's second list (`ideas.md`, 2026-10-20). **Built** (ADR-082, map format v23) except the Shrines (Phase 5);
+the prices below are ADR-082's drafts and the bank tables ADR-112's. The shared rules above (visit scopes, statuses, rolls, artifact
 tiers, creature names) apply. MAP-15 … MAP-24 were answered by ADR-070; MAP-20 (Keymasters) and the map tavern's pool (TOWN-4) by ADR-071;
 the points once marked *(assumed)* were confirmed in ADR-073.
 Every number is a draft.
@@ -313,16 +313,16 @@ Cinnabar Deposit and Sulfur Vent **3000 + 5 ore**. The player is asked before pa
 | Sulfur Vent | Sulfur mine (the Sulfur Dune; added by ADR-070) |
 
 ### Creature banks
-Like the banks above: the guard always fights, the reward only on victory. Tables follow the existing banks: four rows at
-30 / 30 / 30 / 10 %, rewards scaled to the guard's value (ADR-070, MAP-22). Like every bank, each guard is **2–3 creature types of one
-faction**; the creatures below are the notes' starting point and the **drafts are pending**. Dragon City is the strongest bank by far.
-**Built (ADR-082)** with the notes' creatures: Ruins 20 / 30 / 40 / 60 Orcs (a fifth Berserkers half the time) for 2000–6000 gold; Lair
-4 / 6 / 8 / 12 Spectators (a fifth Beholders) for 2000–6000 gold and a Minor artifact (Major in the top row); Keep 20–60 Pikemen and 10–30
-Archers for 1500–5000 gold and a Minor (Major) artifact; Hideout 15–50 Bandits for 1500–5000 gold; Forest Glen 30–100 Timber Wolves (a
-fifth Dire Wolves) for 1000–3000 gold and 5–20 lumber; Dragon City 3 / 4 / 5 / 6 Black Dragons for 10000–30000 gold, a Relic and 1–3 Major
-artifacts.
+Like the banks above: the guard always fights, the reward only on victory. Four rows at 30 / 30 / 30 / 10 %, rewards about 25–60 % of the
+guard's gold worth (ADR-070, MAP-22). Every guard is **2–3 creature types of one faction** (neutral creatures count as one for the neutral
+banks); re-drafted by ADR-112 (drafts). Dragon City is the strongest bank by far. Rows: Ruins Orcs / Goblins / Ogres 15 / 20 / 0, 20 / 30 / 2,
+30 / 40 / 3, 40 / 50 / 5 for 2000–6000 gold; Lair Spectators / Troglodytes 3 / 20 … 10 / 40 (a fifth of the Spectators Beholders half the
+time) for 2000–6000 gold and a Minor artifact (Major in the top row); Keep Pikemen / Archers / Griffins 20 / 10 / 0 … 60 / 30 / 5 for
+1500–5000 gold and a Minor (Major) artifact; Hideout Bandits / Trolls 12 / 2 … 40 / 6 for 1500–5000 gold; Forest Glen Wolves / Mammoths
+25 / 1 … 80 / 3 (a fifth Dire Wolves) for 1500–4500 gold and 5–20 lumber; Dragon City Black / Red / Green Dragons 2 / 0 / 2, 3 / 2 / 0,
+4 / 2 / 2, 5 / 3 / 3 for 10000–30000 gold, a Relic and 1 / 1 / 2 / 3 Major artifacts.
 
-| Bank | Guard (notes, roster creatures) | Reward (notes) |
+| Bank | Guard (the notes' starting point; the rows above add a second faction type) | Reward |
 |---|---|---|
 | Ruins (orcs; the undead bank became the Crypt, ADR-070) | Orc / Orc Berserker | gold |
 | Lair | evil eyes: Spectator / Beholder | gold and artifacts |

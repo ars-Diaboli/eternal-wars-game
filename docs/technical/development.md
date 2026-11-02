@@ -174,10 +174,11 @@ with the same file rules and loading as the creature table (`-- --buildings=path
 | Column | Meaning |
 |---|---|
 | `id`, `level`, `name` | building id (`town-hall`, `fort`, …); level 1, 2, … without gaps; display name of that level |
-| `town` | empty: the row is shared by every town. A town type (`necropolis`): that town's own rows of the building replace all shared levels of it, or add a building only that town has (ADR-074) |
+| `town` | empty: the row is shared by every town. A town type (`necropolis`): that town's own rows of the building replace all shared levels of it, or add a building only that town has (ADR-074); a town row at level `0` removes the shared building from that town (ADR-112) |
 | `gold`, `resources` | cost: gold, and other resources like `lumber 5; ore 5` |
 | `requires` | other buildings first: `blacksmith 1; fort 2`. `dwelling-3 1` is met by any tier-3 dwelling |
 | `income` | paid every day while this is the highest level built: `gold 500`, `lumber 1; ore 1` |
+| `growth` | a flat weekly growth bonus for every dwelling of a tier: `dwelling-1 5` (ADR-112) |
 | `notes` | free text |
 
 `dwelling-1` … `dwelling-5` price the dwellings of a tier (level 1 builds, level 2 upgrades) for every creature line of

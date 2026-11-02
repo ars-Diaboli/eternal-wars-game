@@ -8,8 +8,9 @@
   group; any hero may learn any school, the school of the town across the ring is rarely offered ([heroes.md](heroes.md), ADR-072).
 - **Stronghold and Swamp Bestiary have no school**: both have the faction group **Primal Fury** instead (ADR-063, ADR-069;
   Swamp Bestiary's Adrenaline group is dropped). Its warcries replace spells (no mana, ADR-067); its Interference skill
-  weakens and raises the cost of the enemy hero's spells. Instead of a mage guild they get a **3-level placeholder
-  building** that teaches warcries / spiritual totems (ADR-071, MAG-2; not built).
+  weakens and raises the cost of the enemy hero's spells. Instead of a mage guild they get the **war lodge** (Stronghold: War
+  Lodge / Hall of Warcries / Drums of the Horde; Swamp Bestiary: Totem Circle / Spirit Totems / Elder Totem; ADR-071, MAG-2, built ADR-112): a
+  hero knows a warcry only once a lodge of its level taught it (Rally 1, Intimidate 2, Terror 3), up to its Warcry skill.
 - **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice). Each school has
   17 spells (5 / 5 / 4 / 3 by level, ADR-099); a guild offers 3 / 3 / 2 / 2 of them, **drawn per town at game start** from the game's
   random source; the map may fix some, adventure spells are drawn like the others, and the extra-school buildings draw theirs the same way

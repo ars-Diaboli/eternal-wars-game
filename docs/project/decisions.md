@@ -2712,3 +2712,46 @@ agent's choices where the earlier ADRs say nothing.
 - **AI**: the new kinds have weights in `ArtifactValue` (placeholders).
 - **Not built**: the Crown of the Waning Eye's +1 to the best magic skill; the assembled relics (joining, blocked slots, `full-mana`,
   `no-faction-penalty`); creature casters' spells against artifact immunities (creature casters are not built).
+
+### ADR-112: Growth buildings, the war lodge, banks per faction, garrison heroes, template connection options (ADR-064, ADR-068, ADR-070, ADR-071, ADR-106, 2026-11-02)
+**Status**: accepted (2026-11-02), built. Closes the roadmap items on growth buildings, the Stronghold and Swamp Bestiary third building, per-town
+building names and costs, the bank re-draft (MAP-22), garrison heroes (with the hero limit and towns keeping war machines) and the template
+follow-ups (RMG-11, RMG-13, MAP-20). Points marked *(assumed)* are the agent's choices; all numbers are placeholders.
+
+- **Buildings** (`data/buildings.csv`):
+  - A new `growth` column (`dwelling-T N`) and the buildings `growth-1` (+5 a week to tier 1; 1000 gold + 5 lumber; needs a tier-1 dwelling)
+    and `growth-2` (+2 to tier 2; 1500 gold + 5 ore + 2 of the town's rare resource; needs a tier-2 dwelling) in every town, each with its own
+    name (Haven: Drill Yard, Cloister of Vigil; Stronghold: Warren, Mess Hall; …). TOWN-1: every dwelling of the tier gets the bonus.
+  - The bonus is flat and added after the fort's percent and the artifacts' growth (not raised by them) *(assumed)*; a dwelling built this week
+    gets it in its opening week too *(assumed)*.
+  - A town's row at **level 0** removes a shared building from that town. Stronghold and Swamp Bestiary have no mage guild: their third building
+    is the **war lodge** (`war-lodge`, three levels: War Lodge / Hall of Warcries / Drums of the Horde; Totem Circle / Spirit Totems / Elder Totem;
+    2000 gold + 5 lumber + 5 ore, 3500 + 5 + 3 crystal or sulfur, 5000 + 5 + 5). Their town hall 2 needs war lodge 1 instead of mage guild 1.
+  - **Warcries** (Primal Fury): a hero knows a warcry only once learned at a war lodge of at least its level (Rally 1, Intimidate 2, Terror 3),
+    up to its Primal Fury level: `Hero.WarcriesLearned`, raised by a visit or by building the lodge with the hero in town (`WarcriesLearned`
+    event). Starting heroes know none *(assumed, like spells)*.
+  - Start buildings a town type lacks are dropped and levels capped at its maximum (scenario assembly).
+- **Banks (MAP-22)**: every bank has four rows (weights 30/30/30/10) of two or three creature types of one faction (neutral creatures count as a
+  faction for the neutral banks) and pays about 25–60 % of its guard's gold worth; Dragon City is worth clearly most. Some banks upgrade a fifth of
+  their first stack only *(assumed)*. The tables are in `CreatureBank.cs` and [adventure-map.md](../design/adventure-map.md).
+- **Garrison heroes** (`Town.GarrisonHero`, `EnterGarrisonCommand` / `LeaveGarrisonCommand`, `HeroEnteredGarrison` / `HeroLeftGarrison`):
+  - The visiting hero enters with its army merged into the garrison (refused when it does not fit); it leaves the map (`GameState.Heroes` and
+    `HeroesOf` are map heroes, `AllHeroesOf` and `GetHero` include garrison heroes). Leaving takes the **whole garrison** out onto the entrance
+    (HoMM3), refused with the entrance taken, an empty garrison or the player at its hero limit: a garrison hero does not count (**TOWN-8**).
+  - It earns income, regains mana and movement, levels up and governs like the others; its war machines stay with it, so **a town keeps war
+    machines** through its garrison hero.
+  - A siege of its town is fought by the garrison under the hero (its skills, artifacts, spells and machines). It **cannot retreat or surrender**
+    *(assumed)*. Winning keeps the survivors (and raised undead) in the garrison; losing removes the hero and the town falls. A garrison hero with
+    no troops is beaten outright: its artifacts go to the attacker.
+  - Not built *(assumed out of scope)*: map files placing garrison heroes; the AI using garrisons (its attack estimate ignores the hero);
+    movement commands for a garrison hero ("Unknown hero").
+- **Template connections** (format **v7**, older files load with the defaults):
+  - `kind: Portal`: a pair of linked portals anywhere in the two zones, on any levels; the layout does not make the zones touch. Guarded on both
+    ends like a gate.
+  - `guard` per connection, `connectionGuard` per template (default `Monsters`): `Garrison` (a neutral garrison in the way with troops of the
+    guard value; where no tile of the way closes it, a monster guard instead), `BorderGuard` or `BorderGate` of `colour` (drawn from the seed when
+    omitted) on the passage, with the **Keymaster's Tent** of that colour in the connection's first zone (`from`), guarded by the guard value.
+    One tent per colour per map. Only normal connections take these; wide, gate and portal connections ignore them (a validator warning).
+  - `chance` 1–100 (RMG-13, default 100): rolled from the seed (`presence` stream); a dropped connection that the zones need to stay connected
+    is made anyway, in template order (`ConnectionPlacer.Present`). The layout still treats dropped connections as edges *(assumed)*.
+  - The generator gives the same maps as before for templates that use none of this, so `MapGenerator.Version` stays 7.

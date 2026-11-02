@@ -76,6 +76,9 @@ public sealed class GeneratedMap
 
     internal static TerrainCatalog Terrains => TerrainCatalog.Default;
 
+    /// <summary>Whether an object already stands on the tile (whatever its terrain).</summary>
+    internal bool IsOccupied(MapPosition position) => _occupied.ContainsKey(position);
+
     /// <summary>
     /// Whether the object's blocked and visit cells all fall on free tiles off the passages (stage 3) and the roads (stage 5), so nothing placed
     /// later blocks a way between zones or stands on a road.

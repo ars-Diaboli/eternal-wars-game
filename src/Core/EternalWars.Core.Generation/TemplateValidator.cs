@@ -312,9 +312,30 @@ public static class TemplateValidator
                 warn($"{name} is wide (unguarded): its guard value is ignored.");
             }
 
-            if (c.Kind != ConnectionKind.Gate && from.Level != to.Level)
+            if (c.Kind is not (ConnectionKind.Gate or ConnectionKind.Portal) && from.Level != to.Level)
             {
-                error($"{name} joins two levels, which only a gate can do.");
+                error($"{name} joins two levels, which only a gate or a portal can do.");
+            }
+
+            if (c.Chance is < 1 or > 100)
+            {
+                error($"{name} has a chance of {c.Chance} %; it goes from 1 to 100.");
+            }
+
+            if (c.Guard is { } own && own != ConnectionGuard.Monsters && c.Kind != ConnectionKind.Normal)
+            {
+                warn($"{name} is not a normal connection: only monsters guard it, so its {own} guard is ignored.");
+            }
+
+            var guard = template.GuardOf(c);
+            if (c.Colour is not null && guard is not (ConnectionGuard.BorderGuard or ConnectionGuard.BorderGate))
+            {
+                warn($"{name} has a Keymaster colour but no border guard or gate.");
+            }
+
+            if (guard == ConnectionGuard.Garrison && c.GuardValue == 0)
+            {
+                warn($"{name} is guarded by a garrison with no troops in it.");
             }
         }
 
