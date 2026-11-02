@@ -246,7 +246,14 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 return;
             }
 
-            var reserve = Build(player, town);
+            // A player without heroes cannot take anything (ADR-114): it hires before it builds, and saves for a hero rather than build.
+            var heroless = !_state.HeroesOf(player).Any() && town.Level(BuiltInBuildings.Tavern) > 0;
+            if (heroless)
+            {
+                Hire(player, town, reserve: 0);
+            }
+
+            var reserve = heroless && !_state.HeroesOf(player).Any() ? TavernRules.HeroCost.Gold : Build(player, town);
             Hire(player, town, reserve);
             UpgradeStacks(player, town, reserve);
             Recruit(player, town, reserve);
@@ -675,6 +682,12 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             EquipBest(player, hero);
             RecruitHere(player, hero);
             UseServicesHere(player, hero);
+
+            // Arrived at an own town on the way: take the garrison along now, or the troops would call the hero back every day (ADR-114).
+            if (_state.ObjectCellAt(hero.Position) is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == player)
+            {
+                Consolidate(player, town);
+            }
             if (hero.MovementPoints <= 0 || Defending(hero))
             {
                 return true;
@@ -854,7 +867,11 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             return 6000 + (own.Dwellings.Count * 500);
         }
 
-        var waiting = ArmyPower(own.Garrison) + own.Available.Sum(a => (long)a.Value * _state.Creatures.Get(a.Key).Value);
+        // Creatures in the dwellings count only as far as the gold buys them, or they would call the hero home every day (ADR-114).
+        var resources = _state.GetPlayer(hero.Owner).Resources;
+        var waiting = ArmyPower(own.Garrison) + own.Available.Sum(a => _state.Creatures.Get(a.Key) is var line
+            ? (long)TownRules.MaxAffordable(resources, TownRules.CreatureCost(_state, own, line), a.Value) * line.Value
+            : 0);
         return waiting * 5 > power * 3 ? 0.3 * Math.Min(waiting, Math.Max(power, 1000)) : 0;
     }
 

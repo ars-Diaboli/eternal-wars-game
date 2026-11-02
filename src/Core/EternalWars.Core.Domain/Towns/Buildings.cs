@@ -58,6 +58,16 @@ public static class BuiltInBuildings
     /// </summary>
     public const string WarLodge = "war-lodge";
 
+    /// <summary>
+    /// The spell building of another school (ADR-072, MAG-12): <c>school-inferno</c> adds one Inferno spell per mage guild level. Each town on
+    /// the ring has the two of its ring neighbours' schools (rows of its own in <c>buildings.csv</c>).
+    /// </summary>
+    public static string SpellSchool(string school) => $"school-{school}";
+
+    /// <summary>The school a <see cref="SpellSchool"/> building adds, or null for other buildings.</summary>
+    public static string? SchoolOf(string building) =>
+        building.StartsWith("school-", StringComparison.Ordinal) && building.Length > "school-".Length ? building["school-".Length..] : null;
+
     /// <summary>The growth building of a dwelling tier (ADR-071, TOWN-1): <c>growth-1</c>, <c>growth-2</c>; each town names its own.</summary>
     public static string Growth(int tier) => $"growth-{tier.ToString(CultureInfo.InvariantCulture)}";
 

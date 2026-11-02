@@ -36,17 +36,46 @@ public sealed record HeroSpecialty(SpecialtyKind Kind, string Target, int Amount
     public override string ToString() => Kind switch
     {
         SpecialtyKind.Resource => $"resource {Target} {Amount.ToString(CultureInfo.InvariantCulture)}",
+        SpecialtyKind.Skill when Amount > 0 => $"skill {Target} {Amount.ToString(CultureInfo.InvariantCulture)}",
         _ => $"{Kind.ToString().ToLowerInvariant()} {Target}",
     };
 
-    /// <summary>Parses <c>skill offense.melee</c>, <c>spell light.bless</c> or <c>resource gold 350</c>; an old skill id reads as its successor (ADR-072).</summary>
+    /// <summary>
+    /// What the specialty does, for the hero and tavern screens: "+350 gold a day", "Melee: the skill's effect +5 % a hero level", "+10 % movement,
+    /// even without Logistics", "Bless: +3 % a hero level". Spells are named from <paramref name="spells"/> when given.
+    /// </summary>
+    public string Describe(Magic.SpellCatalog? spells = null) => Kind switch
+    {
+        SpecialtyKind.Resource => $"+{Amount.ToString(CultureInfo.InvariantCulture)} {Target} a day",
+        SpecialtyKind.Skill when Target == BuiltInSkills.Logistics && Amount > 0 => $"+{Amount.ToString(CultureInfo.InvariantCulture)} % movement, even without Logistics",
+        SpecialtyKind.Skill when Amount > 0 => $"+{Amount.ToString(CultureInfo.InvariantCulture)} Necromancy points (with {BuiltInSkills.Get(Target).Name})",
+        SpecialtyKind.Skill when Target == BuiltInSkills.Tactics => "Tactics: deploys 1 column deeper, 2 from hero level 10",
+        SpecialtyKind.Skill when BuiltInSkills.Contains(Target) => $"{BuiltInSkills.Get(Target).Name}: the skill's effect +{SkillEffects.SpecialtyPercentPerLevel} % a hero level",
+        SpecialtyKind.Spell => $"{(spells is not null && spells.TryGet(Target, out var spell) ? spell.Name : Target)}: +3 % a hero level",
+        _ => ToString(),
+    };
+
+    /// <summary>Skills whose specialty may be flat (ADR-093, ADR-107): Logistics (+N % movement) and Death attunement (+N Necromancy points).</summary>
+    public static IReadOnlySet<string> FlatSkills { get; } = new HashSet<string>(StringComparer.Ordinal)
+    {
+        BuiltInSkills.Logistics, ManaRules.AttunementSkill(Towns.TownIds.Necropolis),
+    };
+
+    /// <summary>
+    /// Parses <c>skill offense.melee</c>, <c>skill pathfinding.logistics 10</c> (flat, <see cref="FlatSkills"/> only), <c>spell light.bless</c> or
+    /// <c>resource gold 350</c>; an old skill id reads as its successor (ADR-072).
+    /// </summary>
     public static HeroSpecialty Parse(string text)
     {
         var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return words switch
         {
             ["skill", var skill] when BuiltInSkills.Contains(skill) => new(SpecialtyKind.Skill, BuiltInSkills.Resolve(skill)),
-            ["skill", var skill] => throw new FormatException($"unknown skill '{skill}'"),
+            ["skill", var skill, var amount] when BuiltInSkills.Contains(skill) && FlatSkills.Contains(BuiltInSkills.Resolve(skill))
+                                                  && int.TryParse(amount, NumberStyles.Integer, CultureInfo.InvariantCulture, out var flat) && flat > 0
+                => new(SpecialtyKind.Skill, BuiltInSkills.Resolve(skill), flat),
+            ["skill", var skill, _] when BuiltInSkills.Contains(skill) => throw new FormatException($"'{skill}' has no flat specialty (only {string.Join(", ", FlatSkills)})"),
+            ["skill", var skill, ..] => throw new FormatException($"unknown skill '{skill}'"),
             ["spell", var spell] => new(SpecialtyKind.Spell, spell),
             ["resource", var name, var amount] when Enum.TryParse<ResourceType>(name, ignoreCase: true, out _)
                                                     && int.TryParse(amount, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) && n > 0

@@ -137,6 +137,44 @@ public partial class InspectorPanel : VBoxContainer
             creature.Button.ItemSelected += _ => ApplySlot();
             count.ValueChanged += _ => ApplySlot();
         }
+
+        ShowHeroArtifacts(hero);
+    }
+
+    /// <summary>
+    /// What the hero wears and carries (ADR-061): one row per worn artifact (it goes to the slot its definition names) and per backpack item, and one
+    /// empty row each to add another; "none" removes an entry. A set that does not fit the slots is refused (the warning names it).
+    /// </summary>
+    private void ShowHeroArtifacts(Hero hero)
+    {
+        var scenario = _editor.Scenario;
+        var items = new[] { ("— none —", "") }
+            .Concat(scenario.Artifacts.All.OrderBy(a => a.Slot).ThenBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Slot}, {a.Tier})", a.Id)))
+            .ToList();
+        var changed = new List<Choice<string>>();
+        List<Choice<string>> Rows(string title, IEnumerable<string> ids)
+        {
+            AddChild(new Label { Text = title });
+            var rows = new HFlowContainer();
+            AddChild(rows);
+            return ids.Append("").Select(id =>
+            {
+                var choice = Options(rows, "", items, id);
+                changed.Add(choice);
+                return choice;
+            }).ToList();
+        }
+
+        var worn = Rows("Worn artifacts", hero.Artifacts.AllWorn.Select(w => w.Id));
+        var backpack = Rows("Backpack", hero.Artifacts.Backpack);
+        void Apply() => Edit(() => _editor.SetHeroArtifacts(
+            hero.Id,
+            [.. worn.Select(w => w.Value()).Where(a => a.Length > 0)],
+            [.. backpack.Select(b => b.Value()).Where(a => a.Length > 0)]));
+        foreach (var choice in changed)
+        {
+            choice.Button.ItemSelected += _ => Apply();
+        }
     }
 
     private void ShowObject(MapObject mapObject)
@@ -227,6 +265,43 @@ public partial class InspectorPanel : VBoxContainer
                 void ApplyPrison() => Edit(() => _editor.SetPrison(prison.Id, who.Value(), level.Value == 0 ? null : (int)level.Value));
                 who.Button.ItemSelected += _ => ApplyPrison();
                 level.ValueChanged += _ => ApplyPrison();
+                break;
+            }
+
+            case ArtifactPickup pickup:
+            {
+                var row = new HBoxContainer();
+                AddChild(row);
+                var artifacts = new[] { ($"Random ({pickup.Definition.Name}, drawn at start)", (string?)null) }
+                    .Concat(_editor.Scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", (string?)a.Id)));
+                var artifact = Options(row, "Artifact", artifacts, pickup.Artifact);
+                artifact.Button.ItemSelected += _ => Edit(() => _editor.SetArtifactPickup(pickup.Id, artifact.Value()));
+                break;
+            }
+
+            case Sphinx sphinx:
+                ShowSphinx(sphinx);
+                break;
+
+            case WitchHut hut:
+            {
+                var row = new HBoxContainer();
+                AddChild(row);
+                var skills = new[] { ("Rolled at start", "") }.Concat(BuiltInSkills.All.OrderBy(s => s.Group).ThenBy(s => s.Name).Select(s => ($"{s.Name} ({s.Group})", s.Id))).ToList();
+                var first = Options(row, "Skills", skills, hut.Skills.ElementAtOrDefault(0) ?? "");
+                var second = Options(row, "and", skills, hut.Skills.ElementAtOrDefault(1) ?? "");
+                AddChild(new Label { Text = "Set both, or leave both rolled; the two must differ." });
+                void ApplyHut()
+                {
+                    // Both or neither: a half-set hut waits for its second skill.
+                    if ((first.Value().Length > 0) == (second.Value().Length > 0))
+                    {
+                        Edit(() => _editor.SetWitchHutSkills(hut.Id, first.Value().Length > 0 ? [first.Value(), second.Value()] : []));
+                    }
+                }
+
+                first.Button.ItemSelected += _ => ApplyHut();
+                second.Button.ItemSelected += _ => ApplyHut();
                 break;
             }
 
@@ -398,6 +473,55 @@ public partial class InspectorPanel : VBoxContainer
 
         message.TextSubmitted += _ => Apply();
         message.FocusExited += Apply;
+    }
+
+    /// <summary>A sphinx's riddle (ADR-079): the author's question, answer and two wrong answers, or one drawn from the riddle table at start.</summary>
+    private void ShowSphinx(Sphinx sphinx)
+    {
+        var own = new CheckBox { Text = "Author's riddle (else drawn from the riddle table)", ButtonPressed = sphinx.Riddle is not null };
+        AddChild(own);
+        LineEdit Field(string label, string value, string hint)
+        {
+            var row = new HBoxContainer();
+            AddChild(row);
+            row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(90, 0) });
+            var edit = new LineEdit { Text = value, CustomMinimumSize = new Vector2(280, 0), PlaceholderText = hint, Editable = sphinx.Riddle is not null };
+            row.AddChild(edit);
+            return edit;
+        }
+
+        var question = Field("Question", sphinx.Riddle?.Question ?? "", "What the sphinx asks");
+        var answer = Field("Answer", sphinx.Riddle?.Answer ?? "", "The right answer");
+        var wrong1 = Field("Wrong", sphinx.Riddle?.Wrong1 ?? "", "A wrong answer");
+        var wrong2 = Field("Wrong", sphinx.Riddle?.Wrong2 ?? "", "Another wrong answer");
+        LineEdit[] fields = [question, answer, wrong1, wrong2];
+
+        void Apply()
+        {
+            var riddle = own.ButtonPressed
+                ? new Riddle(question.Text.Trim(), answer.Text.Trim(), wrong1.Text.Trim(), wrong2.Text.Trim())
+                : null;
+            // Nothing changed (also when a field loses focus as the panel refreshes), or the author is still typing.
+            if (riddle != sphinx.Riddle && (riddle is null || fields.All(f => f.Text.Trim().Length > 0)))
+            {
+                Edit(() => _editor.SetSphinxRiddle(sphinx.Id, riddle));
+            }
+        }
+
+        own.Toggled += on =>
+        {
+            foreach (var field in fields)
+            {
+                field.Editable = on;
+            }
+
+            Apply();
+        };
+        foreach (var field in fields)
+        {
+            field.TextSubmitted += _ => Apply();
+            field.FocusExited += Apply;
+        }
     }
 
     /// <summary>Owner, name, pre-built buildings and dwellings (7-of-9 rule), garrison.</summary>

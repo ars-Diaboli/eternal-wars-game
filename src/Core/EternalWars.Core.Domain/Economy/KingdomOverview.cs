@@ -71,7 +71,7 @@ public static class KingdomOverviews
         var gold = state.GetPlayer(player).Resources.Gold;
         foreach (var hero in state.AllHeroesOf(player).OrderBy(h => h.Id.Value))
         {
-            var treasury = new ResourceSet(Gold: SkillEffects.TreasuryGold(hero.SkillLevelOf(BuiltInSkills.Treasury))) + HeroIncome.TreasuryInterest(hero, gold);
+            var treasury = new ResourceSet(Gold: SkillEffects.TreasuryGold(hero)) + HeroIncome.TreasuryInterest(hero, gold);
             Add(hero, "Treasury", treasury);
             Add(hero, "Prospecting", SkillEffects.Prospecting(hero.SkillLevelOf(BuiltInSkills.Prospecting)));
             Add(hero, "Specialty", hero.Specialty?.DailyIncome ?? ResourceSet.Empty);

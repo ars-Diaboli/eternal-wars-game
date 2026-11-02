@@ -28,13 +28,14 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
-/// sim game [--map towns|demo|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal]  (the adventure AI plays every slot)
+/// sim game [--map towns|demo|ember|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal]  (the adventure AI plays every slot)
 /// sim game --template duel|file.ewtemplate.json [--size N] [--players N] [...]  (the same on a map generated per run, random towns)
 /// sim maps [--template name] [--maps 3] [--days 14] [--seed 1]  (CI: generates maps of every shipped template and checks they are playable)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
 /// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
 /// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
 /// sim layout duel|file.ewtemplate.json [--size 96] [--seed 1] [--rects] [--terrain] [--seeds N]  (zone layout, or with --terrain the painted terrain with walls, of a random map template as text)
+/// sim export towns|demo|ember --out map.ewmap.json  (a built-in map saved as a file, for the editor)
 /// sim generate duel|file.ewtemplate.json --out map.ewmap.json [--size N] [--seed 1] [--players N]  (a generated map saved as a file, human players)
 /// sim selftest                      (CI: determinism and replay round trip)
 /// </code>
@@ -73,6 +74,7 @@ public static class Program
                     ? LayoutBatch(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), many, rest.Contains("--rects"))
                     : Layout(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), rest.Contains("--rects"), rest.Contains("--terrain")),
                 ["generate", var template, "--out", var path, .. var rest] => Generate(template, path, rest),
+                ["export", var map, "--out", var path] => Export(map, path),
                 ["selftest"] => SelfTest(),
                 _ => Usage(),
             };
@@ -490,12 +492,21 @@ public static class Program
         _ => throw new FormatException($"'{text}' is not a complexity ({string.Join(", ", Enum.GetNames<Complexity>().Select(n => n.ToLowerInvariant()))})."),
     };
 
+    /// <summary>Saves a built-in map (<c>towns</c>, <c>demo</c>, <c>ember</c>) as a map file the editor and the game open.</summary>
+    private static int Export(string map, string path)
+    {
+        MapSerializer.Save(HandMadeGame(map, 1).Map, path);
+        Console.WriteLine($"{map} → {path}");
+        return 0;
+    }
+
     private static SimGame HandMadeGame(string map, ulong seed, Complexity? complexity = null)
     {
         var document = map switch
         {
             "towns" => MapConverter.ToDocument(TownsScenario.Create(Catalog)),
             "demo" => MapConverter.ToDocument(DemoScenario.Create()),
+            "ember" => MapConverter.ToDocument(EmberMarchScenario.Create(Catalog)),
             _ => MapSerializer.Load(map),
         };
         return new SimGame(document, MapConverter.ToGameState(document, options: new GameOptions(Seed: seed, Complexity: complexity), creatures: Catalog));

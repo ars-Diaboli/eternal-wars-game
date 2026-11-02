@@ -31,6 +31,18 @@ war-lodge,swamp-bestiary,2,Spirit Totems,3500,lumber 5; sulfur 3,,,,teaches Inti
 war-lodge,swamp-bestiary,3,Elder Totem,5000,lumber 5; sulfur 5,,,,teaches Terror
 caravan,,1,Caravan,1000,lumber 5,town-hall 2,,,ADR-054 draft: hire from owned map dwellings within 7500 movement points (ADR-075); send troops to another own town
 necromancy-amplifier,necropolis,1,Necromancy Amplifier,1500,mercury 5,mage-guild 1,,,"+5 % Necromancy for every hero of its owner with the skill; more add nothing (ADR-069, ADR-070, TOWN-6)"
+school-inferno,sylvan,1,Brimstone Altar,2000,mercury 5,mage-guild 2,,,"placeholder (ADR-072, MAG-12): 1 Inferno spell per mage guild level; the school's resource is its town's rare resource"
+school-haven,sylvan,1,Chapel of Dawn,2000,crystal 5,mage-guild 2,,,1 Haven spell per mage guild level
+school-sylvan,haven,1,Grove of Whispers,2000,mercury 5,mage-guild 2,,,1 Sylvan spell per mage guild level
+school-academy,haven,1,Arcane Archive,2000,mercury 5,mage-guild 2,,,1 Academy spell per mage guild level
+school-haven,academy,1,Chapel of Dawn,2000,crystal 5,mage-guild 2,,,
+school-dungeon,academy,1,Shadow Library,2000,sulfur 5,mage-guild 2,,,1 Dungeon spell per mage guild level
+school-academy,dungeon,1,Arcane Archive,2000,mercury 5,mage-guild 2,,,
+school-necropolis,dungeon,1,Bone Scriptorium,2000,mercury 5,mage-guild 2,,,1 Necropolis spell per mage guild level
+school-dungeon,necropolis,1,Shadow Library,2000,sulfur 5,mage-guild 2,,,
+school-inferno,necropolis,1,Brimstone Altar,2000,mercury 5,mage-guild 2,,,
+school-necropolis,inferno,1,Bone Scriptorium,2000,mercury 5,mage-guild 2,,,
+school-sylvan,inferno,1,Grove of Whispers,2000,mercury 5,mage-guild 2,,,
 growth-1,haven,1,Drill Yard,1000,lumber 5,dwelling-1 1,,dwelling-1 5,"placeholder (ADR-071, TOWN-1): every tier-1 dwelling +5 a week"
 growth-2,haven,1,Cloister of Vigil,1500,ore 5; crystal 2,dwelling-2 1,,dwelling-2 2,"placeholder (ADR-071, TOWN-1): every tier-2 dwelling +2 a week"
 growth-1,sylvan,1,Moonlit Glade,1000,lumber 5,dwelling-1 1,,dwelling-1 5,

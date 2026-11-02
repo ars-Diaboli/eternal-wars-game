@@ -214,8 +214,8 @@ public sealed record HeroBattleBonuses(
         return new(
             Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.Melee, Heroes.SkillEffects.MeleeDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Melee))) + artifacts.MeleePercent,
             Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.Archery, Heroes.SkillEffects.RangedDamagePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Archery))) + artifacts.RangedPercent,
-            Math.Min(90, Heroes.SkillEffects.DamageTakenReductionPercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Armor)) + artifacts.DamageTakenReductionPercent),
-            Heroes.SkillEffects.BattleSpeedBonus(hero.SkillLevelOf(Heroes.BuiltInSkills.WarTempo)) + artifacts.BattleSpeed,
+            Math.Min(90, Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.Armor, Heroes.SkillEffects.DamageTakenReductionPercent(hero.SkillLevelOf(Heroes.BuiltInSkills.Armor))) + artifacts.DamageTakenReductionPercent),
+            Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.WarTempo, Heroes.SkillEffects.BattleSpeedBonus(hero.SkillLevelOf(Heroes.BuiltInSkills.WarTempo))) + artifacts.BattleSpeed,
             preferred,
             hero.TotalMorale,
             hero.TotalLuck,
@@ -232,8 +232,25 @@ public sealed record HeroBattleBonuses(
             Heroes.SkillEffects.SpellResistancePercent(hero.SkillLevelOf(Heroes.BuiltInSkills.SpellResistance)),
             artifacts.Immunities,
             artifacts.NoRetreat,
-            artifacts.SpellLevelCap);
+            artifacts.SpellLevelCap)
+        {
+            BloodRagePercent = Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.BloodRage, 100),
+            WarcryPercent = Heroes.SkillEffects.WithSpecialty(hero, Heroes.BuiltInSkills.Warcry, 100),
+            TacticsColumns = Heroes.SkillEffects.TacticsSpecialtyColumns(hero),
+        };
     }
+
+    /// <summary>The strength of Blood Rage in percent (100; a Blood Rage specialty +5 % a hero level): it scales the Attack cap.</summary>
+    public int BloodRagePercent { get; init; } = 100;
+
+    /// <summary>Blood Rage: the most Attack a stack gains from kills (<see cref="PrimalFury.BloodRageMaxAttack"/> × <see cref="BloodRagePercent"/>, rounded down).</summary>
+    public int BloodRageMaxAttack => PrimalFury.BloodRageMaxAttack(BloodRage) * BloodRagePercent / 100;
+
+    /// <summary>The strength of the hero's warcries in percent (100; a Warcry specialty +5 % a hero level): Intimidate's initiative cut and Terror's chance.</summary>
+    public int WarcryPercent { get; init; } = 100;
+
+    /// <summary>Deployment columns a Tactics specialist adds (<see cref="Heroes.SkillEffects.TacticsSpecialtyColumns"/>).</summary>
+    public int TacticsColumns { get; init; }
 }
 
 public enum BattlePhase

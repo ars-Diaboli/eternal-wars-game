@@ -32,6 +32,12 @@ public static class NecromancyRules
     public static int Percent(SkillLevel level, bool amplified, int artifactPercent = 0) =>
         level == SkillLevel.None ? 0 : (PercentPerLevel * (int)level) + (amplified ? AmplifierPercent : 0) + artifactPercent;
 
+    /// <summary>
+    /// The points the hero adds to its Necromancy share: its artifacts' (ADR-111) and a Necromancy specialist's flat +5 (ADR-107); they count only
+    /// with the skill (<see cref="Percent"/>).
+    /// </summary>
+    public static int HeroBonus(Hero hero) => hero.Bonus.NecromancyPercent + SkillEffects.FlatSpecialty(hero, Skill);
+
     /// <summary>Whether the player owns a town with the Necromancy Amplifier (a captured one helps its new owner).</summary>
     public static bool IsAmplified(GameState state, PlayerId player) =>
         state.ObjectsOf<Town>().Any(t => t.Owner == player && t.Level(Amplifier) > 0);

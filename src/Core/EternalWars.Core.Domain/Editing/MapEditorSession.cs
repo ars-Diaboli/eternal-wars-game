@@ -1102,6 +1102,71 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>
+    /// A sphinx's riddle (ADR-079, MAP-27): the author's question with its answer and two wrong ones, or null for one drawn from <c>riddles.csv</c>
+    /// when the game starts. Refused when a text is empty or two answers are the same (ignoring case and spaces at the ends).
+    /// </summary>
+    public EditResult SetSphinxRiddle(MapObjectId id, Riddle? riddle)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Sphinx sphinx)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (riddle is not null)
+        {
+            riddle = new Riddle(riddle.Question.Trim(), riddle.Answer.Trim(), riddle.Wrong1.Trim(), riddle.Wrong2.Trim());
+            string[] answers = [riddle.Answer, riddle.Wrong1, riddle.Wrong2];
+            if (riddle.Question.Length == 0 || answers.Any(a => a.Length == 0) || answers.Distinct(StringComparer.OrdinalIgnoreCase).Count() != answers.Length)
+            {
+                return EditResult.InvalidValue;
+            }
+        }
+
+        var previous = sphinx.Riddle;
+        Run(new DelegateCommand("Set riddle", () => Apply(riddle), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(Riddle? value)
+        {
+            sphinx.Riddle = value;
+            _bus.Publish(new MapObjectChanged(sphinx.Id));
+        }
+    }
+
+    /// <summary>
+    /// A witch hut's two skills (ADR-079, MAP-34): two different known skills of any group, or none for two rolled when the game starts. Old skill ids
+    /// are stored as their successors (ADR-072).
+    /// </summary>
+    public EditResult SetWitchHutSkills(MapObjectId id, IReadOnlyList<string> skills)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not WitchHut hut)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if ((skills.Count != 0 && skills.Count != WitchHut.SkillCount) || skills.Any(s => !BuiltInSkills.Contains(s)))
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var resolved = skills.Select(BuiltInSkills.Resolve).ToList();
+        if (resolved.Distinct(StringComparer.Ordinal).Count() != resolved.Count)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = hut.Skills;
+        Run(new DelegateCommand("Set witch hut skills", () => Apply(resolved), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(IReadOnlyList<string> value)
+        {
+            hut.Skills = value;
+            _bus.Publish(new MapObjectChanged(hut.Id));
+        }
+    }
+
     /// <summary>Who sits in a prison and at what level (ADR-068); null = drawn when the game starts.</summary>
     public EditResult SetPrison(MapObjectId id, string? hero, int? level)
     {

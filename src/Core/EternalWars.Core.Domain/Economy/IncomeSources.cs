@@ -34,7 +34,7 @@ public sealed class HeroIncome : IIncomeSource
         new(Gold: goldOnHand * SkillEffects.TreasuryInterestPermille(hero.SkillLevelOf(BuiltInSkills.Treasury)) / 1000);
 
     public static ResourceSet Of(Hero hero) =>
-        new ResourceSet(Gold: SkillEffects.TreasuryGold(hero.SkillLevelOf(BuiltInSkills.Treasury)))
+        new ResourceSet(Gold: SkillEffects.TreasuryGold(hero))
         + SkillEffects.Prospecting(hero.SkillLevelOf(BuiltInSkills.Prospecting))
         + (hero.Specialty?.DailyIncome ?? ResourceSet.Empty)
         + hero.Bonus.Income;

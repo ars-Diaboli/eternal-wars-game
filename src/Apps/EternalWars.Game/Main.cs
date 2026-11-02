@@ -47,7 +47,7 @@ public partial class Main : Node3D
     private const string ReplaysFolder = "user://replays";
 
     /// <summary>The maps that ship with the game (by name); every other hand-made map is "custom" in the ranking (ADR-101).</summary>
-    private static readonly HashSet<string> ShippedMaps = ["Demo Valley", "Two Towns"];
+    private static readonly HashSet<string> ShippedMaps = ["Demo Valley", "Two Towns", EmberMarchScenario.Name];
 
     private GameSession _session = null!;
     private Node3D? _game;
@@ -1081,6 +1081,13 @@ public partial class Main : Node3D
         townLayer.AddChild(_guildScreen);
         _guildScreen.Bind(_session);
         _townScreen.ThievesGuildRequested += () => _guildScreen.Open(_session.State.CurrentPlayer.Id);
+        var tavernScreen = new TavernPanel();
+        townLayer.AddChild(tavernScreen);
+        tavernScreen.Bind(_session);
+        _townScreen.TavernRequested += tavernScreen.Open;
+        _townScreen.Closed += tavernScreen.Close;
+        tavernScreen.ThievesGuildRequested += () => _guildScreen.Open(_session.State.CurrentPlayer.Id);
+        townLayer.MoveChild(_guildScreen, -1); // the guild opens over the tavern
         _kingdomScreen = new KingdomOverviewPanel();
         townLayer.AddChild(_kingdomScreen);
         _kingdomScreen.Bind(_session);
@@ -1138,6 +1145,7 @@ public partial class Main : Node3D
 
         choices.Add(new ScenarioChoice("Demo Valley", options => MapConverter.ToGameState(MapConverter.ToDocument(DemoScenario.Create()), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
         choices.Add(new ScenarioChoice("Two Towns", options => MapConverter.ToGameState(MapConverter.ToDocument(TownsScenario.Create(GameContent.Creatures)), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
+        choices.Add(new ScenarioChoice(EmberMarchScenario.Name, options => MapConverter.ToGameState(MapConverter.ToDocument(EmberMarchScenario.Create(GameContent.Creatures, GameContent.Heroes, GameContent.Buildings)), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts)));
         var editorMaps = Path.Combine(Path.GetDirectoryName(OS.GetUserDataDir())!, EditorMapsFolder);
         if (Directory.Exists(editorMaps))
         {

@@ -36,6 +36,9 @@ public static class PrimalFury
 
     public const int TerrorChancePercent = 30;
 
+    /// <summary>A Warcry specialist's Terror never takes an action with more than this chance (proposal, ADR-114).</summary>
+    public const int MaxTerrorChancePercent = 60;
+
     /// <summary>Blood Rage: the most Attack a stack gains from kills, +2 per level (Master 8).</summary>
     public static int BloodRageMaxAttack(SkillLevel level) => 2 * (int)level;
 

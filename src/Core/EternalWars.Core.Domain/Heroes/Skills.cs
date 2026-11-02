@@ -214,9 +214,25 @@ public static class SkillEffects
     /// skill specialty (rounded down). Used for the effects that are amounts: Melee, Archery, Logistics and the attunements' mana.
     /// </summary>
     public static int WithSpecialty(Hero hero, string skill, int effect) =>
-        hero.Specialty is { Kind: SpecialtyKind.Skill } specialty && specialty.Target == skill
+        IsSpecialty(hero, skill) && hero.Specialty!.Amount == 0
             ? effect * (100 + (SpecialtyPercentPerLevel * hero.Level)) / 100
             : effect;
+
+    /// <summary>Whether <paramref name="skill"/> is the hero's skill specialty, per level or flat.</summary>
+    public static bool IsSpecialty(Hero hero, string skill) => hero.Specialty is { Kind: SpecialtyKind.Skill } specialty && specialty.Target == skill;
+
+    /// <summary>
+    /// A flat skill specialty's amount (ADR-093, ADR-107): <c>skill pathfinding.logistics 10</c> is +10 % movement even without the skill,
+    /// <c>skill magic.necropolis.attunement 5</c> +5 Necromancy points with the skill; 0 for any other hero.
+    /// </summary>
+    public static int FlatSpecialty(Hero hero, string skill) => IsSpecialty(hero, skill) ? hero.Specialty!.Amount : 0;
+
+    /// <summary>
+    /// A Tactics specialist's extra deployment columns (proposal, ADR-114): +1, +2 from hero level 10; only with the skill (no deployment
+    /// without it).
+    /// </summary>
+    public static int TacticsSpecialtyColumns(Hero hero) =>
+        IsSpecialty(hero, BuiltInSkills.Tactics) && hero.SkillLevelOf(BuiltInSkills.Tactics) > SkillLevel.None ? (hero.Level >= 10 ? 2 : 1) : 0;
 
     public static int MeleeDamagePercent(SkillLevel level) => level switch
     {
@@ -257,6 +273,9 @@ public static class SkillEffects
         SkillLevel.Master => 1000,
         _ => 0,
     };
+
+    /// <summary>The hero's daily Treasury gold, raised by a Treasury specialty (ADR-107); the interest is not.</summary>
+    public static int TreasuryGold(Hero hero) => WithSpecialty(hero, BuiltInSkills.Treasury, TreasuryGold(hero.SkillLevelOf(BuiltInSkills.Treasury)));
 
     /// <summary>Treasury Expert and Master also pay this share of the player's gold on hand, in tenths of a percent (0.5 %, 1 %).</summary>
     public static int TreasuryInterestPermille(SkillLevel level) => level switch
