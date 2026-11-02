@@ -3,7 +3,7 @@
 Every town building, what it costs, what it needs and what it does, and the creature dwellings of each playable town.
 Rules: ADR-030 (7 of 9 dwellings), ADR-046 (building list), ADR-050 (towns in play), ADR-054 (caravan, map
 dwellings), ADR-056 (blacksmith), ADR-060 (tavern), ADR-063 (governors and Stewardship), ADR-070 (per-town lists, Capitol,
-Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building). All towns share one building list, except the Necropolis's own Necromancy Amplifier (the table can give a town its own rows, ADR-074); their dwellings come from their creature lines. Numbers are a draft.
+Brotherhood price, Necromancy Amplifier), ADR-071 (growth buildings, guild offers, spell book, warcry building), ADR-112 (growth buildings and the war lodge built, per-town rows). All towns share one building list, except their own growth buildings, the Necropolis's Necromancy Amplifier and Stronghold and Swamp Bestiary's war lodge in place of the mage guild (the table gives a town its own rows, ADR-074); their dwellings come from their creature lines. Numbers are a draft.
 
 Sources: `src/Core/data/buildings.csv` (columns in
 [development.md](../technical/development.md#editing-town-buildings)) and `creatures.csv`, embedded in core (ADR-071). Update the
@@ -47,6 +47,13 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | `tavern` | 1 | Tavern | 750 gold, lumber 5 | – | – |
 | `tavern` | 2 | Brotherhood | 1 000 gold, ore 5 | fort 1 | – |
 | `necromancy-amplifier` | 1 | Necromancy Amplifier (Necropolis only) | 1 500 gold, mercury 5 | mage-guild 1 | – |
+| `war-lodge` | 1 | War Lodge / Totem Circle (Stronghold / Swamp Bestiary only, no mage guild there) | 2 000 gold, lumber 5, ore 5 | – | – |
+| `war-lodge` | 2 | Hall of Warcries / Spirit Totems | 3 500 gold, lumber 5, crystal 3 (Swamp: sulfur 3) | – | – |
+| `war-lodge` | 3 | Drums of the Horde / Elder Totem | 5 000 gold, lumber 5, crystal 5 (Swamp: sulfur 5) | – | – |
+| `growth-1` | 1 | the town's own name (below) | 1 000 gold, lumber 5 | dwelling-1 1 | – (tier 1 +5 a week) |
+| `growth-2` | 1 | the town's own name (below) | 1 500 gold, ore 5, 2 of the town's rare resource | dwelling-2 1 | – (tier 2 +2 a week) |
+
+In Stronghold and Swamp Bestiary, Town Hall needs `war-lodge 1` instead of `mage-guild 1`.
 
 | Building | Effect | Status |
 |---|---|---|
@@ -57,6 +64,8 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | Mage Guild | spells of its level, of the town's own school: 3 each at levels 1 and 2, 2 each at levels 3 and 4 (ADR-047, ADR-071); sells a spell book for **500 gold**; a hero in a town with a guild refills its mana (ADR-071); level 4 is a placeholder | ⏳ magic (Phase 5) |
 | Tavern | hire 2 heroes (1 native + 1 adjacent); Brotherhood (**1000 gold + 5 ore**): 4 heroes (2 native, 2 adjacent). Stronghold and Swamp Bestiary (no ring): 1 native + 1 warrior of another town; Brotherhood 2 native + 2 warriors (`TavernRules.Slots`). 2500 gold each (ADR-060); the pool is per player and faction, hired heroes get a starter stack, retreated and surrendered heroes come back as they were (ADR-070, ADR-081). Not built: the map tavern has its own weekly pool of 4 random heroes of any faction, shared by all players (ADR-071) ([towns-and-economy.md](../design/towns-and-economy.md#tavern-implemented-adr-060)) | ✅ (ADR-081); map tavern ⏳ |
 | Caravan | hire creatures from owned map dwellings; move troops between towns (ADR-054); cost and requirement are placeholders | ✅ |
+| War Lodge | Stronghold and Swamp Bestiary instead of the mage guild: a visiting hero (or one in town when it is built) learns the warcries up to the lodge's level, Rally 1, Intimidate 2, Terror 3, and uses those its Warcry skill allows (ADR-112) | ✅ |
+| Growth buildings | +5 a week to every tier-1 dwelling / +2 to every tier-2 dwelling of the town, flat, after the fort's percent (ADR-071, ADR-112) | ✅ |
 | Necromancy Amplifier | Necropolis only, the first town-specific building: +5 % Necromancy for every hero of its owner with Death attunement; more than one adds nothing; a captured one helps its new owner (ADR-069, ADR-070, TOWN-6) | ✅ (ADR-078) |
 
 ## Tech tree
@@ -234,13 +243,17 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 
 - The mage guild 4 stays a placeholder (ADR-070). The fort's fortifications only take effect with sieges (before 1.0 since ADR-099; ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
-- **Per-town names and costs** (ADR-070): the `town` column is built (ADR-074); the only town row so far is the Necropolis's
-  Necromancy Amplifier. Designers fill in the other town rows, and every town later gets a unique building.
+- **Per-town names and costs** (ADR-070, ADR-112): the `town` column is built (ADR-074); the growth buildings and the war lodge have a row
+  per town with its own name and rare resource, and Stronghold and Swamp Bestiary's town hall and (removed) mage guild rows. Every town later
+  gets a unique building.
 - The Capitol's cost and income are placeholders.
-- **Growth buildings** (ADR-071, TOWN-1; placeholders, not built): two per town, one adds **+5 a week** to tier-1 growth, the other
-  **+2** to tier-2, whether the town has one or two dwellings of that tier; each dwelling of the tier gets the bonus (ADR-073).
-  Ids, costs and requirements are not set.
+- **Growth buildings** (ADR-071, TOWN-1; placeholders, built ADR-112): `growth-1` adds **+5 a week** to tier-1 growth (1000 gold +
+  5 lumber, needs a tier-1 dwelling), `growth-2` **+2** to tier-2 (1500 gold + 5 ore + 2 of the town's rare resource, needs a tier-2
+  dwelling); each dwelling of the tier gets the bonus (ADR-073). Names: Haven Drill Yard / Cloister of Vigil, Sylvan Moonlit Glade /
+  Hunters' Lodge, Academy Workshop Annex / Sculptors' Hall, Necropolis Unearthed Graves / Charnel Pit, Inferno Birthing Pools / Cages of
+  Torment, Dungeon Mushroom Rings / Labyrinth, Stronghold Warren / Mess Hall, Swamp Bestiary Spawning Pools / Overgrown Thicket.
 - **Spell buildings** (ADR-071, MAG-2; not built): two more buildings add spells of other schools by the magic circle (HoMM4-like,
   ADR-072, MAG-12): one for each of the two schools next to the town's own on the ring, each adding **1 spell per guild level**
-  the town has; placeholder cost **2000 gold + 5 of the school's resource**, needs **mage guild 2**. Stronghold and Swamp Bestiary get a **3-level placeholder building** that teaches warcries / spiritual totems
-  instead of a mage guild.
+  the town has; placeholder cost **2000 gold + 5 of the school's resource**, needs **mage guild 2**. Stronghold and Swamp Bestiary get the **war lodge** instead of a mage guild (built ADR-112):
+  War Lodge / Hall of Warcries / Drums of the Horde (Swamp: Totem Circle / Spirit Totems / Elder Totem), 2000 gold + 5 lumber + 5 ore,
+  3500 + 5 lumber + 3 crystal (Swamp: sulfur), 5000 + 5 + 5; a visiting hero learns the warcries up to its level (Rally, Intimidate, Terror).

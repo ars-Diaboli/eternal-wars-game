@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Turns;
 
 namespace EternalWars.Core.Generation;
@@ -41,6 +42,31 @@ public enum ConnectionKind
 
     /// <summary>A pair of linked two-way gates, one in each zone (also the way across levels), guarded like a normal passage.</summary>
     Gate,
+
+    /// <summary>
+    /// Format v7 (ADR-112, RMG-11): a pair of linked portals (two-way monoliths) anywhere in the two zones, on any levels; the zones need not touch
+    /// (the layout ignores the connection). Guarded on both ends like a gate.
+    /// </summary>
+    Portal,
+}
+
+/// <summary>What guards the passages of a normal connection (format v7, ADR-112, RMG-11, MAP-20).</summary>
+public enum ConnectionGuard
+{
+    /// <summary>A neutral stack of <see cref="TemplateConnection.GuardValue"/> on the passage (the only guard of gates and portals).</summary>
+    Monsters,
+
+    /// <summary>A neutral garrison in the passage holding troops of <see cref="TemplateConnection.GuardValue"/>; whoever beats them flags it.</summary>
+    Garrison,
+
+    /// <summary>
+    /// A border guard of <see cref="TemplateConnection.Colour"/> on the passage, which leaves after the first key holder; the Keymaster's Tent of that
+    /// colour stands in the <see cref="TemplateConnection.From"/> zone, guarded by <see cref="TemplateConnection.GuardValue"/>.
+    /// </summary>
+    BorderGuard,
+
+    /// <summary>Like <see cref="BorderGuard"/>, but a border gate: it stays and lets every key holder through.</summary>
+    BorderGate,
 }
 
 /// <summary>How much rock lies about inside a zone besides the walls on its borders.</summary>
@@ -189,6 +215,18 @@ public sealed record TemplateConnection
 
     /// <summary>How many passages the connection makes through the border (or pairs of gates, for a gate), spread along it. At least 1.</summary>
     public int Passages { get; init; } = 1;
+
+    /// <summary>What guards a normal connection's passages (format v7); null = the template's <see cref="MapTemplate.ConnectionGuard"/>.</summary>
+    public ConnectionGuard? Guard { get; init; }
+
+    /// <summary>The Keymaster colour of a border guard or gate (format v7); null = one drawn from the seed.</summary>
+    public ObjectColour? Colour { get; init; }
+
+    /// <summary>
+    /// The chance in percent (1–100) that the connection is made (format v7, RMG-13), drawn from the seed; a dropped connection the zones need to stay
+    /// connected is made anyway.
+    /// </summary>
+    public int Chance { get; init; } = 100;
 }
 
 /// <summary>
@@ -198,7 +236,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 6;
+    public const int CurrentFormatVersion = 7;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -235,6 +273,9 @@ public sealed record MapTemplate
     /// </summary>
     public TemplateWeekEvents WeekEvents { get; init; } = new();
 
+    /// <summary>What guards the normal connections that name no guard of their own (format v7, ADR-112, RMG-11); monsters by default.</summary>
+    public ConnectionGuard ConnectionGuard { get; init; } = ConnectionGuard.Monsters;
+
     public IReadOnlyList<TemplateZone> Zones { get; init; } = [];
 
     public IReadOnlyList<TemplateConnection> Connections { get; init; } = [];
@@ -245,4 +286,8 @@ public sealed record MapTemplate
     public int Levels => Underground ? 2 : 1;
 
     public TemplateZone? Zone(string id) => Zones.FirstOrDefault(z => z.Id == id);
+
+    /// <summary>The guard a connection's passages get: its own, else the template's; only a normal connection has other than monsters.</summary>
+    public ConnectionGuard GuardOf(TemplateConnection connection) =>
+        connection.Kind == ConnectionKind.Normal ? connection.Guard ?? ConnectionGuard : ConnectionGuard.Monsters;
 }

@@ -23,7 +23,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
 
-## The template (`MapTemplate`, format v6)
+## The template (`MapTemplate`, format v7)
 - Name, description, supported map sizes, player-count range, max humans, whether an underground level is used, and the
   **maximum number of heroes per player, 1 to 8** (v5, ADR-068; default 8). The generator writes it into the scenario's rules; its
   callers (`MapGenerator.Build`, `EditorMapGenerator.Generate`) may override it with `maxHeroes`. There is no template editor yet; the editor's
@@ -42,15 +42,17 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   - **monster strength**: none, weak, average, strong;
   - **obstacles**: none, sparse, normal, dense; allowed terrains (empty = the level's default pool).
 - **Connections** between zones:
-  - kind: **normal** (a one-tile passage guarded by `GuardValue` army power), **wide** (five tiles, unguarded) or
-    **gate** (linked two-way gates, guarded on both ends; the only way across levels);
+  - kind: **normal** (a one-tile passage guarded by `GuardValue` army power), **wide** (five tiles, unguarded),
+    **gate** (linked two-way gates near the border, guarded on both ends) or **portal** (v7, ADR-112: linked portals anywhere in the two
+    zones, on any levels, guarded on both ends; the layout does not make the zones touch). Gates and portals are the ways across levels;
   - **passages**: 1–8 per connection, spread along the border.
-  - Planned (ADR-070, RMG-11 part; not built): a template may **enable portals** (monoliths, two ends each) so the generator
-    links zones with them, and a connection's guard is a **monster guard or a garrison** ([adventure-map.md](adventure-map.md#utilities-and-travel)),
-    per template.
-  - Planned (ADR-071, not built): a connection may be guarded by a **border guard or border gate** of one of the four
-    Keymaster colours, an option per connection ([adventure-map.md](adventure-map.md#utilities-and-travel), MAP-20); every
-    connection has a **presence probability**, 100 % by default, so a template can make a connection optional (RMG-13).
+  - **Guard** (v7, ADR-112, RMG-11, MAP-20): `connectionGuard` for the template and `guard` per connection: `Monsters` (default),
+    `Garrison` (a neutral garrison in the way holding troops of the guard value; a monster guard where no tile of the way can hold one),
+    `BorderGuard` or `BorderGate` of `colour` (red, green, blue, black; drawn when omitted) on the passage, with the Keymaster's Tent of that
+    colour in the `from` zone, guarded by the guard value (one tent per colour). Only normal connections take them
+    ([adventure-map.md](adventure-map.md#utilities-and-travel)).
+  - **Chance** (v7, RMG-13): 1–100 %, default 100; rolled from the seed. A dropped connection that the zones need to stay connected is made
+    anyway (in template order); the layout still places the zones as if it were there.
 - **Roads** (v2, whole template): on or off, the road type (default dirt), which mines get a road (default lumber and
   ore), whether gates do (default on).
 - **Validator** (`TemplateValidator`): errors for players, sizes, zones, start zones, connections, passages, empty
@@ -143,7 +145,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
   editor to show. A hero may stand in the entrance of its own town (the validator and hero placement accept it).
 
 ## Scope
-- **In 1.0**: mirrored generation (2, 4 or 8 players, axis or point symmetry, [above](#the-template-maptemplate-format-v6), ADR-070);
+- **In 1.0**: mirrored generation (2, 4 or 8 players, axis or point symmetry, [above](#the-template-maptemplate-format-v7), ADR-070);
   saving generated maps as ordinary map files as well as reproducing them from the seed.
 - **Not in 1.0**: water zones/islands, boats (ADR-051), importing HotA templates.
 - Open ❓: how army speed and native terrain feed into treasure and guard values.

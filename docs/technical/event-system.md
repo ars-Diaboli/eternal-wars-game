@@ -150,6 +150,8 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `TownBuildingDowngraded(Town, Building, Level)` | `TownService.Capture` | a captured Capitol dropped to town hall 3 because its new owner already has one (ADR-070); published after `TownOwnerChanged` |
 | `CreaturesRecruited(Town, Creature, Count, Hero, Available)` / `StackUpgraded(Town, Hero, Slot, From, To, Count)` | `TownService` | recruits into the garrison (Hero null) or the visiting hero; a stack upgraded for the price difference |
 | `GarrisonChanged(Town, Slots)` | `TownService`, `BattleService`, `CaravanService`, editor | all seven garrison slots after any change |
+| `HeroEnteredGarrison(Town, Hero)` / `HeroLeftGarrison(Town, Hero, Position)` | `TownService` | the visiting hero became the garrison hero (its army joined the garrison, it left the map) / led the whole garrison out onto the entrance (`GarrisonChanged` and `ArmyChanged` follow; ADR-112) |
+| `WarcriesLearned(Hero, Town, Level)` | `MagicRules` (town visit, building the war lodge) | a Stronghold or Swamp Bestiary war lodge taught the hero warcries up to that level (ADR-112) |
 | `TownCreaturesGrew(Town, Available)` | `TownService` | a new week's growth arrived (after `WeekStarted`), or a plague halved the stock (ADR-084) |
 | `CaravanDispatched(Caravan, Owner, Source, Destination, Creature, Count, Days, Cargo)` | `CaravanService` | a caravan left a map dwelling, a town or a resource provider (ADR-054; `Cargo` set for a resource caravan, ADR-079) |
 | `CaravanArrived(Caravan, Destination, Creature, Count, Cargo)` | `CaravanService` | owner's turn start: the troops joined the destination garrison (`GarrisonChanged` just before), or the cargo the treasury (`ResourcesChanged` just before) |

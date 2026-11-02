@@ -39,7 +39,7 @@ small random map (Phase 3).
       `sim towns` re-run (similar spread, tuning stays CONT-2)
 - [x] `buildings.csv` town column (TOWN-3, ADR-074): a town's rows replace a shared building or add one only it has; `BuildingCatalog.For`,
       `TownRules.Buildings`; the town screen, editor, validator and AI use the town's list (the Necromancy Amplifier is the first town row)
-- [ ] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks; MAP-22); the undead Ruins → Crypt
+- [x] Bank tables re-drafted per faction (2–3 creature types of one faction, old and new banks; MAP-22, ADR-112); the undead Ruins → Crypt
       rename with old maps loading `bank.ruins` is done (ADR-082)
 
 ## Phase 0: Foundation ✅
@@ -201,14 +201,15 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
 - [x] Mage guild: spells per level drawn at game start, teaches them, refills mana after a night there, sells the spell book (500 gold; town screen button
       and the guild's spells listed, Godot part not run yet) (ADR-071, ADR-110)
-- [ ] Growth buildings (placeholder, ADR-071): +5 a week for tier 1, +2 for tier 2, per town in `buildings.csv`; the AI builds them
-- [ ] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071)
+- [x] Growth buildings (placeholder, ADR-071, ADR-112): +5 a week for tier 1, +2 for tier 2, per town in `buildings.csv`; the AI builds them
+- [x] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071;
+      the war lodge, ADR-112)
 - [ ] Two spell buildings per town, one per ring neighbour's school, 1 spell per guild level each (2000 gold + 5 of the school's resource,
       needs guild 2; ADR-072)
 - [x] Capitol (town hall 4, ADR-070, ADR-074): Village / Town / City Hall / Capitol; one per player (build refused, captured one drops to
       City Hall, `TownBuildingDowngraded`, validator error); placeholder 15 000 gold + 25 lumber + 25 ore, needs the Castle, 4000 a day; the AI
       builds it last
-- [ ] Per-town names, costs and requirements filled in `buildings.csv` (the column exists, ADR-074); every town's unique
+- [x] Per-town names, costs and requirements filled in `buildings.csv` (the column exists, ADR-074, ADR-112); every town's unique
       building comes later
 - [x] Dwellings on the adventure map (ADR-054): `CreatureDwelling`, weekly growth, flagging, recruiting by a visiting hero
       (`RecruitAtDwellingCommand`); map format v12; editor placement and `SetDwelling`; validator
@@ -315,8 +316,8 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] The battle AI retreats when its army is worth 20 % of the enemy's or less (ADR-081; threshold: tuning)
 - [x] Tavern pools per player and faction (ADR-070, ADR-081): same-faction towns share the offers; basic 1 native + 1 adjacent, the
       Brotherhood 2 native + 2 adjacent
-- [ ] Hero limit: prisoners and waiting heroes do not count (done); heroes in a town garrison wait for garrison heroes, which do not exist
-      yet (ADR-072, ADR-081)
+- [x] Hero limit: prisoners and waiting heroes do not count; heroes in a town garrison do not either (garrison heroes, ADR-072, ADR-081,
+      ADR-112: enter and leave the garrison, lead it in sieges, no retreat)
 - [x] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack: a week's growth of their preferred creature (ADR-070, ADR-081)
 - [x] Hire buttons in the town panel (`TownPanel`)
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
@@ -465,7 +466,7 @@ Same steps per object as above (map format v23, editor, validator, AI, generator
 - [x] Six creature banks: Ruins (orcs), Lair, Keep, Hideout, Forest Glen, Dragon City (the strongest); the undead Ruins renamed Crypt
 - [x] Window and Eye of the Magi (four colours, radius 6, up to 4 Eyes a colour; editor only, not generated)
 - [x] Garrison (flagged, captured by its guards, both ways, leave and take troops)
-- [ ] Generator option to guard connections with garrisons, border guards or gates (RMG-11, template format)
+- [x] Generator option to guard connections with garrisons, border guards or gates (RMG-11, template v7, ADR-112)
 - [x] Map tavern (4 offers from its own weekly pool of random heroes shared by all players; hire at the entrance, hero on the
       next free cell, hero limit; ADR-070, ADR-071)
 - [x] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
@@ -507,7 +508,7 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Template model + `*.ewtemplate.json` (v1; v2 roads, v3 start buildings, v4 teams): sizes, players, levels, zones (type, owner, size, level, towns, richness,
       treasure bands, monster strength, terrains), connections (guard value, wide / guarded / gate) ([random-maps.md](../design/random-maps.md), ADR-064)
 - [x] Teams in templates: a team per start zone, `teamsLocked` (RMG-6, template v4)
-- [ ] Template model follow-ups (ADR-070): portals (monoliths) linking zones, garrisons as a connection guard; optional
+- [x] Template model follow-ups (ADR-070, ADR-112, template v7): portals (monoliths) linking zones, garrisons as a connection guard; optional
       connections with a presence probability (100 % default), border guards and gates as a connection option (ADR-071)
 - [ ] Teams 2–8 (ADR-070): team defaults and restrictions in templates and maps; the map editor may override the template's;
       new-game screen respects them
@@ -605,7 +606,8 @@ Power, an element per spell.
       ammo cart; War machines skill group (Ballistics, Healing, Ammo supply); units at the back of the field, offensive
       machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle
 - [x] Exchanging war machines between heroes (ADR-070, ADR-083: `GiveWarMachineCommand`, exchange panel, AI)
-- [ ] Towns keep machines only through a garrison hero (waits for garrison heroes); war machine tuning
+- [x] Towns keep machines only through a garrison hero (ADR-112)
+- [ ] War machine tuning
 - [x] Teleporting creatures move like flyers (ADR-070, ADR-083: `Teleporting` capability; no creature has it yet)
 - [x] Siege battles (ADR-099, ADR-106, ADR-109): every battle at a town with a Fort (garrison or a hero in its own town); 36-wide field;
       4 wall sections (2 points, 3 at Castle) and a 1-point gate the defenders pass; keep (Citadel) and two towers (Castle) shooting

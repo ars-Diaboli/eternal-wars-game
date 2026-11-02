@@ -61,7 +61,8 @@ public static class ZoneLayouter
         var streams = new SeedStreams(seed);
         var zones = template.Zones;
         var index = zones.Select((z, i) => (z.Id, i)).ToDictionary(p => p.Id, p => p.i, StringComparer.Ordinal);
-        var edges = template.Connections.Select(c => (A: index[c.From], B: index[c.To])).ToList();
+        // Portals join zones anywhere, so their zones need not touch (ADR-112).
+        var edges = template.Connections.Where(c => c.Kind != ConnectionKind.Portal).Select(c => (A: index[c.From], B: index[c.To])).ToList();
         var cells = new int[template.Levels][];
         var unmet = new List<(string, string)>();
 

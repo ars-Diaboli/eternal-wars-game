@@ -171,7 +171,7 @@ every own stack a little each round; the cart adds shots (unlimited with Advance
 apply in sieges (ADR-063, ADR-106, built ADR-109): the attacker's offensive machine is the siege engine and always joins a siege (below).
 
 Heroes **exchange** machines in their exchange: one moves to the other hero when it has none in that slot; an offensive machine becomes the
-receiver's town's kind (ADR-070, ADR-083). A town garrison holds machines only through a hero in it (not built: no garrison heroes yet).
+receiver's town's kind (ADR-070, ADR-083). A town garrison holds machines only through a hero in it (garrison heroes, ADR-112: the hero's machines fight in the siege).
 Spells may target machines; they are `mechanical` and resist many spells (CMB-3, MAG-4).
 
 ADR-073 (HERO-4, built with ADR-076): like HoMM3, a machine stands mostly outside the grid and occupies **only the outermost

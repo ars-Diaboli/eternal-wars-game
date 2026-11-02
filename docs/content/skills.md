@@ -239,7 +239,7 @@ does nothing, and their level-ups use **even odds, 25 / 25 / 25 / 25 %** at ever
 | Warcry / Spiritual Totems (working names, 3 points) | `rage.second` | Expert | Rally: own stacks +1 morale, 3 rounds | + Intimidate: enemy stacks −1 morale, −20 % initiative, 2 rounds | + Terror: each enemy stack loses its next action with 30 % | – | ✅ |
 | Interference (3 points) | `rage.third` | Expert | the enemy hero's spells have −2 Spell Power and cost +1 mana | −4, +2 | −6, +3 | – | ⏳ data only, needs casting (Phase 5) |
 
-Warcries cost no mana (the group's mages have no school): one warcry a round, each once per battle. A warcry is a free action of the hero:
+Warcries cost no mana (the group's mages have no school): one warcry a round, each once per battle. A hero uses a warcry only once a **war lodge** of its level taught it (Rally 1, Intimidate 2, Terror 3; ADR-112), up to its skill level. A warcry is a free action of the hero:
 the player may use it whenever one of their units is up, and it does not use that unit's action (the same holds for spells, ADR-071, MAG-4). Rally and
 Intimidate count from the round after the one they were used in; Terror takes effect at once. The Shamanism drafts in
 [spells.md](spells.md) are the source of the warcries.
