@@ -33,8 +33,9 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Pay(player, TownRules.BuildCost(state, town, level));
         town.SetLevel(building, level.Level);
         town.LastBuilt = state.Date;
+        town.LastBuiltName = level.Name;
         events.Publish(new TownBuilt(town.Id, building, level.Level));
-        if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge)
+        if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null)
         {
             Magic.MagicRules.VisitBy(state, events, town);
         }
@@ -50,6 +51,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Pay(player, TownRules.BuildCost(state, town, level));
         town.SetDwelling(line, level.Level);
         town.LastBuilt = state.Date;
+        town.LastBuiltName = level.Level == 1 ? $"{definition.Name} dwelling" : $"{definition.Name} dwelling upgrade";
         if (level.Level == 1)
         {
             // HoMM3: a new dwelling opens with its first week of creatures, fort bonus included (ADR-066).

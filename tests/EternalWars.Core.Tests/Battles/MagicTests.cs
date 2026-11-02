@@ -171,6 +171,94 @@ public class MagicTests
         Assert.False(session.Execute(new BuySpellBookCommand(Blue, town.Id)).IsAccepted);
     }
 
+    // Spell buildings of other schools (ADR-072, MAG-12) ----------------------------------------------
+
+    [Theory]
+    [InlineData(TownIds.Sylvan, TownIds.Haven, TownIds.Inferno)]
+    [InlineData(TownIds.Haven, TownIds.Academy, TownIds.Sylvan)]
+    [InlineData(TownIds.Academy, TownIds.Dungeon, TownIds.Haven)]
+    [InlineData(TownIds.Dungeon, TownIds.Academy, TownIds.Necropolis)]
+    [InlineData(TownIds.Necropolis, TownIds.Dungeon, TownIds.Inferno)]
+    [InlineData(TownIds.Inferno, TownIds.Necropolis, TownIds.Sylvan)]
+    public void EveryRingTown_HasTheSpellBuildingsOfItsTwoRingNeighbours_NeedingGuildTwo(string town, string first, string second)
+    {
+        var buildings = BuildingCatalog.Default.For(town);
+        var schools = buildings.TownBuildings.Select(BuiltInBuildings.SchoolOf).OfType<string>().Order(StringComparer.Ordinal);
+
+        Assert.Equal(new[] { first, second }.Order(StringComparer.Ordinal), schools);
+        foreach (var school in schools)
+        {
+            var level = buildings.Get(BuiltInBuildings.SpellSchool(school), 1);
+            Assert.Equal(1, buildings.MaxLevel(level.Building));
+            Assert.Equal(2000, level.Cost.Gold);
+            Assert.Equal(5, level.Cost.Mercury + level.Cost.Crystal + level.Cost.Sulfur);
+            Assert.Contains(new BuildingRequirement(BuiltInBuildings.MageGuild, 2), level.Requires);
+        }
+    }
+
+    [Fact]
+    public void PrimalFuryTowns_HaveNoSpellBuildings()
+    {
+        Assert.DoesNotContain(BuildingCatalog.Default.For(TownIds.Stronghold).TownBuildings, b => BuiltInBuildings.SchoolOf(b) is not null);
+        Assert.DoesNotContain(BuildingCatalog.Default.For(TownIds.SwampBestiary).TownBuildings, b => BuiltInBuildings.SchoolOf(b) is not null);
+    }
+
+    [Fact]
+    public void ASpellBuilding_AddsOneSpellOfItsSchoolPerLevel_AndTheGuildTeachesThemUpToItsLevel()
+    {
+        var (session, town, hero) = HeroBeforeTown();
+        var state = session.State;
+        var school = MagicRules.SchoolSpells(state, town, TownIds.Academy);
+
+        Assert.Equal([1, 2, 3, 4], school.Select(s => state.Spells.Get(s).Level));
+        Assert.All(school, s => Assert.Equal(TownIds.Academy, state.Spells.Get(s).School));
+        Assert.Equal(school, MagicRules.SchoolSpells(state, town, TownIds.Academy)); // the same all game
+
+        town.SetLevel(BuiltInBuildings.MageGuild, 2);
+        Assert.DoesNotContain(MagicRules.Offered(state, town), s => state.Spells.Get(s).School == TownIds.Academy);
+        town.SetLevel(BuiltInBuildings.SpellSchool(TownIds.Academy), 1);
+        Assert.Equal(school.Take(2), MagicRules.Offered(state, town).Where(s => state.Spells.Get(s).School == TownIds.Academy));
+
+        hero.HasSpellBook = true;
+        hero.Skills.Set(MagicRules.MagicSkill(TownIds.Academy), SkillLevel.Basic);
+        session.Step(A, Direction.North);
+
+        Assert.Contains(school[0], hero.Spells.Keys);
+        Assert.DoesNotContain(school[1], hero.Spells.Keys); // level 2 needs Advanced Academy Magic
+    }
+
+    [Fact]
+    public void BuildingASpellBuilding_TeachesTheVisitingHeroAtOnce()
+    {
+        var (session, town, hero) = HeroBeforeTown();
+        var state = session.State;
+        session.Step(A, Direction.North);
+        town.SetLevel(BuiltInBuildings.MageGuild, 2);
+        hero.HasSpellBook = true;
+        hero.Skills.Set(MagicRules.MagicSkill(TownIds.Sylvan), SkillLevel.Advanced);
+        state.GetPlayer(Blue).Resources = new(Gold: 5000, Mercury: 5);
+
+        session.Execute(new BuildCommand(Blue, town.Id, BuiltInBuildings.SpellSchool(TownIds.Sylvan))).ThrowIfRejected();
+
+        Assert.Equal(MagicRules.SchoolSpells(state, town, TownIds.Sylvan).Take(2).Order(StringComparer.Ordinal), hero.Spells.Keys.Where(s => state.Spells.Get(s).School == TownIds.Sylvan));
+        Assert.Equal(new EternalWars.Core.Domain.Economy.ResourceSet(Gold: 3000), state.GetPlayer(Blue).Resources);
+    }
+
+    [Fact]
+    public void TheSchoolSpells_FollowTheGameSeed()
+    {
+        IReadOnlyList<string> Draw(ulong seed)
+        {
+            var state = Create(GameOptionsWithSeed(seed), WideMap);
+            var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+            Start(state);
+            return MagicRules.SchoolSpells(state, town, TownIds.Sylvan);
+        }
+
+        Assert.Equal(Draw(5), Draw(5));
+        Assert.Contains(Enumerable.Range(6, 10), s => !Draw((ulong)s).SequenceEqual(Draw(5)));
+    }
+
     // Casting in battle ---------------------------------------------------------------------------
 
     [Fact]

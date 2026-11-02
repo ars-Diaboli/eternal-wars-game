@@ -24,7 +24,8 @@ public partial class TownPanel : PanelContainer
     private readonly Label _title = new();
     private readonly Button _trade = new() { Text = "Marketplace", TooltipText = "Trade gold against resources" };
     private readonly Button _guild = new() { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" };
-    private readonly HFlowContainer _buildings = new();
+    private readonly HBoxContainer _buildings = new();
+    private readonly Label _builtToday = new();
     private readonly GridContainer _dwellings = new() { Columns = 4 };
     private readonly VBoxContainer _armies = new();
     private readonly HBoxContainer _blacksmith = new();
@@ -48,6 +49,9 @@ public partial class TownPanel : PanelContainer
 
     /// <summary>The player opened the Thieves' Guild from this town's tavern (ADR-079).</summary>
     public event Action? ThievesGuildRequested;
+
+    /// <summary>The player opened the tavern screen (ADR-114); when nobody listens, the town screen only has its hire buttons.</summary>
+    public event Action<MapObjectId>? TavernRequested;
 
     public void Bind(GameSession session)
     {
@@ -77,7 +81,8 @@ public partial class TownPanel : PanelContainer
         close.Pressed += Close;
         header.AddChild(close);
 
-        box.AddChild(new Label { Text = "Buildings (one a day)" });
+        box.AddChild(new Label { Text = "Buildings (one a day; hover for cost and requirements)" });
+        box.AddChild(_builtToday);
         box.AddChild(_buildings);
         box.AddChild(new Label { Text = "Dwellings (7 of 9, every tier)" });
         box.AddChild(_dwellings);
@@ -167,33 +172,22 @@ public partial class TownPanel : PanelContainer
         _trade.Visible = town.Level(BuiltInBuildings.Marketplace) > 0;
         _guild.Visible = town.Level(BuiltInBuildings.Tavern) > 0;
 
-        Clear(_buildings);
-        var catalog = TownRules.Buildings(state, town);
-        foreach (var building in catalog.TownBuildings)
-        {
-            var next = TownRules.NextLevel(state, town, building);
-            var refusal = TownRules.CheckBuild(state, town, building);
-            var level = town.Level(building);
-            var button = new Button
-            {
-                Text = next is null ? $"{catalog.Get(building, level).Name} (max)" : $"{next.Name}\n{Cost(TownRules.BuildCost(state, town, next))}",
-                Disabled = refusal is not null,
-                TooltipText = refusal ?? $"Build {next!.Name}",
-            };
-            button.Pressed += () => Run(new BuildCommand(state.CurrentPlayer.Id, town.Id, building));
-            _buildings.AddChild(button);
-        }
+        ShowBuildingTree(state, town);
 
         Clear(_dwellings);
         var resources = state.CurrentPlayer.Resources;
+        var choices = BuildingTree.DwellingChoices(state, town).ToDictionary(c => c.Line.Id);
         foreach (var line in TownRules.Lines(state, town))
         {
             var level = town.DwellingLevel(line.Id);
             var available = town.AvailableOf(line.Id);
+            var choice = choices.GetValueOrDefault(line.Id);
+            var warning = choice is { ClosedLines.Count: > 0 } ? $"  ⚠ closes {string.Join(", ", choice.ClosedLines.Select(l => $"T{l.Tier} {l.Name}"))}" : "";
             _dwellings.AddChild(new Label
             {
-                Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting, +{TownRules.WeeklyGrowth(state, town, line)}/week",
+                Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting, +{TownRules.WeeklyGrowth(state, town, line)}/week{warning}",
                 CustomMinimumSize = new Vector2(240, 0),
+                Modulate = warning.Length > 0 ? new Color(1f, 0.85f, 0.5f) : Colors.White,
             });
 
             var next = TownRules.NextDwellingLevel(state, town, line);
@@ -202,7 +196,7 @@ public partial class TownPanel : PanelContainer
             {
                 Text = next is null ? "—" : $"{(next.Level == 1 ? "Build" : "Upgrade")} {Cost(TownRules.BuildCost(state, town, next))}",
                 Disabled = refusal is not null,
-                TooltipText = refusal ?? "",
+                TooltipText = DwellingTooltip(state, town, next, refusal, choice),
             };
             build.Pressed += () => Run(new BuildDwellingCommand(state.CurrentPlayer.Id, town.Id, line.Id));
             _dwellings.AddChild(build);
@@ -265,11 +259,108 @@ public partial class TownPanel : PanelContainer
         }
 
         // What the guild teaches now (ADR-110).
-        var offered = Core.Domain.Magic.MagicRules.Offered(town).Select(s => state.Spells.TryGet(s, out var spell) ? spell.Name : s).ToList();
+        var offered = Core.Domain.Magic.MagicRules.Offered(state, town).Select(s => state.Spells.TryGet(s, out var spell) ? spell.Name : s).ToList();
         if (offered.Count > 0)
         {
             _blacksmith.AddChild(new Label { Text = $"Mage guild: {string.Join(", ", offered)}" });
         }
+    }
+
+    /// <summary>
+    /// The building tree (ADR-114): one column per requirement depth (what needs nothing on the left), a button per building with its next level
+    /// and cost; the tooltip lists the cost, each requirement (✓ met, ✗ missing), what the level pays or grows, and why it cannot be built.
+    /// Built-out buildings are green, those waiting on others grey, the rest show whether they wait for tomorrow or for resources.
+    /// </summary>
+    private void ShowBuildingTree(GameState state, Town town)
+    {
+        Clear(_buildings);
+        _builtToday.Text = town.LastBuilt == state.Date
+            ? $"Built today: {town.LastBuiltName ?? "a building"}. The next building can go up tomorrow."
+            : "Nothing built today yet.";
+        var step = 0;
+        foreach (var column in BuildingTree.For(state, town).GroupBy(n => n.Depth))
+        {
+            step++;
+            var box = new VBoxContainer { CustomMinimumSize = new Vector2(170, 0) };
+            box.AddChild(new Label { Text = column.Key == 0 ? "Needs nothing" : $"Then ({step})", Modulate = new Color(0.75f, 0.75f, 0.75f) });
+            _buildings.AddChild(box);
+            foreach (var node in column)
+            {
+                var building = node.Building;
+                var button = new Button
+                {
+                    Text = node.Next is null
+                        ? $"{node.Name} ✓"
+                        : $"{node.Name} ({node.Level + 1}/{node.MaxLevel})\n{Cost(node.Cost!.Value)}",
+                    Disabled = node.Status != BuildingStatus.Available,
+                    TooltipText = BuildingTooltip(node),
+                    Modulate = node.Status switch
+                    {
+                        BuildingStatus.Complete => new Color(0.6f, 1f, 0.6f),
+                        BuildingStatus.NeedsBuildings => new Color(0.7f, 0.7f, 0.7f),
+                        BuildingStatus.CannotAfford => new Color(1f, 0.75f, 0.6f),
+                        _ => Colors.White,
+                    },
+                };
+                button.Pressed += () => Run(new BuildCommand(state.CurrentPlayer.Id, town.Id, building));
+                box.AddChild(button);
+            }
+        }
+    }
+
+    private static string BuildingTooltip(BuildingNode node)
+    {
+        if (node.Next is not { } next)
+        {
+            return $"{node.Name}: fully built.";
+        }
+
+        var lines = new List<string> { $"{next.Name} (level {next.Level} of {node.MaxLevel})", $"Cost: {Cost(node.Cost!.Value)}" };
+        lines.AddRange(node.Requires.Select(r => $"{(r.Met ? "✓" : "✗")} needs {r.Name}"));
+        if (!next.Income.IsEmpty)
+        {
+            lines.Add($"Pays {Cost(next.Income)} a day");
+        }
+
+        if (next.Growth is { } growth)
+        {
+            lines.Add($"Every tier {growth.Tier} dwelling grows {growth.Amount} more a week");
+        }
+
+        if (BuiltInBuildings.SchoolOf(next.Building) is { } school)
+        {
+            lines.Add($"Adds one {school} spell per mage guild level");
+        }
+
+        lines.Add(node.Status switch
+        {
+            BuildingStatus.Available => "Click to build.",
+            BuildingStatus.BuiltToday => "Built something today: tomorrow.",
+            _ => node.Refusal ?? "",
+        });
+        return string.Join("\n", lines);
+    }
+
+    private static string DwellingTooltip(GameState state, Town town, BuildingLevel? next, string? refusal, DwellingChoice? choice)
+    {
+        if (next is null)
+        {
+            return "Fully built.";
+        }
+
+        var lines = new List<string> { $"Cost: {Cost(TownRules.BuildCost(state, town, next))}" };
+        if (choice is { TiersLeftOut.Count: > 0 })
+        {
+            lines.Add($"Would leave no room for tier {string.Join(", ", choice.TiersLeftOut)} (7 of 9 dwellings, every tier).");
+        }
+
+        if (choice is { ClosedLines.Count: > 0 })
+        {
+            lines.Add($"Building it means you can no longer build: {string.Join(", ", choice.ClosedLines.Select(l => $"T{l.Tier} {l.Name}"))}.");
+        }
+
+        lines.Add(refusal ?? "Click to build.");
+        return string.Join("\n", lines);
     }
 
     /// <summary>The garrison hero (ADR-112): the visiting hero moves in, or the garrison hero leads the garrison out.</summary>
@@ -459,6 +550,13 @@ public partial class TownPanel : PanelContainer
         }
 
         _tavern.AddChild(new Label { Text = $"Tavern {level}", CustomMinimumSize = new Vector2(110, 0) });
+        if (TavernRequested is not null)
+        {
+            var open = new Button { Text = "Visit the tavern…", TooltipText = "The heroes for hire with their skills, specialty and troops" };
+            open.Pressed += () => TavernRequested?.Invoke(town.Id);
+            _tavern.AddChild(open);
+        }
+
         foreach (var offer in TavernRules.Offers(state, state.CurrentPlayer.Id, town))
         {
             var refusal = TavernRules.CheckHire(state, town, offer.Id);

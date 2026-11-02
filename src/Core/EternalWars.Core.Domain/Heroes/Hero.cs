@@ -218,7 +218,7 @@ public sealed class Hero(
     /// </summary>
     public int ScoutingRadius
     {
-        get => _baseScoutingRadius + SkillEffects.ScoutingRadius(SkillLevelOf(BuiltInSkills.Scouting)) + Bonus.Sight;
+        get => _baseScoutingRadius + SkillEffects.WithSpecialty(this, BuiltInSkills.Scouting, SkillEffects.ScoutingRadius(SkillLevelOf(BuiltInSkills.Scouting))) + Bonus.Sight;
         internal set => _baseScoutingRadius = value;
     }
 

@@ -6,10 +6,12 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -271,5 +273,43 @@ public class ThirdCatalogueTests
 
         Assert.Contains("\"sphinx\"", record, StringComparison.Ordinal);
         Assert.Equal(GameStateDigest.Describe(session.State), GameStateDigest.Describe(replayed.State));
+    }
+
+    // The editor (ADR-114) ------------------------------------------------------------------------
+
+    [Fact]
+    public void TheEditor_SetsASphinxsRiddle_RefusesBadOnes_AndUndoes()
+    {
+        var editor = new MapEditorSession(BlankScenario.Create(10, 6));
+        editor.PlaceObject(BuiltInMapObjects.Sphinx, new(2, 2), out var id);
+        var sphinx = (Sphinx)editor.Scenario.FindObject(id)!;
+
+        Assert.Equal(EditResult.InvalidValue, editor.SetSphinxRiddle(id, new Riddle("Q?", "a", "A ", "b"))); // two answers the same
+        Assert.Equal(EditResult.InvalidValue, editor.SetSphinxRiddle(id, new Riddle(" ", "a", "b", "c")));
+        Assert.Equal(EditResult.Ok, editor.SetSphinxRiddle(id, new Riddle(" What walks? ", "A man", "A dog", "A fish")));
+        Assert.Equal(new Riddle("What walks?", "A man", "A dog", "A fish"), sphinx.Riddle);
+
+        editor.Undo();
+        Assert.Null(sphinx.Riddle);
+        Assert.Equal(EditResult.InvalidTarget, editor.SetSphinxRiddle(new MapObjectId(999), null));
+    }
+
+    [Fact]
+    public void TheEditor_SetsAWitchHutsTwoSkills_OrNone_AndUndoes()
+    {
+        var editor = new MapEditorSession(BlankScenario.Create(10, 6));
+        editor.PlaceObject(BuiltInMapObjects.WitchHut, new(2, 2), out var id);
+        var hut = (WitchHut)editor.Scenario.FindObject(id)!;
+
+        Assert.Equal(EditResult.InvalidValue, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery]));
+        Assert.Equal(EditResult.InvalidValue, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery, BuiltInSkills.Archery]));
+        Assert.Equal(EditResult.InvalidValue, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery, "no.such-skill"]));
+        Assert.Equal(EditResult.Ok, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery, BuiltInSkills.Logistics]));
+        Assert.Equal([BuiltInSkills.Archery, BuiltInSkills.Logistics], hut.Skills);
+        Assert.Equal(EditResult.Ok, editor.SetWitchHutSkills(id, []));
+        Assert.Empty(hut.Skills);
+
+        editor.Undo();
+        Assert.Equal([BuiltInSkills.Archery, BuiltInSkills.Logistics], hut.Skills);
     }
 }

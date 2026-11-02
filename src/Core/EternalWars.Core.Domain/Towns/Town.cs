@@ -73,6 +73,9 @@ public sealed class Town : MapObject, IFlaggable
     /// <summary>The day the town last built something; one building per town per day.</summary>
     public GameDate? LastBuilt { get; internal set; }
 
+    /// <summary>What the town built on <see cref="LastBuilt"/> (the level's name, or the dwelling's), for the town screen; null when not known (a map's town).</summary>
+    public string? LastBuiltName { get; internal set; }
+
     /// <summary>
     /// The spells its mage guild teaches, per spell level (ADR-110): drawn once at game start from the town's school, whether the guild is built
     /// or not; a guild of level L teaches levels 1 to L.

@@ -303,7 +303,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <summary>Blood Rage (ADR-067): a stack that killed creatures gains +1 Attack, up to the level's limit, until the battle ends.</summary>
     private void GainRage(BattleUnit attacker, int killed)
     {
-        if (killed <= 0 || attacker.IsMachine || attacker.RageAttack >= PrimalFury.BloodRageMaxAttack(battle.Participant(attacker.Side).Bonus.BloodRage))
+        if (killed <= 0 || attacker.IsMachine || attacker.RageAttack >= battle.Participant(attacker.Side).Bonus.BloodRageMaxAttack)
         {
             return;
         }
@@ -324,6 +324,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         var affected = new List<int>();
+        var strength = battle.Participant(side).Bonus.WarcryPercent; // a Warcry specialist's are stronger (ADR-114)
         switch (warcry)
         {
             case Warcry.Rally:
@@ -332,13 +333,13 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 break;
             case Warcry.Intimidate:
                 battle.SideEffects.Add(new BattleSideEffect(
-                    side.Opponent(), PrimalFury.IntimidateMorale, PrimalFury.IntimidateInitiativePercent, battle.Round + PrimalFury.IntimidateRounds));
+                    side.Opponent(), PrimalFury.IntimidateMorale, PrimalFury.IntimidateInitiativePercent * strength / 100, battle.Round + PrimalFury.IntimidateRounds));
                 affected.AddRange(battle.LivingArmyOf(side.Opponent()).Select(u => u.Id));
                 break;
             default:
                 foreach (var unit in battle.LivingArmyOf(side.Opponent()).OrderBy(u => u.Id))
                 {
-                    if (battle.Random.Next(100) < PrimalFury.TerrorChancePercent)
+                    if (battle.Random.Next(100) < Math.Min(PrimalFury.MaxTerrorChancePercent, PrimalFury.TerrorChancePercent * strength / 100))
                     {
                         unit.LosesNextAction = true;
                         affected.Add(unit.Id);

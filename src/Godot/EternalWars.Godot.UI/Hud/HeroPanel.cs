@@ -163,7 +163,7 @@ public partial class HeroPanel : PanelContainer
         Visible = true;
         _title.Text = $"{hero.Name}, level {hero.Level} {hero.Class}" + (hero.Definition is { } d ? $" ({state.HeroRoster.Get(d).Town})" : "");
         _stats.Text = StatsText(hero);
-        _specialty.Text = hero.Specialty is { } specialty ? $"Specialty: {SpecialtyText(specialty)}" : "No specialty.";
+        _specialty.Text = hero.Specialty is { } specialty ? $"Specialty: {specialty.Describe(_session.State.Spells)}" : "No specialty.";
         ShowSkills(hero);
         ShowArmy(hero);
         ShowArtifacts(hero);
@@ -202,13 +202,6 @@ public partial class HeroPanel : PanelContainer
 
     private static string SpellName(string spell) =>
         EternalWars.Core.Domain.Magic.SpellCatalog.Default.TryGet(spell, out var definition) ? definition.Name : spell;
-
-    private static string SpecialtyText(HeroSpecialty specialty) => specialty.Kind switch
-    {
-        SpecialtyKind.Skill when BuiltInSkills.Contains(specialty.Target) => $"{BuiltInSkills.Get(specialty.Target).Name} (skill)",
-        SpecialtyKind.Resource => $"{specialty.Amount} {specialty.Target} a day",
-        _ => specialty.ToString(),
-    };
 
     private void ShowSkills(Hero hero)
     {

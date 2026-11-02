@@ -559,7 +559,7 @@ public sealed class BattleService(
         if (battle.DeploymentAllowed && chooser is { } side && !battle.IsComputerControlled(side))
         {
             battle.Deployer = side;
-            battle.DeploymentColumns = BattleSetup.DeploymentColumns(battle.Participant(side).Tactics);
+            battle.DeploymentColumns = BattleSetup.DeploymentColumns(battle.Participant(side).Tactics) + battle.Participant(side).Bonus.TacticsColumns;
         }
 
         BattleSetup.Deploy(battle, battle.PendingStacks.Attackers, battle.PendingStacks.Defenders);
@@ -808,7 +808,8 @@ public sealed class BattleService(
         var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine).Select(u => (state.Creatures.Get(u.Creature.Id), u.InitialCount - u.Count));
         var joined = new List<RaisedUndead>();
         foreach (var raised in NecromancyRules.Raise(
-                     slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random, hero.Bonus.NecromancyPercent))
+                     slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random,
+                     NecromancyRules.HeroBonus(hero)))
         {
             if (army.TryAdd(new CreatureStack(raised.Creature, raised.Count)))
             {

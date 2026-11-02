@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
@@ -79,9 +80,37 @@ public static class MagicRules
         return known.Values.OrderBy(k => k.Spell.Id, StringComparer.Ordinal);
     }
 
-    /// <summary>The spells the town's guild teaches now: its drawn spells up to the guild's level.</summary>
-    public static IEnumerable<string> Offered(Town town) =>
-        town.GuildSpells.Where(l => l.Key <= town.Level(BuiltInBuildings.MageGuild)).OrderBy(l => l.Key).SelectMany(l => l.Value);
+    /// <summary>The spells the town's guild teaches now: its drawn spells up to the guild's level, then those of its built spell buildings.</summary>
+    public static IEnumerable<string> Offered(GameState state, Town town) =>
+        town.GuildSpells.Where(l => l.Key <= town.Level(BuiltInBuildings.MageGuild)).OrderBy(l => l.Key).SelectMany(l => l.Value)
+            .Concat(SchoolBuildings(town).SelectMany(school => SchoolSpells(state, town, school).Take(town.Level(BuiltInBuildings.MageGuild))));
+
+    /// <summary>The schools of the town's built spell buildings (ADR-072), in id order.</summary>
+    public static IEnumerable<string> SchoolBuildings(Town town) =>
+        town.Buildings.Where(b => b.Value > 0).Select(b => BuiltInBuildings.SchoolOf(b.Key)).OfType<string>().Order(StringComparer.Ordinal);
+
+    /// <summary>
+    /// The spells a spell building of <paramref name="school"/> adds in this town (ADR-072, MAG-12): one of the school's spells for each spell
+    /// level 1 to 4, in level order; a guild of level L teaches the first L. The pick is a shuffle seeded from the game seed, the town and the
+    /// school, so it is the same all game and needs no stored state, and it does not draw from the game's random numbers (like the tavern pool).
+    /// A level without spells of the school is skipped.
+    /// </summary>
+    public static IReadOnlyList<string> SchoolSpells(GameState state, Town town, string school)
+    {
+        var name = school.Aggregate(14695981039346656037UL, (hash, c) => (hash ^ c) * 1099511628211UL); // FNV-1a: stable across runs
+        var random = new GameRandom((state.Options.Seed * 0x9E3779B97F4A7C15UL) ^ ((ulong)(town.Id.Value + 1) * 0xBF58476D1CE4E5B9UL) ^ name);
+        var spells = new List<string>();
+        for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
+        {
+            var pool = state.Spells.Of(school, level);
+            if (pool.Count > 0)
+            {
+                spells.Add(pool[random.Next(pool.Count)].Id);
+            }
+        }
+
+        return spells;
+    }
 
     /// <summary>
     /// A hero in an own town (on the entrance) with a mage guild learns the offered spells it may and does not know yet. Its mana fills up only
@@ -107,7 +136,7 @@ public static class MagicRules
             return;
         }
 
-        var learned = Offered(town).Where(id => state.Spells.TryGet(id, out var spell) && CanLearn(hero, spell) && hero.Learn(id)).ToList();
+        var learned = Offered(state, town).Where(id => state.Spells.TryGet(id, out var spell) && CanLearn(hero, spell) && hero.Learn(id)).ToList();
         if (learned.Count > 0)
         {
             events.Publish(new SpellsLearned(hero.Id, town.Id, learned));

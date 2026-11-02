@@ -281,7 +281,7 @@ public class HeroProgressionTests
     [Fact]
     public void HeroIncome_PaysTreasuryProspectingAndResourceSpecialties()
     {
-        var hero = Hero.Create(A, Blue, default, null, HeroCatalog.Default.Get("haven.maren")); // resource gold 350
+        var hero = Hero.Create(A, Blue, default, null, HeroCatalog.Default.Get("sylvan.elaith")); // resource gold 350
         hero.Skills.Set(BuiltInSkills.Treasury, SkillLevel.Basic);
         hero.Skills.Set(BuiltInSkills.Prospecting, SkillLevel.Basic);
 
