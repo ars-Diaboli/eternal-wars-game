@@ -56,6 +56,9 @@ public partial class BattleView3D : Node3D
     private MultiMesh _reach = null!;
     private GameSession _session = null!;
     private Tween? _queue;
+    private ulong _queueFrame;
+    private readonly List<QueuedStep> _playing = [];
+    private readonly List<QueuedStep> _waiting = [];
     private int _pending;
     private bool _instant;
     private AnimationSpeed _speed = AnimationSpeed.Normal;
@@ -223,9 +226,7 @@ public partial class BattleView3D : Node3D
     /// <summary>Hides the scene after the result has been seen.</summary>
     public void Close()
     {
-        _queue?.Kill();
-        _queue = null;
-        _pending = 0;
+        ResetQueue();
         IsOpen = false;
         Visible = false;
         Clear();
@@ -295,9 +296,7 @@ public partial class BattleView3D : Node3D
 
     private void Open(BattleStarted e)
     {
-        _queue?.Kill();
-        _queue = null;
-        _pending = 0;
+        ResetQueue();
         Clear();
 
         var state = _session.State;
@@ -623,6 +622,8 @@ public partial class BattleView3D : Node3D
     /// <summary>
     /// Queues one step: <paramref name="animate"/> adds its tweeners (skipped in quick combat), then
     /// <paramref name="apply"/> sets the end state. With nothing queued, a step without animation applies at once.
+    /// Godot cannot append to a tween once it has started playing, so steps arriving later (an AI turn after the last
+    /// animation began, quick combat mid-animation) wait for the next tween; quick combat applies everything queued at once.
     /// </summary>
     private void Step(Action<Tween>? animate, Action apply)
     {
@@ -632,8 +633,15 @@ public partial class BattleView3D : Node3D
         }
 
         _instant |= _session.State.Battle?.AutoResolve == true;
-        var instant = _instant || _speed == AnimationSpeed.Instant;
-        if ((instant || animate is null) && _pending == 0)
+        if (_instant || _speed == AnimationSpeed.Instant)
+        {
+            FlushSteps();
+            apply();
+            OnIdle();
+            return;
+        }
+
+        if (animate is null && _pending == 0)
         {
             apply();
             OnIdle();
@@ -645,26 +653,105 @@ public partial class BattleView3D : Node3D
             RefreshReach(); // busy now: no reach overlay or preview while the queue plays
         }
 
-        if (_queue is null || !_queue.IsValid() || !_queue.IsRunning())
+        var step = new QueuedStep(animate, apply);
+        if (_queue is not null && _queue.IsValid() && _queue.IsRunning())
         {
-            _queue = CreateTween();
-            _queue.SetSpeedScale((float)SpeedSettings.Scale(_speed == AnimationSpeed.Instant ? AnimationSpeed.Normal : _speed));
-        }
-
-        if (!instant)
-        {
-            animate?.Invoke(_queue);
-        }
-
-        _queue.TweenCallback(Callable.From(() =>
-        {
-            apply();
-            _pending--;
-            if (_pending == 0)
+            if (_queueFrame == Engine.GetProcessFrames())
             {
-                OnIdle();
+                Append(_queue, step); // the tween has not played a frame yet
             }
-        }));
+            else
+            {
+                _waiting.Add(step);
+            }
+
+            return;
+        }
+
+        StartQueue([step]);
+    }
+
+    private void StartQueue(IEnumerable<QueuedStep> steps)
+    {
+        var queue = CreateTween();
+        queue.SetSpeedScale((float)SpeedSettings.Scale(_speed == AnimationSpeed.Instant ? AnimationSpeed.Normal : _speed));
+        queue.Finished += () =>
+        {
+            if (_queue == queue && _waiting.Count > 0)
+            {
+                var next = _waiting.ToList();
+                _waiting.Clear();
+                StartQueue(next);
+            }
+        };
+        _queue = queue;
+        _queueFrame = Engine.GetProcessFrames();
+        foreach (var step in steps)
+        {
+            Append(queue, step);
+        }
+    }
+
+    private void Append(Tween queue, QueuedStep step)
+    {
+        _playing.Add(step);
+        step.Animate?.Invoke(queue);
+        queue.TweenCallback(Callable.From(() => Finish(step)));
+    }
+
+    private void Finish(QueuedStep step)
+    {
+        if (step.Done)
+        {
+            return;
+        }
+
+        step.Done = true;
+        _playing.Remove(step);
+        step.Apply();
+        _pending--;
+        if (_pending == 0)
+        {
+            OnIdle();
+        }
+    }
+
+    /// <summary>Stops the animations and applies every queued step in order (quick combat mid-animation).</summary>
+    private void FlushSteps()
+    {
+        if (_pending == 0)
+        {
+            return;
+        }
+
+        _queue?.Kill();
+        _queue = null;
+        foreach (var step in _playing.Concat(_waiting).ToList())
+        {
+            step.Done = true;
+            step.Apply();
+        }
+
+        ResetQueue();
+    }
+
+    private void ResetQueue()
+    {
+        _queue?.Kill();
+        _queue = null;
+        _playing.Clear();
+        _waiting.Clear();
+        _pending = 0;
+    }
+
+    /// <summary>One queued animation step and its end state.</summary>
+    private sealed class QueuedStep(Action<Tween>? animate, Action apply)
+    {
+        public Action<Tween>? Animate { get; } = animate;
+
+        public Action Apply { get; } = apply;
+
+        public bool Done { get; set; }
     }
 
     private void OnIdle()

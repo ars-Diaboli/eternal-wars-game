@@ -87,7 +87,7 @@ public partial class MapObjectsView : Node3D
     private void Add(KnownObject known)
     {
         var root = new Node3D { Name = $"Object_{known.Id.Value}" };
-        var color = Palette.ForObject(known.Definition.Kind);
+        var color = known.Definition.Colour is { } colour ? Palette.ForColour(colour) : Palette.ForObject(known.Definition.Kind);
         foreach (var (dx, dy, cell) in known.Definition.Footprint.OccupiedCells)
         {
             var at = MapSpace.ToWorld(known.Position.Offset(dx, dy));

@@ -35,6 +35,7 @@ namespace EternalWars.Tools.Sim;
 /// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
 /// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
 /// sim layout duel|file.ewtemplate.json [--size 96] [--seed 1] [--rects] [--terrain] [--seeds N]  (zone layout, or with --terrain the painted terrain with walls, of a random map template as text)
+/// sim generate duel|file.ewtemplate.json --out map.ewmap.json [--size N] [--seed 1] [--players N]  (a generated map saved as a file, human players)
 /// sim selftest                      (CI: determinism and replay round trip)
 /// </code>
 /// Any command takes <c>--creatures path/to/creatures.csv</c> to use an edited creature table without rebuilding.
@@ -71,6 +72,7 @@ public static class Program
                 ["layout", var template, .. var rest] => Option(rest, "--seeds", 0) is > 0 and var many
                     ? LayoutBatch(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), many, rest.Contains("--rects"))
                     : Layout(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), rest.Contains("--rects"), rest.Contains("--terrain")),
+                ["generate", var template, "--out", var path, .. var rest] => Generate(template, path, rest),
                 ["selftest"] => SelfTest(),
                 _ => Usage(),
             };
@@ -171,13 +173,31 @@ public static class Program
         return bad == 0 ? 0 : 1;
     }
 
+    /// <summary>
+    /// Generates a map from a template and saves it as a map file, with human players in the start slots and random towns (to open in the
+    /// game or the editor; the smoke scenario <c>game-generated-connections</c> uses it).
+    /// </summary>
+    private static int Generate(string template, string path, string[] args)
+    {
+        var loaded = LoadTemplate(template);
+        var size = Option(args, "--size", loaded.Sizes[0]);
+        var seed = (ulong)Option(args, "--seed", 1);
+        var players = Option(args, "--players", loaded.MaxPlayers);
+        var setups = Enumerable.Range(0, players).Select(slot => new PlayerSetup(slot, $"Player {slot + 1}", IsHuman: true, PlayerSetup.RandomTown)).ToList();
+        var (state, generation) = MapGenerator.Build(loaded, size, seed, setups, new GameOptions(Seed: seed), Catalog);
+        MapSerializer.Save(MapConverter.ToDocument(state), path);
+        Console.WriteLine($"{loaded.Name} at {size}, seed {seed}, attempt {generation.Attempt} -> {path}");
+        generation.Problems.ToList().ForEach(p => Console.WriteLine($"  problem: {p}"));
+        return generation.Problems.Count == 0 ? 0 : 1;
+    }
+
     private static MapTemplate LoadTemplate(string template) =>
         File.Exists(template) ? TemplateSerializer.Load(template) : BuiltInTemplates.Find(template)
             ?? throw new FormatException($"No template '{template}' (built-in: {string.Join(", ", BuiltInTemplates.Keys)}).");
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;

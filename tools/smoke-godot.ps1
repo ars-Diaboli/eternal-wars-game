@@ -27,6 +27,13 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 $exchangeMap = Join-Path $PSScriptRoot 'smoke/exchange.ewmap.json'
 $battleMap = Join-Path $PSScriptRoot 'smoke/battle.ewmap.json'
 $townsMap = Join-Path $PSScriptRoot 'smoke/towns.ewmap.json'
+$siegeMap = Join-Path $PSScriptRoot 'smoke/siege.ewmap.json'
+$caravanMap = Join-Path $PSScriptRoot 'smoke/caravan.ewmap.json'
+# A map generated from the v7 connection options (ADR-112): garrison, border guard and gate with keymasters, portal, optional connection.
+New-Item -ItemType Directory -Force $Out | Out-Null
+$connectionsMap = Join-Path (Resolve-Path $Out) 'connections.ewmap.json'
+dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- generate (Join-Path $PSScriptRoot 'smoke/connections.ewtemplate.json') --out $connectionsMap --seed 1 | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Generating the connections map failed.' }
 $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
        Input = '5:click:133,263;12:click:133,263;20:click:103,140;28:click:30,140;35:key:Q' },
@@ -71,6 +78,21 @@ $scenarios = @(
     # New game, Enter on Start. The only game scenario without --new-game.
     @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 50; MainMenu = $true
        Input = '3:key:Down;6:key:Down;9:key:Enter;20:key:Escape;26:key:Enter;34:key:Enter' },
+    # A siege (ADR-106, ADR-109): step into the neutral Castle-level town; walls, gate, moat, towers and keep. The footman defends, the
+    # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
+    @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap
+       Input = '3:key:Enter;10:key:Up;62:key:D;72:click:955,280;90:key:D;100:key:D;125:key:Q;140:key:Enter' },
+    # A garrison hero (ADR-112): step into the own town, "Orrin into the garrison", "Lead Orrin out", close the town screen.
+    @{ Name = 'game-garrison-hero'; App = 'EternalWars.Game'; Frames = 60; Map = $townsMap
+       Input = '3:key:Enter;10:key:Up;20:click:99,855;35:click:99,855;48:key:Escape' },
+    # Dwellings and caravans (ADR-054, ADR-073): visit a map dwelling and recruit the week, close; T, scroll to the caravan section, hire
+    # from the owned dwelling, close, end two turns (hot-seat) and look again: the footmen are in the garrison.
+    @{ Name = 'game-dwelling-caravan'; App = 'EternalWars.Game'; Frames = 100; Map = $caravanMap
+       Input = '3:key:Enter;10:key:Up;22:click:770,494;28:click:785,380;34:key:T;42:wheel:down,15;50:click:449,697;58:key:Escape;64:click:342,24;72:click:342,24;82:key:T;90:wheel:down,15' },
+    # The generated connections map in the editor (no fog): pan to the portal, the blue border guard, the blue keymaster, the garrison,
+    # the red border gate and the red keymaster (frames 16, 49, 86, 109, 153, 172).
+    @{ Name = 'editor-generated-connections'; App = 'EternalWars.MapEditor'; Frames = 175; Map = $connectionsMap
+       Input = '5:hold:S,8;18:hold:A,19;38:hold:W,8;51:hold:S,18;70:hold:D,13;88:hold:D,10;99:hold:S,7;111:hold:D,8;120:hold:W,30;155:hold:W,10;166:hold:D,3' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' },
     # Generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.

@@ -115,7 +115,7 @@ small random map (Phase 3).
 **Exit** ✅: a hot-seat game on an editor-made map where players race to collect resources. Playable in the game app
 (hot-seat, fog, guards, quick-combat battles); final art comes in Phase 5.
 
-## Phase 2: Armies and combat: done (3D battle scene still to be checked in Godot)
+## Phase 2: Armies and combat ✅
 
 ### Core (Tier 1) ✅
 - [x] Command pipeline (ADR-036): serializable `GameCommand`s through `GameSession.Execute` only (services'
@@ -175,7 +175,7 @@ small random map (Phase 3).
       backdrops, flyer arcs, battle music; the deployment step is in (ADR-076), drag and drop instead of click-to-place later
 
 **Exit**: heroes fight neutral stacks and each other; battles are replayable from logs. Met in core (`sim selftest`,
-replay tests) and in the game app's 3D battle scene; it still has to be checked in Godot.
+replay tests) and in the game app's 3D battle scene, checked in Godot 4.7.2 (`game-battle-3d`, `game-siege`, ADR-113).
 
 ## Phase 3: Towns and progression
 
@@ -200,7 +200,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Map marketplace object: a visiting hero trades at the fixed X = 4 rate; map format v14, editor placement, validator; the generator places it as a treasure item where the zone's treasure value allows (ADR-067)
 - [x] Blacksmith: sells the healing tent, the ammo cart and a lost offensive machine to the visiting hero (ADR-056)
 - [x] Mage guild: spells per level drawn at game start, teaches them, refills mana after a night there, sells the spell book (500 gold; town screen button
-      and the guild's spells listed, Godot part not run yet) (ADR-071, ADR-110)
+      and the guild's spells listed; the spells seen in Godot, ADR-113, the spell book button not run yet) (ADR-071, ADR-110)
 - [x] Growth buildings (placeholder, ADR-071, ADR-112): +5 a week for tier 1, +2 for tier 2, per town in `buildings.csv`; the AI builds them
 - [x] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071;
       the war lodge, ADR-112)
@@ -223,11 +223,11 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
       within the raw reach (hostile blockers ignored, `CaravanRules.Dwellings`), ordering needs an open route within it; the AI builds and
       hires within reach (travel days by the map speed until ADR-079)
 - [x] Caravan queue on the town screen: caravans coming here, on their way (fewest days left first) then waiting at a full garrison
-      (`CaravanRules.Queue`), and those sent from here (ADR-073; Godot part not run yet)
+      (`CaravanRules.Queue`), and those sent from here (ADR-073; seen in Godot, ADR-113)
 - [x] Map dwellings sell base creatures only: the editor offers and accepts base creatures (`EditResult.UpgradedCreature`), the validator
       rejects upgrades, older maps load the line's base creature (ADR-073, ADR-075)
-- [ ] Smoke scenario for dwellings and caravans (needs Godot); caravan cost tuning; dwelling guards are
-      in the objects block below (ADR-068)
+- [x] Smoke scenario for dwellings and caravans (`game-dwelling-caravan`, `tools/smoke/caravan.ewmap.json`, ADR-113)
+- [ ] Caravan cost tuning; dwelling guards are in the objects block below (ADR-068)
 - [x] Caravan speed (ADR-079, TOWN-10): 2500 movement points a day at the plain step cost for every caravan (3 days at most)
 - [x] Caravan limit (ADR-079, TOWN-10): 6 caravans coming to a town at once, 8 with a governor, refused at the limit; the caravan section
       shows the count
@@ -317,7 +317,7 @@ replay tests) and in the game app's 3D battle scene; it still has to be checked 
 - [x] Tavern pools per player and faction (ADR-070, ADR-081): same-faction towns share the offers; basic 1 native + 1 adjacent, the
       Brotherhood 2 native + 2 adjacent
 - [x] Hero limit: prisoners and waiting heroes do not count; heroes in a town garrison do not either (garrison heroes, ADR-072, ADR-081,
-      ADR-112: enter and leave the garrison, lead it in sieges, no retreat)
+      ADR-112: enter and leave the garrison, lead it in sieges, no retreat; the town screen buttons seen in Godot, `game-garrison-hero`, ADR-113)
 - [x] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack: a week's growth of their preferred creature (ADR-070, ADR-081)
 - [x] Hire buttons in the town panel (`TownPanel`)
 - [ ] Tavern screen in the game app with hero details (waits for the town screen)
@@ -466,7 +466,8 @@ Same steps per object as above (map format v23, editor, validator, AI, generator
 - [x] Six creature banks: Ruins (orcs), Lair, Keep, Hideout, Forest Glen, Dragon City (the strongest); the undead Ruins renamed Crypt
 - [x] Window and Eye of the Magi (four colours, radius 6, up to 4 Eyes a colour; editor only, not generated)
 - [x] Garrison (flagged, captured by its guards, both ways, leave and take troops)
-- [x] Generator option to guard connections with garrisons, border guards or gates (RMG-11, template v7, ADR-112)
+- [x] Generator option to guard connections with garrisons, border guards or gates (RMG-11, template v7, ADR-112; seen in Godot,
+      `editor-generated-connections`, ADR-113)
 - [x] Map tavern (4 offers from its own weekly pool of random heroes shared by all players; hire at the entrance, hero on the
       next free cell, hero limit; ADR-070, ADR-071)
 - [x] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
@@ -617,8 +618,9 @@ Power, an element per spell.
 - [ ] Sieges: one defending shooter in the keep (ADR-106 g); Earthquake (with magic)
 - [x] Sieges: the AI attacking a fortified town only when its estimate (a siege fight) wins, defending behind the walls, walking to a
       breach (ADR-109)
-- [ ] Sieges: the 3D battle scene (walls, gate, keep, towers, moat, rubble, shots, aiming the engine at a structure) is built but not run
-      in Godot yet; a smoke scenario; the town's own look on the siege field
+- [x] Sieges: the 3D battle scene (walls, gate, keep, towers, moat, rubble, shots, aiming the engine at a structure) run in Godot 4.7.2,
+      smoke scenario `game-siege` (`tools/smoke/siege.ewmap.json`); a tween bug in quick combat mid-animation fixed (ADR-113)
+- [ ] Sieges: the town's own look on the siege field
 - [x] Battle movement as a circle (ADR-088, ADR-089, CMB-9): reach within Speed + 0.25 cells at any angle (Theta* around obstacles),
       flyers and teleporters by straight-line distance, the distance penalty measured the same way, battle speeds +10 %; old replay
       digests change

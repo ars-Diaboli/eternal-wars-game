@@ -51,7 +51,10 @@ public partial class Main : Node3D
         _camera = new StrategyCamera { Name = "Camera" };
         AddChild(_camera);
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
-        Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
+        // --map=file opens that map (the smoke scenarios), else a blank one.
+        Open(LaunchArguments.MapPath is { } path
+            ? MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts)
+            : BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
     }
 
     public override void _UnhandledInput(InputEvent @event)

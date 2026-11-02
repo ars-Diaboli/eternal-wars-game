@@ -100,8 +100,11 @@ Any command takes `--creatures path.csv`.
   definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
 - Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
   (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `game-town-screen`,
-  `game-hero-screen`, `game-kingdom`, `game-weeks`, `game-thieves-guild`, `game-random-map`, `game-main-menu`, `editor-tools`, `editor-generate`, `editor-week-events`)
-  and saves frames to `.shots/`. In a fresh clone import the assets once per app first
+  `game-hero-screen`, `game-kingdom`, `game-weeks`, `game-thieves-guild`, `game-random-map`, `game-main-menu`, `game-siege`, `game-garrison-hero`,
+  `game-dwelling-caravan`, `editor-generated-connections`, `editor-tools`, `editor-generate`, `editor-week-events`)
+  and saves frames to `.shots/`. Script entries are `frame:kind:argument` with the kinds `click` / `rclick` (x,y), `key` (a Godot key name),
+  `hold` (`Key,frames`, for camera panning) and `wheel` (`up|down,count`). The editor opens `--map=<file>`; `sim generate <template> --out <file>`
+  saves a generated map to open there (`editor-generated-connections` does that first). In a fresh clone import the assets once per app first
   (`<Godot console exe> --headless --path src/Apps/<App> --import`), or every texture load fails. A passing run only means
   no errors: look at the frames too. The game opens on the main menu; the game scenarios pass `--new-game` to open on the new-game
   screen (all but `game-main-menu`) and start with `key:Enter` (the Start button has the focus), so they
