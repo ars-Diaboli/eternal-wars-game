@@ -1,0 +1,52 @@
+{
+  "formatVersion": 7,
+  "name": "Connection kinds",
+  "description": "Smoke template for the v7 connection options (ADR-112): a garrison, a border gate with its keymaster, a border guard, a portal and an optional connection.",
+  "minPlayers": 2,
+  "maxPlayers": 2,
+  "sizes": [72],
+  "underground": false,
+  "zones": [
+    {
+      "id": "start-1", "type": "PlayerStart", "owner": 0, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 }, "extraPiles": 2,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 3 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-2", "type": "PlayerStart", "owner": 1, "size": 3,
+      "playerTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1, "Lumber": 1, "Ore": 1 }, "extraPiles": 2,
+      "treasure": [ { "minValue": 500, "maxValue": 1500, "count": 3 } ],
+      "monsters": "None"
+    },
+    {
+      "id": "reserve-1", "type": "Treasure", "size": 2,
+      "mines": { "Crystal": 1 }, "extraPiles": 1,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 3 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-2", "type": "Treasure", "size": 2,
+      "mines": { "Sulfur": 1 }, "extraPiles": 1,
+      "treasure": [ { "minValue": 1500, "maxValue": 4000, "count": 3 } ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "centre", "type": "Junction", "size": 2,
+      "neutralTowns": { "min": 1, "max": 1 },
+      "mines": { "Gold": 1 }, "extraPiles": 2,
+      "treasure": [],
+      "monsters": "Strong"
+    }
+  ],
+  "connections": [
+    { "from": "start-1", "to": "reserve-1", "kind": "Normal", "guardValue": 1000, "guard": "Garrison" },
+    { "from": "start-2", "to": "reserve-2", "kind": "Normal", "guardValue": 1000, "guard": "BorderGate", "colour": "Red" },
+    { "from": "start-1", "to": "centre", "kind": "Normal", "guardValue": 3000, "guard": "BorderGuard", "colour": "Blue" },
+    { "from": "start-2", "to": "centre", "kind": "Normal", "guardValue": 3000 },
+    { "from": "reserve-1", "to": "reserve-2", "kind": "Portal", "guardValue": 800 },
+    { "from": "reserve-1", "to": "centre", "kind": "Normal", "guardValue": 1500, "chance": 50 }
+  ]
+}

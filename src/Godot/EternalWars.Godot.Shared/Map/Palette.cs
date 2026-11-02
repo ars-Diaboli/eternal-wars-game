@@ -107,6 +107,16 @@ public static class Palette
         _ => Colors.Magenta,
     };
 
+    /// <summary>The four object colours (keymasters, border guards and gates, Eyes and Windows of the Magi), so a tent and its posts match.</summary>
+    public static Color ForColour(ObjectColour colour) => colour switch
+    {
+        ObjectColour.Red => new Color(0.85f, 0.18f, 0.15f),
+        ObjectColour.Green => new Color(0.20f, 0.70f, 0.25f),
+        ObjectColour.Blue => new Color(0.20f, 0.40f, 0.95f),
+        ObjectColour.Black => new Color(0.12f, 0.12f, 0.14f),
+        _ => Colors.Magenta,
+    };
+
     /// <summary>Path markers: today green, tomorrow yellow, the day after orange, later red (HoMM-style).</summary>
     public static Color ForPathDay(int day) => day switch
     {

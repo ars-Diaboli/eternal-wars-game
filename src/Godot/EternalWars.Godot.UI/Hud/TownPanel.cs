@@ -422,7 +422,7 @@ public partial class TownPanel : PanelContainer
         {
             _caravan.AddChild(new Label
             {
-                Text = $"  {Goods(state, caravan)} from {PlaceName(state.GetObject(caravan.Source))}: "
+                Text = $"  {Goods(state, caravan)} from {PlaceName(state, state.GetObject(caravan.Source))}: "
                        + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room in the garrison"),
             });
         }
@@ -431,7 +431,7 @@ public partial class TownPanel : PanelContainer
         {
             _caravan.AddChild(new Label
             {
-                Text = $"Sent: {caravan.Count} {state.Creatures.Get(caravan.Creature).Name} to {PlaceName(state.GetObject(caravan.Destination))}, "
+                Text = $"Sent: {caravan.Count} {state.Creatures.Get(caravan.Creature).Name} to {PlaceName(state, state.GetObject(caravan.Destination))}, "
                        + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room there"),
             });
         }
@@ -440,7 +440,13 @@ public partial class TownPanel : PanelContainer
     private static string Goods(GameState state, Caravan caravan) =>
         caravan.Cargo is { } cargo ? ResourceProviderRules.Describe(cargo) : $"{caravan.Count} {state.Creatures.Get(caravan.Creature).Name}";
 
-    private static string PlaceName(MapObject place) => place is Town town ? town.Name : place.Definition.Name;
+    /// <summary>A town by its name, a dwelling by its creature ("Footman dwelling at 12,1", as in the hire rows), anything else by its kind.</summary>
+    private static string PlaceName(GameState state, MapObject place) => place switch
+    {
+        Town town => town.Name,
+        CreatureDwelling dwelling => $"{(state.Creatures.TryGet(dwelling.Creature, out var creature) ? creature.Name : dwelling.Creature)} dwelling at {dwelling.Position.X},{dwelling.Position.Y}",
+        _ => place.Definition.Name,
+    };
 
     /// <summary>The tavern's offers (ADR-060): who can be hired for gold at the entrance, by the tavern's level.</summary>
     private void ShowTavern(GameState state, Town town)

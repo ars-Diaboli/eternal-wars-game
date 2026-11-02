@@ -6,8 +6,8 @@ namespace EternalWars.Godot.Shared.Controls;
 /// <summary>
 /// Replays scripted input for smoke tests and screenshots (together with Godot's <c>--write-movie</c>):
 /// <c>-- --autoinput=30:click:800,450;45:key:Enter;60:rclick:400,300</c>. Each entry is
-/// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y) and <c>key</c> (a Godot
-/// <see cref="Key"/> name). Events go through Godot's normal input pipeline, so they hit the same handlers as a
+/// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y), <c>key</c> (a Godot
+/// <see cref="Key"/> name), <c>hold</c> (<c>Key,frames</c>: held down that long) and <c>wheel</c> (<c>up|down,count</c>). Events go through Godot's normal input pipeline, so they hit the same handlers as a
 /// real mouse and keyboard. Does nothing without the argument.
 /// </summary>
 public partial class AutoInput : Node
@@ -37,10 +37,25 @@ public partial class AutoInput : Node
                     _script.Add((frame, new InputEventMouseButton { ButtonIndex = button, Pressed = true, Position = at, GlobalPosition = at }));
                     _script.Add((frame + 1, new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = at, GlobalPosition = at }));
                     break;
-                case "key":
-                    var key = Enum.Parse<Key>(parts[2], ignoreCase: true);
+                case "key" or "hold":
+                    // hold:Key,frames keeps the key down that many frames (camera panning reads the held keys).
+                    var keyParts = parts[2].Split(',');
+                    var key = Enum.Parse<Key>(keyParts[0], ignoreCase: true);
+                    var held = parts[1] == "hold" && keyParts.Length > 1 ? int.Parse(keyParts[1], CultureInfo.InvariantCulture) : 1;
                     _script.Add((frame, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true }));
-                    _script.Add((frame + 1, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false }));
+                    _script.Add((frame + held, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false }));
+                    break;
+                case "wheel":
+                    // wheel:up|down,count at the screen centre (camera zoom).
+                    var wheelParts = parts[2].Split(',');
+                    var wheel = wheelParts[0].Equals("up", StringComparison.OrdinalIgnoreCase) ? MouseButton.WheelUp : MouseButton.WheelDown;
+                    var turns = wheelParts.Length > 1 ? int.Parse(wheelParts[1], CultureInfo.InvariantCulture) : 1;
+                    for (var i = 0; i < turns; i++)
+                    {
+                        _script.Add((frame, new InputEventMouseButton { ButtonIndex = wheel, Pressed = true }));
+                        _script.Add((frame, new InputEventMouseButton { ButtonIndex = wheel, Pressed = false }));
+                    }
+
                     break;
                 default:
                     GD.PushWarning($"autoinput: unknown kind '{parts[1]}' in '{entry}'");
@@ -54,6 +69,11 @@ public partial class AutoInput : Node
         _frame++;
         foreach (var (_, @event) in _script.Where(s => s.Frame == _frame))
         {
+            if (@event is InputEventMouseButton { ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown } turn)
+            {
+                turn.Position = turn.GlobalPosition = GetViewport().GetVisibleRect().Size / 2;
+            }
+
             if (@event is InputEventMouseButton mouse)
             {
                 GetViewport().WarpMouse(mouse.Position);

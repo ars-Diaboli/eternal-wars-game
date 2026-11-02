@@ -267,7 +267,7 @@ reports problems that single edits cannot prevent (hero on water after painting,
   (terrain + roads), `MapObjectsView` (the viewer's `ObjectMemory`, or live objects without a viewer) and
   `FogView`, plus `HeroView`s and the `PathPreview`. The game and the editor both use it, with a viewer and
   without one. HUD and editor panels live in `Godot.UI` (`Hud`, `Setup`, `Editor`, `Battle`).
-- **Smoke tests**: `AutoInput` (`-- --autoinput=...`) replays clicks and keys through the input pipeline;
+- **Smoke tests**: `AutoInput` (`-- --autoinput=...`) replays clicks, keys, held keys and the mouse wheel through the input pipeline;
   `tools/smoke-godot.ps1` runs scripted scenarios under Movie Maker and fails on errors.
 - Assets can't live in a class library. `EternalWars.Godot.Assets` is mounted into each app as
   `res://shared/` by `tools/link-shared-assets.ps1` (junction/symlink, git-ignored). The data tables live in core

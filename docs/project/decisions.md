@@ -2755,3 +2755,23 @@ follow-ups (RMG-11, RMG-13, MAP-20). Points marked *(assumed)* are the agent's c
   - `chance` 1–100 (RMG-13, default 100): rolled from the seed (`presence` stream); a dropped connection that the zones need to stay connected
     is made anyway, in template order (`ConnectionPlacer.Present`). The layout still treats dropped connections as edges *(assumed)*.
   - The generator gives the same maps as before for templates that use none of this, so `MapGenerator.Version` stays 7.
+
+### ADR-113: The Godot check of what was built but never run: sieges, garrison heroes, dwellings and caravans, generated connections (ADR-085, ADR-109, ADR-112, 2026-11-02)
+Four new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; frames under `.shots/`), their maps checked by `SmokeMapTests`:
+`game-siege` (`tools/smoke/siege.ewmap.json`), `game-garrison-hero` (the towns map), `game-dwelling-caravan` (`tools/smoke/caravan.ewmap.json`)
+and `editor-generated-connections` (a map generated from `tools/smoke/connections.ewtemplate.json` by the new `sim generate`).
+
+- **Found and fixed**:
+  - The battle view queued later steps onto a tween that had already started (Godot refuses: "Can't append to a Tween that has started"), so
+    quick combat pressed during an animation, or any event a frame after the queue began, lost its end state. Steps now wait for the next tween
+    when the current one has played a frame, and quick combat applies everything queued at once (`BattleView3D.Step`).
+  - Keymasters' tents, border guards and gates (and the Magi's Eyes and Windows) were all drawn in one yellow; they now take their object colour
+    (`Palette.ForColour`).
+  - The caravan queue named the source "Creature dwelling"; it now says "Footman dwelling at 12,1" like the hire rows.
+- **Tooling**: `sim generate <template> --out <file>` saves a generated map with human players; the editor opens `--map=<file>`; `AutoInput`
+  takes `hold:Key,frames` (held keys, for camera panning) and `wheel:up|down,count`.
+- **Seen working**: the siege field (wall sections, gate, moat, towers and keep off the field, rubble after a hit), the ballista aiming at a wall,
+  quick combat and the result, the captured town; entering and leaving the garrison from the town screen; the dwelling panel, the caravan
+  section (hire, queue, arrival in the garrison a day later), the mage guild's spells and the tavern on the town screen; garrisons, border posts,
+  keymasters and portals on a generated map. Still not seen: the town's own look on the siege field (there is none yet), the spell book button.
+- Walls between generated zones are flat rock terrain and hard to tell from the ground; left for the terrain look-dev (Phase 5).
