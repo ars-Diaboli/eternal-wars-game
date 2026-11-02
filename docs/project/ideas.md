@@ -41,3 +41,16 @@ Recorded so far:
   and ARN-2 (answered: ADR-100, before 1.0 with LAN, three shipped maps).
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
+
+Combat : 
+show not only number of units in the stack but also hit points of the stack as a bar; 51-100%hp - green, 21-50%hp yellow; 0-20% hp - red;
+battlefield - add obstacles that may semi-split battlefield into areas e.g. like long cliffs in homm3;
+
+Random maps : add higher amount of various static objects (trees, rocks etc) so that map feels more immersive;
+
+UI : adjust spacing of the elements and padding so that ui would be more readable; make it close to a real game UI
+note do not change font family or theming, instead focus on placement;
+Make ui more configurable like - initiative bar top/bottom, minimap top/bottom left/right corner, town/hero list panel vertical or horizontal, actions panel , etc;
+
+We need some icons for UI : generate a set of prompts for image generating llm(put them into separate file) to create icons for resouces, skills, actions, icon-buttons etc;
+(take into an account image size , transparent background, image format, lore etc)
