@@ -24,7 +24,7 @@
 | Blacksmith | 1 | Sells the healing tent and ammo cart (ADR-056) | implemented |
 | Marketplace | 2 | Level 2 adds 1 ore and 1 lumber a day; trading: gold against resources, rates by marketplace towns (ADR-067) | income and trading implemented (ADR-067) |
 | Mage guild | 4 | Spells of the town's own school: **3** each at levels 1 and 2, **2** each at levels 3 and 4 (ADR-071, MAG-2); sells a **spell book for 500 gold**; a hero in the town refills its mana (ADR-071, MAG-3); level 4 stays a placeholder (ADR-070) | built, no effect until magic (Phase 5) |
-| Extra spell buildings | 2 | Add spells of **other schools**, chosen by the magic circle (HoMM4-like; details MAG-12) (ADR-071) | planned |
+| Extra spell buildings | 2 | Add spells of **other schools**, chosen by the magic circle (HoMM4-like; details MAG-12) (ADR-071) | built (ADR-114) |
 | War lodge | 3 | **Stronghold and Swamp Bestiary** instead of a mage guild: teaches warcries up to its level (Rally, Intimidate, Terror) to visiting heroes; town hall 2 needs it (placeholder, ADR-071, MAG-2) | implemented (ADR-112) |
 | Growth buildings | 1 each | Two per town (placeholders, own names): `growth-1` adds **+5 a week** to tier-1 growth (1000 gold + 5 lumber), `growth-2` **+2** to tier-2 (1500 gold + 5 ore + 2 of the town's rare resource) (ADR-071, TOWN-1) | implemented (ADR-112) |
 | Tavern / Brotherhood | 2 | Hires heroes: 2 / 4 offered (ADR-060); Brotherhood **1000 gold + 5 ore** (ADR-070) | implemented (ADR-060, ADR-081) |

@@ -26,10 +26,12 @@ replays and a replay viewer (FLOW-4 and UI-2 answered in ADR-101; all but the vi
 and re-drafts the spells and artifacts (CONT-6 answered in ADR-100); ADR-106 settles the siege rules (CMB-11) and the guild spell draw,
 spell elements and summons (MAG-13); the sieges are built (ADR-109; the 3D siege scene still needs a run in Godot). Phase 5 magic has begun: the spell table, guild spells,
 spell books and rank I casting in battle are built (ADR-110). ADR-073's remaining victory conditions
-and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096) wait for EVT-1 … EVT-6. ADR-100 settles Pandora's Box
+and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096): EVT-1 … EVT-6 answered (ADR-115), a Phase 5 item. ADR-100 settles Pandora's Box
 (MAP-35, built in ADR-105) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7 answered in ADR-108: nine relics).
-**Next**: the whole-map fairness check (Phase 4) and a full game against the AI on a
-small random map (Phase 3).
+Phase 3 is closed out in core and the apps (ADR-114: spell buildings, the town screen's building tree, the tavern screen, the
+specialties, the inspector rows, Ember March); a person's full game against the AI is its last check. New ideas (ADR-116): a prologue,
+health bars, dividing obstacles, layout and information windows (CAMP-1, UI-3, CMB-12).
+**Next**: a person's full game on Ember March (Phase 3 exit) and the whole-map fairness check (Phase 4).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -204,8 +206,8 @@ replay tests) and in the game app's 3D battle scene, checked in Godot 4.7.2 (`ga
 - [x] Growth buildings (placeholder, ADR-071, ADR-112): +5 a week for tier 1, +2 for tier 2, per town in `buildings.csv`; the AI builds them
 - [x] Stronghold and Swamp Bestiary: a 3-level building teaching warcries / spiritual totems instead of a guild (placeholder, ADR-071;
       the war lodge, ADR-112)
-- [ ] Two spell buildings per town, one per ring neighbour's school, 1 spell per guild level each (2000 gold + 5 of the school's resource,
-      needs guild 2; ADR-072)
+- [x] Two spell buildings per town, one per ring neighbour's school, 1 spell per guild level each (2000 gold + 5 of the school's resource,
+      needs guild 2; ADR-072; built ADR-114: `school-<town>` rows, the spells picked from the seed, `MagicRules.SchoolSpells`)
 - [x] Capitol (town hall 4, ADR-070, ADR-074): Village / Town / City Hall / Capitol; one per player (build refused, captured one drops to
       City Hall, `TownBuildingDowngraded`, validator error); placeholder 15 000 gold + 25 lumber + 25 ore, needs the Castle, 4000 a day; the AI
       builds it last
@@ -242,16 +244,16 @@ replay tests) and in the game app's 3D battle scene, checked in Godot 4.7.2 (`ga
 - [x] Town screen in the game app: the 2D `TownPanel` as a full-screen panel over the map (ADR-050), opened by
       visiting, from the town list or with T; shows the governor (appoint / dismiss)
 - [x] Town list in the HUD next to the hero list; select and centre on a town (`TownListPanel`)
-- [ ] Town screen polish: building tree with requirements, cost tooltips, "built today" state, dwelling choice
-      warnings (which tier would become unreachable)
+- [x] Town screen polish (ADR-114): building tree by requirement depth (`BuildingTree`), cost and requirement tooltips, "built today"
+      line, dwelling choice warnings (the lines a dwelling would close, the tiers a refused one would leave out); seen in Godot
 - [x] Smoke scenario for the town screen (`game-town-screen`, `tools/smoke/towns.ewmap.json`; run in Godot 4.7.2, ADR-085)
 
 ### Heroes and skills
 - [x] Hero roster `data/heroes.csv`: 16 per town, mage/warrior, preferred creature, specialty (ADR-048)
-- [ ] Rarer resource specialties (4 gold, 6 rare resources in the whole roster, no ore or lumber), 2 Necromancy (+5 points on the skill)
+- [x] Rarer resource specialties (4 gold, 6 rare resources in the whole roster, no ore or lumber), 2 Necromancy (+5 points on the skill)
       and 2 Logistics (+10 % on land, even without the skill) specialists with flat bonuses; the other heroes get a specialty in their
-      first starting skill (effects built where missing: Armor, Treasury, War Tempo, …); drawn once into `heroes.csv` with a fixed seed
-      (ADR-093, ADR-107)
+      first starting skill (effects built: Armor, Treasury, War Tempo, Scouting); drawn once into `heroes.csv` with a fixed seed
+      (ADR-093, ADR-107, ADR-114)
 - [x] Skill groups, levels, level-ups with three offers and rival-school odds (`LevelUpDecision`)
 - [x] Skill effects without towns or magic: melee, archery, armor, treasury, prospecting, logistics, pathfinding,
       troop management, drill, Tactics width
@@ -271,7 +273,8 @@ replay tests) and in the game app's 3D battle scene, checked in Godot 4.7.2 (`ga
 - [x] Siege Ballistics: the `WarMachines` rules in sieges (auto-fire, control, second shot); the hero's own offensive machine is the
       siege engine, auto-fire takes the gate only after the four wall sections (ADR-099, ADR-106, ADR-109)
 - [x] Skill specialties: the skill's effect +5 % per hero level (ADR-072, ADR-083: Melee, Archery, Logistics, attunement mana)
-- [ ] Skill specialties for Tactics, Blood Rage and Warcry (numbers not set) and Necromancy (ADR-083)
+- [x] Skill specialties for Tactics (+1 column, +2 from level 10), Blood Rage (the cap +5 % a level), Warcry (strength +5 % a level, Terror
+      at most 60 %) and Necromancy (+5 flat) (ADR-083; numbers proposed in ADR-114)
 - [x] Rival schools: the arch-rival across the ring only, one per town (ADR-072, HERO-3; ADR-078)
 - [x] Leadership (`offense.third`, +1/2/3 morale) and Alertness (`defense.third`, +5/10/15 % initiative, working title) (ADR-067)
 - [x] Deployment (ADR-072, ADR-076): `BattlePhase.Deploying`, the first 4 / 5 / 6 columns from the own edge by the deployer's Tactics; only
@@ -320,7 +323,8 @@ replay tests) and in the game app's 3D battle scene, checked in Godot 4.7.2 (`ga
       ADR-112: enter and leave the garrison, lead it in sieges, no retreat; the town screen buttons seen in Godot, `game-garrison-hero`, ADR-113)
 - [x] Brotherhood price 1000 gold + 5 ore; hired heroes get a starter stack: a week's growth of their preferred creature (ADR-070, ADR-081)
 - [x] Hire buttons in the town panel (`TownPanel`)
-- [ ] Tavern screen in the game app with hero details (waits for the town screen)
+- [x] Tavern screen in the game app with hero details (`TavernPanel`, ADR-114: specialty and what it does, skills, stats, preferred
+      creature, starter troops or the returning hero's level and army, hire with the refusal; smoke scenario `game-tavern`)
 - [x] Thieves' Guild in the tavern (ADR-079, TOWN-11): `ThievesGuild` ranks by towns, heroes, gold, lumber and ore, rare resources,
       artifacts, income, army strength, best hero, best creature; rows by the number of taverns; `ThievesGuildPanel` from the town screen
       (smoke scenario `game-thieves-guild`, ADR-085)
@@ -339,7 +343,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Map format v11 and editor session calls (`SetHeroArtifacts`, `SetArtifactPickup`); validator
 - [x] The AI picks up, values and equips artifacts
 - [x] Artifact effects that wait for other systems: mana, sight, creature health, immunities and the magic ones are in (ADR-111); regeneration, spell resistance and the like were dropped by CONT-6; the Crown of the Waning Eye's +1 best magic skill is still "Not yet"
-- [ ] Editor: inspector rows for hero artifacts and pickups (Godot)
+- [x] Editor: inspector rows for hero artifacts and pickups (Godot; ADR-114, smoke scenario `editor-inspector-objects`)
 - [x] Godot: paper-doll and backpack on the hero screen (click to wear / take off, tooltips with effects; no drag and drop, no artifact exchange between heroes yet)
 
 - [x] Artifact table: the re-draft (ADR-099, ADR-100, ADR-111, [artifacts.md](../content/artifacts.md); 101 artifacts, 5 sets): the few renamed rows (the gnoll items, lore
@@ -414,8 +418,8 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Buy war machines at the blacksmith: tent, cart for shooters, the offensive machine back with Advanced Ballistics (ADR-059)
 - [ ] Spells (Phase 5), marketplace use (later; no AI trading for now, ADR-067); hiring heroes, artifacts and complexity levels are done
 - [x] AI-vs-AI games on generated maps (`sim game --template`); CI plays two weeks on every shipped template (`sim maps`)
-- [ ] Balance the AI over several maps (`sim game --runs`); on generated maps it hardly fights guards yet (heroes still
-      level 1 after 40 days on `duel`), and no game finishes in 40 days
+- [ ] Balance the AI over several maps (`sim game --runs`); the hand-made maps finish now (ADR-114), but on generated `duel` maps no
+      game finishes in 60 days yet
 
 ### Adventure map objects (ADR-068; [catalogue](../design/adventure-map.md#planned-objects-adr-068))
 Each item is one change with core tests (`TestWorld` maps), a map format bump where needed, editor placement through
@@ -486,7 +490,7 @@ Core, map format v22, editor placement, generator sites and tests for each; the 
 - [x] Den of Thieves (the whole Thieves' Guild table; TOWN-11)
 - [x] Sphinx (author's or table riddle, three answers; Major artifact or 5000 experience, or the day's movement and −3 morale; MAP-27)
 - [x] Astrologer's Tower (a visit shows next week's event, no re-roll; MAP-32, ADR-084; map format v24, generator version 6)
-- [ ] Editor inspector for a sphinx's riddle and a witch hut's skills (the map format holds them)
+- [x] Editor inspector for a sphinx's riddle and a witch hut's skills (`SetSphinxRiddle`, `SetWitchHutSkills` with undo; ADR-114)
 
 #### Pandora's Box (ADR-096)
 - [x] Pandora's Box (MAP-35, ADR-100, ADR-105): the author's contents, gains only (resources, experience, mana, morale and luck, skills, artifacts,
@@ -495,11 +499,15 @@ Core, map format v22, editor placement, generator sites and tests for each; the 
       (generator version 7; Godot parts not run in Godot yet)
 
 ### Content for the slice
-- [ ] Haven and Inferno play-tested end to end on a small map (towns work for all eight; the slice decides what gets
-      art and balance first)
-- [ ] A small two-player scenario map vs. AI shipped with the game
+- [x] Haven and Inferno played end to end on small maps by the AI on both sides (ADR-114): Two Towns 3 of 3 games to a winner by day 37,
+      Ember March 18 of 18 by day 71 (9 wins each); AI fixes on the way (heroes took the garrison only at the start of the turn, and
+      dwelling stock it could not pay for called them home every day; a player without heroes now hires before it builds)
+- [ ] Haven against Inferno played to the end by a person in the game app (the first turns are seen in Godot, `game-ember-march`)
+- [x] A small two-player scenario map vs. AI shipped with the game: **Ember March** (`EmberMarchScenario`, 36 × 30, Haven against the
+      computer's Inferno, a ridge with two guarded passes; on the new-game screen, `sim game --map ember`, `sim export ember`; ADR-114)
 
-**Exit**: complete small-map game vs. AI from start to victory.
+**Exit**: complete small-map game vs. AI from start to victory. Met by the AI on both sides (ADR-114); a person's game in the app is the
+last check.
 
 ## Phase 4: Random map generation
 Needs towns, guards and treasure from Phases 2–3. The template *format* and validator can start earlier.
@@ -625,14 +633,30 @@ Power, an element per spell.
       flyers and teleporters by straight-line distance, the distance penalty measured the same way, battle speeds +10 %; old replay
       digests change
 
-### Map events (ADR-096; HotA's extended events; where they go: EVT-1 ❓)
-- [ ] Core: map events as data (hero, player and town events), variables, conditions and expressions, the main actions, messages and
-      questions as pending decisions; event cells (synchronised copies); turn-start runs; map format bump ❓ EVT-1, EVT-2, EVT-3, EVT-4
-- [ ] Quests: Seer's Hut, Quest Guard, Quest Gate, quest stages, the quest log screen; HoMM3's quest forms ❓ EVT-5
-- [ ] Loops and "run another event"; a Pandora's Box that runs a hero event (MAP-35)
-- [ ] AI: answers by value, Seer's Hut quests worth doing, Quest Guards and Gates as obstacles ❓ EVT-6
-- [ ] Editor: an "Events" tab (the tree, variables, shared events, ready forms for HoMM3's simple events), object inspector links,
-      validator checks ❓ EVT-6
+### Map events (ADR-096, ADR-115; HotA's extended events; after the Phase 3 and 4 exits, before the campaign)
+- [ ] Step 1, core: map events as a data tree (hero, player and town events), map-wide whole-number variables, HotA's conditions with the
+      team, an ally and the day of the week, HotA's actions with reveal an area and give a hero, messages and questions as pending decisions,
+      the battle action, a full army's choice; invisible event cells ignored by routes (the route stops only when the event shows something
+      or fights), repeating until disabled; turn-start runs after income and growth, neutral towns at the start of the day; list order;
+      "defeated by" records only for named monsters and heroes; map format bump (EVT-1 … EVT-4)
+- [ ] Step 2, quests: Seer's Hut, Quest Guard, Quest Gate (like the border gate), quest stages, HoMM3's quest forms that take what they
+      ask, the quest log (Q), free passage for a hero that meets a gate's quest; no Seer's Huts on random maps for now (EVT-5)
+- [ ] Step 3: loops and "run another event"; a Pandora's Box that runs a hero event (MAP-35)
+- [ ] AI: answers by value (random numbers as their average), Seer's Hut quests worth doing, Quest Guards and Gates as obstacles until met,
+      no look-ahead at event cells (EVT-6)
+- [ ] Editor: an "Events" tab (the tree, variables, shared events, "simple event" forms for HoMM3's timed events, event cells and town
+      events), object inspector links, validator checks; tested by playing the map (EVT-6)
+- [ ] Campaign variables ("kept for the next map", "taken from the last map") recorded with the campaign (EVT-1 f, FLOW-1)
+
+### Presentation and UI (ADR-116)
+- [ ] Stack health bars in battle: the stack's hit points against its start, green over 50 %, yellow 21–50 %, red 20 % and below ❓ CMB-12
+- [ ] Dividing obstacles: long cliffs that split the field partly, always with gaps ❓ CMB-12
+- [ ] More scenery on random maps (trees, rocks and the like, denser by zone terrain; ADR-077's scenery)
+- [ ] Spacing pass: shared margins and gaps for every panel, no font or theme change ❓ UI-3
+- [ ] Configurable layout: initiative bar, minimap corner, hero and town lists, action panel; kept in the player's settings ❓ UI-3
+- [ ] Information windows (right-click) for creatures, heroes, skills, spells, artifacts, buildings and map objects; "detailed tooltips" ❓ UI-3
+- [x] Icon prompts for an image model ([icon-prompts.md](../content/icon-prompts.md), ADR-116); the icons themselves later
+- [x] The HoMM3 / HotA / HoMM5 mechanics we lack, listed ([missing-mechanics.md](../design/missing-mechanics.md), ADR-116)
 
 ### Platform and art
 - [ ] Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)
@@ -668,6 +692,7 @@ Power, an element per spell.
 **Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
 
 ## Phase 6: Story campaign
+- [ ] Prologue / tutorial: one small map, Haven against neutrals and a Necropolis vanguard, hints through the map events ❓ CAMP-1 (ADR-116)
 - [ ] Scenario chaining and hero carry-over
 - [ ] Map triggers and events, dialogue: built on the map events (ADR-096); campaign variables kept from one map to the next (FLOW-1, EVT-1)
 - [ ] Editor support for triggers and scripting: the map events' "Events" tab (ADR-096)

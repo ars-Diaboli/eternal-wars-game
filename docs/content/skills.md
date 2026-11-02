@@ -251,15 +251,29 @@ Each roster hero has one HoMM3-style specialty ([hero-roster.md](hero-roster.md)
 | Kind | Example | Status |
 |---|---|---|
 | Resource | `resource gold 350`: +350 gold a day | ✅ (`HeroIncome`) |
-| Skill | `skill offense.melee`: the skill's effect +5 % per hero level (HoMM3-like, ADR-072, HERO-1) | ✅ Melee, Archery, Logistics, attunement mana (ADR-083); 🔜 Tactics, Blood Rage, Warcry, Necromancy |
-| Spell | `spell light.bless`: the spell's effect +3 % per hero level (ADR-072, MAG-6) | ⏳ magic |
+| Skill | `skill offense.melee`: the skill's effect +5 % per hero level (HoMM3-like, ADR-072, HERO-1) | ✅ (ADR-083, ADR-114), see below |
+| Flat skill | `skill pathfinding.logistics 10`, `skill magic.necropolis.attunement 5`: a fixed bonus, no levels (ADR-093, ADR-107) | ✅ (ADR-114) |
+| Spell | `spell light.bless`: the spell's effect +3 % per hero level (ADR-072, MAG-6) | ✅ in battle (ADR-110) |
 
-Planned (ADR-093, ADR-107; the HERO-8 proposals, for now): only 4 heroes with +350 gold and 6 with +1 sulfur, crystal or mercury a day
-(no two of one faction each, a town may have one of each; no ore or lumber specialists); 2 Necromancy specialists (Necropolis, a mage and a
-warrior: +5 points on top of the skill, stacking with the Necromancy Amplifier, only with the skill) and 2 Logistics specialists (a flat
-+10 % movement on land, even without the skill). The heroes that lose their specialty get one in their first starting skill (+5 % per
-level). Other skill specialties keep +5 % per hero level.
+What a skill specialty raises (ADR-083, ADR-114; the Tactics, Blood Rage and Warcry numbers are proposals, ADR-114):
 
+| Skill | The specialty |
+|---|---|
+| Melee, Archery | the damage percent × (100 + 5 × level) / 100, rounded down |
+| Armor | the damage taken off, the same way (Master 20 % → 30 % at level 10) |
+| War Tempo | the battlefield speed bonus, the same way (Master +4 → +6 at level 10) |
+| Treasury | the daily gold, the same way (not the interest) |
+| Scouting | the sight radius it adds, the same way (Expert +6 → +9 at level 10) |
+| An attunement | its maximum and daily mana, the same way |
+| Tactics | **+1 deployment column, +2 from hero level 10** (with the skill; columns are steps, so no percentage) |
+| Blood Rage | the Attack cap, the same way (Master +8 → +12 at level 10) |
+| Warcry | Intimidate's initiative cut and Terror's chance, the same way (at level 10 −30 % and 45 %); Terror at most 60 % |
+| Logistics (flat, 2 heroes) | +10 % movement, even without the skill; nothing more with levels |
+| Death attunement (flat, 2 heroes) | +5 Necromancy points with the skill, on top of the Amplifier; its mana is not scaled |
+
+The roster (ADR-093, ADR-107, drawn in ADR-114 with a fixed seed): 4 heroes with +350 gold and 6 with +1 sulfur, crystal or mercury a day
+(no two of one faction each, a town may have one of each; no ore or lumber specialists); 2 Necromancy and 2 Logistics specialists; the
+heroes that lost their specialty took their first starting skill with an effect. The names are in [hero-roster.md](hero-roster.md).
 ## Open
 
 - A luck skill (none for now).

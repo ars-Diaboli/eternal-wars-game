@@ -34,6 +34,10 @@ New-Item -ItemType Directory -Force $Out | Out-Null
 $connectionsMap = Join-Path (Resolve-Path $Out) 'connections.ewmap.json'
 dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- generate (Join-Path $PSScriptRoot 'smoke/connections.ewtemplate.json') --out $connectionsMap --seed 1 | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Generating the connections map failed.' }
+# The shipped two-player map (ADR-114) as a file, for the game and the editor.
+$emberMap = Join-Path (Resolve-Path $Out) 'ember.ewmap.json'
+dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- export ember --out $emberMap | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Exporting Ember March failed.' }
 $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
        Input = '5:click:133,263;12:click:133,263;20:click:103,140;28:click:30,140;35:key:Q' },
@@ -93,6 +97,15 @@ $scenarios = @(
     # the red border gate and the red keymaster (frames 16, 49, 86, 109, 153, 172).
     @{ Name = 'editor-generated-connections'; App = 'EternalWars.MapEditor'; Frames = 175; Map = $connectionsMap
        Input = '5:hold:S,8;18:hold:A,19;38:hold:W,8;51:hold:S,18;70:hold:D,13;88:hold:D,10;99:hold:S,7;111:hold:D,8;120:hold:W,30;155:hold:W,10;166:hold:D,3' },
+    # The tavern screen (ADR-114): T, scroll to the tavern row, "Visit the tavern…", then Escape for the tooltip, the tavern and the town screen.
+    @{ Name = 'game-tavern'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
+       Input = '3:key:Enter;10:key:T;16:wheel:down,25;24:click:190,794;34:key:Escape;38:key:Escape;44:key:Escape' },
+    # Ember March (ADR-114): start, end the turn (the computer plays Red), open the town screen with its building tree, close it.
+    @{ Name = 'game-ember-march'; App = 'EternalWars.Game'; Frames = 60; Map = $emberMap
+       Input = '3:key:Enter;12:click:342,24;40:key:T;52:key:Escape' },
+    # Inspector rows (ADR-114) on Ember March: Select, the Inspector tab, a Minor artifact pickup, the witch hut, the sphinx, the hero (artifacts).
+    @{ Name = 'editor-inspector-objects'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $emberMap
+       Input = '3:click:544,24;6:click:1328,100;9:click:616,230;16:click:645,382;23:click:965,552;30:click:381,276' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' },
     # Generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.

@@ -40,17 +40,11 @@ Recorded so far:
 - Arena mode like HotA's (a day of preparation, then one battle between two heroes decides the game): ADR-097 (2026-10-29), questions ARN-1
   and ARN-2 (answered: ADR-100, before 1.0 with LAN, three shipped maps).
 
+- Map events: EVT-1 … EVT-6 answered with the proposals (ADR-115, 2026-11-02); a Phase 5 item in three steps.
+- A prologue / tutorial (Haven against neutrals and the undead, placeholder lore), stack health bars (green over 50 %, yellow 21–50 %, red
+  20 % and below), obstacles that split the battlefield, more scenery on random maps, a spacing pass and a configurable layout (initiative
+  bar, minimap corner, hero and town lists, action panel), information windows and advanced tooltips, icon prompts
+  ([icon-prompts.md](../content/icon-prompts.md)) and a list of the HoMM3 / HotA / HoMM5 mechanics we lack
+  ([missing-mechanics.md](../design/missing-mechanics.md)): ADR-116 (2026-11-02), questions CAMP-1, UI-3 and CMB-12.
+
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
-
-Combat : 
-show not only number of units in the stack but also hit points of the stack as a bar; 51-100%hp - green, 21-50%hp yellow; 0-20% hp - red;
-battlefield - add obstacles that may semi-split battlefield into areas e.g. like long cliffs in homm3;
-
-Random maps : add higher amount of various static objects (trees, rocks etc) so that map feels more immersive;
-
-UI : adjust spacing of the elements and padding so that ui would be more readable; make it close to a real game UI
-note do not change font family or theming, instead focus on placement;
-Make ui more configurable like - initiative bar top/bottom, minimap top/bottom left/right corner, town/hero list panel vertical or horizontal, actions panel , etc;
-
-We need some icons for UI : generate a set of prompts for image generating llm(put them into separate file) to create icons for resouces, skills, actions, icon-buttons etc;
-(take into an account image size , transparent background, image format, lore etc)
