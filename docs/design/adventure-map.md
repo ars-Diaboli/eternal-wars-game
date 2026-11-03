@@ -276,7 +276,7 @@ takes a buff once a day (the Stables once a week), so walking off and on again g
 | War Machine Factory | **Implemented.** Sells the visiting hero **its own offensive machine** (ballista, cannon, catapult or glaivethrower, ADR-056), the **ammo cart** and the **healing tent**, at the **blacksmith's prices**; not a machine the hero already has (decided, MAP-13) |
 
 ## Second object catalogue (ADR-069)
-The owner's second list (`ideas.md`, 2026-10-20). **Built** (ADR-082, map format v23) except the Shrines (Phase 5);
+The owner's second list (`ideas.md`, 2026-10-20). **Built** (ADR-082, map format v23; the Shrines in ADR-120, map format v29, a spell book needed too, generator values 500 / 1500 / 2500);
 the prices below are ADR-082's drafts and the bank tables ADR-112's. The shared rules above (visit scopes, statuses, rolls, artifact
 tiers, creature names) apply. MAP-15 … MAP-24 were answered by ADR-070; MAP-20 (Keymasters) and the map tavern's pool (TOWN-4) by ADR-071;
 the points once marked *(assumed)* were confirmed in ADR-073.
@@ -336,7 +336,7 @@ time) for 2000–6000 gold and a Minor artifact (Major in the top row); Keep Pik
 |---|---|
 | Mana Vortex | Sets the hero's mana to **twice the maximum** until it is spent (HoMM3); once a week per hero (ADR-070, MAP-23) |
 | Fountain of Magic | Restores 50 % of the hero's maximum mana; **once a week per hero** (ADR-070, ADR-072) |
-| Shrine (levels 1–3) | Teaches its spell, set in the editor or rolled at game start. Learning needs the school's Magic skill at the spell's level; any hero, any number of visits; a hero without the skill or with the spell already gets a message (ADR-070, MAP-24; needs spells, Phase 5) |
+| Shrine (levels 1–3) | Teaches its spell, set in the editor or rolled at game start. Learning needs the school's Magic skill at the spell's level; any hero, any number of visits; a hero without the skill or with the spell already gets a message (ADR-070, MAP-24; **built**, ADR-120: a spell book is needed too) |
 
 ### Temporary buffs
 Same rules as the buffs above (once a day per hero, gone after the next battle, ±5 cap):

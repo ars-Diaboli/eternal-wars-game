@@ -71,7 +71,9 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 Placeholders that wait for play-testing (kept as they are, ADR-118): caravan cost (ADR-054); complexity starting resources (ADR-063);
 Stewardship and governor percentages (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064);
 building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices (CMB-3); morale 2 % and luck 4 % per point (ADR-053);
-deposit prices and the map marketplace threshold (ADR-070); the AI's retreat threshold; the fairness tolerances and slacks (ADR-117).
+deposit prices and the map marketplace threshold (ADR-070); the AI's retreat threshold; the fairness tolerances and slacks (ADR-117);
+the gate's cap and Defense, Earthquake, summon amounts, a creature caster's Spell Power (count / 2) and the Phoenix's 30 %, shrine values
+(ADR-120); the relics' added effects, their slots, the AI's piece bonus and the glaivethrower's 20–26 (ADR-121).
 ## Answered
 One line per question; the ADR holds the detail.
 

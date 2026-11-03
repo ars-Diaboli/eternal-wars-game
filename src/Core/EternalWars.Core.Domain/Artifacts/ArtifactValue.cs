@@ -7,7 +7,12 @@ namespace EternalWars.Core.Domain.Artifacts;
 /// </summary>
 public static class ArtifactValue
 {
-    public static double Of(ArtifactDefinition artifact) => artifact.Effects.Sum(e => e.Value * e.Kind switch
+    public static double Of(ArtifactDefinition artifact) => Of(artifact.Effects);
+
+    /// <summary>An artifact with what it brings along: an assembled relic is worth its pieces and its own effects.</summary>
+    public static double Of(ArtifactCatalog catalog, ArtifactDefinition artifact) => Of(catalog.EffectsOf(artifact));
+
+    private static double Of(IEnumerable<ArtifactEffect> effects) => effects.Sum(e => e.Value * e.Kind switch
     {
         ArtifactEffectKind.Attack or ArtifactEffectKind.Defense => 10.0,
         ArtifactEffectKind.Morale or ArtifactEffectKind.Luck => 8.0,
@@ -32,12 +37,14 @@ public static class ArtifactValue
         ArtifactEffectKind.Immune => 12.0,
         ArtifactEffectKind.ElementPower => 0.4,
         ArtifactEffectKind.Spells => 20.0,
+        ArtifactEffectKind.FullMana => 40.0,
+        ArtifactEffectKind.NoFactionPenalty => 15.0,
         _ => 0.0,
     });
 
     /// <summary>Artifact ids best first: by value, then rarer tier, then id. Unknown ids come last.</summary>
     public static IEnumerable<string> BestFirst(ArtifactCatalog catalog, IEnumerable<string> ids) =>
-        ids.OrderByDescending(id => catalog.TryGet(id, out var a) ? Of(a) : double.MinValue)
+        ids.OrderByDescending(id => catalog.TryGet(id, out var a) ? Of(catalog, a) : double.MinValue)
             .ThenByDescending(id => catalog.TryGet(id, out var a) ? (int)a.Tier : -1)
             .ThenBy(id => id, StringComparer.Ordinal);
 }

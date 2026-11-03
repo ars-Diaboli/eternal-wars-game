@@ -35,6 +35,17 @@ public class WarMachineTests
     }
 
     [Fact]
+    public void TheFourOffensiveMachines_DealAboutTheSameDamagePerInitiative_TheGlaivethrowerWithTheLeastHealth()
+    {
+        WarMachineKind[] offensive = [WarMachineKind.Ballista, WarMachineKind.Cannon, WarMachineKind.Catapult, WarMachineKind.Glaivethrower];
+        var throughput = offensive.Select(WarMachines.Throughput).ToList();
+
+        Assert.True(throughput.Max() <= 1.15 * throughput.Min(), string.Join(", ", throughput));
+        Assert.Equal(WarMachineKind.Glaivethrower, offensive.MinBy(k => WarMachines.Definition(k).Health));
+        Assert.Equal(WarMachineKind.Glaivethrower, offensive.MaxBy(WarMachines.Throughput));
+    }
+
+    [Fact]
     public void OffensiveMachine_JoinsRegularBattles_OnlyFromAdvancedBallistics_TentAndCartWhenOwned()
     {
         var (session, _) = HeroBattle(ballistics: SkillLevel.Basic, extra: []);

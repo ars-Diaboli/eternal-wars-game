@@ -176,6 +176,8 @@ public static class GameRecordSerializer
         (typeof(DismissGovernorCommand), "dismissGovernor"),
         (typeof(EquipArtifactCommand), "equipArtifact"),
         (typeof(UnequipArtifactCommand), "unequipArtifact"),
+        (typeof(AssembleRelicCommand), "assembleRelic"),
+        (typeof(TakeRelicApartCommand), "takeRelicApart"),
         (typeof(GiveArtifactCommand), "giveArtifact"),
         (typeof(GiveWarMachineCommand), "giveWarMachine"),
         (typeof(ChooseBattleWidthCommand), "battleWidth"),

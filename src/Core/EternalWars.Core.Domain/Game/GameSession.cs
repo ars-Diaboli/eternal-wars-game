@@ -327,6 +327,12 @@ public sealed class GameSession
             case UnequipArtifactCommand unequip:
                 Artifacts.Unequip(unequip.Player, unequip.Hero, unequip.Artifact);
                 return null;
+            case AssembleRelicCommand assemble:
+                Artifacts.Assemble(assemble.Player, assemble.Hero, assemble.Relic);
+                return null;
+            case TakeRelicApartCommand apart:
+                Artifacts.TakeApart(apart.Player, apart.Hero, apart.Relic);
+                return null;
             case GiveArtifactCommand give:
                 Artifacts.Give(give.Player, give.FromHero, give.Artifact, give.ToHero);
                 return null;

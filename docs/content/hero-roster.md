@@ -66,14 +66,16 @@ ring only (HERO-3). Old skill ids in maps, saves and replays read as the new ski
 
 ## War machines
 
-Every hero has up to three machines (ADR-056). Draft numbers:
+Every hero has up to three machines (ADR-056). Draft numbers, tuned in ADR-121: the four offensive machines deal about the same damage per
+initiative (average damage × shots × initiative / 10: ballista 47.5, cannon 45.5, catapult 46, glaivethrower 50.6; WarMachines.Throughput),
+the glaivethrower with the least health:
 
 | Machine | Slot | Towns | Attack / Defense | Damage | Health | Initiative | Notes |
 |---|---|---|---|---|---|---|---|
 | Ballista | offensive | Haven, Necropolis | 10 / 10 | 40–55 | 250 | 10 | |
 | Cannon | offensive | Academy, Inferno | 12 / 8 | 55–75 | 220 | 7 | |
 | Catapult | offensive | Stronghold, Swamp Bestiary | 10 / 10 | 45–70 | 260 | 8 | |
-| Glaivethrower | offensive | Sylvan, Dungeon | 11 / 9 | 25–35 | 200 | 12 | shoots twice |
+| Glaivethrower | offensive | Sylvan, Dungeon | 11 / 9 | 20–26 (was 25–35, ADR-121) | 200 | 11 (was 12) | shoots twice |
 | Healing tent | tent | all | 0 / 5 | – | 150 | – | heals every own stack each round |
 | Ammo cart | cart | all | 0 / 5 | – | 200 | – | extra or unlimited shots |
 

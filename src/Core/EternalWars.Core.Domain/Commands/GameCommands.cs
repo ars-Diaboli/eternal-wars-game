@@ -154,6 +154,12 @@ public sealed record EquipArtifactCommand(PlayerId Player, HeroId Hero, string A
 /// <summary>Takes a worn artifact off into the backpack (which must have room).</summary>
 public sealed record UnequipArtifactCommand(PlayerId Player, HeroId Hero, string Artifact) : GameCommand(Player);
 
+/// <summary>Joins the pieces the hero wears into the assembled relic (ADR-121); free, any time on the owner's turn.</summary>
+public sealed record AssembleRelicCommand(PlayerId Player, HeroId Hero, string Relic) : GameCommand(Player);
+
+/// <summary>Takes an assembled relic the hero wears or carries apart into its pieces (ADR-121); free, any time on the owner's turn.</summary>
+public sealed record TakeRelicApartCommand(PlayerId Player, HeroId Hero, string Relic) : GameCommand(Player);
+
 /// <summary>Gives an artifact (from the backpack first, else off the body) to another own hero while their exchange is open.</summary>
 public sealed record GiveArtifactCommand(PlayerId Player, HeroId FromHero, string Artifact, HeroId ToHero) : GameCommand(Player);
 

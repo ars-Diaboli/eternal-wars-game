@@ -249,7 +249,9 @@ spells are spread out:
 
 ## Creature casters
 
-The creature table names caster spells (`Caster fireball 1`, …; the number is the rank). With this list they become:
+The creature table names caster spells (`Caster fireball 1`, …). **The number is casts per battle** (ADR-120; it was read as the rank, but every
+creature cast is rank I). A caster stack's Spell Power is its **count / 2** *(proposal)*, it pays no mana, and the stack's turn is used. Built
+in ADR-120, except Blind, Confusion and Resurrection, whose effect kinds wait (no creature casts them yet). With this list they become:
 
 | Id in `creatures.csv` | Becomes |
 |---|---|
@@ -263,7 +265,9 @@ The creature table names caster spells (`Caster fireball 1`, …; the number is 
 ## Adventure spells
 
 Cast on the adventure map from the spell book, for mana and a fixed **500 movement points** (ADR-073, MAG-5; a hero with fewer left cannot
-cast). Each school has two or three, at its levels:
+cast). Built (ADR-120): Town Portal (the nearest own town with a free entrance), Dimension Door (up to 6 tiles in a straight line to an
+explored, free, unguarded tile, once a day), View Terrain (reveals radius 12), Pathfinder's Call and Ashwalk (their three terrains native until
+the day ends). The rest only show something and wait for their screens. Each school has two or three, at its levels:
 
 | School | Spells |
 |---|---|
@@ -280,5 +284,6 @@ cast). Each school has two or three, at its levels:
 - Summoned creatures (ADR-106, MAG-13): town creatures' rows, never neutrals; elementals are the exception (Conflux rows). Call the Herd
   calls Sylvan Pegasi (Silver Pegasi at rank III), Awaken the Grove Sylvan Treants (Ancient Treants), Bind Elemental the Conflux air, earth,
   fire and water elementals, Hellgate Inferno Imps (Familiars), Summon Demons Inferno Horned Demons; the Breeder's imps are Inferno Imps.
-  The creatures for Call the Herd and Summon Demons are assumed; the owner may pick others.
+  The creatures for Call the Herd and Summon Demons are assumed; the owner may pick others. Built in ADR-120 (rank I): Bind Elemental calls
+  the first element not yet summoned in the battle *(proposal: no choice screen yet)*; a second cast of a summon adds to its stack.
 - Elements: one per spell, drafted with HoMM3's spell elements as reference where a spell has a counterpart (ADR-106); the owner may move any.

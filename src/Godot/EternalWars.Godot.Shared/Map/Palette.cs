@@ -98,6 +98,7 @@ public static class Palette
         MapObjectKind.SacrificialAltar => new Color(0.55f, 0.15f, 0.15f),
         MapObjectKind.Sphinx => new Color(0.85f, 0.70f, 0.35f),
         MapObjectKind.WitchHut => new Color(0.35f, 0.50f, 0.30f),
+        MapObjectKind.Shrine => new Color(0.45f, 0.55f, 0.85f),
         MapObjectKind.Deposit => new Color(0.55f, 0.50f, 0.45f),
         MapObjectKind.MagiWindow or MapObjectKind.MagiEye => new Color(0.40f, 0.60f, 0.95f),
         MapObjectKind.KeymasterTent or MapObjectKind.BorderPost => new Color(0.90f, 0.85f, 0.30f),
