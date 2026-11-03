@@ -51,12 +51,12 @@ public static class SettlementPlacer
 
             if (isStart)
             {
-                PlayerTowns(map, spec, zone, tiles, townVisits, streams.For("towns", zone), spec.Owner is { } slot && startTowns?.GetValueOrDefault(slot) is { } picked ? picked : null);
+                PlayerTowns(map, spec, zone, tiles, townVisits, streams.For("towns", template.RollZone(zone)), spec.Owner is { } slot && startTowns?.GetValueOrDefault(slot) is { } picked ? picked : null);
             }
 
-            NeutralTowns(map, spec, zone, tiles, townVisits, streams.For("towns", zone + 1000), creatures);
-            Mines(map, spec, zone, tiles, isStart && townVisits.Count > 0 ? townVisits[0] : null, streams.For("mines", zone), creatures);
-            Piles(map, spec, zone, tiles, streams.For("piles", zone));
+            NeutralTowns(map, spec, zone, tiles, townVisits, streams.For("towns", template.RollZone(zone) + 1000), creatures);
+            Mines(map, spec, zone, tiles, isStart && townVisits.Count > 0 ? townVisits[0] : null, streams.For("mines", template.RollZone(zone)), creatures);
+            Piles(map, spec, zone, tiles, streams.For("piles", template.RollZone(zone)));
             CheckReachable(map, spec, tiles);
         }
     }

@@ -4,7 +4,7 @@ Each phase ends with something **playable or usable** and a green test suite. It
 change each; `❓` marks items that wait for a design answer in [open-questions.md](open-questions.md). Core items come
 with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where a smoke scenario exists.
 
-**Where we are (2026-10-28)**: five design rounds are decided; building them started with the groundwork and the quick items. ADR-069
+**Where we are (2026-11-03)**: five design rounds are decided; building them started with the groundwork and the quick items. ADR-069
 reworks the skills, adds Necromancy and a second object catalogue; ADR-070 answers most of its questions and adds teams 2–8,
 the creature size pass, per-town buildings and the Capitol, tavern changes, surrender, the distance penalty, mirrored templates
 and the template editor; ADR-071 settles the data tables, fairness metrics, keymasters, growth buildings, spell books and guilds; ADR-072 answers deployment, Necromancy, the skill ids, rivals, taverns and the spell rules; ADR-073 confirms the open assumptions and settles the war machine footprints, caravan reach, base-creature map dwellings, victory conditions and week events; ADR-075 confirms ADR-073's, changes the caravan reach to 7500 movement points and settles the morale sources; ADR-077 adds map scenery, rivers,
@@ -30,8 +30,10 @@ and deadlines are built (ADR-094). HotA-like map events with quests (ADR-096): E
 (MAP-35, built in ADR-105) and the arena (ARN-1, ARN-2: before 1.0, with LAN, three shipped maps), and gives the artifacts HoMM names and assembled relics (CONT-7 answered in ADR-108: nine relics).
 Phase 3 is closed out in core and the apps (ADR-114: spell buildings, the town screen's building tree, the tavern screen, the
 specialties, the inspector rows, Ember March); a person's full game against the AI is its last check. New ideas (ADR-116): a prologue,
-health bars, dividing obstacles, layout and information windows (CAMP-1, UI-3, CMB-12).
-**Next**: a person's full game on Ember March (Phase 3 exit) and the whole-map fairness check (Phase 4).
+health bars, dividing obstacles, layout and information windows (CAMP-1, UI-3, CMB-12; answered in ADR-118). Phase 4 is closed out in core and the editor
+(ADR-117: whole-map fairness, teams 2–8, mirrored templates, the eight-player template, the template editor).
+The AI plays generated maps to the end (ADR-119: exploring, guards, keymasters, gates, garrison heroes).
+**Next**: a person's full game on Ember March (the Phase 3 exit's last check), the new-game screen's user templates, then the Phase 5 items.
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -418,8 +420,11 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Buy war machines at the blacksmith: tent, cart for shooters, the offensive machine back with Advanced Ballistics (ADR-059)
 - [ ] Spells (Phase 5), marketplace use (later; no AI trading for now, ADR-067); hiring heroes, artifacts and complexity levels are done
 - [x] AI-vs-AI games on generated maps (`sim game --template`); CI plays two weeks on every shipped template (`sim maps`)
-- [ ] Balance the AI over several maps (`sim game --runs`); the hand-made maps finish now (ADR-114), but on generated `duel` maps no
-      game finishes in 60 days yet
+- [x] The AI on generated maps (ADR-119): exploring as a target of its own (a flood to the reachable frontier, through own garrisons, key
+      posts and gates), guards that open the way, keymasters valued by the posts they open, secondary heroes holding a threatened town's
+      garrison; generated `duel` 8 of 8 games to a winner by day 100 (before 1 of 6 by day 60); `sim game` fight statistics and `EW_SIM_EXPLAIN`
+- [ ] Balance the AI further over several maps (`sim game --runs`): the first-mover edge on Two Towns (a day-4 rush), the larger templates'
+      game length, the AI's hero hiring when it is beaten
 
 ### Adventure map objects (ADR-068; [catalogue](../design/adventure-map.md#planned-objects-adr-068))
 Each item is one change with core tests (`TestWorld` maps), a map format bump where needed, editor placement through
@@ -519,8 +524,8 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Teams in templates: a team per start zone, `teamsLocked` (RMG-6, template v4)
 - [x] Template model follow-ups (ADR-070, ADR-112, template v7): portals (monoliths) linking zones, garrisons as a connection guard; optional
       connections with a presence probability (100 % default), border guards and gates as a connection option (ADR-071)
-- [ ] Teams 2–8 (ADR-070): team defaults and restrictions in templates and maps; the map editor may override the template's;
-      new-game screen respects them
+- [x] Teams 2–8 (ADR-070, ADR-117): `minTeams` / `maxTeams` in templates (v8) and maps (v28), validators, the map editor's
+      "Teams from / to" (undoable), the new-game screen shows and enforces them
 - [x] Template validator (`TemplateValidator`: errors and fairness warnings); shipped templates `duel`, `ffa-4` ("Free for all") and `2v2` ("Two against two")
 
 ### Generator pipeline
@@ -544,18 +549,20 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
       picked at setup (AI random); garrisons for empty slots; HoMM3-style start armies; retry on problems with sub-seeds
       (`GenerateBest`); standard rules; `MapGenerator.Version` in game records (v3); factions as generator input with
       native start-zone terrain, "Random" drawn first; a generated game saves as a map and replays
-- [ ] Connectivity and fairness validation of the whole map (ADR-071: distance to mines, treasure value, guard power on the way
-      within ±15 %; retry with the next sub-seed, then report) (whole-map reachability of start towns is checked in
-      `sim maps`, not yet by the generator itself)
-- [ ] Mirrored templates (1.0 scope, ADR-070): 2 players by an axis (vertical, horizontal, diagonal), 4 and 8 players by the
-      centre point (8 with the underground); mirrored zones share their rolls; layout search keeps the symmetry
+- [x] Connectivity and fairness validation of the whole map (ADR-071, ADR-117: `MapFairness`; every start reaches the others and
+      every town, mine and treasure is reachable; mine distance, treasure value by 1 / d², least guard power to the nearest rival, by team,
+      ±15 % with a slack; retry with the next sub-seed, then report; `sim fairness`; generator version 8)
+- [x] Mirrored templates (1.0 scope, ADR-070, ADR-117): 2 players by an axis (vertical, horizontal, diagonal, random) or a half turn,
+      4 and 8 players by a quarter turn (8 with the underground); mirrored zones share their rolls; the layout keeps the symmetry
 
 ### Tooling and UI
 - [x] Headless batch in CI: `sim maps` generates N maps per shipped template over its sizes and player counts and checks
       them (no generator problems, deterministic, every start town reachable from every player, AI-vs-AI play with no
       refused command, replay round trip); CI job `generated-maps`; fairness is the item above
-- [ ] Editor: template editor like HotA's (zone graph: add zones, set properties, draw connections; live validation; no
-      undo) with "Generate" to see the result (ADR-070)
+- [x] Editor: template editor like HotA's (zone graph: add zones, set properties, draw connections; live validation; no
+      undo) with "Generate" to see the result (ADR-070, ADR-117: `TemplateEditorSession`, `TemplateEditorPanel`, user templates in
+      `user://templates`; smoke scenario `editor-template-editor`)
+- [ ] New-game screen: list the user templates too (the editor's Generate tab does)
 - [x] Editor: "generate map from template" core (`EditorMapGenerator`): a template, size, seed, player count and optional
       town per slot give a new editable scenario with coloured players, start towns, heroes and armies, a description
       that records how it was made, and the generator's problems and validator issues to show
@@ -565,11 +572,11 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Game: new-game screen picks template, size, players (human or computer, town and hero per player, team), seed and options, then
       generates; problems of the best attempt are shown with "Start anyway"; saves keep the generation info (ADR-086; smoke scenario
       `game-random-map`). Still open: the tier-1 dwelling pick and the hero limit override
-- [ ] Starter templates: 2-player duel, 4-player free-for-all and 2v2 (shipped), 8-player
+- [x] Starter templates: 2-player duel, 4-player free-for-all (mirrored) and 2v2, "Mirror duel", 8-player "Eight kingdoms" (ADR-117)
 - Not in 1.0: water zones and islands (no sea travel, ADR-051), HotA template import (ADR-034)
 
 **Exit**: a player picks a template in the game and gets a fair, playable random map; designers
-author templates in the editor.
+author templates in the editor. Met in core and the editor (ADR-117); the AI's play on generated maps is the Adventure AI item.
 
 ## Phase 5: Content and polish
 
@@ -649,12 +656,14 @@ Power, an element per spell.
 - [ ] Campaign variables ("kept for the next map", "taken from the last map") recorded with the campaign (EVT-1 f, FLOW-1)
 
 ### Presentation and UI (ADR-116)
-- [ ] Stack health bars in battle: the stack's hit points against its start, green over 50 %, yellow 21–50 %, red 20 % and below ❓ CMB-12
-- [ ] Dividing obstacles: long cliffs that split the field partly, always with gaps ❓ CMB-12
+- [ ] Stack health bars in battle: the top creature's hit points against its full health, green over 50 %, yellow 21–50 %, red 20 % and
+      below (ADR-118)
+- [ ] Dividing obstacles: cliffs or walls of 6–12 cells that split the field partly, at least two gaps, flyers pass over; on highlands,
+      rough, rocky and subterranean ground, one battle in three, never in sieges or banks (ADR-118)
 - [ ] More scenery on random maps (trees, rocks and the like, denser by zone terrain; ADR-077's scenery)
-- [ ] Spacing pass: shared margins and gaps for every panel, no font or theme change ❓ UI-3
-- [ ] Configurable layout: initiative bar, minimap corner, hero and town lists, action panel; kept in the player's settings ❓ UI-3
-- [ ] Information windows (right-click) for creatures, heroes, skills, spells, artifacts, buildings and map objects; "detailed tooltips" ❓ UI-3
+- [ ] Spacing pass: shared margins and gaps for every panel, no font or theme change; first (ADR-118)
+- [ ] Configurable layout: initiative bar, minimap corner, hero and town lists, action panel; a "Layout" tab, kept in the player's settings (ADR-118)
+- [ ] Information windows (right-click) for creatures, heroes, skills, spells, artifacts, buildings and map objects; "detailed tooltips", off by default (ADR-118)
 - [x] Icon prompts for an image model ([icon-prompts.md](../content/icon-prompts.md), ADR-116); the icons themselves later
 - [x] The HoMM3 / HotA / HoMM5 mechanics we lack, listed ([missing-mechanics.md](../design/missing-mechanics.md), ADR-116)
 
@@ -692,7 +701,7 @@ Power, an element per spell.
 **Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
 
 ## Phase 6: Story campaign
-- [ ] Prologue / tutorial: one small map, Haven against neutrals and a Necropolis vanguard, hints through the map events ❓ CAMP-1 (ADR-116)
+- [ ] Prologue / tutorial: one small map, Haven against neutrals and a Necropolis vanguard, hints through the map events, a "Hints" setting; playable from the main menu as "Prologue" (ADR-116, ADR-118)
 - [ ] Scenario chaining and hero carry-over
 - [ ] Map triggers and events, dialogue: built on the map events (ADR-096); campaign variables kept from one map to the next (FLOW-1, EVT-1)
 - [ ] Editor support for triggers and scripting: the map events' "Events" tab (ADR-096)

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EternalWars.Godot.Shared\EternalWars.Godot.Shared.csproj" />
+    <ProjectReference Include="..\..\Core\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj" />
   </ItemGroup>
 
 </Project>

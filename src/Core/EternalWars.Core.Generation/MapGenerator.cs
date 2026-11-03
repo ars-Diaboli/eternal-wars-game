@@ -23,7 +23,7 @@ public static class MapGenerator
     /// Bumped whenever a change makes a template, size, players and seed give another map; saved with generated games and shown with the seed, so a
     /// shared seed from another version can be warned about.
     /// </summary>
-    public const int Version = 7;
+    public const int Version = 8;
 
     /// <summary>How many seeds <see cref="GenerateBest"/> tries: the seed, then sub-seeds of it.</summary>
     public const int Attempts = 10;
@@ -48,6 +48,12 @@ public static class MapGenerator
         RoadPlacer.Place(template, map);
         RiverPlacer.Place(template, map, seed);
         TreasurePlacer.Place(template, map, seed, creatures, artifacts);
+        map.Fairness = MapFairness.Check(template, map, creatures);
+        foreach (var problem in map.Fairness.Problems)
+        {
+            map.Problem(problem);
+        }
+
         return map;
     }
 
@@ -90,6 +96,7 @@ public static class MapGenerator
         MapTemplate template, int size, ulong seed, IReadOnlyList<PlayerSetup> players, GameOptions? options = null, CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null, ArtifactCatalog? artifacts = null, BuildingCatalog? buildings = null, int? maxHeroes = null)
     {
+        ScenarioAssembler.CheckTeams(template, players);
         var resolved = ScenarioAssembler.ResolveTowns(players, seed);
         var generation = GenerateBest(template, size, seed, creatures: creatures, artifacts: artifacts, startTowns: ScenarioAssembler.StartTowns(resolved));
         return (ScenarioAssembler.Build(template, generation.Map, resolved, seed, options, creatures, heroRoster, buildings, artifacts, maxHeroes), generation);

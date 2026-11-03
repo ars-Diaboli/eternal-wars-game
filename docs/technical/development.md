@@ -101,9 +101,10 @@ Any command takes `--creatures path.csv`.
 - Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
   (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `game-town-screen`,
   `game-hero-screen`, `game-kingdom`, `game-weeks`, `game-thieves-guild`, `game-random-map`, `game-main-menu`, `game-siege`, `game-garrison-hero`,
-  `game-dwelling-caravan`, `game-tavern`, `game-ember-march`, `editor-generated-connections`, `editor-inspector-objects`, `editor-tools`, `editor-generate`, `editor-week-events`)
+  `game-dwelling-caravan`, `game-tavern`, `game-ember-march`, `editor-generated-connections`, `editor-inspector-objects`, `editor-tools`, `editor-generate`, `editor-week-events`, `editor-template-editor`)
   and saves frames to `.shots/`. Script entries are `frame:kind:argument` with the kinds `click` / `rclick` (x,y), `key` (a Godot key name),
-  `hold` (`Key,frames`, for camera panning) and `wheel` (`up|down,count`). The editor opens `--map=<file>`; `sim generate <template> --out <file>`
+  `hold` (`Key,frames`, for camera panning), `wheel` (`up|down,count`) and `drag` / `rdrag` (`x1,y1,x2,y2`: pressed, moved and
+  released over three frames). The editor opens `--map=<file>`; `sim generate <template> --out <file>`
   saves a generated map to open there (`editor-generated-connections` does that first), and `sim export towns|demo|ember --out <file>`
   a built-in map (the Ember March scenarios use it). In a fresh clone import the assets once per app first
   (`<Godot console exe> --headless --path src/Apps/<App> --import`), or every texture load fails. A passing run only means
@@ -112,7 +113,13 @@ Any command takes `--creatures path.csv`.
   do not depend on the new-game screen's layout. Smoke maps live in `tools/smoke/`; `SmokeMapTests` checks that they still do what the
   scripts expect.
 - CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` + `sim selftest` on every push to main and on PRs,
-  and a parallel `generated-maps` job: `sim maps --maps 6 --days 14` (6 maps per shipped template, about 30 s).
+  and a parallel `generated-maps` job: `sim maps --maps 6 --days 14` (6 maps per shipped template). `sim fairness [--template <id>] [--seeds 20] [--size N] [--verbose]`
+  generates maps and prints each start's mine distance, treasure value and guard power with the fairness problems (ADR-117).
+  `sim game` prints per player the fights won / lost by kind (neutral, garrison, bank, town, hero, defending), what is left on the map
+  (monster stacks, neutral garrisons and towns, border posts, keys) and the garrison hero moves (ADR-119). `EW_SIM_EXPLAIN=10,25` prints, at
+  the start of those days' turns, each hero's best targets as the AI sees them (value, fight safe or not, route cost, danger) and its
+  exploring tile (`AdventureAi.Explain`); `EW_SIM_GUARDS=1` adds every monster stack and whether the player has explored it; `EW_SIM_TRACE=1`
+  prints the battles and defeated heroes.
 - Core builds with warnings as errors; keep Godot projects warning-free as well.
 - Commits: imperative mood, small and focused.
 - Binary assets (`*.png`, `*.jpg`, `*.glb`, `*.fbx`, `*.wav`, `*.ogg`, fonts, ...) go through **Git LFS** (`.gitattributes`;

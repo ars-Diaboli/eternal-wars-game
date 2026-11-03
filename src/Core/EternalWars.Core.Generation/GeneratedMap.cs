@@ -31,6 +31,7 @@ public sealed class GeneratedMap
     private readonly HashSet<MapPosition> _roads = [];
     private readonly HashSet<MapPosition> _rivers = [];
     private readonly HashSet<MapPosition> _reserved = [];
+    private readonly Dictionary<MapObjectId, int> _treasureValues = [];
     private int _nextId = 1;
 
     private GeneratedMap(GeneratedTerrain terrain)
@@ -118,6 +119,14 @@ public sealed class GeneratedMap
     }
 
     internal void AddTown(GeneratedTown town) => _towns.Add(town);
+
+    /// <summary>The treasure items the treasure stage placed and what each is worth (its drawn value; a site its own value), for the fairness check.</summary>
+    public IReadOnlyDictionary<MapObjectId, int> TreasureValues => _treasureValues;
+
+    internal void RecordTreasure(MapObject item, int value) => _treasureValues[item.Id] = value;
+
+    /// <summary>The whole-map check's measures and findings (<see cref="MapFairness"/>), set by <see cref="MapGenerator.Generate"/>.</summary>
+    public FairnessReport? Fairness { get; internal set; }
 
     /// <summary>
     /// Gives a start town another town type (players pick theirs at game setup): the town of the same size takes the old one's id,

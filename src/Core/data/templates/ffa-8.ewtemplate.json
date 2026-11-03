@@ -1,0 +1,612 @@
+{
+  "formatVersion": 8,
+  "name": "Eight kingdoms",
+  "description": "Eight players, four on the surface and four underground, each with a safe reserve; the reserves of a level are ringed together and lead to its hub, and a guarded gate joins the two hubs. Mirrored by a quarter turn on each level.",
+  "minPlayers": 2,
+  "maxPlayers": 8,
+  "sizes": [
+    128,
+    160,
+    192
+  ],
+  "underground": true,
+  "symmetry": "QuarterTurn",
+  "zones": [
+    {
+      "id": "start-1",
+      "type": "PlayerStart",
+      "owner": 0,
+      "size": 3,
+      "level": 0,
+      "mirror": "start-2",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-2",
+      "type": "PlayerStart",
+      "owner": 1,
+      "size": 3,
+      "level": 0,
+      "mirror": "start-3",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-3",
+      "type": "PlayerStart",
+      "owner": 2,
+      "size": 3,
+      "level": 0,
+      "mirror": "start-4",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-4",
+      "type": "PlayerStart",
+      "owner": 3,
+      "size": 3,
+      "level": 0,
+      "mirror": "start-1",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "reserve-1",
+      "type": "Treasure",
+      "size": 2,
+      "level": 0,
+      "mirror": "reserve-2",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-2",
+      "type": "Treasure",
+      "size": 2,
+      "level": 0,
+      "mirror": "reserve-3",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-3",
+      "type": "Treasure",
+      "size": 2,
+      "level": 0,
+      "mirror": "reserve-4",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-4",
+      "type": "Treasure",
+      "size": 2,
+      "level": 0,
+      "mirror": "reserve-1",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "hub",
+      "type": "Treasure",
+      "size": 3,
+      "level": 0,
+      "neutralTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 2
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 8000,
+          "count": 3,
+          "minValue": 4000
+        }
+      ],
+      "monsters": "Strong"
+    },
+    {
+      "id": "start-5",
+      "type": "PlayerStart",
+      "owner": 4,
+      "size": 3,
+      "level": 1,
+      "mirror": "start-6",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-6",
+      "type": "PlayerStart",
+      "owner": 5,
+      "size": 3,
+      "level": 1,
+      "mirror": "start-7",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-7",
+      "type": "PlayerStart",
+      "owner": 6,
+      "size": 3,
+      "level": 1,
+      "mirror": "start-8",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "start-8",
+      "type": "PlayerStart",
+      "owner": 7,
+      "size": 3,
+      "level": 1,
+      "mirror": "start-5",
+      "playerTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 1,
+        "Lumber": 1,
+        "Ore": 1
+      },
+      "extraPiles": 3,
+      "treasure": [
+        {
+          "maxValue": 1500,
+          "count": 4,
+          "minValue": 500
+        }
+      ],
+      "monsters": "None"
+    },
+    {
+      "id": "reserve-5",
+      "type": "Treasure",
+      "size": 2,
+      "level": 1,
+      "mirror": "reserve-6",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-6",
+      "type": "Treasure",
+      "size": 2,
+      "level": 1,
+      "mirror": "reserve-7",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-7",
+      "type": "Treasure",
+      "size": 2,
+      "level": 1,
+      "mirror": "reserve-8",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "reserve-8",
+      "type": "Treasure",
+      "size": 2,
+      "level": 1,
+      "mirror": "reserve-5",
+      "neutralTowns": {
+        "max": 1,
+        "min": 0
+      },
+      "mines": {
+        "Crystal": 1,
+        "Mercury": 1,
+        "Sulfur": 1
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 4000,
+          "count": 4,
+          "minValue": 1500
+        }
+      ],
+      "monsters": "Weak"
+    },
+    {
+      "id": "deep-hub",
+      "type": "Treasure",
+      "size": 3,
+      "level": 1,
+      "neutralTowns": {
+        "max": 1,
+        "min": 1
+      },
+      "mines": {
+        "Gold": 2
+      },
+      "extraPiles": 2,
+      "treasure": [
+        {
+          "maxValue": 8000,
+          "count": 3,
+          "minValue": 4000
+        }
+      ],
+      "monsters": "Strong"
+    }
+  ],
+  "connections": [
+    {
+      "from": "start-1",
+      "to": "reserve-1",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-1",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-1",
+      "to": "reserve-2",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "start-2",
+      "to": "reserve-2",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-2",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-2",
+      "to": "reserve-3",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "start-3",
+      "to": "reserve-3",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-3",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-3",
+      "to": "reserve-4",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "start-4",
+      "to": "reserve-4",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-4",
+      "to": "hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-4",
+      "to": "reserve-1",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "start-5",
+      "to": "reserve-5",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-5",
+      "to": "deep-hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-5",
+      "to": "reserve-6",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "start-6",
+      "to": "reserve-6",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-6",
+      "to": "deep-hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-6",
+      "to": "reserve-7",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "start-7",
+      "to": "reserve-7",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-7",
+      "to": "deep-hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-7",
+      "to": "reserve-8",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "start-8",
+      "to": "reserve-8",
+      "kind": "Wide"
+    },
+    {
+      "from": "reserve-8",
+      "to": "deep-hub",
+      "kind": "Normal",
+      "guardValue": 3000
+    },
+    {
+      "from": "reserve-8",
+      "to": "reserve-5",
+      "kind": "Normal",
+      "guardValue": 1500
+    },
+    {
+      "from": "hub",
+      "to": "deep-hub",
+      "kind": "Gate",
+      "guardValue": 5000
+    }
+  ]
+}

@@ -191,14 +191,14 @@ public class ConnectionGuardTests
             Connections = [pair.Connections[0] with { Guard = ConnectionGuard.BorderGate, Colour = ObjectColour.Black, Chance = 60, Kind = ConnectionKind.Normal }],
         };
         var loaded = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(full));
-        Assert.Equal(7, loaded.FormatVersion);
+        Assert.Equal(MapTemplate.CurrentFormatVersion, loaded.FormatVersion);
         Assert.Equal(ConnectionGuard.Garrison, loaded.ConnectionGuard);
         Assert.Equal(full.Connections[0], loaded.Connections[0]);
         var portal = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(With(pair.Connections[0] with { Kind = ConnectionKind.Portal })));
         Assert.Equal(ConnectionKind.Portal, portal.Connections[0].Kind);
 
         // A v6 file has none of them: monsters, every connection made.
-        var old = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(pair).Replace("\"formatVersion\": 7", "\"formatVersion\": 6"));
+        var old = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(pair).Replace($"\"formatVersion\": {MapTemplate.CurrentFormatVersion}", "\"formatVersion\": 6"));
         Assert.Equal(6, old.FormatVersion);
         Assert.Equal(ConnectionGuard.Monsters, old.GuardOf(old.Connections[0]));
         Assert.Equal(100, old.Connections[0].Chance);
@@ -215,7 +215,7 @@ public class ConnectionGuardTests
         };
 
         var map = MapGenerator.Generate(template, 96, 5);
-        Assert.Empty(map.Problems);
+        Assert.DoesNotContain(map.Problems, p => !p.StartsWith("Unfair", StringComparison.Ordinal)); // one border guard makes the sides differ on purpose
         Assert.Equal(3, map.Objects.OfType<MapGarrison>().Count() + map.Passages.Count(p => p.Connection >= 3 && map.Objects.OfType<MonsterGuard>().Any(g => g.Position == p.Anchor)));
 
         Assert.NotEmpty(map.Objects.OfType<MapGarrison>());

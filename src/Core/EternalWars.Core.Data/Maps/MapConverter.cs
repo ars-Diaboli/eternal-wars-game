@@ -25,6 +25,8 @@ public static class MapConverter
                 .Select(p => new PlayerSlotDocument(p.Name, p.IsHuman, p.Team.Value == p.Id.Value ? null : p.Team.Value, p.MaxHeroes))
                 .ToList(),
             TeamsLocked = state.TeamsLocked,
+            MinTeams = state.MinTeams,
+            MaxTeams = state.MaxTeams,
             Rules = state.Rules.IsDefault ? null : ToDocument(state.Rules),
             Heroes = state.Heroes
                 .Select(h => new HeroPlacementDocument(
@@ -114,6 +116,7 @@ public static class MapConverter
         {
             var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts, catalog);
             state.SetTeamsLocked(document.TeamsLocked);
+            state.SetTeamCounts(document.MinTeams, document.MaxTeams);
             state.SetRules(ToRules(document.Rules));
             for (var i = 0; i < document.Players.Count; i++)
             {

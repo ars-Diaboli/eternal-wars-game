@@ -115,6 +115,7 @@ public static class ScenarioAssembler
         map.Map.Name = $"{template.Name} {map.Layout.Size}×{map.Layout.Size} #{seed}";
         var state = new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster, buildings: buildings, artifacts: artifacts);
         state.SetTeamsLocked(template.TeamsLocked);
+        state.SetTeamCounts(template.MinTeams, template.MaxTeams);
         state.SetRules(ScenarioRules.Default with { MaxHeroes = maxHeroes ?? template.MaxHeroes, WeekEvents = template.WeekEvents.ToSettings() });
         return state;
     }
@@ -172,6 +173,22 @@ public static class ScenarioAssembler
         if (players.Where(p => p.Hero is not null).GroupBy(p => p.Hero).Any(g => g.Count() > 1))
         {
             throw new ArgumentException("Two players picked the same hero.", nameof(players));
+        }
+
+        CheckTeams(template, players);
+    }
+
+    /// <summary>
+    /// Refuses (<see cref="ArgumentException"/>) a setup whose teams the template's team counts do not allow (ADR-117); <see cref="MapGenerator.Build"/>
+    /// checks it before generating, so a wrong setup costs no map.
+    /// </summary>
+    public static void CheckTeams(MapTemplate template, IReadOnlyList<PlayerSetup> players)
+    {
+        var teams = Teams(template, players.OrderBy(p => p.Slot).ToList()).Distinct().Count();
+        if (teams < (template.MinTeams ?? 1) || teams > (template.MaxTeams ?? int.MaxValue))
+        {
+            throw new ArgumentException(
+                $"{template.Name} is played by {(template.MinTeams == template.MaxTeams ? $"{template.MinTeams}" : $"{template.MinTeams ?? 2} to {template.MaxTeams ?? template.MaxPlayers}")} teams, not {teams}.", nameof(players));
         }
     }
 

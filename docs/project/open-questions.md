@@ -7,7 +7,9 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-02** (ADR-115, ADR-116): EVT-1 … EVT-6 (map events) answered: the proposals; new: CAMP-1 (prologue), UI-3 (layout and
+**Updated 2026-11-03** (ADR-118): CAMP-1 and UI-3 answered: the proposals; CMB-12 answered: the top creature's hit points, the
+proposals for the rest.
+Before that (ADR-115, ADR-116): EVT-1 … EVT-6 (map events) answered: the proposals; new: CAMP-1 (prologue), UI-3 (layout and
 information windows), CMB-12 (health bars, dividing obstacles).
 Before that (ADR-107, ADR-108): HERO-8 (rarer specialties) answered: the proposals, for now; CONT-7 (assembled relics)
 answered, with six more relics.
@@ -40,7 +42,7 @@ MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, R
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work. CAMP-1 stops only the prologue, UI-3 the layout options and information windows, CMB-12 the health bars and dividing obstacles.
+Nothing blocks the current work.
 
 ## Heroes
 
@@ -65,46 +67,11 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
-## New ideas (ADR-116, 2026-11-02)
-
-<a id="camp-1"></a>
-**CAMP-1 Prologue and tutorial.** (ADR-116) A short first campaign that teaches the game: a small map, Haven against neutral creatures and
-the undead, placeholder lore.
-(a) **When**: before the campaign system (Phase 6), as one hand-made map that teaches step by step, or as the campaign's first mission?
-(b) **How it teaches**: messages at set moments (first move, first battle, first town, first week) through the map events (ADR-115), or a
-separate tutorial layer with highlights on the UI?
-(c) **Length**: one map of about two weeks (move, collect, fight, build, recruit, siege a Necropolis town), or two or three short maps?
-(d) **Enemy**: neutral monsters and one undead town held by the computer (it builds and attacks), or neutrals and a scripted undead hero only?
-(e) **Lore**: Haven scouts the border of the Ashen Court; the undead are a Necropolis vanguard (placeholder, lore.md)?
-*Proposal*: (a) the first campaign mission, playable on its own from the main menu ("Prologue") before the campaign screen exists; (b)
-messages through the map events, so it needs EVT step 1 (ADR-115), plus a "hints" setting to turn them off; (c) one map, about two weeks;
-(d) neutrals first, then one computer-held Necropolis town with a small hero; (e) yes.
-
-<a id="ui-3"></a>
-**UI-3 Layout, configuration and information windows.** (ADR-116)
-(a) **Configurable layout**: initiative bar top or bottom, minimap in any corner, hero and town lists vertical or horizontal, the action
-panel's side: a "Layout" tab in the game menu, saved with the player's settings (ADR-090), not with the game?
-(b) **Spacing pass**: one shared set of margins and gaps (theme constants) for every panel, no font or theme change (the owner's note)?
-(c) **Information windows**: right-click (or hold) on a creature, hero, skill, spell, artifact, building or map object opens a window with
-its numbers and how it works; a plain hover tooltip stays short?
-(d) **Advanced tooltips**: a setting "Detailed tooltips" that adds the formulas and the numbers behind them (damage ranges, percentages,
-what a level adds) to the hover tooltips?
-*Proposal*: (a) yes; (b) yes, first, since the layout options build on it; (c) yes, right-click as in HoMM3 and a long press for touch
-later; (d) yes, off by default.
-
-<a id="cmb-12"></a>
-**CMB-12 Stack health bars and dividing obstacles.** (ADR-116)
-(a) **Health bar**: the stack's total hit points against its total at the start of the battle (so losses show), or the top creature's hit
-points? Colours as the owner set them: over 50 % green, 21–50 % yellow, 20 % and below red.
-(b) **Dividing obstacles**: long cliffs or walls of 6–12 cells that split the field partly, with at least two gaps so both sides can always
-reach each other; flyers and teleporters pass over; shooters' cover as for crags (ADR-035)?
-(c) **How often**: on some terrains only (highlands, rough, rocky ground, subterranean), one battle in three there, never in sieges or banks?
-*Proposal*: (a) total hit points against the start; (b) yes; (c) yes.
 ## Numbers to tune (not questions)
-Placeholders that wait for play-testing: caravan cost (ADR-054); complexity starting resources (ADR-063); Stewardship and governor percentages
-(ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064); building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices
-(CMB-3); morale 2 % and luck 4 % per point (ADR-053); deposit prices and the map marketplace threshold (ADR-070); the AI's retreat threshold.
-
+Placeholders that wait for play-testing (kept as they are, ADR-118): caravan cost (ADR-054); complexity starting resources (ADR-063);
+Stewardship and governor percentages (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064);
+building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices (CMB-3); morale 2 % and luck 4 % per point (ADR-053);
+deposit prices and the map marketplace threshold (ADR-070); the AI's retreat threshold; the fairness tolerances and slacks (ADR-117).
 ## Answered
 One line per question; the ADR holds the detail.
 
@@ -117,11 +84,11 @@ One line per question; the ADR holds the detail.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
   CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073; HERO-8 (rarer specialties, the proposals for now) ADR-107.
 - **Combat**: CMB-5 (sieges before 1.0) ADR-099; CMB-11 (siege rules) ADR-106; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
-  morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090.
+  morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090, CMB-12 (health bars, dividing obstacles) ADR-118.
 - **Magic**: MAG-13 (guild spell draw, spell elements, summons) ADR-106; MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.
-- **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095; UI-2 (replays, main menu) ADR-101.
+- **Presentation**: UI-1 (speed settings) ADR-090, built ADR-095; UI-2 (replays, main menu) ADR-101; UI-3 (layout, information windows) ADR-118.
 - **LAN multiplayer**: MP-1 (before 1.0, host, clients that see only their view, lobby, saves) and MP-2 (simultaneous first week) ADR-098;
   MP-3 (clients' view, saves, smooth fog) and MP-4 (start zones) ADR-099.
 - **Content**: CONT-3 (artifacts re-drafted) ADR-099; CONT-6 (HoMM names, assembled relics) ADR-100; CONT-7 (assembled relic rules, six more relics) ADR-108.
@@ -129,5 +96,6 @@ One line per question; the ADR holds the detail.
   events).
 - **Game flow**: victory ADR-057; FLOW-1 (conditions, deadlines, teams) and FLOW-2 (week and month events) ADR-073, the conditions built ADR-094; FLOW-2 event start and town-less players ADR-075; FLOW-3 (turn timer) ADR-091; FLOW-4 (victory screen, ranking) ADR-101.
 - **Map events**: EVT-1 … EVT-6 (scope and plan, triggers, conditions, actions, quests, AI and editor: the proposals) ADR-115.
+- **Campaign**: CAMP-1 (the prologue) ADR-118.
 - **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.

@@ -2866,3 +2866,98 @@ are done.
   lore colours, and prompts for resources, stats, skills, schools, war machines, map and battle actions and buttons.
 - **Missing mechanics**: [missing-mechanics.md](../design/missing-mechanics.md) lists what HoMM3 with HotA and HoMM5 have and we do not, with
   where each stands (dropped, planned, partly, missing) and candidates for next.
+### ADR-117: Phase 4 close-out: whole-map fairness, teams 2–8, mirrored templates, the eight-player template, the template editor (ADR-064, ADR-070, ADR-071, ADR-073, 2026-11-03)
+**Status**: implemented (2026-11-03). Numbers marked *(proposal)* are the agent's, for the owner to confirm or change.
+
+- **Whole-map check** (`MapFairness.Check`, generation stage 8, ADR-071 / RMG-8): after the treasure, every start town must reach every
+  other start town, and every town, mine and treasure item must be reachable from some start. The walk uses the step costs (2 straight,
+  3 diagonal), skips blocked cells, crosses gates and portals by their target, and stops at entrances that end a route, except guards,
+  pickups and garrisons, which it walks through and counts. Each start is measured by three numbers: the **mine distance** (per resource,
+  the distance to the nearest mine, summed), the **treasure value** (each item's recorded worth split between the starts by 1 / distance²)
+  and the **guard power** (the least guard power on the way to the nearest rival; a Dijkstra on guard, then distance).
+- **Teams, not players**, are compared: allies share camps on `2v2`, so a team's numbers are its members' sums (a player without a team is a
+  team of one), and only teams whose zones are alike (size, level, towns, mines, piles, treasure bands, monsters) are compared. A team fails
+  when a number is more than **±15 %** off its group's average and more than a slack off it *(proposal: 4 tiles, 1500 gold, 300 power, so
+  small maps with small numbers are not refused for a step)*. A failure is a generator problem, so `GenerateBest` retries with the next
+  sub-seed and reports the last one if every attempt fails. `sim fairness [--template] [--seeds 20] [--size] [--verbose]` prints the
+  numbers. `MapGenerator.Version` 8.
+- **Teams 2–8** (ADR-070): templates (format v8) and maps (format v28) carry `minTeams` / `maxTeams` (2–8, empty = any). The template
+  validator checks 2 ≤ fewest ≤ most ≤ players and the fewest at most `MinPlayers`, and that locked teams fit; `ScenarioAssembler.CheckTeams`
+  refuses a setup with another team count; `GameState.SetTeamCounts` before the game starts and `AssignTeams` refuses a change that breaks
+  it. The map editor has "Teams from / to" in the map properties (undoable `SetTeamCounts`), the validator an error for locked default teams
+  outside the counts (a warning when not locked); the new-game screen shows "— 2 teams" and refuses others. `2v2` is set to exactly 2.
+- **Mirrored templates** (ADR-070, ADR-073, RMG-9): `symmetry` None, Vertical, Horizontal, Diagonal, RandomAxis (drawn from the seed),
+  HalfTurn or QuarterTurn, and a `mirror` per zone naming its image. Axes and the half turn are for 2 players, the quarter turn for 4 or
+  8 (8 = four per level). The validator checks that mirrors exist, are used once, stay on their level, form cycles of 1 or the symmetry's
+  order with zones alike, that no start zone is its own image and that every connection's image is a connection like it. The layout
+  keeps the zone centres symmetric (only the first zone of each cycle moves), then copies the grid from the first tile of each cycle of
+  tiles. Mirrored zones and connections **share their rolls**: every stage seeds a zone by `RollZone` (the cycle's first zone) and walks its
+  tiles in the source zone's mapped order (`ZoneLayout.Tiles`), passages are sorted in the first connection's frame, and treasure values
+  are drawn before they are placed. The result is the same zone content on every side, though not tile for tile where walls and roads
+  meet on the axis.
+- **Templates**: `ffa-4` is now mirrored (quarter turn); new `mirror-duel` ("Mirror duel", random axis, 2 teams) and `ffa-8` ("Eight
+  kingdoms": 8 players, underground, quarter turn with four starts a level, reserves in a ring, a surface and an underground hub joined by a
+  5000 gate; sizes 128, 160, 192) *(proposal: zone sizes and treasure)*.
+- **Template editor** (ADR-070, RMG-10): `TemplateEditorSession` in core (blank, load, the template's own settings, add / edit / rename /
+  move / remove zones, connect / edit / disconnect, arrange the graph; each change publishes `TemplateChanged` with the validator's live
+  issues; **no undo**, as decided). The graph places are stored in the template (`graphX`, `graphY`; old templates get an arranged graph).
+  The map editor's "Templates" button opens `TemplateEditorPanel`: the zone graph (drag to move, right-drag to connect, drag the ground to
+  pan, wheel to zoom, Delete), an inspector for the template, the zone or the connection, the issues list, New, Open (shipped and user
+  templates), Save to `user://templates`, and Generate with a size and seed, which opens the map. The editor's Generate tab lists the user
+  templates that validate next to the shipped ones; the game's new-game screen still lists only the shipped ones.
+- **Tools**: `sim maps`'s reachability check now walks on from a gate's exit (it stopped at the exit before, which hid nothing on the old
+  templates but failed on `ffa-8`); the auto input has `drag` / `rdrag` (`x1,y1,x2,y2`); smoke scenario `editor-template-editor`.
+- **Results** (`sim fairness --seeds 6` on each template's sizes): fair at the first attempt in 4–6 of 6 seeds, after retries 6 of 6
+  everywhere (duel, 2v2, ffa-4, Mirror duel, Eight kingdoms); `sim maps --days 3`: 15 maps of 5 templates, none failed; 1158 tests pass.
+- **Not done**: the new-game screen's user templates; the AI on generated maps (the next step).
+
+### ADR-118: Answers to CAMP-1, UI-3 and CMB-12 (ADR-116, 2026-11-03)
+**Status**: accepted (2026-11-03), the owner's answers in `open-questions.md`. Nothing implemented; the roadmap items lose their ❓.
+
+- **CAMP-1, the prologue** ("use the proposals"): (a) the campaign's first mission, playable on its own from the main menu as "Prologue"
+  before the campaign screen exists; (b) it teaches through messages from the map events (needs EVT step 1, ADR-115), with a "Hints"
+  setting to turn them off; (c) one map of about two weeks; (d) neutral monsters first, then one computer-held Necropolis town with a small
+  hero; (e) Haven scouts the border of the Ashen Court, the undead are a Necropolis vanguard (placeholder lore).
+- **UI-3, layout and information windows** ("use the proposals"): (a) a "Layout" tab in the game menu (initiative bar top or bottom,
+  minimap corner, hero and town lists vertical or horizontal, the action panel's side), kept in the player's settings, not the game;
+  (b) the spacing pass comes first: one set of margins and gaps as theme constants, no font or theme change; (c) information windows
+  on right-click (a long press on touch later) for creatures, heroes, skills, spells, artifacts, buildings and map objects; the hover
+  tooltip stays short; (d) a "Detailed tooltips" setting, off by default, adds the formulas and numbers.
+- **CMB-12, health bars and dividing obstacles**: (a) *the owner's choice, not the proposal*: the bar shows the **top creature's hit
+  points** (the wounded one at the top of the stack) against its full health, green over 50 %, yellow 21–50 %, red 20 % and below; the
+  count beside it shows the losses; (b) long cliffs or walls of 6–12 cells that split the field partly, always with at least two gaps,
+  flyers and teleporters pass over, shooters' cover as for crags (ADR-035); (c) only on highlands, rough, rocky and subterranean ground,
+  one battle in three there, never in sieges or creature banks.
+- **Numbers to tune**: the owner's list stays as placeholders until play-testing (caravan cost, complexity resources, Stewardship and
+  governor percentages, Ballistics, zone guards and `GuardPicker`, building costs, growth buildings, war machines, morale and luck per
+  point, deposit prices and the marketplace threshold, the AI's retreat threshold).
+
+### ADR-119: The adventure AI on generated maps: exploring, guards, garrison heroes, keys and gates (ADR-059, ADR-071, ADR-112, ADR-114, 2026-11-03)
+**Status**: implemented (2026-11-03). Numbers marked *(proposal)* are the agent's tuning, for play-testing.
+
+- **What was wrong** (found with the new `sim game` diagnostics): on generated `duel` maps the heroes fought once in 60 days and stayed at
+  level 1–5 with armies of 35 000–420 000 power, because (1) exploring was only the fallback when no target had any value, so a daily buff or
+  troops waiting at home kept a hero shuttling forever, and none of the passage guards was ever even seen; (2) the exploring search priced only
+  the 8 frontier tiles nearest in a straight line, which were often ground seen over a wall, so a hero said "nothing to explore" with its own
+  zone half unexplored.
+- **Exploring** (`AdventureAi.Explore`): a flood over open ground (no objects, heroes or guarded tiles) finds the frontier the hero can walk
+  to, nearest first; a border post the player has the key for and an own or allied garrison are passes; a gate or portal whose exit is
+  unexplored is a frontier tile itself (walking in takes the hero through), one whose exit is explored lets the flood go on there. Exploring
+  is now a target like the others, worth **900** *(proposal)* against the targets' `value / (0.5 + days)`; a main hero that knows no enemy town
+  adds **10 %** of its army power *(proposal)*, so a strong army goes looking for the enemy.
+- **Guards**: a monster stack or a neutral garrison within 3 tiles of unexplored ground is also worth the exploring it opens (+900): passage
+  guards stand between zones.
+- **Keymasters**: a tent is worth 2500 once a border post of its colour is known (it bars the way), else 600 *(proposal)*; key holders explore
+  and route through the posts (the route finder already let them, ADR-071).
+- **Garrison heroes** (ADR-112): a **secondary** hero defending its town (an enemy can reach it, the garrison alone cannot hold, the two
+  together at least match the danger) goes into the garrison, while the main hero is out on the map: inside it leads every stack behind the
+  walls, at the entrance it would fight alone and the garrison after it. The player's only or main hero never goes in, as a garrison hero
+  never retreats (a first version let Two Towns end on day 2 when the only hero went in and lost). A garrison hero comes out once no enemy can
+  reach the town, and leaves its weakest stack behind.
+- **Tools**: `AdventureAi.Explain(hero)` lists a hero's best targets with value, fight check, route cost and danger, then its exploring tile;
+  `sim game` prints the fights won / lost per player and kind, what is left on the map, the keys and the garrison hero moves; `EW_SIM_EXPLAIN`
+  and `EW_SIM_GUARDS` ([development.md](../technical/development.md)).
+- **Results** (`sim game --runs`, the AI on both sides): generated `duel` 8 of 8 games to a winner by day 100 (days 27–63, 3 : 5), before 1 of 6
+  by day 60; the connections smoke template (garrison, border gate, border guard) 4 of 4 (days 49–75, keys taken, the garrison beaten, the
+  border guard passed); Mirror duel 3 of 4; Ember March 8 of 8 (days 6–41, 4 : 4; before days 8–71); Two Towns ends on days 4–5 (before
+  13–37): its towns are 23 tiles apart and an exploring hero finds the other town on day 3 (a fair rush, not changed).

@@ -110,17 +110,20 @@ public static class TreasurePlacer
         for (var zone = 0; zone < template.Zones.Count; zone++)
         {
             var spec = template.Zones[zone];
-            var random = streams.For("treasure", zone);
+            var random = streams.For("treasure", template.RollZone(zone));
             var tiles = map.Layout.Tiles(zone).Select(t => new MapPosition(t.X, t.Y, t.Level)).ToList();
             var placed = new List<MapPosition>();
             var isStart = spec.Type is ZoneType.PlayerStart or ZoneType.AiStart;
             var marketplacePlaced = false;
             var sites = new Sites(new Dictionary<string, int>(StringComparer.Ordinal), mapSites);
-            foreach (var band in spec.Treasure)
+            // The values come first, from their own stream, so mirrored zones get the same ones whatever their places cost in draws (ADR-117).
+            var valueRandom = streams.For("treasure-values", template.RollZone(zone));
+            var values = spec.Treasure.Select(band => Enumerable.Range(0, band.Count).Select(_ => band.MinValue + valueRandom.Next(Math.Max(0, band.MaxValue - band.MinValue) + 1)).ToList()).ToList();
+            foreach (var (band, bandIndex) in spec.Treasure.Select((b, i) => (b, i)))
             {
                 for (var i = 0; i < band.Count; i++)
                 {
-                    var value = band.MinValue + random.Next(Math.Max(0, band.MaxValue - band.MinValue) + 1);
+                    var value = values[bandIndex][i];
                     if (!Item(map, spec, tiles, placed, value, isStart, random, creatures, artifacts, relics, sites, ref marketplacePlaced))
                     {
                         map.Problem($"Zone '{spec.Id}': no room for treasure {i + 1} of {band.Count} ({band.MinValue}-{band.MaxValue}).");
@@ -137,6 +140,7 @@ public static class TreasurePlacer
         var roll = random.Next(4);
         MapObject? item = null;
         var guardedValue = value;
+        var worth = value;
         if (random.Next(SiteOdds) == 0 && PickSite(sites, value, random) is { } site
             && Spot(map, MapObjectCatalog.Default.Get(site.Definition), tiles, placed, random) is { } siteAt
             && (site.OwnGuard || HasGuardRoom(map, MapObjectCatalog.Default.Get(site.Definition), siteAt)))
@@ -145,6 +149,7 @@ public static class TreasurePlacer
             sites.Zone[site.Definition] = sites.Zone.GetValueOrDefault(site.Definition) + 1;
             sites.Map[site.Definition] = sites.Map.GetValueOrDefault(site.Definition) + 1;
             guardedValue = site.OwnGuard ? 0 : site.Value;
+            worth = site.Value;
         }
         else if (value >= BoxThreshold && random.Next(BoxOdds) == 0
             && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), tiles, placed, random) is { } boxAt)
@@ -199,6 +204,7 @@ public static class TreasurePlacer
         }
 
         placed.Add(item.VisitPosition);
+        map.RecordTreasure(item, worth);
         var guard = GuardValue(guardedValue, spec.Monsters, isStart, GuardShareMin + random.Next(GuardShareMax - GuardShareMin + 1));
         if (guard > 0)
         {

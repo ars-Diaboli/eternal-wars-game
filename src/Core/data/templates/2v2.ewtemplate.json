@@ -7,6 +7,8 @@
   "sizes": [96, 128, 160],
   "underground": false,
   "teamsLocked": true,
+  "minTeams": 2,
+  "maxTeams": 2,
   "zones": [
     {
       "id": "start-1", "type": "PlayerStart", "owner": 0, "team": 0, "size": 3,

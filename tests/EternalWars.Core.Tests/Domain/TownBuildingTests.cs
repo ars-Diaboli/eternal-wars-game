@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.AI;
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
@@ -140,6 +141,7 @@ public class TownBuildingTests
             town.SetLevel(building, level);
         }
 
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 500)); // too strong to hunt down: the game must go on
         var session = Start(state);
         var ai = new AdventureAi(session, controlHumanSlots: true);
         for (var day = 0; day < 4; day++)
