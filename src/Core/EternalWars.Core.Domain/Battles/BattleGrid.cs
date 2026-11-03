@@ -58,6 +58,10 @@ public static class BattleGrid
         var speed = limit / Unit;
         var start = unit.Position;
         var result = new Dictionary<CellPosition, int> { [start] = 0 };
+        if (unit.IsFixed)
+        {
+            return result; // the keep's stack stays in the keep, rooted stacks where they were called (ADR-120)
+        }
 
         if (unit.Creature.MovesFreely)
         {
@@ -132,8 +136,16 @@ public static class BattleGrid
     /// (then top-to-bottom, left-to-right, so the order is deterministic).
     /// </summary>
     public static IReadOnlyList<CellPosition> AttackPositions(BattleState battle, BattleUnit unit, BattleUnit target) =>
-        unit.IsMachine ? [] : Reachable(battle, unit)
+        unit.IsMachine || target.InKeep ? [] : Reachable(battle, unit)
             .Where(r => unit.RectAt(r.Key).IsAdjacentTo(target.Rect))
+            .OrderBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
+            .Select(r => r.Key)
+            .ToList();
+
+    /// <summary>Placements from which the unit can hit the structure in melee this turn (the gate, ADR-120), closest first.</summary>
+    public static IReadOnlyList<CellPosition> StructureAttackPositions(BattleState battle, BattleUnit unit, SiegeStructure structure) =>
+        unit.IsMachine || !structure.IsStanding ? [] : Reachable(battle, unit)
+            .Where(r => unit.RectAt(r.Key).IsAdjacentTo(structure.Rect))
             .OrderBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
             .Select(r => r.Key)
             .ToList();
@@ -214,6 +226,8 @@ public static class BattleGrid
             }
         }
 
+        // The keep's stack is behind the keep's walls (ADR-120): the same 1/2 as a wall, once.
+        wall |= target.InKeep;
         return units.Sum(u => u.Creature.Size.CoverEighths()) + obstacles.Sum(o => o.Class.CoverEighths()) + (wall ? ObstacleClass.Wall.CoverEighths() : 0);
     }
 

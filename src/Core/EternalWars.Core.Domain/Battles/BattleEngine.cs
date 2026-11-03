@@ -149,10 +149,90 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     private bool FireAt(BattleUnit machine, SiegeStructure structure, Heroes.SkillLevel ballistics)
     {
         var hit = WarMachines.HitsFortification(ballistics, battle.Random);
-        var damage = hit ? Math.Min(structure.Health, WarMachines.FortificationDamage(ballistics, battle.Random)) : 0;
+        var damage = !hit ? 0
+            : structure.Kind == SiegeStructureKind.Gate ? structure.Health // a war machine breaks the gate in one hit (ADR-120)
+            : Math.Min(structure.Health, WarMachines.FortificationDamage(ballistics, battle.Random));
         structure.Health -= damage;
         events.Publish(new SiegeStructureShot(machine.Id, structure.Id, hit, damage, structure.Health));
+        Fell(structure);
         return !structure.IsStanding;
+    }
+
+    /// <summary>
+    /// The active stack hits the gate (ADR-120): it walks next to it if needed (the closest placement, or <paramref name="from"/>), then takes
+    /// <see cref="SiegeRules.GateDamage"/> off it. Nothing hits back.
+    /// </summary>
+    public string? AttackStructure(int structureId, CellPosition? from)
+    {
+        var unit = battle.ActiveUnit!;
+        if (SiegeRules.StructureAttackRefusal(battle, unit, structureId) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var structure = battle.Siege!.Find(structureId)!;
+        var positions = StructureAttackPositions(unit, structure);
+        var position = from ?? (positions.Count > 0 ? positions[0] : (CellPosition?)null);
+        if (position is not { } stand || !positions.Contains(stand))
+        {
+            return $"{unit.Creature.Name} cannot reach the gate" + (from is null ? "." : $" from {from}.");
+        }
+
+        if (stand != unit.Position)
+        {
+            MoveUnit(unit, stand);
+        }
+
+        if (unit.IsAlive)
+        {
+            var roll = unit.SpellModifiers.Roll != 0 ? DamageCalculator.Roll(unit, 0) : battle.Random.NextInclusive(unit.Creature.MinDamage, unit.Creature.MaxDamage);
+            var damage = Math.Min(structure.Health, SiegeRules.GateDamage(battle, unit, roll));
+            structure.Health -= damage;
+            events.Publish(new SiegeStructureDamaged(structure.Id, unit.Id, null, damage, structure.Health));
+        }
+
+        if (!CheckFinished())
+        {
+            EndTurn();
+        }
+
+        return null;
+    }
+
+    /// <summary>Placements from which the unit can hit the structure this turn, closest first (then top-to-bottom, left-to-right).</summary>
+    internal IReadOnlyList<CellPosition> StructureAttackPositions(BattleUnit unit, SiegeStructure structure) => BattleGrid.StructureAttackPositions(battle, unit, structure);
+
+    /// <summary>A structure that fell: when it is the keep, its shooting stack comes out and is an ordinary stack (ADR-120).</summary>
+    private void Fell(SiegeStructure structure)
+    {
+        if (structure.IsStanding || structure.Kind != SiegeStructureKind.Keep)
+        {
+            return;
+        }
+
+        foreach (var unit in battle.Units.Where(u => u.InKeep).ToList())
+        {
+            unit.InKeep = false;
+            events.Publish(new BattleUnitLeftKeep(unit.Id));
+        }
+    }
+
+    /// <summary>Earthquake (ADR-120): <paramref name="sections"/> standing wall sections, drawn at random, take 1 damage each.</summary>
+    private void Quake(string spell, int sections)
+    {
+        if (battle.Siege is not { } siege)
+        {
+            return;
+        }
+
+        var walls = siege.Structures.Where(s => s.IsStanding && s.Kind == SiegeStructureKind.Wall).OrderBy(s => s.Id).ToList();
+        for (var i = 0; i < sections && walls.Count > 0; i++)
+        {
+            var wall = walls[battle.Random.Next(walls.Count)];
+            walls.Remove(wall);
+            wall.Health -= 1;
+            events.Publish(new SiegeStructureDamaged(wall.Id, null, spell, 1, wall.Health));
+        }
     }
 
     /// <summary>The keep and the towers each shoot once a round, as it starts, at the attacking stack worth most to hit (ADR-106; timing assumed).</summary>
@@ -367,11 +447,55 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         var known = battle.Participant(side).Caster!.Find(spellId)!;
-        var effect = known.Spell.Effect!;
         var cost = BattleMagic.Cost(battle, side, known);
         battle.ManaLeft[side] -= cost;
         battle.CastRounds[side] = battle.Round;
         events.Publish(new BattleSpellCast(side, spellId, targetId, cell, cost, battle.ManaOf(side)));
+        Work(side, known, targetId, cell, null);
+
+        if (!CheckFinished() && battle.ActiveUnit is { IsAlive: false })
+        {
+            EndTurn(moraleMayAct: false);
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// The active creature caster casts its spell (ADR-120): its action for the turn, no mana, with its own Spell Power
+    /// (<see cref="BattleMagic.CreatureSpellPower"/>); one of its casts is used up.
+    /// </summary>
+    public string? CreatureCast(int? targetId, CellPosition? cell)
+    {
+        var unit = battle.ActiveUnit!;
+        if (BattleMagic.CreatureCastRefusal(battle, unit, targetId, cell) is { } refusal)
+        {
+            return refusal;
+        }
+
+        var known = BattleMagic.CreatureSpell(unit)!;
+        var caster = BattleMagic.CasterSpells.First(c => c.Value == known.Spell.Id && unit.CastsLeft.GetValueOrDefault(c.Key) > 0).Key;
+        unit.MutableCastsLeft[caster]--;
+        events.Publish(new BattleCreatureCast(unit.Id, known.Spell.Id, targetId, cell, unit.CastsLeft[caster]));
+        Work(unit.Side, known, targetId, cell, BattleMagic.CreatureSpellPower(unit));
+        if (!CheckFinished())
+        {
+            EndTurn();
+        }
+
+        return null;
+    }
+
+    /// <summary>What a cast does, the hero's or a creature's: the spell works on every stack in its reach it affects, by id (a stack it does not affect is reported as resisting); a summon calls its creatures; Earthquake shakes the walls.</summary>
+    private void Work(BattleSide side, KnownSpell known, int? targetId, CellPosition? cell, int? creaturePower)
+    {
+        var effect = known.Spell.Effect!;
+        var spellId = known.Spell.Id;
+        if (effect.Kind == Magic.SpellEffectKind.Summon)
+        {
+            Summon(side, known, creaturePower);
+            return;
+        }
 
         foreach (var unit in BattleMagic.Reach(battle, side, effect, targetId, cell))
         {
@@ -384,18 +508,18 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             switch (effect.Kind)
             {
                 case Magic.SpellEffectKind.Damage:
-                    var damage = BattleMagic.Damage(battle, side, known, unit);
+                    var damage = BattleMagic.Damage(battle, side, known, unit, creaturePower);
                     var killed = Wound(unit, damage);
                     events.Publish(new BattleUnitSpellDamaged(unit.Id, spellId, damage, killed, unit.Count));
                     Bury(unit);
                     if (unit.IsAlive && !effect.Modifiers.IsEmpty)
                     {
-                        Enchant(unit, side, known);
+                        Enchant(unit, side, known, creaturePower);
                     }
 
                     break;
                 case Magic.SpellEffectKind.Heal:
-                    var healed = Math.Min(BattleMagic.Amount(battle, side, known), unit.Creature.Health - unit.TopHealth);
+                    var healed = Math.Min(BattleMagic.Amount(battle, side, known, creaturePower), unit.Creature.Health - unit.TopHealth);
                     if (healed > 0)
                     {
                         unit.TopHealth += healed;
@@ -404,23 +528,52 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
                     break;
                 default:
-                    Enchant(unit, side, known);
+                    Enchant(unit, side, known, creaturePower);
                     break;
             }
         }
 
-        if (!CheckFinished() && battle.ActiveUnit is { IsAlive: false })
+        if (effect.Walls > 0)
         {
-            EndTurn(moraleMayAct: false);
+            Quake(spellId, effect.Walls);
+        }
+    }
+
+    /// <summary>
+    /// A summon (ADR-106, ADR-120): its creatures join an own summoned stack of theirs or stand on the free placement nearest the own edge; they act
+    /// from the next round, vanish when the battle ends and are worth no experience.
+    /// </summary>
+    private void Summon(BattleSide side, KnownSpell known, int? creaturePower)
+    {
+        if (BattleMagic.SummonPlacement(battle, side, known, creaturePower) is not { } placement)
+        {
+            return;
         }
 
-        return null;
+        var (creature, count, joins, at) = placement;
+        var unit = joins;
+        if (unit is not null)
+        {
+            unit.Count += count;
+        }
+        else
+        {
+            unit = new BattleUnit(battle.Units.Max(u => u.Id) + 1, side, creature, count, -1, at)
+            {
+                IsSummoned = true,
+                IsRooted = known.Spell.Effect!.Rooted,
+            };
+            battle.MutableUnits.Add(unit);
+        }
+
+        events.Publish(new BattleUnitSummoned(
+            new BattleUnitInfo(unit.Id, unit.Side, unit.Creature.Id, unit.Count, unit.Position, unit.Width, unit.Height), known.Spell.Id, count));
     }
 
     /// <summary>A buff or curse takes hold on the stack, replacing the same spell's earlier effect.</summary>
-    private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known)
+    private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
-        var until = BattleMagic.UntilRound(battle, side, known, unit);
+        var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
         unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id);
         unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, known.Spell.Effect!.Modifiers, until));
         events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until));
@@ -523,9 +676,18 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         return before - target.Count;
     }
 
-    /// <summary>A stack that is gone leaves the round's order.</summary>
+    /// <summary>A stack that is gone leaves the round's order; a Phoenix with its rebirth left rises instead (ADR-120).</summary>
     private void Bury(BattleUnit target)
     {
+        if (!target.IsAlive && target.CastsLeft.GetValueOrDefault(BattleMagic.Rebirth) > 0)
+        {
+            target.MutableCastsLeft[BattleMagic.Rebirth]--;
+            target.Count = Math.Max(1, target.InitialCount * BattleMagic.RebirthPercent / 100);
+            target.TopHealth = target.Creature.Health;
+            events.Publish(new BattleUnitReborn(target.Id, target.Count));
+            return;
+        }
+
         if (!target.IsAlive)
         {
             battle.MutableQueue.Remove(target.Id);

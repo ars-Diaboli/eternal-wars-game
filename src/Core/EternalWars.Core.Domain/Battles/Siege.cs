@@ -8,7 +8,7 @@ public enum SiegeStructureKind
     /// <summary>One of the four wall sections; a destroyed one is a gap the attackers walk through.</summary>
     Wall,
 
-    /// <summary>The gate: the defenders pass, the attackers break it.</summary>
+    /// <summary>The gate: the defenders pass, the attackers break it (a war machine in one hit, troops by hitting it, ADR-120).</summary>
     Gate,
 
     /// <summary>The keep (Citadel): shoots once a round, double damage.</summary>
@@ -89,6 +89,12 @@ public sealed class SiegeState
 
     public SiegeStructure? Find(int id) => _structures.FirstOrDefault(s => s.Id == id);
 
+    /// <summary>The gate (every siege has one).</summary>
+    public SiegeStructure Gate => _structures.First(s => s.Kind == SiegeStructureKind.Gate);
+
+    /// <summary>Whether the keep still stands (its shooting stack is safe from melee while it does, ADR-120).</summary>
+    public bool KeepStands => _structures.Any(s => s.Kind == SiegeStructureKind.Keep && s.IsStanding);
+
     /// <summary>Whether a standing wall section or gate blocks the cell for a unit of <paramref name="side"/>: the defenders pass the gate.</summary>
     public bool Blocks(CellPosition cell, BattleSide side) =>
         _structures.Any(s => s.IsStanding && s.OnField && (s.Kind == SiegeStructureKind.Wall || side == BattleSide.Attacker) && s.Rect.Contains(cell));
@@ -131,7 +137,17 @@ public static class SiegeRules
 
     public const int GateHeight = 4;
 
-    public const int GateHealth = 1;
+    /// <summary>
+    /// The gate's hit points (ADR-120, the owner's note): 100, 150 with upgraded fortifications (Citadel and Castle, assumed). A war machine's hit
+    /// still breaks it at once; troops wear it down.
+    /// </summary>
+    public static int GateHealth(int fortLevel) => fortLevel >= 2 ? 150 : 100;
+
+    /// <summary>The gate's Defense against the troops that hit it (ADR-120).</summary>
+    public const int GateDefense = 10;
+
+    /// <summary>The most a stack's hit takes off the gate (ADR-120): a big stack needs two or three hits.</summary>
+    public const int GateDamageCap = 50;
 
     /// <summary>Keep and towers have 3 hit points each.</summary>
     public const int TowerHealth = 3;
@@ -165,7 +181,7 @@ public static class SiegeRules
             new(2, SiegeStructureKind.Wall, new CellRect(WallX, GateY / 2, 1, GateY - (GateY / 2)), wall),
             new(3, SiegeStructureKind.Wall, new CellRect(WallX, lower, 1, (height - lower) / 2), wall),
             new(4, SiegeStructureKind.Wall, new CellRect(WallX, lower + ((height - lower) / 2), 1, height - lower - ((height - lower) / 2)), wall),
-            new(5, SiegeStructureKind.Gate, new CellRect(WallX, GateY, 1, GateHeight), GateHealth),
+            new(5, SiegeStructureKind.Gate, new CellRect(WallX, GateY, 1, GateHeight), GateHealth(spec.FortLevel)),
         };
         var moat = new List<CellRect>();
         if (spec.FortLevel >= 2)
@@ -201,6 +217,50 @@ public static class SiegeRules
         }
 
         return battle.Siege!.Find(structure) is { IsStanding: true } ? null : "That structure is not standing.";
+    }
+
+    /// <summary>
+    /// Why the active unit may not hit the structure in melee (ADR-120), or null: only the attackers' troops (not war machines) hit, only the
+    /// standing gate (wall sections need a war machine or Earthquake).
+    /// </summary>
+    public static string? StructureAttackRefusal(BattleState battle, BattleUnit unit, int structure)
+    {
+        if (battle.Siege is not { } siege || siege.Find(structure) is not { } target)
+        {
+            return "There is no such structure.";
+        }
+
+        if (unit.Side != BattleSide.Attacker || unit.IsMachine)
+        {
+            return "Only the attackers' troops break the gate.";
+        }
+
+        if (target.Kind != SiegeStructureKind.Gate)
+        {
+            return "Troops can only break the gate; the walls need a war machine.";
+        }
+
+        return target.IsStanding ? null : "The gate is already broken.";
+    }
+
+    /// <summary>
+    /// A stack's hit on the gate (ADR-120): its roll × its count, +5 % per point of Attack above the gate's Defense 10 (at most +300 %), −2.5 % per
+    /// point below (at most −70 %), halved for a melee penalty, at least 1 and at most <see cref="GateDamageCap"/>.
+    /// </summary>
+    public static int GateDamage(BattleState battle, BattleUnit unit, int roll)
+    {
+        var attack = unit.Creature.Attack + battle.Participant(unit.Side).Attack + unit.RageAttack + unit.SpellModifiers.Attack
+                     + (battle.IsNative(unit) ? BattleState.NativeAttack : 0);
+        long damage = (long)roll * unit.Count;
+        damage = attack >= GateDefense
+            ? damage * (100 + Math.Min(300, 5 * (attack - GateDefense))) / 100
+            : damage * (1000 - Math.Min(700, 25 * (GateDefense - attack))) / 1000;
+        if (unit.Creature.Has(Creatures.CapabilityKind.MeleePenalty))
+        {
+            damage /= 2;
+        }
+
+        return (int)Math.Clamp(damage, 1, GateDamageCap);
     }
 
     /// <summary>Whether a unit of <paramref name="side"/> stops in the moat and takes its damage on entering it (the attackers; assumed).</summary>

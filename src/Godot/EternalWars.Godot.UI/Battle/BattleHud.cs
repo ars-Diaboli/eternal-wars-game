@@ -193,14 +193,38 @@ public partial class BattleHud : Control
         }
 
         ArmedSpell = null;
+        if (_creatureArmed)
+        {
+            _creatureArmed = false;
+            Act(player => new BattleCreatureCastCommand(player, battle.UnitAt(cell)?.Id, cell));
+            return true;
+        }
+
         Act(player => new BattleCastCommand(player, spell, battle.UnitAt(cell)?.Id, cell));
         return true;
+    }
+
+    /// <summary>Whether the armed spell is the active creature caster's own (ADR-120), not the hero's.</summary>
+    private bool _creatureArmed;
+
+    /// <summary>The active stack casts its own spell (ADR-120): at once for a summon or a spell for a side or the field, else after a target click.</summary>
+    private void ArmCreature(KnownSpell known)
+    {
+        if (known.Spell.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
+        {
+            Act(player => new BattleCreatureCastCommand(player));
+            return;
+        }
+
+        (ArmedSpell, _creatureArmed) = (known.Spell.Id, true);
+        _status.Text = $"{known.Spell.Name} (the stack's own spell): click a target (Esc cancels).";
     }
 
     /// <summary>Drops the armed spell (Escape).</summary>
     public void Disarm()
     {
         ArmedSpell = null;
+        _creatureArmed = false;
         Refresh();
     }
 
@@ -212,7 +236,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        ArmedSpell = known.Spell.Id;
+        (ArmedSpell, _creatureArmed) = (known.Spell.Id, false);
         _status.Text = $"{known.Spell.Name}: click a target (Esc cancels).";
     }
 
@@ -224,7 +248,21 @@ public partial class BattleHud : Control
             child.QueueFree();
         }
 
-        if (battle?.ActiveUnit is not { } active || commander is null || battle.Participant(active.Side).Caster is not { } caster)
+        if (battle?.ActiveUnit is not { } active || commander is null)
+        {
+            return;
+        }
+
+        // A creature caster's own spell (ADR-120): its action, no mana.
+        if (BattleMagic.CreatureSpell(active) is { Spell.Effect: not null } own)
+        {
+            var casts = active.CastsLeft.Where(c => BattleMagic.CasterSpells.GetValueOrDefault(c.Key) == own.Spell.Id).Sum(c => c.Value);
+            var cast = new Button { Text = $"{active.Creature.Name}: {own.Spell.Name} ({casts} left)", TooltipText = $"The stack casts it as its action. {own.Spell.Notes}" };
+            cast.Pressed += () => ArmCreature(own);
+            _spells.AddChild(cast);
+        }
+
+        if (battle.Participant(active.Side).Caster is not { } caster)
         {
             return;
         }

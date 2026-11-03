@@ -85,6 +85,9 @@ public static class BuiltInMapObjects
     public const string SacrificialAltar = "sacrificial-altar";
     public const string Sphinx = "sphinx";
     public const string WitchHut = "witch-hut";
+
+    /// <summary>Shrines of spell levels 1–3 (ADR-068, ADR-120): <c>shrine.1</c>, <c>shrine.2</c>, <c>shrine.3</c>.</summary>
+    public static string ShrineId(int level) => $"shrine.{level}";
     public const string AstrologersTower = "astrologers-tower";
 
     /// <summary>Pandora's Box (ADR-100, MAP-35).</summary>
@@ -226,6 +229,7 @@ public static class BuiltInMapObjects
         new(SacrificialAltar, "Sacrificial altar", MapObjectKind.SacrificialAltar, ProviderFootprint),
         new(Sphinx, "Sphinx", MapObjectKind.Sphinx, MineFootprint) { VisitScope = VisitScope.OncePerHero },
         new(WitchHut, "Witch hut", MapObjectKind.WitchHut, ProviderFootprint),
+        .. Enumerable.Range(1, ShrineRules.Levels).Select(level => new MapObjectDefinition(ShrineId(level), $"Shrine (level {level} spell)", MapObjectKind.Shrine, ProviderFootprint) { Amount = level }),
         new(AstrologersTower, "Astrologer's tower", MapObjectKind.AstrologersTower, ProviderFootprint),
         new(PandorasBox, "Pandora's box", MapObjectKind.PandorasBox, Footprint.Single),
 

@@ -37,11 +37,12 @@ namespace EternalWars.Core.Data.Maps;
 /// on victory conditions (<c>target</c>, <c>artifact</c>, <c>deadline</c>; ADR-094). 26 = + the map's difficulty (<c>rules.difficulty</c>, the
 /// complexity the map's starting resources stand for in the ranking; omitted = Normal; ADR-101). 27 = + Pandora's Boxes (<c>pandorasBox</c>:
 /// contents, an optional guard and message; ADR-100). 28 = + the team counts a game of the map may have (<c>minTeams</c>, <c>maxTeams</c>;
-/// omitted = no limit; ADR-117). Older versions still load (with the default events).
+/// omitted = no limit; ADR-117). 29 = + a hero's spell book and spells (<c>spellBook</c>, <c>spells</c>; omitted = the roster's) and shrines
+/// (<c>shrine</c>, an optional spell; ADR-120). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 28;
+    public const int CurrentFormatVersion = 29;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -146,7 +147,8 @@ public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = n
 /// <see cref="Morale"/> and <see cref="Luck"/> (v7, −5…+5) are omitted when 0. <see cref="SpellPower"/> and
 /// <see cref="Knowledge"/> (v8) are omitted when 0; a roster hero then keeps the roster's values. <see cref="WarMachines"/>
 /// (v9) is omitted for the starting set (the offensive machine only). <see cref="Artifacts"/> (worn, each in the slot its
-/// definition names) and <see cref="Backpack"/> are artifact ids (v11), omitted when empty.
+/// definition names) and <see cref="Backpack"/> are artifact ids (v11), omitted when empty. <see cref="SpellBook"/> and <see cref="Spells"/>
+/// (v29, ADR-120) replace the roster's book and spells; omitted = the roster's.
 /// </summary>
 public sealed record HeroPlacementDocument(
     int Id,
@@ -167,7 +169,9 @@ public sealed record HeroPlacementDocument(
     int? Knowledge = null,
     IReadOnlyList<WarMachineSlot>? WarMachines = null,
     IReadOnlyList<string>? Artifacts = null,
-    IReadOnlyList<string>? Backpack = null);
+    IReadOnlyList<string>? Backpack = null,
+    bool? SpellBook = null,
+    IReadOnlyList<string>? Spells = null);
 
 /// <summary>One occupied army slot (0–6).</summary>
 public sealed record ArmySlotDocument(int Slot, string Creature, int Count);
@@ -212,6 +216,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(SacrificialAltarDocument), "altar")]
 [JsonDerivedType(typeof(SphinxDocument), "sphinx")]
 [JsonDerivedType(typeof(WitchHutDocument), "witchHut")]
+[JsonDerivedType(typeof(ShrineDocument), "shrine")]
 [JsonDerivedType(typeof(DepositDocument), "deposit")]
 [JsonDerivedType(typeof(MagiWindowDocument), "magiWindow")]
 [JsonDerivedType(typeof(MagiEyeDocument), "magiEye")]
@@ -369,6 +374,12 @@ public sealed record SphinxDocument : MapObjectDocument
     public string? Wrong1 { get; init; }
 
     public string? Wrong2 { get; init; }
+}
+
+/// <summary>A shrine (v29, ADR-120); <see cref="Spell"/> omitted = one of its level drawn when the game starts.</summary>
+public sealed record ShrineDocument : MapObjectDocument
+{
+    public string? Spell { get; init; }
 }
 
 /// <summary>A witch hut (v22, ADR-079); <see cref="Skills"/> omitted = two rolled when the game starts.</summary>

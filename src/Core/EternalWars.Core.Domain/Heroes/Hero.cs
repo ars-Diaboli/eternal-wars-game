@@ -237,7 +237,8 @@ public sealed class Hero(
         string? name = null, int? attack = null, int? defense = null, IReadOnlyDictionary<string, SkillLevel>? skills = null,
         int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null,
         IEnumerable<Battles.WarMachineSlot>? warMachines = null,
-        IEnumerable<string>? artifacts = null, IEnumerable<string>? backpack = null, ArtifactCatalog? catalog = null)
+        IEnumerable<string>? artifacts = null, IEnumerable<string>? backpack = null, ArtifactCatalog? catalog = null,
+        bool? spellBook = null, IEnumerable<string>? spells = null, Magic.SpellCatalog? spellCatalog = null)
     {
         if (spellPower < 0 || knowledge < 0)
         {
@@ -277,7 +278,31 @@ public sealed class Hero(
             hero.Skills.ReplaceWith(skills);
         }
 
+        // The map's spell book and spells (v29, ADR-120) replace the roster's; null keeps them.
+        hero.HasSpellBook = spellBook ?? hero.HasSpellBook;
+        if (spells is not null)
+        {
+            var known = spellCatalog ?? Magic.SpellCatalog.Default;
+            hero._spells.Clear();
+            foreach (var spell in spells)
+            {
+                _ = known.Get(spell);
+                hero.Learn(spell);
+            }
+        }
+
         return hero;
+    }
+
+    /// <summary>The editor's spell book and spells for a map hero (ADR-120): replaces what it knows; without a book it knows nothing.</summary>
+    internal void SetSpellBook(bool book, IEnumerable<string> spells)
+    {
+        HasSpellBook = book;
+        _spells.Clear();
+        foreach (var spell in book ? spells : [])
+        {
+            Learn(spell);
+        }
     }
 
     /// <summary>

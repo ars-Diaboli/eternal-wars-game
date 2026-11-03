@@ -92,6 +92,9 @@ public enum MapObjectKind
     /// <summary>One of two skills, once per hero level (<see cref="Objects.WitchHut"/>, ADR-079).</summary>
     WitchHut,
 
+    /// <summary>Teaches one spell of its level to a hero who can learn it, any number of times (<see cref="Objects.Shrine"/>, ADR-120).</summary>
+    Shrine,
+
     /// <summary>Becomes a mine for whoever pays (<see cref="Objects.Deposit"/>, ADR-070).</summary>
     Deposit,
 

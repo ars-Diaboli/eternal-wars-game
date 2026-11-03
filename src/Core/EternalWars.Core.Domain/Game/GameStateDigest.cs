@@ -62,6 +62,7 @@ public static class GameStateDigest
                 RefugeeCamp camp => $"{camp.Creature} available {camp.Available}",
                 Sphinx sphinx => $"riddle {sphinx.Riddle?.Question}",
                 WitchHut hut => $"skills {string.Join(',', hut.Skills)}",
+            Shrine shrine => $"spell {shrine.Spell}",
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
                 Prison prison => $"prisoner {prison.Hero} level {prison.Level}",

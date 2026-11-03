@@ -196,6 +196,12 @@ public sealed record BattleShootCommand(PlayerId Player, int Target) : GameComma
 /// <summary>The siege engine, controlled from Basic Ballistics, fires at a wall section, the gate, the keep or a tower (ADR-106).</summary>
 public sealed record BattleShootStructureCommand(PlayerId Player, int Structure) : GameCommand(Player);
 
+/// <summary>The active stack hits the gate in melee (ADR-120); <paramref name="From"/> is where to stand.</summary>
+public sealed record BattleAttackStructureCommand(PlayerId Player, int Structure, CellPosition? From = null) : GameCommand(Player);
+
+/// <summary>The active creature caster casts its spell at a stack or a cell (ADR-120).</summary>
+public sealed record BattleCreatureCastCommand(PlayerId Player, int? Target = null, CellPosition? Cell = null) : GameCommand(Player);
+
 /// <summary>The player's hero uses a warcry (Stronghold, ADR-067): no mana, and the active unit keeps its action.</summary>
 public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry) : GameCommand(Player);
 
@@ -234,3 +240,6 @@ public sealed record CommandResult(bool IsAccepted, string? Error = null, object
     /// <summary>Throws <see cref="InvalidOperationException"/> for a refused command; returns the result otherwise.</summary>
     public CommandResult ThrowIfRejected() => IsAccepted ? this : throw new InvalidOperationException(Error);
 }
+
+/// <summary>A hero casts an adventure spell (ADR-120); <paramref name="Target"/> is the tile for Dimension Door.</summary>
+public sealed record CastAdventureSpellCommand(PlayerId Player, HeroId Hero, string Spell, MapPosition? Target = null) : GameCommand(Player);

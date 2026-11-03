@@ -27,6 +27,7 @@ public partial class HeroPanel : PanelContainer
     private readonly GridContainer _doll = new() { Columns = 4 };
     private readonly HFlowContainer _backpack = new();
     private readonly Label _machines = new();
+    private readonly HFlowContainer _adventure = new();
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private GameSession _session = null!;
@@ -37,6 +38,9 @@ public partial class HeroPanel : PanelContainer
     public bool FullScreen { get; set; }
 
     public event Action? Closed;
+
+    /// <summary>Dimension Door was picked for the hero (ADR-120): the map's next click is its tile. The screen closes.</summary>
+    public event Action<HeroId>? DimensionDoorArmed;
 
     /// <summary>The hero the screen shows, if it is open.</summary>
     public HeroId? CurrentHero => Visible ? _hero : null;
@@ -79,6 +83,8 @@ public partial class HeroPanel : PanelContainer
         box.AddChild(_army);
         box.AddChild(_split);
         box.AddChild(_machines);
+        box.AddChild(new Label { Text = "Adventure spells (mana and 500 movement points)" });
+        box.AddChild(_adventure);
         box.AddChild(new Label { Text = "Worn artifacts (click to take off)" });
         box.AddChild(_doll);
         box.AddChild(new Label { Text = "Backpack (click to put on)" });
@@ -97,6 +103,7 @@ public partial class HeroPanel : PanelContainer
         this.SubscribeWhileInTree<HeroManaRestored>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroManaSpent>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellsLearned>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<AdventureSpellCast>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<PandorasBoxOpened>(session.Events, _ => Refresh()); // stats and skills
         this.SubscribeWhileInTree<HeroMovementRestored>(session.Events, _ => Refresh());
@@ -168,6 +175,47 @@ public partial class HeroPanel : PanelContainer
         ShowArmy(hero);
         ShowArtifacts(hero);
         _machines.Text = "War machines: " + (hero.WarMachines.Count == 0 ? "none" : string.Join(", ", hero.WarMachines.Order()));
+        ShowAdventureSpells(hero);
+    }
+
+    /// <summary>One button per adventure spell the hero knows (ADR-120), disabled with the reason while it cannot be cast.</summary>
+    private void ShowAdventureSpells(Hero hero)
+    {
+        foreach (var child in _adventure.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        var state = _session.State;
+        foreach (var spell in Core.Domain.Magic.AdventureMagic.Known(state, hero))
+        {
+            var refusal = Core.Domain.Magic.AdventureMagic.Refusal(state, hero, spell.Id, null, aimed: false); // Dimension Door's tile is picked on the map
+
+            var button = new Button
+            {
+                Text = $"{spell.Name} ({Core.Domain.Magic.AdventureMagic.Cost(state, hero, spell.Id)} mana)",
+                Disabled = refusal is not null,
+                TooltipText = refusal ?? spell.Notes,
+            };
+            var id = spell.Id;
+            button.Pressed += () =>
+            {
+                if (id == Core.Domain.Magic.AdventureMagic.DimensionDoor)
+                {
+                    DimensionDoorArmed?.Invoke(hero.Id);
+                    Close();
+                    return;
+                }
+
+                Run(new CastAdventureSpellCommand(state.CurrentPlayer.Id, hero.Id, id));
+            };
+            _adventure.AddChild(button);
+        }
+
+        if (_adventure.GetChildCount() == 0)
+        {
+            _adventure.AddChild(new Label { Text = "none" });
+        }
     }
 
     private static string WithBonus(int baseValue, int bonus) =>

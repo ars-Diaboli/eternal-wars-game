@@ -44,6 +44,7 @@ public sealed class GameSession
         Bus.Subscribe<MapObjectChanged>(visibility);
         Bus.Subscribe<MapObjectPlaced>(visibility);
         Bus.Subscribe<SurroundingsRevealed>(visibility);
+        Bus.Subscribe<AreaRevealed>(visibility);
         Bus.Subscribe<HeroFreed>(visibility);
         Bus.Subscribe<HeroLeveledUp>(visibility);
 
@@ -58,10 +59,13 @@ public sealed class GameSession
         Caravans = new CaravanService(State, Bus, Economy);
         Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression, Artifacts);
         Movement = new HeroMovementService(State, Bus, Interactions);
+        AdventureMagic = new Magic.AdventureMagicService(State, Bus);
         Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions);
     }
 
     public GameState State { get; }
+
+    private Magic.AdventureMagicService AdventureMagic { get; }
 
     public IEventSubscriber Events => Bus;
 
@@ -169,7 +173,7 @@ public sealed class GameSession
     }
 
     private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleDeployCommand or BattleStartCommand or BattleMoveCommand
-        or BattleAttackCommand or BattleShootCommand or BattleShootStructureCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand or BattleSurrenderCommand
+        or BattleAttackCommand or BattleShootCommand or BattleShootStructureCommand or BattleAttackStructureCommand or BattleCreatureCastCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand or BattleSurrenderCommand
         or AutoResolveBattleCommand or BattleWarcryCommand or BattleCastCommand;
 
     private string? Authorize(GameCommand command)
@@ -201,6 +205,7 @@ public sealed class GameSession
             StepHeroCommand step => step.Hero,
             MoveHeroCommand move => move.Hero,
             MoveStackCommand stack => stack.FromHero,
+            CastAdventureSpellCommand cast => cast.Hero,
             _ => (Common.HeroId?)null,
         };
         if (hero is { } id && State.Heroes.All(h => h.Id != id))
@@ -346,6 +351,9 @@ public sealed class GameSession
             case BuySpellBookCommand book:
                 Towns.BuySpellBook(book.Player, book.Town);
                 return null;
+            case CastAdventureSpellCommand cast:
+                AdventureMagic.Cast(cast.Player, cast.Hero, cast.Spell, cast.Target);
+                return null;
             case EnterGarrisonCommand enter:
                 Towns.EnterGarrison(enter.Player, enter.Town);
                 return null;
@@ -375,6 +383,12 @@ public sealed class GameSession
                 return null;
             case BattleShootStructureCommand structure:
                 Battles.Act(structure.Player, new ShootStructureAction(structure.Structure));
+                return null;
+            case BattleAttackStructureCommand hit:
+                Battles.Act(hit.Player, new AttackStructureAction(hit.Structure, hit.From));
+                return null;
+            case BattleCreatureCastCommand cast:
+                Battles.Act(cast.Player, new CreatureCastAction(cast.Target, cast.Cell));
                 return null;
             case BattleWarcryCommand warcry:
                 Battles.UseWarcry(warcry.Player, warcry.Warcry);

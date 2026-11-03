@@ -99,9 +99,9 @@ internal static class MovementRules
 
     private static int TerrainCost(GameState state, Hero hero, TerrainType terrain)
     {
-        if (hero.Bonus.NativeTerrains.Contains(terrain))
+        if (hero.Bonus.NativeTerrains.Contains(terrain) || Magic.AdventureMagic.MakesNative(hero, terrain))
         {
-            return TerrainCatalog.NativeCost; // an artifact makes the army at home here (ADR-061)
+            return TerrainCatalog.NativeCost; // an artifact (ADR-061) or Pathfinder's Call / Ashwalk (ADR-120) makes the army at home here
         }
 
         var cost = state.Terrains.MovementCost(terrain, ArmyTown(state, hero));

@@ -142,6 +142,44 @@ public sealed class WitchHut(MapObjectId id, MapObjectDefinition definition, Map
     public IReadOnlyList<string> Skills { get; internal set; } = skills ?? [];
 }
 
+/// <summary>
+/// A shrine (ADR-068, ADR-120): one spell of its level (1–3), set by the map or drawn when the game starts; a visiting hero with a spell book and
+/// the spell's school Magic at the spell's level learns it. Visits are unlimited.
+/// </summary>
+public sealed class Shrine(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? spell = null)
+    : MapObject(id, definition, position, MapObjectKind.Shrine)
+{
+    /// <summary>The spell level the shrine teaches (its definition's amount).</summary>
+    public int SpellLevel => Definition.Amount;
+
+    /// <summary>Its spell; null until drawn when the map leaves it open.</summary>
+    public string? Spell { get; internal set; } = spell;
+}
+
+public static class ShrineRules
+{
+    /// <summary>Shrines teach spell levels 1 to 3 (as HoMM3's three shrines; level 4 spells come from guilds only, assumed).</summary>
+    public const int Levels = 3;
+
+    /// <summary>The spells a shrine of the level may hold: every school's spells of that level (the Primal Fury towns have none).</summary>
+    public static IEnumerable<Magic.SpellDefinition> Candidates(Magic.SpellCatalog spells, int level) =>
+        spells.All.Where(s => s.Level == level).OrderBy(s => s.Id, StringComparer.Ordinal);
+
+    /// <summary>A spell of the shrine's level, drawn for a shrine the map left open.</summary>
+    public static string Roll(GameRandom random, Magic.SpellCatalog spells, int level)
+    {
+        var candidates = Candidates(spells, level).ToList();
+        return candidates[random.Next(candidates.Count)].Id;
+    }
+
+    /// <summary>Why the map's spell does not fit the shrine, or null: a known spell of the shrine's level (none = drawn at start).</summary>
+    public static string? SpellRefusal(Magic.SpellCatalog spells, int level, string? spell) =>
+        spell is null ? null
+        : !spells.TryGet(spell, out var definition) ? $"'{spell}' is not a spell."
+        : definition.Level != level ? $"{definition.Name} is a level {definition.Level} spell, not level {level}."
+        : null;
+}
+
 public static class WitchHutRules
 {
     /// <summary>

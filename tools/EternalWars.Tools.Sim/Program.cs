@@ -480,6 +480,7 @@ public static class Program
             var winner = state.Outcome is { HasWinner: true } outcome ? string.Join("+", outcome.Winners.Select(w => state.GetPlayer(w).Name)) : (state.IsOver ? "nobody" : "unfinished");
             wins[winner] = wins.GetValueOrDefault(winner) + 1;
             refusedTotal += ai.Refused;
+            ai.Refusals.Take(10).ToList().ForEach(r => Console.WriteLine($"  refused: {r}"));
             Console.WriteLine($"run {run + 1}: {state.Date} (day {state.Date.AbsoluteDay}), {winner}{(state.Outcome is { } o ? ": " + o.Reason : string.Empty)}");
             Console.WriteLine($"  {session.CommandLog.Count} commands, AI refused {ai.Refused}, digest {GameStateDigest.Compute(state)}; garrison heroes in {session.CommandLog.Count(c => c is EnterGarrisonCommand)}, out {session.CommandLog.Count(c => c is LeaveGarrisonCommand)}");
             foreach (var player in state.Players)

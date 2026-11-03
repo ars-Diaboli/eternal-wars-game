@@ -28,6 +28,9 @@ public enum SpellEffectKind
 
     /// <summary>An effect on enemy stacks.</summary>
     Curse,
+
+    /// <summary>A stack of town creatures (or Conflux elementals) for the battle (ADR-106, ADR-120): it vanishes afterwards and is worth no experience.</summary>
+    Summon,
 }
 
 /// <summary>Whom a spell reaches: one stack, a square area, every stack of the target side, or every stack on the field.</summary>
@@ -75,23 +78,43 @@ public sealed record SpellModifiers(
 /// <c>buff attack 3 rounds 3</c>, <c>curse morale -2 rounds battle</c>, <c>damage 50 enemies undead-demon</c>, <c>damage 90 speed -2 rounds 2</c>
 /// (damage that also leaves an effect). Amounts and rounds are base numbers at Spell Power 0 (ADR-072). <c>Rounds</c> is null for the rest of
 /// the battle (not lengthened by Spell Power).
+/// <c>walls 2</c> also damages that many standing wall sections by 1 in a siege (Earthquake, ADR-120). <c>summon sylvan.pegasus 150</c> calls
+/// creatures worth that much health (several ids split by <c>|</c>: the first kind not yet summoned this battle), <c>rooted</c> ones never move.
 /// </summary>
 public sealed record SpellEffect(
-    SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds)
+    SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
+    IReadOnlyList<string>? Creatures = null, bool Rooted = false)
 {
     /// <summary>Damage and curses work on the enemy (damage to the whole field or an area hits own stacks too); healing and buffs on own stacks.</summary>
     public bool IsHostile => Kind is SpellEffectKind.Damage or SpellEffectKind.Curse;
+
+    /// <summary>The creatures a summon calls, by id (empty for other spells).</summary>
+    public IReadOnlyList<string> Summons => Creatures ?? [];
 
     public static SpellEffect Parse(string text)
     {
         var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (tokens.Length == 0 || !Enum.TryParse<SpellEffectKind>(tokens[0], ignoreCase: true, out var kind) || !Enum.IsDefined(kind))
         {
-            throw new FormatException($"'{text}' does not start with damage, heal, buff or curse");
+            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse or summon");
         }
 
         var i = 1;
         var amount = 0;
+        if (kind == SpellEffectKind.Summon)
+        {
+            // summon <creature>[|<creature> …] <health> [rooted]
+            var creatures = Next().Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            amount = Number(Next());
+            var rooted = i < tokens.Length && tokens[i] == "rooted" && ++i > 0;
+            if (i < tokens.Length || amount < 1)
+            {
+                throw new FormatException($"'{text}': a summon is 'summon <creature> <health> [rooted]'");
+            }
+
+            return new SpellEffect(kind, amount, SpellReach.Side, 0, SpellFilter.None, SpellModifiers.None, null, 0, creatures, rooted);
+        }
+
         if (kind is SpellEffectKind.Damage or SpellEffectKind.Heal)
         {
             amount = Number(Next());
@@ -99,6 +122,7 @@ public sealed record SpellEffect(
 
         var (reach, area, filter, modifiers, rounds) = (SpellReach.Stack, 0, SpellFilter.None, SpellModifiers.None, (int?)null);
         var hasRounds = false;
+        var walls = 0;
         while (i < tokens.Length)
         {
             var token = tokens[i++];
@@ -130,6 +154,9 @@ public sealed record SpellEffect(
                     rounds = length == "battle" ? null : Number(length);
                     hasRounds = true;
                     break;
+                case "walls":
+                    walls = Number(Next());
+                    break;
                 case "roll":
                     modifiers = modifiers with { Roll = Next() switch { "max" => 1, "min" => -1, var r => throw new FormatException($"roll '{r}' is not max or min") } };
                     break;
@@ -154,7 +181,7 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': an area needs a size");
         }
 
-        return new SpellEffect(kind, amount, reach, area, filter, modifiers, rounds);
+        return new SpellEffect(kind, amount, reach, area, filter, modifiers, rounds, walls);
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");
     }
