@@ -36,8 +36,8 @@ The AI plays generated maps to the end (ADR-119: exploring, guards, keymasters, 
 Phase 5 content is in core: summons, creature casters, adventure spells, shrines and spell books in the map format (v29), the breakable gate,
 the keep's shooter and Earthquake (ADR-120); assembled relics and war machine tuning (ADR-121). Their 3D views and hero-screen buttons need a run in Godot.
 Mastery and spell ranks II / III are built (ADR-122).
-**Next**: a person's full game on Ember March (the Phase 3 exit's last check) and a Godot run of the ADR-120 / ADR-121 / ADR-122 views, the new-game
-screen's user templates, then the remaining Phase 5 items (control and resurrection spells, the AI's buffs, map events, presentation).
+**Next**: a person's full game on Ember March (the Phase 3 exit's last check) and a Godot run of the ADR-120 / ADR-121 / ADR-122 views and of the new-game
+screen's user templates (built), then the remaining Phase 5 items (control and resurrection spells, the AI's buffs, map events, presentation).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -566,7 +566,8 @@ Needs towns, guards and treasure from Phases 2–3. The template *format* and va
 - [x] Editor: template editor like HotA's (zone graph: add zones, set properties, draw connections; live validation; no
       undo) with "Generate" to see the result (ADR-070, ADR-117: `TemplateEditorSession`, `TemplateEditorPanel`, user templates in
       `user://templates`; smoke scenario `editor-template-editor`)
-- [ ] New-game screen: list the user templates too (the editor's Generate tab does)
+- [x] New-game screen: list the user templates too (the editor's Generate tab does): the valid files in the editor's
+      `templates` folder after the shipped ones, labelled with their file name (not run in Godot yet)
 - [x] Editor: "generate map from template" core (`EditorMapGenerator`): a template, size, seed, player count and optional
       town per slot give a new editable scenario with coloured players, start towns, heroes and armies, a description
       that records how it was made, and the generator's problems and validator issues to show
