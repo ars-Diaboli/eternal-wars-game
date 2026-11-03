@@ -145,7 +145,11 @@ public sealed record BattleParticipant(
 }
 
 /// <summary>A spell the side's hero knows, at its rank, with what it costs this hero (attunement taken off, ADR-063).</summary>
-public sealed record KnownSpell(Magic.SpellDefinition Spell, int Rank, int Cost);
+public sealed record KnownSpell(Magic.SpellDefinition Spell, int Rank, int Cost)
+{
+    /// <summary>The spell's battle effect at this rank (ADR-122); null when it cannot be cast in battle.</summary>
+    public Magic.SpellEffect? Effect => Spell.EffectAt(Rank);
+}
 
 /// <summary>
 /// What a hero brings to cast in battle (ADR-110), copied when the battle starts: Spell Power, level (spell specialties grow with it), the

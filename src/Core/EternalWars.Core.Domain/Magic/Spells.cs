@@ -42,7 +42,10 @@ public enum SpellReach
     All,
 }
 
-/// <summary>Which stacks a spell works on at all: any, the living (not undead, constructs or machines), undead, undead and demons, shooters.</summary>
+/// <summary>
+/// Which stacks a spell works on at all: any, the living (not undead, constructs or machines), undead, undead and demons, shooters, melee stacks
+/// (no shots; ranks II / III, ADR-122), stacks on the ground (not flyers; war machines count as on the ground).
+/// </summary>
 public enum SpellFilter
 {
     None,
@@ -50,6 +53,8 @@ public enum SpellFilter
     Undead,
     UndeadOrDemon,
     Shooter,
+    Melee,
+    Ground,
 }
 
 /// <summary>
@@ -80,10 +85,12 @@ public sealed record SpellModifiers(
 /// the battle (not lengthened by Spell Power).
 /// <c>walls 2</c> also damages that many standing wall sections by 1 in a siege (Earthquake, ADR-120). <c>summon sylvan.pegasus 150</c> calls
 /// creatures worth that much health (several ids split by <c>|</c>: the first kind not yet summoned this battle), <c>rooted</c> ones never move.
+/// Ranks II / III (ADR-122) add <c>targets N</c> (a stack spell also reaches the N − 1 stacks nearest the aimed one that it works on, on the same
+/// side), <c>spare-own</c> (an area or field spell leaves the caster's own stacks alone) and the filters <c>melee</c> and <c>ground</c>.
 /// </summary>
 public sealed record SpellEffect(
     SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
-    IReadOnlyList<string>? Creatures = null, bool Rooted = false)
+    IReadOnlyList<string>? Creatures = null, bool Rooted = false, int Targets = 1, bool SpareOwn = false)
 {
     /// <summary>Damage and curses work on the enemy (damage to the whole field or an area hits own stacks too); healing and buffs on own stacks.</summary>
     public bool IsHostile => Kind is SpellEffectKind.Damage or SpellEffectKind.Curse;
@@ -123,6 +130,8 @@ public sealed record SpellEffect(
         var (reach, area, filter, modifiers, rounds) = (SpellReach.Stack, 0, SpellFilter.None, SpellModifiers.None, (int?)null);
         var hasRounds = false;
         var walls = 0;
+        var targets = 1;
+        var spareOwn = false;
         while (i < tokens.Length)
         {
             var token = tokens[i++];
@@ -148,6 +157,18 @@ public sealed record SpellEffect(
                     break;
                 case "shooter":
                     filter = SpellFilter.Shooter;
+                    break;
+                case "melee":
+                    filter = SpellFilter.Melee;
+                    break;
+                case "ground":
+                    filter = SpellFilter.Ground;
+                    break;
+                case "targets":
+                    targets = Number(Next());
+                    break;
+                case "spare-own":
+                    spareOwn = true;
                     break;
                 case "rounds":
                     var length = Next();
@@ -181,7 +202,17 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': an area needs a size");
         }
 
-        return new SpellEffect(kind, amount, reach, area, filter, modifiers, rounds, walls);
+        if (targets < 1 || (targets > 1 && reach != SpellReach.Stack))
+        {
+            throw new FormatException($"'{text}': 'targets' needs a number of at least 1 and a stack spell");
+        }
+
+        if (spareOwn && reach is not (SpellReach.Area or SpellReach.All))
+        {
+            throw new FormatException($"'{text}': 'spare-own' is for area and field spells");
+        }
+
+        return new SpellEffect(kind, amount, reach, area, filter, modifiers, rounds, walls, null, false, targets, spareOwn);
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");
     }
@@ -210,16 +241,28 @@ public sealed record SpellEffect(
 
 /// <summary>
 /// A spell (ADR-047, ADR-099): its school (the town whose school it is), level 1–4, base mana, element, immunity tags, whether it is cast on the
-/// adventure map, and its rank I battle effect where it has been built (null: not castable in battle yet).
+/// adventure map, and its rank I battle effect where it has been built (null: not castable in battle yet). <paramref name="Rank2"/> and
+/// <paramref name="Rank3"/> are the whole battle effect at ranks II and III (ADR-122); null means the rank below's (its change is not built yet).
 /// </summary>
 public sealed record SpellDefinition(
     string Id, string Name, string School, int Level, int Mana, SpellElement Element, IReadOnlyList<string> Tags, bool IsAdventure, SpellEffect? Effect,
-    string Notes = "")
+    string Notes = "", SpellEffect? Rank2 = null, SpellEffect? Rank3 = null)
 {
     public bool HasTag(string tag) => Tags.Contains(tag, StringComparer.Ordinal);
+
+    /// <summary>The battle effect at a rank (1–3): the rank's own, else that of the nearest rank below with one.</summary>
+    public SpellEffect? EffectAt(int rank) => rank switch
+    {
+        >= 3 => Rank3 ?? Rank2 ?? Effect,
+        2 => Rank2 ?? Effect,
+        _ => Effect,
+    };
 }
 
-/// <summary>The spell table as CSV (<c>data/spells.csv</c>): <c>id, name, school, level, mana, element, tags, adventure, battle, notes</c>.</summary>
+/// <summary>
+/// The spell table as CSV (<c>data/spells.csv</c>): <c>id, name, school, level, mana, element, tags, adventure, battle, battle2, battle3, notes</c>;
+/// <c>battle2</c> and <c>battle3</c> hold the whole effect at ranks II and III (ADR-122), empty where the rank changes nothing built yet.
+/// </summary>
 public static class SpellTable
 {
     public const string Id = "id";
@@ -231,10 +274,12 @@ public static class SpellTable
     public const string Tags = "tags";
     public const string Adventure = "adventure";
     public const string Battle = "battle";
+    public const string Battle2 = "battle2";
+    public const string Battle3 = "battle3";
     public const string Notes = "notes";
 
     /// <summary>The columns of the shipped spell table, in order.</summary>
-    public static IReadOnlyList<string> Columns { get; } = [Id, Name, School, Level, Mana, Element, Tags, Adventure, Battle, Notes];
+    public static IReadOnlyList<string> Columns { get; } = [Id, Name, School, Level, Mana, Element, Tags, Adventure, Battle, Battle2, Battle3, Notes];
 
     public static IReadOnlyList<SpellDefinition> Parse(string text) =>
         CsvTable.Parse(text, "Spell", [Id, Name, School, Level, Mana, Element])
@@ -250,19 +295,37 @@ public static class SpellTable
             throw row.Error(Level, $"{level} is not a spell level from 1 to {Creatures.SpellLevels.Max}");
         }
 
-        SpellEffect? effect;
-        try
+        var effect = Effect(row, Battle);
+        var rank2 = Effect(row, Battle2);
+        var rank3 = Effect(row, Battle3);
+        foreach (var (rank, column) in new[] { (rank2, Battle2), (rank3, Battle3) })
         {
-            effect = row.Optional(Battle) is { } battle ? SpellEffect.Parse(battle) : null;
-        }
-        catch (FormatException e)
-        {
-            throw row.Error(Battle, e.Message);
+            if (rank is not null && effect is null)
+            {
+                throw row.Error(column, "a rank II or III effect needs the rank I effect");
+            }
+
+            if (rank is not null && rank.Kind != effect!.Kind)
+            {
+                throw row.Error(column, $"a rank changes the effect, not its kind ({effect.Kind})");
+            }
         }
 
         return new SpellDefinition(
             id, row.Text(Name), row.Text(School), level, row.Int(Mana), row.Enum<SpellElement>(Element), row.List(Tags),
-            row.Optional(Adventure) is "yes", effect, row.Optional(Notes) ?? "");
+            row.Optional(Adventure) is "yes", effect, row.Optional(Notes) ?? "", rank2, rank3);
+    }
+
+    private static SpellEffect? Effect(CsvTable.Row row, string column)
+    {
+        try
+        {
+            return row.Optional(column) is { } battle ? SpellEffect.Parse(battle) : null;
+        }
+        catch (FormatException e)
+        {
+            throw row.Error(column, e.Message);
+        }
     }
 }
 
@@ -280,7 +343,7 @@ public sealed class SpellCatalog
                 throw new FormatException($"Duplicate spell '{spell.Id}'.");
             }
 
-            if (spell.IsAdventure && spell.Effect is not null)
+            if (spell.IsAdventure && (spell.Effect ?? spell.Rank2 ?? spell.Rank3) is not null)
             {
                 throw new FormatException($"Adventure spell '{spell.Id}' has a battle effect.");
             }

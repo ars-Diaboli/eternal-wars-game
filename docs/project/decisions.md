@@ -3029,3 +3029,29 @@ for play-testing. The 3D views are written but not run in Godot yet; the 2D harn
   shots × initiative / 10, `WarMachines.Throughput`): ballista 47.5, cannon 45.5, catapult 46; the glaivethrower was 72 and is now **20–26
   damage, initiative 11** (50.6), still the most, with the least health (200). Tent, cart, prices and the Ballistics table stay; machines
   already scale with the hero's Attack through the damage formula. A test keeps the four within 15 %.
+
+### ADR-122: Spell ranks II and III and the school Mastery skill (ADR-047, ADR-072, ADR-099, ADR-110, MAG-3, 2026-11-03)
+**Status**: implemented (2026-11-03). The roadmap items "School skills take effect" and the ranks part of "Spell table follow-ups";
+*(proposal)* marks the agent's choices.
+
+- **School skills**: Magic (spell levels, ADR-071) and attunement (ADR-063) were already in; **Mastery** is new. `MagicRules.MaxRank`: rank 1
+  without it, **2 at Basic, 3 at Advanced** (MAG-3). When a hero with a book is in an own town with a mage guild (on entering, at the start of
+  its turn there, after a building or book is bought), every spell the guild or a spell building **offers** that the hero knows rises,
+  free, **straight to the rank its Mastery allows** (MAG-3's assumption); spells learned in that visit rise in the same visit. A spell learned
+  elsewhere (a Shrine, the map) rises when the hero visits a guild that offers it. `SpellsRaised` (spell → new rank) after `SpellsLearned`.
+  Shrines teach at rank I; the Unwritten Codex's spells are rank I *(proposal)*.
+- **Table**: `spells.csv` gets `battle2` and `battle3` after `battle`, each the **whole** effect at that rank in the same grammar (not a
+  difference); empty means the rank below's (`SpellDefinition.EffectAt`). A rank needs the rank I effect and keeps its kind (the parser refuses
+  otherwise). 42 of the 43 battle spells have a rank II or III effect (not Smite).
+- **New words**: `targets N` (a stack spell also reaches the **N − 1 stacks nearest the aimed one** on its side that it works on, nearer
+  first by cell distance, then by id *(proposal: no extra clicks, the aimed stack chooses the group)*); `spare-own` (an area or field spell
+  leaves the caster's stacks alone); filters `melee` (no shots) and `ground` (not flying; war machines count as on the ground).
+- **Battle**: `KnownSpell.Effect` is the effect at its rank, used for refusals, reach, damage, durations, summons, the AI's values and the
+  HUD; rank III already counted one level higher against creature spell resistance (ADR-049). The battle HUD and hero screen show "Bless II".
+- **Rank changes not built** (the rank keeps the one below): Smite's splash and its ignoring spell resistance, Holy Word's lost action, Heal's
+  cure and revival, Call Lightning's jump, Barkskin's thorns, Bind Elemental's two kinds, Firebolt's and Dark Bolt's burning, Meteor Shower's
+  rubble, Summon Demons staying, Ashfall sparing own demons, Frost Bolt's freezing; the Familiars' mana theft (Hellgate III calls them). The
+  adventure spells' ranks (radius, Dimension Door's reach and casts, Town Portal's choice, every-terrain walking) are not built either.
+- **Not changed**: the map format (map heroes' spells start at rank I; no format bump); the adventure AI does not plan guild visits for ranks
+  (it gets them when it passes through); mana costs are the same at every rank (spells.md). Old replays whose heroes had Mastery and visited
+  guilds may now differ.

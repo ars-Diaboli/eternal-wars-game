@@ -106,6 +106,7 @@ public partial class HeroPanel : PanelContainer
         this.SubscribeWhileInTree<HeroManaRestored>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroManaSpent>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellsLearned>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<SpellsRaised>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<AdventureSpellCast>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<PandorasBoxOpened>(session.Events, _ => Refresh()); // stats and skills
@@ -247,12 +248,14 @@ public partial class HeroPanel : PanelContainer
         }
 
         var lent = EternalWars.Core.Domain.Magic.MagicRules.Known(hero, EternalWars.Core.Domain.Magic.SpellCatalog.Default).Count() - hero.Spells.Count;
-        var learned = hero.Spells.Count == 0 ? "Spell book: empty." : $"Spells: {string.Join(", ", hero.Spells.Keys.Select(SpellName))}";
+        var learned = hero.Spells.Count == 0 ? "Spell book: empty." : $"Spells: {string.Join(", ", hero.Spells.Select(s => SpellName(s.Key, s.Value)))}";
         return lent > 0 ? $"{learned}   (+{lent} while its artifacts are worn)" : learned;
     }
 
-    private static string SpellName(string spell) =>
-        EternalWars.Core.Domain.Magic.SpellCatalog.Default.TryGet(spell, out var definition) ? definition.Name : spell;
+    private static string SpellName(string spell, int rank) =>
+        EternalWars.Core.Domain.Magic.SpellCatalog.Default.TryGet(spell, out var definition)
+            ? EternalWars.Core.Domain.Magic.MagicRules.NameAtRank(definition, rank)
+            : spell;
 
     private void ShowSkills(Hero hero)
     {

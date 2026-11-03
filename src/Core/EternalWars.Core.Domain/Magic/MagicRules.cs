@@ -25,9 +25,24 @@ public static class MagicRules
     /// <summary>The Magic skill of a spell's school (<c>magic.haven.spells</c>).</summary>
     public static string MagicSkill(string school) => $"{BuiltInSkills.SchoolGroup(school)}.spells";
 
+    /// <summary>The Mastery skill of a spell's school (<c>magic.haven.mastery</c>).</summary>
+    public static string MasterySkill(string school) => $"{BuiltInSkills.SchoolGroup(school)}.mastery";
+
     /// <summary>Whether the hero's school skill is high enough for the spell: Basic Magic allows level 1, Master level 4 (ADR-071).</summary>
     public static bool CanLearn(Hero hero, SpellDefinition spell) =>
         hero.HasSpellBook && (int)hero.SkillLevelOf(MagicSkill(spell.School)) >= spell.Level;
+
+    /// <summary>A spell's name with its rank for the screens: "Bless", "Bless II", "Bless III".</summary>
+    public static string NameAtRank(SpellDefinition spell, int rank) => rank switch
+    {
+        >= 3 => $"{spell.Name} III",
+        2 => $"{spell.Name} II",
+        _ => spell.Name,
+    };
+
+    /// <summary>The highest rank the hero's Mastery of the spell's school allows (ADR-072, MAG-3): 1 without it, 2 at Basic, 3 at Advanced.</summary>
+    public static int MaxRank(Hero hero, SpellDefinition spell) =>
+        Math.Min(Creatures.SpellLevels.MaxRank, 1 + (int)hero.SkillLevelOf(MasterySkill(spell.School)));
 
     /// <summary>
     /// Game start (ADR-106, MAG-13): every town, by id, draws 3 / 3 / 2 / 2 of its school's spells per level without repeats from the game's
@@ -113,7 +128,8 @@ public static class MagicRules
     }
 
     /// <summary>
-    /// A hero in an own town (on the entrance) with a mage guild learns the offered spells it may and does not know yet. Its mana fills up only
+    /// A hero in an own town (on the entrance) with a mage guild learns the offered spells it may and does not know yet, and the offered spells it
+    /// knows rise, free, straight to the rank its Mastery allows (ADR-072, ADR-122; a spell learned elsewhere rises too). Its mana fills up only
     /// after a night there (<paramref name="night"/>: the start of the owner's turn), not on entering. Nothing happens without a guild, and no
     /// learning without a book. A war lodge instead teaches the warcries up to its level (<see cref="Hero.WarcriesLearned"/>).
     /// </summary>
@@ -136,10 +152,23 @@ public static class MagicRules
             return;
         }
 
-        var learned = Offered(state, town).Where(id => state.Spells.TryGet(id, out var spell) && CanLearn(hero, spell) && hero.Learn(id)).ToList();
+        var offered = Offered(state, town).ToList();
+        var learned = offered.Where(id => state.Spells.TryGet(id, out var spell) && CanLearn(hero, spell) && hero.Learn(id)).ToList();
         if (learned.Count > 0)
         {
             events.Publish(new SpellsLearned(hero.Id, town.Id, learned));
+        }
+
+        if (hero.HasSpellBook)
+        {
+            var raised = offered.Distinct(StringComparer.Ordinal)
+                .Where(id => state.Spells.TryGet(id, out var spell) && hero.RaiseSpell(id, MaxRank(hero, spell)))
+                .Select(id => new SpellRank(id, hero.Spells[id]))
+                .ToList();
+            if (raised.Count > 0)
+            {
+                events.Publish(new SpellsRaised(hero.Id, town.Id, raised));
+            }
         }
 
         var max = hero.MaxMana;

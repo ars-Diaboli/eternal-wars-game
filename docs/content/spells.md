@@ -7,8 +7,9 @@ immunities), ADR-063 (six schools, mana, faction groups), ADR-070 and ADR-071 (c
 Town Portal and Dimension Door), ADR-072 (Spell Power formula, ranks). Lore: [lore.md](lore.md). Skills that drive magic:
 [skills.md](skills.md#magic-schools).
 
-**Data (ADR-110)**: the list is `src/Core/data/spells.csv`, generated from the tables below for now; its `battle` column holds the
-rank I effect of the 37 spells castable in battle so far (grammar in `SpellEffect.Parse`).
+**Data (ADR-110, ADR-122)**: the list is `src/Core/data/spells.csv`, generated from the tables below for now; its `battle` column holds the
+rank I effect of the spells castable in battle so far (grammar in `SpellEffect.Parse`), `battle2` and `battle3` the whole effect at ranks II
+and III (empty: the rank below's, where the change needs something not built yet; ADR-122 lists them).
 
 **Re-draft (ADR-099, MAG-1, 2026-10-29)**: the list is re-drafted to fit the lore, with the HoMM3, HoMM4, HoMM5 and Olden Era spell books as
 reference: **17 spells a school, 102 in all** (5 / 5 / 4 / 3 by level, adventure spells included), so a guild draws a selection and two towns
@@ -37,8 +38,9 @@ town creatures (and Conflux elementals).
   exceptions: Magic Arrow belongs to all four (HoMM3), Bind Elemental to the kind of elemental it binds. The element is not an immunity tag:
   a fire-immune creature ignores spells tagged `fire`, not every fire-element spell.
 - **Ranks**: every spell has three ranks (I, II, III). A hero knows rank I; the school's **mastery** skill allows a learned spell to rise to
-  rank II (Basic) and rank III (Advanced); it rises, free, when the hero visits a town whose guild offers it (ADR-072, MAG-3). A rank changes
-  what a spell does, not just its strength.
+  rank II (Basic) and rank III (Advanced); it rises, free, when the hero visits a town whose guild offers it (ADR-072, MAG-3), straight to
+  the rank Mastery allows (built, ADR-122). A rank changes what a spell does, not just its strength. "2 stacks" reaches the aimed stack and
+  the one nearest it; "own stacks spared" leaves the caster's stacks out of an area.
 - **Mana** (`ManaRules`, ADR-063, built): pool of **10 × Knowledge** plus attunement plus 10 × ⌈level / 10⌉; at the start of the owner's
   turn a hero regains **⌈Knowledge / 10⌉** plus attunement. A spell costs its listed mana (the same at every rank) minus attunement, never
   less than **25 %** of the base, rounded up. A hero that spends the night in a town with a mage guild refills its mana (ADR-071; built, ADR-110).

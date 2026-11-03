@@ -116,7 +116,7 @@ public class ReplayTests
         session.Execute(new StepHeroCommand(blue, TestWorld.A, Direction.South)).ThrowIfRejected();
         session.Execute(new StepHeroCommand(blue, TestWorld.A, Direction.South)).ThrowIfRejected();
         var battle = session.State.Battle!;
-        var buff = battle.Attacker.Caster!.Spells.First(s => s.Spell.Effect is { Kind: SpellEffectKind.Buff, Reach: SpellReach.Stack, Filter: SpellFilter.None });
+        var buff = battle.Attacker.Caster!.Spells.First(s => s.Effect is { Kind: SpellEffectKind.Buff, Reach: SpellReach.Stack, Filter: SpellFilter.None });
         session.Execute(new BattleCastCommand(blue, buff.Spell.Id, battle.ActiveUnit!.Id)).ThrowIfRejected(); // the trolls are the AI's
         session.Execute(new AutoResolveBattleCommand(blue)).ThrowIfRejected();
 
