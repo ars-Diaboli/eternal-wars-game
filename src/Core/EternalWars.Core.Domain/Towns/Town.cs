@@ -29,7 +29,8 @@ public sealed class Town : MapObject, IFlaggable
         IReadOnlyDictionary<string, int>? dwellings = null,
         IReadOnlyDictionary<string, int>? available = null,
         Army? garrison = null,
-        GameDate? lastBuilt = null)
+        GameDate? lastBuilt = null,
+        IReadOnlyList<string>? fixedGuildSpells = null)
         : base(id, definition, position, MapObjectKind.Town)
     {
         Owner = owner;
@@ -39,6 +40,7 @@ public sealed class Town : MapObject, IFlaggable
         _available = Copy(available);
         Garrison = garrison ?? new Army();
         LastBuilt = lastBuilt;
+        FixedGuildSpells = fixedGuildSpells?.ToList() ?? [];
     }
 
     /// <summary>Town type (<see cref="TownIds"/>).</summary>
@@ -83,6 +85,20 @@ public sealed class Town : MapObject, IFlaggable
     public IReadOnlyDictionary<int, IReadOnlyList<string>> GuildSpells { get; private set; } = new Dictionary<int, IReadOnlyList<string>>();
 
     internal void SetGuildSpells(IReadOnlyDictionary<int, IReadOnlyList<string>> spells) => GuildSpells = spells;
+
+    /// <summary>
+    /// The guild spells the map fixes (map format v30): spells of the town's school, at most as many per spell level as the guild offers
+    /// (<see cref="Magic.MagicRules.GuildSpellsPerLevel"/>); the game-start draw fills the rest. Empty = everything drawn.
+    /// </summary>
+    public IReadOnlyList<string> FixedGuildSpells { get; internal set; }
+
+    /// <summary>
+    /// The spells each spell building of another school adds here, by school (ADR-072): one per spell level 1 to 4 in level order, drawn once at
+    /// game start for every spell building the town type has, built or not; a guild of level L teaches the first L.
+    /// </summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> SchoolSpells { get; private set; } = new Dictionary<string, IReadOnlyList<string>>();
+
+    internal void SetSchoolSpells(IReadOnlyDictionary<string, IReadOnlyList<string>> spells) => SchoolSpells = spells;
 
     public int Level(string building) => _buildings.GetValueOrDefault(building);
 

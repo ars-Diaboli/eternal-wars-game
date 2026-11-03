@@ -72,8 +72,26 @@ public sealed class BattleUnit
     /// <summary>Rooted where it was called (Awaken the Grove's treants): it never moves, but fights what stands next to it.</summary>
     public bool IsRooted { get; internal init; }
 
-    /// <summary>Whether it stays where it stands this battle: rooted, or the keep's stack while the keep stands.</summary>
-    public bool IsFixed => IsRooted || InKeep;
+    /// <summary>Whether it stays where it stands now: rooted, the keep's stack while the keep stands, or held by Entangle (ADR-123).</summary>
+    public bool IsFixed => IsRooted || InKeep || Has(Magic.SpellStatus.Entangled);
+
+    /// <summary>Moves in a straight line over everything: a flyer or teleporter, or a stack under Fleetfoot (ADR-123).</summary>
+    public bool MovesFreely => Creature.MovesFreely || Has(Magic.SpellStatus.Phase);
+
+    /// <summary>Whether one of the stack's spells gives it the status (ADR-123).</summary>
+    public bool Has(Magic.SpellStatus status) => MutableSpells.Count > 0 && SpellModifiers.Has(status);
+
+    /// <summary>
+    /// Creatures a revive brought back only for this battle (Resurrection rank I, ADR-123): they are lost again when it ends, and die first when the
+    /// stack loses creatures.
+    /// </summary>
+    public int Revived { get; internal set; }
+
+    /// <summary>What the stack keeps after the battle: its count less the creatures revived only for the battle.</summary>
+    public int KeptCount => Math.Max(0, Count - Revived);
+
+    /// <summary>The damage the stack has dealt this battle (Call the Debt, ADR-123).</summary>
+    public long DamageDealt { get; internal set; }
 
     public bool IsAlive => Count > 0;
 
@@ -132,6 +150,8 @@ public sealed class BattleUnit
         LosesNextAction = LosesNextAction,
         InKeep = InKeep,
         MutableSpells = [.. MutableSpells],
+        Revived = Revived,
+        DamageDealt = DamageDealt,
     };
 }
 

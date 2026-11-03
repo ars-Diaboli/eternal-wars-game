@@ -68,3 +68,21 @@ public sealed record AdventureSpellCast(HeroId Hero, string Spell, MapPosition? 
 
 /// <summary>An area around <paramref name="Center"/> was revealed for <paramref name="Owner"/> (View Terrain, ADR-120).</summary>
 public sealed record AreaRevealed(PlayerId Owner, MapPosition Center, int Radius) : IEvent;
+
+/// <summary>Distant Vision: the other players' heroes and the neutral stacks within <paramref name="Radius"/> of the cell looked at.</summary>
+public sealed record ArmiesSighted(HeroId Hero, PlayerId Owner, MapPosition Center, int Radius, IReadOnlyList<Magic.ShownArmy> Armies) : IEvent;
+
+/// <summary>Detect Magic: the map objects within <paramref name="Radius"/> of the hero and what they hold.</summary>
+public sealed record MagicDetected(HeroId Hero, PlayerId Owner, MapPosition Center, int Radius, IReadOnlyList<Magic.DetectedObject> Objects) : IEvent;
+
+/// <summary>
+/// Grave Whisper: the hero's next victory this week raises <paramref name="Percent"/> % more with Necromancy (its status came just before);
+/// at rank III <paramref name="Guards"/> are the neutral stacks within 10 cells with their numbers (empty below).
+/// </summary>
+public sealed record GravesMarked(HeroId Hero, PlayerId Owner, int Percent, IReadOnlyList<Magic.ShownArmy> Guards) : IEvent;
+
+/// <summary>Ledger of Ages: next week's event and the enemy heroes' armies it reads.</summary>
+public sealed record LedgerRead(HeroId Hero, PlayerId Owner, Magic.LedgerReport Report) : IEvent;
+
+/// <summary>Eavesdrop: an enemy town's screen, read-only.</summary>
+public sealed record TownOverheard(HeroId Hero, PlayerId Owner, Magic.TownIntel Town) : IEvent;

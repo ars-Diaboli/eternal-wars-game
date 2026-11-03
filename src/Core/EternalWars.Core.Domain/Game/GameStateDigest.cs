@@ -73,7 +73,9 @@ public static class GameStateDigest
                 MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
                 Town town => $"owner {town.Owner?.Value} governor {town.Governor?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "
                              + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}"
-                             + (town.GuildSpells.Count == 0 ? "" : $" guild {string.Join(';', town.GuildSpells.OrderBy(l => l.Key).Select(l => string.Join(',', l.Value)))}"),
+                             + (town.GuildSpells.Count == 0 ? "" : $" guild {string.Join(';', town.GuildSpells.OrderBy(l => l.Key).Select(l => string.Join(',', l.Value)))}")
+                             + (town.SchoolSpells.Count == 0 ? "" : $" schools {string.Join(';', town.SchoolSpells.OrderBy(s => s.Key, StringComparer.Ordinal).Select(s => $"{s.Key}:{string.Join(',', s.Value)}"))}")
+                             + (town.FixedGuildSpells.Count == 0 ? "" : $" fixed {string.Join(',', town.FixedGuildSpells)}"),
                 _ => mapObject.TeleportTarget?.ToString() ?? "",
             };
             var visits = mapObject.Visits.IsSpent ? $" visits {mapObject.Visits}" : "";

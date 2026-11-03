@@ -19,6 +19,12 @@ public enum HeroStatusKind
 
     /// <summary>Changes nothing: the source (a spell) was used and waits until the status ends (Dimension Door once a day; ADR-120).</summary>
     Cast,
+
+    /// <summary>Veil: the hero's army shows to other players only as amounts; the value is the spell's rank (II hides the artifacts, III the hero).</summary>
+    Veil,
+
+    /// <summary>Grave Whisper: the value is added, in percent, to the hero's Necromancy share in its next victory that raises undead.</summary>
+    Necromancy,
 }
 
 /// <summary>When a temporary hero status ends (ADR-068).</summary>

@@ -402,5 +402,10 @@ public static class MapValidator
         {
             yield return $"garrison has unknown creature '{stack.Creature}'.";
         }
+
+        if (Magic.MagicRules.GuildSpellsProblem(scenario.Spells, town.TownType, town.FixedGuildSpells) is { } spells)
+        {
+            yield return $"has wrong guild spells: {spells}";
+        }
     }
 }

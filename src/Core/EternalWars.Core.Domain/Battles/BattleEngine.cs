@@ -497,39 +497,69 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             return;
         }
 
-        foreach (var unit in BattleMagic.Reach(battle, side, known, targetId, cell))
+        var reach = BattleMagic.Reach(battle, side, known, targetId, cell);
+        foreach (var unit in reach.Where(u => !BattleMagic.Affects(battle, side, known, u)))
         {
-            if (!BattleMagic.Affects(battle, side, known, unit))
+            events.Publish(new BattleSpellResisted(unit.Id, spellId));
+        }
+
+        if (effect.Kind == Magic.SpellEffectKind.Damage)
+        {
+            // Splash and chain hits come after the stacks in reach (ADR-123); every damage is worked out before it is dealt.
+            foreach (var (unit, damage) in BattleMagic.DamagePlan(battle, side, known, targetId, cell, creaturePower))
             {
-                events.Publish(new BattleSpellResisted(unit.Id, spellId));
-                continue;
-            }
+                SpellDamage(unit, spellId, damage);
+                if (!unit.IsAlive)
+                {
+                    continue;
+                }
 
-            switch (effect.Kind)
-            {
-                case Magic.SpellEffectKind.Damage:
-                    var damage = BattleMagic.Damage(battle, side, known, unit, creaturePower);
-                    var killed = Wound(unit, damage);
-                    events.Publish(new BattleUnitSpellDamaged(unit.Id, spellId, damage, killed, unit.Count));
-                    Bury(unit);
-                    if (unit.IsAlive && !effect.Modifiers.IsEmpty)
-                    {
-                        Enchant(unit, side, known, creaturePower);
-                    }
-
-                    break;
-                case Magic.SpellEffectKind.Heal:
-                    var healed = Math.Min(BattleMagic.Amount(battle, side, known, creaturePower), unit.Creature.Health - unit.TopHealth);
-                    if (healed > 0)
-                    {
-                        unit.TopHealth += healed;
-                        events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
-                    }
-
-                    break;
-                default:
+                if (!effect.Modifiers.IsEmpty)
+                {
                     Enchant(unit, side, known, creaturePower);
-                    break;
+                }
+
+                if (effect.StunPercent > 0 && battle.Random.Next(100) < effect.StunPercent)
+                {
+                    unit.LosesNextAction = true;
+                    events.Publish(new BattleUnitStunned(unit.Id, spellId));
+                }
+            }
+        }
+        else
+        {
+            foreach (var unit in reach.Where(u => BattleMagic.Affects(battle, side, known, u)))
+            {
+                switch (effect.Kind)
+                {
+                    case Magic.SpellEffectKind.Heal:
+                        var healed = Math.Min(BattleMagic.Amount(battle, side, known, creaturePower), unit.Creature.Health - unit.TopHealth);
+                        if (healed > 0)
+                        {
+                            unit.TopHealth += healed;
+                            events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
+                        }
+
+                        break;
+                    case Magic.SpellEffectKind.Revive:
+                        Revive(unit, spellId, BattleMagic.Amount(battle, side, known, creaturePower), effect.Lasting);
+                        break;
+                    case Magic.SpellEffectKind.Dispel:
+                        foreach (var removed in BattleMagic.Dispelled(side, effect, unit))
+                        {
+                            unit.MutableSpells.Remove(removed);
+                            events.Publish(new BattleSpellDispelled(unit.Id, removed.Spell, spellId));
+                        }
+
+                        break;
+                    case Magic.SpellEffectKind.Slay:
+                        var slain = Math.Min(unit.Count, BattleMagic.Slain(effect, unit));
+                        SpellDamage(unit, spellId, unit.TotalHealth - ((unit.Count - slain) * unit.Creature.Health)); // the wounded top creature goes first
+                        break;
+                    default:
+                        Enchant(unit, side, known, creaturePower);
+                        break;
+                }
             }
         }
 
@@ -537,6 +567,68 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         {
             Quake(spellId, effect.Walls);
         }
+
+        WakeHit();
+    }
+
+    /// <summary>A spell's damage to a stack (a cast, a burning spell, thorns): wounded, reported, buried; a blind stack hit wakes (ADR-123).</summary>
+    private void SpellDamage(BattleUnit unit, string spell, int damage)
+    {
+        var killed = Wound(unit, damage);
+        events.Publish(new BattleUnitSpellDamaged(unit.Id, spell, damage, killed, unit.Count));
+        Hit(unit);
+        Bury(unit);
+    }
+
+    /// <summary>
+    /// Health back to the stack (ADR-123): its top creature first, then its dead up to its count when the battle started. Creatures revived
+    /// without <paramref name="lasting"/> are lost again when the battle ends. A stack destroyed earlier stands again and acts from the next round.
+    /// </summary>
+    private void Revive(BattleUnit unit, string spell, int health, bool lasting)
+    {
+        var total = (long)Math.Min(BattleMagic.Missing(unit), health);
+        if (total <= 0)
+        {
+            return;
+        }
+
+        var before = unit.Count;
+        var now = unit.TotalHealth + total;
+        var creature = unit.Creature.Health;
+        unit.Count = (int)((now + creature - 1) / creature);
+        unit.TopHealth = (int)(now - ((long)(unit.Count - 1) * creature));
+        if (!lasting)
+        {
+            unit.Revived += unit.Count - before;
+        }
+
+        events.Publish(new BattleUnitRevived(unit.Id, spell, (int)total, unit.Count, unit.TopHealth));
+    }
+
+    /// <summary>Stacks hit while blind this action; they wake once the blow or the spell is over, so a blind stack still retaliates at half.</summary>
+    private readonly HashSet<BattleUnit> _hitWhileBlind = [];
+
+    private void Hit(BattleUnit unit)
+    {
+        if (unit.Has(Magic.SpellStatus.Blind))
+        {
+            _hitWhileBlind.Add(unit);
+        }
+    }
+
+    /// <summary>Blind ends on the stacks hit (ADR-123).</summary>
+    private void WakeHit()
+    {
+        foreach (var unit in _hitWhileBlind.OrderBy(u => u.Id))
+        {
+            foreach (var spell in unit.Spells.Where(s => s.Modifiers.Has(Magic.SpellStatus.Blind)).ToList())
+            {
+                unit.MutableSpells.Remove(spell);
+                events.Publish(new BattleSpellExpired(unit.Id, spell.Spell));
+            }
+        }
+
+        _hitWhileBlind.Clear();
     }
 
     /// <summary>
@@ -574,8 +666,19 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
         var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
+        var modifiers = known.Effect!.Modifiers;
+        if (modifiers.Burn != 0 || modifiers.Regen != 0)
+        {
+            // Burning and regrowth grow with Spell Power like damage, when cast (ADR-123).
+            modifiers = modifiers with
+            {
+                Burn = modifiers.Burn == 0 ? 0 : BattleMagic.Scaled(battle, side, known, modifiers.Burn, creaturePower),
+                Regen = modifiers.Regen == 0 ? 0 : BattleMagic.Scaled(battle, side, known, modifiers.Regen, creaturePower),
+            };
+        }
+
         unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id);
-        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, known.Effect!.Modifiers, until));
+        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, modifiers, until));
         events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until));
     }
 

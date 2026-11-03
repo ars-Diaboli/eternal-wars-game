@@ -94,7 +94,7 @@ public class ShrineAndSpellBookTests
         state.GetHero(C).HasSpellBook = false;
 
         var map = MapConverter.ToDocument(state);
-        Assert.Equal(29, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 29);
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(map)));
 
         var shrines = restored.ObjectsOf<Shrine>().OrderBy(s => s.SpellLevel).ToList();

@@ -46,17 +46,21 @@ public static class MagicRules
 
     /// <summary>
     /// Game start (ADR-106, MAG-13): every town, by id, draws 3 / 3 / 2 / 2 of its school's spells per level without repeats from the game's
-    /// random source. Towns without a school (Stronghold, Swamp Bestiary) offer none.
+    /// random source; the spells the map fixes (<see cref="Town.FixedGuildSpells"/>) take their places first and the draw fills the rest from the
+    /// others. Towns without a school (Stronghold, Swamp Bestiary) offer none. Then every town, by id, draws its spell buildings' spells
+    /// (<see cref="Town.SchoolSpells"/>) from the same source, school by school in id order, one per level.
     /// </summary>
     internal static void DrawGuilds(GameState state)
     {
-        foreach (var town in state.ObjectsOf<Town>().OrderBy(t => t.Id.Value))
+        var towns = state.ObjectsOf<Town>().OrderBy(t => t.Id.Value).ToList();
+        foreach (var town in towns)
         {
             var guild = new Dictionary<int, IReadOnlyList<string>>();
             for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
             {
                 var pool = state.Spells.Of(town.TownType, level).Select(s => s.Id).ToList();
-                var drawn = new List<string>();
+                var drawn = town.FixedGuildSpells.Where(pool.Contains).Distinct(StringComparer.Ordinal).Take(GuildSpellsPerLevel[level - 1]).ToList();
+                pool.RemoveAll(drawn.Contains);
                 while (drawn.Count < GuildSpellsPerLevel[level - 1] && pool.Count > 0)
                 {
                     var pick = state.Random.Next(pool.Count);
@@ -73,6 +77,67 @@ public static class MagicRules
 
             town.SetGuildSpells(guild);
         }
+
+        foreach (var town in towns)
+        {
+            var schools = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+            foreach (var school in TownRules.Buildings(state, town).TownBuildings.Select(BuiltInBuildings.SchoolOf).OfType<string>().Distinct().Order(StringComparer.Ordinal))
+            {
+                var spells = new List<string>();
+                for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
+                {
+                    var pool = state.Spells.Of(school, level);
+                    if (pool.Count > 0)
+                    {
+                        spells.Add(pool[state.Random.Next(pool.Count)].Id);
+                    }
+                }
+
+                schools[school] = spells;
+            }
+
+            town.SetSchoolSpells(schools);
+        }
+    }
+
+    /// <summary>
+    /// Why the spells a map fixes for a town's guild (<see cref="Town.FixedGuildSpells"/>, map v30) are wrong, or null: each must be a known spell of
+    /// the town's school, of a level the guild has, listed once, and no level may list more than the guild offers there (3 / 3 / 2 / 2).
+    /// </summary>
+    public static string? GuildSpellsProblem(SpellCatalog spells, string townType, IReadOnlyList<string> fixedSpells)
+    {
+        foreach (var id in fixedSpells)
+        {
+            if (!spells.TryGet(id, out var spell))
+            {
+                return $"'{id}' is not a spell.";
+            }
+
+            if (spell.School != townType)
+            {
+                return $"{spell.Name} is not a spell of the {townType} school.";
+            }
+
+            if (spell.Level < 1 || spell.Level > GuildSpellsPerLevel.Count)
+            {
+                return $"{spell.Name} is a level {spell.Level} spell; a guild teaches levels 1 to {GuildSpellsPerLevel.Count}.";
+            }
+        }
+
+        if (fixedSpells.GroupBy(s => s, StringComparer.Ordinal).FirstOrDefault(g => g.Count() > 1) is { } twice)
+        {
+            return $"{spells.Get(twice.Key).Name} is listed twice.";
+        }
+
+        foreach (var level in fixedSpells.GroupBy(s => spells.Get(s).Level))
+        {
+            if (level.Count() > GuildSpellsPerLevel[level.Key - 1])
+            {
+                return $"{level.Count()} level {level.Key} spells; the guild offers {GuildSpellsPerLevel[level.Key - 1]}.";
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -106,26 +171,11 @@ public static class MagicRules
 
     /// <summary>
     /// The spells a spell building of <paramref name="school"/> adds in this town (ADR-072, MAG-12): one of the school's spells for each spell
-    /// level 1 to 4, in level order; a guild of level L teaches the first L. The pick is a shuffle seeded from the game seed, the town and the
-    /// school, so it is the same all game and needs no stored state, and it does not draw from the game's random numbers (like the tavern pool).
-    /// A level without spells of the school is skipped.
+    /// level 1 to 4, in level order; a guild of level L teaches the first L. They are drawn at game start from the game's random source like the
+    /// guild's (<see cref="DrawGuilds"/>; the map does not fix them). A level without spells of the school is skipped; empty before the game starts.
     /// </summary>
-    public static IReadOnlyList<string> SchoolSpells(GameState state, Town town, string school)
-    {
-        var name = school.Aggregate(14695981039346656037UL, (hash, c) => (hash ^ c) * 1099511628211UL); // FNV-1a: stable across runs
-        var random = new GameRandom((state.Options.Seed * 0x9E3779B97F4A7C15UL) ^ ((ulong)(town.Id.Value + 1) * 0xBF58476D1CE4E5B9UL) ^ name);
-        var spells = new List<string>();
-        for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
-        {
-            var pool = state.Spells.Of(school, level);
-            if (pool.Count > 0)
-            {
-                spells.Add(pool[random.Next(pool.Count)].Id);
-            }
-        }
-
-        return spells;
-    }
+    public static IReadOnlyList<string> SchoolSpells(GameState state, Town town, string school) =>
+        town.SchoolSpells.GetValueOrDefault(school) ?? [];
 
     /// <summary>
     /// A hero in an own town (on the entrance) with a mage guild learns the offered spells it may and does not know yet, and the offered spells it

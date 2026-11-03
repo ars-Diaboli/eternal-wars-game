@@ -63,7 +63,7 @@ public static class BattleGrid
             return result; // the keep's stack stays in the keep, rooted stacks where they were called (ADR-120)
         }
 
-        if (unit.Creature.MovesFreely)
+        if (unit.MovesFreely)
         {
             for (var y = start.Y - speed; y <= start.Y + speed; y++)
             {
@@ -136,7 +136,7 @@ public static class BattleGrid
     /// (then top-to-bottom, left-to-right, so the order is deterministic).
     /// </summary>
     public static IReadOnlyList<CellPosition> AttackPositions(BattleState battle, BattleUnit unit, BattleUnit target) =>
-        unit.IsMachine || target.InKeep ? [] : Reachable(battle, unit)
+        unit.IsMachine || target.InKeep || unit.Has(Magic.SpellStatus.NoAttack) || !CanBeAttacked(unit, target, melee: true) ? [] : Reachable(battle, unit)
             .Where(r => unit.RectAt(r.Key).IsAdjacentTo(target.Rect))
             .OrderBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
             .Select(r => r.Key)
@@ -162,13 +162,21 @@ public static class BattleGrid
 
     /// <summary>Whether a shooter may fire at all: ammunition left and no enemy adjacent.</summary>
     public static bool CanShootNow(BattleState battle, BattleUnit unit) =>
-        unit.Creature.IsRanged && unit.ShotsLeft > 0 && !AdjacentEnemies(battle, unit).Any();
+        unit.Creature.IsRanged && unit.ShotsLeft > 0 && !unit.Has(Magic.SpellStatus.NoShoot | Magic.SpellStatus.NoAttack) && !AdjacentEnemies(battle, unit).Any();
+
+    /// <summary>
+    /// Whether spells let the attacker hit the target (ADR-123): not one in Stasis, not an enemy that is Unseen, not one under Sanctuary in melee.
+    /// </summary>
+    public static bool CanBeAttacked(BattleUnit attacker, BattleUnit target, bool melee) =>
+        !target.Has(Magic.SpellStatus.Stasis)
+        && !(target.Side != attacker.Side && target.Has(Magic.SpellStatus.Unseen))
+        && !(melee && target.Has(Magic.SpellStatus.Sanctuary));
 
     /// <summary>Whether <paramref name="unit"/> can shoot <paramref name="target"/>; <paramref name="penaltyEighths"/> is the shot's ranged penalty (<see cref="RangedPenaltyEighths"/>).</summary>
     public static bool CanShoot(BattleState battle, BattleUnit unit, BattleUnit target, out int penaltyEighths)
     {
         penaltyEighths = 0;
-        if (!target.IsAlive || target.Side == unit.Side || !CanShootNow(battle, unit))
+        if (!target.IsAlive || target.Side == unit.Side || !CanShootNow(battle, unit) || !CanBeAttacked(unit, target, melee: false))
         {
             return false;
         }
@@ -189,6 +197,11 @@ public static class BattleGrid
     /// </summary>
     public static int RangedPenaltyEighths(BattleState battle, BattleUnit shooter, BattleUnit target)
     {
+        if (shooter.Has(Magic.SpellStatus.TrueShot))
+        {
+            return 0; // Hunter's Sight (ADR-123): no distance penalty, no cover
+        }
+
         var distance = shooter.IsMachine ? 0 : DistancePenaltyEighths(shooter.Rect.DistanceTo(target.Rect));
         return Math.Max(0, distance + CoverEighths(battle, shooter, target) - battle.Participant(shooter.Side).Bonus.MarksmanshipEighths);
     }

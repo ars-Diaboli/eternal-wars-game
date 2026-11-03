@@ -440,7 +440,8 @@ public sealed class MapEditorSession
     /// <summary>
     /// Gives a town another playable town type, e.g. after generating a map: a town of the new type takes its id, place, owner, garrison and,
     /// unless it kept the old type's default name, its name. Buildings the new type also has stay (at most its top level); each dwelling, and the
-    /// creatures waiting in it, moves to the new type's line at the same place in the same tier. Refused when the result lacks a requirement.
+    /// creatures waiting in it, moves to the new type's line at the same place in the same tier. Fixed guild spells (v30) are of the old school and
+    /// are dropped (undo brings them back). Refused when the result lacks a requirement.
     /// </summary>
     public EditResult SetTownType(MapObjectId id, string townType)
     {
@@ -1188,6 +1189,34 @@ public sealed class MapEditorSession
         {
             shrine.Spell = value;
             _bus.Publish(new MapObjectChanged(shrine.Id));
+        }
+    }
+
+    /// <summary>
+    /// The spells a town's mage guild is fixed to teach (map v30): spells of the town's school, at most 3 / 3 / 2 / 2 per level, each once
+    /// (<see cref="Magic.MagicRules.GuildSpellsProblem"/>); the game-start draw fills the rest. Empty = everything drawn. The order is kept as given.
+    /// </summary>
+    public EditResult SetTownGuildSpells(MapObjectId id, IReadOnlyList<string> spells)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (Magic.MagicRules.GuildSpellsProblem(Scenario.Spells, town.TownType, spells) is not null)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = town.FixedGuildSpells;
+        IReadOnlyList<string> next = [.. spells];
+        Run(new DelegateCommand($"Set guild spells of {town.Name}", () => Apply(next), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(IReadOnlyList<string> value)
+        {
+            town.FixedGuildSpells = value;
+            _bus.Publish(new MapObjectChanged(town.Id));
         }
     }
 

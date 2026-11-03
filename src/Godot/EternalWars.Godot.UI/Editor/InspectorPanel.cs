@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
@@ -14,7 +15,7 @@ namespace EternalWars.Godot.UI.Editor;
 
 /// <summary>
 /// Edits the selected hero (stats, Tactics, seven army slots) or object (mine owner and guard, chest values,
-/// monster creature/count/disposition/guard mode, town owner, name, buildings, dwellings and garrison, a Pandora's Box's contents, guard and
+/// monster creature/count/disposition/guard mode, town owner, name, buildings, dwellings, guild spells and garrison, a Pandora's Box's contents, guard and
 /// message; gate links are shown).
 /// Every change is an undoable editor edit.
 /// </summary>
@@ -556,7 +557,7 @@ public partial class InspectorPanel : VBoxContainer
         }
     }
 
-    /// <summary>Owner, name, pre-built buildings and dwellings (7-of-9 rule), garrison.</summary>
+    /// <summary>Owner, name, pre-built buildings and dwellings (7-of-9 rule), fixed guild spells, garrison.</summary>
     private void ShowTown(Town town)
     {
         var scenario = _editor.Scenario;
@@ -593,7 +594,41 @@ public partial class InspectorPanel : VBoxContainer
             level.ValueChanged += value => Edit(() => _editor.SetTownDwelling(town.Id, id, (int)value));
         }
 
+        ShowGuildSpells(town);
         GarrisonRows(town.Id, town.Garrison);
+    }
+
+    /// <summary>
+    /// The spells the map fixes for the town's mage guild (map v30): per spell level as many choices as the guild offers there (3 / 3 / 2 / 2), each
+    /// a spell of the town's school or "drawn" (the game start draws the rest). Towns without a school have no guild and no rows.
+    /// </summary>
+    private void ShowGuildSpells(Town town)
+    {
+        var spells = _editor.Scenario.Spells;
+        if (!Enumerable.Range(1, MagicRules.GuildSpellsPerLevel.Count).Any(level => spells.Of(town.TownType, level).Count > 0))
+        {
+            return;
+        }
+
+        AddChild(new Label { Text = "Guild spells (— drawn — = drawn when the game starts)" });
+        var choices = new List<Choice<string>>();
+        for (var level = 1; level <= MagicRules.GuildSpellsPerLevel.Count; level++)
+        {
+            var items = new[] { ("— drawn —", "") }.Concat(spells.Of(town.TownType, level).OrderBy(s => s.Name).Select(s => (s.Name, s.Id))).ToList();
+            var fixedHere = town.FixedGuildSpells.Where(s => spells.TryGet(s, out var spell) && spell.Level == level).ToList();
+            var row = new HFlowContainer();
+            AddChild(row);
+            for (var slot = 0; slot < MagicRules.GuildSpellsPerLevel[level - 1]; slot++)
+            {
+                choices.Add(Options(row, slot == 0 ? $"L{level}" : "", items, fixedHere.ElementAtOrDefault(slot) ?? ""));
+            }
+        }
+
+        void Apply() => Edit(() => _editor.SetTownGuildSpells(town.Id, [.. choices.Select(c => c.Value()).Where(s => s.Length > 0).Distinct()]));
+        foreach (var choice in choices)
+        {
+            choice.Button.ItemSelected += _ => Apply();
+        }
     }
 
     /// <summary>The seven garrison slots of a town or a map garrison (ADR-070).</summary>

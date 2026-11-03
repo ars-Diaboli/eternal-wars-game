@@ -161,8 +161,12 @@ public sealed record BattleCaster(
 {
     public KnownSpell? Find(string spell) => Spells.FirstOrDefault(s => s.Spell.Id == spell);
 
-    /// <summary>The percent the hero's artifacts add to the effect of the spell's element.</summary>
-    public int ElementBonus(Magic.SpellDefinition spell) => ElementPercent?.GetValueOrDefault(spell.Element) ?? 0;
+    /// <summary>
+    /// The percent the hero's artifacts (the elemental orbs) add to the effect of the spell's element; for Magic Arrow the best of the four, for
+    /// Bind Elemental that of the bound kind's element (ADR-123).
+    /// </summary>
+    public int ElementBonus(Magic.SpellDefinition spell, string? creature = null) =>
+        ElementPercent is { Count: > 0 } percent ? spell.ElementsFor(creature).Select(e => percent.GetValueOrDefault(e)).DefaultIfEmpty(0).Max() : 0;
 
     public static BattleCaster? For(Heroes.Hero hero, Magic.SpellCatalog spells)
     {
@@ -175,7 +179,7 @@ public sealed record BattleCaster(
             .Select(s => new KnownSpell(s.Spell, s.Rank, Heroes.ManaRules.SpellCost(hero, s.Spell.Mana)))
             .ToList();
         var specialty = hero.Specialty is { Kind: Heroes.SpecialtyKind.Spell } special ? special.Target : null;
-        var elements = Enum.GetValues<Magic.SpellElement>().Where(e => hero.Bonus.ElementBonus(e) != 0).ToDictionary(e => e, hero.Bonus.ElementBonus);
+        var elements = new[] { Magic.SpellElement.Air, Magic.SpellElement.Earth, Magic.SpellElement.Fire, Magic.SpellElement.Water }.Where(e => hero.Bonus.ElementBonus(e) != 0).ToDictionary(e => e, hero.Bonus.ElementBonus);
         return new BattleCaster(hero.TotalSpellPower, hero.Level, known, specialty, hero.Mana, elements);
     }
 }
