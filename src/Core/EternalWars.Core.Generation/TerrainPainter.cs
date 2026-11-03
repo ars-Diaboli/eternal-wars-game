@@ -93,23 +93,21 @@ public static class TerrainPainter
 
         for (var level = 0; level < layout.Levels; level++)
         {
-            var tiles = Enumerable.Range(0, template.Zones.Count).ToDictionary(z => z, _ => new List<int>());
-            for (var i = 0; i < size * size; i++)
-            {
-                tiles[layout.ZoneAt(i % size, i / size, level)].Add(i);
-            }
+            // In the layout's order: reading order, or on a mirrored layout the images of the first zone's tiles (ADR-117).
+            var tiles = Enumerable.Range(0, template.Zones.Count)
+                .ToDictionary(z => z, z => layout.Tiles(z).Where(t => t.Level == level).Select(t => (t.Y * size) + t.X).ToList());
 
             var rock = new bool[size * size];
             foreach (var (zone, zoneTiles) in tiles.Where(t => t.Value.Count > 0))
             {
-                PaintZone(map, layout, template.Zones[zone], zoneTiles, level, streams.For("terrain", zone), StartTown(template.Zones[zone], startTowns));
+                PaintZone(map, layout, template.Zones[zone], zoneTiles, level, streams.For("terrain", template.RollZone(zone)), StartTown(template.Zones[zone], startTowns));
             }
 
             RaiseWalls(map, layout, level, rock, walls);
             foreach (var (zone, zoneTiles) in tiles.Where(t => t.Value.Count > 0))
             {
                 FillPockets(map, layout, zoneTiles, level, rock);
-                PlaceObstacles(map, layout, template.Zones[zone], zoneTiles, level, rock, streams.For("obstacles", zone), obstacles);
+                PlaceObstacles(map, layout, template.Zones[zone], zoneTiles, level, rock, streams.For("obstacles", template.RollZone(zone)), obstacles);
             }
         }
 

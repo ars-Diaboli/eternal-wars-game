@@ -22,7 +22,7 @@ public static class RiverPlacer
         var streams = new SeedStreams(seed);
         for (var zone = 0; zone < template.Zones.Count; zone++)
         {
-            var random = streams.For("rivers", zone);
+            var random = streams.For("rivers", template.RollZone(zone));
             if (random.Next(2) != 0)
             {
                 continue;

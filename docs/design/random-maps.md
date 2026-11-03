@@ -3,30 +3,32 @@
 > Part of the [game design](overview.md). Modelled on the Heroes 3: Horn of the Abyss template system (ADR-023,
 > ADR-034, ADR-064). Open items ❓: [open-questions.md](../project/open-questions.md#random-maps-phase-4).
 
-**Status**: the template format (v5), its validator, three shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two") and every
-generator stage including the scenario assembly are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`).
-The editor's "generate from template" exists in core (`EditorMapGenerator`, see [Editor](#editor)). There is no
-template editor, user template folder, fairness validation (decided, ADR-071) or game/editor UI yet; `sim layout` prints
-generated maps, `sim game --template` plays AI-vs-AI games on them, and CI checks every shipped template with
-`sim maps` (no generator problems, deterministic, start towns reachable from every player, AI play and replay work).
+**Status**: the template format (v8), its validator, five shipped templates (`duel`, `ffa-4` "Free for all", `2v2` "Two against two",
+`mirror-duel` "Mirror duel", `ffa-8` "Eight kingdoms") and every generator stage including the scenario assembly and the whole-map
+fairness check are in core (`EternalWars.Core.Generation`, entry point `MapGenerator`, version 8). The game's new-game screen and the
+editor's Generate tab generate maps; the editor's template editor authors templates and saves them to the user folder (ADR-117).
+`sim layout` prints generated maps, `sim fairness` their fairness numbers, `sim game --template` plays AI-vs-AI games on them, and CI
+checks every shipped template with `sim maps` (no generator problems, deterministic, start towns reachable from every player, AI play and
+replay work).
 
 ## Goals
 - **Both the game and the editor generate maps.** The game's new-game screen picks a template, a map size, players,
   a seed and game options, then generates and starts (built, ADR-086: per player human or computer, town, hero and team). The editor generates into an **editable** map, so designers can
   hand-polish a generated map and save it (built: the "Generate" tab, ADR-087).
 - **Templates are authored in the editor** (template editor: a zone graph) and saved as `*.ewtemplate.json`. The game
-  lists every template it can find, built-in and user/mod folders. Today only the built-in (embedded) templates load.
-- **Template editor** (ADR-070, RMG-10; not built): works like the HotA template editor (zone graph, zone and connection
+  lists every template it can find, built-in and user/mod folders. The editor lists the built-in templates and the valid ones in
+  `user://templates`; the new-game screen only the built-in ones so far.
+- **Template editor** (ADR-070, RMG-10; built, ADR-117, [below](#template-editor)): works like the HotA template editor (zone graph, zone and connection
   properties); **no undo** (unlike `MapEditorSession`); "Generate" in the editor shows the result. User templates are saved in
   the user data folder and listed next to the shipped ones (ADR-073).
 - **Generation is deterministic** from (template, size, players, seed, generator version), so a map can be shared by
   its seed. Every stage draws from its own named seed stream (`SeedStreams`).
 - The generator outputs a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
 
-## The template (`MapTemplate`, format v7)
+## The template (`MapTemplate`, format v8)
 - Name, description, supported map sizes, player-count range, max humans, whether an underground level is used, and the
   **maximum number of heroes per player, 1 to 8** (v5, ADR-068; default 8). The generator writes it into the scenario's rules; its
-  callers (`MapGenerator.Build`, `EditorMapGenerator.Generate`) may override it with `maxHeroes`. There is no template editor yet; the editor's
+  callers (`MapGenerator.Build`, `EditorMapGenerator.Generate`) may override it with `maxHeroes`. The editor's
   "Generate" tab offers the override (ADR-087), the new-game screen does not (ADR-086). Generated maps use one limit for every player.
 - **Week and month events** (v6, ADR-084): `weekEvents` with `enabled`, `skipWeeks` (0–8) and `weeklyFactions` / `monthlyFactions`
   (town ids or `neutral`; omitted = the playable towns), written into the scenario's rules like a map's.
@@ -58,12 +60,18 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 - **Validator** (`TemplateValidator`): errors for players, sizes, zones, start zones, connections, passages, empty
   levels and connectivity; warnings for unfair start zones.
 - **Teams** (v4, RMG-6): an optional team per start zone (same number = allies, none = free for all), and `teamsLocked`;
-  players may change teams at setup unless locked. The connections decide where allies are; there are no team fairness
-  checks. ADR-070 (not built): a game has **2 to 8 teams** (8 = free for all); a template sets team defaults and restrictions
-  (fixed teams, allowed team counts), and the map editor may override them on a generated map.
-- **Mirrored templates** (ADR-070, RMG-9; not in the format yet): only for **2, 4 or 8 players** (8 uses the underground). Two
-  players: **axis symmetry**, the axis vertical, horizontal or diagonal; four or eight: **point symmetry** around the map centre.
-  The template picks the symmetry, "random axis" allowed (ADR-073). Mirrored zones share their rolls.
+  players may change teams at setup unless locked. The connections decide where allies are. A game has **2 to 8 teams**
+  (ADR-070, v8, ADR-117): `minTeams` / `maxTeams` (empty = any) limit how many teams a setup may have; the validator checks
+  2 ≤ fewest ≤ most ≤ players, the fewest at most `minPlayers`, and that locked teams fit. A generated map carries the counts (map format
+  v28), and the map editor may change them ("Teams from / to" in the map properties).
+- **Mirrored templates** (ADR-070, RMG-9, v8, ADR-117): `symmetry` is `None`, `Vertical`, `Horizontal`, `Diagonal`, `RandomAxis`
+  (drawn from the seed, ADR-073) or `HalfTurn` for **2 players**, `QuarterTurn` for **4 or 8** (8 = four a level, with the underground).
+  Each zone names its image with `mirror`; mirrors form cycles of 1 (a middle zone that is its own image) or the symmetry's order, of
+  zones alike, on one level; a start zone is never its own image, and every connection's image must be a connection like it. The layout
+  keeps the symmetry (Voronoi always; the zone centres are symmetric and the grid is copied tile by tile), and mirrored zones and
+  connections share their rolls: each stage seeds a zone by the first zone of its cycle and walks its tiles in the mapped order, so the
+  content is the same on every side.
+- **Graph places** (v8): `graphX` / `graphY` per zone, the template editor's drawing only.
 
 ## Pipeline
 
@@ -78,7 +86,7 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 | 5b | `RiverPlacer` | About half the zones get a river from the foot of one wall to the farthest foot of another, over free ground; its look from the terrain (ADR-079, MAP-26) | implemented |
 | 6 | `TreasurePlacer` | Treasure by value band, valuable items guarded in Area mode | implemented |
 | 7 | `ScenarioAssembler` | The scenario `GameState`: players, owners, picked town types and heroes; empty slots stay neutral | implemented |
-| 8 | – | Validate: every start zone reaches the others, start zones are fair | partly (template warnings, reachability per zone; start towns reachable from every player in `sim maps`); fairness metrics decided, not built (ADR-071, RMG-8, below) |
+| 8 | `MapFairness` | Validate: every start reaches the others, everything is reachable, the starts are fair (below) | implemented (ADR-117) |
 
 - **No free-roaming monsters** for now (RMG-3): monsters guard passages and gates (Classic mode), mines (the mine's own
   guard) and treasure (Area mode, ADR-065).
@@ -113,14 +121,19 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
     tier-2 creatures, 1000–1500 power.
   - Neutral towns keep the default start; a slot nobody takes keeps its town, neutral, garrisoned by the zone's strength.
   - Standard rules; complexity and fog from the new-game screen; the map is named "template size×size #seed".
-- **Fairness** (ADR-071, RMG-8; not built): start zones are compared by distance to the nearest
-  mines, treasure value and guard power on the way; they must agree within **±15 %**. A map that fails is retried with the next
-  sub-seed (like other problems, below), then reported. There is no separate "richness" setting (RMG-12, dropped): treasure bands
+- **Fairness** (ADR-071, RMG-8, ADR-117): `MapFairness.Check` first checks that every start town reaches every other and that every
+  town, mine and treasure item is reachable from some start (a walk at the step costs, through gates and portals, through guards,
+  pickups and garrisons). Then each start gets three numbers: **mine distance** (per resource, the nearest mine, summed), **treasure
+  value** (each item's worth split between the starts by 1 / distance²) and **guard power** (the least guard power on the way to the
+  nearest rival). Teams are compared, not players (a team sums its members; no team = a team of one), and only teams whose zones are
+  alike. A number more than **±15 %** off its group's average *and* more than a slack (4 tiles, 1500 gold, 300 power; placeholders) is a
+  problem. A map that fails is retried with the next sub-seed (like other problems, below), then reported. There is no separate "richness" setting (RMG-12, dropped): treasure bands
   and mine minimums decide how rich a zone is.
 - **Problems**: `MapGenerator.GenerateBest` retries with up to 9 sub-seeds and keeps the first clean map, else the one
   with the fewest problems, which the new-game screen shows.
 - **Generator version**: `MapGenerator.Version` is saved with the game record (`GenerationInfo`) and shown with the seed;
-  another version warns that the seed may give another map. Version 3 places the map objects of ADR-068.
+  another version warns that the seed may give another map. Version 3 places the map objects of ADR-068; version 8 (ADR-117) the
+  mirrored rolls and the fairness retry.
 
 - **Guards** (`GuardPicker`): army power is `count × creature value`. A power maps to overlapping tier ranges
   (counts 6–60, 2–40, 1–25, 1–15, 1–10 for tiers 1–5), so one power can be a few stacks of a high tier or many of a
@@ -144,8 +157,22 @@ generated maps, `sim game --template` plays AI-vs-AI games on them, and CI check
 - The result carries the generator's problems (if every attempt had some) and the map validator's issues for the
   editor to show. A hero may stand in the entrance of its own town (the validator and hero placement accept it).
 
+## Template editor
+The map editor's **Templates** button (ADR-070, RMG-10, ADR-117) opens a full-screen template editor over the map. Core:
+`TemplateEditorSession` (engine-free; every change publishes `TemplateChanged` with the validator's issues; no undo, as decided).
+- **Graph**: zones as boxes coloured by type, connections as lines (gate and portal dashed, guard value written). Drag a zone to move it,
+  right-drag from one zone to another to connect them (a gate across levels), drag the ground to pan, wheel to zoom, Delete removes the
+  selection. "Arrange" lays out a template without graph places.
+- **Top row**: New, Open… (shipped and user templates), Save (to `user://templates/<name>.ewtemplate.json`), + Start / AI start /
+  Treasure / Junction (a start takes the next free slot of eight; the player count follows), Arrange, size, seed, Generate (opens the map
+  in the editor) and Close (Esc).
+- **Inspector**: the template's settings (name, description, sizes, players, humans, teams, hero limit, underground, symmetry,
+  connection guard, roads and week events on or off) when nothing is selected; a zone's (id, type, player slot, team, towns, size, level,
+  monsters, mine guards, obstacles, mirror, mines, piles, three treasure bands) or a connection's (kind, guard value, passages, chance,
+  guard kind, keymaster colour). Terrains and neutral town types are edited in the file. The issues list below updates on every change.
+
 ## Scope
-- **In 1.0**: mirrored generation (2, 4 or 8 players, axis or point symmetry, [above](#the-template-maptemplate-format-v7), ADR-070);
+- **In 1.0**: mirrored generation (2, 4 or 8 players, axis or point symmetry, [above](#the-template-maptemplate-format-v8), ADR-070, built);
   saving generated maps as ordinary map files as well as reproducing them from the seed.
 - **Not in 1.0**: water zones/islands, boats (ADR-051), importing HotA templates.
 - Open ❓: how army speed and native terrain feed into treasure and guard values.

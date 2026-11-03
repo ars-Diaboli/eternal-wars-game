@@ -74,6 +74,7 @@ public static class TemplateValidator
 
         StartZones(template, Error);
         Connections(template, Error, Warn);
+        Symmetry(template, Error);
         Fairness(template, Warn);
         return issues;
     }
@@ -101,6 +102,16 @@ public static class TemplateValidator
         if (template.MaxHumans is < 1)
         {
             error("MaxHumans must be at least 1 (or left out).");
+        }
+
+        if (template.MinTeams is < 2 || template.MaxTeams is < 2 || template.MinTeams > template.MaxPlayers || template.MaxTeams > Domain.Game.GameState.MaxPlayers
+            || template.MinTeams > template.MaxTeams)
+        {
+            error($"The team counts go from 2 up to the player count ({template.MaxPlayers}), the fewest not above the most.");
+        }
+        else if (template.MinTeams > template.MinPlayers)
+        {
+            error($"The template asks for at least {template.MinTeams} teams but may be played by {template.MinPlayers} players.");
         }
     }
 
@@ -267,6 +278,13 @@ public static class TemplateValidator
             error($"Player slot {slot.Key} owns more than one start zone.");
         }
 
+        // With every slot taken, the start zones' teams must fit the team counts; locked, nothing at setup can fix them (ADR-117).
+        var defaultTeams = ScenarioAssembler.Teams(template, starts.Where(z => z.Owner is not null).Select(z => new PlayerSetup(z.Owner!.Value, "", false, PlayerSetup.RandomTown)).ToList()).Distinct().Count();
+        if (template.TeamsLocked && (defaultTeams < (template.MinTeams ?? 1) || defaultTeams > (template.MaxTeams ?? int.MaxValue)))
+        {
+            error($"The start zones make {defaultTeams} teams, outside the template's team counts, and the teams are locked.");
+        }
+
         var humanSlots = starts.Count(z => z.Type == ZoneType.PlayerStart);
         if (humanSlots < Math.Min(template.MinPlayers, template.MaxHumans ?? int.MaxValue))
         {
@@ -353,6 +371,92 @@ public static class TemplateValidator
             }
         }
     }
+
+    /// <summary>
+    /// Mirrored templates (ADR-070 RMG-9, ADR-117): 2 players by an axis or a half turn, 4 or 8 by a quarter turn; every zone's mirror exists and is
+    /// on its level, the mirrors make cycles of the symmetry's order (or a zone is its own image), zones of a cycle are alike, and every connection's
+    /// image is a connection like it.
+    /// </summary>
+    private static void Symmetry(MapTemplate template, Action<string> error)
+    {
+        if (template.Symmetry == TemplateSymmetry.None)
+        {
+            if (template.Zones.Any(z => z.Mirror is not null))
+            {
+                error("Zones name mirrors, but the template has no symmetry.");
+            }
+
+            return;
+        }
+
+        var order = MapTemplate.Order(template.Symmetry);
+        var players = template.Symmetry == TemplateSymmetry.QuarterTurn ? new[] { 4, 8 } : [2];
+        if (!players.Contains(template.MaxPlayers))
+        {
+            error($"A template mirrored by {template.Symmetry} is for {string.Join(" or ", players)} players, not {template.MaxPlayers}.");
+        }
+
+        var ids = template.Zones.Select(z => z.Id).ToHashSet(StringComparer.Ordinal);
+        foreach (var zone in template.Zones.Where(z => z.Mirror is { } m && !ids.Contains(m)))
+        {
+            error($"Zone '{zone.Id}' mirrors '{zone.Mirror}', which does not exist.");
+        }
+
+        var image = template.MirrorOf();
+        if (image.Distinct().Count() != image.Length)
+        {
+            error("Two zones name the same mirror: every zone must be the image of exactly one zone.");
+            return;
+        }
+
+        for (var i = 0; i < image.Length; i++)
+        {
+            var (zone, mirror) = (template.Zones[i], template.Zones[image[i]]);
+            var cycle = 1;
+            for (var next = image[i]; next != i && cycle <= order; next = image[next])
+            {
+                cycle++;
+            }
+
+            if (cycle != 1 && cycle != order)
+            {
+                error($"Zone '{zone.Id}' is in a cycle of {cycle} mirrors; {template.Symmetry} needs {order} (or a zone that is its own image).");
+            }
+
+            if (zone.Level != mirror.Level)
+            {
+                error($"Zone '{zone.Id}' and its mirror '{mirror.Id}' are on different levels.");
+            }
+
+            if (!Alike(zone, mirror))
+            {
+                error($"Zone '{zone.Id}' and its mirror '{mirror.Id}' differ (type, size, towns, mines, treasure, monsters or terrain).");
+            }
+
+            if (cycle == 1 && zone.Type is ZoneType.PlayerStart or ZoneType.AiStart)
+            {
+                error($"Start zone '{zone.Id}' is its own image: every start needs a mirrored one.");
+            }
+        }
+
+        var index = template.Zones.Select((z, i) => (z.Id, i)).ToDictionary(p => p.Id, p => p.i, StringComparer.Ordinal);
+        foreach (var c in template.Connections.Where(c => index.ContainsKey(c.From) && index.ContainsKey(c.To)))
+        {
+            var (a, b) = (template.Zones[image[index[c.From]]].Id, template.Zones[image[index[c.To]]].Id);
+            if (template.Connections.FirstOrDefault(o => (o.From == a && o.To == b) || (o.From == b && o.To == a)) is not { } match
+                || match with { From = c.From, To = c.To } != c)
+            {
+                error($"Connection {c.From} – {c.To} has no mirrored connection {a} – {b} like it.");
+            }
+        }
+    }
+
+    private static bool Alike(TemplateZone a, TemplateZone b) =>
+        a.Type == b.Type && a.Size == b.Size && a.PlayerTowns == b.PlayerTowns && a.NeutralTowns == b.NeutralTowns && SameMines(a, b) && a.ExtraPiles == b.ExtraPiles
+        && a.Treasure.SequenceEqual(b.Treasure) && a.Monsters == b.Monsters && a.MineGuards == b.MineGuards && a.Obstacles == b.Obstacles
+        && (a.Terrains ?? []).SequenceEqual(b.Terrains ?? []) && (a.TownTypes ?? []).SequenceEqual(b.TownTypes ?? [])
+        && (a.StartDwellings ?? []).SequenceEqual(b.StartDwellings ?? [])
+        && (a.StartBuildings ?? new Dictionary<string, int>()).OrderBy(p => p.Key, StringComparer.Ordinal).SequenceEqual((b.StartBuildings ?? new Dictionary<string, int>()).OrderBy(p => p.Key, StringComparer.Ordinal));
 
     /// <summary>Zones not reachable from the first zone.</summary>
     private static List<string> Unreachable(MapTemplate template)

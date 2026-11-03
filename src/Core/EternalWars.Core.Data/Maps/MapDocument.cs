@@ -36,11 +36,12 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>astrologersTower</c>; ADR-084). 25 = + conditions to capture a map object, obtain or lose an artifact and release a prisoner, and deadlines
 /// on victory conditions (<c>target</c>, <c>artifact</c>, <c>deadline</c>; ADR-094). 26 = + the map's difficulty (<c>rules.difficulty</c>, the
 /// complexity the map's starting resources stand for in the ranking; omitted = Normal; ADR-101). 27 = + Pandora's Boxes (<c>pandorasBox</c>:
-/// contents, an optional guard and message; ADR-100). Older versions still load (with the default events).
+/// contents, an optional guard and message; ADR-100). 28 = + the team counts a game of the map may have (<c>minTeams</c>, <c>maxTeams</c>;
+/// omitted = no limit; ADR-117). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 27;
+    public const int CurrentFormatVersion = 28;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -68,6 +69,12 @@ public sealed record MapDocument
 
     /// <summary>The setup screen may not change the teams in <see cref="Players"/>.</summary>
     public bool TeamsLocked { get; init; }
+
+    /// <summary>The fewest teams a game of the map may have, 2 to 8 (v28, ADR-117); null = no limit.</summary>
+    public int? MinTeams { get; init; }
+
+    /// <summary>The most teams a game of the map may have, 2 to 8 (v28, ADR-117); null = no limit.</summary>
+    public int? MaxTeams { get; init; }
 
     /// <summary>
     /// Legacy (v4–v12): how every monster guarded its surroundings; omitted = <see cref="Domain.Objects.GuardMode.Classic"/>.

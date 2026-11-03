@@ -75,6 +75,7 @@ public static class Program
                     : Layout(template, Option(rest, "--size", 96), (ulong)Option(rest, "--seed", 1), rest.Contains("--rects"), rest.Contains("--terrain")),
                 ["generate", var template, "--out", var path, .. var rest] => Generate(template, path, rest),
                 ["export", var map, "--out", var path] => Export(map, path),
+                ["fairness", .. var rest] => Fairness(OptionText(rest, "--template"), Option(rest, "--seeds", 20), (ulong)Option(rest, "--seed", 1), rest.Contains("--verbose"), Option(rest, "--size", 0) is > 0 and var fairSize ? fairSize : null),
                 ["selftest"] => SelfTest(),
                 _ => Usage(),
             };
@@ -151,6 +152,58 @@ public static class Program
         }
 
         return layout.UnmetConnections.Count == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// The whole-map check (ADR-071, ADR-117) over N seeds per template and size: how many single attempts pass, how many seeds
+    /// <see cref="MapGenerator.GenerateBest"/> gets a map without problems for, and which check fails most.
+    /// </summary>
+    private static int Fairness(string? only, int seeds, ulong first, bool verbose, int? onlySize = null)
+    {
+        var templates = only is null ? BuiltInTemplates.All : [LoadTemplate(only)];
+        var failedSeeds = 0;
+        foreach (var template in templates)
+        {
+            foreach (var size in template.Sizes.Where(s => onlySize is null || s == onlySize))
+            {
+                var clock = System.Diagnostics.Stopwatch.StartNew();
+                var firstTry = 0;
+                var best = 0;
+                var attempts = 0;
+                var reasons = new Dictionary<string, int>();
+                for (var i = 0; i < seeds; i++)
+                {
+                    var seed = first + (ulong)i;
+                    var single = MapGenerator.Generate(template, size, seed, creatures: Catalog);
+                    firstTry += single.Problems.Count == 0 ? 1 : 0;
+                    foreach (var problem in single.Problems)
+                    {
+                        var key = problem.StartsWith("Unfair", StringComparison.Ordinal) ? "unfair: " + string.Concat(problem[(problem.IndexOf(':') + 2)..].TakeWhile(c => !char.IsDigit(c))).Trim()
+                            : problem.Contains("walked to", StringComparison.Ordinal) || problem.Contains("cannot walk", StringComparison.Ordinal) ? "unreachable" : "other: " + problem;
+                        reasons[key] = reasons.GetValueOrDefault(key) + 1;
+                    }
+
+                    if (verbose)
+                    {
+                        Console.WriteLine($"  seed {seed}: {string.Join(" | ", single.Fairness!.Starts.Select(s => $"{s.Zone} mines {s.MineDistance} treasure {s.TreasureValue} guard {s.GuardPower}"))}");
+                        single.Problems.ToList().ForEach(p => Console.WriteLine($"    {p}"));
+                    }
+
+                    var result = single.Problems.Count == 0 ? new GenerationResult(single, 0, seed) : MapGenerator.GenerateBest(template, size, seed, creatures: Catalog);
+                    best += result.Problems.Count == 0 ? 1 : 0;
+                    attempts += result.Attempt + 1;
+                    failedSeeds += result.Problems.Count == 0 ? 0 : 1;
+                }
+
+                Console.WriteLine($"{template.Name} {size}×{size}: first try {firstTry}/{seeds}, with retries {best}/{seeds}, {(double)attempts / seeds:0.0} attempts a seed, {clock.ElapsedMilliseconds / seeds} ms a seed");
+                foreach (var (reason, count) in reasons.OrderByDescending(r => r.Value).Take(6))
+                {
+                    Console.WriteLine($"    {count,4} × {reason}");
+                }
+            }
+        }
+
+        return failedSeeds == 0 ? 0 : 1;
     }
 
     /// <summary>Generates a template for N seeds in a row (layout, terrain, connections) and reports the ones with problems, and the time.</summary>
@@ -421,20 +474,25 @@ public static class Program
                 Console.WriteLine($"map {game.State.Map.Name}: attempt {generated.Attempt}{string.Concat(game.Problems.Select(p => $"; problem: {p}"))}");
             }
 
-            var (session, ai) = PlayAiGame(game, days);
+            var fights = new FightLog();
+            var (session, ai) = PlayAiGame(game, days, fights);
             var state = session.State;
             var winner = state.Outcome is { HasWinner: true } outcome ? string.Join("+", outcome.Winners.Select(w => state.GetPlayer(w).Name)) : (state.IsOver ? "nobody" : "unfinished");
             wins[winner] = wins.GetValueOrDefault(winner) + 1;
             refusedTotal += ai.Refused;
             Console.WriteLine($"run {run + 1}: {state.Date} (day {state.Date.AbsoluteDay}), {winner}{(state.Outcome is { } o ? ": " + o.Reason : string.Empty)}");
-            Console.WriteLine($"  {session.CommandLog.Count} commands, AI refused {ai.Refused}, digest {GameStateDigest.Compute(state)}");
+            Console.WriteLine($"  {session.CommandLog.Count} commands, AI refused {ai.Refused}, digest {GameStateDigest.Compute(state)}; garrison heroes in {session.CommandLog.Count(c => c is EnterGarrisonCommand)}, out {session.CommandLog.Count(c => c is LeaveGarrisonCommand)}");
             foreach (var player in state.Players)
             {
                 var towns = state.ObjectsOf<Town>().Count(t => t.Owner == player.Id);
                 var heroes = state.HeroesOf(player.Id).ToList();
                 var power = heroes.Sum(h => h.Army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value));
                 Console.WriteLine($"  {player.Name,-8} {(player.IsDefeated ? "defeated" : "playing "),-8} towns {towns}, heroes {heroes.Count} (levels {string.Join(",", heroes.Select(h => h.Level))}, at {string.Join(" ", heroes.Select(h => $"({h.Position.X},{h.Position.Y})"))}), army power {power}, {player.Resources}");
+                Console.WriteLine($"           fights won / lost: {fights.Describe(player.Id)}");
             }
+
+            var guards = state.ObjectsOf<MonsterGuard>().ToList();
+            Console.WriteLine($"  left on the map: {guards.Count} monster stacks (power {guards.Sum(g => (long)Math.Max(1, g.Count ?? 1) * state.Creatures.Get(g.Creature).Value)}), {state.ObjectsOf<MapGarrison>().Count(g => g.Owner is null)} neutral garrisons, {state.ObjectsOf<Town>().Count(t => t.Owner is null)} neutral towns, {state.Objects.Count(o => o.Kind == MapObjectKind.BorderPost)} border posts; keys {string.Join(" ", state.Players.Select(p => $"{p.Name}:{p.Keys.Count}"))}");
 
             if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
             {
@@ -528,10 +586,11 @@ public static class Program
         return new SimGame(MapConverter.ToDocument(state), state, GenerationInfo.Of(template.Name, size, seed, generation.Attempt), generation.Problems);
     }
 
-    private static (GameSession Session, AdventureAi Ai) PlayAiGame(SimGame game, int days)
+    private static (GameSession Session, AdventureAi Ai) PlayAiGame(SimGame game, int days, FightLog? fights = null)
     {
         var session = new GameSession(game.State);
         var ai = new AdventureAi(session, controlHumanSlots: true);
+        fights?.Attach(session);
         if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
         {
             session.Events.Subscribe<HeroDefeated>(e => Console.WriteLine($"    day {session.State.Date.AbsoluteDay}: {e.Hero} of {e.Owner} defeated"));
@@ -539,8 +598,27 @@ public static class Program
         }
 
         session.Start();
+        var explain = Environment.GetEnvironmentVariable("EW_SIM_EXPLAIN")?.Split(',').Select(int.Parse).ToHashSet() ?? [];
         while (!session.State.IsOver && session.State.Date.AbsoluteDay <= days)
         {
+            if (explain.Contains(session.State.Date.AbsoluteDay))
+            {
+                // EW_SIM_EXPLAIN=10,20: what each hero of the player about to move weighs at the start of those days' turns.
+                Console.WriteLine($"  day {session.State.Date.AbsoluteDay}, {session.State.CurrentPlayer.Name}:");
+                foreach (var hero in session.State.HeroesOf(session.State.CurrentPlayer.Id).ToList())
+                {
+                    ai.Explain(hero.Id).ToList().ForEach(line => Console.WriteLine($"    {line}"));
+                }
+
+                if (Environment.GetEnvironmentVariable("EW_SIM_GUARDS") is not null)
+                {
+                    foreach (var guard in session.State.ObjectsOf<MonsterGuard>())
+                    {
+                        Console.WriteLine($"    guard {guard.Creature} x{guard.Count} at {guard.Position}, explored {session.State.Fog.IsExplored(session.State.CurrentPlayer.Id, guard.VisitPosition)}");
+                    }
+                }
+            }
+
             if (!ai.PlayTurn())
             {
                 throw new InvalidOperationException($"The AI got stuck on {session.State.Date} ({session.State.CurrentPlayer.Name}, decision {session.State.PendingDecision}).");
@@ -632,14 +710,17 @@ public static class Program
         foreach (var hero in state.Heroes.GroupBy(h => h.Owner).Select(g => g.First()))
         {
             var reached = new HashSet<MapPosition> { hero.Position };
+            var landed = new HashSet<MapPosition> { hero.Position }; // stood on after a gate: the hero walks on from there (ADR-117 fix)
             var open = new Queue<MapPosition>([hero.Position]);
             while (open.TryDequeue(out var position))
             {
-                if (position != hero.Position && state.ObjectCellAt(position) is { Cell: FootprintCell.Visit, Object: var entered })
+                if (!landed.Contains(position) && state.ObjectCellAt(position) is { Cell: FootprintCell.Visit, Object: var entered })
                 {
-                    if (entered.TeleportTarget is not null && state.TeleportDestination(entered) is { } exit && reached.Add(exit))
+                    if (entered.TeleportTarget is not null && state.TeleportDestination(entered) is { } exit && landed.Add(exit))
                     {
+                        reached.Add(exit);
                         open.Enqueue(exit);
+                        continue;
                     }
 
                     if (entered is not (MonsterGuard or ResourcePile or TreasureChest or ArtifactPickup) && entered.EndsRoute)
@@ -801,5 +882,52 @@ public static class Program
     {
         var index = Array.IndexOf(args, name);
         return index >= 0 && index + 1 < args.Length && int.TryParse(args[index + 1], out var value) ? value : fallback;
+    }
+}
+
+/// <summary>The fights of a `sim game` run per player and kind (neutral monsters, garrisons, towns, heroes), won and lost.</summary>
+internal sealed class FightLog
+{
+    private readonly Dictionary<(PlayerId Player, string Kind), (int Won, int Lost)> _counts = [];
+    private (PlayerId Attacker, PlayerId? Defender, string Kind)? _current;
+
+    public void Attach(GameSession session)
+    {
+        session.Events.Subscribe<BattleStarted>(e =>
+        {
+            var state = session.State;
+            var attacker = e.AttackerHero is { } a ? state.GetHero(a).Owner : (PlayerId?)null;
+            var defender = e.DefenderHero is { } d ? state.GetHero(d).Owner : (PlayerId?)null;
+            var guard = e.Guard is { } g ? state.FindObject(g) : null;
+            var kind = e.DefenderHero is not null ? "hero" : guard switch { Town => "town", MapGarrison => "garrison", CreatureBank => "bank", _ => "neutral" };
+            _current = attacker is { } owner ? (owner, defender, kind) : null;
+        });
+        session.Events.Subscribe<BattleEnded>(e =>
+        {
+            if (_current is not { } fight)
+            {
+                return;
+            }
+
+            Count(fight.Attacker, fight.Kind, e.Winner == BattleSide.Attacker);
+            if (fight.Defender is { } defender)
+            {
+                Count(defender, "defending", e.Winner == BattleSide.Defender);
+            }
+
+            _current = null;
+        });
+    }
+
+    public string Describe(PlayerId player)
+    {
+        var rows = _counts.Where(c => c.Key.Player == player).OrderBy(c => c.Key.Kind).Select(c => $"{c.Key.Kind} {c.Value.Won}/{c.Value.Lost}").ToList();
+        return rows.Count == 0 ? "none" : string.Join(", ", rows);
+    }
+
+    private void Count(PlayerId player, string kind, bool won)
+    {
+        var (w, l) = _counts.GetValueOrDefault((player, kind));
+        _counts[(player, kind)] = won ? (w + 1, l) : (w, l + 1);
     }
 }

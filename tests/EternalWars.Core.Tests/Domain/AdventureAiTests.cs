@@ -316,6 +316,99 @@ public class AdventureAiTests
     }
 
     [Fact]
+    public void ASecondaryHeroDefendingItsTown_LeadsTheGarrisonFromInside_AndComesOutWhenTheThreatIsGone()
+    {
+        // The garrison alone cannot hold against the 100 footmen, the hero (70) and the garrison together can (ADR-112): inside, the hero leads them all.
+        // The main hero (C, walled in far away) is out on the map, so the secondary one may go in: a garrison hero never retreats.
+        var state = Create(
+            "....................................###.", "....................................#C#.", "....................................###.",
+            "........................................", "........................................", "........................................",
+            "........A....B..........................", "........................................");
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Tavern, 0);
+        town.LastBuilt = state.Date;
+        town.Garrison.Set(0, new CreatureStack(BuiltInCreatures.Footman, 40));
+        town.Garrison.Set(1, new CreatureStack(BuiltInCreatures.Wolf, 2));
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 70));
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 100));
+        state.GetHero(C).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 50));
+        var session = Start(state);
+        var ai = Ai(session);
+
+        ai.PlayTurn();
+        Assert.Equal(A, town.GarrisonHero?.Id);
+        Assert.DoesNotContain(state.Heroes, h => h.Id == A);
+        Assert.Equal(110, town.Garrison.Stacks.Where(s => s.Stack.Creature == BuiltInCreatures.Footman).Sum(s => s.Stack.Count));
+
+        session.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+        state.GetHero(B).Position = new MapPosition(39, 7); // out of reach now
+        ai.PlayTurn();
+        Assert.Null(town.GarrisonHero);
+        Assert.Contains(state.Heroes, h => h.Id == A);
+        Assert.Equal(BuiltInCreatures.Wolf, Assert.Single(town.Garrison.Stacks).Stack.Creature); // the weakest stack stays to hold the town
+        Assert.Equal(0, ai.Refused);
+    }
+
+    [Fact]
+    public void ThePlayersOnlyHero_DefendsAtTheEntrance_AndDoesNotGoIntoTheGarrison()
+    {
+        var state = Create(
+            "........................................", "........................................", "........................................",
+            "........................................", "........................................", "........................................",
+            "........A....B..........................", "........................................");
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        town.SetLevel(BuiltInBuildings.Tavern, 0);
+        town.LastBuilt = state.Date;
+        town.Garrison.Set(0, new CreatureStack(BuiltInCreatures.Footman, 40));
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 50));
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 100));
+        var session = Start(state);
+
+        Ai(session).PlayTurn();
+
+        Assert.Null(town.GarrisonHero);
+        Assert.Equal(town.VisitPosition, state.GetHero(A).Position); // it defends, and could still retreat
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AHeroExploresThroughABorderPost_OnlyWithItsKey(bool key)
+    {
+        var state = Create("A..............................................B");
+        var post = Add<BorderPost>(state, BuiltInMapObjects.ColouredId(BuiltInMapObjects.BorderGuard, ObjectColour.Blue), 3, 0);
+        if (key)
+        {
+            state.GetPlayer(Blue).AddKey(ObjectColour.Blue);
+        }
+
+        var session = Start(state, revealAll: false);
+        var ai = Ai(session);
+        ai.PlayTurn();
+
+        Assert.Equal(key, state.GetHero(A).Position.X > 3);
+        Assert.Equal(!key, state.Objects.Contains(post)); // a border guard leaves after the first key holder (ADR-071)
+        Assert.Equal(0, ai.Refused);
+    }
+
+    [Fact]
+    public void AHeroExploresThroughAGate_WhenItsOtherSideIsUnexplored()
+    {
+        // The surface is all in sight; the only unexplored ground is behind the gate.
+        var state = CreateLevels(["A....", ".....", "....."], [".....", ".....", "....B"]);
+        var surface = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 2, 0);
+        var underground = Add<TwoWayGate>(state, BuiltInMapObjects.SubterraneanGate, 0, 0, 1);
+        Link(surface, underground);
+        var session = Start(state, revealAll: false);
+        var ai = Ai(session);
+
+        ai.PlayTurn();
+
+        Assert.Equal(1, state.GetHero(A).Position.Level);
+        Assert.Equal(0, ai.Refused);
+    }
+
+    [Fact]
     public void AHero_StaysOutOfReachOfAStrongerEnemy()
     {
         var state = Create("A....p.....B");

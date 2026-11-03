@@ -35,7 +35,9 @@ public sealed record RandomMapChoice(
     int MinPlayers,
     bool TeamsLocked,
     IReadOnlyList<RandomMapSlot> Slots,
-    Func<RandomMapRequest, RandomMapResult> Create);
+    Func<RandomMapRequest, RandomMapResult> Create,
+    int? MinTeams = null,
+    int? MaxTeams = null);
 
 /// <summary>
 /// New-game setup: a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
@@ -220,7 +222,7 @@ public partial class NewGameScreen : PanelContainer
 
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
-        _players.AddChild(new Label { Text = preview.TeamsLocked ? "Team (locked by the map)" : "Team" });
+        _players.AddChild(new Label { Text = (preview.TeamsLocked ? "Team (locked by the map)" : "Team") + TeamCounts(preview.MinTeams, preview.MaxTeams) });
         foreach (var player in preview.Players)
         {
             _players.AddChild(PlayerName(player.Name, player.Id));
@@ -230,6 +232,16 @@ public partial class NewGameScreen : PanelContainer
             _teams[player.Id] = team;
         }
     }
+
+    /// <summary>The team counts a map or template allows (ADR-117), as a label suffix: " — 2 teams", " — 2 to 4 teams"; empty without a limit.</summary>
+    private static string TeamCounts(int? min, int? max) => (min, max) switch
+    {
+        (null, null) => "",
+        ({ } a, { } b) when a == b => $" — {a} teams",
+        ({ } a, null) => $" — at least {a} teams",
+        (null, { } b) => $" — at most {b} teams",
+        ({ } a, { } b) => $" — {a} to {b} teams",
+    };
 
     private static Label PlayerName(string name, PlayerId id)
     {
@@ -253,7 +265,7 @@ public partial class NewGameScreen : PanelContainer
         _players.AddChild(new Label { Text = "Controlled by" });
         _players.AddChild(new Label { Text = "Town" });
         _players.AddChild(new Label { Text = "Hero" });
-        _players.AddChild(new Label { Text = template.TeamsLocked ? "Team (locked)" : "Team" });
+        _players.AddChild(new Label { Text = (template.TeamsLocked ? "Team (locked)" : "Team") + TeamCounts(template.MinTeams, template.MaxTeams) });
         for (var i = 0; i < (int)_playerCount.Value; i++)
         {
             var slot = template.Slots[i];

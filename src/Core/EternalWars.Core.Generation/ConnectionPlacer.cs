@@ -56,7 +56,7 @@ public static class ConnectionPlacer
         {
             var connection = template.Connections[c];
             var (a, b) = (index[connection.From], index[connection.To]);
-            var random = streams.For("connections", c);
+            var random = streams.For("connections", template.RollConnection(c));
             if (connection.Kind is ConnectionKind.Gate or ConnectionKind.Portal)
             {
                 for (var i = 0; i < connection.Passages; i++)
@@ -69,7 +69,9 @@ public static class ConnectionPlacer
                 var guard = template.GuardOf(connection);
                 var border = guard is ConnectionGuard.BorderGuard or ConnectionGuard.BorderGate;
                 var colour = connection.Colour ?? (border ? (ObjectColour)random.Next(4) : default); // only a border post draws, so other maps stay the same
-                Cut(map, connection, guard, colour, c, a, b, random, creatures);
+                var first = template.Connections[template.RollConnection(c)];
+                var steps = map.Layout.MirrorSteps(index[first.From], index[first.To], a, b);
+                Cut(map, connection, guard, colour, c, a, b, random, creatures, steps);
                 if (border && map.Passages.Any(p => p.Connection == c) && keymasters.Add(colour))
                 {
                     PlaceKeymaster(map, template, connection, colour, a, b, random, creatures);
@@ -87,7 +89,7 @@ public static class ConnectionPlacer
         ArgumentNullException.ThrowIfNull(template);
         var streams = new SeedStreams(seed);
         var connections = template.Connections;
-        var present = connections.Select((c, i) => c.Chance >= 100 || streams.For("presence", i).Next(100) < c.Chance).ToArray();
+        var present = connections.Select((c, i) => c.Chance >= 100 || streams.For("presence", template.RollConnection(i)).Next(100) < c.Chance).ToArray();
         var index = template.Zones.Select((z, i) => (z.Id, i)).ToDictionary(p => p.Id, p => p.i);
         var parent = Enumerable.Range(0, template.Zones.Count).ToArray();
         int Root(int z) => parent[z] == z ? z : parent[z] = Root(parent[z]);
@@ -119,14 +121,14 @@ public static class ConnectionPlacer
 
     // Passages through walls ------------------------------------------------------------------
 
-    private static void Cut(GeneratedMap map, TemplateConnection connection, ConnectionGuard guard, ObjectColour colour, int number, int a, int b, GameRandom random, CreatureCatalog creatures)
+    private static void Cut(GeneratedMap map, TemplateConnection connection, ConnectionGuard guard, ObjectColour colour, int number, int a, int b, GameRandom random, CreatureCatalog creatures, int steps = 0)
     {
         var made = new List<MapPosition>();
         foreach (var strict in new[] { true, false })
         {
             if (made.Count < connection.Passages)
             {
-                CutPassages(map, connection, guard, colour, number, a, b, random, creatures, strict, made);
+                CutPassages(map, connection, guard, colour, number, a, b, random, creatures, strict, made, steps);
             }
         }
 
@@ -137,7 +139,7 @@ public static class ConnectionPlacer
     }
 
     /// <summary>Opens passages until the connection has all of them; <paramref name="strict"/> refuses wall tiles that touch ground of a third zone (a leak), the second round allows them.</summary>
-    private static void CutPassages(GeneratedMap map, TemplateConnection connection, ConnectionGuard guard, ObjectColour colour, int number, int a, int b, GameRandom random, CreatureCatalog creatures, bool strict, List<MapPosition> anchors)
+    private static void CutPassages(GeneratedMap map, TemplateConnection connection, ConnectionGuard guard, ObjectColour colour, int number, int a, int b, GameRandom random, CreatureCatalog creatures, bool strict, List<MapPosition> anchors, int steps)
     {
         if (!map.Walls.TryGetValue(a < b ? (a, b) : (b, a), out var wall) || wall.Count == 0)
         {
@@ -181,7 +183,9 @@ public static class ConnectionPlacer
 
         var accessA = inWall.Where(t => Touches(t, a)).ToHashSet();
         var accessB = inWall.Where(t => Touches(t, b)).ToHashSet();
-        var candidates = wall.Where(inWall.Contains).OrderBy(t => t.Y).ThenBy(t => t.X).ToList();
+        // Sorted in the frame of the connection's first image (ADR-117), so mirrored connections, drawing the same rolls, open mirrored passages.
+        var candidates = wall.Where(inWall.Contains).Select(t => (Tile: t, Key: map.Layout.Unmirror(t.X, t.Y, steps))).OrderBy(t => t.Key.Y).ThenBy(t => t.Key.X)
+            .Select(t => t.Tile).ToList();
         for (var i = candidates.Count - 1; i > 0; i--)
         {
             var j = random.Next(i + 1);

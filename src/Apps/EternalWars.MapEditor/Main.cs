@@ -26,6 +26,9 @@ public partial class Main : Node3D
 {
     private const string MapsDirectory = "user://maps";
 
+    /// <summary>Where the template editor saves (ADR-070: user templates live in the user data folder).</summary>
+    private const string TemplatesDirectory = "user://templates";
+
     private MapEditorSession _editor = null!;
     private MapViewContext _context = null!;
     private StrategyCamera _camera = null!;
@@ -40,6 +43,11 @@ public partial class Main : Node3D
     private MapObjectId? _linkFrom;
     private GenerateRequest? _lastGenerate;
     private TabContainer _tabs = null!;
+
+    /// <summary>The template being edited: kept while maps are opened and generated (the editor itself is rebuilt with the UI).</summary>
+    private readonly TemplateEditorSession _templates = new();
+    private TemplateEditorPanel _templateEditor = null!;
+    private IReadOnlyList<MapTemplate> _generatorTemplates = [];
 
     public override void _Ready()
     {
@@ -242,6 +250,7 @@ public partial class Main : Node3D
         AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
         AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
         AddButton(fileRow, "From template", () => _tabs.CurrentTab = _tabs.GetTabCount() - 1);
+        AddButton(fileRow, "Templates", () => _templateEditor.Open());
         AddButton(fileRow, "Save", Save);
         AddButton(fileRow, "Load", Load);
         AddButton(fileRow, "Undo", () => _editor.Undo());
@@ -280,10 +289,85 @@ public partial class Main : Node3D
         };
         var generate = new GeneratePanel { Name = "Generate" }; // the last tab ("From template" opens it)
         tabs.AddChild(generate);
+        _generatorTemplates = [.. BuiltInTemplates.All, .. UserTemplates().Select(u => u.Template).Where(t => TemplateValidator.IsValid(t))];
         generate.Bind(
-            BuiltInTemplates.All.Select(t => new GeneratorTemplate(t.Name, t.Description, t.Sizes, t.MinPlayers, t.MaxHeroes, StartSlots.Of(t).Select(s => s.Name).ToList())).ToList(),
+            _generatorTemplates.Select(t => new GeneratorTemplate(t.Name, t.Description, t.Sizes, t.MinPlayers, t.MaxHeroes, StartSlots.Of(t).Select(s => s.Name).ToList())).ToList(),
             Generate,
             _lastGenerate);
+
+        // The template editor (ADR-117): over everything, hidden until "Templates".
+        _templateEditor = new TemplateEditorPanel { Name = "TemplateEditor", Visible = false };
+        _ui.AddChild(_templateEditor);
+        _templateEditor.Bind(_templates, new TemplateEditorHost(TemplateSources, SaveTemplate, GenerateFromEditor));
+    }
+
+    /// <summary>The templates the template editor can open: the shipped ones, then the user's files.</summary>
+    private IReadOnlyList<TemplateSource> TemplateSources() =>
+    [
+        .. BuiltInTemplates.All.Select(t => new TemplateSource($"{t.Name} (shipped)", () => t)),
+        .. UserTemplates().Select(u => new TemplateSource($"{u.Template.Name} ({Path.GetFileName(u.Path)})", () => TemplateSerializer.Load(u.Path))),
+    ];
+
+    /// <summary>The readable template files in the user's templates folder.</summary>
+    private static List<(string Path, MapTemplate Template)> UserTemplates()
+    {
+        var directory = ProjectSettings.GlobalizePath(TemplatesDirectory);
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var found = new List<(string, MapTemplate)>();
+        foreach (var file in Directory.GetFiles(directory, "*" + TemplateSerializer.FileExtension).Order(StringComparer.Ordinal))
+        {
+            try
+            {
+                found.Add((file, TemplateSerializer.Load(file)));
+            }
+            catch (Exception e) when (e is FormatException or NotSupportedException or IOException)
+            {
+                GD.PushWarning($"Skipping template {file}: {e.Message}");
+            }
+        }
+
+        return found;
+    }
+
+    private string SaveTemplate(MapTemplate template)
+    {
+        var directory = ProjectSettings.GlobalizePath(TemplatesDirectory);
+        Directory.CreateDirectory(directory);
+        var safeName = string.Concat(template.Name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c)).Trim();
+        var path = Path.Combine(directory, (safeName.Length == 0 ? "untitled" : safeName) + TemplateSerializer.FileExtension);
+        TemplateSerializer.Save(template, path);
+        var errors = TemplateValidator.Validate(template).Count(i => i.Severity == IssueSeverity.Error);
+        return errors == 0 ? $"Saved {path}" : $"Saved {path} with {errors} error(s): it cannot generate until they are fixed.";
+    }
+
+    /// <summary>"Generate" in the template editor: the template as it is, every slot a player, towns drawn; opens the map like "From template".</summary>
+    private string? GenerateFromEditor(MapTemplate template, int size, ulong seed)
+    {
+        EditorMap map;
+        try
+        {
+            map = EditorMapGenerator.Generate(template, size, seed, template.MaxPlayers, new Dictionary<int, string>(), GameContent.Creatures, GameContent.Heroes, GameContent.Buildings, GameContent.Artifacts);
+        }
+        catch (ArgumentException e)
+        {
+            return e.Message;
+        }
+
+        Open(map.Scenario);
+        Describe(template, size, seed, map);
+        return null;
+    }
+
+    private void Describe(MapTemplate template, int size, ulong seed, EditorMap map)
+    {
+        var attempt = map.Generation.Attempt == 0 ? "" : $" (attempt {map.Generation.Attempt})";
+        var problems = map.Problems.Count == 0 ? "" : $" Generator problems: {string.Join(" ", map.Problems)}";
+        var issues = map.Issues.Count == 0 ? "" : $" {map.Issues.Count} validator issue(s), see Validation.";
+        _status.Text = $"Generated {template.Name} {size}×{size}, seed {seed}{attempt}.{problems}{issues}";
     }
 
     /// <summary>
@@ -292,7 +376,7 @@ public partial class Main : Node3D
     /// </summary>
     private string? Generate(GenerateRequest request)
     {
-        var template = BuiltInTemplates.All[request.Template];
+        var template = _generatorTemplates[request.Template];
         EditorMap map;
         try
         {
@@ -306,10 +390,7 @@ public partial class Main : Node3D
 
         _lastGenerate = request;
         Open(map.Scenario);
-        var attempt = map.Generation.Attempt == 0 ? "" : $" (attempt {map.Generation.Attempt})";
-        var problems = map.Problems.Count == 0 ? "" : $" Generator problems: {string.Join(" ", map.Problems)}";
-        var issues = map.Issues.Count == 0 ? "" : $" {map.Issues.Count} validator issue(s), see Validation.";
-        _status.Text = $"Generated {template.Name} {request.Size}×{request.Size}, seed {request.Seed}{attempt}.{problems}{issues}";
+        Describe(template, request.Size, request.Seed, map);
         return null;
     }
 

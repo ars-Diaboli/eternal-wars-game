@@ -69,6 +69,33 @@ public enum ConnectionGuard
     BorderGate,
 }
 
+/// <summary>
+/// How a mirrored template's map is symmetric (format v8, ADR-070 RMG-9, ADR-117): zones and their <see cref="TemplateZone.Mirror"/> are laid out as images
+/// of each other and share their rolls. Two players by an axis, four or eight (with the underground) by a quarter turn around the centre.
+/// </summary>
+public enum TemplateSymmetry
+{
+    None,
+
+    /// <summary>Left and right are mirror images (the axis runs top to bottom).</summary>
+    Vertical,
+
+    /// <summary>Top and bottom are mirror images.</summary>
+    Horizontal,
+
+    /// <summary>Mirror images across the diagonal from the top left to the bottom right.</summary>
+    Diagonal,
+
+    /// <summary>One of the three axes, drawn from the seed.</summary>
+    RandomAxis,
+
+    /// <summary>A half turn around the map centre (two images).</summary>
+    HalfTurn,
+
+    /// <summary>A quarter turn around the map centre (four images).</summary>
+    QuarterTurn,
+}
+
 /// <summary>How much rock lies about inside a zone besides the walls on its borders.</summary>
 public enum ObstacleDensity
 {
@@ -165,6 +192,21 @@ public sealed record TemplateZone
 
     /// <summary>Terrains the zone may be painted with; null or empty = any passable terrain.</summary>
     public IReadOnlyList<TerrainType>? Terrains { get; init; }
+
+    /// <summary>
+    /// Mirrored templates (format v8, ADR-117): the zone this one turns into under one step of <see cref="MapTemplate.Symmetry"/> (the other side of the
+    /// axis, the next quarter turn); null = its own image (a zone on the axis or in the centre). The zones of one cycle are alike in everything but
+    /// the owner and team.
+    /// </summary>
+    public string? Mirror { get; init; }
+
+    /// <summary>
+    /// Template editor (format v8): where the zone's node stands in the zone graph, in graph units; null = laid out by the editor. Ignored by the
+    /// generator.
+    /// </summary>
+    public double? GraphX { get; init; }
+
+    public double? GraphY { get; init; }
 }
 
 /// <summary>
@@ -236,7 +278,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 7;
+    public const int CurrentFormatVersion = 8;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -262,6 +304,15 @@ public sealed record MapTemplate
     public bool TeamsLocked { get; init; }
 
     /// <summary>
+    /// The fewest teams a game on the template's maps may have, 2 to 8 (format v8, ADR-070, ADR-117); null = no limit. Generated maps carry it
+    /// (<see cref="Domain.Game.GameState.MinTeams"/>), and the map editor may change it there.
+    /// </summary>
+    public int? MinTeams { get; init; }
+
+    /// <summary>The most teams, 2 to 8 (format v8, ADR-117); null = no limit.</summary>
+    public int? MaxTeams { get; init; }
+
+    /// <summary>
     /// The most heroes a player may have on a generated map, 1 to <see cref="ScenarioRules.HeroLimit"/> (format v5, ADR-068); the generator may
     /// override it. It becomes the scenario's <see cref="ScenarioRules.MaxHeroes"/>.
     /// </summary>
@@ -275,6 +326,9 @@ public sealed record MapTemplate
 
     /// <summary>What guards the normal connections that name no guard of their own (format v7, ADR-112, RMG-11); monsters by default.</summary>
     public ConnectionGuard ConnectionGuard { get; init; } = ConnectionGuard.Monsters;
+
+    /// <summary>Mirrored templates (format v8, ADR-117): how the map is symmetric; the zones name their images (<see cref="TemplateZone.Mirror"/>).</summary>
+    public TemplateSymmetry Symmetry { get; init; } = TemplateSymmetry.None;
 
     public IReadOnlyList<TemplateZone> Zones { get; init; } = [];
 
@@ -290,4 +344,76 @@ public sealed record MapTemplate
     /// <summary>The guard a connection's passages get: its own, else the template's; only a normal connection has other than monsters.</summary>
     public ConnectionGuard GuardOf(TemplateConnection connection) =>
         connection.Kind == ConnectionKind.Normal ? connection.Guard ?? ConnectionGuard : ConnectionGuard.Monsters;
+
+    /// <summary>The symmetry a map of this seed gets: <see cref="TemplateSymmetry.RandomAxis"/> becomes one of the three axes (stream <c>symmetry</c>).</summary>
+    public TemplateSymmetry SymmetryFor(ulong seed) => Symmetry == TemplateSymmetry.RandomAxis
+        ? new SeedStreams(seed).For("symmetry").Next(3) switch { 0 => TemplateSymmetry.Vertical, 1 => TemplateSymmetry.Horizontal, _ => TemplateSymmetry.Diagonal }
+        : Symmetry;
+
+    /// <summary>How many images a symmetry has (1 = none).</summary>
+    public static int Order(TemplateSymmetry symmetry) => symmetry switch
+    {
+        TemplateSymmetry.None => 1,
+        TemplateSymmetry.QuarterTurn => 4,
+        _ => 2,
+    };
+
+    /// <summary>Each zone's image (index) under one step of the symmetry; the zone itself without symmetry, without a mirror or with an unknown one.</summary>
+    public int[] MirrorOf()
+    {
+        var result = new int[Zones.Count];
+        for (var i = 0; i < Zones.Count; i++)
+        {
+            var target = Symmetry == TemplateSymmetry.None || Zones[i].Mirror is not { } mirror ? -1 : Zones.ToList().FindIndex(z => z.Id == mirror);
+            result[i] = target < 0 ? i : target;
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// The zone whose random rolls a zone uses (ADR-117, "mirrored zones share their rolls"): the first zone of its cycle under the symmetry; the zone
+    /// itself in a template without symmetry, so such maps do not change.
+    /// </summary>
+    public int RollZone(int zone)
+    {
+        if (Symmetry == TemplateSymmetry.None)
+        {
+            return zone;
+        }
+
+        var mirror = MirrorOf();
+        var least = zone;
+        for (int next = mirror[zone], steps = 0; next != zone && steps < Zones.Count; next = mirror[next], steps++)
+        {
+            least = Math.Min(least, next);
+        }
+
+        return least;
+    }
+
+    /// <summary>The connection whose rolls (presence, guard, places) a connection uses: the first of its images; itself without symmetry.</summary>
+    public int RollConnection(int connection)
+    {
+        if (Symmetry == TemplateSymmetry.None)
+        {
+            return connection;
+        }
+
+        var least = connection;
+        var (a, b) = (Connections[connection].From, Connections[connection].To);
+        var mirror = MirrorOf();
+        int Index(string id) => Zones.ToList().FindIndex(z => z.Id == id);
+        for (var step = 0; step < Order(TemplateSymmetry.QuarterTurn); step++)
+        {
+            (a, b) = (Zones[mirror[Index(a)]].Id, Zones[mirror[Index(b)]].Id);
+            var image = Connections.ToList().FindIndex(c => (c.From == a && c.To == b) || (c.From == b && c.To == a));
+            if (image >= 0)
+            {
+                least = Math.Min(least, image);
+            }
+        }
+
+        return least;
+    }
 }

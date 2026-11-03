@@ -45,6 +45,11 @@ Recorded so far:
   20 % and below), obstacles that split the battlefield, more scenery on random maps, a spacing pass and a configurable layout (initiative
   bar, minimap corner, hero and town lists, action panel), information windows and advanced tooltips, icon prompts
   ([icon-prompts.md](../content/icon-prompts.md)) and a list of the HoMM3 / HotA / HoMM5 mechanics we lack
-  ([missing-mechanics.md](../design/missing-mechanics.md)): ADR-116 (2026-11-02), questions CAMP-1, UI-3 and CMB-12.
+  ([missing-mechanics.md](../design/missing-mechanics.md)): ADR-116 (2026-11-02), questions CAMP-1, UI-3 and CMB-12, answered in ADR-118 (2026-11-03: the proposals, but the health bar shows the top creature's
+  hit points).
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
+
+Sieges: hero can be without a war machine or it can be destroyed in previous combat - add ability for heroes units to deal damage to castle gates;
+gates have 100 hit points, when town has upgraded fortifications - 150 hit points, 10 defense; unit damage against gates is capped at 50 dmg. so large enough creature stacks destroy gates in 2/3 hits;
+war machine rules do not change - they can destroy gates in one hit;

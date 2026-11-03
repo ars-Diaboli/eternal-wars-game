@@ -1400,6 +1400,33 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>
+    /// Sets the team counts a game of the map may have (ADR-070, ADR-117), 2 to 8 each, null for no limit; overrides what a template gave a
+    /// generated map. Refused (false) for counts out of range or the fewest above the most.
+    /// </summary>
+    public bool SetTeamCounts(int? min, int? max)
+    {
+        if (min is < 2 or > GameState.MaxPlayers || max is < 2 or > GameState.MaxPlayers || (min is { } low && max is { } high && low > high))
+        {
+            return false;
+        }
+
+        var previous = (Scenario.MinTeams, Scenario.MaxTeams);
+        if (previous == (min, max))
+        {
+            return true;
+        }
+
+        Run(new DelegateCommand("Set team counts", () => Apply(min, max), () => Apply(previous.MinTeams, previous.MaxTeams)));
+        return true;
+
+        void Apply(int? fewest, int? most)
+        {
+            Scenario.SetTeamCounts(fewest, most);
+            _bus.Publish(new PlayerSlotsChanged());
+        }
+    }
+
     // Plumbing --------------------------------------------------------------------------------
 
     private void Run(IEditorCommand command)

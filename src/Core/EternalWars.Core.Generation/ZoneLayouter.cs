@@ -60,6 +60,11 @@ public static class ZoneLayouter
 
         var streams = new SeedStreams(seed);
         var zones = template.Zones;
+        var symmetry = template.SymmetryFor(seed);
+        if (symmetry != TemplateSymmetry.None)
+        {
+            strategy = LayoutStrategy.Voronoi; // a mirrored template is laid out by symmetric zone centres (ADR-117)
+        }
         var index = zones.Select((z, i) => (z.Id, i)).ToDictionary(p => p.Id, p => p.i, StringComparer.Ordinal);
         // Portals join zones anywhere, so their zones need not touch (ADR-112).
         var edges = template.Connections.Where(c => c.Kind != ConnectionKind.Portal).Select(c => (A: index[c.From], B: index[c.To])).ToList();
@@ -77,6 +82,7 @@ public static class ZoneLayouter
             // Many tries from different starting points; the first that makes every connection touch wins, else the best one is repaired.
             // Voronoi searches on a small map (cheap) and paints the winner at full size, where the contacts scale up with it.
             var grid = new int[size * size];
+            var mirror = symmetry == TemplateSymmetry.None ? null : new Mirror(symmetry, template.MirrorOf());
             var bestOpen = int.MaxValue;
             var bestCoarse = int.MaxValue;
             var coarse = Math.Min(size, CoarseSize);
@@ -85,7 +91,7 @@ public static class ZoneLayouter
                 var tried = new int[size * size];
                 if (strategy == LayoutStrategy.Voronoi)
                 {
-                    var (solution, coarseOpen) = Refine(coarse, members, levelEdges, weights, Solve(coarse, zones.Count, members, weights, levelEdges, random, layered: attempt % 2 == 0), random);
+                    var (solution, coarseOpen) = Refine(coarse, members, levelEdges, weights, Solve(coarse, zones.Count, members, weights, levelEdges, random, layered: attempt % 2 == 0, mirror), random, mirror);
                     if (coarseOpen >= bestCoarse && bestOpen != int.MaxValue)
                     {
                         continue; // not worth painting at full size unless it is better than what the small map gave before
@@ -93,7 +99,7 @@ public static class ZoneLayouter
 
                     bestCoarse = Math.Min(bestCoarse, coarseOpen);
 
-                    Paint(tried, size, members, weights, solution, (double)size / coarse, balance: size > coarse ? 6 : 0);
+                    Paint(tried, size, members, weights, solution, (double)size / coarse, balance: size > coarse ? 6 : 0, mirror);
                 }
                 else
                 {
@@ -115,11 +121,17 @@ public static class ZoneLayouter
             }
 
             Repair(grid, size, levelEdges);
+            if (mirror is not null)
+            {
+                mirror.Grid(grid, size); // the repair may have joined zones on one side only
+                MakeContiguous(grid, size);
+            }
+
             unmet.AddRange(levelEdges.Where(e => !Touch(grid, size, e.A, e.B)).Select(e => (zones[e.A].Id, zones[e.B].Id)));
             cells[level] = grid;
         }
 
-        return new ZoneLayout(size, zones.Select(z => z.Id).ToList(), cells, unmet);
+        return new ZoneLayout(size, zones.Select(z => z.Id).ToList(), cells, unmet, symmetry, symmetry == TemplateSymmetry.None ? null : template.MirrorOf());
     }
 
     // Voronoi ---------------------------------------------------------------------------------
@@ -130,7 +142,7 @@ public static class ZoneLayouter
     /// </summary>
     private sealed record VoronoiSolution(double[] X, double[] Y, double[] Power);
 
-    private static VoronoiSolution Solve(int size, int zoneCount, List<int> members, double[] weights, List<(int A, int B)> edges, GameRandom random, bool layered)
+    private static VoronoiSolution Solve(int size, int zoneCount, List<int> members, double[] weights, List<(int A, int B)> edges, GameRandom random, bool layered, Mirror? mirror = null)
     {
         var x = new double[zoneCount];
         var y = new double[zoneCount];
@@ -157,6 +169,8 @@ public static class ZoneLayouter
             Layered(members, edges, size, random, x, y);
         }
 
+        mirror?.Centres(members, x, y, null, size);
+
         // Springs: joined zones want their centres about 0.85 of the sum of their radii apart, every pair at least 0.75 of it.
         for (var step = 0; step < 150; step++)
         {
@@ -178,6 +192,8 @@ public static class ZoneLayouter
                 x[m] = Math.Clamp(x[m], 1, size - 2);
                 y[m] = Math.Clamp(y[m], 1, size - 2);
             }
+
+            mirror?.Centres(members, x, y, null, size);
         }
 
         void Push(int a, int b, double wanted, double strength, bool repel)
@@ -210,12 +226,12 @@ public static class ZoneLayouter
             power[m] = radius[m] * radius[m];
         }
 
-        Balance(new int[size * size], size, members, x, y, power, target, 8, 0.1);
+        Balance(new int[size * size], size, members, x, y, power, target, 8, 0.1, mirror);
         return new VoronoiSolution(x, y, power);
     }
 
     /// <summary>A few rounds of: paint, then grow the weight of zones below their share and (by <paramref name="drift"/>) move centres towards the middle of their cells.</summary>
-    private static void Balance(int[] grid, int size, List<int> members, double[] x, double[] y, double[] power, double[] target, int rounds, double drift)
+    private static void Balance(int[] grid, int size, List<int> members, double[] x, double[] y, double[] power, double[] target, int rounds, double drift, Mirror? mirror = null)
     {
         var count = new int[x.Length];
         var sumX = new double[x.Length];
@@ -242,6 +258,8 @@ public static class ZoneLayouter
                     y[m] += ((sumY[m] / count[m]) - y[m]) * drift;
                 }
             }
+
+            mirror?.Centres(members, x, y, power, size);
         }
     }
 
@@ -250,7 +268,7 @@ public static class ZoneLayouter
     /// before, until none is open or the tries run out. The objective is the real one (contacts of the painted, balanced diagram),
     /// which the spring model only approximates.
     /// </summary>
-    private static (VoronoiSolution Solution, int Open) Refine(int size, List<int> members, List<(int A, int B)> edges, double[] weights, VoronoiSolution start, GameRandom random)
+    private static (VoronoiSolution Solution, int Open) Refine(int size, List<int> members, List<(int A, int B)> edges, double[] weights, VoronoiSolution start, GameRandom random, Mirror? mirror = null)
     {
         var grid = new int[size * size];
         var total = members.Sum(m => weights[m]);
@@ -263,8 +281,9 @@ public static class ZoneLayouter
         int Evaluate(VoronoiSolution candidate)
         {
             var (x, y, power) = ((double[])candidate.X.Clone(), (double[])candidate.Y.Clone(), (double[])candidate.Power.Clone());
-            Balance(grid, size, members, x, y, power, target, 5, 0);
+            Balance(grid, size, members, x, y, power, target, 5, 0, mirror);
             Assign(grid, size, members, x, y, power);
+            mirror?.Grid(grid, size);
             MakeContiguous(grid, size);
 
             // Open connections first; a layout where a zone ended far from its share (the balance cannot always fix a bad move) counts against it too.
@@ -279,25 +298,28 @@ public static class ZoneLayouter
 
         var best = start;
         var open = Evaluate(best);
+        var movable = mirror is null ? members : members.Where(m => mirror.IsFirst(m)).ToList(); // only the first of each cycle moves; its images follow
         for (var step = 0; step < RefineSteps && open > 0; step++)
         {
             var (x, y) = ((double[])best.X.Clone(), (double[])best.Y.Clone());
-            if (members.Count > 1 && random.Next(4) == 0)
+            if (movable.Count > 1 && random.Next(4) == 0)
             {
-                var i = random.Next(members.Count);
-                var j = (i + 1 + random.Next(members.Count - 1)) % members.Count;
-                (x[members[i]], x[members[j]]) = (x[members[j]], x[members[i]]);
-                (y[members[i]], y[members[j]]) = (y[members[j]], y[members[i]]);
+                var i = random.Next(movable.Count);
+                var j = (i + 1 + random.Next(movable.Count - 1)) % movable.Count;
+                (x[movable[i]], x[movable[j]]) = (x[movable[j]], x[movable[i]]);
+                (y[movable[i]], y[movable[j]]) = (y[movable[j]], y[movable[i]]);
             }
             else
             {
-                var m = members[random.Next(members.Count)];
+                var m = movable[random.Next(movable.Count)];
                 var reach = size * 0.3;
                 x[m] = Math.Clamp(x[m] + ((random.Next(2001) - 1000) / 1000.0 * reach), 1, size - 2);
                 y[m] = Math.Clamp(y[m] + ((random.Next(2001) - 1000) / 1000.0 * reach), 1, size - 2);
             }
 
-            var candidate = new VoronoiSolution(x, y, (double[])best.Power.Clone());
+            var candidatePower = (double[])best.Power.Clone();
+            mirror?.Centres(members, x, y, candidatePower, size);
+            var candidate = new VoronoiSolution(x, y, candidatePower);
             var candidateOpen = Evaluate(candidate);
             if (candidateOpen <= open)
             {
@@ -312,7 +334,7 @@ public static class ZoneLayouter
     /// Paints the power diagram of a solution (scaled to another map size, and re-balanced there by <paramref name="balance"/> rounds
     /// so every zone gets its share of the bigger map) into the grid; a zone that lost every tile gets the one nearest its centre.
     /// </summary>
-    private static void Paint(int[] grid, int size, List<int> members, double[] weights, VoronoiSolution solution, double scale, int balance)
+    private static void Paint(int[] grid, int size, List<int> members, double[] weights, VoronoiSolution solution, double scale, int balance, Mirror? mirror = null)
     {
         var x = solution.X.Select(v => v * scale).ToArray();
         var y = solution.Y.Select(v => v * scale).ToArray();
@@ -322,10 +344,11 @@ public static class ZoneLayouter
             var total = members.Sum(m => weights[m]);
             var target = new double[weights.Length];
             members.ForEach(m => target[m] = (double)size * size * weights[m] / total);
-            Balance(grid, size, members, x, y, power, target, balance, 0);
+            Balance(grid, size, members, x, y, power, target, balance, 0, mirror);
         }
 
         Assign(grid, size, members, x, y, power);
+        mirror?.Grid(grid, size);
         foreach (var m in members.Where(m => !grid.Contains(m)))
         {
             grid[(Math.Clamp((int)y[m], 0, size - 1) * size) + Math.Clamp((int)x[m], 0, size - 1)] = m;
@@ -414,6 +437,112 @@ public static class ZoneLayouter
             }
 
             grid[i] = best;
+        }
+    }
+
+    // Symmetry (ADR-117) ----------------------------------------------------------------------
+
+    /// <summary>
+    /// A mirrored template's symmetry on one map side: zone centres are kept as images of the first zone of each cycle (a zone that is its own
+    /// image sits on the axis or in the centre), and a painted grid is copied from its first tiles to their images, so the layout is symmetric
+    /// tile for tile (up to the clean-up that keeps zones in one piece).
+    /// </summary>
+    private sealed class Mirror(TemplateSymmetry symmetry, int[] image)
+    {
+        private int Order { get; } = MapTemplate.Order(symmetry);
+
+        /// <summary>Whether the zone is the first (lowest index) of its cycle: the one whose centre is free to move.</summary>
+        public bool IsFirst(int zone)
+        {
+            for (int next = image[zone], steps = 0; next != zone && steps < image.Length; next = image[next], steps++)
+            {
+                if (next < zone)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private (double X, double Y) Point(double x, double y, double size) => symmetry switch
+        {
+            TemplateSymmetry.Vertical => (size - x, y),
+            TemplateSymmetry.Horizontal => (x, size - y),
+            TemplateSymmetry.Diagonal => (y, x),
+            TemplateSymmetry.HalfTurn => (size - x, size - y),
+            _ => (size - y, x), // a quarter turn
+        };
+
+        private (double X, double Y) OnAxis(double x, double y, double size) => symmetry switch
+        {
+            TemplateSymmetry.Vertical => (size / 2, y),
+            TemplateSymmetry.Horizontal => (x, size / 2),
+            TemplateSymmetry.Diagonal => ((x + y) / 2, (x + y) / 2),
+            _ => (size / 2, size / 2),
+        };
+
+        private int Tile(int index, int size)
+        {
+            var (x, y) = (index % size, index / size);
+            var (nx, ny) = symmetry switch
+            {
+                TemplateSymmetry.Vertical => (size - 1 - x, y),
+                TemplateSymmetry.Horizontal => (x, size - 1 - y),
+                TemplateSymmetry.Diagonal => (y, x),
+                TemplateSymmetry.HalfTurn => (size - 1 - x, size - 1 - y),
+                _ => (size - 1 - y, x),
+            };
+            return (ny * size) + nx;
+        }
+
+        /// <summary>Moves every zone centre (and weight) to the image of its cycle's first zone.</summary>
+        public void Centres(List<int> members, double[] x, double[] y, double[]? power, double size)
+        {
+            foreach (var first in members.Where(IsFirst))
+            {
+                if (image[first] == first)
+                {
+                    (x[first], y[first]) = OnAxis(x[first], y[first], size);
+                    continue;
+                }
+
+                var (cx, cy) = (x[first], y[first]);
+                for (int zone = image[first], step = 1; zone != first && step < Order; zone = image[zone], step++)
+                {
+                    (cx, cy) = Point(cx, cy, size);
+                    (x[zone], y[zone]) = (cx, cy);
+                    if (power is not null)
+                    {
+                        power[zone] = power[first];
+                    }
+                }
+            }
+        }
+
+        /// <summary>Copies the grid from the first tile of every tile cycle to the other tiles of it, turning the zones into their images.</summary>
+        public void Grid(int[] grid, int size)
+        {
+            for (var tile = 0; tile < grid.Length; tile++)
+            {
+                var first = tile;
+                for (int other = Tile(tile, size), step = 1; other != tile && step < Order; other = Tile(other, size), step++)
+                {
+                    first = Math.Min(first, other);
+                }
+
+                if (first != tile)
+                {
+                    continue;
+                }
+
+                var zone = grid[tile];
+                for (int other = Tile(tile, size), step = 1; other != tile && step < Order; other = Tile(other, size), step++)
+                {
+                    zone = image[zone];
+                    grid[other] = zone;
+                }
+            }
         }
     }
 

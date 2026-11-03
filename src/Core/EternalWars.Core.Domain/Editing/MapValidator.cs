@@ -311,6 +311,18 @@ public static class MapValidator
         {
             yield return new(IssueSeverity.Warning, "Fewer than two teams start with a hero or a town, so the game cannot end by defeating enemies.");
         }
+
+        // Team counts (ADR-117): the default teams must fit them, and with locked teams nothing at setup can fix them.
+        var teams = scenario.Players.Select(p => p.Team).Distinct().Count();
+        if (scenario.TeamCountProblem(teams) is { } problem)
+        {
+            yield return new(scenario.TeamsLocked ? IssueSeverity.Error : IssueSeverity.Warning, $"The default teams do not fit the team counts: {problem}");
+        }
+
+        if (scenario.MinTeams > scenario.Players.Count)
+        {
+            yield return new(IssueSeverity.Error, $"The map asks for at least {scenario.MinTeams} teams but has {scenario.Players.Count} players.");
+        }
     }
 
     /// <summary>A hero may start in the entrance of its own town, visiting it (HoMM3; generated maps put the start hero there).</summary>

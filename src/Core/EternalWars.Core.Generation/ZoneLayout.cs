@@ -8,13 +8,33 @@ public sealed class ZoneLayout
 {
     private readonly int[][] _cells;
 
-    internal ZoneLayout(int size, IReadOnlyList<string> zoneIds, int[][] cells, IReadOnlyList<(string From, string To)> unmet)
+    private readonly TemplateSymmetry _symmetry;
+    private readonly int[]? _image;
+
+    internal ZoneLayout(int size, IReadOnlyList<string> zoneIds, int[][] cells, IReadOnlyList<(string From, string To)> unmet,
+        TemplateSymmetry symmetry = TemplateSymmetry.None, int[]? image = null)
     {
         Size = size;
         ZoneIds = zoneIds;
         _cells = cells;
         UnmetConnections = unmet;
+        _symmetry = image is null ? TemplateSymmetry.None : symmetry;
+        _image = image;
     }
+
+    /// <summary>The symmetry the layout was made with (a random axis resolved; <see cref="TemplateSymmetry.None"/> for a template without one).</summary>
+    public TemplateSymmetry Symmetry => _symmetry;
+
+    /// <summary>A tile's image under one step of a symmetry on a map of this side.</summary>
+    internal static (int X, int Y) Image(TemplateSymmetry symmetry, int x, int y, int size) => symmetry switch
+    {
+        TemplateSymmetry.Vertical => (size - 1 - x, y),
+        TemplateSymmetry.Horizontal => (x, size - 1 - y),
+        TemplateSymmetry.Diagonal => (y, x),
+        TemplateSymmetry.HalfTurn => (size - 1 - x, size - 1 - y),
+        TemplateSymmetry.QuarterTurn => (size - 1 - y, x),
+        _ => (x, y),
+    };
 
     /// <summary>Width and height of every level.</summary>
     public int Size { get; }
@@ -34,7 +54,113 @@ public sealed class ZoneLayout
     /// <summary>Number of tiles of a zone.</summary>
     public int Area(int zone) => _cells.Sum(level => level.Count(c => c == zone));
 
+    /// <summary>
+    /// The zone's tiles, in reading order; on a mirrored layout (ADR-117) a zone that is the image of an earlier one lists the images of that
+    /// zone's tiles in its order (then any tiles of its own the clean-up left without a counterpart), so the stages, drawing the same rolls for
+    /// both, pick mirrored places.
+    /// </summary>
     public IEnumerable<(int X, int Y, int Level)> Tiles(int zone)
+    {
+        if (_image is not null && Source(zone) is { } source && source.Zone != zone)
+        {
+            var seen = new HashSet<(int, int, int)>();
+            foreach (var (x, y, level) in ReadingOrder(source.Zone))
+            {
+                var (ix, iy) = (x, y);
+                for (var step = 0; step < source.Steps; step++)
+                {
+                    (ix, iy) = Image(_symmetry, ix, iy, Size);
+                }
+
+                if (_cells[level][(iy * Size) + ix] == zone && seen.Add((ix, iy, level)))
+                {
+                    yield return (ix, iy, level);
+                }
+            }
+
+            foreach (var tile in ReadingOrder(zone).Where(t => !seen.Contains(t)))
+            {
+                yield return tile;
+            }
+
+            yield break;
+        }
+
+        foreach (var tile in ReadingOrder(zone))
+        {
+            yield return tile;
+        }
+    }
+
+    /// <summary>
+    /// The tile in the frame of the first image (ADR-117): the tile <paramref name="steps"/> symmetry steps back. Stages sort places by it, so a
+    /// zone or connection and its images list them alike.
+    /// </summary>
+    public (int X, int Y) Unmirror(int x, int y, int steps)
+    {
+        var order = MapTemplate.Order(_symmetry);
+        for (var step = 0; step < (order - (steps % order)) % order; step++)
+        {
+            (x, y) = Image(_symmetry, x, y, Size);
+        }
+
+        return (x, y);
+    }
+
+    /// <summary>How many symmetry steps lead from the first zone of the zone's cycle to it (0 on a layout without symmetry).</summary>
+    public int MirrorSteps(int zone) => _image is null ? 0 : Source(zone)!.Value.Steps;
+
+    /// <summary>
+    /// How many symmetry steps turn the zone pair (<paramref name="firstA"/>, <paramref name="firstB"/>) into (<paramref name="a"/>, <paramref name="b"/>),
+    /// either way round; 0 when none does or without symmetry.
+    /// </summary>
+    public int MirrorSteps(int firstA, int firstB, int a, int b)
+    {
+        if (_image is null)
+        {
+            return 0;
+        }
+
+        var (x, y) = (firstA, firstB);
+        for (var step = 0; step < MapTemplate.Order(_symmetry); step++)
+        {
+            if ((x == a && y == b) || (x == b && y == a))
+            {
+                return step;
+            }
+
+            (x, y) = (_image[x], _image[y]);
+        }
+
+        return 0;
+    }
+
+    /// <summary>The first zone of the zone's cycle and how many symmetry steps lead from it to the zone.</summary>
+    private (int Zone, int Steps)? Source(int zone)
+    {
+        var path = new List<int> { zone };
+        for (var next = _image![zone]; next != zone && path.Count <= _image.Length; next = _image[next])
+        {
+            path.Add(next);
+        }
+
+        var first = path.Min();
+        if (first == zone)
+        {
+            return (zone, 0);
+        }
+
+        // Steps forward from the first to the zone: walk the cycle from the first.
+        var steps = 0;
+        for (var at = first; at != zone && steps <= _image.Length; at = _image[at])
+        {
+            steps++;
+        }
+
+        return (first, steps);
+    }
+
+    private IEnumerable<(int X, int Y, int Level)> ReadingOrder(int zone)
     {
         for (var level = 0; level < Levels; level++)
         {

@@ -56,7 +56,7 @@ public class TemplateTests
     [Fact]
     public void AShippedTemplate_IsFoundByNameOrFileKey()
     {
-        Assert.Equal(["2v2", "duel", "ffa-4"], BuiltInTemplates.Keys);
+        Assert.Equal(["2v2", "duel", "ffa-4", "ffa-8", "mirror-duel"], BuiltInTemplates.Keys);
         Assert.Same(BuiltInTemplates.Find("Two against two"), BuiltInTemplates.Find("2v2"));
         Assert.Same(BuiltInTemplates.Find("Free for all"), BuiltInTemplates.Find("FFA-4"));
         Assert.Null(BuiltInTemplates.Find("nope"));

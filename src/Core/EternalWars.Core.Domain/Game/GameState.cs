@@ -227,10 +227,44 @@ public sealed class GameState
             throw new InvalidOperationException("This map locks its teams.");
         }
 
+        var after = _players.Select(p => teams.TryGetValue(p.Id, out var team) ? team : p.Team).Distinct().Count();
+        if (TeamCountProblem(after) is { } problem)
+        {
+            throw new InvalidOperationException(problem);
+        }
+
         foreach (var (player, team) in teams)
         {
             GetPlayer(player).Team = team;
         }
+    }
+
+    /// <summary>The fewest teams a game of this map may have (ADR-070, ADR-117); null = no limit.</summary>
+    public int? MinTeams { get; private set; }
+
+    /// <summary>The most teams a game of this map may have; null = no limit (as many as players, 8 = free for all with eight players).</summary>
+    public int? MaxTeams { get; private set; }
+
+    /// <summary>Why <paramref name="teams"/> teams are not allowed on this map, or null when they are.</summary>
+    public string? TeamCountProblem(int teams) =>
+        teams < (MinTeams ?? 1) || teams > (MaxTeams ?? MaxPlayers)
+            ? $"This map is played by {(MinTeams == MaxTeams ? $"{MinTeams}" : $"{MinTeams ?? 1} to {MaxTeams ?? MaxPlayers}")} teams, not {teams}."
+            : null;
+
+    /// <summary>Scenario setting (map loading, editor, generator): the team counts allowed at setup, 2 to 8 each, or null for no limit.</summary>
+    public void SetTeamCounts(int? min, int? max)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("The team counts can only be changed before the game starts.");
+        }
+
+        if (min is < 2 or > MaxPlayers || max is < 2 or > MaxPlayers || (min is { } low && max is { } high && low > high))
+        {
+            throw new ArgumentOutOfRangeException(nameof(min), $"Team counts go from 2 to {MaxPlayers}, the fewest not above the most.");
+        }
+
+        (MinTeams, MaxTeams) = (min, max);
     }
 
     /// <summary>Scenario setting (map loading, editor): whether game setup may change the teams.</summary>

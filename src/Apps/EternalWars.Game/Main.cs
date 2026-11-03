@@ -1176,5 +1176,7 @@ public partial class Main : Node3D
                 template, request.Size, request.Options.Seed, players, request.Options, GameContent.Creatures, GameContent.Heroes, GameContent.Artifacts, GameContent.Buildings);
             _lastGenerated = (state, GenerationInfo.Of(template.Name, request.Size, request.Options.Seed, generation.Attempt));
             return new RandomMapResult(state, generation.Problems);
-        })).ToList();
+        },
+        template.MinTeams,
+        template.MaxTeams)).ToList();
 }

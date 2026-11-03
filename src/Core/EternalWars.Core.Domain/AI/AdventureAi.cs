@@ -103,6 +103,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             return true;
         }
 
+        LeaveGarrisons(player);
         ManageTowns(player);
         _main = _state.HeroesOf(player).OrderByDescending(h => ArmyPower(h.Army)).ThenBy(h => h.Id.Value).FirstOrDefault()?.Id;
 
@@ -617,6 +618,29 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
     }
 
+    /// <summary>
+    /// A garrison hero comes out once no enemy that the garrison alone could not hold can reach the town, and leaves the weakest stack behind
+    /// (as <see cref="Consolidate"/> does); it stays while it would leave the town open to a threat.
+    /// </summary>
+    private void LeaveGarrisons(PlayerId player)
+    {
+        foreach (var town in _state.ObjectsOf<Town>().Where(t => t.Owner == player && t.GarrisonHero is not null).OrderBy(t => t.Id.Value).ToList())
+        {
+            if (!Active(player) || _state.PendingDecision is not null || Danger(player, town.VisitPosition) > 0
+                || TownRules.CheckLeaveGarrison(_state, town) is not null || !Execute(new LeaveGarrisonCommand(player, town.Id)).IsAccepted)
+            {
+                continue;
+            }
+
+            var hero = TownRules.VisitingHero(_state, town)!;
+            if (hero.Army.StackCount >= 2)
+            {
+                var (slot, _) = hero.Army.Stacks.OrderBy(s => Power(s.Stack)).ThenBy(s => s.Slot).First();
+                Execute(new MoveTownStackCommand(player, town.Id, TownArmy.VisitingHero, slot, TownArmy.Garrison, 0));
+            }
+        }
+    }
+
     /// <summary>A hero in the town takes the garrison's creatures with it, leaving the weakest stack to hold the town.</summary>
     private void Consolidate(PlayerId player, Town town)
     {
@@ -683,12 +707,26 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             RecruitHere(player, hero);
             UseServicesHere(player, hero);
 
+            var town = _state.ObjectCellAt(hero.Position) is { Object: Town own, Cell: FootprintCell.Visit } && own.Owner == player ? own : null;
+            if (town is not null && ShouldHoldGarrison(hero, town))
+            {
+                // Inside, the hero leads the whole garrison behind the walls; at the entrance it would fight alone and the garrison after it (ADR-112).
+                Execute(new EnterGarrisonCommand(player, town.Id));
+                return true;
+            }
+
             // Arrived at an own town on the way: take the garrison along now, or the troops would call the hero back every day (ADR-114).
-            if (_state.ObjectCellAt(hero.Position) is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == player)
+            if (town is not null)
             {
                 Consolidate(player, town);
             }
-            if (hero.MovementPoints <= 0 || Defending(hero))
+
+            if (Defending(hero))
+            {
+                return true;
+            }
+
+            if (hero.MovementPoints <= 0)
             {
                 return true;
             }
@@ -794,6 +832,14 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         ArmyPower(hero.Army) + (_state.ObjectCellAt(position) is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == hero.Owner ? ArmyPower(town.Garrison) : 0);
 
     private static bool Holds(long defence, long danger) => danger == 0 || defence >= danger * SafeShare;
+
+    /// <summary>
+    /// Whether a hero defending its town should move into the garrison (ADR-112): only a secondary hero while the main hero is out (a garrison hero
+    /// never retreats, so the player's last hero does not go in), and only when the hero and the garrison together at least match the danger.
+    /// </summary>
+    private bool ShouldHoldGarrison(Hero hero, Town town) =>
+        hero.Id != _main && _main is { } main && _state.Heroes.Any(h => h.Id == main) && Defending(hero)
+        && DefenceAt(hero, hero.Position) >= Danger(hero.Owner, hero.Position) && TownRules.CheckEnterGarrison(_state, town) is null;
 
     /// <summary>A hero in an own town that an enemy can reach stays there when the garrison alone could not hold it but the two together can.</summary>
     private bool Defending(Hero hero)
@@ -1060,15 +1106,77 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 continue;
             }
 
-            var days = path.TotalCost / (double)Math.Max(1, hero.MaxMovementPoints);
-            var score = candidate.Value / (0.5 + days);
+            var score = candidate.Value / (0.5 + Days(hero, path.TotalCost));
             if (score > bestScore)
             {
                 (best, bestScore) = (candidate.Position, score);
             }
         }
 
-        return best ?? Explore(hero, failed);
+        // Unexplored ground is worth a trip of its own (it hides what the targets are made of), not only when nothing else is left.
+        if (Explore(hero, failed) is { } explore && ExploreWorth(hero) / (0.5 + Days(hero, explore.Cost)) > bestScore)
+        {
+            return explore.Position;
+        }
+
+        return best;
+    }
+
+    /// <summary>A guard or garrison next to unexplored ground is also worth the exploring it opens (passage guards stand between zones).</summary>
+    private double OpensTheWay(PlayerId owner, MapPosition position)
+    {
+        for (var dy = -WayRadius; dy <= WayRadius; dy++)
+        {
+            for (var dx = -WayRadius; dx <= WayRadius; dx++)
+            {
+                var near = new MapPosition(position.X + dx, position.Y + dy, position.Level);
+                if (_state.Map.Contains(near) && !_state.Fog.IsExplored(owner, near))
+                {
+                    return ExploreValue;
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    private const int WayRadius = 3;
+
+    private static double Days(Hero hero, int cost) => cost / (double)Math.Max(1, hero.MaxMovementPoints);
+
+    /// <summary>What reaching unexplored ground is worth, against the targets' values (a small treasure).</summary>
+    private const double ExploreValue = 900;
+
+    /// <summary>The share of its army power a main hero puts on exploring while it knows no enemy town: a strong army goes looking for one.</summary>
+    private const double HuntShare = 0.1;
+
+    /// <summary>What exploring is worth to the hero now: <see cref="ExploreValue"/>, more for the main hero while no enemy town is known.</summary>
+    private double ExploreWorth(Hero hero) =>
+        ExploreValue + (hero.Id == _main && !_state.ObjectsOf<Town>().Any(t => t.Owner is { } o && _state.AreEnemies(hero.Owner, o) && _state.Fog.IsExplored(hero.Owner, t.VisitPosition))
+            ? HuntShare * ArmyPower(hero.Army) : 0);
+
+    /// <summary>
+    /// For tuning (<c>sim game --explain</c>): the hero's best candidate targets as <see cref="ChooseTarget"/> sees them, with their value, the
+    /// opponent's power, whether the simulated fight is safe and the route's cost; then the exploring tile. Changes nothing.
+    /// </summary>
+    public IReadOnlyList<string> Explain(HeroId id, int count = 12)
+    {
+        var hero = _state.GetHero(id);
+        var lines = new List<string> { $"{hero.Name} at {hero.Position}, power {ArmyPower(hero.Army)}, movement {hero.MovementPoints}/{hero.MaxMovementPoints}, main {hero.Id == _main}, defending {Defending(hero)}" };
+        foreach (var t in Targets(hero)
+                     .OrderByDescending(t => t.Value / (1 + (0.08 * Distance(hero.Position, t.Position))))
+                     .Take(count))
+        {
+            var what = _state.ObjectCellAt(t.Position)?.Object.Definition.Id ?? (_state.HeroAt(t.Position) is { } h ? $"hero {h.Name}" : "guarded tile");
+            var danger = Danger(hero.Owner, t.Position, except: t.Position);
+            var safe = t.Opponent is not { } opponent ? "no fight"
+                : _estimator.Fight(hero, opponent, t.OpponentAttack, t.OpponentDefense, t.Siege).IsSafe(t.MaxLoss) ? $"safe vs {ArmyPower(opponent)}" : $"UNSAFE vs {ArmyPower(opponent)}";
+            var path = session.Movement.FindPath(hero.Id, t.Position) is { } p ? $"path {p.TotalCost}" : "NO PATH";
+            lines.Add($"  {t.Position} {what}: value {t.Value:0}, {safe}, {path}{(Holds(DefenceAt(hero, t.Position), danger) ? string.Empty : $", danger {danger}")}");
+        }
+
+        lines.Add($"  explore: {(Explore(hero, []) is { } e ? $"{e.Position} cost {e.Cost}" : "nothing")}");
+        return lines;
     }
 
     private static int Distance(MapPosition a, MapPosition b) =>
@@ -1158,10 +1266,12 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     yield return new(visit, (8 * mineYield.DailyYield * GoldValue(mineYield.Resource!.Value, 1)) - (0.5 * Value(deposit.Price)), GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case KeymasterTent tent when !_state.GetPlayer(owner).Keys.Contains(tent.Colour) && Plausible(GuardPower(visit)) && visit != hero.Position:
-                    yield return new(visit, 1500, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    // The key opens the border posts of its colour (ADR-071): worth most once one is known to bar the way.
+                    var barred = _state.ObjectsOf<BorderPost>().Any(b => b.Colour == tent.Colour && _state.Fog.IsExplored(owner, b.VisitPosition));
+                    yield return new(visit, barred ? 2500 : 600, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case MapGarrison mapGarrison when !OwnTeam(owner, mapGarrison.Owner) && visit != hero.Position && Plausible(ArmyPower(mapGarrison.Troops)):
-                    yield return new(visit, 1000 + (0.35 * ArmyPower(mapGarrison.Troops)), mapGarrison.Troops.IsEmpty ? null : mapGarrison.Troops, MaxLoss: MonsterLoss);
+                    yield return new(visit, 1000 + (0.35 * ArmyPower(mapGarrison.Troops)) + OpensTheWay(owner, visit), mapGarrison.Troops.IsEmpty ? null : mapGarrison.Troops, MaxLoss: MonsterLoss);
                     break;
                 case Mine mine when !OwnTeam(owner, mine.Owner):
                     var mineGuard = mine.Guard is { } g ? new CreatureStack(g.Creature, Math.Max(1, g.Count ?? 1)) : null;
@@ -1181,7 +1291,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     }
                     else if (Plausible(monsterPower))
                     {
-                        yield return new(visit, 150 + (monsterPower * 0.35), Army.Of(stack), MaxLoss: MonsterLoss);
+                        yield return new(visit, 150 + (monsterPower * 0.35) + OpensTheWay(owner, visit), Army.Of(stack), MaxLoss: MonsterLoss);
                     }
 
                     break;
@@ -1255,41 +1365,89 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
     }
 
-    /// <summary>With nothing to fight for: the nearest explored tile next to unexplored ground that the hero can reach.</summary>
-    private MapPosition? Explore(Hero hero, HashSet<MapPosition> failed)
+    /// <summary>
+    /// The cheapest explored tile next to unexplored ground that the hero can walk to, and the route's cost. A flood over open ground (no
+    /// objects, heroes or guarded tiles: those are targets with a fight check) finds the tiles really reachable, nearest first, so ground
+    /// seen over a wall does not hide the hero's own frontier; the route finder prices the first few.
+    /// </summary>
+    private (MapPosition Position, int Cost)? Explore(Hero hero, HashSet<MapPosition> failed)
     {
         var map = _state.Map;
         var owner = hero.Owner;
+        var power = ArmyPower(hero.Army);
+        var seen = new HashSet<MapPosition> { hero.Position };
+        var queue = new Queue<MapPosition>();
+        queue.Enqueue(hero.Position);
         var frontier = new List<MapPosition>();
-        foreach (var position in map.Positions(hero.Position.Level))
+        while (queue.Count > 0 && frontier.Count < FrontierChecked)
         {
-            // Exploring never walks into anything: no heroes, objects or guarded ground (those are targets with a fight check).
-            if (position == hero.Position || failed.Contains(position) || _claimed.Contains(position)
-                || !_state.Fog.IsExplored(owner, position) || !_state.Terrains.IsPassable(map.GetTerrain(position))
-                || _state.HeroAt(position) is not null || _state.ObjectCellAt(position) is not null || _state.IsGuarded(position)
-                || !Holds(ArmyPower(hero.Army), Danger(owner, position)))
+            var position = queue.Dequeue();
+            foreach (var direction in DirectionExtensions.All)
             {
-                continue;
-            }
+                var next = position.Step(direction);
+                if (!map.Contains(next) || !seen.Add(next))
+                {
+                    continue;
+                }
 
-            if (DirectionExtensions.All.Any(d => map.Contains(position.Step(d)) && !_state.Fog.IsExplored(owner, position.Step(d))))
-            {
-                frontier.Add(position);
+                if (Teleport(next) is { } entrance)
+                {
+                    // A gate or portal: an unexplored exit is a place to explore (walking in takes the hero there), an explored one goes on.
+                    if (_state.TeleportDestination(entrance) is not { } exit || !_state.Fog.IsExplored(owner, exit))
+                    {
+                        if (!failed.Contains(next) && !_claimed.Contains(next) && Holds(power, Danger(owner, next)))
+                        {
+                            frontier.Add(next);
+                        }
+                    }
+                    else if (seen.Add(exit))
+                    {
+                        queue.Enqueue(exit);
+                    }
+
+                    continue;
+                }
+
+                if (!Open(next))
+                {
+                    continue;
+                }
+
+                queue.Enqueue(next);
+                if (!failed.Contains(next) && !_claimed.Contains(next) && Holds(power, Danger(owner, next))
+                    && DirectionExtensions.All.Any(d => map.Contains(next.Step(d)) && !_state.Fog.IsExplored(owner, next.Step(d))))
+                {
+                    frontier.Add(next);
+                }
             }
         }
 
-        MapPosition? best = null;
-        var bestCost = int.MaxValue;
-        foreach (var position in frontier
-                     .OrderBy(p => Distance(hero.Position, p)).ThenBy(p => p.Y).ThenBy(p => p.X)
-                     .Take(FrontierChecked))
+        (MapPosition Position, int Cost)? best = null;
+        foreach (var position in frontier)
         {
-            if (session.Movement.FindPath(hero.Id, position) is { } path && path.TotalCost < bestCost)
+            if (session.Movement.FindPath(hero.Id, position) is { } path && (best is null || path.TotalCost < best.Value.Cost))
             {
-                (best, bestCost) = (position, path.TotalCost);
+                best = (position, path.TotalCost);
             }
         }
 
         return best;
+
+        // Exploring never walks into anything: no heroes, objects or guarded ground; a border post it has the key for and an own or allied
+        // garrison are passes (ADR-070, ADR-071).
+        bool Open(MapPosition position) =>
+            _state.Fog.IsExplored(owner, position) && MovementRules.CheckTile(_state, position) == MoveResult.Moved
+            && BorderRules.Barring(_state, owner, position) is null && _state.HeroAt(position) is null && !_state.IsGuarded(position)
+            && _state.ObjectCellAt(position) switch
+            {
+                null => true,
+                { Object: BorderPost, Cell: FootprintCell.Visit } => true,
+                { Object: MapGarrison garrison, Cell: FootprintCell.Visit } => garrison.LetsThrough(_state, owner),
+                _ => false,
+            };
+
+        MapObject? Teleport(MapPosition position) =>
+            _state.Fog.IsExplored(owner, position) && !_state.IsGuarded(position) && _state.HeroAt(position) is null
+            && _state.ObjectCellAt(position) is { Cell: FootprintCell.Visit, Object: { TeleportTarget: not null } gate } ? gate : null;
     }
 }
