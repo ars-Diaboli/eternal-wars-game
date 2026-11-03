@@ -76,7 +76,7 @@ public sealed class Hero(
     /// <summary>Whether the hero has a spell book (ADR-071): mages of the magic towns start with one, others buy it in a mage guild.</summary>
     public bool HasSpellBook { get; internal set; }
 
-    /// <summary>Spells in the hero's book with their rank (1–3, ADR-072; all rank 1 until Mastery's upgrades are built).</summary>
+    /// <summary>Spells in the hero's book with their rank (1–3, ADR-072): learned at rank 1, raised by Mastery in guilds (ADR-122).</summary>
     public IReadOnlyDictionary<string, int> Spells => _spells;
 
     /// <summary>
@@ -87,6 +87,18 @@ public sealed class Hero(
 
     /// <summary>Puts a spell in the book at rank 1; false when the hero already knows it.</summary>
     internal bool Learn(string spell) => _spells.TryAdd(spell, 1);
+
+    /// <summary>Raises a known spell to <paramref name="rank"/>; false when the hero does not know it or knows it at that rank or higher.</summary>
+    internal bool RaiseSpell(string spell, int rank)
+    {
+        if (!_spells.TryGetValue(spell, out var now) || now >= rank)
+        {
+            return false;
+        }
+
+        _spells[spell] = rank;
+        return true;
+    }
 
     internal bool AddWarMachine(Battles.WarMachineSlot slot) => _warMachines.Add(slot);
 

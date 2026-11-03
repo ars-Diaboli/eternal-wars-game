@@ -199,7 +199,7 @@ public static class BuiltInSkills
         var group = SchoolGroup(town);
         yield return new($"{group}.spells", group, $"{school} magic", SkillLevel.Master, $"learn {school} spells of levels 1/2/3/4");
         yield return new($"{group}.attunement", group, $"{school} attunement", SkillLevel.Master, "max mana, daily mana and spell cost by school (ManaRules)");
-        yield return new($"{group}.mastery", group, $"{school} mastery", SkillLevel.Advanced, "upgrade learned spells to their second / third level (Phase 5)");
+        yield return new($"{group}.mastery", group, $"{school} mastery", SkillLevel.Advanced, "known spells rise to rank II / III in a guild that offers them (ADR-122)");
     }
 }
 

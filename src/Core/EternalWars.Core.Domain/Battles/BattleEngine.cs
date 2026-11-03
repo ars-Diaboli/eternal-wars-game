@@ -489,7 +489,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <summary>What a cast does, the hero's or a creature's: the spell works on every stack in its reach it affects, by id (a stack it does not affect is reported as resisting); a summon calls its creatures; Earthquake shakes the walls.</summary>
     private void Work(BattleSide side, KnownSpell known, int? targetId, CellPosition? cell, int? creaturePower)
     {
-        var effect = known.Spell.Effect!;
+        var effect = known.Effect!;
         var spellId = known.Spell.Id;
         if (effect.Kind == Magic.SpellEffectKind.Summon)
         {
@@ -497,7 +497,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             return;
         }
 
-        foreach (var unit in BattleMagic.Reach(battle, side, effect, targetId, cell))
+        foreach (var unit in BattleMagic.Reach(battle, side, known, targetId, cell))
         {
             if (!BattleMagic.Affects(battle, side, known, unit))
             {
@@ -561,7 +561,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             unit = new BattleUnit(battle.Units.Max(u => u.Id) + 1, side, creature, count, -1, at)
             {
                 IsSummoned = true,
-                IsRooted = known.Spell.Effect!.Rooted,
+                IsRooted = known.Effect!.Rooted,
             };
             battle.MutableUnits.Add(unit);
         }
@@ -575,7 +575,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     {
         var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
         unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id);
-        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, known.Spell.Effect!.Modifiers, until));
+        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, known.Effect!.Modifiers, until));
         events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until));
     }
 

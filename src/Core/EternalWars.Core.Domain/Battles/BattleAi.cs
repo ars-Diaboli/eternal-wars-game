@@ -138,14 +138,14 @@ internal static class BattleAi
         }
 
         (long Value, string? Spell, int? Target, CellPosition? Cell) best = (0, null, null, null);
-        foreach (var known in caster.Spells.Where(s => s.Spell.Effect is { Kind: Magic.SpellEffectKind.Damage or Magic.SpellEffectKind.Summon }).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
+        foreach (var known in caster.Spells.Where(s => s.Effect is { Kind: Magic.SpellEffectKind.Damage or Magic.SpellEffectKind.Summon }).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
         {
             if (battle.ManaOf(side) < BattleMagic.Cost(battle, side, known))
             {
                 continue;
             }
 
-            foreach (var (target, cell) in Aims(battle, side, known.Spell.Effect!))
+            foreach (var (target, cell) in Aims(battle, side, known.Effect!))
             {
                 if (BattleMagic.CastRefusal(battle, side, known.Spell.Id, target, cell) is not null)
                 {
@@ -172,7 +172,7 @@ internal static class BattleAi
     /// </summary>
     private static long Value(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower)
     {
-        var effect = known.Spell.Effect!;
+        var effect = known.Effect!;
         switch (effect.Kind)
         {
             case Magic.SpellEffectKind.Summon:
@@ -182,7 +182,7 @@ internal static class BattleAi
                     ? Worth(wounded, Math.Min(BattleMagic.Amount(battle, side, known, creaturePower), wounded.Creature.Health - wounded.TopHealth))
                     : 0;
             case Magic.SpellEffectKind.Damage:
-                return BattleMagic.Reach(battle, side, effect, target, cell)
+                return BattleMagic.Reach(battle, side, known, target, cell)
                     .Where(u => BattleMagic.Affects(battle, side, known, u))
                     .Sum(u => (u.Side == side ? -1 : 1) * Worth(u, BattleMagic.Damage(battle, side, known, u, creaturePower)));
             default:
@@ -196,7 +196,7 @@ internal static class BattleAi
     /// </summary>
     private static bool CreatureCast(BattleState battle, BattleEngine engine, BattleUnit unit, List<BattleUnit> enemies)
     {
-        if (BattleMagic.CreatureSpell(unit) is not { Spell.Effect: { } effect } known)
+        if (BattleMagic.CreatureSpell(unit) is not { Effect: { } effect } known)
         {
             return false;
         }

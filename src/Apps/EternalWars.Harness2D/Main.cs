@@ -286,10 +286,10 @@ public partial class Main : Node2D
             return;
         }
 
-        var spells = caster.Spells.Where(s => s.Spell.Effect is not null).ToList();
+        var spells = caster.Spells.Where(s => s.Effect is not null).ToList();
         var next = _armedSpell is null ? 0 : spells.FindIndex(s => s.Spell.Id == _armedSpell) + 1;
         _armedSpell = next < spells.Count ? spells[next].Spell.Id : null;
-        if (_armedSpell is not null && spells[next].Spell.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
+        if (_armedSpell is not null && spells[next].Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
         {
             _armedSpell = null;
             Report(_session.Execute(new BattleCastCommand(player, spells[next].Spell.Id)));

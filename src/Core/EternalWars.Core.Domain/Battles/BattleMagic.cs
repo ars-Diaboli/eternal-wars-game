@@ -4,7 +4,7 @@ using EternalWars.Core.Domain.Magic;
 namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>
-/// A hero's spells in battle (ADR-071, ADR-072, ADR-110), rank I: at most one cast a round per side, during the turn of one of its own units,
+/// A hero's spells in battle (ADR-071, ADR-072, ADR-110), at their ranks (ADR-122): at most one cast a round per side, during the turn of one of its own units,
 /// which keeps its action. Damage is the spell's base × (10 + Spell Power) / 10, durations too (at least 1 round); a spell specialty adds 3 % a
 /// hero level to the amount; holy spells do double damage to undead and demons; the enemy hero's Spell resistance cuts hostile spells' damage and
 /// duration; Interference takes Spell Power off and adds mana to the cost. Creatures' immunities and spell resistance stop spells for good.
@@ -41,7 +41,7 @@ public static class BattleMagic
             return $"The hero does not know '{spellId}'.";
         }
 
-        if (known.Spell.Effect is not { } effect)
+        if (known.Effect is not { } effect)
         {
             return $"{known.Spell.Name} cannot be cast in battle.";
         }
@@ -75,7 +75,7 @@ public static class BattleMagic
             return $"{unit.Creature.Name} has no spell to cast now.";
         }
 
-        if (known.Spell.Effect is null)
+        if (known.Effect is null)
         {
             return $"{known.Spell.Name} cannot be cast in battle yet.";
         }
@@ -124,7 +124,7 @@ public static class BattleMagic
     /// <summary>Why the spell cannot be aimed at the stack or cell (or, for a summon, why there is no room), or null.</summary>
     private static string? TargetRefusal(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower = null)
     {
-        var effect = known.Spell.Effect!;
+        var effect = known.Effect!;
         if (effect.Kind == SpellEffectKind.Summon)
         {
             return SummonPlacement(battle, side, known, creaturePower) is null ? $"There is no room to call {known.Spell.Name}'s creatures." : null;
@@ -166,34 +166,41 @@ public static class BattleMagic
         new(centre.X - (effect.AreaSize / 2), centre.Y - (effect.AreaSize / 2), effect.AreaSize, effect.AreaSize);
 
     /// <summary>
-    /// The stacks in the spell's reach, by id: the target; every stack with a cell in the area (both sides); every stack of the enemy side for a
-    /// hostile spell or of the own side otherwise; every stack on the field.
+    /// The stacks in the spell's reach at its rank, by id: the target, and for <c>targets N</c> (ADR-122) the N − 1 other stacks of its side nearest
+    /// to it that the spell works on (nearer first, then by id); every stack with a cell in the area (both sides); every stack of the enemy side for
+    /// a hostile spell or of the own side otherwise; every stack on the field. <c>spare-own</c> leaves the caster's stacks out of an area or the field.
     /// </summary>
-    public static IReadOnlyList<BattleUnit> Reach(BattleState battle, BattleSide side, SpellEffect effect, int? target, CellPosition? cell)
+    public static IReadOnlyList<BattleUnit> Reach(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell)
     {
+        var effect = known.Effect!;
         IEnumerable<BattleUnit> units = effect.Reach switch
         {
-            SpellReach.Stack => battle.FindUnit(target!.Value) is { IsAlive: true } unit ? [unit] : [],
+            SpellReach.Stack => battle.FindUnit(target!.Value) is { IsAlive: true } unit ? [unit, .. Others(unit)] : [],
             SpellReach.Area => battle.LivingUnits.Where(u => u.Rect.Intersects(Area(effect, cell!.Value))),
             SpellReach.Side => battle.LivingUnitsOf(effect.IsHostile ? side.Opponent() : side),
             _ => battle.LivingUnits,
         };
-        return units.OrderBy(u => u.Id).ToList();
+        return units.Where(u => !effect.SpareOwn || u.Side != side).OrderBy(u => u.Id).ToList();
+
+        IEnumerable<BattleUnit> Others(BattleUnit aimed) => effect.Targets <= 1
+            ? []
+            : battle.LivingUnitsOf(aimed.Side).Where(u => u != aimed && Affects(battle, side, known, u))
+                .OrderBy(u => u.Rect.DistanceTo(aimed.Rect)).ThenBy(u => u.Id).Take(effect.Targets - 1);
     }
 
     /// <summary>
-    /// Whether the spell works on the stack: war machines only take damage; the spell's filter (living, undead, undead and demons, shooters);
-    /// creature immunities to the spell's tags; creature spell resistance and the stack's hero's artifact immunities (ADR-111) against the enemy's
-    /// hostile spells; holy creatures ignore holy spells.
+    /// Whether the spell, at its rank, works on the stack: war machines only take damage (with no filter, or the ground filter); the spell's filter
+    /// (living, undead, undead and demons, shooters, melee stacks, stacks on the ground); creature immunities to the spell's tags; creature spell
+    /// resistance and the stack's hero's artifact immunities (ADR-111) against the enemy's hostile spells; holy creatures ignore holy spells.
     /// </summary>
     public static bool Affects(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit)
     {
         var spell = known.Spell;
-        var effect = spell.Effect!;
+        var effect = known.Effect!;
         var creature = unit.Creature;
         if (unit.IsMachine)
         {
-            return effect.Kind == SpellEffectKind.Damage && effect.Filter is SpellFilter.None;
+            return effect.Kind == SpellEffectKind.Damage && effect.Filter is SpellFilter.None or SpellFilter.Ground;
         }
 
         var fits = effect.Filter switch
@@ -202,6 +209,8 @@ public static class BattleMagic
             SpellFilter.Undead => creature.HasTag(CreatureTags.Undead),
             SpellFilter.UndeadOrDemon => creature.HasTag(CreatureTags.Undead) || creature.HasTag(CreatureTags.Demon),
             SpellFilter.Shooter => creature.Shots > 0,
+            SpellFilter.Melee => creature.Shots == 0,
+            SpellFilter.Ground => !creature.IsFlying,
             _ => true,
         };
         if (!fits || creature.IsImmuneTo(spell.Tags) || (spell.HasTag(Holy) && creature.HasTag(CreatureTags.Holy)))
@@ -241,7 +250,7 @@ public static class BattleMagic
     /// </summary>
     public static int Amount(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
-        var amount = (long)known.Spell.Effect!.Amount * (10 + (creaturePower ?? SpellPower(battle, side))) / 10;
+        var amount = (long)known.Effect!.Amount * (10 + (creaturePower ?? SpellPower(battle, side))) / 10;
         if (creaturePower is null && battle.Participant(side).Caster is { } caster)
         {
             if (caster.Specialty == known.Spell.Id)
@@ -261,13 +270,13 @@ public static class BattleMagic
     /// </summary>
     public static int UntilRound(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null)
     {
-        if (known.Spell.Effect!.Rounds is not { } rounds)
+        if (known.Effect!.Rounds is not { } rounds)
         {
             return BattleEngine.MaxRounds;
         }
 
         var duration = Math.Max(1, rounds * (10 + (creaturePower ?? SpellPower(battle, side))) / 10);
-        if (known.Spell.Effect.IsHostile && unit.Side != side)
+        if (known.Effect.IsHostile && unit.Side != side)
         {
             var resistance = battle.Participant(unit.Side).Bonus.SpellResistancePercent;
             duration = Math.Max(1, ((duration * (100 - resistance)) + 99) / 100);
@@ -284,7 +293,7 @@ public static class BattleMagic
     public static (CreatureDefinition Creature, int Count, BattleUnit? Joins, CellPosition At)? SummonPlacement(
         BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
-        var effect = known.Spell.Effect!;
+        var effect = known.Effect!;
         var summoned = battle.Units.Where(u => u.Side == side && u.IsSummoned).Select(u => u.Creature.Id).ToHashSet(StringComparer.Ordinal);
         var id = effect.Summons.FirstOrDefault(c => !summoned.Contains(c)) ?? effect.Summons.FirstOrDefault();
         if (id is null || !battle.Creatures.TryGet(id, out var creature))

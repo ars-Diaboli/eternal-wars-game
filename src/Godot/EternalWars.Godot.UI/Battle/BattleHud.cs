@@ -210,7 +210,7 @@ public partial class BattleHud : Control
     /// <summary>The active stack casts its own spell (ADR-120): at once for a summon or a spell for a side or the field, else after a target click.</summary>
     private void ArmCreature(KnownSpell known)
     {
-        if (known.Spell.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
+        if (known.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
         {
             Act(player => new BattleCreatureCastCommand(player));
             return;
@@ -230,7 +230,7 @@ public partial class BattleHud : Control
 
     private void Arm(KnownSpell known)
     {
-        if (known.Spell.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
+        if (known.Effect!.Reach is Core.Domain.Magic.SpellReach.Side or Core.Domain.Magic.SpellReach.All)
         {
             Act(player => new BattleCastCommand(player, known.Spell.Id));
             return;
@@ -254,7 +254,7 @@ public partial class BattleHud : Control
         }
 
         // A creature caster's own spell (ADR-120): its action, no mana.
-        if (BattleMagic.CreatureSpell(active) is { Spell.Effect: not null } own)
+        if (BattleMagic.CreatureSpell(active) is { Effect: not null } own)
         {
             var casts = active.CastsLeft.Where(c => BattleMagic.CasterSpells.GetValueOrDefault(c.Key) == own.Spell.Id).Sum(c => c.Value);
             var cast = new Button { Text = $"{active.Creature.Name}: {own.Spell.Name} ({casts} left)", TooltipText = $"The stack casts it as its action. {own.Spell.Notes}" };
@@ -268,10 +268,10 @@ public partial class BattleHud : Control
         }
 
         _spells.AddChild(new Label { Text = $"Mana {battle.ManaOf(active.Side)}" });
-        foreach (var known in caster.Spells.Where(s => s.Spell.Effect is not null))
+        foreach (var known in caster.Spells.Where(s => s.Effect is not null))
         {
             var cost = BattleMagic.Cost(battle, active.Side, known);
-            var button = new Button { Text = $"{known.Spell.Name} ({cost})" };
+            var button = new Button { Text = $"{Core.Domain.Magic.MagicRules.NameAtRank(known.Spell, known.Rank)} ({cost})" };
             var refusal = battle.HasCastThisRound(active.Side) ? "The hero has already cast a spell this round."
                 : battle.ManaOf(active.Side) < cost ? "Not enough mana." : null;
             button.Disabled = refusal is not null;

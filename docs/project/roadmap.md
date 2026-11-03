@@ -35,8 +35,9 @@ health bars, dividing obstacles, layout and information windows (CAMP-1, UI-3, C
 The AI plays generated maps to the end (ADR-119: exploring, guards, keymasters, gates, garrison heroes).
 Phase 5 content is in core: summons, creature casters, adventure spells, shrines and spell books in the map format (v29), the breakable gate,
 the keep's shooter and Earthquake (ADR-120); assembled relics and war machine tuning (ADR-121). Their 3D views and hero-screen buttons need a run in Godot.
-**Next**: a person's full game on Ember March (the Phase 3 exit's last check) and a Godot run of the ADR-120 / ADR-121 views, the new-game
-screen's user templates, then the remaining Phase 5 items (control and resurrection spells, map events, presentation).
+Mastery and spell ranks II / III are built (ADR-122).
+**Next**: a person's full game on Ember March (the Phase 3 exit's last check) and a Godot run of the ADR-120 / ADR-121 / ADR-122 views, the new-game
+screen's user templates, then the remaining Phase 5 items (control and resurrection spells, the AI's buffs, map events, presentation).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -589,7 +590,10 @@ Power, an element per spell.
 
 - [x] Spell table `data/spells.csv` from the re-draft: school, level, cost, element, tags, adventure spells, the rank I battle effect of 37
       spells (ADR-110); mana on heroes is done (ADR-063)
-- [ ] Spell table follow-ups: ranks II / III, the battle effects of the other spells, final numbers after the visuals
+- [x] Spell ranks II / III in battle (ADR-122): `battle2` / `battle3` in `spells.csv` for 42 of the 43 battle spells, `targets N`, `spare-own`,
+      the `melee` and `ground` filters; the HUD and hero screen show the rank (not run in Godot yet)
+- [ ] Spell table follow-ups: the rank changes that need new mechanics (ADR-122's list), the adventure spells' ranks, the battle effects of the
+      other spells, final numbers after the visuals
 - [x] Guild spell selection (ADR-106, ADR-110): 3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3 drawn per town at game start from
       `GameState.Random`, adventure spells drawn like the others
 - [ ] Guild spells fixed by the map (editor, map format bump); the extra-school buildings draw theirs the same way
@@ -600,8 +604,8 @@ Power, an element per spell.
       its level; a night in a town with a guild refills its mana (ADR-071, ADR-110)
 - [x] Spell books and known spells in the map format (map heroes, editor; map format v29, ADR-120)
 - [x] Spell Power multiplies damage and buff / debuff duration: × (1 + SP / 10) for now (ADR-072, ADR-110)
-- [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; no potency, ADR-071), mastery
-      (allows ranks 2 / 3; a spell rises, free, on a visit to a guild that offers it, ADR-072)
+- [x] School skills take effect: magic (spell levels, ADR-110), attunement (mana, regeneration and cost, ADR-063; no potency, ADR-071), mastery
+      (ranks 2 / 3 at Basic / Advanced; a known spell rises, free, straight to that rank in a town whose guild offers it; `SpellsRaised`, ADR-122)
 - [x] Combat spells, rank I (ADR-110): the hero casts once a round during a controlled unit's turn (ADR-070); the unit still acts (ADR-071);
       machines take damage spells only; immunity and resistance are live (ADR-042, ADR-049); the battle AI casts damage spells; HUD spell
       buttons, C in the 2D harness

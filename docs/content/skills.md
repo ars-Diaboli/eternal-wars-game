@@ -175,9 +175,9 @@ Every school has the same three skills (shown for Light):
 
 | Skill | Id | Max | Per level | Status |
 |---|---|---|---|---|
-| Light magic | `magic.haven.spells` | Master | learn spells of level 1 / 2 / 3 / 4 (a spell is learned when this skill is at least its level, ADR-071) | ⏳ magic |
-| Light attunement | `magic.haven.attunement` | Master | max mana, daily mana and spell cost, by school (below) | ✅ numbers (`ManaRules`) · ⏳ casting |
-| Light mastery | `magic.haven.mastery` | Advanced | upgrade learned spells to their second / third level | ⏳ magic |
+| Light magic | `magic.haven.spells` | Master | learn spells of level 1 / 2 / 3 / 4 (a spell is learned when this skill is at least its level, ADR-071) | ✅ (ADR-110) |
+| Light attunement | `magic.haven.attunement` | Master | max mana, daily mana and spell cost, by school (below) | ✅ (`ManaRules`, casting ADR-110) |
+| Light mastery | `magic.haven.mastery` | Advanced | a known spell rises, free, to rank II (Basic) / III (Advanced) in a town whose guild or spell building offers it | ✅ (ADR-122) |
 
 Attunement (ADR-069, replacing ADR-063's table; several add up), ✅ numbers:
 
