@@ -1167,6 +1167,55 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>A shrine's spell (ADR-120): a spell of the shrine's level, or null for one drawn when the game starts.</summary>
+    public EditResult SetShrineSpell(MapObjectId id, string? spell)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Shrine shrine)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (ShrineRules.SpellRefusal(Scenario.Spells, shrine.SpellLevel, spell) is not null)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = shrine.Spell;
+        Run(new DelegateCommand("Set shrine spell", () => Apply(spell), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(string? value)
+        {
+            shrine.Spell = value;
+            _bus.Publish(new MapObjectChanged(shrine.Id));
+        }
+    }
+
+    /// <summary>A hero's spell book and the spells in it (ADR-120): known spell ids, none without a book.</summary>
+    public EditResult SetHeroSpells(HeroId id, bool spellBook, IReadOnlyList<string> spells)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if ((!spellBook && spells.Count > 0) || spells.Any(s => !Scenario.Spells.Contains(s)) || spells.Distinct(StringComparer.Ordinal).Count() != spells.Count)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var previous = (Book: hero.HasSpellBook, Spells: hero.Spells.Keys.ToList());
+        var next = (Book: spellBook, Spells: spells.ToList());
+        Run(new DelegateCommand($"Edit {hero.Name}'s spells", () => Apply(next), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply((bool Book, List<string> Spells) set)
+        {
+            hero.SetSpellBook(set.Book, set.Spells);
+            _bus.Publish(new HeroSpellsChanged(hero.Id));
+        }
+    }
+
     /// <summary>Who sits in a prison and at what level (ADR-068); null = drawn when the game starts.</summary>
     public EditResult SetPrison(MapObjectId id, string? hero, int? level)
     {

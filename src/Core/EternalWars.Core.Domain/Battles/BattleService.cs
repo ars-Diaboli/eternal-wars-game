@@ -24,6 +24,12 @@ public sealed record ShootAction(int Target) : BattleAction;
 /// <summary>The siege engine fires at a wall section, the gate, the keep or a tower (ADR-106).</summary>
 public sealed record ShootStructureAction(int Structure) : BattleAction;
 
+/// <summary>A stack hits a siege structure in melee, the gate only (ADR-120); <paramref name="From"/> is where to stand (null = the closest placement).</summary>
+public sealed record AttackStructureAction(int Structure, CellPosition? From = null) : BattleAction;
+
+/// <summary>The active creature caster casts its spell at a stack or a cell (ADR-120); it is the stack's action.</summary>
+public sealed record CreatureCastAction(int? Target = null, CellPosition? Cell = null) : BattleAction;
+
 public sealed record WaitAction : BattleAction;
 
 public sealed record DefendAction : BattleAction;
@@ -204,6 +210,8 @@ public sealed class BattleService(
             MoveAction move => Engine(battle).Move(move.To),
             AttackAction attack => Engine(battle).Attack(attack.Target, attack.From),
             ShootAction shoot => Engine(battle).Shoot(shoot.Target),
+            AttackStructureAction hit => Engine(battle).AttackStructure(hit.Structure, hit.From),
+            CreatureCastAction cast => Engine(battle).CreatureCast(cast.Target, cast.Cell),
             ShootStructureAction structure => WarMachines.IsControlled(battle.Participant(unit.Side).Bonus.Ballistics)
                 ? Engine(battle).ShootStructure(structure.Structure)
                 : $"Without Ballistics the {unit.Creature.Name} fires by itself.",
@@ -466,7 +474,7 @@ public sealed class BattleService(
     private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null)
     {
         var ground = terrain ?? state.Map.GetTerrain(location);
-        return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns);
+        return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns) { Creatures = state.Creatures };
     }
 
     /// <summary>
@@ -681,7 +689,7 @@ public sealed class BattleService(
         }
         else if (winning.Guard is { } guard)
         {
-            SetGuardCount(state.GetObject(guard), battle.LivingUnitsOf(winner).Sum(u => u.Count));
+            SetGuardCount(state.GetObject(guard), battle.LivingUnitsOf(winner).Where(u => !u.IsSummoned).Sum(u => u.Count));
         }
 
         // Loser: a hero leaves the map, a guard is gone.
@@ -729,12 +737,13 @@ public sealed class BattleService(
     private static int Experience(BattleState battle)
     {
         var loser = battle.Winner!.Value.Opponent();
-        var killedHealth = battle.Units.Where(u => u.Side == loser).Sum(u => (long)(u.InitialCount - u.Count) * u.Creature.Health);
+        var killedHealth = battle.Units.Where(u => u.Side == loser && !u.IsSummoned).Sum(u => (long)(u.InitialCount - u.Count) * u.Creature.Health);
         var heroDefeated = battle.Participant(loser).Hero is not null && battle.EndReason == BattleEndReason.Defeated;
         return (int)Math.Min(int.MaxValue, killedHealth + (heroDefeated ? HeroDefeatExperience : 0));
     }
 
     private static List<BattleCasualty> Casualties(BattleState battle) => battle.Units
+        .Where(u => !u.IsSummoned)
         .GroupBy(u => (u.Side, u.Creature.Id))
         .Select(g => new BattleCasualty(g.Key.Side, g.Key.Id, g.Sum(u => u.InitialCount - u.Count)))
         .Where(c => c.Lost > 0)
@@ -805,7 +814,7 @@ public sealed class BattleService(
     private List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, SkillLevel level, Army army, GameRandom random)
     {
         // The table's creature: the slain count with their own health, not the health an enemy's artifacts gave them in battle.
-        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine).Select(u => (state.Creatures.Get(u.Creature.Id), u.InitialCount - u.Count));
+        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine && !u.IsSummoned).Select(u => (state.Creatures.Get(u.Creature.Id), u.InitialCount - u.Count));
         var joined = new List<RaisedUndead>();
         foreach (var raised in NecromancyRules.Raise(
                      slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random,

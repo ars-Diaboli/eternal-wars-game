@@ -26,3 +26,6 @@ public sealed record UndoHistoryChanged(string? UndoDescription, string? RedoDes
 
     public bool CanRedo => RedoDescription is not null;
 }
+
+/// <summary>The editor changed a hero's spell book or spells (ADR-120).</summary>
+public sealed record HeroSpellsChanged(HeroId Hero) : IEvent;

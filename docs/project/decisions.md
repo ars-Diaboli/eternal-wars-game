@@ -2958,6 +2958,8 @@ are done.
   `sim game` prints the fights won / lost per player and kind, what is left on the map, the keys and the garrison hero moves; `EW_SIM_EXPLAIN`
   and `EW_SIM_GUARDS` ([development.md](../technical/development.md)).
 - **Results** (`sim game --runs`, the AI on both sides): generated `duel` 8 of 8 games to a winner by day 100 (days 27–63, 3 : 5), before 1 of 6
-  by day 60; the connections smoke template (garrison, border gate, border guard) 4 of 4 (days 49–75, keys taken, the garrison beaten, the
-  border guard passed); Mirror duel 3 of 4; Ember March 8 of 8 (days 6–41, 4 : 4; before days 8–71); Two Towns ends on days 4–5 (before
+  by day 60; the connections smoke template (garrison, border gate, border guard) 3 of 4 by day 100 (keys taken, the garrison beaten, the
+  border guard passed); Mirror duel 3 of 4 by day 100; `2v2` 2 of 3 and `ffa-4` 1 of 3 by day 120 (the larger maps take longer); Ember March 8 of 8 (days 6–41, 4 : 4; before days 8–71); Two Towns ends on days 4–5 (before
   13–37): its towns are 23 tiles apart and an exploring hero finds the other town on day 3 (a fair rush, not changed).
+- **Fix**: the AI recruited into a garrison whose seven slots a garrison hero's stacks had filled (refused commands on `2v2`); it now skips
+  a line with no room anywhere. `AdventureAi.Refusals` keeps the refused commands with their reasons, and `sim game` prints them.

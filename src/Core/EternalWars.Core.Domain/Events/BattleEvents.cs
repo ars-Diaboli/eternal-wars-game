@@ -41,6 +41,12 @@ public sealed record BattleStarted(
 /// </summary>
 public sealed record SiegeStructureShot(int Machine, int Structure, bool Hit, int Damage, int Health) : IEvent;
 
+/// <summary>A siege structure was damaged by a stack hitting the gate (<paramref name="Unit"/>) or by a spell (<paramref name="Spell"/>, Earthquake; ADR-120).</summary>
+public sealed record SiegeStructureDamaged(int Structure, int? Unit, string? Spell, int Damage, int Health) : IEvent;
+
+/// <summary>The keep fell: its shooting stack is an ordinary stack now (ADR-120).</summary>
+public sealed record BattleUnitLeftKeep(int Unit) : IEvent;
+
 /// <summary>
 /// The fortifications hurt a stack (ADR-106): a shot of the keep or a tower (<paramref name="Structure"/>), or the moat it entered.
 /// <paramref name="RemainingCount"/> is the stack's size afterwards.
@@ -117,6 +123,15 @@ public sealed record BattleWarcryUsed(BattleSide Side, Warcry Warcry, IReadOnlyL
 
 /// <summary>Terror made a stack lose its action (ADR-067); its turn passed.</summary>
 public sealed record BattleUnitTerrified(int Unit) : IEvent;
+
+/// <summary>A creature caster cast its spell as its action (ADR-120); <paramref name="CastsLeft"/> of it are left this battle.</summary>
+public sealed record BattleCreatureCast(int Unit, string Spell, int? Target, CellPosition? Cell, int CastsLeft) : IEvent;
+
+/// <summary>A summon called creatures (ADR-120): <paramref name="Unit"/> as it is now (a new stack, or an own summoned stack that grew by <paramref name="Added"/>).</summary>
+public sealed record BattleUnitSummoned(BattleUnitInfo Unit, string Spell, int Added) : IEvent;
+
+/// <summary>A Phoenix rose from its ashes with <paramref name="Count"/> creatures (ADR-120).</summary>
+public sealed record BattleUnitReborn(int Unit, int Count) : IEvent;
 
 /// <summary>
 /// A side's hero cast a spell (ADR-110), before its effects: at a stack (<paramref name="Target"/>) or a cell (an area's centre), or at nothing

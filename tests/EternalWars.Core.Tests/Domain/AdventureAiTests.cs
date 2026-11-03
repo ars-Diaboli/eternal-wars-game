@@ -151,6 +151,31 @@ public class AdventureAiTests
     }
 
     [Fact]
+    public void ItDoesNotRecruitIntoAFullGarrison()
+    {
+        // Seven different stacks (a garrison hero's troops can fill the garrison): the town's creatures have nowhere to go.
+        var state = TownMap(out var town);
+        town.Owner = Blue;
+        state.GetHero(A).Position = new MapPosition(9, 0);
+        var others = state.Creatures.All.Where(c => c.Town != TownIds.Haven).Take(Army.SlotCount).ToList();
+        for (var slot = 0; slot < Army.SlotCount; slot++)
+        {
+            town.Garrison.Set(slot, new CreatureStack(others[slot].Id, 1));
+        }
+
+        var line = state.Creatures.BaseCreaturesOf(TownIds.Haven).First();
+        town.SetDwelling(line.Id, 1);
+        town.SetAvailable(line.Id, 10);
+        var session = Start(state);
+        var ai = Ai(session);
+
+        ai.PlayTurn();
+
+        Assert.Equal(0, ai.Refused);
+        Assert.Equal(10, town.AvailableOf(line.Id));
+    }
+
+    [Fact]
     public void ItFlagsAMapDwelling_AndBuysCreaturesThere()
     {
         var state = Create("A.......B", ".........", ".........", ".........");

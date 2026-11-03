@@ -138,6 +138,10 @@ public sealed class MapObjectInteractionService(
                 OfferSkills(hero, hut);
                 break;
 
+            case Shrine shrine:
+                Worship(hero, shrine);
+                break;
+
             case PandorasBox { IsGuarded: true } box when hero.Army.IsEmpty:
                 events.Publish(new MapObjectRefused(hero.Id, box.Id, $"{hero.Name} has no army to face what may guard the box."));
                 break;
@@ -698,6 +702,11 @@ public sealed class MapObjectInteractionService(
             hut.Skills = WitchHutRules.Roll(state.Random);
         }
 
+        foreach (var shrine in state.ObjectsOf<Shrine>().Where(s => s.Spell is null).OrderBy(s => s.Id.Value).ToList())
+        {
+            shrine.Spell = ShrineRules.Roll(state.Random, state.Spells, shrine.SpellLevel);
+        }
+
         StartWeek(restock: true);
     }
 
@@ -1111,6 +1120,32 @@ public sealed class MapObjectInteractionService(
         var options = new List<string> { riddle.Wrong1, riddle.Wrong2 };
         options.Insert(correct, riddle.Answer);
         Ask(new SphinxDecision(hero.Id, sphinx.Id, riddle.Question, options, correct));
+    }
+
+    /// <summary>A shrine teaches its spell to a hero who can learn it and does not know it yet (ADR-120); otherwise it says why not.</summary>
+    private void Worship(Hero hero, Shrine shrine)
+    {
+        if (shrine.Spell is not { } id || !state.Spells.TryGet(id, out var spell))
+        {
+            return;
+        }
+
+        if (hero.Spells.ContainsKey(id))
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, shrine.Id));
+            return;
+        }
+
+        if (!Magic.MagicRules.CanLearn(hero, spell))
+        {
+            var why = hero.HasSpellBook ? $"{hero.Name} needs the {BuiltInSkills.Get(Magic.MagicRules.MagicSkill(spell.School)).Name} skill at level {spell.Level} to learn {spell.Name}."
+                : $"{hero.Name} needs a spell book to learn {spell.Name}.";
+            events.Publish(new MapObjectRefused(hero.Id, shrine.Id, why));
+            return;
+        }
+
+        hero.Learn(id);
+        events.Publish(new SpellsLearned(hero.Id, shrine.Id, [id]));
     }
 
     private void OfferSkills(Hero hero, WitchHut hut)

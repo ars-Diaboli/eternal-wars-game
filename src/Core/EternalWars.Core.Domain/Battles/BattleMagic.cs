@@ -61,6 +61,75 @@ public static class BattleMagic
             return $"Not enough mana for {known.Spell.Name}.";
         }
 
+        return TargetRefusal(battle, side, known, target, cell);
+    }
+
+    /// <summary>
+    /// Why the active creature caster cannot cast its spell now (ADR-120), or null: it needs a cast left of a spell that works in battle, within
+    /// the battle's spell level cap, and a fitting target. Casting is its action; it costs no mana and is not the hero's spell of the round.
+    /// </summary>
+    public static string? CreatureCastRefusal(BattleState battle, BattleUnit unit, int? target, CellPosition? cell)
+    {
+        if (CreatureSpell(unit) is not { } known)
+        {
+            return $"{unit.Creature.Name} has no spell to cast now.";
+        }
+
+        if (known.Spell.Effect is null)
+        {
+            return $"{known.Spell.Name} cannot be cast in battle yet.";
+        }
+
+        if (SpellLevelCap(battle) is { } cap && known.Spell.Level > cap)
+        {
+            return $"No spell above level {cap} can be cast in this battle.";
+        }
+
+        return TargetRefusal(battle, unit.Side, known, target, cell, CreatureSpellPower(unit));
+    }
+
+    /// <summary>
+    /// The creature table's caster spells (ADR-042) as spell table ids ([spells.md](../content/spells.md#creature-casters), ADR-099); <c>rebirth</c>
+    /// is the Phoenix's own ability, not a spell; <c>summon-imps</c> calls imps like Hellgate.
+    /// </summary>
+    public static IReadOnlyDictionary<string, string> CasterSpells { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
+    {
+        ["fireball"] = "chaos.fireball",
+        ["frost-bolt"] = "arcana.frost-bolt",
+        ["blind"] = "shadow.blind",
+        ["bloodlust"] = "chaos.bloodlust",
+        ["cure"] = "light.heal",
+        ["lightning"] = "nature.call-lightning",
+        ["confusion"] = "shadow.confusion",
+        ["death-cloud"] = "death.death-cloud",
+        ["resurrection"] = "light.resurrection",
+        ["summon-imps"] = "chaos.hellgate",
+    };
+
+    /// <summary>The Phoenix's rebirth (ADR-120): not a spell, it rises once with 30 % of its stack.</summary>
+    public const string Rebirth = "rebirth";
+
+    /// <summary>What the Phoenix's stack rises with, in percent of its count at the start of the battle.</summary>
+    public const int RebirthPercent = 30;
+
+    /// <summary>The spell the creature casts now (the first of its caster spells with casts left that is a spell), at rank I; null when none.</summary>
+    public static KnownSpell? CreatureSpell(BattleUnit unit) =>
+        unit.CastsLeft.Where(c => c.Value > 0 && CasterSpells.ContainsKey(c.Key)).OrderBy(c => c.Key, StringComparer.Ordinal)
+            .Select(c => SpellCatalog.Default.TryGet(CasterSpells[c.Key], out var spell) ? new KnownSpell(spell, 1, 0) : null)
+            .FirstOrDefault(k => k is not null);
+
+    /// <summary>A creature caster's Spell Power (ADR-120, proposal): half its count, rounded down.</summary>
+    public static int CreatureSpellPower(BattleUnit unit) => unit.Count / 2;
+
+    /// <summary>Why the spell cannot be aimed at the stack or cell (or, for a summon, why there is no room), or null.</summary>
+    private static string? TargetRefusal(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower = null)
+    {
+        var effect = known.Spell.Effect!;
+        if (effect.Kind == SpellEffectKind.Summon)
+        {
+            return SummonPlacement(battle, side, known, creaturePower) is null ? $"There is no room to call {known.Spell.Name}'s creatures." : null;
+        }
+
         switch (effect.Reach)
         {
             case SpellReach.Stack:
@@ -148,10 +217,10 @@ public static class BattleMagic
     /// The spell's damage to the stack: base × (10 + Spell Power) / 10, the specialty's +3 % a level, ×2 for holy damage to undead and demons,
     /// less the enemy hero's Spell resistance, changed by the stack's spell-taken percent (Arcane Ward); at least 1.
     /// </summary>
-    public static int Damage(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit)
+    public static int Damage(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null)
     {
         var spell = known.Spell;
-        long damage = Amount(battle, side, known);
+        long damage = Amount(battle, side, known, creaturePower);
         if (spell.HasTag(Holy) && (unit.Creature.HasTag(CreatureTags.Undead) || unit.Creature.HasTag(CreatureTags.Demon)))
         {
             damage *= 2;
@@ -167,13 +236,13 @@ public static class BattleMagic
     }
 
     /// <summary>
-    /// A damage or healing spell's amount from the side's hero: base × (10 + Spell Power) / 10, with its specialty and its elemental orbs' percent
-    /// (ADR-111).
+    /// A damage, healing or summoned amount from the side's hero: base × (10 + Spell Power) / 10, with its specialty and its elemental orbs' percent
+    /// (ADR-111); from a creature caster (<paramref name="creaturePower"/>) its own Spell Power and nothing else.
     /// </summary>
-    public static int Amount(BattleState battle, BattleSide side, KnownSpell known)
+    public static int Amount(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
-        var amount = (long)known.Spell.Effect!.Amount * (10 + SpellPower(battle, side)) / 10;
-        if (battle.Participant(side).Caster is { } caster)
+        var amount = (long)known.Spell.Effect!.Amount * (10 + (creaturePower ?? SpellPower(battle, side))) / 10;
+        if (creaturePower is null && battle.Participant(side).Caster is { } caster)
         {
             if (caster.Specialty == known.Spell.Id)
             {
@@ -190,14 +259,14 @@ public static class BattleMagic
     /// The last round a buff or curse lasts on the stack: the rest of this round plus its rounds × (10 + Spell Power) / 10, cut by the enemy hero's
     /// Spell resistance for a hostile spell (rounded up), at least 1; a spell for the battle lasts to its end.
     /// </summary>
-    public static int UntilRound(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit)
+    public static int UntilRound(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null)
     {
         if (known.Spell.Effect!.Rounds is not { } rounds)
         {
             return BattleEngine.MaxRounds;
         }
 
-        var duration = Math.Max(1, rounds * (10 + SpellPower(battle, side)) / 10);
+        var duration = Math.Max(1, rounds * (10 + (creaturePower ?? SpellPower(battle, side))) / 10);
         if (known.Spell.Effect.IsHostile && unit.Side != side)
         {
             var resistance = battle.Participant(unit.Side).Bonus.SpellResistancePercent;
@@ -205,5 +274,39 @@ public static class BattleMagic
         }
 
         return battle.Round + duration;
+    }
+
+    /// <summary>
+    /// What a summon calls (ADR-106, ADR-120): the first of its creatures the side has not summoned yet this battle (else the first), as many as
+    /// its health amount buys (at least 1), and where: an own summoned stack of that creature takes them, else the free placement nearest the
+    /// side's own edge and the field's middle row. Null when nothing fits.
+    /// </summary>
+    public static (CreatureDefinition Creature, int Count, BattleUnit? Joins, CellPosition At)? SummonPlacement(
+        BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null)
+    {
+        var effect = known.Spell.Effect!;
+        var summoned = battle.Units.Where(u => u.Side == side && u.IsSummoned).Select(u => u.Creature.Id).ToHashSet(StringComparer.Ordinal);
+        var id = effect.Summons.FirstOrDefault(c => !summoned.Contains(c)) ?? effect.Summons.FirstOrDefault();
+        if (id is null || !battle.Creatures.TryGet(id, out var creature))
+        {
+            return null;
+        }
+
+        var count = Math.Max(1, Amount(battle, side, known, creaturePower) / Math.Max(1, creature.Health));
+        if (battle.LivingUnitsOf(side).FirstOrDefault(u => u.IsSummoned && u.Creature.Id == id) is { } stack)
+        {
+            return (creature, count, stack, stack.Position);
+        }
+
+        var probe = new BattleUnit(0, side, creature, 1, -1, new CellPosition(0, 0));
+        var size = creature.Size.Cells();
+        var spot = Enumerable.Range(0, battle.Width - size + 1)
+            .SelectMany(x => Enumerable.Range(0, BattleState.Height - size + 1).Select(y => new CellPosition(x, y)))
+            .Where(p => BattleGrid.IsFree(battle, probe, p))
+            .OrderBy(p => side == BattleSide.Attacker ? p.X : battle.Width - size - p.X)
+            .ThenBy(p => Math.Abs(p.Y + (size / 2) - (BattleState.Height / 2))).ThenBy(p => p.Y)
+            .Select(p => (CellPosition?)p)
+            .FirstOrDefault();
+        return spot is { } at ? (creature, count, null, at) : null;
     }
 }

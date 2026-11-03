@@ -633,10 +633,21 @@ public partial class Main : Node3D
         }
     }
 
+    /// <summary>The hero whose Dimension Door waits for its tile (ADR-120): the next map click casts it there.</summary>
+    private HeroId? _doorHero;
+
     private void ClickTile(MapPosition tile)
     {
         var state = _session.State;
         var player = state.CurrentPlayer.Id;
+        if (_doorHero is { } caster)
+        {
+            _doorHero = null;
+            _world.PathPreview.Clear();
+            Report(_session.Execute(new CastAdventureSpellCommand(player, caster, Core.Domain.Magic.AdventureMagic.DimensionDoor, tile)));
+            return;
+        }
+
         if (state.HeroAt(tile) is { } clicked && clicked.Owner == player)
         {
             Select(clicked.Id, focus: false);
@@ -837,6 +848,7 @@ public partial class Main : Node3D
             AttackAction attack => new BattleAttackCommand(player, attack.Target, attack.From),
             ShootAction shoot => new BattleShootCommand(player, shoot.Target),
             ShootStructureAction structure => new BattleShootStructureCommand(player, structure.Structure),
+            AttackStructureAction hit => new BattleAttackStructureCommand(player, hit.Structure, hit.From),
             _ => null,
         };
         if (command is not null)
@@ -1067,6 +1079,11 @@ public partial class Main : Node3D
         _heroScreen = new HeroPanel { FullScreen = true };
         townLayer.AddChild(_heroScreen);
         _heroScreen.Bind(_session);
+        _heroScreen.DimensionDoorArmed += hero =>
+        {
+            _doorHero = hero;
+            _status.Text = $"Dimension Door: click a tile up to {Core.Domain.Magic.AdventureMagic.DimensionDoorRange} tiles away in a straight line.";
+        };
         _dwellingScreen = new DwellingPanel();
         townLayer.AddChild(_dwellingScreen);
         _dwellingScreen.Bind(_session);

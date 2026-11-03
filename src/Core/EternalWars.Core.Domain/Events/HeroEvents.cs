@@ -62,3 +62,9 @@ public sealed record HeroesMet(HeroId Hero, HeroId Other) : IEvent;
 /// (refog). The battle itself follows (<see cref="BattleStarted"/>), unless the defender has no army.
 /// </summary>
 public sealed record BattleTriggered(HeroId Attacker, HeroId Defender, bool IsAmbush) : IEvent;
+
+/// <summary>A hero cast an adventure spell (ADR-120): it paid <paramref name="Cost"/> mana and 500 movement points; what the spell does follows.</summary>
+public sealed record AdventureSpellCast(HeroId Hero, string Spell, MapPosition? Target, int Cost, int Mana, int MovementPoints) : IEvent;
+
+/// <summary>An area around <paramref name="Center"/> was revealed for <paramref name="Owner"/> (View Terrain, ADR-120).</summary>
+public sealed record AreaRevealed(PlayerId Owner, MapPosition Center, int Radius) : IEvent;

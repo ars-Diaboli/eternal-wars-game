@@ -33,7 +33,7 @@ public class SiegeTests
     {
         var fort = SiegeRules.Create(Fort);
         Assert.Equal(
-            [(SiegeStructureKind.Wall, 2), (SiegeStructureKind.Wall, 2), (SiegeStructureKind.Wall, 2), (SiegeStructureKind.Wall, 2), (SiegeStructureKind.Gate, 1)],
+            [(SiegeStructureKind.Wall, 2), (SiegeStructureKind.Wall, 2), (SiegeStructureKind.Wall, 2), (SiegeStructureKind.Wall, 2), (SiegeStructureKind.Gate, 100)],
             fort.Structures.Select(s => (s.Kind, s.Health)));
         Assert.Empty(fort.Moat);
 
@@ -206,10 +206,10 @@ public class SiegeTests
         battle.Add(Defender, TestBattle.Fixed("defender", 1), 1, 30, 2);
         battle.StartWith(ballista);
 
-        Assert.Null(battle.Engine.ShootStructure(5)); // the gate: 1 hit point, every shot hits at Expert
+        Assert.Null(battle.Engine.ShootStructure(5)); // the gate: a machine's hit breaks it (ADR-120), every shot hits at Expert
 
         var shots = battle.Events.OfType<SiegeStructureShot>().ToList();
-        Assert.Equal(new SiegeStructureShot(ballista.Id, 5, true, 1, 0), shots[0]);
+        Assert.Equal(new SiegeStructureShot(ballista.Id, 5, true, SiegeRules.GateHealth(1), 0), shots[0]);
         Assert.Equal((1, true), (shots[1].Structure, shots[1].Hit)); // then the next automatic target
         Assert.Equal(2, shots.Count);
         Assert.False(battle.State.Siege!.Find(5)!.IsStanding);

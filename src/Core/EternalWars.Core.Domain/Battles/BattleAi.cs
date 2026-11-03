@@ -42,6 +42,12 @@ internal static class BattleAi
         {
             return;
         }
+
+        // A creature caster casts when its spell is worth more than its own blow or shot this turn (ADR-120).
+        if (CreatureCast(battle, engine, unit, enemies))
+        {
+            return;
+        }
         if (BattleGrid.CanShootNow(battle, unit))
         {
             var shot = enemies
@@ -67,6 +73,11 @@ internal static class BattleAi
             return;
         }
 
+        if (BreakGate(battle, engine, unit, enemies))
+        {
+            return;
+        }
+
         // In a siege the defenders hold the walls: they fight what reaches them but do not go out (ADR-106).
         var holds = battle.Siege is not null && unit.Side == BattleSide.Defender;
         if (enemies.Count > 0 && !holds && Advance(battle, unit, enemies) is { } destination && engine.Move(destination) is null)
@@ -75,6 +86,38 @@ internal static class BattleAi
         }
 
         engine.Defend();
+    }
+
+    /// <summary>
+    /// A walking attacker in a siege with no way in to a stack it could fight (ADR-120): it hits the standing gate when it can reach it, else it
+    /// walks to the gate's bridge (the moat leaves the gate's rows open).
+    /// </summary>
+    private static bool BreakGate(BattleState battle, BattleEngine engine, BattleUnit unit, List<BattleUnit> enemies)
+    {
+        if (battle.Siege is not { } siege || unit.Creature.MovesFreely || SiegeRules.StructureAttackRefusal(battle, unit, siege.Gate.Id) is not null)
+        {
+            return false;
+        }
+
+        var reachable = enemies.Where(e => !e.InKeep && !e.IsMachine).ToList();
+        if (reachable.Count == 0 || BattleGrid.ApproachSteps(battle, unit, reachable).ContainsKey(unit.Position))
+        {
+            return false; // there is a way in already: walk it
+        }
+
+        var gate = siege.Gate;
+        if (BattleGrid.StructureAttackPositions(battle, unit, gate) is { Count: > 0 } spots)
+        {
+            return engine.AttackStructure(gate.Id, spots[0]) is null;
+        }
+
+        var fearsMoat = SiegeRules.FearsMoat(battle, unit.Side);
+        var closer = BattleGrid.Reachable(battle, unit)
+            .Where(r => !fearsMoat || !siege.InMoat(unit.RectAt(r.Key)))
+            .Select(r => (Position: r.Key, Length: r.Value, Gap: unit.RectAt(r.Key).GapTo(gate.Rect)))
+            .OrderBy(r => r.Gap).ThenBy(r => r.Length).ThenBy(r => r.Position.Y).ThenBy(r => r.Position.X)
+            .First();
+        return closer.Gap < unit.Rect.GapTo(gate.Rect) && engine.Move(closer.Position) is null;
     }
 
     private static long Score(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int penalty = 0)
@@ -95,7 +138,7 @@ internal static class BattleAi
         }
 
         (long Value, string? Spell, int? Target, CellPosition? Cell) best = (0, null, null, null);
-        foreach (var known in caster.Spells.Where(s => s.Spell.Effect is { Kind: Magic.SpellEffectKind.Damage }).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
+        foreach (var known in caster.Spells.Where(s => s.Spell.Effect is { Kind: Magic.SpellEffectKind.Damage or Magic.SpellEffectKind.Summon }).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
         {
             if (battle.ManaOf(side) < BattleMagic.Cost(battle, side, known))
             {
@@ -109,9 +152,7 @@ internal static class BattleAi
                     continue;
                 }
 
-                var value = BattleMagic.Reach(battle, side, known.Spell.Effect!, target, cell)
-                    .Where(u => BattleMagic.Affects(battle, side, known, u))
-                    .Sum(u => (u.Side == side ? -1 : 1) * Worth(u, BattleMagic.Damage(battle, side, known, u)));
+                var value = Value(battle, side, known, target, cell, null);
                 if (value > best.Value)
                 {
                     best = (value, known.Spell.Id, target, cell);
@@ -123,6 +164,78 @@ internal static class BattleAi
         {
             engine.Cast(side, spell, best.Target, best.Cell);
         }
+    }
+
+    /// <summary>
+    /// What a cast is worth (ADR-120): for damage, the creature value of the hit points it takes off enemy stacks less that of own stacks; for a
+    /// summon, the value of the creatures it calls; for healing, the value of the health it gives back; buffs and curses are not weighed (0).
+    /// </summary>
+    private static long Value(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower)
+    {
+        var effect = known.Spell.Effect!;
+        switch (effect.Kind)
+        {
+            case Magic.SpellEffectKind.Summon:
+                return BattleMagic.SummonPlacement(battle, side, known, creaturePower) is { } summon ? (long)summon.Count * summon.Creature.Value : 0;
+            case Magic.SpellEffectKind.Heal:
+                return target is { } id && battle.FindUnit(id) is { } wounded
+                    ? Worth(wounded, Math.Min(BattleMagic.Amount(battle, side, known, creaturePower), wounded.Creature.Health - wounded.TopHealth))
+                    : 0;
+            case Magic.SpellEffectKind.Damage:
+                return BattleMagic.Reach(battle, side, effect, target, cell)
+                    .Where(u => BattleMagic.Affects(battle, side, known, u))
+                    .Sum(u => (u.Side == side ? -1 : 1) * Worth(u, BattleMagic.Damage(battle, side, known, u, creaturePower)));
+            default:
+                return 0;
+        }
+    }
+
+    /// <summary>
+    /// A creature caster's turn (ADR-120): it casts the aim worth most when that beats its own best blow or shot now; a buff goes on the most
+    /// valuable own stack it works on when the caster has nothing to hit this turn.
+    /// </summary>
+    private static bool CreatureCast(BattleState battle, BattleEngine engine, BattleUnit unit, List<BattleUnit> enemies)
+    {
+        if (BattleMagic.CreatureSpell(unit) is not { Spell.Effect: { } effect } known)
+        {
+            return false;
+        }
+
+        var power = BattleMagic.CreatureSpellPower(unit);
+        var own = OwnBest(battle, unit, enemies);
+        IEnumerable<(int? Target, CellPosition? Cell)> aims = effect.Kind switch
+        {
+            Magic.SpellEffectKind.Heal or Magic.SpellEffectKind.Buff => battle.LivingArmyOf(unit.Side).OrderBy(u => u.Id).Select(u => ((int?)u.Id, (CellPosition?)null)),
+            _ => Aims(battle, unit.Side, effect),
+        };
+        (long Value, int? Target, CellPosition? Cell, bool Found) best = (0, null, null, false);
+        foreach (var (target, cell) in aims)
+        {
+            if (BattleMagic.CreatureCastRefusal(battle, unit, target, cell) is not null)
+            {
+                continue;
+            }
+
+            var value = effect.Kind == Magic.SpellEffectKind.Buff
+                ? (own > 0 || battle.FindUnit(target!.Value)!.Spells.Any(s => s.Spell == known.Spell.Id) ? 0 : (long)battle.FindUnit(target!.Value)!.Count * battle.FindUnit(target.Value)!.Creature.Value)
+                : Value(battle, unit.Side, known, target, cell, power);
+            if (value > best.Value)
+            {
+                best = (value, target, cell, true);
+            }
+        }
+
+        return best.Found && (effect.Kind == Magic.SpellEffectKind.Buff || best.Value > own) && engine.CreatureCast(best.Target, best.Cell) is null;
+    }
+
+    /// <summary>The unit's own best shot or blow this turn, as the value of the hit points it would take off; 0 when it cannot hit anything.</summary>
+    private static long OwnBest(BattleState battle, BattleUnit unit, List<BattleUnit> enemies)
+    {
+        var shots = BattleGrid.CanShootNow(battle, unit)
+            ? enemies.Where(e => BattleGrid.CanShoot(battle, unit, e, out _)).Select(e => Score(battle, unit, e, isRanged: true, BattleGrid.RangedPenaltyEighths(battle, unit, e)))
+            : [];
+        var blows = enemies.Where(e => BattleGrid.AttackPositions(battle, unit, e).Count > 0).Select(e => Score(battle, unit, e, isRanged: false));
+        return shots.Concat(blows).DefaultIfEmpty(0).Max();
     }
 
     /// <summary>Where a spell may be aimed: each enemy stack, the centre of each enemy stack for an area, or nowhere for a side or the field.</summary>
@@ -157,9 +270,17 @@ internal static class BattleAi
     /// </summary>
     private static CellPosition? SiegeAdvance(BattleState battle, BattleUnit unit, List<BattleUnit> enemies)
     {
-        var steps = BattleGrid.ApproachSteps(battle, unit, enemies.Where(e => !e.IsMachine || enemies.All(x => x.IsMachine)));
+        // The keep's stack cannot be reached in melee (ADR-120): walk for the others while there are any.
+        var reachable = enemies.Where(e => !e.InKeep || enemies.All(x => x.InKeep)).ToList();
+        var steps = BattleGrid.ApproachSteps(battle, unit, reachable.Where(e => !e.IsMachine || reachable.All(x => x.IsMachine)));
         if (!steps.TryGetValue(unit.Position, out var now))
         {
+            // No way in yet: hit the gate when it can be reached (ADR-120), else close up to it over the bridge.
+            if (SiegeRules.StructureAttackRefusal(battle, unit, battle.Siege!.Gate.Id) is null)
+            {
+                return null; // Act hits the gate before it would advance
+            }
+
             // No way in yet: close up to the moat, not into it.
             var nearest = enemies.OrderBy(e => unit.Rect.GapTo(e.Rect)).ThenBy(e => e.Id).First();
             var fearsMoat = SiegeRules.FearsMoat(battle, unit.Side);

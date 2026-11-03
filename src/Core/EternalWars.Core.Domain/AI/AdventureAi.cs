@@ -61,6 +61,11 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
     public int Refused { get; private set; }
 
+    /// <summary>The refused commands with the game's reasons, for tuning (<c>sim game</c> prints them).</summary>
+    public IReadOnlyList<string> Refusals => _refusals;
+
+    private readonly List<string> _refusals = [];
+
     /// <summary>Whether the current turn is the AI's to play.</summary>
     public bool IsMyTurn => _state.IsStarted && !_state.IsOver && (controlHumanSlots || !_state.CurrentPlayer.IsHuman);
 
@@ -139,6 +144,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         if (!result.IsAccepted)
         {
             Refused++;
+            _refusals.Add($"day {_state.Date.AbsoluteDay}: {command}: {result.Error}");
         }
 
         return result;
@@ -457,6 +463,11 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
             var creature = town.DwellingLevel(line.Id) >= 2 ? line.UpgradesTo! : line.Id;
             var target = hero is not null && hero.Army.CanAccept(creature) ? hero.Id : (HeroId?)null;
+            if (target is null && !town.Garrison.CanAccept(creature))
+            {
+                continue; // no room anywhere (a garrison hero's stacks can fill all seven slots)
+            }
+
             Buy(player, town, line, target, reserve, town.AvailableOf(line.Id));
         }
     }
@@ -731,6 +742,11 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 return true;
             }
 
+            if (PortalHome(player, hero))
+            {
+                continue;
+            }
+
             var target = ChooseTarget(hero, failed);
             if (target is null)
             {
@@ -746,6 +762,28 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Town Portal home (ADR-120): when the town it would take the hero to is threatened by an enemy the garrison alone cannot hold but the two
+    /// together can, and the hero cannot walk there today.
+    /// </summary>
+    private bool PortalHome(PlayerId player, Hero hero)
+    {
+        if (Magic.AdventureMagic.Refusal(_state, hero, Magic.AdventureMagic.TownPortal, null) is not null
+            || Magic.AdventureMagic.PortalTown(_state, hero) is not { } town)
+        {
+            return false;
+        }
+
+        var danger = Danger(player, town.VisitPosition);
+        if (danger == 0 || Holds(ArmyPower(town.Garrison), danger) || !Holds(ArmyPower(hero.Army) + ArmyPower(town.Garrison), danger)
+            || session.Movement.FindPath(hero.Id, town.VisitPosition) is { } path && path.TotalCost <= hero.MovementPoints)
+        {
+            return false;
+        }
+
+        return Execute(new CastAdventureSpellCommand(player, hero.Id, Magic.AdventureMagic.TownPortal)).IsAccepted;
     }
 
     /// <summary>A hero standing on a map dwelling buys what it can afford (keeping a third of the gold) into its army (ADR-054).</summary>
@@ -1264,6 +1302,11 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 case Deposit deposit when Spare(owner).CanAfford(deposit.Price) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     var mineYield = _state.ObjectCatalog.Get(deposit.Definition.Becomes!);
                     yield return new(visit, (8 * mineYield.DailyYield * GoldValue(mineYield.Resource!.Value, 1)) - (0.5 * Value(deposit.Price)), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case Shrine { Spell: { } taught } shrine when !hero.Spells.ContainsKey(taught) && _state.Spells.TryGet(taught, out var shrineSpell)
+                                                          && Magic.MagicRules.CanLearn(hero, shrineSpell) && Plausible(GuardPower(visit)) && visit != hero.Position:
+                    // A spell it can learn (ADR-120): worth more the higher its level.
+                    yield return new(visit, 400 * shrine.SpellLevel, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case KeymasterTent tent when !_state.GetPlayer(owner).Keys.Contains(tent.Colour) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     // The key opens the border posts of its colour (ADR-071): worth most once one is known to bar the way.

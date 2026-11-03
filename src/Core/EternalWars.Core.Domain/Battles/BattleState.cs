@@ -19,7 +19,7 @@ public sealed class BattleUnit
         (Width, Height) = machine is { } kind ? WarMachines.Footprint(kind) : (creature.Size.Cells(), creature.Size.Cells());
         TopHealth = creature.Health;
         ShotsLeft = creature.Shots;
-        CastsLeft = new Dictionary<string, int>(creature.SpellCasts, StringComparer.Ordinal);
+        MutableCastsLeft = new Dictionary<string, int>(creature.SpellCasts, StringComparer.Ordinal);
     }
 
     public int Id { get; }
@@ -61,8 +61,19 @@ public sealed class BattleUnit
 
     public int ShotsLeft { get; internal set; }
 
-    /// <summary>Spell id → casts left this battle (Caster capability; used once magic exists).</summary>
-    public IReadOnlyDictionary<string, int> CastsLeft { get; private init; }
+    /// <summary>The creature table's caster spell id → casts left this battle (Caster capability, ADR-120).</summary>
+    public IReadOnlyDictionary<string, int> CastsLeft => MutableCastsLeft;
+
+    internal Dictionary<string, int> MutableCastsLeft { get; private init; }
+
+    /// <summary>Called by a spell (ADR-106, ADR-120): it vanishes when the battle ends, is nobody's loss and is worth no experience.</summary>
+    public bool IsSummoned { get; internal init; }
+
+    /// <summary>Rooted where it was called (Awaken the Grove's treants): it never moves, but fights what stands next to it.</summary>
+    public bool IsRooted { get; internal init; }
+
+    /// <summary>Whether it stays where it stands this battle: rooted, or the keep's stack while the keep stands.</summary>
+    public bool IsFixed => IsRooted || InKeep;
 
     public bool IsAlive => Count > 0;
 
@@ -86,6 +97,12 @@ public sealed class BattleUnit
     /// <summary>Terror (ADR-067): the unit's next action is lost.</summary>
     public bool LosesNextAction { get; internal set; }
 
+    /// <summary>
+    /// The defenders' shooting stack in the keep (ADR-106 g, ADR-120): while the keep stands it does not move, cannot be attacked in melee and shots
+    /// at it take the keep's 1/2 cover.
+    /// </summary>
+    public bool InKeep { get; internal set; }
+
     /// <summary>Buffs and curses on the stack (ADR-110), oldest first; a spell cast again replaces its earlier effect.</summary>
     public IReadOnlyList<ActiveSpell> Spells => MutableSpells;
 
@@ -104,13 +121,16 @@ public sealed class BattleUnit
         Count = Count,
         TopHealth = TopHealth,
         ShotsLeft = ShotsLeft,
-        CastsLeft = new Dictionary<string, int>(CastsLeft, StringComparer.Ordinal),
+        MutableCastsLeft = new Dictionary<string, int>(CastsLeft, StringComparer.Ordinal),
+        IsSummoned = IsSummoned,
+        IsRooted = IsRooted,
         HasRetaliated = HasRetaliated,
         IsDefending = IsDefending,
         HitsThisRound = HitsThisRound,
         RoundMorale = RoundMorale,
         RageAttack = RageAttack,
         LosesNextAction = LosesNextAction,
+        InKeep = InKeep,
         MutableSpells = [.. MutableSpells],
     };
 }
@@ -246,6 +266,9 @@ public sealed class BattleState
     /// <summary>Quick combat: the AI commands both sides until the end.</summary>
     public bool AutoResolve { get; internal set; }
 
+    /// <summary>The game's creatures, for what spells summon (ADR-120).</summary>
+    internal CreatureCatalog Creatures { get; init; } = CreatureCatalog.Default;
+
     public BattleSide? Winner { get; internal set; }
 
     public BattleEndReason? EndReason { get; internal set; }
@@ -291,6 +314,7 @@ public sealed class BattleState
             EndReason = EndReason,
             PendingStacks = PendingStacks,
             Siege = Siege?.Copy(),
+            Creatures = Creatures,
         };
         copy._units.AddRange(_units.Select(u => u.Copy()));
         copy._obstacles.AddRange(_obstacles);

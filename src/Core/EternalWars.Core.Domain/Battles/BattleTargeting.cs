@@ -29,6 +29,18 @@ public static class BattleTargeting
             return new ShootStructureAction(structure.Id);
         }
 
+        // An attacking stack pointed at the standing gate hits it (ADR-120), from the reachable side nearest the pointer.
+        if (battle.Siege is { } siege && siege.Gate is { IsStanding: true } gate && gate.Rect.Contains(cell)
+            && SiegeRules.StructureAttackRefusal(battle, active, gate.Id) is null)
+        {
+            var spot = BattleGrid.StructureAttackPositions(battle, active, gate)
+                .Select((p, i) => (Placement: p, Order: i, Distance: Distance(active.RectAt(p), x, y)))
+                .OrderBy(c => c.Distance).ThenBy(c => c.Order)
+                .Select(c => (CellPosition?)c.Placement)
+                .FirstOrDefault();
+            return spot is { } stand ? new AttackStructureAction(gate.Id, stand) : null;
+        }
+
         if (battle.UnitAt(cell) is { } unit)
         {
             if (unit.Side == active.Side)

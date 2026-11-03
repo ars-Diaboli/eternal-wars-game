@@ -46,6 +46,11 @@ public static class MapValidator
                 issues.Add(new(IssueSeverity.Warning, $"Hero {hero.Name} has no army and cannot fight.", hero.Position));
             }
 
+            if (!hero.HasSpellBook && hero.Spells.Count > 0)
+            {
+                issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} knows spells but has no spell book (ADR-120).", hero.Position));
+            }
+
             if (hero.Definition is { } type && !scenario.HeroRoster.Contains(type))
             {
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} is of unknown type '{type}'.", hero.Position));

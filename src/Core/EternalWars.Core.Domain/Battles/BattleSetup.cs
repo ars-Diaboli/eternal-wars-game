@@ -48,6 +48,11 @@ public static class BattleSetup
             return "War machines keep their column.";
         }
 
+        if (unit.InKeep)
+        {
+            return $"{unit.Creature.Name} stays in the keep.";
+        }
+
         if (!battle.IsInDeploymentZone(unit.RectAt(to)))
         {
             return $"{unit.Creature.Name} must stand within the first {battle.DeploymentColumns} columns.";
@@ -90,6 +95,34 @@ public static class BattleSetup
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
             SupplyShots(battle, side);
+        }
+
+        ManKeep(battle);
+    }
+
+    /// <summary>
+    /// In a siege with a keep (Citadel) the defenders' strongest shooting stack takes it (ADR-106 g, ADR-120): it stands behind the walls next to
+    /// the keep, at the field's back edge by the gate rows, and stays there while the keep stands.
+    /// </summary>
+    private static void ManKeep(BattleState battle)
+    {
+        if (battle.Siege is not { KeepStands: true }
+            || battle.LivingArmyOf(BattleSide.Defender).Where(u => u.Creature.IsRanged)
+                .OrderByDescending(u => (long)u.Count * u.Creature.Value).ThenBy(u => u.Id).FirstOrDefault() is not { } shooter)
+        {
+            return;
+        }
+
+        var spot = Enumerable.Range(SiegeRules.WallX + 1, battle.Width - shooter.Width - SiegeRules.WallX)
+            .SelectMany(x => Enumerable.Range(0, BattleState.Height - shooter.Height + 1).Select(y => new CellPosition(x, y)))
+            .Where(p => p == shooter.Position || BattleGrid.IsFree(battle, shooter, p))
+            .OrderBy(p => battle.Width - shooter.Width - p.X).ThenBy(p => Math.Abs(p.Y - SiegeRules.GateY)).ThenBy(p => p.Y)
+            .Select(p => (CellPosition?)p)
+            .FirstOrDefault();
+        if (spot is { } at)
+        {
+            shooter.Position = at;
+            shooter.InKeep = true;
         }
     }
 

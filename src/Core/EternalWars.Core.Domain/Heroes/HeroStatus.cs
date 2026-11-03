@@ -13,6 +13,12 @@ public enum HeroStatusKind
 
     /// <summary>Flat movement points added to the daily allowance (<see cref="MovementAllowance"/>), e.g. the Stables for the rest of the week.</summary>
     Movement,
+
+    /// <summary>The terrains whose bit is set in the value are native to the hero's army (Pathfinder's Call, Ashwalk; ADR-120).</summary>
+    NativeTerrain,
+
+    /// <summary>Changes nothing: the source (a spell) was used and waits until the status ends (Dimension Door once a day; ADR-120).</summary>
+    Cast,
 }
 
 /// <summary>When a temporary hero status ends (ADR-068).</summary>

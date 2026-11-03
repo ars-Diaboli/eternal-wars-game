@@ -177,6 +177,11 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitHealed>(events, OnHealed);
         this.SubscribeWhileInTree<SiegeStructureShot>(events, OnStructureShot);
         this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(events, OnSiegeDamaged);
+        this.SubscribeWhileInTree<SiegeStructureDamaged>(events, OnStructureDamaged);
+        this.SubscribeWhileInTree<BattleUnitSummoned>(events, OnSummoned);
+        this.SubscribeWhileInTree<BattleUnitReborn>(events, OnReborn);
+        this.SubscribeWhileInTree<BattleCreatureCast>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} cast {SpellName(e.Spell)} ({e.CastsLeft} cast(s) left).")));
+        this.SubscribeWhileInTree<BattleUnitLeftKeep>(events, e => Step(null, () => Narrate($"The keep falls: {NameOf(e.Unit)} come out of it.")));
         this.SubscribeWhileInTree<BattleSpellCast>(events, e => Step(null, () => Narrate($"{SideName(e.Side)} casts {SpellName(e.Spell)} ({e.Cost} mana, {e.Mana} left).")));
         this.SubscribeWhileInTree<BattleUnitSpellDamaged>(events, OnSpellDamaged);
         this.SubscribeWhileInTree<BattleSpellApplied>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} until round {e.UntilRound}.")));
@@ -269,6 +274,14 @@ public partial class BattleView3D : Node3D
                 break;
             case ShootStructureAction aim when _structures.TryGetValue(aim.Structure, out var structure):
                 ShowOverlay(_target, structure.Rect, ShootColor);
+                break;
+            case AttackStructureAction hit when _structures.TryGetValue(hit.Structure, out var gate):
+                ShowOverlay(_target, gate.Rect, AttackColor);
+                if (hit.From is { } stand && stand != active.Position)
+                {
+                    ShowOverlay(_ghost, active.RectAt(stand), MoveColor);
+                }
+
                 break;
         }
     }
@@ -491,6 +504,34 @@ public partial class BattleView3D : Node3D
             });
     }
 
+    /// <summary>A stack's blow at the gate or Earthquake's shake of a wall section (ADR-120): a shudder; a destroyed structure falls to rubble.</summary>
+    private void OnStructureDamaged(SiegeStructureDamaged e)
+    {
+        if (!_structures.TryGetValue(e.Structure, out var structure))
+        {
+            return;
+        }
+
+        var name = StructureName(structure.Kind);
+        var who = e.Unit is { } unit ? NameOf(unit) : SpellName(e.Spell ?? string.Empty);
+        var line = e.Health == 0 ? $"{who} destroy the {name}." : $"{who} hit the {name}: {e.Damage} damage, {e.Health} hit point(s) left.";
+        Step(
+            t =>
+            {
+                t.TweenProperty(structure.Node, "scale", new Vector3(1.06f, 0.94f, 1.06f), 0.06f);
+                t.TweenProperty(structure.Node, "scale", Vector3.One, 0.08f);
+            },
+            () =>
+            {
+                if (e.Health == 0)
+                {
+                    Ruin(structure.Node);
+                }
+
+                Narrate(line);
+            });
+    }
+
     /// <summary>A tower's shot at a stack or the moat's damage to one that entered it (ADR-106).</summary>
     private void OnSiegeDamaged(BattleUnitSiegeDamaged e)
     {
@@ -601,6 +642,47 @@ public partial class BattleView3D : Node3D
                 t.TweenCallback(Callable.From(text.QueueFree));
             },
             () => Narrate(line));
+    }
+
+    /// <summary>A summon's creatures appear at their placement, or an own summoned stack grows (ADR-120).</summary>
+    private void OnSummoned(BattleUnitSummoned e)
+    {
+        var info = e.Unit;
+        Step(null, () =>
+        {
+            if (!_units.TryGetValue(info.Unit, out var view))
+            {
+                view = new BattleUnitView();
+                view.Bind(info.Unit, info.Side, _session.State.Creatures.Get(info.Creature),
+                    info.Count, info.Width, info.Height, SideColor(info.Side));
+                view.Position = BattleSpace.Center(info.Rect);
+                _field.AddChild(view);
+                _units[info.Unit] = view;
+                _planned[info.Unit] = info.Rect;
+            }
+
+            view.SetCount(info.Count);
+            Narrate($"{SpellName(e.Spell)} calls {e.Added} {view.Creature.Name} for the battle.");
+        });
+    }
+
+    /// <summary>A Phoenix rises from its ashes (ADR-120).</summary>
+    private void OnReborn(BattleUnitReborn e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var view))
+        {
+            return;
+        }
+
+        Step(
+            t => t.TweenProperty(view, "scale", Vector3.One, 0.3f),
+            () =>
+            {
+                view.Visible = true;
+                view.Scale = Vector3.One;
+                view.SetCount(e.Count);
+                Narrate($"{view.Creature.Name} rise from the ashes: {e.Count} of them.");
+            });
     }
 
     private void OnDied(BattleUnitDied e)

@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
@@ -41,7 +42,9 @@ public static class MapConverter
                     h.Knowledge == 0 ? null : h.Knowledge,
                     h.WarMachines.SetEquals(WarMachines.StartingSet) ? null : h.WarMachines.Order().ToList(),
                     h.Artifacts.AllWorn.Any() ? h.Artifacts.AllWorn.Select(w => w.Id).ToList() : null,
-                    h.Artifacts.Backpack.Count == 0 ? null : h.Artifacts.Backpack.ToList()))
+                    h.Artifacts.Backpack.Count == 0 ? null : h.Artifacts.Backpack.ToList(),
+                    h.HasSpellBook,
+                    h.HasSpellBook ? h.Spells.Keys.ToList() : null))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
         };
@@ -200,7 +203,7 @@ public static class MapConverter
             return Hero.Create(
                 new HeroId(h.Id), new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level), ToArmy(h, creatures),
                 h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge, h.WarMachines,
-                h.Artifacts, h.Backpack, artifacts);
+                h.Artifacts, h.Backpack, artifacts, h.SpellBook, h.Spells);
         }
         catch (Exception e) when (e is KeyNotFoundException or ArgumentOutOfRangeException or InvalidOperationException)
         {
@@ -373,6 +376,10 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
                 Question = sphinx.Riddle?.Question, Answer = sphinx.Riddle?.Answer, Wrong1 = sphinx.Riddle?.Wrong1, Wrong2 = sphinx.Riddle?.Wrong2,
+            },
+            Shrine shrine => new ShrineDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Spell = shrine.Spell,
             },
             WitchHut hut => new WitchHutDocument
             {
@@ -584,6 +591,8 @@ public static class MapConverter
                 WitchHutDocument { Skills: { Count: not 0 and not WitchHut.SkillCount } } => throw new FormatException($"A witch hut has {WitchHut.SkillCount} skills, or none to roll."),
                 WitchHutDocument { Skills: { } skills } when skills.Any(s => !BuiltInSkills.Contains(s)) => throw new FormatException("A witch hut names an unknown skill."),
                 WitchHutDocument hut => new WitchHut(id, definition, position, hut.Skills?.Select(BuiltInSkills.Resolve).ToList()),
+                ShrineDocument shrine when ShrineRules.SpellRefusal(SpellCatalog.Default, definition.Amount, shrine.Spell) is { } wrong => throw new FormatException($"A shrine: {wrong}"),
+                ShrineDocument shrine => new Shrine(id, definition, position, shrine.Spell),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
                 PandorasBoxDocument box => ToBox(box, id, definition, position, creatures),
                 DepositDocument => new Deposit(id, definition, position),
