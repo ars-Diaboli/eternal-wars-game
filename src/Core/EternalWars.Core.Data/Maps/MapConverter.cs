@@ -466,6 +466,7 @@ public static class MapConverter
                 Available = town.Available.Count == 0 ? null : Sorted(town.Available),
                 Garrison = town.Garrison.IsEmpty ? null : town.Garrison.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
                 LastBuilt = town.LastBuilt?.AbsoluteDay,
+                GuildSpells = town.FixedGuildSpells.Count == 0 ? null : town.FixedGuildSpells.ToList(),
             },
             _ => throw new NotSupportedException($"Cannot save {mapObject.GetType().Name}."),
         };
@@ -647,8 +648,13 @@ public static class MapConverter
             throw new FormatException($"Town {town.Id} has an invalid building or dwelling level.");
         }
 
+        if (town.GuildSpells is { } spells && MagicRules.GuildSpellsProblem(SpellCatalog.Default, definition.Town!, spells) is { } wrong)
+        {
+            throw new FormatException($"Town {town.Id} has wrong guild spells: {wrong}");
+        }
+
         return new Town(
             id, definition, position, town.Owner is { } owner ? new PlayerId(owner) : null, town.Name, town.Buildings, town.Dwellings,
-            town.Available, ToArmy(town.Garrison, $"Town {town.Id}", creatures), town.LastBuilt is { } day ? new GameDate(day) : null);
+            town.Available, ToArmy(town.Garrison, $"Town {town.Id}", creatures), town.LastBuilt is { } day ? new GameDate(day) : null, town.GuildSpells);
     }
 }

@@ -133,14 +133,29 @@ public static class BattleMagic
         switch (effect.Reach)
         {
             case SpellReach.Stack:
-                if (target is not { } id || battle.FindUnit(id) is not { IsAlive: true } unit)
+                if (target is not { } id || battle.FindUnit(id) is not { } unit || !(unit.IsAlive || IsFallen(battle, side, effect, unit)))
                 {
                     return $"{known.Spell.Name} needs a living stack to aim at.";
                 }
 
-                if ((unit.Side != side) != effect.IsHostile)
+                if (!effect.EitherSide && (unit.Side != side) != effect.IsHostile)
                 {
                     return effect.IsHostile ? $"{known.Spell.Name} is cast on enemy stacks." : $"{known.Spell.Name} is cast on own stacks.";
+                }
+
+                if (unit.Side != side && unit.Has(SpellStatus.Unseen))
+                {
+                    return $"{unit.Creature.Name} cannot be seen.";
+                }
+
+                if (effect.Kind == SpellEffectKind.Revive && Missing(unit) == 0)
+                {
+                    return $"{unit.Creature.Name} has nothing to revive.";
+                }
+
+                if (effect.Kind == SpellEffectKind.Dispel && Dispelled(side, effect, unit).Count == 0)
+                {
+                    return $"{unit.Creature.Name} has no spells {known.Spell.Name} takes off.";
                 }
 
                 return Affects(battle, side, known, unit) ? null : $"{known.Spell.Name} has no effect on {unit.Creature.Name}.";
@@ -161,9 +176,88 @@ public static class BattleMagic
             (var a, var d) => a ?? d,
         };
 
-    /// <summary>The square an area spell covers around its centre cell (the same size whatever the targets' sizes, ADR-072, MAG-11).</summary>
-    public static CellRect Area(SpellEffect effect, CellPosition centre) =>
-        new(centre.X - (effect.AreaSize / 2), centre.Y - (effect.AreaSize / 2), effect.AreaSize, effect.AreaSize);
+    /// <summary>
+    /// The square an area spell covers around its centre cell (the same size whatever the targets' sizes, ADR-072, MAG-11); for a column spell
+    /// (ADR-123) the columns around the cell's, the field's whole height.
+    /// </summary>
+    public static CellRect Area(SpellEffect effect, CellPosition centre) => effect.Column
+        ? new(centre.X - (effect.AreaSize / 2), 0, effect.AreaSize, BattleState.Height)
+        : new(centre.X - (effect.AreaSize / 2), centre.Y - (effect.AreaSize / 2), effect.AreaSize, effect.AreaSize);
+
+    /// <summary>
+    /// An own stack destroyed in this battle that a <c>fallen</c> revive may bring back (ADR-123): not a war machine or a summoned stack, and its
+    /// place is free.
+    /// </summary>
+    public static bool IsFallen(BattleState battle, BattleSide side, SpellEffect effect, BattleUnit unit) =>
+        effect is { Kind: SpellEffectKind.Revive, Fallen: true } && !unit.IsAlive && unit.Side == side && !unit.IsMachine && !unit.IsSummoned
+        && BattleGrid.IsFree(battle, unit, unit.Position);
+
+    /// <summary>The health a revive can give the stack: its top creature's wounds and its dead since the battle started.</summary>
+    public static long Missing(BattleUnit unit) => unit.IsMachine
+        ? 0
+        : ((long)unit.InitialCount * unit.Creature.Health) - unit.TotalHealth;
+
+    /// <summary>
+    /// The spells a dispel takes off the stack (ADR-123): from an own stack the enemy's (Purge), from an enemy stack those its own side cast
+    /// (Unravel), from any stack all of them (Dispel).
+    /// </summary>
+    public static IReadOnlyList<ActiveSpell> Dispelled(BattleSide side, SpellEffect effect, BattleUnit unit) =>
+        effect.Dispels == DispelScope.Any ? [.. unit.Spells] : [.. unit.Spells.Where(s => s.Caster != side)];
+
+    /// <summary>
+    /// The damage a damage spell deals, stack by stack, in order (ADR-123): each stack in its reach it affects; then for <c>splash</c> the enemy stacks
+    /// next to each target at that percent; then for <c>chain</c> the nearest stack not yet hit (enemies only with <c>spare-own</c>), each jump at
+    /// half the damage of the one before. A stack is hit once.
+    /// </summary>
+    public static IReadOnlyList<(BattleUnit Unit, int Damage)> DamagePlan(
+        BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower = null)
+    {
+        var effect = known.Effect!;
+        var plan = new List<(BattleUnit Unit, int Damage)>();
+        var hit = new HashSet<BattleUnit>();
+        foreach (var unit in Reach(battle, side, known, target, cell).Where(u => Affects(battle, side, known, u)))
+        {
+            plan.Add((unit, Damage(battle, side, known, unit, creaturePower)));
+            hit.Add(unit);
+        }
+
+        if (effect.SplashPercent > 0)
+        {
+            foreach (var (unit, _) in plan.ToList())
+            {
+                foreach (var next in battle.LivingUnitsOf(side.Opponent()).Where(u => !hit.Contains(u) && u.Rect.IsAdjacentTo(unit.Rect)).OrderBy(u => u.Id))
+                {
+                    if (Affects(battle, side, known, next))
+                    {
+                        plan.Add((next, Math.Max(1, Damage(battle, side, known, next, creaturePower) * effect.SplashPercent / 100)));
+                        hit.Add(next);
+                    }
+                }
+            }
+        }
+
+        var last = plan.Count > 0 ? plan[0].Unit : null;
+        var percent = 100;
+        for (var jump = 0; jump < effect.Chain && last is not null; jump++)
+        {
+            percent /= 2;
+            var from = last;
+            last = battle.LivingUnits
+                .Where(u => !hit.Contains(u) && !(effect.SpareOwn && u.Side == side) && Affects(battle, side, known, u))
+                .OrderBy(u => u.Rect.DistanceTo(from.Rect)).ThenBy(u => u.Id)
+                .FirstOrDefault();
+            if (last is not null)
+            {
+                plan.Add((last, Math.Max(1, Damage(battle, side, known, last, creaturePower) * percent / 100)));
+                hit.Add(last);
+            }
+        }
+
+        return plan;
+    }
+
+    /// <summary>The creatures a slay takes from the stack (ADR-123): its percent of the count, at least 1.</summary>
+    public static int Slain(SpellEffect effect, BattleUnit unit) => Math.Max(1, unit.Count * effect.Amount / 100);
 
     /// <summary>
     /// The stacks in the spell's reach at its rank, by id: the target, and for <c>targets N</c> (ADR-122) the N − 1 other stacks of its side nearest
@@ -175,8 +269,8 @@ public static class BattleMagic
         var effect = known.Effect!;
         IEnumerable<BattleUnit> units = effect.Reach switch
         {
-            SpellReach.Stack => battle.FindUnit(target!.Value) is { IsAlive: true } unit ? [unit, .. Others(unit)] : [],
-            SpellReach.Area => battle.LivingUnits.Where(u => u.Rect.Intersects(Area(effect, cell!.Value))),
+            SpellReach.Stack => battle.FindUnit(target!.Value) is { } unit && (unit.IsAlive || IsFallen(battle, side, effect, unit)) ? [unit, .. Others(unit)] : [],
+            SpellReach.Area => battle.LivingUnits.Where(u => u.Rect.Intersects(Area(effect, cell!.Value)) && !(effect.Ring && u.Rect.Contains(cell.Value))),
             SpellReach.Side => battle.LivingUnitsOf(effect.IsHostile ? side.Opponent() : side),
             _ => battle.LivingUnits,
         };
@@ -184,7 +278,7 @@ public static class BattleMagic
 
         IEnumerable<BattleUnit> Others(BattleUnit aimed) => effect.Targets <= 1
             ? []
-            : battle.LivingUnitsOf(aimed.Side).Where(u => u != aimed && Affects(battle, side, known, u))
+            : battle.LivingUnitsOf(aimed.Side).Where(u => u != aimed && Affects(battle, side, known, u) && (effect.Kind != SpellEffectKind.Revive || Missing(u) > 0))
                 .OrderBy(u => u.Rect.DistanceTo(aimed.Rect)).ThenBy(u => u.Id).Take(effect.Targets - 1);
     }
 
@@ -203,6 +297,19 @@ public static class BattleMagic
             return effect.Kind == SpellEffectKind.Damage && effect.Filter is SpellFilter.None or SpellFilter.Ground;
         }
 
+        // Wards on the stack (ADR-123): Stasis keeps every spell but a dispel off; Anti-Magic every spell up to its level, Shroud the enemy's;
+        // Oakheart the mind spells; Steadfast makes a stack fearless, so Terror does not take hold.
+        var wards = unit.SpellModifiers;
+        var enemySpell = unit.Side != side;
+        if ((wards.Has(SpellStatus.Stasis) && effect.Kind != SpellEffectKind.Dispel)
+            || spell.Level <= wards.ImmuneLevel
+            || (enemySpell && spell.Level <= wards.ShroudLevel)
+            || (wards.Has(SpellStatus.WardMind) && spell.HasTag(SpellTags.Mind))
+            || (wards.Has(SpellStatus.Fearless) && effect.Modifiers.Has(SpellStatus.NoAttack)))
+        {
+            return false;
+        }
+
         var fits = effect.Filter switch
         {
             SpellFilter.Living => !creature.HasTag(CreatureTags.Undead) && !creature.HasTag(CreatureTags.Construct),
@@ -218,8 +325,8 @@ public static class BattleMagic
             return false;
         }
 
-        var enemy = effect.IsHostile && unit.Side != side;
-        return !(enemy && (creature.ResistsSpell(spell.Level, known.Rank) || battle.Participant(unit.Side).Bonus.IsImmuneTo(spell.Tags)));
+        var enemy = (effect.IsHostile || effect.EitherSide) && enemySpell;
+        return !(enemy && ((creature.ResistsSpell(spell.Level, known.Rank) && !effect.Pierce) || battle.Participant(unit.Side).Bonus.IsImmuneTo(spell.Tags)));
     }
 
     /// <summary>
@@ -229,13 +336,19 @@ public static class BattleMagic
     public static int Damage(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null)
     {
         var spell = known.Spell;
-        long damage = Amount(battle, side, known, creaturePower);
+        var effect = known.Effect!;
+        if (effect.ExecutePercent > 0 && unit.TotalHealth * 100L < (long)unit.InitialCount * unit.Creature.Health * effect.ExecutePercent)
+        {
+            return unit.TotalHealth; // Harvest (ADR-123): a stack worn below the mark is destroyed
+        }
+
+        long damage = Amount(battle, side, known, creaturePower) + (unit.DamageDealt * effect.DebtPercent / 100);
         if (spell.HasTag(Holy) && (unit.Creature.HasTag(CreatureTags.Undead) || unit.Creature.HasTag(CreatureTags.Demon)))
         {
             damage *= 2;
         }
 
-        if (unit.Side != side)
+        if (unit.Side != side && !effect.Pierce)
         {
             damage = damage * (100 - battle.Participant(unit.Side).Bonus.SpellResistancePercent) / 100;
         }
@@ -248,9 +361,16 @@ public static class BattleMagic
     /// A damage, healing or summoned amount from the side's hero: base × (10 + Spell Power) / 10, with its specialty and its elemental orbs' percent
     /// (ADR-111); from a creature caster (<paramref name="creaturePower"/>) its own Spell Power and nothing else.
     /// </summary>
-    public static int Amount(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null)
+    public static int Amount(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null, string? bound = null) =>
+        Scaled(battle, side, known, known.Effect!.Amount, creaturePower, bound);
+
+    /// <summary>
+    /// A base number scaled like a spell's amount: × (10 + Spell Power) / 10, the hero's specialty and elemental orbs (the bound kind's element for
+    /// Bind Elemental, <paramref name="bound"/>); a creature caster only its own Spell Power.
+    /// </summary>
+    public static int Scaled(BattleState battle, BattleSide side, KnownSpell known, int baseAmount, int? creaturePower = null, string? bound = null)
     {
-        var amount = (long)known.Effect!.Amount * (10 + (creaturePower ?? SpellPower(battle, side))) / 10;
+        var amount = (long)baseAmount * (10 + (creaturePower ?? SpellPower(battle, side))) / 10;
         if (creaturePower is null && battle.Participant(side).Caster is { } caster)
         {
             if (caster.Specialty == known.Spell.Id)
@@ -258,7 +378,7 @@ public static class BattleMagic
                 amount = amount * (100 + (SpecialtyPercentPerLevel * caster.Level)) / 100;
             }
 
-            amount = amount * (100 + caster.ElementBonus(known.Spell)) / 100;
+            amount = amount * (100 + caster.ElementBonus(known.Spell, bound)) / 100;
         }
 
         return (int)Math.Min(int.MaxValue, amount);
@@ -273,6 +393,11 @@ public static class BattleMagic
         if (known.Effect!.Rounds is not { } rounds)
         {
             return BattleEngine.MaxRounds;
+        }
+
+        if (rounds == 0)
+        {
+            return battle.Round; // the rest of this round (Vigil, Fleetfoot, ADR-123), not lengthened
         }
 
         var duration = Math.Max(1, rounds * (10 + (creaturePower ?? SpellPower(battle, side))) / 10);
@@ -301,7 +426,7 @@ public static class BattleMagic
             return null;
         }
 
-        var count = Math.Max(1, Amount(battle, side, known, creaturePower) / Math.Max(1, creature.Health));
+        var count = Math.Max(1, Amount(battle, side, known, creaturePower, id) / Math.Max(1, creature.Health));
         if (battle.LivingUnitsOf(side).FirstOrDefault(u => u.IsSummoned && u.Creature.Id == id) is { } stack)
         {
             return (creature, count, stack, stack.Position);

@@ -52,3 +52,6 @@ Recorded so far:
   takes it in one hit): ADR-120 (2026-11-03), built.
 
 Still to decide: see [open-questions.md](open-questions.md) (the open questions by area).
+
+
+Skills - scouting : reveal additional information on enemy / environment - similar to homm3;

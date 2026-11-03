@@ -38,11 +38,12 @@ namespace EternalWars.Core.Data.Maps;
 /// complexity the map's starting resources stand for in the ranking; omitted = Normal; ADR-101). 27 = + Pandora's Boxes (<c>pandorasBox</c>:
 /// contents, an optional guard and message; ADR-100). 28 = + the team counts a game of the map may have (<c>minTeams</c>, <c>maxTeams</c>;
 /// omitted = no limit; ADR-117). 29 = + a hero's spell book and spells (<c>spellBook</c>, <c>spells</c>; omitted = the roster's) and shrines
-/// (<c>shrine</c>, an optional spell; ADR-120). Older versions still load (with the default events).
+/// (<c>shrine</c>, an optional spell; ADR-120). 30 = + a town's fixed mage guild spells (<c>guildSpells</c> on a town: spell ids of the town's
+/// school, at most 3 / 3 / 2 / 2 per level; omitted = all drawn when the game starts). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 29;
+    public const int CurrentFormatVersion = 30;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -485,4 +486,10 @@ public sealed record TownDocument : MapObjectDocument
 
     /// <summary>Absolute day of the town's last build (saved games; one build per day).</summary>
     public int? LastBuilt { get; init; }
+
+    /// <summary>
+    /// The spells the town's mage guild is fixed to teach (v30): spell ids of the town's school, at most 3 / 3 / 2 / 2 per spell level; the rest of
+    /// each level is drawn when the game starts. Omitted = everything drawn. The spell buildings of other schools always draw theirs.
+    /// </summary>
+    public IReadOnlyList<string>? GuildSpells { get; init; }
 }

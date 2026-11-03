@@ -148,5 +148,20 @@ public sealed record BattleSpellApplied(int Unit, string Spell, int UntilRound) 
 /// <summary>A stack in the spell's reach was not touched by it: immune, resisted, or not the kind it works on (ADR-110).</summary>
 public sealed record BattleSpellResisted(int Unit, string Spell) : IEvent;
 
-/// <summary>A buff or curse on a stack ran out as a round started (ADR-110).</summary>
+/// <summary>A buff or curse on a stack ran out as a round started (ADR-110), or ended early: Blind broken by a hit, Unseen by acting (ADR-123).</summary>
 public sealed record BattleSpellExpired(int Unit, string Spell) : IEvent;
+
+/// <summary>A dispel (<paramref name="By"/>) took a spell off a stack (ADR-123).</summary>
+public sealed record BattleSpellDispelled(int Unit, string Spell, string By) : IEvent;
+
+/// <summary>
+/// A stack got health back above its top creature (ADR-123): Resurrection, Animate Dead, Vampirism. <paramref name="Count"/> and
+/// <paramref name="TopHealth"/> are as they are now; a stack destroyed earlier stands again.
+/// </summary>
+public sealed record BattleUnitRevived(int Unit, string Spell, int Health, int Count, int TopHealth) : IEvent;
+
+/// <summary>A stack's turn passed under a spell that holds it (Blind, Stasis, ADR-123).</summary>
+public sealed record BattleUnitSpellbound(int Unit, string Spell) : IEvent;
+
+/// <summary>A spell's hit made the stack lose its next action (Holy Word III, Frost Bolt III, ADR-123).</summary>
+public sealed record BattleUnitStunned(int Unit, string Spell) : IEvent;

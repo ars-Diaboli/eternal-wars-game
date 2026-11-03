@@ -31,6 +31,51 @@ public enum SpellEffectKind
 
     /// <summary>A stack of town creatures (or Conflux elementals) for the battle (ADR-106, ADR-120): it vanishes afterwards and is worth no experience.</summary>
     Summon,
+
+    /// <summary>Health back to an own stack, its top creature first, then its dead up to its count at the start of the battle (Resurrection, ADR-123).</summary>
+    Revive,
+
+    /// <summary>Spells taken off stacks (Purge, Unravel, Dispel, ADR-123).</summary>
+    Dispel,
+
+    /// <summary>A percent of an enemy stack's creatures die outright, at least 1 (Final Reckoning, ADR-123).</summary>
+    Slay,
+}
+
+/// <summary>Whose spells a dispel takes off and from whom (ADR-123): <c>own</c> stacks lose the enemy's, <c>enemy</c> stacks lose their own side's, <c>any</c> stack loses every spell.</summary>
+public enum DispelScope
+{
+    Own,
+    Enemy,
+    Any,
+}
+
+/// <summary>
+/// What a buff or curse does besides numbers (ADR-123): <c>blind</c> (no turns until hit or the spell ends; retaliates at half), <c>confused</c>
+/// (moves and attacks at random), <c>entangled</c> (cannot move), <c>no-shoot</c>, <c>no-attack</c> (cannot attack or shoot; retaliates at half),
+/// <c>no-retaliation</c>, <c>fearless</c> (Terror does not take hold), <c>vigil</c> (retaliates against every attack), <c>true-shot</c> (no distance
+/// penalty or cover), <c>sanctuary</c> (cannot be attacked in melee), <c>stasis</c> (no turns, cannot be attacked or harmed by spells),
+/// <c>unseen</c> (cannot be attacked or aimed at by the enemy until it acts), <c>phase</c> (moves like a flyer), <c>ward-mind</c> (immune to
+/// <c>mind</c> spells).
+/// </summary>
+[Flags]
+public enum SpellStatus
+{
+    None = 0,
+    Blind = 1,
+    Confused = 1 << 1,
+    Entangled = 1 << 2,
+    NoShoot = 1 << 3,
+    NoAttack = 1 << 4,
+    NoRetaliation = 1 << 5,
+    Fearless = 1 << 6,
+    Vigil = 1 << 7,
+    TrueShot = 1 << 8,
+    Sanctuary = 1 << 9,
+    Stasis = 1 << 10,
+    Unseen = 1 << 11,
+    Phase = 1 << 12,
+    WardMind = 1 << 13,
 }
 
 /// <summary>Whom a spell reaches: one stack, a square area, every stack of the target side, or every stack on the field.</summary>
@@ -60,22 +105,30 @@ public enum SpellFilter
 /// <summary>
 /// What a buff or curse changes on a stack while it lasts (ADR-099's rank I numbers): flat Attack, Defense, speed, morale and luck; percent speed and
 /// initiative; percent damage dealt in melee or at range; percent damage taken from every attack, from melee, from shots and from spells; the
-/// damage roll (+1 maximum, Bless; −1 minimum, Curse).
+/// damage roll (+1 maximum, Bless; −1 minimum, Curse). ADR-123 adds the <see cref="SpellStatus"/> flags, damage (<c>burn</c>) and healing
+/// (<c>regen</c>) at the start of each round, creatures lost each round (<c>decay%</c>), immunity to every spell up to a level (<c>immune-level</c>,
+/// Anti-Magic) or to the enemy's up to a level (<c>shroud</c>), melee damage given back (<c>thorns%</c>) and damage dealt healed and revived
+/// (<c>lifesteal%</c>). <c>burn</c> and <c>regen</c> grow with Spell Power when cast.
 /// </summary>
 public sealed record SpellModifiers(
     int Attack = 0, int Defense = 0, int Speed = 0, int SpeedPercent = 0, int InitiativePercent = 0, int MeleePercent = 0, int RangedPercent = 0,
     int DamageTakenPercent = 0, int MeleeTakenPercent = 0, int RangedTakenPercent = 0, int SpellTakenPercent = 0, int Morale = 0, int Luck = 0,
-    int Roll = 0)
+    int Roll = 0, SpellStatus Status = SpellStatus.None, int Burn = 0, int Regen = 0, int DecayPercent = 0, int ImmuneLevel = 0, int ShroudLevel = 0,
+    int ThornsPercent = 0, int LifestealPercent = 0)
 {
     public static SpellModifiers None { get; } = new();
 
     public bool IsEmpty => this == None;
 
+    public bool Has(SpellStatus status) => (Status & status) != 0;
+
     public static SpellModifiers operator +(SpellModifiers a, SpellModifiers b) => new(
         a.Attack + b.Attack, a.Defense + b.Defense, a.Speed + b.Speed, a.SpeedPercent + b.SpeedPercent, a.InitiativePercent + b.InitiativePercent,
         a.MeleePercent + b.MeleePercent, a.RangedPercent + b.RangedPercent, a.DamageTakenPercent + b.DamageTakenPercent,
         a.MeleeTakenPercent + b.MeleeTakenPercent, a.RangedTakenPercent + b.RangedTakenPercent, a.SpellTakenPercent + b.SpellTakenPercent,
-        a.Morale + b.Morale, a.Luck + b.Luck, a.Roll + b.Roll);
+        a.Morale + b.Morale, a.Luck + b.Luck, a.Roll + b.Roll, a.Status | b.Status, a.Burn + b.Burn, a.Regen + b.Regen,
+        a.DecayPercent + b.DecayPercent, Math.Max(a.ImmuneLevel, b.ImmuneLevel), Math.Max(a.ShroudLevel, b.ShroudLevel),
+        a.ThornsPercent + b.ThornsPercent, a.LifestealPercent + b.LifestealPercent);
 }
 
 /// <summary>
@@ -87,13 +140,59 @@ public sealed record SpellModifiers(
 /// creatures worth that much health (several ids split by <c>|</c>: the first kind not yet summoned this battle), <c>rooted</c> ones never move.
 /// Ranks II / III (ADR-122) add <c>targets N</c> (a stack spell also reaches the N − 1 stacks nearest the aimed one that it works on, on the same
 /// side), <c>spare-own</c> (an area or field spell leaves the caster's own stacks alone) and the filters <c>melee</c> and <c>ground</c>.
+/// ADR-123: <c>rounds 0</c> lasts the rest of this round; <c>revive 150 [lasting] [fallen]</c> (lasting: the revived stay after the battle; fallen:
+/// also a stack destroyed in this battle), <c>dispel own|enemy|any</c>, <c>slay 10</c> (percent of the creatures); for damage <c>splash 50</c> (the
+/// stacks next to a target take that percent), <c>chain N</c> (jumps to the N stacks nearest, each at half the one before), <c>pierce</c> (creature and
+/// hero spell resistance do not count), <c>stun% N</c> (the chance a stack hit loses its next action), <c>execute N</c> (a stack below N % of its
+/// starting health is destroyed), <c>debt% N</c> (plus that percent of the damage the stack has dealt in the battle), <c>ring</c> (an area without its
+/// centre cell) and <c>column N</c> (an area N columns wide, the field's height).
 /// </summary>
 public sealed record SpellEffect(
     SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
     IReadOnlyList<string>? Creatures = null, bool Rooted = false, int Targets = 1, bool SpareOwn = false)
 {
-    /// <summary>Damage and curses work on the enemy (damage to the whole field or an area hits own stacks too); healing and buffs on own stacks.</summary>
-    public bool IsHostile => Kind is SpellEffectKind.Damage or SpellEffectKind.Curse;
+    /// <summary>Percent of a damage spell's damage the stacks next to each target take (Smite II).</summary>
+    public int SplashPercent { get; init; }
+
+    /// <summary>How many times the damage jumps on to the nearest stack not yet hit, at half the damage before (Chain Lightning).</summary>
+    public int Chain { get; init; }
+
+    /// <summary>Creature spell resistance and the enemy hero's Spell resistance do not count (Smite III).</summary>
+    public bool Pierce { get; init; }
+
+    /// <summary>The chance in percent that a stack the spell hits loses its next action (Holy Word III, Frost Bolt III).</summary>
+    public int StunPercent { get; init; }
+
+    /// <summary>A stack below this percent of its starting health is destroyed instead of taking the damage (Harvest).</summary>
+    public int ExecutePercent { get; init; }
+
+    /// <summary>The stack also takes this percent of the damage it has dealt in the battle (Call the Debt).</summary>
+    public int DebtPercent { get; init; }
+
+    /// <summary>An area without its centre cell: a stack on the centre is not hit (Frost Ring).</summary>
+    public bool Ring { get; init; }
+
+    /// <summary>The area is <see cref="SpellEffect.AreaSize"/> whole columns of the field (Hellfire).</summary>
+    public bool Column { get; init; }
+
+    /// <summary>A revive's creatures stay after the battle (else they are lost again when it ends).</summary>
+    public bool Lasting { get; init; }
+
+    /// <summary>A revive may bring back an own stack destroyed in this battle.</summary>
+    public bool Fallen { get; init; }
+
+    /// <summary>Whose spells a dispel takes off.</summary>
+    public DispelScope Dispels { get; init; }
+
+    /// <summary>
+    /// Damage, curses, kills and the enemy's dispel work on the enemy (damage to the whole field or an area hits own stacks too); healing, revives,
+    /// buffs and the own dispel on own stacks; <see cref="EitherSide"/> spells on any stack.
+    /// </summary>
+    public bool IsHostile => Kind is SpellEffectKind.Damage or SpellEffectKind.Curse or SpellEffectKind.Slay
+                             || (Kind == SpellEffectKind.Dispel && Dispels == DispelScope.Enemy);
+
+    /// <summary>A spell aimed at a stack of either side (Dispel).</summary>
+    public bool EitherSide => Kind == SpellEffectKind.Dispel && Dispels == DispelScope.Any;
 
     /// <summary>The creatures a summon calls, by id (empty for other spells).</summary>
     public IReadOnlyList<string> Summons => Creatures ?? [];
@@ -103,7 +202,7 @@ public sealed record SpellEffect(
         var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (tokens.Length == 0 || !Enum.TryParse<SpellEffectKind>(tokens[0], ignoreCase: true, out var kind) || !Enum.IsDefined(kind))
         {
-            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse or summon");
+            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse, summon, revive, dispel or slay");
         }
 
         var i = 1;
@@ -122,9 +221,21 @@ public sealed record SpellEffect(
             return new SpellEffect(kind, amount, SpellReach.Side, 0, SpellFilter.None, SpellModifiers.None, null, 0, creatures, rooted);
         }
 
-        if (kind is SpellEffectKind.Damage or SpellEffectKind.Heal)
+        if (kind is SpellEffectKind.Damage or SpellEffectKind.Heal or SpellEffectKind.Revive or SpellEffectKind.Slay)
         {
             amount = Number(Next());
+        }
+
+        var dispels = DispelScope.Any;
+        if (kind == SpellEffectKind.Dispel)
+        {
+            dispels = Next() switch
+            {
+                "own" => DispelScope.Own,
+                "enemy" => DispelScope.Enemy,
+                "any" => DispelScope.Any,
+                var scope => throw new FormatException($"'{text}': a dispel is 'dispel own|enemy|any', not '{scope}'"),
+            };
         }
 
         var (reach, area, filter, modifiers, rounds) = (SpellReach.Stack, 0, SpellFilter.None, SpellModifiers.None, (int?)null);
@@ -132,6 +243,7 @@ public sealed record SpellEffect(
         var walls = 0;
         var targets = 1;
         var spareOwn = false;
+        var (splash, chain, pierce, stun, execute, debt, ring, column, lasting, fallen) = (0, 0, false, 0, 0, 0, false, false, false, false);
         while (i < tokens.Length)
         {
             var token = tokens[i++];
@@ -139,6 +251,39 @@ public sealed record SpellEffect(
             {
                 case "area":
                     (reach, area) = (SpellReach.Area, Number(Next()));
+                    break;
+                case "column":
+                    (reach, area, column) = (SpellReach.Area, Number(Next()), true);
+                    break;
+                case "ring":
+                    ring = true;
+                    break;
+                case "splash":
+                    splash = Number(Next());
+                    break;
+                case "chain":
+                    chain = Number(Next());
+                    break;
+                case "pierce":
+                    pierce = true;
+                    break;
+                case "stun%":
+                    stun = Number(Next());
+                    break;
+                case "execute":
+                    execute = Number(Next());
+                    break;
+                case "debt%":
+                    debt = Number(Next());
+                    break;
+                case "lasting":
+                    lasting = true;
+                    break;
+                case "fallen":
+                    fallen = true;
+                    break;
+                case var flag when Statuses.TryGetValue(flag, out var status):
+                    modifiers = modifiers with { Status = modifiers.Status | status };
                     break;
                 case "enemies" or "allies":
                     reach = SpellReach.Side;
@@ -207,15 +352,67 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': 'targets' needs a number of at least 1 and a stack spell");
         }
 
-        if (spareOwn && reach is not (SpellReach.Area or SpellReach.All))
+        if (spareOwn && reach is not (SpellReach.Area or SpellReach.All) && chain == 0)
         {
-            throw new FormatException($"'{text}': 'spare-own' is for area and field spells");
+            throw new FormatException($"'{text}': 'spare-own' is for area, field and chain spells");
         }
 
-        return new SpellEffect(kind, amount, reach, area, filter, modifiers, rounds, walls, null, false, targets, spareOwn);
+        if ((splash > 0 || chain > 0 || pierce || stun > 0 || execute > 0 || debt > 0) && kind != SpellEffectKind.Damage)
+        {
+            throw new FormatException($"'{text}': splash, chain, pierce, stun%, execute and debt% are for damage spells");
+        }
+
+        if ((lasting || fallen) && kind != SpellEffectKind.Revive)
+        {
+            throw new FormatException($"'{text}': 'lasting' and 'fallen' are for revives");
+        }
+
+        if (ring && (reach != SpellReach.Area || column))
+        {
+            throw new FormatException($"'{text}': 'ring' needs a square area");
+        }
+
+        if (kind is SpellEffectKind.Revive or SpellEffectKind.Slay && amount < 1)
+        {
+            throw new FormatException($"'{text}': a revive or slay needs an amount of at least 1");
+        }
+
+        return new SpellEffect(kind, amount, reach, area, filter, modifiers, rounds, walls, null, false, targets, spareOwn)
+        {
+            SplashPercent = splash,
+            Chain = chain,
+            Pierce = pierce,
+            StunPercent = stun,
+            ExecutePercent = execute,
+            DebtPercent = debt,
+            Ring = ring,
+            Column = column,
+            Lasting = lasting,
+            Fallen = fallen,
+            Dispels = dispels,
+        };
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");
     }
+
+    /// <summary>The status words of buffs and curses (ADR-123).</summary>
+    private static readonly Dictionary<string, SpellStatus> Statuses = new(StringComparer.Ordinal)
+    {
+        ["blind"] = SpellStatus.Blind,
+        ["confused"] = SpellStatus.Confused,
+        ["entangled"] = SpellStatus.Entangled,
+        ["no-shoot"] = SpellStatus.NoShoot,
+        ["no-attack"] = SpellStatus.NoAttack,
+        ["no-retaliation"] = SpellStatus.NoRetaliation,
+        ["fearless"] = SpellStatus.Fearless,
+        ["vigil"] = SpellStatus.Vigil,
+        ["true-shot"] = SpellStatus.TrueShot,
+        ["sanctuary"] = SpellStatus.Sanctuary,
+        ["stasis"] = SpellStatus.Stasis,
+        ["unseen"] = SpellStatus.Unseen,
+        ["phase"] = SpellStatus.Phase,
+        ["ward-mind"] = SpellStatus.WardMind,
+    };
 
     private static int Number(string text) =>
         int.TryParse(text, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var n) ? n : throw new FormatException($"'{text}' is not a whole number");
@@ -235,6 +432,13 @@ public sealed record SpellEffect(
         "spell-taken%" => m with { SpellTakenPercent = value },
         "morale" => m with { Morale = value },
         "luck" => m with { Luck = value },
+        "burn" => m with { Burn = value },
+        "regen" => m with { Regen = value },
+        "decay%" => m with { DecayPercent = value },
+        "immune-level" => m with { ImmuneLevel = value },
+        "shroud" => m with { ShroudLevel = value },
+        "thorns%" => m with { ThornsPercent = value },
+        "lifesteal%" => m with { LifestealPercent = value },
         _ => throw new FormatException($"'{key}' is not something a spell changes"),
     };
 }
@@ -249,6 +453,18 @@ public sealed record SpellDefinition(
     string Notes = "", SpellEffect? Rank2 = null, SpellEffect? Rank3 = null)
 {
     public bool HasTag(string tag) => Tags.Contains(tag, StringComparer.Ordinal);
+
+    /// <summary>
+    /// The elements the spell counts as (ADR-106, ADR-123): its own; all four for Magic Arrow; for Bind Elemental the kind it binds (the element
+    /// in the creature's id, <c>conflux.fire-elemental</c>), none while that is not known.
+    /// </summary>
+    public IReadOnlyList<SpellElement> ElementsFor(string? creature = null) => Element switch
+    {
+        SpellElement.All => [SpellElement.Air, SpellElement.Earth, SpellElement.Fire, SpellElement.Water],
+        SpellElement.Bound => creature is null ? [] : [.. new[] { SpellElement.Air, SpellElement.Earth, SpellElement.Fire, SpellElement.Water }
+            .Where(e => creature.Split('.')[^1].StartsWith(e.ToString().ToLowerInvariant() + "-", StringComparison.Ordinal))],
+        var element => [element],
+    };
 
     /// <summary>The battle effect at a rank (1–3): the rank's own, else that of the nearest rank below with one.</summary>
     public SpellEffect? EffectAt(int rank) => rank switch
@@ -347,8 +563,22 @@ public sealed class SpellCatalog
             {
                 throw new FormatException($"Adventure spell '{spell.Id}' has a battle effect.");
             }
+
+            // The tags follow the effect (ADR-099, ADR-123): a summon is tagged `summon` and only a summon is.
+            if (spell.Effect is { } effect && (effect.Kind == SpellEffectKind.Summon) != spell.HasTag(SummonTag))
+            {
+                throw new FormatException($"Spell '{spell.Id}': only a summon is tagged '{SummonTag}', and every summon is.");
+            }
+
+            if ((spell.Element == SpellElement.Bound) != (spell.Effect?.Kind == SpellEffectKind.Summon && spell.Effect.Summons.Count > 1))
+            {
+                throw new FormatException($"Spell '{spell.Id}': the element 'bound' is for a summon of several kinds (Bind Elemental) only.");
+            }
         }
     }
+
+    /// <summary>The tag of summons (ADR-099): their creatures vanish after the battle and give no experience.</summary>
+    public const string SummonTag = "summon";
 
     public static SpellCatalog Default { get; } = new(SpellTable.Parse(BuiltInSpells.EmbeddedTable()));
 
