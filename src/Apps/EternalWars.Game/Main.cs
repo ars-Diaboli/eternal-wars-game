@@ -42,6 +42,9 @@ public partial class Main : Node3D
 {
     private const string EditorMapsFolder = "Eternal Wars Map Editor/maps";
 
+    /// <summary>Where the editor's template editor saves (its <c>user://templates</c>, ADR-070).</summary>
+    private const string EditorTemplatesFolder = "Eternal Wars Map Editor/templates";
+
     private const string SavesFolder = "user://saves";
 
     private const string ReplaysFolder = "user://replays";
@@ -1175,9 +1178,51 @@ public partial class Main : Node3D
             new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts));
     }
 
-    /// <summary>The shipped templates (ADR-086): generated on "Start" for the players set up, the map seed being the game seed.</summary>
-    private List<RandomMapChoice> RandomMaps() => BuiltInTemplates.All.Select(template => new RandomMapChoice(
-        template.Name,
+    /// <summary>
+    /// The shipped templates (ADR-086), then the valid ones the editor's template editor saved (ADR-117): generated on "Start" for
+    /// the players set up, the map seed being the game seed.
+    /// </summary>
+    private List<RandomMapChoice> RandomMaps() =>
+    [
+        .. BuiltInTemplates.All.Select(template => RandomMap(template, template.Name)),
+        .. UserTemplates().Select(u => RandomMap(u.Template, $"{u.Template.Name} ({Path.GetFileName(u.Path)})")),
+    ];
+
+    /// <summary>The valid template files in the map editor's templates folder; unreadable or invalid ones are skipped with a warning.</summary>
+    private static List<(string Path, MapTemplate Template)> UserTemplates()
+    {
+        var directory = Path.Combine(Path.GetDirectoryName(OS.GetUserDataDir())!, EditorTemplatesFolder);
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+
+        var found = new List<(string, MapTemplate)>();
+        foreach (var file in Directory.GetFiles(directory, "*" + TemplateSerializer.FileExtension).Order(StringComparer.Ordinal))
+        {
+            try
+            {
+                var template = TemplateSerializer.Load(file);
+                if (TemplateValidator.IsValid(template))
+                {
+                    found.Add((file, template));
+                }
+                else
+                {
+                    GD.PushWarning($"Skipping template {file}: it does not pass the template checks");
+                }
+            }
+            catch (Exception e) when (e is FormatException or NotSupportedException or IOException)
+            {
+                GD.PushWarning($"Skipping template {file}: {e.Message}");
+            }
+        }
+
+        return found;
+    }
+
+    private RandomMapChoice RandomMap(MapTemplate template, string label) => new(
+        label,
         template.Description,
         template.Sizes,
         template.MinPlayers,
@@ -1195,5 +1240,5 @@ public partial class Main : Node3D
             return new RandomMapResult(state, generation.Problems);
         },
         template.MinTeams,
-        template.MaxTeams)).ToList();
+        template.MaxTeams);
 }
