@@ -195,14 +195,17 @@ Numbers are placeholders; *(assumed)* marks choices made while building.
   the gate of 4 rows in the middle (a 4 × 4 creature passes). The moat is the 2 columns in front of the walls, bridged in the gate's rows.
   The keep stands behind the defenders' edge and the towers above and below the wall line, **off the grid**: they block nothing and only the
   siege engine reaches them. Random obstacles stay in front of the moat.
-- **The gate**: the defenders pass through it, the attackers break it. It has **1** hit point.
+- **The gate** (ADR-120, the owner's note): the defenders pass through it, the attackers break it. It has **100** hit points, **150** from the
+  Citadel *(\"upgraded fortifications\" assumed to mean Citadel and Castle)*, and **10 Defense**. A machine's hit takes all of it (the machine
+  rules do not change). The attackers' **troops** break it too, so a hero without a machine is not stuck: a stack next to the gate attacks it,
+  rolled like an attack on Defense 10 and **capped at 50** a blow (2–3 blows for a big stack).
 - **Who breaks the walls**: there is **no free siege catapult**. The attacking hero's own **offensive machine** (ballista, cannon, catapult or
   glaivethrower, [hero-roster.md](../content/hero-roster.md#war-machines)) fires at the fortifications; the catapult is only Stronghold's and
   Swamp Bestiary's offensive machine, with no siege role of its own. Siege Ballistics (ADR-063, [skills.md](../content/skills.md#war-machines-machines))
   as drafted: without the skill the machine fires by itself, only at fortifications, 2 hits in 3, 1–2 hit points a hit; Basic gives control.
   **Firing by itself** it aims at the wall sections, at the gate only when all four sections are destroyed, then at the keep and towers *(the
   order after the gate is assumed)*; a player in control may aim at any of them. An attacker without an offensive machine (destroyed and not
-  bought again) breaks nothing; Earthquake still damages wall sections ([spells.md](../content/spells.md); with magic). In a siege the
+  bought again) breaks no walls but its troops break the gate; Earthquake takes 1 hit point off each of 2 wall sections ([spells.md](../content/spells.md); with magic). In a siege the
   attacker's offensive machine always joins, whatever its Ballistics; without the skill it fires by itself for a person too.
 - **Keep and towers**: the keep (Citadel) and the two towers (Castle) each shoot **once a round** at an attacking stack. Damage: **10 + 2 per
   building in the town**, the keep double, flat damage to the attacking creature stack worth most to hit, **when each round starts**
@@ -210,11 +213,12 @@ Numbers are placeholders; *(assumed)* marks choices made while building.
 - **Moat** (Citadel): a band of cells in front of the walls. A creature entering it (walking or landing) stops there and takes damage worth
   about **two tower shots**: placeholder **2 × (10 + 2 per town building)** to the stack, once each time it enters. Only the attackers
   *(assumed)*; a walking stack stops as soon as its footprint touches the moat and moves on freely from there.
-- **Flyers and teleporters** cross the walls. The defenders' shooters behind the walls get the 1/2 cover against attacking shooters; one
-  defending shooting stack may stand in the keep (**not built**).
+- **Flyers and teleporters** cross the walls. The defenders' shooters behind the walls get the 1/2 cover against attacking shooters. From the
+  Citadel the defenders' strongest shooting stack starts **in the keep** (ADR-120 *(proposal)*): it never moves, cannot be attacked in melee,
+  enemy shots at it take the wall cover, and it leaves the keep when the keep falls.
 - **The AI** attacks a fortified town only when its battle estimate wins against the walls, towers and moat, and defends behind them: the
   estimate fights are sieges; in battle the defenders do not advance out of the walls (they fight what they can reach), walking attackers take the way round to a breach or the
-  broken gate and, while the walls hold, close up to the moat without entering it.
+  broken gate and, while the walls hold, close up to the moat without entering it; with no machine left and no breach they break the gate.
 
 ## Other
 - **Auto combat** (ADR-088, ADR-090): each human player's setting in the game menu: off, ask before each battle, or always. It covers battles

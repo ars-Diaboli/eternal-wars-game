@@ -675,8 +675,20 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
     // Heroes --------------------------------------------------------------------------------------------
 
-    /// <summary>What an artifact is worth to the AI (<see cref="ArtifactValue.Of"/>).</summary>
+    /// <summary>What an artifact is worth to the AI (<see cref="ArtifactValue.Of(ArtifactDefinition)"/>).</summary>
     public static double Score(ArtifactDefinition artifact) => ArtifactValue.Of(artifact);
+
+    /// <summary>What wearing it is worth: an assembled relic with its pieces' effects.</summary>
+    private double Worth(ArtifactDefinition artifact) => ArtifactValue.Of(_state.Artifacts, artifact);
+
+    /// <summary>
+    /// What finding it is worth to the hero (ADR-121): a piece of an assembled relic counts half again for each other piece the hero already has
+    /// (worn or carried), so the AI goes for the last pieces.
+    /// </summary>
+    private double FindScore(Hero hero, ArtifactDefinition artifact) =>
+        Score(artifact) * (1 + (0.5 * (_state.Artifacts.RelicOf(artifact.Id) is { } relic
+            ? _state.Artifacts.Get(relic).Pieces.Count(p => p != artifact.Id && hero.Artifacts.Has(p))
+            : 0)));
 
     /// <summary>Puts on what is in the backpack when a slot is free or the new one is clearly better than the worst worn there.</summary>
     private void EquipBest(PlayerId player, Hero hero)
@@ -686,18 +698,29 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
             var candidate = hero.Artifacts.Backpack
                 .Select(id => _state.Artifacts.TryGet(id, out var def) ? def : null)
                 .OfType<ArtifactDefinition>()
-                .Where(def => Score(def) > 0 && (hero.Artifacts.HasRoomToWear(def.Slot) || Score(def) > 1.2 * WorstWornScore(hero, def.Slot)))
-                .OrderByDescending(Score).ThenBy(def => def.Id, StringComparer.Ordinal)
+                .Where(def => Worth(def) > 0 && Fits(hero, def) && (hero.Artifacts.HasRoomToWear(def.Slot) || Worth(def) > 1.2 * WorstWornScore(hero, def.Slot)))
+                .OrderByDescending(Worth).ThenBy(def => def.Id, StringComparer.Ordinal)
                 .FirstOrDefault();
             if (candidate is null || !Execute(new EquipArtifactCommand(player, hero.Id, candidate.Id)).IsAccepted)
             {
-                return;
+                break;
             }
+        }
+
+        // The AI always joins an assembled relic it can (ADR-121).
+        foreach (var relic in ArtifactService.Assemblable(_state.Artifacts, hero).ToList())
+        {
+            Execute(new AssembleRelicCommand(player, hero.Id, relic.Id));
         }
     }
 
+    // An assembled relic needs the slots it blocks free; a worn piece of a relic the hero could finish is not swapped out.
+    private bool Fits(Hero hero, ArtifactDefinition artifact) =>
+        _state.Artifacts.BlockedSlots(artifact).GroupBy(s => s).All(g => hero.Artifacts.Free(g.Key) >= g.Count())
+        && (hero.Artifacts.HasRoomToWear(artifact.Slot) || hero.Artifacts.Worn(artifact.Slot).Any(w => _state.Artifacts.RelicOf(w) is null));
+
     private double WorstWornScore(Hero hero, ArtifactSlot slot) =>
-        hero.Artifacts.Worn(slot).Select(id => _state.Artifacts.TryGet(id, out var def) ? Score(def) : 0).DefaultIfEmpty(0).Min();
+        hero.Artifacts.Worn(slot).Select(id => _state.Artifacts.TryGet(id, out var def) ? Worth(def) : 0).DefaultIfEmpty(0).Min();
 
     private bool PlayHero(PlayerId player, HeroId id)
     {
@@ -1072,7 +1095,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
     {
         var stats = Enum.GetValues<PrimaryStat>().Sum(contents.Stat);
         var skills = contents.Skills.Where(s => hero.Skills.CanRaise(s.Key)).Sum(s => Math.Max(0, s.Value - hero.Skills.Level(s.Key)));
-        var artifacts = hero.Artifacts.BackpackFull ? 0 : contents.Artifacts.Sum(a => _state.Artifacts.TryGet(a, out var found) ? 800 + (80 * Score(found)) : 0);
+        var artifacts = hero.Artifacts.BackpackFull ? 0 : contents.Artifacts.Sum(a => _state.Artifacts.TryGet(a, out var found) ? 800 + (80 * FindScore(hero, found)) : 0);
         var creatures = contents.Creatures.Where(s => hero.Army.CanAccept(s.Creature)).Sum(s => 0.85 * s.Count * _state.Creatures.Get(s.Creature).Value);
         return Value(contents.Resources) + contents.Experience + (750 * stats) + (150 * (contents.Morale + contents.Luck)) + (1000 * skills) + artifacts + creatures;
     }
@@ -1255,7 +1278,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     yield return new(visit, GoldValue(pile.Resource, pile.Amount ?? ResourcePile.AmountRange(pile.Resource).Min), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
                 case ArtifactPickup { Artifact: { } artifact } when !hero.Artifacts.BackpackFull && _state.Artifacts.TryGet(artifact, out var found) && Plausible(GuardPower(visit, pickup: true)):
-                    yield return new(visit, 800 + (80 * Score(found)), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
+                    yield return new(visit, 800 + (80 * FindScore(hero, found)), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
                 case ResourceProvider provider when (provider.Owner != hero.Owner || !provider.Stored.IsEmpty) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, ProviderValue(hero, provider), GuardArmy(visit), MaxLoss: MonsterLoss);

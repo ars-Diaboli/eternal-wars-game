@@ -434,7 +434,7 @@ public sealed class BattleService(
     private BattleParticipant Participant(BattleSide side, Hero hero, Town? garrisonOf = null) =>
         new(side, hero.Owner, hero.Id, garrisonOf?.Id, hero.TotalAttack, hero.TotalDefense, hero.SkillLevelOf(BuiltInSkills.Tactics), !state.GetPlayer(hero.Owner).IsHuman,
             HeroBattleBonuses.For(hero, state.Creatures),
-            MoraleAndLuck.MixedFactions((garrisonOf?.Garrison ?? hero.Army).Stacks.Select(s => state.Creatures.Get(s.Stack.Creature)))
+            (hero.Bonus.NoFactionPenalty ? 0 : MoraleAndLuck.MixedFactions((garrisonOf?.Garrison ?? hero.Army).Stacks.Select(s => state.Creatures.Get(s.Stack.Creature))))
             + (side == BattleSide.Defender && (garrisonOf ?? state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position)) is { } home
                 ? DefenderMorale(home)
                 : 0),

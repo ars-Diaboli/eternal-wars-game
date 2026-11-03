@@ -84,12 +84,37 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
 
     /// <summary>
     /// A defeated hero's artifacts, worn and carried, all go into the winner's backpack. When they do not all fit, the most
-    /// valuable ones come first (<see cref="ArtifactValue.BestFirst"/>) and the rest are lost.
+    /// valuable ones come first (<see cref="ArtifactValue.BestFirst"/>) and the rest are lost. An assembled relic (ADR-121) goes over whole when
+    /// the winner can wear it (its slot and the slots it blocks are free), otherwise as its pieces into the backpack.
     /// </summary>
     internal void Loot(Hero from, Hero to)
     {
         var all = ArtifactValue.BestFirst(state.Artifacts, from.Artifacts.AllWorn.Select(w => w.Id).Concat(from.Artifacts.Backpack)).ToList();
         foreach (var artifact in all)
+        {
+            var definition = state.Artifacts.TryGet(artifact, out var known) ? known : null;
+            if (definition is { IsAssembled: true })
+            {
+                if (to.Artifacts.Wear(definition, state.Artifacts.BlockedSlots(definition)))
+                {
+                    state.RefreshArtifacts(to);
+                    events.Publish(new ArtifactGained(to.Id, artifact, ArtifactSource.Loot));
+                    events.Publish(new ArtifactEquipped(to.Id, artifact, definition.Slot));
+                    continue;
+                }
+
+                foreach (var piece in definition.Pieces)
+                {
+                    Take(piece);
+                }
+
+                continue;
+            }
+
+            Take(artifact);
+        }
+
+        void Take(string artifact)
         {
             if (to.Artifacts.AddToBackpack(artifact))
             {
@@ -102,6 +127,80 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         }
     }
 
+    /// <summary>The assembled relics whose every piece the hero wears (ADR-121), in id order.</summary>
+    public static IEnumerable<ArtifactDefinition> Assemblable(ArtifactCatalog catalog, Hero hero) =>
+        catalog.Relics.Where(r => r.Pieces.All(hero.Artifacts.IsWorn));
+
+    /// <summary>Joins the worn pieces into the relic (ADR-121): the pieces go, the relic sits in the first piece's slot and blocks the others'.</summary>
+    internal void Assemble(PlayerId player, HeroId heroId, string relic)
+    {
+        var hero = Own(player, heroId, exchangeAllowed: true);
+        var definition = state.Artifacts.Get(relic);
+        if (!definition.IsAssembled)
+        {
+            throw new InvalidOperationException($"{definition.Name} is not an assembled relic.");
+        }
+
+        if (definition.Pieces.FirstOrDefault(p => !hero.Artifacts.IsWorn(p)) is { } missing)
+        {
+            throw new InvalidOperationException($"{hero.Name} must wear {state.Artifacts.Get(missing).Name} to assemble {definition.Name}.");
+        }
+
+        foreach (var piece in definition.Pieces)
+        {
+            hero.Artifacts.RemoveWorn(piece);
+        }
+
+        hero.Artifacts.Wear(definition, state.Artifacts.BlockedSlots(definition));
+        state.RefreshArtifacts(hero);
+        events.Publish(new RelicAssembled(hero.Id, relic, definition.Pieces));
+    }
+
+    /// <summary>
+    /// Takes the relic apart (ADR-121): a worn one into its pieces, worn in their slots again; a carried one into pieces in the backpack, which needs
+    /// the room.
+    /// </summary>
+    internal void TakeApart(PlayerId player, HeroId heroId, string relic)
+    {
+        var hero = Own(player, heroId, exchangeAllowed: true);
+        var definition = state.Artifacts.Get(relic);
+        if (!definition.IsAssembled)
+        {
+            throw new InvalidOperationException($"{definition.Name} is not an assembled relic.");
+        }
+
+        if (hero.Artifacts.IsWorn(relic))
+        {
+            hero.Artifacts.RemoveWorn(relic);
+            foreach (var piece in definition.Pieces)
+            {
+                hero.Artifacts.Wear(state.Artifacts.Get(piece));
+            }
+
+            state.RefreshArtifacts(hero);
+            events.Publish(new RelicTakenApart(hero.Id, relic, definition.Pieces, Worn: true));
+            return;
+        }
+
+        if (!hero.Artifacts.Backpack.Contains(relic))
+        {
+            throw new InvalidOperationException($"{hero.Name} has no {definition.Name}.");
+        }
+
+        if (hero.Artifacts.Backpack.Count - 1 + definition.Pieces.Count > ArtifactSlots.BackpackSize)
+        {
+            throw new InvalidOperationException($"{hero.Name}'s backpack has no room for the pieces of {definition.Name}.");
+        }
+
+        hero.Artifacts.RemoveFromBackpack(relic);
+        foreach (var piece in definition.Pieces)
+        {
+            hero.Artifacts.AddToBackpack(piece);
+        }
+
+        events.Publish(new RelicTakenApart(hero.Id, relic, definition.Pieces, Worn: false));
+    }
+
     internal void Equip(PlayerId player, HeroId heroId, string artifact)
     {
         var hero = Own(player, heroId, exchangeAllowed: true);
@@ -111,8 +210,19 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             throw new InvalidOperationException($"{hero.Name} does not carry '{definition.Name}'.");
         }
 
+        // A full slot frees one place by sending what is worn there to the backpack; the slots an assembled relic blocks must be free already.
+        var blocks = state.Artifacts.BlockedSlots(definition);
+        var swap = !hero.Artifacts.HasRoomToWear(definition.Slot) && hero.Artifacts.Worn(definition.Slot).Count > 0;
+        if (blocks.Append(definition.Slot).GroupBy(s => s)
+                .FirstOrDefault(g => hero.Artifacts.Free(g.Key) + (swap && g.Key == definition.Slot ? 1 : 0) < g.Count()) is { } full)
+        {
+            throw new InvalidOperationException(full.Key == definition.Slot && !swap
+                ? $"The {definition.Slot} slot is blocked by an assembled relic."
+                : $"{definition.Name} also needs a free {full.Key} slot.");
+        }
+
         hero.Artifacts.RemoveFromBackpack(artifact);
-        if (!hero.Artifacts.HasRoomToWear(definition.Slot))
+        if (swap)
         {
             // The one worn there goes to the backpack, which has the place just freed.
             var replaced = hero.Artifacts.Worn(definition.Slot)[0];
@@ -121,9 +231,19 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             events.Publish(new ArtifactUnequipped(hero.Id, replaced));
         }
 
-        hero.Artifacts.Wear(definition);
+        if (!hero.Artifacts.Wear(definition, blocks))
+        {
+            hero.Artifacts.AddToBackpack(artifact);
+            state.RefreshArtifacts(hero);
+            throw new InvalidOperationException($"{definition.Name} does not fit.");
+        }
+
         state.RefreshArtifacts(hero);
         events.Publish(new ArtifactEquipped(hero.Id, artifact, definition.Slot));
+        if (state.Artifacts.RelicOf(artifact) is { } relic && Assemblable(state.Artifacts, hero).Any(r => r.Id == relic))
+        {
+            events.Publish(new RelicReady(hero.Id, relic));
+        }
     }
 
     internal void Unequip(PlayerId player, HeroId heroId, string artifact)

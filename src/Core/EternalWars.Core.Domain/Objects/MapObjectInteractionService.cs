@@ -1074,6 +1074,12 @@ public sealed class MapObjectInteractionService(
             throw new InvalidOperationException($"{hero.Name} has no '{artifact}'.");
         }
 
+        if (state.Artifacts.Get(artifact).IsAssembled)
+        {
+            // The altar takes pieces only (ADR-108, ADR-121).
+            throw new InvalidOperationException($"Take {state.Artifacts.Get(artifact).Name} apart first: the altar takes its pieces only.");
+        }
+
         if (!hero.Artifacts.RemoveFromBackpack(artifact))
         {
             hero.Artifacts.RemoveWorn(artifact);

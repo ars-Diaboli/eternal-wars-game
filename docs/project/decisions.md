@@ -2963,3 +2963,69 @@ are done.
   13–37): its towns are 23 tiles apart and an exploring hero finds the other town on day 3 (a fair rush, not changed).
 - **Fix**: the AI recruited into a garrison whose seven slots a garrison hero's stacks had filled (refused commands on `2v2`); it now skips
   a line with no room anywhere. `AdventureAi.Refusals` keeps the refused commands with their reasons, and `sim game` prints them.
+
+### ADR-120: Phase 5 magic and sieges: summons, creature casters, adventure spells, shrines, spell books in the map format; the breakable gate, the keep's shooter, Earthquake (ADR-071, ADR-072, ADR-073, ADR-106, ADR-109, ADR-110, 2026-11-03)
+**Status**: implemented (2026-11-03); the owner's gate note (ideas.md) is built as written, the rest are the agent's proposals *(proposal)*,
+for play-testing. The 3D views are written but not run in Godot yet; the 2D harness has no creature casts.
+
+- **The gate** (owner's note): a hero can arrive without a war machine (never bought, or destroyed earlier), so the attackers' **troops
+  break the gate too**: the gate has **100** hit points, **150** with upgraded fortifications (*Citadel and Castle are "upgraded"*, assumed),
+  and **10 Defense**. A stack's blow at the gate is rolled like an attack on a creature with Defense 10 (+5 % per Attack point above, −2.5 % per
+  point below, a melee penalty halves it) and **capped at 50**, so a large stack breaks it in 2–3 blows. **War machine rules do not change**: a
+  machine's hit takes the whole gate. Only the attackers' troops strike it, and only the gate (`Siege.StructureAttackRefusal`); a stack
+  next to the gate attacks it like an enemy (`BattleAttackStructureCommand`, pointing at the gate in both views). Event
+  `SiegeStructureDamaged`. The battle AI breaks the gate when no wall is open and its machine is gone (`BattleAi.BreakGate`).
+- **One shooter in the keep** (ADR-106 g) *(proposal)*: from the Citadel up, the defenders' strongest shooting stack starts behind the
+  walls next to the keep, **in the keep**: it never moves, cannot be attacked in melee, and enemy shots at it take the wall cover. When the
+  keep falls the stack leaves it (`BattleUnitLeftKeep`) and fights normally. Deployment cannot move it.
+- **Earthquake** (rank I) *(proposal)*: 40 damage to every stack, −20 % initiative for 2 rounds, and **1 hit point off each of 2 random standing
+  wall sections** (`walls 2` in the effect grammar). Outside sieges only the damage and the slow work.
+- **Summons** (`summon id|id N [rooted]`): Summon Pack (150 Pegasi worth), Awaken Grove (400, rooted Treants), Bind Elemental (200; the
+  first element not yet summoned in this battle *(proposal)*), Hellgate (80 Imps), Summon Demons (250 Horned Demons). The number is
+  the health called (count = amount / the creature's health) and grows with Spell Power like damage; the stack appears at the caster's edge
+  nearest the middle row, a second cast adds to it, it vanishes after the battle, gives no experience, counts for no casualties, Necromancy or the guard count. A rooted summon
+  never moves. Event `BattleUnitSummoned`.
+- **Creature casters** (`Caster <spell> <n>` in `creatures.csv`): **n is casts per battle**; a caster stack's **Spell Power is its count
+  / 2** *(proposal)*, rank I effects, no mana. Blind, Confusion and Resurrection are not castable by creatures yet (their effect
+  kinds are missing). The Phoenix's **rebirth**: a destroyed stack comes back once with **30 %** of its creatures *(proposal)*
+  (`BattleUnitReborn`). Command `BattleCreatureCastCommand`; the battle AI weighs a cast (damage, summons, healing) against the stack's attack; the 3D battle
+  HUD has a cast button for the caster stack.
+- **Adventure spells** (ADR-073, MAG-5): cast from the book on the map for the mana and a fixed **500 movement points** (fewer left: no
+  cast). Built: **Town Portal** (the nearest own town with a free entrance), **Dimension Door** (up to 6 tiles in a straight line to an
+  explored, free, passable, unguarded tile, once a day), **View Terrain** (reveals radius 12), **Pathfinder's Call** and **Ashwalk** (three
+  terrains native for the rest of the day). The spells that only show something (Distant Vision, Detect Magic, Grave Whisper, Ledger of
+  Ages, Veil, Eavesdrop) wait for their screens. Command `CastAdventureSpellCommand`, events `AdventureSpellCast`, `AreaRevealed`; the hero
+  panel lists them, Dimension Door arms a click on the map. The adventure AI uses Town Portal to come home to a threatened town.
+- **Shrines** (ADR-068): three objects, `shrine.1` … `shrine.3`, each teaching **one spell of its level** (any school), set in the editor or
+  drawn at game start; a visiting hero with a spell book and the school's Magic at the spell's level learns it, any number of visits.
+  Generator values **500 / 1500 / 2500** *(proposal)*; the AI values a learnable shrine at 400 × its level.
+- **Spell books in the map format** (**v29**): a map hero has `spellBook` and `spells` (absent in older maps: the hero's class decides, as
+  before); a shrine has its `spell`. The editor sets them (`SetHeroSpells`, `SetShrineSpell`, undoable; inspector rows); the validator
+  refuses a hero with spells and no book.
+### ADR-121: Assembled relics, the full-mana and no-faction-penalty effects, war machine tuning (ADR-056, ADR-061, ADR-068, ADR-100, ADR-108, 2026-11-03)
+**Status**: implemented (2026-11-03), ADR-108's rules as written; *(proposal)* marks the agent's choices.
+
+- **Treasure-chest artifacts** (roadmap, ADR-039, CONT-3) were already built in ADR-068 (5 % of chests hold a Minor artifact, no choice) and
+  tested; the roadmap box was only left unticked.
+- **The nine relics** are rows of `artifacts.csv` with the new `pieces` column (tier Relic): Wizard's Well, Statue of Legion, Shackles of
+  War, Elixir of Life, Ring of the Magi, Cornucopia, Angelic Alliance, Regalia of the Undead King, Bow of the Sharpshooter. A relic's
+  `effects` are what it **adds**; worn, it has its pieces' effects too (`ArtifactCatalog.EffectsOf`). It sits in its **first piece's slot**
+  (the column order chooses it *(proposal)*: Misc for the well, statue, shackles, elixir and cornucopia, Ring for the Ring of the Magi, Weapon
+  for the alliance and the bow, Body for the regalia) and **blocks the other pieces' slots**. The catalog refuses a relic in the wrong slot,
+  with fewer than two pieces, a repeated or unknown piece, or a piece of two relics. Relics never drop (`OfTier` leaves them out), so map
+  pickups, chests, banks, merchants and the generator give only pieces.
+- **Joining**: equipping the last piece publishes `RelicReady` and the hero screen says so and shows an **Assemble** button
+  (`AssembleRelicCommand`) *(the "ask" is this notice and button, not a blocking decision: a decision would break an open exchange)*.
+  **Taking apart** any time (`TakeRelicApartCommand`): a worn relic into its pieces in their slots, a carried one into the backpack (needs
+  the room). A carried relic is worn again only when the slots it blocks are free (the slot itself swaps as usual).
+- **Loot**: a defeated hero's relic goes to the winner **whole when the winner can wear it** (its slot and the blocked ones free), else as
+  its pieces into the backpack. The **Sacrificial Altar** refuses a whole relic (take it apart first); the **Artifact Merchant** sells pieces
+  only (its stock is drawn by tier).
+- **Effects**: `full-mana` (the hero's mana is full at the start of each of its turns) and `no-faction-penalty` (no mixed-factions morale
+  for the hero's army, garrison included). Values for the AI: 40 and 15 *(proposal)*; a relic is worth its pieces plus its own effects.
+- **AI**: always assembles what it can after putting artifacts on; a piece found is worth **50 % more for each other piece of its relic
+  the hero has** *(proposal)*; it does not swap out a worn piece for an ordinary artifact.
+- **War machine tuning** *(proposal)*: the four offensive machines now deal about the same expected damage per initiative (average damage ×
+  shots × initiative / 10, `WarMachines.Throughput`): ballista 47.5, cannon 45.5, catapult 46; the glaivethrower was 72 and is now **20–26
+  damage, initiative 11** (50.6), still the most, with the least health (200). Tent, cart, prices and the Ballistics table stay; machines
+  already scale with the hero's Attack through the damage formula. A test keeps the four within 15 %.

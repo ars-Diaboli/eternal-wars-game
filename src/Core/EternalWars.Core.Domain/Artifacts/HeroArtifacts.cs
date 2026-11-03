@@ -15,6 +15,9 @@ public sealed class HeroArtifacts
     private readonly Dictionary<ArtifactSlot, List<string>> _worn = [];
     private readonly List<string> _backpack = [];
 
+    // The slots worn assembled relics block (ADR-108, ADR-121): one entry per relic worn, its other pieces' slots.
+    private readonly List<(string Relic, IReadOnlyList<ArtifactSlot> Slots)> _blocks = [];
+
     public IReadOnlyList<string> Backpack => _backpack;
 
     public bool BackpackFull => _backpack.Count >= ArtifactSlots.BackpackSize;
@@ -31,13 +34,34 @@ public sealed class HeroArtifacts
 
     public bool Has(string id) => _backpack.Contains(id) || IsWorn(id);
 
-    internal bool HasRoomToWear(ArtifactSlot slot) => Worn(slot).Count < ArtifactSlots.Capacity(slot);
+    /// <summary>How many places of a slot worn assembled relics block.</summary>
+    public int Blocked(ArtifactSlot slot) => _blocks.Sum(b => b.Slots.Count(s => s == slot));
 
-    internal bool Wear(ArtifactDefinition artifact)
+    /// <summary>Every blocked place: the slot and the relic blocking it, in paper-doll order.</summary>
+    public IEnumerable<(ArtifactSlot Slot, string Relic)> AllBlocked =>
+        ArtifactSlots.All.SelectMany(slot => _blocks.SelectMany(b => b.Slots.Where(s => s == slot).Select(_ => (slot, b.Relic))));
+
+    public bool HasRoomToWear(ArtifactSlot slot) => Free(slot) > 0;
+
+    /// <summary>Free places of a slot: its capacity less what is worn and blocked there.</summary>
+    public int Free(ArtifactSlot slot) => ArtifactSlots.Capacity(slot) - Worn(slot).Count - Blocked(slot);
+
+    /// <summary>Whether the artifact fits now: a free place in its slot and in every slot it blocks (<paramref name="blocks"/>).</summary>
+    public bool HasRoomFor(ArtifactDefinition artifact, IReadOnlyList<ArtifactSlot> blocks) =>
+        blocks.Append(artifact.Slot).GroupBy(s => s).All(g => Free(g.Key) >= g.Count());
+
+    /// <summary>Wears the artifact in its slot; an assembled relic also blocks <paramref name="blocks"/>. False when it does not fit.</summary>
+    internal bool Wear(ArtifactDefinition artifact, IReadOnlyList<ArtifactSlot>? blocks = null)
     {
-        if (!HasRoomToWear(artifact.Slot))
+        blocks ??= [];
+        if (!HasRoomFor(artifact, blocks))
         {
             return false;
+        }
+
+        if (blocks.Count > 0)
+        {
+            _blocks.Add((artifact.Id, blocks));
         }
 
         if (!_worn.TryGetValue(artifact.Slot, out var list))
@@ -56,6 +80,12 @@ public sealed class HeroArtifacts
         {
             if (list.Remove(id))
             {
+                var block = _blocks.FindIndex(b => b.Relic == id);
+                if (block >= 0)
+                {
+                    _blocks.RemoveAt(block);
+                }
+
                 return true;
             }
         }
@@ -86,7 +116,7 @@ public sealed class HeroArtifacts
         var next = new HeroArtifacts();
         foreach (var id in worn)
         {
-            if (!next.Wear(catalog.Get(id)))
+            if (!next.Wear(catalog.Get(id), catalog.BlockedSlots(catalog.Get(id))))
             {
                 throw new InvalidOperationException($"No free {catalog.Get(id).Slot} slot for '{id}'.");
             }
@@ -107,6 +137,8 @@ public sealed class HeroArtifacts
             _worn[slot] = list;
         }
 
+        _blocks.Clear();
+        _blocks.AddRange(next._blocks);
         _backpack.Clear();
         _backpack.AddRange(next._backpack);
     }
@@ -186,6 +218,12 @@ public sealed record ArtifactBonuses
     /// <summary>The highest spell level either side may cast in the hero's battles, or null.</summary>
     public int? SpellLevelCap { get; init; }
 
+    /// <summary>Mana full at the start of each turn (the Wizard's Well).</summary>
+    public bool FullMana { get; init; }
+
+    /// <summary>No morale loss for mixed factions (the Angelic Alliance).</summary>
+    public bool NoFactionPenalty { get; init; }
+
     /// <summary>Levels the artifacts add to one skill (not counting <see cref="AllSkills"/>).</summary>
     public int SkillBonus(string skill) => Skills.GetValueOrDefault(skill);
 
@@ -201,7 +239,7 @@ public sealed record ArtifactBonuses
         {
             if (catalog.TryGet(id, out var artifact))
             {
-                effects.AddRange(artifact.Effects);
+                effects.AddRange(catalog.EffectsOf(artifact));
                 wornIds.Add(id);
             }
         }
@@ -292,6 +330,8 @@ public sealed record ArtifactBonuses
             ElementPercent = elements,
             SpellLevels = spellLevels,
             SpellLevelCap = cap,
+            FullMana = list.Any(e => e.Kind == ArtifactEffectKind.FullMana),
+            NoFactionPenalty = list.Any(e => e.Kind == ArtifactEffectKind.NoFactionPenalty),
         };
     }
 
@@ -352,6 +392,16 @@ public sealed record ArtifactBonuses
         if (NoRetreat)
         {
             parts.Add("no retreat or surrender in its battles");
+        }
+
+        if (FullMana)
+        {
+            parts.Add("full mana every day");
+        }
+
+        if (NoFactionPenalty)
+        {
+            parts.Add("no morale loss for mixed factions");
         }
 
         return parts.Count == 0 ? "no bonuses" : string.Join(", ", parts);

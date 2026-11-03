@@ -119,7 +119,10 @@ public sealed class TurnService(
 
     private WeekEvent Roll(GameDate weekStart) => WeekEventRules.Roll(state.Rules.WeekEvents, state.Creatures, weekStart, state.Random);
 
-    /// <summary>Every own hero regains its daily mana (ADR-063); nothing happens, and nothing is published, when the pool is full.</summary>
+    /// <summary>
+    /// Every own hero regains its daily mana (ADR-063), or all of it with the Wizard's Well (ADR-121); nothing happens, and nothing is published,
+    /// when the pool is full.
+    /// </summary>
     private void RestoreMana(PlayerId player)
     {
         foreach (var hero in state.AllHeroesOf(player).OrderBy(h => h.Id.Value))
@@ -127,7 +130,7 @@ public sealed class TurnService(
             var max = hero.MaxMana;
             if (hero.Mana < max)
             {
-                hero.Mana = Math.Min(max, hero.Mana + ManaRules.DailyMana(hero));
+                hero.Mana = hero.Bonus.FullMana ? max : Math.Min(max, hero.Mana + ManaRules.DailyMana(hero));
                 events.Publish(new HeroManaRestored(hero.Id, hero.Mana, max));
             }
         }

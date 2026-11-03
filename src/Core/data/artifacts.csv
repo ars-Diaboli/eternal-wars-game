@@ -1,4 +1,4 @@
-id,name,slot,tier,set,effects,notes
+id,name,slot,tier,set,effects,notes,pieces
 badge-of-courage,Badge of Courage,Neck,Minor,,morale 1,struck from a cold coal of the last Wheel fire; soldiers swear it is still warm
 charm-of-mana,Charm of Mana,Neck,Minor,,mana-a-day 1,"a coal in a cage of wire, fed by whoever wears it. A piece of the Wizard's Well"
 pilgrims-boots,Pilgrim's Boots,Boots,Minor,pilgrims-road,movement 10,worn through three crusades; the soles remember every road
@@ -100,3 +100,12 @@ eye-of-the-swamp,Eye of the Swamp,Neck,Relic,,luck 2; immune poison,something lo
 endless-sack-of-gold,Endless Sack of Gold,Misc,Relic,,income gold 1000,"the last dragon's hoard; the dragon is not quite the last, and wants it back"
 seed-of-the-world-tree,Seed of the World Tree,Misc,Relic,,income gold 100; income lumber 1; income ore 1; income crystal 1; income mercury 1; income sulfur 1,it will not sprout on Vael; the Sylvan keep trying
 unwritten-codex,Unwritten Codex,Misc,Relic,,spells 1-2,the pages fill as they are read and are blank again when it is closed
+wizards-well,Wizard's Well,Misc,Relic,,full-mana,"the Academy built a city around it; the city froze, the well did not. Assembled",talisman-of-mana; mystic-orb-of-mana; charm-of-mana
+statue-of-legion,Statue of Legion,Misc,Relic,,growth 35,"whole again, it remembers the year it held the city, and the city's levies come back to it. Assembled",head-of-legion; torso-of-legion; legs-of-legion
+shackles-of-war,Shackles of War,Misc,Relic,,no-retreat,"the chieftain who wore all three never left a field; neither did anyone else. Assembled",shackle-of-war; chain-of-war; collar-of-war
+elixir-of-life,Elixir of Life,Misc,Relic,,creature-health 10,"the Sylvan brewed it once, for a war they then did not have to fight. Assembled",vial-of-lifeblood; ring-of-vitality; ring-of-life
+ring-of-the-magi,Ring of the Magi,Ring,Relic,,spell-power 3,"the Academy's first chancellor wore it, and every chancellor since has claimed to. Assembled",ring-of-conjuring; collar-of-conjuring; cape-of-conjuring
+cornucopia,Cornucopia,Misc,Relic,,income crystal 2; income sulfur 2; income mercury 2,"a horn of the Firstborn's last harvest; it gives until the giver is forgotten. Assembled",everpouring-vial-of-mercury; everflowing-crystal-cloak; eversmoking-ring-of-sulfur
+angelic-alliance,Angelic Alliance,Weapon,Relic,,attack 2; defense 2; spell-power 2; knowledge 2; no-faction-penalty,"Haven's last oath, sworn by angels who have not been seen since. Assembled",sword-of-judgement; lions-shield-of-courage; celestial-necklace-of-bliss
+undead-king-regalia,Regalia of the Undead King,Body,Relic,,necromancy 10,"the king was buried in three graves so he would not rise; he rose three times. Assembled",rib-cage; blackshard-of-the-dead-knight; skull-helmet
+bow-of-the-sharpshooter,Bow of the Sharpshooter,Weapon,Relic,,ranged-damage 15; battle-speed 1,"whoever holds it does not miss; the Sylvan say that is the curse. Assembled",bow-of-elven-cherrywood; bowstring-of-the-unicorns-mane; necklace-of-swiftness

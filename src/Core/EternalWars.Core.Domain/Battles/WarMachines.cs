@@ -29,7 +29,8 @@ public enum WarMachineKind
 }
 
 /// <summary>
-/// War machines (ADR-056, draft numbers). Every hero owns its town's offensive machine; the healing tent and the ammo
+/// War machines (ADR-056, draft numbers; tuned in ADR-121 so the four offensive machines deal about the same damage per initiative, see
+/// <see cref="Throughput"/>). Every hero owns its town's offensive machine; the healing tent and the ammo
 /// cart are bought at a blacksmith. In battle they are units behind their side's lines: they never move or fight in
 /// melee, do not retaliate, have no morale, and are lost when destroyed. The offensive machine shoots on its own turn
 /// with unlimited shots, but outside sieges only from Advanced Ballistics; the tent heals every own stack at the start of
@@ -45,7 +46,7 @@ public static class WarMachines
         [WarMachineKind.Ballista] = Machine(WarMachineKind.Ballista, "Ballista", CreatureSize.Medium, attack: 10, defense: 10, damage: (40, 55), health: 250, initiative: 10),
         [WarMachineKind.Cannon] = Machine(WarMachineKind.Cannon, "Cannon", CreatureSize.Medium, attack: 12, defense: 8, damage: (55, 75), health: 220, initiative: 7),
         [WarMachineKind.Catapult] = Machine(WarMachineKind.Catapult, "Catapult", CreatureSize.Medium, attack: 10, defense: 10, damage: (45, 70), health: 260, initiative: 8),
-        [WarMachineKind.Glaivethrower] = Machine(WarMachineKind.Glaivethrower, "Glaivethrower", CreatureSize.Medium, attack: 11, defense: 9, damage: (25, 35), health: 200, initiative: 12,
+        [WarMachineKind.Glaivethrower] = Machine(WarMachineKind.Glaivethrower, "Glaivethrower", CreatureSize.Medium, attack: 11, defense: 9, damage: (20, 26), health: 200, initiative: 11,
             new CreatureCapability(CapabilityKind.ShootsTwice)),
         [WarMachineKind.HealingTent] = Machine(WarMachineKind.HealingTent, "Healing Tent", CreatureSize.Small, attack: 0, defense: 5, damage: (1, 1), health: 150, initiative: 1),
         [WarMachineKind.AmmoCart] = Machine(WarMachineKind.AmmoCart, "Ammo Cart", CreatureSize.Small, attack: 0, defense: 5, damage: (1, 1), health: 200, initiative: 1),
@@ -76,6 +77,17 @@ public static class WarMachines
     {
         definition = Definitions.Values.FirstOrDefault(d => d.Id == id)!;
         return definition is not null;
+    }
+
+    /// <summary>
+    /// An offensive machine's expected damage per 10 initiative (ADR-121): average damage × shots a turn × initiative / 10. The four stay within
+    /// 15 % of each other; the glaivethrower trades the lowest health for the most.
+    /// </summary>
+    public static double Throughput(WarMachineKind kind)
+    {
+        var machine = Definition(kind);
+        var shots = machine.Has(CapabilityKind.ShootsTwice) ? 2 : 1;
+        return (machine.MinDamage + machine.MaxDamage) / 2.0 * shots * machine.Initiative / 10.0;
     }
 
     public static WarMachineKind OffensiveFor(string? town) =>

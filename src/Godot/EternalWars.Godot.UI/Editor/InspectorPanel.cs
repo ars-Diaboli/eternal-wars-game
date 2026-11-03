@@ -138,7 +138,29 @@ public partial class InspectorPanel : VBoxContainer
             count.ValueChanged += _ => ApplySlot();
         }
 
+        ShowHeroSpells(hero);
         ShowHeroArtifacts(hero);
+    }
+
+    /// <summary>The hero's spell book and the spells in it (ADR-120): a book box, one row per spell and an empty row to add another.</summary>
+    private void ShowHeroSpells(Hero hero)
+    {
+        var book = new CheckBox { Text = "Spell book", ButtonPressed = hero.HasSpellBook };
+        AddChild(book);
+        var items = new[] { ("— none —", "") }
+            .Concat(_editor.Scenario.Spells.All.OrderBy(s => s.Level).ThenBy(s => s.Name).Select(s => ($"{s.Name} (L{s.Level}, {s.School})", s.Id)))
+            .ToList();
+        var rows = new HFlowContainer();
+        AddChild(rows);
+        var choices = hero.Spells.Keys.Append("").Select(id => Options(rows, "", items, id)).ToList();
+        rows.Visible = hero.HasSpellBook;
+        void Apply() => Edit(() => _editor.SetHeroSpells(
+            hero.Id, book.ButtonPressed, book.ButtonPressed ? [.. choices.Select(c => c.Value()).Where(s => s.Length > 0).Distinct()] : []));
+        book.Toggled += _ => Apply();
+        foreach (var choice in choices)
+        {
+            choice.Button.ItemSelected += _ => Apply();
+        }
     }
 
     /// <summary>
@@ -305,8 +327,18 @@ public partial class InspectorPanel : VBoxContainer
                 break;
             }
 
-            case TreasureChest chest:
+            case Shrine shrine:
             {
+                var row = new HBoxContainer();
+                AddChild(row);
+                var spells = new[] { ("Drawn at start", (string?)null) }
+                    .Concat(ShrineRules.Candidates(_editor.Scenario.Spells, shrine.SpellLevel).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id)));
+                var spell = Options(row, "Spell", spells, shrine.Spell);
+                spell.Button.ItemSelected += _ => Edit(() => _editor.SetShrineSpell(shrine.Id, spell.Value()));
+                break;
+            }
+
+            case TreasureChest chest:            {
                 var row = new HBoxContainer();
                 AddChild(row);
                 var fixedValues = new CheckBox { Text = "Fixed values (else rolled)", ButtonPressed = chest.FixedValues is not null };

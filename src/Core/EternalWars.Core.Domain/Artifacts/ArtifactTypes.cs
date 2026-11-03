@@ -127,6 +127,12 @@ public enum ArtifactEffectKind
 
     /// <summary>No spell above this level can be cast by either side in the hero's battles.</summary>
     NoSpellsAbove,
+
+    /// <summary>The hero's mana is full at the start of each of its turns (value 1; the Wizard's Well, ADR-108).</summary>
+    FullMana,
+
+    /// <summary>The hero's army loses no morale for mixed factions (value 1; the Angelic Alliance, ADR-108).</summary>
+    NoFactionPenalty,
 }
 
 /// <param name="Kind">What changes.</param>
@@ -165,6 +171,8 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
         ["element-power"] = ArtifactEffectKind.ElementPower,
         ["spells"] = ArtifactEffectKind.Spells,
         ["no-spells-above"] = ArtifactEffectKind.NoSpellsAbove,
+        ["full-mana"] = ArtifactEffectKind.FullMana,
+        ["no-faction-penalty"] = ArtifactEffectKind.NoFactionPenalty,
     };
 
     /// <summary>The word of a kind in the table: <c>spell-power</c>.</summary>
@@ -199,12 +207,13 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
             ArtifactEffectKind.Spells when parts is [_, var range] && range.Split('-') is [var from, var to] && Int(from) is { } low && Int(to) is { } high
                                            && low >= 1 && low <= high && high <= Creatures.SpellLevels.Max
                 => new(kind, high, low.ToString(CultureInfo.InvariantCulture)),
-            ArtifactEffectKind.NoRetreat when parts is [_]
+            ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana or ArtifactEffectKind.NoFactionPenalty when parts is [_]
                 => new(kind, 1),
             ArtifactEffectKind.Income or ArtifactEffectKind.NativeTerrain or ArtifactEffectKind.Skill or ArtifactEffectKind.Immune
-                or ArtifactEffectKind.ElementPower or ArtifactEffectKind.Spells or ArtifactEffectKind.NoRetreat
+                or ArtifactEffectKind.ElementPower or ArtifactEffectKind.Spells or ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana
+                or ArtifactEffectKind.NoFactionPenalty
                 => throw new FormatException(
-                    $"'{text}': {parts[0]} needs a resource/terrain/skill/tag/element (and for income, skill and element-power a number), spells a level range, no-retreat nothing"),
+                    $"'{text}': {parts[0]} needs a resource/terrain/skill/tag/element (and for income, skill and element-power a number), spells a level range; no-retreat, full-mana and no-faction-penalty nothing"),
             _ when parts is [_, var value] && Int(value) is { } n => new(kind, n),
             _ => throw new FormatException($"'{text}' is not '<effect> <number>'"),
         };
@@ -217,17 +226,27 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
         ArtifactEffectKind.Income or ArtifactEffectKind.Skill or ArtifactEffectKind.ElementPower => $"{WordOf(Kind)} {Target} {Value.ToString(CultureInfo.InvariantCulture)}",
         ArtifactEffectKind.NativeTerrain or ArtifactEffectKind.Immune => $"{WordOf(Kind)} {Target}",
         ArtifactEffectKind.Spells => $"{WordOf(Kind)} {Target}-{Value.ToString(CultureInfo.InvariantCulture)}",
-        ArtifactEffectKind.NoRetreat => WordOf(Kind),
+        ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana or ArtifactEffectKind.NoFactionPenalty => WordOf(Kind),
         _ => $"{WordOf(Kind)} {Value.ToString(CultureInfo.InvariantCulture)}",
     };
 }
 
 /// <summary>
 /// One artifact of the catalog (<c>data/artifacts.csv</c>). <c>Set</c> names the <see cref="ArtifactSetDefinition"/> it belongs to
-/// (or null); <c>Notes</c> is free text: the story, and effects the game cannot apply yet.
+/// (or null); <c>Notes</c> is free text: the story, and effects the game cannot apply yet. <c>Pieces</c> makes it an <b>assembled relic</b>
+/// (ADR-100, ADR-108, ADR-121): joined from those artifacts, worn in the first piece's slot with the other pieces' slots blocked; its
+/// <c>Effects</c> are what it adds to its pieces' effects.
 /// </summary>
 public sealed record ArtifactDefinition(
-    string Id, string Name, ArtifactSlot Slot, ArtifactTier Tier, string? Set, IReadOnlyList<ArtifactEffect> Effects, string Notes = "");
+    string Id, string Name, ArtifactSlot Slot, ArtifactTier Tier, string? Set, IReadOnlyList<ArtifactEffect> Effects, string Notes = "",
+    IReadOnlyList<string>? Pieces = null)
+{
+    /// <summary>The artifacts it is joined from; empty for an ordinary artifact.</summary>
+    public IReadOnlyList<string> Pieces { get; init; } = Pieces ?? [];
+
+    /// <summary>Whether it is an assembled relic (never dropped, only joined from its pieces).</summary>
+    public bool IsAssembled => Pieces.Count > 0;
+}
 
 /// <summary>Worn together, the pieces of a set add <see cref="Bonus"/> to the individual effects.</summary>
 public sealed record ArtifactSetDefinition(string Id, string Name, IReadOnlyList<ArtifactEffect> Bonus, string Notes = "");

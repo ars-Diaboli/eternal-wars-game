@@ -33,7 +33,10 @@ specialties, the inspector rows, Ember March); a person's full game against the 
 health bars, dividing obstacles, layout and information windows (CAMP-1, UI-3, CMB-12; answered in ADR-118). Phase 4 is closed out in core and the editor
 (ADR-117: whole-map fairness, teams 2–8, mirrored templates, the eight-player template, the template editor).
 The AI plays generated maps to the end (ADR-119: exploring, guards, keymasters, gates, garrison heroes).
-**Next**: a person's full game on Ember March (the Phase 3 exit's last check), the new-game screen's user templates, then the Phase 5 items.
+Phase 5 content is in core: summons, creature casters, adventure spells, shrines and spell books in the map format (v29), the breakable gate,
+the keep's shooter and Earthquake (ADR-120); assembled relics and war machine tuning (ADR-121). Their 3D views and hero-screen buttons need a run in Godot.
+**Next**: a person's full game on Ember March (the Phase 3 exit's last check) and a Godot run of the ADR-120 / ADR-121 views, the new-game
+screen's user templates, then the remaining Phase 5 items (control and resurrection spells, map events, presentation).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -340,7 +343,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Income artifacts (daily resources through `HeroIncome`)
 - [x] Terrain artifacts: native terrain and terrain penalty reduction (ADR-045)
 - [x] Artifact pickups on the map (rolled by tier at game start, relics unique) and loot from defeated heroes
-- [ ] Artifacts in treasure chests (the HoMM3 artifact tier, ADR-039) ❓ CONT-3
+- [x] Artifacts in treasure chests: 5 % of chests hold a Minor artifact (ADR-068; the box was left unticked, ADR-121)
 - [x] Artifact exchange between own heroes (`GiveArtifactCommand`, while the exchange is open); screen pending
 - [x] Map format v11 and editor session calls (`SetHeroArtifacts`, `SetArtifactPickup`); validator
 - [x] The AI picks up, values and equips artifacts
@@ -352,7 +355,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
       items with HoMM names; tests follow), the rows whose effects exist, "Ashen Court Regalia"; then the new effect kinds with their rows in
       the owner's order (sight, mana a day and maximum, creature health, no retreat, Necromancy, growth, immunities); the magic ones
       (the four elemental orbs by spell element, ADR-106; spells known while worn, no spells above level 2) with Phase 5
-- [ ] Assembled relics (ADR-100, ADR-108): Wizard's Well, Statue of Legion, Shackles of War, Elixir of Life, Ring of the Magi, Cornucopia,
+- [x] Assembled relics (ADR-100, ADR-108, built ADR-121; the hero screen's buttons not run in Godot yet): Wizard's Well, Statue of Legion, Shackles of War, Elixir of Life, Ring of the Magi, Cornucopia,
       Angelic Alliance, Regalia of the Undead King, Bow of the Sharpshooter (the last two were sets); joining (asked on the last piece and an
       "Assemble" button), blocked slots, taking apart any time, loot whole or as pieces, Merchant and Altar trade pieces only, the AI always
       joins and values a piece more with the others, the hero screen; the `full-mana` and `no-faction-penalty` effect kinds
@@ -482,7 +485,7 @@ Same steps per object as above (map format v23, editor, validator, AI, generator
 - [x] Portals: rename monoliths to portals in the UI (one thing, two ends per type, ADR-070); nothing new in core
 - [x] Mana Vortex (twice the maximum until spent, weekly per hero), Fountain of Magic (weekly per hero, ADR-072)
 - [x] Keymaster's Tent, border guards and border gates (four colours, the player's key, guards vanish, gates stay; ADR-071)
-- [ ] Shrines (spell set in the editor or rolled at start, school Magic at the spell's level, unlimited visits) (Phase 5)
+- [x] Shrines (spell set in the editor or rolled at start, school Magic at the spell's level, unlimited visits) (ADR-120, map format v29)
 
 #### Third catalogue (ADR-077; built 2026-10-26, ADR-079 / ADR-080; [catalogue](../design/adventure-map.md#third-object-catalogue-adr-077))
 Core, map format v22, editor placement, generator sites and tests for each; the Godot screens are not run yet.
@@ -590,20 +593,23 @@ Power, an element per spell.
 - [x] Guild spell selection (ADR-106, ADR-110): 3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3 drawn per town at game start from
       `GameState.Random`, adventure spells drawn like the others
 - [ ] Guild spells fixed by the map (editor, map format bump); the extra-school buildings draw theirs the same way
-- [ ] Summoned creatures (`summon`: vanish after the battle, no experience): town creature rows (Pegasi, Treants, Imps, Horned Demons),
+- [x] Summoned creatures (ADR-120; `summon`: vanish after the battle, no experience): town creature rows (Pegasi, Treants, Imps, Horned Demons),
       Conflux elementals (ADR-106)
 - [x] Spell book: mages of magic towns start with one (holding their specialty spell), warriors buy it for 500 gold in a guild (ADR-071, ADR-110)
 - [x] Guild offers 3 / 3 / 2 / 2 spells of the town's school per level; a hero learns a spell when the school's Magic skill is at least
       its level; a night in a town with a guild refills its mana (ADR-071, ADR-110)
-- [ ] Spell books and known spells in the map format (map heroes, editor)
+- [x] Spell books and known spells in the map format (map heroes, editor; map format v29, ADR-120)
 - [x] Spell Power multiplies damage and buff / debuff duration: × (1 + SP / 10) for now (ADR-072, ADR-110)
 - [ ] School skills take effect: magic (spell levels), attunement (mana, regeneration and cost are in, ADR-063; no potency, ADR-071), mastery
       (allows ranks 2 / 3; a spell rises, free, on a visit to a guild that offers it, ADR-072)
 - [x] Combat spells, rank I (ADR-110): the hero casts once a round during a controlled unit's turn (ADR-070); the unit still acts (ADR-071);
       machines take damage spells only; immunity and resistance are live (ADR-042, ADR-049); the battle AI casts damage spells; HUD spell
       buttons, C in the 2D harness
-- [ ] Combat spells, the rest: creature casters, summons, control and resurrection effects, the AI's buffs
-- [ ] Adventure spells: a fixed 500 movement points besides mana (fewer left: no cast); Dimension Door only to explored tiles (ADR-072)
+- [x] Creature casters (casts per battle, Spell Power = count / 2) and summons, the Phoenix's rebirth (ADR-120)
+- [ ] Combat spells, the rest: control and resurrection effects (Blind, Confusion, Resurrection, for heroes and creature casters), the AI's buffs
+- [x] Adventure spells: a fixed 500 movement points besides mana (fewer left: no cast); Dimension Door only to explored tiles (ADR-072);
+      Town Portal, Dimension Door, View Terrain, Pathfinder's Call, Ashwalk built (ADR-120)
+- [ ] Adventure spells that only show something (Distant Vision, Detect Magic, Grave Whisper, Ledger of Ages, Veil, Eavesdrop): their screens
 - [x] Area spells: a fixed area; a big creature with any cell inside is hit once (ADR-072, ADR-110)
 - [x] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
       specialties +3 % of the effect per hero level (ADR-072); Interference's Spell Power and cost (ADR-110)
@@ -623,14 +629,15 @@ Power, an element per spell.
       machine in regular battles from Advanced Ballistics; lost when destroyed; map format v9, editor, 3D battle
 - [x] Exchanging war machines between heroes (ADR-070, ADR-083: `GiveWarMachineCommand`, exchange panel, AI)
 - [x] Towns keep machines only through a garrison hero (ADR-112)
-- [ ] War machine tuning
+- [x] War machine tuning: the four offensive machines about even in damage per initiative; the glaivethrower 20–26, initiative 11 (ADR-121)
 - [x] Teleporting creatures move like flyers (ADR-070, ADR-083: `Teleporting` capability; no creature has it yet)
 - [x] Siege battles (ADR-099, ADR-106, ADR-109): every battle at a town with a Fort (garrison or a hero in its own town); 36-wide field;
       4 wall sections (2 points, 3 at Castle) and a 1-point gate the defenders pass; keep (Citadel) and two towers (Castle) shooting
       10 + 2 per town building (keep double) when a round starts, 3 points each; moat (Citadel) that stops an attacker and deals two tower
       shots; no free catapult, the attacker's offensive machine always joins and breaks the walls (`BattleShootStructureCommand` from
       Basic Ballistics); 1/2 cover for attackers' shots across walls; `SiegeTests`, a siege replay test
-- [ ] Sieges: one defending shooter in the keep (ADR-106 g); Earthquake (with magic)
+- [x] Sieges: one defending shooter in the keep (ADR-106 g); Earthquake (with magic); troops break the gate (100 / 150 hit points,
+      Defense 10, a blow capped at 50; a machine takes it in one hit; the owner's note) (ADR-120; the 3D views not run in Godot yet)
 - [x] Sieges: the AI attacking a fortified town only when its estimate (a siege fight) wins, defending behind the walls, walking to a
       breach (ADR-109)
 - [x] Sieges: the 3D battle scene (walls, gate, keep, towers, moat, rubble, shots, aiming the engine at a structure) run in Godot 4.7.2,

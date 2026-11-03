@@ -10,10 +10,10 @@ keep their names where HoMM has nothing close and take the HoMM name where it ha
 those the owner chose (CONT-6 b); the items and secondary effects that needed others are dropped (list at the end). The Unwritten Codex and
 the Recanter's Cloak are Relics; the other strong items are **assembled relics** (CONT-6 c), HoMM3's combination artifacts. **The table still
 holds this re-draft** since ADR-111 (101 artifacts, 5 sets): the table is the truth for numbers again (see "Editing artifacts" in
-[development.md](../technical/development.md)). Every number is a draft. Still missing: the assembled relics themselves (their pieces are in) and
-the Crown of the Waning Eye's +1 best magic skill.
+[development.md](../technical/development.md)). Every number is a draft. The assembled relics are built (ADR-121: rows with a `pieces` column). Still missing: the Crown of the Waning
+Eye's +1 best magic skill.
 
-**Status column** (the draft's plan; since ADR-111 every 🆕 and ⏳ row is built except the assembled relics and the Crown's skill level): ✅ an
+**Status column** (the draft's plan; since ADR-111 and ADR-121 every 🆕 and ⏳ row is built except the Crown's skill level): ✅ an
 effect kind that existed; 🆕 a new effect kind; ⏳ needed magic (Phase 5).
 Where a row has both, the ✅ part is applied first. **Was** names the first re-draft's (ADR-099) name or id where it changed.
 
@@ -41,7 +41,8 @@ Where a row has both, the ✅ part is applied first. **Was** names the first re-
 - **Assembled relics** (ADR-100, ADR-108, CONT-6 c, CONT-7; HoMM3's combination artifacts): pieces that a hero wearing all of them may join
   into one Relic. The relic keeps every piece's effect and adds its own; it sits in the first piece's slot and the other pieces' slots stay
   blocked. It is never found whole: only its pieces drop, by their own tiers.
-  - **Joining**: the game asks when the hero puts on the last piece (HoMM3), and the hero screen has an "Assemble" button too.
+  - **Joining**: when the hero puts on the last piece the hero screen says so (HoMM3 asks) and shows an "Assemble" button (ADR-121: a notice,
+    not a blocking question). A carried relic is worn again only with the slots it blocks free.
   - **Taking apart**: any time on the hero screen; the pieces go back to their slots.
   - **Loot and trade**: a defeated hero's relic goes to the winner whole when its slots are free, otherwise as pieces into the backpack. The
     Artifact Merchant and the Sacrificial Altar take and sell pieces only.
@@ -174,7 +175,8 @@ a bank, the Warrior's Tomb, or the reward of a campaign.
 
 ## Assembled relics
 
-Joined from their pieces (above) by a hero who wears all of them (ADR-100, ADR-108). Each keeps its pieces' effects and adds the line below.
+Joined from their pieces (above) by a hero who wears all of them (ADR-100, ADR-108; built, ADR-121). Each keeps its pieces' effects and adds the line below.
+In `artifacts.csv` a relic is a Relic row whose `pieces` column lists its pieces; the first piece's slot is the relic's (the order chooses it).
 Not in the Relic pool: only the pieces drop. The six added by ADR-108 (CONT-7 f: HoMM3's combinations, and the bow and Necromancy sets made
 into relics) are drafts; their numbers wait for play-testing.
 
@@ -221,8 +223,8 @@ list. So (confirmed by CONT-7 g, ADR-108):
 The core is in place (ADR-061): table and catalog, hero equipment and backpack, equip, unequip and give commands, effects in
 battle, movement, income and terrain, map pickups that roll by tier, loot, map format v11, editor session calls, the AI,
 and the hero screen with the paper doll and backpack (`src/Godot/EternalWars.Godot.UI/Hud/HeroPanel.cs`). The re-draft is in the table
-(ADR-111): the renamed rows, the ✅ rows, every new effect kind with its rows, and the magic effects. Next: the assembled relics (roadmap,
-"Artifacts").
+(ADR-111): the renamed rows, the ✅ rows, every new effect kind with its rows, and the magic effects. The assembled relics followed
+(ADR-121): `AssembleRelicCommand`, `TakeRelicApartCommand`, blocked slots in `HeroArtifacts`, loot, the altar, the AI, the hero screen's buttons.
 
 ## Open
 

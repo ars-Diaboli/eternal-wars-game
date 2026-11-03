@@ -40,3 +40,12 @@ public sealed record ArtifactBackpackFull(HeroId Hero, string Artifact) : IEvent
 
 /// <summary>What a hero wears and carries changed: the editor, or an artifact sacrificed at an altar (ADR-079).</summary>
 public sealed record HeroArtifactsChanged(HeroId Hero) : IEvent;
+
+/// <summary>A hero now wears every piece of an assembled relic and may join them (ADR-121): the hero screen asks.</summary>
+public sealed record RelicReady(HeroId Hero, string Relic) : IEvent;
+
+/// <summary>A hero joined the pieces it wore into an assembled relic, worn in the first piece's slot (ADR-121).</summary>
+public sealed record RelicAssembled(HeroId Hero, string Relic, IReadOnlyList<string> Pieces) : IEvent;
+
+/// <summary>A hero took an assembled relic apart: the pieces are worn again (<paramref name="Worn"/>) or in the backpack (ADR-121).</summary>
+public sealed record RelicTakenApart(HeroId Hero, string Relic, IReadOnlyList<string> Pieces, bool Worn) : IEvent;

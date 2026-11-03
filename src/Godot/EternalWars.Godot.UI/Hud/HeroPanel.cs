@@ -97,6 +97,9 @@ public partial class HeroPanel : PanelContainer
         this.SubscribeWhileInTree<ArtifactGiven>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArtifactGained>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArtifactLost>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<RelicAssembled>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<RelicTakenApart>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<RelicReady>(session.Events, e => _status.Text = $"All pieces of {_session.State.Artifacts.Get(e.Relic).Name} are worn: press Assemble to join them.");
         this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroLeveledUp>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroExperienceGained>(session.Events, _ => Refresh());
@@ -336,12 +339,14 @@ public partial class HeroPanel : PanelContainer
         foreach (var slot in ArtifactSlots.All)
         {
             var worn = hero.Artifacts.Worn(slot);
+            var blocked = hero.Artifacts.AllBlocked.Where(b => b.Slot == slot).Select(b => _session.State.Artifacts.Get(b.Relic).Name).ToList();
             for (var i = 0; i < ArtifactSlots.Capacity(slot); i++)
             {
                 var artifact = i < worn.Count ? _session.State.Artifacts.Get(worn[i]) : null;
+                var blocker = artifact is null && i - worn.Count < blocked.Count ? blocked[i - worn.Count] : null;
                 var button = new Button
                 {
-                    Text = $"{slot}: {artifact?.Name ?? "—"}",
+                    Text = $"{slot}: {artifact?.Name ?? (blocker is null ? "—" : $"(held by {blocker})")}",
                     TooltipText = artifact is null ? "" : ArtifactText(artifact),
                     Disabled = artifact is null,
                     CustomMinimumSize = new Vector2(190, 0),
@@ -355,6 +360,24 @@ public partial class HeroPanel : PanelContainer
 
                 _doll.AddChild(button);
             }
+        }
+
+        // Assembled relics (ADR-121): join the worn pieces, or take a relic apart, worn or carried.
+        var player = _session.State.CurrentPlayer.Id;
+        foreach (var relic in ArtifactService.Assemblable(_session.State.Artifacts, hero))
+        {
+            var id = relic.Id;
+            var join = new Button { Text = $"Assemble {relic.Name}", TooltipText = ArtifactText(relic) };
+            join.Pressed += () => Run(new AssembleRelicCommand(player, hero.Id, id));
+            _doll.AddChild(join);
+        }
+
+        foreach (var id in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Distinct().Where(a => _session.State.Artifacts.Get(a).IsAssembled))
+        {
+            var relicId = id;
+            var apart = new Button { Text = $"Take apart {_session.State.Artifacts.Get(id).Name}" };
+            apart.Pressed += () => Run(new TakeRelicApartCommand(player, hero.Id, relicId));
+            _doll.AddChild(apart);
         }
 
         Clear(_backpack);
@@ -374,7 +397,9 @@ public partial class HeroPanel : PanelContainer
     }
 
     private string ArtifactText(ArtifactDefinition artifact) =>
-        $"{artifact.Name} ({artifact.Tier}, {artifact.Slot})\n{ArtifactBonuses.Of(artifact.Effects).Describe()}"
+        $"{artifact.Name} ({(artifact.IsAssembled ? "assembled relic" : artifact.Tier.ToString())}, {artifact.Slot})\n{ArtifactBonuses.Of(_session.State.Artifacts.EffectsOf(artifact)).Describe()}"
+        + (artifact.IsAssembled ? $"\nPieces: {string.Join(", ", artifact.Pieces.Select(p => _session.State.Artifacts.Get(p).Name))}" : "")
+        + (_session.State.Artifacts.RelicOf(artifact.Id) is { } relic ? $"\nA piece of {_session.State.Artifacts.Get(relic).Name}" : "")
         + (artifact.Set is { } set ? $"\nSet: {_session.State.Artifacts.GetSet(set).Name}" : "")
         + (artifact.Notes.Length > 0 ? $"\n{artifact.Notes}" : "");
 
