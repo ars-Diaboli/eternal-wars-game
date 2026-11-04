@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace EternalWars.Core.Data;
 
@@ -16,5 +17,8 @@ internal static class JsonDefaults
         // Hand-edited files need not put the "kind" discriminator first.
         AllowOutOfOrderMetadataProperties = true,
         Converters = { new JsonStringEnumConverter() },
+
+        // The map events' node hierarchies (v31, ADR-115).
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { Maps.MapEventJson.AddTypes } },
     };
 }

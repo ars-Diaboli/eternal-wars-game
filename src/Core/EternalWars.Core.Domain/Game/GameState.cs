@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
+using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
 using EternalWars.Core.Domain.Towns;
@@ -277,6 +278,26 @@ public sealed class GameState
         }
 
         TeamsLocked = locked;
+    }
+
+    /// <summary>The map events (ADR-115): the author's events and what changed while the game ran.</summary>
+    public MapEventState MapEvents { get; } = new();
+
+    /// <summary>Scenario setting (map loading, editor): the map events; refused when they do not fit the map (<see cref="MapEventRules"/>).</summary>
+    public void SetMapEvents(MapEventSet set)
+    {
+        ArgumentNullException.ThrowIfNull(set);
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("The map events can only be changed before the game starts.");
+        }
+
+        if (MapEventRules.Problems(this, set) is [var first, ..])
+        {
+            throw new ArgumentException(first, nameof(set));
+        }
+
+        MapEvents.Load(set);
     }
 
     /// <summary>Scenario setting (map loading, editor): the victory and defeat conditions.</summary>

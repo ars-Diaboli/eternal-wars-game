@@ -35,7 +35,4 @@ HoMM4-like (ADR-048, reworked ADR-069, built ADR-078).
   misc slots and a backpack of 50. Found on the map, looted from defeated heroes (the most valuable kept when the backpack is full, the rest
   lost), handed over in an exchange.
 - **Governing**: [towns-and-economy.md](towns-and-economy.md#governors).
-
-## Hero screen
-Stats, mana, experience, specialty, skills, army, paper doll and backpack, war machines, spell book; opened with H or from the hero list.
-Drag and drop *(planned)*.
+- **Hero screen** (H or the hero list): everything above plus mana and spell book; drag and drop *(planned)*.

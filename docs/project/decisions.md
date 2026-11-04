@@ -709,3 +709,26 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
   day's movement *(proposal: reading III's "no movement points beyond the 500")*, which changes the built behaviour and the AI's portal home.
 - **Not done**: the adventure AI casts none of the show-only spells; old replays with casting heroes may differ (the AI casts more, spell
   buildings draw from the game's generator).
+### ADR-124: Map events, step 1 in core: the event tree, triggers, conditions, actions, map format v31 (ADR-096, ADR-115, EVT-1 … EVT-4, 2026-11-04)
+**Status**: implemented in core (2026-11-04). Not done: the game app's message, question and army windows; the editor's "Events" tab and
+validator warnings; the AI answering by value (it takes the first answer); quests (step 2); loops and "run another event" (step 3).
+
+- **Data**: `MapEventSet` (events in list order, declared variables with starting values, event cells) is the domain's own tree, written to the
+  map as it is (`events`, v31): every node carries a `type` name (`MapEventJson`), so there are no parallel document types. An event has a
+  name, a kind (hero, player, town), its actions, whether it starts enabled and, for a town event, its towns. Invisible cells are not map
+  objects: views, fog, routes and the AI never see them.
+- **Running** (`MapEventService`): triggers queue runs; one runs at a time and pauses on a message, a question, a full army, a battle or
+  anything else pending (a level-up); the session carries it on after every command. Level-ups from an event are offered once the events
+  are done, and only after an event ran, so games without events play exactly as before. A message or question for a player or town event
+  has no hero (`MapEventDecision.NoHero`).
+- **Rules taken where ADR-115 left a choice**: a disabled event is skipped when its turn comes (an earlier event may disable a later one at
+  the same moment); a message's reward amounts are drawn when it shows, so its lines tell what comes; a hero without an army cannot fight
+  an event's battle and the event stops; a computer player is shown no messages and its full army keeps the strongest stacks; neutral
+  towns' events run at the start of every day, day 1 included; "defeated by" counts battles won by defeat (not retreats or surrenders);
+  a given hero moves at once at a turn start and from the next turn when a hero event gives it; a building ignores the day's build.
+- **Loading**: `MapEventRules.Problems` refuses events that do not fit the map (duplicate names, undeclared variables, unknown skills,
+  artifacts, spells, creatures, heroes or events, questions without two or three answers, cells off free passable ground or naming a
+  non-hero event, town events naming non-towns).
+- **Commands**: `AnswerMapEventCommand` (an answer, or 0 to close a message) and `ChooseEventArmyCommand` (the stacks to keep). Events:
+  `MapEventRan`, `MapVariableChanged`, `MapEventEnabledChanged`, `MapEventCellRemoved`, `MapEventHeroGiven`, `MapEventSkillGained`,
+  `MapEventSpellBookGained`, `MapEventSpellLearned`, `MapEventWarMachineGained`.

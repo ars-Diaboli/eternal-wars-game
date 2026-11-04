@@ -8,7 +8,8 @@ using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Heroes;
 
-public sealed class HeroMovementService(GameState state, IEventPublisher events, MapObjectInteractionService interactions)
+public sealed class HeroMovementService(
+    GameState state, IEventPublisher events, MapObjectInteractionService interactions, MapEvents.MapEventService mapEvents)
 {
     /// <summary>Diagonal steps cost ~√2 times more, as in HoMM.</summary>
     public const double DiagonalMultiplier = 1.41;
@@ -201,6 +202,11 @@ public sealed class HeroMovementService(GameState state, IEventPublisher events,
         if (state.ObjectCellAt(target) is { Cell: FootprintCell.Visit } visit)
         {
             interactions.Visit(hero, visit.Object);
+        }
+        else
+        {
+            // An invisible event cell (ADR-115, EVT-2 a): its hero event runs on every step; a message, question or battle ends the route.
+            mapEvents.OnHeroEntered(hero, target);
         }
 
         return MoveResult.Moved;

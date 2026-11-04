@@ -36,7 +36,6 @@ HoMM3 rules. No sea travel: water and rock are impassable on foot (ADR-051).
     make terrains native (ADR-061). Applied in `MovementRules.StepCost`, shared by routes and steps.
 - **Roads** (ADR-024, ADR-032): a layer over terrain, painted in the editor or laid by the [generator](random-maps.md#pipeline). **Dirt 50,
   gravel 65, cobblestone 75**; replaces the terrain cost and ignores native penalties, only for a step **from a road tile to a road tile**.
-- **Rivers**: see [Scenery and rivers](#scenery-and-rivers).
 - **Last step**: a hero with any movement points left may make one more step, whatever it costs, and ends with 0.
 - **Daily movement points** = base from the **slowest creature's map speed** (`MapSpeed`, HoMM3 scale, separate from battlefield Speed,
   ADR-037): ≤3: 1500, 4: 1560, 5: 1630, 6: 1700, 7: 1760, 8: 1830, 9: 1900, 10: 1960, ≥11: 2000; × (100 % + skill bonus, e.g. Logistics) +
@@ -50,31 +49,17 @@ stops when it bumps into one.
 ## Map objects
 Objects have a footprint and are entered only through their entrance tile, usually from below.
 
-| Object | Section |
-|---|---|
-| Resource pile, treasure chest, artifact pickup, one-time loot, Prison, Pandora's Box | [Treasure and one-time loot](#treasure-and-one-time-loot), [Pandora's Box](#pandoras-box-and-map-events) |
-| Mines, abandoned mines, deposits, resource providers | [Mines and resource providers](#mines-and-resource-providers) |
-| Town: 7×7 with the corners free, entrance bottom-middle (`.BBBBB.`, five rows `BBBBBBB`, `.BBVBB.`, ADR-046, ADR-050) | [towns-and-economy.md](towns-and-economy.md) |
-| Map dwelling | [Creature dwellings](#creature-dwellings) |
-| Neutral monster | [Neutral monsters](#neutral-monsters) |
-| Creature banks | [Creature banks](#creature-banks) |
-| Training sites, buffs | [Permanent hero power-ups](#permanent-hero-power-ups), [Temporary buffs](#temporary-buffs) |
-| Sign, Observatory, Hill Fort, Town Gate, War Machine Factory, Windows / Eyes of the Magi, map tavern, portals, garrison, Keymaster | [Utilities and travel](#utilities-and-travel), [Gates](#gates-and-teleporters) |
-| Mana Vortex, Fountain of Magic, Magic Well, Shrines | [Magic](#magic) |
-| Sphinx, Sanctuary, Sacrificial Altar, Refugee Camp, Den of Thieves, Cartographer, Astrologer's Tower, Artifact Merchant, Witch Hut | [Special sites](#special-sites) |
-| Marketplace: opens the trading screen for the hero's owner at a fixed rate ([rates](towns-and-economy.md#marketplace)); not flaggable, any number of visits | – |
-| Scenery, rivers | [Scenery and rivers](#scenery-and-rivers) |
-
-- **Entering an enemy or neutral town** fights its garrison, if any, and captures it; an own hero on the entrance is the town's visiting
-  hero.
+- **Town**: 7×7 with the corners free, entrance bottom-middle (`.BBBBB.`, five rows `BBBBBBB`, `.BBVBB.`; ADR-046, ADR-050). Entering an
+  enemy or neutral town fights its garrison, if any, and captures it; an own hero on the entrance is the town's visiting hero.
+- **Marketplace**: opens the trading screen for the hero's owner at a fixed rate ([rates](towns-and-economy.md#marketplace)); not flaggable,
+  any number of visits.
 - **Mines may be guarded** (editor or generator): the guard must be beaten before the first flagging; after that any hero re-flags by
   visiting. Mine guards always fight.
 
 <a id="planned-objects-adr-068"></a><a id="second-object-catalogue-adr-069"></a><a id="third-object-catalogue-adr-077"></a>
 ## Shared object rules
-The objects come from the owner's three lists: ADR-068, ADR-069 (built ADR-082; Shrines ADR-120) and ADR-077 (built ADR-079, ADR-080,
-ADR-084). Questions are `MAP-n` in [open-questions.md](../project/open-questions.md). The generator places them as treasure by value
-([random-maps.md](random-maps.md#pipeline)).
+Objects from the owner's lists ADR-068, ADR-069 (built ADR-082, ADR-120) and ADR-077 (built ADR-079, ADR-080, ADR-084); questions `MAP-n`.
+The generator places them as treasure by value ([random-maps.md](random-maps.md#pipeline)).
 
 - **Artifact tiers** (MAP-1): **Minor**, **Major**, **Relic** as in `artifacts.csv`. Assembled relics never drop; their pieces do (ADR-121).
   Relics are drawn from a pool without repeats, refilled when empty, so a hero may hold two copies.
@@ -87,7 +72,7 @@ ADR-084). Questions are `MAP-n` in [open-questions.md](../project/open-questions
   replaces the first; different objects add up; battles cap morale and luck at ±5 (ADR-053, MAP-10). Each hero takes a buff once a day
   (Stables once a week), so walking off and on gives nothing.
 - **Random rewards** draw from `GameState.Random` at the visit; a map author may fix the outcome.
-- **Resource groups**: *basic* = lumber, ore; *magic* = crystal, sulfur, mercury (ADR-067); "random resource" never means gold.
+- "Random resource" never means gold ([resource groups](towns-and-economy.md#resources)).
 - **Neutral creatures for objects**: Dwarf and Battle Dwarf are neutral tier-2 creatures (`neutral.dwarf`, `neutral.battle-dwarf`).
 
 ## Neutral monsters
@@ -104,14 +89,10 @@ editor inspector or generator):
 
 ## Meeting heroes
 Moving onto another hero's tile is an interaction, so routes may **end** there (never pass through):
-
-| Other hero | Result |
-|---|---|
-| Own | **Exchange screen**: swap stacks (`MoveStackCommand`: split, merge, swap; a hero keeps one stack), artifacts and war machines ([combat.md](combat.md#war-machines)). The mover stays on its adjacent tile. Artifact exchange UI *(planned)* |
-| Enemy | **Battle**; the loser (or a hero that retreats) leaves the map |
-| Allied | No interaction: the tile is blocked (ADR-027) |
-
-- Teams: [victory-and-modes.md](victory-and-modes.md#game-options).
+- **Own**: the **exchange screen** (the mover stays on its adjacent tile): stacks (`MoveStackCommand`: split, merge, swap; a hero keeps one
+  stack), artifacts (UI *planned*) and [war machines](combat.md#war-machines).
+- **Enemy**: a battle; the loser (or a hero that retreats) leaves the map.
+- **Allied** ([teams](victory-and-modes.md#game-options)): no interaction, the tile is blocked (ADR-027).
 - Under refog a moving hero **stops** when an enemy hero comes into sight; bumping into an unseen one starts a battle (**ambush**, no
   bonus; ADR-031, ADR-038).
 
@@ -123,18 +104,16 @@ Every link is fixed in the map; no random-exit portals (ADR-026). "Portal" and "
 | **Two-way gate / Portal** | A linked pair, **exactly two ends** (no groups); visiting either end moves the hero to the other. Subterranean gates connect levels |
 | **One-way gate / One-Way Portal** | An entrance linked to one exit; several entrances may share an exit. The exit is a landing spot only: visiting does nothing, routes may walk over it |
 
-- Pathfinding goes through both (one-way only in its direction). A blocked exit (a hero on it) means no teleport.
-- Editor: link tool for both; the validator flags unlinked gates and exits no entrance uses. Templates may link zones with portals
-  ([random-maps.md](random-maps.md#the-template-maptemplate-format-v8)).
+Routes go through both (one-way only forwards); a hero on the exit blocks the teleport. The editor links them; the validator flags unlinked
+gates and unused exits. Templates may link zones with portals.
 
 <a id="fog-of-war-implemented-adr-017-adr-031"></a>
 ## Fog of war
 ADR-017, ADR-031. Two modes, chosen at game creation (`GameOptions.FogMode`):
 1. **Permanent reveal** (HoMM3): once explored, terrain, objects and units stay visible.
-2. **Shroud + refog for units**: terrain and objects stay revealed; other players' heroes are visible only on tiles **in sight**. Hysteresis:
-   a tile comes into sight within an observer's radius and drops out only once every observer is farther than radius + **refog margin**
-   (default 2, configurable; radius 3 + margin 4 reveals at 3, refogs at 7). Objects out of sight show their **last known state**
-   (`ObjectMemory`); units are hidden.
+2. **Shroud + refog for units**: terrain and objects stay revealed (out of sight, in their **last known state**, `ObjectMemory`); other
+   players' heroes show only on tiles **in sight**: within an observer's radius, dropping out only beyond radius + **refog margin**
+   (default 2, configurable).
 
 Observers: heroes and owned towns radius 5, owned mines, providers and map dwellings radius 2. Scouting adds 2 / 4 / 6 to a hero's radius,
 revealed at once when learned.
@@ -179,12 +158,13 @@ A map dwelling is one creature line with its own growth (ADR-054; recruiting and
 - **Base creatures only** (ADR-073): the editor refuses an upgrade, the validator reports one, and loading turns it into the line's base.
 
 ## Creature banks
-Entering starts a battle against the rolled guard; guards **always fight**. The reward is paid only on victory; the bank is then **plundered**
-and **refills 4 weeks later** (guard re-rolled, whole reward back; MAP-7, MAP-14). The guard row is rolled at game start (30 / 30 / 30 /
-10 %), **hidden**, and cannot be fixed by the author. Default width, no Tactics choice or deployment. Retreat or defeat leaves the guard
-**intact**. A hero without an army cannot enter. Each creature kind is split into a few stacks (at most seven in all). Guards are **2–3
-types of one faction** (neutrals count as one), rewards about 25–60 % of the guard's gold worth (ADR-112, MAP-22). "N each" = N of every named
-resource; "a fifth" = half the time a fifth of the first type is upgraded. Tables live in `CreatureBank.cs`.
+- Entering fights the guard, which **always fights**; a hero without an army cannot enter. Default width, no Tactics choice or deployment.
+  Each creature kind is split into a few stacks (at most seven).
+- Reward only on victory; the bank is then **plundered** and **refills 4 weeks later**, guard re-rolled, whole reward back (MAP-7, MAP-14).
+  Retreat or defeat leaves the guard **intact**.
+- Guard row rolled at game start (30 / 30 / 30 / 10 %), **hidden**, not fixable by the author. Guards are **2–3 types of one faction**
+  (neutrals count as one), rewards about 25–60 % of the guard's gold worth (ADR-112, MAP-22; `CreatureBank.cs`). "N each" = N of every named
+  resource; "a fifth" = half the time a fifth of the first type is upgraded.
 
 | Bank | Guard rows (30 / 30 / 30 / 10 %) and reward |
 |---|---|
@@ -277,8 +257,19 @@ Rules: [shared object rules](#shared-object-rules).
   visiting hero is asked whether to open it; it opens once and vanishes. Gains only; an optional guard is fought (like a bank's) after "open?"
   and the box opens only on victory; optional message; gains the hero has no room for are lost. Contents hidden until opened (the AI knows
   them); an empty box is a validator error. The generator places boxes of gold, experience or creatures from a value of 5000.
-- **Map events** *(planned, ADR-096, ADR-115; EVT-1 … EVT-6)*: HotA-like extended events, a tree of conditions and actions over map-wide
-  variables, in four types: hero events (invisible event cell or a Pandora's Box), player events (turn start), town events (owner's turn
-  start) and quest events; copies of a hero event on several cells act as one. Quest objects: **Seer's Hut** (quests in turn, each with a
-  reward), **Quest Guard** (blocks until its quest is done, then vanishes), **Quest Gate** (lets through heroes that meet its quest); a quest
-  log. The AI answers by value, does worthwhile quests and treats guards and gates as obstacles.
+- **Map events** (ADR-096, ADR-115, ADR-124): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
+  variables, stored in the map file (`events`; the node types are in `MapEvents/MapEventData.cs`).
+  - **Triggers**: hero events run when a hero steps onto one of their invisible cells (every step, until the event disables or removes
+    itself; routes ignore cells and stop only for a message, a question or a battle); player events at every player's turn start after
+    income, growth and the week's event; town events at the owner's turn start, neutral towns' at the start of the day. Several at one
+    moment run in list order; who triggers is a condition.
+  - **Conditions**: and / or / not, comparisons of expressions (numbers, variables, random numbers, + − × ÷, the player's resources, the
+    hero's army, stats, skills, artifacts, level, mana and movement, the date, the complexity, hero and town counts), the hero, its class,
+    the player, human or computer, its faction, team and allies, a town's owner, and who beat a monster or hero an event names.
+  - **Actions**: branches, stop, variables, enable or disable an event, remove the cell; messages (with reward lines, given once read) and
+    questions with two or three answers; resources, creatures (a person's full army chooses what to keep, a computer keeps its strongest),
+    creatures to hire, buildings (free, with what they need), experience, primary and secondary skills (gains only), artifacts, war machines,
+    spell book and spells, mana, movement, morale and luck until the next battle, a battle (won: the event goes on; lost, fled or
+    surrendered: it stops), reveal an area, give a roster hero. A computer player sees no messages.
+  - *(planned)* Quest events (EVT-5): **Seer's Hut**, **Quest Guard**, **Quest Gate**, a quest log; loops, "run another event" and a
+    Pandora's Box that runs a hero event; the AI answering by value and doing worthwhile quests; the editor's "Events" tab.

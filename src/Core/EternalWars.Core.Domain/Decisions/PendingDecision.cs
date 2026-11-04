@@ -50,6 +50,41 @@ public sealed record SphinxDecision(HeroId Hero, MapObjectId Sphinx, string Ques
 /// <summary>A Pandora's Box asks whether to open it (ADR-100); the contents and any guard stay hidden. <c>AnswerPandorasBoxCommand</c> answers.</summary>
 public sealed record PandorasBoxDecision(HeroId Hero, MapObjectId Box) : PendingDecision(Hero);
 
+/// <summary>
+/// A map event shows a message or asks a question (ADR-115, EVT-4 f): <paramref name="Lines"/> are the rewards a message gives once it is read,
+/// <paramref name="Answers"/> a question's two or three answers (empty for a message). <c>AnswerMapEventCommand</c> answers (0 for a message).
+/// <paramref name="Hero"/> is the hero of a hero event, <see cref="NoHero"/> for player and town events.
+/// </summary>
+public sealed record MapEventDecision(HeroId Hero, string Event, string Text, IReadOnlyList<string> Lines, IReadOnlyList<string> Answers)
+    : PendingDecision(Hero)
+{
+    /// <summary>The hero of a player or town event's decision: none (hero ids start at 1).</summary>
+    public static HeroId NoHero => default;
+
+    public bool IsQuestion => Answers.Count > 0;
+
+    public bool Equals(MapEventDecision? other) =>
+        other is not null && Hero == other.Hero && Event == other.Event && Text == other.Text && Lines.SequenceEqual(other.Lines) && Answers.SequenceEqual(other.Answers);
+
+    public override int GetHashCode() => HashCode.Combine(Hero, Event, Text, Lines.Count, Answers.Count);
+
+    public override string ToString() =>
+        $"MapEventDecision {{ Hero = {Hero}, Event = {Event}, Text = {Text}, Lines = {string.Join(" | ", Lines)}, Answers = {string.Join(" | ", Answers)} }}";
+}
+
+/// <summary>
+/// A map event gave a person's hero creatures it has no room for (EVT-4 e): <paramref name="Stacks"/> are its army and the newcomers, and
+/// <c>ChooseEventArmyCommand</c> keeps up to seven of them; the rest are left behind.
+/// </summary>
+public sealed record MapEventArmyDecision(HeroId Hero, IReadOnlyList<Armies.CreatureStack> Stacks) : PendingDecision(Hero)
+{
+    public bool Equals(MapEventArmyDecision? other) => other is not null && Hero == other.Hero && Stacks.SequenceEqual(other.Stacks);
+
+    public override int GetHashCode() => HashCode.Combine(Hero, Stacks.Count);
+
+    public override string ToString() => $"MapEventArmyDecision {{ Hero = {Hero}, Stacks = {string.Join(" | ", Stacks)} }}";
+}
+
 /// <summary>A witch hut offers up to two skills (ADR-079): <c>ChooseWitchHutSkillCommand</c> takes one, or none to leave.</summary>
 public sealed record WitchHutDecision(HeroId Hero, MapObjectId Hut, IReadOnlyList<string> Options) : PendingDecision(Hero)
 {

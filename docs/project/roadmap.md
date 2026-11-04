@@ -8,10 +8,10 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 
 **Where we are (2026-11-04)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121).
+except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core (ADR-124).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
-and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the last 16 battle spells, map events,
-presentation.
+and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the last 16 battle spells, map events (the
+game app's windows, the editor's Events tab, quests), presentation.
 
 ## Open checks in Godot
 - [ ] Godot run of (built and tested in core, the Godot part not run yet):
@@ -139,11 +139,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Sieges: the town's own look on the siege field
 
 ### Map events (ADR-096, ADR-115; HotA's extended events; after the Phase 3 and 4 exits, before the campaign)
-- [ ] Step 1, core: map events as a data tree (hero, player and town events), map-wide whole-number variables, HotA's conditions with the
-      team, an ally and the day of the week, HotA's actions with reveal an area and give a hero, messages and questions as pending decisions,
-      the battle action, a full army's choice; invisible event cells ignored by routes (the route stops only when the event shows something
-      or fights), repeating until disabled; turn-start runs after income and growth, neutral towns at the start of the day; list order;
-      "defeated by" records only for named monsters and heroes; map format bump (EVT-1 … EVT-4)
+- [x] Step 1, core: the event tree, variables, event cells, turn-start player and town events, HotA's conditions and actions, messages,
+      questions, battles, a full army's choice, "defeated by" records, map format v31 (ADR-124)
+- [ ] Step 1, game app: the message and question window (with reward lines) and the full army's choice; the camera moves to what a turn-start
+      message concerns (EVT-2 f)
 - [ ] Step 2, quests: Seer's Hut, Quest Guard, Quest Gate (like the border gate), quest stages, HoMM3's quest forms that take what they
       ask, the quest log (Q), free passage for a hero that meets a gate's quest; no Seer's Huts on random maps for now (EVT-5)
 - [ ] Step 3: loops and "run another event"; a Pandora's Box that runs a hero event (MAP-35)

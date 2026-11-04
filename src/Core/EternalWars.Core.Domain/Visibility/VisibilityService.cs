@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Visibility;
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<ProviderOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
-      IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<AreaRevealed>, IEventHandler<HeroFreed>,
+      IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<AreaRevealed>, IEventHandler<HeroFreed>, IEventHandler<MapEventHeroGiven>,
       IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>
 {
     public void Handle(GameStarted @event)
@@ -94,6 +94,8 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
     // A freed prisoner looks around from where the prison stood.
     public void Handle(HeroFreed @event) => OnHeroRelocated(state.GetHero(@event.Hero), state.GetHero(@event.Hero).Position);
+
+    public void Handle(MapEventHeroGiven @event) => OnHeroRelocated(state.GetHero(@event.Hero), state.GetHero(@event.Hero).Position);
 
     // Scouting widens the hero's sight at once (ADR-069).
     public void Handle(HeroLeveledUp @event)

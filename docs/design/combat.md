@@ -4,9 +4,8 @@
 > [open-questions.md](../project/open-questions.md).
 
 ## Battlefield
-- **Separate battlefield**, an arena themed by the terrain where the battle starts (ADR-052): 3D scene with move / attack / shot previews,
-  animated AI turns, an initiative timeline and a result screen.
-- **Square grid, 30 wide × 24 tall** by default (ADR-021, ADR-033); 36 wide in sieges.
+- **Separate battlefield** themed by the terrain where the battle starts (ADR-052): **square grid, 30 wide × 24 tall** by default (ADR-021,
+  ADR-033), 36 wide in sieges.
 - **Multi-cell units** (ADR-005, ADR-037); positions refer to the footprint's top-left cell:
 
   | Size | Footprint | Typical creatures |
@@ -28,9 +27,8 @@
     neutral monsters, not in creature banks.
 
 ## Engagement and blocking
-- **No facing, no generic flanking bonus**: damage is the same from any side. A unit's perimeter grows with size, so more attackers fit around
-  a big one. The core tracks engagement and hit history for **abilities** (bonuses when the target is engaged by another enemy, per extra
-  side, per hit this round, …). Size alone grants no reach, cleave or trample.
+- **No facing, no generic flanking bonus.** More attackers fit around a bigger unit. The core tracks engagement and hit history for
+  **abilities** (target engaged by another enemy, per extra side, per hit this round, …). Size alone grants no reach, cleave or trample.
 - **Body blocking and cover** (ADR-035): footprints block movement. Each **unit (friend or foe) or obstacle** the line of fire passes through
   counts **once**:
 
@@ -69,7 +67,7 @@ Creature capabilities, independent of size:
   Speed = movement range), shown on a timeline. The only extra action is good morale.
 - **Ties**: attacker's side, then higher speed, then a seeded roll.
 - **Wait**: waiting units act at the end of the round in **reverse** initiative order.
-- Spells that change initiative do not change when the hero may cast; their other effects on the order are open ❓.
+- How initiative spells change the order is open ❓ ([casting](magic.md#casting-in-battle) is unaffected).
 
 ## Morale and luck
 ADR-053; rates are drafts. Each stack has −5 … +5 of each: creature + hero (and its artifacts) + army.
@@ -83,7 +81,7 @@ ADR-053; rates are drafts. Each stack has −5 … +5 of each: creature + hero (
 
 ## Actions
 ADR-038.
-- **Defend**: +20 % Defense (at least +1) until the unit's next turn. **Wait**: see turn order.
+- **Defend**: +20 % Defense (at least +1) until the unit's next turn.
 - **Retaliation**: once per round unless a capability says otherwise.
 - **Ranged units**: no shot while engaged; distance and cover lower the damage (above).
 - The hero's casting: [magic.md](magic.md#casting-in-battle).
@@ -136,26 +134,25 @@ ADR-099, ADR-106, built ADR-109 and ADR-120 (CMB-11). Numbers are placeholders; 
   ordinary battle. Map garrisons are not besieged.
 - **Fortifications** by fort level (ADR-066): Fort: 4 wall sections and the gate; Citadel: + keep and moat; Castle: + two towers and
   stronger walls.
-- **Walls**: a section has **2** hit points (Fort, Citadel) or **3** (Castle); a destroyed one is a gap. Attackers' shots across a wall take
-  the 1/2 cover, once per shot *(assumed: defenders shoot out freely)*.
-- **Layout** *(assumed)*: wall line at column 24 of 36 (24 columns attackers, 11 behind); four sections of 5 rows, the gate 4 rows in the
-  middle; the moat is the 2 columns in front, bridged at the gate. Keep (behind the defenders' edge) and towers (above and below the wall
-  line) are **off the grid**: they block nothing and only the siege engine reaches them. Random obstacles stay in front of the moat.
-- **Gate**: defenders pass, attackers break it. **100** hit points, **150** from the Citadel *(assumed)*, **10 Defense**. A machine's hit
-  takes all of it; an attacking stack next to it strikes it like Defense 10, **capped at 50** a blow.
-- **Who breaks walls**: no free siege catapult; the attacker's own **offensive machine** always joins and fires at the fortifications (the
-  catapult is just Stronghold's and Swamp Bestiary's machine). Without Ballistics it fires by itself, only at fortifications, 2 hits in 3,
-  1–2 hit points a hit; Basic gives control. By itself it aims at wall sections, at the gate once all four sections are down, then keep and
-  towers *(order assumed)*. Without a machine only the troops break the gate. **Earthquake** takes 1 hit point off each of 2 sections.
-- **Keep and towers**: each shoots **once a round**, as the round starts *(assumed)*, at the attacking stack worth most to hit: flat **10 + 2
-  per town building** (every built level of every building and dwelling *(assumed)*), the keep double. **3** hit points each.
-- **Moat** (Citadel): a stack entering it (walking or landing) stops and takes **2 × (10 + 2 per town building)**, once per entry; attackers
-  only *(assumed)*; it moves on freely from there.
-- **Flyers and teleporters** cross the walls. Defenders' shooters behind the walls get the 1/2 cover. From the Citadel the defenders'
-  strongest shooter starts **in the keep** *(proposal, ADR-120)*: never moves, no melee against it, shots at it take wall cover; it leaves
-  when the keep falls.
-- **AI**: attacks a fortified town only when a siege estimate wins; defenders stay behind the walls; walking attackers go round to a breach
-  or the broken gate and, while walls hold, close up to the moat without entering; with no machine and no breach they break the gate.
+- **Walls**: a section has **2** hit points (**3** with the Castle); a destroyed one is a gap. Attackers' shots across a wall take the 1/2
+  cover once *(assumed: defenders shoot out freely)*.
+- **Layout** *(assumed)*: wall line at column 24 of 36; four sections of 5 rows, the gate 4 rows in the middle; the moat is the 2 columns in
+  front, bridged at the gate. Keep (behind the defenders' edge) and towers (above and below the wall line) are **off the grid** (block nothing; only the siege engine reaches them). Random obstacles stay
+  in front of the moat.
+- **Gate**: defenders pass, attackers break it: **100** hit points (**150** from the Citadel *(assumed)*), **10 Defense**. A machine's hit
+  takes all of it; an adjacent attacking stack strikes it like Defense 10, **capped at 50** a blow.
+- **Breaking walls**: no free catapult; the attacker's own **offensive machine** always joins as the siege engine. Without Ballistics it
+  fires by itself at fortifications only, 2 hits in 3, 1–2 hit points a hit: wall sections, the gate once all four are down, then keep and
+  towers *(order assumed)*; Basic gives control. Without a machine only troops break the gate. **Earthquake**: 1 hit point off 2 sections.
+- **Keep and towers**: each shoots **once a round** as the round starts *(assumed)* at the attacking stack worth most to hit: flat **10 + 2
+  per town building** (every built level of every building and dwelling *(assumed)*), the keep double; **3** hit points each.
+- **Moat**: an attacking stack entering it (walking or landing) stops and takes **2 × (10 + 2 per town building)** per entry, then moves on
+  freely *(attackers only assumed)*.
+- **Flyers and teleporters** cross the walls; defenders' shooters behind them get the 1/2 cover. From the Citadel the defenders' strongest
+  shooter starts **in the keep** *(proposal, ADR-120)*: never moves, can't be meleed, shots at it take wall cover; it leaves when the keep
+  falls.
+- **AI**: attacks a fortified town only when a siege estimate wins; defenders stay inside; walking attackers go round to a breach or the
+  broken gate, close up to the moat without entering while walls hold, and break the gate with no machine and no breach.
 
 ## Auto and quick combat
 - **Auto combat** (ADR-088, ADR-090), per human player in the game menu: off, ask before each battle, or always; for battles against

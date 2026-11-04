@@ -106,6 +106,17 @@ public sealed class BattleService(
         Begin(attacker, battle, Stacks(attacker), GuardStacks(box.Guard), widthChoice: false, deployment: false);
     }
 
+    /// <summary>
+    /// A map event's battle (ADR-115, EVT-4 d): the hero fights the author's army where it stands, split like a bank's guard, with no Tactics choice.
+    /// There is no map object behind the army: the winner keeps its survivors and its experience, a beaten hero leaves the map.
+    /// </summary>
+    internal void BeginEventBattle(Hero attacker, IReadOnlyList<CreatureStack> army)
+    {
+        var neutral = new BattleParticipant(BattleSide.Defender, null, null, null, 0, 0, SkillLevel.None, IsComputer: true);
+        var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, attacker.Position, isAmbush: false);
+        Begin(attacker, battle, Stacks(attacker), GuardStacks(army), widthChoice: false, deployment: false);
+    }
+
     /// <summary>Each kind of creature split into a few stacks, so that the guard has at most <see cref="BattleSetup.MaxGuardStacks"/> + 2 of them.</summary>
     private List<BattleStackSpec> GuardStacks(IReadOnlyList<CreatureStack> guard)
     {

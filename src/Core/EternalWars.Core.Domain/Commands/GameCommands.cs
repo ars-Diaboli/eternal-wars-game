@@ -47,6 +47,19 @@ public sealed record AnswerSphinxCommand(PlayerId Player, int Option) : GameComm
 /// <summary>Answers a <c>PandorasBoxDecision</c>: open the box (fighting its guard first, if any) or leave it (ADR-100).</summary>
 public sealed record AnswerPandorasBoxCommand(PlayerId Player, bool Open) : GameCommand(Player);
 
+/// <summary>Answers a <c>MapEventDecision</c> (ADR-115): the answer at <paramref name="Option"/> (0-based), or 0 to close a message.</summary>
+public sealed record AnswerMapEventCommand(PlayerId Player, int Option) : GameCommand(Player);
+
+/// <summary>Answers a <c>MapEventArmyDecision</c>: the stacks to keep (indices into its list, one to seven); the rest stay behind (EVT-4 e).</summary>
+public sealed record ChooseEventArmyCommand(PlayerId Player, IReadOnlyList<int> Keep) : GameCommand(Player)
+{
+    public bool Equals(ChooseEventArmyCommand? other) => other is not null && Player == other.Player && Keep.SequenceEqual(other.Keep);
+
+    public override int GetHashCode() => HashCode.Combine(Player, Keep.Count);
+
+    public override string ToString() => $"ChooseEventArmyCommand {{ Player = {Player}, Keep = {string.Join(",", Keep)} }}";
+}
+
 /// <summary>Answers a <c>WitchHutDecision</c>: one of its skills, or null to leave without learning (ADR-079).</summary>
 public sealed record ChooseWitchHutSkillCommand(PlayerId Player, string? Skill) : GameCommand(Player);
 

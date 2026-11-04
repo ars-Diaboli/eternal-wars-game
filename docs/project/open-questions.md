@@ -27,12 +27,19 @@ HoMM3"). Today Scouting only adds sight radius (+2 / 4 / 6), and every army on t
 - c. Scouting against Veil: who wins?
 - d. Does the computer player see only what its heroes' Scouting shows?
 
-**Proposal**: (a) yes, words for every army you do not own, in sight or remembered. (b) Basic: exact counts of neutral stacks and creature
+**Proposal**: 
+(a) yes, words for every army you do not own, in sight or remembered. 
+(b) Basic: exact counts of neutral stacks and creature
 bank guards in sight, an enemy hero's level and primary stats; Advanced: exact counts of enemy heroes' armies and town garrisons in sight,
 their artifacts and war machines; Expert: an enemy hero's skills and known spells, and a town's available creatures. The best Scouting among
-the player's heroes in sight of the target counts. (c) Veil rank I hides counts from Scouting below Expert; Veil II hides artifacts from
-everyone; Veil III as built. (d) Yes: the AI reads the shown army (a word counts as the middle of its range), through the same
+the player's heroes in sight of the target counts. 
+(c) Veil rank I hides counts from Scouting below Expert; Veil II hides artifacts from
+everyone; Veil III as built. 
+(d) Yes: the AI reads the shown army (a word counts as the middle of its range), through the same
 `AdventureIntel` query. The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
+
+Answer : a - proposal correct, also for every AdventureIntel.AmountWord display numeric range eg a pack : 10-19, lots : 20-49 and so on;
+b, c, d - use proposal;
 
 ## Game flow and content
 
@@ -88,3 +95,4 @@ One line per question; the ADR holds the detail.
 - **Campaign**: CAMP-1 (the prologue) ADR-118.
 - **Arena**: ARN-1 and ARN-2 (before 1.0, with LAN, three shipped maps) ADR-100.
 - **Assumptions** of ADR-070 … ADR-072: confirmed in ADR-073; of ADR-073: confirmed in ADR-075.
+~~~~
