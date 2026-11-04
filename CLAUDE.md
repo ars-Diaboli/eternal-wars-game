@@ -22,4 +22,7 @@ HoMM3-like 3D turn-based strategy. Godot 4.7.2 .NET, C# on .NET 10. Read `docs/t
   draw randomness only from `GameState.Random` (never `System.Random`).
 - Editor changes go through `MapEditorSession` so they are undoable and publish events.
 - Bump `MapDocument.CurrentFormatVersion` when the map format changes, and keep older versions loading.
-- Record significant decisions in `docs/project/decisions.md`; update `docs/project/roadmap.md` checkboxes.
+- Record significant decisions in `docs/project/decisions.md` (append; ADR-001 … ADR-100 are in `decisions-archive.md`; search for
+  `### ADR-NNN` instead of reading either whole); update `docs/project/roadmap.md` checkboxes. Owner notes in `docs/project/ideas.md`
+  become an ADR or an `open-questions.md` question, then leave `ideas.md`.
+- Docs state the current rules once; no change history in them (ADRs and git keep it).

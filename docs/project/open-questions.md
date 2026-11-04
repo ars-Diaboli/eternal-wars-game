@@ -7,38 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-03** (ADR-118): CAMP-1 and UI-3 answered: the proposals; CMB-12 answered: the top creature's hit points, the
-proposals for the rest.
-Before that (ADR-115, ADR-116): EVT-1 … EVT-6 (map events) answered: the proposals; new: CAMP-1 (prologue), UI-3 (layout and
-information windows), CMB-12 (health bars, dividing obstacles).
-Before that (ADR-107, ADR-108): HERO-8 (rarer specialties) answered: the proposals, for now; CONT-7 (assembled relics)
-answered, with six more relics.
-Before that (ADR-106): CMB-11 (siege rules) and MAG-13 (guild spell draw, spell elements, summons) answered.
-Before that (ADR-101): FLOW-4 (victory screen and ranking) and UI-2 (replays and the main menu) answered.
-Before that (ADR-100): CONT-6 (artifacts with HoMM names, assembled relics), ARN-1 and ARN-2 (the arena before 1.0, with
-LAN and three shipped maps) and MAP-35 (Pandora's Box) answered; new: CONT-7 (assembled relics, the dropped effects).
-Before that (ADR-099): CMB-5 (sieges before 1.0), MAG-1 and CONT-3 (spells and artifacts re-drafted), MP-3 and MP-4
-answered; new: CMB-11 (siege rules), MAG-13 (guild selection, spell review), CONT-6 (artifact review).
-Before that (ADR-098): MP-1 and MP-2 (LAN multiplayer) answered; they bring MP-3 (clients that see only their own view)
-and MP-4 (start zones).
-Before that (ADR-097), the arena mode brought ARN-1 and ARN-2.
-Before that (ADR-096), new ideas brought MAP-35 (Pandora's Box) and EVT-1 … EVT-6 (map events like HotA's extended events,
-quests) ([below](#new-ideas-adr-096-2026-10-29)).
-Before that (ADR-092, ADR-093), new ideas bring FLOW-4 (victory screen and ranking), UI-2 (replays) and HERO-8 (specialties);
-UI-2 follows the owner's revised note (the replay saved from the ranking table, a leaderboard
-in the main menu, unfinished saves watched too).
-Before that (ADR-090, ADR-091): CMB-10 (auto combat, built), UI-1 (speed settings, built ADR-095) and FLOW-3 (turn timer, built) answered. Before that (2026-10-28, ADR-088), new
-ideas brought CMB-9, CMB-10, UI-1, FLOW-3, MP-1 and MP-2 ([below](#new-ideas-adr-088-2026-10-28)); CMB-9 is answered and built (ADR-089).
-Before that (2026-10-26, ADR-079, ADR-080), the sixth round: TOWN-9 … TOWN-11 and MAP-25 … MAP-34 answered and built (the Astrologer's
-Tower waits for the week events). Before that (ADR-077): new ideas (scenery, rivers, flaggable providers, caravans, Thieves' Guild, the third object catalogue) bring
-MAP-25 … MAP-34 and TOWN-9 … TOWN-11. Fifth round (ADR-075): the ADR-073 assumptions confirmed (TOWN-5's reach and FLOW-2's first week
-changed); CMB-2 answered; town-less campaign players.
-Fourth round (ADR-073): the ADR-070 … ADR-072 assumptions confirmed (MAG-5 and MAG-10 changed); HERO-4, TOWN-5,
-FLOW-2 answered; FLOW-1 except the campaign hooks.
-Third round (ADR-072): HERO-1, HERO-3, HERO-6, HERO-7, TOWN-7, TOWN-8, RMG-11, CMB-6, MAG-3, MAG-5 … MAG-12 answered,
-MAP-23 corrected; MAG-1 partly (the Spell Power formula); HERO-4 answered except where the war machines stand.
-Second round (ADR-071): DATA-1, RMG-8, RMG-12, RMG-13, MAP-20, TOWN-1, TOWN-4, CMB-7, CMB-8, MAG-2, MAG-4 answered. First round (ADR-070): MAP-15 …
-MAP-19, MAP-21 … MAP-24, TOWN-2, TOWN-3, TOWN-6, CMB-1, CMB-3, CMB-4, RMG-9, RMG-10 answered.
+**Updated 2026-11-04**: new HERO-9 (Scouting reveals information, the owner's idea).
 
 ## 🚧 Blocking now
 
@@ -48,6 +17,22 @@ Nothing blocks the current work.
 
 <a id="hero-5"></a>
 **HERO-5 Names and drafts.** Hero names, school names and specialties in `heroes.csv`; primary stat odds and starting values (ADR-055).
+
+<a id="hero-9"></a>
+**HERO-9 Scouting reveals information** (owner's idea, 2026-11-04: "reveal additional information on enemy / environment, similar to
+HoMM3"). Today Scouting only adds sight radius (+2 / 4 / 6), and every army on the map shows exact counts unless Veil hides them (ADR-123).
+- a. Baseline without Scouting: should other players' armies and neutral stacks show HoMM3's amount words ("a pack", "lots";
+  `AdventureIntel.AmountWord`) instead of exact counts?
+- b. What each level adds, besides the radius?
+- c. Scouting against Veil: who wins?
+- d. Does the computer player see only what its heroes' Scouting shows?
+
+**Proposal**: (a) yes, words for every army you do not own, in sight or remembered. (b) Basic: exact counts of neutral stacks and creature
+bank guards in sight, an enemy hero's level and primary stats; Advanced: exact counts of enemy heroes' armies and town garrisons in sight,
+their artifacts and war machines; Expert: an enemy hero's skills and known spells, and a town's available creatures. The best Scouting among
+the player's heroes in sight of the target counts. (c) Veil rank I hides counts from Scouting below Expert; Veil II hides artifacts from
+everyone; Veil III as built. (d) Yes: the AI reads the shown army (a word counts as the middle of its range), through the same
+`AdventureIntel` query. The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
 
 ## Game flow and content
 
@@ -73,7 +58,9 @@ Stewardship and governor percentages (ADR-063); siege Ballistics (ADR-063); zone
 building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices (CMB-3); morale 2 % and luck 4 % per point (ADR-053);
 deposit prices and the map marketplace threshold (ADR-070); the AI's retreat threshold; the fairness tolerances and slacks (ADR-117);
 the gate's cap and Defense, Earthquake, summon amounts, a creature caster's Spell Power (count / 2) and the Phoenix's 30 %, shrine values
-(ADR-120); the relics' added effects, their slots, the AI's piece bonus and the glaivethrower's 20–26 (ADR-121).
+(ADR-120); the relics' added effects, their slots, the AI's piece bonus and the glaivethrower's 20–26 (ADR-121); the AI's buff values
+and the *(proposal)* choices of ADR-123.
+
 ## Answered
 One line per question; the ADR holds the detail.
 
