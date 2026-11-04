@@ -283,8 +283,11 @@ public sealed class GameState
     /// <summary>The map events (ADR-115): the author's events and what changed while the game ran.</summary>
     public MapEventState MapEvents { get; } = new();
 
-    /// <summary>Scenario setting (map loading, editor): the map events; refused when they do not fit the map (<see cref="MapEventRules"/>).</summary>
-    public void SetMapEvents(MapEventSet set)
+    /// <summary>
+    /// Scenario setting (map loading, editor): the map events; refused when they do not fit the map (<see cref="MapEventRules"/>). The editor
+    /// passes <paramref name="check"/> false: events being written may not fit yet, and its validator shows the problems.
+    /// </summary>
+    public void SetMapEvents(MapEventSet set, bool check = true)
     {
         ArgumentNullException.ThrowIfNull(set);
         if (IsStarted)
@@ -292,7 +295,7 @@ public sealed class GameState
             throw new InvalidOperationException("The map events can only be changed before the game starts.");
         }
 
-        if (MapEventRules.Problems(this, set) is [var first, ..])
+        if (check && MapEventRules.Problems(this, set) is [var first, ..])
         {
             throw new ArgumentException(first, nameof(set));
         }

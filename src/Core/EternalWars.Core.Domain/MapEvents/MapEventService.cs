@@ -44,6 +44,18 @@ public sealed class MapEventService(
     /// <summary>Whether an event is running or waiting to run.</summary>
     public bool IsBusy => _current is not null || _queue.Count > 0;
 
+    /// <summary>
+    /// The question waiting for an answer with what each answer does, so a computer player can weigh them (EVT-6 a); null when no question waits.
+    /// </summary>
+    public MapEventQuestion? PendingQuestion =>
+        _current is { Waiting: Waiting.Decision, Answers: { } answers } run && state.PendingDecision is MapEventDecision { IsQuestion: true }
+            ? new MapEventQuestion(answers, run.Player, run.Hero, run.Town)
+            : null;
+
+    /// <summary>The quest object whose stage the answer completes (a quest's "Complete"), or null.</summary>
+    public static MapObjectId? CompletedSite(EventAnswer answer) =>
+        MapEventTree.Actions(answer.Actions).OfType<AdvanceQuestAction>().FirstOrDefault()?.Site;
+
     // Triggers ------------------------------------------------------------------------------------------------------
 
     /// <summary>A hero stepped onto <paramref name="cell"/>: its hero event runs, on every step until it disables or removes itself (EVT-2 b).</summary>

@@ -29,3 +29,6 @@ public sealed record UndoHistoryChanged(string? UndoDescription, string? RedoDes
 
 /// <summary>The editor changed a hero's spell book or spells (ADR-120).</summary>
 public sealed record HeroSpellsChanged(HeroId Hero) : IEvent;
+
+/// <summary>The editor changed the map events (EVT-6): events, variables or event cells. Views re-read <c>GameState.MapEvents.Set</c>.</summary>
+public sealed record MapEventsChanged : IEvent;

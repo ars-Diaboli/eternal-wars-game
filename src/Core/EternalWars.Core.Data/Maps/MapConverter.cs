@@ -93,7 +93,8 @@ public static class MapConverter
     /// Builds the initial state of a scenario. <paramref name="catalog"/> resolves object definitions and
     /// <paramref name="terrains"/> supplies terrain rules (both default to the built-in content);
     /// <paramref name="options"/> are the rules chosen at game creation.
-    /// Throws <see cref="FormatException"/> for inconsistent maps.
+    /// Throws <see cref="FormatException"/> for inconsistent maps. The editor passes <paramref name="checkEvents"/> false, so a map whose events do
+    /// not fit yet still opens (its validator shows why).
     /// </summary>
     public static GameState ToGameState(
         MapDocument document,
@@ -103,7 +104,8 @@ public static class MapConverter
         CreatureCatalog? creatures = null,
         HeroCatalog? heroRoster = null,
         BuildingCatalog? buildings = null,
-        ArtifactCatalog? artifacts = null)
+        ArtifactCatalog? artifacts = null,
+        bool checkEvents = true)
     {
         catalog ??= MapObjectCatalog.Default;
         artifacts ??= ArtifactCatalog.Default;
@@ -125,11 +127,11 @@ public static class MapConverter
             // Quest objects and Pandora's Boxes name their events, so a map with them is checked even without events (EVT-5, MAP-35).
             if (document.Events is { } mapEvents)
             {
-                state.SetMapEvents(mapEvents);
+                state.SetMapEvents(mapEvents, checkEvents);
             }
             else if (state.ObjectsOf<QuestSite>().Any(q => q.Quest is not null) || state.ObjectsOf<PandorasBox>().Any(b => b.Event is not null))
             {
-                state.SetMapEvents(Domain.MapEvents.MapEventSet.Empty);
+                state.SetMapEvents(Domain.MapEvents.MapEventSet.Empty, checkEvents);
             }
             for (var i = 0; i < document.Players.Count; i++)
             {

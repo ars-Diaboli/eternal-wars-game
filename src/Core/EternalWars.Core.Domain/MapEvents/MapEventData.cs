@@ -73,6 +73,9 @@ public sealed record QuestStage(EventCondition Requirement, string Proposal, IRe
 /// <summary>One quest a player's heroes were shown (EVT-5): the quest object, its quest, the stage and whether the player completed the quest.</summary>
 public sealed record QuestLogEntry(Common.MapObjectId Site, string Quest, int Stage, bool Done);
 
+/// <summary>A question waiting for its answer (<see cref="MapEventService.PendingQuestion"/>): the answers with their actions, and who the event is for.</summary>
+public sealed record MapEventQuestion(IReadOnlyList<EventAnswer> Answers, Common.PlayerId? Player, Common.HeroId? Hero, Common.MapObjectId? Town);
+
 /// <summary>An invisible event cell (EVT-2): a hero stepping onto (X, Y, Level) runs the hero event <see cref="Event"/>; several cells may share one event.</summary>
 public sealed record EventCell(int X, int Y, int Level, string Event)
 {
