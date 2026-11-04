@@ -10,8 +10,8 @@
   rarely ([heroes.md](heroes.md#skills-and-levels)).
 - **Stronghold and Swamp Bestiary have no school**: their faction group **Primal Fury** (ADR-063, ADR-069) has warcries instead of spells
   (no mana, ADR-067) and Interference, which weakens the enemy hero's spells and raises their cost. A hero knows a warcry
-  once a **war lodge** of its level taught it (Rally 1, Intimidate 2, Terror 3; ADR-071, ADR-112), up to its Warcry skill. Lodge names:
-  Stronghold War Lodge / Hall of Warcries / Drums of the Horde; Swamp Bestiary Totem Circle / Spirit Totems / Elder Totem.
+  once a **war lodge** ([building](../content/town-buildings.md)) of its level taught it (Rally 1, Intimidate 2, Terror 3; ADR-071, ADR-112),
+  up to its Warcry skill.
 - **Four spell levels**; each school has **17 spells** (5 / 5 / 4 / 3 by level, ADR-099). Every spell has **three ranks**.
 - **Elements** (ADR-106, MAG-13): every spell also has an element (air, earth, fire, water); the four elemental orbs raise their element's
   spells, whatever the school. Summons call town creatures (elementals: Conflux).
@@ -54,16 +54,16 @@ ADR-071, ADR-072, ADR-106, ADR-110, ADR-114, ADR-122, ADR-123 (MAG-2, MAG-3, MAG
   rank effects (list in ADR-123).
 
 ## Adventure spells
-Level 4 for Town Portal and Dimension Door (ADR-071, MAG-5); each cast costs mana plus a fixed **500 movement points** (fewer left: no cast,
-ADR-073). Dimension Door lands only on explored tiles. Spells and ranks: [spells.md](../content/spells.md#adventure-spells) (ADR-120,
-ADR-123). The adventure AI casts Town Portal home; the show-only spells *(planned for the AI)*.
+Each cast costs mana plus a fixed **500 movement points** (fewer left: no cast; ADR-073). Town Portal and Dimension Door are level 4
+(MAG-5); Dimension Door lands only on explored tiles. List and ranks: [spells.md](../content/spells.md#adventure-spells) (ADR-120, ADR-123).
+The AI casts Town Portal home, not yet the show-only spells.
 
 ## Necromancy
-ADR-069, ADR-072 (MAG-7), built ADR-078. After a victory a hero with Death attunement raises 5–20 % of the slain enemies' hit points as
-undead, tiers capped by the attunement level; the Necromancy Amplifier adds 5 %. Shown on a screen after the battle result, before any
-level-up; not when the enemy retreated or surrendered. Rules: [skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078).
+ADR-069, ADR-072 (MAG-7), ADR-078. After a victory (not over a retreat or surrender) a hero with Death attunement raises 5–20 % of the
+slain enemies' hit points as undead, tiers capped by its attunement; the Necromancy Amplifier adds 5 %. Shown after the battle result,
+before any level-up. Rules: [skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078).
 
 ## Magic artifacts
-ADR-111. Four elemental orbs (+25 % to their element's damage and healing; Magic Arrow takes the best), the Unwritten Codex (every level 1–2
-spell known while worn, with a book, at rank I), the Recanter's Cloak (no spells above level 2 in the hero's battles, both sides), `mind` /
-`poison` immunities for the army, mana artifacts (mana a day, maximum mana, full mana each turn).
+ADR-111; catalog [artifacts.md](../content/artifacts.md). Elemental orbs (+25 % to their element's damage and healing; Magic Arrow takes
+the best), the Unwritten Codex (all level 1–2 spells at rank I while worn), the Recanter's Cloak (no spells above level 2 in its battles),
+army immunities, mana artifacts.

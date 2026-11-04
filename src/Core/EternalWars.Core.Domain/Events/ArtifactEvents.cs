@@ -18,6 +18,9 @@ public enum ArtifactSource
 
     /// <summary>Bought from an artifact merchant (ADR-079).</summary>
     Bought,
+
+    /// <summary>Given by a map event (ADR-115).</summary>
+    MapEvent,
 }
 
 /// <summary>A hero put an artifact on (from its backpack) into <paramref name="Slot"/> (ADR-061).</summary>

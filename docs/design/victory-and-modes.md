@@ -31,16 +31,15 @@ ADR-092, ADR-101, built ADR-102 … ADR-104.
 - **Score** = max(10, 200 − days) × difficulty (Beginner 80 %, Easy 100 %, Normal 130 %, Hard 160 %, Expert 200 %) × turn timer (off or over
   10 min ×1.0, 6–10 ×1.05, 3–5 ×1.10, 1–2 ×1.20; placeholders). Nothing else counts. **14 rank titles** named after our creatures, weakest to
   a dragon.
-- **Ranking table** per computer in the user data folder (top 20); random maps and shipped maps have **separate tables**, editor-made maps go
-  into the shipped table marked "custom". Every human winner gets a row (hot-seat too): rank, name (asked on the victory screen), faction,
-  map or template (with size), difficulty, days, score, title, date; the new row is highlighted.
-- **Replays**: each row keeps its game's record; "Save replay" (on every end screen) writes `user://replays/*.ewreplay.json`. A replay made
-  with other content fails like a save.
-- **Main menu**: New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard, Quit (the unbuilt ones disabled); "Main menu" on the end
-  screen and in the F10 menu returns to it.
-- **Replay viewer** *(planned)*: tabs Replays and Saves (autosaves too; a save plays to its last command). Whole map revealed or any player's
-  eyes; play, pause, four speeds, next turn, next day, back to any day's start; battles move by move with "skip to the result"; computer
-  turns in full. **"Play from here"** only in a battle for now (plays it on by hand as a separate unranked game); on the adventure map later.
+- **Ranking table** (top 20, per computer): separate tables for random and shipped maps (editor maps join the shipped one as "custom"). Every
+  human winner gets a row (hot-seat too): rank, name (asked on the victory screen), faction, map or template and size, difficulty, days,
+  score, title, date.
+- **Replays**: each row keeps its game's record; every end screen offers "Save replay" (`user://replays/*.ewreplay.json`); a replay made with
+  other content fails like a save.
+- **Main menu**: New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard, Quit (unbuilt ones disabled); reached from the end
+  screen and the F10 menu.
+- **Replay viewer** *(planned)*: replays and saves (to their last command); whole map or any player's eyes; play, pause, four speeds, jump
+  by turn or day; battles move by move or skipped; **"Play from here"** in a battle (a separate unranked game), on the map later.
 
 ## Game modes
 In priority order:
@@ -52,13 +51,12 @@ In priority order:
   movement and building, objects show what they hold); at day 2's start each side's strongest hero is moved to a **combat place** and the
   winner of that battle wins the game. No victory or loss conditions, not ranked, normal fog, both armies shown, no experience; retreat or
   surrender loses. **Three hand-made arena maps**; no generator template.
-- **LAN multiplayer** *(planned before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓)*: the **host** runs the game and the computer players; clients
-  send commands and get only what they may see (no seeing through the fog). Lobby (LAN discovery or an address; map or random map and
-  options; colours; computer players); a battle between two remote humans is played live by both; a dropped player pauses the game until the
-  host hands it to the computer or the player rejoins; text chat. The host's save resumes in multiplayer, a client's loads in single player.
-  **Simultaneous first week** (host's choice, maps with start zones): a hero entering another player's zone, touching an object another
-  player touched that day, or seeing another player's hero discards that day for everyone, and it is replayed turn by turn. One turn timer
-  for all. Internet play is not planned.
+- **LAN multiplayer** *(planned before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓)*: the **host** runs the game and computer players; clients send
+  commands and get only what they may see. Lobby (LAN discovery or address; map or random map, options, colours, computer players); battles
+  between two remote humans are live; a dropped player pauses the game until the host hands it to the computer or the player rejoins; text
+  chat; the host's save resumes in multiplayer, a client's in single player. **Simultaneous first week** (host's choice, maps with start
+  zones): entering another player's zone, touching an object another player touched that day, or seeing another player's hero discards that
+  day for all, and it is replayed turn by turn. One turn timer for all. No internet play.
 
 ## Game options
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,
@@ -66,7 +64,7 @@ hero, team; ADR-086), fog mode ([adventure-map.md](adventure-map.md#fog-of-war))
 seed, turn timer.
 - **Teams** (ADR-070): **2 to 8 teams** (8 = free for all; free for all when nothing is defined). The map or template sets defaults and may
   fix the teams (story maps) or limit the team count; setup may change them unless locked; the map editor may override a template's.
-- **Turn timer** (ADR-088, ADR-091): off by default, 1–30 minutes a turn, for humans; a loaded game starts the turn with full time. Warnings
-  at 1 minute, 30, 15 and 5 seconds. Runs on the adventure map and in battles against the computer or neutrals (a battle running out is
-  finished first); stops in battles between two humans. When it runs out, pending choices get their default (a chest gives gold; leave or
-  stay where offered; neutrals' offers are taken), a level-up or riddle waits for the player, and the turn ends.
+- **Turn timer** (ADR-088, ADR-091): off, or 1–30 minutes a turn for humans; a loaded game restarts the turn at full time. Warnings at 1
+  min, 30, 15, 5 s. Runs on the map and in battles against computer or neutrals (finished first); stops in human-vs-human battles. At zero,
+  pending choices take their default (chest gold; leave or stay as offered; neutrals' offers taken), a level-up or riddle waits, and the
+  turn ends.

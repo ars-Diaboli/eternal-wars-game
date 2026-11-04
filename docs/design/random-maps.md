@@ -2,20 +2,18 @@
 
 > Part of the [game design](overview.md). Modelled on the Heroes 3: Horn of the Abyss template system (ADR-023, ADR-034, ADR-064).
 > Everything here is built unless tagged *(planned)*; numbers are placeholders. Open items ❓:
-> [open-questions.md](../project/open-questions.md#random-maps-phase-4).
+> [open-questions.md](../project/open-questions.md).
 
-Core: `EternalWars.Core.Generation`, entry point `MapGenerator` (version 8). Shipped templates (`src/Core/data/templates`): `duel`, `ffa-4`
-"Free for all", `2v2` "Two against two", `mirror-duel` "Mirror duel", `ffa-8` "Eight kingdoms". Tools: `sim layout`, `sim fairness`, `sim
-game --template`; CI runs `sim maps` on every shipped template (no problems, deterministic, starts reachable, AI play and replay work).
+Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped templates in `src/Core/data/templates` (`duel`, `ffa-4`, `2v2`,
+`mirror-duel`, `ffa-8`); CI checks each with `sim maps` (no problems, deterministic, starts reachable, AI play and replay work).
 
 ## Goals
-- **Game and editor both generate.** The new-game screen picks template, size, players (human or computer, town, hero, team), seed and
-  options, then generates and starts (ADR-086). The editor's "Generate" tab generates an **editable** map to polish and save (ADR-087).
-- **Templates** (`*.ewtemplate.json`) are authored in the [template editor](#template-editor) and saved to `user://templates`. The editor
-  lists the shipped templates and the valid user ones; the new-game screen only the shipped ones so far.
-- **Deterministic** from (template, size, players, seed, generator version), so a map can be shared by its seed; every stage draws from its
-  own seed stream (`SeedStreams`).
-- Output is a scenario `GameState` (ADR-064); `MapConverter.ToDocument` saves it as an ordinary map.
+- **Game and editor both generate**: the new-game screen (template, size, players, seed, options; ADR-086) and the editor's
+  [Generate](#editor) tab, into an **editable** map (ADR-087).
+- **Templates** (`*.ewtemplate.json`) come from the [template editor](#template-editor), saved to `user://templates`; the editor lists
+  shipped and valid user templates, the new-game screen only shipped ones so far.
+- **Deterministic** from (template, size, players, seed, generator version), so a seed shares a map; each stage has its own seed stream
+  (`SeedStreams`). Output is a scenario `GameState` (ADR-064), saved as an ordinary map by `MapConverter.ToDocument`.
 
 ## The template (`MapTemplate`, format v8)
 - Name, description, supported sizes, player range, max humans, underground or not, **heroes per player 1–8** (default 8; written into the
@@ -109,24 +107,17 @@ game --template`; CI runs `sim maps` on every shipped template (no problems, det
   warns that the seed may give another map.
 
 ## Editor
-"Generate" (`EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New".
-- Input: a template (refused with errors), one of its sizes, a seed, how many start slots get a player (default all; the rest stay neutral)
-  and optionally a town per slot (else drawn). Start zones are painted native to the town; changing it later keeps the terrain (RMG-7).
-- Players are named by colour (Blue, Red, Yellow, Green, Orange, Purple, Teal, Pink); start slots are human up to max humans, AI-only slots
-  computer; teams come from the template, and the editor may override them (ADR-070; "Teams from / to" in the map properties).
-- The rest is the game's scenario assembly; the map is playable as generated. Its description records template, size, seed, attempt and
-  generator version. The result carries the generator's problems and the validator's issues. A hero may stand in its own town's entrance.
+"Generate" (`EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
+a seed, how many start slots get a player (default all; the rest neutral) and optionally a town per slot (else drawn; start zones are
+painted native to it and keep that terrain if the town is changed later, RMG-7). Players are named by colour (Blue, Red, Yellow, Green,
+Orange, Purple, Teal, Pink); start slots are human up to max humans, AI-only slots computer; template teams may be overridden (ADR-070).
+The rest is the game's scenario assembly, so the map is playable as generated; its description records template, size, seed, attempt and
+generator version, and the generator's problems and validator issues are shown. A hero may stand in its own town's entrance.
 
 ## Template editor
-The map editor's **Templates** button (RMG-10, ADR-117) opens a full-screen editor, like HotA's. Core `TemplateEditorSession` (engine-free;
-every change publishes `TemplateChanged` with the validator's issues; **no undo**, unlike `MapEditorSession`).
-- **Graph**: zones as boxes coloured by type, connections as lines (gate and portal dashed, guard value written). Drag to move, right-drag
-  between zones to connect (a gate across levels), drag the ground to pan, wheel to zoom, Delete removes. "Arrange" lays out a template
-  without graph places.
-- **Top row**: New, Open… (shipped and user), Save (`user://templates/<name>.ewtemplate.json`), + Start / AI start / Treasure / Junction (a
-  start takes the next free of eight slots), Arrange, size, seed, Generate (opens the map in the editor), Close (Esc).
-- **Inspector**: template settings when nothing is selected; a zone's or connection's fields otherwise. Terrains and neutral town types are
-  edited in the file. The issues list updates on every change.
+The map editor's **Templates** button (RMG-10, ADR-117) opens a full-screen, HotA-like editor: a zone graph, a top row (New, Open, Save,
+add zones, size, seed, Generate) and an inspector for the template, a zone or a connection; terrains and neutral town types are edited in
+the file. Core `TemplateEditorSession`: every change publishes `TemplateChanged` with the validator's issues; **no undo**.
 
 ## Scope
 - **In 1.0**: mirrored generation; saving generated maps as map files as well as reproducing them from the seed.

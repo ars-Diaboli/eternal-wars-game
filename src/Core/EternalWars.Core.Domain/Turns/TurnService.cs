@@ -22,7 +22,8 @@ public sealed class TurnService(
     ProgressionService progression,
     TownService towns,
     CaravanService caravans,
-    MapObjectInteractionService objects)
+    MapObjectInteractionService objects,
+    MapEvents.MapEventService mapEvents)
 {
     internal void StartGame()
     {
@@ -50,6 +51,7 @@ public sealed class TurnService(
         // The first week has no growth to change, but a map that starts its events at once still gets its plague or its stacks.
         state.NextWeekEvent = Roll(state.Date);
         StartWeekEvent();
+        mapEvents.StartDay();
         BeginTurn();
     }
 
@@ -96,6 +98,9 @@ public sealed class TurnService(
                 economy.StockProviders();
                 objects.StartWeek(state.Date.IsFirstDayOfMonth);
             }
+
+            // Neutral towns' map events run at the start of the day (ADR-115, EVT-2 d).
+            mapEvents.StartDay();
         }
     }
 
@@ -146,6 +151,9 @@ public sealed class TurnService(
         caravans.Advance(player.Id);
         economy.CollectDailyIncome(player.Id);
         events.Publish(new TurnStarted(player.Id, state.Date));
+
+        // The player's and its towns' map events, after income, growth and the week's event (ADR-115, EVT-2 d).
+        mapEvents.StartTurn(player.Id);
         progression.OfferNext();
     }
 }

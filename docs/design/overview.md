@@ -8,16 +8,16 @@
 
 | Document | Covers |
 |---|---|
-| [adventure-map.md](adventure-map.md) | Map sizes, terrain and movement, roads, objects, neutral monsters, heroes meeting, gates, fog of war |
-| [heroes.md](heroes.md) | Roster, primary stats, skills, levels, army, artifacts |
-| [towns-and-economy.md](towns-and-economy.md) | Resources, buildings, the creature tech tree, growth, events, caravans, tavern, marketplace, income |
-| [factions.md](factions.md) | Town groups, playable and non-playable towns, rivalries |
-| [combat.md](combat.md) | Battlefield, footprints, turn order, damage, cover, morale and luck, capabilities, war machines, sieges |
-| [magic.md](magic.md) | Schools, guilds, mana, casting, Necromancy (spell catalog: [spells.md](../content/spells.md)) |
-| [victory-and-modes.md](victory-and-modes.md) | Victory and defeat, score and replays, game modes and options |
-| [tools.md](tools.md) | Map editor, 2D harness, headless simulator |
-| [random-maps.md](random-maps.md) | Templates and the random map generator |
-| [presentation.md](presentation.md) | Art direction, camera, UI, audio, speed settings |
+| [adventure-map.md](adventure-map.md) | Terrain, movement, map objects, neutral monsters, gates, fog of war |
+| [heroes.md](heroes.md) | Roster, stats, skills, levels, artifacts |
+| [towns-and-economy.md](towns-and-economy.md) | Buildings, tech tree, growth, events, caravans, tavern, market, income |
+| [factions.md](factions.md) | Town groups, rivalries |
+| [combat.md](combat.md) | Battlefield, turn order, damage, cover, morale, capabilities, war machines, sieges |
+| [magic.md](magic.md) | Schools, guilds, mana, casting |
+| [victory-and-modes.md](victory-and-modes.md) | Victory and defeat, score, replays, modes, options |
+| [tools.md](tools.md) | Map editor, 2D harness, simulator |
+| [random-maps.md](random-maps.md) | Templates and the generator |
+| [presentation.md](presentation.md) | Art, camera, UI, audio, speed settings |
 | [departures.md](departures.md) | Deliberate departures from HoMM3 |
 | [missing-mechanics.md](missing-mechanics.md) | What HoMM3 + HotA and HoMM5 have and we do not |
 
@@ -41,19 +41,9 @@ The 3D presentation must **add atmosphere without hurting readability**: camera,
 4. **Deterministic core**: the same inputs always produce the same game, enabling replays, tests, AI simulation and multiplayer.
 
 ## 3. Core loop
-```
- ┌──────────── Day (each player in turn) ────────────┐
- │ Move heroes ─► visit objects / pick up loot        │
- │      │                 │                           │
- │      ▼                 ▼                           │
- │   Battles ◄──── Neutral / enemy armies             │
- │      │                                             │
- │      ▼                                             │
- │ Experience, artifacts ─► stronger heroes           │
- │ Towns: build 1 structure/day, recruit weekly growth│
- └──────────────── End turn ─────────────────────────┘
-        Week start: creature growth, week and month events
-```
+- **Each day, each player in turn**: move heroes → visit objects, pick up loot → battles with neutral or enemy armies → experience and
+  artifacts make heroes stronger; towns build 1 structure a day and recruit the weekly growth; end turn.
+- **Week start**: creature growth, week and month events.
 
 ## 4. Platforms and scope
 - **1.0: Windows and Linux / Steam Deck** (controller-friendly UI, Deck performance budget to test). macOS later.

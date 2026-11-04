@@ -92,6 +92,12 @@ public static class GameStateDigest
             Line($"caravan {caravan.Id} owner {caravan.Owner.Value} {caravan.Source}->{caravan.Destination} {caravan.Creature}x{caravan.Count} days {caravan.DaysLeft} paid {caravan.Paid}{(caravan.Cargo is { } cargo ? $" cargo {cargo}" : "")}");
         }
 
+        // Map events (ADR-115) only on maps that have them, so older replays keep their digests.
+        if (state.MapEvents.Describe() is { Length: > 0 } mapEvents)
+        {
+            Line($"events {mapEvents}");
+        }
+
         Line($"outcome {state.Outcome?.Winners.Count} {state.Outcome?.Date}");
         Line($"decision {state.PendingDecision}");
         if (state.Battle is { } battle)

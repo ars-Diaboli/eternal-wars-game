@@ -39,11 +39,12 @@ namespace EternalWars.Core.Data.Maps;
 /// contents, an optional guard and message; ADR-100). 28 = + the team counts a game of the map may have (<c>minTeams</c>, <c>maxTeams</c>;
 /// omitted = no limit; ADR-117). 29 = + a hero's spell book and spells (<c>spellBook</c>, <c>spells</c>; omitted = the roster's) and shrines
 /// (<c>shrine</c>, an optional spell; ADR-120). 30 = + a town's fixed mage guild spells (<c>guildSpells</c> on a town: spell ids of the town's
-/// school, at most 3 / 3 / 2 / 2 per level; omitted = all drawn when the game starts). Older versions still load (with the default events).
+/// school, at most 3 / 3 / 2 / 2 per level; omitted = all drawn when the game starts). 31 = + map events (<c>events</c>: the event tree, the variables and the event cells; omitted = none;
+/// ADR-115). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 30;
+    public const int CurrentFormatVersion = 31;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -90,6 +91,9 @@ public sealed record MapDocument
     public IReadOnlyList<HeroPlacementDocument> Heroes { get; init; } = [];
 
     public IReadOnlyList<MapObjectDocument> Objects { get; init; } = [];
+
+    /// <summary>The map events (v31, ADR-115), written as the domain's tree (<see cref="MapEventJson"/>); omitted = none.</summary>
+    public Domain.MapEvents.MapEventSet? Events { get; init; }
 }
 
 /// <summary>

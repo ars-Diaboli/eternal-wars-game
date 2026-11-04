@@ -47,6 +47,7 @@ public static class MapConverter
                     h.HasSpellBook ? h.Spells.Keys.ToList() : null))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
+            Events = state.MapEvents.Set.IsEmpty ? null : state.MapEvents.Set,
         };
 
     public static MapDocument ToDocument(AdventureMap map) => new()
@@ -121,6 +122,10 @@ public static class MapConverter
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetTeamCounts(document.MinTeams, document.MaxTeams);
             state.SetRules(ToRules(document.Rules));
+            if (document.Events is { } mapEvents)
+            {
+                state.SetMapEvents(mapEvents);
+            }
             for (var i = 0; i < document.Players.Count; i++)
             {
                 state.SetHeroLimit(new PlayerId(i), document.Players[i].MaxHeroes);

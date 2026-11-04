@@ -142,6 +142,8 @@ public static class GameRecordSerializer
         (typeof(AnswerCartographerCommand), "cartographer"),
         (typeof(AnswerSphinxCommand), "sphinx"),
         (typeof(AnswerPandorasBoxCommand), "pandorasBox"),
+        (typeof(AnswerMapEventCommand), "mapEvent"),
+        (typeof(ChooseEventArmyCommand), "eventArmy"),
         (typeof(AnswerDepositCommand), "deposit"),
         (typeof(HireAtMapTavernCommand), "hireAtTavern"),
         (typeof(MoveGarrisonStackCommand), "garrisonStack"),
@@ -203,7 +205,7 @@ public static class GameRecordSerializer
     /// <summary>Map JSON settings plus the command hierarchy (kept out of Domain) and compact ids.</summary>
     private static readonly JsonSerializerOptions Options = new(JsonDefaults.Options)
     {
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes } },
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes, Maps.MapEventJson.AddTypes } },
         Converters = { new IdConverter<PlayerId>(v => new(v), id => id.Value), new IdConverter<HeroId>(v => new(v), id => id.Value),
             new IdConverter<MapObjectId>(v => new(v), id => id.Value) },
     };

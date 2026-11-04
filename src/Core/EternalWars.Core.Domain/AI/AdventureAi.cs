@@ -193,6 +193,10 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 case SphinxDecision:
                     command = new AnswerSphinxCommand(player, 0); // no knowledge of riddles: the first answer (its place is rolled)
                     break;
+                case MapEventDecision:
+                    // A computer player is shown no messages; a question takes its first answer until the AI weighs them (EVT-6 a).
+                    command = new AnswerMapEventCommand(player, 0);
+                    break;
                 case WitchHutDecision hut:
                     command = new ChooseWitchHutSkillCommand(player, SkillOffers.ComputerChoice(hut.Options));
                     break;

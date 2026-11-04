@@ -15,20 +15,16 @@ ADR-050.
 - New towns start with town hall 1, fort 1 and tavern 1; pre-built buildings keep the requirements. The town screen is 2D, in the 3D game too.
 
 ## Buildings
-Summary; numbers in [town-buildings.md](../content/town-buildings.md) (ADR-046).
-- **Town hall** 4 levels, 500 / 1000 / 2000 / 4000 gold a day. **Capitol** (level 4, ADR-070, ADR-074): one per player; a second cannot be
-  built, and a captured one drops to City Hall when the captor already has one.
-- **Fort** 3 levels: needed for every dwelling; Citadel / Castle raise growth (below) and add [siege](combat.md#sieges) fortifications.
-- **Blacksmith** (war machines, ADR-056), **marketplace** (2 levels; level 2 +1 ore and +1 lumber a day; [trading](#marketplace)),
-  **tavern / Brotherhood** ([below](#tavern)), **caravan** ([below](#map-dwellings-and-caravans)).
-- **Mage guild** (4 levels) and two **spell buildings** of the neighbouring schools: [magic.md](magic.md#guilds-and-learning).
-  Stronghold and Swamp Bestiary have the **war lodge** instead (3 levels, warcries; town hall 2 needs it; ADR-112).
-- **Growth buildings** (ADR-071, TOWN-1, ADR-112): two per town, own names; [growth](#growth).
-- **Dwellings**: 9 per town, build and upgrade cost by tier ([7 of 9](#creature-tech-tree)).
-- **Necromancy Amplifier** (Necropolis only, ADR-069, TOWN-6): +5 % Necromancy for every hero of its owner with the skill; more than one
-  adds nothing; a captured one helps its new owner.
-- **Per-town lists** (ADR-070, ADR-074, ADR-112): `buildings.csv` has a `town` column; a town's own rows replace the shared ones, add a
-  building only it has, or (level 0) remove one. Every town gets a unique building *(planned, ADR-070)*.
+Each building's levels, cost, requirements and effect: [town-buildings.md](../content/town-buildings.md) (ADR-046). Rules kept here:
+- **Capitol** (town hall 4, ADR-070, ADR-074): one per player; a second cannot be built, and a captured one drops to City Hall when the
+  captor already has one.
+- **Fort** levels raise [growth](#growth) and add [siege](combat.md#sieges) fortifications; every dwelling needs the Fort.
+- **Mage guild** and spell buildings: [magic.md](magic.md#guilds-and-learning); Stronghold and Swamp Bestiary have the **war lodge**
+  instead (warcries; town hall 2 needs it; ADR-112).
+- **Necromancy Amplifier** (Necropolis, ADR-069, TOWN-6): +5 % Necromancy for its owner's heroes with the skill; more than one adds nothing;
+  a captured one helps its new owner.
+- **Per-town lists** (ADR-070, ADR-074, ADR-112): a town's own rows in `buildings.csv` replace the shared ones, add a building only it has,
+  or (level 0) remove one. Every town gets a unique building *(planned, ADR-070)*.
 
 ## Garrison heroes
 ADR-112, TOWN-8. The visiting hero may enter the garrison (its army joins it; refused if it does not fit) and leave with the **whole**
@@ -80,12 +76,11 @@ Astrologer's Tower can tell it).
 ADR-054, ADR-073, ADR-075, ADR-079.
 - Map dwellings ([adventure-map.md](adventure-map.md#creature-dwellings)) grow every Monday, owned or not; a visiting hero flags one and
   recruits from it.
-- A **caravan** (town building) hires from your dwellings or sends garrison troops to another own town; creatures travel virtually, can't be
-  seen or attacked.
-- **Reach**: **7500 movement points** at the plain step cost (100, diagonals 141; terrain, roads, rivers and creature speed ignored). The town
-  lists dwellings within the **raw** reach (rock, water and objects count; hostile heroes, monsters and guards don't); ordering needs a route
-  within the reach that none of them blocks. Checked before paying.
-- **Speed** (TOWN-10): **2500 movement points a day**, so at most **3 days**.
+- A **caravan** (town building) hires from your dwellings or sends garrison troops to another own town; creatures travel virtually, unseen
+  and unattackable.
+- **Reach** **7500**, **speed 2500 movement points a day** (at most 3 days; TOWN-10), at the plain step cost (100, diagonals 141; terrain,
+  roads, rivers, creature speed ignored). The town lists dwellings within the **raw** reach (rock, water, objects count; hostile heroes,
+  monsters, guards don't); ordering needs a route within reach none of them blocks, checked before paying.
 - **Limit** (TOWN-10): at most **6 caravans** per town, **8** with a governor, counting those on their way and waiting at the gates (troops
   between own towns count at the destination); orders at the limit are refused.
 - **Resource caravans** (TOWN-9): fetch the store of an own flagged [resource provider](adventure-map.md#mines-and-resource-providers) within
@@ -100,9 +95,9 @@ ADR-060, ADR-070, ADR-081.
 - A hero costs **2500 gold** and appears on the town's entrance (must be free). A tavern offers **2**, the Brotherhood (level 2) **4**.
 - **Hero limit** (ADR-068, ADR-072): at most **8 heroes** a player, or the map's lower limit (1–8, also per player on campaign-like maps).
   Only heroes on the map count: not prisoners, garrison heroes, or heroes waiting in a tavern.
-- **Offers** come from a pool per player and town faction, reshuffled weekly; a player's towns of one faction show the same offers. Heroes on
-  the map are never offered. Ranked on the [ring of towns](../content/lore.md): native, adjacent, not opposing, opposing (an empty rank falls
-  through); Stronghold and Swamp Bestiary rank native, warriors, everyone else:
+- **Offers**: a pool per player and town faction, reshuffled weekly (same offers in a player's towns of one faction); never heroes on the
+  map. Ranked by the [ring](../content/lore.md): native, adjacent, not opposing, opposing (Stronghold, Swamp Bestiary: native, warriors,
+  others); an empty rank falls through:
 
   | Tavern | Ring towns | Stronghold, Swamp Bestiary |
   |---|---|---|
@@ -121,8 +116,8 @@ a place. Rows grow with the player's **taverns**: 1 — towns, heroes; 2 — + g
 4+ — + army strength, best hero (highest level), best creature (most valuable). The Den of Thieves shows the whole table.
 
 ## Kingdom overview
-ADR-077, ADR-084. One screen: every town, mine, flagged provider, income artifact and income skill or specialty with its daily (or weekly)
-amount, and the totals; it reads the income rules (`TownIncome`, `HeroIncome`, the providers), so it matches what the turn pays.
+ADR-077, ADR-084. One screen listing every income source (towns, mines, providers, artifacts, skills, specialties) with its daily or weekly
+amount and the totals, read from the income rules, so it matches what the turn pays.
 
 ## Governors
 ADR-063. A hero with Stewardship can govern one own town: its buildings cost 5 / 10 / 15 % less and its creatures (recruiting and upgrading)

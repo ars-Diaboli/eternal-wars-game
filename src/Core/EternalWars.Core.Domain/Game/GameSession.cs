@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Turns;
@@ -46,6 +47,7 @@ public sealed class GameSession
         Bus.Subscribe<SurroundingsRevealed>(visibility);
         Bus.Subscribe<AreaRevealed>(visibility);
         Bus.Subscribe<HeroFreed>(visibility);
+        Bus.Subscribe<MapEventHeroGiven>(visibility);
         Bus.Subscribe<HeroLeveledUp>(visibility);
 
         Flow = new GameFlowService(State, Bus);
@@ -58,10 +60,13 @@ public sealed class GameSession
         Towns = new TownService(State, Bus, Economy);
         Caravans = new CaravanService(State, Bus, Economy);
         Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression, Artifacts);
-        Movement = new HeroMovementService(State, Bus, Interactions);
+        MapEvents = new MapEventService(State, Bus, Economy, Progression, Artifacts, Battles);
+        Bus.Subscribe<BattleStarted>(MapEvents); // "defeated by" records (EVT-3 e)
+        Bus.Subscribe<BattleEnded>(MapEvents);
+        Movement = new HeroMovementService(State, Bus, Interactions, MapEvents);
         AdventureMagic = new Magic.AdventureMagicService(State, Bus);
         Bus.Subscribe<UndeadRaised>(AdventureMagic); // Grave Whisper is used up
-        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions);
+        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions, MapEvents);
     }
 
     public GameState State { get; }
@@ -96,6 +101,9 @@ public sealed class GameSession
     internal MapObjectInteractionService Interactions { get; }
 
     internal TurnService Turns { get; }
+
+    /// <summary>The map events (ADR-115); <see cref="MapEventService.IsBusy"/> tells whether one is running.</summary>
+    public MapEventService MapEvents { get; }
 
     internal TownService Towns { get; }
 
@@ -150,6 +158,9 @@ public sealed class GameSession
         }
 
         _log.Add(command);
+
+        // A map event waiting for an answer, a battle or a level-up goes on once nothing is pending.
+        MapEvents.Pump();
         Settle();
         Bus.Publish(new CommandExecuted(command));
         return CommandResult.Accepted(outcome);
@@ -255,6 +266,12 @@ public sealed class GameSession
                 return null;
             case AnswerSphinxCommand sphinx:
                 Interactions.ResolveSphinx(sphinx.Option);
+                return null;
+            case AnswerMapEventCommand answer:
+                MapEvents.Answer(answer.Option);
+                return null;
+            case ChooseEventArmyCommand army:
+                MapEvents.ChooseArmy(army.Keep);
                 return null;
             case AnswerPandorasBoxCommand box:
                 Interactions.ResolvePandorasBox(box.Open);

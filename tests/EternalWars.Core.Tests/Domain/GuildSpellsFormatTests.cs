@@ -83,7 +83,7 @@ public class GuildSpellsFormatTests
         AddTown(state, TownIds.Haven, 10, 0);
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        Assert.Equal(30, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 30);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(json, "\"guildSpells\""));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
 
