@@ -6,32 +6,41 @@ using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.MapEvents;
 
-/// <summary>What makes a map's events and quest objects unusable (ADR-115): checked when a map is loaded; the editor's validator will add warnings (EVT-6 c).</summary>
+/// <summary>A problem with the map events: what is wrong, the event it is in and where on the map, when known.</summary>
+public sealed record MapEventProblem(string Message, string? Event = null, Common.MapPosition? Position = null);
+
+/// <summary>
+/// What makes a map's events and quest objects unusable (ADR-115): checked when a map is loaded, and shown as errors by the editor's validator,
+/// which adds its warnings (<see cref="MapEventChecks"/>).
+/// </summary>
 public static class MapEventRules
 {
     /// <summary>The events' errors against the map they belong to; empty when they can run.</summary>
-    public static IReadOnlyList<string> Problems(GameState state, MapEventSet set)
+    public static IReadOnlyList<string> Problems(GameState state, MapEventSet set) => [.. Check(state, set).Select(p => p.Message)];
+
+    /// <summary>The events' errors with the event and the place they concern.</summary>
+    public static IReadOnlyList<MapEventProblem> Check(GameState state, MapEventSet set)
     {
-        var problems = new List<string>();
+        var problems = new List<MapEventProblem>();
         var names = new HashSet<string>(StringComparer.Ordinal);
         foreach (var definition in set.Events)
         {
             if (string.IsNullOrWhiteSpace(definition.Name) || !names.Add(definition.Name))
             {
-                problems.Add($"Event '{definition.Name}' needs a name of its own.");
+                problems.Add(new($"Event '{definition.Name}' needs a name of its own.", definition.Name));
             }
 
             if (definition.Kind != MapEventKind.Town && definition.Towns.Count > 0)
             {
-                problems.Add($"Only a town event names towns ('{definition.Name}').");
+                problems.Add(new($"Only a town event names towns ('{definition.Name}').", definition.Name));
             }
 
             foreach (var town in definition.Towns.Where(t => state.FindObject(new Common.MapObjectId(t)) is not Town))
             {
-                problems.Add($"Event '{definition.Name}' names object {town}, which is not a town.");
+                problems.Add(new($"Event '{definition.Name}' names object {town}, which is not a town.", definition.Name));
             }
 
-            problems.AddRange(Check(state, set, definition).Select(p => $"Event '{definition.Name}': {p}"));
+            problems.AddRange(Check(state, set, definition).Select(p => new MapEventProblem($"Event '{definition.Name}': {p}", definition.Name)));
         }
 
         var quests = new HashSet<string>(StringComparer.Ordinal);
@@ -40,18 +49,18 @@ public static class MapEventRules
             var at = $"The {site.Definition.Name.ToLowerInvariant()} {site.Id.Value}";
             if (set.Find(site.Quest!) is not { Kind: MapEventKind.Quest } quest)
             {
-                problems.Add($"{at} names '{site.Quest}', which is not a quest.");
+                problems.Add(new($"{at} names '{site.Quest}', which is not a quest.", null, site.Position));
                 continue;
             }
 
             if (!quests.Add(quest.Name))
             {
-                problems.Add($"{at} shares the quest '{quest.Name}'; every quest object has its own.");
+                problems.Add(new($"{at} shares the quest '{quest.Name}'; every quest object has its own.", quest.Name, site.Position));
             }
 
             if (site.Kind == MapObjectKind.QuestGate && (quest.Stages.Count != 1 || quest.Stages[0].Actions.Count > 0))
             {
-                problems.Add($"{at}: a gate's quest has one stage that takes and gives nothing.");
+                problems.Add(new($"{at}: a gate's quest has one stage that takes and gives nothing.", quest.Name, site.Position));
             }
         }
 
@@ -59,7 +68,7 @@ public static class MapEventRules
         {
             if (set.Find(box.Event!) is not { Kind: MapEventKind.Hero })
             {
-                problems.Add($"The Pandora's box {box.Id.Value} names '{box.Event}', which is not a hero event.");
+                problems.Add(new($"The Pandora's box {box.Id.Value} names '{box.Event}', which is not a hero event.", null, box.Position));
             }
         }
 
@@ -69,17 +78,17 @@ public static class MapEventRules
             var at = $"The event cell at {cell.Position}";
             if (set.Find(cell.Event) is not { Kind: MapEventKind.Hero })
             {
-                problems.Add($"{at} names '{cell.Event}', which is not a hero event.");
+                problems.Add(new($"{at} names '{cell.Event}', which is not a hero event.", null, cell.Position));
             }
 
             if (!cells.Add(cell.Position))
             {
-                problems.Add($"{at} is there twice.");
+                problems.Add(new($"{at} is there twice.", cell.Event, cell.Position));
             }
 
             if (!state.Map.Contains(cell.Position) || !state.Terrains.IsPassable(state.Map.GetTerrain(cell.Position)) || state.ObjectCellAt(cell.Position) is not null)
             {
-                problems.Add($"{at} must be on free, passable ground.");
+                problems.Add(new($"{at} must be on free, passable ground.", cell.Event, cell.Position));
             }
         }
 

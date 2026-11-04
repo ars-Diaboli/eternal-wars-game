@@ -32,7 +32,7 @@ namespace EternalWars.Core.Domain.AI;
 /// Also play turns of human slots and command battle sides of human players (the simulator, where nobody sits at the
 /// keyboard). Without it only computer players are played, and battles with a human side wait for that human.
 /// </param>
-public sealed class AdventureAi(GameSession session, bool controlHumanSlots = false)
+public sealed partial class AdventureAi(GameSession session, bool controlHumanSlots = false)
 {
     /// <summary>Most moves one hero makes in a turn; a safety net, a hero normally runs out of movement first.</summary>
     public const int MaxMovesPerHero = 24;
@@ -194,8 +194,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     command = new AnswerSphinxCommand(player, 0); // no knowledge of riddles: the first answer (its place is rolled)
                     break;
                 case MapEventDecision:
-                    // A computer player is shown no messages; a question takes its first answer until the AI weighs them (EVT-6 a).
-                    command = new AnswerMapEventCommand(player, 0);
+                    // A computer player is shown no messages; a question takes the answer worth the most (EVT-6 a).
+                    command = new AnswerMapEventCommand(player, BestAnswer());
                     break;
                 case WitchHutDecision hut:
                     command = new ChooseWitchHutSkillCommand(player, SkillOffers.ComputerChoice(hut.Options));
@@ -1305,6 +1305,10 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                     }
 
                     break;
+                case QuestSite site when visit != hero.Position && QuestWorth(hero, site) is > 0 and var questWorth && Plausible(GuardPower(visit)):
+                    // A Seer's Hut or Quest Guard whose stage the hero meets and which gives more than it takes (EVT-6); the others are obstacles.
+                    yield return new(visit, questWorth, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
                 case Prison { Hero: not null } when !_state.HeroLimitReached(owner) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     yield return new(visit, 2500, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
@@ -1503,8 +1507,8 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
 
         return best;
 
-        // Exploring never walks into anything: no heroes, objects or guarded ground; a border post it has the key for and an own or allied
-        // garrison are passes (ADR-070, ADR-071).
+        // Exploring never walks into anything: no heroes, objects or guarded ground; a border post it has the key for, an own or allied
+        // garrison and a Quest Gate whose quest the hero meets are passes (ADR-070, ADR-071, EVT-6).
         bool Open(MapPosition position) =>
             _state.Fog.IsExplored(owner, position) && MovementRules.CheckTile(_state, position) == MoveResult.Moved
             && BorderRules.Barring(_state, owner, position) is null && _state.HeroAt(position) is null && !_state.IsGuarded(position)
@@ -1513,6 +1517,7 @@ public sealed class AdventureAi(GameSession session, bool controlHumanSlots = fa
                 null => true,
                 { Object: BorderPost, Cell: FootprintCell.Visit } => true,
                 { Object: MapGarrison garrison, Cell: FootprintCell.Visit } => garrison.LetsThrough(_state, owner),
+                { Object: QuestSite { Kind: MapObjectKind.QuestGate }, Cell: FootprintCell.Visit } => QuestRules.Barring(_state, hero, position) is null,
                 _ => false,
             };
 

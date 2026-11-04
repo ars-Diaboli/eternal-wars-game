@@ -12,7 +12,8 @@ public enum IssueSeverity
     Error,
 }
 
-public sealed record MapIssue(IssueSeverity Severity, string Message, MapPosition? Position = null);
+/// <summary>A problem the validator found: how bad, what, where on the map and, for the map events, which event (the Events tab opens it).</summary>
+public sealed record MapIssue(IssueSeverity Severity, string Message, MapPosition? Position = null, string? Event = null);
 
 /// <summary>
 /// Checks a scenario for problems that individual edits cannot prevent (e.g. painting water under a
@@ -207,7 +208,30 @@ public static class MapValidator
         }
 
         issues.AddRange(ValidateRules(scenario));
+        issues.AddRange(ValidateEvents(scenario));
         return issues;
+    }
+
+    /// <summary>
+    /// The map events (EVT-6 c): what stops the map loading (<see cref="MapEvents.MapEventRules"/>) as errors, then the warnings of
+    /// <see cref="MapEvents.MapEventChecks"/>; each at the event's first cell, quest object or town when it has one.
+    /// </summary>
+    private static IEnumerable<MapIssue> ValidateEvents(GameState scenario)
+    {
+        var set = scenario.MapEvents.Set;
+        MapPosition? Where(MapEvents.MapEventProblem problem) => problem.Position ?? (problem.Event is not { } name ? null
+            : set.Cells.FirstOrDefault(c => c.Event == name)?.Position
+              ?? scenario.ObjectsOf<QuestSite>().FirstOrDefault(q => q.Quest == name)?.Position
+              ?? set.Find(name)?.Towns.Select(t => scenario.FindObject(new MapObjectId(t))?.Position).FirstOrDefault(p => p is not null));
+        foreach (var error in MapEvents.MapEventRules.Check(scenario, set))
+        {
+            yield return new(IssueSeverity.Error, error.Message, Where(error), error.Event);
+        }
+
+        foreach (var warning in MapEvents.MapEventChecks.Warnings(scenario, set))
+        {
+            yield return new(IssueSeverity.Warning, warning.Message, Where(warning), warning.Event);
+        }
     }
 
     /// <summary>Victory and defeat conditions (ADR-057): what they point at must exist, and a game should be able to end.</summary>
@@ -345,11 +369,8 @@ public static class MapValidator
             yield return "is empty; give it something to hold or an event to run.";
         }
 
-        if (box.Event is { } name && scenario.MapEvents.Set.Find(name) is not { Kind: MapEvents.MapEventKind.Hero })
-        {
-            yield return $"runs '{name}', which is not a hero event of the map.";
-        }
-        else if (box.Contents.Problem() is { } problem)
+        // An event that is not a hero event is reported with the map events.
+        if (box.Contents.Problem() is { } problem)
         {
             yield return problem;
         }
