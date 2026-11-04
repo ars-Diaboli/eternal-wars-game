@@ -7,7 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-04**: new HERO-9 (Scouting reveals information, the owner's idea).
+**Updated 2026-11-04**: HERO-9 answered (ADR-125); new TOWN-12 (more unique buildings, the Grail buildings; ADR-126).
 
 ## 🚧 Blocking now
 
@@ -18,28 +18,17 @@ Nothing blocks the current work.
 <a id="hero-5"></a>
 **HERO-5 Names and drafts.** Hero names, school names and specialties in `heroes.csv`; primary stat odds and starting values (ADR-055).
 
-<a id="hero-9"></a>
-**HERO-9 Scouting reveals information** (owner's idea, 2026-11-04: "reveal additional information on enemy / environment, similar to
-HoMM3"). Today Scouting only adds sight radius (+2 / 4 / 6), and every army on the map shows exact counts unless Veil hides them (ADR-123).
-- a. Baseline without Scouting: should other players' armies and neutral stacks show HoMM3's amount words ("a pack", "lots";
-  `AdventureIntel.AmountWord`) instead of exact counts?
-- b. What each level adds, besides the radius?
-- c. Scouting against Veil: who wins?
-- d. Does the computer player see only what its heroes' Scouting shows?
+## Towns
 
-**Proposal**: 
-(a) yes, words for every army you do not own, in sight or remembered. 
-(b) Basic: exact counts of neutral stacks and creature
-bank guards in sight, an enemy hero's level and primary stats; Advanced: exact counts of enemy heroes' armies and town garrisons in sight,
-their artifacts and war machines; Expert: an enemy hero's skills and known spells, and a town's available creatures. The best Scouting among
-the player's heroes in sight of the target counts. 
-(c) Veil rank I hides counts from Scouting below Expert; Veil II hides artifacts from
-everyone; Veil III as built. 
-(d) Yes: the AI reads the shown army (a word counts as the middle of its range), through the same
-`AdventureIntel` query. The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
+<a id="town-12"></a>
+**TOWN-12 More unique buildings; the Grail buildings** (owner, 2026-11-04: the first set in ADR-126 is "just one set", more come later).
+- a. Which further faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
+- b. What does each town's Grail building do?
 
-Answer : a - proposal correct, also for every AdventureIntel.AmountWord display numeric range eg a pack : 10-19, lots : 20-49 and so on;
-b, c, d - use proposal;
+**Proposal**: (a) open; the owner adds them here. (b) every Grail building gives +5000 gold a day and +50 % growth in its town, plus
+one effect for all its owner's heroes: Haven +2 morale, Sylvan +2 luck, Academy the town's guild spells known by every hero with a spell
+book, Inferno +3 Spell Power, Necropolis +20 % Necromancy, Dungeon the whole map revealed once, Stronghold +2 Attack, Swamp Bestiary +2
+Defense.
 
 ## Game flow and content
 
@@ -78,7 +67,7 @@ One line per question; the ADR holds the detail.
 - **Towns**: groups ADR-010/028/029, tech tree ADR-030/046, income ADR-025, caravans ADR-054, tavern ADR-060/070, governors ADR-063, TOWN-1 fort
   ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
-  CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073; HERO-8 (rarer specialties, the proposals for now) ADR-107.
+  CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073; HERO-8 (rarer specialties, the proposals for now) ADR-107; HERO-9 (Scouting reveals information) ADR-125.
 - **Combat**: CMB-5 (sieges before 1.0) ADR-099; CMB-11 (siege rules) ADR-106; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
   morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090, CMB-12 (health bars, dividing obstacles) ADR-118.
 - **Magic**: MAG-13 (guild spell draw, spell elements, summons) ADR-106; MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.

@@ -67,6 +67,7 @@ In Stronghold and Swamp Bestiary, Town Hall needs `war-lodge 1` instead of `mage
 | War Lodge | Stronghold and Swamp Bestiary instead of the mage guild: a visiting hero (or one in town when it is built) learns the warcries up to the lodge's level, Rally 1, Intimidate 2, Terror 3, and uses those its Warcry skill allows (ADR-112) | ✅ |
 | Growth buildings | +5 a week to every tier-1 dwelling / +2 to every tier-2 dwelling of the town, flat, after the fort's percent (ADR-071, ADR-112) | ✅ |
 | Necromancy Amplifier | Necropolis only, the first town-specific building: +5 % Necromancy for every hero of its owner with Death attunement; more than one adds nothing; a captured one helps its new owner (ADR-069, ADR-070, TOWN-6) | ✅ (ADR-078) |
+| Unique buildings, first set (working names) | one per town (ADR-126). "Once" is once per hero per town; the siege bonus goes to the town's defending hero. Haven **Stables**: the map Stables without the Lancer upgrade; Stronghold **Proving Ring**: +1 Attack once, +1 Attack in sieges; Swamp Bestiary **Shell Wall**: +1 Defense / +1 Defense; Academy **Hall of Records**: +1 Knowledge / +1 Knowledge; Inferno **Altar of Brimstone**: +1 Spell Power / +1 Spell Power; Sylvan **Elder Grove**: +1000 experience once / +1 luck; Dungeon **Mana Spring**: mana +75 % of the maximum, once a week per hero / +1 morale. Draft cost 2000 gold, 5 ore, 5 of the town's rare resource, Fort 1. More per town: TOWN-12 | ⏳ |
 
 ## Tech tree
 
@@ -244,8 +245,8 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 - The mage guild 4 stays a placeholder (ADR-070). The fort's fortifications only take effect with sieges (before 1.0 since ADR-099; ADR-066).
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
 - **Per-town names and costs** (ADR-070, ADR-112): the `town` column is built (ADR-074); the growth buildings and the war lodge have a row
-  per town with its own name and rare resource, and Stronghold and Swamp Bestiary's town hall and (removed) mage guild rows. Every town later
-  gets a unique building.
+  per town with its own name and rare resource, and Stronghold and Swamp Bestiary's town hall and (removed) mage guild rows. The unique
+  buildings' first set is ADR-126; more per town and the Grail buildings: TOWN-12.
 - The Capitol's cost and income are placeholders.
 - **Growth buildings** (ADR-071, TOWN-1; placeholders, built ADR-112): `growth-1` adds **+5 a week** to tier-1 growth (1000 gold +
   5 lumber, needs a tier-1 dwelling), `growth-2` **+2** to tier-2 (1500 gold + 5 ore + 2 of the town's rare resource, needs a tier-2

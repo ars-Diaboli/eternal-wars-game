@@ -24,7 +24,8 @@ Each building's levels, cost, requirements and effect: [town-buildings.md](../co
 - **Necromancy Amplifier** (Necropolis, ADR-069, TOWN-6): +5 % Necromancy for its owner's heroes with the skill; more than one adds nothing;
   a captured one helps its new owner.
 - **Per-town lists** (ADR-070, ADR-074, ADR-112): a town's own rows in `buildings.csv` replace the shared ones, add a building only it has,
-  or (level 0) remove one. Every town gets a unique building *(planned, ADR-070)*.
+  or (level 0) remove one. Every town gets a unique building *(planned, ADR-126;
+  [town-buildings.md](../content/town-buildings.md))*; more later (TOWN-12).
 
 ## Garrison heroes
 ADR-112, TOWN-8. The visiting hero may enter the garrison (its army joins it; refused if it does not fit) and leave with the **whole**

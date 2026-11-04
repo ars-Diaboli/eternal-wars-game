@@ -242,6 +242,7 @@ Rules: [shared object rules](#shared-object-rules).
 | Astrologer's Tower | Shows next week's event (MAP-32) |
 | Artifact Merchant | **7** Minor or Major artifacts (pieces, never whole relics) at **twice their worth** (Minor 2000, Major 5000), restocked on each month's first day; a sold slot stays empty until then (MAP-33) |
 | Witch Hut | **Two skills** (map-set or rolled); a visit raises one a level, or the same group's next skill where it cannot; **one lesson per hero level** (MAP-34) |
+| University / War Academy *(planned, ADR-126)* | Lessons in the magic schools / the general groups: up to 2 new groups and 2 skills raised a level per hero, each **1000 gold + 5 crystal, mercury and sulfur**; learned skills shown disabled |
 
 <a id="scenery-and-rivers-adr-077-built-adr-079"></a>
 ## Scenery and rivers

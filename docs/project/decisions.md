@@ -732,3 +732,59 @@ validator warnings; the AI answering by value (it takes the first answer); quest
 - **Commands**: `AnswerMapEventCommand` (an answer, or 0 to close a message) and `ChooseEventArmyCommand` (the stacks to keep). Events:
   `MapEventRan`, `MapVariableChanged`, `MapEventEnabledChanged`, `MapEventCellRemoved`, `MapEventHeroGiven`, `MapEventSkillGained`,
   `MapEventSpellBookGained`, `MapEventSpellLearned`, `MapEventWarMachineGained`.
+
+### ADR-125: Scouting reveals information; amount words with their ranges (HERO-9, ADR-069, ADR-123, 2026-11-04)
+**Status**: accepted (2026-11-04), not built. The owner's answer to HERO-9: the proposals, and every amount word shows its range.
+
+- **Baseline**: every army a player does not own (other players', neutral stacks, bank guards, garrisons), in sight or remembered, shows
+  an **amount word with its range** instead of the count: a few (1–4), several (5–9), a pack (10–19), lots (20–49), a horde (50–99), a
+  throng (100–249), a swarm (250–499), zounds (500–999), a legion (1000+) (`AdventureIntel.AmountWord`).
+- **Scouting levels**, besides the sight radius (+2 / 4 / 6): **Basic**: exact counts of neutral stacks and bank guards in sight, an
+  enemy hero's level and primary stats; **Advanced**: exact counts of enemy heroes' armies and town garrisons in sight, their artifacts and
+  war machines; **Expert**: an enemy hero's skills and known spells, a town's available creatures. The best Scouting among the player's
+  heroes that see the target counts.
+- **Veil**: rank I hides counts from Scouting below Expert; rank II hides artifacts from everyone; rank III as built (ADR-123).
+- **AI**: sees only what its heroes' Scouting shows, through the same `AdventureIntel` query; a word counts as the middle of its range
+  (a legion as 1000).
+- The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
+
+### ADR-126: The owner's picks from the missing mechanics: map bans, random placeholders, University and War Academy, spell scrolls, the Grail, the first unique buildings (ADR-116, 2026-11-04)
+**Status**: accepted (2026-11-04), not built. Owner's notes in `ideas.md`; points marked *(proposal)* were filled in by the agent and stand
+unless the owner changes them. More unique buildings and the Grail buildings: TOWN-12.
+
+- **Map bans** (HoMM3, HotA): the map's rules list banned heroes, artifacts, spells and skills. The tavern pools, artifact rolls (chests,
+  banks, Pandora's Boxes, merchants, loot), guild draws, shrines, level-ups, Witch Huts, the University and the War Academy skip them.
+  *(proposal)* What the author places by hand (a hero, an artifact, a fixed guild spell) is kept, and the validator warns; a banned skill
+  is never offered but a hero that starts with it keeps it; a ban that empties a pool falls back to the full list. Map format bump.
+- **Random placeholders** (HoMM3, editor and map format): a **random monster** of tier 1–7 (or any tier) picks a creature of that tier from
+  the playable towns' and neutral lines at game start; a **random town** takes its owner's chosen faction, a neutral one a random playable
+  faction; a **hero placeholder** becomes a random hero of its owner's faction at game start (*(proposal)* campaigns later put a carried
+  hero there, FLOW-1). The draw uses `GameState.Random` at game start, like guild spells.
+- **University and War Academy**: adventure-map objects any hero may visit. The **University** teaches the magic schools, the **War
+  Academy** the general groups (offense … war machines). Each shows a hero up to **2 new groups** (the group's first skill at Basic) and
+  **2 of its skills** in those groups raised one level; a lesson costs **1000 gold + 5 crystal, 5 mercury and 5 sulfur**. Skills already
+  learned (or at their maximum, or new groups past the 6-group limit) are shown disabled. *(proposal)* The offers are drawn per hero with
+  the level-up weights on its first visit and kept for that hero at that object (walking off and on draws nothing new); the rival school
+  can be bought; any number of lessons a visit. Generator values like a Witch Hut's, higher.
+- **Spell scrolls**: one artifact per spell (Misc slot, a `spell-scroll` row with the spell as its parameter). *(proposal)* The hero casts
+  the spell while carrying it, at its own rank for the school, with a spell book and the normal mana cost; scrolls of spell levels 1–3 come
+  from the artifact rolls by level (minor 1, major 2, relic 3), level 4 only placed by hand; never pieces of a relic.
+- **Grail** (HoMM3, HoMM5): *(proposal)* the Grail lies buried on free passable ground (set in the editor or rolled at game start, not within
+  10 cells of a town); **obelisks** (map objects) each show the player a share of the **puzzle map** around it; a hero **digs** with its
+  whole day's movement (only with full movement, not on roads or objects), a hole stays; the Grail is an artifact that cannot be traded or
+  sold, and a hero bringing it into one of its owner's towns builds that town's **Grail building** at once (one per town). The generator
+  places obelisks per template. Map format bump. Grail building effects: TOWN-12.
+- **Unique buildings, the first set** (one per town, beside the Necromancy Amplifier). Each hero gets a "once" bonus **once per town**
+  (another town of the same kind gives it again); the record stays with the town when it is captured *(proposal)*. The siege bonus goes to
+  the defending hero (in the town or its garrison) in a siege of that town. Working names *(proposal)*:
+  - **Haven, Stables**: as the map's Stables (+400 movement at once and a day for the rest of the week, once a week per hero), without the
+    free Lancer → Champion upgrade.
+  - **Stronghold, Proving Ring**: +1 Attack once per hero; +1 Attack to the defending hero in sieges.
+  - **Swamp Bestiary, Shell Wall**: +1 Defense once per hero; +1 Defense in sieges.
+  - **Academy, Hall of Records**: +1 Knowledge once per hero; +1 Knowledge in sieges.
+  - **Inferno, Altar of Brimstone**: +1 Spell Power once per hero; +1 Spell Power in sieges.
+  - **Sylvan, Elder Grove**: +1000 experience once per hero; +1 luck in sieges.
+  - **Dungeon, Mana Spring**: mana +75 % of the hero's maximum, may go above it until spent (like the Mana Vortex), once a week per hero;
+    +1 morale in sieges.
+  - **Necropolis**: the Necromancy Amplifier (ADR-069).
+  - *(proposal)* Cost 2000 gold, 5 ore and 5 of the town's rare resource; needs Fort 1 (Stables: town hall 2). `buildings.csv` rows per town.
