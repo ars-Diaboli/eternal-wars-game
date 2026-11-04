@@ -15,6 +15,12 @@ public enum MapEventKind
 
     /// <summary>The start of the town owner's turn (neutral towns: the start of the day); it acts on the town and its owner.</summary>
     Town,
+
+    /// <summary>
+    /// A quest (EVT-5): a Seer's Hut, Quest Guard or Quest Gate names it and a visiting hero meets its <see cref="MapEventDefinition.Stages"/>,
+    /// one after another; it acts on that hero and its owner. A quest has stages instead of actions.
+    /// </summary>
+    Quest,
 }
 
 /// <summary>
@@ -46,7 +52,26 @@ public sealed record MapEventDefinition(string Name, MapEventKind Kind, IReadOnl
     public bool Enabled { get; init; } = true;
 
     public IReadOnlyList<int> Towns { get; init; } = [];
+
+    /// <summary>A quest's stages, done one after another (a Quest Gate's quest has one, which takes and gives nothing).</summary>
+    public IReadOnlyList<QuestStage> Stages { get; init; } = [];
 }
+
+/// <summary>
+/// One stage of a quest (EVT-5): what the hero must meet (<see cref="Requirement"/>; no random numbers, so routes can test it), the
+/// <see cref="Proposal"/> shown on the first visit and in the quest log, the <see cref="Progress"/> shown on later visits before the hero meets it
+/// (empty: the proposal again), the <see cref="Completion"/> asked once it does, and the <see cref="Actions"/> run when the hero completes it: what
+/// the stage takes, then its rewards (<see cref="QuestForms"/> writes HoMM3's quests this way). A lost battle among the actions leaves the stage open.
+/// </summary>
+public sealed record QuestStage(EventCondition Requirement, string Proposal, IReadOnlyList<EventAction> Actions)
+{
+    public string Progress { get; init; } = "";
+
+    public string Completion { get; init; } = "";
+}
+
+/// <summary>One quest a player's heroes were shown (EVT-5): the quest object, its quest, the stage and whether the player completed the quest.</summary>
+public sealed record QuestLogEntry(Common.MapObjectId Site, string Quest, int Stage, bool Done);
 
 /// <summary>An invisible event cell (EVT-2): a hero stepping onto (X, Y, Level) runs the hero event <see cref="Event"/>; several cells may share one event.</summary>
 public sealed record EventCell(int X, int Y, int Level, string Event)

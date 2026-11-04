@@ -40,11 +40,12 @@ namespace EternalWars.Core.Data.Maps;
 /// omitted = no limit; ADR-117). 29 = + a hero's spell book and spells (<c>spellBook</c>, <c>spells</c>; omitted = the roster's) and shrines
 /// (<c>shrine</c>, an optional spell; ADR-120). 30 = + a town's fixed mage guild spells (<c>guildSpells</c> on a town: spell ids of the town's
 /// school, at most 3 / 3 / 2 / 2 per level; omitted = all drawn when the game starts). 31 = + map events (<c>events</c>: the event tree, the variables and the event cells; omitted = none;
-/// ADR-115). Older versions still load (with the default events).
+/// ADR-115). 32 = + quests (an event's <c>stages</c>) and the quest objects (<c>questSite</c>: Seer's Hut, Quest Guard, Quest Gate, each naming
+/// its <c>quest</c>; ADR-115, EVT-5). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 31;
+    public const int CurrentFormatVersion = 32;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -230,6 +231,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(MapTavernDocument), "tavern")]
 [JsonDerivedType(typeof(GarrisonDocument), "garrison")]
 [JsonDerivedType(typeof(PandorasBoxDocument), "pandorasBox")]
+[JsonDerivedType(typeof(QuestSiteDocument), "questSite")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }
@@ -294,6 +296,12 @@ public sealed record KeymasterDocument : MapObjectDocument;
 
 /// <summary>A border guard or gate (v23, ADR-071); colour and kind come from its definition.</summary>
 public sealed record BorderPostDocument : MapObjectDocument;
+
+/// <summary>A Seer's Hut, Quest Guard or Quest Gate (v32, EVT-5; the kind comes from its definition): the quest event it runs (omitted = none).</summary>
+public sealed record QuestSiteDocument : MapObjectDocument
+{
+    public string? Quest { get; init; }
+}
 
 /// <summary>A map tavern (v23, ADR-070); its weekly pool is drawn in the game.</summary>
 public sealed record MapTavernDocument : MapObjectDocument;

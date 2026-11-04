@@ -24,6 +24,8 @@ namespace EternalWars.Core.Domain.Pathfinding;
 /// <item>With <c>respectFog</c>, only tiles the hero's owner has explored are used.</item>
 /// <item>Border guards and gates are walls to heroes without their key and open ground to key holders (ADR-071); own and allied garrisons are
 /// passes (ADR-070).</item>
+/// <item>A Quest Guard, and a Quest Gate whose quest the hero does not meet, are walls that a route may end on (the bump shows the quest);
+/// a gate is open ground to a hero that meets its quest (EVT-5).</item>
 /// <item>Tiles guarded by a monster end the route (the encounter happens there), like the monster itself.</item>
 /// </list>
 /// Search state is (tile, arrived-by-teleport): a gate entrance reached on foot must teleport,
@@ -55,6 +57,9 @@ public sealed class PathFinder(GameState state)
 
             targetIsEncounter = true;
         }
+
+        // A barring quest object can be clicked: the route ends on it and the last step bumps into it (EVT-5).
+        targetIsEncounter |= QuestRules.Barring(state, hero, target) is not null;
 
         var nodeCount = map.Levels * map.Width * map.Height * 2;
         var cost = new int[nodeCount];
@@ -133,6 +138,7 @@ public sealed class PathFinder(GameState state)
         bool CanStandOn(MapPosition position) =>
             MovementRules.CheckTile(state, position) == MoveResult.Moved &&
             BorderRules.Barring(state, hero.Owner, position) is null &&
+            QuestRules.Barring(state, hero, position) is null &&
             (!respectFog || state.Fog.IsExplored(hero.Owner, position)) &&
             (state.HeroAt(position) is not { } other || !IsKnown(other));
 

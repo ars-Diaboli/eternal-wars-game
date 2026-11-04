@@ -67,6 +67,7 @@ public static class GameStateDigest
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
                 Prison prison => $"prisoner {prison.Hero} level {prison.Level}",
                 CreatureBank bank => $"guard {string.Join(',', bank.Guard)} reward {bank.Reward} {bank.RewardArtifact}{(bank.MoreArtifacts.Count == 0 ? "" : $"+{string.Join('+', bank.MoreArtifacts)}")} plundered {bank.PlunderedOn?.AbsoluteDay}",
+                QuestSite site => $"quest {site.Quest} stage {site.Stage}",
                 PandorasBox box => $"contents {box.Contents} guard {string.Join(',', box.Guard)} message {box.Message}",
                 MapGarrison garrison =>$"owner {garrison.Owner?.Value} troops {Slots(garrison.Troops)}",
                 CreatureDwelling dwelling => $"{dwelling.Creature} owner {dwelling.Owner?.Value} available {dwelling.Available}" + (dwelling.Guard is { } g ? $" guard {g}" : ""),

@@ -105,6 +105,8 @@ public static class Palette
         MapObjectKind.MapTavern => new Color(0.65f, 0.40f, 0.20f),
         MapObjectKind.Garrison => new Color(0.50f, 0.50f, 0.55f),
         MapObjectKind.PandorasBox => new Color(0.75f, 0.30f, 0.65f),
+        MapObjectKind.SeerHut => new Color(0.55f, 0.40f, 0.70f),
+        MapObjectKind.QuestGuard or MapObjectKind.QuestGate => new Color(0.95f, 0.55f, 0.20f),
         _ => Colors.Magenta,
     };
 

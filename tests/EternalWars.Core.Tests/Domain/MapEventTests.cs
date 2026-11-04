@@ -274,7 +274,7 @@ public class MapEventTests
 
         var map = MapConverter.ToDocument(state);
         var json = MapSerializer.Serialize(map);
-        Assert.Equal(31, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 31);
         Assert.Contains("\"type\": \"question\"", json);
         Assert.Equal(json, MapSerializer.Serialize(MapConverter.ToDocument(MapConverter.ToGameState(MapSerializer.Deserialize(json)))));
 

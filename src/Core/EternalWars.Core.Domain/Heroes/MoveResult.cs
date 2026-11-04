@@ -43,6 +43,9 @@ public enum MoveResult
 
     /// <summary>A hero without creatures cannot attack.</summary>
     NoArmy,
+
+    /// <summary>Stepped towards a Quest Guard, or a Quest Gate it may not pass: the quest was shown or offered; the hero did not move (EVT-5).</summary>
+    QuestVisited,
 }
 
 /// <summary>Result of following a path: how far the hero got and why it stopped.</summary>

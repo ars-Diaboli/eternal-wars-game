@@ -122,9 +122,14 @@ public static class MapConverter
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetTeamCounts(document.MinTeams, document.MaxTeams);
             state.SetRules(ToRules(document.Rules));
+            // Quest objects name their quests, so a map with them is checked even without events (EVT-5).
             if (document.Events is { } mapEvents)
             {
                 state.SetMapEvents(mapEvents);
+            }
+            else if (state.ObjectsOf<QuestSite>().Any(q => q.Quest is not null))
+            {
+                state.SetMapEvents(Domain.MapEvents.MapEventSet.Empty);
             }
             for (var i = 0; i < document.Players.Count; i++)
             {
@@ -420,6 +425,10 @@ public static class MapConverter
                 Troops = garrison.Troops.IsEmpty ? null : garrison.Troops.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
             },
             PandorasBox box => ToDocument(box),
+            QuestSite site => new QuestSiteDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Quest = site.Quest,
+            },
             HillFort => new HillFortDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -601,6 +610,7 @@ public static class MapConverter
                 ShrineDocument shrine => new Shrine(id, definition, position, shrine.Spell),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
                 PandorasBoxDocument box => ToBox(box, id, definition, position, creatures),
+                QuestSiteDocument site => new QuestSite(id, definition, position, string.IsNullOrEmpty(site.Quest) ? null : site.Quest),
                 DepositDocument => new Deposit(id, definition, position),
                 MagiWindowDocument => new MagiWindow(id, definition, position),
                 MagiEyeDocument => new MagiEye(id, definition, position),

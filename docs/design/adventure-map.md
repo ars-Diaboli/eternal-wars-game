@@ -258,7 +258,7 @@ Rules: [shared object rules](#shared-object-rules).
   visiting hero is asked whether to open it; it opens once and vanishes. Gains only; an optional guard is fought (like a bank's) after "open?"
   and the box opens only on victory; optional message; gains the hero has no room for are lost. Contents hidden until opened (the AI knows
   them); an empty box is a validator error. The generator places boxes of gold, experience or creatures from a value of 5000.
-- **Map events** (ADR-096, ADR-115, ADR-124): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
+- **Map events** (ADR-096, ADR-115, ADR-124, ADR-127): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
   variables, stored in the map file (`events`; the node types are in `MapEvents/MapEventData.cs`).
   - **Triggers**: hero events run when a hero steps onto one of their invisible cells (every step, until the event disables or removes
     itself; routes ignore cells and stop only for a message, a question or a battle); player events at every player's turn start after
@@ -272,5 +272,14 @@ Rules: [shared object rules](#shared-object-rules).
     creatures to hire, buildings (free, with what they need), experience, primary and secondary skills (gains only), artifacts, war machines,
     spell book and spells, mana, movement, morale and luck until the next battle, a battle (won: the event goes on; lost, fled or
     surrendered: it stops), reveal an area, give a roster hero. A computer player sees no messages.
-  - *(planned)* Quest events (EVT-5): **Seer's Hut**, **Quest Guard**, **Quest Gate**, a quest log; loops, "run another event" and a
-    Pandora's Box that runs a hero event; the AI answering by value and doing worthwhile quests; the editor's "Events" tab.
+  - **Quests**: an event of its own kind with stages done one after another; a stage has a requirement (no random numbers), a proposal,
+    an optional progress text and completion question, and the actions run on completion (what it takes, then the rewards). Ready forms
+    write HoMM3's quests (level, stats, artifacts, creatures, resources, beat a monster or hero, be a hero, class or player). Each quest
+    object names its own quest; the stage reached is shared by all players.
+    - **Seer's Hut**: shows the proposal (later the progress) or, when met, asks to complete; then shows the next stage; empty after the last.
+    - **Quest Guard**: a one-tile barrier every hero bumps into; it leaves after its last stage.
+    - **Quest Gate**: a one-tile barrier with one stage that takes nothing; heroes meeting it walk through, the others bump and see it.
+    - **Quest log** per player: the quests its heroes were shown, their stage and whether it completed them; another player's completion
+      drops the open entries. A computer player completes any stage it meets.
+  - *(planned)* Loops, "run another event" and a Pandora's Box that runs a hero event; the AI answering by value and weighing quests; the
+    editor's "Events" tab; the quest log window.
