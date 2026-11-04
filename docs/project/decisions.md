@@ -788,3 +788,31 @@ unless the owner changes them. More unique buildings and the Grail buildings: TO
     +1 morale in sieges.
   - **Necropolis**: the Necromancy Amplifier (ADR-069).
   - *(proposal)* Cost 2000 gold, 5 ore and 5 of the town's rare resource; needs Fort 1 (Stables: town hall 2). `buildings.csv` rows per town.
+
+### ADR-127: Map events, step 2 in core: quests, the Seer's Hut, Quest Guard and Quest Gate, the quest log, map format v32 (ADR-115, EVT-5, 2026-11-04)
+**Status**: implemented in core (2026-11-04). Not done: the game app's quest log window (Q) and quest object models; the editor's way to write a
+quest and link an object to it (the "Events" tab); the AI weighing quests (it completes any stage it meets and treats barriers as walls);
+loops and "run another event" (step 3).
+
+- **Quests are map events** of a fourth kind, `Quest`: instead of actions a quest has **stages**, done one after another. A stage has a
+  **requirement** (any condition of EVT-3, but no random numbers, so routes can test it), a **proposal** (first visit and the quest log), an
+  optional **progress** text (later visits before it is met), an optional **completion** question and the **actions** run when the hero
+  completes it: what it takes, then its rewards (any action, a battle included; a lost battle leaves the stage open).
+- **Ready forms** (`QuestForms`): HoMM3's quests as stages that take what they ask: level, primary stats, artifacts, creatures, resources, beat a
+  monster, beat a hero, be a hero, a class or a player. The editor will offer them; they write the same tree.
+- **Quest objects** (`QuestSite`, `questSite` in the map): each names its **own** quest (two objects never share one; none = an empty hut, a
+  closed barrier, a validator warning). A stage's progress is the object's, shared by all players.
+  - **Seer's Hut** (a building): a visit that does not meet the stage shows the proposal or progress; one that does asks "Complete / Not now".
+    Completing runs the actions, then shows the next stage's proposal; after the last stage the hut stands empty.
+  - **Quest Guard** (one tile): every hero bumps into it (the hero does not move, `MoveResult.QuestVisited`); completing its last stage
+    removes it.
+  - **Quest Gate** (one tile, one stage that takes and gives nothing): heroes that meet its quest walk through without stopping; the others
+    bump into it and are shown the proposal. Routes treat both barriers as walls and may end on them (a click bumps).
+- **Quest log** (per player, in the game state, `MapEventState.QuestLog`): an entry per quest object the player's heroes were shown, with its
+  stage and whether the player completed it; when someone completes a stage, the other players' open entries for that object go. A gate's
+  entry is done once one of the player's heroes passes.
+- A computer player completes any stage it meets (it takes the first answer); the AI's judgement of quests is the AI step of the roadmap.
+- **Loading**: quests have stages and no actions, every stage a proposal, no random numbers in requirements; only quests have stages; a quest
+  object names a quest, not shared, and a gate's quest has one empty stage. A map with quest objects and no events is checked too.
+- Events: `QuestStageCompleted`, `QuestLogChanged`. Map format **v32**: an event's `stages` and the `questSite` objects (`seer-hut`,
+  `quest.guard`, `quest.gate`).

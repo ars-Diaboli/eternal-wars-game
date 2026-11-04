@@ -33,3 +33,9 @@ public sealed record MapEventSpellLearned(HeroId Hero, string Spell) : IEvent;
 
 /// <summary>A map event gave a hero a war machine (taking one publishes <see cref="WarMachineLost"/>).</summary>
 public sealed record MapEventWarMachineGained(HeroId Hero, Battles.WarMachineSlot Slot) : IEvent;
+
+/// <summary>A hero completed a quest's stage at a quest object (EVT-5); the stage's actions ran before it.</summary>
+public sealed record QuestStageCompleted(MapObjectId Site, string Quest, int Stage, HeroId Hero, PlayerId Player) : IEvent;
+
+/// <summary>The player's quest log changed (<see cref="MapEventState.QuestLog"/>): an entry was added, moved on, done or dropped.</summary>
+public sealed record QuestLogChanged(PlayerId Player) : IEvent;

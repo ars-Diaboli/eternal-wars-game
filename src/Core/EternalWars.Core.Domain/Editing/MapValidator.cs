@@ -138,6 +138,9 @@ public static class MapValidator
                 case PandorasBox box:
                     issues.AddRange(ValidateBox(scenario, box).Select(m => new MapIssue(IssueSeverity.Error, $"{name} {m}", box.Position)));
                     break;
+                case QuestSite { Quest: null } site:
+                    issues.Add(new(IssueSeverity.Warning, site.IsBarrier ? $"{name} has no quest: it bars every hero." : $"{name} has no quest: it stands empty.", site.Position));
+                    break;
             }
         }
 

@@ -148,6 +148,13 @@ public sealed class HeroMovementService(
             return MoveResult.Blocked;
         }
 
+        // A Quest Guard stops everyone, a Quest Gate those who do not meet its quest: the bump shows or offers the quest (EVT-5).
+        if (QuestRules.Barring(state, hero, target) is { } quest)
+        {
+            mapEvents.VisitQuest(hero, quest);
+            return MoveResult.QuestVisited;
+        }
+
         var cost = MovementRules.StepCost(state, hero, hero.Position, target, direction);
         var entrance = state.ObjectCellAt(target) is { Cell: FootprintCell.Visit } cell ? cell.Object : null;
 
@@ -199,7 +206,11 @@ public sealed class HeroMovementService(
         hero.MovementPoints = Math.Max(0, hero.MovementPoints - cost);
         events.Publish(new HeroMoved(hero.Id, from, target, hero.MovementPoints));
 
-        if (state.ObjectCellAt(target) is { Cell: FootprintCell.Visit } visit)
+        if (state.ObjectCellAt(target) is { Cell: FootprintCell.Visit, Object: QuestSite site })
+        {
+            mapEvents.VisitQuest(hero, site);
+        }
+        else if (state.ObjectCellAt(target) is { Cell: FootprintCell.Visit } visit)
         {
             interactions.Visit(hero, visit.Object);
         }

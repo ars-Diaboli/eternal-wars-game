@@ -93,6 +93,11 @@ public static class BuiltInMapObjects
     /// <summary>Pandora's Box (ADR-100, MAP-35).</summary>
     public const string PandorasBox = "pandoras-box";
 
+    /// <summary>The quest objects (ADR-115, EVT-5).</summary>
+    public const string SeerHut = "seer-hut";
+    public const string QuestGuard = "quest.guard";
+    public const string QuestGate = "quest.gate";
+
     /// <summary>The second catalogue's travel and utility objects (ADR-069 … ADR-071); the coloured ones are <see cref="ColouredId"/>.</summary>
     public const string MapTavern = "tavern";
     public const string Garrison = "garrison";
@@ -232,6 +237,9 @@ public static class BuiltInMapObjects
         .. Enumerable.Range(1, ShrineRules.Levels).Select(level => new MapObjectDefinition(ShrineId(level), $"Shrine (level {level} spell)", MapObjectKind.Shrine, ProviderFootprint) { Amount = level }),
         new(AstrologersTower, "Astrologer's tower", MapObjectKind.AstrologersTower, ProviderFootprint),
         new(PandorasBox, "Pandora's box", MapObjectKind.PandorasBox, Footprint.Single),
+        new(SeerHut, "Seer's hut", MapObjectKind.SeerHut, ProviderFootprint),
+        new(QuestGuard, "Quest guard", MapObjectKind.QuestGuard, Footprint.Single),
+        new(QuestGate, "Quest gate", MapObjectKind.QuestGate, Footprint.Single),
 
         // The second catalogue (ADR-069 … ADR-071).
         .. new[] { ResourceType.Lumber, ResourceType.Ore, ResourceType.Gold, ResourceType.Crystal, ResourceType.Mercury, ResourceType.Sulfur }.Select(Deposit),

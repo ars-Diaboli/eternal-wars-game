@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
@@ -79,6 +80,79 @@ public sealed class MapEventService(
         }
 
         Pump();
+    }
+
+    /// <summary>
+    /// A hero visits a quest object (EVT-5): a Seer's Hut it entered, a Quest Guard it bumped into, a Quest Gate it may not pass, or a gate it
+    /// walks through. Not meeting the stage shows its proposal (later visits: its progress) and writes the player's quest log; meeting it asks
+    /// whether to complete it (a computer player takes the first answer). A gate's passage only marks the quest done in the log.
+    /// </summary>
+    internal void VisitQuest(Hero hero, QuestSite site)
+    {
+        events.Publish(new MapObjectVisited(hero.Id, site.Id));
+        if (QuestRules.Current(state, site) is not var (quest, stage))
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, site.Id));
+            return;
+        }
+
+        var seen = Data.QuestLog(hero.Owner).Any(e => e.Site == site.Id && e.Stage == site.Stage);
+        var met = MapEventEvaluator.Test(state, new EventScope(hero.Owner, hero, null), stage.Requirement);
+        if (site.Kind == MapObjectKind.QuestGate && met)
+        {
+            WriteLog(hero.Owner, new QuestLogEntry(site.Id, quest.Name, site.Stage, Done: true));
+            return;
+        }
+
+        WriteLog(hero.Owner, new QuestLogEntry(site.Id, quest.Name, site.Stage, Done: false));
+        IReadOnlyList<EventAction> actions = met
+            ? [new QuestionAction(
+                string.IsNullOrWhiteSpace(stage.Completion) ? $"{stage.Proposal}\n\nComplete the quest?" : stage.Completion,
+                [new EventAnswer("Complete", [.. stage.Actions, new AdvanceQuestAction(site.Id, site.Stage)]), new EventAnswer("Not now", [])])]
+            : [new MessageAction(seen && !string.IsNullOrWhiteSpace(stage.Progress) ? stage.Progress : stage.Proposal)];
+        _queue.Enqueue(new Run(quest, hero.Owner, hero.Id, null, null, startOfTurn: false, actions));
+        Pump();
+    }
+
+    /// <summary>
+    /// A stage is complete: the quest object moves on, the other players' open entries for it go, and the completer's log shows the next stage
+    /// (its proposal is shown at once) or the quest done; a Quest Guard whose last stage is done leaves the map.
+    /// </summary>
+    private void AdvanceQuest(Run run, AdvanceQuestAction advance, Hero hero, PlayerId completer)
+    {
+        if (state.FindObject(advance.Site) is not QuestSite site || site.Stage != advance.Stage)
+        {
+            return;
+        }
+
+        site.Stage++;
+        events.Publish(new QuestStageCompleted(site.Id, run.Event.Name, advance.Stage, hero.Id, completer));
+        foreach (var player in Data.DropOpenQuestEntries(site.Id, completer))
+        {
+            events.Publish(new QuestLogChanged(player));
+        }
+
+        if (site.Stage < run.Event.Stages.Count)
+        {
+            WriteLog(completer, new QuestLogEntry(site.Id, run.Event.Name, site.Stage, Done: false));
+            run.Frames.Push(new Frame([new MessageAction(run.Event.Stages[site.Stage].Proposal)]));
+            return;
+        }
+
+        WriteLog(completer, new QuestLogEntry(site.Id, run.Event.Name, advance.Stage, Done: true));
+        if (site.Kind == MapObjectKind.QuestGuard)
+        {
+            state.RemoveObject(site);
+            events.Publish(new MapObjectRemoved(site.Id));
+        }
+    }
+
+    private void WriteLog(PlayerId player, QuestLogEntry entry)
+    {
+        if (Data.SetQuestLog(player, entry))
+        {
+            events.Publish(new QuestLogChanged(player));
+        }
     }
 
     private IEnumerable<Town> TownsOf(MapEventDefinition definition) =>
@@ -224,7 +298,7 @@ public sealed class MapEventService(
                 run.Frames.Push(new Frame(Test(run, branch.Condition) ? branch.Then : branch.Else));
                 break;
             case SetVariableAction set:
-                SetVariable(set.Variable, Combine(set.Op, Data.Variable(set.Variable), Evaluate(run, set.Value)));
+                SetVariable(set.Variable, MapEventEvaluator.Combine(set.Op, Data.Variable(set.Variable), Evaluate(run, set.Value)));
                 break;
             case EnableEventAction enable:
                 var name = enable.Event ?? run.Event.Name;
@@ -266,6 +340,9 @@ public sealed class MapEventService(
                 break;
             case GiveHeroAction give when run.Player is { } owner:
                 GiveHero(run, owner, give, hero, town);
+                break;
+            case AdvanceQuestAction advance when hero is not null && run.Player is { } completer:
+                AdvanceQuest(run, advance, hero, completer);
                 break;
             case BattleAction fight when hero is not null:
                 if (hero.Army.IsEmpty || fight.Army.Count == 0)
@@ -597,94 +674,11 @@ public sealed class MapEventService(
 
     private Hero? HeroOf(Run run) => run.Hero is { } id ? state.Heroes.FirstOrDefault(h => h.Id == id) : null;
 
-    private int Evaluate(Run run, EventExpr expr) => expr switch
-    {
-        NumberExpr number => number.Value,
-        VariableExpr variable => Data.Variable(variable.Name),
-        RandomExpr random => state.Random.NextInclusive(Math.Min(random.Min, random.Max), Math.Max(random.Min, random.Max)),
-        ArithmeticExpr arithmetic => Combine(arithmetic.Op switch
-        {
-            ArithmeticOp.Add => VariableOp.Add,
-            ArithmeticOp.Subtract => VariableOp.Subtract,
-            ArithmeticOp.Multiply => VariableOp.Multiply,
-            _ => VariableOp.Divide,
-        }, Evaluate(run, arithmetic.Left), Evaluate(run, arithmetic.Right)),
-        QuantityExpr quantity => Read(run, quantity),
-        _ => 0,
-    };
+    private int Evaluate(Run run, EventExpr expr) => MapEventEvaluator.Evaluate(state, Scope(run), expr);
 
-    private static int Combine(VariableOp op, int left, int right) => (int)Math.Clamp(op switch
-    {
-        VariableOp.Set => right,
-        VariableOp.Add => (long)left + right,
-        VariableOp.Subtract => (long)left - right,
-        VariableOp.Multiply => (long)left * right,
-        _ => right == 0 ? 0 : (long)left / right,
-    }, int.MinValue, int.MaxValue);
+    private bool Test(Run run, EventCondition condition) => MapEventEvaluator.Test(state, Scope(run), condition);
 
-    private int Read(Run run, QuantityExpr quantity)
-    {
-        var hero = HeroOf(run);
-        var player = run.Player is { } id ? state.GetPlayer(id) : null;
-        return quantity.Quantity switch
-        {
-            Quantity.Resource => player is not null && Enum.TryParse<ResourceType>(quantity.Id, ignoreCase: true, out var resource) ? player.Resources[resource] : 0,
-            Quantity.Creatures => (hero?.Army ?? (run.Town is { } town && state.FindObject(town) is Town t ? t.Garrison : null))?.Stacks
-                .Where(s => s.Stack.Creature == quantity.Id).Sum(s => s.Stack.Count) ?? 0,
-            Quantity.HeroLevel => hero?.Level ?? 0,
-            Quantity.Experience => hero?.Experience ?? 0,
-            Quantity.Attack => hero?.Attack ?? 0,
-            Quantity.Defense => hero?.Defense ?? 0,
-            Quantity.SpellPower => hero?.SpellPower ?? 0,
-            Quantity.Knowledge => hero?.Knowledge ?? 0,
-            Quantity.Mana => hero?.Mana ?? 0,
-            Quantity.MovementPoints => hero?.MovementPoints ?? 0,
-            Quantity.SkillLevel => hero is not null && quantity.Id is { } skill ? (int)hero.Skills.Level(skill) : 0,
-            Quantity.Artifacts => hero is null ? 0 : hero.Artifacts.AllWorn.Count(w => w.Id == quantity.Id) + hero.Artifacts.Backpack.Count(a => a == quantity.Id),
-            Quantity.Day => state.Date.AbsoluteDay,
-            Quantity.DayOfWeek => state.Date.Day,
-            Quantity.Week => state.Date.Week,
-            Quantity.Month => state.Date.Month,
-            Quantity.Difficulty => (int)(state.Options.Complexity ?? Complexity.Normal),
-            Quantity.Heroes => player is null ? 0 : state.HeroesOf(player.Id).Count(),
-            Quantity.Towns => player is null ? 0 : state.ObjectsOf<Town>().Count(t => t.Owner == player.Id),
-            _ => 0,
-        };
-    }
-
-    private bool Test(Run run, EventCondition condition)
-    {
-        var hero = HeroOf(run);
-        var player = run.Player is { } id ? state.GetPlayer(id) : null;
-        return condition switch
-        {
-            AllCondition all => all.Conditions.All(c => Test(run, c)),
-            AnyCondition any => any.Conditions.Any(c => Test(run, c)),
-            NotCondition not => !Test(run, not.Condition),
-            CompareCondition compare => Compare(Evaluate(run, compare.Left), compare.Op, Evaluate(run, compare.Right)),
-            HeroIsCondition named => hero?.Definition == named.Hero,
-            HeroClassCondition kind => hero is not null && hero.Class == kind.Class && (kind.Town is null || ProgressionService.TownOf(state, hero) == kind.Town),
-            PlayerIsCondition slot => player?.Id.Value == slot.Player,
-            PlayerIsHumanCondition => player?.IsHuman == true,
-            FactionCondition faction => player is not null && player.StartTown == faction.Town,
-            TeamCondition team => player?.Team.Value == team.Team,
-            AllyCondition ally => player is not null && state.HasPlayer(new PlayerId(ally.Player)) && state.AreAllies(player.Id, new PlayerId(ally.Player)),
-            TownOwnerCondition owner => state.FindObject(new MapObjectId(owner.Town)) is Town town && town.Owner?.Value == owner.Owner,
-            MonsterDefeatedCondition monster => Data.MonstersDefeated.TryGetValue(new MapObjectId(monster.Monster), out var by) && by.Value == (monster.Player ?? player?.Id.Value),
-            HeroDefeatedCondition beaten => Data.HeroesDefeated.TryGetValue(new HeroId(beaten.Hero), out var winner) && winner.Value == (beaten.Player ?? player?.Id.Value),
-            _ => false,
-        };
-    }
-
-    private static bool Compare(int left, CompareOp op, int right) => op switch
-    {
-        CompareOp.Equal => left == right,
-        CompareOp.NotEqual => left != right,
-        CompareOp.Less => left < right,
-        CompareOp.LessOrEqual => left <= right,
-        CompareOp.Greater => left > right,
-        _ => left >= right,
-    };
+    private EventScope Scope(Run run) => new(run.Player, HeroOf(run), run.Town);
 
     /// <summary>A reward with its amounts drawn (a message shows them before they are given).</summary>
     private EventAction Fix(Run run, EventAction action) => action switch
@@ -757,6 +751,9 @@ public sealed class MapEventService(
     private PlayerId? OwnerOf(HeroId? hero) =>
         hero is { } id && state.Heroes.Concat(state.GarrisonHeroes).FirstOrDefault(h => h.Id == id) is { } found ? found.Owner : null;
 
+    /// <summary>The last step of a quest stage's completion: the quest object moves on (not map data, so no map can hold it).</summary>
+    private sealed record AdvanceQuestAction(MapObjectId Site, int Stage) : EventAction;
+
     private enum Waiting
     {
         None,
@@ -771,8 +768,9 @@ public sealed class MapEventService(
         public int Next { get; set; }
     }
 
-    /// <summary>One event running for a player, hero, town and cell.</summary>
-    private sealed class Run(MapEventDefinition definition, PlayerId? player, HeroId? hero, MapObjectId? town, MapPosition? cell, bool startOfTurn)
+    /// <summary>One event running for a player, hero, town and cell; a quest's run carries the actions of its visit instead of the event's.</summary>
+    private sealed class Run(
+        MapEventDefinition definition, PlayerId? player, HeroId? hero, MapObjectId? town, MapPosition? cell, bool startOfTurn, IReadOnlyList<EventAction>? actions = null)
     {
         public MapEventDefinition Event { get; } = definition;
 
@@ -786,7 +784,7 @@ public sealed class MapEventService(
 
         public bool StartOfTurn { get; } = startOfTurn;
 
-        public Stack<Frame> Frames { get; } = new([new Frame(definition.Actions)]);
+        public Stack<Frame> Frames { get; } = new([new Frame(actions ?? definition.Actions)]);
 
         public Waiting Waiting { get; set; }
 

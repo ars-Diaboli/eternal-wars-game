@@ -6,7 +6,7 @@ using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.MapEvents;
 
-/// <summary>What makes a map's events unusable (ADR-115): checked when a map is loaded; the editor's validator will add warnings (EVT-6 c).</summary>
+/// <summary>What makes a map's events and quest objects unusable (ADR-115): checked when a map is loaded; the editor's validator will add warnings (EVT-6 c).</summary>
 public static class MapEventRules
 {
     /// <summary>The events' errors against the map they belong to; empty when they can run.</summary>
@@ -34,6 +34,27 @@ public static class MapEventRules
             problems.AddRange(Check(state, set, definition).Select(p => $"Event '{definition.Name}': {p}"));
         }
 
+        var quests = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var site in state.ObjectsOf<QuestSite>().Where(s => s.Quest is not null).OrderBy(s => s.Id.Value))
+        {
+            var at = $"The {site.Definition.Name.ToLowerInvariant()} {site.Id.Value}";
+            if (set.Find(site.Quest!) is not { Kind: MapEventKind.Quest } quest)
+            {
+                problems.Add($"{at} names '{site.Quest}', which is not a quest.");
+                continue;
+            }
+
+            if (!quests.Add(quest.Name))
+            {
+                problems.Add($"{at} shares the quest '{quest.Name}'; every quest object has its own.");
+            }
+
+            if (site.Kind == MapObjectKind.QuestGate && (quest.Stages.Count != 1 || quest.Stages[0].Actions.Count > 0))
+            {
+                problems.Add($"{at}: a gate's quest has one stage that takes and gives nothing.");
+            }
+        }
+
         var cells = new HashSet<Common.MapPosition>();
         foreach (var cell in set.Cells)
         {
@@ -59,19 +80,41 @@ public static class MapEventRules
 
     private static IEnumerable<string> Check(GameState state, MapEventSet set, MapEventDefinition definition)
     {
-        foreach (var name in MapEventTree.Expressions(definition.Actions).OfType<VariableExpr>().Select(v => v.Name)
-                     .Concat(MapEventTree.Actions(definition.Actions).OfType<SetVariableAction>().Select(a => a.Variable))
+        if (definition.Kind == MapEventKind.Quest)
+        {
+            if (definition.Actions.Count > 0 || definition.Stages.Count == 0)
+            {
+                yield return "a quest has stages and no actions of its own.";
+            }
+
+            if (definition.Stages.Any(s => string.IsNullOrWhiteSpace(s.Proposal)))
+            {
+                yield return "every quest stage tells what it asks (its proposal).";
+            }
+
+            if (definition.Stages.SelectMany(MapEventTree.RequirementExpressions).OfType<RandomExpr>().Any())
+            {
+                yield return "a quest's requirement draws no random numbers.";
+            }
+        }
+        else if (definition.Stages.Count > 0)
+        {
+            yield return "only a quest has stages.";
+        }
+
+        foreach (var name in MapEventTree.Expressions(definition).OfType<VariableExpr>().Select(v => v.Name)
+                     .Concat(MapEventTree.Actions(definition).OfType<SetVariableAction>().Select(a => a.Variable))
                      .Where(n => !set.Variables.ContainsKey(n)).Distinct())
         {
             yield return $"the variable '{name}' is not declared.";
         }
 
-        foreach (var random in MapEventTree.Expressions(definition.Actions).OfType<RandomExpr>().Where(r => r.Min > r.Max))
+        foreach (var random in MapEventTree.Expressions(definition).OfType<RandomExpr>().Where(r => r.Min > r.Max))
         {
             yield return $"a random number from {random.Min} to {random.Max}.";
         }
 
-        foreach (var action in MapEventTree.Actions(definition.Actions))
+        foreach (var action in MapEventTree.Actions(definition))
         {
             if (Problem(state, set, definition, action) is { } problem)
             {
@@ -96,7 +139,7 @@ public static class MapEventRules
             $"morale and luck go from −{MapEventService.MaxMoraleOrLuck} to +{MapEventService.MaxMoraleOrLuck}.",
         BattleAction battle when battle.Army.Count is < 1 or > Army.SlotCount || battle.Army.Any(s => s.Count < 1 || !state.Creatures.Contains(s.Creature)) =>
             $"a battle needs one to {Army.SlotCount} stacks of known creatures.",
-        BattleAction when definition.Kind != MapEventKind.Hero => "only a hero event fights.",
+        BattleAction when definition.Kind is not (MapEventKind.Hero or MapEventKind.Quest) => "only a hero event or a quest fights.",
         _ => null,
     };
 }

@@ -98,6 +98,7 @@ public abstract class MapObject
         MapObjectKind.MapTavern => new MapTavern(id, definition, position),
         MapObjectKind.Garrison => new MapGarrison(id, definition, position),
         MapObjectKind.PandorasBox => new PandorasBox(id, definition, position),
+        MapObjectKind.SeerHut or MapObjectKind.QuestGuard or MapObjectKind.QuestGate => new QuestSite(id, definition, position),
         _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
     };
 }

@@ -25,10 +25,14 @@ Nothing blocks the current work.
 - a. Which further faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 - b. What does each town's Grail building do?
 
-**Proposal**: (a) open; the owner adds them here. (b) every Grail building gives +5000 gold a day and +50 % growth in its town, plus
+**Proposal**: 
+(a) open; the owner adds them here. 
+(b) every Grail building gives +5000 gold a day and +50 % growth in its town, plus
 one effect for all its owner's heroes: Haven +2 morale, Sylvan +2 luck, Academy the town's guild spells known by every hero with a spell
 book, Inferno +3 Spell Power, Necropolis +20 % Necromancy, Dungeon the whole map revealed once, Stronghold +2 Attack, Swamp Bestiary +2
 Defense.
+Answer : a - use proposal;
+(b) every Grail building gives +5000 gold a day and +50 % growth in its town, +2 initiative and +5 all 4 primary skills during siege, drop the rest of the proposed stuff
 
 ## Game flow and content
 

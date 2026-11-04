@@ -121,6 +121,15 @@ public enum MapObjectKind
 
     /// <summary>The map author's contents, opened once, maybe behind a guard (<see cref="Objects.PandorasBox"/>, ADR-100, MAP-35).</summary>
     PandorasBox,
+
+    /// <summary>A quest's stages one after another, each with its reward (<see cref="Objects.QuestSite"/>, ADR-115, EVT-5).</summary>
+    SeerHut,
+
+    /// <summary>A barrier that leaves once its quest is done (<see cref="Objects.QuestSite"/>, EVT-5).</summary>
+    QuestGuard,
+
+    /// <summary>A barrier that lets through the heroes meeting its quest (<see cref="Objects.QuestSite"/>, EVT-5).</summary>
+    QuestGate,
 }
 
 /// <summary>
