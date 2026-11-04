@@ -48,6 +48,9 @@ town creatures (and Conflux elementals).
   by **(1 + SP / 10)**, rounded down, at least 1 round. The tables give the **base** numbers (at SP 0); "a + b·SP" is gone. A spell specialty
   adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once
   (MAG-11). Areas are in battlefield cells (the field is 30 × 20; a Small creature is one cell, ADR-070).
+- **Built in battle** (ADR-123): 75 of the 91 battle spells work (the 11 adventure spells are cast on the map); still to come are Consecrate,
+  Martyrdom, Thornwall, Mirror Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Bone Wall, Frenzy, Fire Wall, Blood Price, Shadow
+  Step, Darkness, Hypnotize and Puppet Master. `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
 - **In battle** (ADR-070, ADR-071): the hero casts **at most one spell a round**, during the turn of one of the units it controls; casting
   does not use that unit's action. Spells may target war machines, which are `mechanical` and resist every `mind`, `poison` and healing spell.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`, `curse`, `blind`);
@@ -253,7 +256,7 @@ spells are spread out:
 
 The creature table names caster spells (`Caster fireball 1`, …). **The number is casts per battle** (ADR-120; it was read as the rank, but every
 creature cast is rank I). A caster stack's Spell Power is its **count / 2** *(proposal)*, it pays no mana, and the stack's turn is used. Built
-in ADR-120, except Blind, Confusion and Resurrection, whose effect kinds wait (no creature casts them yet). With this list they become:
+in ADR-120; Blind, Confusion and Resurrection since ADR-123, so every caster spell below is castable. With this list they become:
 
 | Id in `creatures.csv` | Becomes |
 |---|---|
@@ -267,9 +270,24 @@ in ADR-120, except Blind, Confusion and Resurrection, whose effect kinds wait (n
 ## Adventure spells
 
 Cast on the adventure map from the spell book, for mana and a fixed **500 movement points** (ADR-073, MAG-5; a hero with fewer left cannot
-cast). Built (ADR-120): Town Portal (the nearest own town with a free entrance), Dimension Door (up to 6 tiles in a straight line to an
-explored, free, unguarded tile, once a day), View Terrain (reveals radius 12), Pathfinder's Call and Ashwalk (their three terrains native until
-the day ends). The rest only show something and wait for their screens. Each school has two or three, at its levels:
+cast). All eleven are built with their ranks (ADR-120; the per-rank numbers are constants in `AdventureMagic`, not columns of the table). The
+spells aimed at a cell (Dimension Door, Distant Vision, Eavesdrop, Town Portal from rank II) arm the next map click from the hero screen; the
+spells that show something publish an event with what they show, and the game's information popup (`AdventureIntelPanel`) lists it.
+
+| Spell | Rank I | Rank II | Rank III |
+|---|---|---|---|
+| Town Portal | the nearest own town with a free entrance; the day's movement ends *(proposal)* | any own town (click one of its cells) | keeps the movement left after the 500 |
+| Dimension Door | up to 6 tiles in a straight line to an explored, free, unguarded tile, once a day | 9 tiles | twice a day |
+| View Terrain | reveals radius 12 (it stays explored at every rank) | radius 18 | (as II: the area already stays explored) |
+| Pathfinder's Call, Ashwalk | their three terrains native until the day ends | every terrain | also +10 % of the day's allowance as movement now |
+| Distant Vision | lists the other players' heroes (with their armies) and the neutral stacks within 10 of a cell in sight, on explored tiles | radius 14 | also under the fog |
+| Detect Magic | lists what the map objects within 10 hold: chests, artifacts, piles, banks' guards, Pandora's Boxes (guard and contents), shrines' and witch huts' teachings, prisoners, mine and dwelling guards, map garrisons | radius 15 | also creature banks' rewards |
+| Grave Whisper | +10 % Necromancy share in the hero's next victory that raises undead, until the week ends *(proposal: anywhere, the radius is not checked)* | +15 % | also lists the neutral stacks' numbers within 10 |
+| Ledger of Ages | next week's event and the enemy heroes in sight with their armies | also enemy heroes inside towns whose entrance is explored | can be read again, free, until the week ends |
+| Veil | until the week ends, other players see the hero's stacks only as amounts *(proposal: a few 1–4, several 5–9, a pack 10–19, lots 20–49, a horde 50–99, a throng 100–249, a swarm 250–499, zounds 500–999, a legion 1000+)* | also its artifacts hidden | hidden on the map from players with no hero within 3 cells |
+| Eavesdrop | an enemy (or neutral) town in sight: buildings, creatures to recruit, garrison, the hero inside and at the gate, read-only | any explored enemy town | can be shown again, free, until the week ends |
+
+Each school has two or three, at its levels:
 
 | School | Spells |
 |---|---|

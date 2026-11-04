@@ -390,7 +390,7 @@ public sealed class BattleService(
                 var army = new Army(hero.Army.Slots);
                 foreach (var (slot, stack) in hero.Army.Stacks.ToList())
                 {
-                    var survivors = battle.Units.Where(u => u.Side == winner && u.SourceSlot == slot).Sum(u => u.Count);
+                    var survivors = battle.Units.Where(u => u.Side == winner && u.SourceSlot == slot).Sum(u => u.KeptCount);
                     army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
                 }
 
@@ -598,8 +598,15 @@ public sealed class BattleService(
     private void Continue(BattleState battle, IEventPublisher? bus = null)
     {
         while (battle.Phase == BattlePhase.Fighting && battle.ActiveUnit is { } unit
-               && (battle.IsComputerControlled(unit.Side) || SiegeRules.FiresByItself(battle, unit)))
+               && (battle.IsComputerControlled(unit.Side) || SiegeRules.FiresByItself(battle, unit) || unit.Has(Magic.SpellStatus.Confused)))
         {
+            // A confused stack acts at random, whoever commands it (ADR-123).
+            if (unit.Has(Magic.SpellStatus.Confused))
+            {
+                BattleAi.ActConfused(battle, Engine(battle, bus));
+                continue;
+            }
+
             // A computer player's hero gives up a lost battle (ADR-070); quick combat never retreats for a person.
             if (AiMayRetreat && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
             {
@@ -689,7 +696,7 @@ public sealed class BattleService(
         }
         else if (winning.Guard is { } guard)
         {
-            SetGuardCount(state.GetObject(guard), battle.LivingUnitsOf(winner).Where(u => !u.IsSummoned).Sum(u => u.Count));
+            SetGuardCount(state.GetObject(guard), battle.LivingUnitsOf(winner).Where(u => !u.IsSummoned).Sum(u => u.KeptCount));
         }
 
         // Loser: a hero leaves the map, a guard is gone.
@@ -737,7 +744,7 @@ public sealed class BattleService(
     private static int Experience(BattleState battle)
     {
         var loser = battle.Winner!.Value.Opponent();
-        var killedHealth = battle.Units.Where(u => u.Side == loser && !u.IsSummoned).Sum(u => (long)(u.InitialCount - u.Count) * u.Creature.Health);
+        var killedHealth = battle.Units.Where(u => u.Side == loser && !u.IsSummoned).Sum(u => (long)(u.InitialCount - u.KeptCount) * u.Creature.Health);
         var heroDefeated = battle.Participant(loser).Hero is not null && battle.EndReason == BattleEndReason.Defeated;
         return (int)Math.Min(int.MaxValue, killedHealth + (heroDefeated ? HeroDefeatExperience : 0));
     }
@@ -745,7 +752,7 @@ public sealed class BattleService(
     private static List<BattleCasualty> Casualties(BattleState battle) => battle.Units
         .Where(u => !u.IsSummoned)
         .GroupBy(u => (u.Side, u.Creature.Id))
-        .Select(g => new BattleCasualty(g.Key.Side, g.Key.Id, g.Sum(u => u.InitialCount - u.Count)))
+        .Select(g => new BattleCasualty(g.Key.Side, g.Key.Id, g.Sum(u => u.InitialCount - u.KeptCount)))
         .Where(c => c.Lost > 0)
         .ToList();
 
@@ -771,7 +778,7 @@ public sealed class BattleService(
         LoseMachines(battle, side, hero);
         foreach (var (slot, stack) in hero.Army.Stacks.ToList())
         {
-            var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.Count);
+            var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.KeptCount);
             hero.Army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
         }
 
@@ -814,7 +821,7 @@ public sealed class BattleService(
     private List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, SkillLevel level, Army army, GameRandom random)
     {
         // The table's creature: the slain count with their own health, not the health an enemy's artifacts gave them in battle.
-        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine && !u.IsSummoned).Select(u => (state.Creatures.Get(u.Creature.Id), u.InitialCount - u.Count));
+        var slain = battle.Units.Where(u => u.Side == enemy && !u.IsMachine && !u.IsSummoned).Select(u => (state.Creatures.Get(u.Creature.Id), u.InitialCount - u.KeptCount));
         var joined = new List<RaisedUndead>();
         foreach (var raised in NecromancyRules.Raise(
                      slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random,
@@ -842,7 +849,7 @@ public sealed class BattleService(
     {
         foreach (var (slot, stack) in troops.Stacks.ToList())
         {
-            var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.Count);
+            var survivors = battle.Units.Where(u => u.Side == side && u.SourceSlot == slot).Sum(u => u.KeptCount);
             troops.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
         }
 

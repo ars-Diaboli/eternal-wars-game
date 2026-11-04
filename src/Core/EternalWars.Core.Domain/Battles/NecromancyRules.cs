@@ -36,7 +36,8 @@ public static class NecromancyRules
     /// The points the hero adds to its Necromancy share: its artifacts' (ADR-111) and a Necromancy specialist's flat +5 (ADR-107); they count only
     /// with the skill (<see cref="Percent"/>).
     /// </summary>
-    public static int HeroBonus(Hero hero) => hero.Bonus.NecromancyPercent + SkillEffects.FlatSpecialty(hero, Skill);
+    public static int HeroBonus(Hero hero) =>
+        hero.Bonus.NecromancyPercent + SkillEffects.FlatSpecialty(hero, Skill) + Magic.AdventureMagic.NecromancyPercent(hero); // Grave Whisper (ADR-123)
 
     /// <summary>Whether the player owns a town with the Necromancy Amplifier (a captured one helps its new owner).</summary>
     public static bool IsAmplified(GameState state, PlayerId player) =>

@@ -83,6 +83,7 @@ public partial class Main : Node3D
     private KingdomOverviewPanel _kingdomScreen = null!;
     private ObjectServicePanel _serviceScreen = null!;
     private ThievesGuildPanel _guildScreen = null!;
+    private AdventureIntelPanel _intelScreen = null!;
     private Label _status = null!;
     private CanvasLayer _hud = null!;
     private BattleView3D _battle = null!;
@@ -304,8 +305,16 @@ public partial class Main : Node3D
                 }
 
                 break;
-            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right }:
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick:
                 _world.PathPreview.Clear();
+                _aimedSpell = null;
+                if (MapSpace.PickTile(_camera, rightClick.Position, _context.Level) is { } pointed && _session.State.HeroAt(pointed) is { } other
+                    && other.Owner != _session.State.CurrentPlayer.Id && _session.State.CanSee(_session.State.CurrentPlayer.Id, other))
+                {
+                    // Another player's hero as this player is shown it (Veil's amounts).
+                    _status.Text = AdventureIntelPanel.DescribeArmy(_session.State, Core.Domain.Magic.AdventureIntel.ShowHero(_session.State, other, _session.State.CurrentPlayer.Id)).Replace("\n    ", "; ", StringComparison.Ordinal);
+                }
+
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Tab }:
                 SelectNextHero();
@@ -636,18 +645,18 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary>The hero whose Dimension Door waits for its tile (ADR-120): the next map click casts it there.</summary>
-    private HeroId? _doorHero;
+    /// <summary>The hero and the aimed adventure spell waiting for its cell (Dimension Door, Distant Vision, Eavesdrop, Town Portal II): the next map click casts it there.</summary>
+    private (HeroId Hero, string Spell)? _aimedSpell;
 
     private void ClickTile(MapPosition tile)
     {
         var state = _session.State;
         var player = state.CurrentPlayer.Id;
-        if (_doorHero is { } caster)
+        if (_aimedSpell is { } aimed)
         {
-            _doorHero = null;
+            _aimedSpell = null;
             _world.PathPreview.Clear();
-            Report(_session.Execute(new CastAdventureSpellCommand(player, caster, Core.Domain.Magic.AdventureMagic.DimensionDoor, tile)));
+            Report(_session.Execute(new CastAdventureSpellCommand(player, aimed.Hero, aimed.Spell, tile)));
             return;
         }
 
@@ -1082,10 +1091,30 @@ public partial class Main : Node3D
         _heroScreen = new HeroPanel { FullScreen = true };
         townLayer.AddChild(_heroScreen);
         _heroScreen.Bind(_session);
-        _heroScreen.DimensionDoorArmed += hero =>
+        _heroScreen.AdventureSpellArmed += (hero, spell) =>
         {
-            _doorHero = hero;
-            _status.Text = $"Dimension Door: click a tile up to {Core.Domain.Magic.AdventureMagic.DimensionDoorRange} tiles away in a straight line.";
+            _aimedSpell = (hero, spell);
+            var rank = Core.Domain.Magic.AdventureMagic.RankOf(_session.State, _session.State.GetHero(hero), spell);
+            _status.Text = spell switch
+            {
+                Core.Domain.Magic.AdventureMagic.DimensionDoor => $"Dimension Door: click a tile up to {Core.Domain.Magic.AdventureMagic.DimensionDoorRange(rank)} tiles away in a straight line.",
+                Core.Domain.Magic.AdventureMagic.DistantVision => "Distant Vision: click a cell in sight.",
+                Core.Domain.Magic.AdventureMagic.Eavesdrop => rank >= 2 ? "Eavesdrop: click an enemy town." : "Eavesdrop: click an enemy town in sight.",
+                _ => "Town Portal: click an own town.",
+            };
+        };
+        _intelScreen = new AdventureIntelPanel();
+        townLayer.AddChild(_intelScreen);
+        _intelScreen.Bind(_session);
+        _heroScreen.LedgerReopened += hero =>
+            _intelScreen.ShowLedger(Core.Domain.Magic.AdventureIntel.Ledger(_session.State, _session.State.GetHero(hero).Owner, inTowns: true));
+        _heroScreen.EavesdropReopened += (hero, town) =>
+        {
+            if (_session.State.FindObject(town) is Core.Domain.Towns.Town listened)
+            {
+                _heroScreen.Close();
+                _intelScreen.ShowTown(Core.Domain.Magic.AdventureIntel.Town(_session.State, listened, _session.State.GetHero(hero).Owner));
+            }
         };
         _dwellingScreen = new DwellingPanel();
         townLayer.AddChild(_dwellingScreen);

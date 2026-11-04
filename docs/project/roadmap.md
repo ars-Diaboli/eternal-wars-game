@@ -36,8 +36,8 @@ The AI plays generated maps to the end (ADR-119: exploring, guards, keymasters, 
 Phase 5 content is in core: summons, creature casters, adventure spells, shrines and spell books in the map format (v29), the breakable gate,
 the keep's shooter and Earthquake (ADR-120); assembled relics and war machine tuning (ADR-121). Their 3D views and hero-screen buttons need a run in Godot.
 Mastery and spell ranks II / III are built (ADR-122).
-**Next**: a person's full game on Ember March (the Phase 3 exit's last check) and a Godot run of the ADR-120 / ADR-121 / ADR-122 views and of the new-game
-screen's user templates (built), then the remaining Phase 5 items (control and resurrection spells, the AI's buffs, map events, presentation).
+**Next**: a person's full game on Ember March (the Phase 3 exit's last check) and a Godot run of the ADR-120 / ADR-121 / ADR-122 / ADR-123 views and of the new-game
+screen's user templates (built), then the remaining Phase 5 items (the last 16 battle spells, map events, presentation).
 
 ## Data and content groundwork (ADR-070, new 2026-10-22)
 - [x] One home for the data tables: `*.csv` and the templates in `src/Core/data`, embedded in core; apps read the embedded
@@ -593,11 +593,15 @@ Power, an element per spell.
       spells (ADR-110); mana on heroes is done (ADR-063)
 - [x] Spell ranks II / III in battle (ADR-122): `battle2` / `battle3` in `spells.csv` for 42 of the 43 battle spells, `targets N`, `spare-own`,
       the `melee` and `ground` filters; the HUD and hero screen show the rank (not run in Godot yet)
-- [ ] Spell table follow-ups: the rank changes that need new mechanics (ADR-122's list), the adventure spells' ranks, the battle effects of the
-      other spells, final numbers after the visuals
+- [x] Spell table follow-ups (ADR-123): most of ADR-122's rank changes, the adventure spells' ranks, 75 of the 91 battle spells with an
+      effect (new effect words: statuses, wards, per-round effects, dispel, revive, slay, chain, splash, execute)
+- [ ] Spell table, the rest: the battle spells that need field zones, copies, control changes or two-click aiming (Consecrate, Martyrdom,
+      Thornwall, Mirror Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Bone Wall, Frenzy, Fire Wall, Blood Price, Shadow Step,
+      Darkness, Hypnotize, Puppet Master), the rank changes ADR-123 lists as not built, final numbers after the visuals
 - [x] Guild spell selection (ADR-106, ADR-110): 3 / 3 / 2 / 2 of the school's 5 / 5 / 4 / 3 drawn per town at game start from
       `GameState.Random`, adventure spells drawn like the others
-- [ ] Guild spells fixed by the map (editor, map format bump); the extra-school buildings draw theirs the same way
+- [x] Guild spells fixed by the map (map format v30, editor; ADR-123); the extra-school buildings draw theirs at game start from `GameState.Random`
+      (not fixed by the map; not run in Godot yet)
 - [x] Summoned creatures (ADR-120; `summon`: vanish after the battle, no experience): town creature rows (Pegasi, Treants, Imps, Horned Demons),
       Conflux elementals (ADR-106)
 - [x] Spell book: mages of magic towns start with one (holding their specialty spell), warriors buy it for 500 gold in a guild (ADR-071, ADR-110)
@@ -611,15 +615,17 @@ Power, an element per spell.
       machines take damage spells only; immunity and resistance are live (ADR-042, ADR-049); the battle AI casts damage spells; HUD spell
       buttons, C in the 2D harness
 - [x] Creature casters (casts per battle, Spell Power = count / 2) and summons, the Phoenix's rebirth (ADR-120)
-- [ ] Combat spells, the rest: control and resurrection effects (Blind, Confusion, Resurrection, for heroes and creature casters), the AI's buffs
+- [x] Combat spells, the rest (ADR-123): control and resurrection effects (Blind, Confusion, Resurrection, for heroes and creature casters), the
+      AI's buffs, curses, dispels and revives (not run in Godot yet)
 - [x] Adventure spells: a fixed 500 movement points besides mana (fewer left: no cast); Dimension Door only to explored tiles (ADR-072);
       Town Portal, Dimension Door, View Terrain, Pathfinder's Call, Ashwalk built (ADR-120)
-- [ ] Adventure spells that only show something (Distant Vision, Detect Magic, Grave Whisper, Ledger of Ages, Veil, Eavesdrop): their screens
+- [x] Adventure spells that only show something (Distant Vision, Detect Magic, Grave Whisper, Ledger of Ages, Veil, Eavesdrop): their rules and
+      screens (ADR-123; not run in Godot yet; the adventure AI does not cast them)
 - [x] Area spells: a fixed area; a big creature with any cell inside is hit once (ADR-072, ADR-110)
 - [x] Spell resistance skill (−8 / 14 / 20 % to damage and duration, durations away from zero, at least 1 round; ADR-071); spell
       specialties +3 % of the effect per hero level (ADR-072); Interference's Spell Power and cost (ADR-110)
-- [ ] Spell tags (`holy`, `summon` new) and creature caster spells mapped onto the list (ADR-099)
-- [ ] Spell elements (air, earth, fire, water; Magic Arrow all four, Bind Elemental the bound kind) and the `element-power` effect of the
+- [x] Spell tags (`holy`, `summon` new) and creature caster spells mapped onto the list (ADR-099)
+- [x] Spell elements (air, earth, fire, water; Magic Arrow all four, Bind Elemental the bound kind) and the `element-power` effect of the
       four elemental orbs (ADR-106)
 
 ### Combat additions

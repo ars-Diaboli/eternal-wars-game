@@ -48,7 +48,7 @@ public class AdventureSpellTests
         Assert.False(Cast(session, AdventureMagic.TownPortal).IsAccepted); // not in its book
         hero.HasSpellBook = false;
         Assert.Contains("spell book", Cast(session, AdventureMagic.ViewTerrain).Error);
-        Assert.Contains("cannot be cast on the map", AdventureMagic.Refusal(state, Mage(state, "light.distant-vision"), "light.distant-vision", null));
+        Assert.Contains("cannot be cast on the map", AdventureMagic.Refusal(state, Mage(state, "light.bless"), "light.bless", null));
     }
 
     [Fact]

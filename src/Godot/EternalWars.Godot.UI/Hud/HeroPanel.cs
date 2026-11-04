@@ -39,8 +39,17 @@ public partial class HeroPanel : PanelContainer
 
     public event Action? Closed;
 
-    /// <summary>Dimension Door was picked for the hero (ADR-120): the map's next click is its tile. The screen closes.</summary>
-    public event Action<HeroId>? DimensionDoorArmed;
+    /// <summary>
+    /// An adventure spell that is aimed at a cell was picked for the hero (Dimension Door, Distant Vision, Eavesdrop, Town Portal from rank II):
+    /// the map's next click is its cell. The screen closes.
+    /// </summary>
+    public event Action<HeroId, string>? AdventureSpellArmed;
+
+    /// <summary>Ledger of Ages III is open on the hero for the week: read it again (no cost).</summary>
+    public event Action<HeroId>? LedgerReopened;
+
+    /// <summary>Eavesdrop III listens to a town for the week: show it again (no cost).</summary>
+    public event Action<HeroId, MapObjectId>? EavesdropReopened;
 
     /// <summary>The hero the screen shows, if it is open.</summary>
     public HeroId? CurrentHero => Visible ? _hero : null;
@@ -108,6 +117,8 @@ public partial class HeroPanel : PanelContainer
         this.SubscribeWhileInTree<SpellsLearned>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellsRaised>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<AdventureSpellCast>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroStatusGained>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroStatusesExpired>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<PandorasBoxOpened>(session.Events, _ => Refresh()); // stats and skills
         this.SubscribeWhileInTree<HeroMovementRestored>(session.Events, _ => Refresh());
@@ -193,20 +204,21 @@ public partial class HeroPanel : PanelContainer
         var state = _session.State;
         foreach (var spell in Core.Domain.Magic.AdventureMagic.Known(state, hero))
         {
-            var refusal = Core.Domain.Magic.AdventureMagic.Refusal(state, hero, spell.Id, null, aimed: false); // Dimension Door's tile is picked on the map
+            var refusal = Core.Domain.Magic.AdventureMagic.Refusal(state, hero, spell.Id, null, aimed: false); // an aimed spell's cell is picked on the map
+            var rank = Core.Domain.Magic.AdventureMagic.RankOf(state, hero, spell.Id);
 
             var button = new Button
             {
-                Text = $"{spell.Name} ({Core.Domain.Magic.AdventureMagic.Cost(state, hero, spell.Id)} mana)",
+                Text = $"{Core.Domain.Magic.MagicRules.NameAtRank(spell, rank)} ({Core.Domain.Magic.AdventureMagic.Cost(state, hero, spell.Id)} mana)",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? spell.Notes,
             };
             var id = spell.Id;
             button.Pressed += () =>
             {
-                if (id == Core.Domain.Magic.AdventureMagic.DimensionDoor)
+                if (Core.Domain.Magic.AdventureMagic.NeedsTarget(_session.State, hero, id))
                 {
-                    DimensionDoorArmed?.Invoke(hero.Id);
+                    AdventureSpellArmed?.Invoke(hero.Id, id);
                     Close();
                     return;
                 }
@@ -214,6 +226,21 @@ public partial class HeroPanel : PanelContainer
                 Run(new CastAdventureSpellCommand(state.CurrentPlayer.Id, hero.Id, id));
             };
             _adventure.AddChild(button);
+        }
+
+        // The week-long ranks III: read the ledger, or listen at the town, again.
+        if (Core.Domain.Magic.AdventureMagic.ReadsLedger(hero))
+        {
+            var ledger = new Button { Text = "Read the Ledger of Ages again" };
+            ledger.Pressed += () => LedgerReopened?.Invoke(hero.Id);
+            _adventure.AddChild(ledger);
+        }
+
+        if (Core.Domain.Magic.AdventureMagic.ListensTo(hero) is { } town && state.FindObject(town) is Core.Domain.Towns.Town listened)
+        {
+            var eavesdrop = new Button { Text = $"Listen at {listened.Name} again" };
+            eavesdrop.Pressed += () => EavesdropReopened?.Invoke(hero.Id, town);
+            _adventure.AddChild(eavesdrop);
         }
 
         if (_adventure.GetChildCount() == 0)
