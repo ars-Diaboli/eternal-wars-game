@@ -1,56 +1,41 @@
 # Heroes
 
-> Part of the [game design](overview.md). Full lists: [hero-roster.md](../content/hero-roster.md) (every roster hero)
-> and [skills.md](../content/skills.md) (every skill). Open items ❓: [open-questions.md](../project/open-questions.md).
+> Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*; numbers are drafts. Full lists:
+> [hero-roster.md](../content/hero-roster.md) (data: `src/Core/data/heroes.csv`) and [skills.md](../content/skills.md) (every skill and
+> level). Open items ❓: [open-questions.md](../project/open-questions.md).
 
-- **Roster** (implemented as data, ADR-048): 16 heroes per playable town, a **mage** and a **warrior** for each of its
-  eight tier 1–4 creature lines. That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield
-  speed for its base and upgraded form. Each hero has a **specialty** (a skill, a spell or a daily resource; resource specialties become rare and Necromancy and Logistics get flat
-  specialties, ADR-093, ADR-107); a skill specialty adds +5 % of the skill's effect per hero level (built for Melee, Archery, Logistics and attunement mana, ADR-083), a
-  spell specialty +3 % (ADR-072, with magic).
-  Edited in `data/heroes.csv`.
-- **Hiring**: in a town's tavern, 2500 gold; a player has at most **8 heroes**, or fewer if the map says so (1–8, also per player on campaign-like maps, ADR-068; prisoners and heroes in a town garrison do not count, but a garrisoned hero cannot leave while the player is at the limit, ADR-072); a tavern offers 2 heroes, the upgraded
-  one (Brotherhood) 4 ([towns-and-economy.md](towns-and-economy.md#tavern-implemented-adr-060), ADR-060). The offers come
-  from a pool per player and faction, a hired hero gets a **starter stack** of its preferred creature, and a hero who retreats
-  or surrenders waits in its player's taverns as it was (ADR-070, ADR-081). Not built: a map tavern hires like a Brotherhood
-  (from its own weekly pool of 4 random heroes shared by all players, ADR-071).
-- **Primary stats** (implemented, ADR-055): Attack and Defense (added to every stack in battle), Spell Power (multiplies
-  spell damage and buff/debuff duration, ADR-071; Phase 5) and Knowledge (sets the mana pool, see below). Every level raises one of them by 1, HoMM3-style,
-  with odds by class (draft): warriors 35/45/10/10 % (Attack/Defense/Spell Power/Knowledge) up to level 9, then
-  30/30/20/20; mages 10/10/40/40, then 20/20/30/30. The level-up prompt shows the stat with the skill choice. Roster
-  heroes start with 5 points.
-- **Skills** (HoMM4-like, implemented, ADR-048): groups of **three** skills; **10 points** learn a group fully (usually
-  4/3/3; magic schools and war machines 4/4/2); at most **6 groups** per hero. Levels Basic, Advanced, Expert, Master.
+## Roster
+ADR-048. **16 heroes per playable town**: a **mage** and a **warrior** for each of its eight tier 1–4 creature lines.
+- That line is the hero's **preferred creature**: +2 Attack, +2 Defense and +1 battlefield speed for its base and upgraded form; hired
+  heroes start with a stack of it ([tavern](towns-and-economy.md#tavern)).
+- **Specialty**: a skill (+5 % of the skill's effect per hero level, ADR-083, ADR-114), a spell (+3 % per level, [magic.md](magic.md#casting-in-battle))
+  or a daily resource; resource specialties are rare, and Logistics and Necromancy have flat ones (ADR-093, ADR-107).
+- **Hiring and the hero limit**: [towns-and-economy.md](towns-and-economy.md#tavern).
 
-  | Group | Skills |
-  |---|---|
-  The groups as reworked by ADR-069 (2026-10-20, not built yet; [skills.md](../content/skills.md) shows today's numbers next to the new ones):
+## Primary stats
+ADR-055. Attack and Defense (added to every stack in battle), Spell Power and Knowledge ([magic.md](magic.md#mana)). Every level raises one
+by 1, odds by class: warriors 35 / 45 / 10 / 10 % (A / D / SP / K) up to level 9, then 30 / 30 / 20 / 20; mages 10 / 10 / 40 / 40, then 20 /
+20 / 30 / 30. The level-up prompt shows it with the skill choice. Roster heroes start with 5 points.
 
-  | Group | Skills |
-  |---|---|
-  | Offense | Melee (+9/16/23/30 % melee damage), Archery (+15/25/35 % ranged), Marksmanship (ranged penalty −2/8 / −4/8 / −6/8, ADR-070) |
-  | Defense | Armor (−5 % damage taken per level), Spell resistance (−8/14/20 % to hostile spells' damage and duration, ADR-071), Leadership (+1/2/3 morale, ADR-067) |
-  | Estates | Treasury (+250/500/750/1000 gold a day, Expert and Master also 0.5/1 % of the gold on hand, ADR-062), Prospecting (other resources, and a chance of +50 % from resource piles), Stewardship (cheaper buildings and creatures in the town the hero governs, ADR-063) |
-  | Pathfinding | Pathfinding (−25/50/75/100 % terrain penalty), Logistics (+10/20/30 % movement), Scouting (+2/4/6 sight radius) |
-  | Tactics | War Tempo (+1 battlefield speed per level), Tactics (deployment before battle, battlefield width from Advanced), Alertness (+1/2/3 initiative) |
-  | War machines | Ballistics (offensive machine: automatic, controlled, targets troops from Advanced; +25/50 % damage), Healing (tent heals more), Ammo supply (cart: +50 % / unlimited shots) (ADR-056, ADR-063) |
-  | 6 magic schools (Light, Nature, Arcana, Death, Chaos, Shadow) | Magic (spell levels 1–4), Attunement (mana, regeneration, spell cost; Death: Necromancy), Mastery (spell upgrades) (ADR-047, ADR-063, ADR-069) |
-  | Primal Fury (Stronghold and Swamp Bestiary) | Offered only to those towns' heroes: their mages start with it, their warriors are offered it often (ADR-072). Blood Rage, Warcry, Interference (ADR-067, ADR-069; Adrenaline is dropped) |
-- **Levels** (implemented): HoMM3 experience table; each level gives one skill point, spent on one of **three offered
-  skills**. Mages are offered their own school more often, warriors the general groups; the arch-rival's school (across the ring) only in
-  5 % of level-ups (ADR-048, ADR-072).
-- **Army** of up to 7 creature stacks (implemented). A hero without creatures cannot attack.
-- **War machines** (ADR-056): every hero owns its town's offensive machine; tent and cart are bought at a blacksmith
-  ([combat.md](combat.md#war-machines-implemented-adr-056-adr-063)).
-- **Artifacts** (implemented, ADR-061, catalog in [artifacts.md](../content/artifacts.md)): head, neck, cloak, body,
-  weapon, shield, two rings, boots, three miscellaneous slots and a backpack of 50. They add stats, morale and luck,
-  movement, battle speed, damage, daily income, terrain rules and skill levels. Found on the map, looted from defeated
-  heroes (the most valuable are kept when the backpack is full, the rest lost), handed over in an exchange.
-- **Hero screen** (implemented): stats, mana, experience, specialty, skills, army, paper doll and backpack, war
-  machines; opened with H or from the hero list. Drag and drop is pending.
-- **Mana** (implemented, ADR-063): the pool is 10 × Knowledge (plus attunement); a hero regains ⌈Knowledge / 10⌉ (plus
-  attunement) at the start of its owner's turn. ADR-069 adds 10 × ⌈level / 10⌉ to the pool (not built yet). **Spell book** and casting: Phase 5 ([magic.md](magic.md)).
-  ADR-071 (not built): mage heroes start with a spell book, warriors buy one in a mage guild for 500 gold; mana refills in a
-  town with a mage guild.
-- **Governors** (ADR-063): a hero may govern a town; with Stewardship that town's buildings and creatures are cheaper
-  ([towns-and-economy.md](towns-and-economy.md)).
+## Skills and levels
+HoMM4-like (ADR-048, reworked ADR-069, built ADR-078).
+- Groups of **three** skills; **10 points** learn a group (4 / 3 / 3; magic schools and war machines 4 / 4 / 2); at most **6 groups**.
+  Levels Basic, Advanced, Expert, Master.
+- **Groups**: Offense (Melee, Archery, Marksmanship), Defense (Armor, Spell resistance, Leadership), Estates (Treasury, Prospecting,
+  Stewardship), Pathfinding (Pathfinding, Logistics, Scouting), Tactics (War Tempo, Tactics, Alertness), War machines (Ballistics, Healing,
+  Ammo supply), the six magic schools (Magic, Attunement, Mastery) and Primal Fury (Blood Rage, Warcry, Interference; Stronghold and Swamp
+  Bestiary heroes only: their mages start with it, their warriors are offered it often).
+- **Levels**: HoMM3 experience table; each level gives one skill point, spent on one of **three offered skills**. Mages are offered their
+  own school more often, warriors the general groups; the arch-rival's school (across the ring) only in **5 %** of level-ups (ADR-072).
+
+## Army, machines and artifacts
+- **Army** of up to 7 stacks. A hero without creatures cannot attack.
+- **War machines**: [combat.md](combat.md#war-machines).
+- **Artifacts** (ADR-061, catalog [artifacts.md](../content/artifacts.md)): head, neck, cloak, body, weapon, shield, two rings, boots, three
+  misc slots and a backpack of 50. Found on the map, looted from defeated heroes (the most valuable kept when the backpack is full, the rest
+  lost), handed over in an exchange.
+- **Governing**: [towns-and-economy.md](towns-and-economy.md#governors).
+
+## Hero screen
+Stats, mana, experience, specialty, skills, army, paper doll and backpack, war machines, spell book; opened with H or from the hero list.
+Drag and drop *(planned)*.

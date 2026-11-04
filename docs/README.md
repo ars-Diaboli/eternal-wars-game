@@ -34,9 +34,8 @@ The game design document, split by mechanic. Start at the overview.
 | Document | What it covers |
 |---|---|
 | [architecture.md](technical/architecture.md) | Three-tier solution layout, dependency rules, runtime composition |
-| [event-system.md](technical/event-system.md) | The custom pub/sub (event publisher / handler) and the event catalogue |
+| [event-system.md](technical/event-system.md) | The custom pub/sub (event publisher / handler), conventions and event ordering |
 | [development.md](technical/development.md) | Toolchain, build/run/test commands, the simulator, smoke tests, coding conventions |
-| [reference-sandbox.md](technical/reference-sandbox.md) | What was taken from the earlier sandbox project, what was left, what looked wrong |
 
 ## Project: plans and decisions (`project/`)
 
