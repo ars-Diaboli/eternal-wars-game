@@ -1,50 +1,46 @@
 # Game design: overview
 
-> Status: **living document**, split by mechanic into the files of this folder. Items marked ❓ are open; see
-> [open-questions.md](../project/open-questions.md). Decisions are recorded in [decisions.md](../project/decisions.md).
+> Status: **living document**, split by mechanic into the files of this folder. Decisions: [decisions.md](../project/decisions.md) (the
+> ADR-n pointers); open items ❓: [open-questions.md](../project/open-questions.md); progress: [roadmap.md](../project/roadmap.md).
+>
+> **Convention**: the docs describe the game as it plays now; a rule is built unless tagged *(planned, ADR-n)*. ❓ marks an open point.
+> Numbers that live in `src/Core/data/*.csv` are quoted, not restated; the content catalogs are in [docs/content](../content/).
 
 | Document | Covers |
 |---|---|
-| [overview.md](overview.md) | Vision, pillars, core loop, platforms, non-goals (this file) |
 | [adventure-map.md](adventure-map.md) | Map sizes, terrain and movement, roads, objects, neutral monsters, heroes meeting, gates, fog of war |
-| [heroes.md](heroes.md) | Primary stats, skills, levels, army, artifacts, mana |
-| [towns-and-economy.md](towns-and-economy.md) | Resources, buildings, the creature tech tree, growth, map dwellings and caravans, tavern, income |
+| [heroes.md](heroes.md) | Roster, primary stats, skills, levels, army, artifacts |
+| [towns-and-economy.md](towns-and-economy.md) | Resources, buildings, the creature tech tree, growth, events, caravans, tavern, marketplace, income |
 | [factions.md](factions.md) | Town groups, playable and non-playable towns, rivalries |
-| [combat.md](combat.md) | Battlefield, footprints, turn order, damage, cover, morale and luck, capabilities, war machines |
-| [magic.md](magic.md) | Schools, spell levels, mana (spell catalog: [spells.md](../content/spells.md)) |
-| [victory-and-modes.md](victory-and-modes.md) | Victory and defeat, game modes |
+| [combat.md](combat.md) | Battlefield, footprints, turn order, damage, cover, morale and luck, capabilities, war machines, sieges |
+| [magic.md](magic.md) | Schools, guilds, mana, casting, Necromancy (spell catalog: [spells.md](../content/spells.md)) |
+| [victory-and-modes.md](victory-and-modes.md) | Victory and defeat, score and replays, game modes and options |
 | [tools.md](tools.md) | Map editor, 2D harness, headless simulator |
 | [random-maps.md](random-maps.md) | Templates and the random map generator |
-| [presentation.md](presentation.md) | Art direction, camera, UI, audio |
+| [presentation.md](presentation.md) | Art direction, camera, UI, audio, speed settings |
 | [departures.md](departures.md) | Deliberate departures from HoMM3 |
+| [missing-mechanics.md](missing-mechanics.md) | What HoMM3 + HotA and HoMM5 have and we do not |
 
 ## 1. Vision
+*Eternal Wars* is a turn-based **dark fantasy** strategy game inspired by Heroes of Might and Magic III, presented in full 3D. Players lead
+heroes across an adventure map, gather resources, develop towns, recruit armies and fight tactical battles on a square grid where creatures
+occupy 2×2, 3×3 or 4×4 cells.
 
-*Eternal Wars* is a turn-based **dark fantasy** strategy game inspired by Heroes of Might and Magic III,
-presented in full 3D. Players lead heroes across an adventure map, gather resources, develop towns,
-recruit armies and fight tactical battles on a square grid where creatures occupy 2×2, 3×3 or 4×4
-cells.
+It is **HoMM-inspired, not a clone**: we keep the proven loop (heroes, towns, weekly growth, tactical battles) and deliberately change
+systems where we can add identity ([departures.md](departures.md)).
 
-It is **HoMM-inspired, not a clone**: we keep the proven loop (heroes, towns, weekly growth, tactical
-battles) and deliberately change systems where we can add identity. Every twist is logged in
-[departures.md](departures.md).
+The 3D presentation must **add atmosphere without hurting readability**: camera, map and battles stay as legible as HoMM3's 2D.
 
-The 3D presentation is meant to **add atmosphere without hurting readability**: the camera, map and
-battles must stay as legible as HoMM3's hand-painted 2D.
-
-**Modes, in priority order**: single-player vs AI → hot-seat → story campaign. **LAN multiplayer** is planned before 1.0 (ADR-088,
-ADR-098): the host runs the game and clients see only their own view. Online play over the internet stays out of scope.
+**Modes** (priority order): single player vs AI → hot-seat → story campaign; LAN multiplayer before 1.0
+([victory-and-modes.md](victory-and-modes.md#game-modes)). Internet play is out of scope.
 
 ## 2. Pillars
-
 1. **"One more turn"**: short, satisfying turns; meaningful decisions every day of the week.
 2. **Readable at a glance**: every tile, object and unit identifiable from the default camera.
 3. **Moddable by data**: factions, units, spells, artifacts and map objects are data, not code.
-4. **Deterministic core**: the same inputs always produce the same game. This enables replays, tests,
-   AI simulation and (later) multiplayer.
+4. **Deterministic core**: the same inputs always produce the same game, enabling replays, tests, AI simulation and multiplayer.
 
 ## 3. Core loop
-
 ```
  ┌──────────── Day (each player in turn) ────────────┐
  │ Move heroes ─► visit objects / pick up loot        │
@@ -56,15 +52,12 @@ ADR-098): the host runs the game and clients see only their own view. Online pla
  │ Experience, artifacts ─► stronger heroes           │
  │ Towns: build 1 structure/day, recruit weekly growth│
  └──────────────── End turn ─────────────────────────┘
-        Week start: creature growth (week and month events planned, ADR-073)
+        Week start: creature growth, week and month events
 ```
 
 ## 4. Platforms and scope
-- **Platforms for 1.0: Windows and Linux / Steam Deck** (controller-friendly UI and Deck performance
-  budget to test). macOS later.
-- **Player modding is not a 1.0 requirement.** Content stays data-driven, with versioned JSON formats,
-  because that helps us. A supported mod loader and mod folder may come after 1.0.
+- **1.0: Windows and Linux / Steam Deck** (controller-friendly UI, Deck performance budget to test). macOS later.
+- **Player modding is not a 1.0 requirement.** Content stays data-driven with versioned JSON formats; a mod loader may come after 1.0.
 
 ## 5. Non-goals (for now)
-- Real-time elements, online (internet) multiplayer, procedural campaign, mobile touch UI, official mod support, sea travel
-  (ADR-051).
+Real-time elements, internet multiplayer, procedural campaign, mobile touch UI, official mod support, sea travel (ADR-051).

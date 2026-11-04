@@ -1,64 +1,69 @@
 # Magic
 
-> Part of the [game design](overview.md). Spell catalog: [spells.md](../content/spells.md) (re-drafted, ADR-099: 17 spells a school). Open items ❓:
-> [open-questions.md](../project/open-questions.md). Casting is Phase 5: the first slice is built (ADR-110: spell table, guilds, books, rank I casting in battle).
+> Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*; numbers are drafts. Spell catalog:
+> [spells.md](../content/spells.md) (data: `src/Core/data/spells.csv`); school skill tables: [skills.md](../content/skills.md#magic-schools).
+> Open items ❓: [open-questions.md](../project/open-questions.md).
 
-- **Six schools** (ADR-047, ADR-063), one for each town on the ring: Light (Haven), Nature (Sylvan), Arcana (Academy),
-  Death (Necropolis), Chaos (Inferno), Shadow (Dungeon); names are working titles ❓. Each school is also a hero skill
-  group; any hero may learn any school, the school of the town across the ring is rarely offered ([heroes.md](heroes.md), ADR-072).
-- **Stronghold and Swamp Bestiary have no school**: both have the faction group **Primal Fury** instead (ADR-063, ADR-069;
-  Swamp Bestiary's Adrenaline group is dropped). Its warcries replace spells (no mana, ADR-067); its Interference skill
-  weakens and raises the cost of the enemy hero's spells. Instead of a mage guild they get the **war lodge** (Stronghold: War
-  Lodge / Hall of Warcries / Drums of the Horde; Swamp Bestiary: Totem Circle / Spirit Totems / Elder Totem; ADR-071, MAG-2, built ADR-112): a
-  hero knows a warcry only once a lodge of its level taught it (Rally 1, Intimidate 2, Terror 3), up to its Warcry skill.
-- **Four spell levels** and a **four-level mage guild**; every spell has three levels of its own (upgraded twice). Each school has
-  17 spells (5 / 5 / 4 / 3 by level, ADR-099); a guild offers 3 / 3 / 2 / 2 of them, **drawn per town at game start** from the game's
-  random source; the map may fix some, adventure spells are drawn like the others, and the extra-school buildings draw theirs the same way
-  (ADR-106, MAG-13).
-- **Elements** (ADR-106, MAG-13): besides its school, every spell has one of four elements (air, earth, fire, water); the four elemental orbs
-  raise the spells of their element, whatever the school. Summons call town creatures (elementals: Conflux).
-- **Spell books and learning** (ADR-071, MAG-2; built, ADR-110): mage heroes of magic towns start with a spell book (holding their specialty spell); warriors buy one in a mage
-  guild for **500 gold**. A hero learns a spell when its school's Magic skill is at least the spell's level. A guild offers
-  spells of the town's own school: **3** at each of levels 1 and 2, **2** at each of levels 3 and 4. Two more town buildings
-  add spells from other schools by the magic circle (HoMM4-like, ADR-072, MAG-12): one building for each of the two schools next to
-  the town's own on the ring, each adding **1 spell per guild level** the town has; placeholder cost 2000 gold + 5 of the school's
-  resource, needs mage guild 2.
-- A school's skills: **Magic** (4 levels, unlocking spell levels), **Attunement** (4 levels: max mana, daily mana and
-  spell cost by school, ADR-063, table reworked by ADR-069; no spell "potency", ADR-071; Death attunement also gives **Necromancy**), **Mastery**
-  (2 levels: spell upgrades). Tables: [skills.md](../content/skills.md#magic-schools).
-- **Spell ranks** (ADR-072, MAG-3; not built): Mastery does not upgrade spells by itself; it **allows** a known spell to rise to
-  rank 2 (Basic) or 3 (Advanced). The upgrade happens, free, when the hero visits a town whose mage guild (or extra spell
-  building) offers that spell; the spell then rises to the rank the hero's Mastery allows.
-- **Mana** (implemented, `ManaRules`): the pool is 10 × Knowledge plus attunement; a hero regains ⌈Knowledge / 10⌉
-  plus attunement at the start of its owner's turn; a spell costs its base minus attunement, never less than 25 % of
-  the base (rounded up). ADR-069 adds **10 × ⌈level / 10⌉** to the maximum pool only, not to the daily regeneration, so every hero has at least 10
-  (ADR-072, MAG-8; built). A hero that spends the night in a town with a mage guild (still there when its owner's turn starts) refills its mana (ADR-071,
-  MAG-3; built, ADR-110).
-- **Necromancy** (ADR-069; built, ADR-078): after a victory a hero with Death attunement raises 5–20 % of the slain enemies' hit points
-  as undead, of tiers capped by the attunement level; a Necropolis building, the Necromancy Amplifier, adds 5 %. Rules
-  (ADR-072, MAG-7) in [skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078).
-- **Map objects for magic** (ADR-069, ADR-070; not built; [adventure-map.md](adventure-map.md#magic)):
-  - **Mana Vortex**: sets the hero's mana to twice the maximum until it is spent, once a week per hero.
-  - **Fountain of Magic**: restores 50 % of the maximum, **once a week per hero** (ADR-072, MAP-23).
-  - **Shrines** (levels 1–3): teach their spell (set in the editor or rolled at game start) to any hero with the school's
-    Magic skill at the spell's level; any number of visits; a hero without the skill or with the spell gets a message.
-- **Spell Power** (ADR-071, MAG-3; built, ADR-110): multiplies damage spells' damage and buffs' and debuffs' duration, for now
-  **damage × (1 + SP / 10)** and **duration × (1 + SP / 10)** (ADR-072); the spell list's numbers are base numbers at SP 0 (ADR-099).
-- **Spell specialties** (ADR-072, MAG-6): the spell's effect +3 % per hero level.
-- **Area spells** have a fixed area whatever the target's size; a big creature with any cell inside is hit once (ADR-072, MAG-11).
-- The hero casts **at most once a round** in battle, during the turn of one of the units it controls (machines firing on
-  their own do not count); spells that change initiative do not change this. Spells may target war machines, which are
-  `mechanical` and resist many spells (ADR-070, MAG-4 part). Casting does not use the unit's action; it still acts afterwards (HoMM3; ADR-071, MAG-4).
-  Creature casters use the Caster capability ([combat.md](combat.md#creature-capabilities-homm4-style-implemented-adr-042)).
-- Spell resistance and immunity tags on creatures take effect (ADR-110): an immune or resistant stack is not a target and is untouched by area spells.
-- The hero skill **Spell resistance** cuts hostile spells' damage and duration by **8 / 14 / 20 %** (ADR-071, MAG-6; was
-  10 / 15 / 20 %); durations round away from zero, at least 1 round. Built (ADR-110).
-- **Adventure spells** Town Portal and Dimension Door are **level 4** (ADR-071, MAG-5; [spells.md](../content/spells.md#adventure-spells)).
-  Casting one costs a fixed **500 movement points** besides its mana, and a hero with fewer left cannot cast (ADR-073); Dimension Door lands only on
-  explored tiles (ADR-072, MAG-5).
-- **Built so far** (ADR-110): rank I battle effects of 37 spells (damage, healing, buffs and curses), cast once a round; durations count after the
-  round of the cast; holy spells double against undead and demons; war machines take only damage spells. Ranks II / III, Mastery,
-  adventure spells, summons, control and resurrection, creature casters, shrines and the extra-school buildings are not built.
-- **Magic artifacts** (ADR-111; built): the four elemental orbs (+25 % to their element's damage and healing), the Unwritten Codex (every level 1–2
-  spell known while worn, with a book), the Recanter's Cloak (no spells above level 2 in the hero's battles, both sides), `mind` / `poison`
-  immunities for the army, and mana artifacts (mana a day, maximum mana).
+## Schools
+- **Six schools** (ADR-047, ADR-063), one per ring town: Light (Haven), Nature (Sylvan), Arcana (Academy), Death (Necropolis), Chaos
+  (Inferno), Shadow (Dungeon); names are working titles ❓. Each is a hero skill group; any hero may learn any school, the arch-rival's
+  rarely ([heroes.md](heroes.md#skills-and-levels)).
+- **Stronghold and Swamp Bestiary have no school**: their faction group **Primal Fury** (ADR-063, ADR-069) has warcries instead of spells
+  (no mana, ADR-067) and Interference, which weakens the enemy hero's spells and raises their cost. A hero knows a warcry
+  once a **war lodge** of its level taught it (Rally 1, Intimidate 2, Terror 3; ADR-071, ADR-112), up to its Warcry skill. Lodge names:
+  Stronghold War Lodge / Hall of Warcries / Drums of the Horde; Swamp Bestiary Totem Circle / Spirit Totems / Elder Totem.
+- **Four spell levels**; each school has **17 spells** (5 / 5 / 4 / 3 by level, ADR-099). Every spell has **three ranks**.
+- **Elements** (ADR-106, MAG-13): every spell also has an element (air, earth, fire, water); the four elemental orbs raise their element's
+  spells, whatever the school. Summons call town creatures (elementals: Conflux).
+- **School skills** (ADR-063, ADR-069): **Magic** (4 levels: spell levels 1–4), **Attunement** (4 levels: max mana, daily mana, spell cost;
+  no spell potency, ADR-071; Death attunement also gives Necromancy), **Mastery** (2 levels: spell ranks).
+
+## Guilds and learning
+ADR-071, ADR-072, ADR-106, ADR-110, ADR-114, ADR-122, ADR-123 (MAG-2, MAG-3, MAG-12, MAG-13).
+- **Mage guild** (4 levels; level 4 a placeholder): offers its town's school, **3 / 3 / 2 / 2** spells at levels 1–4, **drawn per town at
+  game start** from `GameState.Random`; the map may fix them (`guildSpells`, map format v30). A guild of level L teaches levels 1 to L.
+- **Spell buildings** (HoMM4-like magic circle): two per ring town, one for each neighbouring school, each adding **1 spell per guild level**,
+  drawn at game start (not fixable by the map); 2000 gold + 5 of the school's resource (its town's rare resource), needs mage guild 2.
+- **Spell book**: mages of magic towns start with one holding their specialty spell; others buy one in a mage guild for **500 gold**. Map
+  heroes may be given a book and spells (map format v29).
+- **Learning**: an own hero with a book on a guild town's entrance learns what the guild and spell buildings offer that its school's Magic
+  skill allows (spell level ≤ Magic level). Shrines and the map also teach spells ([adventure-map.md](adventure-map.md#magic)).
+- **Ranks**: Mastery allows rank II (Basic) and III (Advanced). In a guild town a known spell the town offers rises, free, straight to the
+  rank Mastery allows; a spell learned elsewhere rises at a guild that offers it. Mana costs are the same at every rank.
+- **Mana refill**: a night in a guild town (still on the entrance when the owner's turn starts) fills the hero's mana.
+
+## Mana
+`ManaRules` (ADR-063, ADR-069, ADR-072 MAG-8):
+- **Pool** = 10 × Knowledge + 10 × ⌈level / 10⌉ + attunement (so every hero has at least 10).
+- **Daily regain** = ⌈Knowledge / 10⌉ + attunement, at the owner's turn start.
+- **Cost** = base − attunement, never below 25 % of the base (rounded up).
+
+## Casting in battle
+- The hero casts **at most once a round**, during the turn of one of its units, which keeps its action (HoMM3; ADR-071, MAG-4). Machines
+  firing by themselves don't count; spells that change initiative don't change this.
+- **Spell Power** (ADR-072): damage and healing × (1 + SP / 10), durations × (1 + SP / 10), at least 1 round; durations count after the
+  round of the cast. The spell list's numbers are at SP 0 (ADR-099).
+- **Spell specialty** (MAG-6): +3 % of the amount per hero level.
+- **Spell resistance** skill: hostile spells' damage and duration −8 / 14 / 20 % (rounded away from zero, at least 1 round).
+- **What stops a spell**: creature immunity tags and spell resistance ([capabilities](combat.md#creature-capabilities)); holy creatures
+  ignore holy spells; war machines are `mechanical` and take only damage spells. Such stacks are no target and untouched by area spells.
+  Holy spells deal double to undead and demons. Area rules: [combat.md](combat.md#area-attacks).
+- A spell cast again on a stack replaces its earlier effect; different spells add up.
+- **Creature casters** (`Caster` capability): n casts per battle at rank I, Spell Power = count / 2, no mana (ADR-120).
+- **Battle spells**: 75 of 91 work (ADR-123). *(Planned)*: the 16 needing field zones, copies, control changes or two-click aiming, and some
+  rank effects (list in ADR-123).
+
+## Adventure spells
+Level 4 for Town Portal and Dimension Door (ADR-071, MAG-5); each cast costs mana plus a fixed **500 movement points** (fewer left: no cast,
+ADR-073). Dimension Door lands only on explored tiles. Spells and ranks: [spells.md](../content/spells.md#adventure-spells) (ADR-120,
+ADR-123). The adventure AI casts Town Portal home; the show-only spells *(planned for the AI)*.
+
+## Necromancy
+ADR-069, ADR-072 (MAG-7), built ADR-078. After a victory a hero with Death attunement raises 5–20 % of the slain enemies' hit points as
+undead, tiers capped by the attunement level; the Necromancy Amplifier adds 5 %. Shown on a screen after the battle result, before any
+level-up; not when the enemy retreated or surrendered. Rules: [skills.md](../content/skills.md#necromancy-death-attunement-adr-069-built-adr-078).
+
+## Magic artifacts
+ADR-111. Four elemental orbs (+25 % to their element's damage and healing; Magic Arrow takes the best), the Unwritten Codex (every level 1–2
+spell known while worn, with a book, at rank I), the Recanter's Cloak (no spells above level 2 in the hero's battles, both sides), `mind` /
+`poison` immunities for the army, mana artifacts (mana a day, maximum mana, full mana each turn).

@@ -1,213 +1,159 @@
 # Development guide
 
-## Toolchain
-- **.NET SDK 10** (pinned via `global.json`, `rollForward: latestFeature`)
-- **Godot 4.7.2 .NET edition** (the "Godot Engine - .NET" download, not the standard build):
-  https://godotengine.org/download/windows/
-- IDE: Rider or Visual Studio 2026 / VS Code with C# Dev Kit
+Build, test and asset-link commands are in the root `CLAUDE.md`.
 
-## First-time setup
-```powershell
-./tools/link-shared-assets.ps1   # mounts shared assets into each app as res://shared
-dotnet build EternalWars.sln
-dotnet test --solution EternalWars.sln
-```
+## Toolchain
+- .NET SDK 10 (pinned in `global.json`, `rollForward: latestFeature`).
+- Godot 4.7.2 **.NET edition** (https://godotengine.org/download/windows/), needed only to run the apps.
+- Binary assets (`*.png`, `*.glb`, `*.wav`, fonts, ...) go through **Git LFS** (`.gitattributes`; `git lfs install`
+  once); `*.import` sidecars stay text. Exception: `textures/terrain/beach.png` is a plain blob (LFS quota).
 
 ## Running the apps
-Each app is a standalone Godot project:
+Apps are standalone Godot projects: `src/Apps/EternalWars.Game`, `src/Apps/EternalWars.MapEditor`,
+`src/Apps/EternalWars.Harness2D`. Import `project.godot` in the editor and press F5 (an app-local `.sln` it generates
+may be committed), or:
+```powershell
+godot --path src/Apps/EternalWars.Game [-- --map=<file.ewmap.json>]
+```
+In a fresh clone, import assets once per app (`<Godot console exe> --headless --path src/Apps/<App> --import`) or
+every texture load fails.
 
-| App | Folder |
+App arguments (after `--`): `--map=`, `--new-game` (game opens on the new-game screen, not the main menu),
+`--scenario=`, `--settings=`, `--autoinput=` (smoke tests), and content overrides `--creatures=`, `--heroes=`,
+`--buildings=`, `--artifacts=`, `--artifact-sets=` (a bad file is reported with line and column; the embedded copy
+is used instead).
+
+## Files and locations
+
+| What | Format / where |
 |---|---|
-| Game | `src/Apps/EternalWars.Game` |
-| Map editor | `src/Apps/EternalWars.MapEditor` |
-| 2D harness | `src/Apps/EternalWars.Harness2D` |
-
-- **Godot editor**: *Import* the folder's `project.godot`, then press F5. On the first build Godot
-  may generate an app-local `.sln` next to the project. It is fine to commit it.
-- **Command line** (with `godot` = the .NET editor executable on PATH):
-  ```powershell
-  godot --path src/Apps/EternalWars.Game
-  godot --path src/Apps/EternalWars.Game -- --map="$env:APPDATA/Godot/app_userdata/Eternal Wars Map Editor/maps/MyMap.ewmap.json"
-  ```
-- The map editor saves to `user://maps/` (on Windows: `%APPDATA%\Godot\app_userdata\Eternal Wars Map Editor\maps`).
+| Maps | `*.ewmap.json`, `MapDocument` (version history in its doc comment); editor saves to `user://maps/` (`%APPDATA%\Godot\app_userdata\Eternal Wars Map Editor\maps`) |
+| Saves | `*.ewsave.json` (ADR-058) in `user://saves` (`%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): game record + label; load replays commands and checks the digest |
+| Replays | `*.ewreplay.json` (`GameRecord`) |
+| Ranking (ADR-101) | `ranking.json` in the user data folder (`RankingFile`), each row's record in `ranking/*.ewreplay.json` |
+| Templates | `*.ewtemplate.json`; shipped ones in `src/Core/data/templates` |
+| Content tables | `src/Core/data/*.csv`, embedded at build time (see below) |
+| JSON overrides | `CreatureDefinitionSerializer`, `TerrainDefinitionSerializer`, `MapObjectDefinitionSerializer` (ids in `BuiltInMapObjects`) |
 
 ## Headless simulator
-No Godot needed; drives the core through commands only.
-```powershell
-dotnet run --project tools/EternalWars.Tools.Sim -- battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 --runs 200
-dotnet run --project tools/EternalWars.Tools.Sim -- record demo.ewreplay.json --days 7 --seed 1
-dotnet run --project tools/EternalWars.Tools.Sim -- replay demo.ewreplay.json
-dotnet run --project tools/EternalWars.Tools.Sim -- game --map towns --days 40 --runs 8   # the adventure AI plays every slot
-dotnet run --project tools/EternalWars.Tools.Sim -- game --template duel --size 96 --runs 4 [--players N]   # the same on a new generated map per run
-dotnet run --project tools/EternalWars.Tools.Sim -- maps [--template 2v2] --maps 6 --days 14   # what the CI generated-maps job runs
-dotnet run --project tools/EternalWars.Tools.Sim -- towns --runs 32 [--upgraded]   # round robin of one-week town armies
-dotnet run --project tools/EternalWars.Tools.Sim -- creatures [--write table.csv]  # each line's weekly power against its tier
-dotnet run --project tools/EternalWars.Tools.Sim -- lines --runs 4 [--upgraded]    # every creature line against its tier
-dotnet run --project tools/EternalWars.Tools.Sim -- layout duel --size 96 --seed 1 [--rects] [--terrain] [--seeds N]
-dotnet run --project tools/EternalWars.Tools.Sim -- selftest   # what CI runs
-```
-`layout` takes a shipped template name or a `*.ewtemplate.json` path and prints the zone layout as text (`--rects`: the
-Rectangles strategy; `--terrain`: the generated map with walls, passages, guards (`M`, Area-mode `A`), towns, mines, piles, chests (`c`),
-artifacts (`a`) and roads (`+`); `--seeds N`: generate N seeds in a row through every stage and report the ones with problems and the time).
-Templates are named by their name (`"Two against two"`) or file key (`2v2`, `duel`, `ffa-4`), or given as a path.
-`game --template` generates a map per run (seed = run seed, size = `--size` or the template's smallest, `--players` or the
-template's maximum, every town "Random", all computer players) as the new-game screen would, and prints the attempt kept and any
-problems; `--record` saves the first game with its generation info. `maps` checks `--maps` maps per shipped template (or
-`--template`), cycling through the template's sizes and from the most players down: each map must generate without problems and
-the same way twice, every player's hero must be able to walk to every other player's start town (through guards and pickups, via
-gates), the map validator must find no errors, and `--days` days of AI-vs-AI play must issue no refused command and replay through JSON to the same state. A failed line
-names the template, size, seed and player count to reproduce it (`maps --template <t> --seed <s> --maps 1`, or `game --template`).
-Any command takes `--creatures path.csv`.
+`dotnet run --project tools/EternalWars.Tools.Sim -- <command>`; no Godot, drives the core through commands only. Any
+command takes `--creatures path.csv`.
+
+| Command | Does |
+|---|---|
+| `battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs N] [--seed S]` | battle statistics |
+| `record <file> [--days N] [--seed S]` / `replay <file>` | record a game / verify a replay |
+| `selftest` | determinism + replay check (CI) |
+| `game --map towns [--days N] [--runs N] [--record f]` | AI plays every slot; prints fights won/lost by kind, what is left on the map, garrison hero moves |
+| `game --template duel [--size N] [--players N]` | same on a new generated map per run (as the new-game screen would) |
+| `maps [--template t] [--maps N] [--days N] [--seed S]` | per template and size: generates without problems, deterministically, every start town reachable, no validator errors, N days of AI play with no refused command, replays to the same state. CI runs `maps --maps 6 --days 14`; a failure names the repro (`maps --template <t> --seed <s> --maps 1`) |
+| `fairness [--template t] [--seeds 20] [--size N] [--verbose]` | per start: mine distance, treasure value, guard power, fairness problems (ADR-117) |
+| `layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N]` | zone layout as text; `--terrain` the generated map; `--seeds N` batch-checks N seeds with timing |
+| `generate <template> --out <file>` / `export towns\|demo\|ember --out <file>` | write a generated / built-in map |
+| `towns [--runs N] [--upgraded]`, `lines [...]`, `creatures [--write f.csv]` | town-army round robin; creature lines vs their tier; weekly power table |
+
+Templates are named by name (`"Two against two"`), file key (`2v2`, `duel`, `ffa-4`) or path.
+Debug env vars: `EW_SIM_EXPLAIN=10,25` (on those days, each hero's best targets as the AI sees them,
+`AdventureAi.Explain`), `EW_SIM_GUARDS=1` (every monster stack, explored or not), `EW_SIM_TRACE=1` (battles, defeated heroes).
+
+## Godot smoke tests
+`./tools/smoke-godot.ps1 -Godot <Godot .NET console exe> [-Only 'game-*']` runs the scenarios listed in the script under
+Movie Maker and saves frames to `.shots/<scenario>/`. **A pass only means no errors: look at the frames.**
+- Script entries are `frame:kind:argument`: `click` / `rclick` (`x,y`), `key` (Godot key name), `hold` (`Key,frames`),
+  `wheel` (`up|down,count`), `drag` / `rdrag` (`x1,y1,x2,y2`, over three frames). Replayed by `AutoInput`.
+- Game scenarios start with `--new-game` and `key:Enter` (Start has focus), so they do not depend on the screen layout;
+  all start from default settings.
+- Maps live in `tools/smoke/` (or come from `sim generate` / `sim export`); `SmokeMapTests` checks they still do what
+  the scripts expect.
+
+CI (`.github/workflows/ci.yml`) runs build + test + `sim selftest`, and a parallel `generated-maps` job; no Godot.
+
+## Conventions
+- Rules from `CLAUDE.md` apply (Tier 1 if it compiles without `using Godot;`, `partial` nodes, `Bind(...)`,
+  commands only, `GameState.Random`). Events: [event-system.md](event-system.md).
+- Namespaces follow folders (`EternalWars.Core.Domain.Heroes`).
+- Core builds with warnings as errors; keep Godot projects warning-free too.
+- Tests: `MethodUnderTest_Scenario[_Expected]`. Adventure-map tests use `TestWorld` ASCII maps (legend in its doc
+  comment; `TestWorld.Road(...)`; `TestWorld.Start(state)` pre-reveals the map unless the test is about fog; heroes
+  carry `DefaultArmy()`, 1500 MP) and issue commands with `SessionCommands` helpers (`session.Step`, `MoveTo`,
+  `EndTurn`, `AutoResolve`, ...). Rule-level battle tests place units with `TestBattle`.
+- Commits: imperative mood, small and focused.
 
 ## Controls (placeholder)
 | | Game | Editor | Harness |
 |---|---|---|---|
-| Select hero | Click it, Tab, hero list | Select tool | Click it |
-| Hero screen | H (selected hero), "Info" in the hero list; Escape closes | — | — |
-| Town screen | T (next own town), town list, entering an own town; Escape closes | — | Click the town |
-| Move hero | Click tile (route preview), click again to go; arrows / numpad | — | Same |
-| Level | L or button (follows gates) | L or button | — |
-| Camera | WASD pan, Q/E rotate (±45°), wheel zoom | same | — |
-| Edit | — | LMB with the active tool (terrain, road, object, monster, hero, erase, link gates, select); Ctrl+Z / Ctrl+Y | — |
-| Battle | 3D battle scene: point to preview, click to move / attack (from the side the pointer is on) / shoot; W wait, D defend, R retreat, Q quick combat (or the buttons), wheel zoom; Enter / Esc leave the result | — | Click: move / attack / shoot; W wait, D defend, R retreat, Q quick combat |
-| Decisions | Prompt buttons, exchange screen | — | Prompt buttons, exchange screen |
-| Save / load | F10 or the Menu button: list, name, Save / Load / Delete; F5 quick save, F9 quick load; in battle too; autosave at every turn start (two slots) | — | — |
+| Select hero | Click, Tab, hero list | Select tool | Click |
+| Hero / town screen | H / T, hero or town list, entering an own town; Escape closes | — | Click the town |
+| Move hero | Click tile (preview), click again; arrows / numpad | — | Same |
+| Level | L or button | L or button | — |
+| Camera | WASD pan, Q/E rotate, wheel zoom | same | — |
+| Edit | — | LMB with the active tool; Ctrl+Z / Ctrl+Y | — |
+| Battle | Point to preview, click move / attack (from the pointer's side) / shoot; W wait, D defend, R retreat, Q quick combat; wheel zoom; Enter / Esc leave the result | — | Click; same keys |
+| Save / load | F10 or Menu; F5 quick save, F9 quick load; autosave at turn start (two slots) | — | — |
 
-## Conventions
-- **Where does code go?** If it can be written without `using Godot;`, it goes in Tier 1.
-- Namespaces follow folders: `EternalWars.Core.Domain.Heroes`, `EternalWars.Godot.Shared.Map`.
-- Godot node classes are `partial` (required by Godot source generators).
-- Library nodes are created in code and expose `Bind(...)` methods instead of `[Export]` wiring.
-- Events: see [event-system.md](event-system.md). Past tense, `sealed record`, publish after mutation.
-- State setters are `internal`; mutate state only through services. Front-ends, AI, tools and tests change a
-  running game only with `session.Execute(command)` (ADR-036); never call `System.Random` in rules, draw from
-  `GameState.Random`.
-- Tests: xUnit v3 on Microsoft.Testing.Platform, `MethodUnderTest_Scenario[_Expected]` naming.
-  Build adventure-map situations with `TestWorld` ASCII maps (`.` grass, `~` water, `#` rock,
-  `s` swamp, `l` lava, `A`/`C` Blue heroes, `B` Red hero), `TestWorld.Road(...)` for roads, and
-  `TestWorld.Start(state)`, which pre-reveals the map unless the test is about fog. TestWorld heroes carry
-  `TestWorld.DefaultArmy()` (10 footmen, 1500 movement points). Issue commands with the `SessionCommands`
-  helpers (`session.Step`, `session.MoveTo`, `session.EndTurn`, `session.AutoResolve`, ...). Rule-level battle
-  tests place units exactly with `TestBattle`.
-- Saved games are `*.ewsave.json` (ADR-058) in `user://saves` (Windows: `%APPDATA%\Godot\app_userdata\Eternal Wars\saves`): a game record plus a label. Loading replays the commands and checks the digest.
-- The ranking tables (ADR-101, ADR-102) are `ranking.json` in the user data folder (`RankingFile`), each row's game record in `ranking/*.ewreplay.json` next to it.
-- Map files are `*.ewmap.json` (format v22: terrain + optional road and river rows, teams, heroes with roster type,
-  primary stats, skills, war machines, morale, luck, artifacts and armies, objects incl. one-way gates, artifact pickups, creature dwellings, marketplaces, resource providers, loot, buff and training sites, signs, prisons and other utility objects, creature banks, scenery, the third catalogue's objects, monsters with their guard mode, mine guards and towns, victory and defeat conditions, the hero limits; see the
-  version history on `MapDocument`). Replays are `*.ewreplay.json`. Random map templates are `*.ewtemplate.json` (`MapTemplate`; the shipped ones are in
-  `src/Core/data/templates`, embedded into `Core.Data`). Creature
-  stats live in the creature table `src/Core/data/creatures.csv` (see "Editing creature
-  stats" below; ADR-071); JSON definitions can still be layered on with `CreatureDefinitionSerializer`. Terrain rules can be overridden with `TerrainDefinitionSerializer`. Object definitions can be extended with a JSON list of
-  definitions (`MapObjectDefinitionSerializer`); see `BuiltInMapObjects` for ids.
-- Godot smoke tests: `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe>` runs scripted input against each app
-  (scenarios `harness-guard-battle`, `game-route-and-move`, `game-exchange-and-gate`, `game-battle-3d`, `game-town-screen`,
-  `game-hero-screen`, `game-kingdom`, `game-weeks`, `game-thieves-guild`, `game-random-map`, `game-main-menu`, `game-siege`, `game-garrison-hero`,
-  `game-dwelling-caravan`, `game-tavern`, `game-ember-march`, `editor-generated-connections`, `editor-inspector-objects`, `editor-tools`, `editor-generate`, `editor-week-events`, `editor-template-editor`)
-  and saves frames to `.shots/`. Script entries are `frame:kind:argument` with the kinds `click` / `rclick` (x,y), `key` (a Godot key name),
-  `hold` (`Key,frames`, for camera panning), `wheel` (`up|down,count`) and `drag` / `rdrag` (`x1,y1,x2,y2`: pressed, moved and
-  released over three frames). The editor opens `--map=<file>`; `sim generate <template> --out <file>`
-  saves a generated map to open there (`editor-generated-connections` does that first), and `sim export towns|demo|ember --out <file>`
-  a built-in map (the Ember March scenarios use it). In a fresh clone import the assets once per app first
-  (`<Godot console exe> --headless --path src/Apps/<App> --import`), or every texture load fails. A passing run only means
-  no errors: look at the frames too. The game opens on the main menu; the game scenarios pass `--new-game` to open on the new-game
-  screen (all but `game-main-menu`) and start with `key:Enter` (the Start button has the focus), so they
-  do not depend on the new-game screen's layout. Smoke maps live in `tools/smoke/`; `SmokeMapTests` checks that they still do what the
-  scripts expect.
-- CI (`.github/workflows/ci.yml`) runs `dotnet build` + `dotnet test` + `sim selftest` on every push to main and on PRs,
-  and a parallel `generated-maps` job: `sim maps --maps 6 --days 14` (6 maps per shipped template). `sim fairness [--template <id>] [--seeds 20] [--size N] [--verbose]`
-  generates maps and prints each start's mine distance, treasure value and guard power with the fairness problems (ADR-117).
-  `sim game` prints per player the fights won / lost by kind (neutral, garrison, bank, town, hero, defending), what is left on the map
-  (monster stacks, neutral garrisons and towns, border posts, keys) and the garrison hero moves (ADR-119). `EW_SIM_EXPLAIN=10,25` prints, at
-  the start of those days' turns, each hero's best targets as the AI sees them (value, fight safe or not, route cost, danger) and its
-  exploring tile (`AdventureAi.Explain`); `EW_SIM_GUARDS=1` adds every monster stack and whether the player has explored it; `EW_SIM_TRACE=1`
-  prints the battles and defeated heroes.
-- Core builds with warnings as errors; keep Godot projects warning-free as well.
-- Commits: imperative mood, small and focused.
-- Binary assets (`*.png`, `*.jpg`, `*.glb`, `*.fbx`, `*.wav`, `*.ogg`, fonts, ...) go through **Git LFS** (`.gitattributes`;
-  run `git lfs install` once). Godot's `*.import` sidecars stay plain text. Exception: `textures/terrain/beach.png` is a
-  plain blob because the GitHub LFS quota refused it.
+## Content tables
+Every table in `src/Core/data` (ADR-071) is a CSV with columns matched by header name (Excel's semicolon CSV works;
+extra columns such as `notes` are ignored). Ids are referenced by maps, saves and code: rename with care. Apps,
+tests and the default catalog use the copy embedded at build time; to try an edit without rebuilding, pass the
+matching `--creatures=`-style flag (apps) or `--creatures path.csv` (sim). `DataTableSchemaTests` checks every table's
+columns, ids and references; other tests check balance rules (e.g. nine upgradeable lines per town, tiers getting
+stronger, no copy-pasted stat lines).
 
-## Editing creature stats
-
-Every creature is one row of `src/Core/data/creatures.csv` (ADR-044; every table lives in `src/Core/data`, ADR-071). Edit it in any
-spreadsheet or text editor; Excel's semicolon CSV works too. Columns, matched by header name:
+### Editing creature stats
+`creatures.csv` (ADR-044), one row per creature.
 
 | Column | Meaning |
 |---|---|
-| `id` | `town.kebab-name`; maps, saves and code refer to it, so rename with care |
+| `id` | `town.kebab-name` |
 | `name`, `town`, `tier` | display name; town id (empty for neutrals); tier 1–5 |
-| `size` | `Small` (2×2 cells), `Medium` (3×3) or `Large` (4×4) |
-| `upgrade` | id of the upgraded form (same town and tier), empty on upgrades and most neutrals |
+| `size` | `Small` (2×2 cells), `Medium` (3×3), `Large` (4×4) |
+| `upgrade` | id of the upgraded form (same town and tier) |
 | `attack`, `defense`, `min_damage`, `max_damage`, `health` | per creature |
-| `speed`, `map_speed`, `initiative` | battlefield cells per turn; HoMM3-scale adventure speed; turn order |
+| `speed`, `map_speed`, `initiative` | battle cells per turn; HoMM3-scale adventure speed; turn order |
 | `shots` | ammunition; empty or 0 = melee |
-| `morale`, `luck` | −5…+5, empty = 0; the hero's are added in battle (ADR-053) |
+| `morale`, `luck` | −5…+5, empty = 0; the hero's are added in battle |
 | `growth`, `gold`, `resources` | weekly growth; gold cost; other costs like `mercury 1` |
-| `tags` | free words separated by `;` (`human; holy`) |
-| `capabilities` | up to five, separated by `;`: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster fireball 1`, … (`CapabilityKind`) |
-| `notes` | free text; ignored, like any extra column |
+| `tags` | words separated by `;` (`human; holy`) |
+| `capabilities` | up to five, `;`-separated: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster fireball 1`, … (`CapabilityKind`) |
 
-- **Game, editor and 2D harness** use the copy embedded at build time. To try an edit without a rebuild, start the app
-  with `-- --creatures=path.csv` (also `--heroes=`, `--buildings=`, `--artifacts=`, `--artifact-sets=`); a mistake is
-  reported in the Godot output with its line and column, and the embedded copy is used instead.
-- **Simulator** without a rebuild: `dotnet run --project tools/EternalWars.Tools.Sim -- towns --creatures
-  src/Core/data/creatures.csv`. `sim creatures` shows each line's strength against its
-  tier, `sim lines` duels the lines of a tier, `sim towns` plays one-week town armies against each other.
-- **Random map layouts**: `dotnet run --project tools/EternalWars.Tools.Sim -- layout duel --size 96 --seed 3 [--rects] [--terrain]`
-  prints the zone layout of a template (a shipped name or a `*.ewtemplate.json` path) as text, one letter per zone, plus the
-  area of every zone; `--terrain` prints the generated map instead.
-- **Tests and the default catalog** use the copy embedded at build time; `dotnet test` rebuilds it. Tests check
-  the table's rules (nine upgradeable lines per town, tiers getting stronger, no copy-pasted stat lines), and
-  `DataTableSchemaTests` checks every shipped table's columns, ids and references.
-
-## Editing artifacts
-
-Artifacts are `src/Core/data/artifacts.csv` (ADR-061), with the sets in `artifact_sets.csv`, same file
-rules and loading as the other tables (`--artifacts=` and `--artifact-sets=`; a mistake is reported with line and column
-and the built-in copy is used).
+### Editing artifacts
+`artifacts.csv` (ADR-061) and `artifact_sets.csv` (`id, name, effects, notes`; a set needs two or more pieces).
 
 | Column | Meaning |
 |---|---|
-| `id`, `name` | kebab-case id (maps and saves refer to it), display name |
-| `slot` | `Head`, `Neck`, `Cloak`, `Body`, `Weapon`, `Shield`, `Ring` (two fit), `Boots` or `Misc` (three fit) |
-| `tier` | `Minor`, `Major` or `Relic`: what a map pickup of that tier can roll |
-| `set` | id of a row of `artifact_sets.csv`, or empty; wearing every piece of a set adds the set's effects |
-| `effects` | separated by `;`: `attack 2`, `defense`, `spell-power`, `knowledge`, `morale`, `luck`, `movement 10` (percent), `movement-flat 300`, `battle-speed 1`, `melee-damage 10`, `ranged-damage 10`, `damage-taken 5` (percent less), `ranged-damage-taken 10`, `income gold 100`, `native-terrain swamp`, `terrain-penalty 25` (percent removed), `skill machines.ballistics 1`, `all-skills 1`, `sight 1` (scouting radius), `mana-a-day 2`, `mana-max 10`, `creature-health 10` (percent), `no-retreat`, `necromancy 10` (percent points), `growth 5` (percent), `immune mind` (a spell tag), `element-power fire 25` (percent), `spells 1-2` (known while worn), `no-spells-above 2` (ADR-111), `full-mana`, `no-faction-penalty` (ADR-121); negative numbers work; for an assembled relic, what it adds to its pieces |
-| `notes` | free text; effects the game cannot apply yet are marked "Not yet" here |
-| `pieces` | empty, or the pieces of an **assembled relic** separated by `;` (ADR-121): at least two ordinary artifacts, each a piece of one relic only; the relic's `slot` must be its first piece's, and it blocks the other pieces' slots. Relics never drop, only their pieces |
+| `id`, `name` | kebab-case id, display name |
+| `slot` | `Head`, `Neck`, `Cloak`, `Body`, `Weapon`, `Shield`, `Ring` (two fit), `Boots`, `Misc` (three fit) |
+| `tier` | `Minor`, `Major`, `Relic`: what a map pickup of that tier can roll |
+| `set` | id in `artifact_sets.csv`, or empty |
+| `effects` | `;`-separated, e.g. `attack 2`, `income gold 100`, `skill machines.ballistics 1`, `spells 1-2`; the words and units are `ArtifactEffect`'s table and `ArtifactEffectKind`'s doc comments (`Artifacts/ArtifactTypes.cs`); negatives work |
+| `notes` | effects the game cannot apply yet are marked "Not yet" |
+| `pieces` | for an **assembled relic** (ADR-121): `;`-separated ordinary artifacts (two or more, each in one relic only); the relic's `slot` is its first piece's and blocks the others' slots; relics never drop, only pieces |
 
-`artifact_sets.csv` has `id, name, effects, notes`; a set needs at least two pieces. Map objects `artifact.minor`,
-`artifact.major` and `artifact.relic` roll their artifact at game start; the editor can fix one (`SetArtifactPickup`).
+Pickups `artifact.minor` / `.major` / `.relic` roll at game start; the editor can fix one (`SetArtifactPickup`).
 
-## Editing town buildings
-
-Town buildings are `src/Core/data/buildings.csv` (ADR-046, ADR-050), one row per building level,
-with the same file rules and loading as the creature table (`-- --buildings=path.csv` loads another one).
+### Editing town buildings
+`buildings.csv` (ADR-046, ADR-050), one row per building level.
 
 | Column | Meaning |
 |---|---|
-| `id`, `level`, `name` | building id (`town-hall`, `fort`, …); level 1, 2, … without gaps; display name of that level |
-| `town` | empty: the row is shared by every town. A town type (`necropolis`): that town's own rows of the building replace all shared levels of it, or add a building only that town has (ADR-074); a town row at level `0` removes the shared building from that town (ADR-112) |
-| `gold`, `resources` | cost: gold, and other resources like `lumber 5; ore 5` |
-| `requires` | other buildings first: `blacksmith 1; fort 2`. `dwelling-3 1` is met by any tier-3 dwelling |
-| `income` | paid every day while this is the highest level built: `gold 500`, `lumber 1; ore 1` |
-| `growth` | a flat weekly growth bonus for every dwelling of a tier: `dwelling-1 5` (ADR-112) |
-| `notes` | free text |
+| `id`, `level`, `name` | building id (`town-hall`, `fort`, …); level 1, 2, … without gaps; display name |
+| `town` | empty: shared by every town. A town type: that town's rows replace all shared levels of the building, or add a town-only building (ADR-074); level `0` removes the shared building from that town (ADR-112) |
+| `gold`, `resources` | cost (`lumber 5; ore 5`) |
+| `requires` | `blacksmith 1; fort 2`; `dwelling-3 1` is met by any tier-3 dwelling |
+| `income` | daily while this is the highest level built: `gold 500` |
+| `growth` | flat weekly bonus for every dwelling of a tier: `dwelling-1 5` (ADR-112) |
 
-`dwelling-1` … `dwelling-5` price the dwellings of a tier (level 1 builds, level 2 upgrades) for every creature line of
-that tier; which lines a town has comes from the creature table. The 7-of-9 rule (ADR-030) is in code, not in the table.
+`dwelling-1` … `dwelling-5` price the dwellings of a tier (level 1 builds, 2 upgrades) for every line of that tier; the
+lines come from the creature table. The 7-of-9 rule (ADR-030) is in code.
 
-## Editing heroes
-
-The hero roster is `src/Core/data/heroes.csv` (ADR-048), with the same file rules and
-loading as the creature table (`-- --heroes=path.csv` loads another one).
+### Editing heroes
+`heroes.csv` (ADR-048).
 
 | Column | Meaning |
 |---|---|
 | `id`, `name`, `town` | `town.name`; display name; town id |
 | `class` | `Warrior` or `Mage` |
-| `preferred` | base id of a tier 1–4 creature line of the same town; each line has one mage and one warrior |
-| `specialty` | `skill <skill id>`, `spell <spell id>` or `resource <resource> <amount a day>` |
-| `skills` | starting skills: `offense.melee Basic; tactics.tactics Advanced` (ids in `BuiltInSkills`) |
+| `preferred` | base id of a tier 1–4 line of the same town; each line has one mage and one warrior |
+| `specialty` | `skill <id>`, `spell <id>` or `resource <resource> <amount a day>` |
+| `skills` | `offense.melee Basic; tactics.tactics Advanced` (ids in `BuiltInSkills`) |
 | `attack`, `defense`, `spell_power`, `knowledge` | starting primary stats (empty = 0) |
-| `notes` | free text |
-

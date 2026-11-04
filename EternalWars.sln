@@ -54,6 +54,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3C9B6E2A-5
 		docs\design\towns-and-economy.md = docs\design\towns-and-economy.md
 		docs\design\victory-and-modes.md = docs\design\victory-and-modes.md
 		docs\project\decisions.md = docs\project\decisions.md
+		docs\project\decisions-archive.md = docs\project\decisions-archive.md
 		docs\project\ideas.md = docs\project\ideas.md
 		docs\project\open-questions.md = docs\project\open-questions.md
 		docs\project\roadmap.md = docs\project\roadmap.md
@@ -61,7 +62,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{3C9B6E2A-5
 		docs\technical\architecture.md = docs\technical\architecture.md
 		docs\technical\development.md = docs\technical\development.md
 		docs\technical\event-system.md = docs\technical\event-system.md
-		docs\technical\reference-sandbox.md = docs\technical\reference-sandbox.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EternalWars.Core.Generation", "src\Core\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj", "{C56E3387-323D-4072-8F17-02E5A642C886}"
