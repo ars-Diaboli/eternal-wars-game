@@ -10,7 +10,7 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// Placeholder prompt for pending decisions: chest reward, guard offers, the battle
+/// Placeholder prompt for pending decisions: chest reward, guard offers, map event messages, questions and full armies, the battle
 /// width and quick combat. Answers are commands; the panel hides itself when the decision is resolved.
 /// </summary>
 public partial class DecisionPanel : PanelContainer
@@ -112,6 +112,25 @@ public partial class DecisionPanel : PanelContainer
                 }
 
                 break;
+            case MapEventDecision message:
+                // A map event's message (its reward lines, given once read) or question (EVT-4 f).
+                _prompt.Text = message.Lines.Count == 0 ? message.Text : message.Text + "\n\n" + string.Join('\n', message.Lines);
+                if (message.IsQuestion)
+                {
+                    for (var i = 0; i < message.Answers.Count; i++)
+                    {
+                        Button(message.Answers[i], new AnswerMapEventCommand(player, i));
+                    }
+                }
+                else
+                {
+                    Button("OK", new AnswerMapEventCommand(player, 0));
+                }
+
+                break;
+            case MapEventArmyDecision army:
+                ShowArmyChoice(army, player);
+                break;
             case HeroExchangeDecision:
                 Visible = false; // ExchangePanel handles it
                 break;
@@ -165,6 +184,28 @@ public partial class DecisionPanel : PanelContainer
         {
             Button("Quick combat", new AutoResolveBattleCommand(player));
         }
+    }
+
+    /// <summary>A map event gave a full army more creatures (EVT-4 e): tick the stacks to keep, one to seven; the rest stay behind.</summary>
+    private void ShowArmyChoice(MapEventArmyDecision army, Core.Domain.Common.PlayerId player)
+    {
+        _prompt.Text = $"{_session.State.GetHero(army.Hero).Name}'s army is full. Keep which stacks (up to {Core.Domain.Armies.Army.SlotCount})?";
+        var ticks = army.Stacks.Select((stack, i) => new CheckBox
+        {
+            Text = $"{stack.Count} × {(_session.State.Creatures.TryGet(stack.Creature, out var creature) ? creature.Name : stack.Creature)}",
+            ButtonPressed = i < Core.Domain.Armies.Army.SlotCount,
+        }).ToList();
+        var keep = new Button { Text = "Keep" };
+        void Check() => keep.Disabled = ticks.Count(t => t.ButtonPressed) is < 1 or > Core.Domain.Armies.Army.SlotCount;
+        foreach (var tick in ticks)
+        {
+            tick.Toggled += _ => Check();
+            _buttons.AddChild(tick);
+        }
+
+        keep.Pressed += () => _session.Execute(new ChooseEventArmyCommand(player, [.. ticks.Select((t, i) => (t, i)).Where(x => x.t.ButtonPressed).Select(x => x.i)]));
+        _buttons.AddChild(keep);
+        Check();
     }
 
     private void Button(string text, GameCommand command, bool disabled = false)

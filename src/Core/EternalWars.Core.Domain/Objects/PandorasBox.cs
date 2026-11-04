@@ -104,13 +104,17 @@ public sealed record BoxContents
 /// <summary>
 /// A Pandora's Box (ADR-100, MAP-35): a visiting hero is asked whether to open it. An optional <see cref="Guard"/> is fought first, and the box
 /// opens only when the hero wins (a lost or fled battle leaves the guard whole). Opening gives the <see cref="Contents"/> and an optional
-/// <see cref="Message"/>, and the box vanishes. The contents are hidden from the players until then.
+/// <see cref="Message"/>, and the box vanishes; then its hero <see cref="Event"/>, if it names one, runs for the hero (map events, step 3). The
+/// contents are hidden from the players until then.
 /// </summary>
 public sealed class PandorasBox(
     MapObjectId id, MapObjectDefinition definition, MapPosition position,
-    BoxContents? contents = null, IReadOnlyList<CreatureStack>? guard = null, string? message = null)
+    BoxContents? contents = null, IReadOnlyList<CreatureStack>? guard = null, string? message = null, string? @event = null)
     : MapObject(id, definition, position, MapObjectKind.PandorasBox)
 {
+    /// <summary>The hero event run for the opener once the contents are given (null: none); a box with an event may hold nothing else.</summary>
+    public string? Event { get; internal set; } = @event;
+
     public BoxContents Contents { get; internal set; } = contents ?? BoxContents.Empty;
 
     /// <summary>The guard fought after "open?"; at most <see cref="Army.SlotCount"/> stacks, empty for none.</summary>
@@ -181,7 +185,7 @@ public static class PandorasBoxRules
             events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
         }
 
-        events.Publish(new PandorasBoxOpened(box.Id, hero.Id, contents with { Skills = skills, Artifacts = found, Creatures = joined }, box.Message));
+        events.Publish(new PandorasBoxOpened(box.Id, hero.Id, contents with { Skills = skills, Artifacts = found, Creatures = joined }, box.Message) { Event = box.Event });
         progression.GrantExperience(hero, contents.Experience);
     }
 }

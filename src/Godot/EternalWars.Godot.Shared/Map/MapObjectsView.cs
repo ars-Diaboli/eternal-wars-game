@@ -102,6 +102,7 @@ public partial class MapObjectsView : Node3D
             }
         }
 
+        AddShape(root, known, color);
         var top = MapSpace.ToWorld(known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
         if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town or MapObjectKind.Dwelling or MapObjectKind.ResourceProvider)
         {
@@ -143,9 +144,61 @@ public partial class MapObjectsView : Node3D
     private string CreatureName(MonsterGuard monster) =>
         _context.State.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature;
 
+    /// <summary>
+    /// Placeholder shapes that tell the quest objects apart (EVT-5) until there are models: a Seer's Hut gets a pointed roof over its building, a
+    /// Quest Guard a standing figure with a spear, a Quest Gate two posts and a lintel over its cell.
+    /// </summary>
+    private static void AddShape(Node3D root, KnownObject known, Color color)
+    {
+        var at = MapSpace.ToWorld(known.Position);
+        switch (known.Definition.Kind)
+        {
+            case MapObjectKind.SeerHut:
+                var blocked = known.Definition.Footprint.OccupiedCells.Where(c => c.Cell == FootprintCell.Blocked).ToList();
+                if (blocked.Count > 0)
+                {
+                    var middle = at + (new Vector3((float)blocked.Average(c => c.Dx), 0, (float)blocked.Average(c => c.Dy)) * MapSpace.TileSize);
+                    var width = blocked.Max(c => c.Dx) - blocked.Min(c => c.Dx) + 1;
+                    root.AddChild(Cone(0.4f * width, 0.7f, middle + (Vector3.Up * 0.85f), color.Darkened(0.3f)));
+                    root.AddChild(Sphere(0.12f, middle + (Vector3.Up * 1.3f), Colors.Gold)); // the seer's lamp
+                }
+
+                break;
+            case MapObjectKind.QuestGuard:
+                root.AddChild(Cylinder(0.18f, 0.6f, at + (Vector3.Up * 0.36f), color));
+                root.AddChild(Sphere(0.14f, at + (Vector3.Up * 0.8f), color.Lightened(0.3f)));
+                root.AddChild(Box(new Vector3(0.04f, 1.0f, 0.04f), at + new Vector3(0.26f, 0.55f, 0), Colors.Silver));
+                break;
+            case MapObjectKind.QuestGate:
+                root.AddChild(Box(new Vector3(0.14f, 0.9f, 0.14f), at + new Vector3(-0.38f, 0.45f, 0), color));
+                root.AddChild(Box(new Vector3(0.14f, 0.9f, 0.14f), at + new Vector3(0.38f, 0.45f, 0), color));
+                root.AddChild(Box(new Vector3(0.95f, 0.14f, 0.18f), at + (Vector3.Up * 0.95f), color.Darkened(0.2f)));
+                root.AddChild(Sphere(0.09f, at + (Vector3.Up * 1.1f), Colors.Gold)); // the seal: meet the quest to pass
+                break;
+        }
+    }
+
     private static MeshInstance3D Box(Vector3 size, Vector3 position, Color color) => new()
     {
         Mesh = new BoxMesh { Size = size, Material = new StandardMaterial3D { AlbedoColor = color } },
+        Position = position,
+    };
+
+    private static MeshInstance3D Cone(float radius, float height, Vector3 position, Color color) => new()
+    {
+        Mesh = new CylinderMesh { TopRadius = 0, BottomRadius = radius, Height = height, Material = new StandardMaterial3D { AlbedoColor = color } },
+        Position = position,
+    };
+
+    private static MeshInstance3D Cylinder(float radius, float height, Vector3 position, Color color) => new()
+    {
+        Mesh = new CylinderMesh { TopRadius = radius, BottomRadius = radius, Height = height, Material = new StandardMaterial3D { AlbedoColor = color } },
+        Position = position,
+    };
+
+    private static MeshInstance3D Sphere(float radius, Vector3 position, Color color) => new()
+    {
+        Mesh = new SphereMesh { Radius = radius, Height = radius * 2, Material = new StandardMaterial3D { AlbedoColor = color } },
         Position = position,
     };
 }

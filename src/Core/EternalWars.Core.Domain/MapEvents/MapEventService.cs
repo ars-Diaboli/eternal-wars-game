@@ -21,10 +21,19 @@ namespace EternalWars.Core.Domain.MapEvents;
 /// </summary>
 public sealed class MapEventService(
     GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles)
-    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>
+    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>
 {
     /// <summary>The most morale or luck an event gives or takes (HoMM3's ±3).</summary>
     public const int MaxMoraleOrLuck = 3;
+
+    /// <summary>The most rounds a loop runs (<see cref="RepeatAction"/>, <see cref="WhileAction"/>).</summary>
+    public const int MaxLoopRounds = 100;
+
+    /// <summary>How deep events may run one another (<see cref="RunEventAction"/>); a deeper run is skipped, so an event running itself ends.</summary>
+    public const int MaxRunDepth = 16;
+
+    /// <summary>The most actions one run takes; past it the run ends (a guard against loops in loops in events running themselves).</summary>
+    public const int MaxActionsPerRun = 100_000;
 
     private readonly Queue<Run> _queue = new();
     private Run? _current;
@@ -80,6 +89,18 @@ public sealed class MapEventService(
         }
 
         Pump();
+    }
+
+    /// <summary>
+    /// A Pandora's Box that names a hero event opened (MAP-35, step 3): the event runs for the opener, once the box's experience and any level-up
+    /// it brings are dealt with (the session carries the queue on after the command).
+    /// </summary>
+    public void Handle(PandorasBoxOpened @event)
+    {
+        if (@event.Event is { } name && Data.Set.Find(name) is { Kind: MapEventKind.Hero } definition && state.Heroes.FirstOrDefault(h => h.Id == @event.Hero) is { } hero)
+        {
+            _queue.Enqueue(new Run(definition, hero.Owner, hero.Id, null, null, startOfTurn: false));
+        }
     }
 
     /// <summary>
@@ -225,16 +246,47 @@ public sealed class MapEventService(
             var frame = run.Frames.Peek();
             if (frame.Next >= frame.Actions.Count)
             {
-                run.Frames.Pop();
+                if (frame.While is { } condition && frame.Rounds < MaxLoopRounds && Test(run, condition))
+                {
+                    frame.Rounds++;
+                    frame.Next = 0;
+                }
+                else if (frame.RoundsLeft > 0)
+                {
+                    frame.RoundsLeft--;
+                    frame.Next = 0;
+                }
+                else
+                {
+                    run.Frames.Pop();
+                }
+
                 continue;
+            }
+
+            if (++run.Steps > MaxActionsPerRun)
+            {
+                run.Frames.Clear();
+                break;
             }
 
             if (!Apply(run, frame.Actions[frame.Next++]))
             {
-                run.Frames.Clear();
+                Stop(run);
             }
         }
     }
+
+    /// <summary>Ends the event the run is in: its frames go, up to and with the one that started it (a run event returns to the one that ran it).</summary>
+    private static void Stop(Run run)
+    {
+        while (run.Frames.TryPop(out var frame) && frame.Event is null)
+        {
+        }
+    }
+
+    /// <summary>The event whose actions the run is taking now: the innermost run event, else the run's own.</summary>
+    private static MapEventDefinition EventOf(Run run) => run.Frames.FirstOrDefault(f => f.Event is not null)?.Event ?? run.Event;
 
     /// <summary>Answers the pending message or question (<see cref="MapEventDecision"/>) and goes on.</summary>
     internal void Answer(int option)
@@ -297,11 +349,22 @@ public sealed class MapEventService(
             case IfAction branch:
                 run.Frames.Push(new Frame(Test(run, branch.Condition) ? branch.Then : branch.Else));
                 break;
+            case RepeatAction repeat when Math.Min(Evaluate(run, repeat.Times), MaxLoopRounds) is > 0 and var times && repeat.Actions.Count > 0:
+                run.Frames.Push(new Frame(repeat.Actions) { RoundsLeft = times - 1 });
+                break;
+            case WhileAction loop when loop.Actions.Count > 0 && Test(run, loop.Condition):
+                run.Frames.Push(new Frame(loop.Actions) { While = loop.Condition, Rounds = 1 });
+                break;
+            case RunEventAction call when Data.Set.Find(call.Event) is { Kind: not MapEventKind.Quest } other && Data.IsEnabled(other.Name)
+                                          && run.Frames.Count(f => f.Event is not null) < MaxRunDepth:
+                run.Frames.Push(new Frame(other.Actions) { Event = other });
+                events.Publish(new MapEventRan(other.Name, other.Kind, run.Player, run.Hero, run.Town));
+                break;
             case SetVariableAction set:
                 SetVariable(set.Variable, MapEventEvaluator.Combine(set.Op, Data.Variable(set.Variable), Evaluate(run, set.Value)));
                 break;
             case EnableEventAction enable:
-                var name = enable.Event ?? run.Event.Name;
+                var name = enable.Event ?? EventOf(run).Name;
                 if (Data.IsEnabled(name) != enable.Enabled)
                 {
                     Data.SetEnabled(name, enable.Enabled);
@@ -317,7 +380,7 @@ public sealed class MapEventService(
                 break;
             case QuestionAction question when run.Player is { } asked && question.Answers.Count > 0:
                 run.Answers = question.Answers;
-                Ask(run, new MapEventDecision(hero?.Id ?? MapEventDecision.NoHero, run.Event.Name, question.Text, [], question.Answers.Select(a => a.Text).ToList()));
+                Ask(run, new MapEventDecision(hero?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, question.Text, [], question.Answers.Select(a => a.Text).ToList()));
                 break;
             case ResourceAction resource when run.Player is { } player:
                 GiveResource(player, resource.Resource, Evaluate(run, resource.Amount));
@@ -415,7 +478,7 @@ public sealed class MapEventService(
                 events.Publish(new HeroMovementGained(hero.Id, hero.MovementPoints - before, hero.MovementPoints));
                 break;
             case MoraleAction morale:
-                var source = $"event:{run.Event.Name}";
+                var source = $"event:{EventOf(run).Name}";
                 if (Math.Clamp(morale.Morale, -MaxMoraleOrLuck, MaxMoraleOrLuck) is not 0 and var m)
                 {
                     progression.GrantStatus(hero, new HeroStatus(source, HeroStatusKind.Morale, m, StatusExpiry.NextBattle));
@@ -441,7 +504,7 @@ public sealed class MapEventService(
         if (run.Player is { } player && state.GetPlayer(player).IsHuman)
         {
             var lines = rewards.Select(Describe).OfType<string>().ToList();
-            Ask(run, new MapEventDecision(HeroOf(run)?.Id ?? MapEventDecision.NoHero, run.Event.Name, message.Text, lines, []));
+            Ask(run, new MapEventDecision(HeroOf(run)?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, message.Text, lines, []));
         }
     }
 
@@ -761,11 +824,24 @@ public sealed class MapEventService(
         Battle,
     }
 
+    /// <summary>A list of actions being taken: a branch, an answer, a loop's body, or a whole event's actions (<see cref="Event"/> set).</summary>
     private sealed class Frame(IReadOnlyList<EventAction> actions)
     {
         public IReadOnlyList<EventAction> Actions { get; } = actions;
 
         public int Next { get; set; }
+
+        /// <summary>The event these are the actions of (the run's own or a run event); a stop ends the frames up to it.</summary>
+        public MapEventDefinition? Event { get; init; }
+
+        /// <summary>A repeat's rounds still to come after this one.</summary>
+        public int RoundsLeft { get; set; }
+
+        /// <summary>A while loop's condition, tested again when a round ends.</summary>
+        public EventCondition? While { get; init; }
+
+        /// <summary>The rounds a while loop has begun.</summary>
+        public int Rounds { get; set; }
     }
 
     /// <summary>One event running for a player, hero, town and cell; a quest's run carries the actions of its visit instead of the event's.</summary>
@@ -784,7 +860,10 @@ public sealed class MapEventService(
 
         public bool StartOfTurn { get; } = startOfTurn;
 
-        public Stack<Frame> Frames { get; } = new([new Frame(actions ?? definition.Actions)]);
+        public Stack<Frame> Frames { get; } = new([new Frame(actions ?? definition.Actions) { Event = definition }]);
+
+        /// <summary>The actions taken so far (<see cref="MaxActionsPerRun"/>).</summary>
+        public int Steps { get; set; }
 
         public Waiting Waiting { get; set; }
 

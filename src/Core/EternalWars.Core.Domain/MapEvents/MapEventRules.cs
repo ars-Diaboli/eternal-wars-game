@@ -55,6 +55,14 @@ public static class MapEventRules
             }
         }
 
+        foreach (var box in state.ObjectsOf<PandorasBox>().Where(b => b.Event is not null).OrderBy(b => b.Id.Value))
+        {
+            if (set.Find(box.Event!) is not { Kind: MapEventKind.Hero })
+            {
+                problems.Add($"The Pandora's box {box.Id.Value} names '{box.Event}', which is not a hero event.");
+            }
+        }
+
         var cells = new HashSet<Common.MapPosition>();
         foreach (var cell in set.Cells)
         {
@@ -127,6 +135,8 @@ public static class MapEventRules
     {
         QuestionAction { Answers.Count: < 2 or > 3 } => "a question needs two or three answers.",
         EnableEventAction { Event: { } other } when set.Find(other) is null => $"there is no event '{other}'.",
+        RunEventAction run when set.Find(run.Event) is null => $"there is no event '{run.Event}'.",
+        RunEventAction run when set.Find(run.Event) is { Kind: MapEventKind.Quest } => $"'{run.Event}' is a quest, which has no actions to run.",
         RemoveCellAction when definition.Kind != MapEventKind.Hero => "only a hero event has a cell to remove.",
         SkillAction skill when !BuiltInSkills.Contains(skill.Skill) => $"unknown skill '{skill.Skill}'.",
         SkillAction { Level: SkillLevel.None } => "a skill is given at Basic or higher.",

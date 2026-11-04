@@ -166,6 +166,8 @@ public static class MapEventTree
             var nested = action switch
             {
                 IfAction branch => branch.Then.Concat(branch.Else),
+                RepeatAction repeat => repeat.Actions,
+                WhileAction loop => loop.Actions,
                 QuestionAction question => question.Answers.SelectMany(a => a.Actions),
                 MessageAction message => message.Rewards,
                 _ => [],
@@ -195,7 +197,12 @@ public static class MapEventTree
 
     /// <summary>Every condition of the actions, nested ones included.</summary>
     public static IEnumerable<EventCondition> Conditions(IReadOnlyList<EventAction> actions) =>
-        Actions(actions).OfType<IfAction>().SelectMany(a => Flatten(a.Condition));
+        Actions(actions).SelectMany(a => a switch
+        {
+            IfAction branch => Flatten(branch.Condition),
+            WhileAction loop => Flatten(loop.Condition),
+            _ => [],
+        });
 
     /// <summary>Every expression of the actions and their conditions, nested ones included.</summary>
     public static IEnumerable<EventExpr> Expressions(IReadOnlyList<EventAction> actions) =>
@@ -209,6 +216,7 @@ public static class MapEventTree
                 MovementAction movement => [movement.Amount],
                 CreaturesAction creatures => [creatures.Count],
                 AvailableCreaturesAction available => [available.Count],
+                RepeatAction repeat => [repeat.Times],
                 _ => Array.Empty<EventExpr>(),
             })
             .Concat(Conditions(actions).OfType<CompareCondition>().SelectMany(c => new[] { c.Left, c.Right }))

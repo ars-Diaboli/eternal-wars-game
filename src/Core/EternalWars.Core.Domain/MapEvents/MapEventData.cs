@@ -218,8 +218,26 @@ public sealed record IfAction(EventCondition Condition, IReadOnlyList<EventActio
     public IReadOnlyList<EventAction> Else { get; init; } = [];
 }
 
-/// <summary>Ends the event here.</summary>
+/// <summary>Ends the event it is in here (a run event returns to the event that ran it).</summary>
 public sealed record StopAction : EventAction;
+
+/// <summary>
+/// Runs <see cref="Actions"/> <see cref="Times"/> times (EVT-1, step 3): the count is drawn once, when the loop starts; 0 or less runs nothing, and
+/// more than <see cref="MapEventService.MaxLoopRounds"/> runs that many.
+/// </summary>
+public sealed record RepeatAction(EventExpr Times, IReadOnlyList<EventAction> Actions) : EventAction;
+
+/// <summary>
+/// Runs <see cref="Actions"/> again and again while <see cref="Condition"/> holds, tested before every round (EVT-1, step 3), at most
+/// <see cref="MapEventService.MaxLoopRounds"/> rounds.
+/// </summary>
+public sealed record WhileAction(EventCondition Condition, IReadOnlyList<EventAction> Actions) : EventAction;
+
+/// <summary>
+/// Runs another event's actions here, for the same player, hero, town and cell, then goes on (EVT-1, step 3): a shared event written once and run
+/// from many. A disabled event is skipped; a stop in it ends only it; runs nested deeper than <see cref="MapEventService.MaxRunDepth"/> are skipped.
+/// </summary>
+public sealed record RunEventAction(string Event) : EventAction;
 
 public enum VariableOp
 {

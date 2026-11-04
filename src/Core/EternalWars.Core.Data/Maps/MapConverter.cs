@@ -122,12 +122,12 @@ public static class MapConverter
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetTeamCounts(document.MinTeams, document.MaxTeams);
             state.SetRules(ToRules(document.Rules));
-            // Quest objects name their quests, so a map with them is checked even without events (EVT-5).
+            // Quest objects and Pandora's Boxes name their events, so a map with them is checked even without events (EVT-5, MAP-35).
             if (document.Events is { } mapEvents)
             {
                 state.SetMapEvents(mapEvents);
             }
-            else if (state.ObjectsOf<QuestSite>().Any(q => q.Quest is not null))
+            else if (state.ObjectsOf<QuestSite>().Any(q => q.Quest is not null) || state.ObjectsOf<PandorasBox>().Any(b => b.Event is not null))
             {
                 state.SetMapEvents(Domain.MapEvents.MapEventSet.Empty);
             }
@@ -502,6 +502,7 @@ public static class MapConverter
             Creatures = Stacks(c.Creatures),
             Guard = Stacks(box.Guard),
             Message = box.Message,
+            Event = box.Event,
         };
     }
 
@@ -549,7 +550,8 @@ public static class MapConverter
         var guard = Stacks(box.Guard, "guard");
         return guard.Any(s => s.Count < 1)
             ? throw new FormatException($"Pandora's Box {box.Id} has an empty guard stack.")
-            : new PandorasBox(id, definition, position, contents, guard, string.IsNullOrEmpty(box.Message) ? null : box.Message);
+            : new PandorasBox(id, definition, position, contents, guard, string.IsNullOrEmpty(box.Message) ? null : box.Message,
+                string.IsNullOrEmpty(box.Event) ? null : box.Event);
     }
 
     private static Dictionary<string, int> Sorted(IReadOnlyDictionary<string, int> values) =>

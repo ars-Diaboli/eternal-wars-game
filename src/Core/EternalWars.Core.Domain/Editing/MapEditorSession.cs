@@ -1103,6 +1103,46 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>The hero event a Pandora's Box runs for its opener (MAP-35), or null for none; an unknown name is the validator's error.</summary>
+    public EditResult SetPandorasBoxEvent(MapObjectId id, string? @event)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not PandorasBox box)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        @event = string.IsNullOrWhiteSpace(@event) ? null : @event.Trim();
+        var previous = box.Event;
+        Run(new DelegateCommand("Set Pandora's box event", () => Apply(@event), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(string? name)
+        {
+            box.Event = name;
+            _bus.Publish(new MapObjectChanged(box.Id));
+        }
+    }
+
+    /// <summary>The quest a Seer's Hut, Quest Guard or Quest Gate runs (EVT-5), or null for none; an unknown name is refused when the game loads.</summary>
+    public EditResult SetQuestSiteQuest(MapObjectId id, string? quest)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not QuestSite site)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        quest = string.IsNullOrWhiteSpace(quest) ? null : quest.Trim();
+        var previous = site.Quest;
+        Run(new DelegateCommand("Set quest", () => Apply(quest), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(string? name)
+        {
+            site.Quest = name;
+            _bus.Publish(new MapObjectChanged(site.Id));
+        }
+    }
+
     /// <summary>
     /// A sphinx's riddle (ADR-079, MAP-27): the author's question with its answer and two wrong ones, or null for one drawn from <c>riddles.csv</c>
     /// when the game starts. Refused when a text is empty or two answers are the same (ignoring case and spaces at the ends).

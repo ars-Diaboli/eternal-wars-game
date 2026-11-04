@@ -81,6 +81,7 @@ public partial class Main : Node3D
     private DwellingPanel _dwellingScreen = null!;
     private MarketplacePanel _marketScreen = null!;
     private KingdomOverviewPanel _kingdomScreen = null!;
+    private QuestLogPanel _questScreen = null!;
     private ObjectServicePanel _serviceScreen = null!;
     private ThievesGuildPanel _guildScreen = null!;
     private AdventureIntelPanel _intelScreen = null!;
@@ -286,7 +287,16 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible || _serviceScreen.Visible || _kingdomScreen.Visible)
+        if (_questScreen.Visible && @event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Q })
+        {
+            _questScreen.Visible = false;
+            _camera.IgnoreHeldKeys(); // Q also turns the camera; this press only closes the log
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
+        if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible || _serviceScreen.Visible || _kingdomScreen.Visible
+            || _questScreen.Visible)
         {
             return; // a full-screen panel takes the input (Escape closes it)
         }
@@ -327,6 +337,10 @@ public partial class Main : Node3D
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.K } when _session.State.CurrentPlayer.IsHuman:
                 _kingdomScreen.Open(_session.State.CurrentPlayer.Id);
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Q } when _session.State.CurrentPlayer.IsHuman:
+                _questScreen.Open(_session.State.CurrentPlayer.Id);
+                _camera.IgnoreHeldKeys(); // Q also turns the camera; this press only opens the log
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.L }:
                 _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
@@ -455,7 +469,7 @@ public partial class Main : Node3D
         _timerPanel.Bind();
     }
 
-    /// <summary>Closes the screens over the map (town, hero, dwelling, market, services, kingdom, Thieves' Guild).</summary>
+    /// <summary>Closes the screens over the map (town, hero, dwelling, market, services, kingdom, quest log, Thieves' Guild).</summary>
     private void CloseScreens()
     {
         _townScreen.Close();
@@ -464,6 +478,7 @@ public partial class Main : Node3D
         _marketScreen.Close();
         _serviceScreen.Close();
         _kingdomScreen.Hide();
+        _questScreen.Hide();
         _guildScreen.Hide();
     }
 
@@ -1050,7 +1065,7 @@ public partial class Main : Node3D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        _status = new Label { Text = "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  WASD/QE/wheel: camera" };
+        _status = new Label { Text = "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  WASD/QE/wheel: camera" };
         top.AddChild(_status);
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
@@ -1143,6 +1158,17 @@ public partial class Main : Node3D
         var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" };
         kingdom.Pressed += () => _kingdomScreen.Open(_session.State.CurrentPlayer.Id);
         side.AddChild(kingdom);
+        _questScreen = new QuestLogPanel();
+        townLayer.AddChild(_questScreen);
+        _questScreen.Bind(_session);
+        _questScreen.ShowRequested += position =>
+        {
+            _context.SetLevel(position.Level);
+            _camera.FocusOn(MapSpace.ToWorld(position));
+        };
+        var quests = new Button { Text = "Quests (Q)", TooltipText = "The quests your heroes were shown" };
+        quests.Pressed += () => _questScreen.Open(_session.State.CurrentPlayer.Id);
+        side.AddChild(quests);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
         var market = new Button { Text = "Marketplace" };

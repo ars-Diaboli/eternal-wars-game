@@ -710,8 +710,8 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
 - **Not done**: the adventure AI casts none of the show-only spells; old replays with casting heroes may differ (the AI casts more, spell
   buildings draw from the game's generator).
 ### ADR-124: Map events, step 1 in core: the event tree, triggers, conditions, actions, map format v31 (ADR-096, ADR-115, EVT-1 … EVT-4, 2026-11-04)
-**Status**: implemented in core (2026-11-04). Not done: the game app's message, question and army windows; the editor's "Events" tab and
-validator warnings; the AI answering by value (it takes the first answer); quests (step 2); loops and "run another event" (step 3).
+**Status**: implemented in core (2026-11-04). Not done: the editor's "Events" tab and validator warnings; the AI answering by value (it takes the
+first answer). Quests: ADR-127; the game app's windows, loops and "run another event": ADR-128.
 
 - **Data**: `MapEventSet` (events in list order, declared variables with starting values, event cells) is the domain's own tree, written to the
   map as it is (`events`, v31): every node carries a `type` name (`MapEventJson`), so there are no parallel document types. An event has a
@@ -790,9 +790,8 @@ unless the owner changes them. More unique buildings and the Grail buildings: TO
   - *(proposal)* Cost 2000 gold, 5 ore and 5 of the town's rare resource; needs Fort 1 (Stables: town hall 2). `buildings.csv` rows per town.
 
 ### ADR-127: Map events, step 2 in core: quests, the Seer's Hut, Quest Guard and Quest Gate, the quest log, map format v32 (ADR-115, EVT-5, 2026-11-04)
-**Status**: implemented in core (2026-11-04). Not done: the game app's quest log window (Q) and quest object models; the editor's way to write a
-quest and link an object to it (the "Events" tab); the AI weighing quests (it completes any stage it meets and treats barriers as walls);
-loops and "run another event" (step 3).
+**Status**: implemented in core (2026-11-04). Not done: the editor's way to write a quest (the "Events" tab); the AI weighing quests (it
+completes any stage it meets and treats barriers as walls). The quest log window, the object shapes and the inspector link: ADR-128.
 
 - **Quests are map events** of a fourth kind, `Quest`: instead of actions a quest has **stages**, done one after another. A stage has a
   **requirement** (any condition of EVT-3, but no random numbers, so routes can test it), a **proposal** (first visit and the quest log), an
@@ -816,3 +815,37 @@ loops and "run another event" (step 3).
   object names a quest, not shared, and a gate's quest has one empty stage. A map with quest objects and no events is checked too.
 - Events: `QuestStageCompleted`, `QuestLogChanged`. Map format **v32**: an event's `stages` and the `questSite` objects (`seer-hut`,
   `quest.guard`, `quest.gate`).
+
+### ADR-128: Map events: the game app's windows and quest log, quest object shapes; step 3: loops, "run another event", a Pandora's Box's hero event, map format v33 (ADR-115, ADR-124, ADR-127, MAP-35, 2026-11-04)
+**Status**: implemented (2026-11-04); core tested; the game app checked in Godot 4.7.2 with the new smoke scenario `game-quests`. Not done: the
+camera moving to what a turn-start message concerns (EVT-2 f); the editor's "Events" tab (the inspector only picks events the map file
+already has); the AI answering by value, weighing quests and opening a box for its event. Choices made here are marked *(choice)*.
+
+- **Step 3, loops** (`RepeatAction`, `WhileAction`): a repeat's count is drawn once, when it starts; 0 or less runs nothing. A while loop tests
+  its condition before every round. Both stop after **100 rounds** (`MaxLoopRounds`) *(choice)*. A message, question, battle or full army
+  inside a loop pauses it, and it goes on afterwards.
+- **Step 3, running another event** (`RunEventAction`): the named event's actions run there and then for the same player, hero, town and
+  cell, and the event goes on after them. *(choice)*:
+  - a disabled event is skipped;
+  - a stop ends only the run event, and "this event" in it (enable or disable) means the run event;
+  - a quest cannot be run (a load error);
+  - nesting deeper than **16** (`MaxRunDepth`) is skipped, so an event that runs itself ends;
+  - each run event publishes `MapEventRan`.
+  - One run takes at most **100 000 actions** (`MaxActionsPerRun`) and then ends, a guard against loops inside loops.
+- **Pandora's Box** (MAP-35): a box may name a **hero event** (`Event`), which runs for the opener after the contents and the experience (and
+  any level-up) are given *(choice: both, not instead)*.
+  - A box with only an event is valid. An event name that is not a hero event of the map is a validator error and a load error.
+  - The AI values only the contents, so it leaves a box that holds nothing but an event (no look-ahead at events, EVT-6).
+- **Map format v33**: the action types `repeat`, `while` and `runEvent`, and a box's `event`. A map whose boxes name events but which has no
+  events is checked too.
+- **Editor**: `SetPandorasBoxEvent` and `SetQuestSiteQuest`, both undoable. The inspector gets a picker of the map's hero events for a box,
+  and of its quests for a quest object.
+- **Game app**:
+  - the decision prompt shows a map event's message (with its reward lines, OK) and question (one button per answer), and the full army's
+    choice (tick one to seven stacks, Keep), so ADR-124's windows are in;
+  - the **quest log** (Q, or the HUD's "Quests (Q)"): open quests first, each with its object, where it stands, "stage n of m", "open" or
+    "done", and its proposal; "Show" moves the camera there; the log follows `QuestLogChanged`;
+  - the Q press that opens or closes the log does not also turn the camera: `StrategyCamera.IgnoreHeldKeys` ignores held keys until they are
+    let go.
+- **Quest object shapes** (placeholders until the art phase's models): the Seer's Hut gets a pointed roof and a lamp, the Quest Guard a figure
+  with a spear, the Quest Gate two posts, a lintel and a seal.
