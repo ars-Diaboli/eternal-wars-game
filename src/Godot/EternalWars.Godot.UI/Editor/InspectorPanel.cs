@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Magic;
+using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
@@ -394,7 +395,33 @@ public partial class InspectorPanel : VBoxContainer
                 break;
             case PandorasBox box:
                 ShowBox(box, creatures);
+                EventChoice("Runs the hero event", MapEventKind.Hero, box.Event, name => _editor.SetPandorasBoxEvent(box.Id, name));
                 break;
+            case QuestSite site:
+                EventChoice("Quest", MapEventKind.Quest, site.Quest, name => _editor.SetQuestSiteQuest(site.Id, name));
+                break;
+        }
+    }
+
+    /// <summary>
+    /// A row that picks one of the map's events of a kind by name (a box's hero event, a quest object's quest), or none. The events themselves are
+    /// written in the "Events" tab once it exists; until then they come with the map file.
+    /// </summary>
+    private void EventChoice(string label, MapEventKind kind, string? current, Func<string?, EditResult> set)
+    {
+        var names = _editor.Scenario.MapEvents.Set.Events.Where(e => e.Kind == kind).Select(e => e.Name).ToList();
+        if (current is not null && !names.Contains(current))
+        {
+            names.Add(current); // a name the map does not have: shown so it can be cleared (the validator or the loader names it)
+        }
+
+        var row = new HBoxContainer();
+        AddChild(row);
+        var choice = Options(row, label, new[] { ("— none —", "") }.Concat(names.Select(n => (n, n))), current ?? "");
+        choice.Button.ItemSelected += _ => Edit(() => set(choice.Value().Length == 0 ? null : choice.Value()));
+        if (names.Count == 0)
+        {
+            row.AddChild(new Label { Text = $"(the map has no {kind.ToString().ToLowerInvariant()} events yet)" });
         }
     }
 

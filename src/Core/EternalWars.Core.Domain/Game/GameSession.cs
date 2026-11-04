@@ -63,6 +63,7 @@ public sealed class GameSession
         MapEvents = new MapEventService(State, Bus, Economy, Progression, Artifacts, Battles);
         Bus.Subscribe<BattleStarted>(MapEvents); // "defeated by" records (EVT-3 e)
         Bus.Subscribe<BattleEnded>(MapEvents);
+        Bus.Subscribe<PandorasBoxOpened>(MapEvents); // a box's hero event (MAP-35)
         Movement = new HeroMovementService(State, Bus, Interactions, MapEvents);
         AdventureMagic = new Magic.AdventureMagicService(State, Bus);
         Bus.Subscribe<UndeadRaised>(AdventureMagic); // Grave Whisper is used up

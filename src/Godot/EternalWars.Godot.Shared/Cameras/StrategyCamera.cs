@@ -12,6 +12,7 @@ public partial class StrategyCamera : Camera3D
     private Vector3 _focus;
     private float _distance = 16f;
     private float _yawDegrees;
+    private readonly HashSet<Key> _ignored = [];
 
     public float PanSpeed { get; set; } = 12f;
 
@@ -35,12 +36,35 @@ public partial class StrategyCamera : Camera3D
 
     public override void _Ready() => UpdateTransform();
 
+    /// <summary>
+    /// The camera keys held now are ignored until they are let go: a key that also opens or closes a screen (Q, the quest log) does not turn the
+    /// camera as well.
+    /// </summary>
+    public void IgnoreHeldKeys()
+    {
+        foreach (var key in new[] { Key.Q, Key.E, Key.W, Key.A, Key.S, Key.D }.Where(Input.IsKeyPressed))
+        {
+            _ignored.Add(key);
+        }
+    }
+
+    private bool Held(Key key)
+    {
+        if (!Input.IsKeyPressed(key))
+        {
+            _ignored.Remove(key);
+            return false;
+        }
+
+        return !_ignored.Contains(key);
+    }
+
     public override void _Process(double delta)
     {
         var dt = (float)delta;
         var changed = false;
 
-        var rotate = (Input.IsKeyPressed(Key.E) ? 1f : 0f) - (Input.IsKeyPressed(Key.Q) ? 1f : 0f);
+        var rotate = (Held(Key.E) ? 1f : 0f) - (Held(Key.Q) ? 1f : 0f);
         if (rotate != 0f)
         {
             _yawDegrees = Mathf.Clamp(_yawDegrees + (rotate * RotateSpeedDegrees * dt), -MaxYawDegrees, MaxYawDegrees);
@@ -48,10 +72,10 @@ public partial class StrategyCamera : Camera3D
         }
 
         var pan = Vector2.Zero;
-        if (Input.IsKeyPressed(Key.W)) pan.Y += 1;
-        if (Input.IsKeyPressed(Key.S)) pan.Y -= 1;
-        if (Input.IsKeyPressed(Key.A)) pan.X -= 1;
-        if (Input.IsKeyPressed(Key.D)) pan.X += 1;
+        if (Held(Key.W)) pan.Y += 1;
+        if (Held(Key.S)) pan.Y -= 1;
+        if (Held(Key.A)) pan.X -= 1;
+        if (Held(Key.D)) pan.X += 1;
         if (pan != Vector2.Zero)
         {
             var forward = Vector3.Forward.Rotated(Vector3.Up, Mathf.DegToRad(_yawDegrees));

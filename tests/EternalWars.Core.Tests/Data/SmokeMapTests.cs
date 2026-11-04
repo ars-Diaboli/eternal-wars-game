@@ -1,7 +1,9 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
@@ -68,6 +70,23 @@ public class SmokeMapTests
         var owned = session.State.ObjectsOf<CreatureDwelling>().Single(d => d.Creature == "haven.footman");
         Assert.Contains(owned, CaravanRules.Dwellings(session.State, town));
         Assert.Null(CaravanRules.CheckOrder(session.State, town, owned, owned.Available!.Value));
+    }
+
+    [Fact]
+    public void QuestsMap_TwoStepsNorthEnterTheSeersHut_WhoseFirstStageAsksToComplete_ThenShowsTheNext()
+    {
+        var session = new GameSession(MapConverter.ToGameState(MapSerializer.Load(SmokeMap("quests.ewmap.json"))));
+        session.Start();
+        Assert.Equal(3, session.State.ObjectsOf<QuestSite>().Count());
+
+        session.Step(new HeroId(1), Direction.North);
+        session.Step(new HeroId(1), Direction.North);
+        var question = Assert.IsType<MapEventDecision>(session.State.PendingDecision);
+        Assert.Equal(["Complete", "Not now"], question.Answers);
+        session.Execute(new AnswerMapEventCommand(session.State.CurrentPlayer.Id, 0)).ThrowIfRejected();
+
+        Assert.Equal("Come back when you have reached level 30.", Assert.IsType<MapEventDecision>(session.State.PendingDecision).Text);
+        Assert.Single(session.State.MapEvents.QuestLog(session.State.CurrentPlayer.Id));
     }
 
     [Fact]

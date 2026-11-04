@@ -1,0 +1,58 @@
+{
+  "formatVersion": 33,
+  "name": "Quests test",
+  "width": 10,
+  "height": 8,
+  "terrain": [
+    [ "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg", "gggggggggg" ]
+  ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": true } ],
+  "heroes": [
+    { "id": 1, "name": "Orrin", "owner": 0, "x": 4, "y": 4, "army": [ { "slot": 0, "creature": "haven.footman", "count": 10 } ] },
+    { "id": 2, "name": "Sandro", "owner": 1, "x": 9, "y": 7, "army": [ { "slot": 0, "creature": "inferno.imp", "count": 15 } ] }
+  ],
+  "objects": [
+    { "kind": "questSite", "id": 1, "definition": "seer-hut", "x": 3, "y": 1, "quest": "hut" },
+    { "kind": "questSite", "id": 2, "definition": "quest.guard", "x": 7, "y": 2, "quest": "guard" },
+    { "kind": "questSite", "id": 3, "definition": "quest.gate", "x": 7, "y": 5, "quest": "gate" }
+  ],
+  "events": {
+    "events": [
+      {
+        "name": "hut", "kind": "Quest", "actions": [],
+        "stages": [
+          {
+            "requirement": { "type": "compare", "left": { "type": "quantity", "quantity": "HeroLevel" }, "op": "GreaterOrEqual", "right": { "type": "number", "value": 1 } },
+            "proposal": "Show me you can stand on your own feet, traveller.",
+            "actions": [ { "type": "resource", "resource": "Gold", "amount": { "type": "number", "value": 1000 } } ]
+          },
+          {
+            "requirement": { "type": "compare", "left": { "type": "quantity", "quantity": "HeroLevel" }, "op": "GreaterOrEqual", "right": { "type": "number", "value": 30 } },
+            "proposal": "Come back when you have reached level 30.",
+            "actions": [ { "type": "experience", "amount": { "type": "number", "value": 5000 } } ]
+          }
+        ]
+      },
+      {
+        "name": "guard", "kind": "Quest", "actions": [],
+        "stages": [
+          {
+            "requirement": { "type": "compare", "left": { "type": "quantity", "quantity": "HeroLevel" }, "op": "GreaterOrEqual", "right": { "type": "number", "value": 30 } },
+            "proposal": "None shall pass below level 30.",
+            "actions": []
+          }
+        ]
+      },
+      {
+        "name": "gate", "kind": "Quest", "actions": [],
+        "stages": [
+          {
+            "requirement": { "type": "compare", "left": { "type": "quantity", "quantity": "HeroLevel" }, "op": "GreaterOrEqual", "right": { "type": "number", "value": 1 } },
+            "proposal": "The gate opens for any hero of level 1.",
+            "actions": []
+          }
+        ]
+      }
+    ]
+  }
+}

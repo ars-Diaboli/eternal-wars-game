@@ -337,12 +337,17 @@ public static class MapValidator
     internal static bool IsOwnTownEntrance((MapObject Object, FootprintCell Cell) cell, PlayerId owner) =>
         cell is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == owner;
 
-    /// <summary>A Pandora's Box (ADR-100): it must hold something, only gains, and only what exists.</summary>
+    /// <summary>A Pandora's Box (ADR-100): it must hold something (or run a hero event), only gains, and only what exists.</summary>
     private static IEnumerable<string> ValidateBox(GameState scenario, PandorasBox box)
     {
-        if (box.Contents.IsEmpty)
+        if (box.Contents.IsEmpty && box.Event is null)
         {
-            yield return "is empty; give it something to hold.";
+            yield return "is empty; give it something to hold or an event to run.";
+        }
+
+        if (box.Event is { } name && scenario.MapEvents.Set.Find(name) is not { Kind: MapEvents.MapEventKind.Hero })
+        {
+            yield return $"runs '{name}', which is not a hero event of the map.";
         }
         else if (box.Contents.Problem() is { } problem)
         {

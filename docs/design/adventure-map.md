@@ -258,7 +258,7 @@ Rules: [shared object rules](#shared-object-rules).
   visiting hero is asked whether to open it; it opens once and vanishes. Gains only; an optional guard is fought (like a bank's) after "open?"
   and the box opens only on victory; optional message; gains the hero has no room for are lost. Contents hidden until opened (the AI knows
   them); an empty box is a validator error. The generator places boxes of gold, experience or creatures from a value of 5000.
-- **Map events** (ADR-096, ADR-115, ADR-124, ADR-127): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
+- **Map events** (ADR-096, ADR-115, ADR-124, ADR-127, ADR-128): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
   variables, stored in the map file (`events`; the node types are in `MapEvents/MapEventData.cs`).
   - **Triggers**: hero events run when a hero steps onto one of their invisible cells (every step, until the event disables or removes
     itself; routes ignore cells and stop only for a message, a question or a battle); player events at every player's turn start after
@@ -281,5 +281,10 @@ Rules: [shared object rules](#shared-object-rules).
     - **Quest Gate**: a one-tile barrier with one stage that takes nothing; heroes meeting it walk through, the others bump and see it.
     - **Quest log** per player: the quests its heroes were shown, their stage and whether it completed them; another player's completion
       drops the open entries. A computer player completes any stage it meets.
-  - *(planned)* Loops, "run another event" and a Pandora's Box that runs a hero event; the AI answering by value and weighing quests; the
-    editor's "Events" tab; the quest log window.
+  - **Loops and shared events**: a repeat (its count drawn once) and a while loop, each at most 100 rounds; "run another event" runs that
+    event's actions for the same hero, player and town (a disabled one is skipped, a stop in it ends only it, at most 16 deep).
+  - **A Pandora's Box** may name a hero event, run for the opener after the contents.
+  - **Game app**: messages, questions and the full army's choice in the decision prompt; the quest log (Q) with "Show" to look at a quest's
+    object.
+  - *(planned)* The camera moving to what a turn-start message concerns; the AI answering by value, weighing quests and opening a box for
+    its event; the editor's "Events" tab (the inspector already picks a box's event and a quest object's quest from the map's events).

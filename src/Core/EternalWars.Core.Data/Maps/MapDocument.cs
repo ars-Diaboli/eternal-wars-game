@@ -41,11 +41,12 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>shrine</c>, an optional spell; ADR-120). 30 = + a town's fixed mage guild spells (<c>guildSpells</c> on a town: spell ids of the town's
 /// school, at most 3 / 3 / 2 / 2 per level; omitted = all drawn when the game starts). 31 = + map events (<c>events</c>: the event tree, the variables and the event cells; omitted = none;
 /// ADR-115). 32 = + quests (an event's <c>stages</c>) and the quest objects (<c>questSite</c>: Seer's Hut, Quest Guard, Quest Gate, each naming
-/// its <c>quest</c>; ADR-115, EVT-5). Older versions still load (with the default events).
+/// its <c>quest</c>; ADR-115, EVT-5). 33 = + the loop and run actions (<c>repeat</c>, <c>while</c>, <c>runEvent</c>) and a Pandora's Box's hero
+/// <c>event</c> (ADR-115, MAP-35). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 32;
+    public const int CurrentFormatVersion = 33;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -317,10 +318,12 @@ public sealed record GarrisonDocument : MapObjectDocument
 /// <summary>
 /// A Pandora's Box (v27, ADR-100): what it gives (each field omitted when nothing), its <see cref="Guard"/> (omitted = none) and a
 /// <see cref="Message"/> shown when it opens. <see cref="Skills"/> are levels by skill id; <see cref="Morale"/> and <see cref="Luck"/> last until the
-/// next battle.
+/// next battle. <see cref="Event"/> (v33) names the hero event run for the opener (omitted = none).
 /// </summary>
 public sealed record PandorasBoxDocument : MapObjectDocument
 {
+    public string? Event { get; init; }
+
     public IReadOnlyDictionary<ResourceType, int>? Resources { get; init; }
 
     public int? Experience { get; init; }

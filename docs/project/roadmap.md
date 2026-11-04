@@ -8,10 +8,10 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 
 **Where we are (2026-11-04)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core, quests included (ADR-124, ADR-127).
+except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core and the game app, quests, loops and run events included (ADR-124, ADR-127, ADR-128).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
 and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the last 16 battle spells, map events (the
-game app's windows, the editor's Events tab, quests), presentation.
+editor's Events tab, the AI's use of events and quests), presentation.
 
 ## Open checks in Godot
 - [ ] Godot run of (built and tested in core, the Godot part not run yet):
@@ -141,12 +141,12 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 ### Map events (ADR-096, ADR-115; HotA's extended events; after the Phase 3 and 4 exits, before the campaign)
 - [x] Step 1, core: the event tree, variables, event cells, turn-start player and town events, HotA's conditions and actions, messages,
       questions, battles, a full army's choice, "defeated by" records, map format v31 (ADR-124)
-- [ ] Step 1, game app: the message and question window (with reward lines) and the full army's choice; the camera moves to what a turn-start
-      message concerns (EVT-2 f)
+- [x] Step 1, game app: the message and question window (with reward lines) and the full army's choice (ADR-128)
+- [ ] Step 1, game app: the camera moves to what a turn-start message concerns (EVT-2 f)
 - [x] Step 2, core: quests with stages, HoMM3's quest forms that take what they ask, Seer's Hut, Quest Guard, Quest Gate (passage for a
       hero that meets its quest), the quest log in the game state, map format v32; no Seer's Huts on random maps for now (ADR-127)
-- [ ] Step 2, game app: the quest log window (Q), models for the three quest objects
-- [ ] Step 3: loops and "run another event"; a Pandora's Box that runs a hero event (MAP-35)
+- [x] Step 2, game app: the quest log window (Q), placeholder shapes for the three quest objects (ADR-128)
+- [x] Step 3: loops and "run another event"; a Pandora's Box that runs a hero event (MAP-35), map format v33 (ADR-128)
 - [ ] AI: answers by value (random numbers as their average), Seer's Hut quests worth doing, Quest Guards and Gates as obstacles until met,
       no look-ahead at event cells (EVT-6)
 - [ ] Editor: an "Events" tab (the tree, variables, shared events, "simple event" forms for HoMM3's timed events, event cells and town

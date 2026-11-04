@@ -33,6 +33,7 @@ internal static class MapEventJson
             (typeof(SpellBookAction), "spellBook"), (typeof(SpellAction), "spell"), (typeof(ManaAction), "mana"), (typeof(MovementAction), "movement"),
             (typeof(MoraleAction), "morale"), (typeof(CreaturesAction), "creatures"), (typeof(AvailableCreaturesAction), "available"),
             (typeof(BuildAction), "build"), (typeof(BattleAction), "battle"), (typeof(RevealAction), "reveal"), (typeof(GiveHeroAction), "giveHero"),
+            (typeof(RepeatAction), "repeat"), (typeof(WhileAction), "while"), (typeof(RunEventAction), "runEvent"),
         ],
     };
 
