@@ -11,15 +11,15 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Mechanic | From | Status | Notes |
 |---|---|---|---|
 | Sea travel: boats, shipyards, whirlpools, sea objects | HoMM3, HotA | Dropped (ADR-051) | Rivers and shallow water are scenery (ADR-077); no Fly / Water Walk spells |
-| Grail, obelisks, puzzle map, digging | HoMM3, HoMM5 | Missing | Dig action, obelisks reveal pieces, a Grail building per town; **candidate** for late Phase 5 |
-| Spell scrolls (an artifact holding one spell) | HoMM3 | Missing | Fits the artifact table; adventure and battle casting both exist now; **candidate** |
+| Grail, obelisks, puzzle map, digging | HoMM3, HoMM5 | Planned | ADR-126 |
+| Spell scrolls (an artifact holding one spell) | HoMM3 | Planned | ADR-126 |
 | Seer's Huts, Quest Guards / Gates, map events with conditions and variables | HoMM3, HotA | Planned | EVT-1 … EVT-6 (ADR-115); Phase 5, three steps |
-| University (buy secondary skills) | HoMM3 | Missing | Our Witch Hut teaches one skill |
+| University (buy secondary skills) | HoMM3 | Planned | ADR-126, with a War Academy for the general groups |
 | Scholar (one-time stat, skill or spell) | HoMM3 | Missing | Small one-time object like the Learning Stone |
 | Pyramid (a level-4 spell behind a guard) | HoMM3 | Missing | Shrines exist (ADR-120); a guarded spell object is the step up; **candidate** |
 | Freelancer's Guild / selling creatures | HoMM3 | Missing | The Sacrificial Altar takes creatures for experience instead |
-| Random monsters by tier, random towns, hero placeholders (editor) | HoMM3 | Partly | Prisons and monster counts can be left to the game; random types and towns missing |
-| Map bans (heroes, artifacts, spells, skills) | HoMM3, HotA | Missing | One map rule list read by the roster, artifact roll, guild draw and level-ups; **candidate** |
+| Random monsters by tier, random towns, hero placeholders (editor) | HoMM3 | Planned | ADR-126; prisons and monster counts can already be left to the game |
+| Map bans (heroes, artifacts, spells, skills) | HoMM3, HotA | Planned | ADR-126 |
 | Tavern rumours | HoMM3 | Missing | Flavour text in the tavern screen (ADR-114); **candidate** |
 | Hero sleep / wake; next-hero cycle skips sleepers | HoMM3 | Missing | UI only |
 | Town conversion to your own faction | HoMM5 | Missing | Big rule; needs the per-town building tables mapped |
@@ -30,8 +30,8 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 
 | Mechanic | From | Status | Notes |
 |---|---|---|---|
-| Each town's unique buildings | HoMM3, HoMM5 | Partly | The Necromancy Amplifier is the first |
-| Grail building | HoMM3, HoMM5 | Missing | With the Grail |
+| Each town's unique buildings | HoMM3, HoMM5 | Partly | Necromancy Amplifier built; one per town planned (ADR-126); more open (TOWN-12) |
+| Grail building | HoMM3, HoMM5 | Planned | With the Grail (ADR-126); effects open (TOWN-12) |
 | Alternative creature upgrades (pick one of two) | HoMM5 TotE | Missing | One upgrade per line now |
 | Resource silo per faction resource | HoMM3 | Partly | Ours gives lumber and ore (ADR-046) |
 | Artifact merchant as a town building | HoMM3 | Partly | Only the map's Artifact Merchant (ADR-079) |
@@ -42,7 +42,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 
 | Mechanic | From | Status | Notes |
 |---|---|---|---|
-| Information by skill: seeing more of enemy armies and the map | HoMM4 Scouting, HoMM3 count words | Missing | Owner's idea for Scouting (today sight radius only); [HERO-9](../project/open-questions.md#hero-9) |
+| Information by skill: seeing more of enemy armies and the map | HoMM4 Scouting, HoMM3 count words | Planned | ADR-125 |
 | Skill perks and the skill wheel | HoMM5 | Missing | Our skills have four levels and no perks; a big redesign |
 | Racial skills (Training, Gating, Counterstrike, Irresistible Magic, Avenger, Artificer, Runelore) | HoMM5 | Partly | Necromancy and Primal Fury exist |
 | Diplomacy (cheaper surrender, more creatures join) | HoMM3 | Missing | Joining by disposition exists (ADR-040) |

@@ -58,7 +58,7 @@ minimap, editor UI, 2D harness.
       ADR-073, ADR-075, ADR-079); flaggable providers and resource caravans (ADR-079); kingdom overview (ADR-084); town screen and its
       polish (ADR-050, ADR-114)
 - [ ] Caravan cost tuning
-- [ ] Every town's unique building (the per-town column exists, ADR-074; the Necromancy Amplifier is the first)
+- [ ] Every town's unique building: the first set (ADR-126, see Phase 5); more per town later (TOWN-12)
 
 ### Heroes and skills
 - [x] Built: hero roster and specialties (ADR-048, ADR-093, ADR-107, ADR-114), skills and level-ups, primary stats (ADR-055),
@@ -152,6 +152,18 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       events), object inspector links, validator checks; tested by playing the map (EVT-6)
 - [ ] Campaign variables ("kept for the next map", "taken from the last map") recorded with the campaign (EVT-1 f, FLOW-1)
 - [ ] Score: the campaign-like check counts map events (ADR-101)
+
+### Missing mechanics, the owner's picks (ADR-125, ADR-126; [missing-mechanics.md](../design/missing-mechanics.md))
+- [ ] Scouting reveals information: amount words with ranges for armies not owned, what each Scouting level shows, Veil against it,
+      the AI reads only what it sees (ADR-125)
+- [ ] Map bans: heroes, artifacts, spells and skills in the map rules, read by every pool and roll; editor tab, validator warnings; map
+      format bump
+- [ ] Random monsters by tier, random towns, hero placeholders: editor, map format, drawn at game start
+- [ ] University and War Academy map objects: lessons, disabled offers, screen, AI use, generator placement
+- [ ] Spell scrolls: the artifact row, casting from a scroll, artifact rolls by level
+- [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (TOWN-12), editor and generator; map format bump
+- [ ] Unique buildings, the first set: Stables (Haven), Proving Ring (Stronghold), Shell Wall (Swamp Bestiary), Hall of Records
+      (Academy), Altar of Brimstone (Inferno), Elder Grove (Sylvan), Mana Spring (Dungeon); the siege bonuses
 
 ### Presentation and UI (ADR-116)
 - [x] Built: icon prompts and the list of missing mechanics (ADR-116)
