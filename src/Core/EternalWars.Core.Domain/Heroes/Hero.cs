@@ -169,6 +169,14 @@ public sealed class Hero(
         _statuses.Add(status);
     }
 
+    /// <summary>Removes and returns the statuses of one source and kind (a spell's status used up early, Grave Whisper).</summary>
+    internal IReadOnlyList<HeroStatus> RemoveStatuses(string source, HeroStatusKind kind)
+    {
+        var ended = _statuses.Where(s => s.Source == source && s.Kind == kind).ToList();
+        _statuses.RemoveAll(s => s.Source == source && s.Kind == kind);
+        return ended;
+    }
+
     /// <summary>Removes and returns the statuses that end with <paramref name="expiry"/>.</summary>
     internal IReadOnlyList<HeroStatus> RemoveStatuses(StatusExpiry expiry)
     {

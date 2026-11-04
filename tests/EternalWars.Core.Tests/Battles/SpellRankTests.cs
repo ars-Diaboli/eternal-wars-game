@@ -38,8 +38,11 @@ public class SpellRankTests
     [Fact]
     public void ARankWithoutItsOwnEffect_UsesTheRankBelow()
     {
-        var darkBolt = SpellCatalog.Default.Get("shadow.dark-bolt"); // rank II's damage over time is not built
-        Assert.Same(darkBolt.Effect, darkBolt.EffectAt(2));
+        var unseen = SpellCatalog.Default.Get("shadow.unseen"); // rank III's first-strike bonus is not built
+        Assert.Same(unseen.EffectAt(2), unseen.EffectAt(3));
+
+        var darkBolt = SpellCatalog.Default.Get("shadow.dark-bolt"); // rank II burns (ADR-123)
+        Assert.Equal((0, 20, 20), (darkBolt.EffectAt(1)!.Modifiers.Burn, darkBolt.EffectAt(2)!.Modifiers.Burn, darkBolt.EffectAt(3)!.Modifiers.Burn));
         Assert.Equal(2, darkBolt.EffectAt(3)!.Targets);
 
         var heal = SpellCatalog.Default.Get("light.heal"); // rank III's revival is not built

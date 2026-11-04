@@ -247,6 +247,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         {
             var damage = siege.ShotDamage(tower);
             var target = battle.LivingArmyOf(BattleSide.Attacker)
+                .Where(u => !u.Has(Magic.SpellStatus.Stasis | Magic.SpellStatus.Unseen))
                 .OrderByDescending(u => (long)Math.Min(damage, u.TotalHealth) * u.Creature.Value / u.Creature.Health)
                 .ThenBy(u => u.Id)
                 .FirstOrDefault();
@@ -257,6 +258,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
             var killed = Wound(target, damage);
             events.Publish(new BattleUnitSiegeDamaged(target.Id, SiegeDamageSource.Tower, tower.Id, damage, killed, target.Count));
+            Hit(target);
             Bury(target);
         }
     }
@@ -297,6 +299,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         return defender.IsAlive && shooter.IsAlive &&
                defender.Creature.Has(CapabilityKind.RangedRetaliation) &&
                !shooter.Creature.Has(CapabilityKind.NoEnemyRetaliation) &&
+               !defender.Has(Magic.SpellStatus.NoRetaliation | Magic.SpellStatus.Blind) &&
                (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation)) &&
                BattleGrid.CanShoot(battle, defender, shooter, out penalty);
     }
@@ -345,11 +348,13 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         EnterMoat(unit, from);
     }
 
+    /// <summary>Night Terrors and Stasis stop retaliation; Vigil makes it unlimited (ADR-123).</summary>
     private bool CanRetaliate(BattleUnit defender, BattleUnit attacker) =>
         defender.IsAlive && attacker.IsAlive && !defender.IsMachine &&
         defender.Rect.IsAdjacentTo(attacker.Rect) &&
         !attacker.Creature.Has(CapabilityKind.NoEnemyRetaliation) &&
-        (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation));
+        !defender.Has(Magic.SpellStatus.NoRetaliation | Magic.SpellStatus.Stasis) &&
+        (!defender.HasRetaliated || defender.Creature.Has(CapabilityKind.UnlimitedRetaliation) || defender.Has(Magic.SpellStatus.Vigil));
 
     /// <summary>One hit plus, for a melee strike, the attacker's area ability with the same roll.</summary>
     private void Strike(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int penalty = 0)
@@ -358,7 +363,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var roll = attacker.SpellModifiers.Roll != 0
             ? DamageCalculator.Roll(attacker, 0)
             : battle.Random.NextInclusive(attacker.Creature.MinDamage, attacker.Creature.MaxDamage);
-        var secondary = kind == BattleAttackKind.Melee ? AreaTargets(attacker, target) : [];
+        var secondary = kind == BattleAttackKind.Melee ? AreaTargets(attacker, target).Where(u => BattleGrid.CanBeAttacked(attacker, u, melee: true)).ToList() : [];
         var hit = new HitModifiers(roll, kind is BattleAttackKind.Ranged or BattleAttackKind.RangedRetaliation, penalty);
 
         // Luck: the attacker rolls once per strike, every target for itself (ADR-053).
@@ -419,6 +424,11 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             default:
                 foreach (var unit in battle.LivingArmyOf(side.Opponent()).OrderBy(u => u.Id))
                 {
+                    if (unit.Has(Magic.SpellStatus.Fearless))
+                    {
+                        continue; // Steadfast (ADR-123): it cannot be made to flee
+                    }
+
                     if (battle.Random.Next(100) < Math.Min(PrimalFury.MaxTerrorChancePercent, PrimalFury.TerrorChancePercent * strength / 100))
                     {
                         unit.LosesNextAction = true;
@@ -751,16 +761,47 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <returns>How many creatures the hit killed.</returns>
     private int Apply(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int damage, HitLuck luck)
     {
+        // A blind or terrified stack, or one under a half-retaliation spell, hits back at half (ADR-123).
+        if (kind is BattleAttackKind.Retaliation or BattleAttackKind.RangedRetaliation && attacker.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.NoAttack))
+        {
+            damage = Math.Max(1, damage / 2);
+        }
+
+        var dealt = Math.Min(damage, target.TotalHealth);
         var killed = Wound(target, damage);
         target.HitsThisRound++;
+        attacker.DamageDealt += dealt;
         events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, killed, target.Count, luck));
+        Hit(target);
         Bury(target);
+
+        // Vampirism (ADR-123): part of the damage dealt to a living stack heals the attacker and revives its dead, for good.
+        var spells = attacker.SpellModifiers;
+        if (spells.LifestealPercent > 0 && attacker.IsAlive && !target.Creature.HasTag(CreatureTags.Undead) && !target.Creature.HasTag(CreatureTags.Construct))
+        {
+            var source = attacker.Spells.First(s => s.Modifiers.LifestealPercent > 0).Spell;
+            Revive(attacker, source, dealt * spells.LifestealPercent / 100, lasting: true);
+        }
+
+        // Barkskin III (ADR-123): a melee attacker takes part of its damage back.
+        if (kind == BattleAttackKind.Melee && target.Spells.FirstOrDefault(s => s.Modifiers.ThornsPercent > 0) is { } thorns && attacker.IsAlive && dealt > 0)
+        {
+            SpellDamage(attacker, thorns.Spell, Math.Max(1, dealt * thorns.Modifiers.ThornsPercent / 100));
+        }
+
         return killed;
     }
 
-    /// <summary>Takes the damage off the stack, top creature first.</summary>
+    /// <summary>Takes the damage off the stack, top creature first; creatures revived only for the battle die first (ADR-123).</summary>
     /// <returns>How many creatures it killed.</returns>
     private static int Wound(BattleUnit target, int damage)
+    {
+        var killed = Kill(target, damage);
+        target.Revived = Math.Max(0, target.Revived - killed);
+        return killed;
+    }
+
+    private static int Kill(BattleUnit target, int damage)
     {
         var before = target.Count;
         var remaining = target.TotalHealth - damage;
@@ -793,6 +834,8 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
         if (!target.IsAlive)
         {
+            target.MutableSpells.Clear(); // a stack revived later starts without them (ADR-123)
+            target.Revived = 0;
             battle.MutableQueue.Remove(target.Id);
             battle.MutableWaiting.Remove(target.Id);
             events.Publish(new BattleUnitDied(target.Id));
@@ -802,8 +845,17 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <summary>Ends the active unit's action; with good morale rolled this round it acts once more right away (ADR-053).</summary>
     private void EndTurn(bool moraleMayAct = true)
     {
+        WakeHit();
         var unit = battle.ActiveUnit;
         battle.ActiveUnit = null;
+
+        // Unseen lasts until the stack acts (ADR-123).
+        foreach (var hidden in unit?.Spells.Where(s => s.Modifiers.Has(Magic.SpellStatus.Unseen)).ToList() ?? [])
+        {
+            unit!.MutableSpells.Remove(hidden);
+            events.Publish(new BattleSpellExpired(unit.Id, hidden.Spell));
+        }
+
         if (moraleMayAct && unit is { IsAlive: true, RoundMorale: MoraleEffect.ExtraAction } && !CheckFinished())
         {
             unit.RoundMorale = MoraleEffect.None;
@@ -868,6 +920,13 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 continue;
             }
 
+            // Blind and Stasis hold the stack: its turn passes (ADR-123).
+            if (unit.Spells.FirstOrDefault(s => s.Modifiers.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis)) is { } held)
+            {
+                events.Publish(new BattleUnitSpellbound(unit.Id, held.Spell));
+                continue;
+            }
+
             if (unit.RoundMorale == MoraleEffect.SkipTurn)
             {
                 // Bad morale: the turn passes without the unit acting.
@@ -917,10 +976,49 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
         Heal(BattleSide.Attacker);
         Heal(BattleSide.Defender);
+        Tick();
         TowersFire();
+        WakeHit();
         foreach (var unit in battle.MutableQueue.Select(battle.GetUnit).Where(u => u.RoundMorale is MoraleEffect.Haste or MoraleEffect.Slow))
         {
             events.Publish(new BattleMoraleTriggered(unit.Id, unit.RoundMorale));
+        }
+    }
+
+    /// <summary>
+    /// Spells that work each round (ADR-123), as it starts, stack by stack in id order: burning deals its damage, regrowth heals the top creature,
+    /// decay (Plague, Pact of Ash) takes its percent of the creatures, at least 1.
+    /// </summary>
+    private void Tick()
+    {
+        foreach (var unit in battle.LivingUnits.Where(u => u.Spells.Count > 0).OrderBy(u => u.Id).ToList())
+        {
+            foreach (var spell in unit.Spells.ToList())
+            {
+                if (!unit.IsAlive)
+                {
+                    break;
+                }
+
+                var m = spell.Modifiers;
+                if (m.Burn > 0)
+                {
+                    SpellDamage(unit, spell.Spell, m.Burn);
+                }
+
+                if (m.Regen > 0 && unit.IsAlive && unit.TopHealth < unit.Creature.Health)
+                {
+                    var healed = Math.Min(m.Regen, unit.Creature.Health - unit.TopHealth);
+                    unit.TopHealth += healed;
+                    events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
+                }
+
+                if (m.DecayPercent > 0 && unit.IsAlive)
+                {
+                    var lost = Math.Min(unit.Count, Math.Max(1, unit.Count * m.DecayPercent / 100));
+                    SpellDamage(unit, spell.Spell, unit.TotalHealth - ((unit.Count - lost) * unit.Creature.Health));
+                }
+            }
         }
     }
 

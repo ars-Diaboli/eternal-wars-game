@@ -111,7 +111,10 @@ bus.Subscribe<HeroMoved>(visibility); // wired in GameSession
 | `HeroManaRestored(Hero, Mana, MaxMana)` | `TurnService` | owner's turn start, daily mana (ADR-063); not published when the pool is full |
 | `HeroExperienceGained(Hero, Amount, Total)` | `ProgressionService` | chest reward taken as XP, battle won |
 | `HeroStatusGained(Hero, Status)` / `HeroStatusesExpired(Hero, Statuses)` | `ProgressionService` (granted by map objects; expired by `BattleService` after the hero's battle, `TurnService` at the owner's turn start and when a week starts) | temporary morale, luck or daily movement from a map object (ADR-068) |
-| `HeroMovementGained(Hero, Amount, MovementPoints)` | `MapObjectInteractionService` | a buff site added movement points for today (ADR-068) |
+| `HeroMovementGained(Hero, Amount, MovementPoints)` | `MapObjectInteractionService`, `AdventureMagicService` | a buff site added movement points for today (ADR-068); Pathfinder's Call III / Ashwalk III added 10 % |
+| `AdventureSpellCast(Hero, Spell, Target, Cost, Mana, MovementPoints)` / `AreaRevealed(Owner, Center, Radius)` | `AdventureMagicService` | an adventure spell was paid for (what it does follows); View Terrain revealed an area |
+| `ArmiesSighted(Hero, Owner, Center, Radius, Armies)` / `MagicDetected(Hero, Owner, Center, Radius, Objects)` | `AdventureMagicService` | Distant Vision's heroes and stacks (as `ShownArmy`, Veil applied); Detect Magic's objects and their contents |
+| `GravesMarked(Hero, Owner, Percent, Guards)` / `LedgerRead(Hero, Owner, Report)` / `TownOverheard(Hero, Owner, Town)` | `AdventureMagicService` | Grave Whisper's bonus (its `HeroStatusGained` just before; the guards' numbers at rank III); Ledger of Ages' next week and enemy heroes; Eavesdrop's read-only town |
 | `HeroPrimaryStatRaised(Hero, Stat, Amount, Value)` | `ProgressionService` | a training site raised a primary stat (Arena, Colosseum, Library; ADR-068) |
 | `HeroLeveledUp(Hero, Level, Skill, SkillLevel, Stat, StatValue)` | `ProgressionService` | a level-up choice applied: the skill picked (null: none) and the primary stat raised |
 | `WarMachineBought(Seller, Hero, Slot)` | `TownService`, `MapObjectInteractionService` | a town's blacksmith (ADR-056) or a War Machine Factory (ADR-068) sold a war machine to the hero |

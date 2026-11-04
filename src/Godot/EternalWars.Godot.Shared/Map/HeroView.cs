@@ -100,6 +100,16 @@ public partial class HeroView : Node3D
             }
         });
         this.SubscribeWhileInTree<SightChanged>(events, _ => UpdateVisibility());
+        // Veil III hides a hero from other players whose heroes are not close (GameState.CanSee): re-check when anyone moves or a veil changes.
+        this.SubscribeWhileInTree<HeroMoved>(events, e =>
+        {
+            if (e.Hero != hero.Id)
+            {
+                UpdateVisibility();
+            }
+        });
+        this.SubscribeWhileInTree<HeroStatusGained>(events, e => UpdateVisibility());
+        this.SubscribeWhileInTree<HeroStatusesExpired>(events, e => UpdateVisibility());
         if (context is not null)
         {
             context.Changed += UpdateVisibility;

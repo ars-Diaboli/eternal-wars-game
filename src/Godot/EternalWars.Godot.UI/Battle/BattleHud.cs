@@ -196,13 +196,17 @@ public partial class BattleHud : Control
         if (_creatureArmed)
         {
             _creatureArmed = false;
-            Act(player => new BattleCreatureCastCommand(player, battle.UnitAt(cell)?.Id, cell));
+            Act(player => new BattleCreatureCastCommand(player, TargetAt(battle, cell), cell));
             return true;
         }
 
-        Act(player => new BattleCastCommand(player, spell, battle.UnitAt(cell)?.Id, cell));
+        Act(player => new BattleCastCommand(player, spell, TargetAt(battle, cell), cell));
         return true;
     }
+
+    /// <summary>The stack at the cell, else a destroyed one lying there (a revive may bring it back, ADR-123).</summary>
+    private static int? TargetAt(BattleState battle, CellPosition cell) =>
+        battle.UnitAt(cell)?.Id ?? battle.Units.FirstOrDefault(u => !u.IsAlive && !u.IsMachine && u.Rect.Contains(cell))?.Id;
 
     /// <summary>Whether the armed spell is the active creature caster's own (ADR-120), not the hero's.</summary>
     private bool _creatureArmed;

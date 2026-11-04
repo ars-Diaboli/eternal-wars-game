@@ -207,7 +207,7 @@ public static class AdventureIntel
             case CreatureDwelling dwelling:
                 if (dwelling.Guard is { } dwellingGuard)
                 {
-                    lines.Add($"guard: {(dwellingGuard.Count is { } count ? $"{count} " : "")}{Creature(dwellingGuard.Creature)}");
+                    lines.Add($"guard: {(dwellingGuard.Count is { } guarding ? $"{guarding} " : "")}{Creature(dwellingGuard.Creature)}");
                 }
 
                 lines.Add(string.Create(CultureInfo.InvariantCulture, $"{dwelling.Available ?? 0} {Creature(dwelling.Creature)} to recruit"));

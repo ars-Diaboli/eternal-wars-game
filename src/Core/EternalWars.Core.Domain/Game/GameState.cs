@@ -203,8 +203,9 @@ public sealed class GameState
 
     public Hero? HeroAt(MapPosition position) => _heroes.FirstOrDefault(h => h.Position == position);
 
-    /// <summary>Whether <paramref name="viewer"/> currently sees <paramref name="hero"/> (own heroes always).</summary>
-    public bool CanSee(PlayerId viewer, Hero hero) => hero.Owner == viewer || Fog.IsInSight(viewer, hero.Position);
+    /// <summary>Whether <paramref name="viewer"/> currently sees <paramref name="hero"/> (own heroes always; Veil III hides a hero from afar).</summary>
+    public bool CanSee(PlayerId viewer, Hero hero) =>
+        hero.Owner == viewer || (Fog.IsInSight(viewer, hero.Position) && !Magic.AdventureMagic.HidesFrom(this, hero, viewer));
 
     /// <summary>Different players on the same team.</summary>
     public bool AreAllies(PlayerId a, PlayerId b) => a != b && GetPlayer(a).Team == GetPlayer(b).Team;

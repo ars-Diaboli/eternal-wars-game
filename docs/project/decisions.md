@@ -3055,3 +3055,60 @@ for play-testing. The 3D views are written but not run in Godot yet; the 2D harn
 - **Not changed**: the map format (map heroes' spells start at rank I; no format bump); the adventure AI does not plan guild visits for ranks
   (it gets them when it passes through); mana costs are the same at every rank (spells.md). Old replays whose heroes had Mastery and visited
   guilds may now differ.
+
+### ADR-123: The rest of Phase 5 magic: control, revival and most battle spells, the AI's buffs, elements, guild spells fixed by the map (v30), the show-only adventure spells and the adventure spells' ranks (ADR-099, ADR-106, ADR-110, ADR-120, ADR-122, 2026-11-04)
+**Status**: implemented (2026-11-04); *(proposal)* marks the agent's choices, for play-testing. The 3D battle lines, the HUD, the map editor's
+guild-spell rows and the adventure-spell screens are written but not run in Godot yet.
+
+- **Effect grammar** (`SpellEffect`): new kinds `revive N [living|undead] [lasting] [fallen]`, `dispel own|enemy|any` and `slay N` (percent of the
+  creatures, at least 1). Statuses on buffs and curses: `blind`, `confused`, `entangled`, `no-shoot`, `no-attack`, `no-retaliation`, `fearless`,
+  `vigil`, `true-shot`, `sanctuary`, `stasis`, `unseen`, `phase`, `ward-mind`; numbers `burn`, `regen` (each round as it starts, scaled by
+  Spell Power when cast), `decay%`, `immune-level` (every spell up to the level, the own too), `shroud` (the enemy's), `thorns%`, `lifesteal%`.
+  Damage words `splash`, `chain`, `pierce`, `stun%`, `execute`, `debt%`, `ring`, `column`. `rounds 0` is the rest of this round.
+- **Blind** (rounds 2 / 3 / 3 and 2 stacks): the stack's turns pass (`BattleUnitSpellbound`); any hit ends it, after the blow, so it still
+  retaliates **at half** (ranged retaliation: none). **Confusion** (1 / 2 / 2 rounds and 2 stacks): the stack's turn is played by itself, for any
+  side, at random from the battle's generator: one of the enemies it can shoot or reach, or a move to a placement it can reach *(proposal:
+  enemies only; Frenzy is the friend-or-foe spell)*; its hero does not cast in that turn. **Resurrection** (150, living): the top creature first,
+  then the dead up to the stack's starting count; rank I's revived are **lost again after the battle** and die first when the stack loses
+  creatures (`BattleUnit.Revived`, `KeptCount` for survivors, casualties, experience and Necromancy); rank II they stay; rank III also brings
+  back an own stack destroyed in the battle when its place is free (it acts from the next round; the HUD aims at the fallen stack's cell).
+  Creature casters (the Shadow Mistress' and Shadow Matriarch's Blind, the Djinn Sultan's Confusion, the Seraph's Resurrection) cast them at rank I.
+- **Other battle spells now built**, with their ranks from spells.md: Purge, Steadfast, Vigil, Sanctuary, Entangle, Hunter's Sight, Regrowth,
+  Fleetfoot, Chain Lightning (70, then 35 and 17 to the nearest stacks, own too; III enemies only), Oakheart, Frost Ring, Unravel, Anti-Magic,
+  Dispel, Stasis (no turns; cannot be attacked or hit by spells but a dispel), Animate Dead, Call the Debt (the damage the stack dealt; not
+  scaled by Spell Power *(proposal)*), Plague, Vampirism, Final Reckoning, Terror (cannot attack or shoot, retaliates at half; fearless stacks,
+  Steadfast, ignore it and the Terror warcry), Inferno, Pact of Ash, Hellfire, Harvest, Shroud, Forgetfulness, Night Terrors, Unseen (cannot be
+  attacked or aimed at by the enemy until it acts). 75 of the 91 battle spells work; still to come: Consecrate, Martyrdom, Thornwall, Mirror
+  Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Bone Wall, Frenzy, Fire Wall, Blood Price, Shadow Step, Darkness, Hypnotize,
+  Puppet Master (they need field zones, copies, control changes or two-click aiming).
+- **ADR-122's rank changes built**: Smite's splash (II, enemy stacks next to it at half) and its ignoring spell resistance (III), Holy Word's
+  lost action (III, 30 %), Call Lightning's jump (III), Barkskin's thorns (III, 10 %), Firebolt's (III) and Dark Bolt's (II) burning, Frost
+  Bolt's freezing (III, the next action lost). **Still not built**: Heal's cure and revival, Purge II's healing, Meteor Shower's rubble, Summon
+  Demons staying, Ashfall sparing own demons, Bind Elemental's two kinds, the Familiars' mana theft, Entangle III's damage, Unravel III's Spell
+  Power, Dispel III's half mana, Hellfire III, Inferno III's +20 %, Sanctuary III's line, Unseen III's first strike.
+- **The battle AI** casts every kind: damage (splash and chain hits counted), summons, healing, revives (the value of the health), kills,
+  dispels and buffs and curses: **4 %** of the stack's creature value per round it lasts, **10 %** for Blind, Stasis and Confusion, at most 5 rounds
+  counted (a spell for the battle counts 5) *(proposal)*; nothing for a spell the stack already has or a ward when the enemy cannot cast.
+  Creature casters use the same values (a buff still only when the caster has nothing to hit).
+- **Elements** (ADR-106): the orbs' `element-power` was already in (ADR-111); Magic Arrow now takes the **best** of the four orbs *(proposal)*,
+  Bind Elemental the element of the kind it binds (from the creature id). The catalog refuses `bound` on anything but a summon of several kinds.
+- **Tags and creature casters** (ADR-099): `holy` and `summon` were in (ADR-110, ADR-120); the catalog now refuses a summon without the `summon`
+  tag or the tag without a summon. Every caster id in `creatures.csv` maps to a spell with a battle effect (or is the Phoenix's rebirth); a test
+  keeps it so.
+- **Guild spells fixed by the map** (map format **v30**): a town's optional `guildSpells` (spell ids of the town's own school, at most 3 / 3 / 2 / 2
+  a level, no repeats); the rest is drawn at game start as before. Spell buildings now also draw their spells at game start from
+  `GameState.Random` (they were picked from a shuffle seeded by the game seed, town and school); the map cannot fix those *(proposal)*. Changing
+  a town's faction in the editor drops its fixed spells (undoable). Editor: `SetTownGuildSpells`, a "Guild spells" section in the town inspector;
+  the loader and validator refuse bad lists.
+- **Show-only adventure spells** (each mana + 500 movement points): Distant Vision (armies within 10 of a cell in sight; II 14, III under the
+  fog), Detect Magic (what objects within 10 hold; II 15, III the banks' rewards), Grave Whisper (+10 % Necromancy on the next victory that raises
+  undead, until the week ends; II 15 %, III the guards' numbers within 10), Ledger of Ages (next week's event, enemy heroes in sight; II in towns
+  too, III read again free that week), Veil (other players see the army as amount words until the week ends; II artifacts hidden, III the hero
+  hidden from players with no hero within 3), Eavesdrop (an enemy or neutral town in sight, read-only; II any explored one, III again free that
+  week). Events `ArmiesSighted`, `MagicDetected`, `GravesMarked`, `LedgerRead`, `TownOverheard`; `AdventureIntel.ShowHero` is the one query that
+  shows another player's army; the hero panel arms a map click for every aimed spell (`AdventureSpellArmed`); `AdventureIntelPanel` shows them.
+- **Adventure spells' ranks**: Dimension Door 9 cells (II), twice a day (III); View Terrain radius 18 (II); Pathfinder's Call and Ashwalk every
+  terrain (II), +10 % of the day's movement (III) *(proposal)*; Town Portal to a town the player clicks (II, III); at ranks I–II the portal ends the
+  day's movement *(proposal: reading III's "no movement points beyond the 500")*, which changes the built behaviour and the AI's portal home.
+- **Not done**: the adventure AI casts none of the show-only spells; old replays with casting heroes may differ (the AI casts more, spell
+  buildings draw from the game's generator).

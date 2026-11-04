@@ -60,6 +60,7 @@ public sealed class GameSession
         Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression, Artifacts);
         Movement = new HeroMovementService(State, Bus, Interactions);
         AdventureMagic = new Magic.AdventureMagicService(State, Bus);
+        Bus.Subscribe<UndeadRaised>(AdventureMagic); // Grave Whisper is used up
         Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions);
     }
 

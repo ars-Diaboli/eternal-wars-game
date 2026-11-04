@@ -180,6 +180,10 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<SiegeStructureDamaged>(events, OnStructureDamaged);
         this.SubscribeWhileInTree<BattleUnitSummoned>(events, OnSummoned);
         this.SubscribeWhileInTree<BattleUnitReborn>(events, OnReborn);
+        this.SubscribeWhileInTree<BattleUnitRevived>(events, OnRevived);
+        this.SubscribeWhileInTree<BattleSpellDispelled>(events, e => Step(null, () => Narrate($"{SpellName(e.By)} takes {SpellName(e.Spell)} off {NameOf(e.Unit)}.")));
+        this.SubscribeWhileInTree<BattleUnitSpellbound>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} cannot act.")));
+        this.SubscribeWhileInTree<BattleUnitStunned>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} will lose its next action.")));
         this.SubscribeWhileInTree<BattleCreatureCast>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} cast {SpellName(e.Spell)} ({e.CastsLeft} cast(s) left).")));
         this.SubscribeWhileInTree<BattleUnitLeftKeep>(events, e => Step(null, () => Narrate($"The keep falls: {NameOf(e.Unit)} come out of it.")));
         this.SubscribeWhileInTree<BattleSpellCast>(events, e => Step(null, () => Narrate($"{SideName(e.Side)} casts {SpellName(e.Spell)} ({e.Cost} mana, {e.Mana} left).")));
@@ -682,6 +686,25 @@ public partial class BattleView3D : Node3D
                 view.Scale = Vector3.One;
                 view.SetCount(e.Count);
                 Narrate($"{view.Creature.Name} rise from the ashes: {e.Count} of them.");
+            });
+    }
+
+    /// <summary>A revive (ADR-123): the stack grows back; one destroyed earlier stands up again.</summary>
+    private void OnRevived(BattleUnitRevived e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var view))
+        {
+            return;
+        }
+
+        Step(
+            t => t.TweenProperty(view, "scale", Vector3.One, 0.3f),
+            () =>
+            {
+                view.Visible = true;
+                view.Scale = Vector3.One;
+                view.SetCount(e.Count);
+                Narrate($"{SpellName(e.Spell)}: {view.Creature.Name} regain {e.Health} health, {e.Count} of them now.");
             });
     }
 
