@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Map;
 using Godot;
@@ -59,9 +60,10 @@ public partial class NewGameScreen : PanelContainer
     private readonly SpinBox _margin = new() { MinValue = 0, MaxValue = 6, Value = GameOptions.Default.RefogMargin };
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(220, 0) };
     private readonly GridContainer _players = new() { Columns = 3 };
-    private readonly Button _start = new() { Text = "Start" };
+    private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm);
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) };
     private readonly Dictionary<PlayerId, SpinBox> _teams = [];
+    private readonly Dictionary<int, OptionButton> _startTowns = [];
     private readonly List<RandomPlayerRow> _randomPlayers = [];
     private readonly List<Control> _randomRows = [];
     private IReadOnlyList<ScenarioChoice> _choices = [];
@@ -137,7 +139,7 @@ public partial class NewGameScreen : PanelContainer
         var buttons = new HBoxContainer();
         _start.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         buttons.AddChild(_start);
-        var back = new Button { Text = "Back (Esc)" };
+        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft);
         back.Pressed += () => BackRequested?.Invoke();
         buttons.AddChild(back);
         box.AddChild(buttons);
@@ -171,6 +173,7 @@ public partial class NewGameScreen : PanelContainer
         }
 
         _teams.Clear();
+        _startTowns.Clear();
         _randomPlayers.Clear();
     }
 
@@ -203,7 +206,7 @@ public partial class NewGameScreen : PanelContainer
 
         Changed();
         ClearPlayers();
-        _players.Columns = 3;
+        _players.Columns = 4;
         if (SelectedMap is not { } map)
         {
             return;
@@ -223,6 +226,7 @@ public partial class NewGameScreen : PanelContainer
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
         _players.AddChild(new Label { Text = (preview.TeamsLocked ? "Team (locked by the map)" : "Team") + TeamCounts(preview.MinTeams, preview.MaxTeams) });
+        _players.AddChild(new Label { Text = "Town" });
         foreach (var player in preview.Players)
         {
             _players.AddChild(PlayerName(player.Name, player.Id));
@@ -230,7 +234,39 @@ public partial class NewGameScreen : PanelContainer
             var team = new SpinBox { MinValue = 0, MaxValue = GameState.MaxPlayers - 1, Value = player.Team.Value, Editable = !preview.TeamsLocked };
             _players.AddChild(team);
             _teams[player.Id] = team;
+            _players.AddChild(TownChoice(preview, player.Id));
         }
+    }
+
+    /// <summary>
+    /// The player's faction (ADR-126): a choice when the map leaves it open (a random town of the player's, or a hero placeholder without a fixed
+    /// town), else the type of its first town, or a dash.
+    /// </summary>
+    private Control TownChoice(GameState preview, PlayerId player)
+    {
+        var towns = preview.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value).ToList();
+        var open = towns.Any(t => t.IsRandom) || (towns.Count == 0 && preview.HeroesOf(player).Any(h => h.IsPlaceholder));
+        if (!open)
+        {
+            return new Label { Text = towns.FirstOrDefault()?.TownType ?? "—" };
+        }
+
+        var choice = new OptionButton { TooltipText = "The faction of this player's random towns and hero placeholders" };
+        choice.AddItem(Random);
+        foreach (var town in BuiltInMapObjects.PlayableTowns)
+        {
+            choice.AddItem(town);
+        }
+
+        _startTowns[player.Value] = choice;
+        return choice;
+    }
+
+    /// <summary>The factions chosen for the map's players (ADR-126); null when nobody chose one.</summary>
+    private IReadOnlyDictionary<int, string>? ChosenTowns()
+    {
+        var chosen = _startTowns.Where(c => c.Value.Selected > 0).ToDictionary(c => c.Key, c => BuiltInMapObjects.PlayableTowns[c.Value.Selected - 1]);
+        return chosen.Count == 0 ? null : chosen;
     }
 
     /// <summary>The team counts a map or template allows (ADR-117), as a label suffix: " — 2 teams", " — 2 to 4 teams"; empty without a limit.</summary>
@@ -324,7 +360,7 @@ public partial class NewGameScreen : PanelContainer
 
         try
         {
-            var state = map.Create(options);
+            var state = map.Create(options with { StartTowns = ChosenTowns() });
             if (!state.TeamsLocked)
             {
                 state.AssignTeams(_teams.ToDictionary(t => t.Key, t => new TeamId((int)t.Value.Value)));

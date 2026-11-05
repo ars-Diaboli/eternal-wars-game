@@ -280,7 +280,8 @@ public sealed class MonsterGuard(
     int? count = null,
     GuardDisposition disposition = GuardDisposition.Aggressive,
     bool neverFlees = false,
-    GuardMode mode = GuardMode.Classic)
+    GuardMode mode = GuardMode.Classic,
+    int? randomTier = null)
     : MapObject(id, definition, position, MapObjectKind.Monster)
 {
     public const string DefaultCreature = Creatures.BuiltInCreatures.Wolf;
@@ -296,6 +297,12 @@ public sealed class MonsterGuard(
 
     /// <summary>Whether pickups next to this stack can be taken from outside (Classic) or start the fight too (Area).</summary>
     public GuardMode Mode { get; internal set; } = mode;
+
+    /// <summary>
+    /// A random monster (ADR-126): 0 = any tier, 1–7 = that tier; <see cref="Creature"/> is drawn when the game starts
+    /// (<see cref="Game.PlaceholderRules"/>) and until then only shows it. Null = the creature as placed.
+    /// </summary>
+    public int? RandomTier { get; internal set; } = randomTier;
 
     /// <summary>Tiles guarded besides its own (the 8 neighbours on the same level).</summary>
     public IEnumerable<MapPosition> GuardedTiles()

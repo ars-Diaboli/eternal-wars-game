@@ -92,7 +92,7 @@ public static class TavernRules
             (heroes[i], heroes[j]) = (heroes[j], heroes[i]);
         }
 
-        return heroes;
+        return MapBans.Allowed(heroes, h => state.Rules.Bans.BansHero(h.Id)); // the map's bans (ADR-126), after the shuffle so it stays the same
     }
 
     /// <summary>

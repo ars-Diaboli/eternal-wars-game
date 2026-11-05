@@ -31,6 +31,7 @@ $siegeMap = Join-Path $PSScriptRoot 'smoke/siege.ewmap.json'
 $caravanMap = Join-Path $PSScriptRoot 'smoke/caravan.ewmap.json'
 $questsMap = Join-Path $PSScriptRoot 'smoke/quests.ewmap.json'
 $turnStartMap = Join-Path $PSScriptRoot 'smoke/turn-start.ewmap.json'
+$placeholdersMap = Join-Path $PSScriptRoot 'smoke/placeholders.ewmap.json'
 # A map generated from the v7 connection options (ADR-112): garrison, border guard and gate with keymasters, portal, optional connection.
 New-Item -ItemType Directory -Force $Out | Out-Null
 $connectionsMap = Join-Path (Resolve-Path $Out) 'connections.ewmap.json'
@@ -75,6 +76,10 @@ $scenarios = @(
     # event's message for Castlebridge moves the camera to the town; OK closes each.
     @{ Name = 'game-turn-start-camera'; App = 'EternalWars.Game'; Frames = 40; Map = $turnStartMap
        Input = '3:key:Enter;16:click:27,140;30:click:27,140' },
+    # Random placeholders and bans (ADR-126): the new-game screen offers Blue a faction for its random town (Dungeon is picked);
+    # the game starts with Castlebridge a Dungeon town, Blue's hero a Dungeon hero and the random monsters drawn.
+    @{ Name = 'game-placeholders'; App = 'EternalWars.Game'; Frames = 30; Map = $placeholdersMap
+       Input = '5:click:860,516;9:click:839,711;13:click:754,586' },
     # The kingdom overview (ADR-084): K opens it on the towns map, Escape closes it, K again, Escape.
     @{ Name = 'game-kingdom'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
        Input = '3:key:Enter;12:key:K;24:key:Escape;30:key:K;40:key:Escape' },
@@ -127,6 +132,9 @@ $scenarios = @(
     # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
        Input = '3:click:1400,100;8:click:1090,168;14:click:1133,465' },
+    # Bans and placeholders (ADR-126) on the placeholders map: the Bans tab, ban the first hero, undo it; Select, the Inspector tab, the random town.
+    @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $placeholdersMap
+       Input = '3:click:1475,100;7:click:1052,254;11:click:765,94;15:click:544,24;18:click:1328,100;21:click:420,300' },
     # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' }

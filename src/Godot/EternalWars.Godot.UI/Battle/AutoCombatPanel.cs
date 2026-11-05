@@ -183,6 +183,11 @@ public partial class AutoCombatPanel : CenterContainer
         foreach (var (text, pressed) in buttons)
         {
             var button = new Button { Text = text };
+            if (text == "Accept")
+            {
+                button.WithIcon(UiIcon.Confirm);
+            }
+
             button.Pressed += pressed;
             _buttons.AddChild(button);
         }

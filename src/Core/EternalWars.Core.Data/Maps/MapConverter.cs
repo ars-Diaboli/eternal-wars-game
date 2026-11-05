@@ -44,7 +44,8 @@ public static class MapConverter
                     h.Artifacts.AllWorn.Any() ? h.Artifacts.AllWorn.Select(w => w.Id).ToList() : null,
                     h.Artifacts.Backpack.Count == 0 ? null : h.Artifacts.Backpack.ToList(),
                     h.HasSpellBook,
-                    h.HasSpellBook ? h.Spells.Keys.ToList() : null))
+                    h.HasSpellBook ? h.Spells.Keys.ToList() : null,
+                    h.IsPlaceholder ? true : null))
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
             Events = state.MapEvents.Set.IsEmpty ? null : state.MapEvents.Set,
@@ -154,7 +155,12 @@ public static class MapConverter
         rules.GraceDays == ScenarioRules.DefaultGraceDays ? null : rules.GraceDays,
         rules.MaxHeroes == ScenarioRules.HeroLimit ? null : rules.MaxHeroes,
         rules.WeekEvents.IsDefault ? null : ToDocument(rules.WeekEvents),
-        rules.Difficulty);
+        rules.Difficulty,
+        rules.Bans.IsEmpty ? null : new BansDocument(
+            rules.Bans.Heroes.Count == 0 ? null : rules.Bans.Heroes,
+            rules.Bans.Artifacts.Count == 0 ? null : rules.Bans.Artifacts,
+            rules.Bans.Spells.Count == 0 ? null : rules.Bans.Spells,
+            rules.Bans.Skills.Count == 0 ? null : rules.Bans.Skills));
 
     private static WeekEventsDocument ToDocument(WeekEventSettings events) => new(
         events.Enabled,
@@ -186,7 +192,21 @@ public static class MapConverter
                 ? new WeekEventSettings(events.Enabled, events.SkipWeeks ?? WeekEventSettings.DefaultSkipWeeks, events.WeeklyFactions?.ToList(), events.MonthlyFactions?.ToList())
                 : WeekEventSettings.Default,
             Difficulty = document.Difficulty,
+            Bans = ToBans(document.Bans),
         };
+
+    /// <summary>The map's bans (v35); skill ids are resolved like everywhere else, and each list is sorted without repeats.</summary>
+    private static MapBans ToBans(BansDocument? bans)
+    {
+        static IReadOnlyList<string> Sorted(IEnumerable<string>? ids) => (ids ?? []).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
+        return bans is null ? MapBans.None : new MapBans
+        {
+            Heroes = Sorted(bans.Heroes),
+            Artifacts = Sorted(bans.Artifacts),
+            Spells = Sorted(bans.Spells),
+            Skills = Sorted(bans.Skills?.Select(s => BuiltInSkills.Contains(s) ? BuiltInSkills.Resolve(s) : s)),
+        };
+    }
 
     private static ScenarioCondition ToCondition(ConditionDocument c) => new(
         c.Kind,
@@ -212,10 +232,11 @@ public static class MapConverter
             : h.Type is null ? new Dictionary<string, SkillLevel>() : null);
         try
         {
-            return Hero.Create(
+            var hero = Hero.Create(
                 new HeroId(h.Id), new PlayerId(h.Owner), new MapPosition(h.X, h.Y, h.Level), ToArmy(h, creatures),
                 h.Type is { } id ? heroRoster.Get(id) : null, h.Name, h.Attack, h.Defense, skills, h.Morale ?? 0, h.Luck ?? 0, h.SpellPower, h.Knowledge, h.WarMachines,
-                h.Artifacts, h.Backpack, artifacts, h.SpellBook, h.Spells);
+                h.Artifacts, h.Backpack, artifacts, h.SpellBook, h.Spells, placeholder: h.Placeholder == true);
+            return hero;
         }
         catch (Exception e) when (e is KeyNotFoundException or ArgumentOutOfRangeException or InvalidOperationException)
         {
@@ -472,6 +493,7 @@ public static class MapConverter
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
                 Creature = monster.Creature, Count = monster.Count, Disposition = monster.Disposition, NeverFlees = monster.NeverFlees,
                 Mode = monster.Mode == GuardMode.Classic ? null : monster.Mode,
+                RandomTier = monster.RandomTier,
             },
             Town town => new TownDocument
             {
@@ -483,6 +505,7 @@ public static class MapConverter
                 Garrison = town.Garrison.IsEmpty ? null : town.Garrison.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
                 LastBuilt = town.LastBuilt?.AbsoluteDay,
                 GuildSpells = town.FixedGuildSpells.Count == 0 ? null : town.FixedGuildSpells.ToList(),
+                Random = town.IsRandom ? true : null,
             },
             _ => throw new NotSupportedException($"Cannot save {mapObject.GetType().Name}."),
         };
@@ -634,9 +657,11 @@ public static class MapConverter
                 TreasureChestDocument => throw new FormatException("A chest needs both gold and experience, or neither."),
                 MonsterDocument { Mode: { } mode } monster when !Enum.IsDefined(mode) =>
                     throw new FormatException($"Monster {monster.Id} has an unknown guard mode {mode}."),
+                MonsterDocument { RandomTier: < 0 or > CreatureDefinition.MaxTier } monster =>
+                    throw new FormatException($"Monster {monster.Id} has a random tier outside 0–{CreatureDefinition.MaxTier}."),
                 MonsterDocument monster => new MonsterGuard(
                     id, definition, position, monster.Creature, monster.Count, monster.Disposition, monster.NeverFlees,
-                    monster.Mode ?? legacyGuardMode ?? GuardMode.Classic),
+                    monster.Mode ?? legacyGuardMode ?? GuardMode.Classic, monster.RandomTier),
                 GateDocument gate => new TwoWayGate(id, definition, position, ToId(gate.LinkedGate)),
                 GateEntranceDocument entrance => new OneWayGateEntrance(id, definition, position, ToId(entrance.Exit)),
                 GateExitDocument => new OneWayGateExit(id, definition, position),
@@ -674,6 +699,6 @@ public static class MapConverter
 
         return new Town(
             id, definition, position, town.Owner is { } owner ? new PlayerId(owner) : null, town.Name, town.Buildings, town.Dwellings,
-            town.Available, ToArmy(town.Garrison, $"Town {town.Id}", creatures), town.LastBuilt is { } day ? new GameDate(day) : null, town.GuildSpells);
+            town.Available, ToArmy(town.Garrison, $"Town {town.Id}", creatures), town.LastBuilt is { } day ? new GameDate(day) : null, town.GuildSpells, town.Random == true);
     }
 }

@@ -21,7 +21,7 @@ public partial class NoticePanel : PanelContainer
         var box = new VBoxContainer();
         AddChild(box);
         box.AddChild(_text);
-        var ok = new Button { Text = "OK" };
+        var ok = new Button { Text = "OK" }.WithIcon(UiIcon.Confirm);
         ok.Pressed += () => Visible = false;
         box.AddChild(ok);
         Visible = false;

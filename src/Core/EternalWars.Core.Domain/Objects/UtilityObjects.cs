@@ -120,9 +120,10 @@ public static class PrisonRules
             {
                 var towns = BuiltInMapObjects.PlayableTowns;
                 var town = towns[state.Random.Next(towns.Count)];
-                var free = state.HeroRoster.All.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList();
+                var free = MapBans.Allowed(
+                    state.HeroRoster.All.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList(), h => state.Rules.Bans.BansHero(h.Id));
                 var native = free.Where(h => h.Town == town).ToList();
-                var pool = native.Count > 0 ? native : free;
+                var pool = native.Count > 0 ? native : [.. free];
                 if (pool.Count > 0)
                 {
                     prison.Hero = pool[state.Random.Next(pool.Count)].Id;

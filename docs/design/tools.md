@@ -7,12 +7,14 @@ A **separate standalone app**, not an in-game mode (ADR-023). Core `MapEditorSes
 properties, players, validation and conditions panels):
 - terrain painting (brush radius, drag strokes), roads and rivers;
 - objects: placement and removal, gate linking, mine owners and guards, map dwellings, artifact pickups, riddles, witch huts, shrines;
-- heroes (type, army, war machines, morale and luck, artifacts, spell book), monsters (with guard mode, ADR-065), towns (buildings,
-  dwellings, garrison, guild spells);
+- heroes (type, army, war machines, morale and luck, artifacts, spell book, placeholder), monsters (with guard mode, ADR-065; random by
+  tier), towns (buildings, dwellings, garrison, guild spells, random faction);
 - player slots and teams, map name and description, victory and defeat conditions (ADR-057);
+- map events, the "Events" tab ([adventure-map.md](adventure-map.md#pandoras-box-and-map-events), ADR-129), and the map's bans, the "Bans"
+  tab ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
-*Planned*: map events ([adventure-map.md](adventure-map.md#pandoras-box-and-map-events), ADR-115), map resize.
+*Planned*: map resize.
 
 ## 2D harness and simulator
 - **Viewer** (Godot 2D app): a top-down debug front-end over the same core, for rule development and visual debugging of AI.

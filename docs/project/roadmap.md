@@ -8,10 +8,10 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 
 **Where we are (2026-11-05)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132).
+except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
-and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: map bans, random monsters, towns and hero
-placeholders, the Grail, the last 16 battle spells, presentation.
+and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, spell scrolls, the University and War Academy,
+the last 16 battle spells, presentation.
 
 ## Open checks in Godot
 - [ ] Godot run of (built and tested in core, the Godot part not run yet):
@@ -157,9 +157,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 ### Missing mechanics, the owner's picks (ADR-125, ADR-126; [missing-mechanics.md](../design/missing-mechanics.md))
 - [ ] Scouting reveals information: amount words with ranges for armies not owned, what each Scouting level shows, Veil against it,
       the AI reads only what it sees (ADR-125)
-- [ ] Map bans: heroes, artifacts, spells and skills in the map rules, read by every pool and roll; editor tab, validator warnings; map
-      format bump
-- [ ] Random monsters by tier, random towns, hero placeholders: editor, map format, drawn at game start
+- [x] Map bans: heroes, artifacts, spells and skills in the map rules, read by every pool and roll; editor tab, validator warnings; map
+      format bump (ADR-133)
+- [x] Random monsters by tier, random towns, hero placeholders: editor, map format, drawn at game start; the new-game screen's
+      faction choice (ADR-133)
 - [ ] University and War Academy map objects: lessons, disabled offers, screen, AI use, generator placement
 - [ ] Spell scrolls: the artifact row, casting from a scroll, artifact rolls by level
 - [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (ADR-130), editor and generator; map format bump

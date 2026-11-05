@@ -14,6 +14,10 @@ namespace EternalWars.Core.Domain.Artifacts;
 /// </summary>
 public sealed class ArtifactService(GameState state, IEventPublisher events)
 {
+    /// <summary>The artifacts of a tier the rolls may give, by id: without the map's bans, unless they ban the whole tier (ADR-126).</summary>
+    private IReadOnlyList<ArtifactDefinition> OfTier(ArtifactTier tier) =>
+        MapBans.Allowed(state.Artifacts.OfTier(tier).OrderBy(a => a.Id, StringComparer.Ordinal).ToList(), a => state.Rules.Bans.BansArtifact(a.Id));
+
     /// <summary>The artifacts every pickup of a tier may be, minus those already placed on the map or carried (relics stay unique).</summary>
     internal void RollUnsetPickups()
     {
@@ -22,9 +26,9 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             .ToHashSet(StringComparer.Ordinal);
         foreach (var pickup in state.ObjectsOf<ArtifactPickup>().Where(p => p.Artifact is null).OrderBy(p => p.Id.Value).ToList())
         {
-            var tier = state.Artifacts.OfTier(pickup.Tier).OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
+            var tier = OfTier(pickup.Tier);
             var free = tier.Where(a => !taken.Contains(a.Id)).ToList();
-            var pool = free.Count > 0 ? free : tier;
+            var pool = free.Count > 0 ? free : [.. tier];
             if (pool.Count == 0)
             {
                 continue;
@@ -42,7 +46,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     /// </summary>
     internal string? Draw(ArtifactTier tier)
     {
-        var all = state.Artifacts.OfTier(tier).OrderBy(a => a.Id, StringComparer.Ordinal).ToList();
+        var all = OfTier(tier);
         if (all.Count == 0)
         {
             return null;
@@ -61,7 +65,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         {
             state.DrawnRelics.Clear();
             pool = all.Where(a => !present.Contains(a.Id)).ToList();
-            pool = pool.Count > 0 ? pool : all;
+            pool = pool.Count > 0 ? pool : [.. all];
         }
 
         var drawn = pool[state.Random.Next(pool.Count)].Id;

@@ -165,10 +165,10 @@ public static class ShrineRules
     public static IEnumerable<Magic.SpellDefinition> Candidates(Magic.SpellCatalog spells, int level) =>
         spells.All.Where(s => s.Level == level).OrderBy(s => s.Id, StringComparer.Ordinal);
 
-    /// <summary>A spell of the shrine's level, drawn for a shrine the map left open.</summary>
-    public static string Roll(GameRandom random, Magic.SpellCatalog spells, int level)
+    /// <summary>A spell of the shrine's level, drawn for a shrine the map left open; never a banned one unless the level has no other (ADR-126).</summary>
+    public static string Roll(GameRandom random, Magic.SpellCatalog spells, int level, MapBans? bans = null)
     {
-        var candidates = Candidates(spells, level).ToList();
+        var candidates = MapBans.Allowed(Candidates(spells, level).ToList(), s => bans?.BansSpell(s.Id) == true);
         return candidates[random.Next(candidates.Count)].Id;
     }
 
@@ -186,7 +186,7 @@ public static class WitchHutRules
     /// What the hut offers the hero: each of its skills the hero can raise, else another skill of that group it can (the first by id); never the
     /// same skill twice. Empty when the hero used a witch hut at this level already.
     /// </summary>
-    public static IReadOnlyList<string> Options(Hero hero, WitchHut hut)
+    public static IReadOnlyList<string> Options(Hero hero, WitchHut hut, MapBans? bans = null)
     {
         if (hero.WitchHutLevel == hero.Level)
         {
@@ -198,7 +198,7 @@ public static class WitchHutRules
         {
             var group = BuiltInSkills.Get(skill).Group;
             var pick = hero.Skills.CanRaise(skill) && !options.Contains(skill) ? skill
-                : BuiltInSkills.All.Where(s => s.Group == group && hero.Skills.CanRaise(s.Id) && !options.Contains(s.Id))
+                : BuiltInSkills.All.Where(s => s.Group == group && hero.Skills.CanRaise(s.Id) && !options.Contains(s.Id) && bans?.BansSkill(s.Id) != true)
                     .OrderBy(s => s.Id, StringComparer.Ordinal).Select(s => s.Id).FirstOrDefault();
             if (pick is not null)
             {
@@ -209,12 +209,13 @@ public static class WitchHutRules
         return options;
     }
 
-    /// <summary>Two different skills of two different groups, for a hut the map left open.</summary>
-    public static IReadOnlyList<string> Roll(GameRandom random)
+    /// <summary>Two different skills of two different groups, for a hut the map left open; banned skills only when every other is banned (ADR-126).</summary>
+    public static IReadOnlyList<string> Roll(GameRandom random, MapBans? bans = null)
     {
-        var all = BuiltInSkills.All.OrderBy(s => s.Id, StringComparer.Ordinal).ToList();
+        var all = MapBans.Allowed(BuiltInSkills.All.OrderBy(s => s.Id, StringComparer.Ordinal).ToList(), s => bans?.BansSkill(s.Id) == true);
         var first = all[random.Next(all.Count)];
         var rest = all.Where(s => s.Group != first.Group).ToList();
+        rest = rest.Count > 0 ? rest : [.. BuiltInSkills.All.Where(s => s.Group != first.Group).OrderBy(s => s.Id, StringComparer.Ordinal)];
         return [first.Id, rest[random.Next(rest.Count)].Id];
     }
 }

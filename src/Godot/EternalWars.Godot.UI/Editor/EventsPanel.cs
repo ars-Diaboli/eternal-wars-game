@@ -725,6 +725,11 @@ public partial class EventsPanel : ScrollContainer
     private static void Button(Container row, string text, Action pressed)
     {
         var button = new global::Godot.Button { Text = text };
+        if (text switch { "Up" => UiIcon.ArrowUp, "Down" => UiIcon.ArrowDown, "Apply" => UiIcon.Confirm, "Delete" => UiIcon.Close, _ => (UiIcon?)null } is { } icon)
+        {
+            button.WithIcon(icon);
+        }
+
         button.Pressed += pressed;
         row.AddChild(button);
     }

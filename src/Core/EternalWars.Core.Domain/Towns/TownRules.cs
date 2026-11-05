@@ -16,6 +16,41 @@ public static class TownRules
     public const int MaxDwellings = 7;
 
     /// <summary>
+    /// The town as another town type (the editor's type change, a random town at game start, ADR-126): a town of <paramref name="definition"/>'s type
+    /// with the same id, place, owner, garrison, governor and, unless it kept the old type's default name, name. Buildings the new type also has stay
+    /// (at most its top level); each dwelling, and the creatures waiting in it, moves to the new type's line at the same place in the same tier.
+    /// Fixed guild spells are of the old school and are dropped. The caller checks requirements (<see cref="UnmetRequirement"/>).
+    /// </summary>
+    public static Town Retyped(GameState state, Town town, Objects.MapObjectDefinition definition)
+    {
+        var townType = definition.Town ?? throw new ArgumentException($"{definition.Id} is not a town.", nameof(definition));
+        var buildings = state.Buildings.For(townType);
+        var lines = MatchLines(state.Creatures.BaseCreaturesOf(town.TownType).ToList(), state.Creatures.BaseCreaturesOf(townType).ToList());
+        return new Town(town.Id, definition, town.Position, town.Owner, town.Name == town.Definition.Name ? null : town.Name,
+            town.Buildings.Where(b => buildings.TownBuildings.Contains(b.Key)).ToDictionary(b => b.Key, b => Math.Min(b.Value, buildings.MaxLevel(b.Key))),
+            Moved(town.Dwellings), Moved(town.Available), new Armies.Army(town.Garrison.Slots), town.LastBuilt) { Governor = town.Governor };
+
+        Dictionary<string, int> Moved(IReadOnlyDictionary<string, int> values) =>
+            values.Where(v => lines.ContainsKey(v.Key)).ToDictionary(v => lines[v.Key], v => v.Value);
+    }
+
+    /// <summary>Pairs each old line with the new type's line of the same tier at the same place in tier order; lines without a partner drop out.</summary>
+    private static Dictionary<string, string> MatchLines(IReadOnlyList<CreatureDefinition> from, IReadOnlyList<CreatureDefinition> to)
+    {
+        var pairs = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var tier in from.Select(l => l.Tier).Distinct())
+        {
+            var newLines = to.Where(l => l.Tier == tier).ToList();
+            foreach (var (line, index) in from.Where(l => l.Tier == tier).Select((l, i) => (l, i)).Where(p => p.i < newLines.Count))
+            {
+                pairs[line.Id] = newLines[index].Id;
+            }
+        }
+
+        return pairs;
+    }
+
+    /// <summary>
     /// Extra weekly growth of a town's dwellings from its fort (ADR-066, HoMM3): +50 % with the Citadel (fort 2), +100 %
     /// with the Castle (fort 3), none below. Map dwellings (<see cref="Objects.CreatureDwelling"/>) never get it.
     /// </summary>

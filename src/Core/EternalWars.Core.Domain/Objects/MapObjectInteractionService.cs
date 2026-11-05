@@ -699,12 +699,12 @@ public sealed class MapObjectInteractionService(
     {
         foreach (var hut in state.ObjectsOf<WitchHut>().Where(h => h.Skills.Count == 0).OrderBy(h => h.Id.Value).ToList())
         {
-            hut.Skills = WitchHutRules.Roll(state.Random);
+            hut.Skills = WitchHutRules.Roll(state.Random, state.Rules.Bans);
         }
 
         foreach (var shrine in state.ObjectsOf<Shrine>().Where(s => s.Spell is null).OrderBy(s => s.Id.Value).ToList())
         {
-            shrine.Spell = ShrineRules.Roll(state.Random, state.Spells, shrine.SpellLevel);
+            shrine.Spell = ShrineRules.Roll(state.Random, state.Spells, shrine.SpellLevel, state.Rules.Bans);
         }
 
         StartWeek(restock: true);
@@ -1156,7 +1156,7 @@ public sealed class MapObjectInteractionService(
 
     private void OfferSkills(Hero hero, WitchHut hut)
     {
-        var options = WitchHutRules.Options(hero, hut);
+        var options = WitchHutRules.Options(hero, hut, state.Rules.Bans);
         if (hero.WitchHutLevel == hero.Level)
         {
             events.Publish(new MapObjectRefused(hero.Id, hut.Id, $"{hero.Name} learned at a witch hut at this level already."));

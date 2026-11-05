@@ -748,8 +748,9 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
 - The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
 
 ### ADR-126: The owner's picks from the missing mechanics: map bans, random placeholders, University and War Academy, spell scrolls, the Grail, the first unique buildings (ADR-116, 2026-11-04)
-**Status**: accepted (2026-11-04), not built. Owner's notes in `ideas.md`; points marked *(proposal)* were filled in by the agent and stand
-unless the owner changes them. More unique buildings: TOWN-12; the Grail buildings: ADR-130.
+**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), the rest not built yet. Owner's notes in `ideas.md`;
+points marked *(proposal)* were filled in by the agent and stand unless the owner changes them. More unique buildings: TOWN-12; the Grail
+buildings: ADR-130.
 
 - **Map bans** (HoMM3, HotA): the map's rules list banned heroes, artifacts, spells and skills. The tavern pools, artifact rolls (chests,
   banks, Pandora's Boxes, merchants, loot), guild draws, shrines, level-ups, Witch Huts, the University and the War Academy skip them.
@@ -953,3 +954,37 @@ the owner changes them.
 - Hero events (cells, quest objects, a Pandora's Box's event) name no place: their hero is in view. A computer player sees no messages.
 - The camera moves after the turn's own move to the first hero, and again for each later message of the turn; not while the computer's
   moves are still being shown (the turn's showing comes back to it).
+
+### ADR-133: Map bans and random placeholders built (ADR-126, 2026-11-05)
+**Status**: implemented (2026-11-05); core tested (`MapBanAndPlaceholderTests`); checked in Godot 4.7.2 with the new smoke scenarios
+`game-placeholders` and `editor-bans`. Map format v35. Builds ADR-126's map bans and random placeholders; points marked *(proposal)* are the
+agent's choices made while building and stand unless the owner changes them. Rules: [adventure-map.md](../design/adventure-map.md#map-bans-and-random-placeholders).
+
+- **Bans** are part of the map's rules (`ScenarioRules.Bans`, `rules.bans` in the file: heroes, artifacts, spells, skills; sorted, empty
+  lists left out). Read by the town and map taverns, prisons, hero placeholders, every artifact roll (one place: pickups left open and
+  `Draw`), the guild and spell building draws, shrines, level-up offers and witch huts. A pool the bans would empty stays whole (ADR-126).
+  *(proposal)* A guild's spells fixed by the map stay even when banned (placed by hand); a witch hut's own skills stay, but the stand-in
+  skill of a group it offers when the hero cannot take its skill skips banned ones; the tavern pool is shuffled before the bans are taken
+  out, so a ban does not reorder the rest.
+- **Validator**: an unknown id in the bans is an error; a hero of a banned type, a banned artifact, spell or skill on a hero, a banned
+  prisoner, artifact pickup, shrine spell, fixed guild spell, witch hut skill or Pandora's Box artifact is a warning ("placed by hand, so
+  it stays").
+- **Random monster** (`randomTier` on a monster: 0 any tier, 1–7): *(proposal)* the creatures it may become are the growing creatures of
+  the playable towns and the neutral ones, base and upgraded; a count set by the author stays, otherwise the count is rolled for the drawn
+  creature; the creature in the file only shows it in the editor (the editor shows the tier's first such creature).
+- **Random town** (`random` on a town): an owned one takes its owner's chosen faction (`GameOptions.StartTowns`, set on the new-game
+  screen's new "Town" column for a player with a random town or with a hero placeholder and no town; kept in saves and replays);
+  *(proposal)* without a choice, one faction is drawn per player and all its random towns share it; a neutral one draws its own. The town is
+  re-made as the editor's type change does (`TownRules.Retyped`: same id, place, owner, garrison, an author's name; buildings carry over,
+  dwellings move by tier). Making a town random in the editor drops its fixed guild spells.
+- **Hero placeholder** (`placeholder` on a hero): *(proposal)* its faction is its owner's first town once the random towns are drawn, else
+  the chosen faction, else the player's drawn one; it becomes a free roster hero of that faction (not on the map, in a prison or retired;
+  not banned), else any free hero. It keeps its place, army, artifacts and id (so conditions naming it still hold) and takes the roster
+  hero's identity, stats, skills and spells; an empty army gets the hero's starter stack (as a tavern hire).
+- **Game start**: the placeholders are drawn first (`PlaceholderRules.Resolve`): towns, monsters, heroes, from `GameState.Random`; views
+  built before the start redraw from `MapObjectChanged` and `HeroRemoved` + `HeroPlaced`.
+- **Editor**: a "Bans" tab after "Events" (a list per kind with a filter and "banned only"; ticking bans; undo says "Edit the bans");
+  "Random faction" on a town ("Shown as" its type), "Random" (any tier or a tier) on a monster, "Placeholder" on a hero; captions mark
+  random towns and monsters.
+- **Not in this step**: the generator places none of them; the University and War Academy (not built) will read the bans; a campaign's
+  carried hero in a placeholder waits for FLOW-1.

@@ -30,7 +30,8 @@ public sealed class Town : MapObject, IFlaggable
         IReadOnlyDictionary<string, int>? available = null,
         Army? garrison = null,
         GameDate? lastBuilt = null,
-        IReadOnlyList<string>? fixedGuildSpells = null)
+        IReadOnlyList<string>? fixedGuildSpells = null,
+        bool isRandom = false)
         : base(id, definition, position, MapObjectKind.Town)
     {
         Owner = owner;
@@ -41,12 +42,19 @@ public sealed class Town : MapObject, IFlaggable
         Garrison = garrison ?? new Army();
         LastBuilt = lastBuilt;
         FixedGuildSpells = fixedGuildSpells?.ToList() ?? [];
+        IsRandom = isRandom;
     }
 
     /// <summary>Town type (<see cref="TownIds"/>).</summary>
     public string TownType => Definition.Town!;
 
     public PlayerId? Owner { get; internal set; }
+
+    /// <summary>
+    /// A random town (ADR-126): its faction is drawn when the game starts (<see cref="Game.PlaceholderRules"/>), an owned one taking its owner's
+    /// chosen faction; until then its definition only shows it.
+    /// </summary>
+    public bool IsRandom { get; internal set; }
 
     public int ScoutingRadius => TownScoutingRadius;
 

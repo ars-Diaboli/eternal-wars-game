@@ -457,11 +457,8 @@ public sealed class MapEditorSession
             return EditResult.Ok;
         }
 
-        var buildings = Scenario.Buildings.For(townType);
-        var lines = MatchLines(Scenario.Creatures.BaseCreaturesOf(town.TownType).ToList(), Scenario.Creatures.BaseCreaturesOf(townType).ToList());
-        var replacement = new Town(town.Id, definition, town.Position, town.Owner, town.Name == town.Definition.Name ? null : town.Name,
-            town.Buildings.Where(b => buildings.TownBuildings.Contains(b.Key)).ToDictionary(b => b.Key, b => Math.Min(b.Value, buildings.MaxLevel(b.Key))),
-            Moved(town.Dwellings), Moved(town.Available), new Army(town.Garrison.Slots), town.LastBuilt) { Governor = town.Governor };
+        var replacement = TownRules.Retyped(Scenario, town, definition);
+        replacement.IsRandom = town.IsRandom; // a random town's type only shows it in the editor
         if (TownRules.UnmetRequirement(Scenario, replacement) is not null)
         {
             return EditResult.RequirementMissing;
@@ -470,9 +467,6 @@ public sealed class MapEditorSession
         Run(new DelegateCommand($"Make {town.Name} a {townType} town", () => Swap(town, replacement), () => Swap(replacement, town)));
         return EditResult.Ok;
 
-        Dictionary<string, int> Moved(IReadOnlyDictionary<string, int> values) =>
-            values.Where(v => lines.ContainsKey(v.Key)).ToDictionary(v => lines[v.Key], v => v.Value);
-
         void Swap(Town from, Town to)
         {
             RemoveObject(from);
@@ -480,20 +474,66 @@ public sealed class MapEditorSession
         }
     }
 
-    /// <summary>Pairs each old line with the new type's line of the same tier at the same place in tier order; lines without a partner drop out.</summary>
-    private static Dictionary<string, string> MatchLines(IReadOnlyList<Creatures.CreatureDefinition> from, IReadOnlyList<Creatures.CreatureDefinition> to)
+    /// <summary>
+    /// Makes a town random or fixed (ADR-126): a random town's faction is drawn when the game starts, an owned one taking its owner's chosen faction.
+    /// Making it random drops its fixed guild spells, which belong to one school (undo brings them back).
+    /// </summary>
+    public EditResult SetTownRandom(MapObjectId id, bool random)
     {
-        var pairs = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var tier in from.Select(l => l.Tier).Distinct())
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not Town town)
         {
-            var newLines = to.Where(l => l.Tier == tier).ToList();
-            foreach (var (line, index) in from.Where(l => l.Tier == tier).Select((l, i) => (l, i)).Where(p => p.i < newLines.Count))
-            {
-                pairs[line.Id] = newLines[index].Id;
-            }
+            return EditResult.InvalidTarget;
         }
 
-        return pairs;
+        if (town.IsRandom == random)
+        {
+            return EditResult.Ok;
+        }
+
+        var spells = town.FixedGuildSpells;
+        Run(new DelegateCommand(random ? $"Make {town.Name} a random town" : $"Make {town.Name} a {town.TownType} town", () => Apply(random, random ? [] : spells), () => Apply(!random, spells)));
+        return EditResult.Ok;
+
+        void Apply(bool value, IReadOnlyList<string> guild)
+        {
+            town.IsRandom = value;
+            town.FixedGuildSpells = guild;
+            _bus.Publish(new MapObjectChanged(town.Id));
+        }
+    }
+
+    /// <summary>
+    /// Makes a monster random (ADR-126): <paramref name="tier"/> 0 = any tier, 1–7 = that tier, null = the creature as placed. A tier shows the first
+    /// creature of that tier the draw could pick, so the editor has something to show; the creature is drawn when the game starts.
+    /// </summary>
+    public EditResult SetMonsterRandomTier(MapObjectId id, int? tier)
+    {
+        if (Scenario.Objects.FirstOrDefault(o => o.Id == id) is not MonsterGuard monster)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (tier is < 0 or > Creatures.CreatureDefinition.MaxTier)
+        {
+            return EditResult.InvalidValue;
+        }
+
+        var shown = tier is > 0 and var t ? PlaceholderRules.MonsterCandidates(Scenario.Creatures, t).FirstOrDefault()?.Id ?? monster.Creature : monster.Creature;
+        var (oldTier, oldCreature) = (monster.RandomTier, monster.Creature);
+        if (oldTier == tier && oldCreature == shown)
+        {
+            return EditResult.Ok;
+        }
+
+        Run(new DelegateCommand(tier is null ? "Make the monster fixed" : "Make the monster random", () => Apply(tier, shown), () => Apply(oldTier, oldCreature)));
+        return EditResult.Ok;
+
+        void Apply(int? value, string creature)
+        {
+            monster.RandomTier = value;
+            monster.Creature = creature;
+            _bus.Publish(new MapObjectChanged(monster.Id));
+        }
     }
 
     /// <summary>
@@ -854,6 +894,32 @@ public sealed class MapEditorSession
         static (string?, string, HeroClass, string?, HeroSpecialty?, int, int, int, int, Dictionary<string, SkillLevel>) Snapshot(Hero h) =>
             (h.Definition, h.Name, h.Class, h.PreferredCreature, h.Specialty, h.Attack, h.Defense, h.SpellPower, h.Knowledge,
              h.Skills.Levels.ToDictionary(s => s.Key, s => s.Value));
+    }
+
+    /// <summary>
+    /// Makes a hero a placeholder or a hero of its own again (ADR-126): a placeholder becomes a random roster hero of its owner's faction when the
+    /// game starts, keeping its place, army and artifacts; what the editor sets on its type, stats, skills and spells is replaced then.
+    /// </summary>
+    public EditResult SetHeroPlaceholder(HeroId id, bool placeholder)
+    {
+        if (Scenario.Heroes.FirstOrDefault(h => h.Id == id) is not { } hero)
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (hero.IsPlaceholder == placeholder)
+        {
+            return EditResult.Ok;
+        }
+
+        Run(new DelegateCommand(placeholder ? $"Make {hero.Name} a hero placeholder" : $"Make {hero.Name} a hero of its own", () => Apply(placeholder), () => Apply(!placeholder)));
+        return EditResult.Ok;
+
+        void Apply(bool value)
+        {
+            hero.IsPlaceholder = value;
+            _bus.Publish(new HeroStatsChanged(hero.Id, hero.Attack, hero.Defense, hero.Tactics));
+        }
     }
 
     /// <summary>Puts a stack into (or, with null, clears) one of a hero's army slots.</summary>
@@ -1360,7 +1426,8 @@ public sealed class MapEditorSession
         }
 
         var previous = Scenario.Rules;
-        Run(new DelegateCommand("Edit victory and defeat conditions", () => Apply(rules), () => Apply(previous)));
+        var what = previous with { Bans = rules.Bans } == rules ? "Edit the bans" : "Edit victory and defeat conditions";
+        Run(new DelegateCommand(what, () => Apply(rules), () => Apply(previous)));
         return EditResult.Ok;
 
         void Apply(ScenarioRules value)

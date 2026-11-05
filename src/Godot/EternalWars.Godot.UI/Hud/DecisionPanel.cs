@@ -211,6 +211,11 @@ public partial class DecisionPanel : PanelContainer
     private void Button(string text, GameCommand command, bool disabled = false)
     {
         var button = new Button { Text = text, Disabled = disabled };
+        if (text is "OK" or "Accept")
+        {
+            button.WithIcon(UiIcon.Confirm);
+        }
+
         button.Pressed += () => _session.Execute(command);
         _buttons.AddChild(button);
     }

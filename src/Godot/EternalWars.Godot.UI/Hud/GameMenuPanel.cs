@@ -20,7 +20,7 @@ public partial class GameMenuPanel : CenterContainer
     private readonly Label _message = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(560, 0) };
     private readonly Button _save = new() { Text = "Save" };
     private readonly Button _load = new() { Text = "Load" };
-    private readonly Button _delete = new() { Text = "Delete" };
+    private readonly Button _delete = new Button { Text = "Delete" }.WithIcon(UiIcon.Close);
     private readonly Button _mainMenu = new() { Text = "Main menu", TooltipText = "Leave the game; the autosave keeps the start of this turn", Visible = false };
     private readonly HBoxContainer _autoCombatRow = new() { Visible = false };
     private readonly Label _autoCombatLabel = new();
@@ -89,7 +89,7 @@ public partial class GameMenuPanel : CenterContainer
         var actions = new HBoxContainer();
         actions.AddChild(_load);
         actions.AddChild(_delete);
-        var close = new Button { Text = "Close (Esc)" };
+        var close = new Button { Text = "Close (Esc)" }.WithIcon(UiIcon.Close);
         close.Pressed += Close;
         actions.AddChild(close);
         _mainMenu.Pressed += () => MainMenuRequested?.Invoke();

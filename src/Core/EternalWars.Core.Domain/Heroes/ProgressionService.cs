@@ -134,7 +134,7 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
         : hero.PreferredCreature is { } line && state.Creatures.TryGet(line, out var creature) ? creature.Town
         : null;
 
-    private IReadOnlyList<string> Offers(Hero hero) => SkillOffers.Generate(hero, TownOf(state, hero), state.Random);
+    private IReadOnlyList<string> Offers(Hero hero) => SkillOffers.Generate(hero, TownOf(state, hero), state.Random, state.Rules.Bans);
 
     /// <summary>The stat the next level raises, rolled after the skill offers so the prompt can show it (ADR-055).</summary>
     private PrimaryStat RollStat(Hero hero) => StatGrowth.Roll(hero.Class, hero.Level + 1, state.Random, TownOf(state, hero));

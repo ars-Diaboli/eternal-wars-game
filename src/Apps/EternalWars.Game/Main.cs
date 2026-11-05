@@ -20,6 +20,7 @@ using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Battle;
 using EternalWars.Godot.UI.Hud;
 using EternalWars.Godot.UI.Setup;
@@ -564,8 +565,8 @@ public partial class Main : Node3D
         var button = new Button
         {
             Text = "Menu (F10)", AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1,
-            OffsetLeft = -120, OffsetTop = -36, OffsetRight = -8, OffsetBottom = -8,
-        };
+            OffsetLeft = -140, OffsetTop = -36, OffsetRight = -8, OffsetBottom = -8,
+        }.WithIcon(UiIcon.Settings);
         button.Pressed += _menu.Toggle;
         layer.AddChild(button);
     }

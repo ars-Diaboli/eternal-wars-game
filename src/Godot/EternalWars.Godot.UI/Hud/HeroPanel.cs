@@ -73,14 +73,14 @@ public partial class HeroPanel : PanelContainer
 
         var header = new HBoxContainer();
         box.AddChild(header);
-        var previous = new Button { Text = "<" };
+        var previous = new Button { Text = "<", TooltipText = "Previous hero" }.WithIcon(UiIcon.ArrowLeft, iconOnly: true);
         previous.Pressed += () => Step(-1);
         header.AddChild(previous);
         header.AddChild(_title);
-        var next = new Button { Text = ">" };
+        var next = new Button { Text = ">", TooltipText = "Next hero" }.WithIcon(UiIcon.ArrowRight, iconOnly: true);
         next.Pressed += () => Step(1);
         header.AddChild(next);
-        var close = new Button { Text = "Close" };
+        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
         close.Pressed += Close;
         header.AddChild(close);
 

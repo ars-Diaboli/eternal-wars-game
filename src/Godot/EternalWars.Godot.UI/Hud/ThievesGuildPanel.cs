@@ -26,7 +26,7 @@ public partial class ThievesGuildPanel : PanelContainer
         var header = new HBoxContainer();
         box.AddChild(header);
         header.AddChild(_title);
-        var close = new Button { Text = "Close" };
+        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
         close.Pressed += () => Visible = false;
         header.AddChild(close);
         box.AddChild(_table);

@@ -21,10 +21,10 @@ public partial class PlayersPanel : VBoxContainer
         AddChild(_rows);
         var buttons = new HBoxContainer();
         AddChild(buttons);
-        var add = new Button { Text = "Add player" };
+        var add = new Button { Text = "Add player" }.WithIcon(UiIcon.Plus);
         add.Pressed += () => Report(_editor.AddPlayer($"Player {_editor.Scenario.Players.Count + 1}", isHuman: false, out _));
         buttons.AddChild(add);
-        var remove = new Button { Text = "Remove last" };
+        var remove = new Button { Text = "Remove last" }.WithIcon(UiIcon.Minus);
         remove.Pressed += () => Report(_editor.RemoveLastPlayer());
         buttons.AddChild(remove);
         AddChild(_status);
