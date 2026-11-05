@@ -246,7 +246,7 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 - The caravan's cost and place in the tree (ADR-054): placeholders, tune after play-testing.
 - **Per-town names and costs** (ADR-070, ADR-112): the `town` column is built (ADR-074); the growth buildings and the war lodge have a row
   per town with its own name and rare resource, and Stronghold and Swamp Bestiary's town hall and (removed) mage guild rows. The unique
-  buildings' first set is ADR-126; more per town and the Grail buildings: TOWN-12.
+  buildings' first set is ADR-126, more per town: TOWN-12; the Grail buildings: ADR-130.
 - The Capitol's cost and income are placeholders.
 - **Growth buildings** (ADR-071, TOWN-1; placeholders, built ADR-112): `growth-1` adds **+5 a week** to tier-1 growth (1000 gold +
   5 lumber, needs a tier-1 dwelling), `growth-2` **+2** to tier-2 (1500 gold + 5 ore + 2 of the town's rare resource, needs a tier-2

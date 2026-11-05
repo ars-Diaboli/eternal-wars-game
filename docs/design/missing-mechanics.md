@@ -13,7 +13,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Sea travel: boats, shipyards, whirlpools, sea objects | HoMM3, HotA | Dropped (ADR-051) | Rivers and shallow water are scenery (ADR-077); no Fly / Water Walk spells |
 | Grail, obelisks, puzzle map, digging | HoMM3, HoMM5 | Planned | ADR-126 |
 | Spell scrolls (an artifact holding one spell) | HoMM3 | Planned | ADR-126 |
-| Seer's Huts, Quest Guards / Gates, map events with conditions and variables | HoMM3, HotA | Partly | events (ADR-124), quests (ADR-127), loops, run events, the game app's windows and quest log (ADR-128); the editor's Events tab and the AI to come |
+| Seer's Huts, Quest Guards / Gates, map events with conditions and variables | HoMM3, HotA | Yes | events (ADR-124), quests (ADR-127), loops, run events, the game app's windows and quest log (ADR-128), the editor's Events tab and the AI (ADR-129) |
 | University (buy secondary skills) | HoMM3 | Planned | ADR-126, with a War Academy for the general groups |
 | Scholar (one-time stat, skill or spell) | HoMM3 | Missing | Small one-time object like the Learning Stone |
 | Pyramid (a level-4 spell behind a guard) | HoMM3 | Missing | Shrines exist (ADR-120); a guarded spell object is the step up; **candidate** |
@@ -31,7 +31,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Mechanic | From | Status | Notes |
 |---|---|---|---|
 | Each town's unique buildings | HoMM3, HoMM5 | Partly | Necromancy Amplifier built; one per town planned (ADR-126); more open (TOWN-12) |
-| Grail building | HoMM3, HoMM5 | Planned | With the Grail (ADR-126); effects open (TOWN-12) |
+| Grail building | HoMM3, HoMM5 | Planned | With the Grail (ADR-126); +5000 gold, +50 % growth, siege bonus (ADR-130) |
 | Alternative creature upgrades (pick one of two) | HoMM5 TotE | Missing | One upgrade per line now |
 | Resource silo per faction resource | HoMM3 | Partly | Ours gives lumber and ore (ADR-046) |
 | Artifact merchant as a town building | HoMM3 | Partly | Only the map's Artifact Merchant (ADR-079) |

@@ -36,6 +36,8 @@ public partial class Main : Node3D
     private CanvasLayer? _ui;
     private ToolPalette _tools = null!;
     private InspectorPanel _inspector = null!;
+    private EventsPanel _events = null!;
+    private EventCellsView _eventCells = null!;
     private LineEdit _fileName = null!;
     private Label _status = null!;
     private Label _history = null!;
@@ -61,7 +63,7 @@ public partial class Main : Node3D
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
         // --map=file opens that map (the smoke scenarios), else a blank one.
         Open(LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts)
+            ? MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts, checkEvents: false)
             : BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
     }
 
@@ -75,7 +77,11 @@ public partial class Main : Node3D
                     return;
                 }
 
-                if (_tools.Tool.IsBrush)
+                if (_events.PlacingCells is not null)
+                {
+                    Report(_events.ClickCell(tile));
+                }
+                else if (_tools.Tool.IsBrush)
                 {
                     _painting = true;
                     _editor.BeginStroke(_tools.Tool.Kind switch { ToolKind.Road => "Paint road", ToolKind.River => "Paint river", _ => $"Paint {_tools.Tool.Terrain}" });
@@ -222,6 +228,9 @@ public partial class Main : Node3D
         _world = world;
         AddChild(world);
         world.Bind(_context);
+        _eventCells = new EventCellsView { Name = "EventCells" };
+        world.AddChild(_eventCells);
+        _eventCells.Bind(_context);
 
         BuildUi();
         this.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, e =>
@@ -282,11 +291,15 @@ public partial class Main : Node3D
         var validation = new ValidationPanel { Name = "Validation" };
         tabs.AddChild(validation);
         validation.Bind(_editor);
-        validation.IssueSelected += position =>
-        {
-            _context.SetLevel(position.Level);
-            _camera.FocusOn(MapSpace.ToWorld(position));
-        };
+        validation.IssueSelected += ShowTile;
+        _events = new EventsPanel { Name = "Events" };
+        tabs.AddChild(_events);
+        tabs.MoveChild(_events, validation.GetIndex()); // before Validation; Generate stays last
+        _events.Bind(_editor, MapEventNodeJson.Instance);
+        _events.SelectionChanged += name => _eventCells.Highlighted = name;
+        _events.ShowRequested += ShowTile;
+        _inspector.EventRequested += OpenEvent;
+        validation.EventSelected += OpenEvent;
         var generate = new GeneratePanel { Name = "Generate" }; // the last tab ("From template" opens it)
         tabs.AddChild(generate);
         _generatorTemplates = [.. BuiltInTemplates.All, .. UserTemplates().Select(u => u.Template).Where(t => TemplateValidator.IsValid(t))];
@@ -299,6 +312,19 @@ public partial class Main : Node3D
         _templateEditor = new TemplateEditorPanel { Name = "TemplateEditor", Visible = false };
         _ui.AddChild(_templateEditor);
         _templateEditor.Bind(_templates, new TemplateEditorHost(TemplateSources, SaveTemplate, GenerateFromEditor));
+    }
+
+    private void ShowTile(MapPosition position)
+    {
+        _context.SetLevel(position.Level);
+        _camera.FocusOn(MapSpace.ToWorld(position));
+    }
+
+    /// <summary>An event link (inspector, validation): the "Events" tab with that event open.</summary>
+    private void OpenEvent(string name)
+    {
+        _tabs.CurrentTab = _events.GetIndex();
+        _events.Select(name);
     }
 
     /// <summary>The templates the template editor can open: the shipped ones, then the user's files.</summary>
@@ -420,7 +446,7 @@ public partial class Main : Node3D
 
         try
         {
-            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts));
+            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts, checkEvents: false));
             _status.Text = $"Loaded {path}";
         }
         catch (FormatException e)

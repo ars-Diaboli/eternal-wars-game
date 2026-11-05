@@ -17,7 +17,7 @@ namespace EternalWars.Godot.UI.Editor;
 /// <summary>
 /// Edits the selected hero (stats, Tactics, seven army slots) or object (mine owner and guard, chest values,
 /// monster creature/count/disposition/guard mode, town owner, name, buildings, dwellings, guild spells and garrison, a Pandora's Box's contents, guard and
-/// message; gate links are shown).
+/// message; gate links are shown; links to the events a box runs, a quest object asks and a town has).
 /// Every change is an undoable editor edit.
 /// </summary>
 public partial class InspectorPanel : VBoxContainer
@@ -26,6 +26,9 @@ public partial class InspectorPanel : VBoxContainer
     private HeroId? _hero;
     private MapObjectId? _object;
     private bool _refreshing;
+
+    /// <summary>"Edit" on an event link: the editor opens that event in the "Events" tab.</summary>
+    public event Action<string>? EventRequested;
 
     public void Bind(MapEditorSession editor)
     {
@@ -404,8 +407,8 @@ public partial class InspectorPanel : VBoxContainer
     }
 
     /// <summary>
-    /// A row that picks one of the map's events of a kind by name (a box's hero event, a quest object's quest), or none. The events themselves are
-    /// written in the "Events" tab once it exists; until then they come with the map file.
+    /// A row that picks one of the map's events of a kind by name (a box's hero event, a quest object's quest), or none; "New" writes a blank event
+    /// of the kind and picks it (one undo step), "Edit" opens the picked one in the "Events" tab (<see cref="EventRequested"/>).
     /// </summary>
     private void EventChoice(string label, MapEventKind kind, string? current, Func<string?, EditResult> set)
     {
@@ -419,10 +422,54 @@ public partial class InspectorPanel : VBoxContainer
         AddChild(row);
         var choice = Options(row, label, new[] { ("— none —", "") }.Concat(names.Select(n => (n, n))), current ?? "");
         choice.Button.ItemSelected += _ => Edit(() => set(choice.Value().Length == 0 ? null : choice.Value()));
-        if (names.Count == 0)
+        var create = new Button { Text = "New" };
+        create.Pressed += () => Edit(() => NewEvent(kind, set));
+        row.AddChild(create);
+        if (current is not null)
         {
-            row.AddChild(new Label { Text = $"(the map has no {kind.ToString().ToLowerInvariant()} events yet)" });
+            var open = new Button { Text = "Edit" };
+            open.Pressed += () => EventRequested?.Invoke(current);
+            row.AddChild(open);
         }
+    }
+
+    /// <summary>Adds a blank event of the kind and hands its name to <paramref name="use"/>, as one undo step.</summary>
+    private EditResult NewEvent(MapEventKind kind, Func<string?, EditResult> use, IReadOnlyList<int>? towns = null)
+    {
+        var name = _editor.UnusedEventName(kind.ToString().ToLowerInvariant());
+        _editor.BeginStroke($"New {kind.ToString().ToLowerInvariant()} event");
+        try
+        {
+            var result = _editor.AddMapEvent(MapEventTemplates.Blank(name, kind, towns));
+            return result == EditResult.Ok ? use(name) : result;
+        }
+        finally
+        {
+            _editor.EndStroke();
+        }
+    }
+
+    /// <summary>The town events that name the town (each with "Edit"), and "New town event" for it.</summary>
+    private void TownEvents(Town town)
+    {
+        var row = new HFlowContainer();
+        AddChild(row);
+        row.AddChild(new Label { Text = "Town events" });
+        foreach (var definition in _editor.Scenario.MapEvents.Set.Events.Where(e => e.Kind == MapEventKind.Town && e.Towns.Contains(town.Id.Value)))
+        {
+            var name = definition.Name;
+            var open = new Button { Text = name };
+            open.Pressed += () => EventRequested?.Invoke(name);
+            row.AddChild(open);
+        }
+
+        var create = new Button { Text = "New town event" };
+        create.Pressed += () => Edit(() => NewEvent(MapEventKind.Town, name =>
+        {
+            EventRequested?.Invoke(name!);
+            return EditResult.Ok;
+        }, [town.Id.Value]));
+        row.AddChild(create);
     }
 
     /// <summary>
@@ -623,6 +670,7 @@ public partial class InspectorPanel : VBoxContainer
 
         ShowGuildSpells(town);
         GarrisonRows(town.Id, town.Garrison);
+        TownEvents(town);
     }
 
     /// <summary>

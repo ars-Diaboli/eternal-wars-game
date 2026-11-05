@@ -6,12 +6,12 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 
 Done items are summarised with their ADR numbers; the detail is in [decisions.md](decisions.md) and the design docs.
 
-**Where we are (2026-11-04)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
+**Where we are (2026-11-05)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core and the game app, quests, loops and run events included (ADR-124, ADR-127, ADR-128).
+except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core and the game app, quests, loops and run events included, the editor writes them in its "Events" tab and the AI weighs them (ADR-124, ADR-127, ADR-128, ADR-129).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
 and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the last 16 battle spells, map events (the
-editor's Events tab, the AI's use of events and quests), presentation.
+turn-start camera, campaign variables, the score check), presentation.
 
 ## Open checks in Godot
 - [ ] Godot run of (built and tested in core, the Godot part not run yet):
@@ -147,10 +147,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       hero that meets its quest), the quest log in the game state, map format v32; no Seer's Huts on random maps for now (ADR-127)
 - [x] Step 2, game app: the quest log window (Q), placeholder shapes for the three quest objects (ADR-128)
 - [x] Step 3: loops and "run another event"; a Pandora's Box that runs a hero event (MAP-35), map format v33 (ADR-128)
-- [ ] AI: answers by value (random numbers as their average), Seer's Hut quests worth doing, Quest Guards and Gates as obstacles until met,
-      no look-ahead at event cells (EVT-6)
-- [ ] Editor: an "Events" tab (the tree, variables, shared events, "simple event" forms for HoMM3's timed events, event cells and town
-      events), object inspector links, validator checks; tested by playing the map (EVT-6)
+- [x] AI: answers by value (random numbers as their average), Seer's Hut quests worth doing, Quest Guards and Gates as obstacles until met,
+      no look-ahead at event cells (EVT-6, ADR-129)
+- [x] Editor: an "Events" tab (the tree, variables, shared events, "simple event" forms for HoMM3's timed events, event cells and town
+      events), object inspector links, validator checks; tested by playing the map (EVT-6, ADR-129)
 - [ ] Campaign variables ("kept for the next map", "taken from the last map") recorded with the campaign (EVT-1 f, FLOW-1)
 - [ ] Score: the campaign-like check counts map events (ADR-101)
 
@@ -162,7 +162,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Random monsters by tier, random towns, hero placeholders: editor, map format, drawn at game start
 - [ ] University and War Academy map objects: lessons, disabled offers, screen, AI use, generator placement
 - [ ] Spell scrolls: the artifact row, casting from a scroll, artifact rolls by level
-- [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (TOWN-12), editor and generator; map format bump
+- [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (ADR-130), editor and generator; map format bump
 - [ ] Unique buildings, the first set: Stables (Haven), Proving Ring (Stronghold), Shell Wall (Swamp Bestiary), Hall of Records
       (Academy), Altar of Brimstone (Inferno), Elder Grove (Sylvan), Mana Spring (Dungeon); the siege bonuses
 

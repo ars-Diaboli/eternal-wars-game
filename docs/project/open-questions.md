@@ -7,7 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-04**: HERO-9 answered (ADR-125); new TOWN-12 (more unique buildings, the Grail buildings; ADR-126).
+**Updated 2026-11-05**: TOWN-12's Grail buildings answered (ADR-130); its more unique buildings stay open.
 
 ## 🚧 Blocking now
 
@@ -21,18 +21,10 @@ Nothing blocks the current work.
 ## Towns
 
 <a id="town-12"></a>
-**TOWN-12 More unique buildings; the Grail buildings** (owner, 2026-11-04: the first set in ADR-126 is "just one set", more come later).
-- a. Which further faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
-- b. What does each town's Grail building do?
+**TOWN-12 More unique buildings** (owner, 2026-11-04: the first set in ADR-126 is "just one set", more come later). Which further
+faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
-**Proposal**: 
-(a) open; the owner adds them here. 
-(b) every Grail building gives +5000 gold a day and +50 % growth in its town, plus
-one effect for all its owner's heroes: Haven +2 morale, Sylvan +2 luck, Academy the town's guild spells known by every hero with a spell
-book, Inferno +3 Spell Power, Necropolis +20 % Necromancy, Dungeon the whole map revealed once, Stronghold +2 Attack, Swamp Bestiary +2
-Defense.
-Answer : a - use proposal;
-(b) every Grail building gives +5000 gold a day and +50 % growth in its town, +2 initiative and +5 all 4 primary skills during siege, drop the rest of the proposed stuff
+**Proposal**: open; the owner adds them here.
 
 ## Game flow and content
 
@@ -69,7 +61,7 @@ One line per question; the ADR holds the detail.
   ADR-017/031, gates ADR-026, meeting heroes ADR-027, resources ADR-019, chests ADR-039, mines ADR-034, guards ADR-040/065, no sea ADR-051.
 - **Objects**: MAP-1 … MAP-14 ADR-068; MAP-15 … MAP-19, MAP-21 … MAP-24 ADR-070; MAP-20 ADR-071; MAP-23 corrected ADR-072; MAP-35 (Pandora's Box) ADR-100.
 - **Towns**: groups ADR-010/028/029, tech tree ADR-030/046, income ADR-025, caravans ADR-054, tavern ADR-060/070, governors ADR-063, TOWN-1 fort
-  ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075.
+  ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075, TOWN-12 (b, the Grail buildings) ADR-130.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
   CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073; HERO-8 (rarer specialties, the proposals for now) ADR-107; HERO-9 (Scouting reveals information) ADR-125.
 - **Combat**: CMB-5 (sieges before 1.0) ADR-099; CMB-11 (siege rules) ADR-106; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,

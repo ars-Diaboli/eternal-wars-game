@@ -7,20 +7,26 @@ namespace EternalWars.Core.Data.Maps;
 /// One node of an event tree as the map file writes it (<see cref="MapEventJson"/>): the editor's "Events" tab shows a chosen action or quest stage
 /// as this text and reads it back, so every action, condition and expression can be edited without a form of its own (EVT-6).
 /// </summary>
-public static class MapEventNodeJson
+public sealed class MapEventNodeJson : IMapEventNodeText
 {
-    public static string Write(EventAction action) => JsonSerializer.Serialize(action, JsonDefaults.Options);
+    public static readonly MapEventNodeJson Instance = new();
+
+    private MapEventNodeJson()
+    {
+    }
+
+    public string Write(EventAction action) => JsonSerializer.Serialize(action, JsonDefaults.Options);
 
     /// <summary>A quest stage without its actions (they are edited in the tree).</summary>
-    public static string Write(QuestStage stage) => JsonSerializer.Serialize(stage with { Actions = [] }, JsonDefaults.Options);
+    public string Write(QuestStage stage) => JsonSerializer.Serialize(stage with { Actions = [] }, JsonDefaults.Options);
 
-    public static string Write(EventCondition condition) => JsonSerializer.Serialize(condition, JsonDefaults.Options);
+    public string Write(EventCondition condition) => JsonSerializer.Serialize(condition, JsonDefaults.Options);
 
     /// <summary>The action the text describes; <see cref="FormatException"/> with the reason when it describes none.</summary>
-    public static EventAction ReadAction(string text) => Read<EventAction>(text);
+    public EventAction ReadAction(string text) => Read<EventAction>(text);
 
     /// <summary>The stage the text describes, with <paramref name="actions"/> as its actions.</summary>
-    public static QuestStage ReadStage(string text, IReadOnlyList<EventAction> actions)
+    public QuestStage ReadStage(string text, IReadOnlyList<EventAction> actions)
     {
         var stage = Read<QuestStage>(text);
         if (stage.Requirement is null || stage.Proposal is null)
@@ -31,7 +37,7 @@ public static class MapEventNodeJson
         return stage with { Actions = actions };
     }
 
-    public static EventCondition ReadCondition(string text) => Read<EventCondition>(text);
+    public EventCondition ReadCondition(string text) => Read<EventCondition>(text);
 
     private static T Read<T>(string text)
         where T : class
