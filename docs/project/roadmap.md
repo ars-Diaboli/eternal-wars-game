@@ -8,10 +8,10 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 
 **Where we are (2026-11-05)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core and the game app, quests, loops and run events included, the editor writes them in its "Events" tab and the AI weighs them, with campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131).
+except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
-and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the last 16 battle spells, map events (the
-turn-start camera), presentation.
+and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: map bans, random monsters, towns and hero
+placeholders, the Grail, the last 16 battle spells, presentation.
 
 ## Open checks in Godot
 - [ ] Godot run of (built and tested in core, the Godot part not run yet):
@@ -138,11 +138,11 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       (ADR-106, ADR-109, ADR-113, ADR-120), circular battle movement (ADR-089)
 - [ ] Sieges: the town's own look on the siege field
 
-### Map events (ADR-096, ADR-115; HotA's extended events; after the Phase 3 and 4 exits, before the campaign)
+### Map events (ADR-096, ADR-115; HotA's extended events) ✅
 - [x] Step 1, core: the event tree, variables, event cells, turn-start player and town events, HotA's conditions and actions, messages,
       questions, battles, a full army's choice, "defeated by" records, map format v31 (ADR-124)
 - [x] Step 1, game app: the message and question window (with reward lines) and the full army's choice (ADR-128)
-- [ ] Step 1, game app: the camera moves to what a turn-start message concerns (EVT-2 f)
+- [x] Step 1, game app: the camera moves to what a turn-start message concerns (EVT-2 f, ADR-132)
 - [x] Step 2, core: quests with stages, HoMM3's quest forms that take what they ask, Seer's Hut, Quest Guard, Quest Gate (passage for a
       hero that meets its quest), the quest log in the game state, map format v32; no Seer's Huts on random maps for now (ADR-127)
 - [x] Step 2, game app: the quest log window (Q), placeholder shapes for the three quest objects (ADR-128)

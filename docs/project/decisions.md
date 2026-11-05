@@ -419,8 +419,7 @@ and `editor-generated-connections` (a map generated from `tools/smoke/connection
 - **Not done**: a person playing Ember March to the end in the app (the Phase 3 exit's last check); the 2D harness has no tavern screen.
 
 ### ADR-115: Map events: the EVT-1 … EVT-6 proposals (ADR-096, 2026-11-02)
-**Status**: accepted (2026-11-02), the owner's answer to EVT-1 … EVT-6: "use the proposals". Implemented by ADR-124, ADR-127, ADR-128, ADR-129 and ADR-131,
-except the turn-start camera (EVT-2 f).
+**Status**: accepted (2026-11-02), the owner's answer to EVT-1 … EVT-6: "use the proposals". Implemented by ADR-124, ADR-127, ADR-128, ADR-129, ADR-131 and ADR-132.
 
 - **Scope and plan** (EVT-1): all four event types in three steps: (1) hero, player and town events with conditions, variables, messages,
   questions and the main actions; (2) the quest objects and the quest log; (3) loops and "run another event". A Phase 5 item, after the
@@ -817,8 +816,8 @@ editor and the AI weighing them: ADR-129.
   `quest.guard`, `quest.gate`).
 
 ### ADR-128: Map events: the game app's windows and quest log, quest object shapes; step 3: loops, "run another event", a Pandora's Box's hero event, map format v33 (ADR-115, ADR-124, ADR-127, MAP-35, 2026-11-04)
-**Status**: implemented (2026-11-04); core tested; the game app checked in Godot 4.7.2 with the new smoke scenario `game-quests`. Not done: the
-camera moving to what a turn-start message concerns (EVT-2 f). The editor's "Events" tab and the AI's use of events and quests: ADR-129. Choices made here are marked *(choice)*.
+**Status**: implemented (2026-11-04); core tested; the game app checked in Godot 4.7.2 with the new smoke scenario `game-quests`. The camera moving to what a
+turn-start message concerns (EVT-2 f): ADR-132. The editor's "Events" tab and the AI's use of events and quests: ADR-129. Choices made here are marked *(choice)*.
 
 - **Step 3, loops** (`RepeatAction`, `WhileAction`): a repeat's count is drawn once, when it starts; 0 or less runs nothing. A while loop tests
   its condition before every round. Both stop after **100 rounds** (`MaxLoopRounds`) *(choice)*. A message, question, battle or full army
@@ -938,3 +937,19 @@ by the agent and stand unless the owner changes them.
   only a variable leads to is not followed. The editor's validator warns about such an event: "games on this map are not ranked".
 - **Tests**: the carried values, the kept values after play, the format round trip and a replay with carried values, the editor's marks,
   the load error, an older map and record; six events that favour people and six that do not.
+
+### ADR-132: Map events: the camera on a turn-start message (ADR-115, EVT-2 f, 2026-11-05)
+**Status**: implemented (2026-11-05); core tested (`MapEventTests`); checked in Godot 4.7.2 with the new smoke scenario `game-turn-start-camera`.
+No map format change. With it the map events of ADR-115 are complete. Points marked *(proposal)* are the agent's reading and stand unless
+the owner changes them.
+
+- A message or question that a **turn-start** run shows (a player event, or a town event at its owner's turn start) names the place it
+  concerns (`MapEventDecision.Place`), and the game app moves the camera there (and to its level) when it shows the window. What it concerns
+  *(proposal)*, first that applies:
+  - a place the message's own rewards name: the centre of an area they reveal, a cell they give a hero at;
+  - the last place the run touched before it: the centre of an area it revealed, where a hero it gave stands;
+  - the town of a town event (its entrance).
+  Otherwise there is no place and the camera stays on the turn's first hero.
+- Hero events (cells, quest objects, a Pandora's Box's event) name no place: their hero is in view. A computer player sees no messages.
+- The camera moves after the turn's own move to the first hero, and again for each later message of the turn; not while the computer's
+  moves are still being shown (the turn's showing comes back to it).
