@@ -200,6 +200,7 @@ public static class MagicRules
             return;
         }
 
+        Objects.GrailRules.RaiseBuilding(state, events, hero, town);
         UniqueBuildings.Visit(state, events, hero, town);
 
         // Stronghold's and Swamp Bestiary's war lodge (ADR-071, placeholder) teaches the warcries up to its level instead of spells.

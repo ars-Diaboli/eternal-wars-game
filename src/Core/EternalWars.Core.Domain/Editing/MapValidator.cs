@@ -211,7 +211,30 @@ public static class MapValidator
         issues.AddRange(ValidateBans(scenario));
         issues.AddRange(ValidatePlaceholders(scenario));
         issues.AddRange(ValidateEvents(scenario));
+        issues.AddRange(ValidateGrail(scenario));
         return issues;
+    }
+
+    /// <summary>
+    /// The Grail (ADR-140): where the author buried it a hero must be able to dig (an object or road put there later makes it unreachable); a buried
+    /// Grail without obelisks can only be found by chance.
+    /// </summary>
+    private static IEnumerable<MapIssue> ValidateGrail(GameState scenario)
+    {
+        if (scenario.Grail.Position is not { } grail)
+        {
+            yield break;
+        }
+
+        if (GrailRules.CheckGround(scenario, grail) is { } problem)
+        {
+            yield return new(IssueSeverity.Error, $"Nobody can dig up the Grail: {problem}", grail);
+        }
+
+        if (!scenario.ObjectsOf<Obelisk>().Any())
+        {
+            yield return new(IssueSeverity.Warning, "The Grail is buried but the map has no obelisks: players find it only by digging at random.", grail);
+        }
     }
 
     /// <summary>

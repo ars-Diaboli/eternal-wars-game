@@ -84,6 +84,7 @@ public static class TreasureSites
         new(BuiltInMapObjects.WitchHut, 1500),
         new(BuiltInMapObjects.University, 2500, Weight: 1, MapLimit: 1),
         new(BuiltInMapObjects.WarAcademy, 2500, Weight: 1, MapLimit: 1),
+        new(BuiltInMapObjects.Obelisk, 1000, ZoneLimit: 1, MapLimit: 8), // the Grail is buried when the game starts on a map with one (ADR-140)
         new(BuiltInMapObjects.ShrineId(1), 500),
         new(BuiltInMapObjects.ShrineId(2), 1500),
         new(BuiltInMapObjects.ShrineId(3), 2500, Weight: 1),

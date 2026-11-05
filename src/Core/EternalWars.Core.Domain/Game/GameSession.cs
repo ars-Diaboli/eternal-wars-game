@@ -116,6 +116,7 @@ public sealed class GameSession
     public void Start()
     {
         PlaceholderRules.Resolve(State, Bus);
+        Objects.GrailRules.Bury(State);
         Flow.RemoveSurplusHeroes();
         Flow.Begin();
         Artifacts.RollUnsetPickups();
@@ -220,6 +221,7 @@ public sealed class GameSession
             MoveHeroCommand move => move.Hero,
             MoveStackCommand stack => stack.FromHero,
             CastAdventureSpellCommand cast => cast.Hero,
+            DigCommand dig => dig.Hero,
             _ => (Common.HeroId?)null,
         };
         if (hero is { } id && State.Heroes.All(h => h.Id != id))
@@ -283,6 +285,9 @@ public sealed class GameSession
                 return null;
             case TakeLessonCommand lesson:
                 Interactions.TakeLesson(lesson.Player, lesson.School, lesson.Skill);
+                return null;
+            case DigCommand dig:
+                Interactions.Dig(dig.Hero);
                 return null;
             case BuyArtifactCommand buy:
                 Interactions.BuyArtifact(buy.Player, buy.Merchant, buy.Slot);

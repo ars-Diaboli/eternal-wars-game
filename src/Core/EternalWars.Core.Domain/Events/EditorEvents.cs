@@ -32,3 +32,6 @@ public sealed record HeroSpellsChanged(HeroId Hero) : IEvent;
 
 /// <summary>The editor changed the map events (EVT-6): events, variables or event cells. Views re-read <c>GameState.MapEvents.Set</c>.</summary>
 public sealed record MapEventsChanged : IEvent;
+
+/// <summary>The author buried the Grail elsewhere or took it away (ADR-140); <paramref name="Position"/> null = drawn when the game starts.</summary>
+public sealed record GrailMoved(MapPosition? Position) : IEvent;

@@ -53,6 +53,12 @@ public static class BuiltInBuildings
     public const string Caravan = "caravan";
 
     /// <summary>
+    /// The Grail building (ADR-130, ADR-140): never built with gold, only by an own hero bringing the Grail into the town
+    /// (<see cref="Objects.GrailRules"/>); each town type names its own.
+    /// </summary>
+    public const string Grail = "grail";
+
+    /// <summary>
     /// Stronghold's and Swamp Bestiary's 3-level building instead of a mage guild (ADR-071, MAG-2; placeholder): a level teaches the warcry of that
     /// level (<see cref="Battles.PrimalFury.LevelOf"/>) to the owner's heroes in the town.
     /// </summary>

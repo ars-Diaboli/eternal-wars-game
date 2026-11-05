@@ -45,12 +45,13 @@ namespace EternalWars.Core.Data.Maps;
 /// <c>event</c> (ADR-115, MAP-35). 34 = + campaign variables (the events' <c>keptVariables</c> and <c>takenVariables</c>: names of declared
 /// variables; omitted = none; EVT-1 f). 35 = + map bans (<c>rules.bans</c>: heroes, artifacts, spells, skills; ADR-126), random monsters
 /// (<c>randomTier</c> on a monster: 0 any tier, 1–7 that tier), random towns (<c>random</c> on a town) and hero placeholders (<c>placeholder</c> on a
-/// hero), all drawn when the game starts. 36 = + the University and the War Academy (<c>skillSchool</c>; ADR-139). Older versions still load
-/// (with the default events).
+/// hero), all drawn when the game starts. 36 = + the University and the War Academy (<c>skillSchool</c>; ADR-139). 37 = + the buried Grail
+/// (<c>grail</c>: a cell; omitted = drawn when the game starts on a map with obelisks) and obelisks (<c>obelisk</c>; ADR-140). Older versions still
+/// load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 36;
+    public const int CurrentFormatVersion = 37;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -100,7 +101,13 @@ public sealed record MapDocument
 
     /// <summary>The map events (v31, ADR-115), written as the domain's tree (<see cref="MapEventJson"/>); omitted = none.</summary>
     public Domain.MapEvents.MapEventSet? Events { get; init; }
+
+    /// <summary>Where the author buried the Grail (v37, ADR-140); omitted = drawn when the game starts, on a map with obelisks.</summary>
+    public CellDocument? Grail { get; init; }
 }
+
+/// <summary>A cell of the map (v37): column, row and level.</summary>
+public sealed record CellDocument(int X, int Y, int Level = 0);
 
 /// <summary>
 /// How a scenario is won and lost (v10, ADR-057). <see cref="StandardVictory"/> (the last team standing wins) and
@@ -239,6 +246,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(WitchHutDocument), "witchHut")]
 [JsonDerivedType(typeof(ShrineDocument), "shrine")]
 [JsonDerivedType(typeof(SkillSchoolDocument), "skillSchool")]
+[JsonDerivedType(typeof(ObeliskDocument), "obelisk")]
 [JsonDerivedType(typeof(DepositDocument), "deposit")]
 [JsonDerivedType(typeof(MagiWindowDocument), "magiWindow")]
 [JsonDerivedType(typeof(MagiEyeDocument), "magiEye")]
@@ -415,6 +423,9 @@ public sealed record ShrineDocument : MapObjectDocument
 
 /// <summary>A University or War Academy (v36, ADR-139; which one comes from its definition); the lessons are drawn in the game.</summary>
 public sealed record SkillSchoolDocument : MapObjectDocument;
+
+/// <summary>An obelisk (v37, ADR-140); the players' visits are made in the game.</summary>
+public sealed record ObeliskDocument : MapObjectDocument;
 
 /// <summary>A witch hut (v22, ADR-079); <see cref="Skills"/> omitted = two rolled when the game starts.</summary>
 public sealed record WitchHutDocument : MapObjectDocument

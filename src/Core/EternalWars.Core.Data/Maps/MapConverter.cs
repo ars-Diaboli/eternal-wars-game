@@ -49,6 +49,7 @@ public static class MapConverter
                 .ToList(),
             Objects = state.Objects.Select(ToDocument).ToList(),
             Events = state.MapEvents.Set.IsEmpty ? null : state.MapEvents.Set,
+            Grail = state.Grail.Position is { } grail ? new CellDocument(grail.X, grail.Y, grail.Level) : null,
         };
 
     public static MapDocument ToDocument(AdventureMap map) => new()
@@ -125,6 +126,7 @@ public static class MapConverter
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetTeamCounts(document.MinTeams, document.MaxTeams);
             state.SetRules(ToRules(document.Rules));
+            state.SetGrail(document.Grail is { } grail ? new MapPosition(grail.X, grail.Y, grail.Level) : null);
             // Quest objects and Pandora's Boxes name their events, so a map with them is checked even without events (EVT-5, MAP-35).
             if (document.Events is { } mapEvents)
             {
@@ -422,6 +424,10 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
             },
+            Obelisk => new ObeliskDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
             Deposit => new DepositDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -640,6 +646,7 @@ public static class MapConverter
                 ShrineDocument shrine when ShrineRules.SpellRefusal(SpellCatalog.Default, definition.Amount, shrine.Spell) is { } wrong => throw new FormatException($"A shrine: {wrong}"),
                 ShrineDocument shrine => new Shrine(id, definition, position, shrine.Spell),
                 SkillSchoolDocument => new SkillSchool(id, definition, position),
+                ObeliskDocument => new Obelisk(id, definition, position),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
                 PandorasBoxDocument box => ToBox(box, id, definition, position, creatures),
                 QuestSiteDocument site => new QuestSite(id, definition, position, string.IsNullOrEmpty(site.Quest) ? null : site.Quest),

@@ -1437,6 +1437,43 @@ public sealed class MapEditorSession
         }
     }
 
+    /// <summary>
+    /// Buries the Grail at <paramref name="position"/> (ADR-140), or takes it away (null: drawn when the game starts on a map with obelisks). Refused
+    /// off the map and where a hero could not dig (impassable ground, a road, an object).
+    /// </summary>
+    public EditResult SetGrail(MapPosition? position)
+    {
+        var previous = Scenario.Grail.Position;
+        if (position is { } at)
+        {
+            if (!Scenario.Map.Contains(at))
+            {
+                return EditResult.OutOfBounds;
+            }
+
+            if (Objects.GrailRules.CheckGround(Scenario, at) is not null)
+            {
+                return Scenario.ObjectCellAt(at) is not null ? EditResult.Overlaps
+                    : Scenario.Terrains.IsPassable(Scenario.Map.GetTerrain(at)) ? EditResult.InvalidTarget
+                    : EditResult.ImpassableTerrain;
+            }
+        }
+
+        if (previous == position)
+        {
+            return EditResult.Ok;
+        }
+
+        Run(new DelegateCommand(position is null ? "Remove the Grail" : "Bury the Grail", () => Apply(position), () => Apply(previous)));
+        return EditResult.Ok;
+
+        void Apply(MapPosition? value)
+        {
+            Scenario.SetGrail(value);
+            _bus.Publish(new GrailMoved(value));
+        }
+    }
+
     // Map events (EVT-6) -------------------------------------------------------------------------
 
     /// <summary>A name no event of the map has: <paramref name="stem"/>, else "stem 2", "stem 3", ….</summary>

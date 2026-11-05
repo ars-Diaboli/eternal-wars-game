@@ -38,6 +38,15 @@ hall-of-records,academy,1,Hall of Records,2000,ore 5; mercury 5,fort 1,,,"unique
 altar-of-brimstone,inferno,1,Altar of Brimstone,2000,ore 5; mercury 5,fort 1,,,"unique (ADR-126, ADR-138): +1 Spell Power once per hero; +1 Spell Power in sieges"
 elder-grove,sylvan,1,Elder Grove,2000,ore 5; mercury 5,fort 1,,,"unique (ADR-126, ADR-138): +1000 experience once per hero; +1 luck in sieges"
 mana-spring,dungeon,1,Mana Spring,2000,ore 5; sulfur 5,fort 1,,,"unique (ADR-126, ADR-138): mana +75 % of the maximum, above it until spent; once a week per hero; +1 morale in sieges"
+grail,,1,Grail Monument,,,,gold 5000,,"built only by bringing the Grail into the town (ADR-130, ADR-140): +5000 gold a day, +50 % growth of every dwelling; in a siege +2 Initiative for the defending stacks, +5 Attack, Defense, Spell Power and Knowledge for the defending hero"
+grail,haven,1,Dawnspire,,,,gold 5000,,the Grail building's name per town (ADR-140 proposal)
+grail,stronghold,1,Skull of the First Khan,,,,gold 5000,,
+grail,swamp-bestiary,1,Mother Mire,,,,gold 5000,,
+grail,academy,1,Orrery of Ages,,,,gold 5000,,
+grail,inferno,1,Everburning Pyre,,,,gold 5000,,
+grail,sylvan,1,Heartwood Tree,,,,gold 5000,,
+grail,dungeon,1,Abyssal Lantern,,,,gold 5000,,
+grail,necropolis,1,Throne of Bones,,,,gold 5000,,
 school-inferno,sylvan,1,Brimstone Altar,2000,mercury 5,mage-guild 2,,,"placeholder (ADR-072, MAG-12): 1 Inferno spell per mage guild level; the school's resource is its town's rare resource"
 school-haven,sylvan,1,Chapel of Dawn,2000,crystal 5,mage-guild 2,,,1 Haven spell per mage guild level
 school-sylvan,haven,1,Grove of Whispers,2000,mercury 5,mage-guild 2,,,1 Sylvan spell per mage guild level

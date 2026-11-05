@@ -51,6 +51,7 @@ public static class ArtifactValue
         ArtifactEffectKind.Spells => 20.0,
         ArtifactEffectKind.FullMana => 40.0,
         ArtifactEffectKind.NoFactionPenalty => 15.0,
+        ArtifactEffectKind.Grail => 500.0, // never left behind: it builds a Grail building
         _ => 0.0,
     });
 

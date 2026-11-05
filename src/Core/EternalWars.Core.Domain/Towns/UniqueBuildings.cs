@@ -33,16 +33,18 @@ public enum UniqueBonus
 
 /// <summary>
 /// What a town's buildings add to its defending hero in a siege of that town (ADR-126): a hero on its entrance or in its garrison. Knowledge lends
-/// <see cref="ManaRules.ManaPerKnowledge"/> mana a point for the battle, spent first and gone afterwards.
+/// <see cref="ManaRules.ManaPerKnowledge"/> mana a point for the battle, spent first and gone afterwards. <see cref="Initiative"/> (the Grail
+/// building, ADR-130) goes to every defending stack, with or without a hero.
 /// </summary>
-public sealed record SiegeBonus(int Attack = 0, int Defense = 0, int Knowledge = 0, int SpellPower = 0, int Morale = 0, int Luck = 0)
+public sealed record SiegeBonus(int Attack = 0, int Defense = 0, int Knowledge = 0, int SpellPower = 0, int Morale = 0, int Luck = 0, int Initiative = 0)
 {
     public static SiegeBonus None { get; } = new();
 
     public bool IsNone => this == None;
 
     public static SiegeBonus operator +(SiegeBonus a, SiegeBonus b) =>
-        new(a.Attack + b.Attack, a.Defense + b.Defense, a.Knowledge + b.Knowledge, a.SpellPower + b.SpellPower, a.Morale + b.Morale, a.Luck + b.Luck);
+        new(a.Attack + b.Attack, a.Defense + b.Defense, a.Knowledge + b.Knowledge, a.SpellPower + b.SpellPower, a.Morale + b.Morale, a.Luck + b.Luck,
+            a.Initiative + b.Initiative);
 }
 
 /// <summary>One town's unique building: its id in <c>buildings.csv</c>, its town, the visit bonus and the siege bonus.</summary>
@@ -91,8 +93,12 @@ public static class UniqueBuildings
     /// <summary>The town's built unique buildings, in table order.</summary>
     public static IEnumerable<UniqueBuilding> Built(Town town) => All.Where(b => town.Level(b.Id) > 0);
 
-    /// <summary>What the town's buildings add to its defending hero in a siege; <see cref="SiegeBonus.None"/> without any.</summary>
-    public static SiegeBonus SiegeOf(Town town) => Built(town).Aggregate(SiegeBonus.None, (sum, b) => sum + b.Siege);
+    /// <summary>The Grail building's siege bonus (ADR-130): +2 Initiative for every defending stack, +5 Attack, Defense, Spell Power and Knowledge for the hero.</summary>
+    public static SiegeBonus GrailSiege { get; } = new(Attack: 5, Defense: 5, Knowledge: 5, SpellPower: 5, Initiative: 2);
+
+    /// <summary>What the town's buildings (its unique buildings and the Grail building) add to its defenders in a siege; <see cref="SiegeBonus.None"/> without any.</summary>
+    public static SiegeBonus SiegeOf(Town town) =>
+        Built(town).Aggregate(town.Level(BuiltInBuildings.Grail) > 0 ? GrailSiege : SiegeBonus.None, (sum, b) => sum + b.Siege);
 
     /// <summary>Whether <paramref name="hero"/> may take the building's bonus in <paramref name="town"/> today.</summary>
     public static bool CanTake(GameState state, Town town, UniqueBuilding building, Hero hero) =>

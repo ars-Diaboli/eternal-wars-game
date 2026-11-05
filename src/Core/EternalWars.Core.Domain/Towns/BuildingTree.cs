@@ -22,7 +22,7 @@ public enum BuildingStatus
     /// <summary>The owner cannot pay for it.</summary>
     CannotAfford,
 
-    /// <summary>Refused for another reason (a second Capitol).</summary>
+    /// <summary>Refused for another reason (a second Capitol, the Grail building).</summary>
     Refused,
 }
 
@@ -75,6 +75,7 @@ public static class BuildingTree
     private static BuildingStatus Status(GameState state, Town town, BuildingLevel? next, IReadOnlyList<RequirementState> requires, string? refusal) =>
         next is null ? BuildingStatus.Complete
         : refusal is null ? BuildingStatus.Available
+        : next.Building == BuiltInBuildings.Grail ? BuildingStatus.Refused
         : requires.Any(r => !r.Met) ? BuildingStatus.NeedsBuildings
         : town.LastBuilt == state.Date ? BuildingStatus.BuiltToday
         : TownRules.CheckCapitol(state, town, next) is not null ? BuildingStatus.Refused

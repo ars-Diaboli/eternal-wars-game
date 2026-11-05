@@ -142,6 +142,10 @@ public sealed class MapObjectInteractionService(
                 DrawLessons(hero, school);
                 break;
 
+            case Obelisk obelisk:
+                GrailRules.Visit(events, hero, obelisk);
+                break;
+
             case Shrine shrine:
                 Worship(hero, shrine);
                 break;
@@ -1006,6 +1010,37 @@ public sealed class MapObjectInteractionService(
     }
 
     /// <summary>The hero on a University's or War Academy's entrance takes one of its lessons for <see cref="SkillSchoolRules.Price"/> (ADR-139).</summary>
+    /// <summary>
+    /// The hero digs where it stands (ADR-140): it needs its whole day's movement, which the dig spends, and open ground (<see cref="GrailRules.CheckDig"/>).
+    /// The hole stays; on the Grail's cell the hero takes the Grail, unless its backpack is full, which leaves the Grail buried and the cell undug.
+    /// </summary>
+    internal void Dig(HeroId heroId)
+    {
+        var hero = state.GetHero(heroId);
+        if (GrailRules.CheckDig(state, hero) is { } refusal)
+        {
+            throw new InvalidOperationException(refusal);
+        }
+
+        hero.MovementPoints = 0;
+        var position = hero.Position;
+        string? found = null;
+        if (!state.Grail.IsFound && state.Grail.Position == position && state.Artifacts.Grail is { } grail)
+        {
+            if (!artifacts.Grant(hero, grail.Id, ArtifactSource.Found))
+            {
+                events.Publish(new HoleDug(hero.Id, position, null));
+                return;
+            }
+
+            state.Grail.IsFound = true;
+            found = grail.Id;
+        }
+
+        state.Grail.AddHole(position);
+        events.Publish(new HoleDug(hero.Id, position, found));
+    }
+
     internal void TakeLesson(PlayerId player, MapObjectId schoolId, string skill)
     {
         var hero = HeroAt<SkillSchool>(player, schoolId, out var school);
@@ -1118,6 +1153,11 @@ public sealed class MapObjectInteractionService(
         if (!hero.Artifacts.Has(artifact))
         {
             throw new InvalidOperationException($"{hero.Name} has no '{artifact}'.");
+        }
+
+        if (state.Artifacts.Get(artifact).IsGrail)
+        {
+            throw new InvalidOperationException("The Grail is not given up on an altar.");
         }
 
         if (state.Artifacts.Get(artifact).IsAssembled)

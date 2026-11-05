@@ -139,6 +139,12 @@ public enum ArtifactEffectKind
     /// scroll of the table): while it is worn, a hero with a spell book can cast that spell at the rank its school's Mastery allows.
     /// </summary>
     Scroll,
+
+    /// <summary>
+    /// The Grail (value 1; ADR-126, ADR-140): dug up, never rolled, sold, sacrificed or traded at an object; a hero carrying it into one of its owner's
+    /// towns builds that town's Grail building and gives the Grail up.
+    /// </summary>
+    Grail,
 }
 
 /// <param name="Kind">What changes.</param>
@@ -180,6 +186,7 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
         ["full-mana"] = ArtifactEffectKind.FullMana,
         ["no-faction-penalty"] = ArtifactEffectKind.NoFactionPenalty,
         ["scroll"] = ArtifactEffectKind.Scroll,
+        ["grail"] = ArtifactEffectKind.Grail,
     };
 
     /// <summary>The word of a kind in the table: <c>spell-power</c>.</summary>
@@ -214,13 +221,13 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
             ArtifactEffectKind.Spells when parts is [_, var range] && range.Split('-') is [var from, var to] && Int(from) is { } low && Int(to) is { } high
                                            && low >= 1 && low <= high && high <= Creatures.SpellLevels.Max
                 => new(kind, high, low.ToString(CultureInfo.InvariantCulture)),
-            ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana or ArtifactEffectKind.NoFactionPenalty when parts is [_]
+            ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana or ArtifactEffectKind.NoFactionPenalty or ArtifactEffectKind.Grail when parts is [_]
                 => new(kind, 1),
             ArtifactEffectKind.Income or ArtifactEffectKind.NativeTerrain or ArtifactEffectKind.Skill or ArtifactEffectKind.Immune
                 or ArtifactEffectKind.ElementPower or ArtifactEffectKind.Spells or ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana
-                or ArtifactEffectKind.NoFactionPenalty
+                or ArtifactEffectKind.NoFactionPenalty or ArtifactEffectKind.Grail
                 => throw new FormatException(
-                    $"'{text}': {parts[0]} needs a resource/terrain/skill/tag/element (and for income, skill and element-power a number), spells a level range; no-retreat, full-mana and no-faction-penalty nothing"),
+                    $"'{text}': {parts[0]} needs a resource/terrain/skill/tag/element (and for income, skill and element-power a number), spells a level range; no-retreat, full-mana, no-faction-penalty and grail nothing"),
             _ when parts is [_, var value] && Int(value) is { } n => new(kind, n),
             _ => throw new FormatException($"'{text}' is not '<effect> <number>'"),
         };
@@ -233,7 +240,7 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
         ArtifactEffectKind.Income or ArtifactEffectKind.Skill or ArtifactEffectKind.ElementPower => $"{WordOf(Kind)} {Target} {Value.ToString(CultureInfo.InvariantCulture)}",
         ArtifactEffectKind.NativeTerrain or ArtifactEffectKind.Immune => $"{WordOf(Kind)} {Target}",
         ArtifactEffectKind.Spells => $"{WordOf(Kind)} {Target}-{Value.ToString(CultureInfo.InvariantCulture)}",
-        ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana or ArtifactEffectKind.NoFactionPenalty => WordOf(Kind),
+        ArtifactEffectKind.NoRetreat or ArtifactEffectKind.FullMana or ArtifactEffectKind.NoFactionPenalty or ArtifactEffectKind.Grail => WordOf(Kind),
         _ => $"{WordOf(Kind)} {Value.ToString(CultureInfo.InvariantCulture)}",
     };
 }
@@ -259,6 +266,9 @@ public sealed record ArtifactDefinition(
 
     /// <summary>Whether it is a spell scroll, blank or written.</summary>
     public bool IsScroll => ScrollLevel is not null;
+
+    /// <summary>Whether it is the Grail (its <c>grail</c> effect, ADR-140): never rolled, sold, sacrificed or traded at an object.</summary>
+    public bool IsGrail => Effects.Any(e => e.Kind == ArtifactEffectKind.Grail);
 
     /// <summary>The spell written on a scroll (<c>spell-scroll-1:light.bless</c>, ADR-136); null for a blank scroll and any other artifact.</summary>
     public string? Spell { get; init; }

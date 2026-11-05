@@ -63,6 +63,7 @@ public static class GameStateDigest
                 Sphinx sphinx => $"riddle {sphinx.Riddle?.Question}",
                 WitchHut hut => $"skills {string.Join(',', hut.Skills)}",
                 Shrine shrine => $"spell {shrine.Spell}",
+                Obelisk obelisk => $"visited {string.Join(',', obelisk.VisitedBy.Select(v => v.Value))}",
                 SkillSchool school => $"lessons {string.Join(' ', school.Lessons.OrderBy(l => l.Key.Value).Select(l => $"{l.Key.Value}:{string.Join(',', l.Value.Select(x => $"{x.Skill}={x.Level}"))}"))}",
                 TreasureChest chest => $"fixed {chest.FixedValues}",
                 ArtifactPickup pickup => $"artifact {pickup.Artifact}",
@@ -92,6 +93,12 @@ public static class GameStateDigest
         foreach (var caravan in state.Caravans)
         {
             Line($"caravan {caravan.Id} owner {caravan.Owner.Value} {caravan.Source}->{caravan.Destination} {caravan.Creature}x{caravan.Count} days {caravan.DaysLeft} paid {caravan.Paid}{(caravan.Cargo is { } cargo ? $" cargo {cargo}" : "")}");
+        }
+
+        // The Grail (ADR-140) only on maps that have one or holes, so older replays keep their digests.
+        if (state.Grail.Position is not null || state.Grail.Holes.Count > 0)
+        {
+            Line($"grail {state.Grail.Position} found {state.Grail.IsFound} holes {string.Join(',', state.Grail.Holes.OrderBy(h => h.Level).ThenBy(h => h.Y).ThenBy(h => h.X))}");
         }
 
         // Map events (ADR-115) only on maps that have them, so older replays keep their digests.

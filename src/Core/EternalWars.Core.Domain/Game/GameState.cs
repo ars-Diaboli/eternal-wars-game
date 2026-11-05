@@ -283,6 +283,28 @@ public sealed class GameState
     /// <summary>The map events (ADR-115): the author's events and what changed while the game ran.</summary>
     public MapEventState MapEvents { get; } = new();
 
+    /// <summary>Where the Grail lies, whether it was found, and the holes dug (ADR-140).</summary>
+    public Objects.GrailState Grail { get; } = new();
+
+    /// <summary>
+    /// Buries the Grail at <paramref name="position"/> (the map's author, ADR-140), or takes it away (null); before the game starts only. A position
+    /// off the map is refused.
+    /// </summary>
+    public void SetGrail(MapPosition? position)
+    {
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("The Grail is buried before the game starts.");
+        }
+
+        if (position is { } at && !Map.Contains(at))
+        {
+            throw new ArgumentOutOfRangeException(nameof(position), $"{at} is not on the map.");
+        }
+
+        Grail.Position = position;
+    }
+
     /// <summary>
     /// Scenario setting (map loading, editor): the map events; refused when they do not fit the map (<see cref="MapEventRules"/>). The editor
     /// passes <paramref name="check"/> false: events being written may not fit yet, and its validator shows the problems.

@@ -133,6 +133,9 @@ public enum MapObjectKind
 
     /// <summary>Lessons for gold and rare resources: a University's magic schools or a War Academy's general groups (<see cref="Objects.SkillSchool"/>, ADR-139).</summary>
     SkillSchool,
+
+    /// <summary>Shows the visiting hero's player a share of the puzzle map around the buried Grail (<see cref="Objects.Obelisk"/>, ADR-140).</summary>
+    Obelisk,
 }
 
 /// <summary>

@@ -84,6 +84,7 @@ public partial class Main : Node3D
     private MarketplacePanel _marketScreen = null!;
     private KingdomOverviewPanel _kingdomScreen = null!;
     private QuestLogPanel _questScreen = null!;
+    private PuzzleMapPanel _puzzleScreen = null!;
     private ObjectServicePanel _serviceScreen = null!;
     private ThievesGuildPanel _guildScreen = null!;
     private AdventureIntelPanel _intelScreen = null!;
@@ -312,8 +313,15 @@ public partial class Main : Node3D
             return;
         }
 
+        if (_puzzleScreen.Visible && @event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.P })
+        {
+            _puzzleScreen.Visible = false;
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         if (_townScreen.Visible || _heroScreen.Visible || _dwellingScreen.Visible || _marketScreen.Visible || _serviceScreen.Visible || _kingdomScreen.Visible
-            || _questScreen.Visible)
+            || _questScreen.Visible || _puzzleScreen.Visible)
         {
             return; // a full-screen panel takes the input (Escape closes it)
         }
@@ -362,6 +370,12 @@ public partial class Main : Node3D
             case InputEventKey { Pressed: true, Keycode: Key.L }:
                 _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
                 _camera.FocusOn(MapSpace.ToWorld(new MapPosition(_session.State.Map.Width / 2, _session.State.Map.Height / 2, _context.Level)));
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P } when _session.State.CurrentPlayer.IsHuman:
+                _puzzleScreen.Open(_session.State.CurrentPlayer.Id);
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.G } when _session.State.CurrentPlayer.IsHuman:
+                Dig();
                 break;
             case InputEventKey { Pressed: true } key when _selectedHero is { } hero && KeyboardDirections.ToDirection(key.Keycode) is { } direction:
                 _world.PathPreview.Clear();
@@ -497,7 +511,21 @@ public partial class Main : Node3D
         _serviceScreen.Close();
         _kingdomScreen.Hide();
         _questScreen.Hide();
+        _puzzleScreen.Hide();
         _guildScreen.Hide();
+    }
+
+    /// <summary>The selected hero digs where it stands (ADR-140): a whole day's movement, for the Grail.</summary>
+    private void Dig()
+    {
+        if (_selectedHero is not { } hero)
+        {
+            _status.Text = "Select a hero to dig.";
+            return;
+        }
+
+        _world.PathPreview.Clear();
+        Report(_session.Execute(new DigCommand(_session.State.CurrentPlayer.Id, hero)));
     }
 
     /// <summary>The start of a turn goes into the two autosave slots: this turn's and the previous turn's.</summary>
@@ -1083,7 +1111,7 @@ public partial class Main : Node3D
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        _status = new Label { Text = "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  WASD/QE/wheel: camera" };
+        _status = new Label { Text = "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera" };
         top.AddChild(_status);
         var decisions = new DecisionPanel();
         top.AddChild(decisions);
@@ -1187,6 +1215,17 @@ public partial class Main : Node3D
         var quests = new Button { Text = "Quests (Q)", TooltipText = "The quests your heroes were shown" };
         quests.Pressed += () => _questScreen.Open(_session.State.CurrentPlayer.Id);
         side.AddChild(quests);
+        _puzzleScreen = new PuzzleMapPanel();
+        townLayer.AddChild(_puzzleScreen);
+        _puzzleScreen.Bind(_session);
+        var grail = new HBoxContainer();
+        side.AddChild(grail);
+        var puzzle = new Button { Text = "Puzzle map (P)", TooltipText = "The ground around the Grail, as your obelisks show it" };
+        puzzle.Pressed += () => _puzzleScreen.Open(_session.State.CurrentPlayer.Id);
+        grail.AddChild(puzzle);
+        var dig = new Button { Text = "Dig (G)", TooltipText = "The selected hero digs where it stands, with a whole day's movement" };
+        dig.Pressed += Dig;
+        grail.AddChild(dig);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
         var market = new Button { Text = "Marketplace" };
