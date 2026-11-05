@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
@@ -259,6 +260,20 @@ public partial class Main : Node3D
 
         _context.SetViewer(player);
         Select(_session.State.HeroesOf(player).FirstOrDefault()?.Id, focus: true);
+        FocusOnEventPlace(_session.State.PendingDecision);
+    }
+
+    /// <summary>
+    /// A turn-start message or question of a map event moves the camera to what it concerns (EVT-2 f): a town, a revealed area, a hero given.
+    /// Not while the computer's moves are still shown; the turn's showing comes back to it.
+    /// </summary>
+    private void FocusOnEventPlace(PendingDecision? decision)
+    {
+        if (decision is MapEventDecision { Place: { } place } && !ShowingComputerMoves && _session.State.CurrentPlayer.IsHuman)
+        {
+            _context.SetLevel(place.Level);
+            _camera.FocusOn(MapSpace.ToWorld(place));
+        }
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -425,6 +440,7 @@ public partial class Main : Node3D
 
             ShowTurn(e.Player);
         });
+        _game.SubscribeWhileInTree<DecisionRequested>(_session.Events, e => FocusOnEventPlace(e.Decision));
         _context.HeroStepShown += FollowStep;
         _game.SubscribeWhileInTree<HeroDefeated>(_session.Events, e =>
         {

@@ -392,7 +392,10 @@ public sealed class MapEventService(
                 break;
             case QuestionAction question when run.Player is { } asked && question.Answers.Count > 0:
                 run.Answers = question.Answers;
-                Ask(run, new MapEventDecision(hero?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, question.Text, [], question.Answers.Select(a => a.Text).ToList()));
+                Ask(run, new MapEventDecision(hero?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, question.Text, [], question.Answers.Select(a => a.Text).ToList())
+                {
+                    Place = PlaceOf(run, []),
+                });
                 break;
             case ResourceAction resource when run.Player is { } player:
                 GiveResource(player, resource.Resource, Evaluate(run, resource.Amount));
@@ -411,7 +414,8 @@ public sealed class MapEventService(
                 Build(town, build.Building, build.Level);
                 break;
             case RevealAction reveal when run.Player is { } viewer:
-                events.Publish(new AreaRevealed(viewer, new MapPosition(reveal.X, reveal.Y, reveal.Level), reveal.Radius));
+                run.Place = new MapPosition(reveal.X, reveal.Y, reveal.Level);
+                events.Publish(new AreaRevealed(viewer, run.Place.Value, reveal.Radius));
                 break;
             case GiveHeroAction give when run.Player is { } owner:
                 GiveHero(run, owner, give, hero, town);
@@ -516,8 +520,37 @@ public sealed class MapEventService(
         if (run.Player is { } player && state.GetPlayer(player).IsHuman)
         {
             var lines = rewards.Select(Describe).OfType<string>().ToList();
-            Ask(run, new MapEventDecision(HeroOf(run)?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, message.Text, lines, []));
+            Ask(run, new MapEventDecision(HeroOf(run)?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, message.Text, lines, [])
+            {
+                Place = PlaceOf(run, rewards),
+            });
         }
+    }
+
+    /// <summary>
+    /// What a turn-start message or question concerns (EVT-2 f), for the camera: a place its own rewards name (a revealed area's centre, a
+    /// hero given at a cell), else the last place the run touched (an area it revealed, a hero it gave), else the town of a town event. Null
+    /// for runs that are not a turn start: a hero event's hero is already in view.
+    /// </summary>
+    private MapPosition? PlaceOf(Run run, IReadOnlyList<EventAction> rewards)
+    {
+        if (!run.StartOfTurn)
+        {
+            return null;
+        }
+
+        foreach (var reward in rewards)
+        {
+            switch (reward)
+            {
+                case RevealAction reveal:
+                    return new MapPosition(reveal.X, reveal.Y, reveal.Level);
+                case GiveHeroAction { X: { } x, Y: { } y } give:
+                    return new MapPosition(x, y, give.Level);
+            }
+        }
+
+        return run.Place ?? (run.Town is { } id && state.FindObject(id) is Town town ? town.VisitPosition : null);
     }
 
     private void Ask(Run run, PendingDecision decision)
@@ -732,6 +765,7 @@ public sealed class MapEventService(
         progression.LevelUpAutomatically(joined);
         joined.MaxMovementPoints = MovementAllowance.Daily(joined, state.Creatures);
         joined.MovementPoints = run.StartOfTurn ? joined.MaxMovementPoints : 0; // given in the middle of a turn: it moves next turn, like a prisoner
+        run.Place = joined.Position;
         events.Publish(new MapEventHeroGiven(joined.Id, owner, give.Hero, joined.Level));
     }
 
@@ -871,6 +905,9 @@ public sealed class MapEventService(
         public MapPosition? Cell { get; } = cell;
 
         public bool StartOfTurn { get; } = startOfTurn;
+
+        /// <summary>The last place the run touched (an area it revealed, a hero it gave): what a later turn-start message concerns.</summary>
+        public MapPosition? Place { get; set; }
 
         public Stack<Frame> Frames { get; } = new([new Frame(actions ?? definition.Actions) { Event = definition }]);
 

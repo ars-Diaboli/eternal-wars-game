@@ -153,6 +153,41 @@ public class MapEventTests
     }
 
     [Fact]
+    public void ATurnStartMessage_NamesThePlaceItConcerns_ForTheCamera()
+    {
+        static MapEventDecision First(MapEventSet events, Action<GameState>? setup = null) =>
+            Assert.IsType<MapEventDecision>(World(events, setup).State.PendingDecision);
+
+        static MapEventSet Player(params EventAction[] actions) => new() { Events = [new MapEventDefinition("start", MapEventKind.Player, [new IfAction(new PlayerIsCondition(0), actions)])] };
+
+        // Nothing touched: no place, the camera stays with the first hero.
+        Assert.Null(First(Player(new MessageAction("Hello."))).Place);
+
+        // An area the event revealed before the message, or one the message's rewards reveal.
+        Assert.Equal(new MapPosition(4, 3), First(Player(new RevealAction(4, 3, 0, 2), new MessageAction("Look there."))).Place);
+        Assert.Equal(new MapPosition(5, 0), First(Player(new MessageAction("Look there.") { Rewards = [new RevealAction(5, 0, 0, 1)] })).Place);
+
+        // A question after a hero was given: where the hero stands.
+        var roster = Create("......", "A.....", "......", ".....B");
+        var free = roster.HeroRoster.All.First(h => roster.Heroes.All(x => x.Definition != h.Id)).Id;
+        roster.SetMapEvents(Player(new GiveHeroAction(free) { X = 3, Y = 0 }, new QuestionAction("Welcome them?", [new EventAnswer("Yes", []), new EventAnswer("No", [])])));
+        var given = Assert.IsType<MapEventDecision>(Start(roster).State.PendingDecision);
+        Assert.Equal(new MapPosition(3, 0), given.Place);
+        Assert.Contains(roster.Heroes, h => h.Definition == free && h.Position == new MapPosition(3, 0));
+
+        // A town event: its town.
+        var state = Create(Enumerable.Repeat("....................", 10).Append("A..................B").ToArray());
+        var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
+        state.SetMapEvents(new MapEventSet { Events = [new MapEventDefinition("fair", MapEventKind.Town, [new MessageAction("The fair is on.")]) { Towns = [town.Id.Value] }] });
+        Assert.Equal(town.VisitPosition, Assert.IsType<MapEventDecision>(Start(state).State.PendingDecision).Place);
+
+        // A hero event: none, the hero is in view.
+        var session = World(HeroEvent(new RevealAction(5, 3, 0, 1), new MessageAction("A cell.")));
+        session.MoveTo(A, new MapPosition(2, 1));
+        Assert.Null(Assert.IsType<MapEventDecision>(session.State.PendingDecision).Place);
+    }
+
+    [Fact]
     public void TownEvents_RunForTheOwnerAndForNeutralTowns_AndBuildWhatTheBuildingNeeds()
     {
         Town? own = null, neutral = null;

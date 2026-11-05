@@ -30,6 +30,7 @@ $townsMap = Join-Path $PSScriptRoot 'smoke/towns.ewmap.json'
 $siegeMap = Join-Path $PSScriptRoot 'smoke/siege.ewmap.json'
 $caravanMap = Join-Path $PSScriptRoot 'smoke/caravan.ewmap.json'
 $questsMap = Join-Path $PSScriptRoot 'smoke/quests.ewmap.json'
+$turnStartMap = Join-Path $PSScriptRoot 'smoke/turn-start.ewmap.json'
 # A map generated from the v7 connection options (ADR-112): garrison, border guard and gate with keymasters, portal, optional connection.
 New-Item -ItemType Directory -Force $Out | Out-Null
 $connectionsMap = Join-Path (Resolve-Path $Out) 'connections.ewmap.json'
@@ -70,6 +71,10 @@ $scenarios = @(
     # quest log, Q closes it.
     @{ Name = 'game-quests'; App = 'EternalWars.Game'; Frames = 64; Map = $questsMap
        Input = '3:key:Enter;12:key:Up;20:key:Up;26:click:53,192;32:click:27,140;40:key:Q;52:key:Q' },
+    # Turn-start messages (EVT-2 f): Blue's player event reveals Grimhollow and says so, the camera moves there; Enter closes it; the town
+    # event's message for Castlebridge moves the camera to the town; OK closes each.
+    @{ Name = 'game-turn-start-camera'; App = 'EternalWars.Game'; Frames = 40; Map = $turnStartMap
+       Input = '3:key:Enter;16:click:27,140;30:click:27,140' },
     # The kingdom overview (ADR-084): K opens it on the towns map, Escape closes it, K again, Escape.
     @{ Name = 'game-kingdom'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
        Input = '3:key:Enter;12:key:K;24:key:Escape;30:key:K;40:key:Escape' },
