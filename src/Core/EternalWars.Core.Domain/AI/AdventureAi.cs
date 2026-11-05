@@ -374,6 +374,10 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
         yield return (false, BuiltInBuildings.Growth(1)); // the growth buildings (ADR-071), once their tier has a dwelling
         yield return (false, BuiltInBuildings.Growth(2));
+        foreach (var unique in UniqueBuildings.All.Where(b => b.Town == town.TownType))
+        {
+            yield return (false, unique.Id); // the town's unique building (ADR-138): its heroes take the bonus when they pass through
+        }
 
         yield return (false, BuiltInBuildings.Fort);
         yield return (false, BuiltInBuildings.TownHall);

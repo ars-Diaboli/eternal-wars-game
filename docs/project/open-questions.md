@@ -8,7 +8,7 @@ design area**; its lettered points (a, b, …) are parts of the same decision. *
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
 **Updated 2026-11-05**: TOWN-12's Grail buildings answered (ADR-130); its more unique buildings stay open. TOWN-13 (the Undead
-Transformer) added from the owner's notes.
+Transformer) answered (ADR-137).
 
 ## 🚧 Blocking now
 
@@ -26,31 +26,6 @@ Nothing blocks the current work.
 faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
 **Proposal**: open; the owner adds them here.
-
-<a id="town-13"></a>
-**TOWN-13 Undead Transformer** (owner, 2026-11-05). A second Necropolis-only building: it turns living creatures of tier 1–2 into the
-tier-1 undead of the same class (ADR-135: class A to Skeletons, B to Plague Bearers), tier 3–4 into the tier-2 undead (Ghouls, Wights);
-never elementals or constructs. It also swaps tier 1–2 undead for the other class's line of their tier (Plague Bearer to Skeleton, Ghoul to
-Wight) at a "swap value" of 0.75. 
-Open: 
-(a) how many undead a living stack becomes; 
-(b) what the 0.75 applies to; 
-(c) upgraded creatures;
-(d) living creatures with no class (tier 5, neutrals, Conflux and Dragon Utopia); 
-(e) its cost, requirements, and who uses it (a visiting hero, the garrison); 
-(f) whether the computer uses it.
-
-**Proposal**: 
-(a) one undead per living creature, as HoMM3's Skeleton Transformer; 
-(b) the new count is the old stack's count × 0.75, rounded down (at least 1); 
-(c) an upgraded creature counts as its base, the result is the base undead; 
-(d) tier 5 is refused, an unclassed tier 1–4 creature may become either line, the player picks; 
-(e) 1000 gold + 5 mercury, needs a tier-1 dwelling; one stack at a time, of a visiting
-hero or the garrison, free, any number of times a day; 
-(f) the computer turns every eligible stack it does not need into undead when its hero visits.
-Answers : c - if town has upgraded structure for the result creature - transformer result is the upgraded undead;
-e - multiple stacks at a time, similar to homm3;
-use proposals for the rest;
 
 ## Game flow and content
 
@@ -87,7 +62,7 @@ One line per question; the ADR holds the detail.
   ADR-017/031, gates ADR-026, meeting heroes ADR-027, resources ADR-019, chests ADR-039, mines ADR-034, guards ADR-040/065, no sea ADR-051.
 - **Objects**: MAP-1 … MAP-14 ADR-068; MAP-15 … MAP-19, MAP-21 … MAP-24 ADR-070; MAP-20 ADR-071; MAP-23 corrected ADR-072; MAP-35 (Pandora's Box) ADR-100.
 - **Towns**: groups ADR-010/028/029, tech tree ADR-030/046, income ADR-025, caravans ADR-054, tavern ADR-060/070, governors ADR-063, TOWN-1 fort
-  ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075, TOWN-12 (b, the Grail buildings) ADR-130.
+  ADR-066, TOWN-2 ADR-067/068/070, TOWN-3 ADR-070, TOWN-6 ADR-070, TOWN-1 growth buildings and TOWN-4 ADR-071, TOWN-7 and TOWN-8 ADR-072, TOWN-5 and base-creature map dwellings ADR-073, TOWN-5 reach ADR-075, TOWN-12 (b, the Grail buildings) ADR-130, TOWN-13 (the Undead Transformer) ADR-137.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
   CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073; HERO-8 (rarer specialties, the proposals for now) ADR-107; HERO-9 (Scouting reveals information) ADR-125.
 - **Combat**: CMB-5 (sieges before 1.0) ADR-099; CMB-11 (siege rules) ADR-106; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,

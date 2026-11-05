@@ -10,7 +10,7 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
 except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
-and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, the unique buildings, the University and War Academy,
+and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, the University and War Academy, the Undead Transformer (ADR-137),
 the last 16 battle spells, presentation.
 
 ## Open checks in Godot
@@ -22,6 +22,7 @@ the last 16 battle spells, presentation.
       - Battle: deployment step (ADR-076), war machine footprints in 3D, surrender button (ADR-081), Necromancy screen (ADR-078)
       - Game flow: victory screen with score and "Save replay", main menu (ADR-103, ADR-104), the conditions panel's difficulty row,
         the trading screen (ADR-067)
+      - Towns: the unique buildings on the town screen and their visit messages (ADR-138)
       - Map objects: power-up choices (Learning Stone etc.), utility panels and the notice panel, the second and third catalogues'
         screens (ADR-079, ADR-080, ADR-082), Pandora's Box (ADR-105)
       - Editor: hero limit setting on the conditions panel, town faction in the inspector (ADR-083)
@@ -58,7 +59,8 @@ minimap, editor UI, 2D harness.
       ADR-073, ADR-075, ADR-079); flaggable providers and resource caravans (ADR-079); kingdom overview (ADR-084); town screen and its
       polish (ADR-050, ADR-114)
 - [ ] Caravan cost tuning
-- [ ] Every town's unique building: the first set (ADR-126, see Phase 5); more per town later (TOWN-12)
+- [x] Every town's unique building: the first set (ADR-126, ADR-138)
+- [ ] More unique buildings per town (TOWN-12)
 
 ### Heroes and skills
 - [x] Built: hero roster and specialties (ADR-048, ADR-093, ADR-107, ADR-114), skills and level-ups, primary stats (ADR-055),
@@ -165,13 +167,13 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Spell scrolls: one per spell level, the spell written by the generator, the editor or at game start, casting while worn, 5 % of the
       artifact rolls (ADR-136)
 - [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (ADR-130), editor and generator; map format bump
-- [ ] Unique buildings, the first set: Stables (Haven), Proving Ring (Stronghold), Shell Wall (Swamp Bestiary), Hall of Records
-      (Academy), Altar of Brimstone (Inferno), Elder Grove (Sylvan), Mana Spring (Dungeon); the siege bonuses
+- [x] Unique buildings, the first set: Stables (Haven), Proving Ring (Stronghold), Shell Wall (Swamp Bestiary), Hall of Records
+      (Academy), Altar of Brimstone (Inferno), Elder Grove (Sylvan), Mana Spring (Dungeon); the siege bonuses (ADR-138)
 
 ### Roster (CONT-2)
 - [x] Renames, the Wight / Death Weaver tier swap, the Haspid / Wyvern town swap, classes A and B, Necromancy by class (ADR-135)
 - [ ] Undead Transformer: the Necropolis building that turns living creatures into undead of their class, and swaps undead lines
-      ([TOWN-13](open-questions.md#town-13))
+      (ADR-137)
 
 ### Presentation and UI (ADR-116)
 - [x] Built: icon prompts and the list of missing mechanics (ADR-116)

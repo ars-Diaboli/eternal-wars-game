@@ -161,6 +161,9 @@ public sealed record BattleCaster(
 {
     public KnownSpell? Find(string spell) => Spells.FirstOrDefault(s => s.Spell.Id == spell);
 
+    /// <summary>Mana in <see cref="Mana"/> lent for this battle only (a siege's Knowledge, ADR-138): spent first, the rest gone afterwards.</summary>
+    public int LentMana { get; init; }
+
     /// <summary>
     /// The percent the hero's artifacts (the elemental orbs) add to the effect of the spell's element; for Magic Arrow the best of the four, for
     /// Bind Elemental that of the bound kind's element (ADR-123).

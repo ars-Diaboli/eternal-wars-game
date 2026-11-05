@@ -14,6 +14,12 @@ public sealed record TownOwnerChanged(MapObjectId Town, PlayerId? Previous, Play
 /// <summary>A town building reached <paramref name="Level"/> (dwellings: <see cref="DwellingBuilt"/>).</summary>
 public sealed record TownBuilt(MapObjectId Town, string Building, int Level) : IEvent;
 
+/// <summary>
+/// A hero took a unique building's visit bonus in a town (ADR-126, ADR-138); the bonus itself follows as its own events (a stat raised, experience,
+/// movement, mana).
+/// </summary>
+public sealed record UniqueBuildingVisited(HeroId Hero, MapObjectId Town, string Building) : IEvent;
+
 /// <summary>A town building dropped to <paramref name="Level"/>: a captured Capitol whose new owner already has one (ADR-070).</summary>
 public sealed record TownBuildingDowngraded(MapObjectId Town, string Building, int Level) : IEvent;
 
