@@ -301,3 +301,26 @@ Rules: [shared object rules](#shared-object-rules).
     trigger" left off) makes the map campaign-like, so it is not ranked; the validator warns ([victory and modes](victory-and-modes.md)).
   - **Turn-start camera**: a turn-start message or question moves the camera to what it concerns: a place its rewards reveal or give a
     hero at, else the last area the event revealed or hero it gave, else the town of a town event.
+
+## Map bans and random placeholders
+HoMM3 and HotA (ADR-126, built ADR-133; map format v35).
+- **Bans**: the map's rules list banned heroes, artifacts, spells and skills. Every pool and roll skips them: the taverns (town and map),
+  prisons and hero placeholders; the artifact rolls (pickups left open, chests, banks, loot, merchants, sphinxes, a battle's loot); the guild
+  and spell building draws; shrines; level-up offers; witch huts (their draw and the stand-in skill of a group). What the author places by
+  hand stays (a hero, an artifact, a prisoner, a shrine's spell, a guild's fixed spell, a witch hut's skill) and the validator warns; a banned
+  skill a hero starts with stays but is never offered; a ban that would empty a pool leaves that pool whole. The University and the War
+  Academy will skip them too.
+- **Random monster**: of one tier (1–7) or any tier; at game start it becomes a creature of that tier, base or upgraded, of the playable
+  towns' and the neutral lines. A count set by the author stays; otherwise it is rolled by the drawn creature's tier.
+- **Random town**: at game start an owned town takes its owner's faction (chosen on the new-game screen, else one drawn for the player and
+  shared by all its random towns), a neutral one a playable faction of its own. It keeps its id, place, owner, garrison and a name of the
+  author's; buildings carry over and dwellings move to the faction's lines of the same tier, as with the editor's type change. Making a town
+  random drops its fixed guild spells.
+- **Hero placeholder**: at game start it becomes a free roster hero (not on the map, in a prison or waiting in a tavern; not banned) of its
+  owner's faction: the type of the owner's first town, else the faction chosen on the new-game screen, else one drawn. Any free hero when its
+  faction has none. It keeps its place, army and artifacts and takes the roster hero's name, class, stats, skills and spells; an empty army
+  gets the hero's starter stack. A campaign will put a carried hero there (FLOW-1).
+- **Order**: the placeholders are drawn first when the game starts, from the game's random numbers: towns, then monsters, then heroes; then
+  everything else (prisons, guilds, pickups).
+- **Editor**: the "Bans" tab (one list per kind with a filter; ticking bans), "Random faction" on a town, "Random" (any tier or a tier) on a
+  monster, "Placeholder" on a hero; the map shows random towns and monsters by caption.

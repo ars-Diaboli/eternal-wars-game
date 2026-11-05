@@ -124,7 +124,7 @@ public static class MapTavernRules
             (heroes[i], heroes[j]) = (heroes[j], heroes[i]);
         }
 
-        var pool = heroes.Take(OfferCount * 4).ToList(); // the week's pool, before anyone is hired
+        var pool = MapBans.Allowed(heroes, h => state.Rules.Bans.BansHero(h.Id)).Take(OfferCount * 4).ToList(); // the week's pool, before anyone is hired
         var taken = state.Heroes.Concat(state.RetiredHeroes).Select(h => h.Definition).OfType<string>().ToHashSet(StringComparer.Ordinal);
         return [.. pool.Where(h => !taken.Contains(h.Id)).Take(OfferCount)];
     }

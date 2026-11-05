@@ -34,7 +34,7 @@ public partial class ExchangePanel : PanelContainer
         var bottom = new HBoxContainer();
         box.AddChild(bottom);
         bottom.AddChild(_split);
-        var close = new Button { Text = "Close" };
+        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
         close.Pressed += () => _session.Execute(new CompleteExchangeCommand(_session.State.CurrentPlayer.Id));
         bottom.AddChild(close);
         box.AddChild(_status);

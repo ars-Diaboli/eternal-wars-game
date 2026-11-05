@@ -33,7 +33,7 @@ public partial class QuestLogPanel : PanelContainer
         box.AddChild(header);
         _title.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         header.AddChild(_title);
-        var close = new Button { Text = "Close" };
+        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
         close.Pressed += () => Visible = false;
         header.AddChild(close);
         var scroll = new ScrollContainer { CustomMinimumSize = new Vector2(640, 420), HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled };

@@ -12,6 +12,7 @@ using EternalWars.Godot.Shared.Cameras;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Editor;
 using Godot;
 
@@ -296,6 +297,11 @@ public partial class Main : Node3D
         tabs.AddChild(_events);
         tabs.MoveChild(_events, validation.GetIndex()); // before Validation; Generate stays last
         _events.Bind(_editor, MapEventNodeJson.Instance);
+        var bans = new BansPanel { Name = "Bans" }; // the map's bans (ADR-126), after Events
+        tabs.AddChild(bans);
+        tabs.MoveChild(bans, validation.GetIndex());
+        tabs.WithTabIcon(bans.GetIndex(), UiIcon.Ban);
+        bans.Bind(_editor);
         _events.SelectionChanged += name => _eventCells.Highlighted = name;
         _events.ShowRequested += ShowTile;
         _inspector.EventRequested += OpenEvent;

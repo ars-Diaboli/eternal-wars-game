@@ -129,7 +129,9 @@ public partial class MapObjectsView : Node3D
     /// <summary>Monsters show their creature (and, in the editor, the count), towns, dwellings and buildings their name; pickups stay unlabelled.</summary>
     private string? Caption(KnownObject known) => _context.State.FindObject(known.Id) switch
     {
+        MonsterGuard { RandomTier: { } tier } monster => (tier == 0 ? "Random monster" : $"Random monster, tier {tier}") + (monster.Count is { } n ? $" ×{n}" : ""),
         MonsterGuard monster => _context.Viewer is null && monster.Count is { } count ? $"{CreatureName(monster)} ×{count}" : CreatureName(monster),
+        Core.Domain.Towns.Town { IsRandom: true } town => $"{town.Name} (random town)",
         Core.Domain.Towns.Town town => town.Name,
         CreatureDwelling dwelling => _context.State.Creatures.TryGet(dwelling.Creature, out var dwelt) ? $"{dwelt.Name} dwelling" : dwelling.Creature,
         Marketplace => "Marketplace",

@@ -43,11 +43,13 @@ namespace EternalWars.Core.Data.Maps;
 /// ADR-115). 32 = + quests (an event's <c>stages</c>) and the quest objects (<c>questSite</c>: Seer's Hut, Quest Guard, Quest Gate, each naming
 /// its <c>quest</c>; ADR-115, EVT-5). 33 = + the loop and run actions (<c>repeat</c>, <c>while</c>, <c>runEvent</c>) and a Pandora's Box's hero
 /// <c>event</c> (ADR-115, MAP-35). 34 = + campaign variables (the events' <c>keptVariables</c> and <c>takenVariables</c>: names of declared
-/// variables; omitted = none; EVT-1 f). Older versions still load (with the default events).
+/// variables; omitted = none; EVT-1 f). 35 = + map bans (<c>rules.bans</c>: heroes, artifacts, spells, skills; ADR-126), random monsters
+/// (<c>randomTier</c> on a monster: 0 any tier, 1–7 that tier), random towns (<c>random</c> on a town) and hero placeholders (<c>placeholder</c> on a
+/// hero), all drawn when the game starts. Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 34;
+    public const int CurrentFormatVersion = 35;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -114,7 +116,15 @@ public sealed record ScenarioRulesDocument(
     int? GraceDays = null,
     int? MaxHeroes = null,
     WeekEventsDocument? WeekEvents = null,
-    Complexity? Difficulty = null);
+    Complexity? Difficulty = null,
+    BansDocument? Bans = null);
+
+/// <summary>The map's bans (v35, ADR-126): roster hero, artifact, spell and skill ids; each list omitted when empty, the whole omitted when nothing is banned.</summary>
+public sealed record BansDocument(
+    IReadOnlyList<string>? Heroes = null,
+    IReadOnlyList<string>? Artifacts = null,
+    IReadOnlyList<string>? Spells = null,
+    IReadOnlyList<string>? Skills = null);
 
 /// <summary>
 /// Week and month events (v24, ADR-073, ADR-075): <see cref="Enabled"/> false turns them off; <see cref="SkipWeeks"/> (0–8, omitted = 1) weeks pass
@@ -156,7 +166,8 @@ public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = n
 /// <see cref="Knowledge"/> (v8) are omitted when 0; a roster hero then keeps the roster's values. <see cref="WarMachines"/>
 /// (v9) is omitted for the starting set (the offensive machine only). <see cref="Artifacts"/> (worn, each in the slot its
 /// definition names) and <see cref="Backpack"/> are artifact ids (v11), omitted when empty. <see cref="SpellBook"/> and <see cref="Spells"/>
-/// (v29, ADR-120) replace the roster's book and spells; omitted = the roster's.
+/// (v29, ADR-120) replace the roster's book and spells; omitted = the roster's. <see cref="Placeholder"/> (v35, ADR-126): the hero becomes a
+/// random roster hero of its owner's faction when the game starts (its army, artifacts, place and level stay); omitted = false.
 /// </summary>
 public sealed record HeroPlacementDocument(
     int Id,
@@ -179,7 +190,8 @@ public sealed record HeroPlacementDocument(
     IReadOnlyList<string>? Artifacts = null,
     IReadOnlyList<string>? Backpack = null,
     bool? SpellBook = null,
-    IReadOnlyList<string>? Spells = null);
+    IReadOnlyList<string>? Spells = null,
+    bool? Placeholder = null);
 
 /// <summary>One occupied army slot (0–6).</summary>
 public sealed record ArmySlotDocument(int Slot, string Creature, int Count);
@@ -479,6 +491,12 @@ public sealed record MonsterDocument : MapObjectDocument
 
     /// <summary>How this stack guards its surroundings (v13, ADR-065); omitted = <see cref="GuardMode.Classic"/>.</summary>
     public GuardMode? Mode { get; init; }
+
+    /// <summary>
+    /// A random monster (v35, ADR-126): 0 = any tier, 1–7 = that tier; its creature is drawn when the game starts and <see cref="Creature"/> only
+    /// shows it in the editor. Omitted = the creature as placed.
+    /// </summary>
+    public int? RandomTier { get; init; }
 }
 
 /// <summary>
@@ -508,4 +526,10 @@ public sealed record TownDocument : MapObjectDocument
     /// each level is drawn when the game starts. Omitted = everything drawn. The spell buildings of other schools always draw theirs.
     /// </summary>
     public IReadOnlyList<string>? GuildSpells { get; init; }
+
+    /// <summary>
+    /// A random town (v35, ADR-126): its faction is drawn when the game starts (an owned town takes its owner's chosen faction); the definition
+    /// only shows it in the editor. Omitted = false.
+    /// </summary>
+    public bool? Random { get; init; }
 }

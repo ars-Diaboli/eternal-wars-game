@@ -234,7 +234,7 @@ public partial class ConditionsPanel : VBoxContainer
         {
             var row = new HBoxContainer();
             row.AddChild(new Label { Text = ScenarioRules.Describe(Scenario, condition), SizeFlagsHorizontal = SizeFlags.ExpandFill });
-            var delete = new Button { Text = "Remove" };
+            var delete = new Button { Text = "Remove" }.WithIcon(UiIcon.Minus);
             var captured = condition;
             delete.Pressed += () => Change(r => remove(r, captured));
             row.AddChild(delete);

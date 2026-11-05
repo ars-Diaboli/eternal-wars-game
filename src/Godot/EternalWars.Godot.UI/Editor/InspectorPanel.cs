@@ -83,6 +83,19 @@ public partial class InspectorPanel : VBoxContainer
             .Concat(_editor.Scenario.HeroRoster.All.OrderBy(h => h.Town).ThenBy(h => h.Name)
                 .Select(h => ($"{h.Name} ({h.Town}, {h.Class})", (string?)h.Id))), hero.Definition);
         type.Button.ItemSelected += _ => Edit(() => _editor.SetHeroType(hero.Id, type.Value()));
+        var placeholder = new CheckBox
+        {
+            Text = "Placeholder",
+            ButtonPressed = hero.IsPlaceholder,
+            TooltipText = "Becomes a random roster hero of its owner's faction when the game starts (ADR-126); its place, army and artifacts stay.",
+        };
+        placeholder.Toggled += on => Edit(() => _editor.SetHeroPlaceholder(hero.Id, on));
+        identity.AddChild(placeholder);
+        if (hero.IsPlaceholder)
+        {
+            AddChild(new Label { Text = "Placeholder: a random hero of the owner's faction replaces its type, stats, skills and spells at game start." });
+        }
+
         if (hero.Definition is not null)
         {
             AddChild(new Label { Text = $"{hero.Class}; prefers {hero.PreferredCreature}; specialty {hero.Specialty}; skills {hero.Skills}" });
@@ -384,6 +397,14 @@ public partial class InspectorPanel : VBoxContainer
                     ("Area: treasure guard, the whole 3×3 area is guarded", GuardMode.Area),
                 }, monster.Mode);
                 mode.Button.ItemSelected += _ => Edit(() => _editor.SetMonsterGuardMode(monster.Id, mode.Value()));
+
+                // A random monster (ADR-126): the creature above only shows it; the game start draws one of the tier.
+                var row4 = new HBoxContainer();
+                AddChild(row4);
+                var tiers = new[] { ("Fixed creature", (int?)null), ("Random, any tier", 0) }
+                    .Concat(Enumerable.Range(1, Core.Domain.Creatures.CreatureDefinition.MaxTier).Select(t => ($"Random tier {t}", (int?)t)));
+                var randomTier = Options(row4, "Random", tiers, monster.RandomTier);
+                randomTier.Button.ItemSelected += _ => Edit(() => _editor.SetMonsterRandomTier(monster.Id, randomTier.Value()));
                 break;
             }
 
@@ -644,8 +665,17 @@ public partial class InspectorPanel : VBoxContainer
         var name = new LineEdit { Text = town.Name, CustomMinimumSize = new Vector2(160, 0) };
         name.TextSubmitted += text => Edit(() => _editor.SetTownName(town.Id, text));
         row.AddChild(name);
-        var type = Options(row, "Faction", BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), town.TownType);
+        var type = Options(row, town.IsRandom ? "Shown as" : "Faction", BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), town.TownType);
         type.Button.ItemSelected += _ => Edit(() => _editor.SetTownType(town.Id, type.Value()));
+        var random = new CheckBox
+        {
+            Text = "Random faction",
+            ButtonPressed = town.IsRandom,
+            TooltipText = "Drawn when the game starts: an owned town takes its owner's chosen faction, a neutral one a random playable faction. " +
+                          "Buildings carry over; dwellings move to the drawn faction's lines of the same tier.",
+        };
+        random.Toggled += on => Edit(() => _editor.SetTownRandom(town.Id, on));
+        AddChild(random);
 
         AddChild(new Label { Text = "Buildings (level, 0 = not built)" });
         var buildings = new HFlowContainer();
@@ -680,7 +710,7 @@ public partial class InspectorPanel : VBoxContainer
     private void ShowGuildSpells(Town town)
     {
         var spells = _editor.Scenario.Spells;
-        if (!Enumerable.Range(1, MagicRules.GuildSpellsPerLevel.Count).Any(level => spells.Of(town.TownType, level).Count > 0))
+        if (town.IsRandom || !Enumerable.Range(1, MagicRules.GuildSpellsPerLevel.Count).Any(level => spells.Of(town.TownType, level).Count > 0))
         {
             return;
         }

@@ -58,9 +58,10 @@ public static class MagicRules
             var guild = new Dictionary<int, IReadOnlyList<string>>();
             for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
             {
-                var pool = state.Spells.Of(town.TownType, level).Select(s => s.Id).ToList();
-                var drawn = town.FixedGuildSpells.Where(pool.Contains).Distinct(StringComparer.Ordinal).Take(GuildSpellsPerLevel[level - 1]).ToList();
-                pool.RemoveAll(drawn.Contains);
+                // The map's fixed spells stay even when banned; the draw skips banned ones unless the level has no other (ADR-126).
+                var all = state.Spells.Of(town.TownType, level).Select(s => s.Id).ToList();
+                var drawn = town.FixedGuildSpells.Where(all.Contains).Distinct(StringComparer.Ordinal).Take(GuildSpellsPerLevel[level - 1]).ToList();
+                var pool = MapBans.Allowed(all, state.Rules.Bans.BansSpell).Where(s => !drawn.Contains(s)).ToList();
                 while (drawn.Count < GuildSpellsPerLevel[level - 1] && pool.Count > 0)
                 {
                     var pick = state.Random.Next(pool.Count);
@@ -86,7 +87,7 @@ public static class MagicRules
                 var spells = new List<string>();
                 for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
                 {
-                    var pool = state.Spells.Of(school, level);
+                    var pool = MapBans.Allowed(state.Spells.Of(school, level), s => state.Rules.Bans.BansSpell(s.Id));
                     if (pool.Count > 0)
                     {
                         spells.Add(pool[state.Random.Next(pool.Count)].Id);

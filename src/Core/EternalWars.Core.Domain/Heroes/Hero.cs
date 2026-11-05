@@ -206,6 +206,12 @@ public sealed class Hero(
     /// <summary>Roster entry (<see cref="HeroDefinition"/>) the hero was made from; null for a custom map hero.</summary>
     public string? Definition { get; internal set; }
 
+    /// <summary>
+    /// A hero placeholder (ADR-126): it becomes a random roster hero of its owner's faction when the game starts (<see cref="Game.PlaceholderRules"/>),
+    /// keeping its place, army, artifacts and level; until then it stands for that hero.
+    /// </summary>
+    public bool IsPlaceholder { get; internal set; }
+
     public HeroClass Class { get; internal set; }
 
     /// <summary>Base id of the creature line (base and upgrade) that gets the preferred-creature bonus in battle.</summary>
@@ -258,7 +264,7 @@ public sealed class Hero(
         int morale = 0, int luck = 0, int? spellPower = null, int? knowledge = null,
         IEnumerable<Battles.WarMachineSlot>? warMachines = null,
         IEnumerable<string>? artifacts = null, IEnumerable<string>? backpack = null, ArtifactCatalog? catalog = null,
-        bool? spellBook = null, IEnumerable<string>? spells = null, Magic.SpellCatalog? spellCatalog = null)
+        bool? spellBook = null, IEnumerable<string>? spells = null, Magic.SpellCatalog? spellCatalog = null, bool placeholder = false)
     {
         if (spellPower < 0 || knowledge < 0)
         {
@@ -311,6 +317,7 @@ public sealed class Hero(
             }
         }
 
+        hero.IsPlaceholder = placeholder;
         return hero;
     }
 

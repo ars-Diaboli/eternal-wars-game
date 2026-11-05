@@ -77,7 +77,7 @@ public partial class TownPanel : PanelContainer
         header.AddChild(_trade);
         _guild.Pressed += () => ThievesGuildRequested?.Invoke();
         header.AddChild(_guild);
-        var close = new Button { Text = "Close" };
+        var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
         close.Pressed += Close;
         header.AddChild(close);
 

@@ -56,10 +56,11 @@ public static class SkillOffers
     public static string? ComputerChoice(IReadOnlyList<string> offers) =>
         offers.FirstOrDefault(o => o == Battles.NecromancyRules.Skill) ?? offers.FirstOrDefault();
 
-    public static IReadOnlyList<string> Generate(Hero hero, string? heroTown, GameRandom random)
+    /// <summary>The offers of one level-up; the map's banned skills (ADR-126) are left out unless nothing else could be offered.</summary>
+    public static IReadOnlyList<string> Generate(Hero hero, string? heroTown, GameRandom random, Game.MapBans? bans = null)
     {
         var rivals = heroTown is not null && BuiltInSkills.Rivals.TryGetValue(heroTown, out var r) ? r : [];
-        var candidates = BuiltInSkills.All.Where(s => hero.Skills.CanRaise(s.Id) && IsOffered(s, heroTown)).ToList();
+        var candidates = Game.MapBans.Allowed(BuiltInSkills.All.Where(s => hero.Skills.CanRaise(s.Id) && IsOffered(s, heroTown)).ToList(), s => bans?.BansSkill(s.Id) == true);
         var rivalSkills = candidates.Where(s => IsSchoolOf(s, rivals)).ToList();
         var pool = candidates.Except(rivalSkills).Select(s => (s.Id, Weight: Weight(hero, heroTown, s))).ToList();
 

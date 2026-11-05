@@ -115,6 +115,7 @@ public sealed class GameSession
     /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
     public void Start()
     {
+        PlaceholderRules.Resolve(State, Bus);
         Flow.RemoveSurplusHeroes();
         Flow.Begin();
         Artifacts.RollUnsetPickups();

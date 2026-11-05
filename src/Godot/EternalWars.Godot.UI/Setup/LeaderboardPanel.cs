@@ -7,7 +7,7 @@ namespace EternalWars.Godot.UI.Setup;
 public partial class LeaderboardPanel : PanelContainer
 {
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(760, 420) };
-    private readonly Button _back = new() { Text = "Back (Esc)" };
+    private readonly Button _back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft);
 
     public event Action? BackRequested;
 

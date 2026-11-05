@@ -137,8 +137,11 @@ public sealed record ScenarioRules(
     /// </summary>
     public Complexity? Difficulty { get; init; }
 
+    /// <summary>The heroes, artifacts, spells and skills the map bans (ADR-126); none by default.</summary>
+    public MapBans Bans { get; init; } = MapBans.None;
+
     public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays
-        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null;
+        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null && Bans.IsEmpty;
 
     /// <summary>Whether a scenario with these rules can be won at all.</summary>
     public bool CanBeWon => StandardVictory || Victory.Count > 0;

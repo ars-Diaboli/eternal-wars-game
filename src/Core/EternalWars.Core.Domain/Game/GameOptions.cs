@@ -65,4 +65,10 @@ public sealed record GameOptions(
     /// a replay starts the same.
     /// </summary>
     public IReadOnlyDictionary<string, int>? CampaignVariables { get; init; }
+
+    /// <summary>
+    /// The faction each player chose at setup, by player number (ADR-126): its random towns become that town type and its hero placeholders heroes
+    /// of it. A player not listed (or with an unknown town id) gets a faction drawn when the game starts. Null = nobody chose.
+    /// </summary>
+    public IReadOnlyDictionary<int, string>? StartTowns { get; init; }
 }

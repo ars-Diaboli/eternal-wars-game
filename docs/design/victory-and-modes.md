@@ -61,7 +61,8 @@ In priority order:
 ## Game options
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,
 hero, team; ADR-086), fog mode ([adventure-map.md](adventure-map.md#fog-of-war)), complexity ([starting resources](towns-and-economy.md#starting-resources)),
-seed, turn timer.
+seed, turn timer. For a map, a player whose faction the map leaves open (a random town, or a hero placeholder without a town) picks a town
+or "Random" ([random placeholders](adventure-map.md#map-bans-and-random-placeholders), ADR-133).
 - **Teams** (ADR-070): **2 to 8 teams** (8 = free for all; free for all when nothing is defined). The map or template sets defaults and may
   fix the teams (story maps) or limit the team count; setup may change them unless locked; the map editor may override a template's.
 - **Turn timer** (ADR-088, ADR-091): off, or 1–30 minutes a turn for humans; a loaded game restarts the turn at full time. Warnings at 1
