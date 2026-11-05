@@ -749,6 +749,17 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             RecruitHere(player, hero);
             UseServicesHere(player, hero);
 
+            // The Grail's spot, known from the whole puzzle (ADR-140): dig with the day's full movement, or wait there for the next day.
+            if (GrailSpot(player) == hero.Position && !hero.Artifacts.BackpackFull)
+            {
+                if (GrailRules.CheckDig(_state, hero) is null)
+                {
+                    Execute(new DigCommand(player, hero.Id));
+                }
+
+                return true;
+            }
+
             var town = _state.ObjectCellAt(hero.Position) is { Object: Town own, Cell: FootprintCell.Visit } && own.Owner == player ? own : null;
             if (town is not null && ShouldHoldGarrison(hero, town))
             {
@@ -1136,6 +1147,16 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     /// <summary>A skill level bought at a school, in gold (a draft beside a level-up's worth).</summary>
     private const double LessonValue = 1200;
 
+    /// <summary>An obelisk not visited yet by the player or an ally, in gold (a draft: a step toward the Grail, ADR-140).</summary>
+    private const double ObeliskValue = 1000;
+
+    /// <summary>Digging up the Grail, and bringing it into a town without a Grail building, in gold (a draft: a building worth +5000 gold a day).</summary>
+    private const double GrailValue = 12000;
+
+    /// <summary>Where the Grail lies when the player's puzzle is whole and nobody has dug it up yet (ADR-140), else null.</summary>
+    private MapPosition? GrailSpot(PlayerId player) =>
+        _state.Grail.IsFound ? null : GrailRules.Puzzle(_state, player)?.Grail;
+
     /// <summary>A Pandora's Box's guard as one army (at most seven stacks).</summary>
     private static Army BoxGuard(PandorasBox box) => Army.Of([.. box.Guard.Take(Army.SlotCount)]);
 
@@ -1448,6 +1469,11 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     }
 
                     break;
+                case Town own when own.Owner == owner && own.VisitPosition != hero.Position && GrailRules.Carries(_state, hero) && own.Level(BuiltInBuildings.Grail) == 0
+                                   && TownRules.Buildings(_state, own).Contains(BuiltInBuildings.Grail):
+                    // The Grail raises the town's Grail building (ADR-140).
+                    yield return new(visit, GrailValue);
+                    break;
                 case Town own when own.Owner == owner && own.VisitPosition != hero.Position && TownNeed(hero, own) is > 0 and var need:
                     yield return new(visit, need);
                     break;
@@ -1464,7 +1490,16 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 case SkillSchool school when visit != hero.Position && SchoolValue(hero, school) is > 0 and var schoolWorth && Plausible(GuardPower(visit)):
                     yield return new(visit, schoolWorth, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
+                case Obelisk obelisk when _state.Grail.Position is not null && !_state.Grail.IsFound && visit != hero.Position
+                                          && !obelisk.VisitedBy.Any(p => p == owner || _state.AreAllies(p, owner)) && Plausible(GuardPower(visit)):
+                    yield return new(visit, ObeliskValue, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
             }
+        }
+
+        if (GrailSpot(owner) is { } grail && grail != hero.Position && !hero.Artifacts.BackpackFull && Plausible(GuardPower(grail)))
+        {
+            yield return new(grail, GrailValue, GuardArmy(grail), MaxLoss: MonsterLoss);
         }
 
         // A secondary hero carrying a worthwhile army brings it to the main hero (the meeting opens the exchange).

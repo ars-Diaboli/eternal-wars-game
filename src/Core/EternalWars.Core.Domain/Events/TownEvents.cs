@@ -20,6 +20,9 @@ public sealed record TownBuilt(MapObjectId Town, string Building, int Level) : I
 /// </summary>
 public sealed record UniqueBuildingVisited(HeroId Hero, MapObjectId Town, string Building) : IEvent;
 
+/// <summary>A hero brought the Grail into its owner's town and raised the town's Grail building, <paramref name="Name"/> (ADR-130, ADR-140); <see cref="TownBuilt"/> came first.</summary>
+public sealed record GrailBuildingRaised(HeroId Hero, MapObjectId Town, string Name) : IEvent;
+
 /// <summary>A town building dropped to <paramref name="Level"/>: a captured Capitol whose new owner already has one (ADR-070).</summary>
 public sealed record TownBuildingDowngraded(MapObjectId Town, string Building, int Level) : IEvent;
 

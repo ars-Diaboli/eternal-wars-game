@@ -41,6 +41,9 @@ public partial class AdventureWorldView : Node3D
             fog.Bind(context, level);
         }
 
+        var grail = new GrailView { Name = "Grail" }; // the holes (and in the editor the buried Grail) on the shown level
+        AddChild(grail);
+        grail.Bind(context);
         AddChild(PathPreview);
         foreach (var hero in state.Heroes)
         {

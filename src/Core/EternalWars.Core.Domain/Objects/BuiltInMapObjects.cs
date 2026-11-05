@@ -90,6 +90,9 @@ public static class BuiltInMapObjects
     public const string University = "university";
     public const string WarAcademy = "war-academy";
 
+    /// <summary>The obelisk (ADR-126, ADR-140): a visit shows the player a share of the puzzle map around the buried Grail.</summary>
+    public const string Obelisk = "obelisk";
+
     /// <summary>Shrines of spell levels 1–3 (ADR-068, ADR-120): <c>shrine.1</c>, <c>shrine.2</c>, <c>shrine.3</c>.</summary>
     public static string ShrineId(int level) => $"shrine.{level}";
     public const string AstrologersTower = "astrologers-tower";
@@ -240,6 +243,7 @@ public static class BuiltInMapObjects
         new(WitchHut, "Witch hut", MapObjectKind.WitchHut, ProviderFootprint),
         new(University, "University", MapObjectKind.SkillSchool, MineFootprint),
         new(WarAcademy, "War academy", MapObjectKind.SkillSchool, MineFootprint),
+        new(Obelisk, "Obelisk", MapObjectKind.Obelisk, MonolithFootprint),
         .. Enumerable.Range(1, ShrineRules.Levels).Select(level => new MapObjectDefinition(ShrineId(level), $"Shrine (level {level} spell)", MapObjectKind.Shrine, ProviderFootprint) { Amount = level }),
         new(AstrologersTower, "Astrologer's tower", MapObjectKind.AstrologersTower, ProviderFootprint),
         new(PandorasBox, "Pandora's box", MapObjectKind.PandorasBox, Footprint.Single),

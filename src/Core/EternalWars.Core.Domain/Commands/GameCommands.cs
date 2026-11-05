@@ -66,6 +66,9 @@ public sealed record ChooseWitchHutSkillCommand(PlayerId Player, string? Skill) 
 /// <summary>The hero on a University's or War Academy's entrance takes one of its lessons (ADR-139).</summary>
 public sealed record TakeLessonCommand(PlayerId Player, MapObjectId School, string Skill) : GameCommand(Player);
 
+/// <summary>The hero digs where it stands with its whole day's movement, for the Grail (ADR-140).</summary>
+public sealed record DigCommand(PlayerId Player, HeroId Hero) : GameCommand(Player);
+
 /// <summary>The hero on an artifact merchant's entrance buys the artifact in slot <paramref name="Slot"/> (ADR-079).</summary>
 public sealed record BuyArtifactCommand(PlayerId Player, MapObjectId Merchant, int Slot) : GameCommand(Player);
 

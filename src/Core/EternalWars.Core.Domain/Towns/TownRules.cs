@@ -65,14 +65,20 @@ public static class TownRules
     /// How many creatures of <paramref name="line"/> the town's dwelling adds every Monday and opens with: the creature's
     /// weekly growth plus the fort bonus (<see cref="GrowthBonusPercent"/>) and <paramref name="extraPercent"/>, the bonus rounded down
     /// (growth 1 stays 1 with a Citadel), then the flat bonus of the tier's growth building (<see cref="GrowthBuildingBonus"/>, not raised by
-    /// the fort). Whether the dwelling is built is not checked.
+    /// the fort), and last the Grail building's <see cref="GrailGrowthPercent"/> on all of it (ADR-130). Whether the dwelling is built is not checked.
     /// </summary>
     public static int WeeklyGrowth(GameState state, Town town, CreatureDefinition line, int extraPercent = 0) =>
         WeeklyGrowth(state.Buildings, town, line, extraPercent);
 
     /// <inheritdoc cref="WeeklyGrowth(GameState, Town, CreatureDefinition, int)"/>
-    public static int WeeklyGrowth(BuildingCatalog buildings, Town town, CreatureDefinition line, int extraPercent = 0) =>
-        line.WeeklyGrowth + (line.WeeklyGrowth * (GrowthBonusPercent(town) + extraPercent) / 100) + GrowthBuildingBonus(buildings, town, line.Tier);
+    public static int WeeklyGrowth(BuildingCatalog buildings, Town town, CreatureDefinition line, int extraPercent = 0)
+    {
+        var growth = line.WeeklyGrowth + (line.WeeklyGrowth * (GrowthBonusPercent(town) + extraPercent) / 100) + GrowthBuildingBonus(buildings, town, line.Tier);
+        return town.Level(BuiltInBuildings.Grail) > 0 ? growth + (growth * GrailGrowthPercent / 100) : growth;
+    }
+
+    /// <summary>The Grail building's extra growth (ADR-130): on the week's growth after the growth buildings, rounded down.</summary>
+    public const int GrailGrowthPercent = 50;
 
     /// <summary>
     /// The flat weekly bonus the town's growth buildings give every dwelling of <paramref name="tier"/> (ADR-071, TOWN-1; placeholder +5 for
@@ -172,6 +178,11 @@ public static class TownRules
         if (BuiltInBuildings.DwellingTier(building) is not null || !Buildings(state, town).Contains(building))
         {
             return $"Unknown town building '{building}'.";
+        }
+
+        if (building == BuiltInBuildings.Grail && town.Level(building) == 0)
+        {
+            return $"{Buildings(state, town).Get(building, 1).Name} is raised only around the Grail: bring it into the town.";
         }
 
         return NextLevel(state, town, building) is { } next ? CheckLevel(state, town, next) : $"{building} is fully built.";

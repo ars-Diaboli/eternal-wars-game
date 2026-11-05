@@ -204,10 +204,13 @@ public sealed class ArtifactCatalog
 
     /// <summary>
     /// The artifacts of a tier that can drop: assembled relics never do, only their pieces (ADR-100); nor do the scrolls of level 4 spells, which
-    /// only the map's author places (ADR-136).
+    /// only the map's author places (ADR-136), nor the Grail, which is only dug up (ADR-140).
     /// </summary>
     public IEnumerable<ArtifactDefinition> OfTier(ArtifactTier tier) =>
-        _artifacts.Values.Where(a => a.Tier == tier && !a.IsAssembled && !(a.ScrollLevel > MaxRolledScrollLevel));
+        _artifacts.Values.Where(a => a.Tier == tier && !a.IsAssembled && !(a.ScrollLevel > MaxRolledScrollLevel) && !a.IsGrail);
+
+    /// <summary>The Grail's row (<see cref="ArtifactDefinition.IsGrail"/>), or null when the table has none.</summary>
+    public ArtifactDefinition? Grail => _artifacts.Values.Where(a => a.IsGrail).OrderBy(a => a.Id, StringComparer.Ordinal).FirstOrDefault();
 
     /// <summary>The blank spell scrolls, one per spell level, in id order.</summary>
     public IEnumerable<ArtifactDefinition> Scrolls => _artifacts.Values.Where(a => a.IsScroll).OrderBy(a => a.Id, StringComparer.Ordinal);

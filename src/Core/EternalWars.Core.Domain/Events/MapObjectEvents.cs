@@ -139,3 +139,12 @@ public sealed record MineGuardDefeated(MapObjectId Mine) : IEvent;
 
 /// <summary>Per-instance data of an object changed (editor: monster incl. its guard mode, mine guard, chest values; a guard that won a battle).</summary>
 public sealed record MapObjectChanged(MapObjectId Object) : IEvent;
+
+/// <summary>A hero's player visited an obelisk for the first time (ADR-140): its puzzle map shows more.</summary>
+public sealed record ObeliskVisited(HeroId Hero, MapObjectId Obelisk, PlayerId Player) : IEvent;
+
+/// <summary>
+/// A hero dug a hole where it stands with its whole day's movement (ADR-140); <paramref name="Grail"/> is the Grail's artifact id when it was there
+/// and the hero took it, else null.
+/// </summary>
+public sealed record HoleDug(HeroId Hero, MapPosition Position, string? Grail) : IEvent;

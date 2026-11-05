@@ -140,12 +140,15 @@ public sealed class BattleService(
         }
 
         var owner = town.Owner;
+        var siege = SiegeRules.SpecOf(town);
+        // The Grail building's Initiative goes to the garrison's stacks also without a hero (ADR-130).
+        var initiative = siege is not null ? UniqueBuildings.SiegeOf(town).Initiative : 0;
         var garrison = new BattleParticipant(
             BattleSide.Defender, owner, null, town.Id, 0, 0, SkillLevel.None, IsComputer: owner is not { } o || !state.GetPlayer(o).IsHuman,
+            initiative == 0 ? null : HeroBattleBonuses.None with { Initiative = initiative },
             ArmyMorale: MoraleAndLuck.MixedFactions(town.Garrison.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature))) + DefenderMorale(town));
         var battle = Create(Participant(BattleSide.Attacker, attacker), garrison, town.VisitPosition, isAmbush: false);
         var stacks = town.Garrison.Stacks.Select(s => new BattleStackSpec(state.Creatures.Get(s.Stack.Creature), s.Stack.Count, s.Slot)).ToList();
-        var siege = SiegeRules.SpecOf(town);
         Begin(attacker, battle, Stacks(attacker, siege is not null), stacks, siege: siege);
     }
 
@@ -453,7 +456,7 @@ public sealed class BattleService(
         var caster = BattleCaster.For(hero, state.Spells);
         if (!siege.IsNone)
         {
-            bonuses = bonuses with { Morale = bonuses.Morale + siege.Morale, Luck = bonuses.Luck + siege.Luck };
+            bonuses = bonuses with { Morale = bonuses.Morale + siege.Morale, Luck = bonuses.Luck + siege.Luck, Initiative = bonuses.Initiative + siege.Initiative };
             var lent = siege.Knowledge * ManaRules.ManaPerKnowledge;
             caster = caster is null ? null : caster with { SpellPower = caster.SpellPower + siege.SpellPower, Mana = caster.Mana + lent, LentMana = lent };
         }

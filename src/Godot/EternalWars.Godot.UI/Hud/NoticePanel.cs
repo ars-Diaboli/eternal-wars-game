@@ -38,6 +38,16 @@ public partial class NoticePanel : PanelContainer
             Show(e.Hero, e.Next.Kind == Core.Domain.Turns.WeekEventKind.None
                 ? "The astrologer reads nothing unusual in the stars: next week will be an ordinary week."
                 : $"The astrologer reads the stars. Next week: {e.Next.Describe(_session.State.Creatures)}"));
+        this.SubscribeWhileInTree<ObeliskVisited>(session.Events, e =>
+            Show(e.Hero, Core.Domain.Objects.GrailRules.Puzzle(_session.State, e.Player) is { } puzzle
+                ? $"The obelisk's carvings add to your puzzle map: {puzzle.Revealed} of {puzzle.Pieces.Count} pieces (Puzzle map, P)."
+                : "The obelisk's carvings tell of a Grail, but no Grail lies on this map."));
+        this.SubscribeWhileInTree<HoleDug>(session.Events, e =>
+            Show(e.Hero, e.Grail is { } grail ? $"{_session.State.GetHero(e.Hero).Name} digs up the {_session.State.Artifacts.Get(grail).Name}! Bring it into one of your towns."
+                : _session.State.Grail.Position == e.Position && !_session.State.Grail.IsFound ? "Something lies here, but there is no room left to carry it."
+                : "Nothing here but earth and stones."));
+        this.SubscribeWhileInTree<GrailBuildingRaised>(session.Events, e =>
+            Show(e.Hero, $"The Grail is laid to rest, and {e.Name} rises in {NameOf(e.Town)}: +5000 gold a day, +50 % growth, and stronger defenders in a siege."));
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => AnnounceWeek());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Visible = false);
     }
