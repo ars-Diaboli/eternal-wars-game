@@ -25,8 +25,8 @@ ADR-057, ADR-073, ADR-075, ADR-094.
 ADR-092, ADR-101, built ADR-102 … ADR-104.
 - A won game on a map that is not campaign-like ends on a HoMM3-like **victory screen**: days, difficulty, **score**, rank title. A lost game,
   or one won only by computers, has no score.
-- **Not ranked**: campaign-like maps (a human starts without a town, or map events give something only to humans) and arena maps. No editor
-  switch.
+- **Not ranked**: campaign-like maps (a human starts without a town, or map events give something only to humans; the editor's
+  validator warns) and arena maps. No editor switch.
 - **Difficulty** = the complexity; "Map default" counts as Normal unless the author sets the map's difficulty. It never changes the AI.
 - **Score** = max(10, 200 − days) × difficulty (Beginner 80 %, Easy 100 %, Normal 130 %, Hard 160 %, Expert 200 %) × turn timer (off or over
   10 min ×1.0, 6–10 ×1.05, 3–5 ×1.10, 1–2 ×1.20; placeholders). Nothing else counts. **14 rank titles** named after our creatures, weakest to

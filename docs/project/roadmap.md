@@ -8,10 +8,10 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 
 **Where we are (2026-11-05)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core and the game app, quests, loops and run events included, the editor writes them in its "Events" tab and the AI weighs them (ADR-124, ADR-127, ADR-128, ADR-129).
+except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events run in core and the game app, quests, loops and run events included, the editor writes them in its "Events" tab and the AI weighs them, with campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
 and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the last 16 battle spells, map events (the
-turn-start camera, campaign variables, the score check), presentation.
+turn-start camera), presentation.
 
 ## Open checks in Godot
 - [ ] Godot run of (built and tested in core, the Godot part not run yet):
@@ -151,8 +151,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       no look-ahead at event cells (EVT-6, ADR-129)
 - [x] Editor: an "Events" tab (the tree, variables, shared events, "simple event" forms for HoMM3's timed events, event cells and town
       events), object inspector links, validator checks; tested by playing the map (EVT-6, ADR-129)
-- [ ] Campaign variables ("kept for the next map", "taken from the last map") recorded with the campaign (EVT-1 f, FLOW-1)
-- [ ] Score: the campaign-like check counts map events (ADR-101)
+- [x] Campaign variables ("kept for the next map", "taken from the last map") recorded with the campaign (EVT-1 f, FLOW-1, ADR-131)
+- [x] Score: the campaign-like check counts map events (ADR-101, ADR-131)
 
 ### Missing mechanics, the owner's picks (ADR-125, ADR-126; [missing-mechanics.md](../design/missing-mechanics.md))
 - [ ] Scouting reveals information: amount words with ranges for armies not owned, what each Scouting level shows, Veil against it,

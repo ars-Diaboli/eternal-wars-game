@@ -300,7 +300,7 @@ public sealed class GameState
             throw new ArgumentException(first, nameof(set));
         }
 
-        MapEvents.Load(set);
+        MapEvents.Load(set, Options.CampaignVariables);
     }
 
     /// <summary>Scenario setting (map loading, editor): the victory and defeat conditions.</summary>

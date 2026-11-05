@@ -35,9 +35,25 @@ public sealed record MapEventSet
 
     public IReadOnlyList<EventCell> Cells { get; init; } = [];
 
+    /// <summary>
+    /// Campaign variables "kept for the next map" (EVT-1 f, FLOW-1): at the end of the game their values are what a campaign carries on
+    /// (<see cref="MapEventState.CampaignVariables"/>).
+    /// </summary>
+    public IReadOnlyList<string> KeptVariables { get; init; } = [];
+
+    /// <summary>
+    /// Campaign variables "taken from the last map" (EVT-1 f, FLOW-1): they start with the value the campaign carries in
+    /// (<see cref="Game.GameOptions.CampaignVariables"/>), or with their own starting value when it carries none.
+    /// </summary>
+    public IReadOnlyList<string> TakenVariables { get; init; } = [];
+
     public static MapEventSet Empty { get; } = new();
 
-    public bool IsEmpty => Events.Count == 0 && Variables.Count == 0 && Cells.Count == 0;
+    public bool IsEmpty => Events.Count == 0 && Variables.Count == 0 && Cells.Count == 0 && KeptVariables.Count == 0 && TakenVariables.Count == 0;
+
+    public bool IsKept(string variable) => KeptVariables.Contains(variable, StringComparer.Ordinal);
+
+    public bool IsTaken(string variable) => TakenVariables.Contains(variable, StringComparer.Ordinal);
 
     public MapEventDefinition? Find(string name) => Events.FirstOrDefault(e => e.Name == name);
 }

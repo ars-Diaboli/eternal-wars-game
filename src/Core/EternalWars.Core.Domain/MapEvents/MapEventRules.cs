@@ -92,6 +92,11 @@ public static class MapEventRules
             }
         }
 
+        foreach (var name in set.KeptVariables.Concat(set.TakenVariables).Where(v => !set.Variables.ContainsKey(v)).Distinct(StringComparer.Ordinal))
+        {
+            problems.Add(new($"The campaign variable '{name}' is not declared."));
+        }
+
         return problems;
     }
 

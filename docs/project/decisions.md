@@ -5,7 +5,7 @@ ADR-001 … ADR-100 are in [decisions-archive.md](decisions-archive.md). Find an
 
 ### ADR-101: Victory screen, ranking, replays and the main menu (FLOW-4, UI-2, 2026-10-29)
 **Status**: accepted (2026-10-29), the owner's answers to FLOW-4 and UI-2 (ADR-092); the score and ranking core is built (ADR-102), the
-map's difficulty and the victory screen too (ADR-103), the main menu (ADR-104); the replay viewer is not. Points marked *(assumed)* are
+map's difficulty and the victory screen too (ADR-103), the main menu (ADR-104), the map events' check (ADR-131); the replay viewer is not. Points marked *(assumed)* are
 the agent's reading of a short answer; numbers marked *(placeholder)* wait for play-testing.
 
 - **Which games are ranked** (FLOW-4 a, changed): worked out from the map, with **no "not ranked" flag** in the editor *(assumed: the answer
@@ -419,8 +419,8 @@ and `editor-generated-connections` (a map generated from `tools/smoke/connection
 - **Not done**: a person playing Ember March to the end in the app (the Phase 3 exit's last check); the 2D harness has no tavern screen.
 
 ### ADR-115: Map events: the EVT-1 … EVT-6 proposals (ADR-096, 2026-11-02)
-**Status**: accepted (2026-11-02), the owner's answer to EVT-1 … EVT-6: "use the proposals". Implemented by ADR-124, ADR-127, ADR-128 and ADR-129,
-except the turn-start camera (EVT-2 f), campaign variables and the score check (the roadmap's map events section).
+**Status**: accepted (2026-11-02), the owner's answer to EVT-1 … EVT-6: "use the proposals". Implemented by ADR-124, ADR-127, ADR-128, ADR-129 and ADR-131,
+except the turn-start camera (EVT-2 f).
 
 - **Scope and plan** (EVT-1): all four event types in three steps: (1) hero, player and town events with conditions, variables, messages,
   questions and the main actions; (2) the quest objects and the quest log; (3) loops and "run another event". A Phase 5 item, after the
@@ -914,3 +914,27 @@ by the agent and stand unless the owner changes them.
   +50 % applies to the week's growth after the growth buildings, rounded down; names per town come with the buildings' rows.
 - **More unique buildings** (a): stays open. The first set (ADR-126) is the only one planned; the owner adds further buildings per town to
   TOWN-12 later.
+
+### ADR-131: Map events: campaign variables and the score check, map format v34 (ADR-101, ADR-115, EVT-1 f, FLOW-1, 2026-11-05)
+**Status**: implemented (2026-11-05). Points marked *(proposal)* are the agent's reading and stand unless the owner changes them.
+
+- **Campaign variables** (EVT-1 f): a map variable may be marked **"kept for the next map"** and / or **"taken from the last map"** (the
+  events' `keptVariables` and `takenVariables`, names of declared variables; map format v34, older maps load without them).
+  - A taken variable starts with the value the campaign carries in (`GameOptions.CampaignVariables`), or with its own starting value when
+    it carries none; carried names the map does not take are ignored. The carried values are part of the game's options, so a replay or a
+    save starts the same (the record format is unchanged; older records have none).
+  - At any moment, and so at the end of the game, `MapEventState.CampaignVariables` gives the kept variables' current values: what a
+    campaign carries on to the next map. The campaign itself (FLOW-1, Phase 6) passes them; until then nothing does.
+  - A mark on an undeclared variable is a load error; a kept variable that no event reads is not warned about (the next map reads it).
+  - **Editor**: "Kept" and "Taken" tick boxes beside each variable in the Events tab (`MapEditorSession.SetCampaignVariable`, undoable);
+    removing a variable drops its marks.
+- **Score check** (ADR-101, FLOW-4 a): a map is campaign-like, and not ranked, also when a map event **favours people**
+  (`MapEventChecks.FavoursPeople`): it gives something only where its condition holds for people alone. Worked out from the tree, without
+  playing: the "then" of an "if" (and the body of a "while") whose condition needs "the player is a person" (directly, in an "all of", in
+  every part of an "any of", or as "not" of a condition every computer player meets), the "else" of an "if" whose condition every computer
+  player meets, a quest stage only people can meet, and the events such a branch runs. A ready form with "computer may trigger" left off is
+  such an "if". *(proposal)* "Gives something" is any action but a message without rewards, a question, a stop, a variable, enabling or
+  disabling events, removing the cell and a loss (negative amounts, taking an artifact or war machine, lower morale and luck); a gift that
+  only a variable leads to is not followed. The editor's validator warns about such an event: "games on this map are not ranked".
+- **Tests**: the carried values, the kept values after play, the format round trip and a replay with carried values, the editor's marks,
+  the load error, an older map and record; six events that favour people and six that do not.

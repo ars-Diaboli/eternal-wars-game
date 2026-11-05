@@ -1510,7 +1510,35 @@ public sealed class MapEditorSession
             return EditResult.InvalidTarget;
         }
 
-        ChangeEvents($"Remove variable {name}", set with { Variables = set.Variables.Where(v => v.Key != name).ToDictionary(StringComparer.Ordinal) });
+        ChangeEvents($"Remove variable {name}", set with
+        {
+            Variables = set.Variables.Where(v => v.Key != name).ToDictionary(StringComparer.Ordinal),
+            KeptVariables = [.. set.KeptVariables.Where(v => v != name)],
+            TakenVariables = [.. set.TakenVariables.Where(v => v != name)],
+        });
+        return EditResult.Ok;
+    }
+
+    /// <summary>
+    /// Marks a map variable as a campaign variable (EVT-1 f, FLOW-1): <paramref name="kept"/> "kept for the next map", <paramref name="taken"/>
+    /// "taken from the last map" (both, or neither for an ordinary variable). Refused for a variable that is not declared.
+    /// </summary>
+    public EditResult SetCampaignVariable(string name, bool kept, bool taken)
+    {
+        var set = Scenario.MapEvents.Set;
+        if (!set.Variables.ContainsKey(name))
+        {
+            return EditResult.InvalidTarget;
+        }
+
+        if (set.IsKept(name) == kept && set.IsTaken(name) == taken)
+        {
+            return EditResult.Ok;
+        }
+
+        static IReadOnlyList<string> Mark(IReadOnlyList<string> names, string name, bool on) =>
+            [.. names.Where(v => v != name).Concat(on ? [name] : []).Order(StringComparer.Ordinal)];
+        ChangeEvents($"Campaign variable {name}", set with { KeptVariables = Mark(set.KeptVariables, name, kept), TakenVariables = Mark(set.TakenVariables, name, taken) });
         return EditResult.Ok;
     }
 
