@@ -45,11 +45,12 @@ namespace EternalWars.Core.Data.Maps;
 /// <c>event</c> (ADR-115, MAP-35). 34 = + campaign variables (the events' <c>keptVariables</c> and <c>takenVariables</c>: names of declared
 /// variables; omitted = none; EVT-1 f). 35 = + map bans (<c>rules.bans</c>: heroes, artifacts, spells, skills; ADR-126), random monsters
 /// (<c>randomTier</c> on a monster: 0 any tier, 1–7 that tier), random towns (<c>random</c> on a town) and hero placeholders (<c>placeholder</c> on a
-/// hero), all drawn when the game starts. Older versions still load (with the default events).
+/// hero), all drawn when the game starts. 36 = + the University and the War Academy (<c>skillSchool</c>; ADR-139). Older versions still load
+/// (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 35;
+    public const int CurrentFormatVersion = 36;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -237,6 +238,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(SphinxDocument), "sphinx")]
 [JsonDerivedType(typeof(WitchHutDocument), "witchHut")]
 [JsonDerivedType(typeof(ShrineDocument), "shrine")]
+[JsonDerivedType(typeof(SkillSchoolDocument), "skillSchool")]
 [JsonDerivedType(typeof(DepositDocument), "deposit")]
 [JsonDerivedType(typeof(MagiWindowDocument), "magiWindow")]
 [JsonDerivedType(typeof(MagiEyeDocument), "magiEye")]
@@ -410,6 +412,9 @@ public sealed record ShrineDocument : MapObjectDocument
 {
     public string? Spell { get; init; }
 }
+
+/// <summary>A University or War Academy (v36, ADR-139; which one comes from its definition); the lessons are drawn in the game.</summary>
+public sealed record SkillSchoolDocument : MapObjectDocument;
 
 /// <summary>A witch hut (v22, ADR-079); <see cref="Skills"/> omitted = two rolled when the game starts.</summary>
 public sealed record WitchHutDocument : MapObjectDocument

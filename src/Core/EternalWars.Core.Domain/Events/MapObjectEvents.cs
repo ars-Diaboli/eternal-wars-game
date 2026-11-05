@@ -79,6 +79,12 @@ public sealed record PandorasBoxOpened(MapObjectId Box, HeroId Hero, Objects.Box
 }
 
 /// <summary>A hero learned or improved a skill at a witch hut (ADR-079).</summary>
+/// <summary>A University or War Academy drew a hero's lessons on its first visit (ADR-139).</summary>
+public sealed record LessonsDrawn(MapObjectId School, HeroId Hero, IReadOnlyList<Objects.Lesson> Lessons) : IEvent;
+
+/// <summary>A hero took a lesson at a University or War Academy: the skill is now at <paramref name="Level"/> (ADR-139).</summary>
+public sealed record LessonTaken(MapObjectId School, HeroId Hero, string Skill, Heroes.SkillLevel Level, ResourceSet Price) : IEvent;
+
 public sealed record WitchHutSkillLearned(MapObjectId Hut, HeroId Hero, string Skill, Heroes.SkillLevel Level) : IEvent;
 
 /// <summary>A hero visited a Den of Thieves (ADR-079): the front-end shows its player the whole <c>ThievesGuild</c> table.</summary>

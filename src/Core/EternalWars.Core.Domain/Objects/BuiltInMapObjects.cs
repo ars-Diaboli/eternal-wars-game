@@ -86,6 +86,10 @@ public static class BuiltInMapObjects
     public const string Sphinx = "sphinx";
     public const string WitchHut = "witch-hut";
 
+    /// <summary>The skill schools (ADR-126, ADR-139): the University teaches the magic schools, the War Academy the general groups.</summary>
+    public const string University = "university";
+    public const string WarAcademy = "war-academy";
+
     /// <summary>Shrines of spell levels 1–3 (ADR-068, ADR-120): <c>shrine.1</c>, <c>shrine.2</c>, <c>shrine.3</c>.</summary>
     public static string ShrineId(int level) => $"shrine.{level}";
     public const string AstrologersTower = "astrologers-tower";
@@ -234,6 +238,8 @@ public static class BuiltInMapObjects
         new(SacrificialAltar, "Sacrificial altar", MapObjectKind.SacrificialAltar, ProviderFootprint),
         new(Sphinx, "Sphinx", MapObjectKind.Sphinx, MineFootprint) { VisitScope = VisitScope.OncePerHero },
         new(WitchHut, "Witch hut", MapObjectKind.WitchHut, ProviderFootprint),
+        new(University, "University", MapObjectKind.SkillSchool, MineFootprint),
+        new(WarAcademy, "War academy", MapObjectKind.SkillSchool, MineFootprint),
         .. Enumerable.Range(1, ShrineRules.Levels).Select(level => new MapObjectDefinition(ShrineId(level), $"Shrine (level {level} spell)", MapObjectKind.Shrine, ProviderFootprint) { Amount = level }),
         new(AstrologersTower, "Astrologer's tower", MapObjectKind.AstrologersTower, ProviderFootprint),
         new(PandorasBox, "Pandora's box", MapObjectKind.PandorasBox, Footprint.Single),

@@ -14,7 +14,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// What an own hero can buy at a map building it stands at (ADR-068): a Hill Fort's upgrades of tier 1–3 stacks for 150 % of the upgrade price,
 /// a War Machine Factory's machines at the blacksmith's prices, an artifact merchant's stock, a refugee camp's creatures, or what it may
-/// sacrifice at an altar (ADR-079), a map tavern's heroes and the troops of an own garrison (ADR-082). Closes with Escape or "Close", and when the hero leaves.
+/// sacrifice at an altar (ADR-079), a map tavern's heroes and the troops of an own garrison (ADR-082), a University's or War Academy's lessons
+/// (ADR-139). Closes with Escape or "Close", and when the hero leaves.
 /// </summary>
 public partial class ObjectServicePanel : PanelContainer
 {
@@ -44,6 +45,7 @@ public partial class ObjectServicePanel : PanelContainer
         this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArtifactBought>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<LessonTaken>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SacrificeMade>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
@@ -53,7 +55,8 @@ public partial class ObjectServicePanel : PanelContainer
     }
 
     /// <summary>Whether the panel serves this kind of object.</summary>
-    public static bool Serves(MapObject mapObject) => mapObject is HillFort or WarMachineFactory or ArtifactMerchant or RefugeeCamp or SacrificialAltar or MapTavern or MapGarrison;
+    public static bool Serves(MapObject mapObject) =>
+        mapObject is HillFort or WarMachineFactory or ArtifactMerchant or RefugeeCamp or SacrificialAltar or MapTavern or MapGarrison or SkillSchool;
 
     public void Open(MapObjectId id)
     {
@@ -115,6 +118,9 @@ public partial class ObjectServicePanel : PanelContainer
                 return;
             case MapGarrison garrison:
                 ShowGarrison(garrison, hero, player);
+                return;
+            case SkillSchool school:
+                ShowSchool(school, hero, player);
                 return;
         }
 
@@ -283,6 +289,38 @@ public partial class ObjectServicePanel : PanelContainer
             var button = new Button { Text = $"Take {stack.Count} × {state.Creatures.Get(stack.Creature).Name}", Disabled = !hero.Army.CanAccept(stack.Creature) };
             var at = slot;
             button.Pressed += () => Run(new MoveGarrisonStackCommand(player.Id, garrison.Id, at, ToGarrison: false));
+            _rows.AddChild(button);
+        }
+    }
+
+    /// <summary>A University's or War Academy's lessons for the hero (ADR-139); learned ones and new groups past the limit are shown disabled.</summary>
+    private void ShowSchool(SkillSchool school, Core.Domain.Heroes.Hero hero, Core.Domain.Players.Player player)
+    {
+        var lessons = SkillSchoolRules.LessonsOf(school, hero.Id);
+        var price = ResourceProviderRules.Describe(SkillSchoolRules.Price);
+        _rows.AddChild(new Label
+        {
+            Text = lessons.Count == 0 ? $"Nothing to teach {hero.Name}."
+                : $"{(school.TeachesMagic ? "The magic schools" : "The general skill groups")}: {price} a lesson.",
+        });
+        foreach (var lesson in lessons)
+        {
+            var skill = Core.Domain.Heroes.BuiltInSkills.Get(lesson.Skill);
+            var lessonState = SkillSchoolRules.StateOf(hero, lesson);
+            var what = lesson.NewGroup ? $"New group {Core.Domain.Heroes.BuiltInSkills.GroupOf(skill.Id).Name}: {skill.Name} (Basic)" : $"{skill.Name} to {lesson.Level}";
+            var button = new Button
+            {
+                Text = lessonState switch
+                {
+                    LessonState.Learned => $"{what} (learned)",
+                    LessonState.NoRoom => $"{what} (no room for another group)",
+                    _ => what,
+                },
+                Disabled = lessonState != LessonState.Open || !player.Resources.CanAfford(SkillSchoolRules.Price),
+                TooltipText = skill.Description,
+            };
+            var id = skill.Id;
+            button.Pressed += () => Run(new TakeLessonCommand(player.Id, school.Id, id));
             _rows.AddChild(button);
         }
     }

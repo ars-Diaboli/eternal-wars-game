@@ -14,7 +14,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Grail, obelisks, puzzle map, digging | HoMM3, HoMM5 | Planned | ADR-126 |
 | Spell scrolls (an artifact holding one spell) | HoMM3 | Yes | ADR-126, ADR-136 |
 | Seer's Huts, Quest Guards / Gates, map events with conditions and variables | HoMM3, HotA | Yes | events (ADR-124), quests (ADR-127), loops, run events, the game app's windows and quest log (ADR-128), the editor's Events tab and the AI (ADR-129) |
-| University (buy secondary skills) | HoMM3 | Planned | ADR-126, with a War Academy for the general groups |
+| University (buy secondary skills) | HoMM3 | Yes | ADR-126, ADR-139, with a War Academy for the general groups |
 | Scholar (one-time stat, skill or spell) | HoMM3 | Missing | Small one-time object like the Learning Stone |
 | Pyramid (a level-4 spell behind a guard) | HoMM3 | Missing | Shrines exist (ADR-120); a guarded spell object is the step up; **candidate** |
 | Freelancer's Guild / selling creatures | HoMM3 | Missing | The Sacrificial Altar takes creatures for experience instead |

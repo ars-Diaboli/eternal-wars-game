@@ -3,7 +3,7 @@ namespace EternalWars.Core.Domain.Game;
 /// <summary>
 /// The heroes, artifacts, spells and skills a map bans (ADR-126, HoMM3 and HotA; map format v35). Every pool and roll skips them: the
 /// taverns, prisons and hero placeholders, the artifact rolls (pickups, chests, banks, merchants, loot, sphinxes, battle loot), the guild and spell
-/// building draws, shrines, level-ups and witch huts. What the author places by hand is kept (the validator warns); a banned skill a hero starts
+/// building draws, shrines, level-ups, witch huts and the University and War Academy. What the author places by hand is kept (the validator warns); a banned skill a hero starts
 /// with stays but is never offered; a ban that would empty a pool leaves that pool whole (<see cref="Allowed{T}"/>). Ids are kept sorted.
 /// </summary>
 public sealed record MapBans

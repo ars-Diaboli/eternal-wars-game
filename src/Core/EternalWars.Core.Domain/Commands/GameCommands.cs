@@ -63,6 +63,9 @@ public sealed record ChooseEventArmyCommand(PlayerId Player, IReadOnlyList<int> 
 /// <summary>Answers a <c>WitchHutDecision</c>: one of its skills, or null to leave without learning (ADR-079).</summary>
 public sealed record ChooseWitchHutSkillCommand(PlayerId Player, string? Skill) : GameCommand(Player);
 
+/// <summary>The hero on a University's or War Academy's entrance takes one of its lessons (ADR-139).</summary>
+public sealed record TakeLessonCommand(PlayerId Player, MapObjectId School, string Skill) : GameCommand(Player);
+
 /// <summary>The hero on an artifact merchant's entrance buys the artifact in slot <paramref name="Slot"/> (ADR-079).</summary>
 public sealed record BuyArtifactCommand(PlayerId Player, MapObjectId Merchant, int Slot) : GameCommand(Player);
 

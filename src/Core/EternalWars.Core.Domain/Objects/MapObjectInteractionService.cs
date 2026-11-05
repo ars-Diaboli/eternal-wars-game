@@ -138,6 +138,10 @@ public sealed class MapObjectInteractionService(
                 OfferSkills(hero, hut);
                 break;
 
+            case SkillSchool school:
+                DrawLessons(hero, school);
+                break;
+
             case Shrine shrine:
                 Worship(hero, shrine);
                 break;
@@ -980,6 +984,48 @@ public sealed class MapObjectInteractionService(
         {
             events.Publish(new WitchHutSkillLearned(decision.Hut, hero.Id, skill, hero.Skills.Level(skill)));
         }
+    }
+
+    /// <summary>
+    /// A hero's first visit to a University or War Academy draws its lessons, kept for that hero at that school (ADR-139); later visits show the
+    /// same ones. A hero with nothing to learn there is told so.
+    /// </summary>
+    private void DrawLessons(Hero hero, SkillSchool school)
+    {
+        if (!school.Lessons.TryGetValue(hero.Id, out var lessons))
+        {
+            lessons = SkillSchoolRules.Draw(hero, ProgressionService.TownOf(state, hero), school.TeachesMagic, state.Random, state.Rules.Bans);
+            school.Lessons[hero.Id] = lessons;
+            events.Publish(new LessonsDrawn(school.Id, hero.Id, lessons));
+        }
+
+        if (lessons.Count == 0)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, school.Id, $"The {school.Definition.Name.ToLowerInvariant()} has nothing to teach {hero.Name}."));
+        }
+    }
+
+    /// <summary>The hero on a University's or War Academy's entrance takes one of its lessons for <see cref="SkillSchoolRules.Price"/> (ADR-139).</summary>
+    internal void TakeLesson(PlayerId player, MapObjectId schoolId, string skill)
+    {
+        var hero = HeroAt<SkillSchool>(player, schoolId, out var school);
+        var lesson = SkillSchoolRules.LessonsOf(school, hero.Id).FirstOrDefault(l => l.Skill == skill)
+                     ?? throw new InvalidOperationException($"The {school.Definition.Name.ToLowerInvariant()} does not offer {hero.Name} that skill.");
+        switch (SkillSchoolRules.StateOf(hero, lesson))
+        {
+            case LessonState.Learned:
+                throw new InvalidOperationException($"{hero.Name} knows {BuiltInSkills.Get(skill).Name} at that level already.");
+            case LessonState.NoRoom:
+                throw new InvalidOperationException($"{hero.Name} learns at most {HeroSkills.MaxGroups} skill groups.");
+        }
+
+        if (!economy.TrySpend(player, SkillSchoolRules.Price))
+        {
+            throw new InvalidOperationException("Not enough resources.");
+        }
+
+        hero.Skills.Raise(skill);
+        events.Publish(new LessonTaken(school.Id, hero.Id, skill, hero.Skills.Level(skill), SkillSchoolRules.Price));
     }
 
     /// <summary>The hero on an artifact merchant's entrance buys the artifact of a slot for twice its value (ADR-079, MAP-33).</summary>

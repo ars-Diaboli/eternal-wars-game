@@ -10,7 +10,7 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
 except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
-and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, the University and War Academy, the Undead Transformer (ADR-137),
+and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, the Undead Transformer (ADR-137),
 the last 16 battle spells, presentation.
 
 ## Open checks in Godot
@@ -23,6 +23,7 @@ the last 16 battle spells, presentation.
       - Game flow: victory screen with score and "Save replay", main menu (ADR-103, ADR-104), the conditions panel's difficulty row,
         the trading screen (ADR-067)
       - Towns: the unique buildings on the town screen and their visit messages (ADR-138)
+      - Map objects: the University's and War Academy's lessons in the object panel (ADR-139)
       - Map objects: power-up choices (Learning Stone etc.), utility panels and the notice panel, the second and third catalogues'
         screens (ADR-079, ADR-080, ADR-082), Pandora's Box (ADR-105)
       - Editor: hero limit setting on the conditions panel, town faction in the inspector (ADR-083)
@@ -163,7 +164,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       format bump (ADR-133)
 - [x] Random monsters by tier, random towns, hero placeholders: editor, map format, drawn at game start; the new-game screen's
       faction choice (ADR-133)
-- [ ] University and War Academy map objects: lessons, disabled offers, screen, AI use, generator placement
+- [x] University and War Academy map objects: lessons, disabled offers, screen, AI use, generator placement; map format v36 (ADR-139)
 - [x] Spell scrolls: one per spell level, the spell written by the generator, the editor or at game start, casting while worn, 5 % of the
       artifact rolls (ADR-136)
 - [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (ADR-130), editor and generator; map format bump

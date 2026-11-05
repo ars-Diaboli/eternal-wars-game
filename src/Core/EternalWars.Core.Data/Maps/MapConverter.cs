@@ -418,6 +418,10 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level, Skills = hut.Skills.Count == 0 ? null : hut.Skills,
             },
+            SkillSchool => new SkillSchoolDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
             Deposit => new DepositDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -635,6 +639,7 @@ public static class MapConverter
                 WitchHutDocument hut => new WitchHut(id, definition, position, hut.Skills?.Select(BuiltInSkills.Resolve).ToList()),
                 ShrineDocument shrine when ShrineRules.SpellRefusal(SpellCatalog.Default, definition.Amount, shrine.Spell) is { } wrong => throw new FormatException($"A shrine: {wrong}"),
                 ShrineDocument shrine => new Shrine(id, definition, position, shrine.Spell),
+                SkillSchoolDocument => new SkillSchool(id, definition, position),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
                 PandorasBoxDocument box => ToBox(box, id, definition, position, creatures),
                 QuestSiteDocument site => new QuestSite(id, definition, position, string.IsNullOrEmpty(site.Quest) ? null : site.Quest),

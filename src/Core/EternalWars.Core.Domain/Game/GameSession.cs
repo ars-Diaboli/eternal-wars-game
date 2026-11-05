@@ -281,6 +281,9 @@ public sealed class GameSession
             case ChooseWitchHutSkillCommand hut:
                 Interactions.ResolveWitchHut(hut.Skill);
                 return null;
+            case TakeLessonCommand lesson:
+                Interactions.TakeLesson(lesson.Player, lesson.School, lesson.Skill);
+                return null;
             case BuyArtifactCommand buy:
                 Interactions.BuyArtifact(buy.Player, buy.Merchant, buy.Slot);
                 return null;
