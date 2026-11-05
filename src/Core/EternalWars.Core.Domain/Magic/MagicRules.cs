@@ -142,8 +142,9 @@ public static class MagicRules
     }
 
     /// <summary>
-    /// The spells the hero can cast, by id: those it has learned at their rank, and while it wears an artifact that teaches spells (the Unwritten
-    /// Codex, ADR-111) every spell of those levels of every school at rank 1. Nothing without a spell book.
+    /// The spells the hero can cast, by id: those it has learned at their rank; while it wears an artifact that teaches spells (the Unwritten
+    /// Codex, ADR-111) every spell of those levels of every school at rank 1; and the spell of every scroll it wears (ADR-136), whatever its
+    /// school skill, at the rank its school's Mastery allows (<see cref="MaxRank"/>). Nothing without a spell book.
     /// </summary>
     public static IEnumerable<(SpellDefinition Spell, int Rank)> Known(Hero hero, SpellCatalog spells)
     {
@@ -156,6 +157,13 @@ public static class MagicRules
         foreach (var spell in spells.All.Where(s => hero.Bonus.SpellLevels.Contains(s.Level)))
         {
             known.TryAdd(spell.Id, (spell, 1));
+        }
+
+        foreach (var id in hero.Bonus.ScrollSpells.Where(spells.Contains))
+        {
+            var spell = spells.Get(id);
+            var rank = MaxRank(hero, spell);
+            known[id] = (spell, Math.Max(rank, known.TryGetValue(id, out var already) ? already.Rank : 1));
         }
 
         return known.Values.OrderBy(k => k.Spell.Id, StringComparer.Ordinal);

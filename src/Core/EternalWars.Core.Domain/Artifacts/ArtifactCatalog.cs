@@ -57,9 +57,29 @@ public sealed class ArtifactCatalog
     private readonly Dictionary<string, ArtifactDefinition> _artifacts = new(StringComparer.Ordinal);
     private readonly Dictionary<string, ArtifactSetDefinition> _sets = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _relicOf = new(StringComparer.Ordinal);
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ArtifactDefinition> _written = new(StringComparer.Ordinal);
 
-    public ArtifactCatalog(IEnumerable<ArtifactDefinition> artifacts, IEnumerable<ArtifactSetDefinition>? sets = null)
+    /// <summary>
+    /// Between a scroll's id and the spell written on it (ADR-136): <c>spell-scroll-1:light.bless</c>. The catalog holds one blank scroll per spell
+    /// level; a written one is looked up by this id and made from its level's scroll.
+    /// </summary>
+    public const char SpellSeparator = ':';
+
+    /// <summary>The highest spell level whose scrolls the artifact rolls give; level 4 scrolls are only placed by hand (ADR-136).</summary>
+    public const int MaxRolledScrollLevel = 3;
+
+    /// <summary>The id of a scroll with a spell written on it: <c>spell-scroll-1:light.bless</c>.</summary>
+    public static string WithSpell(string scroll, string spell) => $"{BaseOf(scroll)}{SpellSeparator}{spell}";
+
+    /// <summary>The catalog row of an artifact id: a written scroll's blank scroll, otherwise the id itself.</summary>
+    public static string BaseOf(string id) => id.IndexOf(SpellSeparator, StringComparison.Ordinal) is var at and >= 0 ? id[..at] : id;
+
+    /// <param name="artifacts">The artifact rows.</param>
+    /// <param name="sets">The set rows.</param>
+    /// <param name="spells">The spells the scrolls can hold; the shipped table when null.</param>
+    public ArtifactCatalog(IEnumerable<ArtifactDefinition> artifacts, IEnumerable<ArtifactSetDefinition>? sets = null, Magic.SpellCatalog? spells = null)
     {
+        Spells = spells ?? Magic.SpellCatalog.Default;
         foreach (var set in sets ?? [])
         {
             if (!_sets.TryAdd(set.Id, set))
@@ -70,14 +90,21 @@ public sealed class ArtifactCatalog
 
         foreach (var artifact in artifacts)
         {
-            if (!_artifacts.TryAdd(artifact.Id, artifact))
+            if (artifact.Id.Contains(SpellSeparator, StringComparison.Ordinal) || !_artifacts.TryAdd(artifact.Id, artifact))
             {
-                throw new FormatException($"Duplicate artifact '{artifact.Id}'.");
+                throw new FormatException($"Duplicate artifact '{artifact.Id}', or a '{SpellSeparator}' in its id.");
             }
 
             if (artifact.Set is { } set && !_sets.ContainsKey(set))
             {
                 throw new FormatException($"Artifact '{artifact.Id}' is in the unknown set '{set}'.");
+            }
+
+            if (artifact.IsScroll && (artifact.Set is not null || artifact.IsAssembled || artifact.Effects.Count != 1
+                                      || artifact.ScrollLevel is < 1 or > Creatures.SpellLevels.Max))
+            {
+                throw new FormatException(
+                    $"Scroll '{artifact.Id}' has only its 'scroll <level>' effect, a spell level from 1 to {Creatures.SpellLevels.Max}, and no set or pieces.");
             }
         }
 
@@ -90,7 +117,19 @@ public sealed class ArtifactCatalog
         {
             CheckRelic(relic);
         }
+
+        if (_relicOf.Keys.FirstOrDefault(p => _artifacts[p].IsScroll) is { } piece)
+        {
+            throw new FormatException($"The scroll '{piece}' cannot be a piece of an assembled relic.");
+        }
     }
+
+    /// <summary>The spells scrolls can hold.</summary>
+    public Magic.SpellCatalog Spells { get; }
+
+    /// <summary>The spells a scroll of the level can hold, by id.</summary>
+    public IReadOnlyList<string> ScrollSpells(int level) =>
+        Spells.All.Where(s => s.Level == level).Select(s => s.Id).Order(StringComparer.Ordinal).ToList();
 
     private void CheckRelic(ArtifactDefinition relic)
     {
@@ -126,20 +165,52 @@ public sealed class ArtifactCatalog
 
     public IEnumerable<ArtifactSetDefinition> Sets => _sets.Values;
 
-    public bool Contains(string id) => _artifacts.ContainsKey(id);
+    /// <summary>Whether the id is an artifact: a catalog row, or a scroll with a spell of its level written on it.</summary>
+    public bool Contains(string id) => TryGet(id, out _);
 
-    public bool TryGet(string id, out ArtifactDefinition artifact) => _artifacts.TryGetValue(id, out artifact!);
+    /// <summary>The artifact of an id, a written scroll (<c>spell-scroll-1:light.bless</c>) too.</summary>
+    public bool TryGet(string id, out ArtifactDefinition artifact)
+    {
+        if (_artifacts.TryGetValue(id, out artifact!))
+        {
+            return true;
+        }
+
+        var at = id.IndexOf(SpellSeparator, StringComparison.Ordinal);
+        if (at < 0 || !_artifacts.TryGetValue(id[..at], out var blank) || !blank.IsScroll
+            || !Spells.TryGet(id[(at + 1)..], out var spell) || spell.Level != blank.ScrollLevel)
+        {
+            artifact = null!;
+            return false;
+        }
+
+        artifact = _written.GetOrAdd(id, _ => blank with
+        {
+            Id = id,
+            Name = $"Scroll of {spell.Name}",
+            Effects = [new ArtifactEffect(ArtifactEffectKind.Scroll, spell.Level, spell.Id)],
+            Spell = spell.Id,
+        });
+        return true;
+    }
 
     public ArtifactDefinition Get(string id) =>
-        _artifacts.TryGetValue(id, out var artifact) ? artifact : throw new KeyNotFoundException($"Unknown artifact '{id}'.");
+        TryGet(id, out var artifact) ? artifact : throw new KeyNotFoundException($"Unknown artifact '{id}'.");
 
     public ArtifactSetDefinition GetSet(string id) =>
         _sets.TryGetValue(id, out var set) ? set : throw new KeyNotFoundException($"Unknown artifact set '{id}'.");
 
     public IEnumerable<ArtifactDefinition> PiecesOf(string set) => _artifacts.Values.Where(a => a.Set == set);
 
-    /// <summary>The artifacts of a tier that can drop: assembled relics never do, only their pieces (ADR-100).</summary>
-    public IEnumerable<ArtifactDefinition> OfTier(ArtifactTier tier) => _artifacts.Values.Where(a => a.Tier == tier && !a.IsAssembled);
+    /// <summary>
+    /// The artifacts of a tier that can drop: assembled relics never do, only their pieces (ADR-100); nor do the scrolls of level 4 spells, which
+    /// only the map's author places (ADR-136).
+    /// </summary>
+    public IEnumerable<ArtifactDefinition> OfTier(ArtifactTier tier) =>
+        _artifacts.Values.Where(a => a.Tier == tier && !a.IsAssembled && !(a.ScrollLevel > MaxRolledScrollLevel));
+
+    /// <summary>The blank spell scrolls, one per spell level, in id order.</summary>
+    public IEnumerable<ArtifactDefinition> Scrolls => _artifacts.Values.Where(a => a.IsScroll).OrderBy(a => a.Id, StringComparer.Ordinal);
 
     /// <summary>The assembled relics, in id order.</summary>
     public IEnumerable<ArtifactDefinition> Relics => _artifacts.Values.Where(a => a.IsAssembled).OrderBy(a => a.Id, StringComparer.Ordinal);
@@ -167,5 +238,26 @@ public static class BuiltInArtifacts
                            ?? throw new InvalidOperationException($"The artifact table '{resource}' is not embedded.");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
+    }
+}
+
+/// <summary>
+/// How an artifact roll picks from a tier's pool (ADR-136): the tier's spell scroll takes <see cref="ScrollPercent"/> of the rolls when the pool has
+/// it and other artifacts; the others are equally likely. The roll gives a blank scroll; the caller writes its spell.
+/// </summary>
+public static class ArtifactRolls
+{
+    /// <summary>The share of a tier's rolls that gives a scroll, in percent (draft number).</summary>
+    public const int ScrollPercent = 5;
+
+    /// <summary>One artifact of a non-empty <paramref name="pool"/>, drawn from <paramref name="random"/>.</summary>
+    public static ArtifactDefinition Pick(IReadOnlyList<ArtifactDefinition> pool, Common.GameRandom random)
+    {
+        var scrolls = pool.Where(a => a.IsScroll).ToList();
+        var others = pool.Where(a => !a.IsScroll).ToList();
+        var part = scrolls.Count == 0 ? others
+            : others.Count == 0 ? scrolls
+            : random.Next(100) < ScrollPercent ? scrolls : others;
+        return part[random.Next(part.Count)];
     }
 }

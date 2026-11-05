@@ -47,6 +47,13 @@ Where a row has both, the ✅ part is applied first. **Was** names the first re-
   - **Loot and trade**: a defeated hero's relic goes to the winner whole when its slots are free, otherwise as pieces into the backpack. The
     Artifact Merchant and the Sacrificial Altar take and sell pieces only.
   - **AI**: always joins, and values a piece more when it already has the others.
+- **Spell scrolls** (ADR-126, ADR-136; HoMM3): one Misc artifact per spell level, Spell Scroll I–IV (`spell-scroll-1` … `spell-scroll-4`;
+  tiers Minor, Major, Relic, Relic). Each found scroll holds one spell of its level, "Scroll of Bless" (`spell-scroll-1:light.bless`). The
+  random map generator writes the spell when it places the scroll; in the editor the author picks a spell or leaves it random, drawn at game
+  start; a scroll rolled or given during play gets a random spell then. Banned spells are skipped. Worn, a scroll lets a hero with a spell
+  book cast its spell, whatever the hero's school skill, at the rank the school's Mastery allows and for the spell's normal mana; carried in
+  the backpack it does nothing, and nothing is learned. A tier's scroll is 5 % of that tier's rolls (draft number); level 4 scrolls are only
+  placed by hand. Worth 5 / 10 / 18 / 28 to the AI by level. Never in a set or an assembled relic.
 - **Stacking**: bonuses add; terrain artifacts and Pathfinding together never reduce the penalty below zero. The morale / luck cap of ±5
   stays (ADR-053); damage-taken reductions stop at 90 %.
 - **Loot**: from the map (pickups, guarded), a defeated hero (the winner takes what fits), chests and loot sites (ADR-068), the Artifact
@@ -55,7 +62,7 @@ Where a row has both, the ✅ part is applied first. **Was** names the first re-
   `creature-health 10` (percent), `element-power fire 25` (the elemental orbs: percent effect of one element's spells, ADR-106; was `school-power`), `spells 1-2` (known
   while worn, with a spell book), `no-spells-above 2` (both sides), `no-retreat` (both sides: no retreat, no surrender), `necromancy 5`
   (points), `growth 10` (percent in the owner's towns), `immune mind` (a spell tag). The assembled Wizard's Well also needs `full-mana`, and the Angelic Alliance `no-faction-penalty` (ADR-108). All of them are
-  built (ADR-111), the magic ones too.
+  built (ADR-111), the magic ones too. The scrolls use `scroll 1` (the spell level, ADR-136).
 
 ## Minor artifacts
 
@@ -225,6 +232,9 @@ battle, movement, income and terrain, map pickups that roll by tier, loot, map f
 and the hero screen with the paper doll and backpack (`src/Godot/EternalWars.Godot.UI/Hud/HeroPanel.cs`). The re-draft is in the table
 (ADR-111): the renamed rows, the ✅ rows, every new effect kind with its rows, and the magic effects. The assembled relics followed
 (ADR-121): `AssembleRelicCommand`, `TakeRelicApartCommand`, blocked slots in `HeroArtifacts`, loot, the altar, the AI, the hero screen's buttons.
+The spell scrolls (ADR-136): `ArtifactCatalog` looks up written scrolls (`WithSpell`, `BaseOf`), `ArtifactRolls.Pick` gives them their share
+of every roll, `ArtifactService.Inscribe` writes the spell (draws, grants, game start), the generator writes its own, the editor's pickup
+inspector has the spell choice, and `MagicRules.Known` adds a worn scroll's spell.
 
 ## Open
 

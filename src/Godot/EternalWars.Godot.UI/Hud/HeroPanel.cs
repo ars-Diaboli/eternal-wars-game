@@ -262,11 +262,11 @@ public partial class HeroPanel : PanelContainer
             $"Attack {WithBonus(hero.Attack, bonus.Attack)}   Defense {WithBonus(hero.Defense, bonus.Defense)}   Spell Power {WithBonus(hero.SpellPower, bonus.SpellPower)}   Knowledge {WithBonus(hero.Knowledge, bonus.Knowledge)}",
             $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {hero.Mana}/{hero.MaxMana}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}",
             $"Experience {hero.Experience}/{next}" + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : "") + $"   Scouting {hero.ScoutingRadius}",
-            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe()}",
+            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe(EternalWars.Core.Domain.Magic.SpellCatalog.Default)}",
             SpellsText(hero));
     }
 
-    /// <summary>The learned spells by name, and how many more the worn artifacts teach (the Unwritten Codex, ADR-111).</summary>
+    /// <summary>The learned spells by name, and how many more the worn artifacts teach (the Unwritten Codex, ADR-111; scrolls, ADR-136).</summary>
     private static string SpellsText(Hero hero)
     {
         if (!hero.HasSpellBook)
@@ -427,7 +427,7 @@ public partial class HeroPanel : PanelContainer
     }
 
     private string ArtifactText(ArtifactDefinition artifact) =>
-        $"{artifact.Name} ({(artifact.IsAssembled ? "assembled relic" : artifact.Tier.ToString())}, {artifact.Slot})\n{ArtifactBonuses.Of(_session.State.Artifacts.EffectsOf(artifact)).Describe()}"
+        $"{artifact.Name} ({(artifact.IsAssembled ? "assembled relic" : artifact.Tier.ToString())}, {artifact.Slot})\n{ArtifactBonuses.Of(_session.State.Artifacts.EffectsOf(artifact)).Describe(_session.State.Spells)}"
         + (artifact.IsAssembled ? $"\nPieces: {string.Join(", ", artifact.Pieces.Select(p => _session.State.Artifacts.Get(p).Name))}" : "")
         + (_session.State.Artifacts.RelicOf(artifact.Id) is { } relic ? $"\nA piece of {_session.State.Artifacts.Get(relic).Name}" : "")
         + (artifact.Set is { } set ? $"\nSet: {_session.State.Artifacts.GetSet(set).Name}" : "")

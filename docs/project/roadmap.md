@@ -10,7 +10,7 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
 except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
-and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, spell scrolls, the University and War Academy,
+and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, the unique buildings, the University and War Academy,
 the last 16 battle spells, presentation.
 
 ## Open checks in Godot
@@ -162,7 +162,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Random monsters by tier, random towns, hero placeholders: editor, map format, drawn at game start; the new-game screen's
       faction choice (ADR-133)
 - [ ] University and War Academy map objects: lessons, disabled offers, screen, AI use, generator placement
-- [ ] Spell scrolls: the artifact row, casting from a scroll, artifact rolls by level
+- [x] Spell scrolls: one per spell level, the spell written by the generator, the editor or at game start, casting while worn, 5 % of the
+      artifact rolls (ADR-136)
 - [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (ADR-130), editor and generator; map format bump
 - [ ] Unique buildings, the first set: Stables (Haven), Proving Ring (Stronghold), Shell Wall (Swamp Bestiary), Hall of Records
       (Academy), Altar of Brimstone (Inferno), Elder Grove (Sylvan), Mana Spring (Dungeon); the siege bonuses

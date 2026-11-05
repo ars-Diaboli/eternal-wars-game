@@ -66,4 +66,5 @@ before any level-up. Rules: [skills.md](../content/skills.md#necromancy-death-at
 ## Magic artifacts
 ADR-111; catalog [artifacts.md](../content/artifacts.md). Elemental orbs (+25 % to their element's damage and healing; Magic Arrow takes
 the best), the Unwritten Codex (all level 1–2 spells at rank I while worn), the Recanter's Cloak (no spells above level 2 in its battles),
-army immunities, mana artifacts.
+army immunities, mana artifacts. **Spell scrolls** (ADR-136): a worn scroll lets a hero with a spell book cast its spell without the school
+skill, at the rank its Mastery allows, for the normal mana.
