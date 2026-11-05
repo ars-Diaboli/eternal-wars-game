@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
@@ -15,7 +14,7 @@ namespace EternalWars.Godot.UI.Editor;
 /// <summary>
 /// The editor's "Events" tab (ADR-115, EVT-6): the map's events in run order (new, from a simple form, up, down, delete), the chosen event's name,
 /// whether it starts enabled, its towns or cells, and its tree. A node of the tree is edited as the text the map file writes
-/// (<see cref="MapEventNodeJson"/>); actions come from a menu of templates (<see cref="MapEventTemplates"/>). Below: the map variables and the
+/// (<see cref="IMapEventNodeText"/>); actions come from a menu of templates (<see cref="MapEventTemplates"/>). Below: the map variables and the
 /// validator's findings for the event. Every change is an undoable <see cref="MapEditorSession"/> edit.
 /// </summary>
 public partial class EventsPanel : ScrollContainer
@@ -26,6 +25,7 @@ public partial class EventsPanel : ScrollContainer
     private readonly VBoxContainer _box = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
     private readonly Dictionary<ulong, Node> _nodes = [];
     private MapEditorSession _editor = null!;
+    private IMapEventNodeText _nodeText = null!;
     private string? _selected;
     private Node? _node;
     private string? _form;
@@ -47,9 +47,9 @@ public partial class EventsPanel : ScrollContainer
     /// <summary>"Show" on a cell or object: the camera goes there.</summary>
     public event Action<MapPosition>? ShowRequested;
 
-    public void Bind(MapEditorSession editor)
+    public void Bind(MapEditorSession editor, IMapEventNodeText nodeText)
     {
-        _editor = editor;
+        (_editor, _nodeText) = (editor, nodeText);
         HorizontalScrollMode = ScrollMode.Disabled;
         AddChild(_box);
         Refresh();
@@ -426,7 +426,7 @@ public partial class EventsPanel : ScrollContainer
         Button(row, "Apply", () => ApplyText(definition));
         var conditions = MapEventTemplates.Conditions(_editor.Scenario.MapEvents.Set.Variables.Keys.Order(StringComparer.Ordinal).FirstOrDefault());
         var insert = Menu(row, "Insert condition ▾", [.. conditions.Select(c => c.Label)]);
-        insert.IdPressed += id => _text?.InsertTextAtCaret(MapEventNodeJson.Write(conditions[(int)id].Condition));
+        insert.IdPressed += id => _text?.InsertTextAtCaret(_nodeText.Write(conditions[(int)id].Condition));
         _textError = new Label { Modulate = ErrorColour, AutowrapMode = TextServer.AutowrapMode.WordSmart, SizeFlagsHorizontal = SizeFlags.ExpandFill };
         row.AddChild(_textError);
         FillText(definition);
@@ -443,9 +443,9 @@ public partial class EventsPanel : ScrollContainer
         _textError.Text = "";
         (_text.Text, _text.Editable) = _node switch
         {
-            { Path: { } path } when MapEventTreeEdit.Get(definition, path) is { } action => (MapEventNodeJson.Write(action), true),
+            { Path: { } path } when MapEventTreeEdit.Get(definition, path) is { } action => (_nodeText.Write(action), true),
             { Parent.Count: 0, List: >= 0 } stage when definition.Kind == MapEventKind.Quest && stage.List < definition.Stages.Count =>
-                (MapEventNodeJson.Write(definition.Stages[stage.List]), true),
+                (_nodeText.Write(definition.Stages[stage.List]), true),
             _ => ("Choose an action in the tree to edit it here (a quest's stage: its requirement and texts), or add one with \"Add action\".", false),
         };
     }
@@ -461,8 +461,8 @@ public partial class EventsPanel : ScrollContainer
         {
             var edited = _node switch
             {
-                { Path: { } path } => MapEventTreeEdit.Replace(definition, path, MapEventNodeJson.ReadAction(text.Text)),
-                { List: var stage } => MapEventTreeEdit.SetStage(definition, stage, MapEventNodeJson.ReadStage(text.Text, definition.Stages[stage].Actions)),
+                { Path: { } path } => MapEventTreeEdit.Replace(definition, path, _nodeText.ReadAction(text.Text)),
+                { List: var stage } => MapEventTreeEdit.SetStage(definition, stage, _nodeText.ReadStage(text.Text, definition.Stages[stage].Actions)),
                 _ => definition,
             };
             _editor.ReplaceMapEvent(definition.Name, edited);
@@ -538,7 +538,7 @@ public partial class EventsPanel : ScrollContainer
             _box.AddChild(who);
             who.AddChild(new Label { Text = "For (none ticked: every player)" });
             players = [.. scenario.Players.Select(p => new CheckBox { Text = p.Name })];
-            players.ForEach(who.AddChild);
+            players.ForEach(p => who.AddChild(p));
             people = new CheckBox { Text = "people", ButtonPressed = true };
             computers = new CheckBox { Text = "computers", ButtonPressed = form == "town" };
             who.AddChild(people);
@@ -718,7 +718,7 @@ public partial class EventsPanel : ScrollContainer
 
     private static void Button(Container row, string text, Action pressed)
     {
-        var button = new Godot.Button { Text = text };
+        var button = new global::Godot.Button { Text = text };
         button.Pressed += pressed;
         row.AddChild(button);
     }

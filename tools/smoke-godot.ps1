@@ -119,6 +119,9 @@ $scenarios = @(
     # The template editor (ADR-117): "Templates", add a treasure zone, drag it, right-drag it onto start-1 to connect, Generate (opens the map).
     @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 60
        Input = '3:click:593,94;8:click:682,30;14:drag:624,408,708,560;20:rdrag:708,560,568,373;34:click:1226,30' },
+    # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
+    @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
+       Input = '3:click:1400,100;8:click:1090,168;14:click:1133,465' },
     # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' }

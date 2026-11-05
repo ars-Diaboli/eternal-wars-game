@@ -343,19 +343,19 @@ public class MapEventEditorTests
     {
         var message = new MessageAction("Hello") { Rewards = [Gold(5)] };
 
-        var text = MapEventNodeJson.Write(message);
+        var text = MapEventNodeJson.Instance.Write(message);
         Assert.Contains("\"type\": \"message\"", text, StringComparison.Ordinal);
-        Assert.Equal(MapEventNodeJson.Write(message), MapEventNodeJson.Write(MapEventNodeJson.ReadAction(text)));
-        Assert.Throws<FormatException>(() => MapEventNodeJson.ReadAction("{ \"type\": \"message\" }"));
-        Assert.Throws<FormatException>(() => MapEventNodeJson.ReadAction("{ \"type\": \"if\", \"then\": [] }"));
-        Assert.Throws<FormatException>(() => MapEventNodeJson.ReadAction("{ \"type\": \"nonsense\" }"));
-        Assert.Throws<FormatException>(() => MapEventNodeJson.ReadAction("not json"));
+        Assert.Equal(MapEventNodeJson.Instance.Write(message), MapEventNodeJson.Instance.Write(MapEventNodeJson.Instance.ReadAction(text)));
+        Assert.Throws<FormatException>(() => MapEventNodeJson.Instance.ReadAction("{ \"type\": \"message\" }"));
+        Assert.Throws<FormatException>(() => MapEventNodeJson.Instance.ReadAction("{ \"type\": \"if\", \"then\": [] }"));
+        Assert.Throws<FormatException>(() => MapEventNodeJson.Instance.ReadAction("{ \"type\": \"nonsense\" }"));
+        Assert.Throws<FormatException>(() => MapEventNodeJson.Instance.ReadAction("not json"));
 
         var stage = QuestForms.Level(3, "Grow.", Gold(1));
-        var read = MapEventNodeJson.ReadStage(MapEventNodeJson.Write(stage), stage.Actions);
+        var read = MapEventNodeJson.Instance.ReadStage(MapEventNodeJson.Instance.Write(stage), stage.Actions);
         Assert.Equal(stage.Proposal, read.Proposal);
         Assert.Equal(stage.Actions, read.Actions);
-        Assert.DoesNotContain("resource", MapEventNodeJson.Write(stage), StringComparison.Ordinal);
+        Assert.DoesNotContain("resource", MapEventNodeJson.Instance.Write(stage), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -378,7 +378,7 @@ public class MapEventEditorTests
         Assert.Empty(MapEventRules.Problems(state, set));
         foreach (var (_, action) in actions)
         {
-            Assert.Equal(MapEventNodeJson.Write(action), MapEventNodeJson.Write(MapEventNodeJson.ReadAction(MapEventNodeJson.Write(action))));
+            Assert.Equal(MapEventNodeJson.Instance.Write(action), MapEventNodeJson.Instance.Write(MapEventNodeJson.Instance.ReadAction(MapEventNodeJson.Instance.Write(action))));
         }
 
         foreach (var kind in Enum.GetValues<MapEventKind>())

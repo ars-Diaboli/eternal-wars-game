@@ -419,8 +419,8 @@ and `editor-generated-connections` (a map generated from `tools/smoke/connection
 - **Not done**: a person playing Ember March to the end in the app (the Phase 3 exit's last check); the 2D harness has no tavern screen.
 
 ### ADR-115: Map events: the EVT-1 … EVT-6 proposals (ADR-096, 2026-11-02)
-**Status**: accepted (2026-11-02), the owner's answer to EVT-1 … EVT-6: "use the proposals". **Nothing implemented**; the roadmap's map events
-section follows it.
+**Status**: accepted (2026-11-02), the owner's answer to EVT-1 … EVT-6: "use the proposals". Implemented by ADR-124, ADR-127, ADR-128 and ADR-129,
+except the turn-start camera (EVT-2 f), campaign variables and the score check (the roadmap's map events section).
 
 - **Scope and plan** (EVT-1): all four event types in three steps: (1) hero, player and town events with conditions, variables, messages,
   questions and the main actions; (2) the quest objects and the quest log; (3) loops and "run another event". A Phase 5 item, after the
@@ -710,8 +710,8 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
 - **Not done**: the adventure AI casts none of the show-only spells; old replays with casting heroes may differ (the AI casts more, spell
   buildings draw from the game's generator).
 ### ADR-124: Map events, step 1 in core: the event tree, triggers, conditions, actions, map format v31 (ADR-096, ADR-115, EVT-1 … EVT-4, 2026-11-04)
-**Status**: implemented in core (2026-11-04). Not done: the editor's "Events" tab and validator warnings; the AI answering by value (it takes the
-first answer). Quests: ADR-127; the game app's windows, loops and "run another event": ADR-128.
+**Status**: implemented in core (2026-11-04). Quests: ADR-127; the game app's windows, loops and "run another event": ADR-128; the editor's
+"Events" tab, validator warnings and the AI answering by value: ADR-129.
 
 - **Data**: `MapEventSet` (events in list order, declared variables with starting values, event cells) is the domain's own tree, written to the
   map as it is (`events`, v31): every node carries a `type` name (`MapEventJson`), so there are no parallel document types. An event has a
@@ -750,7 +750,7 @@ first answer). Quests: ADR-127; the game app's windows, loops and "run another e
 
 ### ADR-126: The owner's picks from the missing mechanics: map bans, random placeholders, University and War Academy, spell scrolls, the Grail, the first unique buildings (ADR-116, 2026-11-04)
 **Status**: accepted (2026-11-04), not built. Owner's notes in `ideas.md`; points marked *(proposal)* were filled in by the agent and stand
-unless the owner changes them. More unique buildings and the Grail buildings: TOWN-12.
+unless the owner changes them. More unique buildings: TOWN-12; the Grail buildings: ADR-130.
 
 - **Map bans** (HoMM3, HotA): the map's rules list banned heroes, artifacts, spells and skills. The tavern pools, artifact rolls (chests,
   banks, Pandora's Boxes, merchants, loot), guild draws, shrines, level-ups, Witch Huts, the University and the War Academy skip them.
@@ -773,7 +773,7 @@ unless the owner changes them. More unique buildings and the Grail buildings: TO
   10 cells of a town); **obelisks** (map objects) each show the player a share of the **puzzle map** around it; a hero **digs** with its
   whole day's movement (only with full movement, not on roads or objects), a hole stays; the Grail is an artifact that cannot be traded or
   sold, and a hero bringing it into one of its owner's towns builds that town's **Grail building** at once (one per town). The generator
-  places obelisks per template. Map format bump. Grail building effects: TOWN-12.
+  places obelisks per template. Map format bump. Grail building effects: ADR-130.
 - **Unique buildings, the first set** (one per town, beside the Necromancy Amplifier). Each hero gets a "once" bonus **once per town**
   (another town of the same kind gives it again); the record stays with the town when it is captured *(proposal)*. The siege bonus goes to
   the defending hero (in the town or its garrison) in a siege of that town. Working names *(proposal)*:
@@ -790,8 +790,8 @@ unless the owner changes them. More unique buildings and the Grail buildings: TO
   - *(proposal)* Cost 2000 gold, 5 ore and 5 of the town's rare resource; needs Fort 1 (Stables: town hall 2). `buildings.csv` rows per town.
 
 ### ADR-127: Map events, step 2 in core: quests, the Seer's Hut, Quest Guard and Quest Gate, the quest log, map format v32 (ADR-115, EVT-5, 2026-11-04)
-**Status**: implemented in core (2026-11-04). Not done: the editor's way to write a quest (the "Events" tab); the AI weighing quests (it
-completes any stage it meets and treats barriers as walls). The quest log window, the object shapes and the inspector link: ADR-128.
+**Status**: implemented in core (2026-11-04). The quest log window, the object shapes and the inspector link: ADR-128; writing quests in the
+editor and the AI weighing them: ADR-129.
 
 - **Quests are map events** of a fourth kind, `Quest`: instead of actions a quest has **stages**, done one after another. A stage has a
   **requirement** (any condition of EVT-3, but no random numbers, so routes can test it), a **proposal** (first visit and the quest log), an
@@ -818,8 +818,7 @@ completes any stage it meets and treats barriers as walls). The quest log window
 
 ### ADR-128: Map events: the game app's windows and quest log, quest object shapes; step 3: loops, "run another event", a Pandora's Box's hero event, map format v33 (ADR-115, ADR-124, ADR-127, MAP-35, 2026-11-04)
 **Status**: implemented (2026-11-04); core tested; the game app checked in Godot 4.7.2 with the new smoke scenario `game-quests`. Not done: the
-camera moving to what a turn-start message concerns (EVT-2 f); the editor's "Events" tab (the inspector only picks events the map file
-already has); the AI answering by value, weighing quests and opening a box for its event. Choices made here are marked *(choice)*.
+camera moving to what a turn-start message concerns (EVT-2 f). The editor's "Events" tab and the AI's use of events and quests: ADR-129. Choices made here are marked *(choice)*.
 
 - **Step 3, loops** (`RepeatAction`, `WhileAction`): a repeat's count is drawn once, when it starts; 0 or less runs nothing. A while loop tests
   its condition before every round. Both stop after **100 rounds** (`MaxLoopRounds`) *(choice)*. A message, question, battle or full army
@@ -849,3 +848,69 @@ already has); the AI answering by value, weighing quests and opening a box for i
     let go.
 - **Quest object shapes** (placeholders until the art phase's models): the Seer's Hut gets a pointed roof and a lamp, the Quest Guard a figure
   with a spear, the Quest Gate two posts, a lintel and a seal.
+
+### ADR-129: Map events, step 4: the AI's answers and quests, the editor's "Events" tab, validator checks (ADR-115, EVT-6, 2026-11-05)
+**Status**: implemented (2026-11-05); core tested (`AdventureAiEventTests`, `MapEventEditorTests`); the editor's tab checked in Godot 4.7.2 with
+the new smoke scenario `editor-events`. No map format change. Choices made here are marked *(choice)*.
+
+- **The AI and events** (`AdventureAi.Events.cs`):
+  - A **question** is answered with the answer worth the most to the player (the first of equals), where an answer's worth is that of its
+    actions. Random numbers count as their average, `(min + max) / 2`, so the AI still draws none.
+  - **Values** *(choice)*, the AI's usual gold values where it has them: resources at their gold value, experience 1 a point, a primary
+    stat 750, a secondary skill 1000 a level, an artifact 800 + 80 × its find score, a war machine 300 (taking one −300), a spell book 500, a
+    spell 400 × its level, mana 2 and movement 1 a point, morale and luck 150 a point, creatures 0.85 × their value (0.6 to a town's
+    garrison, 0.4 as creatures to hire), a building 1000, revealing an area 100, a hero 2500; what is taken counts negative.
+  - A **battle** is played out by the battle estimator: one the hero wins is worth 0.35 × the enemy's power; one it loses is worth
+    −(its army's power + 5000) and ends the answer's worth there, as does a stop. Branches count the branch whose condition holds now
+    (the AI reads the variables, it draws no random numbers); a repeat counts its average count; a while loop counts one round
+    *(choice)*; "run another event" is followed 4 deep *(choice)*.
+  - **Quests**: a hero goes to a Seer's Hut or Quest Guard only when it meets the current stage and the stage is worth more than nothing
+    (what it takes, then its rewards); a Quest Guard adds 500 for getting it out of the way *(choice)*, plus the unexplored ground behind it.
+    The completion question is answered the same way, so a stage not worth doing is declined. A Quest Gate is open only to a hero that meets
+    it (exploring and routes); a guard or gate it does not meet stays an obstacle.
+  - **No look-ahead**: event cells, player and town events and a Pandora's Box's event are worth nothing until they run.
+- **Editor core**:
+  - `MapEditorSession`: add, replace (a rename rewrites "run another event", enable and disable references, cells, boxes and quest objects),
+    remove (also its cells and the references of boxes and quest objects), move, map variables, and event cells (only on passable,
+    free tiles, only for hero events); all undoable, publishing `MapEventsChanged`.
+  - The editor holds events that do not fit yet: `GameState.SetMapEvents(set, check: false)`, and the editor opens maps with
+    `MapConverter.ToGameState(..., checkEvents: false)`; the validator reports what the game's load would refuse. The game still refuses
+    such a map.
+  - `MapEventTreeEdit` addresses an action by its path of lists (a quest's stages, then, then and else, do, an answer's actions, a message's
+    rewards) to insert, replace, remove and move it; `MapEventText` describes a node in one line for the tree.
+  - **Simple forms** (`SimpleEventForms`) write HoMM3's events as ordinary event trees *(choice: no form kept in the file)*: a **timed event**
+    (a player event: its first day and every n days, for which players, people and or computers, a message and rewards), an **event cell**
+    (a hero event, once or every time) and a **town event** (its towns, days, buildings and creatures to hire). "Every n days" is written with
+    the arithmetic the conditions have, there being no remainder operator.
+  - `MapEventTemplates`: a blank event of each kind, one action of every type and the usual conditions, valid on the map.
+- **Node text** *(choice)*: the tab edits a chosen action, or a quest stage without its actions, as the JSON the map file writes
+  (`IMapEventNodeText`, implemented by `MapEventNodeJson` in Core.Data and handed in by the editor app, so Godot.UI does not use Core.Data). A
+  node with a value missing that may not be missing is refused with the reason, so every action, condition and expression is editable
+  without a form of its own; the menus insert templates.
+- **Validator** (`MapEventRules.Check` returns problems with their event and position; `MapEventChecks.Warnings`): the load errors as
+  errors; as warnings an event that runs itself, an event nothing runs (no cell, box, other event, trigger or quest object), a quest no
+  object asks, a town event with no towns, an event that starts disabled and that nothing enables, a message without text, a quest stage
+  that cannot be met (an unknown hero, player, monster, town, artifact, creature, resource or skill, or a level heroes cannot reach), and a
+  variable nothing reads. An issue sits on the event's position, cell, quest object or town.
+- **Editor app**:
+  - the **"Events" tab**: the events in run order (new of each kind or from a form, up, down, delete), the chosen event's name, whether it
+    starts enabled, its cells ("Place cells" makes map clicks place or remove them; "Show"), towns or quest objects ("Show", "Add stage"), its
+    tree with "Add action", up, down, delete, the node's text with Apply and "Insert condition", the validator's findings for it, and the map
+    variables with their starting values;
+  - the event cells drawn on the map in violet with their event's name, the chosen event's in gold (`EventCellsView`, the editor only);
+  - **inspector links**: a box's hero event and a quest object's quest get "New" (a blank event, picked, one undo step) and "Edit"; a town
+    lists its town events and has "New town event"; a double click on a validation issue of an event opens it in the tab.
+- **Tested by playing the map**: a test writes events with the editor's forms and edits, saves and loads the map, and plays it in the game.
+
+### ADR-130: The Grail buildings; more unique buildings stay open (TOWN-12, ADR-126, 2026-11-05)
+**Status**: accepted (2026-11-05), not built (with the Grail, ADR-126). Owner's answer to TOWN-12; points marked *(proposal)* were filled in
+by the agent and stand unless the owner changes them.
+
+- **Grail buildings** (b): every town's Grail building does the same: **+5000 gold a day** and **+50 % growth** of every dwelling in its
+  town, and in a **siege of that town** the defending side gets **+2 Initiative** for each of its stacks and **+5 Attack, Defense, Spell
+  Power and Knowledge** for its hero. The proposal's per-faction effects for all the owner's heroes (morale, luck, guild spells, Spell
+  Power, Necromancy, the revealed map, Attack, Defense) are dropped. *(proposal)* The siege bonus applies like the unique buildings' (the
+  hero in the town or its garrison; the stacks also without a hero) and counts for the battle only (Knowledge adds no mana in it); the
+  +50 % applies to the week's growth after the growth buildings, rounded down; names per town come with the buildings' rows.
+- **More unique buildings** (a): stays open. The first set (ADR-126) is the only one planned; the owner adds further buildings per town to
+  TOWN-12 later.
