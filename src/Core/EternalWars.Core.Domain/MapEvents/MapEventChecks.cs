@@ -60,14 +60,94 @@ public static class MapEventChecks
             }
         }
 
+        // A variable kept for the next map is read there.
         var read = set.Events.SelectMany(MapEventTree.Expressions).OfType<VariableExpr>().Select(v => v.Name).ToHashSet(StringComparer.Ordinal);
-        foreach (var variable in set.Variables.Keys.Where(v => !read.Contains(v)).Order(StringComparer.Ordinal))
+        foreach (var variable in set.Variables.Keys.Where(v => !read.Contains(v) && !set.IsKept(v)).Order(StringComparer.Ordinal))
         {
             warnings.Add(new($"The variable '{variable}' is never read."));
         }
 
+        if (FavoursPeople(set) is { } favouring)
+        {
+            warnings.Add(new($"Event '{favouring}' gives something only to people, not to computer players: games on this map are not ranked (ADR-101).", favouring));
+        }
+
         return warnings;
     }
+
+    /// <summary>
+    /// The first event that favours people over computer players (ADR-101, FLOW-4 a), or null: one that gives something (anything but a plain
+    /// message, a question, a stop, a variable, enabling or disabling events, removing its cell or a loss) only where its condition holds for people alone: an "if" or "while" whose condition needs "the
+    /// player is a person" (a ready form with "computer may trigger" left off), the "else" of one that holds for every computer player, a quest
+    /// stage that only people can meet, and the events such a branch runs. A map with one is campaign-like and not ranked.
+    /// </summary>
+    public static string? FavoursPeople(MapEventSet set)
+    {
+        foreach (var definition in set.Events)
+        {
+            var branches = PeopleOnly(definition.Actions)
+                .Concat(definition.Stages.Where(s => NeedsPerson(s.Requirement)).Select(s => s.Actions));
+            if (branches.Any(b => Gives(set, b, new HashSet<string>(StringComparer.Ordinal))))
+            {
+                return definition.Name;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>The branches of the actions (nested ones included) that only run for people.</summary>
+    private static IEnumerable<IReadOnlyList<EventAction>> PeopleOnly(IReadOnlyList<EventAction> actions)
+    {
+        foreach (var action in MapEventTree.Actions(actions))
+        {
+            switch (action)
+            {
+                case IfAction branch when NeedsPerson(branch.Condition):
+                    yield return branch.Then;
+                    break;
+                case IfAction branch when HoldsForComputers(branch.Condition):
+                    yield return branch.Else;
+                    break;
+                case WhileAction loop when NeedsPerson(loop.Condition):
+                    yield return loop.Actions;
+                    break;
+            }
+        }
+    }
+
+    /// <summary>Whether the actions give something (with the events they run).</summary>
+    private static bool Gives(MapEventSet set, IReadOnlyList<EventAction> actions, HashSet<string> seen) =>
+        MapEventTree.Actions(actions).Any(a => a switch
+        {
+            MessageAction or QuestionAction or StopAction or IfAction or RepeatAction or WhileAction
+                or SetVariableAction or EnableEventAction or RemoveCellAction => false,
+            RunEventAction run => seen.Add(run.Event) && set.Find(run.Event) is { } other && Gives(set, other.Actions, seen),
+            ResourceAction { Amount: NumberExpr { Value: <= 0 } } or CreaturesAction { Count: NumberExpr { Value: <= 0 } }
+                or AvailableCreaturesAction { Count: NumberExpr { Value: <= 0 } } or ManaAction { Amount: NumberExpr { Value: <= 0 } }
+                or MovementAction { Amount: NumberExpr { Value: <= 0 } } or ArtifactAction { Take: true } or WarMachineAction { Take: true } => false,
+            MoraleAction { Morale: <= 0, Luck: <= 0 } => false,
+            _ => true,
+        });
+
+    /// <summary>Whether the condition can only hold for a person (true ⇒ the player is a person).</summary>
+    private static bool NeedsPerson(EventCondition condition) => condition switch
+    {
+        PlayerIsHumanCondition => true,
+        NotCondition not => HoldsForComputers(not.Condition),
+        AllCondition all => all.Conditions.Any(NeedsPerson),
+        AnyCondition any => any.Conditions.Count > 0 && any.Conditions.All(NeedsPerson),
+        _ => false,
+    };
+
+    /// <summary>Whether the condition holds for every computer player (a computer player ⇒ true).</summary>
+    private static bool HoldsForComputers(EventCondition condition) => condition switch
+    {
+        NotCondition not => NeedsPerson(not.Condition),
+        AllCondition all => all.Conditions.Count > 0 && all.Conditions.All(HoldsForComputers),
+        AnyCondition any => any.Conditions.Any(HoldsForComputers),
+        _ => false,
+    };
 
     /// <summary>The way an event runs itself through "run another event" (its name first and last), or null when it does not.</summary>
     public static IReadOnlyList<string>? Cycle(MapEventSet set, string name)

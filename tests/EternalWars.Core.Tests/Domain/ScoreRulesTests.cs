@@ -1,7 +1,9 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Players;
 using EternalWars.Core.Domain.Towns;
 using static EternalWars.Core.Tests.TestWorld;
@@ -130,6 +132,55 @@ public class ScoreRulesTests
 
         Assert.False(ScoreRules.IsRanked(state));
         Assert.Empty(ScoreRules.Scores(state));
+    }
+
+    private static MapEventSet Player(params EventAction[] actions) => new() { Events = [new MapEventDefinition("e", MapEventKind.Player, actions)] };
+
+    private static ResourceAction Gold(int amount) => new(ResourceType.Gold, new NumberExpr(amount));
+
+    public static TheoryData<string, MapEventSet> Favouring => new()
+    {
+        { "a ready form with 'computer may trigger' left off", new() { Events = [SimpleEventForms.Timed("e", "Gold!", 1, 0, new EventTriggers([]), new SimpleRewards { Experience = 100 })] } },
+        { "an if on 'is a person'", Player(new IfAction(new PlayerIsHumanCondition(), [Gold(500)])) },
+        { "an else of 'is a computer'", Player(new IfAction(new NotCondition(new PlayerIsHumanCondition()), []) { Else = [Gold(500)] }) },
+        { "a message's reward", Player(new IfAction(new AllCondition([new PlayerIsCondition(0), new PlayerIsHumanCondition()]), [new MessageAction("Hi") { Rewards = [Gold(1)] }])) },
+        { "an event it runs", new() { Events = [
+            new MapEventDefinition("e", MapEventKind.Player, [new IfAction(new PlayerIsHumanCondition(), [new RunEventAction("gift")])]),
+            new MapEventDefinition("gift", MapEventKind.Hero, [Gold(1)])] } },
+        { "a quest only people meet", new() { Events = [new MapEventDefinition("q", MapEventKind.Quest, []) { Stages = [new QuestStage(new PlayerIsHumanCondition(), "Be a person.", [Gold(1)])] }] } },
+    };
+
+    public static TheoryData<string, MapEventSet> Fair => new()
+    {
+        { "no condition", Player(Gold(500)) },
+        { "a ready form for anyone", new() { Events = [SimpleEventForms.Timed("e", "Gold!", 1, 0, EventTriggers.Anyone, new SimpleRewards { Experience = 100 })] } },
+        { "only a message for people", Player(new IfAction(new PlayerIsHumanCondition(), [new MessageAction("Welcome!"), new EnableEventAction(null, false)])) },
+        { "a loss for people", Player(new IfAction(new PlayerIsHumanCondition(), [Gold(-500), new ArtifactAction("x", Take: true)])) },
+        { "a gift for computers", Player(new IfAction(new NotCondition(new PlayerIsHumanCondition()), [Gold(500)])) },
+        { "people or slot 1", Player(new IfAction(new AnyCondition([new PlayerIsHumanCondition(), new PlayerIsCondition(0)]), [Gold(500)])) },
+    };
+
+    [Theory]
+    [MemberData(nameof(Favouring))]
+    public void AnEventGivingSomethingOnlyToPeople_MakesTheMapCampaignLike(string what, MapEventSet set)
+    {
+        Assert.NotNull(MapEventChecks.FavoursPeople(set));
+        var state = Duel(adjust: s => s.SetMapEvents(set, check: false));
+        Start(state);
+
+        Assert.False(ScoreRules.IsRanked(state), what);
+        Assert.Contains(MapEventChecks.Warnings(state, set), w => w.Message.Contains("not ranked"));
+    }
+
+    [Theory]
+    [MemberData(nameof(Fair))]
+    public void EventsThatDoNotFavourPeople_KeepTheGameRanked(string what, MapEventSet set)
+    {
+        Assert.Null(MapEventChecks.FavoursPeople(set));
+        var state = Duel(adjust: s => s.SetMapEvents(set, check: false));
+        Start(state);
+
+        Assert.True(ScoreRules.IsRanked(state), what);
     }
 
     [Fact]

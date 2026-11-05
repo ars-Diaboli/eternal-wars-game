@@ -42,11 +42,12 @@ namespace EternalWars.Core.Data.Maps;
 /// school, at most 3 / 3 / 2 / 2 per level; omitted = all drawn when the game starts). 31 = + map events (<c>events</c>: the event tree, the variables and the event cells; omitted = none;
 /// ADR-115). 32 = + quests (an event's <c>stages</c>) and the quest objects (<c>questSite</c>: Seer's Hut, Quest Guard, Quest Gate, each naming
 /// its <c>quest</c>; ADR-115, EVT-5). 33 = + the loop and run actions (<c>repeat</c>, <c>while</c>, <c>runEvent</c>) and a Pandora's Box's hero
-/// <c>event</c> (ADR-115, MAP-35). Older versions still load (with the default events).
+/// <c>event</c> (ADR-115, MAP-35). 34 = + campaign variables (the events' <c>keptVariables</c> and <c>takenVariables</c>: names of declared
+/// variables; omitted = none; EVT-1 f). Older versions still load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 33;
+    public const int CurrentFormatVersion = 34;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;

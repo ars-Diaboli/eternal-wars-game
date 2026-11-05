@@ -43,8 +43,18 @@ public sealed class MapEventState
 
     public int Variable(string name) => _variables.GetValueOrDefault(name);
 
-    /// <summary>Loads the author's events (before the game starts); the variables take their starting values.</summary>
-    internal void Load(MapEventSet set)
+    /// <summary>
+    /// What a campaign carries to the next map (EVT-1 f, FLOW-1): the current values of the variables "kept for the next map"
+    /// (<see cref="MapEventSet.KeptVariables"/>), by name; empty for a map without them.
+    /// </summary>
+    public IReadOnlyDictionary<string, int> CampaignVariables =>
+        Set.KeptVariables.Where(_variables.ContainsKey).Distinct(StringComparer.Ordinal).ToDictionary(v => v, v => _variables[v], StringComparer.Ordinal);
+
+    /// <summary>
+    /// Loads the author's events (before the game starts); the variables take their starting values, those "taken from the last map" the value
+    /// <paramref name="carried"/> holds for them, when it holds one.
+    /// </summary>
+    internal void Load(MapEventSet set, IReadOnlyDictionary<string, int>? carried = null)
     {
         Set = set;
         _variables.Clear();
@@ -53,7 +63,7 @@ public sealed class MapEventState
         _questLogs.Clear();
         foreach (var (name, value) in set.Variables)
         {
-            _variables[name] = value;
+            _variables[name] = set.IsTaken(name) && carried is not null && carried.TryGetValue(name, out var from) ? from : value;
         }
 
         foreach (var definition in set.Events.Where(e => !e.Enabled))

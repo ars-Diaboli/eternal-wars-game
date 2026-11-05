@@ -48,11 +48,13 @@ public static class ScoreRules
     ];
 
     /// <summary>
-    /// Whether the game may be ranked: a map is campaign-like (not ranked) when a human player started without a town (ADR-075). The map events'
-    /// check (an event that favours humans over computer players) comes with the map events (ADR-096).
+    /// Whether the game may be ranked: a map is campaign-like (not ranked) when a human player started without a town (ADR-075), or when a map
+    /// event favours people over computer players (<see cref="MapEvents.MapEventChecks.FavoursPeople"/>).
     /// </summary>
     public static bool IsRanked(GameState state) =>
-        state.IsStarted && state.Players.Where(p => p.TookPart && p.IsHuman).All(p => p.StartTown is not null);
+        state.IsStarted
+        && state.Players.Where(p => p.TookPart && p.IsHuman).All(p => p.StartTown is not null)
+        && MapEvents.MapEventChecks.FavoursPeople(state.MapEvents.Set) is null;
 
     /// <summary>
     /// The difficulty a game counts as: its complexity; with "Map default" (none chosen), the map's difficulty (<see cref="ScenarioRules.Difficulty"/>),

@@ -58,4 +58,11 @@ public sealed record GameOptions(
     FogMode FogMode = FogMode.PermanentReveal, int RefogMargin = 2, ulong Seed = 1, Complexity? Complexity = null, int? TurnTimerMinutes = null)
 {
     public static GameOptions Default { get; } = new();
+
+    /// <summary>
+    /// The values a campaign carries in from the last map (EVT-1 f, FLOW-1): the map's variables "taken from the last map" start with them
+    /// (<see cref="MapEvents.MapEventSet.TakenVariables"/>); other names are ignored. Null (a single game) carries nothing. Kept in the record, so
+    /// a replay starts the same.
+    /// </summary>
+    public IReadOnlyDictionary<string, int>? CampaignVariables { get; init; }
 }

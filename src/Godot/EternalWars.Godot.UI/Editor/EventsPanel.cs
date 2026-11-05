@@ -477,13 +477,19 @@ public partial class EventsPanel : ScrollContainer
 
     private void ShowVariables(MapEventSet set)
     {
-        Heading("Map variables (whole numbers, with their starting values)");
+        Heading("Map variables (whole numbers, with their starting values; campaign: kept for the next map, taken from the last map)");
         foreach (var (name, value) in set.Variables.OrderBy(v => v.Key, StringComparer.Ordinal))
         {
             var row = Row();
             row.AddChild(new Label { Text = name, CustomMinimumSize = new Vector2(160, 0) });
             var spin = Spin(row, value, int.MinValue / 2, int.MaxValue / 2);
             spin.ValueChanged += v => _editor.SetMapVariable(name, (int)v);
+            var kept = new CheckBox { Text = "Kept", ButtonPressed = set.IsKept(name), TooltipText = "Kept for the next map: a campaign carries its value at the end of this map on." };
+            var taken = new CheckBox { Text = "Taken", ButtonPressed = set.IsTaken(name), TooltipText = "Taken from the last map: in a campaign it starts with the value the last map kept." };
+            row.AddChild(kept);
+            row.AddChild(taken);
+            kept.Toggled += on => _editor.SetCampaignVariable(name, on, taken.ButtonPressed);
+            taken.Toggled += on => _editor.SetCampaignVariable(name, kept.ButtonPressed, on);
             Button(row, "Remove", () => _editor.RemoveMapVariable(name));
         }
 

@@ -294,4 +294,9 @@ Rules: [shared object rules](#shared-object-rules).
     cells drawn on the map, "New" and "Edit" links in the inspector, and validator errors and warnings (an event that runs itself or that
     nothing runs, a quest no object asks or that cannot be met, a variable nothing reads, …). The editor opens a map whose events do not fit;
     the game does not.
+  - **Campaign variables**: a map variable may be "kept for the next map" (its value at the end is what a campaign carries on) and / or
+    "taken from the last map" (it starts with the carried value, else its own); ticked in the Events tab. The campaign that carries them is
+    Phase 6 (FLOW-1).
+  - **Ranking**: an event that gives something only to people (a condition only people meet, such as a ready form with "computer may
+    trigger" left off) makes the map campaign-like, so it is not ranked; the validator warns ([victory and modes](victory-and-modes.md)).
   - *(planned)* The camera moving to what a turn-start message concerns.
