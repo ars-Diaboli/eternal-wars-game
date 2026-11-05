@@ -89,10 +89,10 @@ $scenarios = @(
     # The Thieves' Guild (ADR-079) from the town screen's button, closed with Escape, then the town screen too.
     @{ Name = 'game-thieves-guild'; App = 'EternalWars.Game'; Frames = 40; Map = $townsMap
        Input = '3:key:Enter;10:key:T;16:click:446,16;26:key:Escape;32:key:Escape' },
-    # A random map (ADR-086): pick "Random map: Duel", Necropolis and its first hero for Blue, Start (Red is a computer player), K, end the
-    # turn so the computer plays its turn.
-    @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 90
-       Input = '4:click:750,314;8:click:783,428;12:click:765,578;16:click:749,719;20:click:925,578;24:click:925,638;28:click:798,648;45:key:K;55:key:Escape;60:click:342,24' },
+    # A random map (ADR-086): pick "Random map: Duel", Necropolis, its first hero and the Skeleton tier-1 dwelling for Blue, hero limit 7,
+    # Start (Red is a computer player), K, end the turn so the computer plays its turn.
+    @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 105
+       Input = '4:click:750,314;8:click:783,455;12:click:700,595;16:click:687,736;20:click:860,595;24:click:860,655;28:click:1000,595;32:click:1024,682;36:click:618,400;40:click:680,665;58:key:K;68:key:Escape;74:click:342,24' },
     # The main menu (ADR-101), by keyboard: two Downs skip the disabled items to Leaderboard, Enter opens it, Escape returns, Enter on
     # New game, Enter on Start. The only game scenario without --new-game.
     @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 50; MainMenu = $true

@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Heroes;
 
 namespace EternalWars.Core.Generation;
@@ -5,11 +6,15 @@ namespace EternalWars.Core.Generation;
 /// <summary>
 /// A start slot of a template as the game's new-game screen offers it (ADR-086): the player's name (by colour, <see cref="EditorMapGenerator.PlayerNames"/>),
 /// whether a human may take it (a player start; an AI-only start is for computer players), whether a human takes it by default (the first slot a
-/// human may take; the others are computer players, as in HoMM3) and its team when nobody changes it.
+/// human may take; the others are computer players, as in HoMM3), its team when nobody changes it and whether its player picks the start town's
+/// tier-1 dwelling (RMG-7: the start zone gives none of its own).
 /// </summary>
-public sealed record StartSlot(int Slot, string Name, bool HumanAllowed, bool HumanByDefault, int Team);
+public sealed record StartSlot(int Slot, string Name, bool HumanAllowed, bool HumanByDefault, int Team, bool PicksTier1Dwelling = true);
 
-/// <summary>What the new-game screen needs from a template before it generates: its start slots and the heroes a player of a town can pick.</summary>
+/// <summary>
+/// What the new-game screen needs from a template before it generates: its start slots, the heroes a player of a town can pick and the tier-1
+/// dwellings it can start with.
+/// </summary>
 public static class StartSlots
 {
     /// <summary>Every start slot of the template, in slot order. Teams are the start zones' (a zone without one: a team of its own, as <see cref="ScenarioAssembler"/> gives).</summary>
@@ -24,8 +29,22 @@ public static class StartSlots
             s < EditorMapGenerator.PlayerNames.Count ? EditorMapGenerator.PlayerNames[s] : $"Player {s + 1}",
             HumanAllowed(template, s),
             s == firstHuman,
-            teams[s])).ToList();
+            teams[s],
+            PicksTier1Dwelling(template, s))).ToList();
     }
+
+    /// <summary>The tier-1 dwellings a player of <paramref name="town"/> can pick for its start town (RMG-7): the town's tier-1 lines, by name.</summary>
+    public static IReadOnlyList<CreatureDefinition> Tier1Dwellings(CreatureCatalog creatures, string town)
+    {
+        ArgumentNullException.ThrowIfNull(creatures);
+        return creatures.BaseCreaturesOf(town).Where(c => c.Tier == 1).OrderBy(c => c.Name, StringComparer.Ordinal).ToList();
+    }
+
+    /// <summary>A slot's start zone that names no tier-1 dwelling leaves the pick to the player (<see cref="ScenarioAssembler"/>).</summary>
+    private static bool PicksTier1Dwelling(MapTemplate template, int slot) =>
+        template.Zones.FirstOrDefault(z => z.Owner == slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart) is not { } zone
+        || zone.StartDwellings is not { } tiers
+        || !tiers.Contains(1);
 
     /// <summary>The heroes a player of <paramref name="town"/> can start with, by name.</summary>
     public static IReadOnlyList<HeroDefinition> Heroes(HeroCatalog roster, string town)

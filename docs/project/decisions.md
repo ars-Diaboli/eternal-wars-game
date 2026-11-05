@@ -988,3 +988,16 @@ agent's choices made while building and stand unless the owner changes them. Rul
   random towns and monsters.
 - **Not in this step**: the generator places none of them; the University and War Academy (not built) will read the bans; a campaign's
   carried hero in a placeholder waits for FLOW-1.
+
+### ADR-134: New-game screen: the tier-1 dwelling pick and the hero limit (ADR-086, ADR-068, RMG-7, 2026-11-05)
+**Status**: implemented (2026-11-05); core tested (`StartSlotsTests`); checked in Godot 4.7.2 with the reworked smoke scenario
+`game-random-map`. Closes the two points ADR-086 left open; no rule or map format change, the generator core already took both.
+
+- **Tier-1 dwelling**: a "Tier-1 dwelling" column on a random map's player rows, between Hero and Team: "Random" and the picked town's
+  tier-1 lines by name (`StartSlots.Tier1Dwellings`), passed as `PlayerSetup.Tier1Dwelling`. *(proposal)* It is open only for a human player
+  with a picked town whose start zone gives no tier-1 dwelling (`StartSlot.PicksTier1Dwelling`); otherwise it stays "Random" and its tooltip
+  says why (a computer player's is drawn, as RMG-7 says). Changing the town or human / computer resets it.
+- **Hero limit**: a "Hero limit" row under "Players" (1–8, the template's `MaxHeroes` by default). Another value goes to `MapGenerator.Build`
+  as the `maxHeroes` override; one limit for every player, as in the editor's Generate tab (ADR-087). Hand-made maps keep their own limits.
+- **Smoke**: `game-random-map` had drifted to "Two against two" as the map list grew and never left the screen; it now picks Duel,
+  Necropolis, the first hero, Skeleton and a hero limit of 7, starts, opens the kingdom and ends the turn.

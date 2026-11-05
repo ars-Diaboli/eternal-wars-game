@@ -119,7 +119,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       connections, towns, mines, roads, treasure, assembly; ADR-064, ADR-079, RMG-1 … RMG-7, ADR-112), whole-map fairness, teams 2–8,
       mirrored templates, the template editor and starter templates (ADR-117); `sim maps` in CI; editor generation (ADR-087) and the
       new-game screen's random maps (ADR-086), user templates on it
-- [ ] New-game screen: the tier-1 dwelling pick and the hero limit override (the editor's Generate tab has the override, ADR-087)
+- [x] New-game screen: the tier-1 dwelling pick and the hero limit override (ADR-134)
 - Not in 1.0: water zones and islands (no sea travel, ADR-051), HotA template import (ADR-034)
 
 ## Phase 5: Content and polish

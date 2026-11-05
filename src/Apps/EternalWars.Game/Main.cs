@@ -145,7 +145,8 @@ public partial class Main : Node3D
     {
         var setup = new NewGameScreen();
         ShowSetup(setup, back: ShowMainMenu);
-        setup.Bind(Scenarios(), RandomMaps(), town => StartSlots.Heroes(GameContent.Heroes, town));
+        setup.Bind(
+            Scenarios(), RandomMaps(), town => StartSlots.Heroes(GameContent.Heroes, town), town => StartSlots.Tier1Dwellings(GameContent.Creatures, town));
         setup.BackRequested += ShowMainMenu;
         setup.Started += state =>
         {
@@ -1299,18 +1300,20 @@ public partial class Main : Node3D
         template.Sizes,
         template.MinPlayers,
         template.TeamsLocked,
-        StartSlots.Of(template).Select(s => new RandomMapSlot(s.Name, s.HumanAllowed, s.HumanByDefault, s.Team)).ToList(),
+        StartSlots.Of(template).Select(s => new RandomMapSlot(s.Name, s.HumanAllowed, s.HumanByDefault, s.Team, s.PicksTier1Dwelling)).ToList(),
         request =>
         {
             var slots = StartSlots.Of(template);
             var players = request.Players
-                .Select(p => new PlayerSetup(p.Slot, slots[p.Slot].Name, p.IsHuman, p.Town ?? PlayerSetup.RandomTown, p.Hero, p.Team))
+                .Select(p => new PlayerSetup(p.Slot, slots[p.Slot].Name, p.IsHuman, p.Town ?? PlayerSetup.RandomTown, p.Hero, p.Team, p.Tier1Dwelling))
                 .ToList();
             var (state, generation) = MapGenerator.Build(
-                template, request.Size, request.Options.Seed, players, request.Options, GameContent.Creatures, GameContent.Heroes, GameContent.Artifacts, GameContent.Buildings);
+                template, request.Size, request.Options.Seed, players, request.Options, GameContent.Creatures, GameContent.Heroes, GameContent.Artifacts,
+                GameContent.Buildings, request.MaxHeroes);
             _lastGenerated = (state, GenerationInfo.Of(template.Name, request.Size, request.Options.Seed, generation.Attempt));
             return new RandomMapResult(state, generation.Problems);
         },
         template.MinTeams,
-        template.MaxTeams);
+        template.MaxTeams,
+        template.MaxHeroes);
 }
