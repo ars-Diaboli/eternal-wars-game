@@ -441,15 +441,30 @@ public sealed class BattleService(
         : battle.Defender.Owner == player ? BattleSide.Defender
         : null;
 
-    /// <summary>A hero's side; a garrison hero (<paramref name="garrisonOf"/>, ADR-112) leads its town's garrison and holds the town as its guard.</summary>
-    private BattleParticipant Participant(BattleSide side, Hero hero, Town? garrisonOf = null) =>
-        new(side, hero.Owner, hero.Id, garrisonOf?.Id, hero.TotalAttack, hero.TotalDefense, hero.SkillLevelOf(BuiltInSkills.Tactics), !state.GetPlayer(hero.Owner).IsHuman,
-            HeroBattleBonuses.For(hero, state.Creatures),
+    /// <summary>
+    /// A hero's side; a garrison hero (<paramref name="garrisonOf"/>, ADR-112) leads its town's garrison and holds the town as its guard. A hero defending
+    /// its town (on the entrance or in the garrison) gets the Brotherhood's morale, and in a siege the town's unique buildings' bonus (ADR-138).
+    /// </summary>
+    private BattleParticipant Participant(BattleSide side, Hero hero, Town? garrisonOf = null)
+    {
+        var home = side == BattleSide.Defender ? garrisonOf ?? state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position) : null;
+        var siege = home is not null && SiegeRules.SpecOf(home) is not null ? UniqueBuildings.SiegeOf(home) : SiegeBonus.None;
+        var bonuses = HeroBattleBonuses.For(hero, state.Creatures);
+        var caster = BattleCaster.For(hero, state.Spells);
+        if (!siege.IsNone)
+        {
+            bonuses = bonuses with { Morale = bonuses.Morale + siege.Morale, Luck = bonuses.Luck + siege.Luck };
+            var lent = siege.Knowledge * ManaRules.ManaPerKnowledge;
+            caster = caster is null ? null : caster with { SpellPower = caster.SpellPower + siege.SpellPower, Mana = caster.Mana + lent, LentMana = lent };
+        }
+
+        return new(side, hero.Owner, hero.Id, garrisonOf?.Id, hero.TotalAttack + siege.Attack, hero.TotalDefense + siege.Defense, hero.SkillLevelOf(BuiltInSkills.Tactics),
+            !state.GetPlayer(hero.Owner).IsHuman,
+            bonuses,
             (hero.Bonus.NoFactionPenalty ? 0 : MoraleAndLuck.MixedFactions((garrisonOf?.Garrison ?? hero.Army).Stacks.Select(s => state.Creatures.Get(s.Stack.Creature))))
-            + (side == BattleSide.Defender && (garrisonOf ?? state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == hero.Owner && t.VisitPosition == hero.Position)) is { } home
-                ? DefenderMorale(home)
-                : 0),
-            BattleCaster.For(hero, state.Spells));
+            + (home is not null ? DefenderMorale(home) : 0),
+            caster);
+    }
 
     /// <summary>A town's defenders get the Brotherhood's morale (ADR-075, CMB-2): its garrison, or an own hero standing at its entrance.</summary>
     private static int DefenderMorale(Town town) =>
@@ -657,14 +672,15 @@ public sealed class BattleService(
         var experience = Experience(battle);
         var casualties = Casualties(battle);
 
-        // The mana the heroes spent is gone (ADR-110).
+        // The mana the heroes spent is gone (ADR-110); mana lent for a siege (ADR-138) is spent first and does not outlast the battle.
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
-            if (battle.Participant(side) is { Hero: { } id, Caster: { } caster } && battle.ManaOf(side) != caster.Mana)
+            if (battle.Participant(side) is { Hero: { } id, Caster: { } caster } && Math.Min(battle.ManaOf(side), caster.Mana - caster.LentMana) is var left
+                && left != caster.Mana - caster.LentMana)
             {
                 var hero = state.GetHero(id);
-                hero.Mana = battle.ManaOf(side);
-                events.Publish(new HeroManaSpent(id, caster.Mana - hero.Mana, hero.Mana, hero.MaxMana));
+                hero.Mana = left;
+                events.Publish(new HeroManaSpent(id, caster.Mana - caster.LentMana - hero.Mana, hero.Mana, hero.MaxMana));
             }
         }
 

@@ -31,6 +31,13 @@ war-lodge,swamp-bestiary,2,Spirit Totems,3500,lumber 5; sulfur 3,,,,teaches Inti
 war-lodge,swamp-bestiary,3,Elder Totem,5000,lumber 5; sulfur 5,,,,teaches Terror
 caravan,,1,Caravan,1000,lumber 5,town-hall 2,,,ADR-054 draft: hire from owned map dwellings within 7500 movement points (ADR-075); send troops to another own town
 necromancy-amplifier,necropolis,1,Necromancy Amplifier,1500,mercury 5,mage-guild 1,,,"+5 % Necromancy for every hero of its owner with the skill; more add nothing (ADR-069, ADR-070, TOWN-6)"
+stables,haven,1,Stables,2000,ore 5; crystal 5,town-hall 2,,,"unique (ADR-126, ADR-138): as the map's Stables, +400 movement now and every day to the week's end; once a week per hero"
+proving-ring,stronghold,1,Proving Ring,2000,ore 5; crystal 5,fort 1,,,"unique (ADR-126, ADR-138): +1 Attack once per hero; +1 Attack to the defending hero in sieges"
+shell-wall,swamp-bestiary,1,Shell Wall,2000,ore 5; sulfur 5,fort 1,,,"unique (ADR-126, ADR-138): +1 Defense once per hero; +1 Defense in sieges"
+hall-of-records,academy,1,Hall of Records,2000,ore 5; mercury 5,fort 1,,,"unique (ADR-126, ADR-138): +1 Knowledge once per hero; +1 Knowledge in sieges"
+altar-of-brimstone,inferno,1,Altar of Brimstone,2000,ore 5; mercury 5,fort 1,,,"unique (ADR-126, ADR-138): +1 Spell Power once per hero; +1 Spell Power in sieges"
+elder-grove,sylvan,1,Elder Grove,2000,ore 5; mercury 5,fort 1,,,"unique (ADR-126, ADR-138): +1000 experience once per hero; +1 luck in sieges"
+mana-spring,dungeon,1,Mana Spring,2000,ore 5; sulfur 5,fort 1,,,"unique (ADR-126, ADR-138): mana +75 % of the maximum, above it until spent; once a week per hero; +1 morale in sieges"
 school-inferno,sylvan,1,Brimstone Altar,2000,mercury 5,mage-guild 2,,,"placeholder (ADR-072, MAG-12): 1 Inferno spell per mage guild level; the school's resource is its town's rare resource"
 school-haven,sylvan,1,Chapel of Dawn,2000,crystal 5,mage-guild 2,,,1 Haven spell per mage guild level
 school-sylvan,haven,1,Grove of Whispers,2000,mercury 5,mage-guild 2,,,1 Sylvan spell per mage guild level

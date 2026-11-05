@@ -730,7 +730,8 @@ public sealed class MapEventService(
             BuildRequirements(town, catalog.Get(building, l), depth);
             town.SetLevel(building, l);
             events.Publish(new TownBuilt(town.Id, building, l));
-            if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null)
+            if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
+                || UniqueBuildings.Get(building) is not null)
             {
                 Magic.MagicRules.VisitBy(state, events, town);
             }

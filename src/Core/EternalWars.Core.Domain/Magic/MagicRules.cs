@@ -190,7 +190,8 @@ public static class MagicRules
     /// A hero in an own town (on the entrance) with a mage guild learns the offered spells it may and does not know yet, and the offered spells it
     /// knows rise, free, straight to the rank its Mastery allows (ADR-072, ADR-122; a spell learned elsewhere rises too). Its mana fills up only
     /// after a night there (<paramref name="night"/>: the start of the owner's turn), not on entering. Nothing happens without a guild, and no
-    /// learning without a book. A war lodge instead teaches the warcries up to its level (<see cref="Hero.WarcriesLearned"/>).
+    /// learning without a book. A war lodge instead teaches the warcries up to its level (<see cref="Hero.WarcriesLearned"/>). Every town visit
+    /// comes through here, so the town's unique buildings give their bonuses first (<see cref="UniqueBuildings.Visit"/>, ADR-138).
     /// </summary>
     internal static void Visit(GameState state, IEventPublisher events, Hero hero, Town town, bool night = false)
     {
@@ -198,6 +199,8 @@ public static class MagicRules
         {
             return;
         }
+
+        UniqueBuildings.Visit(state, events, hero, town);
 
         // Stronghold's and Swamp Bestiary's war lodge (ADR-071, placeholder) teaches the warcries up to its level instead of spells.
         if (town.Level(BuiltInBuildings.WarLodge) is var lodge and > 0 && lodge > hero.WarcriesLearned)

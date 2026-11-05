@@ -748,7 +748,7 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
 - The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
 
 ### ADR-126: The owner's picks from the missing mechanics: map bans, random placeholders, University and War Academy, spell scrolls, the Grail, the first unique buildings (ADR-116, 2026-11-04)
-**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), spell scrolls (ADR-136), the rest not built yet. Owner's notes in `ideas.md`;
+**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), spell scrolls (ADR-136), the first unique buildings (ADR-138), the rest not built yet. Owner's notes in `ideas.md`;
 points marked *(proposal)* were filled in by the agent and stand unless the owner changes them. More unique buildings: TOWN-12; the Grail
 buildings: ADR-130.
 
@@ -1005,7 +1005,7 @@ agent's choices made while building and stand unless the owner changes them. Rul
 ### ADR-135: Roster revision: renames, two swaps, classes A and B, Necromancy by class (CONT-2, ADR-072, 2026-11-05)
 **Status**: implemented (2026-11-05), from the owner's notes in [ideas.md](ideas.md); core tested (`CreatureTests`, `NecromancyTests`,
 `CreatureBankTests`). Stats marked "placeholder stats (ADR-135)" in `creatures.csv` wait for play-testing; points marked *(proposal)* are the
-agent's choices. The Undead Transformer from the same notes is [TOWN-13](open-questions.md#town-13).
+agent's choices. The Undead Transformer from the same notes is TOWN-13, answered in ADR-137.
 
 - **Renames** (no stat change; ids follow the names): Qilin → **Moon Doe** (`sylvan.moon-doe`), Pristine Unicorn → **Unicorn**
   (`sylvan.unicorn`), Defender → **Dwarf** (`academy.dwarf`), Shield Guard → **Dwarf Defender** (`academy.dwarf-defender`), Dragon Mantis →
@@ -1053,3 +1053,42 @@ level); points marked *(proposal)* are the agent's choices made while building a
   before repeats", whatever spell it holds; the generator places at most one level 3 scroll per map, like any relic.
 - **Value**: by spell level, blank or written (`ArtifactValue.OfScroll`): 5 / 10 / 18 / 28 for levels 1–4 (+1 Attack is 10). The AI uses it to
   choose and equip artifacts and to weigh pickups; loot that does not fit goes by it.
+
+### ADR-137: The Undead Transformer (TOWN-13, ADR-135, 2026-11-05)
+**Status**: accepted (2026-11-05), not built. The owner's answers to TOWN-13; the other points are the agent's proposals the owner took.
+
+- **What it is**: a second Necropolis-only building. It turns living creatures of tier 1–2 into the tier-1 undead of their class (ADR-135:
+  class A to Skeletons, B to Plague Bearers) and of tier 3–4 into the tier-2 undead (Ghouls, Wights); never elementals or constructs. It also
+  swaps tier 1–2 undead for the other class's line of the same tier (Plague Bearer to Skeleton, Ghoul to Wight).
+- **Counts**: one undead per living creature, as HoMM3's Skeleton Transformer. A swap gives the old count × 0.75, rounded down (at least 1).
+- **Upgrades**: an upgraded creature counts as its base. The result is the upgraded undead when the town has the upgraded dwelling of that
+  undead line, else the base undead (owner).
+- **Creatures without a class** (tier 5, neutrals, Conflux and Dragon Utopia): tier 5 is refused; an unclassed tier 1–4 creature may become
+  either line, the player picks.
+- **Use**: 1000 gold + 5 mercury, needs a tier-1 dwelling. The visiting hero's or the garrison's stacks, **several at a time** as in HoMM3
+  (owner); free, any number of times a day.
+- **AI**: turns every eligible stack it does not need into undead when its hero visits.
+
+### ADR-138: The first set of unique buildings built (ADR-126, 2026-11-05)
+**Status**: implemented (2026-11-05); core tested (`UniqueBuildingTests`); the Godot part (the buildings on the town screen, which lists the
+table's rows) not run yet. Builds ADR-126's first set; points marked *(proposal)* are the agent's choices made while building. Rules:
+[town-buildings.md](../content/town-buildings.md).
+
+- **Rows**: one row per town in `buildings.csv` (`stables`, `proving-ring`, `shell-wall`, `hall-of-records`, `altar-of-brimstone`,
+  `elder-grove`, `mana-spring`), 2000 gold, 5 ore and 5 of the town's rare resource (Haven and Stronghold crystal, Swamp Bestiary and Dungeon
+  sulfur, Academy, Inferno and Sylvan mercury), Fort 1 (the Stables town hall 2). The effects are code (`UniqueBuildings`), keyed by the id.
+- **Visits**: every town visit of an own hero gives the bonus: entering the town, being hired or teleported there, standing in it (or in its
+  garrison) at the start of the turn, or standing there when the building is finished. *(proposal)* Allied heroes get nothing. The record is
+  the town's visit log, so it stays with the town when it is captured; the Stables and the Mana Spring are once a week per hero, the others
+  once per hero.
+- **Stables**: the map Stables' status (same source, so the two do not add up) and +400 movement at once, without the Lancer upgrade.
+  **Mana Spring**: mana + 75 % of the maximum (rounded down), above the maximum until spent, capped at twice it like the Mana Vortex.
+  **Elder Grove**: 1000 experience (a level-up is offered as usual).
+- **Sieges**: the hero defending the town in a siege (a hero on its entrance or in its garrison, the town with a Fort) gets the building's
+  bonus to its Attack, Defense, Spell Power, morale or luck for the battle. *(proposal)* +1 Knowledge lends 10 mana for the battle: spent first,
+  the rest gone afterwards; a hero without a spell book gets nothing from Knowledge or Spell Power. A garrison without a hero gets nothing.
+  `UniqueBuildings.SiegeOf` sums the town's buildings, for the Grail buildings to join (ADR-130).
+- **AI**: builds its town's unique building after the growth buildings; its heroes take the bonuses when they pass through. *(proposal)* It
+  does not yet go to a town for them.
+- **Names**: working names. The Inferno **Altar of Brimstone** is close to the **Brimstone Altar**, Sylvan's Inferno spell building; a
+  rename of one of them is open to the owner.

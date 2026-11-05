@@ -35,7 +35,8 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         town.LastBuilt = state.Date;
         town.LastBuiltName = level.Name;
         events.Publish(new TownBuilt(town.Id, building, level.Level));
-        if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null)
+        if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
+            || UniqueBuildings.Get(building) is not null)
         {
             Magic.MagicRules.VisitBy(state, events, town);
         }
