@@ -1001,3 +1001,27 @@ agent's choices made while building and stand unless the owner changes them. Rul
   as the `maxHeroes` override; one limit for every player, as in the editor's Generate tab (ADR-087). Hand-made maps keep their own limits.
 - **Smoke**: `game-random-map` had drifted to "Two against two" as the map list grew and never left the screen; it now picks Duel,
   Necropolis, the first hero, Skeleton and a hero limit of 7, starts, opens the kingdom and ends the turn.
+
+### ADR-135: Roster revision: renames, two swaps, classes A and B, Necromancy by class (CONT-2, ADR-072, 2026-11-05)
+**Status**: implemented (2026-11-05), from the owner's notes in [ideas.md](ideas.md); core tested (`CreatureTests`, `NecromancyTests`,
+`CreatureBankTests`). Stats marked "placeholder stats (ADR-135)" in `creatures.csv` wait for play-testing; points marked *(proposal)* are the
+agent's choices. The Undead Transformer from the same notes is [TOWN-13](open-questions.md#town-13).
+
+- **Renames** (no stat change; ids follow the names): Qilin → **Moon Doe** (`sylvan.moon-doe`), Pristine Unicorn → **Unicorn**
+  (`sylvan.unicorn`), Defender → **Dwarf** (`academy.dwarf`), Shield Guard → **Dwarf Defender** (`academy.dwarf-defender`), Dragon Mantis →
+  **Serpent Fly** (`swamp-bestiary.serpent-fly`). *(proposal)* The Dwarves lose the `human` tag.
+- **The neutral Dwarf and Battle Dwarf are removed**; the Dwarven Treasury is guarded by the Academy's Dwarves (a fifth Dwarf Defenders) and
+  neutral Thanes, the Dwarf counts ×3 to keep the guard's worth (120 / 180 / 240 / 330).
+- **Necropolis tier swap**: the Wight line (Wight, Wraith) is **tier 2**, the Death Weaver line (Death Weaver, Fate Weaver) **tier 3**, with
+  placeholder stats of their new tier (growth and prices as the other line of the tier). The Crypt's Wights are ×2.4 (12 / 20 / 24 / 36) to keep
+  its guard's worth.
+- **Haspid and Wyvern swap towns**: the **Wyvern** line (`swamp-bestiary.wyvern`, `…wyvern-monarch`) is the Swamp Bestiary's second tier-4
+  line (growth 3, 1100 / 1450 gold); the **Haspid** line (`dragon-utopia.haspid`, `…royal-haspid`) joins Dragon Utopia (growth 2, 1650 / 2150
+  gold); placeholder stats. Oszrak and Szask now prefer the Wyvern.
+- **Classes**: each playable town's eight tier 1–4 lines are class **A** or **B**, one of each a tier, as the owner listed them; an upgrade
+  has its base's class (the catalog refuses another); tier 5, Conflux, Dragon Utopia and neutrals have none. `CreatureDefinition.Category`,
+  the `category` column after `upgrade` in `creatures.csv`.
+- **Necromancy by class**: a slain creature's hit points go to the undead line of its own class in the tier the skill level gives (ADR-072's
+  table is unchanged); *(proposal)* an unclassed creature's are split between the two lines in a random proportion, as before.
+- **No migration**: maps and saves naming the old ids no longer load (no shipped map uses them; as with the Wyvern's move in ADR-049).
+- `creatures.csv` loses the "sandbox stats were copy-pasted" notes.

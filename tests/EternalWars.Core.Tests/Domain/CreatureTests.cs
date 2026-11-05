@@ -92,8 +92,13 @@ public class CreatureTests
         var catalog = CreatureCatalog.Default;
         var wyvern = catalog.Get(BuiltInCreatures.Wyvern);
 
-        Assert.Equal((TownIds.DragonUtopia, "dragon-utopia.wyvern-monarch"), (wyvern.Town, wyvern.UpgradesTo));
+        Assert.Equal((TownIds.SwampBestiary, 4, "swamp-bestiary.wyvern-monarch"), (wyvern.Town, wyvern.Tier, wyvern.UpgradesTo));
         Assert.True(catalog.Get(wyvern.UpgradesTo!).Value > wyvern.Value);
+        Assert.Equal((TownIds.DragonUtopia, "dragon-utopia.royal-haspid"), (catalog.Get("dragon-utopia.haspid").Town, catalog.Get("dragon-utopia.haspid").UpgradesTo));
+        Assert.Equal((2, 3), (catalog.Get("necropolis.wight").Tier, catalog.Get("necropolis.death-weaver").Tier));
+        Assert.Equal(["Moon Doe", "Unicorn", "Dwarf", "Dwarf Defender", "Serpent Fly"],
+            new[] { "sylvan.moon-doe", "sylvan.unicorn", "academy.dwarf", "academy.dwarf-defender", "swamp-bestiary.serpent-fly" }.Select(id => catalog.Get(id).Name));
+        Assert.DoesNotContain(catalog.All, c => c.Id.StartsWith("neutral.", StringComparison.Ordinal) && c.Name.Contains("Dwarf", StringComparison.Ordinal));
         Assert.Equal([CapabilityKind.Cleave], catalog.Get("dragon-utopia.dragonyte").Capabilities.Select(c => c.Kind));
         Assert.Null(catalog.Get("neutral.efreet").Town);
         Assert.Null(catalog.Get("neutral.golden-golem").Town);
@@ -103,6 +108,38 @@ public class CreatureTests
             var shadow = catalog.Get(id);
             Assert.False(shadow.IsFlying || shadow.Has(CapabilityKind.Breath) || shadow.HasTag(CreatureTags.Dragon), id);
         });
+    }
+
+    [Theory]
+    [InlineData(TownIds.Haven)]
+    [InlineData(TownIds.Sylvan)]
+    [InlineData(TownIds.Academy)]
+    [InlineData(TownIds.Necropolis)]
+    [InlineData(TownIds.Inferno)]
+    [InlineData(TownIds.Dungeon)]
+    [InlineData(TownIds.Stronghold)]
+    [InlineData(TownIds.SwampBestiary)]
+    public void PlayableTowns_HaveAClassAAndAClassBLinePerTierOneToFour_AndUpgradesShareTheirCategory(string town)
+    {
+        var catalog = CreatureCatalog.Default;
+        var lines = catalog.BaseCreaturesOf(town).ToList();
+
+        foreach (var tier in Enumerable.Range(1, 4))
+        {
+            Assert.Equal([CreatureCategory.A, CreatureCategory.B], lines.Where(l => l.Tier == tier).Select(l => l.Category).Order());
+        }
+
+        Assert.All(lines.Where(l => l.Tier == 5), l => Assert.Equal(CreatureCategory.None, l.Category));
+        Assert.All(lines, l => Assert.Equal(l.Category, catalog.Get(l.UpgradesTo!).Category));
+    }
+
+    [Fact]
+    public void OnlyThePlayableTownsLinesAreCategorised()
+    {
+        Assert.All(CreatureCatalog.Default.All.Where(c => c.Town is null or TownIds.Conflux or TownIds.DragonUtopia),
+            c => Assert.Equal(CreatureCategory.None, c.Category));
+        Assert.Equal(CreatureCategory.A, CreatureCatalog.Default.Get("sylvan.moon-doe").Category);
+        Assert.Equal(CreatureCategory.B, CreatureCatalog.Default.Get("academy.dwarf").Category);
     }
 
     [Fact]

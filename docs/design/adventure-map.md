@@ -73,7 +73,6 @@ The generator places them as treasure by value ([random-maps.md](random-maps.md#
   (Stables once a week), so walking off and on gives nothing.
 - **Random rewards** draw from `GameState.Random` at the visit; a map author may fix the outcome.
 - "Random resource" never means gold ([resource groups](towns-and-economy.md#resources)).
-- **Neutral creatures for objects**: Dwarf and Battle Dwarf are neutral tier-2 creatures (`neutral.dwarf`, `neutral.battle-dwarf`).
 
 ## Neutral monsters
 ADR-040. A creature stack on a tile; stepping onto it attacks it, and it guards the 8 tiles around it. **Guard mode** per stack (ADR-065,
@@ -170,8 +169,8 @@ A map dwelling is one creature line with its own growth (ADR-054; recruiting and
 |---|---|
 | Churchyard | Skeletons + Ghouls: 40 / 30, 3000 gold, Minor · 60 / 40, 4500, Minor · 80 / 50, 6000, Minor · 100 / 70, 8000, Major. A later visit to the plundered bank: **−1 morale for the next battle** (only bank with a penalty) |
 | Mansion | Vampires + Vampire Lords: 25 / 15, 8000 gold, 2 each mercury / sulfur / crystal, Major · 35 / 25, 12000, 3 each, Major · 45 / 35, 16000, 4 each, Major · 60 / 50, 22000, 5 each, Major |
-| Crypt (`bank.crypt`; old maps' `bank.ruins`) | Skeletons + Wights + Liches: 30 / 5 / 1, 2000 gold · 40 / 8 / 2, 3500 · 50 / 10 / 3, 5000 · 60 / 15 / 4, 7000. Also **removes the fog within 12 tiles**, on every visit |
-| Dwarven Treasury | Dwarves + Thanes: 40 / 5, 3000 gold, 2 crystal · 60 / 8, 4500, 4 · 80 / 12, 6000, 6 · 110 / 18, 8500, 10. A fifth Battle Dwarves |
+| Crypt (`bank.crypt`; old maps' `bank.ruins`) | Skeletons + Wights + Liches: 30 / 12 / 1, 2000 gold · 40 / 20 / 2, 3500 · 50 / 24 / 3, 5000 · 60 / 36 / 4, 7000. Also **removes the fog within 12 tiles**, on every visit |
+| Dwarven Treasury | the Academy's Dwarves + neutral Thanes: 120 / 5, 3000 gold, 2 crystal · 180 / 8, 4500, 4 · 240 / 12, 6000, 6 · 330 / 18, 8500, 10. A fifth Dwarf Defenders |
 | Imp Cache | Imps + Horned Demons: 80 / 20, 1500 gold, 2 mercury · 120 / 30, 2000, 4 · 160 / 40, 3000, 6 · 240 / 60, 4000, 8. A fifth Familiars |
 | Medusa Stores | Medusas + Minotaurs: 12 / 5, 2000 gold, 4 sulfur · 20 / 8, 3000, 6 · 28 / 12, 4000, 8 · 38 / 16, 5000, 10. A fifth Putrid Medusas |
 | Naga Bank | Nagas + Gargoyles: 4 / 15, 3500 gold · 8 / 20, 6500 · 12 / 30, 10000 · 16 / 40, 13000. A fifth Naga Queens |

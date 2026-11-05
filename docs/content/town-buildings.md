@@ -126,7 +126,8 @@ Every dwelling of a tier costs the same (the `dwelling-1` … `dwelling-5` rows)
 | 4 | 2 000 gold, lumber 4, ore 4, mercury 1 | 4 000 gold, lumber 8, ore 8, mercury 2 |
 | 5 | 2 500 gold, lumber 5, ore 5, mercury 1, crystal 1 | 5 000 gold, lumber 10, ore 10, mercury 2, crystal 2 |
 
-Creature prices below are per creature; full stats are in `creatures.csv`.
+Creature prices below are per creature; full stats are in `creatures.csv`. Each town splits its tier 1–4 lines into **class A** and **class
+B**, one of each a tier (the `category` column, ADR-135); an upgrade has its base's class, tier 5 has none. Necromancy uses it.
 
 ### Haven
 
@@ -152,7 +153,7 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 | 2 | Hunter (9, 185 gold) | Arcane Archer (240 gold) |
 | 3 | Druid (5, 450 gold) | Druid Elder (580 gold) |
 | 3 | Pegasus (5, 450 gold) | Silver Pegasus (580 gold) |
-| 4 | Qilin (3, 1 100 gold) | Pristine Unicorn (1 450 gold) |
+| 4 | Moon Doe (3, 1 100 gold) | Unicorn (1 450 gold) |
 | 4 | Treant (2, 1 650 gold) | Ancient Treant (2 150 gold) |
 | 5 | Fire Bird (1, 3 300 gold, mercury 1) | Phoenix (4 300 gold, mercury 2) |
 
@@ -161,7 +162,7 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 | Tier | Creature (growth a week, price) | Upgrade (price) |
 |---|---|---|
 | 1 | Gremlin (20, 50 gold) | Gremlin Master (65 gold) |
-| 1 | Defender (15, 65 gold) | Shield Guard (85 gold) |
+| 1 | Dwarf (15, 65 gold) | Dwarf Defender (85 gold) |
 | 2 | Gargoyle (9, 185 gold) | Obsidian Gargoyle (240 gold) |
 | 2 | Iron Golem (7, 240 gold) | Animated Armor (310 gold) |
 | 3 | Snow Maiden (5, 450 gold) | Enchantress (580 gold) |
@@ -177,9 +178,9 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 | 1 | Skeleton (20, 50 gold) | Skeleton Warrior (65 gold) |
 | 1 | Plague Bearer (15, 65 gold) | Flesh Golem (85 gold) |
 | 2 | Ghoul (9, 185 gold) | Alghoul (240 gold) |
-| 2 | Death Weaver (8, 210 gold) | Fate Weaver (270 gold) |
+| 2 | Wight (9, 185 gold) | Wraith (240 gold) |
 | 3 | Vampire (5, 450 gold) | Vampire Lord (580 gold) |
-| 3 | Wight (5, 450 gold) | Wraith (580 gold) |
+| 3 | Death Weaver (5, 450 gold) | Fate Weaver (580 gold) |
 | 4 | Dark Knight (3, 1 100 gold) | Death Knight (1 450 gold) |
 | 4 | Lich (3, 1 100 gold) | Arch Lich (1 450 gold) |
 | 5 | Bone Dragon (1, 3 300 gold, mercury 1) | Ghost Dragon (4 300 gold, mercury 2) |
@@ -233,11 +234,11 @@ Creature prices below are per creature; full stats are in `creatures.csv`.
 | 1 | Lizardman (16, 60 gold) | Lizard Warrior (80 gold) |
 | 1 | Kappa (15, 65 gold) | Kappa Shaman (85 gold) |
 | 2 | Jungle Horror (7, 240 gold) | Jungle Terror (310 gold) |
-| 2 | Mantis (9, 185 gold) | Dragon Mantis (240 gold) |
+| 2 | Mantis (9, 185 gold) | Serpent Fly (240 gold) |
 | 3 | Basilisk (5, 450 gold) | Greater Basilisk (580 gold) |
 | 3 | Owlbear (5, 450 gold) | Elder Owlbear (580 gold) |
 | 4 | Gorgon (3, 1 100 gold) | Mighty Gorgon (1 450 gold) |
-| 4 | Haspid (3, 1 100 gold) | Royal Haspid (1 450 gold) |
+| 4 | Wyvern (3, 1 100 gold) | Wyvern Monarch (1 450 gold) |
 | 5 | Hydra (1, 3 300 gold, sulfur 1) | Chaos Hydra (4 300 gold, sulfur 2) |
 
 ## Open

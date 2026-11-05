@@ -127,8 +127,8 @@ School **Nature** · native terrain forest floor, grass · rival Dungeon (arch-r
 | Ithiel | Mage | Druid / Druid Elder (T3) | spell: Swarm | Nature magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Elaith | Warrior | Pegasus / Silver Pegasus (T3) | +350 gold a day | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
 | Sariel | Mage | Pegasus / Silver Pegasus (T3) | Nature attunement | Nature magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
-| Varis | Warrior | Qilin / Pristine Unicorn (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
-| Calen | Mage | Qilin / Pristine Unicorn (T4) | spell: Barkskin | Nature magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
+| Varis | Warrior | Moon Doe / Unicorn (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
+| Calen | Mage | Moon Doe / Unicorn (T4) | spell: Barkskin | Nature magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Neriah | Warrior | Treant / Ancient Treant (T4) | +1 crystal a day | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
 | Nymara | Mage | Treant / Ancient Treant (T4) | Nature attunement | Nature magic Basic, Nature attunement Basic | 0 / 1 / 2 / 2 |
 
@@ -140,8 +140,8 @@ School **Arcana** · native terrain snow, ice · rival Inferno (arch-rival, ADR-
 |---|---|---|---|---|---|
 | Corvin Halde | Warrior | Gremlin / Gremlin Master (T1) | Melee | Melee Basic, Tactics Basic | 2 / 1 / 1 / 1 |
 | Aurelian Vex | Mage | Gremlin / Gremlin Master (T1) | spell: Magic Arrow | Arcana magic Basic, Treasury Basic | 0 / 0 / 3 / 2 |
-| Stellan Frost | Warrior | Defender / Shield Guard (T1) | Armor | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
-| Seraphine Lux | Mage | Defender / Shield Guard (T1) | Arcana attunement | Arcana magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
+| Stellan Frost | Warrior | Dwarf / Dwarf Defender (T1) | Armor | Armor Basic, Melee Basic | 1 / 2 / 1 / 1 |
+| Seraphine Lux | Mage | Dwarf / Dwarf Defender (T1) | Arcana attunement | Arcana magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Ingrid Vael | Warrior | Gargoyle / Obsidian Gargoyle (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Theodric Wynn | Mage | Gargoyle / Obsidian Gargoyle (T2) | spell: Haste | Arcana magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
 | Tobias Rime | Warrior | Iron Golem / Animated Armor (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
@@ -167,12 +167,12 @@ School **Death** · native terrain cursed lands · rival Haven (arch-rival, ADR-
 | Sepulka | Mage | Plague Bearer / Flesh Golem (T1) | Necromancy (+5 points) | Death magic Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Grimwald | Warrior | Ghoul / Alghoul (T2) | Archery | Logistics Basic, Archery Basic | 2 / 1 / 1 / 1 |
 | Vorlath | Mage | Ghoul / Alghoul (T2) | spell: Curse | Death magic Basic, Logistics Basic | 0 / 0 / 3 / 2 |
-| Ulric Ashgrave | Warrior | Death Weaver / Fate Weaver (T2) | +350 gold a day | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
-| Ysmera | Mage | Death Weaver / Fate Weaver (T2) | +1 mercury a day | Death magic Basic, Death attunement Basic | 0 / 1 / 2 / 2 |
+| Ulric Ashgrave | Warrior | Death Weaver / Fate Weaver (T3) | +350 gold a day | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
+| Ysmera | Mage | Death Weaver / Fate Weaver (T3) | +1 mercury a day | Death magic Basic, Death attunement Basic | 0 / 1 / 2 / 2 |
 | Hespera | Warrior | Vampire / Vampire Lord (T3) | Archery | Archery Basic, Pathfinding Basic | 2 / 1 / 1 / 1 |
 | Kael Duskmire | Mage | Vampire / Vampire Lord (T3) | spell: Drain Life | Death magic Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
-| Corvane | Warrior | Wight / Wraith (T3) | Necromancy (+5 points) | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
-| Lethe | Mage | Wight / Wraith (T3) | Death attunement | Death magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
+| Corvane | Warrior | Wight / Wraith (T2) | Necromancy (+5 points) | Treasury Basic, Tactics Basic | 1 / 2 / 1 / 1 |
+| Lethe | Mage | Wight / Wraith (T2) | Death attunement | Death magic Basic, Armor Basic | 0 / 1 / 2 / 2 |
 | Drusa | Warrior | Dark Knight / Death Knight (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
 | Ozmund | Mage | Dark Knight / Death Knight (T4) | spell: Plague | Death magic Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
 | Malgrin | Warrior | Lich / Arch Lich (T4) | Scouting | Scouting Basic, Melee Basic | 1 / 2 / 1 / 1 |
@@ -259,13 +259,13 @@ Faction group **Primal Fury** (no magic school, ADR-063, ADR-069) · native terr
 | Sethek | Mage | Kappa / Kappa Shaman (T1) | Warcry | Primal Fury (1st) Basic, Spell resistance Basic | 0 / 1 / 2 / 2 |
 | Mudjaw | Warrior | Jungle Horror / Jungle Terror (T2) | Armor | Logistics Basic, Armor Basic | 2 / 1 / 1 / 1 |
 | Murra | Mage | Jungle Horror / Jungle Terror (T2) | Blood Rage | Primal Fury (1st) Basic, Logistics Basic | 0 / 0 / 3 / 2 |
-| Vessk | Warrior | Mantis / Dragon Mantis (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
-| Zhessk | Mage | Mantis / Dragon Mantis (T2) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
+| Vessk | Warrior | Mantis / Serpent Fly (T2) | War Tempo | War Tempo Basic, Armor Basic | 1 / 2 / 1 / 1 |
+| Zhessk | Mage | Mantis / Serpent Fly (T2) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
 | Brakkis | Warrior | Basilisk / Greater Basilisk (T3) | Archery | Archery Basic, Leadership Basic | 2 / 1 / 1 / 1 |
 | Ilthra | Mage | Basilisk / Greater Basilisk (T3) | Blood Rage | Primal Fury (1st) Basic, Prospecting Basic | 0 / 0 / 3 / 2 |
 | Ylsa | Warrior | Owlbear / Elder Owlbear (T3) | Treasury | Treasury Basic, Spell resistance Basic | 1 / 2 / 1 / 1 |
 | Gossk | Mage | Owlbear / Elder Owlbear (T3) | Warcry | Primal Fury (1st) Basic, Armor Basic | 0 / 1 / 2 / 2 |
 | Tharg | Warrior | Gorgon / Mighty Gorgon (T4) | Tactics | Tactics Basic, Armor Basic | 2 / 1 / 1 / 1 |
 | Venna | Mage | Gorgon / Mighty Gorgon (T4) | Blood Rage | Primal Fury (1st) Basic, Pathfinding Basic | 0 / 0 / 3 / 2 |
-| Oszrak | Warrior | Haspid / Royal Haspid (T4) | Scouting | Scouting Basic, Armor Basic | 1 / 2 / 1 / 1 |
-| Szask | Mage | Haspid / Royal Haspid (T4) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |
+| Oszrak | Warrior | Wyvern / Wyvern Monarch (T4) | Scouting | Scouting Basic, Armor Basic | 1 / 2 / 1 / 1 |
+| Szask | Mage | Wyvern / Wyvern Monarch (T4) | Blood Rage | Primal Fury (1st) Basic, Primal Fury (2nd) Basic | 0 / 1 / 2 / 2 |

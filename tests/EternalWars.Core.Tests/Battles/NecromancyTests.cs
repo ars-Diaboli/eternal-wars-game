@@ -57,14 +57,29 @@ public class NecromancyTests
     [InlineData(1UL)]
     [InlineData(2UL)]
     [InlineData(3UL)]
-    public void Raise_SplitsTheTiersHitPointsBetweenItsTwoLines(ulong seed)
+    public void Raise_SplitsAnUncategorisedEnemysHitPointsBetweenTheTiersTwoLines(ulong seed)
     {
-        var footman = CreatureCatalog.Default.Get(BuiltInCreatures.Footman); // tier 1, 13 hit points
-        var raised = Raise(SkillLevel.Master, seed, (footman, 100)); // 1300 × 20 % = 260
+        var wolf = CreatureCatalog.Default.Get(BuiltInCreatures.Wolf); // neutral, tier 1, 14 hit points
+        var raised = Raise(SkillLevel.Master, seed, (wolf, 100)); // 1400 × 20 % = 280
 
         Assert.All(raised, r => Assert.Contains(r.Creature, new[] { Skeleton, PlagueBearer }));
         var health = raised.Sum(r => r.Count * CreatureCatalog.Default.Get(r.Creature).Health);
-        Assert.InRange(health, 260 - 11 - 20 + 2, 260); // each part rounded down
+        Assert.InRange(health, 280 - 11 - 20 + 2, 280); // each part rounded down
+    }
+
+    [Fact]
+    public void Raise_GivesEachCategorisedEnemyTheUndeadLineOfItsCategory()
+    {
+        var creatures = CreatureCatalog.Default;
+        var footman = creatures.Get(BuiltInCreatures.Footman); // class A, tier 1, 13 hit points
+        var pikeman = creatures.Get(BuiltInCreatures.Pikeman); // class B, tier 1, 17 hit points
+        var griffin = creatures.Get(BuiltInCreatures.Griffin); // class B, tier 3, 54 hit points
+
+        Assert.Equal([new RaisedUndead(Skeleton, 260 / 11)], Raise((footman, 100))); // 1300 × 20 %
+        Assert.Equal([new RaisedUndead(PlagueBearer, 340 / 20)], Raise((pikeman, 100)));
+        Assert.Equal(
+            [new RaisedUndead(PlagueBearer, 340 / 20), new RaisedUndead(Skeleton, 260 / 11), new RaisedUndead("necropolis.wight", 1080 / 24)],
+            Raise((footman, 100), (pikeman, 100), (griffin, 100))); // Master: tier 3 → 2, Ghoul (A) and Wight (B)
     }
 
     [Fact]
@@ -145,7 +160,7 @@ public class NecromancyTests
         session.MoveTo(A, new MapPosition(2, 0));
         session.AutoResolve();
 
-        // Skeletons go to the Skeleton Warriors (3/4); Plague Bearers have no Flesh Golems to join and are lost.
+        // Footmen (class A) raise Skeletons, which go to the Skeleton Warriors (3/4); no Plague Bearers rise.
         Assert.All(raised.SelectMany(r => r.Raised), r => Assert.Equal("necropolis.skeleton-warrior", r.Creature));
         Assert.DoesNotContain(army.Stacks, s => s.Stack.Creature is Skeleton or PlagueBearer);
     }

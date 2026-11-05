@@ -167,6 +167,11 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Unique buildings, the first set: Stables (Haven), Proving Ring (Stronghold), Shell Wall (Swamp Bestiary), Hall of Records
       (Academy), Altar of Brimstone (Inferno), Elder Grove (Sylvan), Mana Spring (Dungeon); the siege bonuses
 
+### Roster (CONT-2)
+- [x] Renames, the Wight / Death Weaver tier swap, the Haspid / Wyvern town swap, classes A and B, Necromancy by class (ADR-135)
+- [ ] Undead Transformer: the Necropolis building that turns living creatures into undead of their class, and swaps undead lines
+      ([TOWN-13](open-questions.md#town-13))
+
 ### Presentation and UI (ADR-116)
 - [x] Built: icon prompts and the list of missing mechanics (ADR-116)
 - [ ] Stack health bars in battle: the top creature's hit points against its full health, green over 50 %, yellow 21–50 %, red 20 % and

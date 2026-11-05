@@ -159,6 +159,18 @@ public static class CreatureTags
 }
 
 /// <summary>
+/// A town line's category (ADR-135): each playable town splits its eight tier 1–4 lines into class A and class B; an upgrade has its base's
+/// category. Tier 5, Conflux, Dragon Utopia and neutrals have none. Necromancy and the Undead Transformer map a creature to the undead line of
+/// the same category.
+/// </summary>
+public enum CreatureCategory
+{
+    None,
+    A,
+    B,
+}
+
+/// <summary>
 /// Data definition of a creature type (one per base and per upgraded form). Two speeds on purpose:
 /// <see cref="Speed"/> is battlefield cells per turn, <see cref="MapSpeed"/> is the HoMM3-scale value the
 /// adventure-map movement table uses (ADR-037).
@@ -176,6 +188,9 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
 
     /// <summary>Id of the upgraded form; null when the creature has no upgrade (or is the upgrade).</summary>
     public string? UpgradesTo { get; init; }
+
+    /// <summary>The line's class A or B (ADR-135); <see cref="CreatureCategory.None"/> for uncategorised creatures.</summary>
+    public CreatureCategory Category { get; init; }
 
     public int Attack { get; init; }
 
@@ -285,6 +300,11 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
         if (!Enum.IsDefined(Size))
         {
             throw new FormatException($"Creature '{Id}' has an unknown size {Size}.");
+        }
+
+        if (!Enum.IsDefined(Category))
+        {
+            throw new FormatException($"Creature '{Id}' has an unknown category {Category}.");
         }
 
         if (Health < 1 || MinDamage < 1 || MaxDamage < MinDamage || Speed < 1 || MapSpeed < 1 || Initiative < 1)

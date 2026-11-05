@@ -12,8 +12,8 @@ public sealed record RaisedUndead(string Creature, int Count);
 /// <summary>
 /// Necromancy (ADR-069, ADR-072, MAG-7, draft numbers): after a victory, a hero with Death attunement raises 5 / 10 / 15 / 20 % of the hit
 /// points of the enemy creatures slain as Necropolis undead, +5 % when its owner has a Necromancy Amplifier. The level caps the undead tier
-/// (<see cref="UndeadTier"/>); a tier's hit points are split between its two lines in a random proportion; constructs, elementals and war
-/// machines do not count, nor do the hero's own losses.
+/// (<see cref="UndeadTier"/>); a tier's hit points go to the line of the slain creature's category, an uncategorised creature's are split
+/// between the two lines in a random proportion (ADR-135); constructs, elementals and war machines do not count, nor do the hero's own losses.
 /// </summary>
 public static class NecromancyRules
 {
@@ -60,8 +60,10 @@ public static class NecromancyRules
         !creature.HasTag(CreatureTags.Construct) && !creature.HasTag(CreatureTags.Elemental);
 
     /// <summary>
-    /// The base undead raised from the slain enemies: per undead tier the counted hit points × the share, split between the tier's lines in
-    /// a random proportion (game RNG), each part divided by its creature's hit points, rounded down. Lines in tier and id order.
+    /// The base undead raised from the slain enemies: per undead tier the counted hit points × the share. A categorised enemy's hit points go
+    /// to the tier's line of its category (ADR-135: class A to class A); an uncategorised one's (tier 5, Conflux, Dragon Utopia, neutrals) are
+    /// split between the tier's lines in a random proportion (game RNG). Each line's hit points are divided by its creature's, rounded down.
+    /// Lines in tier and id order.
     /// </summary>
     public static IReadOnlyList<RaisedUndead> Raise(
         IEnumerable<(CreatureDefinition Creature, int Slain)> slain, SkillLevel level, bool amplified, CreatureCatalog creatures, GameRandom random,
@@ -73,30 +75,52 @@ public static class NecromancyRules
             return [];
         }
 
-        var health = new SortedDictionary<int, long>();
+        var health = new SortedDictionary<int, Dictionary<CreatureCategory, long>>();
         foreach (var (creature, count) in slain.Where(s => s.Slain > 0 && Counts(s.Creature)))
         {
             var tier = UndeadTier(level, creature.Tier);
-            health[tier] = health.GetValueOrDefault(tier) + ((long)count * creature.Health);
+            if (!health.TryGetValue(tier, out var byCategory))
+            {
+                health[tier] = byCategory = [];
+            }
+
+            byCategory[creature.Category] = byCategory.GetValueOrDefault(creature.Category) + ((long)count * creature.Health);
         }
 
         var raised = new List<RaisedUndead>();
-        foreach (var (tier, total) in health)
+        foreach (var (tier, byCategory) in health)
         {
-            var pool = total * percent / 100;
             var lines = creatures.BaseCreaturesOf(TownIds.Necropolis).Where(c => c.Tier == tier).ToList();
-            if (pool <= 0 || lines.Count == 0)
+            if (lines.Count == 0)
             {
                 continue;
             }
 
             var shares = new long[lines.Count];
-            shares[0] = pool;
-            if (lines.Count > 1)
+            var unmatched = 0L;
+            foreach (var (category, total) in byCategory)
+            {
+                var line = category == CreatureCategory.None ? -1 : lines.FindIndex(l => l.Category == category);
+                if (line < 0)
+                {
+                    unmatched += total;
+                }
+                else
+                {
+                    shares[line] += total * percent / 100;
+                }
+            }
+
+            var pool = unmatched * percent / 100;
+            if (pool > 0)
             {
                 // Two lines (there are never more): the first gets a random 0–100 % of the pool, the second the rest.
-                shares[0] = pool * random.Next(101) / 100;
-                shares[1] = pool - shares[0];
+                var first = lines.Count > 1 ? pool * random.Next(101) / 100 : pool;
+                shares[0] += first;
+                if (lines.Count > 1)
+                {
+                    shares[1] += pool - first;
+                }
             }
 
             for (var i = 0; i < lines.Count; i++)

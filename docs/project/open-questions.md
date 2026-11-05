@@ -7,7 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-05**: TOWN-12's Grail buildings answered (ADR-130); its more unique buildings stay open.
+**Updated 2026-11-05**: TOWN-12's Grail buildings answered (ADR-130); its more unique buildings stay open. TOWN-13 (the Undead
+Transformer) added from the owner's notes.
 
 ## 🚧 Blocking now
 
@@ -25,6 +26,20 @@ Nothing blocks the current work.
 faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 
 **Proposal**: open; the owner adds them here.
+
+<a id="town-13"></a>
+**TOWN-13 Undead Transformer** (owner, 2026-11-05). A second Necropolis-only building: it turns living creatures of tier 1–2 into the
+tier-1 undead of the same class (ADR-135: class A to Skeletons, B to Plague Bearers), tier 3–4 into the tier-2 undead (Ghouls, Wights);
+never elementals or constructs. It also swaps tier 1–2 undead for the other class's line of their tier (Plague Bearer to Skeleton, Ghoul to
+Wight) at a "swap value" of 0.75. Open: (a) how many undead a living stack becomes; (b) what the 0.75 applies to; (c) upgraded creatures;
+(d) living creatures with no class (tier 5, neutrals, Conflux and Dragon Utopia); (e) its cost, requirements, and who uses it (a visiting
+hero, the garrison); (f) whether the computer uses it.
+
+**Proposal**: (a) one undead per living creature, as HoMM3's Skeleton Transformer; (b) the new count is the old stack's count × 0.75, rounded
+down (at least 1); (c) an upgraded creature counts as its base, the result is the base undead; (d) tier 5 is refused, an unclassed tier 1–4
+creature may become either line, the player picks; (e) 1000 gold + 5 mercury, needs a tier-1 dwelling; one stack at a time, of a visiting
+hero or the garrison, free, any number of times a day; (f) the computer turns every eligible stack it does not need into undead when its hero
+visits.
 
 ## Game flow and content
 
