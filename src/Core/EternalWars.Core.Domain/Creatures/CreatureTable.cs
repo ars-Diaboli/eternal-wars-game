@@ -8,7 +8,7 @@ namespace EternalWars.Core.Domain.Creatures;
 /// Creature definitions as a CSV table, one row per creature (ADR-044): the format of the shipped roster
 /// (<c>src/Core/data/creatures.csv</c>) so designers can edit stats in a spreadsheet or text editor.
 /// The file conventions are <see cref="CsvTable"/>'s. List cells: tags <c>human; holy</c>, resources <c>mercury 1</c>,
-/// capabilities <c>Flying; PackHunter 20; SpellImmunity mind; Caster lightning 2</c>.
+/// capabilities <c>Flying; PackHunter 20; SpellImmunity mind; Caster lightning 2</c>; category <c>A</c>, <c>B</c> or empty (ADR-135).
 /// </summary>
 public static class CreatureTable
 {
@@ -18,6 +18,7 @@ public static class CreatureTable
     public const string Tier = "tier";
     public const string Size = "size";
     public const string Upgrade = "upgrade";
+    public const string Category = "category";
     public const string Attack = "attack";
     public const string Defense = "defense";
     public const string MinDamage = "min_damage";
@@ -39,7 +40,7 @@ public static class CreatureTable
     /// <summary>Columns written by <see cref="Format"/>, in order.</summary>
     public static IReadOnlyList<string> Columns { get; } =
     [
-        Id, Name, Town, Tier, Size, Upgrade, Attack, Defense, MinDamage, MaxDamage, Health, Speed, MapSpeed, Initiative,
+        Id, Name, Town, Tier, Size, Upgrade, Category, Attack, Defense, MinDamage, MaxDamage, Health, Speed, MapSpeed, Initiative,
         Shots, Morale, Luck, Growth, Gold, Resources, Tags, Capabilities, Notes,
     ];
 
@@ -56,8 +57,8 @@ public static class CreatureTable
     public static string Format(IEnumerable<CreatureDefinition> definitions, Func<CreatureDefinition, string?>? notes = null) =>
         CsvTable.Format(Columns, definitions.Select(d => (IReadOnlyList<string>)
         [
-            d.Id, d.Name, d.Town ?? "", N(d.Tier), d.Size.ToString(), d.UpgradesTo ?? "", N(d.Attack), N(d.Defense),
-            N(d.MinDamage), N(d.MaxDamage), N(d.Health), N(d.Speed), N(d.MapSpeed), N(d.Initiative),
+            d.Id, d.Name, d.Town ?? "", N(d.Tier), d.Size.ToString(), d.UpgradesTo ?? "", d.Category == CreatureCategory.None ? "" : d.Category.ToString(),
+            N(d.Attack), N(d.Defense), N(d.MinDamage), N(d.MaxDamage), N(d.Health), N(d.Speed), N(d.MapSpeed), N(d.Initiative),
             d.Shots == 0 ? "" : N(d.Shots), d.Morale == 0 ? "" : N(d.Morale), d.Luck == 0 ? "" : N(d.Luck), N(d.WeeklyGrowth), N(d.Cost.Gold), FormatResources(d.Cost),
             string.Join("; ", d.Tags), string.Join("; ", d.Capabilities.Select(FormatCapability)), notes?.Invoke(d) ?? "",
         ]));
@@ -102,6 +103,7 @@ public static class CreatureTable
         {
             Town = row.Optional(Town),
             UpgradesTo = row.Optional(Upgrade),
+            Category = row.Optional(Category) is null ? CreatureCategory.None : row.Enum<CreatureCategory>(Category),
             Attack = row.Int(Attack),
             Defense = row.Int(Defense),
             MinDamage = row.Int(MinDamage),

@@ -27,14 +27,14 @@ sylvan.sylvara,Sylvara,sylvan,Warrior,sylvan.druid,skill offense.archery,offense
 sylvan.ithiel,Ithiel,sylvan,Mage,sylvan.druid,spell nature.swarm,magic.sylvan.spells Basic; estates.prospecting Basic,0,0,3,2,prefers Druid
 sylvan.elaith,Elaith,sylvan,Warrior,sylvan.pegasus,resource gold 350,estates.treasury Basic; tactics.tactics Basic,1,2,1,1,prefers Pegasus
 sylvan.sariel,Sariel,sylvan,Mage,sylvan.pegasus,skill magic.sylvan.attunement,magic.sylvan.spells Basic; defense.armor Basic,0,1,2,2,prefers Pegasus
-sylvan.varis,Varis,sylvan,Warrior,sylvan.qilin,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Qilin
-sylvan.calen,Calen,sylvan,Mage,sylvan.qilin,spell nature.barkskin,magic.sylvan.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Qilin
+sylvan.varis,Varis,sylvan,Warrior,sylvan.moon-doe,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Moon Doe
+sylvan.calen,Calen,sylvan,Mage,sylvan.moon-doe,spell nature.barkskin,magic.sylvan.spells Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Moon Doe
 sylvan.neriah,Neriah,sylvan,Warrior,sylvan.treant,resource crystal 1,pathfinding.scouting Basic; offense.melee Basic,1,2,1,1,prefers Treant
 sylvan.nymara,Nymara,sylvan,Mage,sylvan.treant,skill magic.sylvan.attunement,magic.sylvan.spells Basic; magic.sylvan.attunement Basic,0,1,2,2,prefers Treant
 academy.corvin,Corvin Halde,academy,Warrior,academy.gremlin,skill offense.melee,offense.melee Basic; tactics.tactics Basic,2,1,1,1,prefers Gremlin
 academy.aurelian,Aurelian Vex,academy,Mage,academy.gremlin,spell arcana.magic-arrow,magic.academy.spells Basic; estates.treasury Basic,0,0,3,2,prefers Gremlin
-academy.stellan,Stellan Frost,academy,Warrior,academy.defender,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Defender
-academy.seraphine,Seraphine Lux,academy,Mage,academy.defender,skill magic.academy.attunement,magic.academy.spells Basic; defense.resistance Basic,0,1,2,2,prefers Defender
+academy.stellan,Stellan Frost,academy,Warrior,academy.dwarf,skill defense.armor,defense.armor Basic; offense.melee Basic,1,2,1,1,prefers Dwarf
+academy.seraphine,Seraphine Lux,academy,Mage,academy.dwarf,skill magic.academy.attunement,magic.academy.spells Basic; defense.resistance Basic,0,1,2,2,prefers Dwarf
 academy.ingrid,Ingrid Vael,academy,Warrior,academy.gargoyle,skill offense.archery,pathfinding.logistics Basic; offense.archery Basic,2,1,1,1,prefers Gargoyle
 academy.theodric,Theodric Wynn,academy,Mage,academy.gargoyle,spell arcana.haste,magic.academy.spells Basic; pathfinding.logistics Basic,0,0,3,2,prefers Gargoyle
 academy.tobias,Tobias Rime,academy,Warrior,academy.iron-golem,skill tactics.wartempo,tactics.wartempo Basic; defense.armor Basic,1,2,1,1,prefers Iron Golem
@@ -125,5 +125,5 @@ swamp-bestiary.ylsa,Ylsa,swamp-bestiary,Warrior,swamp-bestiary.owlbear,skill est
 swamp-bestiary.gossk,Gossk,swamp-bestiary,Mage,swamp-bestiary.owlbear,skill rage.second,rage.first Basic; defense.armor Basic,0,1,2,2,prefers Owlbear
 swamp-bestiary.tharg,Tharg,swamp-bestiary,Warrior,swamp-bestiary.gorgon,skill tactics.tactics,tactics.tactics Basic; defense.armor Basic,2,1,1,1,prefers Gorgon
 swamp-bestiary.venna,Venna,swamp-bestiary,Mage,swamp-bestiary.gorgon,skill rage.first,rage.first Basic; pathfinding.pathfinding Basic,0,0,3,2,prefers Gorgon
-swamp-bestiary.oszrak,Oszrak,swamp-bestiary,Warrior,swamp-bestiary.haspid,skill pathfinding.scouting,pathfinding.scouting Basic; defense.armor Basic,1,2,1,1,prefers Haspid
-swamp-bestiary.szask,Szask,swamp-bestiary,Mage,swamp-bestiary.haspid,skill rage.first,rage.first Basic; rage.second Basic,0,1,2,2,prefers Haspid
+swamp-bestiary.oszrak,Oszrak,swamp-bestiary,Warrior,swamp-bestiary.wyvern,skill pathfinding.scouting,pathfinding.scouting Basic; defense.armor Basic,1,2,1,1,prefers Wyvern
+swamp-bestiary.szask,Szask,swamp-bestiary,Mage,swamp-bestiary.wyvern,skill rage.first,rage.first Basic; rage.second Basic,0,1,2,2,prefers Wyvern

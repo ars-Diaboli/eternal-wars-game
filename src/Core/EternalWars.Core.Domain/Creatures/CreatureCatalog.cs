@@ -28,10 +28,11 @@ public sealed class CreatureCatalog
                 throw new FormatException($"Creature '{definition.Id}' upgrades to unknown '{definition.UpgradesTo}'.");
             }
 
-            if (upgrade.Tier != definition.Tier || upgrade.Town != definition.Town || upgrade.UpgradesTo is not null)
+            if (upgrade.Tier != definition.Tier || upgrade.Town != definition.Town || upgrade.Category != definition.Category
+                || upgrade.UpgradesTo is not null)
             {
                 throw new FormatException(
-                    $"Upgrade '{upgrade.Id}' of '{definition.Id}' must have the same tier and town and no further upgrade.");
+                    $"Upgrade '{upgrade.Id}' of '{definition.Id}' must have the same tier, town and category and no further upgrade.");
             }
 
             _baseOf.TryAdd(upgrade.Id, definition.Id);

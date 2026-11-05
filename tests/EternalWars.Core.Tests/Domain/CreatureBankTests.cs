@@ -61,7 +61,10 @@ public class CreatureBankTests
             {
                 var types = row.Guard.Select(s => s.Creature).Append(row.Upgraded).OfType<string>().Distinct().ToList();
                 Assert.InRange(types.Count, 2, 3);
-                Assert.Single(types.Select(c => creatures.Get(c).Town).Distinct());
+                if (rule != BankRule.DwarvenTreasury) // the Academy's Dwarves with neutral Thanes since the neutral Dwarf left (ADR-135)
+                {
+                    Assert.Single(types.Select(c => creatures.Get(c).Town).Distinct());
+                }
                 var worth = row.Guard.Sum(s => creatures.Get(s.Creature).Cost.Gold * s.Count);
                 Assert.InRange(row.Reward.Gold * 100 / worth, 25, 60);
             }
@@ -76,8 +79,8 @@ public class CreatureBankTests
     {
         var treasuries = Enumerable.Range(1, 30).Select(s => World(BuiltInMapObjects.DwarvenTreasury, seed: (ulong)s).Bank).ToList();
 
-        Assert.All(treasuries, t => Assert.All(t.Guard, s => Assert.Contains(s.Creature, new[] { "neutral.dwarf", "neutral.battle-dwarf", "neutral.thane" })));
-        Assert.Contains(treasuries, t => t.Guard.Any(s => s.Creature == "neutral.battle-dwarf"));
+        Assert.All(treasuries, t => Assert.All(t.Guard, s => Assert.Contains(s.Creature, new[] { "academy.dwarf", "academy.dwarf-defender", "neutral.thane" })));
+        Assert.Contains(treasuries, t => t.Guard.Any(s => s.Creature == "academy.dwarf-defender"));
     }
 
     [Fact]
