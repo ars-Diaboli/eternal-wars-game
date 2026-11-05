@@ -1,5 +1,6 @@
 using System.Globalization;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
@@ -13,21 +14,30 @@ namespace EternalWars.Godot.UI.Setup;
 /// <summary>A map the player can start: a name and a factory building its initial state for the chosen options.</summary>
 public sealed record ScenarioChoice(string Name, Func<GameOptions, GameState> Create);
 
-/// <summary>A start slot of a random map template: its player's name, whether a human may (and by default does) take it, and its default team.</summary>
-public sealed record RandomMapSlot(string Name, bool HumanAllowed, bool HumanByDefault, int Team);
+/// <summary>
+/// A start slot of a random map template: its player's name, whether a human may (and by default does) take it, its default team and whether its
+/// player picks the start town's tier-1 dwelling (the start zone gives none).
+/// </summary>
+public sealed record RandomMapSlot(string Name, bool HumanAllowed, bool HumanByDefault, int Team, bool PicksTier1Dwelling = true);
 
-/// <summary>One player of a random map as set up: the slot, human or computer, the town (null = random) and hero (null = random), the team (null = the template's, when locked).</summary>
-public sealed record RandomMapPlayer(int Slot, bool IsHuman, string? Town, string? Hero, int? Team);
+/// <summary>
+/// One player of a random map as set up: the slot, human or computer, the town (null = random) and hero (null = random), the team (null = the
+/// template's, when locked) and the start town's tier-1 dwelling (a base creature id; null = random).
+/// </summary>
+public sealed record RandomMapPlayer(int Slot, bool IsHuman, string? Town, string? Hero, int? Team, string? Tier1Dwelling = null);
 
-/// <summary>What the screen asks the generator for: the map size, the players (the first slots, in order) and the game options (their seed is the map's).</summary>
-public sealed record RandomMapRequest(int Size, IReadOnlyList<RandomMapPlayer> Players, GameOptions Options);
+/// <summary>
+/// What the screen asks the generator for: the map size, the players (the first slots, in order), the game options (their seed is the map's) and
+/// the hero limit (null = the template's, ADR-068).
+/// </summary>
+public sealed record RandomMapRequest(int Size, IReadOnlyList<RandomMapPlayer> Players, GameOptions Options, int? MaxHeroes = null);
 
 /// <summary>A generated game and the generator's problems when every attempt had some (the player may still play it).</summary>
 public sealed record RandomMapResult(GameState State, IReadOnlyList<string> Problems);
 
 /// <summary>
-/// A random map template the player can start (ADR-086): its sizes, the player count range, the start slots and a factory that generates the game.
-/// Refused setups (too many humans, a hero picked twice, ...) throw <see cref="ArgumentException"/>, which the screen shows.
+/// A random map template the player can start (ADR-086): its sizes, the player count range, the start slots, a factory that generates the game
+/// and its hero limit. Refused setups (too many humans, a hero picked twice, ...) throw <see cref="ArgumentException"/>, which the screen shows.
 /// </summary>
 public sealed record RandomMapChoice(
     string Name,
@@ -38,12 +48,14 @@ public sealed record RandomMapChoice(
     IReadOnlyList<RandomMapSlot> Slots,
     Func<RandomMapRequest, RandomMapResult> Create,
     int? MinTeams = null,
-    int? MaxTeams = null);
+    int? MaxTeams = null,
+    int MaxHeroes = ScenarioRules.HeroLimit);
 
 /// <summary>
 /// New-game setup: a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
-/// locks them (ADR-032). For a template (ADR-086): the size, the number of players and for each player human or computer, town, hero and team
-/// (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
+/// locks them (ADR-032). For a template (ADR-086): the size, the number of players, the hero limit (the template's by default, ADR-068) and for each
+/// player human or computer, town, hero, the start town's tier-1 dwelling (a human player with a picked town, when the start zone gives none; RMG-7)
+/// and team (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
 /// change something. Raises <see cref="Started"/> with the ready state; the app then builds the session and the world.
 /// </summary>
 public partial class NewGameScreen : PanelContainer
@@ -54,6 +66,7 @@ public partial class NewGameScreen : PanelContainer
     private readonly Label _description = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) };
     private readonly OptionButton _size = new();
     private readonly SpinBox _playerCount = new() { MinValue = 1, MaxValue = 8, Step = 1 };
+    private readonly SpinBox _maxHeroes = new() { MinValue = 1, MaxValue = ScenarioRules.HeroLimit, Step = 1 };
     private readonly OptionButton _fog = new();
     private readonly OptionButton _complexity = new();
     private readonly OptionButton _timer = new();
@@ -69,6 +82,7 @@ public partial class NewGameScreen : PanelContainer
     private IReadOnlyList<ScenarioChoice> _choices = [];
     private IReadOnlyList<RandomMapChoice> _templates = [];
     private Func<string, IReadOnlyList<HeroDefinition>> _heroesOf = _ => [];
+    private Func<string, IReadOnlyList<CreatureDefinition>> _tier1Of = _ => [];
     private RandomMapResult? _generated;
     private bool _busy;
 
@@ -77,12 +91,20 @@ public partial class NewGameScreen : PanelContainer
     /// <summary>The player asked to go back to the main menu (Back, or Escape, which the app maps).</summary>
     public event Action? BackRequested;
 
-    /// <summary>Binds the maps, the random map templates and the heroes a player of a town can pick (for the templates' hero choice).</summary>
-    public void Bind(IReadOnlyList<ScenarioChoice> choices, IReadOnlyList<RandomMapChoice>? templates = null, Func<string, IReadOnlyList<HeroDefinition>>? heroesOf = null)
+    /// <summary>
+    /// Binds the maps, the random map templates, the heroes a player of a town can pick and the tier-1 dwellings its start town can begin with
+    /// (for the templates' hero and dwelling choices).
+    /// </summary>
+    public void Bind(
+        IReadOnlyList<ScenarioChoice> choices,
+        IReadOnlyList<RandomMapChoice>? templates = null,
+        Func<string, IReadOnlyList<HeroDefinition>>? heroesOf = null,
+        Func<string, IReadOnlyList<CreatureDefinition>>? tier1Of = null)
     {
         _choices = choices;
         _templates = templates ?? [];
         _heroesOf = heroesOf ?? (_ => []);
+        _tier1Of = tier1Of ?? (_ => []);
         var box = new VBoxContainer { CustomMinimumSize = new Vector2(520, 0) };
         AddChild(box);
         box.AddChild(new Label { Text = "New game" });
@@ -105,6 +127,11 @@ public partial class NewGameScreen : PanelContainer
         _size.ItemSelected += _ => Changed();
         _randomRows.Add(Row(box, "Players", _playerCount));
         _playerCount.ValueChanged += _ => ShowRandomPlayers();
+        _maxHeroes.TooltipText = "The most heroes a player may have on the map at once; the template sets the default.";
+        var heroLimitRow = Row(box, "Hero limit", _maxHeroes);
+        heroLimitRow.AddChild(new Label { Text = "heroes per player" });
+        _randomRows.Add(heroLimitRow);
+        _maxHeroes.ValueChanged += _ => Changed();
 
         _fog.AddItem("Permanent reveal (HoMM3)", (int)FogMode.PermanentReveal);
         _fog.AddItem("Shroud + refog for units", (int)FogMode.ShroudWithRefog);
@@ -200,6 +227,7 @@ public partial class NewGameScreen : PanelContainer
             _playerCount.MinValue = template.MinPlayers;
             _playerCount.MaxValue = template.Slots.Count;
             _playerCount.SetValueNoSignal(template.Slots.Count);
+            _maxHeroes.SetValueNoSignal(template.MaxHeroes);
             ShowRandomPlayers();
             return;
         }
@@ -286,7 +314,7 @@ public partial class NewGameScreen : PanelContainer
         return label;
     }
 
-    /// <summary>The template's first slots, one row each: human or computer, town, hero (of that town), team.</summary>
+    /// <summary>The template's first slots, one row each: human or computer, town, hero (of that town), tier-1 dwelling (of that town), team.</summary>
     private void ShowRandomPlayers()
     {
         Changed();
@@ -296,11 +324,12 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
-        _players.Columns = 5;
+        _players.Columns = 6;
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
         _players.AddChild(new Label { Text = "Town" });
         _players.AddChild(new Label { Text = "Hero" });
+        _players.AddChild(new Label { Text = "Tier-1 dwelling" });
         _players.AddChild(new Label { Text = (template.TeamsLocked ? "Team (locked)" : "Team") + TeamCounts(template.MinTeams, template.MaxTeams) });
         for (var i = 0; i < (int)_playerCount.Value; i++)
         {
@@ -310,14 +339,21 @@ public partial class NewGameScreen : PanelContainer
             _players.AddChild(row.Control);
             _players.AddChild(row.Town);
             _players.AddChild(row.Hero);
+            _players.AddChild(row.Dwelling);
             _players.AddChild(row.Team);
-            row.Control.ItemSelected += _ => Changed();
+            row.Control.ItemSelected += _ =>
+            {
+                row.ShowDwellings(_tier1Of);
+                Changed();
+            };
             row.Town.ItemSelected += _ =>
             {
                 row.ShowHeroes(_heroesOf);
+                row.ShowDwellings(_tier1Of);
                 Changed();
             };
             row.Hero.ItemSelected += _ => Changed();
+            row.Dwelling.ItemSelected += _ => Changed();
             row.Team.ValueChanged += _ => Changed();
             _randomPlayers.Add(row);
         }
@@ -392,7 +428,9 @@ public partial class NewGameScreen : PanelContainer
         await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
         try
         {
-            var request = new RandomMapRequest(_size.GetSelectedId(), _randomPlayers.Select(p => p.Player).ToList(), options);
+            var maxHeroes = (int)_maxHeroes.Value;
+            var request = new RandomMapRequest(
+                _size.GetSelectedId(), _randomPlayers.Select(p => p.Player).ToList(), options, maxHeroes == template.MaxHeroes ? null : maxHeroes);
             var result = template.Create(request);
             if (result.Problems.Count == 0)
             {
@@ -419,12 +457,15 @@ public partial class NewGameScreen : PanelContainer
     {
         private readonly int _slot;
         private readonly bool _teamsLocked;
+        private readonly bool _picksDwelling;
         private IReadOnlyList<HeroDefinition> _heroes = [];
+        private IReadOnlyList<CreatureDefinition> _dwellings = [];
 
         public RandomPlayerRow(int slot, RandomMapSlot setup, bool teamsLocked)
         {
             _slot = slot;
             _teamsLocked = teamsLocked;
+            _picksDwelling = setup.PicksTier1Dwelling;
             Control.AddItem("Human");
             Control.AddItem("Computer");
             Control.SetItemDisabled(0, !setup.HumanAllowed);
@@ -442,6 +483,9 @@ public partial class NewGameScreen : PanelContainer
 
             Hero.AddItem(Random);
             Hero.Disabled = true;
+            Dwelling.AddItem(Random);
+            Dwelling.Disabled = true;
+            Dwelling.TooltipText = DwellingTip();
             Team.Value = setup.Team;
             Team.Editable = !teamsLocked;
         }
@@ -452,6 +496,8 @@ public partial class NewGameScreen : PanelContainer
 
         public OptionButton Hero { get; } = new() { CustomMinimumSize = new Vector2(150, 0) };
 
+        public OptionButton Dwelling { get; } = new() { CustomMinimumSize = new Vector2(120, 0) };
+
         public SpinBox Team { get; } = new() { MinValue = 0, MaxValue = GameState.MaxPlayers - 1, Step = 1 };
 
         private string? SelectedTown => Town.Selected <= 0 ? null : BuiltInMapObjects.PlayableTowns[Town.Selected - 1];
@@ -461,7 +507,35 @@ public partial class NewGameScreen : PanelContainer
             Control.Selected == 0,
             SelectedTown,
             Hero.Selected <= 0 || Hero.Selected > _heroes.Count ? null : _heroes[Hero.Selected - 1].Id,
-            _teamsLocked ? null : (int)Team.Value);
+            _teamsLocked ? null : (int)Team.Value,
+            Dwelling.Selected <= 0 || Dwelling.Selected > _dwellings.Count ? null : _dwellings[Dwelling.Selected - 1].Id);
+
+        private bool IsHuman => Control.Selected == 0;
+
+        /// <summary>
+        /// The dwelling choice (RMG-7): "Random" and the town's tier-1 dwellings, for a human player with a picked town whose start zone gives
+        /// no tier-1 dwelling of its own; otherwise only "Random" (a computer player's is always drawn).
+        /// </summary>
+        public void ShowDwellings(Func<string, IReadOnlyList<CreatureDefinition>> tier1Of)
+        {
+            Dwelling.Clear();
+            Dwelling.AddItem(Random);
+            _dwellings = _picksDwelling && IsHuman && SelectedTown is { } town ? tier1Of(town) : [];
+            foreach (var line in _dwellings)
+            {
+                Dwelling.AddItem(line.Name);
+            }
+
+            Dwelling.Disabled = _dwellings.Count == 0;
+            Dwelling.TooltipText = DwellingTip();
+            Dwelling.Select(0);
+        }
+
+        private string DwellingTip() =>
+            !_picksDwelling ? "This start town already has its tier-1 dwelling."
+            : !IsHuman ? "A computer player's tier-1 dwelling is drawn at random."
+            : SelectedTown is null ? "Pick a town to choose its tier-1 dwelling."
+            : "The tier-1 dwelling the start town begins with.";
 
         /// <summary>The hero choice follows the town: "Random" and the town's heroes; a random town leaves only a random hero.</summary>
         public void ShowHeroes(Func<string, IReadOnlyList<HeroDefinition>> heroesOf)

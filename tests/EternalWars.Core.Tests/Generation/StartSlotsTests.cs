@@ -1,6 +1,7 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Data.Templates;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Towns;
@@ -54,6 +55,26 @@ public sealed class StartSlotsTests : IDisposable
         Assert.All(heroes, h => Assert.Equal(TownIds.Inferno, h.Town));
         Assert.Equal(HeroCatalog.Default.All.Count(h => h.Town == TownIds.Inferno), heroes.Count);
         Assert.Equal(heroes.Select(h => h.Name).Order(StringComparer.Ordinal), heroes.Select(h => h.Name));
+    }
+
+    [Fact]
+    public void TheTier1DwellingIsPicked_UnlessTheStartZoneGivesOne_AndTheHeroLimitCanBeOverridden()
+    {
+        var dwellings = StartSlots.Tier1Dwellings(CreatureCatalog.Default, TownIds.Inferno);
+        Assert.NotEmpty(dwellings);
+        Assert.All(dwellings, c => Assert.Equal(1, c.Tier));
+        Assert.Equal(dwellings.Select(c => c.Name).Order(StringComparer.Ordinal), dwellings.Select(c => c.Name));
+
+        Assert.All(StartSlots.Of(Duel()), s => Assert.True(s.PicksTier1Dwelling));
+        var withTier1 = Duel() with { Zones = [.. Duel().Zones.Select(z => z.Owner == 1 ? z with { StartDwellings = [1] } : z)] };
+        Assert.Equal([true, false], StartSlots.Of(withTier1).Select(s => s.PicksTier1Dwelling));
+
+        var picked = dwellings[^1].Id;
+        PlayerSetup[] players = [new(0, "Blue", true, TownIds.Inferno, Tier1Dwelling: picked), new(1, "Red", false, TownIds.Haven)];
+        var (state, _) = MapGenerator.Build(Duel(), 72, 5, players, new GameOptions(Seed: 5), maxHeroes: 3);
+        var town = state.Objects.OfType<Town>().Single(t => t.Owner == state.Players[0].Id);
+        Assert.Equal([picked], town.Dwellings.Keys.Where(l => dwellings.Any(d => d.Id == l)));
+        Assert.Equal(3, state.HeroLimit(state.Players[0].Id));
     }
 
     [Fact]

@@ -17,8 +17,8 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
 
 ## The template (`MapTemplate`, format v8)
 - Name, description, supported sizes, player range, max humans, underground or not, **heroes per player 1–8** (default 8; written into the
-  scenario's rules; `MapGenerator.Build` / `EditorMapGenerator.Generate` and the editor's Generate tab may override it, the new-game screen
-  does not; one limit for every player).
+  scenario's rules; `MapGenerator.Build` / `EditorMapGenerator.Generate`, the editor's Generate tab and the new-game screen may override it;
+  one limit for every player).
 - **Week and month events** (ADR-084): `weekEvents` with `enabled`, `skipWeeks` (0–8), `weeklyFactions` / `monthlyFactions` (town ids or
   `neutral`; omitted = playable towns); [rules](towns-and-economy.md#week-and-month-events).
 - **Zones**:
@@ -91,7 +91,7 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   - Factions are chosen before generation ("Random" drawn from the seed first), so each start zone is painted with its town's native terrains
     (RMG-7); an editor map without towns keeps the template's terrain.
   - Start towns: the default start plus the zone's `startBuildings` / `startDwellings`; without a tier-1 dwelling there, the player's pick
-    (computer: random). Start dwellings open with a week of creatures.
+    (the new-game screen offers it to a human player with a picked town; computer: random). Start dwellings open with a week of creatures.
   - The picked hero (else one of the town's) stands at the first town with 2–3 stacks of tier-1 and tier-2 creatures, 1000–1500 power.
   - Neutral towns keep the default start; an untaken slot keeps its town, neutral, garrisoned by the zone's strength.
   - Standard rules; complexity and fog from the new-game screen; named "template size×size #seed".
