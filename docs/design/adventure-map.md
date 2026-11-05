@@ -258,7 +258,7 @@ Rules: [shared object rules](#shared-object-rules).
   visiting hero is asked whether to open it; it opens once and vanishes. Gains only; an optional guard is fought (like a bank's) after "open?"
   and the box opens only on victory; optional message; gains the hero has no room for are lost. Contents hidden until opened (the AI knows
   them); an empty box is a validator error. The generator places boxes of gold, experience or creatures from a value of 5000.
-- **Map events** (ADR-096, ADR-115, ADR-124, ADR-127, ADR-128, ADR-129): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
+- **Map events** (ADR-096, ADR-115, ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
   variables, stored in the map file (`events`; the node types are in `MapEvents/MapEventData.cs`).
   - **Triggers**: hero events run when a hero steps onto one of their invisible cells (every step, until the event disables or removes
     itself; routes ignore cells and stop only for a message, a question or a battle); player events at every player's turn start after
@@ -299,4 +299,5 @@ Rules: [shared object rules](#shared-object-rules).
     Phase 6 (FLOW-1).
   - **Ranking**: an event that gives something only to people (a condition only people meet, such as a ready form with "computer may
     trigger" left off) makes the map campaign-like, so it is not ranked; the validator warns ([victory and modes](victory-and-modes.md)).
-  - *(planned)* The camera moving to what a turn-start message concerns.
+  - **Turn-start camera**: a turn-start message or question moves the camera to what it concerns: a place its rewards reveal or give a
+    hero at, else the last area the event revealed or hero it gave, else the town of a town event.
