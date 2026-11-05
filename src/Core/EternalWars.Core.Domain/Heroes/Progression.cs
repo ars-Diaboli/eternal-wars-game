@@ -92,7 +92,7 @@ public static class SkillOffers
     /// Weights: skills already being learned ×3; own school 6 (mage) / 2 (warrior); the own faction group (Primal Fury) 6 for both, so
     /// warriors learn it soon (ADR-072, HERO-7); other schools 2 / 1; general groups 2 / 4.
     /// </summary>
-    private static int Weight(Hero hero, string? heroTown, SkillDefinition skill)
+    internal static int Weight(Hero hero, string? heroTown, SkillDefinition skill)
     {
         var group = BuiltInSkills.GetGroup(skill.Group);
         var mage = hero.Class == HeroClass.Mage;

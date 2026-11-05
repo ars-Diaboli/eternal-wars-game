@@ -241,7 +241,7 @@ Rules: [shared object rules](#shared-object-rules).
 | Astrologer's Tower | Shows next week's event (MAP-32) |
 | Artifact Merchant | **7** Minor or Major artifacts (pieces, never whole relics) at **twice their worth** (Minor 2000, Major 5000), restocked on each month's first day; a sold slot stays empty until then (MAP-33) |
 | Witch Hut | **Two skills** (map-set or rolled); a visit raises one a level, or the same group's next skill where it cannot; **one lesson per hero level** (MAP-34) |
-| University / War Academy *(planned, ADR-126)* | Lessons in the magic schools / the general groups: up to 2 new groups and 2 skills raised a level per hero, each **1000 gold + 5 crystal, mercury and sulfur**; learned skills shown disabled |
+| University / War Academy | Lessons in the magic schools / the six general groups (never Primal Fury), drawn per hero on its first visit with the level-up weights and kept: up to **2 new groups** (the group's first skill at Basic) and **2 skills of its learned groups** one level up; any number a visit, each **1000 gold + 5 crystal, mercury and sulfur**; learned lessons and new groups past the 6-group limit shown disabled (ADR-139). Generator value 2500, one of each per map |
 
 <a id="scenery-and-rivers-adr-077-built-adr-079"></a>
 ## Scenery and rivers
@@ -308,7 +308,7 @@ HoMM3 and HotA (ADR-126, built ADR-133; map format v35).
   and spell building draws; shrines; level-up offers; witch huts (their draw and the stand-in skill of a group). What the author places by
   hand stays (a hero, an artifact, a prisoner, a shrine's spell, a guild's fixed spell, a witch hut's skill) and the validator warns; a banned
   skill a hero starts with stays but is never offered; a ban that would empty a pool leaves that pool whole. The University and the War
-  Academy will skip them too.
+  Academy skip them too.
 - **Random monster**: of one tier (1–7) or any tier; at game start it becomes a creature of that tier, base or upgraded, of the playable
   towns' and the neutral lines. A count set by the author stays; otherwise it is rolled by the drawn creature's tier.
 - **Random town**: at game start an owned town takes its owner's faction (chosen on the new-game screen, else one drawn for the player and

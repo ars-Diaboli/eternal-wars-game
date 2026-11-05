@@ -90,6 +90,7 @@ public abstract class MapObject
         MapObjectKind.Sphinx => new Sphinx(id, definition, position),
         MapObjectKind.WitchHut => new WitchHut(id, definition, position),
         MapObjectKind.Shrine => new Shrine(id, definition, position),
+        MapObjectKind.SkillSchool => new SkillSchool(id, definition, position),
         MapObjectKind.Deposit => new Deposit(id, definition, position),
         MapObjectKind.MagiWindow => new MagiWindow(id, definition, position),
         MapObjectKind.MagiEye => new MagiEye(id, definition, position),

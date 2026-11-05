@@ -1088,8 +1088,53 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 }
 
                 break;
+            case { Object: SkillSchool school, Cell: FootprintCell.Visit }:
+                foreach (var lesson in LessonsToTake(hero, school))
+                {
+                    if (Active(player) && _state.PendingDecision is null)
+                    {
+                        Execute(new TakeLessonCommand(player, school.Id, lesson.Skill));
+                    }
+                }
+
+                break;
         }
     }
+
+    /// <summary>
+    /// The lessons the hero would take at a University or War Academy (ADR-139): its open lessons while the spare resources last, skills it already
+    /// learns first, a new group only while it has a free group slot.
+    /// </summary>
+    private List<Lesson> LessonsToTake(Hero hero, SkillSchool school)
+    {
+        var spare = Spare(hero.Owner);
+        var groups = hero.Skills.Groups.Count();
+        var taken = new List<Lesson>();
+        foreach (var lesson in SkillSchoolRules.LessonsOf(school, hero.Id).Where(l => SkillSchoolRules.StateOf(hero, l) == LessonState.Open).OrderBy(l => l.NewGroup))
+        {
+            if (!spare.CanAfford(SkillSchoolRules.Price) || (lesson.NewGroup && groups >= HeroSkills.MaxGroups))
+            {
+                continue;
+            }
+
+            groups += lesson.NewGroup ? 1 : 0;
+            spare -= SkillSchoolRules.Price;
+            taken.Add(lesson);
+        }
+
+        return taken;
+    }
+
+    /// <summary>
+    /// What a visit to a University or War Academy is worth: the lessons it would take; before the first visit (the lessons are drawn then) a
+    /// guess of one lesson when the player can pay for one.
+    /// </summary>
+    private double SchoolValue(Hero hero, SkillSchool school) =>
+        school.Lessons.ContainsKey(hero.Id) ? LessonValue * LessonsToTake(hero, school).Count
+        : Spare(hero.Owner).CanAfford(SkillSchoolRules.Price) ? LessonValue : 0;
+
+    /// <summary>A skill level bought at a school, in gold (a draft beside a level-up's worth).</summary>
+    private const double LessonValue = 1200;
 
     /// <summary>A Pandora's Box's guard as one army (at most seven stacks).</summary>
     private static Army BoxGuard(PandorasBox box) => Army.Of([.. box.Guard.Take(Army.SlotCount)]);
@@ -1415,6 +1460,9 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     break;
                 case WarMachineFactory when visit != hero.Position && FactoryWants(hero).Count is > 0 and var machines && Plausible(GuardPower(visit)):
                     yield return new(visit, 300 * machines, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    break;
+                case SkillSchool school when visit != hero.Position && SchoolValue(hero, school) is > 0 and var schoolWorth && Plausible(GuardPower(visit)):
+                    yield return new(visit, schoolWorth, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
             }
         }

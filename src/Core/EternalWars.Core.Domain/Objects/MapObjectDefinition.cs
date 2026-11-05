@@ -130,6 +130,9 @@ public enum MapObjectKind
 
     /// <summary>A barrier that lets through the heroes meeting its quest (<see cref="Objects.QuestSite"/>, EVT-5).</summary>
     QuestGate,
+
+    /// <summary>Lessons for gold and rare resources: a University's magic schools or a War Academy's general groups (<see cref="Objects.SkillSchool"/>, ADR-139).</summary>
+    SkillSchool,
 }
 
 /// <summary>

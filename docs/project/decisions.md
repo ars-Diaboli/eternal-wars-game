@@ -748,7 +748,7 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
 - The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
 
 ### ADR-126: The owner's picks from the missing mechanics: map bans, random placeholders, University and War Academy, spell scrolls, the Grail, the first unique buildings (ADR-116, 2026-11-04)
-**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), spell scrolls (ADR-136), the first unique buildings (ADR-138), the rest not built yet. Owner's notes in `ideas.md`;
+**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), spell scrolls (ADR-136), the first unique buildings (ADR-138), the University and War Academy (ADR-139), the rest not built yet. Owner's notes in `ideas.md`;
 points marked *(proposal)* were filled in by the agent and stand unless the owner changes them. More unique buildings: TOWN-12; the Grail
 buildings: ADR-130.
 
@@ -986,7 +986,7 @@ agent's choices made while building and stand unless the owner changes them. Rul
 - **Editor**: a "Bans" tab after "Events" (a list per kind with a filter and "banned only"; ticking bans; undo says "Edit the bans");
   "Random faction" on a town ("Shown as" its type), "Random" (any tier or a tier) on a monster, "Placeholder" on a hero; captions mark
   random towns and monsters.
-- **Not in this step**: the generator places none of them; the University and War Academy (not built) will read the bans; a campaign's
+- **Not in this step**: the generator places none of them; the University and War Academy (ADR-139) read the bans; a campaign's
   carried hero in a placeholder waits for FLOW-1.
 
 ### ADR-134: New-game screen: the tier-1 dwelling pick and the hero limit (ADR-086, ADR-068, RMG-7, 2026-11-05)
@@ -1092,3 +1092,25 @@ table's rows) not run yet. Builds ADR-126's first set; points marked *(proposal)
   does not yet go to a town for them.
 - **Names**: working names. The Inferno **Altar of Brimstone** is close to the **Brimstone Altar**, Sylvan's Inferno spell building; a
   rename of one of them is open to the owner.
+
+### ADR-139: The University and the War Academy built (ADR-126, 2026-11-05)
+**Status**: implemented (2026-11-05); core tested (`SkillSchoolTests`); the Godot part (the lessons in the object panel) not run yet. Builds
+ADR-126's University and War Academy; points marked *(proposal)* are the agent's choices made while building. Rules:
+[adventure-map.md](../design/adventure-map.md#special-sites).
+
+- **Objects**: one kind, `SkillSchool`, two definitions: `university` (the magic schools) and `war-academy` (the six general groups, offense …
+  war machines); never the faction group (Primal Fury). Map format v36 (`skillSchool`; which one comes from the definition).
+- **Lessons**: on a hero's first visit the school draws that hero's lessons and keeps them for it (`SkillSchool.Lessons`, `LessonsDrawn`):
+  up to 2 groups the hero has not learned, each as the group's first skill not banned at Basic, and up to 2 skills of its learned groups of
+  that kind below their maximum, one level up. Both draws use the level-up weights (`SkillOffers.Weight`); the rival school is drawn like any
+  other school. New groups are drawn even when the hero has six groups.
+- **Taking one** (`TakeLessonCommand`, `LessonTaken`): the hero on the entrance, 1000 gold + 5 crystal, mercury and sulfur, any number a
+  visit. A lesson is open while the skill is one level below it and the hero can raise it; it shows **learned** once the skill is at its level
+  (taken here or learned elsewhere since) and **no room** when it would start a seventh group. *(proposal)* A hero with no lessons at all is
+  told the school has nothing to teach it.
+- **Bans**: banned skills are never drawn; a group whose skills are all banned is not offered.
+- **AI**: weighs an unvisited school as one lesson (1200 gold) when it can pay, a visited one by the lessons it would take; on the entrance it
+  takes its open lessons while the spare resources last (a third of the gold kept), raises before new groups, a new group only with a free
+  group slot. *(proposal)*
+- **Generator**: treasure value 2500 each, weight 1, at most one of each per map *(proposal)*.
+- **Game app**: the object panel lists the hero's lessons with the price; learned and no-room lessons are disabled.

@@ -82,6 +82,8 @@ public static class TreasureSites
         new(BuiltInMapObjects.SacrificialAltar, 1500, Weight: 1),
         new(BuiltInMapObjects.Sphinx, 3000, Weight: 1),
         new(BuiltInMapObjects.WitchHut, 1500),
+        new(BuiltInMapObjects.University, 2500, Weight: 1, MapLimit: 1),
+        new(BuiltInMapObjects.WarAcademy, 2500, Weight: 1, MapLimit: 1),
         new(BuiltInMapObjects.ShrineId(1), 500),
         new(BuiltInMapObjects.ShrineId(2), 1500),
         new(BuiltInMapObjects.ShrineId(3), 2500, Weight: 1),

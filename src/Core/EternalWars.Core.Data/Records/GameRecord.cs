@@ -149,6 +149,7 @@ public static class GameRecordSerializer
         (typeof(MoveGarrisonStackCommand), "garrisonStack"),
         (typeof(ChooseWitchHutSkillCommand), "witchHut"),
         (typeof(BuyArtifactCommand), "buyArtifact"),
+        (typeof(TakeLessonCommand), "lesson"),
         (typeof(RecruitAtRefugeeCampCommand), "recruitRefugees"),
         (typeof(SacrificeCreaturesCommand), "sacrificeCreatures"),
         (typeof(SacrificeArtifactCommand), "sacrificeArtifact"),
