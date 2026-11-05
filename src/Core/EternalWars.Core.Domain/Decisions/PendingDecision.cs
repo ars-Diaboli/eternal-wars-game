@@ -61,15 +61,22 @@ public sealed record MapEventDecision(HeroId Hero, string Event, string Text, IR
     /// <summary>The hero of a player or town event's decision: none (hero ids start at 1).</summary>
     public static HeroId NoHero => default;
 
+    /// <summary>
+    /// What a turn-start message or question concerns (EVT-2 f): the camera moves there when it is shown. Null for hero events (the hero is in
+    /// view) and for turn-start events that touch no place.
+    /// </summary>
+    public MapPosition? Place { get; init; }
+
     public bool IsQuestion => Answers.Count > 0;
 
     public bool Equals(MapEventDecision? other) =>
-        other is not null && Hero == other.Hero && Event == other.Event && Text == other.Text && Lines.SequenceEqual(other.Lines) && Answers.SequenceEqual(other.Answers);
+        other is not null && Hero == other.Hero && Event == other.Event && Text == other.Text && Place == other.Place
+        && Lines.SequenceEqual(other.Lines) && Answers.SequenceEqual(other.Answers);
 
-    public override int GetHashCode() => HashCode.Combine(Hero, Event, Text, Lines.Count, Answers.Count);
+    public override int GetHashCode() => HashCode.Combine(Hero, Event, Text, Place, Lines.Count, Answers.Count);
 
     public override string ToString() =>
-        $"MapEventDecision {{ Hero = {Hero}, Event = {Event}, Text = {Text}, Lines = {string.Join(" | ", Lines)}, Answers = {string.Join(" | ", Answers)} }}";
+        $"MapEventDecision {{ Hero = {Hero}, Event = {Event}, Text = {Text}, Place = {Place}, Lines = {string.Join(" | ", Lines)}, Answers = {string.Join(" | ", Answers)} }}";
 }
 
 /// <summary>
