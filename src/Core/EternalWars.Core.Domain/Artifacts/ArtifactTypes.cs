@@ -133,6 +133,12 @@ public enum ArtifactEffectKind
 
     /// <summary>The hero's army loses no morale for mixed factions (value 1; the Angelic Alliance, ADR-108).</summary>
     NoFactionPenalty,
+
+    /// <summary>
+    /// A spell scroll of the spell level <see cref="ArtifactEffect.Value"/> (ADR-136). <c>Target</c> is the spell written on it (none on the blank
+    /// scroll of the table): while it is worn, a hero with a spell book can cast that spell at the rank its school's Mastery allows.
+    /// </summary>
+    Scroll,
 }
 
 /// <param name="Kind">What changes.</param>
@@ -173,6 +179,7 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
         ["no-spells-above"] = ArtifactEffectKind.NoSpellsAbove,
         ["full-mana"] = ArtifactEffectKind.FullMana,
         ["no-faction-penalty"] = ArtifactEffectKind.NoFactionPenalty,
+        ["scroll"] = ArtifactEffectKind.Scroll,
     };
 
     /// <summary>The word of a kind in the table: <c>spell-power</c>.</summary>
@@ -246,6 +253,15 @@ public sealed record ArtifactDefinition(
 
     /// <summary>Whether it is an assembled relic (never dropped, only joined from its pieces).</summary>
     public bool IsAssembled => Pieces.Count > 0;
+
+    /// <summary>The spell level of a spell scroll (its <c>scroll &lt;level&gt;</c> effect, ADR-136); null for any other artifact.</summary>
+    public int? ScrollLevel => Effects.FirstOrDefault(e => e.Kind == ArtifactEffectKind.Scroll)?.Value;
+
+    /// <summary>Whether it is a spell scroll, blank or written.</summary>
+    public bool IsScroll => ScrollLevel is not null;
+
+    /// <summary>The spell written on a scroll (<c>spell-scroll-1:light.bless</c>, ADR-136); null for a blank scroll and any other artifact.</summary>
+    public string? Spell { get; init; }
 }
 
 /// <summary>Worn together, the pieces of a set add <see cref="Bonus"/> to the individual effects.</summary>

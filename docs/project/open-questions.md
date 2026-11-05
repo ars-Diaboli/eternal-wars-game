@@ -31,15 +31,26 @@ faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 **TOWN-13 Undead Transformer** (owner, 2026-11-05). A second Necropolis-only building: it turns living creatures of tier 1–2 into the
 tier-1 undead of the same class (ADR-135: class A to Skeletons, B to Plague Bearers), tier 3–4 into the tier-2 undead (Ghouls, Wights);
 never elementals or constructs. It also swaps tier 1–2 undead for the other class's line of their tier (Plague Bearer to Skeleton, Ghoul to
-Wight) at a "swap value" of 0.75. Open: (a) how many undead a living stack becomes; (b) what the 0.75 applies to; (c) upgraded creatures;
-(d) living creatures with no class (tier 5, neutrals, Conflux and Dragon Utopia); (e) its cost, requirements, and who uses it (a visiting
-hero, the garrison); (f) whether the computer uses it.
+Wight) at a "swap value" of 0.75. 
+Open: 
+(a) how many undead a living stack becomes; 
+(b) what the 0.75 applies to; 
+(c) upgraded creatures;
+(d) living creatures with no class (tier 5, neutrals, Conflux and Dragon Utopia); 
+(e) its cost, requirements, and who uses it (a visiting hero, the garrison); 
+(f) whether the computer uses it.
 
-**Proposal**: (a) one undead per living creature, as HoMM3's Skeleton Transformer; (b) the new count is the old stack's count × 0.75, rounded
-down (at least 1); (c) an upgraded creature counts as its base, the result is the base undead; (d) tier 5 is refused, an unclassed tier 1–4
-creature may become either line, the player picks; (e) 1000 gold + 5 mercury, needs a tier-1 dwelling; one stack at a time, of a visiting
-hero or the garrison, free, any number of times a day; (f) the computer turns every eligible stack it does not need into undead when its hero
-visits.
+**Proposal**: 
+(a) one undead per living creature, as HoMM3's Skeleton Transformer; 
+(b) the new count is the old stack's count × 0.75, rounded down (at least 1); 
+(c) an upgraded creature counts as its base, the result is the base undead; 
+(d) tier 5 is refused, an unclassed tier 1–4 creature may become either line, the player picks; 
+(e) 1000 gold + 5 mercury, needs a tier-1 dwelling; one stack at a time, of a visiting
+hero or the garrison, free, any number of times a day; 
+(f) the computer turns every eligible stack it does not need into undead when its hero visits.
+Answers : c - if town has upgraded structure for the result creature - transformer result is the upgraded undead;
+e - multiple stacks at a time, similar to homm3;
+use proposals for the rest;
 
 ## Game flow and content
 

@@ -748,7 +748,7 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
 - The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
 
 ### ADR-126: The owner's picks from the missing mechanics: map bans, random placeholders, University and War Academy, spell scrolls, the Grail, the first unique buildings (ADR-116, 2026-11-04)
-**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), the rest not built yet. Owner's notes in `ideas.md`;
+**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), spell scrolls (ADR-136), the rest not built yet. Owner's notes in `ideas.md`;
 points marked *(proposal)* were filled in by the agent and stand unless the owner changes them. More unique buildings: TOWN-12; the Grail
 buildings: ADR-130.
 
@@ -1025,3 +1025,31 @@ agent's choices. The Undead Transformer from the same notes is [TOWN-13](open-qu
   table is unchanged); *(proposal)* an unclassed creature's are split between the two lines in a random proportion, as before.
 - **No migration**: maps and saves naming the old ids no longer load (no shipped map uses them; as with the Wyvern's move in ADR-049).
 - `creatures.csv` loses the "sandbox stats were copy-pasted" notes.
+
+### ADR-136: Spell scrolls built (ADR-126, 2026-11-05)
+**Status**: implemented (2026-11-05); core tested (`SpellScrollTests`); the Godot part (scrolls on the paper doll, their spells in the spell
+book and the hero screen's artifact line, the editor's spell choice on a scroll pickup) not run yet. Builds ADR-126's spell scrolls, with the
+owner's changes of 2026-11-05 (one scroll per spell level, 5 % of the rolls, the spell decided by the generator or the editor, values by
+level); points marked *(proposal)* are the agent's choices made while building and stand unless the owner changes them. Rules:
+[artifacts.md](../content/artifacts.md#how-artifacts-work).
+
+- **One scroll per spell level**: four rows in `artifacts.csv`, `spell-scroll-1` … `spell-scroll-4` (Spell Scroll I–IV, Misc), each with the
+  effect `scroll <level>` (a new effect kind) and no set or pieces; tiers 1 Minor, 2 Major, 3 and 4 Relic. A scroll with a spell written on it
+  is the id `spell-scroll-1:light.bless` ("Scroll of Bless"): the catalog looks it up from its level's row (a spell of another level is not an
+  artifact), so heroes, pickups, loot, trade, events and the map file carry it like any artifact id. No map format change.
+- **When the spell is decided**: the random map generator writes it when it places a scroll. In the editor the author picks the scroll and
+  then a spell of its level or "random"; a random (blank) scroll gets its spell at game start, as do blank scrolls a hero starts with.
+  A scroll from a roll during play (rewards, banks, merchants, loot sites) is written when drawn, and a blank one given by a map event, a
+  Pandora's Box or a quest when given. The spell is drawn from the game's random source among the level's spells of every school, without
+  the map's banned spells unless they ban the whole level.
+- **Casting**: a worn written scroll adds its spell to the spells the hero can cast (`MagicRules.Known`), so the battle caster, adventure
+  spells, the spell book and the AI see it. It needs a spell book and pays the normal mana. *(proposal)* It needs no school skill (as
+  HoMM3's scrolls need no Wisdom), and its rank is what the school's Mastery allows; a learned spell keeps the higher of the two ranks.
+  *(proposal)* "Carrying" means wearing: like every other artifact, a scroll in the backpack does nothing, so a hero uses at most three at a
+  time (the Misc slots). Nothing is learned from a scroll.
+- **Rolls**: every roll (pickups left open, rewards, banks, merchants, loot sites, the generator's treasure) goes through
+  `ArtifactRolls.Pick`: the tier's scroll takes **5 %** of the rolls, the other artifacts share the rest. Level 4 scrolls are never rolled
+  (`ArtifactCatalog.OfTier` leaves them out), only placed by the map's author. A relic scroll counts once in the relic pool's "one of each
+  before repeats", whatever spell it holds; the generator places at most one level 3 scroll per map, like any relic.
+- **Value**: by spell level, blank or written (`ArtifactValue.OfScroll`): 5 / 10 / 18 / 28 for levels 1–4 (+1 Attack is 10). The AI uses it to
+  choose and equip artifacts and to weigh pickups; loot that does not fit goes by it.

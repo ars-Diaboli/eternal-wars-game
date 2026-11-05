@@ -18,7 +18,26 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     private IReadOnlyList<ArtifactDefinition> OfTier(ArtifactTier tier) =>
         MapBans.Allowed(state.Artifacts.OfTier(tier).OrderBy(a => a.Id, StringComparer.Ordinal).ToList(), a => state.Rules.Bans.BansArtifact(a.Id));
 
-    /// <summary>The artifacts every pickup of a tier may be, minus those already placed on the map or carried (relics stay unique).</summary>
+    /// <summary>
+    /// A blank spell scroll with a spell written on it (ADR-136): a random spell of its level from the game's random source, without the map's
+    /// banned spells unless they ban the whole level. Any other artifact, or a written scroll, comes back as it is.
+    /// </summary>
+    internal string Inscribe(string artifact)
+    {
+        if (!IsBlankScroll(artifact) || state.Artifacts.Get(artifact).ScrollLevel is not { } level)
+        {
+            return artifact;
+        }
+
+        var spells = MapBans.Allowed(state.Artifacts.ScrollSpells(level), state.Rules.Bans.BansSpell);
+        return spells.Count == 0 ? artifact : ArtifactCatalog.WithSpell(artifact, spells[state.Random.Next(spells.Count)]);
+    }
+
+    /// <summary>
+    /// Game start: every pickup the map left open gets an artifact of its tier, minus those already placed on the map or carried (relics stay
+    /// unique); then every blank scroll on a pickup or a hero gets its spell (<see cref="Inscribe"/>; the generator and the editor's chosen spells
+    /// are kept, ADR-136).
+    /// </summary>
     internal void RollUnsetPickups()
     {
         var taken = state.Heroes.SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
@@ -34,13 +53,44 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
                 continue;
             }
 
-            pickup.Artifact = pool[state.Random.Next(pool.Count)].Id;
+            pickup.Artifact = ArtifactRolls.Pick(pool, state.Random).Id;
             taken.Add(pickup.Artifact);
+        }
+
+        foreach (var pickup in state.ObjectsOf<ArtifactPickup>().Where(p => p.Artifact is not null).OrderBy(p => p.Id.Value))
+        {
+            pickup.Artifact = Inscribe(pickup.Artifact!);
+        }
+
+        foreach (var hero in state.Heroes.OrderBy(h => h.Id.Value))
+        {
+            InscribeCarried(hero);
         }
     }
 
+    private bool IsBlankScroll(string artifact) => state.Artifacts.TryGet(artifact, out var definition) && definition is { IsScroll: true, Spell: null };
+
+    /// <summary>Writes the spells of the blank scrolls the hero wears and carries.</summary>
+    private void InscribeCarried(Hero hero)
+    {
+        foreach (var blank in hero.Artifacts.AllWorn.Select(w => w.Id).Where(IsBlankScroll).ToList())
+        {
+            hero.Artifacts.RemoveWorn(blank);
+            hero.Artifacts.Wear(state.Artifacts.Get(Inscribe(blank)));
+        }
+
+        foreach (var blank in hero.Artifacts.Backpack.Where(IsBlankScroll).ToList())
+        {
+            hero.Artifacts.RemoveFromBackpack(blank);
+            hero.Artifacts.AddToBackpack(Inscribe(blank));
+        }
+
+        state.RefreshArtifacts(hero);
+    }
+
     /// <summary>
-    /// Draws an artifact of a tier for a map reward (ADR-068). Minor and Major artifacts may repeat. Relics come from a pool: neither one drawn
+    /// Draws an artifact of a tier for a map reward (ADR-068): the tier's scroll in <see cref="ArtifactRolls.ScrollPercent"/> of the draws, with its
+    /// spell written (ADR-136). Minor and Major artifacts may repeat. Relics come from a pool: neither one drawn
     /// before nor one lying on the map or carried by a hero; when none is left, the pool is refilled and the draw starts anew, so a hero may end
     /// up with two of one relic. Null only when the catalog has no artifact of the tier.
     /// </summary>
@@ -54,7 +104,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
 
         if (tier != ArtifactTier.Relic)
         {
-            return all[state.Random.Next(all.Count)].Id;
+            return Inscribe(ArtifactRolls.Pick(all, state.Random).Id);
         }
 
         var present = state.Heroes.SelectMany(h => h.Artifacts.AllWorn.Select(w => w.Id).Concat(h.Artifacts.Backpack))
@@ -68,14 +118,18 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             pool = pool.Count > 0 ? pool : [.. all];
         }
 
-        var drawn = pool[state.Random.Next(pool.Count)].Id;
+        var drawn = ArtifactRolls.Pick(pool, state.Random).Id;
         state.DrawnRelics.Add(drawn);
-        return drawn;
+        return Inscribe(drawn);
     }
 
-    /// <summary>Puts a found artifact in the hero's backpack; false when it is full (nothing happens).</summary>
+    /// <summary>
+    /// Puts a found artifact in the hero's backpack, a blank scroll (a map event's, a Pandora's Box's) with its spell written (ADR-136); false when the
+    /// backpack is full (nothing happens).
+    /// </summary>
     internal bool Grant(Hero hero, string artifact, ArtifactSource source)
     {
+        artifact = Inscribe(artifact);
         if (!hero.Artifacts.AddToBackpack(artifact))
         {
             events.Publish(new ArtifactBackpackFull(hero.Id, artifact));

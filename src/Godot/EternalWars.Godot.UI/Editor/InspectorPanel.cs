@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
@@ -191,6 +192,12 @@ public partial class InspectorPanel : VBoxContainer
         var items = new[] { ("— none —", "") }
             .Concat(scenario.Artifacts.All.OrderBy(a => a.Slot).ThenBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Slot}, {a.Tier})", a.Id)))
             .ToList();
+
+        // Written scrolls the hero has (ADR-136) are not catalog rows; list them so an edit keeps them. A blank scroll gets its spell at game start.
+        foreach (var id in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Where(id => items.All(i => i.Item2 != id)).Distinct())
+        {
+            items.Add((scenario.Artifacts.TryGet(id, out var written) ? $"{written.Name} ({written.Slot}, {written.Tier})" : id, id));
+        }
         var changed = new List<Choice<string>>();
         List<Choice<string>> Rows(string title, IEnumerable<string> ids)
         {
@@ -314,8 +321,22 @@ public partial class InspectorPanel : VBoxContainer
                 AddChild(row);
                 var artifacts = new[] { ($"Random ({pickup.Definition.Name}, drawn at start)", (string?)null) }
                     .Concat(_editor.Scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", (string?)a.Id)));
-                var artifact = Options(row, "Artifact", artifacts, pickup.Artifact);
+                var catalog = _editor.Scenario.Artifacts;
+                var artifact = Options(row, "Artifact", artifacts, pickup.Artifact is { } current ? ArtifactCatalog.BaseOf(current) : null);
                 artifact.Button.ItemSelected += _ => Edit(() => _editor.SetArtifactPickup(pickup.Id, artifact.Value()));
+
+                // A spell scroll (ADR-136): the spell written on it, or a random one of its level drawn at game start.
+                if (pickup.Artifact is { } chosen && catalog.TryGet(chosen, out var scroll) && scroll.ScrollLevel is { } level)
+                {
+                    var spellRow = new HBoxContainer();
+                    AddChild(spellRow);
+                    var spells = new[] { ($"Random level {level} spell (drawn at start)", (string?)null) }
+                        .Concat(catalog.ScrollSpells(level).Select(id => catalog.Spells.Get(id)).OrderBy(s => s.Name).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id)));
+                    var spell = Options(spellRow, "Spell", spells, scroll.Spell);
+                    spell.Button.ItemSelected += _ => Edit(() => _editor.SetArtifactPickup(pickup.Id,
+                        spell.Value() is { } written ? ArtifactCatalog.WithSpell(chosen, written) : ArtifactCatalog.BaseOf(chosen)));
+                }
+
                 break;
             }
 

@@ -12,7 +12,19 @@ public static class ArtifactValue
     /// <summary>An artifact with what it brings along: an assembled relic is worth its pieces and its own effects.</summary>
     public static double Of(ArtifactCatalog catalog, ArtifactDefinition artifact) => Of(catalog.EffectsOf(artifact));
 
-    private static double Of(IEnumerable<ArtifactEffect> effects) => effects.Sum(e => e.Value * e.Kind switch
+    /// <summary>
+    /// A spell scroll by its spell level (ADR-136), blank or written (a blank one gets its spell when found): 1 → 5, 2 → 10, 3 → 18, 4 → 28: half of
+    /// +1 Attack at level 1, nearly three times it at level 4.
+    /// </summary>
+    public static double OfScroll(int level) => level switch
+    {
+        <= 1 => 5.0,
+        2 => 10.0,
+        3 => 18.0,
+        _ => 28.0,
+    };
+
+    private static double Of(IEnumerable<ArtifactEffect> effects) => effects.Sum(e => e.Kind == ArtifactEffectKind.Scroll ? OfScroll(e.Value) : e.Value * e.Kind switch
     {
         ArtifactEffectKind.Attack or ArtifactEffectKind.Defense => 10.0,
         ArtifactEffectKind.Morale or ArtifactEffectKind.Luck => 8.0,

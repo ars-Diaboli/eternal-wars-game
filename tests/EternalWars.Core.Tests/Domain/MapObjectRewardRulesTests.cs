@@ -210,11 +210,12 @@ public class MapObjectRewardRulesTests
         var session = Start(state);
         var relics = state.Artifacts.OfTier(ArtifactTier.Relic).Select(a => a.Id).ToHashSet(StringComparer.Ordinal);
 
-        var firstRound = Enumerable.Range(0, relics.Count).Select(_ => session.Artifacts.Draw(ArtifactTier.Relic)!).ToList();
+        // A drawn scroll comes with its spell written (ADR-136); the pool holds the blank one.
+        var firstRound = Enumerable.Range(0, relics.Count).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!)).ToList();
         Assert.Equal(relics.Order(StringComparer.Ordinal), firstRound.Order(StringComparer.Ordinal));
         Assert.Contains("relics drawn", GameStateDigest.Describe(state), StringComparison.Ordinal);
 
-        var next = session.Artifacts.Draw(ArtifactTier.Relic)!; // the pool refilled and the draw starts anew
+        var next = ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!); // the pool refilled and the draw starts anew
         Assert.Contains(next, relics);
         Assert.Equal(new[] { next }, state.DrawnRelics);
     }
@@ -227,12 +228,12 @@ public class MapObjectRewardRulesTests
         state.GetHero(A).Artifacts.AddToBackpack(relics[0]);
         var session = Start(state);
 
-        var drawn = Enumerable.Range(0, relics.Count - 1).Select(_ => session.Artifacts.Draw(ArtifactTier.Relic)!).ToList();
+        var drawn = Enumerable.Range(0, relics.Count - 1).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Relic)!)).ToList();
         Assert.DoesNotContain(relics[0], drawn);
         Assert.Equal(relics.Count - 1, drawn.Distinct().Count());
 
         var minors = state.Artifacts.OfTier(ArtifactTier.Minor).Select(a => a.Id).ToHashSet(StringComparer.Ordinal);
-        var many = Enumerable.Range(0, minors.Count * 3).Select(_ => session.Artifacts.Draw(ArtifactTier.Minor)!).ToList();
+        var many = Enumerable.Range(0, minors.Count * 3).Select(_ => ArtifactCatalog.BaseOf(session.Artifacts.Draw(ArtifactTier.Minor)!)).ToList();
         Assert.All(many, id => Assert.Contains(id, minors));
         Assert.True(many.Distinct().Count() < many.Count); // repeats are allowed
         Assert.Empty(state.DrawnRelics.Intersect(minors));

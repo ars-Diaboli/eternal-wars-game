@@ -12,7 +12,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 |---|---|---|---|
 | Sea travel: boats, shipyards, whirlpools, sea objects | HoMM3, HotA | Dropped (ADR-051) | Rivers and shallow water are scenery (ADR-077); no Fly / Water Walk spells |
 | Grail, obelisks, puzzle map, digging | HoMM3, HoMM5 | Planned | ADR-126 |
-| Spell scrolls (an artifact holding one spell) | HoMM3 | Planned | ADR-126 |
+| Spell scrolls (an artifact holding one spell) | HoMM3 | Yes | ADR-126, ADR-136 |
 | Seer's Huts, Quest Guards / Gates, map events with conditions and variables | HoMM3, HotA | Yes | events (ADR-124), quests (ADR-127), loops, run events, the game app's windows and quest log (ADR-128), the editor's Events tab and the AI (ADR-129) |
 | University (buy secondary skills) | HoMM3 | Planned | ADR-126, with a War Academy for the general groups |
 | Scholar (one-time stat, skill or spell) | HoMM3 | Missing | Small one-time object like the Learning Stone |

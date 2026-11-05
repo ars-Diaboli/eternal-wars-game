@@ -215,6 +215,9 @@ public sealed record ArtifactBonuses
     /// <summary>The spell levels known while worn (every school), none when empty.</summary>
     public IReadOnlySet<int> SpellLevels { get; init; } = new HashSet<int>();
 
+    /// <summary>The spells of the worn scrolls (ADR-136), by id.</summary>
+    public IReadOnlySet<string> ScrollSpells { get; init; } = new HashSet<string>();
+
     /// <summary>The highest spell level either side may cast in the hero's battles, or null.</summary>
     public int? SpellLevelCap { get; init; }
 
@@ -266,6 +269,7 @@ public sealed record ArtifactBonuses
         var immunities = new HashSet<string>(StringComparer.Ordinal);
         var elements = new Dictionary<string, int>(StringComparer.Ordinal);
         var spellLevels = new HashSet<int>();
+        var scrollSpells = new HashSet<string>(StringComparer.Ordinal);
         int? cap = null;
         foreach (var e in list)
         {
@@ -283,6 +287,9 @@ public sealed record ArtifactBonuses
                         spellLevels.Add(level);
                     }
 
+                    break;
+                case ArtifactEffectKind.Scroll when e.Target is { } spell:
+                    scrollSpells.Add(spell);
                     break;
                 case ArtifactEffectKind.NoSpellsAbove:
                     cap = Math.Min(cap ?? int.MaxValue, e.Value);
@@ -329,14 +336,15 @@ public sealed record ArtifactBonuses
             Immunities = immunities,
             ElementPercent = elements,
             SpellLevels = spellLevels,
+            ScrollSpells = scrollSpells,
             SpellLevelCap = cap,
             FullMana = list.Any(e => e.Kind == ArtifactEffectKind.FullMana),
             NoFactionPenalty = list.Any(e => e.Kind == ArtifactEffectKind.NoFactionPenalty),
         };
     }
 
-    /// <summary>A short line for the hero screen: <c>+3 Attack, +1 morale</c>.</summary>
-    public string Describe()
+    /// <summary>A short line for the hero screen: <c>+3 Attack, +1 morale</c>; scroll spells by name when <paramref name="spells"/> is given.</summary>
+    public string Describe(Magic.SpellCatalog? spells = null)
     {
         var parts = new List<string>();
         void Add(int value, string what)
@@ -382,6 +390,12 @@ public sealed record ArtifactBonuses
         if (SpellLevels.Count > 0)
         {
             parts.Add($"knows every level {SpellLevels.Min()}–{SpellLevels.Max()} spell");
+        }
+
+        if (ScrollSpells.Count > 0)
+        {
+            var names = ScrollSpells.Order(StringComparer.Ordinal).Select(id => spells is not null && spells.TryGet(id, out var spell) ? spell.Name : id);
+            parts.Add($"casts {string.Join(", ", names)} from a scroll");
         }
 
         if (SpellLevelCap is { } cap)

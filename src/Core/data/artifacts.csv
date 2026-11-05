@@ -109,3 +109,7 @@ cornucopia,Cornucopia,Misc,Relic,,income crystal 2; income sulfur 2; income merc
 angelic-alliance,Angelic Alliance,Weapon,Relic,,attack 2; defense 2; spell-power 2; knowledge 2; no-faction-penalty,"Haven's last oath, sworn by angels who have not been seen since. Assembled",sword-of-judgement; lions-shield-of-courage; celestial-necklace-of-bliss
 undead-king-regalia,Regalia of the Undead King,Body,Relic,,necromancy 10,"the king was buried in three graves so he would not rise; he rose three times. Assembled",rib-cage; blackshard-of-the-dead-knight; skull-helmet
 bow-of-the-sharpshooter,Bow of the Sharpshooter,Weapon,Relic,,ranged-damage 15; battle-speed 1,"whoever holds it does not miss; the Sylvan say that is the curse. Assembled",bow-of-elven-cherrywood; bowstring-of-the-unicorns-mane; necklace-of-swiftness
+spell-scroll-1,Spell Scroll I,Misc,Minor,,scroll 1,"a level 1 spell, written when found. Academy copyists sell them by the dozen, and the good ones still smell of the lamp"
+spell-scroll-2,Spell Scroll II,Misc,Major,,scroll 2,"a level 2 spell, written when found; the seal is the copyist's promise that it was read back once"
+spell-scroll-3,Spell Scroll III,Misc,Relic,,scroll 3,"a level 3 spell, written when found; few hands are steady enough, and fewer survive the proofreading"
+spell-scroll-4,Spell Scroll IV,Misc,Relic,,scroll 4,"a level 4 spell; never found by chance, only where the map's author laid it"
