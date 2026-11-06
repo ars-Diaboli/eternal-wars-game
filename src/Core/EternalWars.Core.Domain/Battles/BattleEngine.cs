@@ -257,7 +257,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             }
 
             var killed = Wound(target, damage);
-            events.Publish(new BattleUnitSiegeDamaged(target.Id, SiegeDamageSource.Tower, tower.Id, damage, killed, target.Count));
+            events.Publish(new BattleUnitSiegeDamaged(target.Id, SiegeDamageSource.Tower, tower.Id, damage, killed, target.Count, target.TopHealth));
             Hit(target);
             Bury(target);
         }
@@ -273,7 +273,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
         var damage = battle.Siege.MoatDamage;
         var killed = Wound(unit, damage);
-        events.Publish(new BattleUnitSiegeDamaged(unit.Id, SiegeDamageSource.Moat, null, damage, killed, unit.Count));
+        events.Publish(new BattleUnitSiegeDamaged(unit.Id, SiegeDamageSource.Moat, null, damage, killed, unit.Count, unit.TopHealth));
         Bury(unit);
     }
 
@@ -585,7 +585,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     private void SpellDamage(BattleUnit unit, string spell, int damage)
     {
         var killed = Wound(unit, damage);
-        events.Publish(new BattleUnitSpellDamaged(unit.Id, spell, damage, killed, unit.Count));
+        events.Publish(new BattleUnitSpellDamaged(unit.Id, spell, damage, killed, unit.Count, unit.TopHealth));
         Hit(unit);
         Bury(unit);
     }
@@ -771,7 +771,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var killed = Wound(target, damage);
         target.HitsThisRound++;
         attacker.DamageDealt += dealt;
-        events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, killed, target.Count, luck));
+        events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, killed, target.Count, target.TopHealth, luck));
         Hit(target);
         Bury(target);
 

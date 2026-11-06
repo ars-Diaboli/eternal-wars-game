@@ -186,8 +186,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ### Presentation and UI (ADR-116)
 - [x] Built: icon prompts and the list of missing mechanics (ADR-116)
-- [ ] Stack health bars in battle: the top creature's hit points against its full health, green over 50 %, yellow 21–50 %, red 20 % and
-      below (ADR-118)
+- [x] Stack health bars in battle: the top creature's hit points against its full health, green over 50 %, yellow 21–50 %, red 20 % and
+      below (ADR-118, ADR-145)
 - [ ] Dividing obstacles: cliffs or walls of 6–12 cells that split the field partly, at least two gaps, flyers pass over; on highlands,
       rough, rocky and subterranean ground, one battle in three, never in sieges or banks (ADR-118)
 - [ ] More scenery on random maps (trees, rocks and the like, denser by zone terrain; ADR-077's scenery)

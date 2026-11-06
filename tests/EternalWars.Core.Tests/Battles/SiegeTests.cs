@@ -118,7 +118,7 @@ public class SiegeTests
         Assert.Null(battle.Engine.Move(edge));
 
         Assert.Equal(40, siege.MoatDamage); // 2 × (10 + 2 × 5)
-        Assert.Equal(new BattleUnitSiegeDamaged(walker.Id, SiegeDamageSource.Moat, null, 40, 4, 6), Assert.Single(battle.Events.OfType<BattleUnitSiegeDamaged>()));
+        Assert.Equal(new BattleUnitSiegeDamaged(walker.Id, SiegeDamageSource.Moat, null, 40, 4, 6, 10), Assert.Single(battle.Events.OfType<BattleUnitSiegeDamaged>()));
 
         // Once in the moat it moves on freely.
         Assert.Contains(new CellPosition(SiegeRules.WallX + 1, 15), BattleGrid.Reachable(battle.State, walker).Keys);

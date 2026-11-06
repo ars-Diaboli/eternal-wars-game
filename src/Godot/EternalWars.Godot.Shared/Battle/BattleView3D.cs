@@ -444,6 +444,7 @@ public partial class BattleView3D : Node3D
             () =>
             {
                 target.SetCount(e.RemainingCount);
+                target.SetHealth(e.TopHealth);
                 Narrate(line);
             });
     }
@@ -467,7 +468,11 @@ public partial class BattleView3D : Node3D
                 t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.3f).SetDelay(0.1f);
                 t.TweenCallback(Callable.From(text.QueueFree));
             },
-            () => Narrate($"The healing tent restores {e.Healed} health to {view.Creature.Name}."));
+            () =>
+            {
+                view.SetHealth(e.TopHealth);
+                Narrate($"The healing tent restores {e.Healed} health to {view.Creature.Name}.");
+            });
     }
 
     /// <summary>The siege engine's shot at a structure (ADR-106): a projectile and a shudder, or a miss; a destroyed structure falls to rubble.</summary>
@@ -571,6 +576,7 @@ public partial class BattleView3D : Node3D
             () =>
             {
                 target.SetCount(e.RemainingCount);
+                target.SetHealth(e.TopHealth);
                 Narrate(line);
             });
     }
@@ -598,6 +604,7 @@ public partial class BattleView3D : Node3D
             () =>
             {
                 target.SetCount(e.RemainingCount);
+                target.SetHealth(e.TopHealth);
                 Narrate($"{SpellName(e.Spell)} hits {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.");
             });
     }
@@ -685,6 +692,7 @@ public partial class BattleView3D : Node3D
                 view.Visible = true;
                 view.Scale = Vector3.One;
                 view.SetCount(e.Count);
+                view.SetHealth(view.Creature.Health);
                 Narrate($"{view.Creature.Name} rise from the ashes: {e.Count} of them.");
             });
     }
@@ -704,6 +712,7 @@ public partial class BattleView3D : Node3D
                 view.Visible = true;
                 view.Scale = Vector3.One;
                 view.SetCount(e.Count);
+                view.SetHealth(e.TopHealth);
                 Narrate($"{SpellName(e.Spell)}: {view.Creature.Name} regain {e.Health} health, {e.Count} of them now.");
             });
     }

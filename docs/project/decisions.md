@@ -1226,3 +1226,13 @@ agent's placeholders until the town models (Phase 5 presentation).
 - **3D field**: walls carry battlements, the gate a lintel of the town's stone, keep and towers the town's roof; a fallen structure loses its
   roof with the rubble. Beyond the defenders' edge stand 7, 9 or 9 of the town's houses (Fort, Citadel, Castle) under the same roofs. The 2D
   board draws walls, gate and moat in the town's colours.
+
+### ADR-145: Stack health bars in battle (ADR-118, 2026-11-06)
+**Status**: implemented; seen in Godot (the siege smoke map: full, yellow and red bars).
+
+- **Core**: `BattleUnitAttacked`, `BattleUnitSiegeDamaged` and `BattleUnitSpellDamaged` carry the stack's `TopHealth` after the hit, as
+  `BattleUnitHealed` and `BattleUnitRevived` already did, so the view shows the bar as each hit plays, not the state ahead of it.
+  `StackHealth` gives the bar's fraction and band (green when the top creature has over half its health, yellow over a fifth, red at a fifth
+  and below). It changes no rule.
+- **3D field**: a bar under the stack count, facing the camera and drawn over the field; it updates on hits, heals, revives and rebirth. The
+  2D board draws the same bar along each stack's bottom edge. Sizes and colours are placeholders.
