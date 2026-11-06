@@ -151,6 +151,9 @@ ADR-099, ADR-106, built ADR-109 and ADR-120 (CMB-11). Numbers are placeholders; 
 - **Flyers and teleporters** cross the walls; defenders' shooters behind them get the 1/2 cover. From the Citadel the defenders' strongest
   shooter starts **in the keep** *(proposal, ADR-120)*: never moves, can't be meleed, shots at it take wall cover; it leaves when the keep
   falls.
+- **Look** (ADR-144): the fortifications take the besieged town's own look: its stone, gate, roofs (cones, domes, pyramids, spikes or
+  battlements on the keep and towers), moat (water, swamp, Inferno's lava, Conflux's shimmer) and the ground of its yard behind the walls, with a
+  few of its houses beyond the defenders' edge (more behind a stronger fort). Placeholder shapes and colours until the town models.
 - **AI**: attacks a fortified town only when a siege estimate wins; defenders stay inside; walking attackers go round to a breach or the
   broken gate, close up to the moat without entering while walls hold, and break the gate with no machine and no breach.
 

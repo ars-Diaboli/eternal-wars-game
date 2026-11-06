@@ -144,7 +144,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 ### Combat additions
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges
       (ADR-106, ADR-109, ADR-113, ADR-120), circular battle movement (ADR-089)
-- [ ] Sieges: the town's own look on the siege field
+- [x] Sieges: the town's own look on the siege field (ADR-144)
 
 ### Map events (ADR-096, ADR-115; HotA's extended events) ✅
 - [x] Step 1, core: the event tree, variables, event cells, turn-start player and town events, HotA's conditions and actions, messages,

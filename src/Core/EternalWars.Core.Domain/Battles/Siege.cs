@@ -56,8 +56,11 @@ public sealed class SiegeStructure
     public override string ToString() => $"{Kind} #{Id} {Health}/{MaxHealth}";
 }
 
-/// <summary>What a siege is fought at: the town's fort level (1 Fort, 2 Citadel, 3 Castle) and its building count (ADR-106).</summary>
-public sealed record SiegeSpec(int FortLevel, int Buildings);
+/// <summary>
+/// What a siege is fought at: the town's fort level (1 Fort, 2 Citadel, 3 Castle), its building count (ADR-106) and its town type
+/// (<see cref="TownIds"/>), which only sets how the fortifications look (ADR-144); null for an estimate that does not know the town.
+/// </summary>
+public sealed record SiegeSpec(int FortLevel, int Buildings, string? Town = null);
 
 /// <summary>The fortifications of a siege battle (<see cref="BattleState.Siege"/>).</summary>
 public sealed class SiegeState
@@ -161,7 +164,7 @@ public static class SiegeRules
 
     /// <summary>A town is besieged when it has a Fort (ADR-106); null for a town without one.</summary>
     public static SiegeSpec? SpecOf(Town town) =>
-        town.Level(BuiltInBuildings.Fort) is > 0 and var level ? new SiegeSpec(Math.Min(3, level), Buildings(town)) : null;
+        town.Level(BuiltInBuildings.Fort) is > 0 and var level ? new SiegeSpec(Math.Min(3, level), Buildings(town), town.TownType) : null;
 
     /// <summary>
     /// The town's buildings for the towers' damage: every built level of every building and dwelling counts as one (an upgrade is a building of its

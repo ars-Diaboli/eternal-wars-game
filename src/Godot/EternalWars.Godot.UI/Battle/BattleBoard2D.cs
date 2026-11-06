@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
 using Godot;
@@ -97,18 +98,20 @@ public partial class BattleBoard2D : Control
             DrawRect(ToRect(obstacle.Rect).Grow(-1), new Color(0.35f, 0.30f, 0.25f));
         }
 
-        // A siege (ADR-106): the moat, then the wall sections and the gate on the wall line; the keep and towers stand off the board.
+        // A siege (ADR-106) in the town's colours (ADR-144): the moat, then the wall sections and the gate on the wall line; the keep and towers
+        // stand off the board.
         if (battle.Siege is { } siege)
         {
+            var look = SiegeLook.Of(siege.Spec.Town);
             foreach (var moat in siege.Moat)
             {
-                DrawRect(ToRect(moat), new Color(0.20f, 0.35f, 0.60f, 0.55f));
+                DrawRect(ToRect(moat), look.Moat with { A = 0.55f });
             }
 
             foreach (var structure in siege.Structures.Where(s => s.OnField))
             {
-                var color = !structure.IsStanding ? new Color(0.30f, 0.28f, 0.25f, 0.6f)
-                    : structure.Kind == SiegeStructureKind.Gate ? new Color(0.50f, 0.33f, 0.18f) : new Color(0.62f, 0.60f, 0.56f);
+                var color = !structure.IsStanding ? look.Stone.Darkened(0.5f) with { A = 0.6f }
+                    : structure.Kind == SiegeStructureKind.Gate ? look.Gate : look.Stone;
                 DrawRect(ToRect(structure.Rect).Grow(-1), color);
             }
         }
