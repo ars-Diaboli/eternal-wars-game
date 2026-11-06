@@ -38,6 +38,12 @@ public sealed record CreaturesRecruited(MapObjectId Town, string Creature, int C
 /// <summary>A stack of the garrison (<paramref name="Hero"/> null) or the visiting hero was upgraded in a town.</summary>
 public sealed record StackUpgraded(MapObjectId Town, HeroId? Hero, int Slot, string From, string To, int Count) : IEvent;
 
+/// <summary>
+/// A stack of the garrison (<paramref name="Hero"/> null) or the visiting hero went through the Undead Transformer (ADR-137): <paramref name="Count"/>
+/// of <paramref name="From"/> became <paramref name="Result"/> of <paramref name="To"/>.
+/// </summary>
+public sealed record CreaturesTransformed(MapObjectId Town, HeroId? Hero, int Slot, string From, int Count, string To, int Result) : IEvent;
+
 /// <summary>A town's garrison changed (recruits, stack moves, upgrades, battle, editor). Carries all seven slots.</summary>
 public sealed record GarrisonChanged(MapObjectId Town, IReadOnlyList<CreatureStack?> Slots) : IEvent;
 

@@ -49,6 +49,7 @@ public sealed class GameSession
         Bus.Subscribe<HeroFreed>(visibility);
         Bus.Subscribe<MapEventHeroGiven>(visibility);
         Bus.Subscribe<HeroLeveledUp>(visibility);
+        Bus.Subscribe<TownBuilt>(visibility);
 
         Flow = new GameFlowService(State, Bus);
         Economy = new EconomyService(State, Bus);
@@ -345,6 +346,9 @@ public sealed class GameSession
                 return null;
             case UpgradeStackCommand upgrade:
                 Towns.UpgradeStack(upgrade.Player, upgrade.Town, upgrade.Army, upgrade.Slot);
+                return null;
+            case TransformCreaturesCommand transform:
+                Towns.Transform(transform.Player, transform.Town, transform.Orders);
                 return null;
             case MoveTownStackCommand move:
                 Towns.MoveStack(move.Player, move.Town, move.From, move.FromSlot, move.To, move.ToSlot, move.Count);

@@ -25,8 +25,9 @@ Each building's levels, cost, requirements and effect: [town-buildings.md](../co
   a captured one helps its new owner.
 - **Per-town lists** (ADR-070, ADR-074, ADR-112): a town's own rows in `buildings.csv` replace the shared ones, add a building only it has,
   or (level 0) remove one. Every town but Necropolis has a unique building (ADR-126, ADR-138; [town-buildings.md](../content/town-buildings.md)): a bonus
-  for its owner's visiting heroes and one for the hero defending it in a siege; more later (TOWN-12). Necropolis gets the Undead Transformer
-  *(planned, ADR-137)*.
+  for its owner's visiting heroes and one for the hero defending it in a siege; more later (TOWN-12). The Academy also has the
+  **Observatory** (its town sees 24 cells; ADR-143), Necropolis the **Undead Transformer** (living creatures into undead of their class,
+  undead lines swapped; ADR-137, ADR-143; [town-buildings.md](../content/town-buildings.md)).
 
 ## Garrison heroes
 ADR-112, TOWN-8. The visiting hero may enter the garrison (its army joins it; refused if it does not fit) and leave with the **whole**

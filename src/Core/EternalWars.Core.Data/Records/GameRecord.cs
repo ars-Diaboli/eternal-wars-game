@@ -170,6 +170,7 @@ public static class GameRecordSerializer
         (typeof(FetchResourcesCommand), "fetchResources"),
         (typeof(UpgradeStackCommand), "upgradeStack"),
         (typeof(MoveTownStackCommand), "moveTownStack"),
+        (typeof(TransformCreaturesCommand), "transformCreatures"),
         (typeof(BuyWarMachineCommand), "buyWarMachine"),
         (typeof(BuySpellBookCommand), "buySpellBook"),
         (typeof(EnterGarrisonCommand), "enterGarrison"),
