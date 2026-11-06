@@ -244,6 +244,7 @@ public class BuffAndTrainingTests
     public void TheAi_TrainsAtTheArenaNearby()
     {
         var (session, arena) = World<TrainingSite>(BuiltInMapObjects.Arena);
+        Steady(session.State);
         var attack = Alpha(session).Attack;
 
         new AdventureAi(session, controlHumanSlots: true).PlayTurn();

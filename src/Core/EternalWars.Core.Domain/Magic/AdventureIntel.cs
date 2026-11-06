@@ -12,18 +12,27 @@ using EternalWars.Core.Domain.Visibility;
 namespace EternalWars.Core.Domain.Magic;
 
 /// <summary>
-/// A creature stack as a player is shown it: <paramref name="Count"/> is null when Veil hides it (then only <paramref name="Amount"/>, a word
-/// such as "a few" or "a horde", is known).
+/// A creature stack as a player is shown it (ADR-125): <paramref name="Count"/> is null when it is hidden (by Veil, or because the player's
+/// Scouting does not show it), and then only the range <paramref name="Min"/>–<paramref name="Max"/> of its amount word is known
+/// (<paramref name="Max"/> null: open-ended, a legion).
 /// </summary>
-public sealed record ShownStack(string Creature, int? Count, string Amount);
+public sealed record ShownStack(string Creature, int? Count, int Min, int? Max)
+{
+    /// <summary>The amount word with its range, such as "a pack (10–19)" or "a legion (1000+)".</summary>
+    public string Amount => AdventureIntel.AmountText(Min);
+
+    /// <summary>The count, or what a hidden one is taken for: the middle of its range, a legion as its least (the AI's reading, ADR-125).</summary>
+    public int Estimate => Count ?? (Max is { } max ? (Min + max) / 2 : Min);
+}
 
 /// <summary>
 /// A hero or a neutral stack as an information spell shows it: a hero (<paramref name="Hero"/>, its <paramref name="Owner"/>, its worn
-/// artifacts unless Veil II hides them) or a map monster (<paramref name="Monster"/>). <paramref name="Veiled"/>: the counts are hidden.
+/// artifacts unless hidden) or a map monster (<paramref name="Monster"/>). <paramref name="Veiled"/>: Veil hides the counts.
+/// <paramref name="Details"/>: what Scouting tells of a hero beyond its army (<see cref="AdventureIntel.ScoutHero"/>), null when nothing.
 /// </summary>
 public sealed record ShownArmy(
     MapPosition Position, string Name, HeroId? Hero, PlayerId? Owner, MapObjectId? Monster, IReadOnlyList<ShownStack> Stacks,
-    IReadOnlyList<string> Artifacts, bool Veiled, bool ArtifactsHidden);
+    IReadOnlyList<string> Artifacts, bool Veiled, bool ArtifactsHidden, ScoutedHero? Details = null);
 
 /// <summary>What Detect Magic found in a map object: its name, where it is, and one line per thing it holds.</summary>
 public sealed record DetectedObject(MapObjectId Object, string Name, MapPosition Position, IReadOnlyList<string> Contents);
@@ -32,39 +41,67 @@ public sealed record DetectedObject(MapObjectId Object, string Name, MapPosition
 public sealed record LedgerReport(Turns.WeekEvent NextWeek, IReadOnlyList<ShownArmy> Heroes);
 
 /// <summary>
-/// An enemy town as Eavesdrop shows it, read-only: its buildings (name and level), the creatures waiting in its dwellings, the garrison, the
-/// hero inside and the hero at the gate.
+/// An enemy town as Eavesdrop (or Scouting, <see cref="AdventureIntel.ScoutTown"/>) shows it, read-only: its buildings (name and level), the
+/// creatures waiting in its dwellings, the garrison, the hero inside and the hero at the gate. Null <paramref name="Buildings"/> or
+/// <paramref name="Available"/>: not shown.
 /// </summary>
 public sealed record TownIntel(
-    MapObjectId Town, string Name, string TownType, PlayerId? Owner, IReadOnlyList<string> Buildings, IReadOnlyList<ShownStack> Available,
+    MapObjectId Town, string Name, string TownType, PlayerId? Owner, IReadOnlyList<string>? Buildings, IReadOnlyList<ShownStack>? Available,
     IReadOnlyList<ShownStack> Garrison, ShownArmy? GarrisonHero, ShownArmy? VisitingHero);
 
 /// <summary>
 /// The queries behind the information spells (Distant Vision, Detect Magic, Grave Whisper III, Ledger of Ages, Eavesdrop) and how a player is
-/// shown another player's army (Veil). Pure functions of the state.
+/// shown armies it does not own (Veil; Scouting, ADR-125, in AdventureIntel.Scouting.cs). Pure functions of the state.
 /// </summary>
-public static class AdventureIntel
+public static partial class AdventureIntel
 {
     /// <summary>
-    /// The word for a stack's size when its count is hidden *(proposal: HoMM3's scale)*: a few 1–4, several 5–9, a pack 10–19, lots 20–49,
-    /// a horde 50–99, a throng 100–249, a swarm 250–499, zounds 500–999, a legion 1000+.
+    /// The amount words and where each starts (ADR-125): a few 1–4, several 5–9, a pack 10–19, lots 20–49, a horde 50–99, a throng 100–249,
+    /// a swarm 250–499, zounds 500–999, a legion 1000+.
     /// </summary>
-    public static string AmountWord(int count) => count switch
+    private static readonly (int From, string Word)[] Amounts =
+    [
+        (1, "a few"), (5, "several"), (10, "a pack"), (20, "lots"), (50, "a horde"), (100, "a throng"), (250, "a swarm"), (500, "zounds"), (1000, "a legion"),
+    ];
+
+    private static int AmountIndex(int count)
     {
-        < 5 => "a few",
-        < 10 => "several",
-        < 20 => "a pack",
-        < 50 => "lots",
-        < 100 => "a horde",
-        < 250 => "a throng",
-        < 500 => "a swarm",
-        < 1000 => "zounds",
-        _ => "a legion",
+        var index = 0;
+        while (index + 1 < Amounts.Length && count >= Amounts[index + 1].From)
+        {
+            index++;
+        }
+
+        return index;
+    }
+
+    /// <summary>The word for a stack's size when its count is hidden: "a few" … "a legion".</summary>
+    public static string AmountWord(int count) => Amounts[AmountIndex(count)].Word;
+
+    /// <summary>The range of the word a count falls in: (10, 19) for a pack, (1000, null) for a legion.</summary>
+    public static (int Min, int? Max) AmountRange(int count)
+    {
+        var index = AmountIndex(count);
+        return (Amounts[index].From, index + 1 < Amounts.Length ? Amounts[index + 1].From - 1 : null);
+    }
+
+    /// <summary>The word with its range, as every screen shows a hidden count: "a pack (10–19)", "a legion (1000+)".</summary>
+    public static string AmountText(int count) => AmountRange(count) switch
+    {
+        (var min, { } max) => string.Create(CultureInfo.InvariantCulture, $"{AmountWord(count)} ({min}–{max})"),
+        (var min, null) => string.Create(CultureInfo.InvariantCulture, $"{AmountWord(count)} ({min}+)"),
     };
+
+    /// <summary>One stack as shown: exact, or only its amount's range.</summary>
+    public static ShownStack Shown(string creature, int count, bool hidden)
+    {
+        var (min, max) = AmountRange(count);
+        return new ShownStack(creature, hidden ? null : count, min, max);
+    }
 
     /// <summary>The stacks of an army as shown: exact, or with the counts hidden.</summary>
     public static IReadOnlyList<ShownStack> Stacks(IEnumerable<CreatureStack> stacks, bool hidden) =>
-        [.. stacks.Select(s => new ShownStack(s.Creature, hidden ? null : s.Count, AmountWord(s.Count)))];
+        [.. stacks.Select(s => Shown(s.Creature, s.Count, hidden))];
 
     /// <summary>
     /// How <paramref name="viewer"/> is shown <paramref name="hero"/>'s army (the one query every screen showing another player's hero uses):
@@ -82,7 +119,7 @@ public static class AdventureIntel
     /// <summary>A neutral map stack as shown: always exact.</summary>
     public static ShownArmy ShowMonster(GameState state, MonsterGuard monster) =>
         new(monster.Position, state.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature, null, null, monster.Id,
-            monster.Count is { } count ? [new ShownStack(monster.Creature, count, AmountWord(count))] : [], [], false, false);
+            monster.Count is { } count ? [Shown(monster.Creature, count, hidden: false)] : [], [], false, false);
 
     /// <summary>
     /// Distant Vision: the other players' heroes and the neutral stacks within <paramref name="radius"/> of <paramref name="center"/>, on tiles
@@ -131,7 +168,7 @@ public static class AdventureIntel
             .Select(b => catalog.MaxLevel(b.Key) >= b.Value ? $"{catalog.Get(b.Key, b.Value).Name} ({b.Value})" : $"{b.Key} ({b.Value})")
             .ToList();
         var available = town.Available.Where(a => a.Value > 0).OrderBy(a => a.Key, StringComparer.Ordinal)
-            .Select(a => new ShownStack(a.Key, a.Value, AmountWord(a.Value))).ToList();
+            .Select(a => Shown(a.Key, a.Value, hidden: false)).ToList();
         var veiledInside = town.GarrisonHero is { } inside && inside.Owner != viewer && AdventureMagic.VeilRank(inside) >= 1;
         return new TownIntel(
             town.Id, town.Name, town.TownType, town.Owner, buildings, available, Stacks(town.Garrison.Stacks.Select(s => s.Stack), veiledInside),

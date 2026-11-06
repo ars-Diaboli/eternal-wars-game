@@ -118,7 +118,7 @@ replaces the former 150 % value).
 |---|---|---|---|---|---|---|---|
 | Pathfinding | `pathfinding.pathfinding` | Master | −25 % of the non-native terrain penalty | −50 % | −75 % | −100 % | ✅ |
 | Logistics | `pathfinding.logistics` | Expert | +10 % movement points | +20 % | +30 % | – | ✅ |
-| Scouting | `pathfinding.scouting` | Expert | +2 sight radius on the map | +4 | +6 | – | ✅ at once when learned (replaces Troop management, `pathfinding.troops`); ⏳ the information it reveals (ADR-125) |
+| Scouting | `pathfinding.scouting` | Expert | +2 sight radius on the map | +4 | +6 | – | ✅ at once when learned (replaces Troop management, `pathfinding.troops`); ✅ the information it reveals (ADR-125, ADR-142) |
 
 There is no navigation skill: there is no sea travel (ADR-051). A hero's sight radius is 5 plus Scouting ([adventure-map.md](../design/adventure-map.md#fog-of-war-implemented-adr-017-adr-031)).
 

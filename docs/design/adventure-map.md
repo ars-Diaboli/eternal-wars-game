@@ -117,6 +117,22 @@ ADR-017, ADR-031. Two modes, chosen at game creation (`GameOptions.FogMode`):
 Observers: heroes radius 5; owned towns radius 10 from the town's centre cell (7 past its walls, ADR-141); owned mines, providers and map
 dwellings radius 2 from their entrance. Scouting adds 2 / 4 / 6 to a hero's radius, revealed at once when learned.
 
+**What a player is shown of armies it does not own** (ADR-125, ADR-142; `AdventureIntel.ScoutHero` / `ScoutMonster` / `ScoutStacks` /
+`ScoutTown`): every count as an **amount word with its range**: a few (1–4), several (5–9), a pack (10–19), lots (20–49), a horde
+(50–99), a throng (100–249), a swarm (250–499), zounds (500–999), a legion (1000+). The best Scouting among the player's heroes whose
+sight circle reaches the army shows more:
+
+| Scouting | Shows |
+|---|---|
+| Basic | exact counts of neutral stacks and guards; an enemy hero's level and primary stats |
+| Advanced | exact counts of other players' heroes, town garrisons and map garrisons; a hero's artifacts and war machines |
+| Expert | a hero's skills and known spells; the creatures waiting in a town's dwellings |
+
+Veil I hides a hero's counts from Scouting below Expert, Veil II its artifacts from everyone. A town's buildings are not shown (Eavesdrop
+shows them). The information spells (Distant Vision, Ledger of Ages, Eavesdrop, Detect Magic, Grave Whisper) keep their exact counts.
+Right-clicking another player's hero or a neutral stack in sight shows it on the status line, a town not the player's own in the intel
+panel. The adventure AI plans with the same view, taking each hidden count for the middle of its range (a legion as 1000).
+
 ## Mines and resource providers
 | Object | Effect |
 |---|---|

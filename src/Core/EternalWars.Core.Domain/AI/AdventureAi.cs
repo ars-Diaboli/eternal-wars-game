@@ -8,6 +8,7 @@ using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Pathfinding;
 using EternalWars.Core.Domain.Towns;
@@ -205,7 +206,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     var opener = _state.GetHero(box.Hero);
                     var pandora = (PandorasBox)_state.GetObject(box.Box);
                     command = new AnswerPandorasBoxCommand(player, BoxValue(opener, pandora.Contents) > 0
-                        && (!pandora.IsGuarded || _estimator.Fight(opener, BoxGuard(pandora)).IsSafe(MonsterLoss)));
+                        && (!pandora.IsGuarded || _estimator.Fight(opener, Seen(pandora.Guard, pandora.VisitPosition, null)).IsSafe(MonsterLoss)));
                     break;
                 case TreasureChestDecision chest:
                     var hero = _state.GetHero(chest.Hero);
@@ -897,7 +898,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     private IEnumerable<(Hero Enemy, long Power, int Reach)> Threats(PlayerId owner) =>
         _state.Heroes
             .Where(h => _state.AreEnemies(owner, h.Owner) && _state.CanSee(owner, h) && _state.Fog.IsExplored(owner, h.Position))
-            .Select(h => (h, ArmyPower(h.Army), (h.MaxMovementPoints / MovementCostPerTile) + 1));
+            .Select(h => (h, ArmyPower(Seen(h)), (h.MaxMovementPoints / MovementCostPerTile) + 1));
 
     /// <summary>A rough tile cost for how far an enemy gets in a day: between the native 100 and the dearer terrains, diagonals included.</summary>
     private const int MovementCostPerTile = 150;
@@ -938,7 +939,19 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     private long ArmyPower(Army army) => army.Stacks.Sum(s => Power(s.Stack));
 
     private long GuardPower(MapPosition position, bool pickup = false) =>
-        GuardsToBeat(position, pickup).Sum(m => (long)(m.Count ?? 1) * _state.Creatures.Get(m.Creature).Value);
+        GuardsToBeat(position, pickup).Sum(m => Power(SeenMonster(m)));
+
+    /// <summary>
+    /// What the player knows of armies it does not own (ADR-125): the counts its heroes' Scouting shows, the middle of each amount's range for
+    /// the rest. <paramref name="owner"/>: the army's owner, null for neutral.
+    /// </summary>
+    private Army Seen(IEnumerable<CreatureStack> stacks, MapPosition at, PlayerId? owner) =>
+        AdventureIntel.Reckoned(AdventureIntel.ScoutStacks(_state, stacks, at, owner, _state.CurrentPlayer.Id));
+
+    private Army Seen(Hero enemy) => AdventureIntel.Reckoned(AdventureIntel.ScoutHero(_state, enemy, _state.CurrentPlayer.Id).Stacks);
+
+    private CreatureStack SeenMonster(MonsterGuard monster) =>
+        Seen([new CreatureStack(monster.Creature, Math.Max(1, monster.Count ?? 1))], monster.Position, null)[0]!;
 
     /// <summary>The stacks a hero entering <paramref name="position"/> must beat: a pickup only by its Area-mode guards (ADR-065).</summary>
     private IEnumerable<MonsterGuard> GuardsToBeat(MapPosition position, bool pickup) =>
@@ -1157,9 +1170,6 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     private MapPosition? GrailSpot(PlayerId player) =>
         _state.Grail.IsFound ? null : GrailRules.Puzzle(_state, player)?.Grail;
 
-    /// <summary>A Pandora's Box's guard as one army (at most seven stacks).</summary>
-    private static Army BoxGuard(PandorasBox box) => Army.Of([.. box.Guard.Take(Army.SlotCount)]);
-
     /// <summary>
     /// What a Pandora's Box is worth to the hero, by the AI's values (ADR-100): resources at their gold value, experience 1:1, a primary stat as a
     /// training site's (750), morale and luck a buff's (150 a point), a skill 1000 a level gained, artifacts as pickups (only while the backpack has
@@ -1325,7 +1335,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     /// <summary>The neutral guards of a tile as one army, or null.</summary>
     private Army? GuardArmy(MapPosition position, bool pickup = false)
     {
-        var stacks = GuardsToBeat(position, pickup).Take(Army.SlotCount).Select(m => new CreatureStack(m.Creature, Math.Max(1, m.Count ?? 1))).ToArray();
+        var stacks = GuardsToBeat(position, pickup).Take(Army.SlotCount).Select(SeenMonster).ToArray();
         return stacks.Length == 0 ? null : Army.Of(stacks);
     }
 
@@ -1359,7 +1369,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     break;
                 case CreatureBank { IsGuarded: true } bank when visit != hero.Position && !hero.Army.IsEmpty:
                     // Worth its reward; the simulated fight later decides whether the hero can take it (the guard stays whole if it fails).
-                    var bankGuard = Army.Of([.. bank.Guard.Take(Army.SlotCount)]);
+                    var bankGuard = Seen(bank.Guard, visit, null);
                     if (Plausible(ArmyPower(bankGuard)))
                     {
                         yield return new(visit, Value(bank.Reward) + (bank.RewardArtifact is null ? 0 : 1500) + (1500 * bank.MoreArtifacts.Count), bankGuard, MaxLoss: MonsterLoss);
@@ -1368,7 +1378,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     break;
                 case PandorasBox box when visit != hero.Position && (!box.IsGuarded || !hero.Army.IsEmpty) && BoxValue(hero, box.Contents) is > 0 and var boxWorth:
                     // Weighed by its contents against its own guard, else the monsters next to it; the simulated fight later decides.
-                    var boxGuard = box.IsGuarded ? BoxGuard(box) : GuardArmy(visit);
+                    var boxGuard = box.IsGuarded ? Seen(box.Guard, visit, null) : GuardArmy(visit);
                     if (Plausible(boxGuard is null ? 0 : ArmyPower(boxGuard)))
                     {
                         yield return new(visit, boxWorth, boxGuard, MaxLoss: MonsterLoss);
@@ -1414,11 +1424,12 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     var barred = _state.ObjectsOf<BorderPost>().Any(b => b.Colour == tent.Colour && _state.Fog.IsExplored(owner, b.VisitPosition));
                     yield return new(visit, barred ? 2500 : 600, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
-                case MapGarrison mapGarrison when !OwnTeam(owner, mapGarrison.Owner) && visit != hero.Position && Plausible(ArmyPower(mapGarrison.Troops)):
-                    yield return new(visit, 1000 + (0.35 * ArmyPower(mapGarrison.Troops)) + OpensTheWay(owner, visit), mapGarrison.Troops.IsEmpty ? null : mapGarrison.Troops, MaxLoss: MonsterLoss);
+                case MapGarrison mapGarrison when !OwnTeam(owner, mapGarrison.Owner) && visit != hero.Position
+                                                  && Seen(mapGarrison.Troops.Stacks.Select(s => s.Stack), visit, mapGarrison.Owner) is var troops && Plausible(ArmyPower(troops)):
+                    yield return new(visit, 1000 + (0.35 * ArmyPower(troops)) + OpensTheWay(owner, visit), troops.IsEmpty ? null : troops, MaxLoss: MonsterLoss);
                     break;
                 case Mine mine when !OwnTeam(owner, mine.Owner):
-                    var mineGuard = mine.Guard is { } g ? new CreatureStack(g.Creature, Math.Max(1, g.Count ?? 1)) : null;
+                    var mineGuard = mine.Guard is { } g ? Seen([new CreatureStack(g.Creature, Math.Max(1, g.Count ?? 1))], visit, null)[0] : null;
                     if (mineGuard is null || Plausible(Power(mineGuard)))
                     {
                         yield return new(visit, 8 * mine.DailyYield * GoldValue(mine.Resource, 1), mineGuard is null ? null : Army.Of(mineGuard));
@@ -1426,7 +1437,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
                     break;
                 case MonsterGuard monster when !hero.Army.IsEmpty:
-                    var stack = new CreatureStack(monster.Creature, Math.Max(1, monster.Count ?? 1));
+                    var stack = SeenMonster(monster);
                     var monsterPower = Power(stack);
                     var joins = GuardService.JoinRatio(monster.Disposition) is { } ratio && power >= ratio * monsterPower && hero.Army.CanAccept(monster.Creature);
                     if (joins)
@@ -1441,7 +1452,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     break;
                 case CreatureDwelling { Guard: { } dwellingGuard } guardedDwelling when visit != hero.Position:
                     // Beat the guard to flag it (ADR-068); worth the dwelling plus the experience.
-                    var guardStack = new CreatureStack(dwellingGuard.Creature, Math.Max(1, dwellingGuard.Count ?? 1));
+                    var guardStack = Seen([new CreatureStack(dwellingGuard.Creature, Math.Max(1, dwellingGuard.Count ?? 1))], visit, null)[0]!;
                     if (Plausible(Power(guardStack) + GuardPower(visit)))
                     {
                         yield return new(visit, 1200 + (0.35 * Power(guardStack)), Army.Of(guardStack), MaxLoss: MonsterLoss);
@@ -1461,10 +1472,11 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
                     break;
                 case Town town when !OwnTeam(owner, town.Owner):
-                    var garrison = ArmyPower(town.Garrison);
+                    var defenders = AdventureIntel.Reckoned(AdventureIntel.ScoutTown(_state, town, owner).Garrison);
+                    var garrison = ArmyPower(defenders);
                     if (Plausible(garrison))
                     {
-                        yield return new(visit, 4000 + (0.3 * garrison) + (town.Owner is null ? 0 : 2000) + (town.Dwellings.Count * 500), town.Garrison.IsEmpty ? null : town.Garrison,
+                        yield return new(visit, 4000 + (0.3 * garrison) + (town.Owner is null ? 0 : 2000) + (town.Dwellings.Count * 500), defenders.IsEmpty ? null : defenders,
                             Siege: SiegeRules.SpecOf(town));
                     }
 
@@ -1516,12 +1528,13 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 continue;
             }
 
-            var theirs = ArmyPower(enemy.Army);
+            var seen = Seen(enemy);
+            var theirs = ArmyPower(seen);
             if (!hero.Army.IsEmpty && power * 10 >= theirs * 7)
             {
                 // One standing in its own town defends it behind the walls (ADR-106).
                 var home = _state.ObjectCellAt(enemy.Position) is { Object: Town town, Cell: FootprintCell.Visit } && town.Owner == enemy.Owner ? SiegeRules.SpecOf(town) : null;
-                yield return new(enemy.Position, 2000 + (0.8 * theirs), enemy.Army, enemy.Attack, enemy.Defense, Siege: home);
+                yield return new(enemy.Position, 2000 + (0.8 * theirs), seen, enemy.Attack, enemy.Defense, Siege: home);
             }
         }
     }

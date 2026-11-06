@@ -40,7 +40,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 
 | Mechanic | From | Status | Notes |
 |---|---|---|---|
-| Information by skill: seeing more of enemy armies and the map | HoMM4 Scouting, HoMM3 count words | Planned | ADR-125 |
+| Information by skill: seeing more of enemy armies and the map | HoMM4 Scouting, HoMM3 count words | Yes | ADR-125, ADR-142 |
 | Skill perks and the skill wheel | HoMM5 | Missing | Our skills have four levels and no perks; a big redesign |
 | Racial skills (Training, Gating, Counterstrike, Irresistible Magic, Avenger, Artificer, Runelore) | HoMM5 | Partly | Necromancy and Primal Fury exist |
 | Diplomacy (cheaper surrender, more creatures join) | HoMM3 | Missing | Joining by disposition exists (ADR-040) |

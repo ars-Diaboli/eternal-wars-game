@@ -733,7 +733,7 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
   `MapEventSpellBookGained`, `MapEventSpellLearned`, `MapEventWarMachineGained`.
 
 ### ADR-125: Scouting reveals information; amount words with their ranges (HERO-9, ADR-069, ADR-123, 2026-11-04)
-**Status**: accepted (2026-11-04), not built. The owner's answer to HERO-9: the proposals, and every amount word shows its range.
+**Status**: accepted (2026-11-04), built (ADR-142). The owner's answer to HERO-9: the proposals, and every amount word shows its range.
 
 - **Baseline**: every army a player does not own (other players', neutral stacks, bank guards, garrisons), in sight or remembered, shows
   an **amount word with its range** instead of the count: a few (1–4), several (5–9), a pack (10–19), lots (20–49), a horde (50–99), a
@@ -1173,3 +1173,22 @@ run. Points marked *(proposal)* are the agent's choices made while building. Rul
   **10**: 7 cells past its walls on every side. Mines, providers and dwellings keep radius 2 from their entrance. In refog mode the
   town's sight is measured the same way.
 - Games and replays now open more of the map at the start and when a town is taken; no format change.
+
+### ADR-142: Scouting reveals information, built (ADR-125, 2026-11-06)
+**Status**: implemented, core tested (`ScoutingIntelTests`); the game app's right-click not yet run in Godot.
+
+- **Core**: `AdventureIntel.ScoutHero`, `ScoutMonster`, `ScoutStacks` (guards, map garrisons), `ScoutTown` and `ScoutingAt`; `ShownStack` now
+  carries the range of its amount word (`Amount` reads "a pack (10–19)", `Estimate` the middle) and `ShownArmy.Details` (`ScoutedHero`)
+  what Scouting tells of a hero. The information spells keep their own exact queries (`ShowHero`, `Town`, `ArmiesAround` …).
+- **Where ADR-125 left a choice** *(proposal)*: a hero "sees" an army when the army's cell (any cell of a town) is within its sight circle,
+  so a town's or mine's sight shows only words; another player's map garrison counts as a garrison (Advanced), a neutral one as a guard
+  (Basic); an ally's armies are not the player's own, so they show as words too; a Scouting town view shows no buildings; the stats shown
+  include what artifacts add; a word for a remembered army under the fog is read from the army as it is now.
+- **Screens**: right-click on another player's hero or a neutral stack in sight (status line), on a town not the player's own (the intel
+  panel, titled "Scouting"); every hidden count shows its word with its range, Eavesdrop and the other spells' windows included.
+- **AI**: reads monsters, guards, bank and box guards, map garrisons, enemy town garrisons and enemy heroes' armies through the same query,
+  each hidden count as the middle of its range (a legion as 1000), for its targets, threats and simulated fights. *Not done*: it still
+  reads an enemy hero's Attack and Defense for the simulated fight whatever its Scouting.
+- **Effect**: an AI without Scouting overrates an army at the bottom of its word's range (10 footmen read as 14) and fears an equal
+  enemy; AI tests whose enemy hero only stands in give their own hero 12 footmen (`TestWorld.Steady`). Replays of games with AI players
+  may differ.

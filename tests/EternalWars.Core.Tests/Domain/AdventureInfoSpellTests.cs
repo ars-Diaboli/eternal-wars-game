@@ -203,7 +203,7 @@ public class AdventureInfoSpellTests
         var shown = AdventureIntel.ShowHero(state, hero, Red);
         Assert.True(shown.Veiled);
         Assert.Null(shown.Stacks.Single().Count);
-        Assert.Equal("a pack", shown.Stacks.Single().Amount); // 10 footmen
+        Assert.Equal("a pack (10–19)", shown.Stacks.Single().Amount); // 10 footmen
         Assert.True(shown.ArtifactsHidden);
         Assert.Equal(10, AdventureIntel.ShowHero(state, hero, Blue).Stacks.Single().Count); // its owner sees it all
         Assert.True(state.CanSee(Red, hero)); // hidden on the map only at rank III

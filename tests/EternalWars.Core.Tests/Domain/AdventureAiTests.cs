@@ -66,6 +66,7 @@ public class AdventureAiTests
     {
         var state = Create("A.......B");
         var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 3, 0);
+        Steady(state);
         var session = Start(state);
 
         Ai(session).PlayTurn();
@@ -78,6 +79,7 @@ public class AdventureAiTests
     public void ItCapturesAnUndefendedTown()
     {
         var state = TownMap(out var town);
+        Steady(state);
         var session = Start(state);
 
         Ai(session).PlayTurn();
@@ -181,6 +183,7 @@ public class AdventureAiTests
         var state = Create("A.......B", ".........", ".........", ".........");
         var dwelling = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 3, 0); // entrance (4, 1)
         dwelling.Creature = BuiltInCreatures.Footman;
+        Steady(state);
         var session = Start(state);
         state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000);
         var ai = Ai(session);
@@ -193,7 +196,7 @@ public class AdventureAiTests
         Assert.Equal(Blue, dwelling.Owner);
         ai.PlayTurn();
         Assert.Contains(session.CommandLog, c => c is RecruitAtDwellingCommand);
-        Assert.True(state.GetHero(A).Army.Stacks.Sum(s => s.Stack.Count) > 10);
+        Assert.True(state.GetHero(A).Army.Stacks.Sum(s => s.Stack.Count) > 12);
         Assert.Equal(0, ai.Refused);
     }
 
@@ -343,7 +346,8 @@ public class AdventureAiTests
     [Fact]
     public void ASecondaryHeroDefendingItsTown_LeadsTheGarrisonFromInside_AndComesOutWhenTheThreatIsGone()
     {
-        // The garrison alone cannot hold against the 100 footmen, the hero (70) and the garrison together can (ADR-112): inside, the hero leads them all.
+        // The garrison alone cannot hold against the 74 footmen (a horde, 50–99, which the AI takes for 74: ADR-125), the hero (70) and the
+        // garrison together can (ADR-112): inside, the hero leads them all.
         // The main hero (C, walled in far away) is out on the map, so the secondary one may go in: a garrison hero never retreats.
         var state = Create(
             "....................................###.", "....................................#C#.", "....................................###.",
@@ -355,7 +359,7 @@ public class AdventureAiTests
         town.Garrison.Set(0, new CreatureStack(BuiltInCreatures.Footman, 40));
         town.Garrison.Set(1, new CreatureStack(BuiltInCreatures.Wolf, 2));
         state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 70));
-        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 100));
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 74));
         state.GetHero(C).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 50));
         var session = Start(state);
         var ai = Ai(session);
@@ -386,7 +390,7 @@ public class AdventureAiTests
         town.LastBuilt = state.Date;
         town.Garrison.Set(0, new CreatureStack(BuiltInCreatures.Footman, 40));
         state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 50));
-        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 100));
+        state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 74)); // a horde (50–99), taken for 74 (ADR-125)
         var session = Start(state);
 
         Ai(session).PlayTurn();

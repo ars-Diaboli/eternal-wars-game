@@ -521,6 +521,7 @@ public class ArtifactTests
         var state = Create("A.......B");
         Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Major), 3, 0).Artifact = "ogres-club-of-havoc";
         Outfit(state, A, worn: ["rusted-blade"], backpack: ["centaurs-ax"]);
+        Steady(state);
         var session = Start(state);
         var ai = new AdventureAi(session, controlHumanSlots: true);
 

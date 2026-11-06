@@ -134,6 +134,7 @@ public class AdventureAiEventTests
     public void AHeroGoesToASeersHutWorthDoing()
     {
         var (session, hut) = Hut(20_000);
+        Steady(session.State);
 
         Ai(session).PlayTurn();
 

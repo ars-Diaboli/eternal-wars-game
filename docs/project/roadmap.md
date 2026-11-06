@@ -164,8 +164,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Score: the campaign-like check counts map events (ADR-101, ADR-131)
 
 ### Missing mechanics, the owner's picks (ADR-125, ADR-126; [missing-mechanics.md](../design/missing-mechanics.md))
-- [ ] Scouting reveals information: amount words with ranges for armies not owned, what each Scouting level shows, Veil against it,
-      the AI reads only what it sees (ADR-125)
+- [x] Scouting reveals information: amount words with ranges for armies not owned, what each Scouting level shows, Veil against it,
+      the AI reads only what it sees (ADR-125, ADR-142; the AI still reads enemy heroes' Attack and Defense)
 - [x] Map bans: heroes, artifacts, spells and skills in the map rules, read by every pool and roll; editor tab, validator warnings; map
       format bump (ADR-133)
 - [x] Random monsters by tier, random towns, hero placeholders: editor, map format, drawn at game start; the new-game screen's

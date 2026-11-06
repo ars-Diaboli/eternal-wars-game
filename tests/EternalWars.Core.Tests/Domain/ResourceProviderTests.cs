@@ -197,6 +197,7 @@ public class ResourceProviderTests
     public void TheAi_FlagsANeutralProviderNearby()
     {
         var (session, warehouse) = World(BuiltInMapObjects.WarehouseId(ResourceType.Crystal));
+        Steady(session.State);
 
         new AdventureAi(session, controlHumanSlots: true).PlayTurn();
 
