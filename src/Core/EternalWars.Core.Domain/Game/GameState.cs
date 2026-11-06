@@ -404,7 +404,8 @@ public sealed class GameState
     }
 
     /// <summary>Recomputes what a hero's artifacts add (after anything changed what it wears).</summary>
-    internal void RefreshArtifacts(Hero hero) => hero.Bonus = ArtifactBonuses.Compute(Artifacts, hero.Artifacts);
+    internal void RefreshArtifacts(Hero hero) =>
+        hero.Bonus = ArtifactBonuses.Compute(Artifacts, hero.Artifacts) with { HomeTown = ProgressionService.TownOf(this, hero) };
 
     internal void RemoveHero(Hero hero) => _heroes.Remove(hero);
 

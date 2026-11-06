@@ -192,8 +192,33 @@ public sealed class Hero(
     public SkillLevel SkillLevelOf(string skill)
     {
         var learned = Skills.Level(skill);
-        var bonus = Bonus.SkillBonus(skill) + (learned > SkillLevel.None ? Bonus.AllSkills : 0);
+        var bonus = Bonus.SkillBonus(skill) + (learned > SkillLevel.None ? Bonus.AllSkills : 0)
+            + (Bonus.BestMagicSkill != 0 && BestMagicSkill() == BuiltInSkills.Resolve(skill) ? Bonus.BestMagicSkill : 0);
         return bonus == 0 ? learned : (SkillLevel)Math.Min((int)BuiltInSkills.Get(skill).MaxLevel, (int)learned + bonus);
+    }
+
+    /// <summary>
+    /// The hero's best magic skill (the Crown of the Waning Eye, ADR-147): the "magic" skill (spell levels) of the school whose three skills have
+    /// the most learned levels; on a tie, the first school in the ring order (<see cref="Towns.TavernRules.Ring"/>) from the hero's own town,
+    /// or from the ring's first town for a hero of a town without a school. Null while the hero has no school started.
+    /// </summary>
+    public string? BestMagicSkill()
+    {
+        var ring = Towns.TavernRules.Ring;
+        var start = Math.Max(0, ring.ToList().IndexOf(Bonus.HomeTown ?? string.Empty));
+        string? best = null;
+        var most = 0;
+        for (var i = 0; i < ring.Count; i++)
+        {
+            var school = ring[(start + i) % ring.Count];
+            var points = BuiltInSkills.SkillsOf(BuiltInSkills.SchoolGroup(school)).Sum(s => (int)Skills.Level(s.Id));
+            if (points > most)
+            {
+                (best, most) = (school, points);
+            }
+        }
+
+        return best is null ? null : Magic.MagicRules.MagicSkill(best);
     }
 
     /// <summary>Tactics skill (<see cref="BuiltInSkills.Tactics"/>): lets the hero pick the battlefield width (ADR-033).</summary>

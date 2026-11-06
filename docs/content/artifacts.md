@@ -10,10 +10,9 @@ keep their names where HoMM has nothing close and take the HoMM name where it ha
 those the owner chose (CONT-6 b); the items and secondary effects that needed others are dropped (list at the end). The Unwritten Codex and
 the Recanter's Cloak are Relics; the other strong items are **assembled relics** (CONT-6 c), HoMM3's combination artifacts. **The table still
 holds this re-draft** since ADR-111 (101 artifacts, 5 sets): the table is the truth for numbers again (see "Editing artifacts" in
-[development.md](../technical/development.md)). Every number is a draft. The assembled relics are built (ADR-121: rows with a `pieces` column). Still missing: the Crown of the Waning
-Eye's +1 best magic skill.
+[development.md](../technical/development.md)). Every number is a draft. The assembled relics are built (ADR-121: rows with a `pieces` column).
 
-**Status column** (the draft's plan; since ADR-111 and ADR-121 every 🆕 and ⏳ row is built except the Crown's skill level): ✅ an
+**Status column** (the draft's plan; since ADR-111, ADR-121 and ADR-147 every 🆕 and ⏳ row is built): ✅ an
 effect kind that existed; 🆕 a new effect kind; ⏳ needed magic (Phase 5).
 Where a row has both, the ✅ part is applied first. **Was** names the first re-draft's (ADR-099) name or id where it changed.
 
@@ -106,7 +105,7 @@ Made by masters, bound by oaths, and fought over in every age.
 
 | Name (id) | Slot | Effect | Status | Flavour |
 |---|---|---|---|---|
-| Crown of the Waning Eye (`crown-of-the-waning-eye`) | Head | +3 Knowledge, +1 level to the hero's best magic skill (the school with the most skill points; on a tie, the first in the ring order from the hero's town) | ✅ / ⏳ | forged when the sun first dimmed; the wearer sees the dark earlier than others |
+| Crown of the Waning Eye (`crown-of-the-waning-eye`) | Head | +3 Knowledge, +1 level to the hero's best magic skill (the "magic" skill of the school with the most learned levels, up to Master; on a tie, the first school in the ring order from the hero's town; nothing without a school) | ✅ / ⏳ | forged when the sun first dimmed; the wearer sees the dark earlier than others |
 | Helm of Chaos (`helm-of-chaos`) | Head | +3 Knowledge | ✅ | Inferno iron; it thinks along with the wearer, and disagrees |
 | Hunter's Mark (`hunters-mark`) | Neck | +2 luck | ✅ | a bone token with a hole in it; the bearer's arrows find whatever hid |
 | Pendant of Courage (`pendant-of-courage`) | Neck | +2 morale, +2 luck | ✅ | holds a finger bone of a saint, or of whoever was nearest |

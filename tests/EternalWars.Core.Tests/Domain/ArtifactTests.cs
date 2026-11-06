@@ -12,9 +12,11 @@ using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -62,6 +64,7 @@ public class ArtifactTests
     [InlineData("native-terrain forest-floor", ArtifactEffectKind.NativeTerrain, 1, "ForestFloor")]
     [InlineData("skill machines.ballistics 1", ArtifactEffectKind.Skill, 1, "machines.ballistics")]
     [InlineData("all-skills 1", ArtifactEffectKind.AllSkills, 1, null)]
+    [InlineData("best-magic-skill 1", ArtifactEffectKind.BestMagicSkill, 1, null)]
     [InlineData("sight 2", ArtifactEffectKind.Sight, 2, null)]
     [InlineData("immune mind", ArtifactEffectKind.Immune, 1, "mind")]
     [InlineData("element-power fire 25", ArtifactEffectKind.ElementPower, 25, "fire")]
@@ -143,6 +146,53 @@ public class ArtifactTests
         Assert.Equal(SkillLevel.None, hero.SkillLevelOf(BuiltInSkills.Melee)); // not learned: all-skills does not start it
         hero.Skills.Set(BuiltInSkills.Archery, SkillLevel.Expert);
         Assert.Equal(SkillLevel.Expert, hero.SkillLevelOf(BuiltInSkills.Archery)); // Archery stops at Expert
+    }
+
+    [Fact]
+    public void TheCrownOfTheWaningEye_RaisesTheMagicSkillOfTheSchoolWithTheMostLevels()
+    {
+        var state = Create("A.B");
+        var hero = state.GetHero(A);
+        hero.Skills.Set(MagicRules.MagicSkill(TownIds.Haven), SkillLevel.Basic);
+        hero.Skills.Set(MagicRules.MagicSkill(TownIds.Necropolis), SkillLevel.Basic);
+        hero.Skills.Set(MagicRules.MasterySkill(TownIds.Necropolis), SkillLevel.Basic); // Death: 2 levels, Light: 1
+        Outfit(state, A, worn: ["crown-of-the-waning-eye"]);
+
+        Assert.Equal(MagicRules.MagicSkill(TownIds.Necropolis), hero.BestMagicSkill());
+        Assert.Equal(SkillLevel.Advanced, hero.SkillLevelOf(MagicRules.MagicSkill(TownIds.Necropolis)));
+        Assert.Equal(SkillLevel.Basic, hero.SkillLevelOf(MagicRules.MagicSkill(TownIds.Haven)));
+        Assert.Equal(SkillLevel.Basic, hero.SkillLevelOf(MagicRules.MasterySkill(TownIds.Necropolis))); // only the "magic" skill
+        Assert.Equal(3, hero.Bonus.Knowledge);
+    }
+
+    [Fact]
+    public void TheCrownOfTheWaningEye_BreaksATieByTheRingOrderFromTheHerosTown()
+    {
+        var state = Create("A.B");
+        var hero = state.GetHero(A);
+        hero.Skills.Set(MagicRules.MagicSkill(TownIds.Academy), SkillLevel.Basic);
+        hero.Skills.Set(MagicRules.MagicSkill(TownIds.Inferno), SkillLevel.Basic);
+        Outfit(state, A, worn: ["crown-of-the-waning-eye"]);
+        Assert.Equal(MagicRules.MagicSkill(TownIds.Academy), hero.BestMagicSkill()); // no town: the ring from Sylvan reaches Academy first
+
+        hero.PreferredCreature = "necropolis.skeleton"; // a Necropolis hero: Necropolis, Inferno, … Academy
+        state.RefreshArtifacts(hero);
+        Assert.Equal(MagicRules.MagicSkill(TownIds.Inferno), hero.BestMagicSkill());
+        Assert.Equal(SkillLevel.Advanced, hero.SkillLevelOf(MagicRules.MagicSkill(TownIds.Inferno)));
+    }
+
+    [Fact]
+    public void TheCrownOfTheWaningEye_DoesNothingWithoutASchool_AndStopsAtMaster()
+    {
+        var state = Create("A.B");
+        var hero = state.GetHero(A);
+        hero.Skills.Set(BuiltInSkills.Armor, SkillLevel.Expert);
+        Outfit(state, A, worn: ["crown-of-the-waning-eye"]);
+        Assert.Null(hero.BestMagicSkill());
+        Assert.All(BuiltInSkills.Schools.Keys, school => Assert.Equal(SkillLevel.None, hero.SkillLevelOf(MagicRules.MagicSkill(school))));
+
+        hero.Skills.Set(MagicRules.MagicSkill(TownIds.Haven), SkillLevel.Master);
+        Assert.Equal(SkillLevel.Master, hero.SkillLevelOf(MagicRules.MagicSkill(TownIds.Haven)));
     }
 
     // Effects in the rules ---------------------------------------------------------------------------------

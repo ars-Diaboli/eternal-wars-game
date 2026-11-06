@@ -28,7 +28,7 @@ ring-of-vitality,Ring of Vitality,Ring,Minor,,creature-health 5,"a green band; t
 collar-of-conjuring,Collar of Conjuring,Neck,Minor,,spell-power 1,"an apprentice's collar, worn until the spells stop slipping. A piece of the Ring of the Magi"
 ring-of-conjuring,Ring of Conjuring,Ring,Minor,,spell-power 1,"Academy brass, engraved on the inside with a proof nobody has finished. A piece of the Ring of the Magi"
 cape-of-conjuring,Cape of Conjuring,Cloak,Minor,,spell-power 1,the lining is a star chart of a sky Vael no longer has. A piece of the Ring of the Magi
-crown-of-the-waning-eye,Crown of the Waning Eye,Head,Major,,knowledge 3,"forged when the sun first dimmed; the wearer sees the dark earlier than others. Not yet: +1 level to the hero's best magic skill"
+crown-of-the-waning-eye,Crown of the Waning Eye,Head,Major,,knowledge 3; best-magic-skill 1,forged when the sun first dimmed; the wearer sees the dark earlier than others
 helm-of-chaos,Helm of Chaos,Head,Major,,knowledge 3,"Inferno iron; it thinks along with the wearer, and disagrees"
 hunters-mark,Hunter's Mark,Neck,Major,unbound-trophies,luck 2,a bone token with a hole in it; the bearer's arrows find whatever hid
 pendant-of-courage,Pendant of Courage,Neck,Major,,morale 2; luck 2,"holds a finger bone of a saint, or of whoever was nearest"

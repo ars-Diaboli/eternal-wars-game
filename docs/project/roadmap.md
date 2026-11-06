@@ -84,7 +84,7 @@ ADR-112), tavern screen (ADR-114), Thieves' Guild (ADR-079).
 Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Built: artifact tables, paper doll and backpack, effects, pickups and loot, AI use (ADR-061, ADR-068); the re-draft (101 artifacts,
       ADR-099, ADR-100, ADR-111); assembled relics (ADR-108, ADR-121); editor rows (ADR-114)
-- [ ] The Crown of the Waning Eye's +1 to the best magic skill (the effect is "Not yet")
+- [x] The Crown of the Waning Eye's +1 to the best magic skill (ADR-147)
 - [ ] Artifact exchange screen between heroes (the command exists) and drag and drop on the paper doll
 
 ### Game flow
