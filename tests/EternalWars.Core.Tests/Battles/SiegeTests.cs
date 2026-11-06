@@ -59,10 +59,10 @@ public class SiegeTests
         var state = Create(Rows);
         var town = AddTown(state, TownIds.Haven, 0, 0, Red);
 
-        Assert.Equal(new SiegeSpec(1, 3), SiegeRules.SpecOf(town)); // town hall, fort and tavern
+        Assert.Equal(new SiegeSpec(1, 3, TownIds.Haven), SiegeRules.SpecOf(town)); // town hall, fort and tavern
         town.SetLevel(BuiltInBuildings.Fort, 2);
         town.SetDwelling(BuiltInCreatures.Footman, 2);
-        Assert.Equal(new SiegeSpec(2, 6), SiegeRules.SpecOf(town));
+        Assert.Equal(new SiegeSpec(2, 6, TownIds.Haven), SiegeRules.SpecOf(town));
 
         town.SetLevel(BuiltInBuildings.Fort, 0);
         Assert.Null(SiegeRules.SpecOf(town));
@@ -249,6 +249,7 @@ public class SiegeTests
         var battle = Assert.IsType<BattleState>(session.State.Battle);
         Assert.Equal((BattleState.SiegeWidth, 1), (battle.Width, battle.Siege!.FortLevel));
         Assert.Equal(5, Assert.Single(started).Siege!.Structures.Count);
+        Assert.Equal(TownIds.Haven, started[0].Siege!.Town); // the field takes the town's look (ADR-144)
         var ballista = Assert.Single(battle.Units, u => u.Machine == WarMachineKind.Ballista); // no Ballistics needed in a siege
         Assert.Equal(Attacker, ballista.Side);
 

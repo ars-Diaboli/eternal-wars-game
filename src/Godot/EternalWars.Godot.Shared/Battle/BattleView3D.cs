@@ -1024,15 +1024,40 @@ public partial class BattleView3D : Node3D
         };
     }
 
-    /// <summary>A siege's fortifications (ADR-106): the moat as water in front of the walls, the wall sections and gate on the wall line, the keep and towers beside the field.</summary>
+    /// <summary>
+    /// A siege's fortifications (ADR-106) in the town's own look (ADR-144, <see cref="SiegeLook"/>): the moat in front of the walls, the wall
+    /// sections and gate on the wall line, the keep and towers beside the field, the yard behind the walls in the town's ground, and a few of the
+    /// town's houses beyond the defenders' edge.
+    /// </summary>
     private void BuildSiege(SiegeLayout layout)
     {
+        var look = SiegeLook.Of(layout.Town);
         var water = new StandardMaterial3D
         {
-            AlbedoColor = new Color(0.18f, 0.32f, 0.55f, 0.8f),
+            AlbedoColor = look.Moat,
             Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            Roughness = 0.2f,
+            Roughness = look.MoatGlows ? 0.8f : 0.2f,
         };
+        if (look.MoatGlows)
+        {
+            water.EmissionEnabled = true;
+            water.Emission = new Color(look.Moat.R, look.Moat.G, look.Moat.B);
+            water.EmissionEnergyMultiplier = 0.7f;
+        }
+
+        var yard = new CellRect(SiegeRules.WallX + 1, 0, _width - SiegeRules.WallX - 1, BattleState.Height);
+        _field.AddChild(new MeshInstance3D
+        {
+            Name = "Yard",
+            Mesh = new PlaneMesh
+            {
+                Size = new Vector2(yard.Width, yard.Height) * BattleSpace.CellSize,
+                Material = new StandardMaterial3D { AlbedoColor = look.Yard with { A = 0.45f }, Transparency = BaseMaterial3D.TransparencyEnum.Alpha, Roughness = 1f },
+            },
+            Position = BattleSpace.Center(yard) + (Vector3.Up * 0.006f),
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        });
+
         foreach (var moat in layout.Moat)
         {
             _field.AddChild(new MeshInstance3D
@@ -1046,7 +1071,7 @@ public partial class BattleView3D : Node3D
 
         foreach (var structure in layout.Structures)
         {
-            var node = StructureNode(structure);
+            var node = StructureNode(structure, look);
             _field.AddChild(node);
             _structures[structure.Structure] = (structure.Kind, structure.Rect, node);
             if (structure.Health == 0)
@@ -1054,32 +1079,186 @@ public partial class BattleView3D : Node3D
                 Ruin(node);
             }
         }
+
+        // The town beyond the defenders' edge: houses round the keep, more behind a stronger fort.
+        var houses = new (float X, float Y, float Width, float Depth, float Height)[]
+        {
+            (_width + 3.5f, 3f, 2.5f, 2f, 0.8f), (_width + 3f, 19.5f, 2f, 2.5f, 0.7f), (_width + 6.5f, 7f, 3f, 2.5f, 1.0f),
+            (_width + 6f, 16.5f, 2.5f, 3f, 0.9f), (_width + 7.5f, 2.5f, 2f, 2f, 0.6f), (_width + 8f, 12f, 3f, 3f, 1.2f),
+            (_width + 7.5f, 21f, 2.5f, 2f, 0.7f), (_width + 4f, 8f, 2f, 1.5f, 0.6f), (_width + 4f, 15.5f, 1.5f, 2f, 0.6f),
+        };
+        foreach (var (x, y, width, depth, height) in houses.Take(5 + (2 * layout.FortLevel)))
+        {
+            _field.AddChild(House(look, BattleSpace.ToWorld(x, y), width * BattleSpace.CellSize, depth * BattleSpace.CellSize, height));
+        }
     }
 
-    /// <summary>Stone blocks for the walls and the keep, a wooden gate, round towers.</summary>
-    private static MeshInstance3D StructureNode(SiegeStructureInfo structure)
+    /// <summary>Walls and keep as blocks with battlements, the gate, round towers; roofs and colours from the town's look (ADR-144).</summary>
+    private static MeshInstance3D StructureNode(SiegeStructureInfo structure, SiegeLook look)
     {
         var width = structure.Rect.Width * BattleSpace.CellSize;
         var depth = structure.Rect.Height * BattleSpace.CellSize;
         var (mesh, height, color) = structure.Kind switch
         {
-            SiegeStructureKind.Gate => ((PrimitiveMesh)new BoxMesh { Size = new Vector3(width, 0.9f, depth) }, 0.9f, new Color(0.45f, 0.30f, 0.16f)),
-            SiegeStructureKind.Keep => (new BoxMesh { Size = new Vector3(width, 1.8f, depth) }, 1.8f, new Color(0.55f, 0.53f, 0.50f)),
-            SiegeStructureKind.Tower => (new CylinderMesh { TopRadius = depth * 0.45f, BottomRadius = depth * 0.5f, Height = 1.5f }, 1.5f, new Color(0.58f, 0.56f, 0.52f)),
-            _ => (new BoxMesh { Size = new Vector3(width, 1.1f, depth) }, 1.1f, new Color(0.62f, 0.60f, 0.56f)),
+            SiegeStructureKind.Gate => ((PrimitiveMesh)new BoxMesh { Size = new Vector3(width, 0.9f, depth) }, 0.9f, look.Gate),
+            SiegeStructureKind.Keep => (new BoxMesh { Size = new Vector3(width, 1.8f, depth) }, 1.8f, look.Stone.Darkened(0.1f)),
+            SiegeStructureKind.Tower => (new CylinderMesh { TopRadius = depth * 0.45f, BottomRadius = depth * 0.5f, Height = 1.5f }, 1.5f, look.Stone.Darkened(0.05f)),
+            _ => (new BoxMesh { Size = new Vector3(width, 1.1f, depth) }, 1.1f, look.Stone),
         };
-        mesh.Material = new StandardMaterial3D { AlbedoColor = color, Roughness = 1f };
-        return new MeshInstance3D
+        mesh.Material = Material(color);
+        var node = new MeshInstance3D
         {
             Name = $"{structure.Kind}_{structure.Structure}",
             Mesh = mesh,
             Position = BattleSpace.Center(structure.Rect) + (Vector3.Up * height / 2),
         };
+        switch (structure.Kind)
+        {
+            case SiegeStructureKind.Wall:
+                Battlements(node, look.Stone, 0, depth, height / 2);
+                break;
+            case SiegeStructureKind.Gate:
+                // The gatehouse's lintel in the town's stone over the gate.
+                node.AddChild(new MeshInstance3D
+                {
+                    Name = "Lintel",
+                    Mesh = new BoxMesh { Size = new Vector3(width * 1.2f, 0.2f, depth), Material = Material(look.Stone) },
+                    Position = Vector3.Up * ((height / 2) + 0.1f),
+                });
+                break;
+            default:
+                Roof(node, look, width, depth, height / 2);
+                break;
+        }
+
+        return node;
     }
 
-    /// <summary>A destroyed structure: a low, dark heap of rubble where it stood.</summary>
+    /// <summary>One of the town's houses behind the walls: a block of its stone under its roof.</summary>
+    private static MeshInstance3D House(SiegeLook look, Vector3 at, float width, float depth, float height)
+    {
+        var node = new MeshInstance3D
+        {
+            Name = "House",
+            Mesh = new BoxMesh { Size = new Vector3(width, height, depth), Material = Material(look.Stone.Lerp(look.Yard, 0.35f)) },
+            Position = at + (Vector3.Up * height / 2),
+        };
+        Roof(node, look, width, depth, height / 2);
+        return node;
+    }
+
+    /// <summary>The town's roof on a block or tower <paramref name="width"/> × <paramref name="depth"/> whose top is <paramref name="top"/> above its centre.</summary>
+    private static void Roof(Node3D parent, SiegeLook look, float width, float depth, float top)
+    {
+        var size = Mathf.Max(width, depth);
+        var stretch = new Vector3(width / size, 1, depth / size);
+        switch (look.Roofs)
+        {
+            case RoofShape.Cone:
+            case RoofShape.Pyramid:
+            {
+                // A pyramid is a four-sided cone turned so its base is square to the block; the holder stretches either to the block's shape.
+                var pyramid = look.Roofs == RoofShape.Pyramid;
+                var radius = pyramid ? size * 0.55f * Mathf.Sqrt2 : size * 0.56f;
+                var height = size * 0.7f;
+                var holder = new Node3D { Name = "Roof", Position = Vector3.Up * (top + (height / 2)), Scale = stretch };
+                holder.AddChild(new MeshInstance3D
+                {
+                    Mesh = new CylinderMesh { TopRadius = 0, BottomRadius = radius, Height = height, RadialSegments = pyramid ? 4 : 16, Rings = 1, Material = Material(look.Roof) },
+                    RotationDegrees = pyramid ? new Vector3(0, 45, 0) : Vector3.Zero,
+                });
+                parent.AddChild(holder);
+                break;
+            }
+
+            case RoofShape.Dome:
+            {
+                // A sphere sunk to its middle in the block below.
+                var radius = size * 0.5f;
+                var holder = new Node3D { Name = "Roof", Position = Vector3.Up * top, Scale = stretch };
+                holder.AddChild(new MeshInstance3D { Mesh = new SphereMesh { Radius = radius, Height = radius * 2, Material = Material(look.Roof) } });
+                parent.AddChild(holder);
+                break;
+            }
+
+            case RoofShape.Spikes:
+            {
+                var spikes = new Node3D { Name = "Roof", Position = Vector3.Up * top };
+                var material = Material(look.Roof);
+                foreach (var (x, z, height) in new[] { (-0.35f, -0.35f, 0.35f), (0.35f, -0.35f, 0.35f), (-0.35f, 0.35f, 0.35f), (0.35f, 0.35f, 0.35f), (0f, 0f, 0.6f) })
+                {
+                    spikes.AddChild(new MeshInstance3D
+                    {
+                        Mesh = new CylinderMesh { TopRadius = 0, BottomRadius = size * 0.07f, Height = height * size, RadialSegments = 6, Rings = 1, Material = material },
+                        Position = new Vector3(x * width, height * size / 2, z * depth),
+                    });
+                }
+
+                parent.AddChild(spikes);
+                break;
+            }
+
+            default:
+                Battlements(parent, look.Roof, width, depth, top);
+                break;
+        }
+    }
+
+    /// <summary>Merlons along the top: round the edge of a block, or in one line along a wall (<paramref name="width"/> 0).</summary>
+    private static void Battlements(Node3D parent, Color color, float width, float depth, float top)
+    {
+        const float Merlon = 0.12f;
+        var material = Material(color);
+        var points = new List<Vector2>();
+        var along = Mathf.Max(1, Mathf.FloorToInt(depth / (Merlon * 2)));
+        for (var i = 0; i < along; i++)
+        {
+            var z = -depth / 2 + (Merlon * 1.5f) + (i * (depth - (Merlon * 3)) / Mathf.Max(1, along - 1));
+            if (width == 0)
+            {
+                points.Add(new Vector2(0, z));
+            }
+            else
+            {
+                points.Add(new Vector2(-width / 2 + (Merlon / 2), z));
+                points.Add(new Vector2(width / 2 - (Merlon / 2), z));
+            }
+        }
+
+        if (width > 0)
+        {
+            var across = Mathf.Max(0, Mathf.FloorToInt(width / (Merlon * 2)) - 2);
+            for (var i = 1; i <= across; i++)
+            {
+                var x = -width / 2 + (i * width / (across + 1));
+                points.Add(new Vector2(x, -depth / 2 + (Merlon / 2)));
+                points.Add(new Vector2(x, depth / 2 - (Merlon / 2)));
+            }
+        }
+
+        var battlements = new Node3D { Name = "Battlements", Position = Vector3.Up * (top + (Merlon / 2)) };
+        foreach (var point in points)
+        {
+            battlements.AddChild(new MeshInstance3D
+            {
+                Mesh = new BoxMesh { Size = Vector3.One * Merlon, Material = material },
+                Position = new Vector3(point.X, 0, point.Y),
+            });
+        }
+
+        parent.AddChild(battlements);
+    }
+
+    private static StandardMaterial3D Material(Color color) => new() { AlbedoColor = color, Roughness = 1f };
+
+    /// <summary>A destroyed structure: a low, dark heap of rubble where it stood; its roof and battlements are gone.</summary>
     private static void Ruin(MeshInstance3D node)
     {
+        foreach (var child in node.GetChildren().OfType<Node3D>())
+        {
+            child.Visible = false;
+        }
+
         var height = node.GetAabb().Size.Y;
         node.Scale = new Vector3(1, 0.2f, 1);
         node.Position = node.Position with { Y = BattleSpace.Origin.Y + (height * 0.1f) };

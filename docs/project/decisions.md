@@ -230,7 +230,7 @@ nothing; numbers stay placeholders.
   breach or the broken gate, and while the walls hold close up to the moat without entering it; the AI's engine always fires at the walls
   first.
 - **Not built**: one defending shooting stack in the keep (ADR-106 g); Earthquake (with magic); a Godot run and a smoke scenario for the
-  siege scene; the town's own look on the siege field.
+  siege scene; the town's own look on the siege field (built, ADR-144).
 
 ### ADR-110: Magic, first slice: spell table, guilds, spell books, casting in battle (ADR-047, ADR-071, ADR-072, ADR-106, 2026-10-30)
 **Status**: accepted (2026-10-30), built. The first Phase 5 magic slice: rank I only, numbers placeholders. Points marked *(assumed)* are the
@@ -1212,3 +1212,17 @@ agent's choices.
 - **AI** *(proposal for "every stack it does not need")*: in each army of its town with the Transformer it turns all living stacks into
   undead when the army is already mostly undead by worth (creature value × count), elsewhere only those whose undead are worth at least as
   much; a creature without a class becomes the more valuable line; it never swaps lines. It builds both buildings after the unique building.
+
+### ADR-144: The town's own look on the siege field (ADR-106, ADR-109, 2026-11-06)
+**Status**: implemented; seen in Godot (Haven, Academy, Necropolis, Inferno sieges from the siege smoke map). Shapes and colours are the
+agent's placeholders until the town models (Phase 5 presentation).
+
+- **Core**: `SiegeSpec` carries the town type (`SiegeRules.SpecOf` sets it; estimates may leave it null), and `BattleStarted`'s
+  `SiegeLayout.Town` passes it to the views. It changes no rule.
+- **Look** (`SiegeLook` in Godot.Shared, one row per town type, a grey default for an unknown one): the colour of the stone (walls, keep,
+  towers), the gate, the roofs and their shape (Haven, Sylvan, Swamp cones; Academy, Conflux domes; Dungeon, Dragon Utopia pyramids;
+  Necropolis, Inferno spikes; Stronghold battlements on a log palisade), the moat (Inferno lava and Conflux's shimmer glow) and the yard
+  behind the walls, tinted over the battle terrain.
+- **3D field**: walls carry battlements, the gate a lintel of the town's stone, keep and towers the town's roof; a fallen structure loses its
+  roof with the rubble. Beyond the defenders' edge stand 7, 9 or 9 of the town's houses (Fort, Citadel, Castle) under the same roofs. The 2D
+  board draws walls, gate and moat in the town's colours.

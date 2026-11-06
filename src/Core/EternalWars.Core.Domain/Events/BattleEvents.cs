@@ -13,11 +13,14 @@ public sealed record BattleUnitInfo(int Unit, BattleSide Side, string Creature, 
 /// <summary>A siege structure as the battle starts (ADR-106).</summary>
 public sealed record SiegeStructureInfo(int Structure, SiegeStructureKind Kind, CellRect Rect, int Health);
 
-/// <summary>A siege's fortifications as the battle starts: the town's fort level, its structures and the moat's cells (ADR-106).</summary>
-public sealed record SiegeLayout(int FortLevel, IReadOnlyList<SiegeStructureInfo> Structures, IReadOnlyList<CellRect> Moat)
+/// <summary>
+/// A siege's fortifications as the battle starts: the town's fort level, its structures and the moat's cells (ADR-106), and the town type whose
+/// look they take (ADR-144; null when unknown).
+/// </summary>
+public sealed record SiegeLayout(int FortLevel, IReadOnlyList<SiegeStructureInfo> Structures, IReadOnlyList<CellRect> Moat, string? Town = null)
 {
     public static SiegeLayout Of(SiegeState siege) =>
-        new(siege.FortLevel, siege.Structures.Select(s => new SiegeStructureInfo(s.Id, s.Kind, s.Rect, s.Health)).ToList(), siege.Moat);
+        new(siege.FortLevel, siege.Structures.Select(s => new SiegeStructureInfo(s.Id, s.Kind, s.Rect, s.Health)).ToList(), siege.Moat, siege.Spec.Town);
 }
 
 /// <summary>
