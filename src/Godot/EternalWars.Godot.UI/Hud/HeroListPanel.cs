@@ -25,6 +25,9 @@ public partial class HeroListPanel : VBoxContainer
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMovementRestored>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<HeroMovementGained>(session.Events, _ => Refresh()); // Stables, Rally Flag
+        this.SubscribeWhileInTree<HoleDug>(session.Events, _ => Refresh()); // digging takes the day's movement
+        this.SubscribeWhileInTree<SphinxAnswered>(session.Events, _ => Refresh()); // a wrong answer too
         this.SubscribeWhileInTree<HeroDefeated>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
     }

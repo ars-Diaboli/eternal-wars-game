@@ -1,0 +1,266 @@
+{
+ "formatVersion": 37,
+ "name": "Map sites",
+ "width": 40,
+ "height": 8,
+ "terrain": [
+  [
+   "gggggggggggggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggggggggggggg"
+  ]
+ ],
+ "players": [
+  {
+   "name": "Blue",
+   "isHuman": true
+  },
+  {
+   "name": "Red",
+   "isHuman": true
+  }
+ ],
+ "heroes": [
+  {
+   "id": 1,
+   "name": "Ulric",
+   "owner": 0,
+   "x": 2,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.ansel"
+  },
+  {
+   "id": 2,
+   "name": "Wenda",
+   "owner": 0,
+   "x": 6,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.aldric"
+  },
+  {
+   "id": 3,
+   "name": "Lior",
+   "owner": 0,
+   "x": 10,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.maren"
+  },
+  {
+   "id": 4,
+   "name": "Pella",
+   "owner": 0,
+   "x": 13,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.ilse"
+  },
+  {
+   "id": 5,
+   "name": "Hagan",
+   "owner": 0,
+   "x": 17,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.corwin"
+  },
+  {
+   "id": 6,
+   "name": "Sefra",
+   "owner": 0,
+   "x": 21,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.matthias"
+  },
+  {
+   "id": 7,
+   "name": "Mortis",
+   "owner": 0,
+   "x": 25,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "necropolis.skeleton",
+     "count": 20
+    },
+    {
+     "slot": 1,
+     "creature": "necropolis.ghoul",
+     "count": 5
+    }
+   ],
+   "type": "necropolis.morthal"
+  },
+  {
+   "id": 8,
+   "name": "Bram",
+   "owner": 0,
+   "x": 29,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.brenna"
+  },
+  {
+   "id": 9,
+   "name": "Corin",
+   "owner": 1,
+   "x": 33,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.rowena"
+  },
+  {
+   "id": 10,
+   "name": "Tamsin",
+   "owner": 1,
+   "x": 37,
+   "y": 4,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 20
+    }
+   ],
+   "type": "haven.edric"
+  }
+ ],
+ "objects": [
+  {
+   "kind": "skillSchool",
+   "id": 1,
+   "definition": "university",
+   "x": 1,
+   "y": 2
+  },
+  {
+   "kind": "skillSchool",
+   "id": 2,
+   "definition": "war-academy",
+   "x": 5,
+   "y": 2
+  },
+  {
+   "kind": "training",
+   "id": 3,
+   "definition": "training.arena",
+   "x": 9,
+   "y": 2
+  },
+  {
+   "kind": "pandorasBox",
+   "id": 4,
+   "definition": "pandoras-box",
+   "x": 13,
+   "y": 3,
+   "message": "An old box hums with power.",
+   "resources": {
+    "Gold": 1000
+   },
+   "experience": 500
+  },
+  {
+   "kind": "witchHut",
+   "id": 5,
+   "definition": "witch-hut",
+   "x": 16,
+   "y": 2
+  },
+  {
+   "kind": "sphinx",
+   "id": 6,
+   "definition": "sphinx",
+   "x": 20,
+   "y": 2,
+   "question": "What runs but never walks?",
+   "answer": "A river",
+   "wrong1": "A cave",
+   "wrong2": "A well"
+  },
+  {
+   "kind": "altar",
+   "id": 7,
+   "definition": "sacrificial-altar",
+   "x": 24,
+   "y": 2
+  },
+  {
+   "kind": "artifactMerchant",
+   "id": 8,
+   "definition": "artifact-merchant",
+   "x": 28,
+   "y": 2
+  },
+  {
+   "kind": "refugeeCamp",
+   "id": 9,
+   "definition": "refugee-camp",
+   "x": 32,
+   "y": 2
+  },
+  {
+   "kind": "cartographer",
+   "id": 10,
+   "definition": "cartographer.surface",
+   "x": 36,
+   "y": 2
+  }
+ ]
+}

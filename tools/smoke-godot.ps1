@@ -32,6 +32,12 @@ $caravanMap = Join-Path $PSScriptRoot 'smoke/caravan.ewmap.json'
 $questsMap = Join-Path $PSScriptRoot 'smoke/quests.ewmap.json'
 $turnStartMap = Join-Path $PSScriptRoot 'smoke/turn-start.ewmap.json'
 $placeholdersMap = Join-Path $PSScriptRoot 'smoke/placeholders.ewmap.json'
+$uniqueMap = Join-Path $PSScriptRoot 'smoke/unique-buildings.ewmap.json'
+$sitesMap = Join-Path $PSScriptRoot 'smoke/sites.ewmap.json'
+$grailMap = Join-Path $PSScriptRoot 'smoke/grail.ewmap.json'
+$magicMap = Join-Path $PSScriptRoot 'smoke/magic.ewmap.json'
+$necromancyMap = Join-Path $PSScriptRoot 'smoke/necromancy.ewmap.json'
+$siegeMagicMap = Join-Path $PSScriptRoot 'smoke/siege-magic.ewmap.json'
 # A map generated from the v7 connection options (ADR-112): garrison, border guard and gate with keymasters, portal, optional connection.
 New-Item -ItemType Directory -Force $Out | Out-Null
 $connectionsMap = Join-Path (Resolve-Path $Out) 'connections.ewmap.json'
@@ -138,6 +144,53 @@ $scenarios = @(
     # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' }
+    # The scenarios below find buttons by their text (press:) rather than by pixel.
+    # Unique buildings (ADR-138, ADR-143): Orrin enters the Necropolis town, ticks a garrison and a hero stack for the Undead Transformer and
+    # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up), Gareth the Haven town (Stables: a notice).
+    @{ Name = 'game-unique-buildings'; App = 'EternalWars.Game'; Frames = 64; Map = $uniqueMap
+       Input = '3:key:Enter;10:key:Up;20:press:Garrison: 12 Pikeman;24:press:Hero: 20 Footman;30:press:Transform;36:key:Escape;40:press:Ilya;44:key:Up;56:press:→ Basic;60:key:Escape' },
+    # Stables and the Marketplace screen (ADR-067): Gareth enters the Haven town, then the HUD's Marketplace button.
+    @{ Name = 'game-stables-market'; App = 'EternalWars.Game'; Frames = 34; Map = $uniqueMap
+       Input = '3:key:Enter;8:press:Gareth;12:key:Up;24:key:Escape;26:key:Escape;28:press:Marketplace' },
+    # Map sites (ADR-079, ADR-080, ADR-082, ADR-105, ADR-139): each hero steps north onto its site: the University's lessons, the War
+    # Academy's, the Arena's choice, Pandora's Box, the Witch Hut, the Sphinx (the map's riddle, answered wrong: a right answer's 5000 experience would bring level-ups), the Sacrificial Altar, the Artifact Merchant.
+    @{ Name = 'game-map-sites'; App = 'EternalWars.Game'; Frames = 160; Map = $sitesMap
+       Input = '3:key:Enter;8:press:Ulric;12:key:Up;24:key:Escape;28:press:Wenda;32:key:Up;44:key:Escape;48:press:Lior;52:key:Up;62:press:+2 Attack;68:press:Pella;72:key:Up;82:press:Open;90:key:Escape;94:press:Hagan;98:key:Up;108:press:Leave;112:press:Sefra;116:key:Up;126:press:A cave;132:press:Mortis;136:key:Up;146:key:Escape;148:press:Bram;152:key:Up' },
+    # Red's map sites: the Refugee Camp and the Cartographer (Buy reveals the surface).
+    @{ Name = 'game-map-sites-red'; App = 'EternalWars.Game'; Frames = 72; Map = $sitesMap
+       Input = '3:key:Enter;8:press:End turn;16:press:Corin;20:key:Up;32:key:Escape;36:press:Tamsin;40:key:Up;52:press:Buy' },
+    # The Grail (ADR-140): Obelisa visits the obelisk (notice), P opens the puzzle map and closes it; Spade digs (an empty hole), Digby digs up the
+    # Grail; two turns later Digby carries it into Castlebridge (the Grail building's notice).
+    @{ Name = 'game-grail'; App = 'EternalWars.Game'; Frames = 100; Map = $grailMap
+       Input = '3:key:Enter;8:press:Obelisa;12:key:Up;24:key:P;34:key:P;38:press:Spade;42:key:G;50:press:Digby;54:key:G;62:press:End turn;68:press:End turn;76:press:Digby;80:key:Up' },
+    # Magic (ADR-110, ADR-121, ADR-122, ADR-123): Magus enters the guild town (fixed guild spells), the hero screen with ranks and the Assemble
+    # button, Detect Magic's window; then Bookless buys a spell book in the second town.
+    @{ Name = 'game-magic'; App = 'EternalWars.Game'; Frames = 84; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:key:Up;24:key:Escape;28:key:H;34:press:Detect Magic;44:press:Close;50:press:Close;56:press:Bookless;60:key:Up;72:press:spell book' },
+    # Battle magic (ADR-122, ADR-123) and surrender (ADR-081): Distant Vision on the computer mage, then Magus attacks it, casts Blind, defends
+    # until the AI has cast its spells, surrenders.
+    @{ Name = 'game-battle-magic'; App = 'EternalWars.Game'; Frames = 196; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Blind;114:click:1257,490;128:key:D;138:key:D;148:key:D;180:press:Surrender' },
+    # A deployment step and war machines on the field (ADR-076), then Necromancy (ADR-078): the battle width (Tactics), Start, quick combat,
+    # the result, then the Necromancy screen.
+    @{ Name = 'game-necromancy'; App = 'EternalWars.Game'; Frames = 122; Map = $necromancyMap
+       Input = '3:key:Enter;10:key:Right;40:press:32;70:key:Enter;84:key:Q;112:key:Enter' },
+    # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
+    @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
+       Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
+    @{ Name = 'game-siege-earthquake'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMagicMap
+       Input = '3:key:Enter;10:key:Up;62:press:Earthquake;100:key:D;110:key:D;120:key:D;135:key:D' },
+    # The victory screen (ADR-103): quick combat beats the last enemy hero; the screen shows the score (nothing is pressed, so the ranking and
+    # the replays folder stay as they are).
+    @{ Name = 'game-victory'; App = 'EternalWars.Game'; Frames = 120; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:key:Up;22:press:Close;28:key:Down;44:click:800,552;50:click:800,552;80:key:Q;110:key:Enter' },
+    # The editor's Grail tool, the conditions panel's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction and
+    # guild spells (ADR-083, ADR-123).
+    @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $grailMap
+       Input = '5:click:1230,100;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:1328,100' },
+    # The template editor's obelisk count (ADR-140): Templates, select the middle zone.
+    @{ Name = 'editor-template-obelisks'; App = 'EternalWars.MapEditor'; Frames = 16
+       Input = '3:press:Templates;10:click:708,373' }
 )
 
 $failed = 0

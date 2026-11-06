@@ -104,6 +104,88 @@ public class SmokeMapTests
         Assert.Equal(2, map.Objects.Count(o => o.Definition.Id == BuiltInMapObjects.TwoWayMonolith));
     }
 
+    [Fact]
+    public void UniqueBuildingsMap_TheNecropolisTownCanTransform_AndTheGroveAndStablesGiveTheirBonusOnTheFirstStep()
+    {
+        var session = Started("unique-buildings.ewmap.json");
+        var grimhollow = session.State.ObjectsOf<Town>().Single(t => t.Name == "Grimhollow");
+        Assert.Null(UndeadTransformer.CheckTown(grimhollow));
+        Assert.Null(UndeadTransformer.Of(session.State, grimhollow, "haven.pikeman", 12).Refusal);
+
+        session.Step(new HeroId(2), Direction.North);
+        Assert.True(session.State.GetHero(new HeroId(2)).Experience >= UniqueBuildings.ExperienceBonus);
+        var levelUp = Assert.IsType<LevelUpDecision>(session.State.PendingDecision);
+        session.Execute(new ChooseSkillCommand(session.State.CurrentPlayer.Id, levelUp.Options[0])).ThrowIfRejected();
+        var before = session.State.GetHero(new HeroId(3)).MovementPoints;
+        session.Step(new HeroId(3), Direction.North);
+        Assert.True(session.State.GetHero(new HeroId(3)).MovementPoints > before);
+    }
+
+    [Fact]
+    public void SitesMap_EachHeroStepsNorthOntoItsSite()
+    {
+        var session = Started("sites.ewmap.json");
+
+        session.Step(new HeroId(1), Direction.North);
+        Assert.NotEmpty(SkillSchoolRules.LessonsOf(session.State.ObjectsOf<SkillSchool>().Single(s => s.TeachesMagic), new HeroId(1)));
+        session.Step(new HeroId(3), Direction.North);
+        Assert.IsType<TrainingDecision>(session.State.PendingDecision);
+    }
+
+    [Fact]
+    public void GrailMap_TheObeliskIsNorthOfObelisa_AndDigbyStandsOnTheGrail_TwoStepsFromTheTown()
+    {
+        var session = Started("grail.ewmap.json");
+
+        session.Step(new HeroId(1), Direction.North);
+        Assert.Equal(1, GrailRules.Puzzle(session.State, session.State.CurrentPlayer.Id)!.Visited);
+        session.Execute(new DigCommand(session.State.CurrentPlayer.Id, new HeroId(2))).ThrowIfRejected();
+        Assert.True(session.State.Grail.IsFound);
+    }
+
+    [Fact]
+    public void MagicMap_MagusVisitsTheGuildNorth_AndAttacksTheComputerMageSouth()
+    {
+        var session = Started("magic.ewmap.json");
+        var magus = session.State.GetHero(new HeroId(1));
+        Assert.True(magus.HasSpellBook);
+        Assert.False(session.State.GetHero(new HeroId(2)).HasSpellBook);
+
+        session.Step(new HeroId(1), Direction.North);
+        Assert.Equal(new HeroId(1), TownRules.VisitingHero(session.State, session.State.ObjectsOf<Town>().Single(t => t.Name == "Castlebridge"))?.Id);
+    }
+
+    [Fact]
+    public void NecromancyMap_FirstStepEastAsksTheBattleWidth_WithDeathAttunementAndAllThreeMachines()
+    {
+        var session = Started("necromancy.ewmap.json");
+        var hero = session.State.GetHero(new HeroId(1));
+        Assert.NotEqual(Core.Domain.Heroes.SkillLevel.None, hero.SkillLevelOf(NecromancyRules.Skill));
+        Assert.Equal(3, hero.WarMachines.Count);
+
+        session.Step(new HeroId(1), Direction.East);
+        Assert.IsType<BattleDecision>(session.State.PendingDecision); // Advanced Tactics picks the width; the 50 wolves do not offer to join
+    }
+
+    [Fact]
+    public void SiegeMagicMap_FirstStepNorthStartsASiege_WhereTheHeroCanCastEarthquake()
+    {
+        var session = Started("siege-magic.ewmap.json");
+
+        session.Step(new HeroId(1), Direction.North);
+
+        var battle = session.State.Battle!;
+        Assert.NotNull(battle.Siege);
+        Assert.Contains(battle.Participant(BattleSide.Attacker).Caster!.Spells, s => s.Spell.Id == "nature.earthquake");
+    }
+
+    private static GameSession Started(string map)
+    {
+        var session = new GameSession(MapConverter.ToGameState(MapSerializer.Load(SmokeMap(map))));
+        session.Start();
+        return session;
+    }
+
     private static string SmokeMap(string name)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

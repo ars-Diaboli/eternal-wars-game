@@ -120,6 +120,7 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<TownOwnerChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh()); // back after a level-up on the visit (the Elder Grove)
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());

@@ -1,0 +1,88 @@
+{
+ "formatVersion": 37,
+ "name": "Battle extras",
+ "width": 16,
+ "height": 10,
+ "terrain": [
+  [
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg",
+   "gggggggggggggggg"
+  ]
+ ],
+ "players": [
+  {
+   "name": "Blue",
+   "isHuman": true
+  },
+  {
+   "name": "Red",
+   "isHuman": true
+  }
+ ],
+ "heroes": [
+  {
+   "id": 1,
+   "name": "Necro",
+   "owner": 0,
+   "x": 5,
+   "y": 5,
+   "type": "necropolis.morthal",
+   "skills": {
+    "tactics.tactics": "Advanced",
+    "machines.ballistics": "Advanced",
+    "magic.necropolis.attunement": "Advanced"
+   },
+   "warMachines": [
+    "Offensive",
+    "Tent",
+    "Cart"
+   ],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "necropolis.skeleton",
+     "count": 60
+    },
+    {
+     "slot": 1,
+     "creature": "necropolis.ghoul",
+     "count": 20
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Sandro",
+   "owner": 1,
+   "x": 15,
+   "y": 9,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "inferno.imp",
+     "count": 15
+    }
+   ]
+  }
+ ],
+ "objects": [
+  {
+   "kind": "monster",
+   "id": 1,
+   "definition": "monster",
+   "x": 7,
+   "y": 5,
+   "creature": "neutral.wolf",
+   "count": 50,
+   "neverFlees": true
+  }
+ ]
+}
