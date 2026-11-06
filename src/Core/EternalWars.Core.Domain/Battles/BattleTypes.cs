@@ -89,6 +89,9 @@ public enum ObstacleClass
 
     /// <summary>City wall (sieges, <see cref="SiegeStructure"/>), 1/2 cover.</summary>
     Wall,
+
+    /// <summary>A long cliff that splits the field partly (ADR-146): <see cref="BattleObstacle.CliffThickness"/> wide, 6–12 cells long, 1/4 cover like a crag.</summary>
+    Cliff,
 }
 
 public static class ObstacleClassExtensions
@@ -96,7 +99,7 @@ public static class ObstacleClassExtensions
     public static int CoverEighths(this ObstacleClass cover) => cover switch
     {
         ObstacleClass.Small => 1,
-        ObstacleClass.Big => 2,
+        ObstacleClass.Big or ObstacleClass.Cliff => 2,
         _ => 4,
     };
 
@@ -108,9 +111,15 @@ public static class ObstacleClassExtensions
     };
 }
 
-public sealed record BattleObstacle(int Id, CellPosition Position, ObstacleClass Class)
+/// <summary>An obstacle on the field; a <see cref="ObstacleClass.Cliff"/> runs <paramref name="Length"/> cells down the field.</summary>
+public sealed record BattleObstacle(int Id, CellPosition Position, ObstacleClass Class, int Length = 0)
 {
-    public CellRect Rect => new(Position, Class.Cells());
+    /// <summary>How many columns wide a cliff is.</summary>
+    public const int CliffThickness = 2;
+
+    public CellRect Rect => Class == ObstacleClass.Cliff
+        ? new(Position.X, Position.Y, CliffThickness, Length)
+        : new(Position, Class.Cells());
 }
 
 /// <summary>

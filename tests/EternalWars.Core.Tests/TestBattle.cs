@@ -31,14 +31,14 @@ internal sealed class TestBattle
     public static TestBattle Create(
         int width = BattleState.DefaultWidth, ulong seed = 7, int attackerAttack = 0, int defenderDefense = 0,
         HeroBattleBonuses? attackerBonuses = null, HeroBattleBonuses? defenderBonuses = null, IReadOnlyCollection<string>? nativeTowns = null,
-        SiegeSpec? siege = null, BattleCaster? attackerCaster = null, BattleCaster? defenderCaster = null)
+        SiegeSpec? siege = null, BattleCaster? attackerCaster = null, BattleCaster? defenderCaster = null, TerrainType terrain = TerrainType.Grass)
     {
         // A siege (ADR-106) is fought on the 36-wide field behind the town's fortifications.
         width = siege is null ? width : BattleState.SiegeWidth;
         var state = new BattleState(
             new BattleParticipant(BattleSide.Attacker, new PlayerId(0), new HeroId(1), null, attackerAttack, 0, SkillLevel.None, false, attackerBonuses, Caster: attackerCaster),
             new BattleParticipant(BattleSide.Defender, new PlayerId(1), new HeroId(2), null, 0, defenderDefense, SkillLevel.None, false, defenderBonuses, Caster: defenderCaster),
-            TerrainType.Grass,
+            terrain,
             new MapPosition(0, 0),
             isAmbush: false,
             new GameRandom(seed),
@@ -66,6 +66,10 @@ internal sealed class TestBattle
 
     public void AddObstacle(ObstacleClass cover, int x, int y) =>
         State.MutableObstacles.Add(new BattleObstacle(State.Obstacles.Count + 1, new CellPosition(x, y), cover));
+
+    /// <summary>A dividing cliff (ADR-146) whose top cell is at (<paramref name="x"/>, <paramref name="y"/>), <paramref name="length"/> cells down.</summary>
+    public void AddCliff(int x, int y, int length) =>
+        State.MutableObstacles.Add(new BattleObstacle(State.Obstacles.Count + 1, new CellPosition(x, y), ObstacleClass.Cliff, length));
 
     /// <summary>Starts round 1 and then hands the turn to <paramref name="active"/>, whatever the initiative order says.</summary>
     public void StartWith(BattleUnit active)

@@ -268,6 +268,9 @@ public sealed class BattleState
     /// <summary>Whether this battle allows a deployment step at all (heroes and neutral monsters, not creature banks).</summary>
     internal bool DeploymentAllowed { get; set; }
 
+    /// <summary>Whether the field may get a dividing cliff (ADR-146): not in a creature bank's battle (and never in a siege).</summary>
+    internal bool CliffsAllowed { get; set; } = true;
+
     public int Round { get; internal set; }
 
     public IReadOnlyList<BattleUnit> Units => _units;
@@ -328,6 +331,7 @@ public sealed class BattleState
             Deployer = Deployer,
             DeploymentColumns = DeploymentColumns,
             DeploymentAllowed = DeploymentAllowed,
+            CliffsAllowed = CliffsAllowed,
             Round = Round,
             AutoResolve = AutoResolve,
             Winner = Winner,

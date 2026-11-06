@@ -1236,3 +1236,19 @@ agent's placeholders until the town models (Phase 5 presentation).
   and below). It changes no rule.
 - **3D field**: a bar under the stack count, facing the camera and drawn over the field; it updates on hits, heals, revives and rebirth. The
   2D board draws the same bar along each stack's bottom edge. Sizes and colours are placeholders.
+
+### ADR-146: Dividing cliffs on the battlefield (ADR-118, 2026-11-06)
+**Status**: implemented; seen in Godot (the battle smoke map, with highlands and the chance forced for the check). Shape and height are
+placeholders.
+
+- **Rule**: on highlands, rough, rocky and subterranean ground one battle in three gets a cliff; never in a siege or a creature bank (Pandora's
+  Boxes and map-event battles may have one). It stands in the middle of the open ground between the armies (the deployer's zone stays free).
+  Half the time it is one piece of 6–12 cells with at least 4 open rows above and below; otherwise two pieces of 6–10 cells, up to two columns
+  apart, with at least 4 rows between them and at least 4 more above or below. Each piece is 2 columns wide and runs down the field. Gaps of 4
+  let a large creature through. Random obstacles are fewer (1–3 instead of 2–5) and keep 4 columns off the cliff, so they never close a gap.
+- **Movement and shots**: walkers go round (the existing pathing); flyers and teleporters pass over. A shot across a cliff takes 1/4 cover once
+  per piece, like a crag.
+- **AI**: a walker on a field with a cliff advances along the steps round it to the nearest enemy (as attackers do in a siege) instead of
+  by straight-line distance, which would park it against the cliff's face.
+- **Code**: `ObstacleClass.Cliff`; `BattleObstacle` takes a `Length` (its rect is 2 × length); `BattleState.CliffsAllowed` (false for banks);
+  `BattleSetup.PlaceCliff`. The 3D field draws a ridge (a prism) as long as the piece; the 2D board draws its rect like any obstacle.

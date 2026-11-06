@@ -19,6 +19,10 @@
 - **Movement is a circle** (ADR-089, CMB-9): a stack reaches any placement whose path, at any angle, is at most **Speed + 0.25 cells**; around
   obstacles the way round. A diagonal step needs one of the two orthogonal placements free. Flyers and teleporters land on any free placement
   within the same straight-line distance (ADR-038).
+- **Dividing cliffs** (ADR-118, ADR-146): on highlands, rough, rocky and subterranean ground, one battle in three (never a siege or a creature
+  bank) has a cliff down the middle of the open ground: one or two pieces of 6–12 cells, 2 columns wide, leaving at least two gaps of 4 cells
+  or more, so every creature can walk round. Flyers and teleporters pass over; other obstacles keep 4 columns off it. The battle AI's walkers
+  head for a gap.
 - **Tactics** (ADR-069, ADR-072, HERO-4):
   - **Width**: effective level = own Tactics − enemy hero's Tactics (minimum none); only a side with an effective level chooses; the
     computer keeps 30. None / Basic: 30; Advanced: 30, 32; Expert: 28, 30, 32, 34. Sieges have a fixed width.
@@ -35,7 +39,7 @@
   | Blocker | Penalty |
   |---|---|
   | 2×2 or 3×3 creature, small obstacle | 1/8 |
-  | 4×4 creature, big obstacle | 1/4 |
+  | 4×4 creature, big obstacle, cliff | 1/4 |
   | City wall (sieges) | 1/2 |
 
   Obstacle definitions declare small / big; walls are a class of their own. Line of fire: supercover of the segment between footprint
@@ -164,4 +168,3 @@ ADR-099, ADR-106, built ADR-109 and ADR-120 (CMB-11). Numbers are placeholders; 
 - **Quick combat**: either side may hand the rest of a battle to the deterministic battle AI; neutrals and computer players always use it.
 - **Health bars** (ADR-118, ADR-145): each stack shows a bar under its count, the top creature's hit points against its full health: green
   over 50 %, yellow 21–50 %, red 20 % and below.
-- Field-dividing cliffs *(planned, ADR-118, CMB-12)*.

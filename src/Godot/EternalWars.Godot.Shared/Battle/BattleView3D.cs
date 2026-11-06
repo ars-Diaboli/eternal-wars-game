@@ -1013,11 +1013,27 @@ public partial class BattleView3D : Node3D
         _field.AddChild(new MeshInstance3D { Name = "Grid", Mesh = mesh, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off });
     }
 
-    /// <summary>Small obstacles are boulders, big ones crags, wall segments blocks.</summary>
+    /// <summary>Small obstacles are boulders, big ones crags, cliffs (ADR-146) long ridges, wall segments blocks.</summary>
     private static MeshInstance3D ObstacleNode(BattleObstacle obstacle)
     {
         var extent = obstacle.Rect.Width * BattleSpace.CellSize;
         var material = new StandardMaterial3D { AlbedoColor = new Color(0.40f, 0.36f, 0.31f), Roughness = 1f };
+        if (obstacle.Class == ObstacleClass.Cliff)
+        {
+            // A ridge as long as the cliff, its top narrower than its foot: a prism along the field's depth.
+            const float ridge = 1.1f;
+            return new MeshInstance3D
+            {
+                Name = $"Obstacle_{obstacle.Id}",
+                Mesh = new PrismMesh
+                {
+                    Size = new Vector3(extent, ridge, obstacle.Rect.Height * BattleSpace.CellSize),
+                    Material = new StandardMaterial3D { AlbedoColor = new Color(0.36f, 0.32f, 0.28f), Roughness = 1f },
+                },
+                Position = BattleSpace.Center(obstacle.Rect) + (Vector3.Up * (ridge / 2)),
+            };
+        }
+
         var (mesh, height) = obstacle.Class switch
         {
             ObstacleClass.Small => ((PrimitiveMesh)new SphereMesh { Radius = extent * 0.42f, Height = extent * 0.55f }, extent * 0.2f),
