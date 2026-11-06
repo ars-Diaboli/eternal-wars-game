@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
@@ -106,6 +107,43 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         army.Set(slot, new CreatureStack(line.UpgradesTo!, stack.Count));
         events.Publish(new StackUpgraded(town.Id, hero?.Id, slot, line.Id, line.UpgradesTo!, stack.Count));
         PublishArmy(town, hero);
+    }
+
+    /// <summary>
+    /// The Undead Transformer (ADR-137) turns the ordered stacks into undead, all or none. A result joins a stack of the same creature already in
+    /// its army (the first one), else takes the transformed stack's slot.
+    /// </summary>
+    internal void Transform(PlayerId player, MapObjectId townId, IReadOnlyList<TransformOrder> orders)
+    {
+        var town = OwnTown(player, townId);
+        Refuse(UndeadTransformer.CheckTown(town));
+        if (orders.Count == 0 || orders.DistinctBy(o => (o.Army, o.Slot)).Count() != orders.Count)
+        {
+            throw new InvalidOperationException("Pick each stack to transform once.");
+        }
+
+        var planned = orders.Select(order =>
+        {
+            var (army, hero) = ArmyOf(town, order.Army, null);
+            var stack = (Army.IsValidSlot(order.Slot) ? army[order.Slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+            var (transform, refusal) = UndeadTransformer.Of(state, town, stack.Creature, stack.Count, order.Line);
+            Refuse(refusal);
+            return (Army: army, Hero: hero, order.Slot, Transform: transform!);
+        }).ToList();
+
+        foreach (var (army, hero, slot, transform) in planned)
+        {
+            army.Set(slot, null);
+            var same = army.Stacks.FirstOrDefault(s => s.Stack.Creature == transform.To);
+            var into = same.Stack is null ? slot : same.Slot;
+            army.Set(into, new CreatureStack(transform.To, transform.Result + (same.Stack?.Count ?? 0)));
+            events.Publish(new CreaturesTransformed(town.Id, hero?.Id, slot, transform.From, transform.Count, transform.To, transform.Result));
+        }
+
+        foreach (var hero in planned.Select(p => p.Hero).Distinct())
+        {
+            PublishArmy(town, hero);
+        }
     }
 
     internal void MoveStack(PlayerId player, MapObjectId townId, TownArmy from, int fromSlot, TownArmy to, int toSlot, int? count)

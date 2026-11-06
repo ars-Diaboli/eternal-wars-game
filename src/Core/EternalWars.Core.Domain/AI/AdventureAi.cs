@@ -267,6 +267,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
             var reserve = heroless && !_state.HeroesOf(player).Any() ? TavernRules.HeroCost.Gold : Build(player, town);
             Hire(player, town, reserve);
+            TransformStacks(player, town);
             UpgradeStacks(player, town, reserve);
             Recruit(player, town, reserve);
             BuyWarMachines(player, town, reserve);
@@ -380,6 +381,9 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             yield return (false, unique.Id); // the town's unique building (ADR-138): its heroes take the bonus when they pass through
         }
 
+        yield return (false, UndeadTransformer.Building); // Necropolis (ADR-137): its living recruits and prisoners' troops become undead
+        yield return (false, Town.Observatory); // Academy (ADR-143): a wider watch
+
         yield return (false, BuiltInBuildings.Fort);
         yield return (false, BuiltInBuildings.TownHall);
         yield return (false, BuiltInBuildings.Marketplace);
@@ -415,6 +419,51 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         if (offer is not null)
         {
             Execute(new HireHeroCommand(player, town.Id, offer.Id));
+        }
+    }
+
+    /// <summary>
+    /// At its Undead Transformer (ADR-137) the AI turns the living stacks of the garrison and the visiting hero into undead: all of them in an army
+    /// that is mostly undead already (by worth, creature value × count: the living ones cost it morale), elsewhere those whose undead are worth at
+    /// least as much. A creature without a class becomes the more valuable line. It never swaps undead lines.
+    /// </summary>
+    private void TransformStacks(PlayerId player, Town town)
+    {
+        if (UndeadTransformer.CheckTown(town) is not null)
+        {
+            return;
+        }
+
+        var orders = new List<TransformOrder>();
+        foreach (var (army, slots) in ArmiesOf(town))
+        {
+            var undead = slots.Stacks.Select(s => (Creature: _state.Creatures.Get(s.Stack.Creature), s.Stack.Count))
+                .GroupBy(s => s.Creature.HasTag(CreatureTags.Undead)).ToDictionary(g => g.Key, g => g.Sum(s => (long)s.Creature.Value * s.Count));
+            var mostlyUndead = undead.GetValueOrDefault(true) > 0 && undead.GetValueOrDefault(true) >= undead.GetValueOrDefault(false);
+            foreach (var (slot, stack) in slots.Stacks)
+            {
+                var creature = _state.Creatures.Get(stack.Creature);
+                if (!UndeadTransformer.IsLiving(creature))
+                {
+                    continue;
+                }
+
+                var worth = (long)creature.Value * stack.Count;
+                var best = new[] { CreatureCategory.A, CreatureCategory.B }
+                    .Select(line => (Line: line, UndeadTransformer.Of(_state, town, stack.Creature, stack.Count, line).Transform))
+                    .Where(t => t.Transform is not null)
+                    .OrderByDescending(t => (long)_state.Creatures.Get(t.Transform!.To).Value * t.Transform.Result)
+                    .FirstOrDefault();
+                if (best.Transform is { } transform && (mostlyUndead || (long)_state.Creatures.Get(transform.To).Value * transform.Result >= worth))
+                {
+                    orders.Add(new TransformOrder(army, slot, best.Line));
+                }
+            }
+        }
+
+        if (orders.Count > 0)
+        {
+            Execute(new TransformCreaturesCommand(player, town.Id, orders));
         }
     }
 

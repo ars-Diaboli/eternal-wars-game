@@ -250,7 +250,7 @@ public class AdventureInfoSpellTests
         var intel = Assert.Single(overheard).Town;
         Assert.Equal(town.Id, intel.Town);
         Assert.Equal(25, intel.Garrison.Single().Count);
-        Assert.Equal(town.Buildings.Count(b => b.Value > 0), intel.Buildings.Count);
+        Assert.Equal(town.Buildings.Count(b => b.Value > 0), intel.Buildings!.Count);
     }
 
     [Fact]

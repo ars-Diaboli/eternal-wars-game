@@ -16,7 +16,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<ProviderOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
       IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<AreaRevealed>, IEventHandler<HeroFreed>, IEventHandler<MapEventHeroGiven>,
-      IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>
+      IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>, IEventHandler<TownBuilt>
 {
     public void Handle(GameStarted @event)
     {
@@ -103,6 +103,15 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         if (@event.Skill is { } skill && BuiltInSkills.Resolve(skill) == BuiltInSkills.Scouting && state.Heroes.FirstOrDefault(h => h.Id == @event.Hero) is { } hero)
         {
             OnHeroRelocated(hero, hero.Position);
+        }
+    }
+
+    // The Academy's Observatory widens its town's sight at once (ADR-143).
+    public void Handle(TownBuilt @event)
+    {
+        if (@event.Building == Towns.Town.Observatory)
+        {
+            OnOwnerChanged(@event.Town, ((Towns.Town)state.GetObject(@event.Town)).Owner);
         }
     }
 

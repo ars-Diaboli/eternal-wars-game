@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -15,7 +16,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// Basic town screen (ADR-046) for the current player's town: build the next level of a building, build or upgrade
 /// dwellings, recruit, and manage the garrison and the visiting hero (click a stack, then a slot; "Upgrade" upgrades
-/// the picked stack"), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
+/// the picked stack"), turn stacks into undead at a Necropolis's Undead Transformer (ADR-137), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
 /// below. Opened with <see cref="Open"/>. With <see cref="FullScreen"/> (the game app) it fills its parent and scrolls;
 /// Escape or "Close" shut it.
 /// </summary>
@@ -32,6 +33,8 @@ public partial class TownPanel : PanelContainer
     private readonly HBoxContainer _tavern = new();
     private readonly HBoxContainer _governor = new();
     private readonly VBoxContainer _caravan = new();
+    private readonly HFlowContainer _transformer = new();
+    private readonly Dictionary<(TownArmy Army, int Slot), CreatureCategory> _toTransform = [];
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly CheckBox _toHero = new() { Text = "Recruit to visiting hero" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
@@ -90,6 +93,7 @@ public partial class TownPanel : PanelContainer
         box.AddChild(_governor);
         box.AddChild(_armies);
         box.AddChild(_caravan);
+        box.AddChild(_transformer);
         box.AddChild(_blacksmith);
         box.AddChild(_tavern);
 
@@ -108,6 +112,7 @@ public partial class TownPanel : PanelContainer
         this.SubscribeWhileInTree<DwellingBuilt>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<CreaturesRecruited>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<StackUpgraded>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<CreaturesTransformed>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<GarrisonChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ResourcesChanged>(session.Events, _ => Refresh());
@@ -137,6 +142,7 @@ public partial class TownPanel : PanelContainer
     {
         _town = town;
         _picked = null;
+        _toTransform.Clear();
         _status.Text = "";
         Refresh();
     }
@@ -257,6 +263,8 @@ public partial class TownPanel : PanelContainer
                 _blacksmith.AddChild(book);
             }
         }
+
+        ShowTransformer(state, town);
 
         // What the guild teaches now (ADR-110).
         var offered = Core.Domain.Magic.MagicRules.Offered(state, town).Select(s => state.Spells.TryGet(s, out var spell) ? spell.Name : s).ToList();
@@ -573,6 +581,78 @@ public partial class TownPanel : PanelContainer
             hire.Pressed += () => Run(new HireHeroCommand(state.CurrentPlayer.Id, town.Id, offer.Id));
             _tavern.AddChild(hire);
         }
+    }
+
+    /// <summary>
+    /// The Undead Transformer (ADR-137): a toggle per stack it can take (two, one per line, for a creature without a class), then "Transform" turns
+    /// the chosen ones at once.
+    /// </summary>
+    private void ShowTransformer(GameState state, Town town)
+    {
+        Clear(_transformer);
+        if (UndeadTransformer.CheckTown(town) is not null)
+        {
+            return;
+        }
+
+        _transformer.AddChild(new Label { Text = "Undead Transformer (free):" });
+        var armies = new List<(TownArmy Army, Army Slots)> { (TownArmy.Garrison, town.Garrison) };
+        if (TownRules.VisitingHero(state, town) is { } hero)
+        {
+            armies.Add((TownArmy.VisitingHero, hero.Army));
+        }
+
+        foreach (var key in _toTransform.Keys.Where(k => !armies.Any(a => a.Army == k.Army && a.Slots[k.Slot] is not null)).ToList())
+        {
+            _toTransform.Remove(key);
+        }
+
+        foreach (var (army, slots) in armies)
+        {
+            foreach (var (slot, stack) in slots.Stacks)
+            {
+                var lines = UndeadTransformer.NeedsLine(state, stack.Creature) ? new[] { CreatureCategory.A, CreatureCategory.B } : [CreatureCategory.None];
+                foreach (var line in lines)
+                {
+                    if (UndeadTransformer.Of(state, town, stack.Creature, stack.Count, line).Transform is not { } transform)
+                    {
+                        continue;
+                    }
+
+                    var key = (army, slot);
+                    var toggle = new Button
+                    {
+                        Text = $"{(army == TownArmy.Garrison ? "Garrison" : "Hero")}: {stack.Count} {state.Creatures.Get(stack.Creature).Name}"
+                               + $"\n→ {transform.Result} {state.Creatures.Get(transform.To).Name}",
+                        ToggleMode = true,
+                        ButtonPressed = _toTransform.TryGetValue(key, out var chosen) && chosen == line,
+                    };
+                    toggle.Toggled += on =>
+                    {
+                        if (on)
+                        {
+                            _toTransform[key] = line;
+                        }
+                        else if (_toTransform.TryGetValue(key, out var was) && was == line)
+                        {
+                            _toTransform.Remove(key);
+                        }
+
+                        Refresh();
+                    };
+                    _transformer.AddChild(toggle);
+                }
+            }
+        }
+
+        var run = new Button { Text = "Transform", Disabled = _toTransform.Count == 0 };
+        run.Pressed += () =>
+        {
+            var orders = _toTransform.Select(o => new TransformOrder(o.Key.Army, o.Key.Slot, o.Value)).ToList();
+            _toTransform.Clear();
+            Run(new TransformCreaturesCommand(state.CurrentPlayer.Id, town.Id, orders));
+        };
+        _transformer.AddChild(run);
     }
 
     private void AddArmyRow(Town town, TownArmy which, string name, Army army)

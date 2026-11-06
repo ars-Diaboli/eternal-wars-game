@@ -17,6 +17,12 @@ public sealed class Town : MapObject, IFlaggable
     /// </summary>
     public const int TownScoutingRadius = 10;
 
+    /// <summary>An Academy town with the Observatory sees this far (ADR-143).</summary>
+    public const int ObservatoryScoutingRadius = 24;
+
+    /// <summary>The Academy's Observatory (ADR-143): its town sees <see cref="ObservatoryScoutingRadius"/> cells.</summary>
+    public const string Observatory = "observatory";
+
     private readonly Dictionary<string, int> _buildings;
     private readonly Dictionary<string, int> _dwellings;
     private readonly Dictionary<string, int> _available;
@@ -58,7 +64,7 @@ public sealed class Town : MapObject, IFlaggable
     /// </summary>
     public bool IsRandom { get; internal set; }
 
-    public int ScoutingRadius => TownScoutingRadius;
+    public int ScoutingRadius => Level(Observatory) > 0 ? ObservatoryScoutingRadius : TownScoutingRadius;
 
     /// <summary>The middle of the town's footprint, where its sight is measured from (not its entrance, which is on the bottom edge).</summary>
     public MapPosition SightCenter => Position.Offset(Definition.Footprint.Width / 2, Definition.Footprint.Height / 2);

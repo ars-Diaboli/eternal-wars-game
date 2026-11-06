@@ -28,7 +28,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 
 | Mechanic | From | Status | Notes |
 |---|---|---|---|
-| Each town's unique buildings | HoMM3, HoMM5 | Partly | The first set built, one per town (ADR-126, ADR-138); the Undead Transformer planned (ADR-137); more open (TOWN-12) |
+| Each town's unique buildings | HoMM3, HoMM5 | Partly | The first set built, one per town (ADR-126, ADR-138); the Undead Transformer and the Academy's Observatory (ADR-137, ADR-143); more open (TOWN-12) |
 | Grail building | HoMM3, HoMM5 | Yes | +5000 gold, +50 % growth, siege bonus (ADR-130, ADR-140) |
 | Alternative creature upgrades (pick one of two) | HoMM5 TotE | Missing | One upgrade per line now |
 | Resource silo per faction resource | HoMM3 | Partly | Ours gives lumber and ore (ADR-046) |

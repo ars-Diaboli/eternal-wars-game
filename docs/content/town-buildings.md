@@ -47,6 +47,8 @@ Status: ✅ works in play · ⏳ built and paid for, effect waits for a feature 
 | `tavern` | 1 | Tavern | 750 gold, lumber 5 | – | – |
 | `tavern` | 2 | Brotherhood | 1 000 gold, ore 5 | fort 1 | – |
 | `necromancy-amplifier` | 1 | Necromancy Amplifier (Necropolis only) | 1 500 gold, mercury 5 | mage-guild 1 | – |
+| `undead-transformer` | 1 | Undead Transformer (Necropolis only) | 1 000 gold, mercury 5 | dwelling-1 1 | – |
+| `observatory` | 1 | Observatory (Academy only) | 2 500 gold, ore 5, mercury 5 | mage-guild 1 | – |
 | `war-lodge` | 1 | War Lodge / Totem Circle (Stronghold / Swamp Bestiary only, no mage guild there) | 2 000 gold, lumber 5, ore 5 | – | – |
 | `war-lodge` | 2 | Hall of Warcries / Spirit Totems | 3 500 gold, lumber 5, crystal 3 (Swamp: sulfur 3) | – | – |
 | `war-lodge` | 3 | Drums of the Horde / Elder Totem | 5 000 gold, lumber 5, crystal 5 (Swamp: sulfur 5) | – | – |
@@ -67,6 +69,8 @@ In Stronghold and Swamp Bestiary, Town Hall needs `war-lodge 1` instead of `mage
 | War Lodge | Stronghold and Swamp Bestiary instead of the mage guild: a visiting hero (or one in town when it is built) learns the warcries up to the lodge's level, Rally 1, Intimidate 2, Terror 3, and uses those its Warcry skill allows (ADR-112) | ✅ |
 | Growth buildings | +5 a week to every tier-1 dwelling / +2 to every tier-2 dwelling of the town, flat, after the fort's percent (ADR-071, ADR-112) | ✅ |
 | Necromancy Amplifier | Necropolis only, the first town-specific building: +5 % Necromancy for every hero of its owner with Death attunement; more than one adds nothing; a captured one helps its new owner (ADR-069, ADR-070, TOWN-6) | ✅ (ADR-078) |
+| Undead Transformer | Necropolis only: turns stacks of the garrison and the visiting hero into undead, several at once, free. A living tier 1–2 creature becomes the tier-1 undead of its class (A Skeletons, B Plague Bearers), tier 3–4 the tier-2 undead (A Ghouls, B Wights), one for one; never constructs, elementals or tier 5; a creature without a class picks the line. The Necropolis's tier 1–2 undead swap to the other line of their tier for 75 % (rounded down, at least 1). An upgrade counts as its base; the result is upgraded when the town has that undead line's upgraded dwelling (ADR-137, ADR-143) | ✅ (ADR-143) |
+| Observatory | Academy only: the town sees 24 cells from its centre instead of 10 (ADR-143) | ✅ (ADR-143) |
 | Unique buildings, first set (working names) | one per town (ADR-126, ADR-138). "Once" is once per hero per town, given on every visit of an own hero (entering, hired there, a night there, or there when it is built); the record stays with the town. The siege bonus goes to the hero defending the town in a siege (on its entrance or in its garrison); Knowledge lends 10 mana for the battle. Haven **Stables**: the map Stables without the Lancer upgrade; Stronghold **Proving Ring**: +1 Attack once, +1 Attack in sieges; Swamp Bestiary **Shell Wall**: +1 Defense / +1 Defense; Academy **Hall of Records**: +1 Knowledge / +1 Knowledge; Inferno **Altar of Brimstone**: +1 Spell Power / +1 Spell Power; Sylvan **Elder Grove**: +1000 experience once / +1 luck; Dungeon **Mana Spring**: mana +75 % of the maximum, once a week per hero / +1 morale. Draft cost 2000 gold, 5 ore, 5 of the town's rare resource, Fort 1 (Stables: town hall 2). More per town: TOWN-12 | ✅ (ADR-138) |
 
 ## Tech tree

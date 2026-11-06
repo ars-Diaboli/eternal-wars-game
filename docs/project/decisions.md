@@ -1055,7 +1055,7 @@ level); points marked *(proposal)* are the agent's choices made while building a
   choose and equip artifacts and to weigh pickups; loot that does not fit goes by it.
 
 ### ADR-137: The Undead Transformer (TOWN-13, ADR-135, 2026-11-05)
-**Status**: accepted (2026-11-05), not built. The owner's answers to TOWN-13; the other points are the agent's proposals the owner took.
+**Status**: accepted (2026-11-05), built (ADR-143). The owner's answers to TOWN-13; the other points are the agent's proposals the owner took.
 
 - **What it is**: a second Necropolis-only building. It turns living creatures of tier 1–2 into the tier-1 undead of their class (ADR-135:
   class A to Skeletons, B to Plague Bearers) and of tier 3–4 into the tier-2 undead (Ghouls, Wights); never elementals or constructs. It also
@@ -1192,3 +1192,23 @@ run. Points marked *(proposal)* are the agent's choices made while building. Rul
 - **Effect**: an AI without Scouting overrates an army at the bottom of its word's range (10 footmen read as 14) and fears an equal
   enemy; AI tests whose enemy hero only stands in give their own hero 12 footmen (`TestWorld.Steady`). Replays of games with AI players
   may differ.
+
+### ADR-143: The Academy's Observatory; the Undead Transformer built (ADR-137, ADR-138, 2026-11-06)
+**Status**: implemented, core tested (`UndeadTransformerTests`); the town screen's Transformer section not yet run in Godot. The Observatory is
+the owner's note in [ideas.md](ideas.md) ("academy: observatory - sets town's scouting radius to 24"); points marked *(proposal)* are the
+agent's choices.
+
+- **Observatory** (Academy, `observatory` in `buildings.csv`): an Academy town with it sees **24** cells from its centre instead of 10
+  (ADR-141), from the moment it is built. *(proposal)* 2500 gold, 5 ore, 5 mercury, needs mage guild 1; a second unique building of the
+  Academy beside the Hall of Records, with no visit or siege bonus. A town's sight never reaches its hero's Scouting (ADR-142), so it shows
+  armies as words.
+- **Undead Transformer** (Necropolis, `undead-transformer`): ADR-137's rules, 1000 gold + 5 mercury, needs a tier-1 dwelling.
+  `TransformCreaturesCommand` lists the stacks of the garrison and the visiting hero (army, slot, and the line for a creature without a class)
+  and turns them all or none. *(proposal)* Only the Necropolis's own tier 1–2 undead swap lines; other undead (and tier 3+ Necropolis) are
+  refused. A result joins a stack of the same creature in its army, else takes the old slot. Event `CreaturesTransformed`; the replay name is
+  `transformCreatures`.
+- **Town screen**: when built, a toggle per stack it can take ("10 Footman → 10 Skeleton"; two toggles, one per line, for a creature without a
+  class) and a "Transform" button for the chosen ones.
+- **AI** *(proposal for "every stack it does not need")*: in each army of its town with the Transformer it turns all living stacks into
+  undead when the army is already mostly undead by worth (creature value × count), elsewhere only those whose undead are worth at least as
+  much; a creature without a class becomes the more valuable line; it never swaps lines. It builds both buildings after the unique building.

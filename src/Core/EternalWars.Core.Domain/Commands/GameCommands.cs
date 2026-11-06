@@ -138,6 +138,19 @@ public sealed record SendTroopsCommand(PlayerId Player, MapObjectId FromTown, in
 /// <summary>Upgrades a whole stack of the garrison or the visiting hero for the price difference.</summary>
 public sealed record UpgradeStackCommand(PlayerId Player, MapObjectId Town, Towns.TownArmy Army, int Slot) : GameCommand(Player);
 
+/// <summary>One stack for the Undead Transformer (ADR-137): its army and slot, and for a creature without a class the line it becomes (A or B).</summary>
+public sealed record TransformOrder(Towns.TownArmy Army, int Slot, Creatures.CreatureCategory Line = Creatures.CreatureCategory.None);
+
+/// <summary>Turns stacks of the garrison and the visiting hero into undead at the town's Undead Transformer (ADR-137), several at a time.</summary>
+public sealed record TransformCreaturesCommand(PlayerId Player, MapObjectId Town, IReadOnlyList<TransformOrder> Orders) : GameCommand(Player)
+{
+    public bool Equals(TransformCreaturesCommand? other) => other is not null && Player == other.Player && Town == other.Town && Orders.SequenceEqual(other.Orders);
+
+    public override int GetHashCode() => HashCode.Combine(Player, Town, Orders.Count);
+
+    public override string ToString() => $"TransformCreaturesCommand {{ Player = {Player}, Town = {Town}, Orders = {string.Join(", ", Orders)} }}";
+}
+
 /// <summary>
 /// Moves creatures within or between the garrison and the visiting hero, with the rules of <see cref="MoveStackCommand"/>
 /// (<paramref name="Count"/> null = the whole stack; the hero keeps one stack).
