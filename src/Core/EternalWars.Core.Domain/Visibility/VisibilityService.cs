@@ -29,7 +29,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         {
             if (flagged.Owner is { } owner)
             {
-                Reveal(owner, flagged.Object.VisitPosition, flagged.ScoutingRadius);
+                Reveal(owner, SightCenter(flagged.Object), flagged.ScoutingRadius);
             }
         }
 
@@ -125,7 +125,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         var mapObject = state.GetObject(id);
         if (current is { } owner && mapObject is IFlaggable flagged)
         {
-            Reveal(owner, mapObject.VisitPosition, flagged.ScoutingRadius);
+            Reveal(owner, SightCenter(mapObject), flagged.ScoutingRadius);
         }
 
         // The flag change is news for everyone who can see the object; the owners' sight changes too.
@@ -137,6 +137,9 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
     private IEnumerable<(MapObject Object, PlayerId? Owner, int ScoutingRadius)> Flagged() =>
         state.Objects.OfType<IFlaggable>().Select(f => ((MapObject)f, f.Owner, f.ScoutingRadius));
+
+    // A town sees from its middle, so the land beyond its walls is known too; other objects from their entrance.
+    private static MapPosition SightCenter(MapObject mapObject) => mapObject is Towns.Town town ? town.SightCenter : mapObject.VisitPosition;
 
     private void OnHeroRelocated(Hero hero, MapPosition at)
     {
@@ -174,7 +177,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
 
         var observers = state.HeroesOf(player)
             .Select(h => (h.Position, h.ScoutingRadius))
-            .Concat(Flagged().Where(f => f.Owner == player).Select(f => (f.Object.VisitPosition, f.ScoutingRadius)))
+            .Concat(Flagged().Where(f => f.Owner == player).Select(f => (SightCenter(f.Object), f.ScoutingRadius)))
             .ToList();
         var (entered, left) = state.Fog.UpdateSight(player, observers, state.Options.RefogMargin);
         if (entered.Count > 0 || left.Count > 0)

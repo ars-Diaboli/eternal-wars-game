@@ -32,7 +32,8 @@ the last 16 battle spells, presentation.
       - New-game screen: user templates from the editor's `templates` folder
 
 ## Bugs
-- [ ] At game start the fog opens around the starting hero, not around the starting town (owner, 2026-11-06)
+- [x] At game start the fog opens around the starting hero, not around the starting town (owner, 2026-11-06): towns now see from their
+      centre cell, radius 10 (ADR-141)
 
 ## Data and content groundwork ✅
 Data tables in `src/Core/data` embedded in core with designer overrides (DATA-1, ADR-071); creature size pass (ADR-070); per-town

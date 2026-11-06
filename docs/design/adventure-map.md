@@ -114,8 +114,8 @@ ADR-017, ADR-031. Two modes, chosen at game creation (`GameOptions.FogMode`):
    players' heroes show only on tiles **in sight**: within an observer's radius, dropping out only beyond radius + **refog margin**
    (default 2, configurable).
 
-Observers: heroes and owned towns radius 5, owned mines, providers and map dwellings radius 2. Scouting adds 2 / 4 / 6 to a hero's radius,
-revealed at once when learned.
+Observers: heroes radius 5; owned towns radius 10 from the town's centre cell (7 past its walls, ADR-141); owned mines, providers and map
+dwellings radius 2 from their entrance. Scouting adds 2 / 4 / 6 to a hero's radius, revealed at once when learned.
 
 ## Mines and resource providers
 | Object | Effect |

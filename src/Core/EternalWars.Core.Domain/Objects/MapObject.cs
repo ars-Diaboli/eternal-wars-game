@@ -110,7 +110,7 @@ public interface IFlaggable
 {
     PlayerId? Owner { get; }
 
-    /// <summary>How far around its entrance the object reveals and watches for its owner.</summary>
+    /// <summary>How far around its entrance (a town: its middle) the object reveals and watches for its owner.</summary>
     int ScoutingRadius { get; }
 }
 

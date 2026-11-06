@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Visibility;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
@@ -37,6 +38,28 @@ public class VisibilityTests
         Assert.False(fog.IsExplored(Blue, new MapPosition(5, 3)));
         Assert.False(fog.IsExplored(Blue, new MapPosition(6, 0)));
         Assert.False(fog.IsExplored(Red, new MapPosition(0, 0)));
+    }
+
+    [Fact]
+    public void GameStart_AnOwnedTownRevealsAroundItself_NotOnlyAroundItsEntrance()
+    {
+        // A 30×30 field: Blue's town top-left at (10, 10), middle (13, 13), entrance (13, 16) where the hero stands.
+        var rows = Enumerable.Repeat(new string('.', 30), 30).Select(r => r.ToCharArray()).ToArray();
+        rows[16][13] = 'A';
+        rows[29][29] = 'B';
+        var state = Create(rows.Select(r => new string(r)).ToArray());
+        var town = AddTown(state, TownIds.Haven, 10, 10, Blue);
+
+        var fog = Start(state, revealAll: false).State.Fog;
+
+        Assert.Equal(new MapPosition(13, 13), town.SightCenter);
+        Assert.True(fog.IsExplored(Blue, new MapPosition(13, 3)), "10 cells above the centre");
+        Assert.True(fog.IsExplored(Blue, new MapPosition(3, 13)), "10 cells left of the centre");
+        Assert.True(fog.IsExplored(Blue, new MapPosition(23, 13)), "10 cells right of the centre");
+        Assert.True(fog.IsExplored(Blue, new MapPosition(13, 23)), "10 cells below the centre");
+        Assert.False(fog.IsExplored(Blue, new MapPosition(13, 2)));
+        Assert.False(fog.IsExplored(Blue, new MapPosition(2, 13)));
+        Assert.False(fog.IsExplored(Red, new MapPosition(13, 13)));
     }
 
     [Fact]
