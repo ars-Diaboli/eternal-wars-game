@@ -1,0 +1,132 @@
+{
+ "formatVersion": 37,
+ "name": "Grail",
+ "width": 30,
+ "height": 20,
+ "terrain": [
+  [
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg",
+   "gggggggggggggggggggggggggggggg"
+  ]
+ ],
+ "players": [
+  {
+   "name": "Blue",
+   "isHuman": true
+  },
+  {
+   "name": "Red",
+   "isHuman": true
+  }
+ ],
+ "heroes": [
+  {
+   "id": 1,
+   "name": "Obelisa",
+   "owner": 0,
+   "x": 2,
+   "y": 16,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 10
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Digby",
+   "owner": 0,
+   "x": 13,
+   "y": 16,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 10
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "name": "Spade",
+   "owner": 0,
+   "x": 20,
+   "y": 17,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 10
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "Sandro",
+   "owner": 1,
+   "x": 29,
+   "y": 19,
+   "army": [
+    {
+     "slot": 0,
+     "creature": "inferno.imp",
+     "count": 15
+    }
+   ]
+  }
+ ],
+ "objects": [
+  {
+   "kind": "obelisk",
+   "id": 1,
+   "definition": "obelisk",
+   "x": 2,
+   "y": 14
+  },
+  {
+   "kind": "obelisk",
+   "id": 2,
+   "definition": "obelisk",
+   "x": 26,
+   "y": 2
+  },
+  {
+   "kind": "town",
+   "id": 3,
+   "definition": "town.haven",
+   "x": 10,
+   "y": 9,
+   "owner": 0,
+   "name": "Castlebridge",
+   "buildings": {
+    "town-hall": 1,
+    "fort": 1,
+    "tavern": 1
+   }
+  }
+ ],
+ "grail": {
+  "x": 13,
+  "y": 16
+ }
+}

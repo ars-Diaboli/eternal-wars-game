@@ -46,6 +46,7 @@ public partial class ObjectServicePanel : PanelContainer
         this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<ArtifactBought>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<LessonTaken>(session.Events, _ => Refresh());
+        this.SubscribeWhileInTree<LessonsDrawn>(session.Events, _ => Refresh()); // the first visit opens the panel before the school draws the lessons
         this.SubscribeWhileInTree<SacrificeMade>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());

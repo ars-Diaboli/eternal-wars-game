@@ -145,6 +145,7 @@ public partial class ToolPalette : VBoxContainer
                     Text = "Click open ground at least 10 cells from the edges to bury the Grail; click it again to take it away "
                            + "(left unset, it is drawn at game start on maps with obelisks; at most 25 obelisks a map).",
                     AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                    CustomMinimumSize = new Vector2(1000, 0), // a wrapping label in the options row needs a width, or it wraps every letter
                 });
                 break;
         }

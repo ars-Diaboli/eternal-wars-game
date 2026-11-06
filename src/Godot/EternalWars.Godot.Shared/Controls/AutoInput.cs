@@ -8,12 +8,15 @@ namespace EternalWars.Godot.Shared.Controls;
 /// <c>-- --autoinput=30:click:800,450;45:key:Enter;60:rclick:400,300</c>. Each entry is
 /// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y), <c>key</c> (a Godot
 /// <see cref="Key"/> name), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
-/// <c>drag</c>/<c>rdrag</c> (<c>x1,y1,x2,y2</c>: left or right button pressed, moved, released over three frames). Events go through Godot's normal input pipeline, so they hit the same handlers as a
-/// real mouse and keyboard. Does nothing without the argument.
+/// <c>drag</c>/<c>rdrag</c> (<c>x1,y1,x2,y2</c>: left or right button pressed, moved, released over three frames), <c>press</c> (a visible,
+/// enabled button by its text or, without one, its tooltip; the topmost: exact, else the first that contains it, ignoring case; scrolled into view, then clicked at its centre the next
+/// frame; an error when there is none) and <c>dump</c> (prints the visible buttons' texts (a text-less button by its tooltip) and centres, for writing scripts). Events go through
+/// Godot's normal input pipeline, so they hit the same handlers as a real mouse and keyboard. Does nothing without the argument.
 /// </summary>
 public partial class AutoInput : Node
 {
     private readonly List<(int Frame, InputEvent Event)> _script = [];
+    private readonly List<(int Frame, string Kind, string Argument)> _lookups = [];
     private int _frame;
 
     public static AutoInput? FromLaunchArguments() =>
@@ -67,6 +70,9 @@ public partial class AutoInput : Node
                     }
 
                     break;
+                case "press" or "dump":
+                    _lookups.Add((frame, parts[1], parts.Length > 2 ? parts[2] : ""));
+                    break;
                 default:
                     GD.PushWarning($"autoinput: unknown kind '{parts[1]}' in '{entry}'");
                     break;
@@ -77,6 +83,45 @@ public partial class AutoInput : Node
     public override void _Process(double delta)
     {
         _frame++;
+        foreach (var (_, kind, argument) in _lookups.Where(l => l.Frame == _frame && l.Kind is "press" or "dump").ToList())
+        {
+            if (kind == "dump")
+            {
+                foreach (var button in VisibleButtons())
+                {
+                    GD.Print($"autoinput: button '{Label(button).ReplaceLineEndings(" | ")}' at {button.GetGlobalRect().GetCenter().Round()}{(button.Disabled ? " (disabled)" : "")}");
+                }
+            }
+            else if (Find(argument) is { } button)
+            {
+                // Scrolled into view now, clicked where it then is the next frame.
+                for (var parent = button.GetParent(); parent is not null; parent = parent.GetParent())
+                {
+                    if (parent is ScrollContainer scroll)
+                    {
+                        scroll.EnsureControlVisible(button);
+                        break;
+                    }
+                }
+
+                _lookups.Add((_frame + 1, "click-button", button.GetInstanceId().ToString(CultureInfo.InvariantCulture)));
+            }
+            else
+            {
+                GD.PushError($"autoinput: no visible button '{argument}' at frame {_frame}");
+            }
+        }
+
+        foreach (var (_, _, argument) in _lookups.Where(l => l.Frame == _frame && l.Kind == "click-button").ToList())
+        {
+            if (InstanceFromId(ulong.Parse(argument, CultureInfo.InvariantCulture)) is Control button)
+            {
+                var at = button.GetGlobalRect().GetCenter();
+                _script.Add((_frame, new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = true, Position = at, GlobalPosition = at }));
+                _script.Add((_frame + 1, new InputEventMouseButton { ButtonIndex = MouseButton.Left, Pressed = false, Position = at, GlobalPosition = at }));
+            }
+        }
+
         foreach (var (_, @event) in _script.Where(s => s.Frame == _frame))
         {
             if (@event is InputEventMouseButton { ButtonIndex: MouseButton.WheelUp or MouseButton.WheelDown } turn)
@@ -94,6 +139,45 @@ public partial class AutoInput : Node
             }
 
             Input.ParseInputEvent(@event);
+        }
+    }
+
+    private BaseButton? Find(string text)
+    {
+        // The last in tree order is drawn on top (a screen over the map's HUD), so it wins.
+        var buttons = VisibleButtons().Where(b => !b.Disabled).Reverse().ToList();
+        return buttons.FirstOrDefault(b => string.Equals(Label(b), text, StringComparison.OrdinalIgnoreCase))
+            ?? buttons.FirstOrDefault(b => Label(b).Contains(text, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string Label(BaseButton button) => button switch
+    {
+        Button { Text: { Length: > 0 } text } => text,
+        _ => button.TooltipText,
+    };
+
+    private List<BaseButton> VisibleButtons()
+    {
+        var found = new List<BaseButton>();
+        Collect(GetTree().Root, found);
+        return found;
+    }
+
+    private static void Collect(Node node, List<BaseButton> found)
+    {
+        if (node is CanvasItem { Visible: false } or CanvasLayer { Visible: false })
+        {
+            return;
+        }
+
+        if (node is BaseButton button && button.IsVisibleInTree())
+        {
+            found.Add(button);
+        }
+
+        foreach (var child in node.GetChildren())
+        {
+            Collect(child, found);
         }
     }
 }

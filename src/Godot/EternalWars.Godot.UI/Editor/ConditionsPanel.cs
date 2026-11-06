@@ -20,6 +20,9 @@ namespace EternalWars.Godot.UI.Editor;
 /// </summary>
 public partial class ConditionsPanel : VBoxContainer
 {
+    /// <summary>The "not set" item's id: -1 would make Godot number the item itself, and the row would then show nothing selected.</summary>
+    private const int DifficultyNotSet = 1000;
+
     private static readonly (ConditionKind Kind, string Label)[] Kinds =
     [
         (ConditionKind.CaptureTown, "Victory: capture a town"),
@@ -74,7 +77,7 @@ public partial class ConditionsPanel : VBoxContainer
         AddChild(_grace);
         _maxHeroes.ValueChanged += v => Change(r => r with { MaxHeroes = (int)v });
         AddChild(_maxHeroes);
-        _difficulty.AddItem("Difficulty: not set (Normal)", -1);
+        _difficulty.AddItem("Difficulty: not set (Normal)", DifficultyNotSet);
         foreach (var level in Enum.GetValues<Complexity>())
         {
             _difficulty.AddItem($"Difficulty: {level}", (int)level);
@@ -82,7 +85,7 @@ public partial class ConditionsPanel : VBoxContainer
 
         _difficulty.ItemSelected += index => Change(r => r with
         {
-            Difficulty = _difficulty.GetItemId((int)index) is var id and >= 0 ? (Complexity)id : null,
+            Difficulty = _difficulty.GetItemId((int)index) is var id and not DifficultyNotSet ? (Complexity)id : null,
         });
         AddChild(_difficulty);
         _weekEvents.Toggled += on => Change(r => r with { WeekEvents = r.WeekEvents with { Enabled = on } });
@@ -190,7 +193,7 @@ public partial class ConditionsPanel : VBoxContainer
         _grace.SetValueNoSignal(rules.GraceDays);
         _grace.Editable = rules.Elimination;
         _maxHeroes.SetValueNoSignal(rules.MaxHeroes);
-        _difficulty.Selected = _difficulty.GetItemIndex(rules.Difficulty is { } difficulty ? (int)difficulty : -1);
+        _difficulty.Selected = _difficulty.GetItemIndex(rules.Difficulty is { } difficulty ? (int)difficulty : DifficultyNotSet);
         _weekEvents.SetPressedNoSignal(rules.WeekEvents.Enabled);
         _skipWeeks.SetValueNoSignal(rules.WeekEvents.SkipWeeks);
         _skipWeeks.Editable = rules.WeekEvents.Enabled;

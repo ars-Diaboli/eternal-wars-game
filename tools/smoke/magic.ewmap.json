@@ -1,0 +1,177 @@
+{
+ "formatVersion": 37,
+ "name": "Magic",
+ "width": 24,
+ "height": 14,
+ "terrain": [
+  [
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg",
+   "gggggggggggggggggggggggg"
+  ]
+ ],
+ "players": [
+  {
+   "name": "Blue",
+   "isHuman": true
+  },
+  {
+   "name": "Red",
+   "isHuman": false
+  }
+ ],
+ "heroes": [
+  {
+   "id": 1,
+   "name": "Magus",
+   "owner": 0,
+   "x": 4,
+   "y": 8,
+   "type": "haven.ansel",
+   "knowledge": 8,
+   "spellPower": 4,
+   "skills": {
+    "magic.haven.spells": "Expert",
+    "magic.haven.mastery": "Advanced",
+    "magic.academy.spells": "Advanced",
+    "magic.dungeon.spells": "Advanced",
+    "magic.necropolis.spells": "Basic",
+    "magic.sylvan.spells": "Basic"
+   },
+   "spellBook": true,
+   "spells": [
+    "light.bless",
+    "light.distant-vision",
+    "light.resurrection",
+    "arcana.detect-magic",
+    "arcana.slow",
+    "arcana.haste",
+    "shadow.blind",
+    "shadow.hypnotize",
+    "death.animate-dead",
+    "nature.view-terrain"
+   ],
+   "artifacts": [
+    "talisman-of-mana",
+    "mystic-orb-of-mana",
+    "charm-of-mana"
+   ],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 30
+    },
+    {
+     "slot": 1,
+     "creature": "haven.archer",
+     "count": 20
+    },
+    {
+     "slot": 2,
+     "creature": "haven.griffin",
+     "count": 8
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Bookless",
+   "owner": 0,
+   "x": 15,
+   "y": 8,
+   "type": "haven.aldric",
+   "spellBook": false,
+   "spells": [],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "haven.footman",
+     "count": 10
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "name": "Warlock",
+   "owner": 1,
+   "x": 4,
+   "y": 10,
+   "type": "academy.aurelian",
+   "knowledge": 10,
+   "spellPower": 3,
+   "skills": {
+    "magic.haven.spells": "Advanced",
+    "magic.academy.spells": "Advanced",
+    "magic.dungeon.spells": "Advanced"
+   },
+   "spellBook": true,
+   "spells": [
+    "light.bless",
+    "arcana.slow",
+    "arcana.haste",
+    "arcana.dispel",
+    "shadow.blind",
+    "light.resurrection"
+   ],
+   "army": [
+    {
+     "slot": 0,
+     "creature": "academy.gremlin",
+     "count": 40
+    },
+    {
+     "slot": 1,
+     "creature": "academy.gargoyle",
+     "count": 12
+    }
+   ]
+  }
+ ],
+ "objects": [
+  {
+   "kind": "town",
+   "id": 1,
+   "definition": "town.haven",
+   "x": 1,
+   "y": 1,
+   "owner": 0,
+   "name": "Castlebridge",
+   "buildings": {
+    "town-hall": 1,
+    "fort": 1,
+    "tavern": 1,
+    "mage-guild": 2
+   },
+   "guildSpells": [
+    "light.bless",
+    "light.distant-vision"
+   ]
+  },
+  {
+   "kind": "town",
+   "id": 2,
+   "definition": "town.haven",
+   "x": 12,
+   "y": 1,
+   "owner": 0,
+   "name": "Dawnford",
+   "buildings": {
+    "town-hall": 1,
+    "fort": 1,
+    "mage-guild": 1
+   }
+  }
+ ]
+}

@@ -7,7 +7,7 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// A short message from the map for the player whose turn it is (ADR-068): a sign's text, why an object turned the hero away, an emptied
-/// object, a freed prisoner, what a Pandora's Box held, what an Astrologer's Tower foretells, and the week's event when a human's first turn of the week starts (ADR-073).
+/// object, a freed prisoner, what a Pandora's Box held, what an Astrologer's Tower foretells, what a town's unique building gave (ADR-138), a sphinx's verdict, and the week's event when a human's first turn of the week starts (ADR-073).
 /// Hidden again by "OK", Escape or the hero's next step.
 /// </summary>
 public partial class NoticePanel : PanelContainer
@@ -48,7 +48,13 @@ public partial class NoticePanel : PanelContainer
                 : _session.State.Grail.Position == e.Position && !_session.State.Grail.IsFound ? "Something lies here, but there is no room left to carry it."
                 : "Nothing here but earth and stones."));
         this.SubscribeWhileInTree<GrailBuildingRaised>(session.Events, e =>
-            Show(e.Hero, $"The Grail is laid to rest, and {e.Name} rises in {NameOf(e.Town)}: +5000 gold a day, +50 % growth, and stronger defenders in a siege."));
+            Show(e.Hero, $"The Grail is laid to rest, and {e.Name} rises in {(_session.State.FindObject(e.Town) is Core.Domain.Towns.Town raisedIn ? raisedIn.Name : "your town")}: +5000 gold a day, +50 % growth, and stronger defenders in a siege."));
+        this.SubscribeWhileInTree<UniqueBuildingVisited>(session.Events, e => Show(e.Hero, UniqueText(e)));
+        this.SubscribeWhileInTree<SphinxAnswered>(session.Events, e => Show(e.Hero,
+            !e.Right ? $"Wrong. The sphinx's stare ends {_session.State.GetHero(e.Hero).Name}'s day ({Core.Domain.Objects.Sphinx.WrongMorale} morale for the next battle)."
+            : e.Artifact is { } prize ? $"Right. The sphinx gives {_session.State.GetHero(e.Hero).Name} the {_session.State.Artifacts.Get(prize).Name}."
+            : e.Experience > 0 ? $"Right. The sphinx's lesson gives {_session.State.GetHero(e.Hero).Name} {e.Experience} experience."
+            : "Right, but there is no room left to carry the sphinx's prize."));
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => AnnounceWeek());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Visible = false);
     }
@@ -107,6 +113,28 @@ public partial class NoticePanel : PanelContainer
         gains.AddRange(c.Creatures.Select(s => $"{s.Count} × {(state.Creatures.TryGet(s.Creature, out var creature) ? creature.Name : s.Creature)}"));
         var found = gains.Count == 0 ? "The box is empty, or nothing in it was of use." : $"Inside: {string.Join(", ", gains)}.";
         return opened.Message is { } message ? $"{message}\n\n{found}" : found;
+    }
+
+    /// <summary>What a town's unique building gave the visiting hero (ADR-138).</summary>
+    private string UniqueText(UniqueBuildingVisited visited)
+    {
+        var state = _session.State;
+        var hero = state.GetHero(visited.Hero);
+        var name = state.FindObject(visited.Town) is Core.Domain.Towns.Town town
+            ? Core.Domain.Towns.TownRules.Buildings(state, town).Get(visited.Building, 1).Name
+            : visited.Building;
+        var gift = Core.Domain.Towns.UniqueBuildings.Get(visited.Building)?.Bonus switch
+        {
+            Core.Domain.Towns.UniqueBonus.Stables => $"+{Core.Domain.Objects.BuffRules.StablesMovement} movement today and every day until the week ends",
+            Core.Domain.Towns.UniqueBonus.Attack => "+1 Attack",
+            Core.Domain.Towns.UniqueBonus.Defense => "+1 Defense",
+            Core.Domain.Towns.UniqueBonus.Knowledge => "+1 Knowledge",
+            Core.Domain.Towns.UniqueBonus.SpellPower => "+1 Spell Power",
+            Core.Domain.Towns.UniqueBonus.Experience => $"+{Core.Domain.Towns.UniqueBuildings.ExperienceBonus} experience",
+            Core.Domain.Towns.UniqueBonus.ManaSpring => $"mana {hero.Mana}/{hero.MaxMana}",
+            _ => "its blessing",
+        };
+        return $"{hero.Name} visits the {name}: {gift}.";
     }
 
     private string NameOf(Core.Domain.Common.MapObjectId id) =>

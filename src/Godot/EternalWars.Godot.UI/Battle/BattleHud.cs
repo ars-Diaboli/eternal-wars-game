@@ -31,9 +31,9 @@ public partial class BattleHud : Control
     private readonly Button _surrender = new() { Text = "Surrender" };
     private readonly Button _quick = new() { Text = "Quick combat (Q)" };
     private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
-    private readonly HBoxContainer _warcries = new();
+    private readonly HFlowContainer _warcries = new();
     private readonly Dictionary<Warcry, Button> _warcryButtons = [];
-    private readonly HBoxContainer _spells = new();
+    private readonly HFlowContainer _spells = new(); // wraps: a mage's spells do not fit in one row
     private readonly PanelContainer _result = new() { Visible = false };
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
     private readonly Button _close = new() { Text = "Return to the map (Enter)" };
@@ -48,7 +48,7 @@ public partial class BattleHud : Control
         _view = view;
         Name = "BattleHud";
         Visible = false;
-        SetAnchorsPreset(LayoutPreset.FullRect);
+        SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
 
         var top = new VBoxContainer { AnchorLeft = 0, AnchorRight = 1, OffsetTop = 8, MouseFilter = MouseFilterEnum.Ignore };
@@ -60,11 +60,16 @@ public partial class BattleHud : Control
         AddChild(log);
         log.AddChild(_log);
 
-        var actions = new VBoxContainer { AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -440, OffsetTop = -190, OffsetRight = -8, OffsetBottom = -8 };
+        // Bottom right; taller content (many spells) grows upwards, never off the screen.
+        var actions = new VBoxContainer
+        {
+            AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -680, OffsetTop = -230, OffsetRight = -8, OffsetBottom = -48, // above the menu button
+            GrowHorizontal = GrowDirection.Begin, GrowVertical = GrowDirection.Begin, Alignment = BoxContainer.AlignmentMode.End,
+        };
         AddChild(actions);
         actions.AddChild(_status);
         actions.AddChild(_info);
-        var buttons = new HBoxContainer();
+        var buttons = new HFlowContainer();
         actions.AddChild(buttons);
         foreach (var button in new[] { _start, _wait, _defend, _retreat, _surrender, _quick })
         {
@@ -98,7 +103,7 @@ public partial class BattleHud : Control
         };
 
         var center = new CenterContainer { MouseFilter = MouseFilterEnum.Ignore };
-        center.SetAnchorsPreset(LayoutPreset.FullRect);
+        center.SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         AddChild(center);
         center.AddChild(_result);
         var resultBox = new VBoxContainer();
