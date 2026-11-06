@@ -1252,3 +1252,15 @@ placeholders.
   by straight-line distance, which would park it against the cliff's face.
 - **Code**: `ObstacleClass.Cliff`; `BattleObstacle` takes a `Length` (its rect is 2 × length); `BattleState.CliffsAllowed` (false for banks);
   `BattleSetup.PlaceCliff`. The 3D field draws a ridge (a prism) as long as the piece; the 2D board draws its rect like any obstacle.
+
+### ADR-147: The Crown of the Waning Eye's best magic skill (ADR-099, ADR-111, 2026-11-06)
+**Status**: implemented; rules only (the hero screen's artifact line names it).
+
+- **Rule**: the Crown adds one level to the hero's best magic skill: the "magic" skill (which spell levels the hero can learn) of the school
+  whose three skills have the most learned levels together. On a tie, the first school in the ring order (Sylvan, Haven, Academy, Dungeon,
+  Necropolis, Inferno) counting from the hero's own town (its roster town, else its preferred creature's); a hero of a town without a school
+  counts from Sylvan. Nothing while the hero has no school started; a skill at Master stays at Master. Only learned levels count, so other
+  artifacts' skill levels do not move the choice. The level counts everywhere a skill level does (learning spells in a guild, the AI).
+- **Code**: the effect word `best-magic-skill` (`ArtifactEffectKind.BestMagicSkill`); `Hero.BestMagicSkill()`; `Hero.SkillLevelOf` adds it.
+  `ArtifactBonuses.HomeTown` keeps the hero's town for the tie, set by `GameState.RefreshArtifacts` (also refreshed when a placeholder
+  becomes a roster hero). AI weight 8 (placeholder).

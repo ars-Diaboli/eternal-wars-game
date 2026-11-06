@@ -92,6 +92,12 @@ public enum ArtifactEffectKind
     /// <summary>Levels added to every skill the hero has started.</summary>
     AllSkills,
 
+    /// <summary>
+    /// Levels added to the hero's best magic skill (the Crown of the Waning Eye, ADR-147): the "magic" skill of the school with the most learned
+    /// levels, a tie going to the first school in the ring order from the hero's town; nothing while no school is started.
+    /// </summary>
+    BestMagicSkill,
+
     /// <summary>Tiles added to the hero's scouting radius (ADR-111).</summary>
     Sight,
 
@@ -172,6 +178,7 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
         ["terrain-penalty"] = ArtifactEffectKind.TerrainPenalty,
         ["skill"] = ArtifactEffectKind.Skill,
         ["all-skills"] = ArtifactEffectKind.AllSkills,
+        ["best-magic-skill"] = ArtifactEffectKind.BestMagicSkill,
         ["sight"] = ArtifactEffectKind.Sight,
         ["mana-a-day"] = ArtifactEffectKind.ManaADay,
         ["mana-max"] = ArtifactEffectKind.ManaMax,

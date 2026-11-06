@@ -188,6 +188,15 @@ public sealed record ArtifactBonuses
 
     public int AllSkills { get; init; }
 
+    /// <summary>Levels added to the hero's best magic skill (<see cref="Heroes.Hero.BestMagicSkill"/>).</summary>
+    public int BestMagicSkill { get; init; }
+
+    /// <summary>
+    /// The hero's own town, where the ring order of <see cref="BestMagicSkill"/>'s tie starts; set by <c>GameState.RefreshArtifacts</c>, which knows
+    /// the roster (null: the ring starts at its first town).
+    /// </summary>
+    public string? HomeTown { get; init; }
+
     public IReadOnlySet<TerrainType> NativeTerrains { get; init; } = new HashSet<TerrainType>();
 
     public IReadOnlyDictionary<string, int> Skills { get; init; } = new Dictionary<string, int>();
@@ -324,6 +333,7 @@ public sealed record ArtifactBonuses
             Income = income,
             TerrainPenaltyReductionPercent = Math.Min(100, Sum(ArtifactEffectKind.TerrainPenalty)),
             AllSkills = Sum(ArtifactEffectKind.AllSkills),
+            BestMagicSkill = Sum(ArtifactEffectKind.BestMagicSkill),
             NativeTerrains = terrains,
             Skills = skills,
             Sight = Sum(ArtifactEffectKind.Sight),
@@ -375,6 +385,7 @@ public sealed record ArtifactBonuses
         }
 
         Add(AllSkills, "to every skill");
+        Add(BestMagicSkill, "to the best magic skill");
         Add(Sight, "sight radius");
         Add(ManaADay, "mana a day");
         Add(ManaMax, "maximum mana");

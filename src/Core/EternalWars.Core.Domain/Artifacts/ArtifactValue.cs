@@ -40,6 +40,7 @@ public static class ArtifactValue
         ArtifactEffectKind.TerrainPenalty => 0.2,
         ArtifactEffectKind.Skill => 6.0,
         ArtifactEffectKind.AllSkills => 15.0,
+        ArtifactEffectKind.BestMagicSkill => 8.0,
         ArtifactEffectKind.Sight => 3.0,
         ArtifactEffectKind.ManaADay => 3.0,
         ArtifactEffectKind.ManaMax => 0.3,

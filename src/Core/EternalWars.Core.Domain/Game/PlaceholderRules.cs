@@ -96,6 +96,7 @@ public static class PlaceholderRules
 
             var definition = pool[state.Random.Next(pool.Count)];
             hero.Apply(definition);
+            state.RefreshArtifacts(hero); // the hero's own town changed (the Crown of the Waning Eye's tie)
             if (hero.Army.IsEmpty && Towns.TavernRules.StarterStack(state, definition) is { } stack)
             {
                 hero.Army.TryAdd(stack);
