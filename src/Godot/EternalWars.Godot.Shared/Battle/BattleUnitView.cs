@@ -7,7 +7,7 @@ namespace EternalWars.Godot.Shared.Battle;
 /// <summary>
 /// Placeholder creature stack on the battlefield: a base plate in the side's colour covering the footprint, a body
 /// whose shape tells the role (walkers are capsules, shooters cylinders, flyers hovering spheres) and whose colour comes
-/// from the creature id, a nose pointing at the enemy side, the stack count and an active-unit ring. War machines are
+/// from the creature id, a nose pointing at the enemy side, the stack count, the top creature's health bar (ADR-145) and an active-unit ring. War machines are
 /// a wooden box: with a barrel for offensive machines, a pale roof for the tent, wheels for the cart. A machine's footprint is one
 /// column (1 × 3 or 1 × 2, ADR-073); its model is sized by the footprint's length and overhangs the grid's edge.
 /// <see cref="BattleView3D"/> moves and animates it; the view never reads the core state itself.
@@ -105,10 +105,57 @@ public partial class BattleUnitView : Node3D
         _count.FontSize = 40;
         _count.OutlineSize = 10;
         _count.NoDepthTest = true;
-        _count.Position = new Vector3(0, (bodyHeight * 2) + 0.25f, 0);
+        _count.Position = new Vector3(0, (bodyHeight * 2) + 0.36f, 0);
         AddChild(_count);
         SetCount(count);
+
+        // The health bar under the count (ADR-145): a dark back and a fill that shrinks towards its left end.
+        var barY = (bodyHeight * 2) + 0.14f;
+        AddChild(new MeshInstance3D
+        {
+            Mesh = new QuadMesh { Size = new Vector2(BarWidth + 0.03f, BarHeight + 0.03f), Material = BarMaterial(new Color(0.05f, 0.05f, 0.05f, 0.85f), 0) },
+            Position = new Vector3(0, barY, 0),
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        });
+        _barFill.Material = _barMaterial;
+        _bar.Mesh = _barFill;
+        _bar.Position = new Vector3(0, barY, 0);
+        _bar.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
+        AddChild(_bar);
+        SetHealth(creature.Health);
     }
+
+    private const float BarWidth = 0.6f;
+    private const float BarHeight = 0.09f;
+    private readonly MeshInstance3D _bar = new() { Name = "HealthBar" };
+    private readonly QuadMesh _barFill = new();
+    private readonly StandardMaterial3D _barMaterial = BarMaterial(Colors.Green, 1);
+
+    /// <summary>The top creature's hit points (ADR-145): the bar's length, and green, yellow or red.</summary>
+    public void SetHealth(int topHealth)
+    {
+        var fraction = StackHealth.Fraction(topHealth, Creature.Health);
+        var width = BarWidth * fraction;
+        _barFill.Size = new Vector2(Math.Max(width, 0.001f), BarHeight);
+        _barFill.CenterOffset = new Vector3(-(BarWidth - width) / 2, 0, 0);
+        _barMaterial.AlbedoColor = StackHealth.Band(topHealth, Creature.Health) switch
+        {
+            HealthBand.Green => new Color(0.30f, 0.80f, 0.25f),
+            HealthBand.Yellow => new Color(0.95f, 0.80f, 0.20f),
+            _ => new Color(0.90f, 0.20f, 0.15f),
+        };
+    }
+
+    /// <summary>An unlit quad that faces the camera and draws over the field; <paramref name="priority"/> puts the fill over the back.</summary>
+    private static StandardMaterial3D BarMaterial(Color color, int priority) => new()
+    {
+        AlbedoColor = color,
+        ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+        BillboardMode = BaseMaterial3D.BillboardModeEnum.Enabled,
+        Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+        NoDepthTest = true,
+        RenderPriority = priority,
+    };
 
     public bool Active
     {

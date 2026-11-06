@@ -129,6 +129,17 @@ public partial class BattleBoard2D : Control
 
             var label = $"{unit.Creature.Name[..Math.Min(4, unit.Creature.Name.Length)]} {unit.Count}";
             DrawString(font, rect.Position + new Vector2(3, 14), label, fontSize: 12, modulate: Colors.Black);
+
+            // The top creature's health bar along the bottom edge (ADR-145).
+            var bar = new Rect2(rect.Position.X + 2, rect.End.Y - 5, rect.Size.X - 4, 3);
+            DrawRect(bar, new Color(0, 0, 0, 0.7f));
+            DrawRect(bar with { Size = new Vector2(bar.Size.X * StackHealth.Fraction(unit.TopHealth, unit.Creature.Health), bar.Size.Y) },
+                StackHealth.Band(unit.TopHealth, unit.Creature.Health) switch
+                {
+                    HealthBand.Green => new Color(0.30f, 0.80f, 0.25f),
+                    HealthBand.Yellow => new Color(0.95f, 0.80f, 0.20f),
+                    _ => new Color(0.90f, 0.20f, 0.15f),
+                });
         }
     }
 

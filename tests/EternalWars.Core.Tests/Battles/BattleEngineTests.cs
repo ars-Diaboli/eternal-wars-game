@@ -158,7 +158,7 @@ public class BattleEngineTests
         battle.Engine.Attack(target.Id, null);
 
         Assert.Equal((3, 7), (target.Count, target.TopHealth));
-        Assert.Contains(new BattleUnitAttacked(attacker.Id, target.Id, BattleAttackKind.Melee, 23, 2, 3), battle.Events);
+        Assert.Contains(new BattleUnitAttacked(attacker.Id, target.Id, BattleAttackKind.Melee, 23, 2, 3, 7), battle.Events);
     }
 
     [Fact]

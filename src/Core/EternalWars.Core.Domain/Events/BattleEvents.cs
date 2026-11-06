@@ -52,9 +52,9 @@ public sealed record BattleUnitLeftKeep(int Unit) : IEvent;
 
 /// <summary>
 /// The fortifications hurt a stack (ADR-106): a shot of the keep or a tower (<paramref name="Structure"/>), or the moat it entered.
-/// <paramref name="RemainingCount"/> is the stack's size afterwards.
+/// <paramref name="RemainingCount"/> is the stack's size afterwards, <paramref name="TopHealth"/> its top creature's hit points (ADR-145).
 /// </summary>
-public sealed record BattleUnitSiegeDamaged(int Unit, SiegeDamageSource Source, int? Structure, int Damage, int Killed, int RemainingCount) : IEvent;
+public sealed record BattleUnitSiegeDamaged(int Unit, SiegeDamageSource Source, int? Structure, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
 
 /// <summary>The side with the higher Tactics may place its stacks within <paramref name="Columns"/> columns of its edge (ADR-072).</summary>
 public sealed record BattleDeploymentStarted(BattleSide Side, int Columns) : IEvent;
@@ -72,7 +72,10 @@ public sealed record BattleTurnStarted(int Unit, int Round) : IEvent;
 
 public sealed record BattleUnitMoved(int Unit, CellPosition From, CellPosition To) : IEvent;
 
-/// <summary>One hit. <paramref name="RemainingCount"/> is the target's stack size afterwards; <paramref name="Luck"/> what luck did.</summary>
+/// <summary>
+/// One hit. <paramref name="RemainingCount"/> is the target's stack size afterwards and <paramref name="TopHealth"/> its top creature's hit
+/// points (ADR-145); <paramref name="Luck"/> what luck did.
+/// </summary>
 public sealed record BattleUnitAttacked(
     int Attacker,
     int Target,
@@ -80,6 +83,7 @@ public sealed record BattleUnitAttacked(
     int Damage,
     int Killed,
     int RemainingCount,
+    int TopHealth,
     HitLuck Luck = HitLuck.None) : IEvent;
 
 /// <summary>
@@ -142,8 +146,8 @@ public sealed record BattleUnitReborn(int Unit, int Count) : IEvent;
 /// </summary>
 public sealed record BattleSpellCast(BattleSide Side, string Spell, int? Target, CellPosition? Cell, int Cost, int Mana) : IEvent;
 
-/// <summary>A spell's damage to a stack (ADR-110).</summary>
-public sealed record BattleUnitSpellDamaged(int Unit, string Spell, int Damage, int Killed, int RemainingCount) : IEvent;
+/// <summary>A spell's damage to a stack (ADR-110); <paramref name="TopHealth"/> is its top creature's hit points afterwards (ADR-145).</summary>
+public sealed record BattleUnitSpellDamaged(int Unit, string Spell, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
 
 /// <summary>A buff or curse took hold on a stack until the end of round <paramref name="UntilRound"/> (ADR-110).</summary>
 public sealed record BattleSpellApplied(int Unit, string Spell, int UntilRound) : IEvent;

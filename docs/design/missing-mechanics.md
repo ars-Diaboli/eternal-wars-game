@@ -54,7 +54,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 
 | Mechanic | From | Status | Notes |
 |---|---|---|---|
-| Stack health bars | HoMM5 | Planned | ADR-118: top creature's hit points, green / yellow / red |
+| Stack health bars | HoMM5 | Built | ADR-118, ADR-145: top creature's hit points, green / yellow / red |
 | Obstacles that split the field | HoMM3 | Planned | ADR-118 |
 | Terrain-themed and special battlefields | HoMM3 | Partly | Native-terrain bonus exists (ADR-068); themes are a roadmap follow-up |
 | Raise Dead, field walls (Fire Wall, Bone Wall), Teleport, Hypnotize, clones | HoMM3, HoMM5 | Planned | 16 battle spells left (ADR-123): field zones, copies, control changes, two-click aiming |

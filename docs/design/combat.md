@@ -162,4 +162,6 @@ ADR-099, ADR-106, built ADR-109 and ADR-120 (CMB-11). Numbers are placeholders; 
   computer players and neutrals. The battle AI plays a copy for both sides and shows the outcome (casualties, experience, raised undead,
   artifacts). **Accept** ends the battle exactly so; **Fight** plays it by hand from where it stands, re-rolling nothing.
 - **Quick combat**: either side may hand the rest of a battle to the deterministic battle AI; neutrals and computer players always use it.
-- Health bars per stack and field-dividing cliffs *(planned, ADR-118, CMB-12)*.
+- **Health bars** (ADR-118, ADR-145): each stack shows a bar under its count, the top creature's hit points against its full health: green
+  over 50 %, yellow 21–50 %, red 20 % and below.
+- Field-dividing cliffs *(planned, ADR-118, CMB-12)*.
