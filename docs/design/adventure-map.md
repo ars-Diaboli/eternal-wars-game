@@ -242,6 +242,22 @@ Rules: [shared object rules](#shared-object-rules).
 | Artifact Merchant | **7** Minor or Major artifacts (pieces, never whole relics) at **twice their worth** (Minor 2000, Major 5000), restocked on each month's first day; a sold slot stays empty until then (MAP-33) |
 | Witch Hut | **Two skills** (map-set or rolled); a visit raises one a level, or the same group's next skill where it cannot; **one lesson per hero level** (MAP-34) |
 | University / War Academy | Lessons in the magic schools / the six general groups (never Primal Fury), drawn per hero on its first visit with the level-up weights and kept: up to **2 new groups** (the group's first skill at Basic) and **2 skills of its learned groups** one level up; any number a visit, each **1000 gold + 5 crystal, mercury and sulfur**; learned lessons and new groups past the 6-group limit shown disabled (ADR-139). Generator value 2500, one of each per map |
+| Obelisk | Once per player: opens pieces of the **puzzle map** (below); at most **25** a map (ADR-140) |
+
+**The Grail** (ADR-126, ADR-140, MAP-36):
+- **Where**: buried on diggable ground at least **10 cells from every edge** (maps under 24×24 have none), placed by the author or drawn at
+  game start on maps with obelisks, more than 10 cells from every town where it can.
+- **Digging** (G): the hero's whole day's movement, not on roads, objects or an old hole; the hole stays. A full backpack leaves the Grail
+  buried.
+- **The Grail**: never sold, traded or sacrificed; carried into an own town without one, it raises that town's **Grail building** at once
+  ([town-buildings.md](../content/town-buildings.md), ADR-130).
+- **Puzzle map** (P), one per player: **20×20 cells** in **100 pieces of 2×2**, placed so the Grail lies in its centre 4×4 cells. It shows
+  terrain and the objects that stay, without owners; not piles, chests, artifacts, loot, boxes, monsters, prisons or quest guards.
+- **Obelisks** (at most 25): the 100 pieces split evenly over them, the first visits opening the smaller shares (11 obelisks: ten 9s, then
+  10). The first half of a player's visits (rounded down) open random pieces of the outer ring (outside the middle 6×6 pieces), the next
+  ones but the last pieces of the outer and mid rings, the last the rest with the centre, where a cross marks the spot. Allies' visits do
+  not count.
+- **Generator**: 25 obelisks a map by default, or the template's count per zone.
 
 <a id="scenery-and-rivers-adr-077-built-adr-079"></a>
 ## Scenery and rivers

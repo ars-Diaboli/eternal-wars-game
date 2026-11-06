@@ -134,6 +134,70 @@ public static class TreasurePlacer
         }
     }
 
+    /// <summary>
+    /// How many obelisks each zone gets (ADR-140, MAP-36): the zones that set <see cref="TemplateZone.Obelisks"/> get that many; the others split
+    /// what is left of the map's <see cref="GrailRules.MaxObelisks"/> as evenly as can be, the first zones getting one more. The total never goes past
+    /// the cap: zones further down lose what does not fit.
+    /// </summary>
+    public static IReadOnlyList<int> ObeliskCounts(MapTemplate template)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+        var set = template.Zones.Sum(z => Math.Max(0, z.Obelisks ?? 0));
+        var auto = template.Zones.Count(z => z.Obelisks is null);
+        var rest = Math.Max(0, GrailRules.MaxObelisks - set);
+        var counts = new List<int>();
+        var left = GrailRules.MaxObelisks;
+        var autoIndex = 0;
+        foreach (var zone in template.Zones)
+        {
+            var wanted = zone.Obelisks is { } count ? Math.Max(0, count) : (rest / auto) + (autoIndex++ < rest % auto ? 1 : 0);
+            var given = Math.Min(wanted, left);
+            counts.Add(given);
+            left -= given;
+        }
+
+        return counts;
+    }
+
+    /// <summary>
+    /// Stage 6's last step, after the treasure: the obelisks (<see cref="ObeliskCounts"/>), unguarded, three tiles apart, on maps that can hold a Grail
+    /// (<see cref="GrailRules.HoldsGrail"/>). A zone without room for its share gets fewer; a count the template set is reported then.
+    /// Streams: <c>obelisks</c> per zone.
+    /// </summary>
+    public static void PlaceObelisks(MapTemplate template, GeneratedMap map, ulong seed)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+        ArgumentNullException.ThrowIfNull(map);
+        var streams = new SeedStreams(seed);
+        if (!GrailRules.HoldsGrail(map.Map))
+        {
+            return;
+        }
+
+        var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.Obelisk);
+        var counts = ObeliskCounts(template);
+        for (var zone = 0; zone < template.Zones.Count; zone++)
+        {
+            var random = streams.For("obelisks", template.RollZone(zone));
+            var tiles = map.Layout.Tiles(zone).Select(t => new MapPosition(t.X, t.Y, t.Level)).ToList();
+            var placed = new List<MapPosition>();
+            for (var i = 0; i < counts[zone]; i++)
+            {
+                if (Spot(map, definition, tiles, placed, random) is not { } at)
+                {
+                    if (template.Zones[zone].Obelisks is not null)
+                    {
+                        map.Problem($"Zone '{template.Zones[zone].Id}': no room for obelisk {i + 1} of {counts[zone]}.");
+                    }
+
+                    break;
+                }
+
+                placed.Add(map.Add(MapObject.Create(map.NextId(), definition, at)).VisitPosition);
+            }
+        }
+    }
+
     private static bool Item(GeneratedMap map, TemplateZone spec, List<MapPosition> tiles, List<MapPosition> placed, int value, bool isStart, GameRandom random,
         CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<string> relics, Sites sites, ref bool marketplacePlaced)
     {

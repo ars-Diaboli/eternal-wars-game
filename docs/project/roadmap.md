@@ -10,7 +10,7 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
 except 16 battle spells; sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133).
 **Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) a Godot run of the ADR-120 / 121 / 122 / 123 views
-and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Grail, the Undead Transformer (ADR-137),
+and of the new-game screen's user templates (see the list below); (3) the remaining Phase 5 items: the Undead Transformer (ADR-137),
 the last 16 battle spells, presentation.
 
 ## Open checks in Godot
@@ -24,10 +24,15 @@ the last 16 battle spells, presentation.
         the trading screen (ADR-067)
       - Towns: the unique buildings on the town screen and their visit messages (ADR-138)
       - Map objects: the University's and War Academy's lessons in the object panel (ADR-139)
+      - The Grail: puzzle map window (P), digging (G), holes, obelisk and Grail building notices, the editor's Grail tool, the template
+        editor's obelisk count (ADR-140)
       - Map objects: power-up choices (Learning Stone etc.), utility panels and the notice panel, the second and third catalogues'
         screens (ADR-079, ADR-080, ADR-082), Pandora's Box (ADR-105)
       - Editor: hero limit setting on the conditions panel, town faction in the inspector (ADR-083)
       - New-game screen: user templates from the editor's `templates` folder
+
+## Bugs
+- [ ] At game start the fog opens around the starting hero, not around the starting town (owner, 2026-11-06)
 
 ## Data and content groundwork ✅
 Data tables in `src/Core/data` embedded in core with designer overrides (DATA-1, ADR-071); creature size pass (ADR-070); per-town
@@ -167,7 +172,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] University and War Academy map objects: lessons, disabled offers, screen, AI use, generator placement; map format v36 (ADR-139)
 - [x] Spell scrolls: one per spell level, the spell written by the generator, the editor or at game start, casting while worn, 5 % of the
       artifact rolls (ADR-136)
-- [ ] Grail: obelisks and the puzzle map, digging, the Grail artifact, Grail buildings (ADR-130), editor and generator; map format bump
+- [x] Grail: the Grail artifact, burying at game start, digging, obelisks (at most 25), the puzzle map (20×20 cells, 100 pieces by rings,
+      a puzzle per player), Grail buildings (ADR-130), the AI, the editor's Grail tool, the template's obelisk counts (v9); map format v37
+      (ADR-140, MAP-36)
 - [x] Unique buildings, the first set: Stables (Haven), Proving Ring (Stronghold), Shell Wall (Swamp Bestiary), Hall of Records
       (Academy), Altar of Brimstone (Inferno), Elder Grove (Sylvan), Mana Spring (Dungeon); the siege bonuses (ADR-138)
 

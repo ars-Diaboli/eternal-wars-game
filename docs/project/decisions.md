@@ -748,7 +748,7 @@ guild-spell rows and the adventure-spell screens are written but not run in Godo
 - The information spells (Distant Vision, Ledger of Ages, Eavesdrop) keep showing exact counts.
 
 ### ADR-126: The owner's picks from the missing mechanics: map bans, random placeholders, University and War Academy, spell scrolls, the Grail, the first unique buildings (ADR-116, 2026-11-04)
-**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), spell scrolls (ADR-136), the first unique buildings (ADR-138), the University and War Academy (ADR-139), the rest not built yet. Owner's notes in `ideas.md`;
+**Status**: accepted (2026-11-04); map bans and random placeholders built (ADR-133), spell scrolls (ADR-136), the first unique buildings (ADR-138), the University and War Academy (ADR-139), the Grail part 1 (ADR-140; the puzzle map to rework, MAP-36). Owner's notes in `ideas.md`;
 points marked *(proposal)* were filled in by the agent and stand unless the owner changes them. More unique buildings: TOWN-12; the Grail
 buildings: ADR-130.
 
@@ -903,7 +903,7 @@ the new smoke scenario `editor-events`. No map format change. Choices made here 
 - **Tested by playing the map**: a test writes events with the editor's forms and edits, saves and loads the map, and plays it in the game.
 
 ### ADR-130: The Grail buildings; more unique buildings stay open (TOWN-12, ADR-126, 2026-11-05)
-**Status**: accepted (2026-11-05), not built (with the Grail, ADR-126). Owner's answer to TOWN-12; points marked *(proposal)* were filled in
+**Status**: accepted (2026-11-05); built with the Grail's part 1 (ADR-140), core tested. Owner's answer to TOWN-12; points marked *(proposal)* were filled in
 by the agent and stand unless the owner changes them.
 
 - **Grail buildings** (b): every town's Grail building does the same: **+5000 gold a day** and **+50 % growth** of every dwelling in its
@@ -1114,3 +1114,53 @@ ADR-126's University and War Academy; points marked *(proposal)* are the agent's
   group slot. *(proposal)*
 - **Generator**: treasure value 2500 each, weight 1, at most one of each per map *(proposal)*.
 - **Game app**: the object panel lists the hero's lessons with the price; learned and no-room lessons are disabled.
+
+### ADR-140: The Grail built; the owner's puzzle map rules (ADR-126, ADR-130, MAP-36, 2026-11-06)
+**Status**: implemented (part 1 2026-11-05, the puzzle map, the editor tool and the generator's obelisks 2026-11-06); core tested
+(`GrailTests`); the Godot part (puzzle window, digging, holes, the editor's Grail tool, the template editor's obelisk count) built, not
+run. Points marked *(proposal)* are the agent's choices made while building. Rules: [adventure-map.md](../design/adventure-map.md#special-sites).
+
+**Built in part 1** (stays):
+- **The Grail**: an artifact (`grail`, Misc slot, value 500 for the AI) never rolled, not sold, traded or sacrificed. It is buried at
+  game start (`GrailRules.Bury`, `GameState.Random`) only on maps with at least one obelisk, on diggable ground more than 10 cells
+  (Chebyshev, same level) from every town's entrance *(proposal)*, any diggable cell when none is that far; or where the author put it
+  (map format v37, `grail`; the editor's `SetGrail` with undo, the validator's checks).
+- **Digging** (`DigCommand`, key G): only with the whole day's movement, which it uses up; not on roads, objects or an old hole. A hole
+  stays and is shown. *(proposal)* With a full backpack the Grail stays buried and no hole is left.
+- **Grail building**: a hero carrying the Grail into an own town without one raises it at once (`GrailBuildingRaised`); it does not count
+  as the day's building. Effects as ADR-130; per-town names *(proposal)*: Haven Dawnspire, Stronghold Skull of the First Khan, Swamp
+  Bestiary Mother Mire, Academy Orrery of Ages, Inferno Everburning Pyre, Sylvan Heartwood Tree, Dungeon Abyssal Lantern, Necropolis
+  Throne of Bones.
+- **AI**: visits obelisks its player has not visited, digs where its puzzle shows the spot, carries the Grail to an own town without the
+  building.
+- **Game app**: the puzzle map window (P), notices for obelisks, holes and the Grail building. **Editor**: the Grail tool (click to bury,
+  click again to take away); placing a 26th obelisk is refused.
+
+**The puzzle map, owner's rules** (2026-11-06, replace part 1's 15×15 map of 3×3 pieces opened outer ring first):
+- **Size**: the puzzle covers **20×20 map cells** in **pieces of 2×2 cells**: 10×10 = **100 pieces**.
+- **Segments**: the **centre** is the middle 2×2 pieces (4×4 cells), the **mid ring** the rest of the middle 6×6 pieces (32), the **outer
+  ring** the remaining 64 pieces.
+- **The Grail** lies in the centre's 4×4 cells, not always in the same one of them; so the Grail cannot lie too close to the map's edge.
+- **Obelisks**: at most **25** on a map, so an obelisk opens at least 4 pieces. The **first half** of the obelisks a player visits open
+  random pieces of the outer ring only; the **next ones but the last** random pieces of the outer and mid rings; the **last** opens the
+  centre.
+- **What it shows**: terrain and the objects that cannot be removed, without ownership (no flag colours).
+- Like HoMM2 and HoMM3: each obelisk visited opens a share of the picture.
+
+**MAP-36, the owner's answers** (2026-11-06):
+- **Shares** (a): the 100 pieces split over the map's obelisks as evenly as can be, the first visits getting the smaller shares, the last's
+  share including the centre's 4 (`GrailRules.Share`): 25 obelisks open 4 each, 11 open ten 9s then 10, 2 open 50 and 50.
+- **Halves** (b): the first obelisks / 2 visits (rounded down) open the outer ring, the next ones but the last the outer and mid rings, the
+  last the rest with the centre. With 2 obelisks the first opens 50 of the 64 outer pieces. A ring with fewer pieces left than the share
+  opens what is left.
+- **Draws** (c): at each visit, from `GameState.Random`; the number of obelisks the player has visited counts, not which.
+- **Players** (d): a puzzle per player; allies' visits do not count.
+- **Edges** (e): the Grail lies at least **10 cells** from every edge, so maps under **24×24** have none. The editor refuses a nearer spot
+  (`TooNearEdge`), the validator reports one as an error, and warns about obelisks on a map too small for a Grail. The puzzle's place is
+  drawn at game start so the Grail falls in its centre 4×4 cells and the 20×20 cells lie on the map (`GrailState.PuzzleOrigin`).
+- **Shown** (f): terrain and every object that stays (towns, mines, dwellings, gates, sites, scenery …); not piles, chests, artifacts,
+  loot, Pandora's Boxes, monsters, prisons or quest guards (`GrailRules.ShowsOnPuzzle`). The window names the level.
+- **Generator** (g): a zone's `obelisks` in the template (format v9): a count (0–25), or unset to share the map's 25 with the other unset
+  zones, the first zones getting one more; so a map gets **25 by default**. Placed after the treasure, unguarded, three tiles apart
+  (`TreasurePlacer.PlaceObelisks`, stream `obelisks`); none on a map under 24×24. A zone without room gets fewer (reported when the
+  template set its count).

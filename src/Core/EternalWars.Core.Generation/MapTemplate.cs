@@ -182,6 +182,12 @@ public sealed record TemplateZone
 
     public IReadOnlyList<TreasureBand> Treasure { get; init; } = [];
 
+    /// <summary>
+    /// Obelisks in the zone (format v9, ADR-140, MAP-36): null = the generator's share of the map's <see cref="Domain.Objects.GrailRules.MaxObelisks"/>
+    /// (split among the zones that leave it unset), 0 = none, else that many.
+    /// </summary>
+    public int? Obelisks { get; init; }
+
     public MonsterStrength Monsters { get; init; } = MonsterStrength.Average;
 
     /// <summary>Guards on the zone's mines (see <see cref="MineGuarding"/>).</summary>
@@ -278,7 +284,7 @@ public sealed record TemplateConnection
 public sealed record MapTemplate
 {
     /// <summary>Version of the <c>*.ewtemplate.json</c> format this model reads and writes; older files keep loading (bump on a format change).</summary>
-    public const int CurrentFormatVersion = 8;
+    public const int CurrentFormatVersion = 9;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 

@@ -198,6 +198,11 @@ public static class TemplateValidator
             error($"{name} has a negative number of extra piles.");
         }
 
+        if (zone.Obelisks is < 0 or > Domain.Objects.GrailRules.MaxObelisks)
+        {
+            error($"{name} wants {zone.Obelisks} obelisks: 0 to {Domain.Objects.GrailRules.MaxObelisks}.");
+        }
+
         foreach (var band in zone.Treasure)
         {
             if (band.MinValue < 1 || band.MaxValue < band.MinValue || band.Count < 1)
@@ -453,6 +458,7 @@ public static class TemplateValidator
 
     private static bool Alike(TemplateZone a, TemplateZone b) =>
         a.Type == b.Type && a.Size == b.Size && a.PlayerTowns == b.PlayerTowns && a.NeutralTowns == b.NeutralTowns && SameMines(a, b) && a.ExtraPiles == b.ExtraPiles
+        && a.Obelisks == b.Obelisks
         && a.Treasure.SequenceEqual(b.Treasure) && a.Monsters == b.Monsters && a.MineGuards == b.MineGuards && a.Obstacles == b.Obstacles
         && (a.Terrains ?? []).SequenceEqual(b.Terrains ?? []) && (a.TownTypes ?? []).SequenceEqual(b.TownTypes ?? [])
         && (a.StartDwellings ?? []).SequenceEqual(b.StartDwellings ?? [])

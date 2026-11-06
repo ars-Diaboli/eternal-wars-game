@@ -98,7 +98,11 @@ public static class GameStateDigest
         // The Grail (ADR-140) only on maps that have one or holes, so older replays keep their digests.
         if (state.Grail.Position is not null || state.Grail.Holes.Count > 0)
         {
-            Line($"grail {state.Grail.Position} found {state.Grail.IsFound} holes {string.Join(',', state.Grail.Holes.OrderBy(h => h.Level).ThenBy(h => h.Y).ThenBy(h => h.X))}");
+            Line($"grail {state.Grail.Position} found {state.Grail.IsFound} holes {string.Join(',', state.Grail.Holes.OrderBy(h => h.Level).ThenBy(h => h.Y).ThenBy(h => h.X))} puzzle {state.Grail.PuzzleOrigin}");
+            foreach (var (player, pieces) in state.Grail.AllPieces)
+            {
+                Line($"puzzle {player.Value} {string.Join(',', pieces)}");
+            }
         }
 
         // Map events (ADR-115) only on maps that have them, so older replays keep their digests.

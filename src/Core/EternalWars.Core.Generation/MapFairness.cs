@@ -136,7 +136,7 @@ public static class MapFairness
     /// <summary>What makes two start zones alike: the template gives them the same.</summary>
     private static string Signature(TemplateZone zone) =>
         $"{zone.Size}|{zone.Level}|{zone.PlayerTowns}|{zone.NeutralTowns}|{string.Join(",", zone.Mines.Where(m => m.Value > 0).OrderBy(m => m.Key).Select(m => $"{m.Key}{m.Value}"))}"
-        + $"|{zone.ExtraPiles}|{string.Join(",", zone.Treasure.Select(t => $"{t.MinValue}-{t.MaxValue}x{t.Count}"))}|{zone.Monsters}";
+        + $"|{zone.ExtraPiles}|{string.Join(",", zone.Treasure.Select(t => $"{t.MinValue}-{t.MaxValue}x{t.Count}"))}|{zone.Monsters}|{zone.Obelisks}";
 
     private static void Compare<T>(List<T> members, Func<T, string> name, Func<T, int> measure, int slack, string what, string unit, List<string> problems)
     {

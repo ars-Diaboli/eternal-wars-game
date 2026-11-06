@@ -53,6 +53,12 @@ public enum EditResult
 
     /// <summary>A colour already has <see cref="MagiWindow.MaxEyes"/> Eyes of the Magi (ADR-070).</summary>
     TooManyEyes,
+
+    /// <summary>The map already has <see cref="Objects.GrailRules.MaxObelisks"/> obelisks (ADR-140).</summary>
+    TooManyObelisks,
+
+    /// <summary>The Grail would lie too near the map's edge, or the map is too small for one (ADR-140, <see cref="Objects.GrailRules.EdgeDistance"/>).</summary>
+    TooNearEdge,
 }
 
 /// <summary>
@@ -257,6 +263,11 @@ public sealed class MapEditorSession
         if (definition.Kind == MapObjectKind.MagiEye && Scenario.Objects.OfType<MagiEye>().Count(e => e.Colour == definition.Colour) >= MagiWindow.MaxEyes)
         {
             return EditResult.TooManyEyes;
+        }
+
+        if (definition.Kind == MapObjectKind.Obelisk && Scenario.ObjectsOf<Obelisk>().Count() >= Objects.GrailRules.MaxObelisks)
+        {
+            return EditResult.TooManyObelisks;
         }
 
         var mapObject = MapObject.Create(Scenario.NextObjectId(), definition, topLeft);
@@ -1439,7 +1450,8 @@ public sealed class MapEditorSession
 
     /// <summary>
     /// Buries the Grail at <paramref name="position"/> (ADR-140), or takes it away (null: drawn when the game starts on a map with obelisks). Refused
-    /// off the map and where a hero could not dig (impassable ground, a road, an object).
+    /// off the map, nearer the edge than <see cref="Objects.GrailRules.EdgeDistance"/> (or on a map too small for a Grail) and where a hero could not
+    /// dig (impassable ground, a road, an object).
     /// </summary>
     public EditResult SetGrail(MapPosition? position)
     {
@@ -1449,6 +1461,11 @@ public sealed class MapEditorSession
             if (!Scenario.Map.Contains(at))
             {
                 return EditResult.OutOfBounds;
+            }
+
+            if (!Objects.GrailRules.FarFromEdge(Scenario.Map, at))
+            {
+                return EditResult.TooNearEdge;
             }
 
             if (Objects.GrailRules.CheckGround(Scenario, at) is not null)

@@ -48,6 +48,7 @@ public static class MapGenerator
         RoadPlacer.Place(template, map);
         RiverPlacer.Place(template, map, seed);
         TreasurePlacer.Place(template, map, seed, creatures, artifacts);
+        TreasurePlacer.PlaceObelisks(template, map, seed);
         map.Fairness = MapFairness.Check(template, map, creatures);
         foreach (var problem in map.Fairness.Problems)
         {

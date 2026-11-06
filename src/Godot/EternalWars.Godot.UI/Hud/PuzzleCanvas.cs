@@ -5,10 +5,13 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
 
-/// <summary>The puzzle map's cells (<see cref="PuzzleMapPanel"/>, ADR-140).</summary>
+/// <summary>
+/// The puzzle map's cells (<see cref="PuzzleMapPanel"/>, ADR-140): open pieces show the terrain, darker under the objects that stay
+/// (<see cref="GrailRules.ShowsOnPuzzle"/>), never their owners; closed pieces stay parchment.
+/// </summary>
 public partial class PuzzleCanvas : Control
 {
-    public const float CellPixels = 28;
+    public const float CellPixels = 24;
     private static readonly Color Parchment = new(0.78f, 0.69f, 0.50f);
     private GameState? _state;
     private PuzzleMap? _puzzle;
@@ -38,7 +41,7 @@ public partial class PuzzleCanvas : Control
                 }
 
                 var color = !_state.Map.Contains(cell) ? Colors.Black
-                    : _state.ObjectCellAt(cell) is not null ? Palette.ForTerrain(_state.Map.GetTerrain(cell)).Darkened(0.55f)
+                    : _state.ObjectCellAt(cell) is { } standing && GrailRules.ShowsOnPuzzle(standing.Object) ? Palette.ForTerrain(_state.Map.GetTerrain(cell)).Darkened(0.55f)
                     : Palette.ForTerrain(_state.Map.GetTerrain(cell));
                 DrawRect(new Rect2(dx * CellPixels, dy * CellPixels, CellPixels, CellPixels), color);
             }
