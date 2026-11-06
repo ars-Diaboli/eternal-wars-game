@@ -200,6 +200,7 @@ public class AssembledRelicTests
         Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Major), 3, 0).Artifact = AlliancePieces[2];
         Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Major), 3, 1).Artifact = "helm-of-chaos";
         var hero = Outfit(state, A, [], AlliancePieces[..2]);
+        Steady(state);
         var document = MapConverter.ToDocument(state);
         var session = Start(state);
         var ai = new AdventureAi(session, controlHumanSlots: true);

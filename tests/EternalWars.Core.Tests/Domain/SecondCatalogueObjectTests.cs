@@ -81,6 +81,7 @@ public class SecondCatalogueObjectTests
         var vein = Add<Deposit>(state, DepositRules.Id(ResourceType.Lumber), 2, 0);
         state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 20_000, Ore: 20);
         state.GetPlayer(Blue).IsHuman = false;
+        Steady(state);
         var session = Start(state);
 
         new AdventureAi(session).PlayTurn();

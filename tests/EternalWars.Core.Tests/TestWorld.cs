@@ -28,6 +28,12 @@ internal static class TestWorld
     /// <summary>10 footmen: slow enough (map speed 3) to keep the no-army movement base of 1500.</summary>
     public static Army DefaultArmy() => Army.Of(new CreatureStack(BuiltInCreatures.Footman, 10));
 
+    /// <summary>
+    /// For AI tests whose Red hero B only stands in as an enemy within a day's reach: Blue's AI reads B's 10 footmen as "a pack" (10–19) and
+    /// takes them for 14 (ADR-125), so A gets 12 footmen, enough to hold against that without daring to attack it.
+    /// </summary>
+    public static void Steady(GameState state) => state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 12));
+
     public static GameState Create(params string[] rows) => CreateLevels(rows);
 
     public static GameState Create(GameOptions options, params string[] rows) => CreateLevels(options, rows);

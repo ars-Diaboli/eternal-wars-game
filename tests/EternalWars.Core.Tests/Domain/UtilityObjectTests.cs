@@ -243,6 +243,7 @@ public class UtilityObjectTests
     public void TheAi_FreesAPrisonerNearby_AndAnswersATownGate()
     {
         var state = World();
+        Steady(state);
         var prison = Add<Prison>(state, BuiltInMapObjects.Prison, 2, 1);
         var session = Start(state);
         new AdventureAi(session, controlHumanSlots: true).PlayTurn();
@@ -250,6 +251,7 @@ public class UtilityObjectTests
         Assert.Equal(3, state.HeroesOf(Blue).Count());
 
         var other = World();
+        Steady(other);
         var gate = Add<TownGate>(other, BuiltInMapObjects.TownGate, 3, 0);
         AddTown(other, TownIds.Haven, 5, 4, Blue);
         var gateSession = Start(other);

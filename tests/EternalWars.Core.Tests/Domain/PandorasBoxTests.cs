@@ -194,6 +194,7 @@ public class PandorasBoxTests
         var state = Create("A.......B");
         var rich = Add<PandorasBox>(state, BuiltInMapObjects.PandorasBox, 3, 0);
         rich.Contents = new BoxContents { Resources = new ResourceSet(Gold: 8000) };
+        Steady(state);
         var session = Start(state);
         var gold = state.GetPlayer(Blue).Resources.Gold;
 
@@ -205,6 +206,7 @@ public class PandorasBoxTests
         var guarded = Create("A.......B");
         var deadly = Add<PandorasBox>(guarded, BuiltInMapObjects.PandorasBox, 3, 0);
         (deadly.Contents, deadly.Guard) = (new BoxContents { Resources = new ResourceSet(Gold: 8000) }, [new CreatureStack(BuiltInCreatures.Wolf, 500)]);
+        Steady(guarded);
         var other = Start(guarded);
         var ai = new AdventureAi(other, controlHumanSlots: true);
         ai.PlayTurn();

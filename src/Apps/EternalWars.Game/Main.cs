@@ -343,11 +343,9 @@ public partial class Main : Node3D
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick:
                 _world.PathPreview.Clear();
                 _aimedSpell = null;
-                if (MapSpace.PickTile(_camera, rightClick.Position, _context.Level) is { } pointed && _session.State.HeroAt(pointed) is { } other
-                    && other.Owner != _session.State.CurrentPlayer.Id && _session.State.CanSee(_session.State.CurrentPlayer.Id, other))
+                if (MapSpace.PickTile(_camera, rightClick.Position, _context.Level) is { } pointed)
                 {
-                    // Another player's hero as this player is shown it (Veil's amounts).
-                    _status.Text = AdventureIntelPanel.DescribeArmy(_session.State, Core.Domain.Magic.AdventureIntel.ShowHero(_session.State, other, _session.State.CurrentPlayer.Id)).Replace("\n    ", "; ", StringComparison.Ordinal);
+                    ShowScouted(pointed);
                 }
 
                 break;
@@ -386,6 +384,34 @@ public partial class Main : Node3D
         }
 
         GetViewport().SetInputAsHandled();
+    }
+
+    /// <summary>
+    /// A right click on another player's hero, a neutral stack or a town not the player's own: what the player's Scouting shows of it (ADR-125),
+    /// a hero or a stack on the status line, a town in the intel panel.
+    /// </summary>
+    private void ShowScouted(MapPosition pointed)
+    {
+        var state = _session.State;
+        var viewer = state.CurrentPlayer.Id;
+        if (!state.Map.Contains(pointed) || !state.Fog.IsExplored(viewer, pointed))
+        {
+            return;
+        }
+
+        string Line(Core.Domain.Magic.ShownArmy army) => AdventureIntelPanel.DescribeArmy(state, army).Replace("\n    ", "; ", StringComparison.Ordinal);
+        if (state.HeroAt(pointed) is { } other && other.Owner != viewer && state.CanSee(viewer, other))
+        {
+            _status.Text = Line(Core.Domain.Magic.AdventureIntel.ScoutHero(state, other, viewer));
+        }
+        else if (state.ObjectCellAt(pointed)?.Object is MonsterGuard monster && state.Fog.IsInSight(viewer, pointed))
+        {
+            _status.Text = Line(Core.Domain.Magic.AdventureIntel.ScoutMonster(state, monster, viewer));
+        }
+        else if (Core.Domain.Magic.AdventureIntel.TownAt(state, pointed) is { } town && town.Owner != viewer)
+        {
+            _intelScreen.ShowTown(Core.Domain.Magic.AdventureIntel.ScoutTown(state, town, viewer), "Scouting");
+        }
     }
 
     private void StartGame(GameState state)

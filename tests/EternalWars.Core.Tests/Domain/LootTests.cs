@@ -267,10 +267,12 @@ public class LootTests
     public void TheAi_PicksUpLootNearby_AndLeavesSpentSitesAlone()
     {
         var (session, crates) = World(BuiltInMapObjects.SupplyCrates);
+        Steady(session.State);
         new AdventureAi(session, controlHumanSlots: true).PlayTurn();
         Assert.Null(session.State.FindObject(crates.Id));
 
         var (second, corpse) = World(BuiltInMapObjects.Corpse);
+        Steady(second.State);
         second.Interactions.Visit(second.State.GetHero(C), corpse); // spent before A gets there
         new AdventureAi(second, controlHumanSlots: true).PlayTurn();
         Assert.NotEqual(corpse.VisitPosition, second.State.GetHero(A).Position);
