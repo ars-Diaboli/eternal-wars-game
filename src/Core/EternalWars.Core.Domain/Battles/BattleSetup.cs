@@ -90,8 +90,9 @@ public static class BattleSetup
         var attackerExtent = Math.Max(DeploySide(battle, BattleSide.Attacker, attacker, ref id), battle.Deployer == BattleSide.Attacker ? battle.DeploymentColumns : 0);
         var defenderExtent = Math.Max(DeploySide(battle, BattleSide.Defender, defender, ref id), battle.Deployer == BattleSide.Defender ? battle.DeploymentColumns : 0);
         // In a siege the obstacles stay in front of the moat; nothing stands behind the walls but the defenders (ADR-106).
-        PlaceObstacles(battle, attackerExtent + 1,
-            battle.Siege is null ? battle.Width - defenderExtent - 1 : SiegeRules.WallX - SiegeRules.MoatColumns - 1);
+        var toX = battle.Siege is null ? battle.Width - defenderExtent - 1 : SiegeRules.WallX - SiegeRules.MoatColumns - 1;
+        var cliffs = PlaceCliff(battle, attackerExtent + 1, toX);
+        PlaceObstacles(battle, attackerExtent + 1, toX, cliffs ? (1, 3) : (2, 5));
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
             SupplyShots(battle, side);
@@ -216,11 +217,90 @@ public static class BattleSetup
         _ => 1,
     };
 
-    /// <summary>2–5 obstacles between the deployment zones, never touching each other (passages stay open).</summary>
-    private static void PlaceObstacles(BattleState battle, int fromX, int toX)
+    /// <summary>A battle in this many on cliff ground may get a dividing cliff (ADR-146).</summary>
+    public const int CliffOneIn = 3;
+
+    /// <summary>A gap in the cliff is at least this many cells, so that a large creature gets through; other obstacles keep this many columns off it.</summary>
+    public const int CliffGap = 4;
+
+    /// <summary>The ground whose battles may have a dividing cliff (ADR-146): highlands, rough, rocky and subterranean.</summary>
+    public static bool IsCliffGround(Map.TerrainType terrain) =>
+        terrain is Map.TerrainType.Highlands or Map.TerrainType.Rough or Map.TerrainType.RockyGround or Map.TerrainType.Subterranean;
+
+    /// <summary>
+    /// A dividing cliff (ADR-146) in the middle of the open ground, one battle in <see cref="CliffOneIn"/> on cliff ground, never in a siege or a
+    /// creature bank: one or two pieces of 6–12 cells running down the field, at most two columns apart, that leave at least two gaps of
+    /// <see cref="CliffGap"/> cells or more. Returns whether a cliff was placed.
+    /// </summary>
+    private static bool PlaceCliff(BattleState battle, int fromX, int toX)
+    {
+        const int Shift = 2;
+        var band = BattleObstacle.CliffThickness + Shift;
+        if (battle.Siege is not null || !battle.CliffsAllowed || !IsCliffGround(battle.Terrain) || toX - fromX < band
+            || battle.Random.Next(CliffOneIn) != 0)
+        {
+            return false;
+        }
+
+        var random = battle.Random;
+        var x = Math.Clamp(((fromX + toX - band) / 2) + random.NextInclusive(-1, 1), fromX, toX - band);
+        var pieces = new List<(int Y, int Length)>();
+        if (random.Next(2) == 0)
+        {
+            // One piece with a gap of at least CliffGap above and below.
+            var length = random.NextInclusive(6, 12);
+            pieces.Add((random.NextInclusive(CliffGap, BattleState.Height - length - CliffGap), length));
+        }
+        else
+        {
+            // Two pieces, short enough together to leave the gap between them and one more; the rest of the free rows go above and below.
+            var first = random.NextInclusive(6, BattleState.Height - (2 * CliffGap) - 6);
+            var second = random.NextInclusive(6, BattleState.Height - (2 * CliffGap) - first);
+            var free = BattleState.Height - first - second;
+            var between = random.NextInclusive(CliffGap, free - CliffGap);
+            var outer = free - between;
+            var above = random.Next(2) == 0 ? random.NextInclusive(CliffGap, outer) : random.NextInclusive(0, outer - CliffGap);
+            pieces.Add((above, first));
+            pieces.Add((above + first + between, second));
+        }
+
+        foreach (var (y, length) in pieces)
+        {
+            var at = new CellPosition(x + random.NextInclusive(0, Shift), y);
+            battle.MutableObstacles.Add(new BattleObstacle(battle.Obstacles.Count + 1, at, ObstacleClass.Cliff, length));
+        }
+
+        return true;
+    }
+
+    /// <summary>The open rows above, between and below the pieces (sorted by row), or null when two pieces overlap or touch.</summary>
+    internal static IReadOnlyList<int>? CliffGaps(IReadOnlyList<(int Y, int Length)> pieces)
+    {
+        var gaps = new List<int>();
+        var row = 0;
+        foreach (var (y, length) in pieces)
+        {
+            if (y < row || (gaps.Count > 0 && y == row))
+            {
+                return null;
+            }
+
+            gaps.Add(y - row);
+            row = y + length;
+        }
+
+        gaps.Add(BattleState.Height - row);
+        return gaps;
+    }
+
+    /// <summary>
+    /// Obstacles between the deployment zones, never touching each other (passages stay open) and at least <see cref="CliffGap"/> columns off a
+    /// cliff, so they never close its gaps.
+    /// </summary>
+    private static void PlaceObstacles(BattleState battle, int fromX, int toX, (int Min, int Max) range)
     {
         var random = battle.Random;
-        var count = random.NextInclusive(2, 5);
+        var count = random.NextInclusive(range.Min, range.Max);
         for (var i = 0; i < count; i++)
         {
             var cover = random.Next(3) == 0 ? ObstacleClass.Big : ObstacleClass.Small;
@@ -236,12 +316,16 @@ public static class BattleSetup
                     battle.Obstacles.Count + 1,
                     new CellPosition(random.NextInclusive(fromX, toX - size), random.NextInclusive(1, BattleState.Height - size - 1)),
                     cover);
-                if (battle.Obstacles.All(o => !o.Rect.Grow(2).Intersects(obstacle.Rect)))
+                if (battle.Obstacles.All(o => !KeepOut(o).Intersects(obstacle.Rect)))
                 {
                     battle.MutableObstacles.Add(obstacle);
                     break;
                 }
             }
         }
+
+        static CellRect KeepOut(BattleObstacle o) => o.Class == ObstacleClass.Cliff
+            ? new CellRect(o.Rect.X - CliffGap, 0, o.Rect.Width + (2 * CliffGap), BattleState.Height)
+            : o.Rect.Grow(2);
     }
 }

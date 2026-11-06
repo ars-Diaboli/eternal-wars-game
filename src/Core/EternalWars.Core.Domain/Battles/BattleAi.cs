@@ -353,6 +353,18 @@ internal static class BattleAi
             return SiegeAdvance(battle, unit, enemies);
         }
 
+        // A walker on a field with a dividing cliff (ADR-146) goes the way round, through a gap, rather than up to the cliff's face.
+        if (!unit.MovesFreely && battle.Obstacles.Any(o => o.Class == ObstacleClass.Cliff)
+            && BattleGrid.ApproachSteps(battle, unit, enemies) is var steps && steps.TryGetValue(unit.Position, out var now))
+        {
+            var way = BattleGrid.Reachable(battle, unit)
+                .Where(r => steps.ContainsKey(r.Key))
+                .Select(r => (Position: r.Key, Length: r.Value, Steps: steps[r.Key]))
+                .OrderBy(r => r.Steps).ThenBy(r => r.Length).ThenBy(r => r.Position.Y).ThenBy(r => r.Position.X)
+                .First();
+            return way.Steps < now ? way.Position : null;
+        }
+
         var nearest = enemies.OrderBy(e => unit.Rect.GapTo(e.Rect)).ThenBy(e => e.Id).First();
         var best = BattleGrid.Reachable(battle, unit)
             .Select(r => (Position: r.Key, Steps: r.Value, Gap: unit.RectAt(r.Key).GapTo(nearest.Rect)))

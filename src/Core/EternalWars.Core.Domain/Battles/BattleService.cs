@@ -92,6 +92,7 @@ public sealed class BattleService(
     {
         var neutral = new BattleParticipant(BattleSide.Defender, null, null, bank.Id, 0, 0, SkillLevel.None, IsComputer: true);
         var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, bank.VisitPosition, isAmbush: false, bank.Definition.BattleTerrain);
+        battle.CliffsAllowed = false;
         Begin(attacker, battle, Stacks(attacker), GuardStacks(bank.Guard), widthChoice: false, deployment: false);
     }
 
