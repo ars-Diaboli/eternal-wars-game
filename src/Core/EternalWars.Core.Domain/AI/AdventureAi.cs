@@ -1147,7 +1147,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     /// <summary>A skill level bought at a school, in gold (a draft beside a level-up's worth).</summary>
     private const double LessonValue = 1200;
 
-    /// <summary>An obelisk not visited yet by the player or an ally, in gold (a draft: a step toward the Grail, ADR-140).</summary>
+    /// <summary>An obelisk the player has not visited yet, in gold (a draft: a step toward the Grail, ADR-140).</summary>
     private const double ObeliskValue = 1000;
 
     /// <summary>Digging up the Grail, and bringing it into a town without a Grail building, in gold (a draft: a building worth +5000 gold a day).</summary>
@@ -1491,7 +1491,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     yield return new(visit, schoolWorth, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case Obelisk obelisk when _state.Grail.Position is not null && !_state.Grail.IsFound && visit != hero.Position
-                                          && !obelisk.VisitedBy.Any(p => p == owner || _state.AreAllies(p, owner)) && Plausible(GuardPower(visit)):
+                                          && !obelisk.WasVisitedBy(owner) && Plausible(GuardPower(visit)):
                     yield return new(visit, ObeliskValue, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
             }

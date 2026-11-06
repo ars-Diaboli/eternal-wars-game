@@ -143,7 +143,7 @@ public sealed class MapObjectInteractionService(
                 break;
 
             case Obelisk obelisk:
-                GrailRules.Visit(events, hero, obelisk);
+                GrailRules.Visit(state, events, hero, obelisk);
                 break;
 
             case Shrine shrine:

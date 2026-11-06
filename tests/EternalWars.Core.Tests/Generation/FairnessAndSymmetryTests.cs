@@ -212,7 +212,7 @@ public class FairnessAndSymmetryTests
         var template = Shipped("ffa-4") with { MinTeams = 2, MaxTeams = 4 };
         template = template with { Zones = [template.Zones[0] with { GraphX = 1.5, GraphY = -2 }, .. template.Zones.Skip(1)] };
         var loaded = TemplateSerializer.Deserialize(TemplateSerializer.Serialize(template));
-        Assert.Equal(8, loaded.FormatVersion);
+        Assert.Equal(MapTemplate.CurrentFormatVersion, loaded.FormatVersion);
         Assert.Equal(TemplateSymmetry.QuarterTurn, loaded.Symmetry);
         Assert.Equal("start-2", loaded.Zones[0].Mirror);
         Assert.Equal((1.5, -2.0), (loaded.Zones[0].GraphX!.Value, loaded.Zones[0].GraphY!.Value));

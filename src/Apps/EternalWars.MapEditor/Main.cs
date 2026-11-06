@@ -166,6 +166,9 @@ public partial class Main : Node3D
             case ToolKind.LinkGates:
                 Link(mapObject);
                 break;
+            case ToolKind.Grail:
+                Report(_editor.SetGrail(scenario.Grail.Position == tile ? null : tile));
+                break;
             case ToolKind.Select when hero is not null:
                 Inspect(hero.Id);
                 break;

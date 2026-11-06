@@ -41,6 +41,7 @@ public partial class NoticePanel : PanelContainer
         this.SubscribeWhileInTree<ObeliskVisited>(session.Events, e =>
             Show(e.Hero, Core.Domain.Objects.GrailRules.Puzzle(_session.State, e.Player) is { } puzzle
                 ? $"The obelisk's carvings add to your puzzle map: {puzzle.Revealed} of {puzzle.Pieces.Count} pieces (Puzzle map, P)."
+                  + (puzzle.Grail is null ? "" : " The last piece is in place: a cross marks where the Grail lies.")
                 : "The obelisk's carvings tell of a Grail, but no Grail lies on this map."));
         this.SubscribeWhileInTree<HoleDug>(session.Events, e =>
             Show(e.Hero, e.Grail is { } grail ? $"{_session.State.GetHero(e.Hero).Name} digs up the {_session.State.Artifacts.Get(grail).Name}! Bring it into one of your towns."

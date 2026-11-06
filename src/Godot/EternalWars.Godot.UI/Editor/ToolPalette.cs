@@ -18,6 +18,9 @@ public enum ToolKind
     Erase,
     LinkGates,
     Select,
+
+    /// <summary>Buries the Grail where clicked, or takes it away when its cell is clicked again (ADR-140).</summary>
+    Grail,
 }
 
 /// <summary>The active editor tool and its parameters; the app applies it where the user clicks.</summary>
@@ -135,6 +138,14 @@ public partial class ToolPalette : VBoxContainer
                 break;
             case ToolKind.Select:
                 _options.AddChild(new Label { Text = "Click a hero or object to edit it in the inspector." });
+                break;
+            case ToolKind.Grail:
+                _options.AddChild(new Label
+                {
+                    Text = "Click open ground at least 10 cells from the edges to bury the Grail; click it again to take it away "
+                           + "(left unset, it is drawn at game start on maps with obelisks; at most 25 obelisks a map).",
+                    AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                });
                 break;
         }
     }

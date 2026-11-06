@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
+using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
@@ -14,6 +15,7 @@ using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
+using EternalWars.Core.Generation;
 using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
@@ -22,6 +24,9 @@ namespace EternalWars.Core.Tests.Domain;
 public class GrailTests
 {
     private const string Grail = "grail";
+
+    /// <summary>A 30×30 map with hero A at (3, 2).</summary>
+    private static readonly string[] Wide = [.. Enumerable.Range(0, 30).Select(y => y == 2 ? "...A" + new string('.', 26) : new string('.', 30))];
 
     private static readonly string[] Open =
     [
@@ -57,7 +62,17 @@ public class GrailTests
             var grail = Assert.IsType<MapPosition>(state.Grail.Position);
             Assert.Null(GrailRules.CheckGround(state, grail));
             Assert.True(Math.Max(Math.Abs(grail.X - town.VisitPosition.X), Math.Abs(grail.Y - town.VisitPosition.Y)) > GrailRules.TownDistance);
+            Assert.True(GrailRules.FarFromEdge(state.Map, grail));
+            var origin = Assert.IsType<MapPosition>(state.Grail.PuzzleOrigin);
+            Assert.InRange(grail.X - origin.X, 8, 11); // in the puzzle's centre 4×4 cells
+            Assert.InRange(grail.Y - origin.Y, 8, 11);
+            Assert.True(state.Map.Contains(origin) && state.Map.Contains(origin.Offset(GrailRules.PuzzleSize - 1, GrailRules.PuzzleSize - 1)));
         }
+
+        var small = Create(Enumerable.Repeat(new string('.', 23), 23).ToArray());
+        Add<Obelisk>(small, BuiltInMapObjects.Obelisk, 10, 10);
+        Start(small);
+        Assert.Null(small.Grail.Position); // under 24×24: no Grail
 
         var none = Create(rows);
         Start(none);
@@ -70,39 +85,69 @@ public class GrailTests
         Assert.Equal(new MapPosition(2, 2), placed.Grail.Position); // the author's spot is kept
     }
 
-    [Fact]
-    public void Obelisks_ShowThePuzzle_OuterPiecesFirst_AndTheSpotWhenAllAreVisited()
+    [Theory]
+    [InlineData(25, 4, 4)]
+    [InlineData(11, 9, 10)]
+    [InlineData(2, 50, 50)]
+    [InlineData(7, 14, 15)]
+    public void TheHundredPieces_AreSplitEvenly_TheFirstObelisksOpeningFewer(int obelisks, int first, int last)
     {
-        var state = Create(Open);
-        var first = Add<Obelisk>(state, BuiltInMapObjects.Obelisk, 3, 0);
-        Add<Obelisk>(state, BuiltInMapObjects.Obelisk, 6, 0);
-        state.SetGrail(new MapPosition(20, 3));
+        var shares = Enumerable.Range(1, obelisks).Select(v => GrailRules.Share(obelisks, v)).ToList();
+
+        Assert.Equal(GrailRules.PieceCount, shares.Sum());
+        Assert.Equal(first, shares[0]);
+        Assert.Equal(last, shares[^1]);
+        Assert.True(shares.Max() - shares.Min() <= 1);
+        Assert.Equal(shares.Order().ToList(), shares);
+    }
+
+    [Fact]
+    public void Obelisks_OpenTheOuterRingFirst_ThenTheMidRing_AndTheLastOneTheCentre_EachPlayerItsOwnPuzzle()
+    {
+        var state = Create(Wide);
+        foreach (var x in new[] { 3, 6, 9, 12 })
+        {
+            Add<Obelisk>(state, BuiltInMapObjects.Obelisk, x, 0);
+        }
+
+        state.SetGrail(new MapPosition(15, 15));
         var session = Start(state);
         var visited = new List<ObeliskVisited>();
         session.Events.Subscribe<ObeliskVisited>(visited.Add);
-
         var none = GrailRules.Puzzle(state, Blue)!;
-        Assert.Equal((0, 2, 25), (none.Revealed, none.Obelisks, none.Pieces.Count));
-        Assert.Equal(new MapPosition(13, -4), none.Origin);
+        Assert.Equal((0, 4, 100), (none.Revealed, none.Obelisks, none.Pieces.Count));
 
-        session.Step(A, Direction.North);
-        var half = GrailRules.Puzzle(state, Blue)!;
-        Assert.Equal(first.Id, Assert.Single(visited).Obelisk);
-        Assert.Equal(12, half.Revealed); // 25 × 1 / 2, rounded down
-        Assert.All(half.Pieces.Where(p => p.Revealed), p => Assert.True(p.X is 0 or 12 || p.Y is 0 or 12)); // the outer ring
-        Assert.Null(half.Grail);
-        Assert.False(half.Shows(new MapPosition(20, 3)));
-        Assert.Equal(0, GrailRules.Puzzle(state, Red)!.Revealed); // an enemy's visit shows it nothing
+        static PuzzleRing RingAt(int i) => GrailRules.RingOf(i % GrailRules.PiecesPerSide, i / GrailRules.PiecesPerSide);
 
-        session.MoveTo(A, new MapPosition(3, 2));
-        session.Step(A, Direction.North); // the same obelisk again: nothing new
-        Assert.Single(visited);
-
+        session.Step(A, Direction.North); // the obelisk at (3, 0)
+        Assert.Equal(25, state.Grail.PiecesOf(Blue).Count);
         session.MoveTo(A, new MapPosition(6, 1));
+        Assert.Equal(50, state.Grail.PiecesOf(Blue).Count);
+        Assert.All(state.Grail.PiecesOf(Blue), i => Assert.Equal(PuzzleRing.Outer, RingAt(i))); // the first half: the outer ring only
+        Assert.Equal(0, GrailRules.Puzzle(state, Red)!.Revealed); // another player's puzzle stays closed
+
+        session.MoveTo(A, new MapPosition(6, 2));
+        session.MoveTo(A, new MapPosition(6, 1)); // the same obelisk again: nothing new
+        Assert.Equal(2, visited.Count);
+
+        session.MoveTo(A, new MapPosition(9, 1));
+        var third = state.Grail.PiecesOf(Blue);
+        Assert.Equal(75, third.Count);
+        Assert.DoesNotContain(third, i => RingAt(i) == PuzzleRing.Centre);
+        Assert.Null(GrailRules.Puzzle(state, Blue)!.Grail);
+
+        session.MoveTo(A, new MapPosition(12, 1));
         var whole = GrailRules.Puzzle(state, Blue)!;
         Assert.True(whole.IsComplete);
-        Assert.Equal(new MapPosition(20, 3), whole.Grail);
-        Assert.True(whole.Shows(new MapPosition(20, 3)));
+        Assert.Equal(new MapPosition(15, 15), whole.Grail);
+        Assert.True(whole.Shows(new MapPosition(15, 15)));
+    }
+
+    [Fact]
+    public void ThePuzzle_ShowsTheObjectsThatStay_NotThoseThatGo()
+    {
+        Assert.True(GrailRules.ShowsOnPuzzle(MapObject.Create(new MapObjectId(1), MapObjectCatalog.Default.Get(BuiltInMapObjects.Obelisk), new MapPosition(0, 0))));
+        Assert.False(GrailRules.ShowsOnPuzzle(MapObject.Create(new MapObjectId(2), MapObjectCatalog.Default.Get(BuiltInMapObjects.TreasureChest), new MapPosition(0, 0))));
     }
 
     [Fact]
@@ -206,6 +251,7 @@ public class GrailTests
         obelisk.Visit(Blue);
         state.SetGrail(new MapPosition(3, 2));
         var session = Start(state);
+        state.Grail.Open(Blue, Enumerable.Range(0, GrailRules.PieceCount));
 
         new AdventureAi(session, controlHumanSlots: true).PlayTurn();
 
@@ -216,21 +262,60 @@ public class GrailTests
     [Fact]
     public void TheEditor_BuriesTheGrailUndoably_AndTheValidatorWarnsWithoutObelisks()
     {
-        var state = Create(Open);
-        Road(state, 4, 0, 5);
-        state.Map.SetTerrain(new MapPosition(9, 0), TerrainType.Rock);
+        var state = Create(Wide);
+        Road(state, 14, 10, 15);
+        state.Map.SetTerrain(new MapPosition(16, 16), TerrainType.Rock);
         var editor = new MapEditorSession(state);
 
-        Assert.Equal(EditResult.InvalidTarget, editor.SetGrail(new MapPosition(1, 4)));
-        Assert.Equal(EditResult.ImpassableTerrain, editor.SetGrail(new MapPosition(9, 0)));
-        Assert.Equal(EditResult.Ok, editor.SetGrail(new MapPosition(12, 2)));
-        Assert.Equal(new MapPosition(12, 2), state.Grail.Position);
+        Assert.Equal(EditResult.InvalidTarget, editor.SetGrail(new MapPosition(11, 14)));
+        Assert.Equal(EditResult.ImpassableTerrain, editor.SetGrail(new MapPosition(16, 16)));
+        Assert.Equal(EditResult.TooNearEdge, editor.SetGrail(new MapPosition(9, 15)));
+        Assert.Equal(EditResult.TooNearEdge, editor.SetGrail(new MapPosition(15, 20)));
+        Assert.Equal(EditResult.Ok, editor.SetGrail(new MapPosition(12, 12)));
+        Assert.Equal(new MapPosition(12, 12), state.Grail.Position);
         Assert.Contains(MapValidator.Validate(state), i => i.Message.Contains("no obelisks", StringComparison.Ordinal));
 
         editor.Undo();
         Assert.Null(state.Grail.Position);
         editor.Redo();
-        Assert.Equal(new MapPosition(12, 2), state.Grail.Position);
+        Assert.Equal(new MapPosition(12, 12), state.Grail.Position);
+    }
+
+    [Fact]
+    public void AMap_HoldsAtMost25Obelisks()
+    {
+        var state = Create(Wide);
+        var editor = new MapEditorSession(state);
+        for (var i = 0; i < GrailRules.MaxObelisks; i++)
+        {
+            Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.Obelisk, new MapPosition(i % 12 * 2, 4 + (i / 12 * 3)), out _));
+        }
+
+        Assert.Equal(EditResult.TooManyObelisks, editor.PlaceObject(BuiltInMapObjects.Obelisk, new MapPosition(0, 20), out _));
+        Add<Obelisk>(state, BuiltInMapObjects.Obelisk, 0, 20); // past the editor, the validator reports it
+        Assert.Contains(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error && i.Message.Contains("obelisks", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void TheGenerator_PutsTheMapsObelisks_WhereTheTemplateSays_25ByDefault()
+    {
+        var duel = BuiltInTemplates.Find("duel")!;
+        var counts = TreasurePlacer.ObeliskCounts(duel);
+        Assert.Equal(GrailRules.MaxObelisks, counts.Sum());
+        Assert.True(counts.Max() - counts.Min() <= 1);
+
+        var set = duel with { Zones = [.. duel.Zones.Select((z, i) => i == 0 ? z with { Obelisks = 3 } : i == 1 ? z with { Obelisks = 0 } : z)] };
+        var setCounts = TreasurePlacer.ObeliskCounts(set);
+        Assert.Equal((3, 0), (setCounts[0], setCounts[1]));
+        Assert.Equal(GrailRules.MaxObelisks, setCounts.Sum());
+
+        var map = MapGenerator.Generate(duel, 72, 5);
+        Assert.Equal(GrailRules.MaxObelisks, map.Objects.OfType<Obelisk>().Count());
+
+        Assert.Equal(3, TemplateSerializer.Deserialize(TemplateSerializer.Serialize(set)).Zones[0].Obelisks); // template format v9
+        Assert.Null(TemplateSerializer.Deserialize(TemplateSerializer.Serialize(duel)).Zones[0].Obelisks);
+        var tooMany = duel with { Zones = [duel.Zones[0] with { Obelisks = 26 }, .. duel.Zones.Skip(1)] };
+        Assert.Contains(TemplateValidator.Validate(tooMany), i => i.Severity == IssueSeverity.Error && i.Message.Contains("obelisks", StringComparison.Ordinal));
     }
 
     [Fact]

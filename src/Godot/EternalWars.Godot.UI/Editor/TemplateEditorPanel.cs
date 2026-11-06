@@ -404,6 +404,8 @@ public partial class TemplateEditorPanel : PanelContainer
         }
 
         Spin("Resource piles", z.ExtraPiles, 0, 20, v => Zone(id, x => x with { ExtraPiles = v }));
+        Spin("Obelisks (-1 = share of 25)", z.Obelisks ?? -1, -1, GrailRules.MaxObelisks, v => Zone(id, x => x with { Obelisks = v < 0 ? null : v }),
+            tooltip: "How many obelisks the zone gets (ADR-140). -1: the zones left unset share the map's 25.");
 
         Heading("Treasure bands (count 0 = none)");
         for (var band = 0; band < 3; band++)

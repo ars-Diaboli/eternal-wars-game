@@ -81,7 +81,7 @@ public partial class PuzzleMapPanel : PanelContainer
         _title.Text = puzzle is null ? "Puzzle map: no Grail lies on this map."
             : _session.State.Grail.IsFound ? $"Puzzle map: the Grail has been dug up. Obelisks visited: {puzzle.Visited} of {puzzle.Obelisks}."
             : puzzle.Obelisks == 0 ? "Puzzle map: this map has no obelisks; the Grail is found only by digging at random."
-            : $"Puzzle map: {puzzle.Revealed} of {puzzle.Pieces.Count} pieces, {puzzle.Visited} of {puzzle.Obelisks} obelisks visited."
+            : $"Puzzle map ({(puzzle.Origin.Level == 0 ? "surface" : "underground")}): {puzzle.Revealed} of {puzzle.Pieces.Count} pieces, {puzzle.Visited} of {puzzle.Obelisks} obelisks visited."
               + (puzzle.Grail is null ? "" : " The cross marks the spot: dig there with a whole day's movement (G).");
         _canvas.Display(_session.State, puzzle);
     }
