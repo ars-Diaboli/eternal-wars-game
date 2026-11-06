@@ -1164,3 +1164,12 @@ run. Points marked *(proposal)* are the agent's choices made while building. Rul
   zones, the first zones getting one more; so a map gets **25 by default**. Placed after the treasure, unguarded, three tiles apart
   (`TreasurePlacer.PlaceObelisks`, stream `obelisks`); none on a map under 24×24. A zone without room gets fewer (reported when the
   template set its count).
+
+### ADR-141: A town sees from its middle (owner's bug report, 2026-11-06)
+**Status**: implemented; core tested (`VisibilityTests`).
+- **Bug**: at game start the fog opened around the starting hero, not the town: an owned town revealed radius 5 from its entrance, the
+  bottom-middle cell where the starting hero stands, so the land above and beside the 7×7 town stayed dark.
+- **Rule** (owner, 2026-11-06): an owned town reveals and watches from the centre cell of its footprint (`Town.SightCenter`), radius
+  **10**: 7 cells past its walls on every side. Mines, providers and dwellings keep radius 2 from their entrance. In refog mode the
+  town's sight is measured the same way.
+- Games and replays now open more of the map at the start and when a town is taken; no format change.

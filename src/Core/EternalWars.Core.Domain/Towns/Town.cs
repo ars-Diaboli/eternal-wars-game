@@ -12,8 +12,10 @@ namespace EternalWars.Core.Domain.Towns;
 /// </summary>
 public sealed class Town : MapObject, IFlaggable
 {
-    /// <summary>Owned towns reveal and watch this far around their entrance.</summary>
-    public const int TownScoutingRadius = 5;
+    /// <summary>
+    /// Owned towns reveal and watch this far around their centre cell (<see cref="SightCenter"/>): 7 cells past the walls (ADR-141).
+    /// </summary>
+    public const int TownScoutingRadius = 10;
 
     private readonly Dictionary<string, int> _buildings;
     private readonly Dictionary<string, int> _dwellings;
@@ -57,6 +59,9 @@ public sealed class Town : MapObject, IFlaggable
     public bool IsRandom { get; internal set; }
 
     public int ScoutingRadius => TownScoutingRadius;
+
+    /// <summary>The middle of the town's footprint, where its sight is measured from (not its entrance, which is on the bottom edge).</summary>
+    public MapPosition SightCenter => Position.Offset(Definition.Footprint.Width / 2, Definition.Footprint.Height / 2);
 
     public string Name { get; internal set; }
 
