@@ -30,7 +30,6 @@ public partial class TavernPanel : PanelContainer
     {
         _session = session;
         this.CenterAsScreen();
-        this.UseOpaqueBackground();
         var box = new VBoxContainer();
         AddChild(box);
         var header = new HBoxContainer();

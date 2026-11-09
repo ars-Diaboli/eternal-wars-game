@@ -13,7 +13,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class AdventureHudLayout : Container
 {
     /// <summary>The gap to the screen edge and between parts.</summary>
-    public const float Margin = 8;
+    public const float Margin = UiSpacing.ScreenEdge;
 
     /// <summary>Room left at the bottom right for the menu button (on its own layer).</summary>
     public const float MenuButtonHeight = 44;

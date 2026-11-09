@@ -139,7 +139,7 @@ public partial class InspectorPanel : VBoxContainer
             box.Toggled += _ => Edit(() => _editor.SetHeroWarMachines(hero.Id, boxes.Where(b => b.Box.ButtonPressed).Select(b => b.Slot).ToHashSet()));
         }
 
-        AddChild(new Label { Text = "Army" });
+        this.AddHeading("Army");
         var creatures = new[] { ("— empty —", "") }
             .Concat(_editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id)))
             .ToList();
@@ -533,7 +533,7 @@ public partial class InspectorPanel : VBoxContainer
         var scenario = _editor.Scenario;
         var c = box.Contents;
         var changed = new List<Action<Action>>();
-        AddChild(new Label { Text = "Gives (hidden from the players until opened; an empty box is an error)" });
+        this.AddHeading("Gives (hidden from the players until opened; an empty box is an error)");
         var resourceRow = new HFlowContainer();
         AddChild(resourceRow);
         var resources = Enum.GetValues<ResourceType>().Select(r => (Resource: r, Spin: Spin(resourceRow, r.ToString(), c.Resources[r], 0, 1000000))).ToList();
@@ -551,7 +551,7 @@ public partial class InspectorPanel : VBoxContainer
             changed.Add(apply => spin.ValueChanged += _ => apply());
         }
 
-        AddChild(new Label { Text = "Skills (raised to at least this level)" });
+        this.AddHeading("Skills (raised to at least this level)");
         var skillItems = new[] { ("— none —", "") }.Concat(BuiltInSkills.All.OrderBy(s => s.Name).Select(s => (s.Name, s.Id))).ToList();
         var levelItems = Enum.GetValues<SkillLevel>().Where(l => l > SkillLevel.None).Select(l => (l.ToString(), l)).ToList();
         var skills = c.Skills.OrderBy(s => s.Key, StringComparer.Ordinal).Select(s => (s.Key, s.Value)).Append(("", SkillLevel.Basic)).Select(entry =>
@@ -565,7 +565,7 @@ public partial class InspectorPanel : VBoxContainer
             return (Skill: skill, Level: level);
         }).ToList();
 
-        AddChild(new Label { Text = "Artifacts" });
+        this.AddHeading("Artifacts");
         var artifactItems = new[] { ("— none —", "") }.Concat(scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", a.Id))).ToList();
         var artifacts = c.Artifacts.Append("").Select(id =>
         {
@@ -708,7 +708,7 @@ public partial class InspectorPanel : VBoxContainer
         random.Toggled += on => Edit(() => _editor.SetTownRandom(town.Id, on));
         AddChild(random);
 
-        AddChild(new Label { Text = "Buildings (level, 0 = not built)" });
+        this.AddHeading("Buildings (level, 0 = not built)");
         var buildings = new HFlowContainer();
         AddChild(buildings);
         var catalog = TownRules.Buildings(scenario, town);
@@ -719,7 +719,7 @@ public partial class InspectorPanel : VBoxContainer
             level.ValueChanged += value => Edit(() => _editor.SetTownBuilding(town.Id, id, (int)value));
         }
 
-        AddChild(new Label { Text = "Dwellings (0 none, 1 built, 2 upgraded; at most 7, every tier reachable)" });
+        this.AddHeading("Dwellings (0 none, 1 built, 2 upgraded; at most 7, every tier reachable)");
         var dwellings = new GridContainer { Columns = 2 };
         AddChild(dwellings);
         foreach (var line in TownRules.Lines(scenario, town))
@@ -746,7 +746,7 @@ public partial class InspectorPanel : VBoxContainer
             return;
         }
 
-        AddChild(new Label { Text = "Guild spells (— drawn — = drawn when the game starts)" });
+        this.AddHeading("Guild spells (— drawn — = drawn when the game starts)");
         var choices = new List<Choice<string>>();
         for (var level = 1; level <= MagicRules.GuildSpellsPerLevel.Count; level++)
         {
@@ -770,7 +770,7 @@ public partial class InspectorPanel : VBoxContainer
     /// <summary>The seven garrison slots of a town or a map garrison (ADR-070).</summary>
     private void GarrisonRows(MapObjectId holder, Army troops)
     {
-        AddChild(new Label { Text = "Garrison" });
+        this.AddHeading("Garrison");
         var creatures = new[] { ("— empty —", "") }
             .Concat(_editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).Select(c => ($"{c.Name} (T{c.Tier})", c.Id)))
             .ToList();

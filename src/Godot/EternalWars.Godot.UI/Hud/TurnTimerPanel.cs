@@ -22,7 +22,7 @@ public partial class TurnTimerPanel : PanelContainer
         AnchorRight = 0.5f;
         OffsetLeft = -150;
         OffsetRight = 150;
-        OffsetTop = 8;
+        OffsetTop = UiSpacing.ScreenEdge;
         GrowHorizontal = GrowDirection.Both;
         MouseFilter = MouseFilterEnum.Ignore;
         Visible = false;

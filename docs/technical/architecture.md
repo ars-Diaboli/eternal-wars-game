@@ -161,6 +161,10 @@ into Core.Domain; `data/templates` into Core.Data. Apps use the embedded copy (`
   (`Hud`, `Setup`, `Editor`, `Battle`, `Debugging`).
 - Assets cannot live in a class library: `EternalWars.Godot.Assets` is mounted into each app as `res://shared/` by
   `tools/link-shared-assets.ps1` (junction, git-ignored).
+- **Spacing** (ADR-163): every app calls `UiSpacing.Apply()` first, which merges the shared gaps and margins into Godot's default theme (a
+  theme on the root window would not reach controls under a `CanvasLayer`). Panels take the theme's spacing instead of their own numbers:
+  `AddHeading` for a section, `WithCellGap` for a row of slots, `Screens.UseOpaqueBackground` / `CenterAsScreen` for a screen over the map,
+  `Screens.UseMenuPanel` for one over the main menu's picture; code that places controls itself uses `UiSpacing.ScreenEdge`.
 
 ## 5. Threading model
 Single-threaded on Godot's main thread; `EventBus` is deliberately not thread-safe. Heavy work may later run on a

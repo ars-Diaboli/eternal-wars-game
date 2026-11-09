@@ -122,8 +122,8 @@ public partial class ExchangePanel : PanelContainer
             Text = $"Attack {hero.TotalAttack}   Defense {hero.TotalDefense}   Spell Power {hero.TotalSpellPower}   Knowledge {hero.TotalKnowledge}",
         });
 
-        column.AddChild(new Label { Text = "Army" });
-        var army = new HBoxContainer();
+        column.AddHeading("Army");
+        var army = new HBoxContainer().WithCellGap();
         column.AddChild(army);
         for (var slot = 0; slot < Army.SlotCount; slot++)
         {
@@ -156,7 +156,7 @@ public partial class ExchangePanel : PanelContainer
             machines.AddChild(give);
         }
 
-        column.AddChild(new Label { Text = "Worn artifacts" });
+        column.AddHeading("Worn artifacts");
         var doll = new GridContainer { Columns = 3 }.WithArtifactDrag(null, null, new ArtifactPlace(hero.Id, Doll: true), Drop);
         column.AddChild(doll);
         foreach (var slot in ArtifactSlots.All)
@@ -199,7 +199,7 @@ public partial class ExchangePanel : PanelContainer
             relics.AddChild(join);
         }
 
-        column.AddChild(new Label { Text = $"Backpack ({hero.Artifacts.Backpack.Count}/{ArtifactSlots.BackpackSize})" });
+        column.AddHeading($"Backpack ({hero.Artifacts.Backpack.Count}/{ArtifactSlots.BackpackSize})");
         var backpack = new HFlowContainer();
         column.AddChild(backpack);
         var into = new Button { Text = "Into the backpack", Disabled = _artifact is null, TooltipText = "Carry the picked artifact" };

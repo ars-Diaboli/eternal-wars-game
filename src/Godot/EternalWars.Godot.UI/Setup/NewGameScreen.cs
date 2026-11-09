@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Turns;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI.Hud;
 using Godot;
 
 namespace EternalWars.Godot.UI.Setup;
@@ -108,8 +109,9 @@ public partial class NewGameScreen : PanelContainer
         _heroesOf = heroesOf ?? (_ => []);
         _tier1Of = tier1Of ?? (_ => []);
         var box = new VBoxContainer { CustomMinimumSize = new Vector2(520, 0) };
+        this.UseMenuPanel();
         AddChild(box);
-        box.AddChild(new Label { Text = "New game" });
+        box.AddChild(new Label { Text = "New game", HorizontalAlignment = HorizontalAlignment.Center });
 
         foreach (var choice in choices)
         {

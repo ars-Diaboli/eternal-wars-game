@@ -10,7 +10,11 @@ namespace EternalWars.Godot.Shared.Controls;
 /// <see cref="Key"/> name), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
 /// <c>drag</c>/<c>rdrag</c> (<c>x1,y1,x2,y2</c>: left or right button pressed, moved, released over three frames), <c>press</c> (a visible,
 /// enabled button by its text or, without one, its tooltip; the topmost: exact, else the first that contains it, ignoring case; scrolled into view, then clicked at its centre the next
-/// frame; an error when there is none) and <c>dump</c> (prints the visible buttons' texts (a text-less button by its tooltip) and centres, for writing scripts). Events go through
+/// frame; an error when there is none) and <c>dump</c> (prints the visible buttons' texts (a text-less button by its tooltip), centres and sizes, and the tabs, for writing scripts). A click,
+/// right click or drag may name buttons instead of points, so a layout change does not move its target: <c>click:@Close</c>,
+/// <c>rclick:@Head: —#2</c> (the second button labelled so, enabled or not, in tree order), <c>drag:@Rusted Blade&gt;@Head: —#2</c> or
+/// <c>drag:@Axe&gt;1048,456</c> (a button onto a point); a label is the one <c>dump</c> prints, line breaks as " | ", or a tab's title
+/// (<c>click:@Settings</c>). <c>choose:Slow</c> picks an item of the open drop-down list by its text. Events go through
 /// Godot's normal input pipeline, so they hit the same handlers as a real mouse and keyboard. Does nothing without the argument.
 /// </summary>
 public partial class AutoInput : Node
@@ -34,6 +38,9 @@ public partial class AutoInput : Node
             var frame = int.Parse(parts[0], CultureInfo.InvariantCulture);
             switch (parts[1])
             {
+                case "click" or "rclick" or "drag" or "rdrag" when parts[2].Contains('@', StringComparison.Ordinal):
+                    _lookups.Add((frame, parts[1], parts[2])); // aimed at a button: found when the frame comes
+                    break;
                 case "click" or "rclick":
                     var xy = parts[2].Split(',');
                     var at = new Vector2(float.Parse(xy[0], CultureInfo.InvariantCulture), float.Parse(xy[1], CultureInfo.InvariantCulture));
@@ -74,7 +81,7 @@ public partial class AutoInput : Node
                     }
 
                     break;
-                case "press" or "dump":
+                case "press" or "dump" or "choose":
                     _lookups.Add((frame, parts[1], parts.Length > 2 ? parts[2] : ""));
                     break;
                 default:
@@ -87,13 +94,30 @@ public partial class AutoInput : Node
     public override void _Process(double delta)
     {
         _frame++;
+        foreach (var (_, kind, argument) in _lookups.Where(l => l.Frame == _frame && l.Kind is "click" or "rclick" or "drag" or "rdrag").ToList())
+        {
+            Aim(kind, argument);
+        }
+
+        foreach (var (_, _, argument) in _lookups.Where(l => l.Frame == _frame && l.Kind == "choose").ToList())
+        {
+            Choose(argument);
+        }
+
         foreach (var (_, kind, argument) in _lookups.Where(l => l.Frame == _frame && l.Kind is "press" or "dump").ToList())
         {
             if (kind == "dump")
             {
+                GD.Print($"autoinput: dump at frame {_frame}");
                 foreach (var button in VisibleButtons())
                 {
-                    GD.Print($"autoinput: button '{Label(button).ReplaceLineEndings(" | ")}' at {button.GetGlobalRect().GetCenter().Round()}{(button.Disabled ? " (disabled)" : "")}");
+                    var rect = button.GetGlobalRect();
+                    GD.Print($"autoinput: button '{Shown(button)}' at {rect.GetCenter().Round()} size {rect.Size.Round()}{(button.Disabled ? " (disabled)" : "")}");
+                }
+
+                foreach (var (title, centre) in VisibleTabs(GetTree().Root))
+                {
+                    GD.Print($"autoinput: tab '{title}' at {centre.Round()}");
                 }
             }
             else if (Find(argument) is { } button)
@@ -145,6 +169,134 @@ public partial class AutoInput : Node
             Input.ParseInputEvent(@event);
         }
     }
+
+    /// <summary>
+    /// A click, right click or drag whose points name buttons (<c>@label</c>, <c>@label#n</c>) or stay screen points (<c>x,y</c>; a drag's two
+    /// points are joined by <c>&gt;</c>): each button is looked up now and the events go at its centre, this frame and the next ones.
+    /// </summary>
+    private void Aim(string kind, string argument)
+    {
+        var points = (kind is "drag" or "rdrag" ? argument.Split('>', 2) : [argument]).Select(Point).ToList();
+        if (points.Any(p => p is null))
+        {
+            return;
+        }
+
+        var button = kind is "click" or "drag" ? MouseButton.Left : MouseButton.Right;
+        var from = points[0]!.Value;
+        _script.Add((_frame, new InputEventMouseButton { ButtonIndex = button, Pressed = true, Position = from, GlobalPosition = from }));
+        if (points.Count == 1)
+        {
+            _script.Add((_frame + 1, new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = from, GlobalPosition = from }));
+            return;
+        }
+
+        var to = points[1]!.Value;
+        _script.Add((_frame + 1, new InputEventMouseMotion
+        {
+            Position = to, GlobalPosition = to, Relative = to - from,
+            ButtonMask = button == MouseButton.Left ? MouseButtonMask.Left : MouseButtonMask.Right,
+        }));
+        _script.Add((_frame + 2, new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = to, GlobalPosition = to }));
+    }
+
+    /// <summary>
+    /// A point of an aimed event: <c>x,y</c>, or <c>@label</c> (the centre of the first visible button, enabled or not, whose label as
+    /// <c>dump</c> shows it is that, ignoring case) or <c>@label#n</c> (the n-th of them in tree order). Null, with an error, when there is
+    /// no such button.
+    /// </summary>
+    private Vector2? Point(string point)
+    {
+        point = point.Trim();
+        if (!point.StartsWith('@'))
+        {
+            var xy = point.Split(',');
+            return new Vector2(float.Parse(xy[0], CultureInfo.InvariantCulture), float.Parse(xy[1], CultureInfo.InvariantCulture));
+        }
+
+        var label = point[1..];
+        var nth = 1;
+        var hash = label.LastIndexOf('#');
+        if (hash > 0 && int.TryParse(label[(hash + 1)..], NumberStyles.None, CultureInfo.InvariantCulture, out var n) && n > 0)
+        {
+            (label, nth) = (label[..hash], n);
+        }
+
+        var matches = VisibleButtons().Where(b => string.Equals(Shown(b), label, StringComparison.OrdinalIgnoreCase))
+            .Select(b => b.GetGlobalRect().GetCenter())
+            .Concat(VisibleTabs(GetTree().Root).Where(t => string.Equals(t.Title, label, StringComparison.OrdinalIgnoreCase)).Select(t => t.Centre))
+            .ToList();
+        if (matches.Count < nth)
+        {
+            GD.PushError($"autoinput: no visible button or tab '{point[1..]}' at frame {_frame} ({matches.Count} with that label)");
+            return null;
+        }
+
+        return matches[nth - 1];
+    }
+
+    /// <summary>The tabs of the visible tab bars, by title, with their centres on the screen (tabs are not buttons).</summary>
+    private static IEnumerable<(string Title, Vector2 Centre)> VisibleTabs(Node node)
+    {
+        if (node is CanvasItem { Visible: false } or CanvasLayer { Visible: false })
+        {
+            yield break;
+        }
+
+        if (node is TabBar bar && bar.IsVisibleInTree())
+        {
+            for (var i = 0; i < bar.TabCount; i++)
+            {
+                yield return (bar.GetTabTitle(i), bar.GetGlobalTransformWithCanvas() * bar.GetTabRect(i).GetCenter());
+            }
+        }
+
+        foreach (var child in node.GetChildren(includeInternal: true))
+        {
+            foreach (var tab in VisibleTabs(child))
+            {
+                yield return tab;
+            }
+        }
+    }
+
+    /// <summary>
+    /// <c>choose:item</c>: picks the item of that text (ignoring case) in the open drop-down list (the last visible popup menu) with the
+    /// keyboard: the item gets the focus, then Enter, so it does not depend on where the list opened.
+    /// </summary>
+    private void Choose(string item)
+    {
+        var menu = VisiblePopups(GetTree().Root).LastOrDefault();
+        var index = menu is null ? -1 : Enumerable.Range(0, menu.ItemCount).FirstOrDefault(i => string.Equals(menu.GetItemText(i), item, StringComparison.OrdinalIgnoreCase), -1);
+        if (menu is null || index < 0)
+        {
+            GD.PushError($"autoinput: no open list with '{item}' at frame {_frame}");
+            return;
+        }
+
+        menu.SetFocusedItem(index);
+        _script.Add((_frame, new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = true }));
+        _script.Add((_frame + 1, new InputEventKey { Keycode = Key.Enter, PhysicalKeycode = Key.Enter, Pressed = false }));
+    }
+
+    private static IEnumerable<PopupMenu> VisiblePopups(Node node)
+    {
+        if (node is PopupMenu { Visible: true } menu)
+        {
+            yield return menu;
+        }
+
+        foreach (var child in node.GetChildren(includeInternal: true))
+        {
+            foreach (var popup in VisiblePopups(child))
+            {
+                yield return popup;
+            }
+        }
+    }
+
+    /// <summary>A button's label on one line, as <c>dump</c> prints it and aimed events name it.</summary>
+    private static string Shown(BaseButton button) => Label(button).ReplaceLineEndings(" | ");
 
     private BaseButton? Find(string text)
     {

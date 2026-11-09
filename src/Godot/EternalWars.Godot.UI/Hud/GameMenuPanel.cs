@@ -88,9 +88,10 @@ public partial class GameMenuPanel : CenterContainer
         MouseFilter = MouseFilterEnum.Stop;
 
         var panel = new PanelContainer();
+        panel.UseOpaqueBackground();
         AddChild(panel);
         var outer = new VBoxContainer();
-        outer.AddThemeConstantOverride("separation", 8);
+        outer.AddThemeConstantOverride("separation", UiSpacing.Gap);
         panel.AddChild(outer);
         outer.AddChild(_tabs);
         var rows = Tab("Save and load");
@@ -125,7 +126,7 @@ public partial class GameMenuPanel : CenterContainer
         _autoCombatRow.AddChild(_autoCombat);
         settings.AddChild(_autoCombatRow);
 
-        settings.AddChild(new Label { Text = "Speed (kept on this computer)" });
+        settings.AddHeading("Speed (kept on this computer)");
         settings.AddChild(Row("Your heroes", _ownSpeed));
         settings.AddChild(Row("Computer heroes", _computerSpeed));
         settings.AddChild(Row("Battle animations", _battleSpeed));
@@ -298,7 +299,7 @@ public partial class GameMenuPanel : CenterContainer
     private VBoxContainer Tab(string title)
     {
         var page = new VBoxContainer { Name = title };
-        page.AddThemeConstantOverride("separation", 8);
+        page.AddThemeConstantOverride("separation", UiSpacing.Gap);
         _tabs.AddChild(page);
         _tabs.SetTabTitle(_tabs.GetTabCount() - 1, title);
         return page;

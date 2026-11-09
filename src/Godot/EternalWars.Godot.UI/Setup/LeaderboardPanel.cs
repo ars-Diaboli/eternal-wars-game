@@ -13,8 +13,9 @@ public partial class LeaderboardPanel : PanelContainer
 
     public LeaderboardPanel()
     {
+        this.UseMenuPanel();
         var rows = new VBoxContainer();
-        rows.AddThemeConstantOverride("separation", 8);
+        rows.AddThemeConstantOverride("separation", UiSpacing.Gap);
         AddChild(rows);
         rows.AddChild(new Label { Text = "Leaderboard", HorizontalAlignment = HorizontalAlignment.Center });
         rows.AddChild(_tabs);

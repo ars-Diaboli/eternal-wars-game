@@ -36,7 +36,8 @@ ADR-092, ADR-101, built ADR-102 … ADR-104.
   score, title, date.
 - **Replays**: each row keeps its game's record; every end screen offers "Save replay" (`user://replays/*.ewreplay.json`); a replay made with
   other content fails like a save.
-- **Main menu**: New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard, Quit (unbuilt ones disabled); reached from the end
+- **Main menu**: Continue (the newest save; disabled without one), New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard,
+  Quit (unbuilt ones disabled), on a picture ([presentation.md](presentation.md#camera-and-ui)); reached from the end
   screen and the F10 menu.
 - **Replay viewer** *(planned)*: replays and saves (to their last command); whole map or any player's eyes; play, pause, four speeds, jump
   by turn or day; battles move by move or skipped; **"Play from here"** in a battle (a separate unranked game), on the map later.

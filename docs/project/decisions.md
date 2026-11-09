@@ -1681,3 +1681,29 @@ ADR-158).
   Smoke scenario `game-artifact-drag` (exchange: onto the other's empty slot, own backpack onto own doll, onto the other's backpack's free
   space; hero screen: onto the doll, into the backpack).
 - **Not done**: dragging army stacks (still click, then slot); dropping on a slot of the wrong kind is not refused; touch drag.
+
+### ADR-163: The spacing pass, the main menu's picture and small usability fixes (ADR-101, ADR-118, UI-3 b, 2026-11-09)
+**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing.
+
+- **Spacing** (UI-3 b): one set of numbers, `UiSpacing`, as theme constants, with Godot's default fonts, colours and boxes: 4 px between
+  slots and grid cells, 6 between rows, 8 between controls side by side, 16 above a section's heading, 8 inside a panel, 16 inside a
+  screen or window over the map, 8 from the window's edge *(proposal: the numbers)*. Each app merges them into Godot's default theme at
+  start (`UiSpacing.Apply`): a theme on the root window does not reach controls under a `CanvasLayer`, where every HUD part and screen
+  is. Panels lose their own separation numbers; the HUD's corners, the battle HUD, the turn timer, the information window, the menu
+  button and the editor's and harness's panels place themselves with `UiSpacing.ScreenEdge`. Section headings (`AddHeading`) on the
+  hero, exchange and town screens, the F10 menu's speed settings and the editor's inspector and conditions panels.
+- **Main menu picture**: the reference prototype's main-menu picture (`reference/ew`, the owner's), saved as
+  `textures/ui/backgrounds/main-menu.jpg` (JPEG, 0.4 MB instead of a 2.9 MB PNG, for the LFS quota), covers the window behind the main
+  menu, the new-game screen and the leaderboard (`MenuBackground`: cropped to fit, never stretched, darkened by a quarter
+  *(proposal)*). Those screens stand in dark panels that let a little of it through (`Screens.UseMenuPanel`); the main menu is a column
+  on the left, as in the prototype.
+- **Usability** *(proposal: which ones)*:
+  - **Continue** heads the main menu: it loads the newest save (autosave or named; its tooltip names it) and has the focus; without a
+    save it is disabled and New game has the focus. A save that fails to load leaves the F10 menu open with the reason.
+  - The "Menu (F10)" button shows only in a game; on the screens before a game it covered nothing useful and opened a menu with only
+    Load (F10 still works).
+  - The F10 menu and the result screen are opaque, like the other screens: the map and the picture no longer show through their text.
+  - The new-game screen's title is centred, like the leaderboard's.
+- **Smoke**: `game-main-menu` presses its buttons by name (which button has the focus depends on whether the computer has a save).
+- **Not done**: fonts and a theme of our own (the art pass); the town screen's inner rows keep their own layout; the editor's toolbar
+  rows keep fixed offsets.
