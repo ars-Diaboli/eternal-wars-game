@@ -135,7 +135,7 @@ Tactics counts as the hero's Tactics level minus the enemy hero's; only the side
 
 **Deployment** (ADR-072, HERO-4; built, ADR-076): the zone is the number of columns, counted from the hero's own edge of the battlefield, in
 which the player may place the troops. Only the side with the higher Tactics deploys; on a tie nobody does. The player drags stacks in the
-battle scene (click a stack, then where it should stand) and presses "Start battle"; troops that are not deployed, and every computer player's, are placed automatically at the very edge.
+battle scene to where they should stand (or clicks a stack, then the cell; ADR-155) and presses "Start battle"; troops that are not deployed, and every computer player's, are placed automatically at the very edge.
 It works against heroes and neutral monsters, not in creature banks. The war machines keep the outermost column, one cell wide (ADR-073);
 the zone includes that column and stacks may use its free cells (confirmed, ADR-075).
 

@@ -1484,3 +1484,20 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   right click (which showed a scouted army on the status line and an enemy town in the intel panel) now opens the window. Tests
   `InfoSheetTests`, `SettingsFileTests`; smoke scenario `game-info-windows`. No save format change.
 - **Not done**: a long press on touch; windows for the kingdom overview, the tavern's heroes and the decision prompts.
+
+### ADR-155: Drag and drop in the deployment step (ADR-072, ADR-076, 2026-11-09)
+**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing.
+
+- **Drag**: in the deployment step the player presses on an own stack, drags it and lets go where it should stand. While it is dragged the
+  stack's model follows the pointer, lifted a little, and the placement preview under it is green where it may stand and red where not.
+  Letting go places it (the same `BattleDeployCommand` and placement, `BattleTargeting.DeploymentPlacement`, as a click); dropped where it
+  may not stand, it goes back and the refusal shows on the status line; dropped off the field or on its own cells it goes back silently.
+  Escape while dragging puts it back. The release counts even over the HUD.
+- **Click to place stays**: a press without a drag *(proposal: under 6 px of pointer travel)* picks the stack, and the next click on a cell
+  puts it there. A press on the picked stack itself now starts a drag instead of placing it on its own cells.
+- **No swap** *(proposal)*: dropping a stack on another own stack is refused like any occupied cell; swapping places would be a rule change in
+  `BattleSetup.DeploymentRefusal`, not done.
+- **Code**: Godot `BattleView3D.Carry` (the picked model under a field point, or back); the game app maps press, motion and release
+  (`DeployAt`, `DragDeploy`, `DropDeploy`). `AutoInput`'s scripted `drag` now reports the held button on its motion. No core change, no
+  save format change; smoke scenario `game-deploy-drag` (a stack dragged down the zone, another dropped outside it and refused).
+- **Not done**: the 2D harness keeps click to place; touch drag.

@@ -21,7 +21,7 @@ namespace EternalWars.Godot.Shared.Battle;
 /// once it catches up with the core state it shows where a human-commanded active unit can go and raises
 /// <see cref="Idle"/>. After <see cref="BattleEnded"/> has played, <see cref="Finished"/> is raised and the view stays
 /// open until <see cref="Close"/>. Input is mapped by the app: <see cref="PickPoint"/> and <see cref="ShowIntent"/>.
-/// During the deployment step (ADR-072) the zone is shaded, <see cref="Pick"/> marks the stack being placed and
+/// During the deployment step (ADR-072) the zone is shaded, <see cref="Pick"/> marks the stack being placed, <see cref="Carry"/> holds it under the pointer while it is dragged and
 /// <see cref="ShowPlacement"/> previews where it would go. A siege (ADR-106) adds the wall sections, the gate and the moat on the field and the
 /// keep and towers beside it; destroyed structures fall to rubble.
 /// </summary>
@@ -128,6 +128,22 @@ public partial class BattleView3D : Node3D
         SetActive(unit);
     }
 
+    /// <summary>
+    /// Carries the picked stack's model under <paramref name="point"/> (a field point, see <see cref="PickPoint"/>), lifted a little, while
+    /// it is dragged during deployment (ADR-155); null puts it back where it stands.
+    /// </summary>
+    public void Carry(Vector2? point)
+    {
+        if (Picked is not { } id || !_units.TryGetValue(id, out var view) || !_planned.TryGetValue(id, out var rect))
+        {
+            return;
+        }
+
+        view.Position = point is { } p
+            ? BattleSpace.ToWorld(p.X, p.Y) + new Vector3(0, BattleSpace.CellSize * 0.35f, 0)
+            : BattleSpace.Center(rect);
+    }
+
     /// <summary>Previews a placement during deployment: green when allowed, red when refused; null hides it.</summary>
     public void ShowPlacement(CellRect? rect, bool allowed)
     {
@@ -169,7 +185,7 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitTurnRegained>(events, e => Step(null, () =>
             Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} may act once more this round{(e.InPlace ? ", without moving" : string.Empty)}.")));
         this.SubscribeWhileInTree<BattleDeploymentStarted>(events, e => Step(null, () =>
-            Narrate($"{SideName(e.Side)} deploys within {e.Columns} columns: click a stack, then where it should stand; then start the battle.")));
+            Narrate($"{SideName(e.Side)} deploys within {e.Columns} columns: drag a stack to where it should stand (or click it, then the cell); then start the battle.")));
         this.SubscribeWhileInTree<BattleUnitDeployed>(events, OnDeployed);
         this.SubscribeWhileInTree<BattleDeploymentEnded>(events, _ => Step(null, () =>
         {

@@ -193,6 +193,10 @@ $scenarios = @(
     # the result, then the Necromancy screen.
     @{ Name = 'game-necromancy'; App = 'EternalWars.Game'; Frames = 122; Map = $necromancyMap
        Input = '3:key:Enter;10:key:Right;40:press:32;70:key:Enter;84:key:Q;112:key:Enter' },
+    # Drag and drop in the deployment step (ADR-155): the same battle; the 60 stack is dragged down the zone (carried at frame 61, placed at
+    # 62), the 20 stack is dropped outside the zone (refused, back in its place at 68), then the battle starts.
+    @{ Name = 'game-deploy-drag'; App = 'EternalWars.Game'; Frames = 84; Map = $necromancyMap
+       Input = '3:key:Enter;10:key:Right;40:press:32;60:drag:425,305,360,600;66:drag:370,480,900,480;76:key:Enter' },
     # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },

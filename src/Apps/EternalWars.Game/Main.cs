@@ -284,6 +284,16 @@ public partial class Main : Node3D
         }
     }
 
+    /// <summary>A deployment drag ends where the button is let go, even over the HUD (which would otherwise take the release).</summary>
+    public override void _Input(InputEvent @event)
+    {
+        if (_deployDrag is not null && @event is InputEventMouseButton { Pressed: false, ButtonIndex: MouseButton.Left } release)
+        {
+            DropDeploy(release.Position);
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
     public override void _UnhandledInput(InputEvent @event)
     {
         if (@event is InputEventKey { Pressed: true, Echo: false } hotkey && HandleSaveKey(hotkey.Keycode))
@@ -876,9 +886,14 @@ public partial class Main : Node3D
         {
             case InputEventMouseMotion motion:
                 HoverBattle(motion.Position);
+                DragDeploy(motion.Position);
                 return;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
                 ClickBattle(click.Position);
+                break;
+            case InputEventKey { Pressed: true, Keycode: Key.Escape } when _deployDrag is { Moved: true }:
+                _deployDrag = null;
+                _battle.Carry(null);
                 break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick
                 when _session.State.Battle is { } shown && _battle.PickPoint(rightClick.Position) is { } point && shown.UnitAt(BattleSpace.ToCell(point)) is { } unit:
@@ -954,7 +969,7 @@ public partial class Main : Node3D
     {
         if (_battle.Deployer is { } deployer && _session.State.Battle is { } deploying && _battle.PickPoint(screen) is { } spot)
         {
-            DeployAt(deployer, deploying, spot);
+            DeployAt(deployer, deploying, spot, screen);
             return;
         }
 
@@ -985,25 +1000,95 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary>Deployment step: a click on an own stack picks it, a click elsewhere puts the picked stack there.</summary>
-    private void DeployAt(PlayerId player, BattleState battle, Vector2 point)
+    /// <summary>
+    /// Deployment step (ADR-072, ADR-155): a press on an own stack picks it and starts dragging it; a press elsewhere puts the picked stack
+    /// there (click to place).
+    /// </summary>
+    private void DeployAt(PlayerId player, BattleState battle, Vector2 point, Vector2 screen)
     {
-        if (battle.UnitAt(BattleSpace.ToCell(point)) is { IsMachine: false } own && own.Side == battle.Deployer && own.Id != _battle.Picked)
+        if (battle.UnitAt(BattleSpace.ToCell(point)) is { IsMachine: false } own && own.Side == battle.Deployer)
         {
-            _battle.Pick(own.Id);
+            if (own.Id != _battle.Picked)
+            {
+                _battle.Pick(own.Id);
+            }
+
+            _deployDrag = new DeployDrag(own.Id, screen);
             return;
         }
 
-        if (_battle.Picked is { } id && battle.FindUnit(id) is { } picked)
+        PlacePicked(player, battle, point);
+    }
+
+    /// <summary>A pointer moved this far while the button is held makes the press a drag, not a click.</summary>
+    private const float DragPixels = 6;
+
+    /// <summary>The stack being dragged in the deployment step, and where the press was.</summary>
+    private sealed record DeployDrag(int Unit, Vector2 From)
+    {
+        public bool Moved { get; set; }
+    }
+
+    private DeployDrag? _deployDrag;
+
+    /// <summary>While dragging, the stack's model follows the pointer (the placement preview shows where it would stand).</summary>
+    private void DragDeploy(Vector2 screen)
+    {
+        if (_deployDrag is not { } drag || _battle.Picked != drag.Unit)
         {
-            var result = _session.Execute(new BattleDeployCommand(player, id, BattleTargeting.DeploymentPlacement(battle, picked, point.X, point.Y)));
-            _battleHud.Report(result);
-            if (result.IsAccepted)
-            {
-                _battle.Pick(null);
-                _battle.ShowPlacement(null, false);
-            }
+            return;
         }
+
+        drag.Moved |= screen.DistanceTo(drag.From) >= DragPixels;
+        if (drag.Moved)
+        {
+            _battle.Carry(_battle.PickPoint(screen));
+        }
+    }
+
+    /// <summary>
+    /// Letting go after a drag puts the stack where it was dropped; dropped off the field, back on its own cells or where it may not stand,
+    /// it goes back (and stays picked). Letting go without a drag leaves it picked for click to place.
+    /// </summary>
+    private void DropDeploy(Vector2 screen)
+    {
+        if (_deployDrag is not { Moved: true } drag)
+        {
+            _deployDrag = null;
+            return;
+        }
+
+        _deployDrag = null;
+        if (_battle.Deployer is not { } player || _session.State.Battle is not { } battle || battle.FindUnit(drag.Unit) is not { } unit
+            || _battle.PickPoint(screen) is not { } point || BattleTargeting.DeploymentPlacement(battle, unit, point.X, point.Y) == unit.Position)
+        {
+            _battle.Carry(null);
+            return;
+        }
+
+        if (!PlacePicked(player, battle, point))
+        {
+            _battle.Carry(null);
+        }
+    }
+
+    /// <summary>Puts the picked stack where <paramref name="point"/> places it; whether that was accepted.</summary>
+    private bool PlacePicked(PlayerId player, BattleState battle, Vector2 point)
+    {
+        if (_battle.Picked is not { } id || battle.FindUnit(id) is not { } picked)
+        {
+            return false;
+        }
+
+        var result = _session.Execute(new BattleDeployCommand(player, id, BattleTargeting.DeploymentPlacement(battle, picked, point.X, point.Y)));
+        _battleHud.Report(result);
+        if (result.IsAccepted)
+        {
+            _battle.Pick(null);
+            _battle.ShowPlacement(null, false);
+        }
+
+        return result.IsAccepted;
     }
 
     /// <summary>The battle scene replaces the adventure map and its HUD while it is open.</summary>

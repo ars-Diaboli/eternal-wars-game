@@ -47,7 +47,11 @@ public partial class AutoInput : Node
                     var (from, to) = (new Vector2(points[0], points[1]), new Vector2(points[2], points[3]));
                     var dragButton = parts[1] == "drag" ? MouseButton.Left : MouseButton.Right;
                     _script.Add((frame, new InputEventMouseButton { ButtonIndex = dragButton, Pressed = true, Position = from, GlobalPosition = from }));
-                    _script.Add((frame + 1, new InputEventMouseMotion { Position = to, GlobalPosition = to, Relative = to - from }));
+                    _script.Add((frame + 1, new InputEventMouseMotion
+                    {
+                        Position = to, GlobalPosition = to, Relative = to - from,
+                        ButtonMask = dragButton == MouseButton.Left ? MouseButtonMask.Left : MouseButtonMask.Right, // held, as a real drag reports it
+                    }));
                     _script.Add((frame + 2, new InputEventMouseButton { ButtonIndex = dragButton, Pressed = false, Position = to, GlobalPosition = to }));
                     break;
                 case "key" or "hold":
