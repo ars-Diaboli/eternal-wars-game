@@ -64,8 +64,14 @@ In priority order:
     (hot-seat, or against the computer; at least one human). Day 2's battle opens by itself, both armies shown in full, and the status line
     names the two champions. The result screen tells who attacked whom, that arena maps are not ranked, and offers **"Play again"** (the
     same map, players, teams, factions and options, a new seed) and "Save replay".
-  - *(planned)*: the AI's preparation, the editor's switch, combat place and checks, objects showing what they hold on day 1, **three
-    hand-made arena maps** on the new-game screen (no generator template), LAN.
+  - **The computer on day 1** (ADR-160) spends everything on the battle's army: its towns buy what waits, then build the dwellings (with
+    the buildings they need) whose first creatures they can still buy, and the dwelling upgrades worth it, best army per gold first, then
+    hire with what is left. Its heroes take what helps today (piles, chests, artifacts, buffs, training, map dwellings, joining monsters) and
+    skip what pays later (mines, providers, flags, obelisks); they fight only for small losses and never go for enemy heroes or towns
+    (beating the enemy's heroes would leave nobody for the battle). At the end of the day its strongest hero visits every own town and every
+    other hero brings it its army and war machines.
+  - *(planned)*: the editor's switch, combat place and checks, objects showing what they hold on day 1, **three hand-made arena maps** on
+    the new-game screen (no generator template), LAN.
 - **LAN multiplayer** *(planned before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓)*: the **host** runs the game and computer players; clients send
   commands and get only what they may see. Lobby (LAN discovery or address; map or random map, options, colours, computer players); battles
   between two remote humans are live; a dropped player pauses the game until the host hands it to the computer or the player rejoins; text

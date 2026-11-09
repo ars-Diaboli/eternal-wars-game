@@ -1600,3 +1600,34 @@ the shipped maps are the arena's other roadmap items.
 - Smoke: `tools/smoke/arena.ewmap.json` (Blue and Red behind a rock wall, the combat place in a closed pocket) and the `game-arena` scenario
   (end day 1, the computer prepares, quick combat, the result screen, "Play again"); `SmokeMapTests` plays the map against the AI and checks the
   hot-seat setup. Hot-seat was checked in the core only; a battle between two people on one screen is the existing hot-seat battle.
+
+### ADR-160: The adventure AI on an arena map's preparation day (ADR-097, ADR-158, 2026-11-09)
+**Status**: implemented (2026-11-09): the roadmap's arena "AI" item. Only the preparation day changes (`ArenaRules.IsPreparationDay`);
+every other game plays as before (the self-test digest is unchanged). Numbers are placeholders.
+
+- **Never leaves the battle**: done in ADR-158 (no AI retreat in the arena battle; the AI never surrenders anywhere).
+- **Towns** (`AdventureAi.Arena.cs`, `PrepareTown`): nothing is saved for tomorrow. A town first buys what waits, then builds step by step
+  (any number a day): of every dwelling it lacks and every dwelling upgrade, with the buildings each needs first (the requirement chain,
+  worked out from the building table), it takes the plan with the most **army gained per gold**, counting a new dwelling only when the town
+  can still buy at least half of its first week (a new dwelling opens with one, ADR-066), and an upgrade by the creatures waiting and in its
+  armies; it buys after each step. Income, growth, caravans, the marketplace and the like are worth nothing on the last day. Then upgrades,
+  war machines, and **a hero hired with what is left** (more visits that day, and its starter stack), never once the armies are being gathered.
+- **Heroes**: up to 64 moves each (movement does not stop them). Targets that pay only on later days are skipped (`Target.Later`: mines,
+  deposits, empty providers, observatories, obelisks and the Grail, town gates, keymaster tents not known to bar the way, neutral
+  garrisons, prisons, whose hero brings no army); flagging a map dwelling is worth nothing, buying there takes all the gold. Fights are
+  taken only when the simulated loss stays under **15 %** (40 % otherwise). No **danger** is seen (the enemy's day-1 reach would cover the
+  map; the map keeps the players apart, ARN-1 c), and the main hero does not hunt for enemy towns.
+- **No contact with the enemy**: enemy heroes and enemy-owned towns are not targets on the preparation day *(choice)*: beating the enemy's
+  only hero leaves nobody for the battle, a loss for both (ADR-158), and taking its town brings its heroes onto ours. Found on Ember March
+  made an arena (its players can meet on day 1): without it nobody fought on day 2 in three runs of three; with it the battle was fought in
+  all three.
+- **Gathering** (`GatherForBattle`, before the turn ends): the strongest hero by `ArenaRules.ArmyValue` becomes the main hero, walks to every
+  own town it can reach (buying and building there straight into its army, and taking the **whole** garrison: nobody attacks a town before
+  the battle), then every other hero with something to give walks to it and hands over its troops (all but one creature) and war machines
+  (`Exchange`). That hero is the one `ArenaRules.Champion` sends. On the arena smoke map the computer's champion went from its starting two
+  stacks to five.
+- Tests: `ArenaAiTests` (several buildings and the gold spent, mines skipped though taken on an ordinary map, one army at the end of the day,
+  the battle fought to the end on day 2, a weaker enemy hero in reach left alone though attacked on an ordinary map).
+- **Not done**: the AI casts no adventure spells on day 1 and does not trade at the marketplace (as elsewhere, ADR-067); it does not pick
+  the combat place to stand on (the defender's side); it does not weigh Pandora's Box contents shown on day 1 (that showing is the editor
+  item's).
