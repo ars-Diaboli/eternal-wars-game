@@ -9,6 +9,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Settings;
@@ -844,7 +845,36 @@ public partial class Main : Node3D
     }
 
     private void Report(CommandResult result) =>
-        _status.Text = result.IsAccepted ? $"{result.Outcome}" : $"Refused: {result.Error}";
+        _status.Text = result.IsAccepted ? Describe(result.Outcome) : $"Refused: {result.Error}";
+
+    /// <summary>A step's or a move's result in words for the status line.</summary>
+    private static string Describe(object? outcome) => outcome switch
+    {
+        MovementOutcome move => move.Arrived ? $"Arrived ({move.StepsTaken} steps)." : $"{Describe(move.StopReason)} ({move.StepsTaken} steps).",
+        MoveResult reason => reason switch
+        {
+            MoveResult.Moved => "Moved.",
+            MoveResult.NotYourTurn => "Not your turn.",
+            MoveResult.DecisionPending => "Answer the open question first.",
+            MoveResult.OutOfBounds => "The edge of the map.",
+            MoveResult.Impassable => "Impassable ground.",
+            MoveResult.Blocked => "The way is blocked.",
+            MoveResult.Occupied => "An allied hero stands there.",
+            MoveResult.NotEnoughMovementPoints => "No movement left today.",
+            MoveResult.NoPath => "No path there.",
+            MoveResult.Interrupted => "The way changed: stopped.",
+            MoveResult.Met => "Meeting.",
+            MoveResult.BattleStarted => "Battle!",
+            MoveResult.EnemySpotted => "An enemy hero comes into sight: stopped.",
+            MoveResult.GuardEncountered => "Guards bar the way.",
+            MoveResult.CollectedFromAdjacent => "Picked up from beside the guards.",
+            MoveResult.NoArmy => "A hero without an army cannot attack.",
+            MoveResult.QuestVisited => "A quest.",
+            _ => reason.ToString(),
+        },
+        null => "",
+        _ => outcome.ToString() ?? "",
+    };
 
     private void HandleBattleInput(InputEvent @event)
     {

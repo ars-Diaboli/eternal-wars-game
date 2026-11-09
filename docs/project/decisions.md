@@ -1264,3 +1264,40 @@ placeholders.
 - **Code**: the effect word `best-magic-skill` (`ArtifactEffectKind.BestMagicSkill`); `Hero.BestMagicSkill()`; `Hero.SkillLevelOf` adds it.
   `ArtifactBonuses.HomeTown` keeps the hero's town for the tie, set by `GameState.RefreshArtifacts` (also refreshed when a placeholder
   becomes a roster hero). AI weight 8 (placeholder).
+
+### ADR-148: The Godot check of what was built but never run: magic, sieges, the Grail, unique buildings, map sites, game flow (ADR-113, 2026-11-09)
+**Status**: done; closes the "Open checks in Godot" list of Phase 3 apart from the items under "Still not seen".
+
+Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; frames under `.shots/`), their maps checked by `SmokeMapTests`:
+`game-unique-buildings` and `game-stables-market` (`tools/smoke/unique-buildings.ewmap.json`), `game-map-sites` and `game-map-sites-red`
+(`sites.ewmap.json`: ten sites in a row, a typed hero under each, the Sphinx's riddle fixed in the map), `game-grail` (`grail.ewmap.json`),
+`game-magic` and `game-battle-magic` (`magic.ewmap.json`), `game-necromancy` (`necromancy.ewmap.json`), `game-siege-gate` (the siege map),
+`game-siege-earthquake` (`siege-magic.ewmap.json`), `game-victory`, `editor-grail-and-town`, `editor-template-obelisks`.
+
+- **Found and fixed**:
+  - The battle HUD's log and action buttons sat off-screen in every battle: the HUD was anchored without its offsets. It now fills the screen
+    (`SetAnchorsAndOffsetsPreset`), the actions box grows up and left above the menu button, and the button, warcry and spell rows wrap.
+  - The University's panel was empty on a hero's first visit: it opened before the lessons were drawn. `ObjectServicePanel` now refreshes on
+    `LessonsDrawn`.
+  - The town screen did not come back after the Elder Grove's level-up; `TownPanel` refreshes on `DecisionResolved`.
+  - Unique buildings and the Sphinx said nothing: the notice panel now tells what a unique building gave (`UniqueBuildingVisited`) and the
+    Sphinx's verdict (`SphinxAnswered`); the Grail building notice names the town.
+  - The hero list did not update movement after the Stables, a dug hole or the Sphinx; it refreshes on those events.
+  - The puzzle map's parchment stretched to the window's width; it stays square.
+  - The editor's Grail hint wrapped one letter per line (no minimum width), and the conditions panel's difficulty row showed nothing for
+    "not set" (its id was -1, which an `OptionButton` treats as no item).
+  - The game's status line printed raw enum names ("GuardEncountered", a `MovementOutcome` record); `Main.Describe` puts them in words.
+- **Tooling**: `AutoInput` takes `press:<text>` (clicks the topmost visible, enabled button with that text or tooltip, exact then
+  case-insensitive contains, scrolling it into view) and `dump` (prints every visible button with its centre).
+- **Seen working**: the Undead Transformer section (choices and Transform); the Elder Grove and Stables with their notices; the trading screen;
+  the University's and War Academy's lessons, the Arena's choice, Pandora's Box, the Witch Hut, the Sphinx, the Sacrificial Altar, the Artifact
+  Merchant, the Refugee Camp and the Cartographer; the obelisk notice, the puzzle map (P), digging (G) both empty and on the Grail, the Grail
+  building notice; spell ranks on the hero screen, the "Assemble" button of a relic, the adventure spells (Detect Magic's and Distant Vision's
+  windows, View Terrain); the guild's spell book purchase and the guild spells fixed by the map; in battle Bless and Blind cast, the AI's
+  Dispel, surrender, the deployment step with the tent and cart, the Necromancy screen; in a siege the ballista breaking the gate, the keep
+  and towers shooting, Earthquake on units and walls; the victory screen with its score and "Save replay", the main menu; in the editor the
+  conditions panel's hero limit and difficulty, the Grail tool, the town inspector's faction and guild spells, the template editor's obelisk
+  count; the new-game screen's user templates.
+- **Still not seen**: Resurrection; Grave Whisper, Ledger of Ages and Eavesdrop; the AI's buffs, curses and revives (only its Dispel came up);
+  setting a guild spell by hand in the editor; the drawing of a dug hole on the map.
+- An Escape pressed within about 0.6 s of a scripted click did not close the intel popup once; not tried by hand yet, possibly the scripted input.
