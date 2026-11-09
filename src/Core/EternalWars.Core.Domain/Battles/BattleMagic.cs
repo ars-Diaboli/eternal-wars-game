@@ -27,9 +27,11 @@ public static class BattleMagic
 
     /// <summary>
     /// Why the side's hero cannot cast the spell now at the stack or cell, or null. A stack spell needs a living target of the right side (enemies
-    /// for damage and curses, own stacks for healing and buffs) the spell works on; an area spell needs a cell on the field.
+    /// for damage and curses, own stacks for healing and buffs) the spell works on; an area spell needs a cell on the field. A move (ADR-151) also
+    /// needs the cell its stack goes to (<paramref name="cell"/>, the footprint's top-left); a drain may name the own stack it heals
+    /// (<paramref name="second"/>).
     /// </summary>
-    public static string? CastRefusal(BattleState battle, BattleSide side, string spellId, int? target, CellPosition? cell)
+    public static string? CastRefusal(BattleState battle, BattleSide side, string spellId, int? target, CellPosition? cell, int? second = null)
     {
         if (battle.Participant(side).Caster is not { } caster)
         {
@@ -61,7 +63,7 @@ public static class BattleMagic
             return $"Not enough mana for {known.Spell.Name}.";
         }
 
-        return TargetRefusal(battle, side, known, target, cell);
+        return TargetRefusal(battle, side, known, target, cell, second: second);
     }
 
     /// <summary>
@@ -122,7 +124,8 @@ public static class BattleMagic
     public static int CreatureSpellPower(BattleUnit unit) => unit.Count / 2;
 
     /// <summary>Why the spell cannot be aimed at the stack or cell (or, for a summon, why there is no room), or null.</summary>
-    private static string? TargetRefusal(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower = null)
+    private static string? TargetRefusal(
+        BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower = null, int? second = null)
     {
         var effect = known.Effect!;
         if (effect.Kind == SpellEffectKind.Summon)
@@ -163,7 +166,17 @@ public static class BattleMagic
                     return $"{unit.Creature.Name} has no spells {known.Spell.Name} takes off.";
                 }
 
-                return Affects(battle, side, known, unit) ? null : $"{known.Spell.Name} has no effect on {unit.Creature.Name}.";
+                if (!Affects(battle, side, known, unit))
+                {
+                    return $"{known.Spell.Name} has no effect on {unit.Creature.Name}.";
+                }
+
+                if (effect.Kind == SpellEffectKind.Move)
+                {
+                    return MoveRefusal(battle, side, known, unit, cell);
+                }
+
+                return effect.DrainPercent > 0 && second is { } healed ? DrainRefusal(battle, side, known, healed) : null;
             case SpellReach.Area:
                 return cell is { } at && at.X >= 0 && at.Y >= 0 && at.X < battle.Width && at.Y < BattleState.Height
                     ? null
@@ -433,6 +446,50 @@ public static class BattleMagic
     /// <summary>The most total health a stack may have for the spell to take control of it (Hypnotize, ADR-150): its base scaled like an amount.</summary>
     public static int HealthLimit(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null) =>
         Scaled(battle, side, known, known.Effect!.HealthLimit, creaturePower);
+
+    /// <summary>
+    /// Why the move (ADR-151) cannot take the stack to <paramref name="to"/> (its footprint's top-left), or null: a rooted stack and the keep's stack
+    /// stay put; the footprint must fit there (inside the field, clear of obstacles and other stacks) somewhere else than it stands, within the
+    /// spell's range (a straight line from where it stands, like a flyer's reach), and for <c>shadow</c> not next to an enemy stack.
+    /// </summary>
+    public static string? MoveRefusal(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, CellPosition? to)
+    {
+        if (unit.IsRooted || unit.InKeep)
+        {
+            return $"{unit.Creature.Name} cannot be moved.";
+        }
+
+        if (to is not { } at)
+        {
+            return $"{known.Spell.Name} needs the cell {unit.Creature.Name} goes to.";
+        }
+
+        return CanLand(battle, side, known.Effect!, unit, at) ? null : $"{unit.Creature.Name} cannot be moved to {at}.";
+    }
+
+    /// <summary>Whether the move may take the stack to the placement (<see cref="MoveRefusal"/>).</summary>
+    public static bool CanLand(BattleState battle, BattleSide side, SpellEffect effect, BattleUnit unit, CellPosition at) =>
+        at != unit.Position
+        && (effect.MoveRange == 0
+            || BattleGrid.Length(at.X - unit.Position.X, at.Y - unit.Position.Y) <= (effect.MoveRange * BattleGrid.Unit) + BattleGrid.ReachSlack)
+        && BattleGrid.IsFree(battle, unit, at)
+        && !(effect.Shadow && battle.LivingUnits.Any(u => u.Side != side && u.Rect.IsAdjacentTo(unit.RectAt(at))));
+
+    /// <summary>Why a drain (ADR-151) cannot heal the stack, or null: it must be a living own creature stack not in Stasis.</summary>
+    public static string? DrainRefusal(BattleState battle, BattleSide side, KnownSpell known, int healed) =>
+        battle.FindUnit(healed) is { IsAlive: true, IsMachine: false } unit && unit.Side == side && !unit.Has(SpellStatus.Stasis)
+            ? null
+            : $"{known.Spell.Name} heals a living own stack.";
+
+    /// <summary>The health a drain gives back: its percent of the damage dealt.</summary>
+    public static int Drained(SpellEffect effect, long dealt) => (int)Math.Min(int.MaxValue, dealt * effect.DrainPercent / 100);
+
+    /// <summary>
+    /// What the drained health does for the stack: the wounds of its top creature, and with <c>drain-revive</c> its dead up to its count when the
+    /// battle started.
+    /// </summary>
+    public static long DrainHeals(SpellEffect effect, BattleUnit unit, int health) =>
+        Math.Min(health, effect.DrainRevives ? Missing(unit) : unit.Creature.Health - unit.TopHealth);
 
     /// <summary>
     /// What a summon calls (ADR-106, ADR-120): the first of its creatures the side has not summoned yet this battle (else the first), as many as

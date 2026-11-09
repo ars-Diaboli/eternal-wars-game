@@ -59,7 +59,8 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Terrain-themed and special battlefields | HoMM3 | Partly | Native-terrain bonus exists (ADR-068); themes are a roadmap follow-up |
 | Field walls and zones (Fire Wall, Bone Wall, Thornwall, Consecrate, Darkness) | HoMM3, HoMM5 | Built | ADR-149 |
 | Control changes (Hypnotize, Puppet Master, Berserk-like Frenzy) | HoMM3, HoMM5 | Built | ADR-150 |
-| Raise Dead, Teleport, clones | HoMM3, HoMM5 | Planned | 8 battle spells left (ADR-150): copies, two-click aiming |
+| Teleport and life drain spells (two-click aiming) | HoMM3, HoMM5 | Built | ADR-151 |
+| Raise Dead, clones | HoMM3, HoMM5 | Planned | 5 battle spells left (ADR-151): copies and the rest |
 | Creature abilities at scale (aging, poison, death stare, petrify, …) | HoMM3, HoMM5 | Partly | HoMM4-style capabilities, at most 5 a creature (ADR-042) |
 | Battle replay viewer | HotA | Partly | Replays are recorded; the viewer is planned (UI-2) |
 

@@ -78,6 +78,10 @@ public static class BattleTargeting
         new(Math.Clamp((int)MathF.Round(pointerX - (unit.Width / 2f)), 0, battle.Width - unit.Width),
             Math.Clamp((int)MathF.Round(pointerY - (unit.Height / 2f)), 0, BattleState.Height - unit.Height));
 
+    /// <summary>A move spell's second click (ADR-151): the top-left cell that centres the unit's footprint on the clicked cell, kept inside the field.</summary>
+    public static CellPosition SpellPlacement(BattleState battle, BattleUnit unit, CellPosition cell) =>
+        DeploymentPlacement(battle, unit, cell.X + 0.5f, cell.Y + 0.5f);
+
     /// <summary>Squared distance from a footprint's centre to a point in cell units.</summary>
     private static float Distance(CellRect rect, float x, float y)
     {

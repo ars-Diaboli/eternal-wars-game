@@ -186,15 +186,24 @@ public partial class BattleHud : Control
     /// <summary>The spell waiting for its target, if a spell button was pressed (ADR-110).</summary>
     public string? ArmedSpell { get; private set; }
 
+    /// <summary>A two-click spell's first aim (ADR-151): the stack a move takes or a drain hits, once clicked; null before.</summary>
+    private int? _firstAim;
+
     /// <summary>
     /// A click on the battlefield while a spell is armed: casts it at the stack on the cell (or at the cell, for an area) and returns true; false
-    /// when no spell is armed, so the click is an ordinary action.
+    /// when no spell is armed, so the click is an ordinary action. A two-click spell (ADR-151) takes its stack first, then the cell a move goes
+    /// to or the own stack a drain heals.
     /// </summary>
     public bool TryCastAt(CellPosition cell)
     {
         if (ArmedSpell is not { } spell || _session.State.Battle is not { } battle)
         {
             return false;
+        }
+
+        if (!_creatureArmed && battle.ActiveUnit is { } active && battle.Participant(active.Side).Caster?.Find(spell) is { Effect.TwoClicks: true } known)
+        {
+            return AimTwice(battle, known, cell);
         }
 
         ArmedSpell = null;
@@ -206,6 +215,31 @@ public partial class BattleHud : Control
         }
 
         Act(player => new BattleCastCommand(player, spell, TargetAt(battle, cell), cell));
+        return true;
+    }
+
+    private bool AimTwice(BattleState battle, KnownSpell known, CellPosition cell)
+    {
+        var move = known.Effect!.Kind == Core.Domain.Magic.SpellEffectKind.Move;
+        if (_firstAim is not { } first || battle.FindUnit(first) is not { IsAlive: true } aimed)
+        {
+            if (battle.UnitAt(cell) is not { } unit)
+            {
+                _status.Text = $"{known.Spell.Name}: click a stack first (Esc cancels).";
+                return true;
+            }
+
+            _firstAim = unit.Id;
+            _status.Text = move
+                ? $"{known.Spell.Name}: click where {unit.Creature.Name} goes (Esc cancels)."
+                : $"{known.Spell.Name}: click the own stack that drinks the life (Esc cancels).";
+            return true;
+        }
+
+        (ArmedSpell, _firstAim) = (null, null);
+        Act(player => move
+            ? new BattleCastCommand(player, known.Spell.Id, first, BattleTargeting.SpellPlacement(battle, aimed, cell))
+            : new BattleCastCommand(player, known.Spell.Id, first, Second: battle.UnitAt(cell)?.Id));
         return true;
     }
 
@@ -233,6 +267,7 @@ public partial class BattleHud : Control
     public void Disarm()
     {
         ArmedSpell = null;
+        _firstAim = null;
         _creatureArmed = false;
         Refresh();
     }
@@ -245,8 +280,10 @@ public partial class BattleHud : Control
             return;
         }
 
-        (ArmedSpell, _creatureArmed) = (known.Spell.Id, false);
-        _status.Text = $"{known.Spell.Name}: click a target (Esc cancels).";
+        (ArmedSpell, _creatureArmed, _firstAim) = (known.Spell.Id, false, null);
+        _status.Text = known.Effect.TwoClicks
+            ? $"{known.Spell.Name}: click the stack, then {(known.Effect.Kind == Core.Domain.Magic.SpellEffectKind.Move ? "where it goes" : "the own stack it heals")} (Esc cancels)."
+            : $"{known.Spell.Name}: click a target (Esc cancels).";
     }
 
     /// <summary>One button per battle spell of the acting side's hero, with its cost; disabled while it cannot be cast at all.</summary>
@@ -338,7 +375,7 @@ public partial class BattleHud : Control
         _status.Text = deployer is { } placing
             ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (click a stack, then a cell), then start the battle."
             : ArmedSpell is { } armed && _session.State.Spells.TryGet(armed, out var spell)
-                ? $"{spell.Name}: click a target (Esc cancels)."
+                ? $"{spell.Name}: click {(_firstAim is null ? "a target" : "its second aim")} (Esc cancels)."
             : commander is not null && battle.ActiveUnit is { } acting
                 ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
                 : string.Empty;

@@ -213,7 +213,7 @@ internal static class BattleAi
             return;
         }
 
-        (long Value, string? Spell, int? Target, CellPosition? Cell) best = (0, null, null, null);
+        (long Value, string? Spell, int? Target, CellPosition? Cell, int? Second) best = (0, null, null, null, null);
         foreach (var known in caster.Spells.Where(s => s.Effect is not null).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
         {
             if (battle.ManaOf(side) < BattleMagic.Cost(battle, side, known))
@@ -221,25 +221,82 @@ internal static class BattleAi
                 continue;
             }
 
-            foreach (var (target, cell) in Aims(battle, side, known.Effect!))
+            var effect = known.Effect!;
+            foreach (var (target, cell) in effect.Kind == Magic.SpellEffectKind.Move ? MoveAims(battle, side, effect) : Aims(battle, side, effect))
             {
-                if (BattleMagic.CastRefusal(battle, side, known.Spell.Id, target, cell) is not null)
+                var drinker = effect.DrainPercent > 0 ? Drinker(battle, side, known, target) : null;
+                if (BattleMagic.CastRefusal(battle, side, known.Spell.Id, target, cell, drinker?.Id) is not null)
                 {
                     continue;
                 }
 
-                var value = Value(battle, side, known, target, cell, null);
+                var value = Value(battle, side, known, target, cell, null) + (drinker?.Worth ?? 0);
                 if (value > best.Value)
                 {
-                    best = (value, known.Spell.Id, target, cell);
+                    best = (value, known.Spell.Id, target, cell, drinker?.Id);
                 }
             }
         }
 
         if (best.Spell is { } spell)
         {
-            engine.Cast(side, spell, best.Target, best.Cell);
+            engine.Cast(side, spell, best.Target, best.Cell, best.Second);
         }
+    }
+
+    /// <summary>
+    /// Where the AI moves a stack with a move spell (ADR-151, proposal): only the active stack, when it fights in melee (it cannot shoot now) and
+    /// cannot reach an enemy this turn, to each placement next to an enemy stack it may land on; the move is worth the blow it can strike from there.
+    /// So Shadow Step I, which never lands next to an enemy, is not cast by the AI.
+    /// </summary>
+    private static IEnumerable<(int? Target, CellPosition? Cell)> MoveAims(BattleState battle, BattleSide side, Magic.SpellEffect effect)
+    {
+        if (battle.ActiveUnit is not { IsMachine: false } unit || unit.Side != side || unit.IsFixed || unit.Has(Magic.SpellStatus.NoAttack)
+            || BattleGrid.CanShootNow(battle, unit))
+        {
+            yield break;
+        }
+
+        var enemies = battle.LivingUnitsOf(side.Opponent()).Where(e => BattleGrid.CanBeAttacked(unit, e, melee: true) && !e.InKeep).OrderBy(e => e.Id).ToList();
+        if (enemies.Any(e => BattleGrid.AttackPositions(battle, unit, e).Count > 0))
+        {
+            yield break;
+        }
+
+        var seen = new HashSet<CellPosition>();
+        foreach (var enemy in enemies)
+        {
+            for (var y = enemy.Position.Y - unit.Height; y <= enemy.Rect.Bottom; y++)
+            {
+                for (var x = enemy.Position.X - unit.Width; x <= enemy.Rect.Right; x++)
+                {
+                    var at = new CellPosition(x, y);
+                    if (unit.RectAt(at).IsAdjacentTo(enemy.Rect) && seen.Add(at) && BattleMagic.CanLand(battle, side, effect, unit, at))
+                    {
+                        yield return (unit.Id, at);
+                    }
+                }
+            }
+        }
+    }
+
+    /// <summary>The own stack a drain (ADR-151) does most for, with what that is worth (the creature value of the health it gives back); null when none gains.</summary>
+    private static (int Id, long Worth)? Drinker(BattleState battle, BattleSide side, KnownSpell known, int? target)
+    {
+        if (target is null)
+        {
+            return null;
+        }
+
+        var effect = known.Effect!;
+        var dealt = BattleMagic.DamagePlan(battle, side, known, target, null).Where(h => h.Unit.Side != side).Sum(h => (long)Math.Min(h.Damage, h.Unit.TotalHealth));
+        var health = BattleMagic.Drained(effect, dealt);
+        return battle.LivingArmyOf(side).Where(u => !u.Has(Magic.SpellStatus.Stasis))
+            .Select(u => (u.Id, Worth: BattleMagic.DrainHeals(effect, u, health) * u.Creature.Value / u.Creature.Health))
+            .Where(d => d.Worth > 0)
+            .OrderByDescending(d => d.Worth).ThenBy(d => d.Id)
+            .Select(d => ((int Id, long Worth)?)d)
+            .FirstOrDefault();
     }
 
     /// <summary>What a buff or curse is worth a round, in percent of the stack's creature value (ADR-123, proposal).</summary>
@@ -277,6 +334,11 @@ internal static class BattleAi
                     .Sum(h => (h.Unit.Side == side ? -1 : 1) * (Worth(h.Unit, h.Damage) + EnchantValue(battle, side, known, h.Unit)));
             case Magic.SpellEffectKind.Zone:
                 return cell is { } at ? ZoneValue(battle, side, known, at, creaturePower) : 0;
+            case Magic.SpellEffectKind.Move:
+                return target is { } moved && battle.FindUnit(moved) is { } mover && cell is { } to
+                    ? battle.LivingUnitsOf(side.Opponent()).Where(e => mover.RectAt(to).IsAdjacentTo(e.Rect))
+                        .Select(e => Score(battle, mover, e, isRanged: false)).DefaultIfEmpty(0).Max()
+                    : 0;
         }
 
         var units = BattleMagic.Reach(battle, side, known, target, cell).Where(u => BattleMagic.Affects(battle, side, known, u)).ToList();

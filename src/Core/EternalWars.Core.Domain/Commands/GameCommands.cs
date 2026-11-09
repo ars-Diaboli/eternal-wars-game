@@ -243,8 +243,11 @@ public sealed record BattleCreatureCastCommand(PlayerId Player, int? Target = nu
 /// <summary>The player's hero uses a warcry (Stronghold, ADR-067): no mana, and the active unit keeps its action.</summary>
 public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry) : GameCommand(Player);
 
-/// <summary>The hero casts a spell at a stack or a cell, as the spell needs (ADR-110); the active unit keeps its action.</summary>
-public sealed record BattleCastCommand(PlayerId Player, string Spell, int? Target = null, CellPosition? Cell = null) : GameCommand(Player);
+/// <summary>
+/// The hero casts a spell at a stack or a cell, as the spell needs (ADR-110); the active unit keeps its action. A move (ADR-151) takes the stack
+/// <paramref name="Target"/> to <paramref name="Cell"/> (its footprint's top-left); a drain heals the own stack <paramref name="Second"/>.
+/// </summary>
+public sealed record BattleCastCommand(PlayerId Player, string Spell, int? Target = null, CellPosition? Cell = null, int? Second = null) : GameCommand(Player);
 
 public sealed record BattleWaitCommand(PlayerId Player) : GameCommand(Player);
 

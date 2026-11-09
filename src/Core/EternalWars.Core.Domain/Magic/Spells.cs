@@ -46,6 +46,20 @@ public enum SpellEffectKind
     /// Darkness).
     /// </summary>
     Zone,
+
+    /// <summary>An own stack is moved to a free cell the caster picks (Teleport, Shadow Step, ADR-151): aimed with two clicks, the stack and the cell.</summary>
+    Move,
+}
+
+/// <summary>
+/// What a moved stack (ADR-151) may still do this round when it had already taken its turn: nothing more, a whole turn (<c>again</c>), or a turn
+/// in which it does not move (<c>again-attack</c>: it may attack what stands next to it, shoot or defend).
+/// </summary>
+public enum SpellTurnAgain
+{
+    None,
+    Act,
+    Attack,
 }
 
 /// <summary>Whose spells a dispel takes off and from whom (ADR-123): <c>own</c> stacks lose the enemy's, <c>enemy</c> stacks lose their own side's, <c>any</c> stack loses every spell.</summary>
@@ -171,6 +185,9 @@ public sealed record ZoneEffect(
 /// <c>spare-own</c> choose whom its damage hits, <c>defense</c> is for own stacks in it).
 /// ADR-150: a buff or curse may last <c>turns N</c> instead of rounds (the stack's next N turns, played or passed); <c>health N</c> (with
 /// <c>controlled</c>) is the most total health a stack may have to be taken.
+/// ADR-151: <c>move N|field [shadow] [again|again-attack]</c> moves an own stack to a free cell within N cells (or anywhere), with <c>shadow</c> only
+/// where it is not next to an enemy stack; for damage aimed at a stack, <c>drain% N</c> heals an own stack the caster picks by that percent of the
+/// damage dealt, <c>drain-revive</c> also reviving its dead.
 /// </summary>
 public sealed record SpellEffect(
     SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
@@ -224,6 +241,24 @@ public sealed record SpellEffect(
     /// <summary>The most total health a stack may have for a <c>controlled</c> spell to take it (Hypnotize, ADR-150), at Spell Power 0; 0 for none.</summary>
     public int HealthLimit { get; init; }
 
+    /// <summary>How far a <see cref="SpellEffectKind.Move"/> takes the stack, in cells (straight line, like a flyer's reach); 0 for anywhere on the field.</summary>
+    public int MoveRange { get; init; }
+
+    /// <summary>A move only to a cell in shadow: the stack may not land next to an enemy stack (Shadow Step, ADR-151).</summary>
+    public bool Shadow { get; init; }
+
+    /// <summary>What a moved stack that had already taken its turn this round may still do (ADR-151).</summary>
+    public SpellTurnAgain Again { get; init; }
+
+    /// <summary>Percent of the damage a damage spell deals that heals an own stack the caster picks (Drain Life, ADR-151); 0 for none.</summary>
+    public int DrainPercent { get; init; }
+
+    /// <summary>The drained health also revives the picked stack's dead, for good (Drain Life III).</summary>
+    public bool DrainRevives { get; init; }
+
+    /// <summary>Whether the spell is aimed with a second click after its stack: the cell a move goes to, the own stack a drain heals (ADR-151).</summary>
+    public bool TwoClicks => Kind == SpellEffectKind.Move || DrainPercent > 0;
+
     /// <summary>
     /// Damage, curses, kills, the enemy's dispel and field zones work on the enemy (damage to the whole field or an area hits own stacks too; a zone
     /// may also hurt own stacks); healing, revives, buffs and the own dispel on own stacks; <see cref="EitherSide"/> spells on any stack. Creature
@@ -243,7 +278,7 @@ public sealed record SpellEffect(
         var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (tokens.Length == 0 || !Enum.TryParse<SpellEffectKind>(tokens[0], ignoreCase: true, out var kind) || !Enum.IsDefined(kind))
         {
-            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse, summon, revive, dispel, slay or zone");
+            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse, summon, revive, dispel, slay, zone or move");
         }
 
         var i = 1;
@@ -265,6 +300,18 @@ public sealed record SpellEffect(
         if (kind is SpellEffectKind.Damage or SpellEffectKind.Heal or SpellEffectKind.Revive or SpellEffectKind.Slay)
         {
             amount = Number(Next());
+        }
+
+        var moveRange = 0;
+        if (kind == SpellEffectKind.Move)
+        {
+            // move N|field [shadow] [again|again-attack]
+            var range = Next();
+            moveRange = range == "field" ? 0 : Number(range);
+            if (moveRange < (range == "field" ? 0 : 1))
+            {
+                throw new FormatException($"'{text}': a move is 'move N|field', N at least 1");
+            }
         }
 
         var dispels = DispelScope.Any;
@@ -289,11 +336,27 @@ public sealed record SpellEffect(
         var zone = new ZoneEffect();
         var zoneWords = false;
         var (turns, healthLimit) = ((int?)null, 0);
+        var (shadow, again, drain, drainRevives) = (false, SpellTurnAgain.None, 0, false);
         while (i < tokens.Length)
         {
             var token = tokens[i++];
             switch (token)
             {
+                case "shadow":
+                    shadow = true;
+                    break;
+                case "again":
+                    again = SpellTurnAgain.Act;
+                    break;
+                case "again-attack":
+                    again = SpellTurnAgain.Attack;
+                    break;
+                case "drain%":
+                    drain = Number(Next());
+                    break;
+                case "drain-revive":
+                    drainRevives = true;
+                    break;
                 case "area":
                     (reach, area) = (SpellReach.Area, Number(Next()));
                     break;
@@ -483,6 +546,21 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': 'controlled' and 'frenzied' are for a curse on one stack");
         }
 
+        if ((shadow || again != SpellTurnAgain.None) && kind != SpellEffectKind.Move)
+        {
+            throw new FormatException($"'{text}': 'shadow', 'again' and 'again-attack' are for moves");
+        }
+
+        if (kind == SpellEffectKind.Move && (reach != SpellReach.Stack || !modifiers.IsEmpty || hasRounds || targets > 1 || filter != SpellFilter.None || walls > 0))
+        {
+            throw new FormatException($"'{text}': a move is 'move N|field [shadow] [again|again-attack]'");
+        }
+
+        if ((tokens.Contains("drain%") || drainRevives) && (drain < 1 || kind != SpellEffectKind.Damage || reach != SpellReach.Stack))
+        {
+            throw new FormatException($"'{text}': 'drain% N' (at least 1) and 'drain-revive' are for a damage spell aimed at a stack");
+        }
+
         var height = 0;
         if (kind == SpellEffectKind.Zone)
         {
@@ -519,6 +597,11 @@ public sealed record SpellEffect(
             Zone = kind == SpellEffectKind.Zone ? zone : null,
             Turns = turns,
             HealthLimit = healthLimit,
+            MoveRange = moveRange,
+            Shadow = shadow,
+            Again = again,
+            DrainPercent = drain,
+            DrainRevives = drainRevives,
         };
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");

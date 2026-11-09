@@ -269,7 +269,7 @@ public sealed class BattleService(
     /// The player's hero casts a spell (ADR-110) while one of the player's units is up, at a stack or a cell as the spell needs; the unit keeps
     /// its action.
     /// </summary>
-    internal void Cast(PlayerId player, string spell, int? target, CellPosition? cell)
+    internal void Cast(PlayerId player, string spell, int? target, CellPosition? cell, int? second = null)
     {
         var battle = Current(BattlePhase.Fighting);
         var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
@@ -278,7 +278,7 @@ public sealed class BattleService(
             throw new InvalidOperationException($"{unit.Creature.Name} is not under {player}'s command.");
         }
 
-        if (Engine(battle).Cast(unit.Side, spell, target, cell) is { } refusal)
+        if (Engine(battle).Cast(unit.Side, spell, target, cell, second) is { } refusal)
         {
             throw new InvalidOperationException(refusal);
         }

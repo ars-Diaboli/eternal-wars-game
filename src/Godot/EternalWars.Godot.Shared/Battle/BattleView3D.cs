@@ -165,6 +165,9 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleRoundStarted>(events, e => Step(null, () => Narrate($"Round {e.Round}.")));
         this.SubscribeWhileInTree<BattleTurnStarted>(events, e => Step(null, () => SetActive(e.Unit)));
         this.SubscribeWhileInTree<BattleUnitMoved>(events, OnMoved);
+        this.SubscribeWhileInTree<BattleUnitTeleported>(events, OnTeleported);
+        this.SubscribeWhileInTree<BattleUnitTurnRegained>(events, e => Step(null, () =>
+            Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} may act once more this round{(e.InPlace ? ", without moving" : string.Empty)}.")));
         this.SubscribeWhileInTree<BattleDeploymentStarted>(events, e => Step(null, () =>
             Narrate($"{SideName(e.Side)} deploys within {e.Columns} columns: click a stack, then where it should stand; then start the battle.")));
         this.SubscribeWhileInTree<BattleUnitDeployed>(events, OnDeployed);
@@ -407,6 +410,32 @@ public partial class BattleView3D : Node3D
         Step(
             t => t.TweenProperty(view, "position", BattleSpace.Center(rect), Mathf.Clamp(cells * 0.05f, 0.15f, 0.6f)).SetTrans(Tween.TransitionType.Sine),
             () => view.Position = BattleSpace.Center(rect));
+    }
+
+    /// <summary>A stack a move spell took (ADR-151) sinks out of sight and rises at its new place.</summary>
+    private void OnTeleported(BattleUnitTeleported e)
+    {
+        if (!_units.TryGetValue(e.Unit, out var view))
+        {
+            return;
+        }
+
+        var rect = new CellRect(e.To.X, e.To.Y, view.Width, view.Height);
+        _planned[e.Unit] = rect;
+        var line = $"{SpellName(e.Spell)} takes {NameOf(e.Unit)} across the field.";
+        Step(
+            t =>
+            {
+                t.TweenProperty(view, "scale", new Vector3(1, 0.05f, 1), 0.15f);
+                t.TweenCallback(Callable.From(() => view.Position = BattleSpace.Center(rect)));
+                t.TweenProperty(view, "scale", Vector3.One, 0.15f);
+            },
+            () =>
+            {
+                view.Scale = Vector3.One;
+                view.Position = BattleSpace.Center(rect);
+                Narrate(line);
+            });
     }
 
     /// <summary>A stack placed elsewhere during deployment jumps there.</summary>
