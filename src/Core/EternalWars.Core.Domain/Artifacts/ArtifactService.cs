@@ -268,7 +268,17 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             throw new InvalidOperationException($"{hero.Name} does not carry '{definition.Name}'.");
         }
 
-        // A full slot frees one place by sending what is worn there to the backpack; the slots an assembled relic blocks must be free already.
+        var (blocks, swap) = Fit(hero, definition);
+        hero.Artifacts.RemoveFromBackpack(artifact);
+        PutOn(hero, definition, blocks, swap);
+    }
+
+    /// <summary>
+    /// Where the artifact would go on the hero: the slots an assembled relic blocks (they must be free already), and whether the one worn in its
+    /// full slot goes to the backpack to make room. Throws when it cannot be worn.
+    /// </summary>
+    private (IReadOnlyList<ArtifactSlot> Blocks, bool Swap) Fit(Hero hero, ArtifactDefinition definition)
+    {
         var blocks = state.Artifacts.BlockedSlots(definition);
         var swap = !hero.Artifacts.HasRoomToWear(definition.Slot) && hero.Artifacts.Worn(definition.Slot).Count > 0;
         if (blocks.Append(definition.Slot).GroupBy(s => s)
@@ -279,10 +289,14 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
                 : $"{definition.Name} also needs a free {full.Key} slot.");
         }
 
-        hero.Artifacts.RemoveFromBackpack(artifact);
+        return (blocks, swap);
+    }
+
+    /// <summary>Wears an artifact that is in neither the backpack nor a slot (checked by <see cref="Fit"/>); a swapped one goes to the backpack.</summary>
+    private void PutOn(Hero hero, ArtifactDefinition definition, IReadOnlyList<ArtifactSlot> blocks, bool swap)
+    {
         if (swap)
         {
-            // The one worn there goes to the backpack, which has the place just freed.
             var replaced = hero.Artifacts.Worn(definition.Slot)[0];
             hero.Artifacts.RemoveWorn(replaced);
             hero.Artifacts.AddToBackpack(replaced);
@@ -291,14 +305,14 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
 
         if (!hero.Artifacts.Wear(definition, blocks))
         {
-            hero.Artifacts.AddToBackpack(artifact);
+            hero.Artifacts.AddToBackpack(definition.Id);
             state.RefreshArtifacts(hero);
             throw new InvalidOperationException($"{definition.Name} does not fit.");
         }
 
         state.RefreshArtifacts(hero);
-        events.Publish(new ArtifactEquipped(hero.Id, artifact, definition.Slot));
-        if (state.Artifacts.RelicOf(artifact) is { } relic && Assemblable(state.Artifacts, hero).Any(r => r.Id == relic))
+        events.Publish(new ArtifactEquipped(hero.Id, definition.Id, definition.Slot));
+        if (state.Artifacts.RelicOf(definition.Id) is { } relic && Assemblable(state.Artifacts, hero).Any(r => r.Id == relic))
         {
             events.Publish(new RelicReady(hero.Id, relic));
         }
@@ -323,8 +337,12 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         events.Publish(new ArtifactUnequipped(hero.Id, artifact));
     }
 
-    /// <summary>Hands an artifact (from the backpack first, else off the body) to another own hero whose exchange is open.</summary>
-    internal void Give(PlayerId player, HeroId fromId, string artifact, HeroId toId)
+    /// <summary>
+    /// Hands an artifact to another own hero whose exchange is open: the worn one when <paramref name="worn"/>, else from the backpack first, else
+    /// off the body. It goes into the receiver's backpack, or with <paramref name="wear"/> onto its body (the one worn in a full slot goes to its
+    /// backpack); nothing changes when it cannot.
+    /// </summary>
+    internal void Give(PlayerId player, HeroId fromId, string artifact, HeroId toId, bool worn = false, bool wear = false)
     {
         var from = Own(player, fromId, exchangeAllowed: true);
         var to = Own(player, toId, exchangeAllowed: true);
@@ -339,13 +357,15 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             throw new InvalidOperationException("Artifacts change hands only while the exchange of the two heroes is open.");
         }
 
-        var carried = from.Artifacts.Backpack.Contains(artifact);
+        var carried = !worn && from.Artifacts.Backpack.Contains(artifact);
         if (!carried && !from.Artifacts.IsWorn(artifact))
         {
-            throw new InvalidOperationException($"{from.Name} does not have '{artifact}'.");
+            throw new InvalidOperationException(worn ? $"{from.Name} does not wear '{artifact}'." : $"{from.Name} does not have '{artifact}'.");
         }
 
-        if (to.Artifacts.BackpackFull)
+        var definition = state.Artifacts.Get(artifact);
+        var fit = wear ? Fit(to, definition) : default;
+        if ((!wear || fit.Swap) && to.Artifacts.BackpackFull)
         {
             throw new InvalidOperationException($"{to.Name}'s backpack is full.");
         }
@@ -360,7 +380,15 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
             state.RefreshArtifacts(from);
         }
 
-        to.Artifacts.AddToBackpack(artifact);
+        if (wear)
+        {
+            PutOn(to, definition, fit.Blocks, fit.Swap);
+        }
+        else
+        {
+            to.Artifacts.AddToBackpack(artifact);
+        }
+
         events.Publish(new ArtifactGiven(from.Id, to.Id, artifact));
     }
 

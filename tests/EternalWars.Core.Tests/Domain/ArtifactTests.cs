@@ -334,6 +334,64 @@ public class ArtifactTests
         Assert.Equal(2, given.Count);
     }
 
+    [Fact]
+    public void Giving_TheWornCopy_LeavesTheCarriedOne()
+    {
+        var state = Create("AC.B");
+        Outfit(state, A, worn: ["rusted-blade"], backpack: ["rusted-blade"]);
+        var session = Start(state);
+        session.Step(A, Direction.East);
+
+        Assert.True(session.Execute(new GiveArtifactCommand(Blue, A, "rusted-blade", C, Worn: true)).IsAccepted);
+        Assert.Empty(state.GetHero(A).Artifacts.Worn(ArtifactSlot.Weapon));
+        Assert.Equal(["rusted-blade"], state.GetHero(A).Artifacts.Backpack);
+        Assert.Equal(state.GetHero(A).Attack, state.GetHero(A).TotalAttack);
+        Assert.False(session.Execute(new GiveArtifactCommand(Blue, A, "rusted-blade", C, Worn: true)).IsAccepted); // none worn now
+    }
+
+    [Fact]
+    public void Giving_ToWear_PutsItOnTheReceiver_AndSwapsOutTheOneWornThere()
+    {
+        var state = Create("AC.B");
+        Outfit(state, A, worn: ["centaurs-ax"]);
+        Outfit(state, C, worn: ["rusted-blade"]);
+        var session = Start(state);
+        session.Step(A, Direction.East);
+        var events = new List<IEvent>();
+        session.Events.Subscribe<ArtifactGiven>(events.Add);
+        session.Events.Subscribe<ArtifactEquipped>(events.Add);
+        session.Events.Subscribe<ArtifactUnequipped>(events.Add);
+
+        Assert.True(session.Execute(new GiveArtifactCommand(Blue, A, "centaurs-ax", C, Worn: true, Wear: true)).IsAccepted);
+        var c = state.GetHero(C);
+        Assert.Equal(["centaurs-ax"], c.Artifacts.Worn(ArtifactSlot.Weapon));
+        Assert.Equal(["rusted-blade"], c.Artifacts.Backpack);
+        Assert.Equal(c.Attack + 2, c.TotalAttack);
+        Assert.Equal(state.GetHero(A).Attack, state.GetHero(A).TotalAttack);
+        Assert.Equal(
+            [new ArtifactUnequipped(C, "rusted-blade"), new ArtifactEquipped(C, "centaurs-ax", ArtifactSlot.Weapon), new ArtifactGiven(A, C, "centaurs-ax")],
+            events);
+    }
+
+    [Fact]
+    public void Giving_ToWear_NeedsBackpackRoomOnlyForTheSwappedOne()
+    {
+        var full = Enumerable.Repeat("iron-band", ArtifactSlots.BackpackSize).ToArray();
+        var state = Create("AC.B");
+        Outfit(state, A, backpack: ["centaurs-ax", "rusted-blade"]);
+        Outfit(state, C, backpack: full);
+        var session = Start(state);
+        session.Step(A, Direction.East);
+
+        Assert.False(session.Execute(new GiveArtifactCommand(Blue, A, "centaurs-ax", C)).IsAccepted); // into a full backpack
+        Assert.True(session.Execute(new GiveArtifactCommand(Blue, A, "centaurs-ax", C, Wear: true)).IsAccepted); // a free weapon slot
+        Assert.Equal(["centaurs-ax"], state.GetHero(C).Artifacts.Worn(ArtifactSlot.Weapon));
+
+        Assert.False(session.Execute(new GiveArtifactCommand(Blue, A, "rusted-blade", C, Wear: true)).IsAccepted); // the axe has nowhere to go
+        Assert.Equal(["rusted-blade"], state.GetHero(A).Artifacts.Backpack);
+        Assert.Equal(["centaurs-ax"], state.GetHero(C).Artifacts.Worn(ArtifactSlot.Weapon));
+    }
+
     // The map -------------------------------------------------------------------------------------------------
 
     [Fact]

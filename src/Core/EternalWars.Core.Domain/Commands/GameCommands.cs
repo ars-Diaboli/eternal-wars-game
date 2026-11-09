@@ -192,8 +192,11 @@ public sealed record AssembleRelicCommand(PlayerId Player, HeroId Hero, string R
 /// <summary>Takes an assembled relic the hero wears or carries apart into its pieces (ADR-121); free, any time on the owner's turn.</summary>
 public sealed record TakeRelicApartCommand(PlayerId Player, HeroId Hero, string Relic) : GameCommand(Player);
 
-/// <summary>Gives an artifact (from the backpack first, else off the body) to another own hero while their exchange is open.</summary>
-public sealed record GiveArtifactCommand(PlayerId Player, HeroId FromHero, string Artifact, HeroId ToHero) : GameCommand(Player);
+/// <summary>
+/// Gives an artifact to another own hero while their exchange is open: the worn one when <paramref name="Worn"/>, else from the backpack first,
+/// else off the body. It goes into the receiver's backpack, or with <paramref name="Wear"/> onto its body (the exchange screen, ADR-153).
+/// </summary>
+public sealed record GiveArtifactCommand(PlayerId Player, HeroId FromHero, string Artifact, HeroId ToHero, bool Worn = false, bool Wear = false) : GameCommand(Player);
 
 /// <summary>Hands a war machine to another own hero that has none in that slot, while their exchange is open (ADR-070, CMB-3).</summary>
 public sealed record GiveWarMachineCommand(PlayerId Player, HeroId FromHero, Battles.WarMachineSlot Slot, HeroId ToHero) : GameCommand(Player);
