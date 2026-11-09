@@ -110,7 +110,7 @@ public class ArenaTests
         ToBattleDay(session);
 
         // Nobody stood on the combat place: the first player in turn order attacks, the next enemy defends.
-        Assert.Equal(new ArenaBattle(place.Id, Blue, A, Red, B), state.Arena);
+        Assert.Equal(new ArenaBattle(place.Id, Blue, A, Red, B), state.Arena! with { Summary = null });
         Assert.Equal((place.AttackCell, place.VisitPosition), (state.GetHero(A).Position, state.GetHero(B).Position));
         Assert.IsType<BattleDecision>(state.PendingDecision);
         Assert.Equal((A, B), (state.Battle!.Attacker.Hero, state.Battle.Defender.Hero));
@@ -150,7 +150,7 @@ public class ArenaTests
         session.MoveTo(B, second!.VisitPosition);
         session.EndTurn(); // Red
 
-        Assert.Equal(new ArenaBattle(second.Id, Blue, A, Red, B), state.Arena);
+        Assert.Equal(new ArenaBattle(second.Id, Blue, A, Red, B), state.Arena! with { Summary = null });
         Assert.NotEqual(first.Id, state.Arena!.CombatPlace);
         Assert.Equal((second.AttackCell, second.VisitPosition), (state.GetHero(A).Position, state.GetHero(B).Position));
     }
@@ -179,7 +179,7 @@ public class ArenaTests
         session.MoveTo(A, place.VisitPosition); // the weaker hero claims the place for Blue
         ToBattleDay(session);
 
-        Assert.Equal(new ArenaBattle(place.Id, Red, B, Blue, C), state.Arena);
+        Assert.Equal(new ArenaBattle(place.Id, Red, B, Blue, C), state.Arena! with { Summary = null });
         Assert.Equal(place.VisitPosition, state.GetHero(C).Position);
         Assert.Equal(new MapPosition(0, 2), state.GetHero(A).Position);
         Assert.Equal(place.AttackCell, state.GetHero(B).Position);

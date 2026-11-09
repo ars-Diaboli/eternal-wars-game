@@ -101,8 +101,8 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Core: the arena switch in the map (no victory or loss conditions), combat places; day 1 with unlimited movement and building (the
       map's starting resources); the battle at the start of day 2 (HotA's hero choice, heroes moved, no experience, retreat and surrender
       lose), its winner wins the game, a draw is a loss for both; map format bump (ARN-1, ARN-2; ADR-158)
-- [ ] Game app: arena maps on the new-game screen, hot-seat and against the computer; the battle starts by itself, both armies shown;
-      result screen with "Play again" and "Save replay", not ranked (ARN-1)
+- [x] Game app: arena maps on the new-game screen, hot-seat and against the computer; the battle starts by itself, both armies shown;
+  result screen with "Play again" and "Save replay", not ranked (ARN-1; ADR-159)
 - [ ] AI: prepares on day 1 (visits, hires, builds) for the battle; never leaves the battle
 - [ ] Editor: the arena switch on the conditions tab, combat places; validator (no combat place, players that can meet on day 1, map
       events that run only later); Pandora's Boxes, quests, Witch Huts and Shrines show their contents on day 1 (ARN-2)

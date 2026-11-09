@@ -1579,3 +1579,24 @@ the shipped maps are the arena's other roadmap items.
 - **Not done** (the arena's other roadmap items): the new-game screen and the battle screen showing both armies, the result screen, the AI's
   day-1 preparation, the editor's switch and combat place tools, the validator, objects showing their contents on day 1, the shipped maps.
   Combat places are drawn as plain coloured boxes.
+
+### ADR-159: The arena in the game app (ADR-097, ADR-100, ADR-158, ARN-1, 2026-11-09)
+**Status**: implemented (2026-11-09): the roadmap's arena "Game app" item.
+
+- **New-game screen**: an arena map (any map with the switch: `--map`, the editor's maps folder, later the shipped ones) shows one line on
+  what the mode is under the map's name, and each player's "Controlled by" is a Human / Computer choice instead of the map's fixed label:
+  hot-seat (two humans) or against the computer. It goes through `GameState.AssignControllers` (game setup, like `AssignTeams`: refused once
+  started, for unknown players, and when nobody would be a person). Other maps keep the map's controllers *(choice: the roadmap asked it for
+  the arena only)*.
+- **The battle starts by itself**: nothing new was needed: the battle scene opens on any `BattleStarted`, and shows every unit of both sides
+  with its count (ARN-1 f: "the battle screen shows both armies"). The status line says "Day 2: the arena battle. Orrin (Blue) attacked
+  Caelwyn (Red)." from `ArenaChampionsChosen`; `ArenaBattle.Summary` keeps that sentence in the core because a defeated hero leaves the game.
+  The turn panel refreshes on `DayStarted` too, since day 2 starts no turn.
+- **Result screen**: the reason, who attacked whom, "Arena maps are not ranked." (no ranking rows, ADR-158), **"Play again"** and the usual
+  "Save replay". "Play again" rebuilds the game's start map (`_initialMap`, so the same players, controllers and teams) with the same options
+  (factions, fog, complexity, timer) and a **new seed** *(choice: a rematch with its own luck, not the same rolls)*; only arena maps offer it.
+- **Fix**: a game begun from inside another ("Play again", and a load during a game) made no camera current, since the old game's camera
+  was still current until it was freed: the map stayed grey. `BeginGame` now makes the new camera current.
+- Smoke: `tools/smoke/arena.ewmap.json` (Blue and Red behind a rock wall, the combat place in a closed pocket) and the `game-arena` scenario
+  (end day 1, the computer prepares, quick combat, the result screen, "Play again"); `SmokeMapTests` plays the map against the AI and checks the
+  hot-seat setup. Hot-seat was checked in the core only; a battle between two people on one screen is the existing hot-seat battle.

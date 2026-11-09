@@ -39,6 +39,12 @@ public sealed record ArenaBattle(MapObjectId? CombatPlace, PlayerId? Attacker, H
 
     /// <summary>Why no battle was fought (<see cref="ArenaResult.NoBattle"/>).</summary>
     public string? Reason { get; init; }
+
+    /// <summary>
+    /// What the battle was, for the result screen (ADR-159): "Alpha (Blue) attacked Bravo (Red)."; null when no battle was chosen. Kept here because a
+    /// defeated hero leaves the game.
+    /// </summary>
+    public string? Summary { get; init; }
 }
 
 /// <summary>
@@ -104,7 +110,11 @@ public static class ArenaRules
 
         var attackerHero = Champion(state, attacker.Team);
         var defenderHero = Champion(state, defender.Team);
-        var plan = new ArenaBattle(place?.Id, attackerHero?.Owner ?? attacker.Id, attackerHero?.Id, defenderHero?.Owner ?? defender.Id, defenderHero?.Id);
+        var plan = new ArenaBattle(place?.Id, attackerHero?.Owner ?? attacker.Id, attackerHero?.Id, defenderHero?.Owner ?? defender.Id, defenderHero?.Id)
+        {
+            Summary = attackerHero is null || defenderHero is null ? null
+                : $"{attackerHero.Name} ({state.GetPlayer(attackerHero.Owner).Name}) attacked {defenderHero.Name} ({state.GetPlayer(defenderHero.Owner).Name}).",
+        };
         var missing = new[] { (Hero: attackerHero, Player: attacker), (Hero: defenderHero, Player: defender) }.Where(s => s.Hero is null).Select(s => s.Player.Name).ToList();
         return missing.Count == 0
             ? plan

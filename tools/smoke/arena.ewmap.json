@@ -1,0 +1,36 @@
+{
+  "formatVersion": 38,
+  "name": "Arena test",
+  "description": "Smoke map of the arena (ADR-097): Blue and Red prepare on day 1 behind a rock wall; on day 2 their strongest heroes meet at the combat place in the closed pocket at the bottom.",
+  "width": 24,
+  "height": 12,
+  "terrain": [
+    [
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "ggggggggggg#gggggggggggg",
+      "########################",
+      "#########dddddd#########",
+      "########################"
+    ]
+  ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": false } ],
+  "rules": { "arena": true },
+  "heroes": [
+    { "id": 1, "name": "Orrin", "owner": 0, "x": 4, "y": 8, "army": [ { "slot": 0, "creature": "haven.footman", "count": 20 }, { "slot": 1, "creature": "haven.archer", "count": 10 } ] },
+    { "id": 2, "name": "Sandro", "owner": 1, "x": 18, "y": 8, "army": [ { "slot": 0, "creature": "inferno.imp", "count": 30 }, { "slot": 1, "creature": "inferno.familiar", "count": 8 } ] }
+  ],
+  "objects": [
+    { "kind": "town", "id": 1, "definition": "town.haven", "x": 1, "y": 1, "owner": 0, "name": "Brightwall" },
+    { "kind": "town", "id": 2, "definition": "town.inferno", "x": 15, "y": 1, "owner": 1, "name": "Cinderhold" },
+    { "kind": "pile", "id": 3, "definition": "pile.gold", "x": 9, "y": 4, "amount": 5000 },
+    { "kind": "pile", "id": 4, "definition": "pile.gold", "x": 13, "y": 4, "amount": 5000 },
+    { "kind": "combatPlace", "id": 5, "definition": "combat-place", "x": 11, "y": 10 }
+  ]
+}

@@ -451,6 +451,9 @@ public partial class Main : Node3D
         _camera = new StrategyCamera { Name = "Camera" };
         _game.AddChild(_camera);
 
+        // A game begun from inside another ("Play again", a load) would otherwise keep the old game's camera, freed at the end of the frame.
+        _camera.MakeCurrent();
+
         BuildHud();
         BuildBattle();
         BuildResult();
@@ -1162,6 +1165,11 @@ public partial class Main : Node3D
         layer.AddChild(_result);
         _result.Bind(EnterRanking, SaveReplay);
         _result.MainMenuRequested += ShowMainMenu;
+        _result.PlayAgainRequested += PlayAgain;
+
+        // An arena map's day 2 (ADR-097): the battle opens by itself; the status line says who meets whom.
+        _game.SubscribeWhileInTree<ArenaChampionsChosen>(_session.Events, _ =>
+            _status.Text = $"Day 2: the arena battle. {_session.State.Arena?.Summary}");
 
         _game.SubscribeWhileInTree<PlayerDefeated>(_session.Events, e =>
             _status.Text = $"{_session.State.GetPlayer(e.Player).Name} is defeated: {e.Reason}");
@@ -1183,6 +1191,20 @@ public partial class Main : Node3D
                 ShowResult();
             }
         };
+    }
+
+    /// <summary>
+    /// "Play again" on an arena map's result screen (ADR-159): the game's start map with the same players, teams, factions and options, and a new
+    /// seed, so the luck of the rematch is its own.
+    /// </summary>
+    private void PlayAgain()
+    {
+        var options = _session.State.Options with { Seed = (ulong)System.Random.Shared.NextInt64() };
+        var state = MapConverter.ToGameState(
+            _initialMap, options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings,
+            artifacts: GameContent.Artifacts);
+        StartGame(state);
+        _status.Text = $"{_initialMap.Name}: a new game, seed {options.Seed}.";
     }
 
     private void ShowResult()
