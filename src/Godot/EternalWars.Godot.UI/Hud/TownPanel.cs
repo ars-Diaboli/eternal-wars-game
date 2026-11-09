@@ -290,7 +290,7 @@ public partial class TownPanel : PanelContainer
     private void ShowBuildingTree(GameState state, Town town)
     {
         Clear(_buildings);
-        _builtToday.Text = town.LastBuilt == state.Date
+        _builtToday.Text = TownRules.HasBuiltToday(state, town)
             ? $"Built today: {town.LastBuiltName ?? "a building"}. The next building can go up tomorrow."
             : "Nothing built today yet.";
         var step = 0;

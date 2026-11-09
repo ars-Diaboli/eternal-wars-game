@@ -157,6 +157,9 @@ public sealed class GameState
 
     public bool IsOver => Outcome is not null;
 
+    /// <summary>The arena map's battle (ADR-097), chosen at the start of day 2; null before, and on every other map.</summary>
+    public ArenaBattle? Arena { get; internal set; }
+
     public PendingDecision? PendingDecision { get; internal set; }
 
     public Player CurrentPlayer => _players[CurrentPlayerIndex];

@@ -23,7 +23,8 @@ public sealed class TurnService(
     TownService towns,
     CaravanService caravans,
     MapObjectInteractionService objects,
-    MapEvents.MapEventService mapEvents)
+    MapEvents.MapEventService mapEvents,
+    ArenaService arena)
 {
     internal void StartGame()
     {
@@ -75,9 +76,13 @@ public sealed class TurnService(
         {
             AdvancePlayer();
         }
-        while (state.CurrentPlayer.IsDefeated && ++tries <= state.Players.Count);
+        while (state.Arena is null && state.CurrentPlayer.IsDefeated && ++tries <= state.Players.Count);
 
-        BeginTurn();
+        // An arena map's day 2 is its battle, which ends the game: nobody's turn starts (ADR-097).
+        if (state.Arena is null)
+        {
+            BeginTurn();
+        }
     }
 
     private void AdvancePlayer()
@@ -88,6 +93,12 @@ public sealed class TurnService(
             state.CurrentPlayerIndex = 0;
             state.Date = state.Date.Next();
             events.Publish(new DayStarted(state.Date));
+            if (state.Rules.Arena && state.Date.AbsoluteDay == ArenaRules.BattleDay)
+            {
+                arena.StartBattle();
+                return;
+            }
+
             guards.RefillBanks();
             if (state.Date.IsFirstDayOfWeek)
             {

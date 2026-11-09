@@ -136,6 +136,12 @@ public enum MapObjectKind
 
     /// <summary>Shows the visiting hero's player a share of the puzzle map around the buried Grail (<see cref="Objects.Obelisk"/>, ADR-140).</summary>
     Obelisk,
+
+    /// <summary>
+    /// Where an arena map's battle is fought on day 2 (<see cref="Objects.CombatPlace"/>, ADR-097): the defender stands on the entrance, the attacker
+    /// comes from the blocked attack cell.
+    /// </summary>
+    CombatPlace,
 }
 
 /// <summary>

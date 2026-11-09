@@ -72,6 +72,20 @@ public sealed class BattleService(
         Begin(attacker, battle, Stacks(attacker, siege is not null), Stacks(defender), siege: siege);
     }
 
+    /// <summary>
+    /// The arena map's battle (ADR-097, ADR-100): the two champions, already on the combat place, fight on its terrain; never a siege or an ambush.
+    /// Both sides have an army (<see cref="ArenaService"/> settles the others). It gives no experience and the AI never leaves it; its result is
+    /// recorded in <see cref="GameState.Arena"/> (<see cref="Finish"/>).
+    /// </summary>
+    internal void BeginArenaBattle(Hero attacker, Hero defender, MapPosition location)
+    {
+        var battle = Create(Participant(BattleSide.Attacker, attacker), Participant(BattleSide.Defender, defender), location, isAmbush: false);
+        Begin(attacker, battle, Stacks(attacker), Stacks(defender));
+    }
+
+    /// <summary>Whether the battle being fought is an arena map's battle (ADR-097).</summary>
+    private bool IsArenaBattle => state.Arena is { Result: ArenaResult.Fighting };
+
     /// <summary>The AI's throwaway estimate fights play a hero battle as a siege of these fortifications (<see cref="AI.BattleEstimator"/>).</summary>
     internal SiegeSpec? EstimateSiege { get; set; }
 
@@ -643,8 +657,8 @@ public sealed class BattleService(
                 continue;
             }
 
-            // A computer player's hero gives up a lost battle (ADR-070); quick combat never retreats for a person.
-            if (AiMayRetreat && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
+            // A computer player's hero gives up a lost battle (ADR-070), but never the arena's (ADR-097); quick combat never retreats for a person.
+            if (AiMayRetreat && !IsArenaBattle && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
             {
                 Engine(battle, bus).Retreat(unit.Side);
                 break;
@@ -679,8 +693,15 @@ public sealed class BattleService(
         var winning = battle.Participant(winner);
         var losing = battle.Participant(loser);
 
-        var experience = Experience(battle);
+        // The arena's battle gives no experience and decides the game (ADR-097): both armies fallen is a draw, a retreat or surrender loses.
+        var arena = IsArenaBattle ? state.Arena : null;
+        var experience = arena is null ? Experience(battle) : 0;
         var casualties = Casualties(battle);
+        if (arena is not null)
+        {
+            var draw = reason == BattleEndReason.Defeated && !battle.OwnedArmyOf(BattleSide.Attacker).Any() && !battle.OwnedArmyOf(BattleSide.Defender).Any();
+            state.Arena = draw ? arena with { Result = ArenaResult.Draw } : arena with { Result = ArenaResult.Won, Winner = winning.Owner };
+        }
 
         // The mana the heroes spent is gone (ADR-110); mana lent for a siege (ADR-138) is spent first and does not outlast the battle.
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })

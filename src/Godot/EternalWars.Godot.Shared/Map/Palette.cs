@@ -101,6 +101,7 @@ public static class Palette
         MapObjectKind.Shrine => new Color(0.45f, 0.55f, 0.85f),
         MapObjectKind.SkillSchool => new Color(0.30f, 0.45f, 0.70f),
         MapObjectKind.Obelisk => new Color(0.70f, 0.62f, 0.45f),
+        MapObjectKind.CombatPlace => new Color(0.80f, 0.25f, 0.20f),
         MapObjectKind.Deposit => new Color(0.55f, 0.50f, 0.45f),
         MapObjectKind.MagiWindow or MapObjectKind.MagiEye => new Color(0.40f, 0.60f, 0.95f),
         MapObjectKind.KeymasterTent or MapObjectKind.BorderPost => new Color(0.90f, 0.85f, 0.30f),

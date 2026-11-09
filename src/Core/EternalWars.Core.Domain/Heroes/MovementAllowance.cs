@@ -42,7 +42,8 @@ public static class MovementAllowance
         return Daily(speed, percent, hero.MovementBonusFlat + hero.Bonus.MovementFlat + hero.StatusTotal(HeroStatusKind.Movement));
     }
 
-    public static int Daily(GameState state, Hero hero) => Daily(hero, state.Creatures);
+    /// <summary>The allowance in this game: on an arena map's preparation day nearly unlimited (<see cref="ArenaRules.PreparationMovement"/>, ADR-097).</summary>
+    public static int Daily(GameState state, Hero hero) => ArenaRules.IsPreparationDay(state) ? ArenaRules.PreparationMovement : Daily(hero, state.Creatures);
 
     public static int? SlowestMapSpeed(Hero hero, CreatureCatalog creatures) =>
         hero.Army.IsEmpty ? null : hero.Army.Stacks.Min(s => creatures.Get(s.Stack.Creature).MapSpeed);

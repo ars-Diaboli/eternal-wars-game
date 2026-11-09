@@ -1543,3 +1543,39 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   entrance is left for the guard (`SettlementPlacer.Find`'s `accept`), since thicker scenery could leave none.
 - Tests: `TerrainPainterTests.Obstacles_AreDenserOnWoodedAndBrokenGround_ThanOnSand`, `SceneryTests.TheGenerator_FillsAZone_MostlyWithItsTerrainsOwnScenery`.
 - **Not done**: scenery art (the pieces are still placeholder boxes); scenery outside clumps (single trees along roads, forest edges).
+
+### ADR-158: The arena's core rules (ADR-097, ADR-100, ARN-1, ARN-2, 2026-11-09)
+**Status**: implemented (2026-11-09): the roadmap's arena "Core" item. Map format **v38**. The game app, the AI's preparation, the editor and
+the shipped maps are the arena's other roadmap items.
+
+- **The switch**: `ScenarioRules.Arena` (`rules.arena` in the map, omitted = off). On an arena map `GameFlowService` checks nothing but the
+  arena battle: the victory and defeat conditions, the last team standing and the elimination do not count, so nobody is out before the
+  battle *(choice: a player who loses its heroes on day 1 stays in and has "no hero" on day 2)*. The conditions stay in the rules; the editor
+  item decides whether the switch clears them. Never ranked (`ScoreRules.IsRanked`).
+- **Combat place**: a new object kind, `combat-place` (`BV`: the attacker from the west, as the battlefield puts it on the left) and
+  `combat-place.vertical` (`B` over `V`: from the north). The entrance is the defender's cell, the blocked cell the attacker's
+  (`CombatPlace.AttackCell`), so no hero reaches it on day 1. A visit does nothing and routes go through it. Map document `combatPlace`.
+- **Day 1** (`ArenaRules.IsPreparationDay`): `MovementAllowance.Daily(state, hero)` gives **1 000 000** movement points ("nearly unlimited";
+  every hero's daily allowance goes through it now, hires and freed prisoners too; a garrison hero gets them as well), and
+  `TownRules.HasBuiltToday` lifts the one-building-a-day rule (the rule, the building tree, the AI and the town screen use it). **Starting
+  resources** are the usual ones (the complexity, or the map's own with "Map default") *(assumed: ARN-1 d's "the map's starting resources"
+  as against "everything costs nothing")*.
+- **Day 2**: when the calendar reaches day 2, `TurnService` calls `ArenaService.StartBattle` after `DayStarted` and starts no turn (no income,
+  no week or map events). `ArenaRules.Plan` follows ADR-097: the defender is the first player in turn order with a hero on a combat place's
+  entrance (that place is the battlefield), the attacker the first player in turn order who is its enemy; without one, the first player
+  attacks the next enemy at the first combat place (lowest id). Each team's **champion** is its strongest hero by army value (Σ count ×
+  creature value, ties to the lower hero id), a hero on the map first, else a garrison hero, which comes out with the garrison as its army.
+  The defender is moved to the entrance, the attacker to the attack cell (`HeroTeleported`; a hero already there swaps places), then
+  `ArenaChampionsChosen`, then an ordinary hero battle on that cell's terrain (`BattleService.BeginArenaBattle`: no siege, no ambush). With no
+  combat place the heroes stay and fight where the defender stands *(choice; the validator item makes such a map an error)*.
+- **The battle**: no experience; the computer never retreats or surrenders in it (the AI item's "never leaves", one check). Its result goes
+  into `GameState.Arena` (`ArenaBattle`: place, sides, champions, `ArenaResult`) when it finishes: the winner, or a **draw** when both sides'
+  creatures are all dead (the engine still names a winner then). A retreat or surrender is an ordinary loss. A side whose champion has no army
+  loses without a battle; both without armies is a draw. No enemy side, or a side without any hero: no battle (`NoBattle`).
+- **The end**: `GameFlowService` ends the game from `GameState.Arena`: the winner's team wins ("Blue won the arena battle."); a draw or no
+  battle ends it with no winner. `GameStateDigest` writes the arena line only once it is chosen, so older replays keep their digests.
+- Tests: `ArenaTests` (movement, building, the hero choice, swapping, garrison champions, retreat, draw, no hero, no army, ignored
+  conditions, the AI not retreating), `ArenaFormatTests` (v38 round trip, v37 loads).
+- **Not done** (the arena's other roadmap items): the new-game screen and the battle screen showing both armies, the result screen, the AI's
+  day-1 preparation, the editor's switch and combat place tools, the validator, objects showing their contents on day 1, the shipped maps.
+  Combat places are drawn as plain coloured boxes.

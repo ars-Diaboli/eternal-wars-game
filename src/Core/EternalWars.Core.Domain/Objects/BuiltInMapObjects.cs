@@ -93,6 +93,13 @@ public static class BuiltInMapObjects
     /// <summary>The obelisk (ADR-126, ADR-140): a visit shows the player a share of the puzzle map around the buried Grail.</summary>
     public const string Obelisk = "obelisk";
 
+    /// <summary>
+    /// The arena's combat places (ADR-097, ADR-100): the attacker comes from the west (<see cref="CombatPlace"/>) or from the north
+    /// (<see cref="VerticalCombatPlace"/>) onto the defender's cell, as the battlefield puts the attacker on the left.
+    /// </summary>
+    public const string CombatPlace = "combat-place";
+    public const string VerticalCombatPlace = "combat-place.vertical";
+
     /// <summary>Shrines of spell levels 1–3 (ADR-068, ADR-120): <c>shrine.1</c>, <c>shrine.2</c>, <c>shrine.3</c>.</summary>
     public static string ShrineId(int level) => $"shrine.{level}";
     public const string AstrologersTower = "astrologers-tower";
@@ -244,6 +251,8 @@ public static class BuiltInMapObjects
         new(University, "University", MapObjectKind.SkillSchool, MineFootprint),
         new(WarAcademy, "War academy", MapObjectKind.SkillSchool, MineFootprint),
         new(Obelisk, "Obelisk", MapObjectKind.Obelisk, MonolithFootprint),
+        new(CombatPlace, "Combat place", MapObjectKind.CombatPlace, new(["BV"])),
+        new(VerticalCombatPlace, "Combat place (vertical)", MapObjectKind.CombatPlace, new(["B", "V"])),
         .. Enumerable.Range(1, ShrineRules.Levels).Select(level => new MapObjectDefinition(ShrineId(level), $"Shrine (level {level} spell)", MapObjectKind.Shrine, ProviderFootprint) { Amount = level }),
         new(AstrologersTower, "Astrologer's tower", MapObjectKind.AstrologersTower, ProviderFootprint),
         new(PandorasBox, "Pandora's box", MapObjectKind.PandorasBox, Footprint.Single),

@@ -232,9 +232,15 @@ public sealed class HeroMovementService(
             events.Publish(new HeroMovementRestored(hero.Id, hero.MovementPoints));
         }
 
-        // A garrison hero rests too (ADR-112); its allowance is worked out again from the army it leads out (TownService.LeaveGarrison).
+        // A garrison hero rests too (ADR-112); its allowance is worked out again from the army it leads out (TownService.LeaveGarrison). On an
+        // arena map's preparation day it may come out and still go anywhere (ADR-097).
         foreach (var hero in state.GarrisonHeroes.Where(h => h.Owner == owner))
         {
+            if (Game.ArenaRules.IsPreparationDay(state))
+            {
+                hero.MaxMovementPoints = Game.ArenaRules.PreparationMovement;
+            }
+
             hero.MovementPoints = hero.MaxMovementPoints;
         }
     }

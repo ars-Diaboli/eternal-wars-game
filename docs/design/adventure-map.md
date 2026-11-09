@@ -260,6 +260,7 @@ Rules: [shared object rules](#shared-object-rules).
 | Witch Hut | **Two skills** (map-set or rolled); a visit raises one a level, or the same group's next skill where it cannot; **one lesson per hero level** (MAP-34) |
 | University / War Academy | Lessons in the magic schools / the six general groups (never Primal Fury), drawn per hero on its first visit with the level-up weights and kept: up to **2 new groups** (the group's first skill at Basic) and **2 skills of its learned groups** one level up; any number a visit, each **1000 gold + 5 crystal, mercury and sulfur**; learned lessons and new groups past the 6-group limit shown disabled (ADR-139). Generator value 2500, one of each per map |
 | Obelisk | Once per player: opens pieces of the **puzzle map** (below); at most **25** a map (ADR-140) |
+| Combat place | Arena maps only: the day-2 battle is fought here; the defender stands on its entrance, the attacker comes from its blocked attack cell (west, or north in the vertical one); a hero on the entrance makes its owner the defender; otherwise nothing happens and routes go through it ([arena](victory-and-modes.md#game-modes), ADR-158) |
 
 **The Grail** (ADR-126, ADR-140, MAP-36):
 - **Where**: buried on diggable ground at least **10 cells from every edge** (maps under 24×24 have none), placed by the author or drawn at
