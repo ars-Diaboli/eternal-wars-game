@@ -40,8 +40,8 @@ public sealed class GeneratedTerrain
 /// patches of it.</item>
 /// <item>A tile with a tile of another zone among its eight neighbours is wall: borders are two tiles thick and nothing slips through
 /// diagonally. The connections stage opens the passages in them.</item>
-/// <item>Obstacles are small clumps at least three tiles from the walls and from each other; a clump that would cut off part of its
-/// zone is dropped. Walkable pockets the walls cut off are filled in.</item>
+/// <item>Obstacles are small clumps at least three tiles from the walls and one from each other, more of them and larger on wooded or
+/// broken ground (<see cref="SceneryDensity"/>); a clump that would cut off part of its zone is dropped. Walkable pockets the walls cut off are filled in.</item>
 /// </list>
 /// </summary>
 public static class TerrainPainter
@@ -57,14 +57,24 @@ public static class TerrainPainter
     private static IReadOnlyList<TerrainType> PatchPool(int level, TerrainType main) =>
         (level == 0 ? new[] { TerrainType.Dirt, TerrainType.Rough, TerrainType.Grass } : [TerrainType.RockyGround, TerrainType.Subterranean]).Where(t => t != main).ToList();
 
-    /// <summary>Per mille of a zone's tiles that start an obstacle clump, by density.</summary>
+    /// <summary>
+    /// Per mille of a zone's tiles that start an obstacle clump, by density, on terrain of 100 % <see cref="SceneryDensity.Clumps"/>; each tile
+    /// counts by its own terrain's share.
+    /// </summary>
     public static int ClumpsPerMille(ObstacleDensity density) => density switch
     {
         ObstacleDensity.None => 0,
-        ObstacleDensity.Sparse => 3,
-        ObstacleDensity.Normal => 8,
-        _ => 16,
+        ObstacleDensity.Sparse => 4,
+        ObstacleDensity.Normal => 10,
+        _ => 20,
     };
+
+    /// <summary>How many clumps a zone's tiles start: every tile weighs its terrain's <see cref="SceneryDensity.Clumps"/> share.</summary>
+    public static int ClumpCount(AdventureMap map, IEnumerable<MapPosition> tiles, ObstacleDensity density)
+    {
+        var perMille = ClumpsPerMille(density);
+        return perMille == 0 ? 0 : (int)(tiles.Sum(t => (long)SceneryDensity.For(map.GetTerrain(t)).Clumps) * perMille / 100 / 1000);
+    }
 
     private static readonly (int Dx, int Dy)[] Four = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
@@ -270,7 +280,7 @@ public static class TerrainPainter
     private static void PlaceObstacles(AdventureMap map, ZoneLayout layout, TemplateZone zone, List<int> tiles, int level, bool[] rock, GameRandom random, List<MapPosition> placed)
     {
         var size = layout.Size;
-        var clumps = tiles.Count * ClumpsPerMille(zone.Obstacles) / 1000;
+        var clumps = ClumpCount(map, tiles.Select(t => new MapPosition(t % size, t / size, level)), zone.Obstacles);
         if (clumps == 0)
         {
             return;
@@ -303,8 +313,8 @@ public static class TerrainPainter
             }
 
             var clump = new List<int> { start };
-            var target = 2 + random.Next(5);
-            for (var attempts = 0; clump.Count < target && attempts < 20; attempts++)
+            var target = 1 + random.Next(6) + SceneryDensity.For(map.GetTerrain(new MapPosition(start % size, start / size, level))).ExtraSize;
+            for (var attempts = 0; clump.Count < target && attempts < 30; attempts++)
             {
                 var from = clump[random.Next(clump.Count)];
                 var next = Four.Select(d => (X: (from % size) + d.Dx, Y: (from / size) + d.Dy)).Where(p => p.X >= 0 && p.Y >= 0 && p.X < size && p.Y < size)

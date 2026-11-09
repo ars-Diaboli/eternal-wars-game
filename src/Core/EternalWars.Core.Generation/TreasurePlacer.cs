@@ -202,12 +202,12 @@ public static class TreasurePlacer
         CreatureCatalog creatures, ArtifactCatalog artifacts, HashSet<string> relics, Sites sites, ref bool marketplacePlaced)
     {
         var roll = random.Next(4);
+        var guarded = spec.Monsters != MonsterStrength.None; // the spot leaves a free cell by the entrance for a guard
         MapObject? item = null;
         var guardedValue = value;
         var worth = value;
         if (random.Next(SiteOdds) == 0 && PickSite(sites, value, random) is { } site
-            && Spot(map, MapObjectCatalog.Default.Get(site.Definition), tiles, placed, random) is { } siteAt
-            && (site.OwnGuard || HasGuardRoom(map, MapObjectCatalog.Default.Get(site.Definition), siteAt)))
+            && Spot(map, MapObjectCatalog.Default.Get(site.Definition), tiles, placed, random, guarded && !site.OwnGuard) is { } siteAt)
         {
             item = map.Add(MapObject.Create(map.NextId(), MapObjectCatalog.Default.Get(site.Definition), siteAt));
             sites.Zone[site.Definition] = sites.Zone.GetValueOrDefault(site.Definition) + 1;
@@ -216,14 +216,14 @@ public static class TreasurePlacer
             worth = site.Value;
         }
         else if (value >= BoxThreshold && random.Next(BoxOdds) == 0
-            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), tiles, placed, random) is { } boxAt)
+            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), tiles, placed, random, guarded) is { } boxAt)
         {
             item = map.Add(new PandorasBox(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), boxAt, BoxContentsFor(value, creatures, random)));
         }
         else if (value >= ArtifactThreshold && roll < 2 && PickArtifact(artifacts, value, random, relics) is { } artifact)
         {
             var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.ArtifactId(artifact.Tier));
-            if (Spot(map, definition, tiles, placed, random) is { } at)
+            if (Spot(map, definition, tiles, placed, random, guarded) is { } at)
             {
                 item = map.Add(new ArtifactPickup(map.NextId(), definition, at, artifact.Id));
                 if (artifact.Tier == ArtifactTier.Relic)
@@ -233,7 +233,7 @@ public static class TreasurePlacer
             }
         }
         else if (value >= MarketplaceThreshold && !marketplacePlaced && roll >= 2 && random.Next(MarketplaceOdds) == 0
-            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), tiles, placed, random) is { } market)
+            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), tiles, placed, random, guarded) is { } market)
         {
             // A map marketplace (ADR-067) is a treasure item: no owner, guarded like any item of its value.
             item = map.Add(new Marketplace(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), market));
@@ -243,7 +243,7 @@ public static class TreasurePlacer
         else if (value >= ArtifactThreshold ? roll == 2 : roll == 3)
         {
             var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.TreasureChest);
-            if (Spot(map, definition, tiles, placed, random) is { } at)
+            if (Spot(map, definition, tiles, placed, random, guarded) is { } at)
             {
                 // Gold or experience, as a chest offers: the gold is the value, the experience 500 less (as in the roll table, ADR-039).
                 var gold = Math.Max(600, (int)Math.Round(value / 100.0) * 100);
@@ -255,7 +255,7 @@ public static class TreasurePlacer
             var weightRoll = random.Next(PileWeights.Sum(w => w.Weight));
             var resource = PileWeights.First(w => (weightRoll -= w.Weight) < 0).Resource;
             var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.PileId(resource));
-            if (Spot(map, definition, tiles, placed, random) is { } at)
+            if (Spot(map, definition, tiles, placed, random, guarded) is { } at)
             {
                 var amount = Math.Max(1, (int)Math.Round((double)value / GoldValue(resource)));
                 item = map.Add(new ResourcePile(map.NextId(), definition, at, amount));
@@ -321,7 +321,6 @@ public static class TreasurePlacer
         return choices.First(s => (roll -= s.Weight) < 0);
     }
 
-    /// <summary>A place with room around it (for the item and a guard next to it), three tiles from the zone's other treasure.</summary>
     /// <summary>Whether a wide site placed at <paramref name="topLeft"/> leaves a free cell next to its entrance for its guard.</summary>
     private static bool HasGuardRoom(GeneratedMap map, MapObjectDefinition definition, MapPosition topLeft)
     {
@@ -330,8 +329,9 @@ public static class TreasurePlacer
         return DirectionExtensions.All.Select(probe.VisitPosition.Step).Any(p => !own.Contains(p) && map.IsFree(p) && !map.Roads.Contains(p));
     }
 
-    private static MapPosition? Spot(GeneratedMap map, MapObjectDefinition definition, List<MapPosition> tiles, List<MapPosition> placed, GameRandom random) =>
-        SettlementPlacer.Find(map, definition, tiles, random, null, closest: false, avoid: placed, spacing: 3);
+    /// <summary>A place for the item three tiles from the zone's other treasure; with <paramref name="guardRoom"/>, one that leaves a free cell by its entrance for a guard.</summary>
+    private static MapPosition? Spot(GeneratedMap map, MapObjectDefinition definition, List<MapPosition> tiles, List<MapPosition> placed, GameRandom random, bool guardRoom = false) =>
+        SettlementPlacer.Find(map, definition, tiles, random, null, closest: false, avoid: placed, spacing: 3, accept: guardRoom ? at => HasGuardRoom(map, definition, at) : null);
 
     /// <summary>
     /// An artifact of the best tier the value reaches; a relic only once per map, else the tier below. A scroll gets its spell here, a random one of

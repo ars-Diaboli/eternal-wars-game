@@ -1523,3 +1523,23 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   `BattleHud` has `Layout`, and `GameMenuPanel` has its tabs and `LayoutChanged`. No save format change. Smoke scenario `game-layout`;
   `game-auto-combat` and `game-speed-settings` now open the "Settings" tab.
 - **Not done**: the spacing pass (ADR-118 b); a layout for the 2D harness and the map editor.
+
+### ADR-157: More scenery on random maps, denser by terrain (ADR-077, 2026-11-09)
+**Status**: implemented (2026-11-09). Random map generator version **9** (every generated map changes). Numbers are placeholders.
+
+- **How many clumps** *(choice)*: the obstacle densities give 4 / 10 / 20 clumps per 1000 tiles (were 3 / 8 / 16), and each tile counts by
+  its own terrain (`SceneryDensity.Clumps`): forest floor 250 %, highlands 175 %, rough, swamp and rocky ground 150 %, grass, snow and
+  subterranean 125 %, dirt, wasteland and cursed lands 100 %, lava 75 %, sand, beach, ice and the rest 50 %. Mirrored zones keep their images,
+  since their tiles and terrains are images too.
+- **How large** *(choice)*: a clump aims at 1–6 tiles (was 2–6) plus its start tile's `SceneryDensity.ExtraSize`: forest floor 4, highlands
+  2, rough, swamp, rocky ground, grass, snow and subterranean 1. The other clump rules stay: three tiles from the walls, one apart, dropped if
+  it would cut off a part of the zone.
+- **What fills them** *(choice)*: `SceneryPlacer` draws a kind among those with a fitting piece by `SceneryPlacer.Weight`, then that kind's
+  largest fitting piece (before: the largest piece of any kind, which gave many castle walls). Trees 24 on forest floor, 10 on grass,
+  highlands and snow, 6 elsewhere; rocks 16 on rough, highlands, rocky ground, lava, subterranean and snow, 6 elsewhere; dead trees 12 on
+  wasteland, cursed lands and swamp, 4 elsewhere; mushrooms 6 underground and in swamps, 2 elsewhere; bushes and mounds 3; walls and ruins
+  1; the rest 2. On six sample maps (duel and 2v2 at 96, seeds 1–3) scenery went from 289 to 795 pieces, trees and rocks first; walls from 74 to 7.
+- **Treasure keeps room for its guard**: in a zone with monsters, every treasure item (not only map sites) is placed where a free cell by its
+  entrance is left for the guard (`SettlementPlacer.Find`'s `accept`), since thicker scenery could leave none.
+- Tests: `TerrainPainterTests.Obstacles_AreDenserOnWoodedAndBrokenGround_ThanOnSand`, `SceneryTests.TheGenerator_FillsAZone_MostlyWithItsTerrainsOwnScenery`.
+- **Not done**: scenery art (the pieces are still placeholder boxes); scenery outside clumps (single trees along roads, forest edges).

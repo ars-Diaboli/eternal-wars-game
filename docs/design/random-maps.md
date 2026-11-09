@@ -30,8 +30,9 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   - **treasure**: value bands with a count each (e.g. 500–3000 ×9, 3000–6000 ×6, 10000–15000 ×1);
   - **obelisks** (format v9, ADR-140): 0–25, or unset; the unset zones share what is left of the map's 25, split evenly (the first zones
     one more), so by default a map gets 25. None on maps under 24×24 (no Grail fits);
-  - **monster strength**: none, weak, average, strong; **obstacles**: none, sparse, normal, dense; allowed terrains (empty = the level's
-    default pool);
+  - **monster strength**: none, weak, average, strong; **obstacles**: none, sparse, normal, dense (4, 10, 20 clumps per 1000 tiles, each
+    tile weighed by its terrain: forest floor 250 %, highlands 175 %, rough, swamp and rocky ground 150 %, grass, snow and subterranean
+    125 %, dirt, wasteland and cursed lands 100 %, lava 75 %, sand, beach and ice 50 %); allowed terrains (empty = the level's default pool);
   - `mirror` (below); `graphX` / `graphY` (template editor drawing only).
 - **Connections**:
   - kind: **normal** (one-tile passage guarded by `GuardValue` army power), **wide** (five tiles, unguarded), **gate** (linked two-way gates
@@ -60,8 +61,8 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
 | Stage | Class | Does |
 |---|---|---|
 | 1 | `ZoneLayouter` | Places zones from the connection graph (Voronoi with area balancing, or rectangles) |
-| 2 | `TerrainPainter` | Terrain per zone, walls between zones, obstacle clumps |
-| 2b | `SceneryPlacer` | Gives each clump back the ground around it and fills its tiles with fitting [scenery](adventure-map.md#scenery-and-rivers), larger first (MAP-25) |
+| 2 | `TerrainPainter` | Terrain per zone, walls between zones, obstacle clumps (more and larger on wooded and broken ground, `SceneryDensity`) |
+| 2b | `SceneryPlacer` | Gives each clump back the ground around it and fills its tiles with fitting [scenery](adventure-map.md#scenery-and-rivers): a kind by weight (trees and rocks most), its largest piece that fits (MAP-25, ADR-157) |
 | 3 | `ConnectionPlacer` | Passages, their guards (`GuardPicker`), gates and portals |
 | 4 | `SettlementPlacer` | Player towns, neutral towns with garrisons, mines with guards, resource piles |
 | 5 | `RoadPlacer` | Roads: towns of a zone, passages, gates, the nearest lumber mill and ore mine in zones with a town |
