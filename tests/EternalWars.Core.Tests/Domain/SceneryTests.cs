@@ -85,4 +85,19 @@ public class SceneryTests
         Assert.Contains(scenery, s => s.Definition.Footprint.OccupiedCells.Count > 1);
         Assert.Equal(scenery.Select(s => (s.Definition.Id, s.Position)), MapGenerator.Generate(template, 72, 3).Objects.OfType<Scenery>().Select(s => (s.Definition.Id, s.Position)));
     }
+
+    [Theory]
+    [InlineData(TerrainType.ForestFloor, "tree")]
+    [InlineData(TerrainType.Highlands, "rock")]
+    [InlineData(TerrainType.Wasteland, "dead-tree")]
+    public void TheGenerator_FillsAZone_MostlyWithItsTerrainsOwnScenery(TerrainType terrain, string kind)
+    {
+        var template = BuiltInTemplates.Find("duel")!;
+        template = template with { Zones = [.. template.Zones.Select(z => z with { Terrains = [terrain] })] };
+        var tiles = MapGenerator.Generate(template, 96, 2).Objects.OfType<Scenery>()
+            .GroupBy(s => SceneryPlacer.KindOf(s.Definition)).ToDictionary(g => g.Key, g => g.Sum(s => s.Definition.Footprint.OccupiedCells.Count));
+
+        Assert.Equal(kind, tiles.MaxBy(t => t.Value).Key);
+        Assert.True(SceneryPlacer.Weight(kind, terrain) > SceneryPlacer.Weight("wall", terrain));
+    }
 }

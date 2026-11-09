@@ -280,7 +280,8 @@ Rules: [shared object rules](#shared-object-rules).
 ## Scenery and rivers
 - **Scenery** (MAP-25, `scenery.csv`): static objects with no entrance (rocks, trees, dead trees, ponds, bushes, mushrooms, flowers,
   fissures, mounds, ruins, bones, castle walls; each in two or more sizes). **Every cell blocks.** Castle walls are 1×N straight pieces
-  (horizontal, vertical, both diagonals). Each row lists the terrains it suits; the generator fills obstacle clumps with fitting scenery.
+  (horizontal, vertical, both diagonals). Each row lists the terrains it suits; the generator fills obstacle clumps with fitting scenery,
+  mostly trees and rocks: trees in forests, rocks on broken ground, dead trees on blighted land; walls and ruins seldom (ADR-157).
 - **Rivers** (MAP-26): a tile overlay, four looks (clear, icy, muddy, lava). **Leaving a river tile costs 25 % more** (Pathfinding does
   not cut it); a road-to-road step is a bridge and ignores it. Caravans ignore rivers.
 

@@ -155,6 +155,21 @@ public class TerrainPainterTests
     }
 
     [Fact]
+    public void Obstacles_AreDenserOnWoodedAndBrokenGround_ThanOnSand()
+    {
+        MapTemplate Only(TerrainType terrain) => WithDensity(Duel(), ObstacleDensity.Normal) with
+        {
+            Zones = [.. Duel().Zones.Select(z => z with { Obstacles = ObstacleDensity.Normal, Terrains = [terrain] })],
+        };
+        int Count(TerrainType terrain) => Paint(Only(terrain), 96, 2).Obstacles.Count;
+
+        Assert.True(Count(TerrainType.ForestFloor) > Count(TerrainType.Highlands));
+        Assert.True(Count(TerrainType.Highlands) > Count(TerrainType.Dirt));
+        Assert.True(Count(TerrainType.Dirt) > Count(TerrainType.Sand));
+        Assert.True(SceneryDensity.For(TerrainType.ForestFloor).ExtraSize > SceneryDensity.For(TerrainType.Sand).ExtraSize);
+    }
+
+    [Fact]
     public void BothLevels_ArePaintedWithTheirOwnTerrain()
     {
         var template = Duel() with

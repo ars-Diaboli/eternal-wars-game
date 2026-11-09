@@ -6,8 +6,8 @@ namespace EternalWars.Core.Generation;
 
 /// <summary>
 /// Stage 2b of the generator (ADR-079, MAP-25): the rock clumps of stage 2 become scenery. Each clump tile gets back the ground around it, then
-/// the clump is filled with scenery made for that ground (<c>scenery.csv</c>), larger pieces first, so exactly the clump's tiles stay blocked and
-/// no part of a zone is cut off. Deterministic from the seed (the <c>scenery</c> stream).
+/// the clump is filled with scenery made for that ground (<c>scenery.csv</c>): a kind drawn by weight (trees and rocks most, ADR-157), then its
+/// largest piece that fits, so exactly the clump's tiles stay blocked and no part of a zone is cut off. Deterministic from the seed (the <c>scenery</c> stream).
 /// </summary>
 public static class SceneryPlacer
 {
@@ -41,16 +41,42 @@ public static class SceneryPlacer
 
             var terrain = map.Map.GetTerrain(tile);
             var fitting = scenery.Where(d => d.Terrains.Contains(terrain) && Cells(d, Anchor(d, tile)).All(left.Contains)).ToList();
-            var definition = fitting.Count == 0
-                ? catalog.Get(Fallback)
-                : Pick(fitting.GroupBy(d => d.Footprint.OccupiedCells.Count).MaxBy(g => g.Key)!.ToList(), random);
+            var definition = fitting.Count == 0 ? catalog.Get(Fallback) : Pick(fitting, terrain, random);
             var topLeft = Anchor(definition, tile);
             map.Add(MapObject.Create(map.NextId(), definition, topLeft));
             left.ExceptWith(Cells(definition, topLeft));
         }
     }
 
-    private static MapObjectDefinition Pick(List<MapObjectDefinition> choices, GameRandom random) => choices[random.Next(choices.Count)];
+    /// <summary>The kind of a scenery id (<c>scenery.tree.pair</c> → <c>tree</c>).</summary>
+    public static string KindOf(MapObjectDefinition definition) => definition.Id.Split('.') is { Length: > 1 } parts ? parts[1] : definition.Id;
+
+    /// <summary>
+    /// How often a kind is drawn on a terrain (ADR-157): trees and rocks most, the terrain's own kind (trees in forests, rocks on broken
+    /// ground, dead trees on blighted land) far more; walls and ruins rarely. Placeholder numbers.
+    /// </summary>
+    public static int Weight(string kind, TerrainType terrain) => kind switch
+    {
+        "tree" => terrain is TerrainType.ForestFloor ? 24 : terrain is TerrainType.Grass or TerrainType.Highlands or TerrainType.Snow ? 10 : 6,
+        "rock" => terrain is TerrainType.Rough or TerrainType.Highlands or TerrainType.RockyGround or TerrainType.Lava or TerrainType.Subterranean
+            or TerrainType.Snow ? 16 : 6,
+        "dead-tree" => terrain is TerrainType.Wasteland or TerrainType.CursedLands or TerrainType.Swamp ? 12 : 4,
+        "mushrooms" => terrain is TerrainType.Subterranean or TerrainType.Swamp ? 6 : 2,
+        "bush" or "mound" => 3,
+        "wall" or "ruins" => 1,
+        _ => 2,
+    };
+
+    /// <summary>A kind drawn by <see cref="Weight"/> among those with a piece that fits, then that kind's largest fitting piece.</summary>
+    private static MapObjectDefinition Pick(List<MapObjectDefinition> fitting, TerrainType terrain, GameRandom random)
+    {
+        var kinds = fitting.GroupBy(KindOf).OrderBy(g => g.Key, StringComparer.Ordinal).ToList();
+        var roll = random.Next(kinds.Sum(g => Weight(g.Key, terrain)));
+        var kind = kinds.First(g => (roll -= Weight(g.Key, terrain)) < 0).ToList();
+        var largest = kind.Max(d => d.Footprint.OccupiedCells.Count);
+        var choices = kind.Where(d => d.Footprint.OccupiedCells.Count == largest).ToList();
+        return choices[random.Next(choices.Count)];
+    }
 
     /// <summary>Where the definition's top-left goes so its first blocked cell (row by row) lands on <paramref name="tile"/>.</summary>
     private static MapPosition Anchor(MapObjectDefinition definition, MapPosition tile)

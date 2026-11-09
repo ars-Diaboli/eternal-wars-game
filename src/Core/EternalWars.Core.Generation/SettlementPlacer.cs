@@ -181,7 +181,7 @@ public static class SettlementPlacer
     /// one nearest to it, otherwise one is drawn.
     /// </summary>
     internal static MapPosition? Find(GeneratedMap map, MapObjectDefinition definition, List<MapPosition> tiles, GameRandom random, MapPosition? near, bool closest,
-        List<MapPosition> avoid, int spacing, int radius = int.MaxValue, bool margin = true)
+        List<MapPosition> avoid, int spacing, int radius = int.MaxValue, bool margin = true, Func<MapPosition, bool>? accept = null)
     {
         var (vx, vy) = definition.Footprint.VisitOffset;
         var candidates = new List<MapPosition>();
@@ -199,6 +199,11 @@ public static class SettlementPlacer
             }
 
             if (near is { } n && Math.Max(Math.Abs(n.X - entrance.X), Math.Abs(n.Y - entrance.Y)) > radius)
+            {
+                continue;
+            }
+
+            if (accept is not null && !accept(tile))
             {
                 continue;
             }
