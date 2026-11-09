@@ -764,7 +764,7 @@ public sealed class MapEventService(
         joined.Experience = Math.Max(0, give.Experience);
         state.AddHero(joined);
         progression.LevelUpAutomatically(joined);
-        joined.MaxMovementPoints = MovementAllowance.Daily(joined, state.Creatures);
+        joined.MaxMovementPoints = MovementAllowance.Daily(state, joined);
         joined.MovementPoints = run.StartOfTurn ? joined.MaxMovementPoints : 0; // given in the middle of a turn: it moves next turn, like a prisoner
         run.Place = joined.Position;
         events.Publish(new MapEventHeroGiven(joined.Id, owner, give.Hero, joined.Level));

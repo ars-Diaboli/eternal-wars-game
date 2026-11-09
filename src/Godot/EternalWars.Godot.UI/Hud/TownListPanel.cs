@@ -65,7 +65,7 @@ public partial class TownListPanel : BoxContainer
             var button = new Button
             {
                 Text = $"{town.Name} ({town.TownType}){(governor is null ? "" : $"  governor {governor.Name}")}",
-                TooltipText = town.LastBuilt == state.Date ? "Built something today" : "Can build today",
+                TooltipText = TownRules.HasBuiltToday(state, town) ? "Built something today" : "Can build today",
                 Alignment = HorizontalAlignment.Left,
                 ClipText = true,
                 CustomMinimumSize = new Vector2(Horizontal ? 200 : 320, 0),

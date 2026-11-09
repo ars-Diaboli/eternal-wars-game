@@ -46,12 +46,13 @@ namespace EternalWars.Core.Data.Maps;
 /// variables; omitted = none; EVT-1 f). 35 = + map bans (<c>rules.bans</c>: heroes, artifacts, spells, skills; ADR-126), random monsters
 /// (<c>randomTier</c> on a monster: 0 any tier, 1–7 that tier), random towns (<c>random</c> on a town) and hero placeholders (<c>placeholder</c> on a
 /// hero), all drawn when the game starts. 36 = + the University and the War Academy (<c>skillSchool</c>; ADR-139). 37 = + the buried Grail
-/// (<c>grail</c>: a cell; omitted = drawn when the game starts on a map with obelisks) and obelisks (<c>obelisk</c>; ADR-140). Older versions still
+/// (<c>grail</c>: a cell; omitted = drawn when the game starts on a map with obelisks) and obelisks (<c>obelisk</c>; ADR-140). 38 = + the arena
+/// switch (<c>rules.arena</c>; omitted = off) and combat places (<c>combatPlace</c>; ADR-097, ADR-100). Older versions still
 /// load (with the default events).
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 37;
+    public const int CurrentFormatVersion = 38;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
@@ -114,7 +115,8 @@ public sealed record CellDocument(int X, int Y, int Level = 0);
 /// <see cref="Elimination"/> (no towns and no heroes: out) are on unless set to false; <see cref="GraceDays"/> omitted = 7
 /// (the days a player that lost its last town has to own one again; 0 = no countdown). <see cref="MaxHeroes"/> (v15) omitted = 8
 /// (the most heroes a player may have at once). <see cref="WeekEvents"/> (v24) omitted = the default week and month events.
-/// <see cref="Difficulty"/> (v26) omitted = none (the ranking counts "Map default" as Normal).
+/// <see cref="Difficulty"/> (v26) omitted = none (the ranking counts "Map default" as Normal). <see cref="Arena"/> (v38, ADR-097) true makes the map an
+/// arena (a day of preparation, then one battle decides the game; the conditions do not count); omitted = off.
 /// </summary>
 public sealed record ScenarioRulesDocument(
     IReadOnlyList<ConditionDocument>? Victory = null,
@@ -125,7 +127,8 @@ public sealed record ScenarioRulesDocument(
     int? MaxHeroes = null,
     WeekEventsDocument? WeekEvents = null,
     Complexity? Difficulty = null,
-    BansDocument? Bans = null);
+    BansDocument? Bans = null,
+    bool? Arena = null);
 
 /// <summary>The map's bans (v35, ADR-126): roster hero, artifact, spell and skill ids; each list omitted when empty, the whole omitted when nothing is banned.</summary>
 public sealed record BansDocument(
@@ -247,6 +250,7 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 [JsonDerivedType(typeof(ShrineDocument), "shrine")]
 [JsonDerivedType(typeof(SkillSchoolDocument), "skillSchool")]
 [JsonDerivedType(typeof(ObeliskDocument), "obelisk")]
+[JsonDerivedType(typeof(CombatPlaceDocument), "combatPlace")]
 [JsonDerivedType(typeof(DepositDocument), "deposit")]
 [JsonDerivedType(typeof(MagiWindowDocument), "magiWindow")]
 [JsonDerivedType(typeof(MagiEyeDocument), "magiEye")]
@@ -426,6 +430,9 @@ public sealed record SkillSchoolDocument : MapObjectDocument;
 
 /// <summary>An obelisk (v37, ADR-140); the players' visits are made in the game.</summary>
 public sealed record ObeliskDocument : MapObjectDocument;
+
+/// <summary>An arena's combat place (v38, ADR-097); which way the attacker comes from comes from its definition.</summary>
+public sealed record CombatPlaceDocument : MapObjectDocument;
 
 /// <summary>A witch hut (v22, ADR-079); <see cref="Skills"/> omitted = two rolled when the game starts.</summary>
 public sealed record WitchHutDocument : MapObjectDocument

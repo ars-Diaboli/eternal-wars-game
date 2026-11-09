@@ -58,7 +58,19 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
     internal void Evaluate()
     {
         // A battle in progress is settled first; a scenario without any participant has nothing to decide.
-        if (!state.IsStarted || state.IsOver || state.Battle is not null || _teamsAtStart == 0)
+        if (!state.IsStarted || state.IsOver || state.Battle is not null)
+        {
+            return;
+        }
+
+        // An arena map ends with its battle alone (ADR-097): no conditions, no eliminations before it.
+        if (state.Rules.Arena)
+        {
+            EvaluateArena();
+            return;
+        }
+
+        if (_teamsAtStart == 0)
         {
             return;
         }
@@ -95,6 +107,24 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
     }
 
     private IEnumerable<Player> InGame() => state.Players.Where(p => p.TookPart && !p.IsDefeated);
+
+    /// <summary>The arena battle's winner's team wins the game; a draw, or no battle at all, is a loss for everyone (ADR-097, ADR-100).</summary>
+    private void EvaluateArena()
+    {
+        switch (state.Arena)
+        {
+            case { Result: ArenaResult.Won, Winner: { } winner }:
+                var player = state.GetPlayer(winner);
+                End(player.Team, $"{player.Name} won the arena battle.");
+                break;
+            case { Result: ArenaResult.Draw }:
+                End(null, "The arena battle ended in a draw: both armies fell.");
+                break;
+            case { Result: ArenaResult.NoBattle, Reason: var reason }:
+                End(null, reason ?? "No arena battle was fought.");
+                break;
+        }
+    }
 
     private bool HoldsFor(ScenarioCondition c, Player player) => c.Kind switch
     {

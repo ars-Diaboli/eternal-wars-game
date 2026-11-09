@@ -98,9 +98,9 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [ ] Save/load: a state snapshot if replays get too slow
 
 ### Arena mode (ADR-097, ADR-100; before 1.0, after the Phase 3 exit)
-- [ ] Core: the arena switch in the map (no victory or loss conditions), combat places; day 1 with unlimited movement and building (the
+- [x] Core: the arena switch in the map (no victory or loss conditions), combat places; day 1 with unlimited movement and building (the
       map's starting resources); the battle at the start of day 2 (HotA's hero choice, heroes moved, no experience, retreat and surrender
-      lose), its winner wins the game, a draw is a loss for both; map format bump (ARN-1, ARN-2)
+      lose), its winner wins the game, a draw is a loss for both; map format bump (ARN-1, ARN-2; ADR-158)
 - [ ] Game app: arena maps on the new-game screen, hot-seat and against the computer; the battle starts by itself, both armies shown;
       result screen with "Play again" and "Save replay", not ranked (ARN-1)
 - [ ] AI: prepares on day 1 (visits, hires, builds) for the battle; never leaves the battle

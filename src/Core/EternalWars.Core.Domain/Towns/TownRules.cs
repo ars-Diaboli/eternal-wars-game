@@ -16,6 +16,11 @@ public static class TownRules
     public const int MaxDwellings = 7;
 
     /// <summary>
+    /// Whether the town may build nothing more today: one building a day (ADR-046), any number on an arena map's preparation day (ADR-097).
+    /// </summary>
+    public static bool HasBuiltToday(GameState state, Town town) => town.LastBuilt == state.Date && !ArenaRules.IsPreparationDay(state);
+
+    /// <summary>
     /// The town as another town type (the editor's type change, a random town at game start, ADR-126): a town of <paramref name="definition"/>'s type
     /// with the same id, place, owner, garrison, governor and, unless it kept the old type's default name, name. Buildings the new type also has stay
     /// (at most its top level); each dwelling, and the creatures waiting in it, moves to the new type's line at the same place in the same tier.
@@ -362,7 +367,7 @@ public static class TownRules
 
     private static string? CheckLevel(GameState state, Town town, BuildingLevel level)
     {
-        if (town.LastBuilt == state.Date)
+        if (HasBuiltToday(state, town))
         {
             return $"{town.Name} has already built something today.";
         }

@@ -80,6 +80,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 | Adventure AI (ADR-059, ADR-119) | `AdventureAi` (`AI/`) plays only through `Execute`; `BattleEstimator` runs the real engine on a throwaway state; `Explain` for debugging. The game app calls `PlayTurn()` once a frame for computer players. |
 | Magic (ADR-110, ADR-120, ADR-122) | `Magic/`: `Spells` (from `spells.csv`), `MagicRules`, `AdventureMagic` / `AdventureMagicService`; battle casting in `Battles/BattleMagic`. |
 | Saves (ADR-058) | `GameSaves` (Core.Data): initial map + options + command log, digest-checked on load; works mid-battle since battle actions are commands. Autosave hooks `CommandExecuted`. Game app builds its nodes under one `Game` node (freed on load); `BattleView3D.Restore` shows a running battle. |
+| Arena (ADR-097, ADR-158) | `ScenarioRules.Arena`; `ArenaRules` (preparation day: `MovementAllowance.Daily(state, hero)`, `TownRules.HasBuiltToday`; `Plan` chooses sides and champions); `ArenaService.StartBattle` runs from `TurnService` at day 2 instead of a turn; `BattleService` records the result in `GameState.Arena` (no experience, no AI retreat); `GameFlowService` ends the game from it. `CombatPlace` object. |
 
 ### Battles
 - `BattleState` (`GameState.Battle`): field (width × 24 cells), units with footprints, obstacles, round, queue, own

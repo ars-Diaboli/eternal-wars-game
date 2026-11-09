@@ -47,10 +47,22 @@ In priority order:
 2. **Hot-seat**: several humans share the machine; battles between humans on the same screen.
 3. **Story campaign** *(planned, Phase 6)*: chained scenarios, carry-over heroes, scripted events and dialogue, on the
    [map events](adventure-map.md#pandoras-box-and-map-events) with variables kept between maps; a prologue map first (ADR-118, CAMP-1).
-- **Arena** *(planned before 1.0, ADR-097, ADR-100)*, hot-seat, vs. the computer and over LAN, as in HotA: day 1 is preparation (unlimited
-  movement and building, objects show what they hold); at day 2's start each side's strongest hero is moved to a **combat place** and the
-  winner of that battle wins the game. No victory or loss conditions, not ranked, normal fog, both armies shown, no experience; retreat or
-  surrender loses. **Three hand-made arena maps**; no generator template.
+- **Arena** (ADR-097, ADR-100, ADR-158), as in HotA; the map's "Arena" switch (map format v38) turns it on:
+  - **Day 1 is preparation**: heroes have nearly unlimited movement (1 000 000 points) and towns build any number of buildings, with the
+    usual starting resources (the complexity, or the map's own). The map's victory and defeat conditions, the last team standing and the
+    elimination do not count: nobody is out before the battle.
+  - **Day 2 is the battle**, before anyone's turn. The **defender** is the first player in turn order with a hero on a
+    [combat place](adventure-map.md#special-sites)'s entrance, and that place is the battlefield; the **attacker** is the first player in turn
+    order who is its enemy. With no hero on a combat place, the first player attacks and the next enemy defends, at the first combat place.
+    Each side (team) fights with its **strongest hero** by army value (count × creature value; the lower hero id on a tie), one on the map, else
+    a garrison hero, which comes out with the garrison. The defender is put on the combat place's entrance, the attacker on its attack cell (a
+    hero in the way swaps places). The battle is fought on that cell's terrain, never as a siege; it gives **no experience**; the computer
+    never retreats or surrenders.
+  - **The end**: the battle's winner's team wins the game; retreat or surrender loses; both armies fallen is a **draw**, a loss for
+    everyone, and so is a side without a hero (or no enemy to fight). A side without an army loses without a battle. Never ranked.
+  - *(planned)*: hot-seat and vs. the computer from the new-game screen, the battle screen showing both armies, the result screen, the AI's
+    preparation, the editor's switch, combat place and checks, objects showing what they hold on day 1, **three hand-made arena maps** (no
+    generator template), LAN.
 - **LAN multiplayer** *(planned before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓)*: the **host** runs the game and computer players; clients send
   commands and get only what they may see. Lobby (LAN discovery or address; map or random map, options, colours, computer players); battles
   between two remote humans are live; a dropped player pauses the game until the host hands it to the computer or the player rejoins; text

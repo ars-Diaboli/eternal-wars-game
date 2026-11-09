@@ -111,6 +111,12 @@ public static class GameStateDigest
             Line($"events {mapEvents}");
         }
 
+        // The arena battle (ADR-097) only once it is chosen, so older replays keep their digests.
+        if (state.Arena is { } arena)
+        {
+            Line($"arena {arena.CombatPlace?.Value} {arena.Attacker?.Value}:{arena.AttackerHero?.Value} {arena.Defender?.Value}:{arena.DefenderHero?.Value} {arena.Result} {arena.Winner?.Value}");
+        }
+
         Line($"outcome {state.Outcome?.Winners.Count} {state.Outcome?.Date}");
         Line($"decision {state.PendingDecision}");
         if (state.Battle is { } battle)

@@ -439,7 +439,7 @@ public sealed class MapObjectInteractionService(
         freed.Experience = ExperienceTable.For(level);
         state.AddHero(freed);
         progression.LevelUpAutomatically(freed);
-        freed.MaxMovementPoints = MovementAllowance.Daily(freed, state.Creatures);
+        freed.MaxMovementPoints = MovementAllowance.Daily(state, freed);
         freed.MovementPoints = 0; // it starts moving on its owner's next turn
         events.Publish(new HeroFreed(prison.Id, freed.Id, hero.Owner, heroId, freed.Level));
     }
@@ -861,7 +861,7 @@ public sealed class MapObjectInteractionService(
             hero.Army.TryAdd(starter);
         }
 
-        hero.MaxMovementPoints = MovementAllowance.Daily(hero, state.Creatures);
+        hero.MaxMovementPoints = MovementAllowance.Daily(state, hero);
         hero.MovementPoints = hero.MaxMovementPoints; // like a hero hired in a town
         state.AddHero(hero);
         events.Publish(new HeroHired(tavern.Id, hero.Id, definition.Id));

@@ -140,11 +140,17 @@ public sealed record ScenarioRules(
     /// <summary>The heroes, artifacts, spells and skills the map bans (ADR-126); none by default.</summary>
     public MapBans Bans { get; init; } = MapBans.None;
 
+    /// <summary>
+    /// An arena map (ADR-097, ADR-100; <see cref="ArenaRules"/>): a day of preparation, then one battle decides the game. The victory and defeat
+    /// conditions, the last team standing and the elimination do not count; nobody is defeated before the battle. Off by default.
+    /// </summary>
+    public bool Arena { get; init; }
+
     public bool IsDefault => Victory.Count == 0 && Defeat.Count == 0 && StandardVictory && Elimination && GraceDays == DefaultGraceDays
-        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null && Bans.IsEmpty;
+        && MaxHeroes == HeroLimit && WeekEvents.IsDefault && Difficulty is null && Bans.IsEmpty && !Arena;
 
     /// <summary>Whether a scenario with these rules can be won at all.</summary>
-    public bool CanBeWon => StandardVictory || Victory.Count > 0;
+    public bool CanBeWon => Arena || StandardVictory || Victory.Count > 0;
 
     /// <summary>A short sentence for a condition, for the editor and the game's result screen.</summary>
     public static string Describe(GameState state, ScenarioCondition condition)

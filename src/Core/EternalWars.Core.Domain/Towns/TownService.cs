@@ -313,7 +313,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             hero.Army.TryAdd(starter);
         }
 
-        hero.MaxMovementPoints = MovementAllowance.Daily(hero, state.Creatures);
+        hero.MaxMovementPoints = MovementAllowance.Daily(state, hero);
         hero.MovementPoints = hero.MaxMovementPoints;
         state.AddHero(hero);
         events.Publish(new HeroHired(town.Id, hero.Id, heroId));

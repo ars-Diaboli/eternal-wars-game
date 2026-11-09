@@ -162,7 +162,8 @@ public static class MapConverter
             rules.Bans.Heroes.Count == 0 ? null : rules.Bans.Heroes,
             rules.Bans.Artifacts.Count == 0 ? null : rules.Bans.Artifacts,
             rules.Bans.Spells.Count == 0 ? null : rules.Bans.Spells,
-            rules.Bans.Skills.Count == 0 ? null : rules.Bans.Skills));
+            rules.Bans.Skills.Count == 0 ? null : rules.Bans.Skills),
+        rules.Arena ? true : null);
 
     private static WeekEventsDocument ToDocument(WeekEventSettings events) => new(
         events.Enabled,
@@ -195,6 +196,7 @@ public static class MapConverter
                 : WeekEventSettings.Default,
             Difficulty = document.Difficulty,
             Bans = ToBans(document.Bans),
+            Arena = document.Arena == true,
         };
 
     /// <summary>The map's bans (v35); skill ids are resolved like everywhere else, and each list is sorted without repeats.</summary>
@@ -428,6 +430,10 @@ public static class MapConverter
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
             },
+            CombatPlace => new CombatPlaceDocument
+            {
+                Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
+            },
             Deposit => new DepositDocument
             {
                 Id = id, Definition = definition, X = p.X, Y = p.Y, Level = p.Level,
@@ -647,6 +653,7 @@ public static class MapConverter
                 ShrineDocument shrine => new Shrine(id, definition, position, shrine.Spell),
                 SkillSchoolDocument => new SkillSchool(id, definition, position),
                 ObeliskDocument => new Obelisk(id, definition, position),
+                CombatPlaceDocument => new CombatPlace(id, definition, position),
                 CreatureBankDocument => new CreatureBank(id, definition, position),
                 PandorasBoxDocument box => ToBox(box, id, definition, position, creatures),
                 QuestSiteDocument site => new QuestSite(id, definition, position, string.IsNullOrEmpty(site.Quest) ? null : site.Quest),

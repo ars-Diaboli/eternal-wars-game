@@ -68,7 +68,8 @@ public sealed class GameSession
         Movement = new HeroMovementService(State, Bus, Interactions, MapEvents);
         AdventureMagic = new Magic.AdventureMagicService(State, Bus);
         Bus.Subscribe<UndeadRaised>(AdventureMagic); // Grave Whisper is used up
-        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions, MapEvents);
+        Arena = new ArenaService(State, Bus, Battles);
+        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions, MapEvents, Arena);
     }
 
     public GameState State { get; }
@@ -103,6 +104,8 @@ public sealed class GameSession
     internal MapObjectInteractionService Interactions { get; }
 
     internal TurnService Turns { get; }
+
+    internal ArenaService Arena { get; }
 
     /// <summary>The map events (ADR-115); <see cref="MapEventService.IsBusy"/> tells whether one is running.</summary>
     public MapEventService MapEvents { get; }

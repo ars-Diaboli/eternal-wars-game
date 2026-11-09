@@ -293,7 +293,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             return 0;
         }
 
-        var builtToday = town.LastBuilt == _state.Date;
+        var builtToday = TownRules.HasBuiltToday(_state, town);
         if (!builtToday && resources.CanAfford(TownRules.BuildCost(_state, town, wanted.Next)))
         {
             var command = wanted.Dwelling
