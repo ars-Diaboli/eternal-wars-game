@@ -17,7 +17,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// Exchange screen for a <see cref="HeroExchangeDecision"/> (ADR-153): the two heroes side by side, each with its seven army slots, war machines,
 /// paper doll and backpack. Click a stack, then a slot (either hero) to move it there; with "Split" only half moves (<see cref="MoveStackCommand"/>).
 /// Click an artifact, then where it goes: a slot of the other hero's paper doll puts it on, its backpack carries it (<see cref="GiveArtifactCommand"/>);
-/// the own paper doll or backpack puts it on or takes it off. A war machine button gives it to the other hero (<see cref="GiveWarMachineCommand"/>).
+/// the own paper doll or backpack puts it on or takes it off. An artifact can also be dragged there and let go (ADR-162). A war machine button gives it to the other hero (<see cref="GiveWarMachineCommand"/>).
 /// Refusals show below; Close (or Escape) resolves the decision. It covers its parent. A right click on a hero's name, a stack or an artifact
 /// opens its information window (ADR-154).
 /// </summary>
@@ -29,10 +29,7 @@ public partial class ExchangePanel : PanelContainer
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private GameSession _session = null!;
     private (HeroId Hero, int Slot)? _picked;
-    private PickedArtifact? _artifact;
-
-    /// <summary>The artifact picked to move: whose, which and whether it is the worn one.</summary>
-    private sealed record PickedArtifact(HeroId Hero, string Id, bool Worn);
+    private ArtifactInHand? _artifact;
 
     public void Bind(GameSession session)
     {
@@ -107,7 +104,7 @@ public partial class ExchangePanel : PanelContainer
             ? $"{_session.State.Artifacts.Get(a.Id).Name}: click a paper-doll slot to put it on, or a backpack to carry it (Esc cancels)."
             : _picked is not null
                 ? "Click the slot the stack goes to (Esc cancels)."
-                : "Click a stack or an artifact, then where it goes.";
+                : "Click a stack or an artifact, then where it goes, or drag an artifact there.";
         foreach (var (heroId, otherId) in new[] { (exchange.Hero, exchange.Other), (exchange.Other, exchange.Hero) })
         {
             _columns.AddChild(Column(_session.State.GetHero(heroId), otherId));
@@ -160,7 +157,7 @@ public partial class ExchangePanel : PanelContainer
         }
 
         column.AddChild(new Label { Text = "Worn artifacts" });
-        var doll = new GridContainer { Columns = 3 };
+        var doll = new GridContainer { Columns = 3 }.WithArtifactDrag(null, null, new ArtifactPlace(hero.Id, Doll: true), Drop);
         column.AddChild(doll);
         foreach (var slot in ArtifactSlots.All)
         {
@@ -177,11 +174,12 @@ public partial class ExchangePanel : PanelContainer
                     CustomMinimumSize = new Vector2(184, 0),
                     ClipText = true,
                     ToggleMode = true,
-                    ButtonPressed = artifact is not null && _artifact == new PickedArtifact(hero.Id, artifact.Id, true),
+                    ButtonPressed = artifact is not null && _artifact == new ArtifactInHand(hero.Id, artifact.Id, true),
                     Disabled = artifact is null && _artifact is null,
                 };
                 var id = artifact?.Id;
                 button.Pressed += () => ClickDoll(hero.Id, id);
+                button.WithArtifactDrag(id is null ? null : new ArtifactInHand(hero.Id, id, true), artifact?.Name, new ArtifactPlace(hero.Id, Doll: true), Drop);
                 if (id is not null)
                 {
                     button.WithInfo(detailed => InfoSheets.Artifact(_session.State, id, detailed));
@@ -206,6 +204,8 @@ public partial class ExchangePanel : PanelContainer
         column.AddChild(backpack);
         var into = new Button { Text = "Into the backpack", Disabled = _artifact is null, TooltipText = "Carry the picked artifact" };
         into.Pressed += () => ClickBackpack(hero.Id, null);
+        into.WithArtifactDrag(null, null, new ArtifactPlace(hero.Id, Doll: false), Drop);
+        backpack.WithArtifactDrag(null, null, new ArtifactPlace(hero.Id, Doll: false), Drop); // between and beside the buttons
         backpack.AddChild(into);
         foreach (var id in hero.Artifacts.Backpack.Distinct())
         {
@@ -216,11 +216,12 @@ public partial class ExchangePanel : PanelContainer
                 Text = $"{artifact.Name} ({artifact.Slot})" + (count > 1 ? $" ×{count}" : ""),
                 TooltipText = ArtifactText(artifact),
                 ToggleMode = true,
-                ButtonPressed = _artifact == new PickedArtifact(hero.Id, id, false),
+                ButtonPressed = _artifact == new ArtifactInHand(hero.Id, id, false),
             };
             var artifactId = id;
             button.Pressed += () => ClickBackpack(hero.Id, artifactId);
-            button.WithInfo(detailed => InfoSheets.Artifact(_session.State, artifactId, detailed));
+            button.WithInfo(detailed => InfoSheets.Artifact(_session.State, artifactId, detailed))
+                .WithArtifactDrag(new ArtifactInHand(hero.Id, artifactId, false), artifact.Name, new ArtifactPlace(hero.Id, Doll: false), Drop);
             backpack.AddChild(button);
         }
 
@@ -253,61 +254,48 @@ public partial class ExchangePanel : PanelContainer
     }
 
     /// <summary>A paper-doll slot of <paramref name="hero"/>, wearing <paramref name="worn"/> or empty.</summary>
-    private void ClickDoll(HeroId hero, string? worn)
+    private void ClickDoll(HeroId hero, string? worn) => Click(new ArtifactPlace(hero, Doll: true), worn);
+
+    /// <summary>The backpack of <paramref name="hero"/>: one of its artifacts (<paramref name="carried"/>) or the "Into the backpack" button.</summary>
+    private void ClickBackpack(HeroId hero, string? carried) => Click(new ArtifactPlace(hero, Doll: false), carried);
+
+    /// <summary>
+    /// A click on an artifact place: with nothing picked, picks the artifact shown there; with one picked, moves it there (<see cref="Move"/>),
+    /// or, when that would do nothing, picks the one shown there instead (or drops the pick).
+    /// </summary>
+    private void Click(ArtifactPlace place, string? shown)
     {
         _picked = null;
-        var player = _session.State.CurrentPlayer.Id;
-        switch (_artifact)
+        var here = shown is null ? null : new ArtifactInHand(place.Hero, shown, place.Doll);
+        if (_artifact is { } picked && ArtifactDrag.Accepts(picked, place))
         {
-            case null when worn is not null:
-                _artifact = new PickedArtifact(hero, worn, true);
-                break;
-            case { } picked when picked.Hero != hero:
-                _artifact = null;
-                Run(new GiveArtifactCommand(player, picked.Hero, picked.Id, hero, picked.Worn, Wear: true));
-                break;
-            case { Worn: false } picked:
-                _artifact = null;
-                Run(new EquipArtifactCommand(player, hero, picked.Id));
-                break;
-            case { } picked when worn is not null && worn != picked.Id:
-                _artifact = new PickedArtifact(hero, worn, true);
-                break;
-            default:
-                _artifact = null;
-                break;
+            _artifact = null;
+            Move(picked, place);
+        }
+        else
+        {
+            _artifact = here == _artifact ? null : here;
         }
 
         Refresh();
     }
 
-    /// <summary>The backpack of <paramref name="hero"/>: one of its artifacts (<paramref name="carried"/>) or the "Into the backpack" button.</summary>
-    private void ClickBackpack(HeroId hero, string? carried)
+    /// <summary>A drag let go over <paramref name="place"/>.</summary>
+    private void Drop(ArtifactInHand item, ArtifactPlace place)
     {
         _picked = null;
-        var player = _session.State.CurrentPlayer.Id;
-        switch (_artifact)
-        {
-            case null when carried is not null:
-                _artifact = new PickedArtifact(hero, carried, false);
-                break;
-            case { } picked when picked.Hero != hero:
-                _artifact = null;
-                Run(new GiveArtifactCommand(player, picked.Hero, picked.Id, hero, picked.Worn));
-                break;
-            case { Worn: true } picked:
-                _artifact = null;
-                Run(new UnequipArtifactCommand(player, hero, picked.Id));
-                break;
-            case { } picked when carried is not null && carried != picked.Id:
-                _artifact = new PickedArtifact(hero, carried, false);
-                break;
-            default:
-                _artifact = null;
-                break;
-        }
-
+        _artifact = null;
+        Move(item, place);
         Refresh();
+    }
+
+    /// <summary>Gives, puts on or takes off (<see cref="ArtifactDrag.MoveCommand"/>).</summary>
+    private void Move(ArtifactInHand item, ArtifactPlace place)
+    {
+        if (ArtifactDrag.MoveCommand(_session.State.CurrentPlayer.Id, item, place) is { } command)
+        {
+            Run(command);
+        }
     }
 
     private string ArtifactText(ArtifactDefinition artifact) =>

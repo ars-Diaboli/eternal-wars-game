@@ -91,7 +91,8 @@ Moving onto another hero's tile is an interaction, so routes may **end** there (
 - **Own**: the **exchange screen** (the mover stays on its adjacent tile; ADR-153) shows both heroes side by side: stacks
   (`MoveStackCommand`: split, merge, swap; a hero keeps one stack), artifacts and [war machines](combat.md#war-machines). An artifact is
   clicked, then where it goes: a slot of the other hero's paper doll puts it on (the one worn there goes to that hero's backpack), its backpack
-  carries it; the own paper doll or backpack puts it on or takes it off. Relics can be assembled there too.
+  carries it; the own paper doll or backpack puts it on or takes it off. An artifact can also be dragged there and let go (ADR-162).
+  Relics can be assembled there too.
 - **Enemy**: a battle; the loser (or a hero that retreats) leaves the map.
 - **Allied** ([teams](victory-and-modes.md#game-options)): no interaction, the tile is blocked (ADR-027).
 - Under refog a moving hero **stops** when an enemy hero comes into sight; bumping into an unseen one starts a battle (**ambush**, no

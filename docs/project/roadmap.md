@@ -88,7 +88,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
       ADR-099, ADR-100, ADR-111); assembled relics (ADR-108, ADR-121); editor rows (ADR-114)
 - [x] The Crown of the Waning Eye's +1 to the best magic skill (ADR-147)
 - [x] Artifact exchange screen between heroes: both paper dolls and backpacks, click to give, wear or carry (ADR-153)
-- [ ] Drag and drop on the paper doll and the exchange screen
+- [x] Drag and drop on the paper doll and the exchange screen (ADR-162)
 
 ### Game flow
 - [x] Built: victory and loss conditions (ADR-057, ADR-073, ADR-094, ADR-083), save / load and autosave (ADR-058), score, ranking,
