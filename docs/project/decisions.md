@@ -1440,3 +1440,21 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   `JoinUndead` adds Raise Dead's skeletons. Events `BattleUnitCopied`, `BattleCopyVanished`, `BattleUnitShielded`, `BattleManaGained`,
   `BattleUnitActsAgain`, `BattleUnitRaised`, `BattleUnitSplit` (the 3D view adds the new stacks and narrates; the 2D board redraws). Smoke
   scenario `game-battle-mirror`. No save format change.
+
+### ADR-153: The artifact exchange screen (ADR-061, ADR-070, 2026-11-09)
+**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing.
+
+- **Screen**: the exchange of two own heroes covers the map like the hero screen: the two heroes side by side, each with its total primary
+  stats, seven army slots, war machines (a button gives one), paper doll (12 slots), assembled relics ready to join, and backpack (with a count;
+  copies of one artifact show once with ×N). Escape drops what is picked, else closes the exchange.
+- **Artifacts** *(proposal: clicks, not drag and drop, which stays open)*: click an artifact, worn or carried, of either hero, then where it
+  goes: a slot of the other hero's paper doll (any slot; the artifact goes to its own kind) gives it and puts it on, the other's backpack
+  ("Into the backpack" or any carried artifact) gives it to carry; the own paper doll puts a carried one on, the own backpack takes a worn one
+  off. Clicking another artifact of the same hero picks that one instead.
+- **Rule**: `GiveArtifactCommand` gains `Worn` (give the worn copy, not one carried with the same id) and `Wear` (the receiver puts it on, as
+  `EquipArtifactCommand` would: the one worn in a full slot goes to its backpack, and an assembled relic needs the slots it blocks free). The
+  receiver's backpack needs room only for what ends up in it. Everything is checked first, so a refused give changes nothing. Events: the
+  receiver's `ArtifactUnequipped` (the swapped one) and `ArtifactEquipped`, then `ArtifactGiven`. Replays without the two fields load as before.
+- **Code**: `ArtifactService.Give` and the shared `Fit` / `PutOn` (also used by `Equip`); `ExchangePanel` rebuilt, on the game app's screen
+  layer. The smoke scenario `game-exchange-and-gate` gives Orrin's Rusted Blade onto Valeska's doll (her Centaur's Axe goes to her backpack),
+  hands over the Iron Band to carry and moves a stack before closing. No save format change.

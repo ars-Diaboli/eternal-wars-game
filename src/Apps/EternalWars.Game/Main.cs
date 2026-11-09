@@ -1175,10 +1175,6 @@ public partial class Main : Node3D
         var notice = new NoticePanel();
         top.AddChild(notice);
         notice.Bind(_session);
-        var exchange = new ExchangePanel();
-        top.AddChild(exchange);
-        exchange.Bind(_session);
-
         // HoMM-style right-hand panel: minimap and hero list.
         var side = new VBoxContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -340, OffsetTop = 8, OffsetRight = -8 };
         hud.AddChild(side);
@@ -1208,6 +1204,10 @@ public partial class Main : Node3D
         _heroScreen = new HeroPanel { FullScreen = true };
         townLayer.AddChild(_heroScreen);
         _heroScreen.Bind(_session);
+        // Two own heroes met: the exchange screen covers the map like the hero screen (ADR-153).
+        var exchange = new ExchangePanel();
+        townLayer.AddChild(exchange);
+        exchange.Bind(_session);
         _heroScreen.AdventureSpellArmed += (hero, spell) =>
         {
             _aimedSpell = (hero, spell);

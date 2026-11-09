@@ -52,8 +52,9 @@ $scenarios = @(
        Input = '5:click:133,263;12:click:133,263;20:click:103,140;28:click:30,140;35:key:Q' },
     @{ Name = 'game-route-and-move'; App = 'EternalWars.Game'; Frames = 60
        Input = '3:key:Enter;10:click:960,520;25:click:960,520' },
-    @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 60; Map = $exchangeMap
-       Input = '3:key:Enter;10:key:Right;16:click:258,209;20:click:258,151;24:click:194,256;30:click:960,557;36:click:960,557' },
+    # Two own heroes meet (ADR-153): Orrin's blade onto Valeska's doll, his ring into her backpack, her griffins to him; Close, then the gate.
+    @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 72; Map = $exchangeMap
+       Input = '3:key:Enter;10:key:Right;16:click:287,320;19:click:1079,320;22:click:223,456;25:click:875,456;28:click:922,176;31:click:128,176;36:click:122,21;42:click:960,557;48:click:960,557' },
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },

@@ -366,7 +366,7 @@ public sealed class GameSession
                 Artifacts.TakeApart(apart.Player, apart.Hero, apart.Relic);
                 return null;
             case GiveArtifactCommand give:
-                Artifacts.Give(give.Player, give.FromHero, give.Artifact, give.ToHero);
+                Artifacts.Give(give.Player, give.FromHero, give.Artifact, give.ToHero, give.Worn, give.Wear);
                 return null;
             case GiveWarMachineCommand machine:
                 Armies.GiveWarMachine(machine.Player, machine.FromHero, machine.Slot, machine.ToHero);
