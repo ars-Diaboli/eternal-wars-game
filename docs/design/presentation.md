@@ -19,14 +19,20 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
-- **UI**: HoMM-style right panel (minimap, hero / town list, end turn), bottom status bar, full-screen town and hero screens.
+- **UI**: by default a HoMM-style right panel (minimap, hero and town lists, the action panel), the turn, resources and status at the top
+  left, full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips)
+  and "Layout".
+- **Layout** (ADR-118, ADR-156): the "Layout" tab sets the battle's initiative bar (top or bottom), the minimap's corner, the hero and town
+  lists (beside the minimap, or as rows along the bottom) and the action panel's side (kingdom, quests, puzzle map, dig, marketplace). The
+  change shows at once and is kept in `settings.json` with the speeds, not in saves. The minimap is nearest its corner; lists beside it follow
+  it; the action panel stands at the top of its side; the turn and status block stays at the top left, beside anything there.
 - **Audio**: per-terrain ambient music, faction town themes.
 
 ## Information windows
 ADR-118, ADR-154. A right click opens the window of what is under the pointer: on the map a hero, a stack, a town, an object or the ground;
 in battle a stack; on the screens a stack, a skill, a spell, an artifact or a building. It shows only what the player may know (Scouting,
 ADR-125; objects under the fog as last seen). Held and let go it closes; a quick click leaves it open until the next click or key. The
-"Detailed tooltips" setting (off by default, F10 menu, kept with the speed settings) adds the formulas and the raw numbers.
+"Detailed tooltips" setting (off by default, the F10 menu's "Settings" tab, kept with the speed settings) adds the formulas and the raw numbers.
 
 ## Speed settings
 ADR-088, ADR-090, ADR-095. Player settings (`settings.json` in the user data folder, not in saves; they change nothing in the game) for own
