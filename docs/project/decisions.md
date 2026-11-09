@@ -1365,3 +1365,33 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   `BattleGrid.IsFoe`; `BattleAi.ActFrenzied`; `BattleSpellApplied.Turns` and `BattleUnitSideChanged`, which turns the 3D stack (plate, nose,
   facing) and redraws the 2D board. No save format change (saves replay commands); replays of battles where a hero knew one of these spells
   may now differ.
+
+### ADR-151: Two-click spells: Teleport, Shadow Step, Drain Life (ADR-099, ADR-122, ADR-149, 2026-11-09)
+
+- **Grammar**: a new kind `move N|field [shadow] [again|again-attack]` (an own stack to a free cell within N cells or anywhere; `shadow` only
+  where it is not next to an enemy stack; `again` / `again-attack` for rank III); for damage aimed at a stack, `drain% N` (that percent of the
+  damage dealt heals an own stack the caster picks) and `drain-revive` (the healing also revives its dead).
+- **The spells** (spells.md's ranks): Teleport `move 10` (II `move field`, III `move field again`); Shadow Step `move field shadow` (II
+  `move field`: "anywhere" lifts the shadow rule, as rank I already reaches the whole field; III `move field again-attack`); Drain Life
+  `damage 50 living drain% 50` (II `targets 2`, III also `drain-revive`).
+- **Aiming**: `BattleCastCommand` gains `Second`. A move takes `Target` (the stack) and `Cell` (its footprint's top-left; the game centres the
+  footprint on the clicked cell); a drain takes `Target` (the enemy) and `Second` (the own stack), which may be left out (nothing is healed).
+  The battle HUD arms the spell, takes the stack on the first click and the cell or own stack on the second; Esc cancels.
+- **Moves**: any living own creature stack, the active one too (it keeps its action, as for every hero spell); not a rooted stack, the keep's
+  stack or a war machine; Stasis wards it off like every spell. The footprint must fit (inside the field, no obstacle, no stack, no wall zone
+  for a walker), elsewhere than it stands. "Within 10" is the straight line between the top-left cells, with a flyer's 0.25 slack, not grown by
+  Spell Power *(proposal)*. "In shadow" is read from spells.md's parenthetical: not next to an enemy stack (Darkness is not needed). The stack
+  lands over everything between: a zone it leaves or lands in, and the moat, hurt it as they would a flyer (`BattleUnitTeleported`).
+- **Rank III** *(proposal)*: "can still act / attack this round" means a stack that had already taken its turn this round gets one more, after
+  the waiting stacks; it may not wait then. Teleport's is a whole turn; Shadow Step's is a turn without moving (it may attack what stands next
+  to it, shoot or defend). A stack still to act, or the active one, gets nothing more (`BattleUnitTurnRegained`).
+- **Drain**: the own stack (living, not a war machine, not in Stasis) gets half the damage dealt to all the stacks hit (the damage they really
+  lost), as its top creature's wounds; at rank III as a revive, for good (like Vampirism) *(proposal)*. Undead and constructs are not hit
+  (`living`), but any own stack may drink, undead too.
+- **AI** *(proposal)*: a move only for the active stack, when it fights in melee, cannot shoot now and cannot reach an enemy, to a cell next to
+  an enemy it may land on, worth the blow it then strikes (so Shadow Step I is never cast by the AI); a drain picks the own stack whose healing
+  is worth most and adds that to the damage's value.
+- **Code**: `SpellEffectKind.Move`, `SpellTurnAgain`, `SpellEffect.MoveRange`, `Shadow`, `Again`, `DrainPercent`, `DrainRevives`, `TwoClicks`;
+  `BattleMagic.MoveRefusal`, `CanLand`, `DrainRefusal`, `Drained`, `DrainHeals`; `BattleUnit.StaysPut` (in `IsFixed`); the
+  engine's `Teleport` and `Drain`; `BattleTargeting.SpellPlacement`; `BattleUnitTeleported` (the 3D stack sinks and rises at its new place, the
+  2D board redraws) and `BattleUnitTurnRegained`; `BattleSpellCast.Second`. No save format change (saves replay commands; `Second` is optional).

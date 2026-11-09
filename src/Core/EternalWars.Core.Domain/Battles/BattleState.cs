@@ -81,8 +81,14 @@ public sealed class BattleUnit
     /// <summary>Rooted where it was called (Awaken the Grove's treants): it never moves, but fights what stands next to it.</summary>
     public bool IsRooted { get; internal init; }
 
-    /// <summary>Whether it stays where it stands now: rooted, the keep's stack while the keep stands, or held by Entangle (ADR-123).</summary>
-    public bool IsFixed => IsRooted || InKeep || Has(Magic.SpellStatus.Entangled);
+    /// <summary>
+    /// Whether it stays where it stands now: rooted, the keep's stack while the keep stands, held by Entangle (ADR-123), or on the turn Shadow Step III
+    /// gave it back (ADR-151).
+    /// </summary>
+    public bool IsFixed => IsRooted || InKeep || StaysPut || Has(Magic.SpellStatus.Entangled);
+
+    /// <summary>Its next turn this round, given back by a move spell (Shadow Step III, ADR-151), is one in which it does not move.</summary>
+    public bool StaysPut { get; internal set; }
 
     /// <summary>Moves in a straight line over everything: a flyer or teleporter, or a stack under Fleetfoot (ADR-123).</summary>
     public bool MovesFreely => Creature.MovesFreely || Has(Magic.SpellStatus.Phase);
@@ -158,6 +164,7 @@ public sealed class BattleUnit
         RageAttack = RageAttack,
         LosesNextAction = LosesNextAction,
         InKeep = InKeep,
+        StaysPut = StaysPut,
         MutableSpells = [.. MutableSpells],
         Revived = Revived,
         DamageDealt = DamageDealt,

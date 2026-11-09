@@ -346,6 +346,12 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var hits = battle.Zones.Count > 0 ? BattleZones.MoveDamage(battle, unit, BattleGrid.Path(battle, unit, to)) : [];
         unit.Position = to;
         events.Publish(new BattleUnitMoved(unit.Id, from, to));
+        Landed(unit, from, hits);
+    }
+
+    /// <summary>What the stack's move from <paramref name="from"/> costs it: the moat, then the field zones' damage on the way (<paramref name="hits"/>).</summary>
+    private void Landed(BattleUnit unit, CellPosition from, IReadOnlyList<(BattleZone Zone, int Damage)> hits)
+    {
         EnterMoat(unit, from);
 
         // Field zones on the way (ADR-149): Fire Wall burns a stack walking in, Thornwall tears one walking out.
@@ -495,9 +501,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// The side's hero casts a spell (ADR-110): it pays the mana, then the spell works on every stack in its reach it affects, by id; a stack it
     /// does not affect is reported as resisting. The active unit keeps its action, unless the spell killed it.
     /// </summary>
-    public string? Cast(BattleSide side, string spellId, int? targetId, CellPosition? cell)
+    public string? Cast(BattleSide side, string spellId, int? targetId, CellPosition? cell, int? second = null)
     {
-        if (BattleMagic.CastRefusal(battle, side, spellId, targetId, cell) is { } refusal)
+        if (BattleMagic.CastRefusal(battle, side, spellId, targetId, cell, second) is { } refusal)
         {
             return refusal;
         }
@@ -506,8 +512,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var cost = BattleMagic.Cost(battle, side, known);
         battle.ManaLeft[side] -= cost;
         battle.CastRounds[side] = battle.Round;
-        events.Publish(new BattleSpellCast(side, spellId, targetId, cell, cost, battle.ManaOf(side)));
-        Work(side, known, targetId, cell, null);
+        var drains = known.Effect!.DrainPercent > 0 ? second : null;
+        events.Publish(new BattleSpellCast(side, spellId, targetId, cell, cost, battle.ManaOf(side), drains));
+        Work(side, known, targetId, cell, null, drains);
 
         if (!CheckFinished() && battle.ActiveUnit is { IsAlive: false })
         {
@@ -543,13 +550,19 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     }
 
     /// <summary>What a cast does, the hero's or a creature's: the spell works on every stack in its reach it affects, by id (a stack it does not affect is reported as resisting); a summon calls its creatures; Earthquake shakes the walls.</summary>
-    private void Work(BattleSide side, KnownSpell known, int? targetId, CellPosition? cell, int? creaturePower)
+    private void Work(BattleSide side, KnownSpell known, int? targetId, CellPosition? cell, int? creaturePower, int? drains = null)
     {
         var effect = known.Effect!;
         var spellId = known.Spell.Id;
         if (effect.Kind == Magic.SpellEffectKind.Summon)
         {
             Summon(side, known, creaturePower);
+            return;
+        }
+
+        if (effect.Kind == Magic.SpellEffectKind.Move)
+        {
+            Teleport(battle.GetUnit(targetId!.Value), cell!.Value, known);
             return;
         }
 
@@ -568,8 +581,10 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         if (effect.Kind == Magic.SpellEffectKind.Damage)
         {
             // Splash and chain hits come after the stacks in reach (ADR-123); every damage is worked out before it is dealt.
+            long dealt = 0;
             foreach (var (unit, damage) in BattleMagic.DamagePlan(battle, side, known, targetId, cell, creaturePower))
             {
+                dealt += Math.Min(damage, unit.TotalHealth);
                 SpellDamage(unit, spellId, damage);
                 if (!unit.IsAlive)
                 {
@@ -586,6 +601,11 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                     unit.LosesNextAction = true;
                     events.Publish(new BattleUnitStunned(unit.Id, spellId));
                 }
+            }
+
+            if (drains is { } healed && battle.GetUnit(healed) is { IsAlive: true } drinker)
+            {
+                Drain(drinker, known, BattleMagic.Drained(effect, dealt));
             }
         }
         else
@@ -633,6 +653,50 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         WakeHit();
+    }
+
+    /// <summary>
+    /// A move spell (ADR-151): the stack lands on the placement, over everything between. A field zone it leaves or lands in, and the moat, hurt it
+    /// as they would a flyer's. With rank III's <c>again</c> a stack that had already taken its turn this round gets one more, after the waiting
+    /// stacks (it may not wait then); <c>again-attack</c> makes it a turn without moving.
+    /// </summary>
+    private void Teleport(BattleUnit unit, CellPosition to, KnownSpell known)
+    {
+        var from = unit.Position;
+        var hits = battle.Zones.Count > 0 ? BattleZones.MoveDamage(battle, unit, [from, to]) : [];
+        unit.Position = to;
+        events.Publish(new BattleUnitTeleported(unit.Id, from, to, known.Spell.Id));
+        Landed(unit, from, hits);
+
+        var again = known.Effect!.Again;
+        if (again == Magic.SpellTurnAgain.None || !unit.IsAlive || unit == battle.ActiveUnit
+            || battle.Queue.Contains(unit.Id) || battle.Waiting.Contains(unit.Id))
+        {
+            return;
+        }
+
+        battle.MutableWaiting.Add(unit.Id);
+        battle.WaitedThisRound.Add(unit.Id);
+        unit.StaysPut = again == Magic.SpellTurnAgain.Attack;
+        events.Publish(new BattleUnitTurnRegained(unit.Id, known.Spell.Id, unit.StaysPut));
+    }
+
+    /// <summary>A drain (ADR-151) gives the own stack its share of the damage: its top creature's wounds, and with <c>drain-revive</c> its dead, for good.</summary>
+    private void Drain(BattleUnit unit, KnownSpell known, int health)
+    {
+        var effect = known.Effect!;
+        if (effect.DrainRevives)
+        {
+            Revive(unit, known.Spell.Id, health, lasting: true);
+            return;
+        }
+
+        var healed = (int)BattleMagic.DrainHeals(effect, unit, health);
+        if (healed > 0)
+        {
+            unit.TopHealth += healed;
+            events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
+        }
     }
 
     /// <summary>A spell's damage to a stack (a cast, a burning spell, thorns): wounded, reported, buried; a blind stack hit wakes (ADR-123).</summary>
@@ -946,6 +1010,10 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         WakeHit();
         var unit = battle.ActiveUnit;
         battle.ActiveUnit = null;
+        if (unit is not null)
+        {
+            unit.StaysPut = false; // Shadow Step III's turn in place is over (ADR-151)
+        }
 
         // Unseen lasts until the stack acts (ADR-123).
         foreach (var hidden in unit?.Spells.Where(s => s.Modifiers.Has(Magic.SpellStatus.Unseen)).ToList() ?? [])
@@ -1072,6 +1140,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
         foreach (var unit in battle.LivingUnits)
         {
+            unit.StaysPut = false;
             unit.HasRetaliated = false;
             unit.HitsThisRound = 0;
             battle.TieRolls[unit.Id] = battle.Random.Next(1_000_000);

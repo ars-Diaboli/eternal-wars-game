@@ -48,9 +48,9 @@ town creatures (and Conflux elementals).
   by **(1 + SP / 10)**, rounded down, at least 1 round. The tables give the **base** numbers (at SP 0); "a + b·SP" is gone. A spell specialty
   adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once
   (MAG-11). Areas are in battlefield cells (the field is 30 × 20; a Small creature is one cell, ADR-070).
-- **Built in battle** (ADR-123, ADR-149, ADR-150): 83 of the 91 battle spells work (the 11 adventure spells are cast on the map); still to come
-  are Martyrdom, Mirror Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Blood Price and Shadow Step, and Puppet Master III's
-  split. `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
+- **Built in battle** (ADR-123, ADR-149, ADR-150, ADR-151): 86 of the 91 battle spells work (the 11 adventure spells are cast on the map); still
+  to come are Martyrdom, Mirror Image, Clockwork Precision, Raise Dead and Blood Price, and Puppet Master III's split. `spells.csv` lists each
+  rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
 - **Field zones** (ADR-149): Consecrate, Thornwall, Bone Wall, Fire Wall and Darkness leave cells on the field for their rounds, aimed with
   one click. A line runs down the field, centred on the aimed cell; zones are clipped to the field and may lie over stacks. Walls block walkers
   (a stack standing in one may walk out); flyers and teleporters pass over them. A walker takes Fire Wall's damage when its path crosses the
@@ -63,6 +63,13 @@ town creatures (and Conflux elementals).
   A frenzied stack plays its turn by itself, for any side: it shoots or attacks the nearest other stack, friend or foe, or walks towards it.
   "Turns" are the stack's own next turns, played or passed (Blind, Terror, bad morale); waiting does not use one. Spell Power lengthens turns
   like rounds and grows Hypnotize's health limit like an amount; the enemy hero's Spell resistance shortens them.
+- **Two clicks** (ADR-151): Teleport and Shadow Step are aimed at an own stack, then at where it goes; the footprint must fit there (inside the
+  field, clear of obstacles and stacks; a walker cannot land in a wall). "Within 10" is a straight line from where it stands, like a flyer's
+  reach; "in shadow" is a cell not next to an enemy stack. A field zone it leaves or lands in, and the moat, count as for a flyer. Rooted stacks,
+  the keep's stack and war machines cannot be moved. The active stack moved still has its action. "Can still act / attack this round" (rank III):
+  a stack that had already taken its turn this round gets one more after the waiting stacks (it cannot wait then); Shadow Step's is a turn without
+  moving. Drain Life is aimed at an enemy stack, then at the living own stack that drinks the life (none is fine): it gets half the damage dealt
+  to all the stacks hit, as healing of its top creature, at rank III also as its dead revived for good.
 - **In battle** (ADR-070, ADR-071): the hero casts **at most one spell a round**, during the turn of one of the units it controls; casting
   does not use that unit's action. Spells may target war machines, which are `mechanical` and resist every `mind`, `poison` and healing spell.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`, `curse`, `blind`);

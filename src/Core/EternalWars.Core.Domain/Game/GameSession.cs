@@ -432,7 +432,7 @@ public sealed class GameSession
                 Battles.UseWarcry(warcry.Player, warcry.Warcry);
                 return null;
             case BattleCastCommand cast:
-                Battles.Cast(cast.Player, cast.Spell, cast.Target, cast.Cell);
+                Battles.Cast(cast.Player, cast.Spell, cast.Target, cast.Cell, cast.Second);
                 return null;
             case BattleWaitCommand wait:
                 Battles.Act(wait.Player, new WaitAction());

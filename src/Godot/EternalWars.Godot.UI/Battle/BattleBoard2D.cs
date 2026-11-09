@@ -52,6 +52,7 @@ public partial class BattleBoard2D : Control
 
         this.SubscribeWhileInTree<BattleTurnStarted>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitMoved>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitTeleported>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleDeploymentStarted>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitDeployed>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleDeploymentEnded>(session.Events, _ => QueueRedraw());

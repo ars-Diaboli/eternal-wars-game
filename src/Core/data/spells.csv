@@ -42,7 +42,7 @@ arcana.haste,Haste,academy,2,9,air,,,buff speed 3 initiative% 50 rounds 3,buff s
 arcana.frost-ring,Frost Ring,academy,2,10,water,ice,,damage 40 area 3 ring,damage 55 area 3 ring,damage 55 area 3 ring spare-own,40 damage to every stack in the ring of cells around a centre cell (not the centre)
 arcana.mirror-image,Mirror Image,academy,2,10,water,,,,,,a copy of an own stack fights for 2 rounds; it deals full damage and vanishes when hit
 arcana.unravel,Unravel,academy,2,8,water,,,dispel enemy,dispel enemy enemies,,removes the own spells from an enemy stack
-arcana.teleport,Teleport,academy,2,9,water,,,,,,moves an own stack to a free cell within 10
+arcana.teleport,Teleport,academy,2,9,water,,,move 10,move field,move field again,moves an own stack to a free cell within 10
 arcana.frost-bolt,Frost Bolt,academy,3,16,water,ice,,damage 90 speed -2 rounds 2,damage 90 speed -2 rounds 2 targets 2,damage 90 speed -2 rounds 2 targets 3 stun% 100,"90 damage to an enemy stack, −2 speed, 2 rounds"
 arcana.bind-elemental,Bind Elemental,academy,3,18,bound,summon,,summon conflux.air-elemental|conflux.earth-elemental|conflux.fire-elemental|conflux.water-elemental 200,summon conflux.air-elemental|conflux.earth-elemental|conflux.fire-elemental|conflux.water-elemental 280,,"a stack of Conflux air, earth, fire or water elementals (the caster's choice) for the battle, 200 health worth"
 arcana.anti-magic,Anti-Magic,academy,3,15,earth,,,buff immune-level 3 rounds 3,buff immune-level 4 rounds 3,buff immune-level 2 rounds 3 allies,"an own stack is immune to every spell of level 1–3 (also the own), 3 rounds"
@@ -55,7 +55,7 @@ death.weakness,Weakness,necropolis,1,5,water,curse,,curse attack -3 rounds 3,cur
 death.grave-chill,Grave Chill,necropolis,1,5,water,,,curse initiative% -20 speed -1 rounds 3 living,curse initiative% -30 speed -1 rounds 3 living,curse initiative% -30 speed -1 rounds 3 living targets 2,"an enemy stack −20 % initiative and −1 speed, 3 rounds; living only"
 death.unholy-vigour,Unholy Vigour,necropolis,1,5,earth,,,buff attack 2 defense 2 rounds 3 undead,buff attack 3 defense 3 rounds 3 undead,buff attack 3 defense 3 rounds 3 allies undead,"an own undead stack +2 Attack and Defense, 3 rounds"
 death.grave-whisper,Grave Whisper,necropolis,1,5,air,,yes,,,,marks the dead of the last battles in radius 10: the hero's next battle there raises +10 % with Necromancy
-death.drain-life,Drain Life,necropolis,2,9,water,,,,,,50 damage to a living enemy stack; an own stack (the caster's choice) heals half of it
+death.drain-life,Drain Life,necropolis,2,9,water,,,damage 50 living drain% 50,damage 50 living targets 2 drain% 50,damage 50 living targets 2 drain% 50 drain-revive,50 damage to a living enemy stack; an own stack (the caster's choice) heals half of it
 death.animate-dead,Animate Dead,necropolis,2,9,earth,,,revive 60 undead lasting,revive 90 undead lasting,revive 90 undead lasting targets 2,revives 60 health of an own undead stack's dead (they stay)
 death.death-cloud,Death Cloud,necropolis,2,10,air,poison,,damage 30 area 3 living,damage 45 area 3 living,damage 45 area 3 living spare-own,30 damage to every living stack in a 3 × 3 area (own too)
 death.sorrow,Sorrow,necropolis,2,9,earth,mind;curse,,curse morale -2 luck -1 rounds 3,curse morale -2 luck -1 rounds 3 targets 2,curse morale -2 luck -1 rounds 2 enemies,"an enemy stack −2 morale and −1 luck, 3 rounds"
@@ -89,7 +89,7 @@ shadow.shroud,Shroud,dungeon,1,5,air,,,buff ranged-taken% -50 shroud 1 rounds 3,
 shadow.forgetfulness,Forgetfulness,dungeon,1,5,water,mind,,curse no-shoot rounds 3 shooter,curse no-shoot rounds 3 shooter targets 2,curse no-shoot rounds 2 enemies shooter,"an enemy shooting stack forgets how to shoot (melee only), 3 rounds"
 shadow.shadow-dart,Shadow Dart,dungeon,1,5,air,,,damage 30,damage 45,damage 45 targets 2,"30 damage to an enemy stack, ignores Defense"
 shadow.veil,Veil,dungeon,1,5,air,,yes,,,,"the hero's army shows only as ""a few"", ""many"" … to other players, a week"
-shadow.shadow-step,Shadow Step,dungeon,2,9,air,,,,,,moves an own stack to a free cell in shadow (not next to an enemy)
+shadow.shadow-step,Shadow Step,dungeon,2,9,air,,,move field shadow,move field,move field again-attack,moves an own stack to a free cell in shadow (not next to an enemy)
 shadow.confusion,Confusion,dungeon,2,9,water,mind,,curse confused rounds 1,curse confused rounds 2,curse confused rounds 2 targets 2,"an enemy stack moves and attacks at random, 1 round"
 shadow.darkness,Darkness,dungeon,2,10,earth,,,zone area 5 dims-shots rounds 3,zone area 7 dims-shots rounds 3,zone area 7 dims-shots defense 2 rounds 3,"a 5 × 5 area: shots into or out of it are halved, 3 rounds"
 shadow.night-terrors,Night Terrors,dungeon,2,9,fire,mind,,curse morale -2 no-retaliation rounds 2,curse morale -2 no-retaliation rounds 3,curse morale -2 no-retaliation rounds 3 targets 2,"an enemy stack −2 morale and loses retaliation, 2 rounds"

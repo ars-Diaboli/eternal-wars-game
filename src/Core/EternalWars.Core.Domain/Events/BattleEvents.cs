@@ -72,6 +72,15 @@ public sealed record BattleTurnStarted(int Unit, int Round) : IEvent;
 
 public sealed record BattleUnitMoved(int Unit, CellPosition From, CellPosition To) : IEvent;
 
+/// <summary>A move spell (Teleport, Shadow Step, ADR-151) took the stack from one placement to another, over everything between.</summary>
+public sealed record BattleUnitTeleported(int Unit, CellPosition From, CellPosition To, string Spell) : IEvent;
+
+/// <summary>
+/// A move spell's rank III (ADR-151) gave the stack, which had taken its turn this round, one more after the waiting stacks; with
+/// <paramref name="InPlace"/> it does not move on it.
+/// </summary>
+public sealed record BattleUnitTurnRegained(int Unit, string Spell, bool InPlace) : IEvent;
+
 /// <summary>
 /// One hit. <paramref name="RemainingCount"/> is the target's stack size afterwards and <paramref name="TopHealth"/> its top creature's hit
 /// points (ADR-145); <paramref name="Luck"/> what luck did.
@@ -142,9 +151,10 @@ public sealed record BattleUnitReborn(int Unit, int Count) : IEvent;
 
 /// <summary>
 /// A side's hero cast a spell (ADR-110), before its effects: at a stack (<paramref name="Target"/>) or a cell (an area's centre), or at nothing
-/// for a spell that reaches a whole side or the field. <paramref name="Mana"/> is what the hero has left.
+/// for a spell that reaches a whole side or the field. <paramref name="Mana"/> is what the hero has left. A two-click spell (ADR-151) names its
+/// second aim: the cell a move goes to (<paramref name="Cell"/>), the own stack a drain heals (<paramref name="Second"/>).
 /// </summary>
-public sealed record BattleSpellCast(BattleSide Side, string Spell, int? Target, CellPosition? Cell, int Cost, int Mana) : IEvent;
+public sealed record BattleSpellCast(BattleSide Side, string Spell, int? Target, CellPosition? Cell, int Cost, int Mana, int? Second = null) : IEvent;
 
 /// <summary>A spell's damage to a stack (ADR-110); <paramref name="TopHealth"/> is its top creature's hit points afterwards (ADR-145).</summary>
 public sealed record BattleUnitSpellDamaged(int Unit, string Spell, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;

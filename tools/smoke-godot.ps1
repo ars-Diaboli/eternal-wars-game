@@ -178,6 +178,9 @@ $scenarios = @(
     # is over.
     @{ Name = 'game-battle-control'; App = 'EternalWars.Game'; Frames = 200; Map = $magicMap
        Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Hypnotize;114:click:1257,490;128:key:D;138:key:D;148:key:D;158:key:D;168:key:D;184:press:Surrender' },
+    # A two-click spell (ADR-151): the same battle, Teleport cast on Magus' footmen (first click), which land 8 cells on (second click); the Griffin then defends.
+    @{ Name = 'game-battle-teleport'; App = 'EternalWars.Game'; Frames = 150; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Teleport;114:click:410,262;120:click:650,290;132:key:D' },
     # A deployment step and war machines on the field (ADR-076), then Necromancy (ADR-078): the battle width (Tactics), Start, quick combat,
     # the result, then the Necromancy screen.
     @{ Name = 'game-necromancy'; App = 'EternalWars.Game'; Frames = 122; Map = $necromancyMap
