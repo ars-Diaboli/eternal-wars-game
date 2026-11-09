@@ -73,4 +73,3 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | AI difficulty levels (how well it plays) | HoMM3, HoMM5 | Missing | Complexity sets resources only (ADR-063) |
 | Duel mode / arena | HoMM5, HotA | Planned | Before 1.0 (ADR-097, ADR-100) |
 | Online lobby | HotA, HoMM5 | Planned | LAN before 1.0 (ADR-098); online later |
-| Right-click information windows | HoMM3, HoMM5 | Planned | UI-3 (ADR-118) |

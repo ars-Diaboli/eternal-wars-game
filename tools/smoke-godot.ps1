@@ -55,16 +55,20 @@ $scenarios = @(
     # Two own heroes meet (ADR-153): Orrin's blade onto Valeska's doll, his ring into her backpack, her griffins to him; Close, then the gate.
     @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 72; Map = $exchangeMap
        Input = '3:key:Enter;10:key:Right;16:click:287,320;19:click:1079,320;22:click:223,456;25:click:875,456;28:click:922,176;31:click:128,176;36:click:122,21;42:click:960,557;48:click:960,557' },
+    # Information windows (ADR-154): right-click Orrin on the map, a click closes it; on the hero screen right-click his footmen, then his blade
+    # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack.
+    @{ Name = 'game-info-windows'; App = 'EternalWars.Game'; Frames = 42; Map = $exchangeMap
+       Input = '3:key:Enter;10:rclick:800,445;16:click:1500,850;20:key:H;24:rclick:55,282;28:rclick:102,535;32:key:Escape;36:rclick:73,632' },
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
     # Auto combat (ADR-090): the menu sets "Ask before each battle", the step into the monster asks, Auto combat shows the outcome, Accept
     # returns to the map without a second result screen. The question waits until the imps' first moves have played.
     @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;12:click:1020,554;15:click:1028,614;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
+       Input = '3:key:Enter;8:key:F10;12:click:1020,535;15:click:1028,595;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
     # Speed settings (ADR-090): the menu sets "Your heroes" to Slow, then the hero walks a route (its steps take twice as long).
     @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 70
-       Input = '3:key:Enter;8:key:F10;12:click:733,636;15:click:733,666;19:key:Escape;24:click:960,520;30:click:960,520' },
+       Input = '3:key:Enter;8:key:F10;12:click:733,617;15:click:733,647;19:key:Escape;24:click:960,520;30:click:960,520' },
     # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
     # to Red with the full time and the hero screen closes.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 640

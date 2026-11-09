@@ -1458,3 +1458,29 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
 - **Code**: `ArtifactService.Give` and the shared `Fit` / `PutOn` (also used by `Equip`); `ExchangePanel` rebuilt, on the game app's screen
   layer. The smoke scenario `game-exchange-and-gate` gives Orrin's Rusted Blade onto Valeska's doll (her Centaur's Axe goes to her backpack),
   hands over the Iron Band to carry and moves a stack before closing. No save format change.
+
+### ADR-154: Right-click information windows and "Detailed tooltips" (ADR-118 UI-3 c–d, ADR-125, 2026-11-09)
+**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing.
+
+- **Window**: a right click opens one panel beside the pointer, above every screen: a title, what kind of thing it is, then its lines.
+  *(proposal)* Holding the right button and letting go after 0.3 s closes it again (read while held); a quick click leaves it open until the
+  next click or key. A left click or Escape that closes it does nothing else; another right click goes on to open the next window. The hover
+  tooltips stay as they were.
+- **What has one**: on the map a hero, a neutral stack, a town, any other object and open ground (terrain, road, river); in battle a stack
+  (its count, top creature's health, Attack and Defense with what its hero, terrain and spells add, speed, initiative, morale, luck, shots,
+  whether it retaliated, its rules in words and the spells on it); on the hero screen the army, the skills, the known spells (now one button
+  each), the adventure spells and the artifacts; on the exchange screen the two heroes, their stacks and artifacts; on the town screen the
+  buildings (every level with its cost, needs and income, what is built), the dwellings, the recruit buttons and the stacks; in battle the
+  hero's and the stack's spell buttons.
+- **What the player may know**: another player's hero, a neutral stack and a town show what the viewer's Scouting shows (ADR-125); an object
+  under the fog shows as last seen (*"Last seen here; it may have changed since"*), an unexplored cell has no window. A town of the player's
+  own lists its buildings; an object given once per hero or to its first visitor says which of the player's heroes took it.
+- **"Detailed tooltips"** (off by default): a checkbox in the F10 menu, kept in `settings.json` beside the speeds (a new `interface` section;
+  a file without it reads as off). It adds the formulas and the raw numbers: a creature's strength and map speed, the damage formula in
+  battle, a spell's effect at each rank with the amount at the hero's Spell Power, an artifact's effects, a hero's base stats, ids.
+- **Code**: core `Info/InfoSheets` (`InfoSheet` records, pure functions of the state: `Creature`, `BattleStack`, `Hero`, `Skill`, `Spell`,
+  `Artifact`, `Building`, `Dwelling`, `MapCell`, `Town`); `DamageCalculator.AttackOf` / `DefenseOf` (what `Damage` already added, now shared);
+  `InterfaceSettings`, `SettingsFile.LoadInterface`. Godot `InfoWindow` (a canvas layer) and `control.WithInfo(detailed => sheet)`. The map's
+  right click (which showed a scouted army on the status line and an enemy town in the intel panel) now opens the window. Tests
+  `InfoSheetTests`, `SettingsFileTests`; smoke scenario `game-info-windows`. No save format change.
+- **Not done**: a long press on touch; windows for the kingdom overview, the tavern's heroes and the decision prompts.

@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using Godot;
@@ -17,7 +18,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// paper doll and backpack. Click a stack, then a slot (either hero) to move it there; with "Split" only half moves (<see cref="MoveStackCommand"/>).
 /// Click an artifact, then where it goes: a slot of the other hero's paper doll puts it on, its backpack carries it (<see cref="GiveArtifactCommand"/>);
 /// the own paper doll or backpack puts it on or takes it off. A war machine button gives it to the other hero (<see cref="GiveWarMachineCommand"/>).
-/// Refusals show below; Close (or Escape) resolves the decision. It covers its parent.
+/// Refusals show below; Close (or Escape) resolves the decision. It covers its parent. A right click on a hero's name, a stack or an artifact
+/// opens its information window (ADR-154).
 /// </summary>
 public partial class ExchangePanel : PanelContainer
 {
@@ -116,7 +118,8 @@ public partial class ExchangePanel : PanelContainer
     {
         var state = _session.State;
         var column = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill, CustomMinimumSize = new Vector2(560, 0) };
-        column.AddChild(new Label { Text = $"{hero.Name}, level {hero.Level} {hero.Class}" });
+        column.AddChild(new Label { Text = $"{hero.Name}, level {hero.Level} {hero.Class}" }
+            .WithInfo(detailed => InfoSheets.Hero(_session.State, hero, hero.Owner, detailed)));
         column.AddChild(new Label
         {
             Text = $"Attack {hero.TotalAttack}   Defense {hero.TotalDefense}   Spell Power {hero.TotalSpellPower}   Knowledge {hero.TotalKnowledge}",
@@ -138,6 +141,11 @@ public partial class ExchangePanel : PanelContainer
             };
             var target = (hero.Id, slot);
             button.Pressed += () => ClickStack(target);
+            if (stack is not null)
+            {
+                button.WithInfo(detailed => InfoSheets.Creature(_session.State, stack.Creature, detailed, InfoSheets.Known(stack)));
+            }
+
             army.AddChild(button);
         }
 
@@ -174,6 +182,11 @@ public partial class ExchangePanel : PanelContainer
                 };
                 var id = artifact?.Id;
                 button.Pressed += () => ClickDoll(hero.Id, id);
+                if (id is not null)
+                {
+                    button.WithInfo(detailed => InfoSheets.Artifact(_session.State, id, detailed));
+                }
+
                 doll.AddChild(button);
             }
         }
@@ -207,6 +220,7 @@ public partial class ExchangePanel : PanelContainer
             };
             var artifactId = id;
             button.Pressed += () => ClickBackpack(hero.Id, artifactId);
+            button.WithInfo(detailed => InfoSheets.Artifact(_session.State, artifactId, detailed));
             backpack.AddChild(button);
         }
 

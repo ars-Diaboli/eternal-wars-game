@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
@@ -18,7 +19,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// dwellings, recruit, and manage the garrison and the visiting hero (click a stack, then a slot; "Upgrade" upgrades
 /// the picked stack"), turn stacks into undead at a Necropolis's Undead Transformer (ADR-137), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
 /// below. Opened with <see cref="Open"/>. With <see cref="FullScreen"/> (the game app) it fills its parent and scrolls;
-/// Escape or "Close" shut it.
+/// Escape or "Close" shut it. A right click on a building, a dwelling, a recruit button or a stack opens its information window (ADR-154).
 /// </summary>
 public partial class TownPanel : PanelContainer
 {
@@ -190,12 +191,13 @@ public partial class TownPanel : PanelContainer
             var available = town.AvailableOf(line.Id);
             var choice = choices.GetValueOrDefault(line.Id);
             var warning = choice is { ClosedLines.Count: > 0 } ? $"  ⚠ closes {string.Join(", ", choice.ClosedLines.Select(l => $"T{l.Tier} {l.Name}"))}" : "";
+            var dwellingLine = line;
             _dwellings.AddChild(new Label
             {
                 Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting, +{TownRules.WeeklyGrowth(state, town, line)}/week{warning}",
                 CustomMinimumSize = new Vector2(240, 0),
                 Modulate = warning.Length > 0 ? new Color(1f, 0.85f, 0.5f) : Colors.White,
-            });
+            }.WithInfo(detailed => InfoSheets.Dwelling(_session.State, town, dwellingLine, detailed)));
 
             var next = TownRules.NextDwellingLevel(state, town, line);
             var refusal = TownRules.CheckDwelling(state, town, line.Id);
@@ -219,6 +221,11 @@ public partial class TownPanel : PanelContainer
                 };
                 var id = creature?.Id;
                 recruit.Pressed += () => Recruit(town, id!, count);
+                if (id is not null)
+                {
+                    recruit.WithInfo(detailed => InfoSheets.Creature(_session.State, id, detailed));
+                }
+
                 _dwellings.AddChild(recruit);
             }
         }
@@ -312,6 +319,7 @@ public partial class TownPanel : PanelContainer
                     },
                 };
                 button.Pressed += () => Run(new BuildCommand(state.CurrentPlayer.Id, town.Id, building));
+                button.WithInfo(detailed => InfoSheets.Building(_session.State, town, building, detailed));
                 box.AddChild(button);
             }
         }
@@ -672,6 +680,11 @@ public partial class TownPanel : PanelContainer
                 ButtonPressed = _picked == target,
             };
             button.Pressed += () => Click(town, target, stack is not null);
+            if (stack is not null)
+            {
+                button.WithInfo(detailed => InfoSheets.Creature(_session.State, stack.Creature, detailed, InfoSheets.Known(stack)));
+            }
+
             row.AddChild(button);
         }
 
