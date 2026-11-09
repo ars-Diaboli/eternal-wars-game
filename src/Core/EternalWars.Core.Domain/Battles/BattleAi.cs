@@ -125,6 +125,46 @@ internal static class BattleAi
     }
 
     /// <summary>
+    /// A frenzied stack's turn (ADR-150), for any side: it goes for the nearest other stack, friend or foe (by the gap between the footprints, then
+    /// by id), that is not in Stasis or unseen by it. It shoots that stack when it can, else attacks it from the nearest placement, else walks to
+    /// the reachable placement closest to it; it defends when it can do none of them. Its hero does not cast during this turn.
+    /// </summary>
+    public static void ActFrenzied(BattleState battle, BattleEngine engine)
+    {
+        var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
+        var nearest = battle.LivingUnits
+            .Where(u => u != unit && BattleGrid.CanBeAttacked(unit, u, melee: false))
+            .OrderBy(u => unit.Rect.GapTo(u.Rect)).ThenBy(u => u.Id)
+            .FirstOrDefault();
+        if (nearest is not null)
+        {
+            if (BattleGrid.CanShoot(battle, unit, nearest, out _) && engine.Shoot(nearest.Id) is null)
+            {
+                return;
+            }
+
+            if (BattleGrid.AttackPositions(battle, unit, nearest) is { Count: > 0 } spots && engine.Attack(nearest.Id, spots[0]) is null)
+            {
+                return;
+            }
+
+            var gap = unit.Rect.GapTo(nearest.Rect);
+            var closer = BattleGrid.Reachable(battle, unit)
+                .Select(r => (Position: r.Key, Length: r.Value, Gap: unit.RectAt(r.Key).GapTo(nearest.Rect)))
+                .Where(r => r.Gap < gap)
+                .OrderBy(r => r.Gap).ThenBy(r => r.Length).ThenBy(r => r.Position.Y).ThenBy(r => r.Position.X)
+                .Select(r => (CellPosition?)r.Position)
+                .FirstOrDefault();
+            if (closer is { } to && engine.Move(to) is null)
+            {
+                return;
+            }
+        }
+
+        engine.Defend();
+    }
+
+    /// <summary>
     /// A walking attacker in a siege with no way in to a stack it could fight (ADR-120): it hits the standing gate when it can reach it, else it
     /// walks to the gate's bridge (the moat leaves the gate's rows open).
     /// </summary>
@@ -205,8 +245,11 @@ internal static class BattleAi
     /// <summary>What a buff or curse is worth a round, in percent of the stack's creature value (ADR-123, proposal).</summary>
     public const int EnchantPercentPerRound = 4;
 
-    /// <summary>The same for a spell that takes a stack's turns away or makes it act at random (Blind, Stasis, Confusion; proposal).</summary>
+    /// <summary>The same for a spell that takes a stack's turns away or makes it act at random (Blind, Stasis, Confusion, Frenzy; proposal).</summary>
     public const int ControlPercentPerRound = 10;
+
+    /// <summary>The same for a spell that makes the stack fight for the caster (Hypnotize, Puppet Master; ADR-150, proposal): its turns lost and won.</summary>
+    public const int TakenPercentPerRound = 20;
 
     /// <summary>The most rounds a lasting spell is counted for (a spell for the battle counts this many).</summary>
     public const int MaxValuedRounds = 5;
@@ -264,14 +307,17 @@ internal static class BattleAi
             return 0;
         }
 
-        var rounds = effect.Rounds switch
+        // A spell that lasts turns counts a round for each turn (ADR-150).
+        var rounds = (effect.Turns ?? effect.Rounds) switch
         {
             null => MaxValuedRounds,
             0 => 1,
             var r => Math.Min(MaxValuedRounds, r.Value),
         };
-        var control = m.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis | Magic.SpellStatus.Confused);
-        var value = StackValue(unit) * (control ? ControlPercentPerRound : EnchantPercentPerRound) * rounds / 100;
+        var percent = m.Has(Magic.SpellStatus.Controlled) ? TakenPercentPerRound
+            : m.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis | Magic.SpellStatus.Confused | Magic.SpellStatus.Frenzied) ? ControlPercentPerRound
+            : EnchantPercentPerRound;
+        var value = StackValue(unit) * percent * rounds / 100;
         if (m.Burn > 0)
         {
             value += Worth(unit, m.Burn * rounds);

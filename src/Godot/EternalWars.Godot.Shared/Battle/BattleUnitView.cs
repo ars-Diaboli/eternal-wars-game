@@ -50,7 +50,9 @@ public partial class BattleUnitView : Node3D
         Name = $"Unit_{unit}";
 
         var extent = Math.Max(width, height) * BattleSpace.CellSize;
-        var plateMaterial = new StandardMaterial3D { AlbedoColor = sideColor };
+        var plateMaterial = _plateMaterial;
+        plateMaterial.AlbedoColor = sideColor;
+        _noseMaterial.AlbedoColor = sideColor;
         AddChild(new MeshInstance3D
         {
             Mesh = width == height
@@ -87,7 +89,7 @@ public partial class BattleUnitView : Node3D
 
         Body.AddChild(new MeshInstance3D
         {
-            Mesh = new BoxMesh { Size = new Vector3(0.18f, 0.08f, 0.08f) * scale, Material = new StandardMaterial3D { AlbedoColor = sideColor } },
+            Mesh = new BoxMesh { Size = new Vector3(0.18f, 0.08f, 0.08f) * scale, Material = _noseMaterial },
             Position = new Vector3(facing * 0.24f * scale, bodyHeight + (0.12f * scale), 0),
         });
 
@@ -123,6 +125,26 @@ public partial class BattleUnitView : Node3D
         _bar.CastShadow = GeometryInstance3D.ShadowCastingSetting.Off;
         AddChild(_bar);
         SetHealth(creature.Health);
+    }
+
+    private readonly StandardMaterial3D _plateMaterial = new();
+    private readonly StandardMaterial3D _noseMaterial = new();
+
+    /// <summary>
+    /// The stack fights for another side now (a control spell, ADR-150): the plate and nose take that side's colour and the body turns to face
+    /// that side's enemy. Only creature stacks change sides.
+    /// </summary>
+    public void SetSide(BattleSide side, Color sideColor)
+    {
+        if (side == Side)
+        {
+            return;
+        }
+
+        Side = side;
+        _plateMaterial.AlbedoColor = sideColor;
+        _noseMaterial.AlbedoColor = sideColor;
+        Body.RotationDegrees = Body.RotationDegrees with { Y = Body.RotationDegrees.Y + 180 };
     }
 
     private const float BarWidth = 0.6f;

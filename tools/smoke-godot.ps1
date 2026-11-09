@@ -174,6 +174,10 @@ $scenarios = @(
     # A field zone (ADR-149): the same battle, Darkness cast on the computer mage's stack and drawn over its cells, still there in round 2.
     @{ Name = 'game-battle-zone'; App = 'EternalWars.Game'; Frames = 210; Map = $magicMap
        Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Darkness;114:click:1257,490;128:key:D;138:key:D;148:key:D;158:key:D;168:key:D;178:key:D;200:press:Surrender' },
+    # A control spell (ADR-150): the same battle, Hypnotize cast on the computer mage's stack, which turns to Magus' colour and side until its turn
+    # is over.
+    @{ Name = 'game-battle-control'; App = 'EternalWars.Game'; Frames = 200; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Hypnotize;114:click:1257,490;128:key:D;138:key:D;148:key:D;158:key:D;168:key:D;184:press:Surrender' },
     # A deployment step and war machines on the field (ADR-076), then Necromancy (ADR-078): the battle width (Tactics), Start, quick combat,
     # the result, then the Necromancy screen.
     @{ Name = 'game-necromancy'; App = 'EternalWars.Game'; Frames = 122; Map = $necromancyMap

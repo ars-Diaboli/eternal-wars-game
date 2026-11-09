@@ -73,7 +73,7 @@ chaos.brand,Brand,inferno,1,5,fire,fire;curse,,curse taken% 20 rounds 3,curse ta
 chaos.firebolt,Firebolt,inferno,1,5,fire,fire,,damage 45,damage 65,damage 65 burn 10 rounds 2,45 damage to an enemy stack
 chaos.ashwalk,Ashwalk,inferno,1,5,fire,,yes,,,,"until the end of the day the hero's army moves on lava, wasteland and cursed lands as native terrain"
 chaos.terror,Terror,inferno,2,9,air,mind,,curse no-attack rounds 2,curse no-attack rounds 2 targets 2,curse no-attack rounds 2 targets 3,"an enemy stack flees: it cannot attack, 2 rounds, and retaliates at half"
-chaos.frenzy,Frenzy,inferno,2,9,fire,mind,,,,,"an enemy stack attacks the nearest stack, friend or foe, on its next turn"
+chaos.frenzy,Frenzy,inferno,2,9,fire,mind,,curse frenzied turns 1,curse frenzied turns 2,curse frenzied taken% 20 turns 2,"an enemy stack attacks the nearest stack, friend or foe, on its next turn"
 chaos.fire-wall,Fire Wall,inferno,2,10,fire,fire,,zone line 5 enter 30 start 30 rounds 3,zone line 7 enter 30 start 30 rounds 3,zone line 5 wide 3 enter 30 start 30 rounds 3,"a line of 5 burning cells, 3 rounds; a stack entering or starting in it takes 30"
 chaos.hellgate,Hellgate,inferno,2,10,fire,summon,,summon inferno.imp 80,summon inferno.imp 120,summon inferno.familiar 120,"Inferno Imps for the battle, 80 health worth"
 chaos.blood-price,Blood Price,inferno,2,0,fire,,,,,,an own stack loses 10 % of its creatures (at least 1); the hero gains mana equal to the health lost / 5
@@ -95,9 +95,9 @@ shadow.darkness,Darkness,dungeon,2,10,earth,,,zone area 5 dims-shots rounds 3,zo
 shadow.night-terrors,Night Terrors,dungeon,2,9,fire,mind,,curse morale -2 no-retaliation rounds 2,curse morale -2 no-retaliation rounds 3,curse morale -2 no-retaliation rounds 3 targets 2,"an enemy stack −2 morale and loses retaliation, 2 rounds"
 shadow.eavesdrop,Eavesdrop,dungeon,2,8,air,,yes,,,,"shows the town screen (buildings, garrison, the hero inside) of an enemy town in sight"
 shadow.despair,Despair,dungeon,3,16,earth,mind,,curse morale -2 rounds battle,curse morale -2 rounds battle targets 2,curse morale -3 rounds battle enemies,an enemy stack −2 morale for the battle
-shadow.hypnotize,Hypnotize,dungeon,3,18,air,mind,,,,,the caster controls an enemy stack of up to 300 health for its next turn
+shadow.hypnotize,Hypnotize,dungeon,3,18,air,mind,,curse controlled health 300 turns 1,curse controlled health 450 turns 1,curse controlled health 450 turns 2,the caster controls an enemy stack of up to 300 health for its next turn
 shadow.eclipse,Eclipse,dungeon,3,16,air,,,curse initiative% -20 luck -1 rounds 2 enemies,curse initiative% -20 luck -1 rounds 3 enemies,curse initiative% -20 luck -1 attack -2 rounds 3 enemies,"every enemy stack −20 % initiative and −1 luck, 2 rounds"
 shadow.unseen,Unseen,dungeon,3,15,air,,,buff unseen rounds 2,buff unseen rounds 3,,"an own stack cannot be targeted by attacks or spells until it acts, 2 rounds"
 shadow.dark-bolt,Dark Bolt,dungeon,4,25,earth,,,damage 140,damage 140 burn 20 rounds 2,damage 140 burn 20 rounds 2 targets 2,"140 damage, ignores Defense"
-shadow.puppet-master,Puppet Master,dungeon,4,30,air,mind,,,,,an enemy stack fights for the caster for 2 rounds (not against its own hero's stacks once it would die)
+shadow.puppet-master,Puppet Master,dungeon,4,30,air,mind,,curse controlled rounds 2,curse controlled rounds 3,,an enemy stack fights for the caster for 2 rounds
 shadow.dimension-door,Dimension Door,dungeon,4,25,air,,yes,,,,"the hero moves up to 6 cells in a straight line to an explored tile, ignoring terrain and objects; once a day"

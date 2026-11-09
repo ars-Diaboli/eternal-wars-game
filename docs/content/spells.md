@@ -48,15 +48,21 @@ town creatures (and Conflux elementals).
   by **(1 + SP / 10)**, rounded down, at least 1 round. The tables give the **base** numbers (at SP 0); "a + b·SP" is gone. A spell specialty
   adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once
   (MAG-11). Areas are in battlefield cells (the field is 30 × 20; a Small creature is one cell, ADR-070).
-- **Built in battle** (ADR-123, ADR-149): 80 of the 91 battle spells work (the 11 adventure spells are cast on the map); still to come are
-  Martyrdom, Mirror Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Frenzy, Blood Price, Shadow Step, Hypnotize and Puppet
-  Master. `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
+- **Built in battle** (ADR-123, ADR-149, ADR-150): 83 of the 91 battle spells work (the 11 adventure spells are cast on the map); still to come
+  are Martyrdom, Mirror Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Blood Price and Shadow Step, and Puppet Master III's
+  split. `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
 - **Field zones** (ADR-149): Consecrate, Thornwall, Bone Wall, Fire Wall and Darkness leave cells on the field for their rounds, aimed with
   one click. A line runs down the field, centred on the aimed cell; zones are clipped to the field and may lie over stacks. Walls block walkers
   (a stack standing in one may walk out); flyers and teleporters pass over them. A walker takes Fire Wall's damage when its path crosses the
   fire, a flyer or teleporter only when it lands in it. "Starting in it" and "next to it" count as each round starts. Damage and healing grow
   with Spell Power when cast, like burning; durations too. Consecrate's 15 is not doubled by `holy` (the spell hits only undead and demons).
   Zone damage counts the creatures' immunities and spell resistance and the enemy hero's Spell resistance; war machines are untouched.
+- **Control** (ADR-150): Hypnotize and Puppet Master bring an enemy stack over to the caster's side: the caster's player (or AI) commands its
+  turns and the caster's hero gives it its skills, as for an own stack. When the spell ends (or is dispelled, or the stack dies) it is its
+  owner's again; its creatures always go back to their owner after the battle, and a side whose only stacks are taken stays in the battle.
+  A frenzied stack plays its turn by itself, for any side: it shoots or attacks the nearest other stack, friend or foe, or walks towards it.
+  "Turns" are the stack's own next turns, played or passed (Blind, Terror, bad morale); waiting does not use one. Spell Power lengthens turns
+  like rounds and grows Hypnotize's health limit like an amount; the enemy hero's Spell resistance shortens them.
 - **In battle** (ADR-070, ADR-071): the hero casts **at most one spell a round**, during the turn of one of the units it controls; casting
   does not use that unit's action. Spells may target war machines, which are `mechanical` and resist every `mind`, `poison` and healing spell.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`, `curse`, `blind`);
@@ -238,7 +244,7 @@ and takes control; its damage spell ignores armour.
 | 3 | **Eclipse** (`shadow.eclipse`) | 16 | air | – | every enemy stack −20 % initiative and −1 luck, 2 rounds | 3 rounds | also −2 Attack |
 | 3 | **Unseen** (`shadow.unseen`) | 15 | air | – | an own stack cannot be targeted by attacks or spells until it acts, 2 rounds | 3 rounds | it deals +25 % damage on its first attack out of hiding |
 | 4 | **Dark Bolt** (`shadow.dark-bolt`) | 25 | earth | – | 140 damage, ignores Defense | + 20 a round for 2 rounds | hits 2 stacks |
-| 4 | **Puppet Master** (`shadow.puppet-master`) | 30 | air | mind | an enemy stack fights for the caster for 2 rounds (not against its own hero's stacks once it would die) | 3 rounds | up to 600 health; the rest stays on its side |
+| 4 | **Puppet Master** (`shadow.puppet-master`) | 30 | air | mind | an enemy stack fights for the caster for 2 rounds | 3 rounds | up to 600 health; the rest stays on its side |
 | 4 | **Dimension Door** (`shadow.dimension-door`, adventure) | 25 | air | – | the hero moves up to 6 cells in a straight line to an explored tile, ignoring terrain and objects; once a day | 9 cells | twice a day |
 
 - *Blind*: the Dungeon's oldest trick: the dark is not the absence of light, it is a thing that can be thrown.

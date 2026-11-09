@@ -1335,3 +1335,33 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   the engine's `MakeZone`, `TickZones` and `MoveUnit`; `BattleGrid.Path` and the clearance; `BattleZoneCreated` and `BattleZoneExpired`, drawn by
   the 3D field and the 2D board. Battles are not saved as state (saves replay commands), so no save format change; replays of battles where a
   hero knew one of these spells may now differ (the AI casts them).
+
+### ADR-150: Control spells: Frenzy, Hypnotize, Puppet Master, and spells that last turns (ADR-099, ADR-122, ADR-123, 2026-11-09)
+
+- **Grammar**: the statuses `frenzied` and `controlled` (a curse on one stack only), `turns N` instead of `rounds N` for a buff or curse (the
+  stack's next N turns), and `health N` for a `controlled` spell (the most total health a stack may have to be taken; the cast is refused
+  otherwise).
+- **The spells** (spells.md's ranks): Frenzy `curse frenzied turns 1` (II 2 turns, III also `taken% 20`); Hypnotize
+  `curse controlled health 300 turns 1` (II 450, III 2 turns); Puppet Master `curse controlled rounds 2` (II 3 rounds). **Not built**: Puppet
+  Master III's split (up to 600 health comes over, the rest stays); rank III keeps rank II's effect. spells.md's "(not against its own hero's
+  stacks once it would die)" is dropped as unclear *(proposal)*: the puppet fights its own side's stacks like any enemy.
+- **Sides**: a stack has an `Owner` (the side it came with) and a `Side` (the side it fights for): the caster's while a `controlled` spell is on
+  it, else the owner's. Everything in the battle goes by `Side`: who commands its turns (a person or the AI), who may cast during them, its
+  friends and enemies, and the hero whose skills, morale, luck and artifacts count for it *(proposal, like HoMM3)*. The owner counts when the
+  battle ends: survivors, casualties, experience, Necromancy, a guard's count and the surrender price; and a side stays in the battle while it
+  owns a living creature stack, even one the enemy controls *(proposal)*. The control ends when the spell runs out, when a dispel takes it off
+  (the owner's Unravel or anyone's Dispel can free it; the caster's Purge cannot), or when the stack dies (`BattleUnitSideChanged` each time).
+- **Turns**: a spell that lasts turns lasts the stack's next N turns, played or passed (Blind, Stasis, Terror, bad morale); waiting does not use
+  one, and a morale extra action comes after the turn that used it. N grows with Spell Power and is cut by the enemy's Spell resistance like
+  rounds. Hypnotize's health limit grows with Spell Power like an amount *(proposal; HoMM3's limit grows too)*.
+- **Frenzy**: the frenzied stack's turn is played by itself, for any side (like Confusion): it goes for the nearest other stack, friend or foe
+  (the gap between footprints, then the id), not in Stasis or unseen by it; it shoots it when it can, else attacks it from the nearest
+  placement, else walks to the reachable placement nearest it, else defends. Every stack is its foe that turn (it cannot shoot with any stack
+  next to it; cleave and multi-head hit friends too); a friend it hits retaliates. Its hero does not cast during that turn.
+- **AI** *(proposal)*: Frenzy is valued like the other control curses (10 % of the stack's value a turn), Hypnotize and Puppet Master at 20 %
+  a turn or round; a controlled stack is played by its new side's AI like an own stack.
+- **Code**: `SpellStatus.Frenzied` and `Controlled`, `SpellEffect.Turns` and `HealthLimit`; `BattleUnit.Owner`, `Side` from the spells,
+  `ActiveSpell.TurnsLeft`, `BattleState.OwnedArmyOf`; `BattleMagic.Turns` and `HealthLimit`; the engine's `UseTurn` and `SideChanged`;
+  `BattleGrid.IsFoe`; `BattleAi.ActFrenzied`; `BattleSpellApplied.Turns` and `BattleUnitSideChanged`, which turns the 3D stack (plate, nose,
+  facing) and redraws the 2D board. No save format change (saves replay commands); replays of battles where a hero knew one of these spells
+  may now differ.

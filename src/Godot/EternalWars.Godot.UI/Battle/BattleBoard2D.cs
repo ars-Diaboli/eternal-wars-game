@@ -62,6 +62,7 @@ public partial class BattleBoard2D : Control
         this.SubscribeWhileInTree<BattleUnitSpellDamaged>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleZoneCreated>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleZoneExpired>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitSideChanged>(session.Events, _ => QueueRedraw());
     }
 
     public override void _Draw()

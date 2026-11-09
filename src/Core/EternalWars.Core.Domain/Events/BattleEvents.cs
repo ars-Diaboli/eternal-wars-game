@@ -149,13 +149,25 @@ public sealed record BattleSpellCast(BattleSide Side, string Spell, int? Target,
 /// <summary>A spell's damage to a stack (ADR-110); <paramref name="TopHealth"/> is its top creature's hit points afterwards (ADR-145).</summary>
 public sealed record BattleUnitSpellDamaged(int Unit, string Spell, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
 
-/// <summary>A buff or curse took hold on a stack until the end of round <paramref name="UntilRound"/> (ADR-110).</summary>
-public sealed record BattleSpellApplied(int Unit, string Spell, int UntilRound) : IEvent;
+/// <summary>
+/// A buff or curse took hold on a stack until the end of round <paramref name="UntilRound"/> (ADR-110); one that lasts turns (ADR-150) for the
+/// stack's next <paramref name="Turns"/> turns.
+/// </summary>
+public sealed record BattleSpellApplied(int Unit, string Spell, int UntilRound, int? Turns = null) : IEvent;
+
+/// <summary>
+/// A stack now fights for <paramref name="Side"/> (ADR-150): a control spell took it over, or let it go (it ran out, was dispelled, or the stack
+/// died).
+/// </summary>
+public sealed record BattleUnitSideChanged(int Unit, BattleSide Side) : IEvent;
 
 /// <summary>A stack in the spell's reach was not touched by it: immune, resisted, or not the kind it works on (ADR-110).</summary>
 public sealed record BattleSpellResisted(int Unit, string Spell) : IEvent;
 
-/// <summary>A buff or curse on a stack ran out as a round started (ADR-110), or ended early: Blind broken by a hit, Unseen by acting (ADR-123).</summary>
+/// <summary>
+/// A buff or curse on a stack ran out as a round started (ADR-110), or ended early: Blind broken by a hit, Unseen by acting (ADR-123), its last
+/// turn used (ADR-150).
+/// </summary>
 public sealed record BattleSpellExpired(int Unit, string Spell) : IEvent;
 
 /// <summary>A dispel (<paramref name="By"/>) took a spell off a stack (ADR-123).</summary>
