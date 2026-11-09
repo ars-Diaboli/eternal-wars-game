@@ -244,6 +244,34 @@ public sealed class GameState
         }
     }
 
+    /// <summary>
+    /// Game setup (ADR-159): who plays each player, a person (true) or the computer (false), in place of the map's defaults; players not named keep
+    /// theirs. Refused once the game started, for an unknown player, and when nobody would be a person.
+    /// </summary>
+    public void AssignControllers(IReadOnlyDictionary<PlayerId, bool> humans)
+    {
+        ArgumentNullException.ThrowIfNull(humans);
+        if (IsStarted)
+        {
+            throw new InvalidOperationException("Who plays a player can only be changed before the game starts.");
+        }
+
+        if (humans.Keys.Where(p => !HasPlayer(p)).Select(p => (PlayerId?)p).FirstOrDefault() is { } unknown)
+        {
+            throw new InvalidOperationException($"Unknown player {unknown}.");
+        }
+
+        if (!_players.Any(p => humans.TryGetValue(p.Id, out var human) ? human : p.IsHuman))
+        {
+            throw new InvalidOperationException("At least one player must be played by a person.");
+        }
+
+        foreach (var (player, human) in humans)
+        {
+            GetPlayer(player).IsHuman = human;
+        }
+    }
+
     /// <summary>The fewest teams a game of this map may have (ADR-070, ADR-117); null = no limit.</summary>
     public int? MinTeams { get; private set; }
 

@@ -186,6 +186,47 @@ public class SmokeMapTests
         return session;
     }
 
+    [Fact]
+    public void ArenaMap_AgainstTheComputer_DayTwoOpensTheBattleAtTheCombatPlace_AndItsWinnerWins()
+    {
+        var session = new GameSession(MapConverter.ToGameState(MapSerializer.Load(SmokeMap("arena.ewmap.json"))));
+        session.Start();
+        var state = session.State;
+        var place = Assert.Single(state.ObjectsOf<CombatPlace>());
+
+        Assert.True(state.Rules.Arena);
+        session.Execute(new EndTurnCommand(new PlayerId(0))).ThrowIfRejected();
+        new EternalWars.Core.Domain.AI.AdventureAi(session).PlayTurns(limit: 1); // Red prepares and ends day 1
+
+        Assert.Equal(2, state.Date.AbsoluteDay);
+        Assert.NotNull(state.Battle);
+        Assert.Equal(place.Id, state.Arena!.CombatPlace);
+        Assert.Matches(@"^Orrin \(Blue\) attacked \w+ \(Red\)\.$", state.Arena.Summary); // the AI may have hired a stronger hero on day 1
+        Assert.Equal(place.AttackCell, state.GetHero(new HeroId(1)).Position);
+        Assert.NotNull(session.Battles.Commander(BattleSide.Attacker)); // the human fights it by hand
+
+        session.Execute(new AutoResolveBattleCommand(new PlayerId(0))).ThrowIfRejected();
+
+        Assert.True(state.IsOver);
+        Assert.Single(state.Outcome!.Winners);
+        Assert.False(ScoreRules.IsRanked(state));
+    }
+
+    [Fact]
+    public void ArenaMap_HotSeat_TheSetupMakesBothPlayersPeople()
+    {
+        var state = MapConverter.ToGameState(MapSerializer.Load(SmokeMap("arena.ewmap.json")));
+
+        state.AssignControllers(new Dictionary<PlayerId, bool> { [new PlayerId(1)] = true });
+
+        Assert.All(state.Players, p => Assert.True(p.IsHuman));
+        Assert.Throws<InvalidOperationException>(() =>
+            state.AssignControllers(new Dictionary<PlayerId, bool> { [new PlayerId(0)] = false, [new PlayerId(1)] = false }));
+        Assert.Throws<InvalidOperationException>(() => state.AssignControllers(new Dictionary<PlayerId, bool> { [new PlayerId(5)] = true }));
+        new GameSession(state).Start();
+        Assert.Throws<InvalidOperationException>(() => state.AssignControllers(new Dictionary<PlayerId, bool> { [new PlayerId(1)] = false }));
+    }
+
     private static string SmokeMap(string name)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

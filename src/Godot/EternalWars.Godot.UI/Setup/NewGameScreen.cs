@@ -53,7 +53,7 @@ public sealed record RandomMapChoice(
 
 /// <summary>
 /// New-game setup: a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
-/// locks them (ADR-032). For a template (ADR-086): the size, the number of players, the hero limit (the template's by default, ADR-068) and for each
+/// locks them (ADR-032); on an arena map a line on the mode and, per player, Human or Computer (ADR-159). For a template (ADR-086): the size, the number of players, the hero limit (the template's by default, ADR-068) and for each
 /// player human or computer, town, hero, the start town's tier-1 dwelling (a human player with a picked town, when the start zone gives none; RMG-7)
 /// and team (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
 /// change something. Raises <see cref="Started"/> with the ready state; the app then builds the session and the world.
@@ -75,7 +75,9 @@ public partial class NewGameScreen : PanelContainer
     private readonly GridContainer _players = new() { Columns = 3 };
     private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm);
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) };
+    private readonly Label _arena = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0), Visible = false };
     private readonly Dictionary<PlayerId, SpinBox> _teams = [];
+    private readonly Dictionary<PlayerId, OptionButton> _controllers = [];
     private readonly Dictionary<int, OptionButton> _startTowns = [];
     private readonly List<RandomPlayerRow> _randomPlayers = [];
     private readonly List<Control> _randomRows = [];
@@ -121,6 +123,7 @@ public partial class NewGameScreen : PanelContainer
 
         _maps.ItemSelected += _ => ShowPlayers();
         Row(box, "Map", _maps);
+        box.AddChild(_arena);
         box.AddChild(_description);
         _randomRows.Add(_description);
         _randomRows.Add(Row(box, "Size", _size));
@@ -175,6 +178,11 @@ public partial class NewGameScreen : PanelContainer
         ShowPlayers();
     }
 
+    /// <summary>What an arena map is, under the map's name (ADR-097).</summary>
+    public const string ArenaLine =
+        "Arena: day 1 is preparation (heroes move nearly without limit, towns build as much as they can pay). At the start of day 2 each side's "
+        + "strongest hero meets at the combat place, and the winner of that one battle wins the game. Not ranked.";
+
     private FogMode SelectedFog => (FogMode)_fog.GetSelectedId();
 
     private ScenarioChoice? SelectedMap => _maps.Selected >= 0 && _maps.Selected < _choices.Count ? _choices[_maps.Selected] : null;
@@ -200,6 +208,7 @@ public partial class NewGameScreen : PanelContainer
         }
 
         _teams.Clear();
+        _controllers.Clear();
         _startTowns.Clear();
         _randomPlayers.Clear();
     }
@@ -208,6 +217,7 @@ public partial class NewGameScreen : PanelContainer
     private void ShowPlayers()
     {
         _status.Text = "";
+        _arena.Visible = false;
         var template = SelectedTemplate;
         foreach (var row in _randomRows)
         {
@@ -251,6 +261,9 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
+        // An arena map (ADR-097, ADR-159): its mode said in one line, and each player played by a person (hot-seat) or the computer.
+        _arena.Visible = preview.Rules.Arena;
+        _arena.Text = ArenaLine;
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
         _players.AddChild(new Label { Text = (preview.TeamsLocked ? "Team (locked by the map)" : "Team") + TeamCounts(preview.MinTeams, preview.MaxTeams) });
@@ -258,7 +271,19 @@ public partial class NewGameScreen : PanelContainer
         foreach (var player in preview.Players)
         {
             _players.AddChild(PlayerName(player.Name, player.Id));
-            _players.AddChild(new Label { Text = player.IsHuman ? "Human" : "Computer" });
+            if (preview.Rules.Arena)
+            {
+                var controller = new OptionButton();
+                controller.AddItem("Human", 1);
+                controller.AddItem("Computer", 0);
+                controller.Select(controller.GetItemIndex(player.IsHuman ? 1 : 0));
+                _players.AddChild(controller);
+                _controllers[player.Id] = controller;
+            }
+            else
+            {
+                _players.AddChild(new Label { Text = player.IsHuman ? "Human" : "Computer" });
+            }
             var team = new SpinBox { MinValue = 0, MaxValue = GameState.MaxPlayers - 1, Value = player.Team.Value, Editable = !preview.TeamsLocked };
             _players.AddChild(team);
             _teams[player.Id] = team;
@@ -400,6 +425,11 @@ public partial class NewGameScreen : PanelContainer
             if (!state.TeamsLocked)
             {
                 state.AssignTeams(_teams.ToDictionary(t => t.Key, t => new TeamId((int)t.Value.Value)));
+            }
+
+            if (_controllers.Count > 0)
+            {
+                state.AssignControllers(_controllers.ToDictionary(c => c.Key, c => c.Value.GetSelectedId() == 1));
             }
 
             Started?.Invoke(state);

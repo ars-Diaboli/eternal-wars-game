@@ -10,7 +10,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// what is left is to look at the map or go back to the main menu.
 /// A won game on a map that is not campaign-like also shows each human winner's score and rank title (ADR-101, <see cref="ScoreRules"/>): the
 /// winners type their names, and "Enter the ranking" (or leaving the panel) puts the game into the ranking table, which is then shown with the
-/// new rows highlighted. Every end screen offers "Save replay".
+/// new rows highlighted. Every end screen offers "Save replay"; an arena map's also says who fought and offers "Play again" (ADR-159).
 /// </summary>
 public partial class GameResultPanel : CenterContainer
 {
@@ -26,8 +26,13 @@ public partial class GameResultPanel : CenterContainer
     private Func<string, string> _saveReplay = _ => string.Empty;
     private bool _entered = true;
 
+    private readonly Button _playAgain = new() { Text = "Play again", Visible = false };
+
     /// <summary>The player asked to go back to the main menu (the game is entered into the ranking first).</summary>
     public event Action? MainMenuRequested;
+
+    /// <summary>"Play again" on an arena map's result screen (ADR-159): the same map with the same players, from the start.</summary>
+    public event Action? PlayAgainRequested;
 
     public GameResultPanel()
     {
@@ -58,6 +63,12 @@ public partial class GameResultPanel : CenterContainer
         rows.AddChild(_message);
 
         var leave = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
+        _playAgain.Pressed += () =>
+        {
+            Visible = false;
+            PlayAgainRequested?.Invoke();
+        };
+        leave.AddChild(_playAgain);
         var close = new Button { Text = "Look at the map" };
         close.Pressed += () =>
         {
@@ -104,6 +115,11 @@ public partial class GameResultPanel : CenterContainer
     public void ShowOutcome(GameState state, GameOutcome outcome)
     {
         var lines = new List<string> { outcome.Reason };
+        if (state.Arena?.Summary is { } arena)
+        {
+            lines.Add(arena);
+        }
+
         if (outcome.HasWinner)
         {
             lines.Add($"Winners: {string.Join(", ", outcome.Winners.Select(w => state.GetPlayer(w).Name))}");
@@ -111,10 +127,16 @@ public partial class GameResultPanel : CenterContainer
 
         lines.Add($"Day {outcome.Date.AbsoluteDay} ({outcome.Date})");
         var scores = ScoreRules.Scores(state);
-        if (outcome.HasWinner && scores.Count == 0 && state.Players.Any(p => p.IsHuman && outcome.Won(p.Id)))
+        if (state.Rules.Arena)
+        {
+            lines.Add("Arena maps are not ranked.");
+        }
+        else if (outcome.HasWinner && scores.Count == 0 && state.Players.Any(p => p.IsHuman && outcome.Won(p.Id)))
         {
             lines.Add("This map is not ranked.");
         }
+
+        _playAgain.Visible = state.Rules.Arena;
 
         _title.Text = Headline(state, outcome);
         _text.Text = string.Join('\n', lines);

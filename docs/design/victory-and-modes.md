@@ -60,9 +60,12 @@ In priority order:
     never retreats or surrenders.
   - **The end**: the battle's winner's team wins the game; retreat or surrender loses; both armies fallen is a **draw**, a loss for
     everyone, and so is a side without a hero (or no enemy to fight). A side without an army loses without a battle. Never ranked.
-  - *(planned)*: hot-seat and vs. the computer from the new-game screen, the battle screen showing both armies, the result screen, the AI's
-    preparation, the editor's switch, combat place and checks, objects showing what they hold on day 1, **three hand-made arena maps** (no
-    generator template), LAN.
+  - **In the game** (ADR-159): an arena map on the new-game screen says what the mode is, and each player is set to Human or Computer
+    (hot-seat, or against the computer; at least one human). Day 2's battle opens by itself, both armies shown in full, and the status line
+    names the two champions. The result screen tells who attacked whom, that arena maps are not ranked, and offers **"Play again"** (the
+    same map, players, teams, factions and options, a new seed) and "Save replay".
+  - *(planned)*: the AI's preparation, the editor's switch, combat place and checks, objects showing what they hold on day 1, **three
+    hand-made arena maps** on the new-game screen (no generator template), LAN.
 - **LAN multiplayer** *(planned before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓)*: the **host** runs the game and computer players; clients send
   commands and get only what they may see. Lobby (LAN discovery or address; map or random map, options, colours, computer players); battles
   between two remote humans are live; a dropped player pauses the game until the host hands it to the computer or the player rejoins; text

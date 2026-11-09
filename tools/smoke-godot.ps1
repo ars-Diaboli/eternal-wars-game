@@ -38,6 +38,7 @@ $grailMap = Join-Path $PSScriptRoot 'smoke/grail.ewmap.json'
 $magicMap = Join-Path $PSScriptRoot 'smoke/magic.ewmap.json'
 $necromancyMap = Join-Path $PSScriptRoot 'smoke/necromancy.ewmap.json'
 $siegeMagicMap = Join-Path $PSScriptRoot 'smoke/siege-magic.ewmap.json'
+$arenaMap = Join-Path $PSScriptRoot 'smoke/arena.ewmap.json'
 # A map generated from the v7 connection options (ADR-112): garrison, border guard and gate with keymasters, portal, optional connection.
 New-Item -ItemType Directory -Force $Out | Out-Null
 $connectionsMap = Join-Path (Resolve-Path $Out) 'connections.ewmap.json'
@@ -59,6 +60,10 @@ $scenarios = @(
     # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack.
     @{ Name = 'game-info-windows'; App = 'EternalWars.Game'; Frames = 42; Map = $exchangeMap
        Input = '3:key:Enter;10:rclick:800,445;16:click:1500,850;20:key:H;24:rclick:55,282;28:rclick:102,535;32:key:Escape;36:rclick:73,632' },
+    # An arena map against the computer (ADR-097, ADR-159): Blue ends day 1, Red prepares, day 2's battle opens by itself at the combat place;
+    # quick combat, the result screen (not ranked), then "Play again" starts the map anew.
+    @{ Name = 'game-arena'; App = 'EternalWars.Game'; Frames = 110; Map = $arenaMap
+       Input = '3:key:Enter;8:press:End turn;50:key:Q;75:key:Enter;85:press:Play again' },
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
