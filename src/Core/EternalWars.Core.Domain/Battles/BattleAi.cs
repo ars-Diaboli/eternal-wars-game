@@ -232,6 +232,8 @@ internal static class BattleAi
             case Magic.SpellEffectKind.Damage:
                 return BattleMagic.DamagePlan(battle, side, known, target, cell, creaturePower)
                     .Sum(h => (h.Unit.Side == side ? -1 : 1) * (Worth(h.Unit, h.Damage) + EnchantValue(battle, side, known, h.Unit)));
+            case Magic.SpellEffectKind.Zone:
+                return cell is { } at ? ZoneValue(battle, side, known, at, creaturePower) : 0;
         }
 
         var units = BattleMagic.Reach(battle, side, known, target, cell).Where(u => BattleMagic.Affects(battle, side, known, u)).ToList();
@@ -285,6 +287,30 @@ internal static class BattleAi
     }
 
     private static long StackValue(BattleUnit unit) => (long)unit.Count * unit.Creature.Value;
+
+    /// <summary>
+    /// What a field zone is worth (ADR-149, proposal): one round of what it does to the stacks standing in or next to it now, enemies for, own
+    /// against: its damage as a round starts, the tearing of a stack that walks out, its healing of own stacks. Blocking and darkening are not
+    /// valued, so the AI casts the walls and Darkness only for their damage.
+    /// </summary>
+    private static long ZoneValue(BattleState battle, BattleSide side, KnownSpell known, CellPosition cell, int? creaturePower)
+    {
+        var zone = new BattleZone(0, known, side, BattleZones.Cells(battle, known.Effect!, cell), battle.Round, BattleZones.Scaled(battle, side, known, creaturePower));
+        long value = 0;
+        foreach (var unit in battle.LivingUnits)
+        {
+            var inside = zone.Rect.Intersects(unit.Rect);
+            var amount = inside ? zone.Amounts.Start + zone.Amounts.Leave : unit.Rect.IsAdjacentTo(zone.Rect) ? zone.Amounts.Beside : 0;
+            if (amount > 0 && BattleZones.Hurts(battle, zone, unit))
+            {
+                value += (unit.Side == side ? -1 : 1) * Worth(unit, BattleZones.Damage(battle, zone, unit, amount));
+            }
+
+            value += Worth(unit, BattleZones.Healing(zone, unit));
+        }
+
+        return value;
+    }
 
     /// <summary>
     /// A creature caster's turn (ADR-120): it casts the aim worth most when that beats its own best blow or shot now; a buff goes on the most

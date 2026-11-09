@@ -178,11 +178,14 @@ public static class BattleMagic
 
     /// <summary>
     /// The square an area spell covers around its centre cell (the same size whatever the targets' sizes, ADR-072, MAG-11); for a column spell
-    /// (ADR-123) the columns around the cell's, the field's whole height.
+    /// (ADR-123) the columns around the cell's, the field's whole height; for a zone's line (ADR-149) its width and length around the cell, running
+    /// down the field.
     /// </summary>
     public static CellRect Area(SpellEffect effect, CellPosition centre) => effect.Column
         ? new(centre.X - (effect.AreaSize / 2), 0, effect.AreaSize, BattleState.Height)
-        : new(centre.X - (effect.AreaSize / 2), centre.Y - (effect.AreaSize / 2), effect.AreaSize, effect.AreaSize);
+        : effect.AreaHeight > 0
+            ? new(centre.X - (effect.AreaSize / 2), centre.Y - (effect.AreaHeight / 2), effect.AreaSize, effect.AreaHeight)
+            : new(centre.X - (effect.AreaSize / 2), centre.Y - (effect.AreaSize / 2), effect.AreaSize, effect.AreaSize);
 
     /// <summary>
     /// An own stack destroyed in this battle that a <c>fallen</c> revive may bring back (ADR-123): not a war machine or a summoned stack, and its

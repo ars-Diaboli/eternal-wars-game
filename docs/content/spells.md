@@ -48,9 +48,15 @@ town creatures (and Conflux elementals).
   by **(1 + SP / 10)**, rounded down, at least 1 round. The tables give the **base** numbers (at SP 0); "a + b·SP" is gone. A spell specialty
   adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once
   (MAG-11). Areas are in battlefield cells (the field is 30 × 20; a Small creature is one cell, ADR-070).
-- **Built in battle** (ADR-123): 75 of the 91 battle spells work (the 11 adventure spells are cast on the map); still to come are Consecrate,
-  Martyrdom, Thornwall, Mirror Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Bone Wall, Frenzy, Fire Wall, Blood Price, Shadow
-  Step, Darkness, Hypnotize and Puppet Master. `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
+- **Built in battle** (ADR-123, ADR-149): 80 of the 91 battle spells work (the 11 adventure spells are cast on the map); still to come are
+  Martyrdom, Mirror Image, Teleport, Clockwork Precision, Drain Life, Raise Dead, Frenzy, Blood Price, Shadow Step, Hypnotize and Puppet
+  Master. `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
+- **Field zones** (ADR-149): Consecrate, Thornwall, Bone Wall, Fire Wall and Darkness leave cells on the field for their rounds, aimed with
+  one click. A line runs down the field, centred on the aimed cell; zones are clipped to the field and may lie over stacks. Walls block walkers
+  (a stack standing in one may walk out); flyers and teleporters pass over them. A walker takes Fire Wall's damage when its path crosses the
+  fire, a flyer or teleporter only when it lands in it. "Starting in it" and "next to it" count as each round starts. Damage and healing grow
+  with Spell Power when cast, like burning; durations too. Consecrate's 15 is not doubled by `holy` (the spell hits only undead and demons).
+  Zone damage counts the creatures' immunities and spell resistance and the enemy hero's Spell resistance; war machines are untouched.
 - **In battle** (ADR-070, ADR-071): the hero casts **at most one spell a round**, during the turn of one of the units it controls; casting
   does not use that unit's action. Spells may target war machines, which are `mechanical` and resist every `mind`, `poison` and healing spell.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`, `curse`, `blind`);

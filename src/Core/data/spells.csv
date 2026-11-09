@@ -8,7 +8,7 @@ light.heal,Heal,haven,2,9,water,,,heal 40,heal 60,,an own stack regains 40 healt
 light.righteous-might,Righteous Might,haven,2,8,fire,,,buff attack 3 rounds 3,buff attack 5 rounds 3,buff attack 5 rounds 3 allies,"an own stack +3 Attack, 3 rounds"
 light.deflect-missiles,Deflect Missiles,haven,2,9,air,,,buff ranged-taken% -40 rounds 3,buff ranged-taken% -50 rounds 3,buff ranged-taken% -50 rounds 3 allies,"an own stack takes −40 % ranged damage, 3 rounds"
 light.vigil,Vigil,haven,2,8,fire,,,buff vigil rounds 0,buff vigil rounds 1,buff vigil rounds 0 allies,an own stack retaliates against every attack this round
-light.consecrate,Consecrate,haven,2,10,fire,holy,,,,,"a 3 × 3 area: enemy undead and demons in it take 15 a round, 3 rounds"
+light.consecrate,Consecrate,haven,2,10,fire,holy,,zone area 3 start 15 undead-demon spare-own rounds 3,zone area 5 start 15 undead-demon spare-own rounds 3,zone area 5 start 15 heal 10 undead-demon spare-own rounds 3,"a 3 × 3 area: enemy undead and demons in it take 15 a round, 3 rounds"
 light.smite,Smite,haven,3,16,fire,holy,,damage 80,damage 80 splash 50,damage 80 splash 50 pierce,"80 damage to an enemy stack, double to undead and demons"
 light.prayer,Prayer,haven,3,16,water,,,buff attack 2 defense 2 speed 2 rounds 3,buff attack 2 defense 2 speed 2 rounds 3 allies,buff attack 3 defense 3 speed 3 rounds 3 allies,"an own stack +2 Attack, Defense and speed, 3 rounds"
 light.martyrdom,Martyrdom,haven,3,14,earth,,,,,,"an own stack takes half of the damage meant for another own stack, 3 rounds"
@@ -24,7 +24,7 @@ nature.pathfinders-call,Pathfinder's Call,sylvan,1,5,earth,,yes,,,,"until the en
 nature.regrowth,Regrowth,sylvan,2,9,water,,,buff regen 15 rounds 3,buff regen 15 rounds 3 allies,buff regen 15 rounds 5 allies,"an own stack regains 15 health at the start of each round, 3 rounds"
 nature.call-lightning,Call Lightning,sylvan,2,10,air,lightning,,damage 60,damage 80,damage 80 chain 1,60 damage to an enemy stack
 nature.fleetfoot,Fleetfoot,sylvan,2,8,air,,,buff speed 2 phase rounds 0,buff speed 2 phase rounds 1,buff speed 2 phase rounds 0 allies,an own stack +2 speed and can pass through other stacks this round
-nature.thornwall,Thornwall,sylvan,2,10,earth,,,,,,"a line of 5 cells of thorns, 3 rounds: blocks movement, a stack walking out of it takes 20"
+nature.thornwall,Thornwall,sylvan,2,10,earth,,,zone line 5 blocks leave 20 rounds 3,zone line 7 blocks leave 20 rounds 3,zone line 7 blocks blocks-shots leave 20 rounds 3,"a line of 5 cells of thorns, 3 rounds: blocks movement, a stack walking out of it takes 20"
 nature.view-terrain,View Terrain,sylvan,2,9,earth,,yes,,,,"reveals the map around the hero, radius 12, until the next turn"
 nature.swarm,Swarm,sylvan,3,16,air,,,curse attack -3 defense -3 rounds 3,curse attack -3 defense -3 rounds 3 targets 2,curse attack -3 defense -3 rounds 3 enemies,"a cloud of insects: an enemy stack −3 Attack and Defense, 3 rounds"
 nature.summon-pack,Call the Herd,sylvan,3,16,air,summon,,summon sylvan.pegasus 150,summon sylvan.pegasus 220,summon sylvan.silver-pegasus 220,"a stack of Sylvan Pegasi for the battle, 150 health worth"
@@ -63,7 +63,7 @@ death.ledger-of-ages,Ledger of Ages,necropolis,2,10,air,,yes,,,,shows the next w
 death.raise-dead,Raise Dead,necropolis,3,16,earth,,,,,,"after the battle, skeletons worth 15 % of the slain enemies' health join the army (on top of Necromancy)"
 death.death-ripple,Death Ripple,necropolis,3,16,earth,,,damage 30 all living,damage 45 all living,damage 45 enemies living,every living stack on the battlefield takes 30 (own too)
 death.call-the-debt,Call the Debt,necropolis,3,18,fire,curse,,damage 0 debt% 50,damage 0 debt% 70,damage 0 debt% 70 targets 2,an enemy stack takes 50 % of the damage it has dealt this battle
-death.bone-wall,Bone Wall,necropolis,3,15,earth,,,,,,"a line of 5 cells of bone, 3 rounds: blocks movement and shots; own undead walk through it"
+death.bone-wall,Bone Wall,necropolis,3,15,earth,,,zone line 5 blocks blocks-shots own-undead rounds 3,zone line 7 blocks blocks-shots own-undead rounds 3,zone line 7 blocks blocks-shots own-undead beside 20 living spare-own rounds 3,"a line of 5 cells of bone, 3 rounds: blocks movement and shots; own undead walk through it"
 death.plague,Plague,necropolis,4,25,water,poison,,curse decay% 5 rounds 3 living,curse decay% 5 rounds 3 living targets 2,curse decay% 5 rounds 3 enemies living,"an enemy stack loses 5 % of its creatures each round, 3 rounds; living only"
 death.vampirism,Vampirism,necropolis,4,25,water,,,buff lifesteal% 30 rounds 3,buff lifesteal% 50 rounds 3,buff lifesteal% 30 rounds 3 allies,"an own stack heals 30 % of the damage it deals and can revive its dead, 3 rounds"
 death.final-reckoning,Final Reckoning,necropolis,4,30,earth,,,slay 10 all living,slay 15 all living,slay 15 enemies living,every living stack loses 10 % of its creatures (own too; at least 1)
@@ -74,7 +74,7 @@ chaos.firebolt,Firebolt,inferno,1,5,fire,fire,,damage 45,damage 65,damage 65 bur
 chaos.ashwalk,Ashwalk,inferno,1,5,fire,,yes,,,,"until the end of the day the hero's army moves on lava, wasteland and cursed lands as native terrain"
 chaos.terror,Terror,inferno,2,9,air,mind,,curse no-attack rounds 2,curse no-attack rounds 2 targets 2,curse no-attack rounds 2 targets 3,"an enemy stack flees: it cannot attack, 2 rounds, and retaliates at half"
 chaos.frenzy,Frenzy,inferno,2,9,fire,mind,,,,,"an enemy stack attacks the nearest stack, friend or foe, on its next turn"
-chaos.fire-wall,Fire Wall,inferno,2,10,fire,fire,,,,,"a line of 5 burning cells, 3 rounds; a stack entering or starting in it takes 30"
+chaos.fire-wall,Fire Wall,inferno,2,10,fire,fire,,zone line 5 enter 30 start 30 rounds 3,zone line 7 enter 30 start 30 rounds 3,zone line 5 wide 3 enter 30 start 30 rounds 3,"a line of 5 burning cells, 3 rounds; a stack entering or starting in it takes 30"
 chaos.hellgate,Hellgate,inferno,2,10,fire,summon,,summon inferno.imp 80,summon inferno.imp 120,summon inferno.familiar 120,"Inferno Imps for the battle, 80 health worth"
 chaos.blood-price,Blood Price,inferno,2,0,fire,,,,,,an own stack loses 10 % of its creatures (at least 1); the hero gains mana equal to the health lost / 5
 chaos.inferno,Inferno,inferno,3,16,fire,fire,,damage 100 burn 15 rounds 3,damage 100 burn 15 rounds 3 targets 2,damage 100 burn 15 rounds 3 targets 3,"100 damage to a stack, burning 15 a round, 3 rounds"
@@ -91,7 +91,7 @@ shadow.shadow-dart,Shadow Dart,dungeon,1,5,air,,,damage 30,damage 45,damage 45 t
 shadow.veil,Veil,dungeon,1,5,air,,yes,,,,"the hero's army shows only as ""a few"", ""many"" … to other players, a week"
 shadow.shadow-step,Shadow Step,dungeon,2,9,air,,,,,,moves an own stack to a free cell in shadow (not next to an enemy)
 shadow.confusion,Confusion,dungeon,2,9,water,mind,,curse confused rounds 1,curse confused rounds 2,curse confused rounds 2 targets 2,"an enemy stack moves and attacks at random, 1 round"
-shadow.darkness,Darkness,dungeon,2,10,earth,,,,,,"a 5 × 5 area: shots into or out of it are halved, 3 rounds"
+shadow.darkness,Darkness,dungeon,2,10,earth,,,zone area 5 dims-shots rounds 3,zone area 7 dims-shots rounds 3,zone area 7 dims-shots defense 2 rounds 3,"a 5 × 5 area: shots into or out of it are halved, 3 rounds"
 shadow.night-terrors,Night Terrors,dungeon,2,9,fire,mind,,curse morale -2 no-retaliation rounds 2,curse morale -2 no-retaliation rounds 3,curse morale -2 no-retaliation rounds 3 targets 2,"an enemy stack −2 morale and loses retaliation, 2 rounds"
 shadow.eavesdrop,Eavesdrop,dungeon,2,8,air,,yes,,,,"shows the town screen (buildings, garrison, the hero inside) of an enemy town in sight"
 shadow.despair,Despair,dungeon,3,16,earth,mind,,curse morale -2 rounds battle,curse morale -2 rounds battle targets 2,curse morale -3 rounds battle enemies,an enemy stack −2 morale for the battle

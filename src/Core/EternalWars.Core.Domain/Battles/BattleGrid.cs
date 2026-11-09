@@ -50,8 +50,71 @@ public static class BattleGrid
     /// Walkers: the shortest path at any angle (Theta*: a path may go straight on from an earlier placement when the line from there is clear).
     /// Flyers and teleporters: the straight-line distance.
     /// </summary>
-    public static IReadOnlyDictionary<CellPosition, int> Reachable(BattleState battle, BattleUnit unit)
+    public static IReadOnlyDictionary<CellPosition, int> Reachable(BattleState battle, BattleUnit unit) => Search(battle, unit, out _);
+
+    /// <summary>
+    /// The placements the unit passes on its way to <paramref name="to"/>, from where it stands to <paramref name="to"/> (ADR-149): for a walker
+    /// every placement its top-left cell goes through along the path <see cref="Reachable"/> found; for a flyer or teleporter only the two ends.
+    /// Empty when it cannot get there.
+    /// </summary>
+    public static IReadOnlyList<CellPosition> Path(BattleState battle, BattleUnit unit, CellPosition to)
     {
+        var reach = Search(battle, unit, out var parent);
+        if (!reach.ContainsKey(to))
+        {
+            return [];
+        }
+
+        if (unit.MovesFreely || to == unit.Position)
+        {
+            return to == unit.Position ? [to] : [unit.Position, to];
+        }
+
+        var corners = new List<CellPosition> { to };
+        while (corners[^1] != unit.Position)
+        {
+            corners.Add(parent[corners[^1]]);
+        }
+
+        corners.Reverse();
+        var path = new List<CellPosition> { unit.Position };
+        for (var i = 1; i < corners.Count; i++)
+        {
+            path.AddRange(LinePlacements(corners[i - 1], corners[i]));
+        }
+
+        return path;
+    }
+
+    /// <summary>The placements a footprint's top-left cell steps through going straight from one placement to another (not the first), as in <c>IsClearLine</c>.</summary>
+    private static IEnumerable<CellPosition> LinePlacements(CellPosition from, CellPosition to)
+    {
+        int nx = Math.Abs(to.X - from.X), ny = Math.Abs(to.Y - from.Y);
+        int sx = Math.Sign(to.X - from.X), sy = Math.Sign(to.Y - from.Y);
+        var (x, y) = (from.X, from.Y);
+        for (int ix = 0, iy = 0; ix < nx || iy < ny;)
+        {
+            var decision = ((1 + (2L * ix)) * ny) - ((1 + (2L * iy)) * nx);
+            if (decision == 0)
+            {
+                (x, y, ix, iy) = (x + sx, y + sy, ix + 1, iy + 1);
+            }
+            else if (decision < 0)
+            {
+                (x, ix) = (x + sx, ix + 1);
+            }
+            else
+            {
+                (y, iy) = (y + sy, iy + 1);
+            }
+
+            yield return new CellPosition(x, y);
+        }
+    }
+
+    private static Dictionary<CellPosition, int> Search(BattleState battle, BattleUnit unit, out Dictionary<CellPosition, CellPosition> parent)
+    {
+        parent = new Dictionary<CellPosition, CellPosition> { [unit.Position] = unit.Position };
         var clearance = new Clearance(battle, unit);
         var size = unit.Size;
         var limit = MoveLimit(battle, unit);
@@ -86,7 +149,6 @@ public static class BattleGrid
         var moatStops = SiegeRules.FearsMoat(battle, unit.Side) && !siege!.InMoat(unit.Rect);
         bool StopsAt(CellPosition p) => moatStops && siege!.InMoat(unit.RectAt(p));
 
-        var parent = new Dictionary<CellPosition, CellPosition> { [start] = start };
         var done = new HashSet<CellPosition>();
         var frontier = new PriorityQueue<CellPosition, (int Length, int Y, int X)>();
         frontier.Enqueue(start, (0, start.Y, start.X));
@@ -188,7 +250,7 @@ public static class BattleGrid
         }
 
         penaltyEighths = RangedPenaltyEighths(battle, unit, target);
-        return penaltyEighths <= BattleState.MaxRangedPenaltyEighths;
+        return penaltyEighths <= BattleState.MaxRangedPenaltyEighths && !BattleZones.BlocksShot(battle, unit, target);
     }
 
     /// <summary>
@@ -393,10 +455,20 @@ public static class BattleGrid
             var walls = battle.Siege?.Structures
                 .Where(s => s.IsStanding && s.OnField && (s.Kind == SiegeStructureKind.Wall || mover.Side == BattleSide.Attacker))
                 .Select(s => s.Rect) ?? [];
+            // Blocking zones (ADR-149) keep walkers out, but a stack already standing in one may step out over its own cells.
+            var own = battle.Units.Contains(mover) ? mover.Rect : default;
             foreach (var rect in battle.Obstacles.Select(o => o.Rect).Concat(walls)
                          .Concat(ignoreUnits ? [] : battle.LivingUnits.Where(u => u != mover).Select(u => u.Rect)))
             {
                 foreach (var cell in rect.Cells().Where(c => c.X >= 0 && c.Y >= 0 && c.X < battle.Width && c.Y < BattleState.Height))
+                {
+                    blocked[cell.X, cell.Y] = true;
+                }
+            }
+
+            foreach (var zone in battle.Zones.Where(z => BattleZones.Blocks(z, mover)))
+            {
+                foreach (var cell in zone.Rect.Cells().Where(c => !own.Contains(c)))
                 {
                     blocked[cell.X, cell.Y] = true;
                 }

@@ -12,7 +12,7 @@ namespace EternalWars.Godot.UI.Battle;
 /// <summary>
 /// Top-down debug view of the current battle (2D harness): grid, obstacles, units with their counts, the active
 /// unit and, for a human-commanded unit, where it can move; during the deployment step (ADR-072) the deployer's zone; in a siege the walls, gate
-/// and moat (ADR-106). Shown while a battle runs, hidden afterwards.
+/// and moat (ADR-106); the spells' field zones (ADR-149). Shown while a battle runs, hidden afterwards.
 /// Clicks are reported through <see cref="CellClicked"/>; the app maps them to battle commands.
 /// </summary>
 public partial class BattleBoard2D : Control
@@ -60,6 +60,8 @@ public partial class BattleBoard2D : Control
         this.SubscribeWhileInTree<SiegeStructureShot>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitSpellDamaged>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleZoneCreated>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleZoneExpired>(session.Events, _ => QueueRedraw());
     }
 
     public override void _Draw()
@@ -96,6 +98,12 @@ public partial class BattleBoard2D : Control
         foreach (var obstacle in battle.Obstacles)
         {
             DrawRect(ToRect(obstacle.Rect).Grow(-1), new Color(0.35f, 0.30f, 0.25f));
+        }
+
+        // Field zones (ADR-149) under the stacks.
+        foreach (var zone in battle.Zones)
+        {
+            DrawRect(ToRect(zone.Rect), ZoneLook.Of(zone.Spell));
         }
 
         // A siege (ADR-106) in the town's colours (ADR-144): the moat, then the wall sections and the gate on the wall line; the keep and towers
