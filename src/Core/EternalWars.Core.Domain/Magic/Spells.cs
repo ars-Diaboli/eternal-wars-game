@@ -62,7 +62,8 @@ public enum DispelScope
 /// <c>no-retaliation</c>, <c>fearless</c> (Terror does not take hold), <c>vigil</c> (retaliates against every attack), <c>true-shot</c> (no distance
 /// penalty or cover), <c>sanctuary</c> (cannot be attacked in melee), <c>stasis</c> (no turns, cannot be attacked or harmed by spells),
 /// <c>unseen</c> (cannot be attacked or aimed at by the enemy until it acts), <c>phase</c> (moves like a flyer), <c>ward-mind</c> (immune to
-/// <c>mind</c> spells).
+/// <c>mind</c> spells). ADR-150: <c>frenzied</c> (its turn attacks the nearest stack, friend or foe), <c>controlled</c> (it fights for the
+/// spell's caster: Hypnotize, Puppet Master).
 /// </summary>
 [Flags]
 public enum SpellStatus
@@ -82,6 +83,8 @@ public enum SpellStatus
     Unseen = 1 << 11,
     Phase = 1 << 12,
     WardMind = 1 << 13,
+    Frenzied = 1 << 14,
+    Controlled = 1 << 15,
 }
 
 /// <summary>Whom a spell reaches: one stack, a square area, every stack of the target side, or every stack on the field.</summary>
@@ -166,6 +169,8 @@ public sealed record ZoneEffect(
 /// ADR-149: <c>zone area N|line N [wide W] [enter N] [start N] [leave N] [beside N] [heal N] [blocks] [blocks-shots] [own-undead] [dims-shots]
 /// [defense N] [filter] [spare-own] rounds N</c> (a line runs down the field, centred on the aimed cell; <see cref="ZoneEffect"/>; the filter and
 /// <c>spare-own</c> choose whom its damage hits, <c>defense</c> is for own stacks in it).
+/// ADR-150: a buff or curse may last <c>turns N</c> instead of rounds (the stack's next N turns, played or passed); <c>health N</c> (with
+/// <c>controlled</c>) is the most total health a stack may have to be taken.
 /// </summary>
 public sealed record SpellEffect(
     SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
@@ -212,6 +217,12 @@ public sealed record SpellEffect(
 
     /// <summary>What a field zone does (ADR-149); null for every other kind.</summary>
     public ZoneEffect? Zone { get; init; }
+
+    /// <summary>A buff or curse that lasts the stack's next this many turns instead of rounds (ADR-150; Frenzy, Hypnotize); null for rounds.</summary>
+    public int? Turns { get; init; }
+
+    /// <summary>The most total health a stack may have for a <c>controlled</c> spell to take it (Hypnotize, ADR-150), at Spell Power 0; 0 for none.</summary>
+    public int HealthLimit { get; init; }
 
     /// <summary>
     /// Damage, curses, kills, the enemy's dispel and field zones work on the enemy (damage to the whole field or an area hits own stacks too; a zone
@@ -277,6 +288,7 @@ public sealed record SpellEffect(
         var (lineLength, wide) = (0, 0);
         var zone = new ZoneEffect();
         var zoneWords = false;
+        var (turns, healthLimit) = ((int?)null, 0);
         while (i < tokens.Length)
         {
             var token = tokens[i++];
@@ -386,6 +398,13 @@ public sealed record SpellEffect(
                     rounds = length == "battle" ? null : Number(length);
                     hasRounds = true;
                     break;
+                case "turns":
+                    turns = Number(Next());
+                    hasRounds = true;
+                    break;
+                case "health":
+                    healthLimit = Number(Next());
+                    break;
                 case "walls":
                     walls = Number(Next());
                     break;
@@ -448,6 +467,22 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': 'line', 'wide' and the zone words are for zones");
         }
 
+        if (turns is { } t && (t < 1 || rounds is not null || kind is not (SpellEffectKind.Buff or SpellEffectKind.Curse)
+                               || tokens.Count(w => w is "turns" or "rounds") > 1))
+        {
+            throw new FormatException($"'{text}': 'turns N' (at least 1) is for a buff or curse, instead of its rounds");
+        }
+
+        if (healthLimit != 0 && (healthLimit < 1 || !modifiers.Has(SpellStatus.Controlled)))
+        {
+            throw new FormatException($"'{text}': 'health N' (at least 1) is for a 'controlled' spell");
+        }
+
+        if (modifiers.Has(SpellStatus.Controlled | SpellStatus.Frenzied) && (kind != SpellEffectKind.Curse || reach != SpellReach.Stack || targets > 1))
+        {
+            throw new FormatException($"'{text}': 'controlled' and 'frenzied' are for a curse on one stack");
+        }
+
         var height = 0;
         if (kind == SpellEffectKind.Zone)
         {
@@ -482,6 +517,8 @@ public sealed record SpellEffect(
             Dispels = dispels,
             AreaHeight = height,
             Zone = kind == SpellEffectKind.Zone ? zone : null,
+            Turns = turns,
+            HealthLimit = healthLimit,
         };
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");
@@ -504,6 +541,8 @@ public sealed record SpellEffect(
         ["unseen"] = SpellStatus.Unseen,
         ["phase"] = SpellStatus.Phase,
         ["ward-mind"] = SpellStatus.WardMind,
+        ["frenzied"] = SpellStatus.Frenzied,
+        ["controlled"] = SpellStatus.Controlled,
     };
 
     private static int Number(string text) =>

@@ -205,7 +205,18 @@ public partial class BattleView3D : Node3D
 
             Narrate($"{SpellName(e.Spell)} fades.");
         }));
-        this.SubscribeWhileInTree<BattleSpellApplied>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} until round {e.UntilRound}.")));
+        this.SubscribeWhileInTree<BattleSpellApplied>(events, e => Step(null, () => Narrate(e.Turns is { } turns
+            ? $"{SpellName(e.Spell)} on {NameOf(e.Unit)} for its next {(turns == 1 ? "turn" : $"{turns} turns")}."
+            : $"{SpellName(e.Spell)} on {NameOf(e.Unit)} until round {e.UntilRound}.")));
+        this.SubscribeWhileInTree<BattleUnitSideChanged>(events, e => Step(null, () =>
+        {
+            if (_units.TryGetValue(e.Unit, out var view))
+            {
+                view.SetSide(e.Side, SideColor(e.Side));
+            }
+
+            Narrate($"{NameOf(e.Unit)} now fights for {SideName(e.Side)}.");
+        }));
         this.SubscribeWhileInTree<BattleSpellResisted>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} is untouched by {SpellName(e.Spell)}.")));
         this.SubscribeWhileInTree<BattleSpellExpired>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} wears off.")));
         this.SubscribeWhileInTree<BattleRageGained>(events, e => Step(null, () => Narrate($"Blood Rage: {NameOf(e.Unit)} has +{e.Attack} Attack.")));

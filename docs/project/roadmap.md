@@ -8,8 +8,8 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 
 **Where we are (2026-11-09)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 11 battle spells (the field zones are in, ADR-149); sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133). The views built but never run were seen in Godot (ADR-148).
-**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: the last 11 battle
+except 8 battle spells (the field zones and control spells are in, ADR-149, ADR-150); sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133). The views built but never run were seen in Godot (ADR-148).
+**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: the last 8 battle
 spells, presentation; the few views not yet seen (below) when those spells or a game bring them up.
 
 ## Open checks in Godot
@@ -140,9 +140,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       spells, info adventure spells, guild spells fixed by the map (ADR-123); spell resistance, specialties, elements (ADR-071, ADR-072,
       ADR-099, ADR-106)
 - [x] Field zones: Consecrate, Thornwall, Bone Wall, Fire Wall, Darkness, at all three ranks (ADR-149)
-- [ ] Spell table, the rest: the battle spells that need copies, control changes or two-click aiming (Martyrdom, Mirror Image, Teleport,
-      Clockwork Precision, Drain Life, Raise Dead, Frenzy, Blood Price, Shadow Step, Hypnotize, Puppet Master), the rank changes ADR-123 lists
-      as not built, final numbers after the visuals
+- [x] Control spells: Frenzy, Hypnotize, Puppet Master (rank III's split not built), spells that last turns (ADR-150)
+- [ ] Spell table, the rest: the battle spells that need copies or two-click aiming (Martyrdom, Mirror Image, Teleport, Clockwork Precision,
+      Drain Life, Raise Dead, Blood Price, Shadow Step), the rank changes ADR-123 and ADR-150 list as not built, final numbers after the visuals
 
 ### Combat additions
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges

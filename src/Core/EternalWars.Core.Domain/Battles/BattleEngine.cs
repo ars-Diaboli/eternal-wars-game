@@ -49,7 +49,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     public string? Attack(int targetId, CellPosition? from)
     {
         var unit = battle.ActiveUnit!;
-        if (battle.FindUnit(targetId) is not { IsAlive: true } target || target.Side == unit.Side)
+        if (battle.FindUnit(targetId) is not { IsAlive: true } target || !BattleGrid.IsFoe(unit, target))
         {
             return "Not a living enemy.";
         }
@@ -607,12 +607,14 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                         Revive(unit, spellId, BattleMagic.Amount(battle, side, known, creaturePower), effect.Lasting);
                         break;
                     case Magic.SpellEffectKind.Dispel:
+                        var sided = unit.Side;
                         foreach (var removed in BattleMagic.Dispelled(side, effect, unit))
                         {
                             unit.MutableSpells.Remove(removed);
                             events.Publish(new BattleSpellDispelled(unit.Id, removed.Spell, spellId));
                         }
 
+                        SideChanged(unit, sided);
                         break;
                     case Magic.SpellEffectKind.Slay:
                         var slain = Math.Min(unit.Count, BattleMagic.Slain(effect, unit));
@@ -724,10 +726,15 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             new BattleUnitInfo(unit.Id, unit.Side, unit.Creature.Id, unit.Count, unit.Position, unit.Width, unit.Height), known.Spell.Id, count));
     }
 
-    /// <summary>A buff or curse takes hold on the stack, replacing the same spell's earlier effect.</summary>
+    /// <summary>
+    /// A buff or curse takes hold on the stack, replacing the same spell's earlier effect; a <c>controlled</c> one (ADR-150) brings it over to the
+    /// caster's side.
+    /// </summary>
     private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
         var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
+        var turns = BattleMagic.Turns(battle, side, known, unit, creaturePower);
+        var before = unit.Side;
         var modifiers = known.Effect!.Modifiers;
         if (modifiers.Burn != 0 || modifiers.Regen != 0)
         {
@@ -740,8 +747,45 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id);
-        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, modifiers, until));
-        events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until));
+        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, modifiers, until, turns));
+        events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until, turns));
+        SideChanged(unit, before);
+    }
+
+    /// <summary>Reports the stack's new side when a control spell (ADR-150) took hold or let go since it was <paramref name="before"/>.</summary>
+    private void SideChanged(BattleUnit unit, BattleSide before)
+    {
+        if (unit.Side != before)
+        {
+            events.Publish(new BattleUnitSideChanged(unit.Id, unit.Side));
+        }
+    }
+
+    /// <summary>
+    /// One of the stack's turns is over, played or passed (ADR-150): each of its spells that lasts turns has one fewer; one with none left wears off.
+    /// </summary>
+    private void UseTurn(BattleUnit unit)
+    {
+        if (!unit.Spells.Any(s => s.TurnsLeft is not null))
+        {
+            return;
+        }
+
+        var before = unit.Side;
+        foreach (var spell in unit.Spells.Where(s => s.TurnsLeft is not null).ToList())
+        {
+            var index = unit.MutableSpells.IndexOf(spell);
+            if (spell.TurnsLeft > 1)
+            {
+                unit.MutableSpells[index] = spell with { TurnsLeft = spell.TurnsLeft - 1 };
+                continue;
+            }
+
+            unit.MutableSpells.RemoveAt(index);
+            events.Publish(new BattleSpellExpired(unit.Id, spell.Spell));
+        }
+
+        SideChanged(unit, before);
     }
 
     /// <summary>+1 good luck, −1 bad luck, 0 nothing; rolls only for a unit with luck.</summary>
@@ -886,7 +930,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
         if (!target.IsAlive)
         {
-            target.MutableSpells.Clear(); // a stack revived later starts without them (ADR-123)
+            var before = target.Side;
+            target.MutableSpells.Clear(); // a stack revived later starts without them (ADR-123); a controlled one is its owner's again (ADR-150)
+            SideChanged(target, before);
             target.Revived = 0;
             battle.MutableQueue.Remove(target.Id);
             battle.MutableWaiting.Remove(target.Id);
@@ -906,6 +952,11 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         {
             unit!.MutableSpells.Remove(hidden);
             events.Publish(new BattleSpellExpired(unit.Id, hidden.Spell));
+        }
+
+        if (unit is not null)
+        {
+            UseTurn(unit);
         }
 
         if (moraleMayAct && unit is { IsAlive: true, RoundMorale: MoraleEffect.ExtraAction } && !CheckFinished())
@@ -969,6 +1020,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 // Terror (ADR-067): the turn passes without the unit acting.
                 unit.LosesNextAction = false;
                 events.Publish(new BattleUnitTerrified(unit.Id));
+                UseTurn(unit);
                 continue;
             }
 
@@ -976,6 +1028,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             if (unit.Spells.FirstOrDefault(s => s.Modifiers.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis)) is { } held)
             {
                 events.Publish(new BattleUnitSpellbound(unit.Id, held.Spell));
+                UseTurn(unit);
                 continue;
             }
 
@@ -984,6 +1037,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 // Bad morale: the turn passes without the unit acting.
                 unit.RoundMorale = MoraleEffect.None;
                 events.Publish(new BattleMoraleTriggered(unit.Id, MoraleEffect.SkipTurn));
+                UseTurn(unit);
                 continue;
             }
 
@@ -1001,10 +1055,16 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
         // Spells that ran out go before this round's morale and order are decided (ADR-110).
         var expired = new List<(int Unit, string Spell)>();
+        var freed = new List<BattleUnit>();
         foreach (var unit in battle.LivingUnits.Where(u => u.Spells.Count > 0).OrderBy(u => u.Id))
         {
+            var before = unit.Side;
             expired.AddRange(unit.MutableSpells.Where(s => s.UntilRound < battle.Round).Select(s => (unit.Id, s.Spell)));
             unit.MutableSpells.RemoveAll(s => s.UntilRound < battle.Round);
+            if (unit.Side != before)
+            {
+                freed.Add(unit);
+            }
         }
 
         var gone = battle.Zones.Where(z => z.UntilRound < battle.Round).ToList();
@@ -1027,6 +1087,11 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         foreach (var (unit, spell) in expired)
         {
             events.Publish(new BattleSpellExpired(unit, spell));
+        }
+
+        foreach (var unit in freed)
+        {
+            events.Publish(new BattleUnitSideChanged(unit.Id, unit.Side));
         }
 
         foreach (var zone in gone)
@@ -1112,9 +1177,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             return true;
         }
 
-        // War machines alone do not keep a side in the battle (ADR-056).
-        var attackers = battle.LivingArmyOf(BattleSide.Attacker).Any();
-        var defenders = battle.LivingArmyOf(BattleSide.Defender).Any();
+        // War machines alone do not keep a side in the battle (ADR-056); a stack the enemy controls still does (ADR-150).
+        var attackers = battle.OwnedArmyOf(BattleSide.Attacker).Any();
+        var defenders = battle.OwnedArmyOf(BattleSide.Defender).Any();
         if (attackers && defenders)
         {
             return false;

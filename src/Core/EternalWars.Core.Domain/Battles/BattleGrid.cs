@@ -216,7 +216,10 @@ public static class BattleGrid
     public static bool IsFree(BattleState battle, BattleUnit unit, CellPosition topLeft) => new Clearance(battle, unit).IsFree(topLeft, unit.Size);
 
     public static IEnumerable<BattleUnit> AdjacentEnemies(BattleState battle, BattleUnit unit) =>
-        battle.LivingUnits.Where(u => u.Side != unit.Side && u.Rect.IsAdjacentTo(unit.Rect));
+        battle.LivingUnits.Where(u => IsFoe(unit, u) && u.Rect.IsAdjacentTo(unit.Rect));
+
+    /// <summary>Whether the unit fights the other: a stack of the other side, or for a frenzied stack (ADR-150) every other stack.</summary>
+    public static bool IsFoe(BattleUnit unit, BattleUnit other) => other != unit && (other.Side != unit.Side || unit.Has(Magic.SpellStatus.Frenzied));
 
     /// <summary>Engagement hook: other living units of <paramref name="side"/> touching <paramref name="target"/>.</summary>
     public static int EngagingUnits(BattleState battle, BattleUnit target, BattleSide side, BattleUnit? except = null) =>
@@ -238,7 +241,7 @@ public static class BattleGrid
     public static bool CanShoot(BattleState battle, BattleUnit unit, BattleUnit target, out int penaltyEighths)
     {
         penaltyEighths = 0;
-        if (!target.IsAlive || target.Side == unit.Side || !CanShootNow(battle, unit) || !CanBeAttacked(unit, target, melee: false))
+        if (!target.IsAlive || !IsFoe(unit, target) || !CanShootNow(battle, unit) || !CanBeAttacked(unit, target, melee: false))
         {
             return false;
         }

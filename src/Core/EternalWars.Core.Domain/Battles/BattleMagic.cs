@@ -153,6 +153,11 @@ public static class BattleMagic
                     return $"{unit.Creature.Name} has nothing to revive.";
                 }
 
+                if (effect.HealthLimit > 0 && unit.TotalHealth > HealthLimit(battle, side, known, creaturePower))
+                {
+                    return $"{unit.Creature.Name} is too strong for {known.Spell.Name} ({HealthLimit(battle, side, known, creaturePower)} health at most).";
+                }
+
                 if (effect.Kind == SpellEffectKind.Dispel && Dispelled(side, effect, unit).Count == 0)
                 {
                     return $"{unit.Creature.Name} has no spells {known.Spell.Name} takes off.";
@@ -389,7 +394,7 @@ public static class BattleMagic
 
     /// <summary>
     /// The last round a buff or curse lasts on the stack: the rest of this round plus its rounds × (10 + Spell Power) / 10, cut by the enemy hero's
-    /// Spell resistance for a hostile spell (rounded up), at least 1; a spell for the battle lasts to its end.
+    /// Spell resistance for a hostile spell (rounded up), at least 1; a spell for the battle, or one that lasts turns (ADR-150), lasts to its end.
     /// </summary>
     public static int UntilRound(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null)
     {
@@ -403,15 +408,31 @@ public static class BattleMagic
             return battle.Round; // the rest of this round (Vigil, Fleetfoot, ADR-123), not lengthened
         }
 
-        var duration = Math.Max(1, rounds * (10 + (creaturePower ?? SpellPower(battle, side))) / 10);
-        if (known.Effect.IsHostile && unit.Side != side)
+        return battle.Round + Duration(battle, side, known, unit, rounds, creaturePower);
+    }
+
+    /// <summary>
+    /// How many of the stack's turns a spell that lasts turns takes (ADR-150): its turns lengthened and cut like rounds (<see cref="UntilRound"/>);
+    /// null for a spell that lasts rounds.
+    /// </summary>
+    public static int? Turns(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null) =>
+        known.Effect!.Turns is { } turns ? Duration(battle, side, known, unit, turns, creaturePower) : null;
+
+    private static int Duration(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int length, int? creaturePower)
+    {
+        var duration = Math.Max(1, length * (10 + (creaturePower ?? SpellPower(battle, side))) / 10);
+        if (known.Effect!.IsHostile && unit.Side != side)
         {
             var resistance = battle.Participant(unit.Side).Bonus.SpellResistancePercent;
             duration = Math.Max(1, ((duration * (100 - resistance)) + 99) / 100);
         }
 
-        return battle.Round + duration;
+        return duration;
     }
+
+    /// <summary>The most total health a stack may have for the spell to take control of it (Hypnotize, ADR-150): its base scaled like an amount.</summary>
+    public static int HealthLimit(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null) =>
+        Scaled(battle, side, known, known.Effect!.HealthLimit, creaturePower);
 
     /// <summary>
     /// What a summon calls (ADR-106, ADR-120): the first of its creatures the side has not summoned yet this battle (else the first), as many as

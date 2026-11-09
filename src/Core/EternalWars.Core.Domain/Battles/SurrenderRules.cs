@@ -14,7 +14,7 @@ public static class SurrenderRules
 
     /// <summary>Half the gold cost of the side's surviving creatures (war machines are free), rounded up.</summary>
     public static int Price(BattleState battle, BattleSide side) =>
-        (int)Math.Min(int.MaxValue, (battle.LivingArmyOf(side).Sum(u => (long)u.Count * u.Creature.Cost.Gold) + 1) / 2);
+        (int)Math.Min(int.MaxValue, (battle.OwnedArmyOf(side).Sum(u => (long)u.Count * u.Creature.Cost.Gold) + 1) / 2);
 
     /// <summary>Whether a hero's artifact (the Shackles of War, ADR-111) keeps both sides on the field: no retreat, no surrender.</summary>
     public static bool IsLocked(BattleState battle) => battle.Attacker.Bonus.NoRetreat || battle.Defender.Bonus.NoRetreat;

@@ -10,7 +10,7 @@ public sealed class BattleUnit
     {
         Machine = machine;
         Id = id;
-        Side = side;
+        Owner = side;
         Creature = creature;
         Count = count;
         InitialCount = count;
@@ -29,7 +29,16 @@ public sealed class BattleUnit
 
     public bool IsMachine => Machine is not null;
 
-    public BattleSide Side { get; }
+    /// <summary>The side the stack came with; its creatures go back to it when the battle ends (ADR-150).</summary>
+    public BattleSide Owner { get; }
+
+    /// <summary>
+    /// The side the stack fights for now: its <see cref="Owner"/>'s, or while a <c>controlled</c> spell is on it (Hypnotize, Puppet Master, ADR-150)
+    /// that spell's caster's, whose hero then commands it and gives it its skills.
+    /// </summary>
+    public BattleSide Side => MutableSpells.Count > 0 && MutableSpells.LastOrDefault(s => s.Modifiers.Has(Magic.SpellStatus.Controlled)) is { } control
+        ? control.Caster
+        : Owner;
 
     public CreatureDefinition Creature { get; }
 
@@ -134,7 +143,7 @@ public sealed class BattleUnit
     public override string ToString() => $"#{Id} {Count}× {Creature.Name} ({Side}) at {Position}";
 
     /// <summary>The unit as it is now, for a battle copy (<see cref="BattleState.Copy"/>).</summary>
-    internal BattleUnit Copy() => new(Id, Side, Creature, InitialCount, SourceSlot, Position, Machine)
+    internal BattleUnit Copy() => new(Id, Owner, Creature, InitialCount, SourceSlot, Position, Machine)
     {
         Count = Count,
         TopHealth = TopHealth,
@@ -155,8 +164,11 @@ public sealed class BattleUnit
     };
 }
 
-/// <summary>A buff or curse on a stack (ADR-110): what it changes, until the end of round <c>UntilRound</c>.</summary>
-public sealed record ActiveSpell(string Spell, BattleSide Caster, Magic.SpellModifiers Modifiers, int UntilRound);
+/// <summary>
+/// A buff or curse on a stack (ADR-110): what it changes, until the end of round <c>UntilRound</c>; a spell that lasts turns (ADR-150) has
+/// <c>TurnsLeft</c> of the stack's turns to go as well.
+/// </summary>
+public sealed record ActiveSpell(string Spell, BattleSide Caster, Magic.SpellModifiers Modifiers, int UntilRound, int? TurnsLeft = null);
 
 /// <summary>
 /// A battle in progress or just finished (the current one is <c>GameState.Battle</c>). Its random generator
@@ -441,6 +453,12 @@ public sealed class BattleState
 
     /// <summary>Living creature stacks of a side; war machines do not keep a side in the battle (ADR-056).</summary>
     public IEnumerable<BattleUnit> LivingArmyOf(BattleSide side) => LivingUnitsOf(side).Where(u => !u.IsMachine);
+
+    /// <summary>
+    /// Living creature stacks the side came with, whoever they fight for now (ADR-150): they keep the side in the battle and go back to it when
+    /// the battle ends.
+    /// </summary>
+    public IEnumerable<BattleUnit> OwnedArmyOf(BattleSide side) => _units.Where(u => u.IsAlive && u.Owner == side && !u.IsMachine);
 
     /// <summary>The side's living war machine of that kind, if any.</summary>
     public BattleUnit? LivingMachine(BattleSide side, WarMachineKind kind) => LivingUnitsOf(side).FirstOrDefault(u => u.Machine == kind);
