@@ -70,8 +70,11 @@ public partial class DecisionPanel : PanelContainer
                 }
 
                 break;
-            case PandorasBoxDecision:
-                _prompt.Text = "A Pandora's box. Nobody knows what waits inside, or what guards it. Open it?";
+            case PandorasBoxDecision box:
+                // An arena map's day of preparation shows what it holds (ARN-2 c).
+                _prompt.Text = Core.Domain.Magic.AdventureIntel.ArenaContents(state, state.GetObject(box.Box)) is { Count: > 0 } shown
+                    ? $"A Pandora's box holding {string.Join("; ", shown)}. Open it?"
+                    : "A Pandora's box. Nobody knows what waits inside, or what guards it. Open it?";
                 Button("Open", new AnswerPandorasBoxCommand(player, Open: true));
                 Button("Leave", new AnswerPandorasBoxCommand(player, Open: false));
                 break;

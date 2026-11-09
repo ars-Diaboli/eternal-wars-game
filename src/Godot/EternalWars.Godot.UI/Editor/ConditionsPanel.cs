@@ -16,7 +16,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// means defeat) can be switched off, and special victory and defeat conditions added or removed. Every change goes
 /// through <see cref="MapEditorSession.SetScenarioRules"/>, so it is undoable. The hero limit per player (ADR-068) and the week and month events
 /// (on or off, weeks without events first, the factions whose creatures they pick; ADR-073, ADR-075) are rules too, and so is the map's
-/// difficulty: what a game with "Map default" complexity counts as in the ranking (ADR-101).
+/// difficulty: what a game with "Map default" complexity counts as in the ranking (ADR-101). The arena switch (ADR-097, ARN-2) turns the map into
+/// one battle; the conditions then stay stored but count for nothing, so their controls are off.
 /// </summary>
 public partial class ConditionsPanel : VBoxContainer
 {
@@ -38,6 +39,15 @@ public partial class ConditionsPanel : VBoxContainer
         (ConditionKind.TimeLimit, "Defeat: time limit"),
     ];
 
+    private readonly CheckBox _arena = new()
+    {
+        Text = "Arena: a day to prepare, then one battle decides the game",
+        TooltipText = "Day 1: unlimited movement and building. Day 2 starts with the battle of the two sides' strongest heroes at a combat place; "
+                      + "its winner wins the game. The map needs a combat place.",
+    };
+
+    private readonly Label _arenaNote = new() { Text = "The arena ignores the victory and defeat conditions below." };
+    private readonly Button _add = new() { Text = "Add condition" };
     private readonly CheckBox _standard = new() { Text = "Last team standing wins (defeat every enemy)" };
     private readonly CheckBox _elimination = new() { Text = "No towns and no heroes means defeat" };
     private readonly SpinBox _grace = new() { MinValue = 0, MaxValue = 99, Step = 1, Suffix = "days without a town (0 = no countdown)" };
@@ -69,6 +79,9 @@ public partial class ConditionsPanel : VBoxContainer
     {
         _editor = editor;
         AddChild(new Label { Text = "Victory and defeat" });
+        _arena.Toggled += on => Change(r => r with { Arena = on });
+        AddChild(_arena);
+        AddChild(_arenaNote);
         _standard.Toggled += on => Change(r => r with { StandardVictory = on });
         AddChild(_standard);
         _elimination.Toggled += on => Change(r => r with { Elimination = on });
@@ -127,9 +140,8 @@ public partial class ConditionsPanel : VBoxContainer
         AddChild(_amount);
         AddChild(_day);
         AddChild(_deadline);
-        var add = new Button { Text = "Add condition" };
-        add.Pressed += Add;
-        AddChild(add);
+        _add.Pressed += Add;
+        AddChild(_add);
         AddChild(_status);
 
         Refresh();
@@ -188,10 +200,15 @@ public partial class ConditionsPanel : VBoxContainer
     private void Refresh()
     {
         var rules = Scenario.Rules;
+        _arena.SetPressedNoSignal(rules.Arena);
+        _arenaNote.Visible = rules.Arena;
+        _standard.Disabled = rules.Arena;
+        _elimination.Disabled = rules.Arena;
+        _add.Disabled = rules.Arena;
         _standard.SetPressedNoSignal(rules.StandardVictory);
         _elimination.SetPressedNoSignal(rules.Elimination);
         _grace.SetValueNoSignal(rules.GraceDays);
-        _grace.Editable = rules.Elimination;
+        _grace.Editable = rules.Elimination && !rules.Arena;
         _maxHeroes.SetValueNoSignal(rules.MaxHeroes);
         _difficulty.Selected = _difficulty.GetItemIndex(rules.Difficulty is { } difficulty ? (int)difficulty : DifficultyNotSet);
         _weekEvents.SetPressedNoSignal(rules.WeekEvents.Enabled);

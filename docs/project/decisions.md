@@ -1631,3 +1631,36 @@ every other game plays as before (the self-test digest is unchanged). Numbers ar
 - **Not done**: the AI casts no adventure spells on day 1 and does not trade at the marketplace (as elsewhere, ADR-067); it does not pick
   the combat place to stand on (the defender's side); it does not weigh Pandora's Box contents shown on day 1 (that showing is the editor
   item's).
+
+### ADR-161: The arena in the map editor; what objects show on day 1 (ADR-097, ADR-100, ADR-158, ARN-2, 2026-11-09)
+**Status**: implemented (2026-11-09): the roadmap's arena "Editor" item. No map format change (the switch and the combat place are v38,
+ADR-158).
+
+- **The switch**: an "Arena" tick box at the top of the Conditions tab (`ScenarioRules.Arena` through `MapEditorSession.SetScenarioRules`,
+  so undoable). While it is on, the last team standing, the elimination, the grace period and "Add condition" are greyed out and a line says
+  the arena ignores the conditions; the conditions stay stored *(choice: switching back restores them; ADR-158 left whether the switch
+  clears them to this item)*. The hero limit, week events and difficulty stay editable.
+- **Combat places**: placed with the Object tool like any object ("Combat place", "Combat place (vertical)"); the inspector says where the
+  defender and the attacker stand and that a hero on the entrance at the end of day 1 makes its owner the defender.
+- **Validator** (`MapValidator.Arena.cs`):
+  - an **error** for an arena map without a combat place (ARN-2 e), and for a combat place whose attack cell is on impassable ground (no
+    battle can be fought there);
+  - a **warning** when two enemies **can meet on day 1**: each player's day-1 reach is a flood fill from its heroes and its towns'
+    entrances over passable, unblocked cells, through gates (`DayOneReach`); monsters, garrisons, border and quest barriers count as
+    passable *(choice: a hero may beat or open them that day)*, so a map keeps its players apart with impassable ground or blocking
+    objects. Allies may meet;
+  - a **warning** for a **map event that does something only after day 1** (`MapEventChecks.RunsOnlyAfter`): every top action is an "if"
+    without an "else" whose condition the date alone makes false on day 1 (day, day of the week, week, month compared with numbers, so a
+    timed event's later first day); conditions that depend on more than the date are not guessed, quests are not checked;
+  - a warning for victory or defeat conditions on an arena map (ignored), and for fewer than two teams with a hero or a town; the ordinary
+    "fewer than two teams" check is skipped on arena maps;
+  - a **warning** for a combat place on a map that is not an arena (it does nothing).
+- **Contents on day 1** (ARN-2 c, `AdventureIntel.ArenaContents`): on an arena map's preparation day the right-click sheet shows what a
+  **Pandora's Box** holds (and its guard), a **Shrine**'s spell, a **Witch Hut**'s two skills, and a **quest** object's current stage (its
+  proposal, what it wants, what it then takes and gives); the box's "Open it?" prompt names the contents too. Other days and other maps
+  keep them hidden as before. Scrolls and universities (ADR-097's list) do not exist yet.
+- Tests: `ArenaEditorTests` (no combat place, a combat place on an ordinary map, meeting and walls, gates, allies, later events and what
+  is not guessed, ignored conditions, the undoable switch, the contents shown on day 1 and hidden elsewhere); `SmokeMapTests` (the arena
+  smoke map passes). Smoke: `editor-arena` (the switch, unticked, the validator's warning).
+- **Not done**: the computer does not yet weigh the contents shown (it knows them anyway, ADR-100); map event messages are still shown on
+  the arena (ADR-097's "not shown" for players and towns); the shipped arena maps.
