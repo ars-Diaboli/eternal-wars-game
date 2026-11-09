@@ -98,6 +98,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
         var player = _state.CurrentPlayer.Id;
         _claimed.Clear();
+        _gathering = false;
         _estimator.Clear();
         if (!ResolvePending(player))
         {
@@ -125,6 +126,12 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             {
                 return true;
             }
+        }
+
+        // The arena's preparation day ends with every army in the hero that fights at the start of day 2 (ADR-160).
+        if (Preparing && !GatherForBattle(player))
+        {
+            return false;
         }
 
         ManageTowns(player);
@@ -265,6 +272,13 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 Hire(player, town, reserve: 0);
             }
 
+            // The arena's preparation day (ADR-160): no tomorrow to save for.
+            if (Preparing)
+            {
+                PrepareTown(player, town);
+                continue;
+            }
+
             var reserve = heroless && !_state.HeroesOf(player).Any() ? TavernRules.HeroCost.Gold : Build(player, town);
             Hire(player, town, reserve);
             TransformStacks(player, town);
@@ -277,7 +291,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             Consolidate(player, town);
         }
 
-        if (Active(player) && _state.PendingDecision is null)
+        if (Active(player) && _state.PendingDecision is null && !Preparing)
         {
             SendSpareTroops(player);
         }
@@ -783,7 +797,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     private bool PlayHero(PlayerId player, HeroId id)
     {
         var failed = new HashSet<MapPosition>();
-        for (var move = 0; move < MaxMovesPerHero; move++)
+        for (var move = 0; move < (Preparing ? ArenaMovesPerHero : MaxMovesPerHero); move++)
         {
             if (!ResolvePending(player))
             {
@@ -888,7 +902,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         }
 
         var each = StewardshipRules.DiscountCreatures(creature.Cost, hero.SkillLevelOf(BuiltInSkills.Stewardship));
-        var spare = _state.GetPlayer(player).Resources - new ResourceSet(Gold: _state.GetPlayer(player).Resources.Gold / 3);
+        var spare = Preparing ? _state.GetPlayer(player).Resources : _state.GetPlayer(player).Resources - new ResourceSet(Gold: _state.GetPlayer(player).Resources.Gold / 3);
         var count = TownRules.MaxAffordable(spare, each, dwelling.Available!.Value);
         if (count > 0)
         {
@@ -954,7 +968,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
     /// <summary>The strongest enemy army that can reach the place within a day, leaving out the hero at <paramref name="except"/> (the one being attacked); 0 when none can.</summary>
     private long Danger(PlayerId owner, MapPosition position, MapPosition? except = null) =>
-        Threats(owner).Where(t => t.Enemy.Position != except && t.Enemy.Position.Level == position.Level && Distance(t.Enemy.Position, position) <= t.Reach)
+        Preparing ? 0 : Threats(owner).Where(t => t.Enemy.Position != except && t.Enemy.Position.Level == position.Level && Distance(t.Enemy.Position, position) <= t.Reach)
             .Select(t => t.Power).DefaultIfEmpty(0).Max();
 
     /// <summary>What defends a place for the player: the hero's army, plus the garrison when it is the entrance of an own town.</summary>
@@ -1272,7 +1286,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     {
         // Stay out of reach of enemy heroes too strong for the hero (with the garrison, at an own town).
         var candidates = Targets(hero)
-            .Where(t => !failed.Contains(t.Position) && !_claimed.Contains(t.Position) && t.Position != hero.Position)
+            .Where(t => !(Preparing && t.Later) && !failed.Contains(t.Position) && !_claimed.Contains(t.Position) && t.Position != hero.Position)
             .Where(t => Holds(DefenceAt(hero, t.Position), Danger(hero.Owner, t.Position, except: t.Position)))
             .OrderByDescending(t => t.Value / (1 + (0.08 * Distance(hero.Position, t.Position))))
             .ThenBy(t => t.Position.Level).ThenBy(t => t.Position.Y).ThenBy(t => t.Position.X);
@@ -1289,7 +1303,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
             // Fights are played out before going: the army power sum does not see shooters, speed and defence.
             if (candidate.Opponent is { } opponent
-                && !_estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense, candidate.Siege).IsSafe(candidate.MaxLoss))
+                && !_estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense, candidate.Siege).IsSafe(Preparing ? Math.Min(candidate.MaxLoss, ArenaLoss) : candidate.MaxLoss))
             {
                 continue;
             }
@@ -1346,7 +1360,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
     /// <summary>What exploring is worth to the hero now: <see cref="ExploreValue"/>, more for the main hero while no enemy town is known.</summary>
     private double ExploreWorth(Hero hero) =>
-        ExploreValue + (hero.Id == _main && !_state.ObjectsOf<Town>().Any(t => t.Owner is { } o && _state.AreEnemies(hero.Owner, o) && _state.Fog.IsExplored(hero.Owner, t.VisitPosition))
+        ExploreValue + (hero.Id == _main && !Preparing && !_state.ObjectsOf<Town>().Any(t => t.Owner is { } o && _state.AreEnemies(hero.Owner, o) && _state.Fog.IsExplored(hero.Owner, t.VisitPosition))
             ? HuntShare * ArmyPower(hero.Army) : 0);
 
     /// <summary>
@@ -1379,7 +1393,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     /// <summary>A place worth going to. <see cref="Opponent"/> is who has to be beaten there, if anyone; <see cref="Siege"/> the walls it holds (ADR-106).</summary>
     private readonly record struct Target(
         MapPosition Position, double Value, Army? Opponent = null, int OpponentAttack = 0, int OpponentDefense = 0, double MaxLoss = 0.5,
-        SiegeSpec? Siege = null);
+        SiegeSpec? Siege = null, bool Later = false);
 
     /// <summary>The neutral guards of a tile as one army, or null.</summary>
     private Army? GuardArmy(MapPosition position, bool pickup = false)
@@ -1414,7 +1428,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     yield return new(visit, 800 + (80 * FindScore(hero, found)), GuardArmy(visit, pickup: true), MaxLoss: MonsterLoss);
                     break;
                 case ResourceProvider provider when (provider.Owner != hero.Owner || !provider.Stored.IsEmpty) && Plausible(GuardPower(visit)) && visit != hero.Position:
-                    yield return new(visit, ProviderValue(hero, provider), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    yield return new(visit, ProviderValue(hero, provider), GuardArmy(visit), MaxLoss: MonsterLoss, Later: provider.Stored.IsEmpty);
                     break;
                 case CreatureBank { IsGuarded: true } bank when visit != hero.Position && !hero.Army.IsEmpty:
                     // Worth its reward; the simulated fight later decides whether the hero can take it (the guard stays whole if it fails).
@@ -1439,11 +1453,11 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     yield return new(visit, questWorth, GuardArmy(visit), MaxLoss: MonsterLoss);
                     break;
                 case Prison { Hero: not null } when !_state.HeroLimitReached(owner) && Plausible(GuardPower(visit)) && visit != hero.Position:
-                    yield return new(visit, 2500, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    yield return new(visit, 2500, GuardArmy(visit), MaxLoss: MonsterLoss, Later: true); // a hero without an army
                     break;
                 case Observatory observatory when !observatory.Visits.Heroes.Any(h => _state.Heroes.Any(x => x.Id == h && x.Owner == owner))
                                                   && Plausible(GuardPower(visit)) && visit != hero.Position:
-                    yield return new(visit, 600, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    yield return new(visit, 600, GuardArmy(visit), MaxLoss: MonsterLoss, Later: true);
                     break;
                 case TrainingSite training when training.CanCollect(hero.Id, _state.Date) && TrainingValue(hero, training.Rule) is > 0 and var trainingWorth
                                                  && Plausible(GuardPower(visit)) && visit != hero.Position:
@@ -1461,7 +1475,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     break;
                 case Deposit deposit when Spare(owner).CanAfford(deposit.Price) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     var mineYield = _state.ObjectCatalog.Get(deposit.Definition.Becomes!);
-                    yield return new(visit, (8 * mineYield.DailyYield * GoldValue(mineYield.Resource!.Value, 1)) - (0.5 * Value(deposit.Price)), GuardArmy(visit), MaxLoss: MonsterLoss);
+                    yield return new(visit, (8 * mineYield.DailyYield * GoldValue(mineYield.Resource!.Value, 1)) - (0.5 * Value(deposit.Price)), GuardArmy(visit), MaxLoss: MonsterLoss, Later: true);
                     break;
                 case Shrine { Spell: { } taught } shrine when !hero.Spells.ContainsKey(taught) && _state.Spells.TryGet(taught, out var shrineSpell)
                                                           && Magic.MagicRules.CanLearn(hero, shrineSpell) && Plausible(GuardPower(visit)) && visit != hero.Position:
@@ -1471,17 +1485,17 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 case KeymasterTent tent when !_state.GetPlayer(owner).Keys.Contains(tent.Colour) && Plausible(GuardPower(visit)) && visit != hero.Position:
                     // The key opens the border posts of its colour (ADR-071): worth most once one is known to bar the way.
                     var barred = _state.ObjectsOf<BorderPost>().Any(b => b.Colour == tent.Colour && _state.Fog.IsExplored(owner, b.VisitPosition));
-                    yield return new(visit, barred ? 2500 : 600, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    yield return new(visit, barred ? 2500 : 600, GuardArmy(visit), MaxLoss: MonsterLoss, Later: !barred);
                     break;
                 case MapGarrison mapGarrison when !OwnTeam(owner, mapGarrison.Owner) && visit != hero.Position
                                                   && Seen(mapGarrison.Troops.Stacks.Select(s => s.Stack), visit, mapGarrison.Owner) is var troops && Plausible(ArmyPower(troops)):
-                    yield return new(visit, 1000 + (0.35 * ArmyPower(troops)) + OpensTheWay(owner, visit), troops.IsEmpty ? null : troops, MaxLoss: MonsterLoss);
+                    yield return new(visit, 1000 + (0.35 * ArmyPower(troops)) + OpensTheWay(owner, visit), troops.IsEmpty ? null : troops, MaxLoss: MonsterLoss, Later: true);
                     break;
                 case Mine mine when !OwnTeam(owner, mine.Owner):
                     var mineGuard = mine.Guard is { } g ? Seen([new CreatureStack(g.Creature, Math.Max(1, g.Count ?? 1))], visit, null)[0] : null;
                     if (mineGuard is null || Plausible(Power(mineGuard)))
                     {
-                        yield return new(visit, 8 * mine.DailyYield * GoldValue(mine.Resource, 1), mineGuard is null ? null : Army.Of(mineGuard));
+                        yield return new(visit, 8 * mine.DailyYield * GoldValue(mine.Resource, 1), mineGuard is null ? null : Army.Of(mineGuard), Later: true);
                     }
 
                     break;
@@ -1513,14 +1527,15 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     var dwelt = _state.Creatures.Get(dwelling.Creature);
                     var buyable = hero.Army.CanAccept(dwelt.Id)
                         ? TownRules.MaxAffordable(_state.GetPlayer(owner).Resources, dwelt.Cost, dwelling.Available ?? 0) : 0;
-                    var worth = (OwnTeam(owner, dwelling.Owner) ? 0 : 1200) + (0.4 * buyable * dwelt.Value);
+                    var worth = (OwnTeam(owner, dwelling.Owner) || Preparing ? 0 : 1200) + (0.4 * buyable * dwelt.Value);
                     if (worth > 0)
                     {
                         yield return new(visit, worth, GuardArmy(visit), MaxLoss: MonsterLoss);
                     }
 
                     break;
-                case Town town when !OwnTeam(owner, town.Owner):
+                // On an arena map's preparation day only neutral towns: an enemy's brings its heroes onto ours before the battle (ADR-160).
+                case Town town when !OwnTeam(owner, town.Owner) && !(Preparing && town.Owner is not null):
                     var defenders = AdventureIntel.Reckoned(AdventureIntel.ScoutTown(_state, town, owner).Garrison);
                     var garrison = ArmyPower(defenders);
                     if (Plausible(garrison))
@@ -1533,14 +1548,14 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 case Town own when own.Owner == owner && own.VisitPosition != hero.Position && GrailRules.Carries(_state, hero) && own.Level(BuiltInBuildings.Grail) == 0
                                    && TownRules.Buildings(_state, own).Contains(BuiltInBuildings.Grail):
                     // The Grail raises the town's Grail building (ADR-140).
-                    yield return new(visit, GrailValue);
+                    yield return new(visit, GrailValue, Later: true);
                     break;
                 case Town own when own.Owner == owner && own.VisitPosition != hero.Position && TownNeed(hero, own) is > 0 and var need:
                     yield return new(visit, need);
                     break;
                 case TownGate when visit != hero.Position && GateTown(hero) is { Need: var gateNeed } && Plausible(GuardPower(visit)):
                     // The gate is worth (a little less than) the town it leads to; going there through the gate costs no movement (ADR-068).
-                    yield return new(visit, 0.9 * gateNeed, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    yield return new(visit, 0.9 * gateNeed, GuardArmy(visit), MaxLoss: MonsterLoss, Later: true);
                     break;
                 case HillFort when visit != hero.Position && HillFortGain(hero) is > 0 and var gain && Plausible(GuardPower(visit)):
                     yield return new(visit, gain, GuardArmy(visit), MaxLoss: MonsterLoss);
@@ -1553,14 +1568,14 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     break;
                 case Obelisk obelisk when _state.Grail.Position is not null && !_state.Grail.IsFound && visit != hero.Position
                                           && !obelisk.WasVisitedBy(owner) && Plausible(GuardPower(visit)):
-                    yield return new(visit, ObeliskValue, GuardArmy(visit), MaxLoss: MonsterLoss);
+                    yield return new(visit, ObeliskValue, GuardArmy(visit), MaxLoss: MonsterLoss, Later: true);
                     break;
             }
         }
 
         if (GrailSpot(owner) is { } grail && grail != hero.Position && !hero.Artifacts.BackpackFull && Plausible(GuardPower(grail)))
         {
-            yield return new(grail, GrailValue, GuardArmy(grail), MaxLoss: MonsterLoss);
+            yield return new(grail, GrailValue, GuardArmy(grail), MaxLoss: MonsterLoss, Later: true);
         }
 
         // A secondary hero carrying a worthwhile army brings it to the main hero (the meeting opens the exchange).
@@ -1570,7 +1585,8 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             yield return new(main.Position, 0.5 * power);
         }
 
-        foreach (var enemy in _state.Heroes.OrderBy(h => h.Id.Value))
+        // Not on an arena map's preparation day: beating the enemy's heroes before the battle leaves nobody to fight it, a loss for both (ADR-160).
+        foreach (var enemy in _state.Heroes.Where(_ => !Preparing).OrderBy(h => h.Id.Value))
         {
             if (!_state.AreEnemies(owner, enemy.Owner) || !_state.CanSee(owner, enemy) || !_state.Fog.IsExplored(owner, enemy.Position) || Sanctuary.Protects(_state, enemy.Position))
             {
