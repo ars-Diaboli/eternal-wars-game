@@ -196,7 +196,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Dividing obstacles: cliffs or walls of 6–12 cells that split the field partly, at least two gaps, flyers pass over; on highlands,
       rough, rocky and subterranean ground, one battle in three, never in sieges or banks (ADR-118, ADR-146)
 - [x] More scenery on random maps (trees, rocks and the like, denser by zone terrain; ADR-077's scenery, ADR-157)
-- [x] c: shared margins and gaps for every panel, no font or theme change; first (ADR-118, ADR-163)
+- [x] Spacing pass: shared margins and gaps for every panel, no font or theme change; first (ADR-118, ADR-163)
 - [x] Configurable layout: initiative bar, minimap corner, hero and town lists, action panel; a "Layout" tab, kept in the player's settings (ADR-118, ADR-156)
 - [x] Information windows (right-click) for creatures, heroes, skills, spells, artifacts, buildings and map objects; "detailed tooltips", off by default (ADR-118, ADR-154)
 - [ ] Information windows on touch (a long press), and for the kingdom overview, the tavern and the decision prompts (ADR-154)
