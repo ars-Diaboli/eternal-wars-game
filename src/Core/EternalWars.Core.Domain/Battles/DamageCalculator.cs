@@ -18,21 +18,31 @@ public sealed record HitModifiers(int BaseRoll, bool IsRanged, int PenaltyEighth
 /// </summary>
 public static class DamageCalculator
 {
+    /// <summary>
+    /// The Attack a stack strikes with: the creature's, its hero's, rage, the preferred creature's bonus, native terrain and spells (the
+    /// information window shows it, ADR-154).
+    /// </summary>
+    public static int AttackOf(BattleState battle, BattleUnit unit) =>
+        unit.Creature.Attack + battle.Participant(unit.Side).Attack + unit.RageAttack
+        + (battle.Participant(unit.Side).Bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredAttack : 0)
+        + (battle.IsNative(unit) ? BattleState.NativeAttack : 0) + unit.SpellModifiers.Attack;
+
+    /// <summary>The Defense a stack is struck against: as <see cref="AttackOf"/>, with zones and the defend bonus.</summary>
+    public static int DefenseOf(BattleState battle, BattleUnit unit)
+    {
+        var defense = unit.Creature.Defense + battle.Participant(unit.Side).Defense
+                      + (battle.Participant(unit.Side).Bonus.Prefers(unit.Creature) ? Heroes.SkillEffects.PreferredDefense : 0)
+                      + (battle.IsNative(unit) ? BattleState.NativeDefense : 0) + unit.SpellModifiers.Defense
+                      + (battle.Zones.Count > 0 ? BattleZones.Defense(battle, unit) : 0);
+        return unit.IsDefending ? defense + DefendBonus(defense) : defense;
+    }
+
     public static int Damage(BattleState battle, BattleUnit attacker, BattleUnit defender, HitModifiers hit)
     {
         var attackerBonus = battle.Participant(attacker.Side).Bonus;
         var defenderBonus = battle.Participant(defender.Side).Bonus;
-        var attack = attacker.Creature.Attack + battle.Participant(attacker.Side).Attack + attacker.RageAttack
-                     + (attackerBonus.Prefers(attacker.Creature) ? Heroes.SkillEffects.PreferredAttack : 0)
-                     + (battle.IsNative(attacker) ? BattleState.NativeAttack : 0) + attacker.SpellModifiers.Attack;
-        var defense = defender.Creature.Defense + battle.Participant(defender.Side).Defense
-                      + (defenderBonus.Prefers(defender.Creature) ? Heroes.SkillEffects.PreferredDefense : 0)
-                      + (battle.IsNative(defender) ? BattleState.NativeDefense : 0) + defender.SpellModifiers.Defense
-                      + (battle.Zones.Count > 0 ? BattleZones.Defense(battle, defender) : 0);
-        if (defender.IsDefending)
-        {
-            defense += DefendBonus(defense);
-        }
+        var attack = AttackOf(battle, attacker);
+        var defense = DefenseOf(battle, defender);
 
         long damage = (long)hit.BaseRoll * attacker.Count;
         if (attack > defense)

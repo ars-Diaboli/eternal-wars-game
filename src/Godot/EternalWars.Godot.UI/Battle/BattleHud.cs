@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Hud;
 using Godot;
 
 namespace EternalWars.Godot.UI.Battle;
@@ -307,6 +308,8 @@ public partial class BattleHud : Control
             var casts = active.CastsLeft.Where(c => BattleMagic.CasterSpells.GetValueOrDefault(c.Key) == own.Spell.Id).Sum(c => c.Value);
             var cast = new Button { Text = $"{active.Creature.Name}: {own.Spell.Name} ({casts} left)", TooltipText = $"The stack casts it as its action. {own.Spell.Notes}" };
             cast.Pressed += () => ArmCreature(own);
+            var ownId = own.Spell.Id;
+            cast.WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, ownId, 1, detailed));
             _spells.AddChild(cast);
         }
 
@@ -325,6 +328,9 @@ public partial class BattleHud : Control
             button.Disabled = refusal is not null;
             button.TooltipText = refusal ?? known.Spell.Notes;
             button.Pressed += () => Arm(known);
+            var spellId = known.Spell.Id;
+            var rank = known.Rank;
+            button.WithInfo(detailed => Core.Domain.Info.InfoSheets.Spell(_session.State, spellId, rank, detailed));
             _spells.AddChild(button);
         }
     }

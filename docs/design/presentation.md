@@ -22,6 +22,12 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **UI**: HoMM-style right panel (minimap, hero / town list, end turn), bottom status bar, full-screen town and hero screens.
 - **Audio**: per-terrain ambient music, faction town themes.
 
+## Information windows
+ADR-118, ADR-154. A right click opens the window of what is under the pointer: on the map a hero, a stack, a town, an object or the ground;
+in battle a stack; on the screens a stack, a skill, a spell, an artifact or a building. It shows only what the player may know (Scouting,
+ADR-125; objects under the fog as last seen). Held and let go it closes; a quick click leaves it open until the next click or key. The
+"Detailed tooltips" setting (off by default, F10 menu, kept with the speed settings) adds the formulas and the raw numbers.
+
 ## Speed settings
 ADR-088, ADR-090, ADR-095. Player settings (`settings.json` in the user data folder, not in saves; they change nothing in the game) for own
 heroes (every human player's), computer heroes (with "don't show") and battle animations, in the F10 menu: slow (half), normal, fast

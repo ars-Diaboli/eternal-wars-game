@@ -29,6 +29,7 @@ public partial class GameMenuPanel : CenterContainer
     private readonly OptionButton _computerSpeed = SpeedButton(withHidden: true);
     private readonly OptionButton _battleSpeed = SpeedButton(withHidden: false);
     private SpeedSettings _speeds = SpeedSettings.Default;
+    private readonly CheckBox _detailed = new() { Text = "Detailed tooltips (formulas and numbers in the right-click windows)" };
     private IReadOnlyList<SaveItem> _entries = [];
     private Func<IReadOnlyList<SaveItem>> _listSaves = null!;
     private Action<string> _deleteSave = null!;
@@ -48,6 +49,9 @@ public partial class GameMenuPanel : CenterContainer
 
     /// <summary>The player changed a speed setting (the app keeps it in the settings file and applies it).</summary>
     public event Action<SpeedSettings>? SpeedsChanged;
+
+    /// <summary>The player changed the interface settings ("Detailed tooltips", ADR-154); the app keeps them in the settings file.</summary>
+    public event Action<InterfaceSettings>? InterfaceChanged;
 
     /// <summary>The player asked to leave the game for the main menu (offered only in a game).</summary>
     public event Action? MainMenuRequested;
@@ -116,6 +120,8 @@ public partial class GameMenuPanel : CenterContainer
             : _speeds with { ComputerHeroes = (AnimationSpeed)index, ShowComputerHeroes = true });
         _battleSpeed.ItemSelected += index => ChangeSpeeds(_speeds with { Battle = (AnimationSpeed)index });
         ShowSpeeds(_speeds);
+        rows.AddChild(_detailed);
+        _detailed.Toggled += on => InterfaceChanged?.Invoke(new InterfaceSettings(DetailedTooltips: on));
 
         _list.ItemSelected += index =>
         {
@@ -198,6 +204,9 @@ public partial class GameMenuPanel : CenterContainer
         _computerSpeed.Selected = speeds.ShowComputerHeroes ? (int)speeds.ComputerHeroes : HiddenItem;
         _battleSpeed.Selected = (int)speeds.Battle;
     }
+
+    /// <summary>Shows the interface settings read from the settings file.</summary>
+    public void ShowInterface(InterfaceSettings settings) => _detailed.SetPressedNoSignal(settings.DetailedTooltips);
 
     public void Close() => Visible = false;
 

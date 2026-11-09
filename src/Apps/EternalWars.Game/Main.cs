@@ -35,7 +35,7 @@ namespace EternalWars.Game;
 /// </summary>
 /// <remarks>
 /// Run with <c>-- --new-game</c> to open on the new-game screen. Mouse: click an own hero to select it, click a tile to preview the route (markers coloured by day), click the
-/// same tile again to go; right-click clears the preview. Keys: arrows/numpad step, Tab next hero, T next town (the town screen; Escape closes it), L switches
+/// same tile again to go; right-click clears the preview and opens the information window of what is there (ADR-154). Keys: arrows/numpad step, Tab next hero, T next town (the town screen; Escape closes it), L switches
 /// level, WASD/QE/wheel camera. Run with <c>-- --map=&lt;path&gt;</c> to offer an editor map first.
 /// Battles open the 3D battle scene (<see cref="BattleView3D"/>): point at a cell to preview, click to move, attack (from
 /// the side the pointer is on) or shoot; W wait, D defend, R retreat, Q quick combat, wheel zoom; Enter or Escape leave
@@ -103,6 +103,10 @@ public partial class Main : Node3D
     private HeroId? _selectedHero;
     private string _settingsPath = "";
     private SpeedSettings _speeds = SpeedSettings.Default;
+    private InterfaceSettings _interface = InterfaceSettings.Default;
+
+    /// <summary>The right-click information window (ADR-154), above every screen, for the whole run.</summary>
+    private readonly InfoWindow _info = new();
 
     /// <summary>The computer hero the camera last followed (ADR-090).</summary>
     private HeroId? _followed;
@@ -344,9 +348,10 @@ public partial class Main : Node3D
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick:
                 _world.PathPreview.Clear();
                 _aimedSpell = null;
-                if (MapSpace.PickTile(_camera, rightClick.Position, _context.Level) is { } pointed)
+                if (MapSpace.PickTile(_camera, rightClick.Position, _context.Level) is { } pointed
+                    && Core.Domain.Info.InfoSheets.MapCell(_session.State, _session.State.CurrentPlayer.Id, pointed, _info.Detailed) is { } sheet)
                 {
-                    ShowScouted(pointed);
+                    _info.Open(sheet, rightClick.Position);
                 }
 
                 break;
@@ -387,31 +392,15 @@ public partial class Main : Node3D
         GetViewport().SetInputAsHandled();
     }
 
-    /// <summary>
-    /// A right click on another player's hero, a neutral stack or a town not the player's own: what the player's Scouting shows of it (ADR-125),
-    /// a hero or a stack on the status line, a town in the intel panel.
-    /// </summary>
-    private void ShowScouted(MapPosition pointed)
+    private void KeepSettings()
     {
-        var state = _session.State;
-        var viewer = state.CurrentPlayer.Id;
-        if (!state.Map.Contains(pointed) || !state.Fog.IsExplored(viewer, pointed))
+        try
         {
-            return;
+            SettingsFile.Save(_settingsPath, _speeds, _interface);
         }
-
-        string Line(Core.Domain.Magic.ShownArmy army) => AdventureIntelPanel.DescribeArmy(state, army).Replace("\n    ", "; ", StringComparison.Ordinal);
-        if (state.HeroAt(pointed) is { } other && other.Owner != viewer && state.CanSee(viewer, other))
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
-            _status.Text = Line(Core.Domain.Magic.AdventureIntel.ScoutHero(state, other, viewer));
-        }
-        else if (state.ObjectCellAt(pointed)?.Object is MonsterGuard monster && state.Fog.IsInSight(viewer, pointed))
-        {
-            _status.Text = Line(Core.Domain.Magic.AdventureIntel.ScoutMonster(state, monster, viewer));
-        }
-        else if (Core.Domain.Magic.AdventureIntel.TownAt(state, pointed) is { } town && town.Owner != viewer)
-        {
-            _intelScreen.ShowTown(Core.Domain.Magic.AdventureIntel.ScoutTown(state, town, viewer), "Scouting");
+            _menu.SetMessage($"Could not keep the settings: {e.Message}");
         }
     }
 
@@ -608,14 +597,19 @@ public partial class Main : Node3D
         {
             _speeds = speeds;
             ApplySpeeds();
-            try
-            {
-                SettingsFile.Save(_settingsPath, speeds);
-            }
-            catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-            {
-                _menu.SetMessage($"Could not keep the settings: {e.Message}");
-            }
+            KeepSettings();
+        };
+
+        // "Detailed tooltips" (ADR-154): the information windows' formulas and numbers, kept with the speeds.
+        _interface = SettingsFile.LoadInterface(_settingsPath);
+        AddChild(_info);
+        _info.Detailed = _interface.DetailedTooltips;
+        _menu.ShowInterface(_interface);
+        _menu.InterfaceChanged += settings =>
+        {
+            _interface = settings;
+            _info.Detailed = settings.DetailedTooltips;
+            KeepSettings();
         };
 
         var button = new Button
@@ -885,6 +879,10 @@ public partial class Main : Node3D
                 return;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
                 ClickBattle(click.Position);
+                break;
+            case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick
+                when _session.State.Battle is { } shown && _battle.PickPoint(rightClick.Position) is { } point && shown.UnitAt(BattleSpace.ToCell(point)) is { } unit:
+                _info.Open(Core.Domain.Info.InfoSheets.BattleStack(shown, unit, _info.Detailed), rightClick.Position);
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.Result is not null:
                 _battleHud.Continue();

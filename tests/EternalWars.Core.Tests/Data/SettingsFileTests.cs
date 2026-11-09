@@ -3,7 +3,7 @@ using EternalWars.Core.Domain.Settings;
 
 namespace EternalWars.Core.Tests.Data;
 
-/// <summary>The speed settings and their file (ADR-090, UI-1).</summary>
+/// <summary>The speed and interface settings and their file (ADR-090, UI-1; ADR-154).</summary>
 public class SettingsFileTests
 {
     [Fact]
@@ -17,6 +17,26 @@ public class SettingsFileTests
 
             Assert.Equal(settings, SettingsFile.Load(path));
             Assert.Contains("\"ownHeroes\": \"Fast\"", File.ReadAllText(path), StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void DetailedTooltips_AreKeptBesideTheSpeeds_AndOffWhenTheFileHasNone()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
+        var speeds = new SpeedSettings(Battle: AnimationSpeed.Fast);
+        try
+        {
+            SettingsFile.Save(path, speeds, new InterfaceSettings(DetailedTooltips: true));
+
+            Assert.True(SettingsFile.LoadInterface(path).DetailedTooltips);
+            Assert.Equal(speeds, SettingsFile.Load(path));
+            Assert.False(SettingsFile.ReadInterface("{\"speed\": {\"battle\": \"Slow\"}}").DetailedTooltips);
+            Assert.Equal(InterfaceSettings.Default, SettingsFile.ReadInterface("not json"));
         }
         finally
         {

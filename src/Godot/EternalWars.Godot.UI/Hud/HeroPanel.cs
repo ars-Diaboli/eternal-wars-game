@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -14,7 +15,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// Hero screen for a hero of the player whose turn it is: stats (with what artifacts add), mana, experience, specialty,
 /// skills with their descriptions, the army (click a stack, then a slot to move it; "Split" moves half), the paper doll
 /// and the backpack (click a worn artifact to take it off, a carried one to put it on), and war machines. Every change is
-/// a command; refusals show below. Opened with <see cref="Open"/>; Previous / Next go through the player's heroes. With
+/// a command; refusals show below. A right click on a skill, a spell, a stack or an artifact opens its information window (ADR-154). Opened with <see cref="Open"/>; Previous / Next go through the player's heroes. With
 /// <see cref="FullScreen"/> it fills its parent and scrolls; Escape or "Close" shut it.
 /// </summary>
 public partial class HeroPanel : PanelContainer
@@ -28,6 +29,7 @@ public partial class HeroPanel : PanelContainer
     private readonly HFlowContainer _backpack = new();
     private readonly Label _machines = new();
     private readonly HFlowContainer _adventure = new();
+    private readonly HFlowContainer _spells = new();
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private GameSession _session = null!;
@@ -92,6 +94,7 @@ public partial class HeroPanel : PanelContainer
         box.AddChild(_army);
         box.AddChild(_split);
         box.AddChild(_machines);
+        box.AddChild(_spells);
         box.AddChild(new Label { Text = "Adventure spells (mana and 500 movement points)" });
         box.AddChild(_adventure);
         box.AddChild(new Label { Text = "Worn artifacts (click to take off)" });
@@ -191,6 +194,25 @@ public partial class HeroPanel : PanelContainer
         ShowArtifacts(hero);
         _machines.Text = "War machines: " + (hero.WarMachines.Count == 0 ? "none" : string.Join(", ", hero.WarMachines.Order()));
         ShowAdventureSpells(hero);
+        ShowSpells(hero);
+    }
+
+    /// <summary>The spell book: one button per known spell (a right click opens its window), and how many the worn artifacts lend.</summary>
+    private void ShowSpells(Hero hero)
+    {
+        Clear(_spells);
+        _spells.AddChild(new Label { Text = SpellsText(hero) });
+        if (!hero.HasSpellBook)
+        {
+            return;
+        }
+
+        foreach (var (spell, rank) in EternalWars.Core.Domain.Magic.MagicRules.Known(hero, _session.State.Spells))
+        {
+            var id = spell.Id;
+            _spells.AddChild(new Button { Text = EternalWars.Core.Domain.Magic.MagicRules.NameAtRank(spell, rank), Flat = true, TooltipText = spell.Notes }
+                .WithInfo(detailed => InfoSheets.Spell(_session.State, id, rank, detailed, hero)));
+        }
     }
 
     /// <summary>One button per adventure spell the hero knows (ADR-120), disabled with the reason while it cannot be cast.</summary>
@@ -214,6 +236,7 @@ public partial class HeroPanel : PanelContainer
                 TooltipText = refusal ?? spell.Notes,
             };
             var id = spell.Id;
+            button.WithInfo(detailed => InfoSheets.Spell(_session.State, id, rank, detailed, hero));
             button.Pressed += () =>
             {
                 if (Core.Domain.Magic.AdventureMagic.NeedsTarget(_session.State, hero, id))
@@ -262,8 +285,7 @@ public partial class HeroPanel : PanelContainer
             $"Attack {WithBonus(hero.Attack, bonus.Attack)}   Defense {WithBonus(hero.Defense, bonus.Defense)}   Spell Power {WithBonus(hero.SpellPower, bonus.SpellPower)}   Knowledge {WithBonus(hero.Knowledge, bonus.Knowledge)}",
             $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {hero.Mana}/{hero.MaxMana}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}",
             $"Experience {hero.Experience}/{next}" + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : "") + $"   Scouting {hero.ScoutingRadius}",
-            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe(EternalWars.Core.Domain.Magic.SpellCatalog.Default)}",
-            SpellsText(hero));
+            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe(EternalWars.Core.Domain.Magic.SpellCatalog.Default)}");
     }
 
     /// <summary>The learned spells by name, and how many more the worn artifacts teach (the Unwritten Codex, ADR-111; scrolls, ADR-136).</summary>
@@ -275,14 +297,9 @@ public partial class HeroPanel : PanelContainer
         }
 
         var lent = EternalWars.Core.Domain.Magic.MagicRules.Known(hero, EternalWars.Core.Domain.Magic.SpellCatalog.Default).Count() - hero.Spells.Count;
-        var learned = hero.Spells.Count == 0 ? "Spell book: empty." : $"Spells: {string.Join(", ", hero.Spells.Select(s => SpellName(s.Key, s.Value)))}";
-        return lent > 0 ? $"{learned}   (+{lent} while its artifacts are worn)" : learned;
+        var known = hero.Spells.Count == 0 && lent == 0 ? "Spell book: empty." : "Spells:";
+        return lent > 0 ? $"{known} ({lent} lent while its artifacts are worn)" : known;
     }
-
-    private static string SpellName(string spell, int rank) =>
-        EternalWars.Core.Domain.Magic.SpellCatalog.Default.TryGet(spell, out var definition)
-            ? EternalWars.Core.Domain.Magic.MagicRules.NameAtRank(definition, rank)
-            : spell;
 
     private void ShowSkills(Hero hero)
     {
@@ -302,6 +319,7 @@ public partial class HeroPanel : PanelContainer
             _skills.AddChild(new Label { Text = $"{group.Name} ({points}/{SkillGroup.Points})" });
             foreach (var skill in rows)
             {
+                var id = skill.Id;
                 var level = hero.SkillLevelOf(skill.Id);
                 var learned = hero.Skills.Level(skill.Id);
                 _skills.AddChild(new Label
@@ -309,7 +327,7 @@ public partial class HeroPanel : PanelContainer
                     Text = $"    {skill.Name}: {level}" + (level != learned ? $" (learned {learned})" : "") + $" of {skill.MaxLevel}\n        {skill.Description}",
                     AutowrapMode = TextServer.AutowrapMode.WordSmart,
                     CustomMinimumSize = new Vector2(600, 0),
-                });
+                }.WithInfo(detailed => InfoSheets.Skill(id, level, detailed, hero, learned)));
             }
         }
 
@@ -334,6 +352,11 @@ public partial class HeroPanel : PanelContainer
             };
             var target = slot;
             button.Pressed += () => ClickSlot(hero.Id, target);
+            if (stack is not null)
+            {
+                button.WithInfo(detailed => InfoSheets.Creature(_session.State, stack.Creature, detailed, InfoSheets.Known(stack)));
+            }
+
             _army.AddChild(button);
         }
     }
@@ -386,6 +409,7 @@ public partial class HeroPanel : PanelContainer
                 {
                     var id = artifact.Id;
                     button.Pressed += () => Run(new UnequipArtifactCommand(_session.State.CurrentPlayer.Id, hero.Id, id));
+                    button.WithInfo(detailed => InfoSheets.Artifact(_session.State, id, detailed));
                 }
 
                 _doll.AddChild(button);
@@ -422,6 +446,7 @@ public partial class HeroPanel : PanelContainer
             var button = new Button { Text = $"{artifact.Name} ({artifact.Slot})", TooltipText = ArtifactText(artifact) };
             var artifactId = artifact.Id;
             button.Pressed += () => Run(new EquipArtifactCommand(_session.State.CurrentPlayer.Id, hero.Id, artifactId));
+            button.WithInfo(detailed => InfoSheets.Artifact(_session.State, artifactId, detailed));
             _backpack.AddChild(button);
         }
     }

@@ -132,8 +132,7 @@ sight circle reaches the army shows more:
 
 Veil I hides a hero's counts from Scouting below Expert, Veil II its artifacts from everyone. A town's buildings are not shown (Eavesdrop
 shows them). The information spells (Distant Vision, Ledger of Ages, Eavesdrop, Detect Magic, Grave Whisper) keep their exact counts.
-Right-clicking another player's hero or a neutral stack in sight shows it on the status line, a town not the player's own in the intel
-panel. The adventure AI plans with the same view, taking each hidden count for the middle of its range (a legion as 1000).
+Right-clicking another player's hero, a neutral stack or a town opens its information window with what Scouting shows (ADR-154). The adventure AI plans with the same view, taking each hidden count for the middle of its range (a legion as 1000).
 
 ## Mines and resource providers
 | Object | Effect |
