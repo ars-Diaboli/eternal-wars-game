@@ -192,7 +192,7 @@ public partial class BattleHud : Control
     /// <summary>
     /// A click on the battlefield while a spell is armed: casts it at the stack on the cell (or at the cell, for an area) and returns true; false
     /// when no spell is armed, so the click is an ordinary action. A two-click spell (ADR-151) takes its stack first, then the cell a move goes
-    /// to or the own stack a drain heals.
+    /// to, the own stack a drain heals or the martyr that takes the blows (ADR-152).
     /// </summary>
     public bool TryCastAt(CellPosition cell)
     {
@@ -232,7 +232,9 @@ public partial class BattleHud : Control
             _firstAim = unit.Id;
             _status.Text = move
                 ? $"{known.Spell.Name}: click where {unit.Creature.Name} goes (Esc cancels)."
-                : $"{known.Spell.Name}: click the own stack that drinks the life (Esc cancels).";
+                : known.Effect.DrainPercent > 0
+                    ? $"{known.Spell.Name}: click the own stack that drinks the life (Esc cancels)."
+                    : $"{known.Spell.Name}: click the own stack that takes the blows meant for {unit.Creature.Name} (Esc cancels).";
             return true;
         }
 
@@ -282,7 +284,7 @@ public partial class BattleHud : Control
 
         (ArmedSpell, _creatureArmed, _firstAim) = (known.Spell.Id, false, null);
         _status.Text = known.Effect.TwoClicks
-            ? $"{known.Spell.Name}: click the stack, then {(known.Effect.Kind == Core.Domain.Magic.SpellEffectKind.Move ? "where it goes" : "the own stack it heals")} (Esc cancels)."
+            ? $"{known.Spell.Name}: click the stack, then {(known.Effect.Kind == Core.Domain.Magic.SpellEffectKind.Move ? "where it goes" : known.Effect.DrainPercent > 0 ? "the own stack it heals" : "the own stack that takes its blows")} (Esc cancels)."
             : $"{known.Spell.Name}: click a target (Esc cancels).";
     }
 

@@ -49,6 +49,26 @@ public enum SpellEffectKind
 
     /// <summary>An own stack is moved to a free cell the caster picks (Teleport, Shadow Step, ADR-151): aimed with two clicks, the stack and the cell.</summary>
     Move,
+
+    /// <summary>A copy of an own stack fights for some rounds and vanishes when hit (Mirror Image, ADR-152).</summary>
+    Copy,
+
+    /// <summary>
+    /// Skeletons worth a percent of the slain enemies' health join the caster's army after the battle; ranks II / III also raise destroyed stacks
+    /// as skeletons during it (Raise Dead, ADR-152).
+    /// </summary>
+    Raise,
+
+    /// <summary>An own stack loses a percent of its creatures and the hero gains mana for the health lost (Blood Price, ADR-152).</summary>
+    Sacrifice,
+}
+
+/// <summary>How often Raise Dead (ADR-152) raises a destroyed stack during the battle: never (only after it), once, or once each round.</summary>
+public enum SpellRises
+{
+    None,
+    Once,
+    EachRound,
 }
 
 /// <summary>
@@ -77,7 +97,7 @@ public enum DispelScope
 /// penalty or cover), <c>sanctuary</c> (cannot be attacked in melee), <c>stasis</c> (no turns, cannot be attacked or harmed by spells),
 /// <c>unseen</c> (cannot be attacked or aimed at by the enemy until it acts), <c>phase</c> (moves like a flyer), <c>ward-mind</c> (immune to
 /// <c>mind</c> spells). ADR-150: <c>frenzied</c> (its turn attacks the nearest stack, friend or foe), <c>controlled</c> (it fights for the
-/// spell's caster: Hypnotize, Puppet Master).
+/// spell's caster: Hypnotize, Puppet Master). ADR-152: <c>twice</c> (takes a second turn right after its turn, once a round: Clockwork Precision).
 /// </summary>
 [Flags]
 public enum SpellStatus
@@ -99,6 +119,7 @@ public enum SpellStatus
     WardMind = 1 << 13,
     Frenzied = 1 << 14,
     Controlled = 1 << 15,
+    Twice = 1 << 16,
 }
 
 /// <summary>Whom a spell reaches: one stack, a square area, every stack of the target side, or every stack on the field.</summary>
@@ -112,7 +133,7 @@ public enum SpellReach
 
 /// <summary>
 /// Which stacks a spell works on at all: any, the living (not undead, constructs or machines), undead, undead and demons, shooters, melee stacks
-/// (no shots; ranks II / III, ADR-122), stacks on the ground (not flyers; war machines count as on the ground).
+/// (no shots; ranks II / III, ADR-122), stacks on the ground (not flyers; war machines count as on the ground), war machines only (ADR-152).
 /// </summary>
 public enum SpellFilter
 {
@@ -123,6 +144,7 @@ public enum SpellFilter
     Shooter,
     Melee,
     Ground,
+    Machine,
 }
 
 /// <summary>
@@ -131,13 +153,14 @@ public enum SpellFilter
 /// damage roll (+1 maximum, Bless; −1 minimum, Curse). ADR-123 adds the <see cref="SpellStatus"/> flags, damage (<c>burn</c>) and healing
 /// (<c>regen</c>) at the start of each round, creatures lost each round (<c>decay%</c>), immunity to every spell up to a level (<c>immune-level</c>,
 /// Anti-Magic) or to the enemy's up to a level (<c>shroud</c>), melee damage given back (<c>thorns%</c>) and damage dealt healed and revived
-/// (<c>lifesteal%</c>). <c>burn</c> and <c>regen</c> grow with Spell Power when cast.
+/// (<c>lifesteal%</c>). <c>burn</c> and <c>regen</c> grow with Spell Power when cast. ADR-152: the share of the damage meant for the stack that
+/// another own stack takes (<c>martyr%</c>, Martyrdom).
 /// </summary>
 public sealed record SpellModifiers(
     int Attack = 0, int Defense = 0, int Speed = 0, int SpeedPercent = 0, int InitiativePercent = 0, int MeleePercent = 0, int RangedPercent = 0,
     int DamageTakenPercent = 0, int MeleeTakenPercent = 0, int RangedTakenPercent = 0, int SpellTakenPercent = 0, int Morale = 0, int Luck = 0,
     int Roll = 0, SpellStatus Status = SpellStatus.None, int Burn = 0, int Regen = 0, int DecayPercent = 0, int ImmuneLevel = 0, int ShroudLevel = 0,
-    int ThornsPercent = 0, int LifestealPercent = 0)
+    int ThornsPercent = 0, int LifestealPercent = 0, int MartyrPercent = 0)
 {
     public static SpellModifiers None { get; } = new();
 
@@ -151,7 +174,7 @@ public sealed record SpellModifiers(
         a.MeleeTakenPercent + b.MeleeTakenPercent, a.RangedTakenPercent + b.RangedTakenPercent, a.SpellTakenPercent + b.SpellTakenPercent,
         a.Morale + b.Morale, a.Luck + b.Luck, a.Roll + b.Roll, a.Status | b.Status, a.Burn + b.Burn, a.Regen + b.Regen,
         a.DecayPercent + b.DecayPercent, Math.Max(a.ImmuneLevel, b.ImmuneLevel), Math.Max(a.ShroudLevel, b.ShroudLevel),
-        a.ThornsPercent + b.ThornsPercent, a.LifestealPercent + b.LifestealPercent);
+        a.ThornsPercent + b.ThornsPercent, a.LifestealPercent + b.LifestealPercent, Math.Max(a.MartyrPercent, b.MartyrPercent));
 }
 
 /// <summary>
@@ -188,6 +211,11 @@ public sealed record ZoneEffect(
 /// ADR-151: <c>move N|field [shadow] [again|again-attack]</c> moves an own stack to a free cell within N cells (or anywhere), with <c>shadow</c> only
 /// where it is not next to an enemy stack; for damage aimed at a stack, <c>drain% N</c> heals an own stack the caster picks by that percent of the
 /// damage dealt, <c>drain-revive</c> also reviving its dead.
+/// ADR-152: <c>copy rounds N [survives N]</c> (a copy of an own stack), <c>raise N [once|each-round]</c> (no aim: skeletons worth N % of the slain
+/// enemies' health after the battle, and destroyed stacks raised during it), <c>sacrifice N per M</c> (an own stack loses N % of its creatures, the
+/// hero gains 1 mana per M health lost); for buffs <c>martyr% N</c> (another own stack, the second aim, takes that share of the damage meant for the
+/// stack) with <c>martyr-defense N</c> for the martyr, the status <c>twice</c> and the filter <c>machine</c>; for <c>controlled</c> with
+/// <c>health N</c>, <c>split</c> (a bigger stack is split, not refused).
 /// </summary>
 public sealed record SpellEffect(
     SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
@@ -256,8 +284,32 @@ public sealed record SpellEffect(
     /// <summary>The drained health also revives the picked stack's dead, for good (Drain Life III).</summary>
     public bool DrainRevives { get; init; }
 
-    /// <summary>Whether the spell is aimed with a second click after its stack: the cell a move goes to, the own stack a drain heals (ADR-151).</summary>
-    public bool TwoClicks => Kind == SpellEffectKind.Move || DrainPercent > 0;
+    /// <summary>Hits a copy takes before it vanishes (Mirror Image, ADR-152): 1, or 2 when it survives one hit.</summary>
+    public int CopyHits { get; init; } = 1;
+
+    /// <summary>Defense the martyr gets while it guards the stack (Martyrdom III, ADR-152).</summary>
+    public int MartyrDefense { get; init; }
+
+    /// <summary>
+    /// A <c>controlled</c> spell's stack above the health limit is split (Puppet Master III, ADR-152): the creatures within the limit are taken, the
+    /// rest stays on its side.
+    /// </summary>
+    public bool Split { get; init; }
+
+    /// <summary>How often Raise Dead raises a destroyed stack during the battle (ADR-152).</summary>
+    public SpellRises Rises { get; init; }
+
+    /// <summary>A sacrifice gives the hero 1 mana for this much health lost (Blood Price, ADR-152).</summary>
+    public int HealthPerMana { get; init; }
+
+    /// <summary>
+    /// Whether the spell is aimed with a second click after its stack: the cell a move goes to, the own stack a drain heals (ADR-151), the own stack
+    /// that takes the blows (Martyrdom, ADR-152).
+    /// </summary>
+    public bool TwoClicks => Kind == SpellEffectKind.Move || DrainPercent > 0 || Modifiers.MartyrPercent > 0;
+
+    /// <summary>The second aim is an own stack (a drain's drinker, a martyr), not a cell.</summary>
+    public bool SecondIsStack => DrainPercent > 0 || Modifiers.MartyrPercent > 0;
 
     /// <summary>
     /// Damage, curses, kills, the enemy's dispel and field zones work on the enemy (damage to the whole field or an area hits own stacks too; a zone
@@ -278,7 +330,7 @@ public sealed record SpellEffect(
         var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (tokens.Length == 0 || !Enum.TryParse<SpellEffectKind>(tokens[0], ignoreCase: true, out var kind) || !Enum.IsDefined(kind))
         {
-            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse, summon, revive, dispel, slay, zone or move");
+            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse, summon, revive, dispel, slay, zone, move, copy, raise or sacrifice");
         }
 
         var i = 1;
@@ -297,9 +349,38 @@ public sealed record SpellEffect(
             return new SpellEffect(kind, amount, SpellReach.Side, 0, SpellFilter.None, SpellModifiers.None, null, 0, creatures, rooted);
         }
 
-        if (kind is SpellEffectKind.Damage or SpellEffectKind.Heal or SpellEffectKind.Revive or SpellEffectKind.Slay)
+        if (kind is SpellEffectKind.Damage or SpellEffectKind.Heal or SpellEffectKind.Revive or SpellEffectKind.Slay or SpellEffectKind.Raise
+            or SpellEffectKind.Sacrifice)
         {
             amount = Number(Next());
+        }
+
+        if (kind == SpellEffectKind.Raise)
+        {
+            // raise N [once|each-round]: no aim, the whole battle's dead.
+            var rises = i < tokens.Length ? tokens[i++] switch
+            {
+                "once" => SpellRises.Once,
+                "each-round" => SpellRises.EachRound,
+                var word => throw new FormatException($"'{text}': Raise Dead is 'raise N [once|each-round]', not '{word}'"),
+            } : SpellRises.None;
+            if (i < tokens.Length || amount < 1)
+            {
+                throw new FormatException($"'{text}': Raise Dead is 'raise N [once|each-round]', N at least 1");
+            }
+
+            return new SpellEffect(kind, amount, SpellReach.Side, 0, SpellFilter.None, SpellModifiers.None, null) { Rises = rises };
+        }
+
+        if (kind == SpellEffectKind.Sacrifice)
+        {
+            // sacrifice N per M: N % of the creatures, 1 mana per M health.
+            if (i + 2 != tokens.Length || tokens[i++] != "per" || Number(tokens[i++]) is not (> 0 and var per) || amount is < 1 or > 100)
+            {
+                throw new FormatException($"'{text}': a sacrifice is 'sacrifice N per M', N from 1 to 100, M at least 1");
+            }
+
+            return new SpellEffect(kind, amount, SpellReach.Stack, 0, SpellFilter.None, SpellModifiers.None, null) { HealthPerMana = per };
         }
 
         var moveRange = 0;
@@ -337,11 +418,24 @@ public sealed record SpellEffect(
         var zoneWords = false;
         var (turns, healthLimit) = ((int?)null, 0);
         var (shadow, again, drain, drainRevives) = (false, SpellTurnAgain.None, 0, false);
+        var (survives, martyrDefense, split) = (0, 0, false);
         while (i < tokens.Length)
         {
             var token = tokens[i++];
             switch (token)
             {
+                case "survives":
+                    survives = Number(Next());
+                    break;
+                case "martyr-defense":
+                    martyrDefense = Number(Next());
+                    break;
+                case "split":
+                    split = true;
+                    break;
+                case "machine":
+                    filter = SpellFilter.Machine;
+                    break;
                 case "shadow":
                     shadow = true;
                     break;
@@ -561,6 +655,28 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': 'drain% N' (at least 1) and 'drain-revive' are for a damage spell aimed at a stack");
         }
 
+        if (kind == SpellEffectKind.Copy && (rounds is not > 0 || turns is not null || reach != SpellReach.Stack || targets > 1 || !modifiers.IsEmpty
+                                             || filter != SpellFilter.None || walls > 0 || survives < 0))
+        {
+            throw new FormatException($"'{text}': a copy is 'copy rounds N [survives N]', with at least 1 round");
+        }
+
+        if (survives != 0 && kind != SpellEffectKind.Copy)
+        {
+            throw new FormatException($"'{text}': 'survives' is for copies");
+        }
+
+        if ((modifiers.MartyrPercent != 0 || martyrDefense != 0)
+            && (kind != SpellEffectKind.Buff || reach != SpellReach.Stack || targets > 1 || modifiers.MartyrPercent is < 1 or > 100 || martyrDefense < 0))
+        {
+            throw new FormatException($"'{text}': 'martyr% N' (1 to 100) and 'martyr-defense N' are for a buff on one stack");
+        }
+
+        if (split && (!modifiers.Has(SpellStatus.Controlled) || healthLimit == 0))
+        {
+            throw new FormatException($"'{text}': 'split' is for a 'controlled' spell with a health limit");
+        }
+
         var height = 0;
         if (kind == SpellEffectKind.Zone)
         {
@@ -602,6 +718,9 @@ public sealed record SpellEffect(
             Again = again,
             DrainPercent = drain,
             DrainRevives = drainRevives,
+            CopyHits = 1 + survives,
+            MartyrDefense = martyrDefense,
+            Split = split,
         };
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");
@@ -626,6 +745,7 @@ public sealed record SpellEffect(
         ["ward-mind"] = SpellStatus.WardMind,
         ["frenzied"] = SpellStatus.Frenzied,
         ["controlled"] = SpellStatus.Controlled,
+        ["twice"] = SpellStatus.Twice,
     };
 
     private static int Number(string text) =>
@@ -653,6 +773,7 @@ public sealed record SpellEffect(
         "shroud" => m with { ShroudLevel = value },
         "thorns%" => m with { ThornsPercent = value },
         "lifesteal%" => m with { LifestealPercent = value },
+        "martyr%" => m with { MartyrPercent = value },
         _ => throw new FormatException($"'{key}' is not something a spell changes"),
     };
 }

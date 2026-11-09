@@ -1395,3 +1395,48 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   `BattleMagic.MoveRefusal`, `CanLand`, `DrainRefusal`, `Drained`, `DrainHeals`; `BattleUnit.StaysPut` (in `IsFixed`); the
   engine's `Teleport` and `Drain`; `BattleTargeting.SpellPlacement`; `BattleUnitTeleported` (the 3D stack sinks and rises at its new place, the
   2D board redraws) and `BattleUnitTurnRegained`; `BattleSpellCast.Second`. No save format change (saves replay commands; `Second` is optional).
+
+### ADR-152: The last battle spells: Martyrdom, Mirror Image, Clockwork Precision, Raise Dead, Blood Price, Puppet Master III (ADR-099, ADR-122, ADR-150, ADR-151, 2026-11-09)
+**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing. All 91 battle spells now work at every rank.
+
+- **Grammar**: new kinds `copy rounds N [survives N]`, `raise N [once|each-round]` (no aim) and `sacrifice N per M`; for buffs `martyr% N`
+  (another own stack, the second aim, takes that share of each blow meant for the stack) and `martyr-defense N` (for the martyr); the status
+  `twice` (a second turn right after the first, once a round) and the filter `machine` (war machines only; they take any spell with it); for a
+  `controlled` curse with `health N`, `split`.
+- **The spells**: Martyrdom `buff martyr% 50 rounds 3` (II 100 %, III also `martyr-defense 2`); Mirror Image `copy rounds 2` (II 3 rounds,
+  III `survives 1`); Clockwork Precision `buff melee% 50 ranged% 50 twice rounds 2 allies machine` (II 3 rounds, III also `true-shot`: "ignores
+  cover" given to every own machine, only the offensive one shoots); Raise Dead `raise 15` (II `once`, III `each-round`); Blood Price
+  `sacrifice 10 per 5` (II per 4, III per 3); Puppet Master III `curse controlled rounds 3 health 600 split`.
+- **Martyrdom**: aimed with two clicks (ADR-151), the guarded stack, then the martyr (another living own creature stack, not a copy). A *blow*
+  is an attack, a damage spell, a field zone's damage, a tower's shot or the moat; the martyr takes its share after the blow (it does not pass it
+  on again), and none while it is in Stasis. Final Reckoning, decay (Plague, Pact of Ash) and Blood Price are losses, not blows *(proposal)*.
+  The link ends with the spell or when either stack dies.
+- **Mirror Image** *(proposal for the open points)*: the copy has the stack's count, its top creature's health and its shots, none of its spells
+  or casts; it stands on the free placement nearest the stack, for the caster's side, and acts from the next round. It is summoned (gone after the
+  battle, worth no experience, nobody's loss) and does not keep a side in the battle. Any blow it takes uses a hit, after the damage: it vanishes
+  when none is left (rank III: the second blow), or when its rounds (lengthened by Spell Power) end. No copy of a copy, nor of a war machine.
+- **Clockwork Precision**: the second turn comes right after the machine's turn, like good morale's extra action, and not after defending.
+- **Raise Dead** *(proposal)*: cast with no aim, once a battle per side. After the battle, when its hero wins against a defeated enemy,
+  skeletons worth 15 % of the health of the enemy creatures slain (those Necromancy counts, not the stacks it raised in the battle; the
+  percent is not raised by Spell Power) join the army with Necromancy's undead, reported in the same `UndeadRaised`. "From a destroyed stack"
+  (II) and "each round" (III): when cast, and then as each round starts, the destroyed stack worth most health (either side's, not a war machine,
+  summoned stack, copy or raised skeletons, nor constructs or elementals) rises on its place as a new stack of skeletons worth 15 % of its
+  starting health, at least 1, for the caster; rank II raises one in all (the first chance), rank III one a round. Raised skeletons act from the
+  next round and join the army whenever their side's hero wins, however the battle ended.
+- **Blood Price**: an own creature stack (not a copy) loses 10 % of its creatures, at least 1, the wounded top creature first; the hero gains
+  the health lost / 5 (4, 3) in mana at once, rounded down, with no cap in battle *(proposal)*. Mana left above what the hero brought is lost
+  when the battle ends (the rule since ADR-110).
+- **Puppet Master III**: a stack within 600 health (lengthened by Spell Power, like Hypnotize's limit) is taken whole; a bigger one is split:
+  as many full-health creatures as the limit holds leave it as a stack of their own on the nearest free placement, with its spells and shots,
+  and come under control; the rest stays on its side. The part comes from the same army slot (its starting count is moved over too), so the
+  creatures go back together after the battle. It acts from the next round. With no room to split, or not one creature within the limit, the
+  spell is refused.
+- **AI** *(proposal)*: Martyrdom is valued like a buff on the guarded stack, with the other own stack with the most health as the martyr; Mirror
+  Image at 10 % of the stack's value a round; Clockwork Precision like a buff on each machine; Raise Dead at the skeletons the enemy's slain
+  would give now, plus the stack rising now (so not before something dies); Puppet Master III by the part it takes. It never casts Blood Price.
+- **Code**: `SpellEffectKind.Copy`, `Raise`, `Sacrifice`, `SpellRises`, `SpellStatus.Twice`, `SpellFilter.Machine`, `SpellModifiers.MartyrPercent`;
+  `BattleUnit.IsCopy` / `CopyHits` / `IsRaised` / `TookSecondTurn`, `InitialCount` settable for a split; `ActiveSpell.Martyr` / `IsMartyr`;
+  `BattleState.Raising` / `Risen`; the engine's `Take` (blows, the martyr's share), `Mirror`, `Rise`, `SplitOff`; `BattleService`'s
+  `JoinUndead` adds Raise Dead's skeletons. Events `BattleUnitCopied`, `BattleCopyVanished`, `BattleUnitShielded`, `BattleManaGained`,
+  `BattleUnitActsAgain`, `BattleUnitRaised`, `BattleUnitSplit` (the 3D view adds the new stacks and narrates; the 2D board redraws). Smoke
+  scenario `game-battle-mirror`. No save format change.

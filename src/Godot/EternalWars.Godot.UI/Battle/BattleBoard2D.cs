@@ -64,6 +64,11 @@ public partial class BattleBoard2D : Control
         this.SubscribeWhileInTree<BattleZoneCreated>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleZoneExpired>(session.Events, _ => QueueRedraw());
         this.SubscribeWhileInTree<BattleUnitSideChanged>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitCopied>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitRaised>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitSplit>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitShielded>(session.Events, _ => QueueRedraw());
+        this.SubscribeWhileInTree<BattleUnitSummoned>(session.Events, _ => QueueRedraw());
     }
 
     public override void _Draw()

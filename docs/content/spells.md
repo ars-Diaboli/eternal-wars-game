@@ -48,9 +48,9 @@ town creatures (and Conflux elementals).
   by **(1 + SP / 10)**, rounded down, at least 1 round. The tables give the **base** numbers (at SP 0); "a + b·SP" is gone. A spell specialty
   adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once
   (MAG-11). Areas are in battlefield cells (the field is 30 × 20; a Small creature is one cell, ADR-070).
-- **Built in battle** (ADR-123, ADR-149, ADR-150, ADR-151): 86 of the 91 battle spells work (the 11 adventure spells are cast on the map); still
-  to come are Martyrdom, Mirror Image, Clockwork Precision, Raise Dead and Blood Price, and Puppet Master III's split. `spells.csv` lists each
-  rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`).
+- **Built in battle** (ADR-123, ADR-149, ADR-150, ADR-151, ADR-152): all 91 battle spells work (the 11 adventure spells are cast on the map).
+  `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`); a few rank changes still fall back to the rank
+  below (ADR-123 lists them).
 - **Field zones** (ADR-149): Consecrate, Thornwall, Bone Wall, Fire Wall and Darkness leave cells on the field for their rounds, aimed with
   one click. A line runs down the field, centred on the aimed cell; zones are clipped to the field and may lie over stacks. Walls block walkers
   (a stack standing in one may walk out); flyers and teleporters pass over them. A walker takes Fire Wall's damage when its path crosses the
@@ -70,6 +70,15 @@ town creatures (and Conflux elementals).
   a stack that had already taken its turn this round gets one more after the waiting stacks (it cannot wait then); Shadow Step's is a turn without
   moving. Drain Life is aimed at an enemy stack, then at the living own stack that drinks the life (none is fine): it gets half the damage dealt
   to all the stacks hit, as healing of its top creature, at rank III also as its dead revived for good.
+- **The last spells** (ADR-152): Martyrdom is aimed at the guarded stack, then at the martyr (another own stack); the martyr takes its share of
+  each blow (attacks, damage spells, zones, towers, the moat), not of losses like Final Reckoning, decay or Blood Price. Mirror Image's copy has
+  the stack's count and shots but none of its spells; it stands next to it for the caster, acts from the next round, does not keep a side in the
+  battle and vanishes after its last hit or round. Clockwork Precision gives each own war machine a second turn right after its turn, once a
+  round. Raise Dead is cast with no aim, once a battle: after a victory over a defeated enemy, skeletons worth 15 % of the slain enemy creatures'
+  health join the army (with Necromancy's undead); ranks II and III also raise the destroyed stack worth most (either side's) on its place as
+  skeletons worth 15 % of its health, when cast and as rounds start (once in all at rank II, once a round at rank III); they join the army when
+  the side wins. Blood Price's mana comes at once, without a cap in battle. Puppet Master III takes a stack above 600 health in part: the
+  full-health creatures the limit holds become a stack of their own under control; they go back to the same army slot after the battle.
 - **In battle** (ADR-070, ADR-071): the hero casts **at most one spell a round**, during the turn of one of the units it controls; casting
   does not use that unit's action. Spells may target war machines, which are `mechanical` and resist every `mind`, `poison` and healing spell.
 - **Immunity and resistance**: creatures carry immunity tags (`all`, `mind`, `fire`, `ice`, `lightning`, `poison`, `curse`, `blind`);

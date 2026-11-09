@@ -45,7 +45,8 @@ public sealed class BattleUnit
     /// <summary>Army slot the stack came from; -1 for a split neutral guard.</summary>
     public int SourceSlot { get; }
 
-    public int InitialCount { get; }
+    /// <summary>The count it started the battle with; a stack Puppet Master III split (ADR-152) gives the split part's creatures to that part.</summary>
+    public int InitialCount { get; internal set; }
 
     public int Count { get; internal set; }
 
@@ -73,10 +74,27 @@ public sealed class BattleUnit
     /// <summary>The creature table's caster spell id → casts left this battle (Caster capability, ADR-120).</summary>
     public IReadOnlyDictionary<string, int> CastsLeft => MutableCastsLeft;
 
-    internal Dictionary<string, int> MutableCastsLeft { get; private init; }
+    internal Dictionary<string, int> MutableCastsLeft { get; init; }
 
     /// <summary>Called by a spell (ADR-106, ADR-120): it vanishes when the battle ends, is nobody's loss and is worth no experience.</summary>
     public bool IsSummoned { get; internal init; }
+
+    /// <summary>A copy of another stack (Mirror Image, ADR-152): summoned, it vanishes when hit (<see cref="CopyHits"/>) or when its rounds end.</summary>
+    public bool IsCopy { get; internal init; }
+
+    /// <summary>Hits a copy can still take; it vanishes when they reach 0.</summary>
+    public int CopyHits { get; internal set; }
+
+    /// <summary>The last round a copy fights in, and the spell that made it.</summary>
+    public int CopyUntilRound { get; internal init; }
+
+    public string? CopySpell { get; internal init; }
+
+    /// <summary>Skeletons Raise Dead raised from a destroyed stack (ADR-152): they join the caster's army when its hero wins.</summary>
+    public bool IsRaised { get; internal init; }
+
+    /// <summary>It took this round's second turn of a <c>twice</c> spell (Clockwork Precision, ADR-152).</summary>
+    public bool TookSecondTurn { get; internal set; }
 
     /// <summary>Rooted where it was called (Awaken the Grove's treants): it never moves, but fights what stands next to it.</summary>
     public bool IsRooted { get; internal init; }
@@ -157,6 +175,13 @@ public sealed class BattleUnit
         MutableCastsLeft = new Dictionary<string, int>(CastsLeft, StringComparer.Ordinal),
         IsSummoned = IsSummoned,
         IsRooted = IsRooted,
+        IsCopy = IsCopy,
+        CopyHits = CopyHits,
+        CopyUntilRound = CopyUntilRound,
+        CopySpell = CopySpell,
+        IsRaised = IsRaised,
+        TookSecondTurn = TookSecondTurn,
+        InitialCount = InitialCount,
         HasRetaliated = HasRetaliated,
         IsDefending = IsDefending,
         HitsThisRound = HitsThisRound,
@@ -173,9 +198,18 @@ public sealed class BattleUnit
 
 /// <summary>
 /// A buff or curse on a stack (ADR-110): what it changes, until the end of round <c>UntilRound</c>; a spell that lasts turns (ADR-150) has
-/// <c>TurnsLeft</c> of the stack's turns to go as well.
+/// <c>TurnsLeft</c> of the stack's turns to go as well. Martyrdom (ADR-152) names the stack that takes the blows (<c>Martyr</c>); the martyr's own
+/// share of it (its Defense, rank III) is marked <c>IsMartyr</c>.
 /// </summary>
-public sealed record ActiveSpell(string Spell, BattleSide Caster, Magic.SpellModifiers Modifiers, int UntilRound, int? TurnsLeft = null);
+public sealed record ActiveSpell(string Spell, BattleSide Caster, Magic.SpellModifiers Modifiers, int UntilRound, int? TurnsLeft = null)
+{
+    public int? Martyr { get; init; }
+
+    public bool IsMartyr { get; init; }
+}
+
+/// <summary>Raise Dead on a side (ADR-152): the spell, the percent of the slain health raised after the battle, and its raises during it.</summary>
+internal sealed record RaiseDead(string Spell, int Percent, Magic.SpellRises Rises);
 
 /// <summary>
 /// A battle in progress or just finished (the current one is <c>GameState.Battle</c>). Its random generator
@@ -226,6 +260,12 @@ public sealed class BattleState
 
     /// <summary>The mana a side's hero has left (ADR-110); written back to the hero when the battle ends.</summary>
     internal Dictionary<BattleSide, int> ManaLeft { get; } = [];
+
+    /// <summary>Raise Dead cast by a side's hero (ADR-152): its spell, percent and how often it still raises a destroyed stack.</summary>
+    internal Dictionary<BattleSide, RaiseDead> Raising { get; } = [];
+
+    /// <summary>Destroyed stacks Raise Dead has raised already (they rise once, and count no more after the battle).</summary>
+    internal HashSet<int> Risen { get; } = [];
 
     /// <summary>The round a side's hero last cast in; it casts at most once a round (ADR-071, MAG-4).</summary>
     internal Dictionary<BattleSide, int> CastRounds { get; } = [];
@@ -398,6 +438,13 @@ public sealed class BattleState
             copy.CastRounds[side] = round;
         }
 
+        foreach (var (side, raise) in Raising)
+        {
+            copy.Raising[side] = raise;
+        }
+
+        copy.Risen.UnionWith(Risen);
+
         return copy;
     }
 
@@ -465,7 +512,7 @@ public sealed class BattleState
     /// Living creature stacks the side came with, whoever they fight for now (ADR-150): they keep the side in the battle and go back to it when
     /// the battle ends.
     /// </summary>
-    public IEnumerable<BattleUnit> OwnedArmyOf(BattleSide side) => _units.Where(u => u.IsAlive && u.Owner == side && !u.IsMachine);
+    public IEnumerable<BattleUnit> OwnedArmyOf(BattleSide side) => _units.Where(u => u.IsAlive && u.Owner == side && !u.IsMachine && !u.IsCopy);
 
     /// <summary>The side's living war machine of that kind, if any.</summary>
     public BattleUnit? LivingMachine(BattleSide side, WarMachineKind kind) => LivingUnitsOf(side).FirstOrDefault(u => u.Machine == kind);

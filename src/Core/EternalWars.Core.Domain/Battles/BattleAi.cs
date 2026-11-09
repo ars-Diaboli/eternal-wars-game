@@ -224,7 +224,9 @@ internal static class BattleAi
             var effect = known.Effect!;
             foreach (var (target, cell) in effect.Kind == Magic.SpellEffectKind.Move ? MoveAims(battle, side, effect) : Aims(battle, side, effect))
             {
-                var drinker = effect.DrainPercent > 0 ? Drinker(battle, side, known, target) : null;
+                var drinker = effect.DrainPercent > 0 ? Drinker(battle, side, known, target)
+                    : effect.Modifiers.MartyrPercent > 0 ? Martyr(battle, side, target)
+                    : null;
                 if (BattleMagic.CastRefusal(battle, side, known.Spell.Id, target, cell, drinker?.Id) is not null)
                 {
                     continue;
@@ -299,6 +301,16 @@ internal static class BattleAi
             .FirstOrDefault();
     }
 
+    /// <summary>
+    /// The own stack that takes the blows for the aimed one under Martyrdom (ADR-152, proposal): the other own creature stack with the most health,
+    /// not a copy; it adds nothing to the spell's worth.
+    /// </summary>
+    private static (int Id, long Worth)? Martyr(BattleState battle, BattleSide side, int? target) =>
+        battle.LivingArmyOf(side).Where(u => u.Id != target && !u.IsCopy && !u.Has(Magic.SpellStatus.Stasis))
+            .OrderByDescending(u => u.TotalHealth).ThenBy(u => u.Id)
+            .Select(u => ((int Id, long Worth)?)(u.Id, 0L))
+            .FirstOrDefault();
+
     /// <summary>What a buff or curse is worth a round, in percent of the stack's creature value (ADR-123, proposal).</summary>
     public const int EnchantPercentPerRound = 4;
 
@@ -334,6 +346,15 @@ internal static class BattleAi
                     .Sum(h => (h.Unit.Side == side ? -1 : 1) * (Worth(h.Unit, h.Damage) + EnchantValue(battle, side, known, h.Unit)));
             case Magic.SpellEffectKind.Zone:
                 return cell is { } at ? ZoneValue(battle, side, known, at, creaturePower) : 0;
+            case Magic.SpellEffectKind.Copy:
+                // A copy fights like the stack for its rounds, or until hit (ADR-152, proposal): the control share of its value a round.
+                return target is { } copied && battle.FindUnit(copied) is { } original
+                    ? StackValue(original) * ControlPercentPerRound * Math.Min(MaxValuedRounds, effect.Rounds ?? MaxValuedRounds) / 100
+                    : 0;
+            case Magic.SpellEffectKind.Raise:
+                return RaiseValue(battle, side, effect);
+            case Magic.SpellEffectKind.Sacrifice:
+                return 0; // Blood Price (ADR-152, proposal): the AI does not trade creatures for mana
             case Magic.SpellEffectKind.Move:
                 return target is { } moved && battle.FindUnit(moved) is { } mover && cell is { } to
                     ? battle.LivingUnitsOf(side.Opponent()).Where(e => mover.RectAt(to).IsAdjacentTo(e.Rect))
@@ -350,6 +371,28 @@ internal static class BattleAi
                 .Sum(s => (s.Caster == side ? -1 : 1) * StackValue(u) * EnchantPercentPerRound * Math.Clamp(s.UntilRound - battle.Round + 1, 1, MaxValuedRounds) / 100)),
             _ => units.Sum(u => (u.Side == side) == effect.IsHostile ? -EnchantValue(battle, side, known, u) : EnchantValue(battle, side, known, u)),
         };
+    }
+
+    /// <summary>
+    /// What Raise Dead is worth now (ADR-152, proposal): the skeletons the enemy creatures slain so far would give after the battle, and for ranks II
+    /// and III the destroyed stack that would rise now; nothing once the side has cast it.
+    /// </summary>
+    private static long RaiseValue(BattleState battle, BattleSide side, Magic.SpellEffect effect)
+    {
+        if (battle.Raising.ContainsKey(side) || !battle.Creatures.TryGet(BattleMagic.RaisedCreature, out var skeleton))
+        {
+            return 0;
+        }
+
+        var slain = battle.Units.Where(u => u.Owner != side && !u.IsMachine && !u.IsSummoned && NecromancyRules.Counts(u.Creature))
+            .Sum(u => (long)(u.InitialCount - u.KeptCount) * u.Creature.Health);
+        var value = slain * effect.Amount / 100 / skeleton.Health * skeleton.Value;
+        if (effect.Rises != Magic.SpellRises.None && BattleMagic.NextRising(battle, effect.Amount) is { } rising)
+        {
+            value += (long)rising.Count * skeleton.Value;
+        }
+
+        return value;
     }
 
     /// <summary>What the lasting part of a spell is worth on the stack (0 when the stack already has this spell, or for a ward nobody can test).</summary>
@@ -379,7 +422,10 @@ internal static class BattleAi
         var percent = m.Has(Magic.SpellStatus.Controlled) ? TakenPercentPerRound
             : m.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis | Magic.SpellStatus.Confused | Magic.SpellStatus.Frenzied) ? ControlPercentPerRound
             : EnchantPercentPerRound;
-        var value = StackValue(unit) * percent * rounds / 100;
+        var taken = effect.Split && unit.TotalHealth > BattleMagic.HealthLimit(battle, side, known)
+            ? Math.Min(unit.Count, BattleMagic.SplitCount(battle, side, known, unit))
+            : unit.Count;
+        var value = (long)taken * unit.Creature.Value * percent * rounds / 100;
         if (m.Burn > 0)
         {
             value += Worth(unit, m.Burn * rounds);

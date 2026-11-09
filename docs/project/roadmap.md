@@ -8,9 +8,9 @@ Done items are summarised with their ADR numbers; the detail is in [decisions.md
 
 **Where we are (2026-11-09)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-except 5 battle spells (the field zones, control spells and two-click spells are in, ADR-149, ADR-150, ADR-151); sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133). The views built but never run were seen in Godot (ADR-148).
-**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: the last 5 battle
-spells, presentation; the few views not yet seen (below) when those spells or a game bring them up.
+and every battle spell is in (ADR-149 to ADR-152); sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133). The views built but never run were seen in Godot (ADR-148).
+**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: the rank changes
+ADR-123 lists as not built, presentation; the few views not yet seen (below) when those spells or a game bring them up.
 
 ## Open checks in Godot
 - [x] Godot run of (built and tested in core, the Godot part not run yet), seen with 13 new smoke scenarios (ADR-148):
@@ -140,10 +140,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       spells, info adventure spells, guild spells fixed by the map (ADR-123); spell resistance, specialties, elements (ADR-071, ADR-072,
       ADR-099, ADR-106)
 - [x] Field zones: Consecrate, Thornwall, Bone Wall, Fire Wall, Darkness, at all three ranks (ADR-149)
-- [x] Control spells: Frenzy, Hypnotize, Puppet Master (rank III's split not built), spells that last turns (ADR-150)
+- [x] Control spells: Frenzy, Hypnotize, Puppet Master, spells that last turns (ADR-150; rank III's split, ADR-152)
 - [x] Two-click spells: Teleport, Shadow Step, Drain Life, at all three ranks (ADR-151)
-- [ ] Spell table, the rest: Martyrdom, Mirror Image, Clockwork Precision, Raise Dead, Blood Price, the rank changes ADR-123 and ADR-150 list
-      as not built, final numbers after the visuals
+- [x] The last battle spells: Martyrdom, Mirror Image, Clockwork Precision, Raise Dead, Blood Price, at all three ranks (ADR-152)
+- [ ] Spell table, the rest: the rank changes ADR-123 lists as not built, final numbers after the visuals
 
 ### Combat additions
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges

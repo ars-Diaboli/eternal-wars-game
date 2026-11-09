@@ -156,7 +156,19 @@ public static class BattleMagic
                     return $"{unit.Creature.Name} has nothing to revive.";
                 }
 
-                if (effect.HealthLimit > 0 && unit.TotalHealth > HealthLimit(battle, side, known, creaturePower))
+                if (effect.Split && unit.TotalHealth > HealthLimit(battle, side, known, creaturePower))
+                {
+                    if (SplitCount(battle, side, known, unit, creaturePower) < 1)
+                    {
+                        return $"{unit.Creature.Name} is too strong for {known.Spell.Name} (not one creature within {HealthLimit(battle, side, known, creaturePower)} health).";
+                    }
+
+                    if (PlacementNear(battle, unit, unit.Creature) is null)
+                    {
+                        return $"There is no room to split {unit.Creature.Name}.";
+                    }
+                }
+                else if (effect.HealthLimit > 0 && unit.TotalHealth > HealthLimit(battle, side, known, creaturePower))
                 {
                     return $"{unit.Creature.Name} is too strong for {known.Spell.Name} ({HealthLimit(battle, side, known, creaturePower)} health at most).";
                 }
@@ -176,13 +188,35 @@ public static class BattleMagic
                     return MoveRefusal(battle, side, known, unit, cell);
                 }
 
+                if (effect.Kind is SpellEffectKind.Copy or SpellEffectKind.Sacrifice && unit.IsCopy)
+                {
+                    return $"{known.Spell.Name} does not work on a copy.";
+                }
+
+                if (effect.Kind == SpellEffectKind.Copy && PlacementNear(battle, unit, unit.Creature) is null)
+                {
+                    return $"There is no room for a copy of {unit.Creature.Name}.";
+                }
+
+                if (effect.Modifiers.MartyrPercent > 0)
+                {
+                    return MartyrRefusal(battle, side, known, unit, second);
+                }
+
                 return effect.DrainPercent > 0 && second is { } healed ? DrainRefusal(battle, side, known, healed) : null;
             case SpellReach.Area:
                 return cell is { } at && at.X >= 0 && at.Y >= 0 && at.X < battle.Width && at.Y < BattleState.Height
                     ? null
                     : $"{known.Spell.Name} needs a cell on the battlefield.";
             default:
-                return null;
+                if (effect.Kind == SpellEffectKind.Raise && battle.Raising.ContainsKey(side))
+                {
+                    return $"{known.Spell.Name} already works in this battle.";
+                }
+
+                return effect.Filter == SpellFilter.Machine && !Reach(battle, side, known, null, null).Any(u => Affects(battle, side, known, u))
+                    ? $"{known.Spell.Name} needs a war machine of the side."
+                    : null;
         }
     }
 
@@ -315,7 +349,7 @@ public static class BattleMagic
         var creature = unit.Creature;
         if (unit.IsMachine)
         {
-            return effect.Kind == SpellEffectKind.Damage && effect.Filter is SpellFilter.None or SpellFilter.Ground;
+            return effect.Filter == SpellFilter.Machine || (effect.Kind == SpellEffectKind.Damage && effect.Filter is SpellFilter.None or SpellFilter.Ground);
         }
 
         // Wards on the stack (ADR-123): Stasis keeps every spell but a dispel off; Anti-Magic every spell up to its level, Shroud the enemy's;
@@ -339,6 +373,7 @@ public static class BattleMagic
             SpellFilter.Shooter => creature.Shots > 0,
             SpellFilter.Melee => creature.Shots == 0,
             SpellFilter.Ground => !creature.IsFlying,
+            SpellFilter.Machine => false,
             _ => true,
         };
         if (!fits || creature.IsImmuneTo(spell.Tags) || (spell.HasTag(Holy) && creature.HasTag(CreatureTags.Holy)))
@@ -481,6 +516,70 @@ public static class BattleMagic
             ? null
             : $"{known.Spell.Name} heals a living own stack.";
 
+    /// <summary>
+    /// Why the stack cannot take the blows for the aimed one (Martyrdom, ADR-152), or null: it is another living own creature stack, not a copy,
+    /// not in Stasis.
+    /// </summary>
+    public static string? MartyrRefusal(BattleState battle, BattleSide side, KnownSpell known, BattleUnit guarded, int? martyr) =>
+        martyr is not { } id ? $"{known.Spell.Name} needs the own stack that takes the blows."
+        : battle.FindUnit(id) is { IsAlive: true, IsMachine: false, IsCopy: false } unit && unit != guarded && unit.Side == side && !unit.Has(SpellStatus.Stasis)
+            ? null
+            : $"{known.Spell.Name}'s martyr is another living own stack.";
+
+    /// <summary>
+    /// The free placement nearest a stack for a creature's footprint (a copy, a split part; ADR-152): by the gap to the stack, then top to bottom,
+    /// left to right; null when nothing fits.
+    /// </summary>
+    public static CellPosition? PlacementNear(BattleState battle, BattleUnit near, CreatureDefinition creature)
+    {
+        var probe = new BattleUnit(0, near.Side, creature, 1, -1, new CellPosition(0, 0));
+        var size = creature.Size.Cells();
+        return Enumerable.Range(0, battle.Width - size + 1)
+            .SelectMany(x => Enumerable.Range(0, BattleState.Height - size + 1).Select(y => new CellPosition(x, y)))
+            .Where(p => BattleGrid.IsFree(battle, probe, p))
+            .OrderBy(p => probe.RectAt(p).GapTo(near.Rect)).ThenBy(p => p.Y).ThenBy(p => p.X)
+            .Select(p => (CellPosition?)p)
+            .FirstOrDefault();
+    }
+
+    /// <summary>How many of the stack's creatures a splitting control spell takes (Puppet Master III, ADR-152): as many whole ones as its health limit holds.</summary>
+    public static int SplitCount(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null) =>
+        HealthLimit(battle, side, known, creaturePower) / unit.Creature.Health;
+
+    /// <summary>The creatures a sacrifice takes from the stack (Blood Price, ADR-152): its percent of the count, at least 1.</summary>
+    public static int Sacrificed(SpellEffect effect, BattleUnit unit) => Math.Min(unit.Count, Math.Max(1, unit.Count * effect.Amount / 100));
+
+    /// <summary>The health those creatures had (the wounded top creature goes first), and the mana it buys.</summary>
+    public static (int Health, int Mana) SacrificeYield(SpellEffect effect, BattleUnit unit)
+    {
+        var health = unit.TotalHealth - ((unit.Count - Sacrificed(effect, unit)) * unit.Creature.Health);
+        return (health, health / effect.HealthPerMana);
+    }
+
+    /// <summary>The creature Raise Dead raises (ADR-152).</summary>
+    public const string RaisedCreature = "necropolis.skeleton";
+
+    /// <summary>
+    /// The destroyed stack Raise Dead raises next (ADR-152), with how many skeletons: a stack of either side destroyed in the battle, not a war machine,
+    /// a summoned stack, a copy or raised skeletons, of creatures Necromancy counts (not constructs or elementals), not raised before, whose place a
+    /// skeleton fits; the one worth most health first (then by id). Skeletons worth the percent of its health at the start, at least 1.
+    /// </summary>
+    public static (BattleUnit Corpse, CreatureDefinition Skeleton, int Count)? NextRising(BattleState battle, int percent)
+    {
+        if (!battle.Creatures.TryGet(RaisedCreature, out var skeleton))
+        {
+            return null;
+        }
+
+        var probe = new BattleUnit(0, BattleSide.Attacker, skeleton, 1, -1, new CellPosition(0, 0));
+        return battle.Units
+            .Where(u => !u.IsAlive && !u.IsMachine && !u.IsSummoned && !u.IsRaised && NecromancyRules.Counts(u.Creature) && !battle.Risen.Contains(u.Id)
+                        && BattleGrid.IsFree(battle, probe, u.Position))
+            .OrderByDescending(u => (long)u.InitialCount * u.Creature.Health).ThenBy(u => u.Id)
+            .Select(u => ((BattleUnit, CreatureDefinition, int)?)(u, skeleton, (int)Math.Max(1, (long)u.InitialCount * u.Creature.Health * percent / 100 / skeleton.Health)))
+            .FirstOrDefault();
+    }
+
     /// <summary>The health a drain gives back: its percent of the damage dealt.</summary>
     public static int Drained(SpellEffect effect, long dealt) => (int)Math.Min(int.MaxValue, dealt * effect.DrainPercent / 100);
 
@@ -500,7 +599,7 @@ public static class BattleMagic
         BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null)
     {
         var effect = known.Effect!;
-        var summoned = battle.Units.Where(u => u.Side == side && u.IsSummoned).Select(u => u.Creature.Id).ToHashSet(StringComparer.Ordinal);
+        var summoned = battle.Units.Where(u => u.Side == side && u.IsSummoned && !u.IsCopy).Select(u => u.Creature.Id).ToHashSet(StringComparer.Ordinal);
         var id = effect.Summons.FirstOrDefault(c => !summoned.Contains(c)) ?? effect.Summons.FirstOrDefault();
         if (id is null || !battle.Creatures.TryGet(id, out var creature))
         {
@@ -508,7 +607,7 @@ public static class BattleMagic
         }
 
         var count = Math.Max(1, Amount(battle, side, known, creaturePower, id) / Math.Max(1, creature.Health));
-        if (battle.LivingUnitsOf(side).FirstOrDefault(u => u.IsSummoned && u.Creature.Id == id) is { } stack)
+        if (battle.LivingUnitsOf(side).FirstOrDefault(u => u.IsSummoned && !u.IsCopy && u.Creature.Id == id) is { } stack)
         {
             return (creature, count, stack, stack.Position);
         }
