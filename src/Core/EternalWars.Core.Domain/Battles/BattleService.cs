@@ -396,22 +396,22 @@ public sealed class BattleService(
         var losing = battle.Participant(winner.Opponent());
         var raised = new List<RaisedUndead>();
         var artifacts = new List<string>();
-        if (winning.Hero is { } heroId && reason == BattleEndReason.Defeated)
+        if (winning.Hero is { } raiser && Raises(battle, winner, state.GetHero(raiser), reason == BattleEndReason.Defeated))
         {
-            var hero = state.GetHero(heroId);
-            if (hero.SkillLevelOf(NecromancyRules.Skill) is var level and not SkillLevel.None)
+            // The survivors' army and a copy of the game's random generator: the end of the real battle draws the same numbers.
+            var hero = state.GetHero(raiser);
+            var army = new Army(hero.Army.Slots);
+            foreach (var (slot, stack) in hero.Army.Stacks.ToList())
             {
-                // The survivors' army and a copy of the game's random generator: the end of the real battle draws the same numbers.
-                var army = new Army(hero.Army.Slots);
-                foreach (var (slot, stack) in hero.Army.Stacks.ToList())
-                {
-                    var survivors = battle.Units.Where(u => u.Owner == winner && u.SourceSlot == slot).Sum(u => u.KeptCount);
-                    army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
-                }
-
-                raised = JoinUndead(battle, winner.Opponent(), hero, level, army, new GameRandom(state.Random.State));
+                var survivors = battle.Units.Where(u => u.Owner == winner && u.SourceSlot == slot).Sum(u => u.KeptCount);
+                army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
             }
 
+            raised = JoinUndead(battle, winner.Opponent(), hero, army, new GameRandom(state.Random.State), reason == BattleEndReason.Defeated);
+        }
+
+        if (winning.Hero is { } heroId && reason == BattleEndReason.Defeated)
+        {
             if (losing.Hero is { } loserId)
             {
                 var loser = state.GetHero(loserId);
@@ -716,10 +716,7 @@ public sealed class BattleService(
                 ApplySurvivors(battle, winner, held);
             }
 
-            if (reason == BattleEndReason.Defeated)
-            {
-                RaiseUndead(battle, loser, hero, held);
-            }
+            RaiseUndead(battle, loser, hero, held, reason == BattleEndReason.Defeated);
 
             Award(hero, experience);
         }
@@ -827,16 +824,15 @@ public sealed class BattleService(
     /// slain creatures join a stack of their own or a free slot; with neither, an army stack of the upgrade takes 3/4 of them; otherwise they
     /// are lost.
     /// </summary>
-    private void RaiseUndead(BattleState battle, BattleSide enemy, Hero hero, Town? held = null)
+    private void RaiseUndead(BattleState battle, BattleSide enemy, Hero hero, Town? held, bool defeated)
     {
-        var level = hero.SkillLevelOf(NecromancyRules.Skill);
-        if (level == SkillLevel.None)
+        if (!Raises(battle, enemy.Opponent(), hero, defeated))
         {
             return;
         }
 
         // A garrison hero raises them into the town's garrison (ADR-112).
-        var joined = JoinUndead(battle, enemy, hero, level, held?.Garrison ?? hero.Army, state.Random);
+        var joined = JoinUndead(battle, enemy, hero, held?.Garrison ?? hero.Army, state.Random, defeated);
         if (joined.Count == 0)
         {
             return;
@@ -854,15 +850,53 @@ public sealed class BattleService(
         events.Publish(new UndeadRaised(hero.Id, joined));
     }
 
-    /// <summary>Raises the undead from the enemy's slain creatures into <paramref name="army"/> and returns what joined it.</summary>
-    private List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, SkillLevel level, Army army, GameRandom random)
+    /// <summary>
+    /// Whether the winning hero raises anything: Necromancy after a defeated enemy, Raise Dead's skeletons (ADR-152) after a defeated enemy, and the
+    /// skeletons it raised in the battle that still stand, however the battle ended.
+    /// </summary>
+    private static bool Raises(BattleState battle, BattleSide side, Hero hero, bool defeated) =>
+        (defeated && (hero.SkillLevelOf(NecromancyRules.Skill) != SkillLevel.None || battle.Raising.ContainsKey(side)))
+        || battle.Units.Any(u => u.IsAlive && u.IsRaised && u.Owner == side);
+
+    /// <summary>
+    /// Raises the undead from the enemy's slain creatures into <paramref name="army"/> and returns what joined it: Necromancy's, then Raise Dead's
+    /// skeletons (ADR-152): its percent of the health of the enemy creatures slain (those Necromancy counts, not the stacks it raised in the battle)
+    /// and the skeletons it raised that still stand.
+    /// </summary>
+    private List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, Army army, GameRandom random, bool defeated = true)
     {
         // The table's creature: the slain count with their own health, not the health an enemy's artifacts gave them in battle.
+        var level = defeated ? hero.SkillLevelOf(NecromancyRules.Skill) : SkillLevel.None;
         var slain = battle.Units.Where(u => u.Owner == enemy && !u.IsMachine && !u.IsSummoned).Select(u => (state.Creatures.Get(u.Creature.Id), u.InitialCount - u.KeptCount));
+        var raising = NecromancyRules.Raise(slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random, NecromancyRules.HeroBonus(hero)).ToList();
+        var side = enemy.Opponent();
+        if (state.Creatures.TryGet(BattleMagic.RaisedCreature, out var skeleton))
+        {
+            var skeletons = battle.Units.Where(u => u.Owner == side && u.IsRaised).Sum(u => u.KeptCount);
+            if (defeated && battle.Raising.TryGetValue(side, out var raise))
+            {
+                var health = battle.Units
+                    .Where(u => u.Owner == enemy && !u.IsMachine && !u.IsSummoned && !battle.Risen.Contains(u.Id) && NecromancyRules.Counts(state.Creatures.Get(u.Creature.Id)))
+                    .Sum(u => (long)(u.InitialCount - u.KeptCount) * state.Creatures.Get(u.Creature.Id).Health);
+                skeletons += (int)Math.Min(int.MaxValue, health * raise.Percent / 100 / skeleton.Health);
+            }
+
+            if (skeletons > 0)
+            {
+                var index = raising.FindIndex(r => r.Creature == skeleton.Id);
+                if (index < 0)
+                {
+                    raising.Add(new RaisedUndead(skeleton.Id, skeletons));
+                }
+                else
+                {
+                    raising[index] = raising[index] with { Count = raising[index].Count + skeletons };
+                }
+            }
+        }
+
         var joined = new List<RaisedUndead>();
-        foreach (var raised in NecromancyRules.Raise(
-                     slain, level, NecromancyRules.IsAmplified(state, hero.Owner), state.Creatures, random,
-                     NecromancyRules.HeroBonus(hero)))
+        foreach (var raised in raising)
         {
             if (army.TryAdd(new CreatureStack(raised.Creature, raised.Count)))
             {

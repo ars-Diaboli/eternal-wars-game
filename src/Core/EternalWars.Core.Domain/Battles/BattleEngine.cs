@@ -256,7 +256,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 return;
             }
 
-            var killed = Wound(target, damage);
+            var killed = Take(target, damage);
             events.Publish(new BattleUnitSiegeDamaged(target.Id, SiegeDamageSource.Tower, tower.Id, damage, killed, target.Count, target.TopHealth));
             Hit(target);
             Bury(target);
@@ -272,7 +272,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         var damage = battle.Siege.MoatDamage;
-        var killed = Wound(unit, damage);
+        var killed = Take(unit, damage);
         events.Publish(new BattleUnitSiegeDamaged(unit.Id, SiegeDamageSource.Moat, null, damage, killed, unit.Count, unit.TopHealth));
         Bury(unit);
     }
@@ -512,9 +512,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var cost = BattleMagic.Cost(battle, side, known);
         battle.ManaLeft[side] -= cost;
         battle.CastRounds[side] = battle.Round;
-        var drains = known.Effect!.DrainPercent > 0 ? second : null;
-        events.Publish(new BattleSpellCast(side, spellId, targetId, cell, cost, battle.ManaOf(side), drains));
-        Work(side, known, targetId, cell, null, drains);
+        var seconds = known.Effect!.SecondIsStack ? second : null;
+        events.Publish(new BattleSpellCast(side, spellId, targetId, cell, cost, battle.ManaOf(side), seconds));
+        Work(side, known, targetId, cell, null, seconds);
 
         if (!CheckFinished() && battle.ActiveUnit is { IsAlive: false })
         {
@@ -550,13 +550,26 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     }
 
     /// <summary>What a cast does, the hero's or a creature's: the spell works on every stack in its reach it affects, by id (a stack it does not affect is reported as resisting); a summon calls its creatures; Earthquake shakes the walls.</summary>
-    private void Work(BattleSide side, KnownSpell known, int? targetId, CellPosition? cell, int? creaturePower, int? drains = null)
+    private void Work(BattleSide side, KnownSpell known, int? targetId, CellPosition? cell, int? creaturePower, int? second = null)
     {
         var effect = known.Effect!;
         var spellId = known.Spell.Id;
         if (effect.Kind == Magic.SpellEffectKind.Summon)
         {
             Summon(side, known, creaturePower);
+            return;
+        }
+
+        if (effect.Kind == Magic.SpellEffectKind.Copy)
+        {
+            Mirror(side, battle.GetUnit(targetId!.Value), known, creaturePower);
+            return;
+        }
+
+        if (effect.Kind == Magic.SpellEffectKind.Raise)
+        {
+            battle.Raising[side] = new RaiseDead(spellId, effect.Amount, effect.Rises);
+            Rise(side);
             return;
         }
 
@@ -603,7 +616,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 }
             }
 
-            if (drains is { } healed && battle.GetUnit(healed) is { IsAlive: true } drinker)
+            if (effect.DrainPercent > 0 && second is { } healed && battle.GetUnit(healed) is { IsAlive: true } drinker)
             {
                 Drain(drinker, known, BattleMagic.Drained(effect, dealt));
             }
@@ -638,10 +651,20 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                         break;
                     case Magic.SpellEffectKind.Slay:
                         var slain = Math.Min(unit.Count, BattleMagic.Slain(effect, unit));
-                        SpellDamage(unit, spellId, unit.TotalHealth - ((unit.Count - slain) * unit.Creature.Health)); // the wounded top creature goes first
+                        SpellDamage(unit, spellId, unit.TotalHealth - ((unit.Count - slain) * unit.Creature.Health), shieldable: false); // the wounded top creature goes first
+                        break;
+                    case Magic.SpellEffectKind.Sacrifice:
+                        var (health, mana) = BattleMagic.SacrificeYield(effect, unit);
+                        SpellDamage(unit, spellId, health, shieldable: false);
+                        if (mana > 0)
+                        {
+                            battle.ManaLeft[side] = battle.ManaOf(side) + mana;
+                            events.Publish(new BattleManaGained(side, spellId, mana, battle.ManaOf(side)));
+                        }
+
                         break;
                     default:
-                        Enchant(unit, side, known, creaturePower);
+                        Enchant(unit, side, known, creaturePower, second);
                         break;
                 }
             }
@@ -700,9 +723,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     }
 
     /// <summary>A spell's damage to a stack (a cast, a burning spell, thorns): wounded, reported, buried; a blind stack hit wakes (ADR-123).</summary>
-    private void SpellDamage(BattleUnit unit, string spell, int damage)
+    private void SpellDamage(BattleUnit unit, string spell, int damage, bool shieldable = true)
     {
-        var killed = Wound(unit, damage);
+        var killed = Take(unit, damage, shieldable);
         events.Publish(new BattleUnitSpellDamaged(unit.Id, spell, damage, killed, unit.Count, unit.TopHealth));
         Hit(unit);
         Bury(unit);
@@ -794,8 +817,13 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// A buff or curse takes hold on the stack, replacing the same spell's earlier effect; a <c>controlled</c> one (ADR-150) brings it over to the
     /// caster's side.
     /// </summary>
-    private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known, int? creaturePower = null)
+    private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known, int? creaturePower = null, int? martyr = null)
     {
+        if (known.Effect!.Split && unit.TotalHealth > BattleMagic.HealthLimit(battle, side, known, creaturePower))
+        {
+            unit = SplitOff(unit, known, BattleMagic.SplitCount(battle, side, known, unit, creaturePower));
+        }
+
         var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
         var turns = BattleMagic.Turns(battle, side, known, unit, creaturePower);
         var before = unit.Side;
@@ -810,10 +838,90 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             };
         }
 
-        unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id);
-        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, modifiers, until, turns));
+        unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id && !s.IsMartyr);
+        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, modifiers, until, turns) { Martyr = modifiers.MartyrPercent > 0 ? martyr : null });
         events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until, turns));
         SideChanged(unit, before);
+
+        // Martyrdom III (ADR-152): the martyr stands firmer while it guards.
+        if (modifiers.MartyrPercent > 0 && known.Effect.MartyrDefense > 0 && martyr is { } id && battle.FindUnit(id) is { IsAlive: true } guard)
+        {
+            guard.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id && s.IsMartyr);
+            guard.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, new Magic.SpellModifiers(Defense: known.Effect.MartyrDefense), until) { IsMartyr = true });
+            events.Publish(new BattleSpellApplied(guard.Id, known.Spell.Id, until));
+        }
+    }
+
+    /// <summary>
+    /// Puppet Master III (ADR-152): <paramref name="count"/> full-health creatures leave the stack as a stack of their own on the nearest free
+    /// placement, with its spells, shots and casts; they came from the same army slot and go back to it after the battle. They act from the next round.
+    /// </summary>
+    private BattleUnit SplitOff(BattleUnit unit, KnownSpell known, int count)
+    {
+        var at = BattleMagic.PlacementNear(battle, unit, unit.Creature)!.Value;
+        var part = new BattleUnit(battle.Units.Max(u => u.Id) + 1, unit.Owner, unit.Creature, count, unit.SourceSlot, at)
+        {
+            IsSummoned = unit.IsSummoned,
+            IsRaised = unit.IsRaised,
+            MutableCastsLeft = new Dictionary<string, int>(unit.CastsLeft, StringComparer.Ordinal),
+            ShotsLeft = unit.ShotsLeft,
+        };
+        part.MutableSpells.AddRange(unit.Spells);
+        unit.Count -= count;
+        unit.InitialCount = Math.Max(unit.Count, unit.InitialCount - count);
+        unit.Revived = Math.Min(unit.Revived, unit.Count);
+        battle.MutableUnits.Add(part);
+        events.Publish(new BattleUnitSplit(unit.Id, unit.Count, Info(part), known.Spell.Id));
+        return part;
+    }
+
+    private static BattleUnitInfo Info(BattleUnit unit) => new(unit.Id, unit.Side, unit.Creature.Id, unit.Count, unit.Position, unit.Width, unit.Height, unit.Machine);
+
+    /// <summary>
+    /// Mirror Image (ADR-152): a copy of the stack (its count, top creature's health and shots, none of its spells or casts) stands on the free
+    /// placement nearest it for the caster's side. It is summoned (gone after the battle, worth nothing), does not keep its side in the battle, acts
+    /// from the next round and vanishes when its hits are used up or its rounds end.
+    /// </summary>
+    private void Mirror(BattleSide side, BattleUnit unit, KnownSpell known, int? creaturePower)
+    {
+        var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
+        var copy = new BattleUnit(battle.Units.Max(u => u.Id) + 1, side, unit.Creature, unit.Count, -1, BattleMagic.PlacementNear(battle, unit, unit.Creature)!.Value)
+        {
+            IsSummoned = true,
+            IsCopy = true,
+            CopyHits = known.Effect!.CopyHits,
+            CopyUntilRound = until,
+            CopySpell = known.Spell.Id,
+            MutableCastsLeft = new Dictionary<string, int>(StringComparer.Ordinal),
+            TopHealth = unit.TopHealth,
+            ShotsLeft = unit.ShotsLeft,
+        };
+        battle.MutableUnits.Add(copy);
+        events.Publish(new BattleUnitCopied(Info(copy), unit.Id, known.Spell.Id, until));
+    }
+
+    /// <summary>
+    /// Raise Dead during the battle (ADR-152): while the side's spell still raises (rank II once, rank III each round), the destroyed stack worth most
+    /// rises as a new stack of skeletons for the side, on its place; they act from the next round and join the army when the side's hero wins.
+    /// </summary>
+    private void Rise(BattleSide side)
+    {
+        if (!battle.Raising.TryGetValue(side, out var raise) || raise.Rises == Magic.SpellRises.None
+            || BattleMagic.NextRising(battle, raise.Percent) is not { } rising)
+        {
+            return;
+        }
+
+        var (corpse, skeleton, count) = rising;
+        battle.Risen.Add(corpse.Id);
+        var unit = new BattleUnit(battle.Units.Max(u => u.Id) + 1, side, skeleton, count, -1, corpse.Position) { IsRaised = true };
+        battle.MutableUnits.Add(unit);
+        if (raise.Rises == Magic.SpellRises.Once)
+        {
+            battle.Raising[side] = raise with { Rises = Magic.SpellRises.None };
+        }
+
+        events.Publish(new BattleUnitRaised(Info(unit), corpse.Id, raise.Spell));
     }
 
     /// <summary>Reports the stack's new side when a control spell (ADR-150) took hold or let go since it was <paramref name="before"/>.</summary>
@@ -928,7 +1036,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         var dealt = Math.Min(damage, target.TotalHealth);
-        var killed = Wound(target, damage);
+        var killed = Take(target, damage);
         target.HitsThisRound++;
         attacker.DamageDealt += dealt;
         events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, killed, target.Count, target.TopHealth, luck));
@@ -950,6 +1058,32 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         return killed;
+    }
+
+    /// <summary>Martyrs' shares of a blow (ADR-152), dealt once the blow's stack is buried.</summary>
+    private readonly List<(BattleUnit Martyr, BattleUnit Guarded, string Spell, int Damage)> _shields = [];
+
+    /// <summary>
+    /// A blow's damage to the stack (an attack, a damage spell, a zone, the towers, the moat): under Martyrdom (ADR-152) its martyr takes its share,
+    /// once the stack is buried; the stack takes the rest. Losses that are not blows (Final Reckoning, decay, Blood Price) are not
+    /// <paramref name="shieldable"/>.
+    /// </summary>
+    private int Take(BattleUnit target, int damage, bool shieldable = true)
+    {
+        if (shieldable && damage > 0 && target.Spells.Count > 0
+            && target.Spells.FirstOrDefault(s => s.Martyr is not null && s.Modifiers.MartyrPercent > 0) is { } guard
+            && battle.FindUnit(guard.Martyr!.Value) is { IsAlive: true } martyr && martyr != target && martyr.Side == target.Side
+            && !martyr.Has(Magic.SpellStatus.Stasis))
+        {
+            var share = (int)((long)damage * Math.Min(100, guard.Modifiers.MartyrPercent) / 100);
+            damage -= share;
+            if (share > 0)
+            {
+                _shields.Add((martyr, target, guard.Spell, share));
+            }
+        }
+
+        return Wound(target, damage);
     }
 
     /// <summary>Takes the damage off the stack, top creature first; creatures revived only for the battle die first (ADR-123).</summary>
@@ -980,8 +1114,49 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         return before - target.Count;
     }
 
-    /// <summary>A stack that is gone leaves the round's order; a Phoenix with its rebirth left rises instead (ADR-120).</summary>
+    /// <summary>
+    /// After a blow: a copy uses up one of its hits and vanishes when none is left (ADR-152); the stack is buried if gone; then the martyrs take
+    /// their shares of the blow.
+    /// </summary>
     private void Bury(BattleUnit target)
+    {
+        if (target.IsCopy && target.IsAlive && --target.CopyHits <= 0)
+        {
+            Vanish(target);
+        }
+
+        BuryOnly(target);
+        if (_shields.Count == 0)
+        {
+            return;
+        }
+
+        var shares = _shields.ToList();
+        _shields.Clear();
+        foreach (var (martyr, guarded, spell, damage) in shares)
+        {
+            if (!martyr.IsAlive)
+            {
+                continue;
+            }
+
+            var killed = Wound(martyr, damage);
+            events.Publish(new BattleUnitShielded(martyr.Id, guarded.Id, spell, damage, killed, martyr.Count, martyr.TopHealth));
+            Hit(martyr);
+            Bury(martyr);
+        }
+    }
+
+    /// <summary>A copy is gone (ADR-152); <see cref="BuryOnly"/> reports it dead.</summary>
+    private void Vanish(BattleUnit copy)
+    {
+        copy.Count = 0;
+        copy.TopHealth = 0;
+        events.Publish(new BattleCopyVanished(copy.Id, copy.CopySpell ?? string.Empty));
+    }
+
+    /// <summary>A stack that is gone leaves the round's order; a Phoenix with its rebirth left rises instead (ADR-120).</summary>
+    private void BuryOnly(BattleUnit target)
     {
         if (!target.IsAlive && target.CastsLeft.GetValueOrDefault(BattleMagic.Rebirth) > 0)
         {
@@ -1032,6 +1207,17 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             unit.RoundMorale = MoraleEffect.None;
             battle.ActiveUnit = unit;
             events.Publish(new BattleMoraleTriggered(unit.Id, MoraleEffect.ExtraAction));
+            events.Publish(new BattleTurnStarted(unit.Id, battle.Round));
+            return;
+        }
+
+        // Clockwork Precision (ADR-152): a second turn right after the first, once a round.
+        if (moraleMayAct && unit is { IsAlive: true, TookSecondTurn: false } && unit.Spells.FirstOrDefault(s => s.Modifiers.Has(Magic.SpellStatus.Twice)) is { } twice
+            && !CheckFinished())
+        {
+            unit.TookSecondTurn = true;
+            battle.ActiveUnit = unit;
+            events.Publish(new BattleUnitActsAgain(unit.Id, twice.Spell));
             events.Publish(new BattleTurnStarted(unit.Id, battle.Round));
             return;
         }
@@ -1121,6 +1307,13 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         battle.WaitedThisRound.Clear();
         battle.TieRolls.Clear();
 
+        // Copies whose rounds are over vanish (ADR-152).
+        foreach (var copy in battle.LivingUnits.Where(u => u.IsCopy && u.CopyUntilRound < battle.Round).OrderBy(u => u.Id).ToList())
+        {
+            Vanish(copy);
+            BuryOnly(copy);
+        }
+
         // Spells that ran out go before this round's morale and order are decided (ADR-110).
         var expired = new List<(int Unit, string Spell)>();
         var freed = new List<BattleUnit>();
@@ -1141,6 +1334,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         foreach (var unit in battle.LivingUnits)
         {
             unit.StaysPut = false;
+            unit.TookSecondTurn = false;
             unit.HasRetaliated = false;
             unit.HitsThisRound = 0;
             battle.TieRolls[unit.Id] = battle.Random.Next(1_000_000);
@@ -1174,6 +1368,8 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         TickZones();
         TowersFire();
         WakeHit();
+        Rise(BattleSide.Attacker);
+        Rise(BattleSide.Defender);
         foreach (var unit in battle.MutableQueue.Select(battle.GetUnit).Where(u => u.RoundMorale is MoraleEffect.Haste or MoraleEffect.Slow))
         {
             events.Publish(new BattleMoraleTriggered(unit.Id, unit.RoundMorale));
@@ -1211,7 +1407,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
                 if (m.DecayPercent > 0 && unit.IsAlive)
                 {
                     var lost = Math.Min(unit.Count, Math.Max(1, unit.Count * m.DecayPercent / 100));
-                    SpellDamage(unit, spell.Spell, unit.TotalHealth - ((unit.Count - lost) * unit.Creature.Health));
+                    SpellDamage(unit, spell.Spell, unit.TotalHealth - ((unit.Count - lost) * unit.Creature.Health), shieldable: false);
                 }
             }
         }

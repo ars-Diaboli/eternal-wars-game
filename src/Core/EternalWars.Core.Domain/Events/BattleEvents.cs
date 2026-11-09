@@ -200,3 +200,29 @@ public sealed record BattleZoneExpired(int Zone, string Spell) : IEvent;
 
 /// <summary>A spell's hit made the stack lose its next action (Holy Word III, Frost Bolt III, ADR-123).</summary>
 public sealed record BattleUnitStunned(int Unit, string Spell) : IEvent;
+/// <summary>Mirror Image made a copy of <paramref name="Original"/> (ADR-152): <paramref name="Unit"/>, which fights until the end of round <paramref name="UntilRound"/>.</summary>
+public sealed record BattleUnitCopied(BattleUnitInfo Unit, int Original, string Spell, int UntilRound) : IEvent;
+
+/// <summary>A copy vanished (ADR-152): it was hit, or its rounds ran out; <see cref="BattleUnitDied"/> follows.</summary>
+public sealed record BattleCopyVanished(int Unit, string Spell) : IEvent;
+
+/// <summary>
+/// A martyr took its share of the damage meant for <paramref name="Unit"/> (Martyrdom, ADR-152); <paramref name="RemainingCount"/> and
+/// <paramref name="TopHealth"/> are the martyr's afterwards.
+/// </summary>
+public sealed record BattleUnitShielded(int Martyr, int Unit, string Spell, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
+
+/// <summary>A side's hero gained <paramref name="Gained"/> mana in battle (Blood Price, ADR-152); <paramref name="Mana"/> is what it has now.</summary>
+public sealed record BattleManaGained(BattleSide Side, string Spell, int Gained, int Mana) : IEvent;
+
+/// <summary>A stack takes the second turn a spell gives it this round, right after its first (Clockwork Precision, ADR-152).</summary>
+public sealed record BattleUnitActsAgain(int Unit, string Spell) : IEvent;
+
+/// <summary>Raise Dead raised skeletons (<paramref name="Unit"/>, a new stack of the caster's) from the destroyed stack <paramref name="From"/> (ADR-152).</summary>
+public sealed record BattleUnitRaised(BattleUnitInfo Unit, int From, string Spell) : IEvent;
+
+/// <summary>
+/// Puppet Master III split a stack (ADR-152): <paramref name="Unit"/> is the part it takes, <paramref name="From"/> keeps
+/// <paramref name="FromCount"/> creatures on its side.
+/// </summary>
+public sealed record BattleUnitSplit(int From, int FromCount, BattleUnitInfo Unit, string Spell) : IEvent;

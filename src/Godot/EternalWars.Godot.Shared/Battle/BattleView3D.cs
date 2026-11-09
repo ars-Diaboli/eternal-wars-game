@@ -185,6 +185,30 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(events, OnSiegeDamaged);
         this.SubscribeWhileInTree<SiegeStructureDamaged>(events, OnStructureDamaged);
         this.SubscribeWhileInTree<BattleUnitSummoned>(events, OnSummoned);
+        this.SubscribeWhileInTree<BattleUnitCopied>(events, e => Step(null, () =>
+        {
+            AddUnit(e.Unit);
+            Narrate($"{SpellName(e.Spell)}: a copy of {NameOf(e.Original)} fights until round {e.UntilRound}, or until it is hit.");
+        }));
+        this.SubscribeWhileInTree<BattleCopyVanished>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: the copy of {NameOf(e.Unit)} vanishes.")));
+        this.SubscribeWhileInTree<BattleUnitRaised>(events, e => Step(null, () =>
+        {
+            AddUnit(e.Unit);
+            Narrate($"{SpellName(e.Spell)}: {e.Unit.Count} {_session.State.Creatures.Get(e.Unit.Creature).Name} rise where {NameOf(e.From)} fell.");
+        }));
+        this.SubscribeWhileInTree<BattleUnitSplit>(events, e => Step(null, () =>
+        {
+            if (_units.TryGetValue(e.From, out var from))
+            {
+                from.SetCount(e.FromCount);
+            }
+
+            AddUnit(e.Unit);
+            Narrate($"{SpellName(e.Spell)} takes {e.Unit.Count} of {NameOf(e.From)}; {e.FromCount} stay on their side.");
+        }));
+        this.SubscribeWhileInTree<BattleUnitShielded>(events, OnShielded);
+        this.SubscribeWhileInTree<BattleManaGained>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {SideName(e.Side)} gains {e.Gained} mana ({e.Mana} now).")));
+        this.SubscribeWhileInTree<BattleUnitActsAgain>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} acts again.")));
         this.SubscribeWhileInTree<BattleUnitReborn>(events, OnReborn);
         this.SubscribeWhileInTree<BattleUnitRevived>(events, OnRevived);
         this.SubscribeWhileInTree<BattleSpellDispelled>(events, e => Step(null, () => Narrate($"{SpellName(e.By)} takes {SpellName(e.Spell)} off {NameOf(e.Unit)}.")));
@@ -718,25 +742,49 @@ public partial class BattleView3D : Node3D
     }
 
     /// <summary>A summon's creatures appear at their placement, or an own summoned stack grows (ADR-120).</summary>
-    private void OnSummoned(BattleUnitSummoned e)
+    private void OnSummoned(BattleUnitSummoned e) => Step(null, () =>
     {
-        var info = e.Unit;
-        Step(null, () =>
-        {
-            if (!_units.TryGetValue(info.Unit, out var view))
-            {
-                view = new BattleUnitView();
-                view.Bind(info.Unit, info.Side, _session.State.Creatures.Get(info.Creature),
-                    info.Count, info.Width, info.Height, SideColor(info.Side));
-                view.Position = BattleSpace.Center(info.Rect);
-                _field.AddChild(view);
-                _units[info.Unit] = view;
-                _planned[info.Unit] = info.Rect;
-            }
+        var view = AddUnit(e.Unit);
+        Narrate($"{SpellName(e.Spell)} calls {e.Added} {view.Creature.Name} for the battle.");
+    });
 
-            view.SetCount(info.Count);
-            Narrate($"{SpellName(e.Spell)} calls {e.Added} {view.Creature.Name} for the battle.");
-        });
+    /// <summary>A stack that came onto the field during the battle (a summon, a copy, raised skeletons, a split part; ADR-120, ADR-152), or one that grew.</summary>
+    private BattleUnitView AddUnit(BattleUnitInfo info)
+    {
+        if (!_units.TryGetValue(info.Unit, out var view))
+        {
+            view = new BattleUnitView();
+            view.Bind(info.Unit, info.Side, _session.State.Creatures.Get(info.Creature), info.Count, info.Width, info.Height, SideColor(info.Side));
+            view.Position = BattleSpace.Center(info.Rect);
+            _field.AddChild(view);
+            _units[info.Unit] = view;
+            _planned[info.Unit] = info.Rect;
+        }
+
+        view.SetCount(info.Count);
+        return view;
+    }
+
+    /// <summary>A martyr takes its share of a blow (Martyrdom, ADR-152): it flashes and shows its losses.</summary>
+    private void OnShielded(BattleUnitShielded e)
+    {
+        if (!_units.TryGetValue(e.Martyr, out var martyr))
+        {
+            return;
+        }
+
+        Step(
+            t =>
+            {
+                t.TweenProperty(martyr.BodyMaterial, "albedo_color", HitColor, 0.08f);
+                t.TweenProperty(martyr.BodyMaterial, "albedo_color", martyr.BaseColor, 0.15f);
+            },
+            () =>
+            {
+                martyr.SetCount(e.RemainingCount);
+                martyr.SetHealth(e.TopHealth);
+                Narrate($"{SpellName(e.Spell)}: {martyr.Creature.Name} take {e.Damage} of the blow meant for {NameOf(e.Unit)}, {e.Killed} killed.");
+            });
     }
 
     /// <summary>A Phoenix rises from its ashes (ADR-120).</summary>
