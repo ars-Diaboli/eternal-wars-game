@@ -227,6 +227,16 @@ public class SmokeMapTests
         Assert.Throws<InvalidOperationException>(() => state.AssignControllers(new Dictionary<PlayerId, bool> { [new PlayerId(1)] = false }));
     }
 
+    [Fact]
+    public void ArenaMap_PassesTheValidator_ThePlayersCannotMeetOnDayOne()
+    {
+        var state = MapConverter.ToGameState(MapSerializer.Load(SmokeMap("arena.ewmap.json")));
+
+        Assert.Empty(MapValidator.Validate(state).Select(i => i.Message).Where(m =>
+            m.Contains("combat place", StringComparison.Ordinal) || m.Contains("meet on day 1", StringComparison.Ordinal) || m.Contains("after day 1", StringComparison.Ordinal)));
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error);
+    }
+
     private static string SmokeMap(string name)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

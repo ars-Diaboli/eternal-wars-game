@@ -65,7 +65,7 @@ internal static class MapEventEvaluator
         };
     }
 
-    private static bool Compare(int left, CompareOp op, int right) => op switch
+    internal static bool Compare(int left, CompareOp op, int right) => op switch
     {
         CompareOp.Equal => left == right,
         CompareOp.NotEqual => left != right,

@@ -157,7 +157,11 @@ $scenarios = @(
        Input = '3:click:1475,100;7:click:1052,254;11:click:765,94;15:click:544,24;18:click:1328,100;21:click:420,300' },
     # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
-       Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' }
+       Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' },
+    # The arena switch (ARN-2) on the arena map: the Conditions tab (the switch on, the other victory rows off), untick it, scroll the tabs to
+    # Validation (the combat place now does nothing).
+    @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $arenaMap
+       Input = '3:click:1230,100;6:click:1052,158;10:click:1584,100;13:click:1584,100;16:click:1584,100;19:click:1584,100;24:click:1318,100' }
     # The scenarios below find buttons by their text (press:) rather than by pixel.
     # Unique buildings (ADR-138, ADR-143): Orrin enters the Necropolis town, ticks a garrison and a hero stack for the Undead Transformer and
     # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up), Gareth the Haven town (Stables: a notice).

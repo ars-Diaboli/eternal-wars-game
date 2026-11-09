@@ -178,6 +178,63 @@ public static class MapEventChecks
             ? MapEventTree.Actions(definition).OfType<RunEventAction>().Select(r => r.Event).Where(e => set.Find(e) is { Kind: not MapEventKind.Quest }).Distinct()
             : [];
 
+    /// <summary>
+    /// Whether the event does something only on a later day than <paramref name="day"/> (an arena map has one day, ARN-2 e): every action at its top is
+    /// an "if" without an "else" whose condition the date alone makes false on that day ("day ≥ 3", a timed event's first day, "week = 2"). Quests
+    /// are not checked.
+    /// </summary>
+    public static bool RunsOnlyAfter(MapEventDefinition definition, int day)
+    {
+        var date = new GameDate(day);
+        return definition.Kind != MapEventKind.Quest && definition.Actions.Count > 0
+            && definition.Actions.All(a => a is IfAction { Else.Count: 0 } branch && HoldsOn(branch.Condition) == false);
+
+        // Three-valued: null when it depends on more than the date.
+        bool? HoldsOn(EventCondition condition)
+        {
+            switch (condition)
+            {
+                case AllCondition { Conditions.Count: > 0 } all:
+                    var parts = all.Conditions.Select(HoldsOn).ToList();
+                    return parts.Contains(false) ? false : parts.All(p => p == true) ? true : null;
+                case AnyCondition { Conditions.Count: > 0 } any:
+                    var options = any.Conditions.Select(HoldsOn).ToList();
+                    return options.Contains(true) ? true : options.All(o => o == false) ? false : null;
+                case NotCondition not:
+                    return !HoldsOn(not.Condition);
+                case CompareCondition compare when Value(compare.Left) is { } left && Value(compare.Right) is { } right
+                                                   && (UsesDate(compare.Left) || UsesDate(compare.Right)):
+                    return MapEventEvaluator.Compare(left, compare.Op, right);
+                default:
+                    return null; // "never" (an empty "any") is not a later day
+            }
+        }
+
+        int? Value(EventExpr expr) => expr switch
+        {
+            NumberExpr number => number.Value,
+            QuantityExpr { Quantity: Quantity.Day } => date.AbsoluteDay,
+            QuantityExpr { Quantity: Quantity.DayOfWeek } => date.Day,
+            QuantityExpr { Quantity: Quantity.Week } => date.Week,
+            QuantityExpr { Quantity: Quantity.Month } => date.Month,
+            ArithmeticExpr arithmetic when Value(arithmetic.Left) is { } left && Value(arithmetic.Right) is { } right => MapEventEvaluator.Combine(arithmetic.Op switch
+            {
+                ArithmeticOp.Add => VariableOp.Add,
+                ArithmeticOp.Subtract => VariableOp.Subtract,
+                ArithmeticOp.Multiply => VariableOp.Multiply,
+                _ => VariableOp.Divide,
+            }, left, right),
+            _ => null,
+        };
+
+        static bool UsesDate(EventExpr expr) => expr switch
+        {
+            QuantityExpr { Quantity: Quantity.Day or Quantity.DayOfWeek or Quantity.Week or Quantity.Month } => true,
+            ArithmeticExpr arithmetic => UsesDate(arithmetic.Left) || UsesDate(arithmetic.Right),
+            _ => false,
+        };
+    }
+
     /// <summary>Why the requirement can never be met on this map, when that can be told (things that do not exist, a level past the last).</summary>
     public static string? Impossible(GameState state, EventCondition condition) => condition switch
     {

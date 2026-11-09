@@ -442,6 +442,16 @@ public partial class InspectorPanel : VBoxContainer
                 ShowBox(box, creatures);
                 EventChoice("Runs the hero event", MapEventKind.Hero, box.Event, name => _editor.SetPandorasBoxEvent(box.Id, name));
                 break;
+            case CombatPlace place:
+                AddChild(new Label
+                {
+                    Text = $"The arena battle of day 2 (ADR-097): the defender stands on the entrance {place.VisitPosition}, the attacker on "
+                           + $"{place.AttackCell}, and the battle is fought on that cell's ground. A hero standing on the entrance at the end "
+                           + $"of day 1 makes its owner the defender.{(_editor.Scenario.Rules.Arena ? "" : " The map is not an arena yet (conditions tab).")}",
+                    AutowrapMode = TextServer.AutowrapMode.WordSmart,
+                    CustomMinimumSize = new Vector2(300, 0),
+                });
+                break;
             case QuestSite site:
                 EventChoice("Quest", MapEventKind.Quest, site.Quest, name => _editor.SetQuestSiteQuest(site.Id, name));
                 break;

@@ -257,6 +257,44 @@ public static partial class AdventureIntel
         return lines;
     }
 
+    /// <summary>
+    /// What an arena map shows of an object on the preparation day (ADR-097, ARN-2 c), so that players plan their one day: a Pandora's Box's
+    /// contents and guard, a Shrine's spell, a Witch Hut's skills, and a quest object's current stage (what it asks, what it wants, what it then takes and gives).
+    /// Empty for other objects and on other days.
+    /// </summary>
+    public static IReadOnlyList<string> ArenaContents(GameState state, MapObject mapObject)
+    {
+        if (!ArenaRules.IsPreparationDay(state))
+        {
+            return [];
+        }
+
+        switch (mapObject)
+        {
+            case PandorasBox or Shrine or WitchHut:
+                return Contents(state, mapObject, bankRewards: false);
+            case QuestSite site when QuestRules.Current(state, site) is { Stage: var stage }:
+                var lines = new List<string>();
+                if (!string.IsNullOrWhiteSpace(stage.Proposal))
+                {
+                    lines.Add($"quest: {stage.Proposal.ReplaceLineEndings(" ")}");
+                }
+
+                lines.Add($"wants: {MapEvents.MapEventText.Describe(stage.Requirement, state)}");
+                var then = MapEvents.MapEventTree.Actions(stage.Actions).Where(IsReward).Select(a => MapEvents.MapEventText.Describe(a, state)).ToList();
+                lines.Add($"then: {(then.Count == 0 ? "nothing" : string.Join(", ", then))}");
+                return lines;
+            case QuestSite:
+                return ["no quest"];
+            default:
+                return [];
+        }
+
+        static bool IsReward(MapEvents.EventAction action) => action is not (MapEvents.MessageAction or MapEvents.QuestionAction or MapEvents.IfAction
+            or MapEvents.StopAction or MapEvents.RepeatAction or MapEvents.WhileAction or MapEvents.SetVariableAction or MapEvents.EnableEventAction
+            or MapEvents.RemoveCellAction or MapEvents.RunEventAction);
+    }
+
     private static IEnumerable<string> BoxLines(BoxContents contents, Func<string, string> artifact, Func<CreatureStack, string> stack)
     {
         if (contents.IsEmpty)

@@ -70,8 +70,14 @@ In priority order:
     skip what pays later (mines, providers, flags, obelisks); they fight only for small losses and never go for enemy heroes or towns
     (beating the enemy's heroes would leave nobody for the battle). At the end of the day its strongest hero visits every own town and every
     other hero brings it its army and war machines.
-  - *(planned)*: the editor's switch, combat place and checks, objects showing what they hold on day 1, **three hand-made arena maps** on
-    the new-game screen (no generator template), LAN.
+  - **What day 1 shows** (ADR-161): on the preparation day a right click on a Pandora's Box shows its contents and guard (its "Open it?"
+    prompt too), on a Shrine its spell, on a Witch Hut its skills, on a quest object its current stage (what it asks, wants, takes and gives).
+  - **In the editor** (ADR-161): the "Arena" switch heads the Conditions tab; while it is on, the victory and defeat rows are greyed out
+    (kept, not counted). Combat places are ordinary objects of the Object tool. The validator: an error without a combat place or with one
+    whose attack cell is impassable; warnings when two enemies' heroes can reach the same ground on day 1 (from their heroes and town
+    entrances, through gates; monsters, garrisons and barriers count as passable), for map events that do something only after day 1 (by
+    the date in their conditions), for conditions (ignored), and for a combat place on a map that is not an arena.
+  - *(planned)*: **three hand-made arena maps** on the new-game screen (no generator template), LAN.
 - **LAN multiplayer** *(planned before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓)*: the **host** runs the game and computer players; clients send
   commands and get only what they may see. Lobby (LAN discovery or address; map or random map, options, colours, computer players); battles
   between two remote humans are live; a dropped player pauses the game until the host hands it to the computer or the player rejoins; text

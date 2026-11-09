@@ -19,7 +19,7 @@ public sealed record MapIssue(IssueSeverity Severity, string Message, MapPositio
 /// Checks a scenario for problems that individual edits cannot prevent (e.g. painting water under a
 /// hero). The editor shows these; errors should block "play this map".
 /// </summary>
-public static class MapValidator
+public static partial class MapValidator
 {
     public static IReadOnlyList<MapIssue> Validate(GameState scenario)
     {
@@ -212,6 +212,7 @@ public static class MapValidator
         issues.AddRange(ValidatePlaceholders(scenario));
         issues.AddRange(ValidateEvents(scenario));
         issues.AddRange(ValidateGrail(scenario));
+        issues.AddRange(ValidateArena(scenario));
         return issues;
     }
 
@@ -466,7 +467,7 @@ public static class MapValidator
         {
             yield return new(IssueSeverity.Warning, "Nobody can win this scenario: the standard victory is off and there is no victory condition.");
         }
-        else if (rules.StandardVictory && rules.Victory.Count == 0
+        else if (!rules.Arena && rules.StandardVictory && rules.Victory.Count == 0
                  && scenario.Players.Where(p => scenario.HeroesOf(p.Id).Any() || scenario.ObjectsOf<Town>().Any(t => t.Owner == p.Id)).Select(p => p.Team).Distinct().Count() < 2)
         {
             yield return new(IssueSeverity.Warning, "Fewer than two teams start with a hero or a town, so the game cannot end by defeating enemies.");

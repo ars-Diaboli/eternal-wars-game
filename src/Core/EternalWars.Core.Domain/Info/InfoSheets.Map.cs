@@ -84,6 +84,8 @@ public static partial class InfoSheets
                 break;
         }
 
+        // An arena map's day of preparation shows what some objects hold (ARN-2 c).
+        lines.AddRange(AdventureIntel.ArenaContents(state, mapObject).Select(line => char.ToUpperInvariant(line[0]) + line[1..] + (line.EndsWith('.') ? "" : ".")));
         AddVisits(state, viewer, mapObject, lines);
         if (detailed)
         {
