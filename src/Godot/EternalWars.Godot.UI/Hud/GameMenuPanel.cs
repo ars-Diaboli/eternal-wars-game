@@ -7,11 +7,11 @@ namespace EternalWars.Godot.UI.Hud;
 public sealed record SaveItem(string Path, string Label, string? Name, bool Loadable);
 
 /// <summary>
-/// Save and load (ADR-058): the saves in a folder, newest first, a name field and Save / Load / Delete. Works on the
-/// adventure map and in battle, because a save is the game's command log. The app lists the saves and answers the
-/// events; the panel only shows and asks. Saving under an existing name replaces that save. Below the saves, the current human player's
-/// auto combat setting (ADR-090, CMB-10), which the app turns into a command, and the speed settings (ADR-090, UI-1), which the app keeps in
-/// the settings file.
+/// The game menu, in three tabs. "Save and load" (ADR-058): the saves in a folder, newest first, a name field and Save / Load / Delete. Works on
+/// the adventure map and in battle, because a save is the game's command log; saving under an existing name replaces that save. "Settings":
+/// the current human player's auto combat setting (ADR-090, CMB-10), which the app turns into a command, the speed settings (ADR-090, UI-1)
+/// and "Detailed tooltips" (ADR-154). "Layout" (ADR-156): the initiative bar's edge, the minimap's corner, the hero and town lists and the
+/// action panel's side. The app lists the saves, answers the events and keeps the settings in the settings file; the panel only shows and asks.
 /// </summary>
 public partial class GameMenuPanel : CenterContainer
 {
@@ -30,6 +30,12 @@ public partial class GameMenuPanel : CenterContainer
     private readonly OptionButton _battleSpeed = SpeedButton(withHidden: false);
     private SpeedSettings _speeds = SpeedSettings.Default;
     private readonly CheckBox _detailed = new() { Text = "Detailed tooltips (formulas and numbers in the right-click windows)" };
+    private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(580, 340), UseHiddenTabsForMinSize = true }; // the same size on every tab
+    private readonly OptionButton _initiativeBar = Choices("Top", "Bottom");
+    private readonly OptionButton _minimapCorner = Choices("Top right", "Top left", "Bottom right", "Bottom left");
+    private readonly OptionButton _lists = Choices("Beside the minimap", "Along the bottom");
+    private readonly OptionButton _actionSide = Choices("Right", "Left");
+    private LayoutSettings _layout = LayoutSettings.Default;
     private IReadOnlyList<SaveItem> _entries = [];
     private Func<IReadOnlyList<SaveItem>> _listSaves = null!;
     private Action<string> _deleteSave = null!;
@@ -52,6 +58,9 @@ public partial class GameMenuPanel : CenterContainer
 
     /// <summary>The player changed the interface settings ("Detailed tooltips", ADR-154); the app keeps them in the settings file.</summary>
     public event Action<InterfaceSettings>? InterfaceChanged;
+
+    /// <summary>The player changed the layout ("Layout" tab, ADR-156); the app keeps it in the settings file and applies it at once.</summary>
+    public event Action<LayoutSettings>? LayoutChanged;
 
     /// <summary>The player asked to leave the game for the main menu (offered only in a game).</summary>
     public event Action? MainMenuRequested;
@@ -80,26 +89,33 @@ public partial class GameMenuPanel : CenterContainer
 
         var panel = new PanelContainer();
         AddChild(panel);
-        var rows = new VBoxContainer();
-        rows.AddThemeConstantOverride("separation", 8);
-        panel.AddChild(rows);
-        rows.AddChild(new Label { Text = "Save and load" });
+        var outer = new VBoxContainer();
+        outer.AddThemeConstantOverride("separation", 8);
+        panel.AddChild(outer);
+        outer.AddChild(_tabs);
+        var rows = Tab("Save and load");
+        var settings = Tab("Settings");
+        var layout = Tab("Layout");
         rows.AddChild(_list);
 
         var saveRow = new HBoxContainer();
         saveRow.AddChild(_name);
         saveRow.AddChild(_save);
         rows.AddChild(saveRow);
+        var saveActions = new HBoxContainer();
+        saveActions.AddChild(_load);
+        saveActions.AddChild(_delete);
+        rows.AddChild(saveActions);
+
+        // Below the tabs, whichever is shown: the messages and leaving the menu.
+        outer.AddChild(_message);
         var actions = new HBoxContainer();
-        actions.AddChild(_load);
-        actions.AddChild(_delete);
         var close = new Button { Text = "Close (Esc)" }.WithIcon(UiIcon.Close);
         close.Pressed += Close;
         actions.AddChild(close);
         _mainMenu.Pressed += () => MainMenuRequested?.Invoke();
         actions.AddChild(_mainMenu);
-        rows.AddChild(actions);
-        rows.AddChild(_message);
+        outer.AddChild(actions);
 
         _autoCombat.AddItem("Off");
         _autoCombat.AddItem("Ask before each battle");
@@ -107,21 +123,40 @@ public partial class GameMenuPanel : CenterContainer
         _autoCombat.ItemSelected += index => AutoCombatSelected?.Invoke((int)index);
         _autoCombatRow.AddChild(_autoCombatLabel);
         _autoCombatRow.AddChild(_autoCombat);
-        rows.AddChild(_autoCombatRow);
+        settings.AddChild(_autoCombatRow);
 
-        rows.AddChild(new HSeparator());
-        rows.AddChild(new Label { Text = "Speed (kept on this computer)" });
-        rows.AddChild(SpeedRow("Your heroes", _ownSpeed));
-        rows.AddChild(SpeedRow("Computer heroes", _computerSpeed));
-        rows.AddChild(SpeedRow("Battle animations", _battleSpeed));
+        settings.AddChild(new Label { Text = "Speed (kept on this computer)" });
+        settings.AddChild(Row("Your heroes", _ownSpeed));
+        settings.AddChild(Row("Computer heroes", _computerSpeed));
+        settings.AddChild(Row("Battle animations", _battleSpeed));
         _ownSpeed.ItemSelected += index => ChangeSpeeds(_speeds with { OwnHeroes = (AnimationSpeed)index });
         _computerSpeed.ItemSelected += index => ChangeSpeeds(index == HiddenItem
             ? _speeds with { ShowComputerHeroes = false }
             : _speeds with { ComputerHeroes = (AnimationSpeed)index, ShowComputerHeroes = true });
         _battleSpeed.ItemSelected += index => ChangeSpeeds(_speeds with { Battle = (AnimationSpeed)index });
         ShowSpeeds(_speeds);
-        rows.AddChild(_detailed);
+        settings.AddChild(new HSeparator());
+        settings.AddChild(_detailed);
         _detailed.Toggled += on => InterfaceChanged?.Invoke(new InterfaceSettings(DetailedTooltips: on));
+
+        // Layout (ADR-118, UI-3; ADR-156): where the screens put their parts, kept on this computer; applied at once.
+        layout.AddChild(new Label { Text = "Where the screens put their parts (kept on this computer)" });
+        layout.AddChild(Row("Initiative bar (battle)", _initiativeBar));
+        layout.AddChild(Row("Minimap", _minimapCorner));
+        layout.AddChild(Row("Hero and town lists", _lists));
+        layout.AddChild(Row("Action panel", _actionSide));
+        _initiativeBar.ItemSelected += index => ChangeLayout(_layout with { InitiativeBar = (ScreenEdge)index });
+        _minimapCorner.ItemSelected += index => ChangeLayout(_layout with { Minimap = (ScreenCorner)index });
+        _lists.ItemSelected += index => ChangeLayout(_layout with { Lists = (ListOrientation)index });
+        _actionSide.ItemSelected += index => ChangeLayout(_layout with { ActionPanel = (ScreenSide)index });
+        var reset = new Button { Text = "Default layout", SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
+        reset.Pressed += () =>
+        {
+            ShowLayout(LayoutSettings.Default);
+            ChangeLayout(LayoutSettings.Default);
+        };
+        layout.AddChild(reset);
+        ShowLayout(_layout);
 
         _list.ItemSelected += index =>
         {
@@ -208,6 +243,16 @@ public partial class GameMenuPanel : CenterContainer
     /// <summary>Shows the interface settings read from the settings file.</summary>
     public void ShowInterface(InterfaceSettings settings) => _detailed.SetPressedNoSignal(settings.DetailedTooltips);
 
+    /// <summary>Shows the layout settings read from the settings file.</summary>
+    public void ShowLayout(LayoutSettings layout)
+    {
+        _layout = layout;
+        _initiativeBar.Selected = (int)layout.InitiativeBar;
+        _minimapCorner.Selected = (int)layout.Minimap;
+        _lists.Selected = (int)layout.Lists;
+        _actionSide.Selected = (int)layout.ActionPanel;
+    }
+
     public void Close() => Visible = false;
 
     /// <summary>The computer heroes' extra choice, after the four speeds: "Don't show".</summary>
@@ -229,7 +274,7 @@ public partial class GameMenuPanel : CenterContainer
         return button;
     }
 
-    private static HBoxContainer SpeedRow(string label, OptionButton button)
+    private static HBoxContainer Row(string label, OptionButton button)
     {
         var row = new HBoxContainer();
         row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(180, 0) });
@@ -237,10 +282,38 @@ public partial class GameMenuPanel : CenterContainer
         return row;
     }
 
+    /// <summary>A drop-down of <paramref name="labels"/>, in the order of the enum it picks from.</summary>
+    private static OptionButton Choices(params string[] labels)
+    {
+        var button = new OptionButton { CustomMinimumSize = new Vector2(200, 0) };
+        foreach (var label in labels)
+        {
+            button.AddItem(label);
+        }
+
+        return button;
+    }
+
+    /// <summary>A tab page: its rows, titled <paramref name="title"/>.</summary>
+    private VBoxContainer Tab(string title)
+    {
+        var page = new VBoxContainer { Name = title };
+        page.AddThemeConstantOverride("separation", 8);
+        _tabs.AddChild(page);
+        _tabs.SetTabTitle(_tabs.GetTabCount() - 1, title);
+        return page;
+    }
+
     private void ChangeSpeeds(SpeedSettings speeds)
     {
         _speeds = speeds;
         SpeedsChanged?.Invoke(speeds);
+    }
+
+    private void ChangeLayout(LayoutSettings layout)
+    {
+        _layout = layout;
+        LayoutChanged?.Invoke(layout);
     }
 
     public void SetMessage(string text) => _message.Text = text;

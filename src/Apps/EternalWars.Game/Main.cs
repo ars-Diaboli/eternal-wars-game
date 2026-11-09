@@ -104,6 +104,10 @@ public partial class Main : Node3D
     private string _settingsPath = "";
     private SpeedSettings _speeds = SpeedSettings.Default;
     private InterfaceSettings _interface = InterfaceSettings.Default;
+    private LayoutSettings _layout = LayoutSettings.Default;
+
+    /// <summary>Places the adventure map's HUD parts as the layout says (ADR-156); null before the first game.</summary>
+    private AdventureHudLayout? _hudLayout;
 
     /// <summary>The right-click information window (ADR-154), above every screen, for the whole run.</summary>
     private readonly InfoWindow _info = new();
@@ -406,7 +410,7 @@ public partial class Main : Node3D
     {
         try
         {
-            SettingsFile.Save(_settingsPath, _speeds, _interface);
+            SettingsFile.Save(_settingsPath, _speeds, _interface, _layout);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -619,6 +623,25 @@ public partial class Main : Node3D
         {
             _interface = settings;
             _info.Detailed = settings.DetailedTooltips;
+            KeepSettings();
+        };
+
+        // The layout (ADR-156): applied at once to the map's HUD and the battle's, kept with the other settings.
+        _layout = SettingsFile.LoadLayout(_settingsPath);
+        _menu.ShowLayout(_layout);
+        _menu.LayoutChanged += layout =>
+        {
+            _layout = layout;
+            if (IsInstanceValid(_hudLayout))
+            {
+                _hudLayout!.Apply(layout);
+            }
+
+            if (IsInstanceValid(_battleHud))
+            {
+                _battleHud.Layout = layout;
+            }
+
             KeepSettings();
         };
 
@@ -1103,6 +1126,7 @@ public partial class Main : Node3D
         _battleHud = new BattleHud();
         layer.AddChild(_battleHud);
         _battleHud.Bind(_session, _battle);
+        _battleHud.Layout = _layout;
 
         // Auto combat (ADR-090) asks above the battle scene and above the map (a battle still choosing its width).
         var autoLayer = new CanvasLayer { Name = "AutoCombat", Layer = 4 };
@@ -1242,8 +1266,11 @@ public partial class Main : Node3D
         _hud = hud;
         _game!.AddChild(hud);
 
-        var top = new VBoxContainer { Position = new Vector2(12, 8) };
-        hud.AddChild(top);
+        // The parts the "Layout" tab moves (ADR-156): the info block, the minimap, the lists and the action panel.
+        _hudLayout = new AdventureHudLayout();
+        hud.AddChild(_hudLayout);
+        var top = new VBoxContainer();
+        _hudLayout.SetInfo(top);
         var turnPanel = new TurnPanel();
         top.AddChild(turnPanel);
         turnPanel.Bind(_session);
@@ -1258,25 +1285,30 @@ public partial class Main : Node3D
         var notice = new NoticePanel();
         top.AddChild(notice);
         notice.Bind(_session);
-        // HoMM-style right-hand panel: minimap and hero list.
-        var side = new VBoxContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -340, OffsetTop = 8, OffsetRight = -8 };
-        hud.AddChild(side);
+        // HoMM-style by default: the minimap, the hero and town lists and the action panel down the right.
+        var minimapBox = new VBoxContainer();
+        _hudLayout.SetPart(HudPart.Minimap, minimapBox);
         var minimap = new MinimapWidget { CellPixels = Math.Max(2, 320f / Math.Max(_session.State.Map.Width, _session.State.Map.Height)) };
-        side.AddChild(minimap);
+        minimapBox.AddChild(minimap);
         minimap.Bind(_context);
         minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
         var level = new Button { Text = "Switch level (L)", Disabled = _session.State.Map.Levels < 2 };
         level.Pressed += () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
-        side.AddChild(level);
+        minimapBox.AddChild(level);
+        var lists = new VBoxContainer();
+        _hudLayout.SetPart(HudPart.Lists, lists);
         _heroList = new HeroListPanel();
-        side.AddChild(_heroList);
+        lists.AddChild(_heroList);
         _heroList.Bind(_session);
         _heroList.HeroSelected += hero => Select(hero, focus: true);
         _heroList.HeroInfoRequested += hero => ShowHero(hero);
         _townList = new TownListPanel();
-        side.AddChild(_townList);
+        lists.AddChild(_townList);
         _townList.Bind(_session);
         _townList.TownSelected += ShowTown;
+        (_hudLayout.HeroList, _hudLayout.TownList) = (_heroList, _townList);
+        var side = new VBoxContainer();
+        _hudLayout.SetPart(HudPart.Actions, side);
 
         // The town screen covers the map and the HUD (ADR-050); a hero stepping into an own town opens it.
         var townLayer = new CanvasLayer { Name = "TownScreen", Layer = 1 };
@@ -1403,6 +1435,7 @@ public partial class Main : Node3D
                 ShowTown(town.Id);
             }
         });
+        _hudLayout.Apply(_layout);
     }
 
     /// <summary>The demo, the map given with --map, and every map saved by the editor.</summary>

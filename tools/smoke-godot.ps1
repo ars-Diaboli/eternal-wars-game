@@ -65,10 +65,14 @@ $scenarios = @(
     # Auto combat (ADR-090): the menu sets "Ask before each battle", the step into the monster asks, Auto combat shows the outcome, Accept
     # returns to the map without a second result screen. The question waits until the imps' first moves have played.
     @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;12:click:1020,535;15:click:1028,595;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
+       Input = '3:key:Enter;8:key:F10;10:click:646,261;13:click:1020,292;16:click:1000,352;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
     # Speed settings (ADR-090): the menu sets "Your heroes" to Slow, then the hero walks a route (its steps take twice as long).
     @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 70
-       Input = '3:key:Enter;8:key:F10;12:click:733,617;15:click:733,647;19:key:Escape;24:click:960,520;30:click:960,520' },
+       Input = '3:key:Enter;8:key:F10;10:click:646,261;13:click:733,362;16:click:720,395;19:key:Escape;24:click:960,520;30:click:960,520' },
+    # The "Layout" tab (ADR-156): minimap bottom left, the lists along the bottom, the actions left, the initiative bar at the bottom; the map's
+    # HUD moves at once, then the step into the monster opens the battle with its initiative bar at the bottom.
+    @{ Name = 'game-layout'; App = 'EternalWars.Game'; Frames = 90; Map = $battleMap
+       Input = '3:key:Enter;8:key:F10;10:click:724,261;14:click:753,362;18:click:720,476;22:click:753,401;26:click:720,461;30:click:753,440;34:click:700,500;38:click:753,323;42:click:700,383;46:key:Escape;54:key:Right' },
     # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
     # to Red with the full time and the hero screen closes.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 640

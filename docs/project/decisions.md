@@ -1501,3 +1501,25 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
   (`DeployAt`, `DragDeploy`, `DropDeploy`). `AutoInput`'s scripted `drag` now reports the held button on its motion. No core change, no
   save format change; smoke scenario `game-deploy-drag` (a stack dragged down the zone, another dropped outside it and refused).
 - **Not done**: the 2D harness keeps click to place; touch drag.
+
+### ADR-156: The configurable layout and the "Layout" tab (ADR-118 UI-3, 2026-11-09)
+**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing.
+
+- **The tab**: the F10 menu now has three tabs, "Save and load", "Settings" (auto combat, the speeds, "Detailed tooltips") and "Layout".
+  Close and "Main menu" stay below the tabs. The layout choices: the battle's initiative bar (top, under the title, or bottom), the
+  minimap's corner (any of four), the hero and town lists (beside the minimap, or along the bottom) and the action panel's side (right or
+  left), plus "Default layout". A change shows at once, on the map and in a running battle.
+- **Kept per computer**: `LayoutSettings` in the `layout` section of `settings.json`, beside the speeds and the interface settings. It is
+  not in saves and changes no rule. A file without the section gives the default, which is the layout before this ADR.
+- **Where the parts go** *(proposal)*, `HudArrangement`: each corner holds a stack of parts, from the corner outwards. The minimap (with
+  "Switch level") is nearest its corner. Lists "beside the minimap" follow it in its stack, as in HoMM. Lists "along the bottom" run as rows
+  between the bottom stacks, with narrower entries. The action panel (kingdom, quests, puzzle map and dig, marketplace) stands at the top
+  of its side, after the minimap and lists if they are there. The turn, resources and status block does not move: it stays at the top left,
+  beside the top-left stack. The bottom right leaves room for the menu button. With the initiative bar at the bottom, the battle log and
+  the actions move up above it.
+- **Code**: core `LayoutSettings` and `HudArrangement` (Domain) and `SettingsFile.LoadLayout` / `ReadLayout` (Data), with tests. Godot
+  `AdventureHudLayout` is a full-screen container that lets the mouse through. It places the parts and moves them without reparenting,
+  because a part's event subscriptions last only while it is in the tree. `HeroListPanel` and `TownListPanel` have a `Horizontal` form,
+  `BattleHud` has `Layout`, and `GameMenuPanel` has its tabs and `LayoutChanged`. No save format change. Smoke scenario `game-layout`;
+  `game-auto-combat` and `game-speed-settings` now open the "Settings" tab.
+- **Not done**: the spacing pass (ADR-118 b); a layout for the 2D harness and the map editor.

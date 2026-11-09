@@ -8,10 +8,29 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
 
-/// <summary>Towns of the player whose turn it is, next to the hero list; clicking one centres the map on it and opens its town screen.</summary>
-public partial class TownListPanel : VBoxContainer
+/// <summary>
+/// Towns of the player whose turn it is, next to the hero list; clicking one centres the map on it and opens its town screen. A column, or a
+/// row of narrower entries when <see cref="Horizontal"/> (the "Layout" tab, ADR-156).
+/// </summary>
+public partial class TownListPanel : BoxContainer
 {
     private GameSession _session = null!;
+
+    public TownListPanel() => Vertical = true;
+
+    /// <summary>A row of entries instead of a column.</summary>
+    public bool Horizontal
+    {
+        get => !Vertical;
+        set
+        {
+            Vertical = !value;
+            if (_session is not null)
+            {
+                Refresh();
+            }
+        }
+    }
 
     public event Action<MapObjectId>? TownSelected;
 
@@ -49,7 +68,7 @@ public partial class TownListPanel : VBoxContainer
                 TooltipText = town.LastBuilt == state.Date ? "Built something today" : "Can build today",
                 Alignment = HorizontalAlignment.Left,
                 ClipText = true,
-                CustomMinimumSize = new Vector2(320, 0),
+                CustomMinimumSize = new Vector2(Horizontal ? 200 : 320, 0),
             };
             button.AddThemeColorOverride("font_color", Palette.ForPlayer(town.Owner!.Value).Lightened(0.4f));
             var id = town.Id;

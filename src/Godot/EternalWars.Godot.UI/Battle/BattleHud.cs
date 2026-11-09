@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Settings;
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Hud;
@@ -39,9 +40,53 @@ public partial class BattleHud : Control
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
     private readonly Button _close = new() { Text = "Return to the map (Enter)" };
     private readonly Queue<string> _lines = new();
+    private readonly VBoxContainer _top = new() { AnchorLeft = 0, AnchorRight = 1, OffsetTop = 8, MouseFilter = MouseFilterEnum.Ignore };
+
+    /// <summary>The initiative bar's place when the layout puts it at the bottom (ADR-156): the full width, under the log and the actions.</summary>
+    private readonly VBoxContainer _bottomBar = new()
+    {
+        AnchorLeft = 0, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 150, OffsetRight = -150, OffsetBottom = -8, // clear of the menu button
+        GrowVertical = GrowDirection.Begin,
+        MouseFilter = MouseFilterEnum.Ignore,
+    };
+
+    private readonly PanelContainer _logPanel = new() { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 8, OffsetRight = 560 };
+    private readonly VBoxContainer _actions = new()
+    {
+        AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -680, OffsetRight = -8,
+        GrowHorizontal = GrowDirection.Begin, GrowVertical = GrowDirection.Begin, Alignment = BoxContainer.AlignmentMode.End,
+    };
+
+    private LayoutSettings _layout = LayoutSettings.Default;
     private string? _raised;
     private GameSession _session = null!;
     private BattleView3D _view = null!;
+
+    /// <summary>Height the bottom initiative bar takes: the log and the actions stand above it.</summary>
+    private const float BottomBarHeight = 60;
+
+    /// <summary>
+    /// The layout settings (the "Layout" tab, ADR-156): the initiative bar runs under the title at the top, or along the bottom with the log
+    /// and the actions moved up above it.
+    /// </summary>
+    public LayoutSettings Layout
+    {
+        get => _layout;
+        set
+        {
+            _layout = value;
+            var bottom = value.InitiativeBar == ScreenEdge.Bottom;
+            var bar = bottom ? (Container)_bottomBar : _top;
+            if (_timeline.GetParent() != bar)
+            {
+                _timeline.Reparent(bar, keepGlobalTransform: false); // the timeline holds no subscriptions
+            }
+
+            var lift = bottom ? BottomBarHeight : 0;
+            (_logPanel.OffsetTop, _logPanel.OffsetBottom) = (-190 - lift, -8 - lift);
+            (_actions.OffsetTop, _actions.OffsetBottom) = (-230 - lift, -48 - lift); // above the menu button
+        }
+    }
 
     public void Bind(GameSession session, BattleView3D view)
     {
@@ -52,22 +97,18 @@ public partial class BattleHud : Control
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
 
-        var top = new VBoxContainer { AnchorLeft = 0, AnchorRight = 1, OffsetTop = 8, MouseFilter = MouseFilterEnum.Ignore };
-        AddChild(top);
-        top.AddChild(_title);
-        top.AddChild(_timeline);
+        AddChild(_top);
+        _top.AddChild(_title);
+        _top.AddChild(_timeline);
+        AddChild(_bottomBar);
 
-        var log = new PanelContainer { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 8, OffsetTop = -190, OffsetRight = 560, OffsetBottom = -8 };
-        AddChild(log);
-        log.AddChild(_log);
+        AddChild(_logPanel);
+        _logPanel.AddChild(_log);
 
         // Bottom right; taller content (many spells) grows upwards, never off the screen.
-        var actions = new VBoxContainer
-        {
-            AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -680, OffsetTop = -230, OffsetRight = -8, OffsetBottom = -48, // above the menu button
-            GrowHorizontal = GrowDirection.Begin, GrowVertical = GrowDirection.Begin, Alignment = BoxContainer.AlignmentMode.End,
-        };
+        var actions = _actions;
         AddChild(actions);
+        Layout = _layout;
         actions.AddChild(_status);
         actions.AddChild(_info);
         var buttons = new HFlowContainer();

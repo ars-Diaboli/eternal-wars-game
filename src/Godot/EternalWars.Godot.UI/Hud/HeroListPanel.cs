@@ -7,11 +7,30 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
 
-/// <summary>Heroes of the player whose turn it is, with movement points left; clicking one selects it, "Info" opens its hero screen.</summary>
-public partial class HeroListPanel : VBoxContainer
+/// <summary>
+/// Heroes of the player whose turn it is, with movement points left; clicking one selects it, "Info" opens its hero screen. A column, or a
+/// row of narrower entries when <see cref="Horizontal"/> (the "Layout" tab, ADR-156).
+/// </summary>
+public partial class HeroListPanel : BoxContainer
 {
     private GameSession _session = null!;
     private HeroId? _selected;
+
+    public HeroListPanel() => Vertical = true;
+
+    /// <summary>A row of entries instead of a column.</summary>
+    public bool Horizontal
+    {
+        get => !Vertical;
+        set
+        {
+            Vertical = !value;
+            if (_session is not null)
+            {
+                Refresh();
+            }
+        }
+    }
 
     public event Action<HeroId>? HeroSelected;
 
@@ -59,8 +78,8 @@ public partial class HeroListPanel : VBoxContainer
                 ButtonPressed = hero.Id == _selected,
                 Alignment = HorizontalAlignment.Left,
                 ClipText = true,
-                CustomMinimumSize = new Vector2(270, 0),
-                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                CustomMinimumSize = new Vector2(Horizontal ? 180 : 270, 0),
+                SizeFlagsHorizontal = Horizontal ? SizeFlags.Fill : SizeFlags.ExpandFill,
             };
             button.AddThemeColorOverride("font_color", Palette.ForPlayer(hero.Owner).Lightened(0.4f));
             var id = hero.Id;
