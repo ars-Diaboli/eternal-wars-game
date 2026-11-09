@@ -1664,3 +1664,20 @@ ADR-158).
   smoke map passes). Smoke: `editor-arena` (the switch, unticked, the validator's warning).
 - **Not done**: the computer does not yet weigh the contents shown (it knows them anyway, ADR-100); map event messages are still shown on
   the arena (ADR-097's "not shown" for players and towns); the shipped arena maps.
+
+### ADR-162: Drag and drop of artifacts on the hero and exchange screens (ADR-050, ADR-153, 2026-11-09)
+**Status**: implemented (2026-11-09); *(proposal)* marks the agent's choices, for play-testing.
+
+- **Drag**: on the hero screen and the exchange screen a worn or carried artifact is pressed, dragged and let go where it goes; a label
+  with its name follows the pointer. The places are the same as the clicks' (ADR-153): a slot of the other hero's paper doll gives it and
+  puts it on, the other's backpack gives it to carry, the own doll puts a carried one on, the own backpack takes a worn one off. Godot's
+  control drag: a press that moves a few pixels starts it, a press without moving stays a click; letting go over a place that would
+  change nothing (back where it came from) or off the places does nothing, and the pointer shows "no drop" there.
+- **Places** *(proposal)*: any slot of a paper doll, empty or not (the artifact goes to its own kind, as with clicks; not only the
+  matching slot as in HoMM3), the doll's free space, every backpack button, "Into the backpack" and the backpack's free space. Clicks stay
+  as they were; a drag drops what a click had picked.
+- **Code**: Godot `ArtifactDrag` (`WithArtifactDrag` on a control, `Accepts`, `MoveCommand`: the give, equip or unequip command a move
+  is); `HeroPanel` and `ExchangePanel` use it, and the exchange's clicks now share `MoveCommand`. No core change, no save format change.
+  Smoke scenario `game-artifact-drag` (exchange: onto the other's empty slot, own backpack onto own doll, onto the other's backpack's free
+  space; hero screen: onto the doll, into the backpack).
+- **Not done**: dragging army stacks (still click, then slot); dropping on a slot of the wrong kind is not refused; touch drag.

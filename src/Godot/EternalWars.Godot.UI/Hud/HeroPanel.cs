@@ -14,7 +14,7 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>
 /// Hero screen for a hero of the player whose turn it is: stats (with what artifacts add), mana, experience, specialty,
 /// skills with their descriptions, the army (click a stack, then a slot to move it; "Split" moves half), the paper doll
-/// and the backpack (click a worn artifact to take it off, a carried one to put it on), and war machines. Every change is
+/// and the backpack (click a worn artifact to take it off, a carried one to put it on, or drag it there: ADR-162), and war machines. Every change is
 /// a command; refusals show below. A right click on a skill, a spell, a stack or an artifact opens its information window (ADR-154). Opened with <see cref="Open"/>; Previous / Next go through the player's heroes. With
 /// <see cref="FullScreen"/> it fills its parent and scrolls; Escape or "Close" shut it.
 /// </summary>
@@ -97,9 +97,9 @@ public partial class HeroPanel : PanelContainer
         box.AddChild(_spells);
         box.AddChild(new Label { Text = "Adventure spells (mana and 500 movement points)" });
         box.AddChild(_adventure);
-        box.AddChild(new Label { Text = "Worn artifacts (click to take off)" });
+        box.AddChild(new Label { Text = "Worn artifacts (click or drag into the backpack to take off)" });
         box.AddChild(_doll);
-        box.AddChild(new Label { Text = "Backpack (click to put on)" });
+        box.AddChild(new Label { Text = "Backpack (click or drag onto the doll to put on)" });
         box.AddChild(_backpack);
         box.AddChild(_status);
         Visible = false;
@@ -388,6 +388,11 @@ public partial class HeroPanel : PanelContainer
 
     private void ShowArtifacts(Hero hero)
     {
+        // Drag and drop (ADR-162): a worn artifact into the backpack takes it off, a carried one onto any doll slot puts it on.
+        var onDoll = new ArtifactPlace(hero.Id, Doll: true);
+        var inBackpack = new ArtifactPlace(hero.Id, Doll: false);
+        _doll.WithArtifactDrag(null, null, onDoll, Drop);
+        _backpack.WithArtifactDrag(null, null, inBackpack, Drop);
         Clear(_doll);
         foreach (var slot in ArtifactSlots.All)
         {
@@ -405,9 +410,10 @@ public partial class HeroPanel : PanelContainer
                     CustomMinimumSize = new Vector2(190, 0),
                     ClipText = true,
                 };
-                if (artifact is not null)
+                var id = artifact?.Id;
+                button.WithArtifactDrag(id is null ? null : new ArtifactInHand(hero.Id, id, Worn: true), artifact?.Name, onDoll, Drop);
+                if (id is not null)
                 {
-                    var id = artifact.Id;
                     button.Pressed += () => Run(new UnequipArtifactCommand(_session.State.CurrentPlayer.Id, hero.Id, id));
                     button.WithInfo(detailed => InfoSheets.Artifact(_session.State, id, detailed));
                 }
@@ -446,7 +452,8 @@ public partial class HeroPanel : PanelContainer
             var button = new Button { Text = $"{artifact.Name} ({artifact.Slot})", TooltipText = ArtifactText(artifact) };
             var artifactId = artifact.Id;
             button.Pressed += () => Run(new EquipArtifactCommand(_session.State.CurrentPlayer.Id, hero.Id, artifactId));
-            button.WithInfo(detailed => InfoSheets.Artifact(_session.State, artifactId, detailed));
+            button.WithInfo(detailed => InfoSheets.Artifact(_session.State, artifactId, detailed))
+                .WithArtifactDrag(new ArtifactInHand(hero.Id, artifactId, Worn: false), artifact.Name, inBackpack, Drop);
             _backpack.AddChild(button);
         }
     }
@@ -457,6 +464,15 @@ public partial class HeroPanel : PanelContainer
         + (_session.State.Artifacts.RelicOf(artifact.Id) is { } relic ? $"\nA piece of {_session.State.Artifacts.Get(relic).Name}" : "")
         + (artifact.Set is { } set ? $"\nSet: {_session.State.Artifacts.GetSet(set).Name}" : "")
         + (artifact.Notes.Length > 0 ? $"\n{artifact.Notes}" : "");
+
+    /// <summary>An artifact dragged and let go on the doll or in the backpack: put on or taken off (<see cref="ArtifactDrag.MoveCommand"/>).</summary>
+    private void Drop(ArtifactInHand item, ArtifactPlace place)
+    {
+        if (ArtifactDrag.MoveCommand(_session.State.CurrentPlayer.Id, item, place) is { } command)
+        {
+            Run(command);
+        }
+    }
 
     private void Run(GameCommand command)
     {

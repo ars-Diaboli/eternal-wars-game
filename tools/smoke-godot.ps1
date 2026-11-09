@@ -56,6 +56,11 @@ $scenarios = @(
     # Two own heroes meet (ADR-153): Orrin's blade onto Valeska's doll, his ring into her backpack, her griffins to him; Close, then the gate.
     @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 72; Map = $exchangeMap
        Input = '3:key:Enter;10:key:Right;16:click:287,320;19:click:1079,320;22:click:223,456;25:click:875,456;28:click:922,176;31:click:128,176;36:click:122,21;42:click:960,557;48:click:960,557' },
+    # Artifact drag and drop (ADR-162): in the exchange Orrin's blade onto an empty slot of Valeska's doll (her axe goes to her backpack), his
+    # Iron Band from his backpack onto his doll, her axe onto empty ground of his backpack; on his hero screen the axe onto the doll, the band
+    # into the backpack.
+    @{ Name = 'game-artifact-drag'; App = 'EternalWars.Game'; Frames = 62; Map = $exchangeMap
+       Input = '3:key:Enter;10:key:Right;16:drag:288,320,894,284;24:drag:224,456,100,354;30:drag:1048,456,420,458;36:click:111,22;40:key:H;46:drag:104,632,300,534;52:drag:491,512,300,605' },
     # Information windows (ADR-154): right-click Orrin on the map, a click closes it; on the hero screen right-click his footmen, then his blade
     # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack.
     @{ Name = 'game-info-windows'; App = 'EternalWars.Game'; Frames = 42; Map = $exchangeMap
