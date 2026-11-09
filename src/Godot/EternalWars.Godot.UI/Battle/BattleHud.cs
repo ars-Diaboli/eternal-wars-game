@@ -381,7 +381,7 @@ public partial class BattleHud : Control
 
         _title.Text = $"{_view.SideName(BattleSide.Attacker)}  vs  {_view.SideName(BattleSide.Defender)}   ·   round {battle.Round}";
         _status.Text = deployer is { } placing
-            ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (click a stack, then a cell), then start the battle."
+            ? $"{_session.State.GetPlayer(placing).Name}: place your stacks within the first {battle.DeploymentColumns} columns (drag a stack, or click it and then a cell), then start the battle."
             : ArmedSpell is { } armed && _session.State.Spells.TryGet(armed, out var spell)
                 ? $"{spell.Name}: click {(_firstAim is null ? "a target" : "its second aim")} (Esc cancels)."
             : commander is not null && battle.ActiveUnit is { } acting

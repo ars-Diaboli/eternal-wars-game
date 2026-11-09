@@ -18,7 +18,7 @@ ADR-123 lists as not built, presentation; the few views not yet seen (below) whe
         curses, dispels and revives; the info adventure spells' screens (Distant Vision, Detect Magic, …); guild spells fixed by the map
         in the editor (map format v30); the guild's spell book button
       - ADR-120 / ADR-121: the siege's breakable gate, keep shooter and Earthquake in 3D; assembled relics' hero-screen buttons
-      - Battle: deployment step (ADR-076), war machine footprints in 3D, surrender button (ADR-081), Necromancy screen (ADR-078)
+      - Battle: deployment step (ADR-076) with drag and drop (ADR-155), war machine footprints in 3D, surrender button (ADR-081), Necromancy screen (ADR-078)
       - Game flow: victory screen with score and "Save replay", main menu (ADR-103, ADR-104), the conditions panel's difficulty row,
         the trading screen (ADR-067)
       - Towns: the unique buildings on the town screen and their visit messages (ADR-138); the Undead Transformer's section (ADR-143)
@@ -56,7 +56,7 @@ minimap, editor UI, 2D harness.
       `creatures.csv` (ADR-044, ADR-049), terrain model (ADR-045), creature capabilities (ADR-042); 2D battle board and 3D battle
       scene (ADR-052, ADR-085, ADR-113)
 - [ ] Battle scene follow-ups: creature models and animations (Phase 5 art), terrain-themed obstacles and backdrops, flyer arcs, battle
-      music; drag and drop instead of click-to-place in the deployment step (ADR-076)
+      music
 
 ## Phase 3: Towns and progression (closed out, ADR-114)
 
