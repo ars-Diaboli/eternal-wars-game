@@ -15,7 +15,7 @@ public partial class ResourceBar : HBoxContainer
 
     public void Bind(GameSession session)
     {
-        AddThemeConstantOverride("separation", 16);
+        AddThemeConstantOverride("separation", UiSpacing.Section);
         foreach (var type in Enum.GetValues<ResourceType>())
         {
             var label = new Label();

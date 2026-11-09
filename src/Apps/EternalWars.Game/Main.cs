@@ -66,7 +66,10 @@ public partial class Main : Node3D
     private (GameState State, GenerationInfo Info)? _lastGenerated;
     private GameMenuPanel _menu = null!;
 
-    /// <summary>The layer of the main menu, the new-game screen and the leaderboard; null during a game.</summary>
+    /// <summary>The "Menu (F10)" button; hidden on the screens before a game, which have their own buttons (F10 still opens the menu).</summary>
+    private Button _menuButton = null!;
+
+    /// <summary>The layer of the main menu, the new-game screen and the leaderboard, over the <see cref="MenuBackground"/>; null during a game.</summary>
     private CanvasLayer? _setup;
 
     /// <summary>What Escape does on the screen shown in <see cref="_setup"/>.</summary>
@@ -120,6 +123,7 @@ public partial class Main : Node3D
 
     public override void _Ready()
     {
+        UiSpacing.Apply(); // the shared margins and gaps (ADR-163)
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
             AddChild(autoInput);
@@ -145,6 +149,14 @@ public partial class Main : Node3D
         LeaveGame();
         var menu = new MainMenuScreen();
         ShowSetup(menu, back: null);
+        var latest = GameSaves.List(_saveFolder).FirstOrDefault(e => e.Info is not null);
+        menu.ShowContinue(latest?.Info is { } info ? $"{SaveTitle(latest.Path, info)}, {info.Map}, {info.Date} ({LocalTime(info.SavedAt)})" : null);
+        menu.ContinueRequested += () =>
+        {
+            // The menu shows why, if the save does not load; a load closes it.
+            _menu.Open();
+            Load(latest!.Path);
+        };
         menu.NewGameRequested += ShowNewGame;
         menu.LoadRequested += _menu.Open;
         menu.LeaderboardRequested += ShowLeaderboard;
@@ -183,17 +195,30 @@ public partial class Main : Node3D
         {
             _setup = new CanvasLayer { Name = "Setup" };
             AddChild(_setup);
+            _setup.AddChild(new MenuBackground());
         }
 
         foreach (var child in _setup.GetChildren())
         {
-            child.QueueFree();
+            if (child is not MenuBackground)
+            {
+                child.QueueFree();
+            }
         }
 
-        var center = new CenterContainer { AnchorRight = 1, AnchorBottom = 1 };
-        _setup.AddChild(center);
-        center.AddChild(screen);
+        if (screen is MainMenuScreen)
+        {
+            _setup.AddChild(screen); // places itself on the left
+        }
+        else
+        {
+            var center = new CenterContainer { AnchorRight = 1, AnchorBottom = 1 };
+            _setup.AddChild(center);
+            center.AddChild(screen);
+        }
+
         _setupBack = back;
+        _menuButton.Visible = false;
     }
 
     private void CloseSetup()
@@ -201,6 +226,7 @@ public partial class Main : Node3D
         _setup?.QueueFree();
         _setup = null;
         _setupBack = null;
+        _menuButton.Visible = true;
     }
 
     /// <summary>Takes the game being played down: its world, HUD and screens. Nothing runs until a new game or a load builds them again.</summary>
@@ -648,13 +674,13 @@ public partial class Main : Node3D
             KeepSettings();
         };
 
-        var button = new Button
+        _menuButton = new Button
         {
             Text = "Menu (F10)", AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1,
-            OffsetLeft = -140, OffsetTop = -36, OffsetRight = -8, OffsetBottom = -8,
+            OffsetLeft = -132 - UiSpacing.ScreenEdge, OffsetTop = -28 - UiSpacing.ScreenEdge, OffsetRight = -UiSpacing.ScreenEdge, OffsetBottom = -UiSpacing.ScreenEdge,
         }.WithIcon(UiIcon.Settings);
-        button.Pressed += _menu.Toggle;
-        layer.AddChild(button);
+        _menuButton.Pressed += _menu.Toggle;
+        layer.AddChild(_menuButton);
     }
 
     private void ApplySpeeds()

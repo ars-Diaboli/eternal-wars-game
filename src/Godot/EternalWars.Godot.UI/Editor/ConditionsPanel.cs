@@ -78,7 +78,7 @@ public partial class ConditionsPanel : VBoxContainer
     public void Bind(MapEditorSession editor)
     {
         _editor = editor;
-        AddChild(new Label { Text = "Victory and defeat" });
+        this.AddHeading("Victory and defeat");
         _arena.Toggled += on => Change(r => r with { Arena = on });
         AddChild(_arena);
         AddChild(_arenaNote);

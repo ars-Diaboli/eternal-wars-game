@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Hud;
 using Godot;
 
 namespace EternalWars.Godot.UI.Battle;
@@ -39,9 +40,10 @@ public partial class AutoCombatPanel : CenterContainer
         MouseFilter = MouseFilterEnum.Stop;
 
         var panel = new PanelContainer();
+        panel.UseOpaqueBackground();
         AddChild(panel);
         var rows = new VBoxContainer();
-        rows.AddThemeConstantOverride("separation", 10);
+        rows.AddThemeConstantOverride("separation", UiSpacing.Gap);
         panel.AddChild(rows);
         rows.AddChild(_title);
         rows.AddChild(_text);

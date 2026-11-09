@@ -40,20 +40,20 @@ public partial class BattleHud : Control
     private readonly Label _resultText = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
     private readonly Button _close = new() { Text = "Return to the map (Enter)" };
     private readonly Queue<string> _lines = new();
-    private readonly VBoxContainer _top = new() { AnchorLeft = 0, AnchorRight = 1, OffsetTop = 8, MouseFilter = MouseFilterEnum.Ignore };
+    private readonly VBoxContainer _top = new() { AnchorLeft = 0, AnchorRight = 1, OffsetTop = UiSpacing.ScreenEdge, MouseFilter = MouseFilterEnum.Ignore };
 
     /// <summary>The initiative bar's place when the layout puts it at the bottom (ADR-156): the full width, under the log and the actions.</summary>
     private readonly VBoxContainer _bottomBar = new()
     {
-        AnchorLeft = 0, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 150, OffsetRight = -150, OffsetBottom = -8, // clear of the menu button
+        AnchorLeft = 0, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 150, OffsetRight = -150, OffsetBottom = -UiSpacing.ScreenEdge, // clear of the menu button
         GrowVertical = GrowDirection.Begin,
         MouseFilter = MouseFilterEnum.Ignore,
     };
 
-    private readonly PanelContainer _logPanel = new() { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = 8, OffsetRight = 560 };
+    private readonly PanelContainer _logPanel = new() { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = UiSpacing.ScreenEdge, OffsetRight = 560 };
     private readonly VBoxContainer _actions = new()
     {
-        AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -680, OffsetRight = -8,
+        AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -680, OffsetRight = -UiSpacing.ScreenEdge,
         GrowHorizontal = GrowDirection.Begin, GrowVertical = GrowDirection.Begin, Alignment = BoxContainer.AlignmentMode.End,
     };
 

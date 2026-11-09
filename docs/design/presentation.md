@@ -26,6 +26,13 @@ creatures and buildings, heraldic player colours, iconic map objects).
   lists (beside the minimap, or as rows along the bottom) and the action panel's side (kingdom, quests, puzzle map, dig, marketplace). The
   change shows at once and is kept in `settings.json` with the speeds, not in saves. The minimap is nearest its corner; lists beside it follow
   it; the action panel stands at the top of its side; the turn and status block stays at the top left, beside anything there.
+- **Spacing** (ADR-118, ADR-163): one set of margins and gaps for every panel, in Godot's default look (no font or colour of its own):
+  4 px between slots and the cells of a grid (army slots, paper doll, backpack), 6 between rows, 8 between controls side by side, 16
+  above a section's heading (Army, Worn artifacts, Buildings, ...), 8 inside a panel, 16 inside a screen or window over the map, 8 from
+  the window's edge to the HUD parts and between them.
+- **Before a game** (ADR-163): the main menu, the new-game screen and the leaderboard stand on a full-window picture (cropped to fit, never
+  stretched, a little darkened), in dark panels that let some of it through; the main menu is a column on its left. The game's "Menu (F10)"
+  button shows only in a game (F10 still opens the menu). The F10 menu and the result screen are opaque, so the map does not show through.
 - **Audio**: per-terrain ambient music, faction town themes.
 
 ## Information windows

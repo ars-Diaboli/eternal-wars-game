@@ -85,12 +85,12 @@ public partial class TownPanel : PanelContainer
         close.Pressed += Close;
         header.AddChild(close);
 
-        box.AddChild(new Label { Text = "Buildings (one a day; hover for cost and requirements)" });
+        box.AddHeading("Buildings (one a day; hover for cost and requirements)");
         box.AddChild(_builtToday);
         box.AddChild(_buildings);
-        box.AddChild(new Label { Text = "Dwellings (7 of 9, every tier)" });
+        box.AddHeading("Dwellings (7 of 9, every tier)");
         box.AddChild(_dwellings);
-        box.AddChild(new Label { Text = "Governor (Stewardship)" });
+        box.AddHeading("Governor (Stewardship)");
         box.AddChild(_governor);
         box.AddChild(_armies);
         box.AddChild(_caravan);

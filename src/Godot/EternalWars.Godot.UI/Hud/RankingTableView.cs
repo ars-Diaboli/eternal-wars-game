@@ -21,7 +21,7 @@ public partial class RankingTableView : VBoxContainer
     public RankingTableView()
     {
         AddChild(_name);
-        _grid.AddThemeConstantOverride("h_separation", 14);
+        _grid.AddThemeConstantOverride("h_separation", UiSpacing.Section);
         AddChild(_grid);
         AddChild(_empty);
         Display(null);

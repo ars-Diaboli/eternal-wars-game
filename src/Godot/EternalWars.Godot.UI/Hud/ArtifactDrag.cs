@@ -62,7 +62,7 @@ public static class ArtifactDrag
     private static Control Preview(string name)
     {
         var panel = new PanelContainer { Modulate = new Color(1, 1, 1, 0.9f), Position = new Vector2(12, 12) }; // beside the pointer, not under it
-        panel.UseOpaqueBackground();
+        panel.UseOpaqueBackground(UiSpacing.Padding);
         panel.AddChild(new Label { Text = name });
         return panel;
     }

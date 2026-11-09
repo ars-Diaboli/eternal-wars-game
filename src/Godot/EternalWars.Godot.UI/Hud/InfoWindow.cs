@@ -93,8 +93,8 @@ public partial class InfoWindow : CanvasLayer
         var screen = _panel.GetViewportRect().Size;
         var size = _panel.GetCombinedMinimumSize();
         var x = pointer.X + 16 + size.X > screen.X ? pointer.X - 16 - size.X : pointer.X + 16;
-        var y = Math.Clamp(pointer.Y - (size.Y / 2), 8, Math.Max(8, screen.Y - size.Y - 8));
-        _panel.Position = new Vector2(Math.Clamp(x, 8, Math.Max(8, screen.X - size.X - 8)), y);
+        var y = Math.Clamp(pointer.Y - (size.Y / 2), UiSpacing.ScreenEdge, Math.Max(UiSpacing.ScreenEdge, screen.Y - size.Y - UiSpacing.ScreenEdge));
+        _panel.Position = new Vector2(Math.Clamp(x, UiSpacing.ScreenEdge, Math.Max(UiSpacing.ScreenEdge, screen.X - size.X - UiSpacing.ScreenEdge)), y);
     }
 
     public override void _Input(InputEvent @event)

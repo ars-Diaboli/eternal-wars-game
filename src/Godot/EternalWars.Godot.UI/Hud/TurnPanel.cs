@@ -16,7 +16,7 @@ public partial class TurnPanel : HBoxContainer
 
     public void Bind(GameSession session)
     {
-        AddThemeConstantOverride("separation", 16);
+        AddThemeConstantOverride("separation", UiSpacing.Section);
         AddChild(_date);
         AddChild(_player);
 

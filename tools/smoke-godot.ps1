@@ -50,21 +50,21 @@ dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-buil
 if ($LASTEXITCODE -ne 0) { throw 'Exporting Ember March failed.' }
 $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
-       Input = '5:click:133,263;12:click:133,263;20:click:103,140;28:click:30,140;35:key:Q' },
+       Input = '5:click:133,263;12:click:133,263;20:click:@Fight;28:click:@Quick combat;35:key:Q' },
     @{ Name = 'game-route-and-move'; App = 'EternalWars.Game'; Frames = 60
        Input = '3:key:Enter;10:click:960,520;25:click:960,520' },
     # Two own heroes meet (ADR-153): Orrin's blade onto Valeska's doll, his ring into her backpack, her griffins to him; Close, then the gate.
     @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 72; Map = $exchangeMap
-       Input = '3:key:Enter;10:key:Right;16:click:287,320;19:click:1079,320;22:click:223,456;25:click:875,456;28:click:922,176;31:click:128,176;36:click:122,21;42:click:960,557;48:click:960,557' },
+       Input = '3:key:Enter;10:key:Right;16:click:@Weapon: Rusted Blade;19:click:@Weapon: Centaur''s Axe;22:click:@Iron Band (Ring);25:click:@Into the backpack#2;28:click:@2 | Griffin;31:click:@—;36:click:@Close;42:click:960,557;48:click:960,557' },
     # Artifact drag and drop (ADR-162): in the exchange Orrin's blade onto an empty slot of Valeska's doll (her axe goes to her backpack), his
     # Iron Band from his backpack onto his doll, her axe onto empty ground of his backpack; on his hero screen the axe onto the doll, the band
     # into the backpack.
     @{ Name = 'game-artifact-drag'; App = 'EternalWars.Game'; Frames = 62; Map = $exchangeMap
-       Input = '3:key:Enter;10:key:Right;16:drag:288,320,894,284;24:drag:224,456,100,354;30:drag:1048,456,420,458;36:click:111,22;40:key:H;46:drag:104,632,300,534;52:drag:491,512,300,605' },
+       Input = '3:key:Enter;10:key:Right;16:drag:@Weapon: Rusted Blade>@Head: —#2;24:drag:@Iron Band (Ring)>@Ring: —;30:drag:@Centaur''s Axe (Weapon)>420,536;36:click:@Close;40:key:H;46:drag:@Centaur''s Axe (Weapon)>@Shield: —;52:drag:@Ring: Iron Band>300,725' },
     # Information windows (ADR-154): right-click Orrin on the map, a click closes it; on the hero screen right-click his footmen, then his blade
     # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack.
     @{ Name = 'game-info-windows'; App = 'EternalWars.Game'; Frames = 42; Map = $exchangeMap
-       Input = '3:key:Enter;10:rclick:800,445;16:click:1500,850;20:key:H;24:rclick:55,282;28:rclick:102,535;32:key:Escape;36:rclick:73,632' },
+       Input = '3:key:Enter;10:rclick:800,445;16:click:1500,850;20:key:H;24:rclick:@10 | Footman;28:rclick:@Weapon: Rusted Blade;32:key:Escape;36:rclick:@Iron Band (Ring)' },
     # An arena map against the computer (ADR-097, ADR-159): Blue ends day 1, Red prepares, day 2's battle opens by itself at the combat place;
     # quick combat, the result screen (not ranked), then "Play again" starts the map anew.
     @{ Name = 'game-arena'; App = 'EternalWars.Game'; Frames = 110; Map = $arenaMap
@@ -75,18 +75,18 @@ $scenarios = @(
     # Auto combat (ADR-090): the menu sets "Ask before each battle", the step into the monster asks, Auto combat shows the outcome, Accept
     # returns to the map without a second result screen. The question waits until the imps' first moves have played.
     @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;10:click:646,261;13:click:1020,292;16:click:1000,352;19:key:Escape;24:key:Right;60:click:773,509;68:click:773,561' },
+       Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Off;16:choose:Ask before each battle;19:key:Escape;24:key:Right;60:click:@Auto combat;68:click:@Accept' },
     # Speed settings (ADR-090): the menu sets "Your heroes" to Slow, then the hero walks a route (its steps take twice as long).
     @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 70
-       Input = '3:key:Enter;8:key:F10;10:click:646,261;13:click:733,362;16:click:720,395;19:key:Escape;24:click:960,520;30:click:960,520' },
+       Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Normal;16:choose:Slow;19:key:Escape;24:click:960,520;30:click:960,520' },
     # The "Layout" tab (ADR-156): minimap bottom left, the lists along the bottom, the actions left, the initiative bar at the bottom; the map's
     # HUD moves at once, then the step into the monster opens the battle with its initiative bar at the bottom.
     @{ Name = 'game-layout'; App = 'EternalWars.Game'; Frames = 90; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;10:click:724,261;14:click:753,362;18:click:720,476;22:click:753,401;26:click:720,461;30:click:753,440;34:click:700,500;38:click:753,323;42:click:700,383;46:key:Escape;54:key:Right' },
+       Input = '3:key:Enter;8:key:F10;10:click:@Layout;14:click:@Top right;18:choose:Bottom left;22:click:@Beside the minimap;26:choose:Along the bottom;30:click:@Right;34:choose:Left;38:click:@Top;42:choose:Bottom;46:key:Escape;54:key:Right' },
     # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
     # to Red with the full time and the hero screen closes.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 640
-       Input = '3:click:1025,419;8:click:1025,100;12:click:798,586;30:key:H' },
+       Input = '3:click:@Off;8:choose:1 min;12:click:@Start;30:key:H' },
     # The town screen (ADR-050): T opens the first own town over the map, Escape closes it, T again, Escape.
     @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
        Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },
@@ -96,15 +96,15 @@ $scenarios = @(
     # Quests (ADR-127, ADR-128): the Seer's Hut, Quest Guard and Quest Gate shapes; the hero walks into the hut and completes its first stage, the next one shows; Q opens the
     # quest log, Q closes it.
     @{ Name = 'game-quests'; App = 'EternalWars.Game'; Frames = 64; Map = $questsMap
-       Input = '3:key:Enter;12:key:Up;20:key:Up;26:click:53,192;32:click:27,140;40:key:Q;52:key:Q' },
+       Input = '3:key:Enter;12:key:Up;20:key:Up;26:click:@Complete;32:click:@OK;40:key:Q;52:key:Q' },
     # Turn-start messages (EVT-2 f): Blue's player event reveals Grimhollow and says so, the camera moves there; Enter closes it; the town
     # event's message for Castlebridge moves the camera to the town; OK closes each.
     @{ Name = 'game-turn-start-camera'; App = 'EternalWars.Game'; Frames = 40; Map = $turnStartMap
-       Input = '3:key:Enter;16:click:27,140;30:click:27,140' },
+       Input = '3:key:Enter;16:click:@OK;30:click:@OK' },
     # Random placeholders and bans (ADR-126): the new-game screen offers Blue a faction for its random town (Dungeon is picked);
     # the game starts with Castlebridge a Dungeon town, Blue's hero a Dungeon hero and the random monsters drawn.
     @{ Name = 'game-placeholders'; App = 'EternalWars.Game'; Frames = 30; Map = $placeholdersMap
-       Input = '5:click:860,516;9:click:839,711;13:click:754,586' },
+       Input = '5:click:@Random;9:choose:dungeon;13:click:@Start' },
     # The kingdom overview (ADR-084): K opens it on the towns map, Escape closes it, K again, Escape.
     @{ Name = 'game-kingdom'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
        Input = '3:key:Enter;12:key:K;24:key:Escape;30:key:K;40:key:Escape' },
@@ -113,60 +113,60 @@ $scenarios = @(
        Input = (@('3:key:Enter') + (0..13 | ForEach-Object { "$(10 + 6 * $_):click:342,24" })) -join ';' },
     # The Thieves' Guild (ADR-079) from the town screen's button, closed with Escape, then the town screen too.
     @{ Name = 'game-thieves-guild'; App = 'EternalWars.Game'; Frames = 40; Map = $townsMap
-       Input = '3:key:Enter;10:key:T;16:click:446,16;26:key:Escape;32:key:Escape' },
+       Input = '3:key:Enter;10:key:T;16:click:@Thieves'' guild;26:key:Escape;32:key:Escape' },
     # A random map (ADR-086): pick "Random map: Duel", Necropolis, its first hero and the Skeleton tier-1 dwelling for Blue, hero limit 7,
     # Start (Red is a computer player), K, end the turn so the computer plays its turn.
     @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 105
-       Input = '4:click:750,314;8:click:783,455;12:click:700,595;16:click:687,736;20:click:860,595;24:click:860,655;28:click:1000,595;32:click:1024,682;36:click:618,400;40:click:680,665;58:key:K;68:key:Escape;74:click:342,24' },
-    # The main menu (ADR-101), by keyboard: two Downs skip the disabled items to Leaderboard, Enter opens it, Escape returns, Enter on
-    # New game, Enter on Start. The only game scenario without --new-game.
+       Input = '4:click:@Demo Valley;8:choose:Random map: Duel;12:click:@Random;16:choose:necropolis;20:click:@Random;24:choose:Morthal (warrior);28:click:@Random;32:choose:Skeleton;36:click:618,400;40:click:@Start;58:key:K;68:key:Escape;74:click:@End turn' },
+    # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns, New game, Enter on Start. Pressed by name: Continue has the
+    # focus when this computer has a save, New game when not. The only game scenario without --new-game.
     @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 50; MainMenu = $true
-       Input = '3:key:Down;6:key:Down;9:key:Enter;20:key:Escape;26:key:Enter;34:key:Enter' },
+       Input = '3:press:Leaderboard;12:key:Escape;18:press:New game;28:key:Enter' },
     # A siege (ADR-106, ADR-109): step into the neutral Castle-level town; walls, gate, moat, towers and keep. The footman defends, the
     # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
     @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:955,280;90:key:D;100:key:D;125:key:Q;140:key:Enter' },
     # A garrison hero (ADR-112): step into the own town, "Orrin into the garrison", "Lead Orrin out", close the town screen.
     @{ Name = 'game-garrison-hero'; App = 'EternalWars.Game'; Frames = 60; Map = $townsMap
-       Input = '3:key:Enter;10:key:Up;20:click:99,855;35:click:99,855;48:key:Escape' },
+       Input = '3:key:Enter;10:key:Up;20:press:Orrin into the garrison;35:press:Lead Orrin out;48:key:Escape' },
     # Dwellings and caravans (ADR-054, ADR-073): visit a map dwelling and recruit the week, close; T, scroll to the caravan section, hire
     # from the owned dwelling, close, end two turns (hot-seat) and look again: the footmen are in the garrison.
     @{ Name = 'game-dwelling-caravan'; App = 'EternalWars.Game'; Frames = 100; Map = $caravanMap
-       Input = '3:key:Enter;10:key:Up;22:click:770,494;28:click:785,380;34:key:T;42:wheel:down,15;50:click:449,697;58:key:Escape;64:click:342,24;72:click:342,24;82:key:T;90:wheel:down,15' },
+       Input = '3:key:Enter;10:key:Up;22:click:@Recruit week (16);28:click:@Close;34:key:T;42:wheel:down,15;50:click:@Hire 9 | 55 gold each;58:key:Escape;64:click:@End turn;72:click:@End turn;82:key:T;90:wheel:down,15' },
     # The generated connections map in the editor (no fog): pan to the portal, the blue border guard, the blue keymaster, the garrison,
     # the red border gate and the red keymaster (frames 16, 49, 86, 109, 153, 172).
     @{ Name = 'editor-generated-connections'; App = 'EternalWars.MapEditor'; Frames = 175; Map = $connectionsMap
        Input = '5:hold:S,8;18:hold:A,19;38:hold:W,8;51:hold:S,18;70:hold:D,13;88:hold:D,10;99:hold:S,7;111:hold:D,8;120:hold:W,30;155:hold:W,10;166:hold:D,3' },
     # The tavern screen (ADR-114): T, scroll to the tavern row, "Visit the tavern…", then Escape for the tooltip, the tavern and the town screen.
     @{ Name = 'game-tavern'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
-       Input = '3:key:Enter;10:key:T;16:wheel:down,25;24:click:190,794;34:key:Escape;38:key:Escape;44:key:Escape' },
+       Input = '3:key:Enter;10:key:T;16:wheel:down,25;24:click:@Visit the tavern…;34:key:Escape;38:key:Escape;44:key:Escape' },
     # Ember March (ADR-114): start, end the turn (the computer plays Red), open the town screen with its building tree, close it.
     @{ Name = 'game-ember-march'; App = 'EternalWars.Game'; Frames = 60; Map = $emberMap
-       Input = '3:key:Enter;12:click:342,24;40:key:T;52:key:Escape' },
+       Input = '3:key:Enter;12:click:@End turn;40:key:T;52:key:Escape' },
     # Inspector rows (ADR-114) on Ember March: Select, the Inspector tab, a Minor artifact pickup, the witch hut, the sphinx, the hero (artifacts).
     @{ Name = 'editor-inspector-objects'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $emberMap
-       Input = '3:click:544,24;6:click:1328,100;9:click:616,230;16:click:645,382;23:click:965,552;30:click:381,276' },
+       Input = '3:click:@Select;6:click:@Inspector;9:click:616,230;16:click:645,382;23:click:965,552;30:click:381,276' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
-       Input = '3:click:103,24;6:click:700,600;9:click:740,600;12:click:160,24;15:click:800,500;18:click:231,24;21:click:900,450;24:click:492,24;27:click:900,450;30:click:1305,24' },
+       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1305,24' },
     # Generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
     @{ Name = 'editor-generate'; App = 'EternalWars.MapEditor'; Frames = 50
-       Input = '3:click:470,94;8:click:1225,465;12:click:1210,552;16:click:1316,605;30:click:470,94' },
+       Input = '3:click:@From template;8:click:@Random;12:choose:sylvan;16:click:@Generate;30:click:@From template' },
     # The template editor (ADR-117): "Templates", add a treasure zone, drag it, right-drag it onto start-1 to connect, Generate (opens the map).
     @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 60
-       Input = '3:click:593,94;8:click:682,30;14:drag:624,408,708,560;20:rdrag:708,560,568,373;34:click:1226,30' },
+       Input = '3:click:@Templates;8:click:@+ Treasure;14:drag:624,408,708,560;20:rdrag:708,560,568,373;34:click:@Generate' },
     # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
-       Input = '3:click:1400,100;8:click:1090,168;14:click:1133,465' },
+       Input = '3:click:@Events;8:click:1090,168;14:click:1133,465' },
     # Bans and placeholders (ADR-126) on the placeholders map: the Bans tab, ban the first hero, undo it; Select, the Inspector tab, the random town.
     @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $placeholdersMap
-       Input = '3:click:1475,100;7:click:1052,254;11:click:765,94;15:click:544,24;18:click:1328,100;21:click:420,300' },
+       Input = '3:click:@Bans;7:click:@Agathe Sorrel (haven, Mage);11:click:@Undo;15:click:@Select;18:click:@Inspector;21:click:420,300' },
     # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
     @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
-       Input = '3:click:1310,24;8:click:1506,354;14:click:1583,250;20:click:545,86;26:click:545,86' },
+       Input = '3:click:@Conditions;8:click:@conflux;14:click:1583,250;20:click:@Undo;26:click:@Undo' },
     # The arena switch (ARN-2) on the arena map: the Conditions tab (the switch on, the other victory rows off), untick it, scroll the tabs to
     # Validation (the combat place now does nothing).
     @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $arenaMap
-       Input = '3:click:1230,100;6:click:1052,158;10:click:1584,100;13:click:1584,100;16:click:1584,100;19:click:1584,100;24:click:1318,100' }
+       Input = '3:click:@Conditions;6:click:@Arena: a day to prepare, then one battle decides the game;10:click:1584,100;13:click:1584,100;16:click:1584,100;19:click:1584,100;24:click:1318,100' }
     # The scenarios below find buttons by their text (press:) rather than by pixel.
     # Unique buildings (ADR-138, ADR-143): Orrin enters the Necropolis town, ticks a garrison and a hero stack for the Undead Transformer and
     # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up), Gareth the Haven town (Stables: a notice).
@@ -189,7 +189,7 @@ $scenarios = @(
     # Magic (ADR-110, ADR-121, ADR-122, ADR-123): Magus enters the guild town (fixed guild spells), the hero screen with ranks and the Assemble
     # button, Detect Magic's window; then Bookless buys a spell book in the second town.
     @{ Name = 'game-magic'; App = 'EternalWars.Game'; Frames = 84; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:Up;24:key:Escape;28:key:H;34:press:Detect Magic;44:press:Close;50:press:Close;56:press:Bookless;60:key:Up;72:press:spell book' },
+       Input = '3:key:Enter;8:press:Magus;12:key:Up;24:key:Escape;28:key:H;34:press:Detect Magic (4 mana);44:press:Close;50:press:Close;56:press:Bookless;60:key:Up;72:press:spell book' },
     # Battle magic (ADR-122, ADR-123) and surrender (ADR-081): Distant Vision on the computer mage, then Magus attacks it, casts Blind, defends
     # until the AI has cast its spells, surrenders.
     @{ Name = 'game-battle-magic'; App = 'EternalWars.Game'; Frames = 196; Map = $magicMap
@@ -227,7 +227,7 @@ $scenarios = @(
     # The editor's Grail tool, the conditions panel's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction and
     # guild spells (ADR-083, ADR-123).
     @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $grailMap
-       Input = '5:click:1230,100;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:1328,100' },
+       Input = '5:click:@Conditions;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:@Inspector' },
     # The template editor's obelisk count (ADR-140): Templates, select the middle zone.
     @{ Name = 'editor-template-obelisks'; App = 'EternalWars.MapEditor'; Frames = 16
        Input = '3:press:Templates;10:click:708,373' }

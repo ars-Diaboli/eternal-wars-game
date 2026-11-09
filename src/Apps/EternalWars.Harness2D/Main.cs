@@ -13,6 +13,7 @@ using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
+using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Battle;
 using EternalWars.Godot.UI.Debugging;
 using EternalWars.Godot.UI.Hud;
@@ -42,6 +43,7 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
+        UiSpacing.Apply(); // the shared margins and gaps (ADR-163)
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
             AddChild(autoInput);
@@ -311,7 +313,7 @@ public partial class Main : Node2D
         var ui = new CanvasLayer { Name = "Ui" };
         AddChild(ui);
 
-        var top = new VBoxContainer { Name = "Top", Position = new Vector2(16, 8) };
+        var top = new VBoxContainer { Name = "Top", Position = new Vector2(UiSpacing.ScreenEdge, UiSpacing.ScreenEdge) };
         ui.AddChild(top);
         var turnPanel = new TurnPanel();
         top.AddChild(turnPanel);
@@ -338,9 +340,9 @@ public partial class Main : Node2D
             AnchorRight = 1,
             AnchorBottom = 1,
             OffsetLeft = -560,
-            OffsetTop = 8,
-            OffsetRight = -8,
-            OffsetBottom = -8,
+            OffsetTop = UiSpacing.ScreenEdge,
+            OffsetRight = -UiSpacing.ScreenEdge,
+            OffsetBottom = -UiSpacing.ScreenEdge,
         };
         ui.AddChild(log);
         log.Bind(_session.Events);

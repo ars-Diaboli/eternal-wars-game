@@ -24,7 +24,7 @@ public partial class HeroPanel : PanelContainer
     private readonly Label _stats = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private readonly Label _specialty = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private readonly VBoxContainer _skills = new();
-    private readonly HBoxContainer _army = new();
+    private readonly HBoxContainer _army = new HBoxContainer().WithCellGap();
     private readonly GridContainer _doll = new() { Columns = 4 };
     private readonly HFlowContainer _backpack = new();
     private readonly Label _machines = new();
@@ -88,18 +88,18 @@ public partial class HeroPanel : PanelContainer
 
         box.AddChild(_stats);
         box.AddChild(_specialty);
-        box.AddChild(new Label { Text = "Skills" });
+        box.AddHeading("Skills");
         box.AddChild(_skills);
-        box.AddChild(new Label { Text = "Army" });
+        box.AddHeading("Army");
         box.AddChild(_army);
         box.AddChild(_split);
         box.AddChild(_machines);
         box.AddChild(_spells);
-        box.AddChild(new Label { Text = "Adventure spells (mana and 500 movement points)" });
+        box.AddHeading("Adventure spells (mana and 500 movement points)");
         box.AddChild(_adventure);
-        box.AddChild(new Label { Text = "Worn artifacts (click or drag into the backpack to take off)" });
+        box.AddHeading("Worn artifacts (click or drag into the backpack to take off)");
         box.AddChild(_doll);
-        box.AddChild(new Label { Text = "Backpack (click or drag onto the doll to put on)" });
+        box.AddHeading("Backpack (click or drag onto the doll to put on)");
         box.AddChild(_backpack);
         box.AddChild(_status);
         Visible = false;

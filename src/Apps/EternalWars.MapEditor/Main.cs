@@ -54,6 +54,7 @@ public partial class Main : Node3D
 
     public override void _Ready()
     {
+        UiSpacing.Apply(); // the shared margins and gaps (ADR-163)
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
             AddChild(autoInput);
@@ -248,7 +249,7 @@ public partial class Main : Node3D
     {
         _ui = new CanvasLayer { Name = "Ui" };
         AddChild(_ui);
-        var rows = new VBoxContainer { Position = new Vector2(12, 8) };
+        var rows = new VBoxContainer { Position = new Vector2(UiSpacing.ScreenEdge, UiSpacing.ScreenEdge) };
         _ui.AddChild(rows);
 
         _tools = new ToolPalette();
@@ -277,7 +278,7 @@ public partial class Main : Node3D
         rows.AddChild(new Label { Text = "LMB: use tool   Ctrl+Z / Ctrl+Y: undo / redo   L: level   WASD/QE/wheel: camera" });
 
         // Below the tool rows: a tool's second row (terrains, objects) runs under the right-hand side.
-        var tabs = new TabContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -560, OffsetTop = 84, OffsetRight = -8, OffsetBottom = 700 };
+        var tabs = new TabContainer { AnchorLeft = 1, AnchorRight = 1, OffsetLeft = -560, OffsetTop = 84, OffsetRight = -UiSpacing.ScreenEdge, OffsetBottom = 700 };
         _tabs = tabs;
         _ui.AddChild(tabs);
         var properties = new MapPropertiesPanel { Name = "Map" };

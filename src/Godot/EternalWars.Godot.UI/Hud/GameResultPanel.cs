@@ -42,9 +42,10 @@ public partial class GameResultPanel : CenterContainer
         MouseFilter = MouseFilterEnum.Stop;
 
         var panel = new PanelContainer();
+        panel.UseOpaqueBackground();
         AddChild(panel);
         var rows = new VBoxContainer();
-        rows.AddThemeConstantOverride("separation", 12);
+        rows.AddThemeConstantOverride("separation", UiSpacing.Gap);
         panel.AddChild(rows);
         _title.AddThemeFontSizeOverride("font_size", 32);
         rows.AddChild(_title);

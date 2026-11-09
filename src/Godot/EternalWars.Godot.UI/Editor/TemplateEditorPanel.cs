@@ -52,8 +52,8 @@ public partial class TemplateEditorPanel : PanelContainer
         _host = host;
         this.UseOpaqueBackground();
         SetAnchorsPreset(LayoutPreset.FullRect);
-        OffsetLeft = OffsetTop = 8;
-        OffsetRight = OffsetBottom = -8;
+        OffsetLeft = OffsetTop = UiSpacing.ScreenEdge;
+        OffsetRight = OffsetBottom = -UiSpacing.ScreenEdge;
 
         var rows = new VBoxContainer();
         AddChild(rows);
