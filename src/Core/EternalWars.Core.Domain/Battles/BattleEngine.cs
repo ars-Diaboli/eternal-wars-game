@@ -343,9 +343,55 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     private void MoveUnit(BattleUnit unit, CellPosition to)
     {
         var from = unit.Position;
+        var hits = battle.Zones.Count > 0 ? BattleZones.MoveDamage(battle, unit, BattleGrid.Path(battle, unit, to)) : [];
         unit.Position = to;
         events.Publish(new BattleUnitMoved(unit.Id, from, to));
         EnterMoat(unit, from);
+
+        // Field zones on the way (ADR-149): Fire Wall burns a stack walking in, Thornwall tears one walking out.
+        foreach (var (zone, damage) in hits)
+        {
+            if (unit.IsAlive)
+            {
+                SpellDamage(unit, zone.Spell, damage);
+            }
+        }
+    }
+
+    /// <summary>A zone spell (ADR-149) covers its cells, clipped to the field, from now to the last round it lasts.</summary>
+    private void MakeZone(BattleSide side, KnownSpell known, CellPosition cell, int? creaturePower)
+    {
+        var zone = new BattleZone(
+            ++battle.ZonesMade, known, side, BattleZones.Cells(battle, known.Effect!, cell), BattleZones.UntilRound(battle, side, known, creaturePower),
+            BattleZones.Scaled(battle, side, known, creaturePower));
+        battle.MutableZones.Add(zone);
+        events.Publish(new BattleZoneCreated(zone.Id, zone.Spell, side, zone.Rect, zone.UntilRound));
+    }
+
+    /// <summary>
+    /// Field zones as a round starts (ADR-149), zone by zone in id order, stacks in id order: damage to the stacks in it (<c>start</c>) and next
+    /// to it (<c>beside</c>) that it hurts, healing for own stacks in it.
+    /// </summary>
+    private void TickZones()
+    {
+        foreach (var zone in battle.Zones.ToList())
+        {
+            foreach (var unit in battle.LivingUnits.OrderBy(u => u.Id).ToList())
+            {
+                var inside = zone.Rect.Intersects(unit.Rect);
+                var amount = inside ? zone.Amounts.Start : unit.Rect.IsAdjacentTo(zone.Rect) ? zone.Amounts.Beside : 0;
+                if (amount > 0 && BattleZones.Hurts(battle, zone, unit))
+                {
+                    SpellDamage(unit, zone.Spell, BattleZones.Damage(battle, zone, unit, amount));
+                }
+
+                if (BattleZones.Healing(zone, unit) is var healed and > 0)
+                {
+                    unit.TopHealth += healed;
+                    events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
+                }
+            }
+        }
     }
 
     /// <summary>Night Terrors and Stasis stop retaliation; Vigil makes it unlimited (ADR-123).</summary>
@@ -504,6 +550,12 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         if (effect.Kind == Magic.SpellEffectKind.Summon)
         {
             Summon(side, known, creaturePower);
+            return;
+        }
+
+        if (effect.Kind == Magic.SpellEffectKind.Zone)
+        {
+            MakeZone(side, known, cell!.Value, creaturePower);
             return;
         }
 
@@ -955,6 +1007,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             unit.MutableSpells.RemoveAll(s => s.UntilRound < battle.Round);
         }
 
+        var gone = battle.Zones.Where(z => z.UntilRound < battle.Round).ToList();
+        battle.MutableZones.RemoveAll(gone.Contains);
+
         foreach (var unit in battle.LivingUnits)
         {
             unit.HasRetaliated = false;
@@ -974,9 +1029,15 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             events.Publish(new BattleSpellExpired(unit, spell));
         }
 
+        foreach (var zone in gone)
+        {
+            events.Publish(new BattleZoneExpired(zone.Id, zone.Spell));
+        }
+
         Heal(BattleSide.Attacker);
         Heal(BattleSide.Defender);
         Tick();
+        TickZones();
         TowersFire();
         WakeHit();
         foreach (var unit in battle.MutableQueue.Select(battle.GetUnit).Where(u => u.RoundMorale is MoraleEffect.Haste or MoraleEffect.Slow))

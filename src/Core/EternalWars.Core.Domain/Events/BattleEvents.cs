@@ -170,5 +170,11 @@ public sealed record BattleUnitRevived(int Unit, string Spell, int Health, int C
 /// <summary>A stack's turn passed under a spell that holds it (Blind, Stasis, ADR-123).</summary>
 public sealed record BattleUnitSpellbound(int Unit, string Spell) : IEvent;
 
+/// <summary>A spell left a field zone on <paramref name="Rect"/> until the end of round <paramref name="UntilRound"/> (ADR-149).</summary>
+public sealed record BattleZoneCreated(int Zone, string Spell, BattleSide Caster, CellRect Rect, int UntilRound) : IEvent;
+
+/// <summary>A field zone ran out as a round started (ADR-149).</summary>
+public sealed record BattleZoneExpired(int Zone, string Spell) : IEvent;
+
 /// <summary>A spell's hit made the stack lose its next action (Holy Word III, Frost Bolt III, ADR-123).</summary>
 public sealed record BattleUnitStunned(int Unit, string Spell) : IEvent;

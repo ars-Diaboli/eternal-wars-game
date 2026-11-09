@@ -47,6 +47,9 @@ public partial class BattleView3D : Node3D
     /// <summary>Where each unit will stand once the queue has played: the geometry of steps queued after a move.</summary>
     private readonly Dictionary<int, CellRect> _planned = [];
 
+    /// <summary>The spells' field zones on the field (ADR-149), by zone id.</summary>
+    private readonly Dictionary<int, MeshInstance3D> _zones = [];
+
     private readonly Dictionary<BattleSide, string> _sideNames = [];
     private readonly Dictionary<BattleSide, Color> _sideColors = [];
     private readonly Node3D _field = new() { Name = "Field" };
@@ -188,6 +191,20 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitLeftKeep>(events, e => Step(null, () => Narrate($"The keep falls: {NameOf(e.Unit)} come out of it.")));
         this.SubscribeWhileInTree<BattleSpellCast>(events, e => Step(null, () => Narrate($"{SideName(e.Side)} casts {SpellName(e.Spell)} ({e.Cost} mana, {e.Mana} left).")));
         this.SubscribeWhileInTree<BattleUnitSpellDamaged>(events, OnSpellDamaged);
+        this.SubscribeWhileInTree<BattleZoneCreated>(events, e => Step(null, () =>
+        {
+            AddZone(e.Zone, e.Spell, e.Rect);
+            Narrate($"{SpellName(e.Spell)} covers the field until round {e.UntilRound}.");
+        }));
+        this.SubscribeWhileInTree<BattleZoneExpired>(events, e => Step(null, () =>
+        {
+            if (_zones.Remove(e.Zone, out var node))
+            {
+                node.QueueFree();
+            }
+
+            Narrate($"{SpellName(e.Spell)} fades.");
+        }));
         this.SubscribeWhileInTree<BattleSpellApplied>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} until round {e.UntilRound}.")));
         this.SubscribeWhileInTree<BattleSpellResisted>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} is untouched by {SpellName(e.Spell)}.")));
         this.SubscribeWhileInTree<BattleSpellExpired>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} wears off.")));
@@ -228,6 +245,11 @@ public partial class BattleView3D : Node3D
         Open(new BattleStarted(
             battle.Attacker.Hero, battle.Defender.Hero, battle.Defender.Guard, battle.Width, BattleState.Height, battle.IsAmbush,
             units, battle.Obstacles.ToList(), battle.Siege is { } siege ? SiegeLayout.Of(siege) : null));
+        foreach (var zone in battle.Zones)
+        {
+            AddZone(zone.Id, zone.Spell, zone.Rect);
+        }
+
         SetActive(battle.ActiveUnit?.Id);
         RefreshReach();
     }
@@ -931,6 +953,7 @@ public partial class BattleView3D : Node3D
         _units.Clear();
         _structures.Clear();
         _planned.Clear();
+        _zones.Clear();
         _reach.InstanceCount = 0;
         _ghost.Visible = false;
         _target.Visible = false;
@@ -1011,6 +1034,30 @@ public partial class BattleView3D : Node3D
 
         mesh.SurfaceEnd();
         _field.AddChild(new MeshInstance3D { Name = "Grid", Mesh = mesh, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off });
+    }
+
+    /// <summary>A field zone (ADR-149) as a translucent block over its cells, in its spell's placeholder look (<see cref="ZoneLook"/>).</summary>
+    private void AddZone(int id, string spell, CellRect rect)
+    {
+        var height = ZoneLook.Height(spell);
+        var node = new MeshInstance3D
+        {
+            Name = $"Zone_{id}",
+            Mesh = new BoxMesh
+            {
+                Size = new Vector3(rect.Width * BattleSpace.CellSize, height, rect.Height * BattleSpace.CellSize),
+                Material = new StandardMaterial3D
+                {
+                    ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
+                    Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
+                    AlbedoColor = ZoneLook.Of(spell),
+                },
+            },
+            Position = BattleSpace.Center(rect) + (Vector3.Up * ((height / 2) + 0.01f)),
+            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
+        };
+        _field.AddChild(node);
+        _zones[id] = node;
     }
 
     /// <summary>Small obstacles are boulders, big ones crags, cliffs (ADR-146) long ridges, wall segments blocks.</summary>

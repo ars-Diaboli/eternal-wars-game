@@ -40,6 +40,12 @@ public enum SpellEffectKind
 
     /// <summary>A percent of an enemy stack's creatures die outright, at least 1 (Final Reckoning, ADR-123).</summary>
     Slay,
+
+    /// <summary>
+    /// A field zone for some rounds (ADR-149): cells of the field that hurt, heal, block or darken (Consecrate, Thornwall, Bone Wall, Fire Wall,
+    /// Darkness).
+    /// </summary>
+    Zone,
 }
 
 /// <summary>Whose spells a dispel takes off and from whom (ADR-123): <c>own</c> stacks lose the enemy's, <c>enemy</c> stacks lose their own side's, <c>any</c> stack loses every spell.</summary>
@@ -132,6 +138,17 @@ public sealed record SpellModifiers(
 }
 
 /// <summary>
+/// What a field zone does (ADR-149), its amounts at Spell Power 0: damage to a stack whose walk takes it into the zone (a flyer or teleporter only
+/// when it lands there; <c>enter</c>), to a stack in it as a round starts (<c>start</c>), to a stack that moves while standing in it
+/// (<c>leave</c>), to a stack next to it as a round starts (<c>beside</c>); health back to the top creature of each own stack in it as a round starts
+/// (<c>heal</c>); walkers cannot step into it (<c>blocks</c>; flyers and teleporters pass over), own undead excepted (<c>own-undead</c>); shots whose
+/// line crosses it are impossible (<c>blocks-shots</c>); shots into or out of it deal half (<c>dims-shots</c>).
+/// </summary>
+public sealed record ZoneEffect(
+    int Enter = 0, int Start = 0, int Leave = 0, int Beside = 0, int Heal = 0, bool BlocksMovement = false, bool BlocksShots = false,
+    bool OwnUndeadPass = false, bool DimsShots = false);
+
+/// <summary>
 /// A spell's battle effect at rank I, read from the <c>battle</c> column of <c>spells.csv</c>: <c>damage 35 area 3</c>, <c>heal 40</c>,
 /// <c>buff attack 3 rounds 3</c>, <c>curse morale -2 rounds battle</c>, <c>damage 50 enemies undead-demon</c>, <c>damage 90 speed -2 rounds 2</c>
 /// (damage that also leaves an effect). Amounts and rounds are base numbers at Spell Power 0 (ADR-072). <c>Rounds</c> is null for the rest of
@@ -146,6 +163,9 @@ public sealed record SpellModifiers(
 /// hero spell resistance do not count), <c>stun% N</c> (the chance a stack hit loses its next action), <c>execute N</c> (a stack below N % of its
 /// starting health is destroyed), <c>debt% N</c> (plus that percent of the damage the stack has dealt in the battle), <c>ring</c> (an area without its
 /// centre cell) and <c>column N</c> (an area N columns wide, the field's height).
+/// ADR-149: <c>zone area N|line N [wide W] [enter N] [start N] [leave N] [beside N] [heal N] [blocks] [blocks-shots] [own-undead] [dims-shots]
+/// [defense N] [filter] [spare-own] rounds N</c> (a line runs down the field, centred on the aimed cell; <see cref="ZoneEffect"/>; the filter and
+/// <c>spare-own</c> choose whom its damage hits, <c>defense</c> is for own stacks in it).
 /// </summary>
 public sealed record SpellEffect(
     SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
@@ -185,10 +205,20 @@ public sealed record SpellEffect(
     public DispelScope Dispels { get; init; }
 
     /// <summary>
-    /// Damage, curses, kills and the enemy's dispel work on the enemy (damage to the whole field or an area hits own stacks too); healing, revives,
-    /// buffs and the own dispel on own stacks; <see cref="EitherSide"/> spells on any stack.
+    /// The area's height in cells when it is not a square (a zone's <c>line N [wide W]</c>, ADR-149: <see cref="AreaSize"/> is then its width);
+    /// 0 for a square.
     /// </summary>
-    public bool IsHostile => Kind is SpellEffectKind.Damage or SpellEffectKind.Curse or SpellEffectKind.Slay
+    public int AreaHeight { get; init; }
+
+    /// <summary>What a field zone does (ADR-149); null for every other kind.</summary>
+    public ZoneEffect? Zone { get; init; }
+
+    /// <summary>
+    /// Damage, curses, kills, the enemy's dispel and field zones work on the enemy (damage to the whole field or an area hits own stacks too; a zone
+    /// may also hurt own stacks); healing, revives, buffs and the own dispel on own stacks; <see cref="EitherSide"/> spells on any stack. Creature
+    /// spell resistance and the army's immunities count against hostile spells.
+    /// </summary>
+    public bool IsHostile => Kind is SpellEffectKind.Damage or SpellEffectKind.Curse or SpellEffectKind.Slay or SpellEffectKind.Zone
                              || (Kind == SpellEffectKind.Dispel && Dispels == DispelScope.Enemy);
 
     /// <summary>A spell aimed at a stack of either side (Dispel).</summary>
@@ -202,7 +232,7 @@ public sealed record SpellEffect(
         var tokens = text.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (tokens.Length == 0 || !Enum.TryParse<SpellEffectKind>(tokens[0], ignoreCase: true, out var kind) || !Enum.IsDefined(kind))
         {
-            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse, summon, revive, dispel or slay");
+            throw new FormatException($"'{text}' does not start with damage, heal, buff, curse, summon, revive, dispel, slay or zone");
         }
 
         var i = 1;
@@ -244,6 +274,9 @@ public sealed record SpellEffect(
         var targets = 1;
         var spareOwn = false;
         var (splash, chain, pierce, stun, execute, debt, ring, column, lasting, fallen) = (0, 0, false, 0, 0, 0, false, false, false, false);
+        var (lineLength, wide) = (0, 0);
+        var zone = new ZoneEffect();
+        var zoneWords = false;
         while (i < tokens.Length)
         {
             var token = tokens[i++];
@@ -251,6 +284,39 @@ public sealed record SpellEffect(
             {
                 case "area":
                     (reach, area) = (SpellReach.Area, Number(Next()));
+                    break;
+                case "line":
+                    (reach, lineLength) = (SpellReach.Area, Number(Next()));
+                    break;
+                case "wide":
+                    wide = Number(Next());
+                    break;
+                case "enter":
+                    (zone, zoneWords) = (zone with { Enter = Number(Next()) }, true);
+                    break;
+                case "start":
+                    (zone, zoneWords) = (zone with { Start = Number(Next()) }, true);
+                    break;
+                case "leave":
+                    (zone, zoneWords) = (zone with { Leave = Number(Next()) }, true);
+                    break;
+                case "beside":
+                    (zone, zoneWords) = (zone with { Beside = Number(Next()) }, true);
+                    break;
+                case "heal":
+                    (zone, zoneWords) = (zone with { Heal = Number(Next()) }, true);
+                    break;
+                case "blocks":
+                    (zone, zoneWords) = (zone with { BlocksMovement = true }, true);
+                    break;
+                case "blocks-shots":
+                    (zone, zoneWords) = (zone with { BlocksShots = true }, true);
+                    break;
+                case "own-undead":
+                    (zone, zoneWords) = (zone with { OwnUndeadPass = true }, true);
+                    break;
+                case "dims-shots":
+                    (zone, zoneWords) = (zone with { DimsShots = true }, true);
                     break;
                 case "column":
                     (reach, area, column) = (SpellReach.Area, Number(Next()), true);
@@ -342,7 +408,7 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': the effect of a damage spell needs its rounds");
         }
 
-        if (reach == SpellReach.Area && area < 1)
+        if (reach == SpellReach.Area && area < 1 && lineLength < 1)
         {
             throw new FormatException($"'{text}': an area needs a size");
         }
@@ -377,6 +443,30 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': a revive or slay needs an amount of at least 1");
         }
 
+        if ((zoneWords || lineLength > 0 || wide > 0) && kind != SpellEffectKind.Zone)
+        {
+            throw new FormatException($"'{text}': 'line', 'wide' and the zone words are for zones");
+        }
+
+        var height = 0;
+        if (kind == SpellEffectKind.Zone)
+        {
+            if (rounds is not > 0 || (lineLength > 0) == (area > 0) || ring || column || (wide > 0 && lineLength == 0))
+            {
+                throw new FormatException($"'{text}': a zone is 'zone area N|line N [wide W] … rounds N', with at least 1 round");
+            }
+
+            if (modifiers != new SpellModifiers(Defense: modifiers.Defense))
+            {
+                throw new FormatException($"'{text}': a zone changes only the Defense of own stacks in it");
+            }
+
+            if (lineLength > 0)
+            {
+                (area, height) = (Math.Max(1, wide), lineLength);
+            }
+        }
+
         return new SpellEffect(kind, amount, reach, area, filter, modifiers, rounds, walls, null, false, targets, spareOwn)
         {
             SplashPercent = splash,
@@ -390,6 +480,8 @@ public sealed record SpellEffect(
             Lasting = lasting,
             Fallen = fallen,
             Dispels = dispels,
+            AreaHeight = height,
+            Zone = kind == SpellEffectKind.Zone ? zone : null,
         };
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");

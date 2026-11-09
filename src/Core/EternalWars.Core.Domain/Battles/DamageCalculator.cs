@@ -27,7 +27,8 @@ public static class DamageCalculator
                      + (battle.IsNative(attacker) ? BattleState.NativeAttack : 0) + attacker.SpellModifiers.Attack;
         var defense = defender.Creature.Defense + battle.Participant(defender.Side).Defense
                       + (defenderBonus.Prefers(defender.Creature) ? Heroes.SkillEffects.PreferredDefense : 0)
-                      + (battle.IsNative(defender) ? BattleState.NativeDefense : 0) + defender.SpellModifiers.Defense;
+                      + (battle.IsNative(defender) ? BattleState.NativeDefense : 0) + defender.SpellModifiers.Defense
+                      + (battle.Zones.Count > 0 ? BattleZones.Defense(battle, defender) : 0);
         if (defender.IsDefending)
         {
             defense += DefendBonus(defense);
@@ -73,6 +74,10 @@ public static class DamageCalculator
         if (hit.IsRanged)
         {
             damage = damage * (8 - hit.PenaltyEighths) / 8;
+            if (battle.Zones.Count > 0 && BattleZones.DimsShot(battle, attacker, defender))
+            {
+                damage /= 2; // Darkness (ADR-149): a shot into or out of it
+            }
         }
         else if (attacker.Creature.Has(CapabilityKind.MeleePenalty))
         {

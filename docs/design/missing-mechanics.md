@@ -57,7 +57,8 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Stack health bars | HoMM5 | Built | ADR-118, ADR-145: top creature's hit points, green / yellow / red |
 | Obstacles that split the field | HoMM3 | Built | ADR-118, ADR-146: cliffs with two gaps on rough and rocky ground |
 | Terrain-themed and special battlefields | HoMM3 | Partly | Native-terrain bonus exists (ADR-068); themes are a roadmap follow-up |
-| Raise Dead, field walls (Fire Wall, Bone Wall), Teleport, Hypnotize, clones | HoMM3, HoMM5 | Planned | 16 battle spells left (ADR-123): field zones, copies, control changes, two-click aiming |
+| Field walls and zones (Fire Wall, Bone Wall, Thornwall, Consecrate, Darkness) | HoMM3, HoMM5 | Built | ADR-149 |
+| Raise Dead, Teleport, Hypnotize, clones | HoMM3, HoMM5 | Planned | 11 battle spells left (ADR-149): copies, control changes, two-click aiming |
 | Creature abilities at scale (aging, poison, death stare, petrify, …) | HoMM3, HoMM5 | Partly | HoMM4-style capabilities, at most 5 a creature (ADR-042) |
 | Battle replay viewer | HotA | Partly | Replays are recorded; the viewer is planned (UI-2) |
 

@@ -176,6 +176,7 @@ public sealed class BattleState
 
     private readonly List<BattleUnit> _units = [];
     private readonly List<BattleObstacle> _obstacles = [];
+    private readonly List<BattleZone> _zones = [];
     private readonly List<int> _queue = [];
     private readonly List<int> _waiting = [];
 
@@ -277,6 +278,14 @@ public sealed class BattleState
 
     public IReadOnlyList<BattleObstacle> Obstacles => _obstacles;
 
+    /// <summary>Field zones the spells left (ADR-149), oldest first.</summary>
+    public IReadOnlyList<BattleZone> Zones => _zones;
+
+    internal List<BattleZone> MutableZones => _zones;
+
+    /// <summary>Zones made this battle, for the next zone's id.</summary>
+    internal int ZonesMade { get; set; }
+
     /// <summary>The unit whose turn it is.</summary>
     public BattleUnit? ActiveUnit { get; internal set; }
 
@@ -339,9 +348,11 @@ public sealed class BattleState
             PendingStacks = PendingStacks,
             Siege = Siege?.Copy(),
             Creatures = Creatures,
+            ZonesMade = ZonesMade,
         };
         copy._units.AddRange(_units.Select(u => u.Copy()));
         copy._obstacles.AddRange(_obstacles);
+        copy._zones.AddRange(_zones);
         copy._queue.AddRange(_queue);
         copy._waiting.AddRange(_waiting);
         copy.ActiveUnit = ActiveUnit is { } active ? copy.GetUnit(active.Id) : null;

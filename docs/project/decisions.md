@@ -1301,3 +1301,37 @@ Thirteen new smoke scenarios in `tools/smoke-godot.ps1` (run in Godot 4.7.2; fra
 - **Still not seen**: Resurrection; Grave Whisper, Ledger of Ages and Eavesdrop; the AI's buffs, curses and revives (only its Dispel came up);
   setting a guild spell by hand in the editor; the drawing of a dug hole on the map.
 - An Escape pressed within about 0.6 s of a scripted click did not close the intel popup once; not tried by hand yet, possibly the scripted input.
+
+### ADR-149: Field-zone battle spells: Consecrate, Thornwall, Bone Wall, Fire Wall, Darkness (ADR-099, ADR-122, ADR-123, 2026-11-09)
+**Status**: implemented; *(proposal)* marks the agent's choices, for play-testing. Seen in Godot: Darkness cast and drawn
+(`game-battle-zone`); the other four only in tests. The zones' looks are placeholders (translucent blocks in `ZoneLook`).
+
+- **Grammar**: a new kind `zone` with `area N` (a square) or `line N [wide W]` (W columns, N cells down the field, centred on the aimed
+  cell), the triggers `enter N`, `start N`, `leave N`, `beside N`, `heal N`, the flags `blocks`, `blocks-shots`, `own-undead`, `dims-shots`,
+  `defense N` (own stacks in it), the filters and `spare-own` for whom its damage hits, and `rounds N` (at least 1). A zone counts as hostile,
+  so creature spell resistance and the army's immunities count against it.
+- **The spells** (spells.md's ranks): Consecrate `area 3 start 15 undead-demon spare-own` (II area 5, III also `heal 10`); Thornwall
+  `line 5 blocks leave 20` (II line 7, III also `blocks-shots`); Bone Wall `line 5 blocks blocks-shots own-undead` (II line 7, III also
+  `beside 20 living spare-own`); Fire Wall `line 5 enter 30 start 30` (II line 7, III `line 5 wide 3`, the 3 × 5 area); Darkness
+  `area 5 dims-shots` (II area 7, III also `defense 2`). All last 3 rounds.
+- **Aiming** *(proposal)*: one click, like an area spell; a line always runs down the field (across the armies' way), so no direction is
+  chosen. The zone is clipped to the field and may be cast over stacks and obstacles. Several zones may stand at once.
+- **Movement**: blocking cells keep walkers out, except the cells a stack already covers, so a stack caught in a wall can walk out
+  (Thornwall then tears it). Flyers and teleporters pass over walls. `enter` hits a walker whose path (`BattleGrid.Path`, the placements along
+  the path `Reachable` found) crosses the zone from outside it, and a flyer or teleporter only where it lands *(proposal)*. `leave` hits a
+  stack that moves while standing in the zone. Move damage comes after the moat's.
+- **Shots**: `blocks-shots` makes a shot impossible when its line of fire crosses a zone cell that is neither the shooter's nor the target's
+  (ranged retaliation too). `dims-shots` halves a shot whose shooter or target stands in the zone, once even when both do.
+- **Rounds**: a zone lasts the rest of the round it is cast in plus its rounds × (10 + Spell Power) / 10 (not cut by the enemy's Spell
+  resistance, which is per stack), and goes as a round starts (`BattleZoneExpired`). As a round starts, after burning and regrowth, each zone
+  in id order deals `start` to the stacks in it and `beside` to the stacks next to it that it hurts, and heals own creature stacks in it.
+- **Amounts**: grown with Spell Power, the specialty and the orbs when cast, like burning; each hit less the enemy hero's Spell resistance and
+  changed by the stack's spell-taken percent. Holy does not double Consecrate's 15 *(proposal: spells.md gives it as the number taken)*. War
+  machines are never touched (as for other non-damage spells).
+- **AI** *(proposal)*: a zone is worth one round of its damage to the stacks standing in or next to it now (Thornwall's tearing counted for
+  stacks in it), enemies for, own against, plus its healing; it aims at the enemy stacks' centres. Blocking and darkening are not valued, so the
+  AI casts the walls and Darkness only for damage. Moving stacks do not avoid fire or thorns.
+- **Code**: `SpellEffectKind.Zone`, `ZoneEffect`, `SpellEffect.AreaHeight`; `BattleZone` and `BattleZones` (rules), `BattleState.Zones`;
+  the engine's `MakeZone`, `TickZones` and `MoveUnit`; `BattleGrid.Path` and the clearance; `BattleZoneCreated` and `BattleZoneExpired`, drawn by
+  the 3D field and the 2D board. Battles are not saved as state (saves replay commands), so no save format change; replays of battles where a
+  hero knew one of these spells may now differ (the AI casts them).
