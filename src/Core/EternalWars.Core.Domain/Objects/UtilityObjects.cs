@@ -11,6 +11,9 @@ namespace EternalWars.Core.Domain.Objects;
 public sealed class SignPost(MapObjectId id, MapObjectDefinition definition, MapPosition position, string message = "")
     : MapObject(id, definition, position, MapObjectKind.Sign)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public string Message { get; internal set; } = message;
 }
 
@@ -18,23 +21,38 @@ public sealed class SignPost(MapObjectId id, MapObjectDefinition definition, Map
 public sealed class Observatory(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Observatory)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public const int Radius = 20;
 }
 
 /// <summary>Scenery (ADR-079, MAP-25): a rock, a tree, a pond, a ruin, a piece of wall… It only blocks; it has no entrance and no data.</summary>
 public sealed class Scenery(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.Scenery);
+    : MapObject(id, definition, position, MapObjectKind.Scenery)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>The Den of Thieves (ADR-079, TOWN-11): every visit shows the whole Thieves' Guild table; nothing is kept.</summary>
 public sealed class DenOfThieves(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.DenOfThieves);
+    : MapObject(id, definition, position, MapObjectKind.DenOfThieves)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>
 /// The Astrologer's Tower (ADR-077, MAP-32): every visit tells next week's event (<see cref="Game.GameState.NextWeekEvent"/>, rolled a week ahead, so
 /// what it says comes true; no re-roll). Nothing is kept.
 /// </summary>
 public sealed class AstrologersTower(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.AstrologersTower);
+    : MapObject(id, definition, position, MapObjectKind.AstrologersTower)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>
 /// A sanctuary (ADR-079, MAP-28): a hero standing on its entrance cannot be attacked, so enemies cannot enter while it is occupied. A hero may
@@ -43,6 +61,9 @@ public sealed class AstrologersTower(MapObjectId id, MapObjectDefinition definit
 public sealed class Sanctuary(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Sanctuary)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     /// <summary>Whether a hero on <paramref name="position"/> is safe from attack: it is a sanctuary's entrance.</summary>
     public static bool Protects(GameState state, MapPosition position) =>
         state.ObjectCellAt(position) is { Cell: FootprintCell.Visit, Object: Sanctuary };
@@ -50,15 +71,27 @@ public sealed class Sanctuary(MapObjectId id, MapObjectDefinition definition, Ma
 
 /// <summary>A hill fort (ADR-068): the hero on its entrance upgrades stacks of tiers 1–3, stack by stack, for 150 % of the upgrade price.</summary>
 public sealed class HillFort(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.HillFort);
+    : MapObject(id, definition, position, MapObjectKind.HillFort)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>A town gate (ADR-068): the visitor picks one of its owner's towns and is moved to its entrance at no movement cost.</summary>
 public sealed class TownGate(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.TownGate);
+    : MapObject(id, definition, position, MapObjectKind.TownGate)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>A war machine factory (ADR-068): the hero on its entrance buys its own offensive machine, the cart and the tent at the blacksmith's prices.</summary>
 public sealed class WarMachineFactory(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.WarMachineFactory);
+    : MapObject(id, definition, position, MapObjectKind.WarMachineFactory)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>
 /// A prison (ADR-068): the hero in it joins the visitor's player, at <see cref="Level"/>, and the prison goes. <see cref="Hero"/> (a roster id) and
@@ -67,6 +100,9 @@ public sealed class WarMachineFactory(MapObjectId id, MapObjectDefinition defini
 public sealed class Prison(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? hero = null, int? level = null)
     : MapObject(id, definition, position, MapObjectKind.Prison)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"prisoner {Hero} level {Level}";
+
     public string? Hero { get; internal set; } = hero;
 
     public int? Level { get; internal set; } = level;

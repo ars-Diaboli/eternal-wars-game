@@ -11,6 +11,9 @@ namespace EternalWars.Core.Domain.Objects;
 public sealed class CombatPlace(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.CombatPlace)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public override bool EndsRoute => false;
 
     /// <summary>Where the attacker is put on day 2: the footprint's first blocked cell.</summary>

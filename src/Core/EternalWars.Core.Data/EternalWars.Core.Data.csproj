@@ -14,4 +14,8 @@
     <ProjectReference Include="..\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="EternalWars.Core.Tests" />
+  </ItemGroup>
+
 </Project>

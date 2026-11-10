@@ -22,6 +22,9 @@ public enum ObjectColour
 public sealed class Deposit(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Deposit)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public ResourceSet Price => Definition.Price;
 }
 
@@ -29,6 +32,9 @@ public sealed class Deposit(MapObjectId id, MapObjectDefinition definition, MapP
 public sealed class MagiWindow(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.MagiWindow)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public const int Radius = 6;
 
     /// <summary>The most Eyes a colour may have on a map (the editor refuses more, the validator reports them).</summary>
@@ -41,6 +47,9 @@ public sealed class MagiWindow(MapObjectId id, MapObjectDefinition definition, M
 public sealed class MagiEye(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.MagiEye)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public ObjectColour Colour => Definition.Colour!.Value;
 
     public override bool EndsRoute => false;
@@ -50,6 +59,9 @@ public sealed class MagiEye(MapObjectId id, MapObjectDefinition definition, MapP
 public sealed class KeymasterTent(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.KeymasterTent)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public ObjectColour Colour => Definition.Colour!.Value;
 }
 
@@ -60,6 +72,9 @@ public sealed class KeymasterTent(MapObjectId id, MapObjectDefinition definition
 public sealed class BorderPost(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.BorderPost)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public ObjectColour Colour => Definition.Colour!.Value;
 
     /// <summary>A gate stays after letting a key holder through; a guard leaves.</summary>
@@ -75,7 +90,11 @@ public sealed class BorderPost(MapObjectId id, MapObjectDefinition definition, M
 /// tavern and the week (<see cref="MapTavernRules.Offers"/>), so it has no stored state.
 /// </summary>
 public sealed class MapTavern(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.MapTavern);
+    : MapObject(id, definition, position, MapObjectKind.MapTavern)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>
 /// A garrison (ADR-070, MAP-19): flagged like a mine; its owner's heroes (and allies') pass both ways and may leave or take creatures; others
@@ -84,6 +103,12 @@ public sealed class MapTavern(MapObjectId id, MapObjectDefinition definition, Ma
 public sealed class MapGarrison(MapObjectId id, MapObjectDefinition definition, MapPosition position, PlayerId? owner = null, Army? troops = null)
     : MapObject(id, definition, position, MapObjectKind.Garrison), IFlaggable
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"owner {Owner?.Value} troops {GameStateDigest.Slots(Troops)}";
+
+    /// <inheritdoc/>
+    public override bool IsDefendedAgainst(GameState state, PlayerId visitor) => !Troops.IsEmpty && !LetsThrough(state, visitor);
+
     public PlayerId? Owner { get; internal set; } = owner;
 
     public int ScoutingRadius => Mine.MineScoutingRadius;

@@ -63,6 +63,9 @@ public enum TrainingOption
 public sealed class TrainingSite(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Training)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public TrainingRule Rule => Definition.Training!.Value;
 }
 

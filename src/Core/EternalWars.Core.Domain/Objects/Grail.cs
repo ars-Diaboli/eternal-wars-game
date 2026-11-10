@@ -15,6 +15,9 @@ namespace EternalWars.Core.Domain.Objects;
 public sealed class Obelisk(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Obelisk)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"visited {string.Join(',', VisitedBy.Select(v => v.Value))}";
+
     private readonly SortedSet<int> _visitedBy = [];
 
     /// <summary>The players whose heroes have visited it, by id.</summary>

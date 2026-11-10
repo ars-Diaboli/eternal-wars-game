@@ -1772,3 +1772,22 @@ agent's choices.
   back), and the map editor subscribes its undo line on the session's UI instead of the root, which kept every old session alive.
 - **Not done**: the tests still call `session.Interactions.Visit`, `Progression.GrantStatus` / `OfferNext`, `Artifacts.Draw` / `Loot` /
   `Grant` and `Interactions.TryCollect` / `StartWeek` directly (about 55 calls in 20 files) instead of going through `Execute`.
+
+### ADR-166: Map object kinds in registries, not type switches (ADR-013, ADR-065, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (R5).
+
+- **Problem**: a new map object kind touched 9–12 places, several of which fell through silently: the digest's `_ =>` left a new kind's
+  state out, `Visit` did nothing for an unknown type, and the map format needed a `[JsonDerivedType]` plus a `case` in both directions.
+- **Domain**: `MapObjectKinds` registers each `MapObjectKind` with its instance type and a factory (`MapObject.Create` uses it). Each
+  subclass states its own digest text (`MapObject.DigestState`, abstract, so the compiler asks for it; "" for none) and whether it is a
+  pickup (`IsPickup`) or defended against a visitor (`IsDefendedAgainst`), which the move reads instead of a type list. The digest text is
+  unchanged (checked against the old switch on the built-in and generated maps, and fresh instances of every kind).
+- **Visits**: `MapObjectInteractionService` keeps one rule per instance type (a table, `Nothing` for objects used from a panel); visiting a
+  type without a rule throws instead of doing nothing.
+- **Map format**: `MapConverter.ObjectCodecs` (Core.Data) holds each type's `kind` name, document type, save and load; the JSON
+  discriminators are added from it by a resolver modifier (`AddObjectTypes`, in `JsonDefaults` and the replay options) instead of 45
+  attributes on `MapObjectDocument`. The names and the JSON are the same, so the format version stays 38.
+- **Held together by tests** (`MapObjectKindsTests`): every kind is registered and makes its type; every type has a visit rule and exactly
+  one codec under a unique name; a fresh object of every kind comes back from a map file with the same digest text.
+- **Not done** *(choice)*: the AI's targets, the validator, the info sheets and the editor's inspector still switch on the type. Each has a
+  safe default for a kind it does not know (no target, no check, a plain sheet, no fields), so a new kind is playable before they learn it.

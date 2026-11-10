@@ -225,54 +225,9 @@ public sealed record GuardDocument(string Creature, int? Count = null);
 
 /// <summary>
 /// A placed object. <see cref="Definition"/> refers to a <c>MapObjectDefinition</c> id; the
-/// <c>kind</c> discriminator selects the subtype carrying per-instance state.
+/// <c>kind</c> discriminator selects the subtype carrying per-instance state; the names and subtypes are registered in
+/// <see cref="MapConverter.ObjectCodecs"/> (ADR-166), not in attributes here.
 /// </summary>
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
-[JsonDerivedType(typeof(ResourcePileDocument), "pile")]
-[JsonDerivedType(typeof(MineDocument), "mine")]
-[JsonDerivedType(typeof(TreasureChestDocument), "chest")]
-[JsonDerivedType(typeof(GateDocument), "gate")]
-[JsonDerivedType(typeof(GateEntranceDocument), "gateEntrance")]
-[JsonDerivedType(typeof(GateExitDocument), "gateExit")]
-[JsonDerivedType(typeof(MonsterDocument), "monster")]
-[JsonDerivedType(typeof(TownDocument), "town")]
-[JsonDerivedType(typeof(ArtifactPickupDocument), "artifact")]
-[JsonDerivedType(typeof(DwellingDocument), "dwelling")]
-[JsonDerivedType(typeof(MarketplaceDocument), "marketplace")]
-[JsonDerivedType(typeof(ResourceProviderDocument), "provider")]
-[JsonDerivedType(typeof(LootSiteDocument), "loot")]
-[JsonDerivedType(typeof(BuffSiteDocument), "buff")]
-[JsonDerivedType(typeof(TrainingSiteDocument), "training")]
-[JsonDerivedType(typeof(SignDocument), "sign")]
-[JsonDerivedType(typeof(ObservatoryDocument), "observatory")]
-[JsonDerivedType(typeof(HillFortDocument), "hillFort")]
-[JsonDerivedType(typeof(TownGateDocument), "townGate")]
-[JsonDerivedType(typeof(WarMachineFactoryDocument), "factory")]
-[JsonDerivedType(typeof(PrisonDocument), "prison")]
-[JsonDerivedType(typeof(CreatureBankDocument), "bank")]
-[JsonDerivedType(typeof(DenOfThievesDocument), "denOfThieves")]
-[JsonDerivedType(typeof(AstrologersTowerDocument), "astrologersTower")]
-[JsonDerivedType(typeof(SanctuaryDocument), "sanctuary")]
-[JsonDerivedType(typeof(SceneryDocument), "scenery")]
-[JsonDerivedType(typeof(CartographerDocument), "cartographer")]
-[JsonDerivedType(typeof(ArtifactMerchantDocument), "artifactMerchant")]
-[JsonDerivedType(typeof(RefugeeCampDocument), "refugeeCamp")]
-[JsonDerivedType(typeof(SacrificialAltarDocument), "altar")]
-[JsonDerivedType(typeof(SphinxDocument), "sphinx")]
-[JsonDerivedType(typeof(WitchHutDocument), "witchHut")]
-[JsonDerivedType(typeof(ShrineDocument), "shrine")]
-[JsonDerivedType(typeof(SkillSchoolDocument), "skillSchool")]
-[JsonDerivedType(typeof(ObeliskDocument), "obelisk")]
-[JsonDerivedType(typeof(CombatPlaceDocument), "combatPlace")]
-[JsonDerivedType(typeof(DepositDocument), "deposit")]
-[JsonDerivedType(typeof(MagiWindowDocument), "magiWindow")]
-[JsonDerivedType(typeof(MagiEyeDocument), "magiEye")]
-[JsonDerivedType(typeof(KeymasterDocument), "keymaster")]
-[JsonDerivedType(typeof(BorderPostDocument), "borderPost")]
-[JsonDerivedType(typeof(MapTavernDocument), "tavern")]
-[JsonDerivedType(typeof(GarrisonDocument), "garrison")]
-[JsonDerivedType(typeof(PandorasBoxDocument), "pandorasBox")]
-[JsonDerivedType(typeof(QuestSiteDocument), "questSite")]
 public abstract record MapObjectDocument
 {
     public required int Id { get; init; }

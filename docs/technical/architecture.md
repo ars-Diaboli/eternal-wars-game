@@ -116,9 +116,12 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   additions via `MapObjectDefinitionSerializer` + `MapObjectCatalog.With(...)`. An object may turn into another
   definition of `GameState.ObjectCatalog` (same id). Owned objects implement `IFlaggable`.
 - **Footprint** rows: `B` blocked, `V` entrance (exactly one), `.` free. `GameState` indexes occupied cells (O(1) lookup).
-- Movement behaviour is declared on the instance (`EndsRoute`, `TeleportTarget`), so pathfinding has no per-kind code.
-- **New kind** = enum value + subclass + `case` in `MapObjectInteractionService.Visit` + map-format subtype. Kind-specific
-  rules sit in `*Rules` classes (`LootRules`, `BuffRules`, `CreatureBankRules`, ...).
+- Behaviour the rules ask of any object is declared on the instance (`EndsRoute`, `TeleportTarget`, `IsPickup`,
+  `IsDefendedAgainst`, `DigestState`), so pathfinding, movement and the digest have no per-kind code.
+- **New kind** (ADR-166) = enum value + subclass (the compiler asks for its `DigestState`) + entry in `MapObjectKinds` + rule in
+  `MapObjectInteractionService.VisitRules` + document type and codec in `MapConverter.ObjectCodecs`; `MapObjectKindsTests` fails
+  until all of them exist. Optional, with safe defaults: AI targets (`AdventureAi`), validator checks, info sheet, editor inspector
+  fields. Kind-specific rules sit in `*Rules` classes (`LootRules`, `BuffRules`, `CreatureBankRules`, ...).
 - **Rewards (ADR-068)**: definition `VisitScope` + instance `VisitLog` (`MapObject.Visits`, game state only), checked and
   recorded by `MapObjectInteractionService.TryCollect`. Temporary `HeroStatus`es live on the hero, granted/expired via
   `ProgressionService`. Random rewards use `WeightedRoll.Pick`.

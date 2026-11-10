@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Game;
 
 namespace EternalWars.Core.Domain.Objects;
 
@@ -54,56 +55,27 @@ public abstract class MapObject
 
     public override string ToString() => $"{Definition.Name} {Id} at {Position}";
 
-    /// <summary>Creates an instance of the right subclass with default per-instance values.</summary>
-    public static MapObject Create(MapObjectId id, MapObjectDefinition definition, MapPosition position) => definition.Kind switch
-    {
-        MapObjectKind.ResourcePile => new ResourcePile(id, definition, position),
-        MapObjectKind.Mine => new Mine(id, definition, position),
-        MapObjectKind.TreasureChest => new TreasureChest(id, definition, position),
-        MapObjectKind.TwoWayGate => new TwoWayGate(id, definition, position),
-        MapObjectKind.OneWayGateEntrance => new OneWayGateEntrance(id, definition, position),
-        MapObjectKind.OneWayGateExit => new OneWayGateExit(id, definition, position),
-        MapObjectKind.Monster => new MonsterGuard(id, definition, position),
-        MapObjectKind.Town => new Towns.Town(id, definition, position),
-        MapObjectKind.Artifact => new ArtifactPickup(id, definition, position),
-        MapObjectKind.Dwelling => new CreatureDwelling(id, definition, position),
-        MapObjectKind.Marketplace => new Marketplace(id, definition, position),
-        MapObjectKind.ResourceProvider => new ResourceProvider(id, definition, position),
-        MapObjectKind.Loot => new LootSite(id, definition, position),
-        MapObjectKind.Buff => new BuffSite(id, definition, position),
-        MapObjectKind.Training => new TrainingSite(id, definition, position),
-        MapObjectKind.Sign => new SignPost(id, definition, position),
-        MapObjectKind.Observatory => new Observatory(id, definition, position),
-        MapObjectKind.HillFort => new HillFort(id, definition, position),
-        MapObjectKind.TownGate => new TownGate(id, definition, position),
-        MapObjectKind.WarMachineFactory => new WarMachineFactory(id, definition, position),
-        MapObjectKind.Prison => new Prison(id, definition, position),
-        MapObjectKind.CreatureBank => new CreatureBank(id, definition, position),
-        MapObjectKind.DenOfThieves => new DenOfThieves(id, definition, position),
-        MapObjectKind.AstrologersTower => new AstrologersTower(id, definition, position),
-        MapObjectKind.Sanctuary => new Sanctuary(id, definition, position),
-        MapObjectKind.Scenery => new Scenery(id, definition, position),
-        MapObjectKind.Cartographer => new Cartographer(id, definition, position),
-        MapObjectKind.ArtifactMerchant => new ArtifactMerchant(id, definition, position),
-        MapObjectKind.RefugeeCamp => new RefugeeCamp(id, definition, position),
-        MapObjectKind.SacrificialAltar => new SacrificialAltar(id, definition, position),
-        MapObjectKind.Sphinx => new Sphinx(id, definition, position),
-        MapObjectKind.WitchHut => new WitchHut(id, definition, position),
-        MapObjectKind.Shrine => new Shrine(id, definition, position),
-        MapObjectKind.SkillSchool => new SkillSchool(id, definition, position),
-        MapObjectKind.Obelisk => new Obelisk(id, definition, position),
-        MapObjectKind.CombatPlace => new CombatPlace(id, definition, position),
-        MapObjectKind.Deposit => new Deposit(id, definition, position),
-        MapObjectKind.MagiWindow => new MagiWindow(id, definition, position),
-        MapObjectKind.MagiEye => new MagiEye(id, definition, position),
-        MapObjectKind.KeymasterTent => new KeymasterTent(id, definition, position),
-        MapObjectKind.BorderPost => new BorderPost(id, definition, position),
-        MapObjectKind.MapTavern => new MapTavern(id, definition, position),
-        MapObjectKind.Garrison => new MapGarrison(id, definition, position),
-        MapObjectKind.PandorasBox => new PandorasBox(id, definition, position),
-        MapObjectKind.SeerHut or MapObjectKind.QuestGuard or MapObjectKind.QuestGate => new QuestSite(id, definition, position),
-        _ => throw new ArgumentOutOfRangeException(nameof(definition), definition.Kind, null),
-    };
+    /// <summary>
+    /// Whether the object is a pickup (ADR-065): a pickup next to Classic monsters can be taken from outside their zone, and only Area stacks
+    /// defend it.
+    /// </summary>
+    public virtual bool IsPickup => false;
+
+    /// <summary>
+    /// Whether stepping onto the entrance means a fight for a hero of <paramref name="visitor"/> (it then needs an army): a guard of its own, a
+    /// garrison, a defended town.
+    /// </summary>
+    public virtual bool IsDefendedAgainst(GameState state, PlayerId visitor) => false;
+
+    /// <summary>
+    /// The object's own state for <see cref="GameStateDigest"/>; every kind says it, "" for none, so new state cannot be left out by mistake.
+    /// The text is part of recorded digests: changing it breaks older replays.
+    /// </summary>
+    internal abstract string DigestState();
+
+    /// <summary>Creates an instance of the right subclass with default per-instance values (<see cref="MapObjectKinds"/>).</summary>
+    public static MapObject Create(MapObjectId id, MapObjectDefinition definition, MapPosition position) =>
+        MapObjectKinds.Get(definition.Kind).Create(id, definition, position);
 }
 
 /// <summary>An object a player can own (mines, towns): it flies the owner's flag and watches its surroundings for them.</summary>
@@ -122,6 +94,12 @@ public interface IFlaggable
 public sealed class ResourcePile(MapObjectId id, MapObjectDefinition definition, MapPosition position, int? amount = null)
     : MapObject(id, definition, position, MapObjectKind.ResourcePile)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"amount {Amount}";
+
+    /// <inheritdoc/>
+    public override bool IsPickup => true;
+
     public ResourceType Resource => Definition.Resource!.Value;
 
     /// <summary>The fixed amount; null until the game starts when the map leaves it open.</summary>
@@ -153,6 +131,12 @@ public sealed class ResourcePile(MapObjectId id, MapObjectDefinition definition,
 public sealed class Mine(MapObjectId id, MapObjectDefinition definition, MapPosition position, PlayerId? owner = null, GuardStack? guard = null)
     : MapObject(id, definition, position, MapObjectKind.Mine), IFlaggable
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"owner {Owner?.Value} guard {Guard}";
+
+    /// <inheritdoc/>
+    public override bool IsDefendedAgainst(GameState state, PlayerId visitor) => Guard is not null;
+
     /// <summary>Owned mines reveal and watch a small area around them.</summary>
     public const int MineScoutingRadius = 2;
 
@@ -180,6 +164,12 @@ public sealed record ChestValues(int Gold, int Experience);
 public sealed class TreasureChest(MapObjectId id, MapObjectDefinition definition, MapPosition position, ChestValues? fixedValues = null)
     : MapObject(id, definition, position, MapObjectKind.TreasureChest)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"fixed {FixedValues}";
+
+    /// <inheritdoc/>
+    public override bool IsPickup => true;
+
     /// <summary>The owner's table (ADR-068, replacing ADR-039's three equal tiers): weight and values; null values = a Minor artifact instead.</summary>
     public static IReadOnlyList<(int Weight, ChestValues? Values)> Odds { get; } =
         [(30, new(1000, 500)), (30, new(1500, 1000)), (25, new(2000, 1500)), (10, new(2500, 2000)), (5, null)];
@@ -198,6 +188,12 @@ public sealed class TreasureChest(MapObjectId id, MapObjectDefinition definition
 public sealed class ArtifactPickup(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? artifact = null)
     : MapObject(id, definition, position, MapObjectKind.Artifact)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"artifact {Artifact}";
+
+    /// <inheritdoc/>
+    public override bool IsPickup => true;
+
     public string? Artifact { get; internal set; } = artifact;
 
     public Artifacts.ArtifactTier Tier => Definition.ArtifactTier ?? Artifacts.ArtifactTier.Minor;
@@ -225,6 +221,12 @@ public sealed class CreatureDwelling(
     string creature = MonsterGuard.DefaultCreature, PlayerId? owner = null, int? available = null)
     : MapObject(id, definition, position, MapObjectKind.Dwelling), IFlaggable
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"{Creature} owner {Owner?.Value} available {Available}" + (Guard is { } g ? $" guard {g}" : "");
+
+    /// <inheritdoc/>
+    public override bool IsDefendedAgainst(GameState state, PlayerId visitor) => Guard is not null;
+
     /// <summary>Owned dwellings reveal and watch a small area around them, like mines.</summary>
     public const int DwellingScoutingRadius = 2;
 
@@ -249,7 +251,11 @@ public sealed class CreatureDwelling(
 /// owner trade at a fixed rate (<see cref="Economy.MarketplaceRules.MapRate"/>), whatever towns the player has.
 /// </summary>
 public sealed class Marketplace(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.Marketplace);
+    : MapObject(id, definition, position, MapObjectKind.Marketplace)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 /// <summary>How a neutral stack reacts to a hero (HoMM3 dispositions, deterministic thresholds, ADR-040).</summary>
 public enum GuardDisposition
@@ -287,6 +293,9 @@ public sealed class MonsterGuard(
     int? randomTier = null)
     : MapObject(id, definition, position, MapObjectKind.Monster)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"{Creature}:{Count} {Disposition}";
+
     public const string DefaultCreature = Creatures.BuiltInCreatures.Wolf;
 
     public string Creature { get; internal set; } = creature;
@@ -324,6 +333,9 @@ public sealed class MonsterGuard(
 public sealed class TwoWayGate(MapObjectId id, MapObjectDefinition definition, MapPosition position, MapObjectId? linkedGate = null)
     : MapObject(id, definition, position, MapObjectKind.TwoWayGate)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => LinkedGate?.ToString() ?? "";
+
     public MapObjectId? LinkedGate { get; internal set; } = linkedGate;
 
     public override MapObjectId? TeleportTarget => LinkedGate;
@@ -333,6 +345,9 @@ public sealed class TwoWayGate(MapObjectId id, MapObjectDefinition definition, M
 public sealed class OneWayGateEntrance(MapObjectId id, MapObjectDefinition definition, MapPosition position, MapObjectId? exit = null)
     : MapObject(id, definition, position, MapObjectKind.OneWayGateEntrance)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => Exit?.ToString() ?? "";
+
     public MapObjectId? Exit { get; internal set; } = exit;
 
     public override MapObjectId? TeleportTarget => Exit;
@@ -342,5 +357,8 @@ public sealed class OneWayGateEntrance(MapObjectId id, MapObjectDefinition defin
 public sealed class OneWayGateExit(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.OneWayGateExit)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public override bool EndsRoute => false;
 }

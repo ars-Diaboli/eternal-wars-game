@@ -63,217 +63,256 @@ public sealed class MapObjectInteractionService(
         return true;
     }
 
+    private Dictionary<Type, Action<Hero, MapObject>>? _visitRules;
+
+    /// <summary>
+    /// What a visit does, by instance type (ADR-166): every type of <see cref="MapObjectKinds"/> has a rule (<see cref="Nothing"/> for the objects
+    /// used from a panel, or whose visit the move handles), and a test holds the two together.
+    /// </summary>
+    private Dictionary<Type, Action<Hero, MapObject>> VisitRules => _visitRules ??= new()
+    {
+        [typeof(ResourcePile)] = On<ResourcePile>(CollectPile),
+        [typeof(Mine)] = On<Mine>(VisitMine),
+        [typeof(TreasureChest)] = On<TreasureChest>(OpenChest),
+        [typeof(TwoWayGate)] = Teleport,
+        [typeof(OneWayGateEntrance)] = Teleport,
+        [typeof(OneWayGateExit)] = Nothing,
+        [typeof(MonsterGuard)] = On<MonsterGuard>((hero, monster) => guards.Encounter(hero, monster)),
+        [typeof(Town)] = On<Town>(VisitTown),
+        [typeof(ArtifactPickup)] = On<ArtifactPickup>(PickUp),
+        [typeof(CreatureDwelling)] = On<CreatureDwelling>(VisitDwelling),
+        [typeof(Marketplace)] = Nothing,
+        [typeof(ResourceProvider)] = On<ResourceProvider>(VisitProvider),
+        [typeof(LootSite)] = On<LootSite>(Search),
+        [typeof(BuffSite)] = On<BuffSite>(Bless),
+        [typeof(TrainingSite)] = On<TrainingSite>(Train),
+        [typeof(SignPost)] = On<SignPost>((hero, sign) => events.Publish(new SignRead(hero.Id, sign.Id, sign.Message))),
+        [typeof(Observatory)] = On<Observatory>(LookOut),
+        [typeof(HillFort)] = Nothing,
+        [typeof(TownGate)] = On<TownGate>(OfferTowns),
+        [typeof(WarMachineFactory)] = Nothing,
+        [typeof(Prison)] = On<Prison>(Free),
+        [typeof(CreatureBank)] = On<CreatureBank>(EnterBank),
+        [typeof(DenOfThieves)] = On<DenOfThieves>((hero, den) => events.Publish(new ThievesDenVisited(hero.Id, den.Id))),
+        [typeof(AstrologersTower)] = On<AstrologersTower>((hero, tower) => events.Publish(new AstrologerConsulted(hero.Id, tower.Id, state.NextWeekEvent))),
+        [typeof(Sanctuary)] = Nothing,
+        [typeof(Scenery)] = Nothing,
+        [typeof(Cartographer)] = On<Cartographer>(OfferMap),
+        [typeof(ArtifactMerchant)] = Nothing,
+        [typeof(RefugeeCamp)] = Nothing,
+        [typeof(SacrificialAltar)] = Nothing,
+        [typeof(Sphinx)] = On<Sphinx>(AskRiddle),
+        [typeof(WitchHut)] = On<WitchHut>(OfferSkills),
+        [typeof(Shrine)] = On<Shrine>(Worship),
+        [typeof(SkillSchool)] = On<SkillSchool>(DrawLessons),
+        [typeof(Obelisk)] = On<Obelisk>((hero, obelisk) => GrailRules.Visit(state, events, hero, obelisk)),
+        [typeof(CombatPlace)] = Nothing,
+        [typeof(Deposit)] = On<Deposit>(OfferDeposit),
+        [typeof(MagiWindow)] = On<MagiWindow>(LookThrough),
+        [typeof(MagiEye)] = Nothing,
+        [typeof(KeymasterTent)] = On<KeymasterTent>(VisitKeymaster),
+        [typeof(BorderPost)] = On<BorderPost>(PassBorderGuard),
+        [typeof(MapTavern)] = Nothing,
+        [typeof(MapGarrison)] = On<MapGarrison>(VisitGarrison),
+        [typeof(PandorasBox)] = On<PandorasBox>(OpenBox),
+
+        // The move runs the quest (MapEventService.VisitQuest), not the visit.
+        [typeof(QuestSite)] = Nothing,
+    };
+
+    private static readonly Action<Hero, MapObject> Nothing = (_, _) => { };
+
+    private static Action<Hero, MapObject> On<T>(Action<Hero, T> rule)
+        where T : MapObject => (hero, mapObject) => rule(hero, (T)mapObject);
+
+    /// <summary>Whether visiting an object of the type has a rule (every <see cref="MapObjectKinds.Types"/> entry must).</summary>
+    internal bool HasVisitRule(Type type) => VisitRules.ContainsKey(type);
+
+    /// <summary>A hero steps onto the object's entrance: <see cref="MapObjectVisited"/>, then what its kind does.</summary>
     internal void Visit(Hero hero, MapObject mapObject)
     {
+        var rule = VisitRules.GetValueOrDefault(mapObject.GetType())
+                   ?? throw new InvalidOperationException($"{mapObject.GetType().Name} has no visit rule (ADR-166).");
         events.Publish(new MapObjectVisited(hero.Id, mapObject.Id));
-        switch (mapObject)
+        rule(hero, mapObject);
+    }
+
+    private void CollectPile(Hero hero, ResourcePile pile)
+    {
+        RemoveFromMap(pile);
+        var chance = SkillEffects.ProspectingPileChancePercent(hero.SkillLevelOf(BuiltInSkills.Prospecting));
+        var inPile = pile.Amount ?? ResourcePile.Roll(pile.Resource, state.Random);
+        var amount = chance > 0 && state.Random.Next(100) < chance ? inPile + (inPile + 1) / 2 : inPile;
+        economy.Grant(hero.Owner, ResourceSet.Of(pile.Resource, amount));
+        events.Publish(new ResourcePileCollected(hero.Id, pile.Id, pile.Resource, amount));
+    }
+
+    private void VisitMine(Hero hero, Mine mine)
+    {
+        if (mine.Guard is not null)
         {
-            case ResourcePile pile:
-                RemoveFromMap(pile);
-                var chance = SkillEffects.ProspectingPileChancePercent(hero.SkillLevelOf(BuiltInSkills.Prospecting));
-                var inPile = pile.Amount ?? ResourcePile.Roll(pile.Resource, state.Random);
-                var amount = chance > 0 && state.Random.Next(100) < chance ? inPile + (inPile + 1) / 2 : inPile;
-                economy.Grant(hero.Owner, ResourceSet.Of(pile.Resource, amount));
-                events.Publish(new ResourcePileCollected(hero.Id, pile.Id, pile.Resource, amount));
-                break;
+            guards.Encounter(hero, mine);
+        }
+        else if (mine.Owner != hero.Owner)
+        {
+            var previous = mine.Owner;
+            mine.Owner = hero.Owner;
+            events.Publish(new MineOwnerChanged(mine.Id, previous, hero.Owner));
+        }
+    }
 
-            case Mine { Guard: not null } guarded:
-                guards.Encounter(hero, guarded);
-                break;
+    private void OpenChest(Hero hero, TreasureChest chest)
+    {
+        var values = chest.FixedValues ?? WeightedRoll.Pick(TreasureChest.Odds, state.Random);
+        if (values is null)
+        {
+            // The artifact outcome (ADR-068): no choice, the chest is emptied; a full backpack loses it.
+            RemoveFromMap(chest);
+            var found = artifacts.Draw(ArtifactTier.Minor) is { } minor && artifacts.Grant(hero, minor, ArtifactSource.Found) ? minor : null;
+            events.Publish(new LootFound(hero.Id, chest.Id, ResourceSet.Empty, found));
+            return;
+        }
 
-            case Mine mine when mine.Owner != hero.Owner:
-                var previous = mine.Owner;
-                mine.Owner = hero.Owner;
-                events.Publish(new MineOwnerChanged(mine.Id, previous, hero.Owner));
-                break;
+        var decision = new TreasureChestDecision(hero.Id, chest.Id, values.Gold, values.Experience);
+        state.PendingDecision = decision;
+        events.Publish(new DecisionRequested(decision));
+    }
 
-            case TreasureChest chest:
-                var values = chest.FixedValues ?? WeightedRoll.Pick(TreasureChest.Odds, state.Random);
-                if (values is null)
-                {
-                    // The artifact outcome (ADR-068): no choice, the chest is emptied; a full backpack loses it.
-                    RemoveFromMap(chest);
-                    var found = artifacts.Draw(ArtifactTier.Minor) is { } minor && artifacts.Grant(hero, minor, ArtifactSource.Found) ? minor : null;
-                    events.Publish(new LootFound(hero.Id, chest.Id, ResourceSet.Empty, found));
-                    break;
-                }
+    private void LookOut(Hero hero, Observatory observatory)
+    {
+        // Every visit looks out (it only reveals what is still hidden); the log tells the AI which heroes have been up there.
+        TryCollect(hero, observatory);
+        events.Publish(new SurroundingsRevealed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
+    }
 
-                var decision = new TreasureChestDecision(hero.Id, chest.Id, values.Gold, values.Experience);
-                state.PendingDecision = decision;
-                events.Publish(new DecisionRequested(decision));
-                break;
+    private void OpenBox(Hero hero, PandorasBox box)
+    {
+        if (box.IsGuarded && hero.Army.IsEmpty)
+        {
+            events.Publish(new MapObjectRefused(hero.Id, box.Id, $"{hero.Name} has no army to face what may guard the box."));
+        }
+        else
+        {
+            Ask(new PandorasBoxDecision(hero.Id, box.Id));
+        }
+    }
 
-            case LootSite site:
-                Search(hero, site);
-                break;
+    private void LookThrough(Hero hero, MagiWindow window)
+    {
+        // Every visit looks through every Eye of the window's colour (ADR-073).
+        foreach (var eye in state.ObjectsOf<MagiEye>().Where(e => e.Colour == window.Colour).OrderBy(e => e.Id.Value))
+        {
+            events.Publish(new SurroundingsRevealed(hero.Id, window.Id, hero.Owner, eye.Position, MagiWindow.Radius));
+        }
+    }
 
-            case BuffSite buff:
-                Bless(hero, buff);
-                break;
+    private void VisitKeymaster(Hero hero, KeymasterTent tent)
+    {
+        if (state.GetPlayer(hero.Owner).AddKey(tent.Colour))
+        {
+            events.Publish(new KeyReceived(tent.Id, hero.Id, hero.Owner, tent.Colour));
+        }
+        else
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, tent.Id));
+        }
+    }
 
-            case TrainingSite training:
-                Train(hero, training);
-                break;
+    private void PassBorderGuard(Hero hero, BorderPost post)
+    {
+        // Only key holders get onto a border post (the move refuses the others); a guard leaves after the first, a gate stays.
+        if (!post.IsGate)
+        {
+            RemoveFromMap(post);
+            events.Publish(new BorderGuardPassed(post.Id, hero.Id));
+        }
+    }
 
-            case SignPost sign:
-                events.Publish(new SignRead(hero.Id, sign.Id, sign.Message));
-                break;
+    private void VisitGarrison(Hero hero, MapGarrison garrison)
+    {
+        if (garrison.LetsThrough(state, hero.Owner))
+        {
+            return;
+        }
 
-            case Observatory observatory:
-                // Every visit looks out (it only reveals what is still hidden); the log tells the AI which heroes have been up there.
-                TryCollect(hero, observatory);
-                events.Publish(new SurroundingsRevealed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
-                break;
+        if (!garrison.Troops.IsEmpty)
+        {
+            battles.BeginGarrisonBattle(hero, garrison);
+        }
+        else if (garrison.Owner != hero.Owner)
+        {
+            FlagGarrison(garrison, hero.Owner);
+        }
+    }
 
-            case TownGate gate:
-                OfferTowns(hero, gate);
-                break;
+    private void VisitProvider(Hero hero, ResourceProvider provider)
+    {
+        if (provider.Owner != hero.Owner)
+        {
+            Flag(hero, provider);
+        }
+        else if (provider.Stored.IsEmpty)
+        {
+            events.Publish(new MapObjectFoundEmpty(hero.Id, provider.Id));
+        }
+        else
+        {
+            var stored = provider.Stored;
+            provider.Stored = ResourceSet.Empty;
+            events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
+            GiveResources(hero, provider, stored);
+        }
+    }
 
-            case Cartographer cartographer:
-                OfferMap(hero, cartographer);
-                break;
+    private void VisitDwelling(Hero hero, CreatureDwelling dwelling)
+    {
+        if (dwelling.Guard is not null)
+        {
+            guards.Encounter(hero, dwelling);
+        }
+        else if (dwelling.Owner != hero.Owner)
+        {
+            var before = dwelling.Owner;
+            dwelling.Owner = hero.Owner;
+            events.Publish(new DwellingOwnerChanged(dwelling.Id, before, hero.Owner));
+        }
+    }
 
-            case Sphinx sphinx:
-                AskRiddle(hero, sphinx);
-                break;
+    private void PickUp(Hero hero, ArtifactPickup pickup)
+    {
+        if (pickup.Artifact is { } found && artifacts.Grant(hero, found, ArtifactSource.Pickup))
+        {
+            RemoveFromMap(pickup);
+        }
+    }
 
-            case WitchHut hut:
-                OfferSkills(hero, hut);
-                break;
-
-            case SkillSchool school:
-                DrawLessons(hero, school);
-                break;
-
-            case Obelisk obelisk:
-                GrailRules.Visit(state, events, hero, obelisk);
-                break;
-
-            case Shrine shrine:
-                Worship(hero, shrine);
-                break;
-
-            case PandorasBox { IsGuarded: true } box when hero.Army.IsEmpty:
-                events.Publish(new MapObjectRefused(hero.Id, box.Id, $"{hero.Name} has no army to face what may guard the box."));
-                break;
-
-            case PandorasBox box:
-                Ask(new PandorasBoxDecision(hero.Id, box.Id));
-                break;
-
-            case DenOfThieves den:
-                events.Publish(new ThievesDenVisited(hero.Id, den.Id));
-                break;
-
-            case AstrologersTower tower:
-                events.Publish(new AstrologerConsulted(hero.Id, tower.Id, state.NextWeekEvent));
-                break;
-
-            case Deposit deposit:
-                OfferDeposit(hero, deposit);
-                break;
-
-            case MagiWindow window:
-                // Every visit looks through every Eye of the window's colour (ADR-073).
-                foreach (var eye in state.ObjectsOf<MagiEye>().Where(e => e.Colour == window.Colour).OrderBy(e => e.Id.Value))
-                {
-                    events.Publish(new SurroundingsRevealed(hero.Id, window.Id, hero.Owner, eye.Position, MagiWindow.Radius));
-                }
-
-                break;
-
-            case KeymasterTent tent when state.GetPlayer(hero.Owner).AddKey(tent.Colour):
-                events.Publish(new KeyReceived(tent.Id, hero.Id, hero.Owner, tent.Colour));
-                break;
-
-            case KeymasterTent tent:
-                events.Publish(new MapObjectFoundEmpty(hero.Id, tent.Id));
-                break;
-
-            case BorderPost { IsGate: false } guard:
-                // Only key holders get onto a border post (the move refuses the others); a guard leaves after the first.
-                RemoveFromMap(guard);
-                events.Publish(new BorderGuardPassed(guard.Id, hero.Id));
-                break;
-
-            case MapGarrison garrison when !garrison.LetsThrough(state, hero.Owner) && !garrison.Troops.IsEmpty:
-                battles.BeginGarrisonBattle(hero, garrison);
-                break;
-
-            case MapGarrison garrison when garrison.Owner != hero.Owner && !garrison.LetsThrough(state, hero.Owner):
-                FlagGarrison(garrison, hero.Owner);
-                break;
-
-            case Prison prison:
-                Free(hero, prison);
-                break;
-
-            case CreatureBank bank:
-                EnterBank(hero, bank);
-                break;
-
-            case MonsterGuard monster:
-                guards.Encounter(hero, monster);
-                break;
-
-            case ResourceProvider provider when provider.Owner != hero.Owner:
-                Flag(hero, provider);
-                break;
-
-            case ResourceProvider provider when provider.Stored.IsEmpty:
-                events.Publish(new MapObjectFoundEmpty(hero.Id, provider.Id));
-                break;
-
-            case ResourceProvider provider:
-                var stored = provider.Stored;
-                provider.Stored = ResourceSet.Empty;
-                events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
-                GiveResources(hero, provider, stored);
-                break;
-
-            case CreatureDwelling { Guard: not null } guardedDwelling:
-                guards.Encounter(hero, guardedDwelling);
-                break;
-
-            case CreatureDwelling dwelling when dwelling.Owner != hero.Owner:
-                var before = dwelling.Owner;
-                dwelling.Owner = hero.Owner;
-                events.Publish(new DwellingOwnerChanged(dwelling.Id, before, hero.Owner));
-                break;
-
-            case ArtifactPickup { Artifact: { } found } pickup:
-                if (artifacts.Grant(hero, found, ArtifactSource.Pickup))
-                {
-                    RemoveFromMap(pickup);
-                }
-
-                break;
-
+    private void VisitTown(Hero hero, Town town)
+    {
+        if (town.Owner is { } owner && !state.AreEnemies(hero.Owner, owner))
+        {
             // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).
-            case Town town when town.Owner is { } owner && !state.AreEnemies(hero.Owner, owner):
-                TownService.AutoAppoint(state, events, town, hero);
-                Magic.MagicRules.Visit(state, events, hero, town);
-                break;
+            TownService.AutoAppoint(state, events, town, hero);
+            Magic.MagicRules.Visit(state, events, hero, town);
+        }
+        else if (!town.Garrison.IsEmpty || town.GarrisonHero is not null)
+        {
+            battles.BeginTownBattle(hero, town);
+        }
+        else
+        {
+            TownService.Capture(state, events, town, hero.Owner);
+            Magic.MagicRules.Visit(state, events, hero, town);
+        }
+    }
 
-            case Town town when !town.Garrison.IsEmpty || town.GarrisonHero is not null:
-                battles.BeginTownBattle(hero, town);
-                break;
-
-            case Town town:
-                TownService.Capture(state, events, town, hero.Owner);
-                Magic.MagicRules.Visit(state, events, hero, town);
-                break;
-
-            case { TeleportTarget: not null }:
-                // Two-way partner or one-way exit; a hero standing on the landing tile blocks the jump.
-                if (state.TeleportDestination(mapObject) is { } exit && state.HeroAt(exit) is null)
-                {
-                    var from = hero.Position;
-                    hero.Position = exit;
-                    events.Publish(new HeroTeleported(hero.Id, from, exit));
-                }
-
-                break;
+    private void Teleport(Hero hero, MapObject gate)
+    {
+        // Two-way partner or one-way exit; a hero standing on the landing tile blocks the jump.
+        if (gate.TeleportTarget is not null && state.TeleportDestination(gate) is { } exit && state.HeroAt(exit) is null)
+        {
+            var from = hero.Position;
+            hero.Position = exit;
+            events.Publish(new HeroTeleported(hero.Id, from, exit));
         }
     }
 

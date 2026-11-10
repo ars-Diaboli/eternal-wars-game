@@ -32,6 +32,9 @@ public enum LessonState
 public sealed class SkillSchool(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.SkillSchool)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"lessons {string.Join(' ', Lessons.OrderBy(l => l.Key.Value).Select(l => $"{l.Key.Value}:{string.Join(',', l.Value.Select(x => $"{x.Skill}={x.Level}"))}"))}";
+
     /// <summary>The University teaches the magic schools; the War Academy the general groups.</summary>
     public bool TeachesMagic => Definition.Id == BuiltInMapObjects.University;
 

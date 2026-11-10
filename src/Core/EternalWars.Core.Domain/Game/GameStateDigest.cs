@@ -1,7 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.Game;
 
@@ -52,35 +50,7 @@ public static class GameStateDigest
 
         foreach (var mapObject in state.Objects.OrderBy(o => o.Id.Value))
         {
-            var detail = mapObject switch
-            {
-                ResourcePile pile => $"amount {pile.Amount}",
-                Mine mine => $"owner {mine.Owner?.Value} guard {mine.Guard}",
-                ResourceProvider provider => $"owner {provider.Owner?.Value} stored {provider.Stored} claimed {provider.WasClaimed}",
-                Cartographer cartographer => $"buyers {string.Join(',', cartographer.Buyers.Select(p => p.Value).Order())}",
-                ArtifactMerchant merchant => $"stock {string.Join(',', merchant.Stock.Select(a => a ?? "-"))}",
-                RefugeeCamp camp => $"{camp.Creature} available {camp.Available}",
-                Sphinx sphinx => $"riddle {sphinx.Riddle?.Question}",
-                WitchHut hut => $"skills {string.Join(',', hut.Skills)}",
-                Shrine shrine => $"spell {shrine.Spell}",
-                Obelisk obelisk => $"visited {string.Join(',', obelisk.VisitedBy.Select(v => v.Value))}",
-                SkillSchool school => $"lessons {string.Join(' ', school.Lessons.OrderBy(l => l.Key.Value).Select(l => $"{l.Key.Value}:{string.Join(',', l.Value.Select(x => $"{x.Skill}={x.Level}"))}"))}",
-                TreasureChest chest => $"fixed {chest.FixedValues}",
-                ArtifactPickup pickup => $"artifact {pickup.Artifact}",
-                Prison prison => $"prisoner {prison.Hero} level {prison.Level}",
-                CreatureBank bank => $"guard {string.Join(',', bank.Guard)} reward {bank.Reward} {bank.RewardArtifact}{(bank.MoreArtifacts.Count == 0 ? "" : $"+{string.Join('+', bank.MoreArtifacts)}")} plundered {bank.PlunderedOn?.AbsoluteDay}",
-                QuestSite site => $"quest {site.Quest} stage {site.Stage}",
-                PandorasBox box => $"contents {box.Contents} guard {string.Join(',', box.Guard)} message {box.Message}{(box.Event is null ? "" : $" event {box.Event}")}",
-                MapGarrison garrison =>$"owner {garrison.Owner?.Value} troops {Slots(garrison.Troops)}",
-                CreatureDwelling dwelling => $"{dwelling.Creature} owner {dwelling.Owner?.Value} available {dwelling.Available}" + (dwelling.Guard is { } g ? $" guard {g}" : ""),
-                MonsterGuard monster => $"{monster.Creature}:{monster.Count} {monster.Disposition}",
-                Town town => $"owner {town.Owner?.Value} governor {town.Governor?.Value} built {Pairs(town.Buildings)} dwellings {Pairs(town.Dwellings)} available {Pairs(town.Available)} "
-                             + $"garrison {Slots(town.Garrison)} last {town.LastBuilt?.AbsoluteDay}"
-                             + (town.GuildSpells.Count == 0 ? "" : $" guild {string.Join(';', town.GuildSpells.OrderBy(l => l.Key).Select(l => string.Join(',', l.Value)))}")
-                             + (town.SchoolSpells.Count == 0 ? "" : $" schools {string.Join(';', town.SchoolSpells.OrderBy(s => s.Key, StringComparer.Ordinal).Select(s => $"{s.Key}:{string.Join(',', s.Value)}"))}")
-                             + (town.FixedGuildSpells.Count == 0 ? "" : $" fixed {string.Join(',', town.FixedGuildSpells)}"),
-                _ => mapObject.TeleportTarget?.ToString() ?? "",
-            };
+            var detail = mapObject.DigestState();
             var visits = mapObject.Visits.IsSpent ? $" visits {mapObject.Visits}" : "";
             Line($"object {mapObject.Id.Value} {mapObject.Definition.Id} at {mapObject.Position} {detail}{visits}");
         }
@@ -144,8 +114,8 @@ public static class GameStateDigest
         void Line(FormattableString line) => text.Append(FormattableString.Invariant(line)).Append('\n');
     }
 
-    private static string Slots(Armies.Army army) => string.Join(",", army.Slots.Select(s => s is null ? "-" : $"{s.Creature}:{s.Count}"));
+    internal static string Slots(Armies.Army army) => string.Join(",", army.Slots.Select(s => s is null ? "-" : $"{s.Creature}:{s.Count}"));
 
-    private static string Pairs(IReadOnlyDictionary<string, int> values) =>
+    internal static string Pairs(IReadOnlyDictionary<string, int> values) =>
         string.Join(",", values.OrderBy(v => v.Key, StringComparer.Ordinal).Select(v => FormattableString.Invariant($"{v.Key}:{v.Value}")));
 }

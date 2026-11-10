@@ -31,6 +31,9 @@ public enum ProviderRule
 public sealed class ResourceProvider(MapObjectId id, MapObjectDefinition definition, MapPosition position, PlayerId? owner = null)
     : MapObject(id, definition, position, MapObjectKind.ResourceProvider), IFlaggable
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"owner {Owner?.Value} stored {Stored} claimed {WasClaimed}";
+
     /// <summary>Owned providers reveal and watch a small area around them, like mines.</summary>
     public const int ProviderScoutingRadius = 2;
 

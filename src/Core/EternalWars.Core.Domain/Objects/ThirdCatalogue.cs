@@ -15,6 +15,9 @@ namespace EternalWars.Core.Domain.Objects;
 public sealed class Cartographer(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Cartographer)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"buyers {string.Join(',', Buyers.Select(p => p.Value).Order())}";
+
     public const int Price = 3000;
 
     /// <summary>The players who bought the map here.</summary>
@@ -30,6 +33,9 @@ public sealed class Cartographer(MapObjectId id, MapObjectDefinition definition,
 public sealed class ArtifactMerchant(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.ArtifactMerchant)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"stock {string.Join(',', Stock.Select(a => a ?? "-"))}";
+
     public const int StockSize = 7;
 
     /// <summary>What is for sale, slot by slot (null: sold).</summary>
@@ -58,6 +64,9 @@ public static class ArtifactMerchantRules
 public sealed class RefugeeCamp(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.RefugeeCamp)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"{Creature} available {Available}";
+
     public string? Creature { get; internal set; }
 
     public int Available { get; internal set; }
@@ -92,7 +101,11 @@ public enum SacrificeKind
 /// either. Any number of times.
 /// </summary>
 public sealed class SacrificialAltar(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.SacrificialAltar);
+    : MapObject(id, definition, position, MapObjectKind.SacrificialAltar)
+{
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+}
 
 public static class SacrificeRules
 {
@@ -121,6 +134,9 @@ public sealed record Riddle(string Question, string Answer, string Wrong1, strin
 public sealed class Sphinx(MapObjectId id, MapObjectDefinition definition, MapPosition position, Riddle? riddle = null)
     : MapObject(id, definition, position, MapObjectKind.Sphinx)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"riddle {Riddle?.Question}";
+
     public const int Experience = 5000;
 
     public const int WrongMorale = -3;
@@ -136,6 +152,9 @@ public sealed class Sphinx(MapObjectId id, MapObjectDefinition definition, MapPo
 public sealed class WitchHut(MapObjectId id, MapObjectDefinition definition, MapPosition position, IReadOnlyList<string>? skills = null)
     : MapObject(id, definition, position, MapObjectKind.WitchHut)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"skills {string.Join(',', Skills)}";
+
     public const int SkillCount = 2;
 
     /// <summary>The hut's two skills; empty until rolled when the map leaves them open.</summary>
@@ -149,6 +168,9 @@ public sealed class WitchHut(MapObjectId id, MapObjectDefinition definition, Map
 public sealed class Shrine(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? spell = null)
     : MapObject(id, definition, position, MapObjectKind.Shrine)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"spell {Spell}";
+
     /// <summary>The spell level the shrine teaches (its definition's amount).</summary>
     public int SpellLevel => Definition.Amount;
 
