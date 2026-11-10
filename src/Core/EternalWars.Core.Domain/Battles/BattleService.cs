@@ -25,9 +25,10 @@ public sealed class BattleService
     private readonly BattleCommandHandler _commands;
 
     public BattleService(
-        GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts, Economy.EconomyService economy)
+        GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts, Economy.EconomyService economy,
+        TownVisitService towns, PandorasBoxService boxes)
     {
-        var aftermath = new BattleAftermath(state, events, armies, progression, artifacts, economy);
+        var aftermath = new BattleAftermath(state, events, armies, progression, artifacts, economy, towns, boxes);
         _flow = new BattleFlow(state, events, aftermath);
         _starter = new BattleStarter(state, events, artifacts, _flow, aftermath);
         _commands = new BattleCommandHandler(state, events, economy, _flow, aftermath);

@@ -7,11 +7,9 @@ using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
-using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
-using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Turns;
 
 namespace EternalWars.Core.Data.Maps;
@@ -91,44 +89,29 @@ public static partial class MapConverter
         return map;
     }
 
-    /// <summary>Builds the initial state of a scenario from the game's content tables (<see cref="ToGameState(MapDocument, MapObjectCatalog?, GameOptions?, TerrainCatalog?, CreatureCatalog?, HeroCatalog?, BuildingCatalog?, ArtifactCatalog?, bool)"/>).</summary>
-    public static GameState ToGameState(MapDocument document, ContentCatalogs content, GameOptions? options = null, bool checkEvents = true) =>
-        ToGameState(document, options: options, creatures: content.Creatures, heroRoster: content.Heroes, buildings: content.Buildings, artifacts: content.Artifacts,
-            checkEvents: checkEvents);
-
     /// <summary>
-    /// Builds the initial state of a scenario. <paramref name="catalog"/> resolves object definitions and
-    /// <paramref name="terrains"/> supplies terrain rules (both default to the built-in content);
+    /// Builds the initial state of a scenario from the game's content tables (<paramref name="content"/>, the built-in tables when left out);
     /// <paramref name="options"/> are the rules chosen at game creation.
     /// Throws <see cref="FormatException"/> for inconsistent maps. The editor passes <paramref name="checkEvents"/> false, so a map whose events do
     /// not fit yet still opens (its validator shows why).
     /// </summary>
-    public static GameState ToGameState(
-        MapDocument document,
-        MapObjectCatalog? catalog = null,
-        GameOptions? options = null,
-        TerrainCatalog? terrains = null,
-        CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null,
-        ArtifactCatalog? artifacts = null,
-        bool checkEvents = true)
+    public static GameState ToGameState(MapDocument document, ContentCatalogs? content = null, GameOptions? options = null, bool checkEvents = true)
     {
-        catalog ??= MapObjectCatalog.Default;
-        artifacts ??= ArtifactCatalog.Default;
-        creatures ??= CreatureCatalog.Default;
-        heroRoster ??= HeroCatalog.Default;
-        var spells = artifacts.Spells;
+        content ??= ContentCatalogs.Default;
+        var catalog = content.Objects;
+        var artifacts = content.Artifacts;
+        var creatures = content.Creatures;
+        var spells = content.Spells;
         var map = ToMap(document);
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
-        var heroes = document.Heroes.Select(h => ToHero(h, creatures, heroRoster, artifacts)).ToList();
+        var heroes = document.Heroes.Select(h => ToHero(h, creatures, content.Heroes, artifacts)).ToList();
         // Before v13 the guard mode was one map-wide setting; it becomes the mode of every monster (ADR-065).
         var legacyGuardMode = document.FormatVersion < MapDocument.PerMonsterGuardModeVersion ? document.GuardMode : null;
         var objects = document.Objects.Select(o => ToObject(o, catalog, creatures, spells, legacyGuardMode));
         try
         {
-            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts, catalog, spells);
+            var state = new GameState(map, players, heroes, objects, options, content: content);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetTeamCounts(document.MinTeams, document.MaxTeams);
             state.SetRules(ToRules(document.Rules));

@@ -47,10 +47,10 @@ public sealed class GameState
         ContentCatalogs? content = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
-        ObjectCatalog = objectCatalog ?? MapObjectCatalog.Default;
-        Options = options ?? GameOptions.Default;
-        Terrains = terrains ?? TerrainCatalog.Default;
         // A table given on its own wins over the content's; one given neither way is the built-in table.
+        ObjectCatalog = objectCatalog ?? content?.Objects ?? MapObjectCatalog.Default;
+        Options = options ?? GameOptions.Default;
+        Terrains = terrains ?? content?.Terrains ?? TerrainCatalog.Default;
         Creatures = creatures ?? content?.Creatures ?? CreatureCatalog.Default;
         HeroRoster = heroRoster ?? content?.Heroes ?? HeroCatalog.Default;
         Buildings = buildings ?? content?.Buildings ?? BuildingCatalog.Default;

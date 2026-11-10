@@ -174,8 +174,11 @@ public static class CreatureBankRules
     private static IReadOnlyList<BankTier> Bank(string[] creatures, (int[] Counts, ResourceSet Reward, ArtifactTier? Artifact)[] rows, string? upgraded = null) =>
         [.. rows.Select((r, i) => new BankTier(Usual[i], [.. creatures.Zip(r.Counts).Where(c => c.Second > 0).Select(c => new CreatureStack(c.First, c.Second))], r.Reward, r.Artifact, upgraded))];
 
-    /// <summary>Rolls a bank's tier (and the upgraded fifth of its first stack) into its guard and reward.</summary>
-    internal static void Fill(CreatureBank bank, GameRandom random)
+    /// <summary>
+    /// Rolls a bank's tier from <paramref name="random"/>, and whether the upgraded fifth of its first stack is upgraded: the tier, with the guard
+    /// that rolled (<see cref="BankTier.Guard"/> replaced). Filling the bank with it is <see cref="GuardService"/>'s.
+    /// </summary>
+    internal static BankTier Roll(CreatureBank bank, GameRandom random)
     {
         var tier = WeightedRoll.Pick([.. Tables[bank.Rule].Select(t => (t.Weight, t))], random);
         var guard = tier.Guard.ToList();
@@ -184,11 +187,7 @@ public static class CreatureBankRules
             guard = [new CreatureStack(guard[0].Creature, guard[0].Count - fifth), new CreatureStack(upgraded, fifth), .. guard.Skip(1)];
         }
 
-        bank.Guard = guard;
-        bank.Reward = tier.Reward;
-        bank.RewardArtifact = tier.Artifact;
-        bank.MoreArtifacts = tier.MoreArtifacts;
-        bank.PlunderedOn = null;
+        return tier with { Guard = guard };
     }
 
     /// <summary>Whether a plundered bank fills again on <paramref name="date"/>.</summary>

@@ -93,12 +93,12 @@ public static class TreasurePlacer
         (ResourceType.Gold, 3), (ResourceType.Lumber, 2), (ResourceType.Ore, 2), (ResourceType.Crystal, 1), (ResourceType.Mercury, 1), (ResourceType.Sulfur, 1),
     ];
 
-    public static void Place(MapTemplate template, GeneratedMap map, ulong seed, CreatureCatalog? creatures = null, ArtifactCatalog? artifacts = null)
+    public static void Place(MapTemplate template, GeneratedMap map, ulong seed)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
-        creatures ??= CreatureCatalog.Default;
-        artifacts ??= ArtifactCatalog.Default;
+        var creatures = map.Content.Creatures;
+        var artifacts = map.Content.Artifacts;
         if (map.Layout.ZoneIds.Count != template.Zones.Count)
         {
             throw new ArgumentException("The map was not made from this template.", nameof(map));
@@ -174,7 +174,7 @@ public static class TreasurePlacer
             return;
         }
 
-        var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.Obelisk);
+        var definition = map.Definition(BuiltInMapObjects.Obelisk);
         var counts = ObeliskCounts(template);
         for (var zone = 0; zone < template.Zones.Count; zone++)
         {
@@ -207,22 +207,22 @@ public static class TreasurePlacer
         var guardedValue = value;
         var worth = value;
         if (random.Next(SiteOdds) == 0 && PickSite(sites, value, random) is { } site
-            && Spot(map, MapObjectCatalog.Default.Get(site.Definition), tiles, placed, random, guarded && !site.OwnGuard) is { } siteAt)
+            && Spot(map, map.Definition(site.Definition), tiles, placed, random, guarded && !site.OwnGuard) is { } siteAt)
         {
-            item = map.Add(MapObject.Create(map.NextId(), MapObjectCatalog.Default.Get(site.Definition), siteAt));
+            item = map.Add(MapObject.Create(map.NextId(), map.Definition(site.Definition), siteAt));
             sites.Zone[site.Definition] = sites.Zone.GetValueOrDefault(site.Definition) + 1;
             sites.Map[site.Definition] = sites.Map.GetValueOrDefault(site.Definition) + 1;
             guardedValue = site.OwnGuard ? 0 : site.Value;
             worth = site.Value;
         }
         else if (value >= BoxThreshold && random.Next(BoxOdds) == 0
-            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), tiles, placed, random, guarded) is { } boxAt)
+            && Spot(map, map.Definition(BuiltInMapObjects.PandorasBox), tiles, placed, random, guarded) is { } boxAt)
         {
-            item = map.Add(new PandorasBox(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.PandorasBox), boxAt, BoxContentsFor(value, creatures, random)));
+            item = map.Add(new PandorasBox(map.NextId(), map.Definition(BuiltInMapObjects.PandorasBox), boxAt, BoxContentsFor(value, creatures, random)));
         }
         else if (value >= ArtifactThreshold && roll < 2 && PickArtifact(artifacts, value, random, relics) is { } artifact)
         {
-            var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.ArtifactId(artifact.Tier));
+            var definition = map.Definition(BuiltInMapObjects.ArtifactId(artifact.Tier));
             if (Spot(map, definition, tiles, placed, random, guarded) is { } at)
             {
                 item = map.Add(new ArtifactPickup(map.NextId(), definition, at, artifact.Id));
@@ -233,16 +233,16 @@ public static class TreasurePlacer
             }
         }
         else if (value >= MarketplaceThreshold && !marketplacePlaced && roll >= 2 && random.Next(MarketplaceOdds) == 0
-            && Spot(map, MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), tiles, placed, random, guarded) is { } market)
+            && Spot(map, map.Definition(BuiltInMapObjects.Marketplace), tiles, placed, random, guarded) is { } market)
         {
             // A map marketplace (ADR-067) is a treasure item: no owner, guarded like any item of its value.
-            item = map.Add(new Marketplace(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), market));
+            item = map.Add(new Marketplace(map.NextId(), map.Definition(BuiltInMapObjects.Marketplace), market));
             marketplacePlaced = true;
             guardedValue = MarketplaceValue;
         }
         else if (value >= ArtifactThreshold ? roll == 2 : roll == 3)
         {
-            var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.TreasureChest);
+            var definition = map.Definition(BuiltInMapObjects.TreasureChest);
             if (Spot(map, definition, tiles, placed, random, guarded) is { } at)
             {
                 // Gold or experience, as a chest offers: the gold is the value, the experience 500 less (as in the roll table, ADR-039).
@@ -254,7 +254,7 @@ public static class TreasurePlacer
         {
             var weightRoll = random.Next(PileWeights.Sum(w => w.Weight));
             var resource = PileWeights.First(w => (weightRoll -= w.Weight) < 0).Resource;
-            var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.PileId(resource));
+            var definition = map.Definition(BuiltInMapObjects.PileId(resource));
             if (Spot(map, definition, tiles, placed, random, guarded) is { } at)
             {
                 var amount = Math.Max(1, (int)Math.Round((double)value / GoldValue(resource)));
@@ -280,7 +280,7 @@ public static class TreasurePlacer
             }
 
             var (creature, count) = GuardPicker.Pick(creatures, guard, random);
-            map.Add(new MonsterGuard(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Monster), near[random.Next(near.Count)], creature.Id, count, mode: GuardMode.Area));
+            map.Add(new MonsterGuard(map.NextId(), map.Definition(BuiltInMapObjects.Monster), near[random.Next(near.Count)], creature.Id, count, mode: GuardMode.Area));
         }
 
         return true;

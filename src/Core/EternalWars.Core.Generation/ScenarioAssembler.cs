@@ -1,5 +1,4 @@
 using EternalWars.Core.Domain.Armies;
-using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
@@ -35,7 +34,8 @@ public sealed record PlayerSetup(int Slot, string Name, bool IsHuman, string Tow
 /// </list>
 /// The map is used up: its terrain and objects become the game's. The game has the standard rules (<see cref="ScenarioRules.Default"/>) with the hero
 /// limit of the template (<see cref="MapTemplate.MaxHeroes"/>) or of the caller (<c>maxHeroes</c>, ADR-068), and the
-/// options of the new-game screen; the map is named after the template, size and seed. Streams: <c>heroes</c>, <c>dwellings</c>, <c>armies</c>,
+/// options of the new-game screen; the map is named after the template, size and seed. The game's content tables are the map's
+/// (<see cref="GeneratedMap.Content"/>). Streams: <c>heroes</c>, <c>dwellings</c>, <c>armies</c>,
 /// <c>garrisons</c> per slot.
 /// </summary>
 public static class ScenarioAssembler
@@ -70,17 +70,14 @@ public static class ScenarioAssembler
         IReadOnlyList<PlayerSetup> players,
         ulong seed,
         GameOptions? options = null,
-        CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null,
-        ArtifactCatalog? artifacts = null,
         int? maxHeroes = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
         ArgumentNullException.ThrowIfNull(players);
-        creatures ??= CreatureCatalog.Default;
-        heroRoster ??= HeroCatalog.Default;
+        var content = map.Content;
+        var creatures = content.Creatures;
+        var heroRoster = content.Heroes;
         var ordered = ResolveTowns(players, seed);
         Check(template, map, ordered, heroRoster, creatures);
 
@@ -97,7 +94,7 @@ public static class ScenarioAssembler
             var zone = template.Zones.First(z => z.Owner == setup.Slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart);
             made.Add(new Player(id, setup.Name, setup.IsHuman, new TeamId(teams[i])));
 
-            var start = map.Towns.Where(t => t.Slot == setup.Slot).Select(t => StartTown(map, t.Town, zone, setup, id, creatures, buildings ?? BuildingCatalog.Default, streams.For("dwellings", setup.Slot))).ToList();
+            var start = map.Towns.Where(t => t.Slot == setup.Slot).Select(t => StartTown(map, t.Town, zone, setup, id, creatures, content.Buildings, streams.For("dwellings", setup.Slot))).ToList();
             var hero = setup.Hero is { } picked ? heroRoster.Get(picked) : Draw(heroRoster, setup.TownType, taken, heroRandom);
             heroes.Add(Hero.Create(new HeroId(i + 1), id, start[0].VisitPosition, StarterArmy(hero, setup.TownType, creatures, streams.For("armies", setup.Slot)), hero));
         }
@@ -113,7 +110,7 @@ public static class ScenarioAssembler
         }
 
         map.Map.Name = $"{template.Name} {map.Layout.Size}×{map.Layout.Size} #{seed}";
-        var state = new GameState(map.Map, made, heroes, map.Objects, options, creatures: creatures, heroRoster: heroRoster, buildings: buildings, artifacts: artifacts);
+        var state = new GameState(map.Map, made, heroes, map.Objects, options, content: content);
         state.SetTeamsLocked(template.TeamsLocked);
         state.SetTeamCounts(template.MinTeams, template.MaxTeams);
         state.SetRules(ScenarioRules.Default with { MaxHeroes = maxHeroes ?? template.MaxHeroes, WeekEvents = template.WeekEvents.ToSettings() });
@@ -232,7 +229,7 @@ public static class ScenarioAssembler
         }
 
         // A week of creatures waits in every start dwelling, with the fort's growth bonus (ADR-066).
-        var probe = new Town(town.Id, MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(setup.TownType)), town.Position, buildings: buildings);
+        var probe = new Town(town.Id, map.Definition(BuiltInMapObjects.TownId(setup.TownType)), town.Position, buildings: buildings);
         var available = dwellings.Keys.ToDictionary(l => l, l => TownRules.WeeklyGrowth(catalog, probe, creatures.Get(l)), StringComparer.Ordinal);
         return map.Replace(town, setup.TownType, owner, buildings, dwellings, available);
     }

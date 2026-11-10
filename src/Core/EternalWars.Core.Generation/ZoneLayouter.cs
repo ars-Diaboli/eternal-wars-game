@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 
 namespace EternalWars.Core.Generation;
@@ -44,11 +45,14 @@ public static class ZoneLayouter
 
     private static readonly (int Dx, int Dy)[] Around = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
-    /// <summary>Lays out the template on a <paramref name="size"/> × <paramref name="size"/> map. Throws <see cref="ArgumentException"/> for an invalid template or size.</summary>
-    public static ZoneLayout Layout(MapTemplate template, int size, ulong seed, LayoutStrategy strategy = LayoutStrategy.Voronoi)
+    /// <summary>
+    /// Lays out the template on a <paramref name="size"/> × <paramref name="size"/> map. Throws <see cref="ArgumentException"/> for an invalid template
+    /// (checked against <paramref name="content"/>, the built-in tables when left out) or size.
+    /// </summary>
+    public static ZoneLayout Layout(MapTemplate template, int size, ulong seed, LayoutStrategy strategy = LayoutStrategy.Voronoi, ContentCatalogs? content = null)
     {
         ArgumentNullException.ThrowIfNull(template);
-        if (TemplateValidator.Validate(template).FirstOrDefault(i => i.Severity == IssueSeverity.Error) is { } error)
+        if (TemplateValidator.Validate(template, content).FirstOrDefault(i => i.Severity == IssueSeverity.Error) is { } error)
         {
             throw new ArgumentException($"The template is not valid: {error.Message}", nameof(template));
         }

@@ -63,8 +63,7 @@ public partial class Main
         try
         {
             var record = GameRecordSerializer.Load(path);
-            var player = ReplayPlayer.Open(
-                record, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts);
+            var player = ReplayPlayer.Open(record, GameContent.All);
             CloseSetup();
             (_mode, _replay, _replayPlaying, _replayViewerIndex) = (GameMode.Watch, player, true, 0);
             (_replayWait, _resultWait) = (0, 0);

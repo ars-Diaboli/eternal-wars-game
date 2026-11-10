@@ -3,12 +3,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using EternalWars.Core.Data.Maps;
-using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -94,18 +91,12 @@ public static class GameReplay
 
     /// <summary>
     /// Rebuilds the game from the record: same map, options and commands. Throws <see cref="InvalidOperationException"/>
-    /// if a command is refused or the final digest differs (the game is not deterministic, or content changed).
+    /// if a command is refused or the final digest differs (the game is not deterministic, or content changed). <paramref name="content"/> is
+    /// the game's content tables (the built-in tables when left out).
     /// </summary>
-    public static GameSession Replay(
-        GameRecordDocument record,
-        MapObjectCatalog? catalog = null,
-        CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null,
-        TerrainCatalog? terrains = null,
-        ArtifactCatalog? artifacts = null)
+    public static GameSession Replay(GameRecordDocument record, ContentCatalogs? content = null)
     {
-        var session = new GameSession(MapConverter.ToGameState(record.Map, catalog, record.Options, terrains, creatures, heroRoster, buildings, artifacts));
+        var session = new GameSession(MapConverter.ToGameState(record.Map, content, record.Options));
         session.Start();
         for (var i = 0; i < record.Commands.Count; i++)
         {

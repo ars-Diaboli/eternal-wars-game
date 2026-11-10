@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 
 namespace EternalWars.Core.Generation;
@@ -78,16 +79,21 @@ public static class TerrainPainter
 
     private static readonly (int Dx, int Dy)[] Four = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
-    /// <summary>The passable terrains native to a town type, in enum order.</summary>
-    public static IReadOnlyList<TerrainType> NativeTerrains(string townType) =>
-        TerrainCatalog.Default.All.Where(d => d.NativeTowns.Contains(townType) && TerrainCatalog.Default.IsPassable(d.Terrain)).Select(d => d.Terrain).Order().ToList();
+    /// <summary>The passable terrains native to a town type, in enum order, by <paramref name="terrains"/> (the built-in terrain rules when left out).</summary>
+    public static IReadOnlyList<TerrainType> NativeTerrains(string townType, TerrainCatalog? terrains = null)
+    {
+        terrains ??= TerrainCatalog.Default;
+        return terrains.All.Where(d => d.NativeTowns.Contains(townType) && terrains.IsPassable(d.Terrain)).Select(d => d.Terrain).Order().ToList();
+    }
 
     /// <summary>
     /// Paints the template. With <paramref name="startTowns"/> (player slot → town type, known when the game generates the map after the players
-    /// picked, RMG-7), a start zone is painted with a mix of its town's native terrains (those in the zone's terrain list when it has any of them).
+    /// picked, RMG-7), a start zone is painted with a mix of its town's native terrains (those in the zone's terrain list when it has any of them), by
+    /// the terrain rules of <paramref name="content"/> (the built-in tables when left out).
     /// </summary>
-    public static GeneratedTerrain Paint(MapTemplate template, ZoneLayout layout, ulong seed, IReadOnlyDictionary<int, string>? startTowns = null)
+    public static GeneratedTerrain Paint(MapTemplate template, ZoneLayout layout, ulong seed, IReadOnlyDictionary<int, string>? startTowns = null, ContentCatalogs? content = null)
     {
+        var terrains = (content ?? ContentCatalogs.Default).Terrains;
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(layout);
         if (layout.ZoneIds.Count != template.Zones.Count || layout.Levels != template.Levels)
@@ -110,7 +116,7 @@ public static class TerrainPainter
             var rock = new bool[size * size];
             foreach (var (zone, zoneTiles) in tiles.Where(t => t.Value.Count > 0))
             {
-                PaintZone(map, layout, template.Zones[zone], zoneTiles, level, streams.For("terrain", template.RollZone(zone)), StartTown(template.Zones[zone], startTowns));
+                PaintZone(map, layout, template.Zones[zone], zoneTiles, level, streams.For("terrain", template.RollZone(zone)), StartTown(template.Zones[zone], startTowns), terrains);
             }
 
             RaiseWalls(map, layout, level, rock, walls);
@@ -127,11 +133,11 @@ public static class TerrainPainter
     private static string? StartTown(TemplateZone zone, IReadOnlyDictionary<int, string>? startTowns) =>
         zone.Type is ZoneType.PlayerStart or ZoneType.AiStart && zone.Owner is { } slot && startTowns is not null && startTowns.TryGetValue(slot, out var town) ? town : null;
 
-    private static void PaintZone(AdventureMap map, ZoneLayout layout, TemplateZone zone, List<int> tiles, int level, GameRandom random, string? startTown)
+    private static void PaintZone(AdventureMap map, ZoneLayout layout, TemplateZone zone, List<int> tiles, int level, GameRandom random, string? startTown, TerrainCatalog terrains)
     {
         var size = layout.Size;
         var allowed = zone.Terrains is { Count: > 0 } list ? list : DefaultPool(level);
-        var natives = startTown is null ? [] : NativeTerrains(startTown);
+        var natives = startTown is null ? [] : NativeTerrains(startTown, terrains);
         if (natives.Count > 0)
         {
             allowed = natives.Intersect(allowed).ToList() is { Count: > 0 } both && zone.Terrains is { Count: > 0 } ? both : natives;

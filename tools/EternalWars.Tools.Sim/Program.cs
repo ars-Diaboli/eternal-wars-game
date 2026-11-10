@@ -46,8 +46,11 @@ public static class Program
     private static readonly string[] PlayableTowns =
         [TownIds.Haven, TownIds.Sylvan, TownIds.Academy, TownIds.Necropolis, TownIds.Inferno, TownIds.Dungeon, TownIds.Stronghold, TownIds.SwampBestiary];
 
-    /// <summary>The built-in creatures, or the table given with <c>--creatures</c>.</summary>
-    private static CreatureCatalog Catalog { get; set; } = CreatureCatalog.Default;
+    /// <summary>The built-in content, with the creature table given with <c>--creatures</c> if there is one.</summary>
+    private static ContentCatalogs Content { get; set; } = ContentCatalogs.Default;
+
+    /// <summary>The creatures of <see cref="Content"/>.</summary>
+    private static CreatureCatalog Catalog => Content.Creatures;
 
     public static int Main(string[] args)
     {
@@ -55,7 +58,7 @@ public static class Program
         {
             if (Array.IndexOf(args, "--creatures") is var index and >= 0 && index + 1 < args.Length)
             {
-                Catalog = new CreatureCatalog(CreatureTable.Parse(File.ReadAllText(args[index + 1])));
+                Content = new ContentCatalogs(new CreatureCatalog(CreatureTable.Parse(File.ReadAllText(args[index + 1]))));
                 args = [.. args[..index], .. args[(index + 2)..]];
             }
 
@@ -92,7 +95,7 @@ public static class Program
     {
         var loaded = LoadTemplate(template);
         var strategy = rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi;
-        var built = terrain ? MapGenerator.Generate(loaded, size, seed, strategy, Catalog) : null;
+        var built = terrain ? MapGenerator.Generate(loaded, size, seed, strategy, Content) : null;
         var layout = built?.Layout ?? ZoneLayouter.Layout(loaded, size, seed, strategy);
 
         for (var level = 0; level < layout.Levels; level++)
@@ -174,7 +177,7 @@ public static class Program
                 for (var i = 0; i < seeds; i++)
                 {
                     var seed = first + (ulong)i;
-                    var single = MapGenerator.Generate(template, size, seed, creatures: Catalog);
+                    var single = MapGenerator.Generate(template, size, seed, content: Content);
                     firstTry += single.Problems.Count == 0 ? 1 : 0;
                     foreach (var problem in single.Problems)
                     {
@@ -189,7 +192,7 @@ public static class Program
                         single.Problems.ToList().ForEach(p => Console.WriteLine($"    {p}"));
                     }
 
-                    var result = single.Problems.Count == 0 ? new GenerationResult(single, 0, seed) : MapGenerator.GenerateBest(template, size, seed, creatures: Catalog);
+                    var result = single.Problems.Count == 0 ? new GenerationResult(single, 0, seed) : MapGenerator.GenerateBest(template, size, seed, content: Content);
                     best += result.Problems.Count == 0 ? 1 : 0;
                     attempts += result.Attempt + 1;
                     failedSeeds += result.Problems.Count == 0 ? 0 : 1;
@@ -215,7 +218,7 @@ public static class Program
         for (var i = 0; i < count; i++)
         {
             var seed = first + (ulong)i;
-            var built = MapGenerator.Generate(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi, Catalog);
+            var built = MapGenerator.Generate(loaded, size, seed, rectangles ? LayoutStrategy.Rectangles : LayoutStrategy.Voronoi, Content);
             var problems = built.Problems.ToList();
             if (problems.Count > 0)
             {
@@ -239,7 +242,7 @@ public static class Program
         var seed = (ulong)Option(args, "--seed", 1);
         var players = Option(args, "--players", loaded.MaxPlayers);
         var setups = Enumerable.Range(0, players).Select(slot => new PlayerSetup(slot, $"Player {slot + 1}", IsHuman: true, PlayerSetup.RandomTown)).ToList();
-        var (state, generation) = MapGenerator.Build(loaded, size, seed, setups, new GameOptions(Seed: seed), Catalog);
+        var (state, generation) = MapGenerator.Build(loaded, size, seed, setups, new GameOptions(Seed: seed), Content);
         MapSerializer.Save(MapConverter.ToDocument(state), path);
         Console.WriteLine($"{loaded.Name} at {size}, seed {seed}, attempt {generation.Attempt} -> {path}");
         generation.Problems.ToList().ForEach(p => Console.WriteLine($"  problem: {p}"));
@@ -293,7 +296,7 @@ public static class Program
             new Hero(new HeroId(1), "Attacker", players[0].Id, new MapPosition(0, 0), Copy(attacker)),
             new Hero(new HeroId(2), "Defender", players[1].Id, new MapPosition(1, 0), Copy(defender)),
         };
-        var session = new GameSession(new GameState(map, players, heroes, options: new GameOptions(Seed: seed), creatures: Catalog));
+        var session = new GameSession(new GameState(map, players, heroes, options: new GameOptions(Seed: seed), content: Content));
         BattleEnded? ended = null;
         var rounds = 0;
         session.Events.Subscribe<BattleEnded>(e => ended = e);
@@ -561,15 +564,14 @@ public static class Program
 
     private static SimGame HandMadeGame(string map, ulong seed, Complexity? complexity = null)
     {
-        var content = new ContentCatalogs(Catalog);
         var document = map switch
         {
-            "towns" => MapConverter.ToDocument(TownsScenario.Create(content)),
-            "demo" => MapConverter.ToDocument(DemoScenario.Create(content: content)),
-            "ember" => MapConverter.ToDocument(EmberMarchScenario.Create(content)),
+            "towns" => MapConverter.ToDocument(TownsScenario.Create(Content)),
+            "demo" => MapConverter.ToDocument(DemoScenario.Create(content: Content)),
+            "ember" => MapConverter.ToDocument(EmberMarchScenario.Create(Content)),
             _ => MapSerializer.Load(map),
         };
-        return new SimGame(document, MapConverter.ToGameState(document, content, new GameOptions(Seed: seed, Complexity: complexity)));
+        return new SimGame(document, MapConverter.ToGameState(document, Content, new GameOptions(Seed: seed, Complexity: complexity)));
     }
 
     /// <summary>
@@ -584,7 +586,7 @@ public static class Program
         }
 
         var setups = Enumerable.Range(0, players).Select(slot => new PlayerSetup(slot, $"Player {slot + 1}", IsHuman: false, PlayerSetup.RandomTown)).ToList();
-        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(Seed: seed, Complexity: complexity), Catalog);
+        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(Seed: seed, Complexity: complexity), Content);
         return new SimGame(MapConverter.ToDocument(state), state, GenerationInfo.Of(template.Name, size, seed, generation.Attempt), generation.Problems);
     }
 
@@ -695,7 +697,7 @@ public static class Program
         }
 
         var record = GameRecordSerializer.Serialize(GameReplay.Record(game.Map, session, generated: game.Generated));
-        GameReplay.Replay(GameRecordSerializer.Deserialize(record), creatures: Catalog);
+        GameReplay.Replay(GameRecordSerializer.Deserialize(record), Content);
 
         var state = session.State;
         var outcome = state.Outcome is { HasWinner: true } o ? string.Join("+", o.Winners.Select(w => state.GetPlayer(w).Name)) + " won" : state.IsOver ? "nobody won" : "unfinished";
@@ -751,7 +753,7 @@ public static class Program
     private static int Replay(string path)
     {
         var record = GameRecordSerializer.Load(path);
-        var session = GameReplay.Replay(record, creatures: Catalog);
+        var session = GameReplay.Replay(record, Content);
         Console.WriteLine($"replayed {record.Commands.Count} commands: {session.State.Date}, digest {GameStateDigest.Compute(session.State)} (matches the record)");
         return 0;
     }
@@ -768,7 +770,7 @@ public static class Program
         }
 
         var json = GameRecordSerializer.Serialize(GameReplay.Record(map, first));
-        GameReplay.Replay(GameRecordSerializer.Deserialize(json), creatures: Catalog);
+        GameReplay.Replay(GameRecordSerializer.Deserialize(json), Content);
 
         var aiGame = HandMadeGame("towns", seed: 7);
         var (aiFirst, firstAi) = PlayAiGame(aiGame, days: 15);
@@ -779,7 +781,7 @@ public static class Program
             return 1;
         }
 
-        GameReplay.Replay(GameRecordSerializer.Deserialize(GameRecordSerializer.Serialize(GameReplay.Record(aiGame.Map, aiFirst))), creatures: Catalog);
+        GameReplay.Replay(GameRecordSerializer.Deserialize(GameRecordSerializer.Serialize(GameReplay.Record(aiGame.Map, aiFirst))), Content);
 
         var army = ParseArmy($"{BuiltInCreatures.Pikeman}:20,{BuiltInCreatures.Archer}:10");
         var defender = ParseArmy($"{BuiltInCreatures.HellHound}:10");
@@ -800,7 +802,7 @@ public static class Program
     private static (MapDocument Map, GameSession Session) PlayDemo(int days, ulong seed)
     {
         var map = MapConverter.ToDocument(DemoScenario.Create());
-        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: seed), creatures: Catalog));
+        var session = new GameSession(MapConverter.ToGameState(map, Content, new GameOptions(Seed: seed)));
         var state = session.State;
         session.Start();
         for (var turn = 0; turn < days * state.Players.Count; turn++)

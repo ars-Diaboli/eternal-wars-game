@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
@@ -15,7 +16,8 @@ namespace EternalWars.Core.Domain.Battles;
 /// experience, the loser's artifacts, a beaten hero leaving the map and what a won or lost battle does to a guard (<see cref="IBattleGuard"/>).
 /// </summary>
 internal sealed class BattleAftermath(
-    GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts, Economy.EconomyService economy)
+    GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts, Economy.EconomyService economy,
+    TownVisitService towns, PandorasBoxService boxes)
 {
     /// <summary>Experience for defeating (not merely routing) an enemy hero.</summary>
     public const int HeroDefeatExperience = 500;
@@ -135,7 +137,7 @@ internal sealed class BattleAftermath(
         progression.OfferNext();
     }
 
-    private BattleGuardOutcome Outcome(BattleState battle, BattleSide side) => new(state, events, economy, progression, artifacts, battle, side);
+    private BattleGuardOutcome Outcome(BattleState battle, BattleSide side) => new(state, events, economy, progression, artifacts, towns, boxes, battle, side);
 
     /// <summary>What a finished battle is worth to the winner: the health of the creatures it killed, and a defeated hero.</summary>
     public static int Experience(BattleState battle)
@@ -294,7 +296,7 @@ internal sealed class BattleAftermath(
     {
         town.GarrisonHero = null;
         RemoveHero(inside, BattleEndReason.Defeated);
-        TownService.Capture(state, events, town, winner.Owner);
+        towns.Capture(town, winner.Owner);
     }
 
     /// <summary>

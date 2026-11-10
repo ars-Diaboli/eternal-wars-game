@@ -2,7 +2,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Towns;
 
@@ -104,52 +103,4 @@ public static class UniqueBuildings
     public static bool CanTake(GameState state, Town town, UniqueBuilding building, Hero hero) =>
         town.Owner == hero.Owner && town.Level(building.Id) > 0 && town.Visits.CanCollect(building.Scope, hero.Id, state.Date);
 
-    /// <summary>An own hero in the town takes the bonuses of its built unique buildings that it may take today.</summary>
-    internal static void Visit(GameState state, IEventPublisher events, Hero hero, Town town)
-    {
-        foreach (var building in Built(town).Where(b => CanTake(state, town, b, hero)).ToList())
-        {
-            town.Visits.Record(hero.Id, state.Date);
-            events.Publish(new UniqueBuildingVisited(hero.Id, town.Id, building.Id));
-            Give(state, events, hero, building.Bonus);
-        }
-    }
-
-    private static void Give(GameState state, IEventPublisher events, Hero hero, UniqueBonus bonus)
-    {
-        var progression = new ProgressionService(state, events);
-        switch (bonus)
-        {
-            case UniqueBonus.Stables:
-                // The same status as the map's Stables, so the two do not add up (ADR-126: without the free Lancer upgrade).
-                progression.GrantStatus(hero, new HeroStatus(BuiltInMapObjects.Stables, HeroStatusKind.Movement, BuffRules.StablesMovement, StatusExpiry.EndOfWeek));
-                hero.MovementPoints += BuffRules.StablesMovement;
-                events.Publish(new HeroMovementGained(hero.Id, BuffRules.StablesMovement, hero.MovementPoints));
-                break;
-            case UniqueBonus.Attack:
-                progression.RaiseStat(hero, PrimaryStat.Attack, 1);
-                break;
-            case UniqueBonus.Defense:
-                progression.RaiseStat(hero, PrimaryStat.Defense, 1);
-                break;
-            case UniqueBonus.Knowledge:
-                progression.RaiseStat(hero, PrimaryStat.Knowledge, 1);
-                break;
-            case UniqueBonus.SpellPower:
-                progression.RaiseStat(hero, PrimaryStat.SpellPower, 1);
-                break;
-            case UniqueBonus.Experience:
-                progression.GrantExperience(hero, ExperienceBonus);
-                break;
-            case UniqueBonus.ManaSpring:
-                var before = hero.Mana;
-                hero.Mana = before + (hero.MaxMana * ManaSpringPercent / 100);
-                if (hero.Mana > before)
-                {
-                    events.Publish(new HeroManaRestored(hero.Id, hero.Mana, hero.MaxMana));
-                }
-
-                break;
-        }
-    }
 }

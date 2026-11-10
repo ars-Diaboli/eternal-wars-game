@@ -21,7 +21,8 @@ namespace EternalWars.Core.Domain.MapEvents;
 /// is (the session calls it after every command). A disabled event is skipped when its turn comes.
 /// </summary>
 public sealed class MapEventService(
-    GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles)
+    GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles,
+    TownVisitService towns)
     : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>, Turns.ITurnPhaseParticipant
 {
     /// <summary>The most morale or luck an event gives or takes (HoMM3's ±3).</summary>
@@ -744,7 +745,7 @@ public sealed class MapEventService(
             if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
                 || UniqueBuildings.Get(building) is not null)
             {
-                Magic.MagicRules.VisitBy(state, events, town);
+                towns.VisitBy(town);
             }
         }
     }

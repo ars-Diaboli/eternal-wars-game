@@ -23,10 +23,11 @@ public static class TemplateValidator
     /// <summary>At least this many tiles per unit of zone weight per level on the smallest allowed size, before a warning.</summary>
     private const int MinTilesPerZone = 200;
 
-    public static IReadOnlyList<TemplateIssue> Validate(MapTemplate template, TerrainCatalog? terrains = null)
+    /// <summary>The template's errors and warnings; terrains and start buildings are checked against <paramref name="content"/> (the built-in tables when left out).</summary>
+    public static IReadOnlyList<TemplateIssue> Validate(MapTemplate template, ContentCatalogs? content = null)
     {
         ArgumentNullException.ThrowIfNull(template);
-        terrains ??= TerrainCatalog.Default;
+        content ??= ContentCatalogs.Default;
         var issues = new List<TemplateIssue>();
         void Error(string message) => issues.Add(new(IssueSeverity.Error, message));
         void Warn(string message) => issues.Add(new(IssueSeverity.Warning, message));
@@ -51,7 +52,7 @@ public static class TemplateValidator
                 Error($"Zone id '{zone.Id}' is used twice.");
             }
 
-            ValidateZone(template, zone, terrains, Error, Warn);
+            ValidateZone(template, zone, content, Error, Warn);
         }
 
         if (template.Zones.Count == 0)
@@ -79,8 +80,8 @@ public static class TemplateValidator
         return issues;
     }
 
-    public static bool IsValid(MapTemplate template, TerrainCatalog? terrains = null) =>
-        Validate(template, terrains).All(i => i.Severity != IssueSeverity.Error);
+    public static bool IsValid(MapTemplate template, ContentCatalogs? content = null) =>
+        Validate(template, content).All(i => i.Severity != IssueSeverity.Error);
 
     private static void Players(MapTemplate template, Action<string> error)
     {
@@ -136,8 +137,9 @@ public static class TemplateValidator
         }
     }
 
-    private static void ValidateZone(MapTemplate template, TemplateZone zone, TerrainCatalog terrains, Action<string> error, Action<string> warn)
+    private static void ValidateZone(MapTemplate template, TemplateZone zone, ContentCatalogs content, Action<string> error, Action<string> warn)
     {
+        var terrains = content.Terrains;
         var name = $"Zone '{zone.Id}'";
         var isStart = zone.Type is ZoneType.PlayerStart or ZoneType.AiStart;
         if (zone.Size < 1)
@@ -219,7 +221,7 @@ public static class TemplateValidator
             }
         }
 
-        StartBuildings(zone, name, isStart, error);
+        StartBuildings(zone, name, isStart, content.Buildings, error);
 
         if (zone.Type == ZoneType.Junction && (zone.PlayerTowns.Max > 0 || zone.Treasure.Count > 0))
         {
@@ -228,14 +230,13 @@ public static class TemplateValidator
     }
 
     /// <summary>Start-zone buildings: known non-dwelling buildings within their levels; dwellings by tier, as many as the 7-of-9 rule allows (ADR-030).</summary>
-    private static void StartBuildings(TemplateZone zone, string name, bool isStart, Action<string> error)
+    private static void StartBuildings(TemplateZone zone, string name, bool isStart, BuildingCatalog buildings, Action<string> error)
     {
         if (!isStart && (zone.StartBuildings is { Count: > 0 } || zone.StartDwellings is { Count: > 0 }))
         {
             error($"{name} is not a start zone, so it has no start buildings.");
         }
 
-        var buildings = BuildingCatalog.Default;
         foreach (var (building, level) in zone.StartBuildings ?? new Dictionary<string, int>())
         {
             if (building.StartsWith("dwelling-", StringComparison.Ordinal))

@@ -5,6 +5,8 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Battles;
@@ -14,8 +16,8 @@ namespace EternalWars.Core.Domain.Battles;
 /// map with (publishing after mutating).
 /// </summary>
 internal sealed class BattleGuardOutcome(
-    GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleState battle,
-    BattleSide side)
+    GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, TownVisitService towns,
+    PandorasBoxService boxes, BattleState battle, BattleSide side)
 {
     public GameState State => state;
 
@@ -26,6 +28,12 @@ internal sealed class BattleGuardOutcome(
     public ProgressionService Progression => progression;
 
     public ArtifactService Artifacts => artifacts;
+
+    /// <summary>Captures a beaten town.</summary>
+    public TownVisitService Towns => towns;
+
+    /// <summary>Opens a won Pandora's Box.</summary>
+    public PandorasBoxService Boxes => boxes;
 
     /// <summary>The guard's creatures that lived through the battle (its summoned ones do not count).</summary>
     public int Survivors => battle.OwnedArmyOf(side).Where(u => !u.IsSummoned).Sum(u => u.KeptCount);

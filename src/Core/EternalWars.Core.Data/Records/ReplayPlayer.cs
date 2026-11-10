@@ -1,11 +1,8 @@
 using EternalWars.Core.Data.Maps;
-using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -62,19 +59,13 @@ public sealed class ReplayPlayer
 
     /// <summary>
     /// Checks the record by replaying it to its end and indexes its turns. Throws <see cref="InvalidOperationException"/> when a command is
-    /// refused or the final digest differs (other content, or another version of the rules).
+    /// refused or the final digest differs (other content, or another version of the rules). <paramref name="content"/> is the game's content
+    /// tables (the built-in tables when left out).
     /// </summary>
-    public static ReplayPlayer Open(
-        GameRecordDocument record,
-        MapObjectCatalog? catalog = null,
-        CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null,
-        TerrainCatalog? terrains = null,
-        ArtifactCatalog? artifacts = null)
+    public static ReplayPlayer Open(GameRecordDocument record, ContentCatalogs? content = null)
     {
         GameSession Create() =>
-            new(MapConverter.ToGameState(record.Map, catalog, record.Options, terrains, creatures, heroRoster, buildings, artifacts));
+            new(MapConverter.ToGameState(record.Map, content, record.Options));
 
         var session = Create();
         var turns = new List<ReplayTurn>();
