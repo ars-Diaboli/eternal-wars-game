@@ -18,6 +18,33 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
       IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<AreaRevealed>, IEventHandler<HeroFreed>, IEventHandler<MapEventHeroGiven>,
       IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>, IEventHandler<TownBuilt>
 {
+    /// <summary>
+    /// Subscribes to every event that changes what a player sees. The session calls it before any other rule subscribes, so the fog is up to date
+    /// (and its follow-up events queued) before other handlers and the views react.
+    /// </summary>
+    internal void SubscribeTo(IEventSubscriber bus)
+    {
+        bus.Subscribe<GameStarted>(this);
+        bus.Subscribe<HeroMoved>(this);
+        bus.Subscribe<HeroTeleported>(this);
+        bus.Subscribe<MineOwnerChanged>(this);
+        bus.Subscribe<TownOwnerChanged>(this);
+        bus.Subscribe<DwellingOwnerChanged>(this);
+        bus.Subscribe<ProviderOwnerChanged>(this);
+        bus.Subscribe<MapObjectRemoved>(this);
+        bus.Subscribe<HeroDefeated>(this);
+        bus.Subscribe<HeroHired>(this);
+        bus.Subscribe<HeroLeftGarrison>(this);
+        bus.Subscribe<MapObjectChanged>(this);
+        bus.Subscribe<MapObjectPlaced>(this);
+        bus.Subscribe<SurroundingsRevealed>(this);
+        bus.Subscribe<AreaRevealed>(this);
+        bus.Subscribe<HeroFreed>(this);
+        bus.Subscribe<MapEventHeroGiven>(this);
+        bus.Subscribe<HeroLeveledUp>(this);
+        bus.Subscribe<TownBuilt>(this);
+    }
+
     public void Handle(GameStarted @event)
     {
         foreach (var hero in state.Heroes)

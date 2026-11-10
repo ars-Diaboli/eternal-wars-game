@@ -10,6 +10,7 @@ namespace EternalWars.Core.Domain.Heroes;
 
 public sealed class HeroMovementService(
     GameState state, IEventPublisher events, MapObjectInteractionService interactions, MapEvents.MapEventService mapEvents)
+    : Turns.ITurnPhaseParticipant
 {
     /// <summary>Diagonal steps cost ~√2 times more, as in HoMM.</summary>
     public const double DiagonalMultiplier = 1.41;
@@ -219,6 +220,8 @@ public sealed class HeroMovementService(
 
         return MoveResult.Moved;
     }
+
+    void Turns.ITurnPhaseParticipant.PrepareTurn(PlayerId player) => RestoreMovement(player);
 
     internal void RestoreMovement(PlayerId owner)
     {

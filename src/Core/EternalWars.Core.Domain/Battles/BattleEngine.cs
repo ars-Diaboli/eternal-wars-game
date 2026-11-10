@@ -21,16 +21,33 @@ namespace EternalWars.Core.Domain.Battles;
 /// when a round starts, and a side whose creatures are all gone has lost even if machines still stand.
 /// In a siege (ADR-106) the attacker's offensive machine fires at the fortifications, the keep and towers shoot when a round starts, and an
 /// attacker entering the moat takes its damage.
+/// The turn order lives in <see cref="BattleRounds"/>, spells in <see cref="BattleSpellResolver"/>, damage and healing in <see cref="BattleWounds"/>;
+/// one engine (one action, or a test's battle) shares one of each.
 /// </remarks>
-internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
+internal sealed class BattleEngine
 {
     /// <summary>Safety net: a battle still undecided after this many rounds is won by the defender.</summary>
     public const int MaxRounds = 100;
 
+    private readonly BattleState battle;
+    private readonly IEventPublisher events;
+    private readonly BattleWounds wounds;
+    private readonly BattleSpellResolver spells;
+    private readonly BattleRounds rounds;
+
+    public BattleEngine(BattleState battle, IEventPublisher events)
+    {
+        this.battle = battle;
+        this.events = events;
+        wounds = new BattleWounds(battle, events);
+        spells = new BattleSpellResolver(battle, events, wounds);
+        rounds = new BattleRounds(battle, events, wounds, spells);
+    }
+
     public void StartFighting()
     {
         battle.Phase = BattlePhase.Fighting;
-        NextTurn();
+        rounds.NextTurn();
     }
 
     public string? Move(CellPosition to)
@@ -42,7 +59,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         MoveUnit(unit, to);
-        EndTurn();
+        rounds.EndTurn();
         return null;
     }
 
@@ -94,7 +111,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             Strike(unit, target, BattleAttackKind.Melee);
         }
 
-        EndTurn();
+        rounds.EndTurn();
         return null;
     }
 
@@ -119,7 +136,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             Fire(unit, target, penalty);
         }
 
-        EndTurn();
+        rounds.EndTurn();
         return null;
     }
 
@@ -141,7 +158,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             FireAt(unit, next, ballistics);
         }
 
-        EndTurn();
+        rounds.EndTurn();
         return null;
     }
 
@@ -185,19 +202,22 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
 
         if (unit.IsAlive)
         {
-            var roll = unit.SpellModifiers.Roll != 0 ? DamageCalculator.Roll(unit, 0) : battle.Random.NextInclusive(unit.Creature.MinDamage, unit.Creature.MaxDamage);
-            var damage = Math.Min(structure.Health, SiegeRules.GateDamage(battle, unit, roll));
+            var damage = Math.Min(structure.Health, SiegeRules.GateDamage(battle, unit, RollDamage(unit)));
             structure.Health -= damage;
             events.Publish(new SiegeStructureDamaged(structure.Id, unit.Id, null, damage, structure.Health));
         }
 
-        if (!CheckFinished())
+        if (!rounds.CheckFinished())
         {
-            EndTurn();
+            rounds.EndTurn();
         }
 
         return null;
     }
+
+    /// <summary>The stack's damage roll for a blow; Bless and Curse fix it (ADR-110), and nothing is drawn then.</summary>
+    private int RollDamage(BattleUnit unit) =>
+        unit.SpellModifiers.Roll != 0 ? DamageCalculator.Roll(unit, 0) : battle.Random.NextInclusive(unit.Creature.MinDamage, unit.Creature.MaxDamage);
 
     /// <summary>Placements from which the unit can hit the structure this turn, closest first (then top-to-bottom, left-to-right).</summary>
     internal IReadOnlyList<CellPosition> StructureAttackPositions(BattleUnit unit, SiegeStructure structure) => BattleGrid.StructureAttackPositions(battle, unit, structure);
@@ -215,66 +235,6 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             unit.InKeep = false;
             events.Publish(new BattleUnitLeftKeep(unit.Id));
         }
-    }
-
-    /// <summary>Earthquake (ADR-120): <paramref name="sections"/> standing wall sections, drawn at random, take 1 damage each.</summary>
-    private void Quake(string spell, int sections)
-    {
-        if (battle.Siege is not { } siege)
-        {
-            return;
-        }
-
-        var walls = siege.Structures.Where(s => s.IsStanding && s.Kind == SiegeStructureKind.Wall).OrderBy(s => s.Id).ToList();
-        for (var i = 0; i < sections && walls.Count > 0; i++)
-        {
-            var wall = walls[battle.Random.Next(walls.Count)];
-            walls.Remove(wall);
-            wall.Health -= 1;
-            events.Publish(new SiegeStructureDamaged(wall.Id, null, spell, 1, wall.Health));
-        }
-    }
-
-    /// <summary>The keep and the towers each shoot once a round, as it starts, at the attacking stack worth most to hit (ADR-106; timing assumed).</summary>
-    private void TowersFire()
-    {
-        if (battle.Siege is not { } siege)
-        {
-            return;
-        }
-
-        foreach (var tower in siege.Structures.Where(s => s.IsStanding && s.Shoots))
-        {
-            var damage = siege.ShotDamage(tower);
-            var target = battle.LivingArmyOf(BattleSide.Attacker)
-                .Where(u => !u.Has(Magic.SpellStatus.Stasis | Magic.SpellStatus.Unseen))
-                .OrderByDescending(u => (long)Math.Min(damage, u.TotalHealth) * u.Creature.Value / u.Creature.Health)
-                .ThenBy(u => u.Id)
-                .FirstOrDefault();
-            if (target is null)
-            {
-                return;
-            }
-
-            var killed = Take(target, damage);
-            events.Publish(new BattleUnitSiegeDamaged(target.Id, SiegeDamageSource.Tower, tower.Id, damage, killed, target.Count, target.TopHealth));
-            Hit(target);
-            Bury(target);
-        }
-    }
-
-    /// <summary>An attacker entering the moat stops there (<see cref="BattleGrid.Reachable"/>) and takes its damage (ADR-106).</summary>
-    private void EnterMoat(BattleUnit unit, CellPosition from)
-    {
-        if (!SiegeRules.FearsMoat(battle, unit.Side) || battle.Siege!.InMoat(unit.RectAt(from)) || !battle.Siege.InMoat(unit.Rect))
-        {
-            return;
-        }
-
-        var damage = battle.Siege.MoatDamage;
-        var killed = Take(unit, damage);
-        events.Publish(new BattleUnitSiegeDamaged(unit.Id, SiegeDamageSource.Moat, null, damage, killed, unit.Count, unit.TopHealth));
-        Bury(unit);
     }
 
     private void Fire(BattleUnit shooter, BattleUnit target, int penalty)
@@ -321,7 +281,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         battle.MutableWaiting.Add(unit.Id);
         events.Publish(new BattleUnitWaited(unit.Id));
         battle.ActiveUnit = null;
-        NextTurn();
+        rounds.NextTurn();
         return null;
     }
 
@@ -330,15 +290,15 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var unit = battle.ActiveUnit!;
         unit.IsDefending = true;
         events.Publish(new BattleUnitDefended(unit.Id));
-        EndTurn(moraleMayAct: false); // defending is not an action good morale repeats
+        rounds.EndTurn(moraleMayAct: false); // defending is not an action good morale repeats
         return null;
     }
 
     /// <summary>The side's hero leaves the field; the other side wins.</summary>
-    public void Retreat(BattleSide side) => Finish(side.Opponent(), BattleEndReason.Retreated);
+    public void Retreat(BattleSide side) => rounds.Finish(side.Opponent(), BattleEndReason.Retreated);
 
     /// <summary>The side's hero leaves the field with its army, paid for by <c>BattleService.Surrender</c>; the other side wins.</summary>
-    public void Surrender(BattleSide side) => Finish(side.Opponent(), BattleEndReason.Surrendered);
+    public void Surrender(BattleSide side) => rounds.Finish(side.Opponent(), BattleEndReason.Surrendered);
 
     private void MoveUnit(BattleUnit unit, CellPosition to)
     {
@@ -346,58 +306,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         var hits = battle.Zones.Count > 0 ? BattleZones.MoveDamage(battle, unit, BattleGrid.Path(battle, unit, to)) : [];
         unit.Position = to;
         events.Publish(new BattleUnitMoved(unit.Id, from, to));
-        Landed(unit, from, hits);
-    }
-
-    /// <summary>What the stack's move from <paramref name="from"/> costs it: the moat, then the field zones' damage on the way (<paramref name="hits"/>).</summary>
-    private void Landed(BattleUnit unit, CellPosition from, IReadOnlyList<(BattleZone Zone, int Damage)> hits)
-    {
-        EnterMoat(unit, from);
-
-        // Field zones on the way (ADR-149): Fire Wall burns a stack walking in, Thornwall tears one walking out.
-        foreach (var (zone, damage) in hits)
-        {
-            if (unit.IsAlive)
-            {
-                SpellDamage(unit, zone.Spell, damage);
-            }
-        }
-    }
-
-    /// <summary>A zone spell (ADR-149) covers its cells, clipped to the field, from now to the last round it lasts.</summary>
-    private void MakeZone(BattleSide side, KnownSpell known, CellPosition cell, int? creaturePower)
-    {
-        var zone = new BattleZone(
-            ++battle.ZonesMade, known, side, BattleZones.Cells(battle, known.Effect!, cell), BattleZones.UntilRound(battle, side, known, creaturePower),
-            BattleZones.Scaled(battle, side, known, creaturePower));
-        battle.MutableZones.Add(zone);
-        events.Publish(new BattleZoneCreated(zone.Id, zone.Spell, side, zone.Rect, zone.UntilRound));
-    }
-
-    /// <summary>
-    /// Field zones as a round starts (ADR-149), zone by zone in id order, stacks in id order: damage to the stacks in it (<c>start</c>) and next
-    /// to it (<c>beside</c>) that it hurts, healing for own stacks in it.
-    /// </summary>
-    private void TickZones()
-    {
-        foreach (var zone in battle.Zones.ToList())
-        {
-            foreach (var unit in battle.LivingUnits.OrderBy(u => u.Id).ToList())
-            {
-                var inside = zone.Rect.Intersects(unit.Rect);
-                var amount = inside ? zone.Amounts.Start : unit.Rect.IsAdjacentTo(zone.Rect) ? zone.Amounts.Beside : 0;
-                if (amount > 0 && BattleZones.Hurts(battle, zone, unit))
-                {
-                    SpellDamage(unit, zone.Spell, BattleZones.Damage(battle, zone, unit, amount));
-                }
-
-                if (BattleZones.Healing(zone, unit) is var healed and > 0)
-                {
-                    unit.TopHealth += healed;
-                    events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
-                }
-            }
-        }
+        wounds.Landed(unit, from, hits);
     }
 
     /// <summary>Night Terrors and Stasis stop retaliation; Vigil makes it unlimited (ADR-123).</summary>
@@ -411,10 +320,7 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     /// <summary>One hit plus, for a melee strike, the attacker's area ability with the same roll.</summary>
     private void Strike(BattleUnit attacker, BattleUnit target, BattleAttackKind kind, int penalty = 0)
     {
-        // Bless and Curse fix the roll (ADR-110); nothing is drawn then.
-        var roll = attacker.SpellModifiers.Roll != 0
-            ? DamageCalculator.Roll(attacker, 0)
-            : battle.Random.NextInclusive(attacker.Creature.MinDamage, attacker.Creature.MaxDamage);
+        var roll = RollDamage(attacker);
         var secondary = kind == BattleAttackKind.Melee ? AreaTargets(attacker, target).Where(u => BattleGrid.CanBeAttacked(attacker, u, melee: true)).ToList() : [];
         var hit = new HitModifiers(roll, kind is BattleAttackKind.Ranged or BattleAttackKind.RangedRetaliation, penalty);
 
@@ -498,465 +404,37 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     }
 
     /// <summary>
-    /// The side's hero casts a spell (ADR-110): it pays the mana, then the spell works on every stack in its reach it affects, by id; a stack it
-    /// does not affect is reported as resisting. The active unit keeps its action, unless the spell killed it.
+    /// The side's hero casts a spell (ADR-110, <see cref="BattleSpellResolver.Cast"/>). The active unit keeps its action, unless the spell killed it.
     /// </summary>
     public string? Cast(BattleSide side, string spellId, int? targetId, CellPosition? cell, int? second = null)
     {
-        if (BattleMagic.CastRefusal(battle, side, spellId, targetId, cell, second) is { } refusal)
+        if (spells.Cast(side, spellId, targetId, cell, second) is { } refusal)
         {
             return refusal;
         }
 
-        var known = battle.Participant(side).Caster!.Find(spellId)!;
-        var cost = BattleMagic.Cost(battle, side, known);
-        battle.ManaLeft[side] -= cost;
-        battle.CastRounds[side] = battle.Round;
-        var seconds = known.Effect!.SecondIsStack ? second : null;
-        events.Publish(new BattleSpellCast(side, spellId, targetId, cell, cost, battle.ManaOf(side), seconds));
-        Work(side, known, targetId, cell, null, seconds);
-
-        if (!CheckFinished() && battle.ActiveUnit is { IsAlive: false })
+        if (!rounds.CheckFinished() && battle.ActiveUnit is { IsAlive: false })
         {
-            EndTurn(moraleMayAct: false);
+            rounds.EndTurn(moraleMayAct: false);
         }
 
         return null;
     }
 
-    /// <summary>
-    /// The active creature caster casts its spell (ADR-120): its action for the turn, no mana, with its own Spell Power
-    /// (<see cref="BattleMagic.CreatureSpellPower"/>); one of its casts is used up.
-    /// </summary>
+    /// <summary>The active creature caster casts its spell (ADR-120, <see cref="BattleSpellResolver.CreatureCast"/>): its action for the turn.</summary>
     public string? CreatureCast(int? targetId, CellPosition? cell)
     {
-        var unit = battle.ActiveUnit!;
-        if (BattleMagic.CreatureCastRefusal(battle, unit, targetId, cell) is { } refusal)
+        if (spells.CreatureCast(targetId, cell) is { } refusal)
         {
             return refusal;
         }
 
-        var known = BattleMagic.CreatureSpell(battle, unit)!;
-        unit.MutableCastsLeft[known.Spell.Id]--;
-        events.Publish(new BattleCreatureCast(unit.Id, known.Spell.Id, targetId, cell, unit.CastsLeft[known.Spell.Id]));
-        Work(unit.Side, known, targetId, cell, BattleMagic.CreatureSpellPower(unit));
-        if (!CheckFinished())
+        if (!rounds.CheckFinished())
         {
-            EndTurn();
+            rounds.EndTurn();
         }
 
         return null;
-    }
-
-    /// <summary>What a cast does, the hero's or a creature's: the spell works on every stack in its reach it affects, by id (a stack it does not affect is reported as resisting); a summon calls its creatures; Earthquake shakes the walls.</summary>
-    private void Work(BattleSide side, KnownSpell known, int? targetId, CellPosition? cell, int? creaturePower, int? second = null)
-    {
-        var effect = known.Effect!;
-        var spellId = known.Spell.Id;
-        if (effect.Kind == Magic.SpellEffectKind.Summon)
-        {
-            Summon(side, known, creaturePower);
-            return;
-        }
-
-        if (effect.Kind == Magic.SpellEffectKind.Copy)
-        {
-            Mirror(side, battle.GetUnit(targetId!.Value), known, creaturePower);
-            return;
-        }
-
-        if (effect.Kind == Magic.SpellEffectKind.Raise)
-        {
-            battle.Raising[side] = new RaiseDead(spellId, effect.Amount, effect.Rises);
-            Rise(side);
-            return;
-        }
-
-        if (effect.Kind == Magic.SpellEffectKind.Move)
-        {
-            Teleport(battle.GetUnit(targetId!.Value), cell!.Value, known);
-            return;
-        }
-
-        if (effect.Kind == Magic.SpellEffectKind.Zone)
-        {
-            MakeZone(side, known, cell!.Value, creaturePower);
-            return;
-        }
-
-        var reach = BattleMagic.Reach(battle, side, known, targetId, cell);
-        foreach (var unit in reach.Where(u => !BattleMagic.Affects(battle, side, known, u)))
-        {
-            events.Publish(new BattleSpellResisted(unit.Id, spellId));
-        }
-
-        if (effect.Kind == Magic.SpellEffectKind.Damage)
-        {
-            // Splash and chain hits come after the stacks in reach (ADR-123); every damage is worked out before it is dealt.
-            long dealt = 0;
-            foreach (var (unit, damage) in BattleMagic.DamagePlan(battle, side, known, targetId, cell, creaturePower))
-            {
-                dealt += Math.Min(damage, unit.TotalHealth);
-                SpellDamage(unit, spellId, damage);
-                if (!unit.IsAlive)
-                {
-                    continue;
-                }
-
-                if (!effect.Modifiers.IsEmpty)
-                {
-                    Enchant(unit, side, known, creaturePower);
-                }
-
-                if (effect.StunPercent > 0 && battle.Random.Next(100) < effect.StunPercent)
-                {
-                    unit.LosesNextAction = true;
-                    events.Publish(new BattleUnitStunned(unit.Id, spellId));
-                }
-            }
-
-            if (effect.DrainPercent > 0 && second is { } healed && battle.GetUnit(healed) is { IsAlive: true } drinker)
-            {
-                Drain(drinker, known, BattleMagic.Drained(effect, dealt));
-            }
-        }
-        else
-        {
-            foreach (var unit in reach.Where(u => BattleMagic.Affects(battle, side, known, u)))
-            {
-                switch (effect.Kind)
-                {
-                    case Magic.SpellEffectKind.Heal:
-                        var healed = Math.Min(BattleMagic.Amount(battle, side, known, creaturePower), unit.Creature.Health - unit.TopHealth);
-                        if (healed > 0)
-                        {
-                            unit.TopHealth += healed;
-                            events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
-                        }
-
-                        break;
-                    case Magic.SpellEffectKind.Revive:
-                        Revive(unit, spellId, BattleMagic.Amount(battle, side, known, creaturePower), effect.Lasting);
-                        break;
-                    case Magic.SpellEffectKind.Dispel:
-                        var sided = unit.Side;
-                        foreach (var removed in BattleMagic.Dispelled(side, effect, unit))
-                        {
-                            unit.MutableSpells.Remove(removed);
-                            events.Publish(new BattleSpellDispelled(unit.Id, removed.Spell, spellId));
-                        }
-
-                        SideChanged(unit, sided);
-                        break;
-                    case Magic.SpellEffectKind.Slay:
-                        var slain = Math.Min(unit.Count, BattleMagic.Slain(effect, unit));
-                        SpellDamage(unit, spellId, unit.TotalHealth - ((unit.Count - slain) * unit.Creature.Health), shieldable: false); // the wounded top creature goes first
-                        break;
-                    case Magic.SpellEffectKind.Sacrifice:
-                        var (health, mana) = BattleMagic.SacrificeYield(effect, unit);
-                        SpellDamage(unit, spellId, health, shieldable: false);
-                        if (mana > 0)
-                        {
-                            battle.ManaLeft[side] = battle.ManaOf(side) + mana;
-                            events.Publish(new BattleManaGained(side, spellId, mana, battle.ManaOf(side)));
-                        }
-
-                        break;
-                    default:
-                        Enchant(unit, side, known, creaturePower, second);
-                        break;
-                }
-            }
-        }
-
-        if (effect.Walls > 0)
-        {
-            Quake(spellId, effect.Walls);
-        }
-
-        WakeHit();
-    }
-
-    /// <summary>
-    /// A move spell (ADR-151): the stack lands on the placement, over everything between. A field zone it leaves or lands in, and the moat, hurt it
-    /// as they would a flyer's. With rank III's <c>again</c> a stack that had already taken its turn this round gets one more, after the waiting
-    /// stacks (it may not wait then); <c>again-attack</c> makes it a turn without moving.
-    /// </summary>
-    private void Teleport(BattleUnit unit, CellPosition to, KnownSpell known)
-    {
-        var from = unit.Position;
-        var hits = battle.Zones.Count > 0 ? BattleZones.MoveDamage(battle, unit, [from, to]) : [];
-        unit.Position = to;
-        events.Publish(new BattleUnitTeleported(unit.Id, from, to, known.Spell.Id));
-        Landed(unit, from, hits);
-
-        var again = known.Effect!.Again;
-        if (again == Magic.SpellTurnAgain.None || !unit.IsAlive || unit == battle.ActiveUnit
-            || battle.Queue.Contains(unit.Id) || battle.Waiting.Contains(unit.Id))
-        {
-            return;
-        }
-
-        battle.MutableWaiting.Add(unit.Id);
-        battle.WaitedThisRound.Add(unit.Id);
-        unit.StaysPut = again == Magic.SpellTurnAgain.Attack;
-        events.Publish(new BattleUnitTurnRegained(unit.Id, known.Spell.Id, unit.StaysPut));
-    }
-
-    /// <summary>A drain (ADR-151) gives the own stack its share of the damage: its top creature's wounds, and with <c>drain-revive</c> its dead, for good.</summary>
-    private void Drain(BattleUnit unit, KnownSpell known, int health)
-    {
-        var effect = known.Effect!;
-        if (effect.DrainRevives)
-        {
-            Revive(unit, known.Spell.Id, health, lasting: true);
-            return;
-        }
-
-        var healed = (int)BattleMagic.DrainHeals(effect, unit, health);
-        if (healed > 0)
-        {
-            unit.TopHealth += healed;
-            events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
-        }
-    }
-
-    /// <summary>A spell's damage to a stack (a cast, a burning spell, thorns): wounded, reported, buried; a blind stack hit wakes (ADR-123).</summary>
-    private void SpellDamage(BattleUnit unit, string spell, int damage, bool shieldable = true)
-    {
-        var killed = Take(unit, damage, shieldable);
-        events.Publish(new BattleUnitSpellDamaged(unit.Id, spell, damage, killed, unit.Count, unit.TopHealth));
-        Hit(unit);
-        Bury(unit);
-    }
-
-    /// <summary>
-    /// Health back to the stack (ADR-123): its top creature first, then its dead up to its count when the battle started. Creatures revived
-    /// without <paramref name="lasting"/> are lost again when the battle ends. A stack destroyed earlier stands again and acts from the next round.
-    /// </summary>
-    private void Revive(BattleUnit unit, string spell, int health, bool lasting)
-    {
-        var total = (long)Math.Min(BattleMagic.Missing(unit), health);
-        if (total <= 0)
-        {
-            return;
-        }
-
-        var before = unit.Count;
-        var now = unit.TotalHealth + total;
-        var creature = unit.Creature.Health;
-        unit.Count = (int)((now + creature - 1) / creature);
-        unit.TopHealth = (int)(now - ((long)(unit.Count - 1) * creature));
-        if (!lasting)
-        {
-            unit.Revived += unit.Count - before;
-        }
-
-        events.Publish(new BattleUnitRevived(unit.Id, spell, (int)total, unit.Count, unit.TopHealth));
-    }
-
-    /// <summary>Stacks hit while blind this action; they wake once the blow or the spell is over, so a blind stack still retaliates at half.</summary>
-    private readonly HashSet<BattleUnit> _hitWhileBlind = [];
-
-    private void Hit(BattleUnit unit)
-    {
-        if (unit.Has(Magic.SpellStatus.Blind))
-        {
-            _hitWhileBlind.Add(unit);
-        }
-    }
-
-    /// <summary>Blind ends on the stacks hit (ADR-123).</summary>
-    private void WakeHit()
-    {
-        foreach (var unit in _hitWhileBlind.OrderBy(u => u.Id))
-        {
-            foreach (var spell in unit.Spells.Where(s => s.Modifiers.Has(Magic.SpellStatus.Blind)).ToList())
-            {
-                unit.MutableSpells.Remove(spell);
-                events.Publish(new BattleSpellExpired(unit.Id, spell.Spell));
-            }
-        }
-
-        _hitWhileBlind.Clear();
-    }
-
-    /// <summary>
-    /// A summon (ADR-106, ADR-120): its creatures join an own summoned stack of theirs or stand on the free placement nearest the own edge; they act
-    /// from the next round, vanish when the battle ends and are worth no experience.
-    /// </summary>
-    private void Summon(BattleSide side, KnownSpell known, int? creaturePower)
-    {
-        if (BattleMagic.SummonPlacement(battle, side, known, creaturePower) is not { } placement)
-        {
-            return;
-        }
-
-        var (creature, count, joins, at) = placement;
-        var unit = joins;
-        if (unit is not null)
-        {
-            unit.Count += count;
-        }
-        else
-        {
-            unit = new BattleUnit(battle.Units.Max(u => u.Id) + 1, side, creature, count, -1, at)
-            {
-                IsSummoned = true,
-                IsRooted = known.Effect!.Rooted,
-            };
-            battle.MutableUnits.Add(unit);
-        }
-
-        events.Publish(new BattleUnitSummoned(
-            new BattleUnitInfo(unit.Id, unit.Side, unit.Creature.Id, unit.Count, unit.Position, unit.Width, unit.Height), known.Spell.Id, count));
-    }
-
-    /// <summary>
-    /// A buff or curse takes hold on the stack, replacing the same spell's earlier effect; a <c>controlled</c> one (ADR-150) brings it over to the
-    /// caster's side.
-    /// </summary>
-    private void Enchant(BattleUnit unit, BattleSide side, KnownSpell known, int? creaturePower = null, int? martyr = null)
-    {
-        if (known.Effect!.Split && unit.TotalHealth > BattleMagic.HealthLimit(battle, side, known, creaturePower))
-        {
-            unit = SplitOff(unit, known, BattleMagic.SplitCount(battle, side, known, unit, creaturePower));
-        }
-
-        var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
-        var turns = BattleMagic.Turns(battle, side, known, unit, creaturePower);
-        var before = unit.Side;
-        var modifiers = known.Effect!.Modifiers;
-        if (modifiers.Burn != 0 || modifiers.Regen != 0)
-        {
-            // Burning and regrowth grow with Spell Power like damage, when cast (ADR-123).
-            modifiers = modifiers with
-            {
-                Burn = modifiers.Burn == 0 ? 0 : BattleMagic.Scaled(battle, side, known, modifiers.Burn, creaturePower),
-                Regen = modifiers.Regen == 0 ? 0 : BattleMagic.Scaled(battle, side, known, modifiers.Regen, creaturePower),
-            };
-        }
-
-        unit.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id && !s.IsMartyr);
-        unit.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, modifiers, until, turns) { Martyr = modifiers.MartyrPercent > 0 ? martyr : null });
-        events.Publish(new BattleSpellApplied(unit.Id, known.Spell.Id, until, turns));
-        SideChanged(unit, before);
-
-        // Martyrdom III (ADR-152): the martyr stands firmer while it guards.
-        if (modifiers.MartyrPercent > 0 && known.Effect.MartyrDefense > 0 && martyr is { } id && battle.FindUnit(id) is { IsAlive: true } guard)
-        {
-            guard.MutableSpells.RemoveAll(s => s.Spell == known.Spell.Id && s.IsMartyr);
-            guard.MutableSpells.Add(new ActiveSpell(known.Spell.Id, side, new Magic.SpellModifiers(Defense: known.Effect.MartyrDefense), until) { IsMartyr = true });
-            events.Publish(new BattleSpellApplied(guard.Id, known.Spell.Id, until));
-        }
-    }
-
-    /// <summary>
-    /// Puppet Master III (ADR-152): <paramref name="count"/> full-health creatures leave the stack as a stack of their own on the nearest free
-    /// placement, with its spells, shots and casts; they came from the same army slot and go back to it after the battle. They act from the next round.
-    /// </summary>
-    private BattleUnit SplitOff(BattleUnit unit, KnownSpell known, int count)
-    {
-        var at = BattleMagic.PlacementNear(battle, unit, unit.Creature)!.Value;
-        var part = new BattleUnit(battle.Units.Max(u => u.Id) + 1, unit.Owner, unit.Creature, count, unit.SourceSlot, at)
-        {
-            IsSummoned = unit.IsSummoned,
-            IsRaised = unit.IsRaised,
-            MutableCastsLeft = new Dictionary<string, int>(unit.CastsLeft, StringComparer.Ordinal),
-            ShotsLeft = unit.ShotsLeft,
-        };
-        part.MutableSpells.AddRange(unit.Spells);
-        unit.Count -= count;
-        unit.InitialCount = Math.Max(unit.Count, unit.InitialCount - count);
-        unit.Revived = Math.Min(unit.Revived, unit.Count);
-        battle.MutableUnits.Add(part);
-        events.Publish(new BattleUnitSplit(unit.Id, unit.Count, Info(part), known.Spell.Id));
-        return part;
-    }
-
-    private static BattleUnitInfo Info(BattleUnit unit) => new(unit.Id, unit.Side, unit.Creature.Id, unit.Count, unit.Position, unit.Width, unit.Height, unit.Machine);
-
-    /// <summary>
-    /// Mirror Image (ADR-152): a copy of the stack (its count, top creature's health and shots, none of its spells or casts) stands on the free
-    /// placement nearest it for the caster's side. It is summoned (gone after the battle, worth nothing), does not keep its side in the battle, acts
-    /// from the next round and vanishes when its hits are used up or its rounds end.
-    /// </summary>
-    private void Mirror(BattleSide side, BattleUnit unit, KnownSpell known, int? creaturePower)
-    {
-        var until = BattleMagic.UntilRound(battle, side, known, unit, creaturePower);
-        var copy = new BattleUnit(battle.Units.Max(u => u.Id) + 1, side, unit.Creature, unit.Count, -1, BattleMagic.PlacementNear(battle, unit, unit.Creature)!.Value)
-        {
-            IsSummoned = true,
-            IsCopy = true,
-            CopyHits = known.Effect!.CopyHits,
-            CopyUntilRound = until,
-            CopySpell = known.Spell.Id,
-            MutableCastsLeft = new Dictionary<string, int>(StringComparer.Ordinal),
-            TopHealth = unit.TopHealth,
-            ShotsLeft = unit.ShotsLeft,
-        };
-        battle.MutableUnits.Add(copy);
-        events.Publish(new BattleUnitCopied(Info(copy), unit.Id, known.Spell.Id, until));
-    }
-
-    /// <summary>
-    /// Raise Dead during the battle (ADR-152): while the side's spell still raises (rank II once, rank III each round), the destroyed stack worth most
-    /// rises as a new stack of skeletons for the side, on its place; they act from the next round and join the army when the side's hero wins.
-    /// </summary>
-    private void Rise(BattleSide side)
-    {
-        if (!battle.Raising.TryGetValue(side, out var raise) || raise.Rises == Magic.SpellRises.None
-            || BattleMagic.NextRising(battle, raise.Percent) is not { } rising)
-        {
-            return;
-        }
-
-        var (corpse, skeleton, count) = rising;
-        battle.Risen.Add(corpse.Id);
-        var unit = new BattleUnit(battle.Units.Max(u => u.Id) + 1, side, skeleton, count, -1, corpse.Position) { IsRaised = true };
-        battle.MutableUnits.Add(unit);
-        if (raise.Rises == Magic.SpellRises.Once)
-        {
-            battle.Raising[side] = raise with { Rises = Magic.SpellRises.None };
-        }
-
-        events.Publish(new BattleUnitRaised(Info(unit), corpse.Id, raise.Spell));
-    }
-
-    /// <summary>Reports the stack's new side when a control spell (ADR-150) took hold or let go since it was <paramref name="before"/>.</summary>
-    private void SideChanged(BattleUnit unit, BattleSide before)
-    {
-        if (unit.Side != before)
-        {
-            events.Publish(new BattleUnitSideChanged(unit.Id, unit.Side));
-        }
-    }
-
-    /// <summary>
-    /// One of the stack's turns is over, played or passed (ADR-150): each of its spells that lasts turns has one fewer; one with none left wears off.
-    /// </summary>
-    private void UseTurn(BattleUnit unit)
-    {
-        if (!unit.Spells.Any(s => s.TurnsLeft is not null))
-        {
-            return;
-        }
-
-        var before = unit.Side;
-        foreach (var spell in unit.Spells.Where(s => s.TurnsLeft is not null).ToList())
-        {
-            var index = unit.MutableSpells.IndexOf(spell);
-            if (spell.TurnsLeft > 1)
-            {
-                unit.MutableSpells[index] = spell with { TurnsLeft = spell.TurnsLeft - 1 };
-                continue;
-            }
-
-            unit.MutableSpells.RemoveAt(index);
-            events.Publish(new BattleSpellExpired(unit.Id, spell.Spell));
-        }
-
-        SideChanged(unit, before);
     }
 
     /// <summary>+1 good luck, −1 bad luck, 0 nothing; rolls only for a unit with luck.</summary>
@@ -971,29 +449,6 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
     {
         var favour = attackerLuck - RollLuck(defender);
         return favour > 0 ? HitLuck.Lucky : favour < 0 ? HitLuck.Unlucky : HitLuck.None;
-    }
-
-    /// <summary>
-    /// This round's morale (ADR-053): per point, 2 % for an extra action (good) or a lost turn (bad), else 4 % for ±50 %
-    /// initiative. Rolls only for a unit with morale.
-    /// </summary>
-    private MoraleEffect RollMorale(BattleUnit unit)
-    {
-        var morale = battle.MoraleOf(unit);
-        if (morale == 0)
-        {
-            return MoraleEffect.None;
-        }
-
-        var points = Math.Abs(morale);
-        if (battle.Random.Next(100) < MoraleAndLuck.ExtraActionPercent * points)
-        {
-            return morale > 0 ? MoraleEffect.ExtraAction : MoraleEffect.SkipTurn;
-        }
-
-        return battle.Random.Next(100) < MoraleAndLuck.InitiativePercent * points
-            ? morale > 0 ? MoraleEffect.Haste : MoraleEffect.Slow
-            : MoraleEffect.None;
     }
 
     /// <summary>Breath: the target-sized area behind the target (friendly fire). Cleave / multi-head: enemies only.</summary>
@@ -1035,440 +490,28 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
         }
 
         var dealt = Math.Min(damage, target.TotalHealth);
-        var killed = Take(target, damage);
+        var killed = wounds.Take(target, damage);
         target.HitsThisRound++;
         attacker.DamageDealt += dealt;
         events.Publish(new BattleUnitAttacked(attacker.Id, target.Id, kind, damage, killed, target.Count, target.TopHealth, luck));
-        Hit(target);
-        Bury(target);
+        wounds.Hit(target);
+        wounds.Bury(target);
 
         // Vampirism (ADR-123): part of the damage dealt to a living stack heals the attacker and revives its dead, for good.
         var spells = attacker.SpellModifiers;
         if (spells.LifestealPercent > 0 && attacker.IsAlive && !target.Creature.HasTag(CreatureTags.Undead) && !target.Creature.HasTag(CreatureTags.Construct))
         {
             var source = attacker.Spells.First(s => s.Modifiers.LifestealPercent > 0).Spell;
-            Revive(attacker, source, dealt * spells.LifestealPercent / 100, lasting: true);
+            wounds.Revive(attacker, source, dealt * spells.LifestealPercent / 100, lasting: true);
         }
 
         // Barkskin III (ADR-123): a melee attacker takes part of its damage back.
         if (kind == BattleAttackKind.Melee && target.Spells.FirstOrDefault(s => s.Modifiers.ThornsPercent > 0) is { } thorns && attacker.IsAlive && dealt > 0)
         {
-            SpellDamage(attacker, thorns.Spell, Math.Max(1, dealt * thorns.Modifiers.ThornsPercent / 100));
+            wounds.SpellDamage(attacker, thorns.Spell, Math.Max(1, dealt * thorns.Modifiers.ThornsPercent / 100));
         }
 
         return killed;
     }
 
-    /// <summary>Martyrs' shares of a blow (ADR-152), dealt once the blow's stack is buried.</summary>
-    private readonly List<(BattleUnit Martyr, BattleUnit Guarded, string Spell, int Damage)> _shields = [];
-
-    /// <summary>
-    /// A blow's damage to the stack (an attack, a damage spell, a zone, the towers, the moat): under Martyrdom (ADR-152) its martyr takes its share,
-    /// once the stack is buried; the stack takes the rest. Losses that are not blows (Final Reckoning, decay, Blood Price) are not
-    /// <paramref name="shieldable"/>.
-    /// </summary>
-    private int Take(BattleUnit target, int damage, bool shieldable = true)
-    {
-        if (shieldable && damage > 0 && target.Spells.Count > 0
-            && target.Spells.FirstOrDefault(s => s.Martyr is not null && s.Modifiers.MartyrPercent > 0) is { } guard
-            && battle.FindUnit(guard.Martyr!.Value) is { IsAlive: true } martyr && martyr != target && martyr.Side == target.Side
-            && !martyr.Has(Magic.SpellStatus.Stasis))
-        {
-            var share = (int)((long)damage * Math.Min(100, guard.Modifiers.MartyrPercent) / 100);
-            damage -= share;
-            if (share > 0)
-            {
-                _shields.Add((martyr, target, guard.Spell, share));
-            }
-        }
-
-        return Wound(target, damage);
-    }
-
-    /// <summary>Takes the damage off the stack, top creature first; creatures revived only for the battle die first (ADR-123).</summary>
-    /// <returns>How many creatures it killed.</returns>
-    private static int Wound(BattleUnit target, int damage)
-    {
-        var killed = Kill(target, damage);
-        target.Revived = Math.Max(0, target.Revived - killed);
-        return killed;
-    }
-
-    private static int Kill(BattleUnit target, int damage)
-    {
-        var before = target.Count;
-        var remaining = target.TotalHealth - damage;
-        if (remaining <= 0)
-        {
-            target.Count = 0;
-            target.TopHealth = 0;
-        }
-        else
-        {
-            var health = target.Creature.Health;
-            target.Count = (remaining + health - 1) / health;
-            target.TopHealth = remaining - ((target.Count - 1) * health);
-        }
-
-        return before - target.Count;
-    }
-
-    /// <summary>
-    /// After a blow: a copy uses up one of its hits and vanishes when none is left (ADR-152); the stack is buried if gone; then the martyrs take
-    /// their shares of the blow.
-    /// </summary>
-    private void Bury(BattleUnit target)
-    {
-        if (target.IsCopy && target.IsAlive && --target.CopyHits <= 0)
-        {
-            Vanish(target);
-        }
-
-        BuryOnly(target);
-        if (_shields.Count == 0)
-        {
-            return;
-        }
-
-        var shares = _shields.ToList();
-        _shields.Clear();
-        foreach (var (martyr, guarded, spell, damage) in shares)
-        {
-            if (!martyr.IsAlive)
-            {
-                continue;
-            }
-
-            var killed = Wound(martyr, damage);
-            events.Publish(new BattleUnitShielded(martyr.Id, guarded.Id, spell, damage, killed, martyr.Count, martyr.TopHealth));
-            Hit(martyr);
-            Bury(martyr);
-        }
-    }
-
-    /// <summary>A copy is gone (ADR-152); <see cref="BuryOnly"/> reports it dead.</summary>
-    private void Vanish(BattleUnit copy)
-    {
-        copy.Count = 0;
-        copy.TopHealth = 0;
-        events.Publish(new BattleCopyVanished(copy.Id, copy.CopySpell ?? string.Empty));
-    }
-
-    /// <summary>A stack that is gone leaves the round's order; a Phoenix with its rebirth left rises instead (ADR-120).</summary>
-    private void BuryOnly(BattleUnit target)
-    {
-        if (!target.IsAlive && target.CastsLeft.GetValueOrDefault(BattleMagic.Rebirth) > 0)
-        {
-            target.MutableCastsLeft[BattleMagic.Rebirth]--;
-            target.Count = Math.Max(1, target.InitialCount * BattleMagic.RebirthPercent / 100);
-            target.TopHealth = target.Creature.Health;
-            events.Publish(new BattleUnitReborn(target.Id, target.Count));
-            return;
-        }
-
-        if (!target.IsAlive)
-        {
-            var before = target.Side;
-            target.MutableSpells.Clear(); // a stack revived later starts without them (ADR-123); a controlled one is its owner's again (ADR-150)
-            SideChanged(target, before);
-            target.Revived = 0;
-            battle.MutableQueue.Remove(target.Id);
-            battle.MutableWaiting.Remove(target.Id);
-            events.Publish(new BattleUnitDied(target.Id));
-        }
-    }
-
-    /// <summary>Ends the active unit's action; with good morale rolled this round it acts once more right away (ADR-053).</summary>
-    private void EndTurn(bool moraleMayAct = true)
-    {
-        WakeHit();
-        var unit = battle.ActiveUnit;
-        battle.ActiveUnit = null;
-        if (unit is not null)
-        {
-            unit.StaysPut = false; // Shadow Step III's turn in place is over (ADR-151)
-        }
-
-        // Unseen lasts until the stack acts (ADR-123).
-        foreach (var hidden in unit?.Spells.Where(s => s.Modifiers.Has(Magic.SpellStatus.Unseen)).ToList() ?? [])
-        {
-            unit!.MutableSpells.Remove(hidden);
-            events.Publish(new BattleSpellExpired(unit.Id, hidden.Spell));
-        }
-
-        if (unit is not null)
-        {
-            UseTurn(unit);
-        }
-
-        if (moraleMayAct && unit is { IsAlive: true, RoundMorale: MoraleEffect.ExtraAction } && !CheckFinished())
-        {
-            unit.RoundMorale = MoraleEffect.None;
-            battle.ActiveUnit = unit;
-            events.Publish(new BattleMoraleTriggered(unit.Id, MoraleEffect.ExtraAction));
-            events.Publish(new BattleTurnStarted(unit.Id, battle.Round));
-            return;
-        }
-
-        // Clockwork Precision (ADR-152): a second turn right after the first, once a round.
-        if (moraleMayAct && unit is { IsAlive: true, TookSecondTurn: false } && unit.Spells.FirstOrDefault(s => s.Modifiers.Has(Magic.SpellStatus.Twice)) is { } twice
-            && !CheckFinished())
-        {
-            unit.TookSecondTurn = true;
-            battle.ActiveUnit = unit;
-            events.Publish(new BattleUnitActsAgain(unit.Id, twice.Spell));
-            events.Publish(new BattleTurnStarted(unit.Id, battle.Round));
-            return;
-        }
-
-        NextTurn();
-    }
-
-    private void NextTurn()
-    {
-        while (true)
-        {
-            if (CheckFinished())
-            {
-                return;
-            }
-
-            if (battle.MutableQueue.Count == 0 && battle.MutableWaiting.Count == 0)
-            {
-                if (battle.Round >= MaxRounds)
-                {
-                    Finish(BattleSide.Defender, BattleEndReason.Defeated);
-                    return;
-                }
-
-                StartRound();
-                if (CheckFinished())
-                {
-                    return; // the towers' shots ended it
-                }
-            }
-
-            int next;
-            if (battle.MutableQueue.Count > 0)
-            {
-                next = battle.MutableQueue[0];
-                battle.MutableQueue.RemoveAt(0);
-            }
-            else
-            {
-                // Waiting units go in reverse acting order.
-                next = battle.MutableWaiting.OrderByDescending(Key, ActingOrder.Instance).First();
-                battle.MutableWaiting.Remove(next);
-            }
-
-            var unit = battle.GetUnit(next);
-            if (!unit.IsAlive)
-            {
-                continue;
-            }
-
-            unit.IsDefending = false;
-            if (unit.LosesNextAction)
-            {
-                // Terror (ADR-067): the turn passes without the unit acting.
-                unit.LosesNextAction = false;
-                events.Publish(new BattleUnitTerrified(unit.Id));
-                UseTurn(unit);
-                continue;
-            }
-
-            // Blind and Stasis hold the stack: its turn passes (ADR-123).
-            if (unit.Spells.FirstOrDefault(s => s.Modifiers.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis)) is { } held)
-            {
-                events.Publish(new BattleUnitSpellbound(unit.Id, held.Spell));
-                UseTurn(unit);
-                continue;
-            }
-
-            if (unit.RoundMorale == MoraleEffect.SkipTurn)
-            {
-                // Bad morale: the turn passes without the unit acting.
-                unit.RoundMorale = MoraleEffect.None;
-                events.Publish(new BattleMoraleTriggered(unit.Id, MoraleEffect.SkipTurn));
-                UseTurn(unit);
-                continue;
-            }
-
-            battle.ActiveUnit = unit;
-            events.Publish(new BattleTurnStarted(unit.Id, battle.Round));
-            return;
-        }
-    }
-
-    private void StartRound()
-    {
-        battle.Round++;
-        battle.WaitedThisRound.Clear();
-        battle.TieRolls.Clear();
-
-        // Copies whose rounds are over vanish (ADR-152).
-        foreach (var copy in battle.LivingUnits.Where(u => u.IsCopy && u.CopyUntilRound < battle.Round).OrderBy(u => u.Id).ToList())
-        {
-            Vanish(copy);
-            BuryOnly(copy);
-        }
-
-        // Spells that ran out go before this round's morale and order are decided (ADR-110).
-        var expired = new List<(int Unit, string Spell)>();
-        var freed = new List<BattleUnit>();
-        foreach (var unit in battle.LivingUnits.Where(u => u.Spells.Count > 0).OrderBy(u => u.Id))
-        {
-            var before = unit.Side;
-            expired.AddRange(unit.MutableSpells.Where(s => s.UntilRound < battle.Round).Select(s => (unit.Id, s.Spell)));
-            unit.MutableSpells.RemoveAll(s => s.UntilRound < battle.Round);
-            if (unit.Side != before)
-            {
-                freed.Add(unit);
-            }
-        }
-
-        var gone = battle.Zones.Where(z => z.UntilRound < battle.Round).ToList();
-        battle.MutableZones.RemoveAll(gone.Contains);
-
-        foreach (var unit in battle.LivingUnits)
-        {
-            unit.StaysPut = false;
-            unit.TookSecondTurn = false;
-            unit.HasRetaliated = false;
-            unit.HitsThisRound = 0;
-            battle.TieRolls[unit.Id] = battle.Random.Next(1_000_000);
-            unit.RoundMorale = RollMorale(unit);
-        }
-
-        battle.MutableQueue.Clear();
-        battle.MutableQueue.AddRange(battle.LivingUnits
-            .Where(u => u.Machine is not { } machine || WarMachines.TakesTurns(machine))
-            .OrderBy(Key, ActingOrder.Instance)
-            .Select(u => u.Id));
-        events.Publish(new BattleRoundStarted(battle.Round));
-        foreach (var (unit, spell) in expired)
-        {
-            events.Publish(new BattleSpellExpired(unit, spell));
-        }
-
-        foreach (var unit in freed)
-        {
-            events.Publish(new BattleUnitSideChanged(unit.Id, unit.Side));
-        }
-
-        foreach (var zone in gone)
-        {
-            events.Publish(new BattleZoneExpired(zone.Id, zone.Spell));
-        }
-
-        Heal(BattleSide.Attacker);
-        Heal(BattleSide.Defender);
-        Tick();
-        TickZones();
-        TowersFire();
-        WakeHit();
-        Rise(BattleSide.Attacker);
-        Rise(BattleSide.Defender);
-        foreach (var unit in battle.MutableQueue.Select(battle.GetUnit).Where(u => u.RoundMorale is MoraleEffect.Haste or MoraleEffect.Slow))
-        {
-            events.Publish(new BattleMoraleTriggered(unit.Id, unit.RoundMorale));
-        }
-    }
-
-    /// <summary>
-    /// Spells that work each round (ADR-123), as it starts, stack by stack in id order: burning deals its damage, regrowth heals the top creature,
-    /// decay (Plague, Pact of Ash) takes its percent of the creatures, at least 1.
-    /// </summary>
-    private void Tick()
-    {
-        foreach (var unit in battle.LivingUnits.Where(u => u.Spells.Count > 0).OrderBy(u => u.Id).ToList())
-        {
-            foreach (var spell in unit.Spells.ToList())
-            {
-                if (!unit.IsAlive)
-                {
-                    break;
-                }
-
-                var m = spell.Modifiers;
-                if (m.Burn > 0)
-                {
-                    SpellDamage(unit, spell.Spell, m.Burn);
-                }
-
-                if (m.Regen > 0 && unit.IsAlive && unit.TopHealth < unit.Creature.Health)
-                {
-                    var healed = Math.Min(m.Regen, unit.Creature.Health - unit.TopHealth);
-                    unit.TopHealth += healed;
-                    events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
-                }
-
-                if (m.DecayPercent > 0 && unit.IsAlive)
-                {
-                    var lost = Math.Min(unit.Count, Math.Max(1, unit.Count * m.DecayPercent / 100));
-                    SpellDamage(unit, spell.Spell, unit.TotalHealth - ((unit.Count - lost) * unit.Creature.Health), shieldable: false);
-                }
-            }
-        }
-    }
-
-    /// <summary>The healing tent: the top creature of every own creature stack regains health, never above its maximum (ADR-056).</summary>
-    private void Heal(BattleSide side)
-    {
-        if (battle.LivingMachine(side, WarMachineKind.HealingTent) is null)
-        {
-            return;
-        }
-
-        var amount = WarMachines.TentHealing(battle.Participant(side).Bonus.Healing);
-        foreach (var unit in battle.LivingArmyOf(side).Where(u => u.TopHealth < u.Creature.Health).ToList())
-        {
-            var healed = Math.Min(amount, unit.Creature.Health - unit.TopHealth);
-            unit.TopHealth += healed;
-            events.Publish(new BattleUnitHealed(unit.Id, healed, unit.TopHealth));
-        }
-    }
-
-    private (int Initiative, int Side, int Speed, int Roll) Key(int unitId) => Key(battle.GetUnit(unitId));
-
-    private (int Initiative, int Side, int Speed, int Roll) Key(BattleUnit unit) =>
-        (battle.InitiativeOf(unit), unit.Side == BattleSide.Attacker ? 1 : 0, battle.SpeedOf(unit), battle.TieRolls.GetValueOrDefault(unit.Id));
-
-    private bool CheckFinished()
-    {
-        if (battle.Phase == BattlePhase.Finished)
-        {
-            return true;
-        }
-
-        // War machines alone do not keep a side in the battle (ADR-056); a stack the enemy controls still does (ADR-150).
-        var attackers = battle.OwnedArmyOf(BattleSide.Attacker).Any();
-        var defenders = battle.OwnedArmyOf(BattleSide.Defender).Any();
-        if (attackers && defenders)
-        {
-            return false;
-        }
-
-        Finish(attackers ? BattleSide.Attacker : BattleSide.Defender, BattleEndReason.Defeated);
-        return true;
-    }
-
-    private void Finish(BattleSide winner, BattleEndReason reason)
-    {
-        battle.Phase = BattlePhase.Finished;
-        battle.Winner = winner;
-        battle.EndReason = reason;
-        battle.ActiveUnit = null;
-        battle.MutableQueue.Clear();
-        battle.MutableWaiting.Clear();
-    }
-
-    /// <summary>Acting order: higher initiative, attacker side, higher speed, higher tie roll first.</summary>
-    private sealed class ActingOrder : IComparer<(int Initiative, int Side, int Speed, int Roll)>
-    {
-        public static readonly ActingOrder Instance = new();
-
-        public int Compare((int Initiative, int Side, int Speed, int Roll) a, (int Initiative, int Side, int Speed, int Roll) b) =>
-            b.CompareTo(a);
-    }
 }

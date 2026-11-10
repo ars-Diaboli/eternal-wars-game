@@ -270,6 +270,9 @@ public static class AdventureMagic
 /// </summary>
 internal sealed class AdventureMagicService(GameState state, IEventPublisher events) : IEventHandler<UndeadRaised>
 {
+    /// <summary>Subscribes to raised undead (Grave Whisper is used up).</summary>
+    internal void SubscribeTo(IEventSubscriber bus) => bus.Subscribe<UndeadRaised>(this);
+
     internal void Cast(PlayerId player, HeroId heroId, string spell, MapPosition? target)
     {
         var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new CommandRefusedException($"{heroId} is not an own hero on the map.");

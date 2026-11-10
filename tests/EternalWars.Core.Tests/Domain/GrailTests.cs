@@ -267,11 +267,11 @@ public class GrailTests
         state.Map.SetTerrain(new MapPosition(16, 16), TerrainType.Rock);
         var editor = new MapEditorSession(state);
 
-        Assert.Equal(EditResult.InvalidTarget, editor.SetGrail(new MapPosition(11, 14)));
-        Assert.Equal(EditResult.ImpassableTerrain, editor.SetGrail(new MapPosition(16, 16)));
-        Assert.Equal(EditResult.TooNearEdge, editor.SetGrail(new MapPosition(9, 15)));
-        Assert.Equal(EditResult.TooNearEdge, editor.SetGrail(new MapPosition(15, 20)));
-        Assert.Equal(EditResult.Ok, editor.SetGrail(new MapPosition(12, 12)));
+        Assert.Equal(EditResult.InvalidTarget, editor.Map.SetGrail(new MapPosition(11, 14)));
+        Assert.Equal(EditResult.ImpassableTerrain, editor.Map.SetGrail(new MapPosition(16, 16)));
+        Assert.Equal(EditResult.TooNearEdge, editor.Map.SetGrail(new MapPosition(9, 15)));
+        Assert.Equal(EditResult.TooNearEdge, editor.Map.SetGrail(new MapPosition(15, 20)));
+        Assert.Equal(EditResult.Ok, editor.Map.SetGrail(new MapPosition(12, 12)));
         Assert.Equal(new MapPosition(12, 12), state.Grail.Position);
         Assert.Contains(MapValidator.Validate(state), i => i.Message.Contains("no obelisks", StringComparison.Ordinal));
 
@@ -288,10 +288,10 @@ public class GrailTests
         var editor = new MapEditorSession(state);
         for (var i = 0; i < GrailRules.MaxObelisks; i++)
         {
-            Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.Obelisk, new MapPosition(i % 12 * 2, 4 + (i / 12 * 3)), out _));
+            Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Obelisk, new MapPosition(i % 12 * 2, 4 + (i / 12 * 3)), out _));
         }
 
-        Assert.Equal(EditResult.TooManyObelisks, editor.PlaceObject(BuiltInMapObjects.Obelisk, new MapPosition(0, 20), out _));
+        Assert.Equal(EditResult.TooManyObelisks, editor.Objects.Place(BuiltInMapObjects.Obelisk, new MapPosition(0, 20), out _));
         Add<Obelisk>(state, BuiltInMapObjects.Obelisk, 0, 20); // past the editor, the validator reports it
         Assert.Contains(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error && i.Message.Contains("obelisks", StringComparison.Ordinal));
     }

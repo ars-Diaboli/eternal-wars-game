@@ -79,18 +79,18 @@ public class CampaignVariableTests
     public void TheEditor_MarksVariables_Undoably_AndRemovingAVariableDropsItsMarks()
     {
         var editor = new MapEditorSession(Create(Rows));
-        editor.SetMapVariable("deeds", 0);
+        editor.MapEvents.SetVariable("deeds", 0);
 
-        Assert.Equal(EditResult.InvalidTarget, editor.SetCampaignVariable("nope", true, false));
-        Assert.Equal(EditResult.Ok, editor.SetCampaignVariable("deeds", kept: true, taken: true));
+        Assert.Equal(EditResult.InvalidTarget, editor.MapEvents.SetCampaignVariable("nope", true, false));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetCampaignVariable("deeds", kept: true, taken: true));
         Assert.True(editor.Scenario.MapEvents.Set.IsKept("deeds"));
         Assert.True(editor.Scenario.MapEvents.Set.IsTaken("deeds"));
-        Assert.Equal(EditResult.Ok, editor.SetCampaignVariable("deeds", kept: false, taken: true));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetCampaignVariable("deeds", kept: false, taken: true));
         Assert.Empty(editor.Scenario.MapEvents.Set.KeptVariables);
         editor.Undo();
         Assert.True(editor.Scenario.MapEvents.Set.IsKept("deeds"));
 
-        editor.RemoveMapVariable("deeds");
+        editor.MapEvents.RemoveVariable("deeds");
         Assert.Empty(editor.Scenario.MapEvents.Set.KeptVariables);
         Assert.Empty(editor.Scenario.MapEvents.Set.TakenVariables);
     }

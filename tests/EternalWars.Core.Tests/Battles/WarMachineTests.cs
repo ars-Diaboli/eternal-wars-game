@@ -209,9 +209,9 @@ public class WarMachineTests
     public void HeroMachines_RoundTripThroughTheMapFormat_AndTheEditorUndoes()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        editor.PlaceHero(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
-        editor.PlaceHero(new PlayerId(0), new MapPosition(4, 2), "Plain", out _);
-        Assert.Equal(EditResult.Ok, editor.SetHeroWarMachines(id, new HashSet<WarMachineSlot> { WarMachineSlot.Cart }));
+        editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
+        editor.Heroes.Place(new PlayerId(0), new MapPosition(4, 2), "Plain", out _);
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetWarMachines(id, new HashSet<WarMachineSlot> { WarMachineSlot.Cart }));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));

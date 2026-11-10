@@ -1,75 +1,66 @@
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Heroes;
-using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Turns;
 
 /// <summary>
 /// HoMM-style sequential turns: every player acts once per day, in slot order.
-/// When the last player ends the turn the calendar advances; a new week brings the towns' creature growth.
+/// When the last player ends the turn the calendar advances; a new week brings the towns' creature growth. What happens at each step is up to
+/// the session's participants, in their order (<see cref="ITurnPhaseParticipant"/>); the service itself moves the calendar, publishes it
+/// and rolls the week's events. An arena map's battle day (ADR-097) replaces the day, so the arena is not a participant.
 /// </summary>
-public sealed class TurnService(
-    GameState state,
-    IEventPublisher events,
-    EconomyService economy,
-    HeroMovementService movement,
-    GuardService guards,
-    ProgressionService progression,
-    TownService towns,
-    CaravanService caravans,
-    MapObjectInteractionService objects,
-    MapEvents.MapEventService mapEvents,
-    ArenaService arena)
+public sealed class TurnService
 {
+    private readonly GameState _state;
+    private readonly IEventPublisher _events;
+    private readonly ArenaService _arena;
+    private readonly IReadOnlyList<ITurnPhaseParticipant> _participants;
+
+    internal TurnService(GameState state, IEventPublisher events, ArenaService arena, IReadOnlyList<ITurnPhaseParticipant> participants)
+    {
+        _state = state;
+        _events = events;
+        _arena = arena;
+        _participants = participants;
+    }
+
     internal void StartGame()
     {
-        if (state.IsStarted)
+        if (_state.IsStarted)
         {
             throw new InvalidOperationException("The game has already started.");
         }
 
-        state.IsStarted = true;
-        state.CurrentPlayerIndex = 0;
-        if (state.Options.Complexity is { } complexity)
-        {
-            foreach (var player in state.Players)
-            {
-                economy.Set(player.Id, StartingResources.For(complexity));
-            }
-        }
-
-        guards.RollUnsetCounts();
-        towns.FillNewDwellings();
-        economy.StockProviders();
-        events.Publish(new GameStarted(state.Date));
-        events.Publish(new DayStarted(state.Date));
+        _state.IsStarted = true;
+        _state.CurrentPlayerIndex = 0;
+        Each(p => p.SetUpGame());
+        Each(p => p.StockFirstWeek());
+        _events.Publish(new GameStarted(_state.Date));
+        _events.Publish(new DayStarted(_state.Date));
 
         // The first week has no growth to change, but a map that starts its events at once still gets its plague or its stacks.
-        state.NextWeekEvent = Roll(state.Date);
+        _state.NextWeekEvent = Roll(_state.Date);
         StartWeekEvent();
-        mapEvents.StartDay();
+        Each(p => p.OpenDay());
         BeginTurn();
     }
 
     internal void EndTurn()
     {
-        if (!state.IsStarted)
+        if (!_state.IsStarted)
         {
             throw new CommandRefusedException("The game has not started yet.");
         }
 
-        if (state.PendingDecision is not null)
+        if (_state.PendingDecision is not null)
         {
             throw new CommandRefusedException("Resolve the pending decision before ending the turn.");
         }
 
-        events.Publish(new TurnEnded(state.CurrentPlayer.Id, state.Date));
+        _events.Publish(new TurnEnded(_state.CurrentPlayer.Id, _state.Date));
 
         // Defeated players have no turn (ADR-057); the bound only matters if everyone is out, which ends the game first.
         var tries = 0;
@@ -77,10 +68,10 @@ public sealed class TurnService(
         {
             AdvancePlayer();
         }
-        while (state.Arena is null && state.CurrentPlayer.IsDefeated && ++tries <= state.Players.Count);
+        while (_state.Arena is null && _state.CurrentPlayer.IsDefeated && ++tries <= _state.Players.Count);
 
         // An arena map's day 2 is its battle, which ends the game: nobody's turn starts (ADR-097).
-        if (state.Arena is null)
+        if (_state.Arena is null)
         {
             BeginTurn();
         }
@@ -88,31 +79,28 @@ public sealed class TurnService(
 
     private void AdvancePlayer()
     {
-        state.CurrentPlayerIndex++;
-        if (state.CurrentPlayerIndex >= state.Players.Count)
+        _state.CurrentPlayerIndex++;
+        if (_state.CurrentPlayerIndex >= _state.Players.Count)
         {
-            state.CurrentPlayerIndex = 0;
-            state.Date = state.Date.Next();
-            events.Publish(new DayStarted(state.Date));
-            if (state.Rules.Arena && state.Date.AbsoluteDay == ArenaRules.BattleDay)
+            _state.CurrentPlayerIndex = 0;
+            _state.Date = _state.Date.Next();
+            _events.Publish(new DayStarted(_state.Date));
+            if (_state.Rules.Arena && _state.Date.AbsoluteDay == ArenaRules.BattleDay)
             {
-                arena.StartBattle();
+                _arena.StartBattle();
                 return;
             }
 
-            guards.RefillBanks();
-            if (state.Date.IsFirstDayOfWeek)
+            Each(p => p.StartDay());
+            if (_state.Date.IsFirstDayOfWeek)
             {
-                events.Publish(new WeekStarted(state.Date));
-                progression.ExpireStatuses(state.Heroes.Concat(state.GarrisonHeroes), StatusExpiry.EndOfWeek);
+                _events.Publish(new WeekStarted(_state.Date));
+                Each(p => p.StartWeek());
                 StartWeekEvent();
-                towns.GrowWeekly();
-                economy.StockProviders();
-                objects.StartWeek(state.Date.IsFirstDayOfMonth);
+                Each(p => p.StockWeek());
             }
 
-            // Neutral towns' map events run at the start of the day (ADR-115, EVT-2 d).
-            mapEvents.StartDay();
+            Each(p => p.OpenDay());
         }
     }
 
@@ -122,50 +110,32 @@ public sealed class TurnService(
     /// </summary>
     private void StartWeekEvent()
     {
-        state.WeekEvent = state.NextWeekEvent;
-        state.NextWeekEvent = Roll(new GameDate(state.Date.AbsoluteDay + GameDate.DaysPerWeek));
-        if (state.WeekEvent.Kind == WeekEventKind.None)
+        _state.WeekEvent = _state.NextWeekEvent;
+        _state.NextWeekEvent = Roll(new GameDate(_state.Date.AbsoluteDay + GameDate.DaysPerWeek));
+        if (_state.WeekEvent.Kind == WeekEventKind.None)
         {
             return;
         }
 
-        events.Publish(new WeekEventAnnounced(state.Date, state.WeekEvent));
-        towns.ApplyPlague();
-        guards.SpawnMonthly();
+        _events.Publish(new WeekEventAnnounced(_state.Date, _state.WeekEvent));
+        Each(p => p.ApplyWeekEvent());
     }
 
-    private WeekEvent Roll(GameDate weekStart) => WeekEventRules.Roll(state.Rules.WeekEvents, state.Creatures, weekStart, state.Random);
-
-    /// <summary>
-    /// Every own hero regains its daily mana (ADR-063), or all of it with the Wizard's Well (ADR-121); nothing happens, and nothing is published,
-    /// when the pool is full.
-    /// </summary>
-    private void RestoreMana(PlayerId player)
-    {
-        foreach (var hero in state.AllHeroesOf(player).OrderBy(h => h.Id.Value))
-        {
-            var max = hero.MaxMana;
-            if (hero.Mana < max)
-            {
-                hero.Mana = hero.Bonus.FullMana ? max : Math.Min(max, hero.Mana + ManaRules.DailyMana(hero));
-                events.Publish(new HeroManaRestored(hero.Id, hero.Mana, max));
-            }
-        }
-    }
+    private WeekEvent Roll(GameDate weekStart) => WeekEventRules.Roll(_state.Rules.WeekEvents, _state.Creatures, weekStart, _state.Random);
 
     private void BeginTurn()
     {
-        var player = state.CurrentPlayer;
-        progression.ExpireStatuses(state.AllHeroesOf(player.Id), StatusExpiry.EndOfDay);
-        movement.RestoreMovement(player.Id);
-        RestoreMana(player.Id);
-        towns.AppointVisitors(player.Id);
-        caravans.Advance(player.Id);
-        economy.CollectDailyIncome(player.Id);
-        events.Publish(new TurnStarted(player.Id, state.Date));
+        var player = _state.CurrentPlayer.Id;
+        Each(p => p.PrepareTurn(player));
+        _events.Publish(new TurnStarted(player, _state.Date));
+        Each(p => p.OpenTurn(player));
+    }
 
-        // The player's and its towns' map events, after income, growth and the week's event (ADR-115, EVT-2 d).
-        mapEvents.StartTurn(player.Id);
-        progression.OfferNext();
+    private void Each(Action<ITurnPhaseParticipant> hook)
+    {
+        foreach (var participant in _participants)
+        {
+            hook(participant);
+        }
     }
 }

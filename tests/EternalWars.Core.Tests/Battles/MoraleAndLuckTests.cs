@@ -190,9 +190,9 @@ public class MoraleAndLuckDataTests
     public void HeroMoraleAndLuck_RoundTripThroughTheMapFormat_AndAreOmittedWhenZero()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        editor.PlaceHero(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var brave);
-        editor.PlaceHero(new PlayerId(0), new MapPosition(4, 2), "Plain", out _);
-        Assert.Equal(EditResult.Ok, editor.SetHeroMoraleAndLuck(brave, 3, -2));
+        editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var brave);
+        editor.Heroes.Place(new PlayerId(0), new MapPosition(4, 2), "Plain", out _);
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetMoraleAndLuck(brave, 3, -2));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
@@ -206,11 +206,11 @@ public class MoraleAndLuckDataTests
     public void Editor_SetsMoraleAndLuck_Undoably_WithinFive()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        editor.PlaceHero(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
+        editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
         var hero = editor.Scenario.GetHero(id);
 
-        Assert.Equal(EditResult.InvalidValue, editor.SetHeroMoraleAndLuck(id, 6, 0));
-        Assert.Equal(EditResult.Ok, editor.SetHeroMoraleAndLuck(id, -5, 5));
+        Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetMoraleAndLuck(id, 6, 0));
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetMoraleAndLuck(id, -5, 5));
         Assert.Equal((-5, 5), (hero.Morale, hero.Luck));
         Assert.Equal((-5, 5), (HeroBattleBonuses.For(hero, CreatureCatalog.Default).Morale, HeroBattleBonuses.For(hero, CreatureCatalog.Default).Luck));
 

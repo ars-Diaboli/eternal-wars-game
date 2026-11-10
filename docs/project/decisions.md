@@ -1791,3 +1791,67 @@ agent's choices.
   one codec under a unique name; a fresh object of every kind comes back from a map file with the same digest text.
 - **Not done** *(choice)*: the AI's targets, the validator, the info sheets and the editor's inspector still switch on the type. Each has a
   safe default for a kind it does not know (no target, no check, a plain sheet, no fields), so a new kind is playable before they learn it.
+
+### ADR-167: The large classes split along their seams (ADR-036, ADR-166, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (R6).
+
+- **Problem**: six classes of 1100–2000 lines each mixed several jobs, and some held copies of the same rule (five ways to heal the top
+  creature of a stack, seven-way type switches over guard kinds). One change meant reading the whole file.
+- **Rule**: a pure refactor of the game rules. Events, their order, refusals, `GameState.Random` draws and the digest text are unchanged;
+  AI-played games on the built-in scenarios and every built-in template (two seeds each) give the same per-turn digest and event log as
+  before. The map format is unchanged.
+- **Map editor**: `MapEditorSession` is a facade over per-area editors (`Terrain`, `Objects`, `Contents`, `Monsters`, `Towns`, `Heroes`,
+  `MapEvents`, `Players`, `Map`) sharing an internal `EditorContext` (scenario, catalog, bus, undo history, open stroke). One-value edits are a
+  `PropertyEdit<T>`, which records and publishes nothing when the value is already there; the three paint tools share `PaintLayer<T>`. Edits
+  that are not one value (hero type, town type, gate links, adding or removing events and players) stay their own undoable commands.
+- **Map objects**: `MapObjectInteractionService` keeps the visit rules; shops, decisions (`Resolve*`), the week and map preparation, and the
+  Grail are `ObjectShopService`, `ObjectDecisionService`, `ObjectLifecycleService` and `GrailService`, with rewarding visits in
+  `MapObjectRewardVisits` and shared helpers in `ObjectInteractionContext`.
+- **Battles**: `BattleService` is a facade over `BattleStarter`, `BattleCommandHandler`, `BattleFlow` (deployment and the AI loop both need)
+  and `BattleAftermath`. The objects that guard a battle implement `IBattleGuard` (what defeat and survivors do to them) instead of two type
+  switches. `BattleEngine` keeps actions and turn flow; spells are `BattleSpellResolver`, rounds and the end `BattleRounds`, and damage,
+  deaths and healing `BattleWounds`, which holds the one `HealTop`, `KillCreatures` and `RollDamage`. `BattleState.NextUnitId()` makes new
+  stack ids.
+- **Presentation**: the combat log text is `BattleNarrator` in Core (tested). `BattleView3D` coordinates `BattleAnimationQueue`,
+  `BattleFieldBuilder` (one material per colour per battle), `BattleStage` and `BattleAnimations`. The game app's `Main` keeps composition;
+  status text moved to Core (`MoveOutcomeText`, `AdventureSpellPrompt`, `SaveSlotText`, `RankingText`, `TemplateFolder`), and the HUD,
+  map and battle input, deployment drag and setup screens to Godot.UI (`AdventureHud`, `AdventureInputController`,
+  `BattleInputController`, `DeploymentDragController`, `SetupScreenHost`). The input controllers are made per game, so an armed spell or a
+  drag in progress does not carry into a loaded game.
+- **Not done** *(choice)*: the map editor app keeps its own template-folder loading; `Main.Saves.cs` stays a partial of `Main` because it
+  needs most of its state.
+
+### ADR-168: A handler per spell effect kind (ADR-099, ADR-123, ADR-167, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (R7).
+
+- **Problem**: what one effect kind does was spread over the target checks, the resolver and the AI's valuation, each switching on
+  `SpellEffectKind`; a new mechanic meant five or six edits, and the AI's value of a spell could drift from what the spell does.
+- **Rule**: each `SpellEffectKind` has one internal sealed handler in `Battles/Spells/` (`ISpellEffectHandler`, found through
+  `SpellEffectHandlers.For(kind)`). It holds the kind's own refusals (at three fixed points: before the aim checks, before and after
+  `Affects`), which extra stacks `targets N` reaches, how the cast resolves, the AI's value of a cast (`Value(CastContext)`) and the aims the
+  AI tries. Buff and Curse share `EnchantHandler`, which the damage handler also uses for damage that leaves an effect.
+- **Shared**: aiming, reach and area cells, filters, immunity and resistance, and the damage plan (used by the rule and the AI) stay in
+  `BattleMagic`, as do small formulas both a rule and its value read (`Missing`, `Dispelled`, `Slain`, `SacrificeYield`, …).
+- **A new effect kind** is its parse in `SpellEffect.Parse` plus one handler class; a test fails while a kind has no handler or two.
+- **Behaviour**: events, their order and the random draws are unchanged (AI games with 89 casts replay the same). The kind's refusal
+  checks run at their fixed points, which gives the same answer for every effect the spell table can express.
+- **Not done** *(choice)*: the spell table parser and `SpellEffect.IsHostile`/`TwoClicks` stay on the effect (they describe the format);
+  the battle HUD keeps its two checks of `Move` for the two-click prompt, as the registry is internal to Core.
+
+### ADR-169: Commands by handler and marker, turn phases as one ordered list (ADR-036, ADR-167, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (R8).
+
+- **Commands**: `GameSession` dispatches through `CommandHandlers`, one registration per command type, grouped by area
+  (`AdventureCommandHandlers`, `ObjectCommandHandlers`, `TownCommandHandlers`, `ArtifactCommandHandlers`, `BattleCommandHandlers`). A second
+  registration for a type throws, and a test fails while a command has no handler. A new command is its record plus one registration line.
+- **Authorization**: `IBattleCommand` marks the commands that need a running battle and are checked against the side to act;
+  `IHeroCommand` (`HeroId Hero`) marks those whose hero the session checks is on the map and the player's. Equip, Unequip, Assemble, Take
+  Relic Apart and Appoint Governor carry a hero but are checked by their own services, with their own refusals, and are not marked;
+  `MoveStackCommand` names its `FromHero` as the hero; `SetAutoCombatCommand` is allowed at any time. The markers add nothing to the
+  commands' JSON.
+- **Turns**: `TurnService` calls an ordered list of `ITurnPhaseParticipant`s built in `GameSession` (map events, progression, movement, mana,
+  towns, caravans, economy, guards, map objects), each hook a no-op by default (`SetUpGame`, `StockFirstWeek`, `StartDay`, `StartWeek`,
+  `ApplyWeekEvent`, `StockWeek`, `OpenDay`, `PrepareTurn`, `OpenTurn`). The list's order is the order of the turn. The arena stays a direct
+  dependency, as its battle day replaces the whole day.
+- **Subscriptions**: visibility, map events and adventure magic subscribe themselves (`SubscribeTo(bus)`), in that order.
+- **Behaviour**: unchanged (events, refusals, random draws, digests; AI games replay the same).

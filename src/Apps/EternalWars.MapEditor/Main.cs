@@ -131,15 +131,15 @@ public partial class Main : Node3D
         var tool = _tools.Tool;
         if (tool.Kind == ToolKind.Road)
         {
-            _editor.PaintRoad(tile, tool.Road, tool.Radius);
+            _editor.Terrain.PaintRoad(tile, tool.Road, tool.Radius);
         }
         else if (tool.Kind == ToolKind.River)
         {
-            _editor.PaintRiver(tile, tool.River, tool.Radius);
+            _editor.Terrain.PaintRiver(tile, tool.River, tool.Radius);
         }
         else
         {
-            _editor.PaintTerrain(tile, tool.Terrain, tool.Radius);
+            _editor.Terrain.Paint(tile, tool.Terrain, tool.Radius);
         }
     }
 
@@ -153,22 +153,22 @@ public partial class Main : Node3D
         switch (tool.Kind)
         {
             case ToolKind.Object:
-                Report(_editor.PlaceObject(tool.ObjectDefinition, tile, out _));
+                Report(_editor.Objects.Place(tool.ObjectDefinition, tile, out _));
                 break;
             case ToolKind.Monster:
-                Report(_editor.PlaceMonster(tile, tool.Creature, tool.Count, tool.Disposition, neverFlees: false, out _));
+                Report(_editor.Monsters.Place(tile, tool.Creature, tool.Count, tool.Disposition, neverFlees: false, out _));
                 break;
             case ToolKind.Hero:
-                Report(_editor.PlaceHero(tool.Player, tile, $"Hero {scenario.NextHeroId().Value}", out var placed), () => Inspect(placed));
+                Report(_editor.Heroes.Place(tool.Player, tile, $"Hero {scenario.NextHeroId().Value}", out var placed), () => Inspect(placed));
                 break;
             case ToolKind.Erase:
-                Report(hero is not null ? _editor.RemoveHero(hero.Id) : mapObject is not null ? _editor.RemoveObject(mapObject.Id) : EditResult.InvalidTarget);
+                Report(hero is not null ? _editor.Heroes.Remove(hero.Id) : mapObject is not null ? _editor.Objects.Remove(mapObject.Id) : EditResult.InvalidTarget);
                 break;
             case ToolKind.LinkGates:
                 Link(mapObject);
                 break;
             case ToolKind.Grail:
-                Report(_editor.SetGrail(scenario.Grail.Position == tile ? null : tile));
+                Report(_editor.Map.SetGrail(scenario.Grail.Position == tile ? null : tile));
                 break;
             case ToolKind.Select when hero is not null:
                 Inspect(hero.Id);
@@ -201,8 +201,8 @@ public partial class Main : Node3D
         _linkFrom = null;
         var source = _editor.Scenario.GetObject(from);
         Report(clicked is null ? EditResult.InvalidTarget
-            : source is OneWayGateEntrance ? _editor.SetGateExit(from, clicked.Id)
-            : _editor.LinkGates(from, clicked.Id));
+            : source is OneWayGateEntrance ? _editor.Objects.SetGateExit(from, clicked.Id)
+            : _editor.Objects.LinkGates(from, clicked.Id));
     }
 
     private void Inspect(HeroId hero)
@@ -437,7 +437,7 @@ public partial class Main : Node3D
         var name = _fileName.Text.Trim();
         if (name != map.Name)
         {
-            _editor.SetMapProperties(name, map.Description);
+            _editor.Map.SetProperties(name, map.Description);
         }
 
         var errors = MapValidator.Validate(_editor.Scenario).Count(i => i.Severity == IssueSeverity.Error);

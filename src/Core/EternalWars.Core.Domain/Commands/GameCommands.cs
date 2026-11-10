@@ -15,10 +15,10 @@ public abstract record GameCommand(PlayerId Player);
 // Adventure map ----------------------------------------------------------------------------------------
 
 /// <summary>One step in a direction (keyboard movement).</summary>
-public sealed record StepHeroCommand(PlayerId Player, HeroId Hero, Direction Direction) : GameCommand(Player);
+public sealed record StepHeroCommand(PlayerId Player, HeroId Hero, Direction Direction) : GameCommand(Player), IHeroCommand;
 
 /// <summary>Plan a route to <paramref name="Target"/> and follow it as far as movement points allow (click-to-move).</summary>
-public sealed record MoveHeroCommand(PlayerId Player, HeroId Hero, MapPosition Target) : GameCommand(Player);
+public sealed record MoveHeroCommand(PlayerId Player, HeroId Hero, MapPosition Target) : GameCommand(Player), IHeroCommand;
 
 public sealed record EndTurnCommand(PlayerId Player) : GameCommand(Player);
 
@@ -67,7 +67,7 @@ public sealed record ChooseWitchHutSkillCommand(PlayerId Player, string? Skill) 
 public sealed record TakeLessonCommand(PlayerId Player, MapObjectId School, string Skill) : GameCommand(Player);
 
 /// <summary>The hero digs where it stands with its whole day's movement, for the Grail (ADR-140).</summary>
-public sealed record DigCommand(PlayerId Player, HeroId Hero) : GameCommand(Player);
+public sealed record DigCommand(PlayerId Player, HeroId Hero) : GameCommand(Player), IHeroCommand;
 
 /// <summary>The hero on an artifact merchant's entrance buys the artifact in slot <paramref name="Slot"/> (ADR-079).</summary>
 public sealed record BuyArtifactCommand(PlayerId Player, MapObjectId Merchant, int Slot) : GameCommand(Player);
@@ -101,10 +101,14 @@ public sealed record ChooseSkillCommand(PlayerId Player, string Skill) : GameCom
 
 /// <summary>
 /// Moves creatures between army slots of one hero, or between two heroes whose exchange is open.
-/// <paramref name="Count"/> null = the whole stack (a whole stack onto a different creature swaps them).
+/// <paramref name="Count"/> null = the whole stack (a whole stack onto a different creature swaps them). The acting hero is
+/// <paramref name="FromHero"/>; the session also refuses an unknown <paramref name="ToHero"/>.
 /// </summary>
 public sealed record MoveStackCommand(PlayerId Player, HeroId FromHero, int FromSlot, HeroId ToHero, int ToSlot, int? Count = null)
-    : GameCommand(Player);
+    : GameCommand(Player), IHeroCommand
+{
+    HeroId IHeroCommand.Hero => FromHero;
+}
 
 /// <summary>Answer to a <see cref="GuardEncounterDecision"/>: accept the join/flee offer, or decline and fight.</summary>
 public sealed record RespondToGuardCommand(PlayerId Player, bool Accept) : GameCommand(Player);
@@ -219,54 +223,54 @@ public sealed record TradeResourceCommand(
     PlayerId Player, Economy.ResourceType Resource, Economy.TradeDirection Direction, int Amount, MapObjectId? MapMarketplace = null)
     : GameCommand(Player);
 
-public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player);
+public sealed record ChooseBattleWidthCommand(PlayerId Player, int Width) : GameCommand(Player), IBattleCommand;
 
 /// <summary>Deployment step (ADR-072): put the own stack <paramref name="Unit"/> at <paramref name="To"/> within the deployment zone.</summary>
-public sealed record BattleDeployCommand(PlayerId Player, int Unit, CellPosition To) : GameCommand(Player);
+public sealed record BattleDeployCommand(PlayerId Player, int Unit, CellPosition To) : GameCommand(Player), IBattleCommand;
 
 /// <summary>Ends the deployment step ("Start battle").</summary>
-public sealed record BattleStartCommand(PlayerId Player) : GameCommand(Player);
+public sealed record BattleStartCommand(PlayerId Player) : GameCommand(Player), IBattleCommand;
 
-public sealed record BattleMoveCommand(PlayerId Player, CellPosition To) : GameCommand(Player);
+public sealed record BattleMoveCommand(PlayerId Player, CellPosition To) : GameCommand(Player), IBattleCommand;
 
 /// <summary>Melee attack; <paramref name="From"/> is where to stand (null = closest placement next to the target).</summary>
-public sealed record BattleAttackCommand(PlayerId Player, int Target, CellPosition? From = null) : GameCommand(Player);
+public sealed record BattleAttackCommand(PlayerId Player, int Target, CellPosition? From = null) : GameCommand(Player), IBattleCommand;
 
-public sealed record BattleShootCommand(PlayerId Player, int Target) : GameCommand(Player);
+public sealed record BattleShootCommand(PlayerId Player, int Target) : GameCommand(Player), IBattleCommand;
 
 /// <summary>The siege engine, controlled from Basic Ballistics, fires at a wall section, the gate, the keep or a tower (ADR-106).</summary>
-public sealed record BattleShootStructureCommand(PlayerId Player, int Structure) : GameCommand(Player);
+public sealed record BattleShootStructureCommand(PlayerId Player, int Structure) : GameCommand(Player), IBattleCommand;
 
 /// <summary>The active stack hits the gate in melee (ADR-120); <paramref name="From"/> is where to stand.</summary>
-public sealed record BattleAttackStructureCommand(PlayerId Player, int Structure, CellPosition? From = null) : GameCommand(Player);
+public sealed record BattleAttackStructureCommand(PlayerId Player, int Structure, CellPosition? From = null) : GameCommand(Player), IBattleCommand;
 
 /// <summary>The active creature caster casts its spell at a stack or a cell (ADR-120).</summary>
-public sealed record BattleCreatureCastCommand(PlayerId Player, int? Target = null, CellPosition? Cell = null) : GameCommand(Player);
+public sealed record BattleCreatureCastCommand(PlayerId Player, int? Target = null, CellPosition? Cell = null) : GameCommand(Player), IBattleCommand;
 
 /// <summary>The player's hero uses a warcry (Stronghold, ADR-067): no mana, and the active unit keeps its action.</summary>
-public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry) : GameCommand(Player);
+public sealed record BattleWarcryCommand(PlayerId Player, Battles.Warcry Warcry) : GameCommand(Player), IBattleCommand;
 
 /// <summary>
 /// The hero casts a spell at a stack or a cell, as the spell needs (ADR-110); the active unit keeps its action. A move (ADR-151) takes the stack
 /// <paramref name="Target"/> to <paramref name="Cell"/> (its footprint's top-left); a drain heals the own stack <paramref name="Second"/>.
 /// </summary>
-public sealed record BattleCastCommand(PlayerId Player, string Spell, int? Target = null, CellPosition? Cell = null, int? Second = null) : GameCommand(Player);
+public sealed record BattleCastCommand(PlayerId Player, string Spell, int? Target = null, CellPosition? Cell = null, int? Second = null) : GameCommand(Player), IBattleCommand;
 
-public sealed record BattleWaitCommand(PlayerId Player) : GameCommand(Player);
+public sealed record BattleWaitCommand(PlayerId Player) : GameCommand(Player), IBattleCommand;
 
-public sealed record BattleDefendCommand(PlayerId Player) : GameCommand(Player);
+public sealed record BattleDefendCommand(PlayerId Player) : GameCommand(Player), IBattleCommand;
 
 /// <summary>The player's hero flees: its army is lost and it leaves the map for the player's taverns (ADR-038, ADR-081).</summary>
-public sealed record BattleRetreatCommand(PlayerId Player) : GameCommand(Player);
+public sealed record BattleRetreatCommand(PlayerId Player) : GameCommand(Player), IBattleCommand;
 
 /// <summary>
 /// The player's hero surrenders to the other player (ADR-070, ADR-081): half the gold cost of its surviving creatures goes to that player, and
 /// the hero leaves the map with its army for the player's taverns. Not against neutrals.
 /// </summary>
-public sealed record BattleSurrenderCommand(PlayerId Player) : GameCommand(Player);
+public sealed record BattleSurrenderCommand(PlayerId Player) : GameCommand(Player), IBattleCommand;
 
 /// <summary>Quick combat: the AI fights the rest of the battle for both sides.</summary>
-public sealed record AutoResolveBattleCommand(PlayerId Player) : GameCommand(Player);
+public sealed record AutoResolveBattleCommand(PlayerId Player) : GameCommand(Player), IBattleCommand;
 
 /// <summary>A human player's auto combat setting (ADR-090, CMB-10); allowed at any time, also outside the player's turn.</summary>
 public sealed record SetAutoCombatCommand(PlayerId Player, Battles.AutoCombatMode Mode) : GameCommand(Player);
@@ -286,4 +290,4 @@ public sealed record CommandResult(bool IsAccepted, string? Error = null, object
 }
 
 /// <summary>A hero casts an adventure spell (ADR-120); <paramref name="Target"/> is the tile for Dimension Door.</summary>
-public sealed record CastAdventureSpellCommand(PlayerId Player, HeroId Hero, string Spell, MapPosition? Target = null) : GameCommand(Player);
+public sealed record CastAdventureSpellCommand(PlayerId Player, HeroId Hero, string Spell, MapPosition? Target = null) : GameCommand(Player), IHeroCommand;

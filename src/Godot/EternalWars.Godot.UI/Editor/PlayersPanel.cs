@@ -22,10 +22,10 @@ public partial class PlayersPanel : VBoxContainer
         var buttons = new HBoxContainer();
         AddChild(buttons);
         var add = new Button { Text = "Add player" }.WithIcon(UiIcon.Plus);
-        add.Pressed += () => Report(_editor.AddPlayer($"Player {_editor.Scenario.Players.Count + 1}", isHuman: false, out _));
+        add.Pressed += () => Report(_editor.Players.Add($"Player {_editor.Scenario.Players.Count + 1}", isHuman: false, out _));
         buttons.AddChild(add);
         var remove = new Button { Text = "Remove last" }.WithIcon(UiIcon.Minus);
-        remove.Pressed += () => Report(_editor.RemoveLastPlayer());
+        remove.Pressed += () => Report(_editor.Players.RemoveLast());
         buttons.AddChild(remove);
         AddChild(_status);
 
@@ -50,22 +50,22 @@ public partial class PlayersPanel : VBoxContainer
             var id = player.Id;
             var name = new LineEdit { Text = player.Name, CustomMinimumSize = new Vector2(150, 0) };
             name.AddThemeColorOverride("font_color", Palette.ForPlayer(id).Lightened(0.3f));
-            name.TextSubmitted += text => _editor.UpdatePlayer(id, text.Trim(), _editor.Scenario.GetPlayer(id).IsHuman);
+            name.TextSubmitted += text => _editor.Players.Update(id, text.Trim(), _editor.Scenario.GetPlayer(id).IsHuman);
             _rows.AddChild(name);
 
             var human = new CheckBox { ButtonPressed = player.IsHuman };
-            human.Toggled += on => _editor.UpdatePlayer(id, _editor.Scenario.GetPlayer(id).Name, on);
+            human.Toggled += on => _editor.Players.Update(id, _editor.Scenario.GetPlayer(id).Name, on);
             _rows.AddChild(human);
 
             var team = new SpinBox { MinValue = 0, MaxValue = GameState.MaxPlayers - 1, Value = player.Team.Value };
-            team.ValueChanged += v => _editor.SetPlayerTeam(id, new TeamId((int)v));
+            team.ValueChanged += v => _editor.Players.SetTeam(id, new TeamId((int)v));
             _rows.AddChild(team);
 
             // ADR-068: a player's own hero limit for campaign-like maps; 0 = the map's limit.
             var heroes = new SpinBox { MinValue = 0, MaxValue = ScenarioRules.HeroLimit, Value = player.MaxHeroes ?? 0 };
             heroes.ValueChanged += v =>
             {
-                Report(_editor.SetPlayerHeroLimit(id, v == 0 ? null : (int)v));
+                Report(_editor.Players.SetHeroLimit(id, v == 0 ? null : (int)v));
                 heroes.SetValueNoSignal(_editor.Scenario.GetPlayer(id).MaxHeroes ?? 0);
             };
             _rows.AddChild(heroes);

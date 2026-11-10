@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
@@ -110,8 +111,22 @@ public sealed record BoxContents
 public sealed class PandorasBox(
     MapObjectId id, MapObjectDefinition definition, MapPosition position,
     BoxContents? contents = null, IReadOnlyList<CreatureStack>? guard = null, string? message = null, string? @event = null)
-    : MapObject(id, definition, position, MapObjectKind.PandorasBox)
+    : MapObject(id, definition, position, MapObjectKind.PandorasBox), IBattleGuard
 {
+    /// <inheritdoc/>
+    /// <remarks>A lost or fled battle leaves the guard whole.</remarks>
+    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome) => outcome.Events.Publish(new MapObjectChanged(Id));
+
+    /// <inheritdoc/>
+    /// <remarks>Winning opens the box for the hero.</remarks>
+    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
+    {
+        if (winner is not null)
+        {
+            PandorasBoxRules.Open(outcome.State, outcome.Events, outcome.Economy, outcome.Progression, outcome.Artifacts, winner, this);
+        }
+    }
+
     /// <inheritdoc/>
     internal override string DigestState() => $"contents {Contents} guard {string.Join(',', Guard)} message {Message}{(Event is null ? "" : $" event {Event}")}";
 

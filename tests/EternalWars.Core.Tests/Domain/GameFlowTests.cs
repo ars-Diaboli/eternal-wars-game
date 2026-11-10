@@ -645,7 +645,7 @@ public class GameFlowTests
         editor.Events.Subscribe<ScenarioRulesChanged>(_ => changes++);
         var rules = new ScenarioRules([ScenarioCondition.SurviveUntilDay(10)], []);
 
-        editor.SetScenarioRules(rules);
+        editor.Map.SetRules(rules);
         Assert.Same(rules, editor.Scenario.Rules);
 
         Assert.True(editor.Undo());

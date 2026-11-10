@@ -2,10 +2,8 @@ using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Map;
-using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Settings;
-using EternalWars.Core.Domain.Towns;
+using EternalWars.Core.Events;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
 using Godot;
@@ -15,8 +13,9 @@ namespace EternalWars.Godot.Shared.Battle;
 /// <summary>
 /// The battle scene of the 3D game: ground textured with the terrain the battle is fought on, a cell grid, obstacles
 /// and placeholder units (<see cref="BattleUnitView"/>), with its own camera. It opens on <see cref="BattleStarted"/>
-/// and builds everything from that event; later battle events become steps of one animation queue (moves, lunges,
-/// projectiles, hit flashes, deaths), so a whole AI turn that the core resolved at once plays in order. Quick combat
+/// and builds everything from that event (<see cref="BattleFieldBuilder"/>); later battle events become steps of one animation queue
+/// (<see cref="BattleAnimationQueue"/>: moves, lunges, projectiles, hit flashes, deaths), so a whole AI turn that the core resolved at once
+/// plays in order. Each step's combat log line (<see cref="BattleNarrator"/>) is raised as <see cref="Narrated"/> when it plays. Quick combat
 /// and battles without a human side skip the animation; <see cref="Speed"/> plays it slower, faster or not at all (ADR-090). While the queue plays the view is <see cref="IsBusy"/>;
 /// once it catches up with the core state it shows where a human-commanded active unit can go and raises
 /// <see cref="Idle"/>. After <see cref="BattleEnded"/> has played, <see cref="Finished"/> is raised and the view stays
@@ -27,7 +26,6 @@ namespace EternalWars.Godot.Shared.Battle;
 /// </summary>
 public partial class BattleView3D : Node3D
 {
-    private const float GroundMargin = 6f;
     private const float TiltDegrees = 38f;
     private const float MinZoom = 0.55f;
     private const float MaxZoom = 1.6f;
@@ -36,37 +34,28 @@ public partial class BattleView3D : Node3D
     private static readonly Color MoveColor = new(0.30f, 0.90f, 0.30f, 0.45f);
     private static readonly Color AttackColor = new(0.95f, 0.25f, 0.20f, 0.50f);
     private static readonly Color ShootColor = new(0.95f, 0.60f, 0.15f, 0.50f);
-    private static readonly Color HitColor = new(1.0f, 0.15f, 0.10f);
     private static readonly Color ZoneColor = new(0.35f, 0.65f, 1.0f, 0.18f);
 
-    private readonly Dictionary<int, BattleUnitView> _units = [];
-
-    /// <summary>A siege's structures by id (ADR-106).</summary>
-    private readonly Dictionary<int, (SiegeStructureKind Kind, CellRect Rect, MeshInstance3D Node)> _structures = [];
-
-    /// <summary>Where each unit will stand once the queue has played: the geometry of steps queued after a move.</summary>
-    private readonly Dictionary<int, CellRect> _planned = [];
-
-    /// <summary>The spells' field zones on the field (ADR-149), by zone id.</summary>
-    private readonly Dictionary<int, MeshInstance3D> _zones = [];
-
-    private readonly Dictionary<BattleSide, string> _sideNames = [];
     private readonly Dictionary<BattleSide, Color> _sideColors = [];
     private readonly Node3D _field = new() { Name = "Field" };
     private readonly Camera3D _camera = new() { Name = "BattleCamera", Fov = 45 };
     private readonly MeshInstance3D _ghost = Overlay("Ghost");
     private readonly MeshInstance3D _target = Overlay("Target");
+    private readonly BattleAnimationQueue _queue;
+    private readonly BattleNarrator _narrator;
+    private readonly BattleStage _stage;
     private MultiMesh _reach = null!;
     private GameSession _session = null!;
-    private Tween? _queue;
-    private ulong _queueFrame;
-    private readonly List<QueuedStep> _playing = [];
-    private readonly List<QueuedStep> _waiting = [];
-    private int _pending;
     private bool _instant;
-    private AnimationSpeed _speed = AnimationSpeed.Normal;
     private int _width;
     private float _zoom = 1f;
+
+    public BattleView3D()
+    {
+        _queue = new BattleAnimationQueue(this, RefreshReach, OnIdle); // busy: no reach overlay or preview while the queue plays
+        _narrator = new BattleNarrator(() => _session.State);
+        _stage = new BattleStage(_field, () => _session.State, _narrator, SideColor, Step, Narrate);
+    }
 
     /// <summary>The scene was built for a new battle (the app hides the adventure map and shows the battle HUD).</summary>
     public event Action? Opened;
@@ -88,19 +77,12 @@ public partial class BattleView3D : Node3D
     /// <summary>How fast the battle animations play (ADR-090, UI-1); instant shows each step's result at once. A change applies to the queue playing.</summary>
     public AnimationSpeed Speed
     {
-        get => _speed;
-        set
-        {
-            _speed = value;
-            if (_queue is not null && _queue.IsValid() && value != AnimationSpeed.Instant)
-            {
-                _queue.SetSpeedScale((float)SpeedSettings.Scale(value));
-            }
-        }
+        get => _queue.Speed;
+        set => _queue.Speed = value;
     }
 
     /// <summary>Animations are still playing; the shown battlefield is behind the core state.</summary>
-    public bool IsBusy => _pending > 0;
+    public bool IsBusy => _queue.IsBusy;
 
     /// <summary>
     /// The replay viewer watches (ADR-164): nobody commands or deploys from this view, and every battle plays move by move at <see cref="Speed"/>,
@@ -111,7 +93,7 @@ public partial class BattleView3D : Node3D
     /// <summary>Stops the animations and shows the end of every queued step at once ("skip to the result" in the replay viewer).</summary>
     public void FinishAnimations()
     {
-        FlushSteps();
+        _queue.Flush();
         OnIdle();
     }
 
@@ -147,7 +129,7 @@ public partial class BattleView3D : Node3D
     /// </summary>
     public void Carry(Vector2? point)
     {
-        if (Picked is not { } id || !_units.TryGetValue(id, out var view) || !_planned.TryGetValue(id, out var rect))
+        if (Picked is not { } id || !_stage.Units.TryGetValue(id, out var view) || !_stage.Planned.TryGetValue(id, out var rect))
         {
             return;
         }
@@ -168,7 +150,7 @@ public partial class BattleView3D : Node3D
         }
     }
 
-    public string SideName(BattleSide side) => _sideNames.GetValueOrDefault(side, side.ToString());
+    public string SideName(BattleSide side) => _narrator.SideName(side);
 
     public Color SideColor(BattleSide side) => _sideColors.GetValueOrDefault(side, Palette.Neutral);
 
@@ -191,107 +173,64 @@ public partial class BattleView3D : Node3D
 
         var events = session.Events;
         this.SubscribeWhileInTree<BattleStarted>(events, Open);
-        this.SubscribeWhileInTree<BattleRoundStarted>(events, e => Step(null, () => Narrate($"Round {e.Round}.")));
+        Tell<BattleRoundStarted>(events);
         this.SubscribeWhileInTree<BattleTurnStarted>(events, e => Step(null, () => SetActive(e.Unit)));
-        this.SubscribeWhileInTree<BattleUnitMoved>(events, OnMoved);
-        this.SubscribeWhileInTree<BattleUnitTeleported>(events, OnTeleported);
-        this.SubscribeWhileInTree<BattleUnitTurnRegained>(events, e => Step(null, () =>
-            Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} may act once more this round{(e.InPlace ? ", without moving" : string.Empty)}.")));
-        this.SubscribeWhileInTree<BattleDeploymentStarted>(events, e => Step(null, () =>
-            Narrate($"{SideName(e.Side)} deploys within {e.Columns} columns: drag a stack to where it should stand (or click it, then the cell); then start the battle.")));
-        this.SubscribeWhileInTree<BattleUnitDeployed>(events, OnDeployed);
-        this.SubscribeWhileInTree<BattleDeploymentEnded>(events, _ => Step(null, () =>
+        this.SubscribeWhileInTree<BattleUnitMoved>(events, _stage.OnMoved);
+        this.SubscribeWhileInTree<BattleUnitTeleported>(events, _stage.OnTeleported);
+        Tell<BattleUnitTurnRegained>(events);
+        Tell<BattleDeploymentStarted>(events);
+        this.SubscribeWhileInTree<BattleUnitDeployed>(events, _stage.OnDeployed);
+        this.SubscribeWhileInTree<BattleDeploymentEnded>(events, e => Step(null, _stage.Then(e, () =>
         {
             Pick(null);
             ShowPlacement(null, false);
-            Narrate("The battle begins.");
-        }));
-        this.SubscribeWhileInTree<BattleUnitAttacked>(events, OnAttacked);
-        this.SubscribeWhileInTree<BattleUnitDied>(events, OnDied);
-        this.SubscribeWhileInTree<BattleMoraleTriggered>(events, OnMorale);
-        this.SubscribeWhileInTree<BattleUnitHealed>(events, OnHealed);
-        this.SubscribeWhileInTree<SiegeStructureShot>(events, OnStructureShot);
-        this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(events, OnSiegeDamaged);
-        this.SubscribeWhileInTree<SiegeStructureDamaged>(events, OnStructureDamaged);
-        this.SubscribeWhileInTree<BattleUnitSummoned>(events, OnSummoned);
-        this.SubscribeWhileInTree<BattleUnitCopied>(events, e => Step(null, () =>
+        })));
+        this.SubscribeWhileInTree<BattleUnitAttacked>(events, _stage.OnAttacked);
+        this.SubscribeWhileInTree<BattleUnitDied>(events, _stage.OnDied);
+        this.SubscribeWhileInTree<BattleMoraleTriggered>(events, _stage.OnMorale);
+        this.SubscribeWhileInTree<BattleUnitHealed>(events, _stage.OnHealed);
+        this.SubscribeWhileInTree<SiegeStructureShot>(events, _stage.OnStructureShot);
+        this.SubscribeWhileInTree<BattleUnitSiegeDamaged>(events, _stage.OnSiegeDamaged);
+        this.SubscribeWhileInTree<SiegeStructureDamaged>(events, _stage.OnStructureDamaged);
+        this.SubscribeWhileInTree<BattleUnitSummoned>(events, _stage.OnSummoned);
+        this.SubscribeWhileInTree<BattleUnitCopied>(events, _stage.OnCopied);
+        Tell<BattleCopyVanished>(events);
+        this.SubscribeWhileInTree<BattleUnitRaised>(events, _stage.OnRaised);
+        this.SubscribeWhileInTree<BattleUnitSplit>(events, _stage.OnSplit);
+        this.SubscribeWhileInTree<BattleUnitShielded>(events, _stage.OnShielded);
+        Tell<BattleManaGained>(events);
+        Tell<BattleUnitActsAgain>(events);
+        this.SubscribeWhileInTree<BattleUnitReborn>(events, _stage.OnReborn);
+        this.SubscribeWhileInTree<BattleUnitRevived>(events, _stage.OnRevived);
+        Tell<BattleSpellDispelled>(events);
+        Tell<BattleUnitSpellbound>(events);
+        Tell<BattleUnitStunned>(events);
+        Tell<BattleCreatureCast>(events);
+        Tell<BattleUnitLeftKeep>(events);
+        Tell<BattleSpellCast>(events);
+        this.SubscribeWhileInTree<BattleUnitSpellDamaged>(events, _stage.OnSpellDamaged);
+        this.SubscribeWhileInTree<BattleZoneCreated>(events, _stage.OnZoneCreated);
+        this.SubscribeWhileInTree<BattleZoneExpired>(events, _stage.OnZoneExpired);
+        Tell<BattleSpellApplied>(events);
+        this.SubscribeWhileInTree<BattleUnitSideChanged>(events, _stage.OnSideChanged);
+        Tell<BattleSpellResisted>(events);
+        Tell<BattleSpellExpired>(events);
+        Tell<BattleRageGained>(events);
+        Tell<BattleWarcryUsed>(events);
+        Tell<BattleUnitTerrified>(events);
+        Tell<BattleUnitWaited>(events);
+        Tell<BattleUnitDefended>(events);
+        this.SubscribeWhileInTree<BattleEnded>(events, e =>
         {
-            AddUnit(e.Unit);
-            Narrate($"{SpellName(e.Spell)}: a copy of {NameOf(e.Original)} fights until round {e.UntilRound}, or until it is hit.");
-        }));
-        this.SubscribeWhileInTree<BattleCopyVanished>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: the copy of {NameOf(e.Unit)} vanishes.")));
-        this.SubscribeWhileInTree<BattleUnitRaised>(events, e => Step(null, () =>
-        {
-            AddUnit(e.Unit);
-            Narrate($"{SpellName(e.Spell)}: {e.Unit.Count} {_session.State.Creatures.Get(e.Unit.Creature).Name} rise where {NameOf(e.From)} fell.");
-        }));
-        this.SubscribeWhileInTree<BattleUnitSplit>(events, e => Step(null, () =>
-        {
-            if (_units.TryGetValue(e.From, out var from))
+            var line = _stage.Line(e);
+            Step(null, () =>
             {
-                from.SetCount(e.FromCount);
-            }
-
-            AddUnit(e.Unit);
-            Narrate($"{SpellName(e.Spell)} takes {e.Unit.Count} of {NameOf(e.From)}; {e.FromCount} stay on their side.");
-        }));
-        this.SubscribeWhileInTree<BattleUnitShielded>(events, OnShielded);
-        this.SubscribeWhileInTree<BattleManaGained>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {SideName(e.Side)} gains {e.Gained} mana ({e.Mana} now).")));
-        this.SubscribeWhileInTree<BattleUnitActsAgain>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} acts again.")));
-        this.SubscribeWhileInTree<BattleUnitReborn>(events, OnReborn);
-        this.SubscribeWhileInTree<BattleUnitRevived>(events, OnRevived);
-        this.SubscribeWhileInTree<BattleSpellDispelled>(events, e => Step(null, () => Narrate($"{SpellName(e.By)} takes {SpellName(e.Spell)} off {NameOf(e.Unit)}.")));
-        this.SubscribeWhileInTree<BattleUnitSpellbound>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} cannot act.")));
-        this.SubscribeWhileInTree<BattleUnitStunned>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)}: {NameOf(e.Unit)} will lose its next action.")));
-        this.SubscribeWhileInTree<BattleCreatureCast>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} cast {SpellName(e.Spell)} ({e.CastsLeft} cast(s) left).")));
-        this.SubscribeWhileInTree<BattleUnitLeftKeep>(events, e => Step(null, () => Narrate($"The keep falls: {NameOf(e.Unit)} come out of it.")));
-        this.SubscribeWhileInTree<BattleSpellCast>(events, e => Step(null, () => Narrate($"{SideName(e.Side)} casts {SpellName(e.Spell)} ({e.Cost} mana, {e.Mana} left).")));
-        this.SubscribeWhileInTree<BattleUnitSpellDamaged>(events, OnSpellDamaged);
-        this.SubscribeWhileInTree<BattleZoneCreated>(events, e => Step(null, () =>
-        {
-            AddZone(e.Zone, e.Spell, e.Rect);
-            Narrate($"{SpellName(e.Spell)} covers the field until round {e.UntilRound}.");
-        }));
-        this.SubscribeWhileInTree<BattleZoneExpired>(events, e => Step(null, () =>
-        {
-            if (_zones.Remove(e.Zone, out var node))
-            {
-                node.QueueFree();
-            }
-
-            Narrate($"{SpellName(e.Spell)} fades.");
-        }));
-        this.SubscribeWhileInTree<BattleSpellApplied>(events, e => Step(null, () => Narrate(e.Turns is { } turns
-            ? $"{SpellName(e.Spell)} on {NameOf(e.Unit)} for its next {(turns == 1 ? "turn" : $"{turns} turns")}."
-            : $"{SpellName(e.Spell)} on {NameOf(e.Unit)} until round {e.UntilRound}.")));
-        this.SubscribeWhileInTree<BattleUnitSideChanged>(events, e => Step(null, () =>
-        {
-            if (_units.TryGetValue(e.Unit, out var view))
-            {
-                view.SetSide(e.Side, SideColor(e.Side));
-            }
-
-            Narrate($"{NameOf(e.Unit)} now fights for {SideName(e.Side)}.");
-        }));
-        this.SubscribeWhileInTree<BattleSpellResisted>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} is untouched by {SpellName(e.Spell)}.")));
-        this.SubscribeWhileInTree<BattleSpellExpired>(events, e => Step(null, () => Narrate($"{SpellName(e.Spell)} on {NameOf(e.Unit)} wears off.")));
-        this.SubscribeWhileInTree<BattleRageGained>(events, e => Step(null, () => Narrate($"Blood Rage: {NameOf(e.Unit)} has +{e.Attack} Attack.")));
-        this.SubscribeWhileInTree<BattleWarcryUsed>(events, e => Step(null, () => Narrate(WarcryLine(e))));
-        this.SubscribeWhileInTree<BattleUnitTerrified>(events, e => Step(null, () => Narrate($"Terror: {NameOf(e.Unit)} loses its action.")));
-        this.SubscribeWhileInTree<BattleUnitWaited>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} waits.")));
-        this.SubscribeWhileInTree<BattleUnitDefended>(events, e => Step(null, () => Narrate($"{NameOf(e.Unit)} defends.")));
-        this.SubscribeWhileInTree<BattleEnded>(events, e => Step(null, () =>
-        {
-            Result = e;
-            SetActive(null);
-            Narrate(e.Reason switch
-            {
-                BattleEndReason.Retreated => $"{SideName(e.Winner.Opponent())} retreats. {SideName(e.Winner)} wins.",
-                BattleEndReason.Surrendered => $"{SideName(e.Winner.Opponent())} surrenders. {SideName(e.Winner)} wins.",
-                _ => $"{SideName(e.Winner)} wins.",
+                Result = e;
+                SetActive(null);
+                Narrate(line);
+                Finished?.Invoke(e);
             });
-            Finished?.Invoke(e);
-        }));
+        });
     }
 
     /// <summary>
@@ -314,7 +253,7 @@ public partial class BattleView3D : Node3D
             units, battle.Obstacles.ToList(), battle.Siege is { } siege ? SiegeLayout.Of(siege) : null));
         foreach (var zone in battle.Zones)
         {
-            AddZone(zone.Id, zone.Spell, zone.Rect);
+            _stage.AddZone(zone.Id, zone.Spell, zone.Rect);
         }
 
         SetActive(battle.ActiveUnit?.Id);
@@ -324,7 +263,7 @@ public partial class BattleView3D : Node3D
     /// <summary>Hides the scene after the result has been seen.</summary>
     public void Close()
     {
-        ResetQueue();
+        _queue.Reset();
         IsOpen = false;
         Visible = false;
         Clear();
@@ -335,7 +274,7 @@ public partial class BattleView3D : Node3D
     public Vector2? PickPoint(Vector2 screenPoint) =>
         IsOpen && BattleSpace.PickPoint(_camera, screenPoint) is { } point &&
         ((point.X >= 0 && point.Y >= 0 && point.X < _width && point.Y < BattleState.Height)
-         || _structures.Values.Any(s => s.Rect.Contains(BattleSpace.ToCell(point))))
+         || _stage.StructureRects.Any(r => r.Contains(BattleSpace.ToCell(point))))
             ? point
             : null;
 
@@ -365,11 +304,11 @@ public partial class BattleView3D : Node3D
             case ShootAction shoot:
                 ShowOverlay(_target, battle.GetUnit(shoot.Target).Rect, ShootColor);
                 break;
-            case ShootStructureAction aim when _structures.TryGetValue(aim.Structure, out var structure):
-                ShowOverlay(_target, structure.Rect, ShootColor);
+            case ShootStructureAction aim when _stage.TryGetStructure(aim.Structure, out var structure):
+                ShowOverlay(_target, structure, ShootColor);
                 break;
-            case AttackStructureAction hit when _structures.TryGetValue(hit.Structure, out var gate):
-                ShowOverlay(_target, gate.Rect, AttackColor);
+            case AttackStructureAction hit when _stage.TryGetStructure(hit.Structure, out var gate):
+                ShowOverlay(_target, gate, AttackColor);
                 if (hit.From is { } stand && stand != active.Position)
                 {
                     ShowOverlay(_ghost, active.RectAt(stand), MoveColor);
@@ -402,7 +341,7 @@ public partial class BattleView3D : Node3D
 
     private void Open(BattleStarted e)
     {
-        ResetQueue();
+        _queue.Reset();
         Clear();
 
         var state = _session.State;
@@ -411,472 +350,25 @@ public partial class BattleView3D : Node3D
         Result = null;
         _width = e.Width;
         _instant = !Watching && (battle.AutoResolve || (battle.IsComputerControlled(BattleSide.Attacker) && battle.IsComputerControlled(BattleSide.Defender)));
+        var opening = _stage.Line(e);
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
-            var participant = battle.Participant(side);
-            _sideColors[side] = participant.Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral;
-            _sideNames[side] = NameOf(participant);
+            _sideColors[side] = battle.Participant(side).Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral;
         }
 
-        BuildGround(battle.Terrain, e.Width, e.Height);
-        BuildGrid(e.Width, e.Height);
-        foreach (var obstacle in e.Obstacles)
-        {
-            _field.AddChild(ObstacleNode(obstacle));
-        }
-
-        if (e.Siege is { } layout)
-        {
-            BuildSiege(layout);
-        }
-
-        foreach (var info in e.Units)
-        {
-            var view = new BattleUnitView();
-            view.Bind(info.Unit, info.Side, battle.GetUnit(info.Unit).Creature, info.Count, info.Width, info.Height, SideColor(info.Side), info.Machine);
-            var rect = info.Rect;
-            view.Position = BattleSpace.Center(rect);
-            _field.AddChild(view);
-            _units[info.Unit] = view;
-            _planned[info.Unit] = rect;
-        }
-
+        _stage.Build(e, battle);
         _zoom = 1f;
         Visible = true;
         UpdateCamera();
         _camera.MakeCurrent();
-        Narrate(e.IsAmbush ? $"Ambush! {SideName(BattleSide.Attacker)} against {SideName(BattleSide.Defender)}." : $"{SideName(BattleSide.Attacker)} against {SideName(BattleSide.Defender)}.");
+        Narrate(opening);
         Opened?.Invoke();
         OnIdle();
     }
 
-    private void OnMoved(BattleUnitMoved e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        var rect = new CellRect(e.To.X, e.To.Y, view.Width, view.Height);
-        _planned[e.Unit] = rect;
-        var cells = Math.Max(Math.Abs(e.To.X - e.From.X), Math.Abs(e.To.Y - e.From.Y));
-        Step(
-            t => t.TweenProperty(view, "position", BattleSpace.Center(rect), Mathf.Clamp(cells * 0.05f, 0.15f, 0.6f)).SetTrans(Tween.TransitionType.Sine),
-            () => view.Position = BattleSpace.Center(rect));
-    }
-
-    /// <summary>A stack a move spell took (ADR-151) sinks out of sight and rises at its new place.</summary>
-    private void OnTeleported(BattleUnitTeleported e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        var rect = new CellRect(e.To.X, e.To.Y, view.Width, view.Height);
-        _planned[e.Unit] = rect;
-        var line = $"{SpellName(e.Spell)} takes {NameOf(e.Unit)} across the field.";
-        Step(
-            t =>
-            {
-                t.TweenProperty(view, "scale", new Vector3(1, 0.05f, 1), 0.15f);
-                t.TweenCallback(Callable.From(() => view.Position = BattleSpace.Center(rect)));
-                t.TweenProperty(view, "scale", Vector3.One, 0.15f);
-            },
-            () =>
-            {
-                view.Scale = Vector3.One;
-                view.Position = BattleSpace.Center(rect);
-                Narrate(line);
-            });
-    }
-
-    /// <summary>A stack placed elsewhere during deployment jumps there.</summary>
-    private void OnDeployed(BattleUnitDeployed e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        var rect = new CellRect(e.To.X, e.To.Y, view.Width, view.Height);
-        _planned[e.Unit] = rect;
-        Step(null, () => view.Position = BattleSpace.Center(rect));
-    }
-
-    private void OnAttacked(BattleUnitAttacked e)
-    {
-        if (!_units.TryGetValue(e.Attacker, out var attacker) || !_units.TryGetValue(e.Target, out var target))
-        {
-            return;
-        }
-
-        var from = BattleSpace.Center(_planned[e.Attacker]);
-        var to = BattleSpace.Center(_planned[e.Target]);
-        var verb = e.Kind switch
-        {
-            BattleAttackKind.Ranged => "shoots",
-            BattleAttackKind.Retaliation => "strikes back at",
-            BattleAttackKind.RangedRetaliation => "shoots back at",
-            BattleAttackKind.Area => "also hits",
-            _ => "attacks",
-        };
-        var luck = e.Luck switch
-        {
-            HitLuck.Lucky => " Lucky strike!",
-            HitLuck.Unlucky => " Bad luck!",
-            _ => string.Empty,
-        };
-        var line = $"{attacker.Creature.Name} {verb} {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.{luck}";
-        Step(
-            t =>
-            {
-                if (e.Kind is BattleAttackKind.Melee or BattleAttackKind.Retaliation)
-                {
-                    var lunge = (to - from) with { Y = 0 };
-                    lunge = lunge.LengthSquared() > 0 ? lunge.Normalized() * 0.25f : Vector3.Zero;
-                    t.TweenProperty(attacker.Body, "position", lunge, 0.12f);
-                    t.TweenProperty(attacker.Body, "position", Vector3.Zero, 0.12f);
-                }
-                else if (e.Kind is BattleAttackKind.Ranged or BattleAttackKind.RangedRetaliation)
-                {
-                    var projectile = Projectile(from + (Vector3.Up * attacker.BodyHeight * 1.4f));
-                    t.TweenCallback(Callable.From(() => projectile.Visible = true));
-                    t.TweenProperty(projectile, "position", to + (Vector3.Up * target.BodyHeight), Mathf.Clamp(from.DistanceTo(to) * 0.05f, 0.15f, 0.45f));
-                    t.TweenCallback(Callable.From(projectile.QueueFree));
-                }
-
-                var text = FloatingText(
-                    e.Luck switch { HitLuck.Lucky => $"-{e.Killed} lucky!", HitLuck.Unlucky => $"-{e.Killed} unlucky", _ => $"-{e.Killed}" },
-                    to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
-                t.TweenCallback(Callable.From(() => text.Visible = true));
-                t.TweenProperty(target.BodyMaterial, "albedo_color", HitColor, 0.08f);
-                t.Parallel().TweenProperty(text, "position", text.Position + (Vector3.Up * 0.6f), 0.45f);
-                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.45f);
-                t.Parallel().TweenProperty(target.BodyMaterial, "albedo_color", target.BaseColor, 0.15f).SetDelay(0.08f);
-                t.TweenCallback(Callable.From(text.QueueFree));
-            },
-            () =>
-            {
-                target.SetCount(e.RemainingCount);
-                target.SetHealth(e.TopHealth);
-                Narrate(line);
-            });
-    }
-
-    /// <summary>The healing tent: a green number over the healed stack and a log line.</summary>
-    private void OnHealed(BattleUnitHealed e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        var at = BattleSpace.Center(_planned[e.Unit]) + (Vector3.Up * ((view.BodyHeight * 2) + 0.4f));
-        Step(
-            t =>
-            {
-                var text = FloatingText($"+{e.Healed}", at);
-                text.Modulate = new Color(0.45f, 1f, 0.45f);
-                t.TweenCallback(Callable.From(() => text.Visible = true));
-                t.TweenProperty(text, "position", at + (Vector3.Up * 0.4f), 0.3f);
-                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.3f).SetDelay(0.1f);
-                t.TweenCallback(Callable.From(text.QueueFree));
-            },
-            () =>
-            {
-                view.SetHealth(e.TopHealth);
-                Narrate($"The healing tent restores {e.Healed} health to {view.Creature.Name}.");
-            });
-    }
-
-    /// <summary>The siege engine's shot at a structure (ADR-106): a projectile and a shudder, or a miss; a destroyed structure falls to rubble.</summary>
-    private void OnStructureShot(SiegeStructureShot e)
-    {
-        if (!_units.TryGetValue(e.Machine, out var machine) || !_structures.TryGetValue(e.Structure, out var structure))
-        {
-            return;
-        }
-
-        var from = BattleSpace.Center(_planned[e.Machine]) + (Vector3.Up * machine.BodyHeight * 1.4f);
-        var to = BattleSpace.Center(structure.Rect) + (Vector3.Up * 0.5f);
-        var name = StructureName(structure.Kind);
-        var line = !e.Hit ? $"The {machine.Creature.Name} misses the {name}."
-            : e.Health == 0 ? $"The {machine.Creature.Name} destroys the {name}."
-            : $"The {machine.Creature.Name} hits the {name}: {e.Health} hit point(s) left.";
-        Step(
-            t =>
-            {
-                var projectile = Projectile(from);
-                t.TweenCallback(Callable.From(() => projectile.Visible = true));
-                t.TweenProperty(projectile, "position", to, Mathf.Clamp(from.DistanceTo(to) * 0.05f, 0.2f, 0.5f));
-                t.TweenCallback(Callable.From(projectile.QueueFree));
-                if (e.Hit)
-                {
-                    t.TweenProperty(structure.Node, "scale", new Vector3(1.08f, 0.92f, 1.08f), 0.06f);
-                    t.TweenProperty(structure.Node, "scale", Vector3.One, 0.08f);
-                }
-            },
-            () =>
-            {
-                if (e.Health == 0)
-                {
-                    Ruin(structure.Node);
-                }
-
-                Narrate(line);
-            });
-    }
-
-    /// <summary>A stack's blow at the gate or Earthquake's shake of a wall section (ADR-120): a shudder; a destroyed structure falls to rubble.</summary>
-    private void OnStructureDamaged(SiegeStructureDamaged e)
-    {
-        if (!_structures.TryGetValue(e.Structure, out var structure))
-        {
-            return;
-        }
-
-        var name = StructureName(structure.Kind);
-        var who = e.Unit is { } unit ? NameOf(unit) : SpellName(e.Spell ?? string.Empty);
-        var line = e.Health == 0 ? $"{who} destroy the {name}." : $"{who} hit the {name}: {e.Damage} damage, {e.Health} hit point(s) left.";
-        Step(
-            t =>
-            {
-                t.TweenProperty(structure.Node, "scale", new Vector3(1.06f, 0.94f, 1.06f), 0.06f);
-                t.TweenProperty(structure.Node, "scale", Vector3.One, 0.08f);
-            },
-            () =>
-            {
-                if (e.Health == 0)
-                {
-                    Ruin(structure.Node);
-                }
-
-                Narrate(line);
-            });
-    }
-
-    /// <summary>A tower's shot at a stack or the moat's damage to one that entered it (ADR-106).</summary>
-    private void OnSiegeDamaged(BattleUnitSiegeDamaged e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var target))
-        {
-            return;
-        }
-
-        var to = BattleSpace.Center(_planned[e.Unit]);
-        var tower = e.Structure is { } id && _structures.TryGetValue(id, out var found) ? found : ((SiegeStructureKind Kind, CellRect Rect, MeshInstance3D Node)?)null;
-        var line = e.Source == SiegeDamageSource.Moat
-            ? $"{target.Creature.Name} wade into the moat: {e.Damage} damage, {e.Killed} killed."
-            : $"The {StructureName(tower?.Kind ?? SiegeStructureKind.Tower)} shoots {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.";
-        Step(
-            t =>
-            {
-                if (tower is { } shooter)
-                {
-                    var projectile = Projectile(BattleSpace.Center(shooter.Rect) + (Vector3.Up * 1.4f));
-                    t.TweenCallback(Callable.From(() => projectile.Visible = true));
-                    t.TweenProperty(projectile, "position", to + (Vector3.Up * target.BodyHeight), 0.35f);
-                    t.TweenCallback(Callable.From(projectile.QueueFree));
-                }
-
-                var text = FloatingText($"-{e.Killed}", to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
-                t.TweenCallback(Callable.From(() => text.Visible = true));
-                t.TweenProperty(target.BodyMaterial, "albedo_color", HitColor, 0.08f);
-                t.Parallel().TweenProperty(text, "position", text.Position + (Vector3.Up * 0.6f), 0.45f);
-                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.45f);
-                t.Parallel().TweenProperty(target.BodyMaterial, "albedo_color", target.BaseColor, 0.15f).SetDelay(0.08f);
-                t.TweenCallback(Callable.From(text.QueueFree));
-            },
-            () =>
-            {
-                target.SetCount(e.RemainingCount);
-                target.SetHealth(e.TopHealth);
-                Narrate(line);
-            });
-    }
-
-    /// <summary>A spell's damage to a stack (ADR-110): the stack flashes and shows its losses.</summary>
-    private void OnSpellDamaged(BattleUnitSpellDamaged e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var target))
-        {
-            return;
-        }
-
-        var to = BattleSpace.Center(_planned[e.Unit]);
-        Step(
-            t =>
-            {
-                var text = FloatingText($"-{e.Killed}", to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
-                t.TweenCallback(Callable.From(() => text.Visible = true));
-                t.TweenProperty(target.BodyMaterial, "albedo_color", HitColor, 0.08f);
-                t.Parallel().TweenProperty(text, "position", text.Position + (Vector3.Up * 0.6f), 0.45f);
-                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.45f);
-                t.Parallel().TweenProperty(target.BodyMaterial, "albedo_color", target.BaseColor, 0.15f).SetDelay(0.08f);
-                t.TweenCallback(Callable.From(text.QueueFree));
-            },
-            () =>
-            {
-                target.SetCount(e.RemainingCount);
-                target.SetHealth(e.TopHealth);
-                Narrate($"{SpellName(e.Spell)} hits {target.Creature.Name}: {e.Damage} damage, {e.Killed} killed.");
-            });
-    }
-
-    private string SpellName(string spell) => _session.State.Spells.TryGet(spell, out var definition) ? definition.Name : spell;
-    private static string StructureName(SiegeStructureKind kind) => kind switch
-    {
-        SiegeStructureKind.Wall => "wall section",
-        SiegeStructureKind.Gate => "gate",
-        SiegeStructureKind.Keep => "keep",
-        _ => "tower",
-    };
-
-    /// <summary>The log line of a warcry (ADR-067).</summary>
-    private string WarcryLine(BattleWarcryUsed e) => e.Warcry switch
-    {
-        Warcry.Rally => $"{SideName(e.Side)} rallies: +{PrimalFury.RallyMorale} morale for {PrimalFury.RallyRounds} rounds.",
-        Warcry.Intimidate => $"{SideName(e.Side)} intimidates the enemy: −1 morale, −20 % initiative for {PrimalFury.IntimidateRounds} rounds.",
-        _ => $"{SideName(e.Side)} roars a terror cry: {e.Affected.Count} enemy stack(s) will lose their next action.",
-    };
-
-    /// <summary>Morale shows as a caption over the unit and a log line.</summary>
-    private void OnMorale(BattleMoraleTriggered e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        var (caption, line) = e.Effect switch
-        {
-            MoraleEffect.ExtraAction => ("Morale!", $"High morale: {view.Creature.Name} acts again."),
-            MoraleEffect.Haste => ("Eager", $"High morale: {view.Creature.Name} is eager this round (+50 % initiative)."),
-            MoraleEffect.SkipTurn => ("Freezes", $"Low morale: {view.Creature.Name} freezes and loses its turn."),
-            MoraleEffect.Slow => ("Hesitant", $"Low morale: {view.Creature.Name} hesitates this round (−50 % initiative)."),
-            _ => (string.Empty, string.Empty),
-        };
-        var at = BattleSpace.Center(_planned[e.Unit]) + (Vector3.Up * ((view.BodyHeight * 2) + 0.6f));
-        Step(
-            t =>
-            {
-                var text = FloatingText(caption, at);
-                t.TweenCallback(Callable.From(() => text.Visible = true));
-                t.TweenProperty(text, "position", at + (Vector3.Up * 0.4f), 0.5f);
-                t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.5f).SetDelay(0.2f);
-                t.TweenCallback(Callable.From(text.QueueFree));
-            },
-            () => Narrate(line));
-    }
-
-    /// <summary>A summon's creatures appear at their placement, or an own summoned stack grows (ADR-120).</summary>
-    private void OnSummoned(BattleUnitSummoned e) => Step(null, () =>
-    {
-        var view = AddUnit(e.Unit);
-        Narrate($"{SpellName(e.Spell)} calls {e.Added} {view.Creature.Name} for the battle.");
-    });
-
-    /// <summary>A stack that came onto the field during the battle (a summon, a copy, raised skeletons, a split part; ADR-120, ADR-152), or one that grew.</summary>
-    private BattleUnitView AddUnit(BattleUnitInfo info)
-    {
-        if (!_units.TryGetValue(info.Unit, out var view))
-        {
-            view = new BattleUnitView();
-            view.Bind(info.Unit, info.Side, _session.State.Creatures.Get(info.Creature), info.Count, info.Width, info.Height, SideColor(info.Side));
-            view.Position = BattleSpace.Center(info.Rect);
-            _field.AddChild(view);
-            _units[info.Unit] = view;
-            _planned[info.Unit] = info.Rect;
-        }
-
-        view.SetCount(info.Count);
-        return view;
-    }
-
-    /// <summary>A martyr takes its share of a blow (Martyrdom, ADR-152): it flashes and shows its losses.</summary>
-    private void OnShielded(BattleUnitShielded e)
-    {
-        if (!_units.TryGetValue(e.Martyr, out var martyr))
-        {
-            return;
-        }
-
-        Step(
-            t =>
-            {
-                t.TweenProperty(martyr.BodyMaterial, "albedo_color", HitColor, 0.08f);
-                t.TweenProperty(martyr.BodyMaterial, "albedo_color", martyr.BaseColor, 0.15f);
-            },
-            () =>
-            {
-                martyr.SetCount(e.RemainingCount);
-                martyr.SetHealth(e.TopHealth);
-                Narrate($"{SpellName(e.Spell)}: {martyr.Creature.Name} take {e.Damage} of the blow meant for {NameOf(e.Unit)}, {e.Killed} killed.");
-            });
-    }
-
-    /// <summary>A Phoenix rises from its ashes (ADR-120).</summary>
-    private void OnReborn(BattleUnitReborn e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        Step(
-            t => t.TweenProperty(view, "scale", Vector3.One, 0.3f),
-            () =>
-            {
-                view.Visible = true;
-                view.Scale = Vector3.One;
-                view.SetCount(e.Count);
-                view.SetHealth(view.Creature.Health);
-                Narrate($"{view.Creature.Name} rise from the ashes: {e.Count} of them.");
-            });
-    }
-
-    /// <summary>A revive (ADR-123): the stack grows back; one destroyed earlier stands up again.</summary>
-    private void OnRevived(BattleUnitRevived e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        Step(
-            t => t.TweenProperty(view, "scale", Vector3.One, 0.3f),
-            () =>
-            {
-                view.Visible = true;
-                view.Scale = Vector3.One;
-                view.SetCount(e.Count);
-                view.SetHealth(e.TopHealth);
-                Narrate($"{SpellName(e.Spell)}: {view.Creature.Name} regain {e.Health} health, {e.Count} of them now.");
-            });
-    }
-
-    private void OnDied(BattleUnitDied e)
-    {
-        if (!_units.TryGetValue(e.Unit, out var view))
-        {
-            return;
-        }
-
-        Step(
-            t => t.TweenProperty(view, "scale", new Vector3(1, 0.05f, 1), 0.3f),
-            () =>
-            {
-                view.Visible = false;
-                Narrate($"{view.Creature.Name} perish.");
-            });
-    }
-
     /// <summary>
-    /// Queues one step: <paramref name="animate"/> adds its tweeners (skipped in quick combat), then
-    /// <paramref name="apply"/> sets the end state. With nothing queued, a step without animation applies at once.
-    /// Godot cannot append to a tween once it has started playing, so steps arriving later (an AI turn after the last
-    /// animation began, quick combat mid-animation) wait for the next tween; quick combat applies everything queued at once.
+    /// Queues one step on <see cref="BattleAnimationQueue"/>: <paramref name="animate"/> adds its tweeners (skipped in quick combat), then
+    /// <paramref name="apply"/> sets the end state. Quick combat applies everything queued at once.
     /// </summary>
     private void Step(Action<Tween>? animate, Action apply)
     {
@@ -886,126 +378,13 @@ public partial class BattleView3D : Node3D
         }
 
         _instant |= !Watching && _session.State.Battle?.AutoResolve == true;
-        if (_instant || _speed == AnimationSpeed.Instant)
-        {
-            FlushSteps();
-            apply();
-            OnIdle();
-            return;
-        }
-
-        if (animate is null && _pending == 0)
-        {
-            apply();
-            OnIdle();
-            return;
-        }
-
-        if (++_pending == 1)
-        {
-            RefreshReach(); // busy now: no reach overlay or preview while the queue plays
-        }
-
-        var step = new QueuedStep(animate, apply);
-        if (_queue is not null && _queue.IsValid() && _queue.IsRunning())
-        {
-            if (_queueFrame == Engine.GetProcessFrames())
-            {
-                Append(_queue, step); // the tween has not played a frame yet
-            }
-            else
-            {
-                _waiting.Add(step);
-            }
-
-            return;
-        }
-
-        StartQueue([step]);
+        _queue.Play(animate, apply, _instant);
     }
 
-    private void StartQueue(IEnumerable<QueuedStep> steps)
-    {
-        var queue = CreateTween();
-        queue.SetSpeedScale((float)SpeedSettings.Scale(_speed == AnimationSpeed.Instant ? AnimationSpeed.Normal : _speed));
-        queue.Finished += () =>
-        {
-            if (_queue == queue && _waiting.Count > 0)
-            {
-                var next = _waiting.ToList();
-                _waiting.Clear();
-                StartQueue(next);
-            }
-        };
-        _queue = queue;
-        _queueFrame = Engine.GetProcessFrames();
-        foreach (var step in steps)
-        {
-            Append(queue, step);
-        }
-    }
-
-    private void Append(Tween queue, QueuedStep step)
-    {
-        _playing.Add(step);
-        step.Animate?.Invoke(queue);
-        queue.TweenCallback(Callable.From(() => Finish(step)));
-    }
-
-    private void Finish(QueuedStep step)
-    {
-        if (step.Done)
-        {
-            return;
-        }
-
-        step.Done = true;
-        _playing.Remove(step);
-        step.Apply();
-        _pending--;
-        if (_pending == 0)
-        {
-            OnIdle();
-        }
-    }
-
-    /// <summary>Stops the animations and applies every queued step in order (quick combat mid-animation).</summary>
-    private void FlushSteps()
-    {
-        if (_pending == 0)
-        {
-            return;
-        }
-
-        _queue?.Kill();
-        _queue = null;
-        foreach (var step in _playing.Concat(_waiting).ToList())
-        {
-            step.Done = true;
-            step.Apply();
-        }
-
-        ResetQueue();
-    }
-
-    private void ResetQueue()
-    {
-        _queue?.Kill();
-        _queue = null;
-        _playing.Clear();
-        _waiting.Clear();
-        _pending = 0;
-    }
-
-    /// <summary>One queued animation step and its end state.</summary>
-    private sealed class QueuedStep(Action<Tween>? animate, Action apply)
-    {
-        public Action<Tween>? Animate { get; } = animate;
-
-        public Action Apply { get; } = apply;
-
-        public bool Done { get; set; }
-    }
+    /// <summary>An event that only adds its log line: a step without animation that narrates it.</summary>
+    private void Tell<T>(IEventSubscriber events)
+        where T : IEvent =>
+        this.SubscribeWhileInTree<T>(events, e => Step(null, _stage.Then(e, () => { })));
 
     private void OnIdle()
     {
@@ -1015,13 +394,7 @@ public partial class BattleView3D : Node3D
 
     private void Narrate(string line) => Narrated?.Invoke(line);
 
-    private void SetActive(int? unit)
-    {
-        foreach (var view in _units.Values)
-        {
-            view.Active = view.Unit == unit;
-        }
-    }
+    private void SetActive(int? unit) => _stage.SetActive(unit);
 
     /// <summary>
     /// Every cell a human-commanded active unit can cover this turn, as a faint overlay; during the deployment step the
@@ -1062,42 +435,10 @@ public partial class BattleView3D : Node3D
 
     private void Clear()
     {
-        foreach (var child in _field.GetChildren())
-        {
-            child.QueueFree();
-        }
-
-        _units.Clear();
-        _structures.Clear();
-        _planned.Clear();
-        _zones.Clear();
+        _stage.Clear();
         _reach.InstanceCount = 0;
         _ghost.Visible = false;
         _target.Visible = false;
-    }
-
-    private string NameOf(int unit) => _units.TryGetValue(unit, out var view) ? view.Creature.Name : $"#{unit}";
-
-    private string NameOf(BattleParticipant participant)
-    {
-        var state = _session.State;
-        if (participant.Hero is { } hero && state.Heroes.Concat(state.GarrisonHeroes).FirstOrDefault(h => h.Id == hero) is { } found)
-        {
-            return found.Name;
-        }
-
-        return participant.Guard is { } guard
-            ? state.FindObject(guard) switch
-            {
-                Town town => $"{town.Name} garrison",
-                MonsterGuard monster => state.Creatures.TryGet(monster.Creature, out var creature) ? $"Neutral {creature.Name}" : "Neutral monsters",
-                Mine mine => $"{mine.Definition.Name} guard",
-                CreatureDwelling dwelling => $"{dwelling.Definition.Name} guard",
-                CreatureBank bank => $"{bank.Definition.Name} guard",
-                PandorasBox => "Pandora's box guard",
-                _ => "Neutral",
-            }
-            : participant.Side.ToString();
     }
 
     private void UpdateCamera()
@@ -1106,390 +447,6 @@ public partial class BattleView3D : Node3D
         var distance = _width * BattleSpace.CellSize * 1.15f * _zoom;
         var tilt = Mathf.DegToRad(TiltDegrees);
         _camera.LookAtFromPosition(focus + (new Vector3(0, Mathf.Cos(tilt), Mathf.Sin(tilt)) * distance), focus, Vector3.Up);
-    }
-
-    /// <summary>The field in the battle terrain's texture, inside a darker band of the same ground.</summary>
-    private void BuildGround(TerrainType terrain, int width, int height)
-    {
-        var size = new Vector2(width, height) * BattleSpace.CellSize;
-        var center = BattleSpace.ToWorld(width / 2f, height / 2f);
-        var material = AdventureMapView.TerrainMaterial(terrain, 4f);
-        _field.AddChild(new MeshInstance3D { Name = "Ground", Mesh = new PlaneMesh { Size = size, Material = material }, Position = center });
-
-        var surround = (StandardMaterial3D)material.Duplicate();
-        surround.AlbedoColor = material.AlbedoColor.Darkened(0.55f);
-        _field.AddChild(new MeshInstance3D
-        {
-            Name = "Surround",
-            Mesh = new PlaneMesh { Size = size + (Vector2.One * GroundMargin * 2), Material = surround },
-            Position = center + (Vector3.Down * 0.02f),
-        });
-    }
-
-    private void BuildGrid(int width, int height)
-    {
-        var mesh = new ImmediateMesh();
-        var material = new StandardMaterial3D
-        {
-            ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            AlbedoColor = new Color(1, 1, 1, 0.12f),
-        };
-        mesh.SurfaceBegin(Mesh.PrimitiveType.Lines, material);
-        var lift = Vector3.Up * 0.01f;
-        for (var x = 0; x <= width; x++)
-        {
-            mesh.SurfaceAddVertex(BattleSpace.ToWorld(x, 0) + lift);
-            mesh.SurfaceAddVertex(BattleSpace.ToWorld(x, height) + lift);
-        }
-
-        for (var y = 0; y <= height; y++)
-        {
-            mesh.SurfaceAddVertex(BattleSpace.ToWorld(0, y) + lift);
-            mesh.SurfaceAddVertex(BattleSpace.ToWorld(width, y) + lift);
-        }
-
-        mesh.SurfaceEnd();
-        _field.AddChild(new MeshInstance3D { Name = "Grid", Mesh = mesh, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off });
-    }
-
-    /// <summary>A field zone (ADR-149) as a translucent block over its cells, in its spell's placeholder look (<see cref="ZoneLook"/>).</summary>
-    private void AddZone(int id, string spell, CellRect rect)
-    {
-        var height = ZoneLook.Height(spell);
-        var node = new MeshInstance3D
-        {
-            Name = $"Zone_{id}",
-            Mesh = new BoxMesh
-            {
-                Size = new Vector3(rect.Width * BattleSpace.CellSize, height, rect.Height * BattleSpace.CellSize),
-                Material = new StandardMaterial3D
-                {
-                    ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-                    Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-                    AlbedoColor = ZoneLook.Of(spell),
-                },
-            },
-            Position = BattleSpace.Center(rect) + (Vector3.Up * ((height / 2) + 0.01f)),
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-        };
-        _field.AddChild(node);
-        _zones[id] = node;
-    }
-
-    /// <summary>Small obstacles are boulders, big ones crags, cliffs (ADR-146) long ridges, wall segments blocks.</summary>
-    private static MeshInstance3D ObstacleNode(BattleObstacle obstacle)
-    {
-        var extent = obstacle.Rect.Width * BattleSpace.CellSize;
-        var material = new StandardMaterial3D { AlbedoColor = new Color(0.40f, 0.36f, 0.31f), Roughness = 1f };
-        if (obstacle.Class == ObstacleClass.Cliff)
-        {
-            // A ridge as long as the cliff, its top narrower than its foot: a prism along the field's depth.
-            const float ridge = 1.1f;
-            return new MeshInstance3D
-            {
-                Name = $"Obstacle_{obstacle.Id}",
-                Mesh = new PrismMesh
-                {
-                    Size = new Vector3(extent, ridge, obstacle.Rect.Height * BattleSpace.CellSize),
-                    Material = new StandardMaterial3D { AlbedoColor = new Color(0.36f, 0.32f, 0.28f), Roughness = 1f },
-                },
-                Position = BattleSpace.Center(obstacle.Rect) + (Vector3.Up * (ridge / 2)),
-            };
-        }
-
-        var (mesh, height) = obstacle.Class switch
-        {
-            ObstacleClass.Small => ((PrimitiveMesh)new SphereMesh { Radius = extent * 0.42f, Height = extent * 0.55f }, extent * 0.2f),
-            ObstacleClass.Big => (new CylinderMesh { TopRadius = extent * 0.15f, BottomRadius = extent * 0.45f, Height = extent * 0.8f }, extent * 0.4f),
-            _ => (new BoxMesh { Size = new Vector3(extent, extent * 1.5f, extent) }, extent * 0.75f),
-        };
-        mesh.Material = material;
-        return new MeshInstance3D
-        {
-            Name = $"Obstacle_{obstacle.Id}",
-            Mesh = mesh,
-            Position = BattleSpace.Center(obstacle.Rect) + (Vector3.Up * height),
-        };
-    }
-
-    /// <summary>
-    /// A siege's fortifications (ADR-106) in the town's own look (ADR-144, <see cref="SiegeLook"/>): the moat in front of the walls, the wall
-    /// sections and gate on the wall line, the keep and towers beside the field, the yard behind the walls in the town's ground, and a few of the
-    /// town's houses beyond the defenders' edge.
-    /// </summary>
-    private void BuildSiege(SiegeLayout layout)
-    {
-        var look = SiegeLook.Of(layout.Town);
-        var water = new StandardMaterial3D
-        {
-            AlbedoColor = look.Moat,
-            Transparency = BaseMaterial3D.TransparencyEnum.Alpha,
-            Roughness = look.MoatGlows ? 0.8f : 0.2f,
-        };
-        if (look.MoatGlows)
-        {
-            water.EmissionEnabled = true;
-            water.Emission = new Color(look.Moat.R, look.Moat.G, look.Moat.B);
-            water.EmissionEnergyMultiplier = 0.7f;
-        }
-
-        var yard = new CellRect(SiegeRules.WallX + 1, 0, _width - SiegeRules.WallX - 1, BattleState.Height);
-        _field.AddChild(new MeshInstance3D
-        {
-            Name = "Yard",
-            Mesh = new PlaneMesh
-            {
-                Size = new Vector2(yard.Width, yard.Height) * BattleSpace.CellSize,
-                Material = new StandardMaterial3D { AlbedoColor = look.Yard with { A = 0.45f }, Transparency = BaseMaterial3D.TransparencyEnum.Alpha, Roughness = 1f },
-            },
-            Position = BattleSpace.Center(yard) + (Vector3.Up * 0.006f),
-            CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-        });
-
-        foreach (var moat in layout.Moat)
-        {
-            _field.AddChild(new MeshInstance3D
-            {
-                Name = "Moat",
-                Mesh = new BoxMesh { Size = new Vector3(moat.Width * BattleSpace.CellSize, 0.02f, moat.Height * BattleSpace.CellSize), Material = water },
-                Position = BattleSpace.Center(moat) + (Vector3.Up * 0.012f),
-                CastShadow = GeometryInstance3D.ShadowCastingSetting.Off,
-            });
-        }
-
-        foreach (var structure in layout.Structures)
-        {
-            var node = StructureNode(structure, look);
-            _field.AddChild(node);
-            _structures[structure.Structure] = (structure.Kind, structure.Rect, node);
-            if (structure.Health == 0)
-            {
-                Ruin(node);
-            }
-        }
-
-        // The town beyond the defenders' edge: houses round the keep, more behind a stronger fort.
-        var houses = new (float X, float Y, float Width, float Depth, float Height)[]
-        {
-            (_width + 3.5f, 3f, 2.5f, 2f, 0.8f), (_width + 3f, 19.5f, 2f, 2.5f, 0.7f), (_width + 6.5f, 7f, 3f, 2.5f, 1.0f),
-            (_width + 6f, 16.5f, 2.5f, 3f, 0.9f), (_width + 7.5f, 2.5f, 2f, 2f, 0.6f), (_width + 8f, 12f, 3f, 3f, 1.2f),
-            (_width + 7.5f, 21f, 2.5f, 2f, 0.7f), (_width + 4f, 8f, 2f, 1.5f, 0.6f), (_width + 4f, 15.5f, 1.5f, 2f, 0.6f),
-        };
-        foreach (var (x, y, width, depth, height) in houses.Take(5 + (2 * layout.FortLevel)))
-        {
-            _field.AddChild(House(look, BattleSpace.ToWorld(x, y), width * BattleSpace.CellSize, depth * BattleSpace.CellSize, height));
-        }
-    }
-
-    /// <summary>Walls and keep as blocks with battlements, the gate, round towers; roofs and colours from the town's look (ADR-144).</summary>
-    private static MeshInstance3D StructureNode(SiegeStructureInfo structure, SiegeLook look)
-    {
-        var width = structure.Rect.Width * BattleSpace.CellSize;
-        var depth = structure.Rect.Height * BattleSpace.CellSize;
-        var (mesh, height, color) = structure.Kind switch
-        {
-            SiegeStructureKind.Gate => ((PrimitiveMesh)new BoxMesh { Size = new Vector3(width, 0.9f, depth) }, 0.9f, look.Gate),
-            SiegeStructureKind.Keep => (new BoxMesh { Size = new Vector3(width, 1.8f, depth) }, 1.8f, look.Stone.Darkened(0.1f)),
-            SiegeStructureKind.Tower => (new CylinderMesh { TopRadius = depth * 0.45f, BottomRadius = depth * 0.5f, Height = 1.5f }, 1.5f, look.Stone.Darkened(0.05f)),
-            _ => (new BoxMesh { Size = new Vector3(width, 1.1f, depth) }, 1.1f, look.Stone),
-        };
-        mesh.Material = Material(color);
-        var node = new MeshInstance3D
-        {
-            Name = $"{structure.Kind}_{structure.Structure}",
-            Mesh = mesh,
-            Position = BattleSpace.Center(structure.Rect) + (Vector3.Up * height / 2),
-        };
-        switch (structure.Kind)
-        {
-            case SiegeStructureKind.Wall:
-                Battlements(node, look.Stone, 0, depth, height / 2);
-                break;
-            case SiegeStructureKind.Gate:
-                // The gatehouse's lintel in the town's stone over the gate.
-                node.AddChild(new MeshInstance3D
-                {
-                    Name = "Lintel",
-                    Mesh = new BoxMesh { Size = new Vector3(width * 1.2f, 0.2f, depth), Material = Material(look.Stone) },
-                    Position = Vector3.Up * ((height / 2) + 0.1f),
-                });
-                break;
-            default:
-                Roof(node, look, width, depth, height / 2);
-                break;
-        }
-
-        return node;
-    }
-
-    /// <summary>One of the town's houses behind the walls: a block of its stone under its roof.</summary>
-    private static MeshInstance3D House(SiegeLook look, Vector3 at, float width, float depth, float height)
-    {
-        var node = new MeshInstance3D
-        {
-            Name = "House",
-            Mesh = new BoxMesh { Size = new Vector3(width, height, depth), Material = Material(look.Stone.Lerp(look.Yard, 0.35f)) },
-            Position = at + (Vector3.Up * height / 2),
-        };
-        Roof(node, look, width, depth, height / 2);
-        return node;
-    }
-
-    /// <summary>The town's roof on a block or tower <paramref name="width"/> × <paramref name="depth"/> whose top is <paramref name="top"/> above its centre.</summary>
-    private static void Roof(Node3D parent, SiegeLook look, float width, float depth, float top)
-    {
-        var size = Mathf.Max(width, depth);
-        var stretch = new Vector3(width / size, 1, depth / size);
-        switch (look.Roofs)
-        {
-            case RoofShape.Cone:
-            case RoofShape.Pyramid:
-            {
-                // A pyramid is a four-sided cone turned so its base is square to the block; the holder stretches either to the block's shape.
-                var pyramid = look.Roofs == RoofShape.Pyramid;
-                var radius = pyramid ? size * 0.55f * Mathf.Sqrt2 : size * 0.56f;
-                var height = size * 0.7f;
-                var holder = new Node3D { Name = "Roof", Position = Vector3.Up * (top + (height / 2)), Scale = stretch };
-                holder.AddChild(new MeshInstance3D
-                {
-                    Mesh = new CylinderMesh { TopRadius = 0, BottomRadius = radius, Height = height, RadialSegments = pyramid ? 4 : 16, Rings = 1, Material = Material(look.Roof) },
-                    RotationDegrees = pyramid ? new Vector3(0, 45, 0) : Vector3.Zero,
-                });
-                parent.AddChild(holder);
-                break;
-            }
-
-            case RoofShape.Dome:
-            {
-                // A sphere sunk to its middle in the block below.
-                var radius = size * 0.5f;
-                var holder = new Node3D { Name = "Roof", Position = Vector3.Up * top, Scale = stretch };
-                holder.AddChild(new MeshInstance3D { Mesh = new SphereMesh { Radius = radius, Height = radius * 2, Material = Material(look.Roof) } });
-                parent.AddChild(holder);
-                break;
-            }
-
-            case RoofShape.Spikes:
-            {
-                var spikes = new Node3D { Name = "Roof", Position = Vector3.Up * top };
-                var material = Material(look.Roof);
-                foreach (var (x, z, height) in new[] { (-0.35f, -0.35f, 0.35f), (0.35f, -0.35f, 0.35f), (-0.35f, 0.35f, 0.35f), (0.35f, 0.35f, 0.35f), (0f, 0f, 0.6f) })
-                {
-                    spikes.AddChild(new MeshInstance3D
-                    {
-                        Mesh = new CylinderMesh { TopRadius = 0, BottomRadius = size * 0.07f, Height = height * size, RadialSegments = 6, Rings = 1, Material = material },
-                        Position = new Vector3(x * width, height * size / 2, z * depth),
-                    });
-                }
-
-                parent.AddChild(spikes);
-                break;
-            }
-
-            default:
-                Battlements(parent, look.Roof, width, depth, top);
-                break;
-        }
-    }
-
-    /// <summary>Merlons along the top: round the edge of a block, or in one line along a wall (<paramref name="width"/> 0).</summary>
-    private static void Battlements(Node3D parent, Color color, float width, float depth, float top)
-    {
-        const float Merlon = 0.12f;
-        var material = Material(color);
-        var points = new List<Vector2>();
-        var along = Mathf.Max(1, Mathf.FloorToInt(depth / (Merlon * 2)));
-        for (var i = 0; i < along; i++)
-        {
-            var z = -depth / 2 + (Merlon * 1.5f) + (i * (depth - (Merlon * 3)) / Mathf.Max(1, along - 1));
-            if (width == 0)
-            {
-                points.Add(new Vector2(0, z));
-            }
-            else
-            {
-                points.Add(new Vector2(-width / 2 + (Merlon / 2), z));
-                points.Add(new Vector2(width / 2 - (Merlon / 2), z));
-            }
-        }
-
-        if (width > 0)
-        {
-            var across = Mathf.Max(0, Mathf.FloorToInt(width / (Merlon * 2)) - 2);
-            for (var i = 1; i <= across; i++)
-            {
-                var x = -width / 2 + (i * width / (across + 1));
-                points.Add(new Vector2(x, -depth / 2 + (Merlon / 2)));
-                points.Add(new Vector2(x, depth / 2 - (Merlon / 2)));
-            }
-        }
-
-        var battlements = new Node3D { Name = "Battlements", Position = Vector3.Up * (top + (Merlon / 2)) };
-        foreach (var point in points)
-        {
-            battlements.AddChild(new MeshInstance3D
-            {
-                Mesh = new BoxMesh { Size = Vector3.One * Merlon, Material = material },
-                Position = new Vector3(point.X, 0, point.Y),
-            });
-        }
-
-        parent.AddChild(battlements);
-    }
-
-    private static StandardMaterial3D Material(Color color) => new() { AlbedoColor = color, Roughness = 1f };
-
-    /// <summary>A destroyed structure: a low, dark heap of rubble where it stood; its roof and battlements are gone.</summary>
-    private static void Ruin(MeshInstance3D node)
-    {
-        foreach (var child in node.GetChildren().OfType<Node3D>())
-        {
-            child.Visible = false;
-        }
-
-        var height = node.GetAabb().Size.Y;
-        node.Scale = new Vector3(1, 0.2f, 1);
-        node.Position = node.Position with { Y = BattleSpace.Origin.Y + (height * 0.1f) };
-        if (node.Mesh is PrimitiveMesh { Material: StandardMaterial3D material })
-        {
-            material.AlbedoColor = material.AlbedoColor.Darkened(0.45f);
-        }
-    }
-
-    private MeshInstance3D Projectile(Vector3 at)
-    {
-        var projectile = new MeshInstance3D
-        {
-            Mesh = new SphereMesh
-            {
-                Radius = 0.06f,
-                Height = 0.12f,
-                Material = new StandardMaterial3D { AlbedoColor = new Color(1f, 0.9f, 0.6f), ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded },
-            },
-            Position = at,
-            Visible = false,
-        };
-        _field.AddChild(projectile);
-        return projectile;
-    }
-
-    private Label3D FloatingText(string text, Vector3 at)
-    {
-        var label = new Label3D
-        {
-            Text = text,
-            Position = at,
-            Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
-            PixelSize = 0.005f,
-            FontSize = 44,
-            OutlineSize = 10,
-            Modulate = new Color(1f, 0.85f, 0.4f),
-            NoDepthTest = true,
-            Visible = false,
-        };
-        _field.AddChild(label);
-        return label;
     }
 
     private static void ShowOverlay(MeshInstance3D overlay, CellRect rect, Color color)

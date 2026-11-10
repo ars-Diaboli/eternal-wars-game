@@ -120,8 +120,8 @@ public class TerrainAndRoadTests
         var painted = new List<RoadsPainted>();
         editor.Events.Subscribe<RoadsPainted>(painted.Add);
 
-        Assert.Equal(9, editor.PaintRoad(new MapPosition(4, 4), RoadType.Cobblestone, radius: 1));
-        Assert.Equal(1, editor.PaintRoad(new MapPosition(4, 4), RoadType.None));
+        Assert.Equal(9, editor.Terrain.PaintRoad(new MapPosition(4, 4), RoadType.Cobblestone, radius: 1));
+        Assert.Equal(1, editor.Terrain.PaintRoad(new MapPosition(4, 4), RoadType.None));
         editor.Undo();
         editor.Undo();
 
@@ -133,8 +133,8 @@ public class TerrainAndRoadTests
     public void Validator_WarnsAboutRoadsOnImpassableTerrain()
     {
         var editor = new MapEditorSession(BlankScenario.Create(10, 8));
-        editor.PaintTerrain(new MapPosition(5, 5), TerrainType.Water);
-        editor.PaintRoad(new MapPosition(5, 5), RoadType.Dirt);
+        editor.Terrain.Paint(new MapPosition(5, 5), TerrainType.Water);
+        editor.Terrain.PaintRoad(new MapPosition(5, 5), RoadType.Dirt);
 
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Message.Contains("Road on impassable"));
     }

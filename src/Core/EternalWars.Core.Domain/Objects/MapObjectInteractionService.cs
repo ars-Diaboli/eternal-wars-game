@@ -1,69 +1,50 @@
-using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
-using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
-using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Towns;
-using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Objects;
 
-/// <summary>What happens when a hero visits a map object or meets a hero, and the follow-up decisions it opens.</summary>
-public sealed class MapObjectInteractionService(
-    GameState state,
-    IEventPublisher events,
-    EconomyService economy,
-    BattleService battles,
-    GuardService guards,
-    ProgressionService progression,
-    ArtifactService artifacts)
+/// <summary>
+/// What happens when a hero visits a map object or meets a hero. The objects that give something have their rules in
+/// <see cref="MapObjectRewardVisits"/>; the answers to the decisions a visit opens are in <see cref="ObjectDecisionService"/>.
+/// </summary>
+public sealed class MapObjectInteractionService
 {
-    internal void ResolveTreasureChest(TreasureChestReward reward)
-    {
-        if (state.PendingDecision is not TreasureChestDecision decision)
-        {
-            throw new CommandRefusedException("No treasure chest decision is pending.");
-        }
-
-        // Everything the answer needs is found before anything changes, so a refusal leaves the state as it was.
-        var chest = state.GetObject(decision.Chest);
-        var hero = state.GetHero(decision.Hero);
-        state.PendingDecision = null;
-        RemoveFromMap(chest);
-        if (reward == TreasureChestReward.Gold)
-        {
-            economy.Grant(hero.Owner, new ResourceSet(Gold: decision.Gold));
-        }
-
-        events.Publish(new DecisionResolved(decision));
-        if (reward == TreasureChestReward.Experience)
-        {
-            progression.GrantExperience(hero, decision.Experience);
-        }
-    }
-
-    /// <summary>
-    /// Takes the reward of an object with a limited <see cref="VisitScope"/> for the hero (ADR-068): false when the hero may not collect now,
-    /// else the visit is recorded and <see cref="MapObjectCollected"/> published, before the caller hands out the reward.
-    /// </summary>
-    internal bool TryCollect(Hero hero, MapObject mapObject)
-    {
-        if (!mapObject.CanCollect(hero.Id, state.Date))
-        {
-            return false;
-        }
-
-        mapObject.Visits.Record(hero.Id, state.Date);
-        events.Publish(new MapObjectCollected(hero.Id, mapObject.Id));
-        return true;
-    }
-
+    private readonly ObjectInteractionContext _context;
+    private readonly BattleService _battles;
+    private readonly GuardService _guards;
+    private readonly ProgressionService _progression;
+    private readonly GrailService _grail;
+    private readonly MapObjectRewardVisits _rewards;
     private Dictionary<Type, Action<Hero, MapObject>>? _visitRules;
+
+    internal MapObjectInteractionService(
+        ObjectInteractionContext context,
+        BattleService battles,
+        GuardService guards,
+        ProgressionService progression,
+        ArtifactService artifacts,
+        GrailService grail)
+    {
+        _context = context;
+        _battles = battles;
+        _guards = guards;
+        _progression = progression;
+        _grail = grail;
+        _rewards = new MapObjectRewardVisits(context, battles, progression, artifacts);
+    }
+
+    private Game.GameState State => _context.State;
+
+    private Core.Events.IEventPublisher Events => _context.Events;
+
+    /// <inheritdoc cref="ObjectInteractionContext.TryCollect"/>
+    internal bool TryCollect(Hero hero, MapObject mapObject) => _context.TryCollect(hero, mapObject);
 
     /// <summary>
     /// What a visit does, by instance type (ADR-166): every type of <see cref="MapObjectKinds"/> has a rule (<see cref="Nothing"/> for the objects
@@ -71,50 +52,50 @@ public sealed class MapObjectInteractionService(
     /// </summary>
     private Dictionary<Type, Action<Hero, MapObject>> VisitRules => _visitRules ??= new()
     {
-        [typeof(ResourcePile)] = On<ResourcePile>(CollectPile),
+        [typeof(ResourcePile)] = On<ResourcePile>(_rewards.CollectPile),
         [typeof(Mine)] = On<Mine>(VisitMine),
-        [typeof(TreasureChest)] = On<TreasureChest>(OpenChest),
+        [typeof(TreasureChest)] = On<TreasureChest>(_rewards.OpenChest),
         [typeof(TwoWayGate)] = Teleport,
         [typeof(OneWayGateEntrance)] = Teleport,
         [typeof(OneWayGateExit)] = Nothing,
-        [typeof(MonsterGuard)] = On<MonsterGuard>((hero, monster) => guards.Encounter(hero, monster)),
+        [typeof(MonsterGuard)] = On<MonsterGuard>((hero, monster) => _guards.Encounter(hero, monster)),
         [typeof(Town)] = On<Town>(VisitTown),
-        [typeof(ArtifactPickup)] = On<ArtifactPickup>(PickUp),
+        [typeof(ArtifactPickup)] = On<ArtifactPickup>(_rewards.PickUp),
         [typeof(CreatureDwelling)] = On<CreatureDwelling>(VisitDwelling),
         [typeof(Marketplace)] = Nothing,
         [typeof(ResourceProvider)] = On<ResourceProvider>(VisitProvider),
-        [typeof(LootSite)] = On<LootSite>(Search),
-        [typeof(BuffSite)] = On<BuffSite>(Bless),
-        [typeof(TrainingSite)] = On<TrainingSite>(Train),
-        [typeof(SignPost)] = On<SignPost>((hero, sign) => events.Publish(new SignRead(hero.Id, sign.Id, sign.Message))),
+        [typeof(LootSite)] = On<LootSite>(_rewards.Search),
+        [typeof(BuffSite)] = On<BuffSite>(_rewards.Bless),
+        [typeof(TrainingSite)] = On<TrainingSite>(_rewards.Train),
+        [typeof(SignPost)] = On<SignPost>((hero, sign) => Events.Publish(new SignRead(hero.Id, sign.Id, sign.Message))),
         [typeof(Observatory)] = On<Observatory>(LookOut),
         [typeof(HillFort)] = Nothing,
         [typeof(TownGate)] = On<TownGate>(OfferTowns),
         [typeof(WarMachineFactory)] = Nothing,
         [typeof(Prison)] = On<Prison>(Free),
-        [typeof(CreatureBank)] = On<CreatureBank>(EnterBank),
-        [typeof(DenOfThieves)] = On<DenOfThieves>((hero, den) => events.Publish(new ThievesDenVisited(hero.Id, den.Id))),
-        [typeof(AstrologersTower)] = On<AstrologersTower>((hero, tower) => events.Publish(new AstrologerConsulted(hero.Id, tower.Id, state.NextWeekEvent))),
+        [typeof(CreatureBank)] = On<CreatureBank>(_rewards.EnterBank),
+        [typeof(DenOfThieves)] = On<DenOfThieves>((hero, den) => Events.Publish(new ThievesDenVisited(hero.Id, den.Id))),
+        [typeof(AstrologersTower)] = On<AstrologersTower>((hero, tower) => Events.Publish(new AstrologerConsulted(hero.Id, tower.Id, State.NextWeekEvent))),
         [typeof(Sanctuary)] = Nothing,
         [typeof(Scenery)] = Nothing,
-        [typeof(Cartographer)] = On<Cartographer>(OfferMap),
+        [typeof(Cartographer)] = On<Cartographer>(_rewards.OfferMap),
         [typeof(ArtifactMerchant)] = Nothing,
         [typeof(RefugeeCamp)] = Nothing,
         [typeof(SacrificialAltar)] = Nothing,
-        [typeof(Sphinx)] = On<Sphinx>(AskRiddle),
-        [typeof(WitchHut)] = On<WitchHut>(OfferSkills),
-        [typeof(Shrine)] = On<Shrine>(Worship),
-        [typeof(SkillSchool)] = On<SkillSchool>(DrawLessons),
-        [typeof(Obelisk)] = On<Obelisk>((hero, obelisk) => GrailRules.Visit(state, events, hero, obelisk)),
+        [typeof(Sphinx)] = On<Sphinx>(_rewards.AskRiddle),
+        [typeof(WitchHut)] = On<WitchHut>(_rewards.OfferSkills),
+        [typeof(Shrine)] = On<Shrine>(_rewards.Worship),
+        [typeof(SkillSchool)] = On<SkillSchool>(_rewards.DrawLessons),
+        [typeof(Obelisk)] = On<Obelisk>(_grail.VisitObelisk),
         [typeof(CombatPlace)] = Nothing,
-        [typeof(Deposit)] = On<Deposit>(OfferDeposit),
+        [typeof(Deposit)] = On<Deposit>(_rewards.OfferDeposit),
         [typeof(MagiWindow)] = On<MagiWindow>(LookThrough),
         [typeof(MagiEye)] = Nothing,
         [typeof(KeymasterTent)] = On<KeymasterTent>(VisitKeymaster),
         [typeof(BorderPost)] = On<BorderPost>(PassBorderGuard),
         [typeof(MapTavern)] = Nothing,
         [typeof(MapGarrison)] = On<MapGarrison>(VisitGarrison),
-        [typeof(PandorasBox)] = On<PandorasBox>(OpenBox),
+        [typeof(PandorasBox)] = On<PandorasBox>(_rewards.OpenBox),
 
         // The move runs the quest (MapEventService.VisitQuest), not the visit.
         [typeof(QuestSite)] = Nothing,
@@ -133,115 +114,50 @@ public sealed class MapObjectInteractionService(
     {
         var rule = VisitRules.GetValueOrDefault(mapObject.GetType())
                    ?? throw new InvalidOperationException($"{mapObject.GetType().Name} has no visit rule (ADR-166).");
-        events.Publish(new MapObjectVisited(hero.Id, mapObject.Id));
+        Events.Publish(new MapObjectVisited(hero.Id, mapObject.Id));
         rule(hero, mapObject);
     }
 
-    private void CollectPile(Hero hero, ResourcePile pile)
+    internal void Meet(Hero hero, Hero other)
     {
-        RemoveFromMap(pile);
-        var chance = SkillEffects.ProspectingPileChancePercent(hero.SkillLevelOf(BuiltInSkills.Prospecting));
-        var inPile = pile.Amount ?? ResourcePile.Roll(pile.Resource, state.Random);
-        var amount = chance > 0 && state.Random.Next(100) < chance ? inPile + (inPile + 1) / 2 : inPile;
-        economy.Grant(hero.Owner, ResourceSet.Of(pile.Resource, amount));
-        events.Publish(new ResourcePileCollected(hero.Id, pile.Id, pile.Resource, amount));
+        var decision = new HeroExchangeDecision(hero.Id, other.Id);
+        State.PendingDecision = decision;
+        Events.Publish(new HeroesMet(hero.Id, other.Id));
+        Events.Publish(new DecisionRequested(decision));
+    }
+
+    /// <summary>A hero attacks an enemy hero: <see cref="BattleTriggered"/>, then the battle itself.</summary>
+    internal void StartBattle(Hero attacker, Hero defender, bool isAmbush)
+    {
+        Events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
+        _battles.BeginHeroBattle(attacker, defender, isAmbush);
     }
 
     private void VisitMine(Hero hero, Mine mine)
     {
         if (mine.Guard is not null)
         {
-            guards.Encounter(hero, mine);
+            _guards.Encounter(hero, mine);
         }
         else if (mine.Owner != hero.Owner)
         {
             var previous = mine.Owner;
             mine.Owner = hero.Owner;
-            events.Publish(new MineOwnerChanged(mine.Id, previous, hero.Owner));
+            Events.Publish(new MineOwnerChanged(mine.Id, previous, hero.Owner));
         }
     }
 
-    private void OpenChest(Hero hero, TreasureChest chest)
+    private void VisitDwelling(Hero hero, CreatureDwelling dwelling)
     {
-        var values = chest.FixedValues ?? WeightedRoll.Pick(TreasureChest.Odds, state.Random);
-        if (values is null)
+        if (dwelling.Guard is not null)
         {
-            // The artifact outcome (ADR-068): no choice, the chest is emptied; a full backpack loses it.
-            RemoveFromMap(chest);
-            var found = artifacts.Draw(ArtifactTier.Minor) is { } minor && artifacts.Grant(hero, minor, ArtifactSource.Found) ? minor : null;
-            events.Publish(new LootFound(hero.Id, chest.Id, ResourceSet.Empty, found));
-            return;
+            _guards.Encounter(hero, dwelling);
         }
-
-        var decision = new TreasureChestDecision(hero.Id, chest.Id, values.Gold, values.Experience);
-        state.PendingDecision = decision;
-        events.Publish(new DecisionRequested(decision));
-    }
-
-    private void LookOut(Hero hero, Observatory observatory)
-    {
-        // Every visit looks out (it only reveals what is still hidden); the log tells the AI which heroes have been up there.
-        TryCollect(hero, observatory);
-        events.Publish(new SurroundingsRevealed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
-    }
-
-    private void OpenBox(Hero hero, PandorasBox box)
-    {
-        if (box.IsGuarded && hero.Army.IsEmpty)
+        else if (dwelling.Owner != hero.Owner)
         {
-            events.Publish(new MapObjectRefused(hero.Id, box.Id, $"{hero.Name} has no army to face what may guard the box."));
-        }
-        else
-        {
-            Ask(new PandorasBoxDecision(hero.Id, box.Id));
-        }
-    }
-
-    private void LookThrough(Hero hero, MagiWindow window)
-    {
-        // Every visit looks through every Eye of the window's colour (ADR-073).
-        foreach (var eye in state.ObjectsOf<MagiEye>().Where(e => e.Colour == window.Colour).OrderBy(e => e.Id.Value))
-        {
-            events.Publish(new SurroundingsRevealed(hero.Id, window.Id, hero.Owner, eye.Position, MagiWindow.Radius));
-        }
-    }
-
-    private void VisitKeymaster(Hero hero, KeymasterTent tent)
-    {
-        if (state.GetPlayer(hero.Owner).AddKey(tent.Colour))
-        {
-            events.Publish(new KeyReceived(tent.Id, hero.Id, hero.Owner, tent.Colour));
-        }
-        else
-        {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, tent.Id));
-        }
-    }
-
-    private void PassBorderGuard(Hero hero, BorderPost post)
-    {
-        // Only key holders get onto a border post (the move refuses the others); a guard leaves after the first, a gate stays.
-        if (!post.IsGate)
-        {
-            RemoveFromMap(post);
-            events.Publish(new BorderGuardPassed(post.Id, hero.Id));
-        }
-    }
-
-    private void VisitGarrison(Hero hero, MapGarrison garrison)
-    {
-        if (garrison.LetsThrough(state, hero.Owner))
-        {
-            return;
-        }
-
-        if (!garrison.Troops.IsEmpty)
-        {
-            battles.BeginGarrisonBattle(hero, garrison);
-        }
-        else if (garrison.Owner != hero.Owner)
-        {
-            FlagGarrison(garrison, hero.Owner);
+            var before = dwelling.Owner;
+            dwelling.Owner = hero.Owner;
+            Events.Publish(new DwellingOwnerChanged(dwelling.Id, before, hero.Owner));
         }
     }
 
@@ -253,469 +169,14 @@ public sealed class MapObjectInteractionService(
         }
         else if (provider.Stored.IsEmpty)
         {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, provider.Id));
+            Events.Publish(new MapObjectFoundEmpty(hero.Id, provider.Id));
         }
         else
         {
             var stored = provider.Stored;
             provider.Stored = ResourceSet.Empty;
-            events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
-            GiveResources(hero, provider, stored);
-        }
-    }
-
-    private void VisitDwelling(Hero hero, CreatureDwelling dwelling)
-    {
-        if (dwelling.Guard is not null)
-        {
-            guards.Encounter(hero, dwelling);
-        }
-        else if (dwelling.Owner != hero.Owner)
-        {
-            var before = dwelling.Owner;
-            dwelling.Owner = hero.Owner;
-            events.Publish(new DwellingOwnerChanged(dwelling.Id, before, hero.Owner));
-        }
-    }
-
-    private void PickUp(Hero hero, ArtifactPickup pickup)
-    {
-        if (pickup.Artifact is { } found && artifacts.Grant(hero, found, ArtifactSource.Pickup))
-        {
-            RemoveFromMap(pickup);
-        }
-    }
-
-    private void VisitTown(Hero hero, Town town)
-    {
-        if (town.Owner is { } owner && !state.AreEnemies(hero.Owner, owner))
-        {
-            // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).
-            TownService.AutoAppoint(state, events, town, hero);
-            Magic.MagicRules.Visit(state, events, hero, town);
-        }
-        else if (!town.Garrison.IsEmpty || town.GarrisonHero is not null)
-        {
-            battles.BeginTownBattle(hero, town);
-        }
-        else
-        {
-            TownService.Capture(state, events, town, hero.Owner);
-            Magic.MagicRules.Visit(state, events, hero, town);
-        }
-    }
-
-    private void Teleport(Hero hero, MapObject gate)
-    {
-        // Two-way partner or one-way exit; a hero standing on the landing tile blocks the jump.
-        if (gate.TeleportTarget is not null && state.TeleportDestination(gate) is { } exit && state.HeroAt(exit) is null)
-        {
-            var from = hero.Position;
-            hero.Position = exit;
-            events.Publish(new HeroTeleported(hero.Id, from, exit));
-        }
-    }
-
-    /// <summary>A hero on a map dwelling's entrance buys creatures into its army, discounted by its own Stewardship (ADR-054).</summary>
-    internal void RecruitAtDwelling(PlayerId player, MapObjectId dwellingId, int count)
-    {
-        var dwelling = state.FindObject(dwellingId) as CreatureDwelling ?? throw new CommandRefusedException($"{dwellingId} is not a dwelling.");
-        if (state.PendingDecision is not null)
-        {
-            throw new CommandRefusedException("Resolve the pending decision first.");
-        }
-
-        var hero = state.HeroAt(dwelling.VisitPosition);
-        if (hero is null || hero.Owner != player)
-        {
-            throw new CommandRefusedException($"No own hero stands at the {dwelling.Definition.Name}.");
-        }
-
-        var available = dwelling.Available ?? 0;
-        if (count < 1 || count > available)
-        {
-            throw new CommandRefusedException($"Only {available} creatures wait here.");
-        }
-
-        var creature = state.Creatures.Get(dwelling.Creature);
-        if (!hero.Army.CanAccept(creature.Id))
-        {
-            throw new CommandRefusedException($"{hero.Name} has no free slot for {creature.Name}.");
-        }
-
-        var price = StewardshipRules.DiscountCreatures(creature.Cost, hero.SkillLevelOf(BuiltInSkills.Stewardship)) * count;
-        if (!economy.TrySpend(player, price))
-        {
-            throw new CommandRefusedException("Not enough resources.");
-        }
-
-        dwelling.Available = available - count;
-        hero.Army.TryAdd(new CreatureStack(creature.Id, count));
-        events.Publish(new DwellingRecruited(dwelling.Id, hero.Id, creature.Id, count, dwelling.Available.Value));
-        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-    }
-
-    /// <summary>Closes the exchange screen opened by a meeting of two own heroes.</summary>
-    internal void CompleteExchange()
-    {
-        if (state.PendingDecision is not HeroExchangeDecision decision)
-        {
-            throw new CommandRefusedException("No hero exchange is open.");
-        }
-
-        state.PendingDecision = null;
-        events.Publish(new DecisionResolved(decision));
-    }
-
-    internal void Meet(Hero hero, Hero other)
-    {
-        var decision = new HeroExchangeDecision(hero.Id, other.Id);
-        state.PendingDecision = decision;
-        events.Publish(new HeroesMet(hero.Id, other.Id));
-        events.Publish(new DecisionRequested(decision));
-    }
-
-    /// <summary>A hero attacks an enemy hero: <see cref="BattleTriggered"/>, then the battle itself.</summary>
-    internal void StartBattle(Hero attacker, Hero defender, bool isAmbush)
-    {
-        events.Publish(new BattleTriggered(attacker.Id, defender.Id, isAmbush));
-        battles.BeginHeroBattle(attacker, defender, isAmbush);
-    }
-
-    /// <summary>
-    /// A creature bank (ADR-068): the Ruins show their surroundings on every visit; a full bank means a fight; a plundered one gives nothing, and the
-    /// Churchyard's costs the next battle's morale.
-    /// </summary>
-    private void EnterBank(Hero hero, CreatureBank bank)
-    {
-        if (bank.Rule == BankRule.Crypt)
-        {
-            events.Publish(new SurroundingsRevealed(hero.Id, bank.Id, hero.Owner, bank.VisitPosition, CreatureBankRules.CryptRevealRadius));
-        }
-
-        if (bank.IsGuarded)
-        {
-            battles.BeginBankBattle(hero, bank);
-            return;
-        }
-
-        events.Publish(new MapObjectFoundEmpty(hero.Id, bank.Id));
-        if (bank.Rule == BankRule.Churchyard)
-        {
-            progression.GrantStatus(hero, new HeroStatus(bank.Definition.Id, HeroStatusKind.Morale, CreatureBankRules.ChurchyardMorale, StatusExpiry.NextBattle));
-        }
-    }
-
-    /// <summary>The town gate's picker: the owner's towns, an occupied entrance listed but unavailable (ADR-068, MAP-12).</summary>
-    private void OfferTowns(Hero hero, TownGate gate)
-    {
-        var towns = state.ObjectsOf<Town>().Where(t => t.Owner == hero.Owner).OrderBy(t => t.Id.Value)
-            .Select(t => new TownGateOption(t.Id, t.Name, state.HeroAt(t.VisitPosition) is null))
-            .ToList();
-        if (towns.Count == 0)
-        {
-            events.Publish(new MapObjectRefused(hero.Id, gate.Id, "You have no town to go to."));
-            return;
-        }
-
-        var decision = new TownGateDecision(hero.Id, gate.Id, towns);
-        state.PendingDecision = decision;
-        events.Publish(new DecisionRequested(decision));
-    }
-
-    /// <summary>The visitor of a town gate goes to the town picked, at no movement cost, or stays (ADR-068).</summary>
-    internal void ResolveTownGate(MapObjectId? townId)
-    {
-        if (state.PendingDecision is not TownGateDecision decision)
-        {
-            throw new CommandRefusedException("No town gate is open.");
-        }
-
-        var hero = state.GetHero(decision.Hero);
-        Town? town = null;
-        if (townId is { } id)
-        {
-            town = state.FindObject(id) as Town;
-            if (town is null || town.Owner != hero.Owner || decision.Towns.All(t => t.Town != id))
-            {
-                throw new CommandRefusedException("That town is not on the list.");
-            }
-
-            if (state.HeroAt(town.VisitPosition) is not null)
-            {
-                throw new CommandRefusedException($"Someone stands at the entrance of {town.Name}.");
-            }
-        }
-
-        state.PendingDecision = null;
-        if (town is not null)
-        {
-            var from = hero.Position;
-            hero.Position = town.VisitPosition;
-            events.Publish(new HeroTeleported(hero.Id, from, hero.Position));
-            TownService.AutoAppoint(state, events, town, hero);
-            Magic.MagicRules.Visit(state, events, hero, town);
-        }
-
-        events.Publish(new DecisionResolved(decision));
-    }
-
-    /// <summary>A prisoner joins the visitor's player where the prison stood, unless the player has all the heroes it may (ADR-068, MAP-5).</summary>
-    private void Free(Hero hero, Prison prison)
-    {
-        if (state.HeroLimitReached(hero.Owner))
-        {
-            events.Publish(new MapObjectRefused(hero.Id, prison.Id, $"You may have at most {state.HeroLimit(hero.Owner)} heroes; the prisoner stays."));
-            return;
-        }
-
-        if (prison.Hero is not { } heroId || !state.HeroRoster.Contains(heroId))
-        {
-            events.Publish(new MapObjectRefused(hero.Id, prison.Id, "The prison is empty."));
-            return;
-        }
-
-        RemoveFromMap(prison);
-        var level = Math.Max(1, prison.Level ?? 1);
-        var freed = Hero.Create(state.NextUnusedHeroId(), hero.Owner, prison.Position, null, state.HeroRoster.Get(heroId));
-        freed.Experience = ExperienceTable.For(level);
-        state.AddHero(freed);
-        progression.LevelUpAutomatically(freed);
-        freed.MaxMovementPoints = MovementAllowance.Daily(state, freed);
-        freed.MovementPoints = 0; // it starts moving on its owner's next turn
-        events.Publish(new HeroFreed(prison.Id, freed.Id, hero.Owner, heroId, freed.Level));
-    }
-
-    /// <summary>The hero on a hill fort's entrance upgrades one of its stacks of tiers 1–3 for 150 % of the price difference (ADR-068, MAP-11).</summary>
-    internal void UpgradeAtHillFort(PlayerId player, MapObjectId fortId, int slot)
-    {
-        var hero = HeroAt<HillFort>(player, fortId, out var fort);
-        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
-        var upgraded = HillFortRules.UpgradeOf(state.Creatures, stack.Creature)
-                       ?? throw new CommandRefusedException("Only stacks of tiers 1–3 that have an upgrade are upgraded here.");
-        if (!economy.TrySpend(player, HillFortRules.Cost(state.Creatures, stack)))
-        {
-            throw new CommandRefusedException("Not enough resources.");
-        }
-
-        hero.Army.Set(slot, new CreatureStack(upgraded.Id, stack.Count));
-        events.Publish(new HillFortUpgraded(fort.Id, hero.Id, slot, stack.Creature, upgraded.Id, stack.Count));
-        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-    }
-
-    /// <summary>The hero on a War Machine Factory's entrance buys a machine it lacks at the blacksmith's price (ADR-068, MAP-13).</summary>
-    internal void BuyAtFactory(PlayerId player, MapObjectId factoryId, Battles.WarMachineSlot slot)
-    {
-        var hero = HeroAt<WarMachineFactory>(player, factoryId, out var factory);
-        if (hero.WarMachines.Contains(slot))
-        {
-            throw new CommandRefusedException($"{hero.Name} already has that machine.");
-        }
-
-        if (!economy.TrySpend(player, Battles.WarMachines.Cost(slot)))
-        {
-            throw new CommandRefusedException("Not enough gold.");
-        }
-
-        hero.AddWarMachine(slot);
-        events.Publish(new WarMachineBought(factory.Id, hero.Id, slot));
-    }
-
-    /// <summary>The player's hero standing on the entrance of an object of type <typeparamref name="T"/>, with nothing pending.</summary>
-    private Hero HeroAt<T>(PlayerId player, MapObjectId id, out T mapObject)
-        where T : MapObject
-    {
-        mapObject = state.FindObject(id) as T ?? throw new CommandRefusedException($"{id} is not a {typeof(T).Name}.");
-        if (state.PendingDecision is not null)
-        {
-            throw new CommandRefusedException("Resolve the pending decision first.");
-        }
-
-        var hero = state.HeroAt(mapObject.VisitPosition);
-        return hero is not null && hero.Owner == player ? hero : throw new CommandRefusedException($"No own hero stands at the {mapObject.Definition.Name}.");
-    }
-
-    /// <summary>
-    /// A buff site (ADR-068): statuses for the next battle or the week, movement points for today, the Magic Well's mana. The Stables also upgrade
-    /// Lancers on every visit, whether the hero may take the movement again or not.
-    /// </summary>
-    private void Bless(Hero hero, BuffSite site)
-    {
-        if (site.Rule == BuffRule.Stables)
-        {
-            UpgradeAtStables(hero);
-        }
-
-        if (!TryCollect(hero, site))
-        {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, site.Id));
-            return;
-        }
-
-        foreach (var status in BuffRules.Statuses(site.Definition, state.Date))
-        {
-            progression.GrantStatus(hero, status);
-        }
-
-        if (BuffRules.MovementNow(site.Rule) is > 0 and var points)
-        {
-            hero.MovementPoints += points;
-            events.Publish(new HeroMovementGained(hero.Id, points, hero.MovementPoints));
-        }
-
-        if (BuffRules.ManaAfter(site.Rule, hero.Mana, hero.MaxMana) is var mana && mana > hero.Mana)
-        {
-            hero.Mana = mana;
-            events.Publish(new HeroManaRestored(hero.Id, hero.Mana, hero.MaxMana));
-        }
-    }
-
-    private void UpgradeAtStables(Hero hero)
-    {
-        if (!state.Creatures.TryGet(BuffRules.StablesCreature, out var lancer) || lancer.UpgradesTo is not { } upgrade)
-        {
-            return;
-        }
-
-        var stacks = hero.Army.Stacks.Where(s => s.Stack.Creature == lancer.Id).ToList();
-        foreach (var (slot, stack) in stacks)
-        {
-            hero.Army.Set(slot, new CreatureStack(upgrade, stack.Count));
-        }
-
-        if (stacks.Count > 0)
-        {
-            events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-        }
-    }
-
-    /// <summary>
-    /// A training site (ADR-068): once per hero. The Learning Stone and the Library give at once (the Library only from level 10); the others ask
-    /// through a <see cref="TrainingDecision"/>, and a paid one turns the hero away when the player cannot pay any price.
-    /// </summary>
-    private void Train(Hero hero, TrainingSite site)
-    {
-        if (!site.CanCollect(hero.Id, state.Date))
-        {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, site.Id));
-            return;
-        }
-
-        switch (site.Rule)
-        {
-            case TrainingRule.LearningStone:
-                TryCollect(hero, site);
-                progression.GrantExperience(hero, TrainingRules.LearningStoneExperience);
-                return;
-            case TrainingRule.LibraryOfEnlightenment when hero.Level < TrainingRules.LibraryLevel:
-                events.Publish(new MapObjectRefused(hero.Id, site.Id, $"Only heroes of level {TrainingRules.LibraryLevel} or more may study here."));
-                return;
-            case TrainingRule.LibraryOfEnlightenment:
-                TryCollect(hero, site);
-                foreach (var stat in Enum.GetValues<PrimaryStat>())
-                {
-                    progression.RaiseStat(hero, stat, TrainingRules.LibraryStats);
-                }
-
-                return;
-            case TrainingRule.DreamTeacher:
-                var others = state.ObjectsOf<TrainingSite>().Count(t => t != site && t.Rule == TrainingRule.DreamTeacher && t.Visits.Heroes.Contains(hero.Id));
-                TryCollect(hero, site);
-                progression.GrantExperience(hero, TrainingRules.DreamTeacher(others));
-                return;
-            case var rule when TrainingRules.SingleStat(rule) is { } single:
-                TryCollect(hero, site);
-                progression.RaiseStat(hero, single, 1);
-                return;
-        }
-
-        var options = TrainingRules.Options(site.Rule, state.GetPlayer(hero.Owner).Resources);
-        if (options.Count == 0)
-        {
-            events.Publish(new MapObjectRefused(hero.Id, site.Id, "Not enough resources to pay."));
-            return;
-        }
-
-        var decision = new TrainingDecision(hero.Id, site.Id, options, TrainingRules.CanDecline(site.Rule));
-        state.PendingDecision = decision;
-        events.Publish(new DecisionRequested(decision));
-    }
-
-    /// <summary>The visitor of a training site picks an option, pays for it and trains; or leaves, where the site allows it (ADR-068).</summary>
-    internal void ResolveTraining(TrainingOption? option)
-    {
-        if (state.PendingDecision is not TrainingDecision decision)
-        {
-            throw new CommandRefusedException("No training is offered.");
-        }
-
-        if (option is not { } picked)
-        {
-            if (!decision.CanDecline)
-            {
-                throw new CommandRefusedException("Choose one of the options.");
-            }
-
-            state.PendingDecision = null;
-            events.Publish(new DecisionResolved(decision));
-            return;
-        }
-
-        if (!decision.Options.Contains(picked))
-        {
-            throw new CommandRefusedException($"{picked} is not offered.");
-        }
-
-        var hero = state.GetHero(decision.Hero);
-        var site = (TrainingSite)state.GetObject(decision.Site);
-        if (!economy.TrySpend(hero.Owner, TrainingRules.Price(site.Rule, picked)))
-        {
-            throw new CommandRefusedException("Not enough resources.");
-        }
-
-        state.PendingDecision = null;
-        TryCollect(hero, site);
-        if (TrainingRules.Stat(picked) is { } stat)
-        {
-            progression.RaiseStat(hero, stat, TrainingRules.StatBonus);
-        }
-
-        events.Publish(new DecisionResolved(decision));
-        var experience = site.Rule switch
-        {
-            TrainingRule.Gazebo => TrainingRules.GazeboExperience,
-            TrainingRule.TreeOfKnowledge => TrainingRules.ExperienceToNextLevel(hero),
-            _ => 0,
-        };
-        progression.GrantExperience(hero, experience);
-    }
-
-    /// <summary>
-    /// A loot site (ADR-068): the first visitor finds what it rolls, vanishing sites go; later visitors find nothing. The Warrior's Tomb costs
-    /// every visitor morale for the next battle, the first one too.
-    /// </summary>
-    private void Search(Hero hero, LootSite site)
-    {
-        if (TryCollect(hero, site))
-        {
-            var roll = LootRules.Roll(site.Rule, state.Random);
-            if (site.Vanishes)
-            {
-                RemoveFromMap(site);
-            }
-
-            economy.Grant(hero.Owner, roll.Resources);
-            var found = roll.Artifact is { } tier && artifacts.Draw(tier) is { } artifact && artifacts.Grant(hero, artifact, ArtifactSource.Found) ? artifact : null;
-            events.Publish(new LootFound(hero.Id, site.Id, roll.Resources, found));
-        }
-        else
-        {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, site.Id));
-        }
-
-        if (site.Rule == LootRule.WarriorsTomb)
-        {
-            progression.GrantStatus(hero, new HeroStatus(site.Definition.Id, HeroStatusKind.Morale, LootRules.TombMorale, StatusExpiry.NextBattle));
+            Events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
+            _context.GiveResources(hero, provider, stored);
         }
     }
 
@@ -726,596 +187,148 @@ public sealed class MapObjectInteractionService(
     private void Flag(Hero hero, ResourceProvider provider)
     {
         var previous = provider.Owner;
-        var taken = provider.WasClaimed ? provider.Stored : ResourceProviderRules.Roll(provider.Definition, state.Date, state.Random);
+        var taken = provider.WasClaimed ? provider.Stored : ResourceProviderRules.Roll(provider.Definition, State.Date, State.Random);
         provider.Owner = hero.Owner;
         provider.WasClaimed = true;
-        events.Publish(new ProviderOwnerChanged(provider.Id, previous, hero.Owner));
+        Events.Publish(new ProviderOwnerChanged(provider.Id, previous, hero.Owner));
         if (!provider.Stored.IsEmpty)
         {
             provider.Stored = ResourceSet.Empty;
-            events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
+            Events.Publish(new ProviderStockChanged(provider.Id, ResourceSet.Empty));
         }
 
         if (!taken.IsEmpty)
         {
-            GiveResources(hero, provider, taken);
+            _context.GiveResources(hero, provider, taken);
         }
     }
 
-    /// <summary>
-    /// Game start (ADR-079): witch huts the map left open roll their skills, refugee camps get their first week and artifact merchants their stock.
-    /// </summary>
-    internal void PrepareObjects()
+    private void VisitTown(Hero hero, Town town)
     {
-        foreach (var hut in state.ObjectsOf<WitchHut>().Where(h => h.Skills.Count == 0).OrderBy(h => h.Id.Value).ToList())
+        if (town.Owner is { } owner && !State.AreEnemies(hero.Owner, owner))
         {
-            hut.Skills = WitchHutRules.Roll(state.Random, state.Rules.Bans);
+            // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).
+            TownService.AutoAppoint(State, Events, town, hero);
+            Magic.MagicRules.Visit(State, Events, hero, town);
         }
-
-        foreach (var shrine in state.ObjectsOf<Shrine>().Where(s => s.Spell is null).OrderBy(s => s.Id.Value).ToList())
+        else if (!town.Garrison.IsEmpty || town.GarrisonHero is not null)
         {
-            shrine.Spell = ShrineRules.Roll(state.Random, state.Spells, shrine.SpellLevel, state.Rules.Bans);
-        }
-
-        StartWeek(restock: true);
-    }
-
-    /// <summary>The first day of a week: new refugees in every camp; on the first day of a month also new merchant stock (ADR-079).</summary>
-    internal void StartWeek(bool restock)
-    {
-        var candidates = RefugeeCampRules.Candidates(state.Creatures);
-        foreach (var camp in state.ObjectsOf<RefugeeCamp>().OrderBy(c => c.Id.Value).ToList())
-        {
-            if (candidates.Count == 0)
-            {
-                break;
-            }
-
-            var creature = candidates[state.Random.Next(candidates.Count)];
-            camp.Creature = creature.Id;
-            camp.Available = creature.WeeklyGrowth;
-            events.Publish(new RefugeesArrived(camp.Id, creature.Id, camp.Available));
-        }
-
-        if (!restock)
-        {
-            return;
-        }
-
-        foreach (var merchant in state.ObjectsOf<ArtifactMerchant>().OrderBy(m => m.Id.Value).ToList())
-        {
-            merchant.Stock.Clear();
-            for (var i = 0; i < ArtifactMerchant.StockSize; i++)
-            {
-                merchant.Stock.Add(artifacts.Draw(state.Random.Next(2) == 0 ? ArtifactTier.Minor : ArtifactTier.Major));
-            }
-
-            events.Publish(new MerchantRestocked(merchant.Id, merchant.Stock.ToList()));
-        }
-    }
-
-    /// <summary>A deposit offers itself for its price; a player who cannot pay is told the price (ADR-070, MAP-21).</summary>
-    private void OfferDeposit(Hero hero, Deposit deposit)
-    {
-        if (!state.GetPlayer(hero.Owner).Resources.CanAfford(deposit.Price))
-        {
-            events.Publish(new MapObjectRefused(hero.Id, deposit.Id, $"Opening the {deposit.Definition.Name.ToLowerInvariant()} costs {ResourceProviderRules.Describe(deposit.Price)}."));
-            return;
-        }
-
-        Ask(new DepositDecision(hero.Id, deposit.Id, deposit.Price));
-    }
-
-    /// <summary>The visitor's player pays for the deposit, which becomes the mine of its kind with the same id, flagged for the player; or leaves.</summary>
-    internal void ResolveDeposit(bool buy)
-    {
-        if (state.PendingDecision is not DepositDecision decision)
-        {
-            throw new CommandRefusedException("No deposit is waiting for an answer.");
-        }
-
-        // The mine is made before the price is paid, so nothing is spent on a deposit that cannot become one.
-        var hero = state.GetHero(decision.Hero);
-        var deposit = (Deposit)state.GetObject(decision.Deposit);
-        var mine = buy ? new Mine(deposit.Id, state.ObjectCatalog.Get(deposit.Definition.Becomes!), deposit.Position, hero.Owner) : null;
-        if (buy && !economy.TrySpend(hero.Owner, decision.Price))
-        {
-            throw new CommandRefusedException("Not enough resources.");
-        }
-
-        state.PendingDecision = null;
-        events.Publish(new DecisionResolved(decision));
-        if (mine is null)
-        {
-            return;
-        }
-
-        state.RemoveObject(deposit);
-        state.AddObject(mine);
-        events.Publish(new DepositBought(mine.Id, hero.Id, hero.Owner, decision.Price));
-        events.Publish(new MapObjectChanged(mine.Id));
-        events.Publish(new MineOwnerChanged(mine.Id, null, hero.Owner));
-    }
-
-    /// <summary>An empty garrison is flagged by the first hero of another side that enters it (ADR-070).</summary>
-    internal void FlagGarrison(MapGarrison garrison, PlayerId owner)
-    {
-        var previous = garrison.Owner;
-        garrison.Owner = owner;
-        events.Publish(new GarrisonOwnerChanged(garrison.Id, previous, owner));
-    }
-
-    /// <summary>
-    /// The owner's hero on a garrison's entrance moves a whole stack between its army and the garrison (ADR-070); the hero keeps at least one
-    /// stack, and the stack joins one of the same creature or a free slot.
-    /// </summary>
-    internal void MoveGarrisonStack(PlayerId player, MapObjectId garrisonId, int slot, bool toGarrison)
-    {
-        var hero = HeroAt<MapGarrison>(player, garrisonId, out var garrison);
-        if (garrison.Owner != player)
-        {
-            throw new CommandRefusedException("Only the garrison's owner moves troops in or out.");
-        }
-
-        var (from, to) = toGarrison ? (hero.Army, garrison.Troops) : (garrison.Troops, hero.Army);
-        var stack = (Army.IsValidSlot(slot) ? from[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
-        if (toGarrison && hero.Army.Stacks.Count() == 1)
-        {
-            throw new CommandRefusedException($"{hero.Name} must keep at least one stack.");
-        }
-
-        if (!to.CanAccept(stack.Creature))
-        {
-            throw new CommandRefusedException("There is no free slot for that stack.");
-        }
-
-        from.Set(slot, null);
-        to.TryAdd(stack);
-        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-        events.Publish(new GarrisonChanged(garrison.Id, garrison.Troops.Slots.ToList()));
-    }
-
-    /// <summary>
-    /// The hero on a map tavern's entrance hires one of its offers for its player (ADR-070, ADR-071): the hero limit applies, and the new hero
-    /// needs a free cell next to the entrance; it brings a starter stack and moves from the player's next turn on.
-    /// </summary>
-    internal void HireAtMapTavern(PlayerId player, MapObjectId tavernId, string heroId)
-    {
-        HeroAt<MapTavern>(player, tavernId, out var tavern);
-        if (MapTavernRules.Offers(state, tavern).FirstOrDefault(h => h.Id == heroId) is not { } definition)
-        {
-            throw new CommandRefusedException($"{heroId} is not offered here this week.");
-        }
-
-        if (state.HeroLimitReached(player))
-        {
-            throw new CommandRefusedException($"You may have at most {state.HeroLimit(player)} heroes.");
-        }
-
-        var arrival = MapTavernRules.Arrival(state, tavern) ?? throw new CommandRefusedException("There is no free cell next to the tavern.");
-        if (!economy.TrySpend(player, TavernRules.HeroCost))
-        {
-            throw new CommandRefusedException($"A hero costs {TavernRules.HeroCost}.");
-        }
-
-        var hero = Hero.Create(state.NextUnusedHeroId(), player, arrival, null, definition);
-        if (TavernRules.StarterStack(state, definition) is { } starter)
-        {
-            hero.Army.TryAdd(starter);
-        }
-
-        hero.MaxMovementPoints = MovementAllowance.Daily(state, hero);
-        hero.MovementPoints = hero.MaxMovementPoints; // like a hero hired in a town
-        state.AddHero(hero);
-        events.Publish(new HeroHired(tavern.Id, hero.Id, definition.Id));
-        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-    }
-
-    /// <summary>The visitor's player buys the cartographer's map of its level, or leaves (ADR-079, MAP-31).</summary>
-    internal void ResolveCartographer(bool buy)
-    {
-        if (state.PendingDecision is not CartographerDecision decision)
-        {
-            throw new CommandRefusedException("No cartographer is waiting for an answer.");
-        }
-
-        var hero = state.GetHero(decision.Hero);
-        var cartographer = (Cartographer)state.GetObject(decision.Cartographer);
-        if (buy && !economy.TrySpend(hero.Owner, new ResourceSet(Gold: decision.Price)))
-        {
-            throw new CommandRefusedException("Not enough gold.");
-        }
-
-        state.PendingDecision = null;
-        events.Publish(new DecisionResolved(decision));
-        if (!buy)
-        {
-            return;
-        }
-
-        cartographer.Buyers.Add(hero.Owner);
-        events.Publish(new MapBought(cartographer.Id, hero.Id, hero.Owner, decision.Level));
-        var map = state.Map;
-        events.Publish(new SurroundingsRevealed(hero.Id, cartographer.Id, hero.Owner, new MapPosition(map.Width / 2, map.Height / 2, decision.Level), map.Width + map.Height));
-    }
-
-    /// <summary>
-    /// The hero answers the sphinx (ADR-079, MAP-27): right brings a Major artifact or 5000 experience (even odds; a full backpack loses the
-    /// artifact); wrong ends the hero's movement for the day and costs 3 morale in its next battle.
-    /// </summary>
-    internal void ResolveSphinx(int option)
-    {
-        if (state.PendingDecision is not SphinxDecision decision)
-        {
-            throw new CommandRefusedException("No sphinx is waiting for an answer.");
-        }
-
-        if (option < 0 || option >= decision.Options.Count)
-        {
-            throw new CommandRefusedException($"Option {option} is not offered.");
-        }
-
-        var hero = state.GetHero(decision.Hero);
-        var sphinx = (Sphinx)state.GetObject(decision.Sphinx);
-        state.PendingDecision = null;
-        TryCollect(hero, sphinx);
-        events.Publish(new DecisionResolved(decision));
-        if (option != decision.Correct)
-        {
-            hero.MovementPoints = 0;
-            events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: false));
-            progression.GrantStatus(hero, new HeroStatus(sphinx.Definition.Id, HeroStatusKind.Morale, Sphinx.WrongMorale, StatusExpiry.NextBattle));
-            return;
-        }
-
-        if (state.Random.Next(2) == 0 && artifacts.Draw(ArtifactTier.Major) is { } artifact)
-        {
-            var kept = artifacts.Grant(hero, artifact, ArtifactSource.Found);
-            events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: true, Artifact: kept ? artifact : null));
-            return;
-        }
-
-        events.Publish(new SphinxAnswered(sphinx.Id, hero.Id, Right: true, Experience: Sphinx.Experience));
-        progression.GrantExperience(hero, Sphinx.Experience);
-    }
-
-    /// <summary>The hero opens the Pandora's Box, fighting its guard first if it has one, or leaves it closed (ADR-100, MAP-35).</summary>
-    internal void ResolvePandorasBox(bool open)
-    {
-        if (state.PendingDecision is not PandorasBoxDecision decision)
-        {
-            throw new CommandRefusedException("No Pandora's Box is waiting for an answer.");
-        }
-
-        var hero = state.GetHero(decision.Hero);
-        var box = (PandorasBox)state.GetObject(decision.Box);
-        state.PendingDecision = null;
-        events.Publish(new DecisionResolved(decision));
-        if (!open)
-        {
-            return;
-        }
-
-        if (box.IsGuarded)
-        {
-            battles.BeginBoxBattle(hero, box);
-            return;
-        }
-
-        PandorasBoxRules.Open(state, events, economy, progression, artifacts, hero, box);
-    }
-
-    /// <summary>The hero learns or improves one of the witch hut's skills, or leaves without (ADR-079, MAP-34).</summary>
-    internal void ResolveWitchHut(string? skill)
-    {
-        if (state.PendingDecision is not WitchHutDecision decision)
-        {
-            throw new CommandRefusedException("No witch hut is waiting for an answer.");
-        }
-
-        if (skill is not null && !decision.Options.Contains(skill))
-        {
-            throw new CommandRefusedException($"'{skill}' is not offered.");
-        }
-
-        var hero = state.GetHero(decision.Hero);
-        if (skill is not null)
-        {
-            hero.Skills.Raise(skill); // refuses (a full set of skill groups) before anything has changed
-            hero.WitchHutLevel = hero.Level;
-        }
-
-        state.PendingDecision = null;
-        events.Publish(new DecisionResolved(decision));
-        if (skill is not null)
-        {
-            events.Publish(new WitchHutSkillLearned(decision.Hut, hero.Id, skill, hero.Skills.Level(skill)));
-        }
-    }
-
-    /// <summary>
-    /// A hero's first visit to a University or War Academy draws its lessons, kept for that hero at that school (ADR-139); later visits show the
-    /// same ones. A hero with nothing to learn there is told so.
-    /// </summary>
-    private void DrawLessons(Hero hero, SkillSchool school)
-    {
-        if (!school.Lessons.TryGetValue(hero.Id, out var lessons))
-        {
-            lessons = SkillSchoolRules.Draw(hero, ProgressionService.TownOf(state, hero), school.TeachesMagic, state.Random, state.Rules.Bans);
-            school.Lessons[hero.Id] = lessons;
-            events.Publish(new LessonsDrawn(school.Id, hero.Id, lessons));
-        }
-
-        if (lessons.Count == 0)
-        {
-            events.Publish(new MapObjectRefused(hero.Id, school.Id, $"The {school.Definition.Name.ToLowerInvariant()} has nothing to teach {hero.Name}."));
-        }
-    }
-
-    /// <summary>The hero on a University's or War Academy's entrance takes one of its lessons for <see cref="SkillSchoolRules.Price"/> (ADR-139).</summary>
-    /// <summary>
-    /// The hero digs where it stands (ADR-140): it needs its whole day's movement, which the dig spends, and open ground (<see cref="GrailRules.CheckDig"/>).
-    /// The hole stays; on the Grail's cell the hero takes the Grail, unless its backpack is full, which leaves the Grail buried and the cell undug.
-    /// </summary>
-    internal void Dig(HeroId heroId)
-    {
-        var hero = state.GetHero(heroId);
-        if (GrailRules.CheckDig(state, hero) is { } refusal)
-        {
-            throw new CommandRefusedException(refusal);
-        }
-
-        hero.MovementPoints = 0;
-        var position = hero.Position;
-        string? found = null;
-        if (!state.Grail.IsFound && state.Grail.Position == position && state.Artifacts.Grail is { } grail)
-        {
-            if (!artifacts.Grant(hero, grail.Id, ArtifactSource.Found))
-            {
-                events.Publish(new HoleDug(hero.Id, position, null));
-                return;
-            }
-
-            state.Grail.IsFound = true;
-            found = grail.Id;
-        }
-
-        state.Grail.AddHole(position);
-        events.Publish(new HoleDug(hero.Id, position, found));
-    }
-
-    internal void TakeLesson(PlayerId player, MapObjectId schoolId, string skill)
-    {
-        var hero = HeroAt<SkillSchool>(player, schoolId, out var school);
-        var lesson = SkillSchoolRules.LessonsOf(school, hero.Id).FirstOrDefault(l => l.Skill == skill)
-                     ?? throw new CommandRefusedException($"The {school.Definition.Name.ToLowerInvariant()} does not offer {hero.Name} that skill.");
-        switch (SkillSchoolRules.StateOf(hero, lesson))
-        {
-            case LessonState.Learned:
-                throw new CommandRefusedException($"{hero.Name} knows {BuiltInSkills.Get(skill).Name} at that level already.");
-            case LessonState.NoRoom:
-                throw new CommandRefusedException($"{hero.Name} learns at most {HeroSkills.MaxGroups} skill groups.");
-        }
-
-        if (!economy.TrySpend(player, SkillSchoolRules.Price))
-        {
-            throw new CommandRefusedException("Not enough resources.");
-        }
-
-        hero.Skills.Raise(skill);
-        events.Publish(new LessonTaken(school.Id, hero.Id, skill, hero.Skills.Level(skill), SkillSchoolRules.Price));
-    }
-
-    /// <summary>The hero on an artifact merchant's entrance buys the artifact of a slot for twice its value (ADR-079, MAP-33).</summary>
-    internal void BuyArtifact(PlayerId player, MapObjectId merchantId, int slot)
-    {
-        var hero = HeroAt<ArtifactMerchant>(player, merchantId, out var merchant);
-        var artifact = (slot >= 0 && slot < merchant.Stock.Count ? merchant.Stock[slot] : null)
-                       ?? throw new CommandRefusedException("Nothing is for sale in that slot.");
-        if (hero.Artifacts.BackpackFull)
-        {
-            throw new CommandRefusedException($"{hero.Name}'s backpack is full.");
-        }
-
-        var price = ArtifactMerchantRules.Price(state.Artifacts.Get(artifact));
-        if (!economy.TrySpend(player, price))
-        {
-            throw new CommandRefusedException("Not enough gold.");
-        }
-
-        merchant.Stock[slot] = null;
-        artifacts.Grant(hero, artifact, ArtifactSource.Bought);
-        events.Publish(new ArtifactBought(merchant.Id, hero.Id, slot, artifact, price));
-    }
-
-    /// <summary>The hero on a refugee camp's entrance buys its creatures at the normal price (ADR-079, MAP-30; no Stewardship discount).</summary>
-    internal void RecruitAtRefugeeCamp(PlayerId player, MapObjectId campId, int count)
-    {
-        var hero = HeroAt<RefugeeCamp>(player, campId, out var camp);
-        if (camp.Creature is not { } id || count < 1 || count > camp.Available)
-        {
-            throw new CommandRefusedException($"Only {camp.Available} creatures wait here.");
-        }
-
-        var creature = state.Creatures.Get(id);
-        if (!hero.Army.CanAccept(id))
-        {
-            throw new CommandRefusedException($"{hero.Name} has no free slot for {creature.Name}.");
-        }
-
-        if (!economy.TrySpend(player, creature.Cost * count))
-        {
-            throw new CommandRefusedException("Not enough resources.");
-        }
-
-        camp.Available -= count;
-        hero.Army.TryAdd(new CreatureStack(id, count));
-        events.Publish(new DwellingRecruited(camp.Id, hero.Id, id, count, camp.Available));
-        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-    }
-
-    /// <summary>
-    /// Creatures of an army slot go on the altar for twice their hit points in experience (ADR-079, MAP-29): Darkness and Wild heroes only, and the
-    /// hero keeps at least one creature *(choice)*.
-    /// </summary>
-    internal void SacrificeCreatures(PlayerId player, MapObjectId altarId, int slot, int count)
-    {
-        var hero = HeroAt<SacrificialAltar>(player, altarId, out var altar);
-        if (!SacrificeRules.For(ProgressionService.TownOf(state, hero)).HasFlag(SacrificeKind.Creatures))
-        {
-            throw new CommandRefusedException($"{hero.Name} cannot sacrifice creatures.");
-        }
-
-        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
-        if (count < 1 || count > stack.Count)
-        {
-            throw new CommandRefusedException($"The stack has {stack.Count} creatures.");
-        }
-
-        if (count == hero.Army.Stacks.Sum(s => s.Stack.Count))
-        {
-            throw new CommandRefusedException($"{hero.Name} must keep at least one creature.");
-        }
-
-        hero.Army.Set(slot, count == stack.Count ? null : new CreatureStack(stack.Creature, stack.Count - count));
-        var experience = SacrificeRules.Experience(state.Creatures.Get(stack.Creature), count);
-        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-        events.Publish(new SacrificeMade(altar.Id, hero.Id, experience, stack.Creature, count));
-        progression.GrantExperience(hero, experience);
-    }
-
-    /// <summary>An artifact the hero wears or carries goes on the altar for 2000 / 5000 / 10 000 experience by tier (Light and Wild heroes only).</summary>
-    internal void SacrificeArtifact(PlayerId player, MapObjectId altarId, string artifact)
-    {
-        var hero = HeroAt<SacrificialAltar>(player, altarId, out var altar);
-        if (!SacrificeRules.For(ProgressionService.TownOf(state, hero)).HasFlag(SacrificeKind.Artifacts))
-        {
-            throw new CommandRefusedException($"{hero.Name} cannot sacrifice artifacts.");
-        }
-
-        if (!hero.Artifacts.Has(artifact))
-        {
-            throw new CommandRefusedException($"{hero.Name} has no '{artifact}'.");
-        }
-
-        if (state.Artifacts.Get(artifact).IsGrail)
-        {
-            throw new CommandRefusedException("The Grail is not given up on an altar.");
-        }
-
-        if (state.Artifacts.Get(artifact).IsAssembled)
-        {
-            // The altar takes pieces only (ADR-108, ADR-121).
-            throw new CommandRefusedException($"Take {state.Artifacts.Get(artifact).Name} apart first: the altar takes its pieces only.");
-        }
-
-        if (!hero.Artifacts.RemoveFromBackpack(artifact))
-        {
-            hero.Artifacts.RemoveWorn(artifact);
-            state.RefreshArtifacts(hero);
-        }
-
-        var experience = SacrificeRules.Experience(state.Artifacts.Get(artifact));
-        events.Publish(new HeroArtifactsChanged(hero.Id));
-        events.Publish(new SacrificeMade(altar.Id, hero.Id, experience, Artifact: artifact));
-        progression.GrantExperience(hero, experience);
-    }
-
-    private void OfferMap(Hero hero, Cartographer cartographer)
-    {
-        if (cartographer.Level >= state.Map.Levels)
-        {
-            events.Publish(new MapObjectRefused(hero.Id, cartographer.Id, "This map has no underground to chart."));
-        }
-        else if (cartographer.Buyers.Contains(hero.Owner))
-        {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, cartographer.Id));
-        }
-        else if (!state.GetPlayer(hero.Owner).Resources.CanAfford(new ResourceSet(Gold: Cartographer.Price)))
-        {
-            events.Publish(new MapObjectRefused(hero.Id, cartographer.Id, $"The cartographer's map costs {Cartographer.Price} gold."));
+            _battles.BeginTownBattle(hero, town);
         }
         else
         {
-            Ask(new CartographerDecision(hero.Id, cartographer.Id, cartographer.Level, Cartographer.Price));
+            TownService.Capture(State, Events, town, hero.Owner);
+            Magic.MagicRules.Visit(State, Events, hero, town);
         }
     }
 
-    /// <summary>Each hero gets one riddle per sphinx: the author's, or one from the table; the right answer's place among the three is rolled.</summary>
-    private void AskRiddle(Hero hero, Sphinx sphinx)
+    private void Teleport(Hero hero, MapObject gate)
     {
-        if (!sphinx.CanCollect(hero.Id, state.Date))
+        // Two-way partner or one-way exit; a hero standing on the landing tile blocks the jump.
+        if (gate.TeleportTarget is not null && State.TeleportDestination(gate) is { } exit && State.HeroAt(exit) is null)
         {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, sphinx.Id));
-            return;
+            var from = hero.Position;
+            hero.Position = exit;
+            Events.Publish(new HeroTeleported(hero.Id, from, exit));
         }
-
-        var riddle = sphinx.Riddle ?? RiddleTable.Default[state.Random.Next(RiddleTable.Default.Count)];
-        var correct = state.Random.Next(3);
-        var options = new List<string> { riddle.Wrong1, riddle.Wrong2 };
-        options.Insert(correct, riddle.Answer);
-        Ask(new SphinxDecision(hero.Id, sphinx.Id, riddle.Question, options, correct));
     }
 
-    /// <summary>A shrine teaches its spell to a hero who can learn it and does not know it yet (ADR-120); otherwise it says why not.</summary>
-    private void Worship(Hero hero, Shrine shrine)
+    /// <summary>The town gate's picker: the owner's towns, an occupied entrance listed but unavailable (ADR-068, MAP-12).</summary>
+    private void OfferTowns(Hero hero, TownGate gate)
     {
-        if (shrine.Spell is not { } id || !state.Spells.TryGet(id, out var spell))
+        var towns = State.ObjectsOf<Town>().Where(t => t.Owner == hero.Owner).OrderBy(t => t.Id.Value)
+            .Select(t => new TownGateOption(t.Id, t.Name, State.HeroAt(t.VisitPosition) is null))
+            .ToList();
+        if (towns.Count == 0)
         {
+            Events.Publish(new MapObjectRefused(hero.Id, gate.Id, "You have no town to go to."));
             return;
         }
 
-        if (hero.Spells.ContainsKey(id))
-        {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, shrine.Id));
-            return;
-        }
-
-        if (!Magic.MagicRules.CanLearn(hero, spell))
-        {
-            var why = hero.HasSpellBook ? $"{hero.Name} needs the {BuiltInSkills.Get(Magic.MagicRules.MagicSkill(spell.School)).Name} skill at level {spell.Level} to learn {spell.Name}."
-                : $"{hero.Name} needs a spell book to learn {spell.Name}.";
-            events.Publish(new MapObjectRefused(hero.Id, shrine.Id, why));
-            return;
-        }
-
-        hero.Learn(id);
-        events.Publish(new SpellsLearned(hero.Id, shrine.Id, [id]));
+        _context.Ask(new TownGateDecision(hero.Id, gate.Id, towns));
     }
 
-    private void OfferSkills(Hero hero, WitchHut hut)
+    /// <summary>A prisoner joins the visitor's player where the prison stood, unless the player has all the heroes it may (ADR-068, MAP-5).</summary>
+    private void Free(Hero hero, Prison prison)
     {
-        var options = WitchHutRules.Options(hero, hut, state.Rules.Bans);
-        if (hero.WitchHutLevel == hero.Level)
+        if (State.HeroLimitReached(hero.Owner))
         {
-            events.Publish(new MapObjectRefused(hero.Id, hut.Id, $"{hero.Name} learned at a witch hut at this level already."));
+            Events.Publish(new MapObjectRefused(hero.Id, prison.Id, $"You may have at most {State.HeroLimit(hero.Owner)} heroes; the prisoner stays."));
+            return;
         }
-        else if (options.Count == 0)
+
+        if (prison.Hero is not { } heroId || !State.HeroRoster.Contains(heroId))
         {
-            events.Publish(new MapObjectRefused(hero.Id, hut.Id, $"The witch has nothing to teach {hero.Name}."));
+            Events.Publish(new MapObjectRefused(hero.Id, prison.Id, "The prison is empty."));
+            return;
+        }
+
+        _context.RemoveFromMap(prison);
+        var level = Math.Max(1, prison.Level ?? 1);
+        var freed = Hero.Create(State.NextUnusedHeroId(), hero.Owner, prison.Position, null, State.HeroRoster.Get(heroId));
+        freed.Experience = ExperienceTable.For(level);
+        State.AddHero(freed);
+        _progression.LevelUpAutomatically(freed);
+        freed.MaxMovementPoints = MovementAllowance.Daily(State, freed);
+        freed.MovementPoints = 0; // it starts moving on its owner's next turn
+        Events.Publish(new HeroFreed(prison.Id, freed.Id, hero.Owner, heroId, freed.Level));
+    }
+
+    private void LookOut(Hero hero, Observatory observatory)
+    {
+        // Every visit looks out (it only reveals what is still hidden); the log tells the AI which heroes have been up there.
+        _context.TryCollect(hero, observatory);
+        Events.Publish(new SurroundingsRevealed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
+    }
+
+    private void LookThrough(Hero hero, MagiWindow window)
+    {
+        // Every visit looks through every Eye of the window's colour (ADR-073).
+        foreach (var eye in State.ObjectsOf<MagiEye>().Where(e => e.Colour == window.Colour).OrderBy(e => e.Id.Value))
+        {
+            Events.Publish(new SurroundingsRevealed(hero.Id, window.Id, hero.Owner, eye.Position, MagiWindow.Radius));
+        }
+    }
+
+    private void VisitKeymaster(Hero hero, KeymasterTent tent)
+    {
+        if (State.GetPlayer(hero.Owner).AddKey(tent.Colour))
+        {
+            Events.Publish(new KeyReceived(tent.Id, hero.Id, hero.Owner, tent.Colour));
         }
         else
         {
-            Ask(new WitchHutDecision(hero.Id, hut.Id, options));
+            Events.Publish(new MapObjectFoundEmpty(hero.Id, tent.Id));
         }
     }
 
-    private void Ask(PendingDecision decision)
+    private void PassBorderGuard(Hero hero, BorderPost post)
     {
-        state.PendingDecision = decision;
-        events.Publish(new DecisionRequested(decision));
+        // Only key holders get onto a border post (the move refuses the others); a guard leaves after the first, a gate stays.
+        if (!post.IsGate)
+        {
+            _context.RemoveFromMap(post);
+            Events.Publish(new BorderGuardPassed(post.Id, hero.Id));
+        }
     }
 
-    private void GiveResources(Hero hero, MapObject provider, ResourceSet resources)
+    private void VisitGarrison(Hero hero, MapGarrison garrison)
     {
-        TryCollect(hero, provider);
-        economy.Grant(hero.Owner, resources);
-        events.Publish(new ResourcesFound(hero.Id, provider.Id, resources));
-    }
+        if (garrison.LetsThrough(State, hero.Owner))
+        {
+            return;
+        }
 
-    private void RemoveFromMap(MapObject mapObject)
-    {
-        state.RemoveObject(mapObject);
-        events.Publish(new MapObjectRemoved(mapObject.Id));
+        if (!garrison.Troops.IsEmpty)
+        {
+            _battles.BeginGarrisonBattle(hero, garrison);
+        }
+        else if (garrison.Owner != hero.Owner)
+        {
+            // An empty garrison is flagged by the first hero of another side that enters it (ADR-070).
+            var previous = garrison.Owner;
+            garrison.Owner = hero.Owner;
+            Events.Publish(new GarrisonOwnerChanged(garrison.Id, previous, hero.Owner));
+        }
     }
 }

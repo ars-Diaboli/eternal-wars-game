@@ -20,14 +20,14 @@ public class EditorArmyAndGuardTests
     public void HeroStatsAndArmy_AreUndoable_AndValidated()
     {
         var editor = CreateEditor();
-        editor.PlaceHero(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
+        editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
         var hero = editor.Scenario.GetHero(id);
 
-        Assert.Equal(EditResult.Ok, editor.SetHeroStats(id, 3, 2, SkillLevel.Advanced));
-        Assert.Equal(EditResult.Ok, editor.SetArmySlot(id, 4, new CreatureStack(BuiltInCreatures.Lancer, 3)));
-        Assert.Equal(EditResult.UnknownCreature, editor.SetArmySlot(id, 0, new CreatureStack("haven.dragon", 1)));
-        Assert.Equal(EditResult.InvalidValue, editor.SetArmySlot(id, 7, null));
-        Assert.Equal(EditResult.InvalidValue, editor.SetHeroStats(id, -1, 0, SkillLevel.None));
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetStats(id, 3, 2, SkillLevel.Advanced));
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetArmySlot(id, 4, new CreatureStack(BuiltInCreatures.Lancer, 3)));
+        Assert.Equal(EditResult.UnknownCreature, editor.Heroes.SetArmySlot(id, 0, new CreatureStack("haven.dragon", 1)));
+        Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetArmySlot(id, 7, null));
+        Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetStats(id, -1, 0, SkillLevel.None));
 
         Assert.Equal((3, 2, SkillLevel.Advanced), (hero.Attack, hero.Defense, hero.Tactics));
         Assert.Equal(new CreatureStack(BuiltInCreatures.Lancer, 3), hero.Army[4]);
@@ -47,9 +47,9 @@ public class EditorArmyAndGuardTests
         var changed = new List<IEvent>();
         editor.Events.Subscribe<IEvent>(changed.Add);
 
-        Assert.Equal(EditResult.UnknownCreature, editor.PlaceMonster(new(5, 5), "neutral.unicorn", null, GuardDisposition.Friendly, false, out _));
-        Assert.Equal(EditResult.Ok, editor.PlaceMonster(new(5, 5), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out var id));
-        Assert.Equal(EditResult.Ok, editor.SetMonster(id, BuiltInCreatures.Wyvern, 6, GuardDisposition.Savage, neverFlees: true));
+        Assert.Equal(EditResult.UnknownCreature, editor.Monsters.Place(new(5, 5), "neutral.unicorn", null, GuardDisposition.Friendly, false, out _));
+        Assert.Equal(EditResult.Ok, editor.Monsters.Place(new(5, 5), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out var id));
+        Assert.Equal(EditResult.Ok, editor.Monsters.Set(id, BuiltInCreatures.Wyvern, 6, GuardDisposition.Savage, neverFlees: true));
 
         var monster = (MonsterGuard)editor.Scenario.GetObject(id);
         Assert.Equal((BuiltInCreatures.Wyvern, 6, GuardDisposition.Savage, true), (monster.Creature, monster.Count, monster.Disposition, monster.NeverFlees));
@@ -65,17 +65,17 @@ public class EditorArmyAndGuardTests
     public void MineGuards_AndChestValues_AreUndoable()
     {
         var editor = CreateEditor();
-        editor.PlaceObject(BuiltInMapObjects.MineId(ResourceType.Gold), new(4, 4), out var mineId);
-        editor.PlaceObject(BuiltInMapObjects.TreasureChest, new(8, 8), out var chestId);
+        editor.Objects.Place(BuiltInMapObjects.MineId(ResourceType.Gold), new(4, 4), out var mineId);
+        editor.Objects.Place(BuiltInMapObjects.TreasureChest, new(8, 8), out var chestId);
         var mine = (Mine)editor.Scenario.GetObject(mineId);
         var chest = (TreasureChest)editor.Scenario.GetObject(chestId);
 
-        editor.SetMineGuard(mineId, new GuardStack(BuiltInCreatures.Troll, 8));
-        editor.SetChestValues(chestId, new ChestValues(2000, 1500));
+        editor.Objects.SetMineGuard(mineId, new GuardStack(BuiltInCreatures.Troll, 8));
+        editor.Contents.SetChestValues(chestId, new ChestValues(2000, 1500));
 
         Assert.Equal((new GuardStack(BuiltInCreatures.Troll, 8), new ChestValues(2000, 1500)), (mine.Guard, chest.FixedValues));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetMineGuard(chestId, null));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetMonsterGuardMode(mineId, GuardMode.Area)); // mine guards have no mode
+        Assert.Equal(EditResult.InvalidTarget, editor.Objects.SetMineGuard(chestId, null));
+        Assert.Equal(EditResult.InvalidTarget, editor.Monsters.SetGuardMode(mineId, GuardMode.Area)); // mine guards have no mode
 
         editor.Undo();
         editor.Undo();
@@ -87,16 +87,16 @@ public class EditorArmyAndGuardTests
     public void MonsterGuardMode_IsSetPerStack_WithUndoAndRedo()
     {
         var editor = CreateEditor();
-        editor.PlaceMonster(new(3, 3), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out var treasureGuardId);
-        editor.PlaceMonster(new(8, 3), BuiltInCreatures.Wolf, null, GuardDisposition.Hostile, false, out var otherId);
+        editor.Monsters.Place(new(3, 3), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out var treasureGuardId);
+        editor.Monsters.Place(new(8, 3), BuiltInCreatures.Wolf, null, GuardDisposition.Hostile, false, out var otherId);
         var treasureGuard = (MonsterGuard)editor.Scenario.GetObject(treasureGuardId);
         var other = (MonsterGuard)editor.Scenario.GetObject(otherId);
         var changed = new List<IEvent>();
         editor.Events.Subscribe<IEvent>(changed.Add);
 
         Assert.Equal(GuardMode.Classic, treasureGuard.Mode); // the default
-        Assert.Equal(EditResult.Ok, editor.SetMonsterGuardMode(treasureGuardId, GuardMode.Area));
-        Assert.Equal(EditResult.InvalidValue, editor.SetMonsterGuardMode(treasureGuardId, (GuardMode)7));
+        Assert.Equal(EditResult.Ok, editor.Monsters.SetGuardMode(treasureGuardId, GuardMode.Area));
+        Assert.Equal(EditResult.InvalidValue, editor.Monsters.SetGuardMode(treasureGuardId, (GuardMode)7));
 
         Assert.Equal((GuardMode.Area, GuardMode.Classic), (treasureGuard.Mode, other.Mode));
         Assert.Contains(new MapObjectChanged(treasureGuardId), changed);

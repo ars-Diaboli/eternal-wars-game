@@ -119,14 +119,14 @@ public class SecondCatalogueObjectTests
         var editor = new MapEditorSession(BlankScenario.Create(30, 10));
         for (var i = 0; i < MagiWindow.MaxEyes; i++)
         {
-            Assert.Equal(EditResult.Ok, editor.PlaceObject(Red(BuiltInMapObjects.MagiEye), new MapPosition(2 * i, 0), out _));
+            Assert.Equal(EditResult.Ok, editor.Objects.Place(Red(BuiltInMapObjects.MagiEye), new MapPosition(2 * i, 0), out _));
         }
 
-        Assert.Equal(EditResult.TooManyEyes, editor.PlaceObject(Red(BuiltInMapObjects.MagiEye), new MapPosition(9, 0), out _));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.ColouredId(BuiltInMapObjects.MagiEye, ObjectColour.Green), new MapPosition(9, 0), out _));
+        Assert.Equal(EditResult.TooManyEyes, editor.Objects.Place(Red(BuiltInMapObjects.MagiEye), new MapPosition(9, 0), out _));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.ColouredId(BuiltInMapObjects.MagiEye, ObjectColour.Green), new MapPosition(9, 0), out _));
 
-        editor.PlaceObject(BuiltInMapObjects.ColouredId(BuiltInMapObjects.MagiWindow, ObjectColour.Black), new MapPosition(12, 2), out _);
-        editor.PlaceObject(Red(BuiltInMapObjects.BorderGate), new MapPosition(16, 2), out _);
+        editor.Objects.Place(BuiltInMapObjects.ColouredId(BuiltInMapObjects.MagiWindow, ObjectColour.Black), new MapPosition(12, 2), out _);
+        editor.Objects.Place(Red(BuiltInMapObjects.BorderGate), new MapPosition(16, 2), out _);
         var issues = MapValidator.Validate(editor.Scenario).Select(i => i.Message).ToList();
         Assert.Contains(issues, m => m.Contains("no Eye of its colour", StringComparison.Ordinal));
         Assert.Contains(issues, m => m.Contains("no Keymaster's Tent", StringComparison.Ordinal));
@@ -310,10 +310,10 @@ public class SecondCatalogueObjectTests
     public void TheEditor_SetsAMapGarrisonsOwnerAndTroops_Undoably()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 8));
-        editor.PlaceObject(BuiltInMapObjects.Garrison, new MapPosition(2, 2), out var id);
+        editor.Objects.Place(BuiltInMapObjects.Garrison, new MapPosition(2, 2), out var id);
 
-        Assert.Equal(EditResult.Ok, editor.SetMapGarrisonOwner(id, new PlayerId(0)));
-        Assert.Equal(EditResult.Ok, editor.SetGarrisonSlot(id, 2, new CreatureStack("neutral.wolf", 4)));
+        Assert.Equal(EditResult.Ok, editor.Objects.SetGarrisonOwner(id, new PlayerId(0)));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetGarrisonSlot(id, 2, new CreatureStack("neutral.wolf", 4)));
         var garrison = (MapGarrison)editor.Scenario.GetObject(id);
         Assert.Equal((new PlayerId(0), 4), (garrison.Owner!.Value, garrison.Troops[2]!.Count));
 

@@ -1,8 +1,11 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
 
 namespace EternalWars.Core.Domain.Objects;
 
@@ -44,8 +47,43 @@ public sealed record BankTier(int Weight, IReadOnlyList<CreatureStack> Guard, Re
 /// roll, <see cref="CreatureBankRules.RefillDays"/> days later. Its state is game state, not map data.
 /// </summary>
 public sealed class CreatureBank(MapObjectId id, MapObjectDefinition definition, MapPosition position)
-    : MapObject(id, definition, position, MapObjectKind.CreatureBank)
+    : MapObject(id, definition, position, MapObjectKind.CreatureBank), IBattleGuard
 {
+    /// <inheritdoc/>
+    /// <remarks>A retreat or a lost battle leaves the guard intact.</remarks>
+    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome) => outcome.Events.Publish(new MapObjectChanged(Id));
+
+    /// <inheritdoc/>
+    /// <remarks>The bank's reward goes to the winner and the bank is empty until it refills (ADR-068).</remarks>
+    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
+    {
+        if (winner is null)
+        {
+            return;
+        }
+
+        var (reward, tier, more) = (Reward, RewardArtifact, MoreArtifacts);
+        PlunderedOn = outcome.State.Date;
+        Guard = [];
+        Reward = ResourceSet.Empty;
+        RewardArtifact = null;
+        MoreArtifacts = [];
+        outcome.Economy.Grant(winner.Owner, reward);
+        var artifacts = outcome.Artifacts;
+        var found = tier is { } t && artifacts.Draw(t) is { } artifact && artifacts.Grant(winner, artifact, ArtifactSource.Found) ? artifact : null;
+        foreach (var extra in more)
+        {
+            // Further artifacts (Dragon City) go the same way; a full backpack loses them.
+            if (artifacts.Draw(extra) is { } drawn)
+            {
+                artifacts.Grant(winner, drawn, ArtifactSource.Found);
+            }
+        }
+
+        outcome.Events.Publish(new CreatureBankPlundered(Id, winner.Id, reward, found));
+        outcome.Events.Publish(new MapObjectChanged(Id));
+    }
+
     /// <inheritdoc/>
     internal override string DigestState() => $"guard {string.Join(',', Guard)} reward {Reward} {RewardArtifact}{(MoreArtifacts.Count == 0 ? "" : $"+{string.Join('+', MoreArtifacts)}")} plundered {PlunderedOn?.AbsoluteDay}";
 

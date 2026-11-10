@@ -285,10 +285,10 @@ public class TownTests
 
         var scenario = Create(Rows);
         var editor = new MapEditorSession(scenario);
-        editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id);
-        Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.Fort, 0));
-        Assert.Equal(EditResult.RequirementMissing, editor.SetTownDwelling(id, BuiltInCreatures.Footman, 1));
-        Assert.Equal(EditResult.RequirementMissing, editor.SetTownDwelling(id, BuiltInCreatures.Footman, 2));
+        editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id);
+        Assert.Equal(EditResult.Ok, editor.Towns.SetBuilding(id, BuiltInBuildings.Fort, 0));
+        Assert.Equal(EditResult.RequirementMissing, editor.Towns.SetDwelling(id, BuiltInCreatures.Footman, 1));
+        Assert.Equal(EditResult.RequirementMissing, editor.Towns.SetDwelling(id, BuiltInCreatures.Footman, 2));
 
         var fortless = (Town)scenario.GetObject(id);
         fortless.SetDwelling(BuiltInCreatures.Footman, 1);
@@ -302,18 +302,18 @@ public class TownTests
         var editor = new MapEditorSession(scenario);
         var placed = new List<MapObjectPlaced>();
         editor.Events.Subscribe<MapObjectPlaced>(placed.Add);
-        editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id);
-        editor.SetTownOwner(id, Blue);
-        editor.SetTownName(id, "Brightwater");
-        editor.SetTownDwelling(id, BuiltInCreatures.Pikeman, 2);
-        editor.SetGarrisonSlot(id, 0, new CreatureStack(BuiltInCreatures.Pikeman, 5));
+        editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id);
+        editor.Towns.SetOwner(id, Blue);
+        editor.Towns.SetName(id, "Brightwater");
+        editor.Towns.SetDwelling(id, BuiltInCreatures.Pikeman, 2);
+        editor.Towns.SetGarrisonSlot(id, 0, new CreatureStack(BuiltInCreatures.Pikeman, 5));
         var haven = (Town)scenario.GetObject(id);
         haven.SetAvailable(BuiltInCreatures.Pikeman, 12);
         var infernoTierOne = scenario.Creatures.BaseCreaturesOf(TownIds.Inferno).Where(c => c.Tier == 1).ToList();
         var havenTierOne = scenario.Creatures.BaseCreaturesOf(TownIds.Haven).Where(c => c.Tier == 1).ToList();
         var expectedLine = infernoTierOne[havenTierOne.FindIndex(c => c.Id == BuiltInCreatures.Pikeman)].Id;
 
-        Assert.Equal(EditResult.Ok, editor.SetTownType(id, TownIds.Inferno));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetType(id, TownIds.Inferno));
 
         var inferno = (Town)scenario.GetObject(id);
         Assert.Equal((TownIds.Inferno, Blue, "Brightwater", haven.Position), (inferno.TownType, inferno.Owner, inferno.Name, inferno.Position));
@@ -327,8 +327,8 @@ public class TownTests
         Assert.True(editor.Redo());
         Assert.Same(inferno, scenario.GetObject(id));
 
-        Assert.Equal(EditResult.InvalidTarget, editor.SetTownType(id, "atlantis"));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetTownType(new MapObjectId(999), TownIds.Haven));
+        Assert.Equal(EditResult.InvalidTarget, editor.Towns.SetType(id, "atlantis"));
+        Assert.Equal(EditResult.InvalidTarget, editor.Towns.SetType(new MapObjectId(999), TownIds.Haven));
     }
 
     [Theory]
@@ -408,30 +408,30 @@ public class TownTests
     {
         var scenario = Create(Rows);
         var editor = new MapEditorSession(scenario);
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(0, 0), out var id));
         var town = (Town)scenario.GetObject(id);
 
-        Assert.Equal(EditResult.Ok, editor.SetTownOwner(id, Red));
-        Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.MageGuild, 2));
-        Assert.Equal(EditResult.InvalidValue, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 3));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetTownBuilding(id, "dwelling-1", 1));
-        Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.TownHall, 2)); // no blacksmith, marketplace
-        Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 0)); // the fort needs it
-        Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.Fort, 0));
-        Assert.Equal(EditResult.Ok, editor.SetTownBuilding(id, BuiltInBuildings.Tavern, 0));
-        Assert.Equal(EditResult.RequirementMissing, editor.SetTownBuilding(id, BuiltInBuildings.Fort, 3));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetOwner(id, Red));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetBuilding(id, BuiltInBuildings.MageGuild, 2));
+        Assert.Equal(EditResult.InvalidValue, editor.Towns.SetBuilding(id, BuiltInBuildings.Tavern, 3));
+        Assert.Equal(EditResult.InvalidTarget, editor.Towns.SetBuilding(id, "dwelling-1", 1));
+        Assert.Equal(EditResult.RequirementMissing, editor.Towns.SetBuilding(id, BuiltInBuildings.TownHall, 2)); // no blacksmith, marketplace
+        Assert.Equal(EditResult.RequirementMissing, editor.Towns.SetBuilding(id, BuiltInBuildings.Tavern, 0)); // the fort needs it
+        Assert.Equal(EditResult.Ok, editor.Towns.SetBuilding(id, BuiltInBuildings.Fort, 0));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetBuilding(id, BuiltInBuildings.Tavern, 0));
+        Assert.Equal(EditResult.RequirementMissing, editor.Towns.SetBuilding(id, BuiltInBuildings.Fort, 3));
         Assert.True(editor.Undo());
         Assert.True(editor.Undo());
         foreach (var line in new[] { BuiltInCreatures.Footman, BuiltInCreatures.Pikeman, BuiltInCreatures.Zealot, BuiltInCreatures.Archer, BuiltInCreatures.Monk })
         {
-            Assert.Equal(EditResult.Ok, editor.SetTownDwelling(id, line, 1));
+            Assert.Equal(EditResult.Ok, editor.Towns.SetDwelling(id, line, 1));
         }
 
-        Assert.Equal(EditResult.DwellingRule, editor.SetTownDwelling(id, BuiltInCreatures.Griffin, 1));
-        Assert.Equal(EditResult.DwellingRule, editor.SetTownDwelling(id, "inferno.imp", 1));
-        Assert.Equal(EditResult.Ok, editor.SetTownDwelling(id, BuiltInCreatures.Lancer, 2));
-        Assert.Equal(EditResult.Ok, editor.SetGarrisonSlot(id, 0, new CreatureStack(BuiltInCreatures.Footman, 5)));
-        Assert.Equal(EditResult.PlayerInUse, editor.RemoveLastPlayer()); // Red owns the town
+        Assert.Equal(EditResult.DwellingRule, editor.Towns.SetDwelling(id, BuiltInCreatures.Griffin, 1));
+        Assert.Equal(EditResult.DwellingRule, editor.Towns.SetDwelling(id, "inferno.imp", 1));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetDwelling(id, BuiltInCreatures.Lancer, 2));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetGarrisonSlot(id, 0, new CreatureStack(BuiltInCreatures.Footman, 5)));
+        Assert.Equal(EditResult.PlayerInUse, editor.Players.RemoveLast()); // Red owns the town
         Assert.DoesNotContain(MapValidator.Validate(scenario), i => i.Severity == IssueSeverity.Error);
 
         Assert.True(editor.Undo());

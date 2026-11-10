@@ -212,7 +212,7 @@ public class CreatureBankTests
     public void Banks_AreInTheMapFormat_WithoutTheirRoll()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 8));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.DwarvenTreasury, new(2, 2), out var id));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.DwarvenTreasury, new(2, 2), out var id));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));

@@ -120,26 +120,26 @@ public class ShrineAndSpellBookTests
     public void TheEditor_SetsAShrinesSpellOfItsLevel_AndAHerosBookAndSpells_Undoably()
     {
         var editor = new MapEditorSession(BlankScenario.Create(10, 6));
-        editor.PlaceObject(BuiltInMapObjects.ShrineId(2), new(2, 2), out var id);
+        editor.Objects.Place(BuiltInMapObjects.ShrineId(2), new(2, 2), out var id);
         var shrine = (Shrine)editor.Scenario.FindObject(id)!;
         var levelTwo = ShrineRules.Candidates(editor.Scenario.Spells, 2).First().Id;
         var levelOne = ShrineRules.Candidates(editor.Scenario.Spells, 1).First().Id;
 
-        Assert.Equal(EditResult.InvalidValue, editor.SetShrineSpell(id, levelOne));
-        Assert.Equal(EditResult.Ok, editor.SetShrineSpell(id, levelTwo));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetShrineSpell(id, levelOne));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetShrineSpell(id, levelTwo));
         Assert.Equal(levelTwo, shrine.Spell);
         editor.Undo();
         Assert.Null(shrine.Spell);
-        Assert.Equal(EditResult.InvalidTarget, editor.SetShrineSpell(new MapObjectId(999), null));
+        Assert.Equal(EditResult.InvalidTarget, editor.Contents.SetShrineSpell(new MapObjectId(999), null));
 
         var heroState = Create("A..", "..B");
         var scenarioEditor = new MapEditorSession(heroState);
         var hero = heroState.GetHero(A);
         var hadBook = hero.HasSpellBook;
-        Assert.Equal(EditResult.InvalidValue, scenarioEditor.SetHeroSpells(A, false, [levelOne]));
-        Assert.Equal(EditResult.InvalidValue, scenarioEditor.SetHeroSpells(A, true, ["no.such-spell"]));
-        Assert.Equal(EditResult.InvalidValue, scenarioEditor.SetHeroSpells(A, true, [levelOne, levelOne]));
-        Assert.Equal(EditResult.Ok, scenarioEditor.SetHeroSpells(A, true, [levelOne, levelTwo]));
+        Assert.Equal(EditResult.InvalidValue, scenarioEditor.Heroes.SetSpells(A, false, [levelOne]));
+        Assert.Equal(EditResult.InvalidValue, scenarioEditor.Heroes.SetSpells(A, true, ["no.such-spell"]));
+        Assert.Equal(EditResult.InvalidValue, scenarioEditor.Heroes.SetSpells(A, true, [levelOne, levelOne]));
+        Assert.Equal(EditResult.Ok, scenarioEditor.Heroes.SetSpells(A, true, [levelOne, levelTwo]));
         Assert.True(hero.HasSpellBook);
         Assert.Equal(new[] { levelOne, levelTwo }.Order(StringComparer.Ordinal), hero.Spells.Keys.Order(StringComparer.Ordinal));
         scenarioEditor.Undo();

@@ -53,8 +53,8 @@ public class RiverTests
     public void Rivers_AreInTheMapFormat_AndTheEditorPaintsAndUndoesThem()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        Assert.Equal(9, editor.PaintRiver(new(4, 4), RiverType.Lava, radius: 1));
-        Assert.Equal(0, editor.PaintRiver(new(4, 4), RiverType.Lava));
+        Assert.Equal(9, editor.Terrain.PaintRiver(new(4, 4), RiverType.Lava, radius: 1));
+        Assert.Equal(0, editor.Terrain.PaintRiver(new(4, 4), RiverType.Lava));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));

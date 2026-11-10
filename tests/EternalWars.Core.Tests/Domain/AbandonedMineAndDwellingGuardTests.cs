@@ -106,7 +106,7 @@ public class AbandonedMineAndDwellingGuardTests
     public void AbandonedMines_AreOrdinaryMineObjectsInTheMapFormat()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 8));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.AbandonedMineId(ResourceType.Crystal), new(2, 2), out var id));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.AbandonedMineId(ResourceType.Crystal), new(2, 2), out var id));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));

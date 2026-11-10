@@ -153,16 +153,16 @@ public class PandorasBoxTests
     public void TheBox_IsInTheMapFormat_TheValidatorWantsContents_TheEditorSetsItUndoably_AndAGameWithItReplays()
     {
         var editor = new MapEditorSession(Create(".........", ".........", "...A.....", ".........", "C.......B"));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.PandorasBox, new(3, 1), out var placed));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(3, 1), out var placed));
         var box = (PandorasBox)editor.Scenario.GetObject(placed);
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error && i.Message.Contains("is empty", StringComparison.Ordinal));
 
         var guard = new[] { new CreatureStack(BuiltInCreatures.Wolf, 2) };
-        Assert.Equal(EditResult.InvalidValue, editor.SetPandorasBox(box.Id, new BoxContents { Experience = -5 }, [], null));
-        Assert.Equal(EditResult.InvalidValue, editor.SetPandorasBox(box.Id, Everything, [new CreatureStack("no-such-creature", 1)], null));
-        Assert.Equal(EditResult.Ok, editor.SetPandorasBox(box.Id, Everything, guard, "Beware."));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetPandorasBox(box.Id, new BoxContents { Experience = -5 }, [], null));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetPandorasBox(box.Id, Everything, [new CreatureStack("no-such-creature", 1)], null));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetPandorasBox(box.Id, Everything, guard, "Beware."));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
-        Assert.Equal(EditResult.Ok, editor.SetPandorasBox(box.Id, Everything with { Artifacts = ["no-such-artifact"] }, guard, null));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetPandorasBox(box.Id, Everything with { Artifacts = ["no-such-artifact"] }, guard, null));
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Message.Contains("no-such-artifact", StringComparison.Ordinal));
         editor.Undo();
         Assert.Equal((Everything, "Beware."), (box.Contents, box.Message));

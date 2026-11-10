@@ -572,15 +572,15 @@ public class ArtifactTests
         var pickup = Add<ArtifactPickup>(scenario, BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), 1, 0);
         var editor = new MapEditorSession(scenario);
 
-        Assert.Equal(EditResult.Ok, editor.SetHeroArtifacts(A, ["rusted-blade"], ["iron-band"]));
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetArtifacts(A, ["rusted-blade"], ["iron-band"]));
         Assert.Equal(scenario.GetHero(A).Attack + 1, scenario.GetHero(A).TotalAttack);
-        Assert.Equal(EditResult.InvalidValue, editor.SetHeroArtifacts(A, ["rusted-blade", "centaurs-ax"], []));
-        Assert.Equal(EditResult.InvalidValue, editor.SetHeroArtifacts(A, ["nope"], []));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetHeroArtifacts(new HeroId(99), [], []));
+        Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetArtifacts(A, ["rusted-blade", "centaurs-ax"], []));
+        Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetArtifacts(A, ["nope"], []));
+        Assert.Equal(EditResult.InvalidTarget, editor.Heroes.SetArtifacts(new HeroId(99), [], []));
 
-        Assert.Equal(EditResult.Ok, editor.SetArtifactPickup(pickup.Id, "iron-band"));
-        Assert.Equal(EditResult.InvalidValue, editor.SetArtifactPickup(pickup.Id, "nope"));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetArtifactPickup(new MapObjectId(99), "iron-band"));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetArtifactPickup(pickup.Id, "iron-band"));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetArtifactPickup(pickup.Id, "nope"));
+        Assert.Equal(EditResult.InvalidTarget, editor.Contents.SetArtifactPickup(new MapObjectId(99), "iron-band"));
         Assert.Equal("iron-band", pickup.Artifact);
 
         Assert.True(editor.Undo());

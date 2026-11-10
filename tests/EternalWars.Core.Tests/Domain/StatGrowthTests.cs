@@ -98,9 +98,9 @@ public class StatGrowthTests
         Assert.All(HeroCatalog.Default.All, h => Assert.Equal(5, h.Attack + h.Defense + h.SpellPower + h.Knowledge));
 
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        editor.PlaceHero(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
-        Assert.Equal(EditResult.Ok, editor.SetHeroStats(id, 1, 2, SkillLevel.None, 3, 4));
-        Assert.Equal(EditResult.InvalidValue, editor.SetHeroStats(id, 1, 2, SkillLevel.None, -1, 0));
+        editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetStats(id, 1, 2, SkillLevel.None, 3, 4));
+        Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetStats(id, 1, 2, SkillLevel.None, -1, 0));
 
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario))));
         var hero = restored.GetHero(id);
@@ -108,7 +108,7 @@ public class StatGrowthTests
 
         editor.Undo();
         Assert.Equal((0, 0), (editor.Scenario.GetHero(id).SpellPower, editor.Scenario.GetHero(id).Knowledge));
-        Assert.Equal(EditResult.Ok, editor.SetHeroStats(id, 5, 5, SkillLevel.None)); // omitted: kept
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetStats(id, 5, 5, SkillLevel.None)); // omitted: kept
         Assert.Equal((0, 0), (editor.Scenario.GetHero(id).SpellPower, editor.Scenario.GetHero(id).Knowledge));
     }
 

@@ -46,12 +46,37 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 ```
 
 - **`GameSession`**: composition root of a running game: one `GameState`, one `IEventBus`, the services
-  (`TurnService`, `HeroMovementService` + `PathFinder`, `MapObjectInteractionService`, `EconomyService`,
+  (`TurnService`, `HeroMovementService` + `PathFinder`, the map object services, `EconomyService`,
   `VisibilityService`, `ArmyService`, `ProgressionService`, `ArtifactService`, `BattleService`, `GuardService`,
-  `TownService`, `CaravanService`, `AdventureMagicService`, `GameFlowService`).
+  `TownService`, `CaravanService`, `AdventureMagicService`, `GameFlowService`). The map object services share one
+  `ObjectInteractionContext` (state, publisher, economy and the common steps: `Ask`, `RemoveFromMap`, `TryCollect`,
+  `GiveResources`, `HeroAt<T>`): `MapObjectInteractionService` (visits via `VisitRules`, the reward objects' rules in
+  `MapObjectRewardVisits`; hero meetings), `ObjectDecisionService` (the answers to the decisions visits open),
+  `ObjectShopService` (what a hero does at an object from its panel: recruit, buy, upgrade, hire, sacrifice, lessons,
+  garrison troops), `ObjectLifecycleService` (game-start rolls and the weekly refugees / merchant stock) and
+  `GrailService` (obelisk visits, digging; the rules in `GrailRules`).
 - **Commands only** (ADR-036): front-ends, AI, tools and tests change the game with `session.Execute(GameCommand)`;
   service mutators are `internal`. Accepted commands go to `session.CommandLog`; map + seed + log replay the game
   (`GameReplay`).
+- **Executing a command**: `Execute` authorizes it, then hands it to its handler (`CommandHandlers`, one
+  `ICommandHandler<T>` per concrete command type; adding a second throws). Authorization: an `IBattleCommand` needs a running
+  battle, whoever's turn it is (the battle checks the side); `SetAutoCombatCommand` is allowed any time; everything else only in
+  the player's turn, and an `IHeroCommand` only for an own hero on the map (`Hero`; `MoveStackCommand` maps it to `FromHero` and
+  also needs its `ToHero` on the map). Other commands that name a hero (artifacts, governors) leave that check to their service.
+- **Adding a command**: a `sealed record … : GameCommand(Player)` in `Commands/GameCommands.cs`, marked `IBattleCommand` or
+  `IHeroCommand` when it is one; one line in the area's registration (`AdventureCommandHandlers`, `ObjectCommandHandlers`,
+  `TownCommandHandlers`, `ArtifactCommandHandlers`, `BattleCommandHandlers`): `handlers.Add<T>(c => service.Method(...))`, or
+  `AddWithOutcome<T>` when the result goes back in `CommandResult.Outcome`; and its replay name in `GameRecord.CommandTypes`
+  (Core.Data). `CommandHandlerTests` fails for a command without a handler.
+- **Turns**: `TurnService` moves the calendar (players, days, weeks), publishes `GameStarted` / `DayStarted` / `WeekStarted` /
+  `WeekEventAnnounced` / `TurnStarted` / `TurnEnded` and rolls the week's events; everything else happens in the
+  `ITurnPhaseParticipant`s the session gives it, called hook by hook (`SetUpGame`, `StockFirstWeek`, `StartDay`, `StartWeek`,
+  `ApplyWeekEvent`, `StockWeek`, `OpenDay`, `PrepareTurn`, `OpenTurn`) in list order: map events, progression, movement, mana
+  (`ManaRestoration`), towns, caravans, economy, guards, map objects. The order fixes the events and the random draws, so it is
+  part of the rules. An arena's battle day replaces the day (`ArenaService.StartBattle`).
+- **Core subscriptions**: services that react to events list them in their own `SubscribeTo(IEventSubscriber)`
+  (`VisibilityService`, `MapEventService`, `AdventureMagicService`); the session calls them, visibility first, before any view
+  subscribes.
 - **Services** validate, mutate `GameState`, then publish past-tense events. They depend on `IEventPublisher` only.
   A rule refuses a command by throwing `CommandRefusedException` (an unknown id from `GameState.GetHero` / `GetObject` /
   `GetPlayer` does too) before it changes anything; `Execute` turns only that into a rejected `CommandResult`, so any other
@@ -84,16 +109,30 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 | Tavern (ADR-060) | `TavernRules` (offer = stateless weekly shuffle; hire allowed?), `TownService.HireHero`. Tavern is a building level in `buildings.csv`. |
 | Hero limit (ADR-068) | `ScenarioRules.MaxHeroes`, `Player.MaxHeroes`; `GameState.HeroLimitReached` is the one check. `GameSession.Start` removes surplus heroes. |
 | Adventure AI (ADR-059, ADR-119) | `AdventureAi` (`AI/`) plays only through `Execute`; `BattleEstimator` runs the real engine on a throwaway state; `Explain` for debugging; an arena's preparation day in `AdventureAi.Arena.cs` (ADR-160). The game app calls `PlayTurn()` once a frame for computer players. |
-| Magic (ADR-110, ADR-120, ADR-122) | `Magic/`: `Spells` (from `spells.csv`), `MagicRules`, `AdventureMagic` / `AdventureMagicService`; battle casting in `Battles/BattleMagic`. |
+| Magic (ADR-110, ADR-120, ADR-122) | `Magic/`: `Spells` (from `spells.csv`), `MagicRules`, `AdventureMagic` / `AdventureMagicService`; battle casting in `Battles/BattleMagic`, effect kinds in `Battles/Spells/` (see Battles). |
 | Saves (ADR-058) | `GameSaves` (Core.Data): initial map + options + command log, digest-checked on load; works mid-battle since battle actions are commands. Autosave hooks `CommandExecuted`. Game app builds its nodes under one `Game` node (freed on load); `BattleView3D.Restore` shows a running battle. |
 | Arena (ADR-097, ADR-158) | `ScenarioRules.Arena`; `ArenaRules` (preparation day: `MovementAllowance.Daily(state, hero)`, `TownRules.HasBuiltToday`; `Plan` chooses sides and champions); `ArenaService.StartBattle` runs from `TurnService` at day 2 instead of a turn; `BattleService` records the result in `GameState.Arena` (no experience, no AI retreat); `GameFlowService` ends the game from it. `CombatPlace` object. The editor's checks in `MapValidator.Arena.cs`, the contents shown on day 1 in `AdventureIntel.ArenaContents` (ADR-161). |
 
 ### Battles
 - `BattleState` (`GameState.Battle`): field (width × 24 cells), units with footprints, obstacles, round, queue, own
   forked RNG. `BattleGrid`: pure geometry (reach, adjacency, line of fire, cover). `BattleEngine`: rules for the active
-  unit. `BattleAi`: computer sides. `BattleService`: map ↔ battle (start, commanders, survivors, experience, defeated
-  heroes and guards, `NecromancyRules.Raise` after survivors and before experience). `Siege`, `WarMachines`,
+  unit's actions and blows; it builds one `BattleWounds` (damage, deaths, healing, Martyrdom shares, blind wake-ups; shared per action),
+  `BattleSpellResolver` (casting; each effect kind's handler does the rest) and `BattleRounds` (turn order, round start, end of battle) per instance. `BattleAi`: computer
+  sides. `BattleService`: the session's facade for map ↔ battle, composed of `BattleStarter` (sides, battlefield, siege, width choice),
+  `BattleCommandHandler` (players' battle commands, auto combat preview), `BattleFlow` (deployment, AI play until a person acts) and
+  `BattleAftermath` (mana, survivors, `NecromancyRules.Raise` after survivors and before experience, defeated heroes). A guarded map object
+  implements `IBattleGuard` (keeps its survivors, or is defeated: removed, flagged, plundered, opened, captured) with a `BattleGuardOutcome`.
+  `Siege`, `WarMachines`,
   `PrimalFury` (rage, warcries via `BattleWarcryCommand`), `SurrenderRules`, `AutoCombat` beside them.
+- Battle spells: each `SpellEffectKind` has one `ISpellEffectHandler` (`Battles/Spells/`, registered in `SpellEffectHandlers`,
+  looked up with `For(kind)`) holding that kind's rule and its AI value side by side: its own aim checks (`CastRefusal`, `AimRefusal`,
+  `AffectedRefusal`), how a cast works (`Apply`), what the AI thinks it is worth (`Value(CastContext)`) and where the AI aims a
+  hero's cast (`Aims`). `CastContext` bundles the battle, side, spell at its rank, target, cell, second aim and a creature caster's
+  Spell Power. The checks and numbers every kind shares stay in `BattleMagic` (aim legality, reach and area, `Affects`, the damage
+  plan used by the damage handler and the AI, amounts and durations); `BattleSpellResolver` pays and reports the cast and keeps the
+  shared frames (`OnReach`: resisting stacks, Earthquake, wake-ups; Raise Dead's `Rise`); `BattleAi` only dispatches. A new effect
+  kind is its parse in `SpellEffect.Parse` plus one handler class registered in `SpellEffectHandlers` (`SpellEffectHandlersTests`
+  checks every kind has exactly one).
 - Creature special rules are data (`CreatureCapability`, max `CreatureDefinition.MaxCapabilities` = 5, ADR-042); code
   asks `creature.Has(kind)`.
 - Battle commands are authorized per side, not per map turn (hot-seat defender acts during the attacker's turn).
@@ -108,7 +147,11 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - Front-ends map a pointed cell to an action with `BattleTargeting.ActionAt` / `DeploymentPlacement`.
 - Presentation (ADR-052): `BattleView3D` (Godot.Shared/Battle) builds from `BattleStarted` and plays later events as
   one sequential animation queue (a whole AI turn resolves inside one command); it takes input only once the queue has
-  caught up. `BattleHud` (Godot.UI/Battle) overlays it. The harness's `BattleBoard2D` redraws from live state.
+  caught up. It subscribes and coordinates: `BattleStage` (the field's live pieces and the step each event becomes),
+  `BattleFieldBuilder` (field nodes; each material made once per builder),
+  `BattleAnimationQueue` (the sequenced tween playback), `BattleAnimations` (tween recipes) and the engine-free
+  `BattleNarrator` (Core `Battles/`: the combat-log line of each battle event, usable headless). `BattleHud`
+  (Godot.UI/Battle) overlays it. The harness's `BattleBoard2D` redraws from live state.
 
 ### Map objects
 - **Definition** (`MapObjectDefinition`, data: id, `Kind`, footprint, kind parameters) vs **instance** (`MapObject`
@@ -123,7 +166,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   until all of them exist. Optional, with safe defaults: AI targets (`AdventureAi`), validator checks, info sheet, editor inspector
   fields. Kind-specific rules sit in `*Rules` classes (`LootRules`, `BuffRules`, `CreatureBankRules`, ...).
 - **Rewards (ADR-068)**: definition `VisitScope` + instance `VisitLog` (`MapObject.Visits`, game state only), checked and
-  recorded by `MapObjectInteractionService.TryCollect`. Temporary `HeroStatus`es live on the hero, granted/expired via
+  recorded by `ObjectInteractionContext.TryCollect`. Temporary `HeroStatus`es live on the hero, granted/expired via
   `ProgressionService`. Random rewards use `WeightedRoll.Pick`.
 
 ### Terrain, roads, teams, knowledge
@@ -149,8 +192,11 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 ### Map editor
 `MapEditorSession` (`Editing/`) wraps a scenario `GameState` that never starts. Every edit is an `IEditorCommand`
 (execute/undo) in `UndoHistory` and publishes the same kind of events as the game, so editor views are ordinary
-subscribers. `BeginStroke`/`EndStroke` merge a drag into one undo step. `MapValidator` reports what single edits cannot
-prevent.
+subscribers. The session is a facade: edits live in per-area editors (`Terrain`, `Objects`, `Contents`, `Monsters`, `Towns`,
+`Heroes`, `MapEvents`, `Players`, `Map`) over one internal `EditorContext` (scenario, catalog, bus, history, open stroke).
+Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
+nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
+one undo step. `MapValidator` reports what single edits cannot prevent.
 
 ### Content tables (ADR-071)
 `src/Core/data/*.csv` (creatures, heroes, buildings, artifacts, artifact sets, spells, riddles, scenery) are embedded
@@ -167,7 +213,10 @@ into Core.Domain; `data/templates` into Core.Data. Apps use the embedded copy (`
 - View composition (`Godot.Shared/Map`): `MapViewContext` (viewing player, shown level; raises a C# event) →
   `AdventureWorldView` composes per level `AdventureMapView`, `MapObjectsView` (viewer's `ObjectMemory`, or live objects
   without a viewer), `FogView`, `HeroView`s, `PathPreview`. Game and editor both use it. Panels live in `Godot.UI`
-  (`Hud`, `Setup`, `Editor`, `Battle`, `Debugging`).
+  (`Hud`, `Setup`, `Editor`, `Battle`, `Debugging`). The game's adventure HUD and its screens are one `AdventureHud`; the map's and the
+  battle scene's clicks and keys are `AdventureInputController` and `BattleInputController` (deployment drags: `DeploymentDragController`);
+  the screens before a game share a `SetupScreenHost`. Their texts come from core (`MoveOutcomeText`, `AdventureSpellPrompt` in
+  Core.Domain; `SaveSlotText`, `RankingText` in Core.Data, which the app maps onto the panels' view records).
 - Assets cannot live in a class library: `EternalWars.Godot.Assets` is mounted into each app as `res://shared/` by
   `tools/link-shared-assets.ps1` (junction, git-ignored).
 - **Spacing** (ADR-163): every app calls `UiSpacing.Apply()` first, which merges the shared gaps and margins into Godot's default theme (a

@@ -22,7 +22,7 @@ namespace EternalWars.Core.Domain.MapEvents;
 /// </summary>
 public sealed class MapEventService(
     GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles)
-    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>
+    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>, Turns.ITurnPhaseParticipant
 {
     /// <summary>The most morale or luck an event gives or takes (HoMM3's ±3).</summary>
     public const int MaxMoraleOrLuck = 3;
@@ -53,6 +53,14 @@ public sealed class MapEventService(
     /// <summary>The quest object whose stage the answer completes (a quest's "Complete"), or null.</summary>
     public static MapObjectId? CompletedSite(EventAnswer answer) =>
         MapEventTree.Actions(answer.Actions).OfType<AdvanceQuestAction>().FirstOrDefault()?.Site;
+
+    /// <summary>Subscribes to the battles ("defeated by" records, EVT-3 e) and to opened Pandora's Boxes (a box's hero event, MAP-35).</summary>
+    internal void SubscribeTo(IEventSubscriber bus)
+    {
+        bus.Subscribe<BattleStarted>(this);
+        bus.Subscribe<BattleEnded>(this);
+        bus.Subscribe<PandorasBoxOpened>(this);
+    }
 
     // Triggers ------------------------------------------------------------------------------------------------------
 
@@ -100,6 +108,11 @@ public sealed class MapEventService(
 
         Pump();
     }
+
+    void Turns.ITurnPhaseParticipant.OpenDay() => StartDay();
+
+    // The player's and its towns' map events, after income, growth and the week's event (ADR-115, EVT-2 d).
+    void Turns.ITurnPhaseParticipant.OpenTurn(PlayerId player) => StartTurn(player);
 
     /// <summary>
     /// A Pandora's Box that names a hero event opened (MAP-35, step 3): the event runs for the opener, once the box's experience and any level-up

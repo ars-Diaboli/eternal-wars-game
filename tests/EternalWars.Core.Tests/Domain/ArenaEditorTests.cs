@@ -121,7 +121,7 @@ public class ArenaEditorTests
     {
         var editor = new MapEditorSession(EternalWars.Core.Domain.Scenarios.BlankScenario.Create(12, 8));
 
-        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(editor.Scenario.Rules with { Arena = true }));
+        Assert.Equal(EditResult.Ok, editor.Map.SetRules(editor.Scenario.Rules with { Arena = true }));
         Assert.True(editor.Scenario.Rules.Arena);
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Message.Contains("needs a combat place", StringComparison.Ordinal));
 

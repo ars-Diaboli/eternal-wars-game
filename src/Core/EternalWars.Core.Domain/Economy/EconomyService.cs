@@ -8,6 +8,7 @@ using EternalWars.Core.Events;
 namespace EternalWars.Core.Domain.Economy;
 
 public sealed class EconomyService(GameState state, IEventPublisher events, IReadOnlyList<IIncomeSource>? incomeSources = null)
+    : Turns.ITurnPhaseParticipant
 {
     private readonly IReadOnlyList<IIncomeSource> _incomeSources = incomeSources ?? DefaultIncomeSources;
 
@@ -17,6 +18,24 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
     /// <summary>What <paramref name="playerId"/> receives at the start of each of their turns.</summary>
     public ResourceSet DailyIncome(PlayerId playerId) =>
         _incomeSources.Aggregate(ResourceSet.Empty, (total, source) => total + source.DailyIncome(state, playerId));
+
+    /// <summary>The scenario's complexity sets every player's starting resources (when the game has one).</summary>
+    void Turns.ITurnPhaseParticipant.SetUpGame()
+    {
+        if (state.Options.Complexity is { } complexity)
+        {
+            foreach (var player in state.Players)
+            {
+                Set(player.Id, StartingResources.For(complexity));
+            }
+        }
+    }
+
+    void Turns.ITurnPhaseParticipant.StockFirstWeek() => StockProviders();
+
+    void Turns.ITurnPhaseParticipant.StockWeek() => StockProviders();
+
+    void Turns.ITurnPhaseParticipant.PrepareTurn(PlayerId player) => CollectDailyIncome(player);
 
     /// <summary>
     /// The start of a week, and of the game: every flagged resource provider adds a week's output to what waits there (ADR-079, TOWN-9).

@@ -13,7 +13,7 @@ public class MapDifficultyTests
     {
         var editor = new MapEditorSession(Create("A..", "..B"));
 
-        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(editor.Scenario.Rules with { Difficulty = Complexity.Hard }));
+        Assert.Equal(EditResult.Ok, editor.Map.SetRules(editor.Scenario.Rules with { Difficulty = Complexity.Hard }));
         Assert.Equal(Complexity.Hard, editor.Scenario.Rules.Difficulty);
         Assert.False(editor.Scenario.Rules.IsDefault);
 

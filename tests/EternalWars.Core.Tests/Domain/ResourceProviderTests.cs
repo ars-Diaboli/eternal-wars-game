@@ -155,11 +155,11 @@ public class ResourceProviderTests
     public void Providers_AndTheirOwner_AreInTheMapFormat_SetInTheEditor_AndUndoable()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.WaterWheel, new(2, 2), out var wheel));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.WarehouseId(ResourceType.Ore), new(6, 2), out _));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.WaterWheel, new(2, 2), out var wheel));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.WarehouseId(ResourceType.Ore), new(6, 2), out _));
         var player = editor.Scenario.Players[0].Id;
-        Assert.Equal(EditResult.Ok, editor.SetProviderOwner(wheel, player));
-        Assert.Equal(EditResult.UnknownPlayer, editor.SetProviderOwner(wheel, new PlayerId(7)));
+        Assert.Equal(EditResult.Ok, editor.Objects.SetProviderOwner(wheel, player));
+        Assert.Equal(EditResult.UnknownPlayer, editor.Objects.SetProviderOwner(wheel, new PlayerId(7)));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));

@@ -157,7 +157,7 @@ public class MapBanAndPlaceholderTests
     {
         var editor = new MapEditorSession(BlankScenario.Create(20, 12));
         var rules = editor.Scenario.Rules;
-        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(rules with { Bans = rules.Bans.With(MapBanKind.Artifact, "x", true) }));
+        Assert.Equal(EditResult.Ok, editor.Map.SetRules(rules with { Bans = rules.Bans.With(MapBanKind.Artifact, "x", true) }));
         Assert.Equal(["x"], editor.Scenario.Rules.Bans.Artifacts);
         editor.Undo();
         Assert.True(editor.Scenario.Rules.Bans.IsEmpty);
@@ -300,31 +300,31 @@ public class MapBanAndPlaceholderTests
     public void TheEditor_MakesTownsMonstersAndHeroesRandom_Undoably()
     {
         var editor = new MapEditorSession(BlankScenario.Create(20, 12));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new(2, 2), out var townId));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new(2, 2), out var townId));
         var town = (Town)editor.Scenario.FindObject(townId)!;
         var one = SpellCatalog.Default.Of(TownIds.Haven, 1)[0].Id;
-        Assert.Equal(EditResult.Ok, editor.SetTownGuildSpells(townId, [one]));
-        Assert.Equal(EditResult.Ok, editor.SetTownRandom(townId, true));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetGuildSpells(townId, [one]));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetRandom(townId, true));
         Assert.True(town.IsRandom);
         Assert.Empty(town.FixedGuildSpells); // a random town has no school yet
-        Assert.Equal(EditResult.Ok, editor.SetTownType(townId, TownIds.Inferno)); // what it shows
+        Assert.Equal(EditResult.Ok, editor.Towns.SetType(townId, TownIds.Inferno)); // what it shows
         Assert.True(((Town)editor.Scenario.FindObject(townId)!).IsRandom);
         editor.Undo();
         editor.Undo();
         Assert.False(town.IsRandom);
         Assert.Equal([one], town.FixedGuildSpells);
 
-        Assert.Equal(EditResult.Ok, editor.PlaceMonster(new MapPosition(12, 2), BuiltInCreatures.Wolf, null, GuardDisposition.Aggressive, false, out var monsterId));
+        Assert.Equal(EditResult.Ok, editor.Monsters.Place(new MapPosition(12, 2), BuiltInCreatures.Wolf, null, GuardDisposition.Aggressive, false, out var monsterId));
         var monster = (MonsterGuard)editor.Scenario.FindObject(monsterId)!;
-        Assert.Equal(EditResult.InvalidValue, editor.SetMonsterRandomTier(monsterId, 8));
-        Assert.Equal(EditResult.Ok, editor.SetMonsterRandomTier(monsterId, 5));
+        Assert.Equal(EditResult.InvalidValue, editor.Monsters.SetRandomTier(monsterId, 8));
+        Assert.Equal(EditResult.Ok, editor.Monsters.SetRandomTier(monsterId, 5));
         Assert.Equal(5, monster.RandomTier);
         Assert.Equal(5, editor.Scenario.Creatures.Get(monster.Creature).Tier);
         editor.Undo();
         Assert.Null(monster.RandomTier);
 
-        Assert.Equal(EditResult.Ok, editor.PlaceHero(new PlayerId(0), new MapPosition(15, 8), "Hero", out var heroId));
-        Assert.Equal(EditResult.Ok, editor.SetHeroPlaceholder(heroId, true));
+        Assert.Equal(EditResult.Ok, editor.Heroes.Place(new PlayerId(0), new MapPosition(15, 8), "Hero", out var heroId));
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetPlaceholder(heroId, true));
         Assert.True(editor.Scenario.GetHero(heroId).IsPlaceholder);
         editor.Undo();
         Assert.False(editor.Scenario.GetHero(heroId).IsPlaceholder);
