@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -80,11 +81,7 @@ public partial class EventsPanel : ScrollContainer
 
     private void Refresh()
     {
-        foreach (var child in _box.GetChildren())
-        {
-            _box.RemoveChild(child);
-            child.QueueFree();
-        }
+        _box.ClearChildren(detach: true);
 
         _nodes.Clear();
         (_text, _textError) = (null, null);
@@ -482,7 +479,7 @@ public partial class EventsPanel : ScrollContainer
         {
             var row = Row();
             row.AddChild(new Label { Text = name, CustomMinimumSize = new Vector2(160, 0) });
-            var spin = Spin(row, value, int.MinValue / 2, int.MaxValue / 2);
+            var spin = row.AddSpin(null, value, int.MinValue / 2, int.MaxValue / 2);
             spin.ValueChanged += v => _editor.MapEvents.SetVariable(name, (int)v);
             var kept = new CheckBox { Text = "Kept", ButtonPressed = set.IsKept(name), TooltipText = "Kept for the next map: a campaign carries its value at the end of this map on." };
             var taken = new CheckBox { Text = "Taken", ButtonPressed = set.IsTaken(name), TooltipText = "Taken from the last map: in a campaign it starts with the value the last map kept." };
@@ -496,7 +493,7 @@ public partial class EventsPanel : ScrollContainer
         var add = Row();
         var newName = new LineEdit { PlaceholderText = "new variable", CustomMinimumSize = new Vector2(160, 0) };
         add.AddChild(newName);
-        var start = Spin(add, 0, int.MinValue / 2, int.MaxValue / 2);
+        var start = add.AddSpin(null, 0, int.MinValue / 2, int.MaxValue / 2);
         Button(add, "Add", () => _editor.MapEvents.SetVariable(newName.Text, (int)start.Value));
     }
 
@@ -531,9 +528,9 @@ public partial class EventsPanel : ScrollContainer
         {
             var days = Row();
             days.AddChild(new Label { Text = "First day" });
-            first = Spin(days, 1, 1, 9999);
+            first = days.AddSpin(null, 1, 1, 9999);
             days.AddChild(new Label { Text = "then every (days, 0 = once)" });
-            every = Spin(days, 0, 0, 999);
+            every = days.AddSpin(null, 0, 0, 999);
         }
 
         List<CheckBox> players = [];
@@ -579,8 +576,8 @@ public partial class EventsPanel : ScrollContainer
             build.AddChild(buildings);
             var hire = Row();
             hire.AddChild(new Label { Text = "More to hire" });
-            line = Options(hire, [.. lines.Select(c => $"{c.Name} ({c.Town})")]);
-            growth = Spin(hire, 0, -999, 999);
+            line = hire.AddOptions([.. lines.Select(c => $"{c.Name} ({c.Town})")]);
+            growth = hire.AddSpin(null, 0, -999, 999);
         }
 
         OptionButton? questKind = null;
@@ -592,8 +589,8 @@ public partial class EventsPanel : ScrollContainer
         {
             var ask = Row();
             ask.AddChild(new Label { Text = "Asks" });
-            questKind = Options(ask, questKinds);
-            amount = Spin(ask, 5, 0, 999_999);
+            questKind = ask.AddOptions(questKinds);
+            amount = ask.AddSpin(null, 5, 0, 999_999);
             questId = new LineEdit { PlaceholderText = "id", CustomMinimumSize = new Vector2(150, 0) };
             ask.AddChild(questId);
         }
@@ -601,22 +598,22 @@ public partial class EventsPanel : ScrollContainer
         _box.AddChild(new Label { Text = form == "quest" ? "Rewards for completing it" : "Rewards (negative resources and creatures take)" });
         var rewards = new GridContainer { Columns = 6 };
         _box.AddChild(rewards);
-        var resources = Enum.GetValues<ResourceType>().Select(r => (r, Spin(rewards, 0, -99_999, 99_999, r.ToString()))).ToList();
-        var experience = Spin(rewards, 0, 0, 999_999, "Experience");
-        var attack = Spin(rewards, 0, 0, 99, "Attack");
-        var defense = Spin(rewards, 0, 0, 99, "Defense");
-        var power = Spin(rewards, 0, 0, 99, "Power");
-        var knowledge = Spin(rewards, 0, 0, 99, "Knowledge");
-        var morale = Spin(rewards, 0, -3, 3, "Morale");
-        var luck = Spin(rewards, 0, -3, 3, "Luck");
+        var resources = Enum.GetValues<ResourceType>().Select(r => (r, rewards.AddSpin(r.ToString(), 0, -99_999, 99_999))).ToList();
+        var experience = rewards.AddSpin("Experience", 0, 0, 999_999);
+        var attack = rewards.AddSpin("Attack", 0, 0, 99);
+        var defense = rewards.AddSpin("Defense", 0, 0, 99);
+        var power = rewards.AddSpin("Power", 0, 0, 99);
+        var knowledge = rewards.AddSpin("Knowledge", 0, 0, 99);
+        var morale = rewards.AddSpin("Morale", 0, -3, 3);
+        var luck = rewards.AddSpin("Luck", 0, -3, 3);
         var creatureRow = Row();
         creatureRow.AddChild(new Label { Text = "Creatures" });
         var creatures = scenario.Creatures.All.OrderBy(c => c.Town).ThenBy(c => c.Tier).ThenBy(c => c.Id, StringComparer.Ordinal).ToList();
-        var creature = Options(creatureRow, [.. creatures.Select(c => $"{c.Name} ({c.Town})")]);
-        var count = Spin(creatureRow, 0, -9999, 9999);
+        var creature = creatureRow.AddOptions([.. creatures.Select(c => $"{c.Name} ({c.Town})")]);
+        var count = creatureRow.AddSpin(null, 0, -9999, 9999);
         creatureRow.AddChild(new Label { Text = "Artifact" });
         var artifacts = scenario.Artifacts.All.OrderBy(a => a.Name).ToList();
-        var artifact = Options(creatureRow, ["— none —", .. artifacts.Select(a => a.Name)]);
+        var artifact = creatureRow.AddOptions(["— none —", .. artifacts.Select(a => a.Name)]);
 
         var buttons = Row();
         var problem = new Label { Modulate = ErrorColour };
@@ -753,29 +750,5 @@ public partial class EventsPanel : ScrollContainer
         }
 
         return popup;
-    }
-
-    private static OptionButton Options(Container row, IReadOnlyList<string> items)
-    {
-        var button = new OptionButton { FitToLongestItem = false, CustomMinimumSize = new Vector2(150, 0) };
-        foreach (var item in items)
-        {
-            button.AddItem(item);
-        }
-
-        row.AddChild(button);
-        return button;
-    }
-
-    private static SpinBox Spin(Container row, int value, int min, int max, string? label = null)
-    {
-        if (label is not null)
-        {
-            row.AddChild(new Label { Text = label });
-        }
-
-        var spin = new SpinBox { MinValue = min, MaxValue = max, Value = value, AllowGreater = false };
-        row.AddChild(spin);
-        return spin;
     }
 }

@@ -1,3 +1,4 @@
+using EternalWars.Godot.Shared.Controls;
 using System.Globalization;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
@@ -124,16 +125,16 @@ public partial class NewGameScreen : PanelContainer
         }
 
         _maps.ItemSelected += _ => ShowPlayers();
-        Row(box, "Map", _maps);
+        box.AddRow("Map", _maps, 140);
         box.AddChild(_arena);
         box.AddChild(_description);
         _randomRows.Add(_description);
-        _randomRows.Add(Row(box, "Size", _size));
+        _randomRows.Add(box.AddRow("Size", _size, 140));
         _size.ItemSelected += _ => Changed();
-        _randomRows.Add(Row(box, "Players", _playerCount));
+        _randomRows.Add(box.AddRow("Players", _playerCount, 140));
         _playerCount.ValueChanged += _ => ShowRandomPlayers();
         _maxHeroes.TooltipText = "The most heroes a player may have on the map at once; the template sets the default.";
-        var heroLimitRow = Row(box, "Hero limit", _maxHeroes);
+        var heroLimitRow = box.AddRow("Hero limit", _maxHeroes, 140);
         heroLimitRow.AddChild(new Label { Text = "heroes per player" });
         _randomRows.Add(heroLimitRow);
         _maxHeroes.ValueChanged += _ => Changed();
@@ -141,9 +142,9 @@ public partial class NewGameScreen : PanelContainer
         _fog.AddItem("Permanent reveal (HoMM3)", (int)FogMode.PermanentReveal);
         _fog.AddItem("Shroud + refog for units", (int)FogMode.ShroudWithRefog);
         _fog.ItemSelected += _ => _margin.Editable = SelectedFog == FogMode.ShroudWithRefog;
-        Row(box, "Fog of war", _fog);
+        box.AddRow("Fog of war", _fog, 140);
         _margin.Editable = false;
-        Row(box, "Refog margin", _margin);
+        box.AddRow("Refog margin", _margin, 140);
 
         _complexity.AddItem("Map default", -1);
         foreach (var level in Enum.GetValues<Complexity>())
@@ -152,7 +153,7 @@ public partial class NewGameScreen : PanelContainer
         }
 
         // The turn timer (ADR-091) shares the complexity's row: off, or 1 to 30 minutes a human player's turn.
-        var complexityRow = Row(box, "Complexity", _complexity);
+        var complexityRow = box.AddRow("Complexity", _complexity, 140);
         _timer.AddItem("Off", 0);
         for (var minutes = 1; minutes <= TurnTimer.MaxMinutes; minutes++)
         {
@@ -164,7 +165,7 @@ public partial class NewGameScreen : PanelContainer
 
         _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
         _seed.TextChanged += _ => Changed();
-        Row(box, "Seed", _seed);
+        box.AddRow("Seed", _seed, 140);
 
         box.AddChild(_players);
         _start.Pressed += Start;
@@ -192,22 +193,9 @@ public partial class NewGameScreen : PanelContainer
     private RandomMapChoice? SelectedTemplate =>
         _maps.Selected - _choices.Count is var index && index >= 0 && index < _templates.Count ? _templates[index] : null;
 
-    private static HBoxContainer Row(Container parent, string label, Control control)
-    {
-        var row = new HBoxContainer();
-        row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(140, 0) });
-        row.AddChild(control);
-        parent.AddChild(row);
-        return row;
-    }
-
     private void ClearPlayers()
     {
-        foreach (var child in _players.GetChildren())
-        {
-            _players.RemoveChild(child);
-            child.QueueFree();
-        }
+        _players.ClearChildren(detach: true);
 
         _teams.Clear();
         _controllers.Clear();

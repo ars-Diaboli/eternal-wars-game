@@ -62,4 +62,18 @@ public class BattleTargetingTests
         archer.Position = new CellPosition(6, 10); // adjacent: no shot, so a melee blow where it stands
         Assert.Equal(new AttackAction(target.Id, new CellPosition(6, 10)), BattleTargeting.ActionAt(battle.State, new CellPosition(8, 10), 8.1f, 11f));
     }
+
+    [Fact]
+    public void EachAction_BecomesTheCommandThatCarriesItOut()
+    {
+        var player = new Core.Domain.Common.PlayerId(0);
+        var to = new CellPosition(3, 4);
+
+        Assert.Equal(new Core.Domain.Commands.BattleMoveCommand(player, to), BattleTargeting.CommandFor(player, new MoveAction(to)));
+        Assert.Equal(new Core.Domain.Commands.BattleAttackCommand(player, 7, to), BattleTargeting.CommandFor(player, new AttackAction(7, to)));
+        Assert.Equal(new Core.Domain.Commands.BattleShootCommand(player, 7), BattleTargeting.CommandFor(player, new ShootAction(7)));
+        Assert.Equal(new Core.Domain.Commands.BattleShootStructureCommand(player, 2), BattleTargeting.CommandFor(player, new ShootStructureAction(2)));
+        Assert.Equal(new Core.Domain.Commands.BattleAttackStructureCommand(player, 2, to), BattleTargeting.CommandFor(player, new AttackStructureAction(2, to)));
+        Assert.Null(BattleTargeting.CommandFor(player, null));
+    }
 }

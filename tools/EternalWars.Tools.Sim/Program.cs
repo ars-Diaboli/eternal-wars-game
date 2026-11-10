@@ -18,6 +18,7 @@ using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Players;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Tools.Sim;
@@ -687,7 +688,8 @@ public static class Program
             errors.Add("the same seed generated two different games");
         }
 
-        errors.AddRange(Unreachable(game.State));
+        errors.AddRange(MapConnectivity.UnreachableRivalTowns(game.State)
+            .Select(u => $"{u.Player.Name} cannot reach the town of {game.State.GetPlayer(u.Town.Owner!.Value).Name} at {u.Town.VisitPosition}"));
         errors.AddRange(MapValidator.Validate(game.State).Where(i => i.Severity == IssueSeverity.Error).Select(i => $"map validator: {i.Message}"));
 
         var (session, ai) = PlayAiGame(game, days);
@@ -703,51 +705,6 @@ public static class Program
         var outcome = state.Outcome is { HasWinner: true } o ? string.Join("+", o.Winners.Select(w => state.GetPlayer(w).Name)) + " won" : state.IsOver ? "nobody won" : "unfinished";
         summary = $"attempt {game.Generated!.Attempt}, day {state.Date.AbsoluteDay} {outcome}, {session.CommandLog.Count} commands";
         return errors;
-    }
-
-    /// <summary>
-    /// The players' start towns another player cannot walk to from its hero: passable terrain, around blocked object cells, through guards
-    /// (they can be beaten) and pickups (they go away), via gates; any other object entrance ends a route.
-    /// </summary>
-    private static IEnumerable<string> Unreachable(GameState state)
-    {
-        foreach (var hero in state.Heroes.GroupBy(h => h.Owner).Select(g => g.First()))
-        {
-            var reached = new HashSet<MapPosition> { hero.Position };
-            var landed = new HashSet<MapPosition> { hero.Position }; // stood on after a gate: the hero walks on from there (ADR-117 fix)
-            var open = new Queue<MapPosition>([hero.Position]);
-            while (open.TryDequeue(out var position))
-            {
-                if (!landed.Contains(position) && state.ObjectCellAt(position) is { Cell: FootprintCell.Visit, Object: var entered })
-                {
-                    if (entered.TeleportTarget is not null && state.TeleportDestination(entered) is { } exit && landed.Add(exit))
-                    {
-                        reached.Add(exit);
-                        open.Enqueue(exit);
-                        continue;
-                    }
-
-                    if (entered is not (MonsterGuard or ResourcePile or TreasureChest or ArtifactPickup) && entered.EndsRoute)
-                    {
-                        continue;
-                    }
-                }
-
-                foreach (var next in DirectionExtensions.All.Select(position.Step))
-                {
-                    if (state.Map.Contains(next) && state.Terrains.IsPassable(state.Map.GetTerrain(next))
-                        && state.ObjectCellAt(next) is not { Cell: FootprintCell.Blocked } && reached.Add(next))
-                    {
-                        open.Enqueue(next);
-                    }
-                }
-            }
-
-            foreach (var town in state.ObjectsOf<Town>().Where(t => t.Owner is { } owner && owner != hero.Owner && !reached.Contains(t.VisitPosition)))
-            {
-                yield return $"{state.GetPlayer(hero.Owner).Name} cannot reach the town of {state.GetPlayer(town.Owner!.Value).Name} at {town.VisitPosition}";
-            }
-        }
     }
 
     private static int Replay(string path)
@@ -844,20 +801,17 @@ public static class Program
         while (state.PendingDecision is { } decision)
         {
             var player = state.CurrentPlayer.Id;
-            GameCommand command = decision switch
+            // The timer's defaults (TurnTimer.Default), except where the Sim chooses otherwise: it takes what a witch hut or a training offers,
+            // answers riddles and level-ups with the first option, leaves boxes shut and always fights a guard (it exercises battles).
+            var command = decision switch
             {
-                TreasureChestDecision => new ResolveTreasureChestCommand(player, TreasureChestReward.Gold),
-                TownGateDecision => new ChooseTownGateCommand(player, null),
-                CartographerDecision => new AnswerCartographerCommand(player, Buy: false),
-                DepositDecision => new AnswerDepositCommand(player, Buy: false),
                 SphinxDecision => new AnswerSphinxCommand(player, 0),
                 PandorasBoxDecision => new AnswerPandorasBoxCommand(player, Open: false),
                 WitchHutDecision hut => new ChooseWitchHutSkillCommand(player, hut.Options[0]),
-                TrainingDecision training => new ChooseTrainingCommand(player, training.CanDecline ? null : training.Options[0]),
-                HeroExchangeDecision => new CompleteExchangeCommand(player),
+                TrainingDecision { CanDecline: false } training => new ChooseTrainingCommand(player, training.Options[0]),
                 LevelUpDecision levelUp => new ChooseSkillCommand(player, levelUp.Options[0]),
-                GuardEncounterDecision => new RespondToGuardCommand(player, Accept: false), // always fight: exercises battles
-                _ => new AutoResolveBattleCommand(state.Battle!.Attacker.Owner ?? player),
+                GuardEncounterDecision => new RespondToGuardCommand(player, Accept: false),
+                _ => TurnTimer.Default(player, decision) ?? new AutoResolveBattleCommand(state.Battle!.Attacker.Owner ?? player),
             };
             session.Execute(command).ThrowIfRejected();
         }

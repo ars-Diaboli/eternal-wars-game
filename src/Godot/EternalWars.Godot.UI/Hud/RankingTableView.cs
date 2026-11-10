@@ -1,3 +1,4 @@
+using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -30,10 +31,7 @@ public partial class RankingTableView : VBoxContainer
     /// <summary>Shows a table; null hides it.</summary>
     public void Display(RankingView? view)
     {
-        foreach (var child in _grid.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _grid.ClearChildren();
 
         Visible = view is not null;
         if (view is null)

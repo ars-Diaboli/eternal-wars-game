@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
 using Godot;
@@ -36,10 +37,7 @@ public partial class PlayersPanel : VBoxContainer
 
     private void Refresh()
     {
-        foreach (var child in _rows.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _rows.ClearChildren();
 
         _rows.AddChild(new Label { Text = "Name" });
         _rows.AddChild(new Label { Text = "Human" });

@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Info;
+using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -63,11 +64,8 @@ public partial class InfoWindow : CanvasLayer
         Shown = sheet;
         _title.Text = sheet.Title;
         _kind.Text = sheet.Kind;
-        foreach (var child in _lines.GetChildren())
-        {
-            _lines.RemoveChild(child); // out now, so the panel's size is the new sheet's
-            child.QueueFree();
-        }
+        // out now, so the panel's size is the new sheet's
+        _lines.ClearChildren(detach: true);
 
         foreach (var line in sheet.Lines)
         {

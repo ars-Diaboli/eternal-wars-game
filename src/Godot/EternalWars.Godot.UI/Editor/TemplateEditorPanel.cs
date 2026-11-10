@@ -1,3 +1,4 @@
+using EternalWars.Godot.Shared.Controls;
 using System.Globalization;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
@@ -233,11 +234,7 @@ public partial class TemplateEditorPanel : PanelContainer
 
     private void ShowInspector()
     {
-        foreach (var child in _inspector.GetChildren())
-        {
-            _inspector.RemoveChild(child);
-            child.QueueFree();
-        }
+        _inspector.ClearChildren(detach: true);
 
         if (_graph.Selection.Zone is { } zone && _session.Template.Zone(zone) is not null)
         {
@@ -253,19 +250,11 @@ public partial class TemplateEditorPanel : PanelContainer
         }
     }
 
-    private HBoxContainer Row(string label)
-    {
-        var row = new HBoxContainer();
-        row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(150, 0) });
-        _inspector.AddChild(row);
-        return row;
-    }
-
     private void Spin(string label, double value, double min, double max, Action<int> changed, double step = 1, string tooltip = "")
     {
         var spin = new SpinBox { MinValue = min, MaxValue = max, Step = step, Value = value, TooltipText = tooltip, CustomMinimumSize = new Vector2(110, 0) };
         spin.ValueChanged += v => changed((int)v);
-        Row(label).AddChild(spin);
+        _inspector.AddRow(label, labelWidth: 150).AddChild(spin);
     }
 
     private void Choice<T>(string label, IReadOnlyList<T> values, T current, Action<T> changed, Func<T, string>? name = null)
@@ -278,14 +267,14 @@ public partial class TemplateEditorPanel : PanelContainer
 
         option.Select(Math.Max(0, values.ToList().IndexOf(current)));
         option.ItemSelected += i => changed(values[(int)i]);
-        Row(label).AddChild(option);
+        _inspector.AddRow(label, labelWidth: 150).AddChild(option);
     }
 
     private void Check(string label, bool value, Action<bool> changed)
     {
         var box = new CheckBox { ButtonPressed = value };
         box.Toggled += on => changed(on);
-        Row(label).AddChild(box);
+        _inspector.AddRow(label, labelWidth: 150).AddChild(box);
     }
 
     private void Text(string label, string value, Action<string> submitted, bool multiline = false)
@@ -294,14 +283,14 @@ public partial class TemplateEditorPanel : PanelContainer
         {
             var edit = new TextEdit { Text = value, CustomMinimumSize = new Vector2(270, 70), WrapMode = TextEdit.LineWrappingMode.Boundary };
             edit.FocusExited += () => submitted(edit.Text);
-            Row(label).AddChild(edit);
+            _inspector.AddRow(label, labelWidth: 150).AddChild(edit);
             return;
         }
 
         var line = new LineEdit { Text = value, CustomMinimumSize = new Vector2(220, 0) };
         line.TextSubmitted += text => submitted(text);
         line.FocusExited += () => submitted(line.Text);
-        Row(label).AddChild(line);
+        _inspector.AddRow(label, labelWidth: 150).AddChild(line);
     }
 
     private void Heading(string text) => _inspector.AddChild(new Label { Text = text, Modulate = new Color(1, 0.85f, 0.5f) });
@@ -324,7 +313,7 @@ public partial class TemplateEditorPanel : PanelContainer
         Choice("Connection guard", Enum.GetValues<ConnectionGuard>(), t.ConnectionGuard, v => _session.UpdateTemplate(x => x with { ConnectionGuard = v }));
         Check("Roads", t.Roads.Enabled, v => _session.UpdateTemplate(x => x with { Roads = x.Roads with { Enabled = v } }));
         Check("Week events", t.WeekEvents.Enabled, v => _session.UpdateTemplate(x => x with { WeekEvents = x.WeekEvents with { Enabled = v } }));
-        var sizes = Row("Sizes");
+        var sizes = _inspector.AddRow("Sizes", labelWidth: 150);
         var grid = new GridContainer { Columns = 4 };
         sizes.AddChild(grid);
         foreach (var size in MapSizes.Standard)
@@ -412,7 +401,7 @@ public partial class TemplateEditorPanel : PanelContainer
         {
             var at = band;
             var current = at < z.Treasure.Count ? z.Treasure[at] : new TreasureBand(500, 1500, 0);
-            var row = Row($"Band {at + 1}: value, count");
+            var row = _inspector.AddRow($"Band {at + 1}: value, count", labelWidth: 150);
             var low = new SpinBox { MinValue = 100, MaxValue = 50000, Step = 100, Value = current.MinValue };
             var high = new SpinBox { MinValue = 100, MaxValue = 50000, Step = 100, Value = current.MaxValue };
             var count = new SpinBox { MinValue = 0, MaxValue = 20, Value = at < z.Treasure.Count ? current.Count : 0 };
@@ -430,7 +419,7 @@ public partial class TemplateEditorPanel : PanelContainer
             row.AddChild(count);
         }
 
-        var town = Row("Neutral town types");
+        var town = _inspector.AddRow("Neutral town types", labelWidth: 150);
         town.AddChild(new Label { Text = z.TownTypes is { Count: > 0 } types ? string.Join(", ", types) : "any playable town (edit the file to limit)" });
         Button(_inspector, "Remove zone (Del)", () =>
         {

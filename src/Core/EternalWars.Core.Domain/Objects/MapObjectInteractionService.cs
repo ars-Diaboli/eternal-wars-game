@@ -18,7 +18,7 @@ public sealed class MapObjectInteractionService
     private readonly ObjectInteractionContext _context;
     private readonly BattleService _battles;
     private readonly GuardService _guards;
-    private readonly ProgressionService _progression;
+    private readonly HeroRecruitment _recruits;
     private readonly GrailService _grail;
     private readonly TownVisitService _towns;
     private readonly MapObjectRewardVisits _rewards;
@@ -31,12 +31,13 @@ public sealed class MapObjectInteractionService
         ProgressionService progression,
         ArtifactService artifacts,
         GrailService grail,
-        TownVisitService towns)
+        TownVisitService towns,
+        HeroRecruitment recruits)
     {
         _context = context;
         _battles = battles;
         _guards = guards;
-        _progression = progression;
+        _recruits = recruits;
         _grail = grail;
         _towns = towns;
         _rewards = new MapObjectRewardVisits(context, battles, progression, artifacts);
@@ -267,12 +268,7 @@ public sealed class MapObjectInteractionService
 
         _context.RemoveFromMap(prison);
         var level = Math.Max(1, prison.Level ?? 1);
-        var freed = Hero.Create(State.NextUnusedHeroId(), hero.Owner, prison.Position, null, State.HeroRoster.Get(heroId));
-        freed.Experience = ExperienceTable.For(level);
-        State.AddHero(freed);
-        _progression.LevelUpAutomatically(freed);
-        freed.MaxMovementPoints = MovementAllowance.Daily(State, freed);
-        freed.MovementPoints = 0; // it starts moving on its owner's next turn
+        var freed = _recruits.Join(hero.Owner, prison.Position, State.HeroRoster.Get(heroId), ExperienceTable.For(level)); // it moves from its owner's next turn on
         Events.Publish(new HeroFreed(prison.Id, freed.Id, hero.Owner, heroId, freed.Level));
     }
 

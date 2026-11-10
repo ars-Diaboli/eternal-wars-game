@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.Shared.Battle;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Hud;
 using Godot;
@@ -177,10 +178,7 @@ public partial class AutoCombatPanel : CenterContainer
 
     private void SetButtons(params (string Text, Action Pressed)[] buttons)
     {
-        foreach (var child in _buttons.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _buttons.ClearChildren();
 
         foreach (var (text, pressed) in buttons)
         {

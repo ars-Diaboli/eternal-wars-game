@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Turns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -125,18 +126,18 @@ public partial class ConditionsPanel : VBoxContainer
 
         _kind.ItemSelected += _ => ShowFields();
         AddChild(_kind);
-        AddChild(Row("Player", _player));
-        AddChild(Row("Town", _town));
-        AddChild(Row("Hero", _hero));
+        this.AddRow("Player", _player, 70, fill: true);
+        this.AddRow("Town", _town, 70, fill: true);
+        this.AddRow("Hero", _hero, 70, fill: true);
         foreach (var resource in Enum.GetValues<ResourceType>())
         {
             _resource.AddItem(resource.ToString(), (int)resource);
         }
 
-        AddChild(Row("Resource", _resource));
-        AddChild(Row("Object", _object));
-        AddChild(Row("Prison", _prison));
-        AddChild(Row("Artifact", _artifact));
+        this.AddRow("Resource", _resource, 70, fill: true);
+        this.AddRow("Object", _object, 70, fill: true);
+        this.AddRow("Prison", _prison, 70, fill: true);
+        this.AddRow("Artifact", _artifact, 70, fill: true);
         AddChild(_amount);
         AddChild(_day);
         AddChild(_deadline);
@@ -167,15 +168,6 @@ public partial class ConditionsPanel : VBoxContainer
             return r with { WeekEvents = monthly ? r.WeekEvents with { MonthlyFactions = next } : r.WeekEvents with { WeeklyFactions = next } };
         });
         return box;
-    }
-
-    private static HBoxContainer Row(string label, Control control)
-    {
-        var row = new HBoxContainer();
-        row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(70, 0) });
-        control.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        row.AddChild(control);
-        return row;
     }
 
     private ConditionKind SelectedKind => (ConditionKind)_kind.GetItemId(_kind.Selected);
@@ -223,10 +215,7 @@ public partial class ConditionsPanel : VBoxContainer
             }
         }
 
-        foreach (var child in _list.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _list.ClearChildren();
 
         AddRows("Victory", rules.Victory, (r, c) => r with { Victory = r.Victory.Where(x => x != c).ToList() });
         AddRows("Defeat", rules.Defeat, (r, c) => r with { Defeat = r.Defeat.Where(x => x != c).ToList() });

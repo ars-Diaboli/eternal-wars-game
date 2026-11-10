@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Turns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -27,10 +28,7 @@ public partial class GrailView : Node3D
 
     private void Rebuild()
     {
-        foreach (var child in GetChildren())
-        {
-            child.QueueFree();
-        }
+        this.ClearChildren();
 
         var state = _context.State;
         foreach (var hole in state.Grail.Holes.Where(h => h.Level == _context.Level))

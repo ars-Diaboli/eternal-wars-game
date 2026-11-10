@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -89,17 +90,10 @@ public partial class TavernPanel : PanelContainer
         Visible = true;
         var level = town.Level(BuiltInBuildings.Tavern);
         _title.Text = $"{TownRules.Buildings(state, town).Get(BuiltInBuildings.Tavern, level).Name} of {town.Name}: heroes for hire this week";
-        foreach (var child in _balance.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _balance.ClearChildren();
 
         _balance.AddChild(ResourceIcons.Balance(state.CurrentPlayer.Resources.Gold));
-        foreach (var child in _cards.GetChildren())
-        {
-            _cards.RemoveChild(child);
-            child.QueueFree();
-        }
+        _cards.ClearChildren(detach: true);
 
         var offers = TavernRules.Offers(state, state.CurrentPlayer.Id, town);
         if (offers.Count == 0)

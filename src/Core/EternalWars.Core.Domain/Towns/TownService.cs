@@ -23,8 +23,11 @@ public enum TownArmy
 /// garrison and visiting hero, the weekly growth, and the guild spells drawn at game start. Hero arrivals and captures are
 /// <see cref="TownVisitService"/>'s.
 /// </summary>
-public sealed class TownService(GameState state, IEventPublisher events, EconomyService economy, TownVisitService visits) : Turns.ITurnPhaseParticipant
+public sealed class TownService(GameState state, IEventPublisher events, EconomyService economy, TownVisitService visits, HeroRecruitment recruits)
+    : Turns.ITurnPhaseParticipant
 {
+    private readonly TownConstruction _construction = new(state, events, visits);
+
     void Turns.ITurnPhaseParticipant.StockFirstWeek() => FillNewDwellings();
 
     void Turns.ITurnPhaseParticipant.ApplyWeekEvent() => ApplyPlague();
@@ -40,15 +43,9 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
         var level = TownRules.NextLevel(state, town, building)!;
         Pay(player, TownRules.BuildCost(state, town, level));
-        town.SetLevel(building, level.Level);
         town.LastBuilt = state.Date;
         town.LastBuiltName = level.Name;
-        events.Publish(new TownBuilt(town.Id, building, level.Level));
-        if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
-            || UniqueBuildings.Get(building) is not null)
-        {
-            visits.VisitBy(town);
-        }
+        _construction.Raise(town, building, level.Level);
     }
 
     internal void BuildDwelling(PlayerId player, MapObjectId townId, string line)
@@ -59,16 +56,9 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         var definition = state.Creatures.Get(line);
         var level = TownRules.NextDwellingLevel(state, town, definition)!;
         Pay(player, TownRules.BuildCost(state, town, level));
-        town.SetDwelling(line, level.Level);
         town.LastBuilt = state.Date;
         town.LastBuiltName = level.Level == 1 ? $"{definition.Name} dwelling" : $"{definition.Name} dwelling upgrade";
-        if (level.Level == 1)
-        {
-            // HoMM3: a new dwelling opens with its first week of creatures, fort bonus included (ADR-066).
-            town.SetAvailable(line, town.AvailableOf(line) + TownRules.WeeklyGrowth(state, town, definition));
-        }
-
-        events.Publish(new DwellingBuilt(town.Id, line, level.Level, town.AvailableOf(line)));
+        _construction.RaiseDwelling(town, definition, level.Level);
     }
 
     internal void Recruit(PlayerId player, MapObjectId townId, string creature, int count, HeroId? heroId)
@@ -280,27 +270,11 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
         Pay(player, TavernRules.HeroCost);
         var definition = state.HeroRoster.Get(heroId);
-        Hero hero;
-        if (TavernRules.Returning(state, player, heroId) is { } returning)
-        {
-            // Back as it left (ADR-081): level, skills, artifacts, machines, and the army a surrender kept.
-            state.Unretire(returning);
-            hero = returning;
-            hero.Position = town.VisitPosition;
-        }
-        else
-        {
-            hero = Hero.Create(state.NextUnusedHeroId(), player, town.VisitPosition, null, definition);
-        }
 
-        if (hero.Army.IsEmpty && TavernRules.StarterStack(state, definition) is { } starter)
-        {
-            hero.Army.TryAdd(starter);
-        }
-
-        hero.MaxMovementPoints = MovementAllowance.Daily(state, hero);
-        hero.MovementPoints = hero.MaxMovementPoints;
-        state.AddHero(hero);
+        // A retired hero comes back as it left (ADR-081): level, skills, artifacts, machines, and the army a surrender kept.
+        var hero = TavernRules.Returning(state, player, heroId) is { } returning
+            ? recruits.Return(returning, town.VisitPosition, definition)
+            : recruits.Join(player, town.VisitPosition, definition, hired: true, movesToday: true);
         events.Publish(new HeroHired(town.Id, hero.Id, heroId));
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
         visits.Visit(hero, town);

@@ -295,4 +295,20 @@ public class ArenaTests
         Assert.Equal(BattleEndReason.Defeated, Assert.IsType<BattleEnded>(Assert.Single(events)).Reason);
         Assert.Equal([Blue], state.Outcome!.Winners);
     }
+
+    [Fact]
+    public void AutoCombatsPreview_OfTheArenaBattle_PromisesNoExperience()
+    {
+        var state = Map(out _, s => s.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10)));
+        var session = Start(state);
+        ToBattleDay(session);
+        var ended = new List<BattleEnded>();
+        session.Events.Subscribe<BattleEnded>(ended.Add);
+
+        var preview = session.Battles.Preview();
+        session.AutoResolve();
+
+        Assert.Equal(0, preview.Experience);
+        Assert.Equal((Assert.Single(ended).Winner, 0), (preview.Winner, Assert.Single(ended).Experience));
+    }
 }

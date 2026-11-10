@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.Shared.Map;
 using Godot;
@@ -52,10 +53,7 @@ public partial class TownListPanel : BoxContainer
 
     private void Refresh()
     {
-        foreach (var child in GetChildren())
-        {
-            child.QueueFree();
-        }
+        this.ClearChildren();
 
         var state = _session.State;
         AddChild(new Label { Text = $"{state.CurrentPlayer.Name}'s towns (T)" });

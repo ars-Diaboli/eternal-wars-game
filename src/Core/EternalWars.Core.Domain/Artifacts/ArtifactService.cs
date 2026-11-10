@@ -142,6 +142,23 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
     }
 
     /// <summary>
+    /// Takes an artifact away from the hero (given up or taken by the map): from the backpack, else off the body, or the other way round with
+    /// <paramref name="wornFirst"/>. False when the hero has none. The caller publishes what it means.
+    /// </summary>
+    internal bool Remove(Hero hero, string artifact, bool wornFirst = false)
+    {
+        var removed = wornFirst
+            ? hero.Artifacts.RemoveWorn(artifact) || hero.Artifacts.RemoveFromBackpack(artifact)
+            : hero.Artifacts.RemoveFromBackpack(artifact) || hero.Artifacts.RemoveWorn(artifact);
+        if (removed)
+        {
+            state.RefreshArtifacts(hero);
+        }
+
+        return removed;
+    }
+
+    /// <summary>
     /// A defeated hero's artifacts, worn and carried, all go into the winner's backpack. When they do not all fit, the most
     /// valuable ones come first (<see cref="ArtifactValue.BestFirst"/>) and the rest are lost. An assembled relic (ADR-121) goes over whole when
     /// the winner can wear it (its slot and the slots it blocks are free), otherwise as its pieces into the backpack.

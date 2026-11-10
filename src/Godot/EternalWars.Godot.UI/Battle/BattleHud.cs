@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Settings;
 using EternalWars.Godot.Shared.Battle;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using EternalWars.Godot.UI.Hud;
 using Godot;
@@ -348,10 +349,7 @@ public partial class BattleHud : Control
     /// <summary>One button per battle spell of the acting side's hero, with its cost; disabled while it cannot be cast at all.</summary>
     private void RefreshSpells(BattleState? battle, Core.Domain.Common.PlayerId? commander)
     {
-        foreach (var child in _spells.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _spells.ClearChildren();
 
         if (battle?.ActiveUnit is not { } active || commander is null)
         {
@@ -409,10 +407,7 @@ public partial class BattleHud : Control
 
     private void Refresh()
     {
-        foreach (var child in _timeline.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _timeline.ClearChildren();
 
         var battle = _session.State.Battle;
         var commander = _view.Commander;

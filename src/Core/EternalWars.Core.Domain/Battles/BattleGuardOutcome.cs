@@ -44,12 +44,7 @@ internal sealed class BattleGuardOutcome(
     /// <summary>The troops of a town or a map garrison (<paramref name="holder"/>) keep what lived on <paramref name="side"/>, slot by slot.</summary>
     internal static void KeepTroops(BattleState battle, BattleSide side, IEventPublisher events, MapObjectId holder, Army troops)
     {
-        foreach (var (slot, stack) in troops.Stacks.ToList())
-        {
-            var survivors = battle.Units.Where(u => u.Owner == side && u.SourceSlot == slot).Sum(u => u.KeptCount);
-            troops.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
-        }
-
+        BattleOutcome.KeepSurvivors(battle, side, troops);
         events.Publish(new GarrisonChanged(holder, troops.Slots.ToList()));
     }
 }

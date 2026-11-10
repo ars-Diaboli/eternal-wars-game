@@ -180,4 +180,35 @@ public class GarrisonHeroTests
         Assert.DoesNotContain(hero, state.AllHeroesOf(Blue));
         Assert.Contains(defeated, d => d.Hero == hero.Id);
     }
+
+    [Fact]
+    public void AutoCombatsPreview_RaisesAGarrisonHerosUndead_IntoTheGarrison_WhichMayHaveNoRoom()
+    {
+        var (session, town, hero) = Setup(state =>
+        {
+            var garrison = state.ObjectsOf<Town>().Single().Garrison;
+            var lines = state.Creatures.BaseCreaturesOf(TownIds.Haven).Where(c => c.Id != BuiltInCreatures.Footman && c.Id != BuiltInCreatures.Archer).Take(5).ToList();
+            for (var slot = 2; slot < Army.SlotCount; slot++)
+            {
+                garrison.Set(slot, new CreatureStack(lines[slot - 2].Id, 20));
+            }
+
+            state.GetHero(A).Skills.Set(NecromancyRules.Skill, SkillLevel.Expert);
+            state.GetHero(B).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 30));
+        });
+        session.Execute(new EnterGarrisonCommand(Blue, town.Id)).ThrowIfRejected();
+        session.EndTurn();
+        session.MoveTo(B, town.VisitPosition);
+        var raised = new List<UndeadRaised>();
+        session.Events.Subscribe<UndeadRaised>(raised.Add);
+
+        var preview = session.Battles.Preview();
+        session.AutoResolve();
+
+        // The garrison, with all seven slots taken, has no room for skeletons (the hero's own army, empty in the garrison, would have).
+        Assert.Equal((BattleSide.Defender, BattleEndReason.Defeated), (preview.Winner, preview.Reason));
+        Assert.Same(hero, town.GarrisonHero);
+        Assert.Empty(preview.Raised);
+        Assert.Empty(raised);
+    }
 }

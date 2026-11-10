@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -38,10 +39,7 @@ public partial class DecisionPanel : PanelContainer
 
     private void Refresh()
     {
-        foreach (var child in _buttons.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _buttons.ClearChildren();
 
         var state = _session.State;
         var player = state.CurrentPlayer.Id;

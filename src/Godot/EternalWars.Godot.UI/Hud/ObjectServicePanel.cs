@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -97,10 +98,7 @@ public partial class ObjectServicePanel : PanelContainer
 
         Visible = true;
         _title.Text = $"{mapObject.Definition.Name}: {hero.Name}";
-        foreach (var child in _rows.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _rows.ClearChildren();
 
         var player = state.CurrentPlayer;
         switch (mapObject)

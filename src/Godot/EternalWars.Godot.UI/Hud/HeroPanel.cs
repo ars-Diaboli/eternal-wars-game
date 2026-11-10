@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Info;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -218,10 +219,7 @@ public partial class HeroPanel : PanelContainer
     /// <summary>One button per adventure spell the hero knows (ADR-120), disabled with the reason while it cannot be cast.</summary>
     private void ShowAdventureSpells(Hero hero)
     {
-        foreach (var child in _adventure.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _adventure.ClearChildren();
 
         var state = _session.State;
         foreach (var spell in Core.Domain.Magic.AdventureMagic.Known(state, hero))
@@ -482,9 +480,6 @@ public partial class HeroPanel : PanelContainer
 
     private static void Clear(Node node)
     {
-        foreach (var child in node.GetChildren())
-        {
-            child.QueueFree();
-        }
+        node.ClearChildren();
     }
 }

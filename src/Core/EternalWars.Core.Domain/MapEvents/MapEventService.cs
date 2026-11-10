@@ -22,9 +22,11 @@ namespace EternalWars.Core.Domain.MapEvents;
 /// </summary>
 public sealed class MapEventService(
     GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles,
-    TownVisitService towns)
+    TownVisitService towns, HeroRecruitment recruits)
     : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>, Turns.ITurnPhaseParticipant
 {
+    private readonly TownConstruction _construction = new(state, events, towns);
+
     /// <summary>The most morale or luck an event gives or takes (HoMM3's ±3).</summary>
     public const int MaxMoraleOrLuck = 3;
 
@@ -480,8 +482,7 @@ public sealed class MapEventService(
             case ArtifactAction { Take: false } artifact:
                 artifacts.Grant(hero, artifact.Artifact, ArtifactSource.MapEvent);
                 break;
-            case ArtifactAction artifact when hero.Artifacts.IsWorn(artifact.Artifact) ? hero.Artifacts.RemoveWorn(artifact.Artifact) : hero.Artifacts.RemoveFromBackpack(artifact.Artifact):
-                state.RefreshArtifacts(hero);
+            case ArtifactAction artifact when artifacts.Remove(hero, artifact.Artifact, wornFirst: true):
                 events.Publish(new ArtifactLost(hero.Id, artifact.Artifact));
                 break;
             case WarMachineAction { Take: false } machine when hero.AddWarMachine(machine.Slot):
@@ -709,13 +710,7 @@ public sealed class MapEventService(
             for (var l = town.DwellingLevel(line.Id) + 1; l <= top; l++)
             {
                 BuildRequirements(town, catalog.Get(dwelling, l), depth);
-                town.SetDwelling(line.Id, l);
-                if (l == 1)
-                {
-                    town.SetAvailable(line.Id, town.AvailableOf(line.Id) + TownRules.WeeklyGrowth(state, town, line));
-                }
-
-                events.Publish(new DwellingBuilt(town.Id, line.Id, l, town.AvailableOf(line.Id)));
+                _construction.RaiseDwelling(town, line, l);
             }
 
             return;
@@ -740,13 +735,7 @@ public sealed class MapEventService(
         for (var l = town.Level(building) + 1; l <= Math.Min(level, catalog.MaxLevel(building)); l++)
         {
             BuildRequirements(town, catalog.Get(building, l), depth);
-            town.SetLevel(building, l);
-            events.Publish(new TownBuilt(town.Id, building, l));
-            if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
-                || UniqueBuildings.Get(building) is not null)
-            {
-                towns.VisitBy(town);
-            }
+            _construction.Raise(town, building, l);
         }
     }
 
@@ -772,12 +761,8 @@ public sealed class MapEventService(
             return;
         }
 
-        var joined = Hero.Create(state.NextUnusedHeroId(), owner, position, null, state.HeroRoster.Get(give.Hero));
-        joined.Experience = Math.Max(0, give.Experience);
-        state.AddHero(joined);
-        progression.LevelUpAutomatically(joined);
-        joined.MaxMovementPoints = MovementAllowance.Daily(state, joined);
-        joined.MovementPoints = run.StartOfTurn ? joined.MaxMovementPoints : 0; // given in the middle of a turn: it moves next turn, like a prisoner
+        // Given in the middle of a turn, it moves next turn, like a prisoner.
+        var joined = recruits.Join(owner, position, state.HeroRoster.Get(give.Hero), Math.Max(0, give.Experience), movesToday: run.StartOfTurn);
         run.Place = joined.Position;
         events.Publish(new MapEventHeroGiven(joined.Id, owner, give.Hero, joined.Level));
     }

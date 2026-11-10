@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -60,11 +61,7 @@ public partial class ThievesGuildPanel : PanelContainer
     {
         var state = _session.State;
         _title.Text = taverns is { } count ? $"Thieves' guild ({count} tavern(s))" : "Den of thieves: the whole picture";
-        foreach (var child in _table.GetChildren())
-        {
-            _table.RemoveChild(child);
-            child.QueueFree();
-        }
+        _table.ClearChildren(detach: true);
 
         var players = state.Players.Where(p => !p.IsDefeated).OrderBy(p => p.Id.Value).ToList();
         _table.Columns = players.Count + 1;

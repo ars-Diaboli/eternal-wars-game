@@ -10,6 +10,7 @@ using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -53,10 +54,7 @@ public partial class InspectorPanel : VBoxContainer
     private void Refresh()
     {
         _refreshing = true;
-        foreach (var child in GetChildren())
-        {
-            child.QueueFree();
-        }
+        this.ClearChildren();
 
         var scenario = _editor.Scenario;
         if (_hero is { } heroId && scenario.Heroes.FirstOrDefault(h => h.Id == heroId) is { } hero)
@@ -80,7 +78,7 @@ public partial class InspectorPanel : VBoxContainer
         AddChild(new Label { Text = $"{hero.Name} ({_editor.Scenario.GetPlayer(hero.Owner).Name}) at {hero.Position}" });
         var identity = new HBoxContainer();
         AddChild(identity);
-        var type = Options(identity, "Hero", new[] { ("(custom)", (string?)null) }
+        var type = identity.AddChoice("Hero", new[] { ("(custom)", (string?)null) }
             .Concat(_editor.Scenario.HeroRoster.All.OrderBy(h => h.Town).ThenBy(h => h.Name)
                 .Select(h => ($"{h.Name} ({h.Town}, {h.Class})", (string?)h.Id))), hero.Definition);
         type.Button.ItemSelected += _ => Edit(() => _editor.Heroes.SetType(hero.Id, type.Value()));
@@ -104,11 +102,11 @@ public partial class InspectorPanel : VBoxContainer
 
         var stats = new HBoxContainer();
         AddChild(stats);
-        var attack = Spin(stats, "Attack", hero.Attack, 0, 99);
-        var defense = Spin(stats, "Defense", hero.Defense, 0, 99);
-        var spellPower = Spin(stats, "Power", hero.SpellPower, 0, 99);
-        var knowledge = Spin(stats, "Knowledge", hero.Knowledge, 0, 99);
-        var tactics = Options(stats, "Tactics", Enum.GetValues<SkillLevel>().Where(s => s <= SkillLevel.Expert).Select(s => (s.ToString(), s)), hero.Tactics);
+        var attack = stats.AddSpin("Attack", hero.Attack, 0, 99);
+        var defense = stats.AddSpin("Defense", hero.Defense, 0, 99);
+        var spellPower = stats.AddSpin("Power", hero.SpellPower, 0, 99);
+        var knowledge = stats.AddSpin("Knowledge", hero.Knowledge, 0, 99);
+        var tactics = stats.AddChoice("Tactics", Enum.GetValues<SkillLevel>().Where(s => s <= SkillLevel.Expert).Select(s => (s.ToString(), s)), hero.Tactics);
         void ApplyStats() => Edit(() => _editor.Heroes.SetStats(
             hero.Id, (int)attack.Value, (int)defense.Value, tactics.Value(), (int)spellPower.Value, (int)knowledge.Value));
         attack.ValueChanged += _ => ApplyStats();
@@ -119,8 +117,8 @@ public partial class InspectorPanel : VBoxContainer
 
         var spirit = new HBoxContainer();
         AddChild(spirit);
-        var morale = Spin(spirit, "Morale", hero.Morale, -5, 5);
-        var luck = Spin(spirit, "Luck", hero.Luck, -5, 5);
+        var morale = spirit.AddSpin("Morale", hero.Morale, -5, 5);
+        var luck = spirit.AddSpin("Luck", hero.Luck, -5, 5);
         void ApplySpirit() => Edit(() => _editor.Heroes.SetMoraleAndLuck(hero.Id, (int)morale.Value, (int)luck.Value));
         morale.ValueChanged += _ => ApplySpirit();
         luck.ValueChanged += _ => ApplySpirit();
@@ -148,8 +146,8 @@ public partial class InspectorPanel : VBoxContainer
             var row = new HBoxContainer();
             AddChild(row);
             var stack = hero.Army[slot];
-            var creature = Options(row, $"{slot + 1}", creatures, stack?.Creature ?? "");
-            var count = Spin(row, "×", stack?.Count ?? 1, 1, 9999);
+            var creature = row.AddChoice($"{slot + 1}", creatures, stack?.Creature ?? "");
+            var count = row.AddSpin("×", stack?.Count ?? 1, 1, 9999);
             var index = slot;
             void ApplySlot() => Edit(() => _editor.Heroes.SetArmySlot(
                 hero.Id, index, creature.Value() is { Length: > 0 } id ? new CreatureStack(id, (int)count.Value) : null));
@@ -171,7 +169,7 @@ public partial class InspectorPanel : VBoxContainer
             .ToList();
         var rows = new HFlowContainer();
         AddChild(rows);
-        var choices = hero.Spells.Keys.Append("").Select(id => Options(rows, "", items, id)).ToList();
+        var choices = hero.Spells.Keys.Append("").Select(id => rows.AddChoice("", items, id)).ToList();
         rows.Visible = hero.HasSpellBook;
         void Apply() => Edit(() => _editor.Heroes.SetSpells(
             hero.Id, book.ButtonPressed, book.ButtonPressed ? [.. choices.Select(c => c.Value()).Where(s => s.Length > 0).Distinct()] : []));
@@ -206,7 +204,7 @@ public partial class InspectorPanel : VBoxContainer
             AddChild(rows);
             return ids.Append("").Select(id =>
             {
-                var choice = Options(rows, "", items, id);
+                var choice = rows.AddChoice("", items, id);
                 changed.Add(choice);
                 return choice;
             }).ToList();
@@ -235,12 +233,12 @@ public partial class InspectorPanel : VBoxContainer
                 var row = new HBoxContainer();
                 AddChild(row);
                 var lines = creatures.Where(c => !_editor.Scenario.Creatures.IsUpgrade(c.Id)).ToList(); // base creatures only (ADR-073)
-                var creature = Options(row, "Creature", lines, dwelling.Creature);
+                var creature = row.AddChoice("Creature", lines, dwelling.Creature);
                 var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
-                var owner = Options(row, "Owner", owners, dwelling.Owner);
+                var owner = row.AddChoice("Owner", owners, dwelling.Owner);
                 var amountRow = new HBoxContainer();
                 AddChild(amountRow);
-                var amount = Spin(amountRow, "Waiting (-1 = one week's growth)", dwelling.Available ?? -1, -1, 9999);
+                var amount = amountRow.AddSpin("Waiting (-1 = one week's growth)", dwelling.Available ?? -1, -1, 9999);
                 void Apply() => Edit(() => _editor.Objects.SetDwelling(dwelling.Id, creature.Value(), owner.Value(), amount.Value >= 0 ? (int)amount.Value : null));
                 creature.Button.ItemSelected += _ => Apply();
                 owner.Button.ItemSelected += _ => Apply();
@@ -253,7 +251,7 @@ public partial class InspectorPanel : VBoxContainer
                 var row = new HBoxContainer();
                 AddChild(row);
                 var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
-                var owner = Options(row, "Owner", owners, provider.Owner);
+                var owner = row.AddChoice("Owner", owners, provider.Owner);
                 owner.Button.ItemSelected += _ => Edit(() => _editor.Objects.SetProviderOwner(provider.Id, owner.Value()));
                 break;
             }
@@ -263,13 +261,13 @@ public partial class InspectorPanel : VBoxContainer
                 var row = new HBoxContainer();
                 AddChild(row);
                 var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
-                var owner = Options(row, "Owner", owners, mine.Owner);
+                var owner = row.AddChoice("Owner", owners, mine.Owner);
                 owner.Button.ItemSelected += _ => Edit(() => _editor.Objects.SetMineOwner(mine.Id, owner.Value()));
 
                 var guardRow = new HBoxContainer();
                 AddChild(guardRow);
-                var guardCreature = Options(guardRow, "Guard", new[] { ("None", "") }.Concat(creatures), mine.Guard?.Creature ?? "");
-                var guardCount = Spin(guardRow, "Count (0 = rolled)", mine.Guard?.Count ?? 0, 0, 999);
+                var guardCreature = guardRow.AddChoice("Guard", new[] { ("None", "") }.Concat(creatures), mine.Guard?.Creature ?? "");
+                var guardCount = guardRow.AddSpin("Count (0 = rolled)", mine.Guard?.Count ?? 0, 0, 999);
                 void ApplyGuard() => Edit(() => _editor.Objects.SetMineGuard(mine.Id, guardCreature.Value() is { Length: > 0 } id
                     ? new GuardStack(id, guardCount.Value > 0 ? (int)guardCount.Value : null)
                     : null));
@@ -283,7 +281,7 @@ public partial class InspectorPanel : VBoxContainer
                 var row = new HBoxContainer();
                 AddChild(row);
                 var owners = new[] { ("Neutral", (PlayerId?)null) }.Concat(_editor.Scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
-                var owner = Options(row, "Owner", owners, garrison.Owner);
+                var owner = row.AddChoice("Owner", owners, garrison.Owner);
                 owner.Button.ItemSelected += _ => Edit(() => _editor.Objects.SetGarrisonOwner(garrison.Id, owner.Value()));
                 GarrisonRows(garrison.Id, garrison.Troops);
                 break;
@@ -307,8 +305,8 @@ public partial class InspectorPanel : VBoxContainer
                 AddChild(row);
                 var heroes = new[] { ("Random (drawn at start)", (string?)null) }
                     .Concat(_editor.Scenario.HeroRoster.All.OrderBy(h => h.Town).ThenBy(h => h.Name).Select(h => ($"{h.Name} ({h.Town})", (string?)h.Id)));
-                var who = Options(row, "Prisoner", heroes, prison.Hero);
-                var level = Spin(row, "Level (0 = rolled)", prison.Level ?? 0, 0, 75);
+                var who = row.AddChoice("Prisoner", heroes, prison.Hero);
+                var level = row.AddSpin("Level (0 = rolled)", prison.Level ?? 0, 0, 75);
                 void ApplyPrison() => Edit(() => _editor.Contents.SetPrison(prison.Id, who.Value(), level.Value == 0 ? null : (int)level.Value));
                 who.Button.ItemSelected += _ => ApplyPrison();
                 level.ValueChanged += _ => ApplyPrison();
@@ -322,7 +320,7 @@ public partial class InspectorPanel : VBoxContainer
                 var artifacts = new[] { ($"Random ({pickup.Definition.Name}, drawn at start)", (string?)null) }
                     .Concat(_editor.Scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", (string?)a.Id)));
                 var catalog = _editor.Scenario.Artifacts;
-                var artifact = Options(row, "Artifact", artifacts, pickup.Artifact is { } current ? ArtifactCatalog.BaseOf(current) : null);
+                var artifact = row.AddChoice("Artifact", artifacts, pickup.Artifact is { } current ? ArtifactCatalog.BaseOf(current) : null);
                 artifact.Button.ItemSelected += _ => Edit(() => _editor.Contents.SetArtifactPickup(pickup.Id, artifact.Value()));
 
                 // A spell scroll (ADR-136): the spell written on it, or a random one of its level drawn at game start.
@@ -332,7 +330,7 @@ public partial class InspectorPanel : VBoxContainer
                     AddChild(spellRow);
                     var spells = new[] { ($"Random level {level} spell (drawn at start)", (string?)null) }
                         .Concat(catalog.ScrollSpells(level).Select(id => catalog.Spells.Get(id)).OrderBy(s => s.Name).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id)));
-                    var spell = Options(spellRow, "Spell", spells, scroll.Spell);
+                    var spell = spellRow.AddChoice("Spell", spells, scroll.Spell);
                     spell.Button.ItemSelected += _ => Edit(() => _editor.Contents.SetArtifactPickup(pickup.Id,
                         spell.Value() is { } written ? ArtifactCatalog.WithSpell(chosen, written) : ArtifactCatalog.BaseOf(chosen)));
                 }
@@ -349,8 +347,8 @@ public partial class InspectorPanel : VBoxContainer
                 var row = new HBoxContainer();
                 AddChild(row);
                 var skills = new[] { ("Rolled at start", "") }.Concat(BuiltInSkills.All.OrderBy(s => s.Group).ThenBy(s => s.Name).Select(s => ($"{s.Name} ({s.Group})", s.Id))).ToList();
-                var first = Options(row, "Skills", skills, hut.Skills.ElementAtOrDefault(0) ?? "");
-                var second = Options(row, "and", skills, hut.Skills.ElementAtOrDefault(1) ?? "");
+                var first = row.AddChoice("Skills", skills, hut.Skills.ElementAtOrDefault(0) ?? "");
+                var second = row.AddChoice("and", skills, hut.Skills.ElementAtOrDefault(1) ?? "");
                 AddChild(new Label { Text = "Set both, or leave both rolled; the two must differ." });
                 void ApplyHut()
                 {
@@ -372,7 +370,7 @@ public partial class InspectorPanel : VBoxContainer
                 AddChild(row);
                 var spells = new[] { ("Drawn at start", (string?)null) }
                     .Concat(ShrineRules.Candidates(_editor.Scenario.Spells, shrine.SpellLevel).Select(s => ($"{s.Name} ({s.School})", (string?)s.Id)));
-                var spell = Options(row, "Spell", spells, shrine.Spell);
+                var spell = row.AddChoice("Spell", spells, shrine.Spell);
                 spell.Button.ItemSelected += _ => Edit(() => _editor.Contents.SetShrineSpell(shrine.Id, spell.Value()));
                 break;
             }
@@ -382,8 +380,8 @@ public partial class InspectorPanel : VBoxContainer
                 AddChild(row);
                 var fixedValues = new CheckBox { Text = "Fixed values (else rolled)", ButtonPressed = chest.FixedValues is not null };
                 row.AddChild(fixedValues);
-                var gold = Spin(row, "Gold", chest.FixedValues?.Gold ?? 1000, 0, 100000);
-                var experience = Spin(row, "XP", chest.FixedValues?.Experience ?? 500, 0, 100000);
+                var gold = row.AddSpin("Gold", chest.FixedValues?.Gold ?? 1000, 0, 100000);
+                var experience = row.AddSpin("XP", chest.FixedValues?.Experience ?? 500, 0, 100000);
                 void ApplyChest() => Edit(() => _editor.Contents.SetChestValues(
                     chest.Id, fixedValues.ButtonPressed ? new ChestValues((int)gold.Value, (int)experience.Value) : null));
                 fixedValues.Toggled += _ => ApplyChest();
@@ -396,11 +394,11 @@ public partial class InspectorPanel : VBoxContainer
             {
                 var row = new HBoxContainer();
                 AddChild(row);
-                var creature = Options(row, "Creature", creatures, monster.Creature);
-                var count = Spin(row, "Count (0 = rolled)", monster.Count ?? 0, 0, 999);
+                var creature = row.AddChoice("Creature", creatures, monster.Creature);
+                var count = row.AddSpin("Count (0 = rolled)", monster.Count ?? 0, 0, 999);
                 var row2 = new HBoxContainer();
                 AddChild(row2);
-                var disposition = Options(row2, "Disposition", Enum.GetValues<GuardDisposition>().Select(d => (d.ToString(), d)), monster.Disposition);
+                var disposition = row2.AddChoice("Disposition", Enum.GetValues<GuardDisposition>().Select(d => (d.ToString(), d)), monster.Disposition);
                 var neverFlees = new CheckBox { Text = "Never flees", ButtonPressed = monster.NeverFlees };
                 row2.AddChild(neverFlees);
                 void ApplyMonster() => Edit(() => _editor.Monsters.Set(
@@ -412,7 +410,7 @@ public partial class InspectorPanel : VBoxContainer
 
                 var row3 = new HBoxContainer();
                 AddChild(row3);
-                var mode = Options(row3, "Guard mode", new[]
+                var mode = row3.AddChoice("Guard mode", new[]
                 {
                     ("Classic: zone of control, pickups can be stolen", GuardMode.Classic),
                     ("Area: treasure guard, the whole 3×3 area is guarded", GuardMode.Area),
@@ -424,7 +422,7 @@ public partial class InspectorPanel : VBoxContainer
                 AddChild(row4);
                 var tiers = new[] { ("Fixed creature", (int?)null), ("Random, any tier", 0) }
                     .Concat(Enumerable.Range(1, Core.Domain.Creatures.CreatureDefinition.MaxTier).Select(t => ($"Random tier {t}", (int?)t)));
-                var randomTier = Options(row4, "Random", tiers, monster.RandomTier);
+                var randomTier = row4.AddChoice("Random", tiers, monster.RandomTier);
                 randomTier.Button.ItemSelected += _ => Edit(() => _editor.Monsters.SetRandomTier(monster.Id, randomTier.Value()));
                 break;
             }
@@ -472,7 +470,7 @@ public partial class InspectorPanel : VBoxContainer
 
         var row = new HBoxContainer();
         AddChild(row);
-        var choice = Options(row, label, new[] { ("— none —", "") }.Concat(names.Select(n => (n, n))), current ?? "");
+        var choice = row.AddChoice(label, new[] { ("— none —", "") }.Concat(names.Select(n => (n, n))), current ?? "");
         choice.Button.ItemSelected += _ => Edit(() => set(choice.Value().Length == 0 ? null : choice.Value()));
         var create = new Button { Text = "New" };
         create.Pressed += () => Edit(() => NewEvent(kind, set));
@@ -536,16 +534,16 @@ public partial class InspectorPanel : VBoxContainer
         this.AddHeading("Gives (hidden from the players until opened; an empty box is an error)");
         var resourceRow = new HFlowContainer();
         AddChild(resourceRow);
-        var resources = Enum.GetValues<ResourceType>().Select(r => (Resource: r, Spin: Spin(resourceRow, r.ToString(), c.Resources[r], 0, 1000000))).ToList();
+        var resources = Enum.GetValues<ResourceType>().Select(r => (Resource: r, Spin: resourceRow.AddSpin(r.ToString(), c.Resources[r], 0, 1000000))).ToList();
         var heroRow = new HFlowContainer();
         AddChild(heroRow);
-        var experience = Spin(heroRow, "XP", c.Experience, 0, 1000000);
-        var mana = Spin(heroRow, "Mana", c.Mana, 0, 999);
-        var morale = Spin(heroRow, "Morale (next battle)", c.Morale, 0, PandorasBoxRules.MaxMoraleOrLuck);
-        var luck = Spin(heroRow, "Luck (next battle)", c.Luck, 0, PandorasBoxRules.MaxMoraleOrLuck);
+        var experience = heroRow.AddSpin("XP", c.Experience, 0, 1000000);
+        var mana = heroRow.AddSpin("Mana", c.Mana, 0, 999);
+        var morale = heroRow.AddSpin("Morale (next battle)", c.Morale, 0, PandorasBoxRules.MaxMoraleOrLuck);
+        var luck = heroRow.AddSpin("Luck (next battle)", c.Luck, 0, PandorasBoxRules.MaxMoraleOrLuck);
         var statRow = new HFlowContainer();
         AddChild(statRow);
-        var stats = Enum.GetValues<PrimaryStat>().Select(s => (Stat: s, Spin: Spin(statRow, s.ToString(), c.Stat(s), 0, 99))).ToList();
+        var stats = Enum.GetValues<PrimaryStat>().Select(s => (Stat: s, Spin: statRow.AddSpin(s.ToString(), c.Stat(s), 0, 99))).ToList();
         foreach (var spin in resources.Select(r => r.Spin).Concat(stats.Select(s => s.Spin)).Concat([experience, mana, morale, luck]))
         {
             changed.Add(apply => spin.ValueChanged += _ => apply());
@@ -558,8 +556,8 @@ public partial class InspectorPanel : VBoxContainer
         {
             var row = new HBoxContainer();
             AddChild(row);
-            var skill = Options(row, "Skill", skillItems, entry.Item1);
-            var level = Options(row, "at", levelItems, entry.Item2);
+            var skill = row.AddChoice("Skill", skillItems, entry.Item1);
+            var level = row.AddChoice("at", levelItems, entry.Item2);
             changed.Add(apply => skill.Button.ItemSelected += _ => apply());
             changed.Add(apply => level.Button.ItemSelected += _ => apply());
             return (Skill: skill, Level: level);
@@ -571,7 +569,7 @@ public partial class InspectorPanel : VBoxContainer
         {
             var row = new HBoxContainer();
             AddChild(row);
-            var artifact = Options(row, "Artifact", artifactItems, id);
+            var artifact = row.AddChoice("Artifact", artifactItems, id);
             changed.Add(apply => artifact.Button.ItemSelected += _ => apply());
             return artifact;
         }).ToList();
@@ -585,8 +583,8 @@ public partial class InspectorPanel : VBoxContainer
             {
                 var row = new HBoxContainer();
                 AddChild(row);
-                var creature = Options(row, "", stackItems, stack?.Creature ?? "");
-                var count = Spin(row, "×", stack?.Count ?? 1, 1, 99999);
+                var creature = row.AddChoice("", stackItems, stack?.Creature ?? "");
+                var count = row.AddSpin("×", stack?.Count ?? 1, 1, 99999);
                 changed.Add(apply => creature.Button.ItemSelected += _ => apply());
                 changed.Add(apply => count.ValueChanged += _ => apply());
                 return (creature, count);
@@ -690,13 +688,13 @@ public partial class InspectorPanel : VBoxContainer
         var row = new HBoxContainer();
         AddChild(row);
         var owners = new[] { ("Unowned", (PlayerId?)null) }.Concat(scenario.Players.Select(p => (p.Name, (PlayerId?)p.Id)));
-        var owner = Options(row, "Owner", owners, town.Owner);
+        var owner = row.AddChoice("Owner", owners, town.Owner);
         owner.Button.ItemSelected += _ => Edit(() => _editor.Towns.SetOwner(town.Id, owner.Value()));
         row.AddChild(new Label { Text = "Name" });
         var name = new LineEdit { Text = town.Name, CustomMinimumSize = new Vector2(160, 0) };
         name.TextSubmitted += text => Edit(() => _editor.Towns.SetName(town.Id, text));
         row.AddChild(name);
-        var type = Options(row, town.IsRandom ? "Shown as" : "Faction", BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), town.TownType);
+        var type = row.AddChoice(town.IsRandom ? "Shown as" : "Faction", BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), town.TownType);
         type.Button.ItemSelected += _ => Edit(() => _editor.Towns.SetType(town.Id, type.Value()));
         var random = new CheckBox
         {
@@ -715,7 +713,7 @@ public partial class InspectorPanel : VBoxContainer
         foreach (var building in catalog.TownBuildings)
         {
             var id = building;
-            var level = Spin(buildings, building, town.Level(building), 0, catalog.MaxLevel(building));
+            var level = buildings.AddSpin(building, town.Level(building), 0, catalog.MaxLevel(building));
             level.ValueChanged += value => Edit(() => _editor.Towns.SetBuilding(town.Id, id, (int)value));
         }
 
@@ -725,7 +723,7 @@ public partial class InspectorPanel : VBoxContainer
         foreach (var line in TownRules.Lines(scenario, town))
         {
             var id = line.Id;
-            var level = Spin(dwellings, $"T{line.Tier} {line.Name}", town.DwellingLevel(line.Id), 0, line.UpgradesTo is null ? 1 : 2);
+            var level = dwellings.AddSpin($"T{line.Tier} {line.Name}", town.DwellingLevel(line.Id), 0, line.UpgradesTo is null ? 1 : 2);
             level.ValueChanged += value => Edit(() => _editor.Towns.SetDwelling(town.Id, id, (int)value));
         }
 
@@ -756,7 +754,7 @@ public partial class InspectorPanel : VBoxContainer
             AddChild(row);
             for (var slot = 0; slot < MagicRules.GuildSpellsPerLevel[level - 1]; slot++)
             {
-                choices.Add(Options(row, slot == 0 ? $"L{level}" : "", items, fixedHere.ElementAtOrDefault(slot) ?? ""));
+                choices.Add(row.AddChoice(slot == 0 ? $"L{level}" : "", items, fixedHere.ElementAtOrDefault(slot) ?? ""));
             }
         }
 
@@ -779,8 +777,8 @@ public partial class InspectorPanel : VBoxContainer
             var slotRow = new HBoxContainer();
             AddChild(slotRow);
             var stack = troops[slot];
-            var creature = Options(slotRow, $"{slot + 1}", creatures, stack?.Creature ?? "");
-            var count = Spin(slotRow, "×", stack?.Count ?? 1, 1, 9999);
+            var creature = slotRow.AddChoice($"{slot + 1}", creatures, stack?.Creature ?? "");
+            var count = slotRow.AddSpin("×", stack?.Count ?? 1, 1, 9999);
             var index = slot;
             void ApplySlot() => Edit(() => _editor.Towns.SetGarrisonSlot(
                 holder, index, creature.Value() is { Length: > 0 } id ? new CreatureStack(id, (int)count.Value) : null));
@@ -796,33 +794,5 @@ public partial class InspectorPanel : VBoxContainer
         {
             GD.PushWarning($"Edit refused: {result}");
         }
-    }
-
-    private static SpinBox Spin(Container row, string label, int value, int min, int max)
-    {
-        row.AddChild(new Label { Text = label });
-        var spin = new SpinBox { MinValue = min, MaxValue = max, Value = value };
-        row.AddChild(spin);
-        return spin;
-    }
-
-    private static Choice<T> Options<T>(Container row, string label, IEnumerable<(string Text, T Value)> items, T selected)
-    {
-        row.AddChild(new Label { Text = label });
-        var list = items.ToList();
-        var button = new OptionButton { FitToLongestItem = false, CustomMinimumSize = new Vector2(150, 0) };
-        foreach (var (text, _) in list)
-        {
-            button.AddItem(text);
-        }
-
-        button.Selected = Math.Max(0, list.FindIndex(i => EqualityComparer<T>.Default.Equals(i.Value, selected)));
-        row.AddChild(button);
-        return new Choice<T>(button, list);
-    }
-
-    private sealed record Choice<T>(OptionButton Button, List<(string Text, T Value)> Items)
-    {
-        public T Value() => Items[Math.Max(0, Button.Selected)].Value;
     }
 }

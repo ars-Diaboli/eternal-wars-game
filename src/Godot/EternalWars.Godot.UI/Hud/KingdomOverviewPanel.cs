@@ -1,3 +1,4 @@
+using EternalWars.Godot.Shared.Controls;
 using System.Globalization;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
@@ -43,11 +44,7 @@ public partial class KingdomOverviewPanel : PanelContainer
     {
         var overview = KingdomOverviews.For(_session.State, player);
         _title.Text = $"Kingdom of {_session.State.GetPlayer(player).Name}: {_session.State.Date}";
-        foreach (var child in _table.GetChildren())
-        {
-            _table.RemoveChild(child);
-            child.QueueFree();
-        }
+        _table.ClearChildren(detach: true);
 
         _table.AddChild(new Label { Text = "Source", CustomMinimumSize = new Vector2(150, 0) });
         _table.AddChild(new Label());

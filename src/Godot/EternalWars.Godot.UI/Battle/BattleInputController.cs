@@ -148,16 +148,7 @@ public sealed class BattleInputController
             return;
         }
 
-        GameCommand? command = BattleTargeting.ActionAt(battle, BattleSpace.ToCell(point), point.X, point.Y) switch
-        {
-            MoveAction move => new BattleMoveCommand(player, move.To),
-            AttackAction attack => new BattleAttackCommand(player, attack.Target, attack.From),
-            ShootAction shoot => new BattleShootCommand(player, shoot.Target),
-            ShootStructureAction structure => new BattleShootStructureCommand(player, structure.Structure),
-            AttackStructureAction hit => new BattleAttackStructureCommand(player, hit.Structure, hit.From),
-            _ => null,
-        };
-        if (command is not null)
+        if (BattleTargeting.CommandAt(player, battle, BattleSpace.ToCell(point), point.X, point.Y) is { } command)
         {
             _battle.ShowIntent(null);
             _hud.Report(_session.Execute(command));

@@ -27,16 +27,14 @@ internal sealed class BattleAftermath(
 
     public void Finish(BattleState battle)
     {
-        var winner = battle.Winner!.Value;
+        var outcome = BattleOutcome.Of(state, battle);
+        var (winner, reason) = (outcome.Winner, outcome.Reason);
         var loser = winner.Opponent();
-        var reason = battle.EndReason!.Value;
         var winning = battle.Participant(winner);
         var losing = battle.Participant(loser);
 
-        // The arena's battle gives no experience and decides the game (ADR-097): both armies fallen is a draw, a retreat or surrender loses.
+        // The arena's battle gives no experience (BattleOutcome) and decides the game (ADR-097): both armies fallen is a draw, a retreat or surrender loses.
         var arena = IsArenaBattle ? state.Arena : null;
-        var experience = arena is null ? Experience(battle) : 0;
-        var casualties = Casualties(battle);
         if (arena is not null)
         {
             var draw = reason == BattleEndReason.Defeated && !battle.OwnedArmyOf(BattleSide.Attacker).Any() && !battle.OwnedArmyOf(BattleSide.Defender).Any();
@@ -56,7 +54,7 @@ internal sealed class BattleAftermath(
         }
 
         state.Battle = null;
-        events.Publish(new BattleEnded(winner, reason, casualties, winning.Hero is null ? 0 : experience));
+        events.Publish(new BattleEnded(winner, reason, outcome.Casualties, outcome.Experience));
 
         // "For the next battle" statuses are used up by this one, whatever its outcome (ADR-068).
         progression.ExpireStatuses(new[] { winning.Hero, losing.Hero }.OfType<HeroId>().Select(state.GetHero), StatusExpiry.NextBattle);
@@ -79,7 +77,7 @@ internal sealed class BattleAftermath(
 
             RaiseUndead(battle, loser, hero, held, reason == BattleEndReason.Defeated);
 
-            Award(hero, experience);
+            Award(hero, outcome.Experience);
         }
         else if (winning.Guard is { } guardId)
         {
@@ -139,22 +137,6 @@ internal sealed class BattleAftermath(
 
     private BattleGuardOutcome Outcome(BattleState battle, BattleSide side) => new(state, events, economy, progression, artifacts, towns, boxes, battle, side);
 
-    /// <summary>What a finished battle is worth to the winner: the health of the creatures it killed, and a defeated hero.</summary>
-    public static int Experience(BattleState battle)
-    {
-        var loser = battle.Winner!.Value.Opponent();
-        var killedHealth = battle.Units.Where(u => u.Owner == loser && !u.IsSummoned).Sum(u => (long)(u.InitialCount - u.KeptCount) * u.Creature.Health);
-        var heroDefeated = battle.Participant(loser).Hero is not null && battle.EndReason == BattleEndReason.Defeated;
-        return (int)Math.Min(int.MaxValue, killedHealth + (heroDefeated ? HeroDefeatExperience : 0));
-    }
-
-    public static List<BattleCasualty> Casualties(BattleState battle) => battle.Units
-        .Where(u => !u.IsSummoned)
-        .GroupBy(u => (Side: u.Owner, u.Creature.Id))
-        .Select(g => new BattleCasualty(g.Key.Side, g.Key.Id, g.Sum(u => u.InitialCount - u.KeptCount)))
-        .Where(c => c.Lost > 0)
-        .ToList();
-
     /// <summary>The town a garrison hero side holds (ADR-112), or null for any other side.</summary>
     private Town? HeldTown(BattleParticipant participant) =>
         SurrenderRules.IsGarrisonHero(participant) && state.FindObject(participant.Guard!.Value) is Town town ? town : null;
@@ -175,12 +157,7 @@ internal sealed class BattleAftermath(
     private void ApplySurvivors(BattleState battle, BattleSide side, Hero hero)
     {
         LoseMachines(battle, side, hero);
-        foreach (var (slot, stack) in hero.Army.Stacks.ToList())
-        {
-            var survivors = battle.Units.Where(u => u.Owner == side && u.SourceSlot == slot).Sum(u => u.KeptCount);
-            hero.Army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
-        }
-
+        BattleOutcome.KeepSurvivors(battle, side, hero.Army);
         armies.Publish(hero);
     }
 
@@ -219,10 +196,28 @@ internal sealed class BattleAftermath(
     }
 
     /// <summary>
+    /// The undead the winning hero would raise into the army it fought with (its own, or a held town's garrison), with the survivors in it and a
+    /// copy of the game's random numbers: the real end of the battle draws the same (auto combat's preview). Nothing changes.
+    /// </summary>
+    public List<RaisedUndead> PreviewRaised(BattleState battle, BattleOutcome outcome)
+    {
+        var defeated = outcome.Reason == BattleEndReason.Defeated;
+        var winning = battle.Participant(outcome.Winner);
+        if (winning.Hero is not { } id || state.GetHero(id) is not { } hero || !Raises(battle, outcome.Winner, hero, defeated))
+        {
+            return [];
+        }
+
+        var army = new Army((HeldTown(winning)?.Garrison ?? hero.Army).Slots);
+        BattleOutcome.KeepSurvivors(battle, outcome.Winner, army);
+        return JoinUndead(battle, outcome.Winner.Opponent(), hero, army, new GameRandom(state.Random.State), defeated);
+    }
+
+    /// <summary>
     /// Whether the winning hero raises anything: Necromancy after a defeated enemy, Raise Dead's skeletons (ADR-152) after a defeated enemy, and the
     /// skeletons it raised in the battle that still stand, however the battle ended.
     /// </summary>
-    public static bool Raises(BattleState battle, BattleSide side, Hero hero, bool defeated) =>
+    private static bool Raises(BattleState battle, BattleSide side, Hero hero, bool defeated) =>
         (defeated && (hero.SkillLevelOf(NecromancyRules.Skill) != SkillLevel.None || battle.Raising.ContainsKey(side)))
         || battle.Units.Any(u => u.IsAlive && u.IsRaised && u.Owner == side);
 
@@ -231,7 +226,7 @@ internal sealed class BattleAftermath(
     /// skeletons (ADR-152): its percent of the health of the enemy creatures slain (those Necromancy counts, not the stacks it raised in the battle)
     /// and the skeletons it raised that still stand.
     /// </summary>
-    public List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, Army army, GameRandom random, bool defeated = true)
+    private List<RaisedUndead> JoinUndead(BattleState battle, BattleSide enemy, Hero hero, Army army, GameRandom random, bool defeated = true)
     {
         // The table's creature: the slain count with their own health, not the health an enemy's artifacts gave them in battle.
         var level = defeated ? hero.SkillLevelOf(NecromancyRules.Skill) : SkillLevel.None;
