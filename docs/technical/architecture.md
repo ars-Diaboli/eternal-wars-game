@@ -112,7 +112,9 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `DecisionRequested`. A step towards a monster or into its guarded area goes to `GuardService`; onto an enemy hero to
   `BattleService`.
 - **Views** subscribe with `node.SubscribeWhileInTree<T>(...)`. Code-built forms use `FormBuilder` (Godot.Shared/Controls:
-  `AddRow`, `AddSpin`, `AddOptions`, `AddChoice<T>`) and empty a container with `node.ClearChildren()`. **Apps** hold composition and input mapping only.
+  `AddRow`, `AddSpin`, `AddOptions`, `AddChoice<T>`) and empty a container with `node.ClearChildren()`. A view that rebuilds on many
+  events uses a `RefreshScheduler` (Godot.Shared/Events: `.On<T>(events)`), which refreshes once at the end of the frame however many
+  asked. **Apps** hold composition and input mapping only.
 
 ### Feature map (Core.Domain unless noted)
 
