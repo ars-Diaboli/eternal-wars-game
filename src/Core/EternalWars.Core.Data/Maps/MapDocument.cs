@@ -50,14 +50,27 @@ namespace EternalWars.Core.Data.Maps;
 /// switch (<c>rules.arena</c>; omitted = off) and combat places (<c>combatPlace</c>; ADR-097, ADR-100). Older versions still
 /// load (with the default events).
 /// </remarks>
-public sealed record MapDocument
+public sealed record MapDocument : IJsonOnDeserializing
 {
     public const int CurrentFormatVersion = 38;
+
+    /// <summary>The version of a map file that does not say which it is: the first, so every older version's handling applies to it.</summary>
+    public const int UnversionedFormatVersion = 1;
 
     /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
     public const int PerMonsterGuardModeVersion = 13;
 
-    public int FormatVersion { get; init; } = CurrentFormatVersion;
+    private int _formatVersion = CurrentFormatVersion;
+
+    /// <summary>The format the document is in: a document made in code is current; a file without the field is <see cref="UnversionedFormatVersion"/>.</summary>
+    public int FormatVersion
+    {
+        get => _formatVersion;
+        init => _formatVersion = value;
+    }
+
+    /// <summary>Before a file's fields are read: a file that names no version is the first one, not the current.</summary>
+    void IJsonOnDeserializing.OnDeserializing() => _formatVersion = UnversionedFormatVersion;
 
     public required string Name { get; init; }
 

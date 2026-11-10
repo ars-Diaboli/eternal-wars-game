@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
@@ -26,17 +27,19 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not TreasureChestDecision decision)
         {
-            throw new InvalidOperationException("No treasure chest decision is pending.");
+            throw new CommandRefusedException("No treasure chest decision is pending.");
         }
 
-        state.PendingDecision = null;
-        RemoveFromMap(state.GetObject(decision.Chest));
-
+        // Everything the answer needs is found before anything changes, so a refusal leaves the state as it was.
+        var chest = state.GetObject(decision.Chest);
         var hero = state.GetHero(decision.Hero);
+        state.PendingDecision = null;
+        RemoveFromMap(chest);
         if (reward == TreasureChestReward.Gold)
         {
             economy.Grant(hero.Owner, new ResourceSet(Gold: decision.Gold));
         }
+
         events.Publish(new DecisionResolved(decision));
         if (reward == TreasureChestReward.Experience)
         {
@@ -277,34 +280,34 @@ public sealed class MapObjectInteractionService(
     /// <summary>A hero on a map dwelling's entrance buys creatures into its army, discounted by its own Stewardship (ADR-054).</summary>
     internal void RecruitAtDwelling(PlayerId player, MapObjectId dwellingId, int count)
     {
-        var dwelling = state.FindObject(dwellingId) as CreatureDwelling ?? throw new InvalidOperationException($"{dwellingId} is not a dwelling.");
+        var dwelling = state.FindObject(dwellingId) as CreatureDwelling ?? throw new CommandRefusedException($"{dwellingId} is not a dwelling.");
         if (state.PendingDecision is not null)
         {
-            throw new InvalidOperationException("Resolve the pending decision first.");
+            throw new CommandRefusedException("Resolve the pending decision first.");
         }
 
         var hero = state.HeroAt(dwelling.VisitPosition);
         if (hero is null || hero.Owner != player)
         {
-            throw new InvalidOperationException($"No own hero stands at the {dwelling.Definition.Name}.");
+            throw new CommandRefusedException($"No own hero stands at the {dwelling.Definition.Name}.");
         }
 
         var available = dwelling.Available ?? 0;
         if (count < 1 || count > available)
         {
-            throw new InvalidOperationException($"Only {available} creatures wait here.");
+            throw new CommandRefusedException($"Only {available} creatures wait here.");
         }
 
         var creature = state.Creatures.Get(dwelling.Creature);
         if (!hero.Army.CanAccept(creature.Id))
         {
-            throw new InvalidOperationException($"{hero.Name} has no free slot for {creature.Name}.");
+            throw new CommandRefusedException($"{hero.Name} has no free slot for {creature.Name}.");
         }
 
         var price = StewardshipRules.DiscountCreatures(creature.Cost, hero.SkillLevelOf(BuiltInSkills.Stewardship)) * count;
         if (!economy.TrySpend(player, price))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         dwelling.Available = available - count;
@@ -318,7 +321,7 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not HeroExchangeDecision decision)
         {
-            throw new InvalidOperationException("No hero exchange is open.");
+            throw new CommandRefusedException("No hero exchange is open.");
         }
 
         state.PendingDecision = null;
@@ -386,7 +389,7 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not TownGateDecision decision)
         {
-            throw new InvalidOperationException("No town gate is open.");
+            throw new CommandRefusedException("No town gate is open.");
         }
 
         var hero = state.GetHero(decision.Hero);
@@ -396,12 +399,12 @@ public sealed class MapObjectInteractionService(
             town = state.FindObject(id) as Town;
             if (town is null || town.Owner != hero.Owner || decision.Towns.All(t => t.Town != id))
             {
-                throw new InvalidOperationException("That town is not on the list.");
+                throw new CommandRefusedException("That town is not on the list.");
             }
 
             if (state.HeroAt(town.VisitPosition) is not null)
             {
-                throw new InvalidOperationException($"Someone stands at the entrance of {town.Name}.");
+                throw new CommandRefusedException($"Someone stands at the entrance of {town.Name}.");
             }
         }
 
@@ -448,12 +451,12 @@ public sealed class MapObjectInteractionService(
     internal void UpgradeAtHillFort(PlayerId player, MapObjectId fortId, int slot)
     {
         var hero = HeroAt<HillFort>(player, fortId, out var fort);
-        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
         var upgraded = HillFortRules.UpgradeOf(state.Creatures, stack.Creature)
-                       ?? throw new InvalidOperationException("Only stacks of tiers 1–3 that have an upgrade are upgraded here.");
+                       ?? throw new CommandRefusedException("Only stacks of tiers 1–3 that have an upgrade are upgraded here.");
         if (!economy.TrySpend(player, HillFortRules.Cost(state.Creatures, stack)))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         hero.Army.Set(slot, new CreatureStack(upgraded.Id, stack.Count));
@@ -467,12 +470,12 @@ public sealed class MapObjectInteractionService(
         var hero = HeroAt<WarMachineFactory>(player, factoryId, out var factory);
         if (hero.WarMachines.Contains(slot))
         {
-            throw new InvalidOperationException($"{hero.Name} already has that machine.");
+            throw new CommandRefusedException($"{hero.Name} already has that machine.");
         }
 
         if (!economy.TrySpend(player, Battles.WarMachines.Cost(slot)))
         {
-            throw new InvalidOperationException("Not enough gold.");
+            throw new CommandRefusedException("Not enough gold.");
         }
 
         hero.AddWarMachine(slot);
@@ -483,14 +486,14 @@ public sealed class MapObjectInteractionService(
     private Hero HeroAt<T>(PlayerId player, MapObjectId id, out T mapObject)
         where T : MapObject
     {
-        mapObject = state.FindObject(id) as T ?? throw new InvalidOperationException($"{id} is not a {typeof(T).Name}.");
+        mapObject = state.FindObject(id) as T ?? throw new CommandRefusedException($"{id} is not a {typeof(T).Name}.");
         if (state.PendingDecision is not null)
         {
-            throw new InvalidOperationException("Resolve the pending decision first.");
+            throw new CommandRefusedException("Resolve the pending decision first.");
         }
 
         var hero = state.HeroAt(mapObject.VisitPosition);
-        return hero is not null && hero.Owner == player ? hero : throw new InvalidOperationException($"No own hero stands at the {mapObject.Definition.Name}.");
+        return hero is not null && hero.Owner == player ? hero : throw new CommandRefusedException($"No own hero stands at the {mapObject.Definition.Name}.");
     }
 
     /// <summary>
@@ -604,14 +607,14 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not TrainingDecision decision)
         {
-            throw new InvalidOperationException("No training is offered.");
+            throw new CommandRefusedException("No training is offered.");
         }
 
         if (option is not { } picked)
         {
             if (!decision.CanDecline)
             {
-                throw new InvalidOperationException("Choose one of the options.");
+                throw new CommandRefusedException("Choose one of the options.");
             }
 
             state.PendingDecision = null;
@@ -621,14 +624,14 @@ public sealed class MapObjectInteractionService(
 
         if (!decision.Options.Contains(picked))
         {
-            throw new InvalidOperationException($"{picked} is not offered.");
+            throw new CommandRefusedException($"{picked} is not offered.");
         }
 
         var hero = state.GetHero(decision.Hero);
         var site = (TrainingSite)state.GetObject(decision.Site);
         if (!economy.TrySpend(hero.Owner, TrainingRules.Price(site.Rule, picked)))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         state.PendingDecision = null;
@@ -769,24 +772,25 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not DepositDecision decision)
         {
-            throw new InvalidOperationException("No deposit is waiting for an answer.");
+            throw new CommandRefusedException("No deposit is waiting for an answer.");
         }
 
+        // The mine is made before the price is paid, so nothing is spent on a deposit that cannot become one.
         var hero = state.GetHero(decision.Hero);
+        var deposit = (Deposit)state.GetObject(decision.Deposit);
+        var mine = buy ? new Mine(deposit.Id, state.ObjectCatalog.Get(deposit.Definition.Becomes!), deposit.Position, hero.Owner) : null;
         if (buy && !economy.TrySpend(hero.Owner, decision.Price))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         state.PendingDecision = null;
         events.Publish(new DecisionResolved(decision));
-        if (!buy)
+        if (mine is null)
         {
             return;
         }
 
-        var deposit = (Deposit)state.GetObject(decision.Deposit);
-        var mine = new Mine(deposit.Id, state.ObjectCatalog.Get(deposit.Definition.Becomes!), deposit.Position, hero.Owner);
         state.RemoveObject(deposit);
         state.AddObject(mine);
         events.Publish(new DepositBought(mine.Id, hero.Id, hero.Owner, decision.Price));
@@ -811,19 +815,19 @@ public sealed class MapObjectInteractionService(
         var hero = HeroAt<MapGarrison>(player, garrisonId, out var garrison);
         if (garrison.Owner != player)
         {
-            throw new InvalidOperationException("Only the garrison's owner moves troops in or out.");
+            throw new CommandRefusedException("Only the garrison's owner moves troops in or out.");
         }
 
         var (from, to) = toGarrison ? (hero.Army, garrison.Troops) : (garrison.Troops, hero.Army);
-        var stack = (Army.IsValidSlot(slot) ? from[slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+        var stack = (Army.IsValidSlot(slot) ? from[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
         if (toGarrison && hero.Army.Stacks.Count() == 1)
         {
-            throw new InvalidOperationException($"{hero.Name} must keep at least one stack.");
+            throw new CommandRefusedException($"{hero.Name} must keep at least one stack.");
         }
 
         if (!to.CanAccept(stack.Creature))
         {
-            throw new InvalidOperationException("There is no free slot for that stack.");
+            throw new CommandRefusedException("There is no free slot for that stack.");
         }
 
         from.Set(slot, null);
@@ -841,18 +845,18 @@ public sealed class MapObjectInteractionService(
         HeroAt<MapTavern>(player, tavernId, out var tavern);
         if (MapTavernRules.Offers(state, tavern).FirstOrDefault(h => h.Id == heroId) is not { } definition)
         {
-            throw new InvalidOperationException($"{heroId} is not offered here this week.");
+            throw new CommandRefusedException($"{heroId} is not offered here this week.");
         }
 
         if (state.HeroLimitReached(player))
         {
-            throw new InvalidOperationException($"You may have at most {state.HeroLimit(player)} heroes.");
+            throw new CommandRefusedException($"You may have at most {state.HeroLimit(player)} heroes.");
         }
 
-        var arrival = MapTavernRules.Arrival(state, tavern) ?? throw new InvalidOperationException("There is no free cell next to the tavern.");
+        var arrival = MapTavernRules.Arrival(state, tavern) ?? throw new CommandRefusedException("There is no free cell next to the tavern.");
         if (!economy.TrySpend(player, TavernRules.HeroCost))
         {
-            throw new InvalidOperationException($"A hero costs {TavernRules.HeroCost}.");
+            throw new CommandRefusedException($"A hero costs {TavernRules.HeroCost}.");
         }
 
         var hero = Hero.Create(state.NextUnusedHeroId(), player, arrival, null, definition);
@@ -873,13 +877,14 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not CartographerDecision decision)
         {
-            throw new InvalidOperationException("No cartographer is waiting for an answer.");
+            throw new CommandRefusedException("No cartographer is waiting for an answer.");
         }
 
         var hero = state.GetHero(decision.Hero);
+        var cartographer = (Cartographer)state.GetObject(decision.Cartographer);
         if (buy && !economy.TrySpend(hero.Owner, new ResourceSet(Gold: decision.Price)))
         {
-            throw new InvalidOperationException("Not enough gold.");
+            throw new CommandRefusedException("Not enough gold.");
         }
 
         state.PendingDecision = null;
@@ -889,7 +894,6 @@ public sealed class MapObjectInteractionService(
             return;
         }
 
-        var cartographer = (Cartographer)state.GetObject(decision.Cartographer);
         cartographer.Buyers.Add(hero.Owner);
         events.Publish(new MapBought(cartographer.Id, hero.Id, hero.Owner, decision.Level));
         var map = state.Map;
@@ -904,12 +908,12 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not SphinxDecision decision)
         {
-            throw new InvalidOperationException("No sphinx is waiting for an answer.");
+            throw new CommandRefusedException("No sphinx is waiting for an answer.");
         }
 
         if (option < 0 || option >= decision.Options.Count)
         {
-            throw new InvalidOperationException($"Option {option} is not offered.");
+            throw new CommandRefusedException($"Option {option} is not offered.");
         }
 
         var hero = state.GetHero(decision.Hero);
@@ -941,9 +945,11 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not PandorasBoxDecision decision)
         {
-            throw new InvalidOperationException("No Pandora's Box is waiting for an answer.");
+            throw new CommandRefusedException("No Pandora's Box is waiting for an answer.");
         }
 
+        var hero = state.GetHero(decision.Hero);
+        var box = (PandorasBox)state.GetObject(decision.Box);
         state.PendingDecision = null;
         events.Publish(new DecisionResolved(decision));
         if (!open)
@@ -951,8 +957,6 @@ public sealed class MapObjectInteractionService(
             return;
         }
 
-        var hero = state.GetHero(decision.Hero);
-        var box = (PandorasBox)state.GetObject(decision.Box);
         if (box.IsGuarded)
         {
             battles.BeginBoxBattle(hero, box);
@@ -967,22 +971,22 @@ public sealed class MapObjectInteractionService(
     {
         if (state.PendingDecision is not WitchHutDecision decision)
         {
-            throw new InvalidOperationException("No witch hut is waiting for an answer.");
+            throw new CommandRefusedException("No witch hut is waiting for an answer.");
         }
 
         if (skill is not null && !decision.Options.Contains(skill))
         {
-            throw new InvalidOperationException($"'{skill}' is not offered.");
+            throw new CommandRefusedException($"'{skill}' is not offered.");
         }
 
         var hero = state.GetHero(decision.Hero);
-        state.PendingDecision = null;
         if (skill is not null)
         {
-            hero.Skills.Raise(skill);
+            hero.Skills.Raise(skill); // refuses (a full set of skill groups) before anything has changed
             hero.WitchHutLevel = hero.Level;
         }
 
+        state.PendingDecision = null;
         events.Publish(new DecisionResolved(decision));
         if (skill is not null)
         {
@@ -1019,7 +1023,7 @@ public sealed class MapObjectInteractionService(
         var hero = state.GetHero(heroId);
         if (GrailRules.CheckDig(state, hero) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
 
         hero.MovementPoints = 0;
@@ -1045,18 +1049,18 @@ public sealed class MapObjectInteractionService(
     {
         var hero = HeroAt<SkillSchool>(player, schoolId, out var school);
         var lesson = SkillSchoolRules.LessonsOf(school, hero.Id).FirstOrDefault(l => l.Skill == skill)
-                     ?? throw new InvalidOperationException($"The {school.Definition.Name.ToLowerInvariant()} does not offer {hero.Name} that skill.");
+                     ?? throw new CommandRefusedException($"The {school.Definition.Name.ToLowerInvariant()} does not offer {hero.Name} that skill.");
         switch (SkillSchoolRules.StateOf(hero, lesson))
         {
             case LessonState.Learned:
-                throw new InvalidOperationException($"{hero.Name} knows {BuiltInSkills.Get(skill).Name} at that level already.");
+                throw new CommandRefusedException($"{hero.Name} knows {BuiltInSkills.Get(skill).Name} at that level already.");
             case LessonState.NoRoom:
-                throw new InvalidOperationException($"{hero.Name} learns at most {HeroSkills.MaxGroups} skill groups.");
+                throw new CommandRefusedException($"{hero.Name} learns at most {HeroSkills.MaxGroups} skill groups.");
         }
 
         if (!economy.TrySpend(player, SkillSchoolRules.Price))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         hero.Skills.Raise(skill);
@@ -1068,16 +1072,16 @@ public sealed class MapObjectInteractionService(
     {
         var hero = HeroAt<ArtifactMerchant>(player, merchantId, out var merchant);
         var artifact = (slot >= 0 && slot < merchant.Stock.Count ? merchant.Stock[slot] : null)
-                       ?? throw new InvalidOperationException("Nothing is for sale in that slot.");
+                       ?? throw new CommandRefusedException("Nothing is for sale in that slot.");
         if (hero.Artifacts.BackpackFull)
         {
-            throw new InvalidOperationException($"{hero.Name}'s backpack is full.");
+            throw new CommandRefusedException($"{hero.Name}'s backpack is full.");
         }
 
         var price = ArtifactMerchantRules.Price(state.Artifacts.Get(artifact));
         if (!economy.TrySpend(player, price))
         {
-            throw new InvalidOperationException("Not enough gold.");
+            throw new CommandRefusedException("Not enough gold.");
         }
 
         merchant.Stock[slot] = null;
@@ -1091,18 +1095,18 @@ public sealed class MapObjectInteractionService(
         var hero = HeroAt<RefugeeCamp>(player, campId, out var camp);
         if (camp.Creature is not { } id || count < 1 || count > camp.Available)
         {
-            throw new InvalidOperationException($"Only {camp.Available} creatures wait here.");
+            throw new CommandRefusedException($"Only {camp.Available} creatures wait here.");
         }
 
         var creature = state.Creatures.Get(id);
         if (!hero.Army.CanAccept(id))
         {
-            throw new InvalidOperationException($"{hero.Name} has no free slot for {creature.Name}.");
+            throw new CommandRefusedException($"{hero.Name} has no free slot for {creature.Name}.");
         }
 
         if (!economy.TrySpend(player, creature.Cost * count))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         camp.Available -= count;
@@ -1120,18 +1124,18 @@ public sealed class MapObjectInteractionService(
         var hero = HeroAt<SacrificialAltar>(player, altarId, out var altar);
         if (!SacrificeRules.For(ProgressionService.TownOf(state, hero)).HasFlag(SacrificeKind.Creatures))
         {
-            throw new InvalidOperationException($"{hero.Name} cannot sacrifice creatures.");
+            throw new CommandRefusedException($"{hero.Name} cannot sacrifice creatures.");
         }
 
-        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+        var stack = (Army.IsValidSlot(slot) ? hero.Army[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
         if (count < 1 || count > stack.Count)
         {
-            throw new InvalidOperationException($"The stack has {stack.Count} creatures.");
+            throw new CommandRefusedException($"The stack has {stack.Count} creatures.");
         }
 
         if (count == hero.Army.Stacks.Sum(s => s.Stack.Count))
         {
-            throw new InvalidOperationException($"{hero.Name} must keep at least one creature.");
+            throw new CommandRefusedException($"{hero.Name} must keep at least one creature.");
         }
 
         hero.Army.Set(slot, count == stack.Count ? null : new CreatureStack(stack.Creature, stack.Count - count));
@@ -1147,23 +1151,23 @@ public sealed class MapObjectInteractionService(
         var hero = HeroAt<SacrificialAltar>(player, altarId, out var altar);
         if (!SacrificeRules.For(ProgressionService.TownOf(state, hero)).HasFlag(SacrificeKind.Artifacts))
         {
-            throw new InvalidOperationException($"{hero.Name} cannot sacrifice artifacts.");
+            throw new CommandRefusedException($"{hero.Name} cannot sacrifice artifacts.");
         }
 
         if (!hero.Artifacts.Has(artifact))
         {
-            throw new InvalidOperationException($"{hero.Name} has no '{artifact}'.");
+            throw new CommandRefusedException($"{hero.Name} has no '{artifact}'.");
         }
 
         if (state.Artifacts.Get(artifact).IsGrail)
         {
-            throw new InvalidOperationException("The Grail is not given up on an altar.");
+            throw new CommandRefusedException("The Grail is not given up on an altar.");
         }
 
         if (state.Artifacts.Get(artifact).IsAssembled)
         {
             // The altar takes pieces only (ADR-108, ADR-121).
-            throw new InvalidOperationException($"Take {state.Artifacts.Get(artifact).Name} apart first: the altar takes its pieces only.");
+            throw new CommandRefusedException($"Take {state.Artifacts.Get(artifact).Name} apart first: the altar takes its pieces only.");
         }
 
         if (!hero.Artifacts.RemoveFromBackpack(artifact))

@@ -269,8 +269,8 @@ public class ControlSpellTests
                     continue;
                 }
 
-                Assert.True(BattleMagic.CasterSpells.TryGetValue(cast, out var id), $"{creature.Id}: {cast}");
-                Assert.NotNull(SpellCatalog.Default.Get(id).Effect);
+                Assert.True(SpellCatalog.Default.TryGet(cast, out var spell), $"{creature.Id}: {cast}");
+                Assert.NotNull(spell.Effect);
             }
         }
     }

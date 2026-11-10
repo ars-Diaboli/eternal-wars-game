@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
@@ -60,12 +61,12 @@ public sealed class TurnService(
     {
         if (!state.IsStarted)
         {
-            throw new InvalidOperationException("The game has not started yet.");
+            throw new CommandRefusedException("The game has not started yet.");
         }
 
         if (state.PendingDecision is not null)
         {
-            throw new InvalidOperationException("Resolve the pending decision before ending the turn.");
+            throw new CommandRefusedException("Resolve the pending decision before ending the turn.");
         }
 
         events.Publish(new TurnEnded(state.CurrentPlayer.Id, state.Date));

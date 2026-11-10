@@ -359,8 +359,8 @@ public partial class Main : Node2D
 
     private static GameState LoadState() =>
         LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path), options: new GameOptions(Seed: (ulong)Random.Shared.NextInt64()), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts)
+            ? MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, new GameOptions(Seed: (ulong)Random.Shared.NextInt64()))
             : LaunchArguments.Scenario == "towns"
-                ? TownsScenario.Create(GameContent.Creatures, GameContent.Heroes, GameContent.Buildings)
-                : DemoScenario.Create(creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings);
+                ? TownsScenario.Create(GameContent.All)
+                : DemoScenario.Create(content: GameContent.All);
 }

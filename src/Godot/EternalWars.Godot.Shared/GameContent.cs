@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Creatures;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Towns;
 using Godot;
@@ -17,6 +18,7 @@ public static class GameContent
     private static CreatureCatalog? _creatures;
     private static HeroCatalog? _heroes;
     private static BuildingCatalog? _buildings;
+    private static ContentCatalogs? _all;
 
     public static CreatureCatalog Creatures => _creatures ??= Load(LaunchArguments.CreaturesPath, "Creature",
         path => new CreatureCatalog(CreatureTable.Parse(ReadText(path))), CreatureCatalog.Default, c => c.All.Count());
@@ -38,6 +40,9 @@ public static class GameContent
 
     /// <summary>Artifacts and their sets; either flag replaces its table, the other stays embedded.</summary>
     public static ArtifactCatalog Artifacts => _artifacts ??= LoadArtifacts();
+
+    /// <summary>All the tables together, for building a game or a map from them.</summary>
+    public static ContentCatalogs All => _all ??= new(Creatures, Heroes, Buildings, Artifacts);
 
     private static ArtifactCatalog LoadArtifacts()
     {

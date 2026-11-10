@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -29,7 +30,7 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
         }
     }
 
-    public void Grant(PlayerId playerId, ResourceSet amount)
+    internal void Grant(PlayerId playerId, ResourceSet amount)
     {
         var player = state.GetPlayer(playerId);
         var previous = player.Resources;
@@ -46,7 +47,7 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
         events.Publish(new ResourcesChanged(playerId, previous, amount));
     }
 
-    public bool TrySpend(PlayerId playerId, ResourceSet cost)
+    internal bool TrySpend(PlayerId playerId, ResourceSet cost)
     {
         var player = state.GetPlayer(playerId);
         if (!player.Resources.CanAfford(cost))
@@ -68,21 +69,21 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
     {
         if (!MarketplaceRules.IsTradable(resource))
         {
-            throw new InvalidOperationException("Gold cannot be traded.");
+            throw new CommandRefusedException("Gold cannot be traded.");
         }
 
         if (amount <= 0)
         {
-            throw new InvalidOperationException("Trade a positive amount.");
+            throw new CommandRefusedException("Trade a positive amount.");
         }
 
         MarketRate rate;
         if (mapMarketplace is { } id)
         {
-            var marketplace = state.FindObject(id) as Marketplace ?? throw new InvalidOperationException($"{id} is not a marketplace.");
+            var marketplace = state.FindObject(id) as Marketplace ?? throw new CommandRefusedException($"{id} is not a marketplace.");
             if (state.HeroAt(marketplace.VisitPosition) is not { } hero || hero.Owner != playerId)
             {
-                throw new InvalidOperationException("Trading at a map marketplace needs one of your heroes on its entrance.");
+                throw new CommandRefusedException("Trading at a map marketplace needs one of your heroes on its entrance.");
             }
 
             rate = MarketplaceRules.MapRate(resource);
@@ -90,19 +91,19 @@ public sealed class EconomyService(GameState state, IEventPublisher events, IRea
         else
         {
             rate = MarketplaceRules.TownRate(state, playerId, resource)
-                ?? throw new InvalidOperationException("Trading needs a town with a marketplace.");
+                ?? throw new CommandRefusedException("Trading needs a town with a marketplace.");
         }
 
         var player = state.GetPlayer(playerId);
         var gold = (long)amount * (direction == TradeDirection.Buy ? rate.BuyPrice : rate.SellPrice);
         if (gold > int.MaxValue)
         {
-            throw new InvalidOperationException("That trade is too large.");
+            throw new CommandRefusedException("That trade is too large.");
         }
 
         if (direction == TradeDirection.Buy ? player.Resources.Gold < gold : player.Resources[resource] < amount)
         {
-            throw new InvalidOperationException(direction == TradeDirection.Buy ? "Not enough gold." : $"Not enough {resource}.");
+            throw new CommandRefusedException(direction == TradeDirection.Buy ? "Not enough gold." : $"Not enough {resource}.");
         }
 
         var sign = direction == TradeDirection.Buy ? 1 : -1;

@@ -65,8 +65,8 @@ public partial class Main : Node3D
         AddChild(new DirectionalLight3D { RotationDegrees = new Vector3(-55, -35, 0) });
         // --map=file opens that map (the smoke scenarios), else a blank one.
         Open(LaunchArguments.MapPath is { } path
-            ? MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts, checkEvents: false)
-            : BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings));
+            ? MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, checkEvents: false)
+            : BlankScenario.Create(36, 36, content: GameContent.All));
     }
 
     public override void _UnhandledInput(InputEvent @event)
@@ -238,7 +238,8 @@ public partial class Main : Node3D
         _eventCells.Bind(_context);
 
         BuildUi();
-        this.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, e =>
+        // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.
+        _ui!.SubscribeWhileInTree<UndoHistoryChanged>(_editor.Events, e =>
             _history.Text = $"Undo: {e.UndoDescription ?? "—"}   Redo: {e.RedoDescription ?? "—"}");
 
         _camera.FocusOn(MapSpace.ToWorld(new(state.Map.Width / 2, state.Map.Height / 2)));
@@ -261,8 +262,8 @@ public partial class Main : Node3D
         rows.AddChild(fileRow);
         _fileName = new LineEdit { CustomMinimumSize = new Vector2(240, 0) };
         fileRow.AddChild(_fileName);
-        AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
-        AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
+        AddButton(fileRow, "New", () => Open(BlankScenario.Create(36, 36, content: GameContent.All)));
+        AddButton(fileRow, "New (2 levels)", () => Open(BlankScenario.Create(36, 36, levels: 2, content: GameContent.All)));
         AddButton(fileRow, "From template", () => _tabs.CurrentTab = _tabs.GetTabCount() - 1);
         AddButton(fileRow, "Templates", () => _templateEditor.Open());
         AddButton(fileRow, "Save", Save);
@@ -456,7 +457,7 @@ public partial class Main : Node3D
 
         try
         {
-            Open(MapConverter.ToGameState(MapSerializer.Load(path), creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts, checkEvents: false));
+            Open(MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, checkEvents: false));
             _status.Text = $"Loaded {path}";
         }
         catch (FormatException e)

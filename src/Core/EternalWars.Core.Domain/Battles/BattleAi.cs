@@ -405,7 +405,7 @@ internal static class BattleAi
             return 0;
         }
 
-        var enemyCasts = battle.Participant(side.Opponent()).Caster is not null || battle.LivingUnitsOf(side.Opponent()).Any(u => BattleMagic.CreatureSpell(u) is not null);
+        var enemyCasts = battle.Participant(side.Opponent()).Caster is not null || battle.LivingUnitsOf(side.Opponent()).Any(u => BattleMagic.CreatureSpell(battle, u) is not null);
         var wardsOnly = m == new Magic.SpellModifiers(Status: m.Status & Magic.SpellStatus.WardMind, ImmuneLevel: m.ImmuneLevel, ShroudLevel: m.ShroudLevel);
         if (wardsOnly && !enemyCasts)
         {
@@ -472,7 +472,7 @@ internal static class BattleAi
     /// </summary>
     private static bool CreatureCast(BattleState battle, BattleEngine engine, BattleUnit unit, List<BattleUnit> enemies)
     {
-        if (BattleMagic.CreatureSpell(unit) is not { Effect: { } effect } known)
+        if (BattleMagic.CreatureSpell(battle, unit) is not { Effect: { } effect } known)
         {
             return false;
         }

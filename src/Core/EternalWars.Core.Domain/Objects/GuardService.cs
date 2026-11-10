@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
@@ -199,7 +200,7 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
     {
         if (state.PendingDecision is not GuardEncounterDecision decision)
         {
-            throw new InvalidOperationException("No guard is waiting for an answer.");
+            throw new CommandRefusedException("No guard is waiting for an answer.");
         }
 
         var hero = state.GetHero(decision.Hero);

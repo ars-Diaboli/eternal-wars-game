@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Domain.Heroes;
@@ -361,7 +362,7 @@ public sealed class HeroSkills
 
         if (!Groups.Contains(definition.Group) && Groups.Count() >= MaxGroups)
         {
-            throw new InvalidOperationException($"A hero learns at most {MaxGroups} skill groups.");
+            throw new CommandRefusedException($"A hero learns at most {MaxGroups} skill groups.");
         }
 
         _levels[skill] = level;
@@ -372,7 +373,7 @@ public sealed class HeroSkills
         skill = BuiltInSkills.Resolve(skill);
         if (!CanRaise(skill))
         {
-            throw new InvalidOperationException($"{BuiltInSkills.Get(skill).Name} cannot be raised.");
+            throw new CommandRefusedException($"{BuiltInSkills.Get(skill).Name} cannot be raised.");
         }
 
         _levels[skill] = Level(skill) + 1;

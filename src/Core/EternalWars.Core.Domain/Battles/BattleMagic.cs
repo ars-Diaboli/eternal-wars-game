@@ -72,7 +72,7 @@ public static class BattleMagic
     /// </summary>
     public static string? CreatureCastRefusal(BattleState battle, BattleUnit unit, int? target, CellPosition? cell)
     {
-        if (CreatureSpell(unit) is not { } known)
+        if (CreatureSpell(battle, unit) is not { } known)
         {
             return $"{unit.Creature.Name} has no spell to cast now.";
         }
@@ -90,34 +90,19 @@ public static class BattleMagic
         return TargetRefusal(battle, unit.Side, known, target, cell, CreatureSpellPower(unit));
     }
 
-    /// <summary>
-    /// The creature table's caster spells (ADR-042) as spell table ids ([spells.md](../content/spells.md#creature-casters), ADR-099); <c>rebirth</c>
-    /// is the Phoenix's own ability, not a spell; <c>summon-imps</c> calls imps like Hellgate.
-    /// </summary>
-    public static IReadOnlyDictionary<string, string> CasterSpells { get; } = new Dictionary<string, string>(StringComparer.Ordinal)
-    {
-        ["fireball"] = "chaos.fireball",
-        ["frost-bolt"] = "arcana.frost-bolt",
-        ["blind"] = "shadow.blind",
-        ["bloodlust"] = "chaos.bloodlust",
-        ["cure"] = "light.heal",
-        ["lightning"] = "nature.call-lightning",
-        ["confusion"] = "shadow.confusion",
-        ["death-cloud"] = "death.death-cloud",
-        ["resurrection"] = "light.resurrection",
-        ["summon-imps"] = "chaos.hellgate",
-    };
-
     /// <summary>The Phoenix's rebirth (ADR-120): not a spell, it rises once with 30 % of its stack.</summary>
     public const string Rebirth = "rebirth";
 
     /// <summary>What the Phoenix's stack rises with, in percent of its count at the start of the battle.</summary>
     public const int RebirthPercent = 30;
 
-    /// <summary>The spell the creature casts now (the first of its caster spells with casts left that is a spell), at rank I; null when none.</summary>
-    public static KnownSpell? CreatureSpell(BattleUnit unit) =>
-        unit.CastsLeft.Where(c => c.Value > 0 && CasterSpells.ContainsKey(c.Key)).OrderBy(c => c.Key, StringComparer.Ordinal)
-            .Select(c => SpellCatalog.Default.TryGet(CasterSpells[c.Key], out var spell) ? new KnownSpell(spell, 1, 0) : null)
+    /// <summary>
+    /// The spell the creature casts now, at rank I; null when none: the first (by id) of its caster capabilities (ADR-042, which name spell table
+    /// ids, [spells.md](../content/spells.md#creature-casters)) with casts left that is a spell in the battle's table. <see cref="Rebirth"/> is not.
+    /// </summary>
+    public static KnownSpell? CreatureSpell(BattleState battle, BattleUnit unit) =>
+        unit.CastsLeft.Where(c => c.Value > 0).OrderBy(c => c.Key, StringComparer.Ordinal)
+            .Select(c => battle.Spells.TryGet(c.Key, out var spell) ? new KnownSpell(spell, 1, 0) : null)
             .FirstOrDefault(k => k is not null);
 
     /// <summary>A creature caster's Spell Power (ADR-120, proposal): half its count, rounded down.</summary>

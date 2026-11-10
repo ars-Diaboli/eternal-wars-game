@@ -115,7 +115,7 @@ stronger, no copy-pasted stat lines).
 | `morale`, `luck` | −5…+5, empty = 0; the hero's are added in battle |
 | `growth`, `gold`, `resources` | weekly growth; gold cost; other costs like `mercury 1` |
 | `tags` | words separated by `;` (`human; holy`) |
-| `capabilities` | up to five, `;`-separated: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster fireball 1`, … (`CapabilityKind`) |
+| `capabilities` | up to five, `;`-separated: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster chaos.fireball 1` (a spell table id, or `rebirth`), … (`CapabilityKind`) |
 
 ### Editing artifacts
 `artifacts.csv` (ADR-061) and `artifact_sets.csv` (`id, name, effects, notes`; a set needs two or more pieces).

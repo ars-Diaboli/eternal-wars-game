@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
@@ -20,7 +21,7 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
     internal void Order(PlayerId player, MapObjectId townId, MapObjectId dwellingId, int count)
     {
         var town = OwnTown(player, townId);
-        var dwelling = state.FindObject(dwellingId) as CreatureDwelling ?? throw new InvalidOperationException($"{dwellingId} is not a dwelling.");
+        var dwelling = state.FindObject(dwellingId) as CreatureDwelling ?? throw new CommandRefusedException($"{dwellingId} is not a dwelling.");
         Refuse(CaravanRules.CheckOrder(state, town, dwelling, count));
 
         var creature = state.Creatures.Get(dwelling.Creature);
@@ -28,7 +29,7 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
         var price = TownRules.RecruitCost(state, town, creature, count);
         if (!economy.TrySpend(player, price))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         dwelling.Available = (dwelling.Available ?? 0) - count;
@@ -58,13 +59,13 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
     internal void Fetch(PlayerId player, MapObjectId townId, MapObjectId providerId)
     {
         var town = OwnTown(player, townId);
-        var provider = state.FindObject(providerId) as ResourceProvider ?? throw new InvalidOperationException($"{providerId} is not a resource provider.");
+        var provider = state.FindObject(providerId) as ResourceProvider ?? throw new CommandRefusedException($"{providerId} is not a resource provider.");
         Refuse(CaravanRules.CheckFetch(state, town, provider));
 
         var route = CaravanRules.RouteBetween(state, provider, town, out _)!;
         if (!economy.TrySpend(player, CaravanRules.ResourceCaravanCost))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
 
         var cargo = provider.Stored;
@@ -172,12 +173,12 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
     {
         if (state.FindObject(id) is not Town town || town.Owner != player)
         {
-            throw new InvalidOperationException($"{id} is not an own town.");
+            throw new CommandRefusedException($"{id} is not an own town.");
         }
 
         if (state.PendingDecision is not null)
         {
-            throw new InvalidOperationException("Resolve the pending decision first.");
+            throw new CommandRefusedException("Resolve the pending decision first.");
         }
 
         return town;
@@ -187,7 +188,7 @@ public sealed class CaravanService(GameState state, IEventPublisher events, Econ
     {
         if (refusal is not null)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
     }
 }

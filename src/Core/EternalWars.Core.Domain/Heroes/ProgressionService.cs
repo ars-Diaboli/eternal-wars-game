@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -112,14 +113,14 @@ public sealed class ProgressionService(GameState state, IEventPublisher events)
     {
         if (state.PendingDecision is not LevelUpDecision decision)
         {
-            throw new InvalidOperationException("No level-up is pending.");
+            throw new CommandRefusedException("No level-up is pending.");
         }
 
         // A replay recorded before the rework names the old id (ADR-072).
         skill = BuiltInSkills.Resolve(skill);
         if (!decision.Options.Contains(skill))
         {
-            throw new InvalidOperationException($"'{skill}' is not one of the offered skills.");
+            throw new CommandRefusedException($"'{skill}' is not one of the offered skills.");
         }
 
         state.PendingDecision = null;

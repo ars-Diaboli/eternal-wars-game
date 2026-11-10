@@ -561,14 +561,15 @@ public static class Program
 
     private static SimGame HandMadeGame(string map, ulong seed, Complexity? complexity = null)
     {
+        var content = new ContentCatalogs(Catalog);
         var document = map switch
         {
-            "towns" => MapConverter.ToDocument(TownsScenario.Create(Catalog)),
-            "demo" => MapConverter.ToDocument(DemoScenario.Create()),
-            "ember" => MapConverter.ToDocument(EmberMarchScenario.Create(Catalog)),
+            "towns" => MapConverter.ToDocument(TownsScenario.Create(content)),
+            "demo" => MapConverter.ToDocument(DemoScenario.Create(content: content)),
+            "ember" => MapConverter.ToDocument(EmberMarchScenario.Create(content)),
             _ => MapSerializer.Load(map),
         };
-        return new SimGame(document, MapConverter.ToGameState(document, options: new GameOptions(Seed: seed, Complexity: complexity), creatures: Catalog));
+        return new SimGame(document, MapConverter.ToGameState(document, content, new GameOptions(Seed: seed, Complexity: complexity)));
     }
 
     /// <summary>

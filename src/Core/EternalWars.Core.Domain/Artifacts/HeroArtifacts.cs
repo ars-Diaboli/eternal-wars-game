@@ -1,4 +1,5 @@
 using System.Globalization;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
@@ -118,7 +119,7 @@ public sealed class HeroArtifacts
         {
             if (!next.Wear(catalog.Get(id), catalog.BlockedSlots(catalog.Get(id))))
             {
-                throw new InvalidOperationException($"No free {catalog.Get(id).Slot} slot for '{id}'.");
+                throw new CommandRefusedException($"No free {catalog.Get(id).Slot} slot for '{id}'.");
             }
         }
 
@@ -127,7 +128,7 @@ public sealed class HeroArtifacts
             catalog.Get(id);
             if (!next.AddToBackpack(id))
             {
-                throw new InvalidOperationException($"The backpack holds at most {ArtifactSlots.BackpackSize} artifacts.");
+                throw new CommandRefusedException($"The backpack holds at most {ArtifactSlots.BackpackSize} artifacts.");
             }
         }
 

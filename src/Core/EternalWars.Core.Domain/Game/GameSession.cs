@@ -24,6 +24,12 @@ public sealed class GameSession
 {
     private readonly List<GameCommand> _log = [];
 
+    /// <summary>
+    /// Checks that a refused command left the game as it was (its digest text unchanged) and fails loudly otherwise. The tests turn it on for
+    /// every game they play; it costs a digest a command.
+    /// </summary>
+    internal static bool CheckRefusals { get; set; }
+
     public GameSession(GameState state, IEventBus? bus = null)
     {
         State = state ?? throw new ArgumentNullException(nameof(state));
@@ -154,13 +160,20 @@ public sealed class GameSession
         }
 
         object? outcome;
+        var before = CheckRefusals ? GameStateDigest.Describe(State) : null;
         try
         {
-            // Services validate before they mutate, so a refusal leaves the state untouched.
+            // Services validate before they mutate, so a refusal leaves the state untouched. Only a rule's refusal is caught: any other
+            // exception is a bug and goes on up.
             outcome = Dispatch(command);
         }
-        catch (InvalidOperationException e)
+        catch (CommandRefusedException e)
         {
+            if (before is not null && GameStateDigest.Describe(State) != before)
+            {
+                throw new InvalidOperationException($"{command} was refused ({e.Message}) after it had changed the game.", e);
+            }
+
             return CommandResult.Rejected(e.Message);
         }
 

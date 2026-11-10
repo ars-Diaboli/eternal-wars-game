@@ -123,6 +123,32 @@ public class MapEventTests
     }
 
     [Fact]
+    public void ARunningEvent_IsPartOfTheGameState_AndItsDigest_WhereItIsInItsActionsToo()
+    {
+        var events = HeroEvent(new MessageAction("One."), new MessageAction("Two."));
+        var session = World(events);
+        var idle = GameStateDigest.Describe(session.State);
+
+        session.Step(A, Direction.East);
+        session.Step(A, Direction.East);
+        var first = GameStateDigest.Describe(session.State);
+        Assert.NotNull(session.State.MapEvents.Current);
+        Assert.Contains("running cell", first, StringComparison.Ordinal);
+
+        Answer(session);
+        var second = GameStateDigest.Describe(session.State);
+        Assert.Equal("Two.", Assert.IsType<MapEventDecision>(session.State.PendingDecision).Text);
+        Assert.NotEqual(Running(first), Running(second)); // the run moved on in its actions
+
+        Answer(session);
+        Assert.Null(session.State.MapEvents.Current);
+        Assert.DoesNotContain("running", GameStateDigest.Describe(session.State), StringComparison.Ordinal);
+        Assert.DoesNotContain("running", idle, StringComparison.Ordinal);
+
+        static string Running(string digest) => digest[digest.IndexOf("running", StringComparison.Ordinal)..].Split('\n')[0];
+    }
+
+    [Fact]
     public void PlayerEvents_RunAtEveryTurnStart_ForThePlayersTheirConditionsAllow()
     {
         var events = new MapEventSet
