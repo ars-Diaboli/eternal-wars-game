@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
@@ -1510,7 +1511,7 @@ public partial class Main : Node3D
         _kingdomScreen = new KingdomOverviewPanel();
         townLayer.AddChild(_kingdomScreen);
         _kingdomScreen.Bind(_session);
-        var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" };
+        var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" }.WithTreasuryIcon();
         kingdom.Pressed += () => _kingdomScreen.Open(_session.State.CurrentPlayer.Id);
         side.AddChild(kingdom);
         _questScreen = new QuestLogPanel();
@@ -1538,7 +1539,7 @@ public partial class Main : Node3D
         grail.AddChild(dig);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
-        var market = new Button { Text = "Marketplace" };
+        var market = new Button { Text = "Marketplace" }.WithResourceIcon(ResourceType.Gold);
         void RefreshMarketButton()
         {
             market.Disabled = !MarketplacePanel.CanOpenFromTowns(_session.State);

@@ -12,3 +12,5 @@ Stone-style button icons, 128 × 128 with transparency, generated for this proje
 | plus.png / minus.png | add player; remove player, remove a condition |
 | ban.png | the editor's Bans tab |
 | settings.png | the game's Menu (F10) button |
+
+The resource icons are in `../resources/` (see its CREDITS.md).

@@ -39,21 +39,26 @@ public static class UiIcons
             return cached;
         }
 
-        var path = $"{Folder}{FileName(icon)}.png";
-        Texture2D? texture = null;
-        if (ResourceLoader.Exists(path) && GD.Load<Texture2D>(path)?.GetImage() is { } image)
-        {
-            if (image.IsCompressed())
-            {
-                image.Decompress();
-            }
-
-            image.Resize(size, size, Image.Interpolation.Lanczos);
-            texture = ImageTexture.CreateFromImage(image);
-        }
-
+        var texture = LoadScaled($"{Folder}{FileName(icon)}.png", size);
         Cache[(icon, size)] = texture;
         return texture;
+    }
+
+    /// <summary>The image at <paramref name="path"/> scaled to <paramref name="size"/> pixels square, or null if the file is missing.</summary>
+    internal static Texture2D? LoadScaled(string path, int size)
+    {
+        if (!ResourceLoader.Exists(path) || GD.Load<Texture2D>(path)?.GetImage() is not { } image)
+        {
+            return null;
+        }
+
+        if (image.IsCompressed())
+        {
+            image.Decompress();
+        }
+
+        image.Resize(size, size, Image.Interpolation.Lanczos);
+        return ImageTexture.CreateFromImage(image);
     }
 
     /// <summary>
