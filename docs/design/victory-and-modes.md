@@ -22,7 +22,7 @@ ADR-057, ADR-073, ADR-075, ADR-094.
 - Campaign hooks are open ❓ (FLOW-1, Phase 6).
 
 ## Victory screen, ranking and replays
-ADR-092, ADR-101, built ADR-102 … ADR-104.
+ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
 - A won game on a map that is not campaign-like ends on a HoMM3-like **victory screen**: days, difficulty, **score**, rank title. A lost game,
   or one won only by computers, has no score.
 - **Not ranked**: campaign-like maps (a human starts without a town, or map events give something only to humans; the editor's
@@ -39,8 +39,16 @@ ADR-092, ADR-101, built ADR-102 … ADR-104.
 - **Main menu**: Continue (the newest save; disabled without one), New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard,
   Quit (unbuilt ones disabled), on a picture ([presentation.md](presentation.md#camera-and-ui)); reached from the end
   screen and the F10 menu.
-- **Replay viewer** *(planned)*: replays and saves (to their last command); whole map or any player's eyes; play, pause, four speeds, jump
-  by turn or day; battles move by move or skipped; **"Play from here"** in a battle (a separate unranked game), on the map later.
+- **Replay viewer** (ADR-164): "Watch a replay" lists two tabs, **Replays** (`user://replays`) and **Saves** (autosaves too), newest
+  first. A record that does not replay to its digest is refused with the reason (other content). The viewer plays the record command by
+  command on the map and in battles, computer turns and battles in full; it issues no command of its own. A bar along the bottom:
+  play / pause (Space), four speeds (heroes and battles alike), next turn, next day, a day to go to (back or forward: the game is replayed
+  to that day's first turn), the whole map or a player's eyes, and the main menu. In a battle, **"Skip to the result"** plays its moves at
+  once and shows the result, which closes by itself after a moment (Enter at once). A save plays to its last command and stops. Nothing is
+  ranked, saved or autosaved.
+- **"Play from here"**: only in a battle a person commands (the computer's own battles cannot be taken over). The battle goes on by hand
+  as a separate game, not ranked, the computer's side played as usual; when its result screen is left, the viewer comes back paused where
+  it was, the replay unchanged. Taking over on the adventure map comes later; a save is played on with Load.
 
 ## Game modes
 In priority order:

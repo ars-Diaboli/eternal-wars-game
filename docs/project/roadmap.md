@@ -93,8 +93,10 @@ Content draft: [artifacts.md](../content/artifacts.md).
 ### Game flow
 - [x] Built: victory and loss conditions (ADR-057, ADR-073, ADR-094, ADR-083), save / load and autosave (ADR-058), score, ranking,
       victory screen and main menu (ADR-101 … ADR-104), week and month events (ADR-084), turn timer (ADR-091), auto combat (ADR-090)
-- [ ] Replay viewer: Replays and Saves tabs; reveal-all or a player's eyes; play, pause, speeds, next turn / day, back to a day; battles
-      with "skip to the result"; "Play from here" in battles only (ADR-101, UI-2)
+- [x] Replay viewer: Replays and Saves tabs; reveal-all or a player's eyes; play, pause, speeds, next turn / day, back to a day; battles
+      with "skip to the result"; "Play from here" in battles only (ADR-101, UI-2, ADR-164)
+- [ ] Replay viewer: "Play from here" on the adventure map (a save played on with Load meanwhile); a battle where only the computer
+      fights taken over by the viewer
 - [ ] Save/load: a state snapshot if replays get too slow
 
 ### Arena mode (ADR-097, ADR-100; before 1.0, after the Phase 3 exit)

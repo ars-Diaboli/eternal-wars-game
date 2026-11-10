@@ -50,7 +50,7 @@ public partial class BattleHud : Control
         MouseFilter = MouseFilterEnum.Ignore,
     };
 
-    private readonly PanelContainer _logPanel = new() { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = UiSpacing.ScreenEdge, OffsetRight = 560 };
+    private readonly PanelContainer _logPanel = new() { AnchorTop = 1, AnchorBottom = 1, OffsetLeft = UiSpacing.ScreenEdge, OffsetRight = 560, GrowVertical = GrowDirection.Begin }; // a full log grows up, never under the bar below it
     private readonly VBoxContainer _actions = new()
     {
         AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1, OffsetLeft = -680, OffsetRight = -UiSpacing.ScreenEdge,
@@ -82,9 +82,23 @@ public partial class BattleHud : Control
                 _timeline.Reparent(bar, keepGlobalTransform: false); // the timeline holds no subscriptions
             }
 
-            var lift = bottom ? BottomBarHeight : 0;
+            var lift = (bottom ? BottomBarHeight : 0) + _bottomReserve;
+            (_bottomBar.OffsetTop, _bottomBar.OffsetBottom) = (-_bottomReserve, -UiSpacing.ScreenEdge - _bottomReserve);
             (_logPanel.OffsetTop, _logPanel.OffsetBottom) = (-190 - lift, -8 - lift);
             (_actions.OffsetTop, _actions.OffsetBottom) = (-230 - lift, -48 - lift); // above the menu button
+        }
+    }
+
+    private float _bottomReserve;
+
+    /// <summary>Room kept free along the bottom edge (the replay viewer's bar, ADR-164): the initiative bar, the log and the actions stand above it.</summary>
+    public float BottomReserve
+    {
+        get => _bottomReserve;
+        set
+        {
+            _bottomReserve = value;
+            Layout = _layout;
         }
     }
 
@@ -386,7 +400,7 @@ public partial class BattleHud : Control
 
     private void QuickCombat()
     {
-        if (_view.Result is null && (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is { } player)
+        if (!_view.Watching && _view.Result is null && (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is { } player)
         {
             Report(_session.Execute(new AutoResolveBattleCommand(player)));
         }
@@ -413,7 +427,8 @@ public partial class BattleHud : Control
         RefreshSpells(battle, commander);
         var deployer = _view.Deployer;
         _start.Visible = deployer is not null;
-        _wait.Visible = _defend.Visible = _retreat.Visible = _surrender.Visible = deployer is null;
+        _wait.Visible = _defend.Visible = _retreat.Visible = _surrender.Visible = deployer is null && !_view.Watching;
+        _quick.Visible = !_view.Watching; // the replay viewer only watches (ADR-164)
 
         if (battle is null || _view.IsBusy)
         {

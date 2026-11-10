@@ -1707,3 +1707,40 @@ ADR-158).
 - **Smoke**: `game-main-menu` presses its buttons by name (which button has the focus depends on whether the computer has a save).
 - **Not done**: fonts and a theme of our own (the art pass); the town screen's inner rows keep their own layout; the editor's toolbar
   rows keep fixed offsets.
+
+### ADR-164: The replay viewer (ADR-101, UI-2, 2026-11-10)
+**Status**: implemented (2026-11-10); core tested, the Godot parts run in two smoke scenarios. Carries out ADR-101's viewer. *(choice)* marks the
+agent's choices.
+
+- **Core** (`ReplayPlayer`, Core.Data): `Open` replays the whole record once, so a record that does not replay (a refused command, another
+  final digest: other content) fails before anything is shown, and indexes every turn (`ReplayTurn`: where it starts, its date and player)
+  and where battles are fought. The watched `Session` runs one command per `Step`, so the views see the events; `Seek` puts a new session at
+  any point, replayed unheard from the start (ADR-058), which is how the viewer jumps to the next turn, the next day or any day, back or
+  forward *(choice: forward jumps rebuild too, rather than run the commands under the views)*. `TakeOver` gives a separate session at the
+  current point; `CanTakeOver` only in a battle being fought that a person commands. `GameSaves.ListReplays` lists `*.ewreplay.json` like
+  the saves.
+- **The list**: "Watch a replay" in the main menu opens two tabs, Replays (`user://replays`) and Saves (the save folder with the autosaves),
+  newest first; Watch or a double click; a record that cannot be watched stays listed with the reason.
+- **Watching**: the same world, HUD and battle views as a game, with nothing that issues a command: no End turn, questions, exchange screen,
+  dig or marketplace buttons, auto combat question, turn timer, end screen, ranking, saving or autosave; town and hero screens do not open
+  (the town list centres the map on a town). The battle view's `Watching` makes nobody its commander and plays **every** battle move by move,
+  the computer's and quick combat too. Each frame, once the heroes' steps and the battle's animations have played, the next command runs; a
+  turn starts after a short pause and a battle's result stays 1.5 s *(choice; scaled by the speed, none at Instant)*, then closes by itself
+  (Enter closes it at once). The camera follows every hero it can see and switches level with it.
+- **The bar** (`ReplayControlBar`, along the bottom; the map's HUD and the battle's keep its height free): play / pause (Space), the four
+  speeds for heroes and battles alike (Normal to start, not kept) *(choice)*, next turn, next day, a day and Go, the whole map or a player's
+  eyes (the fog as that player knew it), "Skip to the result" and "Play from here" in a battle, Main menu; the line under it shows the date,
+  whose turn, the command count and the end ("The end of the replay", "The end of the save", or the game's result).
+- **Skip to the result**: the battle's remaining commands run at once with the battle shown instantly, so its result screen comes up; a battle
+  the core plays in one command (the computer's, quick combat) only skips its animation.
+- **Play from here**: the battle goes on by hand in a separate session; the computer's side plays as usual; it is not ranked, saved or
+  autosaved. Leaving the battle's result screen (or "Back to the replay") shows the viewer again, paused where it was; the replay does not
+  change. Offered only when a person commands a side *(assumed: the computer's own battles stay the computer's)*.
+- Right click opens the information windows (through the eyes shown, or the current player's on the whole map); L switches the level.
+- `--replay=<file>` opens the game on the viewer (smoke). Smoke: `game-replay-list` (the tabs), `game-replay-viewer` (a recorded computer game:
+  pause, speeds, next day, next turn, the computer's battle played and skipped, the result closing by itself, the end).
+- Fixed on the way: the battle log grows upwards when full, no longer under what is below it.
+- Tests: `ReplayPlayerTests` (stepping to the recorded state, the turn index, seeking back and forward like stepping, next turn and day,
+  a battle's end and the take-over leaving the replay unchanged, a save ending in its battle, records that do not replay, the replays list).
+- **Not done**: "Play from here" on the adventure map; taking over a battle only the computer fights; a snapshot for long replays (a jump
+  replays from the start); "Play from here" has no smoke scenario (the recorded games have no battle a person fights).

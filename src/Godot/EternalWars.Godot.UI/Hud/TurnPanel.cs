@@ -14,15 +14,16 @@ public partial class TurnPanel : HBoxContainer
     private readonly Label _date = new();
     private readonly Label _player = new();
 
-    public void Bind(GameSession session)
+    /// <summary>Shows the session's date and player; <paramref name="endTurn"/> false leaves out the End turn button (the replay viewer, ADR-164).</summary>
+    public void Bind(GameSession session, bool endTurn = true)
     {
         AddThemeConstantOverride("separation", UiSpacing.Section);
         AddChild(_date);
         AddChild(_player);
 
-        var endTurn = new Button { Text = "End turn" };
-        endTurn.Pressed += () => session.Execute(new EndTurnCommand(session.State.CurrentPlayer.Id));
-        AddChild(endTurn);
+        var button = new Button { Text = "End turn", Visible = endTurn };
+        button.Pressed += () => session.Execute(new EndTurnCommand(session.State.CurrentPlayer.Id));
+        AddChild(button);
 
         Refresh(session);
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh(session));

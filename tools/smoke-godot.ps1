@@ -48,6 +48,10 @@ if ($LASTEXITCODE -ne 0) { throw 'Generating the connections map failed.' }
 $emberMap = Join-Path (Resolve-Path $Out) 'ember.ewmap.json'
 dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- export ember --out $emberMap | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Exporting Ember March failed.' }
+# A short computer game with a battle (the sim's demo record), for the replay viewer (ADR-164).
+$replayFile = Join-Path (Resolve-Path $Out) 'smoke.ewreplay.json'
+dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- record $replayFile --days 4 | Out-Null
+if ($LASTEXITCODE -ne 0) { throw 'Recording the replay failed.' }
 $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
        Input = '5:click:133,263;12:click:133,263;20:click:@Fight;28:click:@Quick combat;35:key:Q' },
@@ -122,6 +126,14 @@ $scenarios = @(
     # focus when this computer has a save, New game when not. The only game scenario without --new-game.
     @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 50; MainMenu = $true
        Input = '3:press:Leaderboard;12:key:Escape;18:press:New game;28:key:Enter' },
+    # The replay viewer (ADR-164): "Watch a replay" opens the Replays and Saves tabs, Saves, Escape back to the main menu.
+    @{ Name = 'game-replay-list'; App = 'EternalWars.Game'; Frames = 24; MainMenu = $true
+       Input = '3:press:Watch a replay;10:click:@Saves;16:key:Escape' },
+    # The viewer on a recorded computer game (the sim's demo record, 4 days): pause at once, Fast, next day three times (day 4), next turn (Red's,
+    # with the battle against the wolves), Normal, play: Red walks, the computer's battle plays move by move; skip to its result, which closes
+    # by itself, then the replay plays to its end.
+    @{ Name = 'game-replay-viewer'; App = 'EternalWars.Game'; Frames = 110; Replay = $replayFile
+       Input = '3:key:Space;6:click:@Normal;9:choose:Fast;12:press:Next day;16:press:Next day;20:press:Next day;24:press:Next turn;28:click:@Fast;31:choose:Normal;34:key:Space;70:press:Skip to the result' },
     # A siege (ADR-106, ADR-109): step into the neutral Castle-level town; walls, gate, moat, towers and keep. The footman defends, the
     # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
     @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap
@@ -242,6 +254,7 @@ foreach ($scenario in $scenarios | Where-Object { $_.Name -like $Only }) {
     Remove-Item $settings -ErrorAction SilentlyContinue
     $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings")
     if ($scenario.Map) { $userArgs += "--map=$($scenario.Map)" }
+    if ($scenario.Replay) { $userArgs += "--replay=$($scenario.Replay)" }
     # The game opens on the main menu; the scenarios start on the new-game screen unless they test the menu.
     if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu) { $userArgs += '--new-game' }
 

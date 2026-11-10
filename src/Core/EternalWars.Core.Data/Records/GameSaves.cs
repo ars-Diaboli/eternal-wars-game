@@ -125,7 +125,15 @@ public static class GameSaves
     }
 
     /// <summary>The saves in a folder, newest first; unreadable files are listed with their error. A missing folder is empty.</summary>
-    public static IReadOnlyList<SaveEntry> List(string folder)
+    public static IReadOnlyList<SaveEntry> List(string folder) => ListFiles(folder, GameRecordSerializer.SaveExtension);
+
+    /// <summary>
+    /// The replays in a folder (<c>*.ewreplay.json</c>, ADR-101), newest first, for the replay viewer's Replays tab: the label's name is the file
+    /// name, its date the day the game reached; unreadable files are listed with their error. A missing folder is empty.
+    /// </summary>
+    public static IReadOnlyList<SaveEntry> ListReplays(string folder) => ListFiles(folder, GameRecordSerializer.FileExtension);
+
+    private static IReadOnlyList<SaveEntry> ListFiles(string folder, string extension)
     {
         if (!Directory.Exists(folder))
         {
@@ -133,13 +141,14 @@ public static class GameSaves
         }
 
         var entries = new List<(SaveEntry Entry, DateTime Written)>();
-        foreach (var file in Directory.GetFiles(folder, "*" + GameRecordSerializer.SaveExtension))
+        foreach (var file in Directory.GetFiles(folder, "*" + extension))
         {
             var written = File.GetLastWriteTimeUtc(file);
             try
             {
                 var record = GameRecordSerializer.Load(file);
-                var info = record.Save ?? new SaveInfo(Path.GetFileName(file), written.ToString("O", System.Globalization.CultureInfo.InvariantCulture), "", "", false, record.Map.Name);
+                var name = Path.GetFileName(file)[..^extension.Length];
+                var info = record.Save ?? new SaveInfo(name, written.ToString("O", System.Globalization.CultureInfo.InvariantCulture), "", "", false, record.Map.Name);
                 entries.Add((new SaveEntry(file, info, null), written));
             }
             catch (Exception e) when (e is System.Text.Json.JsonException or FormatException or IOException or NotSupportedException)

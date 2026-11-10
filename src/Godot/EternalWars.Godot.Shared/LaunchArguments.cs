@@ -31,6 +31,9 @@ public static class LaunchArguments
     /// <summary><c>--new-game</c>: the game opens on the new-game screen instead of the main menu (the smoke scripts, a map tried from the editor).</summary>
     public static bool NewGame => OS.GetCmdlineUserArgs().Contains("--new-game");
 
+    /// <summary><c>--replay=&lt;file&gt;</c>: the game opens the replay viewer on this replay or save (the smoke scripts, ADR-164).</summary>
+    public static string? ReplayPath => Value("--replay=");
+
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>
     public static string? AutoInput => Value("--autoinput=");
 

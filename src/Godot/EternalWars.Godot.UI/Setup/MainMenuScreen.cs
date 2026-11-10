@@ -6,7 +6,7 @@ namespace EternalWars.Godot.UI.Setup;
 /// <summary>
 /// The main menu the game opens on (ADR-101, UI-2, ADR-163): Continue, New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard,
 /// Quit, in a column on the left of the <see cref="MenuBackground"/>. Continue loads the newest save (it names it in its tooltip); without one
-/// it is disabled. Multiplayer (LAN, ADR-098), Campaign (Phase 6) and Watch a replay (the replay viewer) are shown disabled until they exist;
+/// it is disabled. Watch a replay opens the replay viewer (ADR-164). Multiplayer (LAN, ADR-098) and Campaign (Phase 6) are shown disabled until they exist;
 /// disabled buttons take no focus, so the arrow keys move between the ones that work. Continue has the focus when there is a save, else New
 /// game, so Enter picks it.
 /// </summary>
@@ -23,6 +23,9 @@ public partial class MainMenuScreen : PanelContainer
     public event Action? NewGameRequested;
 
     public event Action? LoadRequested;
+
+    /// <summary>"Watch a replay": the replay viewer's list of replays and saves (ADR-164).</summary>
+    public event Action? WatchRequested;
 
     public event Action? LeaderboardRequested;
 
@@ -44,7 +47,7 @@ public partial class MainMenuScreen : PanelContainer
         rows.AddChild(Item(new Button { Text = "Load" }, () => LoadRequested?.Invoke()));
         rows.AddChild(Later("Multiplayer", "LAN games come later (ADR-098)."));
         rows.AddChild(Later("Campaign", "The campaign comes in Phase 6."));
-        rows.AddChild(Later("Watch a replay", "Comes with the replay viewer."));
+        rows.AddChild(Item(new Button { Text = "Watch a replay", TooltipText = "Play back a saved replay or a save, on the map and in battles" }, () => WatchRequested?.Invoke()));
         rows.AddChild(Item(new Button { Text = "Leaderboard" }, () => LeaderboardRequested?.Invoke()));
         rows.AddChild(UiSpacing.Space(UiSpacing.Gap));
         rows.AddChild(Item(new Button { Text = "Quit" }, () => QuitRequested?.Invoke()));

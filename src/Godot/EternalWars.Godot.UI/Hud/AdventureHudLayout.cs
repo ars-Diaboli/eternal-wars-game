@@ -29,6 +29,19 @@ public partial class AdventureHudLayout : Container
 
     public TownListPanel? TownList { get; set; }
 
+    /// <summary>Room kept free along the bottom edge (the replay viewer's bar, ADR-164): the bottom parts stand above it.</summary>
+    public float BottomReserve
+    {
+        get => _bottomReserve;
+        set
+        {
+            _bottomReserve = value;
+            QueueSort();
+        }
+    }
+
+    private float _bottomReserve;
+
     public AdventureHudLayout()
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
@@ -97,7 +110,8 @@ public partial class AdventureHudLayout : Container
             }
             else
             {
-                var y = screen.Y - Margin - (left ? 0 : MenuButtonHeight);
+                // Above the replay bar when there is one (it keeps the menu button's corner clear), else clear of the menu button on the right.
+                var y = screen.Y - Margin - (_bottomReserve > 0 ? _bottomReserve : left ? 0 : MenuButtonHeight);
                 foreach (var part in parts)
                 {
                     var height = part.GetCombinedMinimumSize().Y;
@@ -119,7 +133,7 @@ public partial class AdventureHudLayout : Container
             var left = Margin + (stackWidths[ScreenCorner.BottomLeft] > 0 ? stackWidths[ScreenCorner.BottomLeft] + Margin : 0);
             var right = screen.X - Margin - Math.Max(MenuButtonWidth, stackWidths[ScreenCorner.BottomRight] + Margin);
             var size = lists.GetCombinedMinimumSize();
-            FitChildInRect(lists, new Rect2(left, screen.Y - Margin - size.Y, Math.Max(size.X, right - left), size.Y));
+            FitChildInRect(lists, new Rect2(left, screen.Y - Margin - _bottomReserve - size.Y, Math.Max(size.X, right - left), size.Y));
         }
     }
 }
