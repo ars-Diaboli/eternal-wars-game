@@ -24,7 +24,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class TownPanel : PanelContainer
 {
     private readonly Label _title = new();
-    private readonly Button _trade = new() { Text = "Marketplace", TooltipText = "Trade gold against resources" };
+    private readonly Button _trade = new Button { Text = "Marketplace", TooltipText = "Trade gold against resources" }.WithResourceIcon(ResourceType.Gold);
     private readonly Button _guild = new() { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" };
     private readonly HBoxContainer _buildings = new();
     private readonly Label _builtToday = new();

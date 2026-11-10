@@ -126,11 +126,15 @@ public partial class MarketplacePanel : PanelContainer
         foreach (var resource in Enum.GetValues<ResourceType>().Where(MarketplaceRules.IsTradable))
         {
             var rate = _mapMarketplace is not null ? MarketplaceRules.MapRate(resource) : MarketplaceRules.TownRate(state, player.Id, resource)!.Value;
-            _rows.AddChild(new Label { Text = resource.ToString() });
+            var name = new HBoxContainer();
+            name.AddThemeConstantOverride("separation", UiSpacing.Cell);
+            name.AddChild(ResourceIcons.Badge(resource));
+            name.AddChild(new Label { Text = resource.ToString() });
+            _rows.AddChild(name);
             _rows.AddChild(new Label { Text = player.Resources[resource].ToString() });
             _rows.AddChild(new Label { Text = $"{rate.BuyPrice} gold" });
-            _rows.AddChild(TradeButton("Buy", resource, TradeDirection.Buy));
-            var sell = TradeButton($"Sell ({rate.SellPrice} gold)", resource, TradeDirection.Sell);
+            _rows.AddChild(TradeButton("Buy", resource, TradeDirection.Buy).WithResourceIcon(resource));
+            var sell = TradeButton($"Sell ({rate.SellPrice} gold)", resource, TradeDirection.Sell).WithResourceIcon(ResourceType.Gold);
             _rows.AddChild(sell);
         }
     }

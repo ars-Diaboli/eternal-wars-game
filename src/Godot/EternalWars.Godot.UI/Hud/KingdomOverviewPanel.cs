@@ -49,7 +49,15 @@ public partial class KingdomOverviewPanel : PanelContainer
             child.QueueFree();
         }
 
-        Row("Source", "", Enum.GetValues<ResourceType>().Select(r => r.ToString()));
+        _table.AddChild(new Label { Text = "Source", CustomMinimumSize = new Vector2(150, 0) });
+        _table.AddChild(new Label());
+        foreach (var resource in Enum.GetValues<ResourceType>())
+        {
+            var badge = ResourceIcons.Badge(resource);
+            badge.SizeFlagsHorizontal = SizeFlags.ShrinkEnd; // over the right-aligned amounts
+            _table.AddChild(badge);
+        }
+
         foreach (var row in overview.Rows)
         {
             var amounts = row.Kind == IncomeSourceKind.Provider ? row.Stored : row.Daily;
