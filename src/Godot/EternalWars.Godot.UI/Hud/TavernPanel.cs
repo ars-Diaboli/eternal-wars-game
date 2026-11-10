@@ -18,6 +18,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class TavernPanel : PanelContainer
 {
     private readonly Label _title = new();
+    private readonly HBoxContainer _balance = new();
     private readonly HBoxContainer _cards = new();
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(500, 0) };
     private GameSession _session = null!;
@@ -35,6 +36,7 @@ public partial class TavernPanel : PanelContainer
         var header = new HBoxContainer();
         box.AddChild(header);
         header.AddChild(_title);
+        header.AddChild(_balance);
         var guild = new Button { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" };
         guild.Pressed += () => ThievesGuildRequested?.Invoke();
         header.AddChild(guild);
@@ -86,7 +88,13 @@ public partial class TavernPanel : PanelContainer
 
         Visible = true;
         var level = town.Level(BuiltInBuildings.Tavern);
-        _title.Text = $"{TownRules.Buildings(state, town).Get(BuiltInBuildings.Tavern, level).Name} of {town.Name}: heroes for hire this week   (gold {state.CurrentPlayer.Resources.Gold})";
+        _title.Text = $"{TownRules.Buildings(state, town).Get(BuiltInBuildings.Tavern, level).Name} of {town.Name}: heroes for hire this week";
+        foreach (var child in _balance.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        _balance.AddChild(ResourceIcons.Balance(state.CurrentPlayer.Resources.Gold));
         foreach (var child in _cards.GetChildren())
         {
             _cards.RemoveChild(child);
@@ -134,7 +142,8 @@ public partial class TavernPanel : PanelContainer
         }
 
         var refusal = TavernRules.CheckHire(state, town, offer.Id);
-        var hire = new Button { Text = $"Hire for {TavernRules.HeroCost.Gold} gold", Disabled = refusal is not null, TooltipText = refusal ?? $"{offer.Name} appears at the town's entrance." };
+        var hire = new Button { Text = "Hire", Disabled = refusal is not null, TooltipText = refusal ?? $"{offer.Name} appears at the town's entrance." }
+            .WithCost(TavernRules.HeroCost);
         hire.Pressed += () =>
         {
             var result = _session.Execute(new HireHeroCommand(state.CurrentPlayer.Id, town.Id, offer.Id));

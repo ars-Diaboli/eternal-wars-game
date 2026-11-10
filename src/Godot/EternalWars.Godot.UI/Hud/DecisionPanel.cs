@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Decisions;
+using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -48,18 +49,18 @@ public partial class DecisionPanel : PanelContainer
         switch (state.PendingDecision)
         {
             case TreasureChestDecision chest:
-                _prompt.Text = $"Treasure chest: take {chest.Gold} gold or {chest.Experience} experience?";
-                Button("Gold", new ResolveTreasureChestCommand(player, TreasureChestReward.Gold));
+                _prompt.Text = $"Treasure chest: take the gold or {chest.Experience} experience?";
+                Button("Gold", new ResolveTreasureChestCommand(player, TreasureChestReward.Gold)).WithCost(ResourceSet.Of(ResourceType.Gold, chest.Gold));
                 Button("Experience", new ResolveTreasureChestCommand(player, TreasureChestReward.Experience));
                 break;
             case CartographerDecision cartographer:
-                _prompt.Text = $"The cartographer sells the map of the {(cartographer.Level == 0 ? "surface" : "underground")} for {cartographer.Price} gold.";
-                Button("Buy", new AnswerCartographerCommand(player, Buy: true));
+                _prompt.Text = $"The cartographer sells the map of the {(cartographer.Level == 0 ? "surface" : "underground")}.";
+                Button("Buy", new AnswerCartographerCommand(player, Buy: true)).WithCost(ResourceSet.Of(ResourceType.Gold, cartographer.Price));
                 Button("Leave", new AnswerCartographerCommand(player, Buy: false));
                 break;
             case DepositDecision deposit:
-                _prompt.Text = $"Open the {_session.State.GetObject(deposit.Deposit).Definition.Name.ToLowerInvariant()} as a mine for {Core.Domain.Objects.ResourceProviderRules.Describe(deposit.Price)}?";
-                Button("Pay", new AnswerDepositCommand(player, Buy: true));
+                _prompt.Text = $"Open the {_session.State.GetObject(deposit.Deposit).Definition.Name.ToLowerInvariant()} as a mine?";
+                Button("Pay", new AnswerDepositCommand(player, Buy: true)).WithCost(deposit.Price);
                 Button("Leave", new AnswerDepositCommand(player, Buy: false));
                 break;
             case SphinxDecision sphinx:
@@ -103,10 +104,14 @@ public partial class DecisionPanel : PanelContainer
                 foreach (var option in training.Options)
                 {
                     var price = Core.Domain.Objects.TrainingRules.Price(site.Rule, option);
-                    var label = Core.Domain.Objects.TrainingRules.Stat(option) is { } trained
-                        ? $"+{Core.Domain.Objects.TrainingRules.StatBonus} {StatName(trained)}"
-                        : $"Pay {Core.Domain.Objects.ResourceProviderRules.Describe(price)}";
-                    Button(label, new ChooseTrainingCommand(player, option));
+                    if (Core.Domain.Objects.TrainingRules.Stat(option) is { } trained)
+                    {
+                        Button($"+{Core.Domain.Objects.TrainingRules.StatBonus} {StatName(trained)}", new ChooseTrainingCommand(player, option));
+                    }
+                    else
+                    {
+                        Button("Pay", new ChooseTrainingCommand(player, option)).WithCost(price);
+                    }
                 }
 
                 if (training.CanDecline)
@@ -211,7 +216,7 @@ public partial class DecisionPanel : PanelContainer
         Check();
     }
 
-    private void Button(string text, GameCommand command, bool disabled = false)
+    private Button Button(string text, GameCommand command, bool disabled = false)
     {
         var button = new Button { Text = text, Disabled = disabled };
         if (text is "OK" or "Accept")
@@ -221,5 +226,6 @@ public partial class DecisionPanel : PanelContainer
 
         button.Pressed += () => _session.Execute(command);
         _buttons.AddChild(button);
+        return button;
     }
 }

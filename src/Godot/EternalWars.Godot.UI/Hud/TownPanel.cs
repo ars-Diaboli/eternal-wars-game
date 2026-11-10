@@ -24,6 +24,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class TownPanel : PanelContainer
 {
     private readonly Label _title = new();
+    private readonly HBoxContainer _income = new();
     private readonly Button _trade = new Button { Text = "Marketplace", TooltipText = "Trade gold against resources" }.WithResourceIcon(ResourceType.Gold);
     private readonly Button _guild = new() { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" };
     private readonly HBoxContainer _buildings = new();
@@ -77,6 +78,7 @@ public partial class TownPanel : PanelContainer
         var header = new HBoxContainer();
         box.AddChild(header);
         header.AddChild(_title);
+        header.AddChild(_income);
         _trade.Pressed += () => TradeRequested?.Invoke();
         header.AddChild(_trade);
         _guild.Pressed += () => ThievesGuildRequested?.Invoke();
@@ -176,7 +178,9 @@ public partial class TownPanel : PanelContainer
 
         Visible = true;
         var state = _session.State;
-        _title.Text = $"{town.Name} ({town.TownType}), {state.CurrentPlayer.Name}   income {Cost(TownRules.DailyIncome(state, town))} a day";
+        _title.Text = $"{town.Name} ({town.TownType}), {state.CurrentPlayer.Name}   income";
+        Clear(_income);
+        _income.AddChild(ResourceIcons.CostRow(TownRules.DailyIncome(state, town), " a day"));
         _trade.Visible = town.Level(BuiltInBuildings.Marketplace) > 0;
         _guild.Visible = town.Level(BuiltInBuildings.Tavern) > 0;
 
@@ -203,10 +207,15 @@ public partial class TownPanel : PanelContainer
             var refusal = TownRules.CheckDwelling(state, town, line.Id);
             var build = new Button
             {
-                Text = next is null ? "—" : $"{(next.Level == 1 ? "Build" : "Upgrade")} {Cost(TownRules.BuildCost(state, town, next))}",
+                Text = next is null ? "—" : next.Level == 1 ? "Build" : "Upgrade",
                 Disabled = refusal is not null,
                 TooltipText = DwellingTooltip(state, town, next, refusal, choice),
             };
+            if (next is not null)
+            {
+                build.WithCost(TownRules.BuildCost(state, town, next));
+            }
+
             build.Pressed += () => Run(new BuildDwellingCommand(state.CurrentPlayer.Id, town.Id, line.Id));
             _dwellings.AddChild(build);
 
@@ -216,9 +225,14 @@ public partial class TownPanel : PanelContainer
                 var count = canRecruit ? TownRules.MaxAffordable(resources, TownRules.CreatureCost(state, town, creature!), available) : 0;
                 var recruit = new Button
                 {
-                    Text = creature is null ? "—" : $"Recruit {count} {creature.Name}\n{Cost(TownRules.CreatureCost(state, town, creature))} each",
+                    Text = creature is null ? "—" : $"Recruit {count} {creature.Name}",
                     Disabled = count == 0,
                 };
+                if (creature is not null)
+                {
+                    recruit.WithCost(TownRules.CreatureCost(state, town, creature), " each");
+                }
+
                 var id = creature?.Id;
                 recruit.Pressed += () => Recruit(town, id!, count);
                 if (id is not null)
@@ -247,12 +261,18 @@ public partial class TownPanel : PanelContainer
             {
                 var name = TownRules.WarMachineName(state, hero, slot);
                 var refusal = TownRules.CheckBuyWarMachine(state, town, slot);
+                var owned = hero.WarMachines.Contains(slot);
                 var buy = new Button
                 {
-                    Text = hero.WarMachines.Contains(slot) ? $"{name} (owned)" : $"Buy {name}\n{Cost(WarMachines.Cost(slot))}",
+                    Text = owned ? $"{name} (owned)" : $"Buy {name}",
                     Disabled = refusal is not null,
                     TooltipText = refusal ?? "",
                 };
+                if (!owned)
+                {
+                    buy.WithCost(WarMachines.Cost(slot));
+                }
+
                 buy.Pressed += () => Run(new BuyWarMachineCommand(state.CurrentPlayer.Id, town.Id, slot));
                 _blacksmith.AddChild(buy);
             }
@@ -263,10 +283,15 @@ public partial class TownPanel : PanelContainer
                 var refusal = Core.Domain.Magic.MagicRules.CheckBuySpellBook(state, town);
                 var book = new Button
                 {
-                    Text = hero.HasSpellBook ? "Spell book (owned)" : $"Buy a spell book\n{Cost(Core.Domain.Magic.MagicRules.SpellBookCost)}",
+                    Text = hero.HasSpellBook ? "Spell book (owned)" : "Buy a spell book",
                     Disabled = refusal is not null,
                     TooltipText = refusal ?? "",
                 };
+                if (!hero.HasSpellBook)
+                {
+                    book.WithCost(Core.Domain.Magic.MagicRules.SpellBookCost);
+                }
+
                 book.Pressed += () => Run(new BuySpellBookCommand(state.CurrentPlayer.Id, town.Id));
                 _blacksmith.AddChild(book);
             }
@@ -305,9 +330,7 @@ public partial class TownPanel : PanelContainer
                 var building = node.Building;
                 var button = new Button
                 {
-                    Text = node.Next is null
-                        ? $"{node.Name} ✓"
-                        : $"{node.Name} ({node.Level + 1}/{node.MaxLevel})\n{Cost(node.Cost!.Value)}",
+                    Text = node.Next is null ? $"{node.Name} ✓" : $"{node.Name} ({node.Level + 1}/{node.MaxLevel})",
                     Disabled = node.Status != BuildingStatus.Available,
                     TooltipText = BuildingTooltip(node),
                     Modulate = node.Status switch
@@ -318,6 +341,11 @@ public partial class TownPanel : PanelContainer
                         _ => Colors.White,
                     },
                 };
+                if (node.Next is not null)
+                {
+                    button.WithCost(node.Cost!.Value);
+                }
+
                 button.Pressed += () => Run(new BuildCommand(state.CurrentPlayer.Id, town.Id, building));
                 button.WithInfo(detailed => InfoSheets.Building(_session.State, town, building, detailed));
                 box.AddChild(button);
@@ -470,10 +498,10 @@ public partial class TownPanel : PanelContainer
             });
             var hire = new Button
             {
-                Text = $"Hire {count}{System.Environment.NewLine}{Cost(TownRules.CreatureCost(state, town, creature))} each",
+                Text = $"Hire {count}",
                 Disabled = count == 0 || refusal is not null,
                 TooltipText = refusal ?? "",
-            };
+            }.WithCost(TownRules.CreatureCost(state, town, creature), " each");
             var dwellingId = dwelling.Id;
             hire.Pressed += () => Run(new OrderCaravanCommand(player, town.Id, dwellingId, count));
             row.AddChild(hire);
@@ -493,10 +521,10 @@ public partial class TownPanel : PanelContainer
             });
             var fetch = new Button
             {
-                Text = $"Fetch{System.Environment.NewLine}{Cost(CaravanRules.ResourceCaravanCost)}",
+                Text = "Fetch",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? "",
-            };
+            }.WithCost(CaravanRules.ResourceCaravanCost);
             var providerId = provider.Id;
             fetch.Pressed += () => Run(new FetchResourcesCommand(player, town.Id, providerId));
             row.AddChild(fetch);
@@ -583,10 +611,10 @@ public partial class TownPanel : PanelContainer
                 : $"returns: level {returning.Level}{(returning.Army.IsEmpty ? "" : ", with its army")}"; // ADR-081
             var hire = new Button
             {
-                Text = $"Hire {offer.Name}{System.Environment.NewLine}{details}{System.Environment.NewLine}{Cost(TavernRules.HeroCost)}",
+                Text = $"Hire {offer.Name}\n{details}",
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? "",
-            };
+            }.WithCost(TavernRules.HeroCost);
             hire.Pressed += () => Run(new HireHeroCommand(state.CurrentPlayer.Id, town.Id, offer.Id));
             _tavern.AddChild(hire);
         }
@@ -754,9 +782,5 @@ public partial class TownPanel : PanelContainer
         }
     }
 
-    private static string Cost(ResourceSet cost)
-    {
-        var parts = Enum.GetValues<ResourceType>().Where(t => cost[t] != 0).Select(t => $"{cost[t]} {t.ToString().ToLowerInvariant()}").ToList();
-        return parts.Count == 0 ? "free" : string.Join(", ", parts);
-    }
+    private static string Cost(ResourceSet cost) => ResourceIcons.Describe(cost);
 }

@@ -20,6 +20,7 @@ public partial class DwellingPanel : PanelContainer
 {
     private readonly Label _title = new();
     private readonly Label _info = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(360, 0) };
+    private readonly HBoxContainer _price = new();
     private readonly HBoxContainer _buttons = new();
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(360, 0) };
     private GameSession _session = null!;
@@ -42,6 +43,7 @@ public partial class DwellingPanel : PanelContainer
         close.Pressed += Close;
         header.AddChild(close);
         box.AddChild(_info);
+        box.AddChild(_price);
         box.AddChild(_buttons);
         box.AddChild(_status);
         Visible = false;
@@ -102,8 +104,14 @@ public partial class DwellingPanel : PanelContainer
         var available = dwelling.Available ?? 0;
         var each = StewardshipRules.DiscountCreatures(creature.Cost, hero.SkillLevelOf(BuiltInSkills.Stewardship));
         _title.Text = $"{creature.Name} dwelling";
-        _info.Text = $"{available} waiting, {creature.WeeklyGrowth} more every week. {each.Gold} gold each for {hero.Name}.\n"
+        _info.Text = $"{available} waiting, {creature.WeeklyGrowth} more every week. "
                      + (dwelling.Owner == hero.Owner ? "Yours: towns with a caravan can hire from it." : "Not yours yet.");
+        foreach (var child in _price.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        _price.AddChild(ResourceIcons.CostLine($"Each for {hero.Name}:", each));
 
         foreach (var child in _buttons.GetChildren())
         {
@@ -115,6 +123,11 @@ public partial class DwellingPanel : PanelContainer
                      .Select(o => (o.Item1, Math.Min(o.Item2, available))).DistinctBy(o => o.Item2))
         {
             var button = new Button { Text = $"Recruit {label}", Disabled = count < 1 || count > affordable || !hero.Army.CanAccept(creature.Id) };
+            if (count > 0)
+            {
+                button.WithCost(each * count);
+            }
+
             var number = count;
             button.Pressed += () =>
             {
