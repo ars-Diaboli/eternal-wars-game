@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -75,10 +76,7 @@ public partial class BansPanel : VBoxContainer
     /// <summary>The list for the kind, filter and "banned only" box, sorted by label.</summary>
     private void Rebuild()
     {
-        foreach (var child in _list.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _list.ClearChildren();
 
         _boxes.Clear();
         var bans = _editor.Scenario.Rules.Bans;

@@ -8,6 +8,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -312,9 +313,6 @@ public partial class ExchangePanel : PanelContainer
     private static void Clear(Node node)
     {
         // Freed at the end of the frame: the button whose signal is running stays valid.
-        foreach (var child in node.GetChildren())
-        {
-            child.QueueFree();
-        }
+        node.ClearChildren();
     }
 }

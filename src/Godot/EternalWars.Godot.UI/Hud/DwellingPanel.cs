@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -106,17 +107,11 @@ public partial class DwellingPanel : PanelContainer
         _title.Text = $"{creature.Name} dwelling";
         _info.Text = $"{available} waiting, {creature.WeeklyGrowth} more every week. "
                      + (dwelling.Owner == hero.Owner ? "Yours: towns with a caravan can hire from it." : "Not yours yet.");
-        foreach (var child in _price.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _price.ClearChildren();
 
         _price.AddChild(ResourceIcons.CostLine($"Each for {hero.Name}:", each));
 
-        foreach (var child in _buttons.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _buttons.ClearChildren();
 
         var affordable = TownRules.MaxAffordable(state.CurrentPlayer.Resources, each, available);
         foreach (var (label, count) in new[] { ("1", 1), ($"week ({creature.WeeklyGrowth})", creature.WeeklyGrowth), ($"max ({affordable})", affordable) }

@@ -240,37 +240,9 @@ internal sealed class BattleCommandHandler(GameState state, IEventPublisher even
                 break;
         }
 
-        var winner = battle.Winner!.Value;
-        var reason = battle.EndReason!.Value;
-        var winning = battle.Participant(winner);
-        var losing = battle.Participant(winner.Opponent());
-        var raised = new List<RaisedUndead>();
-        var artifacts = new List<string>();
-        if (winning.Hero is { } raiser && BattleAftermath.Raises(battle, winner, state.GetHero(raiser), reason == BattleEndReason.Defeated))
-        {
-            // The survivors' army and a copy of the game's random generator: the end of the real battle draws the same numbers.
-            var hero = state.GetHero(raiser);
-            var army = new Army(hero.Army.Slots);
-            foreach (var (slot, stack) in hero.Army.Stacks.ToList())
-            {
-                var survivors = battle.Units.Where(u => u.Owner == winner && u.SourceSlot == slot).Sum(u => u.KeptCount);
-                army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
-            }
-
-            raised = aftermath.JoinUndead(battle, winner.Opponent(), hero, army, new GameRandom(state.Random.State), reason == BattleEndReason.Defeated);
-        }
-
-        if (winning.Hero is { } heroId && reason == BattleEndReason.Defeated)
-        {
-            if (losing.Hero is { } loserId)
-            {
-                var loser = state.GetHero(loserId);
-                artifacts = ArtifactValue.BestFirst(state.Artifacts, loser.Artifacts.AllWorn.Select(w => w.Id).Concat(loser.Artifacts.Backpack)).ToList();
-            }
-        }
-
+        var outcome = BattleOutcome.Of(state, battle);
         return new AutoCombatPreview(
-            winner, reason, BattleAftermath.Casualties(battle), winning.Hero is null ? 0 : BattleAftermath.Experience(battle), raised, artifacts);
+            outcome.Winner, outcome.Reason, outcome.Casualties, outcome.Experience, aftermath.PreviewRaised(battle, outcome), outcome.Loot);
     }
 
     /// <summary>A human player's auto combat setting (ADR-090, CMB-10): a player setting that changes no rule.</summary>

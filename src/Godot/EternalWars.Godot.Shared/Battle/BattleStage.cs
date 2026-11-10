@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Events;
+using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Battle;
@@ -87,10 +88,7 @@ public sealed class BattleStage(
     /// <summary>Frees every piece of the field.</summary>
     public void Clear()
     {
-        foreach (var child in field.GetChildren())
-        {
-            child.QueueFree();
-        }
+        field.ClearChildren();
 
         _units.Clear();
         _structures.Clear();

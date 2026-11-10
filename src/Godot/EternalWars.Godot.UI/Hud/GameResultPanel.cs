@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -150,10 +151,7 @@ public partial class GameResultPanel : CenterContainer
 
     private void ShowScores(GameState state, IReadOnlyList<GameScore> scores)
     {
-        foreach (var child in _scores.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _scores.ClearChildren();
 
         _names.Clear();
         foreach (var score in scores)

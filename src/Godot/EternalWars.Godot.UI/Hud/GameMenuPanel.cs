@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Settings;
+using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -127,9 +128,9 @@ public partial class GameMenuPanel : CenterContainer
         settings.AddChild(_autoCombatRow);
 
         settings.AddHeading("Speed (kept on this computer)");
-        settings.AddChild(Row("Your heroes", _ownSpeed));
-        settings.AddChild(Row("Computer heroes", _computerSpeed));
-        settings.AddChild(Row("Battle animations", _battleSpeed));
+        settings.AddRow("Your heroes", _ownSpeed, 180);
+        settings.AddRow("Computer heroes", _computerSpeed, 180);
+        settings.AddRow("Battle animations", _battleSpeed, 180);
         _ownSpeed.ItemSelected += index => ChangeSpeeds(_speeds with { OwnHeroes = (AnimationSpeed)index });
         _computerSpeed.ItemSelected += index => ChangeSpeeds(index == HiddenItem
             ? _speeds with { ShowComputerHeroes = false }
@@ -142,10 +143,10 @@ public partial class GameMenuPanel : CenterContainer
 
         // Layout (ADR-118, UI-3; ADR-156): where the screens put their parts, kept on this computer; applied at once.
         layout.AddChild(new Label { Text = "Where the screens put their parts (kept on this computer)" });
-        layout.AddChild(Row("Initiative bar (battle)", _initiativeBar));
-        layout.AddChild(Row("Minimap", _minimapCorner));
-        layout.AddChild(Row("Hero and town lists", _lists));
-        layout.AddChild(Row("Action panel", _actionSide));
+        layout.AddRow("Initiative bar (battle)", _initiativeBar, 180);
+        layout.AddRow("Minimap", _minimapCorner, 180);
+        layout.AddRow("Hero and town lists", _lists, 180);
+        layout.AddRow("Action panel", _actionSide, 180);
         _initiativeBar.ItemSelected += index => ChangeLayout(_layout with { InitiativeBar = (ScreenEdge)index });
         _minimapCorner.ItemSelected += index => ChangeLayout(_layout with { Minimap = (ScreenCorner)index });
         _lists.ItemSelected += index => ChangeLayout(_layout with { Lists = (ListOrientation)index });
@@ -273,14 +274,6 @@ public partial class GameMenuPanel : CenterContainer
         }
 
         return button;
-    }
-
-    private static HBoxContainer Row(string label, OptionButton button)
-    {
-        var row = new HBoxContainer();
-        row.AddChild(new Label { Text = label, CustomMinimumSize = new Vector2(180, 0) });
-        row.AddChild(button);
-        return row;
     }
 
     /// <summary>A drop-down of <paramref name="labels"/>, in the order of the enum it picks from.</summary>

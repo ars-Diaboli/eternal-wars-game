@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Towns;
 /// (<see cref="Visit"/>), and a captured town loses its garrison and governor (<see cref="Capture"/>). The rules it applies are the pure
 /// queries of <see cref="MagicRules"/>, <see cref="StewardshipRules"/>, <see cref="UniqueBuildings"/> and <see cref="TownRules"/>.
 /// </summary>
-public sealed class TownVisitService(GameState state, IEventPublisher events, ProgressionService progression)
+public sealed class TownVisitService(GameState state, IEventPublisher events, ProgressionService progression, Artifacts.ArtifactService artifacts)
 {
     /// <summary>A hero walks, teleports or is portalled into an own or allied town: it may become governor, then it visits.</summary>
     internal void Enter(Hero hero, Town town)
@@ -154,12 +154,7 @@ public sealed class TownVisitService(GameState state, IEventPublisher events, Pr
             return;
         }
 
-        if (!hero.Artifacts.RemoveFromBackpack(grail.Id))
-        {
-            hero.Artifacts.RemoveWorn(grail.Id);
-            state.RefreshArtifacts(hero);
-        }
-
+        artifacts.Remove(hero, grail.Id);
         events.Publish(new ArtifactLost(hero.Id, grail.Id));
         events.Publish(new HeroArtifactsChanged(hero.Id));
         town.SetLevel(BuiltInBuildings.Grail, 1);

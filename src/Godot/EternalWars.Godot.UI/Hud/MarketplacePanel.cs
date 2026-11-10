@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -113,10 +114,7 @@ public partial class MarketplacePanel : PanelContainer
             ? $"Your marketplace towns set the rates (more towns, better rates; a governed town counts 1.5). {player.Name} has {player.Resources.Gold} gold."
             : $"A fixed rate, as if you had {MarketplaceRules.MapMarketplaceTowns} marketplace towns. {player.Name} has {player.Resources.Gold} gold.";
 
-        foreach (var child in _rows.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _rows.ClearChildren();
 
         foreach (var text in new[] { "Resource", "You have", "Buy 1 for", "", "Sell 1 for" })
         {

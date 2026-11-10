@@ -1,3 +1,4 @@
+using EternalWars.Godot.Shared.Controls;
 using System.Globalization;
 using EternalWars.Core.Domain.Objects;
 using Godot;
@@ -123,11 +124,7 @@ public partial class GeneratePanel : VBoxContainer
         }
 
         var kept = _townChoices.Select(c => c.Selected).ToList();
-        foreach (var child in _towns.GetChildren())
-        {
-            _towns.RemoveChild(child);
-            child.QueueFree();
-        }
+        _towns.ClearChildren(detach: true);
 
         _townChoices.Clear();
         for (var slot = 0; slot < (int)_players.Value; slot++)

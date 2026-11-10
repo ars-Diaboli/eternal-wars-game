@@ -263,15 +263,7 @@ public partial class Main : Node2D
             return;
         }
 
-        GameCommand? command = BattleTargeting.ActionAt(battle, cell) switch
-        {
-            MoveAction move => new BattleMoveCommand(player, move.To),
-            AttackAction attack => new BattleAttackCommand(player, attack.Target, attack.From),
-            ShootAction shoot => new BattleShootCommand(player, shoot.Target),
-            ShootStructureAction structure => new BattleShootStructureCommand(player, structure.Structure),
-            AttackStructureAction hit => new BattleAttackStructureCommand(player, hit.Structure, hit.From),
-            _ => null,
-        };
+        var command = BattleTargeting.CommandAt(player, battle, cell);
         GetNode<Label>("Ui/Top/Status").Text = command is null ? "Nothing to do there" : string.Empty;
         if (command is not null)
         {

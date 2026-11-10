@@ -12,7 +12,7 @@ namespace EternalWars.Core.Domain.Objects;
 /// What the hero on a map object's entrance does there from its panel: recruiting, buying, upgrading, hiring, sacrificing, taking lessons and
 /// moving garrison troops.
 /// </summary>
-public sealed class ObjectShopService(ObjectInteractionContext context, ProgressionService progression, ArtifactService artifacts)
+public sealed class ObjectShopService(ObjectInteractionContext context, ProgressionService progression, ArtifactService artifacts, HeroRecruitment recruits)
 {
     private Game.GameState State => context.State;
 
@@ -143,15 +143,7 @@ public sealed class ObjectShopService(ObjectInteractionContext context, Progress
             throw new CommandRefusedException($"A hero costs {TavernRules.HeroCost}.");
         }
 
-        var hero = Hero.Create(State.NextUnusedHeroId(), player, arrival, null, definition);
-        if (TavernRules.StarterStack(State, definition) is { } starter)
-        {
-            hero.Army.TryAdd(starter);
-        }
-
-        hero.MaxMovementPoints = MovementAllowance.Daily(State, hero);
-        hero.MovementPoints = hero.MaxMovementPoints; // like a hero hired in a town
-        State.AddHero(hero);
+        var hero = recruits.Join(player, arrival, definition, hired: true, movesToday: true); // like a hero hired in a town
         context.Events.Publish(new HeroHired(tavern.Id, hero.Id, definition.Id));
         context.Events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
     }
@@ -282,12 +274,7 @@ public sealed class ObjectShopService(ObjectInteractionContext context, Progress
             throw new CommandRefusedException($"Take {State.Artifacts.Get(artifact).Name} apart first: the altar takes its pieces only.");
         }
 
-        if (!hero.Artifacts.RemoveFromBackpack(artifact))
-        {
-            hero.Artifacts.RemoveWorn(artifact);
-            State.RefreshArtifacts(hero);
-        }
-
+        artifacts.Remove(hero, artifact);
         var experience = SacrificeRules.Experience(State.Artifacts.Get(artifact));
         context.Events.Publish(new HeroArtifactsChanged(hero.Id));
         context.Events.Publish(new SacrificeMade(altar.Id, hero.Id, experience, Artifact: artifact));

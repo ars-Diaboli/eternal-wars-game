@@ -8,6 +8,22 @@ namespace EternalWars.Core.Domain.Battles;
 /// </summary>
 public static class BattleTargeting
 {
+    /// <summary>The command that carries out <paramref name="action"/> (from <see cref="ActionAt"/>) for <paramref name="player"/>; null for no action.</summary>
+    public static Commands.GameCommand? CommandFor(Common.PlayerId player, BattleAction? action) => action switch
+    {
+        MoveAction move => new Commands.BattleMoveCommand(player, move.To),
+        AttackAction attack => new Commands.BattleAttackCommand(player, attack.Target, attack.From),
+        ShootAction shoot => new Commands.BattleShootCommand(player, shoot.Target),
+        ShootStructureAction structure => new Commands.BattleShootStructureCommand(player, structure.Structure),
+        AttackStructureAction hit => new Commands.BattleAttackStructureCommand(player, hit.Structure, hit.From),
+        _ => null,
+    };
+
+    /// <summary>The command for pointing at <paramref name="cell"/> (<see cref="ActionAt"/>), or null when there is none.</summary>
+    public static Commands.GameCommand? CommandAt(
+        Common.PlayerId player, BattleState battle, CellPosition cell, float? pointerX = null, float? pointerY = null) =>
+        CommandFor(player, ActionAt(battle, cell, pointerX, pointerY));
+
     /// <summary>
     /// The action for pointing at <paramref name="cell"/>, or null when there is none (own unit, obstacle, out of reach).
     /// <paramref name="pointerX"/> / <paramref name="pointerY"/> are the exact pointer position in cell units (the cell's

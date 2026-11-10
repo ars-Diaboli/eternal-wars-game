@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -93,11 +94,7 @@ public partial class QuestLogPanel : PanelContainer
 
     private void Fill()
     {
-        foreach (var child in _list.GetChildren())
-        {
-            _list.RemoveChild(child);
-            child.QueueFree();
-        }
+        _list.ClearChildren(detach: true);
 
         var state = _session.State;
         var log = state.MapEvents.QuestLog(_player).OrderBy(e => e.Done).ToList();

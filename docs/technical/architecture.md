@@ -57,7 +57,10 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `GrailService` (burying the Grail, obelisk visits, digging; the rules in `GrailRules`) and `PandorasBoxService` (opening a box,
   after a yes or a won guard battle). `TownVisitService` is every hero's arrival in a town (governor, Grail building, unique
   buildings' bonuses, guild spells, mana after a night) and every capture; the movement, decision, battle, map event and
-  adventure-magic services all go through it. Game start: `PlaceholderService` draws the placeholders, then the Grail, the
+  adventure-magic services all go through it. `TownConstruction` raises a building or dwelling level for both the day's build and
+  a map event's free build (a guild, war lodge, school or unique building lets the town's heroes take it at once). A hero joining a
+  player (town or map tavern, prison, map event) goes through `HeroRecruitment`; an artifact taken away (Grail building, altar, map
+  event) through `ArtifactService.Remove`. Game start: `PlaceholderService` draws the placeholders, then the Grail, the
   prisoners, the objects' rolls and the guild spells (`TownService.DrawGuilds`) are drawn in that order.
 - **`*Rules` classes are pure**: static `*Rules` classes hold constants and queries (checks, costs, odds, offers) and never
   change the state or publish; the changes they lead to belong to a service. `RulesPurityTests` fails on a `*Rules` method that
@@ -108,7 +111,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `MovementRules`, publishes `HeroMoved`) → on an entrance `MapObjectInteractionService.Visit` → outcome events /
   `DecisionRequested`. A step towards a monster or into its guarded area goes to `GuardService`; onto an enemy hero to
   `BattleService`.
-- **Views** subscribe with `node.SubscribeWhileInTree<T>(...)`. **Apps** hold composition and input mapping only.
+- **Views** subscribe with `node.SubscribeWhileInTree<T>(...)`. Code-built forms use `FormBuilder` (Godot.Shared/Controls:
+  `AddRow`, `AddSpin`, `AddOptions`, `AddChoice<T>`) and empty a container with `node.ClearChildren()`. **Apps** hold composition and input mapping only.
 
 ### Feature map (Core.Domain unless noted)
 
@@ -154,7 +158,11 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   end.
 - Deployment (ADR-072, ADR-076): `BattlePhase.Deploying` for a human side with higher Tactics; `BattleDeployCommand` →
   `Redeploy` (checked by `BattleSetup.DeploymentRefusal`), `BattleStartCommand` → `EndDeployment`.
-- Front-ends map a pointed cell to an action with `BattleTargeting.ActionAt` / `DeploymentPlacement`.
+- Front-ends map a pointed cell to an action with `BattleTargeting.ActionAt` / `DeploymentPlacement`, and an action to its command
+  with `BattleTargeting.CommandFor` (`CommandAt` does both).
+- The end of a battle is read once into a `BattleOutcome` (winner, reason, losses, the winning hero's experience: none in an arena
+  battle, the defeated hero's artifacts). `BattleAftermath.Finish` applies it and auto combat's `Preview` shows it, with the undead raised
+  into the army the hero fought with (a held town's garrison for a garrison hero) from a copy of the random numbers.
 - Presentation (ADR-052): `BattleView3D` (Godot.Shared/Battle) builds from `BattleStarted` and plays later events as
   one sequential animation queue (a whole AI turn resolves inside one command); it takes input only once the queue has
   caught up. It subscribes and coordinates: `BattleStage` (the field's live pieces and the step each event becomes),
@@ -208,7 +216,8 @@ subscribers. The session is a facade: edits live in per-area editors (`Terrain`,
 `Heroes`, `MapEvents`, `Players`, `Map`) over one internal `EditorContext` (scenario, catalog, bus, history, open stroke).
 Single-value edits are `PropertyEdit<T>` commands; an edit to the value already there records no undo step and publishes
 nothing. The three tile layers paint through `PaintLayer<TValue, TEvent>`. `BeginStroke`/`EndStroke` merge a drag into
-one undo step. `MapValidator` reports what single edits cannot prevent.
+one undo step. `MapValidator` reports what single edits cannot prevent. `MapConnectivity` tells where a hero can walk on a fresh
+map (through guards and pickups, via gates); the Sim's generated-map check reports the rival towns a player cannot reach.
 
 ### Content tables (ADR-071)
 `src/Core/data/*.csv` (creatures, heroes, buildings, artifacts, artifact sets, spells, riddles, scenery) are embedded

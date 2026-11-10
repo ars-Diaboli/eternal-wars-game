@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Events;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -41,10 +42,7 @@ public partial class EventCellsView : Node3D
             return;
         }
 
-        foreach (var child in GetChildren())
-        {
-            child.QueueFree();
-        }
+        this.ClearChildren();
 
         var material = new StandardMaterial3D { AlbedoColor = Marker, Transparency = BaseMaterial3D.TransparencyEnum.Alpha };
         var highlighted = new StandardMaterial3D { AlbedoColor = new Color(1f, 0.85f, 0.3f, 0.85f), Transparency = BaseMaterial3D.TransparencyEnum.Alpha };

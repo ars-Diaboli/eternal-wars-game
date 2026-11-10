@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Pathfinding;
+using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Map;
@@ -37,9 +38,6 @@ public partial class PathPreview : Node3D
     public void Clear()
     {
         Path = null;
-        foreach (var child in GetChildren())
-        {
-            child.QueueFree();
-        }
+        this.ClearChildren();
     }
 }

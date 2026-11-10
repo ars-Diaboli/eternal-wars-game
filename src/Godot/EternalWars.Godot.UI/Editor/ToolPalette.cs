@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Map;
 using Godot;
 
@@ -88,10 +89,7 @@ public partial class ToolPalette : VBoxContainer
 
     private void ShowOptions()
     {
-        foreach (var child in _options.GetChildren())
-        {
-            child.QueueFree();
-        }
+        _options.ClearChildren();
 
         switch (_tool.Kind)
         {

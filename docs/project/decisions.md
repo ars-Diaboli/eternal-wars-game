@@ -1889,3 +1889,28 @@ agent's choices.
   (`ZoneLayouter`, `TerrainPainter` and `TemplateValidator` take the record too). The template editor still validates against the built-in
   tables, as it has no game content.
 - **Behaviour**: unchanged with the built-in content (digests and AI games replay the same).
+
+### ADR-172: One copy of each shared step (code review section 3, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (section 3, duplication).
+
+- **Joining heroes**: `HeroRecruitment.Join` (a roster hero with its experience levelled up at once, a hired one's starter stack, moving
+  today or next turn) and `Return` (a retired hero hired again) replace the four copies in `TownService.HireHero`, the map tavern, prisons
+  and map events. The callers still check and publish.
+- **Building**: `TownConstruction.Raise` / `RaiseDwelling` are the day's build and a map event's free build alike; the rule that a guild,
+  war lodge, school or unique building lets the town's heroes take it at once is written once.
+- **Taking an artifact away**: `ArtifactService.Remove(hero, artifact, wornFirst)` for the Grail building, the altar and map events (a map
+  event takes a worn one first, the others a carried one).
+- **Battle end**: `BattleOutcome.Of` reads the outcome once; `BattleAftermath.Finish` applies it and auto combat's preview shows it, and
+  the preview raises undead into the army the hero fought with (`BattleAftermath.PreviewRaised`). This fixes two disagreements: the
+  preview promised experience for the arena battle, and it raised a garrison hero's undead into the hero's own (empty) army rather than the
+  garrison. `BattleOutcome.KeepSurvivors` is the one survivors-into-slots step (hero, town or map garrison).
+- **Battle input**: `BattleTargeting.CommandFor` / `CommandAt` turn an action into its command for the game and the 2D harness. The keys
+  stay each app's input mapping (the harness keeps S for surrender; the game has the HUD's button).
+- **UI**: `FormBuilder` (Godot.Shared/Controls) replaces the panels' own `Row` / `Spin` / `Options` helpers (inspector, events, conditions,
+  template editor, new game, game menu); `node.ClearChildren(detach)` replaces 35 free-all-children loops.
+- **Sim**: its decision answers are `TurnTimer.Default` except where it deliberately differs (witch huts and training take the first
+  option, riddles and level-ups the first answer, boxes stay shut, guards are always fought). The connectivity check moved to
+  `MapConnectivity` in Core.Domain (`Editing/`), next to `MapValidator` so the validator can use it; not in Core.Generation, which the
+  validator cannot reference.
+- **Behaviour**: unchanged apart from the preview fixes (events, random draws, digests; AI games replay the same; the Sim's self-test digest
+  is the same).
