@@ -5,6 +5,6 @@ Painted resource icons, 256 × 256 with transparency, supplied for this project 
 
 | File | Used for |
 |---|---|
-| gold.png | Gold: the resource bar, the kingdom overview, the marketplace (and its buttons) |
-| lumber.png / ore.png / crystal.png / mercury.png / sulfur.png | the other resources, in the same places |
-| gold_pile.png | the treasury: the Kingdom (K) button |
+| gold.png | Gold: the kingdom overview, the marketplace (and its buttons), every cost and price on a button or in a line (town, tavern, map dwellings and services, adventure choices, surrender) |
+| lumber.png / ore.png / crystal.png / mercury.png / sulfur.png | the other resources, in the same places and the resource bar |
+| gold_pile.png | the treasury: the Kingdom (K) button, and the player's gold on hand (the resource bar, the tavern window's header) |

@@ -24,7 +24,8 @@ public partial class ResourceBar : HBoxContainer
         {
             var item = new HBoxContainer { TooltipText = type.ToString() };
             item.AddThemeConstantOverride("separation", UiSpacing.Cell);
-            var icon = ResourceIcons.Get(type);
+            // What the player holds, not a price: gold shows the pile (ResourceIcons.Balance), the others their usual icon.
+            var icon = type == ResourceType.Gold ? ResourceIcons.Treasury(ResourceIcons.TextSize) ?? ResourceIcons.Get(type) : ResourceIcons.Get(type);
             if (icon is not null)
             {
                 item.AddChild(new TextureRect { Texture = icon, StretchMode = TextureRect.StretchModeEnum.KeepCentered, MouseFilter = MouseFilterEnum.Pass });

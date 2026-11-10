@@ -140,9 +140,9 @@ public partial class ObjectServicePanel : PanelContainer
                 var cost = HillFortRules.Cost(state.Creatures, stack);
                 var button = new Button
                 {
-                    Text = $"{stack.Count} × {creature.Name} → {upgraded.Name} for {ResourceProviderRules.Describe(cost)}",
+                    Text = $"{stack.Count} × {creature.Name} → {upgraded.Name}",
                     Disabled = !player.Resources.CanAfford(cost),
-                };
+                }.WithCost(cost);
                 var at = slot;
                 button.Pressed += () => Run(new UpgradeAtHillFortCommand(player.Id, id, at));
                 _rows.AddChild(button);
@@ -158,9 +158,14 @@ public partial class ObjectServicePanel : PanelContainer
                 var owned = hero.WarMachines.Contains(slot);
                 var button = new Button
                 {
-                    Text = owned ? $"{name} (owned)" : $"Buy {name} for {ResourceProviderRules.Describe(cost)}",
+                    Text = owned ? $"{name} (owned)" : $"Buy {name}",
                     Disabled = owned || !player.Resources.CanAfford(cost),
                 };
+                if (!owned)
+                {
+                    button.WithCost(cost);
+                }
+
                 var which = slot;
                 button.Pressed += () => Run(new BuyWarMachineAtFactoryCommand(player.Id, id, which));
                 _rows.AddChild(button);
@@ -184,9 +189,9 @@ public partial class ObjectServicePanel : PanelContainer
             var price = ArtifactMerchantRules.Price(artifact);
             var button = new Button
             {
-                Text = $"{artifact.Name} ({artifact.Tier}) for {ResourceProviderRules.Describe(price)}",
+                Text = $"{artifact.Name} ({artifact.Tier})",
                 Disabled = !player.Resources.CanAfford(price) || hero.Artifacts.BackpackFull,
-            };
+            }.WithCost(price);
             var at = slot;
             button.Pressed += () => Run(new BuyArtifactCommand(player.Id, merchant.Id, at));
             _rows.AddChild(button);
@@ -204,8 +209,13 @@ public partial class ObjectServicePanel : PanelContainer
 
         var creature = state.Creatures.Get(id);
         var count = TownRules.MaxAffordable(player.Resources, creature.Cost, camp.Available);
-        _rows.AddChild(new Label { Text = $"{camp.Available} {creature.Name} wait here, {ResourceProviderRules.Describe(creature.Cost)} each." });
+        _rows.AddChild(ResourceIcons.CostLine($"{camp.Available} {creature.Name} wait here,", creature.Cost, " each"));
         var button = new Button { Text = $"Hire {count}", Disabled = count == 0 || !hero.Army.CanAccept(id) };
+        if (count > 0)
+        {
+            button.WithCost(creature.Cost * count);
+        }
+
         button.Pressed += () => Run(new RecruitAtRefugeeCampCommand(player.Id, camp.Id, count));
         _rows.AddChild(button);
     }
@@ -249,7 +259,7 @@ public partial class ObjectServicePanel : PanelContainer
     private void ShowTavern(MapTavern tavern, Core.Domain.Players.Player player)
     {
         var state = _session.State;
-        _rows.AddChild(new Label { Text = $"Heroes of any faction, the same for every player; a new pool every week. {ResourceProviderRules.Describe(TavernRules.HeroCost)} each." });
+        _rows.AddChild(new Label { Text = "Heroes of any faction, the same for every player; a new pool every week." });
         var refusal = state.HeroLimitReached(player.Id) ? $"You have all {state.HeroLimit(player.Id)} heroes you may."
             : MapTavernRules.Arrival(state, tavern) is null ? "There is no free cell next to the tavern." : null;
         foreach (var offer in MapTavernRules.Offers(state, tavern))
@@ -259,7 +269,7 @@ public partial class ObjectServicePanel : PanelContainer
                 Text = $"Hire {offer.Name} ({offer.Town}, {offer.Class})",
                 Disabled = refusal is not null || !player.Resources.CanAfford(TavernRules.HeroCost),
                 TooltipText = refusal ?? "",
-            };
+            }.WithCost(TavernRules.HeroCost);
             var id = offer.Id;
             button.Pressed += () => Run(new HireAtMapTavernCommand(player.Id, tavern.Id, id));
             _rows.AddChild(button);
@@ -298,12 +308,9 @@ public partial class ObjectServicePanel : PanelContainer
     private void ShowSchool(SkillSchool school, Core.Domain.Heroes.Hero hero, Core.Domain.Players.Player player)
     {
         var lessons = SkillSchoolRules.LessonsOf(school, hero.Id);
-        var price = ResourceProviderRules.Describe(SkillSchoolRules.Price);
-        _rows.AddChild(new Label
-        {
-            Text = lessons.Count == 0 ? $"Nothing to teach {hero.Name}."
-                : $"{(school.TeachesMagic ? "The magic schools" : "The general skill groups")}: {price} a lesson.",
-        });
+        _rows.AddChild(lessons.Count == 0
+            ? new Label { Text = $"Nothing to teach {hero.Name}." }
+            : ResourceIcons.CostLine($"{(school.TeachesMagic ? "The magic schools" : "The general skill groups")}:", SkillSchoolRules.Price, " a lesson"));
         foreach (var lesson in lessons)
         {
             var skill = Core.Domain.Heroes.BuiltInSkills.Get(lesson.Skill);

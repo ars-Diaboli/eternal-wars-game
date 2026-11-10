@@ -144,7 +144,7 @@ $scenarios = @(
     # Dwellings and caravans (ADR-054, ADR-073): visit a map dwelling and recruit the week, close; T, scroll to the caravan section, hire
     # from the owned dwelling, close, end two turns (hot-seat) and look again: the footmen are in the garrison.
     @{ Name = 'game-dwelling-caravan'; App = 'EternalWars.Game'; Frames = 100; Map = $caravanMap
-       Input = '3:key:Enter;10:key:Up;22:click:@Recruit week (16);28:click:@Close;34:key:T;42:wheel:down,15;50:click:@Hire 9 | 55 gold each;58:key:Escape;64:click:@End turn;72:click:@End turn;82:key:T;90:wheel:down,15' },
+       Input = '3:key:Enter;10:key:Up;22:click:@Recruit week (16) | 960 gold;28:click:@Close;34:key:T;42:wheel:down,15;50:click:@Hire 9 | 55 gold each;58:key:Escape;64:click:@End turn;72:click:@End turn;82:key:T;90:wheel:down,15' },
     # The generated connections map in the editor (no fog): pan to the portal, the blue border guard, the blue keymaster, the garrison,
     # the red border gate and the red keymaster (frames 16, 49, 86, 109, 153, 172).
     @{ Name = 'editor-generated-connections'; App = 'EternalWars.MapEditor'; Frames = 175; Map = $connectionsMap

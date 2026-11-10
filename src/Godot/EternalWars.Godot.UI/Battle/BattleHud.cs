@@ -30,7 +30,8 @@ public partial class BattleHud : Control
     private readonly Button _wait = new() { Text = "Wait (W)" };
     private readonly Button _defend = new() { Text = "Defend (D)" };
     private readonly Button _retreat = new() { Text = "Retreat (R)" };
-    private readonly Button _surrender = new() { Text = "Surrender" };
+    // The price follows the text, then the gold icon: "Surrender 500 [gold]".
+    private readonly Button _surrender = new Button { Text = "Surrender", IconAlignment = HorizontalAlignment.Right }.WithResourceIcon(Core.Domain.Economy.ResourceType.Gold);
     private readonly Button _quick = new() { Text = "Quick combat (Q)" };
     private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
     private readonly HFlowContainer _warcries = new();
@@ -470,7 +471,8 @@ public partial class BattleHud : Control
         }
 
         var refusal = SurrenderRules.Check(_session.State, battle, active.Side);
-        _surrender.Text = $"Surrender ({SurrenderRules.Price(battle, active.Side)} gold)";
+        var price = SurrenderRules.Price(battle, active.Side);
+        _surrender.Text = _surrender.Icon is null ? $"Surrender ({price} gold)" : $"Surrender {price}";
         _surrender.Disabled = refusal is not null;
         _surrender.TooltipText = refusal ?? "Pay the enemy and leave with your army; the hero waits in your taverns.";
     }

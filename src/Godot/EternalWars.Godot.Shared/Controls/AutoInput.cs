@@ -306,9 +306,16 @@ public partial class AutoInput : Node
             ?? buttons.FirstOrDefault(b => Label(b).Contains(text, StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>
+    /// The metadata naming a button whose label is drawn by child controls (a cost row of icons) rather than its text: what its text would
+    /// have been, which <c>dump</c> prints and aimed events name.
+    /// </summary>
+    public const string LabelMeta = "autoinput_label";
+
     private static string Label(BaseButton button) => button switch
     {
         Button { Text: { Length: > 0 } text } => text,
+        _ when button.HasMeta(LabelMeta) => button.GetMeta(LabelMeta).AsString(),
         _ => button.TooltipText,
     };
 
