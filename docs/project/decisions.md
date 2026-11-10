@@ -1744,3 +1744,31 @@ agent's choices.
   a battle's end and the take-over leaving the replay unchanged, a save ending in its battle, records that do not replay, the replays list).
 - **Not done**: "Play from here" on the adventure map; taking over a battle only the computer fights; a snapshot for long replays (a jump
   replays from the start); "Play from here" has no smoke scenario (the recorded games have no battle a person fights).
+
+### ADR-165: Refusals, content tables and running events after the code review (ADR-036, ADR-042, ADR-115, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. Fixes from the code quality review.
+
+- **Refusals** (ADR-036): a rule refuses a command with `CommandRefusedException` (Core.Domain `Commands`), thrown before anything changes;
+  `GameSession.Execute` catches only that. Before, it took every `InvalidOperationException` for a refusal, so a bug (a `First()` on nothing)
+  passed as a quiet refusal. `GameState.GetHero` / `GetObject` / `GetPlayer` refuse an unknown id with it. The answers to a chest, a deposit, a
+  cartographer, a Pandora's Box, a witch hut and an event's army choice now find everything they need before they spend, take or clear
+  anything (a deposit's price was paid before the deposit was looked up). `GameSession.CheckRefusals` (internal) compares the digest text
+  before and after every refused command and fails loudly when it changed; the test assembly turns it on for every game (`TestSetup`),
+  about 10 s on the whole run *(choice: every test game, not one dedicated test)*.
+- **Content tables**: `ContentCatalogs` (creatures, heroes, buildings, artifacts; the spells are the artifact table's) is what the
+  scenarios and `MapConverter.ToGameState(document, content, options)` take; the apps pass `GameContent.All`. An edited artifact table
+  (`--artifacts=`) was lost for Demo Valley, Two Towns, the editor's blank maps and the 2D harness. `MapConverter` checks shrine and
+  guild spells against the game's spell table, not the built-in one.
+- **Creature casters** (ADR-042, ADR-120): `Caster` in `creatures.csv` names the spell table id (`Caster chaos.fireball 1`); the code's
+  name table (`BattleMagic.CasterSpells`) is gone, and a caster's spell comes from the battle's spell table (`BattleState.Spells`, the
+  game's), not the built-in one. `rebirth` stays the Phoenix's own ability.
+- **Running map events** (ADR-115): the queue of events to run, the one running and the battle record for "defeated by" are kept in
+  `MapEventState` (`Runs`, `Current`, `Fight`), not in the service; the running ones are in the digest while there are any *(a save made
+  while an event waited for an answer no longer matches its old digest)*.
+- **Map files without a version** are version 1 (`MapDocument.UnversionedFormatVersion`), so every older version's handling applies; a
+  document made in code is still current.
+- **Smaller fixes**: the AI's battle estimate cache key uses the hero's total attack and defence (with artifacts), as the fight does;
+  `EconomyService.Grant` / `TrySpend` are internal; `SubscribeWhileInTree` subscribes while the node is in the tree (again if it comes
+  back), and the map editor subscribes its undo line on the session's UI instead of the root, which kept every old session alive.
+- **Not done**: the tests still call `session.Interactions.Visit`, `Progression.GrantStatus` / `OfferNext`, `Artifacts.Draw` / `Loot` /
+  `Grant` and `Interactions.TryCollect` / `StartWeek` directly (about 55 calls in 20 files) instead of going through `Execute`.

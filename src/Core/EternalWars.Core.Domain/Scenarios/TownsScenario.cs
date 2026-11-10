@@ -20,8 +20,9 @@ public static class TownsScenario
     public const int Width = 32;
     public const int Height = 22;
 
-    public static GameState Create(CreatureCatalog? creatures = null, HeroCatalog? heroRoster = null, BuildingCatalog? buildings = null)
+    public static GameState Create(ContentCatalogs? content = null)
     {
+        content ??= ContentCatalogs.Default;
         var map = new AdventureMap(Width, Height, 1) { Name = "Two Towns" };
         for (var x = 1; x < Width - 1; x++)
         {
@@ -48,7 +49,7 @@ public static class TownsScenario
 
         var catalog = MapObjectCatalog.Default;
         var objects = new List<MapObject>();
-        var lines = creatures ?? CreatureCatalog.Default;
+        var lines = content.Creatures;
 
         var blue = Town(TownIds.Haven, new MapPosition(1, 2), players[0].Id, "Castlebridge");
         var red = Town(TownIds.Inferno, new MapPosition(Width - 8, 2), players[1].Id, "Ashgate");
@@ -57,7 +58,7 @@ public static class TownsScenario
             foreach (var line in lines.BaseCreaturesOf(town.TownType).Where(l => l.Tier == 1))
             {
                 town.SetDwelling(line.Id, 1);
-                town.SetAvailable(line.Id, TownRules.WeeklyGrowth(buildings ?? BuildingCatalog.Default, town, line));
+                town.SetAvailable(line.Id, TownRules.WeeklyGrowth(content.Buildings, town, line));
             }
         }
 
@@ -74,7 +75,7 @@ public static class TownsScenario
         var wolves = (MonsterGuard)Place(BuiltInMapObjects.Monster, new MapPosition(Width / 2, 6));
         (wolves.Creature, wolves.Count, wolves.Disposition) = (BuiltInCreatures.Wolf, 15, GuardDisposition.Aggressive);
 
-        return new GameState(map, players, heroes, objects, creatures: creatures, heroRoster: heroRoster, buildings: buildings);
+        return new GameState(map, players, heroes, objects, content: content);
 
         Town Town(string type, MapPosition topLeft, PlayerId? owner, string name)
         {

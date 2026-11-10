@@ -1285,9 +1285,7 @@ public partial class Main : Node3D
     private void PlayAgain()
     {
         var options = _session.State.Options with { Seed = (ulong)System.Random.Shared.NextInt64() };
-        var state = MapConverter.ToGameState(
-            _initialMap, options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings,
-            artifacts: GameContent.Artifacts);
+        var state = MapConverter.ToGameState(_initialMap, GameContent.All, options);
         StartGame(state);
         _status.Text = $"{_initialMap.Name}: a new game, seed {options.Seed}.";
     }
@@ -1598,9 +1596,9 @@ public partial class Main : Node3D
             choices.Add(FromFile(path));
         }
 
-        choices.Add(new ScenarioChoice("Demo Valley", options => MapConverter.ToGameState(MapConverter.ToDocument(DemoScenario.Create()), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
-        choices.Add(new ScenarioChoice("Two Towns", options => MapConverter.ToGameState(MapConverter.ToDocument(TownsScenario.Create(GameContent.Creatures)), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings)));
-        choices.Add(new ScenarioChoice(EmberMarchScenario.Name, options => MapConverter.ToGameState(MapConverter.ToDocument(EmberMarchScenario.Create(GameContent.Creatures, GameContent.Heroes, GameContent.Buildings)), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts)));
+        choices.Add(Built("Demo Valley", content => DemoScenario.Create(content: content)));
+        choices.Add(Built("Two Towns", TownsScenario.Create));
+        choices.Add(Built(EmberMarchScenario.Name, EmberMarchScenario.Create));
         var editorMaps = Path.Combine(Path.GetDirectoryName(OS.GetUserDataDir())!, EditorMapsFolder);
         if (Directory.Exists(editorMaps))
         {
@@ -1610,7 +1608,11 @@ public partial class Main : Node3D
         return choices;
 
         static ScenarioChoice FromFile(string file) =>
-            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), options: options, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts));
+            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, options));
+
+        // A built-in scenario goes through the map format like a file, so it starts the way a saved copy of it would.
+        static ScenarioChoice Built(string name, Func<ContentCatalogs, GameState> create) =>
+            new(name, options => MapConverter.ToGameState(MapConverter.ToDocument(create(GameContent.All)), GameContent.All, options));
     }
 
     /// <summary>

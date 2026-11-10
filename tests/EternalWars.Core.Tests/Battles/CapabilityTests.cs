@@ -113,7 +113,7 @@ public class CapabilityTests
         Assert.Throws<FormatException>(() => (basic with { Capabilities = six }).Validate());
         (basic with { Capabilities = six[..5] }).Validate();
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(SpellImmunity)] }).Validate());
-        Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(Caster, 0, "cure")] }).Validate());
+        Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(Caster, 0, "light.heal")] }).Validate());
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(PackHunter)] }).Validate());
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(SpellResistance)] }).Validate());
         Assert.Throws<FormatException>(() => (basic with { Capabilities = [new(SpellResistance, SpellLevels.Max)] }).Validate());
@@ -132,10 +132,10 @@ public class CapabilityTests
         Assert.False(seraph.IsImmuneTo([SpellTags.Fire]));
         Assert.True(devil.IsImmuneTo([SpellTags.Fire, SpellTags.Curse]));
         Assert.True((devil with { Capabilities = [new(SpellImmunity, Parameter: SpellTags.All)] }).IsImmuneTo(["anything"]));
-        Assert.Equal(1, seraph.SpellCasts["resurrection"]);
+        Assert.Equal(1, seraph.SpellCasts["light.resurrection"]);
 
         var battle = TestBattle.Create();
-        Assert.Equal(1, battle.Add(Attacker, seraph, 1, 0, 0).CastsLeft["resurrection"]);
+        Assert.Equal(1, battle.Add(Attacker, seraph, 1, 0, 0).CastsLeft["light.resurrection"]);
 
         var loaded = CreatureDefinitionSerializer.Deserialize(CreatureDefinitionSerializer.Serialize([seraph])).Single();
         Assert.Equal(seraph.Capabilities, loaded.Capabilities);

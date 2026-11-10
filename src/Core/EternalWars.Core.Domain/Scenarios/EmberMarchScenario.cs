@@ -28,10 +28,11 @@ public static class EmberMarchScenario
     /// <summary>The middle and northern gaps in the ridge (columns <see cref="RidgeLeft"/> and <see cref="RidgeLeft"/> + 1).</summary>
     public const int RidgeLeft = 17;
 
-    public static GameState Create(CreatureCatalog? creatures = null, HeroCatalog? heroRoster = null, BuildingCatalog? buildings = null)
+    public static GameState Create(ContentCatalogs? content = null)
     {
-        var lines = creatures ?? CreatureCatalog.Default;
-        var roster = heroRoster ?? HeroCatalog.Default;
+        content ??= ContentCatalogs.Default;
+        var lines = content.Creatures;
+        var roster = content.Heroes;
         var map = new AdventureMap(Width, Height, 1)
         {
             Name = Name,
@@ -85,7 +86,7 @@ public static class EmberMarchScenario
             foreach (var line in lines.BaseCreaturesOf(town.TownType).Where(l => l.Tier == 1))
             {
                 town.SetDwelling(line.Id, 1);
-                town.SetAvailable(line.Id, TownRules.WeeklyGrowth(buildings ?? BuildingCatalog.Default, town, line));
+                town.SetAvailable(line.Id, TownRules.WeeklyGrowth(content.Buildings, town, line));
             }
         }
 
@@ -142,7 +143,7 @@ public static class EmberMarchScenario
         Place(BuiltInMapObjects.LearningStone, new MapPosition(14, 26));
         Place(BuiltInMapObjects.LearningStone, new MapPosition(21, 26));
 
-        return new GameState(map, players, heroes, objects, creatures: creatures, heroRoster: heroRoster, buildings: buildings);
+        return new GameState(map, players, heroes, objects, content: content);
 
         Town Town(string type, MapPosition topLeft, PlayerId? owner, string name)
         {

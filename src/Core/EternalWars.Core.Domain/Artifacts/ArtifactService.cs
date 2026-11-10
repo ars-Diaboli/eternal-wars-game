@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
@@ -196,12 +197,12 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         var definition = state.Artifacts.Get(relic);
         if (!definition.IsAssembled)
         {
-            throw new InvalidOperationException($"{definition.Name} is not an assembled relic.");
+            throw new CommandRefusedException($"{definition.Name} is not an assembled relic.");
         }
 
         if (definition.Pieces.FirstOrDefault(p => !hero.Artifacts.IsWorn(p)) is { } missing)
         {
-            throw new InvalidOperationException($"{hero.Name} must wear {state.Artifacts.Get(missing).Name} to assemble {definition.Name}.");
+            throw new CommandRefusedException($"{hero.Name} must wear {state.Artifacts.Get(missing).Name} to assemble {definition.Name}.");
         }
 
         foreach (var piece in definition.Pieces)
@@ -224,7 +225,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         var definition = state.Artifacts.Get(relic);
         if (!definition.IsAssembled)
         {
-            throw new InvalidOperationException($"{definition.Name} is not an assembled relic.");
+            throw new CommandRefusedException($"{definition.Name} is not an assembled relic.");
         }
 
         if (hero.Artifacts.IsWorn(relic))
@@ -242,12 +243,12 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
 
         if (!hero.Artifacts.Backpack.Contains(relic))
         {
-            throw new InvalidOperationException($"{hero.Name} has no {definition.Name}.");
+            throw new CommandRefusedException($"{hero.Name} has no {definition.Name}.");
         }
 
         if (hero.Artifacts.Backpack.Count - 1 + definition.Pieces.Count > ArtifactSlots.BackpackSize)
         {
-            throw new InvalidOperationException($"{hero.Name}'s backpack has no room for the pieces of {definition.Name}.");
+            throw new CommandRefusedException($"{hero.Name}'s backpack has no room for the pieces of {definition.Name}.");
         }
 
         hero.Artifacts.RemoveFromBackpack(relic);
@@ -265,7 +266,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         var definition = state.Artifacts.Get(artifact);
         if (!hero.Artifacts.Backpack.Contains(artifact))
         {
-            throw new InvalidOperationException($"{hero.Name} does not carry '{definition.Name}'.");
+            throw new CommandRefusedException($"{hero.Name} does not carry '{definition.Name}'.");
         }
 
         var (blocks, swap) = Fit(hero, definition);
@@ -284,7 +285,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         if (blocks.Append(definition.Slot).GroupBy(s => s)
                 .FirstOrDefault(g => hero.Artifacts.Free(g.Key) + (swap && g.Key == definition.Slot ? 1 : 0) < g.Count()) is { } full)
         {
-            throw new InvalidOperationException(full.Key == definition.Slot && !swap
+            throw new CommandRefusedException(full.Key == definition.Slot && !swap
                 ? $"The {definition.Slot} slot is blocked by an assembled relic."
                 : $"{definition.Name} also needs a free {full.Key} slot.");
         }
@@ -307,7 +308,7 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         {
             hero.Artifacts.AddToBackpack(definition.Id);
             state.RefreshArtifacts(hero);
-            throw new InvalidOperationException($"{definition.Name} does not fit.");
+            throw new CommandRefusedException($"{definition.Name} does not fit.");
         }
 
         state.RefreshArtifacts(hero);
@@ -323,12 +324,12 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         var hero = Own(player, heroId, exchangeAllowed: true);
         if (!hero.Artifacts.IsWorn(artifact))
         {
-            throw new InvalidOperationException($"{hero.Name} does not wear '{artifact}'.");
+            throw new CommandRefusedException($"{hero.Name} does not wear '{artifact}'.");
         }
 
         if (hero.Artifacts.BackpackFull)
         {
-            throw new InvalidOperationException($"{hero.Name}'s backpack is full.");
+            throw new CommandRefusedException($"{hero.Name}'s backpack is full.");
         }
 
         hero.Artifacts.RemoveWorn(artifact);
@@ -348,26 +349,26 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
         var to = Own(player, toId, exchangeAllowed: true);
         if (from == to)
         {
-            throw new InvalidOperationException("A hero cannot give an artifact to itself.");
+            throw new CommandRefusedException("A hero cannot give an artifact to itself.");
         }
 
         if (state.PendingDecision is not HeroExchangeDecision exchange
             || !((exchange.Hero == from.Id && exchange.Other == to.Id) || (exchange.Hero == to.Id && exchange.Other == from.Id)))
         {
-            throw new InvalidOperationException("Artifacts change hands only while the exchange of the two heroes is open.");
+            throw new CommandRefusedException("Artifacts change hands only while the exchange of the two heroes is open.");
         }
 
         var carried = !worn && from.Artifacts.Backpack.Contains(artifact);
         if (!carried && !from.Artifacts.IsWorn(artifact))
         {
-            throw new InvalidOperationException(worn ? $"{from.Name} does not wear '{artifact}'." : $"{from.Name} does not have '{artifact}'.");
+            throw new CommandRefusedException(worn ? $"{from.Name} does not wear '{artifact}'." : $"{from.Name} does not have '{artifact}'.");
         }
 
         var definition = state.Artifacts.Get(artifact);
         var fit = wear ? Fit(to, definition) : default;
         if ((!wear || fit.Swap) && to.Artifacts.BackpackFull)
         {
-            throw new InvalidOperationException($"{to.Name}'s backpack is full.");
+            throw new CommandRefusedException($"{to.Name}'s backpack is full.");
         }
 
         if (carried)
@@ -394,15 +395,15 @@ public sealed class ArtifactService(GameState state, IEventPublisher events)
 
     private Hero Own(PlayerId player, HeroId id, bool exchangeAllowed)
     {
-        var hero = state.Heroes.FirstOrDefault(h => h.Id == id) ?? throw new InvalidOperationException($"Unknown hero {id}.");
+        var hero = state.Heroes.FirstOrDefault(h => h.Id == id) ?? throw new CommandRefusedException($"Unknown hero {id}.");
         if (hero.Owner != player)
         {
-            throw new InvalidOperationException($"{hero.Name} does not belong to {player}.");
+            throw new CommandRefusedException($"{hero.Name} does not belong to {player}.");
         }
 
         if (state.PendingDecision is not null && !(exchangeAllowed && state.PendingDecision is HeroExchangeDecision))
         {
-            throw new InvalidOperationException("Resolve the pending decision first.");
+            throw new CommandRefusedException("Resolve the pending decision first.");
         }
 
         return hero;

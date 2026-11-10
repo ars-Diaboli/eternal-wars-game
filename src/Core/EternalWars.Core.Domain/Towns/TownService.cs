@@ -66,22 +66,22 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     internal void Recruit(PlayerId player, MapObjectId townId, string creature, int count, HeroId? heroId)
     {
         var town = OwnTown(player, townId);
-        var line = TownRules.LineOf(state, town, creature) ?? throw new InvalidOperationException($"{town.Name} does not recruit '{creature}'.");
+        var line = TownRules.LineOf(state, town, creature) ?? throw new CommandRefusedException($"{town.Name} does not recruit '{creature}'.");
         var upgraded = creature != line.Id;
         if (town.DwellingLevel(line.Id) < (upgraded ? 2 : 1))
         {
-            throw new InvalidOperationException(upgraded ? $"The {line.Name} dwelling is not upgraded." : $"{town.Name} has no {line.Name} dwelling.");
+            throw new CommandRefusedException(upgraded ? $"The {line.Name} dwelling is not upgraded." : $"{town.Name} has no {line.Name} dwelling.");
         }
 
         if (count < 1 || count > town.AvailableOf(line.Id))
         {
-            throw new InvalidOperationException($"Only {town.AvailableOf(line.Id)} {line.Name} can be recruited.");
+            throw new CommandRefusedException($"Only {town.AvailableOf(line.Id)} {line.Name} can be recruited.");
         }
 
         var (army, hero) = ArmyOf(town, heroId is null ? TownArmy.Garrison : TownArmy.VisitingHero, heroId);
         if (!army.CanAccept(creature))
         {
-            throw new InvalidOperationException("There is no free slot for the recruits.");
+            throw new CommandRefusedException("There is no free slot for the recruits.");
         }
 
         Pay(player, TownRules.RecruitCost(state, town, state.Creatures.Get(creature), count));
@@ -95,12 +95,12 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     {
         var town = OwnTown(player, townId);
         var (army, hero) = ArmyOf(town, which, null);
-        var stack = (Army.IsValidSlot(slot) ? army[slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+        var stack = (Army.IsValidSlot(slot) ? army[slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
         var line = TownRules.Lines(state, town).FirstOrDefault(l => l.Id == stack.Creature && l.UpgradesTo is not null)
-                   ?? throw new InvalidOperationException($"{town.Name} cannot upgrade {stack.Creature}.");
+                   ?? throw new CommandRefusedException($"{town.Name} cannot upgrade {stack.Creature}.");
         if (town.DwellingLevel(line.Id) < 2)
         {
-            throw new InvalidOperationException($"The {line.Name} dwelling is not upgraded.");
+            throw new CommandRefusedException($"The {line.Name} dwelling is not upgraded.");
         }
 
         Pay(player, TownRules.UpgradeCost(state, town, line, stack.Count));
@@ -119,13 +119,13 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Refuse(UndeadTransformer.CheckTown(town));
         if (orders.Count == 0 || orders.DistinctBy(o => (o.Army, o.Slot)).Count() != orders.Count)
         {
-            throw new InvalidOperationException("Pick each stack to transform once.");
+            throw new CommandRefusedException("Pick each stack to transform once.");
         }
 
         var planned = orders.Select(order =>
         {
             var (army, hero) = ArmyOf(town, order.Army, null);
-            var stack = (Army.IsValidSlot(order.Slot) ? army[order.Slot] : null) ?? throw new InvalidOperationException("The slot is empty.");
+            var stack = (Army.IsValidSlot(order.Slot) ? army[order.Slot] : null) ?? throw new CommandRefusedException("The slot is empty.");
             var (transform, refusal) = UndeadTransformer.Of(state, town, stack.Creature, stack.Count, order.Line);
             Refuse(refusal);
             return (Army: army, Hero: hero, order.Slot, Transform: transform!);
@@ -232,7 +232,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     internal void AppointGovernor(PlayerId player, MapObjectId townId, HeroId heroId)
     {
         var town = OwnTown(player, townId);
-        var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new InvalidOperationException($"{heroId} is not an own hero.");
+        var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new CommandRefusedException($"{heroId} is not an own hero.");
         Refuse(StewardshipRules.CheckAppoint(state, town, hero));
         SetGovernor(state, events, town, hero);
     }
@@ -243,7 +243,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         var town = OwnTown(player, townId);
         if (StewardshipRules.GovernorOf(state, town) is null)
         {
-            throw new InvalidOperationException($"{town.Name} has no governor.");
+            throw new CommandRefusedException($"{town.Name} has no governor.");
         }
 
         SetGovernor(state, events, town, null);
@@ -419,17 +419,17 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     {
         if (state.FindObject(townId) is not Town town)
         {
-            throw new InvalidOperationException($"{townId} is not a town.");
+            throw new CommandRefusedException($"{townId} is not a town.");
         }
 
         if (town.Owner != player)
         {
-            throw new InvalidOperationException($"{town.Name} does not belong to {player}.");
+            throw new CommandRefusedException($"{town.Name} does not belong to {player}.");
         }
 
         if (state.PendingDecision is not null)
         {
-            throw new InvalidOperationException("Resolve the pending decision first.");
+            throw new CommandRefusedException("Resolve the pending decision first.");
         }
 
         return town;
@@ -445,7 +445,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         var hero = TownRules.VisitingHero(state, town);
         if (hero is null || (expected is { } id && hero.Id != id))
         {
-            throw new InvalidOperationException($"No own hero is visiting {town.Name}.");
+            throw new CommandRefusedException($"No own hero is visiting {town.Name}.");
         }
 
         return (hero.Army, hero);
@@ -455,7 +455,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     {
         if (!economy.TrySpend(player, cost))
         {
-            throw new InvalidOperationException("Not enough resources.");
+            throw new CommandRefusedException("Not enough resources.");
         }
     }
 
@@ -475,7 +475,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     {
         if (refusal is not null)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
     }
 }

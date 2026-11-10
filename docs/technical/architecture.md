@@ -53,6 +53,12 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   service mutators are `internal`. Accepted commands go to `session.CommandLog`; map + seed + log replay the game
   (`GameReplay`).
 - **Services** validate, mutate `GameState`, then publish past-tense events. They depend on `IEventPublisher` only.
+  A rule refuses a command by throwing `CommandRefusedException` (an unknown id from `GameState.GetHero` / `GetObject` /
+  `GetPlayer` does too) before it changes anything; `Execute` turns only that into a rejected `CommandResult`, so any other
+  exception is a bug and goes on up. The tests turn on `GameSession.CheckRefusals`, which fails a refusal that changed the
+  digest (ADR-165).
+- **Content tables** travel together as `ContentCatalogs` (creatures, heroes, buildings, artifacts and their spells): the
+  scenarios and `MapConverter.ToGameState(document, content, options)` take it, the Godot apps pass `GameContent.All`.
 - **`GameState`** is plain data with `internal` setters. It carries `GameOptions` (fog mode, refog margin, seed; game
   rules, not map data, so passed to `MapConverter.ToGameState(document, catalog, options)`) and `GameState.Random`
   (`GameRandom`), the only randomness rules may use.

@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -271,10 +272,10 @@ internal sealed class AdventureMagicService(GameState state, IEventPublisher eve
 {
     internal void Cast(PlayerId player, HeroId heroId, string spell, MapPosition? target)
     {
-        var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new InvalidOperationException($"{heroId} is not an own hero on the map.");
+        var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new CommandRefusedException($"{heroId} is not an own hero on the map.");
         if (AdventureMagic.Refusal(state, hero, spell, target) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
 
         var rank = AdventureMagic.RankOf(state, hero, spell);

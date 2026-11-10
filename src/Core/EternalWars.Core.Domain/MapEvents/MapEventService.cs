@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
@@ -35,20 +36,17 @@ public sealed class MapEventService(
     /// <summary>The most actions one run takes; past it the run ends (a guard against loops in loops in events running themselves).</summary>
     public const int MaxActionsPerRun = 100_000;
 
-    private readonly Queue<Run> _queue = new();
-    private Run? _current;
-    private (HeroId? Attacker, HeroId? Defender, MapObjectId? Guard, PlayerId? AttackerOwner, PlayerId? DefenderOwner)? _battle;
-
+    /// <summary>The events' state, the running ones too (<see cref="MapEventState.Runs"/>): the service keeps none of its own.</summary>
     private MapEventState Data => state.MapEvents;
 
     /// <summary>Whether an event is running or waiting to run.</summary>
-    public bool IsBusy => _current is not null || _queue.Count > 0;
+    public bool IsBusy => Data.Current is not null || Data.Runs.Count > 0;
 
     /// <summary>
     /// The question waiting for an answer with what each answer does, so a computer player can weigh them (EVT-6 a); null when no question waits.
     /// </summary>
     public MapEventQuestion? PendingQuestion =>
-        _current is { Waiting: Waiting.Decision, Answers: { } answers } run && state.PendingDecision is MapEventDecision { IsQuestion: true }
+        Data.Current is { Waiting: MapEventWaiting.Decision, Answers: { } answers } run && state.PendingDecision is MapEventDecision { IsQuestion: true }
             ? new MapEventQuestion(answers, run.Player, run.Hero, run.Town)
             : null;
 
@@ -63,7 +61,7 @@ public sealed class MapEventService(
     {
         if (Data.Cells.TryGetValue(cell, out var name) && Data.Set.Find(name) is { Kind: MapEventKind.Hero } definition)
         {
-            _queue.Enqueue(new Run(definition, hero.Owner, hero.Id, null, cell, startOfTurn: false));
+            Data.Runs.Enqueue(new MapEventRun(definition, hero.Owner, hero.Id, null, cell, startOfTurn: false));
             Pump();
         }
     }
@@ -75,13 +73,13 @@ public sealed class MapEventService(
         {
             if (definition.Kind == MapEventKind.Player)
             {
-                _queue.Enqueue(new Run(definition, player, null, null, null, startOfTurn: true));
+                Data.Runs.Enqueue(new MapEventRun(definition, player, null, null, null, startOfTurn: true));
             }
             else if (definition.Kind == MapEventKind.Town)
             {
                 foreach (var town in TownsOf(definition).Where(t => t.Owner == player))
                 {
-                    _queue.Enqueue(new Run(definition, player, null, town.Id, null, startOfTurn: true));
+                    Data.Runs.Enqueue(new MapEventRun(definition, player, null, town.Id, null, startOfTurn: true));
                 }
             }
         }
@@ -96,7 +94,7 @@ public sealed class MapEventService(
         {
             foreach (var town in TownsOf(definition).Where(t => t.Owner is null))
             {
-                _queue.Enqueue(new Run(definition, null, null, town.Id, null, startOfTurn: true));
+                Data.Runs.Enqueue(new MapEventRun(definition, null, null, town.Id, null, startOfTurn: true));
             }
         }
 
@@ -111,7 +109,7 @@ public sealed class MapEventService(
     {
         if (@event.Event is { } name && Data.Set.Find(name) is { Kind: MapEventKind.Hero } definition && state.Heroes.FirstOrDefault(h => h.Id == @event.Hero) is { } hero)
         {
-            _queue.Enqueue(new Run(definition, hero.Owner, hero.Id, null, null, startOfTurn: false));
+            Data.Runs.Enqueue(new MapEventRun(definition, hero.Owner, hero.Id, null, null, startOfTurn: false));
         }
     }
 
@@ -143,7 +141,7 @@ public sealed class MapEventService(
                 string.IsNullOrWhiteSpace(stage.Completion) ? $"{stage.Proposal}\n\nComplete the quest?" : stage.Completion,
                 [new EventAnswer("Complete", [.. stage.Actions, new AdvanceQuestAction(site.Id, site.Stage)]), new EventAnswer("Not now", [])])]
             : [new MessageAction(seen && !string.IsNullOrWhiteSpace(stage.Progress) ? stage.Progress : stage.Proposal)];
-        _queue.Enqueue(new Run(quest, hero.Owner, hero.Id, null, null, startOfTurn: false, actions));
+        Data.Runs.Enqueue(new MapEventRun(quest, hero.Owner, hero.Id, null, null, startOfTurn: false, actions));
         Pump();
     }
 
@@ -151,7 +149,7 @@ public sealed class MapEventService(
     /// A stage is complete: the quest object moves on, the other players' open entries for it go, and the completer's log shows the next stage
     /// (its proposal is shown at once) or the quest done; a Quest Guard whose last stage is done leaves the map.
     /// </summary>
-    private void AdvanceQuest(Run run, AdvanceQuestAction advance, Hero hero, PlayerId completer)
+    private void AdvanceQuest(MapEventRun run, AdvanceQuestAction advance, Hero hero, PlayerId completer)
     {
         if (state.FindObject(advance.Site) is not QuestSite site || site.Stage != advance.Stage)
         {
@@ -168,7 +166,7 @@ public sealed class MapEventService(
         if (site.Stage < run.Event.Stages.Count)
         {
             WriteLog(completer, new QuestLogEntry(site.Id, run.Event.Name, site.Stage, Done: false));
-            run.Frames.Push(new Frame([new MessageAction(run.Event.Stages[site.Stage].Proposal)]));
+            run.Frames.Push(new MapEventFrame([new MessageAction(run.Event.Stages[site.Stage].Proposal)]));
             return;
         }
 
@@ -203,10 +201,10 @@ public sealed class MapEventService(
         var ran = false;
         while (state.PendingDecision is null && state.Battle is null && !state.IsOver)
         {
-            ran |= _current is not null || _queue.Count > 0;
-            if (_current is null)
+            ran |= Data.Current is not null || Data.Runs.Count > 0;
+            if (Data.Current is null)
             {
-                if (!_queue.TryDequeue(out var next))
+                if (!Data.Runs.TryDequeue(out var next))
                 {
                     break;
                 }
@@ -216,31 +214,31 @@ public sealed class MapEventService(
                     continue;
                 }
 
-                _current = next;
+                Data.Current = next;
                 events.Publish(new MapEventRan(next.Event.Name, next.Event.Kind, next.Player, next.Hero, next.Town));
             }
 
-            var run = _current;
+            var run = Data.Current;
             switch (run.Waiting)
             {
                 // The answer went away unanswered (its hero left the map): the event ends.
-                case Waiting.Decision:
-                    _current = null;
+                case MapEventWaiting.Decision:
+                    Data.Current = null;
                     continue;
 
                 // The battle is over: a hero still on the map won it; lost, fled or surrendered, the event stops (EVT-4 d).
-                case Waiting.Battle when HeroOf(run) is null:
-                    _current = null;
+                case MapEventWaiting.Battle when HeroOf(run) is null:
+                    Data.Current = null;
                     continue;
-                case Waiting.Battle:
-                    run.Waiting = Waiting.None;
+                case MapEventWaiting.Battle:
+                    run.Waiting = MapEventWaiting.None;
                     break;
             }
 
             Continue(run);
-            if (run.Waiting == Waiting.None && run.Frames.Count == 0)
+            if (run.Waiting == MapEventWaiting.None && run.Frames.Count == 0)
             {
-                _current = null;
+                Data.Current = null;
             }
         }
 
@@ -251,9 +249,9 @@ public sealed class MapEventService(
     }
 
     /// <summary>Runs the actions until the event ends, waits, or something else becomes pending.</summary>
-    private void Continue(Run run)
+    private void Continue(MapEventRun run)
     {
-        while (run.Waiting == Waiting.None && run.Frames.Count > 0 && state.PendingDecision is null && state.Battle is null && !state.IsOver)
+        while (run.Waiting == MapEventWaiting.None && run.Frames.Count > 0 && state.PendingDecision is null && state.Battle is null && !state.IsOver)
         {
             var frame = run.Frames.Peek();
             if (frame.Next >= frame.Actions.Count)
@@ -290,7 +288,7 @@ public sealed class MapEventService(
     }
 
     /// <summary>Ends the event the run is in: its frames go, up to and with the one that started it (a run event returns to the one that ran it).</summary>
-    private static void Stop(Run run)
+    private static void Stop(MapEventRun run)
     {
         while (run.Frames.TryPop(out var frame) && frame.Event is null)
         {
@@ -298,26 +296,26 @@ public sealed class MapEventService(
     }
 
     /// <summary>The event whose actions the run is taking now: the innermost run event, else the run's own.</summary>
-    private static MapEventDefinition EventOf(Run run) => run.Frames.FirstOrDefault(f => f.Event is not null)?.Event ?? run.Event;
+    private static MapEventDefinition EventOf(MapEventRun run) => run.Frames.FirstOrDefault(f => f.Event is not null)?.Event ?? run.Event;
 
     /// <summary>Answers the pending message or question (<see cref="MapEventDecision"/>) and goes on.</summary>
     internal void Answer(int option)
     {
-        if (state.PendingDecision is not MapEventDecision decision || _current is not { Waiting: Waiting.Decision } run)
+        if (state.PendingDecision is not MapEventDecision decision || Data.Current is not { Waiting: MapEventWaiting.Decision } run)
         {
-            throw new InvalidOperationException("No map event is waiting for an answer.");
+            throw new CommandRefusedException("No map event is waiting for an answer.");
         }
 
         if (option < 0 || option >= Math.Max(1, decision.Answers.Count))
         {
-            throw new InvalidOperationException(decision.IsQuestion ? $"Answer 0 to {decision.Answers.Count - 1}." : "A message is closed with 0.");
+            throw new CommandRefusedException(decision.IsQuestion ? $"Answer 0 to {decision.Answers.Count - 1}." : "A message is closed with 0.");
         }
 
         state.PendingDecision = null;
-        run.Waiting = Waiting.None;
+        run.Waiting = MapEventWaiting.None;
         if (run.Answers is { } answers)
         {
-            run.Frames.Push(new Frame(answers[option].Actions));
+            run.Frames.Push(new MapEventFrame(answers[option].Actions));
             run.Answers = null;
         }
 
@@ -328,19 +326,19 @@ public sealed class MapEventService(
     /// <summary>Keeps the chosen stacks of a full army and its newcomers (<see cref="MapEventArmyDecision"/>), then goes on.</summary>
     internal void ChooseArmy(IReadOnlyList<int> keep)
     {
-        if (state.PendingDecision is not MapEventArmyDecision decision || _current is not { Waiting: Waiting.Decision } run)
+        if (state.PendingDecision is not MapEventArmyDecision decision || Data.Current is not { Waiting: MapEventWaiting.Decision } run)
         {
-            throw new InvalidOperationException("No map event is waiting for an army choice.");
+            throw new CommandRefusedException("No map event is waiting for an army choice.");
         }
 
         if (keep.Count is < 1 or > Army.SlotCount || keep.Distinct().Count() != keep.Count || keep.Any(i => i < 0 || i >= decision.Stacks.Count))
         {
-            throw new InvalidOperationException($"Keep one to {Army.SlotCount} different stacks of the {decision.Stacks.Count}.");
+            throw new CommandRefusedException($"Keep one to {Army.SlotCount} different stacks of the {decision.Stacks.Count}.");
         }
 
-        state.PendingDecision = null;
-        run.Waiting = Waiting.None;
         var hero = state.GetHero(decision.Hero);
+        state.PendingDecision = null;
+        run.Waiting = MapEventWaiting.None;
         Refill(hero.Army, keep.Select(i => decision.Stacks[i]));
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
         events.Publish(new DecisionResolved(decision));
@@ -350,7 +348,7 @@ public sealed class MapEventService(
     // Actions -------------------------------------------------------------------------------------------------------
 
     /// <summary>Applies one action; false stops the event.</summary>
-    private bool Apply(Run run, EventAction action)
+    private bool Apply(MapEventRun run, EventAction action)
     {
         var hero = HeroOf(run);
         var town = run.Town is { } townId ? state.FindObject(townId) as Town : null;
@@ -359,17 +357,17 @@ public sealed class MapEventService(
             case StopAction:
                 return false;
             case IfAction branch:
-                run.Frames.Push(new Frame(Test(run, branch.Condition) ? branch.Then : branch.Else));
+                run.Frames.Push(new MapEventFrame(Test(run, branch.Condition) ? branch.Then : branch.Else));
                 break;
             case RepeatAction repeat when Math.Min(Evaluate(run, repeat.Times), MaxLoopRounds) is > 0 and var times && repeat.Actions.Count > 0:
-                run.Frames.Push(new Frame(repeat.Actions) { RoundsLeft = times - 1 });
+                run.Frames.Push(new MapEventFrame(repeat.Actions) { RoundsLeft = times - 1 });
                 break;
             case WhileAction loop when loop.Actions.Count > 0 && Test(run, loop.Condition):
-                run.Frames.Push(new Frame(loop.Actions) { While = loop.Condition, Rounds = 1 });
+                run.Frames.Push(new MapEventFrame(loop.Actions) { While = loop.Condition, Rounds = 1 });
                 break;
             case RunEventAction call when Data.Set.Find(call.Event) is { Kind: not MapEventKind.Quest } other && Data.IsEnabled(other.Name)
                                           && run.Frames.Count(f => f.Event is not null) < MaxRunDepth:
-                run.Frames.Push(new Frame(other.Actions) { Event = other });
+                run.Frames.Push(new MapEventFrame(other.Actions) { Event = other });
                 events.Publish(new MapEventRan(other.Name, other.Kind, run.Player, run.Hero, run.Town));
                 break;
             case SetVariableAction set:
@@ -429,7 +427,7 @@ public sealed class MapEventService(
                     return false; // nobody to fight with: the event stops, the hero stays
                 }
 
-                run.Waiting = Waiting.Battle;
+                run.Waiting = MapEventWaiting.Battle;
                 battles.BeginEventBattle(hero, fight.Army);
                 break;
             default:
@@ -445,7 +443,7 @@ public sealed class MapEventService(
     }
 
     /// <summary>The actions that change the hero itself; gains only for experience, stats and skills (EVT-4 b).</summary>
-    private void ApplyToHero(Run run, Hero hero, EventAction action)
+    private void ApplyToHero(MapEventRun run, Hero hero, EventAction action)
     {
         switch (action)
         {
@@ -513,10 +511,10 @@ public sealed class MapEventService(
     /// A message: a person reads it with a line per reward, then gets the rewards; anyone else gets them at once. The rewards' amounts are drawn
     /// now, so the lines tell what comes.
     /// </summary>
-    private void Show(Run run, MessageAction message)
+    private void Show(MapEventRun run, MessageAction message)
     {
         var rewards = message.Rewards.Select(r => Fix(run, r)).ToList();
-        run.Frames.Push(new Frame(rewards));
+        run.Frames.Push(new MapEventFrame(rewards));
         if (run.Player is { } player && state.GetPlayer(player).IsHuman)
         {
             var lines = rewards.Select(Describe).OfType<string>().ToList();
@@ -532,7 +530,7 @@ public sealed class MapEventService(
     /// hero given at a cell), else the last place the run touched (an area it revealed, a hero it gave), else the town of a town event. Null
     /// for runs that are not a turn start: a hero event's hero is already in view.
     /// </summary>
-    private MapPosition? PlaceOf(Run run, IReadOnlyList<EventAction> rewards)
+    private MapPosition? PlaceOf(MapEventRun run, IReadOnlyList<EventAction> rewards)
     {
         if (!run.StartOfTurn)
         {
@@ -553,9 +551,9 @@ public sealed class MapEventService(
         return run.Place ?? (run.Town is { } id && state.FindObject(id) is Town town ? town.VisitPosition : null);
     }
 
-    private void Ask(Run run, PendingDecision decision)
+    private void Ask(MapEventRun run, PendingDecision decision)
     {
-        run.Waiting = Waiting.Decision;
+        run.Waiting = MapEventWaiting.Decision;
         state.PendingDecision = decision;
         events.Publish(new DecisionRequested(decision));
     }
@@ -594,7 +592,7 @@ public sealed class MapEventService(
     }
 
     /// <summary>Creatures for the hero: they join a stack or a free slot; a full army asks a person what to leave and keeps a computer's strongest.</summary>
-    private void GiveCreatures(Run run, Hero hero, string creature, int count)
+    private void GiveCreatures(MapEventRun run, Hero hero, string creature, int count)
     {
         if (!state.Creatures.Contains(creature) || count == 0)
         {
@@ -747,7 +745,7 @@ public sealed class MapEventService(
     }
 
     /// <summary>A roster hero joins the player (EVT-4 c): not when it is in play or the player has as many heroes as it may.</summary>
-    private void GiveHero(Run run, PlayerId owner, GiveHeroAction give, Hero? near, Town? town)
+    private void GiveHero(MapEventRun run, PlayerId owner, GiveHeroAction give, Hero? near, Town? town)
     {
         if (!state.HeroRoster.Contains(give.Hero) || state.HeroLimitReached(owner) || InPlay(give.Hero))
         {
@@ -782,16 +780,16 @@ public sealed class MapEventService(
 
     // Expressions and conditions ------------------------------------------------------------------------------------
 
-    private Hero? HeroOf(Run run) => run.Hero is { } id ? state.Heroes.FirstOrDefault(h => h.Id == id) : null;
+    private Hero? HeroOf(MapEventRun run) => run.Hero is { } id ? state.Heroes.FirstOrDefault(h => h.Id == id) : null;
 
-    private int Evaluate(Run run, EventExpr expr) => MapEventEvaluator.Evaluate(state, Scope(run), expr);
+    private int Evaluate(MapEventRun run, EventExpr expr) => MapEventEvaluator.Evaluate(state, Scope(run), expr);
 
-    private bool Test(Run run, EventCondition condition) => MapEventEvaluator.Test(state, Scope(run), condition);
+    private bool Test(MapEventRun run, EventCondition condition) => MapEventEvaluator.Test(state, Scope(run), condition);
 
-    private EventScope Scope(Run run) => new(run.Player, HeroOf(run), run.Town);
+    private EventScope Scope(MapEventRun run) => new(run.Player, HeroOf(run), run.Town);
 
     /// <summary>A reward with its amounts drawn (a message shows them before they are given).</summary>
-    private EventAction Fix(Run run, EventAction action) => action switch
+    private EventAction Fix(MapEventRun run, EventAction action) => action switch
     {
         ResourceAction a => a with { Amount = new NumberExpr(Evaluate(run, a.Amount)) },
         ExperienceAction a => a with { Amount = new NumberExpr(Evaluate(run, a.Amount)) },
@@ -829,16 +827,16 @@ public sealed class MapEventService(
     // Defeat records (EVT-3 e) --------------------------------------------------------------------------------------
 
     public void Handle(BattleStarted @event) =>
-        _battle = (@event.AttackerHero, @event.DefenderHero, @event.Guard, OwnerOf(@event.AttackerHero), OwnerOf(@event.DefenderHero));
+        Data.Fight = new(@event.AttackerHero, @event.DefenderHero, @event.Guard, OwnerOf(@event.AttackerHero), OwnerOf(@event.DefenderHero));
 
     public void Handle(BattleEnded @event)
     {
-        if (_battle is not { } battle)
+        if (Data.Fight is not { } battle)
         {
             return;
         }
 
-        _battle = null;
+        Data.Fight = null;
         var (beatenHero, beatenGuard, winner) = @event.Winner == BattleSide.Attacker
             ? (battle.Defender, battle.Guard, battle.AttackerOwner)
             : (battle.Attacker, (MapObjectId?)null, battle.DefenderOwner);
@@ -863,60 +861,4 @@ public sealed class MapEventService(
 
     /// <summary>The last step of a quest stage's completion: the quest object moves on (not map data, so no map can hold it).</summary>
     private sealed record AdvanceQuestAction(MapObjectId Site, int Stage) : EventAction;
-
-    private enum Waiting
-    {
-        None,
-        Decision,
-        Battle,
-    }
-
-    /// <summary>A list of actions being taken: a branch, an answer, a loop's body, or a whole event's actions (<see cref="Event"/> set).</summary>
-    private sealed class Frame(IReadOnlyList<EventAction> actions)
-    {
-        public IReadOnlyList<EventAction> Actions { get; } = actions;
-
-        public int Next { get; set; }
-
-        /// <summary>The event these are the actions of (the run's own or a run event); a stop ends the frames up to it.</summary>
-        public MapEventDefinition? Event { get; init; }
-
-        /// <summary>A repeat's rounds still to come after this one.</summary>
-        public int RoundsLeft { get; set; }
-
-        /// <summary>A while loop's condition, tested again when a round ends.</summary>
-        public EventCondition? While { get; init; }
-
-        /// <summary>The rounds a while loop has begun.</summary>
-        public int Rounds { get; set; }
-    }
-
-    /// <summary>One event running for a player, hero, town and cell; a quest's run carries the actions of its visit instead of the event's.</summary>
-    private sealed class Run(
-        MapEventDefinition definition, PlayerId? player, HeroId? hero, MapObjectId? town, MapPosition? cell, bool startOfTurn, IReadOnlyList<EventAction>? actions = null)
-    {
-        public MapEventDefinition Event { get; } = definition;
-
-        public PlayerId? Player { get; } = player;
-
-        public HeroId? Hero { get; } = hero;
-
-        public MapObjectId? Town { get; } = town;
-
-        public MapPosition? Cell { get; } = cell;
-
-        public bool StartOfTurn { get; } = startOfTurn;
-
-        /// <summary>The last place the run touched (an area it revealed, a hero it gave): what a later turn-start message concerns.</summary>
-        public MapPosition? Place { get; set; }
-
-        public Stack<Frame> Frames { get; } = new([new Frame(actions ?? definition.Actions) { Event = definition }]);
-
-        /// <summary>The actions taken so far (<see cref="MaxActionsPerRun"/>).</summary>
-        public int Steps { get; set; }
-
-        public Waiting Waiting { get; set; }
-
-        public IReadOnlyList<EventAnswer>? Answers { get; set; }
-    }
 }

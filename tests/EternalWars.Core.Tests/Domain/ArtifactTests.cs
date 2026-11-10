@@ -126,10 +126,10 @@ public class ArtifactTests
         var state = Create("A.B");
         var artifacts = state.GetHero(A).Artifacts;
 
-        Assert.Throws<InvalidOperationException>(() => artifacts.ReplaceWith(["rusted-blade", "centaurs-ax"], [], state.Artifacts));
+        Assert.Throws<CommandRefusedException>(() => artifacts.ReplaceWith(["rusted-blade", "centaurs-ax"], [], state.Artifacts));
         artifacts.ReplaceWith(["iron-band", "ring-of-pale-fire"], [], state.Artifacts); // two rings fit
-        Assert.Throws<InvalidOperationException>(() => artifacts.ReplaceWith(["iron-band", "ring-of-pale-fire", "ring-of-the-wayfarer"], [], state.Artifacts));
-        Assert.Throws<InvalidOperationException>(() => artifacts.ReplaceWith([], Enumerable.Repeat("rusted-blade", ArtifactSlots.BackpackSize + 1), state.Artifacts));
+        Assert.Throws<CommandRefusedException>(() => artifacts.ReplaceWith(["iron-band", "ring-of-pale-fire", "ring-of-the-wayfarer"], [], state.Artifacts));
+        Assert.Throws<CommandRefusedException>(() => artifacts.ReplaceWith([], Enumerable.Repeat("rusted-blade", ArtifactSlots.BackpackSize + 1), state.Artifacts));
         Assert.Throws<KeyNotFoundException>(() => artifacts.ReplaceWith(["no-such-artifact"], [], state.Artifacts));
         Assert.Equal(2, artifacts.Worn(ArtifactSlot.Ring).Count); // the failed replaces left it alone
     }

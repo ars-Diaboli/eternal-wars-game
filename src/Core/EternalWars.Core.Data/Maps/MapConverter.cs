@@ -91,6 +91,11 @@ public static class MapConverter
         return map;
     }
 
+    /// <summary>Builds the initial state of a scenario from the game's content tables (<see cref="ToGameState(MapDocument, MapObjectCatalog?, GameOptions?, TerrainCatalog?, CreatureCatalog?, HeroCatalog?, BuildingCatalog?, ArtifactCatalog?, bool)"/>).</summary>
+    public static GameState ToGameState(MapDocument document, ContentCatalogs content, GameOptions? options = null, bool checkEvents = true) =>
+        ToGameState(document, options: options, creatures: content.Creatures, heroRoster: content.Heroes, buildings: content.Buildings, artifacts: content.Artifacts,
+            checkEvents: checkEvents);
+
     /// <summary>
     /// Builds the initial state of a scenario. <paramref name="catalog"/> resolves object definitions and
     /// <paramref name="terrains"/> supplies terrain rules (both default to the built-in content);
@@ -113,16 +118,17 @@ public static class MapConverter
         artifacts ??= ArtifactCatalog.Default;
         creatures ??= CreatureCatalog.Default;
         heroRoster ??= HeroCatalog.Default;
+        var spells = artifacts.Spells;
         var map = ToMap(document);
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
         var heroes = document.Heroes.Select(h => ToHero(h, creatures, heroRoster, artifacts)).ToList();
         // Before v13 the guard mode was one map-wide setting; it becomes the mode of every monster (ADR-065).
         var legacyGuardMode = document.FormatVersion < MapDocument.PerMonsterGuardModeVersion ? document.GuardMode : null;
-        var objects = document.Objects.Select(o => ToObject(o, catalog, creatures, legacyGuardMode));
+        var objects = document.Objects.Select(o => ToObject(o, catalog, creatures, spells, legacyGuardMode));
         try
         {
-            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts, catalog);
+            var state = new GameState(map, players, heroes, objects, options, terrains, creatures, heroRoster, buildings, artifacts, catalog, spells);
             state.SetTeamsLocked(document.TeamsLocked);
             state.SetTeamCounts(document.MinTeams, document.MaxTeams);
             state.SetRules(ToRules(document.Rules));
@@ -604,7 +610,8 @@ public static class MapConverter
         ["bank.ruins"] = BuiltInMapObjects.Crypt,
     };
 
-    private static MapObject ToObject(MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures, GuardMode? legacyGuardMode)
+    private static MapObject ToObject(
+        MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures, SpellCatalog spells, GuardMode? legacyGuardMode)
     {
         if (!catalog.TryGet(document.Definition, out var definition)
             && !(RenamedDefinitions.TryGetValue(document.Definition, out var renamed) && catalog.TryGet(renamed, out definition)))
@@ -649,7 +656,7 @@ public static class MapConverter
                 WitchHutDocument { Skills: { Count: not 0 and not WitchHut.SkillCount } } => throw new FormatException($"A witch hut has {WitchHut.SkillCount} skills, or none to roll."),
                 WitchHutDocument { Skills: { } skills } when skills.Any(s => !BuiltInSkills.Contains(s)) => throw new FormatException("A witch hut names an unknown skill."),
                 WitchHutDocument hut => new WitchHut(id, definition, position, hut.Skills?.Select(BuiltInSkills.Resolve).ToList()),
-                ShrineDocument shrine when ShrineRules.SpellRefusal(SpellCatalog.Default, definition.Amount, shrine.Spell) is { } wrong => throw new FormatException($"A shrine: {wrong}"),
+                ShrineDocument shrine when ShrineRules.SpellRefusal(spells, definition.Amount, shrine.Spell) is { } wrong => throw new FormatException($"A shrine: {wrong}"),
                 ShrineDocument shrine => new Shrine(id, definition, position, shrine.Spell),
                 SkillSchoolDocument => new SkillSchool(id, definition, position),
                 ObeliskDocument => new Obelisk(id, definition, position),
@@ -684,7 +691,7 @@ public static class MapConverter
                 GateDocument gate => new TwoWayGate(id, definition, position, ToId(gate.LinkedGate)),
                 GateEntranceDocument entrance => new OneWayGateEntrance(id, definition, position, ToId(entrance.Exit)),
                 GateExitDocument => new OneWayGateExit(id, definition, position),
-                TownDocument town => ToTown(town, id, definition, position, creatures),
+                TownDocument town => ToTown(town, id, definition, position, creatures, spells),
                 _ => throw new FormatException($"Unsupported object kind {document.GetType().Name}."),
             };
         }
@@ -696,7 +703,7 @@ public static class MapConverter
         static MapObjectId? ToId(int? value) => value is { } v ? new MapObjectId(v) : null;
     }
 
-    private static Town ToTown(TownDocument town, MapObjectId id, MapObjectDefinition definition, MapPosition position, CreatureCatalog creatures)
+    private static Town ToTown(TownDocument town, MapObjectId id, MapObjectDefinition definition, MapPosition position, CreatureCatalog creatures, SpellCatalog spellCatalog)
     {
         foreach (var line in (town.Dwellings?.Keys ?? []).Concat(town.Available?.Keys ?? []))
         {
@@ -711,7 +718,7 @@ public static class MapConverter
             throw new FormatException($"Town {town.Id} has an invalid building or dwelling level.");
         }
 
-        if (town.GuildSpells is { } spells && MagicRules.GuildSpellsProblem(SpellCatalog.Default, definition.Town!, spells) is { } wrong)
+        if (town.GuildSpells is { } spells && MagicRules.GuildSpellsProblem(spellCatalog, definition.Town!, spells) is { } wrong)
         {
             throw new FormatException($"Town {town.Id} has wrong guild spells: {wrong}");
         }

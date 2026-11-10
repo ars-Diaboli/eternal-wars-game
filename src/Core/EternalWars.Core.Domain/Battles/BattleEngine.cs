@@ -536,10 +536,9 @@ internal sealed class BattleEngine(BattleState battle, IEventPublisher events)
             return refusal;
         }
 
-        var known = BattleMagic.CreatureSpell(unit)!;
-        var caster = BattleMagic.CasterSpells.First(c => c.Value == known.Spell.Id && unit.CastsLeft.GetValueOrDefault(c.Key) > 0).Key;
-        unit.MutableCastsLeft[caster]--;
-        events.Publish(new BattleCreatureCast(unit.Id, known.Spell.Id, targetId, cell, unit.CastsLeft[caster]));
+        var known = BattleMagic.CreatureSpell(battle, unit)!;
+        unit.MutableCastsLeft[known.Spell.Id]--;
+        events.Publish(new BattleCreatureCast(unit.Id, known.Spell.Id, targetId, cell, unit.CastsLeft[known.Spell.Id]));
         Work(unit.Side, known, targetId, cell, BattleMagic.CreatureSpellPower(unit));
         if (!CheckFinished())
         {

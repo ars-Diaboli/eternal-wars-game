@@ -107,7 +107,7 @@ public class SummonAndCasterTests
     public void ACreatureCaster_CastsItsSpellAsItsAction_WithHalfItsCountAsSpellPower_AsOftenAsItsCasts()
     {
         var mage = CreatureCatalog.Default.Get("academy.mage");
-        Assert.Equal(1, mage.SpellCasts["fireball"]);
+        Assert.Equal(1, mage.SpellCasts["chaos.fireball"]);
         var battle = TestBattle.Create();
         var casters = battle.Add(Attacker, mage, 10, 0, 0);
         var enemy = battle.Add(Defender, TestBattle.Fixed("enemy", 1, health: 1000), 1, 20, 10);
@@ -116,7 +116,7 @@ public class SummonAndCasterTests
         Assert.Null(battle.Engine.CreatureCast(null, new CellPosition(20, 10)));
 
         Assert.Equal(1000 - (35 * (10 + 5) / 10), enemy.TopHealth); // Fireball 35 at Spell Power 10 / 2
-        Assert.Equal(0, casters.CastsLeft["fireball"]);
+        Assert.Equal(0, casters.CastsLeft["chaos.fireball"]);
         Assert.NotEqual(casters, battle.State.ActiveUnit); // it was the stack's action
         Assert.Contains(battle.Events, e => e is BattleCreatureCast { Spell: "chaos.fireball", CastsLeft: 0 });
 
@@ -125,9 +125,23 @@ public class SummonAndCasterTests
     }
 
     [Fact]
+    public void ACreatureCaster_CastsTheSpellFromTheGamesOwnSpellTable()
+    {
+        var spells = new SpellCatalog(SpellCatalog.Default.All.Select(s => s.Id == "chaos.fireball" ? s with { Effect = s.Effect! with { Amount = 100 } } : s));
+        var battle = TestBattle.Create(spells: spells);
+        var casters = battle.Add(Attacker, CreatureCatalog.Default.Get("academy.mage"), 10, 0, 0);
+        var enemy = battle.Add(Defender, TestBattle.Fixed("enemy", 1, health: 1000), 1, 20, 10);
+        battle.StartWith(casters);
+
+        Assert.Null(battle.Engine.CreatureCast(null, new CellPosition(20, 10)));
+
+        Assert.Equal(1000 - (100 * (10 + 5) / 10), enemy.TopHealth); // the table's Fireball, 100, not the built-in 35
+    }
+
+    [Fact]
     public void TheBattleAi_CastsACreatureSpell_WhenItCannotHitAnythingItself()
     {
-        var caster = TestBattle.Fixed("caster", 1, capabilities: new CreatureCapability(CapabilityKind.Caster, 1, "lightning"));
+        var caster = TestBattle.Fixed("caster", 1, capabilities: new CreatureCapability(CapabilityKind.Caster, 1, "nature.call-lightning"));
         var battle = TestBattle.Create();
         var unit = battle.Add(Attacker, caster, 10, 0, 0);
         var enemy = battle.Add(Defender, TestBattle.Fixed("enemy", 1, health: 1000), 1, 25, 20);

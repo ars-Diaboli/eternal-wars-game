@@ -282,18 +282,11 @@ spells are spread out:
 
 ## Creature casters
 
-The creature table names caster spells (`Caster fireball 1`, …). **The number is casts per battle** (ADR-120; it was read as the rank, but every
-creature cast is rank I). A caster stack's Spell Power is its **count / 2** *(proposal)*, it pays no mana, and the stack's turn is used. Built
-in ADR-120; Blind, Confusion and Resurrection since ADR-123, so every caster spell below is castable. With this list they become:
-
-| Id in `creatures.csv` | Becomes |
-|---|---|
-| `fireball`, `frost-bolt`, `blind`, `bloodlust` | `chaos.fireball`, `arcana.frost-bolt`, `shadow.blind`, `chaos.bloodlust` |
-| `cure` | `light.heal` |
-| `lightning` | `nature.call-lightning` |
-| `confusion`, `death-cloud` | `shadow.confusion`, `death.death-cloud` |
-| `resurrection` | `light.resurrection` |
-| `rebirth` (Phoenix), `summon-imps` (Breeder) | creature-only abilities: the Phoenix rises once with 30 % of its stack; the Breeder calls imps like `chaos.hellgate` |
+The creature table names caster spells by their spell table id (`Caster chaos.fireball 1`, …), looked up in the game's own spell table.
+**The number is casts per battle** (ADR-120; every creature cast is rank I). A caster stack's Spell Power is its **count / 2** *(proposal)*, it
+pays no mana, and the stack's turn is used. The built-in casters cast `chaos.fireball`, `arcana.frost-bolt`, `shadow.blind`, `chaos.bloodlust`,
+`light.heal`, `nature.call-lightning`, `shadow.confusion`, `death.death-cloud`, `light.resurrection` and (the Breeder, calling imps)
+`chaos.hellgate`. `Caster rebirth 1` is the Phoenix's own ability, not a spell: it rises once with 30 % of its stack.
 
 ## Adventure spells
 

@@ -14,7 +14,7 @@ publish/subscribe layer.
 | `IEventBus` / `EventBus` | both; only composition roots (`GameSession`, `MapEditorSession`, app `Main`) see it |
 | `subscriber.Subscribe<T>(Action<T>)` | delegate shortcut (`EventSubscriberExtensions`) |
 | `SubscriptionGroup` | disposes many subscriptions at once |
-| `node.SubscribeWhileInTree<T>(events, handler)` | Godot.Shared; disposes when the node leaves the tree |
+| `node.SubscribeWhileInTree<T>(events, handler)` | Godot.Shared; subscribed while the node is in the tree (from now, or when it enters), disposed when it leaves, subscribed again if it comes back; subscribe on a node that goes away with what the handler keeps alive, not on a root that never leaves |
 
 ## Semantics (guaranteed, covered by `EventBusTests`)
 

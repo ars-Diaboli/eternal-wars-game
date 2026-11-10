@@ -359,9 +359,9 @@ public partial class BattleHud : Control
         }
 
         // A creature caster's own spell (ADR-120): its action, no mana.
-        if (BattleMagic.CreatureSpell(active) is { Effect: not null } own)
+        if (BattleMagic.CreatureSpell(battle, active) is { Effect: not null } own)
         {
-            var casts = active.CastsLeft.Where(c => BattleMagic.CasterSpells.GetValueOrDefault(c.Key) == own.Spell.Id).Sum(c => c.Value);
+            var casts = active.CastsLeft[own.Spell.Id];
             var cast = new Button { Text = $"{active.Creature.Name}: {own.Spell.Name} ({casts} left)", TooltipText = $"The stack casts it as its action. {own.Spell.Notes}" };
             cast.Pressed += () => ArmCreature(own);
             var ownId = own.Spell.Id;

@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
@@ -214,12 +215,12 @@ public sealed class BattleService(
         var battle = Current(BattlePhase.ChoosingWidth);
         if (battle.WidthChooser is not { } chooser || Commander(chooser) != player)
         {
-            throw new InvalidOperationException("Only the side with the better Tactics chooses the width.");
+            throw new CommandRefusedException("Only the side with the better Tactics chooses the width.");
         }
 
         if (!battle.WidthOptions.Contains(width))
         {
-            throw new InvalidOperationException($"Width {width} is not one of {string.Join(", ", battle.WidthOptions)}.");
+            throw new CommandRefusedException($"Width {width} is not one of {string.Join(", ", battle.WidthOptions)}.");
         }
 
         Deploy(battle, width);
@@ -228,10 +229,10 @@ public sealed class BattleService(
     internal void Act(PlayerId player, BattleAction action)
     {
         var battle = Current(BattlePhase.Fighting);
-        var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
+        var unit = battle.ActiveUnit ?? throw new CommandRefusedException("No unit is active.");
         if (Commander(unit.Side) != player)
         {
-            throw new InvalidOperationException($"{unit.Creature.Name} is not under {player}'s command.");
+            throw new CommandRefusedException($"{unit.Creature.Name} is not under {player}'s command.");
         }
 
         var refusal = action switch
@@ -250,7 +251,7 @@ public sealed class BattleService(
         };
         if (refusal is not null)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
 
         Continue(battle);
@@ -262,20 +263,20 @@ public sealed class BattleService(
     internal void UseWarcry(PlayerId player, Warcry warcry)
     {
         var battle = Current(BattlePhase.Fighting);
-        var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
+        var unit = battle.ActiveUnit ?? throw new CommandRefusedException("No unit is active.");
         if (Commander(unit.Side) != player)
         {
-            throw new InvalidOperationException($"{unit.Creature.Name} is not under {player}'s command.");
+            throw new CommandRefusedException($"{unit.Creature.Name} is not under {player}'s command.");
         }
 
         if (battle.Participant(unit.Side).Hero is null)
         {
-            throw new InvalidOperationException("Only a hero uses warcries.");
+            throw new CommandRefusedException("Only a hero uses warcries.");
         }
 
         if (Engine(battle).UseWarcry(unit.Side, warcry) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
     }
 
@@ -286,15 +287,15 @@ public sealed class BattleService(
     internal void Cast(PlayerId player, string spell, int? target, CellPosition? cell, int? second = null)
     {
         var battle = Current(BattlePhase.Fighting);
-        var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
+        var unit = battle.ActiveUnit ?? throw new CommandRefusedException("No unit is active.");
         if (Commander(unit.Side) != player)
         {
-            throw new InvalidOperationException($"{unit.Creature.Name} is not under {player}'s command.");
+            throw new CommandRefusedException($"{unit.Creature.Name} is not under {player}'s command.");
         }
 
         if (Engine(battle).Cast(unit.Side, spell, target, cell, second) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
 
         Continue(battle);
@@ -306,10 +307,10 @@ public sealed class BattleService(
     internal void Retreat(PlayerId player)
     {
         var battle = Current(BattlePhase.Fighting);
-        var side = SideOf(battle, player) ?? throw new InvalidOperationException($"{player} does not fight in this battle.");
+        var side = SideOf(battle, player) ?? throw new CommandRefusedException($"{player} does not fight in this battle.");
         if (SurrenderRules.CheckRetreat(battle, side) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
 
         Engine(battle).Retreat(side);
@@ -323,17 +324,17 @@ public sealed class BattleService(
     internal void Surrender(PlayerId player)
     {
         var battle = Current(BattlePhase.Fighting);
-        var side = SideOf(battle, player) ?? throw new InvalidOperationException($"{player} does not fight in this battle.");
+        var side = SideOf(battle, player) ?? throw new CommandRefusedException($"{player} does not fight in this battle.");
         if (SurrenderRules.Check(state, battle, side) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
 
         var price = SurrenderRules.Price(battle, side);
         var winner = battle.Participant(side.Opponent()).Owner!.Value;
         if (!economy.TrySpend(player, new Economy.ResourceSet(Gold: price)))
         {
-            throw new InvalidOperationException($"Surrendering costs {price} gold.");
+            throw new CommandRefusedException($"Surrendering costs {price} gold.");
         }
 
         economy.Grant(winner, new Economy.ResourceSet(Gold: price));
@@ -345,10 +346,10 @@ public sealed class BattleService(
     /// <summary>Quick combat: the AI fights both sides to the end (either participant may ask, ADR-038).</summary>
     internal void AutoResolve(PlayerId player)
     {
-        var battle = state.Battle ?? throw new InvalidOperationException("No battle is being fought.");
+        var battle = state.Battle ?? throw new CommandRefusedException("No battle is being fought.");
         if (SideOf(battle, player) is null)
         {
-            throw new InvalidOperationException($"{player} does not fight in this battle.");
+            throw new CommandRefusedException($"{player} does not fight in this battle.");
         }
 
         battle.AutoResolve = true;
@@ -388,7 +389,7 @@ public sealed class BattleService(
     /// </summary>
     public AutoCombatPreview Preview()
     {
-        var battle = (state.Battle ?? throw new InvalidOperationException("No battle is being fought.")).Copy();
+        var battle = (state.Battle ?? throw new CommandRefusedException("No battle is being fought.")).Copy();
         var unheard = new EventBus();
         battle.AutoResolve = true;
         switch (battle.Phase)
@@ -442,7 +443,7 @@ public sealed class BattleService(
         var who = state.GetPlayer(player);
         if (!who.IsHuman)
         {
-            throw new InvalidOperationException("Only a human player sets auto combat.");
+            throw new CommandRefusedException("Only a human player sets auto combat.");
         }
 
         if (who.AutoCombat == mode)
@@ -518,7 +519,7 @@ public sealed class BattleService(
     private BattleState Create(BattleParticipant attacker, BattleParticipant defender, MapPosition location, bool isAmbush, Map.TerrainType? terrain = null)
     {
         var ground = terrain ?? state.Map.GetTerrain(location);
-        return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns) { Creatures = state.Creatures };
+        return new(attacker, defender, ground, location, isAmbush, state.Random.Fork(), state.Terrains.Get(ground).NativeTowns) { Creatures = state.Creatures, Spells = state.Spells };
     }
 
     /// <summary>
@@ -530,7 +531,7 @@ public sealed class BattleService(
     {
         if (state.Battle is not null)
         {
-            throw new InvalidOperationException("A battle is already being fought.");
+            throw new CommandRefusedException("A battle is already being fought.");
         }
 
         state.Battle = battle;
@@ -565,10 +566,10 @@ public sealed class BattleService(
     internal void Redeploy(PlayerId player, int unitId, CellPosition to)
     {
         var battle = Deploying(player);
-        var unit = battle.FindUnit(unitId) ?? throw new InvalidOperationException($"No unit {unitId}.");
+        var unit = battle.FindUnit(unitId) ?? throw new CommandRefusedException($"No unit {unitId}.");
         if (BattleSetup.DeploymentRefusal(battle, unit, to) is { } refusal)
         {
-            throw new InvalidOperationException(refusal);
+            throw new CommandRefusedException(refusal);
         }
 
         var from = unit.Position;
@@ -584,7 +585,7 @@ public sealed class BattleService(
         var battle = Current(BattlePhase.Deploying);
         if (Commander(battle.Deployer!.Value) != player)
         {
-            throw new InvalidOperationException("Only the side with the higher Tactics deploys.");
+            throw new CommandRefusedException("Only the side with the higher Tactics deploys.");
         }
 
         return battle;
@@ -678,7 +679,7 @@ public sealed class BattleService(
     private BattleState Current(BattlePhase phase) =>
         state.Battle is { } battle && battle.Phase == phase
             ? battle
-            : throw new InvalidOperationException(phase switch
+            : throw new CommandRefusedException(phase switch
             {
                 BattlePhase.Fighting => "No battle is being fought.",
                 BattlePhase.Deploying => "No stacks to deploy.",

@@ -40,7 +40,7 @@ internal sealed class BattleEstimator(GameState state)
     /// </summary>
     public BattleEstimate Fight(Hero attacker, Army defender, int defenderAttack = 0, int defenderDefense = 0, Battles.SiegeSpec? siege = null)
     {
-        var key = $"{Describe(attacker.Army)}|{attacker.Attack}/{attacker.Defense}|{Describe(defender)}|{defenderAttack}/{defenderDefense}"
+        var key = $"{Describe(attacker.Army)}|{attacker.TotalAttack}/{attacker.TotalDefense}|{Describe(defender)}|{defenderAttack}/{defenderDefense}"
                   + (siege is null ? "" : $"|siege {siege.FortLevel}/{siege.Buildings} {string.Join(",", attacker.WarMachines.Order())}");
         if (!_cache.TryGetValue(key, out var estimate))
         {

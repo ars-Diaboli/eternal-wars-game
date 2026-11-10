@@ -82,6 +82,24 @@ public class MapSerializerTests
     }
 
     [Fact]
+    public void AFileWithoutAVersion_IsTheFirstVersion_SoTheOlderVersionsHandlingApplies()
+    {
+        const string json = """
+            {
+              "name": "Old", "width": 3, "height": 2, "terrain": [ [ "ggg", "ggg" ] ], "guardMode": "Area",
+              "players": [ { "name": "Blue", "isHuman": true } ],
+              "objects": [ { "kind": "monster", "id": 1, "definition": "monster", "x": 1, "y": 1, "creature": "neutral.wolf", "count": 5 } ]
+            }
+            """;
+
+        var document = MapSerializer.Deserialize(json);
+
+        Assert.Equal(MapDocument.UnversionedFormatVersion, document.FormatVersion);
+        Assert.Equal(GuardMode.Area, Assert.IsType<MonsterGuard>(Assert.Single(MapConverter.ToGameState(document).Objects)).Mode); // v4–v12's map-wide mode
+        Assert.Equal(MapDocument.CurrentFormatVersion, MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(BlankScenario.Create(4, 4)))).FormatVersion);
+    }
+
+    [Fact]
     public void Deserialize_RejectsMalformedRows()
     {
         const string json = """

@@ -4,7 +4,8 @@ namespace EternalWars.Core.Domain.MapEvents;
 
 /// <summary>
 /// The map events of a game (ADR-115): the author's <see cref="Set"/>, and what changes while it runs (variables, enabled events, removed cells,
-/// the "defeated by" records). Running events are kept by <see cref="MapEventService"/>; a replay rebuilds them from the commands.
+/// the "defeated by" records), and the events running or waiting to run (<see cref="Runs"/>, <see cref="Current"/>), which
+/// <see cref="MapEventService"/> drives.
 /// </summary>
 public sealed class MapEventState
 {
@@ -31,6 +32,15 @@ public sealed class MapEventState
     internal HashSet<MapObjectId> WatchedMonsters { get; } = [];
 
     internal HashSet<HeroId> WatchedHeroes { get; } = [];
+
+    /// <summary>The events waiting to run, in order.</summary>
+    internal Queue<MapEventRun> Runs { get; } = new();
+
+    /// <summary>The event running now (perhaps waiting for an answer or a battle), or null.</summary>
+    internal MapEventRun? Current { get; set; }
+
+    /// <summary>The battle being fought, as it began (for the "defeated by" records), or null.</summary>
+    internal MapEventFight? Fight { get; set; }
 
     /// <summary>The player's quest log (EVT-5): the quests its heroes were shown, in the order they were first shown; empty for none.</summary>
     public IReadOnlyList<QuestLogEntry> QuestLog(PlayerId player) => _questLogs.TryGetValue(player, out var log) ? log : [];
@@ -61,6 +71,8 @@ public sealed class MapEventState
         _disabled.Clear();
         _cells.Clear();
         _questLogs.Clear();
+        Runs.Clear();
+        Current = null;
         foreach (var (name, value) in set.Variables)
         {
             _variables[name] = set.IsTaken(name) && carried is not null && carried.TryGetValue(name, out var from) ? from : value;
@@ -153,7 +165,10 @@ public sealed class MapEventState
 
     internal void RecordHeroDefeat(HeroId hero, PlayerId by) => _heroesDefeated.TryAdd(hero, by);
 
-    /// <summary>The digest line (empty for a map without events, so older replays keep their digests).</summary>
+    /// <summary>
+    /// The digest line (empty for a map without events, so older replays keep their digests); the running events only while there are any.
+    /// The fight record is not in it: it is the battle's, which the digest has.
+    /// </summary>
     internal string Describe() =>
         Set.IsEmpty
             ? ""
@@ -161,7 +176,9 @@ public sealed class MapEventState
               + $"disabled {string.Join(',', _disabled.Order(StringComparer.Ordinal))} cells {_cells.Count} "
               + $"monsters {string.Join(',', _monstersDefeated.OrderBy(m => m.Key.Value).Select(m => $"{m.Key.Value}:{m.Value.Value}"))} "
               + $"heroes {string.Join(',', _heroesDefeated.OrderBy(h => h.Key.Value).Select(h => $"{h.Key.Value}:{h.Value.Value}"))}"
-              + (_questLogs.Count == 0 ? "" : $" quests {string.Join(';', _questLogs.OrderBy(l => l.Key.Value).Select(l => $"{l.Key.Value}:{string.Join(',', l.Value.Select(e => $"{e.Site.Value}/{e.Stage}{(e.Done ? "!" : "")}"))}"))}");
+              + (_questLogs.Count == 0 ? "" : $" quests {string.Join(';', _questLogs.OrderBy(l => l.Key.Value).Select(l => $"{l.Key.Value}:{string.Join(',', l.Value.Select(e => $"{e.Site.Value}/{e.Stage}{(e.Done ? "!" : "")}"))}"))}")
+              + (Current is null ? "" : $" running {Current.Describe()}")
+              + (Runs.Count == 0 ? "" : $" queued {string.Join(" | ", Runs.Select(r => r.Describe()))}");
 }
 
 /// <summary>Walks an event tree.</summary>

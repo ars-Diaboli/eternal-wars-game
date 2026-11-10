@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
@@ -24,17 +25,17 @@ public sealed class ArmyService(GameState state, IEventPublisher events)
         var to = state.GetHero(toHeroId);
         if (from.Owner != player || to.Owner != player)
         {
-            throw new InvalidOperationException("Both heroes must belong to the player.");
+            throw new CommandRefusedException("Both heroes must belong to the player.");
         }
 
         if (from != to && !(state.PendingDecision is HeroExchangeDecision exchange && IsBetween(exchange, from.Id, to.Id)))
         {
-            throw new InvalidOperationException("Stacks move between heroes only while their exchange is open.");
+            throw new CommandRefusedException("Stacks move between heroes only while their exchange is open.");
         }
 
         if (from == to && state.PendingDecision is not null and not HeroExchangeDecision)
         {
-            throw new InvalidOperationException("Resolve the pending decision first.");
+            throw new CommandRefusedException("Resolve the pending decision first.");
         }
 
         Transfer(from.Army, fromSlot, to.Army, toSlot, count, keepOneStack: from != to);
@@ -57,22 +58,22 @@ public sealed class ArmyService(GameState state, IEventPublisher events)
         var to = state.GetHero(toHeroId);
         if (from.Owner != player || to.Owner != player)
         {
-            throw new InvalidOperationException("Both heroes must belong to the player.");
+            throw new CommandRefusedException("Both heroes must belong to the player.");
         }
 
         if (from == to || state.PendingDecision is not HeroExchangeDecision exchange || !IsBetween(exchange, from.Id, to.Id))
         {
-            throw new InvalidOperationException("War machines change hands only while the exchange of the two heroes is open.");
+            throw new CommandRefusedException("War machines change hands only while the exchange of the two heroes is open.");
         }
 
         if (!from.WarMachines.Contains(slot))
         {
-            throw new InvalidOperationException($"{from.Name} has no {slot} machine.");
+            throw new CommandRefusedException($"{from.Name} has no {slot} machine.");
         }
 
         if (to.WarMachines.Contains(slot))
         {
-            throw new InvalidOperationException($"{to.Name} already has a {slot} machine.");
+            throw new CommandRefusedException($"{to.Name} already has a {slot} machine.");
         }
 
         from.RemoveWarMachine(slot);
@@ -93,27 +94,27 @@ public sealed class ArmyService(GameState state, IEventPublisher events)
     {
         if (!Army.IsValidSlot(fromSlot) || !Army.IsValidSlot(toSlot) || (from == to && fromSlot == toSlot))
         {
-            throw new InvalidOperationException("Invalid army slot.");
+            throw new CommandRefusedException("Invalid army slot.");
         }
 
-        var source = from[fromSlot] ?? throw new InvalidOperationException("The source slot is empty.");
+        var source = from[fromSlot] ?? throw new CommandRefusedException("The source slot is empty.");
         var moving = count ?? source.Count;
         if (moving < 1 || moving > source.Count)
         {
-            throw new InvalidOperationException($"Cannot move {moving} of {source.Count} creatures.");
+            throw new CommandRefusedException($"Cannot move {moving} of {source.Count} creatures.");
         }
 
         var target = to[toSlot];
         var whole = moving == source.Count;
         if (target is not null && target.Creature != source.Creature && !whole)
         {
-            throw new InvalidOperationException("A split stack can only go to an empty slot or the same creature.");
+            throw new CommandRefusedException("A split stack can only go to an empty slot or the same creature.");
         }
 
         var swap = target is not null && target.Creature != source.Creature;
         if (whole && !swap && keepOneStack && from.StackCount == 1)
         {
-            throw new InvalidOperationException("A hero must keep at least one stack.");
+            throw new CommandRefusedException("A hero must keep at least one stack.");
         }
 
         if (swap)

@@ -17,7 +17,7 @@ namespace EternalWars.Core.Domain.Scenarios;
 /// </summary>
 public static class DemoScenario
 {
-    public static GameState Create(int width = 24, int height = 18, int seed = 1, bool withUnderground = true, CreatureCatalog? creatures = null, HeroCatalog? heroRoster = null, Towns.BuildingCatalog? buildings = null)
+    public static GameState Create(int width = 24, int height = 18, int seed = 1, bool withUnderground = true, ContentCatalogs? content = null)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 16);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 12);
@@ -114,7 +114,7 @@ public static class DemoScenario
             MakeWalkable(hero.Position);
         }
 
-        return new GameState(map, players, heroes, objects, creatures: creatures, heroRoster: heroRoster, buildings: buildings);
+        return new GameState(map, players, heroes, objects, content: content);
 
         void Monster(string creature, int? count, GuardDisposition disposition, MapPosition position)
         {

@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Decisions;
@@ -42,17 +43,19 @@ public sealed class GameState
         BuildingCatalog? buildings = null,
         ArtifactCatalog? artifacts = null,
         MapObjectCatalog? objectCatalog = null,
-        Magic.SpellCatalog? spells = null)
+        Magic.SpellCatalog? spells = null,
+        ContentCatalogs? content = null)
     {
         Map = map ?? throw new ArgumentNullException(nameof(map));
         ObjectCatalog = objectCatalog ?? MapObjectCatalog.Default;
         Options = options ?? GameOptions.Default;
         Terrains = terrains ?? TerrainCatalog.Default;
-        Creatures = creatures ?? CreatureCatalog.Default;
-        HeroRoster = heroRoster ?? HeroCatalog.Default;
-        Buildings = buildings ?? BuildingCatalog.Default;
-        Artifacts = artifacts ?? ArtifactCatalog.Default;
-        Spells = spells ?? Magic.SpellCatalog.Default;
+        // A table given on its own wins over the content's; one given neither way is the built-in table.
+        Creatures = creatures ?? content?.Creatures ?? CreatureCatalog.Default;
+        HeroRoster = heroRoster ?? content?.Heroes ?? HeroCatalog.Default;
+        Buildings = buildings ?? content?.Buildings ?? BuildingCatalog.Default;
+        Artifacts = artifacts ?? content?.Artifacts ?? ArtifactCatalog.Default;
+        Spells = spells ?? content?.Spells ?? Artifacts.Spells;
         Random = new GameRandom(Options.Seed);
         Fog = new FogOfWar(map, Options.FogMode);
         _players = players.ToList();
@@ -164,12 +167,14 @@ public sealed class GameState
 
     public Player CurrentPlayer => _players[CurrentPlayerIndex];
 
-    public Player GetPlayer(PlayerId id) => _players.First(p => p.Id == id);
+    /// <summary>The player; an unknown id refuses the command that names it (<see cref="CommandRefusedException"/>).</summary>
+    public Player GetPlayer(PlayerId id) => _players.FirstOrDefault(p => p.Id == id) ?? throw new CommandRefusedException($"Unknown player {id}.");
 
     public bool HasPlayer(PlayerId id) => _players.Any(p => p.Id == id);
 
-    /// <summary>A hero on the map or in a town's garrison (ADR-112).</summary>
-    public Hero GetHero(HeroId id) => _heroes.FirstOrDefault(h => h.Id == id) ?? GarrisonHeroes.First(h => h.Id == id);
+    /// <summary>A hero on the map or in a town's garrison (ADR-112); an unknown id refuses the command that names it.</summary>
+    public Hero GetHero(HeroId id) => _heroes.FirstOrDefault(h => h.Id == id) ?? GarrisonHeroes.FirstOrDefault(h => h.Id == id)
+        ?? throw new CommandRefusedException($"Unknown hero {id}.");
 
     /// <summary>The player's heroes on the map (garrison heroes are not, ADR-112).</summary>
     public IEnumerable<Hero> HeroesOf(PlayerId owner) => _heroes.Where(h => h.Owner == owner);
@@ -386,7 +391,8 @@ public sealed class GameState
 
     public bool IsGuarded(MapPosition position) => GuardsOf(position).Any();
 
-    public MapObject GetObject(MapObjectId id) => _objects.First(o => o.Id == id);
+    /// <summary>The map object; an unknown id refuses the command that names it (<see cref="CommandRefusedException"/>).</summary>
+    public MapObject GetObject(MapObjectId id) => FindObject(id) ?? throw new CommandRefusedException($"Unknown map object {id}.");
 
     public MapObject? FindObject(MapObjectId id) => _objects.FirstOrDefault(o => o.Id == id);
 

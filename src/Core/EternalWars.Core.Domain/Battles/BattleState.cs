@@ -360,6 +360,9 @@ public sealed class BattleState
     /// <summary>The game's creatures, for what spells summon (ADR-120).</summary>
     internal CreatureCatalog Creatures { get; init; } = CreatureCatalog.Default;
 
+    /// <summary>The game's spells, for what creature casters cast (ADR-120).</summary>
+    internal Magic.SpellCatalog Spells { get; init; } = Magic.SpellCatalog.Default;
+
     public BattleSide? Winner { get; internal set; }
 
     public BattleEndReason? EndReason { get; internal set; }
@@ -407,6 +410,7 @@ public sealed class BattleState
             PendingStacks = PendingStacks,
             Siege = Siege?.Copy(),
             Creatures = Creatures,
+            Spells = Spells,
             ZonesMade = ZonesMade,
         };
         copy._units.AddRange(_units.Select(u => u.Copy()));

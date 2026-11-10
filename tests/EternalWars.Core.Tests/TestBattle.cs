@@ -31,7 +31,8 @@ internal sealed class TestBattle
     public static TestBattle Create(
         int width = BattleState.DefaultWidth, ulong seed = 7, int attackerAttack = 0, int defenderDefense = 0,
         HeroBattleBonuses? attackerBonuses = null, HeroBattleBonuses? defenderBonuses = null, IReadOnlyCollection<string>? nativeTowns = null,
-        SiegeSpec? siege = null, BattleCaster? attackerCaster = null, BattleCaster? defenderCaster = null, TerrainType terrain = TerrainType.Grass)
+        SiegeSpec? siege = null, BattleCaster? attackerCaster = null, BattleCaster? defenderCaster = null, TerrainType terrain = TerrainType.Grass,
+        EternalWars.Core.Domain.Magic.SpellCatalog? spells = null)
     {
         // A siege (ADR-106) is fought on the 36-wide field behind the town's fortifications.
         width = siege is null ? width : BattleState.SiegeWidth;
@@ -46,6 +47,7 @@ internal sealed class TestBattle
         {
             Width = width,
             Siege = siege is null ? null : SiegeRules.Create(siege),
+            Spells = spells ?? EternalWars.Core.Domain.Magic.SpellCatalog.Default,
         };
         return new TestBattle(state);
     }
