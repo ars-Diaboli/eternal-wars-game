@@ -1,8 +1,4 @@
-using EternalWars.Core.Domain.Artifacts;
-using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Heroes;
-using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Generation;
 
@@ -15,7 +11,8 @@ public sealed record GenerationResult(GeneratedMap Map, int Attempt, ulong Attem
 /// <summary>
 /// The generator's entry point (ADR-064): runs the stages in order on one seed. <see cref="Generate"/> makes the map (layout, terrain, connections,
 /// towns and mines, roads, treasure); <see cref="GenerateBest"/> retries on problems (RMG-5); <see cref="Build"/> also assembles the scenario for the
-/// players set up at game start, whose towns are an input so their start zones are painted native (RMG-7).
+/// players set up at game start, whose towns are an input so their start zones are painted native (RMG-7). Every stage takes its tables (objects,
+/// terrain, creatures, artifacts, heroes, buildings) from the <see cref="ContentCatalogs"/> it is given, the built-in tables when left out.
 /// </summary>
 public static class MapGenerator
 {
@@ -29,13 +26,14 @@ public static class MapGenerator
     public const int Attempts = 10;
 
     public static GeneratedMap Generate(
-        MapTemplate template, int size, ulong seed, LayoutStrategy strategy = LayoutStrategy.Voronoi, CreatureCatalog? creatures = null, ArtifactCatalog? artifacts = null,
+        MapTemplate template, int size, ulong seed, LayoutStrategy strategy = LayoutStrategy.Voronoi, ContentCatalogs? content = null,
         IReadOnlyDictionary<int, string>? startTowns = null)
     {
         ArgumentNullException.ThrowIfNull(template);
-        var layout = ZoneLayouter.Layout(template, size, seed, strategy);
-        var terrain = TerrainPainter.Paint(template, layout, seed, startTowns);
-        var map = GeneratedMap.From(terrain);
+        content ??= ContentCatalogs.Default;
+        var layout = ZoneLayouter.Layout(template, size, seed, strategy, content);
+        var terrain = TerrainPainter.Paint(template, layout, seed, startTowns, content);
+        var map = GeneratedMap.From(terrain, content);
         SceneryPlacer.Place(map, terrain.Obstacles, seed);
         var present = ConnectionPlacer.Present(template, seed);
         foreach (var (from, to) in layout.UnmetConnections.Where(u => template.Connections.Where((c, i) => present[i]).Any(c => (c.From, c.To) == u || (c.To, c.From) == u)))
@@ -43,13 +41,13 @@ public static class MapGenerator
             map.Problem($"Zones {from} and {to} do not touch.");
         }
 
-        ConnectionPlacer.Place(template, map, seed, creatures);
-        SettlementPlacer.Place(template, map, seed, creatures, startTowns);
+        ConnectionPlacer.Place(template, map, seed);
+        SettlementPlacer.Place(template, map, seed, startTowns);
         RoadPlacer.Place(template, map);
         RiverPlacer.Place(template, map, seed);
-        TreasurePlacer.Place(template, map, seed, creatures, artifacts);
+        TreasurePlacer.Place(template, map, seed);
         TreasurePlacer.PlaceObelisks(template, map, seed);
-        map.Fairness = MapFairness.Check(template, map, creatures);
+        map.Fairness = MapFairness.Check(template, map);
         foreach (var problem in map.Fairness.Problems)
         {
             map.Problem(problem);
@@ -67,14 +65,14 @@ public static class MapGenerator
     /// the fewest (the earliest of those). Deterministic: the same inputs pick the same attempt.
     /// </summary>
     public static GenerationResult GenerateBest(
-        MapTemplate template, int size, ulong seed, LayoutStrategy strategy = LayoutStrategy.Voronoi, CreatureCatalog? creatures = null, ArtifactCatalog? artifacts = null,
+        MapTemplate template, int size, ulong seed, LayoutStrategy strategy = LayoutStrategy.Voronoi, ContentCatalogs? content = null,
         IReadOnlyDictionary<int, string>? startTowns = null)
     {
         GenerationResult? best = null;
         for (var attempt = 0; attempt < Attempts; attempt++)
         {
             var attemptSeed = AttemptSeed(seed, attempt);
-            var result = new GenerationResult(Generate(template, size, attemptSeed, strategy, creatures, artifacts, startTowns), attempt, attemptSeed);
+            var result = new GenerationResult(Generate(template, size, attemptSeed, strategy, content, startTowns), attempt, attemptSeed);
             if (result.Problems.Count == 0)
             {
                 return result;
@@ -94,12 +92,11 @@ public static class MapGenerator
     /// attempt had some) are in the result for the new-game screen to show. <paramref name="maxHeroes"/> overrides the template's hero limit.
     /// </summary>
     public static (GameState State, GenerationResult Generation) Build(
-        MapTemplate template, int size, ulong seed, IReadOnlyList<PlayerSetup> players, GameOptions? options = null, CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null, ArtifactCatalog? artifacts = null, BuildingCatalog? buildings = null, int? maxHeroes = null)
+        MapTemplate template, int size, ulong seed, IReadOnlyList<PlayerSetup> players, GameOptions? options = null, ContentCatalogs? content = null, int? maxHeroes = null)
     {
         ScenarioAssembler.CheckTeams(template, players);
         var resolved = ScenarioAssembler.ResolveTowns(players, seed);
-        var generation = GenerateBest(template, size, seed, creatures: creatures, artifacts: artifacts, startTowns: ScenarioAssembler.StartTowns(resolved));
-        return (ScenarioAssembler.Build(template, generation.Map, resolved, seed, options, creatures, heroRoster, buildings, artifacts, maxHeroes), generation);
+        var generation = GenerateBest(template, size, seed, content: content, startTowns: ScenarioAssembler.StartTowns(resolved));
+        return (ScenarioAssembler.Build(template, generation.Map, resolved, seed, options, maxHeroes), generation);
     }
 }

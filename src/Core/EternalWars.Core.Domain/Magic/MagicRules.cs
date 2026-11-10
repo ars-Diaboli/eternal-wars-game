@@ -3,7 +3,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Towns;
-using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Magic;
 
@@ -43,63 +42,6 @@ public static class MagicRules
     /// <summary>The highest rank the hero's Mastery of the spell's school allows (ADR-072, MAG-3): 1 without it, 2 at Basic, 3 at Advanced.</summary>
     public static int MaxRank(Hero hero, SpellDefinition spell) =>
         Math.Min(Creatures.SpellLevels.MaxRank, 1 + (int)hero.SkillLevelOf(MasterySkill(spell.School)));
-
-    /// <summary>
-    /// Game start (ADR-106, MAG-13): every town, by id, draws 3 / 3 / 2 / 2 of its school's spells per level without repeats from the game's
-    /// random source; the spells the map fixes (<see cref="Town.FixedGuildSpells"/>) take their places first and the draw fills the rest from the
-    /// others. Towns without a school (Stronghold, Swamp Bestiary) offer none. Then every town, by id, draws its spell buildings' spells
-    /// (<see cref="Town.SchoolSpells"/>) from the same source, school by school in id order, one per level.
-    /// </summary>
-    internal static void DrawGuilds(GameState state)
-    {
-        var towns = state.ObjectsOf<Town>().OrderBy(t => t.Id.Value).ToList();
-        foreach (var town in towns)
-        {
-            var guild = new Dictionary<int, IReadOnlyList<string>>();
-            for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
-            {
-                // The map's fixed spells stay even when banned; the draw skips banned ones unless the level has no other (ADR-126).
-                var all = state.Spells.Of(town.TownType, level).Select(s => s.Id).ToList();
-                var drawn = town.FixedGuildSpells.Where(all.Contains).Distinct(StringComparer.Ordinal).Take(GuildSpellsPerLevel[level - 1]).ToList();
-                var pool = MapBans.Allowed(all, state.Rules.Bans.BansSpell).Where(s => !drawn.Contains(s)).ToList();
-                while (drawn.Count < GuildSpellsPerLevel[level - 1] && pool.Count > 0)
-                {
-                    var pick = state.Random.Next(pool.Count);
-                    drawn.Add(pool[pick]);
-                    pool.RemoveAt(pick);
-                }
-
-                if (drawn.Count > 0)
-                {
-                    drawn.Sort(StringComparer.Ordinal);
-                    guild[level] = drawn;
-                }
-            }
-
-            town.SetGuildSpells(guild);
-        }
-
-        foreach (var town in towns)
-        {
-            var schools = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
-            foreach (var school in TownRules.Buildings(state, town).TownBuildings.Select(BuiltInBuildings.SchoolOf).OfType<string>().Distinct().Order(StringComparer.Ordinal))
-            {
-                var spells = new List<string>();
-                for (var level = 1; level <= GuildSpellsPerLevel.Count; level++)
-                {
-                    var pool = MapBans.Allowed(state.Spells.Of(school, level), s => state.Rules.Bans.BansSpell(s.Id));
-                    if (pool.Count > 0)
-                    {
-                        spells.Add(pool[state.Random.Next(pool.Count)].Id);
-                    }
-                }
-
-                schools[school] = spells;
-            }
-
-            town.SetSchoolSpells(schools);
-        }
-    }
 
     /// <summary>
     /// Why the spells a map fixes for a town's guild (<see cref="Town.FixedGuildSpells"/>, map v30) are wrong, or null: each must be a known spell of
@@ -181,75 +123,10 @@ public static class MagicRules
     /// <summary>
     /// The spells a spell building of <paramref name="school"/> adds in this town (ADR-072, MAG-12): one of the school's spells for each spell
     /// level 1 to 4, in level order; a guild of level L teaches the first L. They are drawn at game start from the game's random source like the
-    /// guild's (<see cref="DrawGuilds"/>; the map does not fix them). A level without spells of the school is skipped; empty before the game starts.
+    /// guild's (<see cref="TownService.DrawGuilds"/>; the map does not fix them). A level without spells of the school is skipped; empty before the game starts.
     /// </summary>
     public static IReadOnlyList<string> SchoolSpells(GameState state, Town town, string school) =>
         town.SchoolSpells.GetValueOrDefault(school) ?? [];
-
-    /// <summary>
-    /// A hero in an own town (on the entrance) with a mage guild learns the offered spells it may and does not know yet, and the offered spells it
-    /// knows rise, free, straight to the rank its Mastery allows (ADR-072, ADR-122; a spell learned elsewhere rises too). Its mana fills up only
-    /// after a night there (<paramref name="night"/>: the start of the owner's turn), not on entering. Nothing happens without a guild, and no
-    /// learning without a book. A war lodge instead teaches the warcries up to its level (<see cref="Hero.WarcriesLearned"/>). Every town visit
-    /// comes through here, so the town's unique buildings give their bonuses first (<see cref="UniqueBuildings.Visit"/>, ADR-138).
-    /// </summary>
-    internal static void Visit(GameState state, IEventPublisher events, Hero hero, Town town, bool night = false)
-    {
-        if (town.Owner != hero.Owner)
-        {
-            return;
-        }
-
-        Objects.GrailRules.RaiseBuilding(state, events, hero, town);
-        UniqueBuildings.Visit(state, events, hero, town);
-
-        // Stronghold's and Swamp Bestiary's war lodge (ADR-071, placeholder) teaches the warcries up to its level instead of spells.
-        if (town.Level(BuiltInBuildings.WarLodge) is var lodge and > 0 && lodge > hero.WarcriesLearned)
-        {
-            hero.WarcriesLearned = lodge;
-            events.Publish(new WarcriesLearned(hero.Id, town.Id, lodge));
-        }
-
-        if (town.Level(BuiltInBuildings.MageGuild) < 1)
-        {
-            return;
-        }
-
-        var offered = Offered(state, town).ToList();
-        var learned = offered.Where(id => state.Spells.TryGet(id, out var spell) && CanLearn(hero, spell) && hero.Learn(id)).ToList();
-        if (learned.Count > 0)
-        {
-            events.Publish(new SpellsLearned(hero.Id, town.Id, learned));
-        }
-
-        if (hero.HasSpellBook)
-        {
-            var raised = offered.Distinct(StringComparer.Ordinal)
-                .Where(id => state.Spells.TryGet(id, out var spell) && hero.RaiseSpell(id, MaxRank(hero, spell)))
-                .Select(id => new SpellRank(id, hero.Spells[id]))
-                .ToList();
-            if (raised.Count > 0)
-            {
-                events.Publish(new SpellsRaised(hero.Id, town.Id, raised));
-            }
-        }
-
-        var max = hero.MaxMana;
-        if (night && hero.Mana < max)
-        {
-            hero.Mana = max;
-            events.Publish(new HeroManaRestored(hero.Id, hero.Mana, max));
-        }
-    }
-
-    /// <summary>Visits the town's own hero on the entrance, if any (after a guild is built or a book bought there).</summary>
-    internal static void VisitBy(GameState state, IEventPublisher events, Town town)
-    {
-        if (TownRules.VisitingHero(state, town) is { } hero)
-        {
-            Visit(state, events, hero, town);
-        }
-    }
 
     /// <summary>Why the visiting hero cannot buy a spell book here, or null: it needs a mage guild, an own hero without a book, and 500 gold.</summary>
     public static string? CheckBuySpellBook(GameState state, Town town)

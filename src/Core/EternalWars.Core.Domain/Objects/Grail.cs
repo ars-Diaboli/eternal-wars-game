@@ -4,13 +4,12 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Towns;
-using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Objects;
 
 /// <summary>
 /// An obelisk (ADR-126, ADR-140): the first visit of a player's hero opens that player's next pieces of the puzzle map around the buried Grail
-/// (<see cref="GrailRules.Visit"/>); each player has its own puzzle. The visits start empty in every game; saves replay them.
+/// (<see cref="GrailService.VisitObelisk"/>); each player has its own puzzle. The visits start empty in every game; saves replay them.
 /// </summary>
 public sealed class Obelisk(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Obelisk)
@@ -146,7 +145,7 @@ public static class GrailRules
     public const int PieceCount = PiecesPerSide * PiecesPerSide;
 
     /// <summary>The centre's side in cells (2 × 2 pieces), where the Grail lies.</summary>
-    private const int CentreCells = 4;
+    internal const int CentreCells = 4;
 
     /// <summary>The ring of the piece at column <paramref name="x"/>, row <paramref name="y"/> (0 … 9).</summary>
     public static PuzzleRing RingOf(int x, int y)
@@ -213,107 +212,5 @@ public static class GrailRules
             .ToList();
         var centreOpen = Enumerable.Range(0, PieceCount).Where(i => RingOf(i % PiecesPerSide, i / PiecesPerSide) == PuzzleRing.Centre).All(opened.Contains);
         return new PuzzleMap(origin, PuzzleSize, pieces, obelisks.Count, obelisks.Count(o => o.WasVisitedBy(player)), centreOpen ? grail : null);
-    }
-
-    /// <summary>
-    /// Buries the Grail when the game starts (from <see cref="GameState.Random"/>) on a map with an obelisk, large enough and with no Grail set by its
-    /// author: on a cell one could dig, far enough from the edges, away from the towns when such a cell exists. A map without obelisks keeps no Grail
-    /// unless its author buried one. Then the puzzle's place is drawn around the Grail.
-    /// </summary>
-    internal static void Bury(GameState state)
-    {
-        if (state.Grail.Position is null && state.ObjectsOf<Obelisk>().Any() && state.Artifacts.Grail is not null && HoldsGrail(state.Map))
-        {
-            var cells = Enumerable.Range(0, state.Map.Levels).SelectMany(state.Map.Positions)
-                .Where(p => FarFromEdge(state.Map, p) && CheckGround(state, p) is null).ToList();
-            var towns = state.ObjectsOf<Town>().Select(t => t.VisitPosition).ToList();
-            var away = cells.Where(c => towns.All(t => t.Level != c.Level || Math.Max(Math.Abs(t.X - c.X), Math.Abs(t.Y - c.Y)) > TownDistance)).ToList();
-            var pool = away.Count > 0 ? away : cells;
-            if (pool.Count > 0)
-            {
-                state.Grail.Position = pool[state.Random.Next(pool.Count)];
-            }
-        }
-
-        if (state.Grail.Position is { } grail && state.Grail.PuzzleOrigin is null)
-        {
-            state.Grail.PuzzleOrigin = new MapPosition(grail.X - Offset(grail.X, state.Map.Width), grail.Y - Offset(grail.Y, state.Map.Height), grail.Level);
-        }
-
-        // The Grail's place in the puzzle along one axis: one of the centre's cells (8 … 11), keeping the puzzle on the map where it can.
-        int Offset(int at, int side)
-        {
-            const int first = (PuzzleSize - CentreCells) / 2;
-            const int last = first + CentreCells - 1;
-            var low = Math.Clamp(at - side + PuzzleSize, first, last);
-            var high = Math.Clamp(at, low, last);
-            return low + state.Random.Next(high - low + 1);
-        }
-    }
-
-    /// <summary>
-    /// A hero visits an obelisk: its player's first visit opens that player's next share of the puzzle (<see cref="Share"/>), drawn from the ring
-    /// the visit's number allows; the last obelisk opens the rest.
-    /// </summary>
-    internal static void Visit(GameState state, IEventPublisher events, Hero hero, Obelisk obelisk)
-    {
-        if (!obelisk.Visit(hero.Owner))
-        {
-            events.Publish(new MapObjectFoundEmpty(hero.Id, obelisk.Id));
-            return;
-        }
-
-        if (state.Grail.PuzzleOrigin is not null)
-        {
-            var obelisks = state.ObjectsOf<Obelisk>().ToList();
-            var visit = obelisks.Count(o => o.WasVisitedBy(hero.Owner));
-            var opened = state.Grail.PiecesOf(hero.Owner);
-            var closed = Enumerable.Range(0, PieceCount).Where(i => !opened.Contains(i)).ToList();
-            if (visit >= obelisks.Count)
-            {
-                state.Grail.Open(hero.Owner, closed);
-            }
-            else
-            {
-                var rings = visit <= obelisks.Count / 2 ? new[] { PuzzleRing.Outer } : [PuzzleRing.Outer, PuzzleRing.Mid];
-                var pool = closed.Where(i => rings.Contains(RingOf(i % PiecesPerSide, i / PiecesPerSide))).ToList();
-                var drawn = new List<int>();
-                for (var n = Math.Min(Share(obelisks.Count, visit), pool.Count); n > 0; n--)
-                {
-                    var at = state.Random.Next(pool.Count);
-                    drawn.Add(pool[at]);
-                    pool.RemoveAt(at);
-                }
-
-                state.Grail.Open(hero.Owner, drawn);
-            }
-        }
-
-        events.Publish(new ObeliskVisited(hero.Id, obelisk.Id, hero.Owner));
-    }
-
-    /// <summary>
-    /// An own hero in a town without a Grail building raises it with the Grail it carries (ADR-130, ADR-140): the Grail is given up, the building
-    /// stands at once and does not count as the town's building of the day.
-    /// </summary>
-    internal static void RaiseBuilding(GameState state, IEventPublisher events, Hero hero, Town town)
-    {
-        if (town.Owner != hero.Owner || town.Level(BuiltInBuildings.Grail) > 0 || !TownRules.Buildings(state, town).Contains(BuiltInBuildings.Grail)
-            || state.Artifacts.Grail is not { } grail || !hero.Artifacts.Has(grail.Id))
-        {
-            return;
-        }
-
-        if (!hero.Artifacts.RemoveFromBackpack(grail.Id))
-        {
-            hero.Artifacts.RemoveWorn(grail.Id);
-            state.RefreshArtifacts(hero);
-        }
-
-        events.Publish(new ArtifactLost(hero.Id, grail.Id));
-        events.Publish(new HeroArtifactsChanged(hero.Id));
-        town.SetLevel(BuiltInBuildings.Grail, 1);
-        events.Publish(new TownBuilt(town.Id, BuiltInBuildings.Grail, 1));
-        events.Publish(new GrailBuildingRaised(hero.Id, town.Id, TownRules.Buildings(state, town).Get(BuiltInBuildings.Grail, 1).Name));
     }
 }

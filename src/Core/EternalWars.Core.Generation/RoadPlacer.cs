@@ -117,7 +117,7 @@ public static class RoadPlacer
     }
 
     private static bool Walkable(GeneratedMap map, HashSet<MapPosition> blocked, MapPosition p) =>
-        map.Map.Contains(p) && map.Map.GetTerrain(p) != TerrainPainter.WallTerrain && GeneratedMap.Terrains.IsPassable(map.Map.GetTerrain(p)) && !blocked.Contains(p);
+        map.Map.Contains(p) && map.Map.GetTerrain(p) != TerrainPainter.WallTerrain && map.Terrains.IsPassable(map.Map.GetTerrain(p)) && !blocked.Contains(p);
 
     /// <summary>Paints a road along the cheapest way from <paramref name="from"/> to <paramref name="to"/> (both included), or lists a problem.</summary>
     private static void Lay(GeneratedMap map, RoadType type, HashSet<MapPosition> blocked, MapPosition from, MapPosition to, string what)

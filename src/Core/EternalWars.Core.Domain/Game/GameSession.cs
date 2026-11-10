@@ -44,20 +44,22 @@ public sealed class GameSession
         Armies = new ArmyService(State, Bus);
         Progression = new ProgressionService(State, Bus);
         Artifacts = new ArtifactService(State, Bus);
-        Battles = new BattleService(State, Bus, Armies, Progression, Artifacts, Economy);
-        Guards = new GuardService(State, Bus, Battles);
-        Towns = new TownService(State, Bus, Economy);
-        Caravans = new CaravanService(State, Bus, Economy);
         var objects = new ObjectInteractionContext(State, Bus, Economy);
+        var townVisits = new TownVisitService(State, Bus, Progression);
+        var boxes = new PandorasBoxService(objects, Progression, Artifacts);
+        Battles = new BattleService(State, Bus, Armies, Progression, Artifacts, Economy, townVisits, boxes);
+        Guards = new GuardService(State, Bus, Battles);
+        Towns = new TownService(State, Bus, Economy, townVisits);
+        Caravans = new CaravanService(State, Bus, Economy);
         Grail = new GrailService(objects, Artifacts);
-        Interactions = new MapObjectInteractionService(objects, Battles, Guards, Progression, Artifacts, Grail);
-        ObjectDecisions = new ObjectDecisionService(objects, Battles, Progression, Artifacts);
+        Interactions = new MapObjectInteractionService(objects, Battles, Guards, Progression, Artifacts, Grail, townVisits);
+        ObjectDecisions = new ObjectDecisionService(objects, Battles, Progression, Artifacts, townVisits, boxes);
         ObjectShops = new ObjectShopService(objects, Progression, Artifacts);
         ObjectLifecycle = new ObjectLifecycleService(objects, Artifacts);
-        MapEvents = new MapEventService(State, Bus, Economy, Progression, Artifacts, Battles);
+        MapEvents = new MapEventService(State, Bus, Economy, Progression, Artifacts, Battles, townVisits);
         MapEvents.SubscribeTo(Bus);
         Movement = new HeroMovementService(State, Bus, Interactions, MapEvents);
-        AdventureMagic = new Magic.AdventureMagicService(State, Bus);
+        AdventureMagic = new Magic.AdventureMagicService(State, Bus, townVisits);
         AdventureMagic.SubscribeTo(Bus);
         Arena = new ArenaService(State, Bus, Battles);
 
@@ -130,14 +132,14 @@ public sealed class GameSession
     /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
     public void Start()
     {
-        PlaceholderRules.Resolve(State, Bus);
-        Objects.GrailRules.Bury(State);
+        new PlaceholderService(State, Bus).Resolve();
+        Grail.Bury();
         Flow.RemoveSurplusHeroes();
         Flow.Begin();
         Artifacts.RollUnsetPickups();
-        PrisonRules.Prepare(State);
+        ObjectLifecycle.PreparePrisons();
         ObjectLifecycle.PrepareObjects();
-        Magic.MagicRules.DrawGuilds(State);
+        Towns.DrawGuilds();
         Turns.StartGame();
         Settle();
     }

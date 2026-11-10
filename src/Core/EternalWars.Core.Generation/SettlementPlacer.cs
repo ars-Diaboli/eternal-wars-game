@@ -31,11 +31,11 @@ public static class SettlementPlacer
     private static readonly (int Dx, int Dy)[] Four = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
     /// <summary>Places the towns, mines and piles; <paramref name="startTowns"/> (player slot → town type, RMG-7) gives start towns their type at once.</summary>
-    public static void Place(MapTemplate template, GeneratedMap map, ulong seed, CreatureCatalog? creatures = null, IReadOnlyDictionary<int, string>? startTowns = null)
+    public static void Place(MapTemplate template, GeneratedMap map, ulong seed, IReadOnlyDictionary<int, string>? startTowns = null)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
-        creatures ??= CreatureCatalog.Default;
+        var creatures = map.Content.Creatures;
         if (map.Layout.ZoneIds.Count != template.Zones.Count)
         {
             throw new ArgumentException("The map was not made from this template.", nameof(map));
@@ -67,7 +67,7 @@ public static class SettlementPlacer
     {
         var count = Math.Max(1, spec.PlayerTowns.Min + random.Next(spec.PlayerTowns.Max - spec.PlayerTowns.Min + 1));
         var type = picked ?? (spec.TownTypes is { Count: > 0 } list ? list[0] : TownIds.Haven);
-        var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(type));
+        var definition = map.Definition(BuiltInMapObjects.TownId(type));
         var centre = Centroid(tiles);
         for (var i = 0; i < count; i++)
         {
@@ -90,7 +90,7 @@ public static class SettlementPlacer
         var types = spec.TownTypes is { Count: > 0 } list ? list : BuiltInMapObjects.PlayableTowns;
         for (var i = 0; i < count; i++)
         {
-            var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(types[random.Next(types.Count)]));
+            var definition = map.Definition(BuiltInMapObjects.TownId(types[random.Next(types.Count)]));
             if ((Find(map, definition, tiles, random, null, closest: false, avoid: visits, spacing: 12) ?? Find(map, definition, tiles, random, null, closest: false, avoid: visits, spacing: 8, margin: false)) is not { } spot)
             {
                 map.Problem($"Zone '{spec.Id}': no room for neutral town {i + 1} of {count}.");
@@ -123,7 +123,7 @@ public static class SettlementPlacer
         {
             for (var i = 0; i < spec.Mines.GetValueOrDefault(resource); i++)
             {
-                var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.MineId(resource));
+                var definition = map.Definition(BuiltInMapObjects.MineId(resource));
                 var near = townVisit is { } visit ? (MapPosition?)visit : null;
                 var spot = Find(map, definition, tiles, random, near, closest: false, avoid: placed, spacing: 4, radius: radius)
                            ?? Find(map, definition, tiles, random, null, closest: false, avoid: placed, spacing: 4);
@@ -159,7 +159,7 @@ public static class SettlementPlacer
         {
             var roll = random.Next(PileWeights.Sum(w => w.Weight));
             var resource = PileWeights.First(w => (roll -= w.Weight) < 0).Resource;
-            var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.PileId(resource));
+            var definition = map.Definition(BuiltInMapObjects.PileId(resource));
             if (Find(map, definition, tiles, random, null, closest: false, avoid: placed, spacing: 3) is not { } spot)
             {
                 map.Problem($"Zone '{spec.Id}': no room for resource pile {i + 1} of {spec.ExtraPiles}.");

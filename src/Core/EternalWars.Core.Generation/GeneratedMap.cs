@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -34,14 +35,20 @@ public sealed class GeneratedMap
     private readonly Dictionary<MapObjectId, int> _treasureValues = [];
     private int _nextId = 1;
 
-    private GeneratedMap(GeneratedTerrain terrain)
+    private GeneratedMap(GeneratedTerrain terrain, ContentCatalogs content)
     {
+        Content = content;
         Map = terrain.Map;
         Layout = terrain.Layout;
         _walls = terrain.Walls.ToDictionary(w => w.Key, w => w.Value.ToList());
     }
 
-    public static GeneratedMap From(GeneratedTerrain terrain) => new(terrain ?? throw new ArgumentNullException(nameof(terrain)));
+    /// <summary>The map of the painted <paramref name="terrain"/>, whose stages take their tables from <paramref name="content"/> (the built-in tables when left out).</summary>
+    public static GeneratedMap From(GeneratedTerrain terrain, ContentCatalogs? content = null) =>
+        new(terrain ?? throw new ArgumentNullException(nameof(terrain)), content ?? ContentCatalogs.Default);
+
+    /// <summary>The content tables the stages place objects, guards and treasure from and judge terrain by.</summary>
+    public ContentCatalogs Content { get; }
 
     public AdventureMap Map { get; }
 
@@ -75,7 +82,10 @@ public sealed class GeneratedMap
         Map.Contains(position) && Map.GetTerrain(position) != TerrainPainter.WallTerrain && !_occupied.ContainsKey(position)
         && Terrains.IsPassable(Map.GetTerrain(position));
 
-    internal static TerrainCatalog Terrains => TerrainCatalog.Default;
+    internal TerrainCatalog Terrains => Content.Terrains;
+
+    /// <summary>The object definition <paramref name="id"/> of the content's object table.</summary>
+    internal MapObjectDefinition Definition(string id) => Content.Objects.Get(id);
 
     /// <summary>Whether an object already stands on the tile (whatever its terrain).</summary>
     internal bool IsOccupied(MapPosition position) => _occupied.ContainsKey(position);
@@ -147,7 +157,7 @@ public sealed class GeneratedMap
             throw new ArgumentException("Not a town of this map, or not a playable town type.");
         }
 
-        var replacement = new Town(town.Id, MapObjectCatalog.Default.Get(BuiltInMapObjects.TownId(townType)), town.Position, owner, town.Name == town.Definition.Name ? null : town.Name,
+        var replacement = new Town(town.Id, Definition(BuiltInMapObjects.TownId(townType)), town.Position, owner, town.Name == town.Definition.Name ? null : town.Name,
             buildings ?? town.Buildings, dwellings ?? town.Dwellings, available ?? town.Available, garrison ?? town.Garrison);
         _objects[_objects.IndexOf(town)] = replacement;
         _towns[at] = _towns[at] with { Town = replacement };

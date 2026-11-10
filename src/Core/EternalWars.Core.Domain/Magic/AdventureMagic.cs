@@ -268,7 +268,7 @@ public static class AdventureMagic
 /// Casts adventure spells (ADR-120): validates, pays the mana and the movement points, then does what the spell does at the hero's rank and
 /// publishes it. It also ends Grave Whisper once the hero has raised undead (<see cref="UndeadRaised"/>).
 /// </summary>
-internal sealed class AdventureMagicService(GameState state, IEventPublisher events) : IEventHandler<UndeadRaised>
+internal sealed class AdventureMagicService(GameState state, IEventPublisher events, TownVisitService towns) : IEventHandler<UndeadRaised>
 {
     /// <summary>Subscribes to raised undead (Grave Whisper is used up).</summary>
     internal void SubscribeTo(IEventSubscriber bus) => bus.Subscribe<UndeadRaised>(this);
@@ -293,8 +293,7 @@ internal sealed class AdventureMagicService(GameState state, IEventPublisher eve
             case AdventureMagic.TownPortal:
                 var town = AdventureMagic.PortalTown(state, hero, rank >= 2 ? target : null)!;
                 Relocate(hero, town.VisitPosition);
-                TownService.AutoAppoint(state, events, town, hero);
-                MagicRules.Visit(state, events, hero, town);
+                towns.Enter(hero, town);
                 break;
             case AdventureMagic.DimensionDoor:
                 var used = hero.Statuses.FirstOrDefault(s => s.Source == spell && s.Kind == HeroStatusKind.Cast)?.Value ?? 0;

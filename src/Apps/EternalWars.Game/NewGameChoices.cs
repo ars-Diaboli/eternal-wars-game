@@ -71,8 +71,7 @@ internal static class NewGameChoices
                 .Select(p => new PlayerSetup(p.Slot, slots[p.Slot].Name, p.IsHuman, p.Town ?? PlayerSetup.RandomTown, p.Hero, p.Team, p.Tier1Dwelling))
                 .ToList();
             var (state, generation) = MapGenerator.Build(
-                template, request.Size, request.Options.Seed, players, request.Options, GameContent.Creatures, GameContent.Heroes, GameContent.Artifacts,
-                GameContent.Buildings, request.MaxHeroes);
+                template, request.Size, request.Options.Seed, players, request.Options, GameContent.All, request.MaxHeroes);
             generated(state, GenerationInfo.Of(template.Name, request.Size, request.Options.Seed, generation.Attempt));
             return new RandomMapResult(state, generation.Problems);
         },

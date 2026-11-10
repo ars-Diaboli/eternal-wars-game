@@ -48,13 +48,20 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - **`GameSession`**: composition root of a running game: one `GameState`, one `IEventBus`, the services
   (`TurnService`, `HeroMovementService` + `PathFinder`, the map object services, `EconomyService`,
   `VisibilityService`, `ArmyService`, `ProgressionService`, `ArtifactService`, `BattleService`, `GuardService`,
-  `TownService`, `CaravanService`, `AdventureMagicService`, `GameFlowService`). The map object services share one
+  `TownService`, `TownVisitService`, `CaravanService`, `AdventureMagicService`, `GameFlowService`). The map object services share one
   `ObjectInteractionContext` (state, publisher, economy and the common steps: `Ask`, `RemoveFromMap`, `TryCollect`,
   `GiveResources`, `HeroAt<T>`): `MapObjectInteractionService` (visits via `VisitRules`, the reward objects' rules in
   `MapObjectRewardVisits`; hero meetings), `ObjectDecisionService` (the answers to the decisions visits open),
   `ObjectShopService` (what a hero does at an object from its panel: recruit, buy, upgrade, hire, sacrifice, lessons,
-  garrison troops), `ObjectLifecycleService` (game-start rolls and the weekly refugees / merchant stock) and
-  `GrailService` (obelisk visits, digging; the rules in `GrailRules`).
+  garrison troops), `ObjectLifecycleService` (game-start rolls and prisoners, the weekly refugees / merchant stock),
+  `GrailService` (burying the Grail, obelisk visits, digging; the rules in `GrailRules`) and `PandorasBoxService` (opening a box,
+  after a yes or a won guard battle). `TownVisitService` is every hero's arrival in a town (governor, Grail building, unique
+  buildings' bonuses, guild spells, mana after a night) and every capture; the movement, decision, battle, map event and
+  adventure-magic services all go through it. Game start: `PlaceholderService` draws the placeholders, then the Grail, the
+  prisoners, the objects' rolls and the guild spells (`TownService.DrawGuilds`) are drawn in that order.
+- **`*Rules` classes are pure**: static `*Rules` classes hold constants and queries (checks, costs, odds, offers) and never
+  change the state or publish; the changes they lead to belong to a service. `RulesPurityTests` fails on a `*Rules` method that
+  takes an `IEventPublisher` or returns nothing.
 - **Commands only** (ADR-036): front-ends, AI, tools and tests change the game with `session.Execute(GameCommand)`;
   service mutators are `internal`. Accepted commands go to `session.CommandLog`; map + seed + log replay the game
   (`GameReplay`).
@@ -82,10 +89,13 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `GetPlayer` does too) before it changes anything; `Execute` turns only that into a rejected `CommandResult`, so any other
   exception is a bug and goes on up. The tests turn on `GameSession.CheckRefusals`, which fails a refusal that changed the
   digest (ADR-165).
-- **Content tables** travel together as `ContentCatalogs` (creatures, heroes, buildings, artifacts and their spells): the
-  scenarios and `MapConverter.ToGameState(document, content, options)` take it, the Godot apps pass `GameContent.All`.
+- **Content tables** travel together as `ContentCatalogs` (creatures, heroes, buildings, artifacts and their spells, map
+  objects, terrains; each left out is the built-in table, `ContentCatalogs.Default` all of them). Everything that builds a
+  game takes one record and no separate tables: the scenarios, `MapConverter.ToGameState(document, content, options)`,
+  `GameSaves.Load` / `GameReplay.Replay` / `ReplayPlayer.Open`, `MapGenerator` and `EditorMapGenerator`. Each app builds one
+  record (the Godot apps `GameContent.All` from the `--creatures=`-style flags, the Sim tool from `--creatures`) and passes it on.
 - **`GameState`** is plain data with `internal` setters. It carries `GameOptions` (fog mode, refog margin, seed; game
-  rules, not map data, so passed to `MapConverter.ToGameState(document, catalog, options)`) and `GameState.Random`
+  rules, not map data, so passed to `MapConverter.ToGameState(document, content, options)`) and `GameState.Random`
   (`GameRandom`), the only randomness rules may use.
 - **Pending decisions**: outcomes needing a choice (chest, exchange, guard offer, level-up, battle, ...) set
   `GameState.PendingDecision` and publish `DecisionRequested`; movement and End Turn are refused until the matching
@@ -182,6 +192,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - `MapGenerator.Generate` runs static stages in order on a `GeneratedMap`: `ZoneLayouter` → `TerrainPainter` →
   `SceneryPlacer` → `ConnectionPlacer` (+ `GuardPicker`) → `SettlementPlacer` → `RoadPlacer` → `RiverPlacer` →
   `TreasurePlacer`. Each stage draws from its own `SeedStreams` stream: same inputs → same map on every platform.
+- The stages take every table (objects, terrain, creatures, artifacts) from the `ContentCatalogs` the generator was given,
+  which `GeneratedMap.Content` carries; none uses a built-in table directly. The scenario's game gets the same record.
 - `ScenarioAssembler.Build` / `MapGenerator.Build` produce the scenario `GameState` (`PlayerSetup`); Core.Generation
   cannot see `MapDocument`. The editor uses `EditorMapGenerator.Generate`; `MapConverter.ToDocument` saves a map.
 - Templates: model `MapTemplate` (Core.Generation), file `*.ewtemplate.json` via `TemplateSerializer` /

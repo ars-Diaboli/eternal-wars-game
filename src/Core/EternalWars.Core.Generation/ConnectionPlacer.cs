@@ -34,11 +34,12 @@ public static class ConnectionPlacer
     /// <summary>The least distance between two passages of one connection.</summary>
     public static int Spacing(int mapSize) => Math.Max(6, mapSize / 12);
 
-    public static void Place(MapTemplate template, GeneratedMap map, ulong seed, CreatureCatalog? creatures = null)
+    /// <summary>Places the connections; their guards are creatures of the map's creature table (<see cref="GeneratedMap.Content"/>).</summary>
+    public static void Place(MapTemplate template, GeneratedMap map, ulong seed)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
-        creatures ??= CreatureCatalog.Default;
+        var creatures = map.Content.Creatures;
         if (map.Layout.ZoneIds.Count != template.Zones.Count)
         {
             throw new ArgumentException("The map was not made from this template.", nameof(map));
@@ -230,7 +231,7 @@ public static class ConnectionPlacer
                     PlaceGarrison(map, placed.Definition, placed.At, connection.GuardValue, random, creatures);
                     break;
                 case ConnectionGuard.BorderGuard or ConnectionGuard.BorderGate:
-                    var post = MapObjectCatalog.Default.Get(BuiltInMapObjects.ColouredId(guard == ConnectionGuard.BorderGate ? BuiltInMapObjects.BorderGate : BuiltInMapObjects.BorderGuard, colour));
+                    var post = map.Definition(BuiltInMapObjects.ColouredId(guard == ConnectionGuard.BorderGate ? BuiltInMapObjects.BorderGate : BuiltInMapObjects.BorderGuard, colour));
                     map.Add(new BorderPost(map.NextId(), post, candidate));
                     break;
                 default:
@@ -303,7 +304,7 @@ public static class ConnectionPlacer
                 var (first, second) = (tile.Offset(-dx, -dy), tile.Offset(dx, dy));
                 if (Wall(first) && Wall(second) && Closes([tile, first, second]))
                 {
-                    return (MapObjectCatalog.Default.Get(id), tile);
+                    return (map.Definition(id), tile);
                 }
             }
         }
@@ -328,7 +329,7 @@ public static class ConnectionPlacer
     /// <summary>The Keymaster's Tent of a border post's colour, in the connection's first zone, with a guard of the connection's value next to it.</summary>
     private static void PlaceKeymaster(GeneratedMap map, MapTemplate template, TemplateConnection connection, ObjectColour colour, int a, int b, GameRandom random, CreatureCatalog creatures)
     {
-        var definition = MapObjectCatalog.Default.Get(BuiltInMapObjects.ColouredId(BuiltInMapObjects.KeymasterTent, colour));
+        var definition = map.Definition(BuiltInMapObjects.ColouredId(BuiltInMapObjects.KeymasterTent, colour));
         if (Spot(map, definition, a, template.Zones[a].Level, [], random) is not { } at)
         {
             map.Problem($"Connection {connection.From} - {connection.To}: no room for the Keymaster's Tent.");
@@ -428,7 +429,7 @@ public static class ConnectionPlacer
 
         var (creature, count) = GuardPicker.Pick(creatures, value, random);
         // Passage guards block the way: plain HoMM3 zone of control (ADR-065); Area is for treasure guards.
-        map.Add(new MonsterGuard(map.NextId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Monster), at, creature.Id, count, GuardDisposition.Aggressive, mode: GuardMode.Classic));
+        map.Add(new MonsterGuard(map.NextId(), map.Definition(BuiltInMapObjects.Monster), at, creature.Id, count, GuardDisposition.Aggressive, mode: GuardMode.Classic));
     }
 
     // Gates -----------------------------------------------------------------------------------
@@ -437,7 +438,7 @@ public static class ConnectionPlacer
     {
         var sameLevel = template.Zones[a].Level == template.Zones[b].Level;
         var portal = connection.Kind == ConnectionKind.Portal;
-        var definition = MapObjectCatalog.Default.Get(sameLevel || portal ? BuiltInMapObjects.TwoWayMonolith : BuiltInMapObjects.SubterraneanGate);
+        var definition = map.Definition(sameLevel || portal ? BuiltInMapObjects.TwoWayMonolith : BuiltInMapObjects.SubterraneanGate);
         // A gate stands near the border it crosses; a portal anywhere in its zones.
         var near = !portal && map.Walls.TryGetValue(a < b ? (a, b) : (b, a), out var wall) ? wall : [];
         if (Spot(map, definition, a, template.Zones[a].Level, near, random) is not { } first

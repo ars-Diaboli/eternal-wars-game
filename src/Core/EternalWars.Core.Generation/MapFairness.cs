@@ -45,11 +45,11 @@ public static class MapFairness
 
     private const int Unreached = int.MaxValue;
 
-    public static FairnessReport Check(MapTemplate template, GeneratedMap map, CreatureCatalog? creatures = null)
+    public static FairnessReport Check(MapTemplate template, GeneratedMap map)
     {
         ArgumentNullException.ThrowIfNull(template);
         ArgumentNullException.ThrowIfNull(map);
-        creatures ??= CreatureCatalog.Default;
+        var creatures = map.Content.Creatures;
         var problems = new List<string>();
         var walk = new Walk(map, creatures);
 
@@ -172,7 +172,7 @@ public static class MapFairness
             for (var i = 0; i < _blocked.Length; i++)
             {
                 var p = Position(i);
-                _blocked[i] = map.Map.GetTerrain(p) == TerrainPainter.WallTerrain || !GeneratedMap.Terrains.IsPassable(map.Map.GetTerrain(p));
+                _blocked[i] = map.Map.GetTerrain(p) == TerrainPainter.WallTerrain || !map.Terrains.IsPassable(map.Map.GetTerrain(p));
             }
 
             var byId = map.Objects.ToDictionary(o => o.Id);

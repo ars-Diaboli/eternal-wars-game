@@ -68,7 +68,7 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
                     abandoned.Guard = new GuardStack(creature, state.Random.NextInclusive(abandoned.Definition.GuardMin, abandoned.Definition.GuardMax));
                     break;
                 case CreatureBank { Guard.Count: 0, PlunderedOn: null } bank:
-                    CreatureBankRules.Fill(bank, state.Random);
+                    Fill(bank);
                     break;
                 case CreatureDwelling { Owner: null, Guard: null } dwelling
                     when DwellingGuards.Count(state.Creatures.Get(dwelling.Creature).Tier) is { } guards:
@@ -153,12 +153,23 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
             .Where(p => state.Map.Contains(p) && state.Terrains.IsPassable(state.Map.GetTerrain(p)) && state.ObjectCellAt(p) is null
                         && state.HeroAt(p) is null && !DirectionExtensions.All.Any(d => state.HeroAt(p.Step(d)) is not null));
 
+    /// <summary>Rolls a bank's tier (and the upgraded fifth of its first stack) into its guard and reward (<see cref="CreatureBankRules.Roll"/>).</summary>
+    private void Fill(CreatureBank bank)
+    {
+        var tier = CreatureBankRules.Roll(bank, state.Random);
+        bank.Guard = tier.Guard;
+        bank.Reward = tier.Reward;
+        bank.RewardArtifact = tier.Artifact;
+        bank.MoreArtifacts = tier.MoreArtifacts;
+        bank.PlunderedOn = null;
+    }
+
     /// <summary>A new day: plundered banks whose time has come fill again with a new roll (ADR-068).</summary>
     internal void RefillBanks()
     {
         foreach (var bank in state.ObjectsOf<CreatureBank>().Where(b => CreatureBankRules.RefillsOn(b, state.Date)).OrderBy(b => b.Id.Value).ToList())
         {
-            CreatureBankRules.Fill(bank, state.Random);
+            Fill(bank);
             events.Publish(new CreatureBankRefilled(bank.Id));
             events.Publish(new MapObjectChanged(bank.Id));
         }

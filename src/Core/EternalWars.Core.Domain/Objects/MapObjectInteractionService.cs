@@ -20,6 +20,7 @@ public sealed class MapObjectInteractionService
     private readonly GuardService _guards;
     private readonly ProgressionService _progression;
     private readonly GrailService _grail;
+    private readonly TownVisitService _towns;
     private readonly MapObjectRewardVisits _rewards;
     private Dictionary<Type, Action<Hero, MapObject>>? _visitRules;
 
@@ -29,13 +30,15 @@ public sealed class MapObjectInteractionService
         GuardService guards,
         ProgressionService progression,
         ArtifactService artifacts,
-        GrailService grail)
+        GrailService grail,
+        TownVisitService towns)
     {
         _context = context;
         _battles = battles;
         _guards = guards;
         _progression = progression;
         _grail = grail;
+        _towns = towns;
         _rewards = new MapObjectRewardVisits(context, battles, progression, artifacts);
     }
 
@@ -208,8 +211,7 @@ public sealed class MapObjectInteractionService
         if (town.Owner is { } owner && !State.AreEnemies(hero.Owner, owner))
         {
             // Own or allied towns: the hero just stands in the town (an own hero can take recruits and garrison stacks).
-            TownService.AutoAppoint(State, Events, town, hero);
-            Magic.MagicRules.Visit(State, Events, hero, town);
+            _towns.Enter(hero, town);
         }
         else if (!town.Garrison.IsEmpty || town.GarrisonHero is not null)
         {
@@ -217,8 +219,8 @@ public sealed class MapObjectInteractionService
         }
         else
         {
-            TownService.Capture(State, Events, town, hero.Owner);
-            Magic.MagicRules.Visit(State, Events, hero, town);
+            _towns.Capture(town, hero.Owner);
+            _towns.Visit(hero, town);
         }
     }
 

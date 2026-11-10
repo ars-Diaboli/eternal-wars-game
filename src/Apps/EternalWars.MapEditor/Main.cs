@@ -387,7 +387,7 @@ public partial class Main : Node3D
         EditorMap map;
         try
         {
-            map = EditorMapGenerator.Generate(template, size, seed, template.MaxPlayers, new Dictionary<int, string>(), GameContent.Creatures, GameContent.Heroes, GameContent.Buildings, GameContent.Artifacts);
+            map = EditorMapGenerator.Generate(template, size, seed, template.MaxPlayers, new Dictionary<int, string>(), GameContent.All);
         }
         catch (ArgumentException e)
         {
@@ -418,7 +418,7 @@ public partial class Main : Node3D
         try
         {
             map = EditorMapGenerator.Generate(
-                template, request.Size, request.Seed, request.Players, request.Towns, GameContent.Creatures, GameContent.Heroes, GameContent.Buildings, GameContent.Artifacts, request.MaxHeroes);
+                template, request.Size, request.Seed, request.Players, request.Towns, GameContent.All, request.MaxHeroes);
         }
         catch (ArgumentException e)
         {

@@ -23,7 +23,7 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
     {
         if (winner is not null)
         {
-            TownService.Capture(outcome.State, outcome.Events, this, winner.Owner);
+            outcome.Towns.Capture(this, winner.Owner);
         }
     }
 

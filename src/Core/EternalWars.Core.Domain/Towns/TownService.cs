@@ -20,10 +20,10 @@ public enum TownArmy
 /// <summary>
 /// Towns on the owner's turn (ADR-046, HoMM3-style): one building a day, dwellings by the 7-of-9 rule (ADR-030),
 /// recruiting into the garrison or the visiting hero, stack upgrades for the price difference, moving stacks between
-/// garrison and visiting hero, and the weekly growth. Capturing happens on visits (<c>MapObjectInteractionService</c>)
-/// and after garrison battles (<c>BattleService</c>).
+/// garrison and visiting hero, the weekly growth, and the guild spells drawn at game start. Hero arrivals and captures are
+/// <see cref="TownVisitService"/>'s.
 /// </summary>
-public sealed class TownService(GameState state, IEventPublisher events, EconomyService economy) : Turns.ITurnPhaseParticipant
+public sealed class TownService(GameState state, IEventPublisher events, EconomyService economy, TownVisitService visits) : Turns.ITurnPhaseParticipant
 {
     void Turns.ITurnPhaseParticipant.StockFirstWeek() => FillNewDwellings();
 
@@ -47,7 +47,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         if (building is BuiltInBuildings.MageGuild or BuiltInBuildings.WarLodge || BuiltInBuildings.SchoolOf(building) is not null
             || UniqueBuildings.Get(building) is not null)
         {
-            Magic.MagicRules.VisitBy(state, events, town);
+            visits.VisitBy(town);
         }
     }
 
@@ -190,7 +190,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         Pay(player, Magic.MagicRules.SpellBookCost);
         hero.HasSpellBook = true;
         events.Publish(new SpellBookBought(town.Id, hero.Id));
-        Magic.MagicRules.Visit(state, events, hero, town);
+        visits.Visit(hero, town);
     }
 
     /// <summary>The visiting hero moves into the garrison (ADR-112): its stacks join the garrison's, and it leaves the map.</summary>
@@ -242,7 +242,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         var town = OwnTown(player, townId);
         var hero = state.Heroes.FirstOrDefault(h => h.Id == heroId && h.Owner == player) ?? throw new CommandRefusedException($"{heroId} is not an own hero.");
         Refuse(StewardshipRules.CheckAppoint(state, town, hero));
-        SetGovernor(state, events, town, hero);
+        visits.SetGovernor(town, hero);
     }
 
     /// <summary>The owner dismisses the town's governor.</summary>
@@ -254,17 +254,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
             throw new CommandRefusedException($"{town.Name} has no governor.");
         }
 
-        SetGovernor(state, events, town, null);
-    }
-
-    /// <summary>A visiting hero with Stewardship takes over a town without a governor, unless it governs another town.</summary>
-    internal static void AutoAppoint(GameState state, IEventPublisher events, Town town, Hero hero)
-    {
-        if (town.Owner == hero.Owner && StewardshipRules.GovernorOf(state, town) is null
-            && StewardshipRules.CheckAppoint(state, town, hero) is null && StewardshipRules.TownGovernedBy(state, hero) is null)
-        {
-            SetGovernor(state, events, town, hero);
-        }
+        visits.SetGovernor(town, null);
     }
 
     /// <summary>
@@ -277,23 +267,10 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         {
             foreach (var hero in new[] { TownRules.VisitingHero(state, town), town.GarrisonHero }.OfType<Hero>())
             {
-                AutoAppoint(state, events, town, hero);
-                Magic.MagicRules.Visit(state, events, hero, town, night: true);
+                visits.AutoAppoint(town, hero);
+                visits.Visit(hero, town, night: true);
             }
         }
-    }
-
-    private static void SetGovernor(GameState state, IEventPublisher events, Town town, Hero? hero)
-    {
-        if (hero is not null && StewardshipRules.TownGovernedBy(state, hero) is { } other && other != town)
-        {
-            other.Governor = null;
-            events.Publish(new GovernorChanged(other.Id, hero.Id, null));
-        }
-
-        var previous = StewardshipRules.GovernorOf(state, town)?.Id;
-        town.Governor = hero?.Id;
-        events.Publish(new GovernorChanged(town.Id, previous, hero?.Id));
     }
 
     internal void HireHero(PlayerId player, MapObjectId townId, string heroId)
@@ -326,7 +303,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         state.AddHero(hero);
         events.Publish(new HeroHired(town.Id, hero.Id, heroId));
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-        Magic.MagicRules.Visit(state, events, hero, town);
+        visits.Visit(hero, town);
     }
 
     /// <summary>
@@ -396,30 +373,60 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
     }
 
     /// <summary>
-    /// A town falls to <paramref name="owner"/>: an empty garrison was walked into, or the garrison was beaten. A Capitol drops to
-    /// town hall 3 when the new owner already has one (ADR-070, TOWN-3).
+    /// Game start (ADR-106, MAG-13): every town, by id, draws 3 / 3 / 2 / 2 of its school's spells per level without repeats from the game's
+    /// random source; the spells the map fixes (<see cref="Town.FixedGuildSpells"/>) take their places first and the draw fills the rest from the
+    /// others. Towns without a school (Stronghold, Swamp Bestiary) offer none. Then every town, by id, draws its spell buildings' spells
+    /// (<see cref="Town.SchoolSpells"/>) from the same source, school by school in id order, one per level.
     /// </summary>
-    internal static void Capture(GameState state, IEventPublisher events, Town town, PlayerId owner)
+    internal void DrawGuilds()
     {
-        if (!town.Garrison.IsEmpty)
+        var perLevel = Magic.MagicRules.GuildSpellsPerLevel;
+        var towns = state.ObjectsOf<Town>().OrderBy(t => t.Id.Value).ToList();
+        foreach (var town in towns)
         {
-            for (var slot = 0; slot < Army.SlotCount; slot++)
+            var guild = new Dictionary<int, IReadOnlyList<string>>();
+            for (var level = 1; level <= perLevel.Count; level++)
             {
-                town.Garrison.Set(slot, null);
+                // The map's fixed spells stay even when banned; the draw skips banned ones unless the level has no other (ADR-126).
+                var all = state.Spells.Of(town.TownType, level).Select(s => s.Id).ToList();
+                var drawn = town.FixedGuildSpells.Where(all.Contains).Distinct(StringComparer.Ordinal).Take(perLevel[level - 1]).ToList();
+                var pool = MapBans.Allowed(all, state.Rules.Bans.BansSpell).Where(s => !drawn.Contains(s)).ToList();
+                while (drawn.Count < perLevel[level - 1] && pool.Count > 0)
+                {
+                    var pick = state.Random.Next(pool.Count);
+                    drawn.Add(pool[pick]);
+                    pool.RemoveAt(pick);
+                }
+
+                if (drawn.Count > 0)
+                {
+                    drawn.Sort(StringComparer.Ordinal);
+                    guild[level] = drawn;
+                }
             }
 
-            events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
+            town.SetGuildSpells(guild);
         }
 
-        var previous = town.Owner;
-        town.Owner = owner;
-        town.Governor = null;
-        events.Publish(new TownOwnerChanged(town.Id, previous, owner));
-
-        if (town.Level(BuiltInBuildings.TownHall) >= BuiltInBuildings.CapitolLevel && TownRules.CapitolOf(state, owner, except: town) is not null)
+        foreach (var town in towns)
         {
-            town.SetLevel(BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel - 1);
-            events.Publish(new TownBuildingDowngraded(town.Id, BuiltInBuildings.TownHall, BuiltInBuildings.CapitolLevel - 1));
+            var schools = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+            foreach (var school in TownRules.Buildings(state, town).TownBuildings.Select(BuiltInBuildings.SchoolOf).OfType<string>().Distinct().Order(StringComparer.Ordinal))
+            {
+                var spells = new List<string>();
+                for (var level = 1; level <= perLevel.Count; level++)
+                {
+                    var pool = MapBans.Allowed(state.Spells.Of(school, level), s => state.Rules.Bans.BansSpell(s.Id));
+                    if (pool.Count > 0)
+                    {
+                        spells.Add(pool[state.Random.Next(pool.Count)].Id);
+                    }
+                }
+
+                schools[school] = spells;
+            }
+
+            town.SetSchoolSpells(schools);
         }
     }
 

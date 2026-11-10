@@ -7,18 +7,19 @@ namespace EternalWars.Core.Generation;
 /// <summary>
 /// Stage 2b of the generator (ADR-079, MAP-25): the rock clumps of stage 2 become scenery. Each clump tile gets back the ground around it, then
 /// the clump is filled with scenery made for that ground (<c>scenery.csv</c>): a kind drawn by weight (trees and rocks most, ADR-157), then its
-/// largest piece that fits, so exactly the clump's tiles stay blocked and no part of a zone is cut off. Deterministic from the seed (the <c>scenery</c> stream).
+/// largest piece that fits, so exactly the clump's tiles stay blocked and no part of a zone is cut off. The scenery is that of the map's object table
+/// (<see cref="GeneratedMap.Content"/>). Deterministic from the seed (the <c>scenery</c> stream).
 /// </summary>
 public static class SceneryPlacer
 {
     /// <summary>What fills a tile no other scenery fits.</summary>
     public const string Fallback = "scenery.rock.small";
 
-    public static void Place(GeneratedMap map, IReadOnlyList<MapPosition> obstacles, ulong seed, MapObjectCatalog? catalog = null)
+    public static void Place(GeneratedMap map, IReadOnlyList<MapPosition> obstacles, ulong seed)
     {
         ArgumentNullException.ThrowIfNull(map);
         ArgumentNullException.ThrowIfNull(obstacles);
-        catalog ??= MapObjectCatalog.Default;
+        var catalog = map.Content.Objects;
         var scenery = catalog.OfKind(MapObjectKind.Scenery).OrderBy(d => d.Id, StringComparer.Ordinal).ToList();
         if (scenery.Count == 0)
         {
@@ -101,7 +102,7 @@ public static class SceneryPlacer
                 {
                     var next = tile.Offset(dx, dy);
                     if (map.Map.Contains(next) && !clumps.Contains(next) && map.Layout.ZoneAt(next.X, next.Y, next.Level) == zone
-                        && map.Map.GetTerrain(next) is var terrain && terrain != TerrainPainter.WallTerrain && TerrainCatalog.Default.IsPassable(terrain))
+                        && map.Map.GetTerrain(next) is var terrain && terrain != TerrainPainter.WallTerrain && map.Terrains.IsPassable(terrain))
                     {
                         around.Add(terrain);
                     }

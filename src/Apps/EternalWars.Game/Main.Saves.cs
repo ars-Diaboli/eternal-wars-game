@@ -183,8 +183,7 @@ public partial class Main
     {
         try
         {
-            var (session, record) = GameSaves.Load(
-                path, creatures: GameContent.Creatures, heroRoster: GameContent.Heroes, buildings: GameContent.Buildings, artifacts: GameContent.Artifacts);
+            var (session, record) = GameSaves.Load(path, GameContent.All);
             CloseSetup();
             _menu.Close();
             _generated = record.Generated;

@@ -140,34 +140,4 @@ public static class PrisonRules
 {
     /// <summary>The levels a prisoner may have, with their odds.</summary>
     public static IReadOnlyList<(int Weight, int Level)> LevelOdds { get; } = [(30, 1), (30, 5), (20, 10), (15, 20), (5, 30)];
-
-    /// <summary>
-    /// Fills in the prisons the map left open (game start): a random playable faction, then one of its heroes neither on the map nor in another
-    /// prison (the players' start heroes are on the map), else any such hero; the level from <see cref="LevelOdds"/>.
-    /// </summary>
-    internal static void Prepare(GameState state)
-    {
-        var taken = state.Heroes.Select(h => h.Definition).OfType<string>()
-            .Concat(state.ObjectsOf<Prison>().Select(p => p.Hero).OfType<string>())
-            .ToHashSet(StringComparer.Ordinal);
-        foreach (var prison in state.ObjectsOf<Prison>().OrderBy(p => p.Id.Value).ToList())
-        {
-            if (prison.Hero is null)
-            {
-                var towns = BuiltInMapObjects.PlayableTowns;
-                var town = towns[state.Random.Next(towns.Count)];
-                var free = MapBans.Allowed(
-                    state.HeroRoster.All.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList(), h => state.Rules.Bans.BansHero(h.Id));
-                var native = free.Where(h => h.Town == town).ToList();
-                var pool = native.Count > 0 ? native : [.. free];
-                if (pool.Count > 0)
-                {
-                    prison.Hero = pool[state.Random.Next(pool.Count)].Id;
-                    taken.Add(prison.Hero);
-                }
-            }
-
-            prison.Level ??= WeightedRoll.Pick(LevelOdds, state.Random);
-        }
-    }
 }

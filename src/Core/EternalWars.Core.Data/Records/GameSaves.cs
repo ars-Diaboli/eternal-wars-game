@@ -1,8 +1,6 @@
 using EternalWars.Core.Data.Maps;
-using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -109,19 +107,13 @@ public static class GameSaves
     /// <summary>
     /// Replays a saved game to where it was saved; the session is started and mid-battle if it was saved there. Throws
     /// <see cref="InvalidOperationException"/> when the content has changed since (the digest differs) and
-    /// <see cref="FormatException"/>/<see cref="System.Text.Json.JsonException"/> for damaged files.
+    /// <see cref="FormatException"/>/<see cref="System.Text.Json.JsonException"/> for damaged files. <paramref name="content"/> is the game's
+    /// content tables (the built-in tables when left out).
     /// </summary>
-    public static (GameSession Session, GameRecordDocument Record) Load(
-        string path,
-        MapObjectCatalog? catalog = null,
-        CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null,
-        TerrainCatalog? terrains = null,
-        ArtifactCatalog? artifacts = null)
+    public static (GameSession Session, GameRecordDocument Record) Load(string path, ContentCatalogs? content = null)
     {
         var record = GameRecordSerializer.Load(path);
-        return (GameReplay.Replay(record, catalog, creatures, heroRoster, buildings, terrains, artifacts), record);
+        return (GameReplay.Replay(record, content), record);
     }
 
     /// <summary>The saves in a folder, newest first; unreadable files are listed with their error. A missing folder is empty.</summary>

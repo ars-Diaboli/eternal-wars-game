@@ -15,7 +15,9 @@ public sealed class ObjectDecisionService(
     ObjectInteractionContext context,
     BattleService battles,
     ProgressionService progression,
-    ArtifactService artifacts)
+    ArtifactService artifacts,
+    TownVisitService towns,
+    PandorasBoxService boxes)
 {
     private Game.GameState State => context.State;
 
@@ -87,8 +89,7 @@ public sealed class ObjectDecisionService(
             var from = hero.Position;
             hero.Position = town.VisitPosition;
             Events.Publish(new HeroTeleported(hero.Id, from, hero.Position));
-            TownService.AutoAppoint(State, Events, town, hero);
-            Magic.MagicRules.Visit(State, Events, hero, town);
+            towns.Enter(hero, town);
         }
 
         Events.Publish(new DecisionResolved(decision));
@@ -265,7 +266,7 @@ public sealed class ObjectDecisionService(
             return;
         }
 
-        PandorasBoxRules.Open(State, Events, context.Economy, progression, artifacts, hero, box);
+        boxes.Open(hero, box);
     }
 
     /// <summary>The hero learns or improves one of the witch hut's skills, or leaves without (ADR-079, MAP-34).</summary>

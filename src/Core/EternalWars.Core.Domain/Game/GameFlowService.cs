@@ -213,7 +213,7 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
 
     /// <summary>
     /// Remembers who sits in each prison a condition names: freeing the hero removes the prison, and a prisoner left open by the map is drawn
-    /// after <see cref="Begin"/> (<see cref="PrisonRules.Prepare"/>).
+    /// after <see cref="Begin"/> (<see cref="Objects.ObjectLifecycleService.PreparePrisons"/>).
     /// </summary>
     private void WatchPrisons()
     {

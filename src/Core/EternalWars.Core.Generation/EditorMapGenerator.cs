@@ -1,9 +1,5 @@
-using EternalWars.Core.Domain.Artifacts;
-using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Heroes;
-using EternalWars.Core.Domain.Towns;
 
 namespace EternalWars.Core.Generation;
 
@@ -66,7 +62,7 @@ public static class EditorMapGenerator
     /// <summary>
     /// Generates the map. Refuses (with <see cref="ArgumentException"/>) a template with errors, a size the template does not support, and the
     /// player and town choices <see cref="Players"/> or <see cref="ScenarioAssembler"/> refuse. <paramref name="maxHeroes"/> overrides the template's
-    /// hero limit (ADR-068).
+    /// hero limit (ADR-068). <paramref name="content"/> is the content tables to generate from (the built-in tables when left out).
     /// </summary>
     public static EditorMap Generate(
         MapTemplate template,
@@ -74,14 +70,12 @@ public static class EditorMapGenerator
         ulong seed,
         int? players = null,
         IReadOnlyDictionary<int, string>? towns = null,
-        CreatureCatalog? creatures = null,
-        HeroCatalog? heroRoster = null,
-        BuildingCatalog? buildings = null,
-        ArtifactCatalog? artifacts = null,
+        ContentCatalogs? content = null,
         int? maxHeroes = null)
     {
         ArgumentNullException.ThrowIfNull(template);
-        if (TemplateValidator.Validate(template).FirstOrDefault(i => i.Severity == IssueSeverity.Error) is { } error)
+        content ??= ContentCatalogs.Default;
+        if (TemplateValidator.Validate(template, content).FirstOrDefault(i => i.Severity == IssueSeverity.Error) is { } error)
         {
             throw new ArgumentException($"The template has errors: {error.Message}", nameof(template));
         }
@@ -91,7 +85,7 @@ public static class EditorMapGenerator
             throw new ArgumentOutOfRangeException(nameof(size), size, $"{template.Name} supports the sizes {string.Join(", ", template.Sizes)}.");
         }
 
-        var (scenario, generation) = MapGenerator.Build(template, size, seed, Players(template, players, towns), new GameOptions(Seed: seed), creatures, heroRoster, artifacts, buildings, maxHeroes);
+        var (scenario, generation) = MapGenerator.Build(template, size, seed, Players(template, players, towns), new GameOptions(Seed: seed), content, maxHeroes);
         scenario.Map.Description = Describe(template, size, seed, generation);
         return new EditorMap(scenario, generation, MapValidator.Validate(scenario));
     }

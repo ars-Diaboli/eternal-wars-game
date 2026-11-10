@@ -1,4 +1,6 @@
 using EternalWars.Core.Domain.Artifacts;
+using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Towns;
@@ -9,6 +11,37 @@ namespace EternalWars.Core.Domain.Objects;
 public sealed class ObjectLifecycleService(ObjectInteractionContext context, ArtifactService artifacts) : Turns.ITurnPhaseParticipant
 {
     void Turns.ITurnPhaseParticipant.StockWeek() => StartWeek(context.State.Date.IsFirstDayOfMonth);
+
+    /// <summary>
+    /// Fills in the prisons the map left open (game start): a random playable faction, then one of its heroes neither on the map nor in another
+    /// prison (the players' start heroes are on the map), else any such hero; the level from <see cref="PrisonRules.LevelOdds"/>.
+    /// </summary>
+    internal void PreparePrisons()
+    {
+        var state = context.State;
+        var taken = state.Heroes.Select(h => h.Definition).OfType<string>()
+            .Concat(state.ObjectsOf<Prison>().Select(p => p.Hero).OfType<string>())
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var prison in state.ObjectsOf<Prison>().OrderBy(p => p.Id.Value).ToList())
+        {
+            if (prison.Hero is null)
+            {
+                var towns = BuiltInMapObjects.PlayableTowns;
+                var town = towns[state.Random.Next(towns.Count)];
+                var free = MapBans.Allowed(
+                    state.HeroRoster.All.Where(h => !taken.Contains(h.Id)).OrderBy(h => h.Id, StringComparer.Ordinal).ToList(), h => state.Rules.Bans.BansHero(h.Id));
+                var native = free.Where(h => h.Town == town).ToList();
+                var pool = native.Count > 0 ? native : [.. free];
+                if (pool.Count > 0)
+                {
+                    prison.Hero = pool[state.Random.Next(pool.Count)].Id;
+                    taken.Add(prison.Hero);
+                }
+            }
+
+            prison.Level ??= WeightedRoll.Pick(PrisonRules.LevelOdds, state.Random);
+        }
+    }
 
     /// <summary>
     /// Game start (ADR-079): witch huts the map left open roll their skills, refugee camps get their first week and artifact merchants their stock.

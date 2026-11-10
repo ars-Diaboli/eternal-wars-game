@@ -1855,3 +1855,37 @@ agent's choices.
   dependency, as its battle day replaces the whole day.
 - **Subscriptions**: visibility, map events and adventure magic subscribe themselves (`SubscribeTo(bus)`), in that order.
 - **Behaviour**: unchanged (events, refusals, random draws, digests; AI games replay the same).
+
+### ADR-170: `*Rules` classes are pure queries; their changes are services' (ADR-167, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (R9).
+
+- **Rule**: a static `*Rules` class holds constants and queries (checks, costs, odds, offers) only. Whatever changes the state or publishes
+  lives in a service that the session builds and hands to its callers. `RulesPurityTests` fails on a `*Rules` method that takes an
+  `IEventPublisher` or returns nothing.
+- **`TownVisitService`** (new): a hero's arrival in a town (`Enter` = governor by Stewardship, then `Visit`: the Grail building, the unique
+  buildings' bonuses, the war lodge's warcries, the guild's spells and their ranks, mana after a night), `VisitBy` after a build, governors
+  (`AutoAppoint`, `SetGovernor`) and `Capture`. Movement, object decisions, Town Portal, map events, `TownService` and the battle aftermath use
+  it; the guard kinds reach it through `BattleGuardOutcome.Towns`. It replaces `MagicRules.Visit`/`VisitBy`, `GrailRules.RaiseBuilding`,
+  `UniqueBuildings.Visit` and the static `TownService.Capture`/`AutoAppoint`.
+- **Others**: `GrailService.Bury` and `VisitObelisk` (were `GrailRules.Bury`/`Visit`), `ObjectLifecycleService.PreparePrisons`
+  (was `PrisonRules.Prepare`), `PandorasBoxService.Open` (was `PandorasBoxRules.Open` with 7 parameters; a won guard battle reaches it through
+  `BattleGuardOutcome.Boxes`), `PlaceholderService.Resolve` (was `PlaceholderRules.Resolve`), `TownService.DrawGuilds` (was
+  `MagicRules.DrawGuilds`). `CreatureBankRules.Roll` returns the rolled tier and `GuardService` fills the bank with it (was
+  `CreatureBankRules.Fill`). The unique buildings' bonuses use the session's `ProgressionService` instead of a new one per visit.
+- **Behaviour**: unchanged (events, refusals, random draws, digests; AI games replay the same). The game-start order is the same: placeholders,
+  Grail, surplus heroes, begin, unset pickups, prisoners, object rolls, guild spells.
+
+### ADR-171: One `ContentCatalogs` record from the apps to the generator (ADR-165, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (R10).
+
+- **Record**: `ContentCatalogs` holds every content table a game reads (creatures, spells, artifacts, buildings, hero roster, and also the map
+  objects and terrains); `ContentCatalogs.Default` is the built-in content. `GameState` takes its object and terrain tables from it like the
+  others.
+- **Entry points**: `MapConverter.ToGameState(document, content?, options?, checkEvents)`, `GameSaves.Load(path, content?)`,
+  `GameReplay.Replay` / `ReplayPlayer.Open(record, content?)`, and the generator's `MapGenerator.Build` / `Generate` / `GenerateBest` and
+  `EditorMapGenerator.Generate` take one optional `ContentCatalogs` instead of one optional parameter per table; omitted means the built-in
+  content. The apps build their record once (`GameContent.All`; the Sim tool from `--creatures`) and pass it everywhere.
+- **Generator**: `GeneratedMap.Content` carries the record through every stage; no stage reads a built-in table itself
+  (`ZoneLayouter`, `TerrainPainter` and `TemplateValidator` take the record too). The template editor still validates against the built-in
+  tables, as it has no game content.
+- **Behaviour**: unchanged with the built-in content (digests and AI games replay the same).
