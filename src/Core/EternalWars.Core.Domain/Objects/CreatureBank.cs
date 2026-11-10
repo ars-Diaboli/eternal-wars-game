@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Game;
 
 namespace EternalWars.Core.Domain.Objects;
 
@@ -45,6 +46,12 @@ public sealed record BankTier(int Weight, IReadOnlyList<CreatureStack> Guard, Re
 public sealed class CreatureBank(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.CreatureBank)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"guard {string.Join(',', Guard)} reward {Reward} {RewardArtifact}{(MoreArtifacts.Count == 0 ? "" : $"+{string.Join('+', MoreArtifacts)}")} plundered {PlunderedOn?.AbsoluteDay}";
+
+    /// <inheritdoc/>
+    public override bool IsDefendedAgainst(GameState state, PlayerId visitor) => IsGuarded;
+
     public BankRule Rule => Definition.Bank!.Value;
 
     /// <summary>The rolled guard; empty until the game starts and while the bank is plundered.</summary>

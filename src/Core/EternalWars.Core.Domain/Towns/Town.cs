@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 
 namespace EternalWars.Core.Domain.Towns;
@@ -52,6 +53,19 @@ public sealed class Town : MapObject, IFlaggable
         FixedGuildSpells = fixedGuildSpells?.ToList() ?? [];
         IsRandom = isRandom;
     }
+
+    /// <inheritdoc/>
+    /// <remarks>A town with a garrison (troops or a garrison hero) is defended against its owner's enemies, and an unowned one against anyone.</remarks>
+    public override bool IsDefendedAgainst(GameState state, PlayerId visitor) =>
+        (!Garrison.IsEmpty || GarrisonHero is not null) && (Owner is not { } owner || state.AreEnemies(visitor, owner));
+
+    /// <inheritdoc/>
+    internal override string DigestState() =>
+        $"owner {Owner?.Value} governor {Governor?.Value} built {GameStateDigest.Pairs(Buildings)} dwellings {GameStateDigest.Pairs(Dwellings)} available {GameStateDigest.Pairs(Available)} "
+        + $"garrison {GameStateDigest.Slots(Garrison)} last {LastBuilt?.AbsoluteDay}"
+        + (GuildSpells.Count == 0 ? "" : $" guild {string.Join(';', GuildSpells.OrderBy(l => l.Key).Select(l => string.Join(',', l.Value)))}")
+        + (SchoolSpells.Count == 0 ? "" : $" schools {string.Join(';', SchoolSpells.OrderBy(s => s.Key, StringComparer.Ordinal).Select(s => $"{s.Key}:{string.Join(',', s.Value)}"))}")
+        + (FixedGuildSpells.Count == 0 ? "" : $" fixed {string.Join(',', FixedGuildSpells)}");
 
     /// <summary>Town type (<see cref="TownIds"/>).</summary>
     public string TownType => Definition.Town!;

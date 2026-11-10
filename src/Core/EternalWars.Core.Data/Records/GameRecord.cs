@@ -208,7 +208,7 @@ public static class GameRecordSerializer
     /// <summary>Map JSON settings plus the command hierarchy (kept out of Domain) and compact ids.</summary>
     private static readonly JsonSerializerOptions Options = new(JsonDefaults.Options)
     {
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes, Maps.MapEventJson.AddTypes } },
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes, Maps.MapConverter.AddObjectTypes, Maps.MapEventJson.AddTypes } },
         Converters = { new IdConverter<PlayerId>(v => new(v), id => id.Value), new IdConverter<HeroId>(v => new(v), id => id.Value),
             new IdConverter<MapObjectId>(v => new(v), id => id.Value) },
     };

@@ -36,6 +36,12 @@ public enum LootRule
 public sealed class LootSite(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Loot)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
+    /// <remarks>Only the sites that vanish once searched are pickups.</remarks>
+    public override bool IsPickup => Vanishes;
+
     public LootRule Rule => Definition.Loot!.Value;
 
     /// <summary>Whether the site disappears when visited (and counts as a pickup a Classic guard lets be stolen, ADR-065).</summary>

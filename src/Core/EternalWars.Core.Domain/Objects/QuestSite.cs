@@ -14,6 +14,9 @@ namespace EternalWars.Core.Domain.Objects;
 public sealed class QuestSite(MapObjectId id, MapObjectDefinition definition, MapPosition position, string? quest = null)
     : MapObject(id, definition, position, QuestRules.Check(definition))
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"quest {Quest} stage {Stage}";
+
     public string? Quest { get; internal set; } = quest;
 
     /// <summary>The stage the next completion finishes (game state; 0 on the map).</summary>

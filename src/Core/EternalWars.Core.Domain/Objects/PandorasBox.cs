@@ -112,6 +112,9 @@ public sealed class PandorasBox(
     BoxContents? contents = null, IReadOnlyList<CreatureStack>? guard = null, string? message = null, string? @event = null)
     : MapObject(id, definition, position, MapObjectKind.PandorasBox)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => $"contents {Contents} guard {string.Join(',', Guard)} message {Message}{(Event is null ? "" : $" event {Event}")}";
+
     /// <summary>The hero event run for the opener once the contents are given (null: none); a box with an event may hold nothing else.</summary>
     public string? Event { get; internal set; } = @event;
 

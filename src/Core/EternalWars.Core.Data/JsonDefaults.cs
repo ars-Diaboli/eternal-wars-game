@@ -18,7 +18,7 @@ internal static class JsonDefaults
         AllowOutOfOrderMetadataProperties = true,
         Converters = { new JsonStringEnumConverter() },
 
-        // The map events' node hierarchies (v31, ADR-115).
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { Maps.MapEventJson.AddTypes } },
+        // The map objects' kinds (ADR-166) and the map events' node hierarchies (v31, ADR-115).
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { Maps.MapConverter.AddObjectTypes, Maps.MapEventJson.AddTypes } },
     };
 }

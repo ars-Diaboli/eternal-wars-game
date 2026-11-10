@@ -49,6 +49,9 @@ public enum BuffRule
 public sealed class BuffSite(MapObjectId id, MapObjectDefinition definition, MapPosition position)
     : MapObject(id, definition, position, MapObjectKind.Buff)
 {
+    /// <inheritdoc/>
+    internal override string DigestState() => "";
+
     public BuffRule Rule => Definition.Buff!.Value;
 }
 

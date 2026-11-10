@@ -172,7 +172,7 @@ public sealed class HeroMovementService(
 
         if (state.GuardsOf(target).ToList() is [var firstGuard, ..] guards)
         {
-            var isPickup = entrance is ResourcePile or TreasureChest or ArtifactPickup or LootSite { Vanishes: true };
+            var isPickup = entrance?.IsPickup == true;
             if (isPickup && entrance is not null && guards.All(g => g.Mode == GuardMode.Classic))
             {
                 // HoMM3: a pickup next to Classic monsters can be grabbed from outside their zone without a fight.
@@ -193,10 +193,7 @@ public sealed class HeroMovementService(
             return MoveResult.GuardEncountered;
         }
 
-        var defended = entrance is Mine { Guard: not null } or CreatureDwelling { Guard: not null } or CreatureBank { IsGuarded: true }
-                       || (entrance is Town town && (!town.Garrison.IsEmpty || town.GarrisonHero is not null) && IsHostile(hero, town))
-                       || (entrance is MapGarrison { Troops.IsEmpty: false } garrison && !garrison.LetsThrough(state, hero.Owner));
-        if (defended && hero.Army.IsEmpty)
+        if (entrance?.IsDefendedAgainst(state, hero.Owner) == true && hero.Army.IsEmpty)
         {
             return MoveResult.NoArmy;
         }
@@ -244,8 +241,6 @@ public sealed class HeroMovementService(
             hero.MovementPoints = hero.MaxMovementPoints;
         }
     }
-
-    private bool IsHostile(Hero hero, Town town) => town.Owner is not { } owner || state.AreEnemies(hero.Owner, owner);
 
     private HashSet<HeroId> VisibleEnemies(PlayerId viewer) =>
         state.Heroes.Where(h => state.AreEnemies(viewer, h.Owner) && state.CanSee(viewer, h)).Select(h => h.Id).ToHashSet();
