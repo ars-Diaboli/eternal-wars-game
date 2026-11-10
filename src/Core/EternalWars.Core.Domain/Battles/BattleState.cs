@@ -163,12 +163,10 @@ public sealed class BattleUnit
     /// <summary>Buffs and curses on the stack (ADR-110), oldest first; a spell cast again replaces its earlier effect.</summary>
     public IReadOnlyList<ActiveSpell> Spells => MutableSpells;
 
-    internal List<ActiveSpell> MutableSpells { get; private init; } = [];
+    internal ActiveSpellList MutableSpells { get; private init; } = [];
 
     /// <summary>What the stack's spells change, all added up.</summary>
-    public Magic.SpellModifiers SpellModifiers => MutableSpells.Count == 0
-        ? Magic.SpellModifiers.None
-        : MutableSpells.Aggregate(Magic.SpellModifiers.None, (total, s) => total + s.Modifiers);
+    public Magic.SpellModifiers SpellModifiers => MutableSpells.Modifiers;
 
     public override string ToString() => $"#{Id} {Count}× {Creature.Name} ({Side}) at {Position}";
 

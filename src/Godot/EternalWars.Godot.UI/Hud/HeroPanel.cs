@@ -105,31 +105,32 @@ public partial class HeroPanel : PanelContainer
         box.AddChild(_status);
         Visible = false;
 
-        this.SubscribeWhileInTree<ArtifactEquipped>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ArtifactUnequipped>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ArtifactGiven>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ArtifactGained>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ArtifactLost>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<RelicAssembled>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<RelicTakenApart>(session.Events, _ => Refresh());
+        var refresh = new RefreshScheduler(this, Refresh);
+        refresh.On<ArtifactEquipped>(session.Events);
+        refresh.On<ArtifactUnequipped>(session.Events);
+        refresh.On<ArtifactGiven>(session.Events);
+        refresh.On<ArtifactGained>(session.Events);
+        refresh.On<ArtifactLost>(session.Events);
+        refresh.On<RelicAssembled>(session.Events);
+        refresh.On<RelicTakenApart>(session.Events);
         this.SubscribeWhileInTree<RelicReady>(session.Events, e => _status.Text = $"All pieces of {_session.State.Artifacts.Get(e.Relic).Name} are worn: press Assemble to join them.");
-        this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroLeveledUp>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroExperienceGained>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroManaRestored>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroManaSpent>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<SpellsLearned>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<SpellsRaised>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<AdventureSpellCast>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroStatusGained>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroStatusesExpired>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<PandorasBoxOpened>(session.Events, _ => Refresh()); // stats and skills
-        this.SubscribeWhileInTree<HeroMovementRestored>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroDefeated>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
+        refresh.On<ArmyChanged>(session.Events);
+        refresh.On<HeroLeveledUp>(session.Events);
+        refresh.On<HeroExperienceGained>(session.Events);
+        refresh.On<HeroManaRestored>(session.Events);
+        refresh.On<HeroManaSpent>(session.Events);
+        refresh.On<SpellsLearned>(session.Events);
+        refresh.On<SpellsRaised>(session.Events);
+        refresh.On<AdventureSpellCast>(session.Events);
+        refresh.On<HeroStatusGained>(session.Events);
+        refresh.On<HeroStatusesExpired>(session.Events);
+        refresh.On<SpellBookBought>(session.Events);
+        refresh.On<PandorasBoxOpened>(session.Events); // stats and skills
+        refresh.On<HeroMovementRestored>(session.Events);
+        refresh.On<HeroMoved>(session.Events);
+        refresh.On<WarMachineBought>(session.Events);
+        refresh.On<HeroDefeated>(session.Events);
+        refresh.On<TurnStarted>(session.Events);
     }
 
     /// <summary>Shows a hero of the player whose turn it is.</summary>

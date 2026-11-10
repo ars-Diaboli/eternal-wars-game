@@ -24,9 +24,11 @@ public sealed class GameState
 
     private readonly List<Player> _players;
     private readonly List<Hero> _heroes = [];
+    private readonly Dictionary<HeroId, Hero> _heroById = [];
     private readonly List<Hero> _retiredHeroes = [];
     private int _highestHeroId;
     private readonly List<MapObject> _objects = [];
+    private readonly Dictionary<MapObjectId, MapObject> _objectById = [];
     private readonly List<Towns.Caravan> _caravans = [];
     private int _highestCaravanId;
     private readonly Dictionary<MapPosition, (MapObject Object, FootprintCell Cell)> _objectCells = [];
@@ -173,7 +175,7 @@ public sealed class GameState
     public bool HasPlayer(PlayerId id) => _players.Any(p => p.Id == id);
 
     /// <summary>A hero on the map or in a town's garrison (ADR-112); an unknown id refuses the command that names it.</summary>
-    public Hero GetHero(HeroId id) => _heroes.FirstOrDefault(h => h.Id == id) ?? GarrisonHeroes.FirstOrDefault(h => h.Id == id)
+    public Hero GetHero(HeroId id) => _heroById.GetValueOrDefault(id) ?? GarrisonHeroes.FirstOrDefault(h => h.Id == id)
         ?? throw new CommandRefusedException($"Unknown hero {id}.");
 
     /// <summary>The player's heroes on the map (garrison heroes are not, ADR-112).</summary>
@@ -394,7 +396,7 @@ public sealed class GameState
     /// <summary>The map object; an unknown id refuses the command that names it (<see cref="CommandRefusedException"/>).</summary>
     public MapObject GetObject(MapObjectId id) => FindObject(id) ?? throw new CommandRefusedException($"Unknown map object {id}.");
 
-    public MapObject? FindObject(MapObjectId id) => _objects.FirstOrDefault(o => o.Id == id);
+    public MapObject? FindObject(MapObjectId id) => _objectById.GetValueOrDefault(id);
 
     /// <summary>Where a gate delivers heroes, or null if it is unlinked or its link dangles.</summary>
     public MapPosition? TeleportDestination(MapObject gate) =>
@@ -430,7 +432,7 @@ public sealed class GameState
 
     internal void AddHero(Hero hero)
     {
-        if (_heroes.Any(h => h.Id == hero.Id))
+        if (!_heroById.TryAdd(hero.Id, hero))
         {
             throw new ArgumentException($"Duplicate hero id {hero.Id}.", nameof(hero));
         }
@@ -444,7 +446,13 @@ public sealed class GameState
     internal void RefreshArtifacts(Hero hero) =>
         hero.Bonus = ArtifactBonuses.Compute(Artifacts, hero.Artifacts) with { HomeTown = ProgressionService.TownOf(this, hero) };
 
-    internal void RemoveHero(Hero hero) => _heroes.Remove(hero);
+    internal void RemoveHero(Hero hero)
+    {
+        if (_heroes.Remove(hero))
+        {
+            _heroById.Remove(hero.Id);
+        }
+    }
 
     internal void Retire(Hero hero) => _retiredHeroes.Add(hero);
 
@@ -454,7 +462,7 @@ public sealed class GameState
 
     internal void AddObject(MapObject mapObject)
     {
-        if (_objects.Any(o => o.Id == mapObject.Id))
+        if (_objectById.ContainsKey(mapObject.Id))
         {
             throw new ArgumentException($"Duplicate object id {mapObject.Id}.", nameof(mapObject));
         }
@@ -473,6 +481,7 @@ public sealed class GameState
         }
 
         _objects.Add(mapObject);
+        _objectById.Add(mapObject.Id, mapObject);
         foreach (var (position, cell) in mapObject.OccupiedCells())
         {
             _objectCells[position] = (mapObject, cell);
@@ -485,6 +494,8 @@ public sealed class GameState
         {
             return;
         }
+
+        _objectById.Remove(mapObject.Id);
 
         foreach (var (position, _) in mapObject.OccupiedCells())
         {

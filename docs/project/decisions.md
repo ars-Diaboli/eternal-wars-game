@@ -1914,3 +1914,19 @@ agent's choices.
   validator cannot reference.
 - **Behaviour**: unchanged apart from the preview fixes (events, random draws, digests; AI games replay the same; the Sim's self-test digest
   is the same).
+
+### ADR-173: Caches beside what they cache (code review section 4, 2026-11-10)
+**Status**: implemented (2026-11-10); tested. From the code quality review (section 4, performance).
+
+- **Spell sums**: a stack's spells are an `ActiveSpellList` that keeps their sum (`BattleUnit.SpellModifiers`, under every `Has(status)`,
+  damage roll and AI estimate) until the list changes.
+- **Ids**: `GameState` keeps hero and object dictionaries by id beside its lists (and the cell index); `GetHero`, `GetObject` and
+  `FindObject` no longer scan. Garrison heroes are still found through their towns.
+- **AI threats**: `AdventureAi` keeps each player's visible enemy threats until the next command (only commands change the game, so the
+  session's command count is the key); every candidate target and every flooded explore tile used to scout every enemy hero again.
+  The 10-candidate cap still counts only safe candidates: counting every fight simulation would change what the AI picks, which is
+  tuning, not a cache.
+- **Views**: `TownPanel` and `HeroPanel` (29 and 24 event kinds) and the minimap refresh through a `RefreshScheduler`, once at the end of
+  the frame. The minimap's tiles are an image, one pixel each, of which only the changed pixels are written again; heroes are drawn over
+  it.
+- **Behaviour**: unchanged (events, random draws, digests; AI games replay the same).

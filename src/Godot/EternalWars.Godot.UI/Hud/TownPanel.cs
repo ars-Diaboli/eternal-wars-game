@@ -111,35 +111,36 @@ public partial class TownPanel : PanelContainer
         box.AddChild(_status);
         Visible = false;
 
-        this.SubscribeWhileInTree<TownBuilt>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<TownBuildingDowngraded>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<DwellingBuilt>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<CreaturesRecruited>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<StackUpgraded>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<CreaturesTransformed>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<GarrisonChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ArmyChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ResourcesChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<TownCreaturesGrew>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<TownOwnerChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<DecisionRequested>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<DecisionResolved>(session.Events, _ => Refresh()); // back after a level-up on the visit (the Elder Grove)
-        this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<WarMachineBought>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<SpellBookBought>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroHired>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroEnteredGarrison>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<HeroLeftGarrison>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<GovernorChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<CaravanDispatched>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<CaravanArrived>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<CaravanReturned>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<CaravanLost>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<DwellingCreaturesGrew>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<DwellingOwnerChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ProviderOwnerChanged>(session.Events, _ => Refresh());
-        this.SubscribeWhileInTree<ProviderStockChanged>(session.Events, _ => Refresh());
+        var refresh = new RefreshScheduler(this, Refresh);
+        refresh.On<TownBuilt>(session.Events);
+        refresh.On<TownBuildingDowngraded>(session.Events);
+        refresh.On<DwellingBuilt>(session.Events);
+        refresh.On<CreaturesRecruited>(session.Events);
+        refresh.On<StackUpgraded>(session.Events);
+        refresh.On<CreaturesTransformed>(session.Events);
+        refresh.On<GarrisonChanged>(session.Events);
+        refresh.On<ArmyChanged>(session.Events);
+        refresh.On<ResourcesChanged>(session.Events);
+        refresh.On<TownCreaturesGrew>(session.Events);
+        refresh.On<TownOwnerChanged>(session.Events);
+        refresh.On<HeroMoved>(session.Events);
+        refresh.On<DecisionRequested>(session.Events);
+        refresh.On<DecisionResolved>(session.Events); // back after a level-up on the visit (the Elder Grove)
+        refresh.On<TurnStarted>(session.Events);
+        refresh.On<WarMachineBought>(session.Events);
+        refresh.On<SpellBookBought>(session.Events);
+        refresh.On<HeroHired>(session.Events);
+        refresh.On<HeroEnteredGarrison>(session.Events);
+        refresh.On<HeroLeftGarrison>(session.Events);
+        refresh.On<GovernorChanged>(session.Events);
+        refresh.On<CaravanDispatched>(session.Events);
+        refresh.On<CaravanArrived>(session.Events);
+        refresh.On<CaravanReturned>(session.Events);
+        refresh.On<CaravanLost>(session.Events);
+        refresh.On<DwellingCreaturesGrew>(session.Events);
+        refresh.On<DwellingOwnerChanged>(session.Events);
+        refresh.On<ProviderOwnerChanged>(session.Events);
+        refresh.On<ProviderStockChanged>(session.Events);
     }
 
     /// <summary>Shows a town of the player whose turn it is.</summary>

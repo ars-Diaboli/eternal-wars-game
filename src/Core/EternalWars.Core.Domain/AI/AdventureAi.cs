@@ -957,11 +957,31 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         }
     }
 
-    /// <summary>Visible enemy heroes and how far (in tiles) each can reach in a day.</summary>
-    private IEnumerable<(Hero Enemy, long Power, int Reach)> Threats(PlayerId owner) =>
-        _state.Heroes
-            .Where(h => _state.AreEnemies(owner, h.Owner) && _state.CanSee(owner, h) && _state.Fog.IsExplored(owner, h.Position))
-            .Select(h => (h, ArmyPower(Seen(h)), (h.MaxMovementPoints / MovementCostPerTile) + 1));
+    /// <summary>
+    /// Visible enemy heroes and how far (in tiles) each can reach in a day. Kept until the next command runs (only commands change the game), as
+    /// every candidate target and flooded tile asks for it.
+    /// </summary>
+    private IReadOnlyList<(Hero Enemy, long Power, int Reach)> Threats(PlayerId owner)
+    {
+        if (_threatsAt != session.CommandLog.Count)
+        {
+            _threats.Clear();
+            _threatsAt = session.CommandLog.Count;
+        }
+
+        if (!_threats.TryGetValue(owner, out var threats))
+        {
+            threats = [.. _state.Heroes
+                .Where(h => _state.AreEnemies(owner, h.Owner) && _state.CanSee(owner, h) && _state.Fog.IsExplored(owner, h.Position))
+                .Select(h => (h, ArmyPower(Seen(h)), (h.MaxMovementPoints / MovementCostPerTile) + 1))];
+            _threats[owner] = threats;
+        }
+
+        return threats;
+    }
+
+    private readonly Dictionary<PlayerId, List<(Hero Enemy, long Power, int Reach)>> _threats = [];
+    private int _threatsAt = -1;
 
     /// <summary>A rough tile cost for how far an enemy gets in a day: between the native 100 and the dearer terrains, diagonals included.</summary>
     private const int MovementCostPerTile = 150;
