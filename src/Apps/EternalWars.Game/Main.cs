@@ -131,7 +131,12 @@ public partial class Main : Node3D
 
         _saveFolder = ProjectSettings.GlobalizePath(SavesFolder);
         BuildMenu();
-        if (LaunchArguments.NewGame)
+        if (LaunchArguments.ReplayPath is { } replay)
+        {
+            ShowReplays();
+            Watch(replay, null);
+        }
+        else if (LaunchArguments.NewGame)
         {
             ShowNewGame();
         }
@@ -159,6 +164,7 @@ public partial class Main : Node3D
         };
         menu.NewGameRequested += ShowNewGame;
         menu.LoadRequested += _menu.Open;
+        menu.WatchRequested += ShowReplays;
         menu.LeaderboardRequested += ShowLeaderboard;
         menu.QuitRequested += () => GetTree().Quit();
     }
@@ -234,6 +240,7 @@ public partial class Main : Node3D
     {
         _menu.Close();
         _menu.CanSave = false;
+        StopWatching();
         if (_game is null)
         {
             return;
@@ -260,6 +267,12 @@ public partial class Main : Node3D
     /// </summary>
     public override void _Process(double delta)
     {
+        if (_mode != GameMode.Play)
+        {
+            ProcessReplay(delta); // the replay viewer runs the record, not the AI or the clock (ADR-164)
+            return;
+        }
+
         var showing = ShowingComputerMoves;
         if (_timer is not null && _timerPanel is not null)
         {
@@ -336,6 +349,11 @@ public partial class Main : Node3D
         {
             GetViewport().SetInputAsHandled();
             back();
+            return;
+        }
+
+        if (_mode != GameMode.Play && _context is not null && !_menu.Visible && HandleReplayInput(@event))
+        {
             return;
         }
 
@@ -448,6 +466,7 @@ public partial class Main : Node3D
     {
         // The map as it is now is the start of the game: saves replay from it (ADR-058).
         var initial = MapConverter.ToDocument(state);
+        StopWatching();
         BeginGame(new GameSession(state), initial, resume: false);
     }
 
@@ -464,10 +483,11 @@ public partial class Main : Node3D
         _session = session;
         _initialMap = initialMap;
         _selectedHero = null;
-        _ai = new AdventureAi(session);
-        _menu.CanSave = true;
+        var playing = _mode == GameMode.Play;
+        _ai = playing ? new AdventureAi(session) : null;
+        _menu.CanSave = playing;
         var state = session.State;
-        _context = new MapViewContext(state, _session.Events, state.CurrentPlayer.Id);
+        _context = new MapViewContext(state, _session.Events, playing ? state.CurrentPlayer.Id : ReplayViewer());
 
         _world = new AdventureWorldView { Name = "World" };
         _game.AddChild(_world);
@@ -482,26 +502,45 @@ public partial class Main : Node3D
 
         BuildHud();
         BuildBattle();
-        BuildResult();
-        BuildTimer();
+        if (playing)
+        {
+            BuildResult();
+            BuildTimer();
+        }
+        else
+        {
+            (_timer, _timerPanel) = (null, null);
+            BuildReplayBar(); // the viewer's controls; no ranking, end screen, clock or autosave (ADR-164)
+        }
+
         _turnToShow = null;
         _followed = null;
         ApplySpeeds();
 
         // Autosave once the command that began a turn is logged and settled (ADR-058).
         _turnBegan = false;
-        _game.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => _turnBegan = true);
-        _game.SubscribeWhileInTree<CommandExecuted>(_session.Events, _ =>
+        if (playing)
         {
-            if (_turnBegan)
+            _game.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => _turnBegan = true);
+            _game.SubscribeWhileInTree<CommandExecuted>(_session.Events, _ =>
             {
-                Autosave();
-            }
-        });
+                if (_turnBegan)
+                {
+                    Autosave();
+                }
+            });
+        }
+
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {
             CloseScreens(); // the turn may have ended on the timer with a screen open
             _followed = null;
+            if (!playing)
+            {
+                ReplayTurnStarted(); // the viewer keeps its own eyes on the map
+                return;
+            }
+
             if (!_session.State.GetPlayer(e.Player).IsHuman)
             {
                 return; // the map stays with the last human, who watches the computer heroes it can see (ADR-090)
@@ -537,7 +576,10 @@ public partial class Main : Node3D
         {
             Select(state.HeroesOf(state.CurrentPlayer.Id).FirstOrDefault()?.Id, focus: true);
             _battle.Restore();
-            ShowResult();
+            if (playing)
+            {
+                ShowResult();
+            }
         }
         else
         {
@@ -610,13 +652,7 @@ public partial class Main : Node3D
         AddChild(layer);
         _menu = new GameMenuPanel();
         layer.AddChild(_menu);
-        _menu.Bind(
-            () => GameSaves.List(_saveFolder)
-                .Select(e => e.Info is { } info
-                    ? new SaveItem(e.Path, $"{SaveTitle(e.Path, info)}   {info.Map}, {info.Date}, {info.Player}'s turn{(info.InBattle ? ", in battle" : string.Empty)}   ({LocalTime(info.SavedAt)})", GameSaves.SlotOf(e.Path) is null ? info.Name : null, true)
-                    : new SaveItem(e.Path, $"{Path.GetFileName(e.Path)}   unreadable: {e.Error}", null, false))
-                .ToList(),
-            GameSaves.Delete);
+        _menu.Bind(() => SaveItems(GameSaves.List(_saveFolder)), GameSaves.Delete);
         _menu.SaveRequested += name => Save(name);
         _menu.LoadRequested += Load;
         _menu.MainMenuRequested += ShowMainMenu;
@@ -687,10 +723,21 @@ public partial class Main : Node3D
     {
         if (_context is not null)
         {
-            _context.Speeds = _speeds;
-            _battle.Speed = _speeds.Battle;
+            // The replay viewer plays every hero and battle at its own speed (ADR-164).
+            _context.Speeds = _mode == GameMode.Play ? _speeds : new SpeedSettings(_replaySpeed, _replaySpeed, ShowComputerHeroes: true, _replaySpeed);
+            _battle.Speed = _context.Speeds.Battle;
         }
     }
+
+    /// <summary>The save menu's and the replay list's lines for a folder's files.</summary>
+    private static List<SaveItem> SaveItems(IReadOnlyList<SaveEntry> entries) => entries
+        .Select(e => e.Info is { } info
+            ? new SaveItem(e.Path, info.Date.Length == 0
+                ? $"{info.Name}   {info.Map}   ({LocalTime(info.SavedAt)})" // a replay: no save label
+                : $"{SaveTitle(e.Path, info)}   {info.Map}, {info.Date}, {info.Player}'s turn{(info.InBattle ? ", in battle" : string.Empty)}   ({LocalTime(info.SavedAt)})",
+                GameSaves.SlotOf(e.Path) is null ? info.Name : null, true)
+            : new SaveItem(e.Path, $"{Path.GetFileName(e.Path)}   unreadable: {e.Error}", null, false))
+        .ToList();
 
     /// <summary>
     /// Follows a computer hero with the camera when it starts walking where the player can see it (ADR-090), unless computer heroes are not
@@ -698,10 +745,12 @@ public partial class Main : Node3D
     /// </summary>
     private void FollowStep(Core.Domain.Heroes.Hero hero, MapPosition to)
     {
-        if (_speeds.ShowComputerHeroes && hero.Id != _followed && !_session.State.GetPlayer(hero.Owner).IsHuman
-            && to.Level == _context.Level && _context.IsInSight(to))
+        var watching = _mode == GameMode.Watch; // the viewer follows every hero it can see, on either level (ADR-164)
+        if ((watching || (_speeds.ShowComputerHeroes && !_session.State.GetPlayer(hero.Owner).IsHuman)) && hero.Id != _followed
+            && (watching || to.Level == _context.Level) && _context.IsInSight(to))
         {
             _followed = hero.Id;
+            _context.SetLevel(to.Level);
             _camera.FocusOn(MapSpace.ToWorld(to));
         }
     }
@@ -714,7 +763,7 @@ public partial class Main : Node3D
     /// before a game or on a computer's turn.
     /// </summary>
     private PlayerId? AutoCombatSettingPlayer() =>
-        _context is null ? null
+        _context is null || _mode != GameMode.Play ? null
         : _session.Battles.AutoCombatPlayer() ?? (_session.State.CurrentPlayer.IsHuman ? _session.State.CurrentPlayer.Id : null);
 
     private static string SaveTitle(string path, SaveInfo info) => GameSaves.SlotOf(path) switch
@@ -737,7 +786,7 @@ public partial class Main : Node3D
             case Key.F10:
                 _menu.Toggle();
                 return true;
-            case Key.F5 when _context is not null:
+            case Key.F5 when _context is not null && _mode == GameMode.Play:
                 Save(GameSaves.QuickSaveName);
                 return true;
             case Key.F9:
@@ -779,6 +828,7 @@ public partial class Main : Node3D
             CloseSetup();
             _menu.Close();
             _generated = record.Generated;
+            StopWatching();
             BeginGame(session, record.Map, resume: true);
             _status.Text = $"Loaded '{record.Save?.Name ?? Path.GetFileNameWithoutExtension(path)}'." +
                 (record.Generated is { } generated ? $" {generated.Template} {generated.Size}×{generated.Size}, seed {generated.Seed}. {generated.VersionWarning}" : "");
@@ -1146,7 +1196,7 @@ public partial class Main : Node3D
     /// <summary>The battle scene replaces the adventure map and its HUD while it is open.</summary>
     private void BuildBattle()
     {
-        _battle = new BattleView3D();
+        _battle = new BattleView3D { Watching = _mode == GameMode.Watch };
         _game!.AddChild(_battle);
         _battle.Bind(_session);
 
@@ -1156,13 +1206,21 @@ public partial class Main : Node3D
         layer.AddChild(_battleHud);
         _battleHud.Bind(_session, _battle);
         _battleHud.Layout = _layout;
+        _battleHud.BottomReserve = _mode == GameMode.Play ? 0 : ReplayControlBar.ReservedHeight;
 
-        // Auto combat (ADR-090) asks above the battle scene and above the map (a battle still choosing its width).
-        var autoLayer = new CanvasLayer { Name = "AutoCombat", Layer = 4 };
-        _game.AddChild(autoLayer);
-        _autoCombat = new AutoCombatPanel();
-        autoLayer.AddChild(_autoCombat);
-        _autoCombat.Bind(_session, _battle);
+        // Auto combat (ADR-090) asks above the battle scene and above the map (a battle still choosing its width); not in the replay viewer.
+        if (_mode == GameMode.Play)
+        {
+            var autoLayer = new CanvasLayer { Name = "AutoCombat", Layer = 4 };
+            _game.AddChild(autoLayer);
+            _autoCombat = new AutoCombatPanel();
+            autoLayer.AddChild(_autoCombat);
+            _autoCombat.Bind(_session, _battle);
+        }
+        else
+        {
+            _autoCombat = null;
+        }
 
         _battle.Opened += () =>
         {
@@ -1321,15 +1379,26 @@ public partial class Main : Node3D
         _hudLayout.SetInfo(top);
         var turnPanel = new TurnPanel();
         top.AddChild(turnPanel);
-        turnPanel.Bind(_session);
+        var playing = _mode == GameMode.Play; // the replay viewer only watches: nothing here issues a command (ADR-164)
+        turnPanel.Bind(_session, endTurn: playing);
         var resources = new ResourceBar();
         top.AddChild(resources);
         resources.Bind(_session);
-        _status = new Label { Text = "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera" };
+        _status = new Label
+        {
+            Text = playing
+                ? "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera"
+                : "Watching. Space: play or pause  L: level  right click: information  WASD/QE/wheel: camera",
+        };
         top.AddChild(_status);
-        var decisions = new DecisionPanel();
-        top.AddChild(decisions);
-        decisions.Bind(_session);
+        if (playing)
+        {
+            // The replay viewer leaves out the questions: the record answers them (and an unbound panel's parts would never enter the tree).
+            var decisions = new DecisionPanel();
+            top.AddChild(decisions);
+            decisions.Bind(_session);
+        }
+
         var notice = new NoticePanel();
         top.AddChild(notice);
         notice.Bind(_session);
@@ -1349,11 +1418,28 @@ public partial class Main : Node3D
         lists.AddChild(_heroList);
         _heroList.Bind(_session);
         _heroList.HeroSelected += hero => Select(hero, focus: true);
-        _heroList.HeroInfoRequested += hero => ShowHero(hero);
+        _heroList.HeroInfoRequested += hero =>
+        {
+            if (playing)
+            {
+                ShowHero(hero);
+            }
+        };
         _townList = new TownListPanel();
         lists.AddChild(_townList);
         _townList.Bind(_session);
-        _townList.TownSelected += ShowTown;
+        _townList.TownSelected += town =>
+        {
+            if (playing)
+            {
+                ShowTown(town);
+            }
+            else if (_session.State.FindObject(town) is { } watched)
+            {
+                _context.SetLevel(watched.VisitPosition.Level);
+                _camera.FocusOn(MapSpace.ToWorld(watched.VisitPosition));
+            }
+        };
         (_hudLayout.HeroList, _hudLayout.TownList) = (_heroList, _townList);
         var side = new VBoxContainer();
         _hudLayout.SetPart(HudPart.Actions, side);
@@ -1368,9 +1454,13 @@ public partial class Main : Node3D
         townLayer.AddChild(_heroScreen);
         _heroScreen.Bind(_session);
         // Two own heroes met: the exchange screen covers the map like the hero screen (ADR-153).
-        var exchange = new ExchangePanel();
-        townLayer.AddChild(exchange);
-        exchange.Bind(_session);
+        if (playing)
+        {
+            var exchange = new ExchangePanel(); // it opens itself when two own heroes meet; not in the replay viewer
+            townLayer.AddChild(exchange);
+            exchange.Bind(_session);
+        }
+
         _heroScreen.AdventureSpellArmed += (hero, spell) =>
         {
             _aimedSpell = (hero, spell);
@@ -1444,6 +1534,7 @@ public partial class Main : Node3D
         grail.AddChild(puzzle);
         var dig = new Button { Text = "Dig (G)", TooltipText = "The selected hero digs where it stands, with a whole day's movement" };
         dig.Pressed += Dig;
+        dig.Visible = playing;
         grail.AddChild(dig);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
@@ -1455,6 +1546,7 @@ public partial class Main : Node3D
         }
 
         market.Pressed += () => _marketScreen.Open();
+        market.Visible = playing;
         side.AddChild(market);
         RefreshMarketButton();
         _game.SubscribeWhileInTree<TownBuilt>(_session.Events, _ => RefreshMarketButton());
@@ -1462,28 +1554,38 @@ public partial class Main : Node3D
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, _ => RefreshMarketButton());
         _game.SubscribeWhileInTree<MapObjectVisited>(_session.Events, e =>
         {
-            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Marketplace marketplace)
+            if (playing)
             {
-                _marketScreen.Open(marketplace.Id);
-            }
-
-            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is { } served && ObjectServicePanel.Serves(served))
-            {
-                _serviceScreen.Open(served.Id); // Hill Fort, War Machine Factory (ADR-068)
-            }
-
-            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is CreatureDwelling dwelling)
-            {
-                _dwellingScreen.Open(dwelling.Id); // flagged by now (the visit flagged it first); recruit from it here
-            }
-
-            if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Core.Domain.Towns.Town town
-                && town.Owner == _session.State.CurrentPlayer.Id)
-            {
-                ShowTown(town.Id);
+                OpenVisitedScreen(e);
             }
         });
+        _hudLayout.BottomReserve = playing ? 0 : ReplayControlBar.ReservedHeight;
         _hudLayout.Apply(_layout);
+    }
+
+    /// <summary>A human's hero visited an object with a screen of its own: the marketplace, a service, a dwelling, an own town.</summary>
+    private void OpenVisitedScreen(MapObjectVisited e)
+    {
+        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Marketplace marketplace)
+        {
+            _marketScreen.Open(marketplace.Id);
+        }
+
+        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is { } served && ObjectServicePanel.Serves(served))
+        {
+            _serviceScreen.Open(served.Id); // Hill Fort, War Machine Factory (ADR-068)
+        }
+
+        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is CreatureDwelling dwelling)
+        {
+            _dwellingScreen.Open(dwelling.Id); // flagged by now (the visit flagged it first); recruit from it here
+        }
+
+        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Core.Domain.Towns.Town town
+            && town.Owner == _session.State.CurrentPlayer.Id)
+        {
+            ShowTown(town.Id);
+        }
     }
 
     /// <summary>The demo, the map given with --map, and every map saved by the editor.</summary>

@@ -102,19 +102,32 @@ public partial class BattleView3D : Node3D
     /// <summary>Animations are still playing; the shown battlefield is behind the core state.</summary>
     public bool IsBusy => _pending > 0;
 
+    /// <summary>
+    /// The replay viewer watches (ADR-164): nobody commands or deploys from this view, and every battle plays move by move at <see cref="Speed"/>,
+    /// computer and quick ones too (<see cref="FinishAnimations"/> skips to the end).
+    /// </summary>
+    public bool Watching { get; set; }
+
+    /// <summary>Stops the animations and shows the end of every queued step at once ("skip to the result" in the replay viewer).</summary>
+    public void FinishAnimations()
+    {
+        FlushSteps();
+        OnIdle();
+    }
+
     public BattleEnded? Result { get; private set; }
 
     public Camera3D Camera => _camera;
 
     /// <summary>Who may act now: the commander of the active unit once the view has caught up, else null.</summary>
     public PlayerId? Commander =>
-        IsOpen && !IsBusy && Result is null && _session.State.Battle is { Phase: BattlePhase.Fighting, ActiveUnit: { } active }
+        !Watching && IsOpen && !IsBusy && Result is null && _session.State.Battle is { Phase: BattlePhase.Fighting, ActiveUnit: { } active }
             ? _session.Battles.Commander(active.Side)
             : null;
 
     /// <summary>Who places stacks now: the deployer's commander during the deployment step once the view has caught up, else null.</summary>
     public PlayerId? Deployer =>
-        IsOpen && !IsBusy && Result is null && _session.State.Battle is { Phase: BattlePhase.Deploying, Deployer: { } side }
+        !Watching && IsOpen && !IsBusy && Result is null && _session.State.Battle is { Phase: BattlePhase.Deploying, Deployer: { } side }
             ? _session.Battles.Commander(side)
             : null;
 
@@ -397,7 +410,7 @@ public partial class BattleView3D : Node3D
         IsOpen = true;
         Result = null;
         _width = e.Width;
-        _instant = battle.AutoResolve || (battle.IsComputerControlled(BattleSide.Attacker) && battle.IsComputerControlled(BattleSide.Defender));
+        _instant = !Watching && (battle.AutoResolve || (battle.IsComputerControlled(BattleSide.Attacker) && battle.IsComputerControlled(BattleSide.Defender)));
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
             var participant = battle.Participant(side);
@@ -872,7 +885,7 @@ public partial class BattleView3D : Node3D
             return;
         }
 
-        _instant |= _session.State.Battle?.AutoResolve == true;
+        _instant |= !Watching && _session.State.Battle?.AutoResolve == true;
         if (_instant || _speed == AnimationSpeed.Instant)
         {
             FlushSteps();

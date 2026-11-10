@@ -62,7 +62,7 @@ A planning list (ADR-116), not a plan; updated 2026-11-04. Rows leave when built
 | Teleport and life drain spells (two-click aiming) | HoMM3, HoMM5 | Built | ADR-151 |
 | Raise Dead, clones | HoMM3, HoMM5 | Built | ADR-152: Mirror Image, Raise Dead, Martyrdom, Clockwork Precision, Blood Price |
 | Creature abilities at scale (aging, poison, death stare, petrify, …) | HoMM3, HoMM5 | Partly | HoMM4-style capabilities, at most 5 a creature (ADR-042) |
-| Battle replay viewer | HotA | Partly | Replays are recorded; the viewer is planned (UI-2) |
+| Battle replay viewer | HotA | Yes | The replay viewer plays games and battles back; "Play from here" in a battle (ADR-164) |
 
 ## Game modes and flow
 

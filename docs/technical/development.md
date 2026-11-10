@@ -18,7 +18,8 @@ godot --path src/Apps/EternalWars.Game [-- --map=<file.ewmap.json>]
 In a fresh clone, import assets once per app (`<Godot console exe> --headless --path src/Apps/<App> --import`) or
 every texture load fails.
 
-App arguments (after `--`): `--map=`, `--new-game` (game opens on the new-game screen, not the main menu),
+App arguments (after `--`): `--map=`, `--new-game` (game opens on the new-game screen, not the main menu), `--replay=<file>` (the
+replay viewer on a replay or save),
 `--scenario=`, `--settings=`, `--autoinput=` (smoke tests), and content overrides `--creatures=`, `--heroes=`,
 `--buildings=`, `--artifacts=`, `--artifact-sets=` (a bad file is reported with line and column; the embedded copy
 is used instead).
