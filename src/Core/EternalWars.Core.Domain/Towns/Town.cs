@@ -11,8 +11,22 @@ namespace EternalWars.Core.Domain.Towns;
 /// (ADR-030). Per instance: owner, name, building levels, dwellings (base creature id → 1 built, 2 upgraded), creatures
 /// waiting in each dwelling, the garrison, and the day it last built something (one build per day).
 /// </summary>
-public sealed class Town : MapObject, IFlaggable
+public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
 {
+    /// <inheritdoc/>
+    /// <remarks>The garrison that held its town without a hero keeps what lived.</remarks>
+    void Battles.IBattleGuard.KeepSurvivors(Battles.BattleGuardOutcome outcome) => outcome.KeepTroops(Id, Garrison);
+
+    /// <inheritdoc/>
+    /// <remarks>Beating the garrison captures the town.</remarks>
+    void Battles.IBattleGuard.Defeated(Battles.BattleGuardOutcome outcome, Heroes.Hero? winner)
+    {
+        if (winner is not null)
+        {
+            TownService.Capture(outcome.State, outcome.Events, this, winner.Owner);
+        }
+    }
+
     /// <summary>
     /// Owned towns reveal and watch this far around their centre cell (<see cref="SightCenter"/>): 7 cells past the walls (ADR-141).
     /// </summary>

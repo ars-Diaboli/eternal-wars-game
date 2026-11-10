@@ -39,8 +39,8 @@ public class UtilityObjectTests
     public void ASign_ShowsItsMessage_AndKeepsItInTheMap()
     {
         var editor = new MapEditorSession(BlankScenario.Create(8, 6));
-        editor.PlaceObject(BuiltInMapObjects.Sign, new(2, 2), out var id);
-        Assert.Equal(EditResult.Ok, editor.SetSignMessage(id, "Beware the swamp."));
+        editor.Objects.Place(BuiltInMapObjects.Sign, new(2, 2), out var id);
+        Assert.Equal(EditResult.Ok, editor.Contents.SetSignMessage(id, "Beware the swamp."));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario))));
         Assert.Equal("Beware the swamp.", ((SignPost)restored.GetObject(id)).Message);
         editor.Undo();
@@ -224,10 +224,10 @@ public class UtilityObjectTests
     public void ThePrison_InTheEditorAndTheMapFormat()
     {
         var editor = new MapEditorSession(BlankScenario.Create(10, 6));
-        editor.PlaceObject(BuiltInMapObjects.Prison, new(2, 2), out var id);
+        editor.Objects.Place(BuiltInMapObjects.Prison, new(2, 2), out var id);
         var hero = editor.Scenario.HeroRoster.All.First().Id;
-        Assert.Equal(EditResult.InvalidValue, editor.SetPrison(id, "nobody", null));
-        Assert.Equal(EditResult.Ok, editor.SetPrison(id, hero, 20));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetPrison(id, "nobody", null));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetPrison(id, hero, 20));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = (Prison)MapConverter.ToGameState(MapSerializer.Deserialize(json)).GetObject(id);

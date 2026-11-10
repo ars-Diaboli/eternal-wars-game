@@ -63,7 +63,7 @@ public class SceneryTests
     public void Scenery_IsInTheMapFormat_AndTheEditorPlacesIt()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject("scenery.pond.medium", new(2, 2), out _));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place("scenery.pond.medium", new(2, 2), out _));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));

@@ -130,6 +130,12 @@ public sealed class BattleUnit
 
     public int TotalHealth => Count == 0 ? 0 : ((Count - 1) * Creature.Health) + TopHealth;
 
+    /// <summary>The health of <paramref name="creatures"/> of the stack's creatures, the wounded top creature first (what killing them takes).</summary>
+    internal int HealthOf(int creatures) => TotalHealth - ((Count - creatures) * Creature.Health);
+
+    /// <summary>The stack as views first hear of it.</summary>
+    internal Events.BattleUnitInfo Info() => new(Id, Side, Creature.Id, Count, Position, Width, Height, Machine);
+
     /// <summary>Has already retaliated this round.</summary>
     public bool HasRetaliated { get; internal set; }
 
@@ -378,6 +384,9 @@ public sealed class BattleState
     internal (IReadOnlyList<BattleStackSpec> Attackers, IReadOnlyList<BattleStackSpec> Defenders) PendingStacks { get; set; } = ([], []);
 
     internal List<BattleUnit> MutableUnits => _units;
+
+    /// <summary>The id for a stack that joins the battle (a summon, a split, a copy, a raised stack): one above the highest so far.</summary>
+    internal int NextUnitId() => _units.Max(u => u.Id) + 1;
 
     internal List<BattleObstacle> MutableObstacles => _obstacles;
 

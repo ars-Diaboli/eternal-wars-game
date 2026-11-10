@@ -73,7 +73,7 @@ public partial class EventsPanel : ScrollContainer
         }
 
         var existing = _editor.Scenario.MapEvents.Set.Cells.FirstOrDefault(c => c.Position == tile);
-        return _editor.SetEventCell(tile, existing?.Event == name ? null : name);
+        return _editor.MapEvents.SetCell(tile, existing?.Event == name ? null : name);
     }
 
     private void Later() => Callable.From(Refresh).CallDeferred();
@@ -160,8 +160,8 @@ public partial class EventsPanel : ScrollContainer
             if (id < 4)
             {
                 var kind = (MapEventKind[])[MapEventKind.Hero, MapEventKind.Player, MapEventKind.Town, MapEventKind.Quest];
-                var name = _editor.UnusedEventName(kind[id].ToString().ToLowerInvariant());
-                if (_editor.AddMapEvent(MapEventTemplates.Blank(name, kind[id])) == EditResult.Ok)
+                var name = _editor.MapEvents.UnusedName(kind[id].ToString().ToLowerInvariant());
+                if (_editor.MapEvents.Add(MapEventTemplates.Blank(name, kind[id])) == EditResult.Ok)
                 {
                     Select(name);
                 }
@@ -174,9 +174,9 @@ public partial class EventsPanel : ScrollContainer
         };
         if (_selected is { } selected)
         {
-            Button(row, "Up", () => _editor.MoveMapEvent(selected, -1));
-            Button(row, "Down", () => _editor.MoveMapEvent(selected, 1));
-            Button(row, "Delete", () => _editor.RemoveMapEvent(selected));
+            Button(row, "Up", () => _editor.MapEvents.Move(selected, -1));
+            Button(row, "Down", () => _editor.MapEvents.Move(selected, 1));
+            Button(row, "Delete", () => _editor.MapEvents.Remove(selected));
         }
     }
 
@@ -192,14 +192,14 @@ public partial class EventsPanel : ScrollContainer
         rename.TextSubmitted += text =>
         {
             text = text.Trim();
-            if (text != name && _editor.ReplaceMapEvent(name, definition with { Name = text }) == EditResult.Ok)
+            if (text != name && _editor.MapEvents.Replace(name, definition with { Name = text }) == EditResult.Ok)
             {
                 Select(text);
             }
         };
         row.AddChild(rename);
         var enabled = new CheckBox { Text = "Enabled at the start", ButtonPressed = definition.Enabled };
-        enabled.Toggled += on => _editor.ReplaceMapEvent(name, definition with { Enabled = on });
+        enabled.Toggled += on => _editor.MapEvents.Replace(name, definition with { Enabled = on });
         row.AddChild(enabled);
 
         switch (definition.Kind)
@@ -263,7 +263,7 @@ public partial class EventsPanel : ScrollContainer
         {
             var id = town.Id.Value;
             var box = new CheckBox { Text = $"{town.Name} {town.VisitPosition}", ButtonPressed = definition.Towns.Contains(id) };
-            box.Toggled += on => _editor.ReplaceMapEvent(definition.Name, definition with
+            box.Toggled += on => _editor.MapEvents.Replace(definition.Name, definition with
             {
                 Towns = on ? [.. definition.Towns, id] : [.. definition.Towns.Where(t => t != id)],
             });
@@ -291,7 +291,7 @@ public partial class EventsPanel : ScrollContainer
             Button(row, "Show", () => ShowRequested?.Invoke(sites[0].VisitPosition));
         }
 
-        Button(row, "Add stage", () => _editor.ReplaceMapEvent(definition.Name, definition with
+        Button(row, "Add stage", () => _editor.MapEvents.Replace(definition.Name, definition with
         {
             Stages = [.. definition.Stages, QuestForms.Level(definition.Stages.Count + 2, $"Come back when you have reached level {definition.Stages.Count + 2}.")],
         }));
@@ -385,7 +385,7 @@ public partial class EventsPanel : ScrollContainer
             { List: >= 0 } node => (node.Parent, node.List, Count(definition, node.Parent, node.List)),
             _ => ([], 0, lists[0].Count),
         };
-        if (_editor.ReplaceMapEvent(definition.Name, MapEventTreeEdit.Insert(definition, parent, list, index, action)) == EditResult.Ok)
+        if (_editor.MapEvents.Replace(definition.Name, MapEventTreeEdit.Insert(definition, parent, list, index, action)) == EditResult.Ok)
         {
             _node = new Node(parent, list, index);
         }
@@ -396,7 +396,7 @@ public partial class EventsPanel : ScrollContainer
 
     private void MoveNode(MapEventDefinition definition, int offset)
     {
-        if (_node?.Path is { } path && _editor.ReplaceMapEvent(definition.Name, MapEventTreeEdit.Move(definition, path, offset)) == EditResult.Ok)
+        if (_node?.Path is { } path && _editor.MapEvents.Replace(definition.Name, MapEventTreeEdit.Move(definition, path, offset)) == EditResult.Ok)
         {
             _node = _node with { Index = MapEventTreeEdit.Moved(definition, path, offset)[^1].Index };
         }
@@ -406,12 +406,12 @@ public partial class EventsPanel : ScrollContainer
     {
         if (_node?.Path is { } path)
         {
-            _editor.ReplaceMapEvent(definition.Name, MapEventTreeEdit.Remove(definition, path));
+            _editor.MapEvents.Replace(definition.Name, MapEventTreeEdit.Remove(definition, path));
             _node = null;
         }
         else if (definition.Kind == MapEventKind.Quest && _node is { Parent.Count: 0, List: >= 0 } stage && stage.List < definition.Stages.Count)
         {
-            _editor.ReplaceMapEvent(definition.Name, MapEventTreeEdit.SetStage(definition, stage.List, null));
+            _editor.MapEvents.Replace(definition.Name, MapEventTreeEdit.SetStage(definition, stage.List, null));
             _node = null;
         }
     }
@@ -465,7 +465,7 @@ public partial class EventsPanel : ScrollContainer
                 { List: var stage } => MapEventTreeEdit.SetStage(definition, stage, _nodeText.ReadStage(text.Text, definition.Stages[stage].Actions)),
                 _ => definition,
             };
-            _editor.ReplaceMapEvent(definition.Name, edited);
+            _editor.MapEvents.Replace(definition.Name, edited);
         }
         catch (FormatException e)
         {
@@ -483,21 +483,21 @@ public partial class EventsPanel : ScrollContainer
             var row = Row();
             row.AddChild(new Label { Text = name, CustomMinimumSize = new Vector2(160, 0) });
             var spin = Spin(row, value, int.MinValue / 2, int.MaxValue / 2);
-            spin.ValueChanged += v => _editor.SetMapVariable(name, (int)v);
+            spin.ValueChanged += v => _editor.MapEvents.SetVariable(name, (int)v);
             var kept = new CheckBox { Text = "Kept", ButtonPressed = set.IsKept(name), TooltipText = "Kept for the next map: a campaign carries its value at the end of this map on." };
             var taken = new CheckBox { Text = "Taken", ButtonPressed = set.IsTaken(name), TooltipText = "Taken from the last map: in a campaign it starts with the value the last map kept." };
             row.AddChild(kept);
             row.AddChild(taken);
-            kept.Toggled += on => _editor.SetCampaignVariable(name, on, taken.ButtonPressed);
-            taken.Toggled += on => _editor.SetCampaignVariable(name, kept.ButtonPressed, on);
-            Button(row, "Remove", () => _editor.RemoveMapVariable(name));
+            kept.Toggled += on => _editor.MapEvents.SetCampaignVariable(name, on, taken.ButtonPressed);
+            taken.Toggled += on => _editor.MapEvents.SetCampaignVariable(name, kept.ButtonPressed, on);
+            Button(row, "Remove", () => _editor.MapEvents.RemoveVariable(name));
         }
 
         var add = Row();
         var newName = new LineEdit { PlaceholderText = "new variable", CustomMinimumSize = new Vector2(160, 0) };
         add.AddChild(newName);
         var start = Spin(add, 0, int.MinValue / 2, int.MaxValue / 2);
-        Button(add, "Add", () => _editor.SetMapVariable(newName.Text, (int)start.Value));
+        Button(add, "Add", () => _editor.MapEvents.SetVariable(newName.Text, (int)start.Value));
     }
 
     // Simple event forms --------------------------------------------------------------------------------------------
@@ -515,7 +515,7 @@ public partial class EventsPanel : ScrollContainer
         });
         var row = Row();
         row.AddChild(new Label { Text = "Name" });
-        var name = new LineEdit { Text = _editor.UnusedEventName(form), CustomMinimumSize = new Vector2(180, 0) };
+        var name = new LineEdit { Text = _editor.MapEvents.UnusedName(form), CustomMinimumSize = new Vector2(180, 0) };
         row.AddChild(name);
 
         var message = new TextEdit
@@ -661,7 +661,7 @@ public partial class EventsPanel : ScrollContainer
                 return;
             }
 
-            if (_editor.AddMapEvent(definition) is not EditResult.Ok)
+            if (_editor.MapEvents.Add(definition) is not EditResult.Ok)
             {
                 problem.Text = "The name is empty or another event has it.";
                 return;

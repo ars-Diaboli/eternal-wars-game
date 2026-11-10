@@ -15,8 +15,10 @@ namespace EternalWars.Core.Domain.Towns;
 /// the route is checked again: when it is blocked the caravan returns, when the destination changed hands the creatures
 /// scatter (user decisions, 2026-10-17).
 /// </summary>
-public sealed class CaravanService(GameState state, IEventPublisher events, EconomyService economy)
+public sealed class CaravanService(GameState state, IEventPublisher events, EconomyService economy) : Turns.ITurnPhaseParticipant
 {
+    void Turns.ITurnPhaseParticipant.PrepareTurn(PlayerId player) => Advance(player);
+
     /// <summary>Hires creatures from an owned dwelling for the town (its governor's Stewardship discount applies).</summary>
     internal void Order(PlayerId player, MapObjectId townId, MapObjectId dwellingId, int count)
     {

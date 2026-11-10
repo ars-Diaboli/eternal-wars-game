@@ -191,11 +191,11 @@ public class SpellScrollTests
     public void TheEditor_SetsABlankOrAWrittenScroll_OnAPickup()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 8));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), new(2, 2), out var id));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), new(2, 2), out var id));
 
-        Assert.Equal(EditResult.Ok, editor.SetArtifactPickup(id, Scroll(1)));
-        Assert.Equal(EditResult.Ok, editor.SetArtifactPickup(id, ArtifactCatalog.WithSpell(Scroll(1), "light.bless")));
-        Assert.Equal(EditResult.InvalidValue, editor.SetArtifactPickup(id, ArtifactCatalog.WithSpell(Scroll(2), "light.bless")));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetArtifactPickup(id, Scroll(1)));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetArtifactPickup(id, ArtifactCatalog.WithSpell(Scroll(1), "light.bless")));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetArtifactPickup(id, ArtifactCatalog.WithSpell(Scroll(2), "light.bless")));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
     }
 }

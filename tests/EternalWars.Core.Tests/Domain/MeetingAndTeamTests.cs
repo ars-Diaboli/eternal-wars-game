@@ -91,8 +91,8 @@ public class MeetingAndTeamTests
     {
         var editor = new MapEditorSession(BlankScenario.Create(10, 8));
 
-        editor.SetPlayerTeam(new PlayerId(1), new TeamId(0));
-        editor.SetTeamsLocked(true);
+        editor.Players.SetTeam(new PlayerId(1), new TeamId(0));
+        editor.Players.SetTeamsLocked(true);
         Assert.True(editor.Scenario.AreAllies(new PlayerId(0), new PlayerId(1)));
         Assert.True(editor.Scenario.TeamsLocked);
 

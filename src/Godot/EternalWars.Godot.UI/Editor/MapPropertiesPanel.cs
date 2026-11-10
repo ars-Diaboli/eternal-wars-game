@@ -27,14 +27,14 @@ public partial class MapPropertiesPanel : VBoxContainer
         AddChild(new Label { Text = "Description" });
         AddChild(_description);
         var apply = new Button { Text = "Apply name and description" };
-        apply.Pressed += () => _editor.SetMapProperties(_name.Text.Trim(), _description.Text);
+        apply.Pressed += () => _editor.Map.SetProperties(_name.Text.Trim(), _description.Text);
         AddChild(apply);
 
         _teamsLocked.Toggled += locked =>
         {
             if (!_refreshing)
             {
-                _editor.SetTeamsLocked(locked);
+                _editor.Players.SetTeamsLocked(locked);
             }
         };
         AddChild(_teamsLocked);
@@ -74,7 +74,7 @@ public partial class MapPropertiesPanel : VBoxContainer
         }
 
         int? Count(SpinBox box) => box.Value < 2 ? null : (int)box.Value;
-        if (!_editor.SetTeamCounts(Count(_minTeams), Count(_maxTeams)))
+        if (!_editor.Players.SetTeamCounts(Count(_minTeams), Count(_maxTeams)))
         {
             Refresh(); // the fewest above the most: back to what the map has
         }

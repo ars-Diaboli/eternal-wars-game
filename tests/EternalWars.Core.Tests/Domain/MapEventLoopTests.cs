@@ -215,9 +215,9 @@ public class MapEventLoopTests
     public void ABoxWithOnlyAnEvent_IsValid_ItsEventMustBeAHeroEvent_AndItIsInTheMapFormat()
     {
         var editor = new MapEditorSession(Create(".........", ".........", "...A.....", ".........", "C.......B"));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.PandorasBox, new(3, 1), out var placed));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(3, 1), out var placed));
         var box = (PandorasBox)editor.Scenario.GetObject(placed);
-        Assert.Equal(EditResult.Ok, editor.SetPandorasBoxEvent(box.Id, " box "));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetPandorasBoxEvent(box.Id, " box "));
         Assert.Equal("box", box.Event);
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error && i.Message.Contains("not a hero event", StringComparison.Ordinal));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Message.Contains("is empty", StringComparison.Ordinal));

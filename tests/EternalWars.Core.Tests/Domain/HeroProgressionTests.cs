@@ -305,8 +305,8 @@ public class HeroProgressionTests
     {
         var state = BlankScenario.Create(10, 8);
         var editor = new MapEditorSession(state);
-        Assert.Equal(EditResult.Ok, editor.SetHeroType(A, "inferno.azgaroth"));
-        Assert.Equal(EditResult.InvalidValue, editor.SetHeroType(A, "inferno.nobody"));
+        Assert.Equal(EditResult.Ok, editor.Heroes.SetType(A, "inferno.azgaroth"));
+        Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetType(A, "inferno.nobody"));
 
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(state)))).GetHero(A);
         Assert.Equal(("inferno.azgaroth", "Azgaroth", HeroClass.Warrior, "inferno.imp"), (restored.Definition, restored.Name, restored.Class, restored.PreferredCreature));

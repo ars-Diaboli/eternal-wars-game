@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Armies;
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Game;
@@ -101,8 +102,29 @@ public sealed class MapTavern(MapObjectId id, MapObjectDefinition definition, Ma
 /// must beat the troops inside to pass, and beating them flags it for the winner. A neutral garrison's troops come from the map.
 /// </summary>
 public sealed class MapGarrison(MapObjectId id, MapObjectDefinition definition, MapPosition position, PlayerId? owner = null, Army? troops = null)
-    : MapObject(id, definition, position, MapObjectKind.Garrison), IFlaggable
+    : MapObject(id, definition, position, MapObjectKind.Garrison), IFlaggable, IBattleGuard
 {
+    /// <inheritdoc/>
+    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome) => outcome.KeepTroops(Id, Troops);
+
+    /// <inheritdoc/>
+    /// <remarks>The beaten troops are gone, and the garrison is flagged for the winner.</remarks>
+    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
+    {
+        for (var slot = 0; slot < Army.SlotCount; slot++)
+        {
+            Troops.Set(slot, null);
+        }
+
+        outcome.Events.Publish(new Events.GarrisonChanged(Id, Troops.Slots.ToList()));
+        if (winner is not null)
+        {
+            var previous = Owner;
+            Owner = winner.Owner;
+            outcome.Events.Publish(new Events.GarrisonOwnerChanged(Id, previous, winner.Owner));
+        }
+    }
+
     /// <inheritdoc/>
     internal override string DigestState() => $"owner {Owner?.Value} troops {GameStateDigest.Slots(Troops)}";
 

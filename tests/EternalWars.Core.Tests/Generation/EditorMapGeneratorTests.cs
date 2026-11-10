@@ -79,10 +79,10 @@ public class EditorMapGeneratorTests
         var hero = scenario.Heroes[0];
         var before = scenario.Map.GetTerrain(hero.Position);
 
-        Assert.Equal(1, editor.PaintTerrain(hero.Position, before == TerrainType.Snow ? TerrainType.Sand : TerrainType.Snow));
+        Assert.Equal(1, editor.Terrain.Paint(hero.Position, before == TerrainType.Snow ? TerrainType.Sand : TerrainType.Snow));
         Assert.True(editor.Undo());
         Assert.Equal(before, scenario.Map.GetTerrain(hero.Position));
-        Assert.Equal(EditResult.Ok, editor.RemoveHero(hero.Id));
+        Assert.Equal(EditResult.Ok, editor.Heroes.Remove(hero.Id));
 
         var saved = MapSerializer.Serialize(MapConverter.ToDocument(scenario));
         var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(saved));

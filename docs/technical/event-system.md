@@ -80,10 +80,16 @@ this.SubscribeWhileInTree<HeroMoved>(session.Events, e =>
         CreateTween().TweenProperty(this, "position", MapSpace.ToWorld(e.To), 0.15f);
 });
 
-// Core rules reacting to other rules (wired in GameSession, before views).
+// Core rules reacting to other rules: the service lists its own subscriptions; GameSession calls SubscribeTo before any view subscribes.
 public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, ...
 {
+    internal void SubscribeTo(IEventSubscriber bus)
+    {
+        bus.Subscribe<GameStarted>(this);
+        bus.Subscribe<HeroMoved>(this); // ... in a fixed order: it is the order handlers of one event run in
+    }
+
     public void Handle(HeroMoved e) => RevealAround(state.GetHero(e.Hero), e.To); // publishes TilesRevealed
 }
 ```

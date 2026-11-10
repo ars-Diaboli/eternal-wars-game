@@ -1,3 +1,5 @@
+using EternalWars.Core.Domain.Battles.Spells;
+
 namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>
@@ -196,7 +198,8 @@ internal static class BattleAi
         return closer.Gap < unit.Rect.GapTo(gate.Rect) && engine.Move(closer.Position) is null;
     }
 
-    private static long Score(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int penalty = 0)
+    /// <summary>The creature value of the hit points the unit's blow or shot is expected to take off the target.</summary>
+    internal static long Score(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int penalty = 0)
     {
         var damage = Math.Min(DamageCalculator.Expected(battle, unit, target, isRanged, penalty), target.TotalHealth);
         return (long)damage * target.Creature.Value / target.Creature.Health;
@@ -222,7 +225,8 @@ internal static class BattleAi
             }
 
             var effect = known.Effect!;
-            foreach (var (target, cell) in effect.Kind == Magic.SpellEffectKind.Move ? MoveAims(battle, side, effect) : Aims(battle, side, effect))
+            var handler = SpellEffectHandlers.For(effect.Kind);
+            foreach (var (target, cell) in handler.Aims(battle, side, effect))
             {
                 var drinker = effect.DrainPercent > 0 ? Drinker(battle, side, known, target)
                     : effect.Modifiers.MartyrPercent > 0 ? Martyr(battle, side, target)
@@ -232,7 +236,7 @@ internal static class BattleAi
                     continue;
                 }
 
-                var value = Value(battle, side, known, target, cell, null) + (drinker?.Worth ?? 0);
+                var value = handler.Value(new CastContext(battle, side, known, target, cell, drinker?.Id)) + (drinker?.Worth ?? 0);
                 if (value > best.Value)
                 {
                     best = (value, known.Spell.Id, target, cell, drinker?.Id);
@@ -243,42 +247,6 @@ internal static class BattleAi
         if (best.Spell is { } spell)
         {
             engine.Cast(side, spell, best.Target, best.Cell, best.Second);
-        }
-    }
-
-    /// <summary>
-    /// Where the AI moves a stack with a move spell (ADR-151, proposal): only the active stack, when it fights in melee (it cannot shoot now) and
-    /// cannot reach an enemy this turn, to each placement next to an enemy stack it may land on; the move is worth the blow it can strike from there.
-    /// So Shadow Step I, which never lands next to an enemy, is not cast by the AI.
-    /// </summary>
-    private static IEnumerable<(int? Target, CellPosition? Cell)> MoveAims(BattleState battle, BattleSide side, Magic.SpellEffect effect)
-    {
-        if (battle.ActiveUnit is not { IsMachine: false } unit || unit.Side != side || unit.IsFixed || unit.Has(Magic.SpellStatus.NoAttack)
-            || BattleGrid.CanShootNow(battle, unit))
-        {
-            yield break;
-        }
-
-        var enemies = battle.LivingUnitsOf(side.Opponent()).Where(e => BattleGrid.CanBeAttacked(unit, e, melee: true) && !e.InKeep).OrderBy(e => e.Id).ToList();
-        if (enemies.Any(e => BattleGrid.AttackPositions(battle, unit, e).Count > 0))
-        {
-            yield break;
-        }
-
-        var seen = new HashSet<CellPosition>();
-        foreach (var enemy in enemies)
-        {
-            for (var y = enemy.Position.Y - unit.Height; y <= enemy.Rect.Bottom; y++)
-            {
-                for (var x = enemy.Position.X - unit.Width; x <= enemy.Rect.Right; x++)
-                {
-                    var at = new CellPosition(x, y);
-                    if (unit.RectAt(at).IsAdjacentTo(enemy.Rect) && seen.Add(at) && BattleMagic.CanLand(battle, side, effect, unit, at))
-                    {
-                        yield return (unit.Id, at);
-                    }
-                }
-            }
         }
     }
 
@@ -323,148 +291,11 @@ internal static class BattleAi
     /// <summary>The most rounds a lasting spell is counted for (a spell for the battle counts this many).</summary>
     public const int MaxValuedRounds = 5;
 
-    /// <summary>
-    /// What a cast is worth (ADR-120, ADR-123): for damage, the creature value of the hit points it takes off enemy stacks less that of own stacks
-    /// (splash and chain hits included); for a summon, the value of the creatures it calls; for healing and revives, the value of the health it gives
-    /// back; for a kill, the creatures' value; for a buff or curse, a share of the value of each stack it newly takes hold on (an enemy stack for a
-    /// curse, an own one for a buff) for each round it lasts, more for the spells that take turns away; for a dispel, that share of each spell it
-    /// takes off (the enemy's count for it, the own against it). Wards against spells are worth nothing when the enemy cannot cast.
-    /// </summary>
-    private static long Value(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower)
-    {
-        var effect = known.Effect!;
-        switch (effect.Kind)
-        {
-            case Magic.SpellEffectKind.Summon:
-                return BattleMagic.SummonPlacement(battle, side, known, creaturePower) is { } summon ? (long)summon.Count * summon.Creature.Value : 0;
-            case Magic.SpellEffectKind.Heal:
-                return target is { } id && battle.FindUnit(id) is { } wounded
-                    ? Worth(wounded, Math.Min(BattleMagic.Amount(battle, side, known, creaturePower), wounded.Creature.Health - wounded.TopHealth))
-                    : 0;
-            case Magic.SpellEffectKind.Damage:
-                return BattleMagic.DamagePlan(battle, side, known, target, cell, creaturePower)
-                    .Sum(h => (h.Unit.Side == side ? -1 : 1) * (Worth(h.Unit, h.Damage) + EnchantValue(battle, side, known, h.Unit)));
-            case Magic.SpellEffectKind.Zone:
-                return cell is { } at ? ZoneValue(battle, side, known, at, creaturePower) : 0;
-            case Magic.SpellEffectKind.Copy:
-                // A copy fights like the stack for its rounds, or until hit (ADR-152, proposal): the control share of its value a round.
-                return target is { } copied && battle.FindUnit(copied) is { } original
-                    ? StackValue(original) * ControlPercentPerRound * Math.Min(MaxValuedRounds, effect.Rounds ?? MaxValuedRounds) / 100
-                    : 0;
-            case Magic.SpellEffectKind.Raise:
-                return RaiseValue(battle, side, effect);
-            case Magic.SpellEffectKind.Sacrifice:
-                return 0; // Blood Price (ADR-152, proposal): the AI does not trade creatures for mana
-            case Magic.SpellEffectKind.Move:
-                return target is { } moved && battle.FindUnit(moved) is { } mover && cell is { } to
-                    ? battle.LivingUnitsOf(side.Opponent()).Where(e => mover.RectAt(to).IsAdjacentTo(e.Rect))
-                        .Select(e => Score(battle, mover, e, isRanged: false)).DefaultIfEmpty(0).Max()
-                    : 0;
-        }
+    /// <summary>A stack's creature value.</summary>
+    internal static long StackValue(BattleUnit unit) => (long)unit.Count * unit.Creature.Value;
 
-        var units = BattleMagic.Reach(battle, side, known, target, cell).Where(u => BattleMagic.Affects(battle, side, known, u)).ToList();
-        return effect.Kind switch
-        {
-            Magic.SpellEffectKind.Revive => units.Sum(u => (long)Math.Min(BattleMagic.Missing(u), BattleMagic.Amount(battle, side, known, creaturePower)) * u.Creature.Value / u.Creature.Health),
-            Magic.SpellEffectKind.Slay => units.Sum(u => (u.Side == side ? -1 : 1) * (long)Math.Min(u.Count, BattleMagic.Slain(effect, u)) * u.Creature.Value),
-            Magic.SpellEffectKind.Dispel => units.Sum(u => BattleMagic.Dispelled(side, effect, u)
-                .Sum(s => (s.Caster == side ? -1 : 1) * StackValue(u) * EnchantPercentPerRound * Math.Clamp(s.UntilRound - battle.Round + 1, 1, MaxValuedRounds) / 100)),
-            _ => units.Sum(u => (u.Side == side) == effect.IsHostile ? -EnchantValue(battle, side, known, u) : EnchantValue(battle, side, known, u)),
-        };
-    }
-
-    /// <summary>
-    /// What Raise Dead is worth now (ADR-152, proposal): the skeletons the enemy creatures slain so far would give after the battle, and for ranks II
-    /// and III the destroyed stack that would rise now; nothing once the side has cast it.
-    /// </summary>
-    private static long RaiseValue(BattleState battle, BattleSide side, Magic.SpellEffect effect)
-    {
-        if (battle.Raising.ContainsKey(side) || !battle.Creatures.TryGet(BattleMagic.RaisedCreature, out var skeleton))
-        {
-            return 0;
-        }
-
-        var slain = battle.Units.Where(u => u.Owner != side && !u.IsMachine && !u.IsSummoned && NecromancyRules.Counts(u.Creature))
-            .Sum(u => (long)(u.InitialCount - u.KeptCount) * u.Creature.Health);
-        var value = slain * effect.Amount / 100 / skeleton.Health * skeleton.Value;
-        if (effect.Rises != Magic.SpellRises.None && BattleMagic.NextRising(battle, effect.Amount) is { } rising)
-        {
-            value += (long)rising.Count * skeleton.Value;
-        }
-
-        return value;
-    }
-
-    /// <summary>What the lasting part of a spell is worth on the stack (0 when the stack already has this spell, or for a ward nobody can test).</summary>
-    private static long EnchantValue(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit)
-    {
-        var effect = known.Effect!;
-        var m = effect.Modifiers;
-        if (m.IsEmpty || unit.Spells.Any(s => s.Spell == known.Spell.Id))
-        {
-            return 0;
-        }
-
-        var enemyCasts = battle.Participant(side.Opponent()).Caster is not null || battle.LivingUnitsOf(side.Opponent()).Any(u => BattleMagic.CreatureSpell(battle, u) is not null);
-        var wardsOnly = m == new Magic.SpellModifiers(Status: m.Status & Magic.SpellStatus.WardMind, ImmuneLevel: m.ImmuneLevel, ShroudLevel: m.ShroudLevel);
-        if (wardsOnly && !enemyCasts)
-        {
-            return 0;
-        }
-
-        // A spell that lasts turns counts a round for each turn (ADR-150).
-        var rounds = (effect.Turns ?? effect.Rounds) switch
-        {
-            null => MaxValuedRounds,
-            0 => 1,
-            var r => Math.Min(MaxValuedRounds, r.Value),
-        };
-        var percent = m.Has(Magic.SpellStatus.Controlled) ? TakenPercentPerRound
-            : m.Has(Magic.SpellStatus.Blind | Magic.SpellStatus.Stasis | Magic.SpellStatus.Confused | Magic.SpellStatus.Frenzied) ? ControlPercentPerRound
-            : EnchantPercentPerRound;
-        var taken = effect.Split && unit.TotalHealth > BattleMagic.HealthLimit(battle, side, known)
-            ? Math.Min(unit.Count, BattleMagic.SplitCount(battle, side, known, unit))
-            : unit.Count;
-        var value = (long)taken * unit.Creature.Value * percent * rounds / 100;
-        if (m.Burn > 0)
-        {
-            value += Worth(unit, m.Burn * rounds);
-        }
-
-        if (m.DecayPercent > 0)
-        {
-            // Plague hurts the enemy; Pact of Ash's losses are the price on an own stack.
-            value += (unit.Side == side ? -1 : 1) * StackValue(unit) * m.DecayPercent * rounds / 100;
-        }
-
-        return value;
-    }
-
-    private static long StackValue(BattleUnit unit) => (long)unit.Count * unit.Creature.Value;
-
-    /// <summary>
-    /// What a field zone is worth (ADR-149, proposal): one round of what it does to the stacks standing in or next to it now, enemies for, own
-    /// against: its damage as a round starts, the tearing of a stack that walks out, its healing of own stacks. Blocking and darkening are not
-    /// valued, so the AI casts the walls and Darkness only for their damage.
-    /// </summary>
-    private static long ZoneValue(BattleState battle, BattleSide side, KnownSpell known, CellPosition cell, int? creaturePower)
-    {
-        var zone = new BattleZone(0, known, side, BattleZones.Cells(battle, known.Effect!, cell), battle.Round, BattleZones.Scaled(battle, side, known, creaturePower));
-        long value = 0;
-        foreach (var unit in battle.LivingUnits)
-        {
-            var inside = zone.Rect.Intersects(unit.Rect);
-            var amount = inside ? zone.Amounts.Start + zone.Amounts.Leave : unit.Rect.IsAdjacentTo(zone.Rect) ? zone.Amounts.Beside : 0;
-            if (amount > 0 && BattleZones.Hurts(battle, zone, unit))
-            {
-                value += (unit.Side == side ? -1 : 1) * Worth(unit, BattleZones.Damage(battle, zone, unit, amount));
-            }
-
-            value += Worth(unit, BattleZones.Healing(zone, unit));
-        }
-
-        return value;
-    }
+    /// <summary>The creature value of the hit points (up to the stack's health) a blow or spell takes off or gives back.</summary>
+    internal static long Worth(BattleUnit unit, int damage) => (long)Math.Min(damage, unit.TotalHealth) * unit.Creature.Value / unit.Creature.Health;
 
     /// <summary>
     /// A creature caster's turn (ADR-120): it casts the aim worth most when that beats its own best blow or shot now; a buff goes on the most
@@ -477,6 +308,7 @@ internal static class BattleAi
             return false;
         }
 
+        var handler = SpellEffectHandlers.For(effect.Kind);
         var power = BattleMagic.CreatureSpellPower(unit);
         var own = OwnBest(battle, unit, enemies);
         (long Value, int? Target, CellPosition? Cell, bool Found) best = (0, null, null, false);
@@ -488,14 +320,14 @@ internal static class BattleAi
             }
 
             // A buff is cast only when the caster has nothing to hit itself (ADR-120).
-            var value = effect.Kind == Magic.SpellEffectKind.Buff && own > 0 ? 0 : Value(battle, unit.Side, known, target, cell, power);
+            var value = handler.CreatureCastsWhenIdle && own > 0 ? 0 : handler.Value(new CastContext(battle, unit.Side, known, target, cell, CreaturePower: power));
             if (value > best.Value)
             {
                 best = (value, target, cell, true);
             }
         }
 
-        return best.Found && (effect.Kind == Magic.SpellEffectKind.Buff || best.Value > own) && engine.CreatureCast(best.Target, best.Cell) is null;
+        return best.Found && (handler.CreatureCastsWhenIdle || best.Value > own) && engine.CreatureCast(best.Target, best.Cell) is null;
     }
 
     /// <summary>The unit's own best shot or blow this turn, as the value of the hit points it would take off; 0 when it cannot hit anything.</summary>
@@ -513,7 +345,7 @@ internal static class BattleAi
     /// battle for a revive that brings them back), every stack for one aimed at either side; the centre of each enemy stack for an area; nowhere for
     /// a side or the field.
     /// </summary>
-    private static IEnumerable<(int? Target, CellPosition? Cell)> Aims(BattleState battle, BattleSide side, Magic.SpellEffect effect) => effect.Reach switch
+    internal static IEnumerable<(int? Target, CellPosition? Cell)> Aims(BattleState battle, BattleSide side, Magic.SpellEffect effect) => effect.Reach switch
     {
         Magic.SpellReach.Stack => battle.Units
             .Where(u => effect.EitherSide || (u.Side != side) == effect.IsHostile)
@@ -524,7 +356,6 @@ internal static class BattleAi
         _ => [(null, null)],
     };
 
-    private static long Worth(BattleUnit unit, int damage) => (long)Math.Min(damage, unit.TotalHealth) * unit.Creature.Value / unit.Creature.Health;
     /// <summary>The reachable placement closest to the nearest enemy, if it is closer than standing still.</summary>
     private static CellPosition? Advance(BattleState battle, BattleUnit unit, List<BattleUnit> enemies)
     {

@@ -131,6 +131,6 @@ public partial class BansPanel : VBoxContainer
     private void Change(Func<MapBans, MapBans> change)
     {
         var rules = _editor.Scenario.Rules;
-        _editor.SetScenarioRules(rules with { Bans = change(rules.Bans) });
+        _editor.Map.SetRules(rules with { Bans = change(rules.Bans) });
     }
 }

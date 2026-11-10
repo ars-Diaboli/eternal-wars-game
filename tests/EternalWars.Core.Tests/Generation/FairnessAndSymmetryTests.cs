@@ -92,16 +92,16 @@ public class FairnessAndSymmetryTests
         Assert.Null(MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(EternalWars.Core.Domain.Scenarios.BlankScenario.Create(8, 8))))).MinTeams);
 
         var editor = new MapEditorSession(loaded);
-        Assert.False(editor.SetTeamCounts(3, 2));
-        Assert.True(editor.SetTeamCounts(null, 3));
+        Assert.False(editor.Players.SetTeamCounts(3, 2));
+        Assert.True(editor.Players.SetTeamCounts(null, 3));
         Assert.Equal((null, 3), (editor.Scenario.MinTeams, editor.Scenario.MaxTeams));
         editor.Undo();
         Assert.Equal((2, 2), (editor.Scenario.MinTeams!.Value, editor.Scenario.MaxTeams!.Value));
 
         // Locked teams that do not fit cannot be fixed at setup: an error; unlocked, a warning.
-        editor.SetTeamCounts(3, 4);
+        editor.Players.SetTeamCounts(3, 4);
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Warning && i.Message.Contains("team counts"));
-        editor.SetTeamsLocked(true);
+        editor.Players.SetTeamsLocked(true);
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error && i.Message.Contains("team counts"));
     }
 

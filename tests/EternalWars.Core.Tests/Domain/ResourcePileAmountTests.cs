@@ -56,7 +56,7 @@ public class ResourcePileAmountTests
     public void AnOpenAmount_IsLeftOutOfTheMapFile_AndOldFilesKeepTheirAmounts()
     {
         var editor = new MapEditorSession(BlankScenario.Create(8, 8));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.PileId(ResourceType.Ore), new(2, 2), out var id));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.PileId(ResourceType.Ore), new(2, 2), out var id));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));

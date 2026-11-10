@@ -146,20 +146,20 @@ public class GuildSpellsFormatTests
     public void TheEditor_SetsATownsGuildSpells_Undoably_AndRefusesWrongOnes()
     {
         var editor = new MapEditorSession(BlankScenario.Create(20, 12));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.TownId(TownIds.Haven), new(2, 2), out var id));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new(2, 2), out var id));
         var town = (Town)editor.Scenario.FindObject(id)!;
         var changed = new List<MapObjectChanged>();
         editor.Events.Subscribe<MapObjectChanged>(changed.Add);
         var one = Haven(1);
 
-        Assert.Equal(EditResult.InvalidValue, editor.SetTownGuildSpells(id, ["no.such-spell"]));
-        Assert.Equal(EditResult.InvalidValue, editor.SetTownGuildSpells(id, [one[0], one[0]]));
-        Assert.Equal(EditResult.InvalidValue, editor.SetTownGuildSpells(id, [.. one.Take(4)]));
-        Assert.Equal(EditResult.InvalidValue, editor.SetTownGuildSpells(id, [SpellCatalog.Default.Of(TownIds.Inferno, 1)[0].Id]));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetTownGuildSpells(new MapObjectId(999), []));
+        Assert.Equal(EditResult.InvalidValue, editor.Towns.SetGuildSpells(id, ["no.such-spell"]));
+        Assert.Equal(EditResult.InvalidValue, editor.Towns.SetGuildSpells(id, [one[0], one[0]]));
+        Assert.Equal(EditResult.InvalidValue, editor.Towns.SetGuildSpells(id, [.. one.Take(4)]));
+        Assert.Equal(EditResult.InvalidValue, editor.Towns.SetGuildSpells(id, [SpellCatalog.Default.Of(TownIds.Inferno, 1)[0].Id]));
+        Assert.Equal(EditResult.InvalidTarget, editor.Towns.SetGuildSpells(new MapObjectId(999), []));
         Assert.Empty(changed);
 
-        Assert.Equal(EditResult.Ok, editor.SetTownGuildSpells(id, [one[0], Haven(2)[1]]));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetGuildSpells(id, [one[0], Haven(2)[1]]));
         Assert.Equal([one[0], Haven(2)[1]], town.FixedGuildSpells);
         Assert.Single(changed);
         editor.Undo();
@@ -168,7 +168,7 @@ public class GuildSpellsFormatTests
         Assert.Equal([one[0], Haven(2)[1]], town.FixedGuildSpells);
 
         // Another faction has another school: the fixed spells are dropped with the old type.
-        Assert.Equal(EditResult.Ok, editor.SetTownType(id, TownIds.Inferno));
+        Assert.Equal(EditResult.Ok, editor.Towns.SetType(id, TownIds.Inferno));
         Assert.Empty(((Town)editor.Scenario.FindObject(id)!).FixedGuildSpells);
         editor.Undo();
         Assert.Equal([one[0], Haven(2)[1]], ((Town)editor.Scenario.FindObject(id)!).FixedGuildSpells);

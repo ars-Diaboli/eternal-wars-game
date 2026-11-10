@@ -406,12 +406,12 @@ public class CaravanTests
         Assert.True(MapDocument.CurrentFormatVersion >= 12);
 
         var editor = new MapEditorSession(loaded);
-        Assert.Equal(EditResult.Ok, editor.SetDwelling(copy.Id, BuiltInCreatures.Wolf, Red, null));
+        Assert.Equal(EditResult.Ok, editor.Objects.SetDwelling(copy.Id, BuiltInCreatures.Wolf, Red, null));
         Assert.Equal((BuiltInCreatures.Wolf, Red, (int?)null), (copy.Creature, copy.Owner, copy.Available));
-        Assert.Equal(EditResult.UnknownCreature, editor.SetDwelling(copy.Id, "nope", null, null));
-        Assert.Equal(EditResult.UnknownPlayer, editor.SetDwelling(copy.Id, Footman, new PlayerId(9), null));
-        Assert.Equal(EditResult.InvalidValue, editor.SetDwelling(copy.Id, Footman, null, -1));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetDwelling(new MapObjectId(99), Footman, null, null));
+        Assert.Equal(EditResult.UnknownCreature, editor.Objects.SetDwelling(copy.Id, "nope", null, null));
+        Assert.Equal(EditResult.UnknownPlayer, editor.Objects.SetDwelling(copy.Id, Footman, new PlayerId(9), null));
+        Assert.Equal(EditResult.InvalidValue, editor.Objects.SetDwelling(copy.Id, Footman, null, -1));
+        Assert.Equal(EditResult.InvalidTarget, editor.Objects.SetDwelling(new MapObjectId(99), Footman, null, null));
 
         editor.Undo();
         Assert.Equal((Footman, Blue, 12), (copy.Creature, copy.Owner, copy.Available));
@@ -426,7 +426,7 @@ public class CaravanTests
         var crusader = state.Creatures.Get(Footman).UpgradesTo!;
         var editor = new MapEditorSession(state);
 
-        Assert.Equal(EditResult.UpgradedCreature, editor.SetDwelling(dwelling.Id, crusader, null, null));
+        Assert.Equal(EditResult.UpgradedCreature, editor.Objects.SetDwelling(dwelling.Id, crusader, null, null));
         Assert.Equal(Footman, dwelling.Creature);
 
         // A map made before the rule: the validator rejects the upgrade, and loading turns it into its line's base creature.

@@ -320,7 +320,7 @@ public partial class ConditionsPanel : VBoxContainer
 
     private void Change(Func<ScenarioRules, ScenarioRules> change)
     {
-        if (_editor.SetScenarioRules(change(Scenario.Rules)) is var result and not EditResult.Ok)
+        if (_editor.Map.SetRules(change(Scenario.Rules)) is var result and not EditResult.Ok)
         {
             _status.Text = result == EditResult.HeroLimit ? "A player already has more heroes than that." : result.ToString();
             Refresh();

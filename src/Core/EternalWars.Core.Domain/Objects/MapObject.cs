@@ -1,6 +1,9 @@
+using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
+using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Heroes;
 
 namespace EternalWars.Core.Domain.Objects;
 
@@ -129,8 +132,52 @@ public sealed class ResourcePile(MapObjectId id, MapObjectDefinition definition,
 /// re-flags the mine by visiting it.
 /// </summary>
 public sealed class Mine(MapObjectId id, MapObjectDefinition definition, MapPosition position, PlayerId? owner = null, GuardStack? guard = null)
-    : MapObject(id, definition, position, MapObjectKind.Mine), IFlaggable
+    : MapObject(id, definition, position, MapObjectKind.Mine), IFlaggable, IBattleGuard
 {
+    /// <inheritdoc/>
+    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome)
+    {
+        if (Guard is { } stack)
+        {
+            Guard = stack with { Count = outcome.Survivors };
+        }
+
+        outcome.Events.Publish(new MapObjectChanged(Id));
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>The beaten guard leaves the mine (an abandoned one becomes a normal mine), and the mine is the winner's.</remarks>
+    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
+    {
+        Guard = null;
+        var mine = ClearAbandoned(outcome);
+        outcome.Events.Publish(new MineGuardDefeated(mine.Id));
+        if (winner is not null && mine.Owner != winner.Owner)
+        {
+            var previous = mine.Owner;
+            mine.Owner = winner.Owner;
+            outcome.Events.Publish(new MineOwnerChanged(mine.Id, previous, winner.Owner));
+        }
+    }
+
+    /// <summary>
+    /// A beaten abandoned mine becomes the normal mine of its resource (ADR-068): same id, place and owner, the definition it
+    /// <see cref="MapObjectDefinition.Becomes"/>. Views redraw it on <see cref="MapObjectChanged"/>.
+    /// </summary>
+    private Mine ClearAbandoned(BattleGuardOutcome outcome)
+    {
+        if (Definition.Becomes is not { } becomes || !outcome.State.ObjectCatalog.TryGet(becomes, out var normal))
+        {
+            return this;
+        }
+
+        var cleared = new Mine(Id, normal, Position, Owner);
+        outcome.State.RemoveObject(this);
+        outcome.State.AddObject(cleared);
+        outcome.Events.Publish(new MapObjectChanged(cleared.Id));
+        return cleared;
+    }
+
     /// <inheritdoc/>
     internal override string DigestState() => $"owner {Owner?.Value} guard {Guard}";
 
@@ -219,8 +266,33 @@ public static class DwellingGuards
 public sealed class CreatureDwelling(
     MapObjectId id, MapObjectDefinition definition, MapPosition position,
     string creature = MonsterGuard.DefaultCreature, PlayerId? owner = null, int? available = null)
-    : MapObject(id, definition, position, MapObjectKind.Dwelling), IFlaggable
+    : MapObject(id, definition, position, MapObjectKind.Dwelling), IFlaggable, IBattleGuard
 {
+    /// <inheritdoc/>
+    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome)
+    {
+        if (Guard is { } stack)
+        {
+            Guard = stack with { Count = outcome.Survivors };
+        }
+
+        outcome.Events.Publish(new MapObjectChanged(Id));
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>The beaten guard leaves the dwelling, and the dwelling is the winner's.</remarks>
+    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
+    {
+        Guard = null;
+        outcome.Events.Publish(new MapObjectChanged(Id));
+        if (winner is not null && Owner != winner.Owner)
+        {
+            var before = Owner;
+            Owner = winner.Owner;
+            outcome.Events.Publish(new DwellingOwnerChanged(Id, before, winner.Owner));
+        }
+    }
+
     /// <inheritdoc/>
     internal override string DigestState() => $"{Creature} owner {Owner?.Value} available {Available}" + (Guard is { } g ? $" guard {g}" : "");
 
@@ -291,8 +363,23 @@ public sealed class MonsterGuard(
     bool neverFlees = false,
     GuardMode mode = GuardMode.Classic,
     int? randomTier = null)
-    : MapObject(id, definition, position, MapObjectKind.Monster)
+    : MapObject(id, definition, position, MapObjectKind.Monster), IBattleGuard
 {
+    /// <inheritdoc/>
+    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome)
+    {
+        Count = outcome.Survivors;
+        outcome.Events.Publish(new MapObjectChanged(Id));
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>A beaten monster leaves the map.</remarks>
+    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
+    {
+        outcome.State.RemoveObject(this);
+        outcome.Events.Publish(new MapObjectRemoved(Id));
+    }
+
     /// <inheritdoc/>
     internal override string DigestState() => $"{Creature}:{Count} {Disposition}";
 

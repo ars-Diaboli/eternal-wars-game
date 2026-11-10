@@ -29,7 +29,7 @@ public class MarketplaceFormatTests
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
 
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.Marketplace, new(4, 4), out var id));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Marketplace, new(4, 4), out var id));
 
         Assert.IsType<Marketplace>(editor.Scenario.GetObject(id));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);

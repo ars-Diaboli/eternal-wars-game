@@ -32,37 +32,37 @@ public class MapEventEditorTests
         var changes = 0;
         editor.Events.Subscribe<MapEventsChanged>(_ => changes++);
 
-        Assert.Equal(EditResult.Ok, editor.AddMapEvent(Hero("a")));
-        Assert.Equal(EditResult.Ok, editor.AddMapEvent(Hero("b")));
-        Assert.Equal(EditResult.InvalidValue, editor.AddMapEvent(Hero("a")));
-        Assert.Equal(EditResult.InvalidValue, editor.AddMapEvent(Hero(" ")));
-        Assert.Equal("a 2", editor.UnusedEventName("a"));
-        Assert.Equal(EditResult.Ok, editor.MoveMapEvent("b", -5));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.Add(Hero("a")));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.Add(Hero("b")));
+        Assert.Equal(EditResult.InvalidValue, editor.MapEvents.Add(Hero("a")));
+        Assert.Equal(EditResult.InvalidValue, editor.MapEvents.Add(Hero(" ")));
+        Assert.Equal("a 2", editor.MapEvents.UnusedName("a"));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.Move("b", -5));
         Assert.Equal(["b", "a"], editor.Scenario.MapEvents.Set.Events.Select(e => e.Name));
-        Assert.Equal(EditResult.Ok, editor.RemoveMapEvent("a"));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.Remove("a"));
         Assert.Equal(["b"], editor.Scenario.MapEvents.Set.Events.Select(e => e.Name));
         Assert.Equal(4, changes);
 
         editor.Undo();
         editor.Undo();
         Assert.Equal(["a", "b"], editor.Scenario.MapEvents.Set.Events.Select(e => e.Name));
-        Assert.Equal(EditResult.InvalidTarget, editor.RemoveMapEvent("nope"));
+        Assert.Equal(EditResult.InvalidTarget, editor.MapEvents.Remove("nope"));
     }
 
     [Fact]
     public void Renaming_AnEvent_RenamesWhatNamesIt_AndUndoRestoresTheOldNames()
     {
         var editor = Editor();
-        editor.PlaceObject(BuiltInMapObjects.PandorasBox, new(5, 0), out var boxId);
+        editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(5, 0), out var boxId);
         var box = (PandorasBox)editor.Scenario.GetObject(boxId);
-        editor.AddMapEvent(Hero("old", Gold(1)));
-        editor.AddMapEvent(new MapEventDefinition("caller", MapEventKind.Player,
+        editor.MapEvents.Add(Hero("old", Gold(1)));
+        editor.MapEvents.Add(new MapEventDefinition("caller", MapEventKind.Player,
             [new IfAction(new PlayerIsHumanCondition(), [new RunEventAction("old")]) { Else = [new EnableEventAction("old", false)] }]));
-        editor.SetPandorasBoxEvent(box.Id, "old");
-        Assert.Equal(EditResult.Ok, editor.SetEventCell(new(1, 1), "old"));
+        editor.Contents.SetPandorasBoxEvent(box.Id, "old");
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetCell(new(1, 1), "old"));
 
-        Assert.Equal(EditResult.InvalidValue, editor.ReplaceMapEvent("old", Hero("caller")));
-        Assert.Equal(EditResult.Ok, editor.ReplaceMapEvent("old", Hero("new", Gold(2))));
+        Assert.Equal(EditResult.InvalidValue, editor.MapEvents.Replace("old", Hero("caller")));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.Replace("old", Hero("new", Gold(2))));
 
         var set = editor.Scenario.MapEvents.Set;
         Assert.Equal("new", box.Event);
@@ -82,12 +82,12 @@ public class MapEventEditorTests
     public void Removing_AnEvent_TakesItsCells_AndClearsTheObjectsThatNamedIt()
     {
         var editor = Editor();
-        editor.PlaceObject(BuiltInMapObjects.SeerHut, new(5, 0), out var hutId);
+        editor.Objects.Place(BuiltInMapObjects.SeerHut, new(5, 0), out var hutId);
         var hut = (QuestSite)editor.Scenario.GetObject(hutId);
-        editor.AddMapEvent(new MapEventDefinition("quest", MapEventKind.Quest, []) { Stages = [QuestForms.Level(2, "Grow up.")] });
-        editor.SetQuestSiteQuest(hut.Id, "quest");
+        editor.MapEvents.Add(new MapEventDefinition("quest", MapEventKind.Quest, []) { Stages = [QuestForms.Level(2, "Grow up.")] });
+        editor.Contents.SetQuestSiteQuest(hut.Id, "quest");
 
-        editor.RemoveMapEvent("quest");
+        editor.MapEvents.Remove("quest");
 
         Assert.Null(hut.Quest);
         editor.Undo();
@@ -99,11 +99,11 @@ public class MapEventEditorTests
     {
         var editor = Editor();
 
-        Assert.Equal(EditResult.Ok, editor.SetMapVariable(" gold ", 5));
-        Assert.Equal(EditResult.Ok, editor.SetMapVariable("gold", 7));
-        Assert.Equal(EditResult.InvalidValue, editor.SetMapVariable("", 1));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetVariable(" gold ", 5));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetVariable("gold", 7));
+        Assert.Equal(EditResult.InvalidValue, editor.MapEvents.SetVariable("", 1));
         Assert.Equal(7, editor.Scenario.MapEvents.Set.Variables["gold"]);
-        Assert.Equal(EditResult.Ok, editor.RemoveMapVariable("gold"));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.RemoveVariable("gold"));
         Assert.Empty(editor.Scenario.MapEvents.Set.Variables);
         editor.Undo();
         Assert.Equal(7, editor.Scenario.MapEvents.Set.Variables["gold"]);
@@ -113,17 +113,17 @@ public class MapEventEditorTests
     public void EventCells_GoOnFreePassableGround_OfAHeroEvent()
     {
         var editor = new MapEditorSession(Create("A.~......", ".........", "C.......B"));
-        editor.PlaceObject(BuiltInMapObjects.PandorasBox, new(5, 0), out _);
-        editor.AddMapEvent(Hero("cell"));
-        editor.AddMapEvent(new MapEventDefinition("turn", MapEventKind.Player, []));
+        editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(5, 0), out _);
+        editor.MapEvents.Add(Hero("cell"));
+        editor.MapEvents.Add(new MapEventDefinition("turn", MapEventKind.Player, []));
 
-        Assert.Equal(EditResult.ImpassableTerrain, editor.SetEventCell(new(2, 0), "cell"));
-        Assert.Equal(EditResult.Overlaps, editor.SetEventCell(new(5, 0), "cell"));
-        Assert.Equal(EditResult.OutOfBounds, editor.SetEventCell(new(20, 0), "cell"));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetEventCell(new(3, 1), "turn"));
-        Assert.Equal(EditResult.Ok, editor.SetEventCell(new(3, 1), "cell"));
-        Assert.Equal(EditResult.Ok, editor.SetEventCell(new(3, 1), null));
-        Assert.Equal(EditResult.InvalidTarget, editor.SetEventCell(new(3, 1), null));
+        Assert.Equal(EditResult.ImpassableTerrain, editor.MapEvents.SetCell(new(2, 0), "cell"));
+        Assert.Equal(EditResult.Overlaps, editor.MapEvents.SetCell(new(5, 0), "cell"));
+        Assert.Equal(EditResult.OutOfBounds, editor.MapEvents.SetCell(new(20, 0), "cell"));
+        Assert.Equal(EditResult.InvalidTarget, editor.MapEvents.SetCell(new(3, 1), "turn"));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetCell(new(3, 1), "cell"));
+        Assert.Equal(EditResult.Ok, editor.MapEvents.SetCell(new(3, 1), null));
+        Assert.Equal(EditResult.InvalidTarget, editor.MapEvents.SetCell(new(3, 1), null));
         Assert.Empty(editor.Scenario.MapEvents.Set.Cells);
     }
 
@@ -282,8 +282,8 @@ public class MapEventEditorTests
     public void TheValidator_ShowsTheLoadErrors_WithTheirEvent()
     {
         var editor = Editor();
-        editor.AddMapEvent(Hero("broken", new RunEventAction("missing")));
-        editor.SetEventCell(new(1, 1), "broken");
+        editor.MapEvents.Add(Hero("broken", new RunEventAction("missing")));
+        editor.MapEvents.SetCell(new(1, 1), "broken");
 
         var error = Assert.Single(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
         Assert.Equal("broken", error.Event);
@@ -295,20 +295,20 @@ public class MapEventEditorTests
     public void TheValidator_Warns_AboutSelfRunningUnusedAndUnfinishableEvents()
     {
         var editor = Editor();
-        editor.PlaceObject(BuiltInMapObjects.SeerHut, new(5, 0), out var hutId);
-        editor.SetMapVariable("unread", 1);
-        editor.SetMapVariable("read", 1);
-        editor.AddMapEvent(new MapEventDefinition("ping", MapEventKind.Player, [new RunEventAction("pong")]));
-        editor.AddMapEvent(new MapEventDefinition("pong", MapEventKind.Player,
+        editor.Objects.Place(BuiltInMapObjects.SeerHut, new(5, 0), out var hutId);
+        editor.MapEvents.SetVariable("unread", 1);
+        editor.MapEvents.SetVariable("read", 1);
+        editor.MapEvents.Add(new MapEventDefinition("ping", MapEventKind.Player, [new RunEventAction("pong")]));
+        editor.MapEvents.Add(new MapEventDefinition("pong", MapEventKind.Player,
             [new IfAction(new CompareCondition(new VariableExpr("read"), CompareOp.Equal, new NumberExpr(1)), [new RunEventAction("ping")])]));
-        editor.AddMapEvent(Hero("lonely"));
-        editor.AddMapEvent(new MapEventDefinition("sleeper", MapEventKind.Player, []) { Enabled = false });
-        editor.AddMapEvent(new MapEventDefinition("unused quest", MapEventKind.Quest, []) { Stages = [QuestForms.Level(2, "a")] });
-        editor.AddMapEvent(new MapEventDefinition("hard quest", MapEventKind.Quest, [])
+        editor.MapEvents.Add(Hero("lonely"));
+        editor.MapEvents.Add(new MapEventDefinition("sleeper", MapEventKind.Player, []) { Enabled = false });
+        editor.MapEvents.Add(new MapEventDefinition("unused quest", MapEventKind.Quest, []) { Stages = [QuestForms.Level(2, "a")] });
+        editor.MapEvents.Add(new MapEventDefinition("hard quest", MapEventKind.Quest, [])
         {
             Stages = [QuestForms.Level(99, "Reach level 99."), QuestForms.Artifacts(["no-such-artifact"], "Bring it.")],
         });
-        editor.SetQuestSiteQuest(hutId, "hard quest");
+        editor.Contents.SetQuestSiteQuest(hutId, "hard quest");
 
         var warnings = MapValidator.Validate(editor.Scenario).Where(i => i.Severity == IssueSeverity.Warning).Select(i => i.Message).ToList();
 
@@ -393,9 +393,9 @@ public class MapEventEditorTests
     public void EventsWrittenInTheEditor_PlayInTheGame()
     {
         var editor = Editor();
-        editor.AddMapEvent(SimpleEventForms.Cell("purse", "You find a purse.", EventTriggers.Anyone, once: true,
+        editor.MapEvents.Add(SimpleEventForms.Cell("purse", "You find a purse.", EventTriggers.Anyone, once: true,
             new SimpleRewards { Resources = new Dictionary<ResourceType, int> { [ResourceType.Gold] = 250 } }));
-        editor.SetEventCell(new(4, 2), "purse");
+        editor.MapEvents.SetCell(new(4, 2), "purse");
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Event is not null);
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
@@ -413,7 +413,7 @@ public class MapEventEditorTests
     public void AMapWhoseEventsDoNotFit_OpensInTheEditor_ButNotInTheGame()
     {
         var editor = Editor();
-        editor.AddMapEvent(Hero("broken", new RunEventAction("missing")));
+        editor.MapEvents.Add(Hero("broken", new RunEventAction("missing")));
         var document = MapConverter.ToDocument(editor.Scenario);
 
         Assert.Throws<FormatException>(() => MapConverter.ToGameState(document));

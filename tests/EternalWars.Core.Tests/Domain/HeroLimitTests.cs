@@ -88,13 +88,13 @@ public class HeroLimitTests
         var state = Create("A.C.B"); // Blue has two heroes, Red one
         var editor = new MapEditorSession(state);
 
-        Assert.Equal(EditResult.HeroLimit, editor.SetScenarioRules(state.Rules with { MaxHeroes = 1 }));
-        Assert.Equal(EditResult.InvalidValue, editor.SetScenarioRules(state.Rules with { MaxHeroes = 9 }));
-        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(state.Rules with { MaxHeroes = 2 }));
+        Assert.Equal(EditResult.HeroLimit, editor.Map.SetRules(state.Rules with { MaxHeroes = 1 }));
+        Assert.Equal(EditResult.InvalidValue, editor.Map.SetRules(state.Rules with { MaxHeroes = 9 }));
+        Assert.Equal(EditResult.Ok, editor.Map.SetRules(state.Rules with { MaxHeroes = 2 }));
         Assert.Equal(2, editor.Scenario.Rules.MaxHeroes);
 
-        Assert.Equal(EditResult.HeroLimit, editor.PlaceHero(Blue, new MapPosition(1, 0), "Third", out _));
-        Assert.Equal(EditResult.Ok, editor.PlaceHero(Red, new MapPosition(3, 0), "Second", out _));
+        Assert.Equal(EditResult.HeroLimit, editor.Heroes.Place(Blue, new MapPosition(1, 0), "Third", out _));
+        Assert.Equal(EditResult.Ok, editor.Heroes.Place(Red, new MapPosition(3, 0), "Second", out _));
         editor.Undo();
         editor.Undo();
         Assert.Equal(8, editor.Scenario.Rules.MaxHeroes);
@@ -106,13 +106,13 @@ public class HeroLimitTests
         var state = Create("A.C.B");
         var editor = new MapEditorSession(state);
 
-        Assert.Equal(EditResult.HeroLimit, editor.SetPlayerHeroLimit(Blue, 1));
-        Assert.Equal(EditResult.InvalidValue, editor.SetPlayerHeroLimit(Red, 0));
-        Assert.Equal(EditResult.Ok, editor.SetPlayerHeroLimit(Red, 1));
+        Assert.Equal(EditResult.HeroLimit, editor.Players.SetHeroLimit(Blue, 1));
+        Assert.Equal(EditResult.InvalidValue, editor.Players.SetHeroLimit(Red, 0));
+        Assert.Equal(EditResult.Ok, editor.Players.SetHeroLimit(Red, 1));
         Assert.Equal(1, state.HeroLimit(Red));
         Assert.Equal(8, state.HeroLimit(Blue));
-        Assert.Equal(EditResult.HeroLimit, editor.PlaceHero(Red, new MapPosition(3, 0), "Second", out _));
-        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(state.Rules with { MaxHeroes = 2 })); // Red's own limit is not the map's
+        Assert.Equal(EditResult.HeroLimit, editor.Heroes.Place(Red, new MapPosition(3, 0), "Second", out _));
+        Assert.Equal(EditResult.Ok, editor.Map.SetRules(state.Rules with { MaxHeroes = 2 })); // Red's own limit is not the map's
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));

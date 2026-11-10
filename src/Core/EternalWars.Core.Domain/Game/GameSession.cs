@@ -23,6 +23,7 @@ namespace EternalWars.Core.Domain.Game;
 public sealed class GameSession
 {
     private readonly List<GameCommand> _log = [];
+    private readonly CommandHandlers _handlers = new();
 
     /// <summary>
     /// Checks that a refused command left the game as it was (its digest text unchanged) and fails loudly otherwise. The tests turn it on for
@@ -36,26 +37,7 @@ public sealed class GameSession
         Bus = bus ?? new EventBus();
 
         // Core handlers subscribe first so their follow-up events are queued before views react.
-        var visibility = new VisibilityService(State, Bus);
-        Bus.Subscribe<GameStarted>(visibility);
-        Bus.Subscribe<HeroMoved>(visibility);
-        Bus.Subscribe<HeroTeleported>(visibility);
-        Bus.Subscribe<MineOwnerChanged>(visibility);
-        Bus.Subscribe<TownOwnerChanged>(visibility);
-        Bus.Subscribe<DwellingOwnerChanged>(visibility);
-        Bus.Subscribe<ProviderOwnerChanged>(visibility);
-        Bus.Subscribe<MapObjectRemoved>(visibility);
-        Bus.Subscribe<HeroDefeated>(visibility);
-        Bus.Subscribe<HeroHired>(visibility);
-        Bus.Subscribe<HeroLeftGarrison>(visibility);
-        Bus.Subscribe<MapObjectChanged>(visibility);
-        Bus.Subscribe<MapObjectPlaced>(visibility);
-        Bus.Subscribe<SurroundingsRevealed>(visibility);
-        Bus.Subscribe<AreaRevealed>(visibility);
-        Bus.Subscribe<HeroFreed>(visibility);
-        Bus.Subscribe<MapEventHeroGiven>(visibility);
-        Bus.Subscribe<HeroLeveledUp>(visibility);
-        Bus.Subscribe<TownBuilt>(visibility);
+        new VisibilityService(State, Bus).SubscribeTo(Bus);
 
         Flow = new GameFlowService(State, Bus);
         Economy = new EconomyService(State, Bus);
@@ -66,21 +48,31 @@ public sealed class GameSession
         Guards = new GuardService(State, Bus, Battles);
         Towns = new TownService(State, Bus, Economy);
         Caravans = new CaravanService(State, Bus, Economy);
-        Interactions = new MapObjectInteractionService(State, Bus, Economy, Battles, Guards, Progression, Artifacts);
+        var objects = new ObjectInteractionContext(State, Bus, Economy);
+        Grail = new GrailService(objects, Artifacts);
+        Interactions = new MapObjectInteractionService(objects, Battles, Guards, Progression, Artifacts, Grail);
+        ObjectDecisions = new ObjectDecisionService(objects, Battles, Progression, Artifacts);
+        ObjectShops = new ObjectShopService(objects, Progression, Artifacts);
+        ObjectLifecycle = new ObjectLifecycleService(objects, Artifacts);
         MapEvents = new MapEventService(State, Bus, Economy, Progression, Artifacts, Battles);
-        Bus.Subscribe<BattleStarted>(MapEvents); // "defeated by" records (EVT-3 e)
-        Bus.Subscribe<BattleEnded>(MapEvents);
-        Bus.Subscribe<PandorasBoxOpened>(MapEvents); // a box's hero event (MAP-35)
+        MapEvents.SubscribeTo(Bus);
         Movement = new HeroMovementService(State, Bus, Interactions, MapEvents);
         AdventureMagic = new Magic.AdventureMagicService(State, Bus);
-        Bus.Subscribe<UndeadRaised>(AdventureMagic); // Grave Whisper is used up
+        AdventureMagic.SubscribeTo(Bus);
         Arena = new ArenaService(State, Bus, Battles);
-        Turns = new TurnService(State, Bus, Economy, Movement, Guards, Progression, Towns, Caravans, Interactions, MapEvents, Arena);
+
+        // The list's order is the rules' order at every step of the calendar (ITurnPhaseParticipant): it fixes the events and the random draws.
+        Turns = new TurnService(State, Bus, Arena,
+            [MapEvents, Progression, Movement, new ManaRestoration(State, Bus), Towns, Caravans, Economy, Guards, ObjectLifecycle]);
+
+        AdventureCommandHandlers.Register(_handlers, Movement, Turns, Guards, Progression, Armies, AdventureMagic, Grail);
+        ObjectCommandHandlers.Register(_handlers, ObjectDecisions, ObjectShops, MapEvents);
+        TownCommandHandlers.Register(_handlers, Towns, Caravans, Economy);
+        ArtifactCommandHandlers.Register(_handlers, Artifacts, Armies);
+        BattleCommandHandlers.Register(_handlers, Battles);
     }
 
     public GameState State { get; }
-
-    private Magic.AdventureMagicService AdventureMagic { get; }
 
     public IEventSubscriber Events => Bus;
 
@@ -99,6 +91,12 @@ public sealed class GameSession
     /// <summary>Queries: army power (dispositions).</summary>
     public GuardService Guards { get; }
 
+    /// <summary>The map events (ADR-115); <see cref="MapEventService.IsBusy"/> tells whether one is running.</summary>
+    public MapEventService MapEvents { get; }
+
+    /// <summary>The command types that have a handler: every concrete <see cref="GameCommand"/>.</summary>
+    internal IReadOnlyCollection<Type> HandledCommandTypes => _handlers.CommandTypes;
+
     internal GameFlowService Flow { get; }
 
     internal ArmyService Armies { get; }
@@ -109,16 +107,23 @@ public sealed class GameSession
 
     internal MapObjectInteractionService Interactions { get; }
 
+    internal ObjectDecisionService ObjectDecisions { get; }
+
+    internal ObjectShopService ObjectShops { get; }
+
+    internal ObjectLifecycleService ObjectLifecycle { get; }
+
+    internal GrailService Grail { get; }
+
     internal TurnService Turns { get; }
 
     internal ArenaService Arena { get; }
 
-    /// <summary>The map events (ADR-115); <see cref="MapEventService.IsBusy"/> tells whether one is running.</summary>
-    public MapEventService MapEvents { get; }
-
     internal TownService Towns { get; }
 
     internal CaravanService Caravans { get; }
+
+    private Magic.AdventureMagicService AdventureMagic { get; }
 
     private IEventBus Bus { get; }
 
@@ -131,7 +136,7 @@ public sealed class GameSession
         Flow.Begin();
         Artifacts.RollUnsetPickups();
         PrisonRules.Prepare(State);
-        Interactions.PrepareObjects();
+        ObjectLifecycle.PrepareObjects();
         Magic.MagicRules.DrawGuilds(State);
         Turns.StartGame();
         Settle();
@@ -163,9 +168,9 @@ public sealed class GameSession
         var before = CheckRefusals ? GameStateDigest.Describe(State) : null;
         try
         {
-            // Services validate before they mutate, so a refusal leaves the state untouched. Only a rule's refusal is caught: any other
+            // Handlers validate before they mutate, so a refusal leaves the state untouched. Only a rule's refusal is caught: any other
             // exception is a bug and goes on up.
-            outcome = Dispatch(command);
+            outcome = _handlers.Handle(command);
         }
         catch (CommandRefusedException e)
         {
@@ -204,10 +209,10 @@ public sealed class GameSession
         }
     }
 
-    private static bool IsBattleCommand(GameCommand command) => command is ChooseBattleWidthCommand or BattleDeployCommand or BattleStartCommand or BattleMoveCommand
-        or BattleAttackCommand or BattleShootCommand or BattleShootStructureCommand or BattleAttackStructureCommand or BattleCreatureCastCommand or BattleWaitCommand or BattleDefendCommand or BattleRetreatCommand or BattleSurrenderCommand
-        or AutoResolveBattleCommand or BattleWarcryCommand or BattleCastCommand;
-
+    /// <summary>
+    /// Who may give the command now: a battle command (<see cref="IBattleCommand"/>) whoever's turn it is while a battle is fought, the auto combat
+    /// setting at any time, everything else in the player's own turn; a hero command (<see cref="IHeroCommand"/>) only for an own hero on the map.
+    /// </summary>
     private string? Authorize(GameCommand command)
     {
         if (!State.HasPlayer(command.Player))
@@ -216,7 +221,7 @@ public sealed class GameSession
         }
 
         // In battle each side is commanded by its own player, whoever's turn it is on the map.
-        if (IsBattleCommand(command))
+        if (command is IBattleCommand)
         {
             return State.Battle is null ? "No battle is being fought." : null;
         }
@@ -232,244 +237,25 @@ public sealed class GameSession
             return $"It is not {command.Player}'s turn.";
         }
 
-        var hero = command switch
+        if (command is IHeroCommand { Hero: var hero })
         {
-            StepHeroCommand step => step.Hero,
-            MoveHeroCommand move => move.Hero,
-            MoveStackCommand stack => stack.FromHero,
-            CastAdventureSpellCommand cast => cast.Hero,
-            DigCommand dig => dig.Hero,
-            _ => (Common.HeroId?)null,
-        };
-        if (hero is { } id && State.Heroes.All(h => h.Id != id))
-        {
-            return $"Unknown hero {id}.";
+            if (State.Heroes.All(h => h.Id != hero))
+            {
+                return $"Unknown hero {hero}.";
+            }
+
+            if (State.GetHero(hero).Owner != command.Player)
+            {
+                return $"{hero} does not belong to {command.Player}.";
+            }
         }
 
-        if (hero is { } owned && State.GetHero(owned).Owner != command.Player)
-        {
-            return $"{owned} does not belong to {command.Player}.";
-        }
-
+        // The stack's receiver must be on the map too; whether the two may trade is the army's rule.
         if (command is MoveStackCommand { ToHero: var to } && State.Heroes.All(h => h.Id != to))
         {
             return $"Unknown hero {to}.";
         }
 
         return null;
-    }
-
-    private object? Dispatch(GameCommand command)
-    {
-        switch (command)
-        {
-            case StepHeroCommand step:
-                return Movement.TryStep(step.Hero, step.Direction);
-            case MoveHeroCommand move:
-                return Movement.MoveTo(move.Hero, move.Target);
-            case EndTurnCommand:
-                Turns.EndTurn();
-                return null;
-            case ResolveTreasureChestCommand chest:
-                Interactions.ResolveTreasureChest(chest.Reward);
-                return null;
-            case AnswerCartographerCommand cartographer:
-                Interactions.ResolveCartographer(cartographer.Buy);
-                return null;
-            case AnswerDepositCommand deposit:
-                Interactions.ResolveDeposit(deposit.Buy);
-                return null;
-            case HireAtMapTavernCommand tavern:
-                Interactions.HireAtMapTavern(tavern.Player, tavern.Tavern, tavern.Hero);
-                return null;
-            case MoveGarrisonStackCommand garrison:
-                Interactions.MoveGarrisonStack(garrison.Player, garrison.Garrison, garrison.Slot, garrison.ToGarrison);
-                return null;
-            case AnswerSphinxCommand sphinx:
-                Interactions.ResolveSphinx(sphinx.Option);
-                return null;
-            case AnswerMapEventCommand answer:
-                MapEvents.Answer(answer.Option);
-                return null;
-            case ChooseEventArmyCommand army:
-                MapEvents.ChooseArmy(army.Keep);
-                return null;
-            case AnswerPandorasBoxCommand box:
-                Interactions.ResolvePandorasBox(box.Open);
-                return null;
-            case ChooseWitchHutSkillCommand hut:
-                Interactions.ResolveWitchHut(hut.Skill);
-                return null;
-            case TakeLessonCommand lesson:
-                Interactions.TakeLesson(lesson.Player, lesson.School, lesson.Skill);
-                return null;
-            case DigCommand dig:
-                Interactions.Dig(dig.Hero);
-                return null;
-            case BuyArtifactCommand buy:
-                Interactions.BuyArtifact(buy.Player, buy.Merchant, buy.Slot);
-                return null;
-            case RecruitAtRefugeeCampCommand camp:
-                Interactions.RecruitAtRefugeeCamp(camp.Player, camp.Camp, camp.Count);
-                return null;
-            case SacrificeCreaturesCommand sacrifice:
-                Interactions.SacrificeCreatures(sacrifice.Player, sacrifice.Altar, sacrifice.Slot, sacrifice.Count);
-                return null;
-            case SacrificeArtifactCommand offering:
-                Interactions.SacrificeArtifact(offering.Player, offering.Altar, offering.Artifact);
-                return null;
-            case ChooseTrainingCommand training:
-                Interactions.ResolveTraining(training.Option);
-                return null;
-            case ChooseTownGateCommand gate:
-                Interactions.ResolveTownGate(gate.Town);
-                return null;
-            case UpgradeAtHillFortCommand fort:
-                Interactions.UpgradeAtHillFort(fort.Player, fort.Fort, fort.Slot);
-                return null;
-            case BuyWarMachineAtFactoryCommand factory:
-                Interactions.BuyAtFactory(factory.Player, factory.Factory, factory.Slot);
-                return null;
-            case CompleteExchangeCommand:
-                Interactions.CompleteExchange();
-                return null;
-            case ChooseSkillCommand skill:
-                Progression.Choose(skill.Skill);
-                return null;
-            case MoveStackCommand stack:
-                Armies.MoveStack(stack.Player, stack.FromHero, stack.FromSlot, stack.ToHero, stack.ToSlot, stack.Count);
-                return null;
-            case BuildCommand build:
-                Towns.Build(build.Player, build.Town, build.Building);
-                return null;
-            case BuildDwellingCommand dwelling:
-                Towns.BuildDwelling(dwelling.Player, dwelling.Town, dwelling.Line);
-                return null;
-            case RecruitCommand recruit:
-                Towns.Recruit(recruit.Player, recruit.Town, recruit.Creature, recruit.Count, recruit.Hero);
-                return null;
-            case RecruitAtDwellingCommand dwelling:
-                Interactions.RecruitAtDwelling(dwelling.Player, dwelling.Dwelling, dwelling.Count);
-                return null;
-            case OrderCaravanCommand order:
-                Caravans.Order(order.Player, order.Town, order.Dwelling, order.Count);
-                return null;
-            case FetchResourcesCommand fetch:
-                Caravans.Fetch(fetch.Player, fetch.Town, fetch.Provider);
-                return null;
-            case SendTroopsCommand send:
-                Caravans.Send(send.Player, send.FromTown, send.Slot, send.ToTown, send.Count);
-                return null;
-            case UpgradeStackCommand upgrade:
-                Towns.UpgradeStack(upgrade.Player, upgrade.Town, upgrade.Army, upgrade.Slot);
-                return null;
-            case TransformCreaturesCommand transform:
-                Towns.Transform(transform.Player, transform.Town, transform.Orders);
-                return null;
-            case MoveTownStackCommand move:
-                Towns.MoveStack(move.Player, move.Town, move.From, move.FromSlot, move.To, move.ToSlot, move.Count);
-                return null;
-            case EquipArtifactCommand equip:
-                Artifacts.Equip(equip.Player, equip.Hero, equip.Artifact);
-                return null;
-            case UnequipArtifactCommand unequip:
-                Artifacts.Unequip(unequip.Player, unequip.Hero, unequip.Artifact);
-                return null;
-            case AssembleRelicCommand assemble:
-                Artifacts.Assemble(assemble.Player, assemble.Hero, assemble.Relic);
-                return null;
-            case TakeRelicApartCommand apart:
-                Artifacts.TakeApart(apart.Player, apart.Hero, apart.Relic);
-                return null;
-            case GiveArtifactCommand give:
-                Artifacts.Give(give.Player, give.FromHero, give.Artifact, give.ToHero, give.Worn, give.Wear);
-                return null;
-            case GiveWarMachineCommand machine:
-                Armies.GiveWarMachine(machine.Player, machine.FromHero, machine.Slot, machine.ToHero);
-                return null;
-            case HireHeroCommand hire:
-                Towns.HireHero(hire.Player, hire.Town, hire.Hero);
-                return null;
-            case AppointGovernorCommand appoint:
-                Towns.AppointGovernor(appoint.Player, appoint.Town, appoint.Hero);
-                return null;
-            case DismissGovernorCommand dismiss:
-                Towns.DismissGovernor(dismiss.Player, dismiss.Town);
-                return null;
-            case TradeResourceCommand trade:
-                Economy.Trade(trade.Player, trade.Resource, trade.Direction, trade.Amount, trade.MapMarketplace);
-                return null;
-            case BuyWarMachineCommand buy:
-                Towns.BuyWarMachine(buy.Player, buy.Town, buy.Slot);
-                return null;
-            case BuySpellBookCommand book:
-                Towns.BuySpellBook(book.Player, book.Town);
-                return null;
-            case CastAdventureSpellCommand cast:
-                AdventureMagic.Cast(cast.Player, cast.Hero, cast.Spell, cast.Target);
-                return null;
-            case EnterGarrisonCommand enter:
-                Towns.EnterGarrison(enter.Player, enter.Town);
-                return null;
-            case LeaveGarrisonCommand leave:
-                Towns.LeaveGarrison(leave.Player, leave.Town);
-                return null;
-            case RespondToGuardCommand guard:
-                Guards.Respond(guard.Accept);
-                return null;
-            case ChooseBattleWidthCommand width:
-                Battles.ChooseWidth(width.Player, width.Width);
-                return null;
-            case BattleDeployCommand deploy:
-                Battles.Redeploy(deploy.Player, deploy.Unit, deploy.To);
-                return null;
-            case BattleStartCommand start:
-                Battles.EndDeployment(start.Player);
-                return null;
-            case BattleMoveCommand move:
-                Battles.Act(move.Player, new MoveAction(move.To));
-                return null;
-            case BattleAttackCommand attack:
-                Battles.Act(attack.Player, new AttackAction(attack.Target, attack.From));
-                return null;
-            case BattleShootCommand shoot:
-                Battles.Act(shoot.Player, new ShootAction(shoot.Target));
-                return null;
-            case BattleShootStructureCommand structure:
-                Battles.Act(structure.Player, new ShootStructureAction(structure.Structure));
-                return null;
-            case BattleAttackStructureCommand hit:
-                Battles.Act(hit.Player, new AttackStructureAction(hit.Structure, hit.From));
-                return null;
-            case BattleCreatureCastCommand cast:
-                Battles.Act(cast.Player, new CreatureCastAction(cast.Target, cast.Cell));
-                return null;
-            case BattleWarcryCommand warcry:
-                Battles.UseWarcry(warcry.Player, warcry.Warcry);
-                return null;
-            case BattleCastCommand cast:
-                Battles.Cast(cast.Player, cast.Spell, cast.Target, cast.Cell, cast.Second);
-                return null;
-            case BattleWaitCommand wait:
-                Battles.Act(wait.Player, new WaitAction());
-                return null;
-            case BattleDefendCommand defend:
-                Battles.Act(defend.Player, new DefendAction());
-                return null;
-            case BattleRetreatCommand retreat:
-                Battles.Retreat(retreat.Player);
-                return null;
-            case BattleSurrenderCommand surrender:
-                Battles.Surrender(surrender.Player);
-                return null;
-            case AutoResolveBattleCommand auto:
-                Battles.AutoResolve(auto.Player);
-                return null;
-            case SetAutoCombatCommand setting:
-                Battles.SetAutoCombat(setting.Player, setting.Mode);
-                return null;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(command), command, "Unknown command type.");
-        }
     }
 }

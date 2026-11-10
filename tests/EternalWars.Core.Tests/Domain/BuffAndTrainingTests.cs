@@ -227,8 +227,8 @@ public class BuffAndTrainingTests
     public void BuffAndTrainingSites_AreInTheMapFormat()
     {
         var editor = new MapEditorSession(BlankScenario.Create(14, 10));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.Stables, new(2, 2), out _));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.Arena, new(6, 2), out _));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Stables, new(2, 2), out _));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Arena, new(6, 2), out _));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
         var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));

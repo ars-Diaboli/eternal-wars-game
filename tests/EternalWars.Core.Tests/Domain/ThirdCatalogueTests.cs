@@ -95,9 +95,9 @@ public class ThirdCatalogueTests
         Assert.Null(merchant.Stock[0]);
         Assert.Contains("Nothing is for sale", session.Execute(new BuyArtifactCommand(Blue, merchant.Id, 0)).Error);
 
-        session.Interactions.StartWeek(restock: false);
+        session.ObjectLifecycle.StartWeek(restock: false);
         Assert.Null(merchant.Stock[0]); // a sold slot waits for the month
-        session.Interactions.StartWeek(restock: true);
+        session.ObjectLifecycle.StartWeek(restock: true);
         Assert.All(merchant.Stock, Assert.NotNull);
     }
 
@@ -123,7 +123,7 @@ public class ThirdCatalogueTests
         var seen = new HashSet<string>();
         for (var week = 0; week < 12; week++)
         {
-            session.Interactions.StartWeek(restock: false);
+            session.ObjectLifecycle.StartWeek(restock: false);
             seen.Add(camp.Creature!);
             Assert.Equal(state.Creatures.Get(camp.Creature!).WeeklyGrowth, camp.Available);
         }
@@ -281,32 +281,32 @@ public class ThirdCatalogueTests
     public void TheEditor_SetsASphinxsRiddle_RefusesBadOnes_AndUndoes()
     {
         var editor = new MapEditorSession(BlankScenario.Create(10, 6));
-        editor.PlaceObject(BuiltInMapObjects.Sphinx, new(2, 2), out var id);
+        editor.Objects.Place(BuiltInMapObjects.Sphinx, new(2, 2), out var id);
         var sphinx = (Sphinx)editor.Scenario.FindObject(id)!;
 
-        Assert.Equal(EditResult.InvalidValue, editor.SetSphinxRiddle(id, new Riddle("Q?", "a", "A ", "b"))); // two answers the same
-        Assert.Equal(EditResult.InvalidValue, editor.SetSphinxRiddle(id, new Riddle(" ", "a", "b", "c")));
-        Assert.Equal(EditResult.Ok, editor.SetSphinxRiddle(id, new Riddle(" What walks? ", "A man", "A dog", "A fish")));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetSphinxRiddle(id, new Riddle("Q?", "a", "A ", "b"))); // two answers the same
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetSphinxRiddle(id, new Riddle(" ", "a", "b", "c")));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetSphinxRiddle(id, new Riddle(" What walks? ", "A man", "A dog", "A fish")));
         Assert.Equal(new Riddle("What walks?", "A man", "A dog", "A fish"), sphinx.Riddle);
 
         editor.Undo();
         Assert.Null(sphinx.Riddle);
-        Assert.Equal(EditResult.InvalidTarget, editor.SetSphinxRiddle(new MapObjectId(999), null));
+        Assert.Equal(EditResult.InvalidTarget, editor.Contents.SetSphinxRiddle(new MapObjectId(999), null));
     }
 
     [Fact]
     public void TheEditor_SetsAWitchHutsTwoSkills_OrNone_AndUndoes()
     {
         var editor = new MapEditorSession(BlankScenario.Create(10, 6));
-        editor.PlaceObject(BuiltInMapObjects.WitchHut, new(2, 2), out var id);
+        editor.Objects.Place(BuiltInMapObjects.WitchHut, new(2, 2), out var id);
         var hut = (WitchHut)editor.Scenario.FindObject(id)!;
 
-        Assert.Equal(EditResult.InvalidValue, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery]));
-        Assert.Equal(EditResult.InvalidValue, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery, BuiltInSkills.Archery]));
-        Assert.Equal(EditResult.InvalidValue, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery, "no.such-skill"]));
-        Assert.Equal(EditResult.Ok, editor.SetWitchHutSkills(id, [BuiltInSkills.Archery, BuiltInSkills.Logistics]));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetWitchHutSkills(id, [BuiltInSkills.Archery]));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetWitchHutSkills(id, [BuiltInSkills.Archery, BuiltInSkills.Archery]));
+        Assert.Equal(EditResult.InvalidValue, editor.Contents.SetWitchHutSkills(id, [BuiltInSkills.Archery, "no.such-skill"]));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetWitchHutSkills(id, [BuiltInSkills.Archery, BuiltInSkills.Logistics]));
         Assert.Equal([BuiltInSkills.Archery, BuiltInSkills.Logistics], hut.Skills);
-        Assert.Equal(EditResult.Ok, editor.SetWitchHutSkills(id, []));
+        Assert.Equal(EditResult.Ok, editor.Contents.SetWitchHutSkills(id, []));
         Assert.Empty(hut.Skills);
 
         editor.Undo();

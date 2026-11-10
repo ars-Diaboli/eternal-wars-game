@@ -18,7 +18,7 @@ namespace EternalWars.Core.Domain.Objects;
 /// the army has room and Compliant: always, Friendly: R ≥ 1, Aggressive: R ≥ 2, Hostile: R ≥ 4, Savage: never.
 /// Otherwise the guard tries to flee when R ≥ 3 unless it never flees. Mine guards always fight.
 /// </remarks>
-public sealed class GuardService(GameState state, IEventPublisher events, BattleService battles)
+public sealed class GuardService(GameState state, IEventPublisher events, BattleService battles) : Turns.ITurnPhaseParticipant
 {
     /// <summary>Flee offered when the hero's army is at least this many times stronger.</summary>
     public const int FleeRatio = 3;
@@ -46,6 +46,12 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
     /// <summary>Σ count × creature value of a hero's army.</summary>
     public long ArmyPower(Hero hero) =>
         hero.Army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value);
+
+    void Turns.ITurnPhaseParticipant.SetUpGame() => RollUnsetCounts();
+
+    void Turns.ITurnPhaseParticipant.StartDay() => RefillBanks();
+
+    void Turns.ITurnPhaseParticipant.ApplyWeekEvent() => SpawnMonthly();
 
     /// <summary>Rolls every guard count the map left open: game setup, before <see cref="GameStarted"/>, so no events.</summary>
     internal void RollUnsetCounts()

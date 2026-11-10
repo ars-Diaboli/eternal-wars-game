@@ -11,8 +11,14 @@ namespace EternalWars.Core.Domain.Heroes;
 /// <see cref="SkillOffers"/> proposes, and one primary stat point (<see cref="StatGrowth"/>, ADR-055). Human players choose through a <see cref="LevelUpDecision"/>, during their own turn
 /// (a defender who levels up in the attacker's turn chooses when its turn starts); computer players take <see cref="SkillOffers.ComputerChoice"/>.
 /// </summary>
-public sealed class ProgressionService(GameState state, IEventPublisher events)
+public sealed class ProgressionService(GameState state, IEventPublisher events) : Turns.ITurnPhaseParticipant
 {
+    void Turns.ITurnPhaseParticipant.StartWeek() => ExpireStatuses(state.Heroes.Concat(state.GarrisonHeroes), StatusExpiry.EndOfWeek);
+
+    void Turns.ITurnPhaseParticipant.PrepareTurn(Common.PlayerId player) => ExpireStatuses(state.AllHeroesOf(player), StatusExpiry.EndOfDay);
+
+    void Turns.ITurnPhaseParticipant.OpenTurn(Common.PlayerId player) => OfferNext();
+
     /// <summary>Adds experience and offers any level-ups that are due now.</summary>
     internal void GrantExperience(Hero hero, int amount)
     {

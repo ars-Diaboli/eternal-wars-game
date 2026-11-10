@@ -251,8 +251,8 @@ public class LootTests
     public void LootSites_AreInTheMapFormat_AndTheEditorPlacesThem()
     {
         var editor = new MapEditorSession(BlankScenario.Create(14, 10));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.Campfire, new(2, 2), out _));
-        Assert.Equal(EditResult.Ok, editor.PlaceObject(BuiltInMapObjects.WarriorsTomb, new(6, 2), out _));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Campfire, new(2, 2), out _));
+        Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.WarriorsTomb, new(6, 2), out _));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));

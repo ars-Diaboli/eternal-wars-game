@@ -114,15 +114,15 @@ public class GateTests
     public void Editor_SetsExitAndRemovingExitUnlinksEntrancesWithUndo()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        editor.PlaceObject(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(3, 3), out var first);
-        editor.PlaceObject(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(5, 3), out var second);
-        editor.PlaceObject(BuiltInMapObjects.OneWayMonolithExit, new MapPosition(8, 3), out var exit);
+        editor.Objects.Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(3, 3), out var first);
+        editor.Objects.Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(5, 3), out var second);
+        editor.Objects.Place(BuiltInMapObjects.OneWayMonolithExit, new MapPosition(8, 3), out var exit);
 
-        Assert.Equal(EditResult.InvalidTarget, editor.SetGateExit(first, second)); // not an exit
-        Assert.Equal(EditResult.Ok, editor.SetGateExit(first, exit));
-        Assert.Equal(EditResult.Ok, editor.SetGateExit(second, exit));
+        Assert.Equal(EditResult.InvalidTarget, editor.Objects.SetGateExit(first, second)); // not an exit
+        Assert.Equal(EditResult.Ok, editor.Objects.SetGateExit(first, exit));
+        Assert.Equal(EditResult.Ok, editor.Objects.SetGateExit(second, exit));
 
-        editor.RemoveObject(exit);
+        editor.Objects.Remove(exit);
         Assert.Null(Entrance(editor, first).Exit);
         Assert.Null(Entrance(editor, second).Exit);
 
@@ -135,8 +135,8 @@ public class GateTests
     public void Validator_ReportsUnusedExitsAndEntrancesWithoutExit()
     {
         var editor = new MapEditorSession(BlankScenario.Create(12, 10));
-        editor.PlaceObject(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(3, 3), out _);
-        editor.PlaceObject(BuiltInMapObjects.OneWayMonolithExit, new MapPosition(8, 3), out _);
+        editor.Objects.Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(3, 3), out _);
+        editor.Objects.Place(BuiltInMapObjects.OneWayMonolithExit, new MapPosition(8, 3), out _);
 
         var issues = MapValidator.Validate(editor.Scenario);
 

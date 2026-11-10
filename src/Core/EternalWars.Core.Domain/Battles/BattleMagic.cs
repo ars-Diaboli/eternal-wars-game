@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Battles.Spells;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Magic;
 
@@ -108,14 +109,19 @@ public static class BattleMagic
     /// <summary>A creature caster's Spell Power (ADR-120, proposal): half its count, rounded down.</summary>
     public static int CreatureSpellPower(BattleUnit unit) => unit.Count / 2;
 
-    /// <summary>Why the spell cannot be aimed at the stack or cell (or, for a summon, why there is no room), or null.</summary>
+    /// <summary>
+    /// Why the spell cannot be aimed at the stack or cell, or null: its kind's own checks (<see cref="ISpellEffectHandler"/>) around the checks
+    /// every kind shares.
+    /// </summary>
     private static string? TargetRefusal(
         BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell, int? creaturePower = null, int? second = null)
     {
         var effect = known.Effect!;
-        if (effect.Kind == SpellEffectKind.Summon)
+        var handler = SpellEffectHandlers.For(effect.Kind);
+        var cast = new CastContext(battle, side, known, target, cell, second, creaturePower);
+        if (handler.CastRefusal(cast) is { } refusal)
         {
-            return SummonPlacement(battle, side, known, creaturePower) is null ? $"There is no room to call {known.Spell.Name}'s creatures." : null;
+            return refusal;
         }
 
         switch (effect.Reach)
@@ -136,11 +142,6 @@ public static class BattleMagic
                     return $"{unit.Creature.Name} cannot be seen.";
                 }
 
-                if (effect.Kind == SpellEffectKind.Revive && Missing(unit) == 0)
-                {
-                    return $"{unit.Creature.Name} has nothing to revive.";
-                }
-
                 if (effect.Split && unit.TotalHealth > HealthLimit(battle, side, known, creaturePower))
                 {
                     if (SplitCount(battle, side, known, unit, creaturePower) < 1)
@@ -158,9 +159,10 @@ public static class BattleMagic
                     return $"{unit.Creature.Name} is too strong for {known.Spell.Name} ({HealthLimit(battle, side, known, creaturePower)} health at most).";
                 }
 
-                if (effect.Kind == SpellEffectKind.Dispel && Dispelled(side, effect, unit).Count == 0)
+                // The kind's own checks on the stack (a revive's or dispel's; no spell with a health limit is one of those).
+                if (handler.AimRefusal(cast, unit) is { } aimRefusal)
                 {
-                    return $"{unit.Creature.Name} has no spells {known.Spell.Name} takes off.";
+                    return aimRefusal;
                 }
 
                 if (!Affects(battle, side, known, unit))
@@ -168,19 +170,9 @@ public static class BattleMagic
                     return $"{known.Spell.Name} has no effect on {unit.Creature.Name}.";
                 }
 
-                if (effect.Kind == SpellEffectKind.Move)
+                if (handler.AffectedRefusal(cast, unit) is { } affectedRefusal)
                 {
-                    return MoveRefusal(battle, side, known, unit, cell);
-                }
-
-                if (effect.Kind is SpellEffectKind.Copy or SpellEffectKind.Sacrifice && unit.IsCopy)
-                {
-                    return $"{known.Spell.Name} does not work on a copy.";
-                }
-
-                if (effect.Kind == SpellEffectKind.Copy && PlacementNear(battle, unit, unit.Creature) is null)
-                {
-                    return $"There is no room for a copy of {unit.Creature.Name}.";
+                    return affectedRefusal;
                 }
 
                 if (effect.Modifiers.MartyrPercent > 0)
@@ -194,11 +186,6 @@ public static class BattleMagic
                     ? null
                     : $"{known.Spell.Name} needs a cell on the battlefield.";
             default:
-                if (effect.Kind == SpellEffectKind.Raise && battle.Raising.ContainsKey(side))
-                {
-                    return $"{known.Spell.Name} already works in this battle.";
-                }
-
                 return effect.Filter == SpellFilter.Machine && !Reach(battle, side, known, null, null).Any(u => Affects(battle, side, known, u))
                     ? $"{known.Spell.Name} needs a war machine of the side."
                     : null;
@@ -229,7 +216,7 @@ public static class BattleMagic
     /// place is free.
     /// </summary>
     public static bool IsFallen(BattleState battle, BattleSide side, SpellEffect effect, BattleUnit unit) =>
-        effect is { Kind: SpellEffectKind.Revive, Fallen: true } && !unit.IsAlive && unit.Side == side && !unit.IsMachine && !unit.IsSummoned
+        effect.Fallen && !unit.IsAlive && unit.Side == side && !unit.IsMachine && !unit.IsSummoned
         && BattleGrid.IsFree(battle, unit, unit.Position);
 
     /// <summary>The health a revive can give the stack: its top creature's wounds and its dead since the battle started.</summary>
@@ -318,7 +305,7 @@ public static class BattleMagic
 
         IEnumerable<BattleUnit> Others(BattleUnit aimed) => effect.Targets <= 1
             ? []
-            : battle.LivingUnitsOf(aimed.Side).Where(u => u != aimed && Affects(battle, side, known, u) && (effect.Kind != SpellEffectKind.Revive || Missing(u) > 0))
+            : battle.LivingUnitsOf(aimed.Side).Where(u => u != aimed && Affects(battle, side, known, u) && SpellEffectHandlers.For(effect.Kind).SpreadsTo(u))
                 .OrderBy(u => u.Rect.DistanceTo(aimed.Rect)).ThenBy(u => u.Id).Take(effect.Targets - 1);
     }
 
@@ -332,16 +319,17 @@ public static class BattleMagic
         var spell = known.Spell;
         var effect = known.Effect!;
         var creature = unit.Creature;
+        var handler = SpellEffectHandlers.For(effect.Kind);
         if (unit.IsMachine)
         {
-            return effect.Filter == SpellFilter.Machine || (effect.Kind == SpellEffectKind.Damage && effect.Filter is SpellFilter.None or SpellFilter.Ground);
+            return effect.Filter == SpellFilter.Machine || (handler.HitsMachines && effect.Filter is SpellFilter.None or SpellFilter.Ground);
         }
 
         // Wards on the stack (ADR-123): Stasis keeps every spell but a dispel off; Anti-Magic every spell up to its level, Shroud the enemy's;
         // Oakheart the mind spells; Steadfast makes a stack fearless, so Terror does not take hold.
         var wards = unit.SpellModifiers;
         var enemySpell = unit.Side != side;
-        if ((wards.Has(SpellStatus.Stasis) && effect.Kind != SpellEffectKind.Dispel)
+        if ((wards.Has(SpellStatus.Stasis) && !handler.PassesStasis)
             || spell.Level <= wards.ImmuneLevel
             || (enemySpell && spell.Level <= wards.ShroudLevel)
             || (wards.Has(SpellStatus.WardMind) && spell.HasTag(SpellTags.Mind))
@@ -467,34 +455,6 @@ public static class BattleMagic
     public static int HealthLimit(BattleState battle, BattleSide side, KnownSpell known, int? creaturePower = null) =>
         Scaled(battle, side, known, known.Effect!.HealthLimit, creaturePower);
 
-    /// <summary>
-    /// Why the move (ADR-151) cannot take the stack to <paramref name="to"/> (its footprint's top-left), or null: a rooted stack and the keep's stack
-    /// stay put; the footprint must fit there (inside the field, clear of obstacles and other stacks) somewhere else than it stands, within the
-    /// spell's range (a straight line from where it stands, like a flyer's reach), and for <c>shadow</c> not next to an enemy stack.
-    /// </summary>
-    public static string? MoveRefusal(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, CellPosition? to)
-    {
-        if (unit.IsRooted || unit.InKeep)
-        {
-            return $"{unit.Creature.Name} cannot be moved.";
-        }
-
-        if (to is not { } at)
-        {
-            return $"{known.Spell.Name} needs the cell {unit.Creature.Name} goes to.";
-        }
-
-        return CanLand(battle, side, known.Effect!, unit, at) ? null : $"{unit.Creature.Name} cannot be moved to {at}.";
-    }
-
-    /// <summary>Whether the move may take the stack to the placement (<see cref="MoveRefusal"/>).</summary>
-    public static bool CanLand(BattleState battle, BattleSide side, SpellEffect effect, BattleUnit unit, CellPosition at) =>
-        at != unit.Position
-        && (effect.MoveRange == 0
-            || BattleGrid.Length(at.X - unit.Position.X, at.Y - unit.Position.Y) <= (effect.MoveRange * BattleGrid.Unit) + BattleGrid.ReachSlack)
-        && BattleGrid.IsFree(battle, unit, at)
-        && !(effect.Shadow && battle.LivingUnits.Any(u => u.Side != side && u.Rect.IsAdjacentTo(unit.RectAt(at))));
-
     /// <summary>Why a drain (ADR-151) cannot heal the stack, or null: it must be a living own creature stack not in Stasis.</summary>
     public static string? DrainRefusal(BattleState battle, BattleSide side, KnownSpell known, int healed) =>
         battle.FindUnit(healed) is { IsAlive: true, IsMachine: false } unit && unit.Side == side && !unit.Has(SpellStatus.Stasis)
@@ -537,7 +497,7 @@ public static class BattleMagic
     /// <summary>The health those creatures had (the wounded top creature goes first), and the mana it buys.</summary>
     public static (int Health, int Mana) SacrificeYield(SpellEffect effect, BattleUnit unit)
     {
-        var health = unit.TotalHealth - ((unit.Count - Sacrificed(effect, unit)) * unit.Creature.Health);
+        var health = unit.HealthOf(Sacrificed(effect, unit));
         return (health, health / effect.HealthPerMana);
     }
 

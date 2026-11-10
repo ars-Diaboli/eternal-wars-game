@@ -195,9 +195,9 @@ public class WeekEventTests
 
         var editor = new MapEditorSession(Create("A..", "..B"));
         var settings = new WeekEventSettings(SkipWeeks: 3, WeeklyFactions: [TownIds.Haven, WeekEventSettings.Neutral], MonthlyFactions: []);
-        Assert.Equal(EditResult.Ok, editor.SetScenarioRules(editor.Scenario.Rules with { WeekEvents = settings }));
-        Assert.Equal(EditResult.InvalidValue, editor.SetScenarioRules(editor.Scenario.Rules with { WeekEvents = new WeekEventSettings(SkipWeeks: 9) }));
-        Assert.Equal(EditResult.InvalidValue, editor.SetScenarioRules(editor.Scenario.Rules with { WeekEvents = new WeekEventSettings(WeeklyFactions: ["elves"]) }));
+        Assert.Equal(EditResult.Ok, editor.Map.SetRules(editor.Scenario.Rules with { WeekEvents = settings }));
+        Assert.Equal(EditResult.InvalidValue, editor.Map.SetRules(editor.Scenario.Rules with { WeekEvents = new WeekEventSettings(SkipWeeks: 9) }));
+        Assert.Equal(EditResult.InvalidValue, editor.Map.SetRules(editor.Scenario.Rules with { WeekEvents = new WeekEventSettings(WeeklyFactions: ["elves"]) }));
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Warning && i.Message.Contains("monthly", StringComparison.Ordinal));
 
         var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));

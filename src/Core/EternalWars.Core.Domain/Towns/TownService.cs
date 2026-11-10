@@ -23,8 +23,16 @@ public enum TownArmy
 /// garrison and visiting hero, and the weekly growth. Capturing happens on visits (<c>MapObjectInteractionService</c>)
 /// and after garrison battles (<c>BattleService</c>).
 /// </summary>
-public sealed class TownService(GameState state, IEventPublisher events, EconomyService economy)
+public sealed class TownService(GameState state, IEventPublisher events, EconomyService economy) : Turns.ITurnPhaseParticipant
 {
+    void Turns.ITurnPhaseParticipant.StockFirstWeek() => FillNewDwellings();
+
+    void Turns.ITurnPhaseParticipant.ApplyWeekEvent() => ApplyPlague();
+
+    void Turns.ITurnPhaseParticipant.StockWeek() => GrowWeekly();
+
+    void Turns.ITurnPhaseParticipant.PrepareTurn(PlayerId player) => AppointVisitors(player);
+
     internal void Build(PlayerId player, MapObjectId townId, string building)
     {
         var town = OwnTown(player, townId);
