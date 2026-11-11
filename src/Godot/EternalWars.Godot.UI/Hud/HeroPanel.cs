@@ -203,7 +203,8 @@ public partial class HeroPanel : PanelContainer
     private void ShowSpells(Hero hero)
     {
         Clear(_spells);
-        _spells.AddChild(new Label { Text = SpellsText(hero, _session.State.Spells) });
+        var text = SpellsText(hero, _session.State.Spells);
+        _spells.AddChild(hero.HasSpellBook ? UiIcons.IconLabel(UiIcon.Spells, text) : new Label { Text = text });
         if (!hero.HasSpellBook)
         {
             return;

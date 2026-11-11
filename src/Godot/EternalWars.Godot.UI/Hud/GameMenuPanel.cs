@@ -99,6 +99,7 @@ public partial class GameMenuPanel : CenterContainer
         outer.AddChild(_tabs);
         var rows = Tab("Save and load");
         var settings = Tab("Settings");
+        _tabs.WithTabIcon(settings.GetIndex(), UiIcon.Settings);
         var layout = Tab("Layout");
         rows.AddChild(_list);
 

@@ -298,7 +298,7 @@ public partial class AdventureHud : CanvasLayer
             _context.SetLevel(position.Level);
             _camera.FocusOn(MapSpace.ToWorld(position));
         };
-        var quests = new Button { Text = "Quests (Q)", TooltipText = "The quests your heroes were shown" };
+        var quests = new Button { Text = "Quests (Q)", TooltipText = "The quests your heroes were shown" }.WithIcon(UiIcon.Quests);
         quests.Pressed += () => QuestScreen.Open(_session.State.CurrentPlayer.Id);
         side.AddChild(quests);
         PuzzleScreen = new PuzzleMapPanel();
@@ -306,10 +306,10 @@ public partial class AdventureHud : CanvasLayer
         PuzzleScreen.Bind(_session);
         var grail = new HBoxContainer();
         side.AddChild(grail);
-        var puzzle = new Button { Text = "Puzzle map (P)", TooltipText = "The ground around the Grail, as your obelisks show it" };
+        var puzzle = new Button { Text = "Puzzle map (P)", TooltipText = "The ground around the Grail, as your obelisks show it" }.WithIcon(UiIcon.PuzzleMap);
         puzzle.Pressed += () => PuzzleScreen.Open(_session.State.CurrentPlayer.Id);
         grail.AddChild(puzzle);
-        var dig = new Button { Text = "Dig (G)", TooltipText = "The selected hero digs where it stands, with a whole day's movement" };
+        var dig = new Button { Text = "Dig (G)", TooltipText = "The selected hero digs where it stands, with a whole day's movement" }.WithIcon(UiIcon.Dig);
         dig.Pressed += () => DigRequested?.Invoke();
         dig.Visible = playing;
         grail.AddChild(dig);
