@@ -53,7 +53,7 @@ public sealed class MapObjectKindsTests
         var placed = MapObject.Create(new MapObjectId(1), MapObjectCatalog.Default.OfKind(kind).First(), new MapPosition(2, 2));
         state.AddObject(placed);
 
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(state))), checkEvents: false);
+        var loaded = TestFormat.RoundTrip(state, checkEvents: false);
 
         var back = Assert.Single(loaded.Objects);
         Assert.IsType(placed.GetType(), back);

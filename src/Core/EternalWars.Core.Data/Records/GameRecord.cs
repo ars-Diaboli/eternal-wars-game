@@ -197,7 +197,7 @@ public static class GameRecordSerializer
     ];
 
     /// <summary>Map JSON settings plus the command hierarchy (kept out of Domain) and compact ids.</summary>
-    private static readonly JsonSerializerOptions Options = new(JsonDefaults.Options)
+    internal static readonly JsonSerializerOptions Options = new(JsonDefaults.Options)
     {
         TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes, Maps.MapConverter.AddObjectTypes, Maps.MapEventJson.AddTypes } },
         Converters = { new IdConverter<PlayerId>(v => new(v), id => id.Value), new IdConverter<HeroId>(v => new(v), id => id.Value),
@@ -206,8 +206,12 @@ public static class GameRecordSerializer
 
     public static string Serialize(GameRecordDocument record) => JsonSerializer.Serialize(record, Options);
 
+    /// <summary>Reads a replay or a save; its map, when older, is upgraded to the current format first (<see cref="MapMigrations"/>, ADR-174).</summary>
     public static GameRecordDocument Deserialize(string json) =>
-        JsonSerializer.Deserialize<GameRecordDocument>(json, Options) ?? throw new FormatException("Replay file is empty.");
+        (MapMigrations.Upgrade(json, "map") is { } upgraded
+            ? upgraded.Deserialize<GameRecordDocument>(Options)
+            : JsonSerializer.Deserialize<GameRecordDocument>(json, Options))
+        ?? throw new FormatException("Replay file is empty.");
 
     public static void Save(GameRecordDocument record, string path) => File.WriteAllText(path, Serialize(record));
 

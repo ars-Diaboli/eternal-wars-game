@@ -337,9 +337,9 @@ public class MapEventTests
         var json = MapSerializer.Serialize(map);
         Assert.True(MapDocument.CurrentFormatVersion >= 31);
         Assert.Contains("\"type\": \"question\"", json);
-        Assert.Equal(json, MapSerializer.Serialize(MapConverter.ToDocument(MapConverter.ToGameState(MapSerializer.Deserialize(json)))));
+        Assert.Equal(json, TestFormat.Save(TestFormat.Load(json)));
 
-        var session = new GameSession(MapConverter.ToGameState(MapSerializer.Deserialize(json), options: new GameOptions(Seed: 5)));
+        var session = new GameSession(TestFormat.Load(json, options: new GameOptions(Seed: 5)));
         session.Start();
         session.Step(A, Direction.East);
         session.Step(A, Direction.East);

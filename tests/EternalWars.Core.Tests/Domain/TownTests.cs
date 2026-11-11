@@ -384,8 +384,8 @@ public class TownTests
         town.Garrison.Set(4, new CreatureStack("inferno.familiar", 12));
         town.LastBuilt = new GameDate(3);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var restored = (Town)MapConverter.ToGameState(MapSerializer.Deserialize(json)).GetObject(town.Id);
+        var json = TestFormat.Save(state);
+        var restored = (Town)TestFormat.Load(json).GetObject(town.Id);
 
         Assert.Contains("\"kind\": \"town\"", json);
         Assert.Equal((Red, "Ashgate", TownIds.Inferno, new GameDate(3)), (restored.Owner!.Value, restored.Name, restored.TownType, restored.LastBuilt!.Value));

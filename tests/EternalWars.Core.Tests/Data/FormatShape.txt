@@ -1,0 +1,1760 @@
+# Map files (*.ewmap.json), format v38
+object AllCondition
+  conditions: IReadOnlyList<EventCondition>
+object AllyCondition
+  player: Int32
+object AnyCondition
+  conditions: IReadOnlyList<EventCondition>
+object ArithmeticExpr
+  left: EventExpr
+  op: ArithmeticOp
+  right: EventExpr
+enum ArithmeticOp: Add, Subtract, Multiply, Divide
+object ArmySlotDocument
+  count: Int32
+  creature: String
+  slot: Int32
+object ArtifactAction
+  artifact: String
+  take: Boolean
+object ArtifactMerchantDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ArtifactPickupDocument
+  artifact: String
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object AstrologersTowerDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object AvailableCreaturesAction
+  count: EventExpr
+  line: String
+object BansDocument
+  artifacts: IReadOnlyList<String>
+  heroes: IReadOnlyList<String>
+  skills: IReadOnlyList<String>
+  spells: IReadOnlyList<String>
+object BattleAction
+  army: IReadOnlyList<CreatureStack>
+object BorderPostDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object BuffSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object BuildAction
+  building: String
+  level: Int32
+object CartographerDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object CellDocument
+  level: Int32
+  x: Int32
+  y: Int32
+object CombatPlaceDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object CompareCondition
+  left: EventExpr
+  op: CompareOp
+  right: EventExpr
+enum CompareOp: Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual
+enum Complexity: Beginner, Easy, Normal, Hard, Expert
+object ConditionDocument
+  amount: Int32?
+  artifact: String
+  day: Int32?
+  deadline: Int32?
+  hero: Int32?
+  kind: ConditionKind
+  player: Int32?
+  resource: ResourceType?
+  target: Int32?
+  town: Int32?
+enum ConditionKind: CaptureTown, DefeatHero, GatherResources, SurviveUntilDay, LoseTown, LoseHero, TimeLimit, CaptureObject, ObtainArtifact, ReleaseHero, LoseArtifact
+object CreatureBankDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object CreatureStack
+  count: Int32
+  creature: String
+object CreaturesAction
+  count: EventExpr
+  creature: String
+object DenOfThievesDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object DepositDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object DwellingDocument
+  available: Int32?
+  creature: String (required)
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object EnableEventAction
+  enabled: Boolean
+  event: String
+object EventAction
+  type=artifact -> ArtifactAction
+  type=available -> AvailableCreaturesAction
+  type=battle -> BattleAction
+  type=build -> BuildAction
+  type=creatures -> CreaturesAction
+  type=enable -> EnableEventAction
+  type=experience -> ExperienceAction
+  type=giveHero -> GiveHeroAction
+  type=if -> IfAction
+  type=mana -> ManaAction
+  type=message -> MessageAction
+  type=morale -> MoraleAction
+  type=movement -> MovementAction
+  type=question -> QuestionAction
+  type=removeCell -> RemoveCellAction
+  type=repeat -> RepeatAction
+  type=resource -> ResourceAction
+  type=reveal -> RevealAction
+  type=runEvent -> RunEventAction
+  type=setVariable -> SetVariableAction
+  type=skill -> SkillAction
+  type=spell -> SpellAction
+  type=spellBook -> SpellBookAction
+  type=stat -> PrimaryStatAction
+  type=stop -> StopAction
+  type=warMachine -> WarMachineAction
+  type=while -> WhileAction
+object EventAnswer
+  actions: IReadOnlyList<EventAction>
+  text: String
+object EventCell
+  event: String
+  level: Int32
+  position: MapPosition
+  x: Int32
+  y: Int32
+object EventCondition
+  type=all -> AllCondition
+  type=ally -> AllyCondition
+  type=any -> AnyCondition
+  type=compare -> CompareCondition
+  type=faction -> FactionCondition
+  type=heroClass -> HeroClassCondition
+  type=heroDefeated -> HeroDefeatedCondition
+  type=heroIs -> HeroIsCondition
+  type=monsterDefeated -> MonsterDefeatedCondition
+  type=not -> NotCondition
+  type=playerIs -> PlayerIsCondition
+  type=playerIsHuman -> PlayerIsHumanCondition
+  type=team -> TeamCondition
+  type=townOwner -> TownOwnerCondition
+object EventExpr
+  type=arithmetic -> ArithmeticExpr
+  type=number -> NumberExpr
+  type=quantity -> QuantityExpr
+  type=random -> RandomExpr
+  type=variable -> VariableExpr
+object ExperienceAction
+  amount: EventExpr
+object FactionCondition
+  town: String
+object GarrisonDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  troops: IReadOnlyList<ArmySlotDocument>
+  x: Int32 (required)
+  y: Int32 (required)
+object GateDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  linkedGate: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object GateEntranceDocument
+  definition: String (required)
+  exit: Int32?
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object GateExitDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object GiveHeroAction
+  experience: Int32
+  hero: String
+  level: Int32
+  x: Int32?
+  y: Int32?
+enum GuardDisposition: Compliant, Friendly, Aggressive, Hostile, Savage
+object GuardDocument
+  count: Int32?
+  creature: String
+enum GuardMode: Classic, Area
+enum HeroClass: Warrior, Mage
+object HeroClassCondition
+  class: HeroClass
+  town: String
+object HeroDefeatedCondition
+  hero: Int32
+  player: Int32?
+object HeroIsCondition
+  hero: String
+object HeroPlacementDocument
+  army: IReadOnlyList<ArmySlotDocument>
+  artifacts: IReadOnlyList<String>
+  attack: Int32
+  backpack: IReadOnlyList<String>
+  defense: Int32
+  id: Int32
+  knowledge: Int32?
+  level: Int32
+  luck: Int32?
+  morale: Int32?
+  name: String
+  owner: Int32
+  placeholder: Boolean?
+  skills: IReadOnlyDictionary<String, SkillLevel>
+  spellBook: Boolean?
+  spellPower: Int32?
+  spells: IReadOnlyList<String>
+  type: String
+  warMachines: IReadOnlyList<WarMachineSlot>
+  x: Int32
+  y: Int32
+object HillFortDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object IfAction
+  condition: EventCondition
+  else: IReadOnlyList<EventAction>
+  then: IReadOnlyList<EventAction>
+object KeymasterDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object LootSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MagiEyeDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MagiWindowDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ManaAction
+  amount: EventExpr
+object MapDocument
+  description: String
+  events: MapEventSet
+  formatVersion: Int32
+  grail: CellDocument
+  height: Int32 (required)
+  heroes: IReadOnlyList<HeroPlacementDocument>
+  maxTeams: Int32?
+  minTeams: Int32?
+  name: String (required)
+  objects: IReadOnlyList<MapObjectDocument>
+  players: IReadOnlyList<PlayerSlotDocument>
+  rivers: IReadOnlyList<IReadOnlyList<String>>
+  roads: IReadOnlyList<IReadOnlyList<String>>
+  rules: ScenarioRulesDocument
+  teamsLocked: Boolean
+  terrain: IReadOnlyList<IReadOnlyList<String>> (required)
+  width: Int32 (required)
+object MapEventDefinition
+  actions: IReadOnlyList<EventAction>
+  enabled: Boolean
+  kind: MapEventKind
+  name: String
+  stages: IReadOnlyList<QuestStage>
+  towns: IReadOnlyList<Int32>
+enum MapEventKind: Hero, Player, Town, Quest
+object MapEventSet
+  cells: IReadOnlyList<EventCell>
+  events: IReadOnlyList<MapEventDefinition>
+  isEmpty: Boolean
+  keptVariables: IReadOnlyList<String>
+  takenVariables: IReadOnlyList<String>
+  variables: IReadOnlyDictionary<String, Int32>
+object MapObjectDocument
+  kind=altar -> SacrificialAltarDocument
+  kind=artifact -> ArtifactPickupDocument
+  kind=artifactMerchant -> ArtifactMerchantDocument
+  kind=astrologersTower -> AstrologersTowerDocument
+  kind=bank -> CreatureBankDocument
+  kind=borderPost -> BorderPostDocument
+  kind=buff -> BuffSiteDocument
+  kind=cartographer -> CartographerDocument
+  kind=chest -> TreasureChestDocument
+  kind=combatPlace -> CombatPlaceDocument
+  kind=denOfThieves -> DenOfThievesDocument
+  kind=deposit -> DepositDocument
+  kind=dwelling -> DwellingDocument
+  kind=factory -> WarMachineFactoryDocument
+  kind=garrison -> GarrisonDocument
+  kind=gate -> GateDocument
+  kind=gateEntrance -> GateEntranceDocument
+  kind=gateExit -> GateExitDocument
+  kind=hillFort -> HillFortDocument
+  kind=keymaster -> KeymasterDocument
+  kind=loot -> LootSiteDocument
+  kind=magiEye -> MagiEyeDocument
+  kind=magiWindow -> MagiWindowDocument
+  kind=marketplace -> MarketplaceDocument
+  kind=mine -> MineDocument
+  kind=monster -> MonsterDocument
+  kind=obelisk -> ObeliskDocument
+  kind=observatory -> ObservatoryDocument
+  kind=pandorasBox -> PandorasBoxDocument
+  kind=pile -> ResourcePileDocument
+  kind=prison -> PrisonDocument
+  kind=provider -> ResourceProviderDocument
+  kind=questSite -> QuestSiteDocument
+  kind=refugeeCamp -> RefugeeCampDocument
+  kind=sanctuary -> SanctuaryDocument
+  kind=scenery -> SceneryDocument
+  kind=shrine -> ShrineDocument
+  kind=sign -> SignDocument
+  kind=skillSchool -> SkillSchoolDocument
+  kind=sphinx -> SphinxDocument
+  kind=tavern -> MapTavernDocument
+  kind=town -> TownDocument
+  kind=townGate -> TownGateDocument
+  kind=training -> TrainingSiteDocument
+  kind=witchHut -> WitchHutDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MapPosition
+  level: Int32
+  x: Int32
+  y: Int32
+object MapTavernDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MarketplaceDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MessageAction
+  rewards: IReadOnlyList<EventAction>
+  text: String
+object MineDocument
+  definition: String (required)
+  guard: GuardDocument
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object MonsterDefeatedCondition
+  monster: Int32
+  player: Int32?
+object MonsterDocument
+  count: Int32?
+  creature: String (required)
+  definition: String (required)
+  disposition: GuardDisposition
+  id: Int32 (required)
+  level: Int32
+  mode: GuardMode?
+  neverFlees: Boolean
+  randomTier: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object MoraleAction
+  luck: Int32
+  morale: Int32
+object MovementAction
+  amount: EventExpr
+object NotCondition
+  condition: EventCondition
+object NumberExpr
+  value: Int32
+object ObeliskDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ObservatoryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object PandorasBoxDocument
+  artifacts: IReadOnlyList<String>
+  attack: Int32?
+  creatures: IReadOnlyList<StackDocument>
+  defense: Int32?
+  definition: String (required)
+  event: String
+  experience: Int32?
+  guard: IReadOnlyList<StackDocument>
+  id: Int32 (required)
+  knowledge: Int32?
+  level: Int32
+  luck: Int32?
+  mana: Int32?
+  message: String
+  morale: Int32?
+  resources: IReadOnlyDictionary<ResourceType, Int32>
+  skills: IReadOnlyDictionary<String, SkillLevel>
+  spellPower: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object PlayerIsCondition
+  player: Int32
+object PlayerIsHumanCondition
+object PlayerSlotDocument
+  isHuman: Boolean
+  maxHeroes: Int32?
+  name: String
+  team: Int32?
+enum PrimaryStat: Attack, Defense, SpellPower, Knowledge
+object PrimaryStatAction
+  amount: EventExpr
+  stat: PrimaryStat
+object PrisonDocument
+  definition: String (required)
+  hero: String
+  id: Int32 (required)
+  level: Int32
+  prisonerLevel: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+enum Quantity: Resource, Creatures, HeroLevel, Experience, Attack, Defense, SpellPower, Knowledge, Mana, MovementPoints, SkillLevel, Artifacts, Day, DayOfWeek, Week, Month, Difficulty, Heroes, Towns
+object QuantityExpr
+  id: String
+  quantity: Quantity
+object QuestSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  quest: String
+  x: Int32 (required)
+  y: Int32 (required)
+object QuestStage
+  actions: IReadOnlyList<EventAction>
+  completion: String
+  progress: String
+  proposal: String
+  requirement: EventCondition
+object QuestionAction
+  answers: IReadOnlyList<EventAnswer>
+  text: String
+object RandomExpr
+  max: Int32
+  min: Int32
+object RefugeeCampDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object RemoveCellAction
+object RepeatAction
+  actions: IReadOnlyList<EventAction>
+  times: EventExpr
+object ResourceAction
+  amount: EventExpr
+  resource: ResourceType
+object ResourcePileDocument
+  amount: Int32?
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ResourceProviderDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+enum ResourceType: Gold, Lumber, Ore, Crystal, Mercury, Sulfur
+object RevealAction
+  level: Int32
+  radius: Int32
+  x: Int32
+  y: Int32
+object RunEventAction
+  event: String
+object SacrificialAltarDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object SanctuaryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ScenarioRulesDocument
+  arena: Boolean?
+  bans: BansDocument
+  defeat: IReadOnlyList<ConditionDocument>
+  difficulty: Complexity?
+  elimination: Boolean
+  graceDays: Int32?
+  maxHeroes: Int32?
+  standardVictory: Boolean
+  victory: IReadOnlyList<ConditionDocument>
+  weekEvents: WeekEventsDocument
+object SceneryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object SetVariableAction
+  op: VariableOp
+  value: EventExpr
+  variable: String
+object ShrineDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  spell: String
+  x: Int32 (required)
+  y: Int32 (required)
+object SignDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  message: String
+  x: Int32 (required)
+  y: Int32 (required)
+object SkillAction
+  level: SkillLevel
+  skill: String
+enum SkillLevel: None, Basic, Advanced, Expert, Master
+object SkillSchoolDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object SpellAction
+  spell: String
+object SpellBookAction
+object SphinxDocument
+  answer: String
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  question: String
+  wrong1: String
+  wrong2: String
+  x: Int32 (required)
+  y: Int32 (required)
+object StackDocument
+  count: Int32
+  creature: String
+object StopAction
+object TeamCondition
+  team: Int32
+object TownDocument
+  available: IReadOnlyDictionary<String, Int32>
+  buildings: IReadOnlyDictionary<String, Int32>
+  definition: String (required)
+  dwellings: IReadOnlyDictionary<String, Int32>
+  garrison: IReadOnlyList<ArmySlotDocument>
+  guildSpells: IReadOnlyList<String>
+  id: Int32 (required)
+  lastBuilt: Int32?
+  level: Int32
+  name: String
+  owner: Int32?
+  random: Boolean?
+  x: Int32 (required)
+  y: Int32 (required)
+object TownGateDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object TownOwnerCondition
+  owner: Int32?
+  town: Int32
+object TrainingSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object TreasureChestDocument
+  definition: String (required)
+  experience: Int32?
+  gold: Int32?
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object VariableExpr
+  name: String
+enum VariableOp: Set, Add, Subtract, Multiply, Divide
+object WarMachineAction
+  slot: WarMachineSlot
+  take: Boolean
+object WarMachineFactoryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+enum WarMachineSlot: Offensive, Tent, Cart
+object WeekEventsDocument
+  enabled: Boolean
+  monthlyFactions: IReadOnlyList<String>
+  skipWeeks: Int32?
+  weeklyFactions: IReadOnlyList<String>
+object WhileAction
+  actions: IReadOnlyList<EventAction>
+  condition: EventCondition
+object WitchHutDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  skills: IReadOnlyList<String>
+  x: Int32 (required)
+  y: Int32 (required)
+
+# Saves and replays (*.ewsave.json, *.ewreplay.json), format v3
+object AllCondition
+  conditions: IReadOnlyList<EventCondition>
+object AllyCondition
+  player: Int32
+object AnswerCartographerCommand
+  buy: Boolean
+  player: PlayerId
+object AnswerDepositCommand
+  buy: Boolean
+  player: PlayerId
+object AnswerMapEventCommand
+  option: Int32
+  player: PlayerId
+object AnswerPandorasBoxCommand
+  open: Boolean
+  player: PlayerId
+object AnswerSphinxCommand
+  option: Int32
+  player: PlayerId
+object AnyCondition
+  conditions: IReadOnlyList<EventCondition>
+object AppointGovernorCommand
+  hero: HeroId
+  player: PlayerId
+  town: MapObjectId
+object ArithmeticExpr
+  left: EventExpr
+  op: ArithmeticOp
+  right: EventExpr
+enum ArithmeticOp: Add, Subtract, Multiply, Divide
+object ArmySlotDocument
+  count: Int32
+  creature: String
+  slot: Int32
+object ArtifactAction
+  artifact: String
+  take: Boolean
+object ArtifactMerchantDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ArtifactPickupDocument
+  artifact: String
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object AssembleRelicCommand
+  hero: HeroId
+  player: PlayerId
+  relic: String
+object AstrologersTowerDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+enum AutoCombatMode: Off, Ask, Always
+object AutoResolveBattleCommand
+  player: PlayerId
+object AvailableCreaturesAction
+  count: EventExpr
+  line: String
+object BansDocument
+  artifacts: IReadOnlyList<String>
+  heroes: IReadOnlyList<String>
+  skills: IReadOnlyList<String>
+  spells: IReadOnlyList<String>
+object BattleAction
+  army: IReadOnlyList<CreatureStack>
+object BattleAttackCommand
+  from: CellPosition?
+  player: PlayerId
+  target: Int32
+object BattleAttackStructureCommand
+  from: CellPosition?
+  player: PlayerId
+  structure: Int32
+object BattleCastCommand
+  cell: CellPosition?
+  player: PlayerId
+  second: Int32?
+  spell: String
+  target: Int32?
+object BattleCreatureCastCommand
+  cell: CellPosition?
+  player: PlayerId
+  target: Int32?
+object BattleDefendCommand
+  player: PlayerId
+object BattleDeployCommand
+  player: PlayerId
+  to: CellPosition
+  unit: Int32
+object BattleMoveCommand
+  player: PlayerId
+  to: CellPosition
+object BattleRetreatCommand
+  player: PlayerId
+object BattleShootCommand
+  player: PlayerId
+  target: Int32
+object BattleShootStructureCommand
+  player: PlayerId
+  structure: Int32
+object BattleStartCommand
+  player: PlayerId
+object BattleSurrenderCommand
+  player: PlayerId
+object BattleWaitCommand
+  player: PlayerId
+object BattleWarcryCommand
+  player: PlayerId
+  warcry: Warcry
+object BorderPostDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object BuffSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object BuildAction
+  building: String
+  level: Int32
+object BuildCommand
+  building: String
+  player: PlayerId
+  town: MapObjectId
+object BuildDwellingCommand
+  line: String
+  player: PlayerId
+  town: MapObjectId
+object BuyArtifactCommand
+  merchant: MapObjectId
+  player: PlayerId
+  slot: Int32
+object BuySpellBookCommand
+  player: PlayerId
+  town: MapObjectId
+object BuyWarMachineAtFactoryCommand
+  factory: MapObjectId
+  player: PlayerId
+  slot: WarMachineSlot
+object BuyWarMachineCommand
+  player: PlayerId
+  slot: WarMachineSlot
+  town: MapObjectId
+object CartographerDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object CastAdventureSpellCommand
+  hero: HeroId
+  player: PlayerId
+  spell: String
+  target: MapPosition?
+object CellDocument
+  level: Int32
+  x: Int32
+  y: Int32
+object CellPosition
+  x: Int32
+  y: Int32
+object ChooseBattleWidthCommand
+  player: PlayerId
+  width: Int32
+object ChooseEventArmyCommand
+  keep: IReadOnlyList<Int32>
+  player: PlayerId
+object ChooseSkillCommand
+  player: PlayerId
+  skill: String
+object ChooseTownGateCommand
+  player: PlayerId
+  town: MapObjectId?
+object ChooseTrainingCommand
+  option: TrainingOption?
+  player: PlayerId
+object ChooseWitchHutSkillCommand
+  player: PlayerId
+  skill: String
+object CombatPlaceDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object CompareCondition
+  left: EventExpr
+  op: CompareOp
+  right: EventExpr
+enum CompareOp: Equal, NotEqual, Less, LessOrEqual, Greater, GreaterOrEqual
+object CompleteExchangeCommand
+  player: PlayerId
+enum Complexity: Beginner, Easy, Normal, Hard, Expert
+object ConditionDocument
+  amount: Int32?
+  artifact: String
+  day: Int32?
+  deadline: Int32?
+  hero: Int32?
+  kind: ConditionKind
+  player: Int32?
+  resource: ResourceType?
+  target: Int32?
+  town: Int32?
+enum ConditionKind: CaptureTown, DefeatHero, GatherResources, SurviveUntilDay, LoseTown, LoseHero, TimeLimit, CaptureObject, ObtainArtifact, ReleaseHero, LoseArtifact
+object CreatureBankDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+enum CreatureCategory: None, A, B
+object CreatureStack
+  count: Int32
+  creature: String
+object CreaturesAction
+  count: EventExpr
+  creature: String
+object DenOfThievesDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object DepositDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object DigCommand
+  hero: HeroId
+  player: PlayerId
+enum Direction: North, NorthEast, East, SouthEast, South, SouthWest, West, NorthWest
+object DismissGovernorCommand
+  player: PlayerId
+  town: MapObjectId
+object DwellingDocument
+  available: Int32?
+  creature: String (required)
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object EnableEventAction
+  enabled: Boolean
+  event: String
+object EndTurnCommand
+  player: PlayerId
+object EnterGarrisonCommand
+  player: PlayerId
+  town: MapObjectId
+object EquipArtifactCommand
+  artifact: String
+  hero: HeroId
+  player: PlayerId
+object EventAction
+  type=artifact -> ArtifactAction
+  type=available -> AvailableCreaturesAction
+  type=battle -> BattleAction
+  type=build -> BuildAction
+  type=creatures -> CreaturesAction
+  type=enable -> EnableEventAction
+  type=experience -> ExperienceAction
+  type=giveHero -> GiveHeroAction
+  type=if -> IfAction
+  type=mana -> ManaAction
+  type=message -> MessageAction
+  type=morale -> MoraleAction
+  type=movement -> MovementAction
+  type=question -> QuestionAction
+  type=removeCell -> RemoveCellAction
+  type=repeat -> RepeatAction
+  type=resource -> ResourceAction
+  type=reveal -> RevealAction
+  type=runEvent -> RunEventAction
+  type=setVariable -> SetVariableAction
+  type=skill -> SkillAction
+  type=spell -> SpellAction
+  type=spellBook -> SpellBookAction
+  type=stat -> PrimaryStatAction
+  type=stop -> StopAction
+  type=warMachine -> WarMachineAction
+  type=while -> WhileAction
+object EventAnswer
+  actions: IReadOnlyList<EventAction>
+  text: String
+object EventCell
+  event: String
+  level: Int32
+  position: MapPosition
+  x: Int32
+  y: Int32
+object EventCondition
+  type=all -> AllCondition
+  type=ally -> AllyCondition
+  type=any -> AnyCondition
+  type=compare -> CompareCondition
+  type=faction -> FactionCondition
+  type=heroClass -> HeroClassCondition
+  type=heroDefeated -> HeroDefeatedCondition
+  type=heroIs -> HeroIsCondition
+  type=monsterDefeated -> MonsterDefeatedCondition
+  type=not -> NotCondition
+  type=playerIs -> PlayerIsCondition
+  type=playerIsHuman -> PlayerIsHumanCondition
+  type=team -> TeamCondition
+  type=townOwner -> TownOwnerCondition
+object EventExpr
+  type=arithmetic -> ArithmeticExpr
+  type=number -> NumberExpr
+  type=quantity -> QuantityExpr
+  type=random -> RandomExpr
+  type=variable -> VariableExpr
+object ExperienceAction
+  amount: EventExpr
+object FactionCondition
+  town: String
+object FetchResourcesCommand
+  player: PlayerId
+  provider: MapObjectId
+  town: MapObjectId
+enum FogMode: PermanentReveal, ShroudWithRefog
+object GameCommand
+  type=appointGovernor -> AppointGovernorCommand
+  type=assembleRelic -> AssembleRelicCommand
+  type=autoCombat -> SetAutoCombatCommand
+  type=battleAttack -> BattleAttackCommand
+  type=battleAttackStructure -> BattleAttackStructureCommand
+  type=battleAuto -> AutoResolveBattleCommand
+  type=battleCast -> BattleCastCommand
+  type=battleCreatureCast -> BattleCreatureCastCommand
+  type=battleDefend -> BattleDefendCommand
+  type=battleDeploy -> BattleDeployCommand
+  type=battleMove -> BattleMoveCommand
+  type=battleRetreat -> BattleRetreatCommand
+  type=battleShoot -> BattleShootCommand
+  type=battleShootStructure -> BattleShootStructureCommand
+  type=battleStart -> BattleStartCommand
+  type=battleSurrender -> BattleSurrenderCommand
+  type=battleWait -> BattleWaitCommand
+  type=battleWarcry -> BattleWarcryCommand
+  type=battleWidth -> ChooseBattleWidthCommand
+  type=build -> BuildCommand
+  type=buildDwelling -> BuildDwellingCommand
+  type=buyArtifact -> BuyArtifactCommand
+  type=buySpellBook -> BuySpellBookCommand
+  type=buyWarMachine -> BuyWarMachineCommand
+  type=cartographer -> AnswerCartographerCommand
+  type=castAdventureSpell -> CastAdventureSpellCommand
+  type=chest -> ResolveTreasureChestCommand
+  type=chooseSkill -> ChooseSkillCommand
+  type=closeExchange -> CompleteExchangeCommand
+  type=deposit -> AnswerDepositCommand
+  type=dig -> DigCommand
+  type=dismissGovernor -> DismissGovernorCommand
+  type=endTurn -> EndTurnCommand
+  type=enterGarrison -> EnterGarrisonCommand
+  type=equipArtifact -> EquipArtifactCommand
+  type=eventArmy -> ChooseEventArmyCommand
+  type=factory -> BuyWarMachineAtFactoryCommand
+  type=fetchResources -> FetchResourcesCommand
+  type=garrisonStack -> MoveGarrisonStackCommand
+  type=giveArtifact -> GiveArtifactCommand
+  type=giveWarMachine -> GiveWarMachineCommand
+  type=guard -> RespondToGuardCommand
+  type=hillFort -> UpgradeAtHillFortCommand
+  type=hireAtTavern -> HireAtMapTavernCommand
+  type=hireHero -> HireHeroCommand
+  type=leaveGarrison -> LeaveGarrisonCommand
+  type=lesson -> TakeLessonCommand
+  type=mapEvent -> AnswerMapEventCommand
+  type=move -> MoveHeroCommand
+  type=moveStack -> MoveStackCommand
+  type=moveTownStack -> MoveTownStackCommand
+  type=orderCaravan -> OrderCaravanCommand
+  type=pandorasBox -> AnswerPandorasBoxCommand
+  type=recruit -> RecruitCommand
+  type=recruitAtDwelling -> RecruitAtDwellingCommand
+  type=recruitRefugees -> RecruitAtRefugeeCampCommand
+  type=sacrificeArtifact -> SacrificeArtifactCommand
+  type=sacrificeCreatures -> SacrificeCreaturesCommand
+  type=sendTroops -> SendTroopsCommand
+  type=sphinx -> AnswerSphinxCommand
+  type=step -> StepHeroCommand
+  type=takeRelicApart -> TakeRelicApartCommand
+  type=townGate -> ChooseTownGateCommand
+  type=tradeResource -> TradeResourceCommand
+  type=training -> ChooseTrainingCommand
+  type=transformCreatures -> TransformCreaturesCommand
+  type=unequipArtifact -> UnequipArtifactCommand
+  type=upgradeStack -> UpgradeStackCommand
+  type=witchHut -> ChooseWitchHutSkillCommand
+  player: PlayerId
+object GameOptions
+  campaignVariables: IReadOnlyDictionary<String, Int32>
+  complexity: Complexity?
+  fogMode: FogMode
+  refogMargin: Int32
+  seed: UInt64
+  startTowns: IReadOnlyDictionary<Int32, String>
+  turnTimerMinutes: Int32?
+object GameRecordDocument
+  commands: IReadOnlyList<GameCommand> (required)
+  finalDigest: String
+  formatVersion: Int32
+  generated: GenerationInfo
+  map: MapDocument (required)
+  options: GameOptions (required)
+  save: SaveInfo
+object GarrisonDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  troops: IReadOnlyList<ArmySlotDocument>
+  x: Int32 (required)
+  y: Int32 (required)
+object GateDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  linkedGate: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object GateEntranceDocument
+  definition: String (required)
+  exit: Int32?
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object GateExitDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object GenerationInfo
+  attempt: Int32
+  generatorVersion: Int32
+  seed: UInt64
+  size: Int32
+  template: String
+  versionWarning: String
+object GiveArtifactCommand
+  artifact: String
+  fromHero: HeroId
+  player: PlayerId
+  toHero: HeroId
+  wear: Boolean
+  worn: Boolean
+object GiveHeroAction
+  experience: Int32
+  hero: String
+  level: Int32
+  x: Int32?
+  y: Int32?
+object GiveWarMachineCommand
+  fromHero: HeroId
+  player: PlayerId
+  slot: WarMachineSlot
+  toHero: HeroId
+enum GuardDisposition: Compliant, Friendly, Aggressive, Hostile, Savage
+object GuardDocument
+  count: Int32?
+  creature: String
+enum GuardMode: Classic, Area
+enum HeroClass: Warrior, Mage
+object HeroClassCondition
+  class: HeroClass
+  town: String
+object HeroDefeatedCondition
+  hero: Int32
+  player: Int32?
+value HeroId
+object HeroIsCondition
+  hero: String
+object HeroPlacementDocument
+  army: IReadOnlyList<ArmySlotDocument>
+  artifacts: IReadOnlyList<String>
+  attack: Int32
+  backpack: IReadOnlyList<String>
+  defense: Int32
+  id: Int32
+  knowledge: Int32?
+  level: Int32
+  luck: Int32?
+  morale: Int32?
+  name: String
+  owner: Int32
+  placeholder: Boolean?
+  skills: IReadOnlyDictionary<String, SkillLevel>
+  spellBook: Boolean?
+  spellPower: Int32?
+  spells: IReadOnlyList<String>
+  type: String
+  warMachines: IReadOnlyList<WarMachineSlot>
+  x: Int32
+  y: Int32
+object HillFortDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object HireAtMapTavernCommand
+  hero: String
+  player: PlayerId
+  tavern: MapObjectId
+object HireHeroCommand
+  hero: String
+  player: PlayerId
+  town: MapObjectId
+object IfAction
+  condition: EventCondition
+  else: IReadOnlyList<EventAction>
+  then: IReadOnlyList<EventAction>
+object KeymasterDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object LeaveGarrisonCommand
+  player: PlayerId
+  town: MapObjectId
+object LootSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MagiEyeDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MagiWindowDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ManaAction
+  amount: EventExpr
+object MapDocument
+  description: String
+  events: MapEventSet
+  formatVersion: Int32
+  grail: CellDocument
+  height: Int32 (required)
+  heroes: IReadOnlyList<HeroPlacementDocument>
+  maxTeams: Int32?
+  minTeams: Int32?
+  name: String (required)
+  objects: IReadOnlyList<MapObjectDocument>
+  players: IReadOnlyList<PlayerSlotDocument>
+  rivers: IReadOnlyList<IReadOnlyList<String>>
+  roads: IReadOnlyList<IReadOnlyList<String>>
+  rules: ScenarioRulesDocument
+  teamsLocked: Boolean
+  terrain: IReadOnlyList<IReadOnlyList<String>> (required)
+  width: Int32 (required)
+object MapEventDefinition
+  actions: IReadOnlyList<EventAction>
+  enabled: Boolean
+  kind: MapEventKind
+  name: String
+  stages: IReadOnlyList<QuestStage>
+  towns: IReadOnlyList<Int32>
+enum MapEventKind: Hero, Player, Town, Quest
+object MapEventSet
+  cells: IReadOnlyList<EventCell>
+  events: IReadOnlyList<MapEventDefinition>
+  isEmpty: Boolean
+  keptVariables: IReadOnlyList<String>
+  takenVariables: IReadOnlyList<String>
+  variables: IReadOnlyDictionary<String, Int32>
+object MapObjectDocument
+  kind=altar -> SacrificialAltarDocument
+  kind=artifact -> ArtifactPickupDocument
+  kind=artifactMerchant -> ArtifactMerchantDocument
+  kind=astrologersTower -> AstrologersTowerDocument
+  kind=bank -> CreatureBankDocument
+  kind=borderPost -> BorderPostDocument
+  kind=buff -> BuffSiteDocument
+  kind=cartographer -> CartographerDocument
+  kind=chest -> TreasureChestDocument
+  kind=combatPlace -> CombatPlaceDocument
+  kind=denOfThieves -> DenOfThievesDocument
+  kind=deposit -> DepositDocument
+  kind=dwelling -> DwellingDocument
+  kind=factory -> WarMachineFactoryDocument
+  kind=garrison -> GarrisonDocument
+  kind=gate -> GateDocument
+  kind=gateEntrance -> GateEntranceDocument
+  kind=gateExit -> GateExitDocument
+  kind=hillFort -> HillFortDocument
+  kind=keymaster -> KeymasterDocument
+  kind=loot -> LootSiteDocument
+  kind=magiEye -> MagiEyeDocument
+  kind=magiWindow -> MagiWindowDocument
+  kind=marketplace -> MarketplaceDocument
+  kind=mine -> MineDocument
+  kind=monster -> MonsterDocument
+  kind=obelisk -> ObeliskDocument
+  kind=observatory -> ObservatoryDocument
+  kind=pandorasBox -> PandorasBoxDocument
+  kind=pile -> ResourcePileDocument
+  kind=prison -> PrisonDocument
+  kind=provider -> ResourceProviderDocument
+  kind=questSite -> QuestSiteDocument
+  kind=refugeeCamp -> RefugeeCampDocument
+  kind=sanctuary -> SanctuaryDocument
+  kind=scenery -> SceneryDocument
+  kind=shrine -> ShrineDocument
+  kind=sign -> SignDocument
+  kind=skillSchool -> SkillSchoolDocument
+  kind=sphinx -> SphinxDocument
+  kind=tavern -> MapTavernDocument
+  kind=town -> TownDocument
+  kind=townGate -> TownGateDocument
+  kind=training -> TrainingSiteDocument
+  kind=witchHut -> WitchHutDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+value MapObjectId
+object MapPosition
+  level: Int32
+  x: Int32
+  y: Int32
+object MapTavernDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MarketplaceDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object MessageAction
+  rewards: IReadOnlyList<EventAction>
+  text: String
+object MineDocument
+  definition: String (required)
+  guard: GuardDocument
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object MonsterDefeatedCondition
+  monster: Int32
+  player: Int32?
+object MonsterDocument
+  count: Int32?
+  creature: String (required)
+  definition: String (required)
+  disposition: GuardDisposition
+  id: Int32 (required)
+  level: Int32
+  mode: GuardMode?
+  neverFlees: Boolean
+  randomTier: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+object MoraleAction
+  luck: Int32
+  morale: Int32
+object MoveGarrisonStackCommand
+  garrison: MapObjectId
+  player: PlayerId
+  slot: Int32
+  toGarrison: Boolean
+object MoveHeroCommand
+  hero: HeroId
+  player: PlayerId
+  target: MapPosition
+object MoveStackCommand
+  count: Int32?
+  fromHero: HeroId
+  fromSlot: Int32
+  player: PlayerId
+  toHero: HeroId
+  toSlot: Int32
+object MoveTownStackCommand
+  count: Int32?
+  from: TownArmy
+  fromSlot: Int32
+  player: PlayerId
+  to: TownArmy
+  toSlot: Int32
+  town: MapObjectId
+object MovementAction
+  amount: EventExpr
+object NotCondition
+  condition: EventCondition
+object NumberExpr
+  value: Int32
+object ObeliskDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ObservatoryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object OrderCaravanCommand
+  count: Int32
+  dwelling: MapObjectId
+  player: PlayerId
+  town: MapObjectId
+object PandorasBoxDocument
+  artifacts: IReadOnlyList<String>
+  attack: Int32?
+  creatures: IReadOnlyList<StackDocument>
+  defense: Int32?
+  definition: String (required)
+  event: String
+  experience: Int32?
+  guard: IReadOnlyList<StackDocument>
+  id: Int32 (required)
+  knowledge: Int32?
+  level: Int32
+  luck: Int32?
+  mana: Int32?
+  message: String
+  morale: Int32?
+  resources: IReadOnlyDictionary<ResourceType, Int32>
+  skills: IReadOnlyDictionary<String, SkillLevel>
+  spellPower: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+value PlayerId
+object PlayerIsCondition
+  player: Int32
+object PlayerIsHumanCondition
+object PlayerSlotDocument
+  isHuman: Boolean
+  maxHeroes: Int32?
+  name: String
+  team: Int32?
+enum PrimaryStat: Attack, Defense, SpellPower, Knowledge
+object PrimaryStatAction
+  amount: EventExpr
+  stat: PrimaryStat
+object PrisonDocument
+  definition: String (required)
+  hero: String
+  id: Int32 (required)
+  level: Int32
+  prisonerLevel: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+enum Quantity: Resource, Creatures, HeroLevel, Experience, Attack, Defense, SpellPower, Knowledge, Mana, MovementPoints, SkillLevel, Artifacts, Day, DayOfWeek, Week, Month, Difficulty, Heroes, Towns
+object QuantityExpr
+  id: String
+  quantity: Quantity
+object QuestSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  quest: String
+  x: Int32 (required)
+  y: Int32 (required)
+object QuestStage
+  actions: IReadOnlyList<EventAction>
+  completion: String
+  progress: String
+  proposal: String
+  requirement: EventCondition
+object QuestionAction
+  answers: IReadOnlyList<EventAnswer>
+  text: String
+object RandomExpr
+  max: Int32
+  min: Int32
+object RecruitAtDwellingCommand
+  count: Int32
+  dwelling: MapObjectId
+  player: PlayerId
+object RecruitAtRefugeeCampCommand
+  camp: MapObjectId
+  count: Int32
+  player: PlayerId
+object RecruitCommand
+  count: Int32
+  creature: String
+  hero: HeroId?
+  player: PlayerId
+  town: MapObjectId
+object RefugeeCampDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object RemoveCellAction
+object RepeatAction
+  actions: IReadOnlyList<EventAction>
+  times: EventExpr
+object ResolveTreasureChestCommand
+  player: PlayerId
+  reward: TreasureChestReward
+object ResourceAction
+  amount: EventExpr
+  resource: ResourceType
+object ResourcePileDocument
+  amount: Int32?
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object ResourceProviderDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  owner: Int32?
+  x: Int32 (required)
+  y: Int32 (required)
+enum ResourceType: Gold, Lumber, Ore, Crystal, Mercury, Sulfur
+object RespondToGuardCommand
+  accept: Boolean
+  player: PlayerId
+object RevealAction
+  level: Int32
+  radius: Int32
+  x: Int32
+  y: Int32
+object RunEventAction
+  event: String
+object SacrificeArtifactCommand
+  altar: MapObjectId
+  artifact: String
+  player: PlayerId
+object SacrificeCreaturesCommand
+  altar: MapObjectId
+  count: Int32
+  player: PlayerId
+  slot: Int32
+object SacrificialAltarDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object SanctuaryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object SaveInfo
+  date: String
+  inBattle: Boolean
+  map: String
+  name: String
+  player: String
+  savedAt: String
+object ScenarioRulesDocument
+  arena: Boolean?
+  bans: BansDocument
+  defeat: IReadOnlyList<ConditionDocument>
+  difficulty: Complexity?
+  elimination: Boolean
+  graceDays: Int32?
+  maxHeroes: Int32?
+  standardVictory: Boolean
+  victory: IReadOnlyList<ConditionDocument>
+  weekEvents: WeekEventsDocument
+object SceneryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object SendTroopsCommand
+  count: Int32?
+  fromTown: MapObjectId
+  player: PlayerId
+  slot: Int32
+  toTown: MapObjectId
+object SetAutoCombatCommand
+  mode: AutoCombatMode
+  player: PlayerId
+object SetVariableAction
+  op: VariableOp
+  value: EventExpr
+  variable: String
+object ShrineDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  spell: String
+  x: Int32 (required)
+  y: Int32 (required)
+object SignDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  message: String
+  x: Int32 (required)
+  y: Int32 (required)
+object SkillAction
+  level: SkillLevel
+  skill: String
+enum SkillLevel: None, Basic, Advanced, Expert, Master
+object SkillSchoolDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object SpellAction
+  spell: String
+object SpellBookAction
+object SphinxDocument
+  answer: String
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  question: String
+  wrong1: String
+  wrong2: String
+  x: Int32 (required)
+  y: Int32 (required)
+object StackDocument
+  count: Int32
+  creature: String
+object StepHeroCommand
+  direction: Direction
+  hero: HeroId
+  player: PlayerId
+object StopAction
+object TakeLessonCommand
+  player: PlayerId
+  school: MapObjectId
+  skill: String
+object TakeRelicApartCommand
+  hero: HeroId
+  player: PlayerId
+  relic: String
+object TeamCondition
+  team: Int32
+enum TownArmy: Garrison, VisitingHero
+object TownDocument
+  available: IReadOnlyDictionary<String, Int32>
+  buildings: IReadOnlyDictionary<String, Int32>
+  definition: String (required)
+  dwellings: IReadOnlyDictionary<String, Int32>
+  garrison: IReadOnlyList<ArmySlotDocument>
+  guildSpells: IReadOnlyList<String>
+  id: Int32 (required)
+  lastBuilt: Int32?
+  level: Int32
+  name: String
+  owner: Int32?
+  random: Boolean?
+  x: Int32 (required)
+  y: Int32 (required)
+object TownGateDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object TownOwnerCondition
+  owner: Int32?
+  town: Int32
+enum TradeDirection: Buy, Sell
+object TradeResourceCommand
+  amount: Int32
+  direction: TradeDirection
+  mapMarketplace: MapObjectId?
+  player: PlayerId
+  resource: ResourceType
+enum TrainingOption: PayGold, PayMagicResources, Attack, Defense, SpellPower, Knowledge
+object TrainingSiteDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+object TransformCreaturesCommand
+  orders: IReadOnlyList<TransformOrder>
+  player: PlayerId
+  town: MapObjectId
+object TransformOrder
+  army: TownArmy
+  line: CreatureCategory
+  slot: Int32
+object TreasureChestDocument
+  definition: String (required)
+  experience: Int32?
+  gold: Int32?
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+enum TreasureChestReward: Gold, Experience
+object UnequipArtifactCommand
+  artifact: String
+  hero: HeroId
+  player: PlayerId
+object UpgradeAtHillFortCommand
+  fort: MapObjectId
+  player: PlayerId
+  slot: Int32
+object UpgradeStackCommand
+  army: TownArmy
+  player: PlayerId
+  slot: Int32
+  town: MapObjectId
+object VariableExpr
+  name: String
+enum VariableOp: Set, Add, Subtract, Multiply, Divide
+object WarMachineAction
+  slot: WarMachineSlot
+  take: Boolean
+object WarMachineFactoryDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  x: Int32 (required)
+  y: Int32 (required)
+enum WarMachineSlot: Offensive, Tent, Cart
+enum Warcry: Rally, Intimidate, Terror
+object WeekEventsDocument
+  enabled: Boolean
+  monthlyFactions: IReadOnlyList<String>
+  skipWeeks: Int32?
+  weeklyFactions: IReadOnlyList<String>
+object WhileAction
+  actions: IReadOnlyList<EventAction>
+  condition: EventCondition
+object WitchHutDocument
+  definition: String (required)
+  id: Int32 (required)
+  level: Int32
+  skills: IReadOnlyList<String>
+  x: Int32 (required)
+  y: Int32 (required)

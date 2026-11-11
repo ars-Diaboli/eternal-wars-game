@@ -119,7 +119,7 @@ public class ArenaEditorTests
     [Fact]
     public void TheSwitch_IsAnUndoableEditorChange()
     {
-        var editor = new MapEditorSession(EternalWars.Core.Domain.Scenarios.BlankScenario.Create(12, 8));
+        var editor = TestEditor.Blank(12, 8);
 
         Assert.Equal(EditResult.Ok, editor.Map.SetRules(editor.Scenario.Rules with { Arena = true }));
         Assert.True(editor.Scenario.Rules.Arena);

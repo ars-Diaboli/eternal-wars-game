@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
@@ -308,7 +307,7 @@ public class HeroProgressionTests
         Assert.Equal(EditResult.Ok, editor.Heroes.SetType(A, "inferno.azgaroth"));
         Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetType(A, "inferno.nobody"));
 
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(state)))).GetHero(A);
+        var restored = TestFormat.RoundTrip(state).GetHero(A);
         Assert.Equal(("inferno.azgaroth", "Azgaroth", HeroClass.Warrior, "inferno.imp"), (restored.Definition, restored.Name, restored.Class, restored.PreferredCreature));
         Assert.Equal(SkillLevel.Basic, restored.Skills.Level(BuiltInSkills.Melee));
 
@@ -320,7 +319,7 @@ public class HeroProgressionTests
               "players": [{ "name": "Blue", "isHuman": true }],
               "heroes": [{ "id": 1, "name": "Old", "owner": 0, "x": 0, "y": 0, "tactics": "Advanced" }] }
             """;
-        Assert.Equal(SkillLevel.Advanced, MapConverter.ToGameState(MapSerializer.Deserialize(v4)).GetHero(A).Tactics);
+        Assert.Equal(SkillLevel.Advanced, TestFormat.Load(v4).GetHero(A).Tactics);
     }
 
     [Fact]

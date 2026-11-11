@@ -1,0 +1,21 @@
+{
+  "formatVersion": 12,
+  "name": "Version 12 sample",
+  "width": 16,
+  "height": 12,
+  "terrain": [ [ "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg", "gggggggggggggggg" ] ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": false } ],
+  "guardMode": "Area",
+  "rules": { "victory": [ { "kind": "GatherResources", "player": 0, "resource": "Gold", "amount": 20000 } ], "graceDays": 3 },
+  "heroes": [
+    { "id": 1, "name": "Orrin", "owner": 0, "x": 1, "y": 1, "skills": { "tactics.tactics": "Basic" }, "morale": 1, "spellPower": 2, "knowledge": 1,
+      "artifacts": [ "badge-of-courage" ], "army": [ { "slot": 0, "creature": "haven.footman", "count": 12 } ] }
+  ],
+  "objects": [
+    { "kind": "town", "id": 1, "definition": "town.haven", "x": 2, "y": 3, "owner": 0, "name": "Old Keep", "buildings": { "town-hall": 2, "fort": 1, "tavern": 1 } },
+    { "kind": "monster", "id": 2, "definition": "monster", "x": 10, "y": 1, "creature": "neutral.wolf", "count": 7 },
+    { "kind": "monster", "id": 3, "definition": "monster", "x": 12, "y": 6, "creature": "neutral.wolf", "count": 4 },
+    { "kind": "dwelling", "id": 4, "definition": "dwelling", "x": 9, "y": 5, "creature": "neutral.wolf", "available": 3 },
+    { "kind": "artifact", "id": 5, "definition": "artifact.minor", "x": 1, "y": 6 }
+  ]
+}

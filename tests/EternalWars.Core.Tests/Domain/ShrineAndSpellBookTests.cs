@@ -6,7 +6,6 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -95,7 +94,7 @@ public class ShrineAndSpellBookTests
 
         var map = MapConverter.ToDocument(state);
         Assert.True(MapDocument.CurrentFormatVersion >= 29);
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(map)));
+        var restored = TestFormat.Load(MapSerializer.Serialize(map));
 
         var shrines = restored.ObjectsOf<Shrine>().OrderBy(s => s.SpellLevel).ToList();
         Assert.Equal([spell.Id, null], shrines.Select(s => s.Spell));
@@ -119,7 +118,7 @@ public class ShrineAndSpellBookTests
     [Fact]
     public void TheEditor_SetsAShrinesSpellOfItsLevel_AndAHerosBookAndSpells_Undoably()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(10, 6));
+        var editor = TestEditor.Blank(10, 6);
         editor.Objects.Place(BuiltInMapObjects.ShrineId(2), new(2, 2), out var id);
         var shrine = (Shrine)editor.Scenario.FindObject(id)!;
         var levelTwo = ShrineRules.Candidates(editor.Scenario.Spells, 2).First().Id;

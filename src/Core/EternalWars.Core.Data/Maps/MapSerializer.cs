@@ -8,8 +8,11 @@ public static class MapSerializer
 
     public static string Serialize(MapDocument document) => JsonSerializer.Serialize(document, JsonDefaults.Options);
 
+    /// <summary>Reads a map file of any version: an older one is upgraded to the current format first (<see cref="MapMigrations"/>, ADR-174).</summary>
     public static MapDocument Deserialize(string json) =>
-        JsonSerializer.Deserialize<MapDocument>(json, JsonDefaults.Options)
+        (MapMigrations.Upgrade(json) is { } upgraded
+            ? upgraded.Deserialize<MapDocument>(JsonDefaults.Options)
+            : JsonSerializer.Deserialize<MapDocument>(json, JsonDefaults.Options))
         ?? throw new FormatException("Map file is empty.");
 
     public static void Save(MapDocument document, string path) => File.WriteAllText(path, Serialize(document));

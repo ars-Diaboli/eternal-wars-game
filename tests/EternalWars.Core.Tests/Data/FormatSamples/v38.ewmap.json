@@ -1,0 +1,614 @@
+{
+  "formatVersion": 38,
+  "name": "Format sample",
+  "description": "One object of every kind, for the format tests.",
+  "width": 64,
+  "height": 24,
+  "terrain": [
+    [
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gdddgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gdddgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg",
+      "gdddgggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg"
+    ],
+    [
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu",
+      "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+    ]
+  ],
+  "roads": [
+    [
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      ".....ddd........................................................",
+      ".....ddd........................................................",
+      ".....ddd........................................................"
+    ],
+    [
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................"
+    ]
+  ],
+  "rivers": [
+    [
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "..........c.....................................................",
+      "................................................................"
+    ],
+    [
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................",
+      "................................................................"
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": false
+    }
+  ],
+  "teamsLocked": false,
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Blue hero",
+      "owner": 0,
+      "x": 1,
+      "y": 1,
+      "level": 0,
+      "attack": 0,
+      "defense": 0,
+      "spellBook": false
+    },
+    {
+      "id": 2,
+      "name": "Red hero",
+      "owner": 1,
+      "x": 62,
+      "y": 22,
+      "level": 0,
+      "attack": 0,
+      "defense": 0,
+      "spellBook": false
+    },
+    {
+      "id": 3,
+      "name": "Sample",
+      "owner": 0,
+      "x": 30,
+      "y": 22,
+      "level": 0,
+      "attack": 2,
+      "defense": 3,
+      "skills": {
+        "tactics.tactics": "Advanced"
+      },
+      "morale": 1,
+      "luck": -1,
+      "spellPower": 1,
+      "knowledge": 1,
+      "spellBook": false
+    }
+  ],
+  "objects": [
+    {
+      "kind": "pile",
+      "id": 1,
+      "definition": "pile.crystal",
+      "x": 4,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "mine",
+      "id": 2,
+      "definition": "mine.abandoned.crystal",
+      "x": 7,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "chest",
+      "id": 3,
+      "definition": "chest",
+      "x": 10,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "gate",
+      "id": 4,
+      "definition": "gate.subterranean",
+      "x": 13,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "gateEntrance",
+      "id": 5,
+      "definition": "monolith.entrance",
+      "x": 16,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "gateExit",
+      "id": 6,
+      "definition": "monolith.exit",
+      "x": 19,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "disposition": "Aggressive",
+      "neverFlees": false,
+      "id": 7,
+      "definition": "monster",
+      "x": 22,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "town",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 1
+      },
+      "id": 8,
+      "definition": "town.academy",
+      "x": 25,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "artifact",
+      "id": 9,
+      "definition": "artifact.major",
+      "x": 31,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "dwelling",
+      "creature": "neutral.wolf",
+      "id": 10,
+      "definition": "dwelling",
+      "x": 34,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "marketplace",
+      "id": 11,
+      "definition": "marketplace",
+      "x": 37,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "provider",
+      "id": 12,
+      "definition": "provider.mystical-garden",
+      "x": 40,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "loot",
+      "id": 13,
+      "definition": "loot.campfire",
+      "x": 43,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "buff",
+      "id": 14,
+      "definition": "buff.clover-field",
+      "x": 46,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "training",
+      "id": 15,
+      "definition": "training.arena",
+      "x": 49,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "sign",
+      "message": "",
+      "id": 16,
+      "definition": "sign",
+      "x": 52,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "observatory",
+      "id": 17,
+      "definition": "observatory",
+      "x": 55,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "hillFort",
+      "id": 18,
+      "definition": "hill-fort",
+      "x": 58,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "townGate",
+      "id": 19,
+      "definition": "town-gate",
+      "x": 1,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "factory",
+      "id": 20,
+      "definition": "war-machine-factory",
+      "x": 4,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "prison",
+      "id": 21,
+      "definition": "prison",
+      "x": 7,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "bank",
+      "id": 22,
+      "definition": "bank.churchyard",
+      "x": 10,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "denOfThieves",
+      "id": 23,
+      "definition": "den-of-thieves",
+      "x": 13,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "sanctuary",
+      "id": 24,
+      "definition": "sanctuary",
+      "x": 16,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "scenery",
+      "id": 25,
+      "definition": "scenery.bones.large",
+      "x": 19,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "cartographer",
+      "id": 26,
+      "definition": "cartographer.surface",
+      "x": 22,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "artifactMerchant",
+      "id": 27,
+      "definition": "artifact-merchant",
+      "x": 34,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "refugeeCamp",
+      "id": 28,
+      "definition": "refugee-camp",
+      "x": 37,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "altar",
+      "id": 29,
+      "definition": "sacrificial-altar",
+      "x": 40,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "sphinx",
+      "id": 30,
+      "definition": "sphinx",
+      "x": 43,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "witchHut",
+      "id": 31,
+      "definition": "witch-hut",
+      "x": 46,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "shrine",
+      "id": 32,
+      "definition": "shrine.1",
+      "x": 49,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "deposit",
+      "id": 33,
+      "definition": "deposit.crystal",
+      "x": 52,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "magiWindow",
+      "id": 34,
+      "definition": "magi.window.black",
+      "x": 55,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "magiEye",
+      "id": 35,
+      "definition": "magi.eye.black",
+      "x": 58,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "keymaster",
+      "id": 36,
+      "definition": "keymaster.black",
+      "x": 1,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "borderPost",
+      "id": 37,
+      "definition": "border.gate.black",
+      "x": 4,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "tavern",
+      "id": 38,
+      "definition": "tavern",
+      "x": 7,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "garrison",
+      "id": 39,
+      "definition": "garrison",
+      "x": 10,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "astrologersTower",
+      "id": 40,
+      "definition": "astrologers-tower",
+      "x": 13,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "pandorasBox",
+      "id": 41,
+      "definition": "pandoras-box",
+      "x": 16,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "questSite",
+      "id": 42,
+      "definition": "seer-hut",
+      "x": 19,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "questSite",
+      "id": 43,
+      "definition": "quest.guard",
+      "x": 22,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "questSite",
+      "id": 44,
+      "definition": "quest.gate",
+      "x": 25,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "skillSchool",
+      "id": 45,
+      "definition": "university",
+      "x": 28,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "obelisk",
+      "id": 46,
+      "definition": "obelisk",
+      "x": 31,
+      "y": 9,
+      "level": 0
+    },
+    {
+      "kind": "combatPlace",
+      "id": 47,
+      "definition": "combat-place",
+      "x": 34,
+      "y": 9,
+      "level": 0
+    }
+  ]
+}

@@ -9,7 +9,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -154,7 +153,7 @@ public class ResourceProviderTests
     [Fact]
     public void Providers_AndTheirOwner_AreInTheMapFormat_SetInTheEditor_AndUndoable()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.WaterWheel, new(2, 2), out var wheel));
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.WarehouseId(ResourceType.Ore), new(6, 2), out _));
         var player = editor.Scenario.Players[0].Id;
@@ -162,8 +161,8 @@ public class ResourceProviderTests
         Assert.Equal(EditResult.UnknownPlayer, editor.Objects.SetProviderOwner(wheel, new PlayerId(7)));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
 
         Assert.True(MapDocument.CurrentFormatVersion >= 28);
         Assert.Contains("\"kind\": \"provider\"", json, StringComparison.Ordinal);

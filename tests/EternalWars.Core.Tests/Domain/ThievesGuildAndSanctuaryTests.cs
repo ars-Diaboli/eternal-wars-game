@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.AI;
@@ -72,8 +71,8 @@ public class ThievesGuildAndSanctuaryTests
         Assert.Equal(MoveResult.Moved, session.Step(A, Direction.North));
         Assert.Equal([new ThievesDenVisited(A, den.Id)], visits);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(state);
+        var restored = TestFormat.Load(json);
         Assert.Contains("\"kind\": \"denOfThieves\"", json, StringComparison.Ordinal);
         Assert.Single(restored.ObjectsOf<DenOfThieves>());
         Assert.Single(restored.ObjectsOf<Sanctuary>());

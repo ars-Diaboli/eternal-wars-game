@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Heroes;
@@ -16,8 +15,8 @@ public class MapFormatV4Tests
         original.ObjectsOf<MonsterGuard>().First().Mode = GuardMode.Area;
         original.ObjectsOf<TreasureChest>().First().FixedValues = new ChestValues(1234, 567);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(original));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(original);
+        var restored = TestFormat.Load(json);
 
         Assert.Equal(
             original.Heroes.Select(h => (h.Id, h.Attack, h.Defense, h.Tactics, Slots: string.Join(",", h.Army.Slots))),
@@ -36,11 +35,11 @@ public class MapFormatV4Tests
         var state = BlankScenario.Create(8, 6);
         state.AddObject(new TreasureChest(state.NextObjectId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.TreasureChest), new(1, 1)));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var json = TestFormat.Save(state);
 
         Assert.DoesNotContain("\"gold\"", json);
         Assert.DoesNotContain("\"guardMode\"", json);
-        Assert.Null(MapConverter.ToGameState(MapSerializer.Deserialize(json)).ObjectsOf<TreasureChest>().Single().FixedValues);
+        Assert.Null(TestFormat.Load(json).ObjectsOf<TreasureChest>().Single().FixedValues);
     }
 
     [Fact]
@@ -55,7 +54,7 @@ public class MapFormatV4Tests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var state = TestFormat.Load(json);
 
         Assert.Equal(new ChestValues(1000, 500), state.ObjectsOf<TreasureChest>().Single().FixedValues);
         Assert.True(state.Heroes.Single().Army.IsEmpty);
@@ -76,7 +75,7 @@ public class MapFormatV4Tests
             }
             """;
 
-        Assert.Throws<FormatException>(() => MapConverter.ToGameState(MapSerializer.Deserialize(json)));
+        Assert.Throws<FormatException>(() => TestFormat.Load(json));
     }
 
     [Fact]
@@ -88,7 +87,7 @@ public class MapFormatV4Tests
             new Army([null, null, new CreatureStack(BuiltInCreatures.Devil, 2)]), attack: 3, tactics: SkillLevel.Expert);
         state.AddHero(hero);
 
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(state))));
+        var restored = TestFormat.RoundTrip(state);
 
         var copy = restored.GetHero(hero.Id);
         Assert.Equal(new CreatureStack(BuiltInCreatures.Devil, 2), copy.Army[2]);

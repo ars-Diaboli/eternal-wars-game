@@ -3,7 +3,6 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
@@ -55,11 +54,11 @@ public class ResourcePileAmountTests
     [Fact]
     public void AnOpenAmount_IsLeftOutOfTheMapFile_AndOldFilesKeepTheirAmounts()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(8, 8));
+        var editor = TestEditor.Blank(8, 8);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.PileId(ResourceType.Ore), new(2, 2), out var id));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
 
         Assert.True(MapDocument.CurrentFormatVersion >= 21);
         Assert.DoesNotContain("\"amount\"", json, StringComparison.Ordinal);
@@ -67,6 +66,6 @@ public class ResourcePileAmountTests
 
         var old = json.Replace("\"formatVersion\": 21", "\"formatVersion\": 20", StringComparison.Ordinal)
             .Replace("\"definition\": \"pile.ore\"", "\"definition\": \"pile.ore\", \"amount\": 9", StringComparison.Ordinal);
-        Assert.Equal(9, Assert.IsType<ResourcePile>(MapConverter.ToGameState(MapSerializer.Deserialize(old)).GetObject(id)).Amount);
+        Assert.Equal(9, Assert.IsType<ResourcePile>(TestFormat.Load(old).GetObject(id)).Amount);
     }
 }

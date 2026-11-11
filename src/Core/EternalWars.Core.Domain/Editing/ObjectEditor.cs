@@ -84,16 +84,17 @@ public sealed class ObjectEditor
             _ => new List<MapObjectId>(),
         };
         var links = SnapshotLinks([id, .. dependents]);
+        var index = -1;
         _context.Run(
             $"Remove {mapObject.Definition.Name}",
             () =>
             {
                 dependents.ForEach(d => SetLink(d, null));
-                _context.RemoveObject(mapObject);
+                index = _context.RemoveObject(mapObject);
             },
             () =>
             {
-                _context.AddObject(mapObject);
+                _context.AddObject(mapObject, index);
                 RestoreLinks(links);
             });
         return EditResult.Ok;

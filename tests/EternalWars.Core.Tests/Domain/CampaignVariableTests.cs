@@ -61,7 +61,7 @@ public class CampaignVariableTests
     {
         var state = Create(Rows);
         state.SetMapEvents(Events());
-        var document = MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(state)));
+        var document = MapSerializer.Deserialize(TestFormat.Save(state));
         Assert.Equal(MapDocument.CurrentFormatVersion, document.FormatVersion);
         Assert.Equal(["deeds"], document.Events!.KeptVariables);
         Assert.Equal(["deeds", "other"], document.Events.TakenVariables);
@@ -78,7 +78,7 @@ public class CampaignVariableTests
     [Fact]
     public void TheEditor_MarksVariables_Undoably_AndRemovingAVariableDropsItsMarks()
     {
-        var editor = new MapEditorSession(Create(Rows));
+        var editor = TestEditor.World(Rows);
         editor.MapEvents.SetVariable("deeds", 0);
 
         Assert.Equal(EditResult.InvalidTarget, editor.MapEvents.SetCampaignVariable("nope", true, false));
@@ -114,7 +114,7 @@ public class CampaignVariableTests
         state.SetMapEvents(new MapEventSet { Variables = new Dictionary<string, int> { ["x"] = 1 } });
         var json = MapSerializer.Serialize(MapConverter.ToDocument(state) with { FormatVersion = 33 });
 
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var loaded = TestFormat.Load(json);
 
         Assert.Empty(loaded.MapEvents.Set.KeptVariables);
         Assert.Empty(loaded.MapEvents.CampaignVariables);

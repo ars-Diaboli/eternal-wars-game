@@ -20,8 +20,7 @@ public class MapSerializerTests
         original.AssignTeams(new Dictionary<PlayerId, TeamId> { [new PlayerId(1)] = new(0) });
         original.SetTeamsLocked(true);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(original));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var restored = TestFormat.RoundTrip(original);
 
         Assert.Equal(original.Map.Name, restored.Map.Name);
         Assert.Equal((20, 14, 2), (restored.Map.Width, restored.Map.Height, restored.Map.Levels));
@@ -74,7 +73,7 @@ public class MapSerializerTests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var state = TestFormat.Load(json);
 
         Assert.IsType<TwoWayGate>(Assert.Single(state.Objects));
         Assert.False(state.Map.HasRoads);
@@ -94,9 +93,9 @@ public class MapSerializerTests
 
         var document = MapSerializer.Deserialize(json);
 
-        Assert.Equal(MapDocument.UnversionedFormatVersion, document.FormatVersion);
+        Assert.Equal(MapDocument.CurrentFormatVersion, document.FormatVersion); // upgraded on reading (ADR-174)
         Assert.Equal(GuardMode.Area, Assert.IsType<MonsterGuard>(Assert.Single(MapConverter.ToGameState(document).Objects)).Mode); // v4–v12's map-wide mode
-        Assert.Equal(MapDocument.CurrentFormatVersion, MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(BlankScenario.Create(4, 4)))).FormatVersion);
+        Assert.Equal(MapDocument.CurrentFormatVersion, MapSerializer.Deserialize(TestFormat.Save(BlankScenario.Create(4, 4))).FormatVersion);
     }
 
     [Fact]
@@ -120,7 +119,7 @@ public class MapSerializerTests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var state = TestFormat.Load(json);
 
         Assert.Empty(state.Objects);
         Assert.Equal(TerrainType.Water, state.Map.GetTerrain(new MapPosition(1, 0)));
@@ -137,10 +136,10 @@ public class MapSerializerTests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(template.Replace("DEF", "pile.lumber")));
+        var state = TestFormat.Load(template.Replace("DEF", "pile.lumber"));
         Assert.Equal(9, Assert.IsType<ResourcePile>(Assert.Single(state.Objects)).Amount);
 
-        Assert.Throws<FormatException>(() => MapConverter.ToGameState(MapSerializer.Deserialize(template.Replace("DEF", "pile.unobtainium"))));
+        Assert.Throws<FormatException>(() => TestFormat.Load(template.Replace("DEF", "pile.unobtainium")));
     }
 
     [Fact]

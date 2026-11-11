@@ -11,7 +11,7 @@ public class MapDifficultyTests
     [Fact]
     public void TheEditor_SetsTheDifficultyUndoably()
     {
-        var editor = new MapEditorSession(Create("A..", "..B"));
+        var editor = TestEditor.World("A..", "..B");
 
         Assert.Equal(EditResult.Ok, editor.Map.SetRules(editor.Scenario.Rules with { Difficulty = Complexity.Hard }));
         Assert.Equal(Complexity.Hard, editor.Scenario.Rules.Difficulty);
@@ -27,10 +27,10 @@ public class MapDifficultyTests
         var state = Create("A..", "..B");
         state.SetRules(state.Rules with { Difficulty = Complexity.Expert });
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var json = TestFormat.Save(state);
 
         Assert.Contains("\"difficulty\": \"Expert\"", json);
-        Assert.Equal(Complexity.Expert, MapConverter.ToGameState(MapSerializer.Deserialize(json)).Rules.Difficulty);
+        Assert.Equal(Complexity.Expert, TestFormat.Load(json).Rules.Difficulty);
     }
 
     [Fact]

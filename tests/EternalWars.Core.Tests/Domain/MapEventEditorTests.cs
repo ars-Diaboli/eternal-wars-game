@@ -17,7 +17,7 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>The editor's side of the map events (EVT-6): undoable edits, tree paths, the simple event forms, validator checks, node text.</summary>
 public class MapEventEditorTests
 {
-    private static MapEditorSession Editor() => new(Create(".........", ".........", "...A.....", ".........", "C.......B"));
+    private static readonly string[] Rows = [".........", ".........", "...A.....", ".........", "C.......B"];
 
     private static ResourceAction Gold(int amount) => new(ResourceType.Gold, new NumberExpr(amount));
 
@@ -28,7 +28,7 @@ public class MapEventEditorTests
     [Fact]
     public void Events_AreAdded_Moved_AndRemoved_Undoably_AndPublishTheirChange()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
         var changes = 0;
         editor.Events.Subscribe<MapEventsChanged>(_ => changes++);
 
@@ -52,7 +52,7 @@ public class MapEventEditorTests
     [Fact]
     public void Renaming_AnEvent_RenamesWhatNamesIt_AndUndoRestoresTheOldNames()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
         editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(5, 0), out var boxId);
         var box = (PandorasBox)editor.Scenario.GetObject(boxId);
         editor.MapEvents.Add(Hero("old", Gold(1)));
@@ -81,7 +81,7 @@ public class MapEventEditorTests
     [Fact]
     public void Removing_AnEvent_TakesItsCells_AndClearsTheObjectsThatNamedIt()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
         editor.Objects.Place(BuiltInMapObjects.SeerHut, new(5, 0), out var hutId);
         var hut = (QuestSite)editor.Scenario.GetObject(hutId);
         editor.MapEvents.Add(new MapEventDefinition("quest", MapEventKind.Quest, []) { Stages = [QuestForms.Level(2, "Grow up.")] });
@@ -97,7 +97,7 @@ public class MapEventEditorTests
     [Fact]
     public void Variables_AreDeclaredChangedAndRemoved()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
 
         Assert.Equal(EditResult.Ok, editor.MapEvents.SetVariable(" gold ", 5));
         Assert.Equal(EditResult.Ok, editor.MapEvents.SetVariable("gold", 7));
@@ -112,7 +112,7 @@ public class MapEventEditorTests
     [Fact]
     public void EventCells_GoOnFreePassableGround_OfAHeroEvent()
     {
-        var editor = new MapEditorSession(Create("A.~......", ".........", "C.......B"));
+        var editor = TestEditor.World("A.~......", ".........", "C.......B");
         editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(5, 0), out _);
         editor.MapEvents.Add(Hero("cell"));
         editor.MapEvents.Add(new MapEventDefinition("turn", MapEventKind.Player, []));
@@ -281,7 +281,7 @@ public class MapEventEditorTests
     [Fact]
     public void TheValidator_ShowsTheLoadErrors_WithTheirEvent()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
         editor.MapEvents.Add(Hero("broken", new RunEventAction("missing")));
         editor.MapEvents.SetCell(new(1, 1), "broken");
 
@@ -294,7 +294,7 @@ public class MapEventEditorTests
     [Fact]
     public void TheValidator_Warns_AboutSelfRunningUnusedAndUnfinishableEvents()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
         editor.Objects.Place(BuiltInMapObjects.SeerHut, new(5, 0), out var hutId);
         editor.MapEvents.SetVariable("unread", 1);
         editor.MapEvents.SetVariable("read", 1);
@@ -392,14 +392,13 @@ public class MapEventEditorTests
     [Fact]
     public void EventsWrittenInTheEditor_PlayInTheGame()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
         editor.MapEvents.Add(SimpleEventForms.Cell("purse", "You find a purse.", EventTriggers.Anyone, once: true,
             new SimpleRewards { Resources = new Dictionary<ResourceType, int> { [ResourceType.Gold] = 250 } }));
         editor.MapEvents.SetCell(new(4, 2), "purse");
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Event is not null);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var session = new GameSession(MapConverter.ToGameState(MapSerializer.Deserialize(json)));
+        var session = new GameSession(TestFormat.RoundTrip(editor.Scenario));
         session.Start();
         var gold = session.State.GetPlayer(Blue).Resources.Gold;
         session.Step(A, Direction.East);
@@ -412,7 +411,7 @@ public class MapEventEditorTests
     [Fact]
     public void AMapWhoseEventsDoNotFit_OpensInTheEditor_ButNotInTheGame()
     {
-        var editor = Editor();
+        var editor = TestEditor.World(Rows);
         editor.MapEvents.Add(Hero("broken", new RunEventAction("missing")));
         var document = MapConverter.ToDocument(editor.Scenario);
 

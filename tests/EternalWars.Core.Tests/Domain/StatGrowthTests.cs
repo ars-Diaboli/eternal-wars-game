@@ -97,12 +97,12 @@ public class StatGrowthTests
         Assert.Equal((0, 0, 3, 2), (mage.Attack, mage.Defense, mage.SpellPower, mage.Knowledge));
         Assert.All(HeroCatalog.Default.All, h => Assert.Equal(5, h.Attack + h.Defense + h.SpellPower + h.Knowledge));
 
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
         Assert.Equal(EditResult.Ok, editor.Heroes.SetStats(id, 1, 2, SkillLevel.None, 3, 4));
         Assert.Equal(EditResult.InvalidValue, editor.Heroes.SetStats(id, 1, 2, SkillLevel.None, -1, 0));
 
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario))));
+        var restored = TestFormat.RoundTrip(editor.Scenario);
         var hero = restored.GetHero(id);
         Assert.Equal((1, 2, 3, 4), (hero.Attack, hero.Defense, hero.SpellPower, hero.Knowledge));
 

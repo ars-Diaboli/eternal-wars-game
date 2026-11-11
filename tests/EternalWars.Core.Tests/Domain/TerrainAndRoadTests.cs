@@ -6,7 +6,6 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Players;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
@@ -116,7 +115,7 @@ public class TerrainAndRoadTests
     [Fact]
     public void Editor_PaintsAndErasesRoadsWithUndo()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(10, 8));
+        var editor = TestEditor.Blank(10, 8);
         var painted = new List<RoadsPainted>();
         editor.Events.Subscribe<RoadsPainted>(painted.Add);
 
@@ -132,7 +131,7 @@ public class TerrainAndRoadTests
     [Fact]
     public void Validator_WarnsAboutRoadsOnImpassableTerrain()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(10, 8));
+        var editor = TestEditor.Blank(10, 8);
         editor.Terrain.Paint(new MapPosition(5, 5), TerrainType.Water);
         editor.Terrain.PaintRoad(new MapPosition(5, 5), RoadType.Dirt);
 

@@ -1,9 +1,7 @@
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
-using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -89,7 +87,7 @@ public class MeetingAndTeamTests
     [Fact]
     public void Editor_TeamsAndLockAreUndoable()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(10, 8));
+        var editor = TestEditor.Blank(10, 8);
 
         editor.Players.SetTeam(new PlayerId(1), new TeamId(0));
         editor.Players.SetTeamsLocked(true);

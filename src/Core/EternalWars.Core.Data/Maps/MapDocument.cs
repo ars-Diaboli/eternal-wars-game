@@ -48,29 +48,14 @@ namespace EternalWars.Core.Data.Maps;
 /// hero), all drawn when the game starts. 36 = + the University and the War Academy (<c>skillSchool</c>; ADR-139). 37 = + the buried Grail
 /// (<c>grail</c>: a cell; omitted = drawn when the game starts on a map with obelisks) and obelisks (<c>obelisk</c>; ADR-140). 38 = + the arena
 /// switch (<c>rules.arena</c>; omitted = off) and combat places (<c>combatPlace</c>; ADR-097, ADR-100). Older versions still
-/// load (with the default events).
+/// load: <see cref="MapSerializer"/> upgrades their JSON first (<see cref="MapMigrations"/>, ADR-174), so this record is the current format only.
 /// </remarks>
-public sealed record MapDocument : IJsonOnDeserializing
+public sealed record MapDocument
 {
     public const int CurrentFormatVersion = 38;
 
-    /// <summary>The version of a map file that does not say which it is: the first, so every older version's handling applies to it.</summary>
-    public const int UnversionedFormatVersion = 1;
-
-    /// <summary>First version with a guard mode per monster; older maps had one map-wide <see cref="GuardMode"/>.</summary>
-    public const int PerMonsterGuardModeVersion = 13;
-
-    private int _formatVersion = CurrentFormatVersion;
-
-    /// <summary>The format the document is in: a document made in code is current; a file without the field is <see cref="UnversionedFormatVersion"/>.</summary>
-    public int FormatVersion
-    {
-        get => _formatVersion;
-        init => _formatVersion = value;
-    }
-
-    /// <summary>Before a file's fields are read: a file that names no version is the first one, not the current.</summary>
-    void IJsonOnDeserializing.OnDeserializing() => _formatVersion = UnversionedFormatVersion;
+    /// <summary>The format the document is in; a file read through <see cref="MapSerializer"/> has been upgraded to the current one.</summary>
+    public int FormatVersion { get; init; } = CurrentFormatVersion;
 
     public required string Name { get; init; }
 
@@ -99,12 +84,6 @@ public sealed record MapDocument : IJsonOnDeserializing
 
     /// <summary>The most teams a game of the map may have, 2 to 8 (v28, ADR-117); null = no limit.</summary>
     public int? MaxTeams { get; init; }
-
-    /// <summary>
-    /// Legacy (v4–v12): how every monster guarded its surroundings; omitted = <see cref="Domain.Objects.GuardMode.Classic"/>.
-    /// Read only from older maps, where it becomes each monster's mode; never written (v13 keeps it per monster).
-    /// </summary>
-    public GuardMode? GuardMode { get; init; }
 
     /// <summary>Victory and defeat conditions (v10); omitted = the default: defeat every enemy.</summary>
     public ScenarioRulesDocument? Rules { get; init; }
@@ -185,7 +164,7 @@ public sealed record PlayerSlotDocument(string Name, bool IsHuman, int? Team = n
 /// <summary>
 /// A starting hero. Stats and army are v4; older maps place heroes without an army. <see cref="Type"/> (v5) names a hero
 /// of the roster, whose class, preferred creature and specialty come with it; <see cref="Skills"/> (v5) are skill levels
-/// by skill id, and v4's <see cref="Tactics"/> is read into them. <see cref="Level"/> is the map level (surface 0).
+/// by skill id (v4's <c>tactics</c> is upgraded into them). <see cref="Level"/> is the map level (surface 0).
 /// <see cref="Morale"/> and <see cref="Luck"/> (v7, −5…+5) are omitted when 0. <see cref="SpellPower"/> and
 /// <see cref="Knowledge"/> (v8) are omitted when 0; a roster hero then keeps the roster's values. <see cref="WarMachines"/>
 /// (v9) is omitted for the starting set (the offensive machine only). <see cref="Artifacts"/> (worn, each in the slot its
@@ -202,7 +181,6 @@ public sealed record HeroPlacementDocument(
     int Level = 0,
     int Attack = 0,
     int Defense = 0,
-    SkillLevel? Tactics = null,
     IReadOnlyList<ArmySlotDocument>? Army = null,
     string? Type = null,
     IReadOnlyDictionary<string, SkillLevel>? Skills = null,

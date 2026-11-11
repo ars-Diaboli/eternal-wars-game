@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
@@ -8,7 +7,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -105,11 +103,11 @@ public class AbandonedMineAndDwellingGuardTests
     [Fact]
     public void AbandonedMines_AreOrdinaryMineObjectsInTheMapFormat()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 8));
+        var editor = TestEditor.Blank(12, 8);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.AbandonedMineId(ResourceType.Crystal), new(2, 2), out var id));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
 
         Assert.Contains("\"kind\": \"mine\"", json, StringComparison.Ordinal);
         Assert.Equal(BuiltInMapObjects.AbandonedMineId(ResourceType.Crystal), restored.GetObject(id).Definition.Id);

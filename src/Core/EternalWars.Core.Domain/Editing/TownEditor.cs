@@ -82,11 +82,8 @@ public sealed class TownEditor
         _context.Run($"Make {town.Name} a {townType} town", () => Swap(town, replacement), () => Swap(replacement, town));
         return EditResult.Ok;
 
-        void Swap(Town from, Town to)
-        {
-            _context.RemoveObject(from);
-            _context.AddObject(to);
-        }
+        // The new town takes the old one's place in the object list, so retyping (and undoing it) keeps the order.
+        void Swap(Town from, Town to) => _context.AddObject(to, _context.RemoveObject(from));
     }
 
     /// <summary>

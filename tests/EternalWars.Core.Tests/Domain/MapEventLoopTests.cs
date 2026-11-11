@@ -165,9 +165,9 @@ public class MapEventLoopTests
         Assert.Contains("\"type\": \"repeat\"", json, StringComparison.Ordinal);
         Assert.Contains("\"type\": \"while\"", json, StringComparison.Ordinal);
         Assert.Contains("\"type\": \"runEvent\"", json, StringComparison.Ordinal);
-        Assert.Equal(json, MapSerializer.Serialize(MapConverter.ToDocument(MapConverter.ToGameState(MapSerializer.Deserialize(json)))));
+        Assert.Equal(json, TestFormat.Save(TestFormat.Load(json)));
 
-        var session = new GameSession(MapConverter.ToGameState(MapSerializer.Deserialize(json), options: new GameOptions(Seed: 9)));
+        var session = new GameSession(TestFormat.Load(json, options: new GameOptions(Seed: 9)));
         session.Start();
         session.Step(A, Direction.East);
         session.Step(A, Direction.East);
@@ -214,7 +214,7 @@ public class MapEventLoopTests
     [Fact]
     public void ABoxWithOnlyAnEvent_IsValid_ItsEventMustBeAHeroEvent_AndItIsInTheMapFormat()
     {
-        var editor = new MapEditorSession(Create(".........", ".........", "...A.....", ".........", "C.......B"));
+        var editor = TestEditor.World(".........", ".........", "...A.....", ".........", "C.......B");
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(3, 1), out var placed));
         var box = (PandorasBox)editor.Scenario.GetObject(placed);
         Assert.Equal(EditResult.Ok, editor.Contents.SetPandorasBoxEvent(box.Id, " box "));
@@ -230,7 +230,7 @@ public class MapEventLoopTests
         map = map with { Events = new MapEventSet { Events = [new MapEventDefinition("box", MapEventKind.Hero, [Gold(7)])] } };
         var json = MapSerializer.Serialize(map);
         Assert.Contains("\"event\": \"box\"", json, StringComparison.Ordinal);
-        Assert.Equal("box", MapConverter.ToGameState(MapSerializer.Deserialize(json)).ObjectsOf<PandorasBox>().Single().Event);
+        Assert.Equal("box", TestFormat.Load(json).ObjectsOf<PandorasBox>().Single().Event);
 
         var wrong = map with { Events = new MapEventSet { Events = [new MapEventDefinition("box", MapEventKind.Player, [])] } };
         Assert.Throws<FormatException>(() => MapConverter.ToGameState(wrong));

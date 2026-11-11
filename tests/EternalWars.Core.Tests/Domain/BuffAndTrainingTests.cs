@@ -10,7 +10,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -226,12 +225,12 @@ public class BuffAndTrainingTests
     [Fact]
     public void BuffAndTrainingSites_AreInTheMapFormat()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(14, 10));
+        var editor = TestEditor.Blank(14, 10);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Stables, new(2, 2), out _));
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Arena, new(6, 2), out _));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
 
         Assert.True(MapDocument.CurrentFormatVersion >= 18);
         Assert.Contains("\"kind\": \"buff\"", json, StringComparison.Ordinal);

@@ -1,10 +1,7 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Generation;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -52,19 +49,19 @@ public class RiverTests
     [Fact]
     public void Rivers_AreInTheMapFormat_AndTheEditorPaintsAndUndoesThem()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         Assert.Equal(9, editor.Terrain.PaintRiver(new(4, 4), RiverType.Lava, radius: 1));
         Assert.Equal(0, editor.Terrain.PaintRiver(new(4, 4), RiverType.Lava));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
         Assert.Contains("\"rivers\"", json, StringComparison.Ordinal);
         Assert.Equal(RiverType.Lava, restored.Map.GetRiver(new(5, 5)));
         Assert.Equal(RiverType.None, restored.Map.GetRiver(new(7, 7)));
 
         editor.Undo();
         Assert.False(editor.Scenario.Map.HasRivers);
-        Assert.DoesNotContain("\"rivers\"", MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario)), StringComparison.Ordinal);
+        Assert.DoesNotContain("\"rivers\"", TestFormat.Save(editor.Scenario), StringComparison.Ordinal);
     }
 
     [Fact]

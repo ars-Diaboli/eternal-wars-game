@@ -13,12 +13,10 @@ namespace EternalWars.Core.Tests.Domain;
 
 public class MapEditorSessionTests
 {
-    private static MapEditorSession CreateEditor(int levels = 1) => new(BlankScenario.Create(12, 10, levels));
-
     [Fact]
     public void PaintTerrain_UndoRestoresPreviousTerrainAndRedoReapplies()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         var map = editor.Scenario.Map;
         map.SetTerrain(new MapPosition(5, 5), TerrainType.Sand);
         var painted = new List<TerrainPainted>();
@@ -38,7 +36,7 @@ public class MapEditorSessionTests
     [Fact]
     public void Stroke_GroupsEditsIntoOneUndoStep()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         UndoHistoryChanged? history = null;
         editor.Events.Subscribe<UndoHistoryChanged>(e => history = e);
 
@@ -58,7 +56,7 @@ public class MapEditorSessionTests
     [Fact]
     public void NewEdit_DiscardsRedo()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Terrain.Paint(new MapPosition(5, 5), TerrainType.Water);
         editor.Undo();
 
@@ -72,7 +70,7 @@ public class MapEditorSessionTests
     [InlineData(0, 0, EditResult.Overlaps)]     // covers the blue hero at (1,1)
     public void PlaceObject_RejectsInvalidPlacement(int x, int y, EditResult expected)
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
 
         Assert.Equal(expected, editor.Objects.Place(BuiltInMapObjects.MineId(ResourceType.Gold), new MapPosition(x, y), out _));
         Assert.Empty(editor.Scenario.Objects);
@@ -81,7 +79,7 @@ public class MapEditorSessionTests
     [Fact]
     public void PlaceObject_RejectsImpassableEntranceAndUnknownDefinition()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Terrain.Paint(new MapPosition(5, 5), TerrainType.Water);
 
         Assert.Equal(EditResult.ImpassableTerrain, editor.Objects.Place(BuiltInMapObjects.TreasureChest, new MapPosition(5, 5), out _));
@@ -91,7 +89,7 @@ public class MapEditorSessionTests
     [Fact]
     public void PlaceObject_ThenUndo_RemovesIt()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         var removed = new List<MapObjectRemoved>();
         editor.Events.Subscribe<MapObjectRemoved>(removed.Add);
 
@@ -107,7 +105,7 @@ public class MapEditorSessionTests
     [Fact]
     public void RemovingLinkedGate_UnlinksPartner_UndoRestoresBoth()
     {
-        var editor = CreateEditor(levels: 2);
+        var editor = TestEditor.Blank(levels: 2);
         editor.Objects.Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(4, 4), out var surface);
         editor.Objects.Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(4, 4, 1), out var underground);
         editor.Objects.LinkGates(surface, underground);
@@ -123,7 +121,7 @@ public class MapEditorSessionTests
     [Fact]
     public void LinkGates_RelinksAndUndoRestoresPreviousLinks()
     {
-        var editor = CreateEditor(levels: 2);
+        var editor = TestEditor.Blank(levels: 2);
         editor.Objects.Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(4, 4), out var a);
         editor.Objects.Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(4, 4, 1), out var b);
         editor.Objects.Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(8, 4, 1), out var c);
@@ -143,7 +141,7 @@ public class MapEditorSessionTests
     [Fact]
     public void PlaceHero_ValidatesTileAndOwner()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Terrain.Paint(new MapPosition(5, 5), TerrainType.Water);
         editor.Objects.Place(BuiltInMapObjects.TreasureChest, new MapPosition(6, 6), out _);
 
@@ -160,7 +158,7 @@ public class MapEditorSessionTests
     [Fact]
     public void PlaceHero_InTheEntranceOfItsOwnTown_IsAllowed_AndValid()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new MapPosition(3, 3), out var townId));
         var entrance = editor.Scenario.GetObject(townId).VisitPosition;
 
@@ -177,7 +175,7 @@ public class MapEditorSessionTests
     [Fact]
     public void PlayerSlots_OnlyUnusedLastSlotCanBeRemoved()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
 
         Assert.Equal(EditResult.PlayerInUse, editor.Players.RemoveLast()); // Red owns a hero
         Assert.Equal(EditResult.Ok, editor.Players.Add("Green", isHuman: false, out var green));
@@ -197,7 +195,7 @@ public class MapEditorSessionTests
     [Fact]
     public void PlayerSlots_AreCappedAtEight()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         for (var i = 2; i < GameState.MaxPlayers; i++)
         {
             Assert.Equal(EditResult.Ok, editor.Players.Add($"P{i}", isHuman: false, out _));
@@ -218,7 +216,7 @@ public class MapEditorSessionTests
     [Fact]
     public void MapProperties_AreUndoable()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
 
         editor.Map.SetProperties("Ashen Fields", "Two lords, one valley.");
         Assert.Equal("Ashen Fields", editor.Scenario.Map.Name);
@@ -230,7 +228,7 @@ public class MapEditorSessionTests
     [Fact]
     public void Validator_ReportsHeroOnWaterAndUnlinkedGate()
     {
-        var editor = CreateEditor(levels: 2);
+        var editor = TestEditor.Blank(levels: 2);
         editor.Terrain.Paint(new MapPosition(1, 1), TerrainType.Water); // under the blue hero
         editor.Objects.Place(BuiltInMapObjects.SubterraneanGate, new MapPosition(4, 4), out _);
 

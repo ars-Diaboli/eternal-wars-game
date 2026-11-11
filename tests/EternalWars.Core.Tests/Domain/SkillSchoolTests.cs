@@ -198,7 +198,7 @@ public class SkillSchoolTests
         Add<SkillSchool>(state, BuiltInMapObjects.WarAcademy, 6, 0);
         var map = MapConverter.ToDocument(state);
         var json = MapSerializer.Serialize(map);
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var restored = TestFormat.Load(json);
 
         Assert.Contains("\"skillSchool\"", json, StringComparison.Ordinal);
         Assert.Equal([true, false], restored.ObjectsOf<SkillSchool>().OrderBy(s => s.Id.Value).Select(s => s.TeachesMagic));

@@ -58,7 +58,8 @@ public sealed class HeroEditor
             return EditResult.InvalidTarget;
         }
 
-        _context.Run($"Remove hero {hero.Name}", () => _context.RemoveHero(hero), () => _context.AddHero(hero));
+        var index = -1;
+        _context.Run($"Remove hero {hero.Name}", () => index = _context.RemoveHero(hero), () => _context.AddHero(hero, index));
         return EditResult.Ok;
     }
 

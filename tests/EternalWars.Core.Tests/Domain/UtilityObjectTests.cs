@@ -11,7 +11,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Visibility;
 using EternalWars.Core.Events;
@@ -38,10 +37,10 @@ public class UtilityObjectTests
     [Fact]
     public void ASign_ShowsItsMessage_AndKeepsItInTheMap()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(8, 6));
+        var editor = TestEditor.Blank(8, 6);
         editor.Objects.Place(BuiltInMapObjects.Sign, new(2, 2), out var id);
         Assert.Equal(EditResult.Ok, editor.Contents.SetSignMessage(id, "Beware the swamp."));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario))));
+        var restored = TestFormat.RoundTrip(editor.Scenario);
         Assert.Equal("Beware the swamp.", ((SignPost)restored.GetObject(id)).Message);
         editor.Undo();
         Assert.Equal("", ((SignPost)editor.Scenario.GetObject(id)).Message);
@@ -223,14 +222,14 @@ public class UtilityObjectTests
     [Fact]
     public void ThePrison_InTheEditorAndTheMapFormat()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(10, 6));
+        var editor = TestEditor.Blank(10, 6);
         editor.Objects.Place(BuiltInMapObjects.Prison, new(2, 2), out var id);
         var hero = editor.Scenario.HeroRoster.All.First().Id;
         Assert.Equal(EditResult.InvalidValue, editor.Contents.SetPrison(id, "nobody", null));
         Assert.Equal(EditResult.Ok, editor.Contents.SetPrison(id, hero, 20));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = (Prison)MapConverter.ToGameState(MapSerializer.Deserialize(json)).GetObject(id);
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = (Prison)TestFormat.Load(json).GetObject(id);
 
         Assert.True(MapDocument.CurrentFormatVersion >= 19);
         Assert.Equal((hero, 20), (restored.Hero, restored.Level));

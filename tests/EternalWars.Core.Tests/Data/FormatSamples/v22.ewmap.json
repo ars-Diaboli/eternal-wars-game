@@ -1,0 +1,15 @@
+{
+  "formatVersion": 22,
+  "name": "Version 22 sample",
+  "width": 14,
+  "height": 6,
+  "terrain": [ [ "gggggggggggggg", "gggggggggggggg", "gggggggggggggg", "gggggggggggggg", "gggggggggggggg", "gggggggggggggg" ] ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": false } ],
+  "heroes": [ { "id": 1, "name": "Orrin", "owner": 0, "x": 1, "y": 1 } ],
+  "objects": [
+    { "kind": "bank", "id": 1, "definition": "bank.ruins", "x": 4, "y": 1 },
+    { "kind": "monster", "id": 2, "definition": "monster", "x": 10, "y": 1, "creature": "neutral.wolf", "mode": "Area" },
+    { "kind": "provider", "id": 3, "definition": "provider.windmill", "x": 2, "y": 4, "owner": 0 },
+    { "kind": "sign", "id": 4, "definition": "sign", "x": 8, "y": 4, "message": "Beware the crypt." }
+  ]
+}

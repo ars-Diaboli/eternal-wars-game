@@ -19,7 +19,7 @@ public class EmberMarchTests
         var state = EmberMarchScenario.Create();
 
         Assert.DoesNotContain(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error);
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(state))));
+        var restored = TestFormat.RoundTrip(state);
         Assert.Equal(state.Objects.Count, restored.Objects.Count);
         Assert.Equal(EmberMarchScenario.Name, restored.Map.Name);
     }
