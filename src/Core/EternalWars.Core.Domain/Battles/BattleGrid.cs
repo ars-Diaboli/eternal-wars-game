@@ -252,9 +252,25 @@ public static class BattleGrid
             return false;
         }
 
+        // Sanctuary III (ADR-177): an enemy shooter needs a clear line to a screened stack.
+        if (target.Has(Magic.SpellStatus.Screened) && target.Side != unit.Side && !IsClearShot(battle, unit, target))
+        {
+            return false;
+        }
+
         penaltyEighths = RangedPenaltyEighths(battle, unit, target);
         return penaltyEighths <= BattleState.MaxRangedPenaltyEighths && !BattleZones.BlocksShot(battle, unit, target);
     }
+
+    /// <summary>
+    /// Whether the line of fire from the shooter to the target crosses no other living stack, obstacle or standing siege structure on the field
+    /// (<see cref="LineOfFireCells"/>; Sanctuary III, ADR-177).
+    /// </summary>
+    public static bool IsClearShot(BattleState battle, BattleUnit shooter, BattleUnit target) =>
+        LineOfFireCells(shooter.Rect, target.Rect).All(c =>
+            shooter.Rect.Contains(c) || target.Rect.Contains(c)
+            || (battle.UnitAt(c) is null && !battle.Obstacles.Any(o => o.Rect.Contains(c))
+                && !(battle.Siege?.Structures.Any(s => s.IsStanding && s.OnField && s.Rect.Contains(c)) ?? false)));
 
     /// <summary>
     /// A shot's ranged penalty in eighths (ADR-070, ADR-072, CMB-6): the distance penalty and the cover add up, the shooter's Marksmanship is

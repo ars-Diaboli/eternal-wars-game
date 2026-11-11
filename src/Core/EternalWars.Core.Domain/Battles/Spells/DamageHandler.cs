@@ -46,7 +46,28 @@ internal sealed class DamageHandler : SpellEffectHandler
             {
                 Drain(cast, resolver, drinker, BattleMagic.Drained(effect, dealt));
             }
+
+            if (effect.Rubble && cast.Cell is { } centre)
+            {
+                Rubble(cast, resolver, centre);
+            }
         });
+
+    /// <summary>Meteor Shower III (ADR-177): once the damage is dealt, the area's free cells become one-cell rubble for the rest of the battle.</summary>
+    private static void Rubble(CastContext cast, BattleSpellResolver resolver, CellPosition centre)
+    {
+        var battle = cast.Battle;
+        var rubble = BattleMagic.RubbleCells(battle, cast.Effect, centre)
+            .Select((cell, i) => new BattleObstacle(battle.Obstacles.Count + 1 + i, cell, ObstacleClass.Rubble))
+            .ToList();
+        if (rubble.Count == 0)
+        {
+            return;
+        }
+
+        battle.MutableObstacles.AddRange(rubble);
+        resolver.Events.Publish(new BattleRubbleFell(cast.Known.Spell.Id, rubble));
+    }
 
     public override long Value(CastContext cast) =>
         BattleMagic.DamagePlan(cast.Battle, cast.Side, cast.Known, cast.Target, cast.Cell, cast.CreaturePower)

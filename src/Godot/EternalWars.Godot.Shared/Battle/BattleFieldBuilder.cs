@@ -103,7 +103,7 @@ public sealed class BattleFieldBuilder(Node3D field)
         return node;
     }
 
-    /// <summary>Small obstacles are boulders, big ones crags, cliffs (ADR-146) long ridges, wall segments blocks.</summary>
+    /// <summary>Small obstacles are boulders, big ones crags, cliffs (ADR-146) long ridges, rubble (ADR-177) low heaps, wall segments blocks.</summary>
     public void Obstacle(BattleObstacle obstacle)
     {
         var extent = obstacle.Rect.Width * BattleSpace.CellSize;
@@ -128,6 +128,7 @@ public sealed class BattleFieldBuilder(Node3D field)
         {
             ObstacleClass.Small => ((PrimitiveMesh)new SphereMesh { Radius = extent * 0.42f, Height = extent * 0.55f }, extent * 0.2f),
             ObstacleClass.Big => (new CylinderMesh { TopRadius = extent * 0.15f, BottomRadius = extent * 0.45f, Height = extent * 0.8f }, extent * 0.4f),
+            ObstacleClass.Rubble => (new CylinderMesh { TopRadius = extent * 0.2f, BottomRadius = extent * 0.48f, Height = extent * 0.35f, RadialSegments = 6 }, extent * 0.17f),
             _ => (new BoxMesh { Size = new Vector3(extent, extent * 1.5f, extent) }, extent * 0.75f),
         };
         mesh.Material = Material(Look.Solid, new Color(0.40f, 0.36f, 0.31f));

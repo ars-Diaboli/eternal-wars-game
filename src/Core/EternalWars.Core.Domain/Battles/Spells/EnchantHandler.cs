@@ -11,12 +11,28 @@ namespace EternalWars.Core.Domain.Battles.Spells;
 /// </summary>
 internal abstract class EnchantHandler : StackByStackHandler
 {
-    protected sealed override void ApplyTo(CastContext cast, BattleSpellResolver resolver, BattleUnit unit) => Enchant(cast, resolver, unit, cast.Second);
+    protected sealed override void ApplyTo(CastContext cast, BattleSpellResolver resolver, BattleUnit unit)
+    {
+        // A curse that also hits (Entangle III, ADR-177): the damage first; a stack it destroys takes no curse.
+        if (cast.Effect.Kind == SpellEffectKind.Curse && cast.Effect.Amount > 0)
+        {
+            resolver.Wounds.SpellDamage(unit, cast.Known.Spell.Id, BattleMagic.Damage(cast.Battle, cast.Side, cast.Known, unit, cast.CreaturePower));
+            if (!unit.IsAlive)
+            {
+                return;
+            }
+        }
+
+        Enchant(cast, resolver, unit, cast.Second);
+    }
 
     public sealed override long Value(CastContext cast) =>
-        cast.Affected().Sum(u => (u.Side == cast.Side) == cast.Effect.IsHostile
+        cast.Affected().Sum(u => ((u.Side == cast.Side) == cast.Effect.IsHostile
             ? -LastingValue(cast.Battle, cast.Side, cast.Known, u)
-            : LastingValue(cast.Battle, cast.Side, cast.Known, u));
+            : LastingValue(cast.Battle, cast.Side, cast.Known, u))
+            + (cast.Effect.Kind == SpellEffectKind.Curse && cast.Effect.Amount > 0
+                ? (u.Side == cast.Side ? -1 : 1) * BattleAi.Worth(u, BattleMagic.Damage(cast.Battle, cast.Side, cast.Known, u, cast.CreaturePower))
+                : 0));
 
     /// <summary>
     /// The spell's lasting effect takes hold on the stack, replacing the same spell's earlier effect; a <c>controlled</c> one (ADR-150) brings it

@@ -211,6 +211,9 @@ public partial class BattleView3D : Node3D
         this.SubscribeWhileInTree<BattleUnitSpellDamaged>(events, _stage.OnSpellDamaged);
         this.SubscribeWhileInTree<BattleZoneCreated>(events, _stage.OnZoneCreated);
         this.SubscribeWhileInTree<BattleZoneExpired>(events, _stage.OnZoneExpired);
+        this.SubscribeWhileInTree<BattleRubbleFell>(events, _stage.OnRubbleFell);
+        Tell<BattleManaStolen>(events);
+        Tell<BattleSpellPowerSapped>(events);
         Tell<BattleSpellApplied>(events);
         this.SubscribeWhileInTree<BattleUnitSideChanged>(events, _stage.OnSideChanged);
         Tell<BattleSpellResisted>(events);

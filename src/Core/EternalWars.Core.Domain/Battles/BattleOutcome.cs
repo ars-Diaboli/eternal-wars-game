@@ -49,12 +49,26 @@ internal sealed record BattleOutcome(
         .ToList();
 
     /// <summary>The army that fought for <paramref name="side"/> (a hero's, a town's or a map garrison's) keeps what lived, slot by slot.</summary>
+    /// <remarks>
+    /// On the winning side, summoned creatures that stay (Summon Demons III, ADR-177) then join it: a stack of their creature or a free slot, by
+    /// id; those with neither are lost.
+    /// </remarks>
     public static void KeepSurvivors(BattleState battle, BattleSide side, Army army)
     {
         foreach (var (slot, stack) in army.Stacks.ToList())
         {
             var survivors = battle.Units.Where(u => u.Owner == side && u.SourceSlot == slot).Sum(u => u.KeptCount);
             army.Set(slot, survivors > 0 ? new CreatureStack(stack.Creature, survivors) : null);
+        }
+
+        if (battle.Winner != side)
+        {
+            return;
+        }
+
+        foreach (var summoned in battle.Units.Where(u => u.Owner == side && u.IsAlive && u.IsSummoned && u.Stays && !u.IsCopy).OrderBy(u => u.Id))
+        {
+            army.TryAdd(new CreatureStack(summoned.Creature.Id, summoned.Count));
         }
     }
 }

@@ -22,9 +22,10 @@ public static class BattleMagic
     public static int Cost(BattleState battle, BattleSide side, KnownSpell spell) =>
         spell.Cost + battle.Participant(side.Opponent()).Bonus.EnemySpellCostPenalty;
 
-    /// <summary>The side's Spell Power after the enemy hero's Interference, never below 0.</summary>
+    /// <summary>The side's Spell Power after the enemy hero's Interference and the Spell Power the enemy's spells sapped (ADR-177), never below 0.</summary>
     public static int SpellPower(BattleState battle, BattleSide side) =>
-        Math.Max(0, (battle.Participant(side).Caster?.SpellPower ?? 0) - battle.Participant(side.Opponent()).Bonus.EnemySpellPowerPenalty);
+        Math.Max(0, (battle.Participant(side).Caster?.SpellPower ?? 0) - battle.Participant(side.Opponent()).Bonus.EnemySpellPowerPenalty
+                    - battle.SappedPower.GetValueOrDefault(side));
 
     /// <summary>
     /// Why the side's hero cannot cast the spell now at the stack or cell, or null. A stack spell needs a living target of the right side (enemies
@@ -289,7 +290,8 @@ public static class BattleMagic
     /// <summary>
     /// The stacks in the spell's reach at its rank, by id: the target, and for <c>targets N</c> (ADR-122) the N − 1 other stacks of its side nearest
     /// to it that the spell works on (nearer first, then by id); every stack with a cell in the area (both sides); every stack of the enemy side for
-    /// a hostile spell or of the own side otherwise; every stack on the field. <c>spare-own</c> leaves the caster's stacks out of an area or the field.
+    /// a hostile spell or of the own side otherwise; every stack on the field. <c>spare-own</c> leaves the caster's stacks out of an area or the field,
+    /// <c>spare-own-demons</c> its demons (ADR-177).
     /// </summary>
     public static IReadOnlyList<BattleUnit> Reach(BattleState battle, BattleSide side, KnownSpell known, int? target, CellPosition? cell)
     {
@@ -301,7 +303,8 @@ public static class BattleMagic
             SpellReach.Side => battle.LivingUnitsOf(effect.IsHostile ? side.Opponent() : side),
             _ => battle.LivingUnits,
         };
-        return units.Where(u => !effect.SpareOwn || u.Side != side).OrderBy(u => u.Id).ToList();
+        return units.Where(u => u.Side != side || !(effect.SpareOwn || (effect.SparesOwnDemons && u.Creature.HasTag(CreatureTags.Demon))))
+            .OrderBy(u => u.Id).ToList();
 
         IEnumerable<BattleUnit> Others(BattleUnit aimed) => effect.Targets <= 1
             ? []
@@ -360,7 +363,8 @@ public static class BattleMagic
 
     /// <summary>
     /// The spell's damage to the stack: base × (10 + Spell Power) / 10, the specialty's +3 % a level, ×2 for holy damage to undead and demons,
-    /// less the enemy hero's Spell resistance, changed by the stack's spell-taken percent (Arcane Ward); at least 1.
+    /// less the enemy hero's Spell resistance, changed by the stack's spell-taken percent (Arcane Ward), the <c>own%</c> share for the caster's own
+    /// stacks (Hellfire III, ADR-177); at least 1.
     /// </summary>
     public static int Damage(BattleState battle, BattleSide side, KnownSpell known, BattleUnit unit, int? creaturePower = null)
     {
@@ -383,8 +387,24 @@ public static class BattleMagic
         }
 
         damage = damage * Math.Max(0, 100 + unit.SpellModifiers.SpellTakenPercent) / 100;
+        if (unit.Side == side)
+        {
+            damage = damage * effect.OwnPercent / 100;
+        }
+
         return (int)Math.Clamp(damage, 1, int.MaxValue);
     }
+
+    /// <summary>
+    /// The cells of a <c>rubble</c> spell's area that become rubble (Meteor Shower III, ADR-177): those on the field that no living stack, obstacle,
+    /// standing siege structure or keep covers, top to bottom, left to right.
+    /// </summary>
+    public static IReadOnlyList<CellPosition> RubbleCells(BattleState battle, SpellEffect effect, CellPosition centre) =>
+        [.. Area(effect, centre).Cells()
+            .Where(c => c.X >= 0 && c.Y >= 0 && c.X < battle.Width && c.Y < BattleState.Height && battle.UnitAt(c) is null
+                        && !battle.Obstacles.Any(o => o.Rect.Contains(c))
+                        && !(battle.Siege?.Structures.Any(s => s.IsStanding && s.OnField && s.Rect.Contains(c)) ?? false))
+            .OrderBy(c => c.Y).ThenBy(c => c.X)];
 
     /// <summary>
     /// A damage, healing or summoned amount from the side's hero: base × (10 + Spell Power) / 10, with its specialty and its elemental orbs' percent

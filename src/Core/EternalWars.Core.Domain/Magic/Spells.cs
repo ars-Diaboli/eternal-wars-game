@@ -98,6 +98,7 @@ public enum DispelScope
 /// <c>unseen</c> (cannot be attacked or aimed at by the enemy until it acts), <c>phase</c> (moves like a flyer), <c>ward-mind</c> (immune to
 /// <c>mind</c> spells). ADR-150: <c>frenzied</c> (its turn attacks the nearest stack, friend or foe), <c>controlled</c> (it fights for the
 /// spell's caster: Hypnotize, Puppet Master). ADR-152: <c>twice</c> (takes a second turn right after its turn, once a round: Clockwork Precision).
+/// ADR-177: <c>screened</c> (an enemy shooter needs a clear line to it: no stack or obstacle in between; Sanctuary III).
 /// </summary>
 [Flags]
 public enum SpellStatus
@@ -120,6 +121,7 @@ public enum SpellStatus
     Frenzied = 1 << 14,
     Controlled = 1 << 15,
     Twice = 1 << 16,
+    Screened = 1 << 17,
 }
 
 /// <summary>Whom a spell reaches: one stack, a square area, every stack of the target side, or every stack on the field.</summary>
@@ -154,13 +156,14 @@ public enum SpellFilter
 /// (<c>regen</c>) at the start of each round, creatures lost each round (<c>decay%</c>), immunity to every spell up to a level (<c>immune-level</c>,
 /// Anti-Magic) or to the enemy's up to a level (<c>shroud</c>), melee damage given back (<c>thorns%</c>) and damage dealt healed and revived
 /// (<c>lifesteal%</c>). <c>burn</c> and <c>regen</c> grow with Spell Power when cast. ADR-152: the share of the damage meant for the stack that
-/// another own stack takes (<c>martyr%</c>, Martyrdom).
+/// another own stack takes (<c>martyr%</c>, Martyrdom). ADR-177: the extra damage of an attack the stack makes while Unseen (<c>ambush%</c>,
+/// Unseen III).
 /// </summary>
 public sealed record SpellModifiers(
     int Attack = 0, int Defense = 0, int Speed = 0, int SpeedPercent = 0, int InitiativePercent = 0, int MeleePercent = 0, int RangedPercent = 0,
     int DamageTakenPercent = 0, int MeleeTakenPercent = 0, int RangedTakenPercent = 0, int SpellTakenPercent = 0, int Morale = 0, int Luck = 0,
     int Roll = 0, SpellStatus Status = SpellStatus.None, int Burn = 0, int Regen = 0, int DecayPercent = 0, int ImmuneLevel = 0, int ShroudLevel = 0,
-    int ThornsPercent = 0, int LifestealPercent = 0, int MartyrPercent = 0)
+    int ThornsPercent = 0, int LifestealPercent = 0, int MartyrPercent = 0, int AmbushPercent = 0)
 {
     public static SpellModifiers None { get; } = new();
 
@@ -174,7 +177,8 @@ public sealed record SpellModifiers(
         a.MeleeTakenPercent + b.MeleeTakenPercent, a.RangedTakenPercent + b.RangedTakenPercent, a.SpellTakenPercent + b.SpellTakenPercent,
         a.Morale + b.Morale, a.Luck + b.Luck, a.Roll + b.Roll, a.Status | b.Status, a.Burn + b.Burn, a.Regen + b.Regen,
         a.DecayPercent + b.DecayPercent, Math.Max(a.ImmuneLevel, b.ImmuneLevel), Math.Max(a.ShroudLevel, b.ShroudLevel),
-        a.ThornsPercent + b.ThornsPercent, a.LifestealPercent + b.LifestealPercent, Math.Max(a.MartyrPercent, b.MartyrPercent));
+        a.ThornsPercent + b.ThornsPercent, a.LifestealPercent + b.LifestealPercent, Math.Max(a.MartyrPercent, b.MartyrPercent),
+        a.AmbushPercent + b.AmbushPercent);
 }
 
 /// <summary>
@@ -216,6 +220,12 @@ public sealed record ZoneEffect(
 /// hero gains 1 mana per M health lost); for buffs <c>martyr% N</c> (another own stack, the second aim, takes that share of the damage meant for the
 /// stack) with <c>martyr-defense N</c> for the martyr, the status <c>twice</c> and the filter <c>machine</c>; for <c>controlled</c> with
 /// <c>health N</c>, <c>split</c> (a bigger stack is split, not refused).
+/// ADR-177: for healing <c>cure</c> (the enemy's spells come off the stack) and <c>revive% N</c> (health beyond the top creature's wounds revives its
+/// dead, for good, up to N % of those it lost); for a dispel <c>heal N</c> (each stack it reaches also regains N), <c>sap-power N</c> (the enemy hero
+/// loses N Spell Power for the battle) and <c>refund% N</c> (that percent of the mana back when only the enemy's spells came off); for a curse
+/// <c>hit N</c> (damage as it takes hold); for damage <c>rubble</c> (the free cells of a square area become rubble), <c>spare-own-demons</c> and
+/// <c>own% N</c> (own stacks take that percent); for a summon <c>stays</c> (its creatures join the army after a won battle) and <c>kinds N</c> (N of
+/// its kinds at once, each worth the amount).
 /// </summary>
 public sealed record SpellEffect(
     SpellEffectKind Kind, int Amount, SpellReach Reach, int AreaSize, SpellFilter Filter, SpellModifiers Modifiers, int? Rounds, int Walls = 0,
@@ -302,6 +312,36 @@ public sealed record SpellEffect(
     /// <summary>A sacrifice gives the hero 1 mana for this much health lost (Blood Price, ADR-152).</summary>
     public int HealthPerMana { get; init; }
 
+    /// <summary>Healing also takes the enemy's spells off the stack (Heal II, ADR-177).</summary>
+    public bool Cures { get; init; }
+
+    /// <summary>
+    /// Healing beyond the top creature's wounds revives the stack's dead, for good, up to this percent of the creatures it lost (Heal III, ADR-177);
+    /// 0 for none.
+    /// </summary>
+    public int RevivePercent { get; init; }
+
+    /// <summary>The free cells of the area become rubble, a small obstacle, once the damage is dealt (Meteor Shower III, ADR-177).</summary>
+    public bool Rubble { get; init; }
+
+    /// <summary>A field or area spell leaves the caster's own demons alone (Ashfall III, ADR-177).</summary>
+    public bool SparesOwnDemons { get; init; }
+
+    /// <summary>The percent of the damage the caster's own stacks take (Hellfire III, ADR-177); 100 for all of it.</summary>
+    public int OwnPercent { get; init; } = 100;
+
+    /// <summary>The summoned creatures join the hero's army after a won battle, as far as its slots allow (Summon Demons III, ADR-177).</summary>
+    public bool Stays { get; init; }
+
+    /// <summary>How many of the summon's kinds one cast calls, each worth the amount (Bind Elemental III, ADR-177).</summary>
+    public int Kinds { get; init; } = 1;
+
+    /// <summary>Spell Power the enemy hero loses for the rest of the battle, once a cast (Unravel III, ADR-177).</summary>
+    public int SapPower { get; init; }
+
+    /// <summary>Percent of the hero's mana cost given back when every spell a dispel took off was the enemy's (Dispel III, ADR-177).</summary>
+    public int RefundPercent { get; init; }
+
     /// <summary>
     /// Whether the spell is aimed with a second click after its stack: the cell a move goes to, the own stack a drain heals (ADR-151), the own stack
     /// that takes the blows (Martyrdom, ADR-152).
@@ -337,16 +377,39 @@ public sealed record SpellEffect(
         var amount = 0;
         if (kind == SpellEffectKind.Summon)
         {
-            // summon <creature>[|<creature> …] <health> [rooted]
+            // summon <creature>[|<creature> …] <health> [rooted] [stays] [kinds N]
+            const string form = "a summon is 'summon <creature> <health> [rooted] [stays] [kinds N]', N at most its kinds";
             var creatures = Next().Split('|', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             amount = Number(Next());
-            var rooted = i < tokens.Length && tokens[i] == "rooted" && ++i > 0;
-            if (i < tokens.Length || amount < 1)
+            var (rooted, stays, kinds) = (false, false, 1);
+            while (i < tokens.Length)
             {
-                throw new FormatException($"'{text}': a summon is 'summon <creature> <health> [rooted]'");
+                switch (tokens[i++])
+                {
+                    case "rooted":
+                        rooted = true;
+                        break;
+                    case "stays":
+                        stays = true;
+                        break;
+                    case "kinds":
+                        kinds = Number(Next());
+                        break;
+                    default:
+                        throw new FormatException($"'{text}': {form}");
+                }
             }
 
-            return new SpellEffect(kind, amount, SpellReach.Side, 0, SpellFilter.None, SpellModifiers.None, null, 0, creatures, rooted);
+            if (amount < 1 || kinds < 1 || kinds > creatures.Length)
+            {
+                throw new FormatException($"'{text}': {form}");
+            }
+
+            return new SpellEffect(kind, amount, SpellReach.Side, 0, SpellFilter.None, SpellModifiers.None, null, 0, creatures, rooted)
+            {
+                Stays = stays,
+                Kinds = kinds,
+            };
         }
 
         if (kind is SpellEffectKind.Damage or SpellEffectKind.Heal or SpellEffectKind.Revive or SpellEffectKind.Slay or SpellEffectKind.Raise
@@ -419,11 +482,39 @@ public sealed record SpellEffect(
         var (turns, healthLimit) = ((int?)null, 0);
         var (shadow, again, drain, drainRevives) = (false, SpellTurnAgain.None, 0, false);
         var (survives, martyrDefense, split) = (0, 0, false);
+        var (cures, revivePercent, rubble, sparesDemons, ownPercent, sapPower, refund, hit) = (false, 0, false, false, 100, 0, 0, false);
         while (i < tokens.Length)
         {
             var token = tokens[i++];
             switch (token)
             {
+                case "cure" when kind == SpellEffectKind.Heal:
+                    cures = true;
+                    break;
+                case "revive%" when kind == SpellEffectKind.Heal:
+                    revivePercent = Number(Next());
+                    break;
+                case "heal" when kind == SpellEffectKind.Dispel:
+                    amount = Number(Next());
+                    break;
+                case "sap-power" when kind == SpellEffectKind.Dispel:
+                    sapPower = Number(Next());
+                    break;
+                case "refund%" when kind == SpellEffectKind.Dispel:
+                    refund = Number(Next());
+                    break;
+                case "hit" when kind == SpellEffectKind.Curse:
+                    (amount, hit) = (Number(Next()), true);
+                    break;
+                case "rubble" when kind == SpellEffectKind.Damage:
+                    rubble = true;
+                    break;
+                case "spare-own-demons" when kind == SpellEffectKind.Damage:
+                    sparesDemons = true;
+                    break;
+                case "own%" when kind == SpellEffectKind.Damage:
+                    ownPercent = Number(Next());
+                    break;
                 case "survives":
                     survives = Number(Next());
                     break;
@@ -677,6 +768,21 @@ public sealed record SpellEffect(
             throw new FormatException($"'{text}': 'split' is for a 'controlled' spell with a health limit");
         }
 
+        if (revivePercent is < 0 or > 100 || refund is < 0 or > 100 || ownPercent is < 0 or > 100 || amount < 0 || sapPower < 0 || (hit && amount < 1))
+        {
+            throw new FormatException($"'{text}': revive%, refund% and own% run from 0 to 100; heal and sap-power are not negative, hit is at least 1");
+        }
+
+        if (rubble && (reach != SpellReach.Area || column || ring || lineLength > 0))
+        {
+            throw new FormatException($"'{text}': 'rubble' needs a square area");
+        }
+
+        if (sparesDemons && reach is not (SpellReach.Area or SpellReach.All))
+        {
+            throw new FormatException($"'{text}': 'spare-own-demons' is for area and field spells");
+        }
+
         var height = 0;
         if (kind == SpellEffectKind.Zone)
         {
@@ -721,6 +827,13 @@ public sealed record SpellEffect(
             CopyHits = 1 + survives,
             MartyrDefense = martyrDefense,
             Split = split,
+            Cures = cures,
+            RevivePercent = revivePercent,
+            Rubble = rubble,
+            SparesOwnDemons = sparesDemons,
+            OwnPercent = ownPercent,
+            SapPower = sapPower,
+            RefundPercent = refund,
         };
 
         string Next() => i < tokens.Length ? tokens[i++] : throw new FormatException($"'{text}' ends too early");
@@ -746,6 +859,7 @@ public sealed record SpellEffect(
         ["frenzied"] = SpellStatus.Frenzied,
         ["controlled"] = SpellStatus.Controlled,
         ["twice"] = SpellStatus.Twice,
+        ["screened"] = SpellStatus.Screened,
     };
 
     private static int Number(string text) =>
@@ -774,6 +888,7 @@ public sealed record SpellEffect(
         "thorns%" => m with { ThornsPercent = value },
         "lifesteal%" => m with { LifestealPercent = value },
         "martyr%" => m with { MartyrPercent = value },
+        "ambush%" => m with { AmbushPercent = value },
         _ => throw new FormatException($"'{key}' is not something a spell changes"),
     };
 }

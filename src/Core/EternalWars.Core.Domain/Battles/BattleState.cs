@@ -79,6 +79,9 @@ public sealed class BattleUnit
     /// <summary>Called by a spell (ADR-106, ADR-120): it vanishes when the battle ends, is nobody's loss and is worth no experience.</summary>
     public bool IsSummoned { get; internal init; }
 
+    /// <summary>Summoned creatures that join the side's army when it wins (Summon Demons III, ADR-177).</summary>
+    public bool Stays { get; internal set; }
+
     /// <summary>A copy of another stack (Mirror Image, ADR-152): summoned, it vanishes when hit (<see cref="CopyHits"/>) or when its rounds end.</summary>
     public bool IsCopy { get; internal init; }
 
@@ -178,6 +181,7 @@ public sealed class BattleUnit
         ShotsLeft = ShotsLeft,
         MutableCastsLeft = new Dictionary<string, int>(CastsLeft, StringComparer.Ordinal),
         IsSummoned = IsSummoned,
+        Stays = Stays,
         IsRooted = IsRooted,
         IsCopy = IsCopy,
         CopyHits = CopyHits,
@@ -273,6 +277,9 @@ public sealed class BattleState
 
     /// <summary>The round a side's hero last cast in; it casts at most once a round (ADR-071, MAG-4).</summary>
     internal Dictionary<BattleSide, int> CastRounds { get; } = [];
+
+    /// <summary>Spell Power a side's hero has lost for the rest of the battle to the enemy's spells (Unravel III, ADR-177).</summary>
+    internal Dictionary<BattleSide, int> SappedPower { get; } = [];
 
     public int ManaOf(BattleSide side) => ManaLeft.GetValueOrDefault(side);
 
@@ -452,6 +459,11 @@ public sealed class BattleState
         foreach (var (side, raise) in Raising)
         {
             copy.Raising[side] = raise;
+        }
+
+        foreach (var (side, sapped) in SappedPower)
+        {
+            copy.SappedPower[side] = sapped;
         }
 
         copy.Risen.UnionWith(Risen);

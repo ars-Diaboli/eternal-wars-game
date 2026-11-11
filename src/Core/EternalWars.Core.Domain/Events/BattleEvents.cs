@@ -212,8 +212,23 @@ public sealed record BattleCopyVanished(int Unit, string Spell) : IEvent;
 /// </summary>
 public sealed record BattleUnitShielded(int Martyr, int Unit, string Spell, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
 
-/// <summary>A side's hero gained <paramref name="Gained"/> mana in battle (Blood Price, ADR-152); <paramref name="Mana"/> is what it has now.</summary>
+/// <summary>
+/// A side's hero gained <paramref name="Gained"/> mana in battle (Blood Price, ADR-152; Dispel III's refund, ADR-177); <paramref name="Mana"/> is
+/// what it has now.
+/// </summary>
 public sealed record BattleManaGained(BattleSide Side, string Spell, int Gained, int Mana) : IEvent;
+
+/// <summary>
+/// A stack's attack stole mana from the enemy hero (the Familiars' mana theft, ADR-177): <paramref name="From"/> lost <paramref name="Stolen"/> and
+/// has <paramref name="FromMana"/> left; the stack's own hero, if it has a spell book, gained it.
+/// </summary>
+public sealed record BattleManaStolen(int Unit, BattleSide From, int Stolen, int FromMana) : IEvent;
+
+/// <summary>A spell took <paramref name="Lost"/> Spell Power from <paramref name="Side"/>'s hero for the rest of the battle (Unravel III, ADR-177).</summary>
+public sealed record BattleSpellPowerSapped(BattleSide Side, string Spell, int Lost) : IEvent;
+
+/// <summary>A spell left rubble on the field (Meteor Shower III, ADR-177): one-cell obstacles, from now on part of <see cref="Battles.BattleState.Obstacles"/>.</summary>
+public sealed record BattleRubbleFell(string Spell, IReadOnlyList<BattleObstacle> Rubble) : IEvent;
 
 /// <summary>A stack takes the second turn a spell gives it this round, right after its first (Clockwork Precision, ADR-152).</summary>
 public sealed record BattleUnitActsAgain(int Unit, string Spell) : IEvent;

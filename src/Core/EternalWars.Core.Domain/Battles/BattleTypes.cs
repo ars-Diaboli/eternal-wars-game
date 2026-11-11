@@ -92,13 +92,16 @@ public enum ObstacleClass
 
     /// <summary>A long cliff that splits the field partly (ADR-146): <see cref="BattleObstacle.CliffThickness"/> wide, 6–12 cells long, 1/4 cover like a crag.</summary>
     Cliff,
+
+    /// <summary>One cell of rubble a spell left (Meteor Shower III, ADR-177): it blocks walkers and gives 1/8 cover, like a boulder.</summary>
+    Rubble,
 }
 
 public static class ObstacleClassExtensions
 {
     public static int CoverEighths(this ObstacleClass cover) => cover switch
     {
-        ObstacleClass.Small => 1,
+        ObstacleClass.Small or ObstacleClass.Rubble => 1,
         ObstacleClass.Big or ObstacleClass.Cliff => 2,
         _ => 4,
     };
