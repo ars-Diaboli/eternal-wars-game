@@ -16,8 +16,8 @@ public class ArenaFormatTests
         state.AddObject(new CombatPlace(state.NextObjectId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.CombatPlace), new(2, 1)));
         state.AddObject(new CombatPlace(state.NextObjectId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.VerticalCombatPlace), new(5, 2)));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(state);
+        var restored = TestFormat.Load(json);
 
         Assert.Contains("\"arena\": true", json);
         Assert.Contains("\"kind\": \"combatPlace\"", json);
@@ -31,7 +31,7 @@ public class ArenaFormatTests
     [Fact]
     public void AnOrdinaryMap_WritesNoArenaSwitch()
     {
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(BlankScenario.Create(8, 6)));
+        var json = TestFormat.Save(BlankScenario.Create(8, 6));
 
         Assert.DoesNotContain("arena", json);
     }
@@ -48,7 +48,7 @@ public class ArenaFormatTests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(old));
+        var state = TestFormat.Load(old);
 
         Assert.False(state.Rules.Arena);
         Assert.Equal(38, MapDocument.CurrentFormatVersion);

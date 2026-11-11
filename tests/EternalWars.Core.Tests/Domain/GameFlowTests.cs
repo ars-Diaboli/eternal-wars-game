@@ -11,7 +11,6 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
@@ -546,7 +545,7 @@ public class GameFlowTests
         state.SetRules(rules);
 
         var document = MapConverter.ToDocument(state);
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(document)));
+        var loaded = TestFormat.Load(MapSerializer.Serialize(document));
         var older = MapConverter.ToGameState(document with { FormatVersion = 24, Rules = document.Rules! with { Victory = [new(ConditionKind.CaptureTown, Town: 3)] } });
 
         Assert.Equal(MapDocument.CurrentFormatVersion, document.FormatVersion);
@@ -616,8 +615,7 @@ public class GameFlowTests
             GraceDays: 3);
         state.SetRules(rules);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var loaded = TestFormat.RoundTrip(state);
 
         Assert.Equal(rules.Victory, loaded.Rules.Victory);
         Assert.Equal(rules.Defeat, loaded.Rules.Defeat);
@@ -640,7 +638,7 @@ public class GameFlowTests
     [Fact]
     public void TheEditor_SetsRulesUndoably()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10, 1));
+        var editor = TestEditor.Blank(12, 10, 1);
         var changes = 0;
         editor.Events.Subscribe<ScenarioRulesChanged>(_ => changes++);
         var rules = new ScenarioRules([ScenarioCondition.SurviveUntilDay(10)], []);

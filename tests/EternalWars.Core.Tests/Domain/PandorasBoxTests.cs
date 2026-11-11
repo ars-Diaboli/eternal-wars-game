@@ -152,7 +152,7 @@ public class PandorasBoxTests
     [Fact]
     public void TheBox_IsInTheMapFormat_TheValidatorWantsContents_TheEditorSetsItUndoably_AndAGameWithItReplays()
     {
-        var editor = new MapEditorSession(Create(".........", ".........", "...A.....", ".........", "C.......B"));
+        var editor = TestEditor.World(".........", ".........", "...A.....", ".........", "C.......B");
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.PandorasBox, new(3, 1), out var placed));
         var box = (PandorasBox)editor.Scenario.GetObject(placed);
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error && i.Message.Contains("is empty", StringComparison.Ordinal));
@@ -169,7 +169,7 @@ public class PandorasBoxTests
 
         var map = MapConverter.ToDocument(editor.Scenario);
         var json = MapSerializer.Serialize(map);
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json)).ObjectsOf<PandorasBox>().Single();
+        var restored = TestFormat.Load(json).ObjectsOf<PandorasBox>().Single();
         Assert.Contains("\"kind\": \"pandorasBox\"", json, StringComparison.Ordinal);
         Assert.True(MapDocument.CurrentFormatVersion >= 28);
         Assert.Equal((Everything, "Beware."), (restored.Contents, restored.Message));

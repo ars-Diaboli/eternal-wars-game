@@ -7,7 +7,6 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
@@ -190,7 +189,7 @@ public class SpellScrollTests
     [Fact]
     public void TheEditor_SetsABlankOrAWrittenScroll_OnAPickup()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 8));
+        var editor = TestEditor.Blank(12, 8);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), new(2, 2), out var id));
 
         Assert.Equal(EditResult.Ok, editor.Contents.SetArtifactPickup(id, Scroll(1)));

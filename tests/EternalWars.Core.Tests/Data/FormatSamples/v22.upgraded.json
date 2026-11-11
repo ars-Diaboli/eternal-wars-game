@@ -1,0 +1,81 @@
+{
+  "formatVersion": 38,
+  "name": "Version 22 sample",
+  "description": "",
+  "width": 14,
+  "height": 6,
+  "terrain": [
+    [
+      "gggggggggggggg",
+      "gggggggggggggg",
+      "gggggggggggggg",
+      "gggggggggggggg",
+      "gggggggggggggg",
+      "gggggggggggggg"
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": false
+    }
+  ],
+  "teamsLocked": false,
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Orrin",
+      "owner": 0,
+      "x": 1,
+      "y": 1,
+      "level": 0,
+      "attack": 0,
+      "defense": 0,
+      "spellBook": false
+    }
+  ],
+  "objects": [
+    {
+      "kind": "bank",
+      "id": 1,
+      "definition": "bank.crypt",
+      "x": 4,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "disposition": "Aggressive",
+      "neverFlees": false,
+      "mode": "Area",
+      "id": 2,
+      "definition": "monster",
+      "x": 10,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "provider",
+      "owner": 0,
+      "id": 3,
+      "definition": "provider.windmill",
+      "x": 2,
+      "y": 4,
+      "level": 0
+    },
+    {
+      "kind": "sign",
+      "message": "Beware the crypt.",
+      "id": 4,
+      "definition": "sign",
+      "x": 8,
+      "y": 4,
+      "level": 0
+    }
+  ]
+}

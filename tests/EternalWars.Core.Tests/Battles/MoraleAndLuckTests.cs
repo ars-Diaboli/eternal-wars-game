@@ -4,7 +4,6 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
-using EternalWars.Core.Domain.Scenarios;
 using static EternalWars.Core.Domain.Battles.BattleSide;
 
 namespace EternalWars.Core.Tests.Battles;
@@ -189,13 +188,13 @@ public class MoraleAndLuckDataTests
     [Fact]
     public void HeroMoraleAndLuck_RoundTripThroughTheMapFormat_AndAreOmittedWhenZero()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var brave);
         editor.Heroes.Place(new PlayerId(0), new MapPosition(4, 2), "Plain", out _);
         Assert.Equal(EditResult.Ok, editor.Heroes.SetMoraleAndLuck(brave, 3, -2));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
 
         Assert.Equal((3, -2), (restored.GetHero(brave).Morale, restored.GetHero(brave).Luck));
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(json, "\"morale\""));
@@ -205,7 +204,7 @@ public class MoraleAndLuckDataTests
     [Fact]
     public void Editor_SetsMoraleAndLuck_Undoably_WithinFive()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
         var hero = editor.Scenario.GetHero(id);
 

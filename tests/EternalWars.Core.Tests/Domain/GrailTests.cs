@@ -326,12 +326,12 @@ public class GrailTests
         state.SetGrail(new MapPosition(3, 2));
         var map = MapConverter.ToDocument(state);
         var json = MapSerializer.Serialize(map);
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var restored = TestFormat.Load(json);
 
         Assert.Contains("\"obelisk\"", json, StringComparison.Ordinal);
         Assert.Equal(new MapPosition(3, 2), restored.Grail.Position);
         Assert.Single(restored.ObjectsOf<Obelisk>());
-        Assert.Null(MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(Create(Open))))).Grail.Position);
+        Assert.Null(TestFormat.RoundTrip(Create(Open)).Grail.Position);
 
         var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 4)));
         session.Start();

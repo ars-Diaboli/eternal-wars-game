@@ -430,14 +430,15 @@ public sealed class GameState
 
     internal void RemovePlayer(Player player) => _players.Remove(player);
 
-    internal void AddHero(Hero hero)
+    /// <summary>Adds the hero at the end of <see cref="Heroes"/>, or at <paramref name="index"/> (an undone removal puts it back where it was).</summary>
+    internal void AddHero(Hero hero, int? index = null)
     {
         if (!_heroById.TryAdd(hero.Id, hero))
         {
             throw new ArgumentException($"Duplicate hero id {hero.Id}.", nameof(hero));
         }
 
-        _heroes.Add(hero);
+        _heroes.Insert(index ?? _heroes.Count, hero);
         RefreshArtifacts(hero);
         _highestHeroId = Math.Max(_highestHeroId, hero.Id.Value);
     }
@@ -446,12 +447,17 @@ public sealed class GameState
     internal void RefreshArtifacts(Hero hero) =>
         hero.Bonus = ArtifactBonuses.Compute(Artifacts, hero.Artifacts) with { HomeTown = ProgressionService.TownOf(this, hero) };
 
-    internal void RemoveHero(Hero hero)
+    /// <summary>Removes the hero; returns where it was in <see cref="Heroes"/>, or -1 when it was not there.</summary>
+    internal int RemoveHero(Hero hero)
     {
-        if (_heroes.Remove(hero))
+        var index = _heroes.IndexOf(hero);
+        if (index >= 0)
         {
+            _heroes.RemoveAt(index);
             _heroById.Remove(hero.Id);
         }
+
+        return index;
     }
 
     internal void Retire(Hero hero) => _retiredHeroes.Add(hero);
@@ -460,7 +466,8 @@ public sealed class GameState
 
     internal void RemoveRetiredHeroesOf(PlayerId owner) => _retiredHeroes.RemoveAll(h => h.Owner == owner);
 
-    internal void AddObject(MapObject mapObject)
+    /// <summary>Adds the object at the end of <see cref="Objects"/>, or at <paramref name="index"/> (an undone removal puts it back where it was).</summary>
+    internal void AddObject(MapObject mapObject, int? index = null)
     {
         if (_objectById.ContainsKey(mapObject.Id))
         {
@@ -480,7 +487,7 @@ public sealed class GameState
             }
         }
 
-        _objects.Add(mapObject);
+        _objects.Insert(index ?? _objects.Count, mapObject);
         _objectById.Add(mapObject.Id, mapObject);
         foreach (var (position, cell) in mapObject.OccupiedCells())
         {
@@ -488,18 +495,23 @@ public sealed class GameState
         }
     }
 
-    internal void RemoveObject(MapObject mapObject)
+    /// <summary>Removes the object; returns where it was in <see cref="Objects"/>, or -1 when it was not there.</summary>
+    internal int RemoveObject(MapObject mapObject)
     {
-        if (!_objects.Remove(mapObject))
+        var index = _objects.IndexOf(mapObject);
+        if (index < 0)
         {
-            return;
+            return index;
         }
 
+        _objects.RemoveAt(index);
         _objectById.Remove(mapObject.Id);
 
         foreach (var (position, _) in mapObject.OccupiedCells())
         {
             _objectCells.Remove(position);
         }
+
+        return index;
     }
 }

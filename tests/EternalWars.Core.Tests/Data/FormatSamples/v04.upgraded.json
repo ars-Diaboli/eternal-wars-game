@@ -1,0 +1,143 @@
+{
+  "formatVersion": 38,
+  "name": "Version 4 sample",
+  "description": "Hero armies and Tactics, monsters, mine guards and the map-wide guard mode.",
+  "width": 12,
+  "height": 6,
+  "terrain": [
+    [
+      "gggggggggggg",
+      "gggggggggggg",
+      "ggggddddgggg",
+      "gggggggggggg",
+      "gggggggggggg",
+      "gggggggggggg"
+    ]
+  ],
+  "roads": [
+    [
+      "............",
+      "..dddddddd..",
+      "............",
+      "............",
+      "............",
+      "............"
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": false
+    }
+  ],
+  "teamsLocked": false,
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Orrin",
+      "owner": 0,
+      "x": 1,
+      "y": 1,
+      "level": 0,
+      "attack": 2,
+      "defense": 1,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "haven.footman",
+          "count": 12
+        },
+        {
+          "slot": 2,
+          "creature": "haven.archer",
+          "count": 8
+        }
+      ],
+      "skills": {
+        "tactics.tactics": "Advanced"
+      },
+      "spellBook": false
+    },
+    {
+      "id": 2,
+      "name": "Sandro",
+      "owner": 1,
+      "x": 10,
+      "y": 4,
+      "level": 0,
+      "attack": 0,
+      "defense": 0,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "inferno.imp",
+          "count": 15
+        }
+      ],
+      "spellBook": false
+    }
+  ],
+  "objects": [
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "count": 9,
+      "disposition": "Savage",
+      "neverFlees": true,
+      "mode": "Area",
+      "id": 1,
+      "definition": "monster",
+      "x": 5,
+      "y": 4,
+      "level": 0
+    },
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "disposition": "Aggressive",
+      "neverFlees": false,
+      "mode": "Area",
+      "id": 2,
+      "definition": "monster",
+      "x": 8,
+      "y": 0,
+      "level": 0
+    },
+    {
+      "kind": "mine",
+      "owner": 0,
+      "guard": {
+        "creature": "neutral.wolf",
+        "count": 6
+      },
+      "id": 3,
+      "definition": "mine.gold",
+      "x": 2,
+      "y": 3,
+      "level": 0
+    },
+    {
+      "kind": "chest",
+      "gold": 1500,
+      "experience": 1000,
+      "id": 4,
+      "definition": "chest",
+      "x": 6,
+      "y": 0,
+      "level": 0
+    },
+    {
+      "kind": "pile",
+      "amount": 500,
+      "id": 5,
+      "definition": "pile.gold",
+      "x": 9,
+      "y": 2,
+      "level": 0
+    }
+  ]
+}

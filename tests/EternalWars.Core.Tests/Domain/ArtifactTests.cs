@@ -539,8 +539,7 @@ public class ArtifactTests
         Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Major), 1, 0).Artifact = "hunters-mark";
         Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Relic), 2, 0);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var loaded = TestFormat.RoundTrip(state);
 
         Assert.Equal(["rusted-blade", "iron-band"], loaded.GetHero(A).Artifacts.AllWorn.Select(w => w.Id).Order(StringComparer.Ordinal).Reverse());
         Assert.Equal(["scholars-cap"], loaded.GetHero(A).Artifacts.Backpack);

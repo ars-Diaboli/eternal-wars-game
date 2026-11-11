@@ -34,8 +34,8 @@ tools/EternalWars.Tools.Sim    headless console app over Tier 1 (see development
 | Apps | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 Core.Events depends on nothing; apps never reference each other. Enforced by `Directory.Build.targets` (build fails if a
-`src/Core` project uses `Godot.NET.Sdk` or references `GodotSharp` or a `*Godot*` project); `Directory.Build.props`
-builds core with `TreatWarningsAsErrors`.
+`src/Core` project uses `Godot.NET.Sdk` or references `GodotSharp` or a `*Godot*` project) and by `ArchitectureTests` (every project's
+references against this table); `Directory.Build.props` builds core with `TreatWarningsAsErrors`.
 
 ## 3. Runtime composition
 
@@ -126,6 +126,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 | Hero limit (ADR-068) | `ScenarioRules.MaxHeroes`, `Player.MaxHeroes`; `GameState.HeroLimitReached` is the one check. `GameSession.Start` removes surplus heroes. |
 | Adventure AI (ADR-059, ADR-119) | `AdventureAi` (`AI/`) plays only through `Execute`; `BattleEstimator` runs the real engine on a throwaway state; `Explain` for debugging; an arena's preparation day in `AdventureAi.Arena.cs` (ADR-160). The game app calls `PlayTurn()` once a frame for computer players. |
 | Magic (ADR-110, ADR-120, ADR-122) | `Magic/`: `Spells` (from `spells.csv`), `MagicRules`, `AdventureMagic` / `AdventureMagicService`; battle casting in `Battles/BattleMagic`, effect kinds in `Battles/Spells/` (see Battles). |
+| Map format (ADR-174) | `MapDocument` is the current format only; `MapSerializer` / `GameRecordSerializer` upgrade an older file's JSON first through `MapMigrations` (`IMapMigration` steps by version). Pinned in tests: a sample per version with a step and the current one, the JSON shape of maps and saves, and generated maps per `MapGenerator.Version`. |
 | Saves (ADR-058) | `GameSaves` (Core.Data): initial map + options + command log, digest-checked on load; works mid-battle since battle actions are commands. Autosave hooks `CommandExecuted`. Game app builds its nodes under one `Game` node (freed on load); `BattleView3D.Restore` shows a running battle. |
 | Arena (ADR-097, ADR-158) | `ScenarioRules.Arena`; `ArenaRules` (preparation day: `MovementAllowance.Daily(state, hero)`, `TownRules.HasBuiltToday`; `Plan` chooses sides and champions); `ArenaService.StartBattle` runs from `TurnService` at day 2 instead of a turn; `BattleService` records the result in `GameState.Arena` (no experience, no AI retreat); `GameFlowService` ends the game from it. `CombatPlace` object. The editor's checks in `MapValidator.Arena.cs`, the contents shown on day 1 in `AdventureIntel.ArenaContents` (ADR-161). |
 

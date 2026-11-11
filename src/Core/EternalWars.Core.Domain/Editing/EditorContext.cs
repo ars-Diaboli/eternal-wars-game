@@ -99,28 +99,34 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
 
     public Hero? Hero(HeroId id) => Scenario.Heroes.FirstOrDefault(h => h.Id == id);
 
-    public void AddObject(MapObject mapObject)
+    /// <summary>Adds the object at the end of the scenario's objects, or back at <paramref name="index"/> when undoing its removal.</summary>
+    public void AddObject(MapObject mapObject, int? index = null)
     {
-        Scenario.AddObject(mapObject);
+        Scenario.AddObject(mapObject, index);
         Bus.Publish(new MapObjectPlaced(mapObject.Id, mapObject.Definition.Id, mapObject.Position));
     }
 
-    public void RemoveObject(MapObject mapObject)
+    /// <summary>Removes the object; returns where it was, for an undo to put it back there (the order is the order rules visit objects in).</summary>
+    public int RemoveObject(MapObject mapObject)
     {
-        Scenario.RemoveObject(mapObject);
+        var index = Scenario.RemoveObject(mapObject);
         Bus.Publish(new MapObjectRemoved(mapObject.Id));
+        return index;
     }
 
-    public void AddHero(Hero hero)
+    /// <summary>Adds the hero at the end of the scenario's heroes, or back at <paramref name="index"/> when undoing its removal.</summary>
+    public void AddHero(Hero hero, int? index = null)
     {
-        Scenario.AddHero(hero);
+        Scenario.AddHero(hero, index);
         Bus.Publish(new HeroPlaced(hero.Id, hero.Owner, hero.Position));
     }
 
-    public void RemoveHero(Hero hero)
+    /// <summary>Removes the hero; returns where it was, for an undo to put it back there.</summary>
+    public int RemoveHero(Hero hero)
     {
-        Scenario.RemoveHero(hero);
+        var index = Scenario.RemoveHero(hero);
         Bus.Publish(new HeroRemoved(hero.Id));
+        return index;
     }
 
     /// <summary>Whether two lists hold the same items in the same order (no-op check for list-valued edits).</summary>

@@ -1,176 +1,26 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
-using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
-using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
+using static EternalWars.Core.Tests.Domain.ObjectVisitWorld;
 using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
 
 /// <summary>
-/// The third object catalogue (ADR-079): cartographer (MAP-31), artifact merchant (MAP-33), refugee camp (MAP-30), sacrificial altar (MAP-29),
-/// sphinx (MAP-27) and witch hut (MAP-34).
+/// The sphinx (MAP-27) and the witch hut (MAP-34) of the third object catalogue (ADR-079), in play and in the editor (ADR-114); and the map format
+/// of that catalogue's objects.
 /// </summary>
-public class ThirdCatalogueTests
+public class SphinxAndWitchHutTests
 {
-    // Every object here has its entrance at (3, 1) when placed at (2, 0); hero A starts below it, Charlie in the corner.
-    private static (GameSession Session, T Object) World<T>(string definition, Action<GameState, T>? setUp = null, bool revealAll = true)
-        where T : MapObject
-    {
-        var state = Create(".............................", ".............................", "...A.........................", ".............................", "C...........................B");
-        var mapObject = Add<T>(state, definition, 2, 0);
-        setUp?.Invoke(state, mapObject);
-        var session = Start(state, revealAll);
-        state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 50_000);
-        return (session, mapObject);
-    }
-
-    private static Hero HeroA(GameSession session) => session.State.GetHero(A);
-
-    [Fact]
-    public void TheCartographer_SellsTheWholeLevelFor3000_OncePerPlayer()
-    {
-        var (session, cartographer) = World<Cartographer>(BuiltInMapObjects.SurfaceCartographer, revealAll: false);
-        var state = session.State;
-        Assert.False(state.Fog.IsExplored(Blue, new MapPosition(20, 4)));
-
-        session.Step(A, Direction.North);
-        Assert.Equal(new CartographerDecision(A, cartographer.Id, 0, 3000), state.PendingDecision);
-        session.Execute(new AnswerCartographerCommand(Blue, Buy: true)).ThrowIfRejected();
-
-        Assert.Equal(47_000, state.GetPlayer(Blue).Resources.Gold);
-        Assert.True(state.Fog.IsExplored(Blue, new MapPosition(20, 4)));
-        var empty = new List<MapObjectFoundEmpty>();
-        session.Events.Subscribe<MapObjectFoundEmpty>(empty.Add);
-        session.Interactions.Visit(state.GetHero(C), cartographer);
-        Assert.Null(state.PendingDecision);
-        Assert.Single(empty);
-    }
-
-    [Fact]
-    public void TheCartographer_RefusesWithoutGold_AndTheUndergroundOneOnASingleLevelMap()
-    {
-        var (session, _) = World<Cartographer>(BuiltInMapObjects.SurfaceCartographer);
-        var refused = new List<MapObjectRefused>();
-        session.Events.Subscribe<MapObjectRefused>(refused.Add);
-        session.State.GetPlayer(Blue).Resources = new ResourceSet(Gold: 2999);
-        session.Step(A, Direction.North);
-        Assert.Null(session.State.PendingDecision);
-        Assert.Contains("3000 gold", Assert.Single(refused).Reason, StringComparison.Ordinal);
-
-        var (deep, _) = World<Cartographer>(BuiltInMapObjects.UndergroundCartographer);
-        var noUnderground = new List<MapObjectRefused>();
-        deep.Events.Subscribe<MapObjectRefused>(noUnderground.Add);
-        deep.Step(A, Direction.North);
-        Assert.Contains("no underground", Assert.Single(noUnderground).Reason, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void TheMerchant_LaysOutSevenMinorOrMajorArtifacts_SellsThemForTwiceTheirWorth_AndRestocksMonthly()
-    {
-        var (session, merchant) = World<ArtifactMerchant>(BuiltInMapObjects.ArtifactMerchant);
-        var state = session.State;
-        Assert.Equal(ArtifactMerchant.StockSize, merchant.Stock.Count);
-        Assert.All(merchant.Stock, a => Assert.Contains(state.Artifacts.Get(a!).Tier, new[] { ArtifactTier.Minor, ArtifactTier.Major }));
-        Assert.False(session.Execute(new BuyArtifactCommand(Blue, merchant.Id, 0)).IsAccepted); // nobody stands there
-
-        session.Step(A, Direction.North);
-        var artifact = merchant.Stock[0]!;
-        var price = ArtifactMerchantRules.Price(state.Artifacts.Get(artifact));
-        Assert.Equal(2 * ArtifactMerchantRules.Value(state.Artifacts.Get(artifact).Tier), price.Gold);
-        session.Execute(new BuyArtifactCommand(Blue, merchant.Id, 0)).ThrowIfRejected();
-
-        Assert.Contains(artifact, HeroA(session).Artifacts.Backpack);
-        Assert.Equal(50_000 - price.Gold, state.GetPlayer(Blue).Resources.Gold);
-        Assert.Null(merchant.Stock[0]);
-        Assert.Contains("Nothing is for sale", session.Execute(new BuyArtifactCommand(Blue, merchant.Id, 0)).Error);
-
-        session.ObjectLifecycle.StartWeek(restock: false);
-        Assert.Null(merchant.Stock[0]); // a sold slot waits for the month
-        session.ObjectLifecycle.StartWeek(restock: true);
-        Assert.All(merchant.Stock, Assert.NotNull);
-    }
-
-    [Fact]
-    public void ARefugeeCamp_HasAWeekOfATier3To5BaseCreature_SoldAtTheNormalPrice_AndANewOneEveryWeek()
-    {
-        var (session, camp) = World<RefugeeCamp>(BuiltInMapObjects.RefugeeCamp);
-        var state = session.State;
-        var creature = state.Creatures.Get(camp.Creature!);
-        Assert.InRange(creature.Tier, 3, 5);
-        Assert.Equal(creature.Id, state.Creatures.BaseOf(creature.Id));
-        Assert.Contains(creature.Town, BuiltInMapObjects.PlayableTowns);
-        Assert.Equal(creature.WeeklyGrowth, camp.Available);
-
-        session.Step(A, Direction.North);
-        session.Execute(new RecruitAtRefugeeCampCommand(Blue, camp.Id, 2)).ThrowIfRejected();
-
-        Assert.Equal(creature.WeeklyGrowth - 2, camp.Available);
-        Assert.Equal(50_000 - (2 * creature.Cost.Gold), state.GetPlayer(Blue).Resources.Gold);
-        Assert.Contains(HeroA(session).Army.Stacks, s => s.Stack == new CreatureStack(creature.Id, 2));
-        Assert.False(session.Execute(new RecruitAtRefugeeCampCommand(Blue, camp.Id, camp.Available + 1)).IsAccepted);
-
-        var seen = new HashSet<string>();
-        for (var week = 0; week < 12; week++)
-        {
-            session.ObjectLifecycle.StartWeek(restock: false);
-            seen.Add(camp.Creature!);
-            Assert.Equal(state.Creatures.Get(camp.Creature!).WeeklyGrowth, camp.Available);
-        }
-
-        Assert.True(seen.Count > 1);
-    }
-
-    [Fact]
-    public void DarknessHeroes_SacrificeCreatures_ForTwiceTheirHitPoints_KeepingOne()
-    {
-        var (session, altar) = World<SacrificialAltar>(BuiltInMapObjects.SacrificialAltar, (state, _) =>
-        {
-            state.GetHero(A).PreferredCreature = "necropolis.skeleton";
-            state.GetHero(A).Army.Set(1, new CreatureStack("necropolis.skeleton", 5));
-        });
-        session.Step(A, Direction.North);
-        var hero = HeroA(session);
-        var health = session.State.Creatures.Get("necropolis.skeleton").Health;
-
-        session.Execute(new SacrificeCreaturesCommand(Blue, altar.Id, 1, 5)).ThrowIfRejected();
-
-        Assert.Equal(5 * health * 2, hero.Experience);
-        Assert.Null(hero.Army[1]);
-        Assert.Contains("keep at least one", session.Execute(new SacrificeCreaturesCommand(Blue, altar.Id, 0, hero.Army[0]!.Count)).Error);
-        Assert.Contains("cannot sacrifice artifacts", session.Execute(new SacrificeArtifactCommand(Blue, altar.Id, "x")).Error);
-    }
-
-    [Fact]
-    public void LightHeroes_SacrificeArtifacts_ByTier_AndWildHeroesEither()
-    {
-        var minor = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).First().Id;
-        var (session, altar) = World<SacrificialAltar>(BuiltInMapObjects.SacrificialAltar, (state, _) =>
-        {
-            state.GetHero(A).PreferredCreature = "haven.footman";
-            state.GetHero(A).Artifacts.AddToBackpack(minor);
-        });
-        session.Step(A, Direction.North);
-
-        Assert.Contains("cannot sacrifice creatures", session.Execute(new SacrificeCreaturesCommand(Blue, altar.Id, 0, 1)).Error);
-        session.Execute(new SacrificeArtifactCommand(Blue, altar.Id, minor)).ThrowIfRejected();
-
-        Assert.Equal(2000, HeroA(session).Experience);
-        Assert.DoesNotContain(minor, HeroA(session).Artifacts.Backpack);
-        Assert.Equal(SacrificeKind.Creatures | SacrificeKind.Artifacts, SacrificeRules.For(Core.Domain.Towns.TownIds.Stronghold));
-        Assert.Equal(SacrificeKind.Creatures, SacrificeRules.For(Core.Domain.Towns.TownIds.Dungeon));
-    }
-
     private static readonly Riddle Author = new("What has keys but opens no lock?", "A piano", "A jailer", "A chest");
 
     [Fact]
@@ -258,7 +108,7 @@ public class ThirdCatalogueTests
         Add<SacrificialAltar>(state, BuiltInMapObjects.SacrificialAltar, 9, 3);
         var map = MapConverter.ToDocument(state);
         var json = MapSerializer.Serialize(map);
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var restored = TestFormat.Load(json);
 
         Assert.Equal(Author, restored.ObjectsOf<Sphinx>().Single().Riddle);
         Assert.Equal([BuiltInSkills.Logistics, BuiltInSkills.Archery], restored.ObjectsOf<WitchHut>().Single().Skills);
@@ -280,7 +130,7 @@ public class ThirdCatalogueTests
     [Fact]
     public void TheEditor_SetsASphinxsRiddle_RefusesBadOnes_AndUndoes()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(10, 6));
+        var editor = TestEditor.Blank(10, 6);
         editor.Objects.Place(BuiltInMapObjects.Sphinx, new(2, 2), out var id);
         var sphinx = (Sphinx)editor.Scenario.FindObject(id)!;
 
@@ -297,7 +147,7 @@ public class ThirdCatalogueTests
     [Fact]
     public void TheEditor_SetsAWitchHutsTwoSkills_OrNone_AndUndoes()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(10, 6));
+        var editor = TestEditor.Blank(10, 6);
         editor.Objects.Place(BuiltInMapObjects.WitchHut, new(2, 2), out var id);
         var hut = (WitchHut)editor.Scenario.FindObject(id)!;
 

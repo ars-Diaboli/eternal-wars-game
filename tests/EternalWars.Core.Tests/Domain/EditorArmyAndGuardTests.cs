@@ -6,7 +6,6 @@ using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Tests.Domain;
@@ -14,12 +13,10 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>Editor support for Phase 2 data: hero stats and armies, monsters, mine guards, chest values, per-monster guard mode.</summary>
 public class EditorArmyAndGuardTests
 {
-    private static MapEditorSession CreateEditor() => new(BlankScenario.Create(12, 10));
-
     [Fact]
     public void HeroStatsAndArmy_AreUndoable_AndValidated()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
         var hero = editor.Scenario.GetHero(id);
 
@@ -43,7 +40,7 @@ public class EditorArmyAndGuardTests
     [Fact]
     public void Monsters_ArePlacedConfiguredAndRemovedWithUndo()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         var changed = new List<IEvent>();
         editor.Events.Subscribe<IEvent>(changed.Add);
 
@@ -64,7 +61,7 @@ public class EditorArmyAndGuardTests
     [Fact]
     public void MineGuards_AndChestValues_AreUndoable()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Objects.Place(BuiltInMapObjects.MineId(ResourceType.Gold), new(4, 4), out var mineId);
         editor.Objects.Place(BuiltInMapObjects.TreasureChest, new(8, 8), out var chestId);
         var mine = (Mine)editor.Scenario.GetObject(mineId);
@@ -86,7 +83,7 @@ public class EditorArmyAndGuardTests
     [Fact]
     public void MonsterGuardMode_IsSetPerStack_WithUndoAndRedo()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Monsters.Place(new(3, 3), BuiltInCreatures.Troll, null, GuardDisposition.Hostile, false, out var treasureGuardId);
         editor.Monsters.Place(new(8, 3), BuiltInCreatures.Wolf, null, GuardDisposition.Hostile, false, out var otherId);
         var treasureGuard = (MonsterGuard)editor.Scenario.GetObject(treasureGuardId);

@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
@@ -87,9 +86,9 @@ public class FairnessAndSymmetryTests
         Assert.Throws<ArgumentOutOfRangeException>(() => state.SetTeamCounts(1, 3));
         Assert.Throws<ArgumentOutOfRangeException>(() => state.SetTeamCounts(4, 3));
 
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(state))));
+        var loaded = TestFormat.RoundTrip(state);
         Assert.Equal((2, 2), (loaded.MinTeams!.Value, loaded.MaxTeams!.Value));
-        Assert.Null(MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(MapConverter.ToDocument(EternalWars.Core.Domain.Scenarios.BlankScenario.Create(8, 8))))).MinTeams);
+        Assert.Null(TestFormat.RoundTrip(EternalWars.Core.Domain.Scenarios.BlankScenario.Create(8, 8)).MinTeams);
 
         var editor = new MapEditorSession(loaded);
         Assert.False(editor.Players.SetTeamCounts(3, 2));

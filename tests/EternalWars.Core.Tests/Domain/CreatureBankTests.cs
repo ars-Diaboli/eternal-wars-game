@@ -12,7 +12,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -211,11 +210,11 @@ public class CreatureBankTests
     [Fact]
     public void Banks_AreInTheMapFormat_WithoutTheirRoll()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 8));
+        var editor = TestEditor.Blank(12, 8);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.DwarvenTreasury, new(2, 2), out var id));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
 
         Assert.True(MapDocument.CurrentFormatVersion >= 20);
         Assert.Contains("\"kind\": \"bank\"", json, StringComparison.Ordinal);
@@ -234,5 +233,44 @@ public class CreatureBankTests
 
         Assert.False(bank.IsGuarded);
         Assert.Equal(0, ai.Refused);
+    }
+
+    // The second catalogue's banks (ADR-082) ------------------------------------------------------------
+
+    [Theory]
+    [InlineData(BuiltInMapObjects.Ruins, "stronghold.orc")]
+    [InlineData(BuiltInMapObjects.Lair, "dungeon.spectator")]
+    [InlineData(BuiltInMapObjects.Keep, "haven.pikeman")]
+    [InlineData(BuiltInMapObjects.Hideout, "neutral.bandit")]
+    [InlineData(BuiltInMapObjects.ForestGlen, "neutral.wolf")]
+    [InlineData(BuiltInMapObjects.DragonCity, "dragon-utopia.black-dragon")]
+    public void TheNewBanks_AreGuardedByTheirCreatures(string definition, string creature)
+    {
+        var state = Create("........", "........", "...A....", ".......B");
+        var bank = Add<CreatureBank>(state, definition, 2, 0);
+        Start(state);
+
+        Assert.True(bank.IsGuarded);
+        Assert.Contains(bank.Guard, s => s.Creature == creature);
+        Assert.False(bank.Reward.IsEmpty);
+    }
+
+    [Fact]
+    public void DragonCity_PaysARelicAndMajorArtifacts()
+    {
+        var state = Create("........", "........", "...A....", ".......B");
+        state.GetHero(A).Army.Set(0, new CreatureStack("dragon-utopia.black-dragon", 80));
+        var city = Add<CreatureBank>(state, BuiltInMapObjects.DragonCity, 2, 0);
+        var session = Start(state);
+        var majors = city.MoreArtifacts.Count;
+        Assert.Equal(ArtifactTier.Relic, city.RewardArtifact);
+        Assert.InRange(majors, 1, 3);
+
+        session.Step(A, Direction.North);
+        session.AutoResolve();
+
+        Assert.False(city.IsGuarded);
+        var hero = state.GetHero(A);
+        Assert.Equal(1 + majors, hero.Artifacts.AllWorn.Count() + hero.Artifacts.Backpack.Count);
     }
 }

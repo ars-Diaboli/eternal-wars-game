@@ -1,11 +1,9 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Generation;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -62,12 +60,12 @@ public class SceneryTests
     [Fact]
     public void Scenery_IsInTheMapFormat_AndTheEditorPlacesIt()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         Assert.Equal(EditResult.Ok, editor.Objects.Place("scenery.pond.medium", new(2, 2), out _));
         Assert.DoesNotContain(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Error);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
         Assert.Contains("\"kind\": \"scenery\"", json, StringComparison.Ordinal);
         Assert.Equal("scenery.pond.medium", Assert.Single(restored.ObjectsOf<Scenery>()).Definition.Id);
     }

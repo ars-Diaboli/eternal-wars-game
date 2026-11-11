@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Armies;
@@ -182,27 +181,27 @@ public class WeekEventTests
         NextWeek(session);
         Assert.Equal(WeekEventKind.Starvation, state.WeekEvent.Kind);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var json = TestFormat.Save(state);
         Assert.Contains("\"kind\": \"astrologersTower\"", json, StringComparison.Ordinal);
-        Assert.Single(MapConverter.ToGameState(MapSerializer.Deserialize(json)).ObjectsOf<AstrologersTower>());
+        Assert.Single(TestFormat.Load(json).ObjectsOf<AstrologersTower>());
     }
 
     [Fact]
     public void TheSettings_AreInTheMapFormat_TheEditor_TheValidator_AndTheTemplates()
     {
-        var plain = MapSerializer.Serialize(MapConverter.ToDocument(Create("A..", "..B")));
+        var plain = TestFormat.Save(Create("A..", "..B"));
         Assert.DoesNotContain("weekEvents", plain, StringComparison.Ordinal);
 
-        var editor = new MapEditorSession(Create("A..", "..B"));
+        var editor = TestEditor.World("A..", "..B");
         var settings = new WeekEventSettings(SkipWeeks: 3, WeeklyFactions: [TownIds.Haven, WeekEventSettings.Neutral], MonthlyFactions: []);
         Assert.Equal(EditResult.Ok, editor.Map.SetRules(editor.Scenario.Rules with { WeekEvents = settings }));
         Assert.Equal(EditResult.InvalidValue, editor.Map.SetRules(editor.Scenario.Rules with { WeekEvents = new WeekEventSettings(SkipWeeks: 9) }));
         Assert.Equal(EditResult.InvalidValue, editor.Map.SetRules(editor.Scenario.Rules with { WeekEvents = new WeekEventSettings(WeeklyFactions: ["elves"]) }));
         Assert.Contains(MapValidator.Validate(editor.Scenario), i => i.Severity == IssueSeverity.Warning && i.Message.Contains("monthly", StringComparison.Ordinal));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
+        var json = TestFormat.Save(editor.Scenario);
         Assert.Contains("\"weekEvents\"", json, StringComparison.Ordinal);
-        Assert.Equal(settings, MapConverter.ToGameState(MapSerializer.Deserialize(json)).Rules.WeekEvents);
+        Assert.Equal(settings, TestFormat.Load(json).Rules.WeekEvents);
         editor.Undo();
         Assert.True(editor.Scenario.Rules.WeekEvents.IsDefault);
 

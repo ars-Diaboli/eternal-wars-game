@@ -56,11 +56,11 @@ public class HeroLimitTests
     public void TheMapFormat_KeepsTheLimit_AndOmitsTheDefault()
     {
         var state = BlankScenario.Create(8, 6);
-        var plain = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var plain = TestFormat.Save(state);
         state.SetRules(ScenarioRules.Default with { MaxHeroes = 4 });
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(state);
+        var restored = TestFormat.Load(json);
 
         Assert.True(MapDocument.CurrentFormatVersion >= 15);
         Assert.DoesNotContain("maxHeroes", plain, StringComparison.Ordinal);
@@ -79,7 +79,7 @@ public class HeroLimitTests
             }
             """;
 
-        Assert.Throws<FormatException>(() => MapConverter.ToGameState(MapSerializer.Deserialize(bad)));
+        Assert.Throws<FormatException>(() => TestFormat.Load(bad));
     }
 
     [Fact]
@@ -114,8 +114,8 @@ public class HeroLimitTests
         Assert.Equal(EditResult.HeroLimit, editor.Heroes.Place(Red, new MapPosition(3, 0), "Second", out _));
         Assert.Equal(EditResult.Ok, editor.Map.SetRules(state.Rules with { MaxHeroes = 2 })); // Red's own limit is not the map's
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(state);
+        var restored = TestFormat.Load(json);
         Assert.Equal(1, restored.HeroLimit(new PlayerId(1)));
         Assert.Equal(2, restored.HeroLimit(Blue));
         Assert.Contains("\"maxHeroes\": 1", json, StringComparison.Ordinal);

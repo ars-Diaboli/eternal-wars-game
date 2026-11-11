@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
@@ -84,9 +83,9 @@ public class EditorMapGeneratorTests
         Assert.Equal(before, scenario.Map.GetTerrain(hero.Position));
         Assert.Equal(EditResult.Ok, editor.Heroes.Remove(hero.Id));
 
-        var saved = MapSerializer.Serialize(MapConverter.ToDocument(scenario));
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(saved));
-        Assert.Equal(saved, MapSerializer.Serialize(MapConverter.ToDocument(loaded)));
+        var saved = TestFormat.Save(scenario);
+        var loaded = TestFormat.Load(saved);
+        Assert.Equal(saved, TestFormat.Save(loaded));
         Assert.Equal(scenario.Map.Description, loaded.Map.Description);
         Assert.Single(loaded.Heroes);
     }

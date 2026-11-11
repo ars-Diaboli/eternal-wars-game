@@ -8,7 +8,6 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
@@ -130,14 +129,14 @@ public class MapBanAndPlaceholderTests
         var bans = new MapBans { Heroes = [HeroCatalog.Default.All.First().Id], Skills = [BuiltInSkills.All.First().Id] };
         var state = World(bans);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var json = TestFormat.Save(state);
         Assert.Contains("\"bans\"", json, StringComparison.Ordinal);
         Assert.DoesNotContain("\"artifacts\"", json, StringComparison.Ordinal); // empty lists stay out
-        Assert.Equal(bans, MapConverter.ToGameState(MapSerializer.Deserialize(json)).Rules.Bans);
+        Assert.Equal(bans, TestFormat.Load(json).Rules.Bans);
 
         var plain = MapSerializer.Serialize(MapConverter.ToDocument(World()) with { FormatVersion = 34 });
         Assert.DoesNotContain("\"bans\"", plain, StringComparison.Ordinal);
-        Assert.True(MapConverter.ToGameState(MapSerializer.Deserialize(plain)).Rules.Bans.IsEmpty);
+        Assert.True(TestFormat.Load(plain).Rules.Bans.IsEmpty);
     }
 
     [Fact]
@@ -155,7 +154,7 @@ public class MapBanAndPlaceholderTests
     [Fact]
     public void TheEditor_BansThroughTheRules_Undoably()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(20, 12));
+        var editor = TestEditor.Blank(20, 12);
         var rules = editor.Scenario.Rules;
         Assert.Equal(EditResult.Ok, editor.Map.SetRules(rules with { Bans = rules.Bans.With(MapBanKind.Artifact, "x", true) }));
         Assert.Equal(["x"], editor.Scenario.Rules.Bans.Artifacts);
@@ -278,11 +277,11 @@ public class MapBanAndPlaceholderTests
         town.IsRandom = true;
         state.GetHero(B).IsPlaceholder = true;
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var json = TestFormat.Save(state);
         Assert.Contains("\"randomTier\": 4", json, StringComparison.Ordinal);
         Assert.Contains("\"random\": true", json, StringComparison.Ordinal);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(json, "\"placeholder\": true"));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var restored = TestFormat.Load(json);
 
         Assert.Equal(4, restored.ObjectsOf<MonsterGuard>().Single().RandomTier);
         Assert.True(restored.ObjectsOf<Town>().Single().IsRandom);
@@ -299,7 +298,7 @@ public class MapBanAndPlaceholderTests
     [Fact]
     public void TheEditor_MakesTownsMonstersAndHeroesRandom_Undoably()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(20, 12));
+        var editor = TestEditor.Blank(20, 12);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new(2, 2), out var townId));
         var town = (Town)editor.Scenario.FindObject(townId)!;
         var one = SpellCatalog.Default.Of(TownIds.Haven, 1)[0].Id;

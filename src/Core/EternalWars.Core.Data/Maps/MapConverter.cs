@@ -30,7 +30,7 @@ public static partial class MapConverter
             Heroes = state.Heroes
                 .Select(h => new HeroPlacementDocument(
                     h.Id.Value, h.Name, h.Owner.Value, h.Position.X, h.Position.Y, h.Position.Level,
-                    h.Attack, h.Defense, null,
+                    h.Attack, h.Defense,
                     h.Army.IsEmpty ? null : h.Army.Stacks.Select(s => new ArmySlotDocument(s.Slot, s.Stack.Creature, s.Stack.Count)).ToList(),
                     h.Definition,
                     h.Skills.Levels.Count == 0 ? null : h.Skills.Levels.OrderBy(s => s.Key, StringComparer.Ordinal).ToDictionary(s => s.Key, s => s.Value),
@@ -106,9 +106,7 @@ public static partial class MapConverter
         var players = document.Players.Select((p, i) =>
             new Player(new PlayerId(i), p.Name, p.IsHuman, p.Team is { } team ? new TeamId(team) : null));
         var heroes = document.Heroes.Select(h => ToHero(h, creatures, content.Heroes, artifacts)).ToList();
-        // Before v13 the guard mode was one map-wide setting; it becomes the mode of every monster (ADR-065).
-        var legacyGuardMode = document.FormatVersion < MapDocument.PerMonsterGuardModeVersion ? document.GuardMode : null;
-        var objects = document.Objects.Select(o => ToObject(o, catalog, creatures, spells, legacyGuardMode));
+        var objects = document.Objects.Select(o => ToObject(o, catalog, creatures, spells));
         try
         {
             var state = new GameState(map, players, heroes, objects, options, content: content);
@@ -220,9 +218,7 @@ public static partial class MapConverter
             throw new FormatException($"Hero {h.Name} is of unknown type '{type}'.");
         }
 
-        var skills = h.Skills ?? (h.Tactics is { } tactics and not SkillLevel.None
-            ? new Dictionary<string, SkillLevel> { [BuiltInSkills.Tactics] = tactics }
-            : h.Type is null ? new Dictionary<string, SkillLevel>() : null);
+        var skills = h.Skills ?? (h.Type is null ? new Dictionary<string, SkillLevel>() : null);
         try
         {
             var hero = Hero.Create(

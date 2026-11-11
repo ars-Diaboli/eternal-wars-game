@@ -19,7 +19,7 @@ public static partial class MapConverter
 {
     /// <summary>What loading an object needs besides its document.</summary>
     internal sealed record ObjectContext(
-        MapObjectId Id, MapObjectDefinition Definition, MapPosition Position, CreatureCatalog Creatures, SpellCatalog Spells, GuardMode? LegacyGuardMode);
+        MapObjectId Id, MapObjectDefinition Definition, MapPosition Position, CreatureCatalog Creatures, SpellCatalog Spells);
 
     /// <summary>
     /// One kind's map format: <paramref name="Name"/> is its <c>kind</c> in the file. <see cref="Save"/> fills a document whose common fields
@@ -70,7 +70,7 @@ public static partial class MapConverter
                 { RandomTier: < 0 or > CreatureDefinition.MaxTier } =>
                     throw new FormatException($"Monster {d.Id} has a random tier outside 0–{CreatureDefinition.MaxTier}."),
                 _ => new MonsterGuard(
-                    c.Id, c.Definition, c.Position, d.Creature, d.Count, d.Disposition, d.NeverFlees, d.Mode ?? c.LegacyGuardMode ?? GuardMode.Classic, d.RandomTier),
+                    c.Id, c.Definition, c.Position, d.Creature, d.Count, d.Disposition, d.NeverFlees, d.Mode ?? GuardMode.Classic, d.RandomTier),
             }),
         Codec<Town, TownDocument>("town", ToDocument, ToTown),
         Codec<ArtifactPickup, ArtifactPickupDocument>(
@@ -170,12 +170,6 @@ public static partial class MapConverter
 
     private static readonly Dictionary<Type, ObjectCodec> CodecsByDocument = ObjectCodecs.ToDictionary(c => c.DocumentType);
 
-    /// <summary>Definition ids older maps use for what has another id now: the undead Ruins are the Crypt since ADR-070.</summary>
-    private static readonly Dictionary<string, string> RenamedDefinitions = new(StringComparer.Ordinal)
-    {
-        ["bank.ruins"] = BuiltInMapObjects.Crypt,
-    };
-
     /// <summary>A <see cref="DefaultJsonTypeInfoResolver"/> modifier: the object documents, discriminated by <c>kind</c> (<see cref="ObjectCodecs"/>).</summary>
     internal static void AddObjectTypes(JsonTypeInfo info)
     {
@@ -211,10 +205,9 @@ public static partial class MapConverter
     }
 
     private static MapObject ToObject(
-        MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures, SpellCatalog spells, GuardMode? legacyGuardMode)
+        MapObjectDocument document, MapObjectCatalog catalog, CreatureCatalog creatures, SpellCatalog spells)
     {
-        if (!catalog.TryGet(document.Definition, out var definition)
-            && !(RenamedDefinitions.TryGetValue(document.Definition, out var renamed) && catalog.TryGet(renamed, out definition)))
+        if (!catalog.TryGet(document.Definition, out var definition))
         {
             throw new FormatException($"Object {document.Id} uses unknown definition '{document.Definition}'.");
         }
@@ -222,7 +215,7 @@ public static partial class MapConverter
         var codec = CodecsByDocument.GetValueOrDefault(document.GetType())
                     ?? throw new FormatException($"Unsupported object kind {document.GetType().Name}.");
         var context = new ObjectContext(
-            new MapObjectId(document.Id), definition, new MapPosition(document.X, document.Y, document.Level), creatures, spells, legacyGuardMode);
+            new MapObjectId(document.Id), definition, new MapPosition(document.X, document.Y, document.Level), creatures, spells);
         try
         {
             return codec.Load(document, context);

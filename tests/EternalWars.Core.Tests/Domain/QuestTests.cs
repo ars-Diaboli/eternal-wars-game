@@ -253,15 +253,15 @@ public class QuestTests
             QuestForms.DefeatMonster(7, "Slay the beast."));
         state.SetMapEvents(events);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var json = TestFormat.Save(state);
         Assert.True(MapDocument.CurrentFormatVersion >= 32);
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var restored = TestFormat.Load(json);
 
         var quest = Assert.Single(restored.MapEvents.Set.Events);
         Assert.Equal(MapEventKind.Quest, quest.Kind);
         Assert.Equal(2, quest.Stages.Count);
         Assert.Equal(("Well?", "Pay now?"), (quest.Stages[0].Progress, quest.Stages[0].Completion));
-        Assert.Equal(json, MapSerializer.Serialize(MapConverter.ToDocument(restored)));
+        Assert.Equal(json, TestFormat.Save(restored));
         var sites = restored.ObjectsOf<QuestSite>().OrderBy(s => s.Id.Value).ToList();
         Assert.Equal(["quest", null], sites.Select(s => s.Quest));
         Assert.Equal([MapObjectKind.SeerHut, MapObjectKind.QuestGuard], sites.Select(s => s.Kind));

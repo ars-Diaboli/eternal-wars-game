@@ -5,7 +5,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 
@@ -14,8 +13,6 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>An editor edit that would not change anything records no undo step and publishes nothing (<see cref="PropertyEdit{T}"/>).</summary>
 public class EditorNoOpEditTests
 {
-    private static MapEditorSession CreateEditor() => new(BlankScenario.Create(12, 10));
-
     /// <summary>Counts every event the session publishes from now on.</summary>
     private static List<IEvent> Record(MapEditorSession editor)
     {
@@ -53,7 +50,7 @@ public class EditorNoOpEditTests
     [Fact]
     public void RenamingATownToItsName_RecordsNothing_ButANewNameIsUndoable()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         var town = BuiltInMapObjects.TownId(TownIds.Haven);
         var free = Enumerable.Range(0, 12 * 10).Select(i => new MapPosition(i % 12, i / 12))
             .First(p => editor.Objects.CanPlace(editor.Catalog.Get(town), p) == EditResult.Ok);
@@ -74,7 +71,7 @@ public class EditorNoOpEditTests
     [Fact]
     public void SettingAHeroOrMineToWhatItHas_RecordsNothing()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Heroes.Place(new PlayerId(0), new MapPosition(4, 4), "Orrin", out var hero);
         editor.Objects.Place(BuiltInMapObjects.MineId(ResourceType.Gold), new MapPosition(6, 6), out var mine);
         editor.Heroes.SetStats(hero, 3, 2, SkillLevel.Advanced);
@@ -99,7 +96,7 @@ public class EditorNoOpEditTests
     [Fact]
     public void SettingContentsMapAndPlayersToWhatTheyHave_RecordsNothing()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Objects.Place(BuiltInMapObjects.WitchHut, new MapPosition(2, 2), out var hut);
         editor.Contents.SetWitchHutSkills(hut, [BuiltInSkills.Archery, BuiltInSkills.Logistics]);
         editor.Map.SetProperties("Isles", "Two islands");
@@ -123,7 +120,7 @@ public class EditorNoOpEditTests
     [Fact]
     public void PaintingWhatIsThere_RecordsNothing()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         var events = Record(editor);
 
         Assert.Equal(0, editor.Terrain.Paint(new MapPosition(5, 5), TerrainType.Grass, radius: 1));
@@ -137,7 +134,7 @@ public class EditorNoOpEditTests
     [Fact]
     public void PaintRoad_UndoRestoresEachPreviousRoad_WithOneEventPerRoad()
     {
-        var editor = CreateEditor();
+        var editor = TestEditor.Blank();
         editor.Terrain.PaintRoad(new MapPosition(4, 4), RoadType.Dirt);
         var painted = new List<RoadsPainted>();
         editor.Events.Subscribe<RoadsPainted>(painted.Add);

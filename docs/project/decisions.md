@@ -1930,3 +1930,31 @@ agent's choices.
   the frame. The minimap's tiles are an image, one pixel each, of which only the changed pixels are written again; heroes are drawn over
   it.
 - **Behaviour**: unchanged (events, random draws, digests; AI games replay the same).
+
+### ADR-174: Map format upgrades and testing safety nets (code review section 5, 2026-11-11)
+**Status**: implemented (2026-11-11); tested. From the code quality review (section 5).
+
+- **Upgrades**: an older map file's JSON is upgraded before it is read (`MapMigrations` in Core.Data `Maps`, `IMapMigration` steps, oldest
+  first; each runs on files older than its `Version`), so `MapDocument` and `MapConverter` know only the current format. The steps: v5
+  `tactics` → the hero's `skills`; v13 the map-wide `guardMode` → each monster's `mode`; v23 `bank.ruins` → `bank.crypt`. A file without
+  `formatVersion` is v1. `MapSerializer.Deserialize` and `GameRecordSerializer.Deserialize` (a save's or replay's `map`) upgrade; a file of
+  the current version is read as it is. Gone: `MapDocument.GuardMode`, `HeroPlacementDocument.Tactics`, `PerMonsterGuardModeVersion`,
+  `RenamedDefinitions`. A change: the three old forms now count only in files older than their version (before, a current file with
+  `tactics` or `bank.ruins` was read the old way). A version that only adds fields needs no step. Upgrading through `JsonNode` reads
+  property names without case, as the serializer does.
+- **Pins** (`Pinned`: a file next to the test; `EW_UPDATE_PINNED=1` rewrites it): a sample map per format version that has an upgrade step
+  (the version before it, and v1) and for the current version (`Data/FormatSamples`, with every object kind), each read and saved again to a
+  pinned result; the JSON shape of maps and saves (`Data/FormatShape.txt`: property names, required fields, object and command kinds, enum
+  names), so a rename shows; the maps the shipped templates generate (`Generation/GeneratedMaps.txt`), whose re-pin is refused unless
+  `MapGenerator.Version` changed. A new map format version needs its sample.
+- **Editor undo**: `EditorUndoTests` runs every editor operation (73 cases, a reflection check that none is missing) and compares the
+  map file and digest after undo and redo. It found that undoing a removal put the object or hero back at the end of its list, and a
+  town's type change moved the town to the end: `GameState.RemoveObject` / `RemoveHero` return the index and the editor puts it back there.
+- **Battle copy**: `BattleCopyTests` compares a busy siege battle and its `Copy()` field by field, checks that nothing changed in place is
+  shared, and lists the fields of the copied types, so a new field fails until `Copy()` is checked.
+- **Architecture**: `ArchitectureTests` checks every project's references against the dependency table (architecture.md).
+- **Refusals**: already covered by ADR-165 (`GameSession.CheckRefusals` in every test game).
+- **Test cleanup**: `TestFormat` (`Save`, `Load`, `RoundTrip`) and `TestEditor` (`Blank`, `World`) replace the inline round trips and
+  editor factories; the milestone-named catalogue tests are split by object (`CartographerAndMerchantTests`, `SphinxAndWitchHutTests`,
+  `RefugeeCampAndAltarTests`, `MapGarrisonTests`, `DepositTests`, `MagiWindowAndBorderPostTests`, `MapTavernTests`, …).
+- **Behaviour**: unchanged for play (AI games replay the same); the editor's undo of a removal and a town's type change keep the order.

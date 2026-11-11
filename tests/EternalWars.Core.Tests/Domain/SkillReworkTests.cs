@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
@@ -81,7 +80,7 @@ public class SkillReworkTests
                            "skills": { "pathfinding.troops": "Advanced", "defense.third": "Basic" } }] }
             """;
 
-        var hero = MapConverter.ToGameState(MapSerializer.Deserialize(json)).GetHero(A);
+        var hero = TestFormat.Load(json).GetHero(A);
 
         Assert.Equal(SkillLevel.Advanced, hero.Skills.Level(BuiltInSkills.Scouting));
         Assert.Equal(SkillLevel.Basic, hero.Skills.Level(BuiltInSkills.Alertness));

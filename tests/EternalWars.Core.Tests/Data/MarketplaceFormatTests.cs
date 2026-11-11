@@ -14,8 +14,8 @@ public class MarketplaceFormatTests
         var state = BlankScenario.Create(8, 6);
         state.AddObject(new Marketplace(state.NextObjectId(), MapObjectCatalog.Default.Get(BuiltInMapObjects.Marketplace), new(2, 1)));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(state);
+        var restored = TestFormat.Load(json);
 
         Assert.Contains("\"kind\": \"marketplace\"", json);
         Assert.Contains($"\"formatVersion\": {MapDocument.CurrentFormatVersion}", json);
@@ -27,7 +27,7 @@ public class MarketplaceFormatTests
     [Fact]
     public void TheEditor_PlacesAMarketplace_UndoablyAndTheValidatorAcceptsIt()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
 
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.Marketplace, new(4, 4), out var id));
 
@@ -48,7 +48,7 @@ public class MarketplaceFormatTests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(old));
+        var state = TestFormat.Load(old);
 
         Assert.True(MapDocument.CurrentFormatVersion >= 14);
         Assert.Equal(MapDocument.CurrentFormatVersion, MapConverter.ToDocument(state).FormatVersion);

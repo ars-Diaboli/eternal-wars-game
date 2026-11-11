@@ -21,8 +21,8 @@ public class GuardModeFormatTests
         state.AddObject(new MonsterGuard(state.NextObjectId(), definition, new(1, 1), BuiltInCreatures.Wolf, 5));
         state.AddObject(new MonsterGuard(state.NextObjectId(), definition, new(5, 1), BuiltInCreatures.Troll, 3, mode: GuardMode.Area));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(state);
+        var restored = TestFormat.Load(json);
 
         Assert.Equal([GuardMode.Classic, GuardMode.Area], restored.ObjectsOf<MonsterGuard>().OrderBy(m => m.Id.Value).Select(m => m.Mode));
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(json, "\"mode\""));
@@ -45,7 +45,7 @@ public class GuardModeFormatTests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var state = TestFormat.Load(json);
 
         Assert.Equal(2, state.ObjectsOf<MonsterGuard>().Count());
         Assert.All(state.ObjectsOf<MonsterGuard>(), m => Assert.Equal(expected, m.Mode));
@@ -63,8 +63,8 @@ public class GuardModeFormatTests
             }
             """;
 
-        var saved = MapSerializer.Serialize(MapConverter.ToDocument(MapConverter.ToGameState(MapSerializer.Deserialize(json))));
-        var reloaded = MapConverter.ToGameState(MapSerializer.Deserialize(saved));
+        var saved = TestFormat.Save(TestFormat.Load(json));
+        var reloaded = TestFormat.Load(saved);
 
         Assert.DoesNotContain("\"guardMode\"", saved);
         Assert.All(reloaded.ObjectsOf<MonsterGuard>(), m => Assert.Equal(GuardMode.Area, m.Mode));
@@ -83,7 +83,7 @@ public class GuardModeFormatTests
             }
             """;
 
-        var state = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var state = TestFormat.Load(json);
 
         Assert.Equal([GuardMode.Classic, GuardMode.Area], state.ObjectsOf<MonsterGuard>().OrderBy(m => m.Id.Value).Select(m => m.Mode));
     }

@@ -1,0 +1,11 @@
+{
+  "name": "Version 1 sample",
+  "width": 6,
+  "height": 4,
+  "terrain": [ [ "gggggg", "ggdddg", "gg~~gg", "gggggg" ] ],
+  "players": [ { "name": "Blue", "isHuman": true }, { "name": "Red", "isHuman": false } ],
+  "heroes": [
+    { "id": 1, "name": "Orrin", "owner": 0, "x": 0, "y": 0 },
+    { "id": 2, "name": "Sandro", "owner": 1, "x": 5, "y": 3 }
+  ]
+}

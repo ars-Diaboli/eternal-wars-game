@@ -1,0 +1,51 @@
+{
+  "formatVersion": 38,
+  "name": "Version 1 sample",
+  "description": "",
+  "width": 6,
+  "height": 4,
+  "terrain": [
+    [
+      "gggggg",
+      "ggdddg",
+      "gg~~gg",
+      "gggggg"
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": false
+    }
+  ],
+  "teamsLocked": false,
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Orrin",
+      "owner": 0,
+      "x": 0,
+      "y": 0,
+      "level": 0,
+      "attack": 0,
+      "defense": 0,
+      "spellBook": false
+    },
+    {
+      "id": 2,
+      "name": "Sandro",
+      "owner": 1,
+      "x": 5,
+      "y": 3,
+      "level": 0,
+      "attack": 0,
+      "defense": 0,
+      "spellBook": false
+    }
+  ],
+  "objects": []
+}

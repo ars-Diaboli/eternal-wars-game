@@ -1,0 +1,137 @@
+{
+  "formatVersion": 38,
+  "name": "Version 12 sample",
+  "description": "",
+  "width": 16,
+  "height": 12,
+  "terrain": [
+    [
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg",
+      "gggggggggggggggg"
+    ]
+  ],
+  "players": [
+    {
+      "name": "Blue",
+      "isHuman": true
+    },
+    {
+      "name": "Red",
+      "isHuman": false
+    }
+  ],
+  "teamsLocked": false,
+  "rules": {
+    "victory": [
+      {
+        "kind": "GatherResources",
+        "player": 0,
+        "resource": "Gold",
+        "amount": 20000
+      }
+    ],
+    "standardVictory": true,
+    "elimination": true,
+    "graceDays": 3
+  },
+  "heroes": [
+    {
+      "id": 1,
+      "name": "Orrin",
+      "owner": 0,
+      "x": 1,
+      "y": 1,
+      "level": 0,
+      "attack": 0,
+      "defense": 0,
+      "army": [
+        {
+          "slot": 0,
+          "creature": "haven.footman",
+          "count": 12
+        }
+      ],
+      "skills": {
+        "tactics.tactics": "Basic"
+      },
+      "morale": 1,
+      "spellPower": 2,
+      "knowledge": 1,
+      "artifacts": [
+        "badge-of-courage"
+      ],
+      "spellBook": false
+    }
+  ],
+  "objects": [
+    {
+      "kind": "town",
+      "owner": 0,
+      "name": "Old Keep",
+      "buildings": {
+        "fort": 1,
+        "tavern": 1,
+        "town-hall": 2
+      },
+      "id": 1,
+      "definition": "town.haven",
+      "x": 2,
+      "y": 3,
+      "level": 0
+    },
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "count": 7,
+      "disposition": "Aggressive",
+      "neverFlees": false,
+      "mode": "Area",
+      "id": 2,
+      "definition": "monster",
+      "x": 10,
+      "y": 1,
+      "level": 0
+    },
+    {
+      "kind": "monster",
+      "creature": "neutral.wolf",
+      "count": 4,
+      "disposition": "Aggressive",
+      "neverFlees": false,
+      "mode": "Area",
+      "id": 3,
+      "definition": "monster",
+      "x": 12,
+      "y": 6,
+      "level": 0
+    },
+    {
+      "kind": "dwelling",
+      "creature": "neutral.wolf",
+      "available": 3,
+      "id": 4,
+      "definition": "dwelling",
+      "x": 9,
+      "y": 5,
+      "level": 0
+    },
+    {
+      "kind": "artifact",
+      "id": 5,
+      "definition": "artifact.minor",
+      "x": 1,
+      "y": 6,
+      "level": 0
+    }
+  ]
+}

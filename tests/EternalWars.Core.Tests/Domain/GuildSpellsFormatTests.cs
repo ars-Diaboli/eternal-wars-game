@@ -5,7 +5,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
@@ -82,10 +81,10 @@ public class GuildSpellsFormatTests
         var (state, _) = World(spells);
         AddTown(state, TownIds.Haven, 10, 0);
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(state));
+        var json = TestFormat.Save(state);
         Assert.True(MapDocument.CurrentFormatVersion >= 30);
         Assert.Single(System.Text.RegularExpressions.Regex.Matches(json, "\"guildSpells\""));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var restored = TestFormat.Load(json);
 
         var towns = restored.ObjectsOf<Town>().OrderBy(t => t.Position.X).ToList();
         Assert.Equal(spells, towns[0].FixedGuildSpells);
@@ -98,7 +97,7 @@ public class GuildSpellsFormatTests
         var (state, _) = World([]);
         var document = MapConverter.ToDocument(state) with { FormatVersion = 29 };
 
-        var loaded = MapConverter.ToGameState(MapSerializer.Deserialize(MapSerializer.Serialize(document)));
+        var loaded = TestFormat.Load(MapSerializer.Serialize(document));
 
         var town = Assert.Single(loaded.ObjectsOf<Town>());
         Assert.Empty(town.FixedGuildSpells);
@@ -145,7 +144,7 @@ public class GuildSpellsFormatTests
     [Fact]
     public void TheEditor_SetsATownsGuildSpells_Undoably_AndRefusesWrongOnes()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(20, 12));
+        var editor = TestEditor.Blank(20, 12);
         Assert.Equal(EditResult.Ok, editor.Objects.Place(BuiltInMapObjects.TownId(TownIds.Haven), new(2, 2), out var id));
         var town = (Town)editor.Scenario.FindObject(id)!;
         var changed = new List<MapObjectChanged>();

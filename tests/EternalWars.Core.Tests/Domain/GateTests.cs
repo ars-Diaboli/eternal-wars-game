@@ -4,7 +4,6 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Pathfinding;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -113,7 +112,7 @@ public class GateTests
     [Fact]
     public void Editor_SetsExitAndRemovingExitUnlinksEntrancesWithUndo()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         editor.Objects.Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(3, 3), out var first);
         editor.Objects.Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(5, 3), out var second);
         editor.Objects.Place(BuiltInMapObjects.OneWayMonolithExit, new MapPosition(8, 3), out var exit);
@@ -134,7 +133,7 @@ public class GateTests
     [Fact]
     public void Validator_ReportsUnusedExitsAndEntrancesWithoutExit()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         editor.Objects.Place(BuiltInMapObjects.OneWayMonolithEntrance, new MapPosition(3, 3), out _);
         editor.Objects.Place(BuiltInMapObjects.OneWayMonolithExit, new MapPosition(8, 3), out _);
 

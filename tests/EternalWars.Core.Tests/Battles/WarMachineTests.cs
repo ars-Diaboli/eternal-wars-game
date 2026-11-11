@@ -1,4 +1,3 @@
-using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
@@ -7,7 +6,6 @@ using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
-using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
 using static EternalWars.Core.Domain.Battles.BattleSide;
@@ -208,13 +206,13 @@ public class WarMachineTests
     [Fact]
     public void HeroMachines_RoundTripThroughTheMapFormat_AndTheEditorUndoes()
     {
-        var editor = new MapEditorSession(BlankScenario.Create(12, 10));
+        var editor = TestEditor.Blank(12, 10);
         editor.Heroes.Place(new PlayerId(0), new MapPosition(2, 2), "Orrin", out var id);
         editor.Heroes.Place(new PlayerId(0), new MapPosition(4, 2), "Plain", out _);
         Assert.Equal(EditResult.Ok, editor.Heroes.SetWarMachines(id, new HashSet<WarMachineSlot> { WarMachineSlot.Cart }));
 
-        var json = MapSerializer.Serialize(MapConverter.ToDocument(editor.Scenario));
-        var restored = MapConverter.ToGameState(MapSerializer.Deserialize(json));
+        var json = TestFormat.Save(editor.Scenario);
+        var restored = TestFormat.Load(json);
 
         Assert.Equal([WarMachineSlot.Cart], restored.GetHero(id).WarMachines);
         Assert.Equal([WarMachineSlot.Offensive], restored.GetHero(new HeroId(2)).WarMachines); // omitted = starting set
