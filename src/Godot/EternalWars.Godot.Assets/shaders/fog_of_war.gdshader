@@ -63,25 +63,51 @@ float fbm(vec2 p, int octaves) {
 	return sum;
 }
 
+// The weights 1 4 6 4 1 of a 5-tap binomial filter.
+float binomial(int i) {
+	int a = abs(i);
+	return a == 0 ? 6.0 : (a == 1 ? 4.0 : 1.0);
+}
+
 // Where the ray from the camera meets the horizontal plane at height y (rays never look up here; the camera tilts at most 30°).
 vec2 on_plane(vec3 origin, vec3 dir, float y) {
 	float t = (y - origin.y) / min(dir.y, -0.05);
 	return origin.xz + dir.xz * max(t, 0.0);
 }
 
-// Hidden and out-of-sight amounts at a map point, blurred (a 3×3 tent) so the tile grid never shows and the edge between an explored and an
-// unexplored tile fades over about 1.3 tiles.
+// Hidden and out-of-sight amounts at a map point, blurred (a 5×5 binomial, close to a Gaussian of about a tile) so the tile staircase
+// rounds off: a revealed circle of tiles reads as a round clearing and its edge fades softly over about two tiles.
 vec2 mask_at(vec2 xz) {
 	vec2 uv = (xz + 1.5) / mask_size;
-	vec2 texel = 0.6 / mask_size;
+	vec2 texel = 0.8 / mask_size;
 	vec2 sum = vec2(0.0);
-	for (int y = -1; y <= 1; y++) {
-		for (int x = -1; x <= 1; x++) {
-			float weight = (2.0 - abs(float(x))) * (2.0 - abs(float(y)));
+	for (int y = -2; y <= 2; y++) {
+		for (int x = -2; x <= 2; x++) {
+			float weight = binomial(x) * binomial(y);
 			sum += texture(fog_mask, uv + vec2(float(x), float(y)) * texel).rg * weight;
 		}
 	}
-	return sum / 16.0;
+	return sum / 256.0;
+}
+
+// A star's colour by its temperature, like real stars: most are near white (pale yellow to pale blue), a few are accents, from deep orange
+// (cool) to blue (hot). h in [0, 1). The colours are as seen on screen (sRGB) and returned linear, since the pass's output is converted to sRGB.
+vec3 star_tint_srgb(float h) {
+	// An S-curve keeps most stars near the white middle; only the ends reach the strong colours.
+	float t = h < 0.5 ? 0.5 * pow(2.0 * h, 0.55) : 1.0 - 0.5 * pow(2.0 - 2.0 * h, 0.55);
+	vec3 orange = vec3(1.0, 0.55, 0.28);
+	vec3 yellow = vec3(1.0, 0.86, 0.62);
+	vec3 white = vec3(1.0, 0.97, 0.94);
+	vec3 pale_blue = vec3(0.78, 0.86, 1.0);
+	vec3 blue = vec3(0.45, 0.6, 1.0);
+	if (t < 0.25) return mix(orange, yellow, t / 0.25);
+	if (t < 0.5) return mix(yellow, white, (t - 0.25) / 0.25);
+	if (t < 0.75) return mix(white, pale_blue, (t - 0.5) / 0.25);
+	return mix(pale_blue, blue, (t - 0.75) / 0.25);
+}
+
+vec3 star_tint(float h) {
+	return pow(star_tint_srgb(h), vec3(2.2));
 }
 
 // One layer of stars on a plane: a few cells hold a star of their own size, colour and twinkle.
@@ -105,8 +131,9 @@ vec3 star_layer(vec2 p, float cell, float density, float size, float time) {
 			float twinkle = 0.7 + 0.3 * sin(time * (1.0 + 2.0 * hash12(c + 2.2)) + 6.2831 * chance * 37.0);
 			float core = smoothstep(r, 0.0, d);
 			float glow = 0.25 * smoothstep(r * 3.5, 0.0, d);
-			vec3 tint = mix(vec3(0.75, 0.82, 1.0), vec3(1.0, 0.92, 0.8), hash12(c + 3.3));
-			light += tint * bright * twinkle * (core * core + glow * glow);
+			// The core is whiter than its halo (a bright point burns out to white); the halo carries the star's colour.
+			vec3 tint = star_tint(hash12(c + 3.3));
+			light += bright * twinkle * (mix(tint, vec3(1.0), 0.12) * core * core + tint * glow * glow);
 		}
 	}
 	return light;
@@ -128,15 +155,17 @@ vec3 space(vec3 origin, vec3 dir, float time) {
 			+ vec3(0.02, 0.05, 0.20) * pow(smoothstep(0.68, 0.95, blue), 2.0) * 0.4;
 	}
 
-	vec3 color = nebula;
+	vec3 stars = vec3(0.0);
 	// Star layers: the farther, the denser and fainter, each sized so a star covers about the same few pixels wherever it is.
 	float t1 = abs((ground_y - 40.0 - origin.y) / min(dir.y, -0.05));
 	float t2 = abs((ground_y - 80.0 - origin.y) / min(dir.y, -0.05));
 	float t3 = abs((ground_y - 150.0 - origin.y) / min(dir.y, -0.05));
-	color += star_layer(on_plane(origin, dir, ground_y - 40.0), 3.0, 0.04, t1 * 0.0030, time) * 1.8;
-	color += star_layer(on_plane(origin, dir, ground_y - 80.0), 3.6, 0.06, t2 * 0.0022, time * 0.8) * 1.2;
-	color += star_layer(on_plane(origin, dir, ground_y - 150.0), 4.4, 0.10, t3 * 0.0016, time * 0.6) * 0.8;
-	return color;
+	stars += star_layer(on_plane(origin, dir, ground_y - 40.0), 3.0, 0.02, t1 * 0.0030, time) * 1.8;
+	stars += star_layer(on_plane(origin, dir, ground_y - 80.0), 3.6, 0.03, t2 * 0.0022, time * 0.8) * 1.2;
+	stars += star_layer(on_plane(origin, dir, ground_y - 150.0), 4.4, 0.05, t3 * 0.0016, time * 0.6) * 0.8;
+	// A bright star is dimmed as a whole rather than clipped channel by channel, so a hot star stays blue instead of burning out to white.
+	stars /= max(1.0, max(stars.r, max(stars.g, stars.b)));
+	return nebula + stars;
 }
 
 void fragment() {
@@ -156,22 +185,22 @@ void fragment() {
 	}
 
 	float time = TIME;
-	// The edge wanders: the mask is read through a slowly moving noise warp of about a tile.
-	vec2 warp = vec2(fbm(xz * 0.26 + vec2(time * 0.035, 0.0), 4), fbm(xz * 0.26 + vec2(17.3, time * -0.03), 4)) - 0.5;
-	vec2 mask = mask_at(xz + warp * 1.8);
+	// The edge sways gently: the mask is read through a slow, broad noise warp of under a tile (few octaves, so the line stays smooth).
+	vec2 warp = vec2(fbm(xz * 0.14 + vec2(time * 0.03, 0.0), 2), fbm(xz * 0.14 + vec2(17.3, time * -0.025), 2)) - 0.5;
+	vec2 mask = mask_at(xz + warp * 0.9);
 	// Past the map's edge is always fully hidden, and the map's own edge melts into it over about a tile along a wandering line, never a
 	// straight cut, even where the land is explored up to the edge.
 	vec2 map_size = mask_size - 2.0;
 	vec2 beyond = max(vec2(-0.5) - xz, xz - (map_size - 0.5));
-	float edge = max(beyond.x, beyond.y) + (warp.x + warp.y) * 2.6;
+	float edge = max(beyond.x, beyond.y) + (warp.x + warp.y) * 2.0;
 	float outside = smoothstep(-0.5, 0.9, edge);
 	float hidden = max(mask.r, outside);
 	float unseen = mask.g;
 
 	if (look == 0) {
 		// A wide dark rim first (the land sinks into shadow), then the stars come in.
-		float fog = smoothstep(0.03, 0.8, hidden);
-		float stars = smoothstep(0.55, 1.0, hidden);
+		float fog = smoothstep(0.1, 0.85, hidden);
+		float stars = smoothstep(0.6, 1.0, hidden);
 		vec3 void_color = space(origin, dir, time) * stars;
 		float veil = (1.0 - fog) * OUT_OF_SIGHT_DARK * smoothstep(0.1, 0.9, unseen);
 		float alpha = fog + veil;
@@ -192,9 +221,9 @@ void fragment() {
 			n2 = mix(n2, texture(cloud_texture, low * 0.035 + 0.37).r, 0.6);
 		}
 		float puff = 0.6 * n1 + 0.4 * n2;
-		// A wide ramp (the edge fades over about 1.3 tiles), yet fully hidden ground is always fully covered (puff stays over 0.1:
-		// (1 - 0.2) * 1.75 - 0.4 * 0.8 > 1) and explored ground never gets a wisp (puff stays under 0.9: -0.2 * 1.75 + 0.4 * 0.8 < 0).
-		float density = clamp((hidden - 0.2) * 1.75 + (puff - 0.5) * 0.8, 0.0, 1.0);
+		// A wide ramp with only a little puff in it (so the edge stays a smooth line), yet fully hidden ground is always fully covered (puff
+		// stays over 0.1: (1 - 0.2) * 1.75 - 0.4 * 0.5 > 1) and explored ground never gets a wisp (puff under 0.9: -0.2 * 1.75 + 0.4 * 0.5 < 0).
+		float density = clamp((hidden - 0.2) * 1.75 + (puff - 0.5) * 0.5, 0.0, 1.0);
 		float cloud = smoothstep(0.0, 1.0, density);
 		// Lit tops, blue-grey folds; kept below pure white so the clouds have shape (and the HUD's text stays readable).
 		float lit = smoothstep(0.38, 0.75, n1 + 0.45 * (n2 - 0.5));
