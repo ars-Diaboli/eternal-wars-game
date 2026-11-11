@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.Shared.Controls;
@@ -13,7 +14,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// Placeholder prompt for pending decisions: chest reward, guard offers, map event messages, questions and full armies, the battle
-/// width and quick combat. Answers are commands; the panel hides itself when the decision is resolved.
+/// width and quick combat. Answers are commands; the panel hides itself when the decision is resolved. A right click on the prompt opens the
+/// information window of what it is about, on a skill, a town or a stack to choose that one's (ADR-154).
 /// </summary>
 public partial class DecisionPanel : PanelContainer
 {
@@ -26,7 +28,9 @@ public partial class DecisionPanel : PanelContainer
         _session = session;
         var box = new VBoxContainer();
         AddChild(box);
-        box.AddChild(_prompt);
+        box.AddChild(_prompt.WithInfo(detailed => _session.State.PendingDecision is { } decision
+            ? InfoSheets.Decision(_session.State, _session.State.CurrentPlayer.Id, decision, detailed)
+            : null));
         box.AddChild(_buttons);
         Visible = false;
 
@@ -82,7 +86,8 @@ public partial class DecisionPanel : PanelContainer
                 foreach (var skill in hut.Options)
                 {
                     var level = state.GetHero(hut.Hero).Skills.Level(skill) + 1;
-                    Button($"{BuiltInSkills.Get(skill).Name} ({level})", new ChooseWitchHutSkillCommand(player, skill));
+                    Button($"{BuiltInSkills.Get(skill).Name} ({level})", new ChooseWitchHutSkillCommand(player, skill))
+                        .WithInfo(detailed => InfoSheets.SkillChoice(_session.State.GetHero(hut.Hero), skill, detailed));
                 }
 
                 Button("Leave", new ChooseWitchHutSkillCommand(player, null));
@@ -91,7 +96,10 @@ public partial class DecisionPanel : PanelContainer
                 _prompt.Text = "Town gate: go to which town?";
                 foreach (var town in gate.Towns)
                 {
-                    Button(town.Available ? town.Name : $"{town.Name} (entrance blocked)", new ChooseTownGateCommand(player, town.Town), disabled: !town.Available);
+                    Button(town.Available ? town.Name : $"{town.Name} (entrance blocked)", new ChooseTownGateCommand(player, town.Town), disabled: !town.Available)
+                        .WithInfo(detailed => _session.State.FindObject(town.Town) is Core.Domain.Towns.Town shown
+                            ? InfoSheets.Town(_session.State, player, shown, detailed)
+                            : null);
                 }
 
                 Button("Stay", new ChooseTownGateCommand(player, null));
@@ -145,8 +153,10 @@ public partial class DecisionPanel : PanelContainer
                 _prompt.Text = guard.Offer == GuardOffer.Join
                     ? $"{guard.Count} × {creature} offer to join you."
                     : $"{guard.Count} × {creature} try to flee.";
-                Button(guard.Offer == GuardOffer.Join ? "Accept" : "Let them go", new RespondToGuardCommand(player, true));
-                Button("Fight", new RespondToGuardCommand(player, false));
+                Button(guard.Offer == GuardOffer.Join ? "Accept" : "Let them go", new RespondToGuardCommand(player, true))
+                    .WithInfo(detailed => InfoSheets.Decision(_session.State, player, guard, detailed));
+                Button("Fight", new RespondToGuardCommand(player, false))
+                    .WithInfo(detailed => InfoSheets.Decision(_session.State, player, guard, detailed));
                 break;
             case BattleDecision when state.Battle is { } battle:
                 ShowBattle(battle);
@@ -157,7 +167,8 @@ public partial class DecisionPanel : PanelContainer
                 foreach (var skill in levelUp.Options)
                 {
                     var skillDefinition = BuiltInSkills.Get(skill);
-                    Button($"{skillDefinition.Name} → {hero.Skills.Level(skill) + 1}", new ChooseSkillCommand(player, skill));
+                    Button($"{skillDefinition.Name} → {hero.Skills.Level(skill) + 1}", new ChooseSkillCommand(player, skill))
+                        .WithInfo(detailed => InfoSheets.SkillChoice(_session.State.GetHero(levelUp.Hero), skill, detailed));
                 }
 
                 break;
@@ -200,7 +211,9 @@ public partial class DecisionPanel : PanelContainer
         {
             Text = $"{stack.Count} × {(_session.State.Creatures.TryGet(stack.Creature, out var creature) ? creature.Name : stack.Creature)}",
             ButtonPressed = i < Core.Domain.Armies.Army.SlotCount,
-        }).ToList();
+        }.WithInfo(detailed => _session.State.Creatures.Contains(stack.Creature)
+            ? InfoSheets.Creature(_session.State, stack.Creature, detailed, InfoSheets.Known(stack))
+            : null)).ToList();
         var keep = new Button { Text = "Keep" };
         void Check() => keep.Disabled = ticks.Count(t => t.ButtonPressed) is < 1 or > Core.Domain.Armies.Army.SlotCount;
         foreach (var tick in ticks)

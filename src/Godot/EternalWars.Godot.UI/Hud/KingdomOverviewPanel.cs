@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Info;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -11,8 +12,8 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// The kingdom overview (ADR-077, ADR-084): every town, mine, flagged provider and hero that brings the player resources, with what each pays a day
-/// and the totals, from <see cref="KingdomOverviews.For"/>; providers show what a week brings and what waits there. Opened from the HUD (or K),
-/// closed with Escape or "Close".
+/// and the totals, from <see cref="KingdomOverviews.For"/>; providers show what a week brings and what waits there. A right click on a row opens
+/// its information window (ADR-154). Opened from the HUD (or K), closed with Escape or "Close".
 /// </summary>
 public partial class KingdomOverviewPanel : PanelContainer
 {
@@ -58,13 +59,14 @@ public partial class KingdomOverviewPanel : PanelContainer
         foreach (var row in overview.Rows)
         {
             var amounts = row.Kind == IncomeSourceKind.Provider ? row.Stored : row.Daily;
-            Row(row.Name, row.Kind == IncomeSourceKind.Provider ? $"{row.Detail}; waiting:" : row.Detail, Amounts(amounts));
+            Row(row.Name, row.Kind == IncomeSourceKind.Provider ? $"{row.Detail}; waiting:" : row.Detail, Amounts(amounts),
+                detailed => InfoSheets.Income(_session.State, player, row, detailed));
         }
 
-        Row("Every day", "", Amounts(overview.DailyTotal));
+        Row("Every day", "", Amounts(overview.DailyTotal), _ => InfoSheets.KingdomTotal(overview));
         if (overview.StoredTotal != ResourceSet.Empty)
         {
-            Row("Waiting at providers", "fetch with a hero or a caravan", Amounts(overview.StoredTotal));
+            Row("Waiting at providers", "fetch with a hero or a caravan", Amounts(overview.StoredTotal), _ => InfoSheets.KingdomTotal(overview));
         }
 
         Visible = true;
@@ -82,10 +84,11 @@ public partial class KingdomOverviewPanel : PanelContainer
     private static IEnumerable<string> Amounts(ResourceSet amounts) =>
         Enum.GetValues<ResourceType>().Select(r => amounts[r] == 0 ? "" : amounts[r].ToString(CultureInfo.InvariantCulture));
 
-    private void Row(string name, string detail, IEnumerable<string> cells)
+    /// <summary>A row of the table; a right click on its name or detail opens <paramref name="info"/> (ADR-154).</summary>
+    private void Row(string name, string detail, IEnumerable<string> cells, Func<bool, InfoSheet?> info)
     {
-        _table.AddChild(new Label { Text = name, CustomMinimumSize = new Vector2(150, 0) });
-        _table.AddChild(new Label { Text = detail, CustomMinimumSize = new Vector2(220, 0), AutowrapMode = TextServer.AutowrapMode.WordSmart });
+        _table.AddChild(new Label { Text = name, CustomMinimumSize = new Vector2(150, 0) }.WithInfo(info));
+        _table.AddChild(new Label { Text = detail, CustomMinimumSize = new Vector2(220, 0), AutowrapMode = TextServer.AutowrapMode.WordSmart }.WithInfo(info));
         foreach (var cell in cells)
         {
             _table.AddChild(new Label { Text = cell, CustomMinimumSize = new Vector2(56, 0), HorizontalAlignment = HorizontalAlignment.Right });

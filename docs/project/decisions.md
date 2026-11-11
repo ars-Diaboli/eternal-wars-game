@@ -2034,3 +2034,22 @@ as [spells.md](../content/spells.md) words them. Every one of the 91 battle spel
   summoned kinds; rubble, the refund and the sapped Spell Power are not valued.
 - **Not changed**: the map format, the save format and the state digest. Old saves and replays whose heroes cast these spells at rank III,
   or fought with Familiars against a hero, may now play differently.
+
+### ADR-178: Information windows for the kingdom overview, the tavern and the decision prompts (ADR-154, 2026-11-11)
+**Status**: implemented (2026-11-11); *(proposal)* marks the agent's choices, for play-testing.
+
+- **Kingdom overview**: a right click on a row's name or detail opens what it pays (a provider: what a week brings and what waits there),
+  then the town's, mine's, provider's or hero's own window, as on the map. The "Every day" and "Waiting at providers" rows open the totals
+  split into towns, mines and heroes *(proposal)*.
+- **Tavern**: a right click on a hero's card or its Hire button (the tavern screen, and the town screen's Tavern row) opens the hero for hire:
+  stats, specialty, each starting skill with what it does, the preferred creature and what that gives, the troops it brings, the price or why
+  it is refused; detailed, its roster id and its rank in the faction's pool. A hero of the player's own coming back shows its hero window. The
+  card's preferred creature and troops lines open the creature's window.
+- **Decision prompts**: a right click on the prompt opens what it is about: the object the hero visits, with what it offers now in place of
+  "Visit it to see what it holds" (the chest's two rewards, the price, the sphinx's question, the hut's skills, the gate's towns); the stack
+  offering to join or fleeing, with its exact count; the hero who levels up or whose army is full. A map event's message, the battle and the
+  exchange have none. The skill buttons (a level-up, a witch hut) open the skill with the level it would reach, a town gate's buttons the
+  town, a full army's ticks the stack, a guard's buttons the stack.
+- **Code**: core `InfoSheets.Income`, `KingdomTotal`, `TavernHero`, `Decision`, `SkillChoice` (`InfoSheets.Screens.cs`); the Godot panels add
+  `WithInfo`. Tests `InfoSheetScreenTests`; smoke scenarios `game-info-screens` and `game-info-prompts`. No rule, map or save format change.
+- **Not done**: the map tavern's offers (the object service screen), a long press on touch.
