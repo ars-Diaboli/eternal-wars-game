@@ -2064,3 +2064,33 @@ as [spells.md](../content/spells.md) words them. Every one of the 91 battle spel
   deep orange to blue. A star's halo carries its colour, its core is a little whiter. A bright star is dimmed as a whole rather than clipped,
   so a hot star stays blue instead of burning out to white.
 - Rendering only (`shaders/fog_of_war.gdshader`): rules, saves and the AI are unchanged.
+### ADR-180: The three shipped arena maps (ADR-097, ADR-100, ADR-158, ARN-2, 2026-11-11)
+**Status**: implemented (2026-11-11): the roadmap's last arena item before LAN. Hand-made, in code like Ember March (`Scenarios/`); no arena
+template for the generator (ADR-100). No rule or map format change. Layouts and numbers are *(proposal)*, for play-testing.
+
+- **Proving Grounds** (34 × 18, two players): each player's **random town** and **random hero** take the faction picked on the new-game
+  screen (ADR-126). The halves mirror each other left to right behind a rock wall; the combat place is in a sealed glade in the wall (grass).
+  Each half: two gold piles, a chest, two Pandora's Boxes (experience; trolls behind a wolf guard), a Witch Hut (Leadership, Armor), a level 1
+  Shrine, an Arena, a Temple, a Minor artifact, a Major one behind wolves.
+- **Frostfang Pass** (24 × 30, two players, **no towns**): a Haven mage (Ansel Wren, Blue, the snowy north) against a Necropolis mage (Kael
+  Duskmire, Red, the wasted south), each with a small army, buying the rest at four **map dwellings** of its faction (tiers 2, 3, 2, 4) with
+  10 000 gold lying about, plus a war machine factory, Shrines of levels 1 and 2, three Pandora's Boxes (stats, a tier-3 stack of its
+  faction, experience), a Witch Hut, Star Axis, Marletto Tower, a Learning Stone and artifacts. The halves mirror each other top to bottom;
+  the vertical combat place (the attacker from the north) is sealed in the ridge, on snow.
+- **Four Banners** (40 × 24, **two against two**): Blue and Green share the west, Red and Yellow the east, each player with a random town
+  and hero. Allies share their half's objects and may trade troops; each side fights with its strongest hero (ADR-158). Each half has **its
+  own combat place**: the first player in turn order with a hero standing on one defends there; without one, Blue attacks at the west's.
+- **The same start for everyone** *(proposal)*: a random hero normally brings its own starter stack, which ranges from three tier-4
+  creatures to nine tier-2 ones (an army value of about 10 000 against 1 500 in one test game). So the random heroes on these maps start with a
+  fixed neutral army instead (wolves and bandits), and the factions differ only by their towns.
+- **New-game screen**: the three come after Ember March, in the order above; they count as shipped maps in the ranking's split (never
+  ranked themselves, ADR-158).
+- **Validator fixes** found on the way: a hero placeholder without an army is no longer warned about (it gets its drawn hero's starter
+  stack); "starts without a town and loses after N days" is not given on an arena map (an arena eliminates nobody).
+- **Code**: `ProvingGroundsScenario`, `FrostfangPassScenario`, `FourBannersScenario`, listed by `ArenaScenarios.All`; `MapSketch` builds a
+  map from rows of terrain letters and places one side's layout mirrored for the other. Tests `ArenaMapsTests` (no validator errors or
+  warnings, round trip, every object reachable once its guards are beaten, the random towns and heroes, the teams, two computer players
+  fighting day 2's battle with stronger champions than they started with); smoke `game-arena-shipped`.
+- **Found, not done**: on Four Banners the computer does not share with its ally. The first player of a side picks up most of the half and
+  its ally builds but may buy nothing, so the side's champion can be a hero that did little on day 1. A computer battle on day 1 waits on its
+  result window as on any map.

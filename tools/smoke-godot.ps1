@@ -73,6 +73,10 @@ $scenarios = @(
     # quick combat, the result screen (not ranked), then "Play again" starts the map anew.
     @{ Name = 'game-arena'; App = 'EternalWars.Game'; Frames = 110; Map = $arenaMap
        Input = '3:key:Enter;8:press:End turn;50:key:Q;75:key:Enter;85:press:Play again' },
+    # A shipped arena map from the new-game screen (ADR-180): Four Banners, two against two with random towns; start, then end day 1 and the
+    # computer players prepare (their battles show; day 2 and the result are the game-arena scenario's).
+    @{ Name = 'game-arena-shipped'; App = 'EternalWars.Game'; Frames = 60
+       Input = '4:click:@Demo Valley;8:choose:Four Banners;12:click:@Start;30:press:End turn' },
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },

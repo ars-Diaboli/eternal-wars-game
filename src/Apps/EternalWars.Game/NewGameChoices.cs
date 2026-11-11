@@ -18,7 +18,7 @@ internal static class NewGameChoices
     /// <summary>Where the editor's template editor saves (its <c>user://templates</c>, ADR-070).</summary>
     private const string EditorTemplatesFolder = "Eternal Wars Map Editor/templates";
 
-    /// <summary>The demo, the map given with --map, and every map saved by the editor.</summary>
+    /// <summary>The map given with --map, the shipped maps (the demo, Two Towns, Ember March, the three arenas), and every map saved by the editor.</summary>
     public static List<ScenarioChoice> Scenarios()
     {
         var choices = new List<ScenarioChoice>();
@@ -30,6 +30,7 @@ internal static class NewGameChoices
         choices.Add(Built("Demo Valley", content => DemoScenario.Create(content: content)));
         choices.Add(Built("Two Towns", TownsScenario.Create));
         choices.Add(Built(EmberMarchScenario.Name, EmberMarchScenario.Create));
+        choices.AddRange(ArenaScenarios.All.Select(arena => Built(arena.Name, content => arena.Create(content))));
         var editorMaps = Path.Combine(Path.GetDirectoryName(OS.GetUserDataDir())!, EditorMapsFolder);
         if (Directory.Exists(editorMaps))
         {

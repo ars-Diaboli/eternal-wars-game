@@ -360,6 +360,25 @@ public class GameFlowTests
 
         state.SetRules(ScenarioRules.Default with { GraceDays = 0 });
         Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("starts without a town", StringComparison.Ordinal));
+
+        // An arena eliminates nobody (ADR-158), so the grace period does not matter there.
+        state.SetRules(ScenarioRules.Default with { Arena = true });
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("starts without a town", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void AHeroWithoutAnArmy_IsWarnedAbout_UnlessItIsAPlaceholder_WhichGetsItsStarterStack()
+    {
+        var state = Create("A........B");
+        var hero = state.GetHero(A);
+        foreach (var (slot, _) in hero.Army.Stacks.ToList())
+        {
+            hero.Army.Set(slot, null);
+        }
+
+        Assert.Single(MapValidator.Validate(state), i => i.Message.Contains("has no army", StringComparison.Ordinal));
+        hero.IsPlaceholder = true;
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("has no army", StringComparison.Ordinal));
     }
 
     [Fact]

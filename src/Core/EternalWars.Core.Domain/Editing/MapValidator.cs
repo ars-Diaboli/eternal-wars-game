@@ -42,7 +42,8 @@ public static partial class MapValidator
                 issues.Add(new(IssueSeverity.Error, $"Hero {hero.Name} stands inside an object.", hero.Position));
             }
 
-            if (hero.Army.IsEmpty)
+            // A placeholder without an army gets its drawn hero's starter stack when the game starts (ADR-126).
+            if (hero.Army.IsEmpty && !hero.IsPlaceholder)
             {
                 issues.Add(new(IssueSeverity.Warning, $"Hero {hero.Name} has no army and cannot fight.", hero.Position));
             }
@@ -190,8 +191,8 @@ public static partial class MapValidator
             issues.Add(new(IssueSeverity.Warning, $"Player {player.Name} has no starting hero or town."));
         }
 
-        // Campaign-like maps may start a player without a town (ADR-075): then the grace period should be off.
-        if (scenario.Rules.Elimination && scenario.Rules.GraceDays > 0)
+        // Campaign-like maps may start a player without a town (ADR-075): then the grace period should be off. An arena eliminates nobody (ADR-158).
+        if (scenario.Rules.Elimination && scenario.Rules.GraceDays > 0 && !scenario.Rules.Arena)
         {
             foreach (var player in scenario.Players.Where(p => scenario.HeroesOf(p.Id).Any() && !scenario.ObjectsOf<Town>().Any(t => t.Owner == p.Id)))
             {
