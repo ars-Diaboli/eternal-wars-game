@@ -17,34 +17,45 @@ internal sealed class SummonHandler : SpellEffectHandler
             ? $"There is no room to call {cast.Known.Spell.Name}'s creatures."
             : null;
 
+    /// <summary>
+    /// Calls the creatures: one kind, or with <c>kinds N</c> (Bind Elemental III, ADR-177) N kinds one after the other, each the first not yet
+    /// summoned; with <c>stays</c> (Summon Demons III) they are marked to join the army when the side wins.
+    /// </summary>
     public override void Apply(CastContext cast, BattleSpellResolver resolver)
     {
         var battle = cast.Battle;
-        if (BattleMagic.SummonPlacement(battle, cast.Side, cast.Known, cast.CreaturePower) is not { } placement)
+        for (var kind = 0; kind < cast.Effect.Kinds; kind++)
         {
-            return;
-        }
-
-        var (creature, count, joins, at) = placement;
-        var unit = joins;
-        if (unit is not null)
-        {
-            unit.Count += count;
-        }
-        else
-        {
-            unit = new BattleUnit(battle.NextUnitId(), cast.Side, creature, count, -1, at)
+            if (BattleMagic.SummonPlacement(battle, cast.Side, cast.Known, cast.CreaturePower) is not { } placement)
             {
-                IsSummoned = true,
-                IsRooted = cast.Effect.Rooted,
-            };
-            battle.MutableUnits.Add(unit);
-        }
+                return;
+            }
 
-        resolver.Events.Publish(new BattleUnitSummoned(
-            new BattleUnitInfo(unit.Id, unit.Side, unit.Creature.Id, unit.Count, unit.Position, unit.Width, unit.Height), cast.Known.Spell.Id, count));
+            var (creature, count, joins, at) = placement;
+            var unit = joins;
+            if (unit is not null)
+            {
+                unit.Count += count;
+            }
+            else
+            {
+                unit = new BattleUnit(battle.NextUnitId(), cast.Side, creature, count, -1, at)
+                {
+                    IsSummoned = true,
+                    IsRooted = cast.Effect.Rooted,
+                };
+                battle.MutableUnits.Add(unit);
+            }
+
+            unit.Stays |= cast.Effect.Stays;
+            resolver.Events.Publish(new BattleUnitSummoned(
+                new BattleUnitInfo(unit.Id, unit.Side, unit.Creature.Id, unit.Count, unit.Position, unit.Width, unit.Height), cast.Known.Spell.Id, count));
+        }
     }
 
+    /// <summary>The creature value of the first kind it calls, for each kind (the kinds are worth about the same).</summary>
     public override long Value(CastContext cast) =>
-        BattleMagic.SummonPlacement(cast.Battle, cast.Side, cast.Known, cast.CreaturePower) is { } summon ? (long)summon.Count * summon.Creature.Value : 0;
+        BattleMagic.SummonPlacement(cast.Battle, cast.Side, cast.Known, cast.CreaturePower) is { } summon
+            ? (long)summon.Count * summon.Creature.Value * cast.Effect.Kinds
+            : 0;
 }

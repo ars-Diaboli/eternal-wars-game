@@ -123,6 +123,7 @@ public static partial class InfoSheets
     {
         CapabilityKind.Flying => "Flies over everything in its way.",
         CapabilityKind.Teleporting => "Teleports to any free spot within its speed.",
+        CapabilityKind.ManaThief => $"Mana thief: each of its attacks takes {N(capability.Value)} mana from the enemy hero, for its own hero.",
         CapabilityKind.DoubleStrike => "Strikes twice.",
         CapabilityKind.ShootsTwice => "Shoots twice.",
         CapabilityKind.NoEnemyRetaliation => "No retaliation against its attacks.",

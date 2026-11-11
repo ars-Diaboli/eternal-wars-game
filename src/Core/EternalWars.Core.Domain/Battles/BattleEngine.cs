@@ -341,6 +341,29 @@ internal sealed class BattleEngine
         }
 
         GainRage(attacker, killed);
+        if (kind is BattleAttackKind.Melee or BattleAttackKind.Ranged)
+        {
+            StealMana(attacker);
+        }
+    }
+
+    /// <summary>The Familiars' mana theft (ADR-177): the attack takes mana from the enemy hero, and the stack's own hero gains it if it has a spell book.</summary>
+    private void StealMana(BattleUnit attacker)
+    {
+        var enemy = attacker.Side.Opponent();
+        var stolen = Math.Min(attacker.Creature.CapabilityValue(CapabilityKind.ManaThief), battle.ManaOf(enemy));
+        if (stolen <= 0)
+        {
+            return;
+        }
+
+        battle.ManaLeft[enemy] -= stolen;
+        if (battle.Participant(attacker.Side).Caster is not null)
+        {
+            battle.ManaLeft[attacker.Side] = battle.ManaOf(attacker.Side) + stolen;
+        }
+
+        events.Publish(new BattleManaStolen(attacker.Id, enemy, stolen, battle.ManaOf(enemy)));
     }
 
     /// <summary>Blood Rage (ADR-067): a stack that killed creatures gains +1 Attack, up to the level's limit, until the battle ends.</summary>

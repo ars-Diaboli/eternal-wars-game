@@ -9,7 +9,7 @@ Town Portal and Dimension Door), ADR-072 (Spell Power formula, ranks). Lore: [lo
 
 **Data (ADR-110, ADR-122)**: the list is `src/Core/data/spells.csv`, generated from the tables below for now; its `battle` column holds the
 rank I effect of the spells castable in battle so far (grammar in `SpellEffect.Parse`), `battle2` and `battle3` the whole effect at ranks II
-and III (empty: the rank below's, where the change needs something not built yet; ADR-122 lists them).
+and III (an empty column takes the rank below's; every shipped battle spell has all three, ADR-177).
 
 **Re-draft (ADR-099, MAG-1, 2026-10-29)**: the list is re-drafted to fit the lore, with the HoMM3, HoMM4, HoMM5 and Olden Era spell books as
 reference: **17 spells a school, 102 in all** (5 / 5 / 4 / 3 by level, adventure spells included), so a guild draws a selection and two towns
@@ -49,8 +49,17 @@ town creatures (and Conflux elementals).
   adds +3 % of the spell's effect per hero level (MAG-6). An area spell has a fixed area; a big creature with any cell inside is hit once
   (MAG-11). Areas are in battlefield cells (the field is 30 × 20; a Small creature is one cell, ADR-070).
 - **Built in battle** (ADR-123, ADR-149, ADR-150, ADR-151, ADR-152): all 91 battle spells work (the 11 adventure spells are cast on the map).
-  `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`); a few rank changes still fall back to the rank
-  below (ADR-123 lists them).
+  `spells.csv` lists each rank's effect in the effect grammar (`SpellEffect` in `Spells.cs`), every rank change included (ADR-177).
+- **Rank III details** (ADR-177, *proposals* where marked): Heal II's cure takes the enemy's spells off the stack; Heal III's revival uses the
+  health left after the top creature's wounds, for good, up to a quarter of the creatures lost (rounded down). Purge II's healing grows with Spell
+  Power, and a wounded stack with no enemy spells may be its aim. Meteor Shower III's rubble covers the area's free cells (not under a stack, an
+  obstacle or a siege structure), one-cell obstacles with 1/8 cover, for the rest of the battle. Summon Demons III's demons join the winning
+  hero's army (a stack of theirs or a free slot), not a lost or fled one's. Bind Elemental III calls the first two kinds not yet bound, each
+  worth 280 *(proposal: each the full amount)*. The Familiars' theft is the creature's own `ManaThief 1` (every Familiar, recruited or called),
+  one mana for each of its attacks, not its retaliations. Entangle III's 15 grows with Spell Power. Unravel III's −1 Spell Power counts once a
+  cast and adds up. Dispel III gives back half its mana cost (rounded down) when every spell it took off was cast by the enemy. Hellfire III hits
+  every stack, the caster's own at half. Inferno III's +20 % lasts while it burns. Sanctuary III's clear line: no stack, obstacle or standing
+  siege structure on the line of fire. Unseen III's +25 % is on every blow of the attack it makes out of hiding.
 - **Field zones** (ADR-149): Consecrate, Thornwall, Bone Wall, Fire Wall and Darkness leave cells on the field for their rounds, aimed with
   one click. A line runs down the field, centred on the aimed cell; zones are clipped to the field and may lie over stacks. Walls block walkers
   (a stack standing in one may walk out); flyers and teleporters pass over them. A walker takes Fire Wall's damage when its path crosses the

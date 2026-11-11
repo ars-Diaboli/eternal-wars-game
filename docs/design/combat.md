@@ -108,6 +108,7 @@ HoMM4-style (ADR-042): **at most 5** special rules per creature, every rule coun
 | Spell immunity (tag) | Unaffected by spells with that tag (all, mind, fire, curse, …) |
 | Spell resistance (level n) | Unaffected by hostile spells of level n and below; a rank III spell counts one level higher |
 | Caster (spell, n) | Casts the spell n times per battle ([magic.md](magic.md#casting-in-battle)) |
+| Mana thief (n) | Each of its attacks (not a retaliation) takes n mana from the enemy hero; its own hero gains it if it has a spell book (Familiars, ADR-177) |
 
 ## Leaving a battle
 - **Retreat**: the army is lost and the hero leaves the map; it waits in its player's taverns ([tavern](towns-and-economy.md#tavern)).

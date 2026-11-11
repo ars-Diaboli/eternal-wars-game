@@ -2009,3 +2009,28 @@ agent's choices.
   (`MapViewContext.LastStepStart`), so the fog rolls back as the hero walks. A reveal of 30 tiles or more (a captured town, a Crypt, a
   spell) opens as a wave from its middle. Entering or leaving sight fades in 0.5 s. A new viewer (hot-seat) or level snaps without fading.
 - Rendering only: rules, saves and the AI are unchanged.
+
+### ADR-177: The last rank changes: Heal, Purge, Meteor Shower, Summon Demons, Ashfall, Bind Elemental, the Familiars, Entangle, Unravel, Dispel, Hellfire, Inferno, Sanctuary, Unseen (ADR-122, ADR-123, 2026-11-11)
+**Status**: accepted and implemented (2026-11-11), the owner's pick from the roadmap; builds the rank changes ADR-123 left "still not built",
+as [spells.md](../content/spells.md) words them. Every one of the 91 battle spells now has its own rank III line in `spells.csv`.
+- **New words in the effect grammar** (`SpellEffect.Parse`): for healing `cure` (Heal II, III) and `revive% N` (Heal III, 25); for a dispel
+  `heal N` (Purge II, III: 20), `sap-power N` (Unravel III: 1) and `refund% N` (Dispel III: 50); for a curse `hit N` (Entangle III: 15); for
+  damage `rubble` (Meteor Shower III), `spare-own-demons` (Ashfall III) and `own% N` (Hellfire III: `damage 160 all own% 50`); for a summon
+  `stays` (Summon Demons III) and `kinds N` (Bind Elemental III: 2). Buffs gain the status `screened` (Sanctuary III) and `ambush% N`
+  (Unseen III: 25). Inferno III needed no new word: `taken% 20` while it burns. Each word is refused on the wrong kind or reach.
+- **The Familiars' mana theft is a creature capability**, `ManaThief 1` on `inferno.familiar` (so recruited Familiars steal too, not only
+  Hellgate III's): each melee attack or shot, not a retaliation, takes 1 mana from the enemy hero; the Familiars' hero gains it when it has a
+  spell book (`BattleManaStolen`).
+- **Choices** *(proposals)*: Heal III revives for good, only with the health left after the top creature's wounds, up to a quarter of the
+  creatures lost (rounded down). Purge II's healing grows with Spell Power and lets Purge aim at a wounded stack with no enemy spells. Rubble
+  falls on the area's cells that no stack, obstacle or standing siege structure covers, as one-cell obstacles (`ObstacleClass.Rubble`, 1/8
+  cover) for the rest of the battle (`BattleRubbleFell`; the 3D view and the 2D board draw it). Staying demons join the winner's army (its
+  stack of them or a free slot, else they are lost); a lost or fled battle keeps none. Bind Elemental III calls the first two kinds not yet
+  bound, each worth the full 280. Unravel III's −1 Spell Power is per cast and adds up for the battle (`BattleSpellPowerSapped`). Dispel
+  III's refund is half its mana cost, rounded down, when every spell it took off was cast by the enemy, and not for a creature caster.
+  Sanctuary III's clear line: no living stack, obstacle or standing siege structure on the line of fire. Unseen III's +25 % counts on every
+  blow of the attack made while Unseen (Unseen ends as the stack's action ends).
+- **The battle AI** values them with the existing rules: healing and revived health, the enemy spells taken off, Entangle's damage, both
+  summoned kinds; rubble, the refund and the sapped Spell Power are not valued.
+- **Not changed**: the map format, the save format and the state digest. Old saves and replays whose heroes cast these spells at rank III,
+  or fought with Familiars against a hero, may now play differently.

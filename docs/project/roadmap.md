@@ -6,11 +6,11 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 
 Done items are summarised with their ADR numbers; the detail is in [decisions.md](decisions.md) and the design docs.
 
-**Where we are (2026-11-09)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
+**Where we are (2026-11-11)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
-and every battle spell is in (ADR-149 to ADR-152); sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133). The views built but never run were seen in Godot (ADR-148).
-**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: the rank changes
-ADR-123 lists as not built, presentation; the few views not yet seen (below) when those spells or a game bring them up.
+and every battle spell is in at all three ranks (ADR-149 to ADR-152, ADR-177); sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133). The views built but never run were seen in Godot (ADR-148).
+**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: presentation; the few
+views not yet seen (below) when those spells or a game bring them up.
 
 ## Open checks in Godot
 - [x] Godot run of (built and tested in core, the Godot part not run yet), seen with 13 new smoke scenarios (ADR-148):
@@ -30,7 +30,7 @@ ADR-123 lists as not built, presentation; the few views not yet seen (below) whe
       - Editor: hero limit setting on the conditions panel, town faction in the inspector (ADR-083)
       - New-game screen: user templates from the editor's `templates` folder
 - [ ] Still not seen in Godot (ADR-148): Resurrection; Grave Whisper, Ledger of Ages, Eavesdrop; the AI's buffs, curses and revives; setting
-      a guild spell by hand in the editor; a dug hole's drawing on the map
+      a guild spell by hand in the editor; a dug hole's drawing on the map; Meteor Shower III's rubble on the 3D field (ADR-177)
 
 ## Bugs
 - [x] At game start the fog opens around the starting hero, not around the starting town (owner, 2026-11-06): towns now see from their
@@ -146,7 +146,9 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Control spells: Frenzy, Hypnotize, Puppet Master, spells that last turns (ADR-150; rank III's split, ADR-152)
 - [x] Two-click spells: Teleport, Shadow Step, Drain Life, at all three ranks (ADR-151)
 - [x] The last battle spells: Martyrdom, Mirror Image, Clockwork Precision, Raise Dead, Blood Price, at all three ranks (ADR-152)
-- [ ] Spell table, the rest: the rank changes ADR-123 lists as not built, final numbers after the visuals
+- [x] The last rank changes: Heal, Purge, Meteor Shower, Summon Demons, Ashfall, Bind Elemental, the Familiars' mana theft, Entangle,
+      Unravel, Dispel, Hellfire, Inferno, Sanctuary, Unseen; every battle spell has its own rank III (ADR-177)
+- [ ] Spell table: final numbers after the visuals
 
 ### Combat additions
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges

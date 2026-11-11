@@ -72,7 +72,7 @@ necropolis.arch-lich,Arch Lich,necropolis,4,Small,,B,17,16,21,30,122,10,6,11,16,
 necropolis.bone-dragon,Bone Dragon,necropolis,5,Large,necropolis.ghost-dragon,,22,20,47,70,248,20,9,13,,,,1,3300,mercury 1,undead; dragon,Flying; SpellImmunity mind; Relentless 10,
 necropolis.ghost-dragon,Ghost Dragon,necropolis,5,Large,,,25,23,50,71,285,24,10,14,,,,1,4300,mercury 2,undead; dragon,Flying; SpellImmunity mind; Breath,
 inferno.imp,Imp,inferno,1,Small,inferno.familiar,A,4,3,3,6,13,11,5,13,,,,20,50,,demon,Flying,sandbox name 'Inp'
-inferno.familiar,Familiar,inferno,1,Small,,A,5,4,4,6,13,13,6,14,,,,20,65,,demon,Flying; Relentless 10,
+inferno.familiar,Familiar,inferno,1,Small,,A,5,4,4,6,13,13,6,14,,,,20,65,,demon,Flying; Relentless 10; ManaThief 1,
 inferno.horned-demon,Horned Demon,inferno,1,Small,inferno.horned-overseer,B,7,7,4,6,16,10,4,9,,,,15,65,,demon,,
 inferno.horned-overseer,Horned Overseer,inferno,1,Small,,B,8,9,5,7,17,11,5,10,,,,15,85,,demon,PackHunter 10,
 inferno.hell-hound,Hell Hound,inferno,2,Medium,inferno.cerberus,A,10,7,6,11,32,18,7,13,,,,8,210,,demon; beast,PackHunter 15,

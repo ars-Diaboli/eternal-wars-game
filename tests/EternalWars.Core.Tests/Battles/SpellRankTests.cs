@@ -38,15 +38,14 @@ public class SpellRankTests
     [Fact]
     public void ARankWithoutItsOwnEffect_UsesTheRankBelow()
     {
-        var unseen = SpellCatalog.Default.Get("shadow.unseen"); // rank III's first-strike bonus is not built
-        Assert.Same(unseen.EffectAt(2), unseen.EffectAt(3));
+        // Every shipped battle spell has its own rank III now (ADR-177); a designer's table may still leave a rank empty.
+        var mended = new SpellDefinition("x.mend", "Mend", "haven", 1, 5, SpellElement.Water, [], false, SpellEffect.Parse("heal 40"), Rank2: SpellEffect.Parse("heal 60"));
+        Assert.Same(mended.EffectAt(2), mended.EffectAt(3));
+        Assert.Equal((40, 60, 60), (mended.EffectAt(1)!.Amount, mended.EffectAt(2)!.Amount, mended.EffectAt(3)!.Amount));
 
         var darkBolt = SpellCatalog.Default.Get("shadow.dark-bolt"); // rank II burns (ADR-123)
         Assert.Equal((0, 20, 20), (darkBolt.EffectAt(1)!.Modifiers.Burn, darkBolt.EffectAt(2)!.Modifiers.Burn, darkBolt.EffectAt(3)!.Modifiers.Burn));
         Assert.Equal(2, darkBolt.EffectAt(3)!.Targets);
-
-        var heal = SpellCatalog.Default.Get("light.heal"); // rank III's revival is not built
-        Assert.Equal((40, 60, 60), (heal.EffectAt(1)!.Amount, heal.EffectAt(2)!.Amount, heal.EffectAt(3)!.Amount));
     }
 
     [Fact]

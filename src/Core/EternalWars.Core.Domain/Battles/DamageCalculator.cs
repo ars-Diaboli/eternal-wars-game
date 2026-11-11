@@ -97,9 +97,13 @@ public static class DamageCalculator
         return (int)Math.Clamp(damage, 1, int.MaxValue);
     }
 
-    /// <summary>Spells (ADR-110): the attacker's melee or ranged percent plus the defender's damage-taken percents, at least −100.</summary>
+    /// <summary>
+    /// Spells (ADR-110): the attacker's melee or ranged percent plus the defender's damage-taken percents, and an attack out of hiding's
+    /// <c>ambush%</c> (Unseen III, ADR-177); at least −100.
+    /// </summary>
     private static int Spells(Magic.SpellModifiers attacker, Magic.SpellModifiers defender, bool isRanged) =>
-        Math.Max(-100, (isRanged ? attacker.RangedPercent + defender.RangedTakenPercent : attacker.MeleePercent + defender.MeleeTakenPercent) + defender.DamageTakenPercent);
+        Math.Max(-100, (isRanged ? attacker.RangedPercent + defender.RangedTakenPercent : attacker.MeleePercent + defender.MeleeTakenPercent) + defender.DamageTakenPercent
+                       + (attacker.Has(Magic.SpellStatus.Unseen) ? attacker.AmbushPercent : 0));
 
     /// <summary>Defend: +20 % Defense, at least +1, until the unit's next turn.</summary>
     public static int DefendBonus(int defense) => Math.Max(1, defense / 5);

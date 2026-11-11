@@ -57,6 +57,9 @@ public sealed class BattleNarrator(Func<GameState> state)
         BattleUnitShielded shielded =>
             $"{SpellName(shielded.Spell)}: {UnitName(shielded.Martyr)} take {shielded.Damage} of the blow meant for {UnitName(shielded.Unit)}, {shielded.Killed} killed.",
         BattleManaGained mana => $"{SpellName(mana.Spell)}: {SideName(mana.Side)} gains {mana.Gained} mana ({mana.Mana} now).",
+        BattleManaStolen stolen => $"{UnitName(stolen.Unit)} steal {stolen.Stolen} mana from {SideName(stolen.From)} ({stolen.FromMana} left).",
+        BattleSpellPowerSapped sapped => $"{SpellName(sapped.Spell)}: {SideName(sapped.Side)} loses {sapped.Lost} Spell Power for the battle.",
+        BattleRubbleFell rubble => $"{SpellName(rubble.Spell)} leaves rubble on {rubble.Rubble.Count} cell(s).",
         BattleUnitActsAgain again => $"{SpellName(again.Spell)}: {UnitName(again.Unit)} acts again.",
         BattleUnitReborn reborn => $"{UnitName(reborn.Unit)} rise from the ashes: {reborn.Count} of them.",
         BattleUnitRevived revived => $"{SpellName(revived.Spell)}: {UnitName(revived.Unit)} regain {revived.Health} health, {revived.Count} of them now.",

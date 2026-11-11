@@ -85,6 +85,12 @@ public enum CapabilityKind
 
     /// <summary>Teleports: moves like <see cref="Flying"/> (to any free spot within its speed, ignoring what lies between; ADR-070, CMB-4).</summary>
     Teleporting,
+
+    /// <summary>
+    /// Each of its attacks (melee or a shot, not a retaliation) takes <see cref="CreatureCapability.Value"/> mana from the enemy hero, which its own
+    /// hero gains when it has a spell book (the Familiars, ADR-177).
+    /// </summary>
+    ManaThief,
 }
 
 /// <param name="Kind">The rule.</param>
@@ -98,6 +104,7 @@ public sealed record CreatureCapability(CapabilityKind Kind, int Value = 0, stri
         var problem = Kind switch
         {
             CapabilityKind.PackHunter or CapabilityKind.Relentless when Value <= 0 => "needs a positive percentage",
+            CapabilityKind.ManaThief when Value <= 0 => "needs the mana it takes, at least 1",
             CapabilityKind.SpellImmunity when string.IsNullOrWhiteSpace(Parameter) => "needs a spell tag",
             CapabilityKind.SpellResistance when Value is < 1 or >= SpellLevels.Max => $"needs a spell level from 1 to {SpellLevels.Max - 1}",
             CapabilityKind.Caster when string.IsNullOrWhiteSpace(Parameter) || Value < 1 => "needs a spell id and at least one cast",
