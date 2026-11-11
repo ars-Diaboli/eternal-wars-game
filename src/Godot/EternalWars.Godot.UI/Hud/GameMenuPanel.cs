@@ -31,6 +31,8 @@ public partial class GameMenuPanel : CenterContainer
     private readonly OptionButton _battleSpeed = SpeedButton(withHidden: false);
     private SpeedSettings _speeds = SpeedSettings.Default;
     private readonly CheckBox _detailed = new() { Text = "Detailed tooltips (formulas and numbers in the right-click windows)" };
+    private readonly OptionButton _fog = Choices("Dark (starry void)", "Clouds");
+    private InterfaceSettings _interface = InterfaceSettings.Default;
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(580, 340), UseHiddenTabsForMinSize = true }; // the same size on every tab
     private readonly OptionButton _initiativeBar = Choices("Top", "Bottom");
     private readonly OptionButton _minimapCorner = Choices("Top right", "Top left", "Bottom right", "Bottom left");
@@ -139,7 +141,9 @@ public partial class GameMenuPanel : CenterContainer
         ShowSpeeds(_speeds);
         settings.AddChild(new HSeparator());
         settings.AddChild(_detailed);
-        _detailed.Toggled += on => InterfaceChanged?.Invoke(new InterfaceSettings(DetailedTooltips: on));
+        _detailed.Toggled += on => ChangeInterface(_interface with { DetailedTooltips = on });
+        settings.AddRow("Fog of war", _fog, 180);
+        _fog.ItemSelected += index => ChangeInterface(_interface with { Fog = (FogLook)index });
 
         // Layout (ADR-118, UI-3; ADR-156): where the screens put their parts, kept on this computer; applied at once.
         layout.AddChild(new Label { Text = "Where the screens put their parts (kept on this computer)" });
@@ -243,7 +247,18 @@ public partial class GameMenuPanel : CenterContainer
     }
 
     /// <summary>Shows the interface settings read from the settings file.</summary>
-    public void ShowInterface(InterfaceSettings settings) => _detailed.SetPressedNoSignal(settings.DetailedTooltips);
+    public void ShowInterface(InterfaceSettings settings)
+    {
+        _interface = settings;
+        _detailed.SetPressedNoSignal(settings.DetailedTooltips);
+        _fog.Selected = (int)settings.Fog;
+    }
+
+    private void ChangeInterface(InterfaceSettings settings)
+    {
+        _interface = settings;
+        InterfaceChanged?.Invoke(settings);
+    }
 
     /// <summary>Shows the layout settings read from the settings file.</summary>
     public void ShowLayout(LayoutSettings layout)

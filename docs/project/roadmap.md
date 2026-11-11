@@ -208,8 +208,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Built: speed settings (ADR-095, UI-1)
 - [ ] Platform pass: Linux/Steam Deck builds, controller-friendly UI, Deck performance budget (ADR-034)
 - [ ] Look-dev spike: one terrain biome + one creature + lighting setup, to lock the visual target and budget
-- [ ] Smooth fog (ADR-099): a soft fade from the visible to the hidden area; objects half under the fog show their explored part
-      correctly (rendering only; the rules keep cell-by-cell visibility)
+- [x] Smooth fog (ADR-099, ADR-176): a soft fade from the visible to the hidden area; objects half under the fog show their explored part
+      correctly (rendering only; the rules keep cell-by-cell visibility); a starry-void or cloud look, opening as the hero walks
 - [ ] Terrain: heightmapped landscape with splat shader and blended biome transitions; grid only as overlay
 - [ ] PBR models for heroes, creatures, towns and map objects; fog/volumetrics
 - [ ] UI theme (HoMM-style right-side panel, status bar)

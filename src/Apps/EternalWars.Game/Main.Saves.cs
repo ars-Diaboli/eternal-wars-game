@@ -95,6 +95,11 @@ public partial class Main
         {
             _interface = settings;
             _info.Detailed = settings.DetailedTooltips;
+            if (_context is not null)
+            {
+                _context.FogLook = settings.Fog;
+            }
+
             KeepSettings();
         };
 

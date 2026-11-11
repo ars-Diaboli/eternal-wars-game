@@ -1986,3 +1986,26 @@ agent's choices.
   `game-turn-timer` and `game-random-map` fail the same way on the commit before the review (a scripted click on a long drop-down
   list opens it under the cursor and the release picks an item).
 - **Behaviour**: unchanged with the built-in content (AI games replay the same).
+
+### ADR-176: Fog of war looks: a starry void or clouds, opening as the hero walks (2026-11-11)
+**Status**: accepted and implemented (2026-11-11), the owner's request with reference shots of a starry fog; builds ADR-099's smooth fog.
+- **Two looks, a setting on this computer** (`InterfaceSettings.Fog`, menu "Settings" → "Fog of war"; the settings file's `interface.fog`):
+  **Dark** (the default *(owner's choice)*), a starry void: the map floats in space; **Clouds**, thick drifting clouds. Both hide exactly
+  what the rules hide; **Clouds are opaque** like the void *(owner's choice: not see-through)*. Explored tiles out of sight (refog mode)
+  are veiled: dimmed under the void, a thin haze under the clouds. The editor shows no fog.
+- **Technique: a full-screen pass, not a mesh over the tiles** (`FogView`, `shaders/fog_of_war.gdshader`). Each pixel reads the depth
+  buffer, finds where it stands on the map and reads a fog mask there (one texel a tile, with a hidden border). So an object at the edge
+  shows the part that stands on explored ground and the rest dissolves (ADR-099); pixels with nothing behind them use the ground plane.
+  The mask is blurred and read through a slowly moving noise warp of about a tile, so the edge wanders and never shows the grid; an edge
+  between an explored and an unexplored tile fades over about 1.3 tiles in both looks *(owner's choice)*. The map's own edge melts into
+  the void the same way.
+- **The animation is real 3D parallax, not a scrolling picture**: three star layers and a nebula lie on planes 40 to 160 units below the
+  map, so they shift against the land as the camera pans, turns and zooms; the nebula drifts, the stars twinkle. The void is mostly
+  truly black: sparse stars, about one in eight big and bright, and small faint violet-blue nebula wisps *(owner's choice)*. The clouds lie on two
+  planes above the ground and drift with the wind. Edge of the land under the void: a wide dark rim first, then the stars.
+- **Procedural by default; textures optional**: `textures/fog/nebula.png` replaces the procedural nebula and `textures/fog/clouds.png`
+  adds detail to the clouds when present (prompts for an image model were given with this ADR; the shots in the request are the target).
+- **Smooth reveal**: the core reveals at once; the view fades each tile over 0.9 s, starting when the step that revealed it starts to play
+  (`MapViewContext.LastStepStart`), so the fog rolls back as the hero walks. A reveal of 30 tiles or more (a captured town, a Crypt, a
+  spell) opens as a wave from its middle. Entering or leaving sight fades in 0.5 s. A new viewer (hot-seat) or level snaps without fading.
+- Rendering only: rules, saves and the AI are unchanged.

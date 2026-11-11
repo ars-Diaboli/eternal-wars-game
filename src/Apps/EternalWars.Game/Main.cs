@@ -346,7 +346,7 @@ public partial class Main : Node3D
         _ai = playing ? new AdventureAi(session) : null;
         _menu.CanSave = playing;
         var state = session.State;
-        _context = new MapViewContext(state, _session.Events, playing ? state.CurrentPlayer.Id : ReplayViewer());
+        _context = new MapViewContext(state, _session.Events, playing ? state.CurrentPlayer.Id : ReplayViewer()) { FogLook = _interface.Fog };
 
         _world = new AdventureWorldView { Name = "World" };
         _game.AddChild(_world);
