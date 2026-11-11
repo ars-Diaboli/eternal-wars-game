@@ -16,7 +16,7 @@ ADR-057, ADR-073, ADR-075, ADR-094.
 - **Teams**: a team wins while at least one of its **human** players survives; eliminated human teammates share the win; a surviving computer
   ally does not win for them (ADR-083).
 - **Players without a town**: a campaign-like map may start a player with heroes only: set the grace period to 0 and add "lose a hero"; the
-  validator warns about a townless start while the grace period is on.
+  validator warns about a townless start while the grace period is on (not on an arena map, which eliminates nobody).
 - A defeated player's heroes leave, its towns, mines, providers and map dwellings turn neutral and its caravans vanish; the game then refuses
   its commands and the app shows the result.
 - Campaign hooks are open ❓ (FLOW-1, Phase 6).
@@ -86,7 +86,11 @@ In priority order:
     whose attack cell is impassable; warnings when two enemies' heroes can reach the same ground on day 1 (from their heroes and town
     entrances, through gates; monsters, garrisons and barriers count as passable), for map events that do something only after day 1 (by
     the date in their conditions), for conditions (ignored), and for a combat place on a map that is not an arena.
-  - *(planned)*: **three hand-made arena maps** on the new-game screen (no generator template), LAN.
+  - **Shipped maps** (ADR-180), hand-made (no generator template), on the new-game screen after Ember March: **Proving Grounds**
+    (two players, each picking its faction for a random town and hero, mirrored halves, a sealed combat place); **Frostfang Pass** (two
+    players and no towns: a Haven and a Necropolis mage buy their armies at map dwellings); **Four Banners** (two against two, allies sharing
+    a half, each half with its own combat place). Random heroes there start with the same neutral army.
+  - *(planned)*: LAN.
 - **LAN multiplayer** *(planned before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓)*: the **host** runs the game and computer players; clients send
   commands and get only what they may see. Lobby (LAN discovery or address; map or random map, options, colours, computer players); battles
   between two remote humans are live; a dropped player pauses the game until the host hands it to the computer or the player rejoins; text

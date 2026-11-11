@@ -108,7 +108,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] AI: prepares on day 1 (visits, hires, builds) for the battle; never leaves the battle (ADR-158, ADR-160)
 - [x] Editor: the arena switch on the conditions tab, combat places; validator (no combat place, players that can meet on day 1, map
       events that run only later); Pandora's Boxes, quests, Witch Huts and Shrines show their contents on day 1 (ARN-2; ADR-161)
-- [ ] Three shipped arena maps, hand-made; no arena template for the generator (ARN-2)
+- [x] Three shipped arena maps, hand-made; no arena template for the generator (ARN-2; ADR-180)
 - Arena over the LAN: in [LAN multiplayer](#lan-multiplayer-adr-088-adr-098-before-10-after-the-phase-3-and-4-exits)
 
 ### Adventure AI

@@ -22,7 +22,7 @@ public partial class Main
     private const string ReplaysFolder = "user://replays";
 
     /// <summary>The maps that ship with the game (by name); every other hand-made map is "custom" in the ranking (ADR-101).</summary>
-    private static readonly HashSet<string> ShippedMaps = ["Demo Valley", "Two Towns", EmberMarchScenario.Name];
+    private static readonly HashSet<string> ShippedMaps = ["Demo Valley", "Two Towns", EmberMarchScenario.Name, .. ArenaScenarios.All.Select(a => a.Name)];
 
     private void KeepSettings()
     {
