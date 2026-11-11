@@ -12,6 +12,8 @@ namespace EternalWars.Godot.Shared.Map;
 /// </summary>
 public sealed class MapViewContext(GameState state, IEventSubscriber events, PlayerId? viewer = null)
 {
+    private FogLook _fogLook = FogLook.Dark;
+
     public GameState State { get; } = state;
 
     public IEventSubscriber Events { get; } = events;
@@ -34,6 +36,26 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
     /// <summary>When the last queued step of a computer player's hero that is shown ends.</summary>
     public double ComputerPlaybackEnd { get; private set; }
 
+    /// <summary>How the fog of war is drawn (ADR-176); the app sets it from the settings file.</summary>
+    public FogLook FogLook
+    {
+        get => _fogLook;
+        set
+        {
+            if (value != _fogLook)
+            {
+                _fogLook = value;
+                FogLookChanged?.Invoke();
+            }
+        }
+    }
+
+    /// <summary>When the last booked hero step starts, on <see cref="Now"/>'s clock (the fog opens as the hero walks).</summary>
+    public double LastStepStart { get; private set; }
+
+    /// <summary>The fog's look changed.</summary>
+    public event Action? FogLookChanged;
+
     /// <summary>The viewer or the level changed: views redraw.</summary>
     public event Action? Changed;
 
@@ -53,6 +75,7 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
     public double Schedule(double earliest, double seconds, bool computer)
     {
         var start = Math.Max(earliest, PlaybackEnd);
+        LastStepStart = start;
         PlaybackEnd = start + seconds;
         if (computer)
         {
