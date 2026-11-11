@@ -48,6 +48,7 @@ The game design document, split by mechanic. Start at the overview.
 | [decisions.md](project/decisions.md) | Architecture and design decision log (short ADRs), ADR-101 on |
 | [decisions-archive.md](project/decisions-archive.md) | ADR-001 … ADR-100, read-only; search for `### ADR-NNN` |
 | [ideas.md](project/ideas.md) | Owner's raw notes; each leaves once it becomes an ADR or an open question |
+| [archive/code-review-2026-11.md](project/archive/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175), read-only |
 
 Rules for keeping these in step: a decision goes into `decisions.md` and the matching design doc; an answered question
 moves to the Answered list of `open-questions.md`; roadmap checkboxes follow the code. Numbers that live in data files

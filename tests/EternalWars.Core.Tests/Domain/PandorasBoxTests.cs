@@ -64,7 +64,7 @@ public class PandorasBoxTests
         Assert.Empty(opened);
 
         var gold = session.State.GetPlayer(Blue).Resources.Gold;
-        session.Interactions.Visit(hero, box);
+        session.Revisit(A);
         session.Execute(new AnswerPandorasBoxCommand(Blue, Open: true)).ThrowIfRejected();
 
         Assert.Null(session.State.FindObject(box.Id));
@@ -110,12 +110,12 @@ public class PandorasBoxTests
         Assert.DoesNotContain(session.State.Heroes, h => h.Id == A);
         Assert.Equal(guard, session.State.ObjectsOf<PandorasBox>().Single().Guard);
 
-        var (other, guarded) = World(new BoxContents { Experience = 500 }, guard);
+        var (other, _) = World(new BoxContents { Experience = 500 }, guard);
         var hero = other.State.GetHero(A);
         hero.Army.Set(hero.Army.Stacks.Single().Slot, null);
         var refused = new List<MapObjectRefused>();
         other.Events.Subscribe<MapObjectRefused>(refused.Add);
-        other.Interactions.Visit(hero, guarded);
+        other.Step(A, Direction.North);
         Assert.Null(other.State.PendingDecision);
         Assert.Single(refused);
     }

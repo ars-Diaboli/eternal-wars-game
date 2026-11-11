@@ -32,7 +32,7 @@ public class ShrineAndSpellBookTests
     {
         var probe = Create("A..", "..B");
         var spell = FirstOfLevel(probe, 2);
-        var (session, shrine, hero) = World(2, spell.Id, h =>
+        var (session, _, hero) = World(2, spell.Id, h =>
         {
             h.HasSpellBook = true;
             h.Skills.Set(MagicRules.MagicSkill(spell.School), SkillLevel.Advanced);
@@ -46,7 +46,7 @@ public class ShrineAndSpellBookTests
 
         Assert.True(hero.Spells.ContainsKey(spell.Id));
         Assert.Equal([spell.Id], Assert.Single(learned).Spells);
-        session.Interactions.Visit(hero, shrine);
+        session.Revisit(A);
         Assert.Single(empty);
     }
 
@@ -59,12 +59,12 @@ public class ShrineAndSpellBookTests
         var refused = new List<MapObjectRefused>();
         session.Events.Subscribe<MapObjectRefused>(refused.Add);
 
-        session.Interactions.Visit(hero, shrine);
+        session.Visit(A, shrine);
         Assert.Contains("spell book", refused[^1].Reason, StringComparison.Ordinal);
 
         hero.HasSpellBook = true;
         hero.Skills.Set(MagicRules.MagicSkill(spell.School), SkillLevel.Advanced); // level 2 only
-        session.Interactions.Visit(hero, shrine);
+        session.Revisit(A);
         Assert.Contains("at level 3", refused[^1].Reason, StringComparison.Ordinal);
         Assert.False(hero.Spells.ContainsKey(spell.Id));
     }

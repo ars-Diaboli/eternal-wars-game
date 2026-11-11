@@ -39,6 +39,12 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     public const int MaxMovesPerHero = 24;
 
     private const int CandidatesChecked = 10;
+
+    /// <summary>
+    /// Most fights one choice plays out, unsafe ones included (those do not count against <see cref="CandidatesChecked"/>): a bound on the work
+    /// for a hero ringed by monsters too strong for it, high enough that an ordinary choice never reaches it.
+    /// </summary>
+    private const int FightsChecked = 40;
     private const int FrontierChecked = 8;
 
     /// <summary>The share of its army power a hero accepts to lose clearing a monster stack.</summary>
@@ -1314,18 +1320,22 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         MapPosition? best = null;
         var bestScore = 0.0;
         var checkedCount = 0;
+        var fights = 0;
         foreach (var candidate in candidates)
         {
-            if (checkedCount >= CandidatesChecked)
+            if (checkedCount >= CandidatesChecked || fights >= FightsChecked)
             {
                 break;
             }
 
             // Fights are played out before going: the army power sum does not see shooters, speed and defence.
-            if (candidate.Opponent is { } opponent
-                && !_estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense, candidate.Siege).IsSafe(Preparing ? Math.Min(candidate.MaxLoss, ArenaLoss) : candidate.MaxLoss))
+            if (candidate.Opponent is { } opponent)
             {
-                continue;
+                fights++;
+                if (!_estimator.Fight(hero, opponent, candidate.OpponentAttack, candidate.OpponentDefense, candidate.Siege).IsSafe(Preparing ? Math.Min(candidate.MaxLoss, ArenaLoss) : candidate.MaxLoss))
+                {
+                    continue;
+                }
             }
 
             checkedCount++;

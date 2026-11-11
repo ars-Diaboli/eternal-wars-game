@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Magic;
+using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
 using static EternalWars.Core.Tests.TestWorld;
 
@@ -178,10 +179,15 @@ public class SpellScrollTests
     public void AGivenBlankScroll_ArrivesWritten()
     {
         var state = Create(Map);
+        state.SetMapEvents(new MapEventSet
+        {
+            Events = [new MapEventDefinition("gift", MapEventKind.Hero, [new ArtifactAction(Scroll(2))])],
+            Cells = [new EventCell(1, 0, 0, "gift")],
+        });
         var session = Start(state);
         var hero = state.GetHero(A);
 
-        Assert.True(session.Artifacts.Grant(hero, Scroll(2), ArtifactSource.MapEvent));
+        Assert.Equal(MoveResult.Moved, session.Step(A, Direction.East)); // onto the event cell
 
         AssertWritten(state.Artifacts, hero.Artifacts.Backpack.Single(), 2);
     }

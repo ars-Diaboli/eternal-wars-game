@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Objects;
 
 namespace EternalWars.Core.Tests;
 
@@ -19,8 +20,56 @@ internal static class SessionCommands
     public static MovementOutcome MoveTo(this GameSession session, HeroId hero, MapPosition target) =>
         (MovementOutcome)session.Execute(new MoveHeroCommand(OwnerOf(session, hero), hero, target)).ThrowIfRejected().Outcome!;
 
+    /// <summary>
+    /// Walks the hero onto the object's entrance, the way a player visits it; throws unless the hero gets there. A hero already standing on the
+    /// entrance visits again with <see cref="Revisit"/>.
+    /// </summary>
+    public static MovementOutcome Visit(this GameSession session, HeroId hero, MapObject mapObject)
+    {
+        if (session.State.GetHero(hero).Position == mapObject.VisitPosition)
+        {
+            throw new InvalidOperationException($"The hero already stands on the entrance of {mapObject.Definition.Id}: revisit it.");
+        }
+
+        var outcome = session.MoveTo(hero, mapObject.VisitPosition);
+        return outcome.Arrived ? outcome : throw new InvalidOperationException($"The hero stopped short of {mapObject.Definition.Id}: {outcome.StopReason}.");
+    }
+
+    /// <summary>Steps off the entrance the hero stands on, towards <paramref name="off"/>, and back on: another visit.</summary>
+    public static void Revisit(this GameSession session, HeroId hero, Direction off = Direction.South)
+    {
+        foreach (var direction in new[] { off, (Direction)(((int)off + 4) % 8) })
+        {
+            if (session.Step(hero, direction) is var result && result != MoveResult.Moved)
+            {
+                throw new InvalidOperationException($"Could not step {direction}: {result}.");
+            }
+        }
+    }
+
     public static void EndTurn(this GameSession session) =>
         session.Execute(new EndTurnCommand(session.State.CurrentPlayer.Id)).ThrowIfRejected();
+
+    /// <summary>Every player ends turns until the calendar reaches <paramref name="day"/> (absolute; day 1 is the first).</summary>
+    public static void PlayUntilDay(this GameSession session, int day)
+    {
+        while (session.State.Date.AbsoluteDay < day)
+        {
+            session.EndTurn();
+        }
+    }
+
+    /// <summary>Every player ends turns until the next day begins.</summary>
+    public static void NextDay(this GameSession session) => session.PlayUntilDay(session.State.Date.AbsoluteDay + 1);
+
+    /// <summary>Answers every level-up offered right now with its first skill.</summary>
+    public static void TakeLevelUps(this GameSession session)
+    {
+        while (session.State.PendingDecision is LevelUpDecision decision)
+        {
+            session.Execute(new ChooseSkillCommand(session.State.CurrentPlayer.Id, decision.Options[0])).ThrowIfRejected();
+        }
+    }
 
     public static void ResolveChest(this GameSession session, TreasureChestReward reward) =>
         session.Execute(new ResolveTreasureChestCommand(session.State.CurrentPlayer.Id, reward)).ThrowIfRejected();

@@ -56,7 +56,7 @@ public class DepositTests
         Assert.Equal(new ResourceSet(Gold: 5000, Ore: 10), state.GetPlayer(Blue).Resources);
 
         state.GetPlayer(Blue).Resources = new ResourceSet(Gold: 4999, Ore: 10);
-        session.Interactions.Visit(state.GetHero(A), vein);
+        session.Revisit(A);
         Assert.Null(state.PendingDecision);
         Assert.Contains("5000 gold", Assert.Single(refused).Reason, StringComparison.Ordinal);
     }

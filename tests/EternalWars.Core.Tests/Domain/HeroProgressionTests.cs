@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
@@ -202,12 +203,16 @@ public class HeroProgressionTests
     [Fact]
     public void LevelUp_OfAnotherPlayersHero_WaitsForItsTurn()
     {
-        var state = Create("A..", "..B");
-        var session = Start(state);
+        var state = Create("A..", ".B.", "..C");
         var bravo = state.GetHero(B);
+        bravo.Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 100));
+        bravo.Experience = 999;
+        var session = Start(state);
 
-        session.State.GetHero(B).Experience = 1000; // e.g. won a battle as defender during Blue's turn
-        session.Progression.OfferNext();
+        Assert.Equal(MoveResult.BattleStarted, session.Step(A, Direction.SouthEast)); // Bravo wins as defender during Blue's turn
+        session.AutoResolve();
+        Assert.Null(state.Battle);
+        Assert.True(bravo.PendingLevelUps > 0);
         Assert.Null(state.PendingDecision);
 
         session.EndTurn();
@@ -225,7 +230,7 @@ public class HeroProgressionTests
         var session = Start(state);
 
         hero.Experience = ExperienceTable.For(4);
-        session.Progression.OfferNext();
+        session.EndTurn(); // its next turn opens with the level-ups due
 
         Assert.Equal(4, hero.Level);
         Assert.Equal(3, hero.Skills.Levels.Values.Sum(l => (int)l));

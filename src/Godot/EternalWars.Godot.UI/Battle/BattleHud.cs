@@ -278,7 +278,7 @@ public partial class BattleHud : Control
 
     private bool AimTwice(BattleState battle, KnownSpell known, CellPosition cell)
     {
-        var move = known.Effect!.Kind == Core.Domain.Magic.SpellEffectKind.Move;
+        var move = !known.Effect!.SecondIsStack; // a move's second aim is the cell it goes to
         if (_firstAim is not { } first || battle.FindUnit(first) is not { IsAlive: true } aimed)
         {
             if (battle.UnitAt(cell) is not { } unit)
@@ -342,7 +342,7 @@ public partial class BattleHud : Control
 
         (ArmedSpell, _creatureArmed, _firstAim) = (known.Spell.Id, false, null);
         _status.Text = known.Effect.TwoClicks
-            ? $"{known.Spell.Name}: click the stack, then {(known.Effect.Kind == Core.Domain.Magic.SpellEffectKind.Move ? "where it goes" : known.Effect.DrainPercent > 0 ? "the own stack it heals" : "the own stack that takes its blows")} (Esc cancels)."
+            ? $"{known.Spell.Name}: click the stack, then {(!known.Effect.SecondIsStack ? "where it goes" : known.Effect.DrainPercent > 0 ? "the own stack it heals" : "the own stack that takes its blows")} (Esc cancels)."
             : $"{known.Spell.Name}: click a target (Esc cancels).";
     }
 

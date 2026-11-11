@@ -31,7 +31,7 @@ public class MagiWindowAndBorderPostTests
         rows[2] = "...A" + new string('.', 36);
         rows[11] = new string('.', 39) + "B";
         var state = Create(rows);
-        var window = Add<MagiWindow>(state, Red(BuiltInMapObjects.MagiWindow), 2, 0); // entrance (3, 1)
+        Add<MagiWindow>(state, Red(BuiltInMapObjects.MagiWindow), 2, 0); // entrance (3, 1)
         Add<MagiEye>(state, Red(BuiltInMapObjects.MagiEye), 30, 6);
         Add<MagiEye>(state, BuiltInMapObjects.ColouredId(BuiltInMapObjects.MagiEye, ObjectColour.Blue), 20, 10);
         var session = Start(state, revealAll: false);
@@ -42,7 +42,7 @@ public class MagiWindowAndBorderPostTests
         Assert.True(state.Fog.IsExplored(Blue, new MapPosition(30 + MagiWindow.Radius, 6)));
         Assert.False(state.Fog.IsExplored(Blue, new MapPosition(20, 10))); // another colour
         var revealed = Record<SurroundingsRevealed>(session);
-        session.Interactions.Visit(state.GetHero(A), window);
+        session.Revisit(A);
         Assert.Single(revealed); // every visit looks again
     }
 
@@ -100,7 +100,7 @@ public class MagiWindowAndBorderPostTests
         var (state, session, gate) = Border(BuiltInMapObjects.BorderGate);
         session.MoveTo(A, new MapPosition(3, 1));
         var keys = Record<KeyReceived>(session);
-        session.Interactions.Visit(state.GetHero(A), state.ObjectsOf<KeymasterTent>().Single());
+        session.Revisit(A);
         Assert.Empty(keys); // a second visit gives nothing new
 
         Assert.True(session.MoveTo(C, new MapPosition(5, 5)).Arrived);

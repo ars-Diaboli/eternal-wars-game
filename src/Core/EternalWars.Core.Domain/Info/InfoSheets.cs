@@ -39,7 +39,7 @@ public static partial class InfoSheets
             lines.Add(shown.Count is { } count ? $"Count: {N(count)}" : $"Count: {shown.Amount}");
         }
 
-        lines.AddRange(CreatureStats(c));
+        lines.AddRange(CreatureStats(c, state.Spells));
         if (c.WeeklyGrowth > 0 || !c.Cost.IsEmpty)
         {
             lines.Add($"Cost {Cost(c.Cost)}   Growth {N(c.WeeklyGrowth)} a week");
@@ -86,10 +86,10 @@ public static partial class InfoSheets
         }
 
         lines.Add(unit.HasRetaliated && !c.Has(CapabilityKind.UnlimitedRetaliation) ? "Has retaliated this round." : "Can retaliate.");
-        lines.AddRange(Capabilities(c));
+        lines.AddRange(Capabilities(c, battle.Spells));
         foreach (var spell in unit.Spells)
         {
-            var name = SpellName(spell.Spell);
+            var name = battle.Spells.TryGet(spell.Spell, out var known) ? known.Name : spell.Spell;
             var left = spell.TurnsLeft is { } turns ? $"{N(turns)} more turn{(turns == 1 ? "" : "s")}" : $"until round {N(spell.UntilRound)}";
             lines.Add($"Under {name} ({left})");
         }
@@ -102,26 +102,24 @@ public static partial class InfoSheets
         }
 
         return new InfoSheet(c.Name, unit.IsMachine ? "War machine" : $"Creature, tier {N(c.Tier)}", lines);
-
-        static string SpellName(string id) => SpellCatalog.Default.TryGet(id, out var spell) ? spell.Name : id;
     }
 
     /// <summary>The creature's base numbers, as the creature screen and the recruit window show them.</summary>
-    private static IEnumerable<string> CreatureStats(CreatureDefinition c)
+    private static IEnumerable<string> CreatureStats(CreatureDefinition c, SpellCatalog spells)
     {
         yield return $"Attack {N(c.Attack)}   Defense {N(c.Defense)}   Damage {N(c.MinDamage)}–{N(c.MaxDamage)}   Health {N(c.Health)}";
         yield return $"Speed {N(c.Speed)}   Initiative {N(c.Initiative)}" + (c.IsRanged ? $"   Shots {N(c.Shots)}" : "")
                      + (c.Morale != 0 ? $"   Morale {Signed(c.Morale)}" : "") + (c.Luck != 0 ? $"   Luck {Signed(c.Luck)}" : "");
-        foreach (var line in Capabilities(c))
+        foreach (var line in Capabilities(c, spells))
         {
             yield return line;
         }
     }
 
-    private static IEnumerable<string> Capabilities(CreatureDefinition c) => c.Capabilities.Select(Capability);
+    private static IEnumerable<string> Capabilities(CreatureDefinition c, SpellCatalog spells) => c.Capabilities.Select(k => Capability(k, spells));
 
-    /// <summary>A creature's special rule in words.</summary>
-    public static string Capability(CreatureCapability capability) => capability.Kind switch
+    /// <summary>A creature's special rule in words; a caster's spell is named from the game's spell table.</summary>
+    public static string Capability(CreatureCapability capability, SpellCatalog spells) => capability.Kind switch
     {
         CapabilityKind.Flying => "Flies over everything in its way.",
         CapabilityKind.Teleporting => "Teleports to any free spot within its speed.",
@@ -139,7 +137,7 @@ public static partial class InfoSheets
         CapabilityKind.Relentless => $"Relentless: +{N(capability.Value)} % damage for every hit the target took this round.",
         CapabilityKind.SpellImmunity => capability.Parameter == SpellTags.All ? "Immune to all spells." : $"Immune to {capability.Parameter} spells.",
         CapabilityKind.SpellResistance => $"Unaffected by spells of level {N(capability.Value)} and below.",
-        CapabilityKind.Caster => $"Casts {(SpellCatalog.Default.TryGet(capability.Parameter!, out var spell) ? spell.Name : capability.Parameter)} "
+        CapabilityKind.Caster => $"Casts {(spells.TryGet(capability.Parameter!, out var spell) ? spell.Name : capability.Parameter)} "
                                  + $"{N(capability.Value)} time{(capability.Value == 1 ? "" : "s")} a battle.",
         _ => capability.Kind.ToString(),
     };

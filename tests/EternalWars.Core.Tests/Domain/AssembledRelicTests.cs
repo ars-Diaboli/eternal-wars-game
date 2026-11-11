@@ -131,18 +131,24 @@ public class AssembledRelicTests
     [Fact]
     public void ALootedRelic_GoesOverWhole_WhenItsSlotsAreFree_ElseAsPieces()
     {
-        var state = Create("A..", "..B");
-        Outfit(state, B, [Magi]);
-        var winner = Outfit(state, A);
-        var session = Start(state);
+        Assert.True(BeatTheRelicsWearer(worn: []).Artifacts.IsWorn(Magi));
+        Assert.Equal(MagiPieces, BeatTheRelicsWearer(worn: ["badge-of-courage"]).Artifacts.Backpack);
 
-        session.Artifacts.Loot(state.GetHero(B), winner);
-        Assert.True(winner.Artifacts.IsWorn(Magi));
+        // Alpha, wearing `worn` and leading a big army, attacks and defeats Bravo, who wears the Ring of the Magi.
+        static Hero BeatTheRelicsWearer(string[] worn)
+        {
+            var state = Create("AB.", "...");
+            Outfit(state, B, [Magi]);
+            var winner = Outfit(state, A, worn);
+            winner.Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, 200));
+            var session = Start(state);
 
-        Outfit(state, B, [Magi]);
-        var full = Outfit(state, A, ["badge-of-courage"]);
-        session.Artifacts.Loot(state.GetHero(B), full);
-        Assert.Equal(MagiPieces, full.Artifacts.Backpack);
+            Assert.Equal(MoveResult.BattleStarted, session.Step(A, Direction.East));
+            session.AutoResolve();
+
+            Assert.DoesNotContain(state.Heroes, h => h.Id == B);
+            return winner;
+        }
     }
 
     [Fact]

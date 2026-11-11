@@ -75,7 +75,7 @@ public static class EmberMarchScenario
             new Player(new PlayerId(1), "Red", isHuman: false),
         };
 
-        var catalog = MapObjectCatalog.Default;
+        var catalog = content.Objects;
         var objects = new List<MapObject>();
 
         // Towns: entrance at top-left + (3, 6). Castlebridge's gate is (5, 8), Ashgate's (30, 14); both heroes start on the road below.

@@ -48,7 +48,7 @@ public partial class Main : Node3D
     private TabContainer _tabs = null!;
 
     /// <summary>The template being edited: kept while maps are opened and generated (the editor itself is rebuilt with the UI).</summary>
-    private readonly TemplateEditorSession _templates = new();
+    private readonly TemplateEditorSession _templates = new(content: GameContent.All);
     private TemplateEditorPanel _templateEditor = null!;
     private IReadOnlyList<MapTemplate> _generatorTemplates = [];
 

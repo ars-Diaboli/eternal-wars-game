@@ -116,7 +116,7 @@ public class SkillReworkTests
         Assert.False(state.Fog.IsExplored(Blue, far));
 
         hero.Experience = ExperienceTable.For(2);
-        session.Progression.OfferNext();
+        session.NextDay(); // Blue's next turn opens with the level-up due
         var decision = Assert.IsType<LevelUpDecision>(state.PendingDecision);
         Assert.Equal([BuiltInSkills.Scouting], decision.Options);
         session.Execute(new ChooseSkillCommand(Blue, "pathfinding.troops")).ThrowIfRejected(); // the old id, as an old replay names it

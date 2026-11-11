@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Info;
+using EternalWars.Core.Domain.Magic;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Domain.Visibility;
@@ -36,9 +37,19 @@ public class InfoSheetTests
     [Fact]
     public void ACapability_IsSaidInWords()
     {
+        var spells = SpellCatalog.Default;
         Assert.Equal("Pack hunter: +10 % damage for every other own stack fighting the target.",
-            InfoSheets.Capability(new CreatureCapability(CapabilityKind.PackHunter, 10)));
-        Assert.Equal("Unaffected by spells of level 2 and below.", InfoSheets.Capability(new CreatureCapability(CapabilityKind.SpellResistance, 2)));
+            InfoSheets.Capability(new CreatureCapability(CapabilityKind.PackHunter, 10), spells));
+        Assert.Equal("Unaffected by spells of level 2 and below.", InfoSheets.Capability(new CreatureCapability(CapabilityKind.SpellResistance, 2), spells));
+    }
+
+    [Fact]
+    public void ACastersSpell_IsNamedFromTheGamesSpellTable()
+    {
+        var fireball = SpellCatalog.Default.Get("chaos.fireball");
+        var renamed = new SpellCatalog(SpellCatalog.Default.All.Select(s => s.Id == fireball.Id ? s with { Name = "Ember Storm" } : s));
+
+        Assert.Equal("Casts Ember Storm 2 times a battle.", InfoSheets.Capability(new CreatureCapability(CapabilityKind.Caster, 2, fireball.Id), renamed));
     }
 
     [Fact]

@@ -85,7 +85,7 @@ public class StatGrowthTests
         var session = Start(state);
 
         hero.Experience = ExperienceTable.For(6);
-        session.Progression.OfferNext();
+        session.EndTurn(); // its next turn opens with the level-ups due
 
         Assert.Equal(5, Total(hero)); // five level-ups from level 1
     }

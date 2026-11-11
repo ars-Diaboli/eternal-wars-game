@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Generation;
@@ -23,10 +24,13 @@ public sealed record TemplateChanged(MapTemplate Template, IReadOnlyList<Templat
 public sealed class TemplateEditorSession
 {
     private readonly IEventBus _bus;
+    private readonly ContentCatalogs? _content;
 
-    public TemplateEditorSession(MapTemplate? template = null, IEventBus? bus = null)
+    /// <summary>A session on the template (a blank one when left out), checked against the game's tables (terrains, start buildings; the built-in ones when <paramref name="content"/> is left out).</summary>
+    public TemplateEditorSession(MapTemplate? template = null, IEventBus? bus = null, ContentCatalogs? content = null)
     {
         _bus = bus ?? new EventBus();
+        _content = content;
         Template = template ?? Blank();
     }
 
@@ -34,7 +38,7 @@ public sealed class TemplateEditorSession
 
     public MapTemplate Template { get; private set; }
 
-    public IReadOnlyList<TemplateIssue> Issues => TemplateValidator.Validate(Template);
+    public IReadOnlyList<TemplateIssue> Issues => TemplateValidator.Validate(Template, _content);
 
     /// <summary>A new template: two start zones joined through a junction, the smallest thing that validates.</summary>
     public static MapTemplate Blank() => new()
@@ -269,6 +273,6 @@ public sealed class TemplateEditorSession
     private void Set(MapTemplate template)
     {
         Template = template;
-        _bus.Publish(new TemplateChanged(template, TemplateValidator.Validate(template)));
+        _bus.Publish(new TemplateChanged(template, TemplateValidator.Validate(template, _content)));
     }
 }
