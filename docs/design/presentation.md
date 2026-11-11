@@ -38,8 +38,10 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Audio**: per-terrain ambient music, faction town themes.
 
 ## Information windows
-ADR-118, ADR-154. A right click opens the window of what is under the pointer: on the map a hero, a stack, a town, an object or the ground;
-in battle a stack; on the screens a stack, a skill, a spell, an artifact or a building. It shows only what the player may know (Scouting,
+ADR-118, ADR-154, ADR-178. A right click opens the window of what is under the pointer: on the map a hero, a stack, a town, an object or the ground;
+in battle a stack; on the screens a stack, a skill, a spell, an artifact or a building; in the kingdom overview a row (what it pays,
+then its town, mine, provider or hero) or the totals; in the tavern a hero for hire; on a decision prompt what it is about (the object
+visited and what it offers, the stack, the hero) and each skill, town or stack to choose. It shows only what the player may know (Scouting,
 ADR-125; objects under the fog as last seen). Held and let go it closes; a quick click leaves it open until the next click or key. The
 "Detailed tooltips" setting (off by default, the F10 menu's "Settings" tab, kept with the speed settings) adds the formulas and the raw numbers.
 

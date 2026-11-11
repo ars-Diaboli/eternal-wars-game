@@ -11,6 +11,9 @@ namespace EternalWars.Core.Domain.Info;
 
 public static partial class InfoSheets
 {
+    /// <summary>The line of an object that says nothing more until it is visited.</summary>
+    private const string VisitToSee = "Visit it to see what it holds.";
+
     /// <summary>
     /// What a right click on a map cell shows <paramref name="viewer"/> (ADR-154): a hero it sees there, else the object covering the cell (live
     /// while in sight, as last seen under the fog), else the ground. Null for a cell the player has not explored.
@@ -94,7 +97,7 @@ public static partial class InfoSheets
 
         if (lines.Count == 0)
         {
-            lines.Add(definition.Footprint.HasVisit ? "Visit it to see what it holds." : "Scenery.");
+            lines.Add(definition.Footprint.HasVisit ? VisitToSee : "Scenery.");
         }
 
         return new InfoSheet(definition.Name, Title(definition.Kind.ToString()), lines);

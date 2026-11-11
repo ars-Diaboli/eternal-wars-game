@@ -617,6 +617,8 @@ public partial class TownPanel : PanelContainer
                 Disabled = refusal is not null,
                 TooltipText = refusal ?? "",
             }.WithCost(TavernRules.HeroCost);
+            var player = state.CurrentPlayer.Id;
+            hire.WithInfo(detailed => InfoSheets.TavernHero(_session.State, player, town, offer, detailed));
             hire.Pressed += () => Run(new HireHeroCommand(state.CurrentPlayer.Id, town.Id, offer.Id));
             _tavern.AddChild(hire);
         }
