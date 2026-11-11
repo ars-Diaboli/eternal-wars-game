@@ -92,14 +92,13 @@ public class SkillSchoolTests
         var (session, school) = World(BuiltInMapObjects.WarAcademy, (_, hero) => Clear(hero));
         var drawn = new List<LessonsDrawn>();
         session.Events.Subscribe<LessonsDrawn>(drawn.Add);
-        var hero = session.State.GetHero(A);
 
         session.Step(A, Direction.North);
         var lessons = Assert.Single(drawn).Lessons;
         Assert.Equal(lessons, SkillSchoolRules.LessonsOf(school, A));
         Assert.Equal(SkillSchoolRules.NewGroups, lessons.Count);
 
-        session.Interactions.Visit(hero, school);
+        session.Revisit(A);
         Assert.Single(drawn); // walking off and on draws nothing new
         Assert.Same(lessons, SkillSchoolRules.LessonsOf(school, A));
         Assert.Empty(SkillSchoolRules.LessonsOf(school, C));

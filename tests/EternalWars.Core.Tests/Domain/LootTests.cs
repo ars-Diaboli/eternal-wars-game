@@ -22,7 +22,7 @@ public class LootTests
 
     private static ResourceType[] Kinds(ResourceSet r) => [.. Enum.GetValues<ResourceType>().Where(t => r[t] != 0)];
 
-    /// <summary>Hero A at (3, 2); the site at (3, 1) for single-tile sites. Other heroes visit through the service directly.</summary>
+    /// <summary>Hero A at (3, 2), Charlie at (0, 4); the site at (3, 1) for single-tile sites.</summary>
     private static (GameSession Session, LootSite Site) World(string definition, ulong seed = 1)
     {
         var state = Create(new GameOptions(Seed: seed), ".........", ".........", "...A.....", ".........", "C.......B");
@@ -38,7 +38,7 @@ public class LootTests
         {
             var (session, site) = World(definition, seed);
             session.Events.Subscribe<LootFound>(found.Add);
-            session.Interactions.Visit(session.State.GetHero(A), site);
+            session.Visit(A, site);
         }
 
         return found;
@@ -113,7 +113,8 @@ public class LootTests
         var empty = new List<MapObjectFoundEmpty>();
         session.Events.Subscribe<MapObjectFoundEmpty>(empty.Add);
         session.Step(A, Direction.North);
-        session.Interactions.Visit(session.State.GetHero(C), corpse);
+        session.Step(A, Direction.South); // off again, to make way for Charlie
+        session.Visit(C, corpse);
 
         Assert.Same(corpse, session.State.FindObject(corpse.Id));
         Assert.True(corpse.Visits.IsSpent);
@@ -132,9 +133,10 @@ public class LootTests
         });
 
         var (session, leanTo) = World(BuiltInMapObjects.LeanTo);
-        session.Interactions.Visit(session.State.GetHero(A), leanTo);
+        session.Visit(A, leanTo);
         var after = session.State.GetPlayer(Blue).Resources;
-        session.Interactions.Visit(session.State.GetHero(C), leanTo);
+        session.Step(A, Direction.South);
+        session.Visit(C, leanTo);
         Assert.Equal(after, session.State.GetPlayer(Blue).Resources);
     }
 
@@ -151,8 +153,9 @@ public class LootTests
         var (session, tomb) = World(BuiltInMapObjects.WarriorsTomb);
         var first = session.State.GetHero(A);
         var later = session.State.GetHero(C);
-        session.Interactions.Visit(first, tomb);
-        session.Interactions.Visit(later, tomb);
+        session.Visit(A, tomb);
+        session.Step(A, Direction.South);
+        session.Visit(C, tomb);
 
         Assert.Equal(LootRules.TombMorale, first.TotalMorale);
         Assert.Equal(LootRules.TombMorale, later.TotalMorale);
@@ -164,19 +167,19 @@ public class LootTests
     [Fact]
     public void BuffsEnd_AfterABattleAgainstNeutralsToo()
     {
-        var state = Create(".A.....", ".......", "......B");
-        var monster = Add<MonsterGuard>(state, BuiltInMapObjects.Monster, 2, 1);
+        var state = Create("........", "........", ".A......", "........", ".......B");
+        var monster = Add<MonsterGuard>(state, BuiltInMapObjects.Monster, 3, 3); // guards (2..4, 2..4)
         monster.Creature = BuiltInCreatures.Wolf;
         monster.Count = 2;
         monster.Disposition = GuardDisposition.Savage;
         monster.NeverFlees = true; // a fight, not a flee offer
-        var tomb = Add<LootSite>(state, BuiltInMapObjects.WarriorsTomb, 4, 0);
+        Add<LootSite>(state, BuiltInMapObjects.WarriorsTomb, 0, 0); // entrance (1, 1), right above the hero
         var session = Start(state);
         var hero = state.GetHero(A);
-        session.Interactions.Visit(hero, tomb);
+        session.Step(A, Direction.North);
         Assert.Equal(LootRules.TombMorale, hero.TotalMorale);
 
-        Assert.Equal(MoveResult.GuardEncountered, session.Step(A, Direction.SouthEast));
+        Assert.Equal(MoveResult.GuardEncountered, session.Step(A, Direction.SouthEast)); // into the monster's area
         session.AutoResolve();
 
         Assert.Null(state.Battle);
@@ -213,7 +216,7 @@ public class LootTests
             var chest = Add<TreasureChest>(state, BuiltInMapObjects.TreasureChest, 3, 0);
             var session = Start(state);
             session.Events.Subscribe<LootFound>(artifacts.Add);
-            session.Interactions.Visit(state.GetHero(A), chest);
+            session.Step(A, Direction.North);
             if (state.PendingDecision is TreasureChestDecision decision)
             {
                 offers.Add(decision);
@@ -241,7 +244,7 @@ public class LootTests
             var chest = Add<TreasureChest>(state, BuiltInMapObjects.TreasureChest, 3, 0);
             chest.FixedValues = new ChestValues(1000, 500);
             var session = Start(state);
-            session.Interactions.Visit(state.GetHero(A), chest);
+            session.Step(A, Direction.North);
             Assert.IsType<TreasureChestDecision>(state.PendingDecision);
         }
     }
@@ -272,7 +275,8 @@ public class LootTests
 
         var (second, corpse) = World(BuiltInMapObjects.Corpse);
         Steady(second.State);
-        second.Interactions.Visit(second.State.GetHero(C), corpse); // spent before A gets there
+        second.Visit(C, corpse); // spent before A gets there
+        second.Step(C, Direction.West);
         new AdventureAi(second, controlHumanSlots: true).PlayTurn();
         Assert.NotEqual(corpse.VisitPosition, second.State.GetHero(A).Position);
     }

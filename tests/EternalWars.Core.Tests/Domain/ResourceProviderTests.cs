@@ -36,13 +36,6 @@ public class ResourceProviderTests
 
     private static ResourceSet Resources(GameSession session) => session.State.GetPlayer(Blue).Resources;
 
-    /// <summary>Sends <paramref name="hero"/> through the provider's visit again, as if it walked in on <paramref name="day"/>.</summary>
-    private static void VisitOn(GameSession session, ResourceProvider provider, HeroId hero, int day)
-    {
-        session.State.Date = new GameDate(day);
-        session.Interactions.Visit(session.State.GetHero(hero), provider);
-    }
-
     private static List<ResourceSet> Weeks(GameSession session, string definition, int weeks) =>
         Enumerable.Range(1, weeks).Select(w => ResourceProviderRules.Roll(MapObjectCatalog.Default.Get(definition), new GameDate(((w - 1) * 7) + 1), session.State.Random)).ToList();
 
@@ -60,7 +53,8 @@ public class ResourceProviderTests
 
         Assert.Equal(Blue, wheel.Owner);
         Assert.Equal(before + 500, Resources(session).Gold);
-        VisitOn(session, wheel, C, 7);
+        session.Step(A, Direction.South); // making way for Charlie
+        session.Visit(C, wheel);
         Assert.Equal(before + 500, Resources(session).Gold);
         Assert.Equal(
             new IEvent[] { new ProviderOwnerChanged(wheel.Id, null, Blue), new ResourcesFound(A, wheel.Id, new ResourceSet(Gold: 500)), new MapObjectFoundEmpty(C, wheel.Id) },
@@ -80,7 +74,7 @@ public class ResourceProviderTests
 
         Assert.Equal(new ResourceSet(Gold: 2500), wheel.Stored); // + 1000 in weeks 2 and 3
         var before = Resources(session).Gold;
-        session.Interactions.Visit(session.State.GetHero(A), wheel);
+        session.Visit(A, wheel);
 
         Assert.Equal(before + 2500, Resources(session).Gold);
         Assert.True(wheel.Stored.IsEmpty);

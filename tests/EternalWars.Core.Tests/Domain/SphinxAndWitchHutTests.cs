@@ -26,7 +26,7 @@ public class SphinxAndWitchHutTests
     [Fact]
     public void TheSphinx_AsksItsAuthorsRiddle_AWrongAnswerCostsTheDayAndMorale_AndEachHeroTriesOnce()
     {
-        var (session, sphinx) = World<Sphinx>(BuiltInMapObjects.Sphinx, (_, s) => s.Riddle = Author);
+        var (session, _) = World<Sphinx>(BuiltInMapObjects.Sphinx, (_, s) => s.Riddle = Author);
         session.Step(A, Direction.North);
         var decision = Assert.IsType<SphinxDecision>(session.State.PendingDecision);
         Assert.Equal(Author.Question, decision.Question);
@@ -38,7 +38,8 @@ public class SphinxAndWitchHutTests
         var hero = HeroA(session);
         Assert.Equal(0, hero.MovementPoints);
         Assert.Contains(hero.Statuses, s => s.Kind == HeroStatusKind.Morale && s.Value == -3 && s.Expires == StatusExpiry.NextBattle);
-        session.Interactions.Visit(hero, sphinx);
+        session.NextDay(); // movement again
+        session.Revisit(A);
         Assert.Null(session.State.PendingDecision); // one try per hero
     }
 
@@ -67,7 +68,7 @@ public class SphinxAndWitchHutTests
     [Fact]
     public void TheWitchHut_OffersItsTwoSkills_OrAnotherOfTheirGroup_OncePerLevel()
     {
-        var (session, hut) = World<WitchHut>(BuiltInMapObjects.WitchHut, (state, h) =>
+        var (session, _) = World<WitchHut>(BuiltInMapObjects.WitchHut, (state, h) =>
         {
             h.Skills = [BuiltInSkills.Pathfinding, BuiltInSkills.Stewardship];
             state.GetHero(A).Skills.Set(BuiltInSkills.Pathfinding, BuiltInSkills.Get(BuiltInSkills.Pathfinding).MaxLevel);
@@ -86,11 +87,11 @@ public class SphinxAndWitchHutTests
         Assert.Equal(1, hero.WitchHutLevel);
         var refused = new List<MapObjectRefused>();
         session.Events.Subscribe<MapObjectRefused>(refused.Add);
-        session.Interactions.Visit(hero, hut);
+        session.Revisit(A);
         Assert.Contains("at this level already", Assert.Single(refused).Reason, StringComparison.Ordinal);
 
         hero.Level = 2;
-        session.Interactions.Visit(hero, hut);
+        session.Revisit(A);
         Assert.IsType<WitchHutDecision>(session.State.PendingDecision);
         session.Execute(new ChooseWitchHutSkillCommand(Blue, null)).ThrowIfRejected(); // leaving uses nothing
         Assert.Equal(1, hero.WitchHutLevel);

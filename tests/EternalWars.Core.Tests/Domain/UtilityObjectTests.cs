@@ -32,8 +32,6 @@ public class UtilityObjectTests
         return state;
     }
 
-    private static void Visit(GameSession session, MapObject site, HeroId hero) => session.Interactions.Visit(session.State.GetHero(hero), site);
-
     [Fact]
     public void ASign_ShowsItsMessage_AndKeepsItInTheMap()
     {
@@ -129,12 +127,12 @@ public class UtilityObjectTests
         var session = Start(state);
         var refused = new List<MapObjectRefused>();
         session.Events.Subscribe<MapObjectRefused>(refused.Add);
-        Visit(session, gate, A);
+        session.Visit(A, gate);
         Assert.Null(state.PendingDecision);
         Assert.Single(refused);
 
         var town = AddTown(state, TownIds.Haven, 5, 4, Blue);
-        Visit(session, gate, A);
+        session.Revisit(A);
         Assert.True(session.Execute(new ChooseTownGateCommand(Blue, null)).IsAccepted);
         Assert.NotEqual(town.VisitPosition, state.GetHero(A).Position);
     }
@@ -254,7 +252,7 @@ public class UtilityObjectTests
         var gate = Add<TownGate>(other, BuiltInMapObjects.TownGate, 3, 0);
         AddTown(other, TownIds.Haven, 5, 4, Blue);
         var gateSession = Start(other);
-        Visit(gateSession, gate, A);
+        gateSession.Visit(A, gate);
         var ai = new AdventureAi(gateSession, controlHumanSlots: true);
         ai.PlayTurn();
         Assert.Equal(0, ai.Refused);

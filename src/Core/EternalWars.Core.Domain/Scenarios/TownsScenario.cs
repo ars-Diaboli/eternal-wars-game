@@ -47,7 +47,7 @@ public static class TownsScenario
                 Army.Of(new(BuiltInCreatures.HornedDemon, 22), new(BuiltInCreatures.HellHound, 8)), attack: 1, defense: 2),
         };
 
-        var catalog = MapObjectCatalog.Default;
+        var catalog = content.Objects;
         var objects = new List<MapObject>();
         var lines = content.Creatures;
 

@@ -189,7 +189,7 @@ public partial class HeroPanel : PanelContainer
 
         Visible = true;
         _title.Text = $"{hero.Name}, level {hero.Level} {hero.Class}" + (hero.Definition is { } d ? $" ({state.HeroRoster.Get(d).Town})" : "");
-        _stats.Text = StatsText(hero);
+        _stats.Text = StatsText(hero, _session.State.Spells);
         _specialty.Text = hero.Specialty is { } specialty ? $"Specialty: {specialty.Describe(_session.State.Spells)}" : "No specialty.";
         ShowSkills(hero);
         ShowArmy(hero);
@@ -203,7 +203,7 @@ public partial class HeroPanel : PanelContainer
     private void ShowSpells(Hero hero)
     {
         Clear(_spells);
-        _spells.AddChild(new Label { Text = SpellsText(hero) });
+        _spells.AddChild(new Label { Text = SpellsText(hero, _session.State.Spells) });
         if (!hero.HasSpellBook)
         {
             return;
@@ -276,7 +276,7 @@ public partial class HeroPanel : PanelContainer
 
     private static string Signed(int value) => value > 0 ? $"+{value}" : $"{value}";
 
-    private static string StatsText(Hero hero)
+    private static string StatsText(Hero hero, EternalWars.Core.Domain.Magic.SpellCatalog spells)
     {
         var next = ExperienceTable.For(hero.Level + 1);
         var bonus = hero.Bonus;
@@ -284,18 +284,18 @@ public partial class HeroPanel : PanelContainer
             $"Attack {WithBonus(hero.Attack, bonus.Attack)}   Defense {WithBonus(hero.Defense, bonus.Defense)}   Spell Power {WithBonus(hero.SpellPower, bonus.SpellPower)}   Knowledge {WithBonus(hero.Knowledge, bonus.Knowledge)}",
             $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {hero.Mana}/{hero.MaxMana}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}",
             $"Experience {hero.Experience}/{next}" + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : "") + $"   Scouting {hero.ScoutingRadius}",
-            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe(EternalWars.Core.Domain.Magic.SpellCatalog.Default)}");
+            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe(spells)}");
     }
 
     /// <summary>The learned spells by name, and how many more the worn artifacts teach (the Unwritten Codex, ADR-111; scrolls, ADR-136).</summary>
-    private static string SpellsText(Hero hero)
+    private static string SpellsText(Hero hero, EternalWars.Core.Domain.Magic.SpellCatalog spells)
     {
         if (!hero.HasSpellBook)
         {
             return "No spell book.";
         }
 
-        var lent = EternalWars.Core.Domain.Magic.MagicRules.Known(hero, EternalWars.Core.Domain.Magic.SpellCatalog.Default).Count() - hero.Spells.Count;
+        var lent = EternalWars.Core.Domain.Magic.MagicRules.Known(hero, spells).Count() - hero.Spells.Count;
         var known = hero.Spells.Count == 0 && lent == 0 ? "Spell book: empty." : "Spells:";
         return lent > 0 ? $"{known} ({lent} lent while its artifacts are worn)" : known;
     }

@@ -1958,3 +1958,31 @@ agent's choices.
   editor factories; the milestone-named catalogue tests are split by object (`CartographerAndMerchantTests`, `SphinxAndWitchHutTests`,
   `RefugeeCampAndAltarTests`, `MapGarrisonTests`, `DepositTests`, `MagiWindowAndBorderPostTests`, `MapTavernTests`, …).
 - **Behaviour**: unchanged for play (AI games replay the same); the editor's undo of a removal and a town's type change keep the order.
+
+### ADR-175: Closing the code review (ADR-165 … ADR-174, 2026-11-11)
+**Status**: implemented (2026-11-11); tested. The last items of the code quality review, which is archived in
+`docs/project/archive/code-review-2026-11.md`.
+
+- **Tests through commands** (ADR-036, R4): 41 of the 55 direct service calls in the tests now go through `Execute`. `SessionCommands`
+  gained `Visit` (walk onto an object's entrance), `Revisit` (step off and back on), `PlayUntilDay` / `NextDay` (instead of setting the
+  date) and `TakeLevelUps`; looting, a map event's scroll, level-up offers and battle statuses come from real battles, events and visits.
+  Left *(choice)*: 14 calls that test an internal rule no command reaches without changing what is checked: `TryCollect` on a made-up
+  weekly object, the stacking of made-up statuses, end-of-day statuses (only adventure spells grant them), and `Artifacts.Draw` (the relic
+  pool's no-repeat rule, scroll odds over 2000 draws). `SecondCatalogueTests` is `ManaSiteAndPowerUpTests`.
+- **The game's tables everywhere** (B2, R10): Demo Valley, Two Towns and Ember March place objects from the content's object table (and Demo
+  Valley checks terrain against its terrain table); the template editor validates against the game's tables (`TemplateEditorSession`
+  takes `ContentCatalogs`; the map editor passes `GameContent.All`); a creature caster's spell and a stack's spells are named from the
+  game's spell table in the info sheets (`InfoSheets.Capability(capability, spells)`), and the hero panel's artifact bonuses and lent
+  spells from the game's.
+- **Battle HUD** (R7): the two-click prompt asks `SpellEffect.SecondIsStack` instead of checking for `SpellEffectKind.Move`; no front-end
+  reads an effect kind.
+- **AI fight bound** (section 4): a target choice plays out at most 40 fights (`AdventureAi.FightsChecked`), unsafe ones included, beside
+  the 10 safe candidates it checks. Before, a hero ringed by monsters too strong for it simulated every one. The bound is above what
+  ordinary choices reach: the AI games replay the same.
+- **Left as chosen** in ADR-166 … ADR-169: the AI's targets, the validator, the info sheets and the inspector switch on the object type
+  (each with a safe default); five hero commands stay unmarked (their services refuse with their own texts); the map editor app loads its
+  template folder itself.
+- **Checked in Godot** (the UI work of ADR-167, ADR-172, ADR-173 and this one): `tools/smoke-godot.ps1` passes 53 of 55 scenarios;
+  `game-turn-timer` and `game-random-map` fail the same way on the commit before the review (a scripted click on a long drop-down
+  list opens it under the cursor and the release picks an item).
+- **Behaviour**: unchanged with the built-in content (AI games replay the same).

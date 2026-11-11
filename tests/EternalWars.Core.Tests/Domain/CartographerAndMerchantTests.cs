@@ -29,7 +29,8 @@ public class CartographerAndMerchantTests
         Assert.True(state.Fog.IsExplored(Blue, new MapPosition(20, 4)));
         var empty = new List<MapObjectFoundEmpty>();
         session.Events.Subscribe<MapObjectFoundEmpty>(empty.Add);
-        session.Interactions.Visit(state.GetHero(C), cartographer);
+        session.Step(A, Direction.South); // making way for Charlie
+        session.Visit(C, cartographer);
         Assert.Null(state.PendingDecision);
         Assert.Single(empty);
     }

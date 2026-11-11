@@ -160,21 +160,29 @@ public class MapObjectRewardRulesTests
     [Fact]
     public void NextBattleStatuses_EndWithTheBattle_ForBothHeroes()
     {
-        var state = Create("AB.......");
+        // A Faerie Ring (entrance (3, 1)) and Stables (entrance (5, 1)) for Alpha, a Temple (entrance (8, 1)) for Bravo.
+        var state = Create("...........", "...........", "...A....B..", "...........");
+        var ring = Add<BuffSite>(state, BuiltInMapObjects.FaerieRing, 2, 0);
+        var stables = Add<BuffSite>(state, BuiltInMapObjects.Stables, 4, 0);
+        var temple = Add<BuffSite>(state, BuiltInMapObjects.Temple, 7, 0);
         var session = Start(state);
-        session.Progression.GrantStatus(state.GetHero(A), new("ring", HeroStatusKind.Luck, 1, StatusExpiry.NextBattle));
-        session.Progression.GrantStatus(state.GetHero(A), new("stables", HeroStatusKind.Movement, 400, StatusExpiry.EndOfWeek));
-        session.Progression.GrantStatus(state.GetHero(B), new("temple", HeroStatusKind.Morale, 2, StatusExpiry.NextBattle));
+        session.Visit(A, ring);
+        session.Visit(A, stables);
+        session.EndTurn();
+        session.Visit(B, temple);
+        session.EndTurn();
+        Assert.Equal(3, state.GetHero(A).Statuses.Count + state.GetHero(B).Statuses.Count);
         var expired = new List<HeroStatusesExpired>();
         session.Events.Subscribe<HeroStatusesExpired>(expired.Add);
 
-        session.Step(A, Direction.East);
+        session.MoveTo(A, new MapPosition(7, 2));
+        Assert.Equal(MoveResult.BattleStarted, session.Step(A, Direction.NorthEast));
         Assert.Equal(1, state.Battle!.Participant(BattleSide.Attacker).Bonus.Luck); // the battle took the status in
         session.AutoResolve();
 
         Assert.Null(state.Battle);
-        Assert.Contains(expired, e => e.Hero == A && e.Statuses.Single().Source == "ring");
-        Assert.Contains(expired, e => e.Hero == B && e.Statuses.Single().Source == "temple");
+        Assert.Contains(expired, e => e.Hero == A && e.Statuses.Single().Source == BuiltInMapObjects.FaerieRing);
+        Assert.Contains(expired, e => e.Hero == B && e.Statuses.Single().Source == BuiltInMapObjects.Temple);
         var survivor = state.Heroes.Single();
         Assert.DoesNotContain(survivor.Statuses, s => s.Expires == StatusExpiry.NextBattle);
     }

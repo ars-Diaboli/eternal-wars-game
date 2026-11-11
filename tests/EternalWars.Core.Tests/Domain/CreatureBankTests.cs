@@ -118,9 +118,11 @@ public class CreatureBankTests
         Assert.False(bank.IsGuarded);
         Assert.Equal(GameDate.First, bank.PlunderedOn);
 
-        session.Interactions.Visit(state.GetHero(A), bank); // a later visit: no fight, and the Churchyard's morale penalty
+        session.TakeLevelUps(); // the battle's experience
+        var morale = state.GetHero(A).TotalMorale;
+        session.Revisit(A); // a later visit: no fight, and the Churchyard's morale penalty
         Assert.Null(state.Battle);
-        Assert.Equal(CreatureBankRules.ChurchyardMorale, state.GetHero(A).TotalMorale);
+        Assert.Equal(morale + CreatureBankRules.ChurchyardMorale, state.GetHero(A).TotalMorale);
     }
 
     [Fact]

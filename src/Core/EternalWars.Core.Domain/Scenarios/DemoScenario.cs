@@ -21,6 +21,7 @@ public static class DemoScenario
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 16);
         ArgumentOutOfRangeException.ThrowIfLessThan(height, 12);
+        content ??= ContentCatalogs.Default;
 
         var map = new AdventureMap(width, height, withUnderground ? 2 : 1) { Name = "Demo Valley" };
         var random = new Random(seed);
@@ -68,7 +69,7 @@ public static class DemoScenario
                 attack: 1, defense: 2),
         };
 
-        var catalog = MapObjectCatalog.Default;
+        var catalog = content.Objects;
         var objects = new List<MapObject>();
         Place(BuiltInMapObjects.PileId(ResourceType.Lumber), new MapPosition(4, 3));
         Place(BuiltInMapObjects.PileId(ResourceType.Gold), new MapPosition(3, 5));
@@ -140,7 +141,7 @@ public static class DemoScenario
 
         void MakeWalkable(MapPosition position)
         {
-            if (map.Contains(position) && !TerrainCatalog.Default.IsPassable(map.GetTerrain(position)))
+            if (map.Contains(position) && !content.Terrains.IsPassable(map.GetTerrain(position)))
             {
                 map.SetTerrain(position, position.Level == 0 ? TerrainType.Grass : TerrainType.Subterranean);
             }
