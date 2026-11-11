@@ -28,7 +28,7 @@ public partial class BattleHud : Control
     private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom };
     private readonly Label _info = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(420, 0) };
     private readonly Label _status = new();
-    private readonly Button _wait = new() { Text = "Wait (W)" };
+    private readonly Button _wait = new Button { Text = "Wait (W)" }.WithIcon(UiIcon.Hourglass);
     private readonly Button _defend = new() { Text = "Defend (D)" };
     private readonly Button _retreat = new() { Text = "Retreat (R)" };
     // The price follows the text, then the gold icon: "Surrender 500 [gold]".
@@ -372,7 +372,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        _spells.AddChild(new Label { Text = $"Mana {battle.ManaOf(active.Side)}" });
+        _spells.AddChild(UiIcons.IconLabel(UiIcon.SpellBook,$"Mana {battle.ManaOf(active.Side)}"));
         foreach (var known in caster.Spells.Where(s => s.Effect is not null))
         {
             var cost = BattleMagic.Cost(battle, active.Side, known);

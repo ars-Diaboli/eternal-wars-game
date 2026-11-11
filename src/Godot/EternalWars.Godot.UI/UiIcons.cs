@@ -16,6 +16,12 @@ public enum UiIcon
     Minus,
     Ban,
     Settings,
+    Hourglass,
+    SpellBook,
+    Spells,
+    Quests,
+    PuzzleMap,
+    Dig,
 }
 
 /// <summary>
@@ -86,6 +92,21 @@ public static class UiIcons
         return button;
     }
 
+    /// <summary><paramref name="text"/> after <paramref name="icon"/>, for a heading that is no button; just the label if the icon is missing.</summary>
+    public static Control IconLabel(UiIcon icon, string text)
+    {
+        var label = new Label { Text = text };
+        if (Get(icon) is not { } texture)
+        {
+            return label;
+        }
+
+        var row = new HBoxContainer();
+        row.AddChild(new TextureRect { Texture = texture, StretchMode = TextureRect.StretchModeEnum.KeepCentered });
+        row.AddChild(label);
+        return row;
+    }
+
     /// <summary>Shows <paramref name="icon"/> on a tab's title.</summary>
     public static void WithTabIcon(this TabContainer tabs, int index, UiIcon icon)
     {
@@ -107,6 +128,12 @@ public static class UiIcons
         UiIcon.Minus => "minus",
         UiIcon.Ban => "ban",
         UiIcon.Settings => "settings",
+        UiIcon.Hourglass => "hourglass",
+        UiIcon.SpellBook => "spell_book",
+        UiIcon.Spells => "spells",
+        UiIcon.Quests => "quests",
+        UiIcon.PuzzleMap => "puzzle_map",
+        UiIcon.Dig => "dig",
         _ => "",
     };
 }

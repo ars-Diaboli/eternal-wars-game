@@ -21,7 +21,7 @@ public partial class TurnPanel : HBoxContainer
         AddChild(_date);
         AddChild(_player);
 
-        var button = new Button { Text = "End turn", Visible = endTurn };
+        var button = new Button { Text = "End turn", Visible = endTurn }.WithIcon(UiIcon.Hourglass);
         button.Pressed += () => session.Execute(new EndTurnCommand(session.State.CurrentPlayer.Id));
         AddChild(button);
 

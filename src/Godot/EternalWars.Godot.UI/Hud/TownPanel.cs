@@ -293,6 +293,10 @@ public partial class TownPanel : PanelContainer
                 {
                     book.WithCost(Core.Domain.Magic.MagicRules.SpellBookCost);
                 }
+                else
+                {
+                    book.WithIcon(UiIcon.SpellBook); // a priced button lays its own lines out; the icon goes on the owned one only
+                }
 
                 book.Pressed += () => Run(new BuySpellBookCommand(state.CurrentPlayer.Id, town.Id));
                 _blacksmith.AddChild(book);
