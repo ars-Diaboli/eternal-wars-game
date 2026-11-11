@@ -2053,3 +2053,14 @@ as [spells.md](../content/spells.md) words them. Every one of the 91 battle spel
 - **Code**: core `InfoSheets.Income`, `KingdomTotal`, `TavernHero`, `Decision`, `SkillChoice` (`InfoSheets.Screens.cs`); the Godot panels add
   `WithInfo`. Tests `InfoSheetScreenTests`; smoke scenarios `game-info-screens` and `game-info-prompts`. No rule, map or save format change.
 - **Not done**: the map tavern's offers (the object service screen), a long press on touch.
+### ADR-179: A rounder, smoother fog edge; half the stars, coloured like real ones (ADR-176, 2026-11-11)
+**Status**: accepted and implemented (2026-11-11), the owner's request: the revealed area looked rugged, not round.
+- **A round clearing with a soft edge**: the fog mask (one texel a tile) is blurred with a 5×5 binomial filter (close to a Gaussian of about
+  a tile) instead of a 3×3 tent, so a revealed circle of tiles loses its staircase; the edge fades over about two tiles. The noise warp that
+  sways the edge is broad and slow (two octaves, under a tile) instead of four octaves over almost two tiles, so the line stays smooth. Under
+  the void the dark rim starts a little later, so the clearing keeps its size; under the clouds the puffs move the edge less.
+- **Half the stars**: each of the three star layers has half the stars it had; their size, brightness and twinkle are unchanged.
+- **Star colours by temperature, like real stars** *(owner's choice)*: most are near white, pale yellow to pale blue; a few are accents from
+  deep orange to blue. A star's halo carries its colour, its core is a little whiter. A bright star is dimmed as a whole rather than clipped,
+  so a hot star stays blue instead of burning out to white.
+- Rendering only (`shaders/fog_of_war.gdshader`): rules, saves and the AI are unchanged.

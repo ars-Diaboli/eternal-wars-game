@@ -14,8 +14,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   contradict core tile data (cliffs = rock tiles).
 - **Relief** (ADR-075, Warcraft III-like): rules stay on the 2D grid; walkable ground lies between **0 and 4 cell widths** high, water
   below, cliffs or mountains above. Height follows the tile terrain (editor brush and generator pass come with the terrain look-dev).
-- **Fog of war** (ADR-099, ADR-176): a smooth fade from visible to hidden, never a hard cell edge; a partly explored object shows its explored part.
-  Two looks, a setting on this computer: **Dark** (default), a starry void with drifting nebulae under the map, in 3D parallax; **Clouds**,
+- **Fog of war** (ADR-099, ADR-176, ADR-179): a smooth fade from visible to hidden over about two tiles, never a hard cell edge, so a revealed
+  circle reads as a round clearing; a partly explored object shows its explored part.
+  Two looks, a setting on this computer: **Dark** (default), a starry void (sparse stars, mostly white with orange to blue accents) with drifting nebulae under the map, in 3D parallax; **Clouds**,
   opaque drifting clouds. Revealed tiles open over 0.9 s as the hero's step plays; large reveals open as a wave from their middle.
   Rendering only: the rules keep cell-by-cell visibility.
 
