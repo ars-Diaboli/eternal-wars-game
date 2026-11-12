@@ -6,11 +6,11 @@ with tests (CLAUDE.md); UI items are checked with `tools/smoke-godot.ps1` where 
 
 Done items are summarised with their ADR numbers; the detail is in [decisions.md](decisions.md) and the design docs.
 
-**Where we are (2026-11-11)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
+**Where we are (2026-11-12)**: Phases 0–2 are done; Phase 3 (ADR-114) and Phase 4 (ADR-117) are closed out in core, the apps and the
 editor, and the AI plays generated maps to the end (ADR-119). Phase 5 is in progress: magic is built (ADR-110, ADR-120, ADR-122, ADR-123)
 and every battle spell is in at all three ranks (ADR-149 to ADR-152, ADR-177); sieges, relics and war machine tuning are in (ADR-109, ADR-120, ADR-121); map events are complete: core, the game app (with the turn-start camera), quests, loops and run events, the editor's "Events" tab, the AI, campaign variables and the score check (ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132); map bans and random monsters, towns and hero placeholders are in (ADR-133). The views built but never run were seen in Godot (ADR-148).
-**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: presentation; the few
-views not yet seen (below) when those spells or a game bring them up.
+**Next**: (1) a person's full game on Ember March (the Phase 3 exit's last check); (2) the remaining Phase 5 items: presentation, with
+the adventure map's relief (ADR-181) once MAP-37 is answered; the few views not yet seen (below) when those spells or a game bring them up.
 
 ## Open checks in Godot
 - [x] Godot run of (built and tested in core, the Godot part not run yet), seen with 13 new smoke scenarios (ADR-148):
@@ -214,6 +214,13 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Smooth fog (ADR-099, ADR-176, ADR-179): a soft fade from the visible to the hidden area; objects half under the fog show their explored part
       correctly (rendering only; the rules keep cell-by-cell visibility); a starry-void or cloud look, opening as the hero walks
 - [ ] Terrain: heightmapped landscape with splat shader and blended biome transitions; grid only as overlay
+- [ ] ❓ Relief in the map (ADR-181, MAP-37): a height layer in the map format (bump, with a migration that gives older maps their
+      terrains' heights), read by nothing in the rules
+- [ ] ❓ Relief in the generator: a height pass by terrain (very low swamp, shallow water and ice; high rocky ground, lava and
+      highlands), smooth blending, flat shallow water and ice, dunes on sand; generator version bump (ADR-181, MAP-37)
+- [ ] ❓ Relief in the 3D map: the ground mesh, objects, heroes, paths, the grid overlay and the fog at the ground's height; picking a
+      tile on a slope (ADR-181)
+- [ ] ❓ Relief in the editor: raise, lower, level and smooth tools within the limits, undoable (ADR-181, MAP-37)
 - [ ] PBR models for heroes, creatures, towns and map objects; fog/volumetrics
 - [ ] UI theme (HoMM-style right-side panel, status bar)
 - [ ] Audio: per-terrain ambient music, town themes

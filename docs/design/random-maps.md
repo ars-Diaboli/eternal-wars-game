@@ -109,6 +109,12 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
 - **Generator version** (`MapGenerator.Version`) is saved with the game record (`GenerationInfo`) and shown with the seed; another version
   warns that the seed may give another map.
 
+## Relief
+*Planned* (ADR-181, ❓ MAP-37): a pass after the terrain gives the ground its height by terrain, within the
+[relief's limits](presentation.md#art-direction): swamp, shallow water and ice very low; rocky ground, lava and highlands high; the other
+terrains at placeholder heights in between. Heights blend smoothly where terrains meet; shallow water and ice stay mostly flat, sand gets
+shallow wave-like dunes.
+
 ## Editor
 "Generate" (`EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
 a seed, how many start slots get a player (default all; the rest neutral) and optionally a town per slot (else drawn; start zones are
