@@ -14,7 +14,8 @@ properties, players, validation and conditions panels):
   tab ([adventure-map.md](adventure-map.md#map-bans-and-random-placeholders), ADR-133);
 - validation; [generate from a template and the template editor](random-maps.md#editor).
 
-*Planned*: map resize.
+*Planned*: map resize; height tools that raise, lower, level and smooth the ground within the relief's limits
+([presentation.md](presentation.md#art-direction), ADR-181, ❓ MAP-37).
 
 ## 2D harness and simulator
 - **Viewer** (Godot 2D app): a top-down debug front-end over the same core, for rule development and visual debugging of AI.

@@ -2094,3 +2094,23 @@ template for the generator (ADR-100). No rule or map format change. Layouts and 
 - **Found, not done**: on Four Banners the computer does not share with its ally. The first player of a side picks up most of the half and
   its ally builds but may buy nothing, so the side's champion can be a hero that did little on day 1. A computer battle on day 1 waits on its
   result window as on any map.
+
+### ADR-181: Adventure map relief: a height per map, set by the generator and the editor (ADR-011, ADR-075, 2026-11-12)
+**Status**: accepted (the owner's note in `ideas.md`, 2026-11-12); not built. Points marked *(proposal)* are the agent's and wait for MAP-37.
+Changes ADR-075's "height follows the tile terrain": the height is now the map's own data, which terrain only suggests.
+
+- **Variable height**: the adventure map's ground has a height of its own, kept in the map. The limits are ADR-075's: walkable ground lies
+  between **0 and 4 cell widths**, water below, impassable rock above.
+- **The generator prefers heights by terrain**:
+  - **very low** (near the bottom limit): swamp, shallow water, ice;
+  - **high**: rocky ground, lava, highlands;
+  - **the rest**: placeholder heights in between *(proposal, in cell widths)*: beach 0.5, sand 0.75, grass, dirt and cursed lands 1,
+    forest floor and subterranean 1.25, wasteland 1.5, snow 2, rough 2.5; the high ones 3–3.75; deep water −0.5; impassable rock 4.5–6.
+- **Shape**: the height changes smoothly from one terrain to the next, never as a step. Shallow water and ice are **mostly flat**; sand has
+  **shallow, wave-like dunes**; the others roll gently *(proposal: within ±0.25 of their height)*.
+- **Editor**: the map editor gets tools that change the height, and they keep to the same limits.
+- **Not changed**: the rules stay on the 2D grid (ADR-075). *(proposal)* Height does not change movement cost, sight or battles, so core
+  rules never read it; the battlefield stays flat.
+- **Needs**: a map format bump with a migration that gives older maps their terrains' heights (ADR-174); a generator pass and a generator
+  version bump; the 3D map's mesh, and the things standing on it, at the ground's height. Built with the heightmapped terrain (roadmap,
+  "Platform and art").

@@ -12,8 +12,11 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Terrain** (ADR-011) *(planned; now per-tile triplanar meshes and placeholder objects and units)*: a smooth heightmapped landscape
   (splatting, triplanar slopes, blended biomes); the grid shows only as an overlay (hover, path, range, editor). Visual height must not
   contradict core tile data (cliffs = rock tiles).
-- **Relief** (ADR-075, Warcraft III-like): rules stay on the 2D grid; walkable ground lies between **0 and 4 cell widths** high, water
-  below, cliffs or mountains above. Height follows the tile terrain (editor brush and generator pass come with the terrain look-dev).
+- **Relief** (ADR-075, ADR-181, Warcraft III-like) *(planned; details ❓ MAP-37)*: rules stay on the 2D grid; walkable ground lies between
+  **0 and 4 cell widths** high, water below, cliffs or mountains above. The height is the map's own data: the
+  [generator](random-maps.md#relief) sets it by terrain and the [map editor](tools.md#map-editor) reshapes it within the same limits.
+  Swamp, shallow water and ice lie very low; rocky ground, lava and highlands high; the rest in between. Height changes smoothly between
+  terrains; shallow water and ice are mostly flat, sand has shallow wave-like dunes.
 - **Fog of war** (ADR-099, ADR-176, ADR-179): a smooth fade from visible to hidden over about two tiles, never a hard cell edge, so a revealed
   circle reads as a round clearing; a partly explored object shows its explored part.
   Two looks, a setting on this computer: **Dark** (default), a starry void (sparse stars, mostly white with orange to blue accents) with drifting nebulae under the map, in 3D parallax; **Clouds**,
