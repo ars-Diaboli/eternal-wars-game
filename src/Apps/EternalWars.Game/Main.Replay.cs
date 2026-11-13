@@ -307,7 +307,7 @@ public partial class Main
 
                 break;
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } click:
-                if (MapSpace.PickTile(_camera, click.Position, _context.Level) is { } pointed
+                if (MapSpace.PickTile(_camera, click.Position, _session.State.Map, _context.Level) is { } pointed
                     && Core.Domain.Info.InfoSheets.MapCell(_session.State, _context.Viewer ?? _session.State.CurrentPlayer.Id, pointed, _info.Detailed) is { } sheet)
                 {
                     _info.Open(sheet, click.Position);

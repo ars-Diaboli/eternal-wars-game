@@ -131,6 +131,7 @@ internal sealed class MapSketch
     /// <summary>The map, with the arena switch on (ADR-158).</summary>
     public GameState BuildArena(IEnumerable<Player> players, IEnumerable<Hero> heroes)
     {
+        ReliefShaper.Shape(Map, _objects);
         var state = new GameState(Map, players, heroes, _objects, content: _content);
         state.SetRules(ScenarioRules.Default with { Arena = true });
         return state;

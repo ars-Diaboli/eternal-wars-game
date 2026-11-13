@@ -75,6 +75,7 @@ public static class TownsScenario
         var wolves = (MonsterGuard)Place(BuiltInMapObjects.Monster, new MapPosition(Width / 2, 6));
         (wolves.Creature, wolves.Count, wolves.Disposition) = (BuiltInCreatures.Wolf, 15, GuardDisposition.Aggressive);
 
+        ReliefShaper.Shape(map, objects);
         return new GameState(map, players, heroes, objects, content: content);
 
         Town Town(string type, MapPosition topLeft, PlayerId? owner, string name)

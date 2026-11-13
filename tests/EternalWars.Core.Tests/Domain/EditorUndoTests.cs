@@ -85,6 +85,7 @@ public class EditorUndoTests
 
             e.Map.SetProperties("Fixture", "Built by the editor.");
             Assert.Equal(1, e.Terrain.PaintRoad(new MapPosition(30, 24), RoadType.Dirt));
+            Assert.True(e.Heights.Raise(Hill, 1, 8) > 0);
             e.History.Clear();
         }
 
@@ -136,6 +137,9 @@ public class EditorUndoTests
 
         public static MapPosition EventCell { get; } = new(22, 25);
 
+        /// <summary>A raised bump of ground, for the tools that need one (smooth, heights from terrain).</summary>
+        public static MapPosition Hill { get; } = new(35, 27);
+
         public string Spell(int level) => ShrineRules.Candidates(Editor.Scenario.Spells, level).First().Id;
 
         /// <summary>Places the object at the first free place, row by row from the top (the bottom rows stay free for the cases).</summary>
@@ -176,6 +180,26 @@ public class EditorUndoTests
                 + f.Editor.Terrain.PaintRoad(new MapPosition(33, 22), RoadType.Dirt, radius: 1);
             f.Editor.EndStroke();
             return painted > 0;
+        },
+        ["TerrainEditor.Paint (Auto height off)"] = f =>
+        {
+            f.Editor.Heights.AutoHeight = false;
+            return f.Editor.Terrain.Paint(new MapPosition(30, 22), TerrainType.Snow, radius: 1) > 0;
+        },
+
+        // Heights
+        ["HeightEditor.Raise"] = f => f.Editor.Heights.Raise(new MapPosition(5, 27), 1, 3) > 0,
+        ["HeightEditor.Lower"] = f => f.Editor.Heights.Lower(new MapPosition(5, 27), 2, 8) > 0,
+        ["HeightEditor.Level"] = f => f.Editor.Heights.Level(Fixture.Hill, 2, 2, f.Editor.Heights.HeightAt(new MapPosition(5, 27))) > 0,
+        ["HeightEditor.Smooth"] = f => f.Editor.Heights.Smooth(Fixture.Hill, 1, 4) > 0,
+        ["HeightEditor.FromTerrain"] = f => f.Editor.Heights.FromTerrain(Fixture.Hill, 1) > 0,
+        ["HeightEditor.FromTerrain (whole map)"] = f => f.Editor.Heights.FromTerrain() > 0,
+        ["MapEditorSession.BeginStroke (stroke of height dabs)"] = f =>
+        {
+            f.Editor.BeginStroke("Raise ground");
+            var changed = f.Editor.Heights.Raise(new MapPosition(5, 27), 0, 2) + f.Editor.Heights.Raise(new MapPosition(6, 27), 0, 2);
+            f.Editor.EndStroke();
+            return changed > 0;
         },
 
         // Objects
@@ -277,11 +301,12 @@ public class EditorUndoTests
     private static readonly Dictionary<string, string> NotUndoable = new()
     {
         ["ObjectEditor.CanPlace"] = "a query: whether Place would succeed",
+        ["HeightEditor.HeightAt"] = "a query: the ground's height at a tile",
     };
 
     private static readonly Type[] AreaEditors =
     [
-        typeof(TerrainEditor), typeof(ObjectEditor), typeof(ObjectContentsEditor), typeof(MonsterEditor), typeof(TownEditor),
+        typeof(TerrainEditor), typeof(HeightEditor),typeof(ObjectEditor), typeof(ObjectContentsEditor), typeof(MonsterEditor), typeof(TownEditor),
         typeof(HeroEditor), typeof(MapEventEditor), typeof(PlayerEditor), typeof(MapPropertiesEditor),
     ];
 

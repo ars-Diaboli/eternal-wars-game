@@ -10,8 +10,13 @@ namespace EternalWars.Core.Domain.Editing;
 public sealed class ObjectEditor
 {
     private readonly EditorContext _context;
+    private readonly HeightEditor _heights;
 
-    internal ObjectEditor(EditorContext context) => _context = context;
+    internal ObjectEditor(EditorContext context, HeightEditor heights)
+    {
+        _context = context;
+        _heights = heights;
+    }
 
     private Game.GameState Scenario => _context.Scenario;
 
@@ -39,6 +44,7 @@ public sealed class ObjectEditor
         return EditResult.Ok;
     }
 
+    /// <summary>Places an object; a multi-tile one with an entrance (a town, a mine…) gets its ground levelled in the same command (ADR-182 f).</summary>
     public EditResult Place(string definitionId, MapPosition topLeft, out MapObjectId id)
     {
         id = default;
@@ -65,7 +71,19 @@ public sealed class ObjectEditor
 
         var mapObject = MapObject.Create(Scenario.NextObjectId(), definition, topLeft);
         id = mapObject.Id;
-        _context.Run($"Place {definition.Name}", () => _context.AddObject(mapObject), () => _context.RemoveObject(mapObject));
+        var ground = _heights.Under(mapObject); // levelled first, so the object's view is built on its ground
+        _context.Run(
+            $"Place {definition.Name}",
+            () =>
+            {
+                ground?.Apply();
+                _context.AddObject(mapObject);
+            },
+            () =>
+            {
+                _context.RemoveObject(mapObject);
+                ground?.Revert();
+            });
         return EditResult.Ok;
     }
 

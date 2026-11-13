@@ -7,7 +7,7 @@ namespace EternalWars.Godot.Shared.Map;
 
 /// <summary>
 /// The map editor's markers for the invisible event cells (EVT-2, EVT-6): a violet plate with the event's name on every cell of the shown level. The
-/// game never adds this view (players do not see event cells). Redrawn when the events or the level change.
+/// game never adds this view (players do not see event cells). Redrawn when the events, the level or the ground change.
 /// </summary>
 public partial class EventCellsView : Node3D
 {
@@ -32,6 +32,7 @@ public partial class EventCellsView : Node3D
         context.Changed += Rebuild;
         TreeExiting += () => context.Changed -= Rebuild;
         this.SubscribeWhileInTree<MapEventsChanged>(context.Events, _ => Rebuild());
+        this.SubscribeWhileInTree<GroundHeightsChanged>(context.Events, _ => Rebuild());
         Rebuild();
     }
 
@@ -48,11 +49,11 @@ public partial class EventCellsView : Node3D
         var highlighted = new StandardMaterial3D { AlbedoColor = new Color(1f, 0.85f, 0.3f, 0.85f), Transparency = BaseMaterial3D.TransparencyEnum.Alpha };
         foreach (var cell in _context.State.MapEvents.Set.Cells.Where(c => c.Level == _context.Level))
         {
-            var at = MapSpace.ToWorld(cell.Position);
+            var at = MapSpace.ToGround(_context.State.Map, cell.Position);
             AddChild(new MeshInstance3D
             {
                 Mesh = new BoxMesh { Size = new Vector3(0.7f, 0.04f, 0.7f), Material = cell.Event == _highlighted ? highlighted : material },
-                Position = at + (Vector3.Up * 0.05f),
+                Transform = new Transform3D(MapSpace.OnSlope(_context.State.Map, cell.Position), at + (MapSpace.GroundNormal(_context.State.Map, cell.Position) * 0.05f)),
             });
             AddChild(new Label3D
             {

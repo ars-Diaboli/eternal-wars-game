@@ -32,6 +32,7 @@ public partial class Main : Node3D
 
     private MapEditorSession _editor = null!;
     private MapViewContext _context = null!;
+    private bool _showGrid = true; // the editor's own toggle, kept from map to map
     private StrategyCamera _camera = null!;
     private Node3D? _world;
     private CanvasLayer? _ui;
@@ -43,6 +44,9 @@ public partial class Main : Node3D
     private Label _status = null!;
     private Label _history = null!;
     private bool _painting;
+
+    /// <summary>The Level tool's target: the ground's height (eighths) where the stroke started.</summary>
+    private int _levelTo;
     private MapObjectId? _linkFrom;
     private GenerateRequest? _lastGenerate;
     private TabContainer _tabs = null!;
@@ -86,7 +90,8 @@ public partial class Main : Node3D
                 else if (_tools.Tool.IsBrush)
                 {
                     _painting = true;
-                    _editor.BeginStroke(_tools.Tool.Kind switch { ToolKind.Road => "Paint road", ToolKind.River => "Paint river", _ => $"Paint {_tools.Tool.Terrain}" });
+                    _levelTo = _editor.Heights.HeightAt(tile); // Level spreads the height where the stroke starts
+                    _editor.BeginStroke(_tools.Tool.StrokeDescription);
                     Paint(tile);
                 }
                 else
@@ -124,7 +129,7 @@ public partial class Main : Node3D
     }
 
     private MapPosition? Pick(Vector2 screen) =>
-        MapSpace.PickTile(_camera, screen, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
+        MapSpace.PickTile(_camera, screen, _editor.Scenario.Map, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
 
     private void Paint(MapPosition tile)
     {
@@ -136,6 +141,17 @@ public partial class Main : Node3D
         else if (tool.Kind == ToolKind.River)
         {
             _editor.Terrain.PaintRiver(tile, tool.River, tool.Radius);
+        }
+        else if (tool.Kind == ToolKind.Height)
+        {
+            _ = tool.Height switch
+            {
+                HeightTool.Raise => _editor.Heights.Raise(tile, tool.Radius, tool.Strength),
+                HeightTool.Lower => _editor.Heights.Lower(tile, tool.Radius, tool.Strength),
+                HeightTool.Level => _editor.Heights.Level(tile, tool.Radius, tool.Strength, _levelTo),
+                HeightTool.Smooth => _editor.Heights.Smooth(tile, tool.Radius, tool.Strength),
+                _ => _editor.Heights.FromTerrain(tile, tool.Radius),
+            };
         }
         else
         {
@@ -228,7 +244,7 @@ public partial class Main : Node3D
         _linkFrom = null;
 
         _editor = new MapEditorSession(state);
-        _context = new MapViewContext(state, _editor.Events);
+        _context = new MapViewContext(state, _editor.Events) { ShowGrid = _showGrid };
         var world = new AdventureWorldView { Name = "World" };
         _world = world;
         AddChild(world);
@@ -271,6 +287,9 @@ public partial class Main : Node3D
         AddButton(fileRow, "Undo", () => _editor.Undo());
         AddButton(fileRow, "Redo", () => _editor.Redo());
         AddButton(fileRow, "Level (L)", () => _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels));
+        var grid = new CheckBox { Text = "Grid", ButtonPressed = _showGrid, TooltipText = "Show the tile grid on the ground" };
+        grid.Toggled += on => _context.ShowGrid = _showGrid = on;
+        fileRow.AddChild(grid);
 
         _status = new Label();
         rows.AddChild(_status);

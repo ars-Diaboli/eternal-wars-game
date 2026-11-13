@@ -11,15 +11,18 @@ public sealed class TerrainEditor
     private readonly PaintLayer<RoadType, RoadsPainted> _roads;
     private readonly PaintLayer<RiverType, RiversPainted> _rivers;
 
-    internal TerrainEditor(EditorContext context)
+    internal TerrainEditor(EditorContext context, HeightEditor heights)
     {
         var map = context.Scenario.Map;
-        _terrain = new(context, map.GetTerrain, map.SetTerrain, (positions, terrain) => new TerrainPainted(positions, terrain));
+        _terrain = new(context, map.GetTerrain, map.SetTerrain, (positions, terrain) => new TerrainPainted(positions, terrain), heights.AfterPaint);
         _roads = new(context, map.GetRoad, map.SetRoad, (positions, road) => new RoadsPainted(positions, road));
         _rivers = new(context, map.GetRiver, map.SetRiver, (positions, river) => new RiversPainted(positions, river));
     }
 
-    /// <summary>Paints terrain. Returns the number of tiles changed.</summary>
+    /// <summary>
+    /// Paints terrain. Returns the number of tiles changed. While <see cref="HeightEditor.AutoHeight"/> is on, the same command gives the
+    /// ground there the new terrain's height (<see cref="HeightEditor.FromTerrain(MapPosition, int)"/>), so one undo takes back both.
+    /// </summary>
     public int Paint(MapPosition center, TerrainType terrain, int radius = 0) => _terrain.Paint(center, radius, terrain, $"Paint {terrain}");
 
     /// <summary>Paints (or, with <see cref="RoadType.None"/>, erases) roads. Returns tiles changed.</summary>

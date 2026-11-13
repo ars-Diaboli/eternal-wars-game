@@ -45,19 +45,15 @@ public partial class HeroView : Node3D
         set => _ring.Visible = value;
     }
 
-    /// <summary>Editor and simple front-ends: always visible, no level filter.</summary>
-    public void Bind(Hero hero, IEventSubscriber events) => Bind(hero, events, null);
-
-    public void Bind(Hero hero, MapViewContext context) => Bind(hero, context.Events, context);
-
-    private void Bind(Hero hero, IEventSubscriber events, MapViewContext? context)
+    public void Bind(Hero hero, MapViewContext context)
     {
+        var events = context.Events;
         _hero = hero;
         _context = context;
         _shownPosition = hero.Position;
         _queuedPosition = hero.Position;
         Name = $"Hero_{hero.Id.Value}";
-        Position = MapSpace.ToWorld(hero.Position);
+        Position = OnGround(hero.Position);
         var color = Palette.ForPlayer(hero.Owner);
         _body = new MeshInstance3D
         {
@@ -100,6 +96,17 @@ public partial class HeroView : Node3D
             }
         });
         this.SubscribeWhileInTree<SightChanged>(events, _ => UpdateVisibility());
+        // The editor reshaped the ground: a hero standing there moves with it (one walking takes the new ground as it goes).
+        this.SubscribeWhileInTree<GroundHeightsChanged>(events, e =>
+        {
+            if (_queue is not { } queue || !queue.IsValid() || !queue.IsRunning())
+            {
+                if (e.Level == _shownPosition.Level && e.Area.Touches(_shownPosition))
+                {
+                    Position = OnGround(_shownPosition);
+                }
+            }
+        });
         // Veil III hides a hero from other players whose heroes are not close (GameState.CanSee): re-check when anyone moves or a veil changes.
         this.SubscribeWhileInTree<HeroMoved>(events, e =>
         {
@@ -150,6 +157,7 @@ public partial class HeroView : Node3D
         }
 
         _queueEnd = start + seconds;
+        var from = _queuedPosition;
         _queuedPosition = to;
         if (_context is { } context)
         {
@@ -158,7 +166,8 @@ public partial class HeroView : Node3D
 
         if (seconds > 0)
         {
-            _queue.TweenProperty(this, "position", MapSpace.ToWorld(to), seconds);
+            // Along the ground, sampled every frame, so the hero walks over a slope rather than through it.
+            _queue.TweenMethod(Callable.From<float>(t => Position = Between(from, to, t)), 0f, 1f, seconds);
             _queue.Parallel().TweenProperty(_body, "position:y", BodyHeight + HopHeight, seconds / 2)
                 .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
             _queue.Parallel().TweenProperty(_body, "position:y", BodyHeight, seconds / 2).SetDelay(seconds / 2)
@@ -166,7 +175,7 @@ public partial class HeroView : Node3D
         }
         else
         {
-            _queue.TweenCallback(Callable.From(() => Position = MapSpace.ToWorld(to)));
+            _queue.TweenCallback(Callable.From(() => Position = OnGround(to)));
         }
 
         _queue.TweenCallback(Callable.From(() =>
@@ -178,4 +187,13 @@ public partial class HeroView : Node3D
 
     private void UpdateVisibility() =>
         Visible = _context is null || (_shownPosition.Level == _context.Level && _context.CanSee(_hero));
+
+    private Vector3 OnGround(MapPosition position) => MapSpace.ToGround(_context!.State.Map, position);
+
+    /// <summary>The ground a fraction <paramref name="t"/> of the way along a step (a step never changes level).</summary>
+    private Vector3 Between(MapPosition from, MapPosition to, float t)
+    {
+        var at = MapSpace.ToWorld(from).Lerp(MapSpace.ToWorld(to), t);
+        return at with { Y = MapSpace.GroundY(_context!.State.Map, to.Level, at.X, at.Z) };
+    }
 }

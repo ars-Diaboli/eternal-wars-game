@@ -13,6 +13,7 @@ namespace EternalWars.Godot.Shared.Map;
 public sealed class MapViewContext(GameState state, IEventSubscriber events, PlayerId? viewer = null)
 {
     private FogLook _fogLook = FogLook.Dark;
+    private bool _showGrid;
 
     public GameState State { get; } = state;
 
@@ -50,11 +51,28 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
         }
     }
 
+    /// <summary>Whether the tile grid is drawn over the ground (ADR-183); the game sets it from the settings file, the editor from its toggle.</summary>
+    public bool ShowGrid
+    {
+        get => _showGrid;
+        set
+        {
+            if (value != _showGrid)
+            {
+                _showGrid = value;
+                ShowGridChanged?.Invoke();
+            }
+        }
+    }
+
     /// <summary>When the last booked hero step starts, on <see cref="Now"/>'s clock (the fog opens as the hero walks).</summary>
     public double LastStepStart { get; private set; }
 
     /// <summary>The fog's look changed.</summary>
     public event Action? FogLookChanged;
+
+    /// <summary>The grid was switched on or off.</summary>
+    public event Action? ShowGridChanged;
 
     /// <summary>The viewer or the level changed: views redraw.</summary>
     public event Action? Changed;

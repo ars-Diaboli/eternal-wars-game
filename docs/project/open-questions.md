@@ -7,11 +7,11 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-06**: MAP-36 (the Grail's puzzle map) answered and built (ADR-140).
+**Updated 2026-11-13**: MAP-37 (the adventure map's relief) answered with the proposals (ADR-182).
 
 ## 🚧 Blocking now
 
-Nothing blocks the current work.
+Nothing blocking.
 
 ## Heroes
 
@@ -58,7 +58,8 @@ One line per question; the ADR holds the detail.
 
 - **Scope**: fidelity ADR-008; art [presentation.md](../design/presentation.md); modes, platforms, harness, slice ADR-034; lore drafted by Claude.
 - **Adventure map**: scale ADR-020, camera ADR-022, terrain ADR-011/045, native terrain ADR-032, roads ADR-024/032, movement ADR-018/037, fog
-  ADR-017/031, gates ADR-026, meeting heroes ADR-027, resources ADR-019, chests ADR-039, mines ADR-034, guards ADR-040/065, no sea ADR-051.
+  ADR-017/031, gates ADR-026, meeting heroes ADR-027, resources ADR-019, chests ADR-039, mines ADR-034, guards ADR-040/065, no sea ADR-051,
+  relief ADR-075/181, MAP-37 ADR-182.
 - **Objects**: MAP-1 … MAP-14 ADR-068; MAP-15 … MAP-19, MAP-21 … MAP-24 ADR-070; MAP-20 ADR-071; MAP-23 corrected ADR-072; MAP-35 (Pandora's Box) ADR-100;
   MAP-36 (the Grail's puzzle map) ADR-140.
 - **Towns**: groups ADR-010/028/029, tech tree ADR-030/046, income ADR-025, caravans ADR-054, tavern ADR-060/070, governors ADR-063, TOWN-1 fort

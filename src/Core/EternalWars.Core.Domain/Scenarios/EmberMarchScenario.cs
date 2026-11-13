@@ -143,6 +143,7 @@ public static class EmberMarchScenario
         Place(BuiltInMapObjects.LearningStone, new MapPosition(14, 26));
         Place(BuiltInMapObjects.LearningStone, new MapPosition(21, 26));
 
+        ReliefShaper.Shape(map, objects);
         return new GameState(map, players, heroes, objects, content: content);
 
         Town Town(string type, MapPosition topLeft, PlayerId? owner, string name)
