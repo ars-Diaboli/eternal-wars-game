@@ -13,6 +13,9 @@ public enum ToolKind
     Terrain,
     Road,
     River,
+
+    /// <summary>Shapes the ground's height with a round brush (<see cref="HeightTool"/>, ADR-182 g).</summary>
+    Height,
     Object,
     Monster,
     Hero,
@@ -22,6 +25,20 @@ public enum ToolKind
 
     /// <summary>Buries the Grail where clicked, or takes it away when its cell is clicked again (ADR-140).</summary>
     Grail,
+}
+
+/// <summary>What the Height tool does where it is dragged (<see cref="HeightEditor"/>).</summary>
+public enum HeightTool
+{
+    Raise,
+    Lower,
+
+    /// <summary>Towards the height where the stroke started.</summary>
+    Level,
+    Smooth,
+
+    /// <summary>The terrains' own height (a selection of the map; the whole map is a button).</summary>
+    FromTerrain,
 }
 
 /// <summary>The active editor tool and its parameters; the app applies it where the user clicks.</summary>
@@ -39,8 +56,30 @@ public sealed record EditorTool(
     /// <summary>The river kind the River tool paints (ADR-079).</summary>
     public RiverType River { get; init; } = RiverType.Clear;
 
+    /// <summary>What the Height tool does.</summary>
+    public HeightTool Height { get; init; } = HeightTool.Raise;
+
+    /// <summary>The Height tool's strength: eighths of a cell width per dab, 1 … <see cref="HeightEditor.MaxStrength"/>.</summary>
+    public int Strength { get; init; } = 2;
+
     /// <summary>Drag painting (one undo step per stroke) rather than one edit per click.</summary>
-    public bool IsBrush => Kind is ToolKind.Terrain or ToolKind.Road or ToolKind.River;
+    public bool IsBrush => Kind is ToolKind.Terrain or ToolKind.Road or ToolKind.River or ToolKind.Height;
+
+    /// <summary>The undo step a brush stroke makes.</summary>
+    public string StrokeDescription => Kind switch
+    {
+        ToolKind.Road => "Paint road",
+        ToolKind.River => "Paint river",
+        ToolKind.Height => Height switch
+        {
+            HeightTool.Raise => "Raise ground",
+            HeightTool.Lower => "Lower ground",
+            HeightTool.Level => "Level ground",
+            HeightTool.Smooth => "Smooth ground",
+            _ => "Heights from terrain",
+        },
+        _ => $"Paint {Terrain}",
+    };
 }
 
 /// <summary>Tool buttons plus the options of the selected tool. Raises <see cref="ToolChanged"/> on every change.</summary>
@@ -104,6 +143,24 @@ public partial class ToolPalette : VBoxContainer
                 }
 
                 Radius();
+                AutoHeight();
+                break;
+            case ToolKind.Height:
+                Choice("Do", Enum.GetValues<HeightTool>().Select(h => (h == HeightTool.FromTerrain ? "From terrain" : h.ToString(), h)), _tool.Height,
+                    h => _tool with { Height = h });
+                Radius();
+                _options.AddChild(new Label { Text = "Strength" });
+                var strength = new SpinBox
+                {
+                    MinValue = 1, MaxValue = HeightEditor.MaxStrength, Value = _tool.Strength,
+                    TooltipText = $"Eighths of a cell width per dab ({HeightEditor.MaxStrength} = a whole cell)",
+                };
+                strength.ValueChanged += v => Set(_tool with { Strength = (int)v });
+                _options.AddChild(strength);
+                var whole = new Button { Text = "Heights from terrain", TooltipText = "The whole map, every level, takes its terrains' heights (one undo step)" };
+                whole.Pressed += () => _editor.Heights.FromTerrain();
+                _options.AddChild(whole);
+                AutoHeight();
                 break;
             case ToolKind.Road:
                 Choice("Road", Enum.GetValues<RoadType>().Select(r => (r.ToString(), r)), _tool.Road, r => _tool with { Road = r });
@@ -159,6 +216,19 @@ public partial class ToolPalette : VBoxContainer
         var radius = new SpinBox { MinValue = 0, MaxValue = 5, Value = _tool.Radius };
         radius.ValueChanged += v => Set(_tool with { Radius = (int)v });
         _options.AddChild(radius);
+    }
+
+    /// <summary>The session's Auto height switch: painting terrain also gives the ground the new terrain's height.</summary>
+    private void AutoHeight()
+    {
+        var auto = new CheckBox
+        {
+            Text = "Auto height",
+            ButtonPressed = _editor.Heights.AutoHeight,
+            TooltipText = "Painting terrain also gives the ground there the new terrain's height",
+        };
+        auto.Toggled += on => _editor.Heights.AutoHeight = on;
+        _options.AddChild(auto);
     }
 
     private void Choice<T>(string label, IEnumerable<(string Text, T Value)> items, T selected, Func<T, EditorTool> apply)

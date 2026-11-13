@@ -1,5 +1,5 @@
 {
-  "formatVersion": 38,
+  "formatVersion": 39,
   "name": "Version 22 sample",
   "description": "",
   "width": 14,
@@ -12,6 +12,17 @@
       "gggggggggggggg",
       "gggggggggggggg",
       "gggggggggggggg"
+    ]
+  ],
+  "heights": [
+    [
+      "888888888888888",
+      "888888888888888",
+      "888888888888888",
+      "888888888888888",
+      "888888888888888",
+      "888888888888888",
+      "888888888888888"
     ]
   ],
   "players": [

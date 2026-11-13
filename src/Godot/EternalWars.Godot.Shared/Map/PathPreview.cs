@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Pathfinding;
 using EternalWars.Godot.Shared.Controls;
 using Godot;
@@ -7,7 +8,12 @@ namespace EternalWars.Godot.Shared.Map;
 /// <summary>HoMM-style route preview: one marker per step coloured by the day it is reached, a bigger one at the end.</summary>
 public partial class PathPreview : Node3D
 {
+    private AdventureMap? _map;
+
     public HeroPath? Path { get; private set; }
+
+    /// <summary>The map whose ground the markers sit on.</summary>
+    public void Bind(AdventureMap map) => _map = map;
 
     public void Show(HeroPath path)
     {
@@ -30,7 +36,9 @@ public partial class PathPreview : Node3D
                         ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
                     },
                 },
-                Position = MapSpace.ToWorld(step.Position) + (Vector3.Up * 0.05f),
+                Transform = _map is null
+                    ? new Transform3D(Basis.Identity, MapSpace.ToWorld(step.Position) + (Vector3.Up * 0.05f))
+                    : new Transform3D(MapSpace.OnSlope(_map, step.Position), MapSpace.ToGround(_map, step.Position) + (MapSpace.GroundNormal(_map, step.Position) * 0.05f)),
             });
         }
     }

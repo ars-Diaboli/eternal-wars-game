@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Map;
 
 namespace EternalWars.Core.Data.Maps;
 
@@ -24,7 +26,7 @@ internal static class MapMigrations
     public const int UnversionedFormatVersion = 1;
 
     /// <summary>The steps, oldest first.</summary>
-    public static IReadOnlyList<IMapMigration> Steps { get; } = [new SkillsReplaceTactics(), new GuardModePerMonster(), new RuinsAreTheCrypt()];
+    public static IReadOnlyList<IMapMigration> Steps { get; } = [new SkillsReplaceTactics(), new GuardModePerMonster(), new RuinsAreTheCrypt(), new HeightsFromTerrain()];
 
     private static readonly JsonNodeOptions NodeOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -154,6 +156,55 @@ internal static class MapMigrations
             {
                 bank["definition"] = "bank.crypt";
             }
+        }
+    }
+
+    /// <summary>
+    /// v39 (ADR-182 j): the ground has a height per tile corner; an older map gets its terrain's (<see cref="ReliefShaper.FromTerrain(AdventureMap)"/>:
+    /// blended, no noise). A map whose size or terrain cannot be read is left for the reader to refuse.
+    /// </summary>
+    private sealed class HeightsFromTerrain : IMapMigration
+    {
+        public int Version => 39;
+
+        public void Apply(JsonObject map)
+        {
+            if (map["width"] is not JsonValue widthValue || !widthValue.TryGetValue<int>(out var width) || width < 1
+                || map["height"] is not JsonValue heightValue || !heightValue.TryGetValue<int>(out var height) || height < 1
+                || map["terrain"] is not JsonArray { Count: > 0 } levels)
+            {
+                return;
+            }
+
+            var ground = new AdventureMap(width, height, levels.Count);
+            for (var level = 0; level < levels.Count; level++)
+            {
+                if (levels[level] is not JsonArray rows || rows.Count != height)
+                {
+                    return;
+                }
+
+                for (var y = 0; y < height; y++)
+                {
+                    if (rows[y] is not JsonValue value || !value.TryGetValue<string>(out var row) || row.Length != width)
+                    {
+                        return;
+                    }
+
+                    for (var x = 0; x < width; x++)
+                    {
+                        if (!TerrainCodes.TryFromCode(row[x], out var terrain))
+                        {
+                            return;
+                        }
+
+                        ground.SetTerrain(new MapPosition(x, y, level), terrain);
+                    }
+                }
+            }
+
+            ReliefShaper.FromTerrain(ground);
+            map["heights"] = new JsonArray([.. MapConverter.WriteHeights(ground).Select(l => (JsonNode)new JsonArray([.. l.Select(r => (JsonNode)JsonValue.Create(r))]))]);
         }
     }
 }

@@ -109,6 +109,13 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
 - **Generator version** (`MapGenerator.Version`) is saved with the game record (`GenerationInfo`) and shown with the seed; another version
   warns that the seed may give another map.
 
+## Relief
+(ADR-181, ADR-182.) The last pass (`ReliefPainter`), once the passages and scenery have settled the terrain,
+gives every tile corner its terrain's height ([the table and limits](presentation.md#art-direction)), blended over about 3 tiles where
+terrains meet, plus gentle noise from the seed: ±0.25 cell widths, none on shallow water and ice, dunes of ±0.15 in rows on sand (each zone
+draws their direction). It draws only from its own streams (`heights` per level, `dunes` per zone), so nothing else on the map depends on
+it. The ground under each multi-tile object's footprint is then levelled to its entrance's height; roads and rivers follow the ground.
+
 ## Editor
 "Generate" (`EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
 a seed, how many start slots get a player (default all; the rest neutral) and optionally a town per slot (else drawn; start zones are

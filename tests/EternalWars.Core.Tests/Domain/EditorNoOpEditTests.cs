@@ -94,6 +94,25 @@ public class EditorNoOpEditTests
     }
 
     [Fact]
+    public void HeightToolsThatChangeNoCorner_RecordNothing()
+    {
+        var editor = TestEditor.Blank();
+        var grass = editor.Heights.HeightAt(new MapPosition(5, 5));
+        var undoSteps = UndoSteps(editor);
+        var events = Record(editor);
+
+        editor.BeginStroke("Smooth ground");
+        Assert.Equal(0, editor.Heights.Smooth(new MapPosition(5, 5), 2, 4)); // flat already
+        Assert.Equal(0, editor.Heights.Level(new MapPosition(5, 5), 2, 8, grass));
+        editor.EndStroke();
+        Assert.Equal(0, editor.Heights.FromTerrain(new MapPosition(5, 5), 2)); // a blank map has its terrain's heights
+        Assert.Equal(0, editor.Heights.FromTerrain());
+
+        Assert.Empty(events);
+        Assert.Equal(undoSteps, UndoSteps(editor));
+    }
+
+    [Fact]
     public void SettingContentsMapAndPlayersToWhatTheyHave_RecordsNothing()
     {
         var editor = TestEditor.Blank();

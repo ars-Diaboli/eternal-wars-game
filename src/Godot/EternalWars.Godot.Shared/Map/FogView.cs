@@ -71,6 +71,7 @@ public partial class FogView : Node3D
         _material.SetShaderParameter("fog_mask", _texture);
         _material.SetShaderParameter("mask_size", new Vector2(_width, _height));
         _material.SetShaderParameter("ground_y", MapSpace.ToWorld(new MapPosition(0, 0, level)).Y);
+        SetTop();
         SetOptionalTexture("nebula");
         SetOptionalTexture("cloud", "clouds");
         _screen = new MeshInstance3D
@@ -107,7 +108,18 @@ public partial class FogView : Node3D
                 FadeSight(e.Entered.Concat(e.Left));
             }
         });
+        this.SubscribeWhileInTree<GroundHeightsChanged>(context.Events, e =>
+        {
+            if (e.Level == _level)
+            {
+                SetTop();
+            }
+        });
     }
+
+    /// <summary>The cloud layers float above the level's highest ground (never below its base).</summary>
+    private void SetTop() =>
+        _material.SetShaderParameter("top_y", Math.Max(MapSpace.GroundRange(_context.State.Map, _level).High, MapSpace.ToWorld(new MapPosition(0, 0, _level)).Y));
 
     public override void _Process(double delta)
     {

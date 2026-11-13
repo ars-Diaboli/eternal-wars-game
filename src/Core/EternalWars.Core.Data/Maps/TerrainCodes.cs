@@ -33,7 +33,7 @@ public static class TerrainCodes
     public static char ToCode(TerrainType terrain) => ToCodeMap[terrain];
 
     public static TerrainType FromCode(char code) =>
-        FromCodeMap.TryGetValue(code, out var terrain)
-            ? terrain
-            : throw new FormatException($"Unknown terrain code '{code}'.");
+        TryFromCode(code, out var terrain) ? terrain : throw new FormatException($"Unknown terrain code '{code}'.");
+
+    public static bool TryFromCode(char code, out TerrainType terrain) => FromCodeMap.TryGetValue(code, out terrain);
 }

@@ -1,6 +1,6 @@
-generator v9
-2v2 size 96 seed 1: C15E14A49BCFC431
-duel size 72 seed 1: DEE5DA6B97A22327
-ffa-4 size 96 seed 1: FD3FC522DED549FF
-ffa-8 size 128 seed 1: EF768636C15633DF
-mirror-duel size 72 seed 1: C0E365001ECC5477
+generator v10
+2v2 size 96 seed 1: 26D380649CB20E11
+duel size 72 seed 1: D968AA07A7E11297
+ffa-4 size 96 seed 1: C3D4756EAEC72DFF
+ffa-8 size 128 seed 1: 518D965F3FD581CA
+mirror-duel size 72 seed 1: 4EE4F5E21964A0AC

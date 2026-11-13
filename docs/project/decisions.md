@@ -2094,3 +2094,77 @@ template for the generator (ADR-100). No rule or map format change. Layouts and 
 - **Found, not done**: on Four Banners the computer does not share with its ally. The first player of a side picks up most of the half and
   its ally builds but may buy nothing, so the side's champion can be a hero that did little on day 1. A computer battle on day 1 waits on its
   result window as on any map.
+
+### ADR-181: Adventure map relief: a height per map, set by the generator and the editor (ADR-011, ADR-075, 2026-11-12)
+**Status**: accepted (the owner's note in `ideas.md`, 2026-11-12); not built. The points marked *(proposal)* were confirmed with MAP-37 in
+ADR-182, which holds the details.
+Changes ADR-075's "height follows the tile terrain": the height is now the map's own data, which terrain only suggests.
+
+- **Variable height**: the adventure map's ground has a height of its own, kept in the map. The limits are ADR-075's: walkable ground lies
+  between **0 and 4 cell widths**, water below, impassable rock above.
+- **The generator prefers heights by terrain**:
+  - **very low** (near the bottom limit): swamp, shallow water, ice;
+  - **high**: rocky ground, lava, highlands;
+  - **the rest**: placeholder heights in between *(proposal, in cell widths)*: beach 0.5, sand 0.75, grass, dirt and cursed lands 1,
+    forest floor and subterranean 1.25, wasteland 1.5, snow 2, rough 2.5; the high ones 3–3.75; deep water −0.5; impassable rock 4.5–6.
+- **Shape**: the height changes smoothly from one terrain to the next, never as a step. Shallow water and ice are **mostly flat**; sand has
+  **shallow, wave-like dunes**; the others roll gently *(proposal: within ±0.25 of their height)*.
+- **Editor**: the map editor gets tools that change the height, and they keep to the same limits.
+- **Not changed**: the rules stay on the 2D grid (ADR-075). *(proposal)* Height does not change movement cost, sight or battles, so core
+  rules never read it; the battlefield stays flat.
+- **Needs**: a map format bump with a migration that gives older maps their terrains' heights (ADR-174); a generator pass and a generator
+  version bump; the 3D map's mesh, and the things standing on it, at the ground's height. Built with the heightmapped terrain (roadmap,
+  "Platform and art").
+
+### ADR-182: MAP-37 answered: how the relief is stored, generated and edited (ADR-075, ADR-174, ADR-181, 2026-11-13)
+**Status**: implemented (the owner: "use proposals", 2026-11-13; built in five steps, [plan](archive/relief-plan.md)). "Heights from terrain"
+for a selection is the Height tool's "From terrain" brush (the editor has no selection tool).
+MAP-37 leaves the open questions. The heights are placeholders,
+tuned once the look-dev spike shows them.
+
+- **a. Looks only**: height changes no rule: not movement cost, sight, the AI, pathfinding or battles (the battlefield stays flat). Core
+  rules never read it; it lives in the map so the generator, the editor, saves and the 3D view share one copy.
+- **b. Rocks**: walkable rocky ground is high but inside the limit (3.5); impassable rock stands above it (4.5–6), as ADR-075's cliffs.
+- **c. Heights by terrain** (cell widths): swamp, shallow water and ice 0–0.25; beach 0.5; sand 0.75; grass, dirt and cursed lands 1; forest
+  floor and subterranean 1.25; wasteland 1.5; snow 2; rough 2.5; highlands 3; lava 3.25; rocky ground 3.5; deep water −0.5; impassable rock
+  4.5–6. One table in core, used by the generator, the migration and the editor's "Heights from terrain".
+- **d. Storage**: one height **per tile corner** (a grid one larger than the map each way, per level), in steps of **1/8 cell width**
+  (whole numbers in the file), so neighbouring tiles always meet and slopes are smooth without extra rules. A map format version bump.
+- **e. Generator**: a pass once the terrain is final (after the passages and scenery change it; then objects are levelled): each corner
+  takes its terrain's height, blended over about **3 tiles** where terrains meet, plus gentle noise from the seed (±0.25; none on shallow
+  water and ice; dunes of ±0.15 in rows on sand). Generator version 10; the noise draws only from its own seed streams.
+- **f. Objects on a slope**: the ground under an object's footprint is levelled to its entrance's height, by the generator and when the
+  editor places an object. Roads and rivers follow the ground; a river is not made to run downhill.
+- **g. Editor tools**: raise, lower, level (to the height under the cursor) and smooth, with the terrain brush's radius and strength,
+  undoable through `MapEditorSession`; "Heights from terrain" for a selection or the whole map. Painting terrain moves the height to the new
+  terrain's only while **"Auto height"** is on (on by default).
+- **h. Limits**: walkable terrains are clamped to 0–4, water below 0, impassable rock above 4; nothing more is enforced (a map maker may put
+  swamp on a plateau) and the validator does not warn.
+- **i. Underground**: the same limits and tools; no ceiling is drawn.
+- **j. Older maps** (Ember March, the arenas, saved maps): when loaded they get their terrains' heights with the generator's blending but no
+  noise (format v39, ADR-174: the upgrade step computes the height layer from the terrain), and can be reshaped in the editor
+  afterwards. Maps built in code (`MapSketch`, Ember March) get the
+  same heights from terrain when built.
+- **Plan**: [archive/relief-plan.md](archive/relief-plan.md).
+
+### ADR-183: The ground is one splat-shaded mesh; the tile grid is an overlay and a setting (ADR-011, ADR-182, 2026-11-13)
+**Status**: implemented. Rendering only: no rule, save or map format changes.
+
+- **One mesh a level** (`AdventureMapView`): a vertex per tile corner, shared by the tiles around it, and one per tile centre, at the
+  relief's heights (ADR-182), so the surface is unchanged and `MapSpace.ToGround` and picking still meet it. One draw call whatever the map
+  size. Only a change of heights rebuilds it.
+- **Splat shader** (`shaders/terrain_splat.gdshader`, `TerrainSplat`): the terrains' textures are the layers of one texture array (1024 px,
+  built once from `textures/terrain/`, shared by every level; a texture borrowed by several terrains is one layer with a tint per terrain;
+  a terrain without a texture is its palette colour). Which terrain a tile has is a map-sized texture, one texel a tile, so painting
+  terrain changes texels, not the mesh.
+- **Blended biomes, not following the grid**: a terrain's influence at a pixel is the tile picture blurred over the 3 × 3 tiles around it
+  with a round kernel that reaches 1.5 tiles, so a single tile of another terrain is a round patch (not a square) and a diagonal staircase
+  of tiles a slanted line; the place the picture is read at is pushed about by a slow noise (up to about a third of a tile), so borders
+  wander. Where influences are close the terrains mix, the brighter texels of each ground first, so one ground creeps into the other
+  rather than cross-fading. Broad lighter and darker patches break up wide plains. Steep ground (cliffs) is also textured from the sides.
+- **The grid is an overlay** of the same shader: thin anti-aliased lines on the tile edges that fade out when zoomed far away. It is a
+  setting: in the game "Show the tile grid on the map" (the F10 menu's "Settings" tab, `InterfaceSettings.ShowGrid`, kept in
+  `settings.json`, **off by default**); in the map editor a "Grid" box beside "Level", on by default and not saved. Views read it from
+  `MapViewContext.ShowGrid`.
+- **Not changed**: the battlefield keeps its single-terrain material (`AdventureMapView.TerrainMaterial`); roads and rivers stay plates on
+  the ground; the textures are still the placeholders (no normal or roughness maps yet: the look-dev spike and the PBR art).

@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Map;
 
 namespace EternalWars.Core.Generation;
 
@@ -10,7 +11,7 @@ public sealed record GenerationResult(GeneratedMap Map, int Attempt, ulong Attem
 
 /// <summary>
 /// The generator's entry point (ADR-064): runs the stages in order on one seed. <see cref="Generate"/> makes the map (layout, terrain, connections,
-/// towns and mines, roads, treasure); <see cref="GenerateBest"/> retries on problems (RMG-5); <see cref="Build"/> also assembles the scenario for the
+/// towns and mines, roads, treasure, the ground's height); <see cref="GenerateBest"/> retries on problems (RMG-5); <see cref="Build"/> also assembles the scenario for the
 /// players set up at game start, whose towns are an input so their start zones are painted native (RMG-7). Every stage takes its tables (objects,
 /// terrain, creatures, artifacts, heroes, buildings) from the <see cref="ContentCatalogs"/> it is given, the built-in tables when left out.
 /// </summary>
@@ -20,7 +21,7 @@ public static class MapGenerator
     /// Bumped whenever a change makes a template, size, players and seed give another map; saved with generated games and shown with the seed, so a
     /// shared seed from another version can be warned about.
     /// </summary>
-    public const int Version = 9;
+    public const int Version = 10;
 
     /// <summary>How many seeds <see cref="GenerateBest"/> tries: the seed, then sub-seeds of it.</summary>
     public const int Attempts = 10;
@@ -47,6 +48,10 @@ public static class MapGenerator
         RiverPlacer.Place(template, map, seed);
         TreasurePlacer.Place(template, map, seed);
         TreasurePlacer.PlaceObelisks(template, map, seed);
+
+        // The ground's height last, from the final terrain (the passages and scenery change it), then levelled under the objects (ADR-182).
+        ReliefPainter.Paint(map.Map, seed, p => layout.ZoneAt(p.X, p.Y, p.Level));
+        ReliefShaper.Level(map.Map, map.Objects);
         map.Fairness = MapFairness.Check(template, map);
         foreach (var problem in map.Fairness.Problems)
         {

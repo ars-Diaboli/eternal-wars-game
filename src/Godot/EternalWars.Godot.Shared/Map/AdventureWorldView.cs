@@ -30,7 +30,7 @@ public partial class AdventureWorldView : Node3D
 
             var map = new AdventureMapView { Name = "Terrain" };
             root.AddChild(map);
-            map.Bind(state.Map, context.Events, level);
+            map.Bind(context, level);
 
             var objects = new MapObjectsView { Name = "Objects" };
             root.AddChild(objects);
@@ -45,6 +45,7 @@ public partial class AdventureWorldView : Node3D
         AddChild(grail);
         grail.Bind(context);
         AddChild(PathPreview);
+        PathPreview.Bind(state.Map);
         foreach (var hero in state.Heroes)
         {
             AddHero(hero.Id);

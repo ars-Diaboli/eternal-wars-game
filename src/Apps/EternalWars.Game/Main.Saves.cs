@@ -98,6 +98,7 @@ public partial class Main
             if (_context is not null)
             {
                 _context.FogLook = settings.Fog;
+                _context.ShowGrid = settings.ShowGrid;
             }
 
             KeepSettings();

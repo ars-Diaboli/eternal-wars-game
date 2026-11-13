@@ -11,6 +11,12 @@ public sealed record RoadsPainted(IReadOnlyList<MapPosition> Positions, RoadType
 /// <summary>The editor painted or erased rivers (ADR-079).</summary>
 public sealed record RiversPainted(IReadOnlyList<MapPosition> Positions, RiverType River) : IEvent;
 
+/// <summary>
+/// The editor changed the ground's height (ADR-182 g): every changed corner of <paramref name="Level"/> is in <paramref name="Area"/>.
+/// Views re-read the heights there and move what stands on tiles the area <see cref="CornerArea.Touches"/>.
+/// </summary>
+public sealed record GroundHeightsChanged(int Level, CornerArea Area) : IEvent;
+
 public sealed record HeroPlaced(HeroId Hero, PlayerId Owner, MapPosition Position) : IEvent;
 
 public sealed record HeroRemoved(HeroId Hero) : IEvent;

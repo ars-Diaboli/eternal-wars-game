@@ -66,6 +66,14 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
     public void Run(IEditorCommand command)
     {
         command.Execute();
+        Done(command);
+    }
+
+    public void Run(string description, Action execute, Action undo) => Run(new DelegateCommand(description, execute, undo));
+
+    /// <summary>Records a command that has already run (one that had to run to learn whether it changes anything).</summary>
+    public void Done(IEditorCommand command)
+    {
         if (_stroke is not null)
         {
             _stroke.Add(command);
@@ -75,8 +83,6 @@ internal sealed class EditorContext(GameState scenario, MapObjectCatalog catalog
         History.Record(command);
         PublishHistory();
     }
-
-    public void Run(string description, Action execute, Action undo) => Run(new DelegateCommand(description, execute, undo));
 
     /// <summary>
     /// Sets one value through <paramref name="set"/> as an undoable <see cref="PropertyEdit{T}"/>. Nothing happens (no undo step, no event) when
