@@ -45,6 +45,7 @@ public partial class AdventureWorldView : Node3D
         AddChild(grail);
         grail.Bind(context);
         AddChild(PathPreview);
+        PathPreview.Bind(state.Map);
         foreach (var hero in state.Heroes)
         {
             AddHero(hero.Id);

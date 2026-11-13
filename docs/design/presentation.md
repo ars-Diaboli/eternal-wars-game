@@ -9,18 +9,22 @@ creatures and buildings, heraldic player colours, iconic map objects).
   be decided by a perf spike. Day / night tint per in-game day ❓.
 - **Palette**: desaturated earth tones; player colours and interactive objects stay saturated so the map reads in a dark scene.
 - **Materials**: PBR (albedo / normal / roughness), weathered and worn. **Post**: subtle grading, bloom on magic only, vignette.
-- **Terrain** (ADR-011) *(planned; now per-tile triplanar meshes and placeholder objects and units)*: a smooth heightmapped landscape
+- **Terrain** (ADR-011) *(planned; now one triplanar mesh per terrain over the relief's corner heights, a faint tile grid on it, and placeholder objects and units)*: a smooth heightmapped landscape
   (splatting, triplanar slopes, blended biomes); the grid shows only as an overlay (hover, path, range, editor). Visual height must not
   contradict core tile data (cliffs = rock tiles).
-- **Relief** (ADR-075, ADR-181, Warcraft III-like) *(planned; details ❓ MAP-37)*: rules stay on the 2D grid; walkable ground lies between
-  **0 and 4 cell widths** high, water below, cliffs or mountains above. The height is the map's own data: the
-  [generator](random-maps.md#relief) sets it by terrain and the [map editor](tools.md#map-editor) reshapes it within the same limits.
-  Swamp, shallow water and ice lie very low; rocky ground, lava and highlands high; the rest in between. Height changes smoothly between
-  terrains; shallow water and ice are mostly flat, sand has shallow wave-like dunes.
+- **Relief** (ADR-075, ADR-181, ADR-182, Warcraft III-like): looks only; no rule, the AI or a battle reads it, and the
+  battlefield stays flat. Walkable ground lies between **0 and 4 cell widths** high, water below 0, impassable rock above 4 (4.5–6, the
+  cliffs). The height is the map's own data, one value **per tile corner** in steps of 1/8 cell width, so tiles always meet and slopes are
+  smooth; the [generator](random-maps.md#relief) sets it by terrain and the [map editor](tools.md#map-editor) reshapes it within the same
+  limits. Heights by terrain *(placeholders)*: swamp, shallow water and ice 0–0.25; beach 0.5; sand 0.75; grass, dirt and cursed lands 1;
+  forest floor and subterranean 1.25; wasteland 1.5; snow 2; rough 2.5; highlands 3; lava 3.25; rocky ground 3.5; deep water −0.5.
+  Objects stand on ground levelled to their entrance's height; heroes walk over the slopes; roads, rivers and route markers lie on the
+  ground; a click picks the tile under the cursor on any slope. Underground has the same limits and no
+  drawn ceiling. Older maps get their terrains' heights, blended, when loaded.
 - **Fog of war** (ADR-099, ADR-176, ADR-179): a smooth fade from visible to hidden over about two tiles, never a hard cell edge, so a revealed
   circle reads as a round clearing; a partly explored object shows its explored part.
   Two looks, a setting on this computer: **Dark** (default), a starry void (sparse stars, mostly white with orange to blue accents) with drifting nebulae under the map, in 3D parallax; **Clouds**,
-  opaque drifting clouds. Revealed tiles open over 0.9 s as the hero's step plays; large reveals open as a wave from their middle.
+  opaque drifting clouds floating above the level's highest ground. Revealed tiles open over 0.9 s as the hero's step plays; large reveals open as a wave from their middle.
   Rendering only: the rules keep cell-by-cell visibility.
 
 ## Camera and UI

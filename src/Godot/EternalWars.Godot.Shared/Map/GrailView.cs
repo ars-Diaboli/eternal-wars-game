@@ -8,7 +8,8 @@ namespace EternalWars.Godot.Shared.Map;
 
 /// <summary>
 /// The holes heroes have dug (ADR-140), as dark pits on the explored cells of the shown level; in the editor (no viewer) also the buried Grail, a
-/// gold marker with its name, which players never see. Redrawn when a hole is dug, the Grail moves, a turn starts or the level changes.
+/// gold marker with its name, which players never see. Redrawn when a hole is dug, the Grail moves, a turn starts, the level changes or the editor
+/// reshapes the ground.
 /// </summary>
 public partial class GrailView : Node3D
 {
@@ -23,6 +24,7 @@ public partial class GrailView : Node3D
         this.SubscribeWhileInTree<HoleDug>(context.Events, _ => Rebuild());
         this.SubscribeWhileInTree<GrailMoved>(context.Events, _ => Rebuild());
         this.SubscribeWhileInTree<TurnStarted>(context.Events, _ => Rebuild());
+        this.SubscribeWhileInTree<GroundHeightsChanged>(context.Events, _ => Rebuild());
         Rebuild();
     }
 
@@ -41,13 +43,13 @@ public partial class GrailView : Node3D
             AddChild(new MeshInstance3D
             {
                 Mesh = new CylinderMesh { TopRadius = 0.3f, BottomRadius = 0.22f, Height = 0.03f, Material = new StandardMaterial3D { AlbedoColor = Pit } },
-                Position = MapSpace.ToWorld(hole) + (Vector3.Up * 0.02f),
+                Transform = new Transform3D(MapSpace.OnSlope(state.Map, hole), MapSpace.ToGround(state.Map, hole) + (MapSpace.GroundNormal(state.Map, hole) * 0.03f)),
             });
         }
 
         if (_context.Viewer is null && state.Grail.Position is { } grail && grail.Level == _context.Level)
         {
-            var at = MapSpace.ToWorld(grail);
+            var at = MapSpace.ToGround(state.Map, grail);
             AddChild(new MeshInstance3D
             {
                 Mesh = new CylinderMesh { TopRadius = 0.18f, BottomRadius = 0.1f, Height = 0.3f, Material = new StandardMaterial3D { AlbedoColor = Colors.Gold } },

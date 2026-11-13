@@ -51,7 +51,7 @@ public class ArenaFormatTests
         var state = TestFormat.Load(old);
 
         Assert.False(state.Rules.Arena);
-        Assert.Equal(38, MapDocument.CurrentFormatVersion);
+        Assert.True(MapDocument.CurrentFormatVersion >= 38);
         Assert.Equal(MapDocument.CurrentFormatVersion, MapConverter.ToDocument(state).FormatVersion);
     }
 }

@@ -171,6 +171,10 @@ $scenarios = @(
        Input = '3:click:@Select;6:click:@Inspector;9:click:616,230;16:click:645,382;23:click:965,552;30:click:381,276' },
     @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
        Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1305,24' },
+    # The height tools (ADR-182 g) on a blank map: radius 2, strength 8 (the spin boxes' up arrows), raise two strokes, lower one and undo
+    # it; then highlands painted with Auto height on.
+    @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 60
+       Input = '3:click:@Height;5:click:322,53;7:click:322,53;9:click:493,53;10:click:493,53;11:click:493,53;12:click:493,53;13:click:493,53;14:click:493,53;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,720,900,720;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:300,400' },
     # Generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
     @{ Name = 'editor-generate'; App = 'EternalWars.MapEditor'; Frames = 50
        Input = '3:click:@From template;8:click:@Random;12:choose:sylvan;16:click:@Generate;30:click:@From template' },

@@ -26,7 +26,9 @@ public class GeneratorPinTests
             foreach (var seed in Seeds)
             {
                 var map = EditorMapGenerator.Generate(template, size, seed).Scenario;
-                var file = MapSerializer.Serialize(MapConverter.ToDocument(map)) + GameStateDigest.Describe(map);
+                // The map's file without its format version, so a format bump that leaves generated maps alone does not show here.
+                var document = MapConverter.ToDocument(map) with { FormatVersion = 0 };
+                var file = MapSerializer.Serialize(document) + GameStateDigest.Describe(map);
                 text.Append($"{key} size {size} seed {seed}: {Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(file)))[..16]}\n");
             }
         }

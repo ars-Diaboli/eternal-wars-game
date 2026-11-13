@@ -1,4 +1,4 @@
-# Map files (*.ewmap.json), format v38
+# Map files (*.ewmap.json), format v39
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -305,6 +305,7 @@ object MapDocument
   formatVersion: Int32
   grail: CellDocument
   height: Int32 (required)
+  heights: IReadOnlyList<IReadOnlyList<String>>
   heroes: IReadOnlyList<HeroPlacementDocument>
   maxTeams: Int32?
   minTeams: Int32?
@@ -1256,6 +1257,7 @@ object MapDocument
   formatVersion: Int32
   grail: CellDocument
   height: Int32 (required)
+  heights: IReadOnlyList<IReadOnlyList<String>>
   heroes: IReadOnlyList<HeroPlacementDocument>
   maxTeams: Int32?
   minTeams: Int32?

@@ -31,6 +31,7 @@ public static class BlankScenario
             new Hero(new HeroId(1), "Blue hero", players[0].Id, new MapPosition(1, 1)),
             new Hero(new HeroId(2), "Red hero", players[1].Id, new MapPosition(width - 2, height - 2)),
         };
+        ReliefShaper.FromTerrain(map);
         return new GameState(map, players, heroes, content: content);
     }
 }

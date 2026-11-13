@@ -47,12 +47,13 @@ namespace EternalWars.Core.Data.Maps;
 /// (<c>randomTier</c> on a monster: 0 any tier, 1–7 that tier), random towns (<c>random</c> on a town) and hero placeholders (<c>placeholder</c> on a
 /// hero), all drawn when the game starts. 36 = + the University and the War Academy (<c>skillSchool</c>; ADR-139). 37 = + the buried Grail
 /// (<c>grail</c>: a cell; omitted = drawn when the game starts on a map with obelisks) and obelisks (<c>obelisk</c>; ADR-140). 38 = + the arena
-/// switch (<c>rules.arena</c>; omitted = off) and combat places (<c>combatPlace</c>; ADR-097, ADR-100). Older versions still
+/// switch (<c>rules.arena</c>; omitted = off) and combat places (<c>combatPlace</c>; ADR-097, ADR-100). 39 = + the ground's height
+/// (<c>heights</c>, one character per tile corner, ADR-182; omitted = flat at 0; older maps get their terrain's heights). Older versions still
 /// load: <see cref="MapSerializer"/> upgrades their JSON first (<see cref="MapMigrations"/>, ADR-174), so this record is the current format only.
 /// </remarks>
 public sealed record MapDocument
 {
-    public const int CurrentFormatVersion = 38;
+    public const int CurrentFormatVersion = 39;
 
     /// <summary>The format the document is in; a file read through <see cref="MapSerializer"/> has been upgraded to the current one.</summary>
     public int FormatVersion { get; init; } = CurrentFormatVersion;
@@ -73,6 +74,13 @@ public sealed record MapDocument
 
     /// <summary>Same shape as <see cref="Terrain"/> (<see cref="RiverCodes"/>); omitted when the map has no rivers (v22).</summary>
     public IReadOnlyList<IReadOnlyList<string>>? Rivers { get; init; }
+
+    /// <summary>
+    /// The ground's height per tile corner (v39, ADR-182, <see cref="HeightCodes"/>): one entry per level, each <see cref="Height"/> + 1 rows of
+    /// <see cref="Width"/> + 1 chars. Omitted when every corner is 0 (ground never shaped). A map older than v39 is upgraded with its terrain's
+    /// heights (<see cref="MapMigrations"/>).
+    /// </summary>
+    public IReadOnlyList<IReadOnlyList<string>>? Heights { get; init; }
 
     public IReadOnlyList<PlayerSlotDocument> Players { get; init; } = [];
 

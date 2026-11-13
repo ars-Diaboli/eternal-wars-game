@@ -194,7 +194,11 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - Terrain rules are data (`GameState.Terrains`, `TerrainCatalog`, ADR-045). **All movement cost goes through
   `MovementRules.StepCost`** (road → road, else terrain being left, ×1.41 diagonal; `ArmyTown` native-terrain rule);
   `PathFinder` uses it too, so a planned route costs what walking it costs.
-- Roads and rivers are extra per-tile layers on `AdventureMap`.
+- Roads and rivers are extra per-tile layers on `AdventureMap`. The ground's height is a per-corner layer beside them (ADR-182,
+  `ReliefShaper`, `GroundHeightAt`), for looks only: no rule reads it. Views put things on it with `MapSpace.ToGround` (and
+  `OnSlope` for flat markers) and pick tiles with `MapSpace.PickTile(camera, point, map, level)`, which follows the slopes. The editor
+  shapes it through `MapEditorSession.Heights` (`HeightEditor`); terrain painting (Auto height) and object placement shape it inside their
+  own commands. Every change publishes `GroundHeightsChanged(level, area)` and the views re-place what stands in the area.
 - Teams: `Player.Team`; `AreAllies` / `AreEnemies` drive encounters (own → exchange, enemy → battle, ally → blocked).
 - `FogOfWar` and `ObjectMemory` (last known object state per player) are maintained by `VisibilityService`. **Player
   views draw objects from memory, never live state.**

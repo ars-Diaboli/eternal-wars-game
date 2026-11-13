@@ -7,7 +7,7 @@
 // Two looks, same mask:
 //  - Dark: a starry void. Three star layers and a nebula lie on planes far below the map, so they shift with true parallax as the camera
 //    pans, rotates and zooms; the nebula drifts and the stars twinkle. The edge of the explored land darkens before the stars come in.
-//  - Clouds: two cloud layers on planes above the ground, drifting with the wind, lit on top and grey in the folds; billowy edges.
+//  - Clouds: two cloud layers on planes above the highest ground, drifting with the wind, lit on top and grey in the folds; billowy edges.
 // Optional textures (textures/fog/nebula.png, clouds.png) replace the procedural nebula and add detail to the clouds.
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, depth_test_disabled, cull_disabled, fog_disabled, shadows_disabled;
@@ -17,7 +17,9 @@ uniform sampler2D depth_texture : hint_depth_texture, filter_nearest, repeat_dis
 // R = hidden (1 = unexplored), G = out of sight (1 = explored but not in sight; refog mode). One texel a tile, with a hidden border.
 uniform sampler2D fog_mask : filter_linear, repeat_disable;
 uniform vec2 mask_size = vec2(3.0);
+// The level's base (flat ground, sea level) and its highest ground (ADR-182): the clouds float above the latter.
 uniform float ground_y = 0.0;
+uniform float top_y = 0.0;
 uniform int look = 0; // 0 = dark, 1 = clouds
 
 uniform sampler2D nebula_texture : source_color, filter_linear_mipmap, repeat_enable;
@@ -212,8 +214,8 @@ void fragment() {
 		ALPHA = clamp(alpha, 0.0, 1.0);
 	} else {
 		vec2 wind = vec2(0.22, 0.09) * time;
-		vec2 high = on_plane(origin, dir, ground_y + 6.0) + wind;
-		vec2 low = on_plane(origin, dir, ground_y + 3.0) + wind * 1.6;
+		vec2 high = on_plane(origin, dir, top_y + 6.0) + wind;
+		vec2 low = on_plane(origin, dir, top_y + 3.0) + wind * 1.6;
 		float n1 = fbm(high * 0.11, 5);
 		float n2 = fbm(low * 0.19 + 5.0, 4);
 		if (has_cloud_texture) {
