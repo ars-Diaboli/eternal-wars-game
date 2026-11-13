@@ -2096,7 +2096,8 @@ template for the generator (ADR-100). No rule or map format change. Layouts and 
   result window as on any map.
 
 ### ADR-181: Adventure map relief: a height per map, set by the generator and the editor (ADR-011, ADR-075, 2026-11-12)
-**Status**: accepted (the owner's note in `ideas.md`, 2026-11-12); not built. Points marked *(proposal)* are the agent's and wait for MAP-37.
+**Status**: accepted (the owner's note in `ideas.md`, 2026-11-12); not built. The points marked *(proposal)* were confirmed with MAP-37 in
+ADR-182, which holds the details.
 Changes ADR-075's "height follows the tile terrain": the height is now the map's own data, which terrain only suggests.
 
 - **Variable height**: the adventure map's ground has a height of its own, kept in the map. The limits are ADR-075's: walkable ground lies
@@ -2114,3 +2115,34 @@ Changes ADR-075's "height follows the tile terrain": the height is now the map's
 - **Needs**: a map format bump with a migration that gives older maps their terrains' heights (ADR-174); a generator pass and a generator
   version bump; the 3D map's mesh, and the things standing on it, at the ground's height. Built with the heightmapped terrain (roadmap,
   "Platform and art").
+
+### ADR-182: MAP-37 answered: how the relief is stored, generated and edited (ADR-075, ADR-174, ADR-181, 2026-11-13)
+**Status**: implemented (the owner: "use proposals", 2026-11-13; built in five steps, [plan](archive/relief-plan.md)). "Heights from terrain"
+for a selection is the Height tool's "From terrain" brush (the editor has no selection tool).
+MAP-37 leaves the open questions. The heights are placeholders,
+tuned once the look-dev spike shows them.
+
+- **a. Looks only**: height changes no rule: not movement cost, sight, the AI, pathfinding or battles (the battlefield stays flat). Core
+  rules never read it; it lives in the map so the generator, the editor, saves and the 3D view share one copy.
+- **b. Rocks**: walkable rocky ground is high but inside the limit (3.5); impassable rock stands above it (4.5–6), as ADR-075's cliffs.
+- **c. Heights by terrain** (cell widths): swamp, shallow water and ice 0–0.25; beach 0.5; sand 0.75; grass, dirt and cursed lands 1; forest
+  floor and subterranean 1.25; wasteland 1.5; snow 2; rough 2.5; highlands 3; lava 3.25; rocky ground 3.5; deep water −0.5; impassable rock
+  4.5–6. One table in core, used by the generator, the migration and the editor's "Heights from terrain".
+- **d. Storage**: one height **per tile corner** (a grid one larger than the map each way, per level), in steps of **1/8 cell width**
+  (whole numbers in the file), so neighbouring tiles always meet and slopes are smooth without extra rules. A map format version bump.
+- **e. Generator**: a pass once the terrain is final (after the passages and scenery change it; then objects are levelled): each corner
+  takes its terrain's height, blended over about **3 tiles** where terrains meet, plus gentle noise from the seed (±0.25; none on shallow
+  water and ice; dunes of ±0.15 in rows on sand). Generator version 10; the noise draws only from its own seed streams.
+- **f. Objects on a slope**: the ground under an object's footprint is levelled to its entrance's height, by the generator and when the
+  editor places an object. Roads and rivers follow the ground; a river is not made to run downhill.
+- **g. Editor tools**: raise, lower, level (to the height under the cursor) and smooth, with the terrain brush's radius and strength,
+  undoable through `MapEditorSession`; "Heights from terrain" for a selection or the whole map. Painting terrain moves the height to the new
+  terrain's only while **"Auto height"** is on (on by default).
+- **h. Limits**: walkable terrains are clamped to 0–4, water below 0, impassable rock above 4; nothing more is enforced (a map maker may put
+  swamp on a plateau) and the validator does not warn.
+- **i. Underground**: the same limits and tools; no ceiling is drawn.
+- **j. Older maps** (Ember March, the arenas, saved maps): when loaded they get their terrains' heights with the generator's blending but no
+  noise (format v39, ADR-174: the upgrade step computes the height layer from the terrain), and can be reshaped in the editor
+  afterwards. Maps built in code (`MapSketch`, Ember March) get the
+  same heights from terrain when built.
+- **Plan**: [archive/relief-plan.md](archive/relief-plan.md).

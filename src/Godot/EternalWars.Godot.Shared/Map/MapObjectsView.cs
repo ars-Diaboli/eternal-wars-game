@@ -43,6 +43,15 @@ public partial class MapObjectsView : Node3D
         this.SubscribeWhileInTree<MineOwnerChanged>(events, e => RebuildLive(e.Mine));
         this.SubscribeWhileInTree<DwellingOwnerChanged>(events, e => RebuildLive(e.Dwelling));
         this.SubscribeWhileInTree<ProviderOwnerChanged>(events, e => RebuildLive(e.Provider));
+        // The editor reshaped the ground: what stands there is placed again on it.
+        this.SubscribeWhileInTree<GroundHeightsChanged>(events, e =>
+        {
+            if (e.Level == _level)
+            {
+                Known().Where(k => k.Definition.Footprint.OccupiedCells.Any(c => e.Area.Touches(k.Position.Offset(c.Dx, c.Dy))))
+                    .Select(k => k.Id).ToList().ForEach(Rebuild);
+            }
+        });
     }
 
     private void RebuildLive(MapObjectId id)
@@ -90,7 +99,7 @@ public partial class MapObjectsView : Node3D
         var color = known.Definition.Colour is { } colour ? Palette.ForColour(colour) : Palette.ForObject(known.Definition.Kind);
         foreach (var (dx, dy, cell) in known.Definition.Footprint.OccupiedCells)
         {
-            var at = MapSpace.ToWorld(known.Position.Offset(dx, dy));
+            var at = MapSpace.ToGround(_context.State.Map, known.Position.Offset(dx, dy));
             if (cell == FootprintCell.Blocked)
             {
                 root.AddChild(Box(new Vector3(0.9f, 0.5f, 0.9f), at + (Vector3.Up * 0.25f), color));
@@ -102,8 +111,8 @@ public partial class MapObjectsView : Node3D
             }
         }
 
-        AddShape(root, known, color);
-        var top = MapSpace.ToWorld(known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
+        AddShape(root, known, color, MapSpace.ToGround(_context.State.Map, known.Position));
+        var top = MapSpace.ToGround(_context.State.Map, known.Position) + new Vector3((known.Definition.Footprint.Width - 1) / 2f, 0.9f, 0);
         if (known.Definition.Kind is MapObjectKind.Mine or MapObjectKind.Town or MapObjectKind.Dwelling or MapObjectKind.ResourceProvider)
         {
             root.AddChild(Box(new Vector3(0.3f, 0.3f, 0.05f), top, known.Owner is { } owner ? Palette.ForPlayer(owner) : Palette.Neutral));
@@ -114,7 +123,7 @@ public partial class MapObjectsView : Node3D
             root.AddChild(new Label3D
             {
                 Text = caption,
-                Position = MapSpace.ToWorld(known.VisitPosition()) + (Vector3.Up * 0.8f),
+                Position = MapSpace.ToGround(_context.State.Map, known.VisitPosition()) + (Vector3.Up * 0.8f),
                 Billboard = BaseMaterial3D.BillboardModeEnum.Enabled,
                 PixelSize = 0.006f,
                 Modulate = Colors.White,
@@ -150,9 +159,8 @@ public partial class MapObjectsView : Node3D
     /// Placeholder shapes that tell the quest objects apart (EVT-5) until there are models: a Seer's Hut gets a pointed roof over its building, a
     /// Quest Guard a standing figure with a spear, a Quest Gate two posts and a lintel over its cell.
     /// </summary>
-    private static void AddShape(Node3D root, KnownObject known, Color color)
+    private static void AddShape(Node3D root, KnownObject known, Color color, Vector3 at)
     {
-        var at = MapSpace.ToWorld(known.Position);
         switch (known.Definition.Kind)
         {
             case MapObjectKind.SeerHut:

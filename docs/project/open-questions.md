@@ -7,39 +7,11 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-12**: MAP-37 (the adventure map's relief) added from the owner's note (ADR-181).
+**Updated 2026-11-13**: MAP-37 (the adventure map's relief) answered with the proposals (ADR-182).
 
 ## 🚧 Blocking now
 
-<a id="map-37"></a>
-**🚧 MAP-37 Adventure map relief** (ADR-181; stops the roadmap's relief items). The note sets the direction; these points decide how it is
-built.
-
-- **a. Does height change the rules?** Movement cost uphill, how far a hero sees from high ground, or anything in battle.
-  **Proposal**: no, it is looks only (ADR-075), so core rules never read it and the AI and pathfinding stay as they are.
-- **b. "Rocks" as high ground**: the walkable rocky ground, the impassable rock, or both?
-  **Proposal**: both: rocky ground is high but inside the limit (3.5), impassable rock stands above it (4.5–6), as ADR-075's cliffs.
-- **c. The placeholder heights** (cell widths; walkable 0–4): swamp, shallow water and ice 0–0.25; beach 0.5; sand 0.75; grass, dirt and
-  cursed lands 1; forest floor and subterranean 1.25; wasteland 1.5; snow 2; rough 2.5; highlands 3; lava 3.25; rocky ground 3.5; deep
-  water −0.5. **Proposal**: these, tuned once the look-dev spike shows them.
-- **d. How it is stored**: one height per tile, or per tile corner. **Proposal**: per corner (a grid one larger than the map each way), in
-  steps of 1/8 cell width, so neighbouring tiles always meet and slopes are smooth without extra rules.
-- **e. How the generator varies it**: every zone of one terrain at the same height, or hills and hollows inside a zone.
-  **Proposal**: the terrain's height plus gentle noise from the seed (±0.25; none on shallow water and ice; dunes of ±0.15 in rows on
-  sand), blended over about 3 tiles where terrains meet.
-- **f. Objects on a slope**: towns, mines and other multi-tile objects. **Proposal**: the ground under an object's footprint is levelled
-  to its entrance's height, by the generator and when the editor places it; roads and rivers follow the ground (a river is not made to
-  run downhill).
-- **g. The editor's tools**. **Proposal**: raise, lower, level (to the height under the cursor) and smooth, with the terrain brush's
-  radius and strength, undoable; "Heights from terrain" for a selection or the whole map. Painting terrain moves the height to the new
-  terrain's only while an "Auto height" switch is on (on by default).
-- **h. Limits in the editor**: only the map's limits (0–4 walkable), or a range per terrain too (water stays below 0, rock above 4,
-  shallow water flat)? **Proposal**: walkable terrains are clamped to 0–4, water below 0, impassable rock above 4; nothing more is
-  enforced, so a map maker may put swamp on a plateau; the validator does not warn.
-- **i. The underground level**. **Proposal**: the same limits and tools; no ceiling is drawn.
-- **j. Maps made before** (Ember March, the arenas, saved maps): **Proposal**: they get their terrains' heights with the generator's
-  blending but no noise when loaded, and can be reshaped in the editor afterwards.
-- Answer - use proposals;
+Nothing blocking.
 
 ## Heroes
 
@@ -87,7 +59,7 @@ One line per question; the ADR holds the detail.
 - **Scope**: fidelity ADR-008; art [presentation.md](../design/presentation.md); modes, platforms, harness, slice ADR-034; lore drafted by Claude.
 - **Adventure map**: scale ADR-020, camera ADR-022, terrain ADR-011/045, native terrain ADR-032, roads ADR-024/032, movement ADR-018/037, fog
   ADR-017/031, gates ADR-026, meeting heroes ADR-027, resources ADR-019, chests ADR-039, mines ADR-034, guards ADR-040/065, no sea ADR-051,
-  relief ADR-075/181 (details in MAP-37).
+  relief ADR-075/181, MAP-37 ADR-182.
 - **Objects**: MAP-1 … MAP-14 ADR-068; MAP-15 … MAP-19, MAP-21 … MAP-24 ADR-070; MAP-20 ADR-071; MAP-23 corrected ADR-072; MAP-35 (Pandora's Box) ADR-100;
   MAP-36 (the Grail's puzzle map) ADR-140.
 - **Towns**: groups ADR-010/028/029, tech tree ADR-030/046, income ADR-025, caravans ADR-054, tavern ADR-060/070, governors ADR-063, TOWN-1 fort

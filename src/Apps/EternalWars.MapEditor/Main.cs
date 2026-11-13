@@ -43,6 +43,9 @@ public partial class Main : Node3D
     private Label _status = null!;
     private Label _history = null!;
     private bool _painting;
+
+    /// <summary>The Level tool's target: the ground's height (eighths) where the stroke started.</summary>
+    private int _levelTo;
     private MapObjectId? _linkFrom;
     private GenerateRequest? _lastGenerate;
     private TabContainer _tabs = null!;
@@ -86,7 +89,8 @@ public partial class Main : Node3D
                 else if (_tools.Tool.IsBrush)
                 {
                     _painting = true;
-                    _editor.BeginStroke(_tools.Tool.Kind switch { ToolKind.Road => "Paint road", ToolKind.River => "Paint river", _ => $"Paint {_tools.Tool.Terrain}" });
+                    _levelTo = _editor.Heights.HeightAt(tile); // Level spreads the height where the stroke starts
+                    _editor.BeginStroke(_tools.Tool.StrokeDescription);
                     Paint(tile);
                 }
                 else
@@ -124,7 +128,7 @@ public partial class Main : Node3D
     }
 
     private MapPosition? Pick(Vector2 screen) =>
-        MapSpace.PickTile(_camera, screen, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
+        MapSpace.PickTile(_camera, screen, _editor.Scenario.Map, _context.Level) is { } tile && _editor.Scenario.Map.Contains(tile) ? tile : null;
 
     private void Paint(MapPosition tile)
     {
@@ -136,6 +140,17 @@ public partial class Main : Node3D
         else if (tool.Kind == ToolKind.River)
         {
             _editor.Terrain.PaintRiver(tile, tool.River, tool.Radius);
+        }
+        else if (tool.Kind == ToolKind.Height)
+        {
+            _ = tool.Height switch
+            {
+                HeightTool.Raise => _editor.Heights.Raise(tile, tool.Radius, tool.Strength),
+                HeightTool.Lower => _editor.Heights.Lower(tile, tool.Radius, tool.Strength),
+                HeightTool.Level => _editor.Heights.Level(tile, tool.Radius, tool.Strength, _levelTo),
+                HeightTool.Smooth => _editor.Heights.Smooth(tile, tool.Radius, tool.Strength),
+                _ => _editor.Heights.FromTerrain(tile, tool.Radius),
+            };
         }
         else
         {

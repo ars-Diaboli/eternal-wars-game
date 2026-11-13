@@ -55,7 +55,7 @@ public sealed class AdventureInputController(
         switch (@event)
         {
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click:
-                if (MapSpace.PickTile(camera, click.Position, context.Level) is { } tile && session.State.Map.Contains(tile))
+                if (MapSpace.PickTile(camera, click.Position, session.State.Map, context.Level) is { } tile && session.State.Map.Contains(tile))
                 {
                     ClickTile(tile);
                 }
@@ -64,7 +64,7 @@ public sealed class AdventureInputController(
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick:
                 world.PathPreview.Clear();
                 _aimedSpell = null;
-                if (MapSpace.PickTile(camera, rightClick.Position, context.Level) is { } pointed
+                if (MapSpace.PickTile(camera, rightClick.Position, session.State.Map, context.Level) is { } pointed
                     && InfoSheets.MapCell(session.State, session.State.CurrentPlayer.Id, pointed, info.Detailed) is { } sheet)
                 {
                     info.Open(sheet, rightClick.Position);

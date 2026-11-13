@@ -17,8 +17,9 @@ public sealed class MapEditorSession
     {
         ArgumentNullException.ThrowIfNull(scenario);
         _context = new EditorContext(scenario, catalog ?? MapObjectCatalog.Default, bus ?? new EventBus());
-        Terrain = new TerrainEditor(_context);
-        Objects = new ObjectEditor(_context);
+        Heights = new HeightEditor(_context);
+        Terrain = new TerrainEditor(_context, Heights);
+        Objects = new ObjectEditor(_context, Heights);
         Contents = new ObjectContentsEditor(_context);
         Monsters = new MonsterEditor(_context, Objects);
         Towns = new TownEditor(_context);
@@ -38,6 +39,9 @@ public sealed class MapEditorSession
 
     /// <summary>Terrain, roads and rivers.</summary>
     public TerrainEditor Terrain { get; }
+
+    /// <summary>The ground's height (ADR-182 g): raise, lower, level, smooth, heights from terrain, and the Auto height setting.</summary>
+    public HeightEditor Heights { get; }
 
     /// <summary>Placing and removing objects, gate links and owned objects.</summary>
     public ObjectEditor Objects { get; }

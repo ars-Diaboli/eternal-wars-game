@@ -59,6 +59,7 @@ public static partial class MapConverter
         Terrain = WriteLayer(map, p => TerrainCodes.ToCode(map.GetTerrain(p))),
         Roads = map.HasRoads ? WriteLayer(map, p => RoadCodes.ToCode(map.GetRoad(p))) : null,
         Rivers = map.HasRivers ? WriteLayer(map, p => RiverCodes.ToCode(map.GetRiver(p))) : null,
+        Heights = map.HasGroundHeights ? WriteHeights(map) : null,
     };
 
     public static AdventureMap ToMap(MapDocument document)
@@ -84,6 +85,11 @@ public static partial class MapConverter
         if (document.Rivers is { } rivers)
         {
             ReadLayer(document, rivers, "Rivers", (p, c) => map.SetRiver(p, RiverCodes.FromCode(c)));
+        }
+
+        if (document.Heights is { } heights)
+        {
+            ReadHeights(document, heights, map);
         }
 
         return map;
@@ -278,6 +284,61 @@ public static partial class MapConverter
         }
 
         return levels;
+    }
+
+    /// <summary>The corner grid (<see cref="MapDocument.Heights"/>): per level, <c>Height + 1</c> rows of <c>Width + 1</c> codes.</summary>
+    internal static List<IReadOnlyList<string>> WriteHeights(AdventureMap map)
+    {
+        var levels = new List<IReadOnlyList<string>>(map.Levels);
+        var row = new StringBuilder(map.Width + 1);
+        for (var level = 0; level < map.Levels; level++)
+        {
+            var rows = new List<string>(map.Height + 1);
+            for (var cy = 0; cy <= map.Height; cy++)
+            {
+                row.Clear();
+                for (var cx = 0; cx <= map.Width; cx++)
+                {
+                    row.Append(HeightCodes.ToCode(map.GetCorner(level, cx, cy)));
+                }
+
+                rows.Add(row.ToString());
+            }
+
+            levels.Add(rows);
+        }
+
+        return levels;
+    }
+
+    private static void ReadHeights(MapDocument document, IReadOnlyList<IReadOnlyList<string>> layer, AdventureMap map)
+    {
+        if (layer.Count != document.Terrain.Count)
+        {
+            throw new FormatException($"Heights has {layer.Count} levels, expected {document.Terrain.Count}.");
+        }
+
+        for (var level = 0; level < layer.Count; level++)
+        {
+            var rows = layer[level];
+            if (rows.Count != document.Height + 1)
+            {
+                throw new FormatException($"Heights level {level} has {rows.Count} rows, expected {document.Height + 1}.");
+            }
+
+            for (var cy = 0; cy < rows.Count; cy++)
+            {
+                if (rows[cy].Length != document.Width + 1)
+                {
+                    throw new FormatException($"Heights level {level}, row {cy} has {rows[cy].Length} corners, expected {document.Width + 1}.");
+                }
+
+                for (var cx = 0; cx < rows[cy].Length; cx++)
+                {
+                    map.SetCorner(level, cx, cy, HeightCodes.FromCode(rows[cy][cx]));
+                }
+            }
+        }
     }
 
     private static void ReadLayer(

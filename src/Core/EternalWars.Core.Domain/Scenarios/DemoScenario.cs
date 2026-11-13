@@ -115,6 +115,7 @@ public static class DemoScenario
             MakeWalkable(hero.Position);
         }
 
+        ReliefShaper.Shape(map, objects);
         return new GameState(map, players, heroes, objects, content: content);
 
         void Monster(string creature, int? count, GuardDisposition disposition, MapPosition position)

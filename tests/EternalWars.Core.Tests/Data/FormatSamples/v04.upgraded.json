@@ -1,5 +1,5 @@
 {
-  "formatVersion": 38,
+  "formatVersion": 39,
   "name": "Version 4 sample",
   "description": "Hero armies and Tactics, monsters, mine guards and the map-wide guard mode.",
   "width": 12,
@@ -22,6 +22,17 @@
       "............",
       "............",
       "............"
+    ]
+  ],
+  "heights": [
+    [
+      "8888888888888",
+      "8888888888888",
+      "8888888888888",
+      "8888888888888",
+      "8888888888888",
+      "8888888888888",
+      "8888888888888"
     ]
   ],
   "players": [

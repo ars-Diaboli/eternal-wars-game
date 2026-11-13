@@ -110,10 +110,11 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   warns that the seed may give another map.
 
 ## Relief
-*Planned* (ADR-181, ❓ MAP-37): a pass after the terrain gives the ground its height by terrain, within the
-[relief's limits](presentation.md#art-direction): swamp, shallow water and ice very low; rocky ground, lava and highlands high; the other
-terrains at placeholder heights in between. Heights blend smoothly where terrains meet; shallow water and ice stay mostly flat, sand gets
-shallow wave-like dunes.
+(ADR-181, ADR-182.) The last pass (`ReliefPainter`), once the passages and scenery have settled the terrain,
+gives every tile corner its terrain's height ([the table and limits](presentation.md#art-direction)), blended over about 3 tiles where
+terrains meet, plus gentle noise from the seed: ±0.25 cell widths, none on shallow water and ice, dunes of ±0.15 in rows on sand (each zone
+draws their direction). It draws only from its own streams (`heights` per level, `dunes` per zone), so nothing else on the map depends on
+it. The ground under each multi-tile object's footprint is then levelled to its entrance's height; roads and rivers follow the ground.
 
 ## Editor
 "Generate" (`EditorMapGenerator.Generate`, ADR-087) opens a new map (and undo history) like "New": a template (refused with errors), a size,
