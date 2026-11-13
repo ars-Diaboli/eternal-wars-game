@@ -239,7 +239,8 @@ into Core.Domain; `data/templates` into Core.Data. Apps use the embedded copy (`
 - App `.csproj` files state `<TargetFramework>net10.0</TargetFramework>` explicitly (Godot cannot see
   `Directory.Build.props` and would insert `net8.0`).
 - View composition (`Godot.Shared/Map`): `MapViewContext` (viewing player, shown level; raises a C# event) →
-  `AdventureWorldView` composes per level `AdventureMapView`, `MapObjectsView` (viewer's `ObjectMemory`, or live objects
+  `AdventureWorldView` composes per level `AdventureMapView` (the ground: one mesh, splat-shaded by `TerrainSplat` /
+  `shaders/terrain_splat.gdshader`, the tile grid as its overlay, `MapViewContext.ShowGrid`; ADR-183), `MapObjectsView` (viewer's `ObjectMemory`, or live objects
   without a viewer), `FogView`, `HeroView`s, `PathPreview`. Game and editor both use it. Panels live in `Godot.UI`
   (`Hud`, `Setup`, `Editor`, `Battle`, `Debugging`). The game's adventure HUD and its screens are one `AdventureHud`; the map's and the
   battle scene's clicks and keys are `AdventureInputController` and `BattleInputController` (deployment drags: `DeploymentDragController`);

@@ -45,6 +45,26 @@ public class SettingsFileTests
     }
 
     [Fact]
+    public void TheGrid_IsKeptWithTheInterfaceSettings_AndOffWhenTheFileHasNone()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
+        try
+        {
+            SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(Fog: FogLook.Clouds, ShowGrid: true));
+
+            Assert.True(SettingsFile.LoadInterface(path).ShowGrid);
+            Assert.Equal(FogLook.Clouds, SettingsFile.LoadInterface(path).Fog);
+            Assert.Contains("\"showGrid\": true", File.ReadAllText(path), StringComparison.Ordinal);
+            Assert.False(InterfaceSettings.Default.ShowGrid);
+            Assert.False(SettingsFile.ReadInterface("{\"interface\": {\"fog\": \"Clouds\"}}").ShowGrid);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
+        }
+    }
+
+    [Fact]
     public void TheFogLook_IsKeptWithTheInterfaceSettings_AndDarkWhenTheFileHasNone()
     {
         var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);

@@ -32,6 +32,7 @@ public partial class GameMenuPanel : CenterContainer
     private SpeedSettings _speeds = SpeedSettings.Default;
     private readonly CheckBox _detailed = new() { Text = "Detailed tooltips (formulas and numbers in the right-click windows)" };
     private readonly OptionButton _fog = Choices("Dark (starry void)", "Clouds");
+    private readonly CheckBox _grid = new() { Text = "Show the tile grid on the map" };
     private InterfaceSettings _interface = InterfaceSettings.Default;
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(580, 340), UseHiddenTabsForMinSize = true }; // the same size on every tab
     private readonly OptionButton _initiativeBar = Choices("Top", "Bottom");
@@ -145,6 +146,8 @@ public partial class GameMenuPanel : CenterContainer
         _detailed.Toggled += on => ChangeInterface(_interface with { DetailedTooltips = on });
         settings.AddRow("Fog of war", _fog, 180);
         _fog.ItemSelected += index => ChangeInterface(_interface with { Fog = (FogLook)index });
+        settings.AddChild(_grid);
+        _grid.Toggled += on => ChangeInterface(_interface with { ShowGrid = on });
 
         // Layout (ADR-118, UI-3; ADR-156): where the screens put their parts, kept on this computer; applied at once.
         layout.AddChild(new Label { Text = "Where the screens put their parts (kept on this computer)" });
@@ -253,6 +256,7 @@ public partial class GameMenuPanel : CenterContainer
         _interface = settings;
         _detailed.SetPressedNoSignal(settings.DetailedTooltips);
         _fog.Selected = (int)settings.Fog;
+        _grid.SetPressedNoSignal(settings.ShowGrid);
     }
 
     private void ChangeInterface(InterfaceSettings settings)

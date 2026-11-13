@@ -9,9 +9,11 @@ creatures and buildings, heraldic player colours, iconic map objects).
   be decided by a perf spike. Day / night tint per in-game day ❓.
 - **Palette**: desaturated earth tones; player colours and interactive objects stay saturated so the map reads in a dark scene.
 - **Materials**: PBR (albedo / normal / roughness), weathered and worn. **Post**: subtle grading, bloom on magic only, vignette.
-- **Terrain** (ADR-011) *(planned; now one triplanar mesh per terrain over the relief's corner heights, a faint tile grid on it, and placeholder objects and units)*: a smooth heightmapped landscape
-  (splatting, triplanar slopes, blended biomes); the grid shows only as an overlay (hover, path, range, editor). Visual height must not
-  contradict core tile data (cliffs = rock tiles).
+- **Terrain** (ADR-011, ADR-183) *(placeholder textures, objects and units)*: a smooth heightmapped landscape; the terrains' textures
+  run into each other where biomes meet, along rounded, wandering lines that do not follow the tile grid (a single tile of another
+  terrain is a round patch, a diagonal border a slanted line); cliffs are textured from the sides. Visual height must not contradict core tile data (cliffs = rock tiles).
+- **Tile grid** (ADR-183): an overlay of thin lines on the tile edges, a setting on this computer: "Show the tile grid on the map" in the
+  F10 menu's "Settings" tab, off by default; the map editor has its own "Grid" box, on by default.
 - **Relief** (ADR-075, ADR-181, ADR-182, Warcraft III-like): looks only; no rule, the AI or a battle reads it, and the
   battlefield stays flat. Walkable ground lies between **0 and 4 cell widths** high, water below 0, impassable rock above 4 (4.5–6, the
   cliffs). The height is the map's own data, one value **per tile corner** in steps of 1/8 cell width, so tiles always meet and slopes are
@@ -30,7 +32,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
 - **UI**: by default a HoMM-style right panel (minimap, hero and town lists, the action panel), the turn, resources and status at the top
-  left, full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips)
+  left, full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the fog's look, the tile grid)
   and "Layout".
 - **Layout** (ADR-118, ADR-156): the "Layout" tab sets the battle's initiative bar (top or bottom), the minimap's corner, the hero and town
   lists (beside the minimap, or as rows along the bottom) and the action panel's side (kingdom, quests, puzzle map, dig, marketplace). The
