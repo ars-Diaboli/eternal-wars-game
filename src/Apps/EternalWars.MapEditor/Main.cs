@@ -32,6 +32,7 @@ public partial class Main : Node3D
 
     private MapEditorSession _editor = null!;
     private MapViewContext _context = null!;
+    private bool _showGrid = true; // the editor's own toggle, kept from map to map
     private StrategyCamera _camera = null!;
     private Node3D? _world;
     private CanvasLayer? _ui;
@@ -243,7 +244,7 @@ public partial class Main : Node3D
         _linkFrom = null;
 
         _editor = new MapEditorSession(state);
-        _context = new MapViewContext(state, _editor.Events);
+        _context = new MapViewContext(state, _editor.Events) { ShowGrid = _showGrid };
         var world = new AdventureWorldView { Name = "World" };
         _world = world;
         AddChild(world);
@@ -286,6 +287,9 @@ public partial class Main : Node3D
         AddButton(fileRow, "Undo", () => _editor.Undo());
         AddButton(fileRow, "Redo", () => _editor.Redo());
         AddButton(fileRow, "Level (L)", () => _context.SetLevel((_context.Level + 1) % _editor.Scenario.Map.Levels));
+        var grid = new CheckBox { Text = "Grid", ButtonPressed = _showGrid, TooltipText = "Show the tile grid on the ground" };
+        grid.Toggled += on => _context.ShowGrid = _showGrid = on;
+        fileRow.AddChild(grid);
 
         _status = new Label();
         rows.AddChild(_status);

@@ -1,8 +1,9 @@
 # Terrain textures
 
 Placeholder ground textures taken from the earlier sandbox project (`reference/ew`), one per `TerrainType`.
-Rendered with world-space triplanar UVs by `AdventureMapView`; a missing file falls back to the flat
-`Palette` colour. Snow and ice have no texture yet.
+The adventure map blends them in `shaders/terrain_splat.gdshader` (`TerrainSplat` puts them into one texture array,
+1024 px a layer; other sizes are resized); the battlefield uses one with world-space triplanar UVs. A missing file
+falls back to the flat `Palette` colour. Snow and ice have no texture yet.
 
 | File | Source (sandbox file) | Licence |
 |---|---|---|

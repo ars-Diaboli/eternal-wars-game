@@ -2146,3 +2146,25 @@ tuned once the look-dev spike shows them.
   afterwards. Maps built in code (`MapSketch`, Ember March) get the
   same heights from terrain when built.
 - **Plan**: [archive/relief-plan.md](archive/relief-plan.md).
+
+### ADR-183: The ground is one splat-shaded mesh; the tile grid is an overlay and a setting (ADR-011, ADR-182, 2026-11-13)
+**Status**: implemented. Rendering only: no rule, save or map format changes.
+
+- **One mesh a level** (`AdventureMapView`): a vertex per tile corner, shared by the tiles around it, and one per tile centre, at the
+  relief's heights (ADR-182), so the surface is unchanged and `MapSpace.ToGround` and picking still meet it. One draw call whatever the map
+  size. Only a change of heights rebuilds it.
+- **Splat shader** (`shaders/terrain_splat.gdshader`, `TerrainSplat`): the terrains' textures are the layers of one texture array (1024 px,
+  built once from `textures/terrain/`, shared by every level; a texture borrowed by several terrains is one layer with a tint per terrain;
+  a terrain without a texture is its palette colour). Which terrain a tile has is a map-sized texture, one texel a tile, so painting
+  terrain changes texels, not the mesh.
+- **Blended biomes, not following the grid**: a terrain's influence at a pixel is the tile picture blurred over the 3 × 3 tiles around it
+  with a round kernel that reaches 1.5 tiles, so a single tile of another terrain is a round patch (not a square) and a diagonal staircase
+  of tiles a slanted line; the place the picture is read at is pushed about by a slow noise (up to about a third of a tile), so borders
+  wander. Where influences are close the terrains mix, the brighter texels of each ground first, so one ground creeps into the other
+  rather than cross-fading. Broad lighter and darker patches break up wide plains. Steep ground (cliffs) is also textured from the sides.
+- **The grid is an overlay** of the same shader: thin anti-aliased lines on the tile edges that fade out when zoomed far away. It is a
+  setting: in the game "Show the tile grid on the map" (the F10 menu's "Settings" tab, `InterfaceSettings.ShowGrid`, kept in
+  `settings.json`, **off by default**); in the map editor a "Grid" box beside "Level", on by default and not saved. Views read it from
+  `MapViewContext.ShowGrid`.
+- **Not changed**: the battlefield keeps its single-terrain material (`AdventureMapView.TerrainMaterial`); roads and rivers stay plates on
+  the ground; the textures are still the placeholders (no normal or roughness maps yet: the look-dev spike and the PBR art).

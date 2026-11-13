@@ -30,7 +30,7 @@ public partial class AdventureWorldView : Node3D
 
             var map = new AdventureMapView { Name = "Terrain" };
             root.AddChild(map);
-            map.Bind(state.Map, context.Events, level);
+            map.Bind(context, level);
 
             var objects = new MapObjectsView { Name = "Objects" };
             root.AddChild(objects);
