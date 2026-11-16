@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Godot.UI.Hud;
 using Godot;
 
@@ -38,6 +39,19 @@ public partial class NewGameScreen
     private string _lanShown = "";
     private double _lanClock;
     private bool _openConfirmed;
+
+    /// <summary>The simultaneous first week's switch (a LAN host's lobby only: made when first asked for, so a screen out of the tree holds no node).</summary>
+    private CheckBox? _simultaneousBox;
+
+    private CheckBox Simultaneous => _simultaneousBox ??= new()
+    {
+        Text = "Simultaneous first week",
+        FocusMode = Control.FocusModeEnum.None,
+        TooltipText = "The people play each day of the first week at once, each on their own computer, the computer players after them. A hero "
+                      + "entering another person's start zone, seeing another person's hero or visiting what another person visited that day has "
+                      + "the day played again turn by turn, and every day after it. It needs a start zone for every person (random maps have "
+                      + "them; hand-made maps get them in the editor) and one colour here; otherwise the days are played turn by turn.",
+    };
     private ChatPanel? _chat;
 
     /// <summary>Set before <see cref="Bind"/>: the screen is a LAN host's lobby.</summary>
@@ -66,6 +80,7 @@ public partial class NewGameScreen
         var fog = _fog.GetItemText(_fog.Selected);
         settings.Add(SelectedFog == Core.Domain.Game.FogMode.ShroudWithRefog ? $"Fog of war: {fog}, refog margin {(int)_margin.Value}" : $"Fog of war: {fog}");
         settings.Add($"Complexity: {_complexity.GetItemText(_complexity.Selected)}; turn timer: {_timer.GetItemText(_timer.Selected)}");
+        settings.Add(_simultaneousBox?.ButtonPressed == true ? "The first week's days are played at once." : "Every day is played turn by turn.");
 
         var seats = new List<LanSeat>();
         for (var i = 0; i < _seatNames.Count; i++)
@@ -175,15 +190,16 @@ public partial class NewGameScreen
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             CustomMinimumSize = new Vector2(520, 0),
         });
-        box.AddChild(new CheckBox
-        {
-            Text = "Simultaneous first week",
-            Disabled = true,
-            FocusMode = FocusModeEnum.None,
-            TooltipText = "Everyone plays the first week's days at once. It needs maps with start zones, which come later (MP-2, MP-4): "
-                          + "for now the days are played turn by turn.",
-        });
+        box.AddChild(Simultaneous);
     }
+
+    /// <summary>
+    /// A LAN game's options: the simultaneous first week (MP-2, ADR-197), with the colour played here as the host's; off outside a LAN host's
+    /// lobby.
+    /// </summary>
+    private GameOptions WithLan(GameOptions options) => Lan is null || _simultaneousBox?.ButtonPressed != true
+        ? options
+        : options with { SimultaneousFirstWeek = true, HostPlayer = DescribeLan().Seats.FirstOrDefault(s => s.Kind == LanSeatKind.Here)?.Id };
 
     private void AddLanHeader()
     {
@@ -228,6 +244,11 @@ public partial class NewGameScreen
         if (seats.All(s => s.Kind != LanSeatKind.Here))
         {
             return "Play at least one colour here, on this computer.";
+        }
+
+        if (_simultaneousBox?.ButtonPressed == true && seats.Count(s => s.Kind == LanSeatKind.Here) > 1)
+        {
+            return "A simultaneous first week needs each person on their own computer: play one colour here, or turn it off.";
         }
 
         var open = seats.Where(s => s.Kind == LanSeatKind.Remote && _lanPlayerAt(s.Id) is null).Select(s => s.Colour).ToList();

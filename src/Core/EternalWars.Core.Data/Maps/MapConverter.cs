@@ -60,6 +60,7 @@ public static partial class MapConverter
         Roads = map.HasRoads ? WriteLayer(map, p => RoadCodes.ToCode(map.GetRoad(p))) : null,
         Rivers = map.HasRivers ? WriteLayer(map, p => RiverCodes.ToCode(map.GetRiver(p))) : null,
         Heights = map.HasGroundHeights ? WriteHeights(map) : null,
+        StartZones = map.HasStartZones ? WriteLayer(map, p => map.GetStartZone(p) is { } owner ? (char)('0' + owner.Value) : '.') : null,
     };
 
     public static AdventureMap ToMap(MapDocument document)
@@ -90,6 +91,16 @@ public static partial class MapConverter
         if (document.Heights is { } heights)
         {
             ReadHeights(document, heights, map);
+        }
+
+        if (document.StartZones is { } zones)
+        {
+            ReadLayer(document, zones, "StartZones", (p, c) => map.SetStartZone(p, c switch
+            {
+                '.' => null,
+                >= '0' and <= '7' => new PlayerId(c - '0'),
+                _ => throw new FormatException($"Unknown start zone code '{c}'."),
+            }));
         }
 
         return map;

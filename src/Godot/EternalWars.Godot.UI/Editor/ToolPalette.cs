@@ -14,6 +14,9 @@ public enum ToolKind
     Road,
     River,
 
+    /// <summary>Paints a player's start zone, or erases zones (MP-4, ADR-197).</summary>
+    StartZone,
+
     /// <summary>Shapes the ground's height with a round brush (<see cref="HeightTool"/>, ADR-182 g).</summary>
     Height,
     Object,
@@ -56,6 +59,9 @@ public sealed record EditorTool(
     /// <summary>The river kind the River tool paints (ADR-079).</summary>
     public RiverType River { get; init; } = RiverType.Clear;
 
+    /// <summary>Whose start zone the Start zone tool paints; null erases (MP-4).</summary>
+    public PlayerId? Zone { get; init; }
+
     /// <summary>What the Height tool does.</summary>
     public HeightTool Height { get; init; } = HeightTool.Raise;
 
@@ -63,13 +69,14 @@ public sealed record EditorTool(
     public int Strength { get; init; } = 2;
 
     /// <summary>Drag painting (one undo step per stroke) rather than one edit per click.</summary>
-    public bool IsBrush => Kind is ToolKind.Terrain or ToolKind.Road or ToolKind.River or ToolKind.Height;
+    public bool IsBrush => Kind is ToolKind.Terrain or ToolKind.Road or ToolKind.River or ToolKind.StartZone or ToolKind.Height;
 
     /// <summary>The undo step a brush stroke makes.</summary>
     public string StrokeDescription => Kind switch
     {
         ToolKind.Road => "Paint road",
         ToolKind.River => "Paint river",
+        ToolKind.StartZone => Zone is null ? "Erase start zone" : "Paint start zone",
         ToolKind.Height => Height switch
         {
             HeightTool.Raise => "Raise ground",
@@ -98,7 +105,10 @@ public partial class ToolPalette : VBoxContainer
         _editor = editor;
         _tool = new EditorTool(
             ToolKind.Terrain, TerrainType.Grass, RoadType.Dirt, 0, BuiltInMapObjects.TreasureChest,
-            MonsterGuard.DefaultCreature, null, GuardDisposition.Aggressive, editor.Scenario.Players[0].Id);
+            MonsterGuard.DefaultCreature, null, GuardDisposition.Aggressive, editor.Scenario.Players[0].Id)
+        {
+            Zone = editor.Scenario.Players[0].Id,
+        };
 
         var kinds = new HBoxContainer();
         AddChild(kinds);
@@ -169,6 +179,18 @@ public partial class ToolPalette : VBoxContainer
             case ToolKind.River:
                 Choice("River", Enum.GetValues<RiverType>().Select(r => (r.ToString(), r)), _tool.River, r => _tool with { River = r });
                 Radius();
+                break;
+            case ToolKind.StartZone:
+                Choice(
+                    "Zone",
+                    _editor.Scenario.Players.Select(pl => (pl.Name, (PlayerId?)pl.Id)).Append(("Erase", (PlayerId?)null)),
+                    _tool.Zone,
+                    z => _tool with { Zone = z });
+                Radius();
+                _options.AddChild(new Label
+                {
+                    Text = "Where each player's day stays its own in a simultaneous first week; another player's hero entering it ends those days.",
+                });
                 break;
             case ToolKind.Object:
                 var definitions = _editor.Catalog.All.Where(d => d.Kind != MapObjectKind.Monster).OrderBy(d => d.Name, StringComparer.Ordinal);

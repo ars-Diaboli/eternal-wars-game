@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Network;
@@ -9,11 +10,12 @@ using Godot;
 namespace EternalWars.Game;
 
 /// <summary>
-/// LAN games (ADR-192 to ADR-195): Multiplayer on the main menu lists the games found on the network and hosts or joins one. The host sets
-/// the game up on the new-game screen, which is its lobby: players join, take open colours and chat, and the game starts with them seated. The
+/// LAN games (ADR-192 to ADR-196): Multiplayer on the main menu lists the games found on the network and hosts or joins one. The host sets
+/// the game up on the new-game screen, which is its lobby (or picks a save and how its colours are played, on the saved-game screen): players
+/// join, take open colours and chat, and the game starts with them seated. The
 /// host runs the game and plays the computer players; a client holds only its player's view, which the host keeps up to date. The chat stays over
 /// the map and the battle during the game. A battle opens only on the computers of its sides, each commanding its own. While a colour has nobody
-/// to play it the game is paused for everyone (the pause panel); the host may let the computer play it. <c>--host[=port]</c> opens the host's lobby, <c>--join=address[:port]</c> joins one (<c>--name=</c> names the player).
+/// to play it the game is paused for everyone (the pause panel); the host may let the computer play it. A client saves the host's record of the game. <c>--host[=port]</c> opens the host's lobby, <c>--join=address[:port]</c> joins one (<c>--name=</c> names the player).
 /// </summary>
 public partial class Main
 {
@@ -77,7 +79,12 @@ public partial class Main
         screen.HostRequested += name =>
         {
             _playerName = name;
-            HostLobby();
+            HostLobby(saved: false);
+        };
+        screen.HostSavedRequested += name =>
+        {
+            _playerName = name;
+            HostLobby(saved: true);
         };
         screen.JoinRequested += (name, address) =>
         {
@@ -96,10 +103,10 @@ public partial class Main
     }
 
     /// <summary>
-    /// The host's lobby: the new-game screen as a LAN host's, with the chat; players join while the host sets the game up. A port already in use
-    /// (another game hosting on this computer) is said on the Multiplayer screen.
+    /// The host's lobby: the new-game screen as a LAN host's (or, <paramref name="saved"/>, the saved-game screen), with the chat; players join
+    /// while the host sets the game up. A port already in use (another game hosting on this computer) is said on the Multiplayer screen.
     /// </summary>
-    private void HostLobby()
+    private void HostLobby(bool saved)
     {
         StopNetwork(keep: null);
         try
@@ -126,22 +133,36 @@ public partial class Main
         _lobby = lobby;
         var addresses = LanAnnouncer.LocalAddresses();
         var port = _listener.Port == TcpGameListener.DefaultPort ? "" : $":{_listener.Port}";
-        var setup = new NewGameScreen
+        var hosting = new LanHosting(_playerName, addresses.Count == 0 ? "(no network found)" : string.Join(", ", addresses.Select(a => a + port)));
+        if (saved)
         {
-            Lan = new LanHosting(_playerName, addresses.Count == 0 ? "(no network found)" : string.Join(", ", addresses.Select(a => a + port))),
-        };
+            ShowSavedGame(hosting, loaded: null, screen =>
+            {
+                screen.LanChanged += setup => SetLobbyGame(lobby, setup);
+                lobby.Changed += () => screen.ShowLanPlayers(lobby.PlayerAt);
+                lobby.ChatReceived += screen.Chat.Add;
+                screen.Chat.Said += lobby.Say;
+                screen.Chat.Add("", "You host the saved game. Players join from Multiplayer on their computers.");
+            });
+            return;
+        }
+
+        var setup = new NewGameScreen { Lan = hosting };
         ShowSetup(setup, back: ShowMultiplayer);
         BindNewGame(setup);
         setup.BackRequested += ShowMultiplayer;
-        setup.LanChanged += lan => lobby.SetGame(
-            lan.Game,
-            lan.Settings,
-            [.. lan.Seats.Select(s => new LobbySeat(s.Id, s.Colour, KindOf(s.Kind), s.Kind == LanSeatKind.Here ? _playerName : null, s.Details))]);
+        setup.LanChanged += lan => SetLobbyGame(lobby, lan);
         lobby.Changed += () => setup.ShowLanPlayers(lobby.PlayerAt);
         lobby.ChatReceived += setup.Chat.Add;
         setup.Chat.Said += lobby.Say;
         setup.Chat.Add("", $"You host. Players join from Multiplayer on their computers.");
     }
+
+    /// <summary>The game as the host has set it up, for the joined players.</summary>
+    private void SetLobbyGame(LobbyHost lobby, LanSetup setup) => lobby.SetGame(
+        setup.Game,
+        setup.Settings,
+        [.. setup.Seats.Select(s => new LobbySeat(s.Id, s.Colour, KindOf(s.Kind), s.Kind == LanSeatKind.Here ? _playerName : null, s.Details))]);
 
     private static SeatKind KindOf(LanSeatKind kind) => kind switch
     {
@@ -162,8 +183,10 @@ public partial class Main
         }
 
         _host = lobby.StartGame(session);
+        _host.RecordOf = name => GameReplay.Record(_initialMap, _session, name, _generated); // a client's save or replay (ADR-196)
         _host.ChatReceived += (from, text) => _chat?.Add(from, text);
         _host.PauseChanged += ShowPause;
+        _host.SessionReplaced += session => BeginGame(session, _initialMap, resume: true); // a simultaneous day played again (ADR-197)
     }
 
     /// <summary>Connects to the host at <paramref name="address"/> (<c>name</c> or <c>name:port</c>), joins its lobby or its game.</summary>

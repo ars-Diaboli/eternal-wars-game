@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
@@ -19,14 +20,23 @@ namespace EternalWars.Core.Network;
 /// joined it), the game is paused for everyone (<see cref="Waiting"/>): every command is refused until a player joins that colour or the host
 /// lets the computer play it (<see cref="HandToComputer"/>).
 /// </para>
+/// <para>
+/// Saves (ADR-196): a client saves the game as the host's whole record, which the host sends when asked (<see cref="RecordOf"/>); the game a
+/// host runs may be a loaded save.
+/// </para>
+/// <para>
+/// The simultaneous first week (MP-2, ADR-197): the people play each day at once, each from its own computer. On a conflict the host goes back to
+/// the day's start (its record up to <see cref="GameSession.SimultaneousDayStart"/>) and plays it again turn by turn: a new session
+/// (<see cref="SessionReplaced"/>), whose view every client gets again.
+/// </para>
 /// </summary>
 /// <remarks>Everything happens on the caller's thread in <see cref="Poll"/> (the game app calls it once a frame).</remarks>
 public sealed class GameHost : ICommandRoute, IDisposable
 {
-    private readonly GameSession _session;
     private readonly List<PlayerId> _remoteSeats;
     private readonly List<Peer> _peers = [];
-    private readonly IDisposable _subscription;
+    private GameSession _session;
+    private IDisposable _subscription;
 
     /// <summary>The colours whose player left during the game, with why, until a player joins them again or the computer takes them over.</summary>
     private readonly Dictionary<PlayerId, string> _dropped = [];
@@ -69,6 +79,12 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>A client's link went down (the colour, the player's name, why); the colour is free to join again.</summary>
     public event Action<PlayerId, string, string>? Left;
 
+    /// <summary>
+    /// A simultaneous day's conflict took the day back (ADR-197): the game goes on in this new session, the day played again turn by turn; the
+    /// host's screen shows it in place of the old one.
+    /// </summary>
+    public event Action<GameSession>? SessionReplaced;
+
     /// <summary>The game was paused or goes on again (<see cref="Waiting"/>).</summary>
     public event Action? PauseChanged;
 
@@ -80,6 +96,12 @@ public sealed class GameHost : ICommandRoute, IDisposable
 
     /// <summary>The game the host runs.</summary>
     public GameSession Session => _session;
+
+    /// <summary>
+    /// The game's whole record as the host would save it (ADR-196), given the save's name (null for a replay); a client asks for it to save the
+    /// game on its computer. Null: the host keeps none, and a client's request is refused.
+    /// </summary>
+    public Func<string?, GameRecordDocument>? RecordOf { get; set; }
 
     /// <summary>The human colours played on other computers, taken or not.</summary>
     public IReadOnlyList<PlayerId> RemoteSeats => _remoteSeats;
@@ -199,6 +221,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>Handles what the clients have sent (joins, commands) and drops the links that went down.</summary>
     public void Poll()
     {
+        PlayDayAgainIfConflicted();
         if (_session.State.IsStarted)
         {
             foreach (var peer in _peers.Where(p => p is { Seat: not null, Feed: null } && !p.Connection.IsClosed).ToList())
@@ -228,8 +251,43 @@ public sealed class GameHost : ICommandRoute, IDisposable
             }
         }
 
+        PlayDayAgainIfConflicted();
         SendViews();
         SendPause();
+    }
+
+    /// <summary>
+    /// A simultaneous day's conflict (ADR-197): the game goes back to the day's start and plays it again turn by turn, from the host's record. The
+    /// clients first get what happened up to the conflict, then the new game's view; everyone is told why.
+    /// </summary>
+    private void PlayDayAgainIfConflicted()
+    {
+        if (_session.State.SimultaneousConflict is not { } reason || RecordOf is null)
+        {
+            return;
+        }
+
+        var record = RecordOf(null);
+        var state = _session.State;
+        var by = state.Options.HostPlayer ?? state.Players.First(p => p.IsHuman).Id;
+        var again = GameReplay.Replay(
+            record with { Commands = [.. record.Commands.Take(_session.SimultaneousDayStart), new PlayTurnByTurnCommand(by, reason)], FinalDigest = null },
+            state.Content);
+
+        SendViews();
+        _subscription.Dispose();
+        _session.Route = null;
+        _session = again;
+        again.Route = this;
+        _subscription = again.Events.Subscribe<IEvent>(Capture);
+        _battleSides = [];
+        foreach (var peer in _peers.Where(p => p is { Seat: not null, Feed: not null } && !p.Connection.IsClosed))
+        {
+            SendGame(peer, peer.Seat!.Value);
+        }
+
+        Tell("", $"{reason} The day is played again, turn by turn, and so is every day after it.");
+        SessionReplaced?.Invoke(again);
     }
 
     /// <summary>
@@ -299,6 +357,10 @@ public sealed class GameHost : ICommandRoute, IDisposable
             case TakeSeat:
                 break; // asked in the lobby just before the game started
 
+            case RecordRequest ask when peer.Feed is not null:
+                peer.Connection.Send(RecordFor(ask));
+                break;
+
             default:
                 peer.Connection.Close($"The host did not expect {message.GetType().Name} now.");
                 break;
@@ -334,18 +396,8 @@ public sealed class GameHost : ICommandRoute, IDisposable
     private void Seat(Peer peer, PlayerId taken, string name)
     {
         var state = _session.State;
-        var feed = new PlayerViewFeed(state, taken);
-        var codec = new StateCodec(state);
-        peer.Seat = taken;
         peer.Name = name;
-        peer.Feed = feed;
-        peer.Connection.Send(new JoinAccepted(
-            taken,
-            MapConverter.ToDocument(state.Map),
-            [.. state.Players.Select(p => new PlayerSeat(p.Id, p.Name, p.IsHuman, p.Team))],
-            codec.Write(state.Options with { Seed = 0 })!,
-            codec.Write(state.Rules)!));
-        peer.Connection.Send(feed.First());
+        SendGame(peer, taken);
         if (_pauseSent is { } paused)
         {
             peer.Connection.Send(new GamePaused(paused)); // the next Poll tells everyone when this join ends it
@@ -354,6 +406,35 @@ public sealed class GameHost : ICommandRoute, IDisposable
         _dropped.Remove(taken);
         Tell("", $"{name} plays {state.GetPlayer(taken).Name}.");
         Joined?.Invoke(taken, name);
+    }
+
+    /// <summary>The client's colour, the game's ground and its first view (again, for a game played again from a day's start).</summary>
+    private void SendGame(Peer peer, PlayerId taken)
+    {
+        var state = _session.State;
+        var feed = new PlayerViewFeed(state, taken);
+        var codec = new StateCodec(state);
+        peer.Seat = taken;
+        peer.Feed = feed;
+        peer.Connection.Send(new JoinAccepted(
+            taken,
+            MapConverter.ToDocument(state.Map),
+            [.. state.Players.Select(p => new PlayerSeat(p.Id, p.Name, p.IsHuman, p.Team))],
+            codec.Write(state.Options with { Seed = 0 })!,
+            codec.Write(state.Rules)!));
+        peer.Connection.Send(feed.First());
+    }
+
+    /// <summary>The answer to a client's request for the game's record.</summary>
+    private RecordSent RecordFor(RecordRequest ask)
+    {
+        if (RecordOf is null)
+        {
+            return new RecordSent(ask.Request, null, "The host keeps no record of this game.");
+        }
+
+        var name = ask.SaveName is null ? null : ChatText.Clean(ask.SaveName) ?? "save";
+        return new RecordSent(ask.Request, RecordOf(name), null);
     }
 
     /// <summary>A line of the chat, to every seated client and the host.</summary>

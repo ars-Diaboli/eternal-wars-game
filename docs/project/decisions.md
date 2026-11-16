@@ -2525,3 +2525,76 @@ cannot look under its fog). *(proposal)* marks the agent's choices.
   its turn, the handover's refusals); `LanGameTests` checks that quick combat is refused between two computers.
 - **Not done**: the turn timer still runs on each computer (its roadmap item); anyone may take a dropped colour, not only the player who
   left it; a colour the computer took over does not go back to a person.
+
+### ADR-196: Saves of LAN games: the host's save goes on anywhere, a client saves the host's record (MP-3, ADR-099, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16), the roadmap's saves item. *(proposal)* marks the agent's choices.
+
+- **The host saves** as on one computer (save, quick save, autosave), the whole game.
+- **A client's save is the host's whole record** (ADR-099): Save and F5 ask the host for the game's record, labelled with the save's name,
+  and write it in the client's own saves, where it loads like any save. It holds the whole game, under the client's fog too (fine on a LAN,
+  ADR-099). A client still autosaves nothing *(proposal)*: the host's autosave covers the game.
+- **Replays are the host's record**: a client's "Save replay" on the end screen asks for the record without a label and writes it in its
+  replays. The ranking stays the host's.
+- **A save goes on anywhere**: a save with several people's colours still in the game asks who plays each from now on, on the
+  **saved-game screen** (the save, its date and whose turn, each colour's towns and heroes): **Here** (several make a hot-seat game) or
+  **Computer**; at least one is played here. A colour given to the computer is handed over with `HandToComputerCommand` (ADR-195), so the
+  game's record keeps it and later saves load that way. A save with one person loads at once, as before; F9's quick load keeps every person
+  here, as saved *(proposal: no question on a quick load)*. Loading leaves the game being played.
+- **Host a saved game** (Multiplayer): the saved-game screen as the host's lobby, with the save list, **LAN player** as a third choice, who
+  has joined each colour, the address and the chat. The joined players see the save's map and name, its date and the colours. The game starts
+  with them seated, as a new game does; a LAN colour nobody has joined pauses the game at its turn or battle (ADR-195).
+- **Wire**: protocol 5; new messages `askRecord` (the request's number and the save's name, none for a replay) and `record` (the record, or
+  why there is none).
+- **Code**: Core.Network `RecordRequest`, `RecordSent`, `GameHost.RecordOf`, `GameClient.RequestRecord`; Core.Data `GameSaves.SaveRecord`,
+  `SaveReplayRecord`, `People`. Godot.UI `SavedGameScreen` (`SavedSeat`, `SavedGameView`), `MultiplayerScreen.HostSavedRequested`,
+  `GameResultPanel.ShowMessage`; the game app's `Main.Saves` (`ShowSavedGame`, `StartSaved`) and `Main.Network`. Tests `LanSavesTests` (a
+  client's save loads on one computer to the host's state, a client's replay, the refusals, the host's save hosted again and joined, the
+  computer taking a colour over at load and the save keeping it).
+- **Not done**: a colour the computer plays (in the save or given to it) does not go back to a person; a client's save names no colour as its
+  own, so loading it asks again who plays each.
+
+### ADR-197: Start zones in the map and the simultaneous first week (MP-2, MP-4, ADR-098, ADR-099, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16), the roadmap's start zones and simultaneous first week. *(proposal)* marks the agent's choices.
+
+- **Start zones** (MP-4): a cell layer of the map, each tile in one player's zone or none. **Map format v40** (`startZones`, one character
+  per tile: `.` none, `0`–`7` the player's number; omitted = none; older maps have none, so no upgrade step). The **generator** writes each
+  player's start zone (the template zone of its start town); an untaken slot's zone is nobody's; generator version 11. The **editor** paints
+  them with the Start zone tool (a player or Erase, a brush radius; one undo step a stroke) and shows them as tiles of the player's colour.
+  The **validator**: an error for a zone of a player the map does not have; warnings for a player without a zone (on a map that has
+  zones), a zone without any of its player's towns, a town or hero standing in another player's zone (the zones overlap the starts) and two
+  players' zones that touch.
+- **The simultaneous first week** (MP-2): the host's switch in the lobby (on the new-game screen), kept in the game's options
+  (`SimultaneousFirstWeek`) with the host's colour (`HostPlayer`). A day is simultaneous while the switch is on, no conflict has ended
+  it, it is in the first week, the map is no arena, and at least two people play, each with a start zone; otherwise it is played turn by
+  turn (MP-2 a). It needs **one colour played on the host** *(proposal: hot-seat cannot hide one person's day from another, MP-2 f)*.
+- **How a simultaneous day runs**: when it opens, every person's turn begins at once, in order (income, movement, questions). Each person
+  acts and ends their own turn on their own computer; one who has ended waits for the others. Once all have, the **computer players play
+  their turns one by one** *(proposal)*, then the next day opens. A person the computer takes over (ADR-195) leaves the open turns and the
+  computer plays that turn after the people.
+- **One battle or question at a time** *(proposal)*: the game holds one battle and one question, so while one person fights or answers, the
+  others' commands wait ("Wait: a battle is being fought.").
+- **Conflicts** (MP-2 b): a hero entering another person's start zone; a person seeing another person's hero it did not see when the day
+  opened *(proposal: what each already saw then is no conflict)*; a hero visiting an object another person's hero visited that day. The first
+  one stops the day: every command is refused until the host has played it again.
+- **The day played again** (MP-2 c): the host rebuilds the game from its record up to the day's start, adds `PlayTurnByTurnCommand` (the
+  reason, which everyone is told in the chat and the status line) and goes on in that game: the day is played turn by turn from its first
+  player, with no second income (a turn begins once a day), and so is every day after it *(proposal: one conflict ends the simultaneous
+  week)*. What the people did that day is gone, also from the record. Each client gets the new game's view as on joining.
+- **Determinism**: the current player between commands is the host's open turn (else the first); a command runs as its own player's. Both
+  follow from the record, so a simultaneous game replays and loads exactly. A save made during a simultaneous day goes on turn by turn when it
+  is loaded on one computer.
+- **Clients**: each sees its own open turn as the current one and only its own questions; a day's start and its end in conflict reach
+  everyone (`SimultaneousDayStarted`, `SimultaneousDaysEnded`).
+- **Code**: Domain `AdventureMap.GetStartZone` / `SetStartZone` / `StartZoneOwners` / `StartZoneTiles`, `TerrainEditor.PaintStartZone`
+  (`StartZonesPainted`), `MapValidator.StartZones.cs`; `GameOptions.SimultaneousFirstWeek` / `HostPlayer`, `GameState.OpenTurns` / `IsTurnOf` /
+  `PlayersToAct` / `DecisionPlayer` / `SimultaneousEnded` / `SimultaneousConflict` / `Content`, `TurnService` (open turns, `PassTurn`,
+  `PlayTurnByTurn`, `LeaveOpenTurns`, a turn begun once a day), `SimultaneousDayWatch`, `PlayTurnByTurnCommand` (recorded as `turnByTurn`),
+  `GameSession.SimultaneousDayStart`, events `SimultaneousDayStarted` / `SimultaneousDayConflicted` / `SimultaneousDaysEnded`. Data
+  `MapDocument.StartZones`; Generation `ScenarioAssembler` writes the zones. Network `GameHost.SessionReplaced`, a client joined again by a
+  new `JoinAccepted`, `PlayerViewFeed` per-player current turn and questions. Godot `StartZonesView`, the editor's Start zone tool, the
+  lobby's switch (`NewGameScreen.Lan`). Tests `StartZoneTests` (format, generator, editor, validator) and `SimultaneousDayTests` (open turns,
+  replay, computers after the people, the host's colour, a zone conflict played again turn by turn, a sight conflict, turn by turn without
+  zones and after the first week, a person handed to the computer, a LAN game whose conflict hands out a new game).
+- **Not done**: the turn timer still runs on each computer, not one for all (its roadmap item); the shipped hand-made maps have no start
+  zones yet; the lobby does not say whether a hand-made map has a zone for every person (it is played turn by turn otherwise); a question or
+  battle holds the other people up.

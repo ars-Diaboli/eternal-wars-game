@@ -426,9 +426,9 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
-        var options = new GameOptions(
+        var options = WithLan(new GameOptions(
             SelectedFog, (int)_margin.Value, seed, _complexity.GetSelectedId() < 0 ? null : (Complexity)_complexity.GetSelectedId(),
-            _timer.GetSelectedId() > 0 ? _timer.GetSelectedId() : null);
+            _timer.GetSelectedId() > 0 ? _timer.GetSelectedId() : null));
         if (SelectedTemplate is { } template)
         {
             StartRandom(template, options);

@@ -93,6 +93,9 @@ public partial class GameResultPanel : CenterContainer
     /// <paramref name="enterRanking"/> puts the game's scores into the ranking under the names typed (by player) and returns the table to show,
     /// or null when no row made it; <paramref name="saveReplay"/> writes the game's replay under a name and returns what to tell the player.
     /// </summary>
+    /// <summary>A message under "Save replay" that came later (a LAN client's replay arrives from the host, ADR-196).</summary>
+    public void ShowMessage(string text) => _message.Text = text;
+
     public void Bind(Func<IReadOnlyDictionary<PlayerId, string>, RankingView?> enterRanking, Func<string, string> saveReplay)
     {
         _enterRanking = enterRanking;

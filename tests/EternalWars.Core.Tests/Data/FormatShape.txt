@@ -1,4 +1,4 @@
-# Map files (*.ewmap.json), format v39
+# Map files (*.ewmap.json), format v40
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -315,6 +315,7 @@ object MapDocument
   rivers: IReadOnlyList<IReadOnlyList<String>>
   roads: IReadOnlyList<IReadOnlyList<String>>
   rules: ScenarioRulesDocument
+  startZones: IReadOnlyList<IReadOnlyList<String>>
   teamsLocked: Boolean
   terrain: IReadOnlyList<IReadOnlyList<String>> (required)
   width: Int32 (required)
@@ -1095,6 +1096,7 @@ object GameCommand
   type=tradeResource -> TradeResourceCommand
   type=training -> ChooseTrainingCommand
   type=transformCreatures -> TransformCreaturesCommand
+  type=turnByTurn -> PlayTurnByTurnCommand
   type=unequipArtifact -> UnequipArtifactCommand
   type=upgradeStack -> UpgradeStackCommand
   type=witchHut -> ChooseWitchHutSkillCommand
@@ -1103,8 +1105,10 @@ object GameOptions
   campaignVariables: IReadOnlyDictionary<String, Int32>
   complexity: Complexity?
   fogMode: FogMode
+  hostPlayer: PlayerId?
   refogMargin: Int32
   seed: UInt64
+  simultaneousFirstWeek: Boolean
   startTowns: IReadOnlyDictionary<Int32, String>
   turnTimerMinutes: Int32?
 object GameRecordDocument
@@ -1270,6 +1274,7 @@ object MapDocument
   rivers: IReadOnlyList<IReadOnlyList<String>>
   roads: IReadOnlyList<IReadOnlyList<String>>
   rules: ScenarioRulesDocument
+  startZones: IReadOnlyList<IReadOnlyList<String>>
   teamsLocked: Boolean
   terrain: IReadOnlyList<IReadOnlyList<String>> (required)
   width: Int32 (required)
@@ -1453,6 +1458,9 @@ object PandorasBoxDocument
   spellPower: Int32?
   x: Int32 (required)
   y: Int32 (required)
+object PlayTurnByTurnCommand
+  player: PlayerId
+  reason: String
 value PlayerId
 object PlayerIsCondition
   player: Int32

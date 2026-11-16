@@ -110,7 +110,7 @@ public partial class Main : Node3D
         }
         else if (LaunchArguments.Host)
         {
-            HostLobby();
+            HostLobby(saved: false);
         }
         else if (LaunchArguments.NewGame)
         {
@@ -386,7 +386,7 @@ public partial class Main : Node3D
         _initialMap = initialMap;
         var playing = _mode == GameMode.Play;
         _ai = playing && _client is null ? new AdventureAi(session) : null; // a LAN client's computer players are the host's
-        _menu.CanSave = playing && !session.FollowsHost; // a LAN client holds a view, not the game (ADR-193)
+        _menu.CanSave = playing; // a LAN client saves the host's record of the game (ADR-196)
         var state = session.State;
         _context = new MapViewContext(state, _session.Events, playing ? ViewerHere(state) : ReplayViewer())
         {
@@ -435,6 +435,11 @@ public partial class Main : Node3D
                 }
             });
         }
+
+        // The simultaneous first week of a LAN game (ADR-197): the status line says how today is played.
+        _game.SubscribeWhileInTree<SimultaneousDayStarted>(_session.Events, e =>
+            Tell($"Day {e.Date.AbsoluteDay}: every person plays at once, each on their own computer; the computer players after them."));
+        _game.SubscribeWhileInTree<SimultaneousDaysEnded>(_session.Events, e => Tell($"{e.Reason} From now on the days are played turn by turn."));
 
         _game.SubscribeWhileInTree<TurnStarted>(_session.Events, e =>
         {

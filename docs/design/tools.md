@@ -5,7 +5,8 @@
 ## Map editor
 A **separate standalone app**, not an in-game mode (ADR-023). Core `MapEditorSession` (undo / redo) with Godot UI (tool palette, inspector,
 properties, players, validation and conditions panels):
-- terrain painting (brush radius, drag strokes), roads and rivers;
+- terrain painting (brush radius, drag strokes), roads and rivers; **start zones** (the Start zone tool: a player's zone or Erase, shown as
+  tiles of the player's colour; MP-4, ADR-197), where a player's day stays its own in a simultaneous first week;
 - the ground's height (ADR-181, ADR-182), the "Height" tool: raise, lower, level (towards the height where the stroke started) and smooth
   with a round brush (the radius, and a strength of 1–8 eighths of a cell width a dab, fading over one tile at the edge); "From terrain"
   under the brush and a "Heights from terrain" button for the whole map; an **"Auto height"** switch (on by default) that gives newly

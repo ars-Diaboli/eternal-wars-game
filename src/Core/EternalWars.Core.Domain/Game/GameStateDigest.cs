@@ -18,6 +18,12 @@ public static class GameStateDigest
     {
         var text = new StringBuilder();
         Line($"date {state.Date} player {state.CurrentPlayerIndex} rng {state.RandomState} started {state.IsStarted}");
+
+        // The simultaneous days (ADR-197) only when they are on, so older replays keep their digests.
+        if (state.IsSimultaneous || state.SimultaneousEnded || state.SimultaneousConflict is not null)
+        {
+            Line($"open {string.Join(',', state.OpenTurns.Select(p => p.Value))} ended {state.SimultaneousEnded} conflict {state.SimultaneousConflict}");
+        }
         if (state.WeekEvent.Kind != Turns.WeekEventKind.None || state.NextWeekEvent.Kind != Turns.WeekEventKind.None)
         {
             Line($"week {state.WeekEvent.Kind} {state.WeekEvent.Creature} next {state.NextWeekEvent.Kind} {state.NextWeekEvent.Creature}");

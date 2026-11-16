@@ -28,6 +28,10 @@ public partial class TurnPanel : HBoxContainer
         Refresh(session);
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh(session));
         this.SubscribeWhileInTree<DayStarted>(session.Events, _ => Refresh(session)); // an arena's day 2 starts no turn (ADR-097)
+
+        // A simultaneous day (ADR-197) opens every person's turn, then the host's colour is the current player; a turn ended moves it on.
+        this.SubscribeWhileInTree<SimultaneousDayStarted>(session.Events, _ => Refresh(session));
+        this.SubscribeWhileInTree<CommandExecuted>(session.Events, _ => Refresh(session));
     }
 
     private void Refresh(GameSession session)

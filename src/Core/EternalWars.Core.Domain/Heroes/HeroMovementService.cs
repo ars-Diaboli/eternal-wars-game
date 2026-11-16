@@ -250,7 +250,7 @@ public sealed class HeroMovementService(
 
     private MoveResult CheckCanAct(Hero hero)
     {
-        if (!state.IsStarted || hero.Owner != state.CurrentPlayer.Id)
+        if (!state.IsStarted || !state.IsTurnOf(hero.Owner))
         {
             return MoveResult.NotYourTurn;
         }

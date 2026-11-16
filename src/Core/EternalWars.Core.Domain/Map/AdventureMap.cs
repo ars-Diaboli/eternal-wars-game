@@ -19,6 +19,9 @@ public sealed class AdventureMap
     private readonly RiverType[][] _rivers;
     private readonly sbyte[][] _ground;
 
+    /// <summary>Each tile's start zone: the player's number, or -1 for none (MP-4).</summary>
+    private readonly sbyte[][] _startZones;
+
     public AdventureMap(int width, int height, int levels = 1, TerrainType fill = TerrainType.Grass)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(width, 1);
@@ -35,12 +38,14 @@ public sealed class AdventureMap
         _roads = new RoadType[levels][];
         _rivers = new RiverType[levels][];
         _ground = new sbyte[levels][];
+        _startZones = new sbyte[levels][];
         for (var level = 0; level < levels; level++)
         {
             _terrain[level] = Enumerable.Repeat(fill, width * height).ToArray();
             _roads[level] = new RoadType[width * height];
             _rivers[level] = new RiverType[width * height];
             _ground[level] = new sbyte[(width + 1) * (height + 1)];
+            _startZones[level] = Enumerable.Repeat((sbyte)-1, width * height).ToArray();
         }
     }
 
@@ -109,6 +114,33 @@ public sealed class AdventureMap
 
     /// <summary>The ground's height in cell widths at a tile's centre (the mean of its corners).</summary>
     public float GroundHeightAt(MapPosition position) => GroundHeightAt(position.Level, position.X, position.Y);
+
+    /// <summary>
+    /// The player whose start zone the tile is in (MP-4, ADR-197); null for none. A player's start zone is where its day stays its own in a
+    /// simultaneous first week (MP-2): another player's hero stepping into it ends the simultaneous days.
+    /// </summary>
+    public PlayerId? GetStartZone(MapPosition position) => _startZones[position.Level][Index(position)] is >= 0 and var owner ? new PlayerId(owner) : null;
+
+    public void SetStartZone(MapPosition position, PlayerId? owner)
+    {
+        if (owner is { Value: < 0 or > sbyte.MaxValue } outside)
+        {
+            throw new ArgumentOutOfRangeException(nameof(owner), outside, "Not a player's number.");
+        }
+
+        _startZones[position.Level][Index(position)] = (sbyte)(owner?.Value ?? -1);
+    }
+
+    /// <summary>Whether any tile is in a start zone.</summary>
+    public bool HasStartZones => _startZones.Any(level => level.Any(z => z >= 0));
+
+    /// <summary>The players that have a start zone, in number order.</summary>
+    public IReadOnlyList<PlayerId> StartZoneOwners =>
+        [.. _startZones.SelectMany(level => level).Where(z => z >= 0).Distinct().Order().Select(z => new PlayerId(z))];
+
+    /// <summary>The tiles of <paramref name="owner"/>'s start zone, on every level.</summary>
+    public IEnumerable<MapPosition> StartZoneTiles(PlayerId owner) =>
+        Enumerable.Range(0, Levels).SelectMany(Positions).Where(p => GetStartZone(p) == owner);
 
     public IEnumerable<MapPosition> Positions(int level)
     {

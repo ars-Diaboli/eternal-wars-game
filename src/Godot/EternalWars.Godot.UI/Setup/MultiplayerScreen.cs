@@ -8,7 +8,8 @@ namespace EternalWars.Godot.UI.Setup;
 public sealed record LanGameListing(string Address, string Text, bool CanJoin);
 
 /// <summary>
-/// Multiplayer from the main menu (ADR-194): the player's name; "Host a game" (the host's lobby, where the host sets the game up); the LAN games
+/// Multiplayer from the main menu (ADR-194): the player's name; "Host a game" (the host's lobby, where the host sets the game up); "Host a saved
+/// game" (the lobby for a save, ADR-196); the LAN games
 /// found, each joined with a click; an address to type for a host that is not found (another network, a blocked broadcast); Back. The app keeps
 /// the list of games up to date (<see cref="ShowGames"/>).
 /// </summary>
@@ -21,6 +22,9 @@ public partial class MultiplayerScreen : PanelContainer
 
     /// <summary>"Host a game", with the player's name.</summary>
     public event Action<string>? HostRequested;
+
+    /// <summary>"Host a saved game", with the player's name.</summary>
+    public event Action<string>? HostSavedRequested;
 
     /// <summary>Join the game at an address (the player's name, the address).</summary>
     public event Action<string, string>? JoinRequested;
@@ -41,6 +45,9 @@ public partial class MultiplayerScreen : PanelContainer
         var host = new Button { Text = "Host a game", TooltipText = "Set up a game the players on this network join" }.WithIcon(UiIcon.Confirm);
         host.Pressed += () => HostRequested?.Invoke(PlayerName);
         rows.AddChild(host);
+        var saved = new Button { Text = "Host a saved game", TooltipText = "Go on with a saved game, the players on this network joining its colours" };
+        saved.Pressed += () => HostSavedRequested?.Invoke(PlayerName);
+        rows.AddChild(saved);
 
         rows.AddChild(new Label { Text = "Games on this network" });
         rows.AddChild(_games);

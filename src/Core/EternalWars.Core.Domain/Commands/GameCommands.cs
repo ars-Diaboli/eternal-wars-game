@@ -28,6 +28,12 @@ public sealed record EndTurnCommand(PlayerId Player) : GameCommand(Player);
 /// </summary>
 public sealed record HandToComputerCommand(PlayerId Player) : GameCommand(Player);
 
+/// <summary>
+/// Today, a simultaneous day (MP-2, ADR-197), is played turn by turn from its start, and so is every day after it; given by the LAN host at the
+/// start of the day after a conflict (<paramref name="Reason"/>, which every player is told) took the day back.
+/// </summary>
+public sealed record PlayTurnByTurnCommand(PlayerId Player, string Reason) : GameCommand(Player);
+
 // Decisions --------------------------------------------------------------------------------------------
 
 public sealed record ResolveTreasureChestCommand(PlayerId Player, TreasureChestReward Reward) : GameCommand(Player);

@@ -171,6 +171,10 @@ public partial class Main : Node3D
         {
             _editor.Terrain.PaintRiver(tile, tool.River, tool.Radius);
         }
+        else if (tool.Kind == ToolKind.StartZone)
+        {
+            _editor.Terrain.PaintStartZone(tile, tool.Zone, tool.Radius);
+        }
         else if (tool.Kind == ToolKind.Height)
         {
             _ = tool.Height switch
@@ -281,6 +285,9 @@ public partial class Main : Node3D
         _eventCells = new EventCellsView { Name = "EventCells" };
         world.AddChild(_eventCells);
         _eventCells.Bind(_context);
+        var zones = new StartZonesView { Name = "StartZones" };
+        world.AddChild(zones);
+        zones.Bind(_context);
 
         BuildUi();
         // On the session's own UI, freed with it on the next Open; the root stays in the tree and would keep every old session alive.

@@ -252,11 +252,11 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       text chat (MP-1). The simultaneous first week's switch is shown, off, until that item
 - [x] Battles between two remote humans, each side live (ADR-195); a player who drops out (pause, the host lets the computer take over or
       waits for a rejoin) (MP-1)
-- [ ] Saves: the host's save loads in multiplayer, single player or hot-seat; a client's save (the whole record, sent by the host)
-      loads in single player; replays are the host's record (MP-3, ADR-099)
-- [ ] Start zones in the map: the generator writes them, the editor paints them, validator (touching, overlapping, no start town);
+- [x] Saves (ADR-196): the host's save loads in multiplayer, single player or hot-seat; a client's save (the whole record, sent by the host)
+  loads in single player; replays are the host's record (MP-3, ADR-099)
+- [x] Start zones in the map (ADR-197): the generator writes them, the editor paints them, validator (touching, overlapping, no start town);
       map format bump (MP-4, ADR-099)
-- [ ] Simultaneous first week on maps with start zones: conflicts (entering another start zone, touching an object another player touched
+- [x] Simultaneous first week on maps with start zones (ADR-197): conflicts (entering another start zone, touching an object another player touched
       that day, seeing another player's hero) discard the day for everyone, which is played again turn by turn (MP-2, ADR-098)
 - [ ] The turn timer in multiplayer and in simultaneous days: one timer, the day ends when all have ended their turn (FLOW-3, MP-2)
 - [ ] Arena maps in the lobby (ADR-100, ARN-1): day 1 hidden by each player's own view, turn by turn or simultaneous with start zones

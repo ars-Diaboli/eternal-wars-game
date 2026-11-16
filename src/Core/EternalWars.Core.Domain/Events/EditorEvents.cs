@@ -11,6 +11,9 @@ public sealed record RoadsPainted(IReadOnlyList<MapPosition> Positions, RoadType
 /// <summary>The editor painted or erased rivers (ADR-079).</summary>
 public sealed record RiversPainted(IReadOnlyList<MapPosition> Positions, RiverType River) : IEvent;
 
+/// <summary>The editor painted tiles into a player's start zone, or out of every zone (<paramref name="Owner"/> null; MP-4, ADR-197).</summary>
+public sealed record StartZonesPainted(IReadOnlyList<MapPosition> Positions, PlayerId? Owner) : IEvent;
+
 /// <summary>
 /// The editor changed the ground's height (ADR-182 g): every changed corner of <paramref name="Level"/> is in <paramref name="Area"/>.
 /// Views re-read the heights there and move what stands on tiles the area <see cref="CornerArea.Touches"/>.
