@@ -11,5 +11,5 @@ internal sealed class SlayHandler : StackByStackHandler
         resolver.Wounds.KillCreatures(unit, cast.Known.Spell.Id, Math.Min(unit.Count, BattleMagic.Slain(cast.Effect, unit))); // the wounded top creature goes first
 
     public override long Value(CastContext cast) =>
-        cast.Affected().Sum(u => (u.Side == cast.Side ? -1 : 1) * (long)Math.Min(u.Count, BattleMagic.Slain(cast.Effect, u)) * u.Creature.Value);
+        cast.Affected().Sum(u => (u.Side == cast.Side ? -1 : 1) * (long)Math.Min(u.Count, BattleMagic.Slain(cast.Effect, u)) * u.Creature.FightValue);
 }

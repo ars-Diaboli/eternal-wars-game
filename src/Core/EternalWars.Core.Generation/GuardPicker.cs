@@ -45,7 +45,7 @@ public static class GuardPicker
         var picked = candidates[random.Next(candidates.Count)].Creature;
         var (low, high) = CountsFor(picked.Tier);
         var jitter = 95 + random.Next(11); // percent
-        return (picked, Math.Clamp(Math.Max(1, (int)Math.Round((double)value / picked.Value * jitter / 100)), low, high));
+        return (picked, Math.Clamp(Math.Max(1, (int)Math.Round((double)value / picked.FightValue * jitter / 100)), low, high));
     }
 
     private static List<(CreatureDefinition Creature, int Count)> Candidates(CreatureCatalog creatures, int value) =>
@@ -54,7 +54,7 @@ public static class GuardPicker
             .OrderBy(c => c.Creature.Id, StringComparer.Ordinal).ToList();
 
     /// <summary>How far (relative) a stack of this many is from the wanted power; a stack of one dragon is no guard for 3000.</summary>
-    private static double Error(int value, CreatureDefinition creature, int count) => Math.Abs((double)count * creature.Value - value) / value;
+    private static double Error(int value, CreatureDefinition creature, int count) => Math.Abs((double)count * creature.FightValue - value) / value;
 
     /// <summary>The largest relative difference between a guard's power and the wanted power before the creature is not considered.</summary>
     private const double MaxError = 0.2;
@@ -67,7 +67,7 @@ public static class GuardPicker
             .OrderBy(c => c.Id, StringComparer.Ordinal);
     }
 
-    private static int Needed(int value, CreatureDefinition creature) => Math.Max(1, (int)Math.Round((double)value / creature.Value));
+    private static int Needed(int value, CreatureDefinition creature) => Math.Max(1, (int)Math.Round((double)value / creature.FightValue));
 
     private static int Distance(int count, (int Min, int Max) range) => count < range.Min ? range.Min - count : count > range.Max ? count - range.Max : 0;
 }

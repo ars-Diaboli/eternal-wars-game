@@ -1,181 +1,181 @@
-id,name,town,tier,size,upgrade,category,attack,defense,min_damage,max_damage,health,speed,map_speed,initiative,shots,morale,luck,growth,gold,resources,tags,capabilities,notes
-haven.footman,Footman,haven,1,Small,haven.crusader,A,6,5,4,5,13,11,3,10,,,,18,55,,human; holy,,"sandbox: hp 14, dmg 5-7, A6/D5"
-haven.crusader,Crusader,haven,1,Small,,A,7,6,4,5,13,12,4,11,,,,18,70,,human; holy,DoubleStrike,sandbox: identical to Footman (copy-paste)
-haven.pikeman,Pikeman,haven,1,Small,haven.guardian,B,6,8,3,6,17,10,4,9,,,,16,60,,human; holy,,"sandbox: hp 20, dmg 5-10, A8/D8"
-haven.guardian,Guardian,haven,1,Small,,B,7,10,4,6,18,11,4,10,,,,16,80,,human; holy,FirstStrike; UnlimitedRetaliation,"sandbox: hp 20, dmg 5-10, A8/D10"
-haven.zealot,Zealot,haven,2,Small,haven.inquisitor,A,10,9,6,9,30,12,5,11,,,,9,185,,human; holy,,"sandbox: hp 40, dmg 7-13"
-haven.inquisitor,Inquisitor,haven,2,Small,,A,11,10,7,10,34,13,5,12,,,,9,240,,human; holy,Relentless 15; SpellImmunity mind,"sandbox: hp 45, dmg 11-13"
-haven.archer,Archer,haven,2,Small,haven.marksman,B,8,6,6,9,23,9,4,9,12,,,10,165,,human; holy,MeleePenalty,"sandbox: tier 1 there; hp 12, dmg 4-6, 12 shots"
-haven.marksman,Marksman,haven,2,Small,,B,9,7,6,10,23,10,5,10,16,,,10,210,,human; holy,ShootsTwice; MeleePenalty,"sandbox: hp 15, dmg 4-8, 12 shots"
-haven.monk,Monk,haven,3,Small,haven.priest,A,12,9,12,17,44,9,5,9,10,,,5,450,,human; holy,MeleePenalty; RangedRetaliation,"sandbox: hp 30, dmg 8-12, 12 shots"
-haven.priest,Priest,haven,3,Small,,A,13,11,13,19,50,10,6,11,12,,,5,580,,human; holy,RangedRetaliation; Caster light.heal 1,"sandbox: hp 35, dmg 8-12, 12 shots"
-haven.griffin,Griffin,haven,3,Medium,haven.royal-griffin,B,13,12,9,13,54,20,7,12,,,,5,450,,beast,Flying,"sandbox: hp 100, dmg 16-20, flying"
-haven.royal-griffin,Royal Griffin,haven,3,Medium,,B,14,13,10,14,61,24,8,13,,,,5,580,,beast,Flying; UnlimitedRetaliation,"sandbox: hp 110, dmg 16-22, flying"
-haven.lancer,Lancer,haven,4,Medium,haven.champion,B,16,16,19,26,120,20,7,12,,,,3,1100,,human; holy; mounted,,"sandbox: hp 120, dmg 16-24"
-haven.champion,Champion,haven,4,Medium,,B,18,17,22,29,135,22,9,13,,,,3,1450,,human; holy; mounted,PackHunter 10,sandbox: identical to Lancer (copy-paste)
-haven.paladin,Paladin,haven,4,Medium,haven.sacred-warrior,A,16,20,17,22,125,13,5,12,,,,3,1100,,human; holy,,"sandbox: hp 100, dmg 12-16"
-haven.sacred-warrior,Sacred Warrior,haven,4,Medium,,A,17,22,18,23,126,14,6,13,,,,3,1450,,human; holy,DoubleStrike; SpellImmunity curse,sandbox: identical to Paladin (copy-paste)
-haven.radiant-spirit,Radiant Spirit,haven,5,Medium,haven.seraph,,22,22,58,73,255,24,10,15,,,,1,3300,crystal 1,holy,Flying; SpellImmunity mind,"sandbox: hp 175, flying"
-haven.seraph,Seraph,haven,5,Medium,,,26,26,58,73,278,29,11,16,,,,1,4300,crystal 2,holy,Flying; NoEnemyRetaliation; SpellImmunity mind; Caster light.resurrection 1,"sandbox: hp 250, flying"
-sylvan.pixie,Pixie,sylvan,1,Small,sylvan.sprite,A,3,2,2,6,12,13,5,14,,,,20,50,,fey,Flying,
-sylvan.sprite,Sprite,sylvan,1,Small,,A,4,3,4,6,13,15,6,15,,,,20,65,,fey,Flying; NoEnemyRetaliation,
-sylvan.satyr,Satyr,sylvan,1,Small,sylvan.satyr-warrior,B,6,5,3,6,15,11,4,11,,,,16,60,,fey,,
-sylvan.satyr-warrior,Satyr Warrior,sylvan,1,Small,,B,7,6,4,6,16,12,5,12,,,,16,80,,fey,Relentless 10,
-sylvan.blade-dancer,Blade Dancer,sylvan,2,Small,sylvan.war-dancer,A,9,6,7,11,31,13,6,13,,,,8,210,,elf,,
-sylvan.war-dancer,War Dancer,sylvan,2,Small,,A,10,7,8,12,33,14,6,14,,,,8,270,,elf,MultiHead,
-sylvan.hunter,Hunter,sylvan,2,Small,sylvan.arcane-archer,B,9,5,5,10,19,10,5,11,14,,,9,185,,elf,MeleePenalty,
-sylvan.arcane-archer,Arcane Archer,sylvan,2,Small,,B,10,6,6,10,19,11,6,12,16,,,9,240,,elf,ShootsTwice; MeleePenalty,
-sylvan.druid,Druid,sylvan,3,Small,sylvan.druid-elder,B,11,8,12,17,52,9,5,10,10,,,5,450,,elf,MeleePenalty; Caster nature.call-lightning 1,
-sylvan.druid-elder,Druid Elder,sylvan,3,Small,,B,12,9,14,19,58,10,5,11,12,,,5,580,,elf,RangedRetaliation; Caster nature.call-lightning 2,
-sylvan.pegasus,Pegasus,sylvan,3,Medium,sylvan.silver-pegasus,A,12,10,9,14,52,20,8,13,,,,5,450,,beast,Flying,flying (the sandbox lacked the flag)
-sylvan.silver-pegasus,Silver Pegasus,sylvan,3,Medium,,A,13,12,11,15,59,24,9,14,,,,5,580,,beast,Flying; SpellImmunity mind,flying (the sandbox lacked the flag)
-sylvan.moon-doe,Moon Doe,sylvan,4,Medium,sylvan.unicorn,A,15,16,17,25,119,18,7,12,,,,3,1100,,beast,SpellImmunity curse,
-sylvan.unicorn,Unicorn,sylvan,4,Medium,,A,17,18,19,29,136,20,8,13,,,,3,1450,,beast,SpellImmunity curse; SpellImmunity mind,"sandbox id MistQuilin, shown as Pristine Unicorn"
-sylvan.treant,Treant,sylvan,4,Medium,sylvan.ancient-treant,B,13,22,18,26,219,8,3,7,,,,2,1650,,,UnlimitedRetaliation,
-sylvan.ancient-treant,Ancient Treant,sylvan,4,Medium,,B,15,24,19,29,244,9,4,8,,,,2,2150,,,UnlimitedRetaliation; FirstStrike,
-sylvan.fire-bird,Fire Bird,sylvan,5,Medium,sylvan.phoenix,,22,20,49,65,284,26,11,15,,,,1,3300,mercury 1,,Flying; Breath; SpellImmunity fire,
-sylvan.phoenix,Phoenix,sylvan,5,Medium,,,26,24,52,67,325,31,11,16,,,,1,4300,mercury 2,,Flying; Breath; SpellImmunity fire; Caster rebirth 1,
-academy.gremlin,Gremlin,academy,1,Small,academy.gremlin-master,A,4,3,2,5,14,10,4,11,,,,20,50,,,,"sandbox: hp 8, dmg 1-3"
-academy.gremlin-master,Gremlin Master,academy,1,Small,,A,5,4,3,5,14,11,5,12,8,,,20,65,,,MeleePenalty,"sandbox: hp 9, dmg 1-3, 12 shots"
-academy.dwarf,Dwarf,academy,1,Small,academy.dwarf-defender,B,5,8,2,4,18,9,3,8,,,,15,65,,,FirstStrike,"sandbox: hp 14, dmg 2-3, A5/D7"
-academy.dwarf-defender,Dwarf Defender,academy,1,Small,,B,6,10,3,4,19,10,4,9,,,,15,85,,,FirstStrike; UnlimitedRetaliation,"sandbox: hp 14, dmg 2-3, A5/D9"
-academy.gargoyle,Gargoyle,academy,2,Small,academy.obsidian-gargoyle,A,8,9,4,9,28,15,7,12,,,,9,185,,construct,Flying,"sandbox: hp 20, dmg 3-5, flying"
-academy.obsidian-gargoyle,Obsidian Gargoyle,academy,2,Small,,A,9,11,5,9,33,18,8,13,,,,9,240,,construct,Flying; SpellImmunity fire,"sandbox: hp 25, dmg 4-5, flying"
-academy.iron-golem,Iron Golem,academy,2,Medium,academy.animated-armor,B,9,11,6,10,38,9,4,8,,,,7,240,,construct,SpellImmunity mind,"sandbox: hp 30, dmg 4-6, A12/D15"
-academy.animated-armor,Animated Armor,academy,2,Medium,,B,10,13,7,11,44,10,4,9,,,,7,310,,construct,SpellImmunity mind; SpellImmunity fire,"sandbox: hp 35, dmg 5-7 (upgrade of Iron Golem there)"
-academy.snow-maiden,Snow Maiden,academy,3,Small,academy.enchantress,A,11,7,13,18,47,9,5,11,10,,,5,450,,,MeleePenalty,
-academy.enchantress,Enchantress,academy,3,Small,,A,12,8,14,20,53,10,5,12,12,,,5,580,,,MeleePenalty; Caster arcana.frost-bolt 1,
-academy.sorcerer,Sorcerer,academy,3,Small,academy.mage,B,12,8,12,18,42,9,5,11,10,,,5,450,,human,MeleePenalty,"sandbox: hp 30, dmg 10-14, 12 shots (mislabelled 'Iron Golem' there)"
-academy.mage,Mage,academy,3,Small,,B,13,9,13,19,47,10,5,12,12,,,5,580,,human,MeleePenalty; RangedRetaliation; Caster chaos.fireball 1,"sandbox: hp 40, dmg 10-16, 20 shots (mislabelled 'Steel Golem' there)"
-academy.djinn,Djinn,academy,4,Medium,academy.djinn-sultan,A,15,14,18,26,118,20,8,13,,,,3,1100,,elemental,Flying,
-academy.djinn-sultan,Djinn Sultan,academy,4,Medium,,A,17,16,20,29,132,22,9,14,,,,3,1450,,elemental,Flying; Caster shadow.confusion 1; SpellImmunity mind,
-academy.naga,Naga,academy,4,Medium,academy.naga-queen,B,17,17,17,23,115,11,5,11,,,,2,1650,,,NoEnemyRetaliation,
-academy.naga-queen,Naga Queen,academy,4,Medium,,B,19,19,19,25,131,12,6,12,,,,2,2150,,,NoEnemyRetaliation; Relentless 10,
-academy.colossus,Colossus,academy,5,Medium,academy.titan,,24,24,46,63,250,18,9,13,,,,1,3300,mercury 1,giant,SpellImmunity mind,"sandbox: hp 200, dmg 40-50"
-academy.titan,Titan,academy,5,Medium,,,28,27,46,63,250,20,10,14,20,,,1,4300,mercury 2,giant,SpellImmunity mind; RangedRetaliation,"sandbox: hp 300, dmg 40-50, 16 shots"
-necropolis.skeleton,Skeleton,necropolis,1,Small,necropolis.skeleton-warrior,A,5,4,2,6,11,10,4,10,,,,20,50,,undead,SpellImmunity mind,sandbox showed it as 'Devil' (copy-paste)
-necropolis.skeleton-warrior,Skeleton Warrior,necropolis,1,Small,,A,6,6,3,6,12,11,5,11,,,,20,65,,undead,SpellImmunity mind; UnlimitedRetaliation,
-necropolis.plague-bearer,Plague Bearer,necropolis,1,Small,necropolis.flesh-golem,B,4,6,2,4,20,8,3,7,,,,15,65,,undead,SpellImmunity mind; Relentless 10,
-necropolis.flesh-golem,Flesh Golem,necropolis,1,Small,,B,6,8,3,4,22,9,3,8,,,,15,85,,undead; construct,SpellImmunity mind; UnlimitedRetaliation,
-necropolis.ghoul,Ghoul,necropolis,2,Small,necropolis.alghoul,A,9,7,5,9,26,12,5,11,,,,9,185,,undead,SpellImmunity mind; Relentless 15,
-necropolis.alghoul,Alghoul,necropolis,2,Small,,A,10,8,6,10,30,13,6,12,,,,9,240,,undead,SpellImmunity mind; Relentless 20,
-necropolis.death-weaver,Death Weaver,necropolis,3,Medium,necropolis.fate-weaver,B,12,11,9,13,52,18,7,12,,,,5,450,,undead; beast,Flying; PackHunter 10,placeholder stats (ADR-135)
-necropolis.fate-weaver,Fate Weaver,necropolis,3,Medium,,B,13,12,10,14,60,21,8,13,,,,5,580,,undead; beast,Flying; PackHunter 15; SpellImmunity mind,placeholder stats (ADR-135)
-necropolis.vampire,Vampire,necropolis,3,Small,necropolis.vampire-lord,A,12,10,6,11,35,15,6,12,,,,5,450,,undead,Flying; NoEnemyRetaliation,
-necropolis.vampire-lord,Vampire Lord,necropolis,3,Small,,A,13,12,7,12,41,18,7,13,,,,5,580,,undead,Flying; NoEnemyRetaliation; SpellImmunity mind,
-necropolis.wight,Wight,necropolis,2,Small,necropolis.wraith,B,8,6,5,8,24,10,5,10,10,,,9,185,,undead,MeleePenalty; SpellImmunity mind,placeholder stats (ADR-135)
-necropolis.wraith,Wraith,necropolis,2,Small,,B,9,7,6,9,27,11,5,11,12,,,9,240,,undead,MeleePenalty; RangedRetaliation; SpellImmunity mind,placeholder stats (ADR-135)
-necropolis.dark-knight,Dark Knight,necropolis,4,Medium,necropolis.death-knight,A,17,16,16,23,106,18,7,12,,,,3,1100,,undead; mounted,Relentless 10,
-necropolis.death-knight,Death Knight,necropolis,4,Medium,,A,19,18,18,26,119,20,8,13,,,,3,1450,,undead; mounted,Relentless 15; SpellImmunity mind,
-necropolis.lich,Lich,necropolis,4,Small,necropolis.arch-lich,B,15,14,19,28,110,9,5,10,12,,,3,1100,,undead,MeleePenalty; Caster death.death-cloud 1; SpellImmunity mind,
-necropolis.arch-lich,Arch Lich,necropolis,4,Small,,B,17,16,21,30,122,10,6,11,16,,,3,1450,,undead,MeleePenalty; Caster death.death-cloud 1; SpellImmunity mind; RangedRetaliation,
-necropolis.bone-dragon,Bone Dragon,necropolis,5,Large,necropolis.ghost-dragon,,22,20,47,70,248,20,9,13,,,,1,3300,mercury 1,undead; dragon,Flying; SpellImmunity mind; Relentless 10,
-necropolis.ghost-dragon,Ghost Dragon,necropolis,5,Large,,,25,23,50,71,285,24,10,14,,,,1,4300,mercury 2,undead; dragon,Flying; SpellImmunity mind; Breath,
-inferno.imp,Imp,inferno,1,Small,inferno.familiar,A,4,3,3,6,13,11,5,13,,,,20,50,,demon,Flying,sandbox name 'Inp'
-inferno.familiar,Familiar,inferno,1,Small,,A,5,4,4,6,13,13,6,14,,,,20,65,,demon,Flying; Relentless 10; ManaThief 1,
-inferno.horned-demon,Horned Demon,inferno,1,Small,inferno.horned-overseer,B,7,7,4,6,16,10,4,9,,,,15,65,,demon,,
-inferno.horned-overseer,Horned Overseer,inferno,1,Small,,B,8,9,5,7,17,11,5,10,,,,15,85,,demon,PackHunter 10,
-inferno.hell-hound,Hell Hound,inferno,2,Medium,inferno.cerberus,A,10,7,6,11,32,18,7,13,,,,8,210,,demon; beast,PackHunter 15,
-inferno.cerberus,Cerberus,inferno,2,Medium,,A,11,8,7,11,35,20,8,14,,,,8,270,,demon; beast,Cleave; NoEnemyRetaliation,
-inferno.tormentor,Tormentor,inferno,2,Small,inferno.lacerator,B,10,8,6,9,29,12,5,11,,,,9,185,,demon,Relentless 15,
-inferno.lacerator,Lacerator,inferno,2,Small,,B,11,9,7,10,32,13,5,12,,,,9,240,,demon,Relentless 25; FirstStrike,
-inferno.succubus,Succubus,inferno,3,Small,inferno.succubus-mistress,B,12,9,13,19,47,11,6,11,10,,,5,450,,demon,MeleePenalty,
-inferno.succubus-mistress,Succubus Mistress,inferno,3,Small,,B,13,10,14,20,54,12,6,12,12,,,5,580,,demon,RangedRetaliation; SpellImmunity mind,
-inferno.hell-charger,Hell Charger,inferno,3,Medium,inferno.nightmare,A,13,11,9,14,54,20,8,13,,,,5,450,,demon; beast,,
-inferno.nightmare,Nightmare,inferno,3,Medium,,A,14,12,10,15,63,23,9,14,,,,5,580,,demon; beast,Relentless 15,
-inferno.pit-fiend,Pit Fiend,inferno,4,Medium,inferno.pit-lord,B,17,16,17,25,125,13,6,11,,,,3,1100,,demon,,
-inferno.pit-lord,Pit Lord,inferno,4,Medium,,B,19,17,19,26,132,14,7,12,,,,3,1450,,demon,MultiHead; Caster chaos.fireball 1,
-inferno.juggernaut,Juggernaut,inferno,4,Medium,inferno.ravager,A,17,20,22,32,182,11,5,9,,,,2,1650,,demon; beast,,
-inferno.ravager,Ravager,inferno,4,Medium,,A,19,22,24,34,198,12,6,10,,,,2,2150,,demon; beast,Breath; SpellImmunity fire,
-inferno.devil,Devil,inferno,5,Medium,inferno.arch-devil,,26,24,35,59,176,22,11,15,,,,1,3300,mercury 1,demon,Flying; NoEnemyRetaliation; SpellImmunity fire,
-inferno.arch-devil,Arch Devil,inferno,5,Medium,,,28,26,39,64,205,26,11,16,,,,1,4300,mercury 2,demon,Flying; NoEnemyRetaliation; Relentless 10; SpellImmunity fire,
-dungeon.troglodyte,Troglodyte,dungeon,1,Small,dungeon.deep-troglodyte,A,5,4,4,6,13,10,4,10,,,,18,55,,,SpellImmunity blind,
-dungeon.deep-troglodyte,Deep Troglodyte,dungeon,1,Small,,A,6,5,4,7,14,11,5,11,,,,18,70,,,SpellImmunity blind; PackHunter 10,
-dungeon.scout,Scout,dungeon,1,Small,dungeon.stalker,B,6,3,4,7,15,13,6,14,,,,15,65,,elf,Relentless 10,
-dungeon.stalker,Stalker,dungeon,1,Small,,B,7,4,4,8,16,14,7,15,,,,15,85,,elf,Relentless 15; FirstStrike,
-dungeon.medusa,Medusa,dungeon,2,Small,dungeon.putrid-medusa,A,9,8,5,8,25,9,5,10,8,,,8,210,,reptile,,
-dungeon.putrid-medusa,Putrid Medusa,dungeon,2,Small,,A,10,10,5,8,28,10,5,11,10,,,8,270,,reptile,RangedRetaliation,
-dungeon.minotaur,Minotaur,dungeon,2,Medium,dungeon.minotaur-guard,B,11,9,7,10,37,12,6,11,,,,7,240,,,Relentless 10,
-dungeon.minotaur-guard,Minotaur Guard,dungeon,2,Medium,,B,12,11,7,11,42,13,6,12,,,,7,310,,,Relentless 10; FirstStrike,
-dungeon.dark-raider,Dark Raider,dungeon,3,Medium,dungeon.grim-raider,B,12,10,9,13,56,20,8,13,,,,5,450,,elf; mounted,PackHunter 10,melee cavalry (the sandbox's crossbow shots are dropped)
-dungeon.grim-raider,Grim Raider,dungeon,3,Medium,,B,13,11,10,14,64,22,9,14,,,,5,580,,elf; mounted,PackHunter 15; Relentless 10,melee cavalry (the sandbox's crossbow shots are dropped)
-dungeon.shadow-mistress,Shadow Mistress,dungeon,3,Small,dungeon.shadow-matriarch,A,11,8,12,19,48,10,5,11,10,,,5,450,,elf,MeleePenalty; Caster shadow.blind 1,
-dungeon.shadow-matriarch,Shadow Matriarch,dungeon,3,Small,,A,12,9,14,20,55,11,6,12,12,,,5,580,,elf,MeleePenalty; Caster shadow.blind 1; RangedRetaliation,
-dungeon.manticore,Manticore,dungeon,4,Medium,dungeon.scorpicore,B,16,14,18,27,123,18,8,12,,,,3,1100,,beast,Flying,
-dungeon.scorpicore,Scorpicore,dungeon,4,Medium,,B,18,16,20,29,138,20,9,13,,,,3,1450,,beast,Flying; Relentless 15,
-dungeon.spectator,Spectator,dungeon,4,Medium,dungeon.beholder,A,16,15,16,23,92,8,4,10,12,,,3,1100,,,SpellImmunity mind,
-dungeon.beholder,Beholder,dungeon,4,Medium,,A,18,17,18,25,101,9,5,11,16,,,3,1450,,,SpellImmunity mind; RangedRetaliation,sandbox spelling 'Berholder'
-dungeon.shadow-horror,Shadow Horror,dungeon,5,Medium,dungeon.shadow-reaper,,24,22,44,69,250,24,11,15,,,,1,3300,sulfur 1,,FirstStrike; SpellImmunity mind,"walking shadow, not a dragon: no flying or breath (sandbox: copy of Seraph)"
-dungeon.shadow-reaper,Shadow Reaper,dungeon,5,Medium,,,28,25,49,73,292,26,11,16,,,,1,4300,sulfur 2,,FirstStrike; Relentless 15; SpellImmunity mind,"walking shadow, not a dragon: no flying or breath (sandbox: copy of Seraph)"
-stronghold.goblin,Goblin,stronghold,1,Small,stronghold.hobgoblin,A,4,2,2,5,10,12,5,12,,,,22,45,,orc,PackHunter 10,
-stronghold.hobgoblin,Hobgoblin,stronghold,1,Small,,A,5,3,3,5,11,13,6,13,,,,22,60,,orc,PackHunter 15,
-stronghold.harpy,Harpy,stronghold,1,Small,stronghold.fury,B,6,4,3,5,16,15,6,14,,,,14,70,,beast,Flying,
-stronghold.fury,Fury,stronghold,1,Small,,B,7,5,4,6,16,18,7,15,,,,14,90,,beast,Flying; NoEnemyRetaliation,
-stronghold.orc,Orc,stronghold,2,Small,stronghold.orc-berserker,A,9,6,6,9,27,11,5,11,,,,9,185,,orc,,
-stronghold.orc-berserker,Orc Berserker,stronghold,2,Small,,A,11,5,7,11,28,12,5,12,,,,9,240,,orc,Relentless 20,
-stronghold.centaur,Centaur,stronghold,2,Medium,stronghold.centaur-warchief,B,10,8,6,8,28,18,8,13,,,,8,210,,beast,,
-stronghold.centaur-warchief,Centaur Warchief,stronghold,2,Medium,,B,11,9,7,9,32,20,8,14,,,,8,270,,beast,PackHunter 10,
-stronghold.ogre,Ogre,stronghold,3,Medium,stronghold.ogre-mage,B,13,10,9,14,55,9,4,9,,,,5,450,,giant,,
-stronghold.ogre-mage,Ogre Mage,stronghold,3,Medium,,B,14,11,11,15,63,10,5,10,,,,5,580,,giant,Caster chaos.bloodlust 1,
-stronghold.wolf-rider,Wolf Rider,stronghold,3,Medium,stronghold.wolf-raider,A,12,9,9,13,50,18,8,13,,,,5,450,,orc; mounted,PackHunter 10,new: fills tier 3 (sandbox had only Ogre there)
-stronghold.wolf-raider,Wolf Raider,stronghold,3,Medium,,A,13,10,10,15,56,20,9,14,,,,5,580,,orc; mounted,PackHunter 15; Relentless 10,new: upgrade of Wolf Rider
-stronghold.roc,Roc,stronghold,4,Medium,stronghold.thunderbird,A,13,11,13,18,74,22,9,13,,,,5,660,,beast,Flying,tier 4 as in the sandbox
-stronghold.thunderbird,Thunderbird,stronghold,4,Medium,,A,14,12,15,21,82,24,10,14,,,,5,860,,beast,Flying; Caster nature.call-lightning 1,tier 4 as in the sandbox
-stronghold.cyclops,Cyclops,stronghold,4,Medium,stronghold.cyclops-king,B,17,14,14,19,93,11,5,11,12,,,3,1100,,giant,,not flying (sandbox flag was copy-paste)
-stronghold.cyclops-king,Cyclops King,stronghold,4,Medium,,B,19,16,15,21,103,12,6,12,16,,,3,1450,,giant,RangedRetaliation,
-stronghold.behemoth,Behemoth,stronghold,5,Large,stronghold.ancient-behemoth,,25,20,42,62,250,18,9,13,,,,1,3300,crystal 1,beast,,not flying (sandbox flag was copy-paste)
-stronghold.ancient-behemoth,Ancient Behemoth,stronghold,5,Large,,,28,23,44,69,276,20,10,14,,,,1,4300,crystal 2,beast,Relentless 15,
-swamp-bestiary.lizardman,Lizardman,swamp-bestiary,1,Small,swamp-bestiary.lizard-warrior,A,5,5,3,5,16,11,5,10,,,,16,60,,reptile,,sandbox listed the name only; stats are new
-swamp-bestiary.lizard-warrior,Lizard Warrior,swamp-bestiary,1,Small,,A,6,6,4,6,16,12,5,11,,,,16,80,,reptile,FirstStrike,sandbox listed the name only; stats are new
-swamp-bestiary.kappa,Kappa,swamp-bestiary,1,Small,swamp-bestiary.kappa-shaman,B,6,4,3,6,14,13,6,13,,,,15,65,,fey,Relentless 10,sandbox listed the name only; stats are new
-swamp-bestiary.kappa-shaman,Kappa Shaman,swamp-bestiary,1,Small,,B,7,5,3,6,14,14,6,14,8,,,15,85,,fey,MeleePenalty,sandbox listed the name only; stats are new
-swamp-bestiary.jungle-horror,Jungle Horror,swamp-bestiary,2,Medium,swamp-bestiary.jungle-terror,A,10,8,6,11,36,13,6,11,,,,7,240,,beast,PackHunter 15,sandbox listed the name only; stats are new
-swamp-bestiary.jungle-terror,Jungle Terror,swamp-bestiary,2,Medium,,A,11,9,7,12,41,14,6,12,,,,7,310,,beast,PackHunter 20,sandbox listed the name only; stats are new
-swamp-bestiary.mantis,Mantis,swamp-bestiary,2,Small,swamp-bestiary.serpent-fly,B,10,6,5,9,21,14,6,14,,,,9,185,,beast,FirstStrike,sandbox listed the name only; stats are new
-swamp-bestiary.serpent-fly,Serpent Fly,swamp-bestiary,2,Small,,B,11,7,6,9,22,18,7,15,,,,9,240,,beast,Flying; FirstStrike,sandbox listed the name only; stats are new
-swamp-bestiary.basilisk,Basilisk,swamp-bestiary,3,Medium,swamp-bestiary.greater-basilisk,A,12,12,9,14,54,10,5,10,,,,5,450,,reptile,,sandbox listed the name only; stats are new
-swamp-bestiary.greater-basilisk,Greater Basilisk,swamp-bestiary,3,Medium,,A,13,14,10,15,62,11,5,11,,,,5,580,,reptile,Relentless 10,sandbox listed the name only; stats are new
-swamp-bestiary.owlbear,Owlbear,swamp-bestiary,3,Medium,swamp-bestiary.elder-owlbear,B,13,10,10,14,54,12,6,11,,,,5,450,,beast,Relentless 10,sandbox listed the name only; stats are new
-swamp-bestiary.elder-owlbear,Elder Owlbear,swamp-bestiary,3,Medium,,B,14,11,10,14,58,13,6,12,,,,5,580,,beast,DoubleStrike,sandbox listed the name only; stats are new
-swamp-bestiary.gorgon,Gorgon,swamp-bestiary,4,Medium,swamp-bestiary.mighty-gorgon,A,16,17,15,21,129,10,5,9,,,,3,1100,,beast,,sandbox listed the name only; stats are new
-swamp-bestiary.mighty-gorgon,Mighty Gorgon,swamp-bestiary,4,Medium,,A,18,19,16,23,141,11,5,10,,,,3,1450,,beast,Breath,sandbox listed the name only; stats are new
-swamp-bestiary.wyvern,Wyvern,swamp-bestiary,4,Medium,swamp-bestiary.wyvern-monarch,B,16,14,17,25,115,20,8,12,,,,3,1100,,beast; dragon,Flying,placeholder stats (ADR-135)
-swamp-bestiary.wyvern-monarch,Wyvern Monarch,swamp-bestiary,4,Medium,,B,18,16,19,28,128,22,9,13,,,,3,1450,,beast; dragon,Flying; Relentless 10,placeholder stats (ADR-135)
-swamp-bestiary.hydra,Hydra,swamp-bestiary,5,Medium,swamp-bestiary.chaos-hydra,,23,22,28,43,209,13,7,12,,,,1,3300,sulfur 1,reptile,MultiHead; NoEnemyRetaliation,sandbox listed the name only; stats are new
-swamp-bestiary.chaos-hydra,Chaos Hydra,swamp-bestiary,5,Medium,,,26,25,32,46,241,15,8,13,,,,1,4300,sulfur 2,reptile,MultiHead; NoEnemyRetaliation; SpellImmunity poison,sandbox listed the name only; stats are new
-conflux.wisp,Wisp,conflux,1,Small,,,5,4,3,6,11,15,7,15,,,,15,65,,elemental,Flying; SpellImmunity mind,sandbox listed the name only; stats are new
-conflux.earth-elemental,Earth Elemental,conflux,3,Medium,,,12,14,8,12,58,9,4,8,,,,5,450,,elemental,SpellImmunity mind,sandbox listed the name only; stats are new
-conflux.air-elemental,Air Elemental,conflux,3,Medium,,,12,10,9,12,50,20,9,14,,,,5,450,,elemental,Flying; SpellImmunity mind,sandbox listed the name only; stats are new
-conflux.fire-elemental,Fire Elemental,conflux,3,Medium,,,13,10,10,15,50,15,7,12,,,,5,450,,elemental,SpellImmunity mind; SpellImmunity fire,sandbox listed the name only; stats are new
-conflux.water-elemental,Water Elemental,conflux,3,Medium,,,12,12,9,13,55,13,6,11,,,,5,450,,elemental,SpellImmunity mind,sandbox listed the name only; stats are new
-conflux.magma-elemental,Magma Elemental,conflux,4,Medium,,,16,18,15,21,104,10,5,9,,,,3,1100,,elemental,SpellImmunity mind; SpellImmunity fire,sandbox listed the name only; stats are new
-conflux.storm-elemental,Storm Elemental,conflux,4,Medium,,,16,14,14,21,93,22,9,14,,,,3,1100,,elemental,Flying; SpellImmunity mind; Caster nature.call-lightning 1,sandbox listed the name only; stats are new
-conflux.flame-elemental,Flame Elemental,conflux,4,Medium,,,17,14,17,23,95,18,8,13,,,,3,1100,,elemental,SpellImmunity mind; SpellImmunity fire; Relentless 10,sandbox listed the name only; stats are new
-conflux.ice-elemental,Ice Elemental,conflux,4,Medium,,,15,17,12,17,84,13,6,11,10,,,3,1100,,elemental,SpellImmunity mind; RangedRetaliation,sandbox listed the name only; stats are new
-conflux.energy-elemental,Energy Elemental,conflux,5,Medium,,,24,20,36,52,196,24,10,15,,,,1,3300,,elemental,Flying; SpellImmunity mind; SpellImmunity lightning,sandbox listed the name only; stats are new
-conflux.magic-elemental,Magic Elemental,conflux,5,Medium,,,25,24,34,49,206,20,10,14,,,,1,3300,,elemental,SpellImmunity mind; SpellImmunity all; MultiHead,sandbox listed the name only; stats are new
-dragon-utopia.haspid,Haspid,dragon-utopia,4,Medium,dragon-utopia.royal-haspid,,17,16,19,26,125,17,7,13,,,,2,1650,,reptile,Relentless 15,placeholder stats (ADR-135)
-dragon-utopia.royal-haspid,Royal Haspid,dragon-utopia,4,Medium,,,19,18,21,28,138,19,8,14,,,,2,2150,,reptile,Relentless 15; NoEnemyRetaliation,placeholder stats (ADR-135)
-dragon-utopia.red-dragon,Red Dragon,dragon-utopia,5,Large,,,28,26,49,62,308,22,10,14,,,,1,4950,sulfur 2,dragon,Flying; Breath; SpellImmunity fire; SpellResistance 3,fire (sandbox note)
-dragon-utopia.dragonyte,Dragonyte,dragon-utopia,4,Medium,,,17,17,17,26,141,13,6,11,,,,2,1650,sulfur 1,dragon,Cleave,sandbox listed the name only; stats are new
-dragon-utopia.faerie-dragon,Faerie Dragon,dragon-utopia,5,Medium,,,20,20,36,54,233,26,11,16,,,,1,2300,sulfur 2,dragon,Flying; Caster nature.call-lightning 2,sandbox listed the name only; stats are new
-dragon-utopia.green-dragon,Green Dragon,dragon-utopia,5,Large,,,26,24,49,61,306,20,10,14,,,,1,4600,sulfur 2,dragon,Flying; Breath; SpellImmunity poison; SpellResistance 3,acid (sandbox note)
-dragon-utopia.azure-dragon,Azure Dragon,dragon-utopia,5,Large,,,27,26,50,63,326,22,10,14,,,,1,5300,sulfur 2,dragon,Flying; Breath; SpellImmunity ice; SpellResistance 3,ice (sandbox note)
-dragon-utopia.gold-dragon,Gold Dragon,dragon-utopia,5,Large,,,28,27,47,62,320,24,11,15,,,,1,5100,sulfur 2,dragon,Flying; Breath; SpellImmunity lightning; SpellResistance 3,lightning (sandbox note)
-dragon-utopia.black-dragon,Black Dragon,dragon-utopia,5,Large,,,36,34,55,74,461,26,11,15,,,,1,9900,sulfur 2,dragon,Flying; Breath; SpellImmunity all,about twice any other dragon (sandbox note)
-neutral.wolf,Timber Wolf,,1,Small,neutral.dire-wolf,,6,4,4,6,14,15,7,13,,,,12,85,,beast,PackHunter 20,sandbox: Grove Timber Wolf (old copy)
-neutral.bandit,Bandit,,2,Small,,,9,7,5,10,27,12,6,11,,,,8,210,,human,,game-only neutral
-neutral.troll,Troll,,3,Medium,,,14,10,10,16,54,12,6,9,,,,4,560,,,UnlimitedRetaliation,game-only neutral
-neutral.dire-wolf,Dire Wolf,,1,Small,,,7,5,4,7,16,17,7,14,,,,12,110,,beast,PackHunter 25,sandbox: Grove Dire Wolf (old copy)
-neutral.specter,Specter,,2,Small,neutral.banshee,,9,7,5,9,25,15,7,13,,,,8,210,,undead,Flying; SpellImmunity mind,sandbox: Necropolis (old copy)
-neutral.banshee,Banshee,,2,Small,,,10,8,6,9,27,18,7,14,,,,8,270,,undead,Flying; SpellImmunity mind; NoEnemyRetaliation,sandbox: Necropolis (old copy)
-neutral.thane,Thane,,3,Medium,neutral.thunder-thane,,13,12,9,13,53,13,6,11,,,,5,450,,giant,,"sandbox: Academy tier 3, commented out"
-neutral.thunder-thane,Thunder Thane,,3,Medium,,,14,13,10,15,60,15,7,12,,,,5,580,,giant,Caster nature.call-lightning 1; SpellImmunity lightning,"sandbox: Academy tier 3, commented out"
-neutral.mammoth,Mammoth,,4,Medium,neutral.war-mammoth,,16,19,16,23,135,13,6,9,,,,2,1650,,beast,PackHunter 10,was a Stronghold line before Roc moved back to tier 4
-neutral.war-mammoth,War Mammoth,,4,Medium,,,18,21,18,25,148,14,6,10,,,,2,2150,,beast,PackHunter 10; Cleave,upgrade of Mammoth
-neutral.gog,Gog,,2,Small,neutral.magog,,9,7,5,8,21,10,5,10,10,,,8,210,,demon,MeleePenalty,sandbox: Inferno tier 2 (old copy)
-neutral.magog,Magog,,2,Small,,,10,8,6,9,24,11,5,11,12,,,8,270,,demon,MeleePenalty; SpellImmunity fire; Caster chaos.fireball 1,lore upgrade of Gog
-neutral.breeder,Breeder,,3,Medium,neutral.fel-breeder,,12,12,9,13,65,9,5,9,,,,4,560,,demon,Caster chaos.hellgate 1,"sandbox: Inferno tier 3, commented out; spawns imps (spell hook)"
-neutral.fel-breeder,Fel Breeder,,3,Medium,,,13,13,10,15,77,10,5,10,,,,4,730,,demon,Caster chaos.hellgate 2; SpellImmunity fire,"sandbox: Inferno tier 3, commented out"
-neutral.efreet,Efreet,,4,Medium,,,18,15,21,30,125,22,9,15,,,,3,1450,,elemental; demon,Flying; SpellImmunity fire; Caster chaos.fireball 1,"new: demonic counterpart of the Djinn Sultan, a neutral (one upgrade per line)"
-neutral.golden-golem,Golden Golem,,3,Medium,,,10,15,8,12,55,7,4,7,,,,4,560,,construct,SpellImmunity mind; SpellResistance 2,new
+id,name,town,tier,size,upgrade,category,attack,defense,min_damage,max_damage,health,speed,map_speed,initiative,shots,morale,luck,fight_value,growth,gold,resources,tags,capabilities,notes
+haven.footman,Footman,haven,1,Small,haven.crusader,A,6,5,4,5,13,11,3,10,,,,45,18,55,,human; holy,,"sandbox: hp 14, dmg 5-7, A6/D5"
+haven.crusader,Crusader,haven,1,Small,,A,7,6,4,5,13,12,4,11,,,,48,18,70,,human; holy,DoubleStrike,sandbox: identical to Footman (copy-paste)
+haven.pikeman,Pikeman,haven,1,Small,haven.guardian,B,6,8,3,6,17,10,4,9,,,,65,16,60,,human; holy,,"sandbox: hp 20, dmg 5-10, A8/D8"
+haven.guardian,Guardian,haven,1,Small,,B,7,10,4,6,18,11,4,10,,,,83,16,80,,human; holy,FirstStrike; UnlimitedRetaliation,"sandbox: hp 20, dmg 5-10, A8/D10"
+haven.zealot,Zealot,haven,2,Small,haven.inquisitor,A,10,9,6,9,30,12,5,11,,,,219,9,185,,human; holy,,"sandbox: hp 40, dmg 7-13"
+haven.inquisitor,Inquisitor,haven,2,Small,,A,11,10,7,10,34,13,5,12,,,,296,9,240,,human; holy,Relentless 15; SpellImmunity mind,"sandbox: hp 45, dmg 11-13"
+haven.archer,Archer,haven,2,Small,haven.marksman,B,8,6,6,9,23,9,4,9,12,,,219,10,165,,human; holy,MeleePenalty,"sandbox: tier 1 there; hp 12, dmg 4-6, 12 shots"
+haven.marksman,Marksman,haven,2,Small,,B,9,7,6,10,23,10,5,10,16,,,247,10,210,,human; holy,ShootsTwice; MeleePenalty,"sandbox: hp 15, dmg 4-8, 12 shots"
+haven.monk,Monk,haven,3,Small,haven.priest,A,12,9,12,17,44,9,5,9,10,,,979,5,450,,human; holy,MeleePenalty; RangedRetaliation,"sandbox: hp 30, dmg 8-12, 12 shots"
+haven.priest,Priest,haven,3,Small,,A,13,11,13,19,50,10,6,11,12,,,1320,5,580,,human; holy,RangedRetaliation; Caster light.heal 1,"sandbox: hp 35, dmg 8-12, 12 shots"
+haven.griffin,Griffin,haven,3,Medium,haven.royal-griffin,B,13,12,9,13,54,20,7,12,,,,801,5,450,,beast,Flying,"sandbox: hp 100, dmg 16-20, flying"
+haven.royal-griffin,Royal Griffin,haven,3,Medium,,B,14,13,10,14,61,24,8,13,,,,1032,5,580,,beast,Flying; UnlimitedRetaliation,"sandbox: hp 110, dmg 16-22, flying"
+haven.lancer,Lancer,haven,4,Medium,haven.champion,B,16,16,19,26,120,20,7,12,,,,3510,3,1100,,human; holy; mounted,,"sandbox: hp 120, dmg 16-24"
+haven.champion,Champion,haven,4,Medium,,B,18,17,22,29,135,22,9,13,,,,4733,3,1450,,human; holy; mounted,PackHunter 10,sandbox: identical to Lancer (copy-paste)
+haven.paladin,Paladin,haven,4,Medium,haven.sacred-warrior,A,16,20,17,22,125,13,5,12,,,,3412,3,1100,,human; holy,,"sandbox: hp 100, dmg 12-16"
+haven.sacred-warrior,Sacred Warrior,haven,4,Medium,,A,17,22,18,23,126,14,6,13,,,,3809,3,1450,,human; holy,DoubleStrike; SpellImmunity curse,sandbox: identical to Paladin (copy-paste)
+haven.radiant-spirit,Radiant Spirit,haven,5,Medium,haven.seraph,,22,22,58,73,255,24,10,15,,,,32068,1,3300,crystal 1,holy,Flying; SpellImmunity mind,"sandbox: hp 175, flying"
+haven.seraph,Seraph,haven,5,Medium,,,26,26,58,73,278,29,11,16,,,,39331,1,4300,crystal 2,holy,Flying; NoEnemyRetaliation; SpellImmunity mind; Caster light.resurrection 1,"sandbox: hp 250, flying"
+sylvan.pixie,Pixie,sylvan,1,Small,sylvan.sprite,A,3,2,2,6,12,13,5,14,,,,36,20,50,,fey,Flying,
+sylvan.sprite,Sprite,sylvan,1,Small,,A,4,3,4,6,13,15,6,15,,,,51,20,65,,fey,Flying; NoEnemyRetaliation,
+sylvan.satyr,Satyr,sylvan,1,Small,sylvan.satyr-warrior,B,6,5,3,6,15,11,4,11,,,,52,16,60,,fey,,
+sylvan.satyr-warrior,Satyr Warrior,sylvan,1,Small,,B,7,6,4,6,16,12,5,12,,,,66,16,80,,fey,Relentless 10,
+sylvan.blade-dancer,Blade Dancer,sylvan,2,Small,sylvan.war-dancer,A,9,6,7,11,31,13,6,13,,,,244,8,210,,elf,,
+sylvan.war-dancer,War Dancer,sylvan,2,Small,,A,10,7,8,12,33,14,6,14,,,,305,8,270,,elf,MultiHead,
+sylvan.hunter,Hunter,sylvan,2,Small,sylvan.arcane-archer,B,9,5,5,10,19,10,5,11,14,,,181,9,185,,elf,MeleePenalty,
+sylvan.arcane-archer,Arcane Archer,sylvan,2,Small,,B,10,6,6,10,19,11,6,12,16,,,204,9,240,,elf,ShootsTwice; MeleePenalty,
+sylvan.druid,Druid,sylvan,3,Small,sylvan.druid-elder,B,11,8,12,17,52,9,5,10,10,,,1102,5,450,,elf,MeleePenalty; Caster nature.call-lightning 1,
+sylvan.druid-elder,Druid Elder,sylvan,3,Small,,B,12,9,14,19,58,10,5,11,12,,,1470,5,580,,elf,RangedRetaliation; Caster nature.call-lightning 2,
+sylvan.pegasus,Pegasus,sylvan,3,Medium,sylvan.silver-pegasus,A,12,10,9,14,52,20,8,13,,,,752,5,450,,beast,Flying,flying (the sandbox lacked the flag)
+sylvan.silver-pegasus,Silver Pegasus,sylvan,3,Medium,,A,13,12,11,15,59,24,9,14,,,,1034,5,580,,beast,Flying; SpellImmunity mind,flying (the sandbox lacked the flag)
+sylvan.moon-doe,Moon Doe,sylvan,4,Medium,sylvan.unicorn,A,15,16,17,25,119,18,7,12,,,,3186,3,1100,,beast,SpellImmunity curse,
+sylvan.unicorn,Unicorn,sylvan,4,Medium,,A,17,18,19,29,136,20,8,13,,,,4488,3,1450,,beast,SpellImmunity curse; SpellImmunity mind,"sandbox id MistQuilin, shown as Pristine Unicorn"
+sylvan.treant,Treant,sylvan,4,Medium,sylvan.ancient-treant,B,13,22,18,26,219,8,3,7,,,,6624,2,1650,,,UnlimitedRetaliation,
+sylvan.ancient-treant,Ancient Treant,sylvan,4,Medium,,B,15,24,19,29,244,9,4,8,,,,8637,2,2150,,,UnlimitedRetaliation; FirstStrike,
+sylvan.fire-bird,Fire Bird,sylvan,5,Medium,sylvan.phoenix,,22,20,49,65,284,26,11,15,,,,30109,1,3300,mercury 1,,Flying; Breath; SpellImmunity fire,
+sylvan.phoenix,Phoenix,sylvan,5,Medium,,,26,24,52,67,325,31,11,16,,,,40608,1,4300,mercury 2,,Flying; Breath; SpellImmunity fire; Caster rebirth 1,
+academy.gremlin,Gremlin,academy,1,Small,academy.gremlin-master,A,4,3,2,5,14,10,4,11,,,,33,20,50,,,,"sandbox: hp 8, dmg 1-3"
+academy.gremlin-master,Gremlin Master,academy,1,Small,,A,5,4,3,5,14,11,5,12,8,,,60,20,65,,,MeleePenalty,"sandbox: hp 9, dmg 1-3, 12 shots"
+academy.dwarf,Dwarf,academy,1,Small,academy.dwarf-defender,B,5,8,2,4,18,9,3,8,,,,44,15,65,,,FirstStrike,"sandbox: hp 14, dmg 2-3, A5/D7"
+academy.dwarf-defender,Dwarf Defender,academy,1,Small,,B,6,10,3,4,19,10,4,9,,,,59,15,85,,,FirstStrike; UnlimitedRetaliation,"sandbox: hp 14, dmg 2-3, A5/D9"
+academy.gargoyle,Gargoyle,academy,2,Small,academy.obsidian-gargoyle,A,8,9,4,9,28,15,7,12,,,,201,9,185,,construct,Flying,"sandbox: hp 20, dmg 3-5, flying"
+academy.obsidian-gargoyle,Obsidian Gargoyle,academy,2,Small,,A,9,11,5,9,33,18,8,13,,,,277,9,240,,construct,Flying; SpellImmunity fire,"sandbox: hp 25, dmg 4-5, flying"
+academy.iron-golem,Iron Golem,academy,2,Medium,academy.animated-armor,B,9,11,6,10,38,9,4,8,,,,304,7,240,,construct,SpellImmunity mind,"sandbox: hp 30, dmg 4-6, A12/D15"
+academy.animated-armor,Animated Armor,academy,2,Medium,,B,10,13,7,11,44,10,4,9,,,,425,7,310,,construct,SpellImmunity mind; SpellImmunity fire,"sandbox: hp 35, dmg 5-7 (upgrade of Iron Golem there)"
+academy.snow-maiden,Snow Maiden,academy,3,Small,academy.enchantress,A,11,7,13,18,47,9,5,11,10,,,1038,5,450,,,MeleePenalty,
+academy.enchantress,Enchantress,academy,3,Small,,A,12,8,14,20,53,10,5,12,12,,,1351,5,580,,,MeleePenalty; Caster arcana.frost-bolt 1,
+academy.sorcerer,Sorcerer,academy,3,Small,academy.mage,B,12,8,12,18,42,9,5,11,10,,,945,5,450,,human,MeleePenalty,"sandbox: hp 30, dmg 10-14, 12 shots (mislabelled 'Iron Golem' there)"
+academy.mage,Mage,academy,3,Small,,B,13,9,13,19,47,10,5,12,12,,,1183,5,580,,human,MeleePenalty; RangedRetaliation; Caster chaos.fireball 1,"sandbox: hp 40, dmg 10-16, 20 shots (mislabelled 'Steel Golem' there)"
+academy.djinn,Djinn,academy,4,Medium,academy.djinn-sultan,A,15,14,18,26,118,20,8,13,,,,3816,3,1100,,elemental,Flying,
+academy.djinn-sultan,Djinn Sultan,academy,4,Medium,,A,17,16,20,29,132,22,9,14,,,,5142,3,1450,,elemental,Flying; Caster shadow.confusion 1; SpellImmunity mind,
+academy.naga,Naga,academy,4,Medium,academy.naga-queen,B,17,17,17,23,115,11,5,11,,,,3105,2,1650,,,NoEnemyRetaliation,
+academy.naga-queen,Naga Queen,academy,4,Medium,,B,19,19,19,25,131,12,6,12,,,,4178,2,2150,,,NoEnemyRetaliation; Relentless 10,
+academy.colossus,Colossus,academy,5,Medium,academy.titan,,24,24,46,63,250,18,9,13,,,,23162,1,3300,mercury 1,giant,SpellImmunity mind,"sandbox: hp 200, dmg 40-50"
+academy.titan,Titan,academy,5,Medium,,,28,27,46,63,250,20,10,14,20,,,38319,1,4300,mercury 2,giant,SpellImmunity mind; RangedRetaliation,"sandbox: hp 300, dmg 40-50, 16 shots"
+necropolis.skeleton,Skeleton,necropolis,1,Small,necropolis.skeleton-warrior,A,5,4,2,6,11,10,4,10,,,,31,20,50,,undead,SpellImmunity mind,sandbox showed it as 'Devil' (copy-paste)
+necropolis.skeleton-warrior,Skeleton Warrior,necropolis,1,Small,,A,6,6,3,6,12,11,5,11,,,,43,20,65,,undead,SpellImmunity mind; UnlimitedRetaliation,
+necropolis.plague-bearer,Plague Bearer,necropolis,1,Small,necropolis.flesh-golem,B,4,6,2,4,20,8,3,7,,,,45,15,65,,undead,SpellImmunity mind; Relentless 10,
+necropolis.flesh-golem,Flesh Golem,necropolis,1,Small,,B,6,8,3,4,22,9,3,8,,,,65,15,85,,undead; construct,SpellImmunity mind; UnlimitedRetaliation,
+necropolis.ghoul,Ghoul,necropolis,2,Small,necropolis.alghoul,A,9,7,5,9,26,12,5,11,,,,163,9,185,,undead,SpellImmunity mind; Relentless 15,
+necropolis.alghoul,Alghoul,necropolis,2,Small,,A,10,8,6,10,30,13,6,12,,,,228,9,240,,undead,SpellImmunity mind; Relentless 20,
+necropolis.death-weaver,Death Weaver,necropolis,3,Medium,necropolis.fate-weaver,B,12,11,9,13,52,18,7,12,,,,736,5,450,,undead; beast,Flying; PackHunter 10,placeholder stats (ADR-135)
+necropolis.fate-weaver,Fate Weaver,necropolis,3,Medium,,B,13,12,10,14,60,21,8,13,,,,972,5,580,,undead; beast,Flying; PackHunter 15; SpellImmunity mind,placeholder stats (ADR-135)
+necropolis.vampire,Vampire,necropolis,3,Small,necropolis.vampire-lord,A,12,10,6,11,35,15,6,12,,,,374,5,450,,undead,Flying; NoEnemyRetaliation,
+necropolis.vampire-lord,Vampire Lord,necropolis,3,Small,,A,13,12,7,12,41,18,7,13,,,,525,5,580,,undead,Flying; NoEnemyRetaliation; SpellImmunity mind,
+necropolis.wight,Wight,necropolis,2,Small,necropolis.wraith,B,8,6,5,8,24,10,5,10,10,,,198,9,185,,undead,MeleePenalty; SpellImmunity mind,placeholder stats (ADR-135)
+necropolis.wraith,Wraith,necropolis,2,Small,,B,9,7,6,9,27,11,5,11,12,,,273,9,240,,undead,MeleePenalty; RangedRetaliation; SpellImmunity mind,placeholder stats (ADR-135)
+necropolis.dark-knight,Dark Knight,necropolis,4,Medium,necropolis.death-knight,A,17,16,16,23,106,18,7,12,,,,2738,3,1100,,undead; mounted,Relentless 10,
+necropolis.death-knight,Death Knight,necropolis,4,Medium,,A,19,18,18,26,119,20,8,13,,,,3730,3,1450,,undead; mounted,Relentless 15; SpellImmunity mind,
+necropolis.lich,Lich,necropolis,4,Small,necropolis.arch-lich,B,15,14,19,28,110,9,5,10,12,,,4749,3,1100,,undead,MeleePenalty; Caster death.death-cloud 1; SpellImmunity mind,
+necropolis.arch-lich,Arch Lich,necropolis,4,Small,,B,17,16,21,30,122,10,6,11,16,,,6183,3,1450,,undead,MeleePenalty; Caster death.death-cloud 1; SpellImmunity mind; RangedRetaliation,
+necropolis.bone-dragon,Bone Dragon,necropolis,5,Large,necropolis.ghost-dragon,,22,20,47,70,248,20,9,13,,,,26984,1,3300,mercury 1,undead; dragon,Flying; SpellImmunity mind; Relentless 10,
+necropolis.ghost-dragon,Ghost Dragon,necropolis,5,Large,,,25,23,50,71,285,24,10,14,,,,35174,1,4300,mercury 2,undead; dragon,Flying; SpellImmunity mind; Breath,
+inferno.imp,Imp,inferno,1,Small,inferno.familiar,A,4,3,3,6,13,11,5,13,,,,46,20,50,,demon,Flying,sandbox name 'Inp'
+inferno.familiar,Familiar,inferno,1,Small,,A,5,4,4,6,13,13,6,14,,,,56,20,65,,demon,Flying; Relentless 10; ManaThief 1,
+inferno.horned-demon,Horned Demon,inferno,1,Small,inferno.horned-overseer,B,7,7,4,6,16,10,4,9,,,,68,15,65,,demon,,
+inferno.horned-overseer,Horned Overseer,inferno,1,Small,,B,8,9,5,7,17,11,5,10,,,,94,15,85,,demon,PackHunter 10,
+inferno.hell-hound,Hell Hound,inferno,2,Medium,inferno.cerberus,A,10,7,6,11,32,18,7,13,,,,251,8,210,,demon; beast,PackHunter 15,
+inferno.cerberus,Cerberus,inferno,2,Medium,,A,11,8,7,11,35,20,8,14,,,,307,8,270,,demon; beast,Cleave; NoEnemyRetaliation,
+inferno.tormentor,Tormentor,inferno,2,Small,inferno.lacerator,B,10,8,6,9,29,12,5,11,,,,206,9,185,,demon,Relentless 15,
+inferno.lacerator,Lacerator,inferno,2,Small,,B,11,9,7,10,32,13,5,12,,,,272,9,240,,demon,Relentless 25; FirstStrike,
+inferno.succubus,Succubus,inferno,3,Small,inferno.succubus-mistress,B,12,9,13,19,47,11,6,11,10,,,1155,5,450,,demon,MeleePenalty,
+inferno.succubus-mistress,Succubus Mistress,inferno,3,Small,,B,13,10,14,20,54,12,6,12,12,,,1479,5,580,,demon,RangedRetaliation; SpellImmunity mind,
+inferno.hell-charger,Hell Charger,inferno,3,Medium,inferno.nightmare,A,13,11,9,14,54,20,8,13,,,,683,5,450,,demon; beast,,
+inferno.nightmare,Nightmare,inferno,3,Medium,,A,14,12,10,15,63,23,9,14,,,,905,5,580,,demon; beast,Relentless 15,
+inferno.pit-fiend,Pit Fiend,inferno,4,Medium,inferno.pit-lord,B,17,16,17,25,125,13,6,11,,,,3478,3,1100,,demon,,
+inferno.pit-lord,Pit Lord,inferno,4,Medium,,B,19,17,19,26,132,14,7,12,,,,4158,3,1450,,demon,MultiHead; Caster chaos.fireball 1,
+inferno.juggernaut,Juggernaut,inferno,4,Medium,inferno.ravager,A,17,20,22,32,182,11,5,9,,,,7002,2,1650,,demon; beast,,
+inferno.ravager,Ravager,inferno,4,Medium,,A,19,22,24,34,198,12,6,10,,,,8756,2,2150,,demon; beast,Breath; SpellImmunity fire,
+inferno.devil,Devil,inferno,5,Medium,inferno.arch-devil,,26,24,35,59,176,22,11,15,,,,17371,1,3300,mercury 1,demon,Flying; NoEnemyRetaliation; SpellImmunity fire,
+inferno.arch-devil,Arch Devil,inferno,5,Medium,,,28,26,39,64,205,26,11,16,,,,23437,1,4300,mercury 2,demon,Flying; NoEnemyRetaliation; Relentless 10; SpellImmunity fire,
+dungeon.troglodyte,Troglodyte,dungeon,1,Small,dungeon.deep-troglodyte,A,5,4,4,6,13,10,4,10,,,,47,18,55,,,SpellImmunity blind,
+dungeon.deep-troglodyte,Deep Troglodyte,dungeon,1,Small,,A,6,5,4,7,14,11,5,11,,,,59,18,70,,,SpellImmunity blind; PackHunter 10,
+dungeon.scout,Scout,dungeon,1,Small,dungeon.stalker,B,6,3,4,7,15,13,6,14,,,,59,15,65,,elf,Relentless 10,
+dungeon.stalker,Stalker,dungeon,1,Small,,B,7,4,4,8,16,14,7,15,,,,74,15,85,,elf,Relentless 15; FirstStrike,
+dungeon.medusa,Medusa,dungeon,2,Small,dungeon.putrid-medusa,A,9,8,5,8,25,9,5,10,8,,,225,8,210,,reptile,,
+dungeon.putrid-medusa,Putrid Medusa,dungeon,2,Small,,A,10,10,5,8,28,10,5,11,10,,,273,8,270,,reptile,RangedRetaliation,
+dungeon.minotaur,Minotaur,dungeon,2,Medium,dungeon.minotaur-guard,B,11,9,7,10,37,12,6,11,,,,314,7,240,,,Relentless 10,
+dungeon.minotaur-guard,Minotaur Guard,dungeon,2,Medium,,B,12,11,7,11,42,13,6,12,,,,406,7,310,,,Relentless 10; FirstStrike,
+dungeon.dark-raider,Dark Raider,dungeon,3,Medium,dungeon.grim-raider,B,12,10,9,13,56,20,8,13,,,,646,5,450,,elf; mounted,PackHunter 10,melee cavalry (the sandbox's crossbow shots are dropped)
+dungeon.grim-raider,Grim Raider,dungeon,3,Medium,,B,13,11,10,14,64,22,9,14,,,,844,5,580,,elf; mounted,PackHunter 15; Relentless 10,melee cavalry (the sandbox's crossbow shots are dropped)
+dungeon.shadow-mistress,Shadow Mistress,dungeon,3,Small,dungeon.shadow-matriarch,A,11,8,12,19,48,10,5,11,10,,,1087,5,450,,elf,MeleePenalty; Caster shadow.blind 1,
+dungeon.shadow-matriarch,Shadow Matriarch,dungeon,3,Small,,A,12,9,14,20,55,11,6,12,12,,,1437,5,580,,elf,MeleePenalty; Caster shadow.blind 1; RangedRetaliation,
+dungeon.manticore,Manticore,dungeon,4,Medium,dungeon.scorpicore,B,16,14,18,27,123,18,8,12,,,,4150,3,1100,,beast,Flying,
+dungeon.scorpicore,Scorpicore,dungeon,4,Medium,,B,18,16,20,29,138,20,9,13,,,,5476,3,1450,,beast,Flying; Relentless 15,
+dungeon.spectator,Spectator,dungeon,4,Medium,dungeon.beholder,A,16,15,16,23,92,8,4,10,12,,,3430,3,1100,,,SpellImmunity mind,
+dungeon.beholder,Beholder,dungeon,4,Medium,,A,18,17,18,25,101,9,5,11,16,,,4477,3,1450,,,SpellImmunity mind; RangedRetaliation,sandbox spelling 'Berholder'
+dungeon.shadow-horror,Shadow Horror,dungeon,5,Medium,dungeon.shadow-reaper,,24,22,44,69,250,24,11,15,,,,23306,1,3300,sulfur 1,,FirstStrike; SpellImmunity mind,"walking shadow, not a dragon: no flying or breath (sandbox: copy of Seraph)"
+dungeon.shadow-reaper,Shadow Reaper,dungeon,5,Medium,,,28,25,49,73,292,26,11,16,,,,32506,1,4300,sulfur 2,,FirstStrike; Relentless 15; SpellImmunity mind,"walking shadow, not a dragon: no flying or breath (sandbox: copy of Seraph)"
+stronghold.goblin,Goblin,stronghold,1,Small,stronghold.hobgoblin,A,4,2,2,5,10,12,5,12,,,,22,22,45,,orc,PackHunter 10,
+stronghold.hobgoblin,Hobgoblin,stronghold,1,Small,,A,5,3,3,5,11,13,6,13,,,,30,22,60,,orc,PackHunter 15,
+stronghold.harpy,Harpy,stronghold,1,Small,stronghold.fury,B,6,4,3,5,16,15,6,14,,,,57,14,70,,beast,Flying,
+stronghold.fury,Fury,stronghold,1,Small,,B,7,5,4,6,16,18,7,15,,,,76,14,90,,beast,Flying; NoEnemyRetaliation,
+stronghold.orc,Orc,stronghold,2,Small,stronghold.orc-berserker,A,9,6,6,9,27,11,5,11,,,,177,9,185,,orc,,
+stronghold.orc-berserker,Orc Berserker,stronghold,2,Small,,A,11,5,7,11,28,12,5,12,,,,226,9,240,,orc,Relentless 20,
+stronghold.centaur,Centaur,stronghold,2,Medium,stronghold.centaur-warchief,B,10,8,6,8,28,18,8,13,,,,186,8,210,,beast,,
+stronghold.centaur-warchief,Centaur Warchief,stronghold,2,Medium,,B,11,9,7,9,32,20,8,14,,,,256,8,270,,beast,PackHunter 10,
+stronghold.ogre,Ogre,stronghold,3,Medium,stronghold.ogre-mage,B,13,10,9,14,55,9,4,9,,,,679,5,450,,giant,,
+stronghold.ogre-mage,Ogre Mage,stronghold,3,Medium,,B,14,11,11,15,63,10,5,10,,,,921,5,580,,giant,Caster chaos.bloodlust 1,
+stronghold.wolf-rider,Wolf Rider,stronghold,3,Medium,stronghold.wolf-raider,A,12,9,9,13,50,18,8,13,,,,563,5,450,,orc; mounted,PackHunter 10,new: fills tier 3 (sandbox had only Ogre there)
+stronghold.wolf-raider,Wolf Raider,stronghold,3,Medium,,A,13,10,10,15,56,20,9,14,,,,752,5,580,,orc; mounted,PackHunter 15; Relentless 10,new: upgrade of Wolf Rider
+stronghold.roc,Roc,stronghold,4,Medium,stronghold.thunderbird,A,13,11,13,18,74,22,9,13,,,,1513,5,660,,beast,Flying,tier 4 as in the sandbox
+stronghold.thunderbird,Thunderbird,stronghold,4,Medium,,A,14,12,15,21,82,24,10,14,,,,2036,5,860,,beast,Flying; Caster nature.call-lightning 1,tier 4 as in the sandbox
+stronghold.cyclops,Cyclops,stronghold,4,Medium,stronghold.cyclops-king,B,17,14,14,19,93,11,5,11,12,,,2934,3,1100,,giant,,not flying (sandbox flag was copy-paste)
+stronghold.cyclops-king,Cyclops King,stronghold,4,Medium,,B,19,16,15,21,103,12,6,12,16,,,3823,3,1450,,giant,RangedRetaliation,
+stronghold.behemoth,Behemoth,stronghold,5,Large,stronghold.ancient-behemoth,,25,20,42,62,250,18,9,13,,,,21125,1,3300,crystal 1,beast,,not flying (sandbox flag was copy-paste)
+stronghold.ancient-behemoth,Ancient Behemoth,stronghold,5,Large,,,28,23,44,69,276,20,10,14,,,,27679,1,4300,crystal 2,beast,Relentless 15,
+swamp-bestiary.lizardman,Lizardman,swamp-bestiary,1,Small,swamp-bestiary.lizard-warrior,A,5,5,3,5,16,11,5,10,,,,48,16,60,,reptile,,sandbox listed the name only; stats are new
+swamp-bestiary.lizard-warrior,Lizard Warrior,swamp-bestiary,1,Small,,A,6,6,4,6,16,12,5,11,,,,64,16,80,,reptile,FirstStrike,sandbox listed the name only; stats are new
+swamp-bestiary.kappa,Kappa,swamp-bestiary,1,Small,swamp-bestiary.kappa-shaman,B,6,4,3,6,14,13,6,13,,,,47,15,65,,fey,Relentless 10,sandbox listed the name only; stats are new
+swamp-bestiary.kappa-shaman,Kappa Shaman,swamp-bestiary,1,Small,,B,7,5,3,6,14,14,6,14,8,,,75,15,85,,fey,MeleePenalty,sandbox listed the name only; stats are new
+swamp-bestiary.jungle-horror,Jungle Horror,swamp-bestiary,2,Medium,swamp-bestiary.jungle-terror,A,10,8,6,11,36,13,6,11,,,,290,7,240,,beast,PackHunter 15,sandbox listed the name only; stats are new
+swamp-bestiary.jungle-terror,Jungle Terror,swamp-bestiary,2,Medium,,A,11,9,7,12,41,14,6,12,,,,389,7,310,,beast,PackHunter 20,sandbox listed the name only; stats are new
+swamp-bestiary.mantis,Mantis,swamp-bestiary,2,Small,swamp-bestiary.serpent-fly,B,10,6,5,9,21,14,6,14,,,,132,9,185,,beast,FirstStrike,sandbox listed the name only; stats are new
+swamp-bestiary.serpent-fly,Serpent Fly,swamp-bestiary,2,Small,,B,11,7,6,9,22,18,7,15,,,,187,9,240,,beast,Flying; FirstStrike,sandbox listed the name only; stats are new
+swamp-bestiary.basilisk,Basilisk,swamp-bestiary,3,Medium,swamp-bestiary.greater-basilisk,A,12,12,9,14,54,10,5,10,,,,683,5,450,,reptile,,sandbox listed the name only; stats are new
+swamp-bestiary.greater-basilisk,Greater Basilisk,swamp-bestiary,3,Medium,,A,13,14,10,15,62,11,5,11,,,,910,5,580,,reptile,Relentless 10,sandbox listed the name only; stats are new
+swamp-bestiary.owlbear,Owlbear,swamp-bestiary,3,Medium,swamp-bestiary.elder-owlbear,B,13,10,10,14,54,12,6,11,,,,696,5,450,,beast,Relentless 10,sandbox listed the name only; stats are new
+swamp-bestiary.elder-owlbear,Elder Owlbear,swamp-bestiary,3,Medium,,B,14,11,10,14,58,13,6,12,,,,783,5,580,,beast,DoubleStrike,sandbox listed the name only; stats are new
+swamp-bestiary.gorgon,Gorgon,swamp-bestiary,4,Medium,swamp-bestiary.mighty-gorgon,A,16,17,15,21,129,10,5,9,,,,3076,3,1100,,beast,,sandbox listed the name only; stats are new
+swamp-bestiary.mighty-gorgon,Mighty Gorgon,swamp-bestiary,4,Medium,,A,18,19,16,23,141,11,5,10,,,,3918,3,1450,,beast,Breath,sandbox listed the name only; stats are new
+swamp-bestiary.wyvern,Wyvern,swamp-bestiary,4,Medium,swamp-bestiary.wyvern-monarch,B,16,14,17,25,115,20,8,12,,,,3621,3,1100,,beast; dragon,Flying,placeholder stats (ADR-135)
+swamp-bestiary.wyvern-monarch,Wyvern Monarch,swamp-bestiary,4,Medium,,B,18,16,19,28,128,22,9,13,,,,4872,3,1450,,beast; dragon,Flying; Relentless 10,placeholder stats (ADR-135)
+swamp-bestiary.hydra,Hydra,swamp-bestiary,5,Medium,swamp-bestiary.chaos-hydra,,23,22,28,43,209,13,7,12,,,,12056,1,3300,sulfur 1,reptile,MultiHead; NoEnemyRetaliation,sandbox listed the name only; stats are new
+swamp-bestiary.chaos-hydra,Chaos Hydra,swamp-bestiary,5,Medium,,,26,25,32,46,241,15,8,13,,,,16683,1,4300,sulfur 2,reptile,MultiHead; NoEnemyRetaliation; SpellImmunity poison,sandbox listed the name only; stats are new
+conflux.wisp,Wisp,conflux,1,Small,,,5,4,3,6,11,15,7,15,,,,42,15,65,,elemental,Flying; SpellImmunity mind,sandbox listed the name only; stats are new
+conflux.earth-elemental,Earth Elemental,conflux,3,Medium,,,12,14,8,12,58,9,4,8,,,,667,5,450,,elemental,SpellImmunity mind,sandbox listed the name only; stats are new
+conflux.air-elemental,Air Elemental,conflux,3,Medium,,,12,10,9,12,50,20,9,14,,,,661,5,450,,elemental,Flying; SpellImmunity mind,sandbox listed the name only; stats are new
+conflux.fire-elemental,Fire Elemental,conflux,3,Medium,,,13,10,10,15,50,15,7,12,,,,671,5,450,,elemental,SpellImmunity mind; SpellImmunity fire,sandbox listed the name only; stats are new
+conflux.water-elemental,Water Elemental,conflux,3,Medium,,,12,12,9,13,55,13,6,11,,,,665,5,450,,elemental,SpellImmunity mind,sandbox listed the name only; stats are new
+conflux.magma-elemental,Magma Elemental,conflux,4,Medium,,,16,18,15,21,104,10,5,9,,,,2527,3,1100,,elemental,SpellImmunity mind; SpellImmunity fire,sandbox listed the name only; stats are new
+conflux.storm-elemental,Storm Elemental,conflux,4,Medium,,,16,14,14,21,93,22,9,14,,,,2440,3,1100,,elemental,Flying; SpellImmunity mind; Caster nature.call-lightning 1,sandbox listed the name only; stats are new
+conflux.flame-elemental,Flame Elemental,conflux,4,Medium,,,17,14,17,23,95,18,8,13,,,,2422,3,1100,,elemental,SpellImmunity mind; SpellImmunity fire; Relentless 10,sandbox listed the name only; stats are new
+conflux.ice-elemental,Ice Elemental,conflux,4,Medium,,,15,17,12,17,84,13,6,11,10,,,2374,3,1100,,elemental,SpellImmunity mind; RangedRetaliation,sandbox listed the name only; stats are new
+conflux.energy-elemental,Energy Elemental,conflux,5,Medium,,,24,20,36,52,196,24,10,15,,,,16557,1,3300,,elemental,Flying; SpellImmunity mind; SpellImmunity lightning,sandbox listed the name only; stats are new
+conflux.magic-elemental,Magic Elemental,conflux,5,Medium,,,25,24,34,49,206,20,10,14,,,,14747,1,3300,,elemental,SpellImmunity mind; SpellImmunity all; MultiHead,sandbox listed the name only; stats are new
+dragon-utopia.haspid,Haspid,dragon-utopia,4,Medium,dragon-utopia.royal-haspid,,17,16,19,26,125,17,7,13,,,,3726,2,1650,,reptile,Relentless 15,placeholder stats (ADR-135)
+dragon-utopia.royal-haspid,Royal Haspid,dragon-utopia,4,Medium,,,19,18,21,28,138,19,8,14,,,,4817,2,2150,,reptile,Relentless 15; NoEnemyRetaliation,placeholder stats (ADR-135)
+dragon-utopia.red-dragon,Red Dragon,dragon-utopia,5,Large,,,28,26,49,62,308,22,10,14,,,,37947,1,4950,sulfur 2,dragon,Flying; Breath; SpellImmunity fire; SpellResistance 3,fire (sandbox note)
+dragon-utopia.dragonyte,Dragonyte,dragon-utopia,4,Medium,,,17,17,17,26,141,13,6,11,,,,4092,2,1650,sulfur 1,dragon,Cleave,sandbox listed the name only; stats are new
+dragon-utopia.faerie-dragon,Faerie Dragon,dragon-utopia,5,Medium,,,20,20,36,54,233,26,11,16,,,,18872,1,2300,sulfur 2,dragon,Flying; Caster nature.call-lightning 2,sandbox listed the name only; stats are new
+dragon-utopia.green-dragon,Green Dragon,dragon-utopia,5,Large,,,26,24,49,61,306,20,10,14,,,,35342,1,4600,sulfur 2,dragon,Flying; Breath; SpellImmunity poison; SpellResistance 3,acid (sandbox note)
+dragon-utopia.azure-dragon,Azure Dragon,dragon-utopia,5,Large,,,27,26,50,63,326,22,10,14,,,,40336,1,5300,sulfur 2,dragon,Flying; Breath; SpellImmunity ice; SpellResistance 3,ice (sandbox note)
+dragon-utopia.gold-dragon,Gold Dragon,dragon-utopia,5,Large,,,28,27,47,62,320,24,11,15,,,,39240,1,5100,sulfur 2,dragon,Flying; Breath; SpellImmunity lightning; SpellResistance 3,lightning (sandbox note)
+dragon-utopia.black-dragon,Black Dragon,dragon-utopia,5,Large,,,36,34,55,74,461,26,11,15,,,,80282,1,9900,sulfur 2,dragon,Flying; Breath; SpellImmunity all,about twice any other dragon (sandbox note)
+neutral.wolf,Timber Wolf,,1,Small,neutral.dire-wolf,,6,4,4,6,14,15,7,13,,,,52,12,85,,beast,PackHunter 20,sandbox: Grove Timber Wolf (old copy)
+neutral.bandit,Bandit,,2,Small,,,9,7,5,10,27,12,6,11,,,,182,8,210,,human,,game-only neutral
+neutral.troll,Troll,,3,Medium,,,14,10,10,16,54,12,6,9,,,,772,4,560,,,UnlimitedRetaliation,game-only neutral
+neutral.dire-wolf,Dire Wolf,,1,Small,,,7,5,4,7,16,17,7,14,,,,70,12,110,,beast,PackHunter 25,sandbox: Grove Dire Wolf (old copy)
+neutral.specter,Specter,,2,Small,neutral.banshee,,9,7,5,9,25,15,7,13,,,,188,8,210,,undead,Flying; SpellImmunity mind,sandbox: Necropolis (old copy)
+neutral.banshee,Banshee,,2,Small,,,10,8,6,9,27,18,7,14,,,,230,8,270,,undead,Flying; SpellImmunity mind; NoEnemyRetaliation,sandbox: Necropolis (old copy)
+neutral.thane,Thane,,3,Medium,neutral.thunder-thane,,13,12,9,13,53,13,6,11,,,,655,5,450,,giant,,"sandbox: Academy tier 3, commented out"
+neutral.thunder-thane,Thunder Thane,,3,Medium,,,14,13,10,15,60,15,7,12,,,,881,5,580,,giant,Caster nature.call-lightning 1; SpellImmunity lightning,"sandbox: Academy tier 3, commented out"
+neutral.mammoth,Mammoth,,4,Medium,neutral.war-mammoth,,16,19,16,23,135,13,6,9,,,,3619,2,1650,,beast,PackHunter 10,was a Stronghold line before Roc moved back to tier 4
+neutral.war-mammoth,War Mammoth,,4,Medium,,,18,21,18,25,148,14,6,10,,,,4693,2,2150,,beast,PackHunter 10; Cleave,upgrade of Mammoth
+neutral.gog,Gog,,2,Small,neutral.magog,,9,7,5,8,21,10,5,10,10,,,183,8,210,,demon,MeleePenalty,sandbox: Inferno tier 2 (old copy)
+neutral.magog,Magog,,2,Small,,,10,8,6,9,24,11,5,11,12,,,256,8,270,,demon,MeleePenalty; SpellImmunity fire; Caster chaos.fireball 1,lore upgrade of Gog
+neutral.breeder,Breeder,,3,Medium,neutral.fel-breeder,,12,12,9,13,65,9,5,9,,,,786,4,560,,demon,Caster chaos.hellgate 1,"sandbox: Inferno tier 3, commented out; spawns imps (spell hook)"
+neutral.fel-breeder,Fel Breeder,,3,Medium,,,13,13,10,15,77,10,5,10,,,,1106,4,730,,demon,Caster chaos.hellgate 2; SpellImmunity fire,"sandbox: Inferno tier 3, commented out"
+neutral.efreet,Efreet,,4,Medium,,,18,15,21,30,125,22,9,15,,,,5067,3,1450,,elemental; demon,Flying; SpellImmunity fire; Caster chaos.fireball 1,"new: demonic counterpart of the Djinn Sultan, a neutral (one upgrade per line)"
+neutral.golden-golem,Golden Golem,,3,Medium,,,10,15,8,12,55,7,4,7,,,,618,4,560,,construct,SpellImmunity mind; SpellResistance 2,new

@@ -109,7 +109,7 @@ public static class BattleSetup
     {
         if (battle.Siege is not { KeepStands: true }
             || battle.LivingArmyOf(BattleSide.Defender).Where(u => u.Creature.IsRanged)
-                .OrderByDescending(u => (long)u.Count * u.Creature.Value).ThenBy(u => u.Id).FirstOrDefault() is not { } shooter)
+                .OrderByDescending(u => (long)u.Count * u.Creature.FightValue).ThenBy(u => u.Id).FirstOrDefault() is not { } shooter)
         {
             return;
         }

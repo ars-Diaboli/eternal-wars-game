@@ -2259,8 +2259,9 @@ to change.
   instead of in the top-left block. The information window (right click) still opens at the pointer *(proposal)*.
 
 ### ADR-187: A Fight Value per creature for the battle AI (ADR-118, owner notes, 2026-11-16)
-**Status**: accepted (2026-11-16), not built. From the owner's notes in `ideas.md`; *(proposal)* marks the agent's fill-ins. The rest of the
-note ("a cleverer battle AI") is question CMB-13.
+**Status**: accepted (2026-11-16), built (2026-11-16): the `fight_value` column after `luck`; `CreatureDefinition.FightValue` replaces the
+derived `Value` everywhere, the formula kept as `DerivedFightValue`. From the owner's notes in `ideas.md`; *(proposal)* marks the agent's
+fill-ins. The rest of the note ("a cleverer battle AI") is ADR-188.
 
 - **Fight Value**, as in HoMM3: a number per creature in `creatures.csv` (a `fight_value` column) that says how dangerous one creature is
   in battle. Placeholder values to start: today's derived `CreatureDefinition.Value` (health × average damage × (20 + Attack + Defense) / 80,
@@ -2272,3 +2273,18 @@ note ("a cleverer battle AI") is question CMB-13.
   shoot unhindered or still has casts *(proposal)*, and the AI's targets, spells and retreat weigh the threat it removes rather than only the
   value of the hit points.
 - Not a map or save format change; the content table gains a column (other content changes the replay digest, as any table change does).
+
+### ADR-188: CMB-13 answered: a cleverer battle AI, in steps (ADR-187, 2026-11-16)
+**Status**: accepted (2026-11-16), not built. The owner's answer: a stack's **Fight Value × its count** is the measure to use where it
+fits; the proposals for the rest.
+
+- **The measure**: a stack's threat is its Fight Value (ADR-187) × the creatures in it, so a big stack of weak creatures can outrank a few
+  strong ones. It is used where the AI asks "which stack matters most": the target to focus, the stack to block or keep away from, whom a
+  buff or a curse goes to. Where the AI weighs a single blow (the hit points a hit removes, a retaliation taken) it keeps weighing what that
+  blow does *(proposal, as before)*.
+- **The order**: (a) focus fire on the stack with the highest threat, and finish off stacks it can kill this turn; (d) avoid retaliation:
+  hit stacks that have already retaliated this round, and let attackers without retaliation go first; then (b) protect its shooters
+  (block enemy shooters with a melee stack, keep its own out of reach) and (c) wait or defend when it is outranged or shoots better,
+  instead of always closing in; later (e) spells weighed a whole round ahead (a buff before its strongest stack moves, a mass spell over
+  several stacks) and (f) sieges (the gate or a breach together, shooters on the walls).
+- **Checked** with `sim battle` win rates against the AI before each step; the AI stays deterministic (`GameState.Random` only).

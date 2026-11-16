@@ -104,7 +104,7 @@ internal abstract class EnchantHandler : StackByStackHandler
         var taken = effect.Split && unit.TotalHealth > BattleMagic.HealthLimit(battle, side, known)
             ? Math.Min(unit.Count, BattleMagic.SplitCount(battle, side, known, unit))
             : unit.Count;
-        var value = (long)taken * unit.Creature.Value * percent * rounds / 100;
+        var value = (long)taken * unit.Creature.FightValue * percent * rounds / 100;
         if (m.Burn > 0)
         {
             value += BattleAi.Worth(unit, m.Burn * rounds);

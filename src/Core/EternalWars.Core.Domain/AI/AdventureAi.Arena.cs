@@ -102,14 +102,14 @@ public sealed partial class AdventureAi
                     continue; // the dwelling would stand there with nothing bought from it
                 }
 
-                gain = (long)count * line.Value;
+                gain = (long)count * line.FightValue;
                 spend += new ResourceSet(Gold: each.Gold * count);
             }
             else
             {
                 var upgraded = _state.Creatures.Get(line.UpgradesTo!);
                 var count = town.AvailableOf(line.Id) + ArmiesOf(town).Sum(a => a.Slots.Stacks.Where(s => s.Stack.Creature == line.Id).Sum(s => s.Stack.Count));
-                gain = (long)count * (upgraded.Value - line.Value);
+                gain = (long)count * (upgraded.FightValue - line.FightValue);
                 if (gain <= 0)
                 {
                     continue;
@@ -164,8 +164,8 @@ public sealed partial class AdventureAi
             var lines = TownRules.Lines(_state, town).Where(l => l.Tier == tier);
             var line = level == 1
                 ? lines.Where(l => TownRules.CheckDwellingChoice(_state, town, l.Id, 1) is null)
-                    .OrderByDescending(l => (long)l.Value * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault()
-                : lines.Where(l => town.DwellingLevel(l.Id) == level - 1 && l.UpgradesTo is not null).OrderByDescending(l => l.Value).ThenBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault();
+                    .OrderByDescending(l => (long)l.FightValue * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault()
+                : lines.Where(l => town.DwellingLevel(l.Id) == level - 1 && l.UpgradesTo is not null).OrderByDescending(l => l.FightValue).ThenBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault();
             return line is not null && TownRules.NextDwellingLevel(_state, town, line) is { } next && next.Level == level ? new ArenaStep(true, line.Id, tier, next) : null;
         }
 

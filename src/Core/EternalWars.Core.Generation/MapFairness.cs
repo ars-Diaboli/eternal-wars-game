@@ -203,8 +203,8 @@ public static class MapFairness
 
                 var power = mapObject switch
                 {
-                    MonsterGuard guard => (guard.Count ?? 1) * creatures.Get(guard.Creature).Value,
-                    MapGarrison garrison => garrison.Troops.Stacks.Sum(s => s.Stack.Count * creatures.Get(s.Stack.Creature).Value),
+                    MonsterGuard guard => (guard.Count ?? 1) * creatures.Get(guard.Creature).FightValue,
+                    MapGarrison garrison => garrison.Troops.Stacks.Sum(s => s.Stack.Count * creatures.Get(s.Stack.Creature).FightValue),
                     _ => 0,
                 };
                 if (power <= 0)

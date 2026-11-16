@@ -66,7 +66,7 @@ In priority order:
   - **Day 2 is the battle**, before anyone's turn. The **defender** is the first player in turn order with a hero on a
     [combat place](adventure-map.md#special-sites)'s entrance, and that place is the battlefield; the **attacker** is the first player in turn
     order who is its enemy. With no hero on a combat place, the first player attacks and the next enemy defends, at the first combat place.
-    Each side (team) fights with its **strongest hero** by army value (count × creature value; the lower hero id on a tie), one on the map, else
+    Each side (team) fights with its **strongest hero** by army value (count × Fight Value; the lower hero id on a tie), one on the map, else
     a garrison hero, which comes out with the garrison. The defender is put on the combat place's entrance, the attacker on its attack cell (a
     hero in the way swaps places). The battle is fought on that cell's terrain, never as a siege; it gives **no experience**; the computer
     never retreats or surrenders.

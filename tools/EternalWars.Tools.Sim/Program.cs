@@ -124,7 +124,7 @@ public static class Program
         {
             foreach (var monster in built.Objects.OfType<MonsterGuard>())
             {
-                Console.WriteLine($"  guard at {monster.Position}: {monster.Count} {monster.Creature} ({monster.Count * Catalog.Get(monster.Creature).Value} power)");
+                Console.WriteLine($"  guard at {monster.Position}: {monster.Count} {monster.Creature} ({monster.Count * Catalog.Get(monster.Creature).FightValue} power)");
             }
 
             foreach (var mine in built.Objects.OfType<Mine>())
@@ -321,7 +321,7 @@ public static class Program
         {
             var powers = armies.Select(Power).ToList();
             Console.WriteLine($"{town,-15} power {powers.Min(),6}–{powers.Max(),-6} " +
-                              string.Join("  ", Catalog.BaseCreaturesOf(town).Select(c => $"T{c.Tier} {c.Name} {c.WeeklyGrowth}×{Catalog.Get(upgraded ? c.UpgradesTo! : c.Id).Value}")));
+                              string.Join("  ", Catalog.BaseCreaturesOf(town).Select(c => $"T{c.Tier} {c.Name} {c.WeeklyGrowth}×{Catalog.Get(upgraded ? c.UpgradesTo! : c.Id).FightValue}")));
         }
 
         Console.WriteLine($"Win rate of the row town over the column town ({runs} battles per side, {(upgraded ? "upgraded" : "base")} one-week armies)");
@@ -355,7 +355,7 @@ public static class Program
 
         return 0;
 
-        static long Power(Army army) => army.Stacks.Sum(s => (long)s.Stack.Count * Catalog.Get(s.Stack.Creature).Value);
+        static long Power(Army army) => army.Stacks.Sum(s => (long)s.Stack.Count * Catalog.Get(s.Stack.Creature).FightValue);
     }
 
     /// <summary>
@@ -410,7 +410,7 @@ public static class Program
     }
 
     /// <summary>
-    /// Roster overview for balancing: per creature line its value (<see cref="CreatureDefinition.Value"/>), weekly
+    /// Roster overview for balancing: per creature line its value (<see cref="CreatureDefinition.FightValue"/>), weekly
     /// growth, weekly power (growth × value) relative to the median line of that tier in the playable towns, the upgrade's
     /// value relative to the base, and gold per point of value.
     /// </summary>
@@ -429,21 +429,21 @@ public static class Program
                      .ThenBy(c => c.Town).ThenBy(c => c.Tier).ThenBy(c => c.Name))
         {
             var upgrade = creature.UpgradesTo is { } id ? Catalog.Get(id) : null;
-            Console.WriteLine($"{creature.Town ?? "neutral",-15} {creature.Tier} {creature.Name,-18} {creature.Value,6} {creature.WeeklyGrowth,4} {Week(creature),7:0} " +
-                              $"{Week(creature) / medians[creature.Tier],5:0.00}  {upgrade?.Name ?? "",-18} {upgrade?.Value.ToString() ?? "",6} " +
-                              $"{(upgrade is null ? "" : $"{(double)upgrade.Value / creature.Value:0.00}"),5} {(double)creature.Cost.Gold / creature.Value,8:0.00}");
+            Console.WriteLine($"{creature.Town ?? "neutral",-15} {creature.Tier} {creature.Name,-18} {creature.FightValue,6} {creature.WeeklyGrowth,4} {Week(creature),7:0} " +
+                              $"{Week(creature) / medians[creature.Tier],5:0.00}  {upgrade?.Name ?? "",-18} {upgrade?.FightValue.ToString() ?? "",6} " +
+                              $"{(upgrade is null ? "" : $"{(double)upgrade.FightValue / creature.FightValue:0.00}"),5} {(double)creature.Cost.Gold / creature.FightValue,8:0.00}");
         }
 
         Console.WriteLine();
         Console.WriteLine("One-week army power (mean of the four seven-dwelling builds):");
         foreach (var town in PlayableTowns)
         {
-            Console.WriteLine($"  {town,-15} {WeekArmies(town, upgraded: false).Average(a => a.Stacks.Sum(s => (double)s.Stack.Count * Catalog.Get(s.Stack.Creature).Value)),8:0}");
+            Console.WriteLine($"  {town,-15} {WeekArmies(town, upgraded: false).Average(a => a.Stacks.Sum(s => (double)s.Stack.Count * Catalog.Get(s.Stack.Creature).FightValue)),8:0}");
         }
 
         return 0;
 
-        static double Week(CreatureDefinition creature) => (double)creature.WeeklyGrowth * creature.Value;
+        static double Week(CreatureDefinition creature) => (double)creature.WeeklyGrowth * creature.FightValue;
     }
 
     /// <summary>Writes the catalog (built-in or <c>--creatures</c>) as a creature table; the notes column stays empty.</summary>
@@ -491,13 +491,13 @@ public static class Program
             {
                 var towns = state.ObjectsOf<Town>().Count(t => t.Owner == player.Id);
                 var heroes = state.HeroesOf(player.Id).ToList();
-                var power = heroes.Sum(h => h.Army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value));
+                var power = heroes.Sum(h => h.Army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).FightValue));
                 Console.WriteLine($"  {player.Name,-8} {(player.IsDefeated ? "defeated" : "playing "),-8} towns {towns}, heroes {heroes.Count} (levels {string.Join(",", heroes.Select(h => h.Level))}, at {string.Join(" ", heroes.Select(h => $"({h.Position.X},{h.Position.Y})"))}), army power {power}, {player.Resources}");
                 Console.WriteLine($"           fights won / lost: {fights.Describe(player.Id)}");
             }
 
             var guards = state.ObjectsOf<MonsterGuard>().ToList();
-            Console.WriteLine($"  left on the map: {guards.Count} monster stacks (power {guards.Sum(g => (long)Math.Max(1, g.Count ?? 1) * state.Creatures.Get(g.Creature).Value)}), {state.ObjectsOf<MapGarrison>().Count(g => g.Owner is null)} neutral garrisons, {state.ObjectsOf<Town>().Count(t => t.Owner is null)} neutral towns, {state.Objects.Count(o => o.Kind == MapObjectKind.BorderPost)} border posts; keys {string.Join(" ", state.Players.Select(p => $"{p.Name}:{p.Keys.Count}"))}");
+            Console.WriteLine($"  left on the map: {guards.Count} monster stacks (power {guards.Sum(g => (long)Math.Max(1, g.Count ?? 1) * state.Creatures.Get(g.Creature).FightValue)}), {state.ObjectsOf<MapGarrison>().Count(g => g.Owner is null)} neutral garrisons, {state.ObjectsOf<Town>().Count(t => t.Owner is null)} neutral towns, {state.Objects.Count(o => o.Kind == MapObjectKind.BorderPost)} border posts; keys {string.Join(" ", state.Players.Select(p => $"{p.Name}:{p.Keys.Count}"))}");
 
             if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
             {
@@ -634,7 +634,7 @@ public static class Program
             {
                 // Where every hero stands after each turn, with its army power and mana.
                 Console.WriteLine($"    day {session.State.Date.AbsoluteDay} {session.State.CurrentPlayer.Name} to move; heroes: {string.Join(", ", session.State.Heroes.Select(h =>
-                    $"{h.Name} ({h.Position.X},{h.Position.Y}) power {h.Army.Stacks.Sum(s => (long)s.Stack.Count * session.State.Creatures.Get(s.Stack.Creature).Value)} mana {h.Mana}"))}");
+                    $"{h.Name} ({h.Position.X},{h.Position.Y}) power {h.Army.Stacks.Sum(s => (long)s.Stack.Count * session.State.Creatures.Get(s.Stack.Creature).FightValue)} mana {h.Mana}"))}");
             }
         }
 

@@ -97,7 +97,7 @@ public class SettlementPlacerTests
         var town = map.Towns.Single(t => t.Slot is null && Duel().Zones[t.Zone].Id == "centre").Town;
 
         Assert.Equal(2, town.Garrison.StackCount);
-        var power = town.Garrison.Stacks.Sum(s => (double)s.Stack.Count * CreatureCatalog.Default.Get(s.Stack.Creature).Value);
+        var power = town.Garrison.Stacks.Sum(s => (double)s.Stack.Count * CreatureCatalog.Default.Get(s.Stack.Creature).FightValue);
         Assert.InRange(power, ZoneGuards.TownGarrisonValue(MonsterStrength.Strong) * 0.6, ZoneGuards.TownGarrisonValue(MonsterStrength.Strong) * 1.4);
 
         // A zone without monsters still garrisons its neutral town (weakly).

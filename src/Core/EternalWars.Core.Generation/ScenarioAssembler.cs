@@ -273,7 +273,7 @@ public static class ScenarioAssembler
 
         var total = StarterArmyMin + random.Next(StarterArmyMax - StarterArmyMin + 1);
         int[] shares = count == 2 ? [60, 40] : [50, 30, 20];
-        var stacks = picks.Select((c, i) => new CreatureStack(c.Id, Math.Max(1, (int)Math.Round(total * shares[i] / 100.0 / Math.Max(1, c.Value))))).ToArray();
+        var stacks = picks.Select((c, i) => new CreatureStack(c.Id, Math.Max(1, (int)Math.Round(total * shares[i] / 100.0 / Math.Max(1, c.FightValue))))).ToArray();
         return Army.Of(stacks);
     }
 }

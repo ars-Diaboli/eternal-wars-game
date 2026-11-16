@@ -30,6 +30,9 @@ public static class CreatureTable
     public const string Shots = "shots";
     public const string Morale = "morale";
     public const string Luck = "luck";
+
+    /// <summary>How dangerous one creature is in battle (ADR-187); empty falls back to <see cref="CreatureDefinition.DerivedFightValue"/>.</summary>
+    public const string FightValue = "fight_value";
     public const string Growth = "growth";
     public const string Gold = "gold";
     public const string Resources = "resources";
@@ -41,7 +44,7 @@ public static class CreatureTable
     public static IReadOnlyList<string> Columns { get; } =
     [
         Id, Name, Town, Tier, Size, Upgrade, Category, Attack, Defense, MinDamage, MaxDamage, Health, Speed, MapSpeed, Initiative,
-        Shots, Morale, Luck, Growth, Gold, Resources, Tags, Capabilities, Notes,
+        Shots, Morale, Luck, FightValue, Growth, Gold, Resources, Tags, Capabilities, Notes,
     ];
 
     private static readonly string[] Required = [Id, Name, Tier, Size, Attack, Defense, MinDamage, MaxDamage, Health, Speed, MapSpeed, Initiative];
@@ -59,7 +62,7 @@ public static class CreatureTable
         [
             d.Id, d.Name, d.Town ?? "", N(d.Tier), d.Size.ToString(), d.UpgradesTo ?? "", d.Category == CreatureCategory.None ? "" : d.Category.ToString(),
             N(d.Attack), N(d.Defense), N(d.MinDamage), N(d.MaxDamage), N(d.Health), N(d.Speed), N(d.MapSpeed), N(d.Initiative),
-            d.Shots == 0 ? "" : N(d.Shots), d.Morale == 0 ? "" : N(d.Morale), d.Luck == 0 ? "" : N(d.Luck), N(d.WeeklyGrowth), N(d.Cost.Gold), FormatResources(d.Cost),
+            d.Shots == 0 ? "" : N(d.Shots), d.Morale == 0 ? "" : N(d.Morale), d.Luck == 0 ? "" : N(d.Luck), d.HasOwnFightValue ? N(d.FightValue) : "", N(d.WeeklyGrowth), N(d.Cost.Gold), FormatResources(d.Cost),
             string.Join("; ", d.Tags), string.Join("; ", d.Capabilities.Select(FormatCapability)), notes?.Invoke(d) ?? "",
         ]));
 
@@ -115,6 +118,7 @@ public static class CreatureTable
             Shots = row.Int(Shots, 0),
             Morale = row.Int(Morale, 0),
             Luck = row.Int(Luck, 0),
+            FightValue = row.Int(FightValue, 0),
             WeeklyGrowth = row.Int(Growth, 0),
             Cost = new ResourceSet(Gold: row.Int(Gold, 0)) + ParseResources(row, Resources),
             Tags = row.List(Tags),

@@ -31,10 +31,10 @@ internal sealed class RaiseHandler : SpellEffectHandler
 
         var slain = battle.Units.Where(u => u.Owner != side && !u.IsMachine && !u.IsSummoned && NecromancyRules.Counts(u.Creature))
             .Sum(u => (long)(u.InitialCount - u.KeptCount) * u.Creature.Health);
-        var value = slain * effect.Amount / 100 / skeleton.Health * skeleton.Value;
+        var value = slain * effect.Amount / 100 / skeleton.Health * skeleton.FightValue;
         if (effect.Rises != SpellRises.None && BattleMagic.NextRising(battle, effect.Amount) is { } rising)
         {
-            value += (long)rising.Count * skeleton.Value;
+            value += (long)rising.Count * skeleton.FightValue;
         }
 
         return value;

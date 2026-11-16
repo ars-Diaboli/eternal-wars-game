@@ -28,7 +28,7 @@ public class CreatureTests
             Assert.NotNull(line.UpgradesTo);
             var upgrade = catalog.Get(line.UpgradesTo!);
             Assert.Equal((line.Tier, line.Town, line.Size), (upgrade.Tier, upgrade.Town, upgrade.Size));
-            Assert.True(upgrade.Value > line.Value, $"{upgrade.Id} should be stronger than {line.Id}");
+            Assert.True(upgrade.FightValue > line.FightValue, $"{upgrade.Id} should be stronger than {line.Id}");
         });
         Assert.Equal(18, catalog.All.Count(c => c.Town == town));
     }
@@ -75,15 +75,39 @@ public class CreatureTests
     }
 
     [Fact]
+    public void FightValue_ComesFromTheTable_AndAnEmptyCellFallsBackToTheFormula()
+    {
+        var header = string.Join(",", CreatureTable.Columns);
+        var rows = CreatureTable.Parse($"""
+            {header}
+            x.tuned,Tuned,,1,Small,,,5,5,2,4,10,6,5,8,,,,999,,,,,,
+            x.plain,Plain,,1,Small,,,5,5,2,4,10,6,5,8,,,,,,,,,,
+            """);
+        var (tuned, plain) = (rows[0], rows[1]);
+
+        Assert.Equal((999, true), (tuned.FightValue, tuned.HasOwnFightValue));
+        Assert.Equal((plain.DerivedFightValue, false), (plain.FightValue, plain.HasOwnFightValue));
+        Assert.Equal(10 * 6 * 30 / 80, plain.DerivedFightValue);
+        Assert.Equal([(999, true), (22, false)], CreatureTable.Parse(CreatureTable.Format(rows)).Select(c => (c.FightValue, c.HasOwnFightValue)));
+        Assert.Throws<FormatException>(() => CreatureTable.Parse($"{header}\nx.bad,Bad,,1,Small,,,5,5,2,4,10,6,5,8,,,,-1,,,,,,\n"));
+    }
+
+    [Fact]
+    public void EveryShippedCreature_HasItsOwnFightValue()
+    {
+        Assert.All(BuiltInCreatures.All, c => Assert.True(c.HasOwnFightValue, $"{c.Id} has no fight_value"));
+    }
+
+    [Fact]
     public void EveryTierIsStrongerThanTheOneBelow_ByAverageValue()
     {
         var playable = new[] { TownIds.Haven, TownIds.Sylvan, TownIds.Academy, TownIds.Necropolis, TownIds.Inferno, TownIds.Dungeon, TownIds.Stronghold, TownIds.SwampBestiary };
         var bases = playable.SelectMany(CreatureCatalog.Default.BaseCreaturesOf).ToList();
-        var averages = Enumerable.Range(1, 5).Select(tier => bases.Where(c => c.Tier == tier).Average(c => c.Value)).ToList();
+        var averages = Enumerable.Range(1, 5).Select(tier => bases.Where(c => c.Tier == tier).Average(c => c.FightValue)).ToList();
 
         Assert.All(averages.Zip(averages.Skip(1)), pair => Assert.True(pair.Second > pair.First * 1.8, $"{pair.First:0} → {pair.Second:0}"));
         Assert.Contains(CreatureCatalog.Default.All, c => c.Town == TownIds.Conflux);
-        Assert.True(CreatureCatalog.Default.Get("dragon-utopia.black-dragon").Value > 2 * CreatureCatalog.Default.Get(BuiltInCreatures.RedDragon).Value);
+        Assert.True(CreatureCatalog.Default.Get("dragon-utopia.black-dragon").FightValue > 2 * CreatureCatalog.Default.Get(BuiltInCreatures.RedDragon).FightValue);
     }
 
     [Fact]
@@ -93,7 +117,7 @@ public class CreatureTests
         var wyvern = catalog.Get(BuiltInCreatures.Wyvern);
 
         Assert.Equal((TownIds.SwampBestiary, 4, "swamp-bestiary.wyvern-monarch"), (wyvern.Town, wyvern.Tier, wyvern.UpgradesTo));
-        Assert.True(catalog.Get(wyvern.UpgradesTo!).Value > wyvern.Value);
+        Assert.True(catalog.Get(wyvern.UpgradesTo!).FightValue > wyvern.FightValue);
         Assert.Equal((TownIds.DragonUtopia, "dragon-utopia.royal-haspid"), (catalog.Get("dragon-utopia.haspid").Town, catalog.Get("dragon-utopia.haspid").UpgradesTo));
         Assert.Equal((2, 3), (catalog.Get("necropolis.wight").Tier, catalog.Get("necropolis.death-weaver").Tier));
         Assert.Equal(["Moon Doe", "Unicorn", "Dwarf", "Dwarf Defender", "Serpent Fly"],

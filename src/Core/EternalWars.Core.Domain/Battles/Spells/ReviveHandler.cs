@@ -20,5 +20,5 @@ internal sealed class ReviveHandler : StackByStackHandler
         resolver.Wounds.Revive(unit, cast.Known.Spell.Id, BattleMagic.Amount(cast.Battle, cast.Side, cast.Known, cast.CreaturePower), cast.Effect.Lasting);
 
     public override long Value(CastContext cast) =>
-        cast.Affected().Sum(u => (long)Math.Min(BattleMagic.Missing(u), BattleMagic.Amount(cast.Battle, cast.Side, cast.Known, cast.CreaturePower)) * u.Creature.Value / u.Creature.Health);
+        cast.Affected().Sum(u => (long)Math.Min(BattleMagic.Missing(u), BattleMagic.Amount(cast.Battle, cast.Side, cast.Known, cast.CreaturePower)) * u.Creature.FightValue / u.Creature.Health);
 }

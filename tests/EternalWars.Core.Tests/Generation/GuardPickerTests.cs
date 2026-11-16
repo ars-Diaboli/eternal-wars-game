@@ -31,7 +31,7 @@ public class GuardPickerTests
             {
                 var (creature, count) = GuardPicker.Pick(Creatures, value, new GameRandom(seed));
 
-                Assert.InRange((double)count * creature.Value, value * 0.7, value * 1.3);
+                Assert.InRange((double)count * creature.FightValue, value * 0.7, value * 1.3);
                 Assert.InRange(count, GuardPicker.CountsFor(creature.Tier).Min, GuardPicker.CountsFor(creature.Tier).Max);
             }
         }

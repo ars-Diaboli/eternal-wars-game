@@ -186,7 +186,7 @@ public class RoadAndTreasureTests
         var start = guards.Where(g => template.Zones[ZoneOf(map, g.Position)].Type == ZoneType.PlayerStart)
             .Where(g => ordinary.Any(t => Math.Max(Math.Abs(g.Position.X - t.VisitPosition.X), Math.Abs(g.Position.Y - t.VisitPosition.Y)) == 1)
                         && !treasure.Except(ordinary).Any(t => Math.Max(Math.Abs(g.Position.X - t.VisitPosition.X), Math.Abs(g.Position.Y - t.VisitPosition.Y)) == 1))
-            .Select(g => g.Count!.Value * creatures.Get(g.Creature).Value).ToList();
+            .Select(g => g.Count!.Value * creatures.Get(g.Creature).FightValue).ToList();
         Assert.NotEmpty(start);
         Assert.All(start, power => Assert.InRange(power, 3000 * 0.4 * 0.5 * 0.7, 3000 * 0.6 * 0.5 * 1.3));
         Assert.Equal(0, TreasurePlacer.GuardValue(5000, MonsterStrength.None, startZone: false, 50));

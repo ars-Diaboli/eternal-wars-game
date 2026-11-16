@@ -142,7 +142,7 @@ public class ConnectionPlacerTests
         Assert.NotEmpty(valued);
         Assert.All(valued, g =>
         {
-            var power = (double)g.Count!.Value * creatures.Get(g.Creature).Value;
+            var power = (double)g.Count!.Value * creatures.Get(g.Creature).FightValue;
             Assert.InRange(power, 1500 * 0.75, 3000 * 1.25); // the duel's guard values are 1500 and 3000
         });
     }
