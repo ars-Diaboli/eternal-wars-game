@@ -16,6 +16,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class TownListPanel : BoxContainer
 {
     private GameSession _session = null!;
+    private Func<PlayerId> _listed = null!;
 
     public TownListPanel() => Vertical = true;
 
@@ -35,9 +36,12 @@ public partial class TownListPanel : BoxContainer
 
     public event Action<MapObjectId>? TownSelected;
 
-    public void Bind(GameSession session)
+    /// <param name="session">The game.</param>
+    /// <param name="listed">Whose towns are listed: the current player's by default; in a LAN game this screen's player's in another's turn.</param>
+    public void Bind(GameSession session, Func<PlayerId>? listed = null)
     {
         _session = session;
+        _listed = listed ?? (() => session.State.CurrentPlayer.Id);
         Refresh();
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<TownOwnerChanged>(session.Events, _ => Refresh());
@@ -47,17 +51,18 @@ public partial class TownListPanel : BoxContainer
         this.SubscribeWhileInTree<DwellingBuilt>(session.Events, _ => Refresh());
     }
 
-    /// <summary>The current player's towns in map order, for the town hotkey.</summary>
-    public static IReadOnlyList<Town> TownsOf(GameState state) =>
-        state.ObjectsOf<Town>().Where(t => t.Owner == state.CurrentPlayer.Id).OrderBy(t => t.Id.Value).ToList();
+    /// <summary>A player's towns in map order, for the list and the town hotkey.</summary>
+    public static IReadOnlyList<Town> TownsOf(GameState state, PlayerId player) =>
+        state.ObjectsOf<Town>().Where(t => t.Owner == player).OrderBy(t => t.Id.Value).ToList();
 
     private void Refresh()
     {
         this.ClearChildren();
 
         var state = _session.State;
-        AddChild(new Label { Text = $"{state.CurrentPlayer.Name}'s towns (T)" });
-        foreach (var town in TownsOf(state))
+        var player = state.GetPlayer(_listed());
+        AddChild(new Label { Text = $"{player.Name}'s towns (T)" });
+        foreach (var town in TownsOf(state, player.Id))
         {
             var governor = StewardshipRules.GovernorOf(state, town);
             var button = new Button

@@ -14,7 +14,8 @@ Tier 3 · Apps (Godot projects)       EternalWars.Game (3D, Forward+), EternalWa
 Tier 2 · Godot libraries             EternalWars.Godot.UI      HUD, panels, editor and setup screens, debug overlays
          (GodotSharp)                EternalWars.Godot.Shared  map/hero/battle views, cameras, input, event glue, GameContent
                                      EternalWars.Godot.Assets  models, textures, shaders, prefabs (no code, no csproj)
-Tier 1 · Core (plain .NET 10)        EternalWars.Core.Data        file formats: maps, saves/replays, settings, templates
+Tier 1 · Core (plain .NET 10)        EternalWars.Core.Network     LAN games: messages, TCP links, host and client (ADR-192)
+                                     EternalWars.Core.Data        file formats: maps, saves/replays, settings, templates
                                      EternalWars.Core.Generation  random maps: template model, validator, generator stages
                                      EternalWars.Core.Domain      model + rules, commands, events, AI, editing
                                      EternalWars.Core.Events      pub/sub primitives
@@ -24,14 +25,15 @@ tools/EternalWars.Tools.Sim    headless console app over Tier 1 (see development
 
 ### Dependency rules
 
-| From \ To | Core.Events | Core.Domain | Core.Generation | Core.Data | Godot.Shared | Godot.UI |
-|---|---|---|---|---|---|---|
-| Core.Domain | ✓ | — | ✗ | ✗ | ✗ | ✗ |
-| Core.Generation | ✓ | ✓ | — | ✗ | ✗ | ✗ |
-| Core.Data | ✓ | ✓ | ✓ (template format) | — | ✗ | ✗ |
-| Godot.Shared | ✓ | ✓ | (avoid) | (avoid) | — | ✗ |
-| Godot.UI | ✓ | ✓ | ✓ (template editor) | (avoid) | ✓ | — |
-| Apps | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| From \ To | Core.Events | Core.Domain | Core.Generation | Core.Data | Core.Network | Godot.Shared | Godot.UI |
+|---|---|---|---|---|---|---|---|
+| Core.Domain | ✓ | — | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Core.Generation | ✓ | ✓ | — | ✗ | ✗ | ✗ | ✗ |
+| Core.Data | ✓ | ✓ | ✓ (template format) | — | ✗ | ✗ | ✗ |
+| Core.Network | ✓ | ✓ | ✓ | ✓ (records, commands) | — | ✗ | ✗ |
+| Godot.Shared | ✓ | ✓ | (avoid) | (avoid) | ✗ | — | ✗ |
+| Godot.UI | ✓ | ✓ | ✓ (template editor) | (avoid) | ✗ | ✓ | — |
+| Apps | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 
 Core.Events depends on nothing; apps never reference each other. Enforced by `Directory.Build.targets` (build fails if a
 `src/Core` project uses `Godot.NET.Sdk` or references `GodotSharp` or a `*Godot*` project) and by `ArchitectureTests` (every project's
@@ -127,6 +129,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 | Adventure AI (ADR-059, ADR-119) | `AdventureAi` (`AI/`) plays only through `Execute`; `BattleEstimator` runs the real engine on a throwaway state; `Explain` for debugging; an arena's preparation day in `AdventureAi.Arena.cs` (ADR-160); the adventure spells it casts in `AdventureAi.Spells.cs` (ADR-184). The game app calls `PlayTurn()` once a frame for computer players. |
 | Magic (ADR-110, ADR-120, ADR-122) | `Magic/`: `Spells` (from `spells.csv`), `MagicRules`, `AdventureMagic` / `AdventureMagicService`; battle casting in `Battles/BattleMagic`, effect kinds in `Battles/Spells/` (see Battles). |
 | Map format (ADR-174) | `MapDocument` is the current format only; `MapSerializer` / `GameRecordSerializer` upgrade an older file's JSON first through `MapMigrations` (`IMapMigration` steps by version). Pinned in tests: a sample per version with a step and the current one, the JSON shape of maps and saves, and generated maps per `MapGenerator.Version`. |
+| LAN games (ADR-192) | Core.Network: `GameHost` runs the one real session, seats clients in the remote human colours, runs their commands and sends every logged command to every client (`CommandApplied`); `GameClient` replays the host's record on joining (digest-checked) and then applies the host's commands in order. Both plug into `GameSession.Route` (`ICommandRoute`): the host refuses a remote colour's command given on its screen, a client sends its own colour's to the host (`CommandResult.Sent`). `NetMessage`s are JSON with the save files' settings (`GameRecordSerializer.CreateOptions`), framed by length over TCP (`TcpConnection`, `TcpGameListener`) or in memory (`LoopbackConnection`); everything runs on the game's thread in `Poll`. The HUD asks `MapViewContext.PlaysElsewhere` / `PlaysHere` / `ListedPlayer` whose turn shows and whose lists it shows. |
 | Saves (ADR-058) | `GameSaves` (Core.Data): initial map + options + command log, digest-checked on load; works mid-battle since battle actions are commands. Autosave hooks `CommandExecuted`. Game app builds its nodes under one `Game` node (freed on load); `BattleView3D.Restore` shows a running battle. |
 | Arena (ADR-097, ADR-158) | `ScenarioRules.Arena`; `ArenaRules` (preparation day: `MovementAllowance.Daily(state, hero)`, `TownRules.HasBuiltToday`; `Plan` chooses sides and champions); `ArenaService.StartBattle` runs from `TurnService` at day 2 instead of a turn; `BattleService` records the result in `GameState.Arena` (no experience, no AI retreat); `GameFlowService` ends the game from it. `CombatPlace` object. The editor's checks in `MapValidator.Arena.cs`, the contents shown on day 1 in `AdventureIntel.ArenaContents` (ADR-161). |
 

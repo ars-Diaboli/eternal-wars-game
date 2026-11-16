@@ -89,10 +89,10 @@ public sealed class AdventureInputController(
             case InputEventKey { Pressed: true, Keycode: Key.H }:
                 hud.ShowHero(SelectedHero);
                 break;
-            case InputEventKey { Pressed: true, Keycode: Key.K } when session.State.CurrentPlayer.IsHuman:
+            case InputEventKey { Pressed: true, Keycode: Key.K } when context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.KingdomScreen.Open(session.State.CurrentPlayer.Id);
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Q } when session.State.CurrentPlayer.IsHuman:
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Q } when context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.QuestScreen.Open(session.State.CurrentPlayer.Id);
                 camera.IgnoreHeldKeys(); // Q also turns the camera; this press only opens the log
                 break;
@@ -100,10 +100,10 @@ public sealed class AdventureInputController(
                 context.SetLevel((context.Level + 1) % session.State.Map.Levels);
                 camera.FocusOn(MapSpace.ToWorld(new MapPosition(session.State.Map.Width / 2, session.State.Map.Height / 2, context.Level)));
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P } when session.State.CurrentPlayer.IsHuman:
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.P } when context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.PuzzleScreen.Open(session.State.CurrentPlayer.Id);
                 break;
-            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.G } when session.State.CurrentPlayer.IsHuman:
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.G } when context.PlaysHere(session.State.CurrentPlayer.Id):
                 Dig();
                 break;
             case InputEventKey { Pressed: true } key when SelectedHero is { } hero && KeyboardDirections.ToDirection(key.Keycode) is { } direction:

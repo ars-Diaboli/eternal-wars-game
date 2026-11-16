@@ -197,12 +197,27 @@ public static class GameRecordSerializer
     ];
 
     /// <summary>Map JSON settings plus the command hierarchy (kept out of Domain) and compact ids.</summary>
-    internal static readonly JsonSerializerOptions Options = new(JsonDefaults.Options)
+    internal static readonly JsonSerializerOptions Options = CreateOptions();
+
+    /// <summary>
+    /// The record's JSON settings (commands, maps, compact ids), with <paramref name="modifier"/> for one more type hierarchy: the LAN messages
+    /// carry commands and records (ADR-192).
+    /// </summary>
+    public static JsonSerializerOptions CreateOptions(Action<JsonTypeInfo>? modifier = null)
     {
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes, Maps.MapConverter.AddObjectTypes, Maps.MapEventJson.AddTypes } },
-        Converters = { new IdConverter<PlayerId>(v => new(v), id => id.Value), new IdConverter<HeroId>(v => new(v), id => id.Value),
-            new IdConverter<MapObjectId>(v => new(v), id => id.Value) },
-    };
+        var resolver = new DefaultJsonTypeInfoResolver { Modifiers = { AddCommandTypes, Maps.MapConverter.AddObjectTypes, Maps.MapEventJson.AddTypes } };
+        if (modifier is not null)
+        {
+            resolver.Modifiers.Add(modifier);
+        }
+
+        return new(JsonDefaults.Options)
+        {
+            TypeInfoResolver = resolver,
+            Converters = { new IdConverter<PlayerId>(v => new(v), id => id.Value), new IdConverter<HeroId>(v => new(v), id => id.Value),
+                new IdConverter<MapObjectId>(v => new(v), id => id.Value) },
+        };
+    }
 
     public static string Serialize(GameRecordDocument record) => JsonSerializer.Serialize(record, Options);
 

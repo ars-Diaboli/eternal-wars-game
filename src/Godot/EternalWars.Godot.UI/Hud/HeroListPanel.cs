@@ -15,6 +15,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class HeroListPanel : BoxContainer
 {
     private GameSession _session = null!;
+    private Func<PlayerId> _listed = null!;
     private HeroId? _selected;
 
     public HeroListPanel() => Vertical = true;
@@ -38,9 +39,12 @@ public partial class HeroListPanel : BoxContainer
     /// <summary>The "Info" button of a hero: open its hero screen.</summary>
     public event Action<HeroId>? HeroInfoRequested;
 
-    public void Bind(GameSession session)
+    /// <param name="session">The game.</param>
+    /// <param name="listed">Whose heroes are listed: the current player's by default; in a LAN game this screen's player's in another's turn.</param>
+    public void Bind(GameSession session, Func<PlayerId>? listed = null)
     {
         _session = session;
+        _listed = listed ?? (() => session.State.CurrentPlayer.Id);
         Refresh();
         this.SubscribeWhileInTree<TurnStarted>(session.Events, _ => Refresh());
         this.SubscribeWhileInTree<HeroMoved>(session.Events, _ => Refresh());
@@ -63,7 +67,7 @@ public partial class HeroListPanel : BoxContainer
     {
         this.ClearChildren();
 
-        var player = _session.State.CurrentPlayer;
+        var player = _session.State.GetPlayer(_listed());
         AddChild(new Label { Text = $"{player.Name}'s heroes" });
         foreach (var hero in _session.State.HeroesOf(player.Id))
         {

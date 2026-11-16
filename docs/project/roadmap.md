@@ -243,7 +243,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Audio: per-terrain ambient music, town themes
 
 ## LAN multiplayer (ADR-088, ADR-098; before 1.0, after the Phase 3 and 4 exits)
-- [ ] Network layer: host and clients over the LAN; clients send commands, the host runs them and plays the computer players (MP-1)
+- [x] Network layer (ADR-192): host and clients over the LAN (TCP); clients send commands, the host runs them and plays the computer
+      players; a client's game is a copy that follows the host's commands; `--host` / `--join=` until the lobby (MP-1)
 - [ ] Per-player view: a client starts from the map's static content; the host sends each client only the events it may see (fog);
       the client keeps a partial copy of the state for its views; under the fog stays as last seen; both sides see a whole battle, others
       its result (MP-3, ADR-099)

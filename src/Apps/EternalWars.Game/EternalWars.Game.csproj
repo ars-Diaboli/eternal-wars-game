@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj" />
+    <ProjectReference Include="..\..\Core\EternalWars.Core.Network\EternalWars.Core.Network.csproj" />
     <ProjectReference Include="..\..\Godot\EternalWars.Godot.UI\EternalWars.Godot.UI.csproj" />
   </ItemGroup>
 

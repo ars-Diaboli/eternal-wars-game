@@ -2390,3 +2390,38 @@ marketplaces; *(proposal)* marks the agent's numbers, for play-testing.
   Smoke scenario `game-side-panel`; `game-layout` turns the panel off first. No save format change.
 - **Not done**: the camera still centres on the whole window, so a hero it centres on stands a little towards the panel's side; fonts,
   textured frames and icons of our own (the art pass); the battle HUD and the town screen keep their own layouts.
+
+### ADR-192: The LAN network layer: a host that runs the game, clients that send commands (ADR-088, ADR-098, MP-1, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16), the roadmap's first LAN item; *(proposal)* marks the agent's choices. The per-player view (MP-3,
+ADR-099), the lobby, battles between two remote humans, drop-outs and saves are the roadmap's next items.
+
+- **The host runs the game** (MP-1 b): the one real `GameSession` is the host's. It takes clients into the human colours played elsewhere,
+  runs their commands with `session.Execute`, and plays the computer players as in a game on one computer. Every command it logs, whoever
+  gave it (the host's player, a client, the AI, the turn timer), goes to every client in the log's order.
+- **A client keeps a copy** *(proposal; interim until MP-3)*: on joining it gets the game's record (the start map, the options, every command so
+  far; the save format), replays it and checks the digest, then applies the host's commands one by one; a command out of order or one the
+  copy refuses stops the client ("cut off from the host") instead of letting it play another game. The copy is the whole game, so a client
+  could look under its fog; the per-player view replaces the copy with what the player may see.
+- **Who gives which command**: a client sends only its own colour's commands; its copy refuses another colour's at once, and the host
+  refuses them too. On the host's screen a remote colour's command is refused ("Red plays on another computer"). A client's command is
+  checked against its copy first (whose turn, whose hero), so most refusals need no round trip; the host's rules have the last word, and
+  their refusal comes back as a message. The command is not run on the client: `Execute` answers `CommandResult.Sent`, and the game changes
+  when the command comes back from the host.
+- **Wire** *(proposal)*: TCP, port **47820** by default; each message is its length (4 bytes) and its JSON, with the save files' settings
+  for the commands and records it carries. Messages: join, joined (the colour and the record), join refused, command, command applied (its
+  index in the log), command refused. A protocol number; a host and a client of different numbers refuse to play.
+- **Seats** *(proposal, until the lobby)*: the game is started with `--host[=port]`; the game started from the new-game screen is hosted, its
+  **first human colour plays on the host**, the other human colours wait for clients, which join with `--join=address[:port]`
+  (`--name=` names the player) in the first free colour. A remote colour nobody has joined yet holds up its turn. A client that leaves frees
+  its colour; joining again gets the game as it stands then (the pause and the computer taking over are the drop-out item).
+- **This screen's player**: the map turns only to the colours that play at this screen; on another computer's turn it stays with this
+  screen's player, whose heroes, towns and resources the side panel and the status bar keep showing; questions and object screens open only
+  for the colours here. On one computer nothing changes (hot-seat: every human plays here).
+- **Code**: core `GameSession.Route` (`ICommandRoute`) and `CommandResult.Sent` (Domain); a new project **`EternalWars.Core.Network`**
+  (Tier 1, no Godot): `NetMessage`s and `NetSerializer`, `TcpConnection` / `TcpGameListener` / `LoopbackConnection` (`INetConnection`;
+  messages wait in a queue for the game's thread), `GameHost`, `GameClient`; `GameRecordSerializer.CreateOptions`. Tests `LanGameTests`
+  (in memory and over TCP on this computer). Godot: `MapViewContext.PlaysElsewhere` / `PlaysHere` / `ListedPlayer`, `JoinGameScreen`; the
+  game app's `Main.Network`. No save format change.
+- **Not done**: the per-player view (fog over the wire), the lobby and LAN discovery, chat; a battle between two remote humans is fought by
+  each side's commands but both screens show it as on one computer; the turn timer still runs on each computer; a load or a new game on
+  the host ends the LAN game for the clients; the main menu's Multiplayer stays disabled.

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>LAN multiplayer (ADR-192): the messages, TCP connections, the host that runs the game and the clients that send it commands.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EternalWars.Core.Domain\EternalWars.Core.Domain.csproj" />
+    <ProjectReference Include="..\EternalWars.Core.Data\EternalWars.Core.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EternalWars.Core.Tests" />
+  </ItemGroup>
+
+</Project>

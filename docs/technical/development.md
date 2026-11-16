@@ -20,7 +20,9 @@ every texture load fails.
 
 App arguments (after `--`): `--map=`, `--new-game` (game opens on the new-game screen, not the main menu), `--replay=<file>` (the
 replay viewer on a replay or save),
-`--scenario=`, `--settings=`, `--autoinput=` (smoke tests), and content overrides `--creatures=`, `--heroes=`,
+`--scenario=`, `--settings=`, `--autoinput=` (smoke tests), the LAN game until its lobby exists (ADR-192): `--host[=<port>]` (a game
+started from the new-game screen is hosted, default port 47820; its human colours after the first play on other computers),
+`--join=<address>[:<port>]` (joins such a game in the first free colour), `--name=<player>`, and content overrides `--creatures=`, `--heroes=`,
 `--buildings=`, `--artifacts=`, `--artifact-sets=` (a bad file is reported with line and column; the embedded copy
 is used instead).
 

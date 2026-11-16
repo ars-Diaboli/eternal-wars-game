@@ -104,6 +104,10 @@ public partial class Main : Node3D
             ShowReplays();
             Watch(replay, null);
         }
+        else if (LaunchArguments.Join is { } address)
+        {
+            JoinGame(address);
+        }
         else if (LaunchArguments.NewGame)
         {
             ShowNewGame();
@@ -185,6 +189,7 @@ public partial class Main : Node3D
     /// <summary>Takes the game being played down: its world, HUD and screens. Nothing runs until a new game or a load builds them again.</summary>
     private void LeaveGame()
     {
+        StopNetwork(keep: null);
         _menu.Close();
         _menu.CanSave = false;
         StopWatching();
@@ -214,6 +219,7 @@ public partial class Main : Node3D
     /// </summary>
     public override void _Process(double delta)
     {
+        PollNetwork(); // a LAN game's joins and commands (ADR-192)
         if (_mode != GameMode.Play)
         {
             ProcessReplay(delta); // the replay viewer runs the record, not the AI or the clock (ADR-164)
@@ -267,7 +273,7 @@ public partial class Main : Node3D
     /// </summary>
     private void FocusOnEventPlace(PendingDecision? decision)
     {
-        if (decision is MapEventDecision { Place: { } place } && !ShowingComputerMoves && _session.State.CurrentPlayer.IsHuman)
+        if (decision is MapEventDecision { Place: { } place } && !ShowingComputerMoves && PlaysHere(_session.State.CurrentPlayer.Id))
         {
             _context.SetLevel(place.Level);
             _camera.FocusOn(MapSpace.ToWorld(place));
@@ -340,7 +346,11 @@ public partial class Main : Node3D
         // The map as it is now is the start of the game: saves replay from it (ADR-058).
         var initial = MapConverter.ToDocument(state);
         StopWatching();
-        BeginGame(new GameSession(state), initial, resume: false);
+        StopNetwork(keep: null);
+        var session = new GameSession(state);
+        HostIfAsked(session, initial); // before the start, so clients replay the game from it
+        BeginGame(session, initial, resume: false);
+        TellHosting();
     }
 
     /// <summary>
@@ -349,6 +359,7 @@ public partial class Main : Node3D
     /// </summary>
     private void BeginGame(GameSession session, MapDocument initialMap, bool resume)
     {
+        StopNetwork(keep: session); // a load or a replay leaves a LAN game
         _game?.QueueFree();
         _game = new Node3D { Name = "Game" };
         AddChild(_game);
@@ -356,10 +367,13 @@ public partial class Main : Node3D
         _session = session;
         _initialMap = initialMap;
         var playing = _mode == GameMode.Play;
-        _ai = playing ? new AdventureAi(session) : null;
+        _ai = playing && _client is null ? new AdventureAi(session) : null; // a LAN client's computer players are the host's
         _menu.CanSave = playing;
         var state = session.State;
-        _context = new MapViewContext(state, _session.Events, playing ? state.CurrentPlayer.Id : ReplayViewer()) { FogLook = _interface.Fog, ShowGrid = _interface.ShowGrid };
+        _context = new MapViewContext(state, _session.Events, playing ? ViewerHere(state) : ReplayViewer())
+        {
+            FogLook = _interface.Fog, ShowGrid = _interface.ShowGrid, PlaysElsewhere = PlaysElsewhere,
+        };
 
         _world = new AdventureWorldView { Name = "World" };
         _game.AddChild(_world);
@@ -413,9 +427,9 @@ public partial class Main : Node3D
                 return;
             }
 
-            if (!_session.State.GetPlayer(e.Player).IsHuman)
+            if (!PlaysHere(e.Player))
             {
-                return; // the map stays with the last human, who watches the computer heroes it can see (ADR-090)
+                return; // the map stays with the last human here, who watches the computer heroes it can see (ADR-090), or another computer's player
             }
 
             if (ShowingComputerMoves)
@@ -446,7 +460,7 @@ public partial class Main : Node3D
 
         if (resume)
         {
-            _mapInput.Select(state.HeroesOf(state.CurrentPlayer.Id).FirstOrDefault()?.Id, focus: true);
+            _mapInput.Select(state.HeroesOf(_context.Viewer ?? state.CurrentPlayer.Id).FirstOrDefault()?.Id, focus: true);
             _battle.Restore();
             if (playing)
             {
