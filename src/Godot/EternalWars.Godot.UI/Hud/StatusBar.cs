@@ -52,7 +52,9 @@ public partial class StatusBar : PanelContainer
         return new Rect2((screen.X - width) / 2, screen.Y - bottomOffset - Height, width, Height);
     }
 
-    public void Bind(GameSession session)
+    /// <param name="session">The game.</param>
+    /// <param name="listed">Whose resources are shown (<see cref="ResourceBar"/>): the current player's by default.</param>
+    public void Bind(GameSession session, Func<Core.Domain.Common.PlayerId>? listed = null)
     {
         Name = "StatusBar";
         var style = UiTheme.Box(UiTheme.Background, UiTheme.Border, 2, borderWidth: 0);
@@ -65,7 +67,7 @@ public partial class StatusBar : PanelContainer
         row.AddChild(Message);
         var resources = new ResourceBar { Name = "Resources" };
         row.AddChild(resources);
-        resources.Bind(session);
+        resources.Bind(session, listed);
         if (RightReserve > 0)
         {
             row.AddChild(new Control { CustomMinimumSize = new Vector2(RightReserve - UiSpacing.Section, 0), MouseFilter = MouseFilterEnum.Ignore });

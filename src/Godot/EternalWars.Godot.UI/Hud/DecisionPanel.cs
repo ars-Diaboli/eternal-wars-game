@@ -22,10 +22,16 @@ public partial class DecisionPanel : PanelContainer
     private readonly Label _prompt = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
     private readonly HBoxContainer _buttons = new();
     private GameSession _session = null!;
+    private Func<Core.Domain.Common.PlayerId, bool> _playsHere = null!;
 
-    public void Bind(GameSession session)
+    /// <summary>
+    /// <paramref name="playsHere"/> says whose questions are asked at this screen (ADR-192): every human's by default; a battle's stays shown, its
+    /// buttons are the battle's own.
+    /// </summary>
+    public void Bind(GameSession session, Func<Core.Domain.Common.PlayerId, bool>? playsHere = null)
     {
         _session = session;
+        _playsHere = playsHere ?? (player => session.State.GetPlayer(player).IsHuman);
         var box = new VBoxContainer();
         AddChild(box);
         box.AddChild(_prompt.WithInfo(detailed => _session.State.PendingDecision is { } decision
@@ -47,7 +53,7 @@ public partial class DecisionPanel : PanelContainer
 
         var state = _session.State;
         var player = state.CurrentPlayer.Id;
-        Visible = state.PendingDecision is not null;
+        Visible = state.PendingDecision is BattleDecision || (state.PendingDecision is not null && _playsHere(player));
         switch (state.PendingDecision)
         {
             case TreasureChestDecision chest:

@@ -95,7 +95,7 @@ public partial class AdventureHud : CanvasLayer
             RightReserve = playing ? StatusBar.MenuButtonWidth : 0,
         };
         AddChild(StatusBar);
-        StatusBar.Bind(session);
+        StatusBar.Bind(session, () => context.ListedPlayer);
         Status.Text = playing
             ? "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera"
             : "Watching. Space: play or pause  L: level  right click: information  WASD/QE/wheel: camera";
@@ -113,7 +113,7 @@ public partial class AdventureHud : CanvasLayer
             var decisions = new DecisionPanel();
             decisions.UseOpaqueBackground();
             popUps.AddChild(decisions);
-            decisions.Bind(session);
+            decisions.Bind(session, context.PlaysHere);
         }
 
         var notice = new NoticePanel();
@@ -134,7 +134,7 @@ public partial class AdventureHud : CanvasLayer
         _layout.SetPart(HudPart.Lists, lists);
         HeroList = new HeroListPanel();
         lists.AddChild(HeroList);
-        HeroList.Bind(session);
+        HeroList.Bind(session, () => context.ListedPlayer);
         HeroList.HeroSelected += hero => HeroSelected?.Invoke(hero);
         HeroList.HeroInfoRequested += hero =>
         {
@@ -145,7 +145,7 @@ public partial class AdventureHud : CanvasLayer
         };
         var townList = new TownListPanel();
         lists.AddChild(townList);
-        townList.Bind(session);
+        townList.Bind(session, () => context.ListedPlayer);
         townList.TownSelected += town =>
         {
             if (playing)
@@ -234,7 +234,7 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>T: the town screen of the next own town.</summary>
     public void OpenNextTown()
     {
-        var towns = TownListPanel.TownsOf(_session.State);
+        var towns = TownListPanel.TownsOf(_session.State, _context.ListedPlayer);
         if (towns.Count == 0)
         {
             Status.Text = "You have no town.";
@@ -359,25 +359,25 @@ public partial class AdventureHud : CanvasLayer
         });
     }
 
-    /// <summary>A human's hero visited an object with a screen of its own: the marketplace, a service, a dwelling, an own town.</summary>
+    /// <summary>A hero of a player at this screen visited an object with a screen of its own: the marketplace, a service, a dwelling, an own town.</summary>
     private void OpenVisitedScreen(MapObjectVisited e)
     {
-        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Marketplace marketplace)
+        if (_context.PlaysHere(_session.State.CurrentPlayer.Id) && _session.State.FindObject(e.Object) is Marketplace marketplace)
         {
             _marketScreen.Open(marketplace.Id);
         }
 
-        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is { } served && ObjectServicePanel.Serves(served))
+        if (_context.PlaysHere(_session.State.CurrentPlayer.Id) && _session.State.FindObject(e.Object) is { } served && ObjectServicePanel.Serves(served))
         {
             _serviceScreen.Open(served.Id); // Hill Fort, War Machine Factory (ADR-068)
         }
 
-        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is CreatureDwelling dwelling)
+        if (_context.PlaysHere(_session.State.CurrentPlayer.Id) && _session.State.FindObject(e.Object) is CreatureDwelling dwelling)
         {
             _dwellingScreen.Open(dwelling.Id); // flagged by now (the visit flagged it first); recruit from it here
         }
 
-        if (_session.State.CurrentPlayer.IsHuman && _session.State.FindObject(e.Object) is Town town
+        if (_context.PlaysHere(_session.State.CurrentPlayer.Id) && _session.State.FindObject(e.Object) is Town town
             && town.Owner == _session.State.CurrentPlayer.Id)
         {
             ShowTown(town.Id);

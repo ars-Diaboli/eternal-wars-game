@@ -15,6 +15,7 @@ public class ArchitectureTests
         ["EternalWars.Core.Domain"] = ["EternalWars.Core.Events"],
         ["EternalWars.Core.Generation"] = ["EternalWars.Core.Events", "EternalWars.Core.Domain"],
         ["EternalWars.Core.Data"] = ["EternalWars.Core.Events", "EternalWars.Core.Domain", "EternalWars.Core.Generation"],
+        ["EternalWars.Core.Network"] = ["EternalWars.Core.Events", "EternalWars.Core.Domain", "EternalWars.Core.Generation", "EternalWars.Core.Data"],
         ["EternalWars.Godot.Assets"] = [],
         ["EternalWars.Godot.Shared"] = ["EternalWars.Core.Events", "EternalWars.Core.Domain", "EternalWars.Core.Generation", "EternalWars.Core.Data", "EternalWars.Godot.Assets"],
         ["EternalWars.Godot.UI"] =

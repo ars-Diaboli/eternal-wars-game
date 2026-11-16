@@ -79,6 +79,12 @@ public sealed class GameSession
 
     public IEventSubscriber Events => Bus;
 
+    /// <summary>
+    /// Where a command goes once it is authorized, before it runs (ADR-192): null runs every command here. A LAN host refuses the commands of a
+    /// player who plays on another computer; a LAN client sends its own player's commands to the host and runs only what the host sends back.
+    /// </summary>
+    public ICommandRoute? Route { get; set; }
+
     /// <summary>Accepted commands in order. Together with the map and <see cref="GameOptions.Seed"/> this replays the game.</summary>
     public IReadOnlyList<GameCommand> CommandLog => _log;
 
@@ -165,6 +171,11 @@ public sealed class GameSession
         if (Authorize(command) is { } refusal)
         {
             return CommandResult.Rejected(refusal);
+        }
+
+        if (Route?.Route(command) is { } routed)
+        {
+            return routed;
         }
 
         object? outcome;

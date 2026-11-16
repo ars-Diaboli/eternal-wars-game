@@ -22,6 +22,21 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
     /// <summary>The player whose knowledge is drawn; null = omniscient (map editor).</summary>
     public PlayerId? Viewer { get; private set; } = viewer;
 
+    /// <summary>
+    /// Whether a player plays on another computer of a LAN game (ADR-192): on the host the remote colours, on a client every colour but its own.
+    /// The app sets it; nobody does on one computer.
+    /// </summary>
+    public Func<PlayerId, bool> PlaysElsewhere { get; set; } = _ => false;
+
+    /// <summary>Whose heroes, towns and resources the HUD lists: the current player's, unless it plays on another computer; then the viewer's.</summary>
+    public PlayerId ListedPlayer => Viewer is { } viewer && PlaysElsewhere(State.CurrentPlayer.Id) ? viewer : State.CurrentPlayer.Id;
+
+    /// <summary>
+    /// Whether a player plays at this screen, so its questions and screens open here: every human on one computer (hot-seat), in a LAN game only
+    /// this computer's colours.
+    /// </summary>
+    public bool PlaysHere(PlayerId player) => State.GetPlayer(player).IsHuman && !PlaysElsewhere(player);
+
     /// <summary>0 = surface, 1 = underground.</summary>
     public int Level { get; private set; }
 

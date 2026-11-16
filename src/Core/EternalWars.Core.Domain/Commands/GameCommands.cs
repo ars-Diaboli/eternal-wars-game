@@ -285,6 +285,15 @@ public sealed record CommandResult(bool IsAccepted, string? Error = null, object
 
     public static CommandResult Rejected(string error) => new(false, error);
 
+    /// <summary>
+    /// A command a LAN client has sent to the host (<see cref="ICommandRoute"/>, ADR-192): not run yet; the game changes when the host has run
+    /// it and sends it back, and the host's refusal comes back on its own.
+    /// </summary>
+    public static CommandResult Sent() => new(true) { IsSent = true };
+
+    /// <summary>Sent to the host rather than run here (<see cref="Sent"/>); <see cref="Outcome"/> is then null.</summary>
+    public bool IsSent { get; init; }
+
     /// <summary>Throws <see cref="InvalidOperationException"/> for a refused command; returns the result otherwise.</summary>
     public CommandResult ThrowIfRejected() => IsAccepted ? this : throw new InvalidOperationException(Error);
 }
