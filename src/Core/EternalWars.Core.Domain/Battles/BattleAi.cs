@@ -3,13 +3,32 @@ using EternalWars.Core.Domain.Battles.Spells;
 namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>
-/// Simple, deterministic battle AI for neutrals, computer players and quick combat. Greedy per turn:
-/// shoot the most valuable target, else melee the most valuable reachable target, else close in on the
-/// nearest enemy, else defend. Value = creature value of the hit points it expects to remove.
+/// The battle AI's steps (ADR-188): each level adds one, so <c>sim ai</c> can measure a step against the one before it. The game always
+/// plays <see cref="Latest"/>.
+/// </summary>
+public enum BattleAiLevel
+{
+    /// <summary>Before ADR-188: each unit hits the target whose lost hit points are worth most (Fight Value of the health it takes off).</summary>
+    Greedy,
+
+    /// <summary>ADR-188 (a): focus fire on the biggest threat (Fight Value × count) and finish off stacks it can destroy this turn.</summary>
+    FocusFire,
+
+    /// <summary>The level the game plays.</summary>
+    Latest = FocusFire,
+}
+
+/// <summary>
+/// Simple, deterministic battle AI for neutrals, computer players and quick combat. Per turn: shoot the best target, else melee the best
+/// reachable target, else close in on the nearest enemy, else defend. The best target is the one whose lost hit points are worth most
+/// (<see cref="BattleAiLevel.Greedy"/>), weighted by its threat, with a bonus for destroying it (<see cref="BattleAiLevel.FocusFire"/>, ADR-188).
 /// </summary>
 internal static class BattleAi
 {
-    public static void Act(BattleState battle, BattleEngine engine)
+    /// <summary>A shooter that can shoot now, or a caster with casts left, counts this much more as a threat, in percent (ADR-187, proposal).</summary>
+    public const int ActiveThreatPercent = 125;
+
+    public static void Act(BattleState battle, BattleEngine engine, BattleAiLevel level = BattleAiLevel.Latest)
     {
         var unit = battle.ActiveUnit ?? throw new InvalidOperationException("No unit is active.");
         var enemies = battle.LivingUnitsOf(unit.Side.Opponent()).ToList();
@@ -50,12 +69,13 @@ internal static class BattleAi
         {
             return;
         }
+        var biggestThreat = level >= BattleAiLevel.FocusFire ? enemies.Select(e => Threat(battle, e)).DefaultIfEmpty(0).Max() : 0;
         if (BattleGrid.CanShootNow(battle, unit))
         {
             var shot = enemies
                 .Select(e => (Target: e, CanShoot: BattleGrid.CanShoot(battle, unit, e, out var penalty), Penalty: penalty))
                 .Where(s => s.CanShoot)
-                .OrderByDescending(s => Score(battle, unit, s.Target, isRanged: true, s.Penalty))
+                .OrderByDescending(s => TargetScore(battle, unit, s.Target, isRanged: true, s.Penalty, level, biggestThreat))
                 .ThenBy(s => s.Target.Id)
                 .FirstOrDefault();
             if (shot.Target is not null && engine.Shoot(shot.Target.Id) is null)
@@ -67,7 +87,7 @@ internal static class BattleAi
         var melee = enemies
             .Select(e => (Target: e, Positions: BattleGrid.AttackPositions(battle, unit, e)))
             .Where(m => m.Positions.Count > 0)
-            .OrderByDescending(m => Score(battle, unit, m.Target, isRanged: false))
+            .OrderByDescending(m => TargetScore(battle, unit, m.Target, isRanged: false, 0, level, biggestThreat))
             .ThenBy(m => m.Target.Id)
             .FirstOrDefault();
         if (melee.Target is not null && engine.Attack(melee.Target.Id, melee.Positions[0]) is null)
@@ -203,6 +223,35 @@ internal static class BattleAi
     {
         var damage = Math.Min(DamageCalculator.Expected(battle, unit, target, isRanged, penalty), target.TotalHealth);
         return (long)damage * target.Creature.FightValue / target.Creature.Health;
+    }
+
+    /// <summary>
+    /// How much a stack matters (ADR-188): its Fight Value × its count, raised by <see cref="ActiveThreatPercent"/> while it can shoot unhindered
+    /// or still has casts (ADR-187).
+    /// </summary>
+    internal static long Threat(BattleState battle, BattleUnit unit)
+    {
+        var threat = StackValue(unit);
+        return BattleGrid.CanShootNow(battle, unit) || BattleMagic.CreatureSpell(battle, unit) is not null ? threat * ActiveThreatPercent / 100 : threat;
+    }
+
+    /// <summary>
+    /// What a shot or blow at <paramref name="target"/> is worth to the AI. <see cref="BattleAiLevel.Greedy"/>: <see cref="Score"/>.
+    /// <see cref="BattleAiLevel.FocusFire"/> (ADR-188 a): that worth counts up to twice, by the target's threat against the biggest one, so the
+    /// stacks focus on the biggest threat; a blow expected to destroy the stack adds its whole threat, so stacks it can kill are finished off.
+    /// </summary>
+    internal static long TargetScore(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int penalty, BattleAiLevel level, long biggestThreat)
+    {
+        if (level < BattleAiLevel.FocusFire)
+        {
+            return Score(battle, unit, target, isRanged, penalty);
+        }
+
+        var expected = DamageCalculator.Expected(battle, unit, target, isRanged, penalty);
+        var worth = Worth(target, expected);
+        var threat = Threat(battle, target);
+        var focus = worth + (worth * threat / Math.Max(1, biggestThreat));
+        return expected > 0 && expected >= target.TotalHealth ? focus + threat : focus;
     }
 
     /// <summary>

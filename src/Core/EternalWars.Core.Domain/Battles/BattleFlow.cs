@@ -16,6 +16,9 @@ internal sealed class BattleFlow(GameState state, IEventPublisher events, Battle
     /// <summary>Whether computer players' heroes retreat from lost battles (off in the AI's throwaway estimate fights).</summary>
     public bool AiMayRetreat { get; set; } = true;
 
+    /// <summary>The battle AI's level for the attacker and the defender (<see cref="BattleAiLevel.Latest"/> unless <c>sim ai</c> measures a step).</summary>
+    public (BattleAiLevel Attacker, BattleAiLevel Defender) AiLevels { get; set; } = (BattleAiLevel.Latest, BattleAiLevel.Latest);
+
     /// <summary>Who may command <paramref name="side"/> of the current battle right now (null: the AI does).</summary>
     public PlayerId? Commander(BattleSide side) =>
         state.Battle is { } battle && !battle.IsComputerControlled(side) ? battle.Participant(side).Owner : null;
@@ -106,7 +109,7 @@ internal sealed class BattleFlow(GameState state, IEventPublisher events, Battle
                 break;
             }
 
-            BattleAi.Act(battle, Engine(battle, bus));
+            BattleAi.Act(battle, Engine(battle, bus), unit.Side == BattleSide.Attacker ? AiLevels.Attacker : AiLevels.Defender);
         }
 
         if (battle.Phase == BattlePhase.Finished && ReferenceEquals(battle, state.Battle))
