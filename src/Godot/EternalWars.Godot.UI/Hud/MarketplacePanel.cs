@@ -110,9 +110,10 @@ public partial class MarketplacePanel : PanelContainer
 
         Visible = true;
         _title.Text = _mapMarketplace is null ? "Marketplace" : "Map marketplace";
+        var gold = ResourceAmountText.Short(ResourceType.Gold, player.Resources.Gold);
         _info.Text = _mapMarketplace is null
-            ? $"Your marketplace towns set the rates (more towns, better rates; a governed town counts 1.5). {player.Name} has {player.Resources.Gold} gold."
-            : $"A fixed rate, as if you had {MarketplaceRules.MapMarketplaceTowns} marketplace towns. {player.Name} has {player.Resources.Gold} gold.";
+            ? $"Your marketplace towns set the rates (more towns, better rates; a governed town counts 1.5). {player.Name} has {gold} gold."
+            : $"A fixed rate, as if you had {MarketplaceRules.MapMarketplaceTowns} marketplace towns. {player.Name} has {gold} gold.";
 
         _rows.ClearChildren();
 
@@ -129,7 +130,7 @@ public partial class MarketplacePanel : PanelContainer
             name.AddChild(ResourceIcons.Badge(resource));
             name.AddChild(new Label { Text = resource.ToString() });
             _rows.AddChild(name);
-            _rows.AddChild(new Label { Text = player.Resources[resource].ToString() });
+            _rows.AddChild(ResourceIcons.AmountLabel(resource, player.Resources[resource]));
             _rows.AddChild(new Label { Text = $"{rate.BuyPrice} gold" });
             _rows.AddChild(TradeButton("Buy", resource, TradeDirection.Buy).WithResourceIcon(resource));
             var sell = TradeButton($"Sell ({rate.SellPrice} gold)", resource, TradeDirection.Sell).WithResourceIcon(ResourceType.Gold);

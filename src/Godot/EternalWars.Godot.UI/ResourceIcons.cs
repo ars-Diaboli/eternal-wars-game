@@ -19,6 +19,29 @@ public static class ResourceIcons
     private const string Folder = "res://shared/textures/ui/resources/";
     private static readonly Dictionary<(string, int), Texture2D?> Cache = [];
 
+    /// <summary>
+    /// A label for an amount of <paramref name="resource"/>, shortened past 6 digits for gold and 4 for the others ("321.7m", "31.7k";
+    /// <see cref="ResourceAmountText"/>, ADR-186); a shortened amount names the full one in its tooltip, after <paramref name="tooltip"/> if given.
+    /// </summary>
+    public static Label AmountLabel(ResourceType resource, int amount, string tooltip = "")
+    {
+        var label = new Label { MouseFilter = Control.MouseFilterEnum.Ignore, VerticalAlignment = VerticalAlignment.Center };
+        ShowAmount(label, resource, amount, tooltip);
+        return label;
+    }
+
+    /// <summary>Sets <paramref name="label"/> to <paramref name="amount"/> as <see cref="AmountLabel"/> shows it.</summary>
+    public static void ShowAmount(Label label, ResourceType resource, int amount, string tooltip = "")
+    {
+        label.Text = ResourceAmountText.Short(resource, amount);
+        var full = ResourceAmountText.IsShortened(resource, amount) ? ResourceAmountText.Full(amount) : null;
+        label.TooltipText = full is null ? tooltip : tooltip.Length > 0 ? $"{tooltip}: {full}" : full;
+        if (label.TooltipText.Length > 0)
+        {
+            label.MouseFilter = Control.MouseFilterEnum.Pass;
+        }
+    }
+
     /// <summary>The icon of <paramref name="resource"/> at <paramref name="size"/> pixels, or null if its file is missing.</summary>
     public static Texture2D? Get(ResourceType resource, int size = TextSize) => Load(resource.ToString().ToLowerInvariant(), size);
 
@@ -63,7 +86,7 @@ public static class ResourceIcons
             }
 
             any = true;
-            var amount = cost[resource].ToString(CultureInfo.InvariantCulture);
+            var amount = ResourceAmountText.Short(resource, cost[resource]);
             if (Get(resource, size) is { } texture)
             {
                 row.AddChild(new TextureRect
@@ -74,11 +97,13 @@ public static class ResourceIcons
                     StretchMode = TextureRect.StretchModeEnum.KeepCentered,
                     CustomMinimumSize = new Vector2(size, size),
                 });
-                row.AddChild(new Label { Text = amount, MouseFilter = Control.MouseFilterEnum.Ignore, VerticalAlignment = VerticalAlignment.Center });
+                row.AddChild(AmountLabel(resource, cost[resource]));
             }
             else
             {
-                row.AddChild(new Label { Text = $"{amount} {resource.ToString().ToLowerInvariant()}", MouseFilter = Control.MouseFilterEnum.Ignore });
+                var label = AmountLabel(resource, cost[resource]);
+                label.Text = $"{amount} {resource.ToString().ToLowerInvariant()}";
+                row.AddChild(label);
             }
         }
 
@@ -99,7 +124,12 @@ public static class ResourceIcons
     {
         var row = new HBoxContainer { TooltipText = "Your gold" };
         row.AddThemeConstantOverride("separation", UiSpacing.Cell);
-        var amount = gold.ToString(CultureInfo.InvariantCulture);
+        var amount = ResourceAmountText.Short(ResourceType.Gold, gold);
+        if (ResourceAmountText.IsShortened(ResourceType.Gold, gold))
+        {
+            row.TooltipText = $"Your gold: {ResourceAmountText.Full(gold)}";
+        }
+
         if (Treasury(size) is { } texture)
         {
             row.AddChild(new TextureRect
@@ -119,7 +149,7 @@ public static class ResourceIcons
         return row;
     }
 
-    /// <summary>A cost in words, for tooltips and other plain text: "2500 gold, 5 ore", or "free".</summary>
+    /// <summary>A cost in words, for tooltips and other plain text: "2500 gold, 5 ore", or "free"; the amounts in full.</summary>
     public static string Describe(ResourceSet cost)
     {
         var parts = Enum.GetValues<ResourceType>().Where(t => cost[t] != 0)

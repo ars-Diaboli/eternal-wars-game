@@ -2238,25 +2238,38 @@ put off ("until then a save is played on with Load"). *(choice)* marks the agent
 - **Not done**: taking over a battle only the computer fights (ADR-164).
 
 ### ADR-186: Fullscreen, short resource amounts, a status bar along the bottom and centred pop-ups (ADR-118, ADR-156, owner notes, 2026-11-16)
-**Status**: accepted (2026-11-16), not built. From the owner's notes in `ideas.md`; *(proposal)* marks the agent's fill-ins, for the owner
-to change.
+**Status**: accepted (2026-11-16), built (2026-11-16). From the owner's notes in `ideas.md`;
+*(proposal)* marks the agent's fill-ins, for the owner to change.
 
 - **Fullscreen**: the game plays only in a window today. A "Window mode" row in the F10 menu's "Settings" tab: Windowed or Fullscreen
   (borderless, the screen's own size) *(proposal: Godot's borderless fullscreen, not exclusive)*; kept in `settings.json` with the other
   settings, not in saves; applied at once and at start. Alt+Enter switches it too *(proposal)*. The map editor gets the same setting
   *(proposal)*.
+  - *Built*: `InterfaceSettings.Window` (`WindowMode`: Windowed, Fullscreen) in the `interface` section of `settings.json`; Godot's
+    non-exclusive fullscreen. The map editor has no menu: Alt+Enter alone switches it, kept in the editor's own `settings.json`.
 - **Short resource amounts** everywhere the UI shows a stock of resources (the resource bar, the kingdom overview, the marketplace,
   costs): gold shows up to 6 digits (999 999); above that in millions with one decimal, "321.7m". The other resources show up to 4 digits
   (9 999); above that in thousands with one decimal, "31.7k". Rounded down *(proposal: never shows more than there is)*; a trailing ".0"
   stays *(proposal: the width stays steady)*; gold past 999.9m goes on in millions ("1234.5m") *(proposal)*. The right-click information
   window shows the full number *(proposal)*. One engine-free formatter in core, with tests.
+  - *Built*: `ResourceAmountText` in core; the resource bar, the kingdom overview, the marketplace, every cost row (town, tavern, decision
+    prompts, buttons with a price) and the gold balance use it. A shortened amount names the full one in its tooltip; the information
+    windows and costs in words (tooltips) keep full numbers. Past 999.9 of a unit the formatter steps up to the next one, for gold as well:
+    "1.2b" rather than "1234.5m", and other resources go "999.9k" → "1.0m" (as `ResourceAmountText` was written and tested before this
+    was built; the owner may still prefer millions for gold).
 - **Status bar** on the adventure map: a narrow stripe along the bottom edge, edge to edge on screens up to 16:9; on wider screens it
   stays 16:9 wide, centred *(proposal: centred)*. The resources sit on it, aligned right; its left part shows the game's tooltips and
   labels (what is under the pointer, the hints line and the messages that now go to the status line at the top left). The top-left block
   keeps the turn and End turn *(proposal)*. Lists "along the bottom" (ADR-156) and the bottom corners' parts stand above the stripe; the
   "Menu (F10)" button moves onto the stripe's right end *(proposal)*. In the replay viewer the viewer's bar stands above it *(proposal)*.
+  - *Built*: `StatusBar` on the adventure HUD; the top-left block holds only the turn and End turn. On the map, the status line names the
+    hero, object or ground under the pointer (the information window's title). In the replay viewer the status bar stands *above* the
+    viewer's bar, not below it: the viewer's bar is also shown in battle, where there is no status bar, so it keeps the bottom edge; the
+    menu button stays in the corner beside it there. In battle the menu button stands in the bottom right corner as before.
 - **Pop-ups in the centre**: decision prompts (questions, choices), notices and alerts open in the middle of the screen, over the map,
   instead of in the top-left block. The information window (right click) still opens at the pointer *(proposal)*.
+  - *Built*: the questions (`DecisionPanel`) and notices (`NoticePanel`, which also carries the week's event and other alerts) in a
+    centred column, 520 px wide, with opaque panels.
 
 ### ADR-187: A Fight Value per creature for the battle AI (ADR-118, owner notes, 2026-11-16)
 **Status**: accepted (2026-11-16), built (2026-11-16): the `fight_value` column after `luck`; `CreatureDefinition.FightValue` replaces the

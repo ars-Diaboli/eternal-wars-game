@@ -194,6 +194,7 @@ public partial class Main : Node3D
 
         _game.QueueFree();
         _game = null;
+        PlaceMenuButton();
         _context = null!;
         _status = null!;
         _ai = null;
@@ -272,9 +273,20 @@ public partial class Main : Node3D
         }
     }
 
-    /// <summary>A deployment drag ends where the button is let go, even over the HUD (which would otherwise take the release).</summary>
+    /// <summary>
+    /// Alt+Enter switches the window mode. A deployment drag ends where the button is let go, even over the HUD (which would otherwise take the
+    /// release).
+    /// </summary>
     public override void _Input(InputEvent @event)
     {
+        // Alt+Enter switches the window mode (ADR-186) wherever the focus is, a text field included.
+        if (WindowModes.IsToggleKey(@event))
+        {
+            GetViewport().SetInputAsHandled();
+            ToggleWindowMode();
+            return;
+        }
+
         if (_battleInput is not null && _battleInput.HandleRelease(@event))
         {
             GetViewport().SetInputAsHandled();
@@ -524,6 +536,7 @@ public partial class Main : Node3D
         {
             _world.Visible = false;
             _hud.Visible = false;
+            PlaceMenuButton();
             _camera.ProcessMode = ProcessModeEnum.Disabled;
             _world.PathPreview.Clear();
         };
@@ -531,6 +544,7 @@ public partial class Main : Node3D
         {
             _world.Visible = true;
             _hud.Visible = true;
+            PlaceMenuButton();
             _camera.ProcessMode = ProcessModeEnum.Inherit;
             _camera.MakeCurrent();
         };
@@ -597,5 +611,6 @@ public partial class Main : Node3D
         _hud.HeroSelected += hero => _mapInput.Select(hero, focus: true);
         _hud.DigRequested += _mapInput.Dig;
         _hud.SpellAimed += _mapInput.Aim;
+        PlaceMenuButton();
     }
 }

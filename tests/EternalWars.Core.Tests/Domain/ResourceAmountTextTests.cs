@@ -2,7 +2,7 @@ using EternalWars.Core.Domain.Economy;
 
 namespace EternalWars.Core.Tests.Domain;
 
-/// <summary>Short resource amounts in the labels (ADR-184).</summary>
+/// <summary>Short resource amounts in the labels (ADR-186).</summary>
 public class ResourceAmountTextTests
 {
     [Theory]

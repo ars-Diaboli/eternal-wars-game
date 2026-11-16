@@ -4,14 +4,18 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// The adventure map's status bar (ADR-184): a narrow stripe along the bottom of the screen, as wide as the screen up to 16:9 and a centred
+/// The adventure map's status bar (ADR-186): a narrow stripe along the bottom of the screen, as wide as the screen up to 16:9 and a centred
 /// 16:9 width on a wider screen. On the left the status line (<see cref="Message"/>): the HUD's messages, and what the pointer is over (a HUD
-/// control's tooltip, or the map's cell through <see cref="ShowHover"/>), whichever came last. On the right the <see cref="ResourceBar"/>.
+/// control's tooltip, or the map's cell through <see cref="ShowHover"/>), whichever came last. On the right the <see cref="ResourceBar"/>,
+/// then <see cref="RightReserve"/> left free for the app's menu button (<see cref="MenuSlot"/>).
 /// </summary>
 public partial class StatusBar : PanelContainer
 {
     /// <summary>The bar's height: one line of text with the resource icons.</summary>
     public const float Height = 32;
+
+    /// <summary>The width of the menu button on the bar's right end.</summary>
+    public const float MenuButtonWidth = 140;
 
     /// <summary>The widest the bar gets, as a share of the screen's height: 16:9.</summary>
     private const float MaxAspect = 16f / 9f;
@@ -31,6 +35,23 @@ public partial class StatusBar : PanelContainer
     /// <summary>Room kept free below the bar (the replay viewer's bar, ADR-164).</summary>
     public float BottomOffset { get; set; }
 
+    /// <summary>Width kept free at the bar's right end, for the menu button the app puts there.</summary>
+    public float RightReserve { get; set; }
+
+    /// <summary>Where the menu button goes on a bar at the bottom edge of <paramref name="screen"/>: its right end, <see cref="MenuButtonWidth"/> wide.</summary>
+    public static Rect2 MenuSlot(Vector2 screen)
+    {
+        var bar = Bounds(screen, 0);
+        return new Rect2(bar.End.X - MenuButtonWidth, bar.Position.Y, MenuButtonWidth, Height);
+    }
+
+    /// <summary>The bar's place on <paramref name="screen"/>, <paramref name="bottomOffset"/> above the bottom edge.</summary>
+    public static Rect2 Bounds(Vector2 screen, float bottomOffset)
+    {
+        var width = Math.Min(screen.X, screen.Y * MaxAspect);
+        return new Rect2((screen.X - width) / 2, screen.Y - bottomOffset - Height, width, Height);
+    }
+
     public void Bind(GameSession session)
     {
         Name = "StatusBar";
@@ -46,6 +67,10 @@ public partial class StatusBar : PanelContainer
         var resources = new ResourceBar { Name = "Resources" };
         row.AddChild(resources);
         resources.Bind(session);
+        if (RightReserve > 0)
+        {
+            row.AddChild(new Control { CustomMinimumSize = new Vector2(RightReserve - UiSpacing.Section, 0), MouseFilter = MouseFilterEnum.Ignore });
+        }
     }
 
     /// <summary>
@@ -94,9 +119,8 @@ public partial class StatusBar : PanelContainer
 
     private void Place()
     {
-        var screen = GetViewportRect().Size;
-        var width = Math.Min(screen.X, screen.Y * MaxAspect);
-        Position = new Vector2((screen.X - width) / 2, screen.Y - BottomOffset - Height);
-        Size = new Vector2(width, Height);
+        var bounds = Bounds(GetViewportRect().Size, BottomOffset);
+        Position = bounds.Position;
+        Size = bounds.Size;
     }
 }
