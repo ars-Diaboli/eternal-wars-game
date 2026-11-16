@@ -7,7 +7,8 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-16**: CMB-13 (a cleverer battle AI) added from the owner's notes; the rest of those notes are ADR-186 and ADR-187.
+**Updated 2026-11-16**: CMB-13 (a cleverer battle AI) answered: Fight Value × the stack's count where it fits, the proposals for the rest
+(ADR-188).
 
 ## 🚧 Blocking now
 
@@ -44,22 +45,6 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
-## Combat
-
-<a id="cmb-13"></a>
-**CMB-13 A cleverer battle AI** (owner, 2026-11-16: "upgrade AI to be more clever in combat"). Today `BattleAi` is greedy, one unit at a
-time: shoot or hit the most valuable target in reach, else walk at the nearest enemy, else defend. Which of these should it learn first?
-(a) Focus fire on the most dangerous stack by Fight Value (ADR-187) and finish off stacks it can kill. (b) Protect its shooters: block
-enemy shooters with a melee stack, keep its own out of reach. (c) Wait for the enemy to come to it (wait / defend) when it is outranged or
-shoots better, instead of always closing in. (d) Avoid retaliation: hit stacks that have already retaliated, use no-retaliation attackers
-first. (e) Spells: weigh a whole round ahead (a buff before its strongest stack moves, a mass spell over several stacks). (f) Sieges:
-go for the gate or a breach together, shooters on the walls.
-
-**Proposal**: 
-(a) and (d) first (they build on Fight Value), then (b) and (c); 
-(e) and (f) later. Measured with `sim battle` win rates
-against the current AI, and the AI stays deterministic (`GameState.Random` only).
-
 ## Numbers to tune (not questions)
 Placeholders that wait for play-testing (kept as they are, ADR-118): caravan cost (ADR-054); complexity starting resources (ADR-063);
 Stewardship and governor percentages (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064);
@@ -84,7 +69,7 @@ One line per question; the ADR holds the detail.
 - **Heroes**: roster ADR-048, skills ADR-048/069, stats ADR-055, schools ADR-063/069, artifacts ADR-061, HERO-2 ADR-069 (rest in HERO-7, MAG-9, MAG-10,
   CONT-5); HERO-1, HERO-3, HERO-6, HERO-7 and HERO-4 ADR-072, HERO-4's war machines ADR-073; HERO-8 (rarer specialties, the proposals for now) ADR-107; HERO-9 (Scouting reveals information) ADR-125.
 - **Combat**: CMB-5 (sieges before 1.0) ADR-099; CMB-11 (siege rules) ADR-106; grid and sizes ADR-005/021/070, battlefield ADR-033, turn order ADR-009, damage ADR-033, cover ADR-035, tuning ADR-038, speeds ADR-037,
-  morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090, CMB-12 (health bars, dividing obstacles) ADR-118.
+  morale and luck ADR-053, machines ADR-056/063, victory ADR-057, CMB-1/3/4/6 ADR-070, CMB-7/8 ADR-071, CMB-6 check order ADR-072, CMB-2 ADR-075, CMB-9 (movement as a circle) ADR-089, CMB-10 (auto combat) ADR-090, CMB-12 (health bars, dividing obstacles) ADR-118; CMB-13 (a cleverer battle AI) ADR-188.
 - **Magic**: MAG-13 (guild spell draw, spell elements, summons) ADR-106; MAG-1 (the spell list re-drafted) ADR-099; MAG-4 ADR-070/071; MAG-2, MAG-3 (mana refill, Spell Power role, potency), MAG-5 (levels), MAG-6 (resistance) ADR-071; MAG-1 (Spell Power formula), MAG-3, MAG-5, MAG-6 … MAG-12 ADR-072; MAG-5 (fixed 500 points) and MAG-10 (even stat odds) ADR-073.
 - **Random maps**: ADR-023, ADR-034, ADR-064; RMG-1 … RMG-7 ADR-064/065; RMG-9, RMG-10, teams ADR-070; RMG-8, RMG-12, RMG-13 ADR-071; RMG-11 ADR-070/072.
 - **Data**: DATA-1 ADR-071.

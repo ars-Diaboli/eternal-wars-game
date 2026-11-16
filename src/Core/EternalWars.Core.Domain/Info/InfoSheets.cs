@@ -54,7 +54,7 @@ public static partial class InfoSheets
         {
             lines.Add($"Map speed {N(c.MapSpeed)}   Size {c.Size} ({N(c.Size.Cells())}×{N(c.Size.Cells())} cells)"
                       + (c.Category == CreatureCategory.None ? "" : $"   Class {c.Category}") + (c.Tags.Count > 0 ? $"   Tags: {string.Join(", ", c.Tags)}" : ""));
-            lines.Add($"Strength {N(c.Value)} a creature = health × average damage × (20 + Attack + Defense) / 40"
+            lines.Add($"Strength {N(c.FightValue)} a creature = health × average damage × (20 + Attack + Defense) / 40"
                       + (c.IsRanged ? ", ×1.5 for a shooter" : "") + (c.MovesFreely ? ", ×1.2 for a flyer" : ""));
         }
 

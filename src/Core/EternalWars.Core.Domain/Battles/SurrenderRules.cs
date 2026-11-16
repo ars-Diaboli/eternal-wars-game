@@ -68,5 +68,5 @@ public static class SurrenderRules
     public static bool ShouldRetreat(BattleState battle, BattleSide side) =>
         CheckRetreat(battle, side) is null && Worth(battle, side) <= Worth(battle, side.Opponent()) * RetreatBelowShare;
 
-    private static long Worth(BattleState battle, BattleSide side) => battle.LivingArmyOf(side).Sum(u => (long)u.Count * u.Creature.Value);
+    private static long Worth(BattleState battle, BattleSide side) => battle.LivingArmyOf(side).Sum(u => (long)u.Count * u.Creature.FightValue);
 }

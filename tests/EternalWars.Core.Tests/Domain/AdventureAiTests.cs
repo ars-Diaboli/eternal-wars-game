@@ -457,7 +457,7 @@ public class AdventureAiTests
     {
         var state = Create("A.....C..#B");
         state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10));
-        var footmen = (int)Math.Max(30, 1500 / CreatureCatalog.Default.Get(BuiltInCreatures.Footman).Value);
+        var footmen = (int)Math.Max(30, 1500 / CreatureCatalog.Default.Get(BuiltInCreatures.Footman).FightValue);
         state.GetHero(C).Army.Set(0, new CreatureStack(BuiltInCreatures.Footman, footmen));
         var session = Start(state);
 

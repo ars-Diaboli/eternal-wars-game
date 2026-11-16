@@ -93,5 +93,5 @@ internal sealed class BattleEstimator(GameState state)
         return new BattleEstimate(wins, Seeds.Length, lost / Seeds.Length);
     }
 
-    private long Power(Army army) => army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value);
+    private long Power(Army army) => army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).FightValue);
 }

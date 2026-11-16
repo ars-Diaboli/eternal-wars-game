@@ -208,6 +208,25 @@ public class BattleEngineTests
         Assert.Empty(battle.Events.OfType<BattleUnitAttacked>());
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void BattleAi_ShootsTheStackWithTheHigherFightValue(bool upperIsDangerous)
+    {
+        var battle = TestBattle.Create();
+        var archer = battle.Add(Attacker, TestBattle.Fixed("archer", 1, shots: 10), 5, 0, 4);
+        var weak = TestBattle.Fixed("twin", 1) with { FightValue = 10 };
+        var strong = weak with { FightValue = 1000 };
+        var upper = battle.Add(Defender, upperIsDangerous ? strong : weak, 5, 20, 2);
+        var lower = battle.Add(Defender, upperIsDangerous ? weak : strong, 5, 20, 6);
+        battle.StartWith(archer);
+
+        BattleAi.Act(battle.State, battle.Engine);
+
+        var shot = Assert.Single(battle.Events.OfType<BattleUnitAttacked>(), e => e.Attacker == archer.Id);
+        Assert.Equal((upperIsDangerous ? upper : lower).Id, shot.Target);
+    }
+
     [Fact]
     public void BattleAi_IsDeterministic_AndFinishesTheFight()
     {

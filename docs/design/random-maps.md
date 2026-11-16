@@ -87,7 +87,7 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
   - **Map marketplace** (ADR-067, TOWN-2): from the **4000** band, worth 4000; unowned, no flag.
   - Items worth more than 1000 get a guard of 40–60 % of the value × the zone's strength (weak 0.75, average 1, strong 1.5), half in start
     zones (RMG-2).
-- **Guards** (`GuardPicker`): power = `count × creature value`, mapped to overlapping tier ranges (counts 6–60, 2–40, 1–25, 1–15, 1–10 for
+- **Guards** (`GuardPicker`): power = `count × Fight Value`, mapped to overlapping tier ranges (counts 6–60, 2–40, 1–25, 1–15, 1–10 for
   tiers 1–5); creatures from the playable towns and neutrals, never upgraded. **Zone strength** (`ZoneGuards`): mine guards weak 800 /
   average 2000 / strong 4500 (gold ×1.5, rare ×1.25); neutral town garrisons 1500 / 4000 / 9000 in two stacks.
 - **Scenario** (RMG-5): `PlayerSetup(Slot, Name, IsHuman, TownType, Hero?, Team?, Tier1Dwelling?)` per player.

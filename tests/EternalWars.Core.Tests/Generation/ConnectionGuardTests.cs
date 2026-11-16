@@ -78,7 +78,7 @@ public class ConnectionGuardTests
         Assert.Equal(passage.Anchor, garrison.VisitPosition);
         Assert.Null(garrison.Owner);
         var stack = Assert.Single(garrison.Troops.Stacks).Stack;
-        Assert.InRange((double)stack.Count * Core.Domain.Creatures.CreatureCatalog.Default.Get(stack.Creature).Value, 1500 * 0.75, 1500 * 1.25);
+        Assert.InRange((double)stack.Count * Core.Domain.Creatures.CreatureCatalog.Default.Get(stack.Creature).FightValue, 1500 * 0.75, 1500 * 1.25);
 
         // Only through the garrison: the way is open on foot, closed once its entrance is.
         Assert.Contains(AnyTileOf(map, 1), Reach(map, AnyTileOf(map, 0), stopAtVisits: false));

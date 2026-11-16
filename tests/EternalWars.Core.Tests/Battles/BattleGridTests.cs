@@ -150,7 +150,7 @@ public class BattleGridTests
 
         Assert.True(BattleGrid.Reachable(battle.State, unit).ContainsKey(new CellPosition(7, 10)));
         Assert.True(teleporter.MovesFreely);
-        Assert.Equal(walker.Value * 6 / 5, teleporter.Value);
+        Assert.Equal(walker.FightValue * 6 / 5, teleporter.FightValue);
     }
 
     [Fact]

@@ -268,11 +268,27 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
 
     public bool HasTag(string tag) => Tags.Contains(tag, StringComparer.Ordinal);
 
+    private readonly int _fightValue;
+
     /// <summary>
-    /// Rough strength of one creature, used by the battle AI and neutral dispositions:
-    /// health × average damage × (20 + Attack + Defense) / 40, ×1.5 for shooters, ×1.2 for flyers.
+    /// How dangerous one creature is in battle (ADR-187): the <c>fight_value</c> column, read wherever a creature's or a stack's strength
+    /// is weighed (the battle AI, neutral dispositions, guard and army strength). A creature without one (0) gets
+    /// <see cref="DerivedFightValue"/>.
     /// </summary>
-    public int Value
+    public int FightValue
+    {
+        get => _fightValue > 0 ? _fightValue : DerivedFightValue;
+        init => _fightValue = value;
+    }
+
+    /// <summary>Whether <see cref="FightValue"/> comes from the data rather than <see cref="DerivedFightValue"/>.</summary>
+    public bool HasOwnFightValue => _fightValue > 0;
+
+    /// <summary>
+    /// The fallback Fight Value from the stats (the placeholders in the table came from it):
+    /// health × average damage × (20 + Attack + Defense) / 40, ×1.5 for shooters, ×1.2 for flyers and teleporters.
+    /// </summary>
+    public int DerivedFightValue
     {
         get
         {
@@ -319,9 +335,9 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
             throw new FormatException($"Creature '{Id}' needs health, damage (min ≤ max), speeds and initiative of at least 1.");
         }
 
-        if (Attack < 0 || Defense < 0 || Shots < 0)
+        if (Attack < 0 || Defense < 0 || Shots < 0 || _fightValue < 0)
         {
-            throw new FormatException($"Creature '{Id}' has negative attack, defense or shots.");
+            throw new FormatException($"Creature '{Id}' has negative attack, defense, shots or fight value.");
         }
 
         if (Math.Abs(Morale) > Battles.MoraleAndLuck.Limit || Math.Abs(Luck) > Battles.MoraleAndLuck.Limit)

@@ -45,7 +45,7 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
 
     /// <summary>Σ count × creature value of a hero's army.</summary>
     public long ArmyPower(Hero hero) =>
-        hero.Army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value);
+        hero.Army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).FightValue);
 
     void Turns.ITurnPhaseParticipant.SetUpGame() => RollUnsetCounts();
 
@@ -180,7 +180,7 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
     {
         var count = monster.Count ?? CountRange(state.Creatures.Get(monster.Creature).Tier).Min;
         var heroPower = ArmyPower(hero);
-        var guardPower = (long)count * state.Creatures.Get(monster.Creature).Value;
+        var guardPower = (long)count * state.Creatures.Get(monster.Creature).FightValue;
 
         GuardOffer? offer = null;
         if (JoinRatio(monster.Disposition) is { } ratio && heroPower >= ratio * guardPower && hero.Army.CanAccept(monster.Creature))

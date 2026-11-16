@@ -43,7 +43,7 @@ public class ArenaAiTests
     }
 
     private static long Power(GameState state, EternalWars.Core.Domain.Armies.Army army) =>
-        army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value);
+        army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).FightValue);
 
     [Fact]
     public void OnThePreparationDay_ATownBuildsSeveralBuildings_AndSpendsItsGoldOnTheArmy()

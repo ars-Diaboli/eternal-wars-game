@@ -31,7 +31,7 @@ public class InfoSheetTests
         Assert.StartsWith($"Creature, tier {footman.Tier}", plain.Kind, StringComparison.Ordinal);
         Assert.Contains(plain.Lines, l => l.StartsWith($"Attack {footman.Attack}   Defense {footman.Defense}", StringComparison.Ordinal));
         Assert.DoesNotContain(plain.Lines, l => l.StartsWith("Strength", StringComparison.Ordinal));
-        Assert.Contains(detailed.Lines, l => l.StartsWith($"Strength {footman.Value} a creature", StringComparison.Ordinal));
+        Assert.Contains(detailed.Lines, l => l.StartsWith($"Strength {footman.FightValue} a creature", StringComparison.Ordinal));
     }
 
     [Fact]

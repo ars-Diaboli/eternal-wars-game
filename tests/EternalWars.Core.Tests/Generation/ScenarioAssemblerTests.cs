@@ -45,7 +45,7 @@ public class ScenarioAssemblerTests
             var stacks = hero.Army.Stacks.Select(s => s.Stack).ToList();
             Assert.InRange(stacks.Count, 2, 3);
             Assert.All(stacks, s => Assert.Contains(Creatures.Get(s.Creature), Creatures.BaseCreaturesOf(town.TownType).Where(c => c.Tier <= 2)));
-            Assert.InRange(stacks.Sum(s => s.Count * Creatures.Get(s.Creature).Value), ScenarioAssembler.StarterArmyMin * 0.8, ScenarioAssembler.StarterArmyMax * 1.25);
+            Assert.InRange(stacks.Sum(s => s.Count * Creatures.Get(s.Creature).FightValue), ScenarioAssembler.StarterArmyMin * 0.8, ScenarioAssembler.StarterArmyMax * 1.25);
             if (Creatures.Get(hero.PreferredCreature!).Tier <= 2)
             {
                 Assert.Equal(hero.PreferredCreature, stacks[0].Creature);

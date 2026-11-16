@@ -137,7 +137,7 @@ public static class ArenaRules
     public static long ArmyValue(GameState state, Hero hero)
     {
         var army = state.ObjectsOf<Town>().FirstOrDefault(t => t.GarrisonHero == hero) is { } town ? town.Garrison : hero.Army;
-        return army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).Value);
+        return army.Stacks.Sum(s => (long)s.Stack.Count * state.Creatures.Get(s.Stack.Creature).FightValue);
     }
 }
 

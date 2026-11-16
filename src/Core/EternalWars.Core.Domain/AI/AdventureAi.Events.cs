@@ -133,7 +133,7 @@ public sealed partial class AdventureAi
     private double Gain(EventAction action, EventScope scope, Hero? hero, Town? town)
     {
         double Amount(EventExpr expr) => Average(expr, scope);
-        double CreatureValue(string id) => _state.Creatures.TryGet(id, out var creature) ? creature.Value : 0;
+        double CreatureValue(string id) => _state.Creatures.TryGet(id, out var creature) ? creature.FightValue : 0;
         double ArtifactWorth(string id) => hero is not null && _state.Artifacts.TryGet(id, out var artifact) ? 800 + (80 * FindScore(hero, artifact)) : 0;
         return action switch
         {

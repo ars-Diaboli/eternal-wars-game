@@ -91,15 +91,15 @@ public static class ThievesGuild
             case ThievesGuildRow.Income:
                 return EconomyService.DefaultIncomeSources.Aggregate(ResourceSet.Empty, (total, source) => total + source.DailyIncome(state, player)).Gold;
             case ThievesGuildRow.ArmyStrength:
-                return Stacks(state, player).Sum(s => (long)s.Count * state.Creatures.Get(s.Creature).Value);
+                return Stacks(state, player).Sum(s => (long)s.Count * state.Creatures.Get(s.Creature).FightValue);
             case ThievesGuildRow.BestHero:
                 var best = heroes.OrderByDescending(h => h.Level).ThenByDescending(h => h.Experience).ThenBy(h => h.Id.Value).FirstOrDefault();
                 detail = best is null ? null : $"{best.Name} (level {best.Level})";
                 return best?.Level ?? 0;
             default:
-                var creature = Stacks(state, player).Select(s => state.Creatures.Get(s.Creature)).OrderByDescending(c => c.Value).ThenBy(c => c.Id, StringComparer.Ordinal).FirstOrDefault();
+                var creature = Stacks(state, player).Select(s => state.Creatures.Get(s.Creature)).OrderByDescending(c => c.FightValue).ThenBy(c => c.Id, StringComparer.Ordinal).FirstOrDefault();
                 detail = creature?.Name;
-                return creature?.Value ?? 0;
+                return creature?.FightValue ?? 0;
         }
     }
 

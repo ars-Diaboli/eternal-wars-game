@@ -341,7 +341,7 @@ internal sealed class BattleRounds(BattleState battle, IEventPublisher events, B
             var damage = siege.ShotDamage(tower);
             var target = battle.LivingArmyOf(BattleSide.Attacker)
                 .Where(u => !u.Has(Magic.SpellStatus.Stasis | Magic.SpellStatus.Unseen))
-                .OrderByDescending(u => (long)Math.Min(damage, u.TotalHealth) * u.Creature.Value / u.Creature.Health)
+                .OrderByDescending(u => (long)Math.Min(damage, u.TotalHealth) * u.Creature.FightValue / u.Creature.Health)
                 .ThenBy(u => u.Id)
                 .FirstOrDefault();
             if (target is null)

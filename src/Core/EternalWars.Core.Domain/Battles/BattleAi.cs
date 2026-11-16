@@ -202,7 +202,7 @@ internal static class BattleAi
     internal static long Score(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int penalty = 0)
     {
         var damage = Math.Min(DamageCalculator.Expected(battle, unit, target, isRanged, penalty), target.TotalHealth);
-        return (long)damage * target.Creature.Value / target.Creature.Health;
+        return (long)damage * target.Creature.FightValue / target.Creature.Health;
     }
 
     /// <summary>
@@ -262,7 +262,7 @@ internal static class BattleAi
         var dealt = BattleMagic.DamagePlan(battle, side, known, target, null).Where(h => h.Unit.Side != side).Sum(h => (long)Math.Min(h.Damage, h.Unit.TotalHealth));
         var health = BattleMagic.Drained(effect, dealt);
         return battle.LivingArmyOf(side).Where(u => !u.Has(Magic.SpellStatus.Stasis))
-            .Select(u => (u.Id, Worth: BattleMagic.DrainHeals(effect, u, health) * u.Creature.Value / u.Creature.Health))
+            .Select(u => (u.Id, Worth: BattleMagic.DrainHeals(effect, u, health) * u.Creature.FightValue / u.Creature.Health))
             .Where(d => d.Worth > 0)
             .OrderByDescending(d => d.Worth).ThenBy(d => d.Id)
             .Select(d => ((int Id, long Worth)?)d)
@@ -292,10 +292,10 @@ internal static class BattleAi
     public const int MaxValuedRounds = 5;
 
     /// <summary>A stack's creature value.</summary>
-    internal static long StackValue(BattleUnit unit) => (long)unit.Count * unit.Creature.Value;
+    internal static long StackValue(BattleUnit unit) => (long)unit.Count * unit.Creature.FightValue;
 
     /// <summary>The creature value of the hit points (up to the stack's health) a blow or spell takes off or gives back.</summary>
-    internal static long Worth(BattleUnit unit, int damage) => (long)Math.Min(damage, unit.TotalHealth) * unit.Creature.Value / unit.Creature.Health;
+    internal static long Worth(BattleUnit unit, int damage) => (long)Math.Min(damage, unit.TotalHealth) * unit.Creature.FightValue / unit.Creature.Health;
 
     /// <summary>
     /// A creature caster's turn (ADR-120): it casts the aim worth most when that beats its own best blow or shot now; a buff goes on the most

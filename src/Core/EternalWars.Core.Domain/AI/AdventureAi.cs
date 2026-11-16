@@ -360,7 +360,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     {
         var lines = TownRules.Lines(_state, town);
         IEnumerable<CreatureDefinition> Best(int tier) =>
-            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.Value * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id, StringComparer.Ordinal);
+            lines.Where(l => l.Tier == tier).OrderByDescending(l => (long)l.FightValue * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id, StringComparer.Ordinal);
         bool TierBuilt(int tier) => lines.Any(l => l.Tier == tier && town.DwellingLevel(l.Id) > 0);
 
         if (town.Level(BuiltInBuildings.Fort) < 1)
@@ -460,7 +460,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         foreach (var (army, slots) in ArmiesOf(town))
         {
             var undead = slots.Stacks.Select(s => (Creature: _state.Creatures.Get(s.Stack.Creature), s.Stack.Count))
-                .GroupBy(s => s.Creature.HasTag(CreatureTags.Undead)).ToDictionary(g => g.Key, g => g.Sum(s => (long)s.Creature.Value * s.Count));
+                .GroupBy(s => s.Creature.HasTag(CreatureTags.Undead)).ToDictionary(g => g.Key, g => g.Sum(s => (long)s.Creature.FightValue * s.Count));
             var mostlyUndead = undead.GetValueOrDefault(true) > 0 && undead.GetValueOrDefault(true) >= undead.GetValueOrDefault(false);
             foreach (var (slot, stack) in slots.Stacks)
             {
@@ -470,13 +470,13 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     continue;
                 }
 
-                var worth = (long)creature.Value * stack.Count;
+                var worth = (long)creature.FightValue * stack.Count;
                 var best = new[] { CreatureCategory.A, CreatureCategory.B }
                     .Select(line => (Line: line, UndeadTransformer.Of(_state, town, stack.Creature, stack.Count, line).Transform))
                     .Where(t => t.Transform is not null)
-                    .OrderByDescending(t => (long)_state.Creatures.Get(t.Transform!.To).Value * t.Transform.Result)
+                    .OrderByDescending(t => (long)_state.Creatures.Get(t.Transform!.To).FightValue * t.Transform.Result)
                     .FirstOrDefault();
-                if (best.Transform is { } transform && (mostlyUndead || (long)_state.Creatures.Get(transform.To).Value * transform.Result >= worth))
+                if (best.Transform is { } transform && (mostlyUndead || (long)_state.Creatures.Get(transform.To).FightValue * transform.Result >= worth))
                 {
                     orders.Add(new TransformOrder(army, slot, best.Line));
                 }
@@ -534,7 +534,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         }
 
         // The week's creature first (ADR-073): its doubled stock is the cheapest strength on offer this week.
-        foreach (var line in lines.OrderByDescending(l => _state.WeekEvent.Growth(_state.Creatures, l.Id, 1) > 1).ThenByDescending(l => l.Tier).ThenByDescending(l => l.Value))
+        foreach (var line in lines.OrderByDescending(l => _state.WeekEvent.Growth(_state.Creatures, l.Id, 1) > 1).ThenByDescending(l => l.Tier).ThenByDescending(l => l.FightValue))
         {
             if (!Active(player) || town.AvailableOf(line.Id) <= 0)
             {
@@ -646,7 +646,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
         var dwellings = CaravanRules.Dwellings(_state, town)
             .Where(d => d.Available > 0)
-            .OrderByDescending(d => _state.Creatures.Get(d.Creature).Value).ThenBy(d => d.Id.Value);
+            .OrderByDescending(d => _state.Creatures.Get(d.Creature).FightValue).ThenBy(d => d.Id.Value);
         foreach (var dwelling in dwellings)
         {
             if (!Active(player) || _state.Caravans.Count(c => c.Destination == town.Id) >= 2)
@@ -1061,7 +1061,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         return danger > 0 && !Holds(ArmyPower(town.Garrison), danger) && Holds(DefenceAt(hero, hero.Position), danger);
     }
 
-    private long Power(CreatureStack stack) => (long)stack.Count * _state.Creatures.Get(stack.Creature).Value;
+    private long Power(CreatureStack stack) => (long)stack.Count * _state.Creatures.Get(stack.Creature).FightValue;
 
     private long ArmyPower(Army army) => army.Stacks.Sum(s => Power(s.Stack));
 
@@ -1136,7 +1136,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         // Creatures in the dwellings count only as far as the gold buys them, or they would call the hero home every day (ADR-114).
         var resources = _state.GetPlayer(hero.Owner).Resources;
         var waiting = ArmyPower(own.Garrison) + own.Available.Sum(a => _state.Creatures.Get(a.Key) is var line
-            ? (long)TownRules.MaxAffordable(resources, TownRules.CreatureCost(_state, own, line), a.Value) * line.Value
+            ? (long)TownRules.MaxAffordable(resources, TownRules.CreatureCost(_state, own, line), a.Value) * line.FightValue
             : 0);
         return waiting * 5 > power * 3 ? 0.3 * Math.Min(waiting, Math.Max(power, 1000)) : 0;
     }
@@ -1307,7 +1307,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         var stats = Enum.GetValues<PrimaryStat>().Sum(contents.Stat);
         var skills = contents.Skills.Where(s => hero.Skills.CanRaise(s.Key)).Sum(s => Math.Max(0, s.Value - hero.Skills.Level(s.Key)));
         var artifacts = hero.Artifacts.BackpackFull ? 0 : contents.Artifacts.Sum(a => _state.Artifacts.TryGet(a, out var found) ? 800 + (80 * FindScore(hero, found)) : 0);
-        var creatures = contents.Creatures.Where(s => hero.Army.CanAccept(s.Creature)).Sum(s => 0.85 * s.Count * _state.Creatures.Get(s.Creature).Value);
+        var creatures = contents.Creatures.Where(s => hero.Army.CanAccept(s.Creature)).Sum(s => 0.85 * s.Count * _state.Creatures.Get(s.Creature).FightValue);
         return Value(contents.Resources) + contents.Experience + (750 * stats) + (150 * (contents.Morale + contents.Luck)) + (1000 * skills) + artifacts + creatures;
     }
 
@@ -1595,7 +1595,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                     var dwelt = _state.Creatures.Get(dwelling.Creature);
                     var buyable = hero.Army.CanAccept(dwelt.Id)
                         ? TownRules.MaxAffordable(_state.GetPlayer(owner).Resources, dwelt.Cost, dwelling.Available ?? 0) : 0;
-                    var worth = (OwnTeam(owner, dwelling.Owner) || Preparing ? 0 : 1200) + (0.4 * buyable * dwelt.Value);
+                    var worth = (OwnTeam(owner, dwelling.Owner) || Preparing ? 0 : 1200) + (0.4 * buyable * dwelt.FightValue);
                     if (worth > 0)
                     {
                         yield return new(visit, worth, GuardArmy(visit), MaxLoss: MonsterLoss);

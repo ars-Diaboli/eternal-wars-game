@@ -56,6 +56,6 @@ internal sealed class SummonHandler : SpellEffectHandler
     /// <summary>The creature value of the first kind it calls, for each kind (the kinds are worth about the same).</summary>
     public override long Value(CastContext cast) =>
         BattleMagic.SummonPlacement(cast.Battle, cast.Side, cast.Known, cast.CreaturePower) is { } summon
-            ? (long)summon.Count * summon.Creature.Value * cast.Effect.Kinds
+            ? (long)summon.Count * summon.Creature.FightValue * cast.Effect.Kinds
             : 0;
 }

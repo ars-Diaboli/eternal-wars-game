@@ -113,6 +113,7 @@ stronger, no copy-pasted stat lines).
 | `speed`, `map_speed`, `initiative` | battle cells per turn; HoMM3-scale adventure speed; turn order |
 | `shots` | ammunition; empty or 0 = melee |
 | `morale`, `luck` | −5…+5, empty = 0; the hero's are added in battle |
+| `fight_value` | how dangerous one creature is (ADR-187), read by the battle AI and wherever army strength is weighed; empty = derived from the stats (`DerivedFightValue`) |
 | `growth`, `gold`, `resources` | weekly growth; gold cost; other costs like `mercury 1` |
 | `tags` | words separated by `;` (`human; holy`) |
 | `capabilities` | up to five, `;`-separated: `Flying`, `PackHunter 20`, `SpellImmunity mind`, `Caster chaos.fireball 1` (a spell table id, or `rebirth`), … (`CapabilityKind`) |
