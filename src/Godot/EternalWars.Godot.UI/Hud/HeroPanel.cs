@@ -29,7 +29,7 @@ public partial class HeroPanel : PanelContainer
     private readonly HBoxContainer _army = new HBoxContainer().WithCellGap();
     private readonly GridContainer _doll = new() { Columns = 4 };
     private readonly HFlowContainer _backpack = new();
-    private readonly Label _machines = new();
+    private readonly HFlowContainer _machines = new();
     private readonly HFlowContainer _adventure = new();
     private readonly HFlowContainer _spells = new();
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
@@ -198,7 +198,7 @@ public partial class HeroPanel : PanelContainer
         ShowSkills(hero);
         ShowArmy(hero);
         ShowArtifacts(hero);
-        _machines.Text = "War machines: " + (hero.WarMachines.Count == 0 ? "none" : string.Join(", ", hero.WarMachines.Order()));
+        ShowMachines(hero);
         ShowAdventureSpells(hero);
         ShowSpells(hero);
     }
@@ -311,6 +311,27 @@ public partial class HeroPanel : PanelContainer
         var lent = EternalWars.Core.Domain.Magic.MagicRules.Known(hero, spells).Count() - hero.Spells.Count;
         var known = hero.Spells.Count == 0 && lent == 0 ? "Spell book: empty." : "Spells:";
         return lent > 0 ? $"{known} ({lent} lent while its artifacts are worn)" : known;
+    }
+
+    /// <summary>The hero's war machines, each its icon with the machine's name as the tooltip (the name when it has no icon).</summary>
+    private void ShowMachines(Hero hero)
+    {
+        Clear(_machines);
+        var state = _session.State;
+        _machines.AddChild(new Label { Text = hero.WarMachines.Count == 0 ? "War machines: none" : "War machines:" });
+        foreach (var slot in hero.WarMachines.Order())
+        {
+            var name = Core.Domain.Towns.TownRules.WarMachineName(state, hero, slot);
+            _machines.AddChild(HeroIcons.Machine(state, hero, slot, HeroIcons.SkillSize * 2) is { } texture
+                ? new TextureRect
+                {
+                    Texture = texture,
+                    TooltipText = name,
+                    StretchMode = TextureRect.StretchModeEnum.KeepCentered,
+                    CustomMinimumSize = new Vector2(HeroIcons.SkillSize * 2, HeroIcons.SkillSize * 2),
+                }
+                : new Label { Text = name });
+        }
     }
 
     private void ShowSkills(Hero hero)

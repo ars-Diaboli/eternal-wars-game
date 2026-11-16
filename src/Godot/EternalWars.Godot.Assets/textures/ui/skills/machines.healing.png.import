@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b3jmnqc05jp38"
-path="res://.godot/imported/gold_pile.png-4d01c001ad294b0921948c8f8821d354.ctex"
+uid="uid://gos6eikxmj18"
+path="res://.godot/imported/machines.healing.png-0505ae0e5921e2b7d36b56257816b59b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://shared/textures/ui/resources/gold_pile.png"
-dest_files=["res://.godot/imported/gold_pile.png-4d01c001ad294b0921948c8f8821d354.ctex"]
+source_file="res://shared/textures/ui/skills/machines.healing.png"
+dest_files=["res://.godot/imported/machines.healing.png-0505ae0e5921e2b7d36b56257816b59b.ctex"]
 
 [params]
 

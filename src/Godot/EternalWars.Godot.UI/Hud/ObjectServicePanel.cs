@@ -158,7 +158,7 @@ public partial class ObjectServicePanel : PanelContainer
                 {
                     Text = owned ? $"{name} (owned)" : $"Buy {name}",
                     Disabled = owned || !player.Resources.CanAfford(cost),
-                };
+                }.WithMachineIcon(state, hero, slot);
                 if (!owned)
                 {
                     button.WithCost(cost);
