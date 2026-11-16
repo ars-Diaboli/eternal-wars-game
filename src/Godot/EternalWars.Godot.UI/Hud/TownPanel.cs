@@ -269,7 +269,7 @@ public partial class TownPanel : PanelContainer
                     Text = owned ? $"{name} (owned)" : $"Buy {name}",
                     Disabled = refusal is not null,
                     TooltipText = refusal ?? "",
-                };
+                }.WithMachineIcon(state, hero, slot);
                 if (!owned)
                 {
                     buy.WithCost(WarMachines.Cost(slot));

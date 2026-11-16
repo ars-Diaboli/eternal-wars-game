@@ -7,9 +7,9 @@ using Godot;
 namespace EternalWars.Godot.UI;
 
 /// <summary>
-/// The resource icons in <c>res://shared/textures/ui/resources/</c>: one per <see cref="ResourceType"/>, plus a pile of gold for the
-/// treasury (the Kingdom overview). The 256 px art is scaled down once per size and cached, like <see cref="UiIcons"/>; a missing file
-/// gives null, and callers fall back to the resource's name.
+/// The resource icons in <c>res://shared/textures/ui/resources/</c>: one per <see cref="ResourceType"/>, plus the treasury chest (the
+/// Treasury skill's icon) for the kingdom's gold on hand. The art is scaled once per size and cached, like <see cref="UiIcons"/>; a missing
+/// file gives null, and callers fall back to the resource's name.
 /// </summary>
 public static class ResourceIcons
 {
@@ -17,14 +17,13 @@ public static class ResourceIcons
     public const int TextSize = 24;
 
     private const string Folder = "res://shared/textures/ui/resources/";
-    private const string TreasuryFile = "gold_pile";
     private static readonly Dictionary<(string, int), Texture2D?> Cache = [];
 
     /// <summary>The icon of <paramref name="resource"/> at <paramref name="size"/> pixels, or null if its file is missing.</summary>
     public static Texture2D? Get(ResourceType resource, int size = TextSize) => Load(resource.ToString().ToLowerInvariant(), size);
 
-    /// <summary>The pile of gold: the kingdom's treasury and income.</summary>
-    public static Texture2D? Treasury(int size = UiIcons.ButtonSize) => Load(TreasuryFile, size);
+    /// <summary>The treasury chest: the kingdom's treasury and income.</summary>
+    public static Texture2D? Treasury(int size = UiIcons.ButtonSize) => HeroIcons.Skill(Core.Domain.Heroes.BuiltInSkills.Treasury, size);
 
     /// <summary>
     /// The icon of <paramref name="resource"/> as a control for rows and tables, with the resource's name as its tooltip; a label with the
@@ -93,7 +92,7 @@ public static class ResourceIcons
     }
 
     /// <summary>
-    /// The player's gold on hand, as opposed to a price: the pile of gold followed by the amount ("gold 11500" in text when the icon is
+    /// The player's gold on hand, as opposed to a price: the treasury chest followed by the amount ("gold 11500" in text when the icon is
     /// missing), with "Your gold" as its tooltip.
     /// </summary>
     public static HBoxContainer Balance(int gold, int size = TextSize)
@@ -200,7 +199,7 @@ public static class ResourceIcons
         return button;
     }
 
-    /// <summary>Shows the pile of gold on the button, before its text.</summary>
+    /// <summary>Shows the treasury chest on the button, before its text.</summary>
     public static T WithTreasuryIcon<T>(this T button) where T : Button
     {
         if (Treasury() is { } texture)

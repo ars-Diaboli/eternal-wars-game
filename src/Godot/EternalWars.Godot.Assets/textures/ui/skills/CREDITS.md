@@ -6,6 +6,7 @@ file per skill (prompts in `docs/content/icon-prompts.md`). Each file is named b
 
 | Files | Used for |
 |---|---|
-| offense.\*, defense.\*, estates.\*, pathfinding.\*, tactics.\*, rage.\* | the hero screen's skill rows, the level-up and witch hut choices |
+| offense.\*, defense.\*, estates.\*, pathfinding.\*, tactics.\*, machines.\*, rage.\* | the hero screen's skill rows, the level-up and witch hut choices |
+| estates.treasury.png | also the treasury: the Kingdom (K) button and the player's gold on hand |
 
-Not drawn yet: the war machine skills (`machines.*`) and the magic schools' skills (`magic.*`).
+Not drawn yet: the magic schools' skills (`magic.*`).

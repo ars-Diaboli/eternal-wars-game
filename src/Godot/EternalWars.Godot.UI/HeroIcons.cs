@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using Godot;
 
@@ -16,8 +18,8 @@ public enum HeroStatIcon
 }
 
 /// <summary>
-/// The hero's painted icons: one per skill in <c>res://shared/textures/ui/skills/</c> (named by the skill id, <c>offense.melee.png</c>) and one
-/// per stat in <c>res://shared/textures/ui/stats/</c>. Scaled once per size and cached, like <see cref="UiIcons"/>; a missing file gives
+/// The hero's painted icons: one per skill in <c>res://shared/textures/ui/skills/</c> (named by the skill id, <c>offense.melee.png</c>), one
+/// per stat in <c>res://shared/textures/ui/stats/</c> and one per war machine in <c>res://shared/textures/ui/machines/</c>. Scaled once per size and cached, like <see cref="UiIcons"/>; a missing file gives
 /// null, and callers show the text alone (skills without art yet, such as the magic schools').
 /// </summary>
 public static class HeroIcons
@@ -30,6 +32,7 @@ public static class HeroIcons
 
     private const string SkillFolder = "res://shared/textures/ui/skills/";
     private const string StatFolder = "res://shared/textures/ui/stats/";
+    private const string MachineFolder = "res://shared/textures/ui/machines/";
     private static readonly Dictionary<(string, int), Texture2D?> Cache = [];
 
     /// <summary>The icon of the skill <paramref name="skillId"/>, or null if it has none yet.</summary>
@@ -37,6 +40,24 @@ public static class HeroIcons
 
     /// <summary>The icon of <paramref name="stat"/>, or null if its file is missing.</summary>
     public static Texture2D? Stat(HeroStatIcon stat, int size = StatSize) => Load($"{StatFolder}{FileName(stat)}.png", size);
+
+    /// <summary>The icon of the war machine <paramref name="kind"/>, or null if it has none yet (the cannon, the glaivethrower).</summary>
+    public static Texture2D? Machine(WarMachineKind kind, int size = SkillSize) => Load($"{MachineFolder}{MachineFile(kind)}.png", size);
+
+    /// <summary>The icon of the machine <paramref name="hero"/> has, or would buy, in <paramref name="slot"/> (its town's offensive machine).</summary>
+    public static Texture2D? Machine(GameState state, Hero hero, WarMachineSlot slot, int size = SkillSize) =>
+        Machine(WarMachines.KindOf(slot, ProgressionService.TownOf(state, hero)), size);
+
+    /// <summary>Shows the icon of the machine in <paramref name="slot"/> on the button, before its text.</summary>
+    public static T WithMachineIcon<T>(this T button, GameState state, Hero hero, WarMachineSlot slot) where T : Button
+    {
+        if (Machine(state, hero, slot, UiIcons.ButtonSize + 6) is { } texture)
+        {
+            button.Icon = texture;
+        }
+
+        return button;
+    }
 
     /// <summary>The icon of a primary stat.</summary>
     public static HeroStatIcon Of(PrimaryStat stat) => stat switch
@@ -125,6 +146,17 @@ public static class HeroIcons
         Cache[(path, size)] = texture;
         return texture;
     }
+
+    private static string MachineFile(WarMachineKind kind) => kind switch
+    {
+        WarMachineKind.Ballista => "ballista",
+        WarMachineKind.Cannon => "cannon",
+        WarMachineKind.Catapult => "catapult",
+        WarMachineKind.Glaivethrower => "glaivethrower",
+        WarMachineKind.HealingTent => "healing_tent",
+        WarMachineKind.AmmoCart => "ammo_cart",
+        _ => "",
+    };
 
     private static string FileName(HeroStatIcon stat) => stat switch
     {

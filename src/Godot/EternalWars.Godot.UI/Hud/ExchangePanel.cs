@@ -152,7 +152,8 @@ public partial class ExchangePanel : PanelContainer
         machines.AddChild(new Label { Text = hero.WarMachines.Count == 0 ? "War machines: none" : "War machines:" });
         foreach (var machine in hero.WarMachines.Order())
         {
-            var give = new Button { Text = $"{TownRules.WarMachineName(state, hero, machine)} →", TooltipText = "Give to the other hero" };
+            var give = new Button { Text = $"{TownRules.WarMachineName(state, hero, machine)} →", TooltipText = "Give to the other hero" }
+                .WithMachineIcon(state, hero, machine);
             give.Pressed += () => Run(new GiveWarMachineCommand(state.CurrentPlayer.Id, hero.Id, machine, other));
             machines.AddChild(give);
         }
