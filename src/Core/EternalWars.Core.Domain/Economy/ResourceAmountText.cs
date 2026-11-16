@@ -3,7 +3,7 @@ using System.Globalization;
 namespace EternalWars.Core.Domain.Economy;
 
 /// <summary>
-/// Resource amounts as the labels show them (ADR-184): gold in full up to 6 digits, the other resources up to 4; larger amounts with one
+/// Resource amounts as the labels show them (ADR-186): gold in full up to 6 digits, the other resources up to 4; larger amounts with one
 /// decimal and <c>k</c>, <c>m</c> or <c>b</c>, the smallest that keeps the number under 1000 (<c>31.7k</c>, <c>321.7m</c>). Rounded
 /// towards zero, so a label never shows more than there is. The information windows show <see cref="Full"/>.
 /// </summary>

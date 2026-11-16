@@ -11,7 +11,7 @@ public sealed record SaveItem(string Path, string Label, string? Name, bool Load
 /// The game menu, in three tabs. "Save and load" (ADR-058): the saves in a folder, newest first, a name field and Save / Load / Delete. Works on
 /// the adventure map and in battle, because a save is the game's command log; saving under an existing name replaces that save. "Settings":
 /// the current human player's auto combat setting (ADR-090, CMB-10), which the app turns into a command, the speed settings (ADR-090, UI-1)
-/// and "Detailed tooltips" (ADR-154). "Layout" (ADR-156): the initiative bar's edge, the minimap's corner, the hero and town lists and the
+/// "Detailed tooltips" (ADR-154), the fog, the grid and the window mode (ADR-186). "Layout" (ADR-156): the initiative bar's edge, the minimap's corner, the hero and town lists and the
 /// action panel's side. The app lists the saves, answers the events and keeps the settings in the settings file; the panel only shows and asks.
 /// </summary>
 public partial class GameMenuPanel : CenterContainer
@@ -33,6 +33,7 @@ public partial class GameMenuPanel : CenterContainer
     private readonly CheckBox _detailed = new() { Text = "Detailed tooltips (formulas and numbers in the right-click windows)" };
     private readonly OptionButton _fog = Choices("Dark (starry void)", "Clouds");
     private readonly CheckBox _grid = new() { Text = "Show the tile grid on the map" };
+    private readonly OptionButton _window = WithTooltip(Choices("Windowed", "Fullscreen"), "Alt+Enter switches it too");
     private InterfaceSettings _interface = InterfaceSettings.Default;
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(580, 340), UseHiddenTabsForMinSize = true }; // the same size on every tab
     private readonly OptionButton _initiativeBar = Choices("Top", "Bottom");
@@ -148,6 +149,8 @@ public partial class GameMenuPanel : CenterContainer
         _fog.ItemSelected += index => ChangeInterface(_interface with { Fog = (FogLook)index });
         settings.AddChild(_grid);
         _grid.Toggled += on => ChangeInterface(_interface with { ShowGrid = on });
+        settings.AddRow("Window mode", _window, 180);
+        _window.ItemSelected += index => ChangeInterface(_interface with { Window = (WindowMode)index });
 
         // Layout (ADR-118, UI-3; ADR-156): where the screens put their parts, kept on this computer; applied at once.
         layout.AddChild(new Label { Text = "Where the screens put their parts (kept on this computer)" });
@@ -257,6 +260,7 @@ public partial class GameMenuPanel : CenterContainer
         _detailed.SetPressedNoSignal(settings.DetailedTooltips);
         _fog.Selected = (int)settings.Fog;
         _grid.SetPressedNoSignal(settings.ShowGrid);
+        _window.Selected = (int)settings.Window;
     }
 
     private void ChangeInterface(InterfaceSettings settings)
@@ -297,6 +301,12 @@ public partial class GameMenuPanel : CenterContainer
     }
 
     /// <summary>A drop-down of <paramref name="labels"/>, in the order of the enum it picks from.</summary>
+    private static OptionButton WithTooltip(OptionButton button, string tooltip)
+    {
+        button.TooltipText = tooltip;
+        return button;
+    }
+
     private static OptionButton Choices(params string[] labels)
     {
         var button = new OptionButton { CustomMinimumSize = new Vector2(200, 0) };

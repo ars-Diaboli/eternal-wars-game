@@ -148,6 +148,34 @@ public class SettingsFileTests
     }
 
     [Fact]
+    public void TheWindowMode_IsKeptWithTheInterfaceSettings_AndWindowedWhenTheFileHasNone()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
+        try
+        {
+            SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(Window: WindowMode.Fullscreen));
+
+            Assert.Equal(WindowMode.Fullscreen, SettingsFile.LoadInterface(path).Window);
+            Assert.Contains("\"window\": \"Fullscreen\"", File.ReadAllText(path), StringComparison.Ordinal);
+            Assert.Equal(WindowMode.Windowed, InterfaceSettings.Default.Window);
+            Assert.Equal(WindowMode.Windowed, SettingsFile.ReadInterface("{\"interface\": {\"showGrid\": true}}").Window);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void AltEnter_SwitchesTheWindowMode_AndKeepsTheOtherSettings()
+    {
+        var settings = new InterfaceSettings(ShowGrid: true);
+
+        Assert.Equal(settings with { Window = WindowMode.Fullscreen }, settings.WithWindowToggled());
+        Assert.Equal(settings, settings.WithWindowToggled().WithWindowToggled());
+    }
+
+    [Fact]
     public void WhatTheFileLeavesOut_KeepsItsDefault()
     {
         var settings = SettingsFile.Read("{\"speed\": {\"battle\": \"Slow\"}}");

@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Settings;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Hud;
@@ -34,6 +35,28 @@ public partial class Main
         {
             _menu.SetMessage($"Could not keep the settings: {e.Message}");
         }
+    }
+
+    /// <summary>The interface settings changed, in the menu or by Alt+Enter: applied at once and kept.</summary>
+    private void ChangeInterface(InterfaceSettings settings)
+    {
+        _interface = settings;
+        _info.Detailed = settings.DetailedTooltips;
+        WindowModes.Apply(settings.Window);
+        if (_context is not null)
+        {
+            _context.FogLook = settings.Fog;
+            _context.ShowGrid = settings.ShowGrid;
+        }
+
+        KeepSettings();
+    }
+
+    /// <summary>Alt+Enter: the other window mode, shown in the menu too.</summary>
+    private void ToggleWindowMode()
+    {
+        ChangeInterface(_interface.WithWindowToggled());
+        _menu.ShowInterface(_interface);
     }
 
     /// <summary>The start of a turn goes into the two autosave slots: this turn's and the previous turn's.</summary>
@@ -88,21 +111,11 @@ public partial class Main
 
         // "Detailed tooltips" (ADR-154): the information windows' formulas and numbers, kept with the speeds.
         _interface = SettingsFile.LoadInterface(_settingsPath);
+        WindowModes.Apply(_interface.Window); // the window mode (ADR-186), at start and whenever it changes
         AddChild(_info);
         _info.Detailed = _interface.DetailedTooltips;
         _menu.ShowInterface(_interface);
-        _menu.InterfaceChanged += settings =>
-        {
-            _interface = settings;
-            _info.Detailed = settings.DetailedTooltips;
-            if (_context is not null)
-            {
-                _context.FogLook = settings.Fog;
-                _context.ShowGrid = settings.ShowGrid;
-            }
-
-            KeepSettings();
-        };
+        _menu.InterfaceChanged += ChangeInterface;
 
         // The layout (ADR-156): applied at once to the map's HUD and the battle's, kept with the other settings.
         _layout = SettingsFile.LoadLayout(_settingsPath);
@@ -123,13 +136,32 @@ public partial class Main
             KeepSettings();
         };
 
-        _menuButton = new Button
-        {
-            Text = "Menu (F10)", AnchorLeft = 1, AnchorRight = 1, AnchorTop = 1, AnchorBottom = 1,
-            OffsetLeft = -132 - UiSpacing.ScreenEdge, OffsetTop = -28 - UiSpacing.ScreenEdge, OffsetRight = -UiSpacing.ScreenEdge, OffsetBottom = -UiSpacing.ScreenEdge,
-        }.WithIcon(UiIcon.Settings);
+        _menuButton = new Button { Text = "Menu (F10)" }.WithIcon(UiIcon.Settings);
         _menuButton.Pressed += _menu.Toggle;
         layer.AddChild(_menuButton);
+        PlaceMenuButton();
+        GetViewport().SizeChanged += PlaceMenuButton;
+    }
+
+    /// <summary>
+    /// The menu button sits on the status bar's right end while the adventure map of a game is shown (ADR-186); in battle, in the replay viewer
+    /// (beside its bar) and before a game it stands in the bottom right corner.
+    /// </summary>
+    private void PlaceMenuButton()
+    {
+        var screen = GetViewport().GetVisibleRect().Size;
+        if (_mode == GameMode.Play && IsInstanceValid(_hud) && _hud.Visible && _game is not null)
+        {
+            var slot = StatusBar.MenuSlot(screen);
+            _menuButton.SetAnchorsPreset(Control.LayoutPreset.TopLeft);
+            _menuButton.Position = slot.Position;
+            _menuButton.Size = slot.Size;
+            return;
+        }
+
+        _menuButton.SetAnchorsPreset(Control.LayoutPreset.BottomRight);
+        (_menuButton.OffsetLeft, _menuButton.OffsetTop) = (-132 - UiSpacing.ScreenEdge, -28 - UiSpacing.ScreenEdge);
+        (_menuButton.OffsetRight, _menuButton.OffsetBottom) = (-UiSpacing.ScreenEdge, -UiSpacing.ScreenEdge);
     }
 
     /// <summary>The save menu's and the replay list's lines for a folder's files.</summary>

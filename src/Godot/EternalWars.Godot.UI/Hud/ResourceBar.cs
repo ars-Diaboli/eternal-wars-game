@@ -9,11 +9,12 @@ namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
 /// Shows the resources of the player whose turn it is (hot-seat friendly): each resource's icon and amount, its name in the tooltip
-/// (the name before the amount when the icon file is missing).
+/// (the name before the amount when the icon file is missing). Large amounts are shortened ("321.7m", ADR-186); the tooltip then gives them in full.
 /// </summary>
 public partial class ResourceBar : HBoxContainer
 {
     private readonly Dictionary<ResourceType, Label> _labels = [];
+    private readonly Dictionary<ResourceType, Control> _items = [];
     private readonly Dictionary<ResourceType, bool> _named = []; // no icon file: the label names the resource
     private PlayerId _shown;
 
@@ -34,6 +35,7 @@ public partial class ResourceBar : HBoxContainer
             var label = new Label { MouseFilter = MouseFilterEnum.Pass };
             _labels[type] = label;
             _named[type] = icon is null;
+            _items[type] = item;
             item.AddChild(label);
             AddChild(item);
         }
@@ -59,7 +61,9 @@ public partial class ResourceBar : HBoxContainer
     {
         foreach (var (type, label) in _labels)
         {
-            label.Text = _named[type] ? $"{type}: {resources[type]}" : resources[type].ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var amount = ResourceAmountText.Short(type, resources[type]);
+            label.Text = _named[type] ? $"{type}: {amount}" : amount;
+            _items[type].TooltipText = ResourceAmountText.IsShortened(type, resources[type]) ? $"{type}: {ResourceAmountText.Full(resources[type])}" : type.ToString();
         }
     }
 }

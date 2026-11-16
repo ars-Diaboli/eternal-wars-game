@@ -7,8 +7,9 @@ namespace EternalWars.Godot.UI.Hud;
 /// Places the adventure map's HUD parts on the screen as <see cref="HudArrangement"/> says for the current <see cref="LayoutSettings"/>
 /// (the "Layout" tab, ADR-156). It covers the screen but lets the mouse through; each part is a child that is moved, never reparented
 /// (a part's event subscriptions last while it is in the tree). A stack in a corner is as wide as its widest part, and every part in it
-/// fills that width. The turn, resources and status block stands at the top left, beside the top-left stack. Horizontal lists run along the
-/// bottom between the bottom stacks. The bottom right leaves room for the menu button. It re-places the parts whenever one's size changes.
+/// fills that width. The turn block stands at the top left, beside the top-left stack. Horizontal lists run along the bottom between the
+/// bottom stacks. The bottom parts stand above <see cref="BottomReserve"/> (the status bar, ADR-186); without one, the bottom right leaves room
+/// for the menu button. It re-places the parts whenever one's size changes.
 /// </summary>
 public partial class AdventureHudLayout : Container
 {
@@ -29,7 +30,9 @@ public partial class AdventureHudLayout : Container
 
     public TownListPanel? TownList { get; set; }
 
-    /// <summary>Room kept free along the bottom edge (the replay viewer's bar, ADR-164): the bottom parts stand above it.</summary>
+    /// <summary>
+    /// Room kept free along the bottom edge (the status bar, ADR-186, and the replay viewer's bar, ADR-164): the bottom parts stand above it.
+    /// </summary>
     public float BottomReserve
     {
         get => _bottomReserve;
@@ -48,7 +51,7 @@ public partial class AdventureHudLayout : Container
         MouseFilter = MouseFilterEnum.Ignore;
     }
 
-    /// <summary>The turn, resources and status block (top left).</summary>
+    /// <summary>The turn block (top left).</summary>
     public void SetInfo(Control info)
     {
         _info = info;
@@ -110,7 +113,7 @@ public partial class AdventureHudLayout : Container
             }
             else
             {
-                // Above the replay bar when there is one (it keeps the menu button's corner clear), else clear of the menu button on the right.
+                // Above the status and replay bars when there are any (they hold or clear the menu button), else clear of the menu button on the right.
                 var y = screen.Y - Margin - (_bottomReserve > 0 ? _bottomReserve : left ? 0 : MenuButtonHeight);
                 foreach (var part in parts)
                 {
@@ -131,7 +134,7 @@ public partial class AdventureHudLayout : Container
         if (HudArrangement.ListsInBottomRow(_layout) && _parts.TryGetValue(HudPart.Lists, out var lists))
         {
             var left = Margin + (stackWidths[ScreenCorner.BottomLeft] > 0 ? stackWidths[ScreenCorner.BottomLeft] + Margin : 0);
-            var right = screen.X - Margin - Math.Max(MenuButtonWidth, stackWidths[ScreenCorner.BottomRight] + Margin);
+            var right = screen.X - Margin - Math.Max(_bottomReserve > 0 ? 0 : MenuButtonWidth, stackWidths[ScreenCorner.BottomRight] + Margin);
             var size = lists.GetCombinedMinimumSize();
             FitChildInRect(lists, new Rect2(left, screen.Y - Margin - _bottomReserve - size.Y, Math.Max(size.X, right - left), size.Y));
         }

@@ -82,7 +82,7 @@ public partial class KingdomOverviewPanel : PanelContainer
     }
 
     private static IEnumerable<string> Amounts(ResourceSet amounts) =>
-        Enum.GetValues<ResourceType>().Select(r => amounts[r] == 0 ? "" : amounts[r].ToString(CultureInfo.InvariantCulture));
+        Enum.GetValues<ResourceType>().Select(r => amounts[r] == 0 ? "" : ResourceAmountText.Short(r, amounts[r])); // in full in the row's information window
 
     /// <summary>A row of the table; a right click on its name or detail opens <paramref name="info"/> (ADR-154).</summary>
     private void Row(string name, string detail, IEnumerable<string> cells, Func<bool, InfoSheet?> info)

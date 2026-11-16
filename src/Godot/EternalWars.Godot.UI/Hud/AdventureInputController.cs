@@ -14,14 +14,17 @@ namespace EternalWars.Godot.UI.Hud;
 /// The mouse and keys on the adventure map for the player whose turn it is, and the selected hero. Click an own hero to select it, click a tile
 /// to preview the route (markers coloured by day), click the same tile again to go; an armed adventure spell casts on the next clicked cell.
 /// Right click clears the preview (and the armed spell) and opens the information window of what is there (ADR-154). Keys: arrows/numpad
-/// step, Tab next hero, T next town, H hero screen, K kingdom, Q quest log, P puzzle map, G dig, L switch level. Results go to the HUD's
-/// status line.
+/// step, Tab next hero, T next town, H hero screen, K kingdom, Q quest log, P puzzle map, G dig, L switch level. Results, and the name of what
+/// the pointer is over, go to the HUD's status line.
 /// </summary>
 public sealed class AdventureInputController(
     GameSession session, MapViewContext context, AdventureWorldView world, StrategyCamera camera, AdventureHud hud, InfoWindow info)
 {
     /// <summary>The hero and the aimed adventure spell waiting for its cell (Dimension Door, Distant Vision, Eavesdrop, Town Portal II): the next map click casts it there.</summary>
     private (HeroId Hero, string Spell)? _aimedSpell;
+
+    /// <summary>The cell last named on the status line.</summary>
+    private MapPosition? _hovered;
 
     /// <summary>The own hero the keys and clicks move; null for none.</summary>
     public HeroId? SelectedHero { get; private set; }
@@ -45,6 +48,12 @@ public sealed class AdventureInputController(
         if (hud.IsScreenOpen)
         {
             return false; // a full-screen panel takes the input (Escape closes it)
+        }
+
+        if (@event is InputEventMouseMotion motion)
+        {
+            ShowHover(motion.Position);
+            return false; // the camera and the HUD see the pointer too
         }
 
         if (session.State.PendingDecision is not null)
@@ -106,6 +115,21 @@ public sealed class AdventureInputController(
         }
 
         return true;
+    }
+
+    /// <summary>What the pointer is over goes to the status line (ADR-186): the name the information window would give, once per cell.</summary>
+    private void ShowHover(Vector2 pointer)
+    {
+        var cell = MapSpace.PickTile(camera, pointer, session.State.Map, context.Level);
+        if (cell == _hovered)
+        {
+            return;
+        }
+
+        _hovered = cell;
+        hud.ShowHover(cell is { } pointed && InfoSheets.MapCell(session.State, session.State.CurrentPlayer.Id, pointed, detailed: false) is { } sheet
+            ? sheet.Title
+            : null);
     }
 
     /// <summary>Selects <paramref name="hero"/> (none: null) in the world and the hero list; <paramref name="focus"/> moves the camera to it.</summary>

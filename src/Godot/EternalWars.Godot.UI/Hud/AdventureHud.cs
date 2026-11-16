@@ -14,8 +14,9 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// The adventure map's HUD (ADR-050, ADR-156): this layer holds the parts the "Layout" tab moves (the turn, resources, status and questions
-/// block, the minimap, the hero and town lists, the action buttons), and a second layer above it, added beside it, holds the full-screen
+/// The adventure map's HUD (ADR-050, ADR-156, ADR-186): this layer holds the parts the "Layout" tab moves (the turn block, the minimap, the hero
+/// and town lists, the action buttons), the <see cref="StatusBar"/> along the bottom (the status line and the resources), and the questions
+/// and notices in the middle of the screen; a second layer above it, added beside it, holds the full-screen
 /// panels (town, hero, exchange, dwelling, marketplace, services, Thieves' Guild, tavern, kingdom, quest log, puzzle map, intel). A hero
 /// stepping into an own town, a dwelling, a marketplace or a service opens its screen. In the replay viewer (<c>playing</c> false) nothing
 /// here issues a command: no End Turn, questions, exchange, Dig or Marketplace buttons, and the town list only moves the camera (ADR-164).
@@ -47,8 +48,11 @@ public partial class AdventureHud : CanvasLayer
     /// <summary>An adventure spell was armed on the hero screen and waits for its cell; the status line says what to click.</summary>
     public event Action<HeroId, string>? SpellAimed;
 
-    /// <summary>The status line under the resources.</summary>
-    public Label Status { get; private set; } = null!;
+    /// <summary>The status line on the status bar: the HUD's and the map's messages.</summary>
+    public Label Status => StatusBar.Message;
+
+    /// <summary>The stripe along the bottom of the screen (ADR-186): the status line and the resources.</summary>
+    public StatusBar StatusBar { get; private set; } = null!;
 
     public HeroListPanel HeroList { get; private set; } = null!;
 
@@ -79,31 +83,42 @@ public partial class AdventureHud : CanvasLayer
         // The parts the "Layout" tab moves (ADR-156): the info block, the minimap, the lists and the action panel.
         _layout = new AdventureHudLayout();
         AddChild(_layout);
-        var top = new VBoxContainer();
-        _layout.SetInfo(top);
         var turnPanel = new TurnPanel();
-        top.AddChild(turnPanel);
+        _layout.SetInfo(turnPanel);
         turnPanel.Bind(session, endTurn: playing);
-        var resources = new ResourceBar();
-        top.AddChild(resources);
-        resources.Bind(session);
-        Status = new Label
+
+        // The status bar along the bottom (ADR-186): the hints line first, then the messages and what the pointer is over; the resources on
+        // the right. In the replay viewer it stands above the viewer's bar; in a game the menu button sits on its right end.
+        StatusBar = new StatusBar
         {
-            Text = playing
-                ? "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera"
-                : "Watching. Space: play or pause  L: level  right click: information  WASD/QE/wheel: camera",
+            BottomOffset = playing ? 0 : ReplayControlBar.ReservedHeight,
+            RightReserve = playing ? StatusBar.MenuButtonWidth : 0,
         };
-        top.AddChild(Status);
+        AddChild(StatusBar);
+        StatusBar.Bind(session);
+        Status.Text = playing
+            ? "Click: route, click again: go. Tab: next hero  L: level  K: kingdom  Q: quests  P: puzzle  G: dig  WASD/QE/wheel: camera"
+            : "Watching. Space: play or pause  L: level  right click: information  WASD/QE/wheel: camera";
+
+        // Questions and notices open in the middle of the screen, over the map (ADR-186).
+        var middle = new CenterContainer { Name = "PopUps", MouseFilter = Control.MouseFilterEnum.Ignore };
+        AddChild(middle);
+        middle.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.FullRect);
+        var popUps = new VBoxContainer { MouseFilter = Control.MouseFilterEnum.Ignore, CustomMinimumSize = new Vector2(PopUpWidth, 0) };
+        popUps.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        middle.AddChild(popUps);
         if (playing)
         {
             // The replay viewer leaves out the questions: the record answers them (and an unbound panel's parts would never enter the tree).
             var decisions = new DecisionPanel();
-            top.AddChild(decisions);
+            decisions.UseOpaqueBackground();
+            popUps.AddChild(decisions);
             decisions.Bind(session);
         }
 
         var notice = new NoticePanel();
-        top.AddChild(notice);
+        notice.UseOpaqueBackground();
+        popUps.AddChild(notice);
         notice.Bind(session);
         // HoMM-style by default: the minimap, the hero and town lists and the action panel down the right.
         var minimapBox = new VBoxContainer();
@@ -148,9 +163,15 @@ public partial class AdventureHud : CanvasLayer
         _layout.SetPart(HudPart.Actions, side);
 
         BuildScreens(playing, screens, side);
-        _layout.BottomReserve = playing ? 0 : ReplayControlBar.ReservedHeight;
+        _layout.BottomReserve = StatusBar.Height + StatusBar.BottomOffset; // the bottom parts stand above the status bar
         _layout.Apply(layout);
     }
+
+    /// <summary>How wide the questions and notices in the middle of the screen are.</summary>
+    private const float PopUpWidth = 520;
+
+    /// <summary>What the pointer is over on the map goes to the status line (null: nothing there).</summary>
+    public void ShowHover(string? text) => StatusBar.ShowHover(text);
 
     /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed).</summary>
     public void ApplyLayout(LayoutSettings layout) => _layout.Apply(layout);

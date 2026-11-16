@@ -164,9 +164,10 @@ $scenarios = @(
     # card), then the second (on its Hire button); each closed with Escape before the screen is.
     @{ Name = 'game-info-screens'; App = 'EternalWars.Game'; Frames = 68; Map = $townsMap
        Input = '3:key:Enter;10:key:K;16:rclick:468,299;20:key:Escape;22:rclick:457,353;26:key:Escape;28:key:Escape;32:key:T;38:wheel:down,25;44:click:@Visit the tavern…;50:rclick:590,450;54:key:Escape;56:rclick:862,607;60:key:Escape;62:key:Escape;64:key:Escape' },
-    # Information windows on a decision prompt (ADR-178): Hagan steps onto the Witch Hut; right-click the prompt (the hut), then the skill offered.
+    # Information windows on a decision prompt (ADR-178), in the middle of the screen (ADR-186): Hagan steps onto the Witch Hut; right-click the
+    # prompt (the hut), then the skill offered.
     @{ Name = 'game-info-prompts'; App = 'EternalWars.Game'; Frames = 40; Map = $sitesMap
-       Input = '3:key:Enter;8:press:Hagan;12:key:Up;22:rclick:150,135;26:key:Escape;28:rclick:75,183;32:key:Escape;34:press:Leave' },
+       Input = '3:key:Enter;8:press:Hagan;12:key:Up;22:rclick:800,430;26:key:Escape;28:rclick:640,477;32:key:Escape;34:press:Leave' },
     # Ember March (ADR-114): start, end the turn (the computer plays Red), open the town screen with its building tree, close it.
     @{ Name = 'game-ember-march'; App = 'EternalWars.Game'; Frames = 60; Map = $emberMap
        Input = '3:key:Enter;12:click:@End turn;40:key:T;52:key:Escape' },

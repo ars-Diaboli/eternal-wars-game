@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Data.Settings;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Editing;
@@ -6,6 +7,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
+using EternalWars.Core.Domain.Settings;
 using EternalWars.Core.Generation;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Cameras;
@@ -21,7 +23,7 @@ namespace EternalWars.MapEditor;
 /// <summary>
 /// Map editor entry point. Editing operations, undo/redo and validation live in core (<see cref="MapEditorSession"/>);
 /// the views and panels live in the libraries; this class composes them, maps mouse and keys to the active
-/// tool, and does file I/O.
+/// tool, and does file I/O. Alt+Enter switches the window mode (ADR-186), kept in the editor's own settings file.
 /// </summary>
 public partial class Main : Node3D
 {
@@ -59,6 +61,7 @@ public partial class Main : Node3D
     public override void _Ready()
     {
         UiSpacing.Apply(); // the shared margins and gaps (ADR-163)
+        WindowModes.Apply(SettingsFile.LoadInterface(SettingsPath).Window);
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
             AddChild(autoInput);
@@ -72,6 +75,32 @@ public partial class Main : Node3D
             ? MapConverter.ToGameState(MapSerializer.Load(path), GameContent.All, checkEvents: false)
             : BlankScenario.Create(36, 36, content: GameContent.All));
     }
+
+    /// <summary>Alt+Enter switches the window mode wherever the focus is, a text field included.</summary>
+    public override void _Input(InputEvent @event)
+    {
+        if (!WindowModes.IsToggleKey(@event))
+        {
+            return;
+        }
+
+        GetViewport().SetInputAsHandled();
+        var path = SettingsPath;
+        var settings = SettingsFile.LoadInterface(path).WithWindowToggled();
+        WindowModes.Apply(settings.Window);
+        try
+        {
+            SettingsFile.Save(path, SettingsFile.Load(path), settings, SettingsFile.LoadLayout(path));
+        }
+        catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+        {
+            _status.Text = $"Could not keep the window mode: {e.Message}";
+        }
+    }
+
+    /// <summary>The editor's settings file (only the window mode is used here), or the one the launch arguments name.</summary>
+    private static string SettingsPath =>
+        LaunchArguments.SettingsPath ?? Path.Combine(ProjectSettings.GlobalizePath("user://"), SettingsFile.FileName);
 
     public override void _UnhandledInput(InputEvent @event)
     {
