@@ -10,7 +10,8 @@ public static partial class MapValidator
     /// <summary>
     /// Start zones (MP-4, ADR-197): a zone of a player the map does not have is an error. Warnings: a player of a map with start zones that has
     /// none (the simultaneous first week needs one for each, MP-2); a zone without any of its player's towns, or holding another player's town or
-    /// hero (the zones overlap the starts); two players' zones that touch (a hero steps from one into the other at once).
+    /// hero (the zones overlap the starts); two enemies' zones that touch (a hero steps from one into the other at once; allies' zones may touch,
+    /// ADR-199).
     /// </summary>
     private static IEnumerable<MapIssue> ValidateStartZones(GameState scenario)
     {
@@ -52,7 +53,7 @@ public static partial class MapValidator
             yield return new(IssueSeverity.Warning, $"Hero {hero.Name} stands in {NameOf(scenario, map.GetStartZone(hero.Position)!.Value)}'s start zone.", hero.Position);
         }
 
-        foreach (var ((a, b), at) in TouchingZones(map))
+        foreach (var ((a, b), at) in TouchingZones(map).Where(t => !(scenario.HasPlayer(t.Pair.A) && scenario.HasPlayer(t.Pair.B) && scenario.AreAllies(t.Pair.A, t.Pair.B))))
         {
             yield return new(IssueSeverity.Warning, $"{NameOf(scenario, a)}'s and {NameOf(scenario, b)}'s start zones touch: a hero steps from one into the other at once.", at);
         }

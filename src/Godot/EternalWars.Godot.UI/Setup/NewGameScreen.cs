@@ -207,6 +207,7 @@ public partial class NewGameScreen : PanelContainer
         _seatNames.Clear();
         _seatTowns.Clear();
         _lanPlayers.Clear();
+        _zoneOwners = null;
         _startTowns.Clear();
         _randomPlayers.Clear();
     }
@@ -260,6 +261,7 @@ public partial class NewGameScreen : PanelContainer
         }
 
         // An arena map (ADR-097, ADR-159): its mode said in one line, and each player played by a person (hot-seat) or the computer.
+        _zoneOwners = [.. preview.Map.StartZoneOwners];
         _arena.Visible = preview.Rules.Arena;
         _arena.Text = ArenaLine;
         _players.AddChild(new Label { Text = "Player" });
@@ -274,7 +276,8 @@ public partial class NewGameScreen : PanelContainer
             _seatNames.Add((player.Id, player.Name));
             if (Lan is not null && (player.IsHuman || preview.Rules.Arena))
             {
-                var controller = LanController(player.Id == firstHuman ? LanHere : player.IsHuman ? LanRemote : Computer, humanAllowed: true);
+                // Every player of an arena map may be a person: its other colours wait for LAN players (ADR-199).
+                var controller = LanController(player.Id == firstHuman ? LanHere : player.IsHuman || preview.Rules.Arena ? LanRemote : Computer, humanAllowed: true);
                 _players.AddChild(controller);
                 _controllers[player.Id] = controller;
             }

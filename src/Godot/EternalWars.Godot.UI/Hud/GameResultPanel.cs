@@ -35,6 +35,12 @@ public partial class GameResultPanel : CenterContainer
     /// <summary>"Play again" on an arena map's result screen (ADR-159): the same map with the same players, from the start.</summary>
     public event Action? PlayAgainRequested;
 
+    /// <summary>Whether this computer may start the arena again: not a LAN client, whose host does (ADR-199).</summary>
+    public bool CanPlayAgain { get; set; } = true;
+
+    /// <summary>Whether a colour is played on this computer: in a LAN game the headline is its own players' victory or defeat (ADR-199).</summary>
+    public Func<PlayerId, bool>? PlaysHere { get; set; }
+
     public GameResultPanel()
     {
         AnchorRight = 1;
@@ -102,12 +108,18 @@ public partial class GameResultPanel : CenterContainer
         _saveReplay = saveReplay;
     }
 
-    /// <summary>The headline: Victory when a human player won, Defeat when only computers did, Draw when nobody won.</summary>
-    public static string Headline(GameState state, GameOutcome outcome) =>
-        !outcome.HasWinner ? "Draw"
-        : state.Players.Any(p => p.IsHuman && outcome.Won(p.Id)) ? "Victory"
-        : state.Players.Any(p => p.IsHuman) ? "Defeat"
-        : "Game over";
+    /// <summary>
+    /// The headline: Victory when a person won (in a LAN game, one played on this computer, <paramref name="playsHere"/>), Defeat when only others
+    /// did, Draw when nobody won.
+    /// </summary>
+    public static string Headline(GameState state, GameOutcome outcome, Func<PlayerId, bool>? playsHere = null)
+    {
+        var here = state.Players.Where(p => p.IsHuman && (playsHere?.Invoke(p.Id) ?? true)).ToList();
+        return !outcome.HasWinner ? "Draw"
+            : here.Any(p => outcome.Won(p.Id)) ? "Victory"
+            : here.Count > 0 ? "Defeat"
+            : "Game over";
+    }
 
     /// <summary>A score line: the points, the rank title and what they come from.</summary>
     public static string Describe(GameState state, GameScore score)
@@ -134,16 +146,16 @@ public partial class GameResultPanel : CenterContainer
         var scores = ScoreRules.Scores(state);
         if (state.Rules.Arena)
         {
-            lines.Add("Arena maps are not ranked.");
+            lines.Add(CanPlayAgain ? "Arena maps are not ranked." : "Arena maps are not ranked. The host may start the game again.");
         }
         else if (outcome.HasWinner && scores.Count == 0 && state.Players.Any(p => p.IsHuman && outcome.Won(p.Id)))
         {
             lines.Add("This map is not ranked.");
         }
 
-        _playAgain.Visible = state.Rules.Arena;
+        _playAgain.Visible = state.Rules.Arena && CanPlayAgain;
 
-        _title.Text = Headline(state, outcome);
+        _title.Text = Headline(state, outcome, PlaysHere);
         _text.Text = string.Join('\n', lines);
         ShowScores(state, scores);
         _table.Display(null);

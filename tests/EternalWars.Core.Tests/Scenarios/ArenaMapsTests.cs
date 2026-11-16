@@ -100,6 +100,31 @@ public class ArenaMapsTests
 
     [Theory]
     [MemberData(nameof(Maps))]
+    public void OverTheLan_EveryPlayerHasAStartZone_SoThePeoplePrepareAtOnce_AndTheBattleFollows(string name)
+    {
+        var options = new GameOptions(Seed: 3) { SimultaneousFirstWeek = true, HostPlayer = new PlayerId(0) };
+        var state = MapConverter.ToGameState(MapConverter.ToDocument(Create(name)), options: options);
+        state.AssignControllers(state.Players.ToDictionary(p => p.Id, _ => true));
+        var session = new GameSession(state);
+        var ai = new AdventureAi(session, controlHumanSlots: true);
+        session.Start();
+
+        Assert.All(state.Players, p => Assert.Contains(state.HeroesOf(p.Id), h => state.Map.GetStartZone(h.Position) == p.Id));
+        Assert.True(state.IsSimultaneous);
+        Assert.Equal(state.Players.Select(p => p.Id), state.OpenTurns);
+
+        while (!state.IsOver && state.Date.AbsoluteDay <= 2)
+        {
+            Assert.True(ai.PlayTurn(), $"the AI got stuck on {state.Date}: {state.SimultaneousConflict}");
+        }
+
+        Assert.Null(state.SimultaneousConflict); // the zones keep the enemies apart, and allies may meet
+        Assert.False(state.SimultaneousEnded);
+        Assert.NotEqual(ArenaResult.NoBattle, state.Arena!.Result);
+    }
+
+    [Theory]
+    [MemberData(nameof(Maps))]
     public void ComputerPlayers_PrepareOnDayOne_AndFightTheBattleOnDayTwo(string name)
     {
         var state = Started(name, 7);

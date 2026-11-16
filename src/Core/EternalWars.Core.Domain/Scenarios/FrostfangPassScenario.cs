@@ -11,7 +11,7 @@ using EternalWars.Core.Domain.Players;
 namespace EternalWars.Core.Domain.Scenarios;
 
 /// <summary>
-/// The second shipped arena map (ADR-180): <b>Frostfang Pass</b>, 24 × 30, two players and no towns. A Haven mage (Blue, the snowy north)
+/// The second shipped arena map (ADR-180): <b>Frostfang Pass</b>, 24 × 31, two players and no towns. A Haven mage (Blue, the snowy north)
 /// and a Necropolis mage (Red, the wasted south) buy their armies at map dwellings with the gold lying about, and gather spells, skills
 /// and Pandora's Boxes. The halves mirror each other top to bottom; the combat place (attacker from the north) is sealed in the ridge.
 /// </summary>
@@ -37,8 +37,8 @@ public static class FrostfangPassScenario
         "ssssssssssssssssssssssss",
     ];
 
-    /// <summary>The ridge between the halves, with the combat place's two cells (column 11).</summary>
-    private static readonly string[] Ridge = [.. Enumerable.Range(0, 4).Select(y => y is 1 or 2 ? "###########s############" : new string('#', 24))];
+    /// <summary>The ridge between the halves, five rows so that a hero cannot see across it, with the combat place's two cells (column 11).</summary>
+    private static readonly string[] Ridge = [.. Enumerable.Range(0, 5).Select(y => y is 1 or 2 ? "###########s############" : new string('#', 24))];
 
     /// <summary>One side's troops: its starting army, the map dwellings (tiers 2, 3, 2 and 4) and the creatures in its Pandora's Box.</summary>
     private sealed record Faction(string Hero, Army Army, string[] Dwellings, CreatureStack BoxStack);
@@ -69,6 +69,7 @@ public static class FrostfangPassScenario
 
         void Side(PlayerId owner, int hero, Faction faction)
         {
+            sketch.StartZone(owner, 0, 0, North[0].Length, North.Length);
             heroes.Add(sketch.AddHero(hero, owner, 11, 3, faction.Hero, faction.Army));
             sketch.Dwelling(faction.Dwellings[0], 1, 1);
             sketch.Dwelling(faction.Dwellings[1], 5, 1);
