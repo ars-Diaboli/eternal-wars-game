@@ -18,8 +18,8 @@ public sealed record ReplayTurn(int Position, GameDate Date, PlayerId Player);
 /// once to check it (a refused command or another final digest fails like a load: "made with other content") and to note where every turn
 /// and day starts. <see cref="Session"/> is the game being watched; <see cref="Step"/> runs its next command, so the views see the events.
 /// <see cref="Seek"/> puts a new session at any point (replayed unheard from the start, ADR-058), which is how the viewer jumps to a turn or a
-/// day, back or forward. <see cref="TakeOver"/> gives a separate session at the current point, for "Play from here" in a battle; the record
-/// and the watched session do not change.
+/// day, back or forward. <see cref="TakeOver"/> (in a battle) and <see cref="PlayOn"/> (on the adventure map) give a separate session at the
+/// current point, for "Play from here"; the record and the watched session do not change.
 /// </summary>
 public sealed class ReplayPlayer
 {
@@ -179,6 +179,47 @@ public sealed class ReplayPlayer
         }
 
         return Build(Position);
+    }
+
+    /// <summary>
+    /// Whether "Play from here" on the adventure map is offered: outside a battle (one being fought is <see cref="CanTakeOver"/>'s), while the
+    /// game is not over and a person still plays in it.
+    /// </summary>
+    public bool CanPlayOn =>
+        Session.State.Battle is null && Session.State.Outcome is null && Session.State.Players.Any(p => p.IsHuman && !p.IsDefeated);
+
+    /// <summary>
+    /// "Play from here" on the adventure map: a new game at the current point, replayed from the record to <see cref="Position"/>, so its
+    /// command log is the record cut there and it saves like any game (a save played on with Load). The record and the watched session do not
+    /// change. Throws when <see cref="CanPlayOn"/> is false.
+    /// </summary>
+    public GameSession PlayOn()
+    {
+        if (!CanPlayOn)
+        {
+            throw new InvalidOperationException("Play from here on the map works only outside a battle, in a game a person still plays.");
+        }
+
+        return Build(Position);
+    }
+
+    /// <summary>
+    /// Whose eyes a game played on from a replay is shown through: the current player when a person, else the next person in turn order who is
+    /// still in the game (the computer's turn plays on first); null when no person is.
+    /// </summary>
+    public static PlayerId? PersonToShow(GameState state)
+    {
+        var count = state.Players.Count;
+        for (var i = 0; i < count; i++)
+        {
+            var player = state.Players[(state.CurrentPlayerIndex + i) % count];
+            if (player.IsHuman && !player.IsDefeated)
+            {
+                return player.Id;
+            }
+        }
+
+        return null;
     }
 
     private GameSession Build(int position)

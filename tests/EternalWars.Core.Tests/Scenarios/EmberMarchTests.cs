@@ -57,13 +57,14 @@ public class EmberMarchTests
     [Theory]
     [InlineData(1UL)]
     [InlineData(2UL)]
-    public void TwoComputerPlayers_PlayItToAWinner_WithinSixtyDays(ulong seed)
+    public void TwoComputerPlayers_PlayItToAWinner_WithinEightyDays(ulong seed)
     {
         var state = MapConverter.ToGameState(MapConverter.ToDocument(EmberMarchScenario.Create()), options: new GameOptions(Seed: seed));
         var session = new GameSession(state);
         var ai = new AdventureAi(session, controlHumanSlots: true);
         session.Start();
-        while (!state.IsOver && state.Date.AbsoluteDay <= 60)
+        // 80: a main hero holds its town while an enemy army it cannot beat in the field can reach it (ADR-184), so even armies take longer.
+        while (!state.IsOver && state.Date.AbsoluteDay <= 80)
         {
             Assert.True(ai.PlayTurn(), $"the AI got stuck on {state.Date}");
         }

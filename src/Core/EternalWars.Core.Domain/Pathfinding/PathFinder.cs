@@ -36,11 +36,16 @@ public sealed class PathFinder(GameState state)
     private const int CheapestOrthogonal = 50; // dirt road
     private const int CheapestDiagonalExtra = 21;
 
-    public HeroPath? FindPath(HeroId heroId, MapPosition target, bool respectFog = true)
+    /// <summary>
+    /// The cheapest route for the hero to <paramref name="target"/>, or null. <paramref name="from"/>: plan as if the hero stood there instead (the
+    /// AI weighing a Dimension Door landing); the costs are still the hero's.
+    /// </summary>
+    public HeroPath? FindPath(HeroId heroId, MapPosition target, bool respectFog = true, MapPosition? from = null)
     {
         var hero = state.GetHero(heroId);
         var map = state.Map;
-        if (target == hero.Position || MovementRules.CheckTile(state, target) != MoveResult.Moved ||
+        var origin = from ?? hero.Position;
+        if (target == origin || MovementRules.CheckTile(state, target) != MoveResult.Moved ||
             (respectFog && !state.Fog.IsExplored(hero.Owner, target)))
         {
             return null;
@@ -69,7 +74,7 @@ public sealed class PathFinder(GameState state)
         Array.Fill(parent, -1);
 
         var useHeuristic = !state.Objects.Any(o => o.TeleportTarget is not null);
-        var start = Node(hero.Position, teleported: false);
+        var start = Node(origin, teleported: false);
         cost[start] = 0;
         var open = new PriorityQueue<int, int>();
         open.Enqueue(start, 0);

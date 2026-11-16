@@ -600,6 +600,7 @@ public static class Program
         {
             session.Events.Subscribe<HeroDefeated>(e => Console.WriteLine($"    day {session.State.Date.AbsoluteDay}: {e.Hero} of {e.Owner} defeated"));
             session.Events.Subscribe<BattleStarted>(e => Console.WriteLine($"    day {session.State.Date.AbsoluteDay}: battle {e.AttackerHero} vs {e.DefenderHero?.ToString() ?? e.Guard?.ToString()} units {string.Join(",", e.Units.Select(u => $"{u.Side}:{u.Count}x{u.Creature}"))}"));
+            session.Events.Subscribe<AdventureSpellCast>(e => Console.WriteLine($"    day {session.State.Date.AbsoluteDay}: {e.Hero} casts {e.Spell}{(e.Target is { } at ? $" at {at}" : string.Empty)}"));
         }
 
         session.Start();
@@ -627,6 +628,13 @@ public static class Program
             if (!ai.PlayTurn())
             {
                 throw new InvalidOperationException($"The AI got stuck on {session.State.Date} ({session.State.CurrentPlayer.Name}, decision {session.State.PendingDecision}).");
+            }
+
+            if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null && session.State.Date.AbsoluteDay <= days)
+            {
+                // Where every hero stands after each turn, with its army power and mana.
+                Console.WriteLine($"    day {session.State.Date.AbsoluteDay} {session.State.CurrentPlayer.Name} to move; heroes: {string.Join(", ", session.State.Heroes.Select(h =>
+                    $"{h.Name} ({h.Position.X},{h.Position.Y}) power {h.Army.Stacks.Sum(s => (long)s.Stack.Count * session.State.Creatures.Get(s.Stack.Creature).Value)} mana {h.Mana}"))}");
             }
         }
 

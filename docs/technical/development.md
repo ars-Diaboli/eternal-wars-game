@@ -55,7 +55,7 @@ command takes `--creatures path.csv`.
 
 Templates are named by name (`"Two against two"`), file key (`2v2`, `duel`, `ffa-4`) or path.
 Debug env vars: `EW_SIM_EXPLAIN=10,25` (on those days, each hero's best targets as the AI sees them,
-`AdventureAi.Explain`), `EW_SIM_GUARDS=1` (every monster stack, explored or not), `EW_SIM_TRACE=1` (battles, defeated heroes).
+`AdventureAi.Explain`), `EW_SIM_GUARDS=1` (every monster stack, explored or not), `EW_SIM_TRACE=1` (battles, defeated heroes, adventure spells cast, and after each turn where every hero stands with its army power and mana).
 
 ## Godot smoke tests
 `./tools/smoke-godot.ps1 -Godot <Godot .NET console exe> [-Only 'game-*']` runs the scenarios listed in the script under

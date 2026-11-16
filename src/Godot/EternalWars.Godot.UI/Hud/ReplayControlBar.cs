@@ -9,14 +9,14 @@ namespace EternalWars.Godot.UI.Hud;
 /// <param name="Day">The day being watched.</param>
 /// <param name="LastDay">The last day the record reaches.</param>
 /// <param name="InBattle">A battle is shown: "Skip to the result" is offered.</param>
-/// <param name="CanTakeOver">"Play from here" is offered (a battle a person commands).</param>
+/// <param name="CanTakeOver">"Play from here" works now: in a battle, one a person commands; on the map, a game not over that a person still plays.</param>
 /// <param name="AtEnd">The record has been played to its last command.</param>
 public sealed record ReplayBarState(bool Playing, string Status, int Day, int LastDay, bool InBattle, bool CanTakeOver, bool AtEnd);
 
 /// <summary>
 /// The replay viewer's controls along the bottom of the screen (ADR-101, ADR-164): play and pause (Space), the four speeds, next turn, next day,
-/// a day to go to, whose eyes the map is seen through (the whole map or a player's), "Skip to the result" and "Play from here" in a battle, and
-/// leaving for the main menu. While a battle is played on from the replay (<see cref="TakingOver"/>) only "Back to the replay" is shown. The bar
+/// a day to go to, whose eyes the map is seen through (the whole map or a player's), "Skip to the result" in a battle, "Play from here" (a battle
+/// on by hand, or the game on from the map), and leaving for the main menu. While a battle is played on from the replay (<see cref="TakingOver"/>) only "Back to the replay" is shown. The bar
 /// only shows and asks: the app runs the replay.
 /// </summary>
 public partial class ReplayControlBar : PanelContainer
@@ -32,7 +32,7 @@ public partial class ReplayControlBar : PanelContainer
     private readonly Button _goToDay = new() { Text = "Go", TooltipText = "Jump to the start of this day, back or forward" };
     private readonly OptionButton _viewer = new() { TooltipText = "Whose eyes the map is seen through" };
     private readonly Button _skip = new() { Text = "Skip to the result", Visible = false };
-    private readonly Button _takeOver = new() { Text = "Play from here", Visible = false, TooltipText = "Play this battle on by hand, as a separate game that is not ranked; the replay stays as it is" };
+    private readonly Button _takeOver = new() { Text = "Play from here" };
     private readonly Button _leave = new() { Text = "Main menu" };
     private readonly Button _back = new() { Text = "Back to the replay", Visible = false };
     private readonly Label _status = new() { ClipText = true, SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -139,11 +139,14 @@ public partial class ReplayControlBar : PanelContainer
         }
 
         _skip.Visible = state.InBattle;
-        _takeOver.Visible = state.InBattle;
         _takeOver.Disabled = !state.CanTakeOver;
-        _takeOver.TooltipText = state.CanTakeOver
-            ? "Play this battle on by hand, as a separate game that is not ranked; the replay stays as it is"
-            : "Only a battle a person commands can be played on (the computer plays its own).";
+        _takeOver.TooltipText = (state.InBattle, state.CanTakeOver) switch
+        {
+            (true, true) => "Play this battle on by hand, as a separate game that is not ranked; the replay stays as it is",
+            (true, false) => "Only a battle a person commands can be played on (the computer plays its own).",
+            (false, true) => "Play the game on from here as your own game, like a loaded save; the replay stays as it is",
+            _ => "Only a game that is not over, with a person still in it, can be played on.",
+        };
         _status.Text = state.Status;
     }
 

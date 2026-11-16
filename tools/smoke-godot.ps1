@@ -136,8 +136,12 @@ $scenarios = @(
     # The viewer on a recorded computer game (the sim's demo record, 4 days): pause at once, Fast, next day three times (day 4), next turn (Red's,
     # with the battle against the wolves), Normal, play: Red walks, the computer's battle plays move by move; skip to its result, which closes
     # by itself, then the replay plays to its end.
-    @{ Name = 'game-replay-viewer'; App = 'EternalWars.Game'; Frames = 110; Replay = $replayFile
-       Input = '3:key:Space;6:click:@Normal;9:choose:Fast;12:press:Next day;16:press:Next day;20:press:Next day;24:press:Next turn;28:click:@Fast;31:choose:Normal;34:key:Space;70:press:Skip to the result' },
+    @{ Name = 'game-replay-viewer'; App = 'EternalWars.Game'; Frames = 130; Replay = $replayFile
+       Input = '3:key:Space;6:click:@Normal;9:choose:Fast;12:press:Next day;16:press:Next day;20:press:Next day;24:press:Next turn;28:click:@Fast;31:choose:Normal;34:key:Space;90:press:Skip to the result' },
+    # "Play from here" on the map (ADR-185): the same record paused, next day (Blue's day 2), Play from here: the viewer's bar goes, the game's
+    # HUD comes with End turn; End turn passes to Red.
+    @{ Name = 'game-replay-play-on'; App = 'EternalWars.Game'; Frames = 40; Replay = $replayFile
+       Input = '3:key:Space;6:press:Next day;12:press:Play from here;24:press:End turn' },
     # A siege (ADR-106, ADR-109): step into the neutral Castle-level town; walls, gate, moat, towers and keep. The footman defends, the
     # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
     @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap
