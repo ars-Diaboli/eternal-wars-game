@@ -11,8 +11,8 @@ using EternalWars.Core.Domain.Players;
 namespace EternalWars.Core.Domain.Scenarios;
 
 /// <summary>
-/// The first shipped arena map (ADR-180): <b>Proving Grounds</b>, 34 × 18, two players. Each picks a faction: a random town and a random hero
-/// of it, on two halves that mirror each other left to right, behind a rock wall. The combat place is in a sealed glade in the wall.
+/// The first shipped arena map (ADR-180): <b>Proving Grounds</b>, 35 × 18, two players. Each picks a faction: a random town and a random hero
+/// of it, on two halves that mirror each other left to right, behind a rock wall too wide to see across (ADR-199). The combat place is in a sealed glade in the wall.
 /// </summary>
 public static class ProvingGroundsScenario
 {
@@ -41,8 +41,8 @@ public static class ProvingGroundsScenario
         "ggggggggggg####",
     ];
 
-    /// <summary>The wall between the halves, with the glade of the combat place (row 8).</summary>
-    private static readonly string[] Wall = [.. Enumerable.Range(0, 18).Select(y => y == 8 ? "#gg#" : "####")];
+    /// <summary>The wall between the halves, five tiles so that a hero cannot see across it, with the glade of the combat place (row 8).</summary>
+    private static readonly string[] Wall = [.. Enumerable.Range(0, 18).Select(y => y == 8 ? "#gg##" : "#####")];
 
     public static GameState Create(ContentCatalogs? content = null)
     {
@@ -62,6 +62,7 @@ public static class ProvingGroundsScenario
 
         void Side(PlayerId owner, string town, int hero)
         {
+            sketch.StartZone(owner, 0, 0, West[0].Length, West.Length);
             sketch.AddTown(null, 1, 1, owner, town);
             heroes.Add(sketch.AddRandomHero(hero, owner, 4, 8, Army.Of(new(BuiltInCreatures.Wolf, 24), new("neutral.bandit", 6))));
             sketch.Pile(ResourceType.Gold, 9, 1, 2500);

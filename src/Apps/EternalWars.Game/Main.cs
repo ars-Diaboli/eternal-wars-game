@@ -623,6 +623,8 @@ public partial class Main : Node3D
         _result.Bind(EnterRanking, SaveReplay);
         _result.MainMenuRequested += ShowMainMenu;
         _result.PlayAgainRequested += PlayAgain;
+        _result.CanPlayAgain = _client is null; // a LAN client's rematch is the host's to start (ADR-199)
+        _result.PlaysHere = PlaysHere;
 
         _hud.ReportGameFlow(); // the arena's day 2, defeats, a lost last town
         _game.SubscribeWhileInTree<GameEnded>(_session.Events, _ =>
@@ -643,13 +645,30 @@ public partial class Main : Node3D
 
     /// <summary>
     /// "Play again" on an arena map's result screen (ADR-159): the game's start map with the same players, teams, factions and options, and a new
-    /// seed, so the luck of the rematch is its own.
+    /// seed, so the luck of the rematch is its own. A LAN host's rematch keeps its players: each client gets the new game (ADR-199).
     /// </summary>
     private void PlayAgain()
     {
         var options = _session.State.Options with { Seed = (ulong)System.Random.Shared.NextInt64() };
         var state = MapConverter.ToGameState(_initialMap, GameContent.All, options);
-        StartGame(state);
+        if (_host is { } host)
+        {
+            state.AssignControllers(_session.State.Players.ToDictionary(p => p.Id, p => p.IsHuman)); // a colour handed to the computer stays its
+            var session = new GameSession(state);
+            session.Start();
+            if (host.PlayAgain(session) is { IsAccepted: false, Error: var error })
+            {
+                _status.Text = error ?? "";
+                return;
+            }
+
+            BeginGame(session, _initialMap, resume: true);
+        }
+        else
+        {
+            StartGame(state);
+        }
+
         _status.Text = $"{_initialMap.Name}: a new game, seed {options.Seed}.";
     }
 

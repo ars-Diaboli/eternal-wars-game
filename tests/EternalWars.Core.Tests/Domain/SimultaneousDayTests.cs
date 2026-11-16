@@ -3,6 +3,7 @@ using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Editing;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
@@ -143,6 +144,24 @@ public class SimultaneousDayTests
         }
 
         Assert.StartsWith("Blue saw Red's hero Bravo", state.SimultaneousConflict);
+    }
+
+    [Fact]
+    public void Allies_MayEnterEachOthersStartZones_AndSeeEachOthersHeroes()
+    {
+        var state = Duel(Simultaneous, zoneWidth: 8, gap: 1);
+        state.AssignTeams(new Dictionary<PlayerId, TeamId> { [Blue] = new(0), [Red] = new(0) });
+        var session = Started(state);
+
+        while (state.GetHero(A).Position.X < 14 && Moved(session.Execute(new StepHeroCommand(Blue, A, Direction.East))))
+        {
+        }
+
+        Assert.Equal(Red, state.Map.GetStartZone(state.GetHero(A).Position));
+        Assert.True(state.CanSee(Blue, state.GetHero(B)));
+        Assert.Null(state.SimultaneousConflict);
+        Assert.True(state.IsSimultaneous);
+        Assert.Empty(MapValidator.Validate(state).Where(i => i.Message.Contains("start zones touch", StringComparison.Ordinal)));
     }
 
     [Fact]

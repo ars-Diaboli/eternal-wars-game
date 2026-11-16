@@ -225,12 +225,12 @@ public sealed class TurnService
     }
 
     /// <summary>
-    /// Whether today is played at once: the option is on, no conflict has ended it, it is the first week, the map is no arena, and at least two
-    /// people still play, each with a start zone (MP-2 a).
+    /// Whether today is played at once: the option is on, no conflict has ended it, it is the first week (an arena map's preparation day, ADR-199),
+    /// and at least two people still play, each with a start zone (MP-2 a).
     /// </summary>
     private bool IsSimultaneousDay()
     {
-        if (!_state.Options.SimultaneousFirstWeek || _state.SimultaneousEnded || _state.Rules.Arena || _state.Date.AbsoluteDay > GameDate.DaysPerWeek)
+        if (!_state.Options.SimultaneousFirstWeek || _state.SimultaneousEnded || _state.Date.AbsoluteDay > GameDate.DaysPerWeek)
         {
             return false;
         }

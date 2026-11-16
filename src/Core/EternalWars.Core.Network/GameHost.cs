@@ -311,19 +311,48 @@ public sealed class GameHost : ICommandRoute, IDisposable
             state.Content);
 
         SendViews();
+        Replace(again);
+        Tell("", $"{reason} The day is played again, turn by turn, and so is every day after it.");
+        SessionReplaced?.Invoke(again);
+    }
+
+    /// <summary>
+    /// "Play again" on an arena map's result screen (ADR-159, ADR-199): the same colours go on in <paramref name="next"/> (a new game of the same
+    /// map, started), each client getting its view as on joining. Refused while the game is not over.
+    /// </summary>
+    public CommandResult PlayAgain(GameSession next)
+    {
+        ArgumentNullException.ThrowIfNull(next);
+        if (!_session.State.IsOver)
+        {
+            return CommandResult.Rejected("The game is not over.");
+        }
+
+        if (!next.State.IsStarted || _remoteSeats.Any(s => !next.State.HasPlayer(s) || !next.State.GetPlayer(s).IsHuman))
+        {
+            return CommandResult.Rejected("The new game must be started, with the same colours played on other computers.");
+        }
+
+        SendViews();
+        Replace(next);
+        Tell("", $"{HostName} starts the game again.");
+        return CommandResult.Accepted();
+    }
+
+    /// <summary>The game goes on in <paramref name="next"/>: its commands are routed here and every seated client gets its view again.</summary>
+    private void Replace(GameSession next)
+    {
         _subscription.Dispose();
         _session.Route = null;
-        _session = again;
-        again.Route = this;
-        _subscription = again.Events.Subscribe<IEvent>(Capture);
+        _session = next;
+        next.Route = this;
+        _subscription = next.Events.Subscribe<IEvent>(Capture);
         _battleSides = [];
+        _clockSent = null;
         foreach (var peer in _peers.Where(p => p is { Seat: not null, Feed: not null } && !p.Connection.IsClosed))
         {
             SendGame(peer, peer.Seat!.Value);
         }
-
-        Tell("", $"{reason} The day is played again, turn by turn, and so is every day after it.");
-        SessionReplaced?.Invoke(again);
     }
 
     /// <summary>

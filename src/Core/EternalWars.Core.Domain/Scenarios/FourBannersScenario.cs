@@ -11,7 +11,7 @@ using EternalWars.Core.Domain.Players;
 namespace EternalWars.Core.Domain.Scenarios;
 
 /// <summary>
-/// The third shipped arena map (ADR-180): <b>Four Banners</b>, 40 × 24, two teams of two (Blue and Green in the west, Red and Yellow in the
+/// The third shipped arena map (ADR-180): <b>Four Banners</b>, 41 × 24, two teams of two (Blue and Green in the west, Red and Yellow in the
 /// east), each player with a random town and hero of its faction. Allies share their half and may trade troops; each side's strongest hero
 /// fights. Each half has its own combat place: the first player in turn order with a hero standing on one defends there.
 /// </summary>
@@ -54,7 +54,7 @@ public static class FourBannersScenario
             content ?? ContentCatalogs.Default,
             Name,
             "Arena, two against two. Blue and Green hold the west, Red and Yellow the east, each with a realm of its choosing. Allies share their land and may hand each other troops; on the second day each side's strongest hero fights. Stand on your side's combat place to defend on your own ground.",
-            MapSketch.MirroredX(West, [.. Enumerable.Repeat("####", West.Length)]));
+            MapSketch.MirroredX(West, [.. Enumerable.Repeat("#####", West.Length)])); // too wide to see across (ADR-199)
         var west = new TeamId(0);
         var east = new TeamId(1);
         var players = new[]
@@ -75,6 +75,9 @@ public static class FourBannersScenario
 
         void Half(PlayerId north, PlayerId south, string northTown, string southTown, int firstHero)
         {
+            // Each ally's start zone is its quarter of the half; allies' zones may touch (ADR-199).
+            sketch.StartZone(north, 0, 0, West[0].Length, West.Length / 2);
+            sketch.StartZone(south, 0, West.Length / 2, West[0].Length, West.Length / 2);
             sketch.AddTown(null, 1, 1, north, northTown);
             heroes.Add(sketch.AddRandomHero(firstHero, north, 4, 8, StartingArmy()));
             sketch.AddTown(null, 1, 15, south, southTown);

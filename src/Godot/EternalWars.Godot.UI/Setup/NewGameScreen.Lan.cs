@@ -40,6 +40,9 @@ public partial class NewGameScreen
     private double _lanClock;
     private bool _openConfirmed;
 
+    /// <summary>The players of the selected hand-made map with a start zone; null for a random map, whose generator gives each one (ADR-197).</summary>
+    private HashSet<PlayerId>? _zoneOwners;
+
     /// <summary>The simultaneous first week's switch (a LAN host's lobby only: made when first asked for, so a screen out of the tree holds no node).</summary>
     private CheckBox? _simultaneousBox;
 
@@ -50,8 +53,12 @@ public partial class NewGameScreen
         TooltipText = "The people play each day of the first week at once, each on their own computer, the computer players after them. A hero "
                       + "entering another person's start zone, seeing another person's hero or visiting what another person visited that day has "
                       + "the day played again turn by turn, and every day after it. It needs a start zone for every person (random maps have "
-                      + "them; hand-made maps get them in the editor) and one colour here; otherwise the days are played turn by turn.",
+                      + "them; hand-made maps get them in the editor) and one colour here; otherwise the days are played turn by turn. On an arena "
+                      + "map it is the preparation day.",
     };
+
+    /// <summary>What the switch does with this map and these colours (a LAN host's lobby only).</summary>
+    private Label? _simultaneousNote;
     private ChatPanel? _chat;
 
     /// <summary>Set before <see cref="Bind"/>: the screen is a LAN host's lobby.</summary>
@@ -80,7 +87,7 @@ public partial class NewGameScreen
         var fog = _fog.GetItemText(_fog.Selected);
         settings.Add(SelectedFog == Core.Domain.Game.FogMode.ShroudWithRefog ? $"Fog of war: {fog}, refog margin {(int)_margin.Value}" : $"Fog of war: {fog}");
         settings.Add($"Complexity: {_complexity.GetItemText(_complexity.Selected)}; turn timer: {_timer.GetItemText(_timer.Selected)}");
-        settings.Add(_simultaneousBox?.ButtonPressed == true ? "The first week's days are played at once." : "Every day is played turn by turn.");
+        settings.Add(SimultaneousLine());
 
         var seats = new List<LanSeat>();
         for (var i = 0; i < _seatNames.Count; i++)
@@ -103,6 +110,32 @@ public partial class NewGameScreen
         }
 
         return new LanSetup(SelectedTemplate is { } template ? $"Random map: {template.Name}" : SelectedMap?.Name ?? "", settings, seats);
+    }
+
+    /// <summary>
+    /// The simultaneous first week in words (an arena map's preparation day, ADR-199), naming the people's colours without a start zone, which keep
+    /// every day turn by turn.
+    /// </summary>
+    private string SimultaneousLine()
+    {
+        if (_simultaneousBox?.ButtonPressed != true)
+        {
+            return "Every day is played turn by turn.";
+        }
+
+        var days = _arena.Visible ? "The preparation day is played at once" : "The first week's days are played at once";
+        var people = _seatNames.Where((s, i) => LanSeatKind.Computer != (SelectedTemplate is not null && i < _randomPlayers.Count
+            ? KindOf(_randomPlayers[i].Control)
+            : _controllers.TryGetValue(s.Id, out var c) ? KindOf(c) : LanSeatKind.Computer)).ToList();
+        if (people.Count < 2)
+        {
+            return $"{days} only with two people or more; here every day is played turn by turn.";
+        }
+
+        List<string> without = _zoneOwners is null ? [] : [.. people.Where(s => !_zoneOwners.Contains(s.Id)).Select(s => s.Name)];
+        return without.Count == 0
+            ? $"{days}."
+            : $"{days} only with a start zone for every person: {string.Join(", ", without)} {(without.Count == 1 ? "has" : "have")} none on this map, so every day is played turn by turn.";
     }
 
     /// <summary>Shows who has joined each colour played on another computer.</summary>
@@ -128,6 +161,11 @@ public partial class NewGameScreen
         if (shown != _lanShown)
         {
             _lanShown = shown;
+            if (_simultaneousNote is not null)
+            {
+                _simultaneousNote.Text = _simultaneousBox?.ButtonPressed == true ? SimultaneousLine() : "";
+            }
+
             foreach (var (id, label) in _lanPlayers)
             {
                 label.Text = LanPlayerText(id);
@@ -181,7 +219,7 @@ public partial class NewGameScreen
         return columns;
     }
 
-    /// <summary>Where the players join, and the simultaneous first week (not playable yet).</summary>
+    /// <summary>Where the players join, and the simultaneous first week with what it does here.</summary>
     private void AddLanRows(VBoxContainer box)
     {
         box.AddChild(new Label
@@ -191,6 +229,8 @@ public partial class NewGameScreen
             CustomMinimumSize = new Vector2(520, 0),
         });
         box.AddChild(Simultaneous);
+        _simultaneousNote = new Label { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) };
+        box.AddChild(_simultaneousNote);
     }
 
     /// <summary>

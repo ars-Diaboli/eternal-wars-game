@@ -128,6 +128,22 @@ internal sealed class MapSketch
     public Hero AddHero(int id, PlayerId owner, int x, int y, string roster, Army army) =>
         Hero.Create(new HeroId(id), owner, At(x, y), army, _content.Heroes.Get(roster));
 
+    /// <summary>
+    /// <paramref name="owner"/>'s start zone (MP-4, ADR-199): the <paramref name="width"/> × <paramref name="height"/> tiles from the cell given,
+    /// mirrored with the rest, so a LAN game may play the preparation day at once.
+    /// </summary>
+    public void StartZone(PlayerId owner, int x, int y, int width, int height)
+    {
+        var corner = At(x, y, width, height);
+        for (var dy = 0; dy < height; dy++)
+        {
+            for (var dx = 0; dx < width; dx++)
+            {
+                Map.SetStartZone(corner.Offset(dx, dy), owner);
+            }
+        }
+    }
+
     /// <summary>The map, with the arena switch on (ADR-158).</summary>
     public GameState BuildArena(IEnumerable<Player> players, IEnumerable<Hero> heroes)
     {

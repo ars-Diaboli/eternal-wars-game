@@ -8,7 +8,8 @@ namespace EternalWars.Core.Domain.Turns;
 /// <summary>
 /// Watches a simultaneous day (MP-2 b, ADR-197) for what one person does that concerns another, which the day played at once would hide or get
 /// wrong: a hero entering another person's start zone, a hero visiting an object another person's hero visited that day, a person seeing another
-/// person's hero it did not see when the day began. The first one is the day's conflict (<see cref="GameState.SimultaneousConflict"/>,
+/// person's hero it did not see when the day began. Allies (one team) share their land and plans, so what an ally does is no conflict (ADR-199).
+/// The first one is the day's conflict (<see cref="GameState.SimultaneousConflict"/>,
 /// <see cref="SimultaneousDayConflicted"/>): the session then refuses every command, and the LAN host plays the day again turn by turn.
 /// </summary>
 internal sealed class SimultaneousDayWatch(GameState state, IEventPublisher events)
@@ -28,7 +29,7 @@ internal sealed class SimultaneousDayWatch(GameState state, IEventPublisher even
         _inZones = InOthersZones();
     }
 
-    /// <summary>A hero visited an object: a conflict when another person's hero visited it today.</summary>
+    /// <summary>A hero visited an object: a conflict when another person's hero, not an ally's, visited it today.</summary>
     internal void Visited(HeroId hero, MapObjectId mapObject)
     {
         if (!state.IsSimultaneous || state.SimultaneousConflict is not null
@@ -37,7 +38,7 @@ internal sealed class SimultaneousDayWatch(GameState state, IEventPublisher even
             return;
         }
 
-        if (_visited.TryGetValue(mapObject, out var first) && first != visitor.Owner)
+        if (_visited.TryGetValue(mapObject, out var first) && first != visitor.Owner && !state.AreAllies(first, visitor.Owner))
         {
             var name = state.FindObject(mapObject)?.Definition.Name ?? "an object";
             Conflict($"{state.GetPlayer(visitor.Owner).Name} visited {name}, which {state.GetPlayer(first).Name} visited today.");
@@ -76,7 +77,7 @@ internal sealed class SimultaneousDayWatch(GameState state, IEventPublisher even
         events.Publish(new SimultaneousDayConflicted(reason));
     }
 
-    /// <summary>Each person and each other person's hero on the map it sees.</summary>
+    /// <summary>Each person and each other person's hero on the map it sees, allies' left out.</summary>
     private HashSet<(PlayerId, HeroId)> Seen()
     {
         var people = People.ToList();
@@ -84,12 +85,12 @@ internal sealed class SimultaneousDayWatch(GameState state, IEventPublisher even
         [
             .. from viewer in people
                from hero in state.Heroes
-               where hero.Owner != viewer && people.Contains(hero.Owner) && state.CanSee(viewer, hero)
+               where hero.Owner != viewer && people.Contains(hero.Owner) && !state.AreAllies(viewer, hero.Owner) && state.CanSee(viewer, hero)
                select (viewer, hero.Id),
         ];
     }
 
-    /// <summary>Each person's hero standing in another person's start zone, with that zone.</summary>
+    /// <summary>Each person's hero standing in another person's start zone (not an ally's), with that zone.</summary>
     private HashSet<(HeroId, PlayerId)> InOthersZones()
     {
         var people = People.ToList();
@@ -98,7 +99,7 @@ internal sealed class SimultaneousDayWatch(GameState state, IEventPublisher even
             .. from hero in state.Heroes
                where people.Contains(hero.Owner) && state.Map.Contains(hero.Position)
                let zone = state.Map.GetStartZone(hero.Position)
-               where zone is { } owner && owner != hero.Owner && people.Contains(owner)
+               where zone is { } owner && owner != hero.Owner && people.Contains(owner) && !state.AreAllies(owner, hero.Owner)
                select (hero.Id, zone!.Value),
         ];
     }
