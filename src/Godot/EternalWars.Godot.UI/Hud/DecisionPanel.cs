@@ -87,6 +87,7 @@ public partial class DecisionPanel : PanelContainer
                 {
                     var level = state.GetHero(hut.Hero).Skills.Level(skill) + 1;
                     Button($"{BuiltInSkills.Get(skill).Name} ({level})", new ChooseWitchHutSkillCommand(player, skill))
+                        .WithSkillIcon(skill)
                         .WithInfo(detailed => InfoSheets.SkillChoice(_session.State.GetHero(hut.Hero), skill, detailed));
                 }
 
@@ -112,7 +113,8 @@ public partial class DecisionPanel : PanelContainer
                     var price = Core.Domain.Objects.TrainingRules.Price(site.Rule, option);
                     if (Core.Domain.Objects.TrainingRules.Stat(option) is { } trained)
                     {
-                        Button($"+{Core.Domain.Objects.TrainingRules.StatBonus} {StatName(trained)}", new ChooseTrainingCommand(player, option));
+                        Button($"+{Core.Domain.Objects.TrainingRules.StatBonus} {StatName(trained)}", new ChooseTrainingCommand(player, option))
+                            .WithStatIcon(trained);
                     }
                     else
                     {
@@ -168,6 +170,7 @@ public partial class DecisionPanel : PanelContainer
                 {
                     var skillDefinition = BuiltInSkills.Get(skill);
                     Button($"{skillDefinition.Name} → {hero.Skills.Level(skill) + 1}", new ChooseSkillCommand(player, skill))
+                        .WithSkillIcon(skill)
                         .WithInfo(detailed => InfoSheets.SkillChoice(_session.State.GetHero(levelUp.Hero), skill, detailed));
                 }
 
