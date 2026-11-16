@@ -9,7 +9,7 @@ using EternalWars.Core.Domain.Common;
 
 namespace EternalWars.Core.Network;
 
-/// <summary>What a LAN host and its clients send each other (ADR-192, ADR-193, ADR-194): one JSON object per message, its kind in <c>"type"</c>.</summary>
+/// <summary>What a LAN host and its clients send each other (ADR-192 to ADR-195): one JSON object per message, its kind in <c>"type"</c>.</summary>
 public abstract record NetMessage;
 
 /// <summary>A client asks for a seat: the colour <paramref name="Seat"/>, or the first free one when null.</summary>
@@ -112,11 +112,17 @@ public sealed record SendCommand(int Sequence, GameCommand Command) : NetMessage
 /// <summary>The host refused the client's command number <paramref name="Sequence"/>; nothing changed.</summary>
 public sealed record CommandRefused(int Sequence, string Error) : NetMessage;
 
+/// <summary>
+/// The game is paused for everyone while a colour played on another computer has nobody to play it (ADR-195): why, in words; null when the game
+/// goes on again.
+/// </summary>
+public sealed record GamePaused(string? Reason) : NetMessage;
+
 /// <summary>Turns messages into JSON and back, with the save files' settings for the commands and records they carry.</summary>
 public static class NetSerializer
 {
     /// <summary>Raised whenever a message changes shape; a host and a client of different versions do not play together.</summary>
-    public const int ProtocolVersion = 3;
+    public const int ProtocolVersion = 4;
 
     private static readonly IReadOnlyList<(Type Type, string Name)> MessageTypes =
     [
@@ -130,6 +136,7 @@ public static class NetSerializer
         (typeof(TakeSeat), "takeSeat"),
         (typeof(ChatSay), "say"),
         (typeof(ChatLine), "chat"),
+        (typeof(GamePaused), "paused"),
     ];
 
     private static readonly JsonSerializerOptions Options = CreateOptions();

@@ -9,10 +9,11 @@ using Godot;
 namespace EternalWars.Game;
 
 /// <summary>
-/// LAN games (ADR-192, ADR-193, ADR-194): Multiplayer on the main menu lists the games found on the network and hosts or joins one. The host sets
+/// LAN games (ADR-192 to ADR-195): Multiplayer on the main menu lists the games found on the network and hosts or joins one. The host sets
 /// the game up on the new-game screen, which is its lobby: players join, take open colours and chat, and the game starts with them seated. The
 /// host runs the game and plays the computer players; a client holds only its player's view, which the host keeps up to date. The chat stays over
-/// the map during the game. <c>--host[=port]</c> opens the host's lobby, <c>--join=address[:port]</c> joins one (<c>--name=</c> names the player).
+/// the map and the battle during the game. A battle opens only on the computers of its sides, each commanding its own. While a colour has nobody
+/// to play it the game is paused for everyone (the pause panel); the host may let the computer play it. <c>--host[=port]</c> opens the host's lobby, <c>--join=address[:port]</c> joins one (<c>--name=</c> names the player).
 /// </summary>
 public partial class Main
 {
@@ -44,6 +45,9 @@ public partial class Main
 
     /// <summary>The chat over the map in a LAN game; null otherwise.</summary>
     private ChatPanel? _chat;
+
+    /// <summary>Why a LAN game is paused, over the map and the battle; null outside a LAN game.</summary>
+    private PausePanel? _pause;
 
     /// <summary>The player's name in LAN games, as last typed (or <c>--name=</c>, or the computer's user name).</summary>
     private string _playerName = LaunchArguments.PlayerName ?? System.Environment.UserName;
@@ -159,6 +163,7 @@ public partial class Main
 
         _host = lobby.StartGame(session);
         _host.ChatReceived += (from, text) => _chat?.Add(from, text);
+        _host.PauseChanged += ShowPause;
     }
 
     /// <summary>Connects to the host at <paramref name="address"/> (<c>name</c> or <c>name:port</c>), joins its lobby or its game.</summary>
@@ -216,6 +221,7 @@ public partial class Main
             }
         };
         client.CommandRefused += Tell;
+        client.PauseChanged += ShowPause;
         client.Join(_playerName);
         screen.ShowMessage($"Joining the game at {hostName}:{port}…");
     }
@@ -240,14 +246,30 @@ public partial class Main
         ],
         lobby.Waiting);
 
-    /// <summary>The chat over the map in a LAN game, at the bottom left; Enter starts writing.</summary>
+    /// <summary>
+    /// The chat over the map in a LAN game, at the bottom left (Enter starts writing), and the pause panel at the top, over the battle too.
+    /// </summary>
     private void BuildChat()
     {
         if (_host is null && _client is null)
         {
             _chat = null;
+            _pause = null;
             return;
         }
+
+        var top = new CanvasLayer { Name = "PauseLayer", Layer = 3 };
+        _game!.AddChild(top);
+        _pause = new PausePanel();
+        top.AddChild(_pause);
+        _pause.HandOverRequested += seat =>
+        {
+            if (_host?.HandToComputer(seat) is { IsAccepted: false } refused)
+            {
+                Tell(refused.Error ?? "");
+            }
+        };
+        ShowPause();
 
         var layer = new CanvasLayer { Name = "Chat", Layer = 1 };
         _game!.AddChild(layer);
@@ -270,6 +292,33 @@ public partial class Main
         };
         _chat.Add("", "Enter writes to the other players.");
     }
+
+    /// <summary>The chat at the bottom left of the map; over a battle, above the battle's log.</summary>
+    private void PlaceChat(bool battle)
+    {
+        if (_chat is not null)
+        {
+            (_chat.OffsetTop, _chat.OffsetBottom) = battle ? (-430, -250) : (-190, -40);
+        }
+    }
+
+    /// <summary>The pause panel as the game stands: why it is paused and, on the host, the colours the computer may take over.</summary>
+    private void ShowPause()
+    {
+        if (_host is not null)
+        {
+            _pause?.ShowPause(
+                _host.PauseReason,
+                [.. _host.Waiting.Select(w => new PausedColour(w.Seat, _host.Session.State.GetPlayer(w.Seat).Name))]);
+        }
+        else if (_client is not null)
+        {
+            _pause?.ShowPause(_client.Paused, []);
+        }
+    }
+
+    /// <summary>Whether the LAN game is paused for a colour nobody plays: the AI and the turn timer wait.</summary>
+    private bool IsPaused => _host?.IsPaused == true || _client?.Paused is not null;
 
     /// <summary>Once a frame: new connections, what the clients or the host have sent, the games on the network.</summary>
     private void PollNetwork(double delta)
@@ -319,7 +368,12 @@ public partial class Main
         _announcer.Info = _lobby is not null
             ? info with { Game = _lobby.Lobby.Game, OpenColours = _lobby.OpenColours, Started = false }
             : _host is not null
-                ? info with { Game = _initialMap?.Name ?? "", OpenColours = _host.RemoteSeats.Count(s => _host.PlayerAt(s) is null), Started = true }
+                ? info with
+                {
+                    Game = _initialMap?.Name ?? "",
+                    OpenColours = _host.RemoteSeats.Count(s => _host.PlayerAt(s) is null && !_host.Session.State.GetPlayer(s).IsDefeated),
+                    Started = true,
+                }
                 : info with { OpenColours = 0 };
     }
 

@@ -94,13 +94,15 @@ In priority order:
     players and no towns: a Haven and a Necropolis mage buy their armies at map dwellings); **Four Banners** (two against two, allies sharing
     a half, each half with its own combat place). Random heroes there start with the same neutral army.
   - *(planned)*: LAN.
-- **LAN multiplayer** *(before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓; network, view and lobby built: ADR-192 to ADR-194)*: the **host** runs
+- **LAN multiplayer** *(before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓; network, view, lobby, live battles and drop-outs built: ADR-192 to ADR-195)*: the **host** runs
   the game and computer players; clients send commands and get only what they may see. **Lobby**: Multiplayer lists the games found on the
   network (or an address is typed); the host sets the game up on the new-game screen, each colour played here, by a LAN player or by the
   computer; a joined player takes an open colour; the host's choices, never the seed, are shown to all; a colour nobody has joined at the
-  start waits for a player during the game; the chat stays over the map. *(planned)*: battles
-  between two remote humans are live; a dropped player pauses the game until the host hands it to the computer or the player rejoins; the
-  host's save resumes in multiplayer, a client's in single player. **Simultaneous first week** (host's choice, maps with start
+  start waits for a player during the game; the chat stays over the map and the battle. **Battles** open only on the computers of their
+  sides; between players on two computers each commands its own side live and there is no quick combat. **A player who drops out** pauses
+  the game for everyone, and so does a colour nobody has joined when its turn or its battle comes: every command waits until a player joins
+  that colour or the host lets the computer play it from then on (mid-battle too). *(planned)*: the host's save resumes in multiplayer, a
+  client's in single player. **Simultaneous first week** (host's choice, maps with start
   zones): entering another player's zone, touching an object another player touched that day, or seeing another player's hero discards that
   day for all, and it is replayed turn by turn. One turn timer for all. No internet play.
 

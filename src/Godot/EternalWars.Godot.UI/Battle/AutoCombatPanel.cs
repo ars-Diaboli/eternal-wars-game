@@ -82,7 +82,9 @@ public partial class AutoCombatPanel : CenterContainer
         }
 
         _seen = battle;
-        if (_session.Battles.AutoCombatPlayer() is not { } player)
+
+        // Only for a player at this computer; a LAN client's view cannot preview a battle (the host keeps the random numbers, ADR-193).
+        if (_session.FollowsHost || _session.Battles.AutoCombatPlayer() is not { } player || !(_view.PlaysHere?.Invoke(player) ?? true))
         {
             return;
         }

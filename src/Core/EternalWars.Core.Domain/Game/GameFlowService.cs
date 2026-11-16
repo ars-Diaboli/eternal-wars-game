@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Objects;
@@ -34,6 +35,32 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
                 events.Publish(new HeroRemoved(surplus.Id));
             }
         }
+    }
+
+    /// <summary>
+    /// The computer plays <paramref name="player"/> from now on (ADR-195). Refused for a computer player, a player that is out, and the last player
+    /// still in the game that a person plays.
+    /// </summary>
+    internal void HandToComputer(PlayerId player)
+    {
+        var who = state.GetPlayer(player);
+        if (!who.IsHuman)
+        {
+            throw new CommandRefusedException($"The computer already plays {who.Name}.");
+        }
+
+        if (who.IsDefeated)
+        {
+            throw new CommandRefusedException($"{who.Name} is out of the game.");
+        }
+
+        if (!state.Players.Any(p => p.Id != player && p.IsHuman && !p.IsDefeated))
+        {
+            throw new CommandRefusedException("A person must play at least one player.");
+        }
+
+        who.IsHuman = false;
+        events.Publish(new PlayerHandedToComputer(player));
     }
 
     internal void Begin()

@@ -91,6 +91,11 @@ public sealed class GameSession
         TownCommandHandlers.Register(_handlers, Towns, Caravans, Economy);
         ArtifactCommandHandlers.Register(_handlers, Artifacts, Armies);
         BattleCommandHandlers.Register(_handlers, Battles);
+        _handlers.Add<HandToComputerCommand>(c =>
+        {
+            Flow.HandToComputer(c.Player);
+            Battles.HandToComputer(c.Player);
+        });
     }
 
     public GameState State { get; }
@@ -257,7 +262,7 @@ public sealed class GameSession
 
     /// <summary>
     /// Who may give the command now: a battle command (<see cref="IBattleCommand"/>) whoever's turn it is while a battle is fought, the auto combat
-    /// setting at any time, everything else in the player's own turn; a hero command (<see cref="IHeroCommand"/>) only for an own hero on the map.
+    /// setting and the computer taking a player over at any time, everything else in the player's own turn; a hero command (<see cref="IHeroCommand"/>) only for an own hero on the map.
     /// </summary>
     private string? Authorize(GameCommand command)
     {
@@ -272,8 +277,8 @@ public sealed class GameSession
             return State.Battle is null ? "No battle is being fought." : null;
         }
 
-        // A player setting, changed whenever the player likes.
-        if (command is SetAutoCombatCommand)
+        // A player setting, changed whenever the player likes; the computer taking a player over, whenever the LAN host decides (ADR-195).
+        if (command is SetAutoCombatCommand or HandToComputerCommand)
         {
             return null;
         }

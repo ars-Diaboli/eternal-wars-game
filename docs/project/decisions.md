@@ -2494,3 +2494,34 @@ cannot look under its fog). *(proposal)* marks the agent's choices.
   an open colour joined later, another version, a player leaving, discovery on this computer).
 - **Not done**: each player picking their own town and hero; a host's "Play again" or load still ends the LAN game for the clients; the
   roadmap's next items (live battles between two remote humans, drop-outs, saves, the turn timer, arena maps in the lobby).
+
+### ADR-195: LAN battles fought live between two computers; a player who drops out pauses the game (MP-1, ADR-098, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16), the roadmap's live battles and drop-outs. *(proposal)* marks the agent's choices.
+
+- **Battles between two computers**: a battle opens only on the computers of its sides (a third player, the host's included, sees its
+  result on the map); each player commands only their own side, and their screen says when the other side's player is to act ("Red plays on
+  another computer: waiting for their move"). The host sends every battle event to both sides as it happens (ADR-193), so each sees the
+  other's moves live. One computer (hot-seat) is unchanged.
+- **No quick combat between two computers** *(proposal)*: either side's player could otherwise end the other's battle with the AI; the host
+  refuses it, and the button and Q are off. Auto combat's question (ADR-090) is asked only on the computer of the player it concerns, and not
+  on a client (its view lacks the random numbers a preview needs).
+- **A player who drops out** (MP-1 f): the game pauses for everyone. Every command is refused (the host's player's, the clients', the AI's,
+  the turn timer's) and the pause panel says why. It ends when a player joins that colour (the first free colour a joining player gets is a
+  dropped one; the game is listed as playing with an open colour) or when the host presses "Computer plays Red": the colour becomes a
+  computer player for the rest of the game, its battle side too if it is fighting one (the AI plays its units from the one that is to act,
+  and chooses a width or ends a deployment it was to make). The chat goes on during the pause.
+- **A colour nobody has joined** *(proposal)*: one left open at the start (ADR-194) pauses the game the same way when its turn or its
+  battle comes, so the host can let the computer play it too.
+- **The handover is a command**: `HandToComputerCommand` (the player), allowed at any time like the auto combat setting; refused for a
+  computer player, a player that is out, and the last player a person plays; logged, so saves and replays keep it. Only the host gives it: a
+  client's is refused. Event `PlayerHandedToComputer`, which every player sees.
+- **Wire**: protocol 4; new message `paused` (why, or nothing when the game goes on).
+- **Code**: Domain `HandToComputerCommand`, `GameFlowService.HandToComputer`, `BattleCommandHandler.HandToComputer`, `PlayerHandedToComputer`;
+  `BattleState.Attacker` / `Defender` settable inside the domain. Core.Network `GameHost.Waiting`, `IsPaused`, `PauseReason`, `PauseChanged`,
+  `HandToComputer`, `GamePaused`; `GameClient.Paused`, `PauseChanged`. Godot `BattleView3D.PlaysHere`, `WaitingFor`, `QuickCombatPlayer`;
+  Godot.UI `PausePanel`; the battle HUD, input, decision panel and auto combat follow them. The game app: the AI and the turn timer wait
+  during a pause; the host's AI waits for a battle it does not show; the chat stays over the battle, above its log. Tests `LivePlayTests` (a
+  battle fought live from both computers, a drop-out paused until a rejoin, the computer taking over a colour, mid-battle, an open colour at
+  its turn, the handover's refusals); `LanGameTests` checks that quick combat is refused between two computers.
+- **Not done**: the turn timer still runs on each computer (its roadmap item); anyone may take a dropped colour, not only the player who
+  left it; a colour the computer took over does not go back to a person.

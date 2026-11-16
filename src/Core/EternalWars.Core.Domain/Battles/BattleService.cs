@@ -111,6 +111,9 @@ public sealed class BattleService
     /// <inheritdoc cref="BattleCommandHandler.Surrender"/>
     internal void Surrender(PlayerId player) => _commands.Surrender(player);
 
+    /// <inheritdoc cref="BattleCommandHandler.HandToComputer"/>
+    internal void HandToComputer(PlayerId player) => _commands.HandToComputer(player);
+
     /// <inheritdoc cref="BattleCommandHandler.AutoResolve"/>
     internal void AutoResolve(PlayerId player) => _commands.AutoResolve(player);
 

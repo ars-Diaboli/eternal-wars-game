@@ -250,8 +250,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       its result (MP-3, ADR-099)
 - [x] Lobby (ADR-194): LAN discovery and typing an address, map or random map with its options (ADR-086), colours, computer players;
       text chat (MP-1). The simultaneous first week's switch is shown, off, until that item
-- [ ] Battles between two remote humans, each side live; a player who drops out (pause, the host lets the computer take over or waits
-      for a rejoin) (MP-1)
+- [x] Battles between two remote humans, each side live (ADR-195); a player who drops out (pause, the host lets the computer take over or
+      waits for a rejoin) (MP-1)
 - [ ] Saves: the host's save loads in multiplayer, single player or hot-seat; a client's save (the whole record, sent by the host)
       loads in single player; replays are the host's record (MP-3, ADR-099)
 - [ ] Start zones in the map: the generator writes them, the editor paints them, validator (touching, overlapping, no start town);

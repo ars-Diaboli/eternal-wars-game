@@ -31,9 +31,9 @@ namespace EternalWars.Core.Network;
 /// </summary>
 internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
 {
-    /// <summary>Events everyone sees, whoever they name: the turn order, who is out.</summary>
+    /// <summary>Events everyone sees, whoever they name: the turn order, who is out, who the computer took over.</summary>
     private static readonly HashSet<Type> PublicEvents =
-        [typeof(TurnStarted), typeof(TurnEnded), typeof(PlayerDefeated), typeof(GracePeriodStarted), typeof(GracePeriodEnded)];
+        [typeof(TurnStarted), typeof(TurnEnded), typeof(PlayerDefeated), typeof(GracePeriodStarted), typeof(GracePeriodEnded), typeof(PlayerHandedToComputer)];
 
     /// <summary>Events that name an owner but are about a hero others may see: they follow the hero.</summary>
     private static readonly HashSet<Type> HeroEvents =

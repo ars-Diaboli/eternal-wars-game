@@ -13,6 +13,12 @@ namespace EternalWars.Core.Network;
 /// <see cref="PlayerViewFeed"/>): what changed in it and the events it may see, once a <see cref="Poll"/>. The host's own player and the computer
 /// players play here as in a game on one computer; a remote colour's command given here is refused. The players write to each other in the chat
 /// (<see cref="Say"/>, <see cref="ChatReceived"/>). A game set up in the lobby (<see cref="LobbyHost"/>) starts with the clients already seated.
+/// <para>
+/// Live play between computers (ADR-195): a battle between players on two computers is fought by hand, each side from its own computer (no quick
+/// combat). While a remote colour has nobody to play it and holds the game up (its player left, or it is its turn or its battle and nobody has
+/// joined it), the game is paused for everyone (<see cref="Waiting"/>): every command is refused until a player joins that colour or the host
+/// lets the computer play it (<see cref="HandToComputer"/>).
+/// </para>
 /// </summary>
 /// <remarks>Everything happens on the caller's thread in <see cref="Poll"/> (the game app calls it once a frame).</remarks>
 public sealed class GameHost : ICommandRoute, IDisposable
@@ -22,8 +28,17 @@ public sealed class GameHost : ICommandRoute, IDisposable
     private readonly List<Peer> _peers = [];
     private readonly IDisposable _subscription;
 
+    /// <summary>The colours whose player left during the game, with why, until a player joins them again or the computer takes them over.</summary>
+    private readonly Dictionary<PlayerId, string> _dropped = [];
+
     /// <summary>Set while a client's command runs: the route lets that one through.</summary>
     private bool _runningRemote;
+
+    /// <summary>Set while the host hands a colour to the computer: the route lets that command through the pause.</summary>
+    private bool _handingOver;
+
+    /// <summary>The pause as the clients were last told it.</summary>
+    private string? _pauseSent;
 
     /// <summary>Who fights the current battle, or fought the last one: they see its events.</summary>
     private IReadOnlyCollection<PlayerId> _battleSides = [];
@@ -54,6 +69,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>A client's link went down (the colour, the player's name, why); the colour is free to join again.</summary>
     public event Action<PlayerId, string, string>? Left;
 
+    /// <summary>The game was paused or goes on again (<see cref="Waiting"/>).</summary>
+    public event Action? PauseChanged;
+
     /// <summary>A line of the chat (who wrote it, empty for the game's own lines; the text), the host's own included.</summary>
     public event Action<string, string>? ChatReceived;
 
@@ -71,6 +89,87 @@ public sealed class GameHost : ICommandRoute, IDisposable
 
     /// <summary>The name of the client playing <paramref name="seat"/>; null while nobody has joined it.</summary>
     public string? PlayerAt(PlayerId seat) => _peers.FirstOrDefault(p => p.Seat == seat)?.Name;
+
+    /// <summary>
+    /// The remote colours that hold the game up, with why: those whose player left, and one nobody has joined whose turn it is or that fights the
+    /// battle. The game is paused while there is one.
+    /// </summary>
+    public IReadOnlyList<(PlayerId Seat, string Reason)> Waiting
+    {
+        get
+        {
+            var state = _session.State;
+            if (!state.IsStarted || state.IsOver)
+            {
+                return [];
+            }
+
+            var sides = state.Battle is { } battle
+                ? new[] { battle.Attacker, battle.Defender }.Where(p => !p.IsComputer).Select(p => p.Owner).ToList()
+                : [];
+            var waiting = new List<(PlayerId, string)>();
+            foreach (var seat in _remoteSeats.Where(s => PlayerAt(s) is null && !state.GetPlayer(s).IsDefeated))
+            {
+                if (_dropped.TryGetValue(seat, out var left))
+                {
+                    waiting.Add((seat, left));
+                }
+                else if (state.CurrentPlayer.Id == seat || sides.Contains(seat))
+                {
+                    waiting.Add((seat, $"Nobody plays {state.GetPlayer(seat).Name} yet."));
+                }
+            }
+
+            return waiting;
+        }
+    }
+
+    /// <summary>Whether the game is paused for a colour without a player (<see cref="Waiting"/>).</summary>
+    public bool IsPaused => Waiting.Count > 0;
+
+    /// <summary>Why the game is paused, in words, as the players see it; null while it goes on.</summary>
+    public string? PauseReason => Waiting is { Count: > 0 } waiting
+        ? $"{string.Join(" ", waiting.Select(w => w.Reason))} The game waits for a player to join "
+          + $"{string.Join(", ", waiting.Select(w => _session.State.GetPlayer(w.Seat).Name))}, or for the host to let the computer play it."
+        : null;
+
+    /// <summary>
+    /// The computer plays <paramref name="seat"/>, a remote colour nobody plays now, from here on (ADR-195): it is no longer open to join, and the
+    /// game goes on if it was waiting only for it.
+    /// </summary>
+    public CommandResult HandToComputer(PlayerId seat)
+    {
+        if (!IsRemote(seat))
+        {
+            return CommandResult.Rejected($"{_session.State.GetPlayer(seat).Name} is not played on another computer.");
+        }
+
+        if (PlayerAt(seat) is { } name)
+        {
+            return CommandResult.Rejected($"{name} plays {_session.State.GetPlayer(seat).Name}.");
+        }
+
+        CommandResult result;
+        _handingOver = true;
+        try
+        {
+            result = _session.Execute(new HandToComputerCommand(seat));
+        }
+        finally
+        {
+            _handingOver = false;
+        }
+
+        if (result.IsAccepted)
+        {
+            _remoteSeats.Remove(seat);
+            _dropped.Remove(seat);
+            Tell("", $"The computer plays {_session.State.GetPlayer(seat).Name}.");
+            SendPause();
+        }
+
+        return result;
+    }
 
     /// <summary>Takes a new link; it gets a seat once its <see cref="JoinRequest"/> arrives.</summary>
     public void Accept(INetConnection connection) => _peers.Add(new Peer(connection));
@@ -121,20 +220,48 @@ public sealed class GameHost : ICommandRoute, IDisposable
                 if (peer is { Seat: { } seat, Feed: not null })
                 {
                     var why = peer.Connection.CloseReason ?? "The connection closed.";
-                    Tell("", $"{peer.Name} ({_session.State.GetPlayer(seat).Name}) left the game: {why}");
+                    var line = $"{peer.Name} ({_session.State.GetPlayer(seat).Name}) left the game: {why.TrimEnd('.')}.";
+                    _dropped[seat] = line;
+                    Tell("", line);
                     Left?.Invoke(seat, peer.Name, why);
                 }
             }
         }
 
         SendViews();
+        SendPause();
     }
 
-    /// <summary>Refuses a remote colour's command given on this computer; a client's own command, run by <see cref="Poll"/>, goes through.</summary>
-    public CommandResult? Route(GameCommand command) =>
-        !_runningRemote && IsRemote(command.Player)
+    /// <summary>
+    /// Refuses a remote colour's command given on this computer (a client's own command, run by <see cref="Poll"/>, goes through), every command
+    /// while the game is paused, and quick combat in a battle between players on two computers.
+    /// </summary>
+    public CommandResult? Route(GameCommand command)
+    {
+        if (_handingOver)
+        {
+            return null;
+        }
+
+        if (Waiting is { Count: > 0 } waiting)
+        {
+            return CommandResult.Rejected($"The game is paused: waiting for {string.Join(", ", waiting.Select(w => _session.State.GetPlayer(w.Seat).Name))}.");
+        }
+
+        if (command is AutoResolveBattleCommand && IsFoughtBetweenComputers())
+        {
+            return CommandResult.Rejected("A battle between players on two computers is fought by hand, each side by its own player.");
+        }
+
+        return !_runningRemote && IsRemote(command.Player)
             ? CommandResult.Rejected($"{_session.State.GetPlayer(command.Player).Name} plays on another computer.")
             : null;
+    }
+
+    /// <summary>Whether people on two computers command the two sides of the battle being fought.</summary>
+    private bool IsFoughtBetweenComputers() =>
+        _session.State.Battle is { Attacker: { IsComputer: false, Owner: { } attacker }, Defender: { IsComputer: false, Owner: { } defender } }
+        && (IsRemote(attacker) || IsRemote(defender));
 
     public void Dispose()
     {
@@ -186,7 +313,11 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return;
         }
 
-        var free = _remoteSeats.Where(s => PlayerAt(s) is null).ToList();
+        // A colour whose player left comes first: the game waits for it.
+        var free = _remoteSeats
+            .Where(s => PlayerAt(s) is null && !(_session.State.IsStarted && _session.State.GetPlayer(s).IsDefeated))
+            .OrderBy(s => _dropped.ContainsKey(s) ? 0 : 1)
+            .ToList();
         PlayerId? seat = request.Seat is { } wanted ? (free.Contains(wanted) ? wanted : null) : free.Count > 0 ? free[0] : null;
         if (seat is not { } taken)
         {
@@ -215,6 +346,12 @@ public sealed class GameHost : ICommandRoute, IDisposable
             codec.Write(state.Options with { Seed = 0 })!,
             codec.Write(state.Rules)!));
         peer.Connection.Send(feed.First());
+        if (_pauseSent is { } paused)
+        {
+            peer.Connection.Send(new GamePaused(paused)); // the next Poll tells everyone when this join ends it
+        }
+
+        _dropped.Remove(taken);
         Tell("", $"{name} plays {state.GetPlayer(taken).Name}.");
         Joined?.Invoke(taken, name);
     }
@@ -241,6 +378,12 @@ public sealed class GameHost : ICommandRoute, IDisposable
         if (send.Command.Player != seat)
         {
             peer.Connection.Send(new CommandRefused(send.Sequence, $"You play {_session.State.GetPlayer(seat).Name}."));
+            return;
+        }
+
+        if (send.Command is HandToComputerCommand)
+        {
+            peer.Connection.Send(new CommandRefused(send.Sequence, "Only the host lets the computer play a colour."));
             return;
         }
 
@@ -273,6 +416,24 @@ public sealed class GameHost : ICommandRoute, IDisposable
         {
             peer.Feed?.Capture(e, _battleSides);
         }
+    }
+
+    /// <summary>Tells the clients, and the host's screen, when the game is paused or goes on again.</summary>
+    private void SendPause()
+    {
+        var reason = PauseReason;
+        if (reason == _pauseSent)
+        {
+            return;
+        }
+
+        _pauseSent = reason;
+        foreach (var peer in _peers.Where(p => p.Feed is not null && !p.Connection.IsClosed))
+        {
+            peer.Connection.Send(new GamePaused(reason));
+        }
+
+        PauseChanged?.Invoke();
     }
 
     /// <summary>Sends each seated client what changed in its view since its last update.</summary>

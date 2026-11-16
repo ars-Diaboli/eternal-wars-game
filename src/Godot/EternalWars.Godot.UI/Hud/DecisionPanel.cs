@@ -6,6 +6,7 @@ using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Info;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
@@ -192,14 +193,20 @@ public partial class DecisionPanel : PanelContainer
 
     private void ShowBattle(BattleState battle)
     {
-        var commander = _session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender);
-        if (battle.Phase == BattlePhase.ChoosingWidth && battle.WidthChooser is { } side && _session.Battles.Commander(side) is { } chooser)
+        var commander = BattleView3D.QuickCombatOf(_session, _playsHere);
+        if (battle.Phase == BattlePhase.ChoosingWidth && battle.WidthChooser is { } side && _session.Battles.Commander(side) is { } chooser && _playsHere(chooser))
         {
             _prompt.Text = "Your Tactics lets you choose the battlefield width:";
             foreach (var width in battle.WidthOptions)
             {
                 Button(width.ToString(), new ChooseBattleWidthCommand(chooser, width));
             }
+        }
+        else if (new[] { BattleSide.Attacker, BattleSide.Defender }.Select(_session.Battles.Commander).OfType<Core.Domain.Common.PlayerId>().ToList()
+                 is { Count: > 0 } people && !people.Any(_playsHere))
+        {
+            // A LAN battle of other computers (ADR-195): its players fight it; this screen only waits.
+            _prompt.Text = $"{string.Join(" and ", people.Select(p => _session.State.GetPlayer(p).Name))} fight a battle on another computer.";
         }
         else
         {

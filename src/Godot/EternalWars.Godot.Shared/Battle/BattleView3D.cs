@@ -101,17 +101,55 @@ public partial class BattleView3D : Node3D
 
     public Camera3D Camera => _camera;
 
-    /// <summary>Who may act now: the commander of the active unit once the view has caught up, else null.</summary>
+    /// <summary>
+    /// A LAN game (ADR-195): whether a person commands their side at this computer. Only battles with a side commanded here open, and only those
+    /// sides are commanded from this view. Null on one computer, where every person's side is.
+    /// </summary>
+    public Func<PlayerId, bool>? PlaysHere { get; set; }
+
+    /// <summary>Who may act now: the commander of the active unit once the view has caught up, if they play here; else null.</summary>
     public PlayerId? Commander =>
         !Watching && IsOpen && !IsBusy && Result is null && _session.State.Battle is { Phase: BattlePhase.Fighting, ActiveUnit: { } active }
-            ? _session.Battles.Commander(active.Side)
+        && _session.Battles.Commander(active.Side) is { } commander && Here(commander)
+            ? commander
             : null;
 
-    /// <summary>Who places stacks now: the deployer's commander during the deployment step once the view has caught up, else null.</summary>
+    /// <summary>The commander of the active unit when they play on another computer (the view waits for their move); else null.</summary>
+    public PlayerId? WaitingFor =>
+        !Watching && IsOpen && Result is null && _session.State.Battle is { Phase: BattlePhase.Fighting or BattlePhase.Deploying } battle
+        && (battle.Phase == BattlePhase.Deploying ? battle.Deployer : battle.ActiveUnit?.Side) is { } side
+        && _session.Battles.Commander(side) is { } commander && !Here(commander)
+            ? commander
+            : null;
+
+    /// <summary>Who places stacks now: the deployer's commander during the deployment step once the view has caught up, if they play here; else null.</summary>
     public PlayerId? Deployer =>
         !Watching && IsOpen && !IsBusy && Result is null && _session.State.Battle is { Phase: BattlePhase.Deploying, Deployer: { } side }
-            ? _session.Battles.Commander(side)
+        && _session.Battles.Commander(side) is { } commander && Here(commander)
+            ? commander
             : null;
+
+    /// <summary>
+    /// Who may hand the battle to quick combat: a person commanding a side here, when no side is commanded on another computer (a battle between
+    /// two computers is fought by hand, ADR-195); else null.
+    /// </summary>
+    public PlayerId? QuickCombatPlayer => Watching || Result is not null ? null : QuickCombatOf(_session, PlaysHere);
+
+    /// <summary>
+    /// <see cref="QuickCombatPlayer"/> for any screen of <paramref name="session"/>: the first side's commander, when every person commanding a side
+    /// plays here (<paramref name="playsHere"/>, null on one computer).
+    /// </summary>
+    public static PlayerId? QuickCombatOf(GameSession session, Func<PlayerId, bool>? playsHere)
+    {
+        var commanders = new[] { BattleSide.Attacker, BattleSide.Defender }.Select(session.Battles.Commander).OfType<PlayerId>().ToList();
+        return session.State.Battle is not null && commanders.Count > 0 && commanders.All(p => playsHere?.Invoke(p) ?? true) ? commanders[0] : null;
+    }
+
+    private bool Here(PlayerId player) => PlaysHere?.Invoke(player) ?? true;
+
+    /// <summary>Whether this computer shows <paramref name="battle"/>: always on one computer; in a LAN game, when a person here commands a side.</summary>
+    private bool Shows(BattleState battle) =>
+        PlaysHere is null || new[] { battle.Attacker, battle.Defender }.Any(p => !p.IsComputer && p.Owner is { } owner && Here(owner));
 
     /// <summary>The stack picked for placing during the deployment step.</summary>
     public int? Picked { get; private set; }
@@ -344,11 +382,15 @@ public partial class BattleView3D : Node3D
 
     private void Open(BattleStarted e)
     {
-        _queue.Reset();
-        Clear();
-
         var state = _session.State;
         var battle = state.Battle!;
+        if (!Watching && !Shows(battle))
+        {
+            return; // another computer's battle (ADR-195): its players see it, the others only its result on the map
+        }
+
+        _queue.Reset();
+        Clear();
         IsOpen = true;
         Result = null;
         _width = e.Width;
