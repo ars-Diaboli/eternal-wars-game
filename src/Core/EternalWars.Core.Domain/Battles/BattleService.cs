@@ -57,6 +57,16 @@ public sealed class BattleService
         set => _flow.AiMayRetreat = value;
     }
 
+    /// <summary>
+    /// The battle AI's level for each side (ADR-188). The game plays <see cref="BattleAiLevel.Latest"/>; <c>sim ai</c> sets an earlier level for one
+    /// side to measure a step against the one before it. Not part of the game state.
+    /// </summary>
+    public (BattleAiLevel Attacker, BattleAiLevel Defender) AiLevels
+    {
+        get => _flow.AiLevels;
+        set => _flow.AiLevels = value;
+    }
+
     internal void BeginHeroBattle(Hero attacker, Hero defender, bool isAmbush) => _starter.BeginHeroBattle(attacker, defender, isAmbush);
 
     /// <inheritdoc cref="BattleStarter.BeginArenaBattle"/>

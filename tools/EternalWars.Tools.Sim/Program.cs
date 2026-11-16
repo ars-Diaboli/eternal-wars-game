@@ -33,6 +33,7 @@ namespace EternalWars.Tools.Sim;
 /// sim game --template duel|file.ewtemplate.json [--size N] [--players N] [...]  (the same on a map generated per run, random towns)
 /// sim maps [--template name] [--maps 3] [--days 14] [--seed 1]  (CI: generates maps of every shipped template and checks they are playable)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
+/// sim ai [--runs 8] [--upgraded] [--level L]  (the battle AI's level L against the level before it, ADR-188; one-week town armies)
 /// sim creatures [--write table.csv]  (per-line weekly power against the tier median; optionally rewrite the table)
 /// sim lines [--runs 4] [--upgraded]  (every creature line against the other lines of its tier, one week each)
 /// sim layout duel|file.ewtemplate.json [--size 96] [--seed 1] [--rects] [--terrain] [--seeds N]  (zone layout, or with --terrain the painted terrain with walls, of a random map template as text)
@@ -71,6 +72,7 @@ public static class Program
                 ["game", .. var rest] => Game(GameMaker(rest), Option(rest, "--days", 40), (ulong)Option(rest, "--seed", 1), Option(rest, "--runs", 1), OptionText(rest, "--record")),
                 ["maps", .. var rest] => Maps(OptionText(rest, "--template"), Option(rest, "--maps", 3), Option(rest, "--days", 14), (ulong)Option(rest, "--seed", 1)),
                 ["towns", .. var rest] => Towns(Option(rest, "--runs", 32), rest.Contains("--upgraded")),
+                ["ai", .. var rest] => Ai(Option(rest, "--runs", 8), rest.Contains("--upgraded"), (BattleAiLevel)Option(rest, "--level", (int)BattleAiLevel.Latest)),
                 ["creatures", "--write", var path] => WriteTable(path),
                 ["creatures"] => Creatures(),
                 ["lines", .. var rest] => Lines(Option(rest, "--runs", 4), rest.Contains("--upgraded")),
@@ -256,7 +258,7 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
@@ -288,7 +290,7 @@ public static class Program
         return 0;
     }
 
-    private static (BattleEnded Ended, int Rounds) FightOnce(Army attacker, Army defender, ulong seed)
+    private static (BattleEnded Ended, int Rounds) FightOnce(Army attacker, Army defender, ulong seed, (BattleAiLevel, BattleAiLevel)? levels = null)
     {
         var map = new AdventureMap(3, 1);
         var players = new[] { new Player(new PlayerId(0), "Attacker", isHuman: false), new Player(new PlayerId(1), "Defender", isHuman: false) };
@@ -302,6 +304,7 @@ public static class Program
         var rounds = 0;
         session.Events.Subscribe<BattleEnded>(e => ended = e);
         session.Events.Subscribe<BattleRoundStarted>(e => rounds = e.Round);
+        session.Battles.AiLevels = levels ?? (BattleAiLevel.Latest, BattleAiLevel.Latest);
         session.Start();
         session.Execute(new StepHeroCommand(players[0].Id, heroes[0].Id, Direction.East)).ThrowIfRejected();
         return (ended ?? throw new InvalidOperationException("The battle did not finish."), rounds);
@@ -356,6 +359,51 @@ public static class Program
         return 0;
 
         static long Power(Army army) => army.Stacks.Sum(s => (long)s.Stack.Count * Catalog.Get(s.Stack.Creature).FightValue);
+    }
+
+    /// <summary>
+    /// The battle AI's <paramref name="level"/> against the level before it (ADR-188): every playable town's one-week army (the four builds in
+    /// turn) against every town's, itself included, from both sides, <paramref name="runs"/> seeds a pairing. The newer level commands the row
+    /// town. Prints its win rate per row, in the mirror matches and overall; 50 % means the step changes nothing.
+    /// </summary>
+    private static int Ai(int runs, bool upgraded, BattleAiLevel level)
+    {
+        if (level <= BattleAiLevel.Greedy || level > BattleAiLevel.Latest)
+        {
+            throw new FormatException($"--level is {(int)BattleAiLevel.Greedy + 1}–{(int)BattleAiLevel.Latest} (the level measured against the one before it).");
+        }
+
+        var previous = level - 1;
+        var builds = PlayableTowns.ToDictionary(t => t, t => WeekArmies(t, upgraded));
+        Console.WriteLine($"Win rate of {level} (row town) over {previous} (column town), {runs} battles a side, {(upgraded ? "upgraded" : "base")} one-week armies");
+        Console.WriteLine("".PadRight(16) + string.Concat(PlayableTowns.Select(t => t[..Math.Min(7, t.Length)].PadLeft(8))) + "   total");
+        var (total, mirror) = (0, 0);
+        foreach (var row in PlayableTowns)
+        {
+            var wins = 0;
+            var line = row.PadRight(16);
+            foreach (var column in PlayableTowns)
+            {
+                var won = 0;
+                for (var run = 0; run < runs; run++)
+                {
+                    var (mine, theirs) = (builds[row][run % 4], builds[column][run / 4 % 4]);
+                    won += FightOnce(mine, theirs, (ulong)run, (level, previous)).Ended.Winner == BattleSide.Attacker ? 1 : 0;
+                    won += FightOnce(theirs, mine, (ulong)(run + 1000), (previous, level)).Ended.Winner == BattleSide.Defender ? 1 : 0;
+                }
+
+                wins += won;
+                mirror += row == column ? won : 0;
+                line += $"{100 * won / (2 * runs)}%".PadLeft(8);
+            }
+
+            total += wins;
+            Console.WriteLine(line + $"{100 * wins / (2 * runs * PlayableTowns.Length)}%".PadLeft(8));
+        }
+
+        Console.WriteLine($"{level} won {100.0 * total / (2 * runs * PlayableTowns.Length * PlayableTowns.Length):0.#} % overall, " +
+                          $"{100.0 * mirror / (2 * runs * PlayableTowns.Length):0.#} % of the mirror matches");
+        return 0;
     }
 
     /// <summary>

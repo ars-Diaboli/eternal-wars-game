@@ -155,8 +155,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ### Combat additions
 - [x] Fight Value per creature (`creatures.csv`, placeholders from today's formula), read by the battle AI for the most dangerous stacks (ADR-187)
-- [ ] A cleverer battle AI, step by step (ADR-188): focus fire on the biggest threat (Fight Value × count) and finish off stacks; avoid
-      retaliation; then protect shooters and wait when outranged; later spells a round ahead and sieges
+- [x] A cleverer battle AI, step (a): focus fire on the biggest threat (Fight Value × count) and finish off stacks; `sim ai` measures
+      each step against the one before (ADR-188; about even with the greedy AI)
+- [ ] A cleverer battle AI, the next steps (ADR-188): avoid retaliation; then protect shooters and wait when outranged; later spells a
+      round ahead and sieges
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges
       (ADR-106, ADR-109, ADR-113, ADR-120), circular battle movement (ADR-089)
 - [x] Sieges: the town's own look on the siege field (ADR-144)

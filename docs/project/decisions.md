@@ -2275,8 +2275,8 @@ fill-ins. The rest of the note ("a cleverer battle AI") is ADR-188.
 - Not a map or save format change; the content table gains a column (other content changes the replay digest, as any table change does).
 
 ### ADR-188: CMB-13 answered: a cleverer battle AI, in steps (ADR-187, 2026-11-16)
-**Status**: accepted (2026-11-16), not built. The owner's answer: a stack's **Fight Value × its count** is the measure to use where it
-fits; the proposals for the rest.
+**Status**: accepted (2026-11-16); step (a) built (2026-11-16, `BattleAiLevel.FocusFire`), the rest not built. The owner's answer: a
+stack's **Fight Value × its count** is the measure to use where it fits; the proposals for the rest.
 
 - **The measure**: a stack's threat is its Fight Value (ADR-187) × the creatures in it, so a big stack of weak creatures can outrank a few
   strong ones. It is used where the AI asks "which stack matters most": the target to focus, the stack to block or keep away from, whom a
@@ -2288,3 +2288,14 @@ fits; the proposals for the rest.
   instead of always closing in; later (e) spells weighed a whole round ahead (a buff before its strongest stack moves, a mass spell over
   several stacks) and (f) sieges (the gate or a breach together, shooters on the walls).
 - **Checked** with `sim battle` win rates against the AI before each step; the AI stays deterministic (`GameState.Random` only).
+- **Built, step (a)**: `BattleAiLevel` names the steps (`Greedy` is the AI before this ADR, `FocusFire` step (a); the game plays `Latest`), and
+  `BattleService.AiLevels` sets one per side, outside the game state. A shot or blow scores what the greedy AI scored (the Fight Value of the
+  hit points it takes off), plus that much again × the target's threat ÷ the biggest threat on the field; a blow expected to destroy the stack
+  adds its whole threat. A stack's threat is Fight Value × count, ×1.25 while it can shoot unhindered or has casts left *(proposal)*. Walking
+  still heads for the nearest enemy.
+- **Measured** with `sim ai` (every playable town's one-week army against every town's, both sides, the new level on one side and the old
+  on the other; 32 battles a side): `FocusFire` wins 50.5 % overall and 53.9 % of the mirror matches with base armies, 50 % and 51.2 % with
+  upgraded ones, about even with `Greedy`: the greedy score already weighs each hit point by its Fight Value, so the threat weighting and the
+  finishing bonus change few choices. Variants (no threat weighting, a larger finishing bonus, a bonus for stacks still to act this round,
+  walking at the biggest threat within reach) all stayed within 48–52 %; a sanity run that picks the worst target wins 16 %. Larger gains are
+  expected from (d) avoiding retaliation, which the AI does not weigh at all yet.

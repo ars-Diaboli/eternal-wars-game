@@ -167,5 +167,9 @@ ADR-099, ADR-106, built ADR-109 and ADR-120 (CMB-11). Numbers are placeholders; 
   computer players and neutrals. The battle AI plays a copy for both sides and shows the outcome (casualties, experience, raised undead,
   artifacts). **Accept** ends the battle exactly so; **Fight** plays it by hand from where it stands, re-rolling nothing.
 - **Quick combat**: either side may hand the rest of a battle to the deterministic battle AI; neutrals and computer players always use it.
+- **The battle AI's targets** (ADR-188): each unit shoots, else hits, the enemy stack that scores best, else walks at the nearest enemy, else
+  defends. A blow scores the Fight Value of the hit points it is expected to take off, counted up to twice by the target's **threat** (Fight
+  Value × count, +25 % while it can shoot unhindered or still has casts) against the biggest threat on the field; a blow expected to destroy
+  the stack adds that stack's whole threat. The AI grows in steps (`BattleAiLevel`); `sim ai` measures each step against the one before it.
 - **Health bars** (ADR-118, ADR-145): each stack shows a bar under its count, the top creature's hit points against its full health: green
   over 50 %, yellow 21–50 %, red 20 % and below.
