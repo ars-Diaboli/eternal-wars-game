@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Network;
@@ -49,6 +50,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
 
     /// <summary>The pause as the clients were last told it.</summary>
     private string? _pauseSent;
+
+    /// <summary>The turn clock last sent to the clients.</summary>
+    private TurnClock? _clockSent;
 
     /// <summary>Who fights the current battle, or fought the last one: they see its events.</summary>
     private IReadOnlyCollection<PlayerId> _battleSides = [];
@@ -191,6 +195,38 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Runs a command this computer gives for any colour, a remote one too: the turn timer's defaults and ends of turns (ADR-198), as the one
+    /// clock of the game. Refused like any other while the game is paused.
+    /// </summary>
+    public CommandResult ExecuteAsHost(GameCommand command)
+    {
+        _runningRemote = true;
+        try
+        {
+            return _session.Execute(command);
+        }
+        finally
+        {
+            _runningRemote = false;
+        }
+    }
+
+    /// <summary>Sends the host's turn clock to the clients when it has changed (ADR-198); a client that joins gets it with the game.</summary>
+    public void ShowClock(TurnClock clock)
+    {
+        if (clock == _clockSent)
+        {
+            return;
+        }
+
+        _clockSent = clock;
+        foreach (var peer in _peers.Where(p => p.Feed is not null && !p.Connection.IsClosed))
+        {
+            peer.Connection.Send(new ClockUpdate(clock));
+        }
     }
 
     /// <summary>Takes a new link; it gets a seat once its <see cref="JoinRequest"/> arrives.</summary>
@@ -423,6 +459,10 @@ public sealed class GameHost : ICommandRoute, IDisposable
             codec.Write(state.Options with { Seed = 0 })!,
             codec.Write(state.Rules)!));
         peer.Connection.Send(feed.First());
+        if (_clockSent is { } clock)
+        {
+            peer.Connection.Send(new ClockUpdate(clock));
+        }
     }
 
     /// <summary>The answer to a client's request for the game's record.</summary>

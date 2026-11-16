@@ -70,6 +70,9 @@ public partial class Main : Node3D
     private AutoCombatPanel? _autoCombat;
     private TurnTimer? _timer;
     private TurnTimerPanel? _timerPanel;
+
+    /// <summary>The seconds left on the host's clock last shown on a client, for its warnings.</summary>
+    private int? _clockShown;
     private GameResultPanel _result = null!;
 
     /// <summary>The session last put into the ranking, so a game is entered once.</summary>
@@ -242,13 +245,28 @@ public partial class Main : Node3D
         var showing = ShowingComputerMoves;
         if (_timer is not null && _timerPanel is not null)
         {
+            // This computer's screens hold the end of a turn played here; a LAN host ends a client's turn whatever it shows (ADR-198).
             var paused = IsPaused; // a LAN game waiting for a colour nobody plays (ADR-195)
-            if (_timer.Tick(showing || paused ? 0 : delta, canEnd: !showing && !paused && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true) is { } warning)
+            var screensOpen = _menu.Visible || _battle.IsOpen || _autoCombat?.Visible == true;
+            var canEnd = !showing && !paused && (!screensOpen || !_timer.TimedPlayers.Any(PlaysHere));
+            if (_timer.Tick(showing || paused ? 0 : delta, canEnd) is { } warning)
             {
                 _timerPanel.Warn(warning);
             }
 
             _timerPanel.ShowTime(_timer.SecondsLeft, _timer.IsStopped, _timer.IsUp, delta);
+            _host?.ShowClock(_timer.Clock);
+        }
+        else if (_client?.Clock is { } clock && _timerPanel is not null)
+        {
+            // A client shows the host's clock, the one clock of the game (ADR-198).
+            if (_clockShown is { } before && clock.SecondsLeft is { } left && TurnTimer.WarningPassed(before, left) is { } warning)
+            {
+                _timerPanel.Warn(warning);
+            }
+
+            _clockShown = clock.SecondsLeft;
+            _timerPanel.ShowTime(clock.SecondsLeft, clock.Stopped, clock.Up, delta);
         }
 
         if (showing)
@@ -500,11 +518,12 @@ public partial class Main : Node3D
 
     /// <summary>
     /// The turn timer (ADR-091), when the game has one: the clock over the map and the battle scene. A loaded game starts the current turn with
-    /// the full time.
+    /// the full time. A LAN game has one clock, the host's (ADR-198): the host ends any colour's turn on it, and a client only shows it.
     /// </summary>
     private void BuildTimer()
     {
-        _timer = _session.State.Options.TurnTimerMinutes is null ? null : new TurnTimer(_session);
+        _clockShown = null;
+        _timer = _session.State.Options.TurnTimerMinutes is null || _client is not null ? null : new TurnTimer(_session, _host is null ? null : _host.ExecuteAsHost);
         var layer = new CanvasLayer { Name = "TurnTimer", Layer = 4 };
         _game!.AddChild(layer);
         _timerPanel = new TurnTimerPanel();

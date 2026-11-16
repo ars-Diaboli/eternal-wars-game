@@ -2598,3 +2598,26 @@ cannot look under its fog). *(proposal)* marks the agent's choices.
 - **Not done**: the turn timer still runs on each computer, not one for all (its roadmap item); the shipped hand-made maps have no start
   zones yet; the lobby does not say whether a hand-made map has a zone for every person (it is played turn by turn otherwise); a question or
   battle holds the other people up.
+
+### ADR-198: One turn timer in a LAN game and on a simultaneous day (FLOW-3, MP-2 e, ADR-091, ADR-197, roadmap, 2026-11-17)
+**Status**: implemented (2026-11-17), the roadmap's turn timer in multiplayer. *(proposal)* marks the agent's choices. No rule, save or map
+format changes; LAN protocol 6.
+
+- **One clock, the host's**: in a LAN game only the host runs the turn timer (ADR-091). It answers the defaults and ends the turn of any
+  colour, a client's too (`GameHost.ExecuteAsHost`, which the host's screen cannot otherwise do for a remote colour). It sends the clock to
+  the clients when it changes, in whole seconds, with whether it stands still for a battle between two people and whether the time is up
+  (`ClockUpdate`, a `TurnClock`); a client that joins gets it with the game. A client runs no timer: it shows the host's clock and its
+  warnings (1 minute, 30, 15, 5 seconds), so all computers show the same time and a turn ends once.
+- **A simultaneous day** (MP-2 e): one clock for the day, the full time when the day opens, not one per person. It runs while any person's
+  turn is open; one who ends early waits for the others, and the day ends when all have ended their turn, or when the time is up: then the
+  question being asked gets its default and every open turn ends, in player order. A question without a default (a level-up, a riddle) or a
+  battle holds every turn until it is answered or fought, as it holds the others' commands (ADR-197).
+- **What holds the end of a turn on the host**: its menu, battle scene and auto combat question hold only the turns of colours played on the
+  host *(proposal)*; a client's turn ends on time whatever the host shows. The clock stops while the game is paused (ADR-195). A conflict's
+  day played again starts with the full time.
+- **Code**: Domain `TurnTimer` (an optional command runner, the day's clock while `GameState.IsSimultaneous`, `TimedPlayers`, `Clock`,
+  `WarningPassed`), `TurnClock`; Network `ClockUpdate` ("clock", protocol 6), `GameHost.ExecuteAsHost` / `ShowClock`, `GameClient.Clock`; the
+  game app runs the timer on the host and on one computer, and shows the host's clock on a client. Tests `SimultaneousDayTests` (the day's
+  clock, both turns ended on time; the host's clock ending a client's turn and reaching the client).
+- **Not done**: a client's screens (its battle scene's last moves, a screen left open) do not hold the end of its turn; the clock's time is
+  sent in whole seconds, so a client may show it up to a frame late.

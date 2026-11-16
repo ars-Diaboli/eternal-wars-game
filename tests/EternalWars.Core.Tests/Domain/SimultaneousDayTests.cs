@@ -7,6 +7,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Players;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Events;
 using EternalWars.Core.Network;
 using static EternalWars.Core.Tests.TestWorld;
@@ -227,6 +228,67 @@ public class SimultaneousDayTests
         red.Session.Execute(new StepHeroCommand(Red, B, Direction.West)).ThrowIfRejected();
         Pump(host, red);
         Assert.Equal(replaced.CommandLog.Count, host.RecordOf(null).Commands.Count);
+    }
+
+    [Fact]
+    public void TheTurnTimer_IsOneClockForTheDay_AndEndsEveryOpenTurnWhenItIsUp()
+    {
+        var session = Started(Duel(Simultaneous with { TurnTimerMinutes = 2 }));
+        var timer = new TurnTimer(session);
+        timer.Tick(30);
+        Assert.Equal([Blue, Red], timer.TimedPlayers);
+
+        // Blue ends its turn: the day's clock runs on for Red, not a new turn's.
+        session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
+        timer.Tick(30);
+        Assert.Equal(60, timer.SecondsLeft);
+        Assert.Equal([Red], timer.TimedPlayers);
+
+        timer.Tick(60);
+        Assert.Equal(2, session.State.Date.AbsoluteDay);
+        Assert.Equal([Blue, Red], session.State.OpenTurns);
+        timer.Tick(0);
+        Assert.Equal(120, timer.SecondsLeft); // a new day, the full time
+
+        // Up with both turns open: both end, and the next day opens.
+        timer.Tick(120);
+        Assert.Equal(3, session.State.Date.AbsoluteDay);
+        Assert.Equal([new EndTurnCommand(Blue), new EndTurnCommand(Red)], session.CommandLog.TakeLast(2));
+    }
+
+    [Fact]
+    public void OnALanGame_TheHostsClockIsTheOnlyOne_ItEndsTheClientsTurn_AndTheClientShowsIt()
+    {
+        var state = Duel(Simultaneous with { HostPlayer = Blue, TurnTimerMinutes = 1 });
+        GameSession.CheckRefusals = true;
+        var session = new GameSession(state);
+        session.Start();
+        var host = new GameHost(session, [Red]);
+        var (hostEnd, clientEnd) = LoopbackConnection.Pair();
+        host.Accept(hostEnd);
+        var red = new GameClient(clientEnd);
+        red.Join("Bob", Red);
+        Pump(host, red);
+        Assert.Null(red.Clock);
+
+        var timer = new TurnTimer(session, host.ExecuteAsHost);
+        Assert.False(session.Execute(new EndTurnCommand(Red)).IsAccepted); // the host's screen does not play Red
+        timer.Tick(10.5);
+        host.ShowClock(timer.Clock);
+        Pump(host, red);
+        Assert.Equal(new TurnClock(50, false, false), red.Clock);
+
+        timer.Tick(50);
+        host.ShowClock(timer.Clock);
+        Pump(host, red);
+        Assert.Equal(2, session.State.Date.AbsoluteDay);
+        Assert.Equal(2, red.Session!.State.Date.AbsoluteDay);
+        Assert.Equal([Blue, Red], session.CommandLog.TakeLast(2).Select(c => c.Player));
+
+        timer.Tick(0);
+        host.ShowClock(timer.Clock);
+        Pump(host, red);
+        Assert.Equal(new TurnClock(60, false, false), red.Clock);
     }
 
     /// <summary>

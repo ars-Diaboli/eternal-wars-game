@@ -110,7 +110,7 @@ In priority order:
   fights or answers, the others wait. A hero entering another person's start zone, a person seeing another person's hero it did not see when
   the day began, or a hero visiting an object another person's hero visited that day discards the day for all: the host goes back to the
   day's start and it is played again turn by turn (no second income), and so is every day after it. A save made during a simultaneous day
-  goes on turn by turn when loaded on one computer. *(planned)*: one turn timer for all. No internet play.
+  goes on turn by turn when loaded on one computer. The turn timer is the host's, one clock for all. No internet play.
 
 ## Game options
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,
@@ -122,4 +122,6 @@ or "Random" ([random placeholders](adventure-map.md#map-bans-and-random-placehol
 - **Turn timer** (ADR-088, ADR-091): off, or 1–30 minutes a turn for humans; a loaded game restarts the turn at full time. Warnings at 1
   min, 30, 15, 5 s. Runs on the map and in battles against computer or neutrals (finished first); stops in human-vs-human battles. At zero,
   pending choices take their default (chest gold; leave or stay as offered; neutrals' offers taken), a level-up or riddle waits, and the
-  turn ends.
+  turn ends. A LAN game has **one clock, the host's** (ADR-198): every computer shows it, and the host ends a client's turn on it. A
+  **simultaneous day** has one clock for the day: it runs while any person's turn is open (one who has ended waits for the others), and at
+  zero every open turn ends.

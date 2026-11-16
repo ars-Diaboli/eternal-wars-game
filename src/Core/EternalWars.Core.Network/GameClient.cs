@@ -4,6 +4,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Players;
+using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Network;
@@ -64,6 +65,9 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
 
     /// <summary>Why the game is paused (a colour has nobody to play it, ADR-195); null while it goes on.</summary>
     public string? Paused { get; private set; }
+
+    /// <summary>The host's turn clock (ADR-198), the one clock of the game; null until the host has sent one (no turn timer).</summary>
+    public TurnClock? Clock { get; private set; }
 
     /// <summary>Asks the host for <paramref name="seat"/>, or for any free colour.</summary>
     public void Join(string name, PlayerId? seat = null) => connection.Send(new JoinRequest(NetSerializer.ProtocolVersion, name, seat));
@@ -190,6 +194,9 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
                 break;
             case RecordSent sent when _records.Remove(sent.Request, out var answered):
                 answered(sent.Record, sent.Record is null ? sent.Error ?? "The host sent no record." : null);
+                break;
+            case ClockUpdate clock:
+                Clock = clock.Clock;
                 break;
             case GamePaused paused when _session is not null:
                 Paused = paused.Reason;

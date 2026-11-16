@@ -258,7 +258,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       map format bump (MP-4, ADR-099)
 - [x] Simultaneous first week on maps with start zones (ADR-197): conflicts (entering another start zone, touching an object another player touched
       that day, seeing another player's hero) discard the day for everyone, which is played again turn by turn (MP-2, ADR-098)
-- [ ] The turn timer in multiplayer and in simultaneous days: one timer, the day ends when all have ended their turn (FLOW-3, MP-2)
+- [x] The turn timer in multiplayer and in simultaneous days (ADR-198): one timer, the day ends when all have ended their turn (FLOW-3, MP-2)
 - [ ] Arena maps in the lobby (ADR-100, ARN-1): day 1 hidden by each player's own view, turn by turn or simultaneous with start zones
 
 **Exit**: two players on two computers play a random map from the lobby to the end, save it and load it again.
