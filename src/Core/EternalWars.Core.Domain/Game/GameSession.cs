@@ -32,12 +32,22 @@ public sealed class GameSession
     internal static bool CheckRefusals { get; set; }
 
     public GameSession(GameState state, IEventBus? bus = null)
+        : this(state, bus, followsHost: false)
+    {
+    }
+
+    private GameSession(GameState state, IEventBus? bus, bool followsHost)
     {
         State = state ?? throw new ArgumentNullException(nameof(state));
         Bus = bus ?? new EventBus();
+        FollowsHost = followsHost;
 
-        // Core handlers subscribe first so their follow-up events are queued before views react.
-        new VisibilityService(State, Bus).SubscribeTo(Bus);
+        // Core handlers subscribe first so their follow-up events are queued before views react. A LAN client's session runs no rules, so
+        // nothing of the rules listens to the events its host sends.
+        if (!followsHost)
+        {
+            new VisibilityService(State, Bus).SubscribeTo(Bus);
+        }
 
         Flow = new GameFlowService(State, Bus);
         Economy = new EconomyService(State, Bus);
@@ -58,10 +68,18 @@ public sealed class GameSession
         ObjectShops = new ObjectShopService(objects, Progression, Artifacts, recruits);
         ObjectLifecycle = new ObjectLifecycleService(objects, Artifacts);
         MapEvents = new MapEventService(State, Bus, Economy, Progression, Artifacts, Battles, townVisits, recruits);
-        MapEvents.SubscribeTo(Bus);
+        if (!followsHost)
+        {
+            MapEvents.SubscribeTo(Bus);
+        }
+
         Movement = new HeroMovementService(State, Bus, Interactions, MapEvents);
         AdventureMagic = new Magic.AdventureMagicService(State, Bus, townVisits);
-        AdventureMagic.SubscribeTo(Bus);
+        if (!followsHost)
+        {
+            AdventureMagic.SubscribeTo(Bus);
+        }
+
         Arena = new ArenaService(State, Bus, Battles);
 
         // The list's order is the rules' order at every step of the calendar (ITurnPhaseParticipant): it fixes the events and the random draws.
@@ -76,6 +94,15 @@ public sealed class GameSession
     }
 
     public GameState State { get; }
+
+    /// <summary>
+    /// A LAN client's session (ADR-193, <see cref="FollowingHost"/>): its state is the player's view, which the host keeps up to date and whose
+    /// events it publishes on <paramref name="bus"/>; the rules never run here, so every command must go to the host (<see cref="Route"/>).
+    /// </summary>
+    public static GameSession FollowingHost(GameState state, IEventBus bus) => new(state, bus, followsHost: true);
+
+    /// <summary>Whether this is a LAN client's session (<see cref="FollowingHost"/>): it runs no rules.</summary>
+    public bool FollowsHost { get; }
 
     public IEventSubscriber Events => Bus;
 
@@ -176,6 +203,11 @@ public sealed class GameSession
         if (Route?.Route(command) is { } routed)
         {
             return routed;
+        }
+
+        if (FollowsHost)
+        {
+            return CommandResult.Rejected("This computer follows the host's game: its commands go to the host.");
         }
 
         object? outcome;

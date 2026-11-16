@@ -59,10 +59,18 @@ public partial class Main
         _menu.ShowInterface(_interface);
     }
 
+    /// <summary>A LAN client saves nothing (ADR-193): what it holds is its player's view, which does not replay the game.</summary>
+    private const string HostSaves = "In a LAN game the host saves the game.";
+
     /// <summary>The start of a turn goes into the two autosave slots: this turn's and the previous turn's.</summary>
     private void Autosave()
     {
         _turnBegan = false;
+        if (_session.FollowsHost)
+        {
+            return; // a LAN client holds its player's view, not the game: the host saves (ADR-193)
+        }
+
         try
         {
             GameSaves.Autosave(_saveFolder, _initialMap, _session, _generated);
@@ -205,6 +213,13 @@ public partial class Main
 
     private void Save(string name)
     {
+        if (_session.FollowsHost)
+        {
+            _menu.SetMessage(HostSaves);
+            _status.Text = HostSaves;
+            return;
+        }
+
         try
         {
             GameSaves.Save(_saveFolder, name, _initialMap, _session, _generated);
@@ -247,6 +262,11 @@ public partial class Main
         }
 
         _rankedSession = _session;
+        if (_session.FollowsHost)
+        {
+            return null; // the host's ranking has the game
+        }
+
         var folder = ProjectSettings.GlobalizePath("user://");
         try
         {
@@ -279,6 +299,11 @@ public partial class Main
     /// <summary>"Save replay" on the end screen (ADR-101): the game's record in <c>user://replays</c>.</summary>
     private string SaveReplay(string name)
     {
+        if (_session.FollowsHost)
+        {
+            return HostSaves;
+        }
+
         if (string.IsNullOrWhiteSpace(name))
         {
             name = $"{_initialMap.Name} day {_session.State.Date.AbsoluteDay}";

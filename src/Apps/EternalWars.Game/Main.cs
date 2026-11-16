@@ -348,7 +348,7 @@ public partial class Main : Node3D
         StopWatching();
         StopNetwork(keep: null);
         var session = new GameSession(state);
-        HostIfAsked(session, initial); // before the start, so clients replay the game from it
+        HostIfAsked(session); // before the start, so the clients see the start
         BeginGame(session, initial, resume: false);
         TellHosting();
     }
@@ -368,7 +368,7 @@ public partial class Main : Node3D
         _initialMap = initialMap;
         var playing = _mode == GameMode.Play;
         _ai = playing && _client is null ? new AdventureAi(session) : null; // a LAN client's computer players are the host's
-        _menu.CanSave = playing;
+        _menu.CanSave = playing && !session.FollowsHost; // a LAN client holds a view, not the game (ADR-193)
         var state = session.State;
         _context = new MapViewContext(state, _session.Events, playing ? ViewerHere(state) : ReplayViewer())
         {
