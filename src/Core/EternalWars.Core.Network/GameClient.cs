@@ -11,6 +11,8 @@ namespace EternalWars.Core.Network;
 /// A computer that joins a LAN game (ADR-192). It keeps its player's view of the game (ADR-193): a <see cref="Session"/> that runs no rules
 /// (<see cref="GameSession.FollowingHost"/>), whose state holds only what the host sent (<see cref="ViewMirror"/>) and whose events are the
 /// ones the host let through. Its own player's commands go to the host (<see cref="CommandResult.Sent"/>); another colour's are refused here.
+/// Before the game starts the client is in the host's lobby (ADR-194): it sees the game being set up (<see cref="Lobby"/>), may take another
+/// open colour (<see cref="TakeSeat"/>) and writes in the chat (<see cref="Say"/>), as it may during the game.
 /// </summary>
 /// <remarks>Everything happens on the caller's thread in <see cref="Poll"/>.</remarks>
 public sealed class GameClient(INetConnection connection, ContentCatalogs? content = null) : ICommandRoute, IDisposable
@@ -22,6 +24,12 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
 
     /// <summary>The host took the client in and its view is in place: <see cref="Session"/> and <see cref="Seat"/> are set.</summary>
     public event Action? Joined;
+
+    /// <summary>The lobby changed (<see cref="Lobby"/>, <see cref="LobbySeat"/>).</summary>
+    public event Action? LobbyChanged;
+
+    /// <summary>A line of the chat (who wrote it, empty for the host's game itself; the text).</summary>
+    public event Action<string, string>? ChatReceived;
 
     /// <summary>The host refused one of this client's commands (why); nothing changed.</summary>
     public event Action<string>? CommandRefused;
@@ -41,8 +49,32 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
     /// <summary>Why the client is done; null while it plays.</summary>
     public string? Failure { get; private set; }
 
+    /// <summary>The game being set up in the host's lobby; null before the host has sent it, and for a game that had started already.</summary>
+    public LobbyState? Lobby { get; private set; }
+
+    /// <summary>The client's colour in the lobby; null while it has none.</summary>
+    public PlayerId? LobbySeat { get; private set; }
+
     /// <summary>Asks the host for <paramref name="seat"/>, or for any free colour.</summary>
     public void Join(string name, PlayerId? seat = null) => connection.Send(new JoinRequest(NetSerializer.ProtocolVersion, name, seat));
+
+    /// <summary>Asks for an open colour of the lobby in place of the one the client has.</summary>
+    public void TakeSeat(PlayerId seat)
+    {
+        if (Failure is null && _session is null)
+        {
+            connection.Send(new TakeSeat(seat));
+        }
+    }
+
+    /// <summary>Writes in the chat; the line comes back from the host with everyone's (<see cref="ChatReceived"/>).</summary>
+    public void Say(string text)
+    {
+        if (Failure is null && ChatText.Clean(text) is { } line)
+        {
+            connection.Send(new ChatSay(line));
+        }
+    }
 
     /// <summary>Handles what the host has sent: the seat, the view's updates, refusals.</summary>
     public void Poll()
@@ -100,6 +132,13 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
                 break;
             case CommandRefused refused:
                 CommandRefused?.Invoke(refused.Error);
+                break;
+            case LobbyUpdate lobby when _session is null:
+                (Lobby, LobbySeat) = (lobby.Lobby, lobby.Seat);
+                LobbyChanged?.Invoke();
+                break;
+            case ChatLine line:
+                ChatReceived?.Invoke(line.From, line.Text);
                 break;
             default:
                 Fail($"The client did not expect {message.GetType().Name} now.");

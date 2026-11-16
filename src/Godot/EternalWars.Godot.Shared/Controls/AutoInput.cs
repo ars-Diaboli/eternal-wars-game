@@ -7,7 +7,7 @@ namespace EternalWars.Godot.Shared.Controls;
 /// Replays scripted input for smoke tests and screenshots (together with Godot's <c>--write-movie</c>):
 /// <c>-- --autoinput=30:click:800,450;45:key:Enter;60:rclick:400,300</c>. Each entry is
 /// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y), <c>key</c> (a Godot
-/// <see cref="Key"/> name), <c>touch</c> (<c>x,y,frames</c>: one finger down there, lifted that many frames later; a long press
+/// <see cref="Key"/> name), <c>text</c> (letters typed into the focused text field, one a frame), <c>touch</c> (<c>x,y,frames</c>: one finger down there, lifted that many frames later; a long press
 /// opens the information window through <see cref="TouchInput"/>), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
 /// <c>drag</c>/<c>rdrag</c> (<c>x1,y1,x2,y2</c>: left or right button pressed, moved, released over three frames), <c>press</c> (a visible,
 /// enabled button by its text or, without one, its tooltip; the topmost: exact, else the first that contains it, ignoring case; scrolled into view, then clicked at its centre the next
@@ -77,6 +77,16 @@ public partial class AutoInput : Node
                     var held = parts[1] == "hold" && keyParts.Length > 1 ? int.Parse(keyParts[1], CultureInfo.InvariantCulture) : 1;
                     _script.Add((frame, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = true }));
                     _script.Add((frame + held, new InputEventKey { Keycode = key, PhysicalKeycode = key, Pressed = false }));
+                    break;
+                case "text":
+                    // text:hello types the letters, one a frame, as the keyboard would (a focused text field takes them).
+                    for (var i = 0; i < parts[2].Length; i++)
+                    {
+                        var letter = parts[2][i];
+                        _script.Add((frame + i, new InputEventKey { Unicode = letter, Pressed = true }));
+                        _script.Add((frame + i, new InputEventKey { Unicode = letter, Pressed = false }));
+                    }
+
                     break;
                 case "wheel":
                     // wheel:up|down,count at the screen centre (camera zoom).

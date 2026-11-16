@@ -9,12 +9,12 @@ using EternalWars.Core.Domain.Common;
 
 namespace EternalWars.Core.Network;
 
-/// <summary>What a LAN host and its clients send each other (ADR-192, ADR-193): one JSON object per message, its kind in <c>"type"</c>.</summary>
+/// <summary>What a LAN host and its clients send each other (ADR-192, ADR-193, ADR-194): one JSON object per message, its kind in <c>"type"</c>.</summary>
 public abstract record NetMessage;
 
 /// <summary>A client asks for a seat: the colour <paramref name="Seat"/>, or the first free one when null.</summary>
 /// <param name="Protocol">The client's <see cref="NetSerializer.ProtocolVersion"/>; the host refuses another.</param>
-/// <param name="Name">The player's name, for the host's messages.</param>
+/// <param name="Name">The player's name, for the lobby, the chat and the host's messages.</param>
 /// <param name="Seat">The colour asked for, or null for any free one.</param>
 public sealed record JoinRequest(int Protocol, string Name, PlayerId? Seat = null) : NetMessage;
 
@@ -55,6 +55,57 @@ public sealed record ViewChange(string Kind, int Id, JsonNode? Value);
 /// <summary>The host turns the client away; the connection closes after it.</summary>
 public sealed record JoinRefused(string Reason) : NetMessage;
 
+/// <summary>How a colour of a LAN game is played, as the host sets it in the lobby (ADR-194).</summary>
+public enum SeatKind
+{
+    /// <summary>On the host's computer.</summary>
+    Host,
+
+    /// <summary>By a player on another computer: one who has joined it (<see cref="LobbySeat.Player"/>) or, while nobody has, an open colour.</summary>
+    Remote,
+
+    /// <summary>By the computer, on the host.</summary>
+    Computer,
+}
+
+/// <summary>
+/// A colour of the game in the lobby (ADR-194): how it is played, the name of whoever plays it (the host's player, the client that took it; null
+/// for an open colour or the computer) and what the host chose for it (town, hero, team), in words.
+/// </summary>
+/// <param name="Id">The colour.</param>
+/// <param name="Colour">Its name ("Red").</param>
+/// <param name="Kind">How it is played.</param>
+/// <param name="Player">Who plays it; null while open, and for the computer.</param>
+/// <param name="Details">The town, hero and team chosen for it, in words.</param>
+public sealed record LobbySeat(PlayerId Id, string Colour, SeatKind Kind, string? Player, string Details);
+
+/// <summary>
+/// The game a LAN host is setting up (ADR-194), as every computer in its lobby sees it: the map, its settings in words (the clients need no copy
+/// of the map or the template), its colours and the players who have joined without a colour yet.
+/// </summary>
+/// <param name="Host">The host's player.</param>
+/// <param name="Game">The map, or "Random map: " and the template.</param>
+/// <param name="Settings">One line per setting (size, fog, complexity, timer, ...).</param>
+/// <param name="Seats">The colours of the game, in order.</param>
+/// <param name="Waiting">The joined players who have no colour.</param>
+public sealed record LobbyState(string Host, string Game, IReadOnlyList<string> Settings, IReadOnlyList<LobbySeat> Seats, IReadOnlyList<string> Waiting)
+{
+    /// <summary>The open colours: played on another computer, nobody has taken them yet.</summary>
+    public IEnumerable<LobbySeat> Open => Seats.Where(s => s.Kind == SeatKind.Remote && s.Player is null);
+}
+
+/// <summary>The lobby as it stands now, and the client's colour in it (null while it has none).</summary>
+public sealed record LobbyUpdate(LobbyState Lobby, PlayerId? Seat) : NetMessage;
+
+/// <summary>A client in the lobby asks for an open colour (in place of the one it has).</summary>
+public sealed record TakeSeat(PlayerId Seat) : NetMessage;
+
+/// <summary>A player writes in the chat; the host passes it to everyone (<see cref="ChatLine"/>).</summary>
+public sealed record ChatSay(string Text) : NetMessage;
+
+/// <summary>A line of the chat, from a player (by name), or from the host's game itself when <paramref name="From"/> is empty (who joined, who left).</summary>
+public sealed record ChatLine(string From, string Text) : NetMessage;
+
 /// <summary>A client's command for its own colour; <paramref name="Sequence"/> numbers it, so a refusal can name it.</summary>
 public sealed record SendCommand(int Sequence, GameCommand Command) : NetMessage;
 
@@ -65,7 +116,7 @@ public sealed record CommandRefused(int Sequence, string Error) : NetMessage;
 public static class NetSerializer
 {
     /// <summary>Raised whenever a message changes shape; a host and a client of different versions do not play together.</summary>
-    public const int ProtocolVersion = 2;
+    public const int ProtocolVersion = 3;
 
     private static readonly IReadOnlyList<(Type Type, string Name)> MessageTypes =
     [
@@ -75,6 +126,10 @@ public static class NetSerializer
         (typeof(SendCommand), "command"),
         (typeof(ViewUpdate), "view"),
         (typeof(CommandRefused), "refused"),
+        (typeof(LobbyUpdate), "lobby"),
+        (typeof(TakeSeat), "takeSeat"),
+        (typeof(ChatSay), "say"),
+        (typeof(ChatLine), "chat"),
     ];
 
     private static readonly JsonSerializerOptions Options = CreateOptions();

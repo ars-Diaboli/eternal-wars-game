@@ -11,7 +11,8 @@ namespace EternalWars.Core.Network;
 /// The computer that runs a LAN game (ADR-192): it holds the one real <see cref="GameSession"/>, takes clients into the human colours that play
 /// elsewhere (<see cref="RemoteSeats"/>) and runs their commands. Each client gets only its player's view of the game (ADR-193,
 /// <see cref="PlayerViewFeed"/>): what changed in it and the events it may see, once a <see cref="Poll"/>. The host's own player and the computer
-/// players play here as in a game on one computer; a remote colour's command given here is refused.
+/// players play here as in a game on one computer; a remote colour's command given here is refused. The players write to each other in the chat
+/// (<see cref="Say"/>, <see cref="ChatReceived"/>). A game set up in the lobby (<see cref="LobbyHost"/>) starts with the clients already seated.
 /// </summary>
 /// <remarks>Everything happens on the caller's thread in <see cref="Poll"/> (the game app calls it once a frame).</remarks>
 public sealed class GameHost : ICommandRoute, IDisposable
@@ -29,9 +30,11 @@ public sealed class GameHost : ICommandRoute, IDisposable
 
     /// <param name="session">The game, started or about to start.</param>
     /// <param name="remoteSeats">The human colours played on other computers.</param>
-    public GameHost(GameSession session, IEnumerable<PlayerId> remoteSeats)
+    /// <param name="hostName">The host's player, in the chat.</param>
+    public GameHost(GameSession session, IEnumerable<PlayerId> remoteSeats, string hostName = "Host")
     {
         _session = session;
+        HostName = hostName;
         _remoteSeats = [.. remoteSeats.Distinct()];
         foreach (var seat in _remoteSeats)
         {
@@ -51,6 +54,12 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>A client's link went down (the colour, the player's name, why); the colour is free to join again.</summary>
     public event Action<PlayerId, string, string>? Left;
 
+    /// <summary>A line of the chat (who wrote it, empty for the game's own lines; the text), the host's own included.</summary>
+    public event Action<string, string>? ChatReceived;
+
+    /// <summary>The host's player, in the chat.</summary>
+    public string HostName { get; }
+
     /// <summary>The game the host runs.</summary>
     public GameSession Session => _session;
 
@@ -66,9 +75,39 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>Takes a new link; it gets a seat once its <see cref="JoinRequest"/> arrives.</summary>
     public void Accept(INetConnection connection) => _peers.Add(new Peer(connection));
 
+    /// <summary>
+    /// Seats a client that took <paramref name="seat"/> in the lobby; it gets the game at the first <see cref="Poll"/> once the game has started.
+    /// </summary>
+    internal void Admit(INetConnection connection, PlayerId seat, string name)
+    {
+        if (!IsRemote(seat) || PlayerAt(seat) is not null)
+        {
+            throw new ArgumentException($"{seat} is not a free remote colour of this game.", nameof(seat));
+        }
+
+        _peers.Add(new Peer(connection) { Seat = seat, Name = name });
+    }
+
+    /// <summary>The host's player writes in the chat.</summary>
+    public void Say(string text)
+    {
+        if (ChatText.Clean(text) is { } line)
+        {
+            Tell(HostName, line);
+        }
+    }
+
     /// <summary>Handles what the clients have sent (joins, commands) and drops the links that went down.</summary>
     public void Poll()
     {
+        if (_session.State.IsStarted)
+        {
+            foreach (var peer in _peers.Where(p => p is { Seat: not null, Feed: null } && !p.Connection.IsClosed).ToList())
+            {
+                Seat(peer, peer.Seat!.Value, peer.Name);
+            }
+        }
+
         foreach (var peer in _peers.ToList())
         {
             while (!peer.Connection.IsClosed && peer.Connection.TryReceive(out var message))
@@ -79,9 +118,11 @@ public sealed class GameHost : ICommandRoute, IDisposable
             if (peer.Connection.IsClosed)
             {
                 _peers.Remove(peer);
-                if (peer.Seat is { } seat)
+                if (peer is { Seat: { } seat, Feed: not null })
                 {
-                    Left?.Invoke(seat, peer.Name, peer.Connection.CloseReason ?? "The connection closed.");
+                    var why = peer.Connection.CloseReason ?? "The connection closed.";
+                    Tell("", $"{peer.Name} ({_session.State.GetPlayer(seat).Name}) left the game: {why}");
+                    Left?.Invoke(seat, peer.Name, why);
                 }
             }
         }
@@ -121,6 +162,16 @@ public sealed class GameHost : ICommandRoute, IDisposable
             case SendCommand send when peer.Seat is { } seat:
                 Run(peer, seat, send);
                 break;
+            case ChatSay say when peer.Seat is not null:
+                if (ChatText.Clean(say.Text) is { } line)
+                {
+                    Tell(peer.Name, line);
+                }
+
+                break;
+            case TakeSeat:
+                break; // asked in the lobby just before the game started
+
             default:
                 peer.Connection.Close($"The host did not expect {message.GetType().Name} now.");
                 break;
@@ -135,7 +186,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return;
         }
 
-        var free = _remoteSeats.Where(s => _peers.All(p => p.Seat != s)).ToList();
+        var free = _remoteSeats.Where(s => PlayerAt(s) is null).ToList();
         PlayerId? seat = request.Seat is { } wanted ? (free.Contains(wanted) ? wanted : null) : free.Count > 0 ? free[0] : null;
         if (seat is not { } taken)
         {
@@ -145,11 +196,17 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return;
         }
 
+        Seat(peer, taken, request.Name);
+    }
+
+    /// <summary>Gives the client its colour, the game's ground and its first view.</summary>
+    private void Seat(Peer peer, PlayerId taken, string name)
+    {
         var state = _session.State;
         var feed = new PlayerViewFeed(state, taken);
         var codec = new StateCodec(state);
         peer.Seat = taken;
-        peer.Name = request.Name;
+        peer.Name = name;
         peer.Feed = feed;
         peer.Connection.Send(new JoinAccepted(
             taken,
@@ -158,7 +215,19 @@ public sealed class GameHost : ICommandRoute, IDisposable
             codec.Write(state.Options with { Seed = 0 })!,
             codec.Write(state.Rules)!));
         peer.Connection.Send(feed.First());
-        Joined?.Invoke(taken, request.Name);
+        Tell("", $"{name} plays {state.GetPlayer(taken).Name}.");
+        Joined?.Invoke(taken, name);
+    }
+
+    /// <summary>A line of the chat, to every seated client and the host.</summary>
+    private void Tell(string from, string text)
+    {
+        foreach (var peer in _peers.Where(p => p.Feed is not null))
+        {
+            peer.Connection.Send(new ChatLine(from, text));
+        }
+
+        ChatReceived?.Invoke(from, text);
     }
 
     private static void Refuse(Peer peer, string reason)

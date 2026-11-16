@@ -244,12 +244,12 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 
 ## LAN multiplayer (ADR-088, ADR-098; before 1.0, after the Phase 3 and 4 exits)
 - [x] Network layer (ADR-192): host and clients over the LAN (TCP); clients send commands, the host runs them and plays the computer
-      players; a client's game is a copy that follows the host's commands; `--host` / `--join=` until the lobby (MP-1)
+      players (MP-1)
 - [x] Per-player view (ADR-193): a client starts from the map's static content; the host sends each client only the events it may see (fog);
       the client keeps a partial copy of the state for its views; under the fog stays as last seen; both sides see a whole battle, others
       its result (MP-3, ADR-099)
-- [ ] Lobby: LAN discovery and typing an address, map or random map with its options (ADR-086), colours, computer players, the
-      simultaneous first week on or off; text chat (MP-1)
+- [x] Lobby (ADR-194): LAN discovery and typing an address, map or random map with its options (ADR-086), colours, computer players;
+      text chat (MP-1). The simultaneous first week's switch is shown, off, until that item
 - [ ] Battles between two remote humans, each side live; a player who drops out (pause, the host lets the computer take over or waits
       for a rejoin) (MP-1)
 - [ ] Saves: the host's save loads in multiplayer, single player or hot-seat; a client's save (the whole record, sent by the host)

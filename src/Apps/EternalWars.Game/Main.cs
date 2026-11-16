@@ -108,6 +108,10 @@ public partial class Main : Node3D
         {
             JoinGame(address);
         }
+        else if (LaunchArguments.Host)
+        {
+            HostLobby();
+        }
         else if (LaunchArguments.NewGame)
         {
             ShowNewGame();
@@ -136,6 +140,7 @@ public partial class Main : Node3D
         };
         menu.NewGameRequested += ShowNewGame;
         menu.LoadRequested += _menu.Open;
+        menu.MultiplayerRequested += ShowMultiplayer;
         menu.WatchRequested += ShowReplays;
         menu.LeaderboardRequested += ShowLeaderboard;
         menu.QuitRequested += () => GetTree().Quit();
@@ -145,9 +150,15 @@ public partial class Main : Node3D
     {
         var setup = new NewGameScreen();
         ShowSetup(setup, back: ShowMainMenu);
+        BindNewGame(setup);
+        setup.BackRequested += ShowMainMenu;
+    }
+
+    /// <summary>The new-game screen's maps and templates; its Start starts the game (a LAN host's lobby's too).</summary>
+    private void BindNewGame(NewGameScreen setup)
+    {
         setup.Bind(
             NewGameChoices.Scenarios(), NewGameChoices.RandomMaps((state, info) => _lastGenerated = (state, info)), town => StartSlots.Heroes(GameContent.Heroes, town), town => StartSlots.Tier1Dwellings(GameContent.Creatures, town));
-        setup.BackRequested += ShowMainMenu;
         setup.Started += state =>
         {
             CloseSetup();
@@ -207,6 +218,7 @@ public partial class Main : Node3D
         _timer = null;
         _timerPanel = null;
         _autoCombat = null;
+        _chat = null;
         _turnToShow = null;
         _followed = null;
     }
@@ -219,7 +231,7 @@ public partial class Main : Node3D
     /// </summary>
     public override void _Process(double delta)
     {
-        PollNetwork(); // a LAN game's joins and commands (ADR-192)
+        PollNetwork(delta); // a LAN game's lobby, joins, commands and chat (ADR-192, ADR-194)
         if (_mode != GameMode.Play)
         {
             ProcessReplay(delta); // the replay viewer runs the record, not the AI or the clock (ADR-164)
@@ -335,7 +347,7 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_mapInput.Handle(@event))
+        if (HandleChatKey(@event) || _mapInput.Handle(@event))
         {
             GetViewport().SetInputAsHandled();
         }
@@ -345,12 +357,13 @@ public partial class Main : Node3D
     {
         // The map as it is now is the start of the game: saves replay from it (ADR-058).
         var initial = MapConverter.ToDocument(state);
+        var lobby = _lobby; // a LAN host's lobby hands its players to the game
+        _lobby = null;
         StopWatching();
-        StopNetwork(keep: null);
+        StopNetwork(keep: null, listening: lobby is not null);
         var session = new GameSession(state);
-        HostIfAsked(session); // before the start, so the clients see the start
+        HostLobbyGame(session, lobby); // before the map is shown: it is drawn for this computer's colours
         BeginGame(session, initial, resume: false);
-        TellHosting();
     }
 
     /// <summary>
@@ -387,6 +400,7 @@ public partial class Main : Node3D
         _camera.MakeCurrent();
 
         BuildHud();
+        BuildChat();
         BuildBattle();
         if (playing)
         {
