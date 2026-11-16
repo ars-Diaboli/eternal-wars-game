@@ -140,7 +140,12 @@ ADR-067. Gold is traded against one resource at a time. **X** = the player's tow
 | Nine or more | 500 / 125 | 1000 / 250 |
 
 - **No trade cap.** The **player** trades (a UI button or the town's marketplace), not a hero; unavailable without a marketplace town. Buying
-  is far dearer than selling on purpose: trading is a way out of a shortage, not income. The AI does not trade.
+  is far dearer than selling on purpose: trading is a way out of a shortage, not income.
+- **The AI** (ADR-189) trades at its towns' rate only as the last step to the building a town is saving for: it buys what that building
+  lacks when its income would not bring it within 2 days and the gold covers the building and the trade, the trade taking at most half the
+  gold (on hand plus 3 days of income); or, when only gold is missing, it sells what it holds beyond the building's needs and a kept stock
+  (20 lumber and ore, 10 of each magic resource), if that covers the whole shortfall. It never trades for troops and does not visit map
+  marketplaces.
 - **Map marketplace**: a visiting hero trades for its owner as if X were 4 (factor 5): basic 1000 / 62, magic 2000 / 125; for any player,
   also without a marketplace town. Generator placement: [random-maps.md](random-maps.md#pipeline) (TOWN-2).
 

@@ -305,18 +305,22 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         }
     }
 
-    /// <summary>Builds the most wanted thing it can afford today; returns the gold to keep for the one it is saving for.</summary>
+    /// <summary>
+    /// Builds the most wanted thing it can afford today, trading at the marketplace for it when that is worth it (ADR-189); returns the gold
+    /// to keep for the one it is saving for (with the gold buying its missing resources would take).
+    /// </summary>
     private int Build(PlayerId player, Town town)
     {
         var resources = _state.GetPlayer(player).Resources;
         var income = session.Economy.DailyIncome(player);
-        if (Wanted(town, resources, income) is not { } wanted)
+        if (Wanted(player, town, resources, income) is not { } wanted)
         {
             return 0;
         }
 
         var builtToday = TownRules.HasBuiltToday(_state, town);
-        if (!builtToday && resources.CanAfford(TownRules.BuildCost(_state, town, wanted.Next)))
+        var cost = TownRules.BuildCost(_state, town, wanted.Next);
+        if (!builtToday && TradeFor(player, cost, income))
         {
             var command = wanted.Dwelling
                 ? (GameCommand)new BuildDwellingCommand(player, town.Id, wanted.Id)
@@ -326,10 +330,11 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         }
 
         // Save for it rather than spending everything on creatures, as long as it is within reach.
-        return TownRules.BuildCost(_state, town, wanted.Next).Gold;
+        var buying = Reachable(cost, resources, income) ? 0 : BuyingGold(player, cost, resources) ?? 0;
+        return (int)Math.Min(int.MaxValue, cost.Gold + buying);
     }
 
-    private (bool Dwelling, string Id, BuildingLevel Next)? Wanted(Town town, ResourceSet have, ResourceSet income)
+    private (bool Dwelling, string Id, BuildingLevel Next)? Wanted(PlayerId player, Town town, ResourceSet have, ResourceSet income)
     {
         foreach (var (dwelling, id) in BuildOrder(town))
         {
@@ -340,7 +345,8 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 || (dwelling && next.Level == 1 && TownRules.CheckDwellingChoice(_state, town, id, 1) is not null)
                 || next.Requires.Any(r => TownRules.Level(_state, town, r.Building) < r.Level)
                 || TownRules.CheckCapitol(_state, town, next) is not null
-                || !Reachable(TownRules.BuildCost(_state, town, next), have, income))
+                || !(Reachable(TownRules.BuildCost(_state, town, next), have, income)
+                    || Buyable(player, TownRules.BuildCost(_state, town, next), have, income)))
             {
                 continue;
             }
