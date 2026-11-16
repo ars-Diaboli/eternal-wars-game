@@ -1,3 +1,4 @@
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Battles.Spells;
 
 namespace EternalWars.Core.Domain.Battles;
@@ -14,8 +15,23 @@ public enum BattleAiLevel
     /// <summary>ADR-188 (a): focus fire on the biggest threat (Fight Value × count) and finish off stacks it can destroy this turn.</summary>
     FocusFire,
 
+    /// <summary>
+    /// ADR-188 (d): a blow or shot counts the retaliation it draws against what it takes off, and a stack waits for an own stack still to act
+    /// that hits its target without being hit back.
+    /// </summary>
+    AvoidRetaliation,
+
+    /// <summary>ADR-188 (b): melee stacks go for the enemy shooters (a blow at one that can shoot counts its shots stopped).</summary>
+    ProtectShooters,
+
+    /// <summary>
+    /// ADR-188 (c): a stack with nothing to hit waits for the enemy to come closer, and while its side shoots better it holds its ground
+    /// beside its shooters instead of walking out.
+    /// </summary>
+    HoldBack,
+
     /// <summary>The level the game plays.</summary>
-    Latest = FocusFire,
+    Latest = HoldBack,
 }
 
 /// <summary>
@@ -90,9 +106,18 @@ internal static class BattleAi
             .OrderByDescending(m => TargetScore(battle, unit, m.Target, isRanged: false, 0, level, biggestThreat))
             .ThenBy(m => m.Target.Id)
             .FirstOrDefault();
-        if (melee.Target is not null && engine.Attack(melee.Target.Id, melee.Positions[0]) is null)
+        if (melee.Target is not null)
         {
-            return;
+            // ADR-188 (d): an own stack still to act that hits the target without being hit back goes first.
+            if (level >= BattleAiLevel.AvoidRetaliation && WaitsForAFreeHit(battle, unit, melee.Target) && engine.Wait() is null)
+            {
+                return;
+            }
+
+            if (engine.Attack(melee.Target.Id, BestStand(battle, unit, melee.Positions, level)) is null)
+            {
+                return;
+            }
         }
 
         if (BreakGate(battle, engine, unit, enemies))
@@ -100,9 +125,16 @@ internal static class BattleAi
             return;
         }
 
-        // In a siege the defenders hold the walls: they fight what reaches them but do not go out (ADR-106).
-        var holds = battle.Siege is not null && unit.Side == BattleSide.Defender;
-        if (enemies.Count > 0 && !holds && Advance(battle, unit, enemies) is { } destination && engine.Move(destination) is null)
+        // ADR-188 (c): nothing to hit yet: let the enemy come first, once a round.
+        if (level >= BattleAiLevel.HoldBack && WaitsForTheEnemy(battle, unit) && engine.Wait() is null)
+        {
+            return;
+        }
+
+        // In a siege the defenders hold the walls: they fight what reaches them but do not go out (ADR-106). ADR-188 (c): a side that shoots
+        // better keeps its melee stacks with its shooters.
+        var holds = (battle.Siege is not null && unit.Side == BattleSide.Defender) || (level >= BattleAiLevel.HoldBack && HoldsGround(battle, unit, enemies));
+        if (enemies.Count > 0 && !holds && Advance(battle, unit, enemies, level) is { } destination && engine.Move(destination) is null)
         {
             return;
         }
@@ -251,7 +283,108 @@ internal static class BattleAi
         var worth = Worth(target, expected);
         var threat = Threat(battle, target);
         var focus = worth + (worth * threat / Math.Max(1, biggestThreat));
-        return expected > 0 && expected >= target.TotalHealth ? focus + threat : focus;
+        var score = expected > 0 && expected >= target.TotalHealth ? focus + threat : focus;
+        if (level >= BattleAiLevel.AvoidRetaliation)
+        {
+            score -= RetaliationLoss(battle, unit, target, isRanged, expected);
+        }
+
+        if (level >= BattleAiLevel.ProtectShooters && !isRanged && BattleGrid.CanShootNow(battle, target) && expected < target.TotalHealth)
+        {
+            score += threat * BlockPercent / 100; // a shooter it stands next to cannot shoot
+        }
+
+        return score;
+    }
+
+    /// <summary>A blow at an enemy shooter that can shoot counts this much of its threat more, in percent: its shots stopped (ADR-188 b, proposal).</summary>
+    public const int BlockPercent = 25;
+
+    /// <summary>
+    /// The creature value the unit is expected to lose to the target's retaliation (ADR-188 d): none when it cannot hit back (it has hit back this
+    /// round, cannot, or is destroyed), else the blow of the creatures left after <paramref name="expected"/> damage (all of them before a first strike).
+    /// </summary>
+    internal static long RetaliationLoss(BattleState battle, BattleUnit unit, BattleUnit target, bool isRanged, int expected)
+    {
+        var penalty = 0;
+        var hitsBack = !target.IsMachine && !unit.Creature.Has(CapabilityKind.NoEnemyRetaliation)
+            && !target.Has(Magic.SpellStatus.NoRetaliation | Magic.SpellStatus.Stasis | Magic.SpellStatus.Blind | Magic.SpellStatus.NoAttack)
+            && (isRanged
+                ? target.Creature.Has(CapabilityKind.RangedRetaliation) && (!target.HasRetaliated || target.Creature.Has(CapabilityKind.UnlimitedRetaliation))
+                  && BattleGrid.CanShoot(battle, target, unit, out penalty)
+                : !target.HasRetaliated || target.Creature.Has(CapabilityKind.UnlimitedRetaliation) || target.Has(Magic.SpellStatus.Vigil));
+        if (!hitsBack)
+        {
+            return 0;
+        }
+
+        var first = !isRanged && target.Creature.Has(CapabilityKind.FirstStrike) && !unit.Creature.Has(CapabilityKind.FirstStrike);
+        var left = first ? target.TotalHealth : target.TotalHealth - expected;
+        if (left <= 0)
+        {
+            return 0;
+        }
+
+        var survivors = (left + target.Creature.Health - 1) / target.Creature.Health;
+        var damage = (long)DamageCalculator.Expected(battle, target, unit, isRanged, penalty) * survivors / Math.Max(1, target.Count);
+        return Worth(unit, (int)Math.Min(int.MaxValue, damage));
+    }
+
+    /// <summary>
+    /// Whether the unit waits for an own stack still to act this round that hits <paramref name="target"/> without being hit back (ADR-188 d):
+    /// the target would hit back, the unit has not waited this round, and such a stack can shoot it or reach it now.
+    /// </summary>
+    private static bool WaitsForAFreeHit(BattleState battle, BattleUnit unit, BattleUnit target)
+    {
+        if (battle.WaitedThisRound.Contains(unit.Id) || RetaliationLoss(battle, unit, target, isRanged: false, 0) == 0)
+        {
+            return false;
+        }
+
+        return battle.Queue.Select(battle.GetUnit).Any(u => u.IsAlive && u.Side == unit.Side && !u.IsMachine
+            && ((BattleGrid.CanShootNow(battle, u) && BattleGrid.CanShoot(battle, u, target, out _) && RetaliationLoss(battle, u, target, isRanged: true, 0) == 0)
+                || (u.Creature.Has(CapabilityKind.NoEnemyRetaliation) && BattleGrid.AttackPositions(battle, u, target).Count > 0)));
+    }
+
+    /// <summary>
+    /// Where the unit stands to strike (ADR-188 b): from <see cref="BattleAiLevel.ProtectShooters"/> on, the placement next to the enemy shooters
+    /// that can shoot with the most threat (they cannot while it stands there), else the first.
+    /// </summary>
+    private static CellPosition BestStand(BattleState battle, BattleUnit unit, IReadOnlyList<CellPosition> positions, BattleAiLevel level)
+    {
+        if (level < BattleAiLevel.ProtectShooters || positions.Count == 1)
+        {
+            return positions[0];
+        }
+
+        var shooters = battle.LivingUnitsOf(unit.Side.Opponent()).Where(e => BattleGrid.CanShootNow(battle, e)).ToList();
+        return shooters.Count == 0
+            ? positions[0]
+            : positions.Select((p, i) => (Position: p, Index: i, Blocked: shooters.Where(e => unit.RectAt(p).IsAdjacentTo(e.Rect)).Sum(e => Threat(battle, e))))
+                .OrderByDescending(p => p.Blocked).ThenBy(p => p.Index).First().Position;
+    }
+
+    /// <summary>
+    /// Whether a unit with nothing to hit waits for the enemy to come (ADR-188 c): it has not waited this round, it is not a shooter, it is not
+    /// in a siege, and an enemy stack that can walk is still to act this round.
+    /// </summary>
+    private static bool WaitsForTheEnemy(BattleState battle, BattleUnit unit) =>
+        battle.Siege is null && !battle.WaitedThisRound.Contains(unit.Id) && unit.Creature.Shots == 0
+        && battle.Queue.Select(battle.GetUnit).Any(u => u.IsAlive && u.Side != unit.Side && !u.IsMachine && !u.IsFixed);
+
+    /// <summary>
+    /// Whether the unit holds its ground (ADR-188 c): outside a siege, a stack that is not a shooter stays while its side's shooters that can
+    /// shoot are worth more than the enemy's (the enemy comes to them under fire) and an enemy melee stack can walk to it.
+    /// </summary>
+    private static bool HoldsGround(BattleState battle, BattleUnit unit, List<BattleUnit> enemies)
+    {
+        if (battle.Siege is not null || unit.Creature.Shots > 0)
+        {
+            return false;
+        }
+
+        long Shooting(IEnumerable<BattleUnit> side) => side.Where(u => BattleGrid.CanShootNow(battle, u)).Sum(StackValue);
+        return Shooting(battle.LivingUnitsOf(unit.Side)) > Shooting(enemies) && enemies.Any(e => !e.IsMachine && !e.IsFixed && e.Creature.Shots == 0);
     }
 
     /// <summary>
@@ -405,8 +538,11 @@ internal static class BattleAi
         _ => [(null, null)],
     };
 
-    /// <summary>The reachable placement closest to the nearest enemy, if it is closer than standing still.</summary>
-    private static CellPosition? Advance(BattleState battle, BattleUnit unit, List<BattleUnit> enemies)
+    /// <summary>
+    /// The reachable placement closest to the nearest enemy, if it is closer than standing still; from <see cref="BattleAiLevel.ProtectShooters"/>
+    /// on, a melee stack heads for the enemy shooter that can shoot with the biggest threat instead, while there is one.
+    /// </summary>
+    private static CellPosition? Advance(BattleState battle, BattleUnit unit, List<BattleUnit> enemies, BattleAiLevel level)
     {
         if (battle.Siege is not null && !unit.Creature.MovesFreely)
         {
@@ -425,7 +561,12 @@ internal static class BattleAi
             return way.Steps < now ? way.Position : null;
         }
 
-        var nearest = enemies.OrderBy(e => unit.Rect.GapTo(e.Rect)).ThenBy(e => e.Id).First();
+        var shooters = level >= BattleAiLevel.ProtectShooters && unit.Creature.Shots == 0
+            ? enemies.Where(e => !e.IsMachine && BattleGrid.CanShootNow(battle, e)).ToList()
+            : [];
+        var nearest = shooters.Count > 0
+            ? shooters.OrderByDescending(e => Threat(battle, e)).ThenBy(e => e.Id).First()
+            : enemies.OrderBy(e => unit.Rect.GapTo(e.Rect)).ThenBy(e => e.Id).First();
         var best = BattleGrid.Reachable(battle, unit)
             .Select(r => (Position: r.Key, Steps: r.Value, Gap: unit.RectAt(r.Key).GapTo(nearest.Rect)))
             .OrderBy(r => r.Gap).ThenBy(r => r.Steps).ThenBy(r => r.Position.Y).ThenBy(r => r.Position.X)

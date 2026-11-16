@@ -62,6 +62,117 @@ public class BattleAiTests
         Assert.Equal(10 * 40, BattleAi.Threat(battle.State, blocked)); // an enemy next to it stops its shots
     }
 
+    [Theory]
+    [InlineData(BattleAiLevel.FocusFire, false)]
+    [InlineData(BattleAiLevel.AvoidRetaliation, true)]
+    public void AvoidRetaliation_HitsTheStackThatHasAlreadyHitBack(BattleAiLevel level, bool hitsTheSpentOne)
+    {
+        var battle = TestBattle.Create();
+        var hitter = battle.Add(Attacker, Hitter, 1, 10, 10);
+        var twin = TestBattle.Fixed("twin", 1);
+        var fresh = battle.Add(Defender, twin, 50, 12, 10);
+        var spent = battle.Add(Defender, twin, 50, 8, 10);
+        battle.StartWith(hitter);
+        spent.HasRetaliated = true; // the round has started: it hit back earlier in it
+
+        BattleAi.Act(battle.State, battle.Engine, level);
+
+        // The same blow at the same stack: the older levels take the lower id, the new one the stack that cannot hit back this round.
+        Assert.Equal((hitsTheSpentOne ? spent : fresh).Id, HitBy(battle, hitter));
+    }
+
+    [Fact]
+    public void RetaliationLoss_IsTheBlowOfTheCreaturesLeft_AndNoneWhenTheyCannotHitBack()
+    {
+        var battle = TestBattle.Create();
+        var hitter = battle.Add(Attacker, Hitter, 1, 10, 10);
+        var target = battle.Add(Defender, TestBattle.Fixed("twin", 1), 10, 11, 10);
+        var full = BattleAi.RetaliationLoss(battle.State, hitter, target, isRanged: false, expected: 0);
+
+        Assert.True(full > 0);
+        Assert.InRange(BattleAi.RetaliationLoss(battle.State, hitter, target, isRanged: false, expected: 50), (full / 2) - 1, (full / 2) + 1);
+        Assert.Equal(0, BattleAi.RetaliationLoss(battle.State, hitter, target, isRanged: false, expected: 100)); // destroyed
+        Assert.Equal(0, BattleAi.RetaliationLoss(battle.State, hitter, target, isRanged: true, expected: 0)); // it cannot shoot back
+        target.HasRetaliated = true;
+        Assert.Equal(0, BattleAi.RetaliationLoss(battle.State, hitter, target, isRanged: false, expected: 0));
+    }
+
+    [Theory]
+    [InlineData(BattleAiLevel.FocusFire, false)]
+    [InlineData(BattleAiLevel.AvoidRetaliation, true)]
+    public void AvoidRetaliation_WaitsForAnOwnShooterStillToAct(BattleAiLevel level, bool waits)
+    {
+        var battle = TestBattle.Create();
+        var hitter = battle.Add(Attacker, Hitter, 5, 10, 10);
+        battle.Add(Attacker, TestBattle.Fixed("archer", 1, shots: 10), 5, 0, 20);
+        var target = battle.Add(Defender, TestBattle.Fixed("twin", 1), 50, 12, 10);
+        battle.StartWith(hitter);
+
+        BattleAi.Act(battle.State, battle.Engine, level);
+
+        Assert.Equal(waits, battle.Events.OfType<BattleUnitWaited>().Any(e => e.Unit == hitter.Id));
+        Assert.Equal(!waits, battle.Events.OfType<BattleUnitAttacked>().Any(e => e.Attacker == hitter.Id && e.Target == target.Id));
+    }
+
+    [Fact]
+    public void ProtectShooters_WalksAtTheEnemyShooter_RatherThanTheNearestStack()
+    {
+        int GapToArcher(BattleAiLevel level)
+        {
+            var battle = TestBattle.Create();
+            var walker = battle.Add(Attacker, Hitter with { Speed = 4 }, 5, 2, 10);
+            battle.Add(Defender, TestBattle.Fixed("footman", 1), 5, 14, 10);
+            var archer = battle.Add(Defender, TestBattle.Fixed("archer", 1, shots: 10), 5, 2, 23);
+            battle.StartWith(walker);
+
+            BattleAi.Act(battle.State, battle.Engine, level);
+
+            Assert.NotEqual(new CellPosition(2, 10), walker.Position);
+            return walker.Rect.GapTo(archer.Rect);
+        }
+
+        Assert.True(GapToArcher(BattleAiLevel.ProtectShooters) < GapToArcher(BattleAiLevel.AvoidRetaliation));
+    }
+
+    [Theory]
+    [InlineData(BattleAiLevel.ProtectShooters, false)]
+    [InlineData(BattleAiLevel.HoldBack, true)]
+    public void HoldBack_WaitsForTheEnemyToCome_WhenThereIsNothingToHit(BattleAiLevel level, bool waits)
+    {
+        var battle = TestBattle.Create();
+        var walker = battle.Add(Attacker, Hitter with { Speed = 4 }, 5, 2, 10);
+        battle.Add(Defender, TestBattle.Fixed("footman", 1), 5, 26, 10);
+        battle.StartWith(walker);
+
+        BattleAi.Act(battle.State, battle.Engine, level);
+
+        Assert.Equal(waits, battle.Events.OfType<BattleUnitWaited>().Any(e => e.Unit == walker.Id));
+        Assert.Equal(!waits, walker.Position != new CellPosition(2, 10));
+    }
+
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public void HoldBack_KeepsItsGroundBesideItsShooters_WhileItsSideShootsBetter(bool enemyShootsToo, bool holds)
+    {
+        var battle = TestBattle.Create();
+        var walker = battle.Add(Attacker, Hitter with { Speed = 4 }, 5, 2, 10);
+        battle.Add(Attacker, TestBattle.Fixed("archer", 1, shots: 10), 20, 0, 12);
+        battle.Add(Defender, TestBattle.Fixed("footman", 1), 5, 26, 10);
+        if (enemyShootsToo)
+        {
+            battle.Add(Defender, TestBattle.Fixed("archer", 1, shots: 10), 40, 28, 20);
+        }
+
+        battle.StartWith(walker);
+        battle.State.WaitedThisRound.Add(walker.Id); // it has waited already: now it holds or walks
+
+        BattleAi.Act(battle.State, battle.Engine, BattleAiLevel.HoldBack);
+
+        Assert.Equal(holds, walker.Position == new CellPosition(2, 10));
+        Assert.Equal(holds, battle.Events.OfType<BattleUnitDefended>().Any(e => e.Unit == walker.Id));
+    }
+
     private static readonly CreatureDefinition Hitter = TestBattle.Fixed("hitter", 10, speed: 2);
 
     /// <summary>The hitters' expected blow at a creature with the test stats (at least the lone creature's 10 hit points).</summary>
