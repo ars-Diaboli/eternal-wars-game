@@ -116,6 +116,7 @@ public class DividingCliffTests
         battle.Add(Defender, TestBattle.Fixed("enemy", 1, speed: 1), 1, 14, 2);
 
         battle.StartWith(walker);
+        battle.State.WaitedThisRound.Add(walker.Id); // it has waited for the enemy to come (ADR-188 c): now it walks
         BattleAi.Act(battle.State, battle.Engine);
 
         Assert.True(walker.Position.Y >= 5, $"walked to {walker.Position}"); // down towards the gap, not along row 2 to the cliff

@@ -4,8 +4,8 @@ namespace EternalWars.Godot.UI;
 
 /// <summary>
 /// The one set of margins and gaps every panel uses (the spacing pass, ADR-118, ADR-163). <see cref="CreateTheme"/> turns them into theme
-/// constants that each app merges into the default theme at start, so containers space their children alike without overrides of their own; the fonts,
-/// colours and boxes stay Godot's default look. Code that places controls itself (the HUD's corners, the battle HUD, the information window)
+/// constants that <see cref="UiTheme"/> merges, with the colours, into the default theme at start, so containers space their children alike
+/// without overrides of their own. Code that places controls itself (the HUD's corners, the battle HUD, the information window)
 /// uses the same numbers.
 /// </summary>
 public static class UiSpacing
@@ -32,8 +32,8 @@ public static class UiSpacing
     public const int ScreenEdge = 8;
 
     /// <summary>
-    /// The spacing as a theme: containers' separations and panels' inner margins. Everything else falls back to Godot's default theme. The
-    /// panel box is the default one with margins added, so panels look as before.
+    /// The spacing as a theme: containers' separations and panels' inner margins (the default panel box with margins added; <see cref="UiTheme"/>
+    /// replaces it with its own).
     /// </summary>
     public static Theme CreateTheme()
     {
@@ -57,12 +57,6 @@ public static class UiSpacing
 
         return theme;
     }
-
-    /// <summary>
-    /// Merges the spacing into Godot's default theme, the one every control falls back to, so it holds on every canvas layer (a theme on the
-    /// root window does not reach controls under a canvas layer). Call it once, before the UI is built.
-    /// </summary>
-    public static void Apply() => ThemeDB.GetDefaultTheme().MergeWith(CreateTheme());
 
     /// <summary>Spaces a row of slots (an army) like the cells of a grid, <see cref="Cell"/> apart, as the paper doll beside it.</summary>
     public static T WithCellGap<T>(this T box) where T : BoxContainer

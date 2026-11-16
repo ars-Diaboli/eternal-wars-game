@@ -87,7 +87,7 @@ public class SettingsFileTests
     public void TheLayout_IsKeptBesideTheOtherSettings_AndTheDefaultWhenTheFileHasNone()
     {
         var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
-        var layout = new LayoutSettings(ScreenEdge.Bottom, ScreenCorner.BottomLeft, ListOrientation.Horizontal, ScreenSide.Left);
+        var layout = new LayoutSettings(ScreenEdge.Bottom, ScreenCorner.BottomLeft, ListOrientation.Horizontal, ScreenSide.Left, SidePanel.Off);
         try
         {
             SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(DetailedTooltips: true), layout);
@@ -97,6 +97,8 @@ public class SettingsFileTests
             Assert.Contains("\"minimap\": \"BottomLeft\"", File.ReadAllText(path), StringComparison.Ordinal);
             Assert.Equal(LayoutSettings.Default, SettingsFile.ReadLayout("{\"speed\": {\"battle\": \"Slow\"}}"));
             Assert.Equal(LayoutSettings.Default with { InitiativeBar = ScreenEdge.Bottom }, SettingsFile.ReadLayout("{\"layout\": {\"initiativeBar\": \"Bottom\"}}"));
+            Assert.Contains("\"sidePanel\": \"Off\"", File.ReadAllText(path), StringComparison.Ordinal);
+            Assert.Equal(SidePanel.Right, SettingsFile.ReadLayout("{\"layout\": {\"minimap\": \"TopLeft\"}}").SidePanel);
         }
         finally
         {
@@ -118,7 +120,7 @@ public class SettingsFileTests
     [Fact]
     public void VerticalLists_FollowTheMinimap_AndTheActionsGoToTheTopOfTheirSide()
     {
-        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, ActionPanel: ScreenSide.Left);
+        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, ActionPanel: ScreenSide.Left, SidePanel: SidePanel.Off);
 
         Assert.Equal([HudPart.Minimap, HudPart.Lists], HudArrangement.Stack(layout, ScreenCorner.BottomLeft));
         Assert.Equal([HudPart.Actions], HudArrangement.Stack(layout, ScreenCorner.TopLeft));
@@ -129,12 +131,28 @@ public class SettingsFileTests
     [Fact]
     public void HorizontalLists_GoToTheBottomRow()
     {
-        var layout = new LayoutSettings(Minimap: ScreenCorner.TopLeft, Lists: ListOrientation.Horizontal);
+        var layout = new LayoutSettings(Minimap: ScreenCorner.TopLeft, Lists: ListOrientation.Horizontal, SidePanel: SidePanel.Off);
 
         Assert.True(HudArrangement.ListsInBottomRow(layout));
         Assert.Null(HudArrangement.CornerOf(layout, HudPart.Lists));
         Assert.Equal([HudPart.Minimap], HudArrangement.Stack(layout, ScreenCorner.TopLeft));
         Assert.Equal([HudPart.Actions], HudArrangement.Stack(layout, ScreenCorner.TopRight));
+    }
+
+    [Theory]
+    [InlineData(SidePanel.Right, ScreenCorner.TopRight)]
+    [InlineData(SidePanel.Left, ScreenCorner.TopLeft)]
+    public void TheSidePanel_HoldsTheMinimapListsAndActionsOnItsSide_WhateverTheOtherSettingsSay(SidePanel panel, ScreenCorner top)
+    {
+        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, Lists: ListOrientation.Horizontal, ActionPanel: ScreenSide.Right, SidePanel: panel);
+
+        Assert.Equal([HudPart.Minimap, HudPart.Lists, HudPart.Actions], HudArrangement.Stack(layout, top));
+        Assert.Equal(3, Enum.GetValues<ScreenCorner>().Sum(c => HudArrangement.Stack(layout, c).Count));
+        Assert.False(HudArrangement.ListsInBottomRow(layout));
+        Assert.Equal(panel == SidePanel.Left ? ScreenSide.Left : ScreenSide.Right, HudArrangement.PanelSide(layout));
+        Assert.Null(HudArrangement.PanelSide(layout with { SidePanel = SidePanel.Off }));
+        Assert.True(HudArrangement.ListsInBottomRow(layout with { SidePanel = SidePanel.Off })); // the other settings are kept for when it is off
+        Assert.Equal(SidePanel.Right, LayoutSettings.Default.SidePanel);
     }
 
     [Theory]

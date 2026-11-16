@@ -43,7 +43,7 @@ public partial class Main : Node2D
 
     public override void _Ready()
     {
-        UiSpacing.Apply(); // the shared margins and gaps (ADR-163)
+        UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {
             AddChild(autoInput);

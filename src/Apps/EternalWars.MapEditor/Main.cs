@@ -60,7 +60,7 @@ public partial class Main : Node3D
 
     public override void _Ready()
     {
-        UiSpacing.Apply(); // the shared margins and gaps (ADR-163)
+        UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)
         WindowModes.Apply(SettingsFile.LoadInterface(SettingsPath).Window);
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {

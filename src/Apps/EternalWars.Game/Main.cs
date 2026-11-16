@@ -90,7 +90,7 @@ public partial class Main : Node3D
 
     public override void _Ready()
     {
-        UiSpacing.Apply(); // the shared margins and gaps (ADR-163)
+        UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)
         AddChild(new TouchInput()); // a touch screen as the mouse: a long press opens the information window (ADR-190)
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {

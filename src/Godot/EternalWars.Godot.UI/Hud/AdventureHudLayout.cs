@@ -9,7 +9,9 @@ namespace EternalWars.Godot.UI.Hud;
 /// (a part's event subscriptions last while it is in the tree). A stack in a corner is as wide as its widest part, and every part in it
 /// fills that width. The turn block stands at the top left, beside the top-left stack. Horizontal lists run along the bottom between the
 /// bottom stacks. The bottom parts stand above <see cref="BottomReserve"/> (the status bar, ADR-186); without one, the bottom right leaves room
-/// for the menu button. It re-places the parts whenever one's size changes.
+/// for the menu button. With the side panel on (ADR-191) a framed column runs down that side from the top to the status bar, behind the
+/// minimap, the lists and the action panel, and takes the clicks on it; the turn block stands beside it on the left. It re-places the parts
+/// whenever one's size changes.
 /// </summary>
 public partial class AdventureHudLayout : Container
 {
@@ -23,6 +25,7 @@ public partial class AdventureHudLayout : Container
     public const float MenuButtonWidth = 148;
 
     private readonly Dictionary<HudPart, Control> _parts = [];
+    private readonly Panel _sidePanel = new() { Name = "SidePanel", MouseFilter = MouseFilterEnum.Stop, Visible = false };
     private Control? _info;
     private LayoutSettings _layout = LayoutSettings.Default;
 
@@ -49,7 +52,13 @@ public partial class AdventureHudLayout : Container
     {
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
+        var frame = UiTheme.Box(UiTheme.Background, UiTheme.Border, 0, borderWidth: 0);
+        frame.BorderWidthLeft = frame.BorderWidthRight = UiTheme.FrameWidth;
+        frame.BorderWidthBottom = UiTheme.FrameWidth;
+        _sidePanel.AddThemeStyleboxOverride("panel", frame);
+        AddChild(_sidePanel); // first, so it is drawn behind the parts
     }
+
 
     /// <summary>The turn block (top left).</summary>
     public void SetInfo(Control info)
@@ -125,9 +134,22 @@ public partial class AdventureHudLayout : Container
             }
         }
 
+        // The side panel (ADR-191): the column behind its side's top stack, edge to edge with the screen, down to the status bar.
+        var panelSide = HudArrangement.PanelSide(_layout);
+        var panelWidth = 0f;
+        _sidePanel.Visible = panelSide is not null;
+        if (panelSide is { } side)
+        {
+            var corner = side == ScreenSide.Left ? ScreenCorner.TopLeft : ScreenCorner.TopRight;
+            panelWidth = stackWidths[corner] + (2 * Margin);
+            var x = side == ScreenSide.Left ? 0 : screen.X - panelWidth;
+            FitChildInRect(_sidePanel, new Rect2(x, 0, panelWidth, screen.Y - _bottomReserve));
+        }
+
         if (_info is not null)
         {
-            var x = Margin + (stackWidths[ScreenCorner.TopLeft] > 0 ? stackWidths[ScreenCorner.TopLeft] + Margin : 0);
+            var x = panelSide == ScreenSide.Left ? panelWidth + Margin
+                : Margin + (stackWidths[ScreenCorner.TopLeft] > 0 ? stackWidths[ScreenCorner.TopLeft] + Margin : 0);
             FitChildInRect(_info, new Rect2(new Vector2(x, Margin), _info.GetCombinedMinimumSize()));
         }
 
