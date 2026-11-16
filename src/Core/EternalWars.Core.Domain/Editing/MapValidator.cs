@@ -214,6 +214,7 @@ public static partial class MapValidator
         issues.AddRange(ValidateEvents(scenario));
         issues.AddRange(ValidateGrail(scenario));
         issues.AddRange(ValidateArena(scenario));
+        issues.AddRange(ValidateStartZones(scenario));
         return issues;
     }
 

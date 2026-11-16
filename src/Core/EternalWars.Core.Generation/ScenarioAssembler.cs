@@ -93,6 +93,7 @@ public static class ScenarioAssembler
             var id = new PlayerId(i);
             var zone = template.Zones.First(z => z.Owner == setup.Slot && z.Type is ZoneType.PlayerStart or ZoneType.AiStart);
             made.Add(new Player(id, setup.Name, setup.IsHuman, new TeamId(teams[i])));
+            MarkStartZone(map, zone, id);
 
             var start = map.Towns.Where(t => t.Slot == setup.Slot).Select(t => StartTown(map, t.Town, zone, setup, id, creatures, content.Buildings, streams.For("dwellings", setup.Slot))).ToList();
             var hero = setup.Hero is { } picked ? heroRoster.Get(picked) : Draw(heroRoster, setup.TownType, taken, heroRandom);
@@ -115,6 +116,25 @@ public static class ScenarioAssembler
         state.SetTeamCounts(template.MinTeams, template.MaxTeams);
         state.SetRules(ScenarioRules.Default with { MaxHeroes = maxHeroes ?? template.MaxHeroes, WeekEvents = template.WeekEvents.ToSettings() });
         return state;
+    }
+
+    /// <summary>The template zone of a player's start town is its start zone in the map (MP-4, ADR-197); an empty slot's zone is nobody's.</summary>
+    private static void MarkStartZone(GeneratedMap map, TemplateZone zone, PlayerId owner)
+    {
+        var index = map.Layout.ZoneIds.ToList().IndexOf(zone.Id);
+        if (index < 0)
+        {
+            return;
+        }
+
+        foreach (var (x, y, level) in map.Layout.Tiles(index))
+        {
+            var position = new MapPosition(x, y, level);
+            if (map.Map.Contains(position))
+            {
+                map.Map.SetStartZone(position, owner);
+            }
+        }
     }
 
     private static void Check(MapTemplate template, GeneratedMap map, IReadOnlyList<PlayerSetup> players, HeroCatalog heroRoster, CreatureCatalog creatures)

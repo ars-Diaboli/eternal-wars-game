@@ -94,17 +94,23 @@ In priority order:
     players and no towns: a Haven and a Necropolis mage buy their armies at map dwellings); **Four Banners** (two against two, allies sharing
     a half, each half with its own combat place). Random heroes there start with the same neutral army.
   - *(planned)*: LAN.
-- **LAN multiplayer** *(before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓; network, view, lobby, live battles and drop-outs built: ADR-192 to ADR-195)*: the **host** runs
+- **LAN multiplayer** *(before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓; network, view, lobby, live battles, drop-outs, saves, start zones and the simultaneous first week built: ADR-192 to ADR-197)*: the **host** runs
   the game and computer players; clients send commands and get only what they may see. **Lobby**: Multiplayer lists the games found on the
   network (or an address is typed); the host sets the game up on the new-game screen, each colour played here, by a LAN player or by the
   computer; a joined player takes an open colour; the host's choices, never the seed, are shown to all; a colour nobody has joined at the
   start waits for a player during the game; the chat stays over the map and the battle. **Battles** open only on the computers of their
   sides; between players on two computers each commands its own side live and there is no quick combat. **A player who drops out** pauses
   the game for everyone, and so does a colour nobody has joined when its turn or its battle comes: every command waits until a player joins
-  that colour or the host lets the computer play it from then on (mid-battle too). *(planned)*: the host's save resumes in multiplayer, a
-  client's in single player. **Simultaneous first week** (host's choice, maps with start
-  zones): entering another player's zone, touching an object another player touched that day, or seeing another player's hero discards that
-  day for all, and it is replayed turn by turn. One turn timer for all. No internet play.
+  that colour or the host lets the computer play it from then on (mid-battle too). **Saves**: the host saves and autosaves the game; a
+  client's save and replay are the host's whole record of the game, sent when asked. Any save goes on in a LAN game ("Host a saved game":
+  each colour a person plays is played here, by a LAN player or by the computer) or on one computer (a save with several people's colours
+  asks which play here, hot-seat, and which the computer plays from then on; F9's quick load keeps them all here). **Simultaneous first week** (the host's switch in the lobby; maps with
+  a start zone for every person, which random maps have and the editor paints; one colour played on the host): the people play each day of
+  the first week at once, each on their own computer, and the computer players after them. One battle or question at a time: while one person
+  fights or answers, the others wait. A hero entering another person's start zone, a person seeing another person's hero it did not see when
+  the day began, or a hero visiting an object another person's hero visited that day discards the day for all: the host goes back to the
+  day's start and it is played again turn by turn (no second income), and so is every day after it. A save made during a simultaneous day
+  goes on turn by turn when loaded on one computer. *(planned)*: one turn timer for all. No internet play.
 
 ## Game options
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,

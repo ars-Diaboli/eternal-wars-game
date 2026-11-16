@@ -77,6 +77,9 @@ public sealed class GameState
         }
     }
 
+    /// <summary>The game's content tables, to build another game of the same content (a replay).</summary>
+    public ContentCatalogs Content => new(Creatures, HeroRoster, Buildings, Artifacts, ObjectCatalog, Terrains);
+
     public AdventureMap Map { get; }
 
     public GameOptions Options { get; }
@@ -165,7 +168,61 @@ public sealed class GameState
     /// <summary>The arena map's battle (ADR-097), chosen at the start of day 2; null before, and on every other map.</summary>
     public ArenaBattle? Arena { get; internal set; }
 
-    public PendingDecision? PendingDecision { get; internal set; }
+    public PendingDecision? PendingDecision
+    {
+        get => _pendingDecision;
+        internal set
+        {
+            _pendingDecision = value;
+            DecisionPlayer = value is null ? null : HeroOwner(value.Hero) ?? CurrentPlayer.Id;
+        }
+    }
+
+    /// <summary>Whose question <see cref="PendingDecision"/> is: its hero's owner, else the player whose turn asked it; null without one.</summary>
+    public PlayerId? DecisionPlayer { get; private set; }
+
+    private PendingDecision? _pendingDecision;
+
+    private PlayerId? HeroOwner(HeroId hero) => _heroes.Concat(GarrisonHeroes).FirstOrDefault(h => h.Id == hero)?.Owner;
+
+    // The simultaneous days (MP-2, ADR-197) ---------------------------------------------------------------
+
+    private readonly List<PlayerId> _openTurns = [];
+
+    /// <summary>
+    /// The people whose turns are open at once on a simultaneous day (MP-2, ADR-197), in player order; empty on a day played turn by turn and
+    /// once every person has ended the turn (the computer players then play theirs one by one).
+    /// </summary>
+    public IReadOnlyList<PlayerId> OpenTurns => _openTurns;
+
+    internal List<PlayerId> OpenTurnList => _openTurns;
+
+    /// <summary>Whether several people's turns are open at once (<see cref="OpenTurns"/>).</summary>
+    public bool IsSimultaneous => _openTurns.Count > 0;
+
+    /// <summary>Whether <paramref name="player"/> may act on the map now: its turn is open (a simultaneous day) or it is the current player.</summary>
+    public bool IsTurnOf(PlayerId player) => IsSimultaneous ? _openTurns.Contains(player) : CurrentPlayer.Id == player;
+
+    /// <summary>The players who may act on the map now: those with an open turn, the current player first; else the current player.</summary>
+    public IEnumerable<PlayerId> PlayersToAct => IsSimultaneous ? _openTurns.OrderBy(p => p == CurrentPlayer.Id ? 0 : 1) : [CurrentPlayer.Id];
+
+    /// <summary>The players who ended their turn today on a simultaneous day; they do not play again until the next day.</summary>
+    internal HashSet<PlayerId> DoneToday { get; } = [];
+
+    /// <summary>The players whose turn began today (its income, movement and questions), so a turn begins once a day.</summary>
+    internal HashSet<PlayerId> BegunToday { get; } = [];
+
+    /// <summary>A conflict had a simultaneous day played again turn by turn: every day after it is too (MP-2).</summary>
+    public bool SimultaneousEnded { get; internal set; }
+
+    /// <summary>
+    /// Why today's simultaneous play must stop (a conflict, MP-2): the LAN host plays the day again turn by turn; until then every command is
+    /// refused. Null otherwise.
+    /// </summary>
+    public string? SimultaneousConflict { get; internal set; }
+
+    /// <summary>The player's place in the turn order.</summary>
+    internal int IndexOf(PlayerId player) => _players.FindIndex(p => p.Id == player);
 
     public Player CurrentPlayer => _players[CurrentPlayerIndex];
 

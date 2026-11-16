@@ -71,4 +71,17 @@ public sealed record GameOptions(
     /// of it. A player not listed (or with an unknown town id) gets a faction drawn when the game starts. Null = nobody chose.
     /// </summary>
     public IReadOnlyDictionary<int, string>? StartTowns { get; init; }
+
+    /// <summary>
+    /// The simultaneous first week (MP-2, ADR-098, ADR-197): on a map with a start zone for every person, the people play each day of the first
+    /// week at once, the computer players after them, until a conflict has the day played again turn by turn (<see cref="Commands.PlayTurnByTurnCommand"/>)
+    /// and every day after it. A LAN host's choice; false plays every day turn by turn.
+    /// </summary>
+    public bool SimultaneousFirstWeek { get; init; }
+
+    /// <summary>
+    /// The colour played on the LAN host's computer (ADR-197): while several turns are open at once it is the current player as long as its turn is,
+    /// so the host's screen is its player's. Null: the first open turn is.
+    /// </summary>
+    public Common.PlayerId? HostPlayer { get; init; }
 }

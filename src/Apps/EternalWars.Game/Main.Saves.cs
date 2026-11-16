@@ -3,18 +3,21 @@ using EternalWars.Core.Data.Settings;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Scenarios;
 using EternalWars.Core.Domain.Settings;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.UI;
 using EternalWars.Godot.UI.Hud;
+using EternalWars.Godot.UI.Setup;
 using Godot;
 
 namespace EternalWars.Game;
 
 /// <summary>
 /// The game app's menu and files (composition): the F10 menu with its settings (speeds, tooltips, layout, auto combat), save and load (ADR-058)
-/// with F5 quick save and F9 quick load, the autosave slots, and the ranking and replay of a finished game (ADR-101).
+/// with F5 quick save and F9 quick load, the autosave slots, and the ranking and replay of a finished game (ADR-101). A save with several
+/// people's colours asks who plays them from now on; a LAN client saves the host's record of the game (ADR-196).
 /// </summary>
 public partial class Main
 {
@@ -59,16 +62,13 @@ public partial class Main
         _menu.ShowInterface(_interface);
     }
 
-    /// <summary>A LAN client saves nothing (ADR-193): what it holds is its player's view, which does not replay the game.</summary>
-    private const string HostSaves = "In a LAN game the host saves the game.";
-
     /// <summary>The start of a turn goes into the two autosave slots: this turn's and the previous turn's.</summary>
     private void Autosave()
     {
         _turnBegan = false;
         if (_session.FollowsHost)
         {
-            return; // a LAN client holds its player's view, not the game: the host saves (ADR-193)
+            return; // a LAN client holds its player's view, not the game: the host autosaves (ADR-193); the client saves the host's record (ADR-196)
         }
 
         try
@@ -198,7 +198,7 @@ public partial class Main
             case Key.F9:
                 if (File.Exists(GameSaves.PathFor(_saveFolder, GameSaves.QuickSaveName)))
                 {
-                    Load(GameSaves.PathFor(_saveFolder, GameSaves.QuickSaveName));
+                    Load(GameSaves.PathFor(_saveFolder, GameSaves.QuickSaveName), ask: false);
                 }
                 else
                 {
@@ -213,10 +213,21 @@ public partial class Main
 
     private void Save(string name)
     {
-        if (_session.FollowsHost)
+        if (_client is { } client)
         {
-            _menu.SetMessage(HostSaves);
-            _status.Text = HostSaves;
+            // A LAN client's save is the host's whole record of the game (ADR-196), which loads on one computer.
+            _menu.SetMessage("Asking the host for the game…");
+            client.RequestRecord(name.Trim(), (record, error) =>
+            {
+                try
+                {
+                    Report(record is null ? $"Could not save: {error}" : $"Saved '{Path.GetFileName(GameSaves.SaveRecord(_saveFolder, name, record))[..^GameRecordSerializer.SaveExtension.Length]}'.");
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException or ArgumentException)
+                {
+                    Report($"Could not save: {e.Message}");
+                }
+            });
             return;
         }
 
@@ -232,23 +243,149 @@ public partial class Main
         }
     }
 
-    private void Load(string path)
+    /// <summary>The save menu's message and the status line, for an answer that comes later (a LAN client's save).</summary>
+    private void Report(string text)
+    {
+        _menu.SetMessage(text);
+        Tell(text);
+    }
+
+    private void Load(string path) => Load(path, ask: true);
+
+    /// <summary>
+    /// Loads a save. One with several people's colours still in the game asks who plays them from now on (<paramref name="ask"/>, ADR-196; F9's
+    /// quick load does not: everyone plays here, as saved); one with a single person goes on at once.
+    /// </summary>
+    private void Load(string path, bool ask)
+    {
+        if (LoadSave(path, out var error) is not { } loaded)
+        {
+            _menu.SetMessage($"Could not load: {error}");
+            return;
+        }
+
+        if (ask && GameSaves.People(loaded.Session.State).Count > 1)
+        {
+            ShowSavedGame(lan: null, loaded);
+            return;
+        }
+
+        StartSaved(loaded, []);
+    }
+
+    /// <summary>Replays a save; null (and why) when it does not load.</summary>
+    private static SavedGame? LoadSave(string path, out string error)
     {
         try
         {
             var (session, record) = GameSaves.Load(path, GameContent.All);
-            CloseSetup();
-            _menu.Close();
-            _generated = record.Generated;
-            StopWatching();
-            BeginGame(session, record.Map, resume: true);
-            _status.Text = SaveSlotText.Loaded(path, record);
+            error = "";
+            return new SavedGame(path, session, record);
         }
         catch (Exception e) when (e is InvalidOperationException or FormatException or System.Text.Json.JsonException or IOException or KeyNotFoundException)
         {
-            _menu.SetMessage($"Could not load: {e.Message}");
+            error = e.Message;
+            return null;
         }
     }
+
+    /// <summary>
+    /// The saved-game screen (ADR-196): a save and how each colour a person plays in it is played from now on: here, by the computer or, for a LAN
+    /// host (<paramref name="lan"/>), by a LAN player. It shows <paramref name="loaded"/>, else loads the save picked. <paramref name="wire"/> joins a
+    /// LAN host's lobby to the screen before the first save is shown.
+    /// </summary>
+    private void ShowSavedGame(LanHosting? lan, SavedGame? loaded, Action<SavedGameScreen>? wire = null)
+    {
+        if (lan is null)
+        {
+            LeaveGame(); // the game being played ends here, as a load ends it
+        }
+
+        _menu.Close();
+        Action back = lan is null ? ShowMainMenu : ShowMultiplayer;
+        var screen = new SavedGameScreen { Lan = lan };
+        ShowSetup(screen, back);
+        screen.BackRequested += back;
+        screen.Bind(SaveItems(GameSaves.List(_saveFolder)), loaded?.Path);
+        var shown = loaded;
+        screen.SaveChosen += path =>
+        {
+            shown = LoadSave(path, out var error);
+            if (shown is null)
+            {
+                screen.ShowMessage($"Could not load: {error}");
+                return;
+            }
+
+            screen.ShowGame(ViewOfSave(shown));
+        };
+        screen.StartRequested += seats =>
+        {
+            if (shown is not null)
+            {
+                StartSaved(shown, seats);
+            }
+        };
+        wire?.Invoke(screen);
+        if (loaded is not null)
+        {
+            screen.ShowGame(ViewOfSave(loaded));
+        }
+        else
+        {
+            screen.Choose();
+        }
+    }
+
+    /// <summary>A loaded save as the saved-game screen shows it: the map and the save, the date and whose turn, the colours still in the game.</summary>
+    private static SavedGameView ViewOfSave(SavedGame saved)
+    {
+        var state = saved.Session.State;
+        var lines = new List<string> { $"{state.Date}, {state.CurrentPlayer.Name}'s turn{(state.Battle is null ? "" : ", in a battle")}" };
+        return new SavedGameView(
+            $"{saved.Record.Map.Name}: '{saved.Record.Save?.Name ?? Path.GetFileName(saved.Path)}'",
+            lines,
+            [
+                .. state.Players.Where(p => !p.IsDefeated).Select(p => new SavedSeat(
+                    p.Id,
+                    p.Name,
+                    p.IsHuman,
+                    $"{state.ObjectsOf<Core.Domain.Towns.Town>().Count(t => t.Owner == p.Id)} towns, {state.AllHeroesOf(p.Id).Count()} heroes")),
+            ]);
+    }
+
+    /// <summary>
+    /// Goes on with a loaded save: the colours <paramref name="seats"/> gives the computer are its from now on (a command, so the game's record keeps
+    /// it); a LAN host's lobby hands its players to the game, in the colours of LAN players.
+    /// </summary>
+    private void StartSaved(SavedGame saved, IReadOnlyList<LanSeat> seats)
+    {
+        var (path, session, record) = saved;
+        var lobby = _lobby;
+        _lobby = null;
+        CloseSetup();
+        _menu.Close();
+        StopWatching();
+        StopNetwork(keep: null, listening: lobby is not null);
+        foreach (var seat in seats.Where(s => s.Kind == LanSeatKind.Computer && session.State.GetPlayer(s.Id).IsHuman))
+        {
+            session.Execute(new HandToComputerCommand(seat.Id)).ThrowIfRejected(); // the screen keeps a colour here
+        }
+
+        // On one computer nobody's day can be hidden from another's: a save made during a simultaneous day goes on turn by turn (ADR-197).
+        if (lobby is null && session.State.IsSimultaneous)
+        {
+            session.Execute(new PlayTurnByTurnCommand(session.State.CurrentPlayer.Id, "The game goes on on one computer.")).ThrowIfRejected();
+        }
+
+        _generated = record.Generated;
+        HostLobbyGame(session, lobby);
+        BeginGame(session, record.Map, resume: true);
+        _status.Text = SaveSlotText.Loaded(path, record);
+    }
+
+    /// <summary>A save, replayed to where it was saved.</summary>
+    private sealed record SavedGame(string Path, GameSession Session, GameRecordDocument Record);
 
     /// <summary>
     /// Puts the finished game into the ranking in the user data folder (ADR-101) under the names the winners typed; the table it went into, with
@@ -299,14 +436,29 @@ public partial class Main
     /// <summary>"Save replay" on the end screen (ADR-101): the game's record in <c>user://replays</c>.</summary>
     private string SaveReplay(string name)
     {
-        if (_session.FollowsHost)
-        {
-            return HostSaves;
-        }
-
         if (string.IsNullOrWhiteSpace(name))
         {
             name = $"{_initialMap.Name} day {_session.State.Date.AbsoluteDay}";
+        }
+
+        if (_client is { } client)
+        {
+            // A LAN client's replay is the host's record of the game (ADR-196).
+            var folder = ProjectSettings.GlobalizePath(ReplaysFolder);
+            client.RequestRecord(null, (record, error) =>
+            {
+                try
+                {
+                    _result.ShowMessage(record is null
+                        ? $"Could not save the replay: {error}"
+                        : $"Replay saved as {Path.GetFileName(GameSaves.SaveReplayRecord(folder, name, record))}.");
+                }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
+                {
+                    _result.ShowMessage($"Could not save the replay: {e.Message}");
+                }
+            });
+            return "Asking the host for the game's record…";
         }
 
         try

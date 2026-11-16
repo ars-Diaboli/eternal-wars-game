@@ -95,8 +95,24 @@ public sealed class GameSession
         {
             Flow.HandToComputer(c.Player);
             Battles.HandToComputer(c.Player);
+            Turns.LeaveOpenTurns(c.Player); // on a simultaneous day the computer plays its turn after the people (ADR-197)
         });
+        _handlers.Add<PlayTurnByTurnCommand>(c => Turns.PlayTurnByTurn(c.Reason));
+
+        Watch = new SimultaneousDayWatch(State, Bus);
+        if (!followsHost)
+        {
+            Bus.Subscribe<MapObjectVisited>(e => Watch.Visited(e.Hero, e.Object));
+        }
     }
+
+    /// <summary>
+    /// Where today's commands begin in <see cref="CommandLog"/> on a simultaneous day (MP-2, ADR-197): the commands before it rebuild the game as
+    /// the day opened, which a LAN host plays again turn by turn after a conflict. 0 before the first simultaneous day.
+    /// </summary>
+    public int SimultaneousDayStart { get; private set; }
+
+    private SimultaneousDayWatch Watch { get; }
 
     public GameState State { get; }
 
@@ -181,6 +197,18 @@ public sealed class GameSession
         Towns.DrawGuilds();
         Turns.StartGame();
         Settle();
+        NoteSimultaneousDay();
+    }
+
+    /// <summary>A simultaneous day just opened: where its commands begin, and what is no conflict.</summary>
+    private void NoteSimultaneousDay()
+    {
+        if (Turns.OpenedSimultaneousDay)
+        {
+            Turns.OpenedSimultaneousDay = false;
+            SimultaneousDayStart = _log.Count;
+            Watch.DayOpened();
+        }
     }
 
     /// <summary>
@@ -200,6 +228,12 @@ public sealed class GameSession
             return CommandResult.Rejected("The game is over.");
         }
 
+        // A simultaneous day's conflict stops the day until the host plays it again turn by turn (ADR-197).
+        if (State.SimultaneousConflict is { } conflict && command is not PlayTurnByTurnCommand)
+        {
+            return CommandResult.Rejected($"The day is played again turn by turn: {conflict}");
+        }
+
         if (Authorize(command) is { } refusal)
         {
             return CommandResult.Rejected(refusal);
@@ -213,6 +247,12 @@ public sealed class GameSession
         if (FollowsHost)
         {
             return CommandResult.Rejected("This computer follows the host's game: its commands go to the host.");
+        }
+
+        // On a simultaneous day a command runs as its player's turn (ADR-197); between commands the current player is the host's open turn.
+        if (State.IsSimultaneous && command is not (IBattleCommand or SetAutoCombatCommand or HandToComputerCommand or PlayTurnByTurnCommand))
+        {
+            State.CurrentPlayerIndex = State.IndexOf(command.Player);
         }
 
         object? outcome;
@@ -230,6 +270,7 @@ public sealed class GameSession
                 throw new InvalidOperationException($"{command} was refused ({e.Message}) after it had changed the game.", e);
             }
 
+            Turns.PointAtOpenTurn();
             return CommandResult.Rejected(e.Message);
         }
 
@@ -238,6 +279,9 @@ public sealed class GameSession
         // A map event waiting for an answer, a battle or a level-up goes on once nothing is pending.
         MapEvents.Pump();
         Settle();
+        Turns.PointAtOpenTurn();
+        NoteSimultaneousDay();
+        Watch.Check();
         Bus.Publish(new CommandExecuted(command));
         return CommandResult.Accepted(outcome);
     }
@@ -248,6 +292,11 @@ public sealed class GameSession
     /// </summary>
     private void Settle()
     {
+        foreach (var gone in State.OpenTurns.Where(p => State.GetPlayer(p).IsDefeated).ToList())
+        {
+            Turns.LeaveOpenTurns(gone); // out of the game on a simultaneous day
+        }
+
         for (var i = 0; i < State.Players.Count + 1; i++)
         {
             Flow.Evaluate();
@@ -277,15 +326,32 @@ public sealed class GameSession
             return State.Battle is null ? "No battle is being fought." : null;
         }
 
-        // A player setting, changed whenever the player likes; the computer taking a player over, whenever the LAN host decides (ADR-195).
-        if (command is SetAutoCombatCommand or HandToComputerCommand)
+        // A player setting, changed whenever the player likes; the computer taking a player over and a simultaneous day played again turn by turn,
+        // whenever the LAN host decides (ADR-195, ADR-197).
+        if (command is SetAutoCombatCommand or HandToComputerCommand or PlayTurnByTurnCommand)
         {
             return null;
         }
 
-        if (command.Player != State.CurrentPlayer.Id)
+        if (!State.IsTurnOf(command.Player))
         {
-            return $"It is not {command.Player}'s turn.";
+            return State.DoneToday.Contains(command.Player)
+                ? $"{State.GetPlayer(command.Player).Name} has ended the turn: the others still play today."
+                : $"It is not {command.Player}'s turn.";
+        }
+
+        // On a simultaneous day one battle or question at a time: the others wait for it (ADR-197).
+        if (State.IsSimultaneous)
+        {
+            if (State.Battle is not null)
+            {
+                return "Wait: a battle is being fought.";
+            }
+
+            if (State.PendingDecision is not null && State.DecisionPlayer is { } asked && asked != command.Player)
+            {
+                return $"Wait: {State.GetPlayer(asked).Name} answers a question.";
+            }
         }
 
         if (command is IHeroCommand { Hero: var hero })

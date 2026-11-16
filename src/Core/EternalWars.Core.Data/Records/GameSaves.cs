@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
@@ -75,7 +76,14 @@ public static class GameSaves
     /// file stays until the new one is complete. <paramref name="initialMap"/> is the map the game started from, <paramref name="generated"/>
     /// how it was generated (null for a hand-made map).
     /// </summary>
-    public static string Save(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null)
+    public static string Save(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null) =>
+        SaveRecord(folder, name, GameReplay.Record(initialMap, session, name.Trim(), generated));
+
+    /// <summary>
+    /// Writes a game's record as the save <paramref name="name"/> in <paramref name="folder"/>, like <see cref="Save"/>: a LAN client's save is the
+    /// host's whole record (ADR-196).
+    /// </summary>
+    public static string SaveRecord(string folder, string name, GameRecordDocument record)
     {
         var path = PathFor(folder, name);
         if (SlotOf(path) is not null)
@@ -85,7 +93,7 @@ public static class GameSaves
 
         Directory.CreateDirectory(folder);
         var temp = path + ".tmp";
-        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, name.Trim(), generated), temp);
+        GameRecordSerializer.Save(record, temp);
         File.Move(temp, path, overwrite: true);
         return path;
     }
@@ -94,15 +102,26 @@ public static class GameSaves
     /// Writes the session's replay (ADR-101: "Save replay" on an end screen) as <paramref name="name"/><c>.ewreplay.json</c> in
     /// <paramref name="folder"/>, replacing one of that name; the same record as a save, without the save label.
     /// </summary>
-    public static string SaveReplay(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null)
+    public static string SaveReplay(string folder, string name, MapDocument initialMap, GameSession session, GenerationInfo? generated = null) =>
+        SaveReplayRecord(folder, name, GameReplay.Record(initialMap, session, generated: generated));
+
+    /// <summary>Writes a game's record as the replay <paramref name="name"/>, like <see cref="SaveReplay"/> (a LAN client's is the host's, ADR-196).</summary>
+    public static string SaveReplayRecord(string folder, string name, GameRecordDocument record)
     {
         var path = Path.Combine(folder, Sanitize(name) + GameRecordSerializer.FileExtension);
         Directory.CreateDirectory(folder);
         var temp = path + ".tmp";
-        GameRecordSerializer.Save(GameReplay.Record(initialMap, session, generated: generated), temp);
+        GameRecordSerializer.Save(record with { Save = null }, temp);
         File.Move(temp, path, overwrite: true);
         return path;
     }
+
+    /// <summary>
+    /// The colours a person plays in a loaded game and who are still in it (ADR-196): each is played on this computer, on another (a LAN game) or,
+    /// from now on, by the computer (<see cref="Domain.Commands.HandToComputerCommand"/>).
+    /// </summary>
+    public static IReadOnlyList<PlayerId> People(GameState state) =>
+        [.. state.Players.Where(p => p.IsHuman && !p.IsDefeated).Select(p => p.Id)];
 
     /// <summary>
     /// Replays a saved game to where it was saved; the session is started and mid-battle if it was saved there. Throws

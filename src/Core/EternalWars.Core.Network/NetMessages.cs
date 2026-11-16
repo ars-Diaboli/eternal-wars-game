@@ -9,7 +9,7 @@ using EternalWars.Core.Domain.Common;
 
 namespace EternalWars.Core.Network;
 
-/// <summary>What a LAN host and its clients send each other (ADR-192 to ADR-195): one JSON object per message, its kind in <c>"type"</c>.</summary>
+/// <summary>What a LAN host and its clients send each other (ADR-192 to ADR-196): one JSON object per message, its kind in <c>"type"</c>.</summary>
 public abstract record NetMessage;
 
 /// <summary>A client asks for a seat: the colour <paramref name="Seat"/>, or the first free one when null.</summary>
@@ -118,11 +118,20 @@ public sealed record CommandRefused(int Sequence, string Error) : NetMessage;
 /// </summary>
 public sealed record GamePaused(string? Reason) : NetMessage;
 
+/// <summary>
+/// A client asks for the game's whole record (ADR-196), to save it on its computer: labelled <paramref name="SaveName"/> for a save, without a
+/// label (null) for a replay. <paramref name="Request"/> numbers it, so the answer (<see cref="RecordSent"/>) can name it.
+/// </summary>
+public sealed record RecordRequest(int Request, string? SaveName) : NetMessage;
+
+/// <summary>The host's answer to <see cref="RecordRequest"/> number <paramref name="Request"/>: the record, or why there is none.</summary>
+public sealed record RecordSent(int Request, GameRecordDocument? Record, string? Error) : NetMessage;
+
 /// <summary>Turns messages into JSON and back, with the save files' settings for the commands and records they carry.</summary>
 public static class NetSerializer
 {
     /// <summary>Raised whenever a message changes shape; a host and a client of different versions do not play together.</summary>
-    public const int ProtocolVersion = 4;
+    public const int ProtocolVersion = 5;
 
     private static readonly IReadOnlyList<(Type Type, string Name)> MessageTypes =
     [
@@ -137,6 +146,8 @@ public static class NetSerializer
         (typeof(ChatSay), "say"),
         (typeof(ChatLine), "chat"),
         (typeof(GamePaused), "paused"),
+        (typeof(RecordRequest), "askRecord"),
+        (typeof(RecordSent), "record"),
     ];
 
     private static readonly JsonSerializerOptions Options = CreateOptions();

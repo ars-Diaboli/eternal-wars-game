@@ -172,6 +172,7 @@ public class EditorUndoTests
         ["TerrainEditor.PaintRoad"] = f => f.Editor.Terrain.PaintRoad(new MapPosition(30, 24), RoadType.Cobblestone, radius: 1) > 0,
         ["TerrainEditor.PaintRoad (erase)"] = f => f.Editor.Terrain.PaintRoad(new MapPosition(30, 24), RoadType.None) > 0,
         ["TerrainEditor.PaintRiver"] = f => f.Editor.Terrain.PaintRiver(new MapPosition(26, 22), RiverType.Clear, radius: 1) > 0,
+        ["TerrainEditor.PaintStartZone"] = f => f.Editor.Terrain.PaintStartZone(new MapPosition(26, 22), new PlayerId(0), radius: 1) > 0,
         ["MapEditorSession.BeginStroke (stroke of several paints)"] = f =>
         {
             f.Editor.BeginStroke("Paint a lake");

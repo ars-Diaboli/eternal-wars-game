@@ -91,13 +91,14 @@ public sealed class ProgressionService(GameState state, IEventPublisher events) 
             }
         }
 
-        var player = state.CurrentPlayer;
-        if (!state.IsStarted || !player.IsHuman)
+        if (!state.IsStarted)
         {
             return;
         }
 
-        foreach (var hero in state.AllHeroesOf(player.Id).Where(h => h.PendingLevelUps > 0).ToList())
+        // The current player's heroes; on a simultaneous day, those of every open turn (ADR-197).
+        var people = state.PlayersToAct.Where(p => state.GetPlayer(p).IsHuman).ToList();
+        foreach (var hero in people.SelectMany(p => state.AllHeroesOf(p)).Where(h => h.PendingLevelUps > 0).ToList())
         {
             var options = Offers(hero);
             var stat = RollStat(hero);

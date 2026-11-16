@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Maps;
+using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Game;
@@ -12,12 +13,15 @@ namespace EternalWars.Core.Network;
 /// (<see cref="GameSession.FollowingHost"/>), whose state holds only what the host sent (<see cref="ViewMirror"/>) and whose events are the
 /// ones the host let through. Its own player's commands go to the host (<see cref="CommandResult.Sent"/>); another colour's are refused here.
 /// Before the game starts the client is in the host's lobby (ADR-194): it sees the game being set up (<see cref="Lobby"/>), may take another
-/// open colour (<see cref="TakeSeat"/>) and writes in the chat (<see cref="Say"/>), as it may during the game.
+/// open colour (<see cref="TakeSeat"/>) and writes in the chat (<see cref="Say"/>), as it may during the game. It saves the game as the host's
+/// whole record, which it asks for (<see cref="RequestRecord"/>, ADR-196).
 /// </summary>
 /// <remarks>Everything happens on the caller's thread in <see cref="Poll"/>.</remarks>
 public sealed class GameClient(INetConnection connection, ContentCatalogs? content = null) : ICommandRoute, IDisposable
 {
+    private readonly Dictionary<int, Action<GameRecordDocument?, string?>> _records = [];
     private int _sequence;
+    private int _recordRequests;
     private int _updates;
     private ViewMirror? _mirror;
     private GameSession? _session;
@@ -82,6 +86,29 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
         }
     }
 
+    /// <summary>
+    /// Asks the host for the game's whole record (ADR-196), labelled <paramref name="saveName"/> for a save, or without a label (null) for a replay;
+    /// <paramref name="answered"/> gets it (or why there is none) in a later <see cref="Poll"/>, at once when the game is not joined. A link that
+    /// goes down first leaves it unanswered (<see cref="Disconnected"/> says why).
+    /// </summary>
+    public void RequestRecord(string? saveName, Action<GameRecordDocument?, string?> answered)
+    {
+        if (Failure is not null)
+        {
+            answered(null, $"The game is cut off from the host: {Failure}");
+            return;
+        }
+
+        if (Session is null)
+        {
+            answered(null, "The game has not started yet.");
+            return;
+        }
+
+        _records[++_recordRequests] = answered;
+        connection.Send(new RecordRequest(_recordRequests, saveName));
+    }
+
     /// <summary>Handles what the host has sent: the seat, the view's updates, refusals.</summary>
     public void Poll()
     {
@@ -135,6 +162,16 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
             case JoinAccepted accepted when _session is null:
                 Start(accepted);
                 break;
+            case JoinAccepted again:
+                // The host played a simultaneous day again from its start (ADR-197): a new view of the new game, joined again at its first update.
+                if (ReferenceEquals(_session!.Route, this))
+                {
+                    _session.Route = null;
+                }
+
+                (_session, _mirror, _updates) = (null, null, 0);
+                Start(again);
+                break;
             case JoinRefused refused:
                 Fail(refused.Reason);
                 break;
@@ -150,6 +187,9 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
                 break;
             case ChatLine line:
                 ChatReceived?.Invoke(line.From, line.Text);
+                break;
+            case RecordSent sent when _records.Remove(sent.Request, out var answered):
+                answered(sent.Record, sent.Record is null ? sent.Error ?? "The host sent no record." : null);
                 break;
             case GamePaused paused when _session is not null:
                 Paused = paused.Reason;

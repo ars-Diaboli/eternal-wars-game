@@ -97,6 +97,8 @@ Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped template
     (the new-game screen offers it to a human player with a picked town; computer: random). Start dwellings open with a week of creatures.
   - The picked hero (else one of the town's) stands at the first town with 2–3 stacks of tier-1 and tier-2 creatures, 1000–1500 power.
   - Neutral towns keep the default start; an untaken slot keeps its town, neutral, garrisoned by the zone's strength.
+  - Each player's start zone (the template zone of its start town) is written into the map as its start zone (MP-4, ADR-197), for the
+    simultaneous first week; an untaken slot's zone is nobody's.
   - Standard rules; complexity and fog from the new-game screen; named "template size×size #seed".
 - **Fairness** (RMG-8, ADR-117, `MapFairness.Check`): every start town reaches every other, and every town, mine and treasure item is
   reachable from some start (at step costs, through gates, portals, guards, pickups, garrisons). Each start gets **mine distance** (nearest

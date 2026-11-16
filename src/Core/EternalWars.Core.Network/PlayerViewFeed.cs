@@ -33,7 +33,8 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
 {
     /// <summary>Events everyone sees, whoever they name: the turn order, who is out, who the computer took over.</summary>
     private static readonly HashSet<Type> PublicEvents =
-        [typeof(TurnStarted), typeof(TurnEnded), typeof(PlayerDefeated), typeof(GracePeriodStarted), typeof(GracePeriodEnded), typeof(PlayerHandedToComputer)];
+        [typeof(TurnStarted), typeof(TurnEnded), typeof(PlayerDefeated), typeof(GracePeriodStarted), typeof(GracePeriodEnded), typeof(PlayerHandedToComputer),
+         typeof(SimultaneousDayStarted), typeof(SimultaneousDaysEnded)];
 
     /// <summary>Events that name an owner but are about a hero others may see: they follow the hero.</summary>
     private static readonly HashSet<Type> HeroEvents =
@@ -121,7 +122,7 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
                 return executed.Command.Player == viewer;
             case DecisionRequested or DecisionResolved:
                 var decision = e is DecisionRequested requested ? requested.Decision : ((DecisionResolved)e).Decision;
-                return decision is BattleDecision ? battleSides.Contains(viewer) : state.CurrentPlayer.Id == viewer;
+                return decision is BattleDecision ? battleSides.Contains(viewer) : GameView.Asks(state, decision) == viewer;
             case HeroMoved moved:
                 return SeesHeroAt(moved.Hero, moved.From, moved.To);
             case HeroTeleported teleported:
@@ -318,14 +319,22 @@ internal sealed record GameView(
     GameDate Date, Domain.Turns.WeekEvent WeekEvent, int CurrentPlayerIndex, bool IsStarted, GameOutcome? Outcome, ArenaBattle? Arena,
     PendingDecision? Decision, BattleState? Battle)
 {
+    /// <summary>
+    /// The game as <paramref name="viewer"/> sees it: on a simultaneous day (ADR-197) whose turn is open, it is the current player on its own
+    /// computer; a question is shown only to the player it asks.
+    /// </summary>
     public static GameView Of(GameState state, PlayerId viewer)
     {
         var fights = state.Battle is { } battle && (battle.Attacker.Owner == viewer || battle.Defender.Owner == viewer);
         var decision = state.PendingDecision is BattleDecision ? (fights ? state.PendingDecision : null)
-            : state.CurrentPlayer.Id == viewer ? state.PendingDecision : null;
-        return new(state.Date, state.WeekEvent, state.CurrentPlayerIndex, state.IsStarted, state.Outcome, state.Arena, decision,
-            fights ? state.Battle : null);
+            : state.DecisionPlayer == viewer ? state.PendingDecision : null;
+        var current = state.OpenTurns.Contains(viewer) ? state.IndexOf(viewer) : state.CurrentPlayerIndex;
+        return new(state.Date, state.WeekEvent, current, state.IsStarted, state.Outcome, state.Arena, decision, fights ? state.Battle : null);
     }
+
+    /// <summary>Whom a question asks: its hero's owner, else the current player (whose turn asked it).</summary>
+    public static PlayerId Asks(GameState state, PendingDecision decision) =>
+        state.Heroes.Concat(state.GarrisonHeroes).FirstOrDefault(h => h.Id == decision.Hero)?.Owner ?? state.CurrentPlayer.Id;
 
     public void ApplyTo(GameState state)
     {

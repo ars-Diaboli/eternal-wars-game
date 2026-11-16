@@ -18,6 +18,18 @@ public sealed record GracePeriodEnded(PlayerId Player) : IEvent;
 /// <summary>The computer plays <see cref="Player"/> from now on (ADR-195): a LAN player left and the host handed the colour over.</summary>
 public sealed record PlayerHandedToComputer(PlayerId Player) : IEvent;
 
+/// <summary>A simultaneous day began (MP-2, ADR-197): <paramref name="Players"/>, every person in the game, play it at once.</summary>
+public sealed record SimultaneousDayStarted(GameDate Date, IReadOnlyList<PlayerId> Players) : IEvent;
+
+/// <summary>
+/// Something one person did on a simultaneous day concerns another (<paramref name="Reason"/>, MP-2): the day stops, and the LAN host plays it again
+/// turn by turn.
+/// </summary>
+public sealed record SimultaneousDayConflicted(string Reason) : IEvent;
+
+/// <summary>From today on, every day is played turn by turn (<see cref="Commands.PlayTurnByTurnCommand"/>; <paramref name="Reason"/>, the conflict).</summary>
+public sealed record SimultaneousDaysEnded(GameDate Date, string Reason) : IEvent;
+
 /// <summary>
 /// Day 2 of an arena map began (ADR-097, ADR-100): each side's champion was chosen and moved to <see cref="CombatPlace"/> (null on a map without
 /// one: the heroes stay where they are). Published after <see cref="DayStarted"/> and the heroes' <c>HeroTeleported</c> or
