@@ -2,7 +2,8 @@
 //
 // Each pixel finds where it is on the map from the depth buffer and reads the fog mask there (one texel a tile, faded by FogView), so a tall
 // object at the edge shows the part that stands on explored ground and the rest dissolves into the fog, never a hard tile cut. Pixels with
-// nothing behind them (the void around the map, the gaps between tiles) use the ground plane.
+// nothing behind them are always the void. The ground goes on a few tiles past the map's edge (AdventureMapView's apron); the fog swallows
+// it along a wandering shoreline, so the land never ends in a straight line.
 //
 // Two looks, same mask:
 //  - Dark: a starry void. Three star layers and a nebula lie on planes far below the map, so they shift with true parallax as the camera
@@ -78,15 +79,16 @@ vec2 on_plane(vec3 origin, vec3 dir, float y) {
 }
 
 // Hidden and out-of-sight amounts at a map point, blurred (a 5×5 binomial, close to a Gaussian of about a tile) so the tile staircase
-// rounds off: a revealed circle of tiles reads as a round clearing and its edge fades softly over about two tiles.
+// rounds off: a revealed circle of tiles reads as a round clearing and its edge fades softly over about two tiles. Past the map's edge the
+// nearest edge tile's amounts go on (the shoreline, not the mask, ends the land), so the mask's hidden border is never read.
 vec2 mask_at(vec2 xz) {
-	vec2 uv = (xz + 1.5) / mask_size;
-	vec2 texel = 0.8 / mask_size;
+	vec2 map_last = mask_size - 3.0;
 	vec2 sum = vec2(0.0);
 	for (int y = -2; y <= 2; y++) {
 		for (int x = -2; x <= 2; x++) {
 			float weight = binomial(x) * binomial(y);
-			sum += texture(fog_mask, uv + vec2(float(x), float(y)) * texel).rg * weight;
+			vec2 at = clamp(xz + vec2(float(x), float(y)) * 0.8, vec2(0.0), map_last);
+			sum += texture(fog_mask, (at + 1.5) / mask_size).rg * weight;
 		}
 	}
 	return sum / 256.0;
@@ -190,12 +192,14 @@ void fragment() {
 	// The edge sways gently: the mask is read through a slow, broad noise warp of under a tile (few octaves, so the line stays smooth).
 	vec2 warp = vec2(fbm(xz * 0.14 + vec2(time * 0.03, 0.0), 2), fbm(xz * 0.14 + vec2(17.3, time * -0.025), 2)) - 0.5;
 	vec2 mask = mask_at(xz + warp * 0.9);
-	// Past the map's edge is always fully hidden, and the map's own edge melts into it over about a tile along a wandering line, never a
-	// straight cut, even where the land is explored up to the edge.
+	// The shoreline: the land past the map's edge (the apron) melts into the fog along a wandering line between about a third of a tile and
+	// two tiles out, never a straight cut, even where the land is explored up to the edge. The map's own tiles stay clear. Where nothing is
+	// drawn, the pixel is always the void.
 	vec2 map_size = mask_size - 2.0;
-	vec2 beyond = max(vec2(-0.5) - xz, xz - (map_size - 0.5));
-	float edge = max(beyond.x, beyond.y) + (warp.x + warp.y) * 2.0;
-	float outside = smoothstep(-0.5, 0.9, edge);
+	vec2 beyond2 = max(vec2(-0.5) - xz, xz - (map_size - 0.5));
+	float beyond = max(beyond2.x, beyond2.y);
+	float shore = 0.3 + 2.0 * smoothstep(0.2, 0.65, fbm(xz * 0.16 + vec2(time * 0.01, 3.7), 3));
+	float outside = depth > 0.0 ? smoothstep(max(shore - 1.0, 0.0), shore + 0.25, beyond + (warp.x - warp.y) * 0.5) : 1.0;
 	float hidden = max(mask.r, outside);
 	float unseen = mask.g;
 
@@ -207,9 +211,6 @@ void fragment() {
 		float veil = (1.0 - fog) * OUT_OF_SIGHT_DARK * smoothstep(0.1, 0.9, unseen);
 		float alpha = fog + veil;
 		vec3 color = alpha > 0.0 ? void_color * fog / alpha : vec3(0.0);
-		// Nothing is drawn behind the map's edge: cover the background there even where the fog is still thin (the colour stays the dark rim).
-		float backdrop = depth <= 0.0 ? smoothstep(-0.8, -0.3, edge) : 0.0;
-		alpha = max(alpha, backdrop);
 		ALBEDO = color;
 		ALPHA = clamp(alpha, 0.0, 1.0);
 	} else {

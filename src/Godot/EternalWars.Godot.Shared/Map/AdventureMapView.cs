@@ -13,7 +13,9 @@ namespace EternalWars.Godot.Shared.Map;
 /// <see cref="MapSpace.ToGround"/> puts things), so neighbouring tiles always meet. The mesh is splat-shaded (ADR-183,
 /// <see cref="TerrainSplat"/>): the terrains' textures from <c>res://shared/textures/terrain/</c> run into each other where biomes meet;
 /// terrains without a texture use their flat <see cref="Palette"/> colour. The tile grid is an overlay of the same shader, shown when
-/// <see cref="MapViewContext.ShowGrid"/> is on. Roads and rivers are thin plates lying on each tile's slope.
+/// <see cref="MapViewContext.ShowGrid"/> is on. Roads and rivers are thin plates lying on each tile's slope. While there is fog (a viewer),
+/// the ground goes on <see cref="ApronTiles"/> tiles past the map's edge, its edge tiles' terrain and heights continued, for the fog to
+/// swallow along a wandering shoreline (<c>fog_of_war.gdshader</c>): the land never ends in a straight cut.
 /// </summary>
 public partial class AdventureMapView : Node3D
 {
@@ -24,7 +26,11 @@ public partial class AdventureMapView : Node3D
     /// <summary>How many tiles one texture repeat covers.</summary>
     private const float TilesPerTextureRepeat = 3f;
 
+    /// <summary>How far the ground goes on past the map's edge, in tiles: past the fog's farthest shoreline.</summary>
+    public const int ApronTiles = 4;
+
     private readonly MeshInstance3D _ground = new() { Name = "Ground" };
+    private readonly MeshInstance3D _apron = new() { Name = "Apron" };
     private AdventureMap? _map;
     private int _level;
     private Image _terrainImage = null!;
@@ -43,7 +49,12 @@ public partial class AdventureMapView : Node3D
         _terrainTexture = ImageTexture.CreateFromImage(_terrainImage);
         _material = TerrainSplat.Material(_terrainTexture, map.Width, map.Height, TilesPerTextureRepeat * MapSpace.TileSize);
         AddChild(_ground);
+        AddChild(_apron);
         RebuildGround();
+        void ShowApron() => _apron.Visible = context.Viewer is not null; // no fog (the editor, the whole map in a replay): the map's own edge
+        ShowApron();
+        context.Changed += ShowApron;
+        TreeExiting += () => context.Changed -= ShowApron;
         ShowGrid();
         void ShowGrid() => _material.SetShaderParameter("grid", context.ShowGrid ? 1f : 0f);
         context.ShowGridChanged += ShowGrid;
@@ -192,6 +203,52 @@ public partial class AdventureMapView : Node3D
         mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
         mesh.SurfaceSetMaterial(0, _material);
         _ground.Mesh = mesh;
+        RebuildApron();
+    }
+
+    /// <summary>
+    /// The ground past the map's edge: <see cref="ApronTiles"/> rings of tiles around it, each from the nearest edge corners' heights (the
+    /// shader takes the nearest edge tile's terrain), four triangles a tile like the map's own.
+    /// </summary>
+    private void RebuildApron()
+    {
+        var map = _map!;
+        var (width, height) = (map.Width, map.Height);
+        var vertices = new List<Vector3>();
+        var normals = new List<Vector3>();
+        var indices = new List<int>();
+        for (var y = -ApronTiles; y < height + ApronTiles; y++)
+        {
+            for (var x = -ApronTiles; x < width + ApronTiles; x++)
+            {
+                if (x >= 0 && y >= 0 && x < width && y < height)
+                {
+                    continue;
+                }
+
+                var first = vertices.Count;
+                foreach (var (cx, cy) in (ReadOnlySpan<(int, int)>)[(x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)])
+                {
+                    vertices.Add(new Vector3((cx - 0.5f) * MapSpace.TileSize, Base + Corner(cx, cy), (cy - 0.5f) * MapSpace.TileSize));
+                    normals.Add(CornerNormal(cx, cy));
+                }
+
+                vertices.Add((vertices[first] + vertices[first + 1] + vertices[first + 2] + vertices[first + 3]) / 4);
+                normals.Add((normals[first] + normals[first + 1] + normals[first + 2] + normals[first + 3]).Normalized());
+                var (a, b, c, d, centre) = (first, first + 1, first + 2, first + 3, first + 4);
+                indices.AddRange([a, b, centre, b, d, centre, d, c, centre, c, a, centre]);
+            }
+        }
+
+        var arrays = new global::Godot.Collections.Array();
+        arrays.Resize((int)Mesh.ArrayType.Max);
+        arrays[(int)Mesh.ArrayType.Vertex] = vertices.ToArray();
+        arrays[(int)Mesh.ArrayType.Normal] = normals.ToArray();
+        arrays[(int)Mesh.ArrayType.Index] = indices.ToArray();
+        var mesh = new ArrayMesh();
+        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+        mesh.SurfaceSetMaterial(0, _material);
+        _apron.Mesh = mesh;
     }
 
     /// <summary>A corner's height above the level's base, in world units.</summary>

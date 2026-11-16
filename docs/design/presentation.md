@@ -27,6 +27,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   circle reads as a round clearing; a partly explored object shows its explored part.
   Two looks, a setting on this computer: **Dark** (default), a starry void (sparse stars, mostly white with orange to blue accents) with drifting nebulae under the map, in 3D parallax; **Clouds**,
   opaque drifting clouds floating above the level's highest ground. Revealed tiles open over 0.9 s as the hero's step plays; large reveals open as a wave from their middle.
+  The map's edge is never a straight line: the ground goes on four tiles past it (its edge terrain and heights continued), and the fog
+  swallows that ground along a wandering shoreline between about a third of a tile and two tiles out; the map's own tiles stay clear.
+  Where nothing is drawn, only the fog shows. Without fog (the map editor, the replay's whole-map view) the map ends at its own edge.
   Rendering only: the rules keep cell-by-cell visibility.
 
 ## Camera and UI
