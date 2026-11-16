@@ -58,7 +58,8 @@ public sealed record RandomMapChoice(
 /// locks them (ADR-032); on an arena map a line on the mode and, per player, Human or Computer (ADR-159). For a template (ADR-086): the size, the number of players, the hero limit (the template's by default, ADR-068) and for each
 /// player human or computer, town, hero, the start town's tier-1 dwelling (a human player with a picked town, when the start zone gives none; RMG-7)
 /// and team (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
-/// change something. Raises <see cref="Started"/> with the ready state; the app then builds the session and the world.
+/// change something. Raises <see cref="Started"/> with the ready state; the app then builds the session and the world. As a LAN host's lobby
+/// (<see cref="Lan"/>, ADR-194) each colour a person may play is played here, by a LAN player or by the computer, and the chat sits beside it.
 /// </summary>
 public partial class NewGameScreen : PanelContainer
 {
@@ -111,8 +112,12 @@ public partial class NewGameScreen : PanelContainer
         _tier1Of = tier1Of ?? (_ => []);
         var box = new VBoxContainer { CustomMinimumSize = new Vector2(520, 0) };
         this.UseMenuPanel();
-        AddChild(box);
-        box.AddChild(new Label { Text = "New game", HorizontalAlignment = HorizontalAlignment.Center });
+        AddChild(Lan is null ? box : WithChat(box));
+        box.AddChild(new Label { Text = Lan is null ? "New game" : "LAN game: you host", HorizontalAlignment = HorizontalAlignment.Center });
+        if (Lan is not null)
+        {
+            AddLanRows(box);
+        }
 
         foreach (var choice in choices)
         {
@@ -199,6 +204,9 @@ public partial class NewGameScreen : PanelContainer
 
         _teams.Clear();
         _controllers.Clear();
+        _seatNames.Clear();
+        _seatTowns.Clear();
+        _lanPlayers.Clear();
         _startTowns.Clear();
         _randomPlayers.Clear();
     }
@@ -234,7 +242,7 @@ public partial class NewGameScreen : PanelContainer
 
         Changed();
         ClearPlayers();
-        _players.Columns = 4;
+        _players.Columns = Lan is null ? 4 : 5;
         if (SelectedMap is not { } map)
         {
             return;
@@ -256,12 +264,21 @@ public partial class NewGameScreen : PanelContainer
         _arena.Text = ArenaLine;
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
+        AddLanHeader();
         _players.AddChild(new Label { Text = (preview.TeamsLocked ? "Team (locked by the map)" : "Team") + TeamCounts(preview.MinTeams, preview.MaxTeams) });
         _players.AddChild(new Label { Text = "Town" });
+        var firstHuman = preview.Players.FirstOrDefault(p => p.IsHuman)?.Id;
         foreach (var player in preview.Players)
         {
             _players.AddChild(PlayerName(player.Name, player.Id));
-            if (preview.Rules.Arena)
+            _seatNames.Add((player.Id, player.Name));
+            if (Lan is not null && (player.IsHuman || preview.Rules.Arena))
+            {
+                var controller = LanController(player.Id == firstHuman ? LanHere : player.IsHuman ? LanRemote : Computer, humanAllowed: true);
+                _players.AddChild(controller);
+                _controllers[player.Id] = controller;
+            }
+            else if (preview.Rules.Arena)
             {
                 var controller = new OptionButton();
                 controller.AddItem("Human", 1);
@@ -274,10 +291,14 @@ public partial class NewGameScreen : PanelContainer
             {
                 _players.AddChild(new Label { Text = player.IsHuman ? "Human" : "Computer" });
             }
+
+            AddLanPlayer(player.Id);
             var team = new SpinBox { MinValue = 0, MaxValue = GameState.MaxPlayers - 1, Value = player.Team.Value, Editable = !preview.TeamsLocked };
             _players.AddChild(team);
             _teams[player.Id] = team;
-            _players.AddChild(TownChoice(preview, player.Id));
+            var town = TownChoice(preview, player.Id);
+            _players.AddChild(town);
+            _seatTowns[player.Id] = town;
         }
     }
 
@@ -339,9 +360,10 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
-        _players.Columns = 6;
+        _players.Columns = Lan is null ? 6 : 7;
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
+        AddLanHeader();
         _players.AddChild(new Label { Text = "Town" });
         _players.AddChild(new Label { Text = "Hero" });
         _players.AddChild(new Label { Text = "Tier-1 dwelling" });
@@ -349,9 +371,12 @@ public partial class NewGameScreen : PanelContainer
         for (var i = 0; i < (int)_playerCount.Value; i++)
         {
             var slot = template.Slots[i];
-            var row = new RandomPlayerRow(i, slot, template.TeamsLocked);
+            var row = new RandomPlayerRow(i, slot, template.TeamsLocked, Lan is not null);
             _players.AddChild(PlayerName(slot.Name, new PlayerId(i)));
+            _seatNames.Add((new PlayerId(i), slot.Name));
             _players.AddChild(row.Control);
+            _controllers[new PlayerId(i)] = row.Control; // for the LAN lobby; a random map's players are set in its request
+            AddLanPlayer(new PlayerId(i));
             _players.AddChild(row.Town);
             _players.AddChild(row.Hero);
             _players.AddChild(row.Dwelling);
@@ -378,6 +403,7 @@ public partial class NewGameScreen : PanelContainer
     private void Changed()
     {
         _generated = null;
+        _openConfirmed = false;
         _start.Text = "Start";
     }
 
@@ -391,6 +417,12 @@ public partial class NewGameScreen : PanelContainer
         if (!ulong.TryParse(_seed.Text, CultureInfo.InvariantCulture, out var seed))
         {
             _status.Text = "Enter a numeric seed.";
+            return;
+        }
+
+        if (LanStartProblem() is { } problem)
+        {
+            _status.Text = problem;
             return;
         }
 
@@ -419,7 +451,7 @@ public partial class NewGameScreen : PanelContainer
 
             if (_controllers.Count > 0)
             {
-                state.AssignControllers(_controllers.ToDictionary(c => c.Key, c => c.Value.GetSelectedId() == 1));
+                state.AssignControllers(_controllers.ToDictionary(c => c.Key, c => c.Value.GetSelectedId() != Computer));
             }
 
             Started?.Invoke(state);
@@ -481,15 +513,14 @@ public partial class NewGameScreen : PanelContainer
         private IReadOnlyList<HeroDefinition> _heroes = [];
         private IReadOnlyList<CreatureDefinition> _dwellings = [];
 
-        public RandomPlayerRow(int slot, RandomMapSlot setup, bool teamsLocked)
+        public RandomPlayerRow(int slot, RandomMapSlot setup, bool teamsLocked, bool lan)
         {
             _slot = slot;
             _teamsLocked = teamsLocked;
             _picksDwelling = setup.PicksTier1Dwelling;
-            Control.AddItem("Human");
-            Control.AddItem("Computer");
-            Control.SetItemDisabled(0, !setup.HumanAllowed);
-            Control.Select(setup.HumanByDefault ? 0 : 1);
+            Control = lan
+                ? LanController(setup.HumanByDefault ? LanHere : setup.HumanAllowed ? LanRemote : Computer, setup.HumanAllowed)
+                : HumanOrComputer(setup.HumanByDefault, setup.HumanAllowed);
             if (!setup.HumanAllowed)
             {
                 Control.TooltipText = "This start is for computer players only.";
@@ -510,7 +541,7 @@ public partial class NewGameScreen : PanelContainer
             Team.Editable = !teamsLocked;
         }
 
-        public OptionButton Control { get; } = new();
+        public OptionButton Control { get; }
 
         public OptionButton Town { get; } = new();
 
@@ -524,13 +555,18 @@ public partial class NewGameScreen : PanelContainer
 
         public RandomMapPlayer Player => new(
             _slot,
-            Control.Selected == 0,
+            IsHuman,
             SelectedTown,
             Hero.Selected <= 0 || Hero.Selected > _heroes.Count ? null : _heroes[Hero.Selected - 1].Id,
             _teamsLocked ? null : (int)Team.Value,
             Dwelling.Selected <= 0 || Dwelling.Selected > _dwellings.Count ? null : _dwellings[Dwelling.Selected - 1].Id);
 
-        private bool IsHuman => Control.Selected == 0;
+        private bool IsHuman => Control.GetSelectedId() != Computer;
+
+        /// <summary>The town, hero and team chosen, in words (a LAN lobby's colour).</summary>
+        public string Details =>
+            $"{Town.GetItemText(Town.Selected)} town, {(Hero.Selected <= 0 ? "random hero" : Hero.GetItemText(Hero.Selected))}"
+            + (_teamsLocked ? "" : $", team {(int)Team.Value}");
 
         /// <summary>
         /// The dwelling choice (RMG-7): "Random" and the town's tier-1 dwellings, for a human player with a picked town whose start zone gives

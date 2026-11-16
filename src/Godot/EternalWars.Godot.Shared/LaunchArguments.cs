@@ -35,18 +35,17 @@ public static class LaunchArguments
     public static string? ReplayPath => Value("--replay=");
 
     /// <summary>
-    /// <c>--host</c> or <c>--host=&lt;port&gt;</c>: a game started from the new-game screen is hosted on the LAN (ADR-192); its human colours after the
-    /// first are played on other computers.
+    /// <c>--host</c> or <c>--host=&lt;port&gt;</c>: the game opens on the host's LAN lobby (ADR-194) instead of the main menu.
     /// </summary>
     public static bool Host => OS.GetCmdlineUserArgs().Any(a => a == "--host" || a.StartsWith("--host=", StringComparison.Ordinal));
 
     /// <summary>The port of <c>--host=&lt;port&gt;</c>; null for the default one.</summary>
     public static int? HostPort => int.TryParse(Value("--host="), out var port) ? port : null;
 
-    /// <summary><c>--join=&lt;address&gt;[:&lt;port&gt;]</c>: the game joins the LAN game hosted there (ADR-192) instead of opening the main menu.</summary>
+    /// <summary><c>--join=&lt;address&gt;[:&lt;port&gt;]</c>: the game joins the LAN lobby or game hosted there (ADR-194) instead of opening the main menu.</summary>
     public static string? Join => Value("--join=");
 
-    /// <summary><c>--name=&lt;name&gt;</c>: the player's name in a LAN game; the computer's user name when not given.</summary>
+    /// <summary><c>--name=&lt;name&gt;</c>: the player's name in LAN games (the Multiplayer screen starts with it); the computer's user name when not given.</summary>
     public static string? PlayerName => Value("--name=");
 
     /// <summary>Scripted input for smoke tests (<see cref="Controls.AutoInput"/>).</summary>

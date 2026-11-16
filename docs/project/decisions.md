@@ -2462,3 +2462,35 @@ cannot look under its fog). *(proposal)* marks the agent's choices.
 - **Not done**: another player's hero in sight is sent whole (its exact army, artifacts and skills, where HoMM shows an estimate) and so is
   an enemy town in sight (buildings, garrison); the Thieves' Guild and the kingdom overview show on a client only what the client holds of
   others; the lobby, live battles between two remote humans, drop-outs, saves and the turn timer are the roadmap's next items.
+
+### ADR-194: The LAN lobby: finding games, setting one up, colours, chat (MP-1, ADR-098, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16), the roadmap's lobby; replaces ADR-192's `--host` / `--join` seats. *(proposal)* marks the agent's choices.
+
+- **Multiplayer** (main menu, now enabled): the player's name, "Host a game", the games found on the network (one button each: host, map,
+  lobby or playing, open colours; another version's shown but not joinable) and an address to type (`name` or `name:port`).
+- **Finding games** *(proposal)*: a UDP probe, broadcast and sent to this computer, on port **47821** (the game's port plus one), asked every
+  1.5 s; each host answers with its version, player, game, open colours, TCP port and whether it has started. A game that misses two probes
+  leaves the list. A host on this computer is listed once, by its network address.
+- **The host's lobby is the new-game screen** *(proposal)*: the same maps, templates and options (ADR-086), with this computer's addresses
+  and the chat beside it. Each colour a person may play is **Here** (this computer), **LAN player** or **Computer**; by default the first is
+  Here and the others LAN players. "Joined" shows who took each LAN colour. At least one colour must be played here.
+- **Joined players** see the map, the settings in words, each colour (who plays it; its town, hero and team) and the players without a colour;
+  they take an open colour with "Take". A joining player gets the first open colour, or waits without one; a colour the host takes back
+  leaves its player waiting until another opens. Players do not choose their own town or hero: the host does *(proposal; HoMM lets each
+  player choose)*.
+- **The seed stays on the host** *(proposal)*: it would let a client generate the random map and see under its fog.
+- **Starting**: a LAN colour nobody has joined asks for "Start anyway"; it then waits for a player during the game (ADR-192), who finds the game
+  on the list as playing. A player without a colour is turned away when the game starts. The seated players get the game once it has
+  started (`GameHost` seats them at its first `Poll` after the start).
+- **Chat**: in the lobby and over the map (bottom left; Enter starts writing, Enter sends, Escape leaves the line). The host passes each line
+  to everyone; joins, colours taken and players leaving are the game's own lines. Lines are cut to 200 characters.
+- **The simultaneous first week**: its switch is on the lobby, shown off and disabled, until maps have start zones (MP-2, MP-4).
+- **Wire**: protocol 3; new messages `lobby` (the lobby and the player's colour), `takeSeat`, `say` and `chat`.
+- **Code**: Core.Network `LobbyHost`, `LobbyState` / `LobbySeat` / `SeatKind`, `LanAnnouncer`, `LanBrowser`, `LanGameInfo`; `GameHost` takes
+  seated players from the lobby (`Admit`) and passes the chat on (`Say`, `ChatReceived`); `GameClient` follows the lobby (`Lobby`,
+  `LobbySeat`, `TakeSeat`) and the chat (`Say`, `ChatReceived`). Godot.UI `MultiplayerScreen`, `LobbyScreen` (replaces `JoinGameScreen`),
+  `ChatPanel`, `NewGameScreen.Lan`; the game app's `Main.Network`. `--host` opens the host's lobby, `--join=` joins a lobby or a game. Smoke
+  input `text:` types into the focused field. Tests `LobbyTests` (colours, a colour taken back, chat in the lobby and the game, the start,
+  an open colour joined later, another version, a player leaving, discovery on this computer).
+- **Not done**: each player picking their own town and hero; a host's "Play again" or load still ends the LAN game for the clients; the
+  roadmap's next items (live battles between two remote humans, drop-outs, saves, the turn timer, arena maps in the lobby).
