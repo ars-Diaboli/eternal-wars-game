@@ -22,6 +22,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class HeroPanel : PanelContainer
 {
     private readonly Label _title = new();
+    private readonly HFlowContainer _statBadges = new();
     private readonly Label _stats = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private readonly Label _specialty = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private readonly VBoxContainer _skills = new();
@@ -87,6 +88,8 @@ public partial class HeroPanel : PanelContainer
         close.Pressed += Close;
         header.AddChild(close);
 
+        _statBadges.AddThemeConstantOverride("h_separation", UiSpacing.Section);
+        box.AddChild(_statBadges);
         box.AddChild(_stats);
         box.AddChild(_specialty);
         box.AddHeading("Skills");
@@ -189,6 +192,7 @@ public partial class HeroPanel : PanelContainer
 
         Visible = true;
         _title.Text = $"{hero.Name}, level {hero.Level} {hero.Class}" + (hero.Definition is { } d ? $" ({state.HeroRoster.Get(d).Town})" : "");
+        ShowStatBadges(hero);
         _stats.Text = StatsText(hero, _session.State.Spells);
         _specialty.Text = hero.Specialty is { } specialty ? $"Specialty: {specialty.Describe(_session.State.Spells)}" : "No specialty.";
         ShowSkills(hero);
@@ -277,16 +281,24 @@ public partial class HeroPanel : PanelContainer
 
     private static string Signed(int value) => value > 0 ? $"+{value}" : $"{value}";
 
-    private static string StatsText(Hero hero, EternalWars.Core.Domain.Magic.SpellCatalog spells)
+    /// <summary>The four primary stats (with what artifacts add), mana and experience, each after its icon.</summary>
+    private void ShowStatBadges(Hero hero)
     {
-        var next = ExperienceTable.For(hero.Level + 1);
+        Clear(_statBadges);
         var bonus = hero.Bonus;
-        return string.Join("\n",
-            $"Attack {WithBonus(hero.Attack, bonus.Attack)}   Defense {WithBonus(hero.Defense, bonus.Defense)}   Spell Power {WithBonus(hero.SpellPower, bonus.SpellPower)}   Knowledge {WithBonus(hero.Knowledge, bonus.Knowledge)}",
-            $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Mana {hero.Mana}/{hero.MaxMana}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}",
-            $"Experience {hero.Experience}/{next}" + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : "") + $"   Scouting {hero.ScoutingRadius}",
-            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {bonus.Describe(spells)}");
+        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Attack, "Attack", WithBonus(hero.Attack, bonus.Attack)));
+        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Defense, "Defense", WithBonus(hero.Defense, bonus.Defense)));
+        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.SpellPower, "Spell Power", WithBonus(hero.SpellPower, bonus.SpellPower)));
+        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Knowledge, "Knowledge", WithBonus(hero.Knowledge, bonus.Knowledge)));
+        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Mana, "Mana", $"{hero.Mana}/{hero.MaxMana}"));
+        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Experience, "Experience", $"{hero.Experience}/{ExperienceTable.For(hero.Level + 1)}"));
     }
+
+    private static string StatsText(Hero hero, EternalWars.Core.Domain.Magic.SpellCatalog spells) =>
+        string.Join("\n",
+            $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}   Scouting {hero.ScoutingRadius}"
+                + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : ""),
+            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {hero.Bonus.Describe(spells)}");
 
     /// <summary>The learned spells by name, and how many more the worn artifacts teach (the Unwritten Codex, ADR-111; scrolls, ADR-136).</summary>
     private static string SpellsText(Hero hero, EternalWars.Core.Domain.Magic.SpellCatalog spells)
@@ -322,12 +334,17 @@ public partial class HeroPanel : PanelContainer
                 var id = skill.Id;
                 var level = hero.SkillLevelOf(skill.Id);
                 var learned = hero.Skills.Level(skill.Id);
-                _skills.AddChild(new Label
+                var text = new Label
                 {
-                    Text = $"    {skill.Name}: {level}" + (level != learned ? $" (learned {learned})" : "") + $" of {skill.MaxLevel}\n        {skill.Description}",
+                    Text = $"{skill.Name}: {level}" + (level != learned ? $" (learned {learned})" : "") + $" of {skill.MaxLevel}\n    {skill.Description}",
                     AutowrapMode = TextServer.AutowrapMode.WordSmart,
                     CustomMinimumSize = new Vector2(600, 0),
-                }.WithInfo(detailed => InfoSheets.Skill(id, level, detailed, hero, learned)));
+                    MouseFilter = MouseFilterEnum.Pass,
+                };
+                var row = new MarginContainer { MouseFilter = MouseFilterEnum.Stop };
+                row.AddThemeConstantOverride("margin_left", UiSpacing.Section);
+                row.AddChild(HeroIcons.WithSkillIcon(id, text));
+                _skills.AddChild(row.WithInfo(detailed => InfoSheets.Skill(id, level, detailed, hero, learned)));
             }
         }
 
