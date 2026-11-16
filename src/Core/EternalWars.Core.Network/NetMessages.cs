@@ -6,6 +6,7 @@ using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Turns;
 
 namespace EternalWars.Core.Network;
 
@@ -127,11 +128,14 @@ public sealed record RecordRequest(int Request, string? SaveName) : NetMessage;
 /// <summary>The host's answer to <see cref="RecordRequest"/> number <paramref name="Request"/>: the record, or why there is none.</summary>
 public sealed record RecordSent(int Request, GameRecordDocument? Record, string? Error) : NetMessage;
 
+/// <summary>The host's turn timer as it shows now (ADR-198): the one clock of a LAN game, which the clients show; sent when it changes.</summary>
+public sealed record ClockUpdate(TurnClock Clock) : NetMessage;
+
 /// <summary>Turns messages into JSON and back, with the save files' settings for the commands and records they carry.</summary>
 public static class NetSerializer
 {
     /// <summary>Raised whenever a message changes shape; a host and a client of different versions do not play together.</summary>
-    public const int ProtocolVersion = 5;
+    public const int ProtocolVersion = 6;
 
     private static readonly IReadOnlyList<(Type Type, string Name)> MessageTypes =
     [
@@ -148,6 +152,7 @@ public static class NetSerializer
         (typeof(GamePaused), "paused"),
         (typeof(RecordRequest), "askRecord"),
         (typeof(RecordSent), "record"),
+        (typeof(ClockUpdate), "clock"),
     ];
 
     private static readonly JsonSerializerOptions Options = CreateOptions();

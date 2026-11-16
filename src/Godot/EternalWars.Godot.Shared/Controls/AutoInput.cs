@@ -206,7 +206,12 @@ public partial class AutoInput : Node
         _script.Add((_frame, new InputEventMouseButton { ButtonIndex = button, Pressed = true, Position = from, GlobalPosition = from }));
         if (points.Count == 1)
         {
-            _script.Add((_frame + 1, new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = from, GlobalPosition = from }));
+            // A drop-down opens its list on the press; a release over the list (a long one opens over the button) would pick an item, so it is
+            // released at the screen's corner, off the list.
+            var release = button == MouseButton.Left && VisibleButtons().OfType<OptionButton>().Any(b => b.GetGlobalRect().HasPoint(from))
+                ? Vector2.Zero
+                : from;
+            _script.Add((_frame + 1, new InputEventMouseButton { ButtonIndex = button, Pressed = false, Position = release, GlobalPosition = release }));
             return;
         }
 
