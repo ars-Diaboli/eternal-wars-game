@@ -34,8 +34,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
 
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
-- **UI**: by default a HoMM-style right panel (minimap, hero and town lists, the action panel), the turn and End turn at the top left,
-  full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
+- **UI**: by default a HoMM-style side panel on the right (ADR-191): one framed column from the top to the status bar with the minimap,
+  the hero and town lists and the action panel, which takes the clicks on it; the turn and End turn at the top of the map, beside the
+  panel; full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
 - **Status bar** (ADR-186): a narrow stripe along the bottom of the adventure map, as wide as the screen up to 16:9 and a centred 16:9 width
   on a wider screen. On the left the status line: the hints, the game's messages and what the pointer is over (a HUD control's tooltip, or
@@ -46,12 +47,14 @@ creatures and buildings, heraldic player colours, iconic map objects).
   panels. The information window (right click) opens at the pointer.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
-- **Layout** (ADR-118, ADR-156): the "Layout" tab sets the battle's initiative bar (top or bottom), the minimap's corner, the hero and town
-  lists (beside the minimap, or as rows along the bottom) and the action panel's side (kingdom, quests, puzzle map, dig, marketplace). The
+- **Layout** (ADR-118, ADR-156, ADR-191): the "Layout" tab sets the battle's initiative bar (top or bottom) and the side panel (right, left
+  or off). With the panel off it also sets the minimap's corner, the hero and town lists (beside the minimap, or as rows along the bottom)
+  and the action panel's side (kingdom, quests, puzzle map, dig, marketplace); with it on, those rows are greyed. The
   change shows at once and is kept in `settings.json` with the speeds, not in saves. The minimap is nearest its corner; lists beside it follow
   it; the action panel stands at the top of its side; the turn block stays at the top left, beside anything there. The bottom parts stand
   above the status bar.
-- **Spacing** (ADR-118, ADR-163): one set of margins and gaps for every panel, in Godot's default look (no font or colour of its own):
+- **Theme** (ADR-191): dark slate panels and buttons framed in bronze, Godot's default fonts; the same in the map editor.
+- **Spacing** (ADR-118, ADR-163): one set of margins and gaps for every panel:
   4 px between slots and the cells of a grid (army slots, paper doll, backpack), 6 between rows, 8 between controls side by side, 16
   above a section's heading (Army, Worn artifacts, Buildings, ...), 8 inside a panel, 16 inside a screen or window over the map, 8 from
   the window's edge to the HUD parts and between them.

@@ -11,8 +11,8 @@ public sealed record SaveItem(string Path, string Label, string? Name, bool Load
 /// The game menu, in three tabs. "Save and load" (ADR-058): the saves in a folder, newest first, a name field and Save / Load / Delete. Works on
 /// the adventure map and in battle, because a save is the game's command log; saving under an existing name replaces that save. "Settings":
 /// the current human player's auto combat setting (ADR-090, CMB-10), which the app turns into a command, the speed settings (ADR-090, UI-1)
-/// "Detailed tooltips" (ADR-154), the fog, the grid and the window mode (ADR-186). "Layout" (ADR-156): the initiative bar's edge, the minimap's corner, the hero and town lists and the
-/// action panel's side. The app lists the saves, answers the events and keeps the settings in the settings file; the panel only shows and asks.
+/// "Detailed tooltips" (ADR-154), the fog, the grid and the window mode (ADR-186). "Layout" (ADR-156): the initiative bar's edge, the side panel (ADR-191), and while it is off the minimap's
+/// corner, the hero and town lists and the action panel's side. The app lists the saves, answers the events and keeps the settings in the settings file; the panel only shows and asks.
 /// </summary>
 public partial class GameMenuPanel : CenterContainer
 {
@@ -37,6 +37,8 @@ public partial class GameMenuPanel : CenterContainer
     private InterfaceSettings _interface = InterfaceSettings.Default;
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(580, 340), UseHiddenTabsForMinSize = true }; // the same size on every tab
     private readonly OptionButton _initiativeBar = Choices("Top", "Bottom");
+    private readonly OptionButton _sidePanel = WithTooltip(
+        Choices("Right", "Left", "Off (the parts stand free)"), "A framed column down the side with the minimap, the hero and town lists and the actions");
     private readonly OptionButton _minimapCorner = Choices("Top right", "Top left", "Bottom right", "Bottom left");
     private readonly OptionButton _lists = Choices("Beside the minimap", "Along the bottom");
     private readonly OptionButton _actionSide = Choices("Right", "Left");
@@ -155,6 +157,7 @@ public partial class GameMenuPanel : CenterContainer
         // Layout (ADR-118, UI-3; ADR-156): where the screens put their parts, kept on this computer; applied at once.
         layout.AddChild(new Label { Text = "Where the screens put their parts (kept on this computer)" });
         layout.AddRow("Initiative bar (battle)", _initiativeBar, 180);
+        layout.AddRow("Side panel", _sidePanel, 180);
         layout.AddRow("Minimap", _minimapCorner, 180);
         layout.AddRow("Hero and town lists", _lists, 180);
         layout.AddRow("Action panel", _actionSide, 180);
@@ -162,6 +165,7 @@ public partial class GameMenuPanel : CenterContainer
         _minimapCorner.ItemSelected += index => ChangeLayout(_layout with { Minimap = (ScreenCorner)index });
         _lists.ItemSelected += index => ChangeLayout(_layout with { Lists = (ListOrientation)index });
         _actionSide.ItemSelected += index => ChangeLayout(_layout with { ActionPanel = (ScreenSide)index });
+        _sidePanel.ItemSelected += index => ChangeLayout(_layout with { SidePanel = (SidePanel)index });
         var reset = new Button { Text = "Default layout", SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
         reset.Pressed += () =>
         {
@@ -277,6 +281,19 @@ public partial class GameMenuPanel : CenterContainer
         _minimapCorner.Selected = (int)layout.Minimap;
         _lists.Selected = (int)layout.Lists;
         _actionSide.Selected = (int)layout.ActionPanel;
+        _sidePanel.Selected = (int)layout.SidePanel;
+        EnableFreeParts(layout);
+    }
+
+    /// <summary>The minimap, lists and action rows place the parts only while the side panel is off.</summary>
+    private void EnableFreeParts(LayoutSettings layout)
+    {
+        var free = layout.SidePanel == SidePanel.Off;
+        foreach (var button in new[] { _minimapCorner, _lists, _actionSide })
+        {
+            button.Disabled = !free;
+            button.TooltipText = free ? string.Empty : "Set by the side panel; turn it off to place the parts freely";
+        }
     }
 
     public void Close() => Visible = false;
@@ -337,6 +354,7 @@ public partial class GameMenuPanel : CenterContainer
     private void ChangeLayout(LayoutSettings layout)
     {
         _layout = layout;
+        EnableFreeParts(layout);
         LayoutChanged?.Invoke(layout);
     }
 

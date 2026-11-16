@@ -2288,7 +2288,8 @@ fill-ins. The rest of the note ("a cleverer battle AI") is ADR-188.
 - Not a map or save format change; the content table gains a column (other content changes the replay digest, as any table change does).
 
 ### ADR-188: CMB-13 answered: a cleverer battle AI, in steps (ADR-187, 2026-11-16)
-**Status**: accepted (2026-11-16); step (a) built (2026-11-16, `BattleAiLevel.FocusFire`), the rest not built. The owner's answer: a
+**Status**: accepted (2026-11-16); steps (a), (d), (b) and (c) built (2026-11-16, `BattleAiLevel.FocusFire` … `HoldBack`), (e) and (f)
+not built. The owner's answer: a
 stack's **Fight Value × its count** is the measure to use where it fits; the proposals for the rest.
 
 - **The measure**: a stack's threat is its Fight Value (ADR-187) × the creatures in it, so a big stack of weak creatures can outrank a few
@@ -2312,6 +2313,24 @@ stack's **Fight Value × its count** is the measure to use where it fits; the pr
   finishing bonus change few choices. Variants (no threat weighting, a larger finishing bonus, a bonus for stacks still to act this round,
   walking at the biggest threat within reach) all stayed within 48–52 %; a sanity run that picks the worst target wins 16 %. Larger gains are
   expected from (d) avoiding retaliation, which the AI does not weigh at all yet.
+- **Built, step (d)** (`AvoidRetaliation`): a blow or shot scores what step (a) scored less the Fight Value of the health the target's
+  retaliation is expected to take off the unit (the blow of the creatures left after the hit; all of them before a first strike; none when it
+  cannot hit back: it has this round, is blinded, held or under a no-retaliation spell, the attacker has no-enemy-retaliation, or it is
+  destroyed). A melee stack whose best target would hit back **waits**, once a round, when an own stack still to act this round can hit that
+  target without being hit back (a shooter that can shoot it, or a no-enemy-retaliation creature that can reach it) *(proposal)*.
+- **Built, step (b)** (`ProtectShooters`): a blow at an enemy shooter that can shoot and survives counts 25 % of its threat more (its shots
+  stopped) *(proposal)*; a melee stack strikes from the placement next to the most threatening enemy shooters it can block; a walking melee
+  stack heads for the biggest enemy shooter that can shoot instead of the nearest enemy, while there is one. Keeping own shooters out of reach
+  is left to step (c).
+- **Built, step (c)** (`HoldBack`): outside a siege, a stack that is not a shooter and has nothing to hit **waits** once a round while an enemy
+  stack that can walk is still to act, so the enemy comes to it. After waiting it **holds its ground** (defends) instead of walking out while
+  its side's shooters that can shoot are worth more (Fight Value × count) than the enemy's and the enemy has a walking melee stack; otherwise
+  it walks as before. When the shooters run out of shots or are blocked, the hold ends. The game plays `HoldBack`.
+- **Measured** the same way (32 battles a side; base armies / upgraded): `AvoidRetaliation` against `FocusFire` 58.1 % / 57.5 % (mirror
+  matches 61.7 % / 64.3 %); `ProtectShooters` against `AvoidRetaliation` 49.2 % / 51 %, about even (kept: it does no harm, and (c) builds on
+  it); `HoldBack` against `ProtectShooters` 75.7 % / 59.3 % (mirror 87.3 % / 72.9 %), largely because the older AI walks into the waiting
+  stacks and the shooters' fire. Against a human the gain will be smaller.
+- **Not built**: (e) spells weighed a round ahead and (f) sieges; own shooters stepping away from a blocker.
 
 ### ADR-189: The adventure AI trades at its marketplace (ADR-067, ADR-059, roadmap, 2026-11-16)
 **Status**: accepted (2026-11-16), built (2026-11-16): `AdventureAi.Market.cs`. Lifts ADR-067's "no AI trading for now" for town
@@ -2346,3 +2365,28 @@ marketplaces; *(proposal)* marks the agent's numbers, for play-testing.
 - **Code**: core `Settings/TouchGesture` (the tap, drag and long press, from finger events and a clock; no Godot), Godot `TouchInput` (a node
   the game adds: touch events in, mouse events out through `Input.ParseInputEvent`). `AutoInput` gained `touch:x,y,frames`. Tests
   `TouchGestureTests`; smoke scenario `game-info-touch`. The map editor does not take touch. No save format change.
+
+### ADR-191: The UI theme and the HoMM-style side panel (ADR-118, ADR-156, ADR-163, ADR-186, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16); *(proposal)* marks the agent's choices, for play-testing and the art pass.
+
+- **The side panel**: one framed column down a side of the adventure map, from the top edge to the status bar (ADR-186), holding the
+  minimap with "Switch level", the hero and town lists and the action panel, as in HoMM. It is opaque and takes the clicks on it, so a
+  click there never reaches the map. A new row in the F10 menu's "Layout" tab, **Side panel**: Right (the default), Left or Off. The
+  owner's note: the panel can stand on either side, as the game's settings say.
+- **With the panel on** the minimap, lists and action rows of the tab are greyed: the panel puts the minimap at the top of its side, the lists
+  beside it (vertical) and the action panel below them. Their values are kept, and apply again when the panel is **off**: then the parts
+  stand free in the corners as in ADR-156. A settings file without the row gets the panel on the right *(proposal: the HoMM look is the
+  default, also for a file that had placed the parts freely)*.
+- **The turn block** (date, player, End turn) stays at the top of the map, beside the panel when the panel is on the left *(proposal: not in
+  the panel; the date with the week's event is too wide for it)*. The status bar keeps its place and the menu button; the panel stops
+  above it.
+- **The theme** *(proposal: the colours)*: dark slate panels framed in bronze, Godot's default fonts. `UiTheme` holds the colours and
+  builds the theme from `UiSpacing`'s spacing (ADR-163) plus the panel box and the buttons' boxes (Button, OptionButton, MenuButton: a
+  dark face, a dim bronze frame, bright bronze under the pointer, with the focus and pressed); each app merges it into Godot's default theme
+  at start (`UiTheme.Apply`, in place of `UiSpacing.Apply`), so the map editor and the 2D harness get it too. The opaque screens, the
+  menu panels before a game, the status bar (a 2 px bronze top edge) and the side panel (a 3 px frame) share the colours.
+- **Code**: core `SidePanel` in `LayoutSettings` (the `sidePanel` key of the `layout` section in `settings.json`), `HudArrangement.PanelSide`
+  and `Effective`, with tests; Godot `UiTheme`, `AdventureHudLayout` draws the panel behind its side's stack, `GameMenuPanel` has the row.
+  Smoke scenario `game-side-panel`; `game-layout` turns the panel off first. No save format change.
+- **Not done**: the camera still centres on the whole window, so a hero it centres on stands a little towards the panel's side; fonts,
+  textured frames and icons of our own (the art pass); the battle HUD and the town screen keep their own layouts.

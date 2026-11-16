@@ -157,8 +157,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Fight Value per creature (`creatures.csv`, placeholders from today's formula), read by the battle AI for the most dangerous stacks (ADR-187)
 - [x] A cleverer battle AI, step (a): focus fire on the biggest threat (Fight Value × count) and finish off stacks; `sim ai` measures
       each step against the one before (ADR-188; about even with the greedy AI)
-- [ ] A cleverer battle AI, the next steps (ADR-188): avoid retaliation; then protect shooters and wait when outranged; later spells a
-      round ahead and sieges
+- [x] A cleverer battle AI, steps (d), (b), (c) (ADR-188): weighs the retaliation it draws and waits for a free hit; goes for and blocks
+      enemy shooters; waits for the enemy to come and holds its ground while it shoots better (`HoldBack`: 76 % / 59 % against step (b))
+- [ ] A cleverer battle AI, the last steps (ADR-188): (e) spells weighed a round ahead (a buff before its strongest stack moves, a mass
+      spell over several stacks); (f) sieges (the gate or a breach together, shooters on the walls)
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges
       (ADR-106, ADR-109, ADR-113, ADR-120), circular battle movement (ADR-089)
 - [x] Sieges: the town's own look on the siege field (ADR-144)
@@ -236,7 +238,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Relief in the editor (plan step 5): raise, lower, level and smooth; "Heights from terrain"; "Auto height"; levelling on placement;
       clamped to the limits, undoable
 - [ ] PBR models for heroes, creatures, towns and map objects; fog/volumetrics
-- [ ] UI theme (HoMM-style right-side panel, status bar)
+- [x] UI theme (ADR-191): dark slate and bronze; the HoMM-style side panel (minimap, lists, actions) on the right or left, or off; the
+      status bar (ADR-186)
 - [ ] Audio: per-terrain ambient music, town themes
 
 ## LAN multiplayer (ADR-088, ADR-098; before 1.0, after the Phase 3 and 4 exits)

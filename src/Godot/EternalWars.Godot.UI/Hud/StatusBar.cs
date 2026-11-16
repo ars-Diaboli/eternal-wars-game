@@ -55,9 +55,8 @@ public partial class StatusBar : PanelContainer
     public void Bind(GameSession session)
     {
         Name = "StatusBar";
-        var style = new StyleBoxFlat { BgColor = new Color(0.13f, 0.13f, 0.15f), BorderColor = new Color(0.35f, 0.35f, 0.4f) };
-        style.BorderWidthTop = 1;
-        style.SetContentMarginAll(2);
+        var style = UiTheme.Box(UiTheme.Background, UiTheme.Border, 2, borderWidth: 0);
+        style.BorderWidthTop = 2;
         style.ContentMarginLeft = style.ContentMarginRight = UiSpacing.Gap;
         AddThemeStyleboxOverride("panel", style);
         var row = new HBoxContainer();

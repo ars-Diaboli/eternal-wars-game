@@ -5,8 +5,6 @@ namespace EternalWars.Godot.UI.Hud;
 /// <summary>Shared look of the screens that cover the map (town, hero, kingdom, ...).</summary>
 public static class Screens
 {
-    private static readonly Color Background = new(0.13f, 0.13f, 0.15f);
-
     /// <summary>
     /// Gives the panel an opaque background: Godot's default panel is translucent, so the map and the HUD showed through a
     /// screen and its text ran into theirs. Inside the border it keeps <paramref name="padding"/> (by default a screen's,
@@ -14,10 +12,7 @@ public static class Screens
     /// </summary>
     public static void UseOpaqueBackground(this PanelContainer panel, int padding = UiSpacing.ScreenPadding)
     {
-        var style = new StyleBoxFlat { BgColor = Background, BorderColor = new Color(0.35f, 0.35f, 0.4f) };
-        style.SetContentMarginAll(padding);
-        style.SetBorderWidthAll(1);
-        panel.AddThemeStyleboxOverride("panel", style);
+        panel.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.Background, UiTheme.Border, padding));
     }
 
     /// <summary>
@@ -26,10 +21,7 @@ public static class Screens
     /// </summary>
     public static void UseMenuPanel(this PanelContainer panel)
     {
-        var style = new StyleBoxFlat { BgColor = new Color(0.08f, 0.08f, 0.1f, 0.85f), BorderColor = new Color(0.35f, 0.35f, 0.4f) };
-        style.SetContentMarginAll(UiSpacing.ScreenPadding);
-        style.SetBorderWidthAll(1);
-        panel.AddThemeStyleboxOverride("panel", style);
+        panel.AddThemeStyleboxOverride("panel", UiTheme.Box(UiTheme.MenuBackground, UiTheme.Border, UiSpacing.ScreenPadding));
     }
 
     /// <summary>

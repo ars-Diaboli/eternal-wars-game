@@ -17,13 +17,16 @@ public enum HudPart
 /// Where the adventure map's HUD parts stand for some <see cref="LayoutSettings"/> (ADR-156). Each corner holds a stack of parts, listed
 /// from the corner outwards. The minimap is always nearest its corner. Vertical lists follow it in its stack. Horizontal lists go to the
 /// bottom row between the bottom corners. The action panel goes to the top corner of its side, after the minimap and lists if they are
-/// there. The turn, resources and status block is not moved: it stays at the top left, beside whatever the top-left stack holds.
+/// there. The turn block is not moved: it stays at the top left, beside whatever the top-left stack holds. With the side panel on
+/// (ADR-191) the minimap, the vertical lists and the action panel all stand in the top stack of the panel's side, whatever the other
+/// settings say; those keep their values for when the panel is off.
 /// </summary>
 public static class HudArrangement
 {
     /// <summary>The parts in the stack at <paramref name="corner"/>, from the corner outwards; empty when the corner holds none.</summary>
     public static IReadOnlyList<HudPart> Stack(LayoutSettings layout, ScreenCorner corner)
     {
+        layout = Effective(layout);
         var parts = new List<HudPart>();
         if (layout.Minimap == corner)
         {
@@ -43,7 +46,23 @@ public static class HudArrangement
     }
 
     /// <summary>Whether the hero and town lists run as rows along the bottom of the screen.</summary>
-    public static bool ListsInBottomRow(LayoutSettings layout) => layout.Lists == ListOrientation.Horizontal;
+    public static bool ListsInBottomRow(LayoutSettings layout) => Effective(layout).Lists == ListOrientation.Horizontal;
+
+    /// <summary>The side the HoMM-style panel stands on, or null when it is off (ADR-191).</summary>
+    public static ScreenSide? PanelSide(LayoutSettings layout) => layout.SidePanel switch
+    {
+        SidePanel.Right => ScreenSide.Right,
+        SidePanel.Left => ScreenSide.Left,
+        _ => null,
+    };
+
+    /// <summary>
+    /// The layout the parts follow: with the side panel on, the minimap at the top of its side, the lists beside it and the action panel
+    /// on the same side (ADR-191); with it off, <paramref name="layout"/> itself.
+    /// </summary>
+    public static LayoutSettings Effective(LayoutSettings layout) => PanelSide(layout) is { } side
+        ? layout with { Minimap = TopCorner(side), Lists = ListOrientation.Vertical, ActionPanel = side }
+        : layout;
 
     /// <summary>The corner whose stack holds <paramref name="part"/>, or null for lists in the bottom row.</summary>
     public static ScreenCorner? CornerOf(LayoutSettings layout, HudPart part) =>
