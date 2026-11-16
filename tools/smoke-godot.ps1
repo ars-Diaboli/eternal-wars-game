@@ -69,6 +69,9 @@ $scenarios = @(
     # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack.
     @{ Name = 'game-info-windows'; App = 'EternalWars.Game'; Frames = 42; Map = $exchangeMap
        Input = '3:key:Enter;10:rclick:800,445;16:click:1500,850;20:key:H;24:rclick:@10 | Footman;28:rclick:@Weapon: Rusted Blade;32:key:Escape;36:rclick:@Iron Band (Ring)' },
+    # Touch (ADR-190): a finger held still on the hero opens its information window, which stays open when lifted; a tap closes it.
+    @{ Name = 'game-info-touch'; App = 'EternalWars.Game'; Frames = 70; Map = $exchangeMap
+       Input = '3:key:Enter;10:touch:800,445,45;64:touch:400,300' }
     # An arena map against the computer (ADR-097, ADR-159): Blue ends day 1, Red prepares, day 2's battle opens by itself at the combat place;
     # quick combat, the result screen (not ranked), then "Play again" starts the map anew.
     @{ Name = 'game-arena'; App = 'EternalWars.Game'; Frames = 110; Map = $arenaMap
