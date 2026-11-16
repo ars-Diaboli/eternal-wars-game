@@ -14,7 +14,8 @@ namespace EternalWars.Game;
 /// The replay viewer's composition and input (ADR-101, ADR-164): the Replays and Saves tabs, then a <see cref="ReplayPlayer"/> wired to the
 /// same world, HUD and battle views as a game, watch-only, with <see cref="ReplayControlBar"/> along the bottom. Each frame, once the
 /// heroes' steps and the battle's animations have played, the next command runs; a finished battle's result stays a moment. Jumps (next turn,
-/// next day, a day) rebuild the views on a session put at that point.
+/// next day, a day) rebuild the views on a session put at that point. "Play from here" plays a battle on by hand and comes back, or on the map
+/// leaves the viewer for a game of the player's own from that point.
 /// </summary>
 public partial class Main
 {
@@ -211,7 +212,7 @@ public partial class Main
             _replay.CurrentTurn.Date.AbsoluteDay,
             _replay.LastDay,
             _battle.IsOpen,
-            _battle.IsOpen && _replay.CanTakeOver,
+            _battle.IsOpen ? _replay.CanTakeOver : _replay.CanPlayOn,
             _replay.IsAtEnd));
     }
 
@@ -251,10 +252,24 @@ public partial class Main
         _resultWait = 0;
     }
 
-    /// <summary>"Play from here": the battle goes on by hand in a separate game; the replay waits, paused, where it was.</summary>
+    /// <summary>
+    /// "Play from here": in a battle, the battle goes on by hand in a separate game while the replay waits, paused, where it was; on the map,
+    /// the viewer is left for <see cref="PlayOn"/>.
+    /// </summary>
     private void TakeOver()
     {
-        if (_replay is not { CanTakeOver: true } || _mode != GameMode.Watch)
+        if (_replay is null || _mode != GameMode.Watch)
+        {
+            return;
+        }
+
+        if (!_battle.IsOpen)
+        {
+            PlayOn();
+            return;
+        }
+
+        if (!_replay.CanTakeOver)
         {
             return;
         }
@@ -262,6 +277,32 @@ public partial class Main
         var session = _replay.TakeOver();
         (_mode, _replayPlaying) = (GameMode.TakeOver, false);
         BeginGame(session, _replay.Record.Map, resume: true);
+    }
+
+    /// <summary>
+    /// "Play from here" on the adventure map: the viewer closes and the game goes on from this command as a game of the player's own, as if a
+    /// save cut here were loaded (saves, autosaves, the end screen and the ranking as usual); the replay file does not change. The map is
+    /// seen through a person's eyes: the current player's, else the next person's in turn order (a computer's turn plays on first).
+    /// </summary>
+    private void PlayOn()
+    {
+        if (_replay is not { CanPlayOn: true } replay)
+        {
+            return;
+        }
+
+        var session = replay.PlayOn();
+        var map = replay.Record.Map;
+        StopWatching();
+        BeginGame(session, map, resume: true);
+        var state = session.State;
+        if (ReplayPlayer.PersonToShow(state) is { } person && person != state.CurrentPlayer.Id)
+        {
+            _context.SetViewer(person);
+            _mapInput.Select(state.HeroesOf(person).FirstOrDefault()?.Id, focus: true);
+        }
+
+        _status.Text = $"Playing on from the replay, {state.Date}: your own game now; the replay stays as it is.";
     }
 
     /// <summary>Leaves the battle played on and shows the replay again where it was, paused.</summary>

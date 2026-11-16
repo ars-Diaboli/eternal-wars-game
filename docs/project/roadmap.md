@@ -94,9 +94,9 @@ Content draft: [artifacts.md](../content/artifacts.md).
 - [x] Built: victory and loss conditions (ADR-057, ADR-073, ADR-094, ADR-083), save / load and autosave (ADR-058), score, ranking,
       victory screen and main menu (ADR-101 … ADR-104), week and month events (ADR-084), turn timer (ADR-091), auto combat (ADR-090)
 - [x] Replay viewer: Replays and Saves tabs; reveal-all or a player's eyes; play, pause, speeds, next turn / day, back to a day; battles
-      with "skip to the result"; "Play from here" in battles only (ADR-101, UI-2, ADR-164)
-- [ ] Replay viewer: "Play from here" on the adventure map (a save played on with Load meanwhile); a battle where only the computer
-      fights taken over by the viewer
+      with "skip to the result"; "Play from here" in battles (ADR-101, UI-2, ADR-164)
+- [x] Replay viewer: "Play from here" on the adventure map, the game played on as the player's own (ADR-185)
+- [ ] Replay viewer: a battle where only the computer fights taken over by the viewer
 - [ ] Save/load: a state snapshot if replays get too slow
 
 ### Arena mode (ADR-097, ADR-100; before 1.0, after the Phase 3 exit)
@@ -114,9 +114,12 @@ Content draft: [artifacts.md](../content/artifacts.md).
 ### Adventure AI
 - [x] Built: command-only deterministic AI (ADR-036, ADR-059): economy, exploration, fights, captures, town defence, several heroes,
       war machines, `sim game`; generated maps (ADR-119)
-- [ ] Adventure spells (it does not cast the info spells, ADR-123) and marketplace use (no AI trading for now, ADR-067)
-- [ ] Balance the AI further over several maps (`sim game --runs`): the first-mover edge on Two Towns (a day-4 rush), the larger templates'
-      game length, the AI's hero hiring when it is beaten
+- [x] Adventure spells: Town Portal, Dimension Door, Pathfinder's Call, Ashwalk, View Terrain, Grave Whisper, Veil; not the spells that
+      only show something (ADR-184)
+- [ ] Marketplace use (no AI trading for now, ADR-067)
+- [ ] Balance the AI further over several maps (`sim game --runs`): Two Towns' day-4 rush is gone and its starting armies are even (ADR-184),
+      but the first seat and Haven still win about three games in four there; two equal armies trading empty towns; the larger templates'
+      game length; the AI's hero hiring when it is beaten
 
 ### Adventure map objects ✅
 First catalogue (ADR-068), second catalogue (ADR-069, ADR-082, Shrines ADR-120), third catalogue (ADR-077, ADR-079, ADR-080), Pandora's
@@ -151,6 +154,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Spell table: final numbers after the visuals
 
 ### Combat additions
+- [ ] Fight Value per creature (`creatures.csv`, placeholders from today's formula), read by the battle AI for the most dangerous stacks (ADR-187)
+- [ ] A cleverer battle AI (CMB-13)
 - [x] Built: morale and luck (ADR-053, ADR-075), war machines (ADR-056, ADR-083, ADR-112, ADR-121), teleporting (ADR-083), sieges
       (ADR-106, ADR-109, ADR-113, ADR-120), circular battle movement (ADR-089)
 - [x] Sieges: the town's own look on the siege field (ADR-144)
@@ -205,6 +210,10 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Information windows (right-click) for creatures, heroes, skills, spells, artifacts, buildings and map objects; "detailed tooltips", off by default (ADR-118, ADR-154)
 - [x] Information windows for the kingdom overview, the tavern and the decision prompts (ADR-178)
 - [ ] Information windows on touch (a long press) (ADR-154)
+- [ ] Fullscreen: a "Window mode" setting (Windowed / Fullscreen), Alt+Enter (ADR-186)
+- [ ] Short resource amounts: gold over 999 999 as "321.7m", other resources over 9 999 as "31.7k", across the UI (ADR-186)
+- [ ] A status bar along the bottom of the adventure map (16:9 wide at most): tooltips and labels on the left, resources on the right (ADR-186)
+- [ ] Decision prompts, notices and alerts in the centre of the screen (ADR-186)
 - [ ] The icons themselves (from [icon-prompts.md](../content/icon-prompts.md))
 
 ### Platform and art

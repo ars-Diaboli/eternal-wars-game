@@ -7,7 +7,7 @@ Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs 
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
 item; the others can wait. Each question ends with a **proposal** the agent will use if the owner agrees.
 
-**Updated 2026-11-13**: MAP-37 (the adventure map's relief) answered with the proposals (ADR-182).
+**Updated 2026-11-16**: CMB-13 (a cleverer battle AI) added from the owner's notes; the rest of those notes are ADR-186 and ADR-187.
 
 ## 🚧 Blocking now
 
@@ -44,11 +44,28 @@ the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or n
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
 
+## Combat
+
+<a id="cmb-13"></a>
+**CMB-13 A cleverer battle AI** (owner, 2026-11-16: "upgrade AI to be more clever in combat"). Today `BattleAi` is greedy, one unit at a
+time: shoot or hit the most valuable target in reach, else walk at the nearest enemy, else defend. Which of these should it learn first?
+(a) Focus fire on the most dangerous stack by Fight Value (ADR-187) and finish off stacks it can kill. (b) Protect its shooters: block
+enemy shooters with a melee stack, keep its own out of reach. (c) Wait for the enemy to come to it (wait / defend) when it is outranged or
+shoots better, instead of always closing in. (d) Avoid retaliation: hit stacks that have already retaliated, use no-retaliation attackers
+first. (e) Spells: weigh a whole round ahead (a buff before its strongest stack moves, a mass spell over several stacks). (f) Sieges:
+go for the gate or a breach together, shooters on the walls.
+
+**Proposal**: 
+(a) and (d) first (they build on Fight Value), then (b) and (c); 
+(e) and (f) later. Measured with `sim battle` win rates
+against the current AI, and the AI stays deterministic (`GameState.Random` only).
+
 ## Numbers to tune (not questions)
 Placeholders that wait for play-testing (kept as they are, ADR-118): caravan cost (ADR-054); complexity starting resources (ADR-063);
 Stewardship and governor percentages (ADR-063); siege Ballistics (ADR-063); zone guard and garrison powers, `GuardPicker` ranges (ADR-064);
 building costs; the growth buildings (+5 / +2, ADR-071); war machine stats and prices (CMB-3); morale 2 % and luck 4 % per point (ADR-053);
 deposit prices and the map marketplace threshold (ADR-070); the AI's retreat threshold; the fairness tolerances and slacks (ADR-117);
+the creatures' Fight Values (ADR-187);
 the gate's cap and Defense, Earthquake, summon amounts, a creature caster's Spell Power (count / 2) and the Phoenix's 30 %, shrine values
 (ADR-120); the relics' added effects, their slots, the AI's piece bonus and the glaivethrower's 20–26 (ADR-121); the AI's buff values
 and the *(proposal)* choices of ADR-123.

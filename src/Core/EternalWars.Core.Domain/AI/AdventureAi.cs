@@ -104,6 +104,8 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
         var player = _state.CurrentPlayer.Id;
         _claimed.Clear();
+        _doorChecks.Clear();
+        _reach.Clear();
         _gathering = false;
         _estimator.Clear();
         if (!ResolvePending(player))
@@ -421,7 +423,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
     /// <summary>
     /// Hires a hero while it has fewer than one more than its towns (at most four): the best offered one, its own returning heroes first
-    /// (ADR-081), then warriors (mages have nothing to cast yet), when the gold is there beyond what it saves for a building.
+    /// (ADR-081), then warriors, when the gold is there beyond what it saves for a building.
     /// </summary>
     private void Hire(PlayerId player, Town town, int reserve)
     {
@@ -859,6 +861,12 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
                 continue;
             }
 
+            CastBeforeMoving(player, hero);
+            if (!Active(player))
+            {
+                return true;
+            }
+
             var target = ChooseTarget(hero, failed);
             if (target is null)
             {
@@ -866,6 +874,12 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             }
 
             _claimed.Add(target.Value);
+            CastForRoute(player, hero, target.Value);
+            if (!Active(player) || hero.MovementPoints <= 0 || hero.Position == target.Value)
+            {
+                continue;
+            }
+
             var result = Execute(new MoveHeroCommand(player, id, target.Value));
             if (!result.IsAccepted || result.Outcome is not MovementOutcome { StepsTaken: > 0 })
             {
@@ -874,28 +888,6 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         }
 
         return true;
-    }
-
-    /// <summary>
-    /// Town Portal home (ADR-120): when the town it would take the hero to is threatened by an enemy the garrison alone cannot hold but the two
-    /// together can, and the hero cannot walk there today.
-    /// </summary>
-    private bool PortalHome(PlayerId player, Hero hero)
-    {
-        if (Magic.AdventureMagic.Refusal(_state, hero, Magic.AdventureMagic.TownPortal, null) is not null
-            || Magic.AdventureMagic.PortalTown(_state, hero) is not { } town)
-        {
-            return false;
-        }
-
-        var danger = Danger(player, town.VisitPosition);
-        if (danger == 0 || Holds(ArmyPower(town.Garrison), danger) || !Holds(ArmyPower(hero.Army) + ArmyPower(town.Garrison), danger)
-            || session.Movement.FindPath(hero.Id, town.VisitPosition) is { } path && path.TotalCost <= hero.MovementPoints)
-        {
-            return false;
-        }
-
-        return Execute(new CastAdventureSpellCommand(player, hero.Id, Magic.AdventureMagic.TownPortal)).IsAccepted;
     }
 
     /// <summary>A hero standing on a map dwelling buys what it can afford (keeping a third of the gold) into its army (ADR-054).</summary>
@@ -964,10 +956,10 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
     }
 
     /// <summary>
-    /// Visible enemy heroes and how far (in tiles) each can reach in a day. Kept until the next command runs (only commands change the game), as
-    /// every candidate target and flooded tile asks for it.
+    /// Visible enemy heroes, their army power and the tiles each can reach in a day. Kept until the next command runs (only commands change the
+    /// game), as every candidate target and flooded tile asks for it.
     /// </summary>
-    private IReadOnlyList<(Hero Enemy, long Power, int Reach)> Threats(PlayerId owner)
+    private IReadOnlyList<(Hero Enemy, long Power, IReadOnlySet<MapPosition> Reach)> Threats(PlayerId owner)
     {
         if (_threatsAt != session.CommandLog.Count)
         {
@@ -979,22 +971,68 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         {
             threats = [.. _state.Heroes
                 .Where(h => _state.AreEnemies(owner, h.Owner) && _state.CanSee(owner, h) && _state.Fog.IsExplored(owner, h.Position))
-                .Select(h => (h, ArmyPower(Seen(h)), (h.MaxMovementPoints / MovementCostPerTile) + 1))];
+                .Select(h => (h, ArmyPower(Seen(h)), ReachOf(h)))];
             _threats[owner] = threats;
         }
 
         return threats;
     }
 
-    private readonly Dictionary<PlayerId, List<(Hero Enemy, long Power, int Reach)>> _threats = [];
+    private readonly Dictionary<PlayerId, List<(Hero Enemy, long Power, IReadOnlySet<MapPosition> Reach)>> _threats = [];
     private int _threatsAt = -1;
+    private readonly Dictionary<(HeroId, MapPosition), IReadOnlySet<MapPosition>> _reach = [];
 
-    /// <summary>A rough tile cost for how far an enemy gets in a day: between the native 100 and the dearer terrains, diagonals included.</summary>
-    private const int MovementCostPerTile = 150;
+    /// <summary>
+    /// The tiles an enemy hero can step onto with a day's full movement (ADR-184): a flood with its own step costs (roads, terrain, its native
+    /// ground), through open ground; a hero, an object's entrance or a guarded tile can be reached but not passed. Kept for the turn (the enemy does
+    /// not move during it).
+    /// </summary>
+    private IReadOnlySet<MapPosition> ReachOf(Hero enemy)
+    {
+        if (_reach.TryGetValue((enemy.Id, enemy.Position), out var known))
+        {
+            return known;
+        }
+
+        var budget = Math.Max(1, MovementAllowance.Daily(_state, enemy)); // its next day: what its army allows
+        var cost = new Dictionary<MapPosition, int> { [enemy.Position] = 0 };
+        var open = new PriorityQueue<MapPosition, int>();
+        open.Enqueue(enemy.Position, 0);
+        while (open.TryDequeue(out var position, out var spent))
+        {
+            if (spent != cost[position] || spent >= budget || (position != enemy.Position && !PassesThrough(position)))
+            {
+                continue; // a stale entry, out of movement (a step needs some left), or a tile that ends the walk
+            }
+
+            foreach (var direction in DirectionExtensions.All)
+            {
+                var next = position.Step(direction);
+                if (MovementRules.CheckTile(_state, next) != MoveResult.Moved)
+                {
+                    continue;
+                }
+
+                var total = spent + MovementRules.StepCost(_state, enemy, position, next, direction);
+                if (!cost.TryGetValue(next, out var old) || total < old)
+                {
+                    cost[next] = total;
+                    open.Enqueue(next, total);
+                }
+            }
+        }
+
+        var reach = cost.Keys.ToHashSet();
+        _reach[(enemy.Id, enemy.Position)] = reach;
+        return reach;
+
+        bool PassesThrough(MapPosition position) =>
+            _state.HeroAt(position) is null && !_state.IsGuarded(position) && _state.ObjectCellAt(position) is not { Cell: FootprintCell.Visit, Object.EndsRoute: true };
+    }
 
     /// <summary>The strongest enemy army that can reach the place within a day, leaving out the hero at <paramref name="except"/> (the one being attacked); 0 when none can.</summary>
     private long Danger(PlayerId owner, MapPosition position, MapPosition? except = null) =>
-        Preparing ? 0 : Threats(owner).Where(t => t.Enemy.Position != except && t.Enemy.Position.Level == position.Level && Distance(t.Enemy.Position, position) <= t.Reach)
+        Preparing ? 0 : Threats(owner).Where(t => t.Enemy.Position != except && t.Reach.Contains(position))
             .Select(t => t.Power).DefaultIfEmpty(0).Max();
 
     /// <summary>What defends a place for the player: the hero's army, plus the garrison when it is the entrance of an own town.</summary>
@@ -1565,13 +1603,29 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
 
                     break;
                 // On an arena map's preparation day only neutral towns: an enemy's brings its heroes onto ours before the battle (ADR-160).
+                // On an arena map's preparation day only neutral towns: an enemy's brings its heroes onto ours before the battle (ADR-160).
                 case Town town when !OwnTeam(owner, town.Owner) && !(Preparing && town.Owner is not null):
+                    var siege = SiegeRules.SpecOf(town);
+                    var townWorth = 4000 + (town.Owner is null ? 0 : 2000) + (town.Dwellings.Count * 500);
+                    if (_state.HeroAt(visit) is { } gatekeeper)
+                    {
+                        // A hero on the entrance defends the town alone, behind its walls (ADR-106, ADR-112): that fight comes first, and is weighed
+                        // with the town's worth; an unseen one is not known.
+                        var keeper = Seen(gatekeeper);
+                        if (_state.AreEnemies(owner, gatekeeper.Owner) && _state.CanSee(owner, gatekeeper) && Plausible(ArmyPower(keeper)))
+                        {
+                            yield return new(visit, townWorth + 2000 + (0.8 * ArmyPower(keeper)), keeper, gatekeeper.Attack, gatekeeper.Defense,
+                                Siege: gatekeeper.Owner == town.Owner ? siege : null);
+                        }
+
+                        break;
+                    }
+
                     var defenders = AdventureIntel.Reckoned(AdventureIntel.ScoutTown(_state, town, owner).Garrison);
                     var garrison = ArmyPower(defenders);
                     if (Plausible(garrison))
                     {
-                        yield return new(visit, 4000 + (0.3 * garrison) + (town.Owner is null ? 0 : 2000) + (town.Dwellings.Count * 500), defenders.IsEmpty ? null : defenders,
-                            Siege: SiegeRules.SpecOf(town));
+                        yield return new(visit, townWorth + (0.3 * garrison), defenders.IsEmpty ? null : defenders, Siege: siege);
                     }
 
                     break;

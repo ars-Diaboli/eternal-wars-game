@@ -44,7 +44,7 @@ public static class TownsScenario
             new Hero(new HeroId(1), "Orrin", players[0].Id, new MapPosition(4, 9),
                 Army.Of(new(BuiltInCreatures.Pikeman, 20), new(BuiltInCreatures.Archer, 10)), attack: 2, defense: 1),
             new Hero(new HeroId(2), "Sandro", players[1].Id, new MapPosition(Width - 5, 9),
-                Army.Of(new(BuiltInCreatures.HornedDemon, 22), new(BuiltInCreatures.HellHound, 8)), attack: 1, defense: 2),
+                Army.Of(new(BuiltInCreatures.HornedDemon, 23), new(BuiltInCreatures.HellHound, 9)), attack: 1, defense: 2),
         };
 
         var catalog = content.Objects;

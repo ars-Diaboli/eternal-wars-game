@@ -327,8 +327,9 @@ public class AdventureAiTests
     [Fact]
     public void AHero_GoesHomeToATownAnEnemyThreatens_AndStaysThere()
     {
-        // The garrison (40) alone cannot hold against 100, the hero (50) cannot beat them alone, together they can.
-        var (state, town) = Threatened(heroFootmen: 50, garrisonFootmen: 40, enemyFootmen: 100);
+        // The garrison (40) alone cannot hold against 74 (a horde, 50–99, which the AI takes for 74: ADR-125), the hero (50) cannot beat them
+        // alone, together they can.
+        var (state, town) = Threatened(heroFootmen: 50, garrisonFootmen: 40, enemyFootmen: 74);
         Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 9, 2);
         var session = Start(state);
         var ai = Ai(session);

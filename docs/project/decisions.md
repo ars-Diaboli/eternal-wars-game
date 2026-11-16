@@ -2168,3 +2168,107 @@ tuned once the look-dev spike shows them.
   `MapViewContext.ShowGrid`.
 - **Not changed**: the battlefield keeps its single-terrain material (`AdventureMapView.TerrainMaterial`); roads and rivers stay plates on
   the ground; the textures are still the placeholders (no normal or roughness maps yet: the look-dev spike and the PBR art).
+
+### ADR-184: The adventure AI casts adventure spells; Two Towns' rush and starting armies (ADR-059, ADR-112, ADR-119, ADR-120, ADR-123, 2026-11-16)
+**Status**: implemented. Numbers marked *(proposal)* are the agent's tuning, for play-testing. No rule, save or map format changes.
+
+- **Spells the AI casts** (`AdventureAi.Spells.cs`), each through `CastAdventureSpellCommand`, never on an arena's preparation day:
+  - **Town Portal**: to an own town an enemy can reach that the garrison alone cannot hold but the hero and the garrison together can, when
+    the hero cannot walk there today; or to a town whose waiting troops call the hero home (`TownNeed`) when the walk there takes more than
+    a day. From rank II it picks the town that needs the hero most, else it goes to the nearest.
+  - **Dimension Door**: when the hero cannot reach its chosen target today, the landing (a straight line in each of the eight directions,
+    out of reach of an enemy hero too strong for it) whose route to the target is cheapest, if it saves **300** movement points beyond the
+    cast's 500 *(proposal)*. It is weighed at most 3 times per hero per turn *(proposal)*.
+  - **Pathfinder's Call, Ashwalk**: when today's part of the route to the target leaves enough tiles of their terrains off the road to save
+    **100** movement points beyond the 500 (rank III's +10 % counted) *(proposal)*.
+  - **View Terrain**: when at least **30 %** of the ground in its radius is unexplored *(proposal)*.
+  - **Grave Whisper**: a hero with Necromancy and no Grave Whisper on it.
+  - **Veil**: the main hero, once an enemy hero is in sight, while it has no Veil.
+  - Not cast: Distant Vision, Detect Magic, Ledger of Ages and Eavesdrop. The AI reads what its player knows from the state (ADR-125), so
+    they would tell it nothing new.
+  - **Mana**: the convenience spells (all but Town Portal and Dimension Door) are cast only when the mana left still pays for the hero's
+    dearest battle spell, as a fight may come the same day.
+- **The town at whose entrance a hero stands**: the AI weighed such a town by its garrison alone, but the hero there defends it first,
+  behind the walls (ADR-106, ADR-112). Two Towns ended on days 4–5 because the first player's hero walked into the second's town against
+  the "112-power garrison" and met its hero. The town target now fights that hero (its stats, the walls when it is its own town), worth the
+  town plus the hero.
+- **Where an enemy can go in a day**: the danger check counted 150 movement points a tile (about 11 tiles), so a hero left a town that an enemy
+  25 road tiles away took the next day. It now floods each visible enemy hero's next day of movement (what its army allows) with its own step costs (roads,
+  terrain, native ground). Open ground is passed; a hero, an object's entrance or a guarded tile can be reached but not passed. The flood is
+  kept for the turn. `PathFinder.FindPath` takes a `from` tile, for the Dimension Door landings.
+- **Two Towns' starting armies**: 20 Pikemen and 10 Archers against 22 Horned Demons and 8 Hell Hounds won 94 % of fights as the attacker,
+  and the demons only 50 % (`sim battle`, 200 runs). Red now has **23 Horned Demons and 9 Hell Hounds** *(proposal)*: the attacker wins
+  about three fights in four either way (73 % and 80 %).
+- **Results** (`sim game --runs 12 --days 80`, the AI on both sides):
+  - **Two Towns**: Blue won 12 of 12 (days 11–44; before, 6 of 6 on days 4–5). With the towns and the armies swapped (Inferno first) it was
+    6 : 6. So the first seat and Haven each win about three games in four on this map. The first-mover edge is not an AI fault left to fix.
+  - **Ember March**: Red 8, Blue 4, every game to a winner by day 73 (two after day 60). It was already Red 5 : 1 before these changes. A main
+    hero now sees an enemy army that can reach its town and holds it when it would lose in the open (seed 2: Red's main army stayed home
+    from day 30 to 62), so even armies take longer; `EmberMarchTests` allows 80 days (was 60).
+  - **Generated `duel`**: 4 of 4 games to a winner (days 39–79), no refused command.
+  - Haven also leads the one-week round robin (`sim towns`): 75 % overall, 62 % against Inferno.
+  - Lowering the AI's guess of hidden stack counts (the lower third of a word's range instead of the middle) changed neither map.
+- **Left open** (roadmap): two equal main armies take each other's empty towns in turn and do not meet (Ember March's seed 1 went past day 60
+  that way until the entrance fix gave them a fight); the AI's hero hiring when it is beaten (a beaten player kept 3500 gold and no hero);
+  the larger templates' game length; marketplace use (ADR-067).
+- **Tools**: `EW_SIM_TRACE` also prints the spells cast and, after each turn, every hero's place, army power and mana.
+- **Tests**: `AdventureAiTests.AHero_GoesHomeToATownAnEnemyThreatens_AndStaysThere` passed only because the old guess never had the enemy
+  reach the town; its enemy is now 74 footmen (a horde, as the AI reckons it), so the hero and the garrison together can hold.
+  `AdventureAiSpellTests`: Dimension Door over a wall, not for a short walk; View Terrain over unexplored ground; Pathfinder's Call
+  on swamp, not on open ground; the mana kept for a battle spell; Grave Whisper; Town Portal to a threatened town three days away.
+
+### ADR-185: "Play from here" on the adventure map (ADR-101, ADR-164, 2026-11-16)
+**Status**: implemented (2026-11-16); core tested, the Godot part runs in a smoke scenario. Carries out the map half of UI-2 f, which ADR-101
+put off ("until then a save is played on with Load"). *(choice)* marks the agent's choices.
+
+- **Core** (`ReplayPlayer`): `CanPlayOn` outside a battle (a battle being fought is `CanTakeOver`'s), while the game is not over and a person
+  is still in it (not defeated); `PlayOn` gives a new session replayed from the record to the current command, so its command log is the record
+  cut there and it saves, autosaves and loads like any game. The record and the watched session do not change. `PersonToShow(state)`: the
+  current player when a person, else the next person in turn order still in the game.
+- **The viewer**: "Play from here" is on the bar on the map too (disabled, with the reason, when the game is over or only computers are left;
+  the tooltip says which kind it is). On the map it **leaves the viewer**: the game goes on from that command as the player's own, exactly as if
+  a save cut there were loaded: saves, autosaves (into the usual slots), the end screen, "Save replay" and the ranking as for any loaded game
+  *(choice: it is what Load of such a save already allows; the battle take-over stays unranked because it is a side game that returns)*. There
+  is no way back to the replay from it *(choice)*; the main menu's "Watch a replay" opens it again. The players stay as recorded (people play,
+  computers are the AI); on a computer's turn the AI plays on first and the map is seen through `PersonToShow`'s eyes.
+- Smoke: `game-replay-play-on` (the demo record paused, next day, Play from here, End turn passes to Red). `game-replay-viewer`'s "Skip to the
+  result" moved to frame 90: Red now reaches the wolves later than frame 70.
+- Tests: `ReplayPlayerTests` (playing on from day 2: the same state, the log is the record cut there, the replay unchanged, its save
+  replays to the same state; not offered in a battle or with only computers; whose eyes).
+- **Not done**: taking over a battle only the computer fights (ADR-164).
+
+### ADR-186: Fullscreen, short resource amounts, a status bar along the bottom and centred pop-ups (ADR-118, ADR-156, owner notes, 2026-11-16)
+**Status**: accepted (2026-11-16), not built. From the owner's notes in `ideas.md`; *(proposal)* marks the agent's fill-ins, for the owner
+to change.
+
+- **Fullscreen**: the game plays only in a window today. A "Window mode" row in the F10 menu's "Settings" tab: Windowed or Fullscreen
+  (borderless, the screen's own size) *(proposal: Godot's borderless fullscreen, not exclusive)*; kept in `settings.json` with the other
+  settings, not in saves; applied at once and at start. Alt+Enter switches it too *(proposal)*. The map editor gets the same setting
+  *(proposal)*.
+- **Short resource amounts** everywhere the UI shows a stock of resources (the resource bar, the kingdom overview, the marketplace,
+  costs): gold shows up to 6 digits (999 999); above that in millions with one decimal, "321.7m". The other resources show up to 4 digits
+  (9 999); above that in thousands with one decimal, "31.7k". Rounded down *(proposal: never shows more than there is)*; a trailing ".0"
+  stays *(proposal: the width stays steady)*; gold past 999.9m goes on in millions ("1234.5m") *(proposal)*. The right-click information
+  window shows the full number *(proposal)*. One engine-free formatter in core, with tests.
+- **Status bar** on the adventure map: a narrow stripe along the bottom edge, edge to edge on screens up to 16:9; on wider screens it
+  stays 16:9 wide, centred *(proposal: centred)*. The resources sit on it, aligned right; its left part shows the game's tooltips and
+  labels (what is under the pointer, the hints line and the messages that now go to the status line at the top left). The top-left block
+  keeps the turn and End turn *(proposal)*. Lists "along the bottom" (ADR-156) and the bottom corners' parts stand above the stripe; the
+  "Menu (F10)" button moves onto the stripe's right end *(proposal)*. In the replay viewer the viewer's bar stands above it *(proposal)*.
+- **Pop-ups in the centre**: decision prompts (questions, choices), notices and alerts open in the middle of the screen, over the map,
+  instead of in the top-left block. The information window (right click) still opens at the pointer *(proposal)*.
+
+### ADR-187: A Fight Value per creature for the battle AI (ADR-118, owner notes, 2026-11-16)
+**Status**: accepted (2026-11-16), not built. From the owner's notes in `ideas.md`; *(proposal)* marks the agent's fill-ins. The rest of the
+note ("a cleverer battle AI") is question CMB-13.
+
+- **Fight Value**, as in HoMM3: a number per creature in `creatures.csv` (a `fight_value` column) that says how dangerous one creature is
+  in battle. Placeholder values to start: today's derived `CreatureDefinition.Value` (health × average damage × (20 + Attack + Defense) / 80,
+  ×1.5 shooters, ×1.2 flyers), written into the table so nothing changes on the day it lands *(proposal)*; tuned later with play-testing
+  (it joins "Numbers to tune"). A row without a value falls back to the formula *(proposal)*.
+- **One number** *(proposal)*: Fight Value replaces the derived `Value` wherever it is read (the battle AI's targets and spells, neutral
+  dispositions, guard and army strength), so the table is the only place to tune it.
+- **The battle AI** uses it for the most dangerous stacks on the field: a stack's threat is its count × Fight Value, raised while it can
+  shoot unhindered or still has casts *(proposal)*, and the AI's targets, spells and retreat weigh the threat it removes rather than only the
+  value of the hit points.
+- Not a map or save format change; the content table gains a column (other content changes the replay digest, as any table change does).

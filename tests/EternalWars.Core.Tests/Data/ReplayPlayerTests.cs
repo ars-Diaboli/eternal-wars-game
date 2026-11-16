@@ -154,6 +154,62 @@ public class ReplayPlayerTests
     }
 
     [Fact]
+    public void OnTheMap_TheGameMayBePlayedOn_AsItsOwnGame_WhoseLogIsTheRecordCutThere()
+    {
+        var record = Recorded(out _);
+        var player = ReplayPlayer.Open(record);
+        player.Seek(player.DayPosition(2));
+        Assert.True(player.CanPlayOn);
+        Assert.False(player.CanTakeOver);
+
+        var watched = GameStateDigest.Describe(player.Session.State);
+        var own = player.PlayOn();
+        Assert.NotSame(player.Session, own);
+        Assert.Equal(watched, GameStateDigest.Describe(own.State));
+        Assert.Equal(record.Commands.Take(player.Position), own.CommandLog);
+
+        own.Execute(new EndTurnCommand(own.State.CurrentPlayer.Id)).ThrowIfRejected();
+        Assert.Equal(watched, GameStateDigest.Describe(player.Session.State));
+        Assert.Equal(2, player.Position);
+
+        // Saved, it loads like any save: replayed to the same state.
+        var saved = GameRecordSerializer.Deserialize(GameRecordSerializer.Serialize(GameReplay.Record(record.Map, own, saveName: "on")));
+        var loaded = ReplayPlayer.Open(saved);
+        loaded.Seek(loaded.Count);
+        Assert.Equal(GameStateDigest.Describe(own.State), GameStateDigest.Describe(loaded.Session.State));
+    }
+
+    [Fact]
+    public void PlayingOn_IsNotOffered_InABattle_OrWithoutAPersonInTheGame()
+    {
+        var player = ReplayPlayer.Open(Recorded(out _));
+        player.Seek(5); // in the battle with the trolls: that is "take over"
+        Assert.False(player.CanPlayOn);
+        Assert.Throws<InvalidOperationException>(() => player.PlayOn());
+
+        player.Seek(0);
+        foreach (var p in player.Session.State.Players)
+        {
+            p.IsHuman = false;
+        }
+
+        Assert.False(player.CanPlayOn);
+    }
+
+    [Fact]
+    public void AGamePlayedOn_IsShown_ThroughTheCurrentPerson_ElseTheNextInTurnOrder()
+    {
+        var state = TestWorld.Create(".A.....", ".......", "......B");
+        Assert.Equal(TestWorld.Blue, ReplayPlayer.PersonToShow(state));
+
+        state.GetPlayer(TestWorld.Blue).IsHuman = false;
+        Assert.Equal(TestWorld.Red, ReplayPlayer.PersonToShow(state));
+
+        state.GetPlayer(TestWorld.Red).IsDefeated = true;
+        Assert.Null(ReplayPlayer.PersonToShow(state));
+    }
+
+    [Fact]
     public void ASave_PlaysToItsLastCommand_InTheBattleItWasSavedIn()
     {
         var record = Recorded(out _);
