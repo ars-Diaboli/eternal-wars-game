@@ -29,7 +29,8 @@ The game design document, split by mechanic. Start at the overview.
 | [town-buildings.md](content/town-buildings.md) | Town buildings, the tech tree and every town's dwellings |
 | [spells.md](content/spells.md) | Spell catalog: six schools, four levels, three ranks |
 | [artifacts.md](content/artifacts.md) | Artifact catalog: slots, tiers, sets and lore |
-| [icon-prompts.md](content/icon-prompts.md) | Image-model prompts for the UI icons, with the shared style block |
+| [icon-prompts.md](content/icon-prompts.md) | Image-model prompts for the UI icons and the faction heraldry, as 2×2 and 2×3 sheets with shared style blocks |
+| [town-model-prompts.md](content/town-model-prompts.md) | 3D-model prompts for the ten town types on the adventure map: format, style block, lore per town |
 
 ## Technical: how the code works (`technical/`)
 
