@@ -219,6 +219,7 @@ public partial class Main : Node3D
         _timerPanel = null;
         _autoCombat = null;
         _chat = null;
+        _pause = null;
         _turnToShow = null;
         _followed = null;
     }
@@ -241,7 +242,8 @@ public partial class Main : Node3D
         var showing = ShowingComputerMoves;
         if (_timer is not null && _timerPanel is not null)
         {
-            if (_timer.Tick(showing ? 0 : delta, canEnd: !showing && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true) is { } warning)
+            var paused = IsPaused; // a LAN game waiting for a colour nobody plays (ADR-195)
+            if (_timer.Tick(showing || paused ? 0 : delta, canEnd: !showing && !paused && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true) is { } warning)
             {
                 _timerPanel.Warn(warning);
             }
@@ -260,7 +262,9 @@ public partial class Main : Node3D
             ShowTurn(player);
         }
 
-        if (_ai is not null && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true && AdventureAi.IsComputerTurn(_session.State))
+        // A LAN host: a battle this computer does not show waits for its players, and nothing moves while the game is paused (ADR-195).
+        if (_ai is not null && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true && AdventureAi.IsComputerTurn(_session.State)
+            && !IsPaused && (_host is null || _session.State.Battle is null))
         {
             _ai.PlayTurn();
         }
@@ -339,7 +343,8 @@ public partial class Main : Node3D
 
         if (_battle.IsOpen)
         {
-            if (_battleInput!.Handle(@event))
+            // The chat in a LAN battle, while Enter does not start the battle or leave its result.
+            if ((_battle.Deployer is null && _battle.Result is null && HandleChatKey(@event)) || _battleInput!.Handle(@event))
             {
                 GetViewport().SetInputAsHandled();
             }
@@ -534,7 +539,8 @@ public partial class Main : Node3D
     /// <summary>The battle scene replaces the adventure map and its HUD while it is open.</summary>
     private void BuildBattle()
     {
-        _battle = new BattleView3D { Watching = _mode == GameMode.Watch };
+        // A LAN game shows only the battles of this computer's players, each commanding its own side (ADR-195).
+        _battle = new BattleView3D { Watching = _mode == GameMode.Watch, PlaysHere = _host is null && _client is null ? null : p => !PlaysElsewhere(p) };
         _game!.AddChild(_battle);
         _battle.Bind(_session);
 
@@ -568,6 +574,7 @@ public partial class Main : Node3D
             PlaceMenuButton();
             _camera.ProcessMode = ProcessModeEnum.Disabled;
             _world.PathPreview.Clear();
+            PlaceChat(battle: true);
         };
         _battle.Closed += () =>
         {
@@ -576,6 +583,7 @@ public partial class Main : Node3D
             PlaceMenuButton();
             _camera.ProcessMode = ProcessModeEnum.Inherit;
             _camera.MakeCurrent();
+            PlaceChat(battle: false);
         };
     }
 

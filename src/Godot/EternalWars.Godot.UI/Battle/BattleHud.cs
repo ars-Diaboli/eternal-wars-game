@@ -399,7 +399,7 @@ public partial class BattleHud : Control
 
     private void QuickCombat()
     {
-        if (!_view.Watching && _view.Result is null && (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is { } player)
+        if (_view.QuickCombatPlayer is { } player)
         {
             Report(_session.Execute(new AutoResolveBattleCommand(player)));
         }
@@ -417,8 +417,10 @@ public partial class BattleHud : Control
         _retreat.Disabled = retreatRefusal is not null;
         _retreat.TooltipText = retreatRefusal is { Length: > 0 } why ? why : "";
         RefreshSurrender(battle, commander);
-        _quick.Disabled = _view.Result is not null || battle is null ||
-                          (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is null;
+        _quick.Disabled = battle is null || _view.QuickCombatPlayer is null;
+        _quick.TooltipText = _view.PlaysHere is not null && _quick.Disabled && _view.Result is null
+            ? "A battle between players on two computers is fought by hand."
+            : "";
         RefreshWarcries(battle, commander);
         RefreshSpells(battle, commander);
         var deployer = _view.Deployer;
@@ -438,6 +440,8 @@ public partial class BattleHud : Control
                 ? $"{spell.Name}: click {(_firstAim is null ? "a target" : "its second aim")} (Esc cancels)."
             : commander is not null && battle.ActiveUnit is { } acting
                 ? $"{_session.State.GetPlayer(commander.Value).Name}: {acting.Creature.Name} to act. Click to move, attack or shoot."
+            : _view.WaitingFor is { } other
+                ? $"{_session.State.GetPlayer(other).Name} plays on another computer: waiting for their move."
                 : string.Empty;
 
         var order = new List<(BattleUnit Unit, bool Waiting)>();

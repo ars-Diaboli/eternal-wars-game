@@ -299,9 +299,9 @@ public sealed class BattleState
     /// <summary>Whether the unit fights on its native terrain; neutral creatures and war machines never do.</summary>
     public bool IsNative(BattleUnit unit) => !unit.IsMachine && unit.Creature.Town is { } town && NativeTowns.Contains(town);
 
-    public BattleParticipant Attacker { get; }
+    public BattleParticipant Attacker { get; internal set; }
 
-    public BattleParticipant Defender { get; }
+    public BattleParticipant Defender { get; internal set; }
 
     public Map.TerrainType Terrain { get; }
 

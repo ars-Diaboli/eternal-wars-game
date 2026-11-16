@@ -22,6 +22,12 @@ public sealed record MoveHeroCommand(PlayerId Player, HeroId Hero, MapPosition T
 
 public sealed record EndTurnCommand(PlayerId Player) : GameCommand(Player);
 
+/// <summary>
+/// The computer plays <paramref name="Player"/> from now on, a battle it fights included (a LAN player who left the game, ADR-195). Given by the
+/// host at any time; refused for a computer player, one that is out, and the last player a person plays.
+/// </summary>
+public sealed record HandToComputerCommand(PlayerId Player) : GameCommand(Player);
+
 // Decisions --------------------------------------------------------------------------------------------
 
 public sealed record ResolveTreasureChestCommand(PlayerId Player, TreasureChestReward Reward) : GameCommand(Player);

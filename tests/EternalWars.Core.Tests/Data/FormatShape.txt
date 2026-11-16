@@ -1070,6 +1070,7 @@ object GameCommand
   type=giveArtifact -> GiveArtifactCommand
   type=giveWarMachine -> GiveWarMachineCommand
   type=guard -> RespondToGuardCommand
+  type=handToComputer -> HandToComputerCommand
   type=hillFort -> UpgradeAtHillFortCommand
   type=hireAtTavern -> HireAtMapTavernCommand
   type=hireHero -> HireHeroCommand
@@ -1172,6 +1173,8 @@ object GuardDocument
   count: Int32?
   creature: String
 enum GuardMode: Classic, Area
+object HandToComputerCommand
+  player: PlayerId
 enum HeroClass: Warrior, Mage
 object HeroClassCondition
   class: HeroClass

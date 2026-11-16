@@ -202,7 +202,15 @@ public class LanGameTests
         Assert.Single(redBattle);
         Assert.Empty(thirdBattle);
 
+        // Two players on two computers fight by hand: no quick combat.
+        var refusals = new List<string>();
+        blue.CommandRefused += refusals.Add;
         blue.Session.Execute(new AutoResolveBattleCommand(Blue)).ThrowIfRejected();
+        Pump(host, blue, red, third);
+        Assert.StartsWith("A battle between players on two computers is fought by hand", Assert.Single(refusals));
+        Assert.NotNull(session.State.Battle);
+
+        red.Session.Execute(new BattleRetreatCommand(Red)).ThrowIfRejected();
         Pump(host, blue, red, third);
 
         Assert.Null(session.State.Battle);

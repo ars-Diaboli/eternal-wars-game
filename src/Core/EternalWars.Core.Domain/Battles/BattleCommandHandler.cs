@@ -178,6 +178,40 @@ internal sealed class BattleCommandHandler(GameState state, IEventPublisher even
         flow.Continue(battle);
     }
 
+    /// <summary>
+    /// The computer takes over <paramref name="player"/>'s side of the battle being fought, if it has one (ADR-195): a width or a deployment it was
+    /// to choose is the AI's, and the AI plays its units from the one that is to act.
+    /// </summary>
+    public void HandToComputer(PlayerId player)
+    {
+        if (state.Battle is not { } battle || SideOf(battle, player) is not { } side || battle.Participant(side).IsComputer)
+        {
+            return;
+        }
+
+        if (side == BattleSide.Attacker)
+        {
+            battle.Attacker = battle.Attacker with { IsComputer = true };
+        }
+        else
+        {
+            battle.Defender = battle.Defender with { IsComputer = true };
+        }
+
+        switch (battle.Phase)
+        {
+            case BattlePhase.ChoosingWidth when battle.WidthChooser == side:
+                flow.Deploy(battle, BattleState.DefaultWidth);
+                break;
+            case BattlePhase.Deploying when battle.Deployer == side:
+                flow.StartFighting(battle);
+                break;
+            case BattlePhase.Fighting:
+                flow.Continue(battle);
+                break;
+        }
+    }
+
     /// <summary>Quick combat: the AI fights both sides to the end (either participant may ask, ADR-038).</summary>
     public void AutoResolve(PlayerId player)
     {

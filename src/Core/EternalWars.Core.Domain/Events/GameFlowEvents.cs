@@ -15,6 +15,9 @@ public sealed record GracePeriodStarted(PlayerId Player, GameDate DefeatDay) : I
 /// <summary>A player without towns captured one in time and is no longer counting down.</summary>
 public sealed record GracePeriodEnded(PlayerId Player) : IEvent;
 
+/// <summary>The computer plays <see cref="Player"/> from now on (ADR-195): a LAN player left and the host handed the colour over.</summary>
+public sealed record PlayerHandedToComputer(PlayerId Player) : IEvent;
+
 /// <summary>
 /// Day 2 of an arena map began (ADR-097, ADR-100): each side's champion was chosen and moved to <see cref="CombatPlace"/> (null on a map without
 /// one: the heroes stay where they are). Published after <see cref="DayStarted"/> and the heroes' <c>HeroTeleported</c> or

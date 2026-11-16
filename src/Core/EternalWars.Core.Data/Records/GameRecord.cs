@@ -128,6 +128,7 @@ public static class GameRecordSerializer
         (typeof(StepHeroCommand), "step"),
         (typeof(MoveHeroCommand), "move"),
         (typeof(EndTurnCommand), "endTurn"),
+        (typeof(HandToComputerCommand), "handToComputer"),
         (typeof(ResolveTreasureChestCommand), "chest"),
         (typeof(ChooseTrainingCommand), "training"),
         (typeof(AnswerCartographerCommand), "cartographer"),

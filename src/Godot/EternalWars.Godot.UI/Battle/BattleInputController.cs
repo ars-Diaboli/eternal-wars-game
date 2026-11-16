@@ -11,7 +11,7 @@ namespace EternalWars.Godot.UI.Battle;
 /// <summary>
 /// The mouse and keys over an open <see cref="BattleView3D"/> with its <see cref="BattleHud"/>: point at a cell to preview, click to move, attack
 /// (from the side the pointer is on), shoot or cast the armed spell; W wait, D defend, R retreat for the active unit's commander, Q quick
-/// combat for either human side; right click opens a stack's information window; Enter or Escape leave the result screen, Escape disarms a
+/// combat for either human side (not between two computers, ADR-195); right click opens a stack's information window; Enter or Escape leave the result screen, Escape disarms a
 /// spell. The deployment step (ADR-072, ADR-155) goes to a <see cref="DeploymentDragController"/>; Enter there starts the battle.
 /// </summary>
 public sealed class BattleInputController
@@ -105,7 +105,7 @@ public sealed class BattleInputController
         _battle.ShowIntent(_battle.Commander is not null ? BattleTargeting.ActionAt(battle, cell, point.X, point.Y) : null);
     }
 
-    /// <summary>W wait, D defend, R retreat for the active unit's commander; Q quick combat for either human side.</summary>
+    /// <summary>W wait, D defend, R retreat for the active unit's commander; Q quick combat for either human side, both played here.</summary>
     private GameCommand? KeyCommand(Key key)
     {
         if (_battle.Result is not null)
@@ -115,9 +115,7 @@ public sealed class BattleInputController
 
         if (key == Key.Q)
         {
-            return (_session.Battles.Commander(BattleSide.Attacker) ?? _session.Battles.Commander(BattleSide.Defender)) is { } any
-                ? new AutoResolveBattleCommand(any)
-                : null;
+            return _battle.QuickCombatPlayer is { } any ? new AutoResolveBattleCommand(any) : null;
         }
 
         return _battle.Commander is not { } player ? null : key switch

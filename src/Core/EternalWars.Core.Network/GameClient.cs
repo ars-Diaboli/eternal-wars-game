@@ -31,6 +31,9 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
     /// <summary>A line of the chat (who wrote it, empty for the host's game itself; the text).</summary>
     public event Action<string, string>? ChatReceived;
 
+    /// <summary>The game was paused or goes on again (<see cref="Paused"/>).</summary>
+    public event Action? PauseChanged;
+
     /// <summary>The host refused one of this client's commands (why); nothing changed.</summary>
     public event Action<string>? CommandRefused;
 
@@ -54,6 +57,9 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
 
     /// <summary>The client's colour in the lobby; null while it has none.</summary>
     public PlayerId? LobbySeat { get; private set; }
+
+    /// <summary>Why the game is paused (a colour has nobody to play it, ADR-195); null while it goes on.</summary>
+    public string? Paused { get; private set; }
 
     /// <summary>Asks the host for <paramref name="seat"/>, or for any free colour.</summary>
     public void Join(string name, PlayerId? seat = null) => connection.Send(new JoinRequest(NetSerializer.ProtocolVersion, name, seat));
@@ -103,6 +109,11 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
             return CommandResult.Rejected($"{_session!.State.GetPlayer(command.Player).Name} plays on another computer.");
         }
 
+        if (Paused is not null)
+        {
+            return CommandResult.Rejected("The game is paused.");
+        }
+
         connection.Send(new SendCommand(++_sequence, command));
         return CommandResult.Sent();
     }
@@ -139,6 +150,10 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
                 break;
             case ChatLine line:
                 ChatReceived?.Invoke(line.From, line.Text);
+                break;
+            case GamePaused paused when _session is not null:
+                Paused = paused.Reason;
+                PauseChanged?.Invoke();
                 break;
             default:
                 Fail($"The client did not expect {message.GetType().Name} now.");
