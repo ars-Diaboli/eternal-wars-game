@@ -157,12 +157,14 @@ void fragment() {
 
 	if (grid > 0.0) {
 		vec2 edge = at + 0.5; // tile edges lie on whole numbers
+		// Only on the map's own tiles, not on the ground that continues past its edge under the fog.
+		float on_map = step(0.0, min(min(edge.x, edge.y), min(map_size.x - edge.x, map_size.y - edge.y)));
 		vec2 distance_to = abs(fract(edge + 0.5) - 0.5);
 		vec2 pixel = fwidth(edge);
 		vec2 lines = 1.0 - smoothstep(pixel * 0.5, pixel * 1.5, distance_to);
 		// Zoomed far out the lines would fill the tiles: they fade away instead.
 		float line = max(lines.x, lines.y) * (1.0 - smoothstep(0.12, 0.35, max(pixel.x, pixel.y)));
-		color = mix(color, grid_color.rgb, line * grid_color.a * grid);
+		color = mix(color, grid_color.rgb, line * grid_color.a * grid * on_map);
 	}
 
 	ALBEDO = color;
