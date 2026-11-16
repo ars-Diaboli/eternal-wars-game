@@ -2425,3 +2425,40 @@ ADR-099), the lobby, battles between two remote humans, drop-outs and saves are 
 - **Not done**: the per-player view (fog over the wire), the lobby and LAN discovery, chat; a battle between two remote humans is fought by
   each side's commands but both screens show it as on one computer; the turn timer still runs on each computer; a load or a new game on
   the host ends the LAN game for the clients; the main menu's Multiplayer stays disabled.
+
+### ADR-193: Each LAN client holds only its player's view (MP-3, ADR-099, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16), the roadmap's per-player view; replaces ADR-192's interim copy (the client no longer gets the record, so it
+cannot look under its fog). *(proposal)* marks the agent's choices.
+
+- **What the client gets**: on joining, the ground of the map (terrain, roads, rivers, heights; no object, no hero), the players (name, colour,
+  team, person or computer), the options with the seed left out and the scenario's rules. Then **updates**, once a host frame, with what changed
+  in the player's view since the last one:
+  - its own heroes, towns, mines and everything it owns, as they are; its retired heroes and caravans;
+  - other heroes while it sees them (`CanSee`), taken away when it no longer does;
+  - map objects while a cell of theirs is in its sight; **out of sight an object stays as last sent** ("as last seen"); an object the player
+    remembers but has not seen since it joined comes as a bare object of its kind at its place, with the flag it last saw; one its memory
+    lets go (seen gone) is taken away;
+  - its memory of objects and its fog (tiles explored, tiles in sight under refog);
+  - the date, the week's event, whose turn it is, the outcome; a question only when it is the player's; **a battle only when the player
+    fights it**;
+  - of the other players their name, team and whether they are out, **never their resources**.
+- **Events** the player may see, in order: its own (resources, fog, memory, spells' reports), the turn order and who is out, those about a
+  hero it sees (a step counts when either end is in its sight) or an object in its sight or its own, **every event of a battle it fights**;
+  a third player sees a battle's result only where it sees it (the defeated hero leaves the map in its sight). A command's execution is
+  published only for the player's own commands.
+- **The client runs no rules** (`GameSession.FollowingHost`): no service listens to the events, every command goes to the host. Its state is
+  what the host sent; the views read it as on one computer. A piece that changes is copied into the hero or object already there, so the
+  figures and screens holding it follow; a hero coming into sight is announced with `HeroPlaced` before the update's events, one leaving it
+  with `HeroRemoved` after them; an event naming a hero or object the view does not hold (in sight only between two updates) is left out.
+- **Wire** *(proposal)*: the pieces are written field by field (`StateCodec`): every field of a hero, an object, a battle, a question or an
+  event, with no code per type, so a field the rules add crosses the wire with it; creature and object definitions by id; only the game's own
+  types are read back. The host keeps the text last sent of each piece and sends a piece only when it changed. Protocol 2.
+- **Saves**: a client saves nothing (no autosave, no save, no ranking, no replay): its view does not replay the game. The host saves as
+  before. A client's save as the host's whole record is the saves item.
+- **Code**: Core.Network `PlayerViewFeed` (host), `ViewMirror` (client), `StateCodec`, `ViewUpdate` / `ViewChange` / `PlayerSeat`;
+  `JoinAccepted` carries the ground, `CommandApplied` is gone. Domain: `GameSession.FollowingHost`, `FogOfWar` and `ObjectMemory` setters for
+  the client (internal, visible to Core.Network). Tests `LanGameTests` (fog, last seen, private events, battles' sides and a third player, a
+  computer game on a generated map checked every turn) and `StateCodecTests` (every hero and object of the smoke maps, a siege).
+- **Not done**: another player's hero in sight is sent whole (its exact army, artifacts and skills, where HoMM shows an estimate) and so is
+  an enemy town in sight (buildings, garrison); the Thieves' Guild and the kingdom overview show on a client only what the client holds of
+  others; the lobby, live battles between two remote humans, drop-outs, saves and the turn timer are the roadmap's next items.

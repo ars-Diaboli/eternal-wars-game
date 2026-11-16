@@ -115,6 +115,42 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
         }
     }
 
+    /// <summary>Every tile <paramref name="player"/> has explored (a LAN host sends them to the player's computer, ADR-193).</summary>
+    internal IEnumerable<MapPosition> ExploredOf(PlayerId player)
+    {
+        if (!_explored.TryGetValue(player, out var levels))
+        {
+            yield break;
+        }
+
+        for (var level = 0; level < map.Levels; level++)
+        {
+            for (var index = 0; index < levels[level].Length; index++)
+            {
+                if (levels[level][index])
+                {
+                    yield return new MapPosition(index % map.Width, index / map.Width, level);
+                }
+            }
+        }
+    }
+
+    /// <summary>The tiles <paramref name="player"/> has in sight (meaningful under refog; see <see cref="IsInSight"/>).</summary>
+    internal IReadOnlyCollection<MapPosition> SightOf(PlayerId player) => _inSight.GetValueOrDefault(player) ?? [];
+
+    /// <summary>A LAN client (ADR-193): tiles the host says the player has explored.</summary>
+    internal void MarkExplored(PlayerId player, IEnumerable<MapPosition> positions)
+    {
+        var explored = ExploredLayer(player);
+        foreach (var position in positions.Where(map.Contains))
+        {
+            explored[position.Level][Index(position)] = true;
+        }
+    }
+
+    /// <summary>A LAN client (ADR-193): the tiles the host says the player has in sight now.</summary>
+    internal void SetSight(PlayerId player, IEnumerable<MapPosition> positions) => _inSight[player] = [.. positions];
+
     private bool[][] ExploredLayer(PlayerId player)
     {
         if (!_explored.TryGetValue(player, out var levels))

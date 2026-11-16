@@ -31,6 +31,27 @@ public sealed class ObjectMemory
     public KnownObject? Get(PlayerId player, MapObjectId id) =>
         _known.TryGetValue(player, out var known) ? known.GetValueOrDefault(id) : null;
 
+    /// <summary>A LAN client (ADR-193): what the host says the player last saw of an object.</summary>
+    internal void Set(PlayerId player, KnownObject known)
+    {
+        if (!_known.TryGetValue(player, out var map))
+        {
+            map = [];
+            _known[player] = map;
+        }
+
+        map[known.Id] = known;
+    }
+
+    /// <summary>A LAN client (ADR-193): the player knows the object is gone.</summary>
+    internal void Forget(PlayerId player, MapObjectId id)
+    {
+        if (_known.TryGetValue(player, out var map))
+        {
+            map.Remove(id);
+        }
+    }
+
     /// <summary>Updates everything <paramref name="player"/> can currently see; returns the ids that changed.</summary>
     internal IReadOnlyList<MapObjectId> Refresh(GameState state, PlayerId player)
     {

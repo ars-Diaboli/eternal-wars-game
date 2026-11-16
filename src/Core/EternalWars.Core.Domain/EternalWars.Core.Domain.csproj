@@ -10,6 +10,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="EternalWars.Core.Tests" />
+    <!-- A LAN client's view of the game (ADR-193) is put together from what the host sends, past the rules. -->
+    <InternalsVisibleTo Include="EternalWars.Core.Network" />
   </ItemGroup>
 
   <ItemGroup>

@@ -10,7 +10,7 @@ namespace EternalWars.Game;
 /// <summary>
 /// LAN games (ADR-192) until the lobby exists: <c>--host[=port]</c> hosts the game started from the new-game screen, its human colours after the
 /// first played on other computers; <c>--join=address[:port]</c> joins such a game in the first free colour (<c>--name=</c> names the player).
-/// The host runs the game and plays the computer players; a client's game is a copy that follows the host.
+/// The host runs the game and plays the computer players; a client holds only its player's view, which the host keeps up to date (ADR-193).
 /// </summary>
 public partial class Main
 {
@@ -40,7 +40,7 @@ public partial class Main
         PlaysHere(state.CurrentPlayer.Id) ? state.CurrentPlayer.Id : state.Players.FirstOrDefault(p => PlaysHere(p.Id))?.Id ?? state.CurrentPlayer.Id;
 
     /// <summary>A game about to start from the new-game screen is hosted when the app was started with <c>--host</c>.</summary>
-    private void HostIfAsked(GameSession session, Core.Data.Maps.MapDocument initialMap)
+    private void HostIfAsked(GameSession session)
     {
         if (!LaunchArguments.Host)
         {
@@ -54,7 +54,7 @@ public partial class Main
         }
 
         _listener ??= new TcpGameListener(LaunchArguments.HostPort ?? TcpGameListener.DefaultPort);
-        _host = new GameHost(session, initialMap, humans.Skip(1), _generated);
+        _host = new GameHost(session, humans.Skip(1));
         _host.Joined += (seat, name) => Tell($"{name} joined the game as {_session.State.GetPlayer(seat).Name}.");
         _host.Left += (seat, name, why) => Tell($"{name} ({_session.State.GetPlayer(seat).Name}) left the game: {why} The colour waits for them to join again.");
     }
@@ -100,8 +100,8 @@ public partial class Main
         {
             CloseSetup();
             _joining = null;
-            _generated = client.Generated;
-            BeginGame(client.Session!, client.InitialMap!, resume: true);
+            _generated = null;
+            BeginGame(client.Session!, client.Ground!, resume: true);
             Tell($"Joined the game at {hostName}:{port} as {client.Session!.State.GetPlayer(client.Seat!.Value).Name}.");
         };
         client.Disconnected += why =>

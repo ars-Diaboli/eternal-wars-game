@@ -1,5 +1,4 @@
 using EternalWars.Core.Data.Maps;
-using EternalWars.Core.Data.Records;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
@@ -10,15 +9,14 @@ namespace EternalWars.Core.Network;
 
 /// <summary>
 /// The computer that runs a LAN game (ADR-192): it holds the one real <see cref="GameSession"/>, takes clients into the human colours that play
-/// elsewhere (<see cref="RemoteSeats"/>), runs their commands, and sends every command it has run, whoever gave it, to every client. The host's
-/// own player and the computer players play here as in a game on one computer; a remote colour's command given here is refused.
+/// elsewhere (<see cref="RemoteSeats"/>) and runs their commands. Each client gets only its player's view of the game (ADR-193,
+/// <see cref="PlayerViewFeed"/>): what changed in it and the events it may see, once a <see cref="Poll"/>. The host's own player and the computer
+/// players play here as in a game on one computer; a remote colour's command given here is refused.
 /// </summary>
 /// <remarks>Everything happens on the caller's thread in <see cref="Poll"/> (the game app calls it once a frame).</remarks>
 public sealed class GameHost : ICommandRoute, IDisposable
 {
     private readonly GameSession _session;
-    private readonly MapDocument _initialMap;
-    private readonly GenerationInfo? _generated;
     private readonly List<PlayerId> _remoteSeats;
     private readonly List<Peer> _peers = [];
     private readonly IDisposable _subscription;
@@ -26,15 +24,14 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>Set while a client's command runs: the route lets that one through.</summary>
     private bool _runningRemote;
 
+    /// <summary>Who fights the current battle, or fought the last one: they see its events.</summary>
+    private IReadOnlyCollection<PlayerId> _battleSides = [];
+
     /// <param name="session">The game, started or about to start.</param>
-    /// <param name="initialMap">The map the game started from (saves and clients replay from it).</param>
     /// <param name="remoteSeats">The human colours played on other computers.</param>
-    /// <param name="generated">How the map was generated, when it was.</param>
-    public GameHost(GameSession session, MapDocument initialMap, IEnumerable<PlayerId> remoteSeats, GenerationInfo? generated = null)
+    public GameHost(GameSession session, IEnumerable<PlayerId> remoteSeats)
     {
         _session = session;
-        _initialMap = initialMap;
-        _generated = generated;
         _remoteSeats = [.. remoteSeats.Distinct()];
         foreach (var seat in _remoteSeats)
         {
@@ -45,7 +42,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
 
         session.Route = this;
-        _subscription = session.Events.Subscribe<CommandExecuted>(_ => SendNewCommands());
+        _subscription = session.Events.Subscribe<IEvent>(Capture);
     }
 
     /// <summary>A client took a colour (the colour, the player's name).</summary>
@@ -89,7 +86,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
             }
         }
 
-        SendNewCommands();
+        SendViews();
     }
 
     /// <summary>Refuses a remote colour's command given on this computer; a client's own command, run by <see cref="Poll"/>, goes through.</summary>
@@ -148,10 +145,19 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return;
         }
 
+        var state = _session.State;
+        var feed = new PlayerViewFeed(state, taken);
+        var codec = new StateCodec(state);
         peer.Seat = taken;
         peer.Name = request.Name;
-        peer.Connection.Send(new JoinAccepted(taken, GameReplay.Record(_initialMap, _session, generated: _generated)));
-        peer.Sent = _session.CommandLog.Count;
+        peer.Feed = feed;
+        peer.Connection.Send(new JoinAccepted(
+            taken,
+            MapConverter.ToDocument(state.Map),
+            [.. state.Players.Select(p => new PlayerSeat(p.Id, p.Name, p.IsHuman, p.Team))],
+            codec.Write(state.Options with { Seed = 0 })!,
+            codec.Write(state.Rules)!));
+        peer.Connection.Send(feed.First());
         Joined?.Invoke(taken, request.Name);
     }
 
@@ -186,15 +192,28 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
     }
 
-    /// <summary>Sends each seated client the commands run since its last one, in the log's order.</summary>
-    private void SendNewCommands()
+    /// <summary>Notes each event of the game for the clients that may see it.</summary>
+    private void Capture(IEvent e)
     {
-        var log = _session.CommandLog;
-        foreach (var peer in _peers.Where(p => p.Seat is not null && !p.Connection.IsClosed))
+        if (_session.State.Battle is { } battle)
         {
-            for (; peer.Sent < log.Count; peer.Sent++)
+            _battleSides = new[] { battle.Attacker.Owner, battle.Defender.Owner }.OfType<PlayerId>().ToHashSet();
+        }
+
+        foreach (var peer in _peers)
+        {
+            peer.Feed?.Capture(e, _battleSides);
+        }
+    }
+
+    /// <summary>Sends each seated client what changed in its view since its last update.</summary>
+    private void SendViews()
+    {
+        foreach (var peer in _peers.Where(p => p.Feed is not null && !p.Connection.IsClosed))
+        {
+            if (peer.Feed!.Next() is { } update)
             {
-                peer.Connection.Send(new CommandApplied(peer.Sent, log[peer.Sent]));
+                peer.Connection.Send(update);
             }
         }
     }
@@ -207,7 +226,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
 
         public string Name { get; set; } = "";
 
-        /// <summary>How many of the log's commands the client has been sent.</summary>
-        public int Sent { get; set; }
+        /// <summary>The player's view, once seated.</summary>
+        public PlayerViewFeed? Feed { get; set; }
     }
 }
