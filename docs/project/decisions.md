@@ -2621,3 +2621,34 @@ format changes; LAN protocol 6.
   clock, both turns ended on time; the host's clock ending a client's turn and reaching the client).
 - **Not done**: a client's screens (its battle scene's last moves, a screen left open) do not hold the end of its turn; the clock's time is
   sent in whole seconds, so a client may show it up to a frame late.
+
+### ADR-199: Arena maps over the LAN (ADR-100, ARN-1, MP-2, ADR-197, roadmap, 2026-11-17)
+**Status**: implemented (2026-11-17), the roadmap's arena maps in the lobby. *(proposal)* marks the agent's choices. No save or map format
+change; no protocol change.
+
+- **The lobby**: an arena map lets every player be a person, so in the host's lobby each colour is Here, LAN player or Computer, the first
+  Here and the others **LAN player** by default *(proposal; on other maps a computer-only slot stays the computer's)*. Under the simultaneous
+  switch the lobby says what it does with this map and these colours: the first week's days (an arena's **preparation day**) at once;
+  turn by turn with fewer than two people; or turn by turn because a named person's colour has no start zone on this map.
+- **Day 1** (ARN-1 b): each player prepares in its own view (ADR-193), turn by turn, or **at once** on a map with a start zone for every
+  person: an arena map is no longer kept out of the simultaneous first week. Day 2's battle opens by itself on the two sides' computers
+  and is fought live (ADR-195); the others see its result.
+- **Allies are no conflict** *(proposal)*: on a simultaneous day an ally's start zone, an ally's hero in sight and an object an ally visited
+  that day no longer discard the day (allies share a half on Four Banners and hand each other troops); a visit counts against the first
+  visitor that day, so an enemy visiting it after two allies still does. The validator no longer warns when allies' start zones touch.
+- **The shipped arenas** (ADR-180) get start zones: each player's half on Proving Grounds and Frostfang Pass, each player's quarter of its
+  side's half on Four Banners. The rock between the halves is **five tiles** wide (was four), so a hero's ordinary sight (5) does not see
+  across: day 1 stays hidden even turn by turn *(proposal)*; the maps are now 35 × 18, 24 × 31 and 41 × 24. A hero with more sight (Scouting,
+  an artifact) may still see the other side, which on a simultaneous day plays the day again turn by turn.
+- **The result screen**: its headline is this computer's players' victory or defeat (was: any person's, which on a LAN client showed the
+  winner's "Victory" to the loser). **"Play again"** (ADR-159) on the host starts the rematch for everyone: the same map, colours and options
+  with a new seed, a colour handed to the computer staying the computer's; each client gets the new game as on joining, and the chat says
+  the host started it again. A client has no "Play again"; its result screen says the host may start the game again.
+- **Code**: Domain `TurnService.IsSimultaneousDay` (arenas allowed), `SimultaneousDayWatch` (allies), `MapValidator.StartZones` (allies'
+  zones may touch), `MapSketch.StartZone` and the three arena scenarios. Network `GameHost.PlayAgain` (shares `Replace` with the conflict's
+  replay). Godot.UI `NewGameScreen` (arena colours, the switch's note), `GameResultPanel.CanPlayAgain` / `PlaysHere` / `Headline`; the game
+  app's `PlayAgain` on a host. Tests `LanArenaTests` (day 1 at once in each player's view and the battle fought live; turn by turn without
+  zones; the host's rematch reaching the client), `ArenaMapsTests` (each shipped arena prepared at once by four or two people, no conflict,
+  then the battle), `SimultaneousDayTests` (allies' zones and heroes).
+- **Not done**: a client cannot ask for a rematch; the host's "Play again" does not go back to the lobby, so its players cannot change
+  colours or factions in between.
