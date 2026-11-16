@@ -92,9 +92,13 @@ In priority order:
   - **Shipped maps** (ADR-180), hand-made (no generator template), on the new-game screen after Ember March: **Proving Grounds**
     (two players, each picking its faction for a random town and hero, mirrored halves, a sealed combat place); **Frostfang Pass** (two
     players and no towns: a Haven and a Necropolis mage buy their armies at map dwellings); **Four Banners** (two against two, allies sharing
-    a half, each half with its own combat place). Random heroes there start with the same neutral army.
-  - *(planned)*: LAN.
-- **LAN multiplayer** *(before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓; network, view, lobby, live battles, drop-outs, saves, start zones and the simultaneous first week built: ADR-192 to ADR-197)*: the **host** runs
+    a half, each half with its own combat place). Random heroes there start with the same neutral army. Their halves are kept apart by
+    rock five tiles wide, which a hero's sight does not cross, and each player has a start zone (its half, or its quarter on Four Banners).
+  - **Over the LAN** (ADR-199): an arena map in the host's lobby offers each colour as Here, LAN player (the default after the first) or
+    Computer. Each player prepares in its own view; day 1 is played turn by turn, or at once with the simultaneous switch on a map with a
+    start zone for every person. Day 2's battle opens by itself on both sides' computers and is fought live. The result screen tells each
+    computer its own victory or defeat; the host's "Play again" starts the rematch for everyone, with the same colours.
+- **LAN multiplayer** *(before 1.0, ADR-088, ADR-098; MP-3, MP-4 ❓; network, view, lobby, live battles, drop-outs, saves, start zones, the simultaneous first week, the turn timer and arena maps built: ADR-192 to ADR-199)*: the **host** runs
   the game and computer players; clients send commands and get only what they may see. **Lobby**: Multiplayer lists the games found on the
   network (or an address is typed); the host sets the game up on the new-game screen, each colour played here, by a LAN player or by the
   computer; a joined player takes an open colour; the host's choices, never the seed, are shown to all; a colour nobody has joined at the
@@ -105,10 +109,11 @@ In priority order:
   client's save and replay are the host's whole record of the game, sent when asked. Any save goes on in a LAN game ("Host a saved game":
   each colour a person plays is played here, by a LAN player or by the computer) or on one computer (a save with several people's colours
   asks which play here, hot-seat, and which the computer plays from then on; F9's quick load keeps them all here). **Simultaneous first week** (the host's switch in the lobby; maps with
-  a start zone for every person, which random maps have and the editor paints; one colour played on the host): the people play each day of
-  the first week at once, each on their own computer, and the computer players after them. One battle or question at a time: while one person
+  a start zone for every person, which random maps have and the editor paints; one colour played on the host; the lobby says when the map
+  lacks one): the people play each day of the first week (an arena's preparation day) at once, each on their own computer, and the computer players after them. One battle or question at a time: while one person
   fights or answers, the others wait. A hero entering another person's start zone, a person seeing another person's hero it did not see when
-  the day began, or a hero visiting an object another person's hero visited that day discards the day for all: the host goes back to the
+  the day began, or a hero visiting an object another person's hero visited that day discards the day for all (an ally's zone, hero or
+  visit never does): the host goes back to the
   day's start and it is played again turn by turn (no second income), and so is every day after it. A save made during a simultaneous day
   goes on turn by turn when loaded on one computer. The turn timer is the host's, one clock for all. No internet play.
 
