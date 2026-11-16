@@ -2329,3 +2329,20 @@ marketplaces; *(proposal)* marks the agent's numbers, for play-testing.
 - **Not built**: map marketplaces (the AI neither targets nor trades at them), and trading on the arena's preparation day.
 - Measured on three 60-day `duel` games (`sim game --template duel`): 8, 19 and 13 trades a game, mostly sales of 2–38 units to finish a
   building, a few purchases of one or two units of mercury.
+
+### ADR-190: A long press opens the information window on touch (ADR-154, roadmap, 2026-11-16)
+**Status**: implemented (2026-11-16); *(proposal)* marks the agent's choices, for play-testing.
+
+- **Touch as the mouse**: the game reads a touch screen itself instead of through Godot's mouse emulation (turned off while the game runs).
+  One finger is the pointer: a **tap** is a left click where the finger went down; a finger **moved** more than 12 px *(proposal)* is a
+  left drag from there; a finger **held still for 0.5 s** *(proposal)* is a right click there, so it opens the information window of what is
+  under it, on the map, in battle and on every screen, exactly as a right click does (ADR-154, ADR-178). Every screen keeps handling the
+  mouse only.
+- **No click under a long press**: the left press waits until the touch is known to be a tap or a drag, so holding a finger on a hero or a
+  tile never also selects it or plans a route. A tap therefore acts when the finger lifts.
+- **The window stays open** *(proposal)* when the finger lifts, unlike a held right button (a finger covers the screen while it is held);
+  the next tap closes it and does nothing else, as a left click does.
+- **A second finger** while the first is still undecided cancels the touch; there are no two-finger gestures (pinch zoom) yet.
+- **Code**: core `Settings/TouchGesture` (the tap, drag and long press, from finger events and a clock; no Godot), Godot `TouchInput` (a node
+  the game adds: touch events in, mouse events out through `Input.ParseInputEvent`). `AutoInput` gained `touch:x,y,frames`. Tests
+  `TouchGestureTests`; smoke scenario `game-info-touch`. The map editor does not take touch. No save format change.

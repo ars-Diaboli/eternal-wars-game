@@ -7,7 +7,8 @@ namespace EternalWars.Godot.Shared.Controls;
 /// Replays scripted input for smoke tests and screenshots (together with Godot's <c>--write-movie</c>):
 /// <c>-- --autoinput=30:click:800,450;45:key:Enter;60:rclick:400,300</c>. Each entry is
 /// <c>frame:kind:argument</c>; kinds are <c>click</c>/<c>rclick</c> (screen x,y), <c>key</c> (a Godot
-/// <see cref="Key"/> name), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
+/// <see cref="Key"/> name), <c>touch</c> (<c>x,y,frames</c>: one finger down there, lifted that many frames later; a long press
+/// opens the information window through <see cref="TouchInput"/>), <c>hold</c> (<c>Key,frames</c>: held down that long), <c>wheel</c> (<c>up|down,count</c>) and
 /// <c>drag</c>/<c>rdrag</c> (<c>x1,y1,x2,y2</c>: left or right button pressed, moved, released over three frames), <c>press</c> (a visible,
 /// enabled button by its text or, without one, its tooltip; the topmost: exact, else the first that contains it, ignoring case; scrolled into view, then clicked at its centre the next
 /// frame; an error when there is none) and <c>dump</c> (prints the visible buttons' texts (a text-less button by its tooltip), centres and sizes, and the tabs, for writing scripts). A click,
@@ -60,6 +61,14 @@ public partial class AutoInput : Node
                         ButtonMask = dragButton == MouseButton.Left ? MouseButtonMask.Left : MouseButtonMask.Right, // held, as a real drag reports it
                     }));
                     _script.Add((frame + 2, new InputEventMouseButton { ButtonIndex = dragButton, Pressed = false, Position = to, GlobalPosition = to }));
+                    break;
+                case "touch":
+                    // touch:x,y,frames puts a finger down there and lifts it that many frames later (default 1: a tap).
+                    var touchParts = parts[2].Split(',');
+                    var finger = new Vector2(float.Parse(touchParts[0], CultureInfo.InvariantCulture), float.Parse(touchParts[1], CultureInfo.InvariantCulture));
+                    var touchFrames = touchParts.Length > 2 ? int.Parse(touchParts[2], CultureInfo.InvariantCulture) : 1;
+                    _script.Add((frame, new InputEventScreenTouch { Index = 0, Pressed = true, Position = finger }));
+                    _script.Add((frame + touchFrames, new InputEventScreenTouch { Index = 0, Pressed = false, Position = finger }));
                     break;
                 case "key" or "hold":
                     // hold:Key,frames keeps the key down that many frames (camera panning reads the held keys).

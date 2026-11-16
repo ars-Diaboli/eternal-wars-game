@@ -212,7 +212,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Configurable layout: initiative bar, minimap corner, hero and town lists, action panel; a "Layout" tab, kept in the player's settings (ADR-118, ADR-156)
 - [x] Information windows (right-click) for creatures, heroes, skills, spells, artifacts, buildings and map objects; "detailed tooltips", off by default (ADR-118, ADR-154)
 - [x] Information windows for the kingdom overview, the tavern and the decision prompts (ADR-178)
-- [ ] Information windows on touch (a long press) (ADR-154)
+- [x] Information windows on touch: a finger held still opens the window, a tap clicks, a moved finger drags (ADR-154, ADR-190)
 - [x] Fullscreen: a "Window mode" setting (Windowed / Fullscreen), Alt+Enter (ADR-186)
 - [x] Short resource amounts: gold over 999 999 as "321.7m", other resources over 9 999 as "31.7k", across the UI (ADR-186)
 - [x] A status bar along the bottom of the adventure map (16:9 wide at most): tooltips and labels on the left, resources on the right (ADR-186)
