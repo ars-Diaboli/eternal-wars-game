@@ -121,7 +121,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 | Area | Key types and rules |
 |---|---|
 | Artifacts (ADR-061, ADR-121) | `ArtifactCatalog` (from `artifacts.csv`), `HeroArtifacts`, `ArtifactBonuses` read via `Hero.TotalAttack` / `SkillLevelOf` / `Bonus`; call `GameState.RefreshArtifacts` whenever equipment changes (incl. hero joining, editor edits). `ArtifactService` equips, gives, picks up, loots, `Draw(tier)` (relics from `GameState.DrawnRelics`). |
-| Marketplace (ADR-067) | `MarketplaceRules` rates; `TradeResourceCommand` → `EconomyService.Trade`. AI does not trade. |
+| Marketplace (ADR-067) | `MarketplaceRules` rates; `TradeResourceCommand` → `EconomyService.Trade`. The AI trades for a building (`AdventureAi.Market.cs`, ADR-189). |
 | Tavern (ADR-060) | `TavernRules` (offer = stateless weekly shuffle; hire allowed?), `TownService.HireHero`. Tavern is a building level in `buildings.csv`. |
 | Hero limit (ADR-068) | `ScenarioRules.MaxHeroes`, `Player.MaxHeroes`; `GameState.HeroLimitReached` is the one check. `GameSession.Start` removes surplus heroes. |
 | Adventure AI (ADR-059, ADR-119) | `AdventureAi` (`AI/`) plays only through `Execute`; `BattleEstimator` runs the real engine on a throwaway state; `Explain` for debugging; an arena's preparation day in `AdventureAi.Arena.cs` (ADR-160); the adventure spells it casts in `AdventureAi.Spells.cs` (ADR-184). The game app calls `PlayTurn()` once a frame for computer players. |

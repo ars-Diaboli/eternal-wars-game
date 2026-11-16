@@ -2312,3 +2312,20 @@ stack's **Fight Value × its count** is the measure to use where it fits; the pr
   finishing bonus change few choices. Variants (no threat weighting, a larger finishing bonus, a bonus for stacks still to act this round,
   walking at the biggest threat within reach) all stayed within 48–52 %; a sanity run that picks the worst target wins 16 %. Larger gains are
   expected from (d) avoiding retaliation, which the AI does not weigh at all yet.
+
+### ADR-189: The adventure AI trades at its marketplace (ADR-067, ADR-059, roadmap, 2026-11-16)
+**Status**: accepted (2026-11-16), built (2026-11-16): `AdventureAi.Market.cs`. Lifts ADR-067's "no AI trading for now" for town
+marketplaces; *(proposal)* marks the agent's numbers, for play-testing.
+
+- **Only for a building**: trading is dear (ADR-067), so the AI trades only as the last step to the building a town is saving for (the
+  first reachable one in its build order), through `TradeResourceCommand` at its towns' rate. Never for troops, heroes or war machines.
+- **Buying**: when the building lacks lumber, ore or a magic resource that the income would not bring within **2 days** *(proposal)*, the
+  AI buys all that is missing, if its gold covers the building's gold and the trade, and the trade takes at most **50 %** of its gold
+  *(proposal)*. A building whose missing resources can be bought that way (the gold counted with **3 days** of income, as for any building
+  it saves for) now counts as within reach in the build order, and the gold it keeps back includes the trade.
+- **Selling**: when gold alone is missing, the AI sells what it holds beyond the building's needs and a kept stock of **20** lumber and ore
+  and **10** of each magic resource *(proposal)*, the resource that yields most first, just enough to cover the shortfall, and only if the
+  spare stock covers all of it.
+- **Not built**: map marketplaces (the AI neither targets nor trades at them), and trading on the arena's preparation day.
+- Measured on three 60-day `duel` games (`sim game --template duel`): 8, 19 and 13 trades a game, mostly sales of 2–38 units to finish a
+  building, a few purchases of one or two units of mercury.

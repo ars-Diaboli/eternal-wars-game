@@ -116,7 +116,7 @@ Content draft: [artifacts.md](../content/artifacts.md).
       war machines, `sim game`; generated maps (ADR-119)
 - [x] Adventure spells: Town Portal, Dimension Door, Pathfinder's Call, Ashwalk, View Terrain, Grave Whisper, Veil; not the spells that
       only show something (ADR-184)
-- [ ] Marketplace use (no AI trading for now, ADR-067)
+- [x] Marketplace use: buys what the building it saves for lacks, sells spare stock when only gold is missing; not map marketplaces (ADR-189)
 - [ ] Balance the AI further over several maps (`sim game --runs`): Two Towns' day-4 rush is gone and its starting armies are even (ADR-184),
       but the first seat and Haven still win about three games in four there; two equal armies trading empty towns; the larger templates'
       game length; the AI's hero hiring when it is beaten
