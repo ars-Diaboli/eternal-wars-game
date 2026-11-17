@@ -29,7 +29,7 @@ public partial class StartZonesView : Node3D
         {
             if (e.Level == _context.Level)
             {
-                Relay(e.Area);
+                Relay(ReliefSurface.Reach(e.Area));
             }
         });
         Rebuild();

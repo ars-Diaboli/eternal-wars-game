@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Settings;
@@ -102,7 +103,7 @@ public partial class HeroView : Node3D
         {
             if (_queue is not { } queue || !queue.IsValid() || !queue.IsRunning())
             {
-                if (e.Level == _shownPosition.Level && e.Area.Touches(_shownPosition))
+                if (e.Level == _shownPosition.Level && ReliefSurface.Reach(e.Area).Touches(_shownPosition))
                 {
                     Position = OnGround(_shownPosition);
                 }

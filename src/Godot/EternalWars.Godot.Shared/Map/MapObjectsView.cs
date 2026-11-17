@@ -1,4 +1,5 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Visibility;
@@ -69,7 +70,7 @@ public partial class MapObjectsView : Node3D
         {
             if (e.Level == _level)
             {
-                Known().Where(k => k.Definition.Footprint.OccupiedCells.Any(c => e.Area.Touches(k.Position.Offset(c.Dx, c.Dy))))
+                Known().Where(k => k.Definition.Footprint.OccupiedCells.Any(c => ReliefSurface.Reach(e.Area).Touches(k.Position.Offset(c.Dx, c.Dy))))
                     .Select(k => k.Id).ToList().ForEach(Rebuild);
             }
         });
