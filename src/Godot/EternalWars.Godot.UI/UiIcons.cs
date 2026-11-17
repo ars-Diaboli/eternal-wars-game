@@ -109,10 +109,14 @@ public static class UiIcons
     /// </summary>
     public static bool LabelsOnStatusBar { get; set; } = true;
 
+    /// <summary>The room round an icon-only button's icon, on each side: the button is the icon plus twice this, square.</summary>
+    public const int IconPadding = 6;
+
     /// <summary>
-    /// Shows <paramref name="icon"/> alone on the button at <paramref name="size"/> pixels (ADR-204): its text becomes the label the status
-    /// bar shows on hover (<see cref="StatusLabelMeta"/>; the tooltip when <see cref="LabelsOnStatusBar"/> is off), and the name smoke scripts
-    /// press it by. With <paramref name="keepText"/> the icon stands small before the text instead. The text stays if the icon is missing.
+    /// Shows <paramref name="icon"/> alone on a square button at <paramref name="size"/> pixels (ADR-204), which keeps its size in any
+    /// container: its text becomes the label the status bar shows on hover (<see cref="StatusLabelMeta"/>; the tooltip when
+    /// <see cref="LabelsOnStatusBar"/> is off), and the name smoke scripts press it by. With <paramref name="keepText"/> (the buttons along a
+    /// window's bottom: OK, Cancel, Start, Back) the icon stands small before the text instead. The text stays if the icon is missing.
     /// </summary>
     public static T WithIcon<T>(this T button, UiIcon icon, int size = WindowSize, bool keepText = false) where T : Button
     {
@@ -128,6 +132,10 @@ public static class UiIcons
         }
 
         button.IconAlignment = HorizontalAlignment.Center;
+        var side = size + (2 * IconPadding);
+        button.CustomMinimumSize = new Vector2(side, side);
+        button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkBegin; // square, never stretched by its row or column
+        button.SizeFlagsVertical = Control.SizeFlags.ShrinkCenter;
         Label(button, button.Text);
         return button;
     }

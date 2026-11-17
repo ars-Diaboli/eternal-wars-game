@@ -13,7 +13,7 @@ public partial class ReplayListScreen : PanelContainer
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(720, 360) };
     private readonly Label _message = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(720, 0) };
     private readonly Button _watch = new() { Text = "Watch", Disabled = true };
-    private readonly Button _back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft);
+    private readonly Button _back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft, keepText: true);
     private readonly List<(ItemList List, IReadOnlyList<SaveItem> Items)> _pages = [];
 
     /// <summary>The player asked to watch this file.</summary>
@@ -30,11 +30,7 @@ public partial class ReplayListScreen : PanelContainer
         rows.AddChild(new Label { Text = "Watch a replay", HorizontalAlignment = HorizontalAlignment.Center });
         rows.AddChild(_tabs);
         rows.AddChild(_message);
-        var buttons = new HBoxContainer();
-        buttons.AddThemeConstantOverride("separation", UiSpacing.Gap);
-        rows.AddChild(buttons);
-        buttons.AddChild(_back);
-        buttons.AddChild(_watch);
+        rows.AddChild(Hud.Screens.ButtonRow(_watch, _back));
         _back.Pressed += () => BackRequested?.Invoke();
         _watch.Pressed += RequestWatch;
         _tabs.TabChanged += _ => UpdateButton();

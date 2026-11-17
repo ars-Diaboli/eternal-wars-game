@@ -42,7 +42,7 @@ public partial class MultiplayerScreen : PanelContainer
         _name.Text = playerName;
         rows.AddRow("Your name", _name, 140);
 
-        var host = new Button { Text = "Host a game", TooltipText = "Set up a game the players on this network join" }.WithIcon(UiIcon.Confirm);
+        var host = new Button { Text = "Host a game", TooltipText = "Set up a game the players on this network join" }.WithIcon(UiIcon.Confirm, keepText: true);
         host.Pressed += () => HostRequested?.Invoke(PlayerName);
         rows.AddChild(host);
         var saved = new Button { Text = "Host a saved game", TooltipText = "Go on with a saved game, the players on this network joining its colours" };
@@ -60,9 +60,9 @@ public partial class MultiplayerScreen : PanelContainer
         addressRow.AddChild(join);
         rows.AddChild(_message);
 
-        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft);
+        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft, keepText: true);
         back.Pressed += () => BackRequested?.Invoke();
-        rows.AddChild(back);
+        rows.AddChild(Screens.ButtonRow(back));
         host.CallDeferred(Control.MethodName.GrabFocus);
     }
 

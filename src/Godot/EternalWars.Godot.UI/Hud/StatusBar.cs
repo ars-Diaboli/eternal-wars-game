@@ -16,7 +16,7 @@ public partial class StatusBar : PanelContainer
     public const float Height = 32;
 
     /// <summary>The width of the menu button on the bar's right end.</summary>
-    public const float MenuButtonWidth = 140;
+    public const float MenuButtonWidth = Height + 8; // a square icon button (ADR-204)
 
     /// <summary>The widest the bar gets, as a share of the screen's height: 16:9.</summary>
     private const float MaxAspect = 16f / 9f;

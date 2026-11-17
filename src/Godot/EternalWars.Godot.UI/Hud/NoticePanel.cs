@@ -21,9 +21,9 @@ public partial class NoticePanel : PanelContainer
         var box = new VBoxContainer();
         AddChild(box);
         box.AddChild(_text);
-        var ok = new Button { Text = "OK" }.WithIcon(UiIcon.Confirm);
+        var ok = new Button { Text = "OK" }.WithIcon(UiIcon.Confirm, keepText: true);
         ok.Pressed += () => Visible = false;
-        box.AddChild(ok);
+        box.AddChild(Screens.ButtonRow(ok));
         Visible = false;
 
         this.SubscribeWhileInTree<SignRead>(session.Events, e => Show(e.Hero, $"The sign reads: \"{e.Message}\""));

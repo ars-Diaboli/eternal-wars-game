@@ -21,7 +21,7 @@ namespace EternalWars.Godot.UI.Hud;
 public partial class DecisionPanel : PanelContainer
 {
     private readonly Label _prompt = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
-    private readonly HBoxContainer _buttons = new();
+    private readonly HBoxContainer _buttons = new() { Alignment = BoxContainer.AlignmentMode.End }; // along the bottom, at the right (ADR-204)
     private GameSession _session = null!;
     private Func<Core.Domain.Common.PlayerId, bool> _playsHere = null!;
 
@@ -248,7 +248,7 @@ public partial class DecisionPanel : PanelContainer
         var button = new Button { Text = text, Disabled = disabled };
         if (text is "OK" or "Accept")
         {
-            button.WithIcon(UiIcon.Confirm);
+            button.WithIcon(UiIcon.Confirm, keepText: true);
         }
 
         button.Pressed += () => _session.Execute(command);

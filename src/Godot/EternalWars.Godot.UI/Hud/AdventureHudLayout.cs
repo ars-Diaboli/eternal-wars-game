@@ -10,8 +10,8 @@ namespace EternalWars.Godot.UI.Hud;
 /// fills that width. The turn block stands at the top left, beside the top-left stack. Horizontal lists run along the bottom between the
 /// bottom stacks. The bottom parts stand above <see cref="BottomReserve"/> (the status bar, ADR-186); without one, the bottom right leaves room
 /// for the menu button. With the side panel on (ADR-191) a framed column runs down that side from the top to the status bar, behind the
-/// minimap, the lists and the action panel, and takes the clicks on it; the turn block stands beside it on the left. It re-places the parts
-/// whenever one's size changes.
+/// minimap, the lists and the action panel, and takes the clicks on it; the turn block's calendar stands at its bottom (ADR-204). It re-places
+/// the parts whenever one's size changes.
 /// </summary>
 public partial class AdventureHudLayout : Container
 {
@@ -146,7 +146,16 @@ public partial class AdventureHudLayout : Container
             FitChildInRect(_sidePanel, new Rect2(x, 0, panelWidth, screen.Y - _bottomReserve));
         }
 
-        if (_info is not null)
+        if (_info is not null && panelSide is { } inPanel)
+        {
+            // At the bottom of the side panel (ADR-204), as wide as its column.
+            var width = stackWidths[inPanel == ScreenSide.Left ? ScreenCorner.TopLeft : ScreenCorner.TopRight];
+            var x = inPanel == ScreenSide.Left ? Margin : screen.X - panelWidth + Margin;
+            _info.Size = new Vector2(width, 0); // the wrapping lines take their height at this width
+            var height = _info.GetCombinedMinimumSize().Y;
+            FitChildInRect(_info, new Rect2(x, screen.Y - _bottomReserve - Margin - height, width, height));
+        }
+        else if (_info is not null)
         {
             var x = panelSide == ScreenSide.Left ? panelWidth + Margin
                 : Margin + (stackWidths[ScreenCorner.TopLeft] > 0 ? stackWidths[ScreenCorner.TopLeft] + Margin : 0);

@@ -19,9 +19,9 @@ public partial class GameMenuPanel : CenterContainer
     private readonly ItemList _list = new() { CustomMinimumSize = new Vector2(560, 220) };
     private readonly LineEdit _name = new() { PlaceholderText = "Name of the save", CustomMinimumSize = new Vector2(300, 0) };
     private readonly Label _message = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(560, 0) };
-    private readonly Button _save = new Button { Text = "Save" }.WithIcon(UiIcon.Save);
-    private readonly Button _load = new Button { Text = "Load" }.WithIcon(UiIcon.Load);
-    private readonly Button _delete = new Button { Text = "Delete" }.WithIcon(UiIcon.Close);
+    private readonly Button _save = new Button { Text = "Save" }.WithIcon(UiIcon.Save, keepText: true);
+    private readonly Button _load = new Button { Text = "Load" }.WithIcon(UiIcon.Load, keepText: true);
+    private readonly Button _delete = new Button { Text = "Delete" }.WithIcon(UiIcon.Close, keepText: true);
     private readonly Button _mainMenu = new() { Text = "Main menu", TooltipText = "Leave the game; the autosave keeps the start of this turn", Visible = false };
     private readonly HBoxContainer _autoCombatRow = new() { Visible = false };
     private readonly Label _autoCombatLabel = new();
@@ -112,15 +112,15 @@ public partial class GameMenuPanel : CenterContainer
         saveRow.AddChild(_name);
         saveRow.AddChild(_save);
         rows.AddChild(saveRow);
-        var saveActions = new HBoxContainer();
+        var saveActions = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End };
         saveActions.AddChild(_load);
         saveActions.AddChild(_delete);
         rows.AddChild(saveActions);
 
         // Below the tabs, whichever is shown: the messages and leaving the menu.
         outer.AddChild(_message);
-        var actions = new HBoxContainer();
-        var close = new Button { Text = "Close (Esc)" }.WithIcon(UiIcon.Close);
+        var actions = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End }; // along the bottom, at the right (ADR-204)
+        var close = new Button { Text = "Close (Esc)" }.WithIcon(UiIcon.Close, keepText: true);
         close.Pressed += Close;
         actions.AddChild(close);
         _mainMenu.Pressed += () => MainMenuRequested?.Invoke();

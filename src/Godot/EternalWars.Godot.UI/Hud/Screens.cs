@@ -25,6 +25,22 @@ public static class Screens
     }
 
     /// <summary>
+    /// The row of buttons along a window's bottom (OK, Cancel, Start, Back; ADR-204): with their text, as wide as their text, at the right.
+    /// </summary>
+    public static HBoxContainer ButtonRow(params Button[] buttons)
+    {
+        var row = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.End, SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+        row.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        foreach (var button in buttons)
+        {
+            button.SizeFlagsHorizontal = Control.SizeFlags.ShrinkEnd;
+            row.AddChild(button);
+        }
+
+        return row;
+    }
+
+    /// <summary>
     /// An opaque panel held in the middle of the screen. It grows to both sides as its content grows; with only the Center
     /// preset it grew right and down from the middle, past the screen's edge.
     /// </summary>

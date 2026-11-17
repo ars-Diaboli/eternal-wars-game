@@ -83,9 +83,9 @@ public partial class AdventureHud : CanvasLayer
         // The parts the "Layout" tab moves (ADR-156): the info block, the minimap, the lists and the action panel.
         _layout = new AdventureHudLayout();
         AddChild(_layout);
-        var turnPanel = new TurnPanel();
-        _layout.SetInfo(turnPanel);
-        turnPanel.Bind(session, endTurn: playing);
+        _turn = new TurnPanel();
+        _layout.SetInfo(_turn);
+        _turn.Bind(session, endTurn: playing);
 
         // The status bar along the bottom (ADR-186): the hints line first, then the messages and what the pointer is over; the resources on
         // the right. In the replay viewer it stands above the viewer's bar; in a game the menu button sits on its right end.
@@ -171,7 +171,7 @@ public partial class AdventureHud : CanvasLayer
         StatusBar.Reparent(barLayer, keepGlobalTransform: false);
         VisibilityChanged += () => barLayer.Visible = Visible;
         _layout.BottomReserve = StatusBar.Height + StatusBar.BottomOffset; // the bottom parts stand above the status bar
-        _layout.Apply(layout);
+        ApplyLayout(layout);
     }
 
     /// <summary>How wide the questions and notices in the middle of the screen are.</summary>
@@ -181,7 +181,24 @@ public partial class AdventureHud : CanvasLayer
     public void ShowHover(string? text) => StatusBar.ShowHover(text);
 
     /// <summary>Places the parts as <paramref name="layout"/> says (the "Layout" tab changed).</summary>
-    public void ApplyLayout(LayoutSettings layout) => _layout.Apply(layout);
+    public void ApplyLayout(LayoutSettings layout)
+    {
+        // With the side panel on, End turn stands with its actions and the calendar at its bottom (ADR-204); off, both at the top of the map.
+        var inPanel = HudArrangement.PanelSide(layout) is not null;
+        _turn.InPanel = inPanel;
+        Node home = inPanel ? _actions : _turn;
+        if (_turn.EndTurn is { } endTurn && endTurn.GetParent() != home)
+        {
+            endTurn.Reparent(home, keepGlobalTransform: false);
+        }
+
+        _layout.Apply(layout);
+    }
+
+    private TurnPanel _turn = null!;
+
+    /// <summary>The side panel's action buttons (kingdom, quests, puzzle map, dig, marketplace; End turn with the panel on).</summary>
+    private HFlowContainer _actions = null!;
 
     /// <summary>The status line tells of the game's flow: the arena battle's day (ADR-097), defeats and a lost last town's grace period.</summary>
     public void ReportGameFlow()
@@ -315,9 +332,14 @@ public partial class AdventureHud : CanvasLayer
         KingdomScreen = new KingdomOverviewPanel();
         townLayer.AddChild(KingdomScreen);
         KingdomScreen.Bind(_session);
+        // The action buttons are squares (ADR-204): as many to a row as the panel holds.
+        var actions = _actions = new HFlowContainer();
+        actions.AddThemeConstantOverride("h_separation", UiSpacing.Gap);
+        actions.AddThemeConstantOverride("v_separation", UiSpacing.Gap);
+        side.AddChild(actions);
         var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" }.WithIcon(UiIcon.Kingdom, UiIcons.BarSize);
         kingdom.Pressed += () => KingdomScreen.Open(_session.State.CurrentPlayer.Id);
-        side.AddChild(kingdom);
+        actions.AddChild(kingdom);
         QuestScreen = new QuestLogPanel();
         townLayer.AddChild(QuestScreen);
         QuestScreen.Bind(_session);
@@ -328,19 +350,17 @@ public partial class AdventureHud : CanvasLayer
         };
         var quests = new Button { Text = "Quests (Q)", TooltipText = "The quests your heroes were shown" }.WithIcon(UiIcon.Quests, UiIcons.BarSize);
         quests.Pressed += () => QuestScreen.Open(_session.State.CurrentPlayer.Id);
-        side.AddChild(quests);
+        actions.AddChild(quests);
         PuzzleScreen = new PuzzleMapPanel();
         townLayer.AddChild(PuzzleScreen);
         PuzzleScreen.Bind(_session);
-        var grail = new HBoxContainer();
-        side.AddChild(grail);
         var puzzle = new Button { Text = "Puzzle map (P)", TooltipText = "The ground around the Grail, as your obelisks show it" }.WithIcon(UiIcon.PuzzleMap, UiIcons.BarSize);
         puzzle.Pressed += () => PuzzleScreen.Open(_session.State.CurrentPlayer.Id);
-        grail.AddChild(puzzle);
+        actions.AddChild(puzzle);
         var dig = new Button { Text = "Dig (G)", TooltipText = "The selected hero digs where it stands, with a whole day's movement" }.WithIcon(UiIcon.Dig, UiIcons.BarSize);
         dig.Pressed += () => DigRequested?.Invoke();
         dig.Visible = playing;
-        grail.AddChild(dig);
+        actions.AddChild(dig);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
         var market = new Button { Text = "Marketplace" }.WithIcon(UiIcon.Marketplace, UiIcons.BarSize);
@@ -352,7 +372,7 @@ public partial class AdventureHud : CanvasLayer
 
         market.Pressed += () => _marketScreen.Open();
         market.Visible = playing;
-        side.AddChild(market);
+        actions.AddChild(market);
         RefreshMarketButton();
         this.SubscribeWhileInTree<TownBuilt>(_session.Events, _ => RefreshMarketButton());
         this.SubscribeWhileInTree<TownOwnerChanged>(_session.Events, _ => RefreshMarketButton());

@@ -9,7 +9,8 @@ namespace EternalWars.Godot.Shared.Map;
 /// <summary>
 /// Fog of war over one level for the context's viewer (ADR-176): a full-screen pass (<c>shaders/fog_of_war.gdshader</c>) that reads a fog mask,
 /// one texel a tile. Unexplored tiles are hidden (a starry void or clouds, <see cref="MapViewContext.FogLook"/>); explored tiles out of sight
-/// (refog mode) are veiled. Hidden entirely when there is no viewer (editor).
+/// (refog mode) are veiled. Without a viewer (the editor, a replay's whole-map view) every tile is clear and only the void past the map's edge
+/// shows, never the renderer's bare background.
 /// </summary>
 /// <remarks>
 /// The mask fades instead of switching: a tile the viewer's hero reveals starts opening when the hero's step starts to play (the core reveals it at
@@ -166,7 +167,6 @@ public partial class FogView : Node3D
     /// <summary>The whole mask as the viewer knows the map now, without fading.</summary>
     private void Snap()
     {
-        Visible = _context.Viewer is not null;
         _fading.Clear();
         foreach (var position in _context.State.Map.Positions(_level))
         {

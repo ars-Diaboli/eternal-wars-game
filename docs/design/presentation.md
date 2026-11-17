@@ -29,14 +29,14 @@ creatures and buildings, heraldic player colours, iconic map objects).
   opaque drifting clouds floating above the level's highest ground. Revealed tiles open over 0.9 s as the hero's step plays; large reveals open as a wave from their middle.
   The map's edge is never a straight line: the ground goes on four tiles past it (its edge terrain and heights continued), and the fog
   swallows that ground along a wandering shoreline between about a third of a tile and two tiles out; the map's own tiles stay clear.
-  Where nothing is drawn, only the fog shows. Without fog (the map editor, the replay's whole-map view) the map ends at its own edge.
+  Where nothing is drawn, only the fog shows. Without fog (the map editor, the replay's whole-map view) the map ends at its own edge, with the void (or clouds) around it.
   Rendering only: the rules keep cell-by-cell visibility.
 
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
 - **UI**: by default a HoMM-style side panel on the right (ADR-191): one framed column from the top to the status bar with the minimap,
-  the hero and town lists and the action panel, which takes the clicks on it; the turn and End turn at the top of the map, beside the
-  panel; full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
+  the hero and town lists and the action panel, which takes the clicks on it; End turn among the panel's
+  action buttons and the calendar (date, week's event, whose turn) at the panel's bottom (ADR-204); full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
 - **Status bar** (ADR-186, ADR-204): a narrow stripe along the bottom of the adventure map, as wide as the screen up to 16:9 and a centred
   16:9 width on a wider screen. The battle, town and hero screens and the screens before a game have the same stripe (resources only on
@@ -44,9 +44,10 @@ creatures and buildings, heraldic player colours, iconic map objects).
   the name of the hero, object or ground under it on the map), whichever came last. On the right the resources (short amounts past 6 digits
   for gold and 4 for the others, the full one in the tooltip), then the "Menu (F10)" button. In the replay viewer it stands above the
   viewer's bar, and the menu button stays in the corner beside that bar; in battle the menu button stands in the bottom right corner.
-- **Icon buttons** (ADR-204): a button with an icon shows the icon alone, 48 px in bars and panels (the side panel's actions, the battle
-  bar, the town screen's bottom row), 32 px inside windows and rows; hovering it puts its label and hotkey on the status bar, with no
-  pop-up tooltip. A button whose icon is missing keeps its text.
+- **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the side panel's
+  actions, wrapping into rows; the battle bar; End turn), 32 px in rows and window headers; hovering it puts its label and hotkey on the
+  status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
+  Start, Back, Close, Save, Load) keep their text after a small icon, as wide as the text, at the right of their row.
 - **Cursors** (ADR-204, [cursor-prompts.md](../content/cursor-prompts.md)): the pointer shows what a click would do. An arrow on menus,
   screens and panels, an hourglass while the computer plays or a game loads; on the adventure map a horse (move, with the days from the 2nd
   on; visit; attack; exchange with a hero; enter a town), a helmet or a keep to select, a shovel to dig, a spell cursor for an adventure
@@ -63,7 +64,7 @@ creatures and buildings, heraldic player colours, iconic map objects).
   or off). With the panel off it also sets the minimap's corner, the hero and town lists (beside the minimap, or as rows along the bottom)
   and the action panel's side (kingdom, quests, puzzle map, dig, marketplace); with it on, those rows are greyed. The
   change shows at once and is kept in `settings.json` with the speeds, not in saves. The minimap is nearest its corner; lists beside it follow
-  it; the action panel stands at the top of its side; the turn block stays at the top left, beside anything there. The bottom parts stand
+  it; the action panel stands at the top of its side; the turn block (calendar and End turn) stays at the top left, beside anything there. The bottom parts stand
   above the status bar.
 - **Theme** (ADR-191): dark slate panels and buttons framed in bronze, Godot's default fonts; the same in the map editor.
 - **Spacing** (ADR-118, ADR-163): one set of margins and gaps for every panel:

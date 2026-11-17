@@ -64,7 +64,7 @@ public partial class GameResultPanel : CenterContainer
 
         var replay = new HBoxContainer { Alignment = BoxContainer.AlignmentMode.Center };
         replay.AddChild(_replayName);
-        var save = new Button { Text = "Save replay" }.WithIcon(UiIcon.Save);
+        var save = new Button { Text = "Save replay" }.WithIcon(UiIcon.Save, keepText: true);
         save.Pressed += () => _message.Text = _saveReplay(_replayName.Text);
         replay.AddChild(save);
         rows.AddChild(replay);

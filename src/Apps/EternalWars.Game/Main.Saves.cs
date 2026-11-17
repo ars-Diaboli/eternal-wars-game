@@ -168,7 +168,7 @@ public partial class Main
         }
 
         _menuButton.SetAnchorsPreset(Control.LayoutPreset.BottomRight);
-        (_menuButton.OffsetLeft, _menuButton.OffsetTop) = (-132 - UiSpacing.ScreenEdge, -28 - UiSpacing.ScreenEdge);
+        (_menuButton.OffsetLeft, _menuButton.OffsetTop) = (-StatusBar.MenuButtonWidth - UiSpacing.ScreenEdge, -StatusBar.Height - UiSpacing.ScreenEdge);
         (_menuButton.OffsetRight, _menuButton.OffsetBottom) = (-UiSpacing.ScreenEdge, -UiSpacing.ScreenEdge);
     }
 
