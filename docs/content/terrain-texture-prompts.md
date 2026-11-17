@@ -14,14 +14,15 @@ terrains of the towns as in [town-model-prompts.md](town-model-prompts.md), the 
 
 - **Adventure map** (ADR-183): one splat-shaded mesh a level. Each terrain is one layer of a texture array (**1024 px a layer**; other
   sizes are resized), projected from above in world space and repeated every **3 tiles** (`uv_scale = 0.333`; 1 tile = 1 Godot unit).
-  Neighbouring terrains blend along rounded, wandering lines, and **the brighter texels of each ground win first**, so a ground's light
-  parts (stones, tufts, crests) creep into its neighbour. Steep ground (cliffs) is textured from the sides as well (triplanar). Broad
+  Neighbouring terrains blend along rounded, wandering lines **by height** (ADR-200): each ground's **raised parts win first**, so its
+  stones, tufts and crests poke into its neighbour and the neighbour fills its hollows. The height is `<terrain>_height.png`, or the
+  albedo's brightness when there is none. Steep ground (cliffs) is textured from the sides as well (triplanar). Broad
   lighter and darker patches are added by the shader, so the texture itself should be **evenly lit, with no large-scale gradient**.
 - **Battlefield** (`BattleFieldBuilder.Ground`): one plane of the battle terrain, **24 cells deep** (a cell is 0.5 units, so 12 units)
   inside a darker 6-unit band of the same ground, triplanar in world space, repeated every **4 units = 8 cells**. The camera is much
   closer than on the map, so the same 1024 px covers more of the screen: battle textures need **finer detail and twice the resolution**.
   A thin white cell grid (12 % alpha) is drawn on top, so the ground must not have strong straight lines or a cell-sized pattern.
-- **Today only the albedo is read.** The normal, roughness, AO and height maps are asked for now so the PBR pass (ADR-183's "not
+- **Today only the albedo and the height map are read.** The normal, roughness and AO maps are asked for now so the PBR pass (ADR-183's "not
   changed" note) does not need the textures made again.
 - **Borrowed textures**: shallow water borrows water's, rocky ground rough's, cursed lands wasteland's, ice snow's (`AdventureMapView.TextureOf`,
   told apart by a tint). **Snow and ice have no texture yet** (palette colour). Each terrain below gets its own texture; when they exist,
@@ -39,7 +40,8 @@ terrains of the towns as in [town-model-prompts.md](town-model-prompts.md), the 
   a hero's figure stays in scale)*, battlefield about **4 × 4 m** *(proposal: a cell reads as about 0.5 m)*. State it in the prompt;
   pebbles, tufts and cracks must be sized to it.
 - **Maps**: albedo (sRGB, no lighting), normal (OpenGL, Y+, as Godot expects), roughness, ambient occlusion, height (16-bit grey,
-  **bright = raised**: the splat's mixing reads brightness, so keep the albedo's light parts on the height map's raised parts). Packed
+  **bright = raised**: the splat's height blend reads it, and the albedo's brightness stands in for it until it exists, so keep the
+  albedo's light parts on the height map's raised parts). Packed
   ORM (R occlusion, G roughness, B metallic = 0) is fine.
 - **Value range**: albedo between about **40 and 200 of 255** in the dominant tone (no pure black, no blown-out white except snow and
   ice, kept under 235), so the dark grading and fog still read. Low to medium contrast at the large scale, rich contrast in the small.

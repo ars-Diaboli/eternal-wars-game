@@ -5,8 +5,10 @@
 //  - each terrain's "influence" at a pixel is the tile picture blurred over the 3 × 3 tiles around it with a round, smooth kernel, so a
 //    single tile of another terrain is a round patch and a diagonal staircase of tiles a slanted line;
 //  - the place the picture is read at is pushed about by a slow noise, so the lines wander;
-//  - where influences are close the terrains mix, the brighter texels of each ground first, so grass creeps between stones instead of
-//    cross-fading.
+//  - where influences are close the terrains mix by height (height-based splat blending): each layer's alpha is its ground's height
+//    (stone tops high, the sand between them low); a terrain stands at its height plus its influence, and only the terrains within
+//    `blend_depth` of the highest show, weighted by how far they rise above that line. So stones poke out of the sand and the sand fills
+//    the gaps between them before it covers their tops, instead of the two cross-fading.
 // A pixel well inside one terrain reads one layer only. Steep ground (cliffs) is textured from the side as well (triplanar).
 // The tile grid is an overlay drawn here: thin anti-aliased lines along the tile edges, on when `grid` is.
 shader_type spatial;
@@ -18,6 +20,7 @@ uniform sampler2D terrain_map : filter_nearest, repeat_disable;
 uniform vec2 map_size = vec2(1.0);
 uniform float tile_size = 1.0;
 
+// RGB = the picture, A = the ground's height (bright = raised).
 uniform sampler2DArray albedo_layers : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 // Per terrain number: its layer and the colour multiplied into it.
 uniform int layer_of[MAX_TERRAINS];
@@ -25,8 +28,10 @@ uniform vec4 tint_of[MAX_TERRAINS] : source_color;
 // Texture repeats per world unit.
 uniform float uv_scale = 0.333;
 
-// How wide the mix between two terrains is: a terrain shows where its influence is more than (1 - blend_softness) of the strongest one's.
-uniform float blend_softness : hint_range(0.05, 0.8) = 0.42;
+// How much a ground's relief counts against its influence (0 to 1): the wider, the further one ground's high parts reach into the other.
+uniform float height_relief : hint_range(0.0, 1.0) = 1.0;
+// How soft the line between the grounds is, in the same units: small = crisp outlines around each stone, large = a cross-fade.
+uniform float blend_depth : hint_range(0.01, 0.5) = 0.2;
 // How far the noise moves the borders, in tiles.
 uniform float edge_noise : hint_range(0.0, 0.5) = 0.3;
 
@@ -74,18 +79,18 @@ vec3 kernel(float d) {
 	return k / (k.x + k.y + k.z);
 }
 
-// A terrain's colour at p (texture space), from above and, where the ground is steep, from the sides. The gradients are passed in because
-// this runs inside branches.
-vec3 terrain_color(int terrain, vec3 p, vec3 sides, vec3 dx, vec3 dy) {
+// A terrain's colour (RGB) and height (A) at p (texture space), from above and, where the ground is steep, from the sides. The gradients
+// are passed in because this runs inside branches.
+vec4 terrain_sample(int terrain, vec3 p, vec3 sides, vec3 dx, vec3 dy) {
 	float layer = float(layer_of[terrain]);
-	vec3 color = sides.y * textureGrad(albedo_layers, vec3(p.xz, layer), dx.xz, dy.xz).rgb;
+	vec4 texel = sides.y * textureGrad(albedo_layers, vec3(p.xz, layer), dx.xz, dy.xz);
 	if (sides.x > 0.0) {
-		color += sides.x * textureGrad(albedo_layers, vec3(p.zy, layer), dx.zy, dy.zy).rgb;
+		texel += sides.x * textureGrad(albedo_layers, vec3(p.zy, layer), dx.zy, dy.zy);
 	}
 	if (sides.z > 0.0) {
-		color += sides.z * textureGrad(albedo_layers, vec3(p.xy, layer), dx.xy, dy.xy).rgb;
+		texel += sides.z * textureGrad(albedo_layers, vec3(p.xy, layer), dx.xy, dy.xy);
 	}
-	return color * tint_of[terrain].rgb;
+	return vec4(texel.rgb * tint_of[terrain].rgb, texel.a);
 }
 
 void fragment() {
@@ -128,25 +133,28 @@ void fragment() {
 	vec3 sides = pow(max(abs(normalize(local_normal)) - 0.45, 0.0), vec3(2.0));
 	sides /= sides.x + sides.y + sides.z;
 
-	// A terrain's height here is its influence, raised a little where its texture is bright. Only terrains that can reach the mix are read.
-	float floor_height = 1.0 - blend_softness;
+	// Height-based blend: a terrain stands at its influence plus its ground's height there; the ones within blend_depth of the highest show,
+	// each by how far it rises above that line. The strongest terrain stands at least at its influence, so one that cannot rise to within
+	// blend_depth of that even at its highest is not read at all: well inside a terrain that is every other one.
 	vec3 colors[9];
 	float heights[9];
 	float top = 0.0;
 	for (int i = 0; i < 9; i++) {
 		colors[i] = vec3(0.0);
-		heights[i] = 0.0;
-		if (influence[i] * 1.2 > strongest * 0.8 * floor_height) {
-			colors[i] = terrain_color(terrains[i], p, sides, dx, dy);
-			heights[i] = influence[i] * (0.8 + 0.4 * sqrt(dot(colors[i], vec3(0.299, 0.587, 0.114))));
+		heights[i] = -1.0;
+		if (influence[i] > 0.0 && influence[i] + height_relief + blend_depth > strongest) {
+			vec4 texel = terrain_sample(terrains[i], p, sides, dx, dy);
+			colors[i] = texel.rgb;
+			heights[i] = influence[i] + texel.a * height_relief;
 			top = max(top, heights[i]);
 		}
 	}
 
+	float line = top - blend_depth;
 	vec3 color = vec3(0.0);
 	float total = 0.0;
 	for (int i = 0; i < 9; i++) {
-		float share = max(heights[i] - top * floor_height, 0.0);
+		float share = max(heights[i] - line, 0.0);
 		color += colors[i] * share;
 		total += share;
 	}
@@ -163,8 +171,8 @@ void fragment() {
 		vec2 pixel = fwidth(edge);
 		vec2 lines = 1.0 - smoothstep(pixel * 0.5, pixel * 1.5, distance_to);
 		// Zoomed far out the lines would fill the tiles: they fade away instead.
-		float line = max(lines.x, lines.y) * (1.0 - smoothstep(0.12, 0.35, max(pixel.x, pixel.y)));
-		color = mix(color, grid_color.rgb, line * grid_color.a * grid * on_map);
+		float grid_line = max(lines.x, lines.y) * (1.0 - smoothstep(0.12, 0.35, max(pixel.x, pixel.y)));
+		color = mix(color, grid_color.rgb, grid_line * grid_color.a * grid * on_map);
 	}
 
 	ALBEDO = color;
