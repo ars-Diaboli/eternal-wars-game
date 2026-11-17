@@ -78,8 +78,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - **Adding a command**: a `sealed record … : GameCommand(Player)` in `Commands/GameCommands.cs`, marked `IBattleCommand` or
   `IHeroCommand` when it is one; one line in the area's registration (`AdventureCommandHandlers`, `ObjectCommandHandlers`,
   `TownCommandHandlers`, `ArtifactCommandHandlers`, `BattleCommandHandlers`): `handlers.Add<T>(c => service.Method(...))`, or
-  `AddWithOutcome<T>` when the result goes back in `CommandResult.Outcome`; and its replay name in `GameRecord.CommandTypes`
-  (Core.Data). `CommandHandlerTests` fails for a command without a handler.
+  `AddWithOutcome<T>` when the result goes back in `CommandResult.Outcome`; and its replay name in `GameRecordSerializer.CommandTypes`
+  (Core.Data). `CommandHandlerTests` fails for a command without a handler, `RecordCommandTypesTests` for one without a replay name (or a name used twice).
 - **Turns**: `TurnService` moves the calendar (players, days, weeks; on a simultaneous day every person's turn at once, ADR-197), publishes `GameStarted` / `DayStarted` / `WeekStarted` /
   `WeekEventAnnounced` / `TurnStarted` / `TurnEnded` and rolls the week's events; everything else happens in the
   `ITurnPhaseParticipant`s the session gives it, called hook by hook (`SetUpGame`, `StockFirstWeek`, `StartDay`, `StartWeek`,

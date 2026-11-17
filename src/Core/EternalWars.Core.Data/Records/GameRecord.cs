@@ -123,7 +123,8 @@ public static class GameRecordSerializer
     /// <summary>Saved games use the same document under their own extension (ADR-058).</summary>
     public const string SaveExtension = ".ewsave.json";
 
-    private static readonly IReadOnlyList<(Type Type, string Name)> CommandTypes =
+    /// <summary>Every concrete command and its name in records and LAN messages; a name, once saved, never changes (<c>RecordCommandTypesTests</c>).</summary>
+    internal static readonly IReadOnlyList<(Type Type, string Name)> CommandTypes =
     [
         (typeof(StepHeroCommand), "step"),
         (typeof(MoveHeroCommand), "move"),
