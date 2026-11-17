@@ -10,6 +10,22 @@ namespace EternalWars.Core.Tests.Domain;
 public class PathFinderTests
 {
     [Fact]
+    public void Counters_CountEachSearch_ItsRoute_AndTheTilesItExpanded()
+    {
+        var session = Start(Create("A....", "~~~~~", "B~..."));
+        var before = PathFinder.Counters;
+
+        session.Movement.FindPath(A, new MapPosition(4, 0));
+        session.Movement.FindPath(B, new MapPosition(4, 2));
+        session.Movement.FindPath(A, new MapPosition(0, 1));
+
+        // The route along the row expands its five tiles; the walled-in hero expands only its own; the water target stops before searching.
+        var counted = PathFinder.Counters - before;
+        Assert.Equal((3, 1, 5 + 1), (counted.Searches, counted.Found, counted.Expanded));
+        Assert.True(counted.Time > TimeSpan.Zero);
+    }
+
+    [Fact]
     public void FindPath_StraightLine()
     {
         var session = Start(Create("A....."));

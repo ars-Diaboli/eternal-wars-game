@@ -28,7 +28,7 @@ I read about 73k lines of source and 34k lines of tests (four reviewers working 
 
 | # | Where | Problem |
 |---|---|---|
-| P1 | `PathFinder.cs:69-74` | Each search allocates 3 arrays the size of the map. On a 144² map with 2 levels that is about 330 KB each, which goes on the large-object heap. The AI runs roughly 1–4k searches per player turn, each one per target. |
+| P1 | `PathFinder.cs:69-74` | Each search allocates 3 arrays the size of the map. On a 144² map with 2 levels that is about 330 KB each, which goes on the large-object heap. The AI runs one search per target. The baseline measured 58–78 searches per turn on average and about 210 at most, at 1.8–5 ms each. |
 | P2 | `MoveResult.cs:122` `ArmyTown` | A `Select/Distinct/ToList` chain runs for every edge expanded by every search. |
 | P3 | `GameState.cs:272, 444-451` | `HeroAt` scans every hero. `IsGuarded` runs `Select/OfType/OrderBy` and then `.Any()`. Both run for every pathfinding node. |
 | P4 | `PathFinder.cs:76` | One teleporter anywhere on the map turns off A*, so every search becomes a full Dijkstra over the map. |
@@ -90,7 +90,37 @@ The order is: safety first, then a measurement baseline, then cheap performance 
     - a client gets the record at most every 5 s;
     - the reader closes the link on any exception.
   - The hosts read the time through an internal `TimeProvider`, so tests can move it by hand. `NetLimitsTests` covers each limit.
-- [ ] **Baseline:** add `FindPath` call counters and per-turn timing to `sim game`. Record a baseline on a 144² map with 2 levels and teleporters, and on a battle-heavy seed.
+- [x] **Baseline:** add `FindPath` call counters and per-turn timing to `sim game`. Record a baseline on a 144² map with 2 levels and teleporters, and on a battle-heavy seed.
+  - Done. `PathFinder.Counters` (per thread) counts searches, routes found, tiles expanded and search time. `sim game --profile` prints them with each AI turn's time and battles, per player, per week and for the slowest turns (`development.md`).
+  - The counts are the same on every run of a seed, so after a change they show whether the AI still makes the same searches. Times are wall clock (Release build, this machine) and vary by about 10 %.
+  - **Big map:** `sim game --template ffa-8 --size 144 --players 8 --days 28 --seed 1 --profile`, giving 144², 2 levels, 2 teleporters (so no A* distance estimate), digest `B96E797972B4EDFC`.
+
+    | Measure | Value |
+    |---|---|
+    | Turns | 224, at 391 ms a turn (median 234 ms) |
+    | Path searches | 12,972 (58 a turn), 12,945 found |
+    | Tiles expanded | 6,315,863 (487 a search) |
+    | Search time | 65.3 s, which is 75 % of the turn time |
+    | Battles | 12 in 133 ms |
+    | Week 1 → week 4 | 12.0 s → 31.7 s (searches 2.7k → 3.8k, tiles 0.36 M → 3.2 M) |
+    | Slowest turn | 1.5 s (day 28, Player 8: 127 searches, 165k tiles, 1.25 s searching) |
+
+  - **Battle-heavy seed:** `sim game --template duel --size 72 --days 40 --seed 2 --profile`, giving 72², 1 level, no teleporters, 24 battles, won by conquest on day 37, digest `02E607C4B08FDC80`.
+
+    | Measure | Value |
+    |---|---|
+    | Turns | 73, at 263 ms a turn (median 246 ms) |
+    | Path searches | 5,680 (78 a turn), 5,593 found |
+    | Tiles expanded | 1,516,286 (267 a search) |
+    | Search time | 10.1 s, which is 53 % of the turn time |
+    | Battles | 24 in 523 ms |
+    | Slowest turn | 882 ms (day 2, Player 2: 108 searches, only 7.4k tiles in 329 ms, 1 battle in 116 ms) |
+
+  - What the baseline shows:
+    - Path search is the largest single cost: 75 % of turn time on the big map and 53 % on the duel.
+    - A search costs about 5 ms on the big map and 1.8 ms on the duel, and short searches are expensive too. So the cost of each search and each tile (P1–P3) matters as much as the number of tiles (P4).
+    - The AI makes far fewer searches than P1 estimated: 58–78 a turn on average and about 210 at most, not 1–4k.
+    - Battles themselves are cheap: 5–20 ms each with auto-resolve. The time the AI spends estimating battles (P7) falls under the rest of the turn and is not measured separately.
 
 ### Phase 1: Cheap performance wins (about 1 week; local changes, behaviour unchanged, digests unchanged)
 - [ ] **`GameState` indexes:** `Dictionary<MapPosition, Hero>`, a guarded-tile `bool[]` per level, per-type object buckets for `ObjectsOf<T>`, and a cached garrison list. `IsGuarded` becomes an allocation-free loop.

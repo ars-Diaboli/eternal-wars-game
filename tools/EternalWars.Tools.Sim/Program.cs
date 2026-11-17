@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Data.Templates;
 using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Pathfinding;
 using EternalWars.Core.Generation;
 using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Battles;
@@ -29,7 +30,7 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
-/// sim game [--map towns|demo|ember|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal]  (the adventure AI plays every slot)
+/// sim game [--map towns|demo|ember|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal] [--profile]  (the adventure AI plays every slot; --profile: time per turn, path searches, battles)
 /// sim game --template duel|file.ewtemplate.json [--size N] [--players N] [...]  (the same on a map generated per run, random towns)
 /// sim maps [--template name] [--maps 3] [--days 14] [--seed 1]  (CI: generates maps of every shipped template and checks they are playable)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
@@ -69,7 +70,7 @@ public static class Program
                 ["battle", var attacker, var defender, .. var rest] => Battle(ParseArmy(attacker), ParseArmy(defender), Option(rest, "--runs", 100), (ulong)Option(rest, "--seed", 1)),
                 ["record", var path, .. var rest] => Record(path, Option(rest, "--days", 7), (ulong)Option(rest, "--seed", 1)),
                 ["replay", var path] => Replay(path),
-                ["game", .. var rest] => Game(GameMaker(rest), Option(rest, "--days", 40), (ulong)Option(rest, "--seed", 1), Option(rest, "--runs", 1), OptionText(rest, "--record")),
+                ["game", .. var rest] => Game(GameMaker(rest), Option(rest, "--days", 40), (ulong)Option(rest, "--seed", 1), Option(rest, "--runs", 1), OptionText(rest, "--record"), rest.Contains("--profile")),
                 ["maps", .. var rest] => Maps(OptionText(rest, "--template"), Option(rest, "--maps", 3), Option(rest, "--days", 14), (ulong)Option(rest, "--seed", 1)),
                 ["towns", .. var rest] => Towns(Option(rest, "--runs", 32), rest.Contains("--upgraded")),
                 ["ai", .. var rest] => Ai(Option(rest, "--runs", 8), rest.Contains("--upgraded"), (BattleAiLevel)Option(rest, "--level", (int)BattleAiLevel.Latest)),
@@ -258,7 +259,7 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] [--profile] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
@@ -514,7 +515,7 @@ public static class Program
     }
 
     /// <summary>The adventure AI plays every slot of a map to the end or the day limit; prints how each game went.</summary>
-    private static int Game(Func<ulong, SimGame> make, int days, ulong seed, int runs, string? recordPath)
+    private static int Game(Func<ulong, SimGame> make, int days, ulong seed, int runs, string? recordPath, bool profile = false)
     {
         var wins = new Dictionary<string, int>();
         var refusedTotal = 0;
@@ -527,7 +528,8 @@ public static class Program
             }
 
             var fights = new FightLog();
-            var (session, ai) = PlayAiGame(game, days, fights);
+            var turns = profile ? new TurnProfile() : null;
+            var (session, ai) = PlayAiGame(game, days, fights, turns);
             var state = session.State;
             var winner = state.Outcome is { HasWinner: true } outcome ? string.Join("+", outcome.Winners.Select(w => state.GetPlayer(w).Name)) : (state.IsOver ? "nobody" : "unfinished");
             wins[winner] = wins.GetValueOrDefault(winner) + 1;
@@ -546,6 +548,8 @@ public static class Program
 
             var guards = state.ObjectsOf<MonsterGuard>().ToList();
             Console.WriteLine($"  left on the map: {guards.Count} monster stacks (power {guards.Sum(g => (long)Math.Max(1, g.Count ?? 1) * state.Creatures.Get(g.Creature).FightValue)}), {state.ObjectsOf<MapGarrison>().Count(g => g.Owner is null)} neutral garrisons, {state.ObjectsOf<Town>().Count(t => t.Owner is null)} neutral towns, {state.Objects.Count(o => o.Kind == MapObjectKind.BorderPost)} border posts; keys {string.Join(" ", state.Players.Select(p => $"{p.Name}:{p.Keys.Count}"))}");
+
+            turns?.Describe(state).ForEach(line => Console.WriteLine($"  {line}"));
 
             if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
             {
@@ -639,11 +643,12 @@ public static class Program
         return new SimGame(MapConverter.ToDocument(state), state, GenerationInfo.Of(template.Name, size, seed, generation.Attempt), generation.Problems);
     }
 
-    private static (GameSession Session, AdventureAi Ai) PlayAiGame(SimGame game, int days, FightLog? fights = null)
+    private static (GameSession Session, AdventureAi Ai) PlayAiGame(SimGame game, int days, FightLog? fights = null, TurnProfile? turns = null)
     {
         var session = new GameSession(game.State);
         var ai = new AdventureAi(session, controlHumanSlots: true);
         fights?.Attach(session);
+        turns?.Attach(session);
         if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
         {
             session.Events.Subscribe<HeroDefeated>(e => Console.WriteLine($"    day {session.State.Date.AbsoluteDay}: {e.Hero} of {e.Owner} defeated"));
@@ -673,7 +678,10 @@ public static class Program
                 }
             }
 
-            if (!ai.PlayTurn())
+            var turn = turns?.Begin(session.State);
+            var played = ai.PlayTurn();
+            turns?.End(turn!);
+            if (!played)
             {
                 throw new InvalidOperationException($"The AI got stuck on {session.State.Date} ({session.State.CurrentPlayer.Name}, decision {session.State.PendingDecision}).");
             }
@@ -943,5 +951,101 @@ internal sealed class FightLog
     {
         var (w, l) = _counts.GetValueOrDefault((player, kind));
         _counts[(player, kind)] = won ? (w + 1, l) : (w, l + 1);
+    }
+}
+
+/// <summary>
+/// <c>sim game --profile</c>: how long each AI turn took, the path searches it ran (<see cref="PathFinder.Counters"/>) and the battles in it,
+/// for a baseline before and after performance work. Times are wall-clock on this machine; the counts are the same on every run of a seed.
+/// </summary>
+internal sealed class TurnProfile
+{
+    private readonly List<Turn> _turns = [];
+    private readonly System.Diagnostics.Stopwatch _battleClock = new();
+    private Turn? _current;
+
+    public sealed class Turn(int day, PlayerId player)
+    {
+        public int Day { get; } = day;
+        public PlayerId Player { get; } = player;
+        public long Started { get; set; }
+        public TimeSpan Time { get; set; }
+        public PathSearchCounters Paths { get; set; }
+        public int Battles { get; set; }
+        public TimeSpan BattleTime { get; set; }
+    }
+
+    public void Attach(GameSession session)
+    {
+        session.Events.Subscribe<BattleStarted>(_ => _battleClock.Restart());
+        session.Events.Subscribe<BattleEnded>(_ =>
+        {
+            if (_current is { } turn)
+            {
+                turn.Battles++;
+                turn.BattleTime += _battleClock.Elapsed;
+            }
+        });
+    }
+
+    public Turn Begin(GameState state)
+    {
+        _current = new Turn(state.Date.AbsoluteDay, state.CurrentPlayer.Id) { Paths = PathFinder.Counters, Started = System.Diagnostics.Stopwatch.GetTimestamp() };
+        return _current;
+    }
+
+    public void End(Turn turn)
+    {
+        turn.Time = System.Diagnostics.Stopwatch.GetElapsedTime(turn.Started);
+        turn.Paths = PathFinder.Counters - turn.Paths;
+        _turns.Add(turn);
+        _current = null;
+    }
+
+    public List<string> Describe(GameState state)
+    {
+        if (_turns.Count == 0)
+        {
+            return [];
+        }
+
+        var total = Sum(_turns);
+        var lines = new List<string>
+        {
+            $"profile: {state.Map.Width}×{state.Map.Height}, {state.Map.Levels} level(s), {state.Objects.Count(o => o.TeleportTarget is not null)} teleporters " +
+            $"(path searches {(state.Objects.Any(o => o.TeleportTarget is not null) ? "without" : "with")} the distance estimate)",
+            $"  {_turns.Count} turns in {total.Time.TotalMilliseconds:0} ms ({total.Time.TotalMilliseconds / _turns.Count:0.0} ms a turn, " +
+            $"median {Median(_turns):0.0}); battles {total.Battles} in {total.BattleTime.TotalMilliseconds:0} ms",
+            $"  path searches {total.Paths.Searches} ({(double)total.Paths.Searches / _turns.Count:0} a turn), {total.Paths.Found} found, " +
+            $"{total.Paths.Expanded} tiles expanded ({(total.Paths.Searches == 0 ? 0 : (double)total.Paths.Expanded / total.Paths.Searches):0} a search), " +
+            $"{total.Paths.Time.TotalMilliseconds:0} ms ({100 * total.Paths.Time / total.Time:0} % of the turns)",
+        };
+        foreach (var group in _turns.GroupBy(t => t.Player).OrderBy(g => g.Key.Value))
+        {
+            var sum = Sum(group);
+            lines.Add($"  {state.GetPlayer(group.Key).Name,-8} {sum.Time.TotalMilliseconds,7:0} ms, {sum.Paths.Searches,7} searches, {sum.Paths.Expanded,10} tiles in {sum.Paths.Time.TotalMilliseconds,6:0} ms, {sum.Battles,3} battles");
+        }
+
+        foreach (var week in _turns.GroupBy(t => (t.Day - 1) / 7))
+        {
+            var sum = Sum(week);
+            lines.Add($"  week {week.Key + 1,-2} {sum.Time.TotalMilliseconds,7:0} ms, {sum.Paths.Searches,7} searches, {sum.Paths.Expanded,10} tiles in {sum.Paths.Time.TotalMilliseconds,6:0} ms, {sum.Battles,3} battles");
+        }
+
+        lines.Add("  slowest turns:");
+        lines.AddRange(_turns.OrderByDescending(t => t.Time).Take(5).Select(t =>
+            $"    day {t.Day,-3} {state.GetPlayer(t.Player).Name,-8} {t.Time.TotalMilliseconds,6:0} ms, {t.Paths.Searches,5} searches, {t.Paths.Expanded,8} tiles in {t.Paths.Time.TotalMilliseconds,4:0} ms, {t.Battles} battles ({t.BattleTime.TotalMilliseconds:0} ms)"));
+        return lines;
+
+        static Turn Sum(IEnumerable<Turn> turns) => turns.Aggregate(new Turn(0, default), (sum, t) =>
+        {
+            sum.Time += t.Time;
+            sum.Paths += t.Paths;
+            sum.Battles += t.Battles;
+            sum.BattleTime += t.BattleTime;
+            return sum;
+        });
+
+        static double Median(List<Turn> turns) => turns.Select(t => t.Time.TotalMilliseconds).Order().ElementAt(turns.Count / 2);
     }
 }

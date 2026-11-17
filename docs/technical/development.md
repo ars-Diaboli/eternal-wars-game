@@ -48,6 +48,7 @@ command takes `--creatures path.csv`.
 | `selftest` | determinism + replay check (CI) |
 | `game --map towns [--days N] [--runs N] [--record f]` | AI plays every slot; prints fights won/lost by kind, what is left on the map, garrison hero moves |
 | `game --template duel [--size N] [--players N]` | same on a new generated map per run (as the new-game screen would) |
+| `game ... --profile` | also the time of each AI turn, its path searches (count, routes found, tiles expanded, time; `PathFinder.Counters`) and battles, per player, per week and for the slowest turns. Counts are the same on every run of a seed, times vary by about 10 %. Run a Release build (`-c Release`) for timings; the baselines are in `refactoring-plan.md` |
 | `maps [--template t] [--maps N] [--days N] [--seed S]` | per template and size: generates without problems, deterministically, every start town reachable, no validator errors, N days of AI play with no refused command, replays to the same state. CI runs `maps --maps 6 --days 14`; a failure names the repro (`maps --template <t> --seed <s> --maps 1`) |
 | `fairness [--template t] [--seeds 20] [--size N] [--verbose]` | per start: mine distance, treasure value, guard power, fairness problems (ADR-117) |
 | `layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N]` | zone layout as text; `--terrain` the generated map; `--seeds N` batch-checks N seeds with timing |
