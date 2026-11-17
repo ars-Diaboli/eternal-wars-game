@@ -39,6 +39,7 @@ public sealed class GameState
     private readonly int[] _guards; // per tile: monster cells on its eight neighbours
     private readonly Dictionary<Type, object> _objectsOfType = []; // T -> read-only list of T, in Objects order
     private List<Towns.Town>? _townsById;
+    private List<IFlaggable>? _flaggables;
 
     public GameState(
         AdventureMap map,
@@ -263,6 +264,9 @@ public sealed class GameState
 
     /// <summary>The towns, lowest id first (cached until a town is added or removed).</summary>
     private List<Towns.Town> TownsById => _townsById ??= [.. ObjectsOf<Towns.Town>().OrderBy(t => t.Id.Value)];
+
+    /// <summary>The objects that can fly a flag (towns, mines, dwellings, providers, garrisons), in map order (cached until one is added or removed).</summary>
+    internal IReadOnlyList<IFlaggable> Flaggables => _flaggables ??= [.. _objects.OfType<IFlaggable>()];
 
     /// <summary>Every hero of the player: on the map, then in garrisons (income, mana, movement and statuses count them all, ADR-112).</summary>
     public IEnumerable<Hero> AllHeroesOf(PlayerId owner) => HeroesOf(owner).Concat(GarrisonHeroes.Where(h => h.Owner == owner));
@@ -526,6 +530,11 @@ public sealed class GameState
         if (mapObject is Towns.Town)
         {
             _townsById = null;
+        }
+
+        if (mapObject is IFlaggable)
+        {
+            _flaggables = null;
         }
     }
 

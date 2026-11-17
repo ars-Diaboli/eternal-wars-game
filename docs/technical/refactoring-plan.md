@@ -232,10 +232,76 @@ The order is: safety first, then a measurement baseline, then cheap performance 
     | Duel | 117 → 94 ms / 106 → 74 ms | 399 → 173 ms |
 
     Most of the gain is in the AI's battle estimates (P7), which play battles out and so search reaches too.
-- [ ] **`BattleEstimator`:** build the `BattleState` directly, following `BattleCommandHandler.Preview`. Use a struct hash key and a bounded cache that survives across turns.
-- [ ] **Visibility:** cache flagged observers per player, and recompute only the circle of the observer that moved.
-- [ ] **Map editor:** ground split into chunks of about 32×32 tiles, rebuilding only the chunks a stroke touches, and patch only the painted pixels of the splat map.
-- [ ] **Map objects:** `MultiMesh` per level for object cells, and show captions only nearby or on hover.
+- [x] **`BattleEstimator`:** build the `BattleState` directly, following `BattleCommandHandler.Preview`. Use a struct hash key and a bounded cache that survives across turns.
+  Done (ADR-206): the estimate fights set up their battle as a hero battle is set up and play it through `BattleFlow.PlayComputer`, with no
+  game around it; their fixed seeds are the battles the throwaway games played, so every estimate is unchanged. Estimates are kept for the
+  game under a struct key, in two generations of 4,096. `sim game --profile` counts them (`BattleEstimateCounters`). The 18 A/B games
+  keep their digests (339 → 243 s).
+
+    | Baseline | Turn time (mean / median) | Estimates asked / played |
+    |---|---|---|
+    | Big map | 58 → 35 ms / 42 → 22 ms | 2,959 / 150 (2.6 s) |
+    | Duel | 106 → 72 ms / 81 → 65 ms | 511 / 111 (1.7 s) |
+
+  The fights still take about a third of the AI's time: each plays a whole battle with the battle AI.
+- [x] **Visibility:** cache flagged observers per player, and recompute only the circle of the observer that moved.
+  - Done:
+    - `FogOfWar.UpdateSight` keeps the observers (place, radius) and margin each player's sight was last worked out from. It compares
+      them with the new ones and works out only the tiles within sight radius + margin of the observers that moved, came, went or changed
+      their radius, checking each against the observers that can reach it. Every other tile keeps the observer that put it in sight, or
+      still has none near enough, so the answer is the same as a fresh recompute. With more changed than kept, a new margin, or sight set
+      from outside (a LAN client), it works everything out afresh.
+    - `GameState.Flaggables` keeps the objects that can fly a flag, forgotten when one is added or removed like the lists by type. The
+      observers read their owner and radius live, so a flag or an Observatory needs no event to be seen.
+  - `FogSightTests` adds two tests: random observers stepping, jumping, teleporting between levels, coming, going, doubling up and
+    changing radius, with margins 0–3, give after each change the same sight, entered and left tiles as a fresh recompute; a new margin
+    and sight set from outside are worked out afresh.
+  - `sim game --fog refog` plays with refog. The baselines give the same digests in both fog modes (duel with refog 858EBBAAB60E783F), and so
+    do 9 generated games of 60 days with refog (duel, ffa-4, 2v2, seeds 1–3).
+    Sight upkeep, timed with temporary instrumentation over the same updates: 577–780 → 217–248 ms on the big map (3,938 updates) and
+    662–875 → 183–208 ms on the duel (1,829). That is under 1 % of the turn time either way, so turn times don't change measurably in the
+    sim; the gain is per step in the apps.
+- [x] **Map editor:** ground split into chunks of about 32×32 tiles, rebuilding only the chunks a stroke touches, and patch only the painted pixels of the splat map.
+  - Done (P12, ADR-207):
+    - `AdventureMapView` draws each level's ground as meshes of 32 × 32 tiles. A change of heights rebuilds the chunks with a tile that has a
+      corner within one of a changed corner, the apron only when that reaches the map's edge, and the roads and rivers of the touched tiles
+      (found from the area, not by walking the whole map).
+    - Painting writes the painted tiles' bytes into the kept terrain map and uploads it; the texture upload stays whole (Godot has no
+      partial update), but the map is no longer read tile by tile.
+    - Timing the editor's dabs showed a bigger cost the item didn't name: `StartZonesView` laid every start zone plate again on each change of
+      heights (about 160 ms a dab on a generated 256 × 256 map, whose zones are large). It now lays again only the plates on the touched tiles.
+  - Measured with temporary timing in the editor on a generated 256 × 256 two-level map (Debug build, 20 strokes of each kind):
+
+    | Dab | Before | After |
+    |---|---|---|
+    | Height (whole dab) | 250 ms | 12 ms |
+    | of which the ground view | ~80 ms | ~2 ms |
+    | of which start zones | ~160 ms | <1 ms |
+    | Terrain paint (whole dab) | 78 ms | 5 ms |
+
+    On a 36 × 36 map the difference doesn't show. What is left per stroke (not per dab) is the validation panel, about 60 ms when a stroke
+    ends.
+  - The `editor-heights` smoke frames are byte-identical to the old code's (60 of 60); `editor-tools` differs only in a toolbar button's hover
+    highlight.
+- [x] **Map objects:** `MultiMesh` per level for object cells, and show captions only nearby or on hover.
+  - Done (P11, ADR-208):
+    - `MapObjectsView` draws the boxes, plates and flags of its level's objects as instances of one `MultiMesh` per box size, coloured per
+      instance with the colour taken as sRGB, so they look as before. Rebuilding an object hides its instances and reuses them; when they
+      are all taken the instances are doubled and written again. Only the quest objects' shapes stay nodes.
+    - Captions have a visibility range of 20 (fading over the last 2), so those around the camera's focus show and zooming out hides them.
+      `MapViewContext.Pointed` (set by the game's `AdventureInputController` and the editor on pointer motion) shows the caption of the
+      object under the pointer from any distance.
+  - Measured with temporary monitors in the editor, 60 frames in:
+
+    | Map | Objects | Nodes | Draw calls in view |
+    |---|---|---|---|
+    | 256 × 256 | 1,969 | 7,017 → 1,250 | 133 → 132 |
+    | 144 × 144 | 712 | 3,883 → 1,176 | 147 → 139 |
+
+    The camera sees only part of the map, so draw calls barely change; the gain is the nodes (and their memory and tree upkeep) and the far
+    captions.
+  - Smoke frames of object-heavy scenarios (`game-map-sites`, `game-quests`, `editor-inspector-objects`) show the same objects in the same
+    colours; they differ where a far caption is now hidden, and in the hover status line.
 
 ### Phase 3: Correctness and architecture cleanup (about 1 week)
 - [ ] **Scenario tracking state:** move `GameFlowService` tracking into `GameState` (for example a `ScenarioTracking` record) and add it to the digest. Bump the digest version and keep older replays checking.

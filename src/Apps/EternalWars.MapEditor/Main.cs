@@ -135,12 +135,16 @@ public partial class Main : Node3D
                 _editor.EndStroke();
                 break;
             case InputEventMouseMotion motion when _painting:
-                if (Pick(motion.Position) is { } dragged)
+                _context.Point(Pick(motion.Position));
+                if (_context.Pointed is { } dragged)
                 {
                     Paint(dragged);
                 }
 
                 break;
+            case InputEventMouseMotion motion:
+                _context.Point(Pick(motion.Position)); // the caption of what is under the pointer shows from afar
+                return;
             case InputEventKey { Pressed: true, Keycode: Key.Z, CtrlPressed: true, ShiftPressed: false }:
                 _editor.Undo();
                 break;

@@ -30,7 +30,7 @@ namespace EternalWars.Tools.Sim;
 /// sim battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs 200] [--seed 1]
 /// sim record demo.ewreplay.json [--days 7] [--seed 1]
 /// sim replay demo.ewreplay.json
-/// sim game [--map towns|demo|ember|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal] [--profile]  (the adventure AI plays every slot; --profile: time per turn, path searches, battles)
+/// sim game [--map towns|demo|ember|file.ewmap.json] [--days 40] [--seed 1] [--runs 1] [--record file] [--complexity normal] [--fog refog] [--profile]  (the adventure AI plays every slot; --fog refog: shroud with refog instead of permanent reveal; --profile: time per turn, path searches, battles)
 /// sim game --template duel|file.ewtemplate.json [--size N] [--players N] [...]  (the same on a map generated per run, random towns)
 /// sim maps [--template name] [--maps 3] [--days 14] [--seed 1]  (CI: generates maps of every shipped template and checks they are playable)
 /// sim towns [--runs 32] [--upgraded]  (round robin of one-week town armies, for roster balance)
@@ -259,7 +259,7 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] [--profile] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] [--fog refog] [--profile] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
@@ -587,16 +587,22 @@ public static class Program
     private static Func<ulong, SimGame> GameMaker(string[] args)
     {
         var complexity = ParseComplexity(OptionText(args, "--complexity"));
+        var fog = OptionText(args, "--fog") switch
+        {
+            null or "reveal" => FogMode.PermanentReveal,
+            "refog" => FogMode.ShroudWithRefog,
+            var other => throw new FormatException($"'{other}' is not a fog mode (reveal, refog)."),
+        };
         if (OptionText(args, "--template") is not { } name)
         {
             var map = OptionText(args, "--map") ?? "towns";
-            return seed => HandMadeGame(map, seed, complexity);
+            return seed => HandMadeGame(map, seed, complexity, fog);
         }
 
         var template = LoadTemplate(name);
         var size = Option(args, "--size", template.Sizes[0]);
         var players = Option(args, "--players", template.MaxPlayers);
-        return seed => GeneratedGame(template, size, players, seed, complexity);
+        return seed => GeneratedGame(template, size, players, seed, complexity, fog);
     }
 
     /// <summary>The <c>--complexity</c> level (beginner, easy, normal, hard, expert); none keeps the map's own resources.</summary>
@@ -615,7 +621,7 @@ public static class Program
         return 0;
     }
 
-    private static SimGame HandMadeGame(string map, ulong seed, Complexity? complexity = null)
+    private static SimGame HandMadeGame(string map, ulong seed, Complexity? complexity = null, FogMode fog = FogMode.PermanentReveal)
     {
         var document = map switch
         {
@@ -624,14 +630,14 @@ public static class Program
             "ember" => MapConverter.ToDocument(EmberMarchScenario.Create(Content)),
             _ => MapSerializer.Load(map),
         };
-        return new SimGame(document, MapConverter.ToGameState(document, Content, new GameOptions(Seed: seed, Complexity: complexity)));
+        return new SimGame(document, MapConverter.ToGameState(document, Content, new GameOptions(FogMode: fog, Seed: seed, Complexity: complexity)));
     }
 
     /// <summary>
     /// A map generated from the template for computer players in the first <paramref name="players"/> start slots, each with a random town,
     /// assembled like the new-game screen does (<see cref="MapGenerator.Build"/>); the map seed is the game seed.
     /// </summary>
-    private static SimGame GeneratedGame(MapTemplate template, int size, int players, ulong seed, Complexity? complexity = null)
+    private static SimGame GeneratedGame(MapTemplate template, int size, int players, ulong seed, Complexity? complexity = null, FogMode fog = FogMode.PermanentReveal)
     {
         if (players < 1 || players > template.MaxPlayers)
         {
@@ -639,7 +645,7 @@ public static class Program
         }
 
         var setups = Enumerable.Range(0, players).Select(slot => new PlayerSetup(slot, $"Player {slot + 1}", IsHuman: false, PlayerSetup.RandomTown)).ToList();
-        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(Seed: seed, Complexity: complexity), Content);
+        var (state, generation) = MapGenerator.Build(template, size, seed, setups, new GameOptions(FogMode: fog, Seed: seed, Complexity: complexity), Content);
         return new SimGame(MapConverter.ToDocument(state), state, GenerationInfo.Of(template.Name, size, seed, generation.Attempt), generation.Problems);
     }
 
@@ -955,7 +961,8 @@ internal sealed class FightLog
 }
 
 /// <summary>
-/// <c>sim game --profile</c>: how long each AI turn took, the path searches and cost maps it ran (<see cref="PathFinder.Counters"/>) and the battles in it,
+/// <c>sim game --profile</c>: how long each AI turn took, the path searches and cost maps it ran (<see cref="PathFinder.Counters"/>), the battle estimates it
+/// asked for (<see cref="BattleEstimateCounters"/>) and the battles in it,
 /// for a baseline before and after performance work. Times are wall-clock on this machine; the counts are the same on every run of a seed.
 /// </summary>
 internal sealed class TurnProfile
@@ -971,6 +978,7 @@ internal sealed class TurnProfile
         public long Started { get; set; }
         public TimeSpan Time { get; set; }
         public PathSearchCounters Paths { get; set; }
+        public BattleEstimateCounters Estimates { get; set; }
         public int Battles { get; set; }
         public TimeSpan BattleTime { get; set; }
     }
@@ -990,7 +998,7 @@ internal sealed class TurnProfile
 
     public Turn Begin(GameState state)
     {
-        _current = new Turn(state.Date.AbsoluteDay, state.CurrentPlayer.Id) { Paths = PathFinder.Counters, Started = System.Diagnostics.Stopwatch.GetTimestamp() };
+        _current = new Turn(state.Date.AbsoluteDay, state.CurrentPlayer.Id) { Paths = PathFinder.Counters, Estimates = BattleEstimateCounters.Current, Started = System.Diagnostics.Stopwatch.GetTimestamp() };
         return _current;
     }
 
@@ -998,6 +1006,7 @@ internal sealed class TurnProfile
     {
         turn.Time = System.Diagnostics.Stopwatch.GetElapsedTime(turn.Started);
         turn.Paths = PathFinder.Counters - turn.Paths;
+        turn.Estimates = BattleEstimateCounters.Current - turn.Estimates;
         _turns.Add(turn);
         _current = null;
     }
@@ -1020,6 +1029,8 @@ internal sealed class TurnProfile
             $"cost maps {total.Paths.Floods} ({(double)total.Paths.Floods / _turns.Count:0} a turn); " +
             $"{total.Paths.Expanded} tiles expanded ({(total.Paths.Searches + total.Paths.Floods == 0 ? 0 : (double)total.Paths.Expanded / (total.Paths.Searches + total.Paths.Floods)):0} each), " +
             $"{total.Paths.Time.TotalMilliseconds:0} ms ({100 * total.Paths.Time / total.Time:0} % of the turns)",
+            $"  battle estimates {total.Estimates.Asked} asked, {total.Estimates.Played} played in " +
+            $"{total.Estimates.Time.TotalMilliseconds:0} ms ({100 * total.Estimates.Time / total.Time:0} % of the turns)",
         };
         foreach (var group in _turns.GroupBy(t => t.Player).OrderBy(g => g.Key.Value))
         {
@@ -1042,6 +1053,7 @@ internal sealed class TurnProfile
         {
             sum.Time += t.Time;
             sum.Paths += t.Paths;
+            sum.Estimates += t.Estimates;
             sum.Battles += t.Battles;
             sum.BattleTime += t.BattleTime;
             return sum;

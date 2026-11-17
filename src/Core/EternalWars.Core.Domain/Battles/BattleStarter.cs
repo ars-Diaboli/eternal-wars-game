@@ -19,9 +19,6 @@ namespace EternalWars.Core.Domain.Battles;
 /// </summary>
 internal sealed class BattleStarter(GameState state, IEventPublisher events, ArtifactService artifacts, BattleFlow flow, BattleAftermath aftermath)
 {
-    /// <summary>The AI's throwaway estimate fights play a hero battle as a siege of these fortifications (<see cref="AI.BattleEstimator"/>).</summary>
-    public SiegeSpec? EstimateSiege { get; set; }
-
     public void BeginHeroBattle(Hero attacker, Hero defender, bool isAmbush)
     {
         if (defender.Army.IsEmpty)
@@ -39,9 +36,9 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
             isAmbush);
 
         // A hero standing in its own town with a Fort defends it behind the walls (ADR-106).
-        var siege = EstimateSiege ?? (state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == defender.Owner && t.VisitPosition == defender.Position) is { } home
+        var siege = state.ObjectsOf<Town>().FirstOrDefault(t => t.Owner == defender.Owner && t.VisitPosition == defender.Position) is { } home
             ? SiegeRules.SpecOf(home)
-            : null);
+            : null;
         Begin(attacker, battle, Stacks(attacker, siege is not null), Stacks(defender), siege: siege);
     }
 

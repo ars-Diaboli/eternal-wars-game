@@ -20,6 +20,9 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
     // and diffs stay proportional to what observers see, not to map size.
     private readonly Dictionary<PlayerId, HashSet<MapPosition>> _inSight = [];
 
+    /// <summary>The observers and margin each player's sight was last worked out from (<see cref="UpdateSight"/>).</summary>
+    private readonly Dictionary<PlayerId, (int Margin, (MapPosition Center, int Radius)[] Observers)> _seenFrom = [];
+
     public FogMode Mode { get; } = mode;
 
     public bool IsExplored(PlayerId player, MapPosition position) =>
@@ -80,10 +83,73 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
     /// observer is within its sight radius, or if it already was in sight and an observer is still within
     /// sight radius + <paramref name="margin"/>. Returns the tiles that entered and left sight.
     /// </summary>
+    /// <remarks>
+    /// Only tiles within sight radius + margin of an observer that moved, came, went or changed its radius can change: any other tile keeps
+    /// the observer that put it in sight (or still has none near enough), so only the circles of those observers are worked out again, against
+    /// the observers that reach them. The answer is the same as working everything out afresh.
+    /// </remarks>
     internal (IReadOnlyList<MapPosition> Entered, IReadOnlyList<MapPosition> Left) UpdateSight(
         PlayerId player, IReadOnlyCollection<(MapPosition Center, int Radius)> observers, int margin)
     {
-        var previous = _inSight.GetValueOrDefault(player) ?? [];
+        var now = observers.ToArray();
+        var previous = _inSight.GetValueOrDefault(player);
+        var changed = previous is not null && _seenFrom.TryGetValue(player, out var last) && last.Margin == margin ? Changed(last.Observers, now) : null;
+        _seenFrom[player] = (margin, now);
+        if (changed is null || Area(changed, margin) > Area(now, margin))
+        {
+            return UpdateAllSight(player, previous ?? [], now, margin);
+        }
+
+        if (changed.Count == 0)
+        {
+            return ([], []);
+        }
+
+        // Only the observers that reach a changed circle can decide its tiles.
+        var near = now.Where(o => changed.Any(c => c.Center.Level == o.Center.Level
+            && Math.Max(Math.Abs(c.Center.X - o.Center.X), Math.Abs(c.Center.Y - o.Center.Y)) <= c.Radius + o.Radius + (2 * margin))).ToArray();
+        var entered = new List<MapPosition>();
+        var left = new List<MapPosition>();
+        var done = new HashSet<MapPosition>();
+        foreach (var (center, radius) in changed)
+        {
+            foreach (var position in Circle(center, radius + margin))
+            {
+                if (!done.Add(position))
+                {
+                    continue;
+                }
+
+                var was = previous!.Contains(position);
+                var inSight = false;
+                foreach (var (at, reach) in near)
+                {
+                    if (IsWithinRadius(at, position, reach) || (was && IsWithinRadius(at, position, reach + margin)))
+                    {
+                        inSight = true;
+                        break;
+                    }
+                }
+
+                if (inSight && !was)
+                {
+                    previous.Add(position);
+                    entered.Add(position);
+                }
+                else if (!inSight && was)
+                {
+                    previous.Remove(position);
+                    left.Add(position);
+                }
+            }
+        }
+
+        return (entered, left);
+    }
+
+    private (IReadOnlyList<MapPosition> Entered, IReadOnlyList<MapPosition> Left) UpdateAllSight(
+        PlayerId player, HashSet<MapPosition> previous, (MapPosition Center, int Radius)[] observers, int margin)
+    {
         var current = new HashSet<MapPosition>();
         foreach (var (center, radius) in observers)
         {
@@ -99,6 +165,47 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
         _inSight[player] = current;
         return (current.Where(p => !previous.Contains(p)).ToList(), previous.Where(p => !current.Contains(p)).ToList());
     }
+
+    /// <summary>The observers in one list and not in the other (each as often as it is missing there), from both lists.</summary>
+    private static List<(MapPosition Center, int Radius)> Changed((MapPosition Center, int Radius)[] before, (MapPosition Center, int Radius)[] after)
+    {
+        var matched = new bool[before.Length];
+        var changed = new List<(MapPosition Center, int Radius)>();
+        foreach (var observer in after)
+        {
+            var at = -1;
+            for (var i = 0; i < before.Length && at < 0; i++)
+            {
+                if (!matched[i] && before[i] == observer)
+                {
+                    at = i;
+                }
+            }
+
+            if (at < 0)
+            {
+                changed.Add(observer);
+            }
+            else
+            {
+                matched[at] = true;
+            }
+        }
+
+        for (var i = 0; i < before.Length; i++)
+        {
+            if (!matched[i])
+            {
+                changed.Add(before[i]);
+            }
+        }
+
+        return changed;
+    }
+
+    /// <summary>About how many tiles the observers' circles of sight radius + margin cover: their squares, overlaps counted each time.</summary>
+    private static long Area(IEnumerable<(MapPosition Center, int Radius)> observers, int margin) =>
+        observers.Sum(o => (long)((2 * (o.Radius + margin)) + 1) * ((2 * (o.Radius + margin)) + 1));
 
     private IEnumerable<MapPosition> Circle(MapPosition center, int radius)
     {
@@ -149,7 +256,11 @@ public sealed class FogOfWar(AdventureMap map, FogMode mode)
     }
 
     /// <summary>A LAN client (ADR-193): the tiles the host says the player has in sight now.</summary>
-    internal void SetSight(PlayerId player, IEnumerable<MapPosition> positions) => _inSight[player] = [.. positions];
+    internal void SetSight(PlayerId player, IEnumerable<MapPosition> positions)
+    {
+        _inSight[player] = [.. positions];
+        _seenFrom.Remove(player);
+    }
 
     private bool[][] ExploredLayer(PlayerId player)
     {

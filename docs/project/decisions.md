@@ -2799,3 +2799,51 @@ fill-ins, for the owner to change. No rule, save or map format change.
   change choices (one duel is won by the same player on day 54 instead of 46). The baseline games keep their digests.
 - **Checked** by `PathCostMapTests`: on two-level maps with monsters, gates, a garrison, a quest guard, a border guard and heroes, with and
   without fog, every tile's answer equals `FindPath`'s, in any order of asking; random road maps where the old estimate gave dearer routes.
+
+### ADR-206: The AI's battle estimates play battles of their own and are kept from turn to turn (ADR-059, ADR-106, 2026-11-17)
+**Status**: implemented. No save, map or protocol format changes.
+
+- **Why**: each estimate built three complete games (map, services, heroes) to fight one battle in each, and the estimates were forgotten at
+  every turn's start, keyed by a text built from both armies.
+- **Rule**: `BattleEstimator` sets the battle up as `BattleStarter.BeginHeroBattle` sets up a hero battle — two bare heroes (Attack and
+  Defense only) of computer players on grass; in a siege the attacker with its own war machines — and plays it out unheard, outside any game,
+  as auto combat's preview does, through `BattleFlow.PlayComputer` with retreat off. The three fights use fixed seeds of their own, the
+  same battles the throwaway games played, so every estimate is what it was.
+- **Kept**: an estimate depends only on both armies slot by slot, the sides' Attack and Defense, and a siege's fort level and building count
+  with the attacker's war machines, so it is kept under a struct key of those (hash worked out once) for the rest of the game, in two
+  generations of `BattleEstimator.Capacity` (4096): when the newer is full it becomes the older and the oldest are dropped; an estimate found
+  in the older moves to the newer.
+- **Effect** (sim A/B, 18 generated games of 60 days: duel, ffa-4, 2v2, seeds 1–6): all end in the same state, in 243 s
+  instead of 339 s. The big-map baseline asks for 2,959 estimates and plays 150 of them.
+- **Checked** by `BattleEstimatorTests` (outcomes, the key, the bound) and the A/B digests.
+
+### ADR-207: The ground is drawn in chunks; editor strokes redraw only what they reach (ADR-183, ADR-197, 2026-11-17)
+**Status**: implemented. Rendering only: no rule, save or map format changes. Replaces ADR-183's "one mesh a level".
+
+- **Why**: on a 256 × 256 map a height dab in the editor took about 250 ms: the whole ground mesh was built again (about 80 ms), and the
+  start zones' plates (about 160 ms) were all laid again on every change of heights. Terrain painting rebuilt the whole terrain map
+  texture from the map on every dab.
+- **Chunks** (`AdventureMapView`): the ground of a level is meshes of `ChunkTiles` (32) × 32 tiles, built like the one mesh was (a vertex per
+  corner, one per tile centre); a corner on a chunk's edge is worked out the same in both chunks, so they meet without a seam. A change of
+  heights rebuilds the chunks with a tile that has a corner within one of a changed corner (a corner's normal comes from its neighbours),
+  the apron only when that reaches the map's edge, and the roads and rivers of the tiles it touches. A few draw calls more; the camera skips
+  the chunks out of view.
+- **Painting** changes only the painted tiles' bytes of the terrain map, then uploads the texture (Godot has no partial update).
+- **Start zones** (`StartZonesView`): a change of heights lays again only the plates on the tiles it touches; painting zones and a change of
+  level still redraw them all.
+- **Effect** (the editor on a generated 256 × 256 two-level map, Debug build, 20 height strokes / 20 terrain strokes): a height dab
+  250 → 12 ms, a terrain dab 78 → 5 ms. The editor smoke frames are the same as before.
+
+### ADR-208: Map objects are drawn in batches; captions show nearby or under the pointer (ADR-031, ADR-207, 2026-11-18)
+**Status**: implemented. Rendering only: no rule, save or map format changes.
+
+- **Why**: every object was a node with a mesh instance per box (its blocked cells, its entrance, its flag) and a caption of its own: a
+  generated 256 × 256 map of about 2,000 objects made about 7,000 nodes, and every caption on the level was drawn wherever the camera was.
+- **Batches** (`MapObjectsView`): the boxes, plates and flags of a level's objects are instances of one `MultiMesh` per box size, coloured per
+  instance (the colours read as before: the instance colour is taken as sRGB). A removed object's instances are hidden and reused; when all
+  are taken, the instances are doubled. Only the quest objects' shapes (EVT-5) stay nodes of their own.
+- **Captions** show within `MapObjectsView.CaptionRange` (20 world units) of the camera, fading out over the last 2; the camera starts 16
+  from what it looks at, so the captions around it show and zooming out hides them. The object under the pointer shows its caption from
+  any distance: the game's and the editor's input set `MapViewContext.Pointed`.
+- **Effect** (the editor on generated maps): nodes 7,017 → 1,250 at 256 × 256 (1,969 objects), 3,883 → 1,176 at 144 × 144. Draw calls in
+  view stay about the same (about 135); the gain is in nodes, memory and the far captions not drawn.
