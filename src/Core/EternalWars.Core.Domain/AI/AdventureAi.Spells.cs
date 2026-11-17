@@ -31,9 +31,6 @@ public sealed partial class AdventureAi
     private const int NativeWalkSaving = 100;
 
     private readonly Dictionary<HeroId, int> _doorChecks = [];
-    private PathFinder? _paths;
-
-    private PathFinder Paths => _paths ??= new PathFinder(_state);
 
     /// <summary>Whether the hero could cast the spell now (before picking any cell).</summary>
     private bool CanCast(Hero hero, string spell) => AdventureMagic.Refusal(_state, hero, spell, null, aimed: false) is null;
@@ -172,7 +169,7 @@ public sealed partial class AdventureAi
         }
 
         _doorChecks[hero.Id] = _doorChecks.GetValueOrDefault(hero.Id) + 1;
-        var walk = session.Movement.FindPath(hero.Id, target)?.TotalCost;
+        var walk = WalkCost(hero, target);
         if (walk is { } cost && cost <= hero.MovementPoints)
         {
             return false;
@@ -181,6 +178,7 @@ public sealed partial class AdventureAi
         var range = AdventureMagic.DimensionDoorRange(AdventureMagic.RankOf(_state, hero, AdventureMagic.DimensionDoor));
         var bestCost = walk is { } w ? w - AdventureMagic.MovementCost - DoorSaving : int.MaxValue;
         MapPosition? best = null;
+        PathFinder.ReverseCostMap? fromLandings = null;
         foreach (var direction in DirectionExtensions.All)
         {
             var landing = hero.Position;
@@ -193,7 +191,8 @@ public sealed partial class AdventureAi
                     continue;
                 }
 
-                if (Paths.FindPath(hero.Id, target, from: landing) is { TotalCost: var rest } && rest < bestCost)
+                fromLandings ??= CostsTo(hero, target);
+                if (fromLandings.CostFrom(landing) is { } rest && rest < bestCost)
                 {
                     (best, bestCost) = (landing, rest);
                 }
@@ -228,7 +227,7 @@ public sealed partial class AdventureAi
             }
 
             var danger = Danger(player, town.VisitPosition);
-            var walk = session.Movement.FindPath(hero.Id, town.VisitPosition)?.TotalCost;
+            var walk = WalkCost(hero, town.VisitPosition);
             var worth = danger > 0
                 ? walk is not { } cost || cost > hero.MovementPoints
                 : walk is not { } far || far > hero.MaxMovementPoints;

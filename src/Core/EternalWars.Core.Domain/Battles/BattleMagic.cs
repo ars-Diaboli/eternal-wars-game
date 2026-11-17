@@ -499,9 +499,10 @@ public static class BattleMagic
     {
         var probe = new BattleUnit(0, near.Side, creature, 1, -1, new CellPosition(0, 0));
         var size = creature.Size.Cells();
+        var free = BattleGrid.FreePlacements(battle, probe);
         return Enumerable.Range(0, battle.Width - size + 1)
             .SelectMany(x => Enumerable.Range(0, BattleState.Height - size + 1).Select(y => new CellPosition(x, y)))
-            .Where(p => BattleGrid.IsFree(battle, probe, p))
+            .Where(free)
             .OrderBy(p => probe.RectAt(p).GapTo(near.Rect)).ThenBy(p => p.Y).ThenBy(p => p.X)
             .Select(p => (CellPosition?)p)
             .FirstOrDefault();
@@ -537,9 +538,10 @@ public static class BattleMagic
         }
 
         var probe = new BattleUnit(0, BattleSide.Attacker, skeleton, 1, -1, new CellPosition(0, 0));
+        var free = BattleGrid.FreePlacements(battle, probe);
         return battle.Units
             .Where(u => !u.IsAlive && !u.IsMachine && !u.IsSummoned && !u.IsRaised && NecromancyRules.Counts(u.Creature) && !battle.Risen.Contains(u.Id)
-                        && BattleGrid.IsFree(battle, probe, u.Position))
+                        && free(u.Position))
             .OrderByDescending(u => (long)u.InitialCount * u.Creature.Health).ThenBy(u => u.Id)
             .Select(u => ((BattleUnit, CreatureDefinition, int)?)(u, skeleton, (int)Math.Max(1, (long)u.InitialCount * u.Creature.Health * percent / 100 / skeleton.Health)))
             .FirstOrDefault();
@@ -579,9 +581,10 @@ public static class BattleMagic
 
         var probe = new BattleUnit(0, side, creature, 1, -1, new CellPosition(0, 0));
         var size = creature.Size.Cells();
+        var free = BattleGrid.FreePlacements(battle, probe);
         var spot = Enumerable.Range(0, battle.Width - size + 1)
             .SelectMany(x => Enumerable.Range(0, BattleState.Height - size + 1).Select(y => new CellPosition(x, y)))
-            .Where(p => BattleGrid.IsFree(battle, probe, p))
+            .Where(free)
             .OrderBy(p => side == BattleSide.Attacker ? p.X : battle.Width - size - p.X)
             .ThenBy(p => Math.Abs(p.Y + (size / 2) - (BattleState.Height / 2))).ThenBy(p => p.Y)
             .Select(p => (CellPosition?)p)

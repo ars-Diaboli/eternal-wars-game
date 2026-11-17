@@ -100,8 +100,9 @@ internal static class BattleAi
             }
         }
 
+        var reach = BattleGrid.Reachable(battle, unit);
         var melee = enemies
-            .Select(e => (Target: e, Positions: BattleGrid.AttackPositions(battle, unit, e)))
+            .Select(e => (Target: e, Positions: BattleGrid.AttackPositions(reach, unit, e)))
             .Where(m => m.Positions.Count > 0)
             .OrderByDescending(m => TargetScore(battle, unit, m.Target, isRanged: false, 0, level, biggestThreat))
             .ThenBy(m => m.Target.Id)
@@ -156,15 +157,16 @@ internal static class BattleAi
             options.AddRange(enemies.Where(e => BattleGrid.CanShoot(battle, unit, e, out _)).Select(e => (Func<string?>)(() => engine.Shoot(e.Id))));
         }
 
+        var reach = BattleGrid.Reachable(battle, unit);
         foreach (var enemy in enemies)
         {
-            if (BattleGrid.AttackPositions(battle, unit, enemy) is { Count: > 0 } spots)
+            if (BattleGrid.AttackPositions(reach, unit, enemy) is { Count: > 0 } spots)
             {
                 options.Add(() => engine.Attack(enemy.Id, spots[battle.Random.Next(spots.Count)]));
             }
         }
 
-        var moves = BattleGrid.Reachable(battle, unit).Keys.Where(p => p != unit.Position).OrderBy(p => p.Y).ThenBy(p => p.X).ToList();
+        var moves = reach.Keys.Where(p => p != unit.Position).OrderBy(p => p.Y).ThenBy(p => p.X).ToList();
         if (moves.Count > 0)
         {
             options.Add(() => engine.Move(moves[battle.Random.Next(moves.Count)]));
@@ -518,7 +520,8 @@ internal static class BattleAi
         var shots = BattleGrid.CanShootNow(battle, unit)
             ? enemies.Where(e => BattleGrid.CanShoot(battle, unit, e, out _)).Select(e => Score(battle, unit, e, isRanged: true, BattleGrid.RangedPenaltyEighths(battle, unit, e)))
             : [];
-        var blows = enemies.Where(e => BattleGrid.AttackPositions(battle, unit, e).Count > 0).Select(e => Score(battle, unit, e, isRanged: false));
+        var reach = BattleGrid.Reachable(battle, unit);
+        var blows = enemies.Where(e => BattleGrid.AttackPositions(reach, unit, e).Count > 0).Select(e => Score(battle, unit, e, isRanged: false));
         return shots.Concat(blows).DefaultIfEmpty(0).Max();
     }
 

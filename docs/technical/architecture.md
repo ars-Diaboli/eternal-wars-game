@@ -113,6 +113,12 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `MovementRules`, publishes `HeroMoved`) → on an entrance `MapObjectInteractionService.Visit` → outcome events /
   `DecisionRequested`. A step towards a monster or into its guarded area goes to `GuardService`; onto an enemy hero to
   `BattleService`.
+- **Routes**: `PathFinder.FindPath` is A* (a distance estimate that never counts more than the cheapest steps, so routes are the cheapest),
+  plain Dijkstra once a gate links two tiles. `HeroMovementService.FindPath` gives its last route again while
+  `GameSession.ChangeStamp` (commands accepted + events published + hero moves) stays the same, so a move right after a check does not search
+  again. For many targets at once, `PathFinder.CostsFrom` (from one tile) and `CostsTo` (to one tile, from many) are Dijkstra searches that
+  run only as far as the questions need and answer exactly what `FindPath` would give as the route's cost; the AI weighs its targets, its
+  exploring and its Dimension Door landings with them and searches the full route only for the target it picks (by moving).
 - **Views** subscribe with `node.SubscribeWhileInTree<T>(...)`. Code-built forms use `FormBuilder` (Godot.Shared/Controls:
   `AddRow`, `AddSpin`, `AddOptions`, `AddChoice<T>`) and empty a container with `node.ClearChildren()`. A view that rebuilds on many
   events uses a `RefreshScheduler` (Godot.Shared/Events: `.On<T>(events)`), which refreshes once at the end of the frame however many
@@ -135,7 +141,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 
 ### Battles
 - `BattleState` (`GameState.Battle`): field (width × 24 cells), units with footprints, obstacles, round, queue, own
-  forked RNG. `BattleGrid`: pure geometry (reach, adjacency, line of fire, cover). `BattleEngine`: rules for the active
+  forked RNG. `BattleGrid`: pure geometry (reach, adjacency, line of fire, cover); a unit's reach is kept beside its battle and handed out again until something the search reads changes. `BattleEngine`: rules for the active
   unit's actions and blows; it builds one `BattleWounds` (damage, deaths, healing, Martyrdom shares, blind wake-ups; shared per action),
   `BattleSpellResolver` (casting; each effect kind's handler does the rest) and `BattleRounds` (turn order, round start, end of battle) per instance. `BattleAi`: computer
   sides. `BattleService`: the session's facade for map ↔ battle, composed of `BattleStarter` (sides, battlefield, siege, width choice),
