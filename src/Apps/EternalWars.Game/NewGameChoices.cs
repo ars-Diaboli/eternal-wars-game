@@ -18,7 +18,10 @@ internal static class NewGameChoices
     /// <summary>Where the editor's template editor saves (its <c>user://templates</c>, ADR-070).</summary>
     private const string EditorTemplatesFolder = "Eternal Wars Map Editor/templates";
 
-    /// <summary>The map given with --map, the shipped maps (the demo, Two Towns, Ember March, the three arenas), and every map saved by the editor.</summary>
+    /// <summary>
+    /// The map given with --map, the shipped maps (the demo, Two Towns, Ember March, the three arenas), and every map saved by the editor, each
+    /// with the new-game screen's tab it is listed on (ADR-201): the shipped ones by hand, a file by <see cref="MapKinds.Of"/>.
+    /// </summary>
     public static List<ScenarioChoice> Scenarios()
     {
         var choices = new List<ScenarioChoice>();
@@ -27,10 +30,10 @@ internal static class NewGameChoices
             choices.Add(FromFile(path));
         }
 
-        choices.Add(Built("Demo Valley", content => DemoScenario.Create(content: content)));
-        choices.Add(Built("Two Towns", TownsScenario.Create));
-        choices.Add(Built(EmberMarchScenario.Name, EmberMarchScenario.Create));
-        choices.AddRange(ArenaScenarios.All.Select(arena => Built(arena.Name, content => arena.Create(content))));
+        choices.Add(Built("Demo Valley", content => DemoScenario.Create(content: content), MapKind.Scenario));
+        choices.Add(Built("Two Towns", TownsScenario.Create, MapKind.Scenario));
+        choices.Add(Built(EmberMarchScenario.Name, EmberMarchScenario.Create, MapKind.Scenario));
+        choices.AddRange(ArenaScenarios.All.Select(arena => Built(arena.Name, content => arena.Create(content), MapKind.Arena)));
         var editorMaps = Path.Combine(Path.GetDirectoryName(OS.GetUserDataDir())!, EditorMapsFolder);
         if (Directory.Exists(editorMaps))
         {
@@ -40,11 +43,24 @@ internal static class NewGameChoices
         return choices;
 
         static ScenarioChoice FromFile(string file) =>
-            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, options));
+            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, options), KindOf(file));
 
         // A built-in scenario goes through the map format like a file, so it starts the way a saved copy of it would.
-        static ScenarioChoice Built(string name, Func<ContentCatalogs, GameState> create) =>
-            new(name, options => MapConverter.ToGameState(MapConverter.ToDocument(create(GameContent.All)), GameContent.All, options));
+        static ScenarioChoice Built(string name, Func<ContentCatalogs, GameState> create, MapKind kind) =>
+            new(name, options => MapConverter.ToGameState(MapConverter.ToDocument(create(GameContent.All)), GameContent.All, options), kind);
+    }
+
+    /// <summary>The tab of a map file; one that does not load is listed with the scenarios, where choosing it says why.</summary>
+    private static MapKind KindOf(string file)
+    {
+        try
+        {
+            return MapKinds.Of(MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, GameOptions.Default));
+        }
+        catch (Exception e) when (e is FormatException or IOException or InvalidOperationException or System.Text.Json.JsonException)
+        {
+            return MapKind.Scenario;
+        }
     }
 
     /// <summary>

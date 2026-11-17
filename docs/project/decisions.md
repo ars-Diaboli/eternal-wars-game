@@ -2666,3 +2666,21 @@ change; no protocol change.
   already ask for), else the albedo's brightness (the article's "alpha from greyscale"); either is stretched to the full 0–255 range
   (2 % clipped at each end) so every ground's relief counts alike. Layers are RGBA8; the plain white layer is at mid height.
 - **Not changed**: the battlefield's single-terrain material; terrain textures, the influence kernel and the edge noise.
+
+### ADR-201: The new-game screen has tabs by kind of map (ADR-086, ADR-097, ADR-101, ADR-163, 2026-11-17)
+**Status**: implemented. No rule, save or map format changes.
+
+- **Four tabs** (`NewGameScreen`), each with its map count: **Scenarios**, **Random maps** (the shipped and the editor's valid templates),
+  **Arenas** and **Campaign**. Each lists its maps on the left (a button a map, scrolled when long) and shows the chosen one on the right:
+  its name, a summary (size and levels, or a template's player range and sizes; players; the team counts), the map's or template's
+  description, the arena line, a template's size / players / hero limit, then the players. The game options (fog and refog margin,
+  complexity and turn timer, seed with "New seed") sit in two columns under them for every tab. The screen is about 1240 px wide (1120
+  beside a LAN lobby's chat). Each tab remembers the map last chosen on it; an empty tab says how its maps come to be and Start is off.
+- **Which tab a map is on** (`MapKinds.Of`, Core): an arena map is an arena; a map is **campaign-like** when it would not be ranked for
+  something other than being an arena (a person starts without a town, ADR-075, or a map event favours people, ADR-101) or when it
+  keeps or takes campaign variables (EVT-1 f); anything else is a scenario. The shipped maps are placed by hand (`NewGameChoices`):
+  Demo Valley, Two Towns and Ember March under Scenarios (Demo Valley has no towns, which the rule would read as campaign-like), the
+  three arenas under Arenas. A map file that does not load goes under Scenarios, where choosing it says why.
+- **Opens on** the tab of the first map, so a map given with `--map` is chosen and Enter starts it, as before; otherwise on Scenarios.
+- **Smoke scripts** press a tab by part of its label (`press:Arenas`) and click a map by name (`click:@Four Banners`).
+- **Not done**: campaigns themselves (Phase 6: chaining maps, carried heroes); the Campaign tab lists single campaign-like maps until then.

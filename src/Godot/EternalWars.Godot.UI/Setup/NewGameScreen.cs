@@ -13,8 +13,11 @@ using Godot;
 
 namespace EternalWars.Godot.UI.Setup;
 
-/// <summary>A map the player can start: a name and a factory building its initial state for the chosen options.</summary>
-public sealed record ScenarioChoice(string Name, Func<GameOptions, GameState> Create);
+/// <summary>
+/// A map the player can start: a name, a factory building its initial state for the chosen options, and the tab it is listed on (ADR-201;
+/// <see cref="MapKinds.Of"/> for a map file).
+/// </summary>
+public sealed record ScenarioChoice(string Name, Func<GameOptions, GameState> Create, MapKind Kind = MapKind.Scenario);
 
 /// <summary>
 /// A start slot of a random map template: its player's name, whether a human may (and by default does) take it, its default team and whether its
@@ -54,7 +57,8 @@ public sealed record RandomMapChoice(
     int MaxHeroes = ScenarioRules.HeroLimit);
 
 /// <summary>
-/// New-game setup: a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
+/// New-game setup (ADR-201: four tabs, Scenarios, Random maps, Arenas and Campaign, each a list of its maps on the left and the chosen one's
+/// details and players on the right, the game options under them): a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
 /// locks them (ADR-032); on an arena map a line on the mode and, per player, Human or Computer (ADR-159). For a template (ADR-086): the size, the number of players, the hero limit (the template's by default, ADR-068) and for each
 /// player human or computer, town, hero, the start town's tier-1 dwelling (a human player with a picked town, when the start zone gives none; RMG-7)
 /// and team (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
@@ -65,8 +69,17 @@ public partial class NewGameScreen : PanelContainer
 {
     private const string Random = "Random";
 
-    private readonly OptionButton _maps = new();
-    private readonly Label _description = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) };
+    private const int LabelWidth = 120;
+
+    private readonly Dictionary<MapTab, List<MapEntry>> _entries = Enum.GetValues<MapTab>().ToDictionary(t => t, _ => new List<MapEntry>());
+    private readonly Dictionary<MapTab, Button> _tabButtons = [];
+    private readonly Dictionary<MapTab, MapEntry> _lastSelected = [];
+    private readonly VBoxContainer _list = new() { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+    private readonly Label _title = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+    private readonly Label _summary = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, Modulate = new Color(1, 1, 1, 0.75f) };
+    private readonly Label _description = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+    private readonly Label _playersHeading = new() { Text = "Players" };
+    private readonly HSeparator _playersRule = new();
     private readonly OptionButton _size = new();
     private readonly SpinBox _playerCount = new() { MinValue = 1, MaxValue = 8, Step = 1 };
     private readonly SpinBox _maxHeroes = new() { MinValue = 1, MaxValue = ScenarioRules.HeroLimit, Step = 1 };
@@ -77,19 +90,28 @@ public partial class NewGameScreen : PanelContainer
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(220, 0) };
     private readonly GridContainer _players = new() { Columns = 3 };
     private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm);
-    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) };
-    private readonly Label _arena = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0), Visible = false };
+    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
+    private readonly Label _arena = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
     private readonly Dictionary<PlayerId, SpinBox> _teams = [];
     private readonly Dictionary<PlayerId, OptionButton> _controllers = [];
     private readonly Dictionary<int, OptionButton> _startTowns = [];
     private readonly List<RandomPlayerRow> _randomPlayers = [];
     private readonly List<Control> _randomRows = [];
-    private IReadOnlyList<ScenarioChoice> _choices = [];
-    private IReadOnlyList<RandomMapChoice> _templates = [];
     private Func<string, IReadOnlyList<HeroDefinition>> _heroesOf = _ => [];
     private Func<string, IReadOnlyList<CreatureDefinition>> _tier1Of = _ => [];
     private RandomMapResult? _generated;
+    private MapTab _tab;
+    private MapEntry? _selected;
     private bool _busy;
+
+    /// <summary>The screen's tabs, in their order: the hand-made maps by <see cref="MapKind"/>, and the random map templates.</summary>
+    private enum MapTab
+    {
+        Scenarios,
+        RandomMaps,
+        Arenas,
+        Campaign,
+    }
 
     public event Action<GameState>? Started;
 
@@ -106,50 +128,135 @@ public partial class NewGameScreen : PanelContainer
         Func<string, IReadOnlyList<HeroDefinition>>? heroesOf = null,
         Func<string, IReadOnlyList<CreatureDefinition>>? tier1Of = null)
     {
-        _choices = choices;
-        _templates = templates ?? [];
         _heroesOf = heroesOf ?? (_ => []);
         _tier1Of = tier1Of ?? (_ => []);
-        var box = new VBoxContainer { CustomMinimumSize = new Vector2(520, 0) };
+        foreach (var choice in choices)
+        {
+            _entries[TabOf(choice.Kind)].Add(new MapEntry(choice.Name, choice, null));
+        }
+
+        foreach (var template in templates ?? [])
+        {
+            _entries[MapTab.RandomMaps].Add(new MapEntry(template.Name, null, template));
+        }
+
         this.UseMenuPanel();
+        var box = new VBoxContainer { CustomMinimumSize = new Vector2(Lan is null ? 1240 : 1120, 0) };
+        box.AddThemeConstantOverride("separation", UiSpacing.Gap);
         AddChild(Lan is null ? box : WithChat(box));
-        box.AddChild(new Label { Text = Lan is null ? "New game" : "LAN game: you host", HorizontalAlignment = HorizontalAlignment.Center });
+        var heading = new Label { Text = Lan is null ? "New game" : "LAN game: you host", HorizontalAlignment = HorizontalAlignment.Center };
+        heading.AddThemeFontSizeOverride("font_size", 26);
+        box.AddChild(heading);
         if (Lan is not null)
         {
             AddLanRows(box);
         }
 
-        foreach (var choice in choices)
+        box.AddChild(Tabs());
+        box.AddChild(MapArea());
+        box.AddChild(new HSeparator());
+        box.AddChild(Options());
+        box.AddChild(new HSeparator());
+
+        _start.Pressed += Start;
+        var buttons = new HBoxContainer();
+        _start.SizeFlagsHorizontal = SizeFlags.ExpandFill;
+        buttons.AddChild(_start);
+        var back = new Button { Text = "Back (Esc)", CustomMinimumSize = new Vector2(200, 0) }.WithIcon(UiIcon.ArrowLeft);
+        back.Pressed += () => BackRequested?.Invoke();
+        buttons.AddChild(back);
+        box.AddChild(buttons);
+        _start.CallDeferred(Control.MethodName.GrabFocus); // Enter starts (and the smoke scripts need no coordinates)
+        box.AddChild(_status);
+
+        // The screen opens on the first map's tab (a map given with --map comes first), else on the first tab that has maps.
+        var first = choices.Count > 0 ? TabOf(choices[0].Kind) : Enum.GetValues<MapTab>().FirstOrDefault(t => _entries[t].Count > 0);
+        ShowTab(first);
+    }
+
+    /// <summary>One toggle button a tab, with its map count; an empty tab is still shown (it says how to get its maps).</summary>
+    private HBoxContainer Tabs()
+    {
+        var row = new HBoxContainer();
+        var group = new ButtonGroup();
+        foreach (var tab in Enum.GetValues<MapTab>())
         {
-            _maps.AddItem(choice.Name);
+            var button = new Button
+            {
+                Text = $"{TabName(tab)} ({_entries[tab].Count})",
+                ToggleMode = true,
+                ButtonGroup = group,
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                FocusMode = FocusModeEnum.None,
+                TooltipText = TabTip(tab),
+            };
+            button.Pressed += () => ShowTab(tab);
+            row.AddChild(button);
+            _tabButtons[tab] = button;
         }
 
-        foreach (var template in _templates)
-        {
-            _maps.AddItem($"Random map: {template.Name}");
-        }
+        return row;
+    }
 
-        _maps.ItemSelected += _ => ShowPlayers();
-        box.AddRow("Map", _maps, 140);
-        box.AddChild(_arena);
-        box.AddChild(_description);
-        _randomRows.Add(_description);
-        _randomRows.Add(box.AddRow("Size", _size, 140));
+    /// <summary>The tab's maps on the left; the chosen map's name, size, description, random map settings and players on the right.</summary>
+    private HBoxContainer MapArea()
+    {
+        var area = new HBoxContainer { CustomMinimumSize = new Vector2(0, 430) };
+        area.AddThemeConstantOverride("separation", UiSpacing.Section);
+        var listScroll = new ScrollContainer
+        {
+            CustomMinimumSize = new Vector2(Lan is null ? 300 : 200, 0), // the lobby's chat takes the room
+            HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
+        };
+        listScroll.AddChild(_list);
+        area.AddChild(listScroll);
+        area.AddChild(new VSeparator());
+
+        var details = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
+        details.AddThemeConstantOverride("separation", UiSpacing.Row);
+        _title.AddThemeFontSizeOverride("font_size", 22);
+        details.AddChild(_title);
+        details.AddChild(_summary);
+        details.AddChild(_arena);
+        details.AddChild(_description);
+
+        var settings = new HBoxContainer();
+        settings.AddThemeConstantOverride("separation", UiSpacing.Section);
+        settings.AddRow("Size", _size);
         _size.ItemSelected += _ => Changed();
-        _randomRows.Add(box.AddRow("Players", _playerCount, 140));
+        settings.AddRow("Players", _playerCount);
         _playerCount.ValueChanged += _ => ShowRandomPlayers();
         _maxHeroes.TooltipText = "The most heroes a player may have on the map at once; the template sets the default.";
-        var heroLimitRow = box.AddRow("Hero limit", _maxHeroes, 140);
-        heroLimitRow.AddChild(new Label { Text = "heroes per player" });
-        _randomRows.Add(heroLimitRow);
+        var heroLimit = settings.AddRow("Hero limit", _maxHeroes);
+        heroLimit.AddChild(new Label { Text = "heroes per player" });
         _maxHeroes.ValueChanged += _ => Changed();
+        details.AddChild(settings);
+        _randomRows.Add(settings);
+
+        details.AddChild(_playersRule);
+        details.AddChild(_playersHeading);
+        var playersScroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill };
+        _players.AddThemeConstantOverride("h_separation", Lan is null ? UiSpacing.Section : UiSpacing.Gap);
+        _players.AddThemeConstantOverride("v_separation", UiSpacing.Row);
+        playersScroll.AddChild(_players);
+        details.AddChild(playersScroll);
+        area.AddChild(details);
+        return area;
+    }
+
+    /// <summary>The game options, in two columns: fog and its refog margin, complexity and turn timer, the seed.</summary>
+    private GridContainer Options()
+    {
+        var grid = new GridContainer { Columns = 2 };
+        grid.AddThemeConstantOverride("h_separation", UiSpacing.Section * 3);
+        grid.AddThemeConstantOverride("v_separation", UiSpacing.Row);
 
         _fog.AddItem("Permanent reveal (HoMM3)", (int)FogMode.PermanentReveal);
         _fog.AddItem("Shroud + refog for units", (int)FogMode.ShroudWithRefog);
         _fog.ItemSelected += _ => _margin.Editable = SelectedFog == FogMode.ShroudWithRefog;
-        box.AddRow("Fog of war", _fog, 140);
+        grid.AddRow("Fog of war", _fog, LabelWidth);
         _margin.Editable = false;
-        box.AddRow("Refog margin", _margin, 140);
+        grid.AddRow("Refog margin", _margin, LabelWidth);
 
         _complexity.AddItem("Map default", -1);
         foreach (var level in Enum.GetValues<Complexity>())
@@ -157,32 +264,118 @@ public partial class NewGameScreen : PanelContainer
             _complexity.AddItem($"{level} ({StartingResources.For(level).Gold} gold)", (int)level);
         }
 
-        // The turn timer (ADR-091) shares the complexity's row: off, or 1 to 30 minutes a human player's turn.
-        var complexityRow = box.AddRow("Complexity", _complexity, 140);
+        grid.AddRow("Complexity", _complexity, LabelWidth);
+
+        // The turn timer (ADR-091): off, or 1 to 30 minutes a human player's turn.
         _timer.AddItem("Off", 0);
         for (var minutes = 1; minutes <= TurnTimer.MaxMinutes; minutes++)
         {
             _timer.AddItem($"{minutes} min", minutes);
         }
 
-        complexityRow.AddChild(new Label { Text = "  Turn timer" });
-        complexityRow.AddChild(_timer);
+        grid.AddRow("Turn timer", _timer, LabelWidth);
 
-        _seed.Text = ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
+        _seed.Text = NewSeed();
         _seed.TextChanged += _ => Changed();
-        box.AddRow("Seed", _seed, 140);
+        var seedRow = grid.AddRow("Seed", _seed, LabelWidth);
+        var draw = new Button { Text = "New seed", FocusMode = FocusModeEnum.None, TooltipText = "Draw another seed." };
+        draw.Pressed += () =>
+        {
+            _seed.Text = NewSeed(); // setting the text from code raises no TextChanged
+            Changed();
+        };
+        seedRow.AddChild(draw);
+        return grid;
+    }
 
-        box.AddChild(_players);
-        _start.Pressed += Start;
-        var buttons = new HBoxContainer();
-        _start.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        buttons.AddChild(_start);
-        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft);
-        back.Pressed += () => BackRequested?.Invoke();
-        buttons.AddChild(back);
-        box.AddChild(buttons);
-        _start.CallDeferred(Control.MethodName.GrabFocus); // Enter starts (and the smoke scripts need no coordinates)
-        box.AddChild(_status);
+    private static string NewSeed() => ((ulong)System.Random.Shared.NextInt64()).ToString(CultureInfo.InvariantCulture);
+
+    private static MapTab TabOf(MapKind kind) => kind switch
+    {
+        MapKind.Arena => MapTab.Arenas,
+        MapKind.Campaign => MapTab.Campaign,
+        _ => MapTab.Scenarios,
+    };
+
+    private static string TabName(MapTab tab) => tab == MapTab.RandomMaps ? "Random maps" : tab.ToString();
+
+    private static string TabTip(MapTab tab) => tab switch
+    {
+        MapTab.Scenarios => "Hand-made maps played to win: the shipped ones and those saved in the map editor.",
+        MapTab.RandomMaps => "A map generated from a template for the players you set up.",
+        MapTab.Arenas => "A day to prepare, then one battle decides the game. Not ranked.",
+        _ => "Story maps: a person starts without a town, a map event favours people, or the map carries campaign variables. Not ranked.",
+    };
+
+    /// <summary>What an empty tab says in place of a map.</summary>
+    private static string EmptyTab(MapTab tab) => tab switch
+    {
+        MapTab.Campaign =>
+            "No campaign-like maps yet. A map saved in the map editor is listed here when a person starts without a town, a map event "
+            + "gives something only to people, or the map keeps or takes campaign variables.",
+        MapTab.Arenas => "No arena maps. Make one in the map editor (Conditions, Arena).",
+        MapTab.RandomMaps => "No random map templates.",
+        _ => "No maps. Maps saved in the map editor are listed here.",
+    };
+
+    /// <summary>Shows a tab: its maps as a list, the one last chosen on it (else the first) chosen again.</summary>
+    private void ShowTab(MapTab tab)
+    {
+        _tab = tab;
+        _tabButtons[tab].SetPressedNoSignal(true);
+        _list.ClearChildren(detach: true);
+        var group = new ButtonGroup();
+        var entries = _entries[tab];
+        var chosen = _lastSelected.GetValueOrDefault(tab) is { } last && entries.Contains(last) ? last : entries.FirstOrDefault();
+        foreach (var entry in entries)
+        {
+            var button = new Button
+            {
+                Text = entry.Name,
+                ToggleMode = true,
+                ButtonGroup = group,
+                Alignment = HorizontalAlignment.Left,
+                TextOverrunBehavior = TextServer.OverrunBehavior.TrimEllipsis,
+                SizeFlagsHorizontal = SizeFlags.ExpandFill,
+                FocusMode = FocusModeEnum.None,
+                TooltipText = entry.Name,
+                ButtonPressed = entry == chosen,
+            };
+            button.Pressed += () => Select(entry);
+            _list.AddChild(button);
+        }
+
+        if (chosen is not null)
+        {
+            Select(chosen);
+            return;
+        }
+
+        _selected = null;
+        _title.Text = TabName(tab);
+        _summary.Text = "";
+        _description.Text = EmptyTab(tab);
+        _description.Visible = true;
+        _arena.Visible = false;
+        _playersHeading.Visible = _playersRule.Visible = _summary.Visible = false;
+        _start.Disabled = true;
+        foreach (var row in _randomRows)
+        {
+            row.Visible = false;
+        }
+
+        _status.Text = "";
+        Changed();
+        ClearPlayers();
+    }
+
+    private void Select(MapEntry entry)
+    {
+        _selected = entry;
+        _lastSelected[_tab] = entry;
+        _title.Text = entry.Name;
+        _playersHeading.Visible = _playersRule.Visible = _summary.Visible = true;
+        _start.Disabled = false;
         ShowPlayers();
     }
 
@@ -193,10 +386,9 @@ public partial class NewGameScreen : PanelContainer
 
     private FogMode SelectedFog => (FogMode)_fog.GetSelectedId();
 
-    private ScenarioChoice? SelectedMap => _maps.Selected >= 0 && _maps.Selected < _choices.Count ? _choices[_maps.Selected] : null;
+    private ScenarioChoice? SelectedMap => _selected?.Map;
 
-    private RandomMapChoice? SelectedTemplate =>
-        _maps.Selected - _choices.Count is var index && index >= 0 && index < _templates.Count ? _templates[index] : null;
+    private RandomMapChoice? SelectedTemplate => _selected?.Template;
 
     private void ClearPlayers()
     {
@@ -226,6 +418,10 @@ public partial class NewGameScreen : PanelContainer
         if (template is not null)
         {
             _description.Text = template.Description;
+            _description.Visible = template.Description.Length > 0;
+            var players = template.MinPlayers == template.Slots.Count ? $"{template.MinPlayers}" : $"{template.MinPlayers} to {template.Slots.Count}";
+            _summary.Text = $"Random map · {players} players · sizes "
+                            + string.Join(", ", template.Sizes.Select(size => $"{size}×{size}")) + TeamCounts(template.MinTeams, template.MaxTeams);
             _size.Clear();
             foreach (var size in template.Sizes)
             {
@@ -260,6 +456,13 @@ public partial class NewGameScreen : PanelContainer
             return;
         }
 
+        var levels = preview.Map.Levels > 1 ? $", {preview.Map.Levels} levels" : "";
+        var people = preview.Players.Count(p => p.IsHuman);
+        _summary.Text = $"{preview.Map.Width}×{preview.Map.Height}{levels} · {preview.Players.Count} players, {people} played by people"
+                        + TeamCounts(preview.MinTeams, preview.MaxTeams);
+        _description.Text = preview.Map.Description;
+        _description.Visible = preview.Map.Description.Length > 0;
+
         // An arena map (ADR-097, ADR-159): its mode said in one line, and each player played by a person (hot-seat) or the computer.
         _zoneOwners = [.. preview.Map.StartZoneOwners];
         _arena.Visible = preview.Rules.Arena;
@@ -267,7 +470,7 @@ public partial class NewGameScreen : PanelContainer
         _players.AddChild(new Label { Text = "Player" });
         _players.AddChild(new Label { Text = "Controlled by" });
         AddLanHeader();
-        _players.AddChild(new Label { Text = (preview.TeamsLocked ? "Team (locked by the map)" : "Team") + TeamCounts(preview.MinTeams, preview.MaxTeams) });
+        _players.AddChild(new Label { Text = preview.TeamsLocked ? "Team (locked by the map)" : "Team" });
         _players.AddChild(new Label { Text = "Town" });
         var firstHuman = preview.Players.FirstOrDefault(p => p.IsHuman)?.Id;
         foreach (var player in preview.Players)
@@ -336,14 +539,14 @@ public partial class NewGameScreen : PanelContainer
         return chosen.Count == 0 ? null : chosen;
     }
 
-    /// <summary>The team counts a map or template allows (ADR-117), as a label suffix: " — 2 teams", " — 2 to 4 teams"; empty without a limit.</summary>
+    /// <summary>The team counts a map or template allows (ADR-117), for the summary line: " · 2 teams", " · 2 to 4 teams"; empty without a limit.</summary>
     private static string TeamCounts(int? min, int? max) => (min, max) switch
     {
         (null, null) => "",
-        ({ } a, { } b) when a == b => $" — {a} teams",
-        ({ } a, null) => $" — at least {a} teams",
-        (null, { } b) => $" — at most {b} teams",
-        ({ } a, { } b) => $" — {a} to {b} teams",
+        ({ } a, { } b) when a == b => $" · {a} teams",
+        ({ } a, null) => $" · at least {a} teams",
+        (null, { } b) => $" · at most {b} teams",
+        ({ } a, { } b) => $" · {a} to {b} teams",
     };
 
     private static Label PlayerName(string name, PlayerId id)
@@ -370,7 +573,7 @@ public partial class NewGameScreen : PanelContainer
         _players.AddChild(new Label { Text = "Town" });
         _players.AddChild(new Label { Text = "Hero" });
         _players.AddChild(new Label { Text = "Tier-1 dwelling" });
-        _players.AddChild(new Label { Text = (template.TeamsLocked ? "Team (locked)" : "Team") + TeamCounts(template.MinTeams, template.MaxTeams) });
+        _players.AddChild(new Label { Text = template.TeamsLocked ? "Team (locked)" : "Team" });
         for (var i = 0; i < (int)_playerCount.Value; i++)
         {
             var slot = template.Slots[i];
@@ -506,6 +709,9 @@ public partial class NewGameScreen : PanelContainer
             _busy = false;
         }
     }
+
+    /// <summary>A map on a tab's list: a hand-made map or a random map template.</summary>
+    private sealed record MapEntry(string Name, ScenarioChoice? Map, RandomMapChoice? Template);
 
     /// <summary>The controls of one player of a random map.</summary>
     private sealed class RandomPlayerRow

@@ -219,6 +219,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Short resource amounts: gold over 999 999 as "321.7m", other resources over 9 999 as "31.7k", across the UI (ADR-186)
 - [x] A status bar along the bottom of the adventure map (16:9 wide at most): tooltips and labels on the left, resources on the right (ADR-186)
 - [x] Decision prompts, notices and alerts in the centre of the screen (ADR-186)
+- [x] A bigger new-game screen with tabs: Scenarios, Random maps, Arenas, Campaign; map list, details and players, options (ADR-201)
 - [ ] The icons themselves (from [icon-prompts.md](../content/icon-prompts.md))
 
 ### Platform and art
