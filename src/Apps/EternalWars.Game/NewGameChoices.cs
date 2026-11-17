@@ -42,24 +42,37 @@ internal static class NewGameChoices
 
         return choices;
 
-        static ScenarioChoice FromFile(string file) =>
-            new(Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, options), KindOf(file));
+        static ScenarioChoice FromFile(string file)
+        {
+            var (kind, width, height) = Describe(file);
+            return new(
+                Path.GetFileName(file), options => MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, options), kind, width, height);
+        }
 
-        // A built-in scenario goes through the map format like a file, so it starts the way a saved copy of it would.
-        static ScenarioChoice Built(string name, Func<ContentCatalogs, GameState> create, MapKind kind) =>
-            new(name, options => MapConverter.ToGameState(MapConverter.ToDocument(create(GameContent.All)), GameContent.All, options), kind);
+        // A built-in scenario goes through the map format like a file, so it starts the way a saved copy of it would. Its size is read once, for
+        // sorting and filtering the list (ADR-204).
+        static ScenarioChoice Built(string name, Func<ContentCatalogs, GameState> create, MapKind kind)
+        {
+            var map = create(GameContent.All).Map;
+            return new(
+                name, options => MapConverter.ToGameState(MapConverter.ToDocument(create(GameContent.All)), GameContent.All, options), kind, map.Width,
+                map.Height);
+        }
     }
 
-    /// <summary>The tab of a map file; one that does not load is listed with the scenarios, where choosing it says why.</summary>
-    private static MapKind KindOf(string file)
+    /// <summary>
+    /// The tab and size of a map file; one that does not load is listed with the scenarios, of unknown size, where choosing it says why.
+    /// </summary>
+    private static (MapKind Kind, int Width, int Height) Describe(string file)
     {
         try
         {
-            return MapKinds.Of(MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, GameOptions.Default));
+            var state = MapConverter.ToGameState(MapSerializer.Load(file), GameContent.All, GameOptions.Default);
+            return (MapKinds.Of(state), state.Map.Width, state.Map.Height);
         }
         catch (Exception e) when (e is FormatException or IOException or InvalidOperationException or System.Text.Json.JsonException)
         {
-            return MapKind.Scenario;
+            return (MapKind.Scenario, 0, 0);
         }
     }
 

@@ -223,7 +223,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] The icons themselves (from [icon-prompts.md](../content/icon-prompts.md)), the difficulty icons (sheet 29) included
 - [ ] Icon-only buttons (48 px in bars and panels, 32 px in windows), their label and hotkey on the status bar (ADR-204)
 - [ ] A status bar on the battle, town and hero screens and the screens before a game (ADR-204)
-- [ ] Map lists on the new-game screen sorted by name or size and filtered by size, kept in the settings (ADR-204)
+- [x] Map lists on the new-game screen sorted by name or size and filtered by size, kept in the settings (ADR-204)
 - [ ] The difficulty as a row of five icons on the new-game screen, the icon on the victory screen and the leaderboard (ADR-204)
 - [ ] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), the images and hotspots (from
       [cursor-prompts.md](../content/cursor-prompts.md)) (ADR-204)

@@ -157,11 +157,21 @@ public partial class Main : Node3D
         setup.BackRequested += ShowMainMenu;
     }
 
-    /// <summary>The new-game screen's maps and templates; its Start starts the game (a LAN host's lobby's too).</summary>
+    /// <summary>
+    /// The new-game screen's maps and templates, sorted and filtered as kept in the settings file (ADR-204); its Start starts the game (a LAN host's
+    /// lobby's too).
+    /// </summary>
     private void BindNewGame(NewGameScreen setup)
     {
         setup.Bind(
-            NewGameChoices.Scenarios(), NewGameChoices.RandomMaps((state, info) => _lastGenerated = (state, info)), town => StartSlots.Heroes(GameContent.Heroes, town), town => StartSlots.Tier1Dwellings(GameContent.Creatures, town));
+            NewGameChoices.Scenarios(), NewGameChoices.RandomMaps((state, info) => _lastGenerated = (state, info)), town => StartSlots.Heroes(GameContent.Heroes, town), town => StartSlots.Tier1Dwellings(GameContent.Creatures, town),
+            _interface.MapList());
+        setup.MapListChanged += view =>
+        {
+            _interface = _interface.WithMapList(view);
+            _menu.ShowInterface(_interface); // the menu changes its copy of the interface settings, so it must hold this one
+            KeepSettings();
+        };
         setup.Started += state =>
         {
             CloseSetup();
