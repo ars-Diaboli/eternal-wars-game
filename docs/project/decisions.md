@@ -2727,7 +2727,9 @@ change; no protocol change.
   share, the record interval, the lobby's timeout and cap).
 
 ### ADR-204: Cursors, icon-only buttons, a status bar on every screen, sorted map lists, difficulty icons (ADR-116, ADR-186, ADR-201, owner notes, 2026-11-17)
-**Status**: accepted (2026-11-17), not built. From the owner's notes in `ideas.md` and their answers; *(proposal)* marks the agent's
+**Status**: accepted (2026-11-17); built: the map lists' sort and filter (`MapListView`, `MapSizeClass` in Core.Domain, kept as
+`InterfaceSettings.MapSort` / `MapSortReversed` / `MapSizeFilter`; a map file that does not load has no size: listed under All sizes only, last
+by size); the rest not built. From the owner's notes in `ideas.md` and their answers; *(proposal)* marks the agent's
 fill-ins, for the owner to change. No rule, save or map format change.
 
 - **Cursors** ([cursor-prompts.md](../content/cursor-prompts.md)): the pointer changes with what a click would do, with HoMM3's and HoMM5's

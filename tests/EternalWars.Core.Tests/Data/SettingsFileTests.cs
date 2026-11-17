@@ -1,4 +1,5 @@
 using EternalWars.Core.Data.Settings;
+using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Settings;
 
 namespace EternalWars.Core.Tests.Data;
@@ -177,6 +178,34 @@ public class SettingsFileTests
             Assert.Contains("\"window\": \"Fullscreen\"", File.ReadAllText(path), StringComparison.Ordinal);
             Assert.Equal(WindowMode.Windowed, InterfaceSettings.Default.Window);
             Assert.Equal(WindowMode.Windowed, SettingsFile.ReadInterface("{\"interface\": {\"showGrid\": true}}").Window);
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(path)!, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TheMapListsSortAndFilter_AreKeptWithTheInterfaceSettings_AndByNameWithEverySizeWhenTheFileHasNone()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
+        var view = new MapListView(MapSort.Size, Reversed: true, Size: 128);
+        try
+        {
+            SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(ShowGrid: true).WithMapList(view));
+
+            var loaded = SettingsFile.LoadInterface(path);
+            Assert.Equal(view, loaded.MapList());
+            Assert.True(loaded.ShowGrid);
+            Assert.Contains("\"mapSort\": \"Size\"", File.ReadAllText(path), StringComparison.Ordinal);
+
+            // A file written before the map lists were sorted keeps its other settings and sorts by name, every size shown.
+            var older = SettingsFile.ReadInterface("{\"interface\": {\"detailedTooltips\": true, \"fog\": \"Clouds\", \"showGrid\": true, \"window\": \"Fullscreen\"}}");
+            Assert.Equal(new InterfaceSettings(true, FogLook.Clouds, true, WindowMode.Fullscreen), older);
+            Assert.Equal(MapListView.Default, older.MapList());
+
+            // A size that is no preset shows every map.
+            Assert.Equal(MapListView.AllSizes, SettingsFile.ReadInterface("{\"interface\": {\"mapSizeFilter\": 100}}").MapList().Size);
         }
         finally
         {

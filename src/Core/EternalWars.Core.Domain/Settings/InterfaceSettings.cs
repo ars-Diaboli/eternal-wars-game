@@ -1,18 +1,36 @@
+using EternalWars.Core.Domain.Game;
+
 namespace EternalWars.Core.Domain.Settings;
 
 /// <summary>
 /// How the screens explain and show things (ADR-118, UI-3; ADR-154; ADR-176). <see cref="DetailedTooltips"/> adds the formulas and the raw
 /// numbers to the information windows; off by default. <see cref="Fog"/> is how the fog of war looks on the adventure map;
 /// <see cref="ShowGrid"/> draws the tile grid over its ground (ADR-183; off by default). <see cref="Window"/> is whether the game fills the
-/// screen (ADR-186; a window by default). Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
+/// screen (ADR-186; a window by default). <see cref="MapSort"/>, <see cref="MapSortReversed"/> and <see cref="MapSizeFilter"/> are how the
+/// new-game screen's map lists are sorted and filtered (ADR-204; by name, every size, by default). Kept per computer in the settings file, like
+/// <see cref="SpeedSettings"/>; it changes no rule.
 /// </summary>
-public sealed record InterfaceSettings(bool DetailedTooltips = false, FogLook Fog = FogLook.Dark, bool ShowGrid = false, WindowMode Window = WindowMode.Windowed)
+public sealed record InterfaceSettings(
+    bool DetailedTooltips = false,
+    FogLook Fog = FogLook.Dark,
+    bool ShowGrid = false,
+    WindowMode Window = WindowMode.Windowed,
+    MapSort MapSort = MapSort.Name,
+    bool MapSortReversed = false,
+    int MapSizeFilter = MapListView.AllSizes)
 {
     public static InterfaceSettings Default { get; } = new();
 
     /// <summary>These settings with the other window mode (Alt+Enter).</summary>
     public InterfaceSettings WithWindowToggled() =>
         this with { Window = Window == WindowMode.Fullscreen ? WindowMode.Windowed : WindowMode.Fullscreen };
+
+    /// <summary>How the map lists are sorted and filtered (a size that is no preset shows every map).</summary>
+    public MapListView MapList() => new MapListView(MapSort, MapSortReversed).Filtered(MapSizeFilter);
+
+    /// <summary>These settings with the map lists sorted and filtered as <paramref name="view"/>.</summary>
+    public InterfaceSettings WithMapList(MapListView view) =>
+        this with { MapSort = view.Sort, MapSortReversed = view.Reversed, MapSizeFilter = view.Size };
 }
 
 /// <summary>How the game's window shows (ADR-186).</summary>

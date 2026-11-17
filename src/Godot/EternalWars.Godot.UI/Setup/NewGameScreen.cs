@@ -14,10 +14,10 @@ using Godot;
 namespace EternalWars.Godot.UI.Setup;
 
 /// <summary>
-/// A map the player can start: a name, a factory building its initial state for the chosen options, and the tab it is listed on (ADR-201;
-/// <see cref="MapKinds.Of"/> for a map file).
+/// A map the player can start: a name, a factory building its initial state for the chosen options, the tab it is listed on (ADR-201;
+/// <see cref="MapKinds.Of"/> for a map file) and its size, for sorting and filtering the list (ADR-204; 0 when unknown: a file that does not load).
 /// </summary>
-public sealed record ScenarioChoice(string Name, Func<GameOptions, GameState> Create, MapKind Kind = MapKind.Scenario);
+public sealed record ScenarioChoice(string Name, Func<GameOptions, GameState> Create, MapKind Kind = MapKind.Scenario, int Width = 0, int Height = 0);
 
 /// <summary>
 /// A start slot of a random map template: its player's name, whether a human may (and by default does) take it, its default team and whether its
@@ -57,8 +57,8 @@ public sealed record RandomMapChoice(
     int MaxHeroes = ScenarioRules.HeroLimit);
 
 /// <summary>
-/// New-game setup (ADR-201: four tabs, Scenarios, Random maps, Arenas and Campaign, each a list of its maps on the left and the chosen one's
-/// details and players on the right, the game options under them): a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
+/// New-game setup (ADR-201: four tabs, Scenarios, Random maps, Arenas and Campaign, each a list of its maps on the left, sorted and filtered by
+/// size as the player chose (ADR-204), and the chosen one's details and players on the right, the game options under them):a map or a random map template, fog mode and refog margin, complexity, turn timer, seed. For a map: its players, with teams unless the map
 /// locks them (ADR-032); on an arena map a line on the mode and, per player, Human or Computer (ADR-159). For a template (ADR-086): the size, the number of players, the hero limit (the template's by default, ADR-068) and for each
 /// player human or computer, town, hero, the start town's tier-1 dwelling (a human player with a picked town, when the start zone gives none; RMG-7)
 /// and team (unless the template locks them); the map is generated on "Start" and, if it still has problems, shown so the player can start it anyway or
@@ -99,6 +99,10 @@ public partial class NewGameScreen : PanelContainer
     private readonly List<Control> _randomRows = [];
     private Func<string, IReadOnlyList<HeroDefinition>> _heroesOf = _ => [];
     private Func<string, IReadOnlyList<CreatureDefinition>> _tier1Of = _ => [];
+    private readonly Button _sortByName = new() { ToggleMode = true, FocusMode = FocusModeEnum.None, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+    private readonly Button _sortBySize = new() { ToggleMode = true, FocusMode = FocusModeEnum.None, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+    private readonly OptionButton _sizeFilter = new() { FocusMode = FocusModeEnum.None, SizeFlagsHorizontal = SizeFlags.ExpandFill };
+    private MapListView _view = MapListView.Default;
     private RandomMapResult? _generated;
     private MapTab _tab;
     private MapEntry? _selected;
@@ -119,25 +123,34 @@ public partial class NewGameScreen : PanelContainer
     public event Action? BackRequested;
 
     /// <summary>
+    /// The player sorted or filtered the map lists (ADR-204): the app keeps the view in the settings file and hands it to <see cref="Bind"/> the
+    /// next time.
+    /// </summary>
+    public event Action<MapListView>? MapListChanged;
+
+    /// <summary>
     /// Binds the maps, the random map templates, the heroes a player of a town can pick and the tier-1 dwellings its start town can begin with
-    /// (for the templates' hero and dwelling choices).
+    /// (for the templates' hero and dwelling choices), and how the map lists are sorted and filtered (ADR-204; by name, every size, when null).
     /// </summary>
     public void Bind(
         IReadOnlyList<ScenarioChoice> choices,
         IReadOnlyList<RandomMapChoice>? templates = null,
         Func<string, IReadOnlyList<HeroDefinition>>? heroesOf = null,
-        Func<string, IReadOnlyList<CreatureDefinition>>? tier1Of = null)
+        Func<string, IReadOnlyList<CreatureDefinition>>? tier1Of = null,
+        MapListView? mapList = null)
     {
         _heroesOf = heroesOf ?? (_ => []);
         _tier1Of = tier1Of ?? (_ => []);
+        _view = mapList ?? MapListView.Default;
         foreach (var choice in choices)
         {
-            _entries[TabOf(choice.Kind)].Add(new MapEntry(choice.Name, choice, null));
+            var size = MapSizeClass.Of(choice.Width, choice.Height);
+            _entries[TabOf(choice.Kind)].Add(new MapEntry(choice.Name, choice, null, size is { } s ? [s] : []));
         }
 
         foreach (var template in templates ?? [])
         {
-            _entries[MapTab.RandomMaps].Add(new MapEntry(template.Name, null, template));
+            _entries[MapTab.RandomMaps].Add(new MapEntry(template.Name, null, template, MapSizeClass.OfTemplate(template.Sizes)));
         }
 
         this.UseMenuPanel();
@@ -169,8 +182,14 @@ public partial class NewGameScreen : PanelContainer
         _start.CallDeferred(Control.MethodName.GrabFocus); // Enter starts (and the smoke scripts need no coordinates)
         box.AddChild(_status);
 
-        // The screen opens on the first map's tab (a map given with --map comes first), else on the first tab that has maps.
+        // The screen opens on the first map's tab (a map given with --map comes first, and is chosen if the filter shows it), else on the first
+        // tab that has maps.
         var first = choices.Count > 0 ? TabOf(choices[0].Kind) : Enum.GetValues<MapTab>().FirstOrDefault(t => _entries[t].Count > 0);
+        if (choices.Count > 0)
+        {
+            _lastSelected[first] = _entries[first][0];
+        }
+
         ShowTab(first);
     }
 
@@ -183,7 +202,6 @@ public partial class NewGameScreen : PanelContainer
         {
             var button = new Button
             {
-                Text = $"{TabName(tab)} ({_entries[tab].Count})",
                 ToggleMode = true,
                 ButtonGroup = group,
                 SizeFlagsHorizontal = SizeFlags.ExpandFill,
@@ -195,7 +213,78 @@ public partial class NewGameScreen : PanelContainer
             _tabButtons[tab] = button;
         }
 
+        ShowTabCounts();
         return row;
+    }
+
+    /// <summary>Each tab's label with the number of its maps the size filter shows.</summary>
+    private void ShowTabCounts()
+    {
+        foreach (var (tab, button) in _tabButtons)
+        {
+            button.Text = $"{TabName(tab)} ({Shown(tab).Count})";
+        }
+    }
+
+    /// <summary>A tab's maps that pass the size filter, in the chosen order (ADR-204).</summary>
+    private IReadOnlyList<MapEntry> Shown(MapTab tab) => _view.Arrange(_entries[tab], e => e.Name, e => e.Sizes);
+
+    /// <summary>
+    /// The sort buttons and the size filter above the list (ADR-204): pressing the active sort again reverses it. The same for every tab; the app
+    /// keeps them.
+    /// </summary>
+    private VBoxContainer ListControls()
+    {
+        var box = new VBoxContainer();
+        box.AddThemeConstantOverride("separation", UiSpacing.Row);
+        var sort = new HBoxContainer();
+        sort.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        sort.AddChild(new Label { Text = "Sort" });
+        sort.AddChild(_sortByName);
+        sort.AddChild(_sortBySize);
+        _sortByName.Pressed += () => ChangeView(_view.Pressed(MapSort.Name));
+        _sortBySize.Pressed += () => ChangeView(_view.Pressed(MapSort.Size));
+        box.AddChild(sort);
+
+        _sizeFilter.AddItem("All sizes", MapListView.AllSizes);
+        foreach (var size in Core.Domain.Map.MapSizes.Standard)
+        {
+            _sizeFilter.AddItem($"{size}×{size}", size);
+        }
+
+        _sizeFilter.TooltipText = "Show the maps of one size: a map counts as the smallest size that holds its larger side; a random map template "
+                                  + "is listed under every size it supports.";
+        _sizeFilter.ItemSelected += index => ChangeView(_view.Filtered(_sizeFilter.GetItemId((int)index)));
+        var filter = new HBoxContainer();
+        filter.AddThemeConstantOverride("separation", UiSpacing.Gap);
+        filter.AddChild(new Label { Text = "Size" });
+        filter.AddChild(_sizeFilter);
+        box.AddChild(filter);
+        ShowListControls();
+        return box;
+    }
+
+    /// <summary>The sort buttons and the size filter as the view is: the active sort pressed, with its direction.</summary>
+    private void ShowListControls()
+    {
+        var byName = _view.Sort == MapSort.Name;
+        _sortByName.SetPressedNoSignal(byName);
+        _sortBySize.SetPressedNoSignal(!byName);
+        _sortByName.Text = !byName ? "Name" : _view.Reversed ? "Name Z–A" : "Name A–Z";
+        _sortBySize.Text = byName ? "Size" : _view.Reversed ? "Large first" : "Small first";
+        _sortByName.TooltipText = byName ? "Sorted by name; press again to reverse." : "Sort by name, A–Z.";
+        _sortBySize.TooltipText = !byName ? "Sorted by size, then by name; press again to reverse." : "Sort by size, small first, then by name.";
+        _sizeFilter.Select(_sizeFilter.GetItemIndex(_view.Size));
+    }
+
+    /// <summary>The player sorted or filtered: every tab's list follows (a chosen map the filter hides gives way to the first listed), the app keeps it.</summary>
+    private void ChangeView(MapListView view)
+    {
+        _view = view;
+        ShowListControls();
+        ShowTabCounts();
+        ShowTab(_tab);
+        MapListChanged?.Invoke(view);
     }
 
     /// <summary>The tab's maps on the left; the chosen map's name, size, description, random map settings and players on the right.</summary>
@@ -203,13 +292,17 @@ public partial class NewGameScreen : PanelContainer
     {
         var area = new HBoxContainer { CustomMinimumSize = new Vector2(0, 430) };
         area.AddThemeConstantOverride("separation", UiSpacing.Section);
+        var listColumn = new VBoxContainer { CustomMinimumSize = new Vector2(Lan is null ? 300 : 200, 0) }; // the lobby's chat takes the room
+        listColumn.AddThemeConstantOverride("separation", UiSpacing.Row);
+        listColumn.AddChild(ListControls());
         var listScroll = new ScrollContainer
         {
-            CustomMinimumSize = new Vector2(Lan is null ? 300 : 200, 0), // the lobby's chat takes the room
+            SizeFlagsVertical = SizeFlags.ExpandFill,
             HorizontalScrollMode = ScrollContainer.ScrollMode.Disabled,
         };
         listScroll.AddChild(_list);
-        area.AddChild(listScroll);
+        listColumn.AddChild(listScroll);
+        area.AddChild(listColumn);
         area.AddChild(new VSeparator());
 
         var details = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
@@ -318,14 +411,17 @@ public partial class NewGameScreen : PanelContainer
         _ => "No maps. Maps saved in the map editor are listed here.",
     };
 
-    /// <summary>Shows a tab: its maps as a list, the one last chosen on it (else the first) chosen again.</summary>
+    /// <summary>
+    /// Shows a tab: its maps that pass the size filter as a list in the chosen order, the one last chosen on it (else, or when the filter hides it,
+    /// the first listed) chosen again. The map already shown is kept as set up (a new order or filter does not reset its players).
+    /// </summary>
     private void ShowTab(MapTab tab)
     {
         _tab = tab;
         _tabButtons[tab].SetPressedNoSignal(true);
         _list.ClearChildren(detach: true);
         var group = new ButtonGroup();
-        var entries = _entries[tab];
+        var entries = Shown(tab);
         var chosen = _lastSelected.GetValueOrDefault(tab) is { } last && entries.Contains(last) ? last : entries.FirstOrDefault();
         foreach (var entry in entries)
         {
@@ -347,14 +443,20 @@ public partial class NewGameScreen : PanelContainer
 
         if (chosen is not null)
         {
-            Select(chosen);
+            if (chosen != _selected)
+            {
+                Select(chosen);
+            }
+
             return;
         }
 
         _selected = null;
         _title.Text = TabName(tab);
         _summary.Text = "";
-        _description.Text = EmptyTab(tab);
+        _description.Text = _entries[tab].Count == 0
+            ? EmptyTab(tab)
+            : $"No map on this tab is {_view.Size}×{_view.Size}. Choose another size, or All sizes.";
         _description.Visible = true;
         _arena.Visible = false;
         _playersHeading.Visible = _playersRule.Visible = _summary.Visible = false;
@@ -710,8 +812,11 @@ public partial class NewGameScreen : PanelContainer
         }
     }
 
-    /// <summary>A map on a tab's list: a hand-made map or a random map template.</summary>
-    private sealed record MapEntry(string Name, ScenarioChoice? Map, RandomMapChoice? Template);
+    /// <summary>
+    /// A map on a tab's list: a hand-made map or a random map template, with its size classes (<see cref="MapSizeClass"/>: a map's one, a
+    /// template's every supported size, none when unknown).
+    /// </summary>
+    private sealed record MapEntry(string Name, ScenarioChoice? Map, RandomMapChoice? Template, IReadOnlyList<int> Sizes);
 
     /// <summary>The controls of one player of a random map.</summary>
     private sealed class RandomPlayerRow
