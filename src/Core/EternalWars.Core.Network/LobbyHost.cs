@@ -46,11 +46,20 @@ public sealed class LobbyHost(string hostName) : IDisposable
 
     private IEnumerable<Peer> Joined => _peers.Where(p => p.Name is not null && !p.Connection.IsClosed);
 
-    /// <summary>Takes a new link; the player is in the lobby once its <see cref="JoinRequest"/> arrives.</summary>
+    /// <summary>The clock for <see cref="NetLimits"/> (tests set their own); the game's host gets it too.</summary>
+    internal TimeProvider Time { get; set; } = TimeProvider.System;
+
+    /// <summary>
+    /// Takes a new link; the player is in the lobby once its <see cref="JoinRequest"/> arrives, which must come within
+    /// <see cref="NetLimits.JoinTimeout"/>. Turned away while <see cref="NetLimits.MaxUnjoined"/> other links wait to join.
+    /// </summary>
     public void Accept(INetConnection connection)
     {
         ObjectDisposedException.ThrowIf(_done, this);
-        _peers.Add(new Peer(connection));
+        if (NetLimits.AdmitNew(connection, _peers.Count(p => p.Name is null && !p.Connection.IsClosed)))
+        {
+            _peers.Add(new Peer(connection) { Arrived = Time.GetUtcNow() });
+        }
     }
 
     /// <summary>
@@ -88,11 +97,17 @@ public sealed class LobbyHost(string hostName) : IDisposable
     public void Poll()
     {
         var changed = false;
+        var now = Time.GetUtcNow();
         foreach (var peer in _peers.ToList())
         {
-            while (!peer.Connection.IsClosed && peer.Connection.TryReceive(out var message))
+            for (var taken = 0; taken < NetLimits.MaxMessagesPerPoll && !peer.Connection.IsClosed && peer.Connection.TryReceive(out var message); taken++)
             {
                 changed |= Handle(peer, message);
+            }
+
+            if (peer.Name is null && !peer.Connection.IsClosed)
+            {
+                NetLimits.CloseIfLate(peer.Connection, peer.Arrived, now);
             }
 
             if (peer.Connection.IsClosed)
@@ -121,7 +136,7 @@ public sealed class LobbyHost(string hostName) : IDisposable
     public GameHost StartGame(GameSession session)
     {
         ObjectDisposedException.ThrowIf(_done, this);
-        var host = new GameHost(session, _seats.Where(s => s.Kind == SeatKind.Remote).Select(s => s.Id), HostName);
+        var host = new GameHost(session, _seats.Where(s => s.Kind == SeatKind.Remote).Select(s => s.Id), HostName) { Time = Time };
         foreach (var peer in _peers.Where(p => !p.Connection.IsClosed))
         {
             if (peer is { Name: { } name, Seat: { } seat })
@@ -260,6 +275,9 @@ public sealed class LobbyHost(string hostName) : IDisposable
 
         /// <summary>The lobby as last sent to this player.</summary>
         public string? Sent { get; set; }
+
+        /// <summary>When the link came (it must join within <see cref="NetLimits.JoinTimeout"/>).</summary>
+        public DateTimeOffset Arrived { get; init; }
     }
 }
 

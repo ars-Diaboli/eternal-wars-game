@@ -229,8 +229,20 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
     }
 
-    /// <summary>Takes a new link; it gets a seat once its <see cref="JoinRequest"/> arrives.</summary>
-    public void Accept(INetConnection connection) => _peers.Add(new Peer(connection));
+    /// <summary>The clock for <see cref="NetLimits"/> (tests set their own).</summary>
+    internal TimeProvider Time { get; set; } = TimeProvider.System;
+
+    /// <summary>
+    /// Takes a new link; it gets a seat once its <see cref="JoinRequest"/> arrives, which must come within <see cref="NetLimits.JoinTimeout"/>.
+    /// Turned away while <see cref="NetLimits.MaxUnjoined"/> other links wait to join.
+    /// </summary>
+    public void Accept(INetConnection connection)
+    {
+        if (NetLimits.AdmitNew(connection, _peers.Count(p => p.Seat is null && !p.Connection.IsClosed)))
+        {
+            _peers.Add(new Peer(connection) { Arrived = Time.GetUtcNow() });
+        }
+    }
 
     /// <summary>
     /// Seats a client that took <paramref name="seat"/> in the lobby; it gets the game at the first <see cref="Poll"/> once the game has started.
@@ -266,11 +278,17 @@ public sealed class GameHost : ICommandRoute, IDisposable
             }
         }
 
+        var now = Time.GetUtcNow();
         foreach (var peer in _peers.ToList())
         {
-            while (!peer.Connection.IsClosed && peer.Connection.TryReceive(out var message))
+            for (var taken = 0; taken < NetLimits.MaxMessagesPerPoll && !peer.Connection.IsClosed && peer.Connection.TryReceive(out var message); taken++)
             {
                 Handle(peer, message);
+            }
+
+            if (peer.Seat is null && !peer.Connection.IsClosed)
+            {
+                NetLimits.CloseIfLate(peer.Connection, peer.Arrived, now);
             }
 
             if (peer.Connection.IsClosed)
@@ -423,7 +441,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
                 break; // asked in the lobby just before the game started
 
             case RecordRequest ask when peer.Feed is not null:
-                peer.Connection.Send(RecordFor(ask));
+                peer.Connection.Send(RecordFor(peer, ask));
                 break;
 
             default:
@@ -494,14 +512,21 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
     }
 
-    /// <summary>The answer to a client's request for the game's record.</summary>
-    private RecordSent RecordFor(RecordRequest ask)
+    /// <summary>The answer to a client's request for the game's record: at most one record per <see cref="NetLimits.RecordInterval"/>.</summary>
+    private RecordSent RecordFor(Peer peer, RecordRequest ask)
     {
         if (RecordOf is null)
         {
             return new RecordSent(ask.Request, null, "The host keeps no record of this game.");
         }
 
+        var now = Time.GetUtcNow();
+        if (peer.LastRecord is { } last && now - last < NetLimits.RecordInterval)
+        {
+            return new RecordSent(ask.Request, null, $"The game was saved moments ago: wait {NetLimits.RecordInterval.TotalSeconds:0} seconds between saves.");
+        }
+
+        peer.LastRecord = now;
         var name = ask.SaveName is null ? null : ChatText.Clean(ask.SaveName) ?? "save";
         return new RecordSent(ask.Request, RecordOf(name), null);
     }
@@ -608,5 +633,11 @@ public sealed class GameHost : ICommandRoute, IDisposable
 
         /// <summary>The player's view, once seated.</summary>
         public PlayerViewFeed? Feed { get; set; }
+
+        /// <summary>When the link came (it must join within <see cref="NetLimits.JoinTimeout"/>).</summary>
+        public DateTimeOffset Arrived { get; init; }
+
+        /// <summary>When the host last sent this client the game's record.</summary>
+        public DateTimeOffset? LastRecord { get; set; }
     }
 }

@@ -2,7 +2,6 @@ using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
-using System.Text.Json;
 
 namespace EternalWars.Core.Network;
 
@@ -43,10 +42,17 @@ public sealed class TcpConnection : INetConnection
     private readonly NetworkStream _stream;
     private readonly ConcurrentQueue<NetMessage> _received = new();
     private readonly Lock _sending = new();
+    private readonly int _maxMessageBytes;
+    private readonly int _maxWaiting;
     private volatile string? _closeReason;
 
-    public TcpConnection(TcpClient client)
+    /// <param name="client">The connected socket.</param>
+    /// <param name="maxMessageBytes">The biggest message read; a longer one closes the link before anything is allocated for it.</param>
+    /// <param name="maxWaiting">The messages that may wait for <see cref="TryReceive"/>; one more closes the link.</param>
+    public TcpConnection(TcpClient client, int maxMessageBytes = MaxMessageBytes, int maxWaiting = int.MaxValue)
     {
+        _maxMessageBytes = Math.Clamp(maxMessageBytes, 1, MaxMessageBytes);
+        _maxWaiting = maxWaiting;
         _client = client;
         _client.NoDelay = true;
         _stream = client.GetStream();
@@ -133,23 +139,28 @@ public sealed class TcpConnection : INetConnection
             {
                 await _stream.ReadExactlyAsync(header);
                 var length = BinaryPrimitives.ReadInt32BigEndian(header);
-                if (length is <= 0 or > MaxMessageBytes)
+                if (length <= 0 || length > _maxMessageBytes)
                 {
-                    throw new InvalidDataException($"A message of {length} bytes.");
+                    throw new InvalidDataException($"A message of {length} bytes (at most {_maxMessageBytes}).");
                 }
 
                 var body = new byte[length];
                 await _stream.ReadExactlyAsync(body);
                 _received.Enqueue(NetSerializer.Deserialize(body));
+                if (_received.Count > _maxWaiting)
+                {
+                    throw new InvalidDataException($"More than {_maxWaiting} messages waiting.");
+                }
             }
         }
         catch (EndOfStreamException)
         {
             Close("The other side closed the connection.");
         }
-        catch (Exception e) when (e is IOException or SocketException or ObjectDisposedException or JsonException or InvalidDataException
-                                       or NotSupportedException)
+        catch (Exception e)
         {
+            // Whatever a message did (a bad length, bad JSON, a record that refused its values), the link goes down: a reader that stopped
+            // with the link still up would leave its seat taken by nobody.
             Close(e.Message);
         }
     }
@@ -157,7 +168,7 @@ public sealed class TcpConnection : INetConnection
 
 /// <summary>
 /// Takes clients' connections on a TCP port (<see cref="DefaultPort"/> unless told otherwise) in the background; the host takes them from
-/// <see cref="TryAccept"/>.
+/// <see cref="TryAccept"/>. A client's link reads small messages only (<see cref="NetLimits"/>).
 /// </summary>
 public sealed class TcpGameListener : IDisposable
 {
@@ -188,7 +199,8 @@ public sealed class TcpGameListener : IDisposable
         {
             while (true)
             {
-                _accepted.Enqueue(new TcpConnection(await _listener.AcceptTcpClientAsync()));
+                var client = await _listener.AcceptTcpClientAsync();
+                _accepted.Enqueue(new TcpConnection(client, NetLimits.MaxClientMessageBytes, NetLimits.MaxClientMessagesWaiting));
             }
         }
         catch (Exception e) when (e is SocketException or ObjectDisposedException or InvalidOperationException)
