@@ -32,7 +32,25 @@ public sealed class Hero(
 
     public PlayerId Owner { get; internal set; } = owner;
 
-    public MapPosition Position { get; internal set; } = position;
+    public MapPosition Position
+    {
+        get => _position;
+        internal set
+        {
+            _position = value;
+            Interlocked.Increment(ref s_moves);
+        }
+    }
+
+    private MapPosition _position = position;
+
+    private static long s_moves;
+
+    /// <summary>
+    /// Changes whenever any hero's <see cref="Position"/> is set (on any thread, in any game), so <see cref="Game.GameState"/> knows when its
+    /// hero-by-tile index may be out of date without the hero knowing its game.
+    /// </summary>
+    internal static long Moves => Volatile.Read(ref s_moves);
 
     /// <summary>Up to seven creature stacks. Speed (<see cref="Creatures.CreatureDefinition.MapSpeed"/>) drives movement.</summary>
     public Army Army { get; } = army ?? new Army();

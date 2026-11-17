@@ -88,16 +88,43 @@ internal static class MovementRules
     /// left (native rules from <see cref="GameState.Terrains"/>, the penalty above 100 cut by Pathfinding), +25 % when that tile has a river
     /// (ADR-079, MAP-26; Pathfinding does not cut it); diagonal ×1.41.
     /// </summary>
-    public static int StepCost(GameState state, Hero hero, MapPosition from, MapPosition to, Direction direction)
+    public static int StepCost(GameState state, Hero hero, MapPosition from, MapPosition to, Direction direction) =>
+        StepCost(state, hero, from, to, direction, terrainCosts: null);
+
+    /// <summary>
+    /// <see cref="StepCost(GameState, Hero, MapPosition, MapPosition, Direction)"/> with the hero's terrain costs remembered in
+    /// <paramref name="terrainCosts"/> (indexed by <see cref="TerrainType"/>, -1 = not worked out yet; <see cref="TerrainTypeCount"/> long). Valid
+    /// while nothing about the hero changes, as during one path search.
+    /// </summary>
+    public static int StepCost(GameState state, Hero hero, MapPosition from, MapPosition to, Direction direction, int[]? terrainCosts)
     {
         var map = state.Map;
         var fromRoad = map.GetRoad(from);
         var baseCost = fromRoad != RoadType.None && map.GetRoad(to) != RoadType.None
             ? fromRoad.MovementCost()
             : map.GetRiver(from) != RiverType.None
-                ? RiverRules.WithPenalty(TerrainCost(state, hero, map.GetTerrain(from)))
-                : TerrainCost(state, hero, map.GetTerrain(from));
+                ? RiverRules.WithPenalty(TerrainCost(state, hero, map.GetTerrain(from), terrainCosts))
+                : TerrainCost(state, hero, map.GetTerrain(from), terrainCosts);
         return direction.IsDiagonal() ? (int)Math.Round(baseCost * HeroMovementService.DiagonalMultiplier) : baseCost;
+    }
+
+    /// <summary>The length of a terrain cost table for <see cref="StepCost(GameState, Hero, MapPosition, MapPosition, Direction, int[])"/>.</summary>
+    public static readonly int TerrainTypeCount = Enum.GetValues<TerrainType>().Max(t => (int)t) + 1;
+
+    private static int TerrainCost(GameState state, Hero hero, TerrainType terrain, int[]? remembered)
+    {
+        if (remembered is null)
+        {
+            return TerrainCost(state, hero, terrain);
+        }
+
+        ref var cost = ref remembered[(int)terrain];
+        if (cost < 0)
+        {
+            cost = TerrainCost(state, hero, terrain);
+        }
+
+        return cost;
     }
 
     private static int TerrainCost(GameState state, Hero hero, TerrainType terrain)
@@ -119,7 +146,21 @@ internal static class MovementRules
     /// </summary>
     public static string? ArmyTown(GameState state, Hero hero)
     {
-        var towns = hero.Army.Stacks.Select(s => state.Creatures.Get(s.Stack.Creature).Town).Distinct().ToList();
-        return towns is [{ } town] ? town : null;
+        string? town = null;
+        var any = false;
+        foreach (var (_, stack) in hero.Army.Stacks)
+        {
+            var own = state.Creatures.Get(stack.Creature).Town;
+            if (!any)
+            {
+                (town, any) = (own, true);
+            }
+            else if (own != town)
+            {
+                return null;
+            }
+        }
+
+        return town;
     }
 }

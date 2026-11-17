@@ -16,7 +16,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<ProviderOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
       IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<AreaRevealed>, IEventHandler<HeroFreed>, IEventHandler<MapEventHeroGiven>,
-      IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>, IEventHandler<TownBuilt>
+      IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>, IEventHandler<TownBuilt>, IEventHandler<GarrisonOwnerChanged>
 {
     /// <summary>
     /// Subscribes to every event that changes what a player sees. The session calls it before any other rule subscribes, so the fog is up to date
@@ -43,6 +43,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         bus.Subscribe<MapEventHeroGiven>(this);
         bus.Subscribe<HeroLeveledUp>(this);
         bus.Subscribe<TownBuilt>(this);
+        bus.Subscribe<GarrisonOwnerChanged>(this);
     }
 
     public void Handle(GameStarted @event)
@@ -133,6 +134,15 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         }
     }
 
+    // A garrison's new flag is news for everyone who can see it. (Its sight is a garrison's, not a mine's: it reveals nothing new.)
+    public void Handle(GarrisonOwnerChanged @event)
+    {
+        foreach (var player in state.Players)
+        {
+            RefreshMemory(player.Id);
+        }
+    }
+
     // The Academy's Observatory widens its town's sight at once (ADR-143).
     public void Handle(TownBuilt @event)
     {
@@ -177,19 +187,32 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     // A town sees from its middle, so the land beyond its walls is known too; other objects from their entrance.
     private static MapPosition SightCenter(MapObject mapObject) => mapObject is Towns.Town town ? town.SightCenter : mapObject.VisitPosition;
 
+    // Only what came into sight is new to the hero's owner: objects already in sight publish their own changes (ObjectMemory.Refresh).
     private void OnHeroRelocated(Hero hero, MapPosition at)
     {
-        Reveal(hero.Owner, at, hero.ScoutingRadius);
-        ObserversChanged(hero.Owner);
+        var revealed = Reveal(hero.Owner, at, hero.ScoutingRadius);
+        if (!state.HasPlayer(hero.Owner))
+        {
+            return;
+        }
+
+        var entered = UpdateSight(hero.Owner);
+        var changed = state.Memory.Refresh(state, hero.Owner, revealed, entered);
+        if (changed.Count > 0)
+        {
+            events.Publish(new KnownObjectsChanged(hero.Owner, changed));
+        }
     }
 
-    private void Reveal(PlayerId player, MapPosition center, int radius)
+    private IReadOnlyList<MapPosition> Reveal(PlayerId player, MapPosition center, int radius)
     {
         var revealed = state.Fog.Reveal(player, center, radius);
         if (revealed.Count > 0)
         {
             events.Publish(new TilesRevealed(player, revealed));
         }
+
+        return revealed;
     }
 
     private void ObserversChanged(PlayerId player)
@@ -203,12 +226,12 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         RefreshMemory(player);
     }
 
-    /// <summary>Sight is a pure function of current observers, so recomputing from state is always correct.</summary>
-    private void UpdateSight(PlayerId player)
+    /// <summary>Sight is a pure function of current observers, so recomputing from state is always correct. Returns the tiles that came into sight.</summary>
+    private IReadOnlyList<MapPosition> UpdateSight(PlayerId player)
     {
         if (state.Options.FogMode != FogMode.ShroudWithRefog)
         {
-            return;
+            return [];
         }
 
         var observers = state.HeroesOf(player)
@@ -220,6 +243,8 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         {
             events.Publish(new SightChanged(player, entered, left));
         }
+
+        return entered;
     }
 
     private void RefreshMemory(PlayerId player)

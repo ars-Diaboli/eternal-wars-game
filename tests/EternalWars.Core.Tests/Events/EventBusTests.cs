@@ -114,4 +114,43 @@ public class EventBusTests
 
         Assert.Equal(0, count);
     }
+
+    [Fact]
+    public void HandlersOfAnEventType_AreWorkedOutAgain_AfterEachSubscriptionChange()
+    {
+        var bus = new EventBus();
+        var log = new List<string>();
+        bus.Subscribe<Ping>(e => log.Add($"a{e.Value}"));
+        bus.Publish(new Ping(1));
+
+        var b = bus.Subscribe<IEvent>(e => log.Add($"b{e}"));
+        bus.Publish(new Ping(2));
+        bus.Publish(new Pong(3));
+
+        b.Dispose();
+        bus.Publish(new Ping(4));
+        bus.Publish(new Pong(5));
+
+        Assert.Equal(["a1", "a2", $"b{new Ping(2)}", $"b{new Pong(3)}", "a4"], log);
+    }
+
+    [Fact]
+    public void SubscribingDuringDispatch_AppliesFromTheNextEvent()
+    {
+        var bus = new EventBus();
+        var log = new List<string>();
+        bus.Subscribe<Ping>(e =>
+        {
+            log.Add($"a{e.Value}");
+            if (e.Value == 1)
+            {
+                bus.Subscribe<Ping>(late => log.Add($"late{late.Value}"));
+                bus.Publish(new Ping(2)); // queued: dispatched after Ping 1, with the new handler
+            }
+        });
+
+        bus.Publish(new Ping(1));
+
+        Assert.Equal(["a1", "a2", "late2"], log);
+    }
 }

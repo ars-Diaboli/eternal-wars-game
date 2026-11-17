@@ -33,6 +33,13 @@ public sealed class GameState
     private int _highestCaravanId;
     private readonly Dictionary<MapPosition, (MapObject Object, FootprintCell Cell)> _objectCells = [];
 
+    // Indexes (lookups the pathfinder makes for every tile it expands). Rebuilt or kept up to date by the mutators below; never part of the state.
+    private readonly Dictionary<MapPosition, Hero> _heroAt = [];
+    private long _heroAtMoves = -1; // Hero.Moves when _heroAt was built; -1 = rebuild
+    private readonly int[] _guards; // per tile: monster cells on its eight neighbours
+    private readonly Dictionary<Type, object> _objectsOfType = []; // T -> read-only list of T, in Objects order
+    private List<Towns.Town>? _townsById;
+
     public GameState(
         AdventureMap map,
         IEnumerable<Player> players,
@@ -60,6 +67,7 @@ public sealed class GameState
         Spells = spells ?? content?.Spells ?? Artifacts.Spells;
         Random = new GameRandom(Options.Seed);
         Fog = new FogOfWar(map, Options.FogMode);
+        _guards = new int[map.Levels * map.Width * map.Height];
         _players = players.ToList();
         if (_players.Count is 0 or > MaxPlayers)
         {
@@ -183,7 +191,7 @@ public sealed class GameState
 
     private PendingDecision? _pendingDecision;
 
-    private PlayerId? HeroOwner(HeroId hero) => _heroes.Concat(GarrisonHeroes).FirstOrDefault(h => h.Id == hero)?.Owner;
+    private PlayerId? HeroOwner(HeroId hero) => (_heroById.GetValueOrDefault(hero) ?? GarrisonHero(hero))?.Owner;
 
     // The simultaneous days (MP-2, ADR-197) ---------------------------------------------------------------
 
@@ -232,14 +240,29 @@ public sealed class GameState
     public bool HasPlayer(PlayerId id) => _players.Any(p => p.Id == id);
 
     /// <summary>A hero on the map or in a town's garrison (ADR-112); an unknown id refuses the command that names it.</summary>
-    public Hero GetHero(HeroId id) => _heroById.GetValueOrDefault(id) ?? GarrisonHeroes.FirstOrDefault(h => h.Id == id)
-        ?? throw new CommandRefusedException($"Unknown hero {id}.");
+    public Hero GetHero(HeroId id) => _heroById.GetValueOrDefault(id) ?? GarrisonHero(id) ?? throw new CommandRefusedException($"Unknown hero {id}.");
+
+    private Hero? GarrisonHero(HeroId id)
+    {
+        foreach (var town in TownsById)
+        {
+            if (town.GarrisonHero is { } hero && hero.Id == id)
+            {
+                return hero;
+            }
+        }
+
+        return null;
+    }
 
     /// <summary>The player's heroes on the map (garrison heroes are not, ADR-112).</summary>
     public IEnumerable<Hero> HeroesOf(PlayerId owner) => _heroes.Where(h => h.Owner == owner);
 
     /// <summary>The heroes in towns' garrisons, by town id (ADR-112): off the map, not counted towards the hero limit.</summary>
-    public IEnumerable<Hero> GarrisonHeroes => ObjectsOf<Towns.Town>().OrderBy(t => t.Id.Value).Select(t => t.GarrisonHero).OfType<Hero>();
+    public IEnumerable<Hero> GarrisonHeroes => TownsById.Select(t => t.GarrisonHero).OfType<Hero>();
+
+    /// <summary>The towns, lowest id first (cached until a town is added or removed).</summary>
+    private List<Towns.Town> TownsById => _townsById ??= [.. ObjectsOf<Towns.Town>().OrderBy(t => t.Id.Value)];
 
     /// <summary>Every hero of the player: on the map, then in garrisons (income, mana, movement and statuses count them all, ADR-112).</summary>
     public IEnumerable<Hero> AllHeroesOf(PlayerId owner) => HeroesOf(owner).Concat(GarrisonHeroes.Where(h => h.Owner == owner));
@@ -269,7 +292,24 @@ public sealed class GameState
         GetPlayer(owner).MaxHeroes = limit;
     }
 
-    public Hero? HeroAt(MapPosition position) => _heroes.FirstOrDefault(h => h.Position == position);
+    /// <summary>The hero on the tile (the first in <see cref="Heroes"/> should two share it), or null.</summary>
+    public Hero? HeroAt(MapPosition position)
+    {
+        if (_heroAtMoves != Hero.Moves)
+        {
+            // Any hero anywhere moved, or one joined or left: index this game's heroes again (the first hero on a tile wins).
+            var moves = Hero.Moves;
+            _heroAt.Clear();
+            foreach (var hero in _heroes)
+            {
+                _heroAt.TryAdd(hero.Position, hero);
+            }
+
+            _heroAtMoves = moves;
+        }
+
+        return _heroAt.GetValueOrDefault(position);
+    }
 
     /// <summary>Whether <paramref name="viewer"/> currently sees <paramref name="hero"/> (own heroes always; Veil III hides a hero from afar).</summary>
     public bool CanSee(PlayerId viewer, Hero hero) =>
@@ -442,13 +482,52 @@ public sealed class GameState
     /// is its entrance, not a guarded tile). Lowest id first.
     /// </summary>
     public IEnumerable<MonsterGuard> GuardsOf(MapPosition position) =>
-        DirectionExtensions.All
-            .Select(d => ObjectCellAt(position.Step(d)))
-            .Select(c => c?.Object)
-            .OfType<MonsterGuard>()
-            .OrderBy(m => m.Id.Value);
+        !IsGuarded(position)
+            ? []
+            : DirectionExtensions.All
+                .Select(d => ObjectCellAt(position.Step(d)))
+                .Select(c => c?.Object)
+                .OfType<MonsterGuard>()
+                .OrderBy(m => m.Id.Value);
 
-    public bool IsGuarded(MapPosition position) => GuardsOf(position).Any();
+    /// <summary>Whether a monster guards <paramref name="position"/> (<see cref="GuardsOf"/> is not empty); a lookup, it allocates nothing.</summary>
+    public bool IsGuarded(MapPosition position) => Map.Contains(position) && _guards[TileIndex(position)] > 0;
+
+    private int TileIndex(MapPosition position) => (((position.Level * Map.Height) + position.Y) * Map.Width) + position.X;
+
+    /// <summary>Counts a monster's cells on (+1) or off (-1) the tiles around them.</summary>
+    private void CountGuards(MapObject mapObject, int delta)
+    {
+        if (mapObject is not MonsterGuard)
+        {
+            return;
+        }
+
+        foreach (var (cell, _) in mapObject.OccupiedCells())
+        {
+            foreach (var direction in DirectionExtensions.All)
+            {
+                if (cell.Step(direction) is var tile && Map.Contains(tile))
+                {
+                    _guards[TileIndex(tile)] += delta;
+                }
+            }
+        }
+    }
+
+    /// <summary>Forgets the cached object lists the object belongs to (it was added or removed).</summary>
+    private void ForgetObjectLists(MapObject mapObject)
+    {
+        foreach (var type in _objectsOfType.Keys.Where(t => t.IsInstanceOfType(mapObject)).ToList())
+        {
+            _objectsOfType.Remove(type);
+        }
+
+        if (mapObject is Towns.Town)
+        {
+            _townsById = null;
+        }
+    }
 
     /// <summary>The map object; an unknown id refuses the command that names it (<see cref="CommandRefusedException"/>).</summary>
     public MapObject GetObject(MapObjectId id) => FindObject(id) ?? throw new CommandRefusedException($"Unknown map object {id}.");
@@ -459,8 +538,43 @@ public sealed class GameState
     public MapPosition? TeleportDestination(MapObject gate) =>
         gate.TeleportTarget is { } target && FindObject(target) is { } landing ? landing.VisitPosition : null;
 
+    /// <summary>Whether any object has a <see cref="MapObject.TeleportTarget"/> (only gates have one; links may change, so it is checked each time).</summary>
+    public bool HasTeleporters
+    {
+        get
+        {
+            foreach (var gate in ObjectsOf<TwoWayGate>())
+            {
+                if (gate.TeleportTarget is not null)
+                {
+                    return true;
+                }
+            }
+
+            foreach (var gate in ObjectsOf<OneWayGateEntrance>())
+            {
+                if (gate.TeleportTarget is not null)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>The objects of type <typeparamref name="T"/> (subtypes included), in <see cref="Objects"/> order; cached until one is added or removed.</summary>
     public IEnumerable<T> ObjectsOf<T>()
-        where T : MapObject => _objects.OfType<T>();
+        where T : MapObject
+    {
+        if (!_objectsOfType.TryGetValue(typeof(T), out var list))
+        {
+            list = _objects.OfType<T>().ToList().AsReadOnly();
+            _objectsOfType[typeof(T)] = list;
+        }
+
+        return (IReadOnlyList<T>)list;
+    }
 
     /// <summary>The object occupying <paramref name="position"/> (blocked or visit cell), if any.</summary>
     public (MapObject Object, FootprintCell Cell)? ObjectCellAt(MapPosition position) =>
@@ -496,6 +610,7 @@ public sealed class GameState
         }
 
         _heroes.Insert(index ?? _heroes.Count, hero);
+        _heroAtMoves = -1;
         RefreshArtifacts(hero);
         _highestHeroId = Math.Max(_highestHeroId, hero.Id.Value);
     }
@@ -512,6 +627,7 @@ public sealed class GameState
         {
             _heroes.RemoveAt(index);
             _heroById.Remove(hero.Id);
+            _heroAtMoves = -1;
         }
 
         return index;
@@ -550,6 +666,9 @@ public sealed class GameState
         {
             _objectCells[position] = (mapObject, cell);
         }
+
+        CountGuards(mapObject, +1);
+        ForgetObjectLists(mapObject);
     }
 
     /// <summary>Removes the object; returns where it was in <see cref="Objects"/>, or -1 when it was not there.</summary>
@@ -569,6 +688,8 @@ public sealed class GameState
             _objectCells.Remove(position);
         }
 
+        CountGuards(mapObject, -1);
+        ForgetObjectLists(mapObject);
         return index;
     }
 }

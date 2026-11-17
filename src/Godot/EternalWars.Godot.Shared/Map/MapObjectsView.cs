@@ -16,6 +16,7 @@ namespace EternalWars.Godot.Shared.Map;
 public partial class MapObjectsView : Node3D
 {
     private readonly Dictionary<MapObjectId, Node3D> _nodes = [];
+    private readonly MeshCache _meshes = new();
     private MapViewContext _context = null!;
     private int _level;
 
@@ -25,8 +26,8 @@ public partial class MapObjectsView : Node3D
         _level = level;
         RebuildAll();
 
-        context.Changed += RebuildAll;
-        TreeExiting += () => context.Changed -= RebuildAll;
+        context.ViewerChanged += RebuildAll;
+        TreeExiting += () => context.ViewerChanged -= RebuildAll;
         var events = context.Events;
         this.SubscribeWhileInTree<KnownObjectsChanged>(events, e =>
         {
@@ -159,7 +160,7 @@ public partial class MapObjectsView : Node3D
     /// Placeholder shapes that tell the quest objects apart (EVT-5) until there are models: a Seer's Hut gets a pointed roof over its building, a
     /// Quest Guard a standing figure with a spear, a Quest Gate two posts and a lintel over its cell.
     /// </summary>
-    private static void AddShape(Node3D root, KnownObject known, Color color, Vector3 at)
+    private void AddShape(Node3D root, KnownObject known, Color color, Vector3 at)
     {
         switch (known.Definition.Kind)
         {
@@ -188,29 +189,16 @@ public partial class MapObjectsView : Node3D
         }
     }
 
-    private static MeshInstance3D Box(Vector3 size, Vector3 position, Color color) => new()
-    {
-        Mesh = new BoxMesh { Size = size, Material = new StandardMaterial3D { AlbedoColor = color } },
-        Position = position,
-    };
+    // Objects of one colour and size share their mesh and material (_meshes).
+    private MeshInstance3D Box(Vector3 size, Vector3 position, Color color) => new() { Mesh = _meshes.Box(size, color), Position = position };
 
-    private static MeshInstance3D Cone(float radius, float height, Vector3 position, Color color) => new()
-    {
-        Mesh = new CylinderMesh { TopRadius = 0, BottomRadius = radius, Height = height, Material = new StandardMaterial3D { AlbedoColor = color } },
-        Position = position,
-    };
+    private MeshInstance3D Cone(float radius, float height, Vector3 position, Color color) =>
+        new() { Mesh = _meshes.Cylinder(0, radius, height, color), Position = position };
 
-    private static MeshInstance3D Cylinder(float radius, float height, Vector3 position, Color color) => new()
-    {
-        Mesh = new CylinderMesh { TopRadius = radius, BottomRadius = radius, Height = height, Material = new StandardMaterial3D { AlbedoColor = color } },
-        Position = position,
-    };
+    private MeshInstance3D Cylinder(float radius, float height, Vector3 position, Color color) =>
+        new() { Mesh = _meshes.Cylinder(radius, radius, height, color), Position = position };
 
-    private static MeshInstance3D Sphere(float radius, Vector3 position, Color color) => new()
-    {
-        Mesh = new SphereMesh { Radius = radius, Height = radius * 2, Material = new StandardMaterial3D { AlbedoColor = color } },
-        Position = position,
-    };
+    private MeshInstance3D Sphere(float radius, Vector3 position, Color color) => new() { Mesh = _meshes.Sphere(radius, color), Position = position };
 }
 
 internal static class KnownObjectExtensions

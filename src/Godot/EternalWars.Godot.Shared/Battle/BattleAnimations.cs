@@ -1,3 +1,4 @@
+using EternalWars.Godot.Shared.Controls;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Battle;
@@ -15,8 +16,8 @@ public sealed class BattleAnimations(BattleFieldBuilder field)
     {
         var lunge = (to - from) with { Y = 0 };
         lunge = lunge.LengthSquared() > 0 ? lunge.Normalized() * 0.25f : Vector3.Zero;
-        t.TweenProperty(attacker.Body, "position", lunge, 0.12f);
-        t.TweenProperty(attacker.Body, "position", Vector3.Zero, 0.12f);
+        t.TweenProperty(attacker.Body, TweenPaths.Position, lunge, 0.12f);
+        t.TweenProperty(attacker.Body, TweenPaths.Position, Vector3.Zero, 0.12f);
     }
 
     /// <summary>A projectile flies from <paramref name="from"/> to <paramref name="to"/> in <paramref name="duration"/> seconds.</summary>
@@ -24,7 +25,7 @@ public sealed class BattleAnimations(BattleFieldBuilder field)
     {
         var projectile = field.Projectile(from);
         t.TweenCallback(Callable.From(() => projectile.Visible = true));
-        t.TweenProperty(projectile, "position", to, duration);
+        t.TweenProperty(projectile, TweenPaths.Position, to, duration);
         t.TweenCallback(Callable.From(projectile.QueueFree));
     }
 
@@ -33,18 +34,18 @@ public sealed class BattleAnimations(BattleFieldBuilder field)
     {
         var text = field.FloatingText(caption, to + (Vector3.Up * ((target.BodyHeight * 2) + 0.4f)));
         t.TweenCallback(Callable.From(() => text.Visible = true));
-        t.TweenProperty(target.BodyMaterial, "albedo_color", HitColor, 0.08f);
-        t.Parallel().TweenProperty(text, "position", text.Position + (Vector3.Up * 0.6f), 0.45f);
-        t.Parallel().TweenProperty(text, "modulate:a", 0f, 0.45f);
-        t.Parallel().TweenProperty(target.BodyMaterial, "albedo_color", target.BaseColor, 0.15f).SetDelay(0.08f);
+        t.TweenProperty(target.BodyMaterial, TweenPaths.AlbedoColor, HitColor, 0.08f);
+        t.Parallel().TweenProperty(text, TweenPaths.Position, text.Position + (Vector3.Up * 0.6f), 0.45f);
+        t.Parallel().TweenProperty(text, TweenPaths.ModulateAlpha, 0f, 0.45f);
+        t.Parallel().TweenProperty(target.BodyMaterial, TweenPaths.AlbedoColor, target.BaseColor, 0.15f).SetDelay(0.08f);
         t.TweenCallback(Callable.From(text.QueueFree));
     }
 
     /// <summary>The stack flashes red and back, without a caption.</summary>
     public static void Flash(Tween t, BattleUnitView unit)
     {
-        t.TweenProperty(unit.BodyMaterial, "albedo_color", HitColor, 0.08f);
-        t.TweenProperty(unit.BodyMaterial, "albedo_color", unit.BaseColor, 0.15f);
+        t.TweenProperty(unit.BodyMaterial, TweenPaths.AlbedoColor, HitColor, 0.08f);
+        t.TweenProperty(unit.BodyMaterial, TweenPaths.AlbedoColor, unit.BaseColor, 0.15f);
     }
 
     /// <summary>
@@ -60,15 +61,15 @@ public sealed class BattleAnimations(BattleFieldBuilder field)
         }
 
         t.TweenCallback(Callable.From(() => text.Visible = true));
-        t.TweenProperty(text, "position", at + (Vector3.Up * 0.4f), duration);
-        t.Parallel().TweenProperty(text, "modulate:a", 0f, duration).SetDelay(fadeDelay);
+        t.TweenProperty(text, TweenPaths.Position, at + (Vector3.Up * 0.4f), duration);
+        t.Parallel().TweenProperty(text, TweenPaths.ModulateAlpha, 0f, duration).SetDelay(fadeDelay);
         t.TweenCallback(Callable.From(text.QueueFree));
     }
 
     /// <summary>A struck structure squashes to <paramref name="squash"/> and springs back.</summary>
     public static void Shudder(Tween t, Node3D node, Vector3 squash)
     {
-        t.TweenProperty(node, "scale", squash, 0.06f);
-        t.TweenProperty(node, "scale", Vector3.One, 0.08f);
+        t.TweenProperty(node, TweenPaths.Scale, squash, 0.06f);
+        t.TweenProperty(node, TweenPaths.Scale, Vector3.One, 0.08f);
     }
 }

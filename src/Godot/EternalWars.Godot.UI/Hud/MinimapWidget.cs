@@ -36,8 +36,13 @@ public partial class MinimapWidget : Control
         Rebuild();
 
         var rebuild = new RefreshScheduler(this, Rebuild);
-        context.Changed += rebuild.Request;
-        TreeExiting += () => context.Changed -= rebuild.Request;
+        context.ViewerChanged += rebuild.Request;
+        context.LevelChanged += rebuild.Request;
+        TreeExiting += () =>
+        {
+            context.ViewerChanged -= rebuild.Request;
+            context.LevelChanged -= rebuild.Request;
+        };
         rebuild.On<TilesRevealed>(context.Events)
             .On<KnownObjectsChanged>(context.Events)
             .On<SightChanged>(context.Events)

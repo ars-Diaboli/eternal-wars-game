@@ -89,8 +89,11 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
     /// <summary>The grid was switched on or off.</summary>
     public event Action? ShowGridChanged;
 
-    /// <summary>The viewer or the level changed: views redraw.</summary>
-    public event Action? Changed;
+    /// <summary>The player whose knowledge is drawn changed: views of fog, memory and sight redraw.</summary>
+    public event Action? ViewerChanged;
+
+    /// <summary>The level shown changed: views that draw only the shown level redraw (views of one level each need not).</summary>
+    public event Action? LevelChanged;
 
     /// <summary>A hero's step starts playing (the app follows computer heroes with the camera).</summary>
     public event Action<Hero, MapPosition>? HeroStepShown;
@@ -125,7 +128,7 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
         if (viewer != Viewer)
         {
             Viewer = viewer;
-            Changed?.Invoke();
+            ViewerChanged?.Invoke();
         }
     }
 
@@ -135,7 +138,7 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
         if (level != Level)
         {
             Level = level;
-            Changed?.Invoke();
+            LevelChanged?.Invoke();
         }
     }
 

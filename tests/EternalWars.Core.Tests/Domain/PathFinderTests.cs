@@ -1,8 +1,10 @@
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Pathfinding;
+using EternalWars.Core.Domain.Armies;
 using static EternalWars.Core.Tests.TestWorld;
 
 namespace EternalWars.Core.Tests.Domain;
@@ -168,5 +170,34 @@ public class PathFinderTests
         var session = Start(state);
 
         Assert.Null(session.Movement.FindPath(A, new MapPosition(4, 2, 1)));
+    }
+
+    [Fact]
+    public void Searches_ReusingTheThreadsBuffers_StartAfresh_WhateverTheMapOrHeroBefore()
+    {
+        // Imps are at home on lava; footmen pay its full cost.
+        var state = Create("Clll.", "~~~~~", "Alll.");
+        state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Imp, 5));
+        var session = Start(state);
+        var big = Start(Create(new string('.', 40), new string('.', 40), "A" + new string('.', 39)));
+        string?[] Searches() =>
+        [
+            Route(session.Movement.FindPath(A, new MapPosition(4, 2))),
+            Route(session.Movement.FindPath(C, new MapPosition(4, 0))),
+            Route(session.Movement.FindPath(C, new MapPosition(4, 2))), // across the water: nothing left over from A's search
+            Route(big.Movement.FindPath(A, new MapPosition(39, 2))), // a bigger map grows the buffers
+        ];
+
+        string?[] fresh = [];
+        var thread = new Thread(() => fresh = Searches()); // a thread that has never searched
+        thread.Start();
+        thread.Join();
+
+        Assert.Equal(fresh, Searches());
+        Assert.Equal(fresh, Searches()); // the same buffers again, after the big map
+        Assert.Null(fresh[2]);
+        Assert.NotEqual(fresh[0]![^20..], fresh[1]![^20..]); // the lava costs differ by army
+
+        static string? Route(HeroPath? path) => path is null ? null : string.Join(",", path.Steps.Select(s => $"{s.Position.X}:{s.Cost}:{s.Day}"));
     }
 }

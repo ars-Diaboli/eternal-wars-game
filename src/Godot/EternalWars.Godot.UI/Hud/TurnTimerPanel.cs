@@ -11,9 +11,14 @@ public partial class TurnTimerPanel : PanelContainer
 {
     private const double WarningShown = 3;
 
+    private static readonly StringName FontColor = "font_color";
+
     private readonly Label _clock = new() { HorizontalAlignment = HorizontalAlignment.Center };
     private string? _warning;
     private double _warningLeft;
+
+    /// <summary>What the clock last showed: it is redrawn only when the second, the state or the warning changes, not every frame.</summary>
+    private (double Seconds, bool Stopped, bool Up, string? Warning, bool Red)? _shown;
 
     public void Bind()
     {
@@ -47,11 +52,21 @@ public partial class TurnTimerPanel : PanelContainer
         }
 
         _warningLeft -= delta;
-        var time = TimeSpan.FromSeconds(Math.Ceiling(left));
+        var seconds = Math.Ceiling(left);
+        var warning = _warningLeft > 0 ? _warning : null;
+        var red = left <= 60 && !stopped;
+        var shown = (seconds, stopped, up, warning, red);
+        if (_shown == shown)
+        {
+            return;
+        }
+
+        _shown = shown;
+        var time = TimeSpan.FromSeconds(seconds);
         _clock.Text = up ? "Time is up: the turn ends as soon as it can."
             : stopped ? $"Turn time {time:m\\:ss} (stopped during the battle)"
-            : _warningLeft > 0 && _warning is not null ? $"Turn time {time:m\\:ss}  {_warning}"
+            : warning is not null ? $"Turn time {time:m\\:ss}  {warning}"
             : $"Turn time {time:m\\:ss}";
-        _clock.AddThemeColorOverride("font_color", left <= 60 && !stopped ? Colors.OrangeRed : Colors.White);
+        _clock.AddThemeColorOverride(FontColor, red ? Colors.OrangeRed : Colors.White);
     }
 }

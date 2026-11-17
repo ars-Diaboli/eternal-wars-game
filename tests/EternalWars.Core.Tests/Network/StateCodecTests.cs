@@ -61,6 +61,40 @@ public class StateCodecTests
         Assert.All(events, e => Assert.Equal(e.GetType(), RoundTrip<IEvent>(session.State, e).GetType()));
     }
 
+    [Fact]
+    public void Write_NamesAFieldAlsoInABaseType_ByItsType_AndWritesStructsAndDictionaryEntries()
+    {
+        var codec = new StateCodec(new GameSession(MapConverter.ToGameState(MapSerializer.Load(Path.Combine(SmokeFolder(), "siege.ewmap.json")))).State);
+
+        var written = codec.Write(new Derived(1, 2, new Spot(3, 4), new Dictionary<string, int> { ["a"] = 5, ["b"] = 6 }))!.ToJsonString();
+
+        Assert.Equal("""{"Base.count":1,"Derived.count":2,"spot":{"X":3,"Y":4},"entries":[["a",5],["b",6]]}""", written);
+    }
+
+    private class Base(int count)
+    {
+#pragma warning disable CS9124 // the parameter is kept in a field on purpose: the test needs a base field of the same name
+        private readonly int count = count;
+#pragma warning restore CS9124
+
+        public int BaseCount => count;
+    }
+
+    private sealed class Derived(int baseCount, int count, Spot spot, Dictionary<string, int> entries) : Base(baseCount)
+    {
+        private readonly int count = count;
+        private readonly Spot spot = spot;
+        private readonly Dictionary<string, int> entries = entries;
+
+        public override string ToString() => $"{count} {spot} {entries.Count}";
+    }
+
+    private readonly struct Spot(int x, int y)
+    {
+        public readonly int X = x;
+        public readonly int Y = y;
+    }
+
     private static T RoundTrip<T>(GameState state, T value)
     {
         var codec = new StateCodec(state);

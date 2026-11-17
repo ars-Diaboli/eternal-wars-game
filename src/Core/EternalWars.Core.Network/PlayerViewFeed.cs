@@ -1,5 +1,7 @@
-using System.Collections;
+using System.Buffers;
 using System.Reflection;
+using System.Security.Cryptography;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Common;
@@ -39,8 +41,10 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
 
     private readonly StateCodec _codec = new(state);
 
-    /// <summary>The JSON last sent of each piece of the view, by <c>kind:id</c>.</summary>
-    private readonly Dictionary<string, string> _sent = [];
+    /// <summary>A hash of the JSON last sent of each piece of the view, by <c>kind:id</c> (128 bits of SHA-256: a missed change would need a collision).</summary>
+    private readonly Dictionary<string, UInt128> _sent = [];
+
+    private readonly ArrayBufferWriter<byte> _json = new();
 
     private readonly Dictionary<MapObjectId, KnownObject> _memory = [];
     private readonly List<JsonNode> _events = [];
@@ -295,13 +299,33 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
     private void Put<T>(List<ViewChange> changes, string kind, int id, T value)
     {
         var node = _codec.Write(value);
-        var text = node?.ToJsonString() ?? "null";
+        var hash = Hash(node);
         var key = Key(kind, id);
-        if (!_sent.TryGetValue(key, out var sent) || sent != text)
+        if (!_sent.TryGetValue(key, out var sent) || sent != hash)
         {
-            _sent[key] = text;
+            _sent[key] = hash;
             changes.Add(new ViewChange(kind, id, node));
         }
+    }
+
+    private UInt128 Hash(JsonNode? node)
+    {
+        _json.ResetWrittenCount();
+        using (var writer = new Utf8JsonWriter(_json))
+        {
+            if (node is null)
+            {
+                writer.WriteNullValue();
+            }
+            else
+            {
+                node.WriteTo(writer);
+            }
+        }
+
+        Span<byte> digest = stackalloc byte[SHA256.HashSizeInBytes];
+        SHA256.HashData(_json.WrittenSpan, digest);
+        return System.Buffers.Binary.BinaryPrimitives.ReadUInt128LittleEndian(digest);
     }
 
     /// <summary>Takes away the pieces of <paramref name="kind"/> sent before and not among <paramref name="kept"/>.</summary>

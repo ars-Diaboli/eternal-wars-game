@@ -19,8 +19,13 @@ public partial class GrailView : Node3D
     public void Bind(MapViewContext context)
     {
         _context = context;
-        context.Changed += Rebuild;
-        TreeExiting += () => context.Changed -= Rebuild;
+        context.ViewerChanged += Rebuild;
+        context.LevelChanged += Rebuild;
+        TreeExiting += () =>
+        {
+            context.ViewerChanged -= Rebuild;
+            context.LevelChanged -= Rebuild;
+        };
         this.SubscribeWhileInTree<HoleDug>(context.Events, _ => Rebuild());
         this.SubscribeWhileInTree<GrailMoved>(context.Events, _ => Rebuild());
         this.SubscribeWhileInTree<TurnStarted>(context.Events, _ => Rebuild());

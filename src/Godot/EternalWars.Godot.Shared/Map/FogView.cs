@@ -88,11 +88,11 @@ public partial class FogView : Node3D
         ApplyLook();
         Snap();
 
-        context.Changed += Snap;
+        context.ViewerChanged += Snap;
         context.FogLookChanged += ApplyLook;
         TreeExiting += () =>
         {
-            context.Changed -= Snap;
+            context.ViewerChanged -= Snap;
             context.FogLookChanged -= ApplyLook;
         };
         this.SubscribeWhileInTree<TilesRevealed>(context.Events, e =>
