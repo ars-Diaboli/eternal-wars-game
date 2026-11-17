@@ -7,7 +7,8 @@ namespace EternalWars.Godot.Shared.Map;
 /// <summary>
 /// Converts between core grid coordinates and Godot world space.
 /// Tile (x, y) occupies the unit square centred at (x, 0, y); levels are stacked vertically. The ground rises above a level's base by the
-/// map's relief (ADR-182, <see cref="AdventureMap.GroundHeightAt(int, float, float)"/>): <see cref="ToGround"/> puts things on it.
+/// map's relief (ADR-182), as the smooth surface <see cref="ReliefSurface"/> shows it (ADR-209): the ground mesh lies on it,
+/// <see cref="ToGround"/> puts things on it and picking meets it.
 /// </summary>
 public static class MapSpace
 {
@@ -23,11 +24,11 @@ public static class MapSpace
 
     /// <summary>The ground at the tile's centre.</summary>
     public static Vector3 ToGround(AdventureMap map, MapPosition position) =>
-        ToWorld(position) + (Vector3.Up * map.GroundHeightAt(position) * TileSize);
+        ToWorld(position) + (Vector3.Up * ReliefSurface.HeightAt(map, position.Level, position.X, position.Y) * TileSize);
 
     /// <summary>The ground's world height on <paramref name="level"/> below the world point (<paramref name="x"/>, <paramref name="z"/>).</summary>
     public static float GroundY(AdventureMap map, int level, float x, float z) =>
-        (-level * LevelSpacing) + (map.GroundHeightAt(level, x / TileSize, z / TileSize) * TileSize);
+        (-level * LevelSpacing) + (ReliefSurface.HeightAt(map, level, x / TileSize, z / TileSize) * TileSize);
 
     /// <summary>The ground's slope at a tile's centre, as its up direction: from the heights half a tile either way.</summary>
     public static Vector3 GroundNormal(AdventureMap map, MapPosition position)
@@ -43,7 +44,7 @@ public static class MapSpace
     /// <summary>Turns a flat thing (a plate, a marker) to lie on the ground's slope at a tile's centre.</summary>
     public static Basis OnSlope(AdventureMap map, MapPosition position) => new(new Quaternion(Vector3.Up, GroundNormal(map, position)));
 
-    /// <summary>The highest and lowest ground of a level, in world height.</summary>
+    /// <summary>The highest and lowest ground of a level, in world height (the shown surface never leaves its corners' range).</summary>
     public static (float Low, float High) GroundRange(AdventureMap map, int level)
     {
         int low = int.MaxValue, high = int.MinValue;

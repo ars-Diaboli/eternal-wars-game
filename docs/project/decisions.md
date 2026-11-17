@@ -2847,3 +2847,22 @@ fill-ins, for the owner to change. No rule, save or map format change.
   any distance: the game's and the editor's input set `MapViewContext.Pointed`.
 - **Effect** (the editor on generated maps): nodes 7,017 → 1,250 at 256 × 256 (1,969 objects), 3,883 → 1,176 at 144 × 144. Draw calls in
   view stay about the same (about 135); the gain is in nodes, memory and the far captions not drawn.
+
+### ADR-209: The ground is shown as a smooth surface, each tile drawn as 2 × 2 squares (ADR-182, ADR-207, 2026-11-18)
+**Status**: implemented (the owner: "more detailed terrain, geometry ×4", smoothed hills, the apron alike). Rendering only: no rule, save or
+map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner and per tile centre, at the relief's bilinear heights).
+
+- **Why**: four flat triangles a tile made hills faceted, with a crease along every tile edge.
+- **The surface** (`ReliefSurface`, Core): monotone bicubic through the relief's corners: a cubic along x through four rows of corners,
+  then one along y, with Catmull-Rom tangents limited after Fritsch and Carlson. It passes through every corner and is smooth across tile
+  edges; over a tile it stays between that tile's own corners, so there is no ripple at a cliff's foot, flat ground stays flat and a
+  level's height range is still its corners' range. Past the map's edge it takes the nearest edge corners, as before. Rules keep the
+  bilinear `AdventureMap.GroundHeightAt` (the editor's "height where the stroke starts", levelling at entrances).
+- **The view follows it**: `MapSpace.ToGround`, `GroundY` (heroes walking, picking) and `GroundNormal` (plates on slopes) read
+  `ReliefSurface`, so what stands on the ground meets the mesh. A tile's shown ground reads one corner past its own on every side, so a
+  change of heights re-places what stands on tiles touching `ReliefSurface.Reach(area)` (the area grown by one).
+- **The mesh** (`AdventureMapView.Ground`): every tile is `Subdivisions` (2) × 2 squares of four triangles to the square's centre, 16
+  triangles a tile (4 before); the chunks and the apron (as four strips) are built alike. Heights come from `ReliefSurface.Grid`, which works
+  each corner row's cubic out once a column; normals come from the surface a quarter tile either way.
+- **Cost** (the editor, Debug build, generated maps): building a level's ground 75 → 200 ms at 256 × 256, 32 → 75 ms at 144 × 144; a height
+  dab's ground rebuild 1–2 → 4–9 ms.
