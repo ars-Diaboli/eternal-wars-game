@@ -27,6 +27,7 @@ public sealed record SiegeLayout(int FortLevel, IReadOnlyList<SiegeStructureInfo
 /// The battlefield is set up (after the width choice, if any). Fighting begins at once, or after the deployment step
 /// (<see cref="BattleDeploymentStarted"/> … <see cref="BattleDeploymentEnded"/>). <paramref name="Siege"/> is set for a siege (ADR-106).
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleStarted(
     HeroId? AttackerHero,
     HeroId? DefenderHero,
@@ -42,49 +43,62 @@ public sealed record BattleStarted(
 /// The attacker's offensive machine fired at a siege structure (ADR-106): <paramref name="Hit"/> whether it hit, <paramref name="Damage"/> the hit
 /// points it took off, <paramref name="Health"/> what is left (0: destroyed; a wall section is a gap now).
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record SiegeStructureShot(int Machine, int Structure, bool Hit, int Damage, int Health) : IEvent;
 
 /// <summary>A siege structure was damaged by a stack hitting the gate (<paramref name="Unit"/>) or by a spell (<paramref name="Spell"/>, Earthquake; ADR-120).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record SiegeStructureDamaged(int Structure, int? Unit, string? Spell, int Damage, int Health) : IEvent;
 
 /// <summary>The keep fell: its shooting stack is an ordinary stack now (ADR-120).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitLeftKeep(int Unit) : IEvent;
 
 /// <summary>
 /// The fortifications hurt a stack (ADR-106): a shot of the keep or a tower (<paramref name="Structure"/>), or the moat it entered.
 /// <paramref name="RemainingCount"/> is the stack's size afterwards, <paramref name="TopHealth"/> its top creature's hit points (ADR-145).
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitSiegeDamaged(int Unit, SiegeDamageSource Source, int? Structure, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
 
 /// <summary>The side with the higher Tactics may place its stacks within <paramref name="Columns"/> columns of its edge (ADR-072).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleDeploymentStarted(BattleSide Side, int Columns) : IEvent;
 
 /// <summary>A stack was placed elsewhere during the deployment step.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitDeployed(int Unit, CellPosition From, CellPosition To) : IEvent;
 
 /// <summary>The deployer pressed "Start battle" (or handed the battle to quick combat); the first round follows.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleDeploymentEnded(BattleSide Side) : IEvent;
 
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleRoundStarted(int Round) : IEvent;
 
 /// <summary>It is <paramref name="Unit"/>'s turn.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleTurnStarted(int Unit, int Round) : IEvent;
 
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitMoved(int Unit, CellPosition From, CellPosition To) : IEvent;
 
 /// <summary>A move spell (Teleport, Shadow Step, ADR-151) took the stack from one placement to another, over everything between.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitTeleported(int Unit, CellPosition From, CellPosition To, string Spell) : IEvent;
 
 /// <summary>
 /// A move spell's rank III (ADR-151) gave the stack, which had taken its turn this round, one more after the waiting stacks; with
 /// <paramref name="InPlace"/> it does not move on it.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitTurnRegained(int Unit, string Spell, bool InPlace) : IEvent;
 
 /// <summary>
 /// One hit. <paramref name="RemainingCount"/> is the target's stack size afterwards and <paramref name="TopHealth"/> its top creature's hit
 /// points (ADR-145); <paramref name="Luck"/> what luck did.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitAttacked(
     int Attacker,
     int Target,
@@ -99,29 +113,37 @@ public sealed record BattleUnitAttacked(
 /// Morale took effect (ADR-053): Haste / Slow when the round starts, an extra action as it begins, a lost turn when the
 /// unit's turn would have come.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleMoraleTriggered(int Unit, MoraleEffect Effect) : IEvent;
 
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitDied(int Unit) : IEvent;
 
 /// <summary>The healing tent restored <paramref name="Healed"/> health to the stack's top creature (ADR-056).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitHealed(int Unit, int Healed, int TopHealth) : IEvent;
 
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitWaited(int Unit) : IEvent;
 
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitDefended(int Unit) : IEvent;
 
 public sealed record BattleCasualty(BattleSide Side, string Creature, int Lost);
 
 /// <summary>A human player changed its auto combat setting (ADR-090, CMB-10).</summary>
+[SeenBy(Audience.Owner)]
 public sealed record AutoCombatChanged(PlayerId Player, AutoCombatMode Mode) : IEvent;
 
 /// <summary>Necromancy raised undead after the battle (ADR-072, MAG-7); published after <see cref="BattleEnded"/> and before any level-up.</summary>
+[SeenBy(Audience.Witnesses)]
 public sealed record UndeadRaised(HeroId Hero, IReadOnlyList<RaisedUndead> Raised) : IEvent;
 
 /// <summary>
 /// The battle is over. <paramref name="Experience"/> went to the winning hero (if any). Map consequences
 /// (armies, defeated heroes, guards) follow as their own events, then <see cref="DecisionResolved"/>.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleEnded(
     BattleSide Winner,
     BattleEndReason Reason,
@@ -129,24 +151,30 @@ public sealed record BattleEnded(
     int Experience) : IEvent;
 
 /// <summary>A stack gained Attack from a kill with Blood Rage (ADR-067); <paramref name="Attack"/> is the total it has gained.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleRageGained(int Unit, int Attack) : IEvent;
 
 /// <summary>
 /// A hero used a warcry (ADR-067). <paramref name="Affected"/> are the stacks it works on: all of the side's own for Rally, all enemy stacks for
 /// Intimidate, and the enemy stacks that lost their next action for Terror.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleWarcryUsed(BattleSide Side, Warcry Warcry, IReadOnlyList<int> Affected) : IEvent;
 
 /// <summary>Terror made a stack lose its action (ADR-067); its turn passed.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitTerrified(int Unit) : IEvent;
 
 /// <summary>A creature caster cast its spell as its action (ADR-120); <paramref name="CastsLeft"/> of it are left this battle.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleCreatureCast(int Unit, string Spell, int? Target, CellPosition? Cell, int CastsLeft) : IEvent;
 
 /// <summary>A summon called creatures (ADR-120): <paramref name="Unit"/> as it is now (a new stack, or an own summoned stack that grew by <paramref name="Added"/>).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitSummoned(BattleUnitInfo Unit, string Spell, int Added) : IEvent;
 
 /// <summary>A Phoenix rose from its ashes with <paramref name="Count"/> creatures (ADR-120).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitReborn(int Unit, int Count) : IEvent;
 
 /// <summary>
@@ -154,90 +182,112 @@ public sealed record BattleUnitReborn(int Unit, int Count) : IEvent;
 /// for a spell that reaches a whole side or the field. <paramref name="Mana"/> is what the hero has left. A two-click spell (ADR-151) names its
 /// second aim: the cell a move goes to (<paramref name="Cell"/>), the own stack a drain heals (<paramref name="Second"/>).
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleSpellCast(BattleSide Side, string Spell, int? Target, CellPosition? Cell, int Cost, int Mana, int? Second = null) : IEvent;
 
 /// <summary>A spell's damage to a stack (ADR-110); <paramref name="TopHealth"/> is its top creature's hit points afterwards (ADR-145).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitSpellDamaged(int Unit, string Spell, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
 
 /// <summary>
 /// A buff or curse took hold on a stack until the end of round <paramref name="UntilRound"/> (ADR-110); one that lasts turns (ADR-150) for the
 /// stack's next <paramref name="Turns"/> turns.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleSpellApplied(int Unit, string Spell, int UntilRound, int? Turns = null) : IEvent;
 
 /// <summary>
 /// A stack now fights for <paramref name="Side"/> (ADR-150): a control spell took it over, or let it go (it ran out, was dispelled, or the stack
 /// died).
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitSideChanged(int Unit, BattleSide Side) : IEvent;
 
 /// <summary>A stack in the spell's reach was not touched by it: immune, resisted, or not the kind it works on (ADR-110).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleSpellResisted(int Unit, string Spell) : IEvent;
 
 /// <summary>
 /// A buff or curse on a stack ran out as a round started (ADR-110), or ended early: Blind broken by a hit, Unseen by acting (ADR-123), its last
 /// turn used (ADR-150).
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleSpellExpired(int Unit, string Spell) : IEvent;
 
 /// <summary>A dispel (<paramref name="By"/>) took a spell off a stack (ADR-123).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleSpellDispelled(int Unit, string Spell, string By) : IEvent;
 
 /// <summary>
 /// A stack got health back above its top creature (ADR-123): Resurrection, Animate Dead, Vampirism. <paramref name="Count"/> and
 /// <paramref name="TopHealth"/> are as they are now; a stack destroyed earlier stands again.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitRevived(int Unit, string Spell, int Health, int Count, int TopHealth) : IEvent;
 
 /// <summary>A stack's turn passed under a spell that holds it (Blind, Stasis, ADR-123).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitSpellbound(int Unit, string Spell) : IEvent;
 
 /// <summary>A spell left a field zone on <paramref name="Rect"/> until the end of round <paramref name="UntilRound"/> (ADR-149).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleZoneCreated(int Zone, string Spell, BattleSide Caster, CellRect Rect, int UntilRound) : IEvent;
 
 /// <summary>A field zone ran out as a round started (ADR-149).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleZoneExpired(int Zone, string Spell) : IEvent;
 
 /// <summary>A spell's hit made the stack lose its next action (Holy Word III, Frost Bolt III, ADR-123).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitStunned(int Unit, string Spell) : IEvent;
 /// <summary>Mirror Image made a copy of <paramref name="Original"/> (ADR-152): <paramref name="Unit"/>, which fights until the end of round <paramref name="UntilRound"/>.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitCopied(BattleUnitInfo Unit, int Original, string Spell, int UntilRound) : IEvent;
 
 /// <summary>A copy vanished (ADR-152): it was hit, or its rounds ran out; <see cref="BattleUnitDied"/> follows.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleCopyVanished(int Unit, string Spell) : IEvent;
 
 /// <summary>
 /// A martyr took its share of the damage meant for <paramref name="Unit"/> (Martyrdom, ADR-152); <paramref name="RemainingCount"/> and
 /// <paramref name="TopHealth"/> are the martyr's afterwards.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitShielded(int Martyr, int Unit, string Spell, int Damage, int Killed, int RemainingCount, int TopHealth) : IEvent;
 
 /// <summary>
 /// A side's hero gained <paramref name="Gained"/> mana in battle (Blood Price, ADR-152; Dispel III's refund, ADR-177); <paramref name="Mana"/> is
 /// what it has now.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleManaGained(BattleSide Side, string Spell, int Gained, int Mana) : IEvent;
 
 /// <summary>
 /// A stack's attack stole mana from the enemy hero (the Familiars' mana theft, ADR-177): <paramref name="From"/> lost <paramref name="Stolen"/> and
 /// has <paramref name="FromMana"/> left; the stack's own hero, if it has a spell book, gained it.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleManaStolen(int Unit, BattleSide From, int Stolen, int FromMana) : IEvent;
 
 /// <summary>A spell took <paramref name="Lost"/> Spell Power from <paramref name="Side"/>'s hero for the rest of the battle (Unravel III, ADR-177).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleSpellPowerSapped(BattleSide Side, string Spell, int Lost) : IEvent;
 
 /// <summary>A spell left rubble on the field (Meteor Shower III, ADR-177): one-cell obstacles, from now on part of <see cref="Battles.BattleState.Obstacles"/>.</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleRubbleFell(string Spell, IReadOnlyList<BattleObstacle> Rubble) : IEvent;
 
 /// <summary>A stack takes the second turn a spell gives it this round, right after its first (Clockwork Precision, ADR-152).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitActsAgain(int Unit, string Spell) : IEvent;
 
 /// <summary>Raise Dead raised skeletons (<paramref name="Unit"/>, a new stack of the caster's) from the destroyed stack <paramref name="From"/> (ADR-152).</summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitRaised(BattleUnitInfo Unit, int From, string Spell) : IEvent;
 
 /// <summary>
 /// Puppet Master III split a stack (ADR-152): <paramref name="Unit"/> is the part it takes, <paramref name="From"/> keeps
 /// <paramref name="FromCount"/> creatures on its side.
 /// </summary>
+[SeenBy(Audience.BattleSides)]
 public sealed record BattleUnitSplit(int From, int FromCount, BattleUnitInfo Unit, string Spell) : IEvent;

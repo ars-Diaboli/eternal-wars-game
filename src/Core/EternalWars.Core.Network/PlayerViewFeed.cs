@@ -31,16 +31,11 @@ namespace EternalWars.Core.Network;
 /// </summary>
 internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
 {
-    /// <summary>Events everyone sees, whoever they name: the turn order, who is out, who the computer took over.</summary>
-    private static readonly HashSet<Type> PublicEvents =
-        [typeof(TurnStarted), typeof(TurnEnded), typeof(PlayerDefeated), typeof(GracePeriodStarted), typeof(GracePeriodEnded), typeof(PlayerHandedToComputer),
-         typeof(SimultaneousDayStarted), typeof(SimultaneousDaysEnded)];
+    /// <summary>The <see cref="Audience.Special"/> events, each decided in <see cref="ShowsSpecial"/>.</summary>
+    internal static readonly IReadOnlySet<Type> SpecialEvents =
+        new HashSet<Type> { typeof(CommandExecuted), typeof(DecisionRequested), typeof(DecisionResolved), typeof(HeroMoved), typeof(HeroTeleported) };
 
-    /// <summary>Events that name an owner but are about a hero others may see: they follow the hero.</summary>
-    private static readonly HashSet<Type> HeroEvents =
-        [typeof(HeroDefeated), typeof(HeroSurrendered), typeof(HeroPlaced), typeof(HeroFreed), typeof(MapEventHeroGiven)];
-
-    private static readonly Dictionary<Type, PropertyInfo[]> PropertiesByType = [];
+    private static readonly Dictionary<Type, EventShape> ShapesByType = [];
 
     private readonly StateCodec _codec = new(state);
 
@@ -112,10 +107,26 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
         return update;
     }
 
-    /// <summary>Whether the player may see the event (it happened in its sight, to it, or to everyone).</summary>
+    /// <summary>
+    /// Whether the player may see the event, by the event's declared <see cref="Audience"/> (ADR-202). An event that declares none is
+    /// never shown.
+    /// </summary>
     internal bool Shows(IEvent e, IReadOnlyCollection<PlayerId> battleSides)
     {
-        var type = e.GetType();
+        var shape = EventShape.Of(e.GetType());
+        return shape.Audience switch
+        {
+            Audience.Everyone => true,
+            Audience.Owner => shape.Owner?.GetValue(e) is PlayerId owner && owner == viewer,
+            Audience.Witnesses => Witnesses(e, shape.Subjects),
+            Audience.BattleSides => battleSides.Contains(viewer),
+            Audience.Special => ShowsSpecial(e, battleSides),
+            _ => false,
+        };
+    }
+
+    private bool ShowsSpecial(IEvent e, IReadOnlyCollection<PlayerId> battleSides)
+    {
         switch (e)
         {
             case CommandExecuted executed:
@@ -127,26 +138,17 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
                 return SeesHeroAt(moved.Hero, moved.From, moved.To);
             case HeroTeleported teleported:
                 return SeesHeroAt(teleported.Hero, teleported.From, teleported.To);
-            case BattleTriggered:
-                break;
             default:
-                if (type.Name.StartsWith("Battle", StringComparison.Ordinal) || type.Name.StartsWith("Siege", StringComparison.Ordinal))
-                {
-                    return battleSides.Contains(viewer);
-                }
-
-                break;
+                return false;
         }
+    }
 
-        if (PublicEvents.Contains(type))
-        {
-            return true;
-        }
-
+    /// <summary>The player sees a hero the event names; naming no hero, an object it names.</summary>
+    private bool Witnesses(IEvent e, PropertyInfo[] subjects)
+    {
         var heroes = new List<HeroId>();
         var objects = new List<MapObjectId>();
-        PlayerId? owner = null;
-        foreach (var property in PropertiesOf(type))
+        foreach (var property in subjects)
         {
             switch (property.GetValue(e))
             {
@@ -155,9 +157,6 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
                     break;
                 case MapObjectId mapObject:
                     objects.Add(mapObject);
-                    break;
-                case PlayerId player when property.Name is "Player" or "Owner":
-                    owner = player;
                     break;
                 case IEnumerable<HeroId> many:
                     heroes.AddRange(many);
@@ -168,32 +167,37 @@ internal sealed class PlayerViewFeed(GameState state, PlayerId viewer)
             }
         }
 
-        if (owner is { } private_ && !HeroEvents.Contains(type))
-        {
-            return private_ == viewer;
-        }
-
-        if (heroes.Count > 0)
-        {
-            return heroes.Any(SeesHero);
-        }
-
-        return objects.Count == 0 || objects.Any(SeesObject);
+        return heroes.Count > 0 ? heroes.Any(SeesHero) : objects.Any(SeesObject);
     }
 
-    private static PropertyInfo[] PropertiesOf(Type type)
+    /// <summary>
+    /// What <see cref="Shows"/> reads of an event type: its declared audience (null when it declares none), the property naming the player an
+    /// <see cref="Audience.Owner"/> event is for, and the properties naming the heroes and objects a <see cref="Audience.Witnesses"/> event is about.
+    /// </summary>
+    internal sealed record EventShape(Audience? Audience, PropertyInfo? Owner, PropertyInfo[] Subjects)
     {
-        lock (PropertiesByType)
+        public static EventShape Of(Type type)
         {
-            if (!PropertiesByType.TryGetValue(type, out var properties))
+            lock (ShapesByType)
             {
-                properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                    .Where(p => p.GetIndexParameters().Length == 0 && p.Name != "EqualityContract").ToArray();
-                PropertiesByType[type] = properties;
-            }
+                if (!ShapesByType.TryGetValue(type, out var shape))
+                {
+                    var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                        .Where(p => p.GetIndexParameters().Length == 0 && p.Name != "EqualityContract").ToArray();
+                    shape = new EventShape(
+                        type.GetCustomAttribute<SeenByAttribute>()?.Audience,
+                        properties.FirstOrDefault(p => p.PropertyType == typeof(PlayerId) && p.Name is "Player" or "Owner"),
+                        properties.Where(p => Names<HeroId>(p.PropertyType) || Names<MapObjectId>(p.PropertyType)).ToArray());
+                    ShapesByType[type] = shape;
+                }
 
-            return properties;
+                return shape;
+            }
         }
+
+        private static bool Names<TId>(Type type)
+            where TId : struct =>
+            type == typeof(TId) || type == typeof(TId?) || typeof(IEnumerable<TId>).IsAssignableFrom(type);
     }
 
     private Hero? FindHero(HeroId id) => state.Heroes.FirstOrDefault(h => h.Id == id) ?? state.GarrisonHeroes.FirstOrDefault(h => h.Id == id);

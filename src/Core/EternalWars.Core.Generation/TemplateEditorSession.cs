@@ -1,11 +1,13 @@
 using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Editing;
+using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Generation;
 
 /// <summary>The template in a <see cref="TemplateEditorSession"/> changed; <see cref="Issues"/> are the validator's findings on the new one.</summary>
+[SeenBy(Audience.Nobody)]
 public sealed record TemplateChanged(MapTemplate Template, IReadOnlyList<TemplateIssue> Issues) : IEvent;
 
 /// <summary>

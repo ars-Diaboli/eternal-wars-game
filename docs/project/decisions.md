@@ -2684,3 +2684,21 @@ change; no protocol change.
 - **Opens on** the tab of the first map, so a map given with `--map` is chosen and Enter starts it, as before; otherwise on Scenarios.
 - **Smoke scripts** press a tab by part of its label (`press:Arenas`) and click a map by name (`click:@Four Banners`).
 - **Not done**: campaigns themselves (Phase 6: chaining maps, carried heroes); the Campaign tab lists single campaign-like maps until then.
+
+### ADR-202: Every event declares who may learn of it (ADR-193, MP-3, 2026-11-17)
+**Status**: implemented. No rule, save or map format changes; the network protocol is unchanged.
+
+- **Why**: a LAN host chose the events it passes to a client by reading their properties (`PlayerViewFeed.Shows`): an owner, heroes,
+  objects, a name starting with "Battle", a hand-kept list of public events. An event naming none of them went to **every** client, so a
+  new private event, or one carrying its player under another name, leaked to the other players without a test noticing. Map-script
+  internals did (`MapVariableChanged`, `MapEventEnabledChanged`, `MapEventCellRemoved`, `MapEventRan` without a player).
+- **Rule**: each event type carries `[SeenBy(Audience.…)]` (Core.Domain `Events/SeenByAttribute.cs`): `Everyone`, `Owner` (the player
+  its `Player` / `Owner` property names), `Witnesses` (the players who see a hero it names; naming no hero, an object it names),
+  `BattleSides`, `Special` (commands, questions, hero moves: `PlayerViewFeed.ShowsSpecial`) or `Nobody` (map-script internals and the
+  editors' events). The host reads only the attribute; **an event without one reaches no client**, and a `Witnesses` event that names no
+  hero or object at the time is not shown either.
+- **Checked** by `EventAudienceTests`: every event declares an audience, an `Owner` event has its `PlayerId` property, a `Witnesses`
+  event has a hero or object property, the `Special` events are the ones the host decides.
+- **Classified as before**, except: the calendar and the game's end (`GameStarted`, `DayStarted`, `WeekStarted`, `WeekEventAnnounced`,
+  `GameEnded`) and `SimultaneousDayConflicted` are declared `Everyone` (they already went to everyone); the map-script events above go
+  to `Nobody` (no client view uses them).
