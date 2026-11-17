@@ -38,11 +38,23 @@ creatures and buildings, heraldic player colours, iconic map objects).
   the hero and town lists and the action panel, which takes the clicks on it; the turn and End turn at the top of the map, beside the
   panel; full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
-- **Status bar** (ADR-186): a narrow stripe along the bottom of the adventure map, as wide as the screen up to 16:9 and a centred 16:9 width
-  on a wider screen. On the left the status line: the hints, the game's messages and what the pointer is over (a HUD control's tooltip, or
+- **Status bar** (ADR-186, ADR-204): a narrow stripe along the bottom of the adventure map, as wide as the screen up to 16:9 and a centred
+  16:9 width on a wider screen. The battle, town and hero screens and the screens before a game have the same stripe (resources only on
+  the map and the town screen); windows over a screen use that screen's bar; the map editor keeps pop-up tooltips. On the left the status line: the hints, the game's messages and what the pointer is over (a HUD control's tooltip, or
   the name of the hero, object or ground under it on the map), whichever came last. On the right the resources (short amounts past 6 digits
   for gold and 4 for the others, the full one in the tooltip), then the "Menu (F10)" button. In the replay viewer it stands above the
   viewer's bar, and the menu button stays in the corner beside that bar; in battle the menu button stands in the bottom right corner.
+- **Icon buttons** (ADR-204): a button with an icon shows the icon alone, 48 px in bars and panels (the side panel's actions, the battle
+  bar, the town screen's bottom row), 32 px inside windows and rows; hovering it puts its label and hotkey on the status bar, with no
+  pop-up tooltip. A button whose icon is missing keeps its text.
+- **Cursors** (ADR-204, [cursor-prompts.md](../content/cursor-prompts.md)): the pointer shows what a click would do. An arrow on menus,
+  screens and panels, an hourglass while the computer plays or a game loads; on the adventure map a horse (move, with the days from the 2nd
+  on; visit; attack; exchange with a hero; enter a town), a helmet or a keep to select, a shovel to dig, a spell cursor for an adventure
+  spell's target; in battle a sword (melee), a bow or a broken arrow (a shot dealing half or less), a wand or a ring (one-target or area
+  spell), a boulder (the controlled siege engine), a boot, wing or portal (walk, fly, teleport), and a blocked sign. Over an enemy the
+  pointer's place in the cell (eight 45° sectors) picks the side to strike from, one of eight; the sword points that way and the cells the
+  attacker would stand on are highlighted; an unreachable side gives way to the nearest reachable one. Still images at 64 px, scaled for
+  smaller UI; the system arrow when a file is missing.
 - **Pop-ups** (ADR-186): decision prompts (questions, choices) and notices open in the middle of the screen, over the map, in opaque
   panels. The information window (right click) opens at the pointer.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in

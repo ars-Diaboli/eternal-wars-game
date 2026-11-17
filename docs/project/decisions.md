@@ -2725,3 +2725,41 @@ change; no protocol change.
 - **Clock**: the hosts read `TimeProvider` (`Time`, internal; the lobby hands its own to the game's host), so tests move time by hand.
 - **Checked** by `NetLimitsTests` (TCP: a long length, unreadable JSON, a flood; loopback: the timeout, the waiting cap, the per-`Poll`
   share, the record interval, the lobby's timeout and cap).
+
+### ADR-204: Cursors, icon-only buttons, a status bar on every screen, sorted map lists, difficulty icons (ADR-116, ADR-186, ADR-201, owner notes, 2026-11-17)
+**Status**: accepted (2026-11-17), not built. From the owner's notes in `ideas.md` and their answers; *(proposal)* marks the agent's
+fill-ins, for the owner to change. No rule, save or map format change.
+
+- **Cursors** ([cursor-prompts.md](../content/cursor-prompts.md)): the pointer changes with what a click would do, with HoMM3's and HoMM5's
+  states and our own art. A standard arrow on menus, the town and hero screens and panels; an hourglass while a computer turn plays or a game
+  loads; a horse on the adventure map (move, visit, attack, exchange with a hero, enter a town; the days a move takes drawn by the game from
+  the 2nd day on), a helmet and a keep to select a hero or town, a shovel to dig, a spell cursor for an adventure spell's target; in battle a
+  sword for melee, a bow (an arrow, and a broken arrow when the shot deals half or less), a wand for a one-target spell, a ring for an area
+  spell, a boulder for the controlled siege engine against walls, a boot, a wing or a portal for walking, flying and teleporting, and a
+  blocked sign where nothing can be done. **Static images** (the owner's answer), shipped at 64 px and scaled to 48 and 32; the hotspot per
+  cursor in a `cursors.csv` *(proposal)*. A missing file falls back to the system arrow, as missing icons keep the text.
+- **Melee direction**: over an enemy, the pointer's place in the hovered cell (eight 45° sectors round its centre) picks the side to strike
+  from, one of **eight**; the sword cursor points that way and the cells the attacker would stand on (its whole footprint) are
+  highlighted. A side the attacker cannot reach gives way to the nearest reachable one by angle *(proposal)*; a click attacks from the
+  shown side. The choice of side and stand cells is engine-free (Core.Domain, beside `BattleGrid.AttackPositions`, with tests); so is the
+  choice of cursor for what is under the pointer, on the map and in battle *(proposal: one resolver each, returning a cursor id; the views
+  only map ids to images)*.
+- **Icon-only buttons**: a button with an icon (`UiIcons`) shows the icon alone, **48 px** where buttons stand in a bar or panel (the side
+  panel's actions, the battle bar, the town screen's bottom row) and **32 px** inside windows and rows (arrows, close, split) *(proposal)*;
+  no text label. Hovering it shows its label, with its hotkey when it has one ("End turn (E)"), on the **status bar**, not as a pop-up
+  tooltip. A button whose icon file is missing keeps its text.
+- **A status bar on every screen** (the owner's answer): the adventure map's (ADR-186) also along the bottom of the battle, town and hero
+  screens and the screens before a game (main menu, new-game screen, lobby, leaderboard, replay list) *(proposal: the same 16:9-wide
+  stripe; resources only on the map and the town screen)*. Windows over a screen use that screen's bar. The map editor keeps pop-up
+  tooltips *(proposal)*.
+- **Map lists sorted and filtered**: every map list on the new-game screen's tabs (ADR-201), in the game and the LAN lobby, gets a **Sort**
+  choice, **Name** (A–Z, the default) or **Size** (small first, then by name), a second press reversing it, and a **Size** filter: All, or
+  one of the map presets (48 … 256; adventure-map.md) *(proposal)*. A map counts as the smallest preset that holds its larger side (an
+  arena of 35 × 18 is 48); a template is listed under every size it supports and sorts by its smallest. The tab counts show what passes the
+  filter; a chosen map that the filter hides gives way to the first listed. Sort and filter are kept in `settings.json`, the same for every
+  tab *(proposal)*. The ordering and size rule are engine-free (Core, with tests).
+- **Difficulty icons** ([icon-prompts.md](../content/icon-prompts.md), sheet 29): five icons for the five levels (Beginner … Expert), one
+  helmet growing grander, as HoMM3 shows its levels as a row of pictures. The owner's answer: **icons only**; difficulty still sets only
+  the starting resources and the score and never changes the AI (ADR-101). On the new-game screen the complexity becomes a row of the
+  five icon buttons after a "Map default" text button *(proposal)*, the label on the status bar; the victory screen and the leaderboard
+  show the icon beside the name.
