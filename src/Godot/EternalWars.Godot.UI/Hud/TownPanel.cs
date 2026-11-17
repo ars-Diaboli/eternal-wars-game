@@ -66,6 +66,7 @@ public partial class TownPanel : PanelContainer
         if (FullScreen)
         {
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            OffsetBottom = -StatusBar.Height; // the status bar stays in sight below (ADR-204)
             this.UseOpaqueBackground();
             var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill };
             AddChild(scroll);

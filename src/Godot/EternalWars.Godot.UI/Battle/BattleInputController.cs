@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
+using EternalWars.Core.Domain.Cursors;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Info;
 using EternalWars.Godot.Shared.Battle;
@@ -88,6 +89,7 @@ public sealed class BattleInputController
         {
             _battle.ShowIntent(null);
             _hud.ShowUnit(null);
+            GameCursors.Show(GameCursor.Pointer);
             return;
         }
 
@@ -99,10 +101,15 @@ public sealed class BattleInputController
             var picked = _battle.Picked is { } id ? battle.FindUnit(id) : null;
             var at = picked is null ? (CellPosition?)null : BattleTargeting.DeploymentPlacement(battle, picked, point.X, point.Y);
             _battle.ShowPlacement(at is { } p ? picked!.RectAt(p) : null, at is { } q && BattleSetup.DeploymentRefusal(battle, picked!, q) is null);
+            GameCursors.Show(GameCursor.Pointer);
             return;
         }
 
-        _battle.ShowIntent(_battle.Commander is not null ? BattleTargeting.ActionAt(battle, cell, point.X, point.Y) : null);
+        // The stand cells of a move or a blow are highlighted; the cursor says what a click does, a sword pointing from the side (ADR-204).
+        var acting = _battle.Commander is not null;
+        var action = acting ? BattleTargeting.ActionAt(battle, cell, point.X, point.Y) : null;
+        _battle.ShowIntent(action);
+        GameCursors.Show(_battle.Result is not null ? GameCursor.Pointer : BattleCursors.For(battle, acting, _hud.ArmedSpellIsArea, action));
     }
 
     /// <summary>W wait, D defend, R retreat for the active unit's commander; Q quick combat for either human side, both played here.</summary>

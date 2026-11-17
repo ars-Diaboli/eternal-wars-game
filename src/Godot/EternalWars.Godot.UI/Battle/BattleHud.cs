@@ -28,11 +28,11 @@ public partial class BattleHud : Control
     private readonly Label _log = new() { VerticalAlignment = VerticalAlignment.Bottom };
     private readonly Label _info = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(420, 0) };
     private readonly Label _status = new();
-    private readonly Button _wait = new Button { Text = "Wait (W)" }.WithIcon(UiIcon.Hourglass);
-    private readonly Button _defend = new Button { Text = "Defend (D)" }.WithIcon(UiIcon.Defend);
-    private readonly Button _retreat = new Button { Text = "Retreat (R)" }.WithIcon(UiIcon.Retreat);
-    private readonly Button _surrender = new Button { Text = "Surrender" }.WithIcon(UiIcon.Surrender);
-    private readonly Button _quick = new Button { Text = "Quick combat (Q)" }.WithIcon(UiIcon.QuickCombat);
+    private readonly Button _wait = new Button { Text = "Wait (W)" }.WithIcon(UiIcon.Hourglass, UiIcons.BarSize);
+    private readonly Button _defend = new Button { Text = "Defend (D)" }.WithIcon(UiIcon.Defend, UiIcons.BarSize);
+    private readonly Button _retreat = new Button { Text = "Retreat (R)" }.WithIcon(UiIcon.Retreat, UiIcons.BarSize);
+    private readonly Button _surrender = new Button { Text = "Surrender" }.WithIcon(UiIcon.Surrender, UiIcons.BarSize);
+    private readonly Button _quick = new Button { Text = "Quick combat (Q)" }.WithIcon(UiIcon.QuickCombat, UiIcons.BarSize);
     private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
     private readonly HFlowContainer _warcries = new();
     private readonly Dictionary<Warcry, Button> _warcryButtons = [];
@@ -83,14 +83,21 @@ public partial class BattleHud : Control
                 _timeline.Reparent(bar, keepGlobalTransform: false); // the timeline holds no subscriptions
             }
 
-            var lift = (bottom ? BottomBarHeight : 0) + _bottomReserve;
-            (_bottomBar.OffsetTop, _bottomBar.OffsetBottom) = (-_bottomReserve, -UiSpacing.ScreenEdge - _bottomReserve);
+            var reserve = _bottomReserve + StatusBar.Height; // the status bar along the bottom (ADR-204)
+            var lift = (bottom ? BottomBarHeight : 0) + reserve;
+            (_bottomBar.OffsetTop, _bottomBar.OffsetBottom) = (-reserve, -UiSpacing.ScreenEdge - reserve);
+            Bar.BottomOffset = _bottomReserve;
             (_logPanel.OffsetTop, _logPanel.OffsetBottom) = (-190 - lift, -8 - lift);
-            (_actions.OffsetTop, _actions.OffsetBottom) = (-230 - lift, -48 - lift); // above the menu button
+            (_actions.OffsetTop, _actions.OffsetBottom) = (-230 - lift, -8 - lift);
         }
     }
 
     private float _bottomReserve;
+
+    /// <summary>
+    /// The battle's status bar (ADR-204): the buttons' labels and the field's hints; the menu button sits on its right end. Without resources.
+    /// </summary>
+    public StatusBar Bar { get; } = new() { RightReserve = StatusBar.MenuButtonWidth };
 
     /// <summary>Room kept free along the bottom edge (the replay viewer's bar, ADR-164): the initiative bar, the log and the actions stand above it.</summary>
     public float BottomReserve
@@ -112,6 +119,8 @@ public partial class BattleHud : Control
         SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Ignore;
 
+        AddChild(Bar);
+        Bar.Bind(null);
         AddChild(_top);
         _top.AddChild(_title);
         _top.AddChild(_timeline);
@@ -137,7 +146,7 @@ public partial class BattleHud : Control
         actions.AddChild(_warcries);
         foreach (var warcry in Enum.GetValues<Warcry>())
         {
-            var button = new Button { Text = $"{warcry} (warcry)", Visible = false }.WithIcon(UiIcon.Warcry);
+            var button = new Button { Text = $"{warcry} (warcry)", Visible = false }.WithIcon(UiIcon.Warcry, UiIcons.BarSize);
             button.Pressed += () => Act(player => new BattleWarcryCommand(player, warcry));
             _warcryButtons[warcry] = button;
             _warcries.AddChild(button);
@@ -238,10 +247,24 @@ public partial class BattleHud : Control
         _view.Close();
     }
 
-    public void Report(CommandResult result) => _status.Text = result.IsAccepted ? string.Empty : $"Refused: {result.Error}";
+    public void Report(CommandResult result)
+    {
+        _status.Text = result.IsAccepted ? string.Empty : $"Refused: {result.Error}";
+        if (!result.IsAccepted)
+        {
+            Bar.Message.Text = _status.Text;
+        }
+    }
 
     /// <summary>The spell waiting for its target, if a spell button was pressed (ADR-110).</summary>
     public string? ArmedSpell { get; private set; }
+
+    /// <summary>Whether the armed spell hits an area (an area or a line, for the cursor, ADR-204); null when none is armed.</summary>
+    public bool? ArmedSpellIsArea => ArmedSpell is null ? null : _armedArea;
+
+    private bool _armedArea;
+
+    private static bool HitsArea(KnownSpell known) => known.Effect is { } effect && (effect.Reach == Core.Domain.Magic.SpellReach.Area || effect.Zone is not null);
 
     /// <summary>A two-click spell's first aim (ADR-151): the stack a move takes or a drain hits, once clicked; null before.</summary>
     private int? _firstAim;
@@ -318,7 +341,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        (ArmedSpell, _creatureArmed) = (known.Spell.Id, true);
+        (ArmedSpell, _creatureArmed, _armedArea) = (known.Spell.Id, true, HitsArea(known));
         _status.Text = $"{known.Spell.Name} (the stack's own spell): click a target (Esc cancels).";
     }
 
@@ -339,7 +362,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        (ArmedSpell, _creatureArmed, _firstAim) = (known.Spell.Id, false, null);
+        (ArmedSpell, _creatureArmed, _firstAim, _armedArea) = (known.Spell.Id, false, null, HitsArea(known));
         _status.Text = known.Effect.TwoClicks
             ? $"{known.Spell.Name}: click the stack, then {(!known.Effect.SecondIsStack ? "where it goes" : known.Effect.DrainPercent > 0 ? "the own stack it heals" : "the own stack that takes its blows")} (Esc cancels)."
             : $"{known.Spell.Name}: click a target (Esc cancels).";
@@ -470,7 +493,7 @@ public partial class BattleHud : Control
 
         var refusal = SurrenderRules.Check(_session.State, battle, active.Side);
         var price = SurrenderRules.Price(battle, active.Side);
-        _surrender.Text = $"Surrender ({price} gold)";
+        _surrender.SetLabel($"Surrender ({price} gold)");
         _surrender.Disabled = refusal is not null;
         _surrender.TooltipText = refusal ?? "Pay the enemy and leave with your army; the hero waits in your taverns.";
     }

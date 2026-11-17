@@ -127,7 +127,7 @@ public partial class AdventureHud : CanvasLayer
         minimapBox.AddChild(minimap);
         minimap.Bind(context);
         minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
-        var level = new Button { Text = "Switch level (L)", Disabled = session.State.Map.Levels < 2 }.WithIcon(UiIcon.SwitchLevel);
+        var level = new Button { Text = "Switch level (L)", Disabled = session.State.Map.Levels < 2 }.WithIcon(UiIcon.SwitchLevel, UiIcons.BarSize);
         level.Pressed += () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
         minimapBox.AddChild(level);
         var lists = new VBoxContainer();
@@ -163,6 +163,13 @@ public partial class AdventureHud : CanvasLayer
         _layout.SetPart(HudPart.Actions, side);
 
         BuildScreens(playing, screens, side);
+
+        // The status bar stands over the town, hero and exchange screens too (ADR-204), which stop short of it: its own layer above
+        // theirs, shown while the HUD is.
+        var barLayer = new CanvasLayer { Name = "StatusBarLayer", Layer = 1 };
+        screens.AddChild(barLayer);
+        StatusBar.Reparent(barLayer, keepGlobalTransform: false);
+        VisibilityChanged += () => barLayer.Visible = Visible;
         _layout.BottomReserve = StatusBar.Height + StatusBar.BottomOffset; // the bottom parts stand above the status bar
         _layout.Apply(layout);
     }
@@ -308,7 +315,7 @@ public partial class AdventureHud : CanvasLayer
         KingdomScreen = new KingdomOverviewPanel();
         townLayer.AddChild(KingdomScreen);
         KingdomScreen.Bind(_session);
-        var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" }.WithIcon(UiIcon.Kingdom);
+        var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" }.WithIcon(UiIcon.Kingdom, UiIcons.BarSize);
         kingdom.Pressed += () => KingdomScreen.Open(_session.State.CurrentPlayer.Id);
         side.AddChild(kingdom);
         QuestScreen = new QuestLogPanel();
@@ -319,7 +326,7 @@ public partial class AdventureHud : CanvasLayer
             _context.SetLevel(position.Level);
             _camera.FocusOn(MapSpace.ToWorld(position));
         };
-        var quests = new Button { Text = "Quests (Q)", TooltipText = "The quests your heroes were shown" }.WithIcon(UiIcon.Quests);
+        var quests = new Button { Text = "Quests (Q)", TooltipText = "The quests your heroes were shown" }.WithIcon(UiIcon.Quests, UiIcons.BarSize);
         quests.Pressed += () => QuestScreen.Open(_session.State.CurrentPlayer.Id);
         side.AddChild(quests);
         PuzzleScreen = new PuzzleMapPanel();
@@ -327,16 +334,16 @@ public partial class AdventureHud : CanvasLayer
         PuzzleScreen.Bind(_session);
         var grail = new HBoxContainer();
         side.AddChild(grail);
-        var puzzle = new Button { Text = "Puzzle map (P)", TooltipText = "The ground around the Grail, as your obelisks show it" }.WithIcon(UiIcon.PuzzleMap);
+        var puzzle = new Button { Text = "Puzzle map (P)", TooltipText = "The ground around the Grail, as your obelisks show it" }.WithIcon(UiIcon.PuzzleMap, UiIcons.BarSize);
         puzzle.Pressed += () => PuzzleScreen.Open(_session.State.CurrentPlayer.Id);
         grail.AddChild(puzzle);
-        var dig = new Button { Text = "Dig (G)", TooltipText = "The selected hero digs where it stands, with a whole day's movement" }.WithIcon(UiIcon.Dig);
+        var dig = new Button { Text = "Dig (G)", TooltipText = "The selected hero digs where it stands, with a whole day's movement" }.WithIcon(UiIcon.Dig, UiIcons.BarSize);
         dig.Pressed += () => DigRequested?.Invoke();
         dig.Visible = playing;
         grail.AddChild(dig);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
-        var market = new Button { Text = "Marketplace" }.WithIcon(UiIcon.Marketplace);
+        var market = new Button { Text = "Marketplace" }.WithIcon(UiIcon.Marketplace, UiIcons.BarSize);
         void RefreshMarketButton()
         {
             market.Disabled = !MarketplacePanel.CanOpenFromTowns(_session.State);

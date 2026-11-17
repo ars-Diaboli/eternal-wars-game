@@ -2729,7 +2729,14 @@ change; no protocol change.
 ### ADR-204: Cursors, icon-only buttons, a status bar on every screen, sorted map lists, difficulty icons (ADR-116, ADR-186, ADR-201, owner notes, 2026-11-17)
 **Status**: accepted (2026-11-17); built: the map lists' sort and filter (`MapListView`, `MapSizeClass` in Core.Domain, kept as
 `InterfaceSettings.MapSort` / `MapSortReversed` / `MapSizeFilter`; a map file that does not load has no size: listed under All sizes only, last
-by size); the rest not built. From the owner's notes in `ideas.md` and their answers; *(proposal)* marks the agent's
+by size); the cursors' choice (`AdventureCursors`, `BattleCursors`, `GameCursor`, Core.Domain `Cursors`) and the melee side
+(`BattleTargeting.SideOf`, `CompassSide`), shown by `GameCursors` (Godot.UI), which falls back to system cursors (arrow, hand, cross,
+forbidden, busy) until the images exist; the hotspots are a table in `GameCursors.Definition`, not a `cursors.csv`; the icon-only buttons
+(`UiIcons.WithIcon`, label in `status_label` metadata, `SetLabel` for buttons renamed later; the map editor shows the label as the tooltip);
+the status bar on the town, hero and exchange screens (the map's bar on its own layer above them), in battle (no resources; the menu button
+on its right end) and before a game (`SetupScreenHost.Bar`). Not built: the difficulty icons (no art yet); the days a move takes on the move
+cursor (drawn once the images exist); a button with a description or a refusal in its tooltip still shows it as a pop-up as well. From the
+owner's notes in `ideas.md` and their answers; *(proposal)* marks the agent's
 fill-ins, for the owner to change. No rule, save or map format change.
 
 - **Cursors** ([cursor-prompts.md](../content/cursor-prompts.md)): the pointer changes with what a click would do, with HoMM3's and HoMM5's
@@ -2742,8 +2749,8 @@ fill-ins, for the owner to change. No rule, save or map format change.
   cursor in a `cursors.csv` *(proposal)*. A missing file falls back to the system arrow, as missing icons keep the text.
 - **Melee direction**: over an enemy, the pointer's place in the hovered cell (eight 45° sectors round its centre) picks the side to strike
   from, one of **eight**; the sword cursor points that way and the cells the attacker would stand on (its whole footprint) are
-  highlighted. A side the attacker cannot reach gives way to the nearest reachable one by angle *(proposal)*; a click attacks from the
-  shown side. The choice of side and stand cells is engine-free (Core.Domain, beside `BattleGrid.AttackPositions`, with tests); so is the
+  highlighted. The sectors are taken round the **target's centre** (for a 2 × 2 target its whole footprint), not the hovered cell's. A side
+  the attacker cannot reach gives way to the nearest reachable one by angle *(proposal)*; a click attacks from the shown side. The choice of side and stand cells is engine-free (Core.Domain, beside `BattleGrid.AttackPositions`, with tests); so is the
   choice of cursor for what is under the pointer, on the map and in battle *(proposal: one resolver each, returning a cursor id; the views
   only map ids to images)*.
 - **Icon-only buttons**: a button with an icon (`UiIcons`) shows the icon alone, **48 px** where buttons stand in a bar or panel (the side

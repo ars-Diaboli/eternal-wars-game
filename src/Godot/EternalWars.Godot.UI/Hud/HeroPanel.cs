@@ -65,6 +65,7 @@ public partial class HeroPanel : PanelContainer
         if (FullScreen)
         {
             SetAnchorsAndOffsetsPreset(LayoutPreset.FullRect);
+            OffsetBottom = -StatusBar.Height; // the status bar stays in sight below (ADR-204)
             this.UseOpaqueBackground();
             var scroll = new ScrollContainer { SizeFlagsVertical = SizeFlags.ExpandFill, SizeFlagsHorizontal = SizeFlags.ExpandFill };
             AddChild(scroll);
@@ -77,11 +78,11 @@ public partial class HeroPanel : PanelContainer
 
         var header = new HBoxContainer();
         box.AddChild(header);
-        var previous = new Button { Text = "<", TooltipText = "Previous hero" }.WithIcon(UiIcon.ArrowLeft, iconOnly: true);
+        var previous = new Button { Text = "Previous hero" }.WithIcon(UiIcon.ArrowLeft);
         previous.Pressed += () => Step(-1);
         header.AddChild(previous);
         header.AddChild(_title);
-        var next = new Button { Text = ">", TooltipText = "Next hero" }.WithIcon(UiIcon.ArrowRight, iconOnly: true);
+        var next = new Button { Text = "Next hero" }.WithIcon(UiIcon.ArrowRight);
         next.Pressed += () => Step(1);
         header.AddChild(next);
         var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);

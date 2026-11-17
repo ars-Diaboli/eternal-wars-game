@@ -61,6 +61,7 @@ public partial class Main : Node3D
     public override void _Ready()
     {
         UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)
+        UiIcons.LabelsOnStatusBar = false; // the editor has no status bar: icon buttons name themselves in their tooltips (ADR-204)
         WindowModes.Apply(SettingsFile.LoadInterface(SettingsPath).Window);
         if (AutoInput.FromLaunchArguments() is { } autoInput)
         {

@@ -52,9 +52,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   on; visit; attack; exchange with a hero; enter a town), a helmet or a keep to select, a shovel to dig, a spell cursor for an adventure
   spell's target; in battle a sword (melee), a bow or a broken arrow (a shot dealing half or less), a wand or a ring (one-target or area
   spell), a boulder (the controlled siege engine), a boot, wing or portal (walk, fly, teleport), and a blocked sign. Over an enemy the
-  pointer's place in the cell (eight 45° sectors) picks the side to strike from, one of eight; the sword points that way and the cells the
+  pointer's place round the target's centre (eight 45° sectors) picks the side to strike from, one of eight; the sword points that way and the cells the
   attacker would stand on are highlighted; an unreachable side gives way to the nearest reachable one. Still images at 64 px, scaled for
-  smaller UI; the system arrow when a file is missing.
+  smaller UI; while an image is missing the nearest system cursor stands in (arrow, hand, cross, forbidden, busy). Controls show the arrow.
 - **Pop-ups** (ADR-186): decision prompts (questions, choices) and notices open in the middle of the screen, over the map, in opaque
   panels. The information window (right click) opens at the pointer.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in

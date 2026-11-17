@@ -712,7 +712,7 @@ public partial class NewGameScreen : PanelContainer
     {
         _generated = null;
         _openConfirmed = false;
-        _start.Text = "Start";
+        _start.SetLabel("Start");
     }
 
     private void Start()
@@ -799,7 +799,7 @@ public partial class NewGameScreen : PanelContainer
             }
 
             _generated = result;
-            _start.Text = "Start anyway";
+            _start.SetLabel("Start anyway");
             _status.Text = $"Every try of this seed left problems; the best map has: {string.Join(" ", result.Problems)} Start it anyway, or change the seed.";
         }
         catch (Exception e) when (e is ArgumentException or InvalidOperationException)
