@@ -2702,3 +2702,26 @@ change; no protocol change.
 - **Classified as before**, except: the calendar and the game's end (`GameStarted`, `DayStarted`, `WeekStarted`, `WeekEventAnnounced`,
   `GameEnded`) and `SimultaneousDayConflicted` are declared `Everyone` (they already went to everyone); the map-script events above go
   to `Nobody` (no client view uses them).
+
+### ADR-203: What a link may cost a LAN host (ADR-192, ADR-194, ADR-196, 2026-11-17)
+**Status**: implemented. No rule, save, map or protocol format changes.
+
+- **Why**: anyone on the network can connect to a host. A link read any length up to 64 MB and allocated it before the body came, could wait
+  for ever without joining, any number could, a `Poll` read everything a link had sent, a message whose reading threw anything but a
+  few exception types stopped its reader with the link still up (a seat held by nobody), and every `RecordRequest` made the host write the
+  whole record.
+- **Limits** (`NetLimits`, Core.Network), the same for the lobby (`LobbyHost`) and the game (`GameHost`):
+  - A link the host accepts (`TcpGameListener`) reads messages of at most **64 KB** (`MaxClientMessageBytes`), checked on the length
+    before anything is allocated, and closes once more than **256** wait for `Poll` (`MaxClientMessagesWaiting`). It is the limit for the
+    link's whole life, not only before the join: a client only sends joins, colours, chat (200 characters), commands and record requests.
+    The client's end still reads up to 64 MB (`TcpConnection.MaxMessageBytes`): the host sends the map and whole records.
+  - A link must send its `JoinRequest` within **10 seconds** (`JoinTimeout`), else it gets `JoinRefused` and is closed. A seated client,
+    or one the lobby hands to the game, has no timeout.
+  - At most **8** links wait to join at once (`MaxUnjoined`); one more is turned away at once (`JoinRefused`).
+  - A `Poll` takes at most **16** messages from a link (`MaxMessagesPerPoll`); the rest wait for the next.
+  - A client gets the game's record at most once every **5 seconds** (`RecordInterval`); a request sooner is answered with an error
+    (`RecordSent` without a record), which the client shows like any refused save.
+  - Whatever reading a message throws closes the link with the exception's message.
+- **Clock**: the hosts read `TimeProvider` (`Time`, internal; the lobby hands its own to the game's host), so tests move time by hand.
+- **Checked** by `NetLimitsTests` (TCP: a long length, unreadable JSON, a flood; loopback: the timeout, the waiting cap, the per-`Poll`
+  share, the record interval, the lobby's timeout and cap).
