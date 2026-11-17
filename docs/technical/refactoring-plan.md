@@ -175,7 +175,7 @@ The order is: safety first, then a measurement baseline, then cheap performance 
     |---|---|---|
     | 300 idle host polls | 380–440 ms (about 1.4 ms a frame) | 0.2 ms |
     | 4 polls after AI days | 7.4 ms | 2.5–3.0 ms (including compiling the getters once) |
-- [x] **Small Godot fixes:** four of the five are done. The battle-input change is deferred to Phase 2 (see below).
+- [x] **Small Godot fixes:** all five are done; the battle-input one through Phase 2 "Battle reach".
   - [x] Split `MapViewContext.Changed` into `ViewerChanged` and `LevelChanged`.
     - Done (P10). Each view subscribes to what it draws:
       - viewer only: the per-level views (fog, map objects, the map apron);
@@ -186,14 +186,52 @@ The order is: safety first, then a measurement baseline, then cheap performance 
     - Done. A `MeshCache` makes each placeholder mesh, and its material, once per shape, size and colour. Each view owns its cache, so the resources are freed with the view and don't linger in statics. No code changes these materials after they are made.
   - [x] Throttle the timer label and keep its `StringName` in a static field.
     - Done. `TurnTimerPanel` redraws only when the shown second, the stopped or time-up state, the warning or the colour changes, and it uses a static `font_color` name.
-  - [ ] Remember the last hovered cell in battle input.
-    - Deferred to Phase 2 "Battle reach". `BattleTargeting.ActionAt` depends on the exact pointer position, not only the cell: the attack side and the tie-breaks use the pointer's distance. It also depends on the battle state. A per-cell cache would change which stand a click picks, and nothing yet tells the input when the battle changed. The cost is the reach search inside `ActionAt`; the version-keyed reach cache planned for Phase 2 removes it without changing behaviour.
+  - [x] Remember the last hovered cell in battle input.
+    - Done through Phase 2 "Battle reach", not with a per-cell cache. `BattleTargeting.ActionAt` depends on the exact pointer position, not only the cell: the attack side and the tie-breaks use the pointer's distance. It also depends on the battle state, so a per-cell cache would change which stand a click picks. Its cost was the reach search, and hovering now gets the kept reach until the battle changes.
   - [x] Use `static readonly NodePath` for tween property paths.
     - Done. `TweenPaths` holds the five paths the views tween; all 21 `TweenProperty` calls use them.
   - Checked with the Godot smoke scenarios (Movie Maker; they fail on any Godot or C# error): route and move, 3D battle, turn timer, grail, replay viewer, generated connections in the editor, hero exchange and gate, and siege.
 ### Phase 2: Algorithm-level performance (about 1–2 weeks; check digests and AI behaviour with sim A/B runs)
-- [ ] **AI path costs:** one Dijkstra flood per (hero, position, command count), with candidate costs read from its cost array. Build the full route only for the winner. Do a reverse flood for Dimension Door landings, and cache the last path so the `MoveHeroCommand` does not search again.
-- [ ] **Battle reach:** remember `Search(battle, unit)` on `BattleState`, keyed by a version number bumped on any move, death or spell. Add `AttackPositions(reach, …)` so the AI filters one search. Build one `Clearance` for each placement scan. Add a unit occupancy grid and an id→unit dictionary.
+- [x] **AI path costs:** one Dijkstra flood per (hero, position, command count), with candidate costs read from its cost array. Build the full route only for the winner. Do a reverse flood for Dimension Door landings, and cache the last path so the `MoveHeroCommand` does not search again.
+  - Done (ADR-205):
+    - `PathFinder.CostsFrom` and `CostsTo` are Dijkstra searches over the route rules that run only as far as the questions so far need. They answer exactly what `FindPath` gives as the route's cost. Steps only a target may take (bumping into a hero or quest object, stepping onto a monster from the tile it guards) are kept apart and count only for that tile. `PathFinder` and the cost maps share the rule helpers, so they can't drift apart.
+    - The AI keeps one cost map per hero until `GameSession.ChangeStamp` moves (commands accepted, events published, hero moves). It prices its candidate targets, its exploring tiles, Town Portal and the walk before a Dimension Door with that map. One `CostsTo` map prices every Dimension Door landing; an origin with a visit tile falls back to a search, since a route may come back over it. The arena gathering and the route spells still search, because they need the route itself or move right away.
+    - `HeroMovementService.FindPath` returns its last route while the change stamp stays the same, so the move after a check doesn't search again.
+  - The flood exposed a bug in `FindPath`: its distance estimate counted 71 for a diagonal, but a dirt-road diagonal costs 70. A* then sometimes settled for a route up to a few points dearer, on maps without gates. The estimate now counts 70, so A* and the cost maps agree everywhere. Checked with a temporary comparison of every AI cost query against `FindPath` over 12 generated games: before the fix, 5 games had mismatches; after it, none did.
+  - `PathCostMapTests` compares every tile's answer with `FindPath`, in three orders of asking. It covers two levels with monsters, linked and one-way gates, a garrison, a quest guard, a border guard and heroes, with and without fog, plus a reverse map for nine targets. It also has random road maps on which the old estimate fails. Two more tests cover the last-route cache.
+  - Sim A/B against the previous commit, 18 generated games of 60 days (duel, ffa-4, 2v2, seeds 1–6): 15 end in an identical state. In 3, the cheaper routes change choices; the duel among them is won by the same player, on day 54 instead of 46. Total wall time 561 → 509 s. The baseline games keep their digests (the duel takes one more move on the way).
+  - Baselines (one Release run each, after Phase 1):
+
+    | Game | Path searches | Tiles expanded | Search time | Turn (mean / median) |
+    |---|---|---|---|---|
+    | Big map | 12,972 → 924, plus 924 cost maps | 6.3 M → 1.4 M | 4.7 → 1.9 s (8 % of turn time) | 98 → 106 ms / 44 → 47 ms, within this machine's noise |
+    | Duel | 5,680 → 329, plus 329 cost maps | 1.5 M → 0.5 M | 1.9 → 1.4 s | 150 → 117 ms / 120 → 106 ms |
+
+    On the big map, path search was already only a fifth of turn time after Phase 1, so most of the remaining turn time is elsewhere (battle estimates, P7).
+- [x] **Battle reach:** remember `Search(battle, unit)` on `BattleState`, keyed by a version number bumped on any move, death or spell. Add `AttackPositions(reach, …)` so the AI filters one search. Build one `Clearance` for each placement scan. Add a unit occupancy grid and an id→unit dictionary.
+  - Done (P6), with three changes to the plan:
+    - **Key.** The cache is keyed by what the search reads, not by a version number. The search reads more than moves, deaths and spells: the unit's place, footprint, side and move limit (spells, the hero's bonus, native terrain); whether it flies or is held; the moat; standing walls; obstacles; the other living units' footprints; and the zones that block it. A version number would have to be bumped wherever any of these changes, and one missed bump would silently hand out a wrong reach, which the rules also use to validate moves. The key holds those inputs as numbers and is compared in full (about 50 integers, against a search of 0.2–0.4 ms). A kept reach can therefore never be stale, even when the AI or a test moves a unit by hand.
+    - **Storage.** The cache sits beside the battle in a `ConditionalWeakTable`, not in `BattleState`. The battle is saved, sent to LAN clients and copied field by field (`StateCodec`, `BattleCopyTests`), so a cache field would travel with it. Each battle (and each copy) gets its own cache, which goes when the battle does.
+    - **Not done: the occupancy grid and the id→unit dictionary.** Counted over the whole duel game, `UnitAt` runs about 330k times and `GetUnit`/`FindUnit` about 52k, each a scan over about 14 units: around 20 ms in all. That doesn't justify another index that must follow every move, death, summon and split.
+  - Also done:
+    - `AttackPositions(reach, unit, target)` lets the battle AI weigh every target from one reach. Its sort gives the same order as before.
+    - `FreePlacements(battle, unit)` builds one `Clearance` for a whole placement scan: placements near a stack, a summon's spot, a skeleton's spot, the keep shooter's spot.
+    - The walker search keeps its state in arrays over the field instead of dictionaries and a hash set, and still hands out the placements in the order they were first reached. Straight-line lengths come from a table, the clearance table is a flat array, and the line check no longer allocates on each step.
+  - The reaches handed out are shared, so callers must not change them; they are `IReadOnlyDictionary`.
+  - `BattleReachCacheTests`:
+    - plays four battles (two of them sieges) with the AI, and after every action checks every unit's kept reach, its paths and its attack placements against a fresh search on a copy;
+    - casts Thornwall, Haste and Entangle, takes a wall down, kills a stack, adds an obstacle and moves units, checking each time that the reach is searched again;
+    - checks that `FreePlacements` agrees with `IsFree` everywhere.
+    
+    Leaving the zones, or the other side's units, out of the key makes these tests fail.
+  - The 18 A/B games of the AI path costs item end in the same states as before: same digests, and the same results in 200 `sim battle` runs. Their total time fell from 509 to 286 s. About half the reach calls in battles are now kept answers, and the AI makes about 40 % fewer of them. Baselines (one Release run each):
+
+    | Game | Turn (mean / median) | Battles |
+    |---|---|---|
+    | Big map | 106 → 52 ms / 47 → 38 ms | 150 → 41 ms |
+    | Duel | 117 → 94 ms / 106 → 74 ms | 399 → 173 ms |
+
+    Most of the gain is in the AI's battle estimates (P7), which play battles out and so search reaches too.
 - [ ] **`BattleEstimator`:** build the `BattleState` directly, following `BattleCommandHandler.Preview`. Use a struct hash key and a bounded cache that survives across turns.
 - [ ] **Visibility:** cache flagged observers per player, and recompute only the circle of the observer that moved.
 - [ ] **Map editor:** ground split into chunks of about 32×32 tiles, rebuilding only the chunks a stroke touches, and patch only the painted pixels of the splat map.

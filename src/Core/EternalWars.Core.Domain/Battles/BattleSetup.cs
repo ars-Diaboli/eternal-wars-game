@@ -114,9 +114,10 @@ public static class BattleSetup
             return;
         }
 
+        var free = BattleGrid.FreePlacements(battle, shooter);
         var spot = Enumerable.Range(SiegeRules.WallX + 1, battle.Width - shooter.Width - SiegeRules.WallX)
             .SelectMany(x => Enumerable.Range(0, BattleState.Height - shooter.Height + 1).Select(y => new CellPosition(x, y)))
-            .Where(p => p == shooter.Position || BattleGrid.IsFree(battle, shooter, p))
+            .Where(p => p == shooter.Position || free(p))
             .OrderBy(p => battle.Width - shooter.Width - p.X).ThenBy(p => Math.Abs(p.Y - SiegeRules.GateY)).ThenBy(p => p.Y)
             .Select(p => (CellPosition?)p)
             .FirstOrDefault();

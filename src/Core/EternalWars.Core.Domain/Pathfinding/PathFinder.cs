@@ -31,13 +31,17 @@ namespace EternalWars.Core.Domain.Pathfinding;
 /// Search state is (tile, arrived-by-teleport): a gate entrance reached on foot must teleport,
 /// but the same tile reached by teleport may be walked away from.
 /// </remarks>
-public sealed class PathFinder(GameState state)
+public sealed partial class PathFinder(GameState state)
 {
     private const int CheapestOrthogonal = 50; // dirt road
-    private const int CheapestDiagonalExtra = 21;
+
+    /// <summary>A diagonal dirt-road step costs 70 (50 × 1.41 = 70.5, rounded to even): the estimate must never count more, or routes come out dearer.</summary>
+    private const int CheapestDiagonalExtra = 20;
 
     [ThreadStatic]
     private static PathSearchCounters _counters;
+
+    private GameState State => state;
 
     [ThreadStatic]
     private static SearchBuffers? _spare;
@@ -59,26 +63,12 @@ public sealed class PathFinder(GameState state)
         var hero = state.GetHero(heroId);
         var map = state.Map;
         var origin = from ?? hero.Position;
-        if (target == origin || MovementRules.CheckTile(state, target) != MoveResult.Moved ||
-            (respectFog && !state.Fog.IsExplored(hero.Owner, target)))
+        if (target == origin || TargetKindOf(hero, target, respectFog) is not { } kind)
         {
             return null;
         }
 
-        // A hero on the target turns the route into a meeting/battle, or makes it impossible (ally).
-        var targetIsEncounter = false;
-        if (state.HeroAt(target) is { } targetHero && (!respectFog || state.CanSee(hero.Owner, targetHero)))
-        {
-            if (MovementRules.Classify(state, hero.Owner, targetHero) == HeroEncounter.Ally)
-            {
-                return null;
-            }
-
-            targetIsEncounter = true;
-        }
-
-        // A barring quest object can be clicked: the route ends on it and the last step bumps into it (EVT-5).
-        targetIsEncounter |= QuestRules.Barring(state, hero, target) is not null;
+        var targetIsEncounter = kind == TargetKind.Encounter;
 
         // The buffers this thread keeps between searches; a search started inside another (none today) gets its own.
         var search = _spare ?? new SearchBuffers();
@@ -124,9 +114,7 @@ public sealed class PathFinder(GameState state)
             if (current != start && state.IsGuarded(position))
             {
                 // Except towards the guarding monster itself: clicking a monster routes up to it (HoMM3).
-                if (state.GuardsOf(position).Any(m => m.VisitPosition == target) &&
-                    DirectionExtensions.FromOffset(target.X - position.X, target.Y - position.Y) is { } toMonster &&
-                    target.Level == position.Level)
+                if (GuardEdge(position, target) is { } toMonster)
                 {
                     Relax(current, Node(target, teleported: false), MovementRules.StepCost(state, hero, position, target, toMonster, terrainCosts), target);
                 }
@@ -134,11 +122,11 @@ public sealed class PathFinder(GameState state)
                 continue;
             }
 
-            if (current != start && !teleported && state.ObjectCellAt(position) is { Cell: FootprintCell.Visit } visit)
+            if (current != start && !teleported && VisitAt(hero, position) is { } visit)
             {
-                if (visit.Object.TeleportTarget is not null)
+                if (visit.Teleports)
                 {
-                    if (state.TeleportDestination(visit.Object) is { } exit && CanStandOn(exit))
+                    if (TeleportExit(hero, visit.Object, respectFog) is { } exit)
                     {
                         Relax(current, Node(exit, teleported: true), 0, exit);
                     }
@@ -146,8 +134,7 @@ public sealed class PathFinder(GameState state)
                     continue;
                 }
 
-                // Own and allied garrisons are passes (ADR-070).
-                if (visit.Object.EndsRoute && !(visit.Object is MapGarrison garrison && garrison.LetsThrough(state, hero.Owner)))
+                if (visit.EndsRoute)
                 {
                     continue;
                 }
@@ -166,14 +153,7 @@ public sealed class PathFinder(GameState state)
         Count(expanded, found: false, started);
         return null;
 
-        bool IsKnown(Hero other) => !respectFog || state.CanSee(hero.Owner, other);
-
-        bool CanStandOn(MapPosition position) =>
-            MovementRules.CheckTile(state, position) == MoveResult.Moved &&
-            BorderRules.Barring(state, hero.Owner, position) is null &&
-            QuestRules.Barring(state, hero, position) is null &&
-            (!respectFog || state.Fog.IsExplored(hero.Owner, position)) &&
-            (state.HeroAt(position) is not { } other || !IsKnown(other));
+        bool CanStandOn(MapPosition position) => this.CanStandOn(hero, position, respectFog);
 
         void Relax(int from, int to, int stepCost, MapPosition toPosition)
         {
@@ -187,6 +167,76 @@ public sealed class PathFinder(GameState state)
             open.Enqueue(to, candidate + (useHeuristic ? Heuristic(toPosition, target) : 0));
         }
     }
+
+    /// <summary>
+    /// Whether a route may end on <paramref name="target"/>, and how: null when it may not (a tile no hero can stand on, unexplored with
+    /// <paramref name="respectFog"/>, or an allied hero on it); <see cref="TargetKind.Encounter"/> when the last step bumps into what stands
+    /// there (a hero the owner knows of: a meeting or a battle; or a barring quest object, EVT-5).
+    /// </summary>
+    private TargetKind? TargetKindOf(Hero hero, MapPosition target, bool respectFog)
+    {
+        if (MovementRules.CheckTile(state, target) != MoveResult.Moved || (respectFog && !state.Fog.IsExplored(hero.Owner, target)))
+        {
+            return null;
+        }
+
+        var kind = TargetKind.Plain;
+        if (state.HeroAt(target) is { } targetHero && IsKnown(hero, targetHero, respectFog))
+        {
+            if (MovementRules.Classify(state, hero.Owner, targetHero) == HeroEncounter.Ally)
+            {
+                return null;
+            }
+
+            kind = TargetKind.Encounter;
+        }
+
+        return QuestRules.Barring(state, hero, target) is not null ? TargetKind.Encounter : kind;
+    }
+
+    private bool IsKnown(Hero hero, Hero other, bool respectFog) => !respectFog || state.CanSee(hero.Owner, other);
+
+    /// <summary>Whether a route may pass over <paramref name="position"/> (not only end there).</summary>
+    private bool CanStandOn(Hero hero, MapPosition position, bool respectFog) =>
+        MovementRules.CheckTile(state, position) == MoveResult.Moved &&
+        BorderRules.Barring(state, hero.Owner, position) is null &&
+        QuestRules.Barring(state, hero, position) is null &&
+        (!respectFog || state.Fog.IsExplored(hero.Owner, position)) &&
+        (state.HeroAt(position) is not { } other || !IsKnown(hero, other, respectFog));
+
+    /// <summary>
+    /// The step from a guarded <paramref name="position"/> onto <paramref name="monster"/>, when a monster guarding the position is visited
+    /// there: the one step a route may take out of a guarded tile (clicking a monster routes up to it, HoMM3).
+    /// </summary>
+    private Direction? GuardEdge(MapPosition position, MapPosition monster) =>
+        state.GuardsOf(position).Any(m => m.VisitPosition == monster) &&
+        DirectionExtensions.FromOffset(monster.X - position.X, monster.Y - position.Y) is { } toMonster &&
+        monster.Level == position.Level
+            ? toMonster
+            : null;
+
+    /// <summary>The object visited on <paramref name="position"/> and what it does to a route that walks onto it, or null.</summary>
+    private Visit? VisitAt(Hero hero, MapPosition position) =>
+        state.ObjectCellAt(position) is { Cell: FootprintCell.Visit } visit
+            ? new Visit(
+                visit.Object,
+                visit.Object.TeleportTarget is not null,
+                // Own and allied garrisons are passes (ADR-070).
+                visit.Object.EndsRoute && !(visit.Object is MapGarrison garrison && garrison.LetsThrough(state, hero.Owner)))
+            : null;
+
+    /// <summary>Where the gate takes a hero who walks in, when the hero may stand there.</summary>
+    private MapPosition? TeleportExit(Hero hero, MapObject gate, bool respectFog) =>
+        state.TeleportDestination(gate) is { } exit && CanStandOn(hero, exit, respectFog) ? exit : null;
+
+    private enum TargetKind
+    {
+        Plain,
+        Encounter,
+    }
+
+    /// <summary>An object's visit tile on a route: a gate moves the hero on; otherwise, unless it is harmless to walk over, the route ends there.</summary>
+    private readonly record struct Visit(MapObject Object, bool Teleports, bool EndsRoute);
 
     private static void Count(int expanded, bool found, long started) => _counters = _counters with
     {
@@ -311,13 +361,14 @@ public sealed class PathFinder(GameState state)
 
 /// <summary>
 /// What the <see cref="PathFinder"/> has done on a thread: the searches started (those that stopped at once included), the ones that found a
-/// route, the tiles they expanded and the time the searches took (wall clock; searches that stopped at once are not timed).
+/// route, the tiles they expanded and the time the searches took (wall clock; searches that stopped at once are not timed), and the cost
+/// maps started (<see cref="PathFinder.CostsFrom"/>, <see cref="PathFinder.CostsTo"/>), whose tiles and time are counted with the searches'.
 /// </summary>
-public readonly record struct PathSearchCounters(long Searches, long Found, long Expanded, TimeSpan Time)
+public readonly record struct PathSearchCounters(long Searches, long Found, long Expanded, TimeSpan Time, long Floods = 0)
 {
     public static PathSearchCounters operator +(PathSearchCounters a, PathSearchCounters b) =>
-        new(a.Searches + b.Searches, a.Found + b.Found, a.Expanded + b.Expanded, a.Time + b.Time);
+        new(a.Searches + b.Searches, a.Found + b.Found, a.Expanded + b.Expanded, a.Time + b.Time, a.Floods + b.Floods);
 
     public static PathSearchCounters operator -(PathSearchCounters a, PathSearchCounters b) =>
-        new(a.Searches - b.Searches, a.Found - b.Found, a.Expanded - b.Expanded, a.Time - b.Time);
+        new(a.Searches - b.Searches, a.Found - b.Found, a.Expanded - b.Expanded, a.Time - b.Time, a.Floods - b.Floods);
 }

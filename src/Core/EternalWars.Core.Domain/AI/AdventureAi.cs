@@ -1383,12 +1383,12 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             }
 
             checkedCount++;
-            if (session.Movement.FindPath(hero.Id, candidate.Position) is not { } path)
+            if (WalkCost(hero, candidate.Position) is not { } cost)
             {
                 continue;
             }
 
-            var score = candidate.Value / (0.5 + Days(hero, path.TotalCost));
+            var score = candidate.Value / (0.5 + Days(hero, cost));
             if (score > bestScore)
             {
                 (best, bestScore) = (candidate.Position, score);
@@ -1453,7 +1453,7 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
             var danger = Danger(hero.Owner, t.Position, except: t.Position);
             var safe = t.Opponent is not { } opponent ? "no fight"
                 : _estimator.Fight(hero, opponent, t.OpponentAttack, t.OpponentDefense, t.Siege).IsSafe(t.MaxLoss) ? $"safe vs {ArmyPower(opponent)}" : $"UNSAFE vs {ArmyPower(opponent)}";
-            var path = session.Movement.FindPath(hero.Id, t.Position) is { } p ? $"path {p.TotalCost}" : "NO PATH";
+            var path = WalkCost(hero, t.Position) is { } cost ? $"path {cost}" : "NO PATH";
             lines.Add($"  {t.Position} {what}: value {t.Value:0}, {safe}, {path}{(Holds(DefenceAt(hero, t.Position), danger) ? string.Empty : $", danger {danger}")}");
         }
 
@@ -1754,9 +1754,9 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         (MapPosition Position, int Cost)? best = null;
         foreach (var position in frontier)
         {
-            if (session.Movement.FindPath(hero.Id, position) is { } path && (best is null || path.TotalCost < best.Value.Cost))
+            if (WalkCost(hero, position) is { } cost && (best is null || cost < best.Value.Cost))
             {
-                best = (position, path.TotalCost);
+                best = (position, cost);
             }
         }
 

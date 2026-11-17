@@ -2777,3 +2777,25 @@ fill-ins, for the owner to change. No rule, save or map format change.
   the starting resources and the score and never changes the AI (ADR-101). On the new-game screen the complexity becomes a row of the
   five icon buttons after a "Map default" text button *(proposal)*, the label on the status bar; the victory screen and the leaderboard
   show the icon beside the name.
+
+### ADR-205: Routes are the cheapest; the AI weighs its targets with one cost map (ADR-013, ADR-040, ADR-120, 2026-11-17)
+**Status**: implemented. No save, map or protocol format changes.
+
+- **Why**: the route search's distance estimate counted a diagonal step as at least 71, but a diagonal on a dirt road costs 70 (50 × 1.41 =
+  70.5, rounded to even). An estimate above the real cost lets A* settle for a dearer route: on maps without linked gates, routes came out
+  up to a few points dearer than the cheapest, and the AI's sums were off by as much. And the AI searched a full route for every target
+  it weighed (about 60–80 searches a turn).
+- **Rule**: the estimate counts 50 a straight step and 70 a diagonal one, so `FindPath` always finds the cheapest route. With linked gates it
+  is plain Dijkstra, as before.
+- **The AI's route costs**: `PathFinder.CostsFrom` (one tile to every tile) and `CostsTo` (every tile to one tile) are Dijkstra searches over
+  the same rules that run only as far as the questions so far need. Each answers exactly what `FindPath` gives as the route's cost: a
+  hero or quest object bumped into and a monster stepped onto from the tile it guards count only for that tile. The AI keeps one map per
+  hero until the game changes (`GameSession.ChangeStamp`: commands accepted, events published, hero moves) and prices its candidate
+  targets, its exploring tiles, Town Portal and the walk before a Dimension Door with it. A Dimension Door's landings are priced with
+  one `CostsTo` map instead of a search per landing. Only the chosen target gets a full route, when the hero moves there.
+- **Last route**: `HeroMovementService.FindPath` gives its last route again while the change stamp stays the same, so a move just after a
+  check (the AI's route spells and arena gathering, a click after the hover preview) does not search again.
+- **Effect** (sim A/B, 18 generated games of 60 days: duel, ffa-4, 2v2, seeds 1–6): 15 end in the same state; in 3 the cheaper routes
+  change choices (one duel is won by the same player on day 54 instead of 46). The baseline games keep their digests.
+- **Checked** by `PathCostMapTests`: on two-level maps with monsters, gates, a garrison, a quest guard, a border guard and heroes, with and
+  without fog, every tile's answer equals `FindPath`'s, in any order of asking; random road maps where the old estimate gave dearer routes.

@@ -24,6 +24,7 @@ public sealed class GameSession
 {
     private readonly List<GameCommand> _log = [];
     private readonly CommandHandlers _handlers = new();
+    private long _published;
 
     /// <summary>
     /// Checks that a refused command left the game as it was (its digest text unchanged) and fails loudly otherwise. The tests turn it on for
@@ -41,6 +42,7 @@ public sealed class GameSession
         State = state ?? throw new ArgumentNullException(nameof(state));
         Bus = bus ?? new EventBus();
         FollowsHost = followsHost;
+        Bus.Subscribe<Core.Events.IEvent>(_ => _published++);
 
         // Core handlers subscribe first so their follow-up events are queued before views react. A LAN client's session runs no rules, so
         // nothing of the rules listens to the events its host sends.
@@ -73,7 +75,7 @@ public sealed class GameSession
             MapEvents.SubscribeTo(Bus);
         }
 
-        Movement = new HeroMovementService(State, Bus, Interactions, MapEvents);
+        Movement = new HeroMovementService(State, Bus, Interactions, MapEvents, () => ChangeStamp);
         AdventureMagic = new Magic.AdventureMagicService(State, Bus, townVisits);
         if (!followsHost)
         {
@@ -135,6 +137,12 @@ public sealed class GameSession
 
     /// <summary>Accepted commands in order. Together with the map and <see cref="GameOptions.Seed"/> this replays the game.</summary>
     public IReadOnlyList<GameCommand> CommandLog => _log;
+
+    /// <summary>
+    /// A number that grows whenever the game may have changed: a command accepted, an event published or a hero moved (any game's, so it may
+    /// also grow when this one did not). While it stays the same, what was worked out from the state still holds (route caches).
+    /// </summary>
+    internal long ChangeStamp => _log.Count + _published + Hero.Moves;
 
     /// <summary>Queries: daily income.</summary>
     public EconomyService Economy { get; }

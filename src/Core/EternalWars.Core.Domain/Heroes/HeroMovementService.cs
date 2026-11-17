@@ -9,13 +9,14 @@ using EternalWars.Core.Events;
 namespace EternalWars.Core.Domain.Heroes;
 
 public sealed class HeroMovementService(
-    GameState state, IEventPublisher events, MapObjectInteractionService interactions, MapEvents.MapEventService mapEvents)
+    GameState state, IEventPublisher events, MapObjectInteractionService interactions, MapEvents.MapEventService mapEvents, Func<long>? changes = null)
     : Turns.ITurnPhaseParticipant
 {
     /// <summary>Diagonal steps cost ~√2 times more, as in HoMM.</summary>
     public const double DiagonalMultiplier = 1.41;
 
     private readonly PathFinder _pathFinder = new(state);
+    private (HeroId Hero, MapPosition Target, long Stamp, HeroPath? Path)? _lastPath;
 
     /// <summary>
     /// HoMM3 "last step" rule: any positive amount of movement points allows one more step,
@@ -23,8 +24,28 @@ public sealed class HeroMovementService(
     /// </summary>
     public static bool CanAffordStep(int movementPointsLeft) => movementPointsLeft > 0;
 
-    /// <summary>Plans a route through tiles the hero's owner has explored. Null when unreachable.</summary>
-    public HeroPath? FindPath(HeroId heroId, MapPosition target) => _pathFinder.FindPath(heroId, target);
+    /// <summary>
+    /// Plans a route through tiles the hero's owner has explored. Null when unreachable. While the session's
+    /// <see cref="GameSession.ChangeStamp"/> stays the same, the last route planned is given again instead of searched again (the AI checks a
+    /// route before it moves along it).
+    /// </summary>
+    public HeroPath? FindPath(HeroId heroId, MapPosition target)
+    {
+        if (changes is null)
+        {
+            return _pathFinder.FindPath(heroId, target);
+        }
+
+        var stamp = changes();
+        if (_lastPath is { } last && last.Hero == heroId && last.Target == target && last.Stamp == stamp)
+        {
+            return last.Path;
+        }
+
+        var path = _pathFinder.FindPath(heroId, target);
+        _lastPath = (heroId, target, stamp, path);
+        return path;
+    }
 
     /// <summary>Plans and follows a route as far as movement points allow (click-to-move).</summary>
     internal MovementOutcome MoveTo(HeroId heroId, MapPosition target)

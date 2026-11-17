@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using EternalWars.Core.Domain.Creatures;
 
 namespace EternalWars.Core.Domain.Battles;
@@ -13,6 +14,10 @@ namespace EternalWars.Core.Domain.Battles;
 /// stand where all of its cells are inside the field and free of obstacles and other units (clearance, checked in O(1) with a prefix-sum
 /// table). A diagonal step needs at least one of the two orthogonal intermediate placements to be free, so units cannot squeeze through
 /// corners. Flyers and teleporters land on any free placement within the same straight-line distance.
+/// <para>
+/// A unit's reach is searched once and kept beside its battle until something the search reads changes (<see cref="ReachKey"/>); the
+/// dictionaries handed out are shared, never changed.
+/// </para>
 /// </remarks>
 public static class BattleGrid
 {
@@ -26,6 +31,18 @@ public static class BattleGrid
 
     /// <summary>The straight-line length of (<paramref name="dx"/>, <paramref name="dy"/>) cells in <see cref="Unit"/>s, rounded down.</summary>
     public static int Length(int dx, int dy)
+    {
+        var (ax, ay) = (Math.Abs(dx), Math.Abs(dy));
+        return ax < LengthTableSide && ay < LengthTableSide ? LengthTable[(ay * LengthTableSide) + ax] : SquareRootLength(dx, dy);
+    }
+
+    /// <summary>The lengths of the offsets within a siege field's width, worked out once (the searches ask for them on every step).</summary>
+    private const int LengthTableSide = BattleState.SiegeWidth + 1;
+
+    private static readonly int[] LengthTable = [.. Enumerable.Range(0, LengthTableSide * LengthTableSide)
+        .Select(i => SquareRootLength(i % LengthTableSide, i / LengthTableSide))];
+
+    private static int SquareRootLength(int dx, int dy)
     {
         var squared = (((long)dx * dx) + ((long)dy * dy)) * Unit * Unit;
         var root = (long)Math.Sqrt(squared);
@@ -50,7 +67,7 @@ public static class BattleGrid
     /// Walkers: the shortest path at any angle (Theta*: a path may go straight on from an earlier placement when the line from there is clear).
     /// Flyers and teleporters: the straight-line distance.
     /// </summary>
-    public static IReadOnlyDictionary<CellPosition, int> Reachable(BattleState battle, BattleUnit unit) => Search(battle, unit, out _);
+    public static IReadOnlyDictionary<CellPosition, int> Reachable(BattleState battle, BattleUnit unit) => Search(battle, unit).Reach;
 
     /// <summary>
     /// The placements the unit passes on its way to <paramref name="to"/>, from where it stands to <paramref name="to"/> (ADR-149): for a walker
@@ -59,7 +76,7 @@ public static class BattleGrid
     /// </summary>
     public static IReadOnlyList<CellPosition> Path(BattleState battle, BattleUnit unit, CellPosition to)
     {
-        var reach = Search(battle, unit, out var parent);
+        var (reach, parent) = Search(battle, unit);
         if (!reach.ContainsKey(to))
         {
             return [];
@@ -112,6 +129,71 @@ public static class BattleGrid
         }
     }
 
+    /// <summary>The battles' searched reaches, beside them (not in them: the battle is saved and sent whole); each goes with its battle.</summary>
+    private static readonly ConditionalWeakTable<BattleState, ReachCache> Reaches = [];
+
+    /// <summary>The unit's reach and each placement's parent on its path, from the battle's cache when nothing the search reads has changed.</summary>
+    private static (Dictionary<CellPosition, int> Reach, Dictionary<CellPosition, CellPosition> Parent) Search(BattleState battle, BattleUnit unit)
+    {
+        var cache = Reaches.GetValue(battle, _ => new ReachCache());
+        var key = cache.Scratch;
+        key.Clear();
+        ReachKey(battle, unit, key);
+        if (cache.ByUnit.TryGetValue(unit, out var known) && known.Siege == battle.Siege && key.SequenceEqual(known.Key))
+        {
+            return (known.Reach, known.Parent);
+        }
+
+
+        var reach = Search(battle, unit, out var parent);
+        cache.ByUnit[unit] = new ReachEntry([.. key], battle.Siege, reach, parent);
+        return (reach, parent);
+    }
+
+    /// <summary>
+    /// Everything <see cref="Search(BattleState, BattleUnit, out Dictionary{CellPosition, CellPosition})"/> reads, as numbers: the field's
+    /// width; the unit's place, footprint, side, move limit and whether it flies, is held or stands in the field; whether the moat stops it;
+    /// the standing siege structures (the siege itself is compared by reference: its moat never changes); the obstacles; the other living
+    /// units' footprints; and the zones that block it. Two equal keys give the same search, so a kept one can be handed out again.
+    /// </summary>
+    private static void ReachKey(BattleState battle, BattleUnit unit, List<int> key)
+    {
+        key.AddRange([battle.Width, unit.Position.X, unit.Position.Y, unit.Size, unit.Width, unit.Height, (int)unit.Side, MoveLimit(battle, unit)]);
+        key.Add((unit.MovesFreely ? 1 : 0) | (unit.IsFixed ? 2 : 0) | (battle.Units.Contains(unit) ? 4 : 0)
+                | (SiegeRules.FearsMoat(battle, unit.Side) && battle.Siege!.InMoat(unit.Rect) ? 8 : 0));
+        if (battle.Siege is { } siege)
+        {
+            foreach (var structure in siege.Structures)
+            {
+                key.Add(structure.IsStanding ? structure.Id : -structure.Id - 1);
+            }
+        }
+
+        key.Add(battle.Obstacles.Count);
+        foreach (var obstacle in battle.Obstacles)
+        {
+            var rect = obstacle.Rect;
+            key.AddRange([rect.X, rect.Y, rect.Width, rect.Height]);
+        }
+
+        foreach (var other in battle.Units)
+        {
+            if (other != unit && other.IsAlive)
+            {
+                key.AddRange([other.Position.X, other.Position.Y, other.Width, other.Height]);
+            }
+        }
+
+        key.Add(-1);
+        foreach (var zone in battle.Zones)
+        {
+            if (BattleZones.Blocks(zone, unit))
+            {
+                key.AddRange([zone.Rect.X, zone.Rect.Y, zone.Rect.Width, zone.Rect.Height]);
+            }
+        }
+    }
+
     private static Dictionary<CellPosition, int> Search(BattleState battle, BattleUnit unit, out Dictionary<CellPosition, CellPosition> parent)
     {
         parent = new Dictionary<CellPosition, CellPosition> { [unit.Position] = unit.Position };
@@ -148,21 +230,37 @@ public static class BattleGrid
         var siege = battle.Siege;
         var moatStops = SiegeRules.FearsMoat(battle, unit.Side) && !siege!.InMoat(unit.Rect);
         bool StopsAt(CellPosition p) => moatStops && siege!.InMoat(unit.RectAt(p));
+        Func<CellPosition, bool>? stops = moatStops ? StopsAt : null;
 
-        var done = new HashSet<CellPosition>();
-        var frontier = new PriorityQueue<CellPosition, (int Length, int Y, int X)>();
-        frontier.Enqueue(start, (0, start.Y, start.X));
-        while (frontier.TryDequeue(out var current, out var priority))
+        // Every placement a walker reaches is inside the field (it must be free there), so the search keeps its state in arrays over the field's
+        // cells. The placements are handed out in the order they were first reached, as the result has always been.
+        var width = battle.Width;
+        var cells = width * BattleState.Height;
+        var lengths = new int[cells];
+        var parents = new int[cells];
+        var done = new bool[cells];
+        Array.Fill(lengths, -1);
+        var order = new List<int>();
+        int Index(CellPosition p) => (p.Y * width) + p.X;
+        CellPosition At(int index) => new(index % width, index / width);
+
+        var origin = Index(start);
+        (lengths[origin], parents[origin]) = (0, origin);
+        var frontier = new PriorityQueue<int, long>();
+        frontier.Enqueue(origin, Priority(0, start));
+        while (frontier.TryDequeue(out var currentIndex, out var priority))
         {
-            if (priority.Length != result[current] || !done.Add(current) || StopsAt(current))
+            var current = At(currentIndex);
+            if (priority >> 16 != lengths[currentIndex] || done[currentIndex] || StopsAt(current))
             {
                 continue;
             }
 
+            done[currentIndex] = true;
             foreach (var (dx, dy) in Steps)
             {
                 var next = current.Offset(dx, dy);
-                if (done.Contains(next) || !clearance.IsFree(next, size))
+                if (!clearance.IsFree(next, size) || done[Index(next)])
                 {
                     continue;
                 }
@@ -172,25 +270,41 @@ public static class BattleGrid
                     continue;
                 }
 
-                var from = parent[current];
-                if (from == current || !IsClearLine(clearance, from, next, size, moatStops ? StopsAt : null))
+                var fromIndex = parents[currentIndex];
+                var from = At(fromIndex);
+                if (fromIndex == currentIndex || !IsClearLine(clearance, from, next, size, stops))
                 {
-                    from = current;
+                    (from, fromIndex) = (current, currentIndex);
                 }
 
-                var length = result[from] + Length(next.X - from.X, next.Y - from.Y);
-                if (length > limit || (result.TryGetValue(next, out var known) && known <= length))
+                var nextIndex = Index(next);
+                var length = lengths[fromIndex] + Length(next.X - from.X, next.Y - from.Y);
+                if (length > limit || (lengths[nextIndex] >= 0 && lengths[nextIndex] <= length))
                 {
                     continue;
                 }
 
-                result[next] = length;
-                parent[next] = from;
-                frontier.Enqueue(next, (length, next.Y, next.X));
+                if (lengths[nextIndex] < 0)
+                {
+                    order.Add(nextIndex);
+                }
+
+                (lengths[nextIndex], parents[nextIndex]) = (length, fromIndex);
+                frontier.Enqueue(nextIndex, Priority(length, next));
             }
         }
 
+        foreach (var index in order)
+        {
+            var placement = At(index);
+            result[placement] = lengths[index];
+            parent[placement] = At(parents[index]);
+        }
+
         return result;
+
+        // Shortest first, then top to bottom, left to right (a placement's cells are within the field, below 256).
+        static long Priority(int length, CellPosition p) => ((long)length << 16) | ((long)p.Y << 8) | (uint)p.X;
     }
 
     /// <summary>
@@ -198,11 +312,41 @@ public static class BattleGrid
     /// (then top-to-bottom, left-to-right, so the order is deterministic).
     /// </summary>
     public static IReadOnlyList<CellPosition> AttackPositions(BattleState battle, BattleUnit unit, BattleUnit target) =>
-        unit.IsMachine || target.InKeep || unit.Has(Magic.SpellStatus.NoAttack) || !CanBeAttacked(unit, target, melee: true) ? [] : Reachable(battle, unit)
-            .Where(r => unit.RectAt(r.Key).IsAdjacentTo(target.Rect))
-            .OrderBy(r => r.Value).ThenBy(r => r.Key.Y).ThenBy(r => r.Key.X)
-            .Select(r => r.Key)
-            .ToList();
+        CanMelee(unit, target) ? AttackPositions(Reachable(battle, unit), unit, target) : [];
+
+    /// <summary>
+    /// <see cref="AttackPositions(BattleState, BattleUnit, BattleUnit)"/> from the unit's <paramref name="reach"/> (<see cref="Reachable"/>), for
+    /// weighing many targets with one search.
+    /// </summary>
+    public static IReadOnlyList<CellPosition> AttackPositions(IReadOnlyDictionary<CellPosition, int> reach, BattleUnit unit, BattleUnit target)
+    {
+        if (!CanMelee(unit, target))
+        {
+            return [];
+        }
+
+        var rect = target.Rect;
+        List<(CellPosition At, int Length)>? spots = null;
+        foreach (var (at, length) in reach)
+        {
+            if (unit.RectAt(at).IsAdjacentTo(rect))
+            {
+                (spots ??= []).Add((at, length));
+            }
+        }
+
+        if (spots is null)
+        {
+            return [];
+        }
+
+        // Closest first, then top-to-bottom, left-to-right: placements are distinct, so the order is total.
+        spots.Sort((a, b) => a.Length != b.Length ? a.Length.CompareTo(b.Length) : a.At.Y != b.At.Y ? a.At.Y.CompareTo(b.At.Y) : a.At.X.CompareTo(b.At.X));
+        return spots.ConvertAll(s => s.At);
+    }
+
+    private static bool CanMelee(BattleUnit unit, BattleUnit target) =>
+        !(unit.IsMachine || target.InKeep || unit.Has(Magic.SpellStatus.NoAttack) || !CanBeAttacked(unit, target, melee: true));
 
     /// <summary>Placements from which the unit can hit the structure in melee this turn (the gate, ADR-120), closest first.</summary>
     public static IReadOnlyList<CellPosition> StructureAttackPositions(BattleState battle, BattleUnit unit, SiegeStructure structure) =>
@@ -214,6 +358,17 @@ public static class BattleGrid
 
     /// <summary>Whether the unit's footprint fits at <paramref name="topLeft"/>: inside the field, no obstacle, no other living unit.</summary>
     public static bool IsFree(BattleState battle, BattleUnit unit, CellPosition topLeft) => new Clearance(battle, unit).IsFree(topLeft, unit.Size);
+
+    /// <summary>
+    /// <see cref="IsFree"/> for many placements of one unit: the field is read once, when this is called, so the battle must not change while
+    /// the answer is used.
+    /// </summary>
+    public static Func<CellPosition, bool> FreePlacements(BattleState battle, BattleUnit unit)
+    {
+        var clearance = new Clearance(battle, unit);
+        var size = unit.Size;
+        return topLeft => clearance.IsFree(topLeft, size);
+    }
 
     public static IEnumerable<BattleUnit> AdjacentEnemies(BattleState battle, BattleUnit unit) =>
         battle.LivingUnits.Where(u => IsFoe(unit, u) && u.Rect.IsAdjacentTo(unit.Rect));
@@ -379,13 +534,12 @@ public static class BattleGrid
         int nx = Math.Abs(to.X - from.X), ny = Math.Abs(to.Y - from.Y);
         int sx = Math.Sign(to.X - from.X), sy = Math.Sign(to.Y - from.Y);
         var (x, y) = (from.X, from.Y);
-        bool Passable(CellPosition p) => clearance.IsFree(p, size) && (stops is null || p == to || !stops(p));
         for (int ix = 0, iy = 0; ix < nx || iy < ny;)
         {
             var decision = ((1 + (2L * ix)) * ny) - ((1 + (2L * iy)) * nx);
             if (decision == 0)
             {
-                if (!Passable(new CellPosition(x + sx, y)) && !Passable(new CellPosition(x, y + sy)))
+                if (!Passable(clearance, new CellPosition(x + sx, y), to, size, stops) && !Passable(clearance, new CellPosition(x, y + sy), to, size, stops))
                 {
                     return false;
                 }
@@ -406,7 +560,7 @@ public static class BattleGrid
                 iy++;
             }
 
-            if (!Passable(new CellPosition(x, y)))
+            if (!Passable(clearance, new CellPosition(x, y), to, size, stops))
             {
                 return false;
             }
@@ -414,6 +568,9 @@ public static class BattleGrid
 
         return true;
     }
+
+    private static bool Passable(Clearance clearance, CellPosition p, CellPosition to, int size, Func<CellPosition, bool>? stops) =>
+        clearance.IsFree(p, size) && (stops is null || p == to || !stops(p));
 
     /// <summary>
     /// Steps (8-way, one per placement) from each placement to the nearest one next to any of <paramref name="targets"/>, around obstacles and a
@@ -458,18 +615,29 @@ public static class BattleGrid
         return steps;
     }
 
+    private sealed class ReachCache
+    {
+        public Dictionary<BattleUnit, ReachEntry> ByUnit { get; } = new(ReferenceEqualityComparer.Instance);
+
+        /// <summary>The key being built, so a hit allocates nothing.</summary>
+        public List<int> Scratch { get; } = [];
+    }
+
+    private sealed record ReachEntry(int[] Key, SiegeState? Siege, Dictionary<CellPosition, int> Reach, Dictionary<CellPosition, CellPosition> Parent);
+
     /// <summary>
     /// Free-cell lookup for placing one unit's footprint: obstacles, a siege's standing walls (the gate only for attackers) and every other living
     /// unit block.
     /// </summary>
     private sealed class Clearance
     {
-        private readonly int[,] _blockedPrefix;
-        private readonly BattleState _battle;
+        private readonly int[] _blockedPrefix; // (x, y) at y * (width + 1) + x: the blocked cells left of x and above y
+        private readonly int _stride;
+        private readonly int _width;
 
         public Clearance(BattleState battle, BattleUnit mover, bool ignoreUnits = false)
         {
-            _battle = battle;
+            (_width, _stride) = (battle.Width, battle.Width + 1);
             var blocked = new bool[battle.Width, BattleState.Height];
             var walls = battle.Siege?.Structures
                 .Where(s => s.IsStanding && s.OnField && (s.Kind == SiegeStructureKind.Wall || mover.Side == BattleSide.Attacker))
@@ -493,26 +661,26 @@ public static class BattleGrid
                 }
             }
 
-            _blockedPrefix = new int[battle.Width + 1, BattleState.Height + 1];
+            var p = _blockedPrefix = new int[_stride * (BattleState.Height + 1)];
             for (var x = 0; x < battle.Width; x++)
             {
                 for (var y = 0; y < BattleState.Height; y++)
                 {
-                    _blockedPrefix[x + 1, y + 1] = (blocked[x, y] ? 1 : 0) + _blockedPrefix[x, y + 1] + _blockedPrefix[x + 1, y] - _blockedPrefix[x, y];
+                    p[((y + 1) * _stride) + x + 1] = (blocked[x, y] ? 1 : 0) + p[((y + 1) * _stride) + x] + p[(y * _stride) + x + 1] - p[(y * _stride) + x];
                 }
             }
         }
 
         public bool IsFree(CellPosition topLeft, int size)
         {
-            var rect = new CellRect(topLeft, size);
-            if (!_battle.IsInside(rect))
+            var (left, top, right, bottom) = (topLeft.X, topLeft.Y, topLeft.X + size, topLeft.Y + size);
+            if (left < 0 || top < 0 || right > _width || bottom > BattleState.Height)
             {
-                return false;
+                return false; // outside the field (BattleState.IsInside)
             }
 
             var p = _blockedPrefix;
-            return p[rect.Right, rect.Bottom] - p[rect.X, rect.Bottom] - p[rect.Right, rect.Y] + p[rect.X, rect.Y] == 0;
+            return p[(bottom * _stride) + right] - p[(bottom * _stride) + left] - p[(top * _stride) + right] + p[(top * _stride) + left] == 0;
         }
     }
 }
