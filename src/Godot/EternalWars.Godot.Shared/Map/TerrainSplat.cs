@@ -6,7 +6,8 @@ namespace EternalWars.Godot.Shared.Map;
 /// <summary>
 /// The splat material of the adventure map's ground (ADR-183, <c>shaders/terrain_splat.gdshader</c>): every terrain's picture is a layer of
 /// one texture array, built once and shared by every level and map; which terrain a tile has is read from a map-sized texture
-/// (<see cref="TerrainMap"/>), so painting a tile is one texel, not a new mesh.
+/// (<see cref="TerrainMap"/>), so painting a tile is one texel, not a new mesh. A layer's alpha is its ground's height (bright = raised),
+/// which the shader's height blend reads: from <c>&lt;terrain&gt;_height.png</c> when there is one, else from the picture's brightness.
 /// </summary>
 internal static class TerrainSplat
 {
@@ -53,8 +54,8 @@ internal static class TerrainSplat
     /// </summary>
     private static Layers BuildLayers()
     {
-        var white = Image.CreateEmpty(LayerSize, LayerSize, false, Image.Format.Rgb8);
-        white.Fill(Colors.White);
+        var white = Image.CreateEmpty(LayerSize, LayerSize, false, Image.Format.Rgba8);
+        white.Fill(new Color(1f, 1f, 1f, 0.5f));
         white.GenerateMipmaps();
         var images = new global::Godot.Collections.Array<Image> { white };
         var layerOfPath = new Dictionary<string, int>(StringComparer.Ordinal);
@@ -90,7 +91,32 @@ internal static class TerrainSplat
         return new Layers(textures, layerOf, tintOf);
     }
 
+    /// <summary>The picture in RGB and its height in A.</summary>
     private static Image LayerImage(string path)
+    {
+        var albedo = LoadSquare(path).GetData();
+        var heightPath = HeightPath(path);
+        var height = ResourceLoader.Exists(heightPath) ? Grey(LoadSquare(heightPath).GetData()) : Grey(albedo);
+        Stretch(height);
+
+        var rgba = new byte[LayerSize * LayerSize * 4];
+        for (var i = 0; i < height.Length; i++)
+        {
+            rgba[i * 4] = albedo[i * 3];
+            rgba[(i * 4) + 1] = albedo[(i * 3) + 1];
+            rgba[(i * 4) + 2] = albedo[(i * 3) + 2];
+            rgba[(i * 4) + 3] = height[i];
+        }
+
+        var image = Image.CreateFromData(LayerSize, LayerSize, false, Image.Format.Rgba8, rgba);
+        image.GenerateMipmaps();
+        return image;
+    }
+
+    /// <summary><c>textures/terrain/sand.png</c> → <c>textures/terrain/sand_height.png</c>.</summary>
+    private static string HeightPath(string albedoPath) => albedoPath[..^".png".Length] + "_height.png";
+
+    private static Image LoadSquare(string path)
     {
         var image = GD.Load<Texture2D>(path).GetImage();
         if (image.IsCompressed())
@@ -104,8 +130,52 @@ internal static class TerrainSplat
             image.Resize(LayerSize, LayerSize, Image.Interpolation.Lanczos);
         }
 
-        image.GenerateMipmaps();
         return image;
+    }
+
+    /// <summary>The brightness of each RGB8 pixel.</summary>
+    private static byte[] Grey(byte[] rgb)
+    {
+        var grey = new byte[rgb.Length / 3];
+        for (var i = 0; i < grey.Length; i++)
+        {
+            grey[i] = (byte)(((rgb[i * 3] * 77) + (rgb[(i * 3) + 1] * 150) + (rgb[(i * 3) + 2] * 29)) >> 8);
+        }
+
+        return grey;
+    }
+
+    /// <summary>
+    /// Spreads the heights over the whole 0–255 range (the darkest and brightest 2 % clipped), so every ground's relief counts alike in the
+    /// blend whether its picture is dull or contrasty.
+    /// </summary>
+    private static void Stretch(byte[] height)
+    {
+        var histogram = new int[256];
+        foreach (var value in height)
+        {
+            histogram[value]++;
+        }
+
+        var clip = height.Length / 50;
+        int low = 0, high = 255;
+        for (int seen = 0; low < 255 && (seen += histogram[low]) < clip; low++)
+        {
+        }
+
+        for (int seen = 0; high > 0 && (seen += histogram[high]) < clip; high--)
+        {
+        }
+
+        if (high <= low)
+        {
+            return;
+        }
+
+        for (var i = 0; i < height.Length; i++)
+        {
+            height[i] = (byte)Math.Clamp((height[i] - low) * 255 / (high - low), 0, 255);
+        }
     }
 
     private sealed record Layers(Texture2DArray Textures, int[] LayerOf, Color[] TintOf);

@@ -227,7 +227,7 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Look-dev spike: one terrain biome + one creature + lighting setup, to lock the visual target and budget
 - [x] Smooth fog (ADR-099, ADR-176, ADR-179): a soft fade from the visible to the hidden area; objects half under the fog show their explored part
       correctly (rendering only; the rules keep cell-by-cell visibility); a starry-void or cloud look, opening as the hero walks
-- [x] Terrain (ADR-183): heightmapped landscape, one mesh a level, with a splat shader and blended biome transitions; the grid only as an
+- [x] Terrain (ADR-183): heightmapped landscape, one mesh a level, with a splat shader and blended biome transitions (by height, ADR-200); the grid only as an
       overlay, a setting (off by default in the game, a "Grid" box in the editor)
 - [x] Relief in the map (ADR-181, ADR-182, [plan](archive/relief-plan.md) steps 1–2): per-corner heights in 1/8 cell widths, the terrain
       height table, map format v39; older and code-built maps get their terrains' blended heights; read by nothing in the rules

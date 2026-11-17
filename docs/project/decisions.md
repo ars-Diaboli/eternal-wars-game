@@ -2652,3 +2652,17 @@ change; no protocol change.
   then the battle), `SimultaneousDayTests` (allies' zones and heroes).
 - **Not done**: a client cannot ask for a rematch; the host's "Play again" does not go back to the lobby, so its players cannot change
   colours or factions in between.
+
+### ADR-200: Terrains blend by height on the adventure map (ADR-183, 2026-11-17)
+**Status**: implemented. Rendering only: no rule, save or map format changes.
+
+- **Height-based splat blending** (`shaders/terrain_splat.gdshader`), after the method of "height-based texture blending"
+  (habr.com/ru/articles/442924): each layer of the terrain texture array carries its ground's height in alpha (bright = raised). A terrain
+  stands at its influence (ADR-183's blurred, noise-pushed tile picture, 0 to 1) plus `height_relief` × its height there; the terrains
+  within `blend_depth` of the highest show, each weighted by how far it rises above that line. Defaults are the article's: relief 1,
+  depth 0.2. So at a border the stones of one ground stand out of the other's sand and the sand fills the gaps between them, instead
+  of a cross-fade or ADR-183's brightness-scaled mix. A terrain that cannot come within `blend_depth` even at its highest is not read.
+- **Where the height comes from** (`TerrainSplat`): `textures/terrain/<terrain>_height.png` when it exists (the name the texture prompts
+  already ask for), else the albedo's brightness (the article's "alpha from greyscale"); either is stretched to the full 0–255 range
+  (2 % clipped at each end) so every ground's relief counts alike. Layers are RGBA8; the plain white layer is at mid height.
+- **Not changed**: the battlefield's single-terrain material; terrain textures, the influence kernel and the edge noise.
