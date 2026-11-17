@@ -189,6 +189,10 @@ public partial class AutoCombatPanel : CenterContainer
             {
                 button.WithIcon(UiIcon.Confirm);
             }
+            else if (text == "Auto combat")
+            {
+                button.WithIcon(UiIcon.AutoCombat);
+            }
 
             button.Pressed += pressed;
             _buttons.AddChild(button);

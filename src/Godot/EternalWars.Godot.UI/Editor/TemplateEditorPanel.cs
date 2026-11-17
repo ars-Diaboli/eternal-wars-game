@@ -135,6 +135,11 @@ public partial class TemplateEditorPanel : PanelContainer
     private static void Button(Container parent, string text, Action pressed)
     {
         var button = new Button { Text = text };
+        if (text == "Save")
+        {
+            button.WithIcon(UiIcon.Save);
+        }
+
         button.Pressed += pressed;
         parent.AddChild(button);
     }

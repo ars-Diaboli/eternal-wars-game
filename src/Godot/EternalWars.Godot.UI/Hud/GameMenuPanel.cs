@@ -19,8 +19,8 @@ public partial class GameMenuPanel : CenterContainer
     private readonly ItemList _list = new() { CustomMinimumSize = new Vector2(560, 220) };
     private readonly LineEdit _name = new() { PlaceholderText = "Name of the save", CustomMinimumSize = new Vector2(300, 0) };
     private readonly Label _message = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(560, 0) };
-    private readonly Button _save = new() { Text = "Save" };
-    private readonly Button _load = new() { Text = "Load" };
+    private readonly Button _save = new Button { Text = "Save" }.WithIcon(UiIcon.Save);
+    private readonly Button _load = new Button { Text = "Load" }.WithIcon(UiIcon.Load);
     private readonly Button _delete = new Button { Text = "Delete" }.WithIcon(UiIcon.Close);
     private readonly Button _mainMenu = new() { Text = "Main menu", TooltipText = "Leave the game; the autosave keeps the start of this turn", Visible = false };
     private readonly HBoxContainer _autoCombatRow = new() { Visible = false };
@@ -102,6 +102,7 @@ public partial class GameMenuPanel : CenterContainer
         panel.AddChild(outer);
         outer.AddChild(_tabs);
         var rows = Tab("Save and load");
+        _tabs.WithTabIcon(rows.GetIndex(), UiIcon.Save);
         var settings = Tab("Settings");
         _tabs.WithTabIcon(settings.GetIndex(), UiIcon.Settings);
         var layout = Tab("Layout");

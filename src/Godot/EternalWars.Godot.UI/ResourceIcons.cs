@@ -7,9 +7,8 @@ using Godot;
 namespace EternalWars.Godot.UI;
 
 /// <summary>
-/// The resource icons in <c>res://shared/textures/ui/resources/</c>: one per <see cref="ResourceType"/>, plus the treasury chest (the
-/// Treasury skill's icon) for the kingdom's gold on hand. The art is scaled once per size and cached, like <see cref="UiIcons"/>; a missing
-/// file gives null, and callers fall back to the resource's name.
+/// The resource icons in <c>res://shared/textures/ui/resources/</c>: one per <see cref="ResourceType"/>. The art is scaled once per size and
+/// cached, like <see cref="UiIcons"/>; a missing file gives null, and callers fall back to the resource's name.
 /// </summary>
 public static class ResourceIcons
 {
@@ -44,9 +43,6 @@ public static class ResourceIcons
 
     /// <summary>The icon of <paramref name="resource"/> at <paramref name="size"/> pixels, or null if its file is missing.</summary>
     public static Texture2D? Get(ResourceType resource, int size = TextSize) => Load(resource.ToString().ToLowerInvariant(), size);
-
-    /// <summary>The treasury chest: the kingdom's treasury and income.</summary>
-    public static Texture2D? Treasury(int size = UiIcons.ButtonSize) => HeroIcons.Skill(Core.Domain.Heroes.BuiltInSkills.Treasury, size);
 
     /// <summary>
     /// The icon of <paramref name="resource"/> as a control for rows and tables, with the resource's name as its tooltip; a label with the
@@ -117,7 +113,7 @@ public static class ResourceIcons
     }
 
     /// <summary>
-    /// The player's gold on hand, as opposed to a price: the treasury chest followed by the amount ("gold 11500" in text when the icon is
+    /// The player's gold on hand, as opposed to a price: the gold pile followed by the amount ("gold 11500" in text when the icon is
     /// missing), with "Your gold" as its tooltip.
     /// </summary>
     public static HBoxContainer Balance(int gold, int size = TextSize)
@@ -130,7 +126,7 @@ public static class ResourceIcons
             row.TooltipText = $"Your gold: {ResourceAmountText.Full(gold)}";
         }
 
-        if (Treasury(size) is { } texture)
+        if (Get(ResourceType.Gold, size) is { } texture)
         {
             row.AddChild(new TextureRect
             {
@@ -222,17 +218,6 @@ public static class ResourceIcons
     public static T WithResourceIcon<T>(this T button, ResourceType resource) where T : Button
     {
         if (Get(resource, UiIcons.ButtonSize) is { } texture)
-        {
-            button.Icon = texture;
-        }
-
-        return button;
-    }
-
-    /// <summary>Shows the treasury chest on the button, before its text.</summary>
-    public static T WithTreasuryIcon<T>(this T button) where T : Button
-    {
-        if (Treasury() is { } texture)
         {
             button.Icon = texture;
         }

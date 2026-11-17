@@ -29,11 +29,10 @@ public partial class BattleHud : Control
     private readonly Label _info = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(420, 0) };
     private readonly Label _status = new();
     private readonly Button _wait = new Button { Text = "Wait (W)" }.WithIcon(UiIcon.Hourglass);
-    private readonly Button _defend = new() { Text = "Defend (D)" };
-    private readonly Button _retreat = new() { Text = "Retreat (R)" };
-    // The price follows the text, then the gold icon: "Surrender 500 [gold]".
-    private readonly Button _surrender = new Button { Text = "Surrender", IconAlignment = HorizontalAlignment.Right }.WithResourceIcon(Core.Domain.Economy.ResourceType.Gold);
-    private readonly Button _quick = new() { Text = "Quick combat (Q)" };
+    private readonly Button _defend = new Button { Text = "Defend (D)" }.WithIcon(UiIcon.Defend);
+    private readonly Button _retreat = new Button { Text = "Retreat (R)" }.WithIcon(UiIcon.Retreat);
+    private readonly Button _surrender = new Button { Text = "Surrender" }.WithIcon(UiIcon.Surrender);
+    private readonly Button _quick = new Button { Text = "Quick combat (Q)" }.WithIcon(UiIcon.QuickCombat);
     private readonly Button _start = new() { Text = "Start battle (Enter)", Visible = false };
     private readonly HFlowContainer _warcries = new();
     private readonly Dictionary<Warcry, Button> _warcryButtons = [];
@@ -138,7 +137,7 @@ public partial class BattleHud : Control
         actions.AddChild(_warcries);
         foreach (var warcry in Enum.GetValues<Warcry>())
         {
-            var button = new Button { Text = $"{warcry} (warcry)", Visible = false };
+            var button = new Button { Text = $"{warcry} (warcry)", Visible = false }.WithIcon(UiIcon.Warcry);
             button.Pressed += () => Act(player => new BattleWarcryCommand(player, warcry));
             _warcryButtons[warcry] = button;
             _warcries.AddChild(button);
@@ -471,7 +470,7 @@ public partial class BattleHud : Control
 
         var refusal = SurrenderRules.Check(_session.State, battle, active.Side);
         var price = SurrenderRules.Price(battle, active.Side);
-        _surrender.Text = _surrender.Icon is null ? $"Surrender ({price} gold)" : $"Surrender {price}";
+        _surrender.Text = $"Surrender ({price} gold)";
         _surrender.Disabled = refusal is not null;
         _surrender.TooltipText = refusal ?? "Pay the enemy and leave with your army; the hero waits in your taverns.";
     }
