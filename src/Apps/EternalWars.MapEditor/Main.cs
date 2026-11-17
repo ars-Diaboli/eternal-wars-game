@@ -532,6 +532,11 @@ public partial class Main : Node3D
     private static void AddButton(Container parent, string text, Action onPressed)
     {
         var button = new Button { Text = text };
+        if (text switch { "Save" => UiIcon.Save, "Load" => UiIcon.Load, "Undo" => UiIcon.Undo, "Redo" => UiIcon.Redo, "Level (L)" => UiIcon.SwitchLevel, _ => (UiIcon?)null } is { } icon)
+        {
+            button.WithIcon(icon);
+        }
+
         button.Pressed += onPressed;
         parent.AddChild(button);
     }

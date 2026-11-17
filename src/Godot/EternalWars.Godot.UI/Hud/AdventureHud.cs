@@ -127,7 +127,7 @@ public partial class AdventureHud : CanvasLayer
         minimapBox.AddChild(minimap);
         minimap.Bind(context);
         minimap.TileClicked += tile => _camera.FocusOn(MapSpace.ToWorld(tile));
-        var level = new Button { Text = "Switch level (L)", Disabled = session.State.Map.Levels < 2 };
+        var level = new Button { Text = "Switch level (L)", Disabled = session.State.Map.Levels < 2 }.WithIcon(UiIcon.SwitchLevel);
         level.Pressed += () => _context.SetLevel((_context.Level + 1) % _session.State.Map.Levels);
         minimapBox.AddChild(level);
         var lists = new VBoxContainer();
@@ -308,7 +308,7 @@ public partial class AdventureHud : CanvasLayer
         KingdomScreen = new KingdomOverviewPanel();
         townLayer.AddChild(KingdomScreen);
         KingdomScreen.Bind(_session);
-        var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" }.WithTreasuryIcon();
+        var kingdom = new Button { Text = "Kingdom (K)", TooltipText = "Every source of income and the totals" }.WithIcon(UiIcon.Kingdom);
         kingdom.Pressed += () => KingdomScreen.Open(_session.State.CurrentPlayer.Id);
         side.AddChild(kingdom);
         QuestScreen = new QuestLogPanel();
@@ -336,7 +336,7 @@ public partial class AdventureHud : CanvasLayer
         grail.AddChild(dig);
 
         // Trading belongs to the player, not a hero: a button, or a hero visiting a map marketplace (ADR-067).
-        var market = new Button { Text = "Marketplace" }.WithResourceIcon(ResourceType.Gold);
+        var market = new Button { Text = "Marketplace" }.WithIcon(UiIcon.Marketplace);
         void RefreshMarketButton()
         {
             market.Disabled = !MarketplacePanel.CanOpenFromTowns(_session.State);

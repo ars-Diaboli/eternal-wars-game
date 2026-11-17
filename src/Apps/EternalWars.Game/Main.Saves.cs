@@ -144,7 +144,7 @@ public partial class Main
             KeepSettings();
         };
 
-        _menuButton = new Button { Text = "Menu (F10)" }.WithIcon(UiIcon.Settings);
+        _menuButton = new Button { Text = "Menu (F10)" }.WithIcon(UiIcon.Menu);
         _menuButton.Pressed += _menu.Toggle;
         layer.AddChild(_menuButton);
         PlaceMenuButton();

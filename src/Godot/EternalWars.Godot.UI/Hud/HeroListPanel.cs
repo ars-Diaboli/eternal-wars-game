@@ -86,7 +86,7 @@ public partial class HeroListPanel : BoxContainer
             button.AddThemeColorOverride("font_color", Palette.ForPlayer(hero.Owner).Lightened(0.4f));
             var id = hero.Id;
             button.Pressed += () => HeroSelected?.Invoke(id);
-            var info = new Button { Text = "Info", TooltipText = "Hero screen (H)" };
+            var info = new Button { Text = "Info", TooltipText = "Hero screen (H)" }.WithIcon(UiIcon.Info);
             info.Pressed += () => HeroInfoRequested?.Invoke(id);
             var row = new HBoxContainer();
             row.AddChild(button);

@@ -27,7 +27,7 @@ public partial class TownPanel : PanelContainer
     private readonly Label _title = new();
     private readonly HBoxContainer _income = new();
     private readonly Button _trade = new Button { Text = "Marketplace", TooltipText = "Trade gold against resources" }.WithResourceIcon(ResourceType.Gold);
-    private readonly Button _guild = new() { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" };
+    private readonly Button _guild = new Button { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" }.WithIcon(UiIcon.ThievesGuild);
     private readonly HBoxContainer _buildings = new();
     private readonly Label _builtToday = new();
     private readonly GridContainer _dwellings = new() { Columns = 4 };
