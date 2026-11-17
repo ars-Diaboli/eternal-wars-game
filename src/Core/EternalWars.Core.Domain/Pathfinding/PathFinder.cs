@@ -12,7 +12,7 @@ namespace EternalWars.Core.Domain.Pathfinding;
 /// <remarks>
 /// Rules:
 /// <list type="bullet">
-/// <item>8-way movement; step cost from <see cref="MovementRules.StepCost"/> (road → road, else terrain
+/// <item>8-way movement; step cost from <see cref="MovementRules.StepCost(GameState, Hero, MapPosition, MapPosition, Direction)"/> (road → road, else terrain
 /// being left; diagonal ×1.41).</item>
 /// <item>Impassable terrain, blocked object cells and heroes the owner can see are obstacles. Unseen heroes
 /// are unknown to the planner; movement runs into them.</item>
@@ -39,6 +39,9 @@ public sealed class PathFinder(GameState state)
     [ThreadStatic]
     private static PathSearchCounters _counters;
 
+    [ThreadStatic]
+    private static SearchBuffers? _spare;
+
     /// <summary>
     /// The searches this thread has run so far (diagnostics for <c>sim game --profile</c>; rules never read it). Per thread, so a game on one
     /// thread counts only its own searches.
@@ -64,7 +67,7 @@ public sealed class PathFinder(GameState state)
 
         // A hero on the target turns the route into a meeting/battle, or makes it impossible (ally).
         var targetIsEncounter = false;
-        if (state.HeroAt(target) is { } targetHero && IsKnown(targetHero))
+        if (state.HeroAt(target) is { } targetHero && (!respectFog || state.CanSee(hero.Owner, targetHero)))
         {
             if (MovementRules.Classify(state, hero.Owner, targetHero) == HeroEncounter.Ally)
             {
@@ -77,34 +80,44 @@ public sealed class PathFinder(GameState state)
         // A barring quest object can be clicked: the route ends on it and the last step bumps into it (EVT-5).
         targetIsEncounter |= QuestRules.Barring(state, hero, target) is not null;
 
-        var nodeCount = map.Levels * map.Width * map.Height * 2;
-        var cost = new int[nodeCount];
-        var parent = new int[nodeCount];
-        var closed = new bool[nodeCount];
-        Array.Fill(cost, int.MaxValue);
-        Array.Fill(parent, -1);
+        // The buffers this thread keeps between searches; a search started inside another (none today) gets its own.
+        var search = _spare ?? new SearchBuffers();
+        _spare = null;
+        search.Begin(map.Levels * map.Width * map.Height * 2);
+        try
+        {
+            return Search(hero, origin, target, targetIsEncounter, respectFog, search, started);
+        }
+        finally
+        {
+            _spare = search;
+        }
+    }
 
-        var useHeuristic = !state.Objects.Any(o => o.TeleportTarget is not null);
+    private HeroPath? Search(Hero hero, MapPosition origin, MapPosition target, bool targetIsEncounter, bool respectFog, SearchBuffers search, long started)
+    {
+        var useHeuristic = !state.HasTeleporters;
+        var terrainCosts = search.TerrainCosts;
+        var open = search.Open;
         var start = Node(origin, teleported: false);
-        cost[start] = 0;
-        var open = new PriorityQueue<int, int>();
+        search.Reach(start, 0, -1);
         open.Enqueue(start, 0);
         var expanded = 0;
 
         while (open.TryDequeue(out var current, out _))
         {
-            if (closed[current])
+            if (search.IsClosed(current))
             {
                 continue;
             }
 
-            closed[current] = true;
+            search.Close(current);
             expanded++;
             var (position, teleported) = Decode(current);
             if (position == target)
             {
                 Count(expanded, found: true, started);
-                return BuildPath(hero, current, cost, parent);
+                return BuildPath(hero, current, search);
             }
 
             // Entering a guarded tile starts an encounter, so a route can end there but never pass through (ADR-040).
@@ -115,7 +128,7 @@ public sealed class PathFinder(GameState state)
                     DirectionExtensions.FromOffset(target.X - position.X, target.Y - position.Y) is { } toMonster &&
                     target.Level == position.Level)
                 {
-                    Relax(current, Node(target, teleported: false), MovementRules.StepCost(state, hero, position, target, toMonster), target);
+                    Relax(current, Node(target, teleported: false), MovementRules.StepCost(state, hero, position, target, toMonster, terrainCosts), target);
                 }
 
                 continue;
@@ -145,7 +158,7 @@ public sealed class PathFinder(GameState state)
                 var next = position.Step(direction);
                 if (CanStandOn(next) || (targetIsEncounter && next == target))
                 {
-                    Relax(current, Node(next, teleported: false), MovementRules.StepCost(state, hero, position, next, direction), next);
+                    Relax(current, Node(next, teleported: false), MovementRules.StepCost(state, hero, position, next, direction, terrainCosts), next);
                 }
             }
         }
@@ -164,14 +177,13 @@ public sealed class PathFinder(GameState state)
 
         void Relax(int from, int to, int stepCost, MapPosition toPosition)
         {
-            var candidate = cost[from] + stepCost;
-            if (closed[to] || candidate >= cost[to])
+            var candidate = search.CostOf(from) + stepCost;
+            if (search.IsClosed(to) || candidate >= search.CostOf(to))
             {
                 return;
             }
 
-            cost[to] = candidate;
-            parent[to] = from;
+            search.Reach(to, candidate, from);
             open.Enqueue(to, candidate + (useHeuristic ? Heuristic(toPosition, target) : 0));
         }
     }
@@ -196,10 +208,10 @@ public sealed class PathFinder(GameState state)
         return (CheapestOrthogonal * Math.Max(dx, dy)) + (CheapestDiagonalExtra * Math.Min(dx, dy));
     }
 
-    private HeroPath BuildPath(Hero hero, int end, int[] cost, int[] parent)
+    private HeroPath BuildPath(Hero hero, int end, SearchBuffers search)
     {
         var nodes = new List<int>();
-        for (var node = end; parent[node] != -1; node = parent[node])
+        for (var node = end; search.ParentOf(node) != -1; node = search.ParentOf(node))
         {
             nodes.Add(node);
         }
@@ -213,8 +225,9 @@ public sealed class PathFinder(GameState state)
         foreach (var node in nodes)
         {
             var (position, teleported) = Decode(node);
-            var stepCost = cost[node] - previousCost;
-            previousCost = cost[node];
+            var cost = search.CostOf(node);
+            var stepCost = cost - previousCost;
+            previousCost = cost;
 
             // Teleports happen during the previous step's visit, so they never start a new day.
             if (!teleported && !HeroMovementService.CanAffordStep(movementLeft))
@@ -224,7 +237,7 @@ public sealed class PathFinder(GameState state)
             }
 
             movementLeft = Math.Max(0, movementLeft - stepCost);
-            steps.Add(new PathStep(position, teleported ? PathStepKind.Teleport : PathStepKind.Walk, stepCost, cost[node], day));
+            steps.Add(new PathStep(position, teleported ? PathStepKind.Teleport : PathStepKind.Walk, stepCost, cost, day));
         }
 
         return new HeroPath(hero.Id, steps);
@@ -240,6 +253,59 @@ public sealed class PathFinder(GameState state)
         var x = tile % state.Map.Width;
         var rest = tile / state.Map.Width;
         return (new MapPosition(x, rest % state.Map.Height, rest / state.Map.Height), teleported);
+    }
+
+    /// <summary>
+    /// A search's working memory, kept by its thread from one search to the next. A node's cost and parent count only when its
+    /// <see cref="_reached"/> stamp is this search's generation, and it is closed only when its <see cref="_closed"/> stamp is; so a new search
+    /// clears nothing but the queue and the terrain costs.
+    /// </summary>
+    private sealed class SearchBuffers
+    {
+        private int[] _cost = [];
+        private int[] _parent = [];
+        private int[] _reached = [];
+        private int[] _closed = [];
+        private int _generation;
+
+        public PriorityQueue<int, int> Open { get; } = new();
+
+        /// <summary>The hero's cost per terrain type, worked out on first use in each search (-1 = not yet).</summary>
+        public int[] TerrainCosts { get; } = new int[MovementRules.TerrainTypeCount];
+
+        public void Begin(int nodeCount)
+        {
+            if (_cost.Length < nodeCount)
+            {
+                (_cost, _parent, _reached, _closed) = (new int[nodeCount], new int[nodeCount], new int[nodeCount], new int[nodeCount]);
+                _generation = 0;
+            }
+
+            if (++_generation == int.MaxValue)
+            {
+                Array.Clear(_reached);
+                Array.Clear(_closed);
+                _generation = 1;
+            }
+
+            Open.Clear();
+            Array.Fill(TerrainCosts, -1);
+        }
+
+        public int CostOf(int node) => _reached[node] == _generation ? _cost[node] : int.MaxValue;
+
+        public int ParentOf(int node) => _reached[node] == _generation ? _parent[node] : -1;
+
+        public void Reach(int node, int cost, int parent)
+        {
+            _reached[node] = _generation;
+            _cost[node] = cost;
+            _parent[node] = parent;
+        }
+
+        public bool IsClosed(int node) => _closed[node] == _generation;
+
+        public void Close(int node) => _closed[node] = _generation;
     }
 }
 

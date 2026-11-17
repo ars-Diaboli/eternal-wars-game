@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Settings;
 using EternalWars.Core.Events;
+using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -119,8 +120,13 @@ public partial class HeroView : Node3D
         this.SubscribeWhileInTree<HeroStatusesExpired>(events, e => UpdateVisibility());
         if (context is not null)
         {
-            context.Changed += UpdateVisibility;
-            TreeExiting += () => context.Changed -= UpdateVisibility;
+            context.ViewerChanged += UpdateVisibility;
+            context.LevelChanged += UpdateVisibility;
+            TreeExiting += () =>
+            {
+                context.ViewerChanged -= UpdateVisibility;
+                context.LevelChanged -= UpdateVisibility;
+            };
         }
 
         UpdateVisibility();
@@ -168,9 +174,9 @@ public partial class HeroView : Node3D
         {
             // Along the ground, sampled every frame, so the hero walks over a slope rather than through it.
             _queue.TweenMethod(Callable.From<float>(t => Position = Between(from, to, t)), 0f, 1f, seconds);
-            _queue.Parallel().TweenProperty(_body, "position:y", BodyHeight + HopHeight, seconds / 2)
+            _queue.Parallel().TweenProperty(_body, TweenPaths.PositionY, BodyHeight + HopHeight, seconds / 2)
                 .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.Out);
-            _queue.Parallel().TweenProperty(_body, "position:y", BodyHeight, seconds / 2).SetDelay(seconds / 2)
+            _queue.Parallel().TweenProperty(_body, TweenPaths.PositionY, BodyHeight, seconds / 2).SetDelay(seconds / 2)
                 .SetTrans(Tween.TransitionType.Sine).SetEase(Tween.EaseType.In);
         }
         else

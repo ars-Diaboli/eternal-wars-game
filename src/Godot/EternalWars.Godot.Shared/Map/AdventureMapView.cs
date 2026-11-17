@@ -53,8 +53,8 @@ public partial class AdventureMapView : Node3D
         RebuildGround();
         void ShowApron() => _apron.Visible = context.Viewer is not null; // no fog (the editor, the whole map in a replay): the map's own edge
         ShowApron();
-        context.Changed += ShowApron;
-        TreeExiting += () => context.Changed -= ShowApron;
+        context.ViewerChanged += ShowApron;
+        TreeExiting += () => context.ViewerChanged -= ShowApron;
         ShowGrid();
         void ShowGrid() => _material.SetShaderParameter("grid", context.ShowGrid ? 1f : 0f);
         context.ShowGridChanged += ShowGrid;

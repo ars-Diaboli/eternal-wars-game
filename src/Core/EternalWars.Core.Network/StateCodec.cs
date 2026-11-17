@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
@@ -33,7 +34,7 @@ internal sealed class StateCodec(GameState catalogs)
     private const string DefinitionKey = "$def";
 
     private static readonly Assembly DomainAssembly = typeof(GameState).Assembly;
-    private static readonly Dictionary<Type, FieldInfo[]> FieldsByType = [];
+    private static readonly Dictionary<Type, Shape> ShapesByType = [];
     private static readonly Dictionary<string, Type?> TypesByName = [];
     private static readonly Lock Gate = new();
 
@@ -60,34 +61,21 @@ internal sealed class StateCodec(GameState catalogs)
         }
     }
 
-    private static FieldInfo[] FieldsOf(Type type)
+    private static FieldInfo[] FieldsOf(Type type) => ShapeOf(type).Fields;
+
+    /// <summary>What the codec needs to know of a type, worked out once per process (<see cref="Shape"/>).</summary>
+    private static Shape ShapeOf(Type type)
     {
         lock (Gate)
         {
-            if (FieldsByType.TryGetValue(type, out var known))
+            if (!ShapesByType.TryGetValue(type, out var shape))
             {
-                return known;
+                shape = new Shape(type);
+                ShapesByType[type] = shape;
             }
 
-            var fields = new List<FieldInfo>();
-            for (var t = type; t is not null && t != typeof(object) && t != typeof(ValueType); t = t.BaseType)
-            {
-                fields.InsertRange(0, t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
-                    .Where(f => !typeof(Delegate).IsAssignableFrom(f.FieldType))
-                    .OrderBy(f => f.MetadataToken));
-            }
-
-            known = [.. fields];
-            FieldsByType[type] = known;
-            return known;
+            return shape;
         }
-    }
-
-    /// <summary>The name a field is written under: its own, or with its declaring type's when a base type has a field of that name too.</summary>
-    private static string KeyOf(FieldInfo[] fields, int index)
-    {
-        var field = fields[index];
-        return fields.Count(f => f.Name == field.Name) > 1 ? $"{field.DeclaringType!.Name}.{field.Name}" : field.Name;
     }
 
     private static bool IsScalar(Type type) =>
@@ -217,26 +205,28 @@ internal sealed class StateCodec(GameState catalogs)
                 _seen[value] = _seen.Count;
             }
 
-            if (ElementOfSequence(type) is { } element)
+            var shape = ShapeOf(type);
+            if (shape.Element is { } element)
             {
                 return Sequence((IEnumerable)value, element);
             }
 
-            if (EntriesOf(type) is { } entry)
+            if (shape.Entry is { } entry)
             {
                 return Entries((IEnumerable)value, entry.Key, entry.Value);
             }
 
-            if (declared.IsInterface && InterfaceShape(declared) is var shape && (shape.Item is not null || shape.Entry is not null))
+            if (declared.IsInterface && InterfaceShape(declared) is var collection && (collection.Item is not null || collection.Entry is not null))
             {
-                return shape.Entry is { } pair ? Entries((IEnumerable)value, pair.Key, pair.Value) : Sequence((IEnumerable)value, shape.Item!);
+                return collection.Entry is { } pair ? Entries((IEnumerable)value, pair.Key, pair.Value) : Sequence((IEnumerable)value, collection.Item!);
             }
 
-            var fields = FieldsOf(type);
+            var fields = shape.Fields;
+            var getters = shape.Getters;
             var node = new JsonObject();
             for (var i = 0; i < fields.Length; i++)
             {
-                node[KeyOf(fields, i)] = Write(fields[i].GetValue(value), fields[i].FieldType);
+                node[shape.Keys[i]] = Write(getters[i](value), fields[i].FieldType);
             }
 
             return type == declared ? node : new JsonObject { [TypeKey] = NameOf(type), [ValueKey] = node };
@@ -270,9 +260,9 @@ internal sealed class StateCodec(GameState catalogs)
             var array = new JsonArray();
             foreach (var entry in entries)
             {
-                var type = entry.GetType();
-                var key = type.GetProperty("Key")!.GetValue(entry);
-                var value = type.GetProperty("Value")!.GetValue(entry);
+                var pair = ShapeOf(entry.GetType());
+                var key = pair.PairKey!(entry);
+                var value = pair.PairValue!(entry);
                 array.Add(new JsonArray(Write(key, keyType), Write(value, valueType)));
             }
 
@@ -381,12 +371,13 @@ internal sealed class StateCodec(GameState catalogs)
                 Remember(value);
             }
 
-            var fields = FieldsOf(type);
+            var layout = ShapeOf(type);
+            var fields = layout.Fields;
             var members = (JsonObject)node!;
             for (var i = 0; i < fields.Length; i++)
             {
                 var field = fields[i];
-                if (members.TryGetPropertyValue(KeyOf(fields, i), out var member))
+                if (members.TryGetPropertyValue(layout.Keys[i], out var member))
                 {
                     field.SetValue(value, Read(member, field.FieldType));
                 }
@@ -422,5 +413,66 @@ internal sealed class StateCodec(GameState catalogs)
             _ when type == typeof(decimal) => (decimal)node.GetValue<double>(),
             _ => Convert.ChangeType(node.GetValue<long>(), type, System.Globalization.CultureInfo.InvariantCulture),
         };
+    }
+
+    /// <summary>
+    /// A type's fields (base types' first, delegates left out), the names they are written under, compiled getters for them (made on first
+    /// write), and whether the type is a sequence or a dictionary. A <see cref="KeyValuePair{TKey,TValue}"/> also gets getters for its key and
+    /// value.
+    /// </summary>
+    private sealed class Shape
+    {
+        private readonly Lazy<Func<object, object?>[]> _getters;
+
+        public Shape(Type type)
+        {
+            var fields = new List<FieldInfo>();
+            for (var t = type; t is not null && t != typeof(object) && t != typeof(ValueType); t = t.BaseType)
+            {
+                fields.InsertRange(0, t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+                    .Where(f => !typeof(Delegate).IsAssignableFrom(f.FieldType))
+                    .OrderBy(f => f.MetadataToken));
+            }
+
+            Fields = [.. fields];
+
+            // A field is written under its own name, or with its declaring type's when a base type has a field of that name too.
+            Keys = [.. Fields.Select(f => Fields.Count(o => o.Name == f.Name) > 1 ? $"{f.DeclaringType!.Name}.{f.Name}" : f.Name)];
+            Element = ElementOfSequence(type);
+            Entry = EntriesOf(type);
+            _getters = new Lazy<Func<object, object?>[]>(() => [.. Fields.Select(Getter)]);
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                (PairKey, PairValue) = (PropertyGetter(type, "Key"), PropertyGetter(type, "Value"));
+            }
+        }
+
+        public FieldInfo[] Fields { get; }
+
+        public string[] Keys { get; }
+
+        public Func<object, object?>[] Getters => _getters.Value;
+
+        public Type? Element { get; }
+
+        public (Type Key, Type Value)? Entry { get; }
+
+        public Func<object, object?>? PairKey { get; }
+
+        public Func<object, object?>? PairValue { get; }
+
+        private static Func<object, object?> Getter(FieldInfo field)
+        {
+            var target = Expression.Parameter(typeof(object));
+            var read = Expression.Field(Expression.Convert(target, field.DeclaringType!), field);
+            return Expression.Lambda<Func<object, object?>>(Expression.Convert(read, typeof(object)), target).Compile();
+        }
+
+        private static Func<object, object?> PropertyGetter(Type type, string name)
+        {
+            var target = Expression.Parameter(typeof(object));
+            var read = Expression.Property(Expression.Convert(target, type), name);
+            return Expression.Lambda<Func<object, object?>>(Expression.Convert(read, typeof(object)), target).Compile();
+        }
     }
 }

@@ -8,6 +8,7 @@ namespace EternalWars.Godot.Shared.Map;
 /// <summary>HoMM-style route preview: one marker per step coloured by the day it is reached, a bigger one at the end.</summary>
 public partial class PathPreview : Node3D
 {
+    private readonly MeshCache _meshes = new();
     private AdventureMap? _map;
 
     public HeroPath? Path { get; private set; }
@@ -25,17 +26,7 @@ public partial class PathPreview : Node3D
             var size = last ? 0.35f : 0.16f;
             AddChild(new MeshInstance3D
             {
-                Mesh = new CylinderMesh
-                {
-                    TopRadius = size,
-                    BottomRadius = size,
-                    Height = 0.04f,
-                    Material = new StandardMaterial3D
-                    {
-                        AlbedoColor = Palette.ForPathDay(step.Day),
-                        ShadingMode = BaseMaterial3D.ShadingModeEnum.Unshaded,
-                    },
-                },
+                Mesh = _meshes.Cylinder(size, size, 0.04f, Palette.ForPathDay(step.Day), unshaded: true), // one per size and day colour
                 Transform = _map is null
                     ? new Transform3D(Basis.Identity, MapSpace.ToWorld(step.Position) + (Vector3.Up * 0.05f))
                     : new Transform3D(MapSpace.OnSlope(_map, step.Position), MapSpace.ToGround(_map, step.Position) + (MapSpace.GroundNormal(_map, step.Position) * 0.05f)),

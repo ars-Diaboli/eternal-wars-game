@@ -363,6 +363,30 @@ public class LanGameTests
     }
 
     [Fact]
+    public void AnIdleHost_SendsNoUpdates_UntilTheGameChanges()
+    {
+        var (session, host) = HostGame(Create("A...B"), remote: [Red]);
+        var (hostEnd, clientEnd) = LoopbackConnection.Pair();
+        host.Accept(hostEnd);
+        var client = new GameClient(clientEnd);
+        client.Join("Bob");
+        Pump(host, client);
+
+        for (var frame = 0; frame < 5; frame++)
+        {
+            host.Poll();
+        }
+
+        Assert.False(clientEnd.TryReceive(out var idle), $"sent {idle}");
+
+        session.Execute(new StepHeroCommand(Blue, A, Direction.East)).ThrowIfRejected(); // the host's own player
+        host.Poll();
+
+        Assert.True(clientEnd.TryReceive(out var update));
+        Assert.IsType<ViewUpdate>(update);
+    }
+
+    [Fact]
     public void AClientThatMissesAnUpdate_StopsInsteadOfShowingAnotherGame()
     {
         var (_, host) = HostGame(Create("A...B"), remote: [Red]);

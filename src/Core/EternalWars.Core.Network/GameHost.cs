@@ -54,6 +54,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// <summary>The turn clock last sent to the clients.</summary>
     private TurnClock? _clockSent;
 
+    /// <summary>Whether the game published anything since the views were last sent: every change to the state publishes an event.</summary>
+    private bool _viewsStale;
+
     /// <summary>Who fights the current battle, or fought the last one: they see its events.</summary>
     private IReadOnlyCollection<PlayerId> _battleSides = [];
 
@@ -591,6 +594,8 @@ public sealed class GameHost : ICommandRoute, IDisposable
         {
             peer.Feed?.Capture(e, _battleSides);
         }
+
+        _viewsStale = true;
     }
 
     /// <summary>Tells the clients, and the host's screen, when the game is paused or goes on again.</summary>
@@ -611,9 +616,17 @@ public sealed class GameHost : ICommandRoute, IDisposable
         PauseChanged?.Invoke();
     }
 
-    /// <summary>Sends each seated client what changed in its view since its last update.</summary>
+    /// <summary>
+    /// Sends each seated client what changed in its view since its last update; nothing to do when the game published nothing since (a client
+    /// seated meanwhile got the whole view on joining).
+    /// </summary>
     private void SendViews()
     {
+        if (!_viewsStale)
+        {
+            return;
+        }
+
         foreach (var peer in _peers.Where(p => p.Feed is not null && !p.Connection.IsClosed))
         {
             if (peer.Feed!.Next() is { } update)
@@ -621,6 +634,8 @@ public sealed class GameHost : ICommandRoute, IDisposable
                 peer.Connection.Send(update);
             }
         }
+
+        _viewsStale = false;
     }
 
     private sealed class Peer(INetConnection connection)

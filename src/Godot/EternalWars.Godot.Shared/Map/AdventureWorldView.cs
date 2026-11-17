@@ -56,8 +56,8 @@ public partial class AdventureWorldView : Node3D
         this.SubscribeWhileInTree<HeroDefeated>(context.Events, e => RemoveHero(e.Hero));
         this.SubscribeWhileInTree<HeroEnteredGarrison>(context.Events, e => RemoveHero(e.Hero));
         this.SubscribeWhileInTree<HeroLeftGarrison>(context.Events, e => AddHero(e.Hero));
-        context.Changed += ShowLevel;
-        TreeExiting += () => context.Changed -= ShowLevel;
+        context.LevelChanged += ShowLevel;
+        TreeExiting += () => context.LevelChanged -= ShowLevel;
         ShowLevel();
     }
 

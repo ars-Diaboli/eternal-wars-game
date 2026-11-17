@@ -9,17 +9,19 @@ namespace EternalWars.Core.Events;
 /// <item>Events published from inside a handler are queued and dispatched after the current
 /// event has reached every handler (breadth-first). This keeps ordering predictable: all
 /// reactions to <c>A</c> are seen before anything <c>A</c>'s reactions caused.</item>
-/// <item>Subscribing/unsubscribing during dispatch is safe; changes apply to the next event.</item>
+/// <item>Subscribing during dispatch is safe and applies from the next event; a handler unsubscribed during dispatch is not called again,
+/// not even for the current event.</item>
 /// <item>If a handler throws, dispatch stops, still-queued events are discarded and the
 /// exception propagates to the outermost <see cref="Publish{TEvent}"/> caller.</item>
 /// </list>
+/// Each concrete event type's handlers are worked out once and kept until a subscription is added or removed.
 /// The bus is intentionally not thread-safe: the game simulation is turn-based and runs on one thread.
 /// </remarks>
 public sealed class EventBus : IEventBus
 {
     private readonly List<Subscription> _subscriptions = [];
     private readonly Queue<IEvent> _pending = new();
-    private Subscription[]? _snapshot;
+    private readonly Dictionary<Type, Subscription[]> _byEventType = []; // concrete event type -> its subscriptions, in subscription order
     private bool _dispatching;
 
     public void Publish<TEvent>(TEvent @event)
@@ -55,18 +57,23 @@ public sealed class EventBus : IEventBus
 
         var subscription = new Subscription(this, typeof(TEvent), e => handler.Handle((TEvent)e));
         _subscriptions.Add(subscription);
-        _snapshot = null;
+        _byEventType.Clear();
         return subscription;
     }
 
     private void Dispatch(IEvent @event)
     {
-        _snapshot ??= [.. _subscriptions];
         var eventType = @event.GetType();
-
-        foreach (var subscription in _snapshot)
+        if (!_byEventType.TryGetValue(eventType, out var subscriptions))
         {
-            if (subscription.IsActive && subscription.EventType.IsAssignableFrom(eventType))
+            subscriptions = [.. _subscriptions.Where(s => s.EventType.IsAssignableFrom(eventType))];
+            _byEventType[eventType] = subscriptions;
+        }
+
+        // The array is never changed (a new one replaces it), so handlers may subscribe and unsubscribe while it is walked.
+        foreach (var subscription in subscriptions)
+        {
+            if (subscription.IsActive)
             {
                 subscription.Invoke(@event);
             }
@@ -77,7 +84,7 @@ public sealed class EventBus : IEventBus
     {
         if (_subscriptions.Remove(subscription))
         {
-            _snapshot = null;
+            _byEventType.Clear();
         }
     }
 

@@ -181,7 +181,7 @@ public sealed class BattleStage(
         _planned[e.Unit] = rect;
         var cells = Math.Max(Math.Abs(e.To.X - e.From.X), Math.Abs(e.To.Y - e.From.Y));
         Step(
-            t => t.TweenProperty(view, "position", BattleSpace.Center(rect), Mathf.Clamp(cells * 0.05f, 0.15f, 0.6f)).SetTrans(Tween.TransitionType.Sine),
+            t => t.TweenProperty(view, TweenPaths.Position, BattleSpace.Center(rect), Mathf.Clamp(cells * 0.05f, 0.15f, 0.6f)).SetTrans(Tween.TransitionType.Sine),
             () => view.Position = BattleSpace.Center(rect));
     }
 
@@ -199,9 +199,9 @@ public sealed class BattleStage(
         Step(
             t =>
             {
-                t.TweenProperty(view, "scale", new Vector3(1, 0.05f, 1), 0.15f);
+                t.TweenProperty(view, TweenPaths.Scale, new Vector3(1, 0.05f, 1), 0.15f);
                 t.TweenCallback(Callable.From(() => view.Position = BattleSpace.Center(rect)));
-                t.TweenProperty(view, "scale", Vector3.One, 0.15f);
+                t.TweenProperty(view, TweenPaths.Scale, Vector3.One, 0.15f);
             },
             () =>
             {
@@ -443,7 +443,7 @@ public sealed class BattleStage(
 
         var line = Line(e);
         Step(
-            t => t.TweenProperty(view, "scale", Vector3.One, 0.3f),
+            t => t.TweenProperty(view, TweenPaths.Scale, Vector3.One, 0.3f),
             () =>
             {
                 view.Visible = true;
@@ -464,7 +464,7 @@ public sealed class BattleStage(
 
         var line = Line(e);
         Step(
-            t => t.TweenProperty(view, "scale", Vector3.One, 0.3f),
+            t => t.TweenProperty(view, TweenPaths.Scale, Vector3.One, 0.3f),
             () =>
             {
                 view.Visible = true;
@@ -484,7 +484,7 @@ public sealed class BattleStage(
 
         var line = Line(e);
         Step(
-            t => t.TweenProperty(view, "scale", new Vector3(1, 0.05f, 1), 0.3f),
+            t => t.TweenProperty(view, TweenPaths.Scale, new Vector3(1, 0.05f, 1), 0.3f),
             () =>
             {
                 view.Visible = false;

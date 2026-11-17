@@ -55,39 +55,106 @@ public sealed class ObjectMemory
     /// <summary>Updates everything <paramref name="player"/> can currently see; returns the ids that changed.</summary>
     internal IReadOnlyList<MapObjectId> Refresh(GameState state, PlayerId player)
     {
+        var known = KnownOf(player);
+        List<MapObjectId>? changed = null;
+        foreach (var mapObject in state.Objects)
+        {
+            if (IsInSight(state, player, mapObject.Position, mapObject.Definition))
+            {
+                Notice(known, mapObject, ref changed);
+            }
+        }
+
+        ForgetGone(state, player, known, ref changed);
+        return changed ?? [];
+    }
+
+    /// <summary>
+    /// Updates what came into <paramref name="player"/>'s sight on <paramref name="revealed"/> and <paramref name="entered"/> tiles (a hero moved or
+    /// looked around); returns the ids that changed. Objects already in sight are not looked at: whatever changes a remembered part of an object
+    /// (its owner or definition, its removal) publishes an event that refreshes everything (<see cref="VisibilityService"/>).
+    /// </summary>
+    internal IReadOnlyList<MapObjectId> Refresh(GameState state, PlayerId player, IReadOnlyList<MapPosition> revealed, IReadOnlyList<MapPosition> entered)
+    {
+        if (revealed.Count == 0 && entered.Count == 0)
+        {
+            return [];
+        }
+
+        var known = KnownOf(player);
+        List<MapObjectId>? changed = null;
+        NoticeOn(revealed);
+        NoticeOn(entered);
+        ForgetGone(state, player, known, ref changed);
+        return changed ?? [];
+
+        void NoticeOn(IReadOnlyList<MapPosition> tiles)
+        {
+            foreach (var tile in tiles)
+            {
+                if (state.ObjectCellAt(tile) is { Object: var mapObject } && state.Fog.IsInSight(player, tile) &&
+                    (changed is null || !changed.Contains(mapObject.Id)))
+                {
+                    Notice(known, mapObject, ref changed);
+                }
+            }
+        }
+    }
+
+    private Dictionary<MapObjectId, KnownObject> KnownOf(PlayerId player)
+    {
         if (!_known.TryGetValue(player, out var known))
         {
             known = [];
             _known[player] = known;
         }
 
-        var changed = new List<MapObjectId>();
-        foreach (var mapObject in state.Objects)
-        {
-            if (!mapObject.OccupiedCells().Any(c => state.Fog.IsInSight(player, c.Position)))
-            {
-                continue;
-            }
+        return known;
+    }
 
-            var snapshot = KnownObject.Of(mapObject);
-            if (known.GetValueOrDefault(mapObject.Id) != snapshot)
+    /// <summary>Remembers the object as it is now, if that differs from what was remembered (a snapshot is made only then).</summary>
+    private static void Notice(Dictionary<MapObjectId, KnownObject> known, MapObject mapObject, ref List<MapObjectId>? changed)
+    {
+        var owner = (mapObject as IFlaggable)?.Owner;
+        if (known.TryGetValue(mapObject.Id, out var remembered) && remembered.Position == mapObject.Position && remembered.Owner == owner &&
+            Equals(remembered.Definition, mapObject.Definition))
+        {
+            return;
+        }
+
+        known[mapObject.Id] = new KnownObject(mapObject.Id, mapObject.Definition, mapObject.Position, owner);
+        (changed ??= []).Add(mapObject.Id);
+    }
+
+    /// <summary>Remembered objects that are gone, noticed only when their place is in sight again.</summary>
+    private static void ForgetGone(GameState state, PlayerId player, Dictionary<MapObjectId, KnownObject> known, ref List<MapObjectId>? changed)
+    {
+        List<MapObjectId>? gone = null;
+        foreach (var remembered in known.Values)
+        {
+            if (state.FindObject(remembered.Id) is null && IsInSight(state, player, remembered.Position, remembered.Definition))
             {
-                known[mapObject.Id] = snapshot;
-                changed.Add(mapObject.Id);
+                (gone ??= []).Add(remembered.Id);
             }
         }
 
-        // Remembered objects that are gone, noticed only when their place is in sight again.
-        foreach (var remembered in known.Values.ToList())
+        foreach (var id in gone ?? [])
         {
-            var stillThere = state.Objects.Any(o => o.Id == remembered.Id);
-            if (!stillThere && remembered.Cells().Any(p => state.Fog.IsInSight(player, p)))
+            known.Remove(id);
+            (changed ??= []).Add(id);
+        }
+    }
+
+    private static bool IsInSight(GameState state, PlayerId player, MapPosition position, MapObjectDefinition definition)
+    {
+        foreach (var (dx, dy, _) in definition.Footprint.OccupiedCells)
+        {
+            if (state.Fog.IsInSight(player, position.Offset(dx, dy)))
             {
-                known.Remove(remembered.Id);
-                changed.Add(remembered.Id);
+                return true;
             }
         }
 
-        return changed;
+        return false;
     }
 }

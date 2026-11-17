@@ -123,18 +123,74 @@ The order is: safety first, then a measurement baseline, then cheap performance 
     - Battles themselves are cheap: 5–20 ms each with auto-resolve. The time the AI spends estimating battles (P7) falls under the rest of the turn and is not measured separately.
 
 ### Phase 1: Cheap performance wins (about 1 week; local changes, behaviour unchanged, digests unchanged)
-- [ ] **`GameState` indexes:** `Dictionary<MapPosition, Hero>`, a guarded-tile `bool[]` per level, per-type object buckets for `ObjectsOf<T>`, and a cached garrison list. `IsGuarded` becomes an allocation-free loop.
-- [ ] **`PathFinder` buffers:** pooled arrays plus a generation stamp instead of `closed`, a reused `PriorityQueue`, a per-terrain cost table built once per search (replaces `ArmyTown` per edge), and a cached teleporter list.
-- [ ] **Event bus:** cache `Dictionary<Type, Subscription[]>` per concrete event type, cleared when subscriptions change.
-- [ ] **Memory of map objects (`ObjectMemory`):** use `FindObject(id)`, look only at tiles that just came into sight, and compare before allocating.
-- [ ] **Network views:** set a dirty flag in `GameHost.Capture` and call `SendViews` only when it is set. Store a hash in `_sent` instead of JSON. Cache the field keys and compiled accessors in `StateCodec`.
-- [ ] **Small Godot fixes:**
-  - Split `MapViewContext.Changed` into `ViewerChanged` and `LevelChanged`.
-  - Share materials and meshes per colour in `MapObjectsView` and `PathPreview`.
-  - Throttle the timer label and keep its `StringName` in a static field.
-  - Remember the last hovered cell in battle input.
-  - Use `static readonly NodePath` for tween property paths.
+- [x] **`GameState` indexes:** `Dictionary<MapPosition, Hero>`, a guarded-tile `bool[]` per level, per-type object buckets for `ObjectsOf<T>`, and a cached garrison list. `IsGuarded` becomes an allocation-free loop.
+  - Done (P3). None of the indexes is saved or part of the digest:
+    - `HeroAt` reads a tile → hero dictionary. Setting any `Hero.Position` bumps the static `Hero.Moves` counter, and adding or removing a hero marks the dictionary stale. The dictionary is rebuilt on the next lookup after either. Heroes don't know their game, and tests and scenario builders set `Position` directly, so a counter is safer than updating the index on every move. When two heroes share a tile, the first in `Heroes` still wins.
+    - `IsGuarded` reads one flat `int[]` over all levels. Each entry counts the monster cells on the tile's eight neighbours, so removing a monster can subtract its cells; a `bool[]` couldn't. `AddObject` and `RemoveObject` keep it up to date. `GuardsOf` returns at once on an unguarded tile.
+    - `ObjectsOf<T>` returns a cached read-only list, in `Objects` order and including subtypes. Adding or removing an object drops the cached lists of every type it belongs to.
+    - The towns, sorted by id, are cached for `GarrisonHeroes`, `GetHero` and the owner of a pending decision. The cache is dropped when a town is added or removed.
+  - `GameStateIndexTests` checks every lookup against a plain scan as heroes move, join and leave and as objects are added, removed and put back.
+  - The baseline games give the same digests and the same search counts. Times changed as follows (one Release run each):
 
+    | Game | Turn (mean / median) | Search time |
+    |---|---|---|
+    | Big map | 391 → 294 ms / 234 → 171 ms | 65.3 → 49.7 s |
+    | Duel | 263 → 214 ms / 246 → 172 ms | 10.1 → 7.9 s |
+- [x] **`PathFinder` buffers:** pooled arrays plus a generation stamp instead of `closed`, a reused `PriorityQueue`, a per-terrain cost table built once per search (replaces `ArmyTown` per edge), and a cached teleporter list.
+  - Done (P1, P2):
+    - Each thread keeps one set of search buffers: the cost and parent arrays, two generation-stamp arrays (reached and closed) and the `PriorityQueue`. A new search bumps the generation instead of clearing the arrays. The arrays grow when a bigger map needs them, and a search started inside another gets its own set.
+    - `MovementRules.StepCost` takes an optional terrain cost table. The search remembers the hero's cost for each terrain type the first time it needs it, so `ArmyTown` and the skill and artifact checks run once per terrain per search instead of on every step. `ArmyTown` itself is now a loop that allocates nothing.
+    - `GameState.HasTeleporters` checks the cached lists of the two gate types instead of every object. A test fails if another type starts to override `TeleportTarget`.
+  - `PathFinderTests` checks that searches reusing a thread's buffers return the same routes as a thread that has never searched, across heroes with different terrain costs and maps of different sizes. `GameStateIndexTests` checks that `HasTeleporters` follows gate links as they are set and cleared.
+  - The baseline games give the same digests and the same search counts. Times changed as follows (one Release run each, after the `GameState` indexes above):
+
+    | Game | Turn (mean / median) | Search time |
+    |---|---|---|
+    | Big map | 294 → 98 ms / 171 → 44 ms | 49.7 → 4.7 s (22 % of turn time, down from 75 %) |
+    | Duel | 214 → 150 ms / 172 → 120 ms | 7.9 → 1.9 s (17 % of turn time, down from 50 %) |
+
+    On the big map, a run with the terrain table switched off took 20.2 s of search time. So the buffers, the allocation-free `ArmyTown` and the teleporter check together saved about 29 s, and the terrain table saved the other 15 s.
+- [x] **Event bus:** cache `Dictionary<Type, Subscription[]>` per concrete event type, cleared when subscriptions change.
+  - Done (P9). `Dispatch` looks up the event's concrete type. The first event of a type collects the matching subscriptions in subscription order, so later events of that type skip the `IsAssignableFrom` checks. Subscribing or unsubscribing clears the whole cache. The cached arrays are never changed in place, so handlers can subscribe and unsubscribe during dispatch as before. A new subscription applies from the next event, and a handler unsubscribed during dispatch is skipped at once.
+  - `EventBusTests` adds two tests: handlers are worked out again after each subscription change, and a handler subscribed during dispatch receives the events queued after that point.
+  - The duel baseline gives the same digest. Its turn time doesn't change measurably, because the sim has only a few subscribers. The gain is in the Godot apps, where every view subscribes.
+- [x] **Memory of map objects (`ObjectMemory`):** use `FindObject(id)`, look only at tiles that just came into sight, and compare before allocating.
+  - Done (P5):
+    - A hero that moves, is hired, freed, given or leaves a garrison, or learns Scouting, now refreshes its owner's memory only on the tiles that came into sight. These are the newly explored tiles, plus, with refog, the tiles that entered sight. Every other trigger still refreshes everything in sight.
+    - This is safe because each change to what memory keeps (owner, definition, removal) publishes an event that refreshes everything. `GarrisonOwnerChanged` was the one such event `VisibilityService` didn't handle. A garrison flagged in sight was noticed only on a later refresh, and the old full refresh on each step ran before the visit that flagged it. It now refreshes everyone's memory. It reveals nothing, so the fog, and with it the digest, is unchanged.
+    - A remembered object is compared field by field, and a new snapshot is made only when something differs. Objects that are gone are found with `FindObject`, replacing the old `Objects.Any` scan, which was O(remembered × objects). Footprints are walked without LINQ, and nothing is allocated when nothing changed.
+  - `VisibilityTests` adds two tests:
+    - in both fog modes, after every step a full refresh finds nothing the step's refresh missed, including a pile taken in sight;
+    - a garrison flagged in sight is seen flagged at once.
+  - The baseline games give the same digests. Memory refresh was timed separately, with temporary instrumentation, on the same 13,769 / 5,338 calls: 875 → 149 ms on the big map and 149 → 30 ms on the duel. That was about 1 % of turn time, so turn times don't change measurably in the sim. Memory isn't in the digest, and no rule or AI reads it; only views, cursors, info sheets and the network feed do.
+- [x] **Network views:** set a dirty flag in `GameHost.Capture` and call `SendViews` only when it is set. Store a hash in `_sent` instead of JSON. Cache the field keys and compiled accessors in `StateCodec`.
+  - Done (P8):
+    - `GameHost` builds the clients' views only after the game has published something. Every state change publishes an event, and fog changes come as events too. A client seated in between gets the whole view on joining, and pause and clock messages already had their own checks. The flag is cleared only after all views are sent, so if a send fails, the next frame tries again, as before.
+    - `PlayerViewFeed` keeps 128 bits of a SHA-256 hash of each piece it sent, instead of the JSON text. It writes the JSON into a reused byte buffer, so it no longer builds a string to compare.
+    - `StateCodec` keeps one `Shape` per type: its fields, the keys they are written under (worked out once, not on every write), compiled field getters, and whether the type is a sequence or a dictionary. Dictionary entries use compiled `Key`/`Value` getters. Reading still sets fields through reflection, because compiled expressions can't assign `readonly` fields.
+  - New tests: `LanGameTests` checks that an idle host sends no updates until the game changes. `StateCodecTests` checks the written keys for a field name shared by a base and a derived type, a struct field and dictionary entries. The existing round-trip tests cover the rest.
+  - Measured with a temporary benchmark: a generated 72² duel with refog and one remote client (Release).
+
+    | Case | Before | After |
+    |---|---|---|
+    | 300 idle host polls | 380–440 ms (about 1.4 ms a frame) | 0.2 ms |
+    | 4 polls after AI days | 7.4 ms | 2.5–3.0 ms (including compiling the getters once) |
+- [x] **Small Godot fixes:** four of the five are done. The battle-input change is deferred to Phase 2 (see below).
+  - [x] Split `MapViewContext.Changed` into `ViewerChanged` and `LevelChanged`.
+    - Done (P10). Each view subscribes to what it draws:
+      - viewer only: the per-level views (fog, map objects, the map apron);
+      - level only: level visibility, event cells, start zones;
+      - both: heroes, grail holes, the minimap.
+    - Switching levels no longer rebuilds every level's fog and objects.
+  - [x] Share materials and meshes per colour in `MapObjectsView` and `PathPreview`.
+    - Done. A `MeshCache` makes each placeholder mesh, and its material, once per shape, size and colour. Each view owns its cache, so the resources are freed with the view and don't linger in statics. No code changes these materials after they are made.
+  - [x] Throttle the timer label and keep its `StringName` in a static field.
+    - Done. `TurnTimerPanel` redraws only when the shown second, the stopped or time-up state, the warning or the colour changes, and it uses a static `font_color` name.
+  - [ ] Remember the last hovered cell in battle input.
+    - Deferred to Phase 2 "Battle reach". `BattleTargeting.ActionAt` depends on the exact pointer position, not only the cell: the attack side and the tie-breaks use the pointer's distance. It also depends on the battle state. A per-cell cache would change which stand a click picks, and nothing yet tells the input when the battle changed. The cost is the reach search inside `ActionAt`; the version-keyed reach cache planned for Phase 2 removes it without changing behaviour.
+  - [x] Use `static readonly NodePath` for tween property paths.
+    - Done. `TweenPaths` holds the five paths the views tween; all 21 `TweenProperty` calls use them.
+  - Checked with the Godot smoke scenarios (Movie Maker; they fail on any Godot or C# error): route and move, 3D battle, turn timer, grail, replay viewer, generated connections in the editor, hero exchange and gate, and siege.
 ### Phase 2: Algorithm-level performance (about 1–2 weeks; check digests and AI behaviour with sim A/B runs)
 - [ ] **AI path costs:** one Dijkstra flood per (hero, position, command count), with candidate costs read from its cost array. Build the full route only for the winner. Do a reverse flood for Dimension Door landings, and cache the last path so the `MoveHeroCommand` does not search again.
 - [ ] **Battle reach:** remember `Search(battle, unit)` on `BattleState`, keyed by a version number bumped on any move, death or spell. Add `AttackPositions(reach, …)` so the AI filters one search. Build one `Clearance` for each placement scan. Add a unit occupancy grid and an id→unit dictionary.

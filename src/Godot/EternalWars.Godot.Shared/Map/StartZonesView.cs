@@ -16,8 +16,8 @@ public partial class StartZonesView : Node3D
     public void Bind(MapViewContext context)
     {
         _context = context;
-        context.Changed += Rebuild;
-        TreeExiting += () => context.Changed -= Rebuild;
+        context.LevelChanged += Rebuild;
+        TreeExiting += () => context.LevelChanged -= Rebuild;
         this.SubscribeWhileInTree<StartZonesPainted>(context.Events, _ => Rebuild());
         this.SubscribeWhileInTree<GroundHeightsChanged>(context.Events, _ => Rebuild());
         Rebuild();

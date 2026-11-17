@@ -223,6 +223,69 @@ public class VisibilityTests
         Assert.Null(state.Memory.Get(Blue, pile.Id));
     }
 
+    [Theory]
+    [InlineData(FogMode.PermanentReveal)]
+    [InlineData(FogMode.ShroudWithRefog)]
+    public void MemoryAfterEachStep_IsWhatAFullLookAroundWouldGive(FogMode mode)
+    {
+        // A hero step refreshes memory only on the tiles that came into sight; a full refresh afterwards must find nothing new.
+        var state = Create(new GameOptions(mode, RefogMargin: 2), Strip);
+        var mine = Add<Mine>(state, BuiltInMapObjects.MineId(ResourceType.Gold), 10, 0);
+        var pile = Add<ResourcePile>(state, BuiltInMapObjects.PileId(ResourceType.Gold), 12, 2);
+        Add<TreasureChest>(state, BuiltInMapObjects.TreasureChest, 24, 0);
+        state.GetHero(B).Position = new MapPosition(20, 1);
+        var session = Start(state, revealAll: false);
+
+        void Walk(HeroId hero, int toX, int y)
+        {
+            var owner = state.GetHero(hero).Owner;
+            for (var steps = 0; state.GetHero(hero).Position.X != toX; steps++)
+            {
+                Assert.True(steps < 30, $"{hero} stuck at {state.GetHero(hero).Position}");
+                var from = state.GetHero(hero).Position;
+                session.Step(hero, from.X < toX ? Direction.East : Direction.West);
+                Assert.NotEqual(from, state.GetHero(hero).Position);
+                foreach (var player in state.Players)
+                {
+                    Assert.Empty(state.Memory.Refresh(state, player.Id));
+                }
+            }
+
+            Assert.Equal(y, state.GetHero(hero).Position.Y);
+            Assert.True(state.Fog.IsInSight(owner, state.GetHero(hero).Position));
+        }
+
+        Walk(A, 8, 1); // the mine and the pile come into sight (the mine blocks the row further on)
+        Assert.NotNull(state.Memory.Get(Blue, mine.Id));
+        Assert.NotNull(state.Memory.Get(Blue, pile.Id));
+        session.EndTurn();
+
+        Walk(B, 14, 1);
+        session.MoveTo(B, pile.VisitPosition); // with refog, the move stops when Blue's hero comes into sight
+        session.MoveTo(B, pile.VisitPosition); // Red takes the pile in Blue's sight
+        Assert.Null(state.FindObject(pile.Id));
+        Assert.Null(state.Memory.Get(Blue, pile.Id));
+        foreach (var player in state.Players)
+        {
+            Assert.Empty(state.Memory.Refresh(state, player.Id));
+        }
+    }
+
+    [Fact]
+    public void AGarrisonFlaggedInSight_IsSeenFlaggedAtOnce()
+    {
+        var state = Create(Refog, WithHeroes(('A', 2, 5), ('B', 12, 5)));
+        var garrison = Add<MapGarrison>(state, BuiltInMapObjects.Garrison, 6, 4);
+        var session = Start(state, revealAll: false);
+        Assert.Null(state.Memory.Get(Blue, garrison.Id)!.Owner);
+        session.EndTurn();
+
+        session.MoveTo(B, garrison.VisitPosition); // empty, so the first hero in flags it
+
+        Assert.Equal(Red, garrison.Owner);
+        Assert.Equal(Red, state.Memory.Get(Blue, garrison.Id)!.Owner);
+    }
+
     [Fact]
     public void Minimap_HidesUnexploredTilesAndMarksHeroes()
     {
