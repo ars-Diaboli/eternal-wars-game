@@ -121,7 +121,10 @@ In priority order:
 The new-game screen has four tabs (ADR-201): **Scenarios** (hand-made maps played to win: the shipped ones and the editor's), **Random
 maps** (the templates), **Arenas** and **Campaign** (campaign-like maps: a person starts without a town, a map event favours people, or the
 map keeps or takes campaign variables; `MapKinds`). Each tab lists its maps on the left and shows the chosen one's size, players,
-description and player setup on the right; the options below are shared by every tab.
+description and player setup on the right; the options below are shared by every tab. Every list sorts by **Name** (A–Z, the default) or
+**Size** (small first), a second press reversing it, and filters by **Size** (All or one preset, 48 … 256; a map counts as the smallest
+preset holding its larger side, a template under every size it supports); the choice is kept in `settings.json` for all tabs (ADR-204).
+The difficulty is a row of five icons (Beginner … Expert) after "Map default".
 
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,
 hero, team; ADR-086), fog mode ([adventure-map.md](adventure-map.md#fog-of-war)), complexity ([starting resources](towns-and-economy.md#starting-resources)),

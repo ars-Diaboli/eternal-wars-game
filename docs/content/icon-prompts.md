@@ -1,7 +1,7 @@
 # Icon prompts (for an image-generating model)
 
 Prompts for the UI icons (owner's note, ADR-116): resources, primary stats, skills, magic schools, war machines, adventure-map and battle actions,
-and plain icon buttons. The icons are generated as **sheets of 4 (2 × 2) or 6 (2 × 3)**, the shapes the image model handles best, and cut into
+and plain icon buttons, and the five difficulty levels (ADR-204). The mouse cursors are in [cursor-prompts.md](cursor-prompts.md). The icons are generated as **sheets of 4 (2 × 2) or 6 (2 × 3)**, the shapes the image model handles best, and cut into
 one file per icon. A sheet groups icons of the **same level of detail and the same use**, so they come out matching. Each prompt is: the
 tier's **style block** + the **sheet block** + the sheet's numbered cells, as written below.
 
@@ -28,7 +28,7 @@ buttons) use none of the faction colours strongly.
 
 | Tier | What | Where it is shown | Sheets |
 |---|---|---|---|
-| **A · Objects** | painted objects with materials | hero screen, level-up and trade windows, the resource bar; 48–64 px | 1–7 |
+| **A · Objects** | painted objects with materials | hero screen, level-up and trade windows, the resource bar, the difficulty row; 48–64 px | 1–7, 29 |
 | **B · Emblems** | symbols with two or three colours and a glow | skill and spell rows, the action panel, the battle bar; 32–48 px | 8–18 |
 | **C · Plain** | one-colour symbols the theme tints | buttons; 24–32 px | 19–22 |
 | **Heraldry** | faction crests in colour, and their one-colour charges | town and player panels, flags and banners; 24–128 px | 23–28 |
@@ -156,6 +156,20 @@ generate it on its own and expect to roll it several times.
   bow arms, bent or doubled string, extra arms, tangled ropes, floating or disconnected parts".
 - **If it still fails**: generate the one icon alone (1 × 1 at 1024 px); or sketch it (a few boxes and cylinders in Blender or Godot, a
   screenshot is enough) and give it to the model as the image input at medium strength; or fix the wheel by hand with a circle.
+
+### 29 · Difficulty (2 × 3) — the new-game screen's difficulty row, the victory screen, the leaderboard
+
+Five steps of one subject, from humble to grand, so the row reads as a climb at a glance: the **same helmet shape and size** in every cell,
+**three-quarter view facing left**, each richer than the last. Generate the five on one sheet so they match.
+
+| # | File | Subject |
+|---|---|---|
+| 1 | `icon_difficulty_beginner` | a plain brown leather cap with ear flaps and a chin strap, worn and patched |
+| 2 | `icon_difficulty_easy` | a round iron kettle helmet with a wide brim, dull grey, a few dents |
+| 3 | `icon_difficulty_normal` | a polished steel helm with a closed visor and a narrow eye slit, plain, rivets along the rim |
+| 4 | `icon_difficulty_hard` | the same closed steel helm with bronze trim round the eye slit and a tall dark-red plume |
+| 5 | `icon_difficulty_expert` | the same closed helm in blackened steel, a gold crown band round the brow with one ember-red gem, a dark-red plume |
+| 6 | — | spare: a second take of the expert helm |
 
 ## Tier B · Emblems
 
