@@ -182,7 +182,7 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
     }
 
     private IEnumerable<(MapObject Object, PlayerId? Owner, int ScoutingRadius)> Flagged() =>
-        state.Objects.OfType<IFlaggable>().Select(f => ((MapObject)f, f.Owner, f.ScoutingRadius));
+        state.Flaggables.Select(f => ((MapObject)f, f.Owner, f.ScoutingRadius));
 
     // A town sees from its middle, so the land beyond its walls is known too; other objects from their entrance.
     private static MapPosition SightCenter(MapObject mapObject) => mapObject is Towns.Town town ? town.SightCenter : mapObject.VisitPosition;
@@ -234,10 +234,20 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
             return [];
         }
 
-        var observers = state.HeroesOf(player)
-            .Select(h => (h.Position, h.ScoutingRadius))
-            .Concat(Flagged().Where(f => f.Owner == player).Select(f => (SightCenter(f.Object), f.ScoutingRadius)))
-            .ToList();
+        var observers = new List<(MapPosition, int)>();
+        foreach (var hero in state.HeroesOf(player))
+        {
+            observers.Add((hero.Position, hero.ScoutingRadius));
+        }
+
+        foreach (var flagged in state.Flaggables)
+        {
+            if (flagged.Owner == player)
+            {
+                observers.Add((SightCenter((MapObject)flagged), flagged.ScoutingRadius));
+            }
+        }
+
         var (entered, left) = state.Fog.UpdateSight(player, observers, state.Options.RefogMargin);
         if (entered.Count > 0 || left.Count > 0)
         {

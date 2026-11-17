@@ -80,6 +80,9 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
         }
     }
 
+    /// <summary>The tile under the pointer on the shown level, or null; the input sets it, and the objects view shows that tile's caption from afar.</summary>
+    public MapPosition? Pointed { get; private set; }
+
     /// <summary>When the last booked hero step starts, on <see cref="Now"/>'s clock (the fog opens as the hero walks).</summary>
     public double LastStepStart { get; private set; }
 
@@ -88,6 +91,9 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
 
     /// <summary>The grid was switched on or off.</summary>
     public event Action? ShowGridChanged;
+
+    /// <summary>The pointer came over another tile (<see cref="Pointed"/>).</summary>
+    public event Action? PointedChanged;
 
     /// <summary>The player whose knowledge is drawn changed: views of fog, memory and sight redraw.</summary>
     public event Action? ViewerChanged;
@@ -129,6 +135,15 @@ public sealed class MapViewContext(GameState state, IEventSubscriber events, Pla
         {
             Viewer = viewer;
             ViewerChanged?.Invoke();
+        }
+    }
+
+    public void Point(MapPosition? tile)
+    {
+        if (tile != Pointed)
+        {
+            Pointed = tile;
+            PointedChanged?.Invoke();
         }
     }
 

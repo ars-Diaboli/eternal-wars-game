@@ -8,11 +8,11 @@ using Godot;
 namespace EternalWars.Godot.Shared.Map;
 
 /// <summary>
-/// Renders one level of an <see cref="AdventureMap"/>: the ground as one mesh (one draw call, whatever the map size), shaped by the map's
-/// relief (ADR-182): every tile is four triangles from its four corners' heights to its centre's (the corners' mean, where
+/// Renders one level of an <see cref="AdventureMap"/>: the ground as meshes of <see cref="ChunkTiles"/> × <see cref="ChunkTiles"/> tiles (a
+/// change of heights rebuilds only the chunks it reaches; the camera skips those out of view), shaped by the map's relief (ADR-182): every tile is four triangles from its four corners' heights to its centre's (the corners' mean, where
 /// <see cref="MapSpace.ToGround"/> puts things), so neighbouring tiles always meet. The mesh is splat-shaded (ADR-183,
 /// <see cref="TerrainSplat"/>): the terrains' textures from <c>res://shared/textures/terrain/</c> run into each other where biomes meet;
-/// terrains without a texture use their flat <see cref="Palette"/> colour. The tile grid is an overlay of the same shader, shown when
+/// terrains without a texture use their flat <see cref="Palette"/> colour. Painting changes only the painted tiles' texels of the terrain map. The tile grid is an overlay of the same shader, shown when
 /// <see cref="MapViewContext.ShowGrid"/> is on. Roads and rivers are thin plates lying on each tile's slope. While there is fog (a viewer),
 /// the ground goes on <see cref="ApronTiles"/> tiles past the map's edge, its edge tiles' terrain and heights continued, for the fog to
 /// swallow along a wandering shoreline (<c>fog_of_war.gdshader</c>): the land never ends in a straight cut.
@@ -29,10 +29,14 @@ public partial class AdventureMapView : Node3D
     /// <summary>How far the ground goes on past the map's edge, in tiles: past the fog's farthest shoreline.</summary>
     public const int ApronTiles = 4;
 
-    private readonly MeshInstance3D _ground = new() { Name = "Ground" };
+    /// <summary>The side of a ground chunk, in tiles.</summary>
+    public const int ChunkTiles = 32;
+
     private readonly MeshInstance3D _apron = new() { Name = "Apron" };
+    private MeshInstance3D[,] _chunks = new MeshInstance3D[0, 0];
     private AdventureMap? _map;
     private int _level;
+    private byte[] _terrainBytes = [];
     private Image _terrainImage = null!;
     private ImageTexture _terrainTexture = null!;
     private ShaderMaterial _material = null!;
@@ -45,12 +49,22 @@ public partial class AdventureMapView : Node3D
         var events = context.Events;
         _map = map;
         _level = level;
-        _terrainImage = Image.CreateFromData(map.Width, map.Height, false, Image.Format.R8, TerrainSplat.TerrainMap(map, level));
+        _terrainBytes = TerrainSplat.TerrainMap(map, level);
+        _terrainImage = Image.CreateFromData(map.Width, map.Height, false, Image.Format.R8, _terrainBytes);
         _terrainTexture = ImageTexture.CreateFromImage(_terrainImage);
         _material = TerrainSplat.Material(_terrainTexture, map.Width, map.Height, TilesPerTextureRepeat * MapSpace.TileSize);
-        AddChild(_ground);
+        _chunks = new MeshInstance3D[(map.Width + ChunkTiles - 1) / ChunkTiles, (map.Height + ChunkTiles - 1) / ChunkTiles];
+        for (var cy = 0; cy < _chunks.GetLength(1); cy++)
+        {
+            for (var cx = 0; cx < _chunks.GetLength(0); cx++)
+            {
+                AddChild(_chunks[cx, cy] = new MeshInstance3D { Name = $"Ground{cx}_{cy}" });
+                RebuildChunk(cx, cy);
+            }
+        }
+
         AddChild(_apron);
-        RebuildGround();
+        RebuildApron();
         void ShowApron() => _apron.Visible = context.Viewer is not null; // no fog (the editor, the whole map in a replay): the map's own edge
         ShowApron();
         context.ViewerChanged += ShowApron;
@@ -67,23 +81,31 @@ public partial class AdventureMapView : Node3D
         RefreshRoads(map.Positions(level));
         RefreshRivers(map.Positions(level));
 
-        // Painting changes texels of the terrain map; only a change of heights needs a new mesh.
+        // Painting changes texels of the terrain map (the painted tiles' bytes; the texture is uploaded whole, Godot has no partial update);
+        // only a change of heights needs new meshes.
         this.SubscribeWhileInTree<TerrainPainted>(events, e =>
         {
-            if (e.Positions.Any(p => p.Level == _level))
+            var changed = false;
+            foreach (var position in e.Positions)
             {
-                _terrainImage.SetData(map.Width, map.Height, false, Image.Format.R8, TerrainSplat.TerrainMap(map, _level));
+                if (position.Level == _level && map.Contains(position))
+                {
+                    _terrainBytes[(position.Y * map.Width) + position.X] = (byte)map.GetTerrain(position);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                _terrainImage.SetData(map.Width, map.Height, false, Image.Format.R8, _terrainBytes);
                 _terrainTexture.Update(_terrainImage);
             }
         });
         this.SubscribeWhileInTree<GroundHeightsChanged>(events, e =>
         {
-            if (e.Level == _level)
+            if (e.Level == _level && !e.Area.IsEmpty)
             {
-                RebuildGround();
-                var tiles = map.Positions(_level).Where(e.Area.Touches).ToList();
-                RefreshRoads(tiles);
-                RefreshRivers(tiles);
+                Reshape(e.Area);
             }
         });
         this.SubscribeWhileInTree<RoadsPainted>(events, e => RefreshRoads(e.Positions));
@@ -156,13 +178,54 @@ public partial class AdventureMapView : Node3D
     }
 
     /// <summary>
-    /// A vertex per corner, shared by the tiles around it, and one per tile centre; four triangles a tile, clockwise seen from above (Godot's
-    /// front faces). Each corner's normal comes from its neighbouring corners, so light runs smoothly over the slopes.
+    /// The ground under changed corners: a corner's normal comes from its neighbours and a tile's centre from its corners, so the tiles with a
+    /// corner within one of the area are rebuilt, chunk by chunk, with their roads and rivers; the apron when the area reaches the edge.
     /// </summary>
-    private void RebuildGround()
+    private void Reshape(CornerArea changed)
     {
         var map = _map!;
-        var (width, height) = (map.Width, map.Height);
+        var reach = changed.Grow(1).Clip(map);
+
+        // The tiles with a corner in the reach: x from Left - 1 to Right, y from Top - 1 to Bottom, within the map.
+        var (left, top) = (Math.Max(reach.Left - 1, 0), Math.Max(reach.Top - 1, 0));
+        var (right, bottom) = (Math.Min(reach.Right, map.Width - 1), Math.Min(reach.Bottom, map.Height - 1));
+        for (var cy = top / ChunkTiles; cy <= bottom / ChunkTiles; cy++)
+        {
+            for (var cx = left / ChunkTiles; cx <= right / ChunkTiles; cx++)
+            {
+                RebuildChunk(cx, cy);
+            }
+        }
+
+        if (reach.Left <= 0 || reach.Top <= 0 || reach.Right >= map.Width || reach.Bottom >= map.Height)
+        {
+            RebuildApron();
+        }
+
+        // Roads and rivers lie on the slope of their tile, which its own corners set.
+        var tiles = new List<MapPosition>();
+        for (var y = Math.Max(changed.Top - 1, 0); y <= Math.Min(changed.Bottom, map.Height - 1); y++)
+        {
+            for (var x = Math.Max(changed.Left - 1, 0); x <= Math.Min(changed.Right, map.Width - 1); x++)
+            {
+                tiles.Add(new MapPosition(x, y, _level));
+            }
+        }
+
+        RefreshRoads(tiles);
+        RefreshRivers(tiles);
+    }
+
+    /// <summary>
+    /// One chunk of the ground: a vertex per corner, shared by the tiles around it, and one per tile centre; four triangles a tile, clockwise
+    /// seen from above (Godot's front faces). Each corner's normal comes from its neighbouring corners, so light runs smoothly over the slopes;
+    /// a corner on a chunk's edge is worked out the same in both chunks, so they meet without a seam.
+    /// </summary>
+    private void RebuildChunk(int chunkX, int chunkY)
+    {
+        var map = _map!;
+        var (x0, y0) = (chunkX * ChunkTiles, chunkY * ChunkTiles);
+        var (width, height) = (Math.Min(ChunkTiles, map.Width - x0), Math.Min(ChunkTiles, map.Height - y0));
         var cornerCount = (width + 1) * (height + 1);
         var vertices = new Vector3[cornerCount + (width * height)];
         var normals = new Vector3[vertices.Length];
@@ -172,8 +235,9 @@ public partial class AdventureMapView : Node3D
         {
             for (var cx = 0; cx <= width; cx++)
             {
-                vertices[CornerIndex(cx, cy)] = new Vector3((cx - 0.5f) * MapSpace.TileSize, Base + Corner(cx, cy), (cy - 0.5f) * MapSpace.TileSize);
-                normals[CornerIndex(cx, cy)] = CornerNormal(cx, cy);
+                var (gx, gy) = (x0 + cx, y0 + cy);
+                vertices[CornerIndex(cx, cy)] = new Vector3((gx - 0.5f) * MapSpace.TileSize, Base + Corner(gx, gy), (gy - 0.5f) * MapSpace.TileSize);
+                normals[CornerIndex(cx, cy)] = CornerNormal(gx, gy);
             }
         }
 
@@ -185,7 +249,7 @@ public partial class AdventureMapView : Node3D
                 // Corners: a top-left, b top-right, c bottom-left, d bottom-right; then the centre.
                 var (a, b, c, d) = (CornerIndex(x, y), CornerIndex(x + 1, y), CornerIndex(x, y + 1), CornerIndex(x + 1, y + 1));
                 var centre = cornerCount + (y * width) + x;
-                vertices[centre] = MapSpace.ToGround(map, new MapPosition(x, y, _level));
+                vertices[centre] = MapSpace.ToGround(map, new MapPosition(x0 + x, y0 + y, _level));
                 normals[centre] = (normals[a] + normals[b] + normals[c] + normals[d]).Normalized();
                 foreach (var index in (ReadOnlySpan<int>)[a, b, centre, b, d, centre, d, c, centre, c, a, centre])
                 {
@@ -202,8 +266,7 @@ public partial class AdventureMapView : Node3D
         var mesh = new ArrayMesh();
         mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
         mesh.SurfaceSetMaterial(0, _material);
-        _ground.Mesh = mesh;
-        RebuildApron();
+        _chunks[chunkX, chunkY].Mesh = mesh;
     }
 
     /// <summary>

@@ -13,9 +13,6 @@ namespace EternalWars.Core.Domain.Battles;
 /// </summary>
 internal sealed class BattleFlow(GameState state, IEventPublisher events, BattleAftermath aftermath)
 {
-    /// <summary>Whether computer players' heroes retreat from lost battles (off in the AI's throwaway estimate fights).</summary>
-    public bool AiMayRetreat { get; set; } = true;
-
     /// <summary>The battle AI's level for the attacker and the defender (<see cref="BattleAiLevel.Latest"/> unless <c>sim ai</c> measures a step).</summary>
     public (BattleAiLevel Attacker, BattleAiLevel Defender) AiLevels { get; set; } = (BattleAiLevel.Latest, BattleAiLevel.Latest);
 
@@ -86,35 +83,46 @@ internal sealed class BattleFlow(GameState state, IEventPublisher events, Battle
     /// </summary>
     public void Continue(BattleState battle, IEventPublisher? bus = null)
     {
+        // A computer player's hero gives up a lost battle (ADR-070), but never the arena's (ADR-097).
+        PlayComputer(battle, bus ?? events, AiLevels, mayRetreat: !aftermath.IsArenaBattle);
+        if (battle.Phase == BattlePhase.Finished && ReferenceEquals(battle, state.Battle))
+        {
+            aftermath.Finish(battle);
+        }
+    }
+
+    /// <summary>
+    /// Plays the AI's units (and a self-firing siege engine, a frenzied or confused stack) until a person has to act or the battle is over. With
+    /// <paramref name="mayRetreat"/> a computer player's hero retreats from a lost battle; quick combat never retreats for a person. The AI's
+    /// estimate fights (<see cref="AI.BattleEstimator"/>) play a battle that belongs to no game through this too.
+    /// </summary>
+    public static void PlayComputer(BattleState battle, IEventPublisher bus, (BattleAiLevel Attacker, BattleAiLevel Defender) levels, bool mayRetreat)
+    {
         while (battle.Phase == BattlePhase.Fighting && battle.ActiveUnit is { } unit
                && (battle.IsComputerControlled(unit.Side) || SiegeRules.FiresByItself(battle, unit) || unit.Has(Magic.SpellStatus.Confused | Magic.SpellStatus.Frenzied)))
         {
+            var engine = new BattleEngine(battle, bus);
+
             // A frenzied stack goes for the nearest stack (ADR-150), a confused one acts at random (ADR-123), whoever commands it.
             if (unit.Has(Magic.SpellStatus.Frenzied))
             {
-                BattleAi.ActFrenzied(battle, Engine(battle, bus));
+                BattleAi.ActFrenzied(battle, engine);
                 continue;
             }
 
             if (unit.Has(Magic.SpellStatus.Confused))
             {
-                BattleAi.ActConfused(battle, Engine(battle, bus));
+                BattleAi.ActConfused(battle, engine);
                 continue;
             }
 
-            // A computer player's hero gives up a lost battle (ADR-070), but never the arena's (ADR-097); quick combat never retreats for a person.
-            if (AiMayRetreat && !aftermath.IsArenaBattle && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
+            if (mayRetreat && battle.Participant(unit.Side).IsComputer && SurrenderRules.ShouldRetreat(battle, unit.Side))
             {
-                Engine(battle, bus).Retreat(unit.Side);
+                engine.Retreat(unit.Side);
                 break;
             }
 
-            BattleAi.Act(battle, Engine(battle, bus), unit.Side == BattleSide.Attacker ? AiLevels.Attacker : AiLevels.Defender);
-        }
-
-        if (battle.Phase == BattlePhase.Finished && ReferenceEquals(battle, state.Battle))
-        {
-            aftermath.Finish(battle);
+            BattleAi.Act(battle, engine, unit.Side == BattleSide.Attacker ? levels.Attacker : levels.Defender);
         }
     }
 }

@@ -129,6 +129,7 @@ public sealed class AdventureInputController(
     private void ShowHover(Vector2 pointer)
     {
         var cell = MapSpace.PickTile(camera, pointer, session.State.Map, context.Level);
+        context.Point(cell);
         if (cell != _cursorCell)
         {
             _cursorCell = cell;

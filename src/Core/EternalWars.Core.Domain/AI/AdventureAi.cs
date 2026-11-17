@@ -107,7 +107,6 @@ public sealed partial class AdventureAi(GameSession session, bool controlHumanSl
         _doorChecks.Clear();
         _reach.Clear();
         _gathering = false;
-        _estimator.Clear();
         if (!ResolvePending(player))
         {
             return false;
