@@ -144,7 +144,7 @@ public partial class Main
             KeepSettings();
         };
 
-        _menuButton = new Button { Text = "Menu (F10)" }.WithIcon(UiIcon.Menu);
+        _menuButton = new Button { Text = "Menu (F10)" }.WithIcon(UiIcon.Menu, UiIcons.StatusBarSize);
         _menuButton.Pressed += _menu.Toggle;
         layer.AddChild(_menuButton);
         PlaceMenuButton();
@@ -152,13 +152,13 @@ public partial class Main
     }
 
     /// <summary>
-    /// The menu button sits on the status bar's right end while the adventure map of a game is shown (ADR-186); in battle, in the replay viewer
-    /// (beside its bar) and before a game it stands in the bottom right corner.
+    /// The menu button sits on the status bar's right end while a game is played, on the map and in battle (ADR-186, ADR-204); in the replay
+    /// viewer (beside its bar) and before a game it stands in the bottom right corner.
     /// </summary>
     private void PlaceMenuButton()
     {
         var screen = GetViewport().GetVisibleRect().Size;
-        if (_mode == GameMode.Play && IsInstanceValid(_hud) && _hud.Visible && _game is not null)
+        if (_mode == GameMode.Play && IsInstanceValid(_hud) && _game is not null) // the map's and the battle's bars share the slot (ADR-204)
         {
             var slot = StatusBar.MenuSlot(screen);
             _menuButton.SetAnchorsPreset(Control.LayoutPreset.TopLeft);

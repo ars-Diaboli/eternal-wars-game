@@ -88,29 +88,83 @@ public static class UiIcons
         return ImageTexture.CreateFromImage(image);
     }
 
+    /// <summary>An icon button's size in a bar or panel: the side panel's actions, the battle bar, the turn block (ADR-204).</summary>
+    public const int BarSize = 48;
+
+    /// <summary>An icon button's size inside a window or a row (ADR-204).</summary>
+    public const int WindowSize = 32;
+
+    /// <summary>An icon button's size on the status bar, whose line is <see cref="Hud.StatusBar.Height"/> tall.</summary>
+    public const int StatusBarSize = 20;
+
     /// <summary>
-    /// Shows <paramref name="icon"/> on the button, before its text. With <paramref name="iconOnly"/> the text goes (into the
-    /// tooltip when it has none), so glyph buttons such as "&lt;" become the icon; the text stays if the icon is missing.
+    /// The metadata holding an icon-only button's label (its text and hotkey), which the <see cref="Hud.StatusBar"/> shows while the pointer is
+    /// over it (ADR-204).
     /// </summary>
-    public static T WithIcon<T>(this T button, UiIcon icon, bool iconOnly = false) where T : Button
+    public const string StatusLabelMeta = "status_label";
+
+    /// <summary>
+    /// Whether the app shows an icon-only button's label on a status bar (the game, ADR-204); false (the map editor, which has none) puts the
+    /// label into the button's tooltip instead. The app sets it before it builds its controls.
+    /// </summary>
+    public static bool LabelsOnStatusBar { get; set; } = true;
+
+    /// <summary>
+    /// Shows <paramref name="icon"/> alone on the button at <paramref name="size"/> pixels (ADR-204): its text becomes the label the status
+    /// bar shows on hover (<see cref="StatusLabelMeta"/>; the tooltip when <see cref="LabelsOnStatusBar"/> is off), and the name smoke scripts
+    /// press it by. With <paramref name="keepText"/> the icon stands small before the text instead. The text stays if the icon is missing.
+    /// </summary>
+    public static T WithIcon<T>(this T button, UiIcon icon, int size = WindowSize, bool keepText = false) where T : Button
     {
-        if (Get(icon) is not { } texture)
+        if (Get(icon, keepText ? ButtonSize : size) is not { } texture)
         {
             return button;
         }
 
         button.Icon = texture;
-        if (iconOnly)
+        if (keepText)
         {
-            if (string.IsNullOrEmpty(button.TooltipText))
-            {
-                button.TooltipText = button.Text;
-            }
-
-            button.Text = "";
+            return button;
         }
 
+        button.IconAlignment = HorizontalAlignment.Center;
+        Label(button, button.Text);
         return button;
+    }
+
+    private static void Label(Button button, string label)
+    {
+        button.Text = "";
+        button.SetMeta(StatusLabelMeta, label);
+        button.SetMeta(Shared.Controls.AutoInput.LabelMeta, label);
+        if (!LabelsOnStatusBar && string.IsNullOrEmpty(button.TooltipText))
+        {
+            button.TooltipText = label;
+        }
+    }
+
+    /// <summary>
+    /// Sets what a button says: an icon-only button's label (<see cref="WithIcon"/>), else its text. Code that renames a button after it was
+    /// made ("Start anyway", the surrender's price) goes through here, so an icon-only button keeps showing only its icon.
+    /// </summary>
+    public static void SetLabel(this Button button, string label)
+    {
+        if (button.HasMeta(StatusLabelMeta))
+        {
+            Label(button, label);
+        }
+        else
+        {
+            button.Text = label;
+        }
+    }
+
+    /// <summary>What the status bar says while the pointer is over <paramref name="control"/>: an icon-only button's label, then its tooltip.</summary>
+    public static string StatusText(Control control)
+    {
+        var label = control.HasMeta(StatusLabelMeta) ? control.GetMeta(StatusLabelMeta).AsString() : "";
+        var tip = control.TooltipText;
+        return label.Length == 0 ? tip : tip.Length == 0 || tip == label ? label : $"{label}: {tip}";
     }
 
     /// <summary><paramref name="text"/> after <paramref name="icon"/>, for a heading that is no button; just the label if the icon is missing.</summary>

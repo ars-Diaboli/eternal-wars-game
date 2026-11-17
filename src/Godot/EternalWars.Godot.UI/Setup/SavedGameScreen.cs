@@ -127,7 +127,7 @@ public partial class SavedGameScreen : PanelContainer
     {
         _game = game;
         _openConfirmed = false;
-        _start.Text = "Start";
+        _start.SetLabel("Start");
         _start.Disabled = game is null;
         _title.Text = game?.Title ?? "";
         _lines.Text = game is null ? "" : string.Join("\n", game.Lines);
@@ -223,7 +223,7 @@ public partial class SavedGameScreen : PanelContainer
     private void Changed()
     {
         _openConfirmed = false;
-        _start.Text = "Start";
+        _start.SetLabel("Start");
         ShowJoined();
         LanChanged?.Invoke(Describe());
     }
@@ -260,7 +260,7 @@ public partial class SavedGameScreen : PanelContainer
         if (open.Count > 0 && !_openConfirmed)
         {
             _openConfirmed = true;
-            _start.Text = "Start anyway";
+            _start.SetLabel("Start anyway");
             ShowMessage($"Nobody has joined {string.Join(", ", open)} yet: start anyway, and each waits for a player to join during the game, or wait.");
             return;
         }

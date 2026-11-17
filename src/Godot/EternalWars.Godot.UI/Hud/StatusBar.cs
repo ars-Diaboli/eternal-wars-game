@@ -4,10 +4,11 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// The adventure map's status bar (ADR-186): a narrow stripe along the bottom of the screen, as wide as the screen up to 16:9 and a centred
+/// The status bar (ADR-186, ADR-204): a narrow stripe along the bottom of the screen, as wide as the screen up to 16:9 and a centred
 /// 16:9 width on a wider screen. On the left the status line (<see cref="Message"/>): the HUD's messages, and what the pointer is over (a HUD
-/// control's tooltip, or the map's cell through <see cref="ShowHover"/>), whichever came last. On the right the <see cref="ResourceBar"/>,
-/// then <see cref="RightReserve"/> left free for the app's menu button (<see cref="MenuSlot"/>).
+/// control's label and tooltip, <see cref="UiIcons.StatusText"/>, or the map's cell through <see cref="ShowHover"/>), whichever came last.
+/// On the right the <see cref="ResourceBar"/> (on the adventure map and the town screen), then <see cref="RightReserve"/> left free for the
+/// app's menu button (<see cref="MenuSlot"/>). The adventure map, the battle and the screens before a game each have one.
 /// </summary>
 public partial class StatusBar : PanelContainer
 {
@@ -33,7 +34,20 @@ public partial class StatusBar : PanelContainer
     };
 
     /// <summary>Room kept free below the bar (the replay viewer's bar, ADR-164).</summary>
-    public float BottomOffset { get; set; }
+    public float BottomOffset
+    {
+        get => _bottomOffset;
+        set
+        {
+            _bottomOffset = value;
+            if (IsInsideTree())
+            {
+                Place();
+            }
+        }
+    }
+
+    private float _bottomOffset;
 
     /// <summary>Width kept free at the bar's right end, for the menu button the app puts there.</summary>
     public float RightReserve { get; set; }
@@ -52,9 +66,9 @@ public partial class StatusBar : PanelContainer
         return new Rect2((screen.X - width) / 2, screen.Y - bottomOffset - Height, width, Height);
     }
 
-    /// <param name="session">The game.</param>
+    /// <param name="session">The game, whose resources the bar shows; null for a bar without them (battle, the screens before a game).</param>
     /// <param name="listed">Whose resources are shown (<see cref="ResourceBar"/>): the current player's by default.</param>
-    public void Bind(GameSession session, Func<Core.Domain.Common.PlayerId>? listed = null)
+    public void Bind(GameSession? session, Func<Core.Domain.Common.PlayerId>? listed = null)
     {
         Name = "StatusBar";
         var style = UiTheme.Box(UiTheme.Background, UiTheme.Border, 2, borderWidth: 0);
@@ -65,9 +79,12 @@ public partial class StatusBar : PanelContainer
         row.AddThemeConstantOverride("separation", UiSpacing.Section);
         AddChild(row);
         row.AddChild(Message);
-        var resources = new ResourceBar { Name = "Resources" };
-        row.AddChild(resources);
-        resources.Bind(session, listed);
+        if (session is not null)
+        {
+            var resources = new ResourceBar { Name = "Resources" };
+            row.AddChild(resources);
+            resources.Bind(session, listed);
+        }
         if (RightReserve > 0)
         {
             row.AddChild(new Control { CustomMinimumSize = new Vector2(RightReserve - UiSpacing.Section, 0), MouseFilter = MouseFilterEnum.Ignore });
@@ -92,27 +109,27 @@ public partial class StatusBar : PanelContainer
         }
     }
 
-    public override void _Ready()
+    public override void _EnterTree()
     {
-        GetViewport().SizeChanged += Place;
+        GetViewport().SizeChanged += Place; // not _Ready: the adventure HUD moves the bar to another layer (ADR-204)
         Place();
     }
 
     public override void _ExitTree() => GetViewport().SizeChanged -= Place;
 
-    /// <summary>A HUD control's tooltip goes to the status line as the pointer comes over it.</summary>
+    /// <summary>A control's label (an icon-only button's, ADR-204) and tooltip go to the status line as the pointer comes over it.</summary>
     public override void _Input(InputEvent @event)
     {
-        if (@event is not InputEventMouseMotion || GetViewport().GuiGetHoveredControl() is not { } control)
+        if (!IsVisibleInTree() || @event is not InputEventMouseMotion || GetViewport().GuiGetHoveredControl() is not { } control)
         {
             return;
         }
 
         for (Node? node = control; node is Control item; node = item.GetParent())
         {
-            if (item.TooltipText.Length > 0)
+            if (UiIcons.StatusText(item) is { Length: > 0 } text)
             {
-                ShowHover(item.TooltipText);
+                ShowHover(text);
                 return;
             }
         }

@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Cursors;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.Info;
@@ -25,6 +26,9 @@ public sealed class AdventureInputController(
 
     /// <summary>The cell last named on the status line.</summary>
     private MapPosition? _hovered;
+
+    /// <summary>The cell and the state the cursor was last chosen for (ADR-204); cleared when a selection, a spell or a move may change it.</summary>
+    private MapPosition? _cursorCell;
 
     /// <summary>The own hero the keys and clicks move; null for none.</summary>
     public HeroId? SelectedHero { get; private set; }
@@ -73,6 +77,7 @@ public sealed class AdventureInputController(
             case InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } rightClick:
                 world.PathPreview.Clear();
                 _aimedSpell = null;
+                RefreshCursor();
                 if (MapSpace.PickTile(camera, rightClick.Position, session.State.Map, context.Level) is { } pointed
                     && InfoSheets.MapCell(session.State, session.State.CurrentPlayer.Id, pointed, info.Detailed) is { } sheet)
                 {
@@ -117,10 +122,19 @@ public sealed class AdventureInputController(
         return true;
     }
 
-    /// <summary>What the pointer is over goes to the status line (ADR-186): the name the information window would give, once per cell.</summary>
+    /// <summary>
+    /// What the pointer is over goes to the status line (ADR-186): the name the information window would give, once per cell; the cursor says
+    /// what a click would do there (ADR-204).
+    /// </summary>
     private void ShowHover(Vector2 pointer)
     {
         var cell = MapSpace.PickTile(camera, pointer, session.State.Map, context.Level);
+        if (cell != _cursorCell)
+        {
+            _cursorCell = cell;
+            GameCursors.Show(CursorAt(cell));
+        }
+
         if (cell == _hovered)
         {
             return;
@@ -132,10 +146,33 @@ public sealed class AdventureInputController(
             : null);
     }
 
+    /// <summary>The cursor over <paramref name="cell"/>: busy on a turn not played here, else what the chosen hero would do there.</summary>
+    private GameCursor CursorAt(MapPosition? cell)
+    {
+        var player = session.State.CurrentPlayer.Id;
+        if (!context.PlaysHere(player))
+        {
+            return GameCursor.Busy;
+        }
+
+        if (cell is not { } pointed)
+        {
+            return GameCursor.Pointer;
+        }
+
+        var hero = SelectedHero is { } chosen && session.State.HeroesOf(player).Any(h => h.Id == chosen) ? chosen : (HeroId?)null;
+        var path = hero is { } id && _aimedSpell is null && session.State.Map.Contains(pointed) ? session.Movement.FindPath(id, pointed) : null;
+        return AdventureCursors.For(session.State, player, hero, pointed, path, _aimedSpell is not null).Cursor;
+    }
+
+    /// <summary>The cursor is chosen again at the next pointer move (a selection, a spell or a move changed what a click does).</summary>
+    private void RefreshCursor() => _cursorCell = null;
+
     /// <summary>Selects <paramref name="hero"/> (none: null) in the world and the hero list; <paramref name="focus"/> moves the camera to it.</summary>
     public void Select(HeroId? hero, bool focus)
     {
         SelectedHero = hero;
+        RefreshCursor();
         world.Select(hero);
         world.PathPreview.Clear();
         hud.HeroList.ShowSelected(hero);
@@ -148,7 +185,11 @@ public sealed class AdventureInputController(
     }
 
     /// <summary>An adventure spell armed on the hero screen: the next map click casts it there.</summary>
-    public void Aim(HeroId hero, string spell) => _aimedSpell = (hero, spell);
+    public void Aim(HeroId hero, string spell)
+    {
+        _aimedSpell = (hero, spell);
+        RefreshCursor();
+    }
 
     /// <summary>The selected hero digs where it stands (ADR-140): a whole day's movement, for the Grail.</summary>
     public void Dig()
@@ -167,6 +208,7 @@ public sealed class AdventureInputController(
     {
         var state = session.State;
         var player = state.CurrentPlayer.Id;
+        RefreshCursor();
         if (_aimedSpell is { } aimed)
         {
             _aimedSpell = null;
@@ -216,5 +258,9 @@ public sealed class AdventureInputController(
         }
     }
 
-    private void Report(CommandResult result) => hud.Status.Text = MoveOutcomeText.Of(result);
+    private void Report(CommandResult result)
+    {
+        RefreshCursor();
+        hud.Status.Text = MoveOutcomeText.Of(result);
+    }
 }

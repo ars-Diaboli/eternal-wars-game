@@ -298,7 +298,7 @@ public partial class NewGameScreen
         }
 
         _openConfirmed = true;
-        _start.Text = "Start anyway";
+        _start.SetLabel("Start anyway");
         return $"Nobody has joined {string.Join(", ", open)} yet: start anyway, and each waits for a player to join during the game, or wait.";
     }
 }

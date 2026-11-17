@@ -612,6 +612,7 @@ public partial class Main : Node3D
         };
         _battle.Closed += () =>
         {
+            GameCursors.Show(Core.Domain.Cursors.GameCursor.Pointer); // the battle's last cursor goes; the map's comes with the next move
             _world.Visible = true;
             _hud.Visible = true;
             PlaceMenuButton();

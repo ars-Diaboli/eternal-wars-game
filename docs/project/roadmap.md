@@ -221,13 +221,13 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Decision prompts, notices and alerts in the centre of the screen (ADR-186)
 - [x] A bigger new-game screen with tabs: Scenarios, Random maps, Arenas, Campaign; map list, details and players, options (ADR-201)
 - [ ] The icons themselves (from [icon-prompts.md](../content/icon-prompts.md)), the difficulty icons (sheet 29) included
-- [ ] Icon-only buttons (48 px in bars and panels, 32 px in windows), their label and hotkey on the status bar (ADR-204)
-- [ ] A status bar on the battle, town and hero screens and the screens before a game (ADR-204)
+- [x] Icon-only buttons (48 px in bars and panels, 32 px in windows), their label and hotkey on the status bar (ADR-204)
+- [x] A status bar on the battle, town and hero screens and the screens before a game (ADR-204)
 - [x] Map lists on the new-game screen sorted by name or size and filtered by size, kept in the settings (ADR-204)
 - [ ] The difficulty as a row of five icons on the new-game screen, the icon on the victory screen and the leaderboard (ADR-204)
-- [ ] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), the images and hotspots (from
-      [cursor-prompts.md](../content/cursor-prompts.md)) (ADR-204)
-- [ ] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
+- [x] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), system cursors standing in (ADR-204)
+- [ ] The cursor images (from [cursor-prompts.md](../content/cursor-prompts.md)) and the days a move takes drawn on the move cursor (ADR-204)
+- [x] Melee direction in battle: the side to strike from by the pointer's place in the cell (8 sides), the stand cells highlighted (ADR-204)
 
 ### Platform and art
 - [x] Built: speed settings (ADR-095, UI-1)

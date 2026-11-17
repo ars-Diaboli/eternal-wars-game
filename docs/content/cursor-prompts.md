@@ -11,8 +11,8 @@ block** + the icons' **sheet block** (from icon-prompts.md) + the sheet's number
 - **Cursor**: each cell becomes `cursor_<group>_<id>.png`, 32-bit RGBA, kept at 512 px as the master. The game ships it at **64 px** and
   scales it to 48 and 32 px for smaller UI scales; one still image a cursor, no animation.
 - **Hotspot**: the pixel that points, given per cursor below as where it is in the cell (in 1/8 of the cell from the top left, so `1,1` is
-  64 px in at 512 px and 8 px in at 64 px). The game reads it from `cursors.csv` (id, file, hotspot x, hotspot y), so a redrawn cursor only
-  needs its row changed. The **pointing part touches the hotspot**: the arrow's tip, the sword's point, the centre of a target ring.
+  64 px in at 512 px and 8 px in at 64 px). The game keeps the same table in `GameCursors.Definition`; a redrawn cursor with a moved hotspot
+  needs its row changed there. Put the files in `src/Godot/EternalWars.Godot.Assets/textures/ui/cursors/`. The **pointing part touches the hotspot**: the arrow's tip, the sword's point, the centre of a target ring.
 - **Shape**: every cursor must read at 32 px over a busy 3D map: one clear silhouette, a **thick dark outline (about 5 % of the cell)**, a
   light inner edge, no thin lines, no text, letters or numbers. Where a cursor needs a number (the days a move takes) the game draws it.
 - **Spare cell**: as for the icons, a second take of the hardest cursor on the sheet.
@@ -134,10 +134,9 @@ with them, which is acceptable at 32–64 px).
 | a free cell it can reach | `walk`, `fly` or `teleport` by how the stack moves (combat.md's capabilities) |
 | anything else on the field | `ui_blocked`; the battle bar and windows show the pointer |
 
-**Melee direction** (the owner's note): over an enemy stack, the pointer's place in the hovered cell picks one of **eight sides**: the cell
-is split into eight 45° sectors round its centre, and the sector the pointer is in names the neighbouring side the attacker strikes from
-(north, north-east, east, …). For a 2 × 2 target the side is that of the target's whole footprint, and a corner sector of an edge cell
-picks the diagonal. The sword cursor shows that side, and the cells the attacker would **stand on** (its whole footprint, 1 × 1 or 2 × 2)
+**Melee direction** (the owner's note): over an enemy stack, the pointer's place picks one of **eight sides**: the space round the
+target's centre (its whole footprint, 1 × 1 or 2 × 2) is split into eight 45° sectors, and the sector the pointer is in names the side the
+attacker strikes from (north, north-east, east, …). The sword cursor shows that side, and the cells the attacker would **stand on** (its whole footprint, 1 × 1 or 2 × 2)
 are highlighted on the grid. If the attacker cannot stand on that side (blocked, out of reach, off the field) the nearest side it can reach
 (by angle) is used instead; with none, the cursor is `ui_blocked`. A click attacks from the shown side. A shooter next to an enemy (which
 must strike in melee) uses the same rule.
