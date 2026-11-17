@@ -36,12 +36,23 @@ public sealed class PathFinder(GameState state)
     private const int CheapestOrthogonal = 50; // dirt road
     private const int CheapestDiagonalExtra = 21;
 
+    [ThreadStatic]
+    private static PathSearchCounters _counters;
+
+    /// <summary>
+    /// The searches this thread has run so far (diagnostics for <c>sim game --profile</c>; rules never read it). Per thread, so a game on one
+    /// thread counts only its own searches.
+    /// </summary>
+    public static PathSearchCounters Counters => _counters;
+
     /// <summary>
     /// The cheapest route for the hero to <paramref name="target"/>, or null. <paramref name="from"/>: plan as if the hero stood there instead (the
     /// AI weighing a Dimension Door landing); the costs are still the hero's.
     /// </summary>
     public HeroPath? FindPath(HeroId heroId, MapPosition target, bool respectFog = true, MapPosition? from = null)
     {
+        var started = System.Diagnostics.Stopwatch.GetTimestamp();
+        _counters = _counters with { Searches = _counters.Searches + 1 };
         var hero = state.GetHero(heroId);
         var map = state.Map;
         var origin = from ?? hero.Position;
@@ -78,6 +89,7 @@ public sealed class PathFinder(GameState state)
         cost[start] = 0;
         var open = new PriorityQueue<int, int>();
         open.Enqueue(start, 0);
+        var expanded = 0;
 
         while (open.TryDequeue(out var current, out _))
         {
@@ -87,9 +99,11 @@ public sealed class PathFinder(GameState state)
             }
 
             closed[current] = true;
+            expanded++;
             var (position, teleported) = Decode(current);
             if (position == target)
             {
+                Count(expanded, found: true, started);
                 return BuildPath(hero, current, cost, parent);
             }
 
@@ -136,6 +150,7 @@ public sealed class PathFinder(GameState state)
             }
         }
 
+        Count(expanded, found: false, started);
         return null;
 
         bool IsKnown(Hero other) => !respectFog || state.CanSee(hero.Owner, other);
@@ -160,6 +175,13 @@ public sealed class PathFinder(GameState state)
             open.Enqueue(to, candidate + (useHeuristic ? Heuristic(toPosition, target) : 0));
         }
     }
+
+    private static void Count(int expanded, bool found, long started) => _counters = _counters with
+    {
+        Found = _counters.Found + (found ? 1 : 0),
+        Expanded = _counters.Expanded + expanded,
+        Time = _counters.Time + System.Diagnostics.Stopwatch.GetElapsedTime(started),
+    };
 
     /// <summary>Admissible lower bound: octile distance at the cheapest possible (road) cost.</summary>
     private static int Heuristic(MapPosition from, MapPosition to)
@@ -219,4 +241,17 @@ public sealed class PathFinder(GameState state)
         var rest = tile / state.Map.Width;
         return (new MapPosition(x, rest % state.Map.Height, rest / state.Map.Height), teleported);
     }
+}
+
+/// <summary>
+/// What the <see cref="PathFinder"/> has done on a thread: the searches started (those that stopped at once included), the ones that found a
+/// route, the tiles they expanded and the time the searches took (wall clock; searches that stopped at once are not timed).
+/// </summary>
+public readonly record struct PathSearchCounters(long Searches, long Found, long Expanded, TimeSpan Time)
+{
+    public static PathSearchCounters operator +(PathSearchCounters a, PathSearchCounters b) =>
+        new(a.Searches + b.Searches, a.Found + b.Found, a.Expanded + b.Expanded, a.Time + b.Time);
+
+    public static PathSearchCounters operator -(PathSearchCounters a, PathSearchCounters b) =>
+        new(a.Searches - b.Searches, a.Found - b.Found, a.Expanded - b.Expanded, a.Time - b.Time);
 }
