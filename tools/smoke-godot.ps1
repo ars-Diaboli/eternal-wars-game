@@ -76,10 +76,10 @@ $scenarios = @(
     # quick combat, the result screen (not ranked), then "Play again" starts the map anew.
     @{ Name = 'game-arena'; App = 'EternalWars.Game'; Frames = 110; Map = $arenaMap
        Input = '3:key:Enter;8:press:End turn;50:key:Q;75:key:Enter;85:press:Play again' },
-    # A shipped arena map from the new-game screen (ADR-180): Four Banners, two against two with random towns; start, then end day 1 and the
-    # computer players prepare (their battles show; day 2 and the result are the game-arena scenario's).
+    # A shipped arena map from the new-game screen's Arenas tab (ADR-180, ADR-201): Four Banners, two against two with random towns; start,
+    # then end day 1 and the computer players prepare (their battles show; day 2 and the result are the game-arena scenario's).
     @{ Name = 'game-arena-shipped'; App = 'EternalWars.Game'; Frames = 60
-       Input = '4:click:@Demo Valley;8:choose:Four Banners;12:click:@Start;30:press:End turn' },
+       Input = '4:press:Arenas;8:click:@Four Banners;12:click:@Start;30:press:End turn' },
     # Step next to a savage monster: the 3D battle scene opens; wait, defend, a click on the field, quick combat, leave.
     @{ Name = 'game-battle-3d'; App = 'EternalWars.Game'; Frames = 80; Map = $battleMap
        Input = '3:key:Enter;10:key:Right;30:key:W;40:key:D;48:click:960,600;58:key:Q;68:key:Enter' },
@@ -128,10 +128,10 @@ $scenarios = @(
     # The Thieves' Guild (ADR-079) from the town screen's button, closed with Escape, then the town screen too.
     @{ Name = 'game-thieves-guild'; App = 'EternalWars.Game'; Frames = 40; Map = $townsMap
        Input = '3:key:Enter;10:key:T;16:click:@Thieves'' guild;26:key:Escape;32:key:Escape' },
-    # A random map (ADR-086): pick "Random map: Duel", Necropolis, its first hero and the Skeleton tier-1 dwelling for Blue, hero limit 7,
+    # A random map (ADR-086, ADR-201): the Random maps tab, Duel, Necropolis, its first hero and the Skeleton tier-1 dwelling for Blue, hero limit 7,
     # Start (Red is a computer player), K, end the turn so the computer plays its turn.
     @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 105
-       Input = '4:click:@Demo Valley;8:choose:Random map: Duel;12:click:@Random;16:choose:necropolis;20:click:@Random;24:choose:Morthal (warrior);28:click:@Random;32:choose:Skeleton;36:click:618,400;40:click:@Start;58:key:K;68:key:Escape;74:click:@End turn' },
+       Input = '4:press:Random maps;8:click:@Duel;12:click:@Random;16:choose:necropolis;20:click:@Random;24:choose:Morthal (warrior);28:click:@Random;32:choose:Skeleton;36:click:1008,291;40:click:@Start;58:key:K;68:key:Escape;74:click:@End turn' },
     # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns, New game, Enter on Start. Pressed by name: Continue has the
     # focus when this computer has a save, New game when not. The only game scenario without --new-game.
     @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 50; MainMenu = $true

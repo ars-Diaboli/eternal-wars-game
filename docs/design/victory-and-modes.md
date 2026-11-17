@@ -89,7 +89,7 @@ In priority order:
     whose attack cell is impassable; warnings when two enemies' heroes can reach the same ground on day 1 (from their heroes and town
     entrances, through gates; monsters, garrisons and barriers count as passable), for map events that do something only after day 1 (by
     the date in their conditions), for conditions (ignored), and for a combat place on a map that is not an arena.
-  - **Shipped maps** (ADR-180), hand-made (no generator template), on the new-game screen after Ember March: **Proving Grounds**
+  - **Shipped maps** (ADR-180), hand-made (no generator template), on the new-game screen's Arenas tab: **Proving Grounds**
     (two players, each picking its faction for a random town and hero, mirrored halves, a sealed combat place); **Frostfang Pass** (two
     players and no towns: a Haven and a Necropolis mage buy their armies at map dwellings); **Four Banners** (two against two, allies sharing
     a half, each half with its own combat place). Random heroes there start with the same neutral army. Their halves are kept apart by
@@ -118,6 +118,11 @@ In priority order:
   goes on turn by turn when loaded on one computer. The turn timer is the host's, one clock for all. No internet play.
 
 ## Game options
+The new-game screen has four tabs (ADR-201): **Scenarios** (hand-made maps played to win: the shipped ones and the editor's), **Random
+maps** (the templates), **Arenas** and **Campaign** (campaign-like maps: a person starts without a town, a map event favours people, or the
+map keeps or takes campaign variables; `MapKinds`). Each tab lists its maps on the left and shows the chosen one's size, players,
+description and player setup on the right; the options below are shared by every tab.
+
 Chosen on the new-game screen and recorded in saves and replays (ADR-058): map or template (with size and players: human or computer, town,
 hero, team; ADR-086), fog mode ([adventure-map.md](adventure-map.md#fog-of-war)), complexity ([starting resources](towns-and-economy.md#starting-resources)),
 seed, turn timer. For a map, a player whose faction the map leaves open (a random town, or a hero placeholder without a town) picks a town
