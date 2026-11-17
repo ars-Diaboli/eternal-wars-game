@@ -48,9 +48,9 @@ public partial class LobbyScreen : PanelContainer
         _seats.AddThemeConstantOverride("h_separation", UiSpacing.Gap * 2);
         rows.AddChild(_seats);
         rows.AddChild(_waiting);
-        var leave = new Button { Text = "Leave (Esc)" }.WithIcon(UiIcon.ArrowLeft);
+        var leave = new Button { Text = "Leave (Esc)" }.WithIcon(UiIcon.ArrowLeft, keepText: true);
         leave.Pressed += () => BackRequested?.Invoke();
-        rows.AddChild(leave);
+        rows.AddChild(Screens.ButtonRow(leave));
 
         Chat.CustomMinimumSize = new Vector2(320, 360);
         columns.AddChild(Chat);

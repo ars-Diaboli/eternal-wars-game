@@ -2753,10 +2753,15 @@ fill-ins, for the owner to change. No rule, save or map format change.
   the attacker cannot reach gives way to the nearest reachable one by angle *(proposal)*; a click attacks from the shown side. The choice of side and stand cells is engine-free (Core.Domain, beside `BattleGrid.AttackPositions`, with tests); so is the
   choice of cursor for what is under the pointer, on the map and in battle *(proposal: one resolver each, returning a cursor id; the views
   only map ids to images)*.
-- **Icon-only buttons**: a button with an icon (`UiIcons`) shows the icon alone, **48 px** where buttons stand in a bar or panel (the side
-  panel's actions, the battle bar, the town screen's bottom row) and **32 px** inside windows and rows (arrows, close, split) *(proposal)*;
-  no text label. Hovering it shows its label, with its hotkey when it has one ("End turn (E)"), on the **status bar**, not as a pop-up
+- **Icon-only buttons**: a button with an icon (`UiIcons`) shows the icon alone on a **square** button, **48 px** where buttons stand in a
+  bar or panel (the side panel's actions, wrapping into rows; the battle bar; End turn) and **32 px** in rows and window headers (Close,
+  the hero screen's arrows, the hero list's info) *(proposal)*; no text label. The owner's change: the buttons along a **window's bottom**
+  (OK, Accept, Cancel, Start, Back, Leave, Close (Esc), Save, Load, Delete, Save replay) keep their **text** with a small icon before it,
+  are as wide as their text and stand at the **right** of their row (`Screens.ButtonRow`). Hovering it shows its label, with its hotkey when it has one ("End turn (E)"), on the **status bar**, not as a pop-up
   tooltip. A button whose icon file is missing keeps its text.
+- **The turn block in the side panel** (the owner's change): with the side panel on, **End turn** stands with the panel's action buttons
+  (after the marketplace) and the **calendar** (the date with the week's event, whose turn it is) at the **bottom** of the panel, above the
+  status bar, its lines wrapping to the panel's width. With the panel off, both stay at the top left as before (`TurnPanel.InPanel`).
 - **A status bar on every screen** (the owner's answer): the adventure map's (ADR-186) also along the bottom of the battle, town and hero
   screens and the screens before a game (main menu, new-game screen, lobby, leaderboard, replay list) *(proposal: the same 16:9-wide
   stripe; resources only on the map and the town screen)*. Windows over a screen use that screen's bar. The map editor keeps pop-up

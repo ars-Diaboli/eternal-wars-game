@@ -23,7 +23,7 @@ public partial class AutoCombatPanel : CenterContainer
 {
     private readonly Label _title = new() { HorizontalAlignment = HorizontalAlignment.Center };
     private readonly Label _text = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(460, 0) };
-    private readonly HBoxContainer _buttons = new() { Alignment = BoxContainer.AlignmentMode.Center };
+    private readonly HBoxContainer _buttons = new() { Alignment = BoxContainer.AlignmentMode.End }; // along the bottom, at the right (ADR-204)
     private GameSession _session = null!;
     private BattleState? _seen;
     private PlayerId? _waiting;
@@ -187,11 +187,11 @@ public partial class AutoCombatPanel : CenterContainer
             var button = new Button { Text = text };
             if (text == "Accept")
             {
-                button.WithIcon(UiIcon.Confirm);
+                button.WithIcon(UiIcon.Confirm, keepText: true);
             }
             else if (text == "Auto combat")
             {
-                button.WithIcon(UiIcon.AutoCombat);
+                button.WithIcon(UiIcon.AutoCombat, keepText: true);
             }
 
             button.Pressed += pressed;

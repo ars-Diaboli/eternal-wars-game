@@ -7,7 +7,7 @@ namespace EternalWars.Godot.UI.Setup;
 public partial class LeaderboardPanel : PanelContainer
 {
     private readonly TabContainer _tabs = new() { CustomMinimumSize = new Vector2(760, 420) };
-    private readonly Button _back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft);
+    private readonly Button _back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft, keepText: true);
 
     public event Action? BackRequested;
 
@@ -20,7 +20,7 @@ public partial class LeaderboardPanel : PanelContainer
         rows.AddChild(new Label { Text = "Leaderboard", HorizontalAlignment = HorizontalAlignment.Center });
         rows.AddChild(_tabs);
         _back.Pressed += () => BackRequested?.Invoke();
-        rows.AddChild(_back);
+        rows.AddChild(Screens.ButtonRow(_back));
         _back.CallDeferred(Control.MethodName.GrabFocus);
     }
 

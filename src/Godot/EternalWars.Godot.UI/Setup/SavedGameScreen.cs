@@ -29,7 +29,7 @@ public partial class SavedGameScreen : PanelContainer
     private readonly Label _lines = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
     private readonly GridContainer _seats = new() { Columns = 4 };
     private readonly Label _message = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(520, 0) };
-    private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm);
+    private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm, keepText: true);
     private readonly Dictionary<PlayerId, OptionButton> _controllers = [];
     private readonly Dictionary<PlayerId, Label> _joined = [];
     private readonly List<string> _paths = [];
@@ -94,15 +94,10 @@ public partial class SavedGameScreen : PanelContainer
         }
 
         rows.AddChild(_message);
-        var buttons = new HBoxContainer();
-        buttons.AddThemeConstantOverride("separation", UiSpacing.Gap);
-        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft);
+        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft, keepText: true);
         back.Pressed += () => BackRequested?.Invoke();
-        buttons.AddChild(back);
-        _start.SizeFlagsHorizontal = SizeFlags.ExpandFill;
         _start.Pressed += Start;
-        buttons.AddChild(_start);
-        rows.AddChild(buttons);
+        rows.AddChild(Screens.ButtonRow(_start, back));
 
         if (Lan is not null)
         {

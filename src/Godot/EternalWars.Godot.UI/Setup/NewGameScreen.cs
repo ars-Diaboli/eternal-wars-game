@@ -89,7 +89,7 @@ public partial class NewGameScreen : PanelContainer
     private readonly SpinBox _margin = new() { MinValue = 0, MaxValue = 6, Value = GameOptions.Default.RefogMargin };
     private readonly LineEdit _seed = new() { CustomMinimumSize = new Vector2(220, 0) };
     private readonly GridContainer _players = new() { Columns = 3 };
-    private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm);
+    private readonly Button _start = new Button { Text = "Start" }.WithIcon(UiIcon.Confirm, keepText: true);
     private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart };
     private readonly Label _arena = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, Visible = false };
     private readonly Dictionary<PlayerId, SpinBox> _teams = [];
@@ -172,13 +172,9 @@ public partial class NewGameScreen : PanelContainer
         box.AddChild(new HSeparator());
 
         _start.Pressed += Start;
-        var buttons = new HBoxContainer();
-        _start.SizeFlagsHorizontal = SizeFlags.ExpandFill;
-        buttons.AddChild(_start);
-        var back = new Button { Text = "Back (Esc)", CustomMinimumSize = new Vector2(200, 0) }.WithIcon(UiIcon.ArrowLeft);
+        var back = new Button { Text = "Back (Esc)" }.WithIcon(UiIcon.ArrowLeft, keepText: true);
         back.Pressed += () => BackRequested?.Invoke();
-        buttons.AddChild(back);
-        box.AddChild(buttons);
+        box.AddChild(Screens.ButtonRow(_start, back));
         _start.CallDeferred(Control.MethodName.GrabFocus); // Enter starts (and the smoke scripts need no coordinates)
         box.AddChild(_status);
 
