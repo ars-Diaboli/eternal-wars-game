@@ -24,8 +24,8 @@ public partial class AdventureMapView : Node3D
     private const float RiverWidth = 0.8f;
     private const string TextureFolder = "res://shared/textures/terrain/";
 
-    /// <summary>How many tiles one texture repeat covers.</summary>
-    private const float TilesPerTextureRepeat = 3f;
+    /// <summary>How many tiles one texture repeat covers (32 squares of the mesh; the shader hides the repeat, ADR-212).</summary>
+    private const float TilesPerTextureRepeat = 16f;
 
     /// <summary>How far the ground goes on past the map's edge, in tiles: past the fog's farthest shoreline.</summary>
     public const int ApronTiles = 4;

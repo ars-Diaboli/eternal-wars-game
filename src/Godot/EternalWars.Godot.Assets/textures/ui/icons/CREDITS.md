@@ -8,7 +8,8 @@ sheets of [icon-prompts.md](../../../../../../docs/content/icon-prompts.md) (set
 |---|---|
 | close.png | Close buttons, Delete (saves, map events) |
 | confirm.png | OK, Accept, Start, Apply |
-| info.png (scroll) | the map's "Hero screen (H)" action button |
+| hero.png (plumed helmet, the owner's select-hero cursor art) | the map's "Hero screen (H)" action button |
+| info.png (scroll) | not used |
 | arrow_left.png / arrow_right.png | previous / next hero, Back |
 | arrow_up.png / arrow_down.png | move a map event or event action up / down |
 | plus.png / minus.png | add player; remove player, remove a condition |
@@ -21,7 +22,7 @@ sheets of [icon-prompts.md](../../../../../../docs/content/icon-prompts.md) (set
 | hourglass.png (brass hourglass) | Wait (W) in battle |
 | end_turn.png (wooden hourglass) | End turn |
 | switch_level.png (surface over a cave, up and down arrows) | Switch level (L); the map editor's Level (L) |
-| spell_book.png (closed) | the map's "Spell book (C)" action button; the hero's mana in battle, before the spell buttons; the town's "Spell book (owned)" |
+| spell_book.png (leather book with a blue rune, the Knowledge stat's art) | the map's "Spell book (C)" action button; the hero's mana in battle, before the spell buttons; the town's "Spell book (owned)" |
 | spells.png (open) | the hero screen's spell list |
 | quests.png (sealed scroll) | Quests (Q) |
 | puzzle_map.png (open scroll) | Puzzle map (P) |

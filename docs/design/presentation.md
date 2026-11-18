@@ -10,8 +10,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
 - **Palette**: desaturated earth tones; player colours and interactive objects stay saturated so the map reads in a dark scene.
 - **Materials**: PBR (albedo / normal / roughness), weathered and worn. **Post**: subtle grading, bloom on magic only, vignette.
 - **Terrain** (ADR-011, ADR-183) *(placeholder textures, objects and units)*: a smooth heightmapped landscape; the terrains' textures
-  run into each other where biomes meet, along rounded, wandering lines that do not follow the tile grid (a single tile of another
-  terrain is a round patch, a diagonal border a slanted line); cliffs are textured from the sides. Visual height must not contradict core tile data (cliffs = rock tiles).
+  run into each other where biomes meet, over about two thirds of a tile (ADR-212), along wandering lines that do not follow the tile
+  grid (a single tile of another terrain is a patch with rounded, wandering edges); a texture repeats every 16 tiles, its repeat hidden
+  by cells that each shift it and blend into each other the same way; cliffs are textured from the sides. Visual height must not contradict core tile data (cliffs = rock tiles).
 - **Tile grid** (ADR-183): an overlay of thin lines on the tile edges, a setting on this computer: "Show the tile grid on the map" in the
   F10 menu's "Settings" tab, off by default; the map editor has its own "Grid" box, on by default.
 - **Relief** (ADR-075, ADR-181, ADR-182, Warcraft III-like): looks only; no rule, the AI or a battle reads it, and the
@@ -63,8 +64,8 @@ creatures and buildings, heraldic player colours, iconic map objects).
   spell's target; in battle a sword (melee), a bow or a broken arrow (a shot dealing half or less), a wand or a ring (one-target or area
   spell), a boulder (the controlled siege engine), a boot, wing or portal (walk, fly, teleport), and a blocked sign. Over an enemy the
   pointer's place round the target's centre (eight 45° sectors) picks the side to strike from, one of eight; the sword points that way and the cells the
-  attacker would stand on are highlighted; an unreachable side gives way to the nearest reachable one. Still images at 64 px, scaled for
-  smaller UI; while an image is missing the nearest system cursor stands in (arrow, hand, cross, forbidden, busy). Controls show the arrow.
+  attacker would stand on are highlighted; an unreachable side gives way to the nearest reachable one. Still images drawn at 64 px, shown at 43 px (the arrow, the hourglass and the
+  blocked sign at 32 px); while an image is missing the nearest system cursor stands in (arrow, hand, cross, forbidden, busy). Controls show the arrow.
 - **Pop-ups** (ADR-186): decision prompts (questions, choices) and notices open in the middle of the screen, over the map, in opaque
   panels. The information window (right click) opens at the pointer.
 - **Window mode** (ADR-186): Windowed or Fullscreen (borderless, the screen's own size), in the "Settings" tab; Alt+Enter switches it, in

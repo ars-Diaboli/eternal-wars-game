@@ -1,15 +1,19 @@
-// The adventure map's ground (ADR-011, ADR-183): one mesh a level, splat-shaded.
+// The adventure map's ground (ADR-011, ADR-183, ADR-212): one mesh a level, splat-shaded.
 //
 // Which terrain a tile has comes from a map-sized texture (one texel a tile, the terrain's number); the terrains' pictures are the layers
-// of one texture array. Biomes run into each other along rounded, wandering lines that do not follow the tile grid:
-//  - each terrain's "influence" at a pixel is the tile picture blurred over the 3 × 3 tiles around it with a round, smooth kernel, so a
-//    single tile of another terrain is a round patch and a diagonal staircase of tiles a slanted line;
+// of one texture array. Biomes run into each other along wandering lines that do not follow the tile grid:
+//  - each terrain's "influence" at a pixel is the share of its tiles in a small square round the pixel, so it rises from 0 to 1 over a
+//    band `blend_width` tiles to each side of a tile edge (a third of a tile: the border blends over two thirds of one) and a pixel
+//    further inside a tile is that tile's terrain alone;
 //  - the place the picture is read at is pushed about by a slow noise, so the lines wander;
 //  - where influences are close the terrains mix by height (height-based splat blending): each layer's alpha is its ground's height
 //    (stone tops high, the sand between them low); a terrain stands at its height plus its influence, and only the terrains within
 //    `blend_depth` of the highest show, weighted by how far they rise above that line. So stones poke out of the sand and the sand fills
 //    the gaps between them before it covers their tops, instead of the two cross-fading.
-// A pixel well inside one terrain reads one layer only. Steep ground (cliffs) is textured from the side as well (triplanar).
+// One terrain's picture repeats every 16 tiles; to hide the repeat the ground is cut into cells `variation_cell` tiles wide (along the same
+// wandering lines), each showing the picture shifted by its own random amount, and neighbouring cells meet with the same height blend over
+// the same band, so no straight seam and no regular pattern shows.
+// Steep ground (cliffs) is textured from the side as well (triplanar).
 // The tile grid is an overlay drawn here: thin anti-aliased lines along the tile edges, on when `grid` is.
 shader_type spatial;
 
@@ -26,14 +30,18 @@ uniform sampler2DArray albedo_layers : source_color, filter_linear_mipmap_anisot
 uniform int layer_of[MAX_TERRAINS];
 uniform vec4 tint_of[MAX_TERRAINS] : source_color;
 // Texture repeats per world unit.
-uniform float uv_scale = 0.333;
+uniform float uv_scale = 0.0625;
 
+// How far a border's blend reaches to each side of it, in tiles (at most 0.5).
+uniform float blend_width : hint_range(0.02, 0.5) = 0.33;
 // How much a ground's relief counts against its influence (0 to 1): the wider, the further one ground's high parts reach into the other.
 uniform float height_relief : hint_range(0.0, 1.0) = 1.0;
 // How soft the line between the grounds is, in the same units: small = crisp outlines around each stone, large = a cross-fade.
 uniform float blend_depth : hint_range(0.01, 0.5) = 0.2;
 // How far the noise moves the borders, in tiles.
 uniform float edge_noise : hint_range(0.0, 0.5) = 0.3;
+// The side of a cell showing one shift of a picture, in tiles.
+uniform float variation_cell : hint_range(2.0, 32.0) = 7.0;
 
 uniform float grid : hint_range(0.0, 1.0) = 0.0;
 uniform vec4 grid_color : source_color = vec4(0.0, 0.0, 0.0, 0.4);
@@ -50,6 +58,12 @@ float hash12(vec2 p) {
 	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
 	p3 += dot(p3, p3.yzx + 33.33);
 	return fract((p3.x + p3.y) * p3.z);
+}
+
+vec3 hash32(vec2 p) {
+	vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+	p3 += dot(p3, p3.yxz + 33.33);
+	return fract((p3.xxy + p3.yzz) * p3.zyx);
 }
 
 float value_noise(vec2 p) {
@@ -69,14 +83,19 @@ int terrain_at(ivec2 tile) {
 	return clamp(int(texelFetch(terrain_map, tile, 0).r * 255.0 + 0.5), 0, MAX_TERRAINS - 1);
 }
 
-// The blur's kernel along one axis, for the tiles at -1, 0 and +1 from the nearest one; d is how far the pixel is from that tile's centre
-// (-0.5 to 0.5). It falls to nothing at 1.5 tiles, so a tile's share is zero when it enters or leaves the 3 × 3: no seam anywhere.
-vec3 kernel(float d) {
-	vec3 distance_to = (vec3(-1.0, 0.0, 1.0) - d) / 1.5;
-	vec3 k = max(1.0 - distance_to * distance_to, 0.0);
-	k = k * k * k;
-	k *= k;
-	return k / (k.x + k.y + k.z);
+// 0 well before an edge, 1 well past it, a smooth rise over `width` to each side; x is the distance past the edge.
+float ramp(float x, float width) {
+	return smoothstep(-width, width, x);
+}
+
+// Along one axis, the shares of the tiles at -1, 0 and +1 from the nearest one; d is how far the pixel is from that tile's centre
+// (-0.5 to 0.5). Each tile's share is the part of the band round the pixel that lies on it, so the shares add up to 1 and a tile's share
+// is already 0 when it enters or leaves the three: no seam anywhere.
+vec3 coverage(float d) {
+	return vec3(
+		ramp(d + 1.5, blend_width) - ramp(d + 0.5, blend_width),
+		ramp(d + 0.5, blend_width) - ramp(d - 0.5, blend_width),
+		ramp(d - 0.5, blend_width) - ramp(d - 1.5, blend_width));
 }
 
 // A terrain's colour (RGB) and height (A) at p (texture space), from above and, where the ground is steep, from the sides. The gradients
@@ -93,6 +112,40 @@ vec4 terrain_sample(int terrain, vec3 p, vec3 sides, vec3 dx, vec3 dy) {
 	return vec4(texel.rgb * tint_of[terrain].rgb, texel.a);
 }
 
+// The terrain's picture with the repeat hidden: the variation cells round `cell` (the read place in cells) each shift the picture by their
+// own random amount, and where two or four meet they mix by height over the border's band, as two terrains do. RGB = colour, A = height.
+vec4 varied_sample(int terrain, vec3 p, vec2 cell, vec3 sides, vec3 dx, vec3 dy) {
+	ivec2 first = ivec2(floor(cell - 0.5));
+	vec2 past = cell - vec2(first + 1); // how far past the line between the first cells and the next, -0.5 to 0.5
+	vec2 next = vec2(ramp(past.x, blend_width / variation_cell), ramp(past.y, blend_width / variation_cell));
+
+	vec4 texels[4];
+	float heights[4];
+	float top = -1.0;
+	for (int i = 0; i < 4; i++) {
+		ivec2 offset = ivec2(i % 2, i / 2);
+		float share = (offset.x == 1 ? next.x : 1.0 - next.x) * (offset.y == 1 ? next.y : 1.0 - next.y);
+		heights[i] = -1.0;
+		texels[i] = vec4(0.0);
+		if (share > 0.0) {
+			vec3 shift = hash32(vec2(first + offset) + float(layer_of[terrain]) * 17.31);
+			texels[i] = terrain_sample(terrain, p + shift, sides, dx, dy);
+			heights[i] = share + texels[i].a * height_relief;
+			top = max(top, heights[i]);
+		}
+	}
+
+	float line = top - blend_depth;
+	vec4 result = vec4(0.0);
+	float total = 0.0;
+	for (int i = 0; i < 4; i++) {
+		float share = max(heights[i] - line, 0.0);
+		result += texels[i] * share;
+		total += share;
+	}
+	return result / total;
+}
+
 void fragment() {
 	vec3 p = local_position * uv_scale;
 	vec3 dx = dFdx(p);
@@ -103,13 +156,14 @@ void fragment() {
 	vec2 bend = vec2(soft_noise(at * 0.8), soft_noise(at * 0.8 + vec2(37.2, 17.9))) - 0.5;
 	vec2 wobble = vec2(value_noise(at * 3.3 + 5.5), value_noise(at * 3.3 + vec2(71.1, 9.4))) - 0.5;
 	vec2 read_at = at + (bend * 2.0 + wobble * 0.5) * edge_noise;
+	vec2 cell = read_at / variation_cell + vec2(0.37, 0.61); // the cells' borders off the tile edges
 
 	ivec2 nearest = ivec2(floor(read_at + 0.5));
 	vec2 d = read_at - vec2(nearest);
-	vec3 kx = kernel(d.x);
-	vec3 ky = kernel(d.y);
+	vec3 kx = coverage(d.x);
+	vec3 ky = coverage(d.y);
 
-	// Each terrain's influence: the 3 × 3 tiles' kernel weights, the same terrain on several tiles added up.
+	// Each terrain's influence: the 3 × 3 tiles' shares, the same terrain on several tiles added up in its first slot.
 	int terrains[9];
 	float influence[9];
 	float strongest = 0.0;
@@ -143,7 +197,7 @@ void fragment() {
 		colors[i] = vec3(0.0);
 		heights[i] = -1.0;
 		if (influence[i] > 0.0 && influence[i] + height_relief + blend_depth > strongest) {
-			vec4 texel = terrain_sample(terrains[i], p, sides, dx, dy);
+			vec4 texel = varied_sample(terrains[i], p, cell, sides, dx, dy);
 			colors[i] = texel.rgb;
 			heights[i] = influence[i] + texel.a * height_relief;
 			top = max(top, heights[i]);

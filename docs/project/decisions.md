@@ -2896,3 +2896,14 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   faction), the leaderboard's faction column and the map editor's faction choices (the town inspector, the week events' factions).
 - **Not yet**: the group crests (no screen names a group) and the charges in the player's colour on banners and map flags, which need
   textured banner meshes first.
+
+### ADR-212: Terrain borders blend over two thirds of a tile; a picture repeats every 16 tiles with the repeat hidden (owner, 2026-11-18)
+
+- **Border**: a terrain's influence at a pixel (ADR-183) is the share of its tiles in a small square round the pixel, not a round blur, so
+  it rises from 0 to 1 over a band a third of a tile to each side of a tile edge (`blend_width`): a border blends over about two thirds of
+  a tile and the rest of a tile is its terrain alone. The edge noise still bends the borders; a lone tile of another terrain is a square
+  with rounded, wandering edges. The height blend (ADR-200) is unchanged.
+- **Scale**: one repeat of a terrain's picture covers 16 × 16 tiles (32 × 32 squares of the ground mesh), was 3 × 3.
+- **Repeat hidden**: the ground is cut into cells 7 tiles wide (`variation_cell`, along the same wandering lines, off the tile edges);
+  each cell shows each terrain's picture shifted by a random amount of its own, and neighbouring cells meet with the same height blend over
+  the same band. A pixel inside a cell reads each terrain once, near a cell border twice, at a corner four times.
