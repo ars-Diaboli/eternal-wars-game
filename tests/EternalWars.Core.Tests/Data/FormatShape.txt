@@ -690,7 +690,7 @@ object WitchHutDocument
   x: Int32 (required)
   y: Int32 (required)
 
-# Saves and replays (*.ewsave.json, *.ewreplay.json), format v3
+# Saves and replays (*.ewsave.json, *.ewreplay.json), format v4
 object AllCondition
   conditions: IReadOnlyList<EventCondition>
 object AllyCondition
@@ -1113,6 +1113,7 @@ object GameOptions
   turnTimerMinutes: Int32?
 object GameRecordDocument
   commands: IReadOnlyList<GameCommand> (required)
+  digestVersion: Int32
   finalDigest: String
   formatVersion: Int32
   generated: GenerationInfo

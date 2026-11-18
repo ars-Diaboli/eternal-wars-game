@@ -52,6 +52,23 @@ public class SimultaneousDayTests
     }
 
     [Fact]
+    public void TurnEnded_ComesOnceTheTurnIsOut_OfTodaysOpenTurns()
+    {
+        var session = Started(Duel(Simultaneous));
+        var state = session.State;
+        var seen = new List<(PlayerId Player, List<PlayerId> Open, bool Done)>();
+        session.Events.Subscribe<TurnEnded>(e => seen.Add((e.Player, state.OpenTurns.ToList(), state.DoneToday.Contains(e.Player))));
+
+        session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
+        session.Execute(new EndTurnCommand(Red)).ThrowIfRejected();
+
+        Assert.Equal([Blue, Red], seen.Select(s => s.Player));
+        Assert.Equal([Red], seen[0].Open);
+        Assert.Empty(seen[1].Open);
+        Assert.All(seen, s => Assert.True(s.Done));
+    }
+
+    [Fact]
     public void ASimultaneousGame_Replays_ToTheSameState()
     {
         var state = Duel(Simultaneous);

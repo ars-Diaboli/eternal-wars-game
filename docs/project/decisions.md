@@ -2907,3 +2907,43 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
 - **Repeat hidden**: the ground is cut into cells 7 tiles wide (`variation_cell`, along the same wandering lines, off the tile edges);
   each cell shows each terrain's picture shifted by a random amount of its own, and neighbouring cells meet with the same height blend over
   the same band. A pixel inside a cell reads each terrain once, near a cell border twice, at a corner four times.
+
+### ADR-213: The scenario rules' memory is game state, and the digest has versions (ADR-036, ADR-057, ADR-058, 2026-11-18)
+**Status**: implemented. No rule or map format change; saves and replays gain a field (record format 4).
+
+- **Why**: `GameFlowService` kept what the scenario rules remember from the start (the teams that took part, the heroes there were, who sits
+  in each prison a "release hero" condition names) in private fields. It was not in `GameState`, so not in the digest, a copied state or
+  anything else that reads the state.
+- **State**: `GameState.Tracking` (`ScenarioTracking`: `TeamsAtStart`, `Heroes` as `TrackedHero(Owner, Name)` by hero id, `Prisoners` by
+  prison id; immutable, sorted by id). `GameFlowService.Begin` sets it when the game starts, `Evaluate` adds prisoners as before; the rules
+  read it from the state. `ScenarioTracking.None` before the game starts.
+- **Digest versions** (`GameStateDigest.FirstVersion` = 1, `CurrentVersion` = 2): `Compute` and `Describe` take a version, the current one
+  when left out. Version 2 adds a `tracking` line once the game has started (a scenario not started tracks nothing, so the generator's and
+  the editor's pinned texts hold); version 1 is the text as it was. A new digest field from now on goes in a new version instead of being
+  written "only when present".
+- **Records**: `GameRecordDocument.DigestVersion` says which version `FinalDigest` was computed with; a file without it was made before
+  (version 1), so older replays and saves still check. `GameReplay.Record` writes the current version; `CheckFinalDigest` (used by
+  `GameReplay.Replay` and `ReplayPlayer.Open`) checks with the record's version and refuses an unknown one like other content.
+  `GameRecordDocument.CurrentFormatVersion` is 4.
+- **Checked**: `ScenarioTrackingTests`. The sim's duel baseline (`--template duel --size 72 --days 40 --seed 2`) still gives
+  `02E607C4B08FDC80` in version 1 (`A0F1FADCC6D8DEE4` in version 2): the rules play the same.
+
+### ADR-214: Events tell what happened, never ask for it; the turn's end is recorded before `TurnEnded` (ADR-016, ADR-197, 2026-11-18)
+**Status**: implemented. No rule, save, map or protocol format change; the order of a few events changes.
+
+- **Why**: View Terrain and map events published `AreaRevealed`, and observatories, Magi windows, the Ruins and cartographers
+  `SurroundingsRevealed`, so that `VisibilityService` would reveal the area: the events were requests, and they worked only because
+  visibility subscribes first. `TurnService.EndTurn` published `TurnEnded` before it took the turn out of a simultaneous day's open turns.
+- **Reveals**: `IFogRevealer.RevealArea(player, center, radius)` (Visibility; `VisibilityService` implements it: explore, refresh memory,
+  publish `TilesRevealed` / `KnownObjectsChanged`). `AdventureMagicService` and `MapEventService` call it and then publish `AreaRevealed`;
+  the object services call `ObjectInteractionContext.RevealSurroundings`, which reveals and then publishes `SurroundingsRevealed`.
+  `VisibilityService` no longer handles either event. A LAN client's session holds the service but never reveals: it runs no rules.
+- **Order**: `TilesRevealed` and `KnownObjectsChanged` now come before the reveal event instead of after it; when a view gets the reveal
+  event, the fog already shows the area.
+- **End of turn**: on a simultaneous day the turn leaves the open turns, joins `DoneToday` and the current player points at the next open
+  turn before `TurnEnded`; the next turn (`PassTurn`, with its own events) follows it. Turn by turn, `TurnEnded` comes with the ending
+  player still current, as before.
+- **Rule**: an event tells of a change already made. A rule that needs another service to change state calls it through a narrow interface,
+  then publishes its own event (`event-system.md`).
+- **Checked**: `RevealOrderTests`, `SimultaneousDayTests.TurnEnded_ComesOnceTheTurnIsOut_OfTodaysOpenTurns`. The digests are unchanged
+  (duel baseline `A0F1FADCC6D8DEE4`, sim self-test `82AE941CD62212E2`).

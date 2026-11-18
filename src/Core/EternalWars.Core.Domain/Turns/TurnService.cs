@@ -71,16 +71,22 @@ public sealed class TurnService
             throw new CommandRefusedException("Resolve the pending decision before ending the turn.");
         }
 
+        // The turn's end is recorded before TurnEnded tells of it (ADR-214); the next turn, with its own events, follows the event.
         var player = _state.CurrentPlayer.Id;
-        _events.Publish(new TurnEnded(player, _state.Date));
-        if (_state.IsSimultaneous)
+        var simultaneous = _state.IsSimultaneous;
+        if (simultaneous)
         {
             // A person's turn of a simultaneous day: the others go on; once all have ended theirs, the computer players play in order.
             _state.OpenTurnList.Remove(player);
             _state.DoneToday.Add(player);
+            PointAtOpenTurn();
+        }
+
+        _events.Publish(new TurnEnded(player, _state.Date));
+        if (simultaneous)
+        {
             if (_state.IsSimultaneous)
             {
-                PointAtOpenTurn();
                 return;
             }
 

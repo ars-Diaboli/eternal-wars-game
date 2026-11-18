@@ -16,11 +16,12 @@ namespace EternalWars.Core.Data.Records;
 /// <summary>
 /// A replayable game (<c>*.ewreplay.json</c>) or a saved game (<c>*.ewsave.json</c>, ADR-058): the map as it was at the
 /// start, the game options (incl. the seed) and every accepted command. <see cref="FinalDigest"/> lets a replay prove it
-/// reached the same state. Version 2 adds <see cref="Save"/>, version 3 <see cref="Generated"/>; older files still load.
+/// reached the same state. Version 2 adds <see cref="Save"/>, version 3 <see cref="Generated"/>, version 4 <see cref="DigestVersion"/>; older files
+/// still load.
 /// </summary>
 public sealed record GameRecordDocument
 {
-    public const int CurrentFormatVersion = 3;
+    public const int CurrentFormatVersion = 4;
 
     public int FormatVersion { get; init; } = CurrentFormatVersion;
 
@@ -32,6 +33,26 @@ public sealed record GameRecordDocument
 
     /// <summary><see cref="GameStateDigest"/> after the last command, if recorded.</summary>
     public string? FinalDigest { get; init; }
+
+    /// <summary>
+    /// The <see cref="GameStateDigest"/> version <see cref="FinalDigest"/> was computed with (ADR-213); a file without one was made before digests
+    /// had versions (<see cref="GameStateDigest.FirstVersion"/>).
+    /// </summary>
+    public int DigestVersion { get; init; } = GameStateDigest.FirstVersion;
+
+    /// <summary>Throws <see cref="InvalidOperationException"/> when <paramref name="state"/> is not the state <see cref="FinalDigest"/> records.</summary>
+    public void CheckFinalDigest(GameState state)
+    {
+        if (FinalDigest is not null && DigestVersion is < GameStateDigest.FirstVersion or > GameStateDigest.CurrentVersion)
+        {
+            throw new InvalidOperationException($"The record's digest version {DigestVersion} is unknown to this game (it knows {GameStateDigest.FirstVersion} to {GameStateDigest.CurrentVersion}).");
+        }
+
+        if (FinalDigest is { } expected && GameStateDigest.Compute(state, DigestVersion) is var actual && actual != expected)
+        {
+            throw new InvalidOperationException($"Replay ended in state {actual}, the record says {expected}.");
+        }
+    }
 
     /// <summary>What the save menu shows; present in saved games.</summary>
     public SaveInfo? Save { get; init; }
@@ -78,6 +99,7 @@ public static class GameReplay
         Options = session.State.Options,
         Commands = session.CommandLog.ToList(),
         FinalDigest = GameStateDigest.Compute(session.State),
+        DigestVersion = GameStateDigest.CurrentVersion,
         Save = saveName is null
             ? null
             : new SaveInfo(
@@ -107,11 +129,7 @@ public static class GameReplay
             }
         }
 
-        if (record.FinalDigest is { } expected && GameStateDigest.Compute(session.State) is var actual && actual != expected)
-        {
-            throw new InvalidOperationException($"Replay ended in state {actual}, the record says {expected}.");
-        }
-
+        record.CheckFinalDigest(session.State);
         return session;
     }
 }

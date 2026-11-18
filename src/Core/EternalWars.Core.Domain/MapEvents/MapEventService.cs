@@ -21,7 +21,7 @@ namespace EternalWars.Core.Domain.MapEvents;
 /// is (the session calls it after every command). A disabled event is skipped when its turn comes.
 /// </summary>
 public sealed class MapEventService(
-    GameState state, IEventPublisher events, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles,
+    GameState state, IEventPublisher events, Visibility.IFogRevealer fog, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles,
     TownVisitService towns, HeroRecruitment recruits)
     : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>, Turns.ITurnPhaseParticipant
 {
@@ -429,6 +429,7 @@ public sealed class MapEventService(
                 break;
             case RevealAction reveal when run.Player is { } viewer:
                 run.Place = new MapPosition(reveal.X, reveal.Y, reveal.Level);
+                fog.RevealArea(viewer, run.Place.Value, reveal.Radius);
                 events.Publish(new AreaRevealed(viewer, run.Place.Value, reveal.Radius));
                 break;
             case GiveHeroAction give when run.Player is { } owner:

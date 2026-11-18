@@ -169,6 +169,9 @@ public sealed class GameState
     /// <summary>How the scenario is won and lost (ADR-057); set by the map, changed before the game starts only.</summary>
     public ScenarioRules Rules { get; private set; } = ScenarioRules.Default;
 
+    /// <summary>What the scenario rules remember from the start (ADR-213); set when the game starts, kept by <see cref="GameFlowService"/>.</summary>
+    public ScenarioTracking Tracking { get; internal set; } = ScenarioTracking.None;
+
     /// <summary>How the game ended, or null while it is running.</summary>
     public GameOutcome? Outcome { get; internal set; }
 

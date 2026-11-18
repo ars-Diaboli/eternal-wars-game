@@ -86,7 +86,10 @@ public sealed record BattleTriggered(HeroId Attacker, HeroId Defender, bool IsAm
 [SeenBy(Audience.Witnesses)]
 public sealed record AdventureSpellCast(HeroId Hero, string Spell, MapPosition? Target, int Cost, int Mana, int MovementPoints) : IEvent;
 
-/// <summary>An area around <paramref name="Center"/> was revealed for <paramref name="Owner"/> (View Terrain, ADR-120).</summary>
+/// <summary>
+/// An area around <paramref name="Center"/> was revealed for <paramref name="Owner"/> (View Terrain, ADR-120; a map event's reveal): already
+/// explored when published (<c>IFogRevealer</c>, ADR-214).
+/// </summary>
 [SeenBy(Audience.Owner)]
 public sealed record AreaRevealed(PlayerId Owner, MapPosition Center, int Radius) : IEvent;
 
