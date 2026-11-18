@@ -15,17 +15,10 @@ public sealed class Town : MapObject, IFlaggable, Battles.IBattleGuard
 {
     /// <inheritdoc/>
     /// <remarks>The garrison that held its town without a hero keeps what lived.</remarks>
-    void Battles.IBattleGuard.KeepSurvivors(Battles.BattleGuardOutcome outcome) => outcome.KeepTroops(Id, Garrison);
+    Battles.GuardOutcome Battles.IBattleGuard.Survived() => new Battles.TroopsSurvive(this, Garrison);
 
     /// <inheritdoc/>
-    /// <remarks>Beating the garrison captures the town.</remarks>
-    void Battles.IBattleGuard.Defeated(Battles.BattleGuardOutcome outcome, Heroes.Hero? winner)
-    {
-        if (winner is not null)
-        {
-            outcome.Towns.Capture(this, winner.Owner);
-        }
-    }
+    Battles.GuardOutcome Battles.IBattleGuard.Defeated() => new Battles.TownWon(this);
 
     /// <summary>
     /// Owned towns reveal and watch this far around their centre cell (<see cref="SightCenter"/>): 7 cells past the walls (ADR-141).

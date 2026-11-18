@@ -11,8 +11,8 @@ using EternalWars.Core.Events;
 namespace EternalWars.Core.Domain.Objects;
 
 /// <summary>
-/// What the map object services share: the state, the publisher, the economy, the fog and the small steps every object rule uses (asking, removing an
-/// object, collecting a limited reward, finding the hero at an object's entrance).
+/// What the map object services share: the state, the publisher, the economy, the fog, the decision steps (<see cref="DecisionSteps"/>) and the
+/// small steps every object rule uses (collecting a limited reward, finding the hero at an object's entrance).
 /// </summary>
 public sealed class ObjectInteractionContext
 {
@@ -22,6 +22,7 @@ public sealed class ObjectInteractionContext
         Events = events;
         Economy = economy;
         Fog = fog;
+        Steps = new DecisionSteps(state, events);
     }
 
     internal GameState State { get; }
@@ -31,6 +32,9 @@ public sealed class ObjectInteractionContext
     internal EconomyService Economy { get; }
 
     internal IFogRevealer Fog { get; }
+
+    /// <summary>Asking, taking and resolving a decision, and removing an object from the map, in their fixed order (ADR-215).</summary>
+    internal DecisionSteps Steps { get; }
 
     /// <summary>
     /// The hero's object shows its owner the area within <paramref name="radius"/> of <paramref name="center"/> for good (an observatory, a Magi
@@ -56,20 +60,6 @@ public sealed class ObjectInteractionContext
         mapObject.Visits.Record(hero.Id, State.Date);
         Events.Publish(new MapObjectCollected(hero.Id, mapObject.Id));
         return true;
-    }
-
-    /// <summary>Opens a decision: it becomes <see cref="GameState.PendingDecision"/>, then <see cref="DecisionRequested"/>.</summary>
-    internal void Ask(PendingDecision decision)
-    {
-        State.PendingDecision = decision;
-        Events.Publish(new DecisionRequested(decision));
-    }
-
-    /// <summary>The object leaves the map: <see cref="MapObjectRemoved"/>.</summary>
-    internal void RemoveFromMap(MapObject mapObject)
-    {
-        State.RemoveObject(mapObject);
-        Events.Publish(new MapObjectRemoved(mapObject.Id));
     }
 
     /// <summary>The hero collects the object and its player gets the resources: <see cref="ResourcesFound"/>.</summary>

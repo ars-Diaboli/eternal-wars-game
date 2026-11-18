@@ -15,7 +15,7 @@ public sealed class PandorasBoxService(ObjectInteractionContext context, Progres
     internal void Open(Hero hero, PandorasBox box)
     {
         var events = context.Events;
-        context.RemoveFromMap(box);
+        context.Steps.RemoveObject(box);
         var contents = box.Contents;
         if (!contents.Resources.IsEmpty)
         {

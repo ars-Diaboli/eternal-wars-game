@@ -23,24 +23,22 @@ public sealed class ObjectDecisionService(
 
     private Core.Events.IEventPublisher Events => context.Events;
 
+    private DecisionSteps Steps => context.Steps;
+
     internal void ResolveTreasureChest(TreasureChestReward reward)
     {
-        if (State.PendingDecision is not TreasureChestDecision decision)
-        {
-            throw new CommandRefusedException("No treasure chest decision is pending.");
-        }
+        var decision = Steps.TakeDecision<TreasureChestDecision>("No treasure chest decision is pending.");
 
         // Everything the answer needs is found before anything changes, so a refusal leaves the state as it was.
         var chest = State.GetObject(decision.Chest);
         var hero = State.GetHero(decision.Hero);
-        State.PendingDecision = null;
-        context.RemoveFromMap(chest);
+        Steps.Resolve(decision);
+        Steps.RemoveObject(chest);
         if (reward == TreasureChestReward.Gold)
         {
             context.Economy.Grant(hero.Owner, new ResourceSet(Gold: decision.Gold));
         }
 
-        Events.Publish(new DecisionResolved(decision));
         if (reward == TreasureChestReward.Experience)
         {
             progression.GrantExperience(hero, decision.Experience);
@@ -50,22 +48,15 @@ public sealed class ObjectDecisionService(
     /// <summary>Closes the exchange screen opened by a meeting of two own heroes.</summary>
     internal void CompleteExchange()
     {
-        if (State.PendingDecision is not HeroExchangeDecision decision)
-        {
-            throw new CommandRefusedException("No hero exchange is open.");
-        }
+        var decision = Steps.TakeDecision<HeroExchangeDecision>("No hero exchange is open.");
 
-        State.PendingDecision = null;
-        Events.Publish(new DecisionResolved(decision));
+        Steps.Resolve(decision);
     }
 
     /// <summary>The visitor of a town gate goes to the town picked, at no movement cost, or stays (ADR-068).</summary>
     internal void ResolveTownGate(MapObjectId? townId)
     {
-        if (State.PendingDecision is not TownGateDecision decision)
-        {
-            throw new CommandRefusedException("No town gate is open.");
-        }
+        var decision = Steps.TakeDecision<TownGateDecision>("No town gate is open.");
 
         var hero = State.GetHero(decision.Hero);
         Town? town = null;
@@ -83,7 +74,7 @@ public sealed class ObjectDecisionService(
             }
         }
 
-        State.PendingDecision = null;
+        Steps.Resolve(decision);
         if (town is not null)
         {
             var from = hero.Position;
@@ -91,17 +82,12 @@ public sealed class ObjectDecisionService(
             Events.Publish(new HeroTeleported(hero.Id, from, hero.Position));
             towns.Enter(hero, town);
         }
-
-        Events.Publish(new DecisionResolved(decision));
     }
 
     /// <summary>The visitor of a training site picks an option, pays for it and trains; or leaves, where the site allows it (ADR-068).</summary>
     internal void ResolveTraining(TrainingOption? option)
     {
-        if (State.PendingDecision is not TrainingDecision decision)
-        {
-            throw new CommandRefusedException("No training is offered.");
-        }
+        var decision = Steps.TakeDecision<TrainingDecision>("No training is offered.");
 
         if (option is not { } picked)
         {
@@ -110,8 +96,7 @@ public sealed class ObjectDecisionService(
                 throw new CommandRefusedException("Choose one of the options.");
             }
 
-            State.PendingDecision = null;
-            Events.Publish(new DecisionResolved(decision));
+            Steps.Resolve(decision);
             return;
         }
 
@@ -127,14 +112,13 @@ public sealed class ObjectDecisionService(
             throw new CommandRefusedException("Not enough resources.");
         }
 
-        State.PendingDecision = null;
+        Steps.Resolve(decision);
         context.TryCollect(hero, site);
         if (TrainingRules.Stat(picked) is { } stat)
         {
             progression.RaiseStat(hero, stat, TrainingRules.StatBonus);
         }
 
-        Events.Publish(new DecisionResolved(decision));
         var experience = site.Rule switch
         {
             TrainingRule.Gazebo => TrainingRules.GazeboExperience,
@@ -147,10 +131,7 @@ public sealed class ObjectDecisionService(
     /// <summary>The visitor's player pays for the deposit, which becomes the mine of its kind with the same id, flagged for the player; or leaves.</summary>
     internal void ResolveDeposit(bool buy)
     {
-        if (State.PendingDecision is not DepositDecision decision)
-        {
-            throw new CommandRefusedException("No deposit is waiting for an answer.");
-        }
+        var decision = Steps.TakeDecision<DepositDecision>("No deposit is waiting for an answer.");
 
         // The mine is made before the price is paid, so nothing is spent on a deposit that cannot become one.
         var hero = State.GetHero(decision.Hero);
@@ -161,8 +142,7 @@ public sealed class ObjectDecisionService(
             throw new CommandRefusedException("Not enough resources.");
         }
 
-        State.PendingDecision = null;
-        Events.Publish(new DecisionResolved(decision));
+        Steps.Resolve(decision);
         if (mine is null)
         {
             return;
@@ -178,10 +158,7 @@ public sealed class ObjectDecisionService(
     /// <summary>The visitor's player buys the cartographer's map of its level, or leaves (ADR-079, MAP-31).</summary>
     internal void ResolveCartographer(bool buy)
     {
-        if (State.PendingDecision is not CartographerDecision decision)
-        {
-            throw new CommandRefusedException("No cartographer is waiting for an answer.");
-        }
+        var decision = Steps.TakeDecision<CartographerDecision>("No cartographer is waiting for an answer.");
 
         var hero = State.GetHero(decision.Hero);
         var cartographer = (Cartographer)State.GetObject(decision.Cartographer);
@@ -190,8 +167,7 @@ public sealed class ObjectDecisionService(
             throw new CommandRefusedException("Not enough gold.");
         }
 
-        State.PendingDecision = null;
-        Events.Publish(new DecisionResolved(decision));
+        Steps.Resolve(decision);
         if (!buy)
         {
             return;
@@ -209,10 +185,7 @@ public sealed class ObjectDecisionService(
     /// </summary>
     internal void ResolveSphinx(int option)
     {
-        if (State.PendingDecision is not SphinxDecision decision)
-        {
-            throw new CommandRefusedException("No sphinx is waiting for an answer.");
-        }
+        var decision = Steps.TakeDecision<SphinxDecision>("No sphinx is waiting for an answer.");
 
         if (option < 0 || option >= decision.Options.Count)
         {
@@ -221,9 +194,8 @@ public sealed class ObjectDecisionService(
 
         var hero = State.GetHero(decision.Hero);
         var sphinx = (Sphinx)State.GetObject(decision.Sphinx);
-        State.PendingDecision = null;
+        Steps.Resolve(decision);
         context.TryCollect(hero, sphinx);
-        Events.Publish(new DecisionResolved(decision));
         if (option != decision.Correct)
         {
             hero.MovementPoints = 0;
@@ -246,15 +218,11 @@ public sealed class ObjectDecisionService(
     /// <summary>The hero opens the Pandora's Box, fighting its guard first if it has one, or leaves it closed (ADR-100, MAP-35).</summary>
     internal void ResolvePandorasBox(bool open)
     {
-        if (State.PendingDecision is not PandorasBoxDecision decision)
-        {
-            throw new CommandRefusedException("No Pandora's Box is waiting for an answer.");
-        }
+        var decision = Steps.TakeDecision<PandorasBoxDecision>("No Pandora's Box is waiting for an answer.");
 
         var hero = State.GetHero(decision.Hero);
         var box = (PandorasBox)State.GetObject(decision.Box);
-        State.PendingDecision = null;
-        Events.Publish(new DecisionResolved(decision));
+        Steps.Resolve(decision);
         if (!open)
         {
             return;
@@ -272,10 +240,7 @@ public sealed class ObjectDecisionService(
     /// <summary>The hero learns or improves one of the witch hut's skills, or leaves without (ADR-079, MAP-34).</summary>
     internal void ResolveWitchHut(string? skill)
     {
-        if (State.PendingDecision is not WitchHutDecision decision)
-        {
-            throw new CommandRefusedException("No witch hut is waiting for an answer.");
-        }
+        var decision = Steps.TakeDecision<WitchHutDecision>("No witch hut is waiting for an answer.");
 
         if (skill is not null && !decision.Options.Contains(skill))
         {
@@ -283,16 +248,16 @@ public sealed class ObjectDecisionService(
         }
 
         var hero = State.GetHero(decision.Hero);
-        if (skill is not null)
+        if (skill is not null && !hero.Skills.CanRaise(skill))
         {
-            hero.Skills.Raise(skill); // refuses (a full set of skill groups) before anything has changed
-            hero.WitchHutLevel = hero.Level;
+            throw new CommandRefusedException($"{BuiltInSkills.Get(skill).Name} cannot be raised."); // a full set of skill groups
         }
 
-        State.PendingDecision = null;
-        Events.Publish(new DecisionResolved(decision));
+        Steps.Resolve(decision);
         if (skill is not null)
         {
+            hero.Skills.Raise(skill);
+            hero.WitchHutLevel = hero.Level;
             Events.Publish(new WitchHutSkillLearned(decision.Hut, hero.Id, skill, hero.Skills.Level(skill)));
         }
     }

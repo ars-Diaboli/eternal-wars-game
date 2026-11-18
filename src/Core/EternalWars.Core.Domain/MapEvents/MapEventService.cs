@@ -26,6 +26,7 @@ public sealed class MapEventService(
     : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>, Turns.ITurnPhaseParticipant
 {
     private readonly TownConstruction _construction = new(state, events, towns);
+    private readonly DecisionSteps _steps = new(state, events);
 
     /// <summary>The most morale or luck an event gives or takes (HoMM3's ±3).</summary>
     public const int MaxMoraleOrLuck = 3;
@@ -189,8 +190,7 @@ public sealed class MapEventService(
         WriteLog(completer, new QuestLogEntry(site.Id, run.Event.Name, advance.Stage, Done: true));
         if (site.Kind == MapObjectKind.QuestGuard)
         {
-            state.RemoveObject(site);
-            events.Publish(new MapObjectRemoved(site.Id));
+            _steps.RemoveObject(site);
         }
     }
 
@@ -327,7 +327,6 @@ public sealed class MapEventService(
             throw new CommandRefusedException(decision.IsQuestion ? $"Answer 0 to {decision.Answers.Count - 1}." : "A message is closed with 0.");
         }
 
-        state.PendingDecision = null;
         run.Waiting = MapEventWaiting.None;
         if (run.Answers is { } answers)
         {
@@ -335,7 +334,7 @@ public sealed class MapEventService(
             run.Answers = null;
         }
 
-        events.Publish(new DecisionResolved(decision));
+        _steps.Resolve(decision);
         Pump();
     }
 
@@ -353,11 +352,10 @@ public sealed class MapEventService(
         }
 
         var hero = state.GetHero(decision.Hero);
-        state.PendingDecision = null;
         run.Waiting = MapEventWaiting.None;
+        _steps.Resolve(decision);
         Refill(hero.Army, keep.Select(i => decision.Stacks[i]));
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-        events.Publish(new DecisionResolved(decision));
         Pump();
     }
 
@@ -570,8 +568,7 @@ public sealed class MapEventService(
     private void Ask(MapEventRun run, PendingDecision decision)
     {
         run.Waiting = MapEventWaiting.Decision;
-        state.PendingDecision = decision;
-        events.Publish(new DecisionRequested(decision));
+        _steps.Ask(decision);
     }
 
     private void SetVariable(string name, int value)

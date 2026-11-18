@@ -25,7 +25,7 @@ internal sealed class MapObjectRewardVisits(
 
     internal void CollectPile(Hero hero, ResourcePile pile)
     {
-        context.RemoveFromMap(pile);
+        context.Steps.RemoveObject(pile);
         var chance = SkillEffects.ProspectingPileChancePercent(hero.SkillLevelOf(BuiltInSkills.Prospecting));
         var inPile = pile.Amount ?? ResourcePile.Roll(pile.Resource, State.Random);
         var amount = chance > 0 && State.Random.Next(100) < chance ? inPile + (inPile + 1) / 2 : inPile;
@@ -39,20 +39,20 @@ internal sealed class MapObjectRewardVisits(
         if (values is null)
         {
             // The artifact outcome (ADR-068): no choice, the chest is emptied; a full backpack loses it.
-            context.RemoveFromMap(chest);
+            context.Steps.RemoveObject(chest);
             var found = artifacts.Draw(ArtifactTier.Minor) is { } minor && artifacts.Grant(hero, minor, ArtifactSource.Found) ? minor : null;
             Events.Publish(new LootFound(hero.Id, chest.Id, ResourceSet.Empty, found));
             return;
         }
 
-        context.Ask(new TreasureChestDecision(hero.Id, chest.Id, values.Gold, values.Experience));
+        context.Steps.Ask(new TreasureChestDecision(hero.Id, chest.Id, values.Gold, values.Experience));
     }
 
     internal void PickUp(Hero hero, ArtifactPickup pickup)
     {
         if (pickup.Artifact is { } found && artifacts.Grant(hero, found, ArtifactSource.Pickup))
         {
-            context.RemoveFromMap(pickup);
+            context.Steps.RemoveObject(pickup);
         }
     }
 
@@ -64,7 +64,7 @@ internal sealed class MapObjectRewardVisits(
         }
         else
         {
-            context.Ask(new PandorasBoxDecision(hero.Id, box.Id));
+            context.Steps.Ask(new PandorasBoxDecision(hero.Id, box.Id));
         }
     }
 
@@ -193,7 +193,7 @@ internal sealed class MapObjectRewardVisits(
             return;
         }
 
-        context.Ask(new TrainingDecision(hero.Id, site.Id, options, TrainingRules.CanDecline(site.Rule)));
+        context.Steps.Ask(new TrainingDecision(hero.Id, site.Id, options, TrainingRules.CanDecline(site.Rule)));
     }
 
     /// <summary>
@@ -207,7 +207,7 @@ internal sealed class MapObjectRewardVisits(
             var roll = LootRules.Roll(site.Rule, State.Random);
             if (site.Vanishes)
             {
-                context.RemoveFromMap(site);
+                context.Steps.RemoveObject(site);
             }
 
             context.Economy.Grant(hero.Owner, roll.Resources);
@@ -234,7 +234,7 @@ internal sealed class MapObjectRewardVisits(
             return;
         }
 
-        context.Ask(new DepositDecision(hero.Id, deposit.Id, deposit.Price));
+        context.Steps.Ask(new DepositDecision(hero.Id, deposit.Id, deposit.Price));
     }
 
     internal void OfferMap(Hero hero, Cartographer cartographer)
@@ -253,7 +253,7 @@ internal sealed class MapObjectRewardVisits(
         }
         else
         {
-            context.Ask(new CartographerDecision(hero.Id, cartographer.Id, cartographer.Level, Cartographer.Price));
+            context.Steps.Ask(new CartographerDecision(hero.Id, cartographer.Id, cartographer.Level, Cartographer.Price));
         }
     }
 
@@ -270,7 +270,7 @@ internal sealed class MapObjectRewardVisits(
         var correct = State.Random.Next(3);
         var options = new List<string> { riddle.Wrong1, riddle.Wrong2 };
         options.Insert(correct, riddle.Answer);
-        context.Ask(new SphinxDecision(hero.Id, sphinx.Id, riddle.Question, options, correct));
+        context.Steps.Ask(new SphinxDecision(hero.Id, sphinx.Id, riddle.Question, options, correct));
     }
 
     /// <summary>A shrine teaches its spell to a hero who can learn it and does not know it yet (ADR-120); otherwise it says why not.</summary>
@@ -312,7 +312,7 @@ internal sealed class MapObjectRewardVisits(
         }
         else
         {
-            context.Ask(new WitchHutDecision(hero.Id, hut.Id, options));
+            context.Steps.Ask(new WitchHutDecision(hero.Id, hut.Id, options));
         }
     }
 

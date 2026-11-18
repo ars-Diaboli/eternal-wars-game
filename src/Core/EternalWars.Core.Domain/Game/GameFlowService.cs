@@ -1,5 +1,6 @@
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
@@ -16,6 +17,8 @@ namespace EternalWars.Core.Domain.Game;
 /// </summary>
 public sealed class GameFlowService(GameState state, IEventPublisher events)
 {
+    private readonly DecisionSteps _steps = new(state, events);
+
     /// <summary>
     /// Before the game starts: a player with more heroes than it may have (a map made that way, ADR-068) loses the surplus, the newest heroes (highest
     /// ids) first. Each one is reported with <see cref="HeroRemoved"/>.
@@ -269,9 +272,9 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         foreach (var hero in state.HeroesOf(player.Id).ToList())
         {
             state.RemoveHero(hero);
-            if (state.PendingDecision?.Hero == hero.Id)
+            if (state.PendingDecision is { } decision && decision.Hero == hero.Id)
             {
-                state.PendingDecision = null;
+                _steps.Resolve(decision);
             }
 
             events.Publish(new HeroDefeated(hero.Id, hero.Owner, Retreated: false));

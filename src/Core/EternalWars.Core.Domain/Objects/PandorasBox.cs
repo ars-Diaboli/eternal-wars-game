@@ -114,17 +114,10 @@ public sealed class PandorasBox(
 {
     /// <inheritdoc/>
     /// <remarks>A lost or fled battle leaves the guard whole.</remarks>
-    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome) => outcome.Events.Publish(new MapObjectChanged(Id));
+    GuardOutcome IBattleGuard.Survived() => new GuardUnchanged(this);
 
     /// <inheritdoc/>
-    /// <remarks>Winning opens the box for the hero.</remarks>
-    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
-    {
-        if (winner is not null)
-        {
-            outcome.Boxes.Open(winner, this);
-        }
-    }
+    GuardOutcome IBattleGuard.Defeated() => new BoxWon(this);
 
     /// <inheritdoc/>
     internal override string DigestState() => $"contents {Contents} guard {string.Join(',', Guard)} message {Message}{(Event is null ? "" : $" event {Event}")}";

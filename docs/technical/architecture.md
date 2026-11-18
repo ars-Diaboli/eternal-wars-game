@@ -105,7 +105,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
 - **Pending decisions**: outcomes needing a choice (chest, exchange, guard offer, level-up, battle, ...) set
   `GameState.PendingDecision` and publish `DecisionRequested`; movement and End Turn are refused until the matching
   command resolves it. A battle is a `BattleDecision` resolved when the battle ends. Core never waits; UI or AI answers
-  whenever it wants.
+  whenever it wants. Every service asks, takes and resolves through `DecisionSteps` (ADR-215), which also removes objects from
+  the map: take the decision, check the answer (a refusal changes nothing), resolve, then apply the answer.
 - **Settle**: after `Start()` and every accepted command `GameSession` runs `GameFlowService.Evaluate()` (eliminations,
   winner, passing the turn of a just-defeated player), then publishes `CommandExecuted`. Once `GameState.Outcome` is set,
   `Execute` refuses everything. `TurnService` skips defeated players; `GameState.Rules` (`ScenarioRules`) says what counts and
@@ -148,7 +149,8 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   sides. `BattleService`: the session's facade for map ↔ battle, composed of `BattleStarter` (sides, battlefield, siege, width choice),
   `BattleCommandHandler` (players' battle commands, auto combat preview), `BattleFlow` (deployment, AI play until a person acts) and
   `BattleAftermath` (mana, survivors, `NecromancyRules.Raise` after survivors and before experience, defeated heroes). A guarded map object
-  implements `IBattleGuard` (keeps its survivors, or is defeated: removed, flagged, plundered, opened, captured) with a `BattleGuardOutcome`.
+  implements `IBattleGuard`: it only describes what the battle's end does to it (a `GuardOutcome`: keeps its survivors, or is removed, flagged,
+  plundered, opened, captured), and `BattleGuardService` applies the description (ADR-216).
   `Siege`, `WarMachines`,
   `PrimalFury` (rage, warcries via `BattleWarcryCommand`), `SurrenderRules`, `AutoCombat` beside them.
 - Battle spells: each `SpellEffectKind` has one `ISpellEffectHandler` (`Battles/Spells/`, registered in `SpellEffectHandlers`,

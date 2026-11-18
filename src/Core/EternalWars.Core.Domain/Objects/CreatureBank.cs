@@ -51,38 +51,10 @@ public sealed class CreatureBank(MapObjectId id, MapObjectDefinition definition,
 {
     /// <inheritdoc/>
     /// <remarks>A retreat or a lost battle leaves the guard intact.</remarks>
-    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome) => outcome.Events.Publish(new MapObjectChanged(Id));
+    GuardOutcome IBattleGuard.Survived() => new GuardUnchanged(this);
 
     /// <inheritdoc/>
-    /// <remarks>The bank's reward goes to the winner and the bank is empty until it refills (ADR-068).</remarks>
-    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
-    {
-        if (winner is null)
-        {
-            return;
-        }
-
-        var (reward, tier, more) = (Reward, RewardArtifact, MoreArtifacts);
-        PlunderedOn = outcome.State.Date;
-        Guard = [];
-        Reward = ResourceSet.Empty;
-        RewardArtifact = null;
-        MoreArtifacts = [];
-        outcome.Economy.Grant(winner.Owner, reward);
-        var artifacts = outcome.Artifacts;
-        var found = tier is { } t && artifacts.Draw(t) is { } artifact && artifacts.Grant(winner, artifact, ArtifactSource.Found) ? artifact : null;
-        foreach (var extra in more)
-        {
-            // Further artifacts (Dragon City) go the same way; a full backpack loses them.
-            if (artifacts.Draw(extra) is { } drawn)
-            {
-                artifacts.Grant(winner, drawn, ArtifactSource.Found);
-            }
-        }
-
-        outcome.Events.Publish(new CreatureBankPlundered(Id, winner.Id, reward, found));
-        outcome.Events.Publish(new MapObjectChanged(Id));
-    }
+    GuardOutcome IBattleGuard.Defeated() => new BankPlundered(this);
 
     /// <inheritdoc/>
     internal override string DigestState() => $"guard {string.Join(',', Guard)} reward {Reward} {RewardArtifact}{(MoreArtifacts.Count == 0 ? "" : $"+{string.Join('+', MoreArtifacts)}")} plundered {PlunderedOn?.AbsoluteDay}";

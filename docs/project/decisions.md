@@ -2947,3 +2947,43 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   then publishes its own event (`event-system.md`).
 - **Checked**: `RevealOrderTests`, `SimultaneousDayTests.TurnEnded_ComesOnceTheTurnIsOut_OfTodaysOpenTurns`. The digests are unchanged
   (duel baseline `A0F1FADCC6D8DEE4`, sim self-test `82AE941CD62212E2`).
+
+### ADR-215: One set of decision steps, taken in one order (ADR-016, ADR-214, 2026-11-18)
+**Status**: implemented. No rule, save, map or protocol format change; the order of a few events changes.
+
+- **Why**: asking (`PendingDecision` + `DecisionRequested`) was written by hand in five services and resolving in fifteen places, each
+  in its own order: some resolvers published `DecisionResolved` before the answer's effects, some after, so a level-up the answer
+  brought could be requested before the old decision was resolved.
+- **Helper**: `DecisionSteps` (Decisions) with `Ask`, `TakeDecision<T>` (the pending decision of that type, else a refusal),
+  `Resolve` (cleared, then `DecisionResolved`) and `RemoveObject` (removed, then `MapObjectRemoved`). The object services use it
+  through `ObjectInteractionContext.Steps`; `GuardService`, `ProgressionService`, `BattleStarter`, `BattleAftermath`,
+  `MapEventService` and `GameFlowService` hold one each.
+- **Order**: take the decision; check the answer, a price that can be refused among the checks; a refusal changes nothing and leaves
+  the decision pending. Then resolve, then apply the answer: a decision its effects open (a level-up, a battle) is requested after
+  this one's `DecisionResolved`. A battle's decision lasts the battle and is resolved after its consequences, as before.
+- **Changes**: `DecisionResolved` now precedes the answer's effects for the treasure chest, the town gate, training, the sphinx, the
+  level-up choice and a map event's army choice. The witch hut checks that the skill can be raised before it resolves. A joining or
+  fleeing guard leaves the map before `GuardJoined` / `GuardFled` ("object gone" order). A meeting publishes `HeroesMet` before its
+  exchange decision is pending. A defeated player's hero with a decision pending now gets its `DecisionResolved`, so a LAN client
+  drops it too.
+- **Not moved**: an object replaced in place under its id (a bought deposit, a cleared abandoned mine, a retyped town) is not removed;
+  a beaten monster leaves from `IBattleGuard.Defeated`, reworked by the battle guard outcome item; the editor removes through its own
+  undoable steps.
+- **Checked**: `DecisionStepsTests`. The digests are unchanged (duel baseline `A0F1FADCC6D8DEE4`, sim self-test `82AE941CD62212E2`).
+
+### ADR-216: A battle guard describes its outcome; a service applies it (ADR-068, ADR-215, 2026-11-18)
+**Status**: implemented. No rule, save, map or protocol format change; no event order change.
+
+- **Why**: `IBattleGuard.KeepSurvivors` / `Defeated` ran the rules inside the map objects: a monster removed itself, a mine replaced itself
+  in `GameState`, a creature bank paid its reward through the economy and drew artifacts, each through a `BattleGuardOutcome` that handed
+  them the state, the publisher and five services. Entities changed state and published, against "only Domain services mutate".
+- **Description**: `IBattleGuard.Survived()` (the guard won, or its attacker fled or surrendered) and `Defeated()` return a `GuardOutcome`
+  record naming the object: `GuardUnchanged`, `MonsterSurvives`, `SiteGuardSurvives` (a mine's or a dwelling's stack), `TroopsSurvive`
+  (a town's or a map garrison's troops); `MonsterBeaten`, `MineGuardBeaten`, `DwellingGuardBeaten`, `BankPlundered`, `BoxWon`, `TownWon`,
+  `GarrisonWon`. Asking changes nothing.
+- **Applying**: `BattleGuardService` (Battles; `BattleAftermath` owns it) switches on the record and mutates, then publishes, in the order
+  the entities used; the winner is passed in, and outcomes that need one do nothing without it, as before. A won guard that is not an
+  `IBattleGuard` gets `GuardUnchanged`. A beaten monster leaves through `DecisionSteps.RemoveObject`. `BattleGuardOutcome` is removed;
+  its `KeepTroops` is the service's.
+- **Checked**: `BattleGuardOutcomeTests`, and the existing battle and object tests for what each outcome does. The digests are unchanged
+  (duel baseline `A0F1FADCC6D8DEE4`, sim self-test `82AE941CD62212E2`).
