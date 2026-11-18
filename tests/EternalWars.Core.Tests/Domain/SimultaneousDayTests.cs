@@ -69,6 +69,36 @@ public class SimultaneousDayTests
     }
 
     [Fact]
+    public void TheDaysCommands_BeginAfterTheCommandThatOpenedIt()
+    {
+        var session = Started(Duel(Simultaneous));
+        Assert.Equal(0, session.SimultaneousDayStart);
+
+        session.Execute(new StepHeroCommand(Red, B, Direction.West)).ThrowIfRejected();
+        session.Execute(new EndTurnCommand(Blue)).ThrowIfRejected();
+        Assert.Equal(0, session.SimultaneousDayStart);
+        session.Execute(new EndTurnCommand(Red)).ThrowIfRejected(); // opens day 2
+
+        Assert.Equal(3, session.SimultaneousDayStart);
+        Assert.Equal(3, session.CommandLog.Count);
+    }
+
+    [Fact]
+    public void LeavingTheOpenTurns_ClosesTheDay_OnlyWithTheLastOne()
+    {
+        var state = Started(Duel(Simultaneous with { HostPlayer = Red })).State;
+        var days = new SimultaneousDayCoordinator(state, new EventBus());
+        Assert.Equal(Red, state.CurrentPlayer.Id);
+
+        Assert.False(days.Leave(Red));
+        Assert.Equal([Blue], state.OpenTurns);
+        Assert.Equal(Blue, state.CurrentPlayer.Id); // the host's turn is gone: the first open one
+        Assert.False(days.Leave(Red)); // not open any more
+        Assert.True(days.Leave(Blue));
+        Assert.False(state.IsSimultaneous);
+    }
+
+    [Fact]
     public void ASimultaneousGame_Replays_ToTheSameState()
     {
         var state = Duel(Simultaneous);

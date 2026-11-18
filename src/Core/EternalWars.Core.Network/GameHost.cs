@@ -455,9 +455,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
 
     private void Join(Peer peer, JoinRequest request)
     {
-        if (request.Protocol != NetSerializer.ProtocolVersion)
+        if (NetSerializer.VersionRefusal(request) is { } version)
         {
-            Refuse(peer, $"The host plays protocol {NetSerializer.ProtocolVersion}, this game {request.Protocol}: use the same version of the game.");
+            Refuse(peer, version);
             return;
         }
 

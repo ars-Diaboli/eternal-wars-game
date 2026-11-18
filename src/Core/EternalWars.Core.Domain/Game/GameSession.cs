@@ -42,6 +42,7 @@ public sealed class GameSession
         State = state ?? throw new ArgumentNullException(nameof(state));
         Bus = bus ?? new EventBus();
         FollowsHost = followsHost;
+        ViewSink = followsHost ? new ViewSink(State) : null;
         Bus.Subscribe<Core.Events.IEvent>(_ => _published++);
 
         // Core handlers subscribe first so their follow-up events are queued before views react. A LAN client's session runs no rules, so
@@ -86,7 +87,13 @@ public sealed class GameSession
         Arena = new ArenaService(State, Bus, Battles);
 
         // The list's order is the rules' order at every step of the calendar (ITurnPhaseParticipant): it fixes the events and the random draws.
-        Turns = new TurnService(State, Bus, Arena,
+        Days = new SimultaneousDayCoordinator(State, Bus);
+        if (!followsHost)
+        {
+            Days.SubscribeTo(Bus);
+        }
+
+        Turns = new TurnService(State, Bus, Arena, Days,
             [MapEvents, Progression, Movement, new ManaRestoration(State, Bus), Towns, Caravans, Economy, Guards, ObjectLifecycle]);
 
         AdventureCommandHandlers.Register(_handlers, Movement, Turns, Guards, Progression, Armies, AdventureMagic, Grail);
@@ -101,21 +108,16 @@ public sealed class GameSession
             Turns.LeaveOpenTurns(c.Player); // on a simultaneous day the computer plays its turn after the people (ADR-197)
         });
         _handlers.Add<PlayTurnByTurnCommand>(c => Turns.PlayTurnByTurn(c.Reason));
-
-        Watch = new SimultaneousDayWatch(State, Bus);
-        if (!followsHost)
-        {
-            Bus.Subscribe<MapObjectVisited>(e => Watch.Visited(e.Hero, e.Object));
-        }
     }
 
     /// <summary>
     /// Where today's commands begin in <see cref="CommandLog"/> on a simultaneous day (MP-2, ADR-197): the commands before it rebuild the game as
     /// the day opened, which a LAN host plays again turn by turn after a conflict. 0 before the first simultaneous day.
     /// </summary>
-    public int SimultaneousDayStart { get; private set; }
+    public int SimultaneousDayStart => Days.DayStart;
 
-    private SimultaneousDayWatch Watch { get; }
+    /// <summary>The simultaneous days: open turns, whose turn a command runs in, the conflict watch (ADR-217).</summary>
+    private SimultaneousDayCoordinator Days { get; }
 
     public GameState State { get; }
 
@@ -124,6 +126,12 @@ public sealed class GameSession
     /// events it publishes on <paramref name="bus"/>; the rules never run here, so every command must go to the host (<see cref="Route"/>).
     /// </summary>
     public static GameSession FollowingHost(GameState state, IEventBus bus) => new(state, bus, followsHost: true);
+
+    /// <summary>
+    /// Where a LAN client puts what the host sent (ADR-218): only a session that follows the host has one (<see cref="FollowingHost"/>); null
+    /// otherwise.
+    /// </summary>
+    public IViewSink? ViewSink { get; }
 
     /// <summary>Whether this is a LAN client's session (<see cref="FollowingHost"/>): it runs no rules.</summary>
     public bool FollowsHost { get; }
@@ -206,18 +214,7 @@ public sealed class GameSession
         Towns.DrawGuilds();
         Turns.StartGame();
         Settle();
-        NoteSimultaneousDay();
-    }
-
-    /// <summary>A simultaneous day just opened: where its commands begin, and what is no conflict.</summary>
-    private void NoteSimultaneousDay()
-    {
-        if (Turns.OpenedSimultaneousDay)
-        {
-            Turns.OpenedSimultaneousDay = false;
-            SimultaneousDayStart = _log.Count;
-            Watch.DayOpened();
-        }
+        Days.Started(_log.Count);
     }
 
     /// <summary>
@@ -238,9 +235,9 @@ public sealed class GameSession
         }
 
         // A simultaneous day's conflict stops the day until the host plays it again turn by turn (ADR-197).
-        if (State.SimultaneousConflict is { } conflict && command is not PlayTurnByTurnCommand)
+        if (Days.Stopped(command) is { } stopped)
         {
-            return CommandResult.Rejected($"The day is played again turn by turn: {conflict}");
+            return CommandResult.Rejected(stopped);
         }
 
         if (Authorize(command) is { } refusal)
@@ -259,10 +256,7 @@ public sealed class GameSession
         }
 
         // On a simultaneous day a command runs as its player's turn (ADR-197); between commands the current player is the host's open turn.
-        if (State.IsSimultaneous && command is not (IBattleCommand or SetAutoCombatCommand or HandToComputerCommand or PlayTurnByTurnCommand))
-        {
-            State.CurrentPlayerIndex = State.IndexOf(command.Player);
-        }
+        Days.TakeTurnOf(command);
 
         object? outcome;
         var before = CheckRefusals ? GameStateDigest.Describe(State) : null;
@@ -279,7 +273,7 @@ public sealed class GameSession
                 throw new InvalidOperationException($"{command} was refused ({e.Message}) after it had changed the game.", e);
             }
 
-            Turns.PointAtOpenTurn();
+            Days.Refused();
             return CommandResult.Rejected(e.Message);
         }
 
@@ -288,9 +282,7 @@ public sealed class GameSession
         // A map event waiting for an answer, a battle or a level-up goes on once nothing is pending.
         MapEvents.Pump();
         Settle();
-        Turns.PointAtOpenTurn();
-        NoteSimultaneousDay();
-        Watch.Check();
+        Days.Executed(_log.Count);
         Bus.Publish(new CommandExecuted(command));
         return CommandResult.Accepted(outcome);
     }
@@ -342,25 +334,10 @@ public sealed class GameSession
             return null;
         }
 
-        if (!State.IsTurnOf(command.Player))
+        // Its own turn; on a simultaneous day one battle or question at a time: the others wait for it (ADR-197).
+        if (Days.Refusal(command.Player) is { } notNow)
         {
-            return State.DoneToday.Contains(command.Player)
-                ? $"{State.GetPlayer(command.Player).Name} has ended the turn: the others still play today."
-                : $"It is not {command.Player}'s turn.";
-        }
-
-        // On a simultaneous day one battle or question at a time: the others wait for it (ADR-197).
-        if (State.IsSimultaneous)
-        {
-            if (State.Battle is not null)
-            {
-                return "Wait: a battle is being fought.";
-            }
-
-            if (State.PendingDecision is not null && State.DecisionPlayer is { } asked && asked != command.Player)
-            {
-                return $"Wait: {State.GetPlayer(asked).Name} answers a question.";
-            }
+            return notNow;
         }
 
         if (command is IHeroCommand { Hero: var hero })

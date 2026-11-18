@@ -2987,3 +2987,36 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   its `KeepTroops` is the service's.
 - **Checked**: `BattleGuardOutcomeTests`, and the existing battle and object tests for what each outcome does. The digests are unchanged
   (duel baseline `A0F1FADCC6D8DEE4`, sim self-test `82AE941CD62212E2`).
+
+### ADR-217: One coordinator for the simultaneous days (ADR-197, ADR-214, 2026-11-18)
+**Status**: implemented. No rule, save, map or protocol format change; no event order change.
+
+- **Why**: the simultaneous days were spread over three places. `TurnService` opened the day and set a public `OpenedSimultaneousDay`
+  flag; `GameSession` read and cleared it, kept the day's start in the command log and the conflict watch, pointed the current player
+  at a command's player and back, and refused the waiting players; both edited `GameState`'s open turns and ended turns.
+- **Description**: `SimultaneousDayCoordinator` (Turns; the session creates it and hands it to `TurnService`) holds all of it: whether
+  today is played at once and opening it (`TryOpen`, beginning each turn through `TurnService`), a person's turn ending, leaving the open
+  turns, the days ending (`PlayTurnByTurnCommand`), the conflict refusal, whose turn a command runs in and who must wait, the conflict
+  watch and the day's start in the log (`GameSession.SimultaneousDayStart`). The session tells it `Started`, `Refused` and `Executed`
+  with the log's length; the flag is private to it. It alone writes `GameState.OpenTurns`, the turns ended today, `SimultaneousEnded`
+  and `SimultaneousConflict`; the state keeps them, since they are part of the game and its digest.
+- **Checked**: `SimultaneousDayTests` (the day's start in the log; leaving the open turns). The digests are unchanged (duel baseline
+  `A0F1FADCC6D8DEE4`, sim self-test `82AE941CD62212E2`).
+
+### ADR-218: The LAN code changes a client's game through a view sink; a schema hash guards the join (ADR-193, ADR-203, 2026-11-18)
+**Status**: implemented. LAN protocol 7 (`JoinRequest.Schema`); no rule, save or map format change.
+
+- **Why**: Domain declared `InternalsVisibleTo` for Core.Network, so the client's `ViewMirror` set the game's date, players, heroes, objects,
+  memory and fog through any internal member it liked, and nothing kept Network from calling rule internals on a host. Two builds with the
+  same protocol number but different fields in a hero or a town joined, then misread each other's views.
+- **Sink**: `IViewSink` (Domain, Game) is the one way into a client's game: `ShowGame`, `ShowPlayer`, `AddHero` / `RemoveHero`,
+  `AddObject` / `RemoveObject`, `Remember` / `Forget`, `ReplaceRetiredHeroes`, `ReplaceCaravans`, `MarkExplored`, `SetSight`.
+  `GameSession.ViewSink` gives it only on a session made by `FollowingHost`; a host's session has none, so its game still changes only
+  through `Execute`. `GameView` / `PlayerView` (what a player is shown of the game and of a player) are public Domain records; the
+  host-side reads it needs, `FogOfWar.ExploredOf` and `SightOf`, are public. Domain shows its internals to the tests only.
+- **Schema**: `StateCodec.SchemaHash` hashes (SHA-256, first 8 bytes in hex) every Domain type with the keys and types of the fields the
+  codec writes, compiler-made types left out and generic types named without assembly versions, so two machines on different runtimes
+  agree. A client sends it in `JoinRequest.Schema` (`NetSerializer.Schema`); `GameHost` and `LobbyHost` refuse another protocol or
+  another schema (`NetSerializer.VersionRefusal`).
+- **Checked**: `NetworkAccessTests` (internals shown to the tests only; only a following session has a sink; the hash and a matching join;
+  a different or missing schema refused) and the LAN tests.

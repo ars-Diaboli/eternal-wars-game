@@ -198,9 +198,8 @@ public sealed class LobbyHost(string hostName) : IDisposable
 
     private bool Join(Peer peer, JoinRequest request)
     {
-        if (request.Protocol != NetSerializer.ProtocolVersion)
+        if (NetSerializer.VersionRefusal(request) is { } reason)
         {
-            var reason = $"The host plays protocol {NetSerializer.ProtocolVersion}, this game {request.Protocol}: use the same version of the game.";
             peer.Connection.Send(new JoinRefused(reason));
             peer.Connection.Close(reason);
             return false;

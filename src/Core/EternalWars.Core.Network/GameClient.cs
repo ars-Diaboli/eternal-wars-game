@@ -70,7 +70,7 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
     public TurnClock? Clock { get; private set; }
 
     /// <summary>Asks the host for <paramref name="seat"/>, or for any free colour.</summary>
-    public void Join(string name, PlayerId? seat = null) => connection.Send(new JoinRequest(NetSerializer.ProtocolVersion, name, seat));
+    public void Join(string name, PlayerId? seat = null) => connection.Send(new JoinRequest(NetSerializer.ProtocolVersion, name, seat, NetSerializer.Schema));
 
     /// <summary>Asks for an open colour of the lobby in place of the one the client has.</summary>
     public void TakeSeat(PlayerId seat)
@@ -223,7 +223,7 @@ public sealed class GameClient(INetConnection connection, ContentCatalogs? conte
             var bus = new EventBus();
             _session = GameSession.FollowingHost(state, bus);
             _session.Route = this;
-            _mirror = new ViewMirror(state, accepted.Seat, bus);
+            _mirror = new ViewMirror(state, _session.ViewSink!, accepted.Seat, bus);
             (Seat, Ground) = (accepted.Seat, accepted.Ground);
         }
         catch (Exception e) when (e is InvalidDataException or InvalidOperationException or ArgumentException or KeyNotFoundException)

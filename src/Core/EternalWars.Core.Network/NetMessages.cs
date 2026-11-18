@@ -17,7 +17,10 @@ public abstract record NetMessage;
 /// <param name="Protocol">The client's <see cref="NetSerializer.ProtocolVersion"/>; the host refuses another.</param>
 /// <param name="Name">The player's name, for the lobby, the chat and the host's messages.</param>
 /// <param name="Seat">The colour asked for, or null for any free one.</param>
-public sealed record JoinRequest(int Protocol, string Name, PlayerId? Seat = null) : NetMessage;
+/// <param name="Schema">
+/// The client's <see cref="NetSerializer.Schema"/>, the shape of the game's pieces its views carry; the host refuses another (ADR-218).
+/// </param>
+public sealed record JoinRequest(int Protocol, string Name, PlayerId? Seat = null, string? Schema = null) : NetMessage;
 
 /// <summary>
 /// The host gives the client <paramref name="Seat"/> and what of the game never changes and hides nothing (ADR-193): the ground of the map
@@ -135,7 +138,21 @@ public sealed record ClockUpdate(TurnClock Clock) : NetMessage;
 public static class NetSerializer
 {
     /// <summary>Raised whenever a message changes shape; a host and a client of different versions do not play together.</summary>
-    public const int ProtocolVersion = 6;
+    public const int ProtocolVersion = 7;
+
+    /// <summary>
+    /// A hash of every field the views carry (<see cref="StateCodec.SchemaHash"/>, ADR-218): two builds whose game pieces differ have different
+    /// ones, even under one <see cref="ProtocolVersion"/>, and do not play together.
+    /// </summary>
+    public static string Schema => StateCodec.SchemaHash;
+
+    /// <summary>Why a host turns <paramref name="request"/> away for its version: another protocol or another schema; null when they match.</summary>
+    internal static string? VersionRefusal(JoinRequest request) =>
+        request.Protocol != ProtocolVersion
+            ? $"The host plays protocol {ProtocolVersion}, this game {request.Protocol}: use the same version of the game."
+            : request.Schema != Schema
+                ? $"The host's game keeps its pieces differently (schema {Schema}, this game {request.Schema ?? "none"}): use the same build of the game."
+                : null;
 
     private static readonly IReadOnlyList<(Type Type, string Name)> MessageTypes =
     [

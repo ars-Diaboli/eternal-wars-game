@@ -12,14 +12,15 @@ namespace EternalWars.Core.Network;
 
 /// <summary>
 /// The client's side of its view (ADR-193): puts what the host sent (<see cref="ViewUpdate"/>) into the client's <see cref="GameState"/> and
-/// publishes the events the host let through, so the views on this computer follow the game as they do on one computer.
+/// publishes the events the host let through, so the views on this computer follow the game as they do on one computer. It changes the state
+/// only through the session's <see cref="IViewSink"/> (ADR-218).
 /// </summary>
 /// <remarks>
 /// The views know heroes from the events that bring them onto the map; a hero that comes into sight is announced with
 /// <see cref="HeroPlaced"/> before the host's events, one that goes out of it with <see cref="HeroRemoved"/> after them. An event naming a hero
 /// or an object the view does not hold (it was in sight only in between two updates) is left out, unless it takes one away.
 /// </remarks>
-internal sealed class ViewMirror(GameState state, PlayerId viewer, IEventBus bus)
+internal sealed class ViewMirror(GameState state, IViewSink sink, PlayerId viewer, IEventBus bus)
 {
     /// <summary>Events that tell of a hero leaving the map: the views take it away, whether or not it is still in the view.</summary>
     private static readonly HashSet<Type> Departures =
@@ -37,10 +38,10 @@ internal sealed class ViewMirror(GameState state, PlayerId viewer, IEventBus bus
             switch (change.Kind)
             {
                 case "game":
-                    _codec.Read<GameView>(change.Value)!.ApplyTo(state);
+                    sink.ShowGame(_codec.Read<GameView>(change.Value)!);
                     break;
                 case "player":
-                    _codec.Read<PlayerView>(change.Value)!.ApplyTo(state.GetPlayer(new PlayerId(change.Id)));
+                    sink.ShowPlayer(new PlayerId(change.Id), _codec.Read<PlayerView>(change.Value)!);
                     break;
                 case "hero":
                     PutHero(new HeroId(change.Id), change.Value is null ? null : _codec.Read<Hero>(change.Value), arrived, departed);
@@ -51,40 +52,30 @@ internal sealed class ViewMirror(GameState state, PlayerId viewer, IEventBus bus
                 case "memory":
                     if (change.Value is null)
                     {
-                        state.Memory.Forget(viewer, new MapObjectId(change.Id));
+                        sink.Forget(viewer, new MapObjectId(change.Id));
                     }
                     else
                     {
-                        state.Memory.Set(viewer, _codec.Read<KnownObject>(change.Value)!);
+                        sink.Remember(viewer, _codec.Read<KnownObject>(change.Value)!);
                     }
 
                     remembered.Add(new MapObjectId(change.Id));
                     break;
                 case "retired":
-                    state.RemoveRetiredHeroesOf(viewer);
-                    foreach (var hero in _codec.Read<List<Hero>>(change.Value) ?? [])
-                    {
-                        state.Retire(hero);
-                    }
-
+                    sink.ReplaceRetiredHeroes(viewer, _codec.Read<List<Hero>>(change.Value) ?? []);
                     break;
                 case "caravans":
-                    state.RemoveCaravansOf(viewer);
-                    foreach (var caravan in _codec.Read<List<Caravan>>(change.Value) ?? [])
-                    {
-                        state.AddCaravan(caravan);
-                    }
-
+                    sink.ReplaceCaravans(viewer, _codec.Read<List<Caravan>>(change.Value) ?? []);
                     break;
                 default:
                     throw new InvalidDataException($"The host sent a piece of the game this computer does not know: {change.Kind}.");
             }
         }
 
-        state.Fog.MarkExplored(viewer, update.Explored);
+        sink.MarkExplored(viewer, update.Explored);
         if (update.Sight is { } sight)
         {
-            state.Fog.SetSight(viewer, sight);
+            sink.SetSight(viewer, sight);
         }
 
         foreach (var hero in arrived)
@@ -119,7 +110,7 @@ internal sealed class ViewMirror(GameState state, PlayerId viewer, IEventBus bus
         {
             if (old is not null)
             {
-                state.RemoveHero(old);
+                sink.RemoveHero(old);
             }
 
             departed.Add(id);
@@ -130,7 +121,7 @@ internal sealed class ViewMirror(GameState state, PlayerId viewer, IEventBus bus
         }
         else
         {
-            state.AddHero(hero);
+            sink.AddHero(hero);
             arrived.Add(hero);
         }
     }
@@ -146,7 +137,7 @@ internal sealed class ViewMirror(GameState state, PlayerId viewer, IEventBus bus
             return;
         }
 
-        var index = old is not null ? state.RemoveObject(old) : -1;
+        var index = old is not null ? sink.RemoveObject(old) : -1;
         if (mapObject is null)
         {
             return;
@@ -157,11 +148,11 @@ internal sealed class ViewMirror(GameState state, PlayerId viewer, IEventBus bus
         {
             if (state.ObjectCellAt(position) is { } stale)
             {
-                state.RemoveObject(stale.Object);
+                sink.RemoveObject(stale.Object);
             }
         }
 
-        state.AddObject(mapObject, index >= 0 ? Math.Min(index, state.Objects.Count) : null);
+        sink.AddObject(mapObject, index >= 0 ? Math.Min(index, state.Objects.Count) : null);
     }
 
     /// <summary>Whether the view holds every hero and object the event names (or the event takes one away).</summary>
