@@ -42,7 +42,8 @@ namespace EternalWars.Tools.Sim;
 /// sim generate duel|file.ewtemplate.json --out map.ewmap.json [--size N] [--seed 1] [--players N]  (a generated map saved as a file, human players)
 /// sim selftest                      (CI: determinism and replay round trip)
 /// </code>
-/// Any command takes <c>--creatures path/to/creatures.csv</c> to use an edited creature table without rebuilding.
+/// Any command takes <c>--creatures path/to/creatures.csv</c> to use an edited creature table without rebuilding, and
+/// <c>--weight Name=value</c> (repeatable) to play the adventure AI with that <see cref="AiWeights"/> weight changed (game, maps, selftest).
 /// </summary>
 public static class Program
 {
@@ -55,6 +56,12 @@ public static class Program
     /// <summary>The creatures of <see cref="Content"/>.</summary>
     private static CreatureCatalog Catalog => Content.Creatures;
 
+    /// <summary>The adventure AI's weights: the defaults with the <c>--weight</c> options applied in order.</summary>
+    private static AiWeights Weights { get; set; } = AiWeights.Default;
+
+    /// <summary>The <c>--weight</c> options given, as Name=value.</summary>
+    private static List<string> WeightOptions { get; } = [];
+
     public static int Main(string[] args)
     {
         try
@@ -65,6 +72,7 @@ public static class Program
                 args = [.. args[..index], .. args[(index + 2)..]];
             }
 
+            args = TakeWeights(args);
             return args switch
             {
                 ["battle", var attacker, var defender, .. var rest] => Battle(ParseArmy(attacker), ParseArmy(defender), Option(rest, "--runs", 100), (ulong)Option(rest, "--seed", 1)),
@@ -259,8 +267,9 @@ public static class Program
 
     private static int Usage()
     {
-        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] [--fog refog] [--profile] | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
+        Console.Error.WriteLine("usage: sim battle <army> <army> [--runs N] [--seed S] | record <file> [--days D] [--seed S] | replay <file> | game [--map towns|demo|file | --template T [--size N] [--players N]] [--days D] [--seed S] [--runs N] [--record F] [--complexity C] [--fog refog] [--profile] [--weight Name=value]... | maps [--template T] [--maps N] [--days D] [--seed S] | towns [--runs N] [--upgraded] | ai [--runs N] [--upgraded] [--level L] | creatures [--write F] | lines [--runs N] [--upgraded] | layout <template> [--size N] [--seed S] [--rects] [--terrain] [--seeds N] | generate <template> --out <file> [--size N] [--seed S] [--players N] | selftest");
         Console.Error.WriteLine("       [--creatures table.csv] with any command uses that creature table");
+        Console.Error.WriteLine($"       [--weight Name=value]... plays the adventure AI with those weights ({string.Join(", ", AiWeights.Names)})");
         Console.Error.WriteLine("       army = creature:count[,creature:count...], e.g. haven.pikeman:20,haven.archer:10");
         return 2;
     }
@@ -519,6 +528,11 @@ public static class Program
     {
         var wins = new Dictionary<string, int>();
         var refusedTotal = 0;
+        if (WeightOptions.Count > 0)
+        {
+            Console.WriteLine($"AI weights: {string.Join(", ", WeightOptions)}");
+        }
+
         for (var run = 0; run < runs; run++)
         {
             var game = make(seed + (ulong)run);
@@ -652,7 +666,7 @@ public static class Program
     private static (GameSession Session, AdventureAi Ai) PlayAiGame(SimGame game, int days, FightLog? fights = null, TurnProfile? turns = null)
     {
         var session = new GameSession(game.State);
-        var ai = new AdventureAi(session, controlHumanSlots: true);
+        var ai = new AdventureAi(session, controlHumanSlots: true, Weights);
         fights?.Attach(session);
         turns?.Attach(session);
         if (Environment.GetEnvironmentVariable("EW_SIM_TRACE") is not null)
@@ -898,6 +912,33 @@ public static class Program
             return new CreatureStack(creature, count);
         }).ToArray();
         return stacks.Length is > 0 and <= Army.SlotCount ? Army.Of(stacks) : throw new FormatException("An army has 1 to 7 stacks.");
+    }
+
+    /// <summary>
+    /// Takes every <c>--weight Name=value</c> out of the arguments into <see cref="Weights"/> (<see cref="AiWeights.With(string)"/>: an unknown
+    /// name or a bad value is an error) and returns the rest.
+    /// </summary>
+    private static string[] TakeWeights(string[] args)
+    {
+        var rest = new List<string>();
+        for (var i = 0; i < args.Length; i++)
+        {
+            if (args[i] != "--weight")
+            {
+                rest.Add(args[i]);
+                continue;
+            }
+
+            if (i + 1 >= args.Length)
+            {
+                throw new FormatException("--weight takes Name=value.");
+            }
+
+            Weights = Weights.With(args[++i]);
+            WeightOptions.Add(args[i]);
+        }
+
+        return [.. rest];
     }
 
     private static string? OptionText(string[] args, string name)

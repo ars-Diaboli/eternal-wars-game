@@ -2,6 +2,7 @@ using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Domain.Game.Conditions;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Players;
 using EternalWars.Core.Domain.Towns;
@@ -111,7 +112,7 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         {
             if (rules.Victory.Where(c => c.Player is null || c.Player == player.Id).FirstOrDefault(c => HoldsFor(c, player)) is { } won)
             {
-                End(player.Team, ScenarioRules.Achieved(state, player, won, won.Kind == ConditionKind.ReleaseHero ? PrisonerOf(won) : HeroNameOf(won)));
+                End(player.Team, ScenarioRules.Achieved(state, player, won, HeroNameOf(won)));
                 return;
             }
         }
@@ -156,37 +157,16 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         }
     }
 
-    private bool HoldsFor(ScenarioCondition c, Player player) => c.Kind switch
-    {
-        ConditionKind.CaptureTown => c.Town is { } id && state.FindObject(id) is Town { Owner: { } owner }
-                                     && (owner == player.Id || state.AreAllies(owner, player.Id)),
-        ConditionKind.DefeatHero => c.Hero is { } hero && state.Tracking.Heroes.TryGetValue(hero, out var known)
-                                    && state.Heroes.All(h => h.Id != hero) && state.AreEnemies(known.Owner, player.Id),
-        ConditionKind.GatherResources => c.Amount > 0 && player.Resources[c.Resource] >= c.Amount,
-        ConditionKind.SurviveUntilDay => state.Date.AbsoluteDay >= c.Day,
-        ConditionKind.CaptureObject => c.Target is { } id && state.FindObject(id) is IFlaggable { Owner: { } owner }
-                                       && (owner == player.Id || state.AreAllies(owner, player.Id)),
-        ConditionKind.ObtainArtifact => c.Artifact is { } artifact
-                                        && state.Heroes.Any(h => h.Artifacts.Has(artifact) && (h.Owner == player.Id || state.AreAllies(h.Owner, player.Id))),
-        ConditionKind.ReleaseHero => c.Target is { } prison && state.FindObject(prison) is null && state.Tracking.Prisoners.TryGetValue(prison, out var prisoner)
-                                     && state.Heroes.Any(h => h.Definition == prisoner && (h.Owner == player.Id || state.AreAllies(h.Owner, player.Id))),
-        _ => false,
-    };
+    /// <summary>Whether the victory condition holds for the player (its kind's handler, <see cref="ScenarioConditionHandlers"/>).</summary>
+    private bool HoldsFor(ScenarioCondition c, Player player) => ScenarioConditionHandlers.Find(c.Kind)?.WonBy(state, c, player) ?? false;
 
     private string? DefeatReason(Player player)
     {
         foreach (var c in state.Rules.Defeat)
         {
-            var applies = c.Player == player.Id || (c.Player is null && c.Kind == ConditionKind.TimeLimit);
-            var holds = applies && c.Kind switch
-            {
-                ConditionKind.LoseTown => c.Town is { } id && state.FindObject(id) is Town town && town.Owner != player.Id,
-                ConditionKind.LoseHero => c.Hero is { } hero && state.Tracking.Heroes.ContainsKey(hero) && state.Heroes.All(h => h.Id != hero),
-                ConditionKind.TimeLimit => state.Date.AbsoluteDay > c.Day,
-                ConditionKind.LoseArtifact => c.Artifact is { } artifact && !state.AllHeroesOf(player.Id).Any(h => h.Artifacts.Has(artifact)),
-                _ => false,
-            };
-            if (holds)
+            var handler = ScenarioConditionHandlers.Find(c.Kind);
+            var applies = c.Player == player.Id || (c.Player is null && handler is { DefeatsEveryone: true });
+            if (applies && handler is not null && handler.LostBy(state, c, player))
             {
                 return ScenarioRules.Lost(state, c, HeroNameOf(c));
             }
@@ -239,7 +219,8 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         }
     }
 
-    private string? HeroNameOf(ScenarioCondition c) => c.Hero is { } hero && state.Tracking.Heroes.TryGetValue(hero, out var known) ? known.Name : null;
+    /// <summary>The hero the end's reason tells of (<see cref="IScenarioConditionHandler.HeroName"/>).</summary>
+    private string? HeroNameOf(ScenarioCondition c) => ScenarioConditionHandlers.Find(c.Kind)?.HeroName(state, c);
 
     /// <summary>
     /// Remembers who sits in each prison a condition names: freeing the hero removes the prison, and a prisoner left open by the map is drawn
@@ -261,9 +242,6 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
             state.Tracking = state.Tracking with { Prisoners = prisoners };
         }
     }
-
-    private string? PrisonerOf(ScenarioCondition c) =>
-        c.Target is { } id && state.Tracking.Prisoners.TryGetValue(id, out var hero) && state.HeroRoster.Contains(hero) ? state.HeroRoster.Get(hero).Name : null;
 
     /// <summary>A defeated player leaves: its heroes are removed, its towns and mines turn neutral.</summary>
     private void Defeat(Player player, string reason)

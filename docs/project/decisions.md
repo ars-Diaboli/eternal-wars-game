@@ -3020,3 +3020,54 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   another schema (`NetSerializer.VersionRefusal`).
 - **Checked**: `NetworkAccessTests` (internals shown to the tests only; only a following session has a sink; the hash and a matching join;
   a different or missing schema refused) and the LAN tests.
+
+### ADR-219: Per-kind rules are handler classes in registries (ADR-120, 2026-11-19)
+**Status**: implemented. No rule, save, map format or protocol change.
+
+- **Why**: rules that differ by kind lived in long switches: `SpellEffect.Parse` (one method, 58 cases), the `MapEventService` action
+  switch (about 25 types, plus the message-reward and place switches), `AdventureMagic.Cast`, `ScenarioCondition.Kind` (switched on in
+  six places) and `MapValidator`. A new kind meant finding every switch.
+- **Pattern** (as `SpellEffectHandlers`): one small class per kind behind an interface, a base class with the defaults, a static registry
+  (`All`, `For`) that throws on a kind it does not know, and a test per registry that fails while any kind is missing or doubled.
+  - Battle effect grammar: `Magic/Parsing/SpellEffectHeads` (per `SpellEffectKind`) and `SpellEffectWords` (the keyword table; a
+    kind-bound word comes before the general one); `SpellEffectReader` keeps the cross-word checks.
+  - Map event actions: `MapEvents/Actions/MapEventActionHandlers`, keyed by action type (`Apply`, `Fix`, `Describe`, `Place`).
+    `AdvanceQuestAction` stays nested in `MapEventService` so its saved type name does not change.
+  - Adventure spells: `Magic/AdventureSpells/AdventureSpellHandlers`, keyed by spell id; `AdventureCast` carries the cast.
+  - Scenario conditions: `Game/Conditions/ScenarioConditionHandlers`, one class per kind with what it means for the game's end, its
+    sentences and the validator's issue. A kind the enum does not define (from a map file) keeps the old fallbacks.
+  - Map checks: `Editing/Checks/MapChecks.All`, run in a fixed order; `MapValidator.Validate` runs them.
+- **Stays a switch**: `MapConverter.ToDocument` (Core.Data cannot see the handlers; it picks the stored fields) and the editor's
+  `ConditionsPanel` (Godot UI).
+- **Checked**: `SpellEffectParsersTests`, `MapEventActionHandlersTests`, `AdventureSpellHandlersTests`, `ScenarioConditionHandlersTests`,
+  `MapChecksTests`; messages, issue order, event order and the sim digests are unchanged.
+
+### ADR-220: The adventure AI is a coordinator of parts, with tunable weights (ADR-059, ADR-119, 2026-11-19)
+**Status**: implemented. No rule change; the AI plays as before.
+
+- **Why**: `AdventureAi` had grown to about 2,500 lines in one class, and the numbers it weighs with were literals spread through it.
+- **Parts** (internal, in `AI/`), sharing an `AiContext` (the session, the estimator, the weights, the commands issued, the turn's main hero
+  and claimed targets, the army and resource measures):
+  - `ThreatMap`: enemy heroes' reach and danger, cached while the command log does not grow.
+  - `TargetValuer`: values and picks a hero's targets (map events and quests included), with the route cost cache.
+  - `TownManager`: building, recruiting, garrisons, caravans, marketplace trades and the arena's town plans.
+  - `DecisionResponder`: answers pending decisions (map event questions, hero meetings, level-ups).
+  - `AdventureAi` keeps the turn and hero loops, `Explain`, spells and the arena's gathering into the champion.
+- **Weights**: `AiWeights` (public record, 32 numbers; `Default` is the shipped AI). `AdventureAi(session, controlHumanSlots, weights)`.
+  `AiWeights.With("Name=value")` sets one by name, strictly (unknown name, bad value, NaN refused); the sim takes
+  `--weight Name=value`, repeatable. Per-object values and the safety caps stay constants.
+- **Checked**: `AdventureAiPartsTests`; the sim digests are unchanged (no draw, loop or tie-break moved).
+
+### ADR-221: `GameHost` coordinates seats, pause, chat and the day played again (ADR-192, ADR-195, ADR-197, 2026-11-19)
+**Status**: implemented. No protocol change.
+
+- **Why**: `GameHost` held the seats, the pause, the chat, the replay of a conflicting simultaneous day and the session routing in one class.
+- **Parts** (internal, Core.Network):
+  - `SeatManager`: the remote colours, the client links (`HostPeer`), the colours whose player left, choosing a colour on a join, the limit
+    on links waiting to join.
+  - `PausePolicy`: which colours hold the game up, the refusal while paused, the pause last sent, and the hand-over that goes through it.
+  - `ChatRelay`: cleans players' lines and sends every line to the clients with the game and to the host's screen.
+  - `SimultaneousDayRewinder`: no state; replays the host's record up to `GameSession.SimultaneousDayStart` plus a `PlayTurnByTurnCommand`.
+- `GameHost` keeps the session, the command route, the turn clock, the views, record requests and the order in which `Poll` calls the
+  parts. Its public API, wire messages, refusal texts and order of sends are unchanged.
+- **Checked**: `SeatManagerTests`, `PausePolicyTests`, `ChatRelayTests`, `SimultaneousDayRewinderTests` and the LAN tests.

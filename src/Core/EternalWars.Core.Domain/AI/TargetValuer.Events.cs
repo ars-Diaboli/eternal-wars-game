@@ -1,6 +1,4 @@
 using EternalWars.Core.Domain.Armies;
-using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
 using EternalWars.Core.Domain.MapEvents;
 using EternalWars.Core.Domain.Objects;
@@ -9,53 +7,20 @@ using EternalWars.Core.Domain.Towns;
 namespace EternalWars.Core.Domain.AI;
 
 /// <summary>
-/// The AI and the map events (EVT-6): it answers a question by what each answer is worth, does a quest stage when what it gives is worth more than
-/// what it takes, and treats Quest Guards and Gates as obstacles until its hero meets them. It does not look ahead at events: event cells, player
-/// and town events and a Pandora's Box's event are worth nothing to it until they run. Random numbers count as their average, so the AI still
-/// draws none.
+/// The worth of map events (EVT-6): what a quest stage or an answer gives against what it takes, by the AI's usual values. The AI does not look
+/// ahead at events: event cells, player and town events and a Pandora's Box's event are worth nothing to it until they run. Random numbers count
+/// as their average, so the AI still draws none.
 /// </summary>
-public sealed partial class AdventureAi
+internal sealed partial class TargetValuer
 {
     /// <summary>How deep the worth of a "run another event" is followed.</summary>
     private const int EventWorthDepth = 4;
-
-    /// <summary>What getting a Quest Guard out of the way is worth on its own (more when unexplored ground is behind it).</summary>
-    private const double GuardOpened = 500;
-
-    /// <summary>The answer worth the most to the player (the first of equals), counting a quest's completion; 0 when the AI cannot see the question.</summary>
-    private int BestAnswer()
-    {
-        if (session.MapEvents.PendingQuestion is not { } question)
-        {
-            return 0;
-        }
-
-        var scope = new EventScope(question.Player, question.Hero is { } id ? _state.Heroes.FirstOrDefault(h => h.Id == id) : null, question.Town);
-        var best = 0;
-        var bestWorth = double.MinValue;
-        for (var i = 0; i < question.Answers.Count; i++)
-        {
-            var answer = question.Answers[i];
-            var worth = Worth(answer.Actions, scope, 0).Value;
-            if (MapEventService.CompletedSite(answer) is { } site && _state.FindObject(site) is QuestSite { Kind: MapObjectKind.QuestGuard } guard && scope.Player is { } player)
-            {
-                worth += GuardOpened + OpensTheWay(player, guard.VisitPosition);
-            }
-
-            if (worth > bestWorth)
-            {
-                (best, bestWorth) = (i, worth);
-            }
-        }
-
-        return best;
-    }
 
     /// <summary>
     /// What doing the quest object's current stage is worth to the hero, or 0 when it does not meet it (or it is a gate, which it simply walks
     /// through once it does): the stage's actions (what it takes, then its rewards), and for a guard the way it opens.
     /// </summary>
-    private double QuestWorth(Hero hero, QuestSite site)
+    public double QuestWorth(Hero hero, QuestSite site)
     {
         if (site.Kind == MapObjectKind.QuestGate || QuestRules.Current(_state, site) is not { } current || !QuestRules.Meets(_state, hero, site))
         {
@@ -63,11 +28,11 @@ public sealed partial class AdventureAi
         }
 
         var worth = Worth(current.Stage.Actions, new EventScope(hero.Owner, hero, null), 0).Value;
-        return site.Kind == MapObjectKind.QuestGuard ? worth + GuardOpened + OpensTheWay(hero.Owner, site.VisitPosition) : worth;
+        return site.Kind == MapObjectKind.QuestGuard ? worth + _weights.GuardOpened + OpensTheWay(hero.Owner, site.VisitPosition) : worth;
     }
 
     /// <summary>The actions' worth in gold, and whether they end the event (a stop, or a battle the hero would lose).</summary>
-    private (double Value, bool Stops) Worth(IReadOnlyList<EventAction> actions, EventScope scope, int depth)
+    public (double Value, bool Stops) Worth(IReadOnlyList<EventAction> actions, EventScope scope, int depth)
     {
         var total = 0.0;
         foreach (var action in actions)
@@ -121,9 +86,9 @@ public sealed partial class AdventureAi
                 }
 
                 var enemy = Army.Of([.. fight.Army.Take(Army.SlotCount)]);
-                return _estimator.Fight(hero, enemy).IsSafe(MonsterLoss)
-                    ? (0.35 * ArmyPower(enemy), false)
-                    : (-(ArmyPower(hero.Army) + 5000.0), true); // the hero would be lost
+                return _ai.Estimator.Fight(hero, enemy).IsSafe(_weights.MonsterLoss)
+                    ? (_weights.GuardArmyShare * _ai.ArmyPower(enemy), false)
+                    : (-(_ai.ArmyPower(hero.Army) + 5000.0), true); // the hero would be lost
         }
 
         return (Gain(action, scope, hero, town), false);
@@ -138,8 +103,8 @@ public sealed partial class AdventureAi
         return action switch
         {
             ResourceAction resource when scope.Player is { } player => Amount(resource.Amount) is var amount && amount >= 0
-                ? amount * GoldValue(resource.Resource, 1)
-                : -Math.Min(-amount, _state.GetPlayer(player).Resources[resource.Resource]) * GoldValue(resource.Resource, 1),
+                ? amount * AiContext.GoldValue(resource.Resource, 1)
+                : -Math.Min(-amount, _state.GetPlayer(player).Resources[resource.Resource]) * AiContext.GoldValue(resource.Resource, 1),
             ExperienceAction experience when hero is not null => Math.Max(0, Amount(experience.Amount)),
             PrimaryStatAction stat when hero is not null => 750 * Math.Max(0, Amount(stat.Amount)),
             SkillAction skill when hero is not null && BuiltInSkills.Contains(skill.Skill) && BuiltInSkills.Resolve(skill.Skill) is var id && hero.Skills.CanRaise(id) =>

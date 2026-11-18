@@ -5,7 +5,8 @@ namespace EternalWars.Core.Domain.Battles.Spells;
 /// <summary>
 /// The registry of battle spell effects: the one <see cref="ISpellEffectHandler"/> of each <see cref="SpellEffectKind"/>. The aim checks
 /// (<see cref="BattleMagic.CastRefusal"/>), the resolver and the battle AI ask it instead of switching on the kind, so a new effect kind is its
-/// parse in <see cref="SpellEffect.Parse"/> plus one handler class registered here (a test checks every kind has exactly one).
+/// head in <see cref="Magic.Parsing.SpellEffectHeads"/> (and any new words in <see cref="Magic.Parsing.SpellEffectWords"/>) plus one handler class
+/// registered here (a test checks every kind has exactly one).
 /// </summary>
 internal static class SpellEffectHandlers
 {

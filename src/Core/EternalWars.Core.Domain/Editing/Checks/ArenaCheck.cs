@@ -5,17 +5,17 @@ using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 
-namespace EternalWars.Core.Domain.Editing;
+namespace EternalWars.Core.Domain.Editing.Checks;
 
-public static partial class MapValidator
+/// <summary>
+/// An arena map (ADR-097, ARN-2 e): without a combat place it is faulty (an error); warnings when two enemies can meet on day 1 (their heroes
+/// reach the same ground, <see cref="DayOneReach"/>), for map events that do something only on a later day (day 2 is the battle, and there is
+/// no turn after it), for victory and defeat conditions (the arena ignores them) and when fewer than two teams start with a hero or a town. A
+/// combat place on a map without the switch does nothing.
+/// </summary>
+internal sealed class ArenaCheck : IMapCheck
 {
-    /// <summary>
-    /// An arena map (ADR-097, ARN-2 e): without a combat place it is faulty (an error); warnings when two enemies can meet on day 1 (their heroes
-    /// reach the same ground, <see cref="DayOneReach"/>), for map events that do something only on a later day (day 2 is the battle, and there is
-    /// no turn after it), for victory and defeat conditions (the arena ignores them) and when fewer than two teams start with a hero or a town. A
-    /// combat place on a map without the switch does nothing.
-    /// </summary>
-    private static IEnumerable<MapIssue> ValidateArena(GameState scenario)
+    public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var places = scenario.ObjectsOf<CombatPlace>().OrderBy(p => p.Id.Value).ToList();
         if (!scenario.Rules.Arena)

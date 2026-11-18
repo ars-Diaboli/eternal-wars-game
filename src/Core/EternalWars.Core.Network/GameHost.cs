@@ -31,25 +31,21 @@ namespace EternalWars.Core.Network;
 /// (<see cref="SessionReplaced"/>), whose view every client gets again.
 /// </para>
 /// </summary>
-/// <remarks>Everything happens on the caller's thread in <see cref="Poll"/> (the game app calls it once a frame).</remarks>
+/// <remarks>
+/// Everything happens on the caller's thread in <see cref="Poll"/> (the game app calls it once a frame). The host runs the session, routes its
+/// commands and sends the views; who plays where (<see cref="SeatManager"/>), the pause (<see cref="PausePolicy"/>), the chat
+/// (<see cref="ChatRelay"/>) and the day played again (<see cref="SimultaneousDayRewinder"/>) are its parts.
+/// </remarks>
 public sealed class GameHost : ICommandRoute, IDisposable
 {
-    private readonly List<PlayerId> _remoteSeats;
-    private readonly List<Peer> _peers = [];
+    private readonly SeatManager _seats;
+    private readonly PausePolicy _pause;
+    private readonly ChatRelay _chat;
     private GameSession _session;
     private IDisposable _subscription;
 
-    /// <summary>The colours whose player left during the game, with why, until a player joins them again or the computer takes them over.</summary>
-    private readonly Dictionary<PlayerId, string> _dropped = [];
-
     /// <summary>Set while a client's command runs: the route lets that one through.</summary>
     private bool _runningRemote;
-
-    /// <summary>Set while the host hands a colour to the computer: the route lets that command through the pause.</summary>
-    private bool _handingOver;
-
-    /// <summary>The pause as the clients were last told it.</summary>
-    private string? _pauseSent;
 
     /// <summary>The turn clock last sent to the clients.</summary>
     private TurnClock? _clockSent;
@@ -67,15 +63,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
     {
         _session = session;
         HostName = hostName;
-        _remoteSeats = [.. remoteSeats.Distinct()];
-        foreach (var seat in _remoteSeats)
-        {
-            if (!session.State.HasPlayer(seat) || !session.State.GetPlayer(seat).IsHuman)
-            {
-                throw new ArgumentException($"{seat} is not a human player of this game.", nameof(remoteSeats));
-            }
-        }
-
+        _seats = new SeatManager(session.State, remoteSeats);
+        _pause = new PausePolicy(_seats);
+        _chat = new ChatRelay(_seats);
         session.Route = this;
         _subscription = session.Events.Subscribe<IEvent>(Capture);
     }
@@ -93,10 +83,18 @@ public sealed class GameHost : ICommandRoute, IDisposable
     public event Action<GameSession>? SessionReplaced;
 
     /// <summary>The game was paused or goes on again (<see cref="Waiting"/>).</summary>
-    public event Action? PauseChanged;
+    public event Action? PauseChanged
+    {
+        add => _pause.Changed += value;
+        remove => _pause.Changed -= value;
+    }
 
     /// <summary>A line of the chat (who wrote it, empty for the game's own lines; the text), the host's own included.</summary>
-    public event Action<string, string>? ChatReceived;
+    public event Action<string, string>? ChatReceived
+    {
+        add => _chat.Received += value;
+        remove => _chat.Received -= value;
+    }
 
     /// <summary>The host's player, in the chat.</summary>
     public string HostName { get; }
@@ -111,56 +109,25 @@ public sealed class GameHost : ICommandRoute, IDisposable
     public Func<string?, GameRecordDocument>? RecordOf { get; set; }
 
     /// <summary>The human colours played on other computers, taken or not.</summary>
-    public IReadOnlyList<PlayerId> RemoteSeats => _remoteSeats;
+    public IReadOnlyList<PlayerId> RemoteSeats => _seats.RemoteSeats;
 
     /// <summary>Whether <paramref name="player"/> plays on another computer.</summary>
-    public bool IsRemote(PlayerId player) => _remoteSeats.Contains(player);
+    public bool IsRemote(PlayerId player) => _seats.IsRemote(player);
 
     /// <summary>The name of the client playing <paramref name="seat"/>; null while nobody has joined it.</summary>
-    public string? PlayerAt(PlayerId seat) => _peers.FirstOrDefault(p => p.Seat == seat)?.Name;
+    public string? PlayerAt(PlayerId seat) => _seats.PlayerAt(seat);
 
     /// <summary>
     /// The remote colours that hold the game up, with why: those whose player left, and one nobody has joined whose turn it is or that fights the
     /// battle. The game is paused while there is one.
     /// </summary>
-    public IReadOnlyList<(PlayerId Seat, string Reason)> Waiting
-    {
-        get
-        {
-            var state = _session.State;
-            if (!state.IsStarted || state.IsOver)
-            {
-                return [];
-            }
-
-            var sides = state.Battle is { } battle
-                ? new[] { battle.Attacker, battle.Defender }.Where(p => !p.IsComputer).Select(p => p.Owner).ToList()
-                : [];
-            var waiting = new List<(PlayerId, string)>();
-            foreach (var seat in _remoteSeats.Where(s => PlayerAt(s) is null && !state.GetPlayer(s).IsDefeated))
-            {
-                if (_dropped.TryGetValue(seat, out var left))
-                {
-                    waiting.Add((seat, left));
-                }
-                else if (state.CurrentPlayer.Id == seat || sides.Contains(seat))
-                {
-                    waiting.Add((seat, $"Nobody plays {state.GetPlayer(seat).Name} yet."));
-                }
-            }
-
-            return waiting;
-        }
-    }
+    public IReadOnlyList<(PlayerId Seat, string Reason)> Waiting => _pause.Waiting(_session.State);
 
     /// <summary>Whether the game is paused for a colour without a player (<see cref="Waiting"/>).</summary>
     public bool IsPaused => Waiting.Count > 0;
 
     /// <summary>Why the game is paused, in words, as the players see it; null while it goes on.</summary>
-    public string? PauseReason => Waiting is { Count: > 0 } waiting
-        ? $"{string.Join(" ", waiting.Select(w => w.Reason))} The game waits for a player to join "
-          + $"{string.Join(", ", waiting.Select(w => _session.State.GetPlayer(w.Seat).Name))}, or for the host to let the computer play it."
-        : null;
+    public string? PauseReason => _pause.Reason(_session.State);
 
     /// <summary>
     /// The computer plays <paramref name="seat"/>, a remote colour nobody plays now, from here on (ADR-195): it is no longer open to join, and the
@@ -178,23 +145,12 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return CommandResult.Rejected($"{name} plays {_session.State.GetPlayer(seat).Name}.");
         }
 
-        CommandResult result;
-        _handingOver = true;
-        try
-        {
-            result = _session.Execute(new HandToComputerCommand(seat));
-        }
-        finally
-        {
-            _handingOver = false;
-        }
-
+        var result = _pause.HandOver(() => _session.Execute(new HandToComputerCommand(seat)));
         if (result.IsAccepted)
         {
-            _remoteSeats.Remove(seat);
-            _dropped.Remove(seat);
-            Tell("", $"The computer plays {_session.State.GetPlayer(seat).Name}.");
-            SendPause();
+            _seats.HandToComputer(seat);
+            _chat.Announce($"The computer plays {_session.State.GetPlayer(seat).Name}.");
+            _pause.Send(_session.State);
         }
 
         return result;
@@ -226,7 +182,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
 
         _clockSent = clock;
-        foreach (var peer in _peers.Where(p => p.Feed is not null && !p.Connection.IsClosed))
+        foreach (var peer in _seats.Seated)
         {
             peer.Connection.Send(new ClockUpdate(clock));
         }
@@ -239,35 +195,15 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// Takes a new link; it gets a seat once its <see cref="JoinRequest"/> arrives, which must come within <see cref="NetLimits.JoinTimeout"/>.
     /// Turned away while <see cref="NetLimits.MaxUnjoined"/> other links wait to join.
     /// </summary>
-    public void Accept(INetConnection connection)
-    {
-        if (NetLimits.AdmitNew(connection, _peers.Count(p => p.Seat is null && !p.Connection.IsClosed)))
-        {
-            _peers.Add(new Peer(connection) { Arrived = Time.GetUtcNow() });
-        }
-    }
+    public void Accept(INetConnection connection) => _seats.Accept(connection, Time.GetUtcNow());
 
     /// <summary>
     /// Seats a client that took <paramref name="seat"/> in the lobby; it gets the game at the first <see cref="Poll"/> once the game has started.
     /// </summary>
-    internal void Admit(INetConnection connection, PlayerId seat, string name)
-    {
-        if (!IsRemote(seat) || PlayerAt(seat) is not null)
-        {
-            throw new ArgumentException($"{seat} is not a free remote colour of this game.", nameof(seat));
-        }
-
-        _peers.Add(new Peer(connection) { Seat = seat, Name = name });
-    }
+    internal void Admit(INetConnection connection, PlayerId seat, string name) => _seats.Admit(connection, seat, name);
 
     /// <summary>The host's player writes in the chat.</summary>
-    public void Say(string text)
-    {
-        if (ChatText.Clean(text) is { } line)
-        {
-            Tell(HostName, line);
-        }
-    }
+    public void Say(string text) => _chat.Say(HostName, text);
 
     /// <summary>Handles what the clients have sent (joins, commands) and drops the links that went down.</summary>
     public void Poll()
@@ -275,14 +211,14 @@ public sealed class GameHost : ICommandRoute, IDisposable
         PlayDayAgainIfConflicted();
         if (_session.State.IsStarted)
         {
-            foreach (var peer in _peers.Where(p => p is { Seat: not null, Feed: null } && !p.Connection.IsClosed).ToList())
+            foreach (var peer in _seats.Admitted.ToList())
             {
                 Seat(peer, peer.Seat!.Value, peer.Name);
             }
         }
 
         var now = Time.GetUtcNow();
-        foreach (var peer in _peers.ToList())
+        foreach (var peer in _seats.Peers.ToList())
         {
             for (var taken = 0; taken < NetLimits.MaxMessagesPerPoll && !peer.Connection.IsClosed && peer.Connection.TryReceive(out var message); taken++)
             {
@@ -294,47 +230,34 @@ public sealed class GameHost : ICommandRoute, IDisposable
                 NetLimits.CloseIfLate(peer.Connection, peer.Arrived, now);
             }
 
-            if (peer.Connection.IsClosed)
+            if (peer.Connection.IsClosed && _seats.Forget(peer, _session.State) is { } left)
             {
-                _peers.Remove(peer);
-                if (peer is { Seat: { } seat, Feed: not null })
-                {
-                    var why = peer.Connection.CloseReason ?? "The connection closed.";
-                    var line = $"{peer.Name} ({_session.State.GetPlayer(seat).Name}) left the game: {why.TrimEnd('.')}.";
-                    _dropped[seat] = line;
-                    Tell("", line);
-                    Left?.Invoke(seat, peer.Name, why);
-                }
+                _chat.Announce(left.Line);
+                Left?.Invoke(left.Seat, left.Name, left.Why);
             }
         }
 
         PlayDayAgainIfConflicted();
         SendViews();
-        SendPause();
+        _pause.Send(_session.State);
     }
 
     /// <summary>
-    /// A simultaneous day's conflict (ADR-197): the game goes back to the day's start and plays it again turn by turn, from the host's record. The
-    /// clients first get what happened up to the conflict, then the new game's view; everyone is told why.
+    /// A simultaneous day's conflict (ADR-197): the game goes back to the day's start and plays it again turn by turn, from the host's record
+    /// (<see cref="SimultaneousDayRewinder"/>). The clients first get what happened up to the conflict, then the new game's view; everyone is told
+    /// why.
     /// </summary>
     private void PlayDayAgainIfConflicted()
     {
-        if (_session.State.SimultaneousConflict is not { } reason || RecordOf is null)
+        if (SimultaneousDayRewinder.PlayDayAgain(_session, RecordOf) is not { } day)
         {
             return;
         }
 
-        var record = RecordOf(null);
-        var state = _session.State;
-        var by = state.Options.HostPlayer ?? state.Players.First(p => p.IsHuman).Id;
-        var again = GameReplay.Replay(
-            record with { Commands = [.. record.Commands.Take(_session.SimultaneousDayStart), new PlayTurnByTurnCommand(by, reason)], FinalDigest = null },
-            state.Content);
-
         SendViews();
-        Replace(again);
-        Tell("", $"{reason} The day is played again, turn by turn, and so is every day after it.");
-        SessionReplaced?.Invoke(again);
+        Replace(day.Again);
+        _chat.Announce(day.Announcement);
+        SessionReplaced?.Invoke(day.Again);
     }
 
     /// <summary>
@@ -349,14 +272,14 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return CommandResult.Rejected("The game is not over.");
         }
 
-        if (!next.State.IsStarted || _remoteSeats.Any(s => !next.State.HasPlayer(s) || !next.State.GetPlayer(s).IsHuman))
+        if (!next.State.IsStarted || _seats.RemoteSeats.Any(s => !next.State.HasPlayer(s) || !next.State.GetPlayer(s).IsHuman))
         {
             return CommandResult.Rejected("The new game must be started, with the same colours played on other computers.");
         }
 
         SendViews();
         Replace(next);
-        Tell("", $"{HostName} starts the game again.");
+        _chat.Announce($"{HostName} starts the game again.");
         return CommandResult.Accepted();
     }
 
@@ -370,7 +293,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
         _subscription = next.Events.Subscribe<IEvent>(Capture);
         _battleSides = [];
         _clockSent = null;
-        foreach (var peer in _peers.Where(p => p is { Seat: not null, Feed: not null } && !p.Connection.IsClosed))
+        foreach (var peer in _seats.Seated)
         {
             SendGame(peer, peer.Seat!.Value);
         }
@@ -382,14 +305,14 @@ public sealed class GameHost : ICommandRoute, IDisposable
     /// </summary>
     public CommandResult? Route(GameCommand command)
     {
-        if (_handingOver)
+        if (_pause.IsHandingOver)
         {
             return null;
         }
 
-        if (Waiting is { Count: > 0 } waiting)
+        if (_pause.Refusal(_session.State) is { } paused)
         {
-            return CommandResult.Rejected($"The game is paused: waiting for {string.Join(", ", waiting.Select(w => _session.State.GetPlayer(w.Seat).Name))}.");
+            return paused;
         }
 
         if (command is AutoResolveBattleCommand && IsFoughtBetweenComputers())
@@ -415,15 +338,10 @@ public sealed class GameHost : ICommandRoute, IDisposable
             _session.Route = null;
         }
 
-        foreach (var peer in _peers)
-        {
-            peer.Connection.Close("The host has left the game.");
-        }
-
-        _peers.Clear();
+        _seats.CloseAll("The host has left the game.");
     }
 
-    private void Handle(Peer peer, NetMessage message)
+    private void Handle(HostPeer peer, NetMessage message)
     {
         switch (message)
         {
@@ -434,11 +352,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
                 Run(peer, seat, send);
                 break;
             case ChatSay say when peer.Seat is not null:
-                if (ChatText.Clean(say.Text) is { } line)
-                {
-                    Tell(peer.Name, line);
-                }
-
+                _chat.Say(peer.Name, say.Text);
                 break;
             case TakeSeat:
                 break; // asked in the lobby just before the game started
@@ -453,7 +367,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
     }
 
-    private void Join(Peer peer, JoinRequest request)
+    private void Join(HostPeer peer, JoinRequest request)
     {
         if (NetSerializer.VersionRefusal(request) is { } version)
         {
@@ -461,17 +375,9 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return;
         }
 
-        // A colour whose player left comes first: the game waits for it.
-        var free = _remoteSeats
-            .Where(s => PlayerAt(s) is null && !(_session.State.IsStarted && _session.State.GetPlayer(s).IsDefeated))
-            .OrderBy(s => _dropped.ContainsKey(s) ? 0 : 1)
-            .ToList();
-        PlayerId? seat = request.Seat is { } wanted ? (free.Contains(wanted) ? wanted : null) : free.Count > 0 ? free[0] : null;
-        if (seat is not { } taken)
+        if (_seats.Choose(request, _session.State, out var taken) is { } refusal)
         {
-            Refuse(peer, request.Seat is { } asked && _session.State.HasPlayer(asked)
-                ? $"{_session.State.GetPlayer(asked).Name} is not a free colour in this game."
-                : "Every colour of this game is taken.");
+            Refuse(peer, refusal);
             return;
         }
 
@@ -479,23 +385,19 @@ public sealed class GameHost : ICommandRoute, IDisposable
     }
 
     /// <summary>Gives the client its colour, the game's ground and its first view.</summary>
-    private void Seat(Peer peer, PlayerId taken, string name)
+    private void Seat(HostPeer peer, PlayerId taken, string name)
     {
         var state = _session.State;
         peer.Name = name;
         SendGame(peer, taken);
-        if (_pauseSent is { } paused)
-        {
-            peer.Connection.Send(new GamePaused(paused)); // the next Poll tells everyone when this join ends it
-        }
-
-        _dropped.Remove(taken);
-        Tell("", $"{name} plays {state.GetPlayer(taken).Name}.");
+        _pause.TellJoined(peer); // the next Poll tells everyone when this join ends the pause
+        _seats.Joined(taken);
+        _chat.Announce($"{name} plays {state.GetPlayer(taken).Name}.");
         Joined?.Invoke(taken, name);
     }
 
     /// <summary>The client's colour, the game's ground and its first view (again, for a game played again from a day's start).</summary>
-    private void SendGame(Peer peer, PlayerId taken)
+    private void SendGame(HostPeer peer, PlayerId taken)
     {
         var state = _session.State;
         var feed = new PlayerViewFeed(state, taken);
@@ -516,7 +418,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
     }
 
     /// <summary>The answer to a client's request for the game's record: at most one record per <see cref="NetLimits.RecordInterval"/>.</summary>
-    private RecordSent RecordFor(Peer peer, RecordRequest ask)
+    private RecordSent RecordFor(HostPeer peer, RecordRequest ask)
     {
         if (RecordOf is null)
         {
@@ -534,24 +436,13 @@ public sealed class GameHost : ICommandRoute, IDisposable
         return new RecordSent(ask.Request, RecordOf(name), null);
     }
 
-    /// <summary>A line of the chat, to every seated client and the host.</summary>
-    private void Tell(string from, string text)
-    {
-        foreach (var peer in _peers.Where(p => p.Feed is not null))
-        {
-            peer.Connection.Send(new ChatLine(from, text));
-        }
-
-        ChatReceived?.Invoke(from, text);
-    }
-
-    private static void Refuse(Peer peer, string reason)
+    private static void Refuse(HostPeer peer, string reason)
     {
         peer.Connection.Send(new JoinRefused(reason));
         peer.Connection.Close(reason);
     }
 
-    private void Run(Peer peer, PlayerId seat, SendCommand send)
+    private void Run(HostPeer peer, PlayerId seat, SendCommand send)
     {
         if (send.Command.Player != seat)
         {
@@ -590,30 +481,12 @@ public sealed class GameHost : ICommandRoute, IDisposable
             _battleSides = new[] { battle.Attacker.Owner, battle.Defender.Owner }.OfType<PlayerId>().ToHashSet();
         }
 
-        foreach (var peer in _peers)
+        foreach (var peer in _seats.Peers)
         {
             peer.Feed?.Capture(e, _battleSides);
         }
 
         _viewsStale = true;
-    }
-
-    /// <summary>Tells the clients, and the host's screen, when the game is paused or goes on again.</summary>
-    private void SendPause()
-    {
-        var reason = PauseReason;
-        if (reason == _pauseSent)
-        {
-            return;
-        }
-
-        _pauseSent = reason;
-        foreach (var peer in _peers.Where(p => p.Feed is not null && !p.Connection.IsClosed))
-        {
-            peer.Connection.Send(new GamePaused(reason));
-        }
-
-        PauseChanged?.Invoke();
     }
 
     /// <summary>
@@ -627,7 +500,7 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return;
         }
 
-        foreach (var peer in _peers.Where(p => p.Feed is not null && !p.Connection.IsClosed))
+        foreach (var peer in _seats.Seated)
         {
             if (peer.Feed!.Next() is { } update)
             {
@@ -636,23 +509,5 @@ public sealed class GameHost : ICommandRoute, IDisposable
         }
 
         _viewsStale = false;
-    }
-
-    private sealed class Peer(INetConnection connection)
-    {
-        public INetConnection Connection { get; } = connection;
-
-        public PlayerId? Seat { get; set; }
-
-        public string Name { get; set; } = "";
-
-        /// <summary>The player's view, once seated.</summary>
-        public PlayerViewFeed? Feed { get; set; }
-
-        /// <summary>When the link came (it must join within <see cref="NetLimits.JoinTimeout"/>).</summary>
-        public DateTimeOffset Arrived { get; init; }
-
-        /// <summary>When the host last sent this client the game's record.</summary>
-        public DateTimeOffset? LastRecord { get; set; }
     }
 }

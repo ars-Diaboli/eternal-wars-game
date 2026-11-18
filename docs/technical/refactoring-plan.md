@@ -331,9 +331,14 @@ The order is: safety first, then a measurement baseline, then cheap performance 
   - `JoinRequest.Schema` carries `NetSerializer.Schema`, a 16-hex-digit hash of every Domain type's codec fields (names and types, without assembly versions); the host and the lobby refuse a different one. Protocol 7.
 
 ### Phase 4: Breaking up large classes (ongoing; one per PR)
-- [ ] **Per-kind handlers**, the same pattern as the battle spell handlers, for `SpellEffect.Parse`, `MapEventService` actions, adventure spells, `ScenarioCondition` and `MapValidator` checks.
-- [ ] **`AdventureAi`:** extract `ThreatMap`, `TargetValuer`, `TownManager` and `DecisionResponder`, plus an `AiWeights` record the sim tool can tune.
-- [ ] **`GameHost`:** split out `SeatManager`, `PausePolicy`, `ChatRelay` and `SimultaneousDayRewinder`.
+- [x] **Per-kind handlers**, the same pattern as the battle spell handlers, for `SpellEffect.Parse`, `MapEventService` actions, adventure spells, `ScenarioCondition` and `MapValidator` checks.
+  - Done (ADR-219). `SpellEffectHeads` per kind and the `SpellEffectWords` keyword table, `MapEventActionHandlers` (28, by action type), `AdventureSpellHandlers` (by spell id), `ScenarioConditionHandlers` (11) and `MapChecks` (14, in order). Each registry has a completeness test.
+  - Switches stay only outside Domain's reach: `MapConverter.ToDocument` in Core.Data and the editor's `ConditionsPanel`.
+- [x] **`AdventureAi`:** extract `ThreatMap`, `TargetValuer`, `TownManager` and `DecisionResponder`, plus an `AiWeights` record the sim tool can tune.
+  - Done (ADR-220). The parts share an `AiContext`; `AdventureAi` keeps the turn and hero loops, spells and the arena gathering. `AiWeights` has 32 numbers; `sim ... --weight Name=value` sets one.
+  - `AdventureAiPartsTests` covers the weights and each part; the digests are unchanged.
+- [x] **`GameHost`:** split out `SeatManager`, `PausePolicy`, `ChatRelay` and `SimultaneousDayRewinder`.
+  - Done (ADR-221). The public API, wire messages, refusal texts and order of sends are unchanged; each part has its own tests.
 - [ ] **Game app `Main`:** move AI and timer gating and local seat ownership into a Core `GameDirector` (with tests), replay stepping into a `ReplayController`, and screens into a coordinator in Godot.UI.
 - [ ] **Panels:** split `TownPanel` and `HeroPanel` into sections with their own subscriptions and schedulers. Give the inspector one section per object type. Add a `FormBuilder.AddOwnerChoice` helper. Move colours and sizes into `UiTheme` tokens.
 - [ ] **Lower priority:** typed content ids, `InfoSheets` returning structured lines instead of English text, splitting the sim tool's `Program.cs` into one class per command with strict option parsing, autosave written straight to a stream, and save listing that reads only the header.

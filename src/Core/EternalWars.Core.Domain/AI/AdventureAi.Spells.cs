@@ -18,18 +18,6 @@ namespace EternalWars.Core.Domain.AI;
 /// </summary>
 public sealed partial class AdventureAi
 {
-    /// <summary>Movement a Dimension Door must save, beyond the 500 the cast costs, to be worth it.</summary>
-    private const int DoorSaving = 300;
-
-    /// <summary>How often a turn the AI weighs a Dimension Door for one hero (each weighing prices up to 72 landings).</summary>
-    private const int DoorChecksPerHero = 3;
-
-    /// <summary>View Terrain is cast when at least this share of the ground in its radius is unexplored.</summary>
-    private const double ViewTerrainShare = 0.3;
-
-    /// <summary>Pathfinder's Call or Ashwalk must save this much movement today beyond what the cast costs.</summary>
-    private const int NativeWalkSaving = 100;
-
     private readonly Dictionary<HeroId, int> _doorChecks = [];
 
     /// <summary>Whether the hero could cast the spell now (before picking any cell).</summary>
@@ -47,12 +35,12 @@ public sealed partial class AdventureAi
     }
 
     private bool Cast(PlayerId player, Hero hero, string spell, MapPosition? target = null) =>
-        Execute(new CastAdventureSpellCommand(player, hero.Id, spell, target)).IsAccepted;
+        _ai.Execute(new CastAdventureSpellCommand(player, hero.Id, spell, target)).IsAccepted;
 
     /// <summary>The spells cast before the hero picks where to go: they change what it knows (View Terrain) or last past today.</summary>
     private void CastBeforeMoving(PlayerId player, Hero hero)
     {
-        if (Preparing || hero.Army.IsEmpty)
+        if (_ai.Preparing || hero.Army.IsEmpty)
         {
             return;
         }
@@ -65,14 +53,14 @@ public sealed partial class AdventureAi
         }
 
         // Veil: once an enemy hero is in sight, the main army's counts are hidden from it for the week.
-        if (Active(player) && hero.Id == _main && AdventureMagic.VeilRank(hero) == 0 && Threats(player).Count > 0
+        if (_ai.Active(player) && hero.Id == _ai.Main && AdventureMagic.VeilRank(hero) == 0 && _threats.Threats(player).Count > 0
             && CanCast(hero, AdventureMagic.Veil) && Spares(hero, AdventureMagic.Veil))
         {
             Cast(player, hero, AdventureMagic.Veil);
         }
 
-        if (Active(player) && CanCast(hero, AdventureMagic.ViewTerrain) && Spares(hero, AdventureMagic.ViewTerrain)
-            && UnexploredShare(hero.Owner, hero.Position, AdventureMagic.ViewTerrainRadius(AdventureMagic.RankOf(_state, hero, AdventureMagic.ViewTerrain))) >= ViewTerrainShare)
+        if (_ai.Active(player) && CanCast(hero, AdventureMagic.ViewTerrain) && Spares(hero, AdventureMagic.ViewTerrain)
+            && UnexploredShare(hero.Owner, hero.Position, AdventureMagic.ViewTerrainRadius(AdventureMagic.RankOf(_state, hero, AdventureMagic.ViewTerrain))) >= _weights.ViewTerrainShare)
         {
             Cast(player, hero, AdventureMagic.ViewTerrain);
         }
@@ -104,26 +92,26 @@ public sealed partial class AdventureAi
     /// </summary>
     private bool CastForRoute(PlayerId player, Hero hero, MapPosition target)
     {
-        if (Preparing)
+        if (_ai.Preparing)
         {
             return false;
         }
 
         foreach (var spell in new[] { AdventureMagic.PathfindersCall, AdventureMagic.Ashwalk })
         {
-            if (Active(player) && !hero.Statuses.Any(s => s.Source == spell) && CanCast(hero, spell) && Spares(hero, spell)
-                && session.Movement.FindPath(hero.Id, target) is { } path)
+            if (_ai.Active(player) && !hero.Statuses.Any(s => s.Source == spell) && CanCast(hero, spell) && Spares(hero, spell)
+                && _session.Movement.FindPath(hero.Id, target) is { } path)
             {
                 var rank = AdventureMagic.RankOf(_state, hero, spell);
                 var extra = rank >= 3 ? hero.MaxMovementPoints * AdventureMagic.NativeWalkMovementPercent / 100 : 0;
-                if (NativeSaving(hero, path, AdventureMagic.NativeTerrains(spell, rank)) + extra >= AdventureMagic.MovementCost + NativeWalkSaving)
+                if (NativeSaving(hero, path, AdventureMagic.NativeTerrains(spell, rank)) + extra >= AdventureMagic.MovementCost + _weights.NativeWalkSaving)
                 {
                     Cast(player, hero, spell);
                 }
             }
         }
 
-        return Active(player) && DoorTowards(player, hero, target);
+        return _ai.Active(player) && DoorTowards(player, hero, target);
     }
 
     /// <summary>
@@ -158,25 +146,25 @@ public sealed partial class AdventureAi
 
     /// <summary>
     /// Dimension Door towards <paramref name="target"/> when the hero cannot walk there today: the landing (a straight line in one of the eight
-    /// directions, safe from enemy heroes too strong for it) whose route to the target is cheapest, if it saves <see cref="DoorSaving"/> beyond
+    /// directions, safe from enemy heroes too strong for it) whose route to the target is cheapest, if it saves <see cref="AiWeights.DoorSaving"/> beyond
     /// the cast's 500 movement points.
     /// </summary>
     private bool DoorTowards(PlayerId player, Hero hero, MapPosition target)
     {
-        if (!CanCast(hero, AdventureMagic.DimensionDoor) || _doorChecks.GetValueOrDefault(hero.Id) >= DoorChecksPerHero)
+        if (!CanCast(hero, AdventureMagic.DimensionDoor) || _doorChecks.GetValueOrDefault(hero.Id) >= _weights.DoorChecksPerHero)
         {
             return false;
         }
 
         _doorChecks[hero.Id] = _doorChecks.GetValueOrDefault(hero.Id) + 1;
-        var walk = WalkCost(hero, target);
+        var walk = _values.WalkCost(hero, target);
         if (walk is { } cost && cost <= hero.MovementPoints)
         {
             return false;
         }
 
         var range = AdventureMagic.DimensionDoorRange(AdventureMagic.RankOf(_state, hero, AdventureMagic.DimensionDoor));
-        var bestCost = walk is { } w ? w - AdventureMagic.MovementCost - DoorSaving : int.MaxValue;
+        var bestCost = walk is { } w ? w - AdventureMagic.MovementCost - _weights.DoorSaving : int.MaxValue;
         MapPosition? best = null;
         PathFinder.ReverseCostMap? fromLandings = null;
         foreach (var direction in DirectionExtensions.All)
@@ -186,12 +174,12 @@ public sealed partial class AdventureAi
             {
                 landing = landing.Step(direction);
                 if (AdventureMagic.Refusal(_state, hero, AdventureMagic.DimensionDoor, landing) is not null
-                    || !Holds(ArmyPower(hero.Army), Danger(hero.Owner, landing)))
+                    || !_threats.Holds(_ai.ArmyPower(hero.Army), _threats.Danger(hero.Owner, landing)))
                 {
                     continue;
                 }
 
-                fromLandings ??= CostsTo(hero, target);
+                fromLandings ??= _values.CostsTo(hero, target);
                 if (fromLandings.CostFrom(landing) is { } rest && rest < bestCost)
                 {
                     (best, bestCost) = (landing, rest);
@@ -204,12 +192,12 @@ public sealed partial class AdventureAi
 
     /// <summary>
     /// Town Portal (ADR-120, ADR-184), to the town the hero would go to (from rank II any own town, else the nearest): one threatened by an enemy
-    /// the garrison alone cannot hold but the two together can, or one whose waiting troops call the hero home (<see cref="TownNeed"/>) when the
+    /// the garrison alone cannot hold but the two together can, or one whose waiting troops call the hero home (<see cref="TargetValuer.TownNeed"/>) when the
     /// walk there takes more than a day. Not when the hero could walk to a threatened town today.
     /// </summary>
     private bool PortalHome(PlayerId player, Hero hero)
     {
-        if (Preparing || !CanCast(hero, AdventureMagic.TownPortal))
+        if (_ai.Preparing || !CanCast(hero, AdventureMagic.TownPortal))
         {
             return false;
         }
@@ -218,16 +206,16 @@ public sealed partial class AdventureAi
         var towns = rank >= 2
             ? _state.ObjectsOf<Town>().Where(t => AdventureMagic.PortalTown(_state, hero, t.VisitPosition) == t).ToList()
             : AdventureMagic.PortalTown(_state, hero) is { } nearest ? [nearest] : [];
-        foreach (var town in towns.OrderByDescending(t => TownNeed(hero, t)).ThenBy(t => t.Id.Value))
+        foreach (var town in towns.OrderByDescending(t => _values.TownNeed(hero, t)).ThenBy(t => t.Id.Value))
         {
-            var need = TownNeed(hero, town);
+            var need = _values.TownNeed(hero, town);
             if (need <= 0)
             {
                 continue;
             }
 
-            var danger = Danger(player, town.VisitPosition);
-            var walk = WalkCost(hero, town.VisitPosition);
+            var danger = _threats.Danger(player, town.VisitPosition);
+            var walk = _values.WalkCost(hero, town.VisitPosition);
             var worth = danger > 0
                 ? walk is not { } cost || cost > hero.MovementPoints
                 : walk is not { } far || far > hero.MaxMovementPoints;

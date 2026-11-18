@@ -7,27 +7,12 @@ namespace EternalWars.Core.Domain.AI;
 /// <summary>
 /// The AI at the marketplace (ADR-189), through <see cref="TradeResourceCommand"/> like a player, at its towns' rate (ADR-067). Trading is
 /// dear, so it is only the last step to the building a town is saving for: it buys the resources that building lacks when its income would
-/// not bring them within <see cref="TradeWaitDays"/> days and the gold covers the building and the trade, the trade taking at most
-/// <see cref="TradeTreasuryPercent"/> % of the gold; or, when gold alone is missing, it sells what it holds beyond the building's needs and a
-/// stock it keeps (<see cref="KeepBasic"/>, <see cref="KeepMagic"/>). It never trades for troops, and it does not visit map marketplaces.
+/// not bring them within <see cref="AiWeights.TradeWaitDays"/> days and the gold covers the building and the trade, the trade taking at most
+/// <see cref="AiWeights.TradeTreasuryPercent"/> % of the gold; or, when gold alone is missing, it sells what it holds beyond the building's needs and a
+/// stock it keeps (<see cref="AiWeights.KeepBasic"/>, <see cref="AiWeights.KeepMagic"/>). It never trades for troops, and it does not visit map marketplaces.
 /// </summary>
-public sealed partial class AdventureAi
+internal sealed partial class TownManager
 {
-    /// <summary>The most of the gold (on hand plus <see cref="SavingDays"/> days of income) a trade may take.</summary>
-    private const int TradeTreasuryPercent = 50;
-
-    /// <summary>A missing resource that this many days of income bring is waited for, not bought.</summary>
-    private const int TradeWaitDays = 2;
-
-    /// <summary>Days of gold income a building may be saved for (as <see cref="Reachable"/> counts them).</summary>
-    private const int SavingDays = 3;
-
-    /// <summary>Lumber and ore the AI keeps when it sells for gold: the next buildings want them.</summary>
-    private const int KeepBasic = 20;
-
-    /// <summary>Crystal, sulfur and mercury the AI keeps when it sells for gold.</summary>
-    private const int KeepMagic = 10;
-
     /// <summary>
     /// The gold that buying what <paramref name="have"/> lacks of <paramref name="cost"/> would take at the player's rate; null when it has no
     /// marketplace town, 0 when nothing but gold is missing.
@@ -52,7 +37,7 @@ public sealed partial class AdventureAi
         return gold;
     }
 
-    /// <summary>Whether buying the missing resources makes <paramref name="cost"/> worth saving for (the gold within <see cref="SavingDays"/> days).</summary>
+    /// <summary>Whether buying the missing resources makes <paramref name="cost"/> worth saving for (the gold within <see cref="AiWeights.SavingDays"/> days).</summary>
     private bool Buyable(PlayerId player, ResourceSet cost, ResourceSet have, ResourceSet income)
     {
         if (BuyingGold(player, cost, have) is not { } gold)
@@ -60,8 +45,8 @@ public sealed partial class AdventureAi
             return false;
         }
 
-        var treasury = (long)have.Gold + (income.Gold * SavingDays);
-        return cost.Gold + gold <= treasury && gold * 100 <= treasury * TradeTreasuryPercent;
+        var treasury = (long)have.Gold + (income.Gold * _weights.SavingDays);
+        return cost.Gold + gold <= treasury && gold * 100 <= treasury * _weights.TradeTreasuryPercent;
     }
 
     /// <summary>
@@ -79,15 +64,15 @@ public sealed partial class AdventureAi
         if (goods.Any(r => have[r] < cost[r]))
         {
             // A resource the income brings soon is waited for; otherwise buy all that is missing, if the gold covers it within the limit.
-            if (goods.All(r => have[r] + (income[r] * TradeWaitDays) >= cost[r]) || BuyingGold(player, cost, have) is not { } gold
-                || cost.Gold + gold > have.Gold || gold * 100 > (long)have.Gold * TradeTreasuryPercent)
+            if (goods.All(r => have[r] + (income[r] * _weights.TradeWaitDays) >= cost[r]) || BuyingGold(player, cost, have) is not { } gold
+                || cost.Gold + gold > have.Gold || gold * 100 > (long)have.Gold * _weights.TradeTreasuryPercent)
             {
                 return false;
             }
 
             foreach (var resource in goods.Where(r => have[r] < cost[r]))
             {
-                if (!Execute(new TradeResourceCommand(player, resource, TradeDirection.Buy, cost[resource] - have[resource])).IsAccepted)
+                if (!_ai.Execute(new TradeResourceCommand(player, resource, TradeDirection.Buy, cost[resource] - have[resource])).IsAccepted)
                 {
                     return false;
                 }
@@ -121,7 +106,7 @@ public sealed partial class AdventureAi
 
         foreach (var (resource, units) in sales)
         {
-            if (!Execute(new TradeResourceCommand(player, resource, TradeDirection.Sell, units)).IsAccepted)
+            if (!_ai.Execute(new TradeResourceCommand(player, resource, TradeDirection.Sell, units)).IsAccepted)
             {
                 return false;
             }
@@ -129,7 +114,7 @@ public sealed partial class AdventureAi
 
         return _state.GetPlayer(player).Resources.CanAfford(cost);
 
-        int Spare(ResourceType resource) => Math.Max(0, have[resource] - cost[resource] - (MarketplaceRules.IsBasic(resource) ? KeepBasic : KeepMagic));
+        int Spare(ResourceType resource) => Math.Max(0, have[resource] - cost[resource] - (MarketplaceRules.IsBasic(resource) ? _weights.KeepBasic : _weights.KeepMagic));
         int Rate(ResourceType resource) => Math.Max(1, MarketplaceRules.TownRate(_state, player, resource)!.Value.SellPrice);
     }
 }

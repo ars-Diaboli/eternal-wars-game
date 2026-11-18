@@ -3,17 +3,17 @@ using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Towns;
 
-namespace EternalWars.Core.Domain.Editing;
+namespace EternalWars.Core.Domain.Editing.Checks;
 
-public static partial class MapValidator
+/// <summary>
+/// Start zones (MP-4, ADR-197): a zone of a player the map does not have is an error. Warnings: a player of a map with start zones that has
+/// none (the simultaneous first week needs one for each, MP-2); a zone without any of its player's towns, or holding another player's town or
+/// hero (the zones overlap the starts); two enemies' zones that touch (a hero steps from one into the other at once; allies' zones may touch,
+/// ADR-199).
+/// </summary>
+internal sealed class StartZoneCheck : IMapCheck
 {
-    /// <summary>
-    /// Start zones (MP-4, ADR-197): a zone of a player the map does not have is an error. Warnings: a player of a map with start zones that has
-    /// none (the simultaneous first week needs one for each, MP-2); a zone without any of its player's towns, or holding another player's town or
-    /// hero (the zones overlap the starts); two enemies' zones that touch (a hero steps from one into the other at once; allies' zones may touch,
-    /// ADR-199).
-    /// </summary>
-    private static IEnumerable<MapIssue> ValidateStartZones(GameState scenario)
+    public IEnumerable<MapIssue> Check(GameState scenario)
     {
         var map = scenario.Map;
         if (!map.HasStartZones)
