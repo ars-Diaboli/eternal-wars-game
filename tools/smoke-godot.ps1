@@ -107,10 +107,15 @@ $scenarios = @(
     # The side panel (ADR-191): the framed column on the right by default, moved to the left in the "Layout" tab; the turn block stands beside it.
     @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 100
        Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Normal;16:choose:Slow;19:key:Escape;24:click:960,520;30:click:960,520;70:key:F10;72:click:@Layout;75:click:@Right;78:choose:Left;82:key:Escape' },
-    # The "Layout" tab (ADR-156): the side panel off (ADR-191), then minimap bottom left, the lists along the bottom, the actions left, the
-    # initiative bar at the bottom; the map's HUD moves at once, then the step into the monster opens the battle with its initiative bar at the bottom.
+    # The "Layout" tab (ADR-156): the side panel off (ADR-191), then minimap bottom left, the lists along the bottom, the action buttons
+    # bottom right (ADR-210), the initiative bar at the bottom; the map's HUD moves at once, then the step into the monster opens the battle with
+    # its initiative bar at the bottom.
     @{ Name = 'game-layout'; App = 'EternalWars.Game'; Frames = 96; Map = $battleMap
-       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Right;16:choose:Off (the parts stand free);20:click:@Top right;24:choose:Bottom left;28:click:@Beside the minimap;32:choose:Along the bottom;36:click:@Right;40:choose:Left;44:click:@Top;48:choose:Bottom;52:key:Escape;60:key:Right' },
+       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Right;16:choose:Off (the parts stand free);20:click:@Top right;24:choose:Bottom left;28:click:@Beside the minimap;32:choose:Along the bottom;36:click:@Top right;40:choose:Bottom right;44:click:@Top;48:choose:Bottom;52:key:Escape;60:key:Right' },
+    # The action buttons (ADR-210), 3×3 in the side panel: Magus' spell book from its button (Escape closes it), then with C (C closes it);
+    # the hero screen from its button; the game menu from its button. Bookless selected, the spell book button is disabled.
+    @{ Name = 'game-action-buttons'; App = 'EternalWars.Game'; Frames = 62; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:press:Spell book (C);20:key:Escape;24:key:C;31:key:C;36:press:Hero screen (H);42:key:Escape;46:press:Menu (F10);52:key:Escape;56:press:Bookless' },
     # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
     # to Red with the full time and the hero screen closes. At 2 frames a second, so the minute takes 120 frames instead of 600.
     @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 140; Fps = 2

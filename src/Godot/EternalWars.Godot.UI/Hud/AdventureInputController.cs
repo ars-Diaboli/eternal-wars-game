@@ -94,6 +94,9 @@ public sealed class AdventureInputController(
             case InputEventKey { Pressed: true, Keycode: Key.H }:
                 hud.ShowHero(SelectedHero);
                 break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.C } when context.PlaysHere(session.State.CurrentPlayer.Id):
+                hud.OpenSpellBook(SelectedHero);
+                break;
             case InputEventKey { Pressed: true, Keycode: Key.K } when context.PlaysHere(session.State.CurrentPlayer.Id):
                 hud.KingdomScreen.Open(session.State.CurrentPlayer.Id);
                 break;
@@ -176,7 +179,7 @@ public sealed class AdventureInputController(
         RefreshCursor();
         world.Select(hero);
         world.PathPreview.Clear();
-        hud.HeroList.ShowSelected(hero);
+        hud.ShowSelected(hero);
         if (hero is { } id && focus)
         {
             var position = session.State.GetHero(id).Position;

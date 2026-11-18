@@ -227,48 +227,20 @@ public partial class HeroPanel : PanelContainer
     private void ShowAdventureSpells(Hero hero)
     {
         _adventure.ClearChildren();
-
-        var state = _session.State;
-        foreach (var spell in Core.Domain.Magic.AdventureMagic.Known(state, hero))
+        var buttons = AdventureSpellButtons.For(
+            _session.State,
+            hero,
+            cast: spell => Run(new CastAdventureSpellCommand(_session.State.CurrentPlayer.Id, hero.Id, spell)),
+            arm: spell =>
+            {
+                AdventureSpellArmed?.Invoke(hero.Id, spell);
+                Close();
+            },
+            ledger: () => LedgerReopened?.Invoke(hero.Id),
+            eavesdrop: town => EavesdropReopened?.Invoke(hero.Id, town));
+        foreach (var button in buttons)
         {
-            var refusal = Core.Domain.Magic.AdventureMagic.Refusal(state, hero, spell.Id, null, aimed: false); // an aimed spell's cell is picked on the map
-            var rank = Core.Domain.Magic.AdventureMagic.RankOf(state, hero, spell.Id);
-
-            var button = new Button
-            {
-                Text = $"{Core.Domain.Magic.MagicRules.NameAtRank(spell, rank)} ({Core.Domain.Magic.AdventureMagic.Cost(state, hero, spell.Id)} mana)",
-                Disabled = refusal is not null,
-                TooltipText = refusal ?? spell.Notes,
-            };
-            var id = spell.Id;
-            button.WithInfo(detailed => InfoSheets.Spell(_session.State, id, rank, detailed, hero));
-            button.Pressed += () =>
-            {
-                if (Core.Domain.Magic.AdventureMagic.NeedsTarget(_session.State, hero, id))
-                {
-                    AdventureSpellArmed?.Invoke(hero.Id, id);
-                    Close();
-                    return;
-                }
-
-                Run(new CastAdventureSpellCommand(state.CurrentPlayer.Id, hero.Id, id));
-            };
             _adventure.AddChild(button);
-        }
-
-        // The week-long ranks III: read the ledger, or listen at the town, again.
-        if (Core.Domain.Magic.AdventureMagic.ReadsLedger(hero))
-        {
-            var ledger = new Button { Text = "Read the Ledger of Ages again" };
-            ledger.Pressed += () => LedgerReopened?.Invoke(hero.Id);
-            _adventure.AddChild(ledger);
-        }
-
-        if (Core.Domain.Magic.AdventureMagic.ListensTo(hero) is { } town && state.FindObject(town) is Core.Domain.Towns.Town listened)
-        {
-            var eavesdrop = new Button { Text = $"Listen at {listened.Name} again" };
-            eavesdrop.Pressed += () => EavesdropReopened?.Invoke(hero.Id, town);
-            _adventure.AddChild(eavesdrop);
         }
 
         if (_adventure.GetChildCount() == 0)

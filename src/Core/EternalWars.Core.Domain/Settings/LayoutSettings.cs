@@ -43,13 +43,13 @@ public enum ListOrientation
 
 /// <summary>
 /// Where the screens put their parts (ADR-118, UI-3; ADR-156): the battle's initiative bar, the adventure map's minimap corner, the hero
-/// and town lists and the action panel's side, unless the <see cref="SidePanel"/> holds them all (ADR-191). Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
+/// and town lists and the action buttons' corner, unless the <see cref="SidePanel"/> holds them all (ADR-191). Kept per computer in the settings file, like <see cref="SpeedSettings"/>; it changes no rule.
 /// </summary>
 public sealed record LayoutSettings(
     ScreenEdge InitiativeBar = ScreenEdge.Top,
     ScreenCorner Minimap = ScreenCorner.TopRight,
     ListOrientation Lists = ListOrientation.Vertical,
-    ScreenSide ActionPanel = ScreenSide.Right,
+    ScreenCorner ActionButtons = ScreenCorner.TopRight,
     SidePanel SidePanel = SidePanel.Right)
 {
     public static LayoutSettings Default { get; } = new();

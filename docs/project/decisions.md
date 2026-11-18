@@ -2866,3 +2866,21 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   each corner row's cubic out once a column; normals come from the surface a quarter tile either way.
 - **Cost** (the editor, Debug build, generated maps): building a level's ground 75 → 200 ms at 256 × 256, 32 → 75 ms at 144 × 144; a height
   dab's ground rebuild 1–2 → 4–9 ms.
+
+### ADR-210: The adventure map's action buttons are a 3 × 3 grid in a corner of their own, with a spell book (ADR-156, ADR-191, ADR-204, owner notes, 2026-11-18)
+**Status**: implemented. No rule, save or map format change; the settings file's layout loses `actionPanel` (a side) for `actionButtons` (a corner).
+
+- **The grid** (`AdventureHud.BuildActions`): nine square 48 px icon buttons, three to a row: hero screen (H), spell book (C), kingdom
+  (K); quests (Q), puzzle map (P), dig (G); marketplace, switch level (L), menu (F10). It takes in the level switch that stood under the
+  minimap, the hero list's per-hero "Info" button (now one button for the selected hero) and the menu button that stood on the status
+  bar's right end (on the map; in battle it stays there).
+- **Disabled, not hidden**: the hero screen, spell book and dig act on the selected hero (`AdventureHud.ShowSelected`) and are greyed
+  without one, the spell book also for a hero without a book; the marketplace without a town marketplace; the level switch on a one-level
+  map. The tooltip (shown on the status bar) says why. In the replay viewer the hero, spell book, dig and marketplace buttons are greyed.
+- **The spell book** (`SpellBookPanel`): a window over the map with the hero's mana, its adventure spells to cast (the same buttons as the
+  hero screen's, `AdventureSpellButtons`; an aimed one closes the book and waits for its cell) and its battle spells by school with their
+  costs; a right click opens a spell's information window. C or Escape closes it, and so does the next turn.
+- **Where** (`LayoutSettings.ActionButtons`, `HudArrangement`): any corner, chosen in the "Layout" tab like the minimap, after the minimap
+  and the lists when they share it; default top right. With the side panel on the grid stands in the panel under the lists, as before.
+  End turn no longer moves among the actions with the panel on: it stays with the calendar, at the panel's bottom.
+- **Menu icon**: a stone gear from the owner (`menu.png`).
