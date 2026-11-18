@@ -1,17 +1,25 @@
 #!/usr/bin/env pwsh
 # Smoke test of the Godot apps: runs each app with scripted input (AutoInput) under Godot's Movie Maker,
-# saves the frames as PNGs for a visual check and fails if Godot or C# reports an error.
+# saves the frames as pictures for a visual check and fails if Godot or C# reports an error.
 #
 #   ./tools/smoke-godot.ps1 -Godot "C:\path\Godot_v4.7.2-stable_mono_win64_console.exe"
 #
-# Needs a GPU/display (Movie Maker renders for real). Builds the solution first. Frames go to .shots/<scenario>/.
+# Needs a GPU/display (Movie Maker renders for real). Builds the solution first. Frames go to .shots/<scenario>/:
+# frame.avi and its frames as frame00000000.jpg, …; with -Png lossless frame00000000.png, … instead.
+# Scenarios run side by side (-Jobs); the apps' windows take no focus under Movie Maker (no_focus.movie in project.godot).
 # Click coordinates assume the default window sizes in each project.godot.
 
 param(
     [string]$Godot = $env:GODOT,
     [string]$Out = (Join-Path (Split-Path -Parent $PSScriptRoot) '.shots'),
     # Run only the scenarios whose name matches this wildcard (e.g. 'game-*').
-    [string]$Only = '*'
+    [string]$Only = '*',
+    # How many scenarios run at the same time (each is its own Godot process with its own settings and saves).
+    [int]$Jobs = [Math]::Max(1, [Math]::Min(8, [int]([Environment]::ProcessorCount / 2))),
+    # Skip the build (the solution is built already).
+    [switch]$NoBuild,
+    # Lossless PNG frames instead of JPEG ones: several times slower (compressing the PNGs takes most of a run), for comparing frames exactly.
+    [switch]$Png
 )
 
 $ErrorActionPreference = 'Stop'
@@ -21,8 +29,10 @@ if (-not $Godot -or -not (Test-Path $Godot)) {
 }
 
 & (Join-Path $PSScriptRoot 'link-shared-assets.ps1') | Out-Null
-dotnet build (Join-Path $root 'EternalWars.sln') --nologo -v quiet
-if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+if (-not $NoBuild) {
+    dotnet build (Join-Path $root 'EternalWars.sln') --nologo -v quiet
+    if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
+}
 
 $exchangeMap = Join-Path $PSScriptRoot 'smoke/exchange.ewmap.json'
 $battleMap = Join-Path $PSScriptRoot 'smoke/battle.ewmap.json'
@@ -39,24 +49,32 @@ $magicMap = Join-Path $PSScriptRoot 'smoke/magic.ewmap.json'
 $necromancyMap = Join-Path $PSScriptRoot 'smoke/necromancy.ewmap.json'
 $siegeMagicMap = Join-Path $PSScriptRoot 'smoke/siege-magic.ewmap.json'
 $arenaMap = Join-Path $PSScriptRoot 'smoke/arena.ewmap.json'
-# A map generated from the v7 connection options (ADR-112): garrison, border guard and gate with keymasters, portal, optional connection.
+# Made by the simulator, side by side: a map generated from the v7 connection options (ADR-112: garrison, border guard and gate with
+# keymasters, portal, optional connection); the shipped two-player map (ADR-114) as a file, for the game and the editor; a short computer
+# game with a battle (the sim's demo record), for the replay viewer (ADR-164).
 New-Item -ItemType Directory -Force $Out | Out-Null
-$connectionsMap = Join-Path (Resolve-Path $Out) 'connections.ewmap.json'
-dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- generate (Join-Path $PSScriptRoot 'smoke/connections.ewtemplate.json') --out $connectionsMap --seed 1 | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Generating the connections map failed.' }
-# The shipped two-player map (ADR-114) as a file, for the game and the editor.
-$emberMap = Join-Path (Resolve-Path $Out) 'ember.ewmap.json'
-dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- export ember --out $emberMap | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Exporting Ember March failed.' }
-# A short computer game with a battle (the sim's demo record), for the replay viewer (ADR-164).
-$replayFile = Join-Path (Resolve-Path $Out) 'smoke.ewreplay.json'
-dotnet run --project (Join-Path $PSScriptRoot 'EternalWars.Tools.Sim') --no-build -- record $replayFile --days 4 | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Recording the replay failed.' }
+$Out = (Resolve-Path $Out).Path
+$connectionsMap = Join-Path $Out 'connections.ewmap.json'
+$emberMap = Join-Path $Out 'ember.ewmap.json'
+$replayFile = Join-Path $Out 'smoke.ewreplay.json'
+$sim = Join-Path $PSScriptRoot 'EternalWars.Tools.Sim'
+$simFailed = @(
+    @{ What = 'Generating the connections map'; Args = @('generate', (Join-Path $PSScriptRoot 'smoke/connections.ewtemplate.json'), '--out', $connectionsMap, '--seed', '1') },
+    @{ What = 'Exporting Ember March'; Args = @('export', 'ember', '--out', $emberMap) },
+    @{ What = 'Recording the replay'; Args = @('record', $replayFile, '--days', '4') }
+) | ForEach-Object -Parallel {
+    $simArgs = $_.Args
+    dotnet run --project $using:sim --no-build -- @simArgs | Out-Null
+    if ($LASTEXITCODE -ne 0) { $_.What }
+}
+if ($simFailed) { throw "$($simFailed -join ', ') failed." }
 $scenarios = @(
     @{ Name = 'harness-guard-battle'; App = 'EternalWars.Harness2D'; Frames = 45
        Input = '5:click:133,263;12:click:133,263;20:click:@Fight;28:click:@Quick combat;35:key:Q' },
-    @{ Name = 'game-route-and-move'; App = 'EternalWars.Game'; Frames = 60
-       Input = '3:key:Enter;10:click:960,520;25:click:960,520' },
+    # A route and a walk, then a week of turns through "End turn" (two human seats, 14 clicks): the new week's notice and its event next
+    # to the date (ADR-084).
+    @{ Name = 'game-route-and-move'; App = 'EternalWars.Game'; Frames = 150
+       Input = (@('3:key:Enter', '10:click:960,520', '25:click:960,520') + (0..13 | ForEach-Object { "$(60 + 6 * $_):press:End turn" })) -join ';' },
     # Two own heroes meet (ADR-153): Orrin's blade onto Valeska's doll, his ring into her backpack, her griffins to him; Close, then the gate.
     @{ Name = 'game-exchange-and-gate'; App = 'EternalWars.Game'; Frames = 72; Map = $exchangeMap
        Input = '3:key:Enter;10:key:Right;16:click:@Weapon: Rusted Blade;19:click:@Weapon: Centaur''s Axe;22:click:@Iron Band (Ring);25:click:@Into the backpack#2;28:click:@2 | Griffin;31:click:@—;36:click:@Close;42:click:960,557;48:click:960,557' },
@@ -66,12 +84,10 @@ $scenarios = @(
     @{ Name = 'game-artifact-drag'; App = 'EternalWars.Game'; Frames = 62; Map = $exchangeMap
        Input = '3:key:Enter;10:key:Right;16:drag:@Weapon: Rusted Blade>@Head: —#2;24:drag:@Iron Band (Ring)>@Ring: —;30:drag:@Centaur''s Axe (Weapon)>420,536;36:click:@Close;40:key:H;46:drag:@Centaur''s Axe (Weapon)>@Shield: —;52:drag:@Ring: Iron Band>300,725' },
     # Information windows (ADR-154): right-click Orrin on the map, a click closes it; on the hero screen right-click his footmen, then his blade
-    # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack.
-    @{ Name = 'game-info-windows'; App = 'EternalWars.Game'; Frames = 42; Map = $exchangeMap
-       Input = '3:key:Enter;10:rclick:800,445;16:click:1500,850;20:key:H;24:rclick:@10 | Footman;28:rclick:@Weapon: Rusted Blade;32:key:Escape;36:rclick:@Iron Band (Ring)' },
+    # (the second right click opens the next window), Escape closes it, then the Iron Band in his backpack; Escape closes it and the screen.
     # Touch (ADR-190): a finger held still on the hero opens its information window, which stays open when lifted; a tap closes it.
-    @{ Name = 'game-info-touch'; App = 'EternalWars.Game'; Frames = 70; Map = $exchangeMap
-       Input = '3:key:Enter;10:touch:800,445,45;64:touch:400,300' }
+    @{ Name = 'game-info-windows'; App = 'EternalWars.Game'; Frames = 112; Map = $exchangeMap
+       Input = '3:key:Enter;10:rclick:800,445;16:click:1500,850;20:key:H;24:rclick:@10 | Footman;28:rclick:@Weapon: Rusted Blade;32:key:Escape;36:rclick:@Iron Band (Ring);42:key:Escape;46:key:Escape;52:touch:800,445,45;106:touch:400,300' },
     # An arena map against the computer (ADR-097, ADR-159): Blue ends day 1, Red prepares, day 2's battle opens by itself at the combat place;
     # quick combat, the result screen (not ranked), then "Play again" starts the map anew.
     @{ Name = 'game-arena'; App = 'EternalWars.Game'; Frames = 110; Map = $arenaMap
@@ -88,25 +104,22 @@ $scenarios = @(
     @{ Name = 'game-auto-combat'; App = 'EternalWars.Game'; Frames = 85; Map = $battleMap
        Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Off;16:choose:Ask before each battle;19:key:Escape;24:key:Right;60:click:@Auto combat;68:click:@Accept' },
     # Speed settings (ADR-090): the menu sets "Your heroes" to Slow, then the hero walks a route (its steps take twice as long).
-    @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 70
-       Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Normal;16:choose:Slow;19:key:Escape;24:click:960,520;30:click:960,520' },
+    # The side panel (ADR-191): the framed column on the right by default, moved to the left in the "Layout" tab; the turn block stands beside it.
+    @{ Name = 'game-speed-settings'; App = 'EternalWars.Game'; Frames = 100
+       Input = '3:key:Enter;8:key:F10;10:click:@Settings;13:click:@Normal;16:choose:Slow;19:key:Escape;24:click:960,520;30:click:960,520;70:key:F10;72:click:@Layout;75:click:@Right;78:choose:Left;82:key:Escape' },
     # The "Layout" tab (ADR-156): the side panel off (ADR-191), then minimap bottom left, the lists along the bottom, the actions left, the
     # initiative bar at the bottom; the map's HUD moves at once, then the step into the monster opens the battle with its initiative bar at the bottom.
     @{ Name = 'game-layout'; App = 'EternalWars.Game'; Frames = 96; Map = $battleMap
        Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Right;16:choose:Off (the parts stand free);20:click:@Top right;24:choose:Bottom left;28:click:@Beside the minimap;32:choose:Along the bottom;36:click:@Right;40:choose:Left;44:click:@Top;48:choose:Bottom;52:key:Escape;60:key:Right' },
-    # The side panel (ADR-191): the framed column on the right by default, moved to the left in the "Layout" tab; the turn block stands beside it.
-    @{ Name = 'game-side-panel'; App = 'EternalWars.Game'; Frames = 40
-       Input = '3:key:Enter;8:key:F10;10:click:@Layout;13:click:@Right;16:choose:Left;20:key:Escape' },
     # The turn timer (ADR-091): pick 1 minute on the new-game screen, start, open the hero screen and wait. The warnings come, the turn passes
-    # to Red with the full time and the hero screen closes.
-    @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 640
-       Input = '3:click:@Off;8:choose:1 min;12:click:@Start;30:key:H' },
-    # The town screen (ADR-050): T opens the first own town over the map, Escape closes it, T again, Escape.
-    @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
-       Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape' },
-    # The hero screen (ADR-050): select a hero, H opens it, Escape closes it, then the same through the hero list's Info button.
-    @{ Name = 'game-hero-screen'; App = 'EternalWars.Game'; Frames = 50
-       Input = '3:key:Enter;12:key:H;24:key:Escape;30:key:H;40:key:Escape' },
+    # to Red with the full time and the hero screen closes. At 2 frames a second, so the minute takes 120 frames instead of 600.
+    @{ Name = 'game-turn-timer'; App = 'EternalWars.Game'; Frames = 140; Fps = 2
+       Input = '2:click:@Off;4:choose:1 min;6:click:@Start;10:key:H' },
+    # The screens over the map on the towns map, each opened, closed with Escape, opened again and closed: the town screen (ADR-050) with T,
+    # the kingdom overview (ADR-084) with K, the hero screen (ADR-050) with H. Then a garrison hero (ADR-112): step into the own town,
+    # "Orrin into the garrison", "Lead Orrin out", close the town screen.
+    @{ Name = 'game-town-screen'; App = 'EternalWars.Game'; Frames = 170; Map = $townsMap
+       Input = '3:key:Enter;12:key:T;24:key:Escape;30:key:T;40:key:Escape;48:key:K;60:key:Escape;66:key:K;76:key:Escape;84:key:H;96:key:Escape;102:key:H;112:key:Escape;120:key:Up;130:press:Orrin into the garrison;145:press:Lead Orrin out;158:key:Escape' },
     # Quests (ADR-127, ADR-128): the Seer's Hut, Quest Guard and Quest Gate shapes; the hero walks into the hut and completes its first stage, the next one shows; Q opens the
     # quest log, Q closes it.
     @{ Name = 'game-quests'; App = 'EternalWars.Game'; Frames = 64; Map = $questsMap
@@ -119,26 +132,15 @@ $scenarios = @(
     # the game starts with Castlebridge a Dungeon town, Blue's hero a Dungeon hero and the random monsters drawn.
     @{ Name = 'game-placeholders'; App = 'EternalWars.Game'; Frames = 30; Map = $placeholdersMap
        Input = '5:click:@Random;9:choose:dungeon;13:click:@Start' },
-    # The kingdom overview (ADR-084): K opens it on the towns map, Escape closes it, K again, Escape.
-    @{ Name = 'game-kingdom'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
-       Input = '3:key:Enter;12:key:K;24:key:Escape;30:key:K;40:key:Escape' },
-    # A week of turns through "End turn" (two human seats, 14 clicks): the new week's notice and its event next to the date (ADR-084).
-    @{ Name = 'game-weeks'; App = 'EternalWars.Game'; Frames = 100
-       Input = (@('3:key:Enter') + (0..13 | ForEach-Object { "$(10 + 6 * $_):click:342,24" })) -join ';' },
-    # The Thieves' Guild (ADR-079) from the town screen's button, closed with Escape, then the town screen too.
-    @{ Name = 'game-thieves-guild'; App = 'EternalWars.Game'; Frames = 40; Map = $townsMap
-       Input = '3:key:Enter;10:key:T;16:click:@Thieves'' guild;26:key:Escape;32:key:Escape' },
     # A random map (ADR-086, ADR-201): the Random maps tab, Duel, Necropolis, its first hero and the Skeleton tier-1 dwelling for Blue, hero limit 7,
     # Start (Red is a computer player), K, end the turn so the computer plays its turn.
     @{ Name = 'game-random-map'; App = 'EternalWars.Game'; Frames = 105
        Input = '4:press:Random maps;8:click:@Duel;12:click:@Random;16:choose:necropolis;20:click:@Random;24:choose:Morthal (warrior);28:click:@Random;32:choose:Skeleton;36:click:1008,291;40:click:@Start;58:key:K;68:key:Escape;74:click:@End turn' },
-    # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns, New game, Enter on Start. Pressed by name: Continue has the
-    # focus when this computer has a save, New game when not. The only game scenario without --new-game.
-    @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 50; MainMenu = $true
-       Input = '3:press:Leaderboard;12:key:Escape;18:press:New game;28:key:Enter' },
-    # The replay viewer (ADR-164): "Watch a replay" opens the Replays and Saves tabs, Saves, Escape back to the main menu.
-    @{ Name = 'game-replay-list'; App = 'EternalWars.Game'; Frames = 24; MainMenu = $true
-       Input = '3:press:Watch a replay;10:click:@Saves;16:key:Escape' },
+    # The main menu (ADR-101, ADR-163) over its picture: Leaderboard opens, Escape returns; "Watch a replay" (ADR-164) opens the Replays and
+    # Saves tabs, Saves, Escape back to the main menu; New game, Enter on Start. Pressed by name: Continue has the focus when there is a
+    # save, New game when not. The only game scenario without --new-game.
+    @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 69; MainMenu = $true
+       Input = '3:press:Leaderboard;12:key:Escape;18:press:Watch a replay;25:click:@Saves;31:key:Escape;37:press:New game;47:key:Enter' },
     # The viewer on a recorded computer game (the sim's demo record, 4 days): pause at once, Fast, next day three times (day 4), next turn (Red's,
     # with the battle against the wolves), Normal, play: Red walks, the computer's battle plays move by move; skip to its result, which closes
     # by itself, then the replay plays to its end.
@@ -152,9 +154,6 @@ $scenarios = @(
     # ballista (Basic Ballistics) shoots the upper wall, two more defend, quick combat mid-animation (ADR-112 check), Enter on the result.
     @{ Name = 'game-siege'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:955,280;90:key:D;100:key:D;125:key:Q;140:key:Enter' },
-    # A garrison hero (ADR-112): step into the own town, "Orrin into the garrison", "Lead Orrin out", close the town screen.
-    @{ Name = 'game-garrison-hero'; App = 'EternalWars.Game'; Frames = 60; Map = $townsMap
-       Input = '3:key:Enter;10:key:Up;20:press:Orrin into the garrison;35:press:Lead Orrin out;48:key:Escape' },
     # Dwellings and caravans (ADR-054, ADR-073): visit a map dwelling and recruit the week, close; T, scroll to the caravan section, hire
     # from the owned dwelling, close, end two turns (hot-seat) and look again: the footmen are in the garrison.
     @{ Name = 'game-dwelling-caravan'; App = 'EternalWars.Game'; Frames = 100; Map = $caravanMap
@@ -163,63 +162,53 @@ $scenarios = @(
     # the red border gate and the red keymaster (frames 16, 49, 86, 109, 153, 172).
     @{ Name = 'editor-generated-connections'; App = 'EternalWars.MapEditor'; Frames = 175; Map = $connectionsMap
        Input = '5:hold:S,8;18:hold:A,19;38:hold:W,8;51:hold:S,18;70:hold:D,13;88:hold:D,10;99:hold:S,7;111:hold:D,8;120:hold:W,30;155:hold:W,10;166:hold:D,3' },
-    # The tavern screen (ADR-114): T, scroll to the tavern row, "Visit the tavern…", then Escape for the tooltip, the tavern and the town screen.
-    @{ Name = 'game-tavern'; App = 'EternalWars.Game'; Frames = 50; Map = $townsMap
-       Input = '3:key:Enter;10:key:T;16:wheel:down,25;24:click:@Visit the tavern…;34:key:Escape;38:key:Escape;44:key:Escape' },
-    # Information windows on the screens (ADR-154, ADR-178): the kingdom overview's town row, then its total; the tavern's first hero (on its
-    # card), then the second (on its Hire button); each closed with Escape before the screen is.
-    @{ Name = 'game-info-screens'; App = 'EternalWars.Game'; Frames = 68; Map = $townsMap
-       Input = '3:key:Enter;10:key:K;16:rclick:468,299;20:key:Escape;22:rclick:457,353;26:key:Escape;28:key:Escape;32:key:T;38:wheel:down,25;44:click:@Visit the tavern…;50:rclick:590,450;54:key:Escape;56:rclick:862,607;60:key:Escape;62:key:Escape;64:key:Escape' },
-    # Information windows on a decision prompt (ADR-178), in the middle of the screen (ADR-186): Hagan steps onto the Witch Hut; right-click the
-    # prompt (the hut), then the skill offered.
-    @{ Name = 'game-info-prompts'; App = 'EternalWars.Game'; Frames = 40; Map = $sitesMap
-       Input = '3:key:Enter;8:press:Hagan;12:key:Up;22:rclick:800,430;26:key:Escape;28:rclick:640,477;32:key:Escape;34:press:Leave' },
+    # Information windows on the screens (ADR-154, ADR-178): the kingdom overview's town row, then its total, each closed with Escape before
+    # the screen is. Then the town screen: the Thieves' Guild (ADR-079) from its button, closed with Escape; scroll to the tavern row,
+    # "Visit the tavern…" (ADR-114), the tavern's first hero (on its card), then the second (on its Hire button), each window closed with
+    # Escape, then the tavern and the town screen.
+    @{ Name = 'game-info-screens'; App = 'EternalWars.Game'; Frames = 88; Map = $townsMap
+       Input = '3:key:Enter;10:key:K;16:rclick:468,299;20:key:Escape;22:rclick:457,353;26:key:Escape;28:key:Escape;32:key:T;38:click:@Thieves'' guild;48:key:Escape;54:wheel:down,25;60:click:@Visit the tavern…;68:rclick:590,450;72:key:Escape;74:rclick:862,607;78:key:Escape;80:key:Escape;82:key:Escape' },
     # Ember March (ADR-114): start, end the turn (the computer plays Red), open the town screen with its building tree, close it.
     @{ Name = 'game-ember-march'; App = 'EternalWars.Game'; Frames = 60; Map = $emberMap
        Input = '3:key:Enter;12:click:@End turn;40:key:T;52:key:Escape' },
     # Inspector rows (ADR-114) on Ember March: Select, the Inspector tab, a Minor artifact pickup, the witch hut, the sphinx, the hero (artifacts).
     @{ Name = 'editor-inspector-objects'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $emberMap
        Input = '3:click:@Select;6:click:@Inspector;9:click:616,230;16:click:645,382;23:click:965,552;30:click:381,276' },
-    @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 40
-       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1305,24' },
+    # The tools on a blank map: roads, a river, an object, the gate link tool. Then the week event settings on the conditions tab
+    # (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
+    @{ Name = 'editor-tools'; App = 'EternalWars.MapEditor'; Frames = 76
+       Input = '3:click:@Road;6:click:700,600;9:click:740,600;12:click:@River;15:click:800,500;18:click:@Object;21:click:900,450;24:click:@LinkGates;27:click:900,450;30:click:1305,24;39:click:@Conditions;44:click:@conflux;50:click:1583,250;56:click:@Undo;62:click:@Undo' },
     # The height tools (ADR-182 g) on a blank map: radius 2, strength 8 (the spin boxes' up arrows), raise two strokes, lower one and undo
     # it; then highlands painted with Auto height on.
-    @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 60
-       Input = '3:click:@Height;5:click:322,53;7:click:322,53;9:click:493,53;10:click:493,53;11:click:493,53;12:click:493,53;13:click:493,53;14:click:493,53;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,720,900,720;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:300,400' },
-    # Generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
-    @{ Name = 'editor-generate'; App = 'EternalWars.MapEditor'; Frames = 50
-       Input = '3:click:@From template;8:click:@Random;12:choose:sylvan;16:click:@Generate;30:click:@From template' },
-    # The template editor (ADR-117): "Templates", add a treasure zone, drag it, right-drag it onto start-1 to connect, Generate (opens the map).
-    @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 60
-       Input = '3:click:@Templates;8:click:@+ Treasure;14:drag:624,408,708,560;20:rdrag:708,560,568,373;34:click:@Generate' },
+    # Then generate from a template (ADR-087): "From template", Sylvan for Blue, Generate (Two against two at 128), then the tab again: the settings stay.
+    @{ Name = 'editor-heights'; App = 'EternalWars.MapEditor'; Frames = 106
+       Input = '3:click:@Height;5:click:322,53;7:click:322,53;9:click:493,53;10:click:493,53;11:click:493,53;12:click:493,53;13:click:493,53;14:click:493,53;17:drag:460,600,900,600;21:drag:460,620,900,620;26:click:@Raise;29:choose:Lower;33:drag:460,720,900,720;38:click:@Undo;42:click:@Terrain;45:click:@Highlands;48:click:300,400;59:click:@From template;64:click:@Random;68:choose:sylvan;72:click:@Generate;86:click:@From template' },
+    # The template editor (ADR-117): "Templates", select the middle zone (its obelisk count, ADR-140), add a treasure zone, drag it,
+    # right-drag it onto start-1 to connect, Generate (opens the map).
+    @{ Name = 'editor-template-editor'; App = 'EternalWars.MapEditor'; Frames = 70
+       Input = '3:click:@Templates;10:click:708,373;18:click:@+ Treasure;24:drag:624,408,708,560;30:rdrag:708,560,568,373;44:click:@Generate' },
     # The Events tab (EVT-6) on the quests map: open the tab, pick the first event (its tree), then its first action (the node text).
     @{ Name = 'editor-events'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $questsMap
        Input = '3:click:@Events;8:click:1090,168;14:click:1133,465' },
     # Bans and placeholders (ADR-126) on the placeholders map: the Bans tab, ban the first hero, undo it; Select, the Inspector tab, the random town.
     @{ Name = 'editor-bans'; App = 'EternalWars.MapEditor'; Frames = 30; Map = $placeholdersMap
        Input = '3:click:@Bans;7:click:@Agathe Sorrel (haven, Mage);11:click:@Undo;15:click:@Select;18:click:@Inspector;21:click:420,300' },
-    # The week event settings on the conditions tab (ADR-084): tick Conflux for the weekly events, one more skipped week, undo both.
-    @{ Name = 'editor-week-events'; App = 'EternalWars.MapEditor'; Frames = 40
-       Input = '3:click:@Conditions;8:click:@conflux;14:click:1583,250;20:click:@Undo;26:click:@Undo' },
     # The arena switch (ARN-2) on the arena map: the Conditions tab (the switch on, the other victory rows off), untick it, scroll the tabs to
     # Validation (the combat place now does nothing).
     @{ Name = 'editor-arena'; App = 'EternalWars.MapEditor'; Frames = 40; Map = $arenaMap
        Input = '3:click:@Conditions;6:click:@Arena: a day to prepare, then one battle decides the game;10:click:1584,100;13:click:1584,100;16:click:1584,100;19:click:1584,100;24:click:1318,100' }
     # The scenarios below find buttons by their text (press:) rather than by pixel.
     # Unique buildings (ADR-138, ADR-143): Orrin enters the Necropolis town, ticks a garrison and a hero stack for the Undead Transformer and
-    # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up), Gareth the Haven town (Stables: a notice).
-    @{ Name = 'game-unique-buildings'; App = 'EternalWars.Game'; Frames = 64; Map = $uniqueMap
-       Input = '3:key:Enter;10:key:Up;20:press:Garrison: 12 Pikeman;24:press:Hero: 20 Footman;30:press:Transform;36:key:Escape;40:press:Ilya;44:key:Up;56:press:→ Basic;60:key:Escape' },
-    # Stables and the Marketplace screen (ADR-067): Gareth enters the Haven town, then the HUD's Marketplace button.
-    @{ Name = 'game-stables-market'; App = 'EternalWars.Game'; Frames = 34; Map = $uniqueMap
-       Input = '3:key:Enter;8:press:Gareth;12:key:Up;24:key:Escape;26:key:Escape;28:press:Marketplace' },
+    # transforms them; Ilya enters the Sylvan town (Elder Grove: a notice and a level-up). Stables and the Marketplace screen (ADR-067):
+    # Gareth enters the Haven town (Stables: a notice), then the HUD's Marketplace button.
+    @{ Name = 'game-unique-buildings'; App = 'EternalWars.Game'; Frames = 100; Map = $uniqueMap
+       Input = '3:key:Enter;10:key:Up;20:press:Garrison: 12 Pikeman;24:press:Hero: 20 Footman;30:press:Transform;36:key:Escape;40:press:Ilya;44:key:Up;56:press:→ Basic;60:key:Escape;64:press:OK;68:key:Escape;74:press:Gareth;78:key:Up;90:key:Escape;92:key:Escape;94:press:Marketplace' },
     # Map sites (ADR-079, ADR-080, ADR-082, ADR-105, ADR-139): each hero steps north onto its site: the University's lessons, the War
     # Academy's, the Arena's choice, Pandora's Box, the Witch Hut, the Sphinx (the map's riddle, answered wrong: a right answer's 5000 experience would bring level-ups), the Sacrificial Altar, the Artifact Merchant.
-    @{ Name = 'game-map-sites'; App = 'EternalWars.Game'; Frames = 160; Map = $sitesMap
-       Input = '3:key:Enter;8:press:Ulric;12:key:Up;24:key:Escape;28:press:Wenda;32:key:Up;44:key:Escape;48:press:Lior;52:key:Up;62:press:+2 Attack;68:press:Pella;72:key:Up;82:press:Open;90:key:Escape;94:press:Hagan;98:key:Up;108:press:Leave;112:press:Sefra;116:key:Up;126:press:A cave;132:press:Mortis;136:key:Up;146:key:Escape;148:press:Bram;152:key:Up' },
-    # Red's map sites: the Refugee Camp and the Cartographer (Buy reveals the surface).
-    @{ Name = 'game-map-sites-red'; App = 'EternalWars.Game'; Frames = 72; Map = $sitesMap
-       Input = '3:key:Enter;8:press:End turn;16:press:Corin;20:key:Up;32:key:Escape;36:press:Tamsin;40:key:Up;52:press:Buy' },
+    # At the Witch Hut, information windows on a decision prompt (ADR-178), in the middle of the screen (ADR-186): right-click the prompt
+    # (the hut), then the skill offered. After Blue's turn Red's map sites: the Refugee Camp and the Cartographer (Buy reveals the surface).
+    @{ Name = 'game-map-sites'; App = 'EternalWars.Game'; Frames = 244; Map = $sitesMap
+       Input = '3:key:Enter;8:press:Ulric;12:key:Up;24:key:Escape;28:press:Wenda;32:key:Up;44:key:Escape;48:press:Lior;52:key:Up;62:press:+2 Attack;68:press:Pella;72:key:Up;82:press:Open;90:key:Escape;94:press:Hagan;98:key:Up;108:rclick:800,430;112:key:Escape;114:rclick:640,477;118:key:Escape;120:press:Leave;124:press:Sefra;128:key:Up;138:press:A cave;144:press:Mortis;148:key:Up;158:key:Escape;160:press:Bram;164:key:Up;176:key:Escape;180:press:End turn;188:press:Corin;192:key:Up;204:key:Escape;208:press:Tamsin;212:key:Up;224:press:Buy' },
     # The Grail (ADR-140): Obelisa visits the obelisk (notice), P opens the puzzle map and closes it; Spade digs (an empty hole), Digby digs up the
     # Grail; two turns later Digby carries it into Castlebridge (the Grail building's notice).
     @{ Name = 'game-grail'; App = 'EternalWars.Game'; Frames = 100; Map = $grailMap
@@ -243,58 +232,97 @@ $scenarios = @(
     @{ Name = 'game-battle-teleport'; App = 'EternalWars.Game'; Frames = 150; Map = $magicMap
        Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Teleport;114:click:410,262;120:click:650,290;132:key:D' },
     # A copy (ADR-152): the same battle, Mirror Image cast on Magus' footmen; the copy stands next to them; the Footman then defends.
-    @{ Name = 'game-battle-mirror'; App = 'EternalWars.Game'; Frames = 150; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Mirror Image;114:click:410,262;132:key:D' },
-    # A deployment step and war machines on the field (ADR-076), then Necromancy (ADR-078): the battle width (Tactics), Start, quick combat,
-    # the result, then the Necromancy screen.
-    @{ Name = 'game-necromancy'; App = 'EternalWars.Game'; Frames = 122; Map = $necromancyMap
-       Input = '3:key:Enter;10:key:Right;40:press:32;70:key:Enter;84:key:Q;112:key:Enter' },
-    # Drag and drop in the deployment step (ADR-155): the same battle; the 60 stack is dragged down the zone (carried at frame 61, placed at
-    # 62), the 20 stack is dropped outside the zone (refused, back in its place at 68), then the battle starts.
-    @{ Name = 'game-deploy-drag'; App = 'EternalWars.Game'; Frames = 84; Map = $necromancyMap
-       Input = '3:key:Enter;10:key:Right;40:press:32;60:drag:425,305,360,600;66:drag:370,480,900,480;76:key:Enter' },
+    # Then the victory screen (ADR-103): quick combat beats the last enemy hero; the screen shows the score (nothing is pressed, so the
+    # ranking and the replays folder stay as they are).
+    @{ Name = 'game-battle-mirror'; App = 'EternalWars.Game'; Frames = 190; Map = $magicMap
+       Input = '3:key:Enter;8:press:Magus;12:key:H;18:press:Distant Vision;24:click:800,500;36:press:Close;40:key:Up;50:press:Close;56:key:Down;72:click:800,552;78:click:800,552;108:press:Mirror Image;114:click:410,262;132:key:D;150:key:Q;180:key:Enter' },
+    # A deployment step and war machines on the field (ADR-076): the battle width (Tactics); drag and drop in the deployment step (ADR-155):
+    # the 60 stack is dragged down the zone (carried at frame 61, placed at 62), the 20 stack is dropped outside the zone (refused, back in
+    # its place at 68); Start, quick combat, the result, then the Necromancy screen (ADR-078).
+    @{ Name = 'game-necromancy'; App = 'EternalWars.Game'; Frames = 128; Map = $necromancyMap
+       Input = '3:key:Enter;10:key:Right;40:press:32;60:drag:425,305,360,600;66:drag:370,480,900,480;76:key:Enter;90:key:Q;118:key:Enter' },
     # The siege's gate, keep and towers and Earthquake (ADR-120): the ballista breaks the gate; a second run casts Earthquake.
     @{ Name = 'game-siege-gate'; App = 'EternalWars.Game'; Frames = 104; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:key:D;72:click:958,432' },
     @{ Name = 'game-siege-earthquake'; App = 'EternalWars.Game'; Frames = 150; Map = $siegeMagicMap
        Input = '3:key:Enter;10:key:Up;62:press:Earthquake;100:key:D;110:key:D;120:key:D;135:key:D' },
-    # The victory screen (ADR-103): quick combat beats the last enemy hero; the screen shows the score (nothing is pressed, so the ranking and
-    # the replays folder stay as they are).
-    @{ Name = 'game-victory'; App = 'EternalWars.Game'; Frames = 120; Map = $magicMap
-       Input = '3:key:Enter;8:press:Magus;12:key:Up;22:press:Close;28:key:Down;44:click:800,552;50:click:800,552;80:key:Q;110:key:Enter' },
     # The editor's Grail tool, the conditions panel's difficulty and hero limit rows (ADR-083, ADR-103) and the town inspector's faction and
     # guild spells (ADR-083, ADR-123).
     @{ Name = 'editor-grail-and-town'; App = 'EternalWars.MapEditor'; Frames = 38; Map = $grailMap
-       Input = '5:click:@Conditions;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:@Inspector' },
-    # The template editor's obelisk count (ADR-140): Templates, select the middle zone.
-    @{ Name = 'editor-template-obelisks'; App = 'EternalWars.MapEditor'; Frames = 16
-       Input = '3:press:Templates;10:click:708,373' }
+       Input = '5:click:@Conditions;10:press:Grail;14:click:400,450;20:press:Select;24:click:720,560;28:click:@Inspector' }
 )
 
-$failed = 0
-foreach ($scenario in $scenarios | Where-Object { $_.Name -like $Only }) {
-    $dir = Join-Path $Out $scenario.Name
+$selected = @($scenarios | Where-Object { $_.Name -like $Only } | Sort-Object { -$_.Frames }) # the longest first, so they do not end the run alone
+$watch = [Diagnostics.Stopwatch]::StartNew()
+$results = $selected | ForEach-Object -ThrottleLimit ([Math]::Max(1, $Jobs)) -Parallel {
+    $scenario = $_
+    $started = [Diagnostics.Stopwatch]::StartNew()
+    $dir = Join-Path $using:Out $scenario.Name
     New-Item -ItemType Directory -Force $dir | Out-Null
-    # Every game scenario starts from the default settings (ADR-090), whatever this computer's settings file says.
+    # No frames of an earlier, longer run stay behind.
+    Remove-Item (Join-Path $dir 'frame*') -ErrorAction SilentlyContinue
+    # Every game scenario starts from the default settings (ADR-090), whatever this computer's settings file says, and keeps its
+    # autosaves to itself: scenarios run side by side, and this computer's saves stay as they are.
     $settings = Join-Path $dir 'settings.json'
     Remove-Item $settings -ErrorAction SilentlyContinue
-    $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings")
+    $saves = Join-Path $dir 'saves'
+    Remove-Item $saves -Recurse -ErrorAction SilentlyContinue
+    $userArgs = @("--autoinput=$($scenario.Input)", "--settings=$settings", "--saves=$saves")
     if ($scenario.Map) { $userArgs += "--map=$($scenario.Map)" }
     if ($scenario.Replay) { $userArgs += "--replay=$($scenario.Replay)" }
     # The game opens on the main menu; the scenarios start on the new-game screen unless they test the menu.
     if ($scenario.App -eq 'EternalWars.Game' -and -not $scenario.MainMenu) { $userArgs += '--new-game' }
+    $fps = if ($scenario.Fps) { $scenario.Fps } else { 10 }
 
-    $log = & $Godot --path (Join-Path $root "src/Apps/$($scenario.App)") --write-movie (Join-Path $dir 'frame.png') `
-        --fixed-fps 10 --quit-after $scenario.Frames -- @userArgs 2>&1 | Out-String
-    $errors = $log -split "`n" | Where-Object { $_ -match 'ERROR|SCRIPT ERROR|Unhandled exception|Exception:' }
-    if ($LASTEXITCODE -ne 0 -or $errors) {
-        $failed++
-        Write-Host "FAIL  $($scenario.Name)"
-        $errors | ForEach-Object { Write-Host "      $_" }
+    $movie = Join-Path $dir ($using:Png ? 'frame.png' : 'frame.avi')
+    # With many Godot processes starting at once, one now and then dies at start without a word (seen about once in 400 starts): that
+    # one is started again, once, and its line says so. A run that reports an error is never repeated.
+    $tries = 0
+    do {
+        $tries++
+        $log = & $using:Godot --path (Join-Path $using:root "src/Apps/$($scenario.App)") --write-movie $movie `
+            --fixed-fps $fps --quit-after $scenario.Frames -- @userArgs 2>&1 | Out-String
+        $exit = $LASTEXITCODE
+    } while ($tries -lt 2 -and $exit -ne 0 -and -not $log.Trim())
+    Set-Content (Join-Path $dir 'godot.log') $log
+    if (-not $using:Png -and (Test-Path $movie)) {
+        # The film is Motion JPEG: every video chunk of its "movi" list is one frame's JPEG file, written out as it is.
+        $bytes = [IO.File]::ReadAllBytes($movie)
+        $at = 12
+        $frame = 0
+        while ($at + 8 -le $bytes.Length) {
+            $id = [Text.Encoding]::ASCII.GetString($bytes, $at, 4)
+            $size = [BitConverter]::ToUInt32($bytes, $at + 4)
+            if ($id -eq 'LIST' -and [Text.Encoding]::ASCII.GetString($bytes, $at + 8, 4) -eq 'movi') {
+                $at += 12 # into the list: its chunks follow
+                continue
+            }
+
+            if ($id -in '00db', '00dc') {
+                $file = [IO.File]::Create((Join-Path $dir ('frame{0:D8}.jpg' -f $frame++)))
+                $file.Write($bytes, $at + 8, $size)
+                $file.Dispose()
+            }
+
+            $at += 8 + $size + $size % 2
+        }
+    }
+
+    $errors = @($log -split "`n" | Where-Object { $_ -match 'ERROR|SCRIPT ERROR|Unhandled exception|Exception:' })
+    $ok = $exit -eq 0 -and -not $errors
+    $seconds = '{0,5:N1}s' -f $started.Elapsed.TotalSeconds
+    if ($tries -gt 1) { $seconds += ' (second start)' }
+    if ($ok) {
+        Write-Host "ok    $seconds  $($scenario.Name)  ($dir)"
     }
     else {
-        Write-Host "ok    $($scenario.Name)  ($dir)"
+        Write-Host "FAIL  $seconds  $($scenario.Name)  (exit code $exit, $(Join-Path $dir 'godot.log'))"
+        $errors | ForEach-Object { Write-Host "      $_" }
     }
+
+    $ok
 }
 
+$failed = @($results | Where-Object { -not $_ }).Count
+Write-Host ('{0} scenario(s), {1} failed, {2:N0}s' -f $selected.Count, $failed, $watch.Elapsed.TotalSeconds)
 if ($failed -gt 0) { throw "$failed smoke scenario(s) failed." }
