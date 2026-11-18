@@ -13,12 +13,16 @@ namespace EternalWars.Core.Domain.Battles;
 
 /// <summary>
 /// The end of a battle on the adventure map: the arena's result, the heroes' mana, the survivors back into their slots, Necromancy and Raise Dead,
-/// experience, the loser's artifacts, a beaten hero leaving the map and what a won or lost battle does to a guard (<see cref="IBattleGuard"/>).
+/// experience, the loser's artifacts, a beaten hero leaving the map and what a won or lost battle does to a guard (described by <see cref="IBattleGuard"/>, applied by
+/// <see cref="BattleGuardService"/>).
 /// </summary>
 internal sealed class BattleAftermath(
     GameState state, IEventPublisher events, ArmyService armies, ProgressionService progression, ArtifactService artifacts, Economy.EconomyService economy,
     TownVisitService towns, PandorasBoxService boxes)
 {
+    private readonly DecisionSteps _steps = new(state, events);
+    private readonly BattleGuardService _guards = new(state, events, economy, artifacts, towns, boxes);
+
     /// <summary>Experience for defeating (not merely routing) an enemy hero.</summary>
     public const int HeroDefeatExperience = 500;
 
@@ -82,14 +86,8 @@ internal sealed class BattleAftermath(
         else if (winning.Guard is { } guardId)
         {
             // A guard keeps what lived.
-            if (state.GetObject(guardId) is IBattleGuard guard)
-            {
-                guard.KeepSurvivors(Outcome(battle, winner));
-            }
-            else
-            {
-                events.Publish(new MapObjectChanged(guardId));
-            }
+            var guard = state.GetObject(guardId);
+            _guards.Apply(guard is IBattleGuard described ? described.Survived() : new GuardUnchanged(guard), battle, winner, null);
         }
 
         // Loser: a hero leaves the map, a guard is gone.
@@ -120,22 +118,20 @@ internal sealed class BattleAftermath(
         }
         else if (losing.Guard is { } guardId)
         {
-            var guard = state.GetObject(guardId);
-            var taker = winning.Hero is { } heroId ? state.GetHero(heroId) : null;
-            (guard as IBattleGuard)?.Defeated(Outcome(battle, loser), taker);
+            if (state.GetObject(guardId) is IBattleGuard guard)
+            {
+                var taker = winning.Hero is { } heroId ? state.GetHero(heroId) : null;
+                _guards.Apply(guard.Defeated(), battle, loser, taker);
+            }
         }
 
-        var decision = state.PendingDecision;
-        state.PendingDecision = null;
-        if (decision is not null)
+        if (state.PendingDecision is { } decision)
         {
-            events.Publish(new DecisionResolved(decision));
+            _steps.Resolve(decision);
         }
 
         progression.OfferNext();
     }
-
-    private BattleGuardOutcome Outcome(BattleState battle, BattleSide side) => new(state, events, economy, progression, artifacts, towns, boxes, battle, side);
 
     /// <summary>The town a garrison hero side holds (ADR-112), or null for any other side.</summary>
     private Town? HeldTown(BattleParticipant participant) =>
@@ -162,7 +158,7 @@ internal sealed class BattleAftermath(
     }
 
     /// <summary>The town's garrison keeps what lived.</summary>
-    private void ApplySurvivors(BattleState battle, BattleSide side, Town town) => BattleGuardOutcome.KeepTroops(battle, side, events, town.Id, town.Garrison);
+    private void ApplySurvivors(BattleState battle, BattleSide side, Town town) => _guards.KeepTroops(battle, side, town.Id, town.Garrison);
 
     /// <summary>
     /// Necromancy (ADR-072, MAG-7): after a victory over a defeated enemy (not one that retreated), the base undead raised from the enemy's

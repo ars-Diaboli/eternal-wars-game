@@ -20,6 +20,8 @@ namespace EternalWars.Core.Domain.Objects;
 /// </remarks>
 public sealed class GuardService(GameState state, IEventPublisher events, BattleService battles) : Turns.ITurnPhaseParticipant
 {
+    private readonly DecisionSteps _steps = new(state, events);
+
     /// <summary>Flee offered when the hero's army is at least this many times stronger.</summary>
     public const int FleeRatio = 3;
 
@@ -194,9 +196,7 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
 
         if (offer is { } o)
         {
-            var decision = new GuardEncounterDecision(hero.Id, monster.Id, o, monster.Creature, count);
-            state.PendingDecision = decision;
-            events.Publish(new DecisionRequested(decision));
+            _steps.Ask(new GuardEncounterDecision(hero.Id, monster.Id, o, monster.Creature, count));
             return;
         }
 
@@ -215,15 +215,10 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
     /// <summary>Accept the offer (join / let them go), or decline it and fight.</summary>
     internal void Respond(bool accept)
     {
-        if (state.PendingDecision is not GuardEncounterDecision decision)
-        {
-            throw new CommandRefusedException("No guard is waiting for an answer.");
-        }
-
+        var decision = _steps.TakeDecision<GuardEncounterDecision>("No guard is waiting for an answer.");
         var hero = state.GetHero(decision.Hero);
         var monster = (MonsterGuard)state.GetObject(decision.Guard);
-        state.PendingDecision = null;
-        events.Publish(new DecisionResolved(decision));
+        _steps.Resolve(decision);
 
         if (!accept)
         {
@@ -231,7 +226,7 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
             return;
         }
 
-        state.RemoveObject(monster);
+        _steps.RemoveObject(monster); // joined or fled, the monster leaves the map first
         if (decision.Offer == GuardOffer.Join)
         {
             hero.Army.TryAdd(new Armies.CreatureStack(decision.Creature, decision.Count));
@@ -242,7 +237,5 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
         {
             events.Publish(new GuardFled(hero.Id, monster.Id));
         }
-
-        events.Publish(new MapObjectRemoved(monster.Id));
     }
 }

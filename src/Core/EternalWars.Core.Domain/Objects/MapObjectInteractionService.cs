@@ -124,10 +124,8 @@ public sealed class MapObjectInteractionService
 
     internal void Meet(Hero hero, Hero other)
     {
-        var decision = new HeroExchangeDecision(hero.Id, other.Id);
-        State.PendingDecision = decision;
         Events.Publish(new HeroesMet(hero.Id, other.Id));
-        Events.Publish(new DecisionRequested(decision));
+        _context.Steps.Ask(new HeroExchangeDecision(hero.Id, other.Id));
     }
 
     /// <summary>A hero attacks an enemy hero: <see cref="BattleTriggered"/>, then the battle itself.</summary>
@@ -248,7 +246,7 @@ public sealed class MapObjectInteractionService
             return;
         }
 
-        _context.Ask(new TownGateDecision(hero.Id, gate.Id, towns));
+        _context.Steps.Ask(new TownGateDecision(hero.Id, gate.Id, towns));
     }
 
     /// <summary>A prisoner joins the visitor's player where the prison stood, unless the player has all the heroes it may (ADR-068, MAP-5).</summary>
@@ -266,7 +264,7 @@ public sealed class MapObjectInteractionService
             return;
         }
 
-        _context.RemoveFromMap(prison);
+        _context.Steps.RemoveObject(prison);
         var level = Math.Max(1, prison.Level ?? 1);
         var freed = _recruits.Join(hero.Owner, prison.Position, State.HeroRoster.Get(heroId), ExperienceTable.For(level)); // it moves from its owner's next turn on
         Events.Publish(new HeroFreed(prison.Id, freed.Id, hero.Owner, heroId, freed.Level));
@@ -305,7 +303,7 @@ public sealed class MapObjectInteractionService
         // Only key holders get onto a border post (the move refuses the others); a guard leaves after the first, a gate stays.
         if (!post.IsGate)
         {
-            _context.RemoveFromMap(post);
+            _context.Steps.RemoveObject(post);
             Events.Publish(new BorderGuardPassed(post.Id, hero.Id));
         }
     }

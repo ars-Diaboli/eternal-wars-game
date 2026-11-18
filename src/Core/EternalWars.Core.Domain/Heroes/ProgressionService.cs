@@ -13,6 +13,8 @@ namespace EternalWars.Core.Domain.Heroes;
 /// </summary>
 public sealed class ProgressionService(GameState state, IEventPublisher events) : Turns.ITurnPhaseParticipant
 {
+    private readonly DecisionSteps _steps = new(state, events);
+
     void Turns.ITurnPhaseParticipant.StartWeek() => ExpireStatuses(state.Heroes.Concat(state.GarrisonHeroes), StatusExpiry.EndOfWeek);
 
     void Turns.ITurnPhaseParticipant.PrepareTurn(Common.PlayerId player) => ExpireStatuses(state.AllHeroesOf(player), StatusExpiry.EndOfDay);
@@ -109,19 +111,14 @@ public sealed class ProgressionService(GameState state, IEventPublisher events) 
                 continue;
             }
 
-            var decision = new LevelUpDecision(hero.Id, hero.Level + 1, options, stat);
-            state.PendingDecision = decision;
-            events.Publish(new DecisionRequested(decision));
+            _steps.Ask(new LevelUpDecision(hero.Id, hero.Level + 1, options, stat));
             return;
         }
     }
 
     internal void Choose(string skill)
     {
-        if (state.PendingDecision is not LevelUpDecision decision)
-        {
-            throw new CommandRefusedException("No level-up is pending.");
-        }
+        var decision = _steps.TakeDecision<LevelUpDecision>("No level-up is pending.");
 
         // A replay recorded before the rework names the old id (ADR-072).
         skill = BuiltInSkills.Resolve(skill);
@@ -130,9 +127,9 @@ public sealed class ProgressionService(GameState state, IEventPublisher events) 
             throw new CommandRefusedException($"'{skill}' is not one of the offered skills.");
         }
 
-        state.PendingDecision = null;
-        LevelUp(state.GetHero(decision.Hero), skill, decision.Stat);
-        events.Publish(new DecisionResolved(decision));
+        var hero = state.GetHero(decision.Hero);
+        _steps.Resolve(decision);
+        LevelUp(hero, skill, decision.Stat);
         OfferNext();
     }
 

@@ -105,25 +105,10 @@ public sealed class MapGarrison(MapObjectId id, MapObjectDefinition definition, 
     : MapObject(id, definition, position, MapObjectKind.Garrison), IFlaggable, IBattleGuard
 {
     /// <inheritdoc/>
-    void IBattleGuard.KeepSurvivors(BattleGuardOutcome outcome) => outcome.KeepTroops(Id, Troops);
+    GuardOutcome IBattleGuard.Survived() => new TroopsSurvive(this, Troops);
 
     /// <inheritdoc/>
-    /// <remarks>The beaten troops are gone, and the garrison is flagged for the winner.</remarks>
-    void IBattleGuard.Defeated(BattleGuardOutcome outcome, Hero? winner)
-    {
-        for (var slot = 0; slot < Army.SlotCount; slot++)
-        {
-            Troops.Set(slot, null);
-        }
-
-        outcome.Events.Publish(new Events.GarrisonChanged(Id, Troops.Slots.ToList()));
-        if (winner is not null)
-        {
-            var previous = Owner;
-            Owner = winner.Owner;
-            outcome.Events.Publish(new Events.GarrisonOwnerChanged(Id, previous, winner.Owner));
-        }
-    }
+    GuardOutcome IBattleGuard.Defeated() => new GarrisonWon(this);
 
     /// <inheritdoc/>
     internal override string DigestState() => $"owner {Owner?.Value} troops {GameStateDigest.Slots(Troops)}";

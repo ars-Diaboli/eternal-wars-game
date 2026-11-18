@@ -19,6 +19,8 @@ namespace EternalWars.Core.Domain.Battles;
 /// </summary>
 internal sealed class BattleStarter(GameState state, IEventPublisher events, ArtifactService artifacts, BattleFlow flow, BattleAftermath aftermath)
 {
+    private readonly DecisionSteps _steps = new(state, events);
+
     public void BeginHeroBattle(Hero attacker, Hero defender, bool isAmbush)
     {
         if (defender.Army.IsEmpty)
@@ -243,9 +245,6 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
         battle.PendingStacks = (attackers, defenders);
         battle.DeploymentAllowed = deployment;
         battle.Siege = siege is null ? null : SiegeRules.Create(siege);
-        var decision = new BattleDecision(attacker.Id);
-        state.PendingDecision = decision;
-
         // The phase is settled before anyone hears of the battle, so views see the width choice (publish after mutating).
         var (chooser, level) = BattleSetup.EffectiveTactics(battle.Attacker.Tactics, battle.Defender.Tactics);
         var choosing = widthChoice && siege is null && chooser is { } side && !battle.IsComputerControlled(side) && BattleSetup.WidthOptions(level).Count > 1;
@@ -256,7 +255,7 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
             battle.WidthOptions = BattleSetup.WidthOptions(level);
         }
 
-        events.Publish(new DecisionRequested(decision));
+        _steps.Ask(new BattleDecision(attacker.Id));
         if (!choosing)
         {
             // The AI keeps the default width.

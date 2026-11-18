@@ -62,7 +62,7 @@ I read about 73k lines of source and 34k lines of tests (four reviewers working 
   - `TownPanel`, `InspectorPanel` and `EventsPanel` rebuild everything on any event.
   - The game app's `Main` partials (about 2k lines) hold timer and AI gating, seat ownership, LAN announce rules and replay stepping. That breaks the rule that Apps hold composition and input mapping only.
 - **Switches where the rest of the code uses handler tables:** adventure spells (`AdventureMagic.Cast`), `ScenarioCondition.Kind` (switched on in 6 places), the `MapEventService` action switch, and `MapValidator`.
-- **Duplication:** setting a `PendingDecision` and publishing `DecisionRequested` is written by hand in 5 services. `new DecisionResolved` appears 15 times. The nine decision resolvers repeat the same take/clear/publish block.
+- **Duplication:** setting a `PendingDecision` and publishing `DecisionRequested` is written by hand in 5 services. `new DecisionResolved` appears 15 times. The nine decision resolvers repeat the same take/clear/publish block. Fixed in Phase 3 (ADR-215).
 - **Magic numbers:** AI weights such as 800+80×, the 3000 gold cushion and the 0.08 distance decay are written inline and copied.
 - **Smaller issues:**
   - Content ids (creatures, spells, artifacts, buildings) are plain strings.
@@ -312,8 +312,15 @@ The order is: safety first, then a measurement baseline, then cheap performance 
   - Done (ADR-214). `EndTurn` takes the turn out of today's open turns (a simultaneous day) before `TurnEnded`; the next turn follows the event.
   - `IFogRevealer.RevealArea` (implemented by `VisibilityService`) reveals for View Terrain and map events before `AreaRevealed`, and for observatories, Magi windows, the Ruins and cartographers before `SurroundingsRevealed` (`ObjectInteractionContext.RevealSurroundings`). `VisibilityService` no longer handles either event.
   - `TilesRevealed` and `KnownObjectsChanged` now come before the reveal event instead of after it. The fog, the random draws and the digests are unchanged: the duel baseline still gives `A0F1FADCC6D8DEE4` and the sim self-test `82AE941CD62212E2`.
-- [ ] **Shared decision helpers:** `Ask`, `TakeDecision<T>`, `Resolve` and `RemoveObject` on one shared helper, used by all services, with one fixed order.
-- [ ] **Battle guard outcomes:** `IBattleGuard` returns a description of the outcome, and a service applies it, so entities stop mutating state.
+- [x] **Shared decision helpers:** `Ask`, `TakeDecision<T>`, `Resolve` and `RemoveObject` on one shared helper, used by all services, with one fixed order.
+  - Done (ADR-215). `DecisionSteps` (Decisions) holds the four steps. The object services reach it through `ObjectInteractionContext.Steps`; the guard, progression, battle, map event and game flow services hold their own.
+  - The order: take the decision, check the answer (a price that can be refused among the checks), resolve (cleared, then `DecisionResolved`), then the answer's effects. A refused answer leaves the decision pending and publishes nothing. A battle's decision is still resolved after its consequences.
+  - Events that moved: `DecisionResolved` now comes before the answer's effects for the treasure chest, the town gate, training, the sphinx, the level-up choice and a map event's army choice. A joining or fleeing guard leaves the map (`MapObjectRemoved`) before `GuardJoined` / `GuardFled`. A defeated player's hero with a decision pending now gets its `DecisionResolved`. The digests are unchanged: the duel baseline still gives `A0F1FADCC6D8DEE4` and the sim self-test `82AE941CD62212E2`.
+  - Left as they are: a deposit or abandoned mine replaced in place keeps its id (`MapObjectChanged`, no removal); a beaten monster leaves the map through `BattleGuardService`, which uses `DecisionSteps.RemoveObject` (ADR-216); the editor removes objects through its own undoable steps.
+- [x] **Battle guard outcomes:** `IBattleGuard` returns a description of the outcome, and a service applies it, so entities stop mutating state.
+  - Done (ADR-216). `IBattleGuard.Survived()` / `Defeated()` return a `GuardOutcome` record naming the object and what happens to it (`MonsterSurvives`, `SiteGuardSurvives`, `TroopsSurvive`, `GuardUnchanged`; `MonsterBeaten`, `MineGuardBeaten`, `DwellingGuardBeaten`, `BankPlundered`, `BoxWon`, `TownWon`, `GarrisonWon`). The guard changes nothing.
+  - `BattleGuardService` (Battles, owned by `BattleAftermath`) applies it: the survivors, the abandoned mine cleared, the flags, the bank's reward, the box opened, the town captured. `BattleGuardOutcome`, the bag of services the entities used, is gone.
+  - The mutations, random draws and events come in the same order as before: the duel baseline still gives `A0F1FADCC6D8DEE4` and the sim self-test `82AE941CD62212E2`.
 - [ ] **Simultaneous days:** one `SimultaneousDayCoordinator` replaces the public flag and the state spread over the session and `TurnService`.
 - [ ] **Network access:** replace `InternalsVisibleTo` for Network with a narrow sink interface that applies the client's view updates. Add a schema hash to the join handshake.
 

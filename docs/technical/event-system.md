@@ -64,7 +64,7 @@ publish/subscribe layer.
 |---|---|
 | Any accepted command | its events … → `CommandExecuted` last (command already in `CommandLog`; autosave hooks here) |
 | Map object visit | `MapObjectVisited` first, then the outcome events (or `DecisionRequested`) |
-| Choice needed | `DecisionRequested` … `DecisionResolved`; a battle's `DecisionResolved(BattleDecision)` comes after `BattleEnded` and its map consequences |
+| Choice needed | `DecisionRequested` … `DecisionResolved`, then the answer's effects; a decision they open (a level-up, a battle) is requested after it. A refused answer publishes nothing. A battle's `DecisionResolved(BattleDecision)` comes after `BattleEnded` and its map consequences |
 | Battle end | `BattleEnded` → survivors' `ArmyChanged` → `UndeadRaised` → experience / level-up → `DecisionResolved` |
 | Player eliminated | its `HeroDefeated`, `TownOwnerChanged`, `MineOwnerChanged` … → `PlayerDefeated` |
 | Object replaced in place (same id) | `MapObjectChanged`, then owner events (e.g. `DepositBought` → `MapObjectChanged` → `MineOwnerChanged`) |
