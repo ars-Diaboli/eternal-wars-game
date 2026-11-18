@@ -160,7 +160,7 @@ public partial class TavernPanel : PanelContainer
         box.AddChild(hire);
         if (refusal is not null)
         {
-            Line(refusal, new Color(1f, 0.6f, 0.5f));
+            Line(refusal, UiTheme.TextRefusal);
         }
 
         return card;

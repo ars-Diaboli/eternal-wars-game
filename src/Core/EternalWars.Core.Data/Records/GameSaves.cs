@@ -135,7 +135,10 @@ public static class GameSaves
         return (GameReplay.Replay(record, content), record);
     }
 
-    /// <summary>The saves in a folder, newest first; unreadable files are listed with their error. A missing folder is empty.</summary>
+    /// <summary>
+    /// The saves in a folder, newest first, from their labels only (<see cref="GameRecordLabel.Read(string)"/>: the commands are not read, so a
+    /// save that fails to load still lists); files whose label cannot be read are listed with their error. A missing folder is empty.
+    /// </summary>
     public static IReadOnlyList<SaveEntry> List(string folder) => ListFiles(folder, GameRecordSerializer.SaveExtension);
 
     /// <summary>
@@ -157,9 +160,10 @@ public static class GameSaves
             var written = File.GetLastWriteTimeUtc(file);
             try
             {
-                var record = GameRecordSerializer.Load(file);
+                var label = GameRecordLabel.Read(file);
                 var name = Path.GetFileName(file)[..^extension.Length];
-                var info = record.Save ?? new SaveInfo(name, written.ToString("O", System.Globalization.CultureInfo.InvariantCulture), "", "", false, record.Map.Name);
+                var info = label.Save ?? new SaveInfo(name, written.ToString("O", System.Globalization.CultureInfo.InvariantCulture), "", "", false,
+                    label.MapName ?? throw new FormatException("The record's map has no name."));
                 entries.Add((new SaveEntry(file, info, null), written));
             }
             catch (Exception e) when (e is System.Text.Json.JsonException or FormatException or IOException or NotSupportedException)

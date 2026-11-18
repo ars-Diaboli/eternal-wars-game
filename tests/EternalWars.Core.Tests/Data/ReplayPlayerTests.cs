@@ -20,7 +20,7 @@ public class ReplayPlayerTests
     /// Two human players end two days, then Blue's hero attacks trolls on day 3 and fights two rounds by hand before quick combat, then both
     /// end the turn.
     /// </summary>
-    private static GameRecordDocument Recorded(out GameSession played)
+    internal static GameRecordDocument Recorded(out GameSession played)
     {
         var state = TestWorld.Create(".A.....", ".......", "......B");
         state.GetHero(TestWorld.A).Army.Set(1, new CreatureStack(BuiltInCreatures.Archer, 15));

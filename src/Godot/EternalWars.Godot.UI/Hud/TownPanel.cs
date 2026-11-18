@@ -1,16 +1,11 @@
-using EternalWars.Core.Domain.Armies;
-using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
-using EternalWars.Core.Domain.Creatures;
-using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
-using EternalWars.Core.Domain.Info;
-using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Hud.TownScreen;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -21,36 +16,40 @@ namespace EternalWars.Godot.UI.Hud;
 /// the picked stack"), turn stacks into undead at a Necropolis's Undead Transformer (ADR-137), and appoint or dismiss the governor (ADR-063). Every action is a town command; refusals show
 /// below. Opened with <see cref="Open"/>. With <see cref="FullScreen"/> (the game app) it fills its parent and scrolls;
 /// Escape or "Close" shut it. A right click on a building, a dwelling, a recruit button or a stack opens its information window (ADR-154).
+/// The screen is made of <see cref="TownSection"/>s (ADR-223), each rebuilt alone on its own events; the screen rebuilds them all when it opens
+/// and on the events that change what it shows at all or what every section reads (the owner, a decision, the turn, a building, the governor).
 /// </summary>
 public partial class TownPanel : PanelContainer
 {
-    private readonly Label _title = new() { VerticalAlignment = VerticalAlignment.Center };
-
-    private readonly TextureRect _crest = new()
-    {
-        StretchMode = TextureRect.StretchModeEnum.KeepCentered,
-        MouseFilter = MouseFilterEnum.Pass,
-        CustomMinimumSize = new Vector2(Heraldry.TitleSize, Heraldry.TitleSize),
-    };
-    private readonly HBoxContainer _income = new();
-    private readonly Button _trade = new Button { Text = "Marketplace", TooltipText = "Trade gold against resources" }.WithResourceIcon(ResourceType.Gold);
-    private readonly Button _guild = new Button { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" }.WithIcon(UiIcon.ThievesGuild);
-    private readonly HBoxContainer _buildings = new();
-    private readonly Label _builtToday = new();
-    private readonly GridContainer _dwellings = new() { Columns = 4 };
-    private readonly VBoxContainer _armies = new();
-    private readonly HBoxContainer _blacksmith = new();
-    private readonly HBoxContainer _tavern = new();
-    private readonly HBoxContainer _governor = new();
-    private readonly VBoxContainer _caravan = new();
-    private readonly HFlowContainer _transformer = new();
-    private readonly Dictionary<(TownArmy Army, int Slot), CreatureCategory> _toTransform = [];
+    private readonly TownHeaderSection _header;
+    private readonly BuildingTreeSection _buildings;
+    private readonly DwellingsSection _dwellings;
+    private readonly GovernorSection _governor;
+    private readonly TownArmiesSection _armies;
+    private readonly CaravanSection _caravan;
+    private readonly TransformerSection _transformer;
+    private readonly BlacksmithSection _blacksmith;
+    private readonly TavernSection _tavern;
+    private readonly TownSection[] _sections;
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
     private readonly CheckBox _toHero = new() { Text = "Recruit to visiting hero" };
-    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
+    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) };
     private GameSession _session = null!;
     private MapObjectId? _town;
-    private (TownArmy Army, int Slot)? _picked;
+
+    public TownPanel()
+    {
+        _header = new TownHeaderSection(this);
+        _buildings = new BuildingTreeSection(this);
+        _dwellings = new DwellingsSection(this);
+        _governor = new GovernorSection(this);
+        _armies = new TownArmiesSection(this);
+        _caravan = new CaravanSection(this);
+        _transformer = new TransformerSection(this);
+        _blacksmith = new BlacksmithSection(this);
+        _tavern = new TavernSection(this);
+        _sections = [_header, _buildings, _dwellings, _governor, _armies, _caravan, _tavern, _blacksmith, _transformer];
+    }
 
     /// <summary>Fill the parent and scroll (the game app's town screen) instead of shrinking to the content. Set before <see cref="Bind"/>.</summary>
     public bool FullScreen { get; set; }
@@ -86,29 +85,29 @@ public partial class TownPanel : PanelContainer
 
         var header = new HBoxContainer();
         box.AddChild(header);
-        header.AddChild(_crest);
-        header.AddChild(_title);
-        header.AddChild(_income);
-        _trade.Pressed += () => TradeRequested?.Invoke();
-        header.AddChild(_trade);
-        _guild.Pressed += () => ThievesGuildRequested?.Invoke();
-        header.AddChild(_guild);
+        header.AddChild(_header.Crest);
+        header.AddChild(_header.Title);
+        header.AddChild(_header.Income);
+        _header.Trade.Pressed += () => TradeRequested?.Invoke();
+        header.AddChild(_header.Trade);
+        _header.Guild.Pressed += () => ThievesGuildRequested?.Invoke();
+        header.AddChild(_header.Guild);
         var close = new Button { Text = "Close" }.WithIcon(UiIcon.Close);
         close.Pressed += Close;
         header.AddChild(close);
 
         box.AddHeading("Buildings (one a day; hover for cost and requirements)");
-        box.AddChild(_builtToday);
-        box.AddChild(_buildings);
+        box.AddChild(_buildings.BuiltToday);
+        box.AddChild(_buildings.Buildings);
         box.AddHeading("Dwellings (7 of 9, every tier)");
-        box.AddChild(_dwellings);
+        box.AddChild(_dwellings.Grid);
         box.AddHeading("Governor (Stewardship)");
-        box.AddChild(_governor);
-        box.AddChild(_armies);
-        box.AddChild(_caravan);
-        box.AddChild(_transformer);
-        box.AddChild(_blacksmith);
-        box.AddChild(_tavern);
+        box.AddChild(_governor.Row);
+        box.AddChild(_armies.Rows);
+        box.AddChild(_caravan.Rows);
+        box.AddChild(_transformer.Row);
+        box.AddChild(_blacksmith.Row);
+        box.AddChild(_tavern.Row);
 
         var options = new HBoxContainer();
         box.AddChild(options);
@@ -120,44 +119,27 @@ public partial class TownPanel : PanelContainer
         box.AddChild(_status);
         Visible = false;
 
-        var refresh = new RefreshScheduler(this, Refresh);
-        refresh.On<TownBuilt>(session.Events);
-        refresh.On<TownBuildingDowngraded>(session.Events);
-        refresh.On<DwellingBuilt>(session.Events);
-        refresh.On<CreaturesRecruited>(session.Events);
-        refresh.On<StackUpgraded>(session.Events);
-        refresh.On<CreaturesTransformed>(session.Events);
-        refresh.On<GarrisonChanged>(session.Events);
-        refresh.On<ArmyChanged>(session.Events);
-        refresh.On<ResourcesChanged>(session.Events);
-        refresh.On<TownCreaturesGrew>(session.Events);
-        refresh.On<TownOwnerChanged>(session.Events);
-        refresh.On<HeroMoved>(session.Events);
-        refresh.On<DecisionRequested>(session.Events);
-        refresh.On<DecisionResolved>(session.Events); // back after a level-up on the visit (the Elder Grove)
-        refresh.On<TurnStarted>(session.Events);
-        refresh.On<WarMachineBought>(session.Events);
-        refresh.On<SpellBookBought>(session.Events);
-        refresh.On<HeroHired>(session.Events);
-        refresh.On<HeroEnteredGarrison>(session.Events);
-        refresh.On<HeroLeftGarrison>(session.Events);
-        refresh.On<GovernorChanged>(session.Events);
-        refresh.On<CaravanDispatched>(session.Events);
-        refresh.On<CaravanArrived>(session.Events);
-        refresh.On<CaravanReturned>(session.Events);
-        refresh.On<CaravanLost>(session.Events);
-        refresh.On<DwellingCreaturesGrew>(session.Events);
-        refresh.On<DwellingOwnerChanged>(session.Events);
-        refresh.On<ProviderOwnerChanged>(session.Events);
-        refresh.On<ProviderStockChanged>(session.Events);
+        // What the screen shows at all (the owner, a decision over it, the turn), and what every section reads (the buildings, the governor's discount).
+        new RefreshScheduler(this, Refresh)
+            .On<TownOwnerChanged>(session.Events)
+            .On<DecisionRequested>(session.Events)
+            .On<DecisionResolved>(session.Events) // back after a level-up on the visit (the Elder Grove)
+            .On<TurnStarted>(session.Events)
+            .On<TownBuilt>(session.Events)
+            .On<TownBuildingDowngraded>(session.Events)
+            .On<GovernorChanged>(session.Events);
+        foreach (var section in _sections)
+        {
+            section.Watch(session.Events);
+        }
     }
 
     /// <summary>Shows a town of the player whose turn it is.</summary>
     public void Open(MapObjectId town)
     {
         _town = town;
-        _picked = null;
-        _toTransform.Clear();
+        Picked = null;
+        _transformer.Reset();
         _status.Text = "";
         Refresh();
     }
@@ -176,6 +158,25 @@ public partial class TownPanel : PanelContainer
     /// <summary>The town the screen shows, if it is open.</summary>
     public MapObjectId? CurrentTown => Visible ? _town : null;
 
+    internal GameSession Session => _session;
+
+    /// <summary>The town the sections show: the open town while the screen is in sight.</summary>
+    internal Town? Shown => Visible && _session.State.PendingDecision is null ? Current : null;
+
+    /// <summary>The stack picked to move (the army rows) or to send (the caravan).</summary>
+    internal (TownArmy Army, int Slot)? Picked { get; set; }
+
+    /// <summary>"Split (move half)" is ticked.</summary>
+    internal bool Split => _split.ButtonPressed;
+
+    /// <summary>"Recruit to visiting hero" is ticked.</summary>
+    internal bool RecruitToHero => _toHero.ButtonPressed;
+
+    /// <summary>Someone opens a tavern screen (<see cref="TavernRequested"/>).</summary>
+    internal bool HasTavernScreen => TavernRequested is not null;
+
+    internal void OpenTavern(MapObjectId town) => TavernRequested?.Invoke(town);
+
     private Town? Current =>
         _town is { } id && _session.State.FindObject(id) is Town town && town.Owner == _session.State.CurrentPlayer.Id ? town : null;
 
@@ -188,567 +189,23 @@ public partial class TownPanel : PanelContainer
         }
 
         Visible = true;
-        var state = _session.State;
-        _crest.Texture = Heraldry.Crest(town.TownType, Heraldry.TitleSize);
-        _crest.TooltipText = town.TownType;
-        _crest.Visible = _crest.Texture is not null;
-        _title.Text = $"{town.Name} ({town.TownType}), {state.CurrentPlayer.Name}   income";
-        Clear(_income);
-        _income.AddChild(ResourceIcons.CostRow(TownRules.DailyIncome(state, town), " a day"));
-        _trade.Visible = town.Level(BuiltInBuildings.Marketplace) > 0;
-        _guild.Visible = town.Level(BuiltInBuildings.Tavern) > 0;
-
-        ShowBuildingTree(state, town);
-
-        Clear(_dwellings);
-        var resources = state.CurrentPlayer.Resources;
-        var choices = BuildingTree.DwellingChoices(state, town).ToDictionary(c => c.Line.Id);
-        foreach (var line in TownRules.Lines(state, town))
+        foreach (var section in _sections)
         {
-            var level = town.DwellingLevel(line.Id);
-            var available = town.AvailableOf(line.Id);
-            var choice = choices.GetValueOrDefault(line.Id);
-            var warning = choice is { ClosedLines.Count: > 0 } ? $"  ⚠ closes {string.Join(", ", choice.ClosedLines.Select(l => $"T{l.Tier} {l.Name}"))}" : "";
-            var dwellingLine = line;
-            _dwellings.AddChild(new Label
-            {
-                Text = $"T{line.Tier} {line.Name}: {(level switch { 0 => "not built", 1 => "built", _ => "upgraded" })}, {available} waiting, +{TownRules.WeeklyGrowth(state, town, line)}/week{warning}",
-                CustomMinimumSize = new Vector2(240, 0),
-                Modulate = warning.Length > 0 ? new Color(1f, 0.85f, 0.5f) : Colors.White,
-            }.WithInfo(detailed => InfoSheets.Dwelling(_session.State, town, dwellingLine, detailed)));
-
-            var next = TownRules.NextDwellingLevel(state, town, line);
-            var refusal = TownRules.CheckDwelling(state, town, line.Id);
-            var build = new Button
-            {
-                Text = next is null ? "—" : next.Level == 1 ? "Build" : "Upgrade",
-                Disabled = refusal is not null,
-                TooltipText = DwellingTooltip(state, town, next, refusal, choice),
-            };
-            if (next is not null)
-            {
-                build.WithCost(TownRules.BuildCost(state, town, next));
-            }
-
-            build.Pressed += () => Run(new BuildDwellingCommand(state.CurrentPlayer.Id, town.Id, line.Id));
-            _dwellings.AddChild(build);
-
-            foreach (var creature in new[] { line, line.UpgradesTo is { } up ? state.Creatures.Get(up) : null })
-            {
-                var canRecruit = creature is not null && level >= (creature == line ? 1 : 2) && available > 0;
-                var count = canRecruit ? TownRules.MaxAffordable(resources, TownRules.CreatureCost(state, town, creature!), available) : 0;
-                var recruit = new Button
-                {
-                    Text = creature is null ? "—" : $"Recruit {count} {creature.Name}",
-                    Disabled = count == 0,
-                };
-                if (creature is not null)
-                {
-                    recruit.WithCost(TownRules.CreatureCost(state, town, creature), " each");
-                }
-
-                var id = creature?.Id;
-                recruit.Pressed += () => Recruit(town, id!, count);
-                if (id is not null)
-                {
-                    recruit.WithInfo(detailed => InfoSheets.Creature(_session.State, id, detailed));
-                }
-
-                _dwellings.AddChild(recruit);
-            }
-        }
-
-        ShowGovernor(state, town);
-        Clear(_armies);
-        AddArmyRow(town, TownArmy.Garrison, town.GarrisonHero is { } inside ? $"Garrison ({inside.Name})" : "Garrison", town.Garrison);
-        ShowGarrisonHero(state, town);
-        ShowCaravan(state, town);
-        ShowTavern(state, town);
-        Clear(_blacksmith);
-        if (TownRules.VisitingHero(state, town) is { } hero)
-        {
-            AddArmyRow(town, TownArmy.VisitingHero, hero.Name, hero.Army);
-
-            // The blacksmith sells the war machines the visiting hero lacks (ADR-056).
-            _blacksmith.AddChild(new Label { Text = $"Blacksmith (war machines of {hero.Name})", CustomMinimumSize = new Vector2(240, 0) });
-            foreach (var slot in Enum.GetValues<WarMachineSlot>())
-            {
-                var name = TownRules.WarMachineName(state, hero, slot);
-                var refusal = TownRules.CheckBuyWarMachine(state, town, slot);
-                var owned = hero.WarMachines.Contains(slot);
-                var buy = new Button
-                {
-                    Text = owned ? $"{name} (owned)" : $"Buy {name}",
-                    Disabled = refusal is not null,
-                    TooltipText = refusal ?? "",
-                }.WithMachineIcon(state, hero, slot);
-                if (!owned)
-                {
-                    buy.WithCost(WarMachines.Cost(slot));
-                }
-
-                buy.Pressed += () => Run(new BuyWarMachineCommand(state.CurrentPlayer.Id, town.Id, slot));
-                _blacksmith.AddChild(buy);
-            }
-
-            // The mage guild sells the spell book (ADR-071, ADR-110).
-            if (town.Level(BuiltInBuildings.MageGuild) > 0)
-            {
-                var refusal = Core.Domain.Magic.MagicRules.CheckBuySpellBook(state, town);
-                var book = new Button
-                {
-                    Text = hero.HasSpellBook ? "Spell book (owned)" : "Buy a spell book",
-                    Disabled = refusal is not null,
-                    TooltipText = refusal ?? "",
-                };
-                if (!hero.HasSpellBook)
-                {
-                    book.WithCost(Core.Domain.Magic.MagicRules.SpellBookCost);
-                }
-                else
-                {
-                    book.WithIcon(UiIcon.SpellBook); // a priced button lays its own lines out; the icon goes on the owned one only
-                }
-
-                book.Pressed += () => Run(new BuySpellBookCommand(state.CurrentPlayer.Id, town.Id));
-                _blacksmith.AddChild(book);
-            }
-        }
-
-        ShowTransformer(state, town);
-
-        // What the guild teaches now (ADR-110).
-        var offered = Core.Domain.Magic.MagicRules.Offered(state, town).Select(s => state.Spells.TryGet(s, out var spell) ? spell.Name : s).ToList();
-        if (offered.Count > 0)
-        {
-            _blacksmith.AddChild(new Label { Text = $"Mage guild: {string.Join(", ", offered)}" });
+            section.Show(town);
         }
     }
 
-    /// <summary>
-    /// The building tree (ADR-114): one column per requirement depth (what needs nothing on the left), a button per building with its next level
-    /// and cost; the tooltip lists the cost, each requirement (✓ met, ✗ missing), what the level pays or grows, and why it cannot be built.
-    /// Built-out buildings are green, those waiting on others grey, the rest show whether they wait for tomorrow or for resources.
-    /// </summary>
-    private void ShowBuildingTree(GameState state, Town town)
+    /// <summary>A stack's slot clicked: picks it, or moves the picked stack there (half with "Split").</summary>
+    internal void ClickSlot(Town town, (TownArmy Army, int Slot) target, bool occupied)
     {
-        Clear(_buildings);
-        _builtToday.Text = TownRules.HasBuiltToday(state, town)
-            ? $"Built today: {town.LastBuiltName ?? "a building"}. The next building can go up tomorrow."
-            : "Nothing built today yet.";
-        var step = 0;
-        foreach (var column in BuildingTree.For(state, town).GroupBy(n => n.Depth))
+        if (Picked is not { } from)
         {
-            step++;
-            var box = new VBoxContainer { CustomMinimumSize = new Vector2(170, 0) };
-            box.AddChild(new Label { Text = column.Key == 0 ? "Needs nothing" : $"Then ({step})", Modulate = new Color(0.75f, 0.75f, 0.75f) });
-            _buildings.AddChild(box);
-            foreach (var node in column)
-            {
-                var building = node.Building;
-                var button = new Button
-                {
-                    Text = node.Next is null ? $"{node.Name} ✓" : $"{node.Name} ({node.Level + 1}/{node.MaxLevel})",
-                    Disabled = node.Status != BuildingStatus.Available,
-                    TooltipText = BuildingTooltip(node),
-                    Modulate = node.Status switch
-                    {
-                        BuildingStatus.Complete => new Color(0.6f, 1f, 0.6f),
-                        BuildingStatus.NeedsBuildings => new Color(0.7f, 0.7f, 0.7f),
-                        BuildingStatus.CannotAfford => new Color(1f, 0.75f, 0.6f),
-                        _ => Colors.White,
-                    },
-                };
-                if (node.Next is not null)
-                {
-                    button.WithCost(node.Cost!.Value);
-                }
-
-                button.Pressed += () => Run(new BuildCommand(state.CurrentPlayer.Id, town.Id, building));
-                button.WithInfo(detailed => InfoSheets.Building(_session.State, town, building, detailed));
-                box.AddChild(button);
-            }
-        }
-    }
-
-    private static string BuildingTooltip(BuildingNode node)
-    {
-        if (node.Next is not { } next)
-        {
-            return $"{node.Name}: fully built.";
-        }
-
-        var lines = new List<string> { $"{next.Name} (level {next.Level} of {node.MaxLevel})", $"Cost: {Cost(node.Cost!.Value)}" };
-        lines.AddRange(node.Requires.Select(r => $"{(r.Met ? "✓" : "✗")} needs {r.Name}"));
-        if (!next.Income.IsEmpty)
-        {
-            lines.Add($"Pays {Cost(next.Income)} a day");
-        }
-
-        if (next.Growth is { } growth)
-        {
-            lines.Add($"Every tier {growth.Tier} dwelling grows {growth.Amount} more a week");
-        }
-
-        if (BuiltInBuildings.SchoolOf(next.Building) is { } school)
-        {
-            lines.Add($"Adds one {school} spell per mage guild level");
-        }
-
-        lines.Add(node.Status switch
-        {
-            BuildingStatus.Available => "Click to build.",
-            BuildingStatus.BuiltToday => "Built something today: tomorrow.",
-            _ => node.Refusal ?? "",
-        });
-        return string.Join("\n", lines);
-    }
-
-    private static string DwellingTooltip(GameState state, Town town, BuildingLevel? next, string? refusal, DwellingChoice? choice)
-    {
-        if (next is null)
-        {
-            return "Fully built.";
-        }
-
-        var lines = new List<string> { $"Cost: {Cost(TownRules.BuildCost(state, town, next))}" };
-        if (choice is { TiersLeftOut.Count: > 0 })
-        {
-            lines.Add($"Would leave no room for tier {string.Join(", ", choice.TiersLeftOut)} (7 of 9 dwellings, every tier).");
-        }
-
-        if (choice is { ClosedLines.Count: > 0 })
-        {
-            lines.Add($"Building it means you can no longer build: {string.Join(", ", choice.ClosedLines.Select(l => $"T{l.Tier} {l.Name}"))}.");
-        }
-
-        lines.Add(refusal ?? "Click to build.");
-        return string.Join("\n", lines);
-    }
-
-    /// <summary>The garrison hero (ADR-112): the visiting hero moves in, or the garrison hero leads the garrison out.</summary>
-    private void ShowGarrisonHero(GameState state, Town town)
-    {
-        var player = state.CurrentPlayer.Id;
-        var row = new HBoxContainer();
-        if (town.GarrisonHero is { } inside)
-        {
-            var refusal = TownRules.CheckLeaveGarrison(state, town);
-            var leave = new Button { Text = $"Lead {inside.Name} out", Disabled = refusal is not null, TooltipText = refusal ?? "The garrison becomes its army." };
-            leave.Pressed += () => Run(new LeaveGarrisonCommand(player, town.Id));
-            row.AddChild(leave);
-        }
-        else if (TownRules.VisitingHero(state, town) is { } visitor)
-        {
-            var refusal = TownRules.CheckEnterGarrison(state, town);
-            var enter = new Button
-            {
-                Text = $"{visitor.Name} into the garrison",
-                Disabled = refusal is not null,
-                TooltipText = refusal ?? "Its army joins the garrison; it defends the town with its skills and war machines.",
-            };
-            enter.Pressed += () => Run(new EnterGarrisonCommand(player, town.Id));
-            row.AddChild(enter);
-        }
-
-        _armies.AddChild(row);
-    }
-
-    /// <summary>The governor and what Stewardship does here (ADR-063); appoint the visiting hero, or dismiss the governor.</summary>
-    private void ShowGovernor(GameState state, Town town)
-    {
-        Clear(_governor);
-        var player = state.CurrentPlayer.Id;
-        var governor = StewardshipRules.GovernorOf(state, town);
-        var level = StewardshipRules.LevelIn(state, town);
-        _governor.AddChild(new Label
-        {
-            Text = governor is null
-                ? "No governor: Stewardship does not apply."
-                : $"{governor.Name}: buildings -{StewardshipRules.BuildingDiscountPercent(level)} %, creatures -{StewardshipRules.CreatureDiscountPercent(level)} %",
-            CustomMinimumSize = new Vector2(360, 0),
-        });
-        if (governor is not null)
-        {
-            var dismiss = new Button { Text = "Dismiss governor" };
-            dismiss.Pressed += () => Run(new DismissGovernorCommand(player, town.Id));
-            _governor.AddChild(dismiss);
-        }
-
-        if (TownRules.VisitingHero(state, town) is { } visitor && visitor != governor && StewardshipRules.CheckAppoint(state, town, visitor) is null)
-        {
-            var appoint = new Button { Text = $"Appoint {visitor.Name}" };
-            appoint.Pressed += () => Run(new AppointGovernorCommand(player, town.Id, visitor.Id));
-            _governor.AddChild(appoint);
-        }
-    }
-
-    /// <summary>
-    /// The caravan (ADR-054): hire creatures from owned map dwellings within its reach (ADR-073), fetch what waits at own resource providers
-    /// (ADR-079), send the picked garrison stack to another own town, the queue of caravans coming here and those sent from here.
-    /// </summary>
-    private void ShowCaravan(GameState state, Town town)
-    {
-        Clear(_caravan);
-        if (town.Level(BuiltInBuildings.Caravan) < 1)
-        {
+            Picked = occupied ? target : null;
+            RefreshPicking();
             return;
         }
 
-        var player = state.CurrentPlayer.Id;
-        _caravan.AddChild(new Label
-        {
-            Text = $"Caravan: reaches {CaravanRules.MaxReach} movement points, {CaravanRules.DailyMovement} a day; "
-                   + $"{CaravanRules.Queue(state, town).Count} of {CaravanRules.Limit(state, town)} caravans coming",
-        });
-        foreach (var dwelling in CaravanRules.Dwellings(state, town).Where(d => d.Available > 0))
-        {
-            var creature = state.Creatures.Get(dwelling.Creature);
-            var available = dwelling.Available!.Value;
-            var count = TownRules.MaxAffordable(state.CurrentPlayer.Resources, TownRules.CreatureCost(state, town, creature), available);
-            var refusal = CaravanRules.CheckOrder(state, town, dwelling, Math.Max(1, count));
-            var route = CaravanRules.RouteBetween(state, dwelling, town, out _);
-            var row = new HBoxContainer();
-            row.AddChild(new Label
-            {
-                Text = $"{creature.Name} dwelling at {dwelling.Position.X},{dwelling.Position.Y}: {available} waiting, {(route is null ? "no route" : $"{route.Days} day(s) away")}",
-                CustomMinimumSize = new Vector2(360, 0),
-            });
-            var hire = new Button
-            {
-                Text = $"Hire {count}",
-                Disabled = count == 0 || refusal is not null,
-                TooltipText = refusal ?? "",
-            }.WithCost(TownRules.CreatureCost(state, town, creature), " each");
-            var dwellingId = dwelling.Id;
-            hire.Pressed += () => Run(new OrderCaravanCommand(player, town.Id, dwellingId, count));
-            row.AddChild(hire);
-            _caravan.AddChild(row);
-        }
-
-        foreach (var provider in CaravanRules.Providers(state, town).Where(p => !p.Stored.IsEmpty))
-        {
-            var refusal = CaravanRules.CheckFetch(state, town, provider);
-            var route = CaravanRules.RouteBetween(state, provider, town, out _);
-            var row = new HBoxContainer();
-            row.AddChild(new Label
-            {
-                Text = $"{provider.Definition.Name} at {provider.Position.X},{provider.Position.Y}: {ResourceProviderRules.Describe(provider.Stored)}, "
-                       + (route is null ? "no route" : $"{route.Days} day(s) away"),
-                CustomMinimumSize = new Vector2(360, 0),
-            });
-            var fetch = new Button
-            {
-                Text = "Fetch",
-                Disabled = refusal is not null,
-                TooltipText = refusal ?? "",
-            }.WithCost(CaravanRules.ResourceCaravanCost);
-            var providerId = provider.Id;
-            fetch.Pressed += () => Run(new FetchResourcesCommand(player, town.Id, providerId));
-            row.AddChild(fetch);
-            _caravan.AddChild(row);
-        }
-
-        if (_picked is { Army: TownArmy.Garrison } picked && town.Garrison[picked.Slot] is { } stack)
-        {
-            int? count = _split.ButtonPressed && stack.Count > 1 ? stack.Count / 2 : null;
-            foreach (var other in state.ObjectsOf<Town>().Where(t => t.Owner == player && t != town).OrderBy(t => t.Id.Value))
-            {
-                var refusal = CaravanRules.CheckSend(state, town, picked.Slot, other, count);
-                var send = new Button { Text = $"Send {count ?? stack.Count} {state.Creatures.Get(stack.Creature).Name} to {other.Name}", Disabled = refusal is not null, TooltipText = refusal ?? "" };
-                var target = other.Id;
-                send.Pressed += () =>
-                {
-                    _picked = null;
-                    Run(new SendTroopsCommand(player, town.Id, picked.Slot, target, count));
-                };
-                _caravan.AddChild(send);
-            }
-        }
-
-        var queue = CaravanRules.Queue(state, town);
-        if (queue.Count > 0)
-        {
-            _caravan.AddChild(new Label { Text = "Queue:" });
-        }
-
-        foreach (var caravan in queue)
-        {
-            _caravan.AddChild(new Label
-            {
-                Text = $"  {Goods(state, caravan)} from {PlaceName(state, state.GetObject(caravan.Source))}: "
-                       + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room in the garrison"),
-            });
-        }
-
-        foreach (var caravan in state.Caravans.Where(c => c.Owner == player && c.Source == town.Id))
-        {
-            _caravan.AddChild(new Label
-            {
-                Text = $"Sent: {caravan.Count} {state.Creatures.Get(caravan.Creature).Name} to {PlaceName(state, state.GetObject(caravan.Destination))}, "
-                       + (caravan.DaysLeft > 0 ? $"{caravan.DaysLeft} day(s) left" : "waiting for room there"),
-            });
-        }
-    }
-
-    private static string Goods(GameState state, Caravan caravan) =>
-        caravan.Cargo is { } cargo ? ResourceProviderRules.Describe(cargo) : $"{caravan.Count} {state.Creatures.Get(caravan.Creature).Name}";
-
-    /// <summary>A town by its name, a dwelling by its creature ("Footman dwelling at 12,1", as in the hire rows), anything else by its kind.</summary>
-    private static string PlaceName(GameState state, MapObject place) => place switch
-    {
-        Town town => town.Name,
-        CreatureDwelling dwelling => $"{(state.Creatures.TryGet(dwelling.Creature, out var creature) ? creature.Name : dwelling.Creature)} dwelling at {dwelling.Position.X},{dwelling.Position.Y}",
-        _ => place.Definition.Name,
-    };
-
-    /// <summary>The tavern's offers (ADR-060): who can be hired for gold at the entrance, by the tavern's level.</summary>
-    private void ShowTavern(GameState state, Town town)
-    {
-        Clear(_tavern);
-        var level = town.Level(BuiltInBuildings.Tavern);
-        if (level < 1)
-        {
-            return;
-        }
-
-        _tavern.AddChild(new Label { Text = $"Tavern {level}", CustomMinimumSize = new Vector2(110, 0) });
-        if (TavernRequested is not null)
-        {
-            var open = new Button { Text = "Visit the tavern…", TooltipText = "The heroes for hire with their skills, specialty and troops" };
-            open.Pressed += () => TavernRequested?.Invoke(town.Id);
-            _tavern.AddChild(open);
-        }
-
-        foreach (var offer in TavernRules.Offers(state, state.CurrentPlayer.Id, town))
-        {
-            var refusal = TavernRules.CheckHire(state, town, offer.Id);
-            var returning = TavernRules.Returning(state, state.CurrentPlayer.Id, offer.Id);
-            var details = returning is null
-                ? $"{offer.Class}, {offer.Town}"
-                : $"returns: level {returning.Level}{(returning.Army.IsEmpty ? "" : ", with its army")}"; // ADR-081
-            var hire = new Button
-            {
-                Text = $"Hire {offer.Name}\n{details}",
-                Disabled = refusal is not null,
-                TooltipText = refusal ?? "",
-            }.WithCost(TavernRules.HeroCost);
-            var player = state.CurrentPlayer.Id;
-            hire.WithInfo(detailed => InfoSheets.TavernHero(_session.State, player, town, offer, detailed));
-            hire.Pressed += () => Run(new HireHeroCommand(state.CurrentPlayer.Id, town.Id, offer.Id));
-            _tavern.AddChild(hire);
-        }
-    }
-
-    /// <summary>
-    /// The Undead Transformer (ADR-137): a toggle per stack it can take (two, one per line, for a creature without a class), then "Transform" turns
-    /// the chosen ones at once.
-    /// </summary>
-    private void ShowTransformer(GameState state, Town town)
-    {
-        Clear(_transformer);
-        if (UndeadTransformer.CheckTown(town) is not null)
-        {
-            return;
-        }
-
-        _transformer.AddChild(new Label { Text = "Undead Transformer (free):" });
-        var armies = new List<(TownArmy Army, Army Slots)> { (TownArmy.Garrison, town.Garrison) };
-        if (TownRules.VisitingHero(state, town) is { } hero)
-        {
-            armies.Add((TownArmy.VisitingHero, hero.Army));
-        }
-
-        foreach (var key in _toTransform.Keys.Where(k => !armies.Any(a => a.Army == k.Army && a.Slots[k.Slot] is not null)).ToList())
-        {
-            _toTransform.Remove(key);
-        }
-
-        foreach (var (army, slots) in armies)
-        {
-            foreach (var (slot, stack) in slots.Stacks)
-            {
-                var lines = UndeadTransformer.NeedsLine(state, stack.Creature) ? new[] { CreatureCategory.A, CreatureCategory.B } : [CreatureCategory.None];
-                foreach (var line in lines)
-                {
-                    if (UndeadTransformer.Of(state, town, stack.Creature, stack.Count, line).Transform is not { } transform)
-                    {
-                        continue;
-                    }
-
-                    var key = (army, slot);
-                    var toggle = new Button
-                    {
-                        Text = $"{(army == TownArmy.Garrison ? "Garrison" : "Hero")}: {stack.Count} {state.Creatures.Get(stack.Creature).Name}"
-                               + $"\n→ {transform.Result} {state.Creatures.Get(transform.To).Name}",
-                        ToggleMode = true,
-                        ButtonPressed = _toTransform.TryGetValue(key, out var chosen) && chosen == line,
-                    };
-                    toggle.Toggled += on =>
-                    {
-                        if (on)
-                        {
-                            _toTransform[key] = line;
-                        }
-                        else if (_toTransform.TryGetValue(key, out var was) && was == line)
-                        {
-                            _toTransform.Remove(key);
-                        }
-
-                        Refresh();
-                    };
-                    _transformer.AddChild(toggle);
-                }
-            }
-        }
-
-        var run = new Button { Text = "Transform", Disabled = _toTransform.Count == 0 };
-        run.Pressed += () =>
-        {
-            var orders = _toTransform.Select(o => new TransformOrder(o.Key.Army, o.Key.Slot, o.Value)).ToList();
-            _toTransform.Clear();
-            Run(new TransformCreaturesCommand(state.CurrentPlayer.Id, town.Id, orders));
-        };
-        _transformer.AddChild(run);
-    }
-
-    private void AddArmyRow(Town town, TownArmy which, string name, Army army)
-    {
-        var row = new HBoxContainer();
-        row.AddChild(new Label { Text = name, CustomMinimumSize = new Vector2(110, 0) });
-        for (var slot = 0; slot < Army.SlotCount; slot++)
-        {
-            var stack = army[slot];
-            var target = (which, slot);
-            var button = new Button
-            {
-                Text = stack is null ? "—" : $"{stack.Count}\n{stack.Creature.Split('.')[^1]}",
-                CustomMinimumSize = new Vector2(86, 48),
-                ToggleMode = true,
-                ButtonPressed = _picked == target,
-            };
-            button.Pressed += () => Click(town, target, stack is not null);
-            if (stack is not null)
-            {
-                button.WithInfo(detailed => InfoSheets.Creature(_session.State, stack.Creature, detailed, InfoSheets.Known(stack)));
-            }
-
-            row.AddChild(button);
-        }
-
-        _armies.AddChild(row);
-    }
-
-    private void Click(Town town, (TownArmy Army, int Slot) target, bool occupied)
-    {
-        if (_picked is not { } from)
-        {
-            _picked = occupied ? target : null;
-            Refresh();
-            return;
-        }
-
-        _picked = null;
+        Picked = null;
         if (from != target)
         {
             var source = from.Army == TownArmy.Garrison ? town.Garrison : TownRules.VisitingHero(_session.State, town)!.Army;
@@ -757,28 +214,29 @@ public partial class TownPanel : PanelContainer
             Run(new MoveTownStackCommand(_session.State.CurrentPlayer.Id, town.Id, from.Army, from.Slot, target.Army, target.Slot, count));
         }
 
-        Refresh();
+        RefreshPicking();
+    }
+
+    /// <summary>The sections that show the picked stack.</summary>
+    private void RefreshPicking()
+    {
+        _armies.Refresh();
+        _caravan.Refresh();
     }
 
     private void UpgradePicked()
     {
-        if (Current is not { } town || _picked is not { } picked)
+        if (Current is not { } town || Picked is not { } picked)
         {
             _status.Text = "Pick a stack first.";
             return;
         }
 
-        _picked = null;
+        Picked = null;
         Run(new UpgradeStackCommand(_session.State.CurrentPlayer.Id, town.Id, picked.Army, picked.Slot));
     }
 
-    private void Recruit(Town town, string creature, int count)
-    {
-        var hero = _toHero.ButtonPressed ? TownRules.VisitingHero(_session.State, town)?.Id : null;
-        Run(new RecruitCommand(_session.State.CurrentPlayer.Id, town.Id, creature, count, hero));
-    }
-
-    private void Run(GameCommand command)
+    internal void Run(GameCommand command)
     {
         var result = _session.Execute(command);
         _status.Text = result.IsAccepted ? "" : $"Refused: {result.Error}";
@@ -792,12 +250,4 @@ public partial class TownPanel : PanelContainer
             GetViewport().SetInputAsHandled();
         }
     }
-
-    private static void Clear(Node node)
-    {
-        // Freed at the end of the frame, as in ExchangePanel: the button whose signal is running stays valid.
-        node.ClearChildren();
-    }
-
-    private static string Cost(ResourceSet cost) => ResourceIcons.Describe(cost);
 }

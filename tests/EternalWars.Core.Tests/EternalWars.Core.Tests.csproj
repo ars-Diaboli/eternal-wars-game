@@ -20,6 +20,7 @@
     <ProjectReference Include="..\..\src\Core\EternalWars.Core.Data\EternalWars.Core.Data.csproj" />
     <ProjectReference Include="..\..\src\Core\EternalWars.Core.Generation\EternalWars.Core.Generation.csproj" />
     <ProjectReference Include="..\..\src\Core\EternalWars.Core.Network\EternalWars.Core.Network.csproj" />
+    <ProjectReference Include="..\..\tools\EternalWars.Tools.Sim\EternalWars.Tools.Sim.csproj" />
   </ItemGroup>
 
 </Project>

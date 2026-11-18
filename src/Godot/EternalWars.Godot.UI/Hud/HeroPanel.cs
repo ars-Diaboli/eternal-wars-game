@@ -1,13 +1,11 @@
-using EternalWars.Core.Domain.Armies;
-using EternalWars.Core.Domain.Artifacts;
 using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
-using EternalWars.Core.Domain.Info;
 using EternalWars.Godot.Shared.Controls;
 using EternalWars.Godot.Shared.Events;
+using EternalWars.Godot.UI.Hud.HeroScreen;
 using Godot;
 
 namespace EternalWars.Godot.UI.Hud;
@@ -18,32 +16,37 @@ namespace EternalWars.Godot.UI.Hud;
 /// and the backpack (click a worn artifact to take it off, a carried one to put it on, or drag it there: ADR-162), and war machines. Every change is
 /// a command; refusals show below. A right click on a skill, a spell, a stack or an artifact opens its information window (ADR-154). Opened with <see cref="Open"/>; Previous / Next go through the player's heroes. With
 /// <see cref="FullScreen"/> it fills its parent and scrolls; Escape or "Close" shut it.
+/// The screen is made of <see cref="HeroSection"/>s (ADR-223), each rebuilt alone on its own events; the screen rebuilds them all when it opens
+/// and when the turn passes or a hero is defeated (the hero may no longer be the player's).
 /// </summary>
 public partial class HeroPanel : PanelContainer
 {
-    private readonly Label _title = new() { VerticalAlignment = VerticalAlignment.Center };
-
-    private readonly TextureRect _crest = new()
-    {
-        StretchMode = TextureRect.StretchModeEnum.KeepCentered,
-        MouseFilter = MouseFilterEnum.Pass,
-        CustomMinimumSize = new Vector2(Heraldry.TitleSize, Heraldry.TitleSize),
-    };
-    private readonly HFlowContainer _statBadges = new();
-    private readonly Label _stats = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
-    private readonly Label _specialty = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
-    private readonly VBoxContainer _skills = new();
-    private readonly HBoxContainer _army = new HBoxContainer().WithCellGap();
-    private readonly GridContainer _doll = new() { Columns = 4 };
-    private readonly HFlowContainer _backpack = new();
-    private readonly HFlowContainer _machines = new();
-    private readonly HFlowContainer _adventure = new();
-    private readonly HFlowContainer _spells = new();
+    private readonly HeroHeaderSection _header;
+    private readonly HeroStatsSection _stats;
+    private readonly HeroSkillsSection _skills;
+    private readonly HeroArmySection _army;
+    private readonly WarMachinesSection _machines;
+    private readonly SpellBookSection _spells;
+    private readonly AdventureSpellsSection _adventure;
+    private readonly HeroArtifactsSection _artifacts;
+    private readonly HeroSection[] _sections;
     private readonly CheckBox _split = new() { Text = "Split (move half)" };
-    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
+    private readonly Label _status = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(UiTheme.ScreenTextWidth, 0) };
     private GameSession _session = null!;
     private HeroId? _hero;
-    private int? _pickedSlot;
+
+    public HeroPanel()
+    {
+        _header = new HeroHeaderSection(this);
+        _stats = new HeroStatsSection(this);
+        _skills = new HeroSkillsSection(this);
+        _army = new HeroArmySection(this);
+        _artifacts = new HeroArtifactsSection(this);
+        _machines = new WarMachinesSection(this);
+        _adventure = new AdventureSpellsSection(this);
+        _spells = new SpellBookSection(this);
+        _sections = [_header, _stats, _skills, _army, _artifacts, _machines, _adventure, _spells];
+    }
 
     /// <summary>Fill the parent and scroll (the game app's hero screen) instead of shrinking to the content. Set before <see cref="Bind"/>.</summary>
     public bool FullScreen { get; set; }
@@ -64,6 +67,14 @@ public partial class HeroPanel : PanelContainer
 
     /// <summary>The hero the screen shows, if it is open.</summary>
     public HeroId? CurrentHero => Visible ? _hero : null;
+
+    internal GameSession Session => _session;
+
+    /// <summary>The hero the sections show: the open hero while the screen is in sight and the hero is the current player's.</summary>
+    internal Hero? Shown => Visible && _hero is { } id ? Of(id) : null;
+
+    /// <summary>The army slot picked to move.</summary>
+    internal int? PickedSlot { get; private set; }
 
     public void Bind(GameSession session)
     {
@@ -88,8 +99,8 @@ public partial class HeroPanel : PanelContainer
         var previous = new Button { Text = "Previous hero" }.WithIcon(UiIcon.ArrowLeft);
         previous.Pressed += () => Step(-1);
         header.AddChild(previous);
-        header.AddChild(_crest);
-        header.AddChild(_title);
+        header.AddChild(_header.Crest);
+        header.AddChild(_header.Title);
         var next = new Button { Text = "Next hero" }.WithIcon(UiIcon.ArrowRight);
         next.Pressed += () => Step(1);
         header.AddChild(next);
@@ -97,59 +108,42 @@ public partial class HeroPanel : PanelContainer
         close.Pressed += Close;
         header.AddChild(close);
 
-        _statBadges.AddThemeConstantOverride("h_separation", UiSpacing.Section);
-        box.AddChild(_statBadges);
-        box.AddChild(_stats);
-        box.AddChild(_specialty);
+        _stats.Badges.AddThemeConstantOverride("h_separation", UiSpacing.Section);
+        box.AddChild(_stats.Badges);
+        box.AddChild(_stats.Stats);
+        box.AddChild(_stats.Specialty);
         box.AddHeading("Skills");
-        box.AddChild(_skills);
+        box.AddChild(_skills.Rows);
         box.AddHeading("Army");
-        box.AddChild(_army);
+        box.AddChild(_army.Slots);
         box.AddChild(_split);
-        box.AddChild(_machines);
-        box.AddChild(_spells);
+        box.AddChild(_machines.Row);
+        box.AddChild(_spells.Row);
         box.AddHeading("Adventure spells (mana and 500 movement points)");
-        box.AddChild(_adventure);
+        box.AddChild(_adventure.Row);
         box.AddHeading("Worn artifacts (click or drag into the backpack to take off)");
-        box.AddChild(_doll);
+        box.AddChild(_artifacts.Doll);
         box.AddHeading("Backpack (click or drag onto the doll to put on)");
-        box.AddChild(_backpack);
+        box.AddChild(_artifacts.Backpack);
         box.AddChild(_status);
         Visible = false;
 
-        var refresh = new RefreshScheduler(this, Refresh);
-        refresh.On<ArtifactEquipped>(session.Events);
-        refresh.On<ArtifactUnequipped>(session.Events);
-        refresh.On<ArtifactGiven>(session.Events);
-        refresh.On<ArtifactGained>(session.Events);
-        refresh.On<ArtifactLost>(session.Events);
-        refresh.On<RelicAssembled>(session.Events);
-        refresh.On<RelicTakenApart>(session.Events);
+        // Whether the hero is still the current player's.
+        new RefreshScheduler(this, Refresh)
+            .On<TurnStarted>(session.Events)
+            .On<HeroDefeated>(session.Events);
         this.SubscribeWhileInTree<RelicReady>(session.Events, e => _status.Text = $"All pieces of {_session.State.Artifacts.Get(e.Relic).Name} are worn: press Assemble to join them.");
-        refresh.On<ArmyChanged>(session.Events);
-        refresh.On<HeroLeveledUp>(session.Events);
-        refresh.On<HeroExperienceGained>(session.Events);
-        refresh.On<HeroManaRestored>(session.Events);
-        refresh.On<HeroManaSpent>(session.Events);
-        refresh.On<SpellsLearned>(session.Events);
-        refresh.On<SpellsRaised>(session.Events);
-        refresh.On<AdventureSpellCast>(session.Events);
-        refresh.On<HeroStatusGained>(session.Events);
-        refresh.On<HeroStatusesExpired>(session.Events);
-        refresh.On<SpellBookBought>(session.Events);
-        refresh.On<PandorasBoxOpened>(session.Events); // stats and skills
-        refresh.On<HeroMovementRestored>(session.Events);
-        refresh.On<HeroMoved>(session.Events);
-        refresh.On<WarMachineBought>(session.Events);
-        refresh.On<HeroDefeated>(session.Events);
-        refresh.On<TurnStarted>(session.Events);
+        foreach (var section in _sections)
+        {
+            section.Watch(session.Events);
+        }
     }
 
     /// <summary>Shows a hero of the player whose turn it is.</summary>
     public void Open(HeroId hero)
     {
         _hero = hero;
-        _pickedSlot = null;
+        PickedSlot = null;
         _status.Text = "";
         Refresh();
     }
@@ -174,6 +168,54 @@ public partial class HeroPanel : PanelContainer
         }
     }
 
+    internal void ArmAdventureSpell(HeroId hero, string spell)
+    {
+        AdventureSpellArmed?.Invoke(hero, spell);
+        Close();
+    }
+
+    internal void ReopenLedger(HeroId hero) => LedgerReopened?.Invoke(hero);
+
+    internal void ReopenEavesdrop(HeroId hero, MapObjectId town) => EavesdropReopened?.Invoke(hero, town);
+
+    /// <summary>An army slot clicked: picks its stack, or moves the picked stack there (half with "Split").</summary>
+    internal void ClickSlot(HeroId id, int slot)
+    {
+        var hero = _session.State.GetHero(id);
+        if (PickedSlot is not { } from)
+        {
+            if (hero.Army[slot] is not null)
+            {
+                PickedSlot = slot;
+            }
+
+            _army.Refresh();
+            return;
+        }
+
+        PickedSlot = null;
+        if (from != slot)
+        {
+            var stack = hero.Army[from]!;
+            int? count = _split.ButtonPressed && stack.Count > 1 ? stack.Count / 2 : null;
+            Run(new MoveStackCommand(_session.State.CurrentPlayer.Id, id, from, id, slot, count));
+        }
+
+        _army.Refresh();
+    }
+
+    internal void Run(GameCommand command)
+    {
+        var result = _session.Execute(command);
+        _status.Text = result.IsAccepted ? "" : $"Refused: {result.Error}";
+    }
+
+    private Hero? Of(HeroId id)
+    {
+        var state = _session.State;
+        return state.HeroesOf(state.CurrentPlayer.Id).FirstOrDefault(h => h.Id == id);
+    }
+
     private void Step(int direction)
     {
         var state = _session.State;
@@ -191,320 +233,16 @@ public partial class HeroPanel : PanelContainer
             return;
         }
 
-        var state = _session.State;
-        var hero = state.HeroesOf(state.CurrentPlayer.Id).FirstOrDefault(h => h.Id == id);
-        if (hero is null)
+        if (Of(id) is not { } hero)
         {
             Close();
             return;
         }
 
         Visible = true;
-        var faction = hero.Definition is { } d ? state.HeroRoster.Get(d).Town : null;
-        _title.Text = $"{hero.Name}, level {hero.Level} {hero.Class}" + (faction is null ? "" : $" ({faction})");
-        _crest.Texture = Heraldry.Crest(faction, Heraldry.TitleSize);
-        _crest.TooltipText = faction ?? "";
-        _crest.Visible = _crest.Texture is not null;
-        ShowStatBadges(hero);
-        _stats.Text = StatsText(hero, _session.State.Spells);
-        _specialty.Text = hero.Specialty is { } specialty ? $"Specialty: {specialty.Describe(_session.State.Spells)}" : "No specialty.";
-        ShowSkills(hero);
-        ShowArmy(hero);
-        ShowArtifacts(hero);
-        ShowMachines(hero);
-        ShowAdventureSpells(hero);
-        ShowSpells(hero);
-    }
-
-    /// <summary>The spell book: one button per known spell (a right click opens its window), and how many the worn artifacts lend.</summary>
-    private void ShowSpells(Hero hero)
-    {
-        Clear(_spells);
-        var text = SpellsText(hero, _session.State.Spells);
-        _spells.AddChild(hero.HasSpellBook ? UiIcons.IconLabel(UiIcon.Spells, text) : new Label { Text = text });
-        if (!hero.HasSpellBook)
+        foreach (var section in _sections)
         {
-            return;
+            section.Show(hero);
         }
-
-        foreach (var (spell, rank) in EternalWars.Core.Domain.Magic.MagicRules.Known(hero, _session.State.Spells))
-        {
-            var id = spell.Id;
-            _spells.AddChild(new Button { Text = EternalWars.Core.Domain.Magic.MagicRules.NameAtRank(spell, rank), Flat = true, TooltipText = spell.Notes }
-                .WithInfo(detailed => InfoSheets.Spell(_session.State, id, rank, detailed, hero)));
-        }
-    }
-
-    /// <summary>One button per adventure spell the hero knows (ADR-120), disabled with the reason while it cannot be cast.</summary>
-    private void ShowAdventureSpells(Hero hero)
-    {
-        _adventure.ClearChildren();
-        var buttons = AdventureSpellButtons.For(
-            _session.State,
-            hero,
-            cast: spell => Run(new CastAdventureSpellCommand(_session.State.CurrentPlayer.Id, hero.Id, spell)),
-            arm: spell =>
-            {
-                AdventureSpellArmed?.Invoke(hero.Id, spell);
-                Close();
-            },
-            ledger: () => LedgerReopened?.Invoke(hero.Id),
-            eavesdrop: town => EavesdropReopened?.Invoke(hero.Id, town));
-        foreach (var button in buttons)
-        {
-            _adventure.AddChild(button);
-        }
-
-        if (_adventure.GetChildCount() == 0)
-        {
-            _adventure.AddChild(new Label { Text = "none" });
-        }
-    }
-
-    private static string WithBonus(int baseValue, int bonus) =>
-        bonus == 0 ? $"{baseValue}" : $"{baseValue + bonus} ({baseValue} {(bonus > 0 ? "+" : "−")} {Math.Abs(bonus)})";
-
-    private static string Signed(int value) => value > 0 ? $"+{value}" : $"{value}";
-
-    /// <summary>The four primary stats (with what artifacts add), mana and experience, each after its icon.</summary>
-    private void ShowStatBadges(Hero hero)
-    {
-        Clear(_statBadges);
-        var bonus = hero.Bonus;
-        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Attack, "Attack", WithBonus(hero.Attack, bonus.Attack)));
-        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Defense, "Defense", WithBonus(hero.Defense, bonus.Defense)));
-        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.SpellPower, "Spell Power", WithBonus(hero.SpellPower, bonus.SpellPower)));
-        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Knowledge, "Knowledge", WithBonus(hero.Knowledge, bonus.Knowledge)));
-        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Mana, "Mana", $"{hero.Mana}/{hero.MaxMana}"));
-        _statBadges.AddChild(HeroIcons.StatBadge(HeroStatIcon.Experience, "Experience", $"{hero.Experience}/{ExperienceTable.For(hero.Level + 1)}"));
-    }
-
-    private static string StatsText(Hero hero, EternalWars.Core.Domain.Magic.SpellCatalog spells) =>
-        string.Join("\n",
-            $"Morale {Signed(hero.TotalMorale)}   Luck {Signed(hero.TotalLuck)}   Movement {hero.MovementPoints}/{hero.MaxMovementPoints}   Scouting {hero.ScoutingRadius}"
-                + (hero.PendingLevelUps > 0 ? $"   {hero.PendingLevelUps} level-up(s) waiting" : ""),
-            hero.Artifacts.IsEmpty ? "No artifacts." : $"Artifacts: {hero.Bonus.Describe(spells)}");
-
-    /// <summary>The learned spells by name, and how many more the worn artifacts teach (the Unwritten Codex, ADR-111; scrolls, ADR-136).</summary>
-    private static string SpellsText(Hero hero, EternalWars.Core.Domain.Magic.SpellCatalog spells)
-    {
-        if (!hero.HasSpellBook)
-        {
-            return "No spell book.";
-        }
-
-        var lent = EternalWars.Core.Domain.Magic.MagicRules.Known(hero, spells).Count() - hero.Spells.Count;
-        var known = hero.Spells.Count == 0 && lent == 0 ? "Spell book: empty." : "Spells:";
-        return lent > 0 ? $"{known} ({lent} lent while its artifacts are worn)" : known;
-    }
-
-    /// <summary>The hero's war machines, each its icon with the machine's name as the tooltip (the name when it has no icon).</summary>
-    private void ShowMachines(Hero hero)
-    {
-        Clear(_machines);
-        var state = _session.State;
-        _machines.AddChild(new Label { Text = hero.WarMachines.Count == 0 ? "War machines: none" : "War machines:" });
-        foreach (var slot in hero.WarMachines.Order())
-        {
-            var name = Core.Domain.Towns.TownRules.WarMachineName(state, hero, slot);
-            _machines.AddChild(HeroIcons.Machine(state, hero, slot, HeroIcons.SkillSize * 2) is { } texture
-                ? new TextureRect
-                {
-                    Texture = texture,
-                    TooltipText = name,
-                    StretchMode = TextureRect.StretchModeEnum.KeepCentered,
-                    CustomMinimumSize = new Vector2(HeroIcons.SkillSize * 2, HeroIcons.SkillSize * 2),
-                }
-                : new Label { Text = name });
-        }
-    }
-
-    private void ShowSkills(Hero hero)
-    {
-        Clear(_skills);
-        var any = false;
-        foreach (var group in BuiltInSkills.Groups)
-        {
-            // Skills the hero learned, plus ones an artifact adds.
-            var rows = BuiltInSkills.SkillsOf(group.Id).Where(s => hero.SkillLevelOf(s.Id) > SkillLevel.None).ToList();
-            if (rows.Count == 0)
-            {
-                continue;
-            }
-
-            any = true;
-            var points = rows.Sum(s => (int)hero.Skills.Level(s.Id));
-            _skills.AddChild(new Label { Text = $"{group.Name} ({points}/{SkillGroup.Points})" });
-            foreach (var skill in rows)
-            {
-                var id = skill.Id;
-                var level = hero.SkillLevelOf(skill.Id);
-                var learned = hero.Skills.Level(skill.Id);
-                var text = new Label
-                {
-                    Text = $"{skill.Name}: {level}" + (level != learned ? $" (learned {learned})" : "") + $" of {skill.MaxLevel}\n    {skill.Description}",
-                    AutowrapMode = TextServer.AutowrapMode.WordSmart,
-                    CustomMinimumSize = new Vector2(600, 0),
-                    MouseFilter = MouseFilterEnum.Pass,
-                };
-                var row = new MarginContainer { MouseFilter = MouseFilterEnum.Stop };
-                row.AddThemeConstantOverride("margin_left", UiSpacing.Section);
-                row.AddChild(HeroIcons.WithSkillIcon(id, text));
-                _skills.AddChild(row.WithInfo(detailed => InfoSheets.Skill(id, level, detailed, hero, learned)));
-            }
-        }
-
-        if (!any)
-        {
-            _skills.AddChild(new Label { Text = "    No skills yet." });
-        }
-    }
-
-    private void ShowArmy(Hero hero)
-    {
-        Clear(_army);
-        for (var slot = 0; slot < Army.SlotCount; slot++)
-        {
-            var stack = hero.Army[slot];
-            var button = new Button
-            {
-                Text = stack is null ? "—" : $"{stack.Count}\n{_session.State.Creatures.Get(stack.Creature).Name}",
-                CustomMinimumSize = new Vector2(96, 56),
-                ToggleMode = true,
-                ButtonPressed = _pickedSlot == slot,
-            };
-            var target = slot;
-            button.Pressed += () => ClickSlot(hero.Id, target);
-            if (stack is not null)
-            {
-                button.WithInfo(detailed => InfoSheets.Creature(_session.State, stack.Creature, detailed, InfoSheets.Known(stack)));
-            }
-
-            _army.AddChild(button);
-        }
-    }
-
-    private void ClickSlot(HeroId id, int slot)
-    {
-        var hero = _session.State.GetHero(id);
-        if (_pickedSlot is not { } from)
-        {
-            if (hero.Army[slot] is not null)
-            {
-                _pickedSlot = slot;
-            }
-
-            Refresh();
-            return;
-        }
-
-        _pickedSlot = null;
-        if (from != slot)
-        {
-            var stack = hero.Army[from]!;
-            int? count = _split.ButtonPressed && stack.Count > 1 ? stack.Count / 2 : null;
-            Run(new MoveStackCommand(_session.State.CurrentPlayer.Id, id, from, id, slot, count));
-        }
-
-        Refresh();
-    }
-
-    private void ShowArtifacts(Hero hero)
-    {
-        // Drag and drop (ADR-162): a worn artifact into the backpack takes it off, a carried one onto any doll slot puts it on.
-        var onDoll = new ArtifactPlace(hero.Id, Doll: true);
-        var inBackpack = new ArtifactPlace(hero.Id, Doll: false);
-        _doll.WithArtifactDrag(null, null, onDoll, Drop);
-        _backpack.WithArtifactDrag(null, null, inBackpack, Drop);
-        Clear(_doll);
-        foreach (var slot in ArtifactSlots.All)
-        {
-            var worn = hero.Artifacts.Worn(slot);
-            var blocked = hero.Artifacts.AllBlocked.Where(b => b.Slot == slot).Select(b => _session.State.Artifacts.Get(b.Relic).Name).ToList();
-            for (var i = 0; i < ArtifactSlots.Capacity(slot); i++)
-            {
-                var artifact = i < worn.Count ? _session.State.Artifacts.Get(worn[i]) : null;
-                var blocker = artifact is null && i - worn.Count < blocked.Count ? blocked[i - worn.Count] : null;
-                var button = new Button
-                {
-                    Text = $"{slot}: {artifact?.Name ?? (blocker is null ? "—" : $"(held by {blocker})")}",
-                    TooltipText = artifact is null ? "" : ArtifactText(artifact),
-                    Disabled = artifact is null,
-                    CustomMinimumSize = new Vector2(190, 0),
-                    ClipText = true,
-                };
-                var id = artifact?.Id;
-                button.WithArtifactDrag(id is null ? null : new ArtifactInHand(hero.Id, id, Worn: true), artifact?.Name, onDoll, Drop);
-                if (id is not null)
-                {
-                    button.Pressed += () => Run(new UnequipArtifactCommand(_session.State.CurrentPlayer.Id, hero.Id, id));
-                    button.WithInfo(detailed => InfoSheets.Artifact(_session.State, id, detailed));
-                }
-
-                _doll.AddChild(button);
-            }
-        }
-
-        // Assembled relics (ADR-121): join the worn pieces, or take a relic apart, worn or carried.
-        var player = _session.State.CurrentPlayer.Id;
-        foreach (var relic in ArtifactService.Assemblable(_session.State.Artifacts, hero))
-        {
-            var id = relic.Id;
-            var join = new Button { Text = $"Assemble {relic.Name}", TooltipText = ArtifactText(relic) };
-            join.Pressed += () => Run(new AssembleRelicCommand(player, hero.Id, id));
-            _doll.AddChild(join);
-        }
-
-        foreach (var id in hero.Artifacts.AllWorn.Select(w => w.Id).Concat(hero.Artifacts.Backpack).Distinct().Where(a => _session.State.Artifacts.Get(a).IsAssembled))
-        {
-            var relicId = id;
-            var apart = new Button { Text = $"Take apart {_session.State.Artifacts.Get(id).Name}" };
-            apart.Pressed += () => Run(new TakeRelicApartCommand(player, hero.Id, relicId));
-            _doll.AddChild(apart);
-        }
-
-        Clear(_backpack);
-        if (hero.Artifacts.Backpack.Count == 0)
-        {
-            _backpack.AddChild(new Label { Text = "    Empty." });
-        }
-
-        foreach (var id in hero.Artifacts.Backpack)
-        {
-            var artifact = _session.State.Artifacts.Get(id);
-            var button = new Button { Text = $"{artifact.Name} ({artifact.Slot})", TooltipText = ArtifactText(artifact) };
-            var artifactId = artifact.Id;
-            button.Pressed += () => Run(new EquipArtifactCommand(_session.State.CurrentPlayer.Id, hero.Id, artifactId));
-            button.WithInfo(detailed => InfoSheets.Artifact(_session.State, artifactId, detailed))
-                .WithArtifactDrag(new ArtifactInHand(hero.Id, artifactId, Worn: false), artifact.Name, inBackpack, Drop);
-            _backpack.AddChild(button);
-        }
-    }
-
-    private string ArtifactText(ArtifactDefinition artifact) =>
-        $"{artifact.Name} ({(artifact.IsAssembled ? "assembled relic" : artifact.Tier.ToString())}, {artifact.Slot})\n{ArtifactBonuses.Of(_session.State.Artifacts.EffectsOf(artifact)).Describe(_session.State.Spells)}"
-        + (artifact.IsAssembled ? $"\nPieces: {string.Join(", ", artifact.Pieces.Select(p => _session.State.Artifacts.Get(p).Name))}" : "")
-        + (_session.State.Artifacts.RelicOf(artifact.Id) is { } relic ? $"\nA piece of {_session.State.Artifacts.Get(relic).Name}" : "")
-        + (artifact.Set is { } set ? $"\nSet: {_session.State.Artifacts.GetSet(set).Name}" : "")
-        + (artifact.Notes.Length > 0 ? $"\n{artifact.Notes}" : "");
-
-    /// <summary>An artifact dragged and let go on the doll or in the backpack: put on or taken off (<see cref="ArtifactDrag.MoveCommand"/>).</summary>
-    private void Drop(ArtifactInHand item, ArtifactPlace place)
-    {
-        if (ArtifactDrag.MoveCommand(_session.State.CurrentPlayer.Id, item, place) is { } command)
-        {
-            Run(command);
-        }
-    }
-
-    private void Run(GameCommand command)
-    {
-        var result = _session.Execute(command);
-        _status.Text = result.IsAccepted ? "" : $"Refused: {result.Error}";
-    }
-
-    private static void Clear(Node node)
-    {
-        node.ClearChildren();
     }
 }

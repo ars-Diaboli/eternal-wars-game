@@ -1,4 +1,4 @@
-﻿# Eternal Wars codebase review and refactoring plan
+# Eternal Wars codebase review and refactoring plan
 
 The architecture is in good shape. What needs work is performance and the networking code, not the design.
 
@@ -339,9 +339,14 @@ The order is: safety first, then a measurement baseline, then cheap performance 
   - `AdventureAiPartsTests` covers the weights and each part; the digests are unchanged.
 - [x] **`GameHost`:** split out `SeatManager`, `PausePolicy`, `ChatRelay` and `SimultaneousDayRewinder`.
   - Done (ADR-221). The public API, wire messages, refusal texts and order of sends are unchanged; each part has its own tests.
-- [ ] **Game app `Main`:** move AI and timer gating and local seat ownership into a Core `GameDirector` (with tests), replay stepping into a `ReplayController`, and screens into a coordinator in Godot.UI.
-- [ ] **Panels:** split `TownPanel` and `HeroPanel` into sections with their own subscriptions and schedulers. Give the inspector one section per object type. Add a `FormBuilder.AddOwnerChoice` helper. Move colours and sizes into `UiTheme` tokens.
+- [x] **Game app `Main`:** move AI and timer gating and local seat ownership into a Core `GameDirector` (with tests), replay stepping into a `ReplayController`, and screens into a coordinator in Godot.UI.
+  - Done (ADR-222). `GameDirector` (Core.Domain, Game) runs the AI, the turn clock and the turn the map waits to show, over a `LocalSeats` (`LanSeats.Of` a host or client in Core.Network; `LanAnnouncer.Describe` is the announce rule). `ReplayController` (Core.Data, Records) steps the replay viewer. `GameScreens` (Godot.UI) opens and swaps the screens and places the menu button.
+  - `Main` keeps composition and input mapping; the AI's draws and the digests are unchanged.
+- [x] **Panels:** split `TownPanel` and `HeroPanel` into sections with their own subscriptions and schedulers. Give the inspector one section per object type. Add a `FormBuilder.AddOwnerChoice` helper. Move colours and sizes into `UiTheme` tokens.
+  - Done (ADR-223). Nine town screen sections and eight hero screen sections, each a `ScreenSection` with its own `RefreshScheduler` and events; the screens rebuild them all only when they open, on the turn and on the few events every section reads.
+  - The inspector: an `InspectorSection<T>` per object type (19, in `InspectorSections`; a type listed twice throws), `HeroInspector` and the shared `InspectorForm`. The tests cannot see Godot, so the registry has no completeness test; fields stay optional for a kind.
 - [ ] **Lower priority:** typed content ids, `InfoSheets` returning structured lines instead of English text, splitting the sim tool's `Program.cs` into one class per command with strict option parsing, autosave written straight to a stream, and save listing that reads only the header.
+  - Done (ADR-224): the sim tool's commands, autosave to a stream, save listing from the header.
 
 **What to watch:**
 - Digests: Phases 1–2 must not change the random draw order or tie-breaks. Run the replay and digest pin tests after each step.

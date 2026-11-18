@@ -3071,3 +3071,78 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
 - `GameHost` keeps the session, the command route, the turn clock, the views, record requests and the order in which `Poll` calls the
   parts. Its public API, wire messages, refusal texts and order of sends are unchanged.
 - **Checked**: `SeatManagerTests`, `PausePolicyTests`, `ChatRelayTests`, `SimultaneousDayRewinderTests` and the LAN tests.
+
+### ADR-222: The game app's policy lives in a `GameDirector`, a `ReplayController` and `GameScreens` (ADR-059, ADR-091, ADR-164, 2026-11-19)
+**Status**: implemented. No save, map or protocol change.
+
+- **Why**: the game app's `Main` held when the computer players play, when the turn timer runs and ends a turn, which colours are played on
+  this computer, what a LAN host announces, the replay viewer's stepping and which screen is open. Apps hold composition and input mapping
+  only.
+- **Parts**:
+  - `GameDirector` (Core.Domain, Game): built per shown game from the session, a `LocalSeats` and whether it is watched. It owns the
+    `AdventureAi` and the `TurnTimer` (neither in the replay viewer, nor for a session following a LAN host) and answers once a frame:
+    `RunClock` (the clock stands still while computer moves are shown or the game is paused; a time that is up ends the turn unless a
+    screen here holds a timed colour played here; a clock shown from elsewhere gives its warnings), `TakeTurnToShow` and `PlayComputer`
+    (not while a screen holds the game, while paused, or, where battles are played elsewhere, during a battle). `PlaysHere`,
+    `PlaysElsewhere` and `Viewer` say whose game this screen shows.
+  - `LocalSeats` (Core.Domain, Game): the colours played elsewhere, the pause, how the timer's commands run, where its clock goes, a clock
+    shown from elsewhere, and whether the computer waits for battles. `LanSeats.Of(GameHost)` and `LanSeats.Of(GameClient)` (Core.Network)
+    make a host's and a client's. `LanAnnouncer.Describe` is what a host announces.
+  - `ReplayController` (Core.Data, Records): over a `ReplayPlayer`, playing or paused (the end pauses it), the speed, the viewer's eyes,
+    the moments at a turn's start and on a battle's result, seeking, skipping a battle and playing one on; `Advance` says what a frame did.
+  - `GameScreens` (Godot.UI): the setup layer and its Escape, the F10 menu and the placing of its button, and the swap between the map and
+    the battle scene (the chat of a LAN game moving with it).
+- `Main` builds the views, passes them on and maps input. The AI's construction, the timer's ticks and the commands they give come in the
+  same order as before.
+- **Checked**: `GameDirectorTests`, `LanSeatsTests` and `ReplayControllerTests`; the duel baseline still gives `A0F1FADCC6D8DEE4` and the
+  sim self-test `82AE941CD62212E2`; the game's smoke frames compared before and after.
+
+### ADR-223: The town and hero screens are sections; the inspector has one section per object type (ADR-046, ADR-191, 2026-11-19)
+**Status**: implemented. No rule or map format change; the screens look and read as before.
+
+- **Why**: `TownPanel` (about 800 lines) rebuilt the whole screen on any of 28 events, `HeroPanel` on any of 25, and `InspectorPanel`
+  (about 800 lines) was one switch over the object types that rebuilt at once after every edit. The same owner drop-down was written five
+  times, and colours and widths were literals in each panel.
+- **Parts** (Godot.UI):
+  - `ScreenSection<TSubject>` (Hud): a part of a screen with its own `RefreshScheduler` on one of its controls and its own events; it
+    rebuilds alone, once a frame, and only while the screen shows its subject. The screen lays the sections' controls out and rebuilds them
+    all when it opens and on the events that change what it shows at all.
+  - Town screen (`Hud/TownScreen`): `TownHeaderSection`, `BuildingTreeSection`, `DwellingsSection`, `GovernorSection`, `TownArmiesSection`,
+    `CaravanSection`, `TransformerSection`, `BlacksmithSection`, `TavernSection`. The whole screen: owner, decision asked or answered, turn,
+    building raised or downgraded, governor (every price). The picked stack and the ticks stay the screen's; the transformer keeps its own
+    choices.
+  - Hero screen (`Hud/HeroScreen`): `HeroHeaderSection`, `HeroStatsSection`, `HeroSkillsSection`, `HeroArmySection`,
+    `HeroArtifactsSection`, `WarMachinesSection`, `SpellBookSection`, `AdventureSpellsSection`. The whole screen: turn, hero defeated.
+  - Inspector (`Editor/Inspector`): one `InspectorSection<T>` per map object type in the `InspectorSections` registry (a second section
+    for a type throws when it is built; a type without one shows only its caption, as fields stay optional for a kind), `HeroInspector`
+    for heroes, and `InspectorForm` for what they share (the edits, a garrison's rows, an event link). It fills again once a frame after
+    `UndoHistoryChanged`.
+- **Helpers**: `FormBuilder.AddOwnerChoice` (no owner first, then the players); `UiTheme` tokens for text tints (`TextCaution`,
+  `TextQuiet`, `TextDone`, the building states, `TextRefusal`, `IssueError` / `IssueWarning`) and the screens' and inspector's widths and
+  slot sizes. Drawing colours (the battle board, the template graph, the puzzle) stay with their drawing code.
+- **Checked**: build and tests; the smoke scenarios that show the town screen, the hero screen and the inspector, frame by frame before and after (PNG): the same pixels wherever the new game's random seed, the pointer and the computer's turn are the same.
+
+### ADR-224: The sim tool's commands are classes with strict options; saves stream to disk and list from their label (ADR-034, ADR-058, 2026-11-19)
+**Status**: implemented. No rule, save or map format change; the sim's output and exit codes for valid command lines are unchanged.
+
+- **Why**: the sim's `Program.cs` held every command in 1,100 lines, and its option reading ignored a typo (`--day 5`), a missing value and a
+  bad one (`--runs x` ran with the default). Saves were built as one string before being written, and the save menu deserialized every
+  save in the folder, map and commands included, to show its label.
+- **Parts**:
+  - Sim commands (`tools/EternalWars.Tools.Sim/Commands`): one `SimCommand` class per command (`BattleCommand`, `RecordCommand`,
+    `ReplayCommand`, `PlayGameCommand` for `game`, `MapsCommand`, `TownsCommand`, `AiCommand`, `CreaturesCommand`, `LinesCommand`,
+    `LayoutCommand`, `GenerateCommand`, `ExportCommand`, `FairnessCommand`, `SelfTestCommand`) naming its positionals and options;
+    `SimContext` carries the content and the AI weights; `SimGames`, `DemoGame`, `Fights`, `FightLog`, `TurnProfile` are shared.
+  - `CommandLine` parses strictly: an unknown option, a missing value, a bad value (not a number, below the option's minimum, not one of
+    its choices), an option given twice, a missing or extra positional or a missing required option is `error: ...` naming the option and
+    listing what the command takes, exit code 2. `--creatures` and `--weight` are taken from anywhere; `--weight` only for `game`, `maps`
+    and `selftest`; `game` refuses `--map` with `--template` and `--size`/`--players` without it.
+  - `GameRecordSerializer.Save` writes through a `FileStream` as it serializes (`Write(record, stream)`): the same bytes as before
+    (UTF-8, no byte order mark), still to a `.tmp` file moved into place.
+  - `GameRecordLabel.Read`: a `Utf8JsonReader` pass over the file a buffer at a time that takes the map's name on the way, steps over the
+    map and the commands without building them and stops after the `save` object. The format keeps the label after the commands (no
+    format change: every file reads as before); a save whose commands no longer load still lists, and loading it reports the error.
+    `GameSaves.List`/`ListReplays` use it; a file whose JSON breaks before the label is listed as unreadable.
+- **Checked**: `SimCommandLineTests` (the tests reference the sim project), `SaveFileStreamTests` (same bytes as the text, a 100,000-command
+  save, labels cut at any buffer size, damaged commands, a file cut after its label, unreadable files, a version 1 save with a byte
+  order mark); the sim digests and the output of every command compared before and after (times aside).

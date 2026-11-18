@@ -54,18 +54,11 @@ public partial class Main
     /// <summary>The player's name in LAN games, as last typed (or <c>--name=</c>, or the computer's user name).</summary>
     private string _playerName = LaunchArguments.PlayerName ?? System.Environment.UserName;
 
-    /// <summary>Whether a player plays on another computer: on the host the remote colours, on a client every colour but its own.</summary>
-    private bool PlaysElsewhere(PlayerId player) => _host?.IsRemote(player) == true || (_client is not null && _client.Seat != player);
+    /// <summary>Whether a player plays on another computer (the game's <see cref="LanSeats"/>).</summary>
+    private bool PlaysElsewhere(PlayerId player) => _director!.PlaysElsewhere(player);
 
-    /// <summary>
-    /// Whether a player plays at this screen, so the map turns to it and its questions open here: every human (hot-seat), except in a LAN game,
-    /// where only this computer's colours do.
-    /// </summary>
-    private bool PlaysHere(PlayerId player) => _session.State.GetPlayer(player).IsHuman && !PlaysElsewhere(player);
-
-    /// <summary>Whose eyes the map is drawn through when a game is shown: the player whose turn it is if it plays here, else the first who does.</summary>
-    private PlayerId ViewerHere(GameState state) =>
-        PlaysHere(state.CurrentPlayer.Id) ? state.CurrentPlayer.Id : state.Players.FirstOrDefault(p => PlaysHere(p.Id))?.Id ?? state.CurrentPlayer.Id;
+    /// <summary>Whether a player plays at this screen, so the map turns to it and its questions open here (<see cref="GameDirector.PlaysHere"/>).</summary>
+    private bool PlaysHere(PlayerId player) => _director!.PlaysHere(player);
 
     /// <summary>Multiplayer: the player's name, Host a game, the games found on the network, an address to type.</summary>
     private void ShowMultiplayer()
@@ -316,15 +309,6 @@ public partial class Main
         _chat.Add("", "Enter writes to the other players.");
     }
 
-    /// <summary>The chat at the bottom left of the map; over a battle, above the battle's log.</summary>
-    private void PlaceChat(bool battle)
-    {
-        if (_chat is not null)
-        {
-            (_chat.OffsetTop, _chat.OffsetBottom) = battle ? (-430, -250) : (-190, -40);
-        }
-    }
-
     /// <summary>The pause panel as the game stands: why it is paused and, on the host, the colours the computer may take over.</summary>
     private void ShowPause()
     {
@@ -339,9 +323,6 @@ public partial class Main
             _pause?.ShowPause(_client.Paused, []);
         }
     }
-
-    /// <summary>Whether the LAN game is paused for a colour nobody plays: the AI and the turn timer wait.</summary>
-    private bool IsPaused => _host?.IsPaused == true || _client?.Paused is not null;
 
     /// <summary>Once a frame: new connections, what the clients or the host have sent, the games on the network.</summary>
     private void PollNetwork(double delta)
@@ -382,22 +363,10 @@ public partial class Main
     /// <summary>What the host tells the computers looking for games: its lobby, or its game and the colours waiting for a player.</summary>
     private void Announce()
     {
-        if (_announcer is null)
+        if (_announcer is not null)
         {
-            return;
+            _announcer.Info = LanAnnouncer.Describe(_announcer.Info, _lobby, _host, _initialMap?.Name);
         }
-
-        var info = _announcer.Info;
-        _announcer.Info = _lobby is not null
-            ? info with { Game = _lobby.Lobby.Game, OpenColours = _lobby.OpenColours, Started = false }
-            : _host is not null
-                ? info with
-                {
-                    Game = _initialMap?.Name ?? "",
-                    OpenColours = _host.RemoteSeats.Count(s => _host.PlayerAt(s) is null && !_host.Session.State.GetPlayer(s).IsDefeated),
-                    Started = true,
-                }
-                : info with { OpenColours = 0 };
     }
 
     private static LanGameListing Listing(LanGameFound game)

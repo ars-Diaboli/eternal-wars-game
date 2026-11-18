@@ -1,5 +1,4 @@
 using EternalWars.Core.Data.Records;
-using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Settings;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Battle;
@@ -11,43 +10,26 @@ using Godot;
 namespace EternalWars.Game;
 
 /// <summary>
-/// The replay viewer's composition and input (ADR-101, ADR-164): the Replays and Saves tabs, then a <see cref="ReplayPlayer"/> wired to the
-/// same world, HUD and battle views as a game, watch-only, with <see cref="ReplayControlBar"/> along the bottom. Each frame, once the
-/// heroes' steps and the battle's animations have played, the next command runs; a finished battle's result stays a moment. Jumps (next turn,
-/// next day, a day) rebuild the views on a session put at that point. "Play from here" plays a battle on by hand and comes back, or on the map
-/// leaves the viewer for a game of the player's own from that point.
+/// The replay viewer's composition and input (ADR-101, ADR-164): the Replays and Saves tabs, then a <see cref="ReplayController"/> (ADR-222)
+/// wired to the same world, HUD and battle views as a game, watch-only, with <see cref="ReplayControlBar"/> along the bottom. Each frame, once
+/// the heroes' steps and the battle's animations have played, the controller runs the next command; a finished battle's result stays a moment.
+/// Jumps (next turn, next day, a day) rebuild the views on a session put at that point. "Play from here" plays a battle on by hand and comes
+/// back, or on the map leaves the viewer for a game of the player's own from that point.
 /// </summary>
 public partial class Main
 {
-    /// <summary>What the game app runs: a game, a replay being watched, or a battle played on from a replay.</summary>
-    private enum GameMode
-    {
-        Play,
-
-        /// <summary>The replay viewer (ADR-164): the record's commands play one at a time; nothing else issues one.</summary>
-        Watch,
-
-        /// <summary>"Play from here" in a battle: a separate game, not ranked, that goes back to the replay when the battle scene closes.</summary>
-        TakeOver,
-    }
-
-    /// <summary>How long a battle's result stays before the replay goes on, at normal speed.</summary>
-    private const double ResultSeconds = 1.5;
-
-    /// <summary>The pause at the start of each turn, at normal speed, so turns read apart.</summary>
-    private const double TurnSeconds = 0.5;
-
-    private GameMode _mode = GameMode.Play;
-    private ReplayPlayer? _replay;
+    /// <summary>The replay being watched (or a battle played on from it, <see cref="ReplayController.IsTakingOver"/>); null while playing a game.</summary>
+    private ReplayController? _replay;
     private ReplayControlBar? _replayBar;
-    private bool _replayPlaying;
+
+    /// <summary>The viewer's speed, kept for the next replay watched.</summary>
     private AnimationSpeed _replaySpeed = AnimationSpeed.Normal;
 
-    /// <summary>0 = the whole map, else the player at this index − 1.</summary>
-    private int _replayViewerIndex;
+    /// <summary>Whether a game is played (not a replay watched, nor a battle played on from one).</summary>
+    private bool Playing => _replay is null;
 
-    private double _replayWait;
-    private double _resultWait;
+    /// <summary>Whether a replay is watched (ADR-164): the record's commands play one at a time; nothing else issues one.</summary>
+    private bool Watching => _replay is { IsTakingOver: false };
 
     private void ShowReplays()
     {
@@ -66,8 +48,7 @@ public partial class Main
             var record = GameRecordSerializer.Load(path);
             var player = ReplayPlayer.Open(record, GameContent.All);
             CloseSetup();
-            (_mode, _replay, _replayPlaying, _replayViewerIndex) = (GameMode.Watch, player, true, 0);
-            (_replayWait, _resultWait) = (0, 0);
+            _replay = new ReplayController(player, _replaySpeed);
             _generated = record.Generated;
             BeginGame(player.Session, record.Map, resume: true);
         }
@@ -86,147 +67,101 @@ public partial class Main
     }
 
     /// <summary>Back to playing games: the viewer's state goes.</summary>
-    private void StopWatching()
-    {
-        (_mode, _replay, _replayBar, _replayPlaying) = (GameMode.Play, null, null, false);
-    }
-
-    /// <summary>Whose eyes the viewer's map is seen through: null for the whole map.</summary>
-    private PlayerId? ReplayViewer() =>
-        _replayViewerIndex > 0 && _replayViewerIndex <= _session.State.Players.Count ? _session.State.Players[_replayViewerIndex - 1].Id : null;
-
-    private double Pause(double normalSeconds) => SpeedSettings.Seconds(_replaySpeed, normalSeconds);
+    private void StopWatching() => (_replay, _replayBar) = (null, null);
 
     private void BuildReplayBar()
     {
+        var replay = _replay!;
         var layer = new CanvasLayer { Name = "ReplayBar", Layer = 4 };
         _game!.AddChild(layer);
         _replayBar = new ReplayControlBar();
         layer.AddChild(_replayBar);
-        _replayBar.Bind(_session.State.Players.Select(p => p.Name).ToList(), _replaySpeed, _replayViewerIndex);
-        _replayBar.TakingOver = _mode == GameMode.TakeOver;
-        _replayBar.PlayToggled += ToggleReplay;
+        _replayBar.Bind(_session.State.Players.Select(p => p.Name).ToList(), _replaySpeed, replay.ViewerIndex);
+        _replayBar.TakingOver = replay.IsTakingOver;
+        _replayBar.PlayToggled += replay.Toggle;
         _replayBar.SpeedChanged += speed =>
         {
-            _replaySpeed = speed;
+            (_replaySpeed, replay.Speed) = (speed, speed);
             ApplySpeeds();
         };
-        _replayBar.NextTurnRequested += () => SeekReplay(_replay!.NextTurnPosition());
-        _replayBar.NextDayRequested += () => SeekReplay(_replay!.NextDayPosition());
-        _replayBar.DayRequested += day => SeekReplay(_replay!.DayPosition(day));
+        _replayBar.NextTurnRequested += () => SeekReplay(replay.Player.NextTurnPosition());
+        _replayBar.NextDayRequested += () => SeekReplay(replay.Player.NextDayPosition());
+        _replayBar.DayRequested += day => SeekReplay(replay.Player.DayPosition(day));
         _replayBar.ViewerChanged += index =>
         {
-            _replayViewerIndex = index;
-            _context.SetViewer(ReplayViewer());
+            replay.ViewerIndex = index;
+            _context.SetViewer(replay.Viewer(_session.State));
         };
         _replayBar.SkipRequested += SkipBattle;
         _replayBar.TakeOverRequested += TakeOver;
         _replayBar.LeaveRequested += ShowMainMenu;
         _replayBar.BackRequested += BackToReplay;
-        if (_mode == GameMode.TakeOver)
+        if (replay.IsTakingOver)
         {
             _battle.Closed += BackToReplay; // the battle is over and its result seen
             _replayBar.SetStatus("Playing the battle on from the replay: a separate game, not ranked; the replay stays as it is.");
         }
     }
 
-    private void ToggleReplay()
-    {
-        if (_replay is { IsAtEnd: false })
-        {
-            _replayPlaying = !_replayPlaying;
-        }
-    }
-
     /// <summary>A turn started in the replay: a short pause before its first command.</summary>
-    private void ReplayTurnStarted() => _replayWait = Pause(TurnSeconds);
+    private void ReplayTurnStarted() => _replay?.TurnStarted();
 
     /// <summary>
-    /// One frame of the viewer: the bar shows where the replay is; while playing, the next command runs once the views have caught up (heroes'
-    /// steps, the battle's animations, a finished battle's result for a moment). The record's end pauses the replay.
+    /// One frame of the viewer: the bar shows where the replay is; while playing, the controller runs the next command once the views have
+    /// caught up (heroes' steps, the battle's animations, a finished battle's result for a moment).
     /// </summary>
     private void ProcessReplay(double delta)
     {
-        if (_mode != GameMode.Watch || _replay is null || _context is null)
+        if (!Watching || _replay is not { } replay || _context is null)
         {
             return;
-        }
-
-        if (_replay.IsAtEnd)
-        {
-            _replayPlaying = false;
         }
 
         ShowReplayState();
-        if (!_replayPlaying || _menu.Visible || _context.Now < _context.PlaybackEnd || _battle.IsBusy)
+        var frame = replay.Advance(
+            delta,
+            held: _menu.Visible || _context.Now < _context.PlaybackEnd || _battle.IsBusy,
+            resultShown: _battle.IsOpen && _battle.Result is not null);
+        switch (frame.Kind)
         {
-            return;
-        }
-
-        if (_battle.IsOpen && _battle.Result is not null)
-        {
-            _resultWait += delta;
-            if (_resultWait >= Pause(ResultSeconds))
-            {
-                _resultWait = 0;
+            case ReplayAdvance.LeaveResult:
                 _battleHud.Continue(); // the Necromancy screen first, if undead were raised, then the map
-            }
-
-            return;
-        }
-
-        if (_replayWait > 0)
-        {
-            _replayWait -= delta;
-            return;
-        }
-
-        try
-        {
-            _replay.Step();
-        }
-        catch (InvalidOperationException e)
-        {
-            // Only a command from outside the record could make the watched game differ: rebuild it from the record where it was, paused.
-            GD.PushWarning($"Replay viewer: {e.Message}");
-            _replayPlaying = false;
-            SeekReplay(_replay.Position);
+                break;
+            case ReplayAdvance.Diverged:
+                // Only a command from outside the record could make the watched game differ: rebuild it from the record where it was, paused.
+                GD.PushWarning($"Replay viewer: {frame.Problem}");
+                SeekReplay(replay.Player.Position);
+                break;
         }
     }
 
     private void ShowReplayState()
     {
-        if (_replayBar is null || _replay is null)
+        if (_replayBar is null || _replay is not { } replay)
         {
             return;
         }
 
-        var state = _replay.Session.State;
-        var end = !_replay.IsAtEnd ? string.Empty
-            : state.Outcome is { } outcome ? $"   ·   The game is over: {outcome.Reason}"
-            : _replay.Record.Save is not null ? "   ·   The end of the save"
-            : "   ·   The end of the replay";
         _replayBar.Display(new ReplayBarState(
-            _replayPlaying,
-            $"{state.Date}, {state.CurrentPlayer.Name}'s turn   ·   command {_replay.Position} of {_replay.Count}{end}",
-            _replay.CurrentTurn.Date.AbsoluteDay,
-            _replay.LastDay,
+            replay.IsPlaying,
+            replay.Status(),
+            replay.Player.CurrentTurn.Date.AbsoluteDay,
+            replay.Player.LastDay,
             _battle.IsOpen,
-            _battle.IsOpen ? _replay.CanTakeOver : _replay.CanPlayOn,
-            _replay.IsAtEnd));
+            _battle.IsOpen ? replay.Player.CanTakeOver : replay.Player.CanPlayOn,
+            replay.Player.IsAtEnd));
     }
 
     /// <summary>Jumps to <paramref name="position"/> (a turn's or day's start), back or forward: the views are built again on a session put there.</summary>
     private void SeekReplay(int position)
     {
-        if (_replay is null || _mode != GameMode.Watch)
+        if (!Watching || _replay is not { } replay)
         {
             return;
         }
 
-        _replay.Seek(position);
-        (_replayWait, _resultWait) = (0, 0);
-        BeginGame(_replay.Session, _replay.Record.Map, resume: true);
+        replay.Seek(position);
+        BeginGame(replay.Player.Session, replay.Player.Record.Map, resume: true);
     }
 
     /// <summary>
@@ -243,13 +178,9 @@ public partial class Main
         var speed = _battle.Speed;
         _battle.Speed = AnimationSpeed.Instant;
         _battle.FinishAnimations();
-        while (_replay.IsInBattle(_replay.Position) && _replay.Step())
-        {
-        }
-
+        _replay.SkipBattle();
         _battle.FinishAnimations();
         _battle.Speed = speed;
-        _resultWait = 0;
     }
 
     /// <summary>
@@ -258,7 +189,7 @@ public partial class Main
     /// </summary>
     private void TakeOver()
     {
-        if (_replay is null || _mode != GameMode.Watch)
+        if (!Watching || _replay is not { } replay)
         {
             return;
         }
@@ -269,14 +200,10 @@ public partial class Main
             return;
         }
 
-        if (!_replay.CanTakeOver)
+        if (replay.TakeOver() is { } session)
         {
-            return;
+            BeginGame(session, replay.Player.Record.Map, resume: true);
         }
-
-        var session = _replay.TakeOver();
-        (_mode, _replayPlaying) = (GameMode.TakeOver, false);
-        BeginGame(session, _replay.Record.Map, resume: true);
     }
 
     /// <summary>
@@ -286,7 +213,7 @@ public partial class Main
     /// </summary>
     private void PlayOn()
     {
-        if (_replay is not { CanPlayOn: true } replay)
+        if (_replay?.Player is not { CanPlayOn: true } replay)
         {
             return;
         }
@@ -308,13 +235,10 @@ public partial class Main
     /// <summary>Leaves the battle played on and shows the replay again where it was, paused.</summary>
     private void BackToReplay()
     {
-        if (_mode != GameMode.TakeOver || _replay is null)
+        if (_replay is { } replay && replay.BackToReplay())
         {
-            return;
+            BeginGame(replay.Player.Session, replay.Player.Record.Map, resume: true);
         }
-
-        _mode = GameMode.Watch;
-        BeginGame(_replay.Session, _replay.Record.Map, resume: true);
     }
 
     /// <summary>
@@ -324,7 +248,7 @@ public partial class Main
     /// </summary>
     private bool HandleReplayInput(InputEvent @event)
     {
-        if (_mode == GameMode.TakeOver)
+        if (_replay is { IsTakingOver: true })
         {
             return !_battle.IsOpen;
         }
@@ -332,7 +256,7 @@ public partial class Main
         switch (@event)
         {
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Space }:
-                ToggleReplay();
+                _replay?.Toggle();
                 break;
             case InputEventKey { Pressed: true, Keycode: Key.Enter or Key.KpEnter or Key.Escape } when _battle.IsOpen && _battle.Result is not null:
                 _battleHud.Continue();

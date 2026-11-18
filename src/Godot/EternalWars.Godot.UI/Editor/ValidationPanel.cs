@@ -52,7 +52,7 @@ public partial class ValidationPanel : ItemList
         foreach (var issue in _issues)
         {
             var index = AddItem($"{issue.Severity}: {issue.Message}{(issue.Position is { } p ? $" {p}" : "")}{(issue.Event is not null ? " (double click: open the event)" : "")}");
-            SetItemCustomFgColor(index, issue.Severity == IssueSeverity.Error ? new Color(1f, 0.45f, 0.4f) : new Color(1f, 0.85f, 0.4f));
+            SetItemCustomFgColor(index, issue.Severity == IssueSeverity.Error ? UiTheme.IssueError : UiTheme.IssueWarning);
         }
     }
 }

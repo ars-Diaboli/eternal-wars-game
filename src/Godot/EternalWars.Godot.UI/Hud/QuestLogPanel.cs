@@ -112,13 +112,13 @@ public partial class QuestLogPanel : PanelContainer
             _list.AddChild(row);
             var lines = new VBoxContainer { SizeFlagsHorizontal = SizeFlags.ExpandFill };
             row.AddChild(lines);
-            lines.AddChild(new Label { Text = heading, Modulate = entry.Done ? new Color(0.6f, 0.6f, 0.6f) : Colors.White });
+            lines.AddChild(new Label { Text = heading, Modulate = entry.Done ? UiTheme.TextDone : Colors.White });
             lines.AddChild(new Label
             {
                 Text = text,
                 AutowrapMode = TextServer.AutowrapMode.WordSmart,
                 CustomMinimumSize = new Vector2(520, 0),
-                Modulate = entry.Done ? new Color(0.6f, 0.6f, 0.6f) : new Color(0.9f, 0.85f, 0.7f),
+                Modulate = entry.Done ? UiTheme.TextDone : new Color(0.9f, 0.85f, 0.7f),
             });
             if (state.FindObject(entry.Site) is { } site)
             {
