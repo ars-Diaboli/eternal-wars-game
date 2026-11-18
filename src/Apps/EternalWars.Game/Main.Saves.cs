@@ -83,13 +83,12 @@ public partial class Main
 
     // Save and load (ADR-058) ---------------------------------------------------------------------
 
-    /// <summary>The menu is above everything, also above the battle scene and its HUD, so saving works in battle too.</summary>
+    /// <summary>The menu is above everything, also above the battle scene and its HUD, so saving works in battle too (<see cref="GameScreens"/>).</summary>
     private void BuildMenu()
     {
-        var layer = new CanvasLayer { Name = "Menu", Layer = 5 };
-        AddChild(layer);
-        _menu = new GameMenuPanel();
-        layer.AddChild(_menu);
+        _screens = new GameScreens(this, () => Playing);
+        _screens.Build();
+        _menu = _screens.Menu;
         _menu.Bind(() => SaveItems(GameSaves.List(_saveFolder)), GameSaves.Delete);
         _menu.SaveRequested += name => Save(name);
         _menu.LoadRequested += Load;
@@ -143,37 +142,6 @@ public partial class Main
 
             KeepSettings();
         };
-
-        _menuButton = new Button { Text = "Menu (F10)" }.WithIcon(UiIcon.Menu, UiIcons.StatusBarSize);
-        _menuButton.Pressed += _menu.Toggle;
-        layer.AddChild(_menuButton);
-        PlaceMenuButton();
-        GetViewport().SizeChanged += PlaceMenuButton;
-    }
-
-    /// <summary>
-    /// On the adventure map the menu is one of the HUD's action buttons (ADR-210), and this button is hidden. In a battle that is played it
-    /// sits on the status bar's right end (ADR-204); in the replay viewer's battles (beside its bar) and before a game it stands in the bottom
-    /// right corner. The setup screens hide it.
-    /// </summary>
-    private void PlaceMenuButton()
-    {
-        var screen = GetViewport().GetVisibleRect().Size;
-        var inGame = IsInstanceValid(_hud) && _game is not null;
-        var inBattle = inGame && IsInstanceValid(_battle) && _battle.IsOpen;
-        _menuButton.Visible = _setup is null && !(inGame && !inBattle);
-        if (_mode == GameMode.Play && inBattle)
-        {
-            var slot = StatusBar.MenuSlot(screen);
-            _menuButton.SetAnchorsPreset(Control.LayoutPreset.TopLeft);
-            _menuButton.Position = slot.Position;
-            _menuButton.Size = slot.Size;
-            return;
-        }
-
-        _menuButton.SetAnchorsPreset(Control.LayoutPreset.BottomRight);
-        (_menuButton.OffsetLeft, _menuButton.OffsetTop) = (-StatusBar.MenuButtonWidth - UiSpacing.ScreenEdge, -StatusBar.Height - UiSpacing.ScreenEdge);
-        (_menuButton.OffsetRight, _menuButton.OffsetBottom) = (-UiSpacing.ScreenEdge, -UiSpacing.ScreenEdge);
     }
 
     /// <summary>The save menu's and the replay list's lines for a folder's files.</summary>
@@ -185,7 +153,7 @@ public partial class Main
     /// before a game or on a computer's turn.
     /// </summary>
     private PlayerId? AutoCombatSettingPlayer() =>
-        _context is null || _mode != GameMode.Play ? null
+        _context is null || !Playing ? null
         : _session.Battles.AutoCombatPlayer() ?? (_session.State.CurrentPlayer.IsHuman ? _session.State.CurrentPlayer.Id : null);
 
     /// <summary>F10 menu, F5 quick save, F9 quick load; they work on the adventure map and in battle.</summary>
@@ -196,7 +164,7 @@ public partial class Main
             case Key.F10:
                 _menu.Toggle();
                 return true;
-            case Key.F5 when _context is not null && _mode == GameMode.Play:
+            case Key.F5 when _context is not null && Playing:
                 Save(GameSaves.QuickSaveName);
                 return true;
             case Key.F9:

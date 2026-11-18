@@ -50,6 +50,23 @@ public sealed class LanAnnouncer : IDisposable
         set => _info = value;
     }
 
+    /// <summary>
+    /// What a host answers (ADR-194, ADR-222), from what it answered before (<paramref name="info"/>: its version, player and port): while it holds
+    /// a <paramref name="lobby"/>, the lobby's game and its open colours, not started; while it hosts a game, the game's map
+    /// (<paramref name="gameName"/>) and the remote colours without a player that are still in the game, started; else no open colour.
+    /// </summary>
+    public static LanGameInfo Describe(LanGameInfo info, LobbyHost? lobby, GameHost? host, string? gameName) =>
+        lobby is not null
+            ? info with { Game = lobby.Lobby.Game, OpenColours = lobby.OpenColours, Started = false }
+            : host is not null
+                ? info with
+                {
+                    Game = gameName ?? "",
+                    OpenColours = host.RemoteSeats.Count(s => host.PlayerAt(s) is null && !host.Session.State.GetPlayer(s).IsDefeated),
+                    Started = true,
+                }
+                : info with { OpenColours = 0 };
+
     /// <summary>This computer's IPv4 addresses on its networks (what a player types to join it), loopback left out.</summary>
     public static IReadOnlyList<string> LocalAddresses()
     {

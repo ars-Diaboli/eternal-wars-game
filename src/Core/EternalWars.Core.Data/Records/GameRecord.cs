@@ -249,7 +249,15 @@ public static class GameRecordSerializer
             : JsonSerializer.Deserialize<GameRecordDocument>(json, Options))
         ?? throw new FormatException("Replay file is empty.");
 
-    public static void Save(GameRecordDocument record, string path) => File.WriteAllText(path, Serialize(record));
+    /// <summary>Writes the record to a file (replacing it) as it serializes, without the whole text in memory first (<see cref="Write"/>).</summary>
+    public static void Save(GameRecordDocument record, string path)
+    {
+        using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
+        Write(record, stream);
+    }
+
+    /// <summary>Writes the record to <paramref name="stream"/> as UTF-8 JSON as it serializes: the bytes of <see cref="Serialize"/>'s text, without a byte order mark.</summary>
+    public static void Write(GameRecordDocument record, Stream stream) => JsonSerializer.Serialize(stream, record, Options);
 
     public static GameRecordDocument Load(string path) => Deserialize(File.ReadAllText(path));
 

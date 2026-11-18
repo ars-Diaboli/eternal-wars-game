@@ -33,6 +33,76 @@ public static class UiTheme
     /// <summary>The side panel's frame width, thicker than a panel's.</summary>
     public const int FrameWidth = 3;
 
+    // Text tints (a label's or button's Modulate, a list item's colour).
+
+    /// <summary>A caution in a line: a dwelling that closes others, a heading in the template editor's inspector.</summary>
+    public static readonly Color TextCaution = new(1f, 0.85f, 0.5f);
+
+    /// <summary>A quiet caption: a column's title in the building tree.</summary>
+    public static readonly Color TextQuiet = new(0.75f, 0.75f, 0.75f);
+
+    /// <summary>Something done: a finished quest in the quest log.</summary>
+    public static readonly Color TextDone = new(0.6f, 0.6f, 0.6f);
+
+    /// <summary>A building that is fully built.</summary>
+    public static readonly Color TextComplete = new(0.6f, 1f, 0.6f);
+
+    /// <summary>A building waiting on others (its requirements are not met).</summary>
+    public static readonly Color TextBlocked = new(0.7f, 0.7f, 0.7f);
+
+    /// <summary>A building the player cannot pay for yet.</summary>
+    public static readonly Color TextUnaffordable = new(1f, 0.75f, 0.6f);
+
+    /// <summary>Why something cannot be done (the tavern's hire refusal).</summary>
+    public static readonly Color TextRefusal = new(1f, 0.6f, 0.5f);
+
+    /// <summary>An error in a list of problems (the validator, the template editor).</summary>
+    public static readonly Color IssueError = new(1f, 0.45f, 0.4f);
+
+    /// <summary>A warning in a list of problems (the validator, the template editor).</summary>
+    public static readonly Color IssueWarning = new(1f, 0.85f, 0.4f);
+
+    // Sizes of the town and hero screens and the editor's inspector (the least width of a label, a field or a slot).
+
+    /// <summary>A wrapping text line on the town and hero screens (status, stats, skill descriptions).</summary>
+    public const int ScreenTextWidth = 600;
+
+    /// <summary>A labelled row on the town screen: the governor, a caravan's dwelling or provider.</summary>
+    public const int TownRowWidth = 360;
+
+    /// <summary>A dwelling's line and the blacksmith's caption on the town screen.</summary>
+    public const int TownLineWidth = 240;
+
+    /// <summary>A column of the town's building tree.</summary>
+    public const int BuildingColumnWidth = 170;
+
+    /// <summary>The name before a row of army slots, and the tavern's caption, on the town screen.</summary>
+    public const int ArmyNameWidth = 110;
+
+    /// <summary>A stack's slot on the town screen.</summary>
+    public static readonly Vector2 TownSlotSize = new(86, 48);
+
+    /// <summary>A stack's slot on the hero screen.</summary>
+    public static readonly Vector2 HeroSlotSize = new(96, 56);
+
+    /// <summary>A slot of the paper doll on the hero screen.</summary>
+    public const int DollSlotWidth = 190;
+
+    /// <summary>A free text in the inspector: a sign's or a box's message.</summary>
+    public const int InspectorTextWidth = 260;
+
+    /// <summary>A sphinx's riddle field in the inspector, and its caption.</summary>
+    public const int InspectorFieldWidth = 280;
+
+    /// <inheritdoc cref="InspectorFieldWidth"/>
+    public const int InspectorFieldLabelWidth = 90;
+
+    /// <summary>A town's name in the inspector.</summary>
+    public const int InspectorNameWidth = 160;
+
+    /// <summary>A wrapping note in the inspector (the arena place).</summary>
+    public const int InspectorNoteWidth = 300;
+
     /// <summary>A flat box of <paramref name="background"/> framed in <paramref name="border"/>, <paramref name="padding"/> inside.</summary>
     public static StyleBoxFlat Box(Color background, Color border, int padding, int borderWidth = 1)
     {

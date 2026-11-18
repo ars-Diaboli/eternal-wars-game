@@ -1,14 +1,13 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Data.Records;
 using EternalWars.Core.Data.Settings;
-using EternalWars.Core.Domain.AI;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Decisions;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Settings;
-using EternalWars.Core.Domain.Turns;
 using EternalWars.Core.Generation;
+using EternalWars.Core.Network;
 using EternalWars.Godot.Shared;
 using EternalWars.Godot.Shared.Battle;
 using EternalWars.Godot.Shared.Cameras;
@@ -46,14 +45,13 @@ public partial class Main : Node3D
     private (GameState State, GenerationInfo Info)? _lastGenerated;
     private GameMenuPanel _menu = null!;
 
-    /// <summary>The "Menu (F10)" button; hidden on the screens before a game, which have their own buttons (F10 still opens the menu).</summary>
-    private Button _menuButton = null!;
-
-    /// <summary>The layer of the main menu, the new-game screen and the leaderboard; null during a game.</summary>
-    private SetupScreenHost? _setup;
+    /// <summary>Which screen is shown: the screens before a game, the menu, the map or the battle scene (ADR-222).</summary>
+    private GameScreens _screens = null!;
     private string _saveFolder = "";
     private bool _turnBegan;
-    private AdventureAi? _ai;
+
+    /// <summary>The game's computer players, turn timer and the colours played here (ADR-222); null outside a game.</summary>
+    private GameDirector? _director;
     private MapViewContext _context = null!;
     private AdventureWorldView _world = null!;
     private StrategyCamera _camera = null!;
@@ -68,11 +66,7 @@ public partial class Main : Node3D
     /// <summary>The adventure map's clicks and keys, and the selected hero.</summary>
     private AdventureInputController _mapInput = null!;
     private AutoCombatPanel? _autoCombat;
-    private TurnTimer? _timer;
     private TurnTimerPanel? _timerPanel;
-
-    /// <summary>The seconds left on the host's clock last shown on a client, for its warnings.</summary>
-    private int? _clockShown;
     private GameResultPanel _result = null!;
 
     /// <summary>The session last put into the ranking, so a game is entered once.</summary>
@@ -87,9 +81,6 @@ public partial class Main : Node3D
 
     /// <summary>The computer hero the camera last followed (ADR-090).</summary>
     private HeroId? _followed;
-
-    /// <summary>A human player's turn that started while computer moves were still shown: the map turns to them once they are.</summary>
-    private PlayerId? _turnToShow;
 
     public override void _ExitTree() => GameCursors.Release();
 
@@ -193,24 +184,9 @@ public partial class Main : Node3D
     }
 
     /// <summary>Puts a screen on the setup layer in place of the one shown; Escape does <paramref name="back"/> (none on the main menu).</summary>
-    private void ShowSetup(Control screen, Action? back)
-    {
-        if (_setup is null)
-        {
-            _setup = new SetupScreenHost();
-            AddChild(_setup);
-        }
+    private void ShowSetup(Control screen, Action? back) => _screens.ShowSetup(screen, back);
 
-        _setup.ShowScreen(screen, back);
-        _menuButton.Visible = false;
-    }
-
-    private void CloseSetup()
-    {
-        _setup?.QueueFree();
-        _setup = null;
-        PlaceMenuButton();
-    }
+    private void CloseSetup() => _screens.CloseSetup();
 
     /// <summary>Takes the game being played down: its world, HUD and screens. Nothing runs until a new game or a load builds them again.</summary>
     private void LeaveGame()
@@ -226,58 +202,45 @@ public partial class Main : Node3D
 
         _game.QueueFree();
         _game = null;
-        PlaceMenuButton();
+        _screens.LeaveGame();
         _context = null!;
         _status = null!;
-        _ai = null;
-        _timer = null;
+        _director = null;
         _timerPanel = null;
         _autoCombat = null;
         _chat = null;
         _pause = null;
-        _turnToShow = null;
         _followed = null;
     }
 
     /// <summary>
-    /// Computer players play their turns here, one a frame (ADR-059). The AI waits while a battle scene is open (it may be
-    /// a human's fight) and while the menu is. The turn timer's clock runs here too (ADR-091); it ends a turn only once the battle scene,
-    /// the auto combat question and the menu are closed. While computer heroes' moves are being shown (ADR-090), the AI, the clock and the
-    /// next human turn wait for them.
+    /// Once a frame the <see cref="GameDirector"/> runs the game (ADR-222): the turn timer's clock (ADR-091), the turn the map waits to turn to,
+    /// then the computer players' turns, one a frame (ADR-059). The screens open here (the menu, the battle scene, the auto combat question) hold
+    /// the AI and the end of a turn played here; while computer heroes' moves are being shown (ADR-090), the AI, the clock and the next human
+    /// turn wait for them.
     /// </summary>
     public override void _Process(double delta)
     {
         PollNetwork(delta); // a LAN game's lobby, joins, commands and chat (ADR-192, ADR-194)
-        if (_mode != GameMode.Play)
+        if (!Playing)
         {
             ProcessReplay(delta); // the replay viewer runs the record, not the AI or the clock (ADR-164)
             return;
         }
 
-        var showing = ShowingComputerMoves;
-        if (_timer is not null && _timerPanel is not null)
+        if (_director is not { } director)
         {
-            // This computer's screens hold the end of a turn played here; a LAN host ends a client's turn whatever it shows (ADR-198).
-            var paused = IsPaused; // a LAN game waiting for a colour nobody plays (ADR-195)
-            var screensOpen = _menu.Visible || _battle.IsOpen || _autoCombat?.Visible == true;
-            var canEnd = !showing && !paused && (!screensOpen || !_timer.TimedPlayers.Any(PlaysHere));
-            if (_timer.Tick(showing || paused ? 0 : delta, canEnd) is { } warning)
-            {
-                _timerPanel.Warn(warning);
-            }
-
-            _timerPanel.ShowTime(_timer.SecondsLeft, _timer.IsStopped, _timer.IsUp, delta);
-            _host?.ShowClock(_timer.Clock);
+            return;
         }
-        else if (_client?.Clock is { } clock && _timerPanel is not null)
+
+        var showing = ShowingComputerMoves;
+        if (director.RunClock(delta, showing, _screens.HoldTheGame) is { } clock && _timerPanel is not null)
         {
-            // A client shows the host's clock, the one clock of the game (ADR-198).
-            if (_clockShown is { } before && clock.SecondsLeft is { } left && TurnTimer.WarningPassed(before, left) is { } warning)
+            if (clock.Warning is { } warning)
             {
                 _timerPanel.Warn(warning);
             }
 
-            _clockShown = clock.SecondsLeft;
             _timerPanel.ShowTime(clock.SecondsLeft, clock.Stopped, clock.Up, delta);
         }
 
@@ -286,18 +249,12 @@ public partial class Main : Node3D
             return;
         }
 
-        if (_turnToShow is { } player)
+        if (director.TakeTurnToShow() is { } player)
         {
-            _turnToShow = null;
             ShowTurn(player);
         }
 
-        // A LAN host: a battle this computer does not show waits for its players, and nothing moves while the game is paused (ADR-195).
-        if (_ai is not null && !_menu.Visible && !_battle.IsOpen && _autoCombat?.Visible != true && AdventureAi.IsComputerTurn(_session.State)
-            && !IsPaused && (_host is null || _session.State.Battle is null))
-        {
-            _ai.PlayTurn();
-        }
+        director.PlayComputer(_screens.HoldTheGame);
     }
 
     /// <summary>Hot-seat: the map is drawn through the eyes of whoever plays now, with their first hero selected.</summary>
@@ -354,19 +311,18 @@ public partial class Main : Node3D
             return;
         }
 
-        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && _setup?.Back is { } back && !_menu.Visible)
+        if (@event is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape } && _screens.GoBack())
         {
             GetViewport().SetInputAsHandled();
-            back();
             return;
         }
 
-        if (_mode != GameMode.Play && _context is not null && !_menu.Visible && HandleReplayInput(@event))
+        if (!Playing && _context is not null && !_menu.Visible && HandleReplayInput(@event))
         {
             return;
         }
 
-        if (_context is null || _menu.Visible || _autoCombat?.Visible == true || ShowingComputerMoves || _turnToShow is not null)
+        if (_context is null || _menu.Visible || _autoCombat?.Visible == true || ShowingComputerMoves || _director?.HasTurnToShow == true)
         {
             return;
         }
@@ -412,13 +368,16 @@ public partial class Main : Node3D
         _game = new Node3D { Name = "Game" };
         AddChild(_game);
 
+        _screens.EnterGame();
         _session = session;
         _initialMap = initialMap;
-        var playing = _mode == GameMode.Play;
-        _ai = playing && _client is null ? new AdventureAi(session) : null; // a LAN client's computer players are the host's
+        var playing = Playing;
+
+        // The computer players and the clock are a LAN host's; a client only shows them (ADR-198).
+        _director = new GameDirector(session, _host is not null ? LanSeats.Of(_host) : _client is not null ? LanSeats.Of(_client) : null, watching: !playing);
         _menu.CanSave = playing; // a LAN client saves the host's record of the game (ADR-196)
         var state = session.State;
-        _context = new MapViewContext(state, _session.Events, playing ? ViewerHere(state) : ReplayViewer())
+        _context = new MapViewContext(state, _session.Events, playing ? _director.Viewer() : _replay!.Viewer(state))
         {
             FogLook = _interface.Fog, ShowGrid = _interface.ShowGrid, PlaysElsewhere = PlaysElsewhere,
         };
@@ -444,11 +403,10 @@ public partial class Main : Node3D
         }
         else
         {
-            (_timer, _timerPanel) = (null, null);
+            _timerPanel = null;
             BuildReplayBar(); // the viewer's controls; no ranking, end screen, clock or autosave (ADR-164)
         }
 
-        _turnToShow = null;
         _followed = null;
         ApplySpeeds();
 
@@ -481,18 +439,12 @@ public partial class Main : Node3D
                 return;
             }
 
-            if (!PlaysHere(e.Player))
+            // The map stays with the last human here, who watches the computer heroes it can see (ADR-090), or another computer's player; while
+            // the computer's moves are shown, the turn waits for them.
+            if (_director!.TurnStarted(e.Player, ShowingComputerMoves))
             {
-                return; // the map stays with the last human here, who watches the computer heroes it can see (ADR-090), or another computer's player
+                ShowTurn(e.Player);
             }
-
-            if (ShowingComputerMoves)
-            {
-                _turnToShow = e.Player; // once the computer's moves have been shown
-                return;
-            }
-
-            ShowTurn(e.Player);
         });
         _game.SubscribeWhileInTree<DecisionRequested>(_session.Events, e => FocusOnEventPlace(e.Decision));
         _context.HeroStepShown += FollowStep;
@@ -529,13 +481,11 @@ public partial class Main : Node3D
     }
 
     /// <summary>
-    /// The turn timer (ADR-091), when the game has one: the clock over the map and the battle scene. A loaded game starts the current turn with
-    /// the full time. A LAN game has one clock, the host's (ADR-198): the host ends any colour's turn on it, and a client only shows it.
+    /// The turn timer's clock (ADR-091) over the map and the battle scene; the <see cref="GameDirector"/> runs it, or on a LAN client shows the
+    /// host's (ADR-198).
     /// </summary>
     private void BuildTimer()
     {
-        _clockShown = null;
-        _timer = _session.State.Options.TurnTimerMinutes is null || _client is not null ? null : new TurnTimer(_session, _host is null ? null : _host.ExecuteAsHost);
         var layer = new CanvasLayer { Name = "TurnTimer", Layer = 4 };
         _game!.AddChild(layer);
         _timerPanel = new TurnTimerPanel();
@@ -548,7 +498,7 @@ public partial class Main : Node3D
         if (_context is not null)
         {
             // The replay viewer plays every hero and battle at its own speed (ADR-164).
-            _context.Speeds = _mode == GameMode.Play ? _speeds : new SpeedSettings(_replaySpeed, _replaySpeed, ShowComputerHeroes: true, _replaySpeed);
+            _context.Speeds = Playing ? _speeds : new SpeedSettings(_replaySpeed, _replaySpeed, ShowComputerHeroes: true, _replaySpeed);
             _battle.Speed = _context.Speeds.Battle;
         }
     }
@@ -559,7 +509,7 @@ public partial class Main : Node3D
     /// </summary>
     private void FollowStep(Core.Domain.Heroes.Hero hero, MapPosition to)
     {
-        var watching = _mode == GameMode.Watch; // the viewer follows every hero it can see, on either level (ADR-164)
+        var watching = Watching; // the viewer follows every hero it can see, on either level (ADR-164)
         if ((watching || (_speeds.ShowComputerHeroes && !_session.State.GetPlayer(hero.Owner).IsHuman)) && hero.Id != _followed
             && (watching || to.Level == _context.Level) && _context.IsInSight(to))
         {
@@ -576,7 +526,7 @@ public partial class Main : Node3D
     private void BuildBattle()
     {
         // A LAN game shows only the battles of this computer's players, each commanding its own side (ADR-195).
-        _battle = new BattleView3D { Watching = _mode == GameMode.Watch, PlaysHere = _host is null && _client is null ? null : p => !PlaysElsewhere(p) };
+        _battle = new BattleView3D { Watching = Watching, PlaysHere = _host is null && _client is null ? null : p => !PlaysElsewhere(p) };
         _game!.AddChild(_battle);
         _battle.Bind(_session);
 
@@ -586,11 +536,11 @@ public partial class Main : Node3D
         layer.AddChild(_battleHud);
         _battleHud.Bind(_session, _battle);
         _battleHud.Layout = _layout;
-        _battleHud.BottomReserve = _mode == GameMode.Play ? 0 : ReplayControlBar.ReservedHeight;
+        _battleHud.BottomReserve = Playing ? 0 : ReplayControlBar.ReservedHeight;
         _battleInput = new BattleInputController(_session, _battle, _battleHud, _info);
 
         // Auto combat (ADR-090) asks above the battle scene and above the map (a battle still choosing its width); not in the replay viewer.
-        if (_mode == GameMode.Play)
+        if (Playing)
         {
             var autoLayer = new CanvasLayer { Name = "AutoCombat", Layer = 4 };
             _game.AddChild(autoLayer);
@@ -603,25 +553,7 @@ public partial class Main : Node3D
             _autoCombat = null;
         }
 
-        _battle.Opened += () =>
-        {
-            _world.Visible = false;
-            _hud.Visible = false;
-            PlaceMenuButton();
-            _camera.ProcessMode = ProcessModeEnum.Disabled;
-            _world.PathPreview.Clear();
-            PlaceChat(battle: true);
-        };
-        _battle.Closed += () =>
-        {
-            GameCursors.Show(Core.Domain.Cursors.GameCursor.Pointer); // the battle's last cursor goes; the map's comes with the next move
-            _world.Visible = true;
-            _hud.Visible = true;
-            PlaceMenuButton();
-            _camera.ProcessMode = ProcessModeEnum.Inherit;
-            _camera.MakeCurrent();
-            PlaceChat(battle: false);
-        };
+        _screens.ShowBattle(_battle, _autoCombat, _world, _camera, _chat); // in place of the map while it is open
     }
 
     /// <summary>
@@ -697,7 +629,7 @@ public partial class Main : Node3D
     {
         _hud = new AdventureHud();
         _game!.AddChild(_hud);
-        var playing = _mode == GameMode.Play; // the replay viewer only watches: nothing here issues a command (ADR-164)
+        var playing = Playing; // the replay viewer only watches: nothing here issues a command (ADR-164)
         _hud.Bind(_session, _context, _world, _camera, playing, _layout, screens: _game);
         _status = _hud.Status;
         _mapInput = new AdventureInputController(_session, _context, _world, _camera, _hud, _info);
@@ -705,6 +637,6 @@ public partial class Main : Node3D
         _hud.DigRequested += _mapInput.Dig;
         _hud.SpellAimed += _mapInput.Aim;
         _hud.MenuRequested += _menu.Toggle;
-        PlaceMenuButton();
+        _screens.ShowHud(_hud);
     }
 }

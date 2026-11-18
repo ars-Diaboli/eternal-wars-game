@@ -226,7 +226,7 @@ public partial class TemplateEditorPanel : PanelContainer
         foreach (var issue in issues)
         {
             var index = _issues.AddItem($"{(issue.Severity == IssueSeverity.Error ? "Error" : "Warning")}: {issue.Message}");
-            _issues.SetItemCustomFgColor(index, issue.Severity == IssueSeverity.Error ? new Color(1, 0.45f, 0.4f) : new Color(1, 0.85f, 0.4f));
+            _issues.SetItemCustomFgColor(index, issue.Severity == IssueSeverity.Error ? UiTheme.IssueError : UiTheme.IssueWarning);
         }
 
         if (issues.Count == 0)
@@ -298,7 +298,7 @@ public partial class TemplateEditorPanel : PanelContainer
         _inspector.AddRow(label, labelWidth: 150).AddChild(line);
     }
 
-    private void Heading(string text) => _inspector.AddChild(new Label { Text = text, Modulate = new Color(1, 0.85f, 0.5f) });
+    private void Heading(string text) => _inspector.AddChild(new Label { Text = text, Modulate = UiTheme.TextCaution });
 
     private void ShowTemplate()
     {

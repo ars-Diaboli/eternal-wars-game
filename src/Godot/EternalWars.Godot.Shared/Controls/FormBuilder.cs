@@ -1,3 +1,5 @@
+using EternalWars.Core.Domain.Common;
+using EternalWars.Core.Domain.Players;
 using Godot;
 
 namespace EternalWars.Godot.Shared.Controls;
@@ -61,6 +63,14 @@ public static class FormBuilder
         button.Selected = Math.Max(0, list.FindIndex(i => EqualityComparer<T>.Default.Equals(i.Value, selected)));
         return new Choice<T>(button, list);
     }
+
+    /// <summary>
+    /// Adds an owner drop-down to <paramref name="row"/>, after <paramref name="label"/>: <paramref name="noOwner"/> (no owner, null) first, then
+    /// each of <paramref name="players"/> by name, with <paramref name="selected"/> picked.
+    /// </summary>
+    public static Choice<PlayerId?> AddOwnerChoice(
+        this Container row, IEnumerable<Player> players, PlayerId? selected, string noOwner = "Unowned", string label = "Owner") =>
+        row.AddChoice(label, new[] { (noOwner, (PlayerId?)null) }.Concat(players.Select(p => (p.Name, (PlayerId?)p.Id))), selected);
 
     /// <summary>
     /// Frees every child of <paramref name="node"/>. With <paramref name="detach"/> they leave it at once, so its size and child list are the new
