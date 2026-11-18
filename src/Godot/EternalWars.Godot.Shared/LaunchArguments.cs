@@ -10,6 +10,9 @@ public static class LaunchArguments
     /// <summary>A settings file to use instead of the one in the user data folder (smoke tests start from the defaults).</summary>
     public static string? SettingsPath => Value("--settings=");
 
+    /// <summary>A folder for the game's saves and autosaves instead of the one in the user data folder (smoke tests run side by side and leave the player's saves alone).</summary>
+    public static string? SavesPath => Value("--saves=");
+
     /// <summary>A built-in scenario by name when no map is given (2D harness: <c>towns</c> for <c>TownsScenario</c>).</summary>
     public static string? Scenario => Value("--scenario=");
 

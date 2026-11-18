@@ -20,7 +20,7 @@ every texture load fails.
 
 App arguments (after `--`): `--map=`, `--new-game` (game opens on the new-game screen, not the main menu), `--replay=<file>` (the
 replay viewer on a replay or save),
-`--scenario=`, `--settings=`, `--autoinput=` (smoke tests), LAN games (ADR-194): `--host[=<port>]` (opens the host's lobby, default port
+`--scenario=`, `--settings=`, `--saves=<folder>` (the game's saves and autosaves go there), `--autoinput=` (smoke tests), LAN games (ADR-194): `--host[=<port>]` (opens the host's lobby, default port
 47820, discovery on the next port), `--join=<address>[:<port>]` (joins that host's lobby or game), `--name=<player>`, and content overrides `--creatures=`, `--heroes=`,
 `--buildings=`, `--artifacts=`, `--artifact-sets=` (a bad file is reported with line and column; the embedded copy
 is used instead).
@@ -61,8 +61,16 @@ Debug env vars: `EW_SIM_EXPLAIN=10,25` (on those days, each hero's best targets 
 `AdventureAi.Explain`), `EW_SIM_GUARDS=1` (every monster stack, explored or not), `EW_SIM_TRACE=1` (battles, defeated heroes, adventure spells cast, and after each turn where every hero stands with its army power and mana).
 
 ## Godot smoke tests
-`./tools/smoke-godot.ps1 -Godot <Godot .NET console exe> [-Only 'game-*']` runs the scenarios listed in the script under
-Movie Maker and saves frames to `.shots/<scenario>/`. **A pass only means no errors: look at the frames.**
+`./tools/smoke-godot.ps1 -Godot <Godot .NET console exe> [-Only 'game-*'] [-Jobs 8] [-NoBuild] [-Png]` runs the scenarios listed in
+the script under Movie Maker and saves frames to `.shots/<scenario>/`. **A pass only means no errors: look at the frames.**
+- Frames are `frame00000000.jpg`, … (zero-based), cut out of the scenario's `frame.avi` (Motion JPEG). `-Png` writes lossless
+  `frame00000000.png`, … instead, for comparing frames exactly; compressing PNGs takes most of such a run (several times slower).
+- Scenarios run side by side (`-Jobs`, default half the logical processors, at most 8; more gains nothing), the longest first; each
+  is its own Godot process with its own settings file and save folder (`--settings=`, `--saves=`) in its `.shots` folder, next to
+  its `godot.log`. Under Movie Maker the apps' windows take no focus (`window/size/no_focus.movie` in each `project.godot`): a
+  window taking the focus closes the other windows' drop-down lists and loses their clicks.
+  The windows share the one mouse pointer, so hover highlights can differ between runs; `-Jobs 1` when a frame must be exact.
+- A scenario runs at 10 frames a second; `Fps = <n>` in its entry changes that (the turn timer runs at 2, so its minute is 120 frames).
 - Script entries are `frame:kind:argument`: `click` / `rclick` (`x,y`), `key` (Godot key name), `hold` (`Key,frames`),
   `wheel` (`up|down,count`), `drag` / `rdrag` (`x1,y1,x2,y2`, over three frames). Replayed by `AutoInput`.
 - Game scenarios start with `--new-game` and `key:Enter` (Start has focus), so they do not depend on the screen layout;

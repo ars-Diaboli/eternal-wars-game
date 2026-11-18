@@ -100,7 +100,7 @@ public partial class Main : Node3D
             AddChild(autoInput);
         }
 
-        _saveFolder = ProjectSettings.GlobalizePath(SavesFolder);
+        _saveFolder = LaunchArguments.SavesPath ?? ProjectSettings.GlobalizePath(SavesFolder);
         BuildMenu();
         if (LaunchArguments.ReplayPath is { } replay)
         {
