@@ -76,7 +76,7 @@ internal sealed class MapObjectRewardVisits(
     {
         if (bank.Rule == BankRule.Crypt)
         {
-            Events.Publish(new SurroundingsRevealed(hero.Id, bank.Id, hero.Owner, bank.VisitPosition, CreatureBankRules.CryptRevealRadius));
+            context.RevealSurroundings(hero, bank.Id, bank.VisitPosition, CreatureBankRules.CryptRevealRadius);
         }
 
         if (bank.IsGuarded)

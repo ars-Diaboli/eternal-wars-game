@@ -37,6 +37,8 @@ publish/subscribe layer.
 - Carry enough for a view to update without querying state when practical (`ResourcesChanged` has `Previous` and
   `Current`).
 - **Publish after mutating**: when a handler runs, `GameState` already reflects the event.
+- **Events tell, they never ask**: a rule that needs another service to change state calls it (a narrow interface such as
+  `IFogRevealer`) and then publishes its own event; nothing relies on a handler to make an event come true (ADR-214).
 - **Every event declares who may learn of it** with `[SeenBy(Audience.…)]` (ADR-202): `Everyone`, `Owner` (the player its `Player` /
   `Owner` property names), `Witnesses` (the players who see a hero it names, or naming none an object it names), `BattleSides`,
   `Special` (decided in `PlayerViewFeed.ShowsSpecial`) or `Nobody` (map-script internals, editor events). A LAN host passes an event

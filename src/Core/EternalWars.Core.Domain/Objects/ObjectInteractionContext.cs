@@ -5,21 +5,23 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Visibility;
 using EternalWars.Core.Events;
 
 namespace EternalWars.Core.Domain.Objects;
 
 /// <summary>
-/// What the map object services share: the state, the publisher, the economy and the small steps every object rule uses (asking, removing an
+/// What the map object services share: the state, the publisher, the economy, the fog and the small steps every object rule uses (asking, removing an
 /// object, collecting a limited reward, finding the hero at an object's entrance).
 /// </summary>
 public sealed class ObjectInteractionContext
 {
-    internal ObjectInteractionContext(GameState state, IEventPublisher events, EconomyService economy)
+    internal ObjectInteractionContext(GameState state, IEventPublisher events, EconomyService economy, IFogRevealer fog)
     {
         State = state;
         Events = events;
         Economy = economy;
+        Fog = fog;
     }
 
     internal GameState State { get; }
@@ -27,6 +29,18 @@ public sealed class ObjectInteractionContext
     internal IEventPublisher Events { get; }
 
     internal EconomyService Economy { get; }
+
+    internal IFogRevealer Fog { get; }
+
+    /// <summary>
+    /// The hero's object shows its owner the area within <paramref name="radius"/> of <paramref name="center"/> for good (an observatory, a Magi
+    /// window's eye, the Ruins, a cartographer's map; ADR-068, ADR-214): revealed, then <see cref="SurroundingsRevealed"/> published.
+    /// </summary>
+    internal void RevealSurroundings(Hero hero, MapObjectId mapObject, MapPosition center, int radius)
+    {
+        Fog.RevealArea(hero.Owner, center, radius);
+        Events.Publish(new SurroundingsRevealed(hero.Id, mapObject, hero.Owner, center, radius));
+    }
 
     /// <summary>
     /// Takes the reward of an object with a limited <see cref="VisitScope"/> for the hero (ADR-068): false when the hero may not collect now,

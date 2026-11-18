@@ -6,16 +6,29 @@ namespace EternalWars.Core.Domain.Game;
 /// <summary>
 /// Fingerprint of everything that matters in a running game (calendar, RNG, players, heroes and armies, objects,
 /// pending decision, battle). Two games with equal digests are in the same state; replays and the simulator
-/// use it to prove determinism.
+/// use it to prove determinism. The digest has versions (ADR-213): a record says which one its final digest was computed with, and an older
+/// version leaves out what was added after it, so older replays and saves still check.
 /// </summary>
 public static class GameStateDigest
 {
-    public static string Compute(GameState state) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Describe(state))))[..16];
+    /// <summary>The first version: everything up to ADR-212; records without a digest version use it.</summary>
+    public const int FirstVersion = 1;
+
+    /// <summary>Version 2 adds the scenario tracking (<see cref="GameState.Tracking"/>, ADR-213).</summary>
+    public const int CurrentVersion = 2;
+
+    /// <summary>The digest of <paramref name="state"/> in <paramref name="version"/> (<see cref="CurrentVersion"/> when left out).</summary>
+    public static string Compute(GameState state, int version = CurrentVersion) =>
+        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Describe(state, version))))[..16];
 
     /// <summary>The canonical text the digest is computed from (handy when two digests differ).</summary>
-    public static string Describe(GameState state)
+    public static string Describe(GameState state, int version = CurrentVersion)
     {
+        if (version is < FirstVersion or > CurrentVersion)
+        {
+            throw new ArgumentOutOfRangeException(nameof(version), version, $"Digest versions are {FirstVersion} to {CurrentVersion}.");
+        }
+
         var text = new StringBuilder();
         Line($"date {state.Date} player {state.CurrentPlayerIndex} rng {state.RandomState} started {state.IsStarted}");
 
@@ -91,6 +104,13 @@ public static class GameStateDigest
         if (state.Arena is { } arena)
         {
             Line($"arena {arena.CombatPlace?.Value} {arena.Attacker?.Value}:{arena.AttackerHero?.Value} {arena.Defender?.Value}:{arena.DefenderHero?.Value} {arena.Result} {arena.Winner?.Value}");
+        }
+
+        // The scenario tracking (ADR-213) from version 2 on, once the game has started (a scenario not started tracks nothing, so the generator's
+        // and the editor's pinned texts hold).
+        if (version >= 2 && state.IsStarted)
+        {
+            Line($"{state.Tracking.Describe()}");
         }
 
         Line($"outcome {state.Outcome?.Winners.Count} {state.Outcome?.Date}");

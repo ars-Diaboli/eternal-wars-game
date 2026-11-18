@@ -28,8 +28,8 @@ public sealed record MapObjectRefused(HeroId Hero, MapObjectId Object, string Re
 public sealed record SignRead(HeroId Hero, MapObjectId Sign, string Message) : IEvent;
 
 /// <summary>
-/// A hero looked out from an observatory or visited the Ruins (ADR-068); <c>VisibilityService</c> reveals the terrain within <paramref name="Radius"/>
-/// of <paramref name="Center"/> to <paramref name="Owner"/>.
+/// A hero looked out from an observatory, through a Magi window, visited the Ruins or bought a cartographer's map (ADR-068): the terrain within
+/// <paramref name="Radius"/> of <paramref name="Center"/> was revealed to <paramref name="Owner"/> (through <c>IFogRevealer</c> before this event, ADR-214).
 /// </summary>
 [SeenBy(Audience.Owner)]
 public sealed record SurroundingsRevealed(HeroId Hero, MapObjectId Object, PlayerId Owner, MapPosition Center, int Radius) : IEvent;

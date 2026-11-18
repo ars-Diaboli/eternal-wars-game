@@ -276,7 +276,7 @@ public sealed class MapObjectInteractionService
     {
         // Every visit looks out (it only reveals what is still hidden); the log tells the AI which heroes have been up there.
         _context.TryCollect(hero, observatory);
-        Events.Publish(new SurroundingsRevealed(hero.Id, observatory.Id, hero.Owner, observatory.VisitPosition, Observatory.Radius));
+        _context.RevealSurroundings(hero, observatory.Id, observatory.VisitPosition, Observatory.Radius);
     }
 
     private void LookThrough(Hero hero, MagiWindow window)
@@ -284,7 +284,7 @@ public sealed class MapObjectInteractionService
         // Every visit looks through every Eye of the window's colour (ADR-073).
         foreach (var eye in State.ObjectsOf<MagiEye>().Where(e => e.Colour == window.Colour).OrderBy(e => e.Id.Value))
         {
-            Events.Publish(new SurroundingsRevealed(hero.Id, window.Id, hero.Owner, eye.Position, MagiWindow.Radius));
+            _context.RevealSurroundings(hero, window.Id, eye.Position, MagiWindow.Radius);
         }
     }
 

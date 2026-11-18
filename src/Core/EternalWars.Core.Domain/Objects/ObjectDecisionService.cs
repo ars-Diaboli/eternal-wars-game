@@ -200,7 +200,7 @@ public sealed class ObjectDecisionService(
         cartographer.Buyers.Add(hero.Owner);
         Events.Publish(new MapBought(cartographer.Id, hero.Id, hero.Owner, decision.Level));
         var map = State.Map;
-        Events.Publish(new SurroundingsRevealed(hero.Id, cartographer.Id, hero.Owner, new MapPosition(map.Width / 2, map.Height / 2, decision.Level), map.Width + map.Height));
+        context.RevealSurroundings(hero, cartographer.Id, new MapPosition(map.Width / 2, map.Height / 2, decision.Level), map.Width + map.Height);
     }
 
     /// <summary>

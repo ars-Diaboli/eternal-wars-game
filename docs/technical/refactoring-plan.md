@@ -47,9 +47,9 @@ I read about 73k lines of source and 34k lines of tests (four reviewers working 
 - **`PlayerViewFeed.Shows` defaults to "show" (`:181`).** An event without a hero, object or owner property goes to every client. A new private event would leak to opponents without anyone noticing. **Fixed in Phase 0 (ADR-202).**
 - **No limits before a client has joined (`Connections.cs:136-141`).** A peer can claim a 64 MB frame and the host allocates the buffer before the data arrives. There is no handshake timeout and no cap on peers that have not joined. **Fixed in Phase 0 (ADR-203).**
 - **Reader task can fault silently (`ReadAsync`).** It catches only a few exception types, so a bad message can stop the reader without closing the connection, leaving a seat that is never read. **Fixed in Phase 0 (ADR-203).**
-- **State the digest misses (`GameFlowService.cs:19-21`).** It keeps the state the scenario rules use (the heroes and prisoners at start, the teams at start) outside `GameState`. That state is not in the digest, the LAN view or AI copies of the state.
-- **Publish before mutate (`TurnService.cs:75-80`).** `TurnEnded` is published before the turn state changes, which breaks the mutate-then-publish rule.
-- **Events used as commands.** `AreaRevealed` is published so that `VisibilityService` will change the fog, which only works because visibility subscribes first.
+- **State the digest misses (`GameFlowService.cs:19-21`).** It keeps the state the scenario rules use (the heroes and prisoners at start, the teams at start) outside `GameState`. That state is not in the digest, the LAN view or AI copies of the state. **Fixed in Phase 3 (ADR-213).**
+- **Publish before mutate (`TurnService.cs:75-80`).** `TurnEnded` is published before the turn state changes, which breaks the mutate-then-publish rule. **Fixed in Phase 3 (ADR-214).**
+- **Events used as commands.** `AreaRevealed` is published so that `VisibilityService` will change the fog, which only works because visibility subscribes first. **Fixed in Phase 3 (ADR-214)**, with `SurroundingsRevealed`, which was used the same way.
 - **Hand-kept command list.** No test checks that every `GameCommand` appears in `GameRecordSerializer.CommandTypes`, so a missing entry only shows up at runtime, on a save or over LAN. **Fixed in Phase 0 (`RecordCommandTypesTests`).**
 
 ### SOLID and code smells
@@ -304,8 +304,14 @@ The order is: safety first, then a measurement baseline, then cheap performance 
     colours; they differ where a far caption is now hidden, and in the hover status line.
 
 ### Phase 3: Correctness and architecture cleanup (about 1 week)
-- [ ] **Scenario tracking state:** move `GameFlowService` tracking into `GameState` (for example a `ScenarioTracking` record) and add it to the digest. Bump the digest version and keep older replays checking.
-- [ ] **Mutate before publishing:** fix `TurnService.EndTurn`. Replace `AreaRevealed` used as a request with a direct `IFogRevealer` call followed by the event.
+- [x] **Scenario tracking state:** move `GameFlowService` tracking into `GameState` (for example a `ScenarioTracking` record) and add it to the digest. Bump the digest version and keep older replays checking.
+  - Done (ADR-213). `GameState.Tracking` (`ScenarioTracking`) holds the teams at start, the heroes at start and the tracked prisoners; `GameFlowService` keeps no state of its own.
+  - `GameStateDigest` has versions: version 2 adds the tracking line once the game has started. A record stores the version its final digest was computed with (`DigestVersion`, record format 4); a file without one checks with version 1.
+  - The digests quoted in the baselines above are version 1. The duel baseline still gives `02E607C4B08FDC80` in version 1, so the rules play the same; its version 2 digest is `A0F1FADCC6D8DEE4`.
+- [x] **Mutate before publishing:** fix `TurnService.EndTurn`. Replace `AreaRevealed` used as a request with a direct `IFogRevealer` call followed by the event.
+  - Done (ADR-214). `EndTurn` takes the turn out of today's open turns (a simultaneous day) before `TurnEnded`; the next turn follows the event.
+  - `IFogRevealer.RevealArea` (implemented by `VisibilityService`) reveals for View Terrain and map events before `AreaRevealed`, and for observatories, Magi windows, the Ruins and cartographers before `SurroundingsRevealed` (`ObjectInteractionContext.RevealSurroundings`). `VisibilityService` no longer handles either event.
+  - `TilesRevealed` and `KnownObjectsChanged` now come before the reveal event instead of after it. The fog, the random draws and the digests are unchanged: the duel baseline still gives `A0F1FADCC6D8DEE4` and the sim self-test `82AE941CD62212E2`.
 - [ ] **Shared decision helpers:** `Ask`, `TakeDecision<T>`, `Resolve` and `RemoveObject` on one shared helper, used by all services, with one fixed order.
 - [ ] **Battle guard outcomes:** `IBattleGuard` returns a description of the outcome, and a service applies it, so entities stop mutating state.
 - [ ] **Simultaneous days:** one `SimultaneousDayCoordinator` replaces the public flag and the state spread over the session and `TurnService`.

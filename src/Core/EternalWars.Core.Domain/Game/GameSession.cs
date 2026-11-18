@@ -45,10 +45,11 @@ public sealed class GameSession
         Bus.Subscribe<Core.Events.IEvent>(_ => _published++);
 
         // Core handlers subscribe first so their follow-up events are queued before views react. A LAN client's session runs no rules, so
-        // nothing of the rules listens to the events its host sends.
+        // nothing of the rules listens to the events its host sends (nor reveals anything: its fog is the host's).
+        var visibility = new VisibilityService(State, Bus);
         if (!followsHost)
         {
-            new VisibilityService(State, Bus).SubscribeTo(Bus);
+            visibility.SubscribeTo(Bus);
         }
 
         Flow = new GameFlowService(State, Bus);
@@ -56,7 +57,7 @@ public sealed class GameSession
         Armies = new ArmyService(State, Bus);
         Progression = new ProgressionService(State, Bus);
         Artifacts = new ArtifactService(State, Bus);
-        var objects = new ObjectInteractionContext(State, Bus, Economy);
+        var objects = new ObjectInteractionContext(State, Bus, Economy, visibility);
         var townVisits = new TownVisitService(State, Bus, Progression, Artifacts);
         var boxes = new PandorasBoxService(objects, Progression, Artifacts);
         var recruits = new HeroRecruitment(State, Progression);
@@ -69,14 +70,14 @@ public sealed class GameSession
         ObjectDecisions = new ObjectDecisionService(objects, Battles, Progression, Artifacts, townVisits, boxes);
         ObjectShops = new ObjectShopService(objects, Progression, Artifacts, recruits);
         ObjectLifecycle = new ObjectLifecycleService(objects, Artifacts);
-        MapEvents = new MapEventService(State, Bus, Economy, Progression, Artifacts, Battles, townVisits, recruits);
+        MapEvents = new MapEventService(State, Bus, visibility, Economy, Progression, Artifacts, Battles, townVisits, recruits);
         if (!followsHost)
         {
             MapEvents.SubscribeTo(Bus);
         }
 
         Movement = new HeroMovementService(State, Bus, Interactions, MapEvents, () => ChangeStamp);
-        AdventureMagic = new Magic.AdventureMagicService(State, Bus, townVisits);
+        AdventureMagic = new Magic.AdventureMagicService(State, Bus, visibility, townVisits);
         if (!followsHost)
         {
             AdventureMagic.SubscribeTo(Bus);

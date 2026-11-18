@@ -87,11 +87,7 @@ public sealed class ReplayPlayer
                 inBattle[i + 1] = session.State.Battle is not null;
             }
 
-            if (record.FinalDigest is { } expected && GameStateDigest.Compute(session.State) is var actual && actual != expected)
-            {
-                throw new InvalidOperationException($"Replay ended in state {actual}, the record says {expected}.");
-            }
-
+            record.CheckFinalDigest(session.State);
             return new ReplayPlayer(record, Create, turns, inBattle);
         }
     }

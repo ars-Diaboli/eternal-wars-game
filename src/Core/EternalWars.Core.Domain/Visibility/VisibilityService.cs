@@ -13,9 +13,9 @@ namespace EternalWars.Core.Domain.Visibility;
 /// <see cref="SightChanged"/> (refog mode) and <see cref="KnownObjectsChanged"/>.
 /// </summary>
 public sealed class VisibilityService(GameState state, IEventPublisher events)
-    : IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
+    : IFogRevealer, IEventHandler<GameStarted>, IEventHandler<HeroMoved>, IEventHandler<HeroTeleported>,
       IEventHandler<MineOwnerChanged>, IEventHandler<TownOwnerChanged>, IEventHandler<DwellingOwnerChanged>, IEventHandler<ProviderOwnerChanged>, IEventHandler<MapObjectRemoved>, IEventHandler<HeroDefeated>,
-      IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<SurroundingsRevealed>, IEventHandler<AreaRevealed>, IEventHandler<HeroFreed>, IEventHandler<MapEventHeroGiven>,
+      IEventHandler<HeroHired>, IEventHandler<HeroLeftGarrison>, IEventHandler<MapObjectChanged>, IEventHandler<HeroFreed>, IEventHandler<MapEventHeroGiven>,
       IEventHandler<HeroLeveledUp>, IEventHandler<MapObjectPlaced>, IEventHandler<TownBuilt>, IEventHandler<GarrisonOwnerChanged>
 {
     /// <summary>
@@ -37,8 +37,6 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         bus.Subscribe<HeroLeftGarrison>(this);
         bus.Subscribe<MapObjectChanged>(this);
         bus.Subscribe<MapObjectPlaced>(this);
-        bus.Subscribe<SurroundingsRevealed>(this);
-        bus.Subscribe<AreaRevealed>(this);
         bus.Subscribe<HeroFreed>(this);
         bus.Subscribe<MapEventHeroGiven>(this);
         bus.Subscribe<HeroLeveledUp>(this);
@@ -107,17 +105,11 @@ public sealed class VisibilityService(GameState state, IEventPublisher events)
         }
     }
 
-    // An observatory shows its surroundings for good (explored, like any revealed terrain; ADR-068).
-    public void Handle(AreaRevealed @event)
+    // An observatory, a cartographer, View Terrain or a map event shows an area for good (explored, like any revealed terrain; ADR-068, ADR-214).
+    public void RevealArea(PlayerId player, MapPosition center, int radius)
     {
-        Reveal(@event.Owner, @event.Center, @event.Radius);
-        RefreshMemory(@event.Owner);
-    }
-
-    public void Handle(SurroundingsRevealed @event)
-    {
-        Reveal(@event.Owner, @event.Center, @event.Radius);
-        RefreshMemory(@event.Owner);
+        Reveal(player, center, radius);
+        RefreshMemory(player);
     }
 
     // A freed prisoner looks around from where the prison stood.
