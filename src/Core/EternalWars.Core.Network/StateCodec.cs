@@ -38,6 +38,15 @@ internal sealed class StateCodec(GameState catalogs)
     private static readonly Dictionary<string, Type?> TypesByName = [];
     private static readonly Lock Gate = new();
 
+    private static readonly Lazy<string> Schema = new(ComputeSchema);
+
+    /// <summary>
+    /// A hash of the shape of every piece the views carry (ADR-218): each type of the game's Domain assembly, by name, with the keys and types of
+    /// the fields written for it. A host and a client agree on it only when the codec writes and reads the same fields; compiler-made types
+    /// (closures, iterators) are left out, as they never cross the wire.
+    /// </summary>
+    public static string SchemaHash => Schema.Value;
+
     /// <summary>Writes <paramref name="value"/> as declared to be a <typeparamref name="T"/>.</summary>
     public JsonNode? Write<T>(T value) => new Writer(catalogs).Write(value, typeof(T));
 
@@ -62,6 +71,33 @@ internal sealed class StateCodec(GameState catalogs)
     }
 
     private static FieldInfo[] FieldsOf(Type type) => ShapeOf(type).Fields;
+
+    private static string ComputeSchema()
+    {
+        var text = new System.Text.StringBuilder();
+        foreach (var type in DomainAssembly.GetTypes()
+                     .Where(t => !t.IsGenericTypeDefinition && !t.IsInterface && t.FullName is { } n && !n.Contains('<', StringComparison.Ordinal))
+                     .OrderBy(t => t.FullName, StringComparer.Ordinal))
+        {
+            var shape = ShapeOf(type);
+            text.Append(type.FullName).Append('{');
+            for (var i = 0; i < shape.Fields.Length; i++)
+            {
+                text.Append(shape.Keys[i]).Append(':').Append(SchemaName(shape.Fields[i].FieldType)).Append(';');
+            }
+
+            text.Append("}\n");
+        }
+
+        var digest = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(text.ToString()));
+        return Convert.ToHexString(digest, 0, 8);
+    }
+
+    /// <summary>A type's name without its assembly's version, so two computers on different runtimes agree: <c>List`1[Hero]</c>.</summary>
+    private static string SchemaName(Type type) =>
+        type.IsGenericType
+            ? $"{type.Namespace}.{type.Name}[{string.Join(',', type.GetGenericArguments().Select(SchemaName))}]"
+            : type.IsArray ? SchemaName(type.GetElementType()!) + "[]" : type.FullName ?? type.Name;
 
     /// <summary>What the codec needs to know of a type, worked out once per process (<see cref="Shape"/>).</summary>
     private static Shape ShapeOf(Type type)

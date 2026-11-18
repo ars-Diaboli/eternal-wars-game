@@ -321,8 +321,14 @@ The order is: safety first, then a measurement baseline, then cheap performance 
   - Done (ADR-216). `IBattleGuard.Survived()` / `Defeated()` return a `GuardOutcome` record naming the object and what happens to it (`MonsterSurvives`, `SiteGuardSurvives`, `TroopsSurvive`, `GuardUnchanged`; `MonsterBeaten`, `MineGuardBeaten`, `DwellingGuardBeaten`, `BankPlundered`, `BoxWon`, `TownWon`, `GarrisonWon`). The guard changes nothing.
   - `BattleGuardService` (Battles, owned by `BattleAftermath`) applies it: the survivors, the abandoned mine cleared, the flags, the bank's reward, the box opened, the town captured. `BattleGuardOutcome`, the bag of services the entities used, is gone.
   - The mutations, random draws and events come in the same order as before: the duel baseline still gives `A0F1FADCC6D8DEE4` and the sim self-test `82AE941CD62212E2`.
-- [ ] **Simultaneous days:** one `SimultaneousDayCoordinator` replaces the public flag and the state spread over the session and `TurnService`.
-- [ ] **Network access:** replace `InternalsVisibleTo` for Network with a narrow sink interface that applies the client's view updates. Add a schema hash to the join handshake.
+- [x] **Simultaneous days:** one `SimultaneousDayCoordinator` replaces the public flag and the state spread over the session and `TurnService`.
+  - Done (ADR-217). `SimultaneousDayCoordinator` (Turns) decides which days are played at once, opens and ends the people's turns, points the current player at the host's open turn, says who must wait, owns the conflict watch and notes where the day's commands begin (`GameSession.SimultaneousDayStart` reads it).
+  - `TurnService.OpenedSimultaneousDay`, the flag the session read and cleared, is gone; the session tells the coordinator when the game started and when a command was done or refused. Only the coordinator changes the open turns, the turns ended today, `SimultaneousEnded` and `SimultaneousConflict`.
+  - The events, random draws and digests are unchanged: the duel baseline still gives `A0F1FADCC6D8DEE4` and the sim self-test `82AE941CD62212E2`.
+- [x] **Network access:** replace `InternalsVisibleTo` for Network with a narrow sink interface that applies the client's view updates. Add a schema hash to the join handshake.
+  - Done (ADR-218). Domain shows its internals to the tests only. A client's `ViewMirror` changes its game through `IViewSink` (`GameSession.ViewSink`, only on a session that follows the host): the game and player views, heroes and objects in and out, memory, retired heroes, caravans, explored tiles and sight.
+  - `GameView` / `PlayerView` moved to Domain (Game) as public records; `FogOfWar.ExploredOf` / `SightOf` are public reads. The codec still reads and writes fields by reflection.
+  - `JoinRequest.Schema` carries `NetSerializer.Schema`, a 16-hex-digit hash of every Domain type's codec fields (names and types, without assembly versions); the host and the lobby refuse a different one. Protocol 7.
 
 ### Phase 4: Breaking up large classes (ongoing; one per PR)
 - [ ] **Per-kind handlers**, the same pattern as the battle spell handlers, for `SpellEffect.Parse`, `MapEventService` actions, adventure spells, `ScenarioCondition` and `MapValidator` checks.
