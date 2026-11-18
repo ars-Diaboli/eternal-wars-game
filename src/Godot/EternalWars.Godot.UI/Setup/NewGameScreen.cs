@@ -616,14 +616,14 @@ public partial class NewGameScreen : PanelContainer
         var open = towns.Any(t => t.IsRandom) || (towns.Count == 0 && preview.HeroesOf(player).Any(h => h.IsPlaceholder));
         if (!open)
         {
-            return new Label { Text = towns.FirstOrDefault()?.TownType ?? "—" };
+            return towns.FirstOrDefault()?.TownType is { } type ? Heraldry.Titled(type, type) : new Label { Text = "—" };
         }
 
         var choice = new OptionButton { TooltipText = "The faction of this player's random towns and hero placeholders" };
         choice.AddItem(Random);
         foreach (var town in BuiltInMapObjects.PlayableTowns)
         {
-            choice.AddItem(town);
+            choice.AddFaction(town);
         }
 
         _startTowns[player.Value] = choice;

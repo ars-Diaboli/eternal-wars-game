@@ -2884,3 +2884,15 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
   and the lists when they share it; default top right. With the side panel on the grid stands in the panel under the lists, as before.
   End turn no longer moves among the actions with the panel on: it stays with the calendar, at the panel's bottom.
 - **Menu icon**: a stone gear from the owner (`menu.png`).
+
+### ADR-211: Faction crests stand beside a faction wherever the UI names one (owner's heraldry sheets, 2026-11-18)
+
+- **Art**: the owner's heraldry sheets ([icon-prompts.md](../content/icon-prompts.md), sets 23–28), cut into `textures/ui/heraldry/`:
+  `crest_<town>.png` and `crest_group_<group>.png` (the figure on a painted shield) and `charge_<id>.png` (the figure alone, engraved
+  silver rather than the flat white the prompts asked for: its alpha still serves as a mask). Loaded by `Heraldry`, scaled and cached like
+  the other icons; without the file the UI shows the name alone.
+- **Where**: the town type's crest before the town's name in the town list and the kingdom overview, beside the town screen's title and the
+  hero screen's (a roster hero's faction), on each tavern card, in the new-game screen's faction column (each choice and the fixed
+  faction), the leaderboard's faction column and the map editor's faction choices (the town inspector, the week events' factions).
+- **Not yet**: the group crests (no screen names a group) and the charges in the player's colour on banners and map flags, which need
+  textured banner meshes first.

@@ -124,7 +124,7 @@ public partial class TavernPanel : PanelContainer
         }
 
         var returning = TavernRules.Returning(state, state.CurrentPlayer.Id, offer.Id);
-        Line(offer.Name, new Color(1f, 0.9f, 0.6f));
+        box.AddChild(Heraldry.Titled(offer.Town, offer.Name, Heraldry.TitleSize, new Color(1f, 0.9f, 0.6f)));
         Line($"{offer.Class}, {offer.Town}{(offer.Town == town.TownType ? " (native)" : "")}");
         Line($"Specialty: {offer.Specialty.Describe(state.Spells)}");
         var skills = returning?.Skills.ToString() ?? string.Join(", ", offer.StartingSkills.Select(s => $"{s.Value} {(BuiltInSkills.Contains(s.Key) ? BuiltInSkills.Get(s.Key).Name : s.Key)}"));

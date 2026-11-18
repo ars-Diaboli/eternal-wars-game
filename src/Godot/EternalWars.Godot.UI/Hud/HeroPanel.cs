@@ -21,7 +21,14 @@ namespace EternalWars.Godot.UI.Hud;
 /// </summary>
 public partial class HeroPanel : PanelContainer
 {
-    private readonly Label _title = new();
+    private readonly Label _title = new() { VerticalAlignment = VerticalAlignment.Center };
+
+    private readonly TextureRect _crest = new()
+    {
+        StretchMode = TextureRect.StretchModeEnum.KeepCentered,
+        MouseFilter = MouseFilterEnum.Pass,
+        CustomMinimumSize = new Vector2(Heraldry.TitleSize, Heraldry.TitleSize),
+    };
     private readonly HFlowContainer _statBadges = new();
     private readonly Label _stats = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
     private readonly Label _specialty = new() { AutowrapMode = TextServer.AutowrapMode.WordSmart, CustomMinimumSize = new Vector2(600, 0) };
@@ -81,6 +88,7 @@ public partial class HeroPanel : PanelContainer
         var previous = new Button { Text = "Previous hero" }.WithIcon(UiIcon.ArrowLeft);
         previous.Pressed += () => Step(-1);
         header.AddChild(previous);
+        header.AddChild(_crest);
         header.AddChild(_title);
         var next = new Button { Text = "Next hero" }.WithIcon(UiIcon.ArrowRight);
         next.Pressed += () => Step(1);
@@ -192,7 +200,11 @@ public partial class HeroPanel : PanelContainer
         }
 
         Visible = true;
-        _title.Text = $"{hero.Name}, level {hero.Level} {hero.Class}" + (hero.Definition is { } d ? $" ({state.HeroRoster.Get(d).Town})" : "");
+        var faction = hero.Definition is { } d ? state.HeroRoster.Get(d).Town : null;
+        _title.Text = $"{hero.Name}, level {hero.Level} {hero.Class}" + (faction is null ? "" : $" ({faction})");
+        _crest.Texture = Heraldry.Crest(faction, Heraldry.TitleSize);
+        _crest.TooltipText = faction ?? "";
+        _crest.Visible = _crest.Texture is not null;
         ShowStatBadges(hero);
         _stats.Text = StatsText(hero, _session.State.Spells);
         _specialty.Text = hero.Specialty is { } specialty ? $"Specialty: {specialty.Describe(_session.State.Spells)}" : "No specialty.";

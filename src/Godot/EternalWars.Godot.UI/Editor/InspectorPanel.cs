@@ -695,6 +695,14 @@ public partial class InspectorPanel : VBoxContainer
         name.TextSubmitted += text => Edit(() => _editor.Towns.SetName(town.Id, text));
         row.AddChild(name);
         var type = row.AddChoice(town.IsRandom ? "Shown as" : "Faction", BuiltInMapObjects.PlayableTowns.Select(t => (t, t)), town.TownType);
+        for (var i = 0; i < BuiltInMapObjects.PlayableTowns.Count; i++)
+        {
+            if (Heraldry.Crest(BuiltInMapObjects.PlayableTowns[i], UiIcons.ButtonSize) is { } crest)
+            {
+                type.Button.SetItemIcon(i, crest);
+            }
+        }
+
         type.Button.ItemSelected += _ => Edit(() => _editor.Towns.SetType(town.Id, type.Value()));
         var random = new CheckBox
         {
