@@ -49,12 +49,21 @@ public partial class RankingTableView : VBoxContainer
 
         foreach (var row in view.Rows)
         {
-            foreach (var cell in new[] { row.Rank.ToString(), row.Player, row.Faction, row.Map, row.Difficulty, row.Days.ToString(), row.Score.ToString(), row.Title, row.Date })
+            var cells = new[] { row.Rank.ToString(), row.Player, row.Faction, row.Map, row.Difficulty, row.Days.ToString(), row.Score.ToString(), row.Title, row.Date };
+            for (var i = 0; i < cells.Length; i++)
             {
-                var label = new Label { Text = cell };
-                if (row.Highlight)
+                var cell = cells[i];
+                Color? color = row.Highlight ? new Color(1f, 0.85f, 0.3f) : null;
+                if (Headings[i] == "Faction" && Heraldry.Crest(cell) is not null)
                 {
-                    label.AddThemeColorOverride("font_color", new Color(1f, 0.85f, 0.3f));
+                    _grid.AddChild(Heraldry.Titled(cell, cell, color: color));
+                    continue;
+                }
+
+                var label = new Label { Text = cell };
+                if (color is { } font)
+                {
+                    label.AddThemeColorOverride("font_color", font);
                 }
 
                 _grid.AddChild(label);

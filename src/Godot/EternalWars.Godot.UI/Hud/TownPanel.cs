@@ -24,7 +24,14 @@ namespace EternalWars.Godot.UI.Hud;
 /// </summary>
 public partial class TownPanel : PanelContainer
 {
-    private readonly Label _title = new();
+    private readonly Label _title = new() { VerticalAlignment = VerticalAlignment.Center };
+
+    private readonly TextureRect _crest = new()
+    {
+        StretchMode = TextureRect.StretchModeEnum.KeepCentered,
+        MouseFilter = MouseFilterEnum.Pass,
+        CustomMinimumSize = new Vector2(Heraldry.TitleSize, Heraldry.TitleSize),
+    };
     private readonly HBoxContainer _income = new();
     private readonly Button _trade = new Button { Text = "Marketplace", TooltipText = "Trade gold against resources" }.WithResourceIcon(ResourceType.Gold);
     private readonly Button _guild = new Button { Text = "Thieves' guild", TooltipText = "How you rank against the other players; more taverns show more" }.WithIcon(UiIcon.ThievesGuild);
@@ -79,6 +86,7 @@ public partial class TownPanel : PanelContainer
 
         var header = new HBoxContainer();
         box.AddChild(header);
+        header.AddChild(_crest);
         header.AddChild(_title);
         header.AddChild(_income);
         _trade.Pressed += () => TradeRequested?.Invoke();
@@ -181,6 +189,9 @@ public partial class TownPanel : PanelContainer
 
         Visible = true;
         var state = _session.State;
+        _crest.Texture = Heraldry.Crest(town.TownType, Heraldry.TitleSize);
+        _crest.TooltipText = town.TownType;
+        _crest.Visible = _crest.Texture is not null;
         _title.Text = $"{town.Name} ({town.TownType}), {state.CurrentPlayer.Name}   income";
         Clear(_income);
         _income.AddChild(ResourceIcons.CostRow(TownRules.DailyIncome(state, town), " a day"));

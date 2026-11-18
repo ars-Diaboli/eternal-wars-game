@@ -91,6 +91,8 @@ public partial class Main : Node3D
     /// <summary>A human player's turn that started while computer moves were still shown: the map turns to them once they are.</summary>
     private PlayerId? _turnToShow;
 
+    public override void _ExitTree() => GameCursors.Release();
+
     public override void _Ready()
     {
         UiTheme.Apply(); // the shared margins and gaps (ADR-163) and the look (ADR-191)

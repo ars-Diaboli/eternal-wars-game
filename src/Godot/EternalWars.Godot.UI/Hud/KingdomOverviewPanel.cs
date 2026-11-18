@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Info;
+using EternalWars.Core.Domain.Towns;
 using EternalWars.Godot.Shared.Events;
 using Godot;
 
@@ -59,8 +60,9 @@ public partial class KingdomOverviewPanel : PanelContainer
         foreach (var row in overview.Rows)
         {
             var amounts = row.Kind == IncomeSourceKind.Provider ? row.Stored : row.Daily;
+            var crest = row.Kind == IncomeSourceKind.Town && row.Object is { } id && _session.State.FindObject(id) is Town town ? town.TownType : null;
             Row(row.Name, row.Kind == IncomeSourceKind.Provider ? $"{row.Detail}; waiting:" : row.Detail, Amounts(amounts),
-                detailed => InfoSheets.Income(_session.State, player, row, detailed));
+                detailed => InfoSheets.Income(_session.State, player, row, detailed), crest);
         }
 
         Row("Every day", "", Amounts(overview.DailyTotal), _ => InfoSheets.KingdomTotal(overview));
@@ -84,10 +86,15 @@ public partial class KingdomOverviewPanel : PanelContainer
     private static IEnumerable<string> Amounts(ResourceSet amounts) =>
         Enum.GetValues<ResourceType>().Select(r => amounts[r] == 0 ? "" : ResourceAmountText.Short(r, amounts[r])); // in full in the row's information window
 
-    /// <summary>A row of the table; a right click on its name or detail opens <paramref name="info"/> (ADR-154).</summary>
-    private void Row(string name, string detail, IEnumerable<string> cells, Func<bool, InfoSheet?> info)
+    /// <summary>
+    /// A row of the table, a town's name after its <paramref name="crest"/>; a right click on its name or detail opens <paramref name="info"/>
+    /// (ADR-154).
+    /// </summary>
+    private void Row(string name, string detail, IEnumerable<string> cells, Func<bool, InfoSheet?> info, string? crest = null)
     {
-        _table.AddChild(new Label { Text = name, CustomMinimumSize = new Vector2(150, 0) }.WithInfo(info));
+        var title = crest is null ? new Label { Text = name } : Heraldry.Titled(crest, name);
+        title.CustomMinimumSize = new Vector2(150, 0);
+        _table.AddChild(title.WithInfo(info));
         _table.AddChild(new Label { Text = detail, CustomMinimumSize = new Vector2(220, 0), AutowrapMode = TextServer.AutowrapMode.WordSmart }.WithInfo(info));
         foreach (var cell in cells)
         {

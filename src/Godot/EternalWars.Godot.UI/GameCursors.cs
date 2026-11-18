@@ -64,6 +64,28 @@ public static class GameCursors
         Input.SetDefaultCursorShape(Fallback(cursor));
     }
 
+    /// <summary>
+    /// Gives the system cursors back and drops the images. The app calls it when it quits: the engine's input keeps the images it was given
+    /// and would otherwise free them after the renderer is gone (leaked textures at exit).
+    /// </summary>
+    public static void Release()
+    {
+        foreach (var shape in new[] { Input.CursorShape.Arrow, Input.CursorShape.Busy, Slot })
+        {
+            Input.SetCustomMouseCursor(null, shape);
+        }
+
+        Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
+        foreach (var image in Cache.Values)
+        {
+            image?.Image.Dispose();
+        }
+
+        Cache.Clear();
+        _shown = null;
+        _arrowSet = false;
+    }
+
     /// <summary>The cursor's image file name (without the folder and extension) and its hotspot in eighths of the image.</summary>
     public static (string File, int X, int Y) Definition(GameCursor cursor) => cursor switch
     {

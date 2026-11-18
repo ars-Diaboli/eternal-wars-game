@@ -54,6 +54,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   buttons; the battle bar; End turn), 32 px in rows and window headers; hovering it puts its label and hotkey on the
   status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
   Start, Back, Close, Save, Load) keep their text after a small icon, as wide as the text, at the right of their row.
+- **Heraldry** (ADR-211): each town type has a crest (its figure on a painted shield). It stands before the faction's name wherever the
+  UI names one: the town list, the town and hero screens' titles, the kingdom overview, the tavern's cards, the new-game screen's
+  factions, the leaderboard and the map editor's faction choices.
 - **Cursors** (ADR-204, [cursor-prompts.md](../content/cursor-prompts.md)): the pointer shows what a click would do. An arrow on menus,
   screens and panels, an hourglass while the computer plays or a game loads; on the adventure map a horse (move, with the days from the 2nd
   on; visit; attack; exchange with a hero; enter a town), a helmet or a keep to select, a shovel to dig, a spell cursor for an adventure

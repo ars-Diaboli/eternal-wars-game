@@ -155,7 +155,7 @@ public partial class ConditionsPanel : VBoxContainer
     /// <summary>A faction's tick box; ticking or unticking stores the whole list, in the order of <see cref="WeekEventSettings.Factions"/>.</summary>
     private CheckBox FactionBox(string faction, bool monthly)
     {
-        var box = new CheckBox { Text = faction };
+        var box = new CheckBox { Text = faction }.WithCrest(faction, UiIcons.ButtonSize);
         box.SetMeta("faction", faction);
         box.Toggled += on => Change(r =>
         {
