@@ -9,8 +9,8 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>
-/// Heroes of the player whose turn it is, with movement points left; clicking one selects it, "Info" opens its hero screen. A column, or a
-/// row of narrower entries when <see cref="Horizontal"/> (the "Layout" tab, ADR-156).
+/// Heroes of the player whose turn it is, with movement points left; clicking one selects it (the action buttons' hero screen and spell book
+/// then open its, ADR-210). A column, or a row of narrower entries when <see cref="Horizontal"/> (the "Layout" tab, ADR-156).
 /// </summary>
 public partial class HeroListPanel : BoxContainer
 {
@@ -35,9 +35,6 @@ public partial class HeroListPanel : BoxContainer
     }
 
     public event Action<HeroId>? HeroSelected;
-
-    /// <summary>The "Info" button of a hero: open its hero screen.</summary>
-    public event Action<HeroId>? HeroInfoRequested;
 
     /// <param name="session">The game.</param>
     /// <param name="listed">Whose heroes are listed: the current player's by default; in a LAN game this screen's player's in another's turn.</param>
@@ -86,12 +83,7 @@ public partial class HeroListPanel : BoxContainer
             button.AddThemeColorOverride("font_color", Palette.ForPlayer(hero.Owner).Lightened(0.4f));
             var id = hero.Id;
             button.Pressed += () => HeroSelected?.Invoke(id);
-            var info = new Button { Text = "Info", TooltipText = "Hero screen (H)" }.WithIcon(UiIcon.Info);
-            info.Pressed += () => HeroInfoRequested?.Invoke(id);
-            var row = new HBoxContainer();
-            row.AddChild(button);
-            row.AddChild(info);
-            AddChild(row);
+            AddChild(button);
         }
     }
 }

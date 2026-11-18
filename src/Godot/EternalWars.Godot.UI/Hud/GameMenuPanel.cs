@@ -41,7 +41,7 @@ public partial class GameMenuPanel : CenterContainer
         Choices("Right", "Left", "Off (the parts stand free)"), "A framed column down the side with the minimap, the hero and town lists and the actions");
     private readonly OptionButton _minimapCorner = Choices("Top right", "Top left", "Bottom right", "Bottom left");
     private readonly OptionButton _lists = Choices("Beside the minimap", "Along the bottom");
-    private readonly OptionButton _actionSide = Choices("Right", "Left");
+    private readonly OptionButton _actionCorner = Choices("Top right", "Top left", "Bottom right", "Bottom left");
     private LayoutSettings _layout = LayoutSettings.Default;
     private IReadOnlyList<SaveItem> _entries = [];
     private Func<IReadOnlyList<SaveItem>> _listSaves = null!;
@@ -161,11 +161,11 @@ public partial class GameMenuPanel : CenterContainer
         layout.AddRow("Side panel", _sidePanel, 180);
         layout.AddRow("Minimap", _minimapCorner, 180);
         layout.AddRow("Hero and town lists", _lists, 180);
-        layout.AddRow("Action panel", _actionSide, 180);
+        layout.AddRow("Action buttons", _actionCorner, 180);
         _initiativeBar.ItemSelected += index => ChangeLayout(_layout with { InitiativeBar = (ScreenEdge)index });
         _minimapCorner.ItemSelected += index => ChangeLayout(_layout with { Minimap = (ScreenCorner)index });
         _lists.ItemSelected += index => ChangeLayout(_layout with { Lists = (ListOrientation)index });
-        _actionSide.ItemSelected += index => ChangeLayout(_layout with { ActionPanel = (ScreenSide)index });
+        _actionCorner.ItemSelected += index => ChangeLayout(_layout with { ActionButtons = (ScreenCorner)index });
         _sidePanel.ItemSelected += index => ChangeLayout(_layout with { SidePanel = (SidePanel)index });
         var reset = new Button { Text = "Default layout", SizeFlagsHorizontal = SizeFlags.ShrinkBegin };
         reset.Pressed += () =>
@@ -281,7 +281,7 @@ public partial class GameMenuPanel : CenterContainer
         _initiativeBar.Selected = (int)layout.InitiativeBar;
         _minimapCorner.Selected = (int)layout.Minimap;
         _lists.Selected = (int)layout.Lists;
-        _actionSide.Selected = (int)layout.ActionPanel;
+        _actionCorner.Selected = (int)layout.ActionButtons;
         _sidePanel.Selected = (int)layout.SidePanel;
         EnableFreeParts(layout);
     }
@@ -290,7 +290,7 @@ public partial class GameMenuPanel : CenterContainer
     private void EnableFreeParts(LayoutSettings layout)
     {
         var free = layout.SidePanel == SidePanel.Off;
-        foreach (var button in new[] { _minimapCorner, _lists, _actionSide })
+        foreach (var button in new[] { _minimapCorner, _lists, _actionCorner })
         {
             button.Disabled = !free;
             button.TooltipText = free ? string.Empty : "Set by the side panel; turn it off to place the parts freely";

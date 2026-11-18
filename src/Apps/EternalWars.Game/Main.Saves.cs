@@ -152,13 +152,17 @@ public partial class Main
     }
 
     /// <summary>
-    /// The menu button sits on the status bar's right end while a game is played, on the map and in battle (ADR-186, ADR-204); in the replay
-    /// viewer (beside its bar) and before a game it stands in the bottom right corner.
+    /// On the adventure map the menu is one of the HUD's action buttons (ADR-210), and this button is hidden. In a battle that is played it
+    /// sits on the status bar's right end (ADR-204); in the replay viewer's battles (beside its bar) and before a game it stands in the bottom
+    /// right corner. The setup screens hide it.
     /// </summary>
     private void PlaceMenuButton()
     {
         var screen = GetViewport().GetVisibleRect().Size;
-        if (_mode == GameMode.Play && IsInstanceValid(_hud) && _game is not null) // the map's and the battle's bars share the slot (ADR-204)
+        var inGame = IsInstanceValid(_hud) && _game is not null;
+        var inBattle = inGame && IsInstanceValid(_battle) && _battle.IsOpen;
+        _menuButton.Visible = _setup is null && !(inGame && !inBattle);
+        if (_mode == GameMode.Play && inBattle)
         {
             var slot = StatusBar.MenuSlot(screen);
             _menuButton.SetAnchorsPreset(Control.LayoutPreset.TopLeft);

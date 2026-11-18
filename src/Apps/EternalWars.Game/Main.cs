@@ -207,7 +207,7 @@ public partial class Main : Node3D
     {
         _setup?.QueueFree();
         _setup = null;
-        _menuButton.Visible = true;
+        PlaceMenuButton();
     }
 
     /// <summary>Takes the game being played down: its world, HUD and screens. Nothing runs until a new game or a load builds them again.</summary>
@@ -702,6 +702,7 @@ public partial class Main : Node3D
         _hud.HeroSelected += hero => _mapInput.Select(hero, focus: true);
         _hud.DigRequested += _mapInput.Dig;
         _hud.SpellAimed += _mapInput.Aim;
+        _hud.MenuRequested += _menu.Toggle;
         PlaceMenuButton();
     }
 }

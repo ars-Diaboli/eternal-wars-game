@@ -35,17 +35,23 @@ creatures and buildings, heraldic player colours, iconic map objects).
 ## Camera and UI
 - **Camera** (ADR-022): tilted **15–30° from vertical** (more tilted zoomed in), **rotatable ±45°**, zoom, pan.
 - **UI**: by default a HoMM-style side panel on the right (ADR-191): one framed column from the top to the status bar with the minimap,
-  the hero and town lists and the action panel, which takes the clicks on it; End turn among the panel's
-  action buttons and the calendar (date, week's event, whose turn) at the panel's bottom (ADR-204); full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
+  the hero and town lists and the action buttons, which takes the clicks on it; the calendar (date, week's event, whose turn) and End turn
+  at the panel's bottom (ADR-204); full-screen town and hero screens. The F10 menu has three tabs: "Save and load", "Settings" (auto combat, speeds, detailed tooltips, the
   fog's look, the tile grid, the window mode) and "Layout".
+- **Action buttons** (ADR-210): a 3 × 3 grid of 48 px icon buttons: hero screen (H), spell book (C), kingdom (K); quests (Q), puzzle map
+  (P), dig (G); marketplace, switch level (L), menu (F10). The hero screen, spell book and dig act on the selected hero and are greyed
+  without one (the spell book also when the hero has none); the marketplace without a town marketplace; the level switch on a one-level map.
+  In the replay viewer the hero, spell book, dig and marketplace buttons are greyed. The spell book is a window over the map: the hero's
+  mana, its adventure spells to cast, its battle spells by school with their costs.
 - **Status bar** (ADR-186, ADR-204): a narrow stripe along the bottom of the adventure map, as wide as the screen up to 16:9 and a centred
   16:9 width on a wider screen. The battle, town and hero screens and the screens before a game have the same stripe (resources only on
   the map and the town screen); windows over a screen use that screen's bar; the map editor keeps pop-up tooltips. On the left the status line: the hints, the game's messages and what the pointer is over (a HUD control's tooltip, or
   the name of the hero, object or ground under it on the map), whichever came last. On the right the resources (short amounts past 6 digits
-  for gold and 4 for the others, the full one in the tooltip), then the "Menu (F10)" button. In the replay viewer it stands above the
-  viewer's bar, and the menu button stays in the corner beside that bar; in battle the menu button stands in the bottom right corner.
-- **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the side panel's
-  actions, wrapping into rows; the battle bar; End turn), 32 px in rows and window headers; hovering it puts its label and hotkey on the
+  for gold and 4 for the others, the full one in the tooltip). On the adventure map the menu is one of the action buttons; in battle the
+  "Menu (F10)" button stands on the bar's right end, and before a game and in the replay viewer's battles in the bottom right corner. In
+  the replay viewer the bar stands above the viewer's bar.
+- **Icon buttons** (ADR-204): a button with an icon shows the icon alone on a square button, 48 px in bars and panels (the action
+  buttons; the battle bar; End turn), 32 px in rows and window headers; hovering it puts its label and hotkey on the
   status bar, with no pop-up tooltip. A button whose icon is missing keeps its text. The buttons along a window's bottom (OK, Accept,
   Start, Back, Close, Save, Load) keep their text after a small icon, as wide as the text, at the right of their row.
 - **Cursors** (ADR-204, [cursor-prompts.md](../content/cursor-prompts.md)): the pointer shows what a click would do. An arrow on menus,
@@ -62,9 +68,9 @@ creatures and buildings, heraldic player colours, iconic map objects).
   the game and in the map editor. Kept in `settings.json`, applied at once and at start.
 - **Layout** (ADR-118, ADR-156, ADR-191): the "Layout" tab sets the battle's initiative bar (top or bottom) and the side panel (right, left
   or off). With the panel off it also sets the minimap's corner, the hero and town lists (beside the minimap, or as rows along the bottom)
-  and the action panel's side (kingdom, quests, puzzle map, dig, marketplace); with it on, those rows are greyed. The
+  and the action buttons' corner; with it on, those rows are greyed. The
   change shows at once and is kept in `settings.json` with the speeds, not in saves. The minimap is nearest its corner; lists beside it follow
-  it; the action panel stands at the top of its side; the turn block (calendar and End turn) stays at the top left, beside anything there. The bottom parts stand
+  it; the action buttons stand in their corner, after the minimap and lists if they share it; the turn block (calendar and End turn) stays at the top left, beside anything there. The bottom parts stand
   above the status bar.
 - **Theme** (ADR-191): dark slate panels and buttons framed in bronze, Godot's default fonts; the same in the map editor.
 - **Spacing** (ADR-118, ADR-163): one set of margins and gaps for every panel:

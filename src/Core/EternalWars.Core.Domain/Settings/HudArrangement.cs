@@ -3,22 +3,22 @@ namespace EternalWars.Core.Domain.Settings;
 /// <summary>A part of the adventure map's HUD that the layout settings move.</summary>
 public enum HudPart
 {
-    /// <summary>The minimap and its "Switch level" button.</summary>
+    /// <summary>The minimap.</summary>
     Minimap,
 
     /// <summary>The hero and town lists.</summary>
     Lists,
 
-    /// <summary>The action panel: kingdom, quests, puzzle map, dig, marketplace.</summary>
+    /// <summary>The 3×3 action buttons: hero, spell book, kingdom, quests, puzzle map, dig, marketplace, level, menu (ADR-210).</summary>
     Actions,
 }
 
 /// <summary>
 /// Where the adventure map's HUD parts stand for some <see cref="LayoutSettings"/> (ADR-156). Each corner holds a stack of parts, listed
 /// from the corner outwards. The minimap is always nearest its corner. Vertical lists follow it in its stack. Horizontal lists go to the
-/// bottom row between the bottom corners. The action panel goes to the top corner of its side, after the minimap and lists if they are
-/// there. The turn block is not moved: it stays at the top left, beside whatever the top-left stack holds. With the side panel on
-/// (ADR-191) the minimap, the vertical lists and the action panel all stand in the top stack of the panel's side, whatever the other
+/// bottom row between the bottom corners. The action buttons go to their own corner, after the minimap and lists if they are there
+/// (ADR-210). The turn block is not moved: it stays at the top left, beside whatever the top-left stack holds. With the side panel on
+/// (ADR-191) the minimap, the vertical lists and the action buttons all stand in the top stack of the panel's side, whatever the other
 /// settings say; those keep their values for when the panel is off.
 /// </summary>
 public static class HudArrangement
@@ -37,7 +37,7 @@ public static class HudArrangement
             }
         }
 
-        if (corner == TopCorner(layout.ActionPanel))
+        if (corner == layout.ActionButtons)
         {
             parts.Add(HudPart.Actions);
         }
@@ -57,11 +57,11 @@ public static class HudArrangement
     };
 
     /// <summary>
-    /// The layout the parts follow: with the side panel on, the minimap at the top of its side, the lists beside it and the action panel
-    /// on the same side (ADR-191); with it off, <paramref name="layout"/> itself.
+    /// The layout the parts follow: with the side panel on, the minimap at the top of its side, the lists beside it and the action buttons
+    /// in the same stack (ADR-191); with it off, <paramref name="layout"/> itself.
     /// </summary>
     public static LayoutSettings Effective(LayoutSettings layout) => PanelSide(layout) is { } side
-        ? layout with { Minimap = TopCorner(side), Lists = ListOrientation.Vertical, ActionPanel = side }
+        ? layout with { Minimap = TopCorner(side), Lists = ListOrientation.Vertical, ActionButtons = TopCorner(side) }
         : layout;
 
     /// <summary>The corner whose stack holds <paramref name="part"/>, or null for lists in the bottom row.</summary>

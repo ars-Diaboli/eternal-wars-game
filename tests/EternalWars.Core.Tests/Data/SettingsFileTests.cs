@@ -88,7 +88,7 @@ public class SettingsFileTests
     public void TheLayout_IsKeptBesideTheOtherSettings_AndTheDefaultWhenTheFileHasNone()
     {
         var path = Path.Combine(Path.GetTempPath(), $"ew-settings-{Guid.NewGuid():N}", SettingsFile.FileName);
-        var layout = new LayoutSettings(ScreenEdge.Bottom, ScreenCorner.BottomLeft, ListOrientation.Horizontal, ScreenSide.Left, SidePanel.Off);
+        var layout = new LayoutSettings(ScreenEdge.Bottom, ScreenCorner.BottomLeft, ListOrientation.Horizontal, ScreenCorner.BottomRight, SidePanel.Off);
         try
         {
             SettingsFile.Save(path, SpeedSettings.Default, new InterfaceSettings(DetailedTooltips: true), layout);
@@ -100,6 +100,11 @@ public class SettingsFileTests
             Assert.Equal(LayoutSettings.Default with { InitiativeBar = ScreenEdge.Bottom }, SettingsFile.ReadLayout("{\"layout\": {\"initiativeBar\": \"Bottom\"}}"));
             Assert.Contains("\"sidePanel\": \"Off\"", File.ReadAllText(path), StringComparison.Ordinal);
             Assert.Equal(SidePanel.Right, SettingsFile.ReadLayout("{\"layout\": {\"minimap\": \"TopLeft\"}}").SidePanel);
+            Assert.Contains("\"actionButtons\": \"BottomRight\"", File.ReadAllText(path), StringComparison.Ordinal);
+
+            // An older file's action panel side is left out: the buttons take their default corner, the other settings stay.
+            Assert.Equal(LayoutSettings.Default with { Minimap = ScreenCorner.TopLeft },
+                SettingsFile.ReadLayout("{\"layout\": {\"minimap\": \"TopLeft\", \"actionPanel\": \"Left\"}}"));
         }
         finally
         {
@@ -119,14 +124,26 @@ public class SettingsFileTests
     }
 
     [Fact]
-    public void VerticalLists_FollowTheMinimap_AndTheActionsGoToTheTopOfTheirSide()
+    public void VerticalLists_FollowTheMinimap_AndTheActionsGoToTheirCorner()
     {
-        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, ActionPanel: ScreenSide.Left, SidePanel: SidePanel.Off);
+        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, ActionButtons: ScreenCorner.TopLeft, SidePanel: SidePanel.Off);
 
         Assert.Equal([HudPart.Minimap, HudPart.Lists], HudArrangement.Stack(layout, ScreenCorner.BottomLeft));
         Assert.Equal([HudPart.Actions], HudArrangement.Stack(layout, ScreenCorner.TopLeft));
         Assert.Empty(HudArrangement.Stack(layout, ScreenCorner.TopRight));
         Assert.Equal(ScreenCorner.BottomLeft, HudArrangement.CornerOf(layout, HudPart.Lists));
+    }
+
+    [Fact]
+    public void TheActionButtons_TakeAnyCorner_AfterTheMinimapAndListsInTheirs()
+    {
+        var bottom = new LayoutSettings(ActionButtons: ScreenCorner.BottomRight, SidePanel: SidePanel.Off);
+        var shared = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, ActionButtons: ScreenCorner.BottomLeft, SidePanel: SidePanel.Off);
+
+        Assert.Equal([HudPart.Actions], HudArrangement.Stack(bottom, ScreenCorner.BottomRight));
+        Assert.Equal([HudPart.Minimap, HudPart.Lists], HudArrangement.Stack(bottom, ScreenCorner.TopRight));
+        Assert.Equal([HudPart.Minimap, HudPart.Lists, HudPart.Actions], HudArrangement.Stack(shared, ScreenCorner.BottomLeft));
+        Assert.Equal(ScreenCorner.TopRight, LayoutSettings.Default.ActionButtons);
     }
 
     [Fact]
@@ -145,7 +162,7 @@ public class SettingsFileTests
     [InlineData(SidePanel.Left, ScreenCorner.TopLeft)]
     public void TheSidePanel_HoldsTheMinimapListsAndActionsOnItsSide_WhateverTheOtherSettingsSay(SidePanel panel, ScreenCorner top)
     {
-        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, Lists: ListOrientation.Horizontal, ActionPanel: ScreenSide.Right, SidePanel: panel);
+        var layout = new LayoutSettings(Minimap: ScreenCorner.BottomLeft, Lists: ListOrientation.Horizontal, ActionButtons: ScreenCorner.BottomRight, SidePanel: panel);
 
         Assert.Equal([HudPart.Minimap, HudPart.Lists, HudPart.Actions], HudArrangement.Stack(layout, top));
         Assert.Equal(3, Enum.GetValues<ScreenCorner>().Sum(c => HudArrangement.Stack(layout, c).Count));
