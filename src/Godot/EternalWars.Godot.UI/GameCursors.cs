@@ -12,8 +12,11 @@ namespace EternalWars.Godot.UI;
 /// </summary>
 public static class GameCursors
 {
-    /// <summary>The cursor's size on screen, in pixels.</summary>
-    public const int Size = 64;
+    /// <summary>An action cursor's size on screen (the map's and the battlefield's), in pixels.</summary>
+    public const int Size = 43;
+
+    /// <summary>The pointer's, the hourglass's and the blocked sign's size on screen, in pixels: half the art's 64.</summary>
+    public const int PlainSize = 32;
 
     private const string Folder = "res://shared/textures/ui/cursors/";
 
@@ -135,8 +138,9 @@ public static class GameCursors
         }
 
         var (file, x, y) = Definition(cursor);
-        var image = UiIcons.LoadScaled($"{Folder}{file}.png", Size);
-        (Texture2D, Vector2)? found = image is null ? null : (image, new Vector2(Math.Min(x * Size / 8, Size - 1), Math.Min(y * Size / 8, Size - 1)));
+        var size = cursor is GameCursor.Pointer or GameCursor.Busy or GameCursor.Blocked ? PlainSize : Size;
+        var image = UiIcons.LoadScaled($"{Folder}{file}.png", size);
+        (Texture2D, Vector2)? found = image is null ? null : (image, new Vector2(Math.Min(x * size / 8, size - 1), Math.Min(y * size / 8, size - 1)));
         Cache[cursor] = found;
         return found;
     }

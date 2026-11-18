@@ -245,7 +245,7 @@ public partial class AdventureHud : CanvasLayer
     private void BuildActions(bool playing)
     {
         _playing = playing;
-        _heroButton = AddAction("Hero screen (H)", UiIcon.Info, () => ShowHero(_selected));
+        _heroButton = AddAction("Hero screen (H)", UiIcon.Hero, () => ShowHero(_selected));
         _bookButton = AddAction("Spell book (C)", UiIcon.SpellBook, () => OpenSpellBook(_selected));
         AddAction("Kingdom (K)", UiIcon.Kingdom, () => KingdomScreen.Open(_session.State.CurrentPlayer.Id), "Every source of income and the totals");
         AddAction("Quests (Q)", UiIcon.Quests, () => QuestScreen.Open(_session.State.CurrentPlayer.Id), "The quests your heroes were shown");

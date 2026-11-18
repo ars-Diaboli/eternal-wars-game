@@ -1,6 +1,6 @@
 # Cursors
 
-Mouse cursors, 64 × 64 with transparency, generated for this project by the owner (2026-11-18) from sets 1–3 of
+Mouse cursors, 64 × 64 with transparency (shown at 43 × 43; the pointer, busy and blocked ones at 32 × 32), generated for this project by the owner (2026-11-18) from sets 1–3 of
 [cursor-prompts.md](../../../../../../docs/content/cursor-prompts.md) and cut one per file. Loaded by `EternalWars.Godot.UI.GameCursors`
 with the hotspots from its `Definition` table; each image is placed so its pointing part is on that hotspot (the arrow's tip in the top
 left corner, the hooves and the shovel's blade at 7/8 down, the others centred). A missing file leaves the system cursor in its place.
