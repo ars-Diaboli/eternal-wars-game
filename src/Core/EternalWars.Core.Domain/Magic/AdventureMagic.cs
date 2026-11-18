@@ -3,6 +3,7 @@ using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.Magic.AdventureSpells;
 using EternalWars.Core.Domain.Map;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
@@ -43,11 +44,8 @@ public static class AdventureMagic
     /// <summary>Pathfinder's Call III and Ashwalk III add this share of the day's movement allowance, in percent.</summary>
     public const int NativeWalkMovementPercent = 10;
 
-    /// <summary>The adventure spells that can be cast now: all of them.</summary>
-    public static IReadOnlySet<string> Built { get; } = new HashSet<string>(StringComparer.Ordinal)
-    {
-        TownPortal, DimensionDoor, ViewTerrain, PathfindersCall, Ashwalk, DistantVision, DetectMagic, GraveWhisper, LedgerOfAges, Veil, Eavesdrop,
-    };
+    /// <summary>The adventure spells that can be cast now: those with a handler (<see cref="AdventureSpellHandlers"/>), all of them.</summary>
+    public static IReadOnlySet<string> Built { get; } = AdventureSpellHandlers.All.Select(h => h.Spell).ToHashSet(StringComparer.Ordinal);
 
     private static int AtRank(int rank, int one, int two, int three) => rank >= 3 ? three : rank == 2 ? two : one;
 
@@ -77,20 +75,11 @@ public static class AdventureMagic
     /// Whether the cast needs a cell picked on the map: Dimension Door (the tile), Distant Vision (the cell looked at), Eavesdrop (a cell of the
     /// town) and Town Portal from rank II (a cell of the own town to go to; without one it takes the nearest).
     /// </summary>
-    public static bool NeedsTarget(GameState state, Hero hero, string spell) => spell switch
-    {
-        DimensionDoor or DistantVision or Eavesdrop => true,
-        TownPortal => RankOf(state, hero, spell) >= 2,
-        _ => false,
-    };
+    public static bool NeedsTarget(GameState state, Hero hero, string spell) => AdventureSpellHandlers.Find(spell)?.NeedsTarget(state, hero) ?? false;
 
     /// <summary>The terrains a spell makes native for the rest of the day at rank I (Pathfinder's Call: forest floor, grass, swamp; Ashwalk: lava, wasteland, cursed lands).</summary>
-    public static IReadOnlySet<TerrainType> NativeTerrains(string spell) => spell switch
-    {
-        PathfindersCall => new HashSet<TerrainType> { TerrainType.ForestFloor, TerrainType.Grass, TerrainType.Swamp },
-        Ashwalk => new HashSet<TerrainType> { TerrainType.Lava, TerrainType.Wasteland, TerrainType.CursedLands },
-        _ => new HashSet<TerrainType>(),
-    };
+    public static IReadOnlySet<TerrainType> NativeTerrains(string spell) =>
+        AdventureSpellHandlers.Find(spell) is NativeWalkHandler walk ? new HashSet<TerrainType>(walk.Terrains) : new HashSet<TerrainType>();
 
     /// <summary>The terrains the spell makes native at <paramref name="rank"/>: its three at rank I, every terrain from rank II.</summary>
     public static IReadOnlySet<TerrainType> NativeTerrains(string spell, int rank) =>
@@ -194,74 +183,11 @@ public static class AdventureMagic
             return $"Casting {definition.Name} needs {MovementCost} movement points.";
         }
 
-        var rank = RankOf(state, hero, spell);
-        switch (spell)
-        {
-            case TownPortal when PortalTown(state, hero) is null:
-                return "There is no own town to return to.";
-            case TownPortal when !aimed || target is null:
-                return null;
-            case TownPortal when rank < 2:
-                return PortalTown(state, hero, target) == PortalTown(state, hero) ? null : "Town Portal goes only to the nearest own town at rank I.";
-            case TownPortal:
-                return PortalTown(state, hero, target) is null ? "Town Portal needs an own town with a free entrance." : null;
-            case DimensionDoor when hero.Statuses.FirstOrDefault(s => s.Source == DimensionDoor && s.Kind == HeroStatusKind.Cast) is { } used
-                                    && used.Value >= DimensionDoorCasts(rank):
-                return DimensionDoorCasts(rank) == 1 ? "Dimension Door works once a day." : $"Dimension Door works {DimensionDoorCasts(rank)} times a day.";
-            case DimensionDoor:
-                return aimed ? DoorRefusal(state, hero, target, DimensionDoorRange(rank)) : null;
-            case DistantVision when aimed:
-                return target is { } cell && state.Map.Contains(cell) && state.Fog.IsInSight(hero.Owner, cell) ? null : "Distant Vision looks at a cell in sight.";
-            case Eavesdrop when aimed:
-                return EavesdropRefusal(state, hero, target, rank);
-            default:
-                return null;
-        }
+        return AdventureSpellHandlers.For(spell).Refusal(state, hero, RankOf(state, hero, spell), target, aimed);
     }
 
     /// <summary>The town an aimed Eavesdrop listens to, or null.</summary>
     public static Town? EavesdropTown(GameState state, MapPosition? target) => target is { } cell ? AdventureIntel.TownAt(state, cell) : null;
-
-    private static string? EavesdropRefusal(GameState state, Hero hero, MapPosition? target, int rank)
-    {
-        if (EavesdropTown(state, target) is not { } town)
-        {
-            return "Eavesdrop needs a town to listen to.";
-        }
-
-        if (town.Owner is { } owner && (owner == hero.Owner || state.AreAllies(owner, hero.Owner)))
-        {
-            return "Eavesdrop listens only to enemy towns.";
-        }
-
-        return rank >= 2
-            ? AdventureIntel.Explored(state, hero.Owner, town) ? null : "Eavesdrop needs a town the player has explored."
-            : AdventureIntel.InSight(state, hero.Owner, town) ? null : "Eavesdrop at rank I needs a town in sight.";
-    }
-
-    private static string? DoorRefusal(GameState state, Hero hero, MapPosition? target, int range)
-    {
-        if (target is not { } to)
-        {
-            return "Dimension Door needs a tile to go to.";
-        }
-
-        var (dx, dy) = (to.X - hero.Position.X, to.Y - hero.Position.Y);
-        var distance = Math.Max(Math.Abs(dx), Math.Abs(dy));
-        if (to.Level != hero.Position.Level || distance == 0 || distance > range || (dx != 0 && dy != 0 && Math.Abs(dx) != Math.Abs(dy)))
-        {
-            return $"Dimension Door goes up to {range} tiles in a straight line.";
-        }
-
-        if (!state.Map.Contains(to) || !state.Fog.IsExplored(hero.Owner, to))
-        {
-            return "Dimension Door lands only on explored tiles.";
-        }
-
-        return MovementRules.CheckTile(state, to) != MoveResult.Moved || state.HeroAt(to) is not null || state.ObjectCellAt(to) is not null || state.IsGuarded(to)
-            ? "Dimension Door needs a free, passable and unguarded tile."
-            : null;
-    }
 }
 
 /// <summary>
@@ -288,67 +214,7 @@ internal sealed class AdventureMagicService(GameState state, IEventPublisher eve
         // Town Portal below rank III ends the day's movement (rank III: "costs no movement points beyond the 500", proposal).
         hero.MovementPoints = spell == AdventureMagic.TownPortal && rank < 3 ? 0 : hero.MovementPoints - AdventureMagic.MovementCost;
         events.Publish(new AdventureSpellCast(hero.Id, spell, target, cost, hero.Mana, hero.MovementPoints));
-        switch (spell)
-        {
-            case AdventureMagic.TownPortal:
-                var town = AdventureMagic.PortalTown(state, hero, rank >= 2 ? target : null)!;
-                Relocate(hero, town.VisitPosition);
-                towns.Enter(hero, town);
-                break;
-            case AdventureMagic.DimensionDoor:
-                var used = hero.Statuses.FirstOrDefault(s => s.Source == spell && s.Kind == HeroStatusKind.Cast)?.Value ?? 0;
-                Relocate(hero, target!.Value);
-                Mark(hero, new HeroStatus(spell, HeroStatusKind.Cast, used + 1, StatusExpiry.EndOfDay));
-                break;
-            case AdventureMagic.ViewTerrain:
-                fog.RevealArea(hero.Owner, hero.Position, AdventureMagic.ViewTerrainRadius(rank));
-                events.Publish(new AreaRevealed(hero.Owner, hero.Position, AdventureMagic.ViewTerrainRadius(rank)));
-                break;
-            case AdventureMagic.PathfindersCall or AdventureMagic.Ashwalk:
-                Mark(hero, new HeroStatus(spell, HeroStatusKind.NativeTerrain, AdventureMagic.TerrainMask(AdventureMagic.NativeTerrains(spell, rank)), StatusExpiry.EndOfDay));
-                if (rank >= 3 && hero.MaxMovementPoints * AdventureMagic.NativeWalkMovementPercent / 100 is var extra and > 0)
-                {
-                    hero.MovementPoints += extra;
-                    events.Publish(new HeroMovementGained(hero.Id, extra, hero.MovementPoints));
-                }
-
-                break;
-            case AdventureMagic.DistantVision:
-                var center = target!.Value;
-                var radius = AdventureMagic.DistantVisionRadius(rank);
-                events.Publish(new ArmiesSighted(hero.Id, hero.Owner, center, radius, AdventureIntel.ArmiesAround(state, hero.Owner, center, radius, underFog: rank >= 3)));
-                break;
-            case AdventureMagic.DetectMagic:
-                var detectRadius = AdventureMagic.DetectMagicRadius(rank);
-                events.Publish(new MagicDetected(hero.Id, hero.Owner, hero.Position, detectRadius, AdventureIntel.ObjectsAround(state, hero.Position, detectRadius, bankRewards: rank >= 3)));
-                break;
-            case AdventureMagic.GraveWhisper:
-                var percent = AdventureMagic.GraveWhisperPercent(rank);
-                Mark(hero, new HeroStatus(spell, HeroStatusKind.Necromancy, percent, StatusExpiry.EndOfWeek));
-                events.Publish(new GravesMarked(hero.Id, hero.Owner, percent,
-                    rank >= 3 ? AdventureIntel.MonstersAround(state, hero.Owner, hero.Position, AdventureMagic.GraveWhisperRadius) : []));
-                break;
-            case AdventureMagic.LedgerOfAges:
-                if (rank >= 3)
-                {
-                    Mark(hero, new HeroStatus(spell, HeroStatusKind.Cast, 1, StatusExpiry.EndOfWeek));
-                }
-
-                events.Publish(new LedgerRead(hero.Id, hero.Owner, AdventureIntel.Ledger(state, hero.Owner, inTowns: rank >= 2)));
-                break;
-            case AdventureMagic.Veil:
-                Mark(hero, new HeroStatus(spell, HeroStatusKind.Veil, rank, StatusExpiry.EndOfWeek));
-                break;
-            case AdventureMagic.Eavesdrop:
-                var listened = AdventureMagic.EavesdropTown(state, target)!;
-                if (rank >= 3)
-                {
-                    Mark(hero, new HeroStatus(spell, HeroStatusKind.Cast, listened.Id.Value, StatusExpiry.EndOfWeek));
-                }
-
-                events.Publish(new TownOverheard(hero.Id, hero.Owner, AdventureIntel.Town(state, listened, hero.Owner)));
-                break;
-        }
+        AdventureSpellHandlers.For(spell).Cast(new AdventureCast(state, events, fog, towns, hero, spell, rank, target));
     }
 
     /// <summary>Grave Whisper is used up by the victory that raised undead.</summary>
@@ -359,18 +225,5 @@ internal sealed class AdventureMagicService(GameState state, IEventPublisher eve
         {
             events.Publish(new HeroStatusesExpired(hero.Id, ended));
         }
-    }
-
-    private void Relocate(Hero hero, MapPosition to)
-    {
-        var from = hero.Position;
-        hero.Position = to;
-        events.Publish(new HeroTeleported(hero.Id, from, to));
-    }
-
-    private void Mark(Hero hero, HeroStatus status)
-    {
-        hero.AddStatus(status);
-        events.Publish(new HeroStatusGained(hero.Id, status));
     }
 }

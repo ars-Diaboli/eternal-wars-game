@@ -48,6 +48,7 @@ command takes `--creatures path.csv`.
 | `selftest` | determinism + replay check (CI) |
 | `game --map towns [--days N] [--runs N] [--record f]` | AI plays every slot; prints fights won/lost by kind, what is left on the map, garrison hero moves |
 | `game --template duel [--size N] [--players N]` | same on a new generated map per run (as the new-game screen would) |
+| `game ... --weight Name=value` | overrides one `AiWeights` number for the adventure AI (repeatable; `game`, `maps`, `selftest`); an unknown name or bad value is an error listing the names |
 | `game ... --fog refog` | plays with shroud and refog instead of permanent reveal (the AI then sees only what is in sight) |
 | `game ... --profile` | also the time of each AI turn, its path searches and cost maps (count, routes found, tiles expanded, time; `PathFinder.Counters`), its battle estimates (asked, played, time; `BattleEstimateCounters`) and battles, per player, per week and for the slowest turns. Counts are the same on every run of a seed, times vary by about 10 %. Run a Release build (`-c Release`) for timings; the baselines are in `refactoring-plan.md` |
 | `maps [--template t] [--maps N] [--days N] [--seed S]` | per template and size: generates without problems, deterministically, every start town reachable, no validator errors, N days of AI play with no refused command, replays to the same state. CI runs `maps --maps 6 --days 14`; a failure names the repro (`maps --template <t> --seed <s> --maps 1`) |

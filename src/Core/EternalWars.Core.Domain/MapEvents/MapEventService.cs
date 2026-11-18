@@ -8,6 +8,7 @@ using EternalWars.Core.Domain.Economy;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
 using EternalWars.Core.Domain.Heroes;
+using EternalWars.Core.Domain.MapEvents.Actions;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Towns;
 using EternalWars.Core.Events;
@@ -25,8 +26,11 @@ public sealed class MapEventService(
     TownVisitService towns, HeroRecruitment recruits)
     : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>, Turns.ITurnPhaseParticipant
 {
-    private readonly TownConstruction _construction = new(state, events, towns);
-    private readonly DecisionSteps _steps = new(state, events);
+    /// <summary>The town's buildings an event builds (<see cref="BuildAction"/>).</summary>
+    internal TownConstruction Construction { get; } = new(state, events, towns);
+
+    /// <summary>The messages, questions and army choices an event asks, and the objects it removes.</summary>
+    internal DecisionSteps Steps { get; } = new(state, events);
 
     /// <summary>The most morale or luck an event gives or takes (HoMM3's ±3).</summary>
     public const int MaxMoraleOrLuck = 3;
@@ -41,7 +45,24 @@ public sealed class MapEventService(
     public const int MaxActionsPerRun = 100_000;
 
     /// <summary>The events' state, the running ones too (<see cref="MapEventState.Runs"/>): the service keeps none of its own.</summary>
-    private MapEventState Data => state.MapEvents;
+    internal MapEventState Data => state.MapEvents;
+
+    /// <summary>The game the events run in; it and the services below are what the action handlers work with (<see cref="MapEventActionContext"/>).</summary>
+    internal GameState State => state;
+
+    internal IEventPublisher Events => events;
+
+    internal Visibility.IFogRevealer Fog => fog;
+
+    internal EconomyService Economy => economy;
+
+    internal ProgressionService Progression => progression;
+
+    internal ArtifactService Artifacts => artifacts;
+
+    internal BattleService Battles => battles;
+
+    internal HeroRecruitment Recruits => recruits;
 
     /// <summary>Whether an event is running or waiting to run.</summary>
     public bool IsBusy => Data.Current is not null || Data.Runs.Count > 0;
@@ -162,39 +183,7 @@ public sealed class MapEventService(
         Pump();
     }
 
-    /// <summary>
-    /// A stage is complete: the quest object moves on, the other players' open entries for it go, and the completer's log shows the next stage
-    /// (its proposal is shown at once) or the quest done; a Quest Guard whose last stage is done leaves the map.
-    /// </summary>
-    private void AdvanceQuest(MapEventRun run, AdvanceQuestAction advance, Hero hero, PlayerId completer)
-    {
-        if (state.FindObject(advance.Site) is not QuestSite site || site.Stage != advance.Stage)
-        {
-            return;
-        }
-
-        site.Stage++;
-        events.Publish(new QuestStageCompleted(site.Id, run.Event.Name, advance.Stage, hero.Id, completer));
-        foreach (var player in Data.DropOpenQuestEntries(site.Id, completer))
-        {
-            events.Publish(new QuestLogChanged(player));
-        }
-
-        if (site.Stage < run.Event.Stages.Count)
-        {
-            WriteLog(completer, new QuestLogEntry(site.Id, run.Event.Name, site.Stage, Done: false));
-            run.Frames.Push(new MapEventFrame([new MessageAction(run.Event.Stages[site.Stage].Proposal)]));
-            return;
-        }
-
-        WriteLog(completer, new QuestLogEntry(site.Id, run.Event.Name, advance.Stage, Done: true));
-        if (site.Kind == MapObjectKind.QuestGuard)
-        {
-            _steps.RemoveObject(site);
-        }
-    }
-
-    private void WriteLog(PlayerId player, QuestLogEntry entry)
+    internal void WriteLog(PlayerId player, QuestLogEntry entry)
     {
         if (Data.SetQuestLog(player, entry))
         {
@@ -312,7 +301,7 @@ public sealed class MapEventService(
     }
 
     /// <summary>The event whose actions the run is taking now: the innermost run event, else the run's own.</summary>
-    private static MapEventDefinition EventOf(MapEventRun run) => run.Frames.FirstOrDefault(f => f.Event is not null)?.Event ?? run.Event;
+    internal static MapEventDefinition EventOf(MapEventRun run) => run.Frames.FirstOrDefault(f => f.Event is not null)?.Event ?? run.Event;
 
     /// <summary>Answers the pending message or question (<see cref="MapEventDecision"/>) and goes on.</summary>
     internal void Answer(int option)
@@ -334,7 +323,7 @@ public sealed class MapEventService(
             run.Answers = null;
         }
 
-        _steps.Resolve(decision);
+        Steps.Resolve(decision);
         Pump();
     }
 
@@ -353,7 +342,7 @@ public sealed class MapEventService(
 
         var hero = state.GetHero(decision.Hero);
         run.Waiting = MapEventWaiting.None;
-        _steps.Resolve(decision);
+        Steps.Resolve(decision);
         Refill(hero.Army, keep.Select(i => decision.Stacks[i]));
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
         Pump();
@@ -361,182 +350,12 @@ public sealed class MapEventService(
 
     // Actions -------------------------------------------------------------------------------------------------------
 
-    /// <summary>Applies one action; false stops the event.</summary>
+    /// <summary>Applies one action through its handler (<see cref="MapEventActionHandlers"/>); false stops the event.</summary>
     private bool Apply(MapEventRun run, EventAction action)
     {
         var hero = HeroOf(run);
         var town = run.Town is { } townId ? state.FindObject(townId) as Town : null;
-        switch (action)
-        {
-            case StopAction:
-                return false;
-            case IfAction branch:
-                run.Frames.Push(new MapEventFrame(Test(run, branch.Condition) ? branch.Then : branch.Else));
-                break;
-            case RepeatAction repeat when Math.Min(Evaluate(run, repeat.Times), MaxLoopRounds) is > 0 and var times && repeat.Actions.Count > 0:
-                run.Frames.Push(new MapEventFrame(repeat.Actions) { RoundsLeft = times - 1 });
-                break;
-            case WhileAction loop when loop.Actions.Count > 0 && Test(run, loop.Condition):
-                run.Frames.Push(new MapEventFrame(loop.Actions) { While = loop.Condition, Rounds = 1 });
-                break;
-            case RunEventAction call when Data.Set.Find(call.Event) is { Kind: not MapEventKind.Quest } other && Data.IsEnabled(other.Name)
-                                          && run.Frames.Count(f => f.Event is not null) < MaxRunDepth:
-                run.Frames.Push(new MapEventFrame(other.Actions) { Event = other });
-                events.Publish(new MapEventRan(other.Name, other.Kind, run.Player, run.Hero, run.Town));
-                break;
-            case SetVariableAction set:
-                SetVariable(set.Variable, MapEventEvaluator.Combine(set.Op, Data.Variable(set.Variable), Evaluate(run, set.Value)));
-                break;
-            case EnableEventAction enable:
-                var name = enable.Event ?? EventOf(run).Name;
-                if (Data.IsEnabled(name) != enable.Enabled)
-                {
-                    Data.SetEnabled(name, enable.Enabled);
-                    events.Publish(new MapEventEnabledChanged(name, enable.Enabled));
-                }
-
-                break;
-            case RemoveCellAction when run.Cell is { } cell && Data.RemoveCell(cell):
-                events.Publish(new MapEventCellRemoved(cell));
-                break;
-            case MessageAction message:
-                Show(run, message);
-                break;
-            case QuestionAction question when run.Player is { } asked && question.Answers.Count > 0:
-                run.Answers = question.Answers;
-                Ask(run, new MapEventDecision(hero?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, question.Text, [], question.Answers.Select(a => a.Text).ToList())
-                {
-                    Place = PlaceOf(run, []),
-                });
-                break;
-            case ResourceAction resource when run.Player is { } player:
-                GiveResource(player, resource.Resource, Evaluate(run, resource.Amount));
-                break;
-            case CreaturesAction creatures when hero is not null:
-                GiveCreatures(run, hero, creatures.Creature, Evaluate(run, creatures.Count));
-                break;
-            case CreaturesAction creatures when town is not null:
-                GiveGarrison(town, creatures.Creature, Evaluate(run, creatures.Count));
-                break;
-            case AvailableCreaturesAction available when town is not null && TownRules.LineOf(state, town, available.Line) is { } line:
-                town.SetAvailable(line.Id, Math.Max(0, town.AvailableOf(line.Id) + Evaluate(run, available.Count)));
-                events.Publish(new TownCreaturesGrew(town.Id, town.Available.ToDictionary()));
-                break;
-            case BuildAction build when town is not null:
-                Build(town, build.Building, build.Level);
-                break;
-            case RevealAction reveal when run.Player is { } viewer:
-                run.Place = new MapPosition(reveal.X, reveal.Y, reveal.Level);
-                fog.RevealArea(viewer, run.Place.Value, reveal.Radius);
-                events.Publish(new AreaRevealed(viewer, run.Place.Value, reveal.Radius));
-                break;
-            case GiveHeroAction give when run.Player is { } owner:
-                GiveHero(run, owner, give, hero, town);
-                break;
-            case AdvanceQuestAction advance when hero is not null && run.Player is { } completer:
-                AdvanceQuest(run, advance, hero, completer);
-                break;
-            case BattleAction fight when hero is not null:
-                if (hero.Army.IsEmpty || fight.Army.Count == 0)
-                {
-                    return false; // nobody to fight with: the event stops, the hero stays
-                }
-
-                run.Waiting = MapEventWaiting.Battle;
-                battles.BeginEventBattle(hero, fight.Army);
-                break;
-            default:
-                if (hero is not null)
-                {
-                    ApplyToHero(run, hero, action);
-                }
-
-                break;
-        }
-
-        return true;
-    }
-
-    /// <summary>The actions that change the hero itself; gains only for experience, stats and skills (EVT-4 b).</summary>
-    private void ApplyToHero(MapEventRun run, Hero hero, EventAction action)
-    {
-        switch (action)
-        {
-            case ExperienceAction experience when Evaluate(run, experience.Amount) is > 0 and var gained:
-                progression.GrantExperience(hero, gained);
-                break;
-            case PrimaryStatAction stat when Evaluate(run, stat.Amount) is > 0 and var raised:
-                progression.RaiseStat(hero, stat.Stat, raised);
-                break;
-            case SkillAction skill when BuiltInSkills.Contains(skill.Skill):
-                var id = BuiltInSkills.Resolve(skill.Skill);
-                var level = (SkillLevel)Math.Min((int)skill.Level, (int)BuiltInSkills.Get(id).MaxLevel);
-                if (hero.Skills.Level(id) < level && hero.Skills.CanRaise(id))
-                {
-                    hero.Skills.Set(id, level);
-                    events.Publish(new MapEventSkillGained(hero.Id, id, level));
-                }
-
-                break;
-            case ArtifactAction { Take: false } artifact:
-                artifacts.Grant(hero, artifact.Artifact, ArtifactSource.MapEvent);
-                break;
-            case ArtifactAction artifact when artifacts.Remove(hero, artifact.Artifact, wornFirst: true):
-                events.Publish(new ArtifactLost(hero.Id, artifact.Artifact));
-                break;
-            case WarMachineAction { Take: false } machine when hero.AddWarMachine(machine.Slot):
-                events.Publish(new MapEventWarMachineGained(hero.Id, machine.Slot));
-                break;
-            case WarMachineAction { Take: true } machine when hero.RemoveWarMachine(machine.Slot):
-                events.Publish(new WarMachineLost(hero.Id, machine.Slot));
-                break;
-            case SpellBookAction when !hero.HasSpellBook:
-                hero.HasSpellBook = true;
-                events.Publish(new MapEventSpellBookGained(hero.Id));
-                break;
-            case SpellAction spell when hero.HasSpellBook && state.Spells.Contains(spell.Spell) && hero.Learn(spell.Spell):
-                events.Publish(new MapEventSpellLearned(hero.Id, spell.Spell));
-                break;
-            case ManaAction mana:
-                ChangeMana(hero, Evaluate(run, mana.Amount));
-                break;
-            case MovementAction movement when Evaluate(run, movement.Amount) is not 0 and var points:
-                var before = hero.MovementPoints;
-                hero.MovementPoints = Math.Max(0, before + points);
-                events.Publish(new HeroMovementGained(hero.Id, hero.MovementPoints - before, hero.MovementPoints));
-                break;
-            case MoraleAction morale:
-                var source = $"event:{EventOf(run).Name}";
-                if (Math.Clamp(morale.Morale, -MaxMoraleOrLuck, MaxMoraleOrLuck) is not 0 and var m)
-                {
-                    progression.GrantStatus(hero, new HeroStatus(source, HeroStatusKind.Morale, m, StatusExpiry.NextBattle));
-                }
-
-                if (Math.Clamp(morale.Luck, -MaxMoraleOrLuck, MaxMoraleOrLuck) is not 0 and var l)
-                {
-                    progression.GrantStatus(hero, new HeroStatus(source, HeroStatusKind.Luck, l, StatusExpiry.NextBattle));
-                }
-
-                break;
-        }
-    }
-
-    /// <summary>
-    /// A message: a person reads it with a line per reward, then gets the rewards; anyone else gets them at once. The rewards' amounts are drawn
-    /// now, so the lines tell what comes.
-    /// </summary>
-    private void Show(MapEventRun run, MessageAction message)
-    {
-        var rewards = message.Rewards.Select(r => Fix(run, r)).ToList();
-        run.Frames.Push(new MapEventFrame(rewards));
-        if (run.Player is { } player && state.GetPlayer(player).IsHuman)
-        {
-            var lines = rewards.Select(Describe).OfType<string>().ToList();
-            Ask(run, new MapEventDecision(HeroOf(run)?.Id ?? MapEventDecision.NoHero, EventOf(run).Name, message.Text, lines, [])
-            {
-                Place = PlaceOf(run, rewards),
-            });
-        }
+        return MapEventActionHandlers.For(action).Apply(new MapEventActionContext(this, run, hero, town), action);
     }
 
     /// <summary>
@@ -544,7 +363,7 @@ public sealed class MapEventService(
     /// hero given at a cell), else the last place the run touched (an area it revealed, a hero it gave), else the town of a town event. Null
     /// for runs that are not a turn start: a hero event's hero is already in view.
     /// </summary>
-    private MapPosition? PlaceOf(MapEventRun run, IReadOnlyList<EventAction> rewards)
+    internal MapPosition? PlaceOf(MapEventRun run, IReadOnlyList<EventAction> rewards)
     {
         if (!run.StartOfTurn)
         {
@@ -553,129 +372,23 @@ public sealed class MapEventService(
 
         foreach (var reward in rewards)
         {
-            switch (reward)
+            if (MapEventActionHandlers.For(reward).Place(reward) is { } place)
             {
-                case RevealAction reveal:
-                    return new MapPosition(reveal.X, reveal.Y, reveal.Level);
-                case GiveHeroAction { X: { } x, Y: { } y } give:
-                    return new MapPosition(x, y, give.Level);
+                return place;
             }
         }
 
         return run.Place ?? (run.Town is { } id && state.FindObject(id) is Town town ? town.VisitPosition : null);
     }
 
-    private void Ask(MapEventRun run, PendingDecision decision)
+    internal void Ask(MapEventRun run, PendingDecision decision)
     {
         run.Waiting = MapEventWaiting.Decision;
-        _steps.Ask(decision);
+        Steps.Ask(decision);
     }
 
-    private void SetVariable(string name, int value)
-    {
-        Data.SetVariable(name, value);
-        events.Publish(new MapVariableChanged(name, value));
-    }
-
-    private void GiveResource(PlayerId player, ResourceType resource, int amount)
-    {
-        if (amount > 0)
-        {
-            economy.Grant(player, ResourceSet.Of(resource, amount));
-        }
-        else if (Math.Min(-amount, state.GetPlayer(player).Resources[resource]) is > 0 and var taken)
-        {
-            economy.Set(player, state.GetPlayer(player).Resources - ResourceSet.Of(resource, taken));
-        }
-    }
-
-    private void ChangeMana(Hero hero, int amount)
-    {
-        var before = hero.Mana;
-        if (amount > 0 && Math.Min(2 * hero.MaxMana, before + amount) is var raised && raised > before)
-        {
-            hero.Mana = raised;
-            events.Publish(new HeroManaRestored(hero.Id, hero.Mana, hero.MaxMana));
-        }
-        else if (amount < 0 && before > 0)
-        {
-            hero.Mana = before + amount;
-            events.Publish(new HeroManaSpent(hero.Id, before - hero.Mana, hero.Mana, hero.MaxMana));
-        }
-    }
-
-    /// <summary>Creatures for the hero: they join a stack or a free slot; a full army asks a person what to leave and keeps a computer's strongest.</summary>
-    private void GiveCreatures(MapEventRun run, Hero hero, string creature, int count)
-    {
-        if (!state.Creatures.Contains(creature) || count == 0)
-        {
-            return;
-        }
-
-        if (count < 0)
-        {
-            if (Take(hero.Army, creature, -count))
-            {
-                events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-            }
-
-            return;
-        }
-
-        var stack = new CreatureStack(creature, count);
-        if (hero.Army.TryAdd(stack))
-        {
-            events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-            return;
-        }
-
-        var all = hero.Army.Stacks.Select(s => s.Stack).Append(stack).ToList();
-        if (state.GetPlayer(hero.Owner).IsHuman)
-        {
-            Ask(run, new MapEventArmyDecision(hero.Id, all));
-            return;
-        }
-
-        Refill(hero.Army, all.OrderByDescending(s => (long)s.Count * state.Creatures.Get(s.Creature).Health).Take(Army.SlotCount));
-        events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
-    }
-
-    /// <summary>Creatures for a town event's garrison; those without room are lost.</summary>
-    private void GiveGarrison(Town town, string creature, int count)
-    {
-        var changed = count switch
-        {
-            > 0 when state.Creatures.Contains(creature) => town.Garrison.TryAdd(new CreatureStack(creature, count)),
-            < 0 => Take(town.Garrison, creature, -count),
-            _ => false,
-        };
-        if (changed)
-        {
-            events.Publish(new GarrisonChanged(town.Id, town.Garrison.Slots.ToList()));
-        }
-    }
-
-    /// <summary>Takes up to <paramref name="count"/> of the creature from the army, last stack first; false when it has none.</summary>
-    private static bool Take(Army army, string creature, int count)
-    {
-        var taken = false;
-        foreach (var (slot, stack) in army.Stacks.Where(s => s.Stack.Creature == creature).Reverse().ToList())
-        {
-            if (count <= 0)
-            {
-                break;
-            }
-
-            var removed = Math.Min(count, stack.Count);
-            army.Set(slot, stack.Count == removed ? null : new CreatureStack(creature, stack.Count - removed));
-            count -= removed;
-            taken = true;
-        }
-
-        return taken;
-    }
-
-    private static void Refill(Army army, IEnumerable<CreatureStack> stacks)
+    /// <summary>Empties the army and fills it with the stacks, in order.</summary>
+    internal static void Refill(Army army, IEnumerable<CreatureStack> stacks)
     {
         var kept = stacks.ToList();
         for (var slot = 0; slot < Army.SlotCount; slot++)
@@ -689,137 +402,15 @@ public sealed class MapEventService(
         }
     }
 
-    /// <summary>
-    /// Builds a town building, or a line's dwelling, up to <paramref name="level"/> (EVT-4 a): no cost, no day's build, and every requirement
-    /// built first.
-    /// </summary>
-    private void Build(Town town, string building, int level, int depth = 0)
-    {
-        if (depth > 32)
-        {
-            return;
-        }
-
-        var catalog = TownRules.Buildings(state, town);
-        if (TownRules.LineOf(state, town, building) is { } line && line.Id == building)
-        {
-            var dwelling = BuiltInBuildings.Dwelling(line.Tier);
-            var top = Math.Min(level, line.UpgradesTo is null ? 1 : catalog.MaxLevel(dwelling));
-            for (var l = town.DwellingLevel(line.Id) + 1; l <= top; l++)
-            {
-                BuildRequirements(town, catalog.Get(dwelling, l), depth);
-                _construction.RaiseDwelling(town, line, l);
-            }
-
-            return;
-        }
-
-        if (BuiltInBuildings.DwellingTier(building) is { } tier)
-        {
-            // A requirement on a tier ("dwelling-3"): the town's first line of that tier.
-            if (TownRules.Lines(state, town).Where(l => l.Tier == tier).OrderBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault() is { } first)
-            {
-                Build(town, first.Id, level, depth + 1);
-            }
-
-            return;
-        }
-
-        if (!catalog.Contains(building))
-        {
-            return;
-        }
-
-        for (var l = town.Level(building) + 1; l <= Math.Min(level, catalog.MaxLevel(building)); l++)
-        {
-            BuildRequirements(town, catalog.Get(building, l), depth);
-            _construction.Raise(town, building, l);
-        }
-    }
-
-    private void BuildRequirements(Town town, BuildingLevel level, int depth)
-    {
-        foreach (var requirement in level.Requires.Where(r => TownRules.Level(state, town, r.Building) < r.Level))
-        {
-            Build(town, requirement.Building, requirement.Level, depth + 1);
-        }
-    }
-
-    /// <summary>A roster hero joins the player (EVT-4 c): not when it is in play or the player has as many heroes as it may.</summary>
-    private void GiveHero(MapEventRun run, PlayerId owner, GiveHeroAction give, Hero? near, Town? town)
-    {
-        if (!state.HeroRoster.Contains(give.Hero) || state.HeroLimitReached(owner) || InPlay(give.Hero))
-        {
-            return;
-        }
-
-        var target = give.X is { } x && give.Y is { } y ? new MapPosition(x, y, give.Level) : near?.Position ?? town?.VisitPosition;
-        if (target is not { } around || FreeCellNear(around) is not { } position)
-        {
-            return;
-        }
-
-        // Given in the middle of a turn, it moves next turn, like a prisoner.
-        var joined = recruits.Join(owner, position, state.HeroRoster.Get(give.Hero), Math.Max(0, give.Experience), movesToday: run.StartOfTurn);
-        run.Place = joined.Position;
-        events.Publish(new MapEventHeroGiven(joined.Id, owner, give.Hero, joined.Level));
-    }
-
-    private bool InPlay(string definition) =>
-        state.Heroes.Concat(state.GarrisonHeroes).Concat(state.RetiredHeroes).Any(h => h.Definition == definition)
-        || state.ObjectsOf<Objects.Prison>().Any(p => p.Hero == definition);
-
-    /// <summary>The place itself when a hero may stand there, else the first such neighbour.</summary>
-    private MapPosition? FreeCellNear(MapPosition around) =>
-        new[] { around }.Concat(DirectionExtensions.All.Select(around.Step))
-            .Cast<MapPosition?>()
-            .FirstOrDefault(p => MovementRules.CheckTile(state, p!.Value) == MoveResult.Moved && state.HeroAt(p.Value) is null && state.ObjectCellAt(p.Value) is null);
-
     // Expressions and conditions ------------------------------------------------------------------------------------
 
-    private Hero? HeroOf(MapEventRun run) => run.Hero is { } id ? state.Heroes.FirstOrDefault(h => h.Id == id) : null;
+    internal Hero? HeroOf(MapEventRun run) => run.Hero is { } id ? state.Heroes.FirstOrDefault(h => h.Id == id) : null;
 
-    private int Evaluate(MapEventRun run, EventExpr expr) => MapEventEvaluator.Evaluate(state, Scope(run), expr);
+    internal int Evaluate(MapEventRun run, EventExpr expr) => MapEventEvaluator.Evaluate(state, Scope(run), expr);
 
-    private bool Test(MapEventRun run, EventCondition condition) => MapEventEvaluator.Test(state, Scope(run), condition);
+    internal bool Test(MapEventRun run, EventCondition condition) => MapEventEvaluator.Test(state, Scope(run), condition);
 
     private EventScope Scope(MapEventRun run) => new(run.Player, HeroOf(run), run.Town);
-
-    /// <summary>A reward with its amounts drawn (a message shows them before they are given).</summary>
-    private EventAction Fix(MapEventRun run, EventAction action) => action switch
-    {
-        ResourceAction a => a with { Amount = new NumberExpr(Evaluate(run, a.Amount)) },
-        ExperienceAction a => a with { Amount = new NumberExpr(Evaluate(run, a.Amount)) },
-        PrimaryStatAction a => a with { Amount = new NumberExpr(Evaluate(run, a.Amount)) },
-        ManaAction a => a with { Amount = new NumberExpr(Evaluate(run, a.Amount)) },
-        MovementAction a => a with { Amount = new NumberExpr(Evaluate(run, a.Amount)) },
-        CreaturesAction a => a with { Count = new NumberExpr(Evaluate(run, a.Count)) },
-        AvailableCreaturesAction a => a with { Count = new NumberExpr(Evaluate(run, a.Count)) },
-        _ => action,
-    };
-
-    /// <summary>A message's line for a reward (amounts already drawn), or null for an action that shows nothing.</summary>
-    private string? Describe(EventAction action)
-    {
-        static string Signed(int value) => value >= 0 ? $"+{value}" : $"{value}";
-        static int Amount(EventExpr expr) => expr is NumberExpr number ? number.Value : 0;
-        return action switch
-        {
-            ResourceAction a => $"{Signed(Amount(a.Amount))} {a.Resource}",
-            ExperienceAction a => $"{Signed(Amount(a.Amount))} experience",
-            PrimaryStatAction a => $"{Signed(Amount(a.Amount))} {a.Stat}",
-            ManaAction a => $"{Signed(Amount(a.Amount))} mana",
-            MovementAction a => $"{Signed(Amount(a.Amount))} movement",
-            CreaturesAction a => $"{Signed(Amount(a.Count))} {(state.Creatures.TryGet(a.Creature, out var c) ? c.Name : a.Creature)}",
-            SkillAction a => $"{(BuiltInSkills.Contains(a.Skill) ? BuiltInSkills.Get(a.Skill).Name : a.Skill)} ({a.Level})",
-            ArtifactAction a => $"{(a.Take ? "−" : "+")} {(state.Artifacts.TryGet(a.Artifact, out var artifact) ? artifact.Name : a.Artifact)}",
-            WarMachineAction a => $"{(a.Take ? "−" : "+")} {a.Slot}",
-            SpellBookAction => "+ spell book",
-            SpellAction a => $"+ {(state.Spells.TryGet(a.Spell, out var spell) ? spell.Name : a.Spell)}",
-            MoraleAction a => string.Join(", ", new[] { a.Morale != 0 ? $"{Signed(a.Morale)} morale" : null, a.Luck != 0 ? $"{Signed(a.Luck)} luck" : null }.OfType<string>()),
-            _ => null,
-        };
-    }
 
     // Defeat records (EVT-3 e) --------------------------------------------------------------------------------------
 
@@ -857,5 +448,5 @@ public sealed class MapEventService(
         hero is { } id && state.Heroes.Concat(state.GarrisonHeroes).FirstOrDefault(h => h.Id == id) is { } found ? found.Owner : null;
 
     /// <summary>The last step of a quest stage's completion: the quest object moves on (not map data, so no map can hold it).</summary>
-    private sealed record AdvanceQuestAction(MapObjectId Site, int Stage) : EventAction;
+    internal sealed record AdvanceQuestAction(MapObjectId Site, int Stage) : EventAction;
 }

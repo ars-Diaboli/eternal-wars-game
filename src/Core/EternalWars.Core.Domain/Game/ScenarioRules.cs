@@ -1,7 +1,7 @@
 using System.Globalization;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Economy;
-using EternalWars.Core.Domain.Objects;
+using EternalWars.Core.Domain.Game.Conditions;
 using EternalWars.Core.Domain.Players;
 
 namespace EternalWars.Core.Domain.Game;
@@ -61,11 +61,11 @@ public sealed record ScenarioCondition(
     string? Artifact = null,
     int? Deadline = null)
 {
-    public bool IsVictory => Kind is ConditionKind.CaptureTown or ConditionKind.DefeatHero or ConditionKind.GatherResources or ConditionKind.SurviveUntilDay
-        or ConditionKind.CaptureObject or ConditionKind.ObtainArtifact or ConditionKind.ReleaseHero;
+    /// <summary>Whether it is a victory condition (its kind's handler, <see cref="ScenarioConditionHandlers"/>).</summary>
+    public bool IsVictory => ScenarioConditionHandlers.Find(Kind)?.IsVictory ?? false;
 
     /// <summary>Whether a deadline makes sense: every victory condition but surviving, which has its own day.</summary>
-    public bool CanHaveDeadline => IsVictory && Kind != ConditionKind.SurviveUntilDay;
+    public bool CanHaveDeadline => ScenarioConditionHandlers.Find(Kind)?.CanHaveDeadline ?? false;
 
     public static ScenarioCondition CaptureTown(MapObjectId town, PlayerId? player = null) => new(ConditionKind.CaptureTown, player, Town: town);
 
@@ -155,21 +155,7 @@ public sealed record ScenarioRules(
     /// <summary>A short sentence for a condition, for the editor and the game's result screen.</summary>
     public static string Describe(GameState state, ScenarioCondition condition)
     {
-        var what = condition.Kind switch
-        {
-            ConditionKind.CaptureTown => $"Capture {TownName(state, condition.Town)}",
-            ConditionKind.DefeatHero => $"Defeat {HeroName(state, condition.Hero)}",
-            ConditionKind.GatherResources => $"Gather {condition.Amount.ToString(CultureInfo.InvariantCulture)} {condition.Resource.ToString().ToLowerInvariant()}",
-            ConditionKind.SurviveUntilDay => $"Survive until day {condition.Day.ToString(CultureInfo.InvariantCulture)}",
-            ConditionKind.LoseTown => $"Lose {TownName(state, condition.Town)}",
-            ConditionKind.LoseHero => $"Lose {HeroName(state, condition.Hero)}",
-            ConditionKind.TimeLimit => $"Fail to win by day {condition.Day.ToString(CultureInfo.InvariantCulture)}",
-            ConditionKind.CaptureObject => $"Capture {ObjectName(state, condition.Target)}",
-            ConditionKind.ObtainArtifact => $"Obtain {ArtifactName(state, condition.Artifact)}",
-            ConditionKind.ReleaseHero => $"Release {PrisonerName(state, condition.Target)} from prison",
-            ConditionKind.LoseArtifact => $"Lose {ArtifactName(state, condition.Artifact)}",
-            _ => condition.Kind.ToString(),
-        };
+        var what = ScenarioConditionHandlers.Find(condition.Kind)?.Describe(state, condition) ?? condition.Kind.ToString();
         if (condition.Deadline is { } deadline)
         {
             what += $" by day {deadline.ToString(CultureInfo.InvariantCulture)}";
@@ -179,46 +165,16 @@ public sealed record ScenarioRules(
     }
 
     /// <summary>What a player achieved with a victory condition: the reason a game ended.</summary>
-    internal static string Achieved(GameState state, Player player, ScenarioCondition condition, string? heroName) => condition.Kind switch
-    {
-        ConditionKind.CaptureTown => $"{player.Name} captured {TownName(state, condition.Town)}.",
-        ConditionKind.DefeatHero => $"{player.Name} defeated {heroName ?? HeroName(state, condition.Hero)}.",
-        ConditionKind.GatherResources => $"{player.Name} gathered {condition.Amount.ToString(CultureInfo.InvariantCulture)} {condition.Resource.ToString().ToLowerInvariant()}.",
-        ConditionKind.CaptureObject => $"{player.Name} captured {ObjectName(state, condition.Target)}.",
-        ConditionKind.ObtainArtifact => $"{player.Name} obtained {ArtifactName(state, condition.Artifact)}.",
-        ConditionKind.ReleaseHero => $"{player.Name} released {heroName ?? "the prisoner"}.",
-        _ => $"{player.Name} survived until day {condition.Day.ToString(CultureInfo.InvariantCulture)}.",
-    };
+    internal static string Achieved(GameState state, Player player, ScenarioCondition condition, string? heroName) =>
+        ScenarioConditionHandlers.Find(condition.Kind)?.Achieved(state, player, condition, heroName) ?? ScenarioConditionHandler.Survived(player, condition);
 
     /// <summary>Why a defeat condition eliminated its player.</summary>
-    internal static string Lost(GameState state, ScenarioCondition condition, string? heroName) => condition.Kind switch
-    {
-        ConditionKind.LoseTown => $"Lost {TownName(state, condition.Town)}.",
-        ConditionKind.LoseHero => $"Lost {heroName ?? HeroName(state, condition.Hero)}.",
-        ConditionKind.LoseArtifact => $"Lost {ArtifactName(state, condition.Artifact)}.",
-        _ => $"Ran out of time (day {condition.Day.ToString(CultureInfo.InvariantCulture)}).",
-    };
+    internal static string Lost(GameState state, ScenarioCondition condition, string? heroName) =>
+        ScenarioConditionHandlers.Find(condition.Kind)?.Lost(state, condition, heroName) ?? ScenarioConditionHandler.OutOfTime(condition);
 
     /// <summary>Why a missed deadline eliminated a player (ADR-073).</summary>
     internal static string Missed(GameState state, ScenarioCondition condition) =>
         $"Missed the deadline: {Describe(state, condition with { Player = null })}.";
-
-    private static string TownName(GameState state, MapObjectId? id) =>
-        id is { } town && state.FindObject(town) is Towns.Town found ? found.Name : "a town";
-
-    private static string ObjectName(GameState state, MapObjectId? id) => id is { } target && state.FindObject(target) is { } found
-        ? found is Towns.Town town ? town.Name : $"the {found.Definition.Name} at {found.Position.X.ToString(CultureInfo.InvariantCulture)}, {found.Position.Y.ToString(CultureInfo.InvariantCulture)}"
-        : "an object";
-
-    private static string ArtifactName(GameState state, string? id) =>
-        id is not null && state.Artifacts.TryGet(id, out var artifact) ? artifact.Name : "an artifact";
-
-    /// <summary>The roster hero held in a prison, while the prison stands and its prisoner is known.</summary>
-    private static string PrisonerName(GameState state, MapObjectId? id) =>
-        id is { } prison && state.FindObject(prison) is Prison { Hero: { } hero } && state.HeroRoster.Contains(hero) ? state.HeroRoster.Get(hero).Name : "the prisoner";
-
-    private static string HeroName(GameState state, HeroId? id) =>
-        id is { } hero && state.Heroes.FirstOrDefault(h => h.Id == hero) is { } found ? found.Name : "a hero";
 }
 
 /// <summary>How a game ended (<see cref="GameState.Outcome"/>).</summary>
