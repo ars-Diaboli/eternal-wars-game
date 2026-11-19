@@ -60,6 +60,23 @@ public sealed class SaveFileStreamTests : IDisposable
         Assert.Equal(new UTF8Encoding(encoderShouldEmitUTF8Identifier: false).GetBytes(GameRecordSerializer.Serialize(record)), File.ReadAllBytes(path));
     }
 
+    /// <summary>A command the record format does not know, so writing a record that holds it fails part way.</summary>
+    private sealed record UnlistedCommand(PlayerId Player) : GameCommand(Player);
+
+    [Fact]
+    public void ASaveThatFailsPartWay_LeavesTheFileAtItsPathAsItWas()
+    {
+        var path = Path.Combine(_folder, "kept" + GameRecordSerializer.SaveExtension);
+        GameRecordSerializer.Save(SavedRecord(), path);
+        var before = File.ReadAllBytes(path);
+        var broken = LargeRecord(20_000) with { Commands = [.. LargeRecord(20_000).Commands, new UnlistedCommand(new PlayerId(0))] };
+
+        Assert.ThrowsAny<NotSupportedException>(() => GameRecordSerializer.Save(broken, path));
+
+        Assert.Equal(before, File.ReadAllBytes(path));
+        Assert.Equal([path], Directory.GetFiles(_folder));
+    }
+
     [Fact]
     public void Autosave_WritesTheSameFileAsSerializingItsRecord()
     {

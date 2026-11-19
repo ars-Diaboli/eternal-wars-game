@@ -627,6 +627,9 @@ public sealed class GameState
         _highestHeroId = Math.Max(_highestHeroId, hero.Id.Value);
     }
 
+    /// <summary>Rebuilds the tile → hero lookup on its next use: a hero's place was written past <see cref="Hero.Position"/>'s setter.</summary>
+    internal void ForgetHeroPlaces() => _heroAtMoves = -1;
+
     /// <summary>Recomputes what a hero's artifacts add (after anything changed what it wears).</summary>
     internal void RefreshArtifacts(Hero hero) =>
         hero.Bonus = ArtifactBonuses.Compute(Artifacts, hero.Artifacts) with { HomeTown = ProgressionService.TownOf(this, hero) };

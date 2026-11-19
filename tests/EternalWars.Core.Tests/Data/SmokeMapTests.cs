@@ -232,8 +232,8 @@ public class SmokeMapTests
     {
         var state = MapConverter.ToGameState(MapSerializer.Load(SmokeMap("arena.ewmap.json")));
 
-        Assert.Empty(MapValidator.Validate(state).Select(i => i.Message).Where(m =>
-            m.Contains("combat place", StringComparison.Ordinal) || m.Contains("meet on day 1", StringComparison.Ordinal) || m.Contains("after day 1", StringComparison.Ordinal)));
+        Assert.DoesNotContain(MapValidator.Validate(state).Select(i => i.Message), m =>
+            m.Contains("combat place", StringComparison.Ordinal) || m.Contains("meet on day 1", StringComparison.Ordinal) || m.Contains("after day 1", StringComparison.Ordinal));
         Assert.DoesNotContain(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error);
     }
 

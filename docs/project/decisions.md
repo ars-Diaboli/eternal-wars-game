@@ -3187,3 +3187,24 @@ to change. Map format **v41** (difficulty names); saves and the ranking file rea
 - **Adventure map**: the **calendar** (the date, the week's event) moves onto the **status bar, right of the resources**, in both side-panel
   modes *(proposal: the date short, the week's event in its hover text)*; the **"Turn: <player>" label goes**. End turn stays where
   ADR-204 put it.
+
+
+### ADR-226: Closing the refactoring plan (ADR-202 … ADR-224, 2026-11-19)
+**Status**: implemented (2026-11-19); tested. The codebase review and refactoring plan is archived in
+`docs/project/archive/refactoring-plan-2026-11.md`, with a table of how each phase was checked.
+
+- **Checked**: every plan item against the code, and the diffs of the twelve refactoring commits for bugs (one reviewer per phase). Phases
+  0–4 are done as the plan records them, except where noted below; no behaviour change was found in the per-kind handlers, the AI split,
+  the `GameHost` split, the battle guard outcomes, the decision steps or the caches of Phases 1–2.
+- **Fixed**:
+  - A LAN client's tile → hero lookup went stale: `ViewMirror` writes a hero's place by reflection, past `Hero.Position`'s setter, so
+    `GameState.HeroAt` kept the old tiles until a hero came or went (clicking one's own hero, route previews, cursors and panels were
+    wrong on the client). The mirror now tells the sink (`IViewSink.HeroChanged`), which drops the lookup. `LanGameTests` reproduces it.
+  - `GameRecordSerializer.Save` wrote straight into the target since ADR-224, so a record that failed part way (an unlisted command)
+    truncated a file already there (`sim record`, `sim game --record`). It now writes a `.part` file beside it and moves it over, deleting
+    it on failure. `SaveFileStreamTests` checks it.
+  - The three xUnit analyzer warnings; `AdventureAi.Explain`'s comment names `EW_SIM_EXPLAIN` (there is no `--explain`).
+- **Corrections to the record**: the AI keeps one cost map, for the last hero asked, not one per hero (ADR-205); the game app's `Main`
+  still holds some policy (ADR-222, see Left); `EventsPanel` was not split (ADR-223); `ViewMirror` copies heroes and objects already in the
+  view in place, by reflection, beside the sink (ADR-218).
+- **Left**: the roadmap's "Code health" section lists them.

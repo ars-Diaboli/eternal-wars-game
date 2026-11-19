@@ -252,8 +252,22 @@ public static class GameRecordSerializer
     /// <summary>Writes the record to a file (replacing it) as it serializes, without the whole text in memory first (<see cref="Write"/>).</summary>
     public static void Save(GameRecordDocument record, string path)
     {
-        using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-        Write(record, stream);
+        // Written beside the target and moved over it, so a save that fails part way leaves the file at the path as it was.
+        var temp = path + ".part";
+        try
+        {
+            using (var stream = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                Write(record, stream);
+            }
+
+            File.Move(temp, path, overwrite: true);
+        }
+        catch
+        {
+            File.Delete(temp);
+            throw;
+        }
     }
 
     /// <summary>Writes the record to <paramref name="stream"/> as UTF-8 JSON as it serializes: the bytes of <see cref="Serialize"/>'s text, without a byte order mark.</summary>

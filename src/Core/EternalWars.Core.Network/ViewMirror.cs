@@ -13,7 +13,8 @@ namespace EternalWars.Core.Network;
 /// <summary>
 /// The client's side of its view (ADR-193): puts what the host sent (<see cref="ViewUpdate"/>) into the client's <see cref="GameState"/> and
 /// publishes the events the host let through, so the views on this computer follow the game as they do on one computer. It changes the state
-/// only through the session's <see cref="IViewSink"/> (ADR-218).
+/// through the session's <see cref="IViewSink"/> (ADR-218), except that a hero or object already in the view takes the host's values in place
+/// (<see cref="StateCodec.CopyInto"/>), so the views that hold it follow; a hero copied so is reported to the sink (its place may have changed).
 /// </summary>
 /// <remarks>
 /// The views know heroes from the events that bring them onto the map; a hero that comes into sight is announced with
@@ -118,6 +119,7 @@ internal sealed class ViewMirror(GameState state, IViewSink sink, PlayerId viewe
         else if (old is not null)
         {
             StateCodec.CopyInto(old, hero);
+            sink.HeroChanged(old);
         }
         else
         {

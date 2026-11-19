@@ -76,6 +76,26 @@ public class LanGameTests
     }
 
     [Fact]
+    public void AHeroMovedByTheHost_IsFoundOnItsNewTile_InTheClientsView()
+    {
+        var (session, host) = HostGame(Create("A...B"), remote: [Blue]);
+        var client = Join(host);
+        var view = client.Session!.State;
+
+        Assert.True(client.Session.Execute(new StepHeroCommand(Blue, A, Direction.East)).IsSent);
+        host.Poll();
+        Assert.Equal(new MapPosition(1, 0), session.State.GetHero(A).Position);
+
+        // The client looks before the host's update reaches it, so its lookup is built after the host's move but from the old places.
+        Assert.Equal(A, view.HeroAt(new MapPosition(0, 0))?.Id);
+        Pump(host, client);
+
+        Assert.Equal(new MapPosition(1, 0), view.GetHero(A).Position);
+        Assert.Equal(A, view.HeroAt(new MapPosition(1, 0))?.Id);
+        Assert.Null(view.HeroAt(new MapPosition(0, 0)));
+    }
+
+    [Fact]
     public void AnEnemyHero_ComesIntoTheView_WhenSeen_AndLeavesItWhenOutOfSight()
     {
         var (session, host) = HostGame(Create(Refog, "A...........B"), remote: [Red]);
