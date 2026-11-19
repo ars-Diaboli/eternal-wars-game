@@ -7,7 +7,7 @@ using EternalWars.Core.Domain.Players;
 namespace EternalWars.Core.Domain.Game.Conditions;
 
 /// <summary>
-/// The defaults of a <see cref="IScenarioConditionHandler"/>: a deadline for every victory, never holding, the tracked hero's name, the ends of
+/// The defaults of a <see cref="IScenarioConditionHandler"/>: a deadline for every victory, nothing to track, never holding, the tracked hero's name, the ends of
 /// surviving and of a time limit, no issue; and the names the sentences use.
 /// </summary>
 internal abstract class ScenarioConditionHandler : IScenarioConditionHandler
@@ -21,6 +21,8 @@ internal abstract class ScenarioConditionHandler : IScenarioConditionHandler
     public virtual bool DefeatsEveryone => false;
 
     public abstract string Describe(GameState state, ScenarioCondition condition);
+
+    public virtual ScenarioTracking Track(GameState state, ScenarioCondition condition, ScenarioTracking tracking) => tracking;
 
     public virtual bool WonBy(GameState state, ScenarioCondition condition, Player player) => false;
 

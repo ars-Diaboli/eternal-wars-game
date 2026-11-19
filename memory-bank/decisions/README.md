@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-232.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-233.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -258,3 +258,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [229](multiplayer.md#adr-229-the-schema-hash-leaves-out-the-runtimes-fields-and-carries-enum-numbers-adr-218-adr-226-2026-11-19) | multiplayer | The schema hash leaves out the runtime's fields and carries enum numbers (ADR-218, ADR-226, 2026-11-19) | implemented |
 | [230](multiplayer.md#adr-230-a-tcp-link-reads-and-writes-on-threads-of-its-own-adr-228-2026-11-19) | multiplayer | A TCP link reads and writes on threads of its own (ADR-228, 2026-11-19) | implemented |
 | [231](architecture.md#adr-231-the-game-apps-remaining-policy-moves-to-core-autosave-rematch-a-saves-seats-lan-rules-replay-recovery-the-maps-focus-adr-222-adr-226-2026-11-19) | architecture | The game app's remaining policy moves to core: autosave, rematch, a save's seats, LAN rules, replay recovery, the map's focus (ADR-222, ADR-226, 2026-11-19) | implemented |
+| [232](architecture.md#adr-232-code-health-continue-falls-back-to-a-save-that-loads-the-events-panel-refreshes-once-and-while-shown-every-ai-tuning-number-is-a-weight-leftover-cleanups-adr-220-adr-224-adr-226-2026-11-19) | architecture | Code health: Continue falls back to a save that loads, the events panel refreshes once and while shown, every AI tuning number is a weight, leftover cleanups (ADR-220, ADR-224, ADR-226, 2026-11-19) | implemented |

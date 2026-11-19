@@ -4,9 +4,10 @@ using EternalWars.Core.Domain.Players;
 namespace EternalWars.Core.Domain.Game.Conditions;
 
 /// <summary>
-/// What one <see cref="ConditionKind"/> means (ADR-057, ADR-073): whether it is a victory, when it holds for a player, how it reads, and what the
-/// validator says about it. The rules every kind shares (whom a condition applies to, deadlines, the order of the checks) are
-/// <see cref="GameFlowService"/>'s and <see cref="MapValidator"/>'s; the handler for a kind is <see cref="ScenarioConditionHandlers.For"/>.
+/// What one <see cref="ConditionKind"/> means (ADR-057, ADR-073): whether it is a victory, what the game remembers for it, when it holds for a
+/// player, how it reads, and what the validator says about it. The rules every kind shares (whom a condition applies to, deadlines, the order of
+/// the checks) are <see cref="GameFlowService"/>'s and the validator's rules check (<c>RulesCheck</c>); the handler for a kind is
+/// <see cref="ScenarioConditionHandlers.For"/>.
 /// </summary>
 internal interface IScenarioConditionHandler
 {
@@ -21,6 +22,12 @@ internal interface IScenarioConditionHandler
 
     /// <summary>Whether, as a defeat condition without a player, it applies to every player (else to none).</summary>
     bool DefeatsEveryone { get; }
+
+    /// <summary>
+    /// What the game remembers for the condition before each check (<see cref="ScenarioTracking"/>), from <paramref name="tracking"/>: what the
+    /// map may lose before the condition is judged (a prison's hero, ADR-232); <paramref name="tracking"/> itself when nothing.
+    /// </summary>
+    ScenarioTracking Track(GameState state, ScenarioCondition condition, ScenarioTracking tracking);
 
     /// <summary>The condition in a few words, without its player or deadline.</summary>
     string Describe(GameState state, ScenarioCondition condition);

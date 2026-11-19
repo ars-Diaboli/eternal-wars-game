@@ -6,7 +6,8 @@ namespace EternalWars.Core.Domain.AI;
 /// <summary>
 /// The numbers the adventure AI weighs its choices with: target values in gold, the losses and dangers it accepts, the cushions it keeps and
 /// how much it searches. <see cref="Default"/> is how the AI plays; the simulator overrides single weights by name to tune them
-/// (<see cref="With(string, string)"/>).
+/// (<see cref="With(string, string)"/>). Every tuning number of the adventure AI is here, none inline in its parts (ADR-232); no weight is
+/// negative.
 /// </summary>
 public sealed record AiWeights
 {
@@ -29,6 +30,12 @@ public sealed record AiWeights
 
     /// <summary>How much a target's value falls per tile of distance when the candidates are ranked: value / (1 + penalty × distance).</summary>
     public double DistancePenalty { get; init; } = 0.08;
+
+    /// <summary>
+    /// A guarded target is a candidate only when the hero's army power is at least this % of its guard's: a loose filter on the power sum
+    /// before the fight is played out.
+    /// </summary>
+    public int PlausiblePercent { get; init; } = 70;
 
     // Fights and danger --------------------------------------------------------------------------------
 
@@ -79,6 +86,33 @@ public sealed record AiWeights
     /// <summary>What getting a Quest Guard out of the way is worth on its own (more when unexplored ground is behind it).</summary>
     public double GuardOpened { get; init; } = 500;
 
+    /// <summary>An artifact to pick up (also one in a Pandora's Box or given by an event), in gold, before <see cref="ArtifactScoreValue"/>.</summary>
+    public double ArtifactValue { get; init; } = 800;
+
+    /// <summary>What each point of an artifact's score for the hero adds to <see cref="ArtifactValue"/>.</summary>
+    public double ArtifactScoreValue { get; init; } = 80;
+
+    /// <summary>Each artifact a creature bank gives, in gold (beside its resources).</summary>
+    public double BankArtifactValue { get; init; } = 1500;
+
+    /// <summary>A treasure chest, in gold.</summary>
+    public double ChestValue { get; init; } = 1500;
+
+    /// <summary>The share of their value that creatures in a Pandora's Box count for, where they fit in the hero's army (ADR-100).</summary>
+    public double BoxCreatureShare { get; init; } = 0.85;
+
+    /// <summary>
+    /// The troops waiting in an own town (its garrison and the creatures the gold buys there) call a hero home when they reach this % of its
+    /// army power (ADR-114).
+    /// </summary>
+    public int TroopsTripPercent { get; init; } = 60;
+
+    /// <summary>The share of the troops waiting in a town that the trip is worth, at most the hero's army power (and at least <see cref="TroopsTripFloor"/>).</summary>
+    public double TroopsTripShare { get; init; } = 0.3;
+
+    /// <summary>The army power a hero's own is taken to be at least, for <see cref="TroopsTripShare"/>: a hero without an army still fetches troops.</summary>
+    public long TroopsTripFloor { get; init; } = 1000;
+
     /// <summary>A skill level bought at a school, in gold (beside a level-up's worth).</summary>
     public double LessonValue { get; init; } = 1200;
 
@@ -92,6 +126,24 @@ public sealed record AiWeights
 
     /// <summary>Gold kept after buying a war machine or a spell book: creatures and buildings come first.</summary>
     public int WarMachineCushion { get; init; } = 1500;
+
+    /// <summary>Gold kept after paying gold to train (a Gazebo, a Tree of Knowledge, a training site's gold price).</summary>
+    public int TrainingCushion { get; init; } = 3000;
+
+    /// <summary>Spending at a map object (a school, a Cartographer) keeps this part of the gold back: 3 keeps a third (at least 1).</summary>
+    public int KeptGoldPart { get; init; } = 3;
+
+    /// <summary>A Cartographer's map is bought when the gold is at least this many times its price.</summary>
+    public int CartographerGoldTimes { get; init; } = 3;
+
+    /// <summary>A building is saved for when its gold comes within this many days of income (else its resources may be bought).</summary>
+    public int BuildGoldDays { get; init; } = 3;
+
+    /// <summary>A building is saved for when each resource other than gold comes within this many days of income.</summary>
+    public int BuildResourceDays { get; init; } = 7;
+
+    /// <summary>The most heroes a player hires: one more than its towns, up to this.</summary>
+    public int MostHeroes { get; init; } = 4;
 
     /// <summary>The most of the gold (on hand plus <see cref="SavingDays"/> days of income) a marketplace trade may take (ADR-189).</summary>
     public int TradeTreasuryPercent { get; init; } = 50;
@@ -127,7 +179,7 @@ public sealed record AiWeights
 
     /// <summary>
     /// A copy with the named weight set to <paramref name="value"/> (invariant culture). Throws <see cref="FormatException"/> for an unknown
-    /// name (case-sensitive) or a value that is not a number of the weight's type.
+    /// name (case-sensitive), a value that is not a number of the weight's type, or a negative one (ADR-232).
     /// </summary>
     public AiWeights With(string name, string value)
     {
@@ -135,10 +187,10 @@ public sealed record AiWeights
             ?? throw new FormatException($"'{name}' is not an AI weight ({string.Join(", ", Names)}).");
         object parsed = property.PropertyType switch
         {
-            var t when t == typeof(int) && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) => (object)i,
-            var t when t == typeof(long) && long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l) => (object)l,
-            var t when t == typeof(double) && double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && double.IsFinite(d) => (object)d,
-            _ => throw new FormatException($"'{value}' is not a value for the AI weight {name} ({property.PropertyType.Name})."),
+            var t when t == typeof(int) && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) && i >= 0 => (object)i,
+            var t when t == typeof(long) && long.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var l) && l >= 0 => (object)l,
+            var t when t == typeof(double) && double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && double.IsFinite(d) && d >= 0 => (object)d,
+            _ => throw new FormatException($"'{value}' is not a value for the AI weight {name} (a {property.PropertyType.Name} of 0 or more)."),
         };
         var copy = this with { };
         property.SetValue(copy, parsed);

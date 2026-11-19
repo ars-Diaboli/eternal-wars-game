@@ -103,6 +103,20 @@ public static class UiTheme
     /// <summary>A wrapping note in the inspector (the arena place).</summary>
     public const int InspectorNoteWidth = 300;
 
+    // The chat over the map in a LAN game (ADR-194): its place in the bottom-left corner, above the status bar.
+
+    /// <summary>The map chat's distance from the screen's left edge.</summary>
+    public const int MapChatLeft = 8;
+
+    /// <summary>The map chat's size.</summary>
+    public static readonly Vector2 MapChatSize = new(380, 150);
+
+    /// <summary>The map chat's distance from the screen's bottom edge: the status bar is below it.</summary>
+    public const int MapChatBottom = 40;
+
+    /// <summary>The map chat's lines' see-through ground.</summary>
+    public static readonly Color MapChatBackground = new(Background, 0.55f);
+
     /// <summary>A flat box of <paramref name="background"/> framed in <paramref name="border"/>, <paramref name="padding"/> inside.</summary>
     public static StyleBoxFlat Box(Color background, Color border, int padding, int borderWidth = 1)
     {

@@ -294,7 +294,7 @@ marketplaces; *(proposal)* marks the agent's numbers, for play-testing.
 - **Checked** by `BattleEstimatorTests` (outcomes, the key, the bound) and the A/B digests.
 
 ### ADR-220: The adventure AI is a coordinator of parts, with tunable weights (ADR-059, ADR-119, 2026-11-19)
-**Status**: implemented. No rule change; the AI plays as before.
+**Status**: implemented; extended by ADR-232 (the numbers still inline became weights; no negative weight). No rule change; the AI plays as before.
 
 - **Why**: `AdventureAi` had grown to about 2,500 lines in one class, and the numbers it weighs with were literals spread through it.
 - **Parts** (internal, in `AI/`), sharing an `AiContext` (the session, the estimator, the weights, the commands issued, the turn's main hero

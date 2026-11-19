@@ -5,6 +5,7 @@ using EternalWars.Core.Domain.Armies;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Game;
+using EternalWars.Core.Domain.Game.Conditions;
 using EternalWars.Core.Domain.Objects;
 using EternalWars.Core.Domain.Scenarios;
 using static EternalWars.Core.Tests.TestWorld;
@@ -55,6 +56,24 @@ public class ScenarioTrackingTests
 
         Assert.Equal(prison.Hero, state.Tracking.Prisoners[prison.Id]);
         Assert.Contains($"prisoners {prison.Id.Value}:{prison.Hero}\n", GameStateDigest.Describe(state), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TheReleaseHeroHandler_TracksThePrisoner_AndOtherKindsTrackNothing()
+    {
+        // ADR-232: what a kind remembers is its handler's, not the game flow's.
+        var state = Create("......", "......", "...A..", "......", ".....B");
+        var prison = Add<Prison>(state, BuiltInMapObjects.Prison, 2, 1);
+        prison.Hero = "Prisoner";
+        var release = ScenarioCondition.ReleaseHero(prison.Id);
+        var handler = ScenarioConditionHandlers.For(release.Kind);
+
+        var tracked = handler.Track(state, release, ScenarioTracking.None);
+
+        Assert.Equal("Prisoner", tracked.Prisoners[prison.Id]);
+        Assert.Same(tracked, handler.Track(state, release, tracked)); // nothing new: the same tracking
+        Assert.Same(ScenarioTracking.None, handler.Track(state, ScenarioCondition.ReleaseHero(new MapObjectId(999)), ScenarioTracking.None));
+        Assert.Same(ScenarioTracking.None, ScenarioConditionHandlers.For(ConditionKind.DefeatHero).Track(state, ScenarioCondition.DefeatHero(B), ScenarioTracking.None));
     }
 
     [Fact]

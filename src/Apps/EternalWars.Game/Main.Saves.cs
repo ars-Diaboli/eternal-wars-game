@@ -224,43 +224,49 @@ public partial class Main
     /// </summary>
     private void Load(string path, bool ask)
     {
-        if (LoadSave(path, out var error) is not { } loaded)
+        if (GameSaves.TryLoad(path, GameContent.All, out var error) is not { } loaded)
         {
             _menu.SetMessage($"Could not load: {error}");
             return;
         }
 
-        if (ask && SavedGameStart.AsksWhoPlays(loaded.Session.State))
+        GoOn(loaded, ask);
+    }
+
+    /// <summary>
+    /// The main menu's Continue: the newest save that loads (ADR-232). The newer ones that did not are named on the status line or the saved-game
+    /// screen; when none loads, the save menu opens and says why.
+    /// </summary>
+    private void Continue()
+    {
+        if (GameSaves.LoadNewest(GameSaves.List(_saveFolder), GameContent.All, out var skipped) is not { } loaded)
         {
-            ShowSavedGame(lan: null, loaded);
+            _menu.Open();
+            _menu.SetMessage($"Could not load: {SaveSlotText.Skipped(skipped)}");
             return;
         }
 
-        StartSaved(loaded, []);
+        GoOn(loaded, ask: true, SaveSlotText.Skipped(skipped));
     }
 
-    /// <summary>Replays a save; null (and why) when it does not load.</summary>
-    private static SavedGame? LoadSave(string path, out string error)
+    /// <summary>A loaded save goes on: with several people still in it the saved-game screen asks who plays them (<paramref name="ask"/>).</summary>
+    private void GoOn(LoadedSave loaded, bool ask, string note = "")
     {
-        try
+        if (ask && SavedGameStart.AsksWhoPlays(loaded.Session.State))
         {
-            var (session, record) = GameSaves.Load(path, GameContent.All);
-            error = "";
-            return new SavedGame(path, session, record);
+            ShowSavedGame(lan: null, loaded, note: note);
+            return;
         }
-        catch (Exception e) when (e is InvalidOperationException or FormatException or System.Text.Json.JsonException or IOException or KeyNotFoundException)
-        {
-            error = e.Message;
-            return null;
-        }
+
+        StartSaved(loaded, [], note);
     }
 
     /// <summary>
     /// The saved-game screen (ADR-196): a save and how each colour a person plays in it is played from now on: here, by the computer or, for a LAN
     /// host (<paramref name="lan"/>), by a LAN player. It shows <paramref name="loaded"/>, else loads the save picked. <paramref name="wire"/> joins a
-    /// LAN host's lobby to the screen before the first save is shown.
+    /// LAN host's lobby to the screen before the first save is shown; <paramref name="note"/> is shown with <paramref name="loaded"/>.
     /// </summary>
-    private void ShowSavedGame(LanHosting? lan, SavedGame? loaded, Action<SavedGameScreen>? wire = null)
+    private void ShowSavedGame(LanHosting? lan, LoadedSave? loaded, Action<SavedGameScreen>? wire = null, string note = "")
     {
         if (lan is null)
         {
@@ -276,7 +282,7 @@ public partial class Main
         var shown = loaded;
         screen.SaveChosen += path =>
         {
-            shown = LoadSave(path, out var error);
+            shown = GameSaves.TryLoad(path, GameContent.All, out var error);
             if (shown is null)
             {
                 screen.ShowMessage($"Could not load: {error}");
@@ -296,6 +302,10 @@ public partial class Main
         if (loaded is not null)
         {
             screen.ShowGame(ViewOfSave(loaded));
+            if (note.Length > 0)
+            {
+                screen.ShowMessage(note);
+            }
         }
         else
         {
@@ -304,7 +314,7 @@ public partial class Main
     }
 
     /// <summary>A loaded save as the saved-game screen shows it: the map and the save, the date and whose turn, the colours still in the game.</summary>
-    private static SavedGameView ViewOfSave(SavedGame saved)
+    private static SavedGameView ViewOfSave(LoadedSave saved)
     {
         var state = saved.Session.State;
         var lines = new List<string> { $"{state.Date}, {state.CurrentPlayer.Name}'s turn{(state.Battle is null ? "" : ", in a battle")}" };
@@ -322,9 +332,10 @@ public partial class Main
 
     /// <summary>
     /// Goes on with a loaded save: the colours <paramref name="seats"/> gives the computer are its from now on (a command, so the game's record keeps
-    /// it); a LAN host's lobby hands its players to the game, in the colours of LAN players.
+    /// it); a LAN host's lobby hands its players to the game, in the colours of LAN players. <paramref name="note"/> goes before the status line's
+    /// "Loaded".
     /// </summary>
-    private void StartSaved(SavedGame saved, IReadOnlyList<LanSeat> seats)
+    private void StartSaved(LoadedSave saved, IReadOnlyList<LanSeat> seats, string note = "")
     {
         var (path, session, record) = saved;
         var lobby = _lobby;
@@ -338,11 +349,8 @@ public partial class Main
         _generated = record.Generated;
         HostLobbyGame(session, lobby);
         BeginGame(session, record.Map, resume: true);
-        _status.Text = SaveSlotText.Loaded(path, record);
+        _status.Text = note.Length > 0 ? $"{note} {SaveSlotText.Loaded(path, record)}" : SaveSlotText.Loaded(path, record);
     }
-
-    /// <summary>A save, replayed to where it was saved.</summary>
-    private sealed record SavedGame(string Path, GameSession Session, GameRecordDocument Record);
 
     /// <summary>
     /// Puts the finished game into the ranking in the user data folder (ADR-101) under the names the winners typed; the table it went into, with

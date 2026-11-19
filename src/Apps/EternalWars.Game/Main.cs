@@ -130,12 +130,7 @@ public partial class Main : Node3D
         ShowSetup(menu, back: null);
         var latest = GameSaves.List(_saveFolder).FirstOrDefault(e => e.Info is not null);
         menu.ShowContinue(SaveSlotText.Continue(latest));
-        menu.ContinueRequested += () =>
-        {
-            // The menu shows why, if the save does not load; a load closes it.
-            _menu.Open();
-            Load(latest!.Path);
-        };
+        menu.ContinueRequested += Continue;
         menu.NewGameRequested += ShowNewGame;
         menu.LoadRequested += _menu.Open;
         menu.MultiplayerRequested += ShowMultiplayer;
@@ -377,14 +372,15 @@ public partial class Main : Node3D
         var playing = Playing;
 
         // The computer players and the clock are a LAN host's; a client only shows them (ADR-198).
-        _director = new GameDirector(session, _host is not null ? LanSeats.Of(_host) : _client is not null ? LanSeats.Of(_client) : null, watching: !playing);
-        _focus = new MapFocus(session, _director, watching: Watching);
+        // The views and handlers below hold this game's director, not the field: a callback after LeaveGame still finds it.
+        var director = _director = new GameDirector(session, _host is not null ? LanSeats.Of(_host) : _client is not null ? LanSeats.Of(_client) : null, watching: !playing);
+        _focus = new MapFocus(session, director, watching: Watching);
         _autosave = new AutosaveSchedule(session, watching: !playing);
         _menu.CanSave = playing; // a LAN client saves the host's record of the game (ADR-196)
         var state = session.State;
-        _context = new MapViewContext(state, _session.Events, playing ? _director.Viewer() : _replay!.Viewer(state))
+        _context = new MapViewContext(state, _session.Events, playing ? director.Viewer() : _replay!.Viewer(state))
         {
-            FogLook = _interface.Fog, ShowGrid = _interface.ShowGrid, PlaysElsewhere = PlaysElsewhere,
+            FogLook = _interface.Fog, ShowGrid = _interface.ShowGrid, PlaysElsewhere = director.PlaysElsewhere,
         };
 
         _world = new AdventureWorldView { Name = "World" };
@@ -400,10 +396,10 @@ public partial class Main : Node3D
 
         BuildHud();
         BuildChat();
-        BuildBattle();
+        BuildBattle(director);
         if (playing)
         {
-            BuildResult();
+            BuildResult(director);
             BuildTimer();
         }
         else
@@ -442,7 +438,7 @@ public partial class Main : Node3D
 
             // The map stays with the last human here, who watches the computer heroes it can see (ADR-090), or another computer's player; while
             // the computer's moves are shown, the turn waits for them.
-            if (_director!.TurnStarted(e.Player, ShowingComputerMoves))
+            if (director.TurnStarted(e.Player, ShowingComputerMoves))
             {
                 ShowTurn(e.Player);
             }
@@ -521,10 +517,10 @@ public partial class Main : Node3D
     private bool ShowingComputerMoves => _context is not null && _context.IsShowingComputer;
 
     /// <summary>The battle scene replaces the adventure map and its HUD while it is open.</summary>
-    private void BuildBattle()
+    private void BuildBattle(GameDirector director)
     {
         // A LAN game shows only the battles of this computer's players, each commanding its own side (ADR-195).
-        _battle = new BattleView3D { Watching = Watching, PlaysHere = _host is null && _client is null ? null : p => !PlaysElsewhere(p) };
+        _battle = new BattleView3D { Watching = Watching, PlaysHere = _host is null && _client is null ? null : p => !director.PlaysElsewhere(p) };
         _game!.AddChild(_battle);
         _battle.Bind(_session);
 
@@ -557,7 +553,7 @@ public partial class Main : Node3D
     /// <summary>
     /// The result screen of a won or lost game (ADR-057). A battle that decided the game is shown to its end first.
     /// </summary>
-    private void BuildResult()
+    private void BuildResult(GameDirector director)
     {
         var layer = new CanvasLayer { Name = "Result", Layer = 3 };
         _game!.AddChild(layer);
@@ -567,7 +563,7 @@ public partial class Main : Node3D
         _result.MainMenuRequested += ShowMainMenu;
         _result.PlayAgainRequested += PlayAgain;
         _result.CanPlayAgain = _client is null; // a LAN client's rematch is the host's to start (ADR-199)
-        _result.PlaysHere = PlaysHere;
+        _result.PlaysHere = director.PlaysHere;
 
         _hud.ReportGameFlow(); // the arena's day 2, defeats, a lost last town
         _game.SubscribeWhileInTree<GameEnded>(_session.Events, _ =>

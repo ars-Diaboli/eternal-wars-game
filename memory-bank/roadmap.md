@@ -297,20 +297,19 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       its live set
 - [x] Game app `Main` policy moved out (ADR-231): `AutosaveSchedule`, `GameRematch` (the seed a parameter), `SavedGameStart`,
       `LanAddress` / `LanListing` / `LanAccept`, `ReplayViews` and the diverged replay's recovery in `ReplayController`, `MapFocus`
-- [ ] Main-menu "Continue" offers a save whose commands no longer load (labels are read alone since ADR-224); fall back to the next one
-- [ ] `EventsPanel` rebuilds whole on every `UndoHistoryChanged`, unmerged; give it a `RefreshScheduler` or sections
+- [x] Main-menu "Continue" falls back to the newest save that loads and names the ones passed over (ADR-232)
+- [x] `EventsPanel` refreshes through a `RefreshScheduler`, once for a burst and not while its tab is hidden (`OnlyWhileShown`, ADR-232)
 - [ ] Smoke `game-battle-control` fails at frame 184 (no Surrender: the computer's stack is acting), before ADR-227 too; the smoke games draw
       a random seed, so their battles differ between runs (a fixed seed per scenario would make them repeatable)
-- [ ] AI tuning numbers still inline (`TargetValuer`, `TownManager`, `DecisionResponder`, `AiContext`: 0.85 creature share, the 0.7
-      power share, the +3000 gold cushion, the third of the gold kept, …) into `AiWeights`; `AiWeights.With` to refuse negative values
+- [x] AI tuning numbers left inline are `AiWeights` (15 more, ADR-232); `AiWeights.With` refuses negative values
 - [ ] Switches on the map-event action type left in Domain (`MapEventState.Expressions`, `MapEventText`, `TargetValuer.Events`) into
       the handlers, and a test that a handler of an action with an amount overrides `Fix`
 - [ ] Map-event `Answer` / `ChooseArmy` through `DecisionSteps.TakeDecision`; `PandorasBoxOpened` no longer carries the box's event
       for `MapEventService` to run (an event used as a request, ADR-214)
 - [ ] From the review, never planned: typed content ids; `InfoSheets` returning structured lines, not English text; `CheckRefusals`
       not a process-wide static; `ThirdCatalogue.Buyers` / `Stock` not public mutable collections
-- [ ] Small: `Main.Network`'s `_director!` delegates after `LeaveGame`; chat offsets as `UiTheme` tokens; `ConditionKind.ReleaseHero`
-      tested outside its handler (`GameFlowService`); `IScenarioConditionHandler`'s comment names `MapValidator`
+- [x] Small (ADR-232): the views hold the game's `GameDirector`; the map chat's place as `UiTheme` tokens; a prison tracked by the
+      "release hero" handler (`Track`); `IScenarioConditionHandler`'s comment
 
 ## Risks
 | Risk | Mitigation |

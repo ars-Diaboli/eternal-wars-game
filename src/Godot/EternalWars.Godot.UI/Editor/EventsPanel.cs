@@ -16,7 +16,8 @@ namespace EternalWars.Godot.UI.Editor;
 /// The editor's "Events" tab (ADR-115, EVT-6): the map's events in run order (new, from a simple form, up, down, delete), the chosen event's name,
 /// whether it starts enabled, its towns or cells, and its tree. A node of the tree is edited as the text the map file writes
 /// (<see cref="IMapEventNodeText"/>); actions come from a menu of templates (<see cref="MapEventTemplates"/>). Below: the map variables and the
-/// validator's findings for the event. Every change is an undoable <see cref="MapEditorSession"/> edit.
+/// validator's findings for the event. Every change is an undoable <see cref="MapEditorSession"/> edit. The panel is rebuilt once for a burst of
+/// edits, and not while its tab is hidden (ADR-232).
 /// </summary>
 public partial class EventsPanel : ScrollContainer
 {
@@ -27,6 +28,8 @@ public partial class EventsPanel : ScrollContainer
     private readonly Dictionary<ulong, Node> _nodes = [];
     private MapEditorSession _editor = null!;
     private IMapEventNodeText _nodeText = null!;
+    private RefreshScheduler _refresh = null!;
+    private IReadOnlyList<MapIssue> _issues = [];
     private string? _selected;
     private Node? _node;
     private string? _form;
@@ -53,8 +56,8 @@ public partial class EventsPanel : ScrollContainer
         (_editor, _nodeText) = (editor, nodeText);
         HorizontalScrollMode = ScrollMode.Disabled;
         AddChild(_box);
+        _refresh = new RefreshScheduler(this, Refresh).OnlyWhileShown().On<UndoHistoryChanged>(editor.Events);
         Refresh();
-        this.SubscribeWhileInTree<UndoHistoryChanged>(editor.Events, _ => Later());
     }
 
     /// <summary>Opens an event (the inspector's and the validator's links).</summary>
@@ -77,7 +80,7 @@ public partial class EventsPanel : ScrollContainer
         return _editor.MapEvents.SetCell(tile, existing?.Event == name ? null : name);
     }
 
-    private void Later() => Callable.From(Refresh).CallDeferred();
+    private void Later() => _refresh.Request();
 
     private void Refresh()
     {
@@ -86,6 +89,7 @@ public partial class EventsPanel : ScrollContainer
         _nodes.Clear();
         (_text, _textError) = (null, null);
         var set = _editor.Scenario.MapEvents.Set;
+        _issues = [.. MapValidator.Validate(_editor.Scenario).Where(i => i.Event is not null)];
         if (_selected is not null && set.Find(_selected) is null)
         {
             (_selected, _node) = (null, null);
@@ -115,12 +119,11 @@ public partial class EventsPanel : ScrollContainer
     private void ShowList(MapEventSet set)
     {
         Heading("Events (they run in this order)");
-        var issues = MapValidator.Validate(_editor.Scenario).Where(i => i.Event is not null).ToList();
         var list = new ItemList { CustomMinimumSize = new Vector2(0, 120), SizeFlagsHorizontal = SizeFlags.ExpandFill };
         _box.AddChild(list);
         foreach (var definition in set.Events)
         {
-            var mine = issues.Where(i => i.Event == definition.Name).ToList();
+            var mine = _issues.Where(i => i.Event == definition.Name).ToList();
             var index = list.AddItem(MapEventText.Describe(definition) + (mine.Count == 0 ? "" : $"  ⚠ {mine.Count}"));
             if (mine.Count > 0)
             {
@@ -218,7 +221,7 @@ public partial class EventsPanel : ScrollContainer
         ShowTree(definition);
         ShowNodeEditor(definition);
 
-        foreach (var issue in MapValidator.Validate(_editor.Scenario).Where(i => i.Event == name))
+        foreach (var issue in _issues.Where(i => i.Event == name))
         {
             _box.AddChild(new Label
             {

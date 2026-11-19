@@ -16,6 +16,16 @@ internal sealed class ReleaseHeroHandler : ScenarioConditionHandler
 
     public override string Describe(GameState state, ScenarioCondition condition) => $"Release {PrisonerName(state, condition.Target)} from prison";
 
+    /// <summary>
+    /// Who sits in the prison, while it stands: freeing the hero removes it, and a prisoner the map left open is drawn after the game begins
+    /// (<see cref="Objects.ObjectLifecycleService.PreparePrisons"/>).
+    /// </summary>
+    public override ScenarioTracking Track(GameState state, ScenarioCondition condition, ScenarioTracking tracking) =>
+        condition.Target is { } id && state.FindObject(id) is Prison { Hero: { } hero } && tracking.Prisoners.SetItem(id, hero) is var prisoners
+        && prisoners != tracking.Prisoners
+            ? tracking with { Prisoners = prisoners }
+            : tracking;
+
     public override bool WonBy(GameState state, ScenarioCondition condition, Player player) =>
         condition.Target is { } prison && state.FindObject(prison) is null && state.Tracking.Prisoners.TryGetValue(prison, out var prisoner)
         && state.Heroes.Any(h => h.Definition == prisoner && OwnTeam(state, h.Owner, player));

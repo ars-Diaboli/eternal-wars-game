@@ -8,16 +8,17 @@ the owner's missing-mechanics picks, the arena and LAN multiplayer are built. Th
 plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-232 (roadmap "Code health"): Continue loads the newest save that loads (`GameSaves.LoadNewest`); the events panel refreshes
+  once and only while shown (`RefreshScheduler.OnlyWhileShown`); 15 more `AiWeights`, none negative; a prison tracked by its condition's
+  handler; the views hold the game's `GameDirector`; the map chat's place as `UiTheme` tokens.
 - ADR-231 (roadmap "Code health"): the game app's remaining policy is core's: `AutosaveSchedule`, `MapFocus`, `GameRematch`,
   `SavedGameStart`, `LanAddress` / `LanListing` / `LanAccept`, `ReplayViews` and replay recovery in `ReplayController`; each tested.
-- ADR-229, the schema hash (roadmap "Code health"): runtime base types by name only, enums by names and numbers. ADR-230: a
-  `TcpConnection` reads and writes on two threads of its own; ADR-228's writer dropped a link idle for 30 seconds on its next send, and
-  its thread-pool timing made the TCP tests fail now and then.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).
 2. The remaining Phase 5 items in [roadmap.md](roadmap.md) ("Presentation and UI", "Platform and art", "Roster").
-3. The "Code health" list in [roadmap.md](roadmap.md): `ChangeStamp` and `SightOf`, AI weights, "Continue" on an unloadable save (ADR-226).
+3. The "Code health" list in [roadmap.md](roadmap.md): `ChangeStamp` and `SightOf`, the map-event action switches and requests, the
+   review's leftovers, fixed seeds for the smoke games (ADR-226).
 
 ## Known problems
 - Smoke scenario `game-battle-control` fails at frame 184 (no Surrender while the computer's stack acts); it failed before ADR-227 too.
