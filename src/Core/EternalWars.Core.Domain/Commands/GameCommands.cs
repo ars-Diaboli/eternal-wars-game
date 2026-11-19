@@ -29,6 +29,12 @@ public sealed record EndTurnCommand(PlayerId Player) : GameCommand(Player);
 public sealed record HandToComputerCommand(PlayerId Player) : GameCommand(Player);
 
 /// <summary>
+/// A person plays <paramref name="Player"/> from now on, a battle it starts included: the replay viewer taking over a battle only the computer
+/// fought, in a separate game (ADR-233). Given on the player's own turn; refused for a player a person plays already and for one that is out.
+/// </summary>
+public sealed record HandToPersonCommand(PlayerId Player) : GameCommand(Player);
+
+/// <summary>
 /// Today, a simultaneous day (MP-2, ADR-197), is played turn by turn from its start, and so is every day after it; given by the LAN host at the
 /// start of the day after a conflict (<paramref name="Reason"/>, which every player is told) took the day back.
 /// </summary>

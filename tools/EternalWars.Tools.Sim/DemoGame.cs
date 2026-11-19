@@ -13,10 +13,18 @@ namespace EternalWars.Tools.Sim;
 /// <summary>The demo scenario played by scripted heroes (<c>record</c>, <c>selftest</c>).</summary>
 internal static class DemoGame
 {
-    /// <summary>Every day each hero heads for the enemy's start; chests give gold, guards are fought, battles quick-resolved.</summary>
-    public static (MapDocument Map, GameSession Session) Play(SimContext sim, int days, ulong seed)
+    /// <summary>
+    /// Every day each hero heads for the enemy's start; chests give gold, guards are fought, battles quick-resolved. With
+    /// <paramref name="computerRed"/> the map makes Red a computer player, so the core fights its battles within the command that starts them.
+    /// </summary>
+    public static (MapDocument Map, GameSession Session) Play(SimContext sim, int days, ulong seed, bool computerRed = false)
     {
         var map = MapConverter.ToDocument(DemoScenario.Create());
+        if (computerRed)
+        {
+            map = map with { Players = map.Players.Select((p, i) => i == 1 ? p with { IsHuman = false } : p).ToList() };
+        }
+
         var session = new GameSession(MapConverter.ToGameState(map, sim.Content, new GameOptions(Seed: seed)));
         var state = session.State;
         session.Start();

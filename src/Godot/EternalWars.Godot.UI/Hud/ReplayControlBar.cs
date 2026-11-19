@@ -9,9 +9,13 @@ namespace EternalWars.Godot.UI.Hud;
 /// <param name="Day">The day being watched.</param>
 /// <param name="LastDay">The last day the record reaches.</param>
 /// <param name="InBattle">A battle is shown: "Skip to the result" is offered.</param>
-/// <param name="CanTakeOver">"Play from here" works now: in a battle, one a person commands; on the map, a game not over that a person still plays.</param>
+/// <param name="CanTakeOver">
+/// "Play from here" works now: in a battle, one a person commands or one only the computer fought; on the map, a game not over that a person still
+/// plays.
+/// </param>
 /// <param name="AtEnd">The record has been played to its last command.</param>
-public sealed record ReplayBarState(bool Playing, string Status, int Day, int LastDay, bool InBattle, bool CanTakeOver, bool AtEnd);
+/// <param name="FromTheStart">The battle shown is one only the computer fought: taking it over plays it again from its start (ADR-233).</param>
+public sealed record ReplayBarState(bool Playing, string Status, int Day, int LastDay, bool InBattle, bool CanTakeOver, bool AtEnd, bool FromTheStart = false);
 
 /// <summary>
 /// The replay viewer's controls along the bottom of the screen (ADR-101, ADR-164): play and pause (Space), the four speeds, next turn, next day,
@@ -142,8 +146,10 @@ public partial class ReplayControlBar : PanelContainer
         _takeOver.Disabled = !state.CanTakeOver;
         _takeOver.TooltipText = (state.InBattle, state.CanTakeOver) switch
         {
+            (true, true) when state.FromTheStart =>
+                "Play this battle again from its start, commanding the attacker, as a separate game that is not ranked; the replay stays as it is",
             (true, true) => "Play this battle on by hand, as a separate game that is not ranked; the replay stays as it is",
-            (true, false) => "Only a battle a person commands can be played on (the computer plays its own).",
+            (true, false) => "This battle cannot be played from this point (a battlefield width still to choose).",
             (false, true) => "Play the game on from here as your own game, like a loaded save; the replay stays as it is",
             _ => "Only a game that is not over, with a person still in it, can be played on.",
         };

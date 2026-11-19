@@ -13,8 +13,8 @@ namespace EternalWars.Game;
 /// The replay viewer's composition and input (ADR-101, ADR-164): the Replays and Saves tabs, then a <see cref="ReplayController"/> (ADR-222)
 /// wired to the same world, HUD and battle views as a game, watch-only, with <see cref="ReplayControlBar"/> along the bottom. Each frame, once
 /// the heroes' steps and the battle's animations have played, the controller runs the next command; a finished battle's result stays a moment.
-/// Jumps (next turn, next day, a day) rebuild the views on a session put at that point. "Play from here" plays a battle on by hand and comes
-/// back, or on the map leaves the viewer for a game of the player's own from that point.
+/// Jumps (next turn, next day, a day) rebuild the views on a session put at that point. "Play from here" plays a battle on by hand (one only the
+/// computer fought from its start, ADR-233) and comes back, or on the map leaves the viewer for a game of the player's own from that point.
 /// </summary>
 public partial class Main
 {
@@ -99,7 +99,7 @@ public partial class Main
         if (replay.IsTakingOver)
         {
             _battle.Closed += BackToReplay; // the battle is over and its result seen
-            _replayBar.SetStatus("Playing the battle on from the replay: a separate game, not ranked; the replay stays as it is.");
+            _replayBar.SetStatus(replay.TakeOverStatus);
         }
     }
 
@@ -148,7 +148,8 @@ public partial class Main
             replay.Player.LastDay,
             _battle.IsOpen,
             replay.CanPlayFromHere(_battle.IsOpen),
-            replay.Player.IsAtEnd));
+            replay.Player.IsAtEnd,
+            _battle.IsOpen && replay.Player.TakesOverFromTheStart));
     }
 
     /// <summary>Jumps to <paramref name="position"/> (a turn's or day's start), back or forward: the views are built again on a session put there.</summary>
@@ -199,9 +200,14 @@ public partial class Main
             return;
         }
 
-        if (replay.TakeOver() is { } session)
+        if (replay.TakeOver(out var problem) is { } session)
         {
             BeginGame(session, replay.Player.Record.Map, resume: true);
+        }
+        else if (problem is not null)
+        {
+            GD.PushWarning($"Replay viewer: {problem}");
+            _replayBar?.SetStatus($"This battle cannot be played: {problem}");
         }
     }
 

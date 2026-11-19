@@ -1,5 +1,6 @@
 using EternalWars.Core.Data.Maps;
 using EternalWars.Core.Domain.Battles;
+using EternalWars.Core.Domain.Commands;
 using EternalWars.Core.Domain.Common;
 using EternalWars.Core.Domain.Events;
 using EternalWars.Core.Domain.Game;
@@ -26,12 +27,22 @@ public sealed class ReplayPlayer
     private readonly Func<GameSession> _create;
     private readonly bool[] _inBattle;
 
-    private ReplayPlayer(GameRecordDocument record, Func<GameSession> create, IReadOnlyList<ReplayTurn> turns, bool[] inBattle)
+    /// <summary>Whether a battle a person commands a side of is being fought after a position: one that may be played on from there.</summary>
+    private readonly bool[] _commanded;
+
+    /// <summary>The battles only the computer fought, each within one command (ADR-233): the command's index and the attacker's player.</summary>
+    private readonly IReadOnlyDictionary<int, PlayerId> _computerBattles;
+
+    private ReplayPlayer(
+        GameRecordDocument record, Func<GameSession> create, IReadOnlyList<ReplayTurn> turns, bool[] inBattle, bool[] commanded,
+        IReadOnlyDictionary<int, PlayerId> computerBattles)
     {
         Record = record;
         _create = create;
         Turns = turns;
         _inBattle = inBattle;
+        _commanded = commanded;
+        _computerBattles = computerBattles;
         Session = Build(0);
     }
 
@@ -69,15 +80,28 @@ public sealed class ReplayPlayer
 
         var session = Create();
         var turns = new List<ReplayTurn>();
+        var computerBattles = new Dictionary<int, PlayerId>();
         var position = 0;
+        PlayerId? computerAttacker = null;
         using (session.Events.Subscribe<TurnStarted>(e => turns.Add(new ReplayTurn(position, e.Date, e.Player))))
+        using (session.Events.Subscribe<BattleStarted>(_ =>
+               {
+                   // A command's first battle, when nobody commands either side: the core fights it to its end within the command.
+                   if (computerAttacker is null && session.State.Battle is { Attacker: { IsComputer: true, Owner: { } attacker }, Defender.IsComputer: true })
+                   {
+                       computerAttacker = attacker;
+                   }
+               }))
         {
             session.Start();
             var inBattle = new bool[record.Commands.Count + 1];
+            var commanded = new bool[record.Commands.Count + 1];
             inBattle[0] = session.State.Battle is not null;
+            commanded[0] = Commanded(session);
             for (var i = 0; i < record.Commands.Count; i++)
             {
                 position = i + 1; // a turn that starts during this command starts after it
+                computerAttacker = null;
                 var result = session.Execute(record.Commands[i]);
                 if (!result.IsAccepted)
                 {
@@ -85,10 +109,15 @@ public sealed class ReplayPlayer
                 }
 
                 inBattle[i + 1] = session.State.Battle is not null;
+                commanded[i + 1] = Commanded(session);
+                if (computerAttacker is { } attacker && !inBattle[i + 1])
+                {
+                    computerBattles[i] = attacker;
+                }
             }
 
             record.CheckFinalDigest(session.State);
-            return new ReplayPlayer(record, Create, turns, inBattle);
+            return new ReplayPlayer(record, Create, turns, inBattle, commanded, computerBattles);
         }
     }
 
@@ -156,25 +185,72 @@ public sealed class ReplayPlayer
     }
 
     /// <summary>
-    /// Whether "Play from here" is offered (ADR-101, UI-2 f): only in a battle being fought, and only when a person commands a side of it (the
-    /// computer's sides are played by the core).
+    /// Whether "Play from here" is offered in a battle (ADR-101, UI-2 f): one being fought that a person commands a side of; one the last command
+    /// ended, in a battle a person commanded (quick combat, <see cref="TakesOverBeforeItsEnd"/>) or a battle only the computer
+    /// fought (<see cref="TakesOverFromTheStart"/>, ADR-233).
     /// </summary>
-    public bool CanTakeOver =>
-        Session.State.Battle is { Phase: BattlePhase.Fighting or BattlePhase.Deploying }
-        && (Session.Battles.Commander(BattleSide.Attacker) ?? Session.Battles.Commander(BattleSide.Defender)) is not null;
+    public bool CanTakeOver => CanTakeOverInProgress || TakesOverBeforeItsEnd || TakesOverFromTheStart;
 
     /// <summary>
-    /// A separate game at the current point, to play the battle on by hand: replayed from the record to <see cref="Position"/>. Playing it
-    /// changes neither the record nor the watched session. Throws when <see cref="CanTakeOver"/> is false.
+    /// Whether the battle to take over is one a person commanded that the last command ended (quick combat playing it out, or its last blow,
+    /// ADR-233): taking it over goes on from just before that command.
+    /// </summary>
+    public bool TakesOverBeforeItsEnd => Session.State.Battle is null && Position > 0 && _commanded[Position - 1];
+
+    /// <summary>
+    /// Whether the battle to take over is one only the computer fought, in the last command played (ADR-233): it has no point between its moves
+    /// to go on from, so taking it over plays it again from its start, a person commanding the attacker.
+    /// </summary>
+    public bool TakesOverFromTheStart => Session.State.Battle is null && _computerBattles.ContainsKey(Position - 1);
+
+    /// <summary>The player a person commands in a battle taken over from its start (<see cref="TakesOverFromTheStart"/>); null otherwise.</summary>
+    public PlayerId? TakeOverAttacker => TakesOverFromTheStart ? _computerBattles[Position - 1] : null;
+
+    private bool CanTakeOverInProgress => Commanded(Session);
+
+    private static bool Commanded(GameSession session) =>
+        session.State.Battle is { Phase: BattlePhase.Fighting or BattlePhase.Deploying }
+        && (session.Battles.Commander(BattleSide.Attacker) ?? session.Battles.Commander(BattleSide.Defender)) is not null;
+
+    /// <summary>
+    /// A separate game at the current point, to play the battle on by hand: replayed from the record to <see cref="Position"/>, or to just
+    /// before the command that ended it (<see cref="TakesOverBeforeItsEnd"/>). A battle only the computer fought (<see cref="TakesOverFromTheStart"/>) starts again instead: the game is replayed to the command that fought it, a person
+    /// plays the attacker's player from then on (<see cref="HandToPersonCommand"/>) and that command runs again, so the battle waits for the
+    /// person; a battlefield width the person may now choose is the one the computer fought on. Playing it changes neither the record nor the
+    /// watched session. Throws when <see cref="CanTakeOver"/> is false, or when the command no longer starts a battle the person commands.
     /// </summary>
     public GameSession TakeOver()
     {
-        if (!CanTakeOver)
+        if (CanTakeOverInProgress)
         {
-            throw new InvalidOperationException("Play from here works only in a battle a person commands.");
+            return Build(Position);
         }
 
-        return Build(Position);
+        if (TakesOverBeforeItsEnd)
+        {
+            return Build(Position - 1);
+        }
+
+        if (TakeOverAttacker is not { } attacker)
+        {
+            throw new InvalidOperationException("Play from here works only in a battle a person commands, or one only the computer fought.");
+        }
+
+        var position = Position - 1;
+        var session = Build(position);
+        session.Execute(new HandToPersonCommand(attacker)).ThrowIfRejected();
+        session.Execute(Record.Commands[position]).ThrowIfRejected();
+        if (session.State.Battle is { Phase: BattlePhase.ChoosingWidth, WidthChooser: { } side } && session.Battles.Commander(side) is { } chooser)
+        {
+            session.Execute(new ChooseBattleWidthCommand(chooser, BattleState.DefaultWidth)).ThrowIfRejected();
+        }
+
+        if (session.State.Battle is not { Phase: BattlePhase.Fighting or BattlePhase.Deploying } || session.Battles.Commander(BattleSide.Attacker) != attacker)
+        {
+            throw new InvalidOperationException("The computer's battle does not start again for a person here.");
+        }
+
+        return session;
     }
 
     /// <summary>

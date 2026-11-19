@@ -26,6 +26,7 @@
 | [201](#adr-201-the-new-game-screen-has-tabs-by-kind-of-map-adr-086-adr-097-adr-101-adr-163-2026-11-17) | The new-game screen has tabs by kind of map (ADR-086, ADR-097, ADR-101, ADR-163, 2026-11-17) | implemented |
 | [225](#adr-225-the-new-game-screens-options-tidied-difficulty-as-five-chess-pieces-the-calendar-on-the-status-bar-adr-063-adr-101-adr-201-adr-204-owner-notes-2026-11-19) | The new-game screen's options tidied; difficulty as five chess pieces; the calendar on the status bar (ADR-063, ADR-101, ADR-201, ADR-204, owner notes, 2026-11-19) | accepted |
 | [227](#adr-227-building-adr-225-old-difficulty-names-player-colours-and-the-new-game-screens-players-adr-225-2026-11-19) | Building ADR-225: old difficulty names, player colours and the new-game screen's players (ADR-225, 2026-11-19) | accepted |
+| [233](#adr-233-the-replay-viewer-takes-over-a-battle-played-in-one-command-the-computers-from-its-start-quick-combat-from-just-before-it-adr-164-adr-185-2026-11-19) | The replay viewer takes over a battle played in one command: the computer's from its start, quick combat from just before it (ADR-164, ADR-185, 2026-11-19) | implemented |
 
 
 ### ADR-057: Victory and defeat
@@ -382,7 +383,8 @@ ADR-158).
   the arena (ADR-097's "not shown" for players and towns); the shipped arena maps.
 
 ### ADR-164: The replay viewer (ADR-101, UI-2, 2026-11-10)
-**Status**: implemented (2026-11-10); core tested, the Godot parts run in two smoke scenarios. Carries out ADR-101's viewer. *(choice)* marks the
+**Status**: implemented (2026-11-10); core tested, the Godot parts run in two smoke scenarios; a battle only the computer fights is taken over
+since ADR-233. Carries out ADR-101's viewer. *(choice)* marks the
 agent's choices.
 
 - **Core** (`ReplayPlayer`, Core.Data): `Open` replays the whole record once, so a record that does not replay (a refused command, another
@@ -554,3 +556,32 @@ to change. Map format **v41** (difficulty names); saves and the ranking file rea
   - The town and colour choices open a panel under their button, in the screen's own layer, so the status bar names what the pointer is over.
   - Until the difficulty pieces are drawn, the level's name stands in on its button; the victory screen and the leaderboard then show the
     name alone.
+
+### ADR-233: The replay viewer takes over a battle played in one command: the computer's from its start, quick combat from just before it (ADR-164, ADR-185, 2026-11-19)
+**Status**: implemented (2026-11-19); core tested, the Godot part runs in two smoke scenarios. Carries out what ADR-164 and ADR-185 left
+("taking over a battle only the computer fights"). *(choice)* marks the agent's choices.
+
+- **Why it was not offered**: the core fights a battle nobody commands within the command that starts it (a computer hero's move), and
+  quick combat plays a person's battle out in one command; the viewer then shows the battle move by move from its events, but the record
+  has no point between those moves to go on from.
+- **A battle only the computer fought** (`ReplayPlayer.TakesOverFromTheStart`): `Open` notes each command whose first battle had no person
+  on either side and was over when the command ended, with the attacker's player. "Play from here", while that battle is shown, plays it
+  **again from its start** in a separate game: replayed to that command, a person plays the attacker's player from then on
+  (`HandToPersonCommand`), and the command runs again, so the battle waits for the person. The person commands the **attacker**; the
+  defender (neutrals, or another computer player) stays the computer's *(choice)*. A battlefield width the person could now choose is the one
+  the computer fought on (the default) *(choice: the viewer cannot answer a width question)*; a deployment the person's Tactics now allows is
+  the person's. The status line says whose side is played. Should the command not start a battle the person commands (a map event that asks
+  people only, say), the viewer says so and stays where it was.
+- **A battle quick combat ended** (`TakesOverBeforeItsEnd`): while it is shown, "Play from here" goes on from just before the command that
+  ended it, as in a battle being fought (ADR-164); so does a battle a person commanded whose last blow was the last command. The recorded
+  games of the smoke scenarios (the AI playing people's colours) end their battles so.
+- **`HandToPersonCommand`** (`handToPerson` in records): the mirror of `HandToComputerCommand`: a person plays the player from now on
+  (`PlayerHandedToPerson`). Given on the player's own turn; refused for a player a person plays already and for one that is out. A LAN
+  client's is refused like its `HandToComputerCommand`; only the viewer's separate game gives it. No rule changes; older records load.
+- **The bar**: "Play from here" in such a battle; its tooltip says that a computer's battle starts again, commanding the attacker.
+- `sim record --computer` makes Red a computer player, so its battles are fought within one command. Smoke: `game-replay-take-over` (the
+  sim's record: Red's battle after quick combat, played on by hand, quick combat, back to the replay) and `game-replay-computer-battle`
+  (the `--computer` record: Red's battle again from its start, as Red).
+- Tests: `ReplayPlayerTests` (a computer's battle taken over from its start with the person on the attacker's side, the replay unchanged,
+  only right after its command; a battle quick combat ended taken over from just before it; `HandToPersonCommand` and its refusals; the
+  controller's status line).
