@@ -4,7 +4,7 @@ using Godot;
 namespace EternalWars.Godot.UI;
 
 /// <summary>
-/// The faction heraldry in <c>res://shared/textures/ui/heraldry/</c> (docs/content/icon-prompts.md, "Heraldry"): per town type
+/// The faction heraldry in <c>res://shared/textures/ui/heraldry/</c> (docs/content/prompts/icon-prompts.md, "Heraldry"): per town type
 /// (<c>haven</c>, <c>swamp-bestiary</c>) and per group (<c>group_dawn-covenant</c>) a painted crest, <c>crest_&lt;id&gt;.png</c>, and its
 /// figure alone, <c>charge_&lt;id&gt;.png</c>. Scaled once per size and cached, like <see cref="UiIcons"/>; a missing file gives null, and
 /// callers keep the faction's name alone.

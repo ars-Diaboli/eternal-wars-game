@@ -5,7 +5,7 @@ namespace EternalWars.Godot.UI;
 
 /// <summary>
 /// Shows the mouse cursor the core chose (<see cref="GameCursor"/>, ADR-204) over the adventure map and the battlefield. Each cursor's image is
-/// <c>res://shared/textures/ui/cursors/cursor_&lt;group&gt;_&lt;id&gt;.png</c> (docs/content/cursor-prompts.md), scaled to <see cref="Size"/>
+/// <c>res://shared/textures/ui/cursors/cursor_&lt;group&gt;_&lt;id&gt;.png</c> (docs/content/prompts/cursor-prompts.md), scaled to <see cref="Size"/>
 /// pixels with its hotspot from the prompts' table; while an image is missing the nearest system cursor stands in (an arrow, a hand, a cross,
 /// the forbidden sign, the busy one). Controls keep their own cursor (the arrow, with <c>cursor_ui_pointer</c> once it exists), so the HUD
 /// never shows a sword. The map's cursor goes into one spare system shape (<see cref="Slot"/>), made the viewport's default.

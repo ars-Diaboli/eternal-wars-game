@@ -2,7 +2,7 @@
 
 > Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*; numbers are drafts. Spell catalog:
 > [spells.md](../content/spells.md) (data: `src/Core/data/spells.csv`); school skill tables: [skills.md](../content/skills.md#magic-schools).
-> Open items ❓: [open-questions.md](../project/open-questions.md).
+> Open items ❓: [open-questions.md](../../memory-bank/open-questions.md).
 
 ## Schools
 - **Six schools** (ADR-047, ADR-063), one per ring town: Light (Haven), Nature (Sylvan), Arcana (Academy), Death (Necropolis), Chaos

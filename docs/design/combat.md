@@ -1,7 +1,7 @@
 # Combat
 
 > Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*; numbers are drafts. Open items ❓:
-> [open-questions.md](../project/open-questions.md).
+> [open-questions.md](../../memory-bank/open-questions.md).
 
 ## Battlefield
 - **Separate battlefield** themed by the terrain where the battle starts (ADR-052): **square grid, 30 wide × 24 tall** by default (ADR-021,

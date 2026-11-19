@@ -1,7 +1,7 @@
 # Open questions
 
-Design questions still to answer. Answers move into the [design docs](../design/overview.md) and
-[decisions.md](decisions.md); the question then leaves this file and gets one line under [Answered](#answered).
+Design questions still to answer. Answers move into the [design docs](../docs/design/overview.md) and
+[the decision index](decisions/README.md); the question then leaves this file and gets one line under [Answered](#answered).
 
 Every question has a stable id (`RMG-8`, `TOWN-4`, …) so the roadmap and ADRs can point at it. A question covers **one
 design area**; its lettered points (a, b, …) are parts of the same decision. **🚧** marks a question that stops a roadmap
@@ -40,7 +40,7 @@ faction-specific buildings does each town get (HoMM3 has 2–4 a town)?
 the Behemoth line; whether a non-dragon line stays Large (Behemoths, Hydras or none) is decided once there are visuals.
 
 <a id="cont-4"></a>
-**CONT-4 More twists.** Which other systems should depart from HoMM3 ([departures.md](../design/departures.md))?
+**CONT-4 More twists.** Which other systems should depart from HoMM3 ([departures.md](../docs/design/departures.md))?
 
 <a id="cont-5"></a>
 **CONT-5 Primal Fury names.** One name for both towns, or a Swamp name? "Warcry" for Stronghold and "Spiritual Totems" for Swamp Bestiary, or one?
@@ -58,7 +58,7 @@ and the *(proposal)* choices of ADR-123.
 ## Answered
 One line per question; the ADR holds the detail.
 
-- **Scope**: fidelity ADR-008; art [presentation.md](../design/presentation.md); modes, platforms, harness, slice ADR-034; lore drafted by Claude.
+- **Scope**: fidelity ADR-008; art [presentation.md](../docs/design/presentation.md); modes, platforms, harness, slice ADR-034; lore drafted by Claude.
 - **Adventure map**: scale ADR-020, camera ADR-022, terrain ADR-011/045, native terrain ADR-032, roads ADR-024/032, movement ADR-018/037, fog
   ADR-017/031, gates ADR-026, meeting heroes ADR-027, resources ADR-019, chests ADR-039, mines ADR-034, guards ADR-040/065, no sea ADR-051,
   relief ADR-075/181, MAP-37 ADR-182.

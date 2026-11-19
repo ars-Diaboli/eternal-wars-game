@@ -1,7 +1,7 @@
 # Hero stat icons
 
 Painted stat icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-16) as an icon sheet and cut into one
-file per stat (prompts in `docs/content/icon-prompts.md`). Loaded through `EternalWars.Godot.UI.HeroIcons`; a missing file shows the
+file per stat (prompts in `docs/content/prompts/icon-prompts.md`). Loaded through `EternalWars.Godot.UI.HeroIcons`; a missing file shows the
 stat's name instead.
 
 | File | Used for |

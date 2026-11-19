@@ -1,7 +1,7 @@
 # Heraldry
 
 Faction crests and charges, 128 × 128 with transparency, generated for this project by the owner (2026-11-18) from the "Heraldry" sheets
-of [icon-prompts.md](../../../../../../docs/content/icon-prompts.md) (sets 23–28) and cut one figure per file. Loaded through
+of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 23–28) and cut one figure per file. Loaded through
 `EternalWars.Godot.UI.Heraldry`, which scales them to the size needed; a missing file leaves the faction's name alone.
 
 | File | What |

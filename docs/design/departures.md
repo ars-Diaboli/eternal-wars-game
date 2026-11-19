@@ -1,7 +1,7 @@
 # Deliberate departures from HoMM3
 
 > Part of the [game design](overview.md) (ADR-008). Rules live in the linked docs; new twists are proposed in
-> [open-questions.md](../project/open-questions.md). All built unless marked *accepted* (decided, not yet visible in play).
+> [open-questions.md](../../memory-bank/open-questions.md). All built unless marked *accepted* (decided, not yet visible in play).
 
 | # | Area | HoMM3 | Eternal Wars |
 |---|---|---|---|

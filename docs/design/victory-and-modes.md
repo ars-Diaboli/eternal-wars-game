@@ -1,7 +1,7 @@
 # Victory, defeat and game modes
 
 > Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*. Open items ❓:
-> [open-questions.md](../project/open-questions.md).
+> [open-questions.md](../../memory-bank/open-questions.md).
 
 ## Victory and defeat
 ADR-057, ADR-073, ADR-075, ADR-094.

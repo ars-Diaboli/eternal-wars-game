@@ -2,7 +2,7 @@
 
 > Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*; numbers are drafts. Every building with its
 > cost, requirements and effect, the tech tree and each town's dwellings: [town-buildings.md](../content/town-buildings.md) (data:
-> `src/Core/data/buildings.csv`). Open items ❓: [open-questions.md](../project/open-questions.md).
+> `src/Core/data/buildings.csv`). Open items ❓: [open-questions.md](../../memory-bank/open-questions.md).
 
 ## Resources
 **Six**: gold, lumber, ore, crystal, mercury, sulfur (ADR-019, `ResourceSet`). No gems. *Basic* = lumber, ore; *magic* = crystal, sulfur,

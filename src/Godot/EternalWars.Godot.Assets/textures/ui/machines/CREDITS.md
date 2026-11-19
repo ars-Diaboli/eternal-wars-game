@@ -1,7 +1,7 @@
 # War machine icons
 
 Painted war machine icons with transparency (about 140–160 px square), generated for this project by the owner (2026-11-16) as an icon
-sheet and cut into one file per machine (prompts in `docs/content/icon-prompts.md`). Loaded through `EternalWars.Godot.UI.HeroIcons`; a
+sheet and cut into one file per machine (prompts in `docs/content/prompts/icon-prompts.md`). Loaded through `EternalWars.Godot.UI.HeroIcons`; a
 machine without a file shows its name alone.
 
 | File | Used for |

@@ -2,7 +2,7 @@
 
 > Part of the [game design](overview.md). Modelled on the Heroes 3: Horn of the Abyss template system (ADR-023, ADR-034, ADR-064).
 > Everything here is built unless tagged *(planned)*; numbers are placeholders. Open items ❓:
-> [open-questions.md](../project/open-questions.md).
+> [open-questions.md](../../memory-bank/open-questions.md).
 
 Core `MapGenerator` (`EternalWars.Core.Generation`, version 8). Shipped templates in `src/Core/data/templates` (`duel`, `ffa-4`, `2v2`,
 `mirror-duel`, `ffa-8`); CI checks each with `sim maps` (no problems, deterministic, starts reachable, AI play and replay work).

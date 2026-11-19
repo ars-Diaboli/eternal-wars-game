@@ -2,7 +2,7 @@
 
 > Part of the [game design](overview.md). Everything here is built unless tagged *(planned)*; numbers are drafts. Full lists:
 > [hero-roster.md](../content/hero-roster.md) (data: `src/Core/data/heroes.csv`) and [skills.md](../content/skills.md) (every skill and
-> level). Open items ❓: [open-questions.md](../project/open-questions.md).
+> level). Open items ❓: [open-questions.md](../../memory-bank/open-questions.md).
 
 ## Roster
 ADR-048. **16 heroes per playable town**: a **mage** and a **warrior** for each of its eight tier 1–4 creature lines.

@@ -1,7 +1,7 @@
 # Factions and towns
 
 > Part of the [game design](overview.md). World, group and town flavour: [lore.md](../content/lore.md). Open items ❓:
-> [open-questions.md](../project/open-questions.md).
+> [open-questions.md](../../memory-bank/open-questions.md).
 
 Towns form four groups (ADR-010). **Groups matter only in lore and the campaign** (ADR-028): story, scenario setup, campaign alliances and
 scripted events. In standard and random-map games they have **no rule effect**: no automatic alliances, shared skills, diplomacy or group

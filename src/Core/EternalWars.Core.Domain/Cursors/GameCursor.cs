@@ -1,7 +1,7 @@
 namespace EternalWars.Core.Domain.Cursors;
 
 /// <summary>
-/// The mouse cursors (ADR-204, docs/content/cursor-prompts.md): what a click would do where the pointer is. The front-ends map each to its
+/// The mouse cursors (ADR-204, docs/content/prompts/cursor-prompts.md): what a click would do where the pointer is. The front-ends map each to its
 /// image (<c>cursor_&lt;group&gt;_&lt;id&gt;.png</c>) or, while the image is missing, to the nearest system cursor.
 /// </summary>
 public enum GameCursor

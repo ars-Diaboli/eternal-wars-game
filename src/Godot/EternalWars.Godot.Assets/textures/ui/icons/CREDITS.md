@@ -1,7 +1,7 @@
 # UI icons
 
 Button icons, 128 × 128 with transparency, generated for this project by the owner (2026-11-05, 2026-11-11, 2026-11-17), cut from the
-sheets of [icon-prompts.md](../../../../../../docs/content/icon-prompts.md) (sets 15–22). Loaded through
+sheets of [icon-prompts.md](../../../../../../docs/content/prompts/icon-prompts.md) (sets 15–22). Loaded through
 `EternalWars.Godot.UI.UiIcons`, which scales them to button size; a missing file leaves the button text-only.
 
 | File | Used for |
