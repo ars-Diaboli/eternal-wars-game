@@ -212,6 +212,7 @@ public partial class Main
             CloseSetup();
             _joining = null;
             _generated = null;
+            _campaign = null;
             BeginGame(client.Session!, client.Ground!, resume: true);
             Tell($"Joined the game at {hostName}:{port} as {client.Session!.State.GetPlayer(client.Seat!.Value).Name}.");
         };

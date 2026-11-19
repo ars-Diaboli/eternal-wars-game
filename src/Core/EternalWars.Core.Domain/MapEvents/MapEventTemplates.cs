@@ -18,7 +18,7 @@ public static class MapEventTemplates
     {
         MapEventKind.Hero => new(name, kind, [new MessageAction("Something happens here.")]),
         MapEventKind.Quest => new(name, kind, []) { Stages = [QuestForms.Level(2, "Come back when you have reached level 2.")] },
-        MapEventKind.Town => new(name, kind, []) { Towns = towns ?? [] },
+        MapEventKind.Town or MapEventKind.Captured => new(name, kind, []) { Towns = towns ?? [] },
         _ => new(name, kind, []),
     };
 
@@ -35,6 +35,8 @@ public static class MapEventTemplates
         [
             ("Message", new MessageAction("Write the message here.") { Rewards = [new ResourceAction(ResourceType.Gold, new NumberExpr(500))] }),
             ("Question", new QuestionAction("Write the question here?", [new EventAnswer("Yes", []), new EventAnswer("No", [])])),
+            ("Dialogue", new DialogueAction([new DialogueLine(hero, "The first line."), new DialogueLine("", "The narrator's line.")])),
+            ("End the game", new EndGameAction(Won: true) { Text = "The goal is reached." }),
             ("If", new IfAction(new PlayerIsHumanCondition(), [])),
             ("Repeat", new RepeatAction(new NumberExpr(2), [])),
             ("While", new WhileAction(new CompareCondition(new VariableExpr(x), CompareOp.Less, new NumberExpr(3)),

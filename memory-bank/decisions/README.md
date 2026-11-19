@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-241.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-243.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -267,3 +267,5 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [238](architecture.md#adr-238-map-event-answers-take-their-decision-through-the-decision-steps-a-pandoras-box-queues-its-hero-event-itself-adr-215-adr-226-2026-11-19) | architecture | Map-event answers take their decision through the decision steps; a Pandora's Box queues its hero event itself (ADR-215, ADR-226, 2026-11-19) | implemented |
 | [239](architecture.md#adr-239-code-health-every-smoke-scenario-has-a-seed-of-its-own-the-refusal-check-is-a-runtime-switch-map-objects-hand-out-read-only-collections-adr-165-adr-226-adr-235-2026-11-19) | architecture | Code health: every smoke scenario has a seed of its own, the refusal check is a runtime switch, map objects hand out read-only collections (ADR-165, ADR-226, ADR-235, 2026-11-19) | implemented |
 | [240](presentation.md#adr-240-the-splat-reads-adventure-only-pictures-and-normal-roughness-and-occlusion-maps-owner-adr-183-2026-11-19) | presentation | The splat reads adventure-only pictures and normal, roughness and occlusion maps (owner, ADR-183, 2026-11-19) | implemented |
+| [241](game-modes.md#adr-241-campaigns-maps-played-one-after-another-heroes-and-campaign-variables-carried-the-sample-campaign-border-watch-flow-1-adr-131-adr-126-2026-11-19) | game-modes | Campaigns: maps played one after another, heroes and campaign variables carried, the sample campaign Border Watch (FLOW-1, ADR-131, ADR-126, 2026-11-19) | implemented |
+| [242](map-events.md#adr-242-map-events-for-stories-dialogues-the-end-of-the-game-captured-and-battle-events-map-format-v42-adr-115-adr-241-2026-11-19) | map-events | Map events for stories: dialogues, the end of the game, captured and battle events, map format v42 (ADR-115, ADR-241, 2026-11-19) | implemented |

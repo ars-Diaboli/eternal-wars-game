@@ -247,6 +247,7 @@ public sealed class GameSession
     /// <summary>Starts the game: day 1, the first player's turn. Part of every game, so it is not a command.</summary>
     public void Start()
     {
+        new Campaigns.CarriedHeroService(State, Bus).Place(); // before the placeholders: a carried hero takes one of its person's (ADR-241)
         new PlaceholderService(State, Bus).Resolve();
         Grail.Bury();
         Flow.RemoveSurplusHeroes();

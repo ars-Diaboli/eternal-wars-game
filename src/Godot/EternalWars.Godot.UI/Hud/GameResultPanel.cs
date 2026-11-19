@@ -28,12 +28,23 @@ public partial class GameResultPanel : CenterContainer
     private bool _entered = true;
 
     private readonly Button _playAgain = new() { Text = "Play again", Visible = false };
+    private readonly Button _campaignOn = new() { Visible = false };
+    private readonly Button _campaignRetry = new() { Text = "Try again", Visible = false };
 
     /// <summary>The player asked to go back to the main menu (the game is entered into the ranking first).</summary>
     public event Action? MainMenuRequested;
 
     /// <summary>"Play again" on an arena map's result screen (ADR-159): the same map with the same players, from the start.</summary>
     public event Action? PlayAgainRequested;
+
+    /// <summary>A won campaign map's "Next map" (or "Finish the campaign" after the last one, ADR-241).</summary>
+    public event Action? CampaignContinueRequested;
+
+    /// <summary>A lost campaign map's "Try again": the map from its start, with what the campaign carried in (ADR-241).</summary>
+    public event Action? CampaignRetryRequested;
+
+    /// <summary>The game is a campaign's map (ADR-241): what its result screen offers; null for a single game.</summary>
+    public CampaignResult? Campaign { get; set; }
 
     /// <summary>Whether this computer may start the arena again: not a LAN client, whose host does (ADR-199).</summary>
     public bool CanPlayAgain { get; set; } = true;
@@ -77,6 +88,18 @@ public partial class GameResultPanel : CenterContainer
             PlayAgainRequested?.Invoke();
         };
         leave.AddChild(_playAgain);
+        _campaignOn.Pressed += () =>
+        {
+            Visible = false;
+            CampaignContinueRequested?.Invoke();
+        };
+        leave.AddChild(_campaignOn);
+        _campaignRetry.Pressed += () =>
+        {
+            Visible = false;
+            CampaignRetryRequested?.Invoke();
+        };
+        leave.AddChild(_campaignRetry);
         var close = new Button { Text = "Look at the map" };
         close.Pressed += () =>
         {
@@ -148,12 +171,19 @@ public partial class GameResultPanel : CenterContainer
         {
             lines.Add(CanPlayAgain ? "Arena maps are not ranked." : "Arena maps are not ranked. The host may start the game again.");
         }
+        else if (Campaign is { } campaign)
+        {
+            lines.Add(campaign.Won ? campaign.Next is null ? "The campaign is won." : $"Next: {campaign.Next}." : "Try the map again, or leave the campaign.");
+        }
         else if (outcome.HasWinner && scores.Count == 0 && state.Players.Any(p => p.IsHuman && outcome.Won(p.Id)))
         {
             lines.Add("This map is not ranked.");
         }
 
         _playAgain.Visible = state.Rules.Arena && CanPlayAgain;
+        _campaignOn.Visible = Campaign is { Won: true };
+        _campaignOn.Text = Campaign is { Next: null } ? "Finish the campaign" : "Next map";
+        _campaignRetry.Visible = Campaign is { Won: false };
 
         _title.Text = Headline(state, outcome, PlaysHere);
         _text.Text = string.Join('\n', lines);
@@ -215,3 +245,8 @@ public partial class GameResultPanel : CenterContainer
         }
     }
 }
+
+/// <summary>
+/// A campaign map's result (ADR-241): whether the campaign's person won it and the title of the map that comes next (null after the last one).
+/// </summary>
+public sealed record CampaignResult(bool Won, string? Next);

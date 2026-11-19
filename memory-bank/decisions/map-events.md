@@ -15,6 +15,7 @@
 | [129](#adr-129-map-events-step-4-the-ais-answers-and-quests-the-editors-events-tab-validator-checks-adr-115-evt-6-2026-11-05) | Map events, step 4: the AI's answers and quests, the editor's "Events" tab, validator checks (ADR-115, EVT-6, 2026-11-05) | implemented |
 | [131](#adr-131-map-events-campaign-variables-and-the-score-check-map-format-v34-adr-101-adr-115-evt-1-f-flow-1-2026-11-05) | Map events: campaign variables and the score check, map format v34 (ADR-101, ADR-115, EVT-1 f, FLOW-1, 2026-11-05) | implemented |
 | [132](#adr-132-map-events-the-camera-on-a-turn-start-message-adr-115-evt-2-f-2026-11-05) | Map events: the camera on a turn-start message (ADR-115, EVT-2 f, 2026-11-05) | implemented |
+| [242](#adr-242-map-events-for-stories-dialogues-the-end-of-the-game-captured-and-battle-events-map-format-v42-adr-115-adr-241-2026-11-19) | Map events for stories: dialogues, the end of the game, captured and battle events, map format v42 (ADR-115, ADR-241, 2026-11-19) | implemented |
 
 
 ### ADR-096: Pandora's Box and map events (HotA-like extended events) (2026-10-29)
@@ -287,3 +288,20 @@ the owner changes them.
 - Hero events (cells, quest objects, a Pandora's Box's event) name no place: their hero is in view. A computer player sees no messages.
 - The camera moves after the turn's own move to the first hero, and again for each later message of the turn; not while the computer's
   moves are still being shown (the turn's showing comes back to it).
+
+### ADR-242: Map events for stories: dialogues, the end of the game, captured and battle events, map format v42 (ADR-115, ADR-241, 2026-11-19)
+**Status**: implemented. Map format v42 (two event kinds, two actions; older maps load as they are). The editor's Events tab offers them.
+
+- **Dialogue** (`DialogueAction`): lines, each with a speaker (a roster hero's id, shown as its name, any other name, or none for a narrator)
+  and text. A person reads them one at a time (`MapEventDecision.Dialogue`; "Next", then "OK" answers the event, which goes on); a computer
+  player is not shown it. No portraits until there are hero pictures.
+- **End the game** (`EndGameAction`, with an optional reason): won, the event's player's team wins the map; lost, the player is defeated and
+  the usual checks decide the rest. The event stops there and no other event runs until the game flow has settled it after the command
+  (`GameState.ScriptedEnd`). Without a player (a neutral town's event) nothing happens. It is how a campaign map ends on its story (ADR-241).
+- **Captured events** (`MapEventKind.Captured`): they name towns like town events; when one falls to a player they run for the new owner, the
+  town and the hero at its gate, once the command that took it is done. The validator warns when one names no town.
+- **Battle events** (`MapEventKind.Battle`): after every battle won on the map (the other side lost, fled or surrendered) they run for the
+  winner and its hero; which battle it was is a condition ("defeated by", the hero). A map event's own battle runs none, so an event that
+  fights cannot run itself.
+- **Ranking** (ADR-131): a dialogue and a lost end give nothing; a won end only people can reach favours people.
+- *(choice)* No separate "game start" trigger: a player event with "day 1" and "disable this event" does it.

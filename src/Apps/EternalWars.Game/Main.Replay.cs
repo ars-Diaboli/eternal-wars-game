@@ -50,6 +50,7 @@ public partial class Main
             CloseSetup();
             _replay = new ReplayController(player, _replaySpeed);
             _generated = record.Generated;
+            _campaign = null; // the viewer only watches
             BeginGame(player.Session, record.Map, resume: true);
         }
         catch (Exception e) when (e is InvalidOperationException or FormatException or System.Text.Json.JsonException or IOException or KeyNotFoundException)

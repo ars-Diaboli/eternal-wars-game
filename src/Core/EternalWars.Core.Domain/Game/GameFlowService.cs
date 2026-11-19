@@ -126,6 +126,23 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
 
         var rules = state.Rules;
         Track();
+        if (state.ScriptedEnd is { } scripted)
+        {
+            // A map event ended the game for its player (ADR-242): won, its team wins; lost, it is out and the usual checks go on.
+            state.ScriptedEnd = null;
+            var by = state.GetPlayer(scripted.Player);
+            if (scripted.Won && !by.IsDefeated)
+            {
+                End(by.Team, scripted.Reason.Length > 0 ? scripted.Reason : $"{by.Name} achieved the map's goal.");
+                return;
+            }
+
+            if (!scripted.Won && !by.IsDefeated)
+            {
+                Defeat(by, scripted.Reason.Length > 0 ? scripted.Reason : $"{by.Name} failed the map's goal.");
+            }
+        }
+
         foreach (var player in InGame())
         {
             if (rules.Victory.Where(c => c.Player is null || c.Player == player.Id).FirstOrDefault(c => HoldsFor(c, player)) is { } won)

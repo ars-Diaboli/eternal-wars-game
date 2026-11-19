@@ -293,12 +293,13 @@ Rules: [shared object rules](#shared-object-rules).
   visiting hero is asked whether to open it; it opens once and vanishes. Gains only; an optional guard is fought (like a bank's) after "open?"
   and the box opens only on victory; optional message; gains the hero has no room for are lost. Contents hidden until opened (the AI knows
   them); an empty box is a validator error. The generator places boxes of gold, experience or creatures from a value of 5000.
-- **Map events** (ADR-096, ADR-115, ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
+- **Map events** (ADR-096, ADR-115, ADR-124, ADR-127, ADR-128, ADR-129, ADR-131, ADR-132, ADR-242): HotA-like extended events, a tree of conditions and actions over map-wide whole-number
   variables, stored in the map file (`events`; the node types are in `MapEvents/MapEventData.cs`).
   - **Triggers**: hero events run when a hero steps onto one of their invisible cells (every step, until the event disables or removes
     itself; routes ignore cells and stop only for a message, a question or a battle); player events at every player's turn start after
-    income, growth and the week's event; town events at the owner's turn start, neutral towns' at the start of the day. Several at one
-    moment run in list order; who triggers is a condition.
+    income, growth and the week's event; town events at the owner's turn start, neutral towns' at the start of the day; captured events
+    when a town they name falls to a player (for the new owner and the hero at its gate); battle events after every battle won on the map
+    (for the winner and its hero; not after a map event's own battle). Several at one moment run in list order; who triggers is a condition.
   - **Conditions**: and / or / not, comparisons of expressions (numbers, variables, random numbers, + − × ÷, the player's resources, the
     hero's army, stats, skills, artifacts, level, mana and movement, the date, the difficulty (the game's, else the map's, else Normal; Easy 0 … Master 4), hero and town counts), the hero, its class,
     the player, human or computer, its faction, team and allies, a town's owner, and who beat a monster or hero an event names.
@@ -306,7 +307,8 @@ Rules: [shared object rules](#shared-object-rules).
     questions with two or three answers; resources, creatures (a person's full army chooses what to keep, a computer keeps its strongest),
     creatures to hire, buildings (free, with what they need), experience, primary and secondary skills (gains only), artifacts, war machines,
     spell book and spells, mana, movement, morale and luck until the next battle, a battle (won: the event goes on; lost, fled or
-    surrendered: it stops), reveal an area, give a roster hero. A computer player sees no messages.
+    surrendered: it stops), reveal an area, give a roster hero; a dialogue (lines with a speaker, read one at a time); the end of the game
+    for the event's player (won: its team wins; lost: it is defeated). A computer player sees no messages or dialogues.
   - **Quests**: an event of its own kind with stages done one after another; a stage has a requirement (no random numbers), a proposal,
     an optional progress text and completion question, and the actions run on completion (what it takes, then the rewards). Ready forms
     write HoMM3's quests (level, stats, artifacts, creatures, resources, beat a monster or hero, be a hero, class or player). Each quest
@@ -330,8 +332,8 @@ Rules: [shared object rules](#shared-object-rules).
     nothing runs, a quest no object asks or that cannot be met, a variable nothing reads, …). The editor opens a map whose events do not fit;
     the game does not.
   - **Campaign variables**: a map variable may be "kept for the next map" (its value at the end is what a campaign carries on) and / or
-    "taken from the last map" (it starts with the carried value, else its own); ticked in the Events tab. The campaign that carries them is
-    Phase 6 (FLOW-1).
+    "taken from the last map" (it starts with the carried value, else its own); ticked in the Events tab. A campaign carries them from a won
+    map to the next (ADR-241).
   - **Ranking**: an event that gives something only to people (a condition only people meet, such as a ready form with "computer may
     trigger" left off) makes the map campaign-like, so it is not ranked; the validator warns ([victory and modes](victory-and-modes.md)).
   - **Turn-start camera**: a turn-start message or question moves the camera to what it concerns: a place its rewards reveal or give a
@@ -354,7 +356,7 @@ HoMM3 and HotA (ADR-126, built ADR-133; map format v35).
 - **Hero placeholder**: at game start it becomes a free roster hero (not on the map, in a prison or waiting in a tavern; not banned) of its
   owner's faction: the type of the owner's first town, else the faction chosen on the new-game screen, else one drawn. Any free hero when its
   faction has none. It keeps its place, army and artifacts and takes the roster hero's name, class, stats, skills and spells; an empty army
-  gets the hero's starter stack. A campaign will put a carried hero there (FLOW-1).
+  gets the hero's starter stack. A campaign puts a carried hero there first (ADR-241).
 - **Order**: the placeholders are drawn first when the game starts, from the game's random numbers: towns, then monsters, then heroes; then
   everything else (prisons, guilds, pickups).
 - **Editor**: the "Bans" tab (one list per kind with a filter; ticking bans), "Random faction" on a town, "Random" (any tier or a tier) on a

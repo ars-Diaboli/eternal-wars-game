@@ -67,16 +67,19 @@ public sealed record MapEventDecision(HeroId Hero, string Event, string Text, IR
     /// </summary>
     public MapPosition? Place { get; init; }
 
+    /// <summary>A dialogue's lines (ADR-242), each speaker named, shown one after another; <see cref="Text"/> is the first line's. Empty for a message.</summary>
+    public IReadOnlyList<MapEvents.DialogueLine> Dialogue { get; init; } = [];
+
     public bool IsQuestion => Answers.Count > 0;
 
     public bool Equals(MapEventDecision? other) =>
         other is not null && Hero == other.Hero && Event == other.Event && Text == other.Text && Place == other.Place
-        && Lines.SequenceEqual(other.Lines) && Answers.SequenceEqual(other.Answers);
+        && Lines.SequenceEqual(other.Lines) && Answers.SequenceEqual(other.Answers) && Dialogue.SequenceEqual(other.Dialogue);
 
     public override int GetHashCode() => HashCode.Combine(Hero, Event, Text, Place, Lines.Count, Answers.Count);
 
     public override string ToString() =>
-        $"MapEventDecision {{ Hero = {Hero}, Event = {Event}, Text = {Text}, Place = {Place}, Lines = {string.Join(" | ", Lines)}, Answers = {string.Join(" | ", Answers)} }}";
+        $"MapEventDecision {{ Hero = {Hero}, Event = {Event}, Text = {Text}, Place = {Place}, Lines = {string.Join(" | ", Lines)}, Answers = {string.Join(" | ", Answers)}, Dialogue = {string.Join(" | ", Dialogue.Select(l => $"{l.Speaker}: {l.Text}"))} }}";
 }
 
 /// <summary>

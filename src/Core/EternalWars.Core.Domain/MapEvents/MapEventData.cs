@@ -21,6 +21,18 @@ public enum MapEventKind
     /// one after another; it acts on that hero and its owner. A quest has stages instead of actions.
     /// </summary>
     Quest,
+
+    /// <summary>
+    /// One of the event's <see cref="MapEventDefinition.Towns"/> falls to a player (ADR-242): it acts on the town, its new owner and the hero that
+    /// took it (none when the town went over without one).
+    /// </summary>
+    Captured,
+
+    /// <summary>
+    /// A player won a battle on the map (ADR-242; the other side lost, fled or surrendered; not a map event's own battle): it acts on the winner and
+    /// its hero (none for a town's garrison without one). Which battle it was is a condition ("defeated by", the hero).
+    /// </summary>
+    Battle,
 }
 
 /// <summary>
@@ -282,6 +294,26 @@ public sealed record RemoveCellAction : EventAction;
 public sealed record MessageAction(string Text) : EventAction
 {
     public IReadOnlyList<EventAction> Rewards { get; init; } = [];
+}
+
+/// <summary>
+/// A conversation (ADR-242): its <see cref="Lines"/> shown one after another to a person, then the event goes on. A computer player is not shown it.
+/// </summary>
+public sealed record DialogueAction(IReadOnlyList<DialogueLine> Lines) : EventAction;
+
+/// <summary>
+/// One line of a <see cref="DialogueAction"/>: who says it (<see cref="Speaker"/>: a roster hero's id, shown as its name, or any name; empty for a
+/// narrator) and the <see cref="Text"/>.
+/// </summary>
+public sealed record DialogueLine(string Speaker, string Text);
+
+/// <summary>
+/// Ends the game for the event's player (ADR-242, FLOW-1): won, its team wins the map; lost, the player is defeated. <see cref="Text"/> is the
+/// reason shown (empty: a plain one). The event stops here.
+/// </summary>
+public sealed record EndGameAction(bool Won) : EventAction
+{
+    public string Text { get; init; } = "";
 }
 
 /// <summary>A question with two or three answers; the chosen answer's actions run next. A computer player answers by itself.</summary>

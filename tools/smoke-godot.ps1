@@ -156,6 +156,10 @@ $scenarios = @(
     # save, New game when not. The only game scenario without --new-game.
     @{ Name = 'game-main-menu'; App = 'EternalWars.Game'; Frames = 69; MainMenu = $true
        Input = '3:press:Leaderboard;12:key:Escape;18:press:Watch a replay;25:click:@Saves;31:key:Escape;37:press:New game;47:key:Enter' },
+    # A campaign (ADR-241, ADR-242): Campaign in the main menu, Border Watch at Normal, the first map's intro, then its briefing dialogue line by
+    # line (Next, OK) and the end of Blue's first turn.
+    @{ Name = 'game-campaign'; App = 'EternalWars.Game'; Frames = 75; MainMenu = $true
+       Input = '3:press:Campaign;10:press:Start;17:press:Start the map;40:press:Next;47:press:OK;55:press:End turn' },
     # The viewer on a recorded computer game (the sim's demo record, 4 days): pause at once, Fast, next day three times (day 4), next turn (Red's,
     # with the battle against the wolves), Normal, play: Red walks, the computer's battle plays move by move; skip to its result, which closes
     # by itself, then the replay plays to its end.

@@ -134,6 +134,7 @@ public partial class Main : Node3D
         menu.NewGameRequested += ShowNewGame;
         menu.LoadRequested += _menu.Open;
         menu.MultiplayerRequested += ShowMultiplayer;
+        menu.CampaignRequested += ShowCampaigns;
         menu.WatchRequested += ShowReplays;
         menu.LeaderboardRequested += ShowLeaderboard;
         menu.QuitRequested += () => GetTree().Quit();
@@ -166,6 +167,7 @@ public partial class Main : Node3D
         {
             CloseSetup();
             _generated = _lastGenerated is { } last && ReferenceEquals(last.State, state) ? last.Info : null;
+            _campaign = null;
             StartGame(state);
         };
     }
@@ -562,6 +564,8 @@ public partial class Main : Node3D
         _result.Bind(EnterRanking, SaveReplay);
         _result.MainMenuRequested += ShowMainMenu;
         _result.PlayAgainRequested += PlayAgain;
+        _result.CampaignContinueRequested += ContinueCampaign;
+        _result.CampaignRetryRequested += () => ShowCampaignIntro();
         _result.CanPlayAgain = _client is null; // a LAN client's rematch is the host's to start (ADR-199)
         _result.PlaysHere = director.PlaysHere;
 
@@ -614,6 +618,7 @@ public partial class Main : Node3D
     {
         if (_session.State.Outcome is { } outcome)
         {
+            _result.Campaign = CampaignResultOf(_session.State);
             _result.ShowOutcome(_session.State, outcome);
         }
     }

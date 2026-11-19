@@ -71,6 +71,13 @@ public sealed record GameOptions(
     public IReadOnlyDictionary<string, int>? CampaignVariables { get; init; }
 
     /// <summary>
+    /// The heroes a campaign carries in from the last map (ADR-241): when the game starts each becomes the campaign person's hero of its roster hero,
+    /// else a hero placeholder of the person's (<see cref="Campaigns.CampaignRules"/>). Null (a single game) carries none. Kept in the record, so a
+    /// replay starts the same.
+    /// </summary>
+    public IReadOnlyList<Campaigns.CarriedHero>? CarriedHeroes { get; init; }
+
+    /// <summary>
     /// The faction each player chose at setup, by player number (ADR-126): its random towns become that town type and its hero placeholders heroes
     /// of it. A player not listed (or with an unknown town id) gets a faction drawn when the game starts. Null = nobody chose.
     /// </summary>

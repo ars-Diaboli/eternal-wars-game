@@ -17,14 +17,15 @@ namespace EternalWars.Core.Domain.MapEvents;
 
 /// <summary>
 /// Runs the map events (ADR-115, step 1: EVT-1 … EVT-4). Triggers queue runs: a hero stepping onto an event cell, a player's turn start (its player
-/// events, then the town events of its towns, in list order) and the start of a day (neutral towns' events). Runs go one at a time; a run pauses on
+/// events, then the town events of its towns, in list order), the start of a day (neutral towns' events), a town changing hands and a battle won
+/// (ADR-242). Runs go one at a time; a run pauses on
 /// a message, a question, a full army or a battle, or when something else (a level-up) is pending, and <see cref="Pump"/> carries on once nothing
 /// is (the session calls it after every command). A disabled event is skipped when its turn comes.
 /// </summary>
 public sealed class MapEventService(
     GameState state, IEventPublisher events, Visibility.IFogRevealer fog, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles,
     TownVisitService towns, HeroRecruitment recruits)
-    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, Turns.ITurnPhaseParticipant
+    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<TownOwnerChanged>, Turns.ITurnPhaseParticipant
 {
     /// <summary>The town's buildings an event builds (<see cref="BuildAction"/>).</summary>
     internal TownConstruction Construction { get; } = new(state, events, towns);
@@ -79,11 +80,12 @@ public sealed class MapEventService(
     public static MapObjectId? CompletedSite(EventAnswer answer) =>
         MapEventTree.Actions(answer.Actions).OfType<AdvanceQuestAction>().FirstOrDefault()?.Site;
 
-    /// <summary>Subscribes to the battles ("defeated by" records, EVT-3 e).</summary>
+    /// <summary>Subscribes to the battles ("defeated by" records, EVT-3 e; battle events) and to towns changing hands (captured events, ADR-242).</summary>
     internal void SubscribeTo(IEventSubscriber bus)
     {
         bus.Subscribe<BattleStarted>(this);
         bus.Subscribe<BattleEnded>(this);
+        bus.Subscribe<TownOwnerChanged>(this);
     }
 
     // Triggers ------------------------------------------------------------------------------------------------------
@@ -190,7 +192,7 @@ public sealed class MapEventService(
     {
         // Level-ups are offered here only after an event ran, so games without events take their turns exactly as before.
         var ran = false;
-        while (state.PendingDecision is null && state.Battle is null && !state.IsOver)
+        while (state.PendingDecision is null && state.Battle is null && !state.IsOver && state.ScriptedEnd is null)
         {
             ran |= Data.Current is not null || Data.Runs.Count > 0;
             if (Data.Current is null)
@@ -242,7 +244,8 @@ public sealed class MapEventService(
     /// <summary>Runs the actions until the event ends, waits, or something else becomes pending.</summary>
     private void Continue(MapEventRun run)
     {
-        while (run.Waiting == MapEventWaiting.None && run.Frames.Count > 0 && state.PendingDecision is null && state.Battle is null && !state.IsOver)
+        while (run.Waiting == MapEventWaiting.None && run.Frames.Count > 0 && state.PendingDecision is null && state.Battle is null && !state.IsOver
+               && state.ScriptedEnd is null)
         {
             var frame = run.Frames.Peek();
             if (frame.Next >= frame.Actions.Count)
@@ -413,9 +416,19 @@ public sealed class MapEventService(
         }
 
         Data.Fight = null;
-        var (beatenHero, beatenGuard, winner) = @event.Winner == BattleSide.Attacker
-            ? (battle.Defender, battle.Guard, battle.AttackerOwner)
-            : (battle.Attacker, (MapObjectId?)null, battle.DefenderOwner);
+        var (beatenHero, beatenGuard, winner, winnerHero) = @event.Winner == BattleSide.Attacker
+            ? (battle.Defender, battle.Guard, battle.AttackerOwner, battle.Attacker)
+            : (battle.Attacker, (MapObjectId?)null, battle.DefenderOwner, battle.Defender);
+        if (winner is { } victor && Data.Current is not { Waiting: MapEventWaiting.Battle })
+        {
+            // A battle won (ADR-242): the battle events run for the winner once the battle is over; an event's own battle runs none, so an event
+            // that fights cannot run itself.
+            foreach (var definition in Data.Set.Events.Where(e => e.Kind == MapEventKind.Battle))
+            {
+                Data.Runs.Enqueue(new MapEventRun(definition, victor, winnerHero, null, null, startOfTurn: false));
+            }
+        }
+
         if (winner is not { } by || @event.Reason != BattleEndReason.Defeated)
         {
             return;
@@ -429,6 +442,24 @@ public sealed class MapEventService(
         if (beatenHero is { } heroId && Data.WatchedHeroes.Contains(heroId))
         {
             Data.RecordHeroDefeat(heroId, by);
+        }
+    }
+
+    /// <summary>
+    /// A town fell to a player (ADR-242): the captured events that name it run once the command that took it is done (the session pumps after every
+    /// command), for the new owner and the hero standing at its gate.
+    /// </summary>
+    public void Handle(TownOwnerChanged @event)
+    {
+        if (!state.IsStarted || @event.Current is not { } owner || state.FindObject(@event.Town) is not Town town)
+        {
+            return;
+        }
+
+        var hero = state.Heroes.FirstOrDefault(h => h.Owner == owner && h.Position == town.VisitPosition)?.Id;
+        foreach (var definition in Data.Set.Events.Where(e => e.Kind == MapEventKind.Captured && e.Towns.Contains(town.Id.Value)))
+        {
+            Data.Runs.Enqueue(new MapEventRun(definition, owner, hero, town.Id, null, startOfTurn: false));
         }
     }
 

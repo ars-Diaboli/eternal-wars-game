@@ -25,6 +25,10 @@ public partial class DecisionPanel : PanelContainer
     private GameSession _session = null!;
     private Func<Core.Domain.Common.PlayerId, bool> _playsHere = null!;
 
+    /// <summary>The dialogue being read (ADR-242) and the line shown; a new dialogue starts at its first line.</summary>
+    private MapEventDecision? _dialogue;
+    private int _line;
+
     /// <summary>
     /// <paramref name="playsHere"/> says whose questions are asked at this screen (ADR-192): every human's by default; a battle's stays shown, its
     /// buttons are the battle's own.
@@ -55,6 +59,11 @@ public partial class DecisionPanel : PanelContainer
         var state = _session.State;
         var player = state.CurrentPlayer.Id;
         Visible = state.PendingDecision is BattleDecision || (state.PendingDecision is not null && _playsHere(player));
+        if (state.PendingDecision is not MapEventDecision { Dialogue.Count: > 0 })
+        {
+            _dialogue = null;
+        }
+
         switch (state.PendingDecision)
         {
             case TreasureChestDecision chest:
@@ -134,6 +143,9 @@ public partial class DecisionPanel : PanelContainer
                     Button("Leave", new ChooseTrainingCommand(player, null));
                 }
 
+                break;
+            case MapEventDecision { Dialogue.Count: > 0 } dialogue:
+                ShowDialogue(dialogue, player);
                 break;
             case MapEventDecision message:
                 // A map event's message (its reward lines, given once read) or question (EVT-4 f).
@@ -241,6 +253,38 @@ public partial class DecisionPanel : PanelContainer
         keep.Pressed += () => _session.Execute(new ChooseEventArmyCommand(player, [.. ticks.Select((t, i) => (t, i)).Where(x => x.t.ButtonPressed).Select(x => x.i)]));
         _buttons.AddChild(keep);
         Check();
+    }
+
+    /// <summary>
+    /// A map event's dialogue (ADR-242): one line at a time, its speaker above it; "Next" shows the next line here, "OK" on the last answers the
+    /// event so it goes on.
+    /// </summary>
+    private void ShowDialogue(MapEventDecision dialogue, Core.Domain.Common.PlayerId player)
+    {
+        if (!Equals(dialogue, _dialogue))
+        {
+            (_dialogue, _line) = (dialogue, 0);
+        }
+
+        var line = dialogue.Dialogue[Math.Min(_line, dialogue.Dialogue.Count - 1)];
+        var count = dialogue.Dialogue.Count > 1 ? $"\n\n({_line + 1} / {dialogue.Dialogue.Count})" : "";
+        _prompt.Text = (line.Speaker.Length > 0 ? $"{line.Speaker}:\n" : "") + line.Text + count;
+        if (_line < dialogue.Dialogue.Count - 1)
+        {
+            var next = new Button { Text = "Next" }.WithIcon(UiIcon.ArrowRight, keepText: true);
+            next.Pressed += () =>
+            {
+                _line++;
+                _buttons.ClearChildren();
+                ShowDialogue(dialogue, player);
+            };
+            _buttons.AddChild(next);
+            next.CallDeferred(Control.MethodName.GrabFocus);
+        }
+        else
+        {
+            Button("OK", new AnswerMapEventCommand(player, 0)).CallDeferred(Control.MethodName.GrabFocus);
+        }
     }
 
     private Button Button(string text, GameCommand command, bool disabled = false)

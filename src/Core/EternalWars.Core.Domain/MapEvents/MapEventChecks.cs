@@ -33,7 +33,7 @@ public static class MapEventChecks
                 MapEventKind.Hero when !run.Contains(name) && !set.Cells.Any(c => c.Event == name) && !state.ObjectsOf<PandorasBox>().Any(b => b.Event == name) =>
                     "is never run: no event cell, Pandora's box or other event runs it.",
                 MapEventKind.Quest when !state.ObjectsOf<QuestSite>().Any(q => q.Quest == name) => "is not the quest of any Seer's Hut, Quest Guard or Quest Gate.",
-                MapEventKind.Town when definition.Towns.Count == 0 && !run.Contains(name) => "names no town, so it never runs.",
+                MapEventKind.Town or MapEventKind.Captured when definition.Towns.Count == 0 && !run.Contains(name) => "names no town, so it never runs.",
                 _ => null,
             };
             if (unused is not null)
@@ -121,7 +121,7 @@ public static class MapEventChecks
         MapEventTree.Actions(actions).Any(a => a switch
         {
             MessageAction or QuestionAction or StopAction or IfAction or RepeatAction or WhileAction
-                or SetVariableAction or EnableEventAction or RemoveCellAction => false,
+                or SetVariableAction or EnableEventAction or RemoveCellAction or DialogueAction or EndGameAction { Won: false } => false,
             RunEventAction run => seen.Add(run.Event) && set.Find(run.Event) is { } other && Gives(set, other.Actions, seen),
             ResourceAction { Amount: NumberExpr { Value: <= 0 } } or CreaturesAction { Count: NumberExpr { Value: <= 0 } }
                 or AvailableCreaturesAction { Count: NumberExpr { Value: <= 0 } } or ManaAction { Amount: NumberExpr { Value: <= 0 } }

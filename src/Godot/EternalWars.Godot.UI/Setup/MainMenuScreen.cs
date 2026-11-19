@@ -6,7 +6,7 @@ namespace EternalWars.Godot.UI.Setup;
 /// <summary>
 /// The main menu the game opens on (ADR-101, UI-2, ADR-163): Continue, New game, Load, Multiplayer, Campaign, Watch a replay, Leaderboard,
 /// Quit, in a column on the left of the <see cref="MenuBackground"/>. Continue loads the newest save (it names it in its tooltip); without one
-/// it is disabled. Multiplayer opens the LAN games (ADR-194), Watch a replay the replay viewer (ADR-164). Campaign (Phase 6) is shown disabled until it exists;
+/// it is disabled. Multiplayer opens the LAN games (ADR-194), Campaign the campaigns (ADR-241), Watch a replay the replay viewer (ADR-164);
 /// disabled buttons take no focus, so the arrow keys move between the ones that work. Continue has the focus when there is a save, else New
 /// game, so Enter picks it.
 /// </summary>
@@ -26,6 +26,9 @@ public partial class MainMenuScreen : PanelContainer
 
     /// <summary>"Multiplayer": hosting or joining a LAN game (ADR-194).</summary>
     public event Action? MultiplayerRequested;
+
+    /// <summary>"Campaign": the campaigns to play (ADR-241).</summary>
+    public event Action? CampaignRequested;
 
     /// <summary>"Watch a replay": the replay viewer's list of replays and saves (ADR-164).</summary>
     public event Action? WatchRequested;
@@ -49,7 +52,7 @@ public partial class MainMenuScreen : PanelContainer
         rows.AddChild(Item(_newGame, () => NewGameRequested?.Invoke()));
         rows.AddChild(Item(new Button { Text = "Load" }, () => LoadRequested?.Invoke()));
         rows.AddChild(Item(new Button { Text = "Multiplayer", TooltipText = "Host a game on this network, or join one" }, () => MultiplayerRequested?.Invoke()));
-        rows.AddChild(Later("Campaign", "The campaign comes in Phase 6."));
+        rows.AddChild(Item(new Button { Text = "Campaign", TooltipText = "Maps played one after another, heroes carried from one to the next" }, () => CampaignRequested?.Invoke()));
         rows.AddChild(Item(new Button { Text = "Watch a replay", TooltipText = "Play back a saved replay or a save, on the map and in battles" }, () => WatchRequested?.Invoke()));
         rows.AddChild(Item(new Button { Text = "Leaderboard" }, () => LeaderboardRequested?.Invoke()));
         rows.AddChild(UiSpacing.Space(UiSpacing.Gap));
@@ -79,6 +82,4 @@ public partial class MainMenuScreen : PanelContainer
         return button;
     }
 
-    private static Button Later(string text, string why) =>
-        new() { Text = text, Disabled = true, FocusMode = FocusModeEnum.None, TooltipText = why };
 }

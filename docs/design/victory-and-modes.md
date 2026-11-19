@@ -19,14 +19,15 @@ ADR-057, ADR-073, ADR-075, ADR-094.
   validator warns about a townless start while the grace period is on (not on an arena map, which eliminates nobody).
 - A defeated player's heroes leave, its towns, mines, providers and map dwellings turn neutral and its caravans vanish; the game then refuses
   its commands and the app shows the result.
-- Campaign hooks are open ❓ (FLOW-1, Phase 6).
+- **Campaign maps** (ADR-241): a campaign map ends by its own conditions or by a map event that ends the game (ADR-242); the person's team
+  winning goes on to the next map, any other end offers to try the map again from its start.
 
 ## Victory screen, ranking and replays
 ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
 - A won game on a map that is not campaign-like ends on a HoMM3-like **victory screen**: days, difficulty, **score**, rank title. A lost game,
   or one won only by computers, has no score.
 - **Not ranked**: campaign-like maps (a human starts without a town, or map events give something only to humans; the editor's
-  validator warns) and arena maps. No editor switch.
+  validator warns), a campaign's maps and arena maps. No editor switch.
 - **Difficulty** (Easy, Normal, Hard, Expert, Master; ADR-225): chosen on the new-game screen, the map's own difficulty (Normal when not
   set) preselected. It never changes the AI.
 - **Score** = max(10, 200 − days) × difficulty (Easy 80 %, Normal 100 %, Hard 130 %, Expert 160 %, Master 200 %) × turn timer (off or over
@@ -59,8 +60,13 @@ ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
 In priority order:
 1. **Single scenario vs. AI**.
 2. **Hot-seat**: several humans share the machine; battles between humans on the same screen.
-3. **Story campaign** *(planned, Phase 6)*: chained scenarios, carry-over heroes, scripted events and dialogue, on the
-   [map events](adventure-map.md#pandoras-box-and-map-events) with variables kept between maps; a prologue map first (ADR-118, CAMP-1).
+3. **Story campaign** (ADR-241): maps played one after another by one person at one difficulty, each won before the next, with an intro
+   before and an outro after each. The next map takes in the heroes it names and its strongest others (level, experience, stats, skills,
+   spells, war machines; armies and artifacts as the map chooses): each becomes the person's hero of the same roster hero, else a hero
+   placeholder; one without a place waits for a later map. The [map events](adventure-map.md#pandoras-box-and-map-events)' kept variables
+   carry on, dialogues tell the story and an event can end the map (ADR-242). Campaign files (`*.ewcampaign.json`) name map files beside
+   them; the game ships the sample campaign Border Watch. A save of a campaign map goes on with its campaign. The prologue map comes later
+   (ADR-118, CAMP-1).
 - **Arena** (ADR-097, ADR-100, ADR-158), as in HotA; the map's "Arena" switch (map format v38) turns it on:
   - **Day 1 is preparation**: heroes have nearly unlimited movement (1 000 000 points) and towns build any number of buildings, with the
     usual starting resources (the difficulty's, or the map's own). The map's victory and defeat conditions, the last team standing and the

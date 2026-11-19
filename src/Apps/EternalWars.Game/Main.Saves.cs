@@ -67,7 +67,7 @@ public partial class Main
     {
         try
         {
-            GameSaves.Autosave(_saveFolder, _initialMap, _session, _generated);
+            GameSaves.Autosave(_saveFolder, _initialMap, _session, _generated, _campaign?.Record);
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)
         {
@@ -199,7 +199,7 @@ public partial class Main
 
         try
         {
-            GameSaves.Save(_saveFolder, name, _initialMap, _session, _generated);
+            GameSaves.Save(_saveFolder, name, _initialMap, _session, _generated, _campaign?.Record);
             _menu.SetMessage($"Saved '{name}'.");
             _status.Text = $"Saved '{name}'.";
         }
@@ -347,6 +347,7 @@ public partial class Main
         SavedGameStart.GoOn(session, seats.Where(s => s.Kind == LanSeatKind.Computer).Select(s => s.Id), lan: lobby is not null);
 
         _generated = record.Generated;
+        _campaign = lobby is null ? ResumeCampaign(record.Campaign) : null; // a campaign map goes on with its campaign (ADR-241)
         HostLobbyGame(session, lobby);
         BeginGame(session, record.Map, resume: true);
         _status.Text = note.Length > 0 ? $"{note} {SaveSlotText.Loaded(path, record)}" : SaveSlotText.Loaded(path, record);
@@ -428,7 +429,7 @@ public partial class Main
 
         try
         {
-            var path = GameSaves.SaveReplay(ProjectSettings.GlobalizePath(ReplaysFolder), name, _initialMap, _session, _generated);
+            var path = GameSaves.SaveReplay(ProjectSettings.GlobalizePath(ReplaysFolder), name, _initialMap, _session, _generated, _campaign?.Record);
             return $"Replay saved as {Path.GetFileName(path)}.";
         }
         catch (Exception e) when (e is IOException or UnauthorizedAccessException)

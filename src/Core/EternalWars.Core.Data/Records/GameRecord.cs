@@ -18,11 +18,12 @@ namespace EternalWars.Core.Data.Records;
 /// A replayable game (<c>*.ewreplay.json</c>) or a saved game (<c>*.ewsave.json</c>, ADR-058): the map as it was at the
 /// start, the game options (incl. the seed) and every accepted command. <see cref="FinalDigest"/> lets a replay prove it
 /// reached the same state. Version 2 adds <see cref="Save"/>, version 3 <see cref="Generated"/>, version 4 <see cref="DigestVersion"/>, version 5
-/// names the options' <c>difficulty</c> HoMM3's way (was <c>complexity</c>, one step lower; ADR-225); older files still load.
+/// names the options' <c>difficulty</c> HoMM3's way (was <c>complexity</c>, one step lower; ADR-225), version 6 adds <see cref="Campaign"/> and the
+/// options' carried heroes (ADR-241); older files still load.
 /// </summary>
 public sealed record GameRecordDocument
 {
-    public const int CurrentFormatVersion = 5;
+    public const int CurrentFormatVersion = 6;
 
     /// <summary>The first version whose options name the difficulty <c>difficulty</c>, Easy … Master (ADR-225).</summary>
     internal const int DifficultyVersion = 5;
@@ -63,7 +64,16 @@ public sealed record GameRecordDocument
 
     /// <summary>How the map was generated, for a game on a random map (RMG-5); null for a hand-made map.</summary>
     public GenerationInfo? Generated { get; init; }
+
+    /// <summary>The campaign this game is a map of (ADR-241), so a loaded save goes on with it once the map is won; null for a single game.</summary>
+    public CampaignRecord? Campaign { get; init; }
 }
+
+/// <summary>
+/// A campaign map's place in its campaign (ADR-241): where the campaign comes from (<see cref="Source"/>, the front-end's name for it: a shipped
+/// campaign or a campaign file) and where it stood when this map began (<see cref="Progress"/>: the map's index, the difficulty, what it carried in).
+/// </summary>
+public sealed record CampaignRecord(string Source, Domain.Campaigns.CampaignProgress Progress);
 
 /// <summary>
 /// The inputs of a generated map (the map itself is in <see cref="GameRecordDocument.Map"/>): template, size, seed, the attempt the generator kept
@@ -96,10 +106,12 @@ public static class GameReplay
     /// Captures a finished or ongoing session. <paramref name="initialMap"/> must be the map document the
     /// session was created from (save it before starting: the live state has changed since).
     /// </summary>
-    public static GameRecordDocument Record(MapDocument initialMap, GameSession session, string? saveName = null, GenerationInfo? generated = null) => new()
+    public static GameRecordDocument Record(
+        MapDocument initialMap, GameSession session, string? saveName = null, GenerationInfo? generated = null, CampaignRecord? campaign = null) => new()
     {
         Map = initialMap,
         Generated = generated,
+        Campaign = campaign,
         Options = session.State.Options,
         Commands = session.CommandLog.ToList(),
         FinalDigest = GameStateDigest.Compute(session.State),

@@ -152,14 +152,15 @@ public partial class EventsPanel : ScrollContainer
         var row = Row();
         var add = Menu(row, "New ▾",
         [
-            "Hero event (cells, boxes)", "Player event (turn start)", "Town event (turn start)", "Quest (quest objects)", null,
+            "Hero event (cells, boxes)", "Player event (turn start)", "Town event (turn start)", "Quest (quest objects)",
+            "Captured event (a town falls)", "Battle event (a battle won)", null,
             "Timed event (form)…", "Event cell (form)…", "Town event (form)…", "Quest (form)…",
         ]);
         add.IdPressed += id =>
         {
-            if (id < 4)
+            if (id < 6)
             {
-                var kind = (MapEventKind[])[MapEventKind.Hero, MapEventKind.Player, MapEventKind.Town, MapEventKind.Quest];
+                var kind = (MapEventKind[])[MapEventKind.Hero, MapEventKind.Player, MapEventKind.Town, MapEventKind.Quest, MapEventKind.Captured, MapEventKind.Battle];
                 var name = _editor.MapEvents.UnusedName(kind[id].ToString().ToLowerInvariant());
                 if (_editor.MapEvents.Add(MapEventTemplates.Blank(name, kind[id])) == EditResult.Ok)
                 {
@@ -168,7 +169,7 @@ public partial class EventsPanel : ScrollContainer
             }
             else
             {
-                _form = (string[])["timed", "cell", "town", "quest"] is var forms ? forms[id - 5] : null;
+                _form = (string[])["timed", "cell", "town", "quest"] is var forms ? forms[id - 7] : null;
                 Later();
             }
         };
@@ -207,8 +208,11 @@ public partial class EventsPanel : ScrollContainer
             case MapEventKind.Hero:
                 ShowCells(definition);
                 break;
-            case MapEventKind.Town:
+            case MapEventKind.Town or MapEventKind.Captured:
                 ShowTowns(definition);
+                break;
+            case MapEventKind.Battle:
+                _box.AddChild(new Label { Text = "Runs for the winner of every battle on the map; which battle it was is a condition (an If: defeated by, the hero)." });
                 break;
             case MapEventKind.Quest:
                 ShowQuestObjects(definition);
@@ -255,7 +259,12 @@ public partial class EventsPanel : ScrollContainer
 
     private void ShowTowns(MapEventDefinition definition)
     {
-        _box.AddChild(new Label { Text = "Runs at the start of the owner's turn in these towns (neutral towns: at the start of the day):" });
+        _box.AddChild(new Label
+        {
+            Text = definition.Kind == MapEventKind.Captured
+                ? "Runs when one of these towns falls to a player, for its new owner and the hero that took it:"
+                : "Runs at the start of the owner's turn in these towns (neutral towns: at the start of the day):",
+        });
         var flow = new HFlowContainer();
         _box.AddChild(flow);
         var towns = _editor.Scenario.ObjectsOf<Town>().OrderBy(t => t.Id.Value).ToList();

@@ -1,5 +1,5 @@
 {
-  "formatVersion": 41,
+  "formatVersion": 42,
   "name": "Format sample",
   "description": "One object of every kind, for the format tests.",
   "width": 64,
@@ -725,5 +725,57 @@
       "y": 9,
       "level": 0
     }
-  ]
+  ],
+  "events": {
+    "events": [
+      {
+        "name": "taken",
+        "kind": "Captured",
+        "actions": [
+          {
+            "type": "dialogue",
+            "lines": [
+              {
+                "speaker": "",
+                "text": "The gates open."
+              },
+              {
+                "speaker": "Scout",
+                "text": "The town is ours."
+              }
+            ]
+          },
+          {
+            "type": "endGame",
+            "won": true,
+            "text": "The town has fallen."
+          }
+        ],
+        "enabled": true,
+        "towns": [
+          8
+        ],
+        "stages": []
+      },
+      {
+        "name": "won",
+        "kind": "Battle",
+        "actions": [
+          {
+            "type": "endGame",
+            "won": false,
+            "text": ""
+          }
+        ],
+        "enabled": true,
+        "towns": [],
+        "stages": []
+      }
+    ],
+    "variables": {},
+    "cells": [],
+    "keptVariables": [],
+    "takenVariables": [],
+    "isEmpty": false
+  }
 }
