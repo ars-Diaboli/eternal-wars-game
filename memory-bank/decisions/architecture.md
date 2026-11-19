@@ -34,6 +34,7 @@
 | [222](#adr-222-the-game-apps-policy-lives-in-a-gamedirector-a-replaycontroller-and-gamescreens-adr-059-adr-091-adr-164-2026-11-19) | The game app's policy lives in a `GameDirector`, a `ReplayController` and `GameScreens` (ADR-059, ADR-091, ADR-164, 2026-11-19) | implemented |
 | [223](#adr-223-the-town-and-hero-screens-are-sections-the-inspector-has-one-section-per-object-type-adr-046-adr-191-2026-11-19) | The town and hero screens are sections; the inspector has one section per object type (ADR-046, ADR-191, 2026-11-19) | implemented |
 | [224](#adr-224-the-sim-tools-commands-are-classes-with-strict-options-saves-stream-to-disk-and-list-from-their-label-adr-034-adr-058-2026-11-19) | The sim tool's commands are classes with strict options; saves stream to disk and list from their label (ADR-034, ADR-058, 2026-11-19) | implemented |
+| [231](#adr-231-the-game-apps-remaining-policy-moves-to-core-autosave-rematch-a-saves-seats-lan-rules-replay-recovery-the-maps-focus-adr-222-adr-226-2026-11-19) | The game app's remaining policy moves to core: autosave, rematch, a save's seats, LAN rules, replay recovery, the map's focus (ADR-222, ADR-226, 2026-11-19) | implemented |
 
 
 ### ADR-001: Godot 4.7.2 (.NET) + C# on .NET 10
@@ -435,7 +436,7 @@ keep their values as fixed values, and their heroes start without an army.
   `MapChecksTests`; messages, issue order, event order and the sim digests are unchanged.
 
 ### ADR-222: The game app's policy lives in a `GameDirector`, a `ReplayController` and `GameScreens` (ADR-059, ADR-091, ADR-164, 2026-11-19)
-**Status**: implemented. No save, map or protocol change.
+**Status**: implemented; extended by ADR-231 (the policy `Main` still held). No save, map or protocol change.
 
 - **Why**: the game app's `Main` held when the computer players play, when the turn timer runs and ends a turn, which colours are played on
   this computer, what a LAN host announces, the replay viewer's stepping and which screen is open. Apps hold composition and input mapping
@@ -508,3 +509,27 @@ keep their values as fixed values, and their heroes start without an army.
 - **Checked**: `SimCommandLineTests` (the tests reference the sim project), `SaveFileStreamTests` (same bytes as the text, a 100,000-command
   save, labels cut at any buffer size, damaged commands, a file cut after its label, unreadable files, a version 1 save with a byte
   order mark); the sim digests and the output of every command compared before and after (times aside).
+
+### ADR-231: The game app's remaining policy moves to core: autosave, rematch, a save's seats, LAN rules, replay recovery, the map's focus (ADR-222, ADR-226, 2026-11-19)
+**Status**: implemented (2026-11-19), the roadmap's "Code health" item; extends ADR-222. No rule, save, map or protocol change.
+
+- **Why** (the refactoring close-out, ADR-226): after ADR-222 the game app's `Main` still decided when to autosave, built the rematch,
+  set a loaded save's colours going, held the LAN lobby's and the game list's rules, recovered a replay that diverged and chose where the
+  camera goes. Apps hold composition and input mapping only, and none of it was tested.
+- **Parts** (engine-free, each with its tests):
+  - `AutosaveSchedule` (Core.Domain, Game): once a game has started, then after the command that began each turn; never in the replay
+    viewer nor on a session following a LAN host (`AutosaveScheduleTests`).
+  - `MapFocus` (Core.Domain, Game): the computer hero followed when it starts walking in sight (once, until another walks or a turn
+    starts; the replay viewer follows every hero on either level), a map event's place, the selected hero teleported to another level,
+    the hero selected when a turn is shown and when the selected one is defeated (`MapFocusTests`).
+  - `GameRematch` (Core.Data, Records): the start map with the finished game's options and a new seed; a LAN host's keeps who plays each
+    colour. The front-end draws the seed as the new-game screen does: a new game's seed is not a rule's randomness.
+  - `SavedGameStart` (Core.Data, Records): whether a save asks who plays (more than one person still in it), the colours handed to the
+    computer by command, and a simultaneous day loaded on one computer going on turn by turn (`SavedGameStartTests`, also the rematch).
+  - `LanAddress`, `LanListing`, `LanAccept` (Core.Network): an address typed to join, a found game's line and whether it can be joined, who
+    plays a lobby's colour and whether it can be taken (`LobbyState.Open` uses the same rule), and where a hosting computer's new connection
+    goes (`LanRulesTests`).
+  - `ReplayController`: `Advance` takes `ReplayViews` (the menu, heroes' steps and a battle's animations hold it; a result stays its
+    moment); a diverged game is put back where it was on a new session, paused, before `Diverged` is returned; `CanPlayFromHere`
+    (`ReplayControllerTests`).
+- `Main` asks these and moves the views; what it shows and the order of commands are unchanged. The 37 game smoke scenarios pass after it.

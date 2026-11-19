@@ -120,17 +120,16 @@ public partial class Main
         ShowReplayState();
         var frame = replay.Advance(
             delta,
-            held: _menu.Visible || _context.Now < _context.PlaybackEnd || _battle.IsBusy,
-            resultShown: _battle.IsOpen && _battle.Result is not null);
+            new ReplayViews(_menu.Visible, _context.Now < _context.PlaybackEnd, _battle.IsBusy, _battle.IsOpen && _battle.Result is not null));
         switch (frame.Kind)
         {
             case ReplayAdvance.LeaveResult:
                 _battleHud.Continue(); // the Necromancy screen first, if undead were raised, then the map
                 break;
             case ReplayAdvance.Diverged:
-                // Only a command from outside the record could make the watched game differ: rebuild it from the record where it was, paused.
+                // The controller has put the record's game back where it was, paused: the views are built again on it.
                 GD.PushWarning($"Replay viewer: {frame.Problem}");
-                SeekReplay(replay.Player.Position);
+                BeginGame(replay.Player.Session, replay.Player.Record.Map, resume: true);
                 break;
         }
     }
@@ -148,7 +147,7 @@ public partial class Main
             replay.Player.CurrentTurn.Date.AbsoluteDay,
             replay.Player.LastDay,
             _battle.IsOpen,
-            _battle.IsOpen ? replay.Player.CanTakeOver : replay.Player.CanPlayOn,
+            replay.CanPlayFromHere(_battle.IsOpen),
             replay.Player.IsAtEnd));
     }
 
@@ -226,7 +225,7 @@ public partial class Main
         if (ReplayPlayer.PersonToShow(state) is { } person && person != state.CurrentPlayer.Id)
         {
             _context.SetViewer(person);
-            _mapInput.Select(state.HeroesOf(person).FirstOrDefault()?.Id, focus: true);
+            _mapInput.Select(_focus.FirstHeroOf(person), focus: true);
         }
 
         _status.Text = $"Playing on from the replay, {state.Date}: your own game now; the replay stays as it is.";

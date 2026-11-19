@@ -295,8 +295,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       Found on the way: a TCP link idle for 30 seconds was dropped on its next send; a link now reads and writes on threads of its own (ADR-230)
 - [ ] `GameSession.ChangeStamp` misses a LAN client's view writes (the hover preview's last-route cache); `FogOfWar.SightOf` hands out
       its live set
-- [ ] Game app `Main` policy to move out (ADR-222): when to autosave, the rematch (its seed from `System.Random.Shared`), loading a save's
-      seats (`HandToComputer`, `PlayTurnByTurn`), lobby seat and join-listing rules, replay hold and recovery, camera and focus rules
+- [x] Game app `Main` policy moved out (ADR-231): `AutosaveSchedule`, `GameRematch` (the seed a parameter), `SavedGameStart`,
+      `LanAddress` / `LanListing` / `LanAccept`, `ReplayViews` and the diverged replay's recovery in `ReplayController`, `MapFocus`
 - [ ] Main-menu "Continue" offers a save whose commands no longer load (labels are read alone since ADR-224); fall back to the next one
 - [ ] `EventsPanel` rebuilds whole on every `UndoHistoryChanged`, unmerged; give it a `RefreshScheduler` or sections
 - [ ] Smoke `game-battle-control` fails at frame 184 (no Surrender: the computer's stack is acting), before ADR-227 too; the smoke games draw

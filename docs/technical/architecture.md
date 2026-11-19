@@ -129,14 +129,18 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   screen's in `Hud/HeroScreen`), each with its own scheduler and events, rebuilding only itself; the screen rebuilds them all when it
   opens and on the few events that change what it shows at all. The editor's inspector has one `InspectorSection<T>` per map object
   type in the `InspectorSections` registry (`Editor/Inspector`). **Apps** hold composition and input mapping only.
-- **The game app** (ADR-222): `Main` builds the views and maps input; the policy it runs lives elsewhere. `GameDirector` (Core.Domain/Game)
+- **The game app** (ADR-222, ADR-231): `Main` builds the views and maps input; the policy it runs lives elsewhere. `GameDirector` (Core.Domain/Game)
   runs a shown game once a frame: the colours played here (`PlaysHere`, `PlaysElsewhere`, `Viewer`), the turn timer's clock and when it
   may end a turn (`RunClock`), a person's turn that waits for the computer's moves to be shown (`TurnStarted`, `TakeTurnToShow`) and the
   computer players' turns (`PlayComputer`), changing the game only through the AI's and the timer's commands. What it is told about the
   computer it runs on is a `LocalSeats` (one computer by default; a LAN host's or client's from `LanSeats` in Core.Network). The replay
   viewer's stepping is `ReplayController` (Core.Data/Records) over a `ReplayPlayer`: play and pause, speed, the eyes the map is seen
-  through, the moments at a turn's start and on a battle's result, skipping a battle, playing one on. Which screen shows (the screens
-  before a game, the F10 menu and its button, the map or the battle scene) is `GameScreens` (Godot.UI).
+  through, the moments at a turn's start and on a battle's result, what holds a frame (`ReplayViews`), putting a diverged game back,
+  skipping a battle, playing one on. When to autosave is `AutosaveSchedule` and where the map's camera goes and which hero is selected is
+  `MapFocus` (both Core.Domain/Game); a rematch is `GameRematch` and a loaded save's colours `SavedGameStart` (Core.Data/Records); a typed
+  address, the games found and a lobby's colours read through `LanAddress` and `LanListing`, and `LanAccept` routes a host's new
+  connection (Core.Network). Which screen shows (the screens before a game, the F10 menu and its button, the map or the battle scene) is
+  `GameScreens` (Godot.UI).
 
 ### Feature map (Core.Domain unless noted)
 

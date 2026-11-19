@@ -95,7 +95,7 @@ public sealed record LobbySeat(PlayerId Id, string Colour, SeatKind Kind, string
 public sealed record LobbyState(string Host, string Game, IReadOnlyList<string> Settings, IReadOnlyList<LobbySeat> Seats, IReadOnlyList<string> Waiting)
 {
     /// <summary>The open colours: played on another computer, nobody has taken them yet.</summary>
-    public IEnumerable<LobbySeat> Open => Seats.Where(s => s.Kind == SeatKind.Remote && s.Player is null);
+    public IEnumerable<LobbySeat> Open => Seats.Where(LanListing.CanTake);
 }
 
 /// <summary>The lobby as it stands now, and the client's colour in it (null while it has none).</summary>

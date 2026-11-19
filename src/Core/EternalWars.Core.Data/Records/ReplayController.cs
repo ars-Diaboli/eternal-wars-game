@@ -16,12 +16,25 @@ public enum ReplayAdvance
     /// <summary>The next command ran.</summary>
     Stepped,
 
-    /// <summary>The watched game differed from its record (<see cref="ReplayFrame.Problem"/>): paused; the front-end shows the record where it was.</summary>
+    /// <summary>
+    /// The watched game differed from its record (<see cref="ReplayFrame.Problem"/>): the controller has put the record's game back where it
+    /// was, on a new session, paused; the front-end builds its views again on it.
+    /// </summary>
     Diverged,
 }
 
 /// <summary>A frame of the replay viewer: what it did and, when the watched game diverged, why.</summary>
 public readonly record struct ReplayFrame(ReplayAdvance Kind, string? Problem = null);
+
+/// <summary>
+/// What the replay viewer's views show this frame (<see cref="ReplayController.Advance"/>): the menu open, heroes' steps still played, a
+/// battle's animations still running, a finished battle's result on screen.
+/// </summary>
+public readonly record struct ReplayViews(bool MenuOpen = false, bool StepsPlaying = false, bool BattleAnimating = false, bool ResultShown = false)
+{
+    /// <summary>Whether the views hold the replay back: the next command waits until they have caught up and the menu is closed.</summary>
+    public bool Hold => MenuOpen || StepsPlaying || BattleAnimating;
+}
 
 /// <summary>
 /// The replay viewer's stepping (ADR-164, ADR-222) over a <see cref="ReplayPlayer"/>: playing or paused, the speed, whose eyes the map is seen
@@ -80,23 +93,23 @@ public sealed class ReplayController(ReplayPlayer player, AnimationSpeed speed =
     }
 
     /// <summary>
-    /// One frame of <paramref name="seconds"/>: while playing and not <paramref name="held"/> (the menu open, heroes' steps or a battle's
-    /// animations still shown), a finished battle's result (<paramref name="resultShown"/>) stays a moment, a turn's start pauses a moment, else the
-    /// next command runs. A command the record's game refuses pauses the replay.
+    /// One frame of <paramref name="seconds"/>: while playing and not held by the <paramref name="views"/> (<see cref="ReplayViews.Hold"/>), a
+    /// finished battle's result stays a moment, a turn's start pauses a moment, else the next command runs. A command the record's game refuses
+    /// pauses the replay and puts the record's game back where it was (<see cref="ReplayAdvance.Diverged"/>).
     /// </summary>
-    public ReplayFrame Advance(double seconds, bool held, bool resultShown)
+    public ReplayFrame Advance(double seconds, ReplayViews views)
     {
         if (Player.IsAtEnd)
         {
             _playing = false;
         }
 
-        if (!_playing || held)
+        if (!_playing || views.Hold)
         {
             return new ReplayFrame(ReplayAdvance.Waited);
         }
 
-        if (resultShown)
+        if (views.ResultShown)
         {
             _resultWait += seconds;
             if (_resultWait < SpeedSettings.Seconds(Speed, ResultSeconds))
@@ -121,11 +134,18 @@ public sealed class ReplayController(ReplayPlayer player, AnimationSpeed speed =
         }
         catch (InvalidOperationException e)
         {
-            // Only a command from outside the record could make the watched game differ: the front-end rebuilds it from the record, paused.
+            // Only a command from outside the record could make the watched game differ: it is rebuilt from the record where it was, paused.
             _playing = false;
+            Seek(Player.Position);
             return new ReplayFrame(ReplayAdvance.Diverged, e.Message);
         }
     }
+
+    /// <summary>
+    /// Whether "Play from here" is offered: in a battle (<paramref name="battleShown"/>), playing it on (<see cref="ReplayPlayer.CanTakeOver"/>);
+    /// on the map, a game of the player's own from here (<see cref="ReplayPlayer.CanPlayOn"/>).
+    /// </summary>
+    public bool CanPlayFromHere(bool battleShown) => battleShown ? Player.CanTakeOver : Player.CanPlayOn;
 
     /// <summary>"Skip to the result": the battle's remaining commands run at once; its result shows from the start of its moment.</summary>
     public void SkipBattle()
