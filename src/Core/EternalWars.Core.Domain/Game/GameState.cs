@@ -35,7 +35,7 @@ public sealed class GameState
 
     // Indexes (lookups the pathfinder makes for every tile it expands). Rebuilt or kept up to date by the mutators below; never part of the state.
     private readonly Dictionary<MapPosition, Hero> _heroAt = [];
-    private long _heroAtMoves = -1; // Hero.Moves when _heroAt was built; -1 = rebuild
+    private long _heroAtMoves = -1; // HeroMoves.Count when _heroAt was built; -1 = rebuild
     private readonly int[] _guards; // per tile: monster cells on its eight neighbours
     private readonly Dictionary<Type, object> _objectsOfType = []; // T -> read-only list of T, in Objects order
     private List<Towns.Town>? _townsById;
@@ -312,13 +312,16 @@ public sealed class GameState
         GetPlayer(owner).MaxHeroes = limit;
     }
 
+    /// <summary>How many times this game's heroes have moved (any <see cref="Hero.Position"/> set since they were added).</summary>
+    internal HeroMoveCounter HeroMoves { get; } = new();
+
     /// <summary>The hero on the tile (the first in <see cref="Heroes"/> should two share it), or null.</summary>
     public Hero? HeroAt(MapPosition position)
     {
-        if (_heroAtMoves != Hero.Moves)
+        if (_heroAtMoves != HeroMoves.Count)
         {
-            // Any hero anywhere moved, or one joined or left: index this game's heroes again (the first hero on a tile wins).
-            var moves = Hero.Moves;
+            // One of this game's heroes moved, or one joined or left: index the heroes again (the first hero on a tile wins).
+            var moves = HeroMoves.Count;
             _heroAt.Clear();
             foreach (var hero in _heroes)
             {
@@ -635,6 +638,7 @@ public sealed class GameState
         }
 
         _heroes.Insert(index ?? _heroes.Count, hero);
+        hero.MoveCounter = HeroMoves;
         _heroAtMoves = -1;
         RefreshArtifacts(hero);
         _highestHeroId = Math.Max(_highestHeroId, hero.Id.Value);

@@ -118,7 +118,7 @@ Godot views ◄──subscribe── session.Events (EventBus) ◄────�
   `BattleService`.
 - **Routes**: `PathFinder.FindPath` is A* (a distance estimate that never counts more than the cheapest steps, so routes are the cheapest),
   plain Dijkstra once a gate links two tiles. `HeroMovementService.FindPath` gives its last route again while
-  `GameSession.ChangeStamp` (commands accepted + events published + hero moves + a LAN client's view writes) stays the same, so a move right after a check does not search
+  `GameSession.ChangeStamp` (commands accepted + events published + its own heroes' moves + a LAN client's view writes) stays the same, so a move right after a check does not search
   again. For many targets at once, `PathFinder.CostsFrom` (from one tile) and `CostsTo` (to one tile, from many) are Dijkstra searches that
   run only as far as the questions need and answer exactly what `FindPath` would give as the route's cost; the AI weighs its targets, its
   exploring and its Dimension Door landings with them and searches the full route only for the target it picks (by moving).
