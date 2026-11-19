@@ -226,7 +226,14 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [x] Icon-only buttons (48 px in bars and panels, 32 px in windows), their label and hotkey on the status bar (ADR-204)
 - [x] A status bar on the battle, town and hero screens and the screens before a game (ADR-204)
 - [x] Map lists on the new-game screen sorted by name or size and filtered by size, kept in the settings (ADR-204)
-- [ ] The difficulty as a row of five icons on the new-game screen, the icon on the victory screen and the leaderboard (ADR-204)
+- [ ] The difficulty as a row of five chess-piece buttons on the new-game screen, the icon on the victory screen and the leaderboard (ADR-204, ADR-225)
+- [ ] Difficulty levels renamed Easy … Master (old names moved up one; map v41 migration, saves and ranking read old names), no "Map
+      default": the map's own difficulty or Normal preselected, its description on the status bar (ADR-225)
+- [ ] New-game options tidied: fog "Permanent reveal" / "Refog", no refog margin, turn timer checkbox with minutes, seed only in debug
+      builds, hero limit beside the fog (ADR-225)
+- [ ] New-game players: "+" / "−" for a random map's players, a colour choice per player (`Player.Colour`), the town as a 2 × 4 crest panel (ADR-225)
+- [ ] An "×" at the top right closes the new-game screen (no Back); every window's "×" in its top-right corner (ADR-225)
+- [ ] The calendar on the adventure map's status bar right of the resources; no "Turn: <player>" label (ADR-225)
 - [x] Cursors: the cursor for what is under the pointer (core resolvers, adventure map and battle), system cursors standing in (ADR-204)
 - [x] The cursor images for menus and the adventure map (sets 1–3 of [cursor-prompts.md](../content/cursor-prompts.md), ADR-204)
 - [ ] The battle cursor images (sets 4–7) and the days a move takes drawn on the move cursor (ADR-204)

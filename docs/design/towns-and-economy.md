@@ -155,6 +155,6 @@ Paid at the owner's turn start. **No base income** (ADR-025): only sources pay, 
 Silo), the Treasury and Prospecting skills (ADR-062), resource specialties and artifacts (`HeroIncome`, ADR-061).
 
 ## Starting resources
-ADR-063. The game's **complexity** (`GameOptions.Complexity`; none = the map's own) sets each player's start: Beginner 10000 gold, 30 lumber,
-30 ore, 10 of each rare; Easy 7500, 20, 20, 6; Normal 5000, 15, 15, 3; Hard 3500, 12, 12, 1; Expert 2500, 10, 10, none. Only Expert is the
-designer's set; the others are guesses.
+ADR-063, ADR-225. The game's **difficulty** (`GameOptions.Complexity`; none = the map's own) sets each player's start: Easy 10000 gold, 30 lumber,
+30 ore, 10 of each rare; Normal 7500, 20, 20, 6; Hard 5000, 15, 15, 3; Expert 3500, 12, 12, 1; Master 2500, 10, 10, none. Only Master is the
+designer's set; the others are guesses. A map's own level (its difficulty, Normal when not set) keeps the map's own starting resources.

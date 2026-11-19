@@ -113,9 +113,9 @@ gates and unused exits. Templates may link zones with portals.
 ## Fog of war
 ADR-017, ADR-031. Two modes, chosen at game creation (`GameOptions.FogMode`):
 1. **Permanent reveal** (HoMM3): once explored, terrain, objects and units stay visible.
-2. **Shroud + refog for units**: terrain and objects stay revealed (out of sight, in their **last known state**, `ObjectMemory`); other
+2. **Refog**: terrain and objects stay revealed (out of sight, in their **last known state**, `ObjectMemory`); other
    players' heroes show only on tiles **in sight**: within an observer's radius, dropping out only beyond radius + **refog margin**
-   (default 2, configurable).
+   (default 2; set only by the tools, ADR-225).
 
 Observers: heroes radius 5; owned towns radius 10 from the town's centre cell (7 past its walls, ADR-141), an Academy with the Observatory 24 (ADR-143); owned mines, providers and map
 dwellings radius 2 from their entrance. Scouting adds 2 / 4 / 6 to a hero's radius, revealed at once when learned.

@@ -3146,3 +3146,44 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
 - **Checked**: `SimCommandLineTests` (the tests reference the sim project), `SaveFileStreamTests` (same bytes as the text, a 100,000-command
   save, labels cut at any buffer size, damaged commands, a file cut after its label, unreadable files, a version 1 save with a byte
   order mark); the sim digests and the output of every command compared before and after (times aside).
+
+### ADR-225: The new-game screen's options tidied; difficulty as five chess pieces; the calendar on the status bar (ADR-063, ADR-101, ADR-201, ADR-204, owner notes, 2026-11-19)
+**Status**: accepted (2026-11-19), not built. From the owner's notes in `ideas.md`; *(proposal)* marks the agent's fill-ins, for the owner
+to change. Map format **v41** (difficulty names); saves and the ranking file read the old names too.
+
+- **Game difficulty** (replaces "Complexity" on the screen and in the code: `Complexity` → `Difficulty` *(proposal)*): the levels are
+  **Easy, Normal, Hard, Expert, Master**, HoMM3's five steps. The old names move up one by position, so every level keeps its numbers:
+  Beginner → Easy, Easy → Normal, Normal → Hard, Hard → Expert, Expert → Master. Starting resources (towns-and-economy.md) and the score
+  factors (Easy 80 %, Normal 100 %, Hard 130 %, Expert 160 %, Master 200 %) are unchanged per level. `MapMigrations` renames
+  `rules.difficulty` in maps before v41; saves and `ranking` files map the old names when they read them *(proposal)*.
+- **A row of five square buttons** with **chess pieces** (pawn, knight, bishop, rook, queen; [icon-prompts.md](../content/icon-prompts.md),
+  sheet 29, replacing ADR-204's helmets), one pressed at a time. Hovering one puts its name and what it means (the starting gold and
+  resources, the score factor) on the **status bar**; the gold no longer stands in the labels. **No "Map default" button**:
+  - **A map** preselects its own difficulty (`rules.difficulty`, set in the editor's conditions panel), **Normal** when it sets none. The
+    player may pick another *(proposal: the map's difficulty is a default, not a lock)*. The map's level keeps the map's own starting
+    resources (the game is sent with no difficulty, as "Map default" was); another level sets that level's resources *(proposal)*. The
+    editor's "Difficulty" row says "Normal" for not set.
+  - **A random map**: Normal preselected; the chosen level sets the resources and is the generated map's difficulty.
+  - A map event's "difficulty" quantity reads the game's level, else the map's, else Normal (now 1, was 2 for "none").
+- **Fog of war**: the choices read **Permanent reveal** and **Refog**. The **refog margin row goes**; a game started from the screen uses the
+  default margin (2); the tools may still set it.
+- **Turn timer**: a **checkbox**; ticked, a number box beside it takes the minutes (1–30) *(proposal: 5 when first ticked)*.
+- **Seed**: the field and "New seed" are shown only in **debug builds** (`OS.IsDebugBuild()`); a release build draws a new seed for every
+  game, still kept in saves and replays.
+- **Layout**: the **hero limit** row moves into the game options beside the fog (shown when the hero limit applies, as now).
+- **Players on a random map**: the "Players" number box goes. A **"+"** icon button under the players list adds the next slot (to the
+  template's maximum); a **"−"** icon button on each player's row removes that player (to the template's minimum). Hidden at the limits.
+- **Player colour**: each player row gets a colour choice (a swatch opening the eight colours); picking a colour another player has swaps
+  the two *(proposal)*. Needs a player's colour apart from its `PlayerId` *(proposal: `Player.Colour`, set at the start, kept in saves;
+  `Palette.ForPlayer` reads it)*; core change with tests.
+- **Town choice**: the faction names give way to their **crests** (ADR-211): the row shows the chosen crest ("?" for Random); clicking it
+  opens a **2 × 4 panel** of the eight towns' crests *(proposal: with a "Random" button under it)*. Hovering a crest puts the town's name on
+  the status bar.
+- **Close, not Back**: the new-game screen's "Back (Esc)" button goes; a 32 px **"×"** icon button stands in its **top-right corner** (Esc
+  still closes). **Everywhere** an "×" (`UiIcon.Close`, icon-only) closes a window or screen, it stands in that window's top-right corner
+  (the hero, town, tavern, marketplace, dwelling, exchange, spell book, kingdom, quest log, puzzle map, thieves' guild, object and intel
+  windows). Text buttons along a window's bottom (ADR-204) stay as they are *(proposal: the other screens before a game keep their Back
+  for now)*.
+- **Adventure map**: the **calendar** (the date, the week's event) moves onto the **status bar, right of the resources**, in both side-panel
+  modes *(proposal: the date short, the week's event in its hover text)*; the **"Turn: <player>" label goes**. End turn stays where
+  ADR-204 put it.
