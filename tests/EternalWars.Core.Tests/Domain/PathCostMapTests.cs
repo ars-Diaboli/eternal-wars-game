@@ -203,6 +203,18 @@ public class PathCostMapTests
     }
 
     [Fact]
+    public void AHeroMovingInAnotherGame_KeepsThisGamesRoute()
+    {
+        var session = Start(Create("A....."));
+        var other = Start(Create("A....."));
+
+        var planned = session.Movement.FindPath(A, new MapPosition(5, 0));
+        other.MoveTo(A, new MapPosition(3, 0));
+
+        Assert.Same(planned, session.Movement.FindPath(A, new MapPosition(5, 0)));
+    }
+
+    [Fact]
     public void ARoutePlannedBeforeTheGameChanged_IsPlannedAgain()
     {
         var session = Start(Create("A.....", "......"));

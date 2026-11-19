@@ -19,6 +19,4 @@ plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [
 3. The "Code health" list in [roadmap.md](roadmap.md): typed content ids, and `InfoSheets` as data once localisation is decided (ADR-239).
 
 ## Known problems
-- `PathCostMapTests.TheMove_FollowsTheRouteJustPlanned_WithoutSearchingAgain` fails now and then in a full run: it reads the
-  process-wide `PathFinder.Counters`, which tests running alongside also move.
 - Numbers marked *(placeholder)* in the ADRs and in [open-questions.md](open-questions.md) wait for play-testing.

@@ -177,11 +177,10 @@ public sealed class GameSession
     public IReadOnlyList<GameCommand> CommandLog => _log;
 
     /// <summary>
-    /// A number that grows whenever the game may have changed: a command accepted, an event published, a hero moved (any game's, so it may
-    /// also grow when this one did not), or, on a LAN client, the host's view written in (ADR-236). While it stays the same, what was worked
-    /// out from the state still holds (route caches).
+    /// A number that grows whenever the game may have changed: a command accepted, an event published, one of its heroes moved, or, on a LAN client, the
+    /// host's view written in (ADR-236). While it stays the same, what was worked out from the state still holds (route caches).
     /// </summary>
-    internal long ChangeStamp => _log.Count + _published + Hero.Moves + (_viewSink?.Writes ?? 0);
+    internal long ChangeStamp => _log.Count + _published + State.HeroMoves.Count + (_viewSink?.Writes ?? 0);
 
     /// <summary>Queries: daily income.</summary>
     public EconomyService Economy { get; }

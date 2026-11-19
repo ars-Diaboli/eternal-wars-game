@@ -38,19 +38,17 @@ public sealed class Hero(
         internal set
         {
             _position = value;
-            Interlocked.Increment(ref s_moves);
+            MoveCounter?.Add();
         }
     }
 
     private MapPosition _position = position;
 
-    private static long s_moves;
-
     /// <summary>
-    /// Changes whenever any hero's <see cref="Position"/> is set (on any thread, in any game), so <see cref="Game.GameState"/> knows when its
-    /// hero-by-tile index may be out of date without the hero knowing its game.
+    /// The moves counter of the game the hero was last added to (<see cref="Game.GameState.AddHero"/>), told whenever <see cref="Position"/>
+    /// is set, so that game knows when its hero-by-tile index and route caches may be out of date without the hero knowing its game.
     /// </summary>
-    internal static long Moves => Volatile.Read(ref s_moves);
+    internal HeroMoveCounter? MoveCounter { get; set; }
 
     /// <summary>Up to seven creature stacks. Speed (<see cref="Creatures.CreatureDefinition.MapSpeed"/>) drives movement.</summary>
     public Army Army { get; } = army ?? new Army();
