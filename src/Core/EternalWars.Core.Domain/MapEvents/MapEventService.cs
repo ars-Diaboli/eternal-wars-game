@@ -24,7 +24,7 @@ namespace EternalWars.Core.Domain.MapEvents;
 public sealed class MapEventService(
     GameState state, IEventPublisher events, Visibility.IFogRevealer fog, EconomyService economy, ProgressionService progression, ArtifactService artifacts, BattleService battles,
     TownVisitService towns, HeroRecruitment recruits)
-    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, IEventHandler<PandorasBoxOpened>, Turns.ITurnPhaseParticipant
+    : IEventHandler<BattleStarted>, IEventHandler<BattleEnded>, Turns.ITurnPhaseParticipant
 {
     /// <summary>The town's buildings an event builds (<see cref="BuildAction"/>).</summary>
     internal TownConstruction Construction { get; } = new(state, events, towns);
@@ -79,12 +79,11 @@ public sealed class MapEventService(
     public static MapObjectId? CompletedSite(EventAnswer answer) =>
         MapEventTree.Actions(answer.Actions).OfType<AdvanceQuestAction>().FirstOrDefault()?.Site;
 
-    /// <summary>Subscribes to the battles ("defeated by" records, EVT-3 e) and to opened Pandora's Boxes (a box's hero event, MAP-35).</summary>
+    /// <summary>Subscribes to the battles ("defeated by" records, EVT-3 e).</summary>
     internal void SubscribeTo(IEventSubscriber bus)
     {
         bus.Subscribe<BattleStarted>(this);
         bus.Subscribe<BattleEnded>(this);
-        bus.Subscribe<PandorasBoxOpened>(this);
     }
 
     // Triggers ------------------------------------------------------------------------------------------------------
@@ -92,9 +91,8 @@ public sealed class MapEventService(
     /// <summary>A hero stepped onto <paramref name="cell"/>: its hero event runs, on every step until it disables or removes itself (EVT-2 b).</summary>
     internal void OnHeroEntered(Hero hero, MapPosition cell)
     {
-        if (Data.Cells.TryGetValue(cell, out var name) && Data.Set.Find(name) is { Kind: MapEventKind.Hero } definition)
+        if (Data.Cells.TryGetValue(cell, out var name) && Data.QueueHeroEvent(name, hero, cell))
         {
-            Data.Runs.Enqueue(new MapEventRun(definition, hero.Owner, hero.Id, null, cell, startOfTurn: false));
             Pump();
         }
     }
@@ -138,18 +136,6 @@ public sealed class MapEventService(
 
     // The player's and its towns' map events, after income, growth and the week's event (ADR-115, EVT-2 d).
     void Turns.ITurnPhaseParticipant.OpenTurn(PlayerId player) => StartTurn(player);
-
-    /// <summary>
-    /// A Pandora's Box that names a hero event opened (MAP-35, step 3): the event runs for the opener, once the box's experience and any level-up
-    /// it brings are dealt with (the session carries the queue on after the command).
-    /// </summary>
-    public void Handle(PandorasBoxOpened @event)
-    {
-        if (@event.Event is { } name && Data.Set.Find(name) is { Kind: MapEventKind.Hero } definition && state.Heroes.FirstOrDefault(h => h.Id == @event.Hero) is { } hero)
-        {
-            Data.Runs.Enqueue(new MapEventRun(definition, hero.Owner, hero.Id, null, null, startOfTurn: false));
-        }
-    }
 
     /// <summary>
     /// A hero visits a quest object (EVT-5): a Seer's Hut it entered, a Quest Guard it bumped into, a Quest Gate it may not pass, or a gate it
@@ -303,13 +289,12 @@ public sealed class MapEventService(
     /// <summary>The event whose actions the run is taking now: the innermost run event, else the run's own.</summary>
     internal static MapEventDefinition EventOf(MapEventRun run) => run.Frames.FirstOrDefault(f => f.Event is not null)?.Event ?? run.Event;
 
-    /// <summary>Answers the pending message or question (<see cref="MapEventDecision"/>) and goes on.</summary>
+    /// <summary>Answers the pending message or question (<see cref="MapEventDecision"/>) and goes on (the steps of ADR-215).</summary>
     internal void Answer(int option)
     {
-        if (state.PendingDecision is not MapEventDecision decision || Data.Current is not { Waiting: MapEventWaiting.Decision } run)
-        {
-            throw new CommandRefusedException("No map event is waiting for an answer.");
-        }
+        const string refusal = "No map event is waiting for an answer.";
+        var decision = Steps.TakeDecision<MapEventDecision>(refusal);
+        var run = WaitingRun(refusal);
 
         if (option < 0 || option >= Math.Max(1, decision.Answers.Count))
         {
@@ -327,13 +312,12 @@ public sealed class MapEventService(
         Pump();
     }
 
-    /// <summary>Keeps the chosen stacks of a full army and its newcomers (<see cref="MapEventArmyDecision"/>), then goes on.</summary>
+    /// <summary>Keeps the chosen stacks of a full army and its newcomers (<see cref="MapEventArmyDecision"/>), then goes on (the steps of ADR-215).</summary>
     internal void ChooseArmy(IReadOnlyList<int> keep)
     {
-        if (state.PendingDecision is not MapEventArmyDecision decision || Data.Current is not { Waiting: MapEventWaiting.Decision } run)
-        {
-            throw new CommandRefusedException("No map event is waiting for an army choice.");
-        }
+        const string refusal = "No map event is waiting for an army choice.";
+        var decision = Steps.TakeDecision<MapEventArmyDecision>(refusal);
+        var run = WaitingRun(refusal);
 
         if (keep.Count is < 1 or > Army.SlotCount || keep.Distinct().Count() != keep.Count || keep.Any(i => i < 0 || i >= decision.Stacks.Count))
         {
@@ -347,6 +331,10 @@ public sealed class MapEventService(
         events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
         Pump();
     }
+
+    /// <summary>The run waiting for the pending decision's answer; otherwise the answer is refused with <paramref name="refusal"/>.</summary>
+    private MapEventRun WaitingRun(string refusal) =>
+        Data.Current is { Waiting: MapEventWaiting.Decision } run ? run : throw new CommandRefusedException(refusal);
 
     // Actions -------------------------------------------------------------------------------------------------------
 

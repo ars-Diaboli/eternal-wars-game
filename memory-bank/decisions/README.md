@@ -2,7 +2,7 @@
 
 Every ADR, one line each, with the file that holds it. Find one by number here (or search `### ADR-NNN` under `memory-bank/decisions/`), then read only that entry.
 
-**Next free number: ADR-238.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
+**Next free number: ADR-239.** A new ADR goes at the bottom of its category file, with a row in that file's table and a row here. Accepted ADRs are not rewritten: a later ADR supersedes them, and the old one's status says so.
 
 ## Categories
 
@@ -264,3 +264,4 @@ Every ADR, one line each, with the file that holds it. Find one by number here (
 | [235](project-and-scope.md#adr-235-the-godot-check-of-what-adr-148-had-not-seen-resurrection-the-intel-spells-the-ais-battle-magic-a-hand-set-guild-spell-a-dug-hole-meteor-showers-rubble-adr-148-adr-177-2026-11-19) | project-and-scope | The Godot check of what ADR-148 had not seen: Resurrection, the intel spells, the AI's battle magic, a hand-set guild spell, a dug hole, Meteor Shower's rubble (ADR-148, ADR-177, 2026-11-19) | done |
 | [236](architecture.md#adr-236-a-lan-clients-view-writes-move-the-change-stamp-a-players-sight-is-handed-out-as-a-copy-adr-205-adr-218-adr-226-2026-11-19) | architecture | A LAN client's view writes move the change stamp; a player's sight is handed out as a copy (ADR-205, ADR-218, ADR-226, 2026-11-19) | implemented |
 | [237](architecture.md#adr-237-a-map-event-actions-handler-tells-what-the-action-holds-its-editor-line-and-its-worth-to-the-ai-adr-219-adr-226-2026-11-19) | architecture | A map event action's handler tells what the action holds, its editor line and its worth to the AI (ADR-219, ADR-226, 2026-11-19) | implemented |
+| [238](architecture.md#adr-238-map-event-answers-take-their-decision-through-the-decision-steps-a-pandoras-box-queues-its-hero-event-itself-adr-215-adr-226-2026-11-19) | architecture | Map-event answers take their decision through the decision steps; a Pandora's Box queues its hero event itself (ADR-215, ADR-226, 2026-11-19) | implemented |

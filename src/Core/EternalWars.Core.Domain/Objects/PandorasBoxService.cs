@@ -10,7 +10,8 @@ public sealed class PandorasBoxService(ObjectInteractionContext context, Progres
     /// <summary>
     /// Opens the box for the hero: it vanishes; resources, primary stats, mana (up to twice the maximum), morale and luck for the next battle, skills
     /// (lost where the hero has no room for their group), artifacts (lost to a full backpack) and creatures (lost without a slot) go to the hero; then
-    /// <see cref="PandorasBoxOpened"/> with what it got; the experience comes last, for its level-ups.
+    /// <see cref="PandorasBoxOpened"/> with what it got; the box's hero event, if it names one, is queued for the hero (MAP-35); the experience
+    /// comes last, for its level-ups. The event runs once those are dealt with (the session carries the queue on after the command).
     /// </summary>
     internal void Open(Hero hero, PandorasBox box)
     {
@@ -60,7 +61,12 @@ public sealed class PandorasBoxService(ObjectInteractionContext context, Progres
             events.Publish(new ArmyChanged(hero.Id, hero.Army.Slots.ToList()));
         }
 
-        events.Publish(new PandorasBoxOpened(box.Id, hero.Id, contents with { Skills = skills, Artifacts = found, Creatures = joined }, box.Message) { Event = box.Event });
+        events.Publish(new PandorasBoxOpened(box.Id, hero.Id, contents with { Skills = skills, Artifacts = found, Creatures = joined }, box.Message));
+        if (box.Event is { } name)
+        {
+            context.State.MapEvents.QueueHeroEvent(name, hero);
+        }
+
         progression.GrantExperience(hero, contents.Experience);
     }
 }

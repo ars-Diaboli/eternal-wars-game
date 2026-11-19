@@ -192,6 +192,41 @@ public class MapEventLoopTests
     }
 
     [Fact]
+    public void AMapEventAnswer_ToAnotherDecision_IsRefused_AndLeavesItPending()
+    {
+        var (session, _) = BoxWorld(new BoxContents { Resources = new ResourceSet(Gold: 500) }, new MessageAction("A voice laughs."));
+        session.Step(A, Direction.North);
+        var box = Assert.IsType<PandorasBoxDecision>(session.State.PendingDecision);
+
+        var answer = session.Execute(new AnswerMapEventCommand(Blue, 0));
+        var army = session.Execute(new ChooseEventArmyCommand(Blue, [0]));
+
+        Assert.Equal((false, "No map event is waiting for an answer."), (answer.IsAccepted, answer.Error));
+        Assert.Equal((false, "No map event is waiting for an army choice."), (army.IsAccepted, army.Error));
+        Assert.Same(box, session.State.PendingDecision);
+    }
+
+    [Fact]
+    public void ABoxsEvent_IsQueuedByTheBox_AndRunsAfterTheLevelUpItsExperienceBrings()
+    {
+        var (session, _) = BoxWorld(new BoxContents { Experience = 5000 }, new MessageAction("A voice laughs."));
+        var opened = new List<PandorasBoxOpened>();
+        session.Events.Subscribe<PandorasBoxOpened>(opened.Add);
+
+        session.Step(A, Direction.North);
+        session.Execute(new AnswerPandorasBoxCommand(Blue, Open: true)).ThrowIfRejected();
+
+        Assert.Single(opened);
+        Assert.IsType<LevelUpDecision>(session.State.PendingDecision);
+        while (session.State.PendingDecision is LevelUpDecision levelUp)
+        {
+            session.Execute(new ChooseSkillCommand(Blue, levelUp.Options[0])).ThrowIfRejected();
+        }
+
+        Assert.Equal("A voice laughs.", Assert.IsType<MapEventDecision>(session.State.PendingDecision).Text);
+    }
+
+    [Fact]
     public void ABoxWithAnEvent_GivesItsContents_ThenRunsTheEventForTheOpener()
     {
         var (session, box) = BoxWorld(new BoxContents { Resources = new ResourceSet(Gold: 500) }, new MessageAction("A voice laughs.") { Rewards = [Gold(1000)] });

@@ -303,8 +303,8 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
       a random seed, so their battles differ between runs; an entry's `Seed = <n>` now fixes it (ADR-235), set only on the newest scenarios
 - [x] AI tuning numbers left inline are `AiWeights` (15 more, ADR-232); `AiWeights.With` refuses negative values
 - [x] The map-event action type switches in Domain moved into the handlers; a test checks a reward with an amount overrides `Fix` (ADR-237)
-- [ ] Map-event `Answer` / `ChooseArmy` through `DecisionSteps.TakeDecision`; `PandorasBoxOpened` no longer carries the box's event
-      for `MapEventService` to run (an event used as a request, ADR-214)
+- [x] Map-event `Answer` / `ChooseArmy` through `DecisionSteps.TakeDecision`; `PandorasBoxOpened` no longer carries the box's event
+      for `MapEventService` to run (an event used as a request, ADR-214; ADR-238)
 - [ ] From the review, never planned: typed content ids; `InfoSheets` returning structured lines, not English text; `CheckRefusals`
       not a process-wide static; `ThirdCatalogue.Buyers` / `Stock` not public mutable collections
 - [x] Small (ADR-232): the views hold the game's `GameDirector`; the map chat's place as `UiTheme` tokens; a prison tracked by the

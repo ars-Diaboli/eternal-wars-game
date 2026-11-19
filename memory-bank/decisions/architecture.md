@@ -38,6 +38,7 @@
 | [232](#adr-232-code-health-continue-falls-back-to-a-save-that-loads-the-events-panel-refreshes-once-and-while-shown-every-ai-tuning-number-is-a-weight-leftover-cleanups-adr-220-adr-224-adr-226-2026-11-19) | Code health: Continue falls back to a save that loads, the events panel refreshes once and while shown, every AI tuning number is a weight, leftover cleanups (ADR-220, ADR-224, ADR-226, 2026-11-19) | implemented |
 | [236](#adr-236-a-lan-clients-view-writes-move-the-change-stamp-a-players-sight-is-handed-out-as-a-copy-adr-205-adr-218-adr-226-2026-11-19) | A LAN client's view writes move the change stamp; a player's sight is handed out as a copy (ADR-205, ADR-218, ADR-226, 2026-11-19) | implemented |
 | [237](#adr-237-a-map-event-actions-handler-tells-what-the-action-holds-its-editor-line-and-its-worth-to-the-ai-adr-219-adr-226-2026-11-19) | A map event action's handler tells what the action holds, its editor line and its worth to the AI (ADR-219, ADR-226, 2026-11-19) | implemented |
+| [238](#adr-238-map-event-answers-take-their-decision-through-the-decision-steps-a-pandoras-box-queues-its-hero-event-itself-adr-215-adr-226-2026-11-19) | Map-event answers take their decision through the decision steps; a Pandora's Box queues its hero event itself (ADR-215, ADR-226, 2026-11-19) | implemented |
 
 
 ### ADR-001: Godot 4.7.2 (.NET) + C# on .NET 10
@@ -592,3 +593,16 @@ the AI plays as before.
   action holds an expression, a condition or action lists.
 - The checks that look for particular actions (`MapEventChecks`, `MapEventRules.Problem`, the editor's event rename) stay where they are:
   they ask about a few actions, not every type.
+
+### ADR-238: Map-event answers take their decision through the decision steps; a Pandora's Box queues its hero event itself (ADR-215, ADR-226, 2026-11-19)
+**Status**: implemented. No rule, save or map format change. `PandorasBoxOpened` loses a field, so the LAN schema hash (ADR-229) changes.
+
+- **Answers**: `MapEventService.Answer` and `ChooseArmy` take their decision with `DecisionSteps.TakeDecision<T>`, then the run waiting for
+  it. Either missing is refused with the same words as before, and the decision stays pending. These were the last two answers that
+  checked the decision by hand.
+- **The box's event**: `PandorasBoxService.Open` queues the box's hero event itself, through `MapEventState.QueueHeroEvent`, right after
+  `PandorasBoxOpened` and before the box's experience. A hero stepping onto an event cell queues its event the same way.
+  `PandorasBoxOpened` reports only what the hero got: it no longer carries the event's name, and `MapEventService` no longer subscribes
+  to it. The event still runs once the experience and its level-ups are dealt with.
+- **Checked** (`MapEventLoopTests`): a map-event answer or army choice sent while a box's question is pending is refused and leaves the
+  question pending; a box's event runs after the level-up its experience brings.
