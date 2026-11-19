@@ -1,6 +1,7 @@
 using EternalWars.Core.Domain.Battles;
 using EternalWars.Core.Domain.Creatures;
 using EternalWars.Core.Domain.Events;
+using EternalWars.Core.Events;
 using static EternalWars.Core.Domain.Battles.BattleSide;
 
 namespace EternalWars.Core.Tests.Battles;
@@ -172,6 +173,145 @@ public class BattleAiTests
         Assert.Equal(holds, walker.Position == new CellPosition(2, 10));
         Assert.Equal(holds, battle.Events.OfType<BattleUnitDefended>().Any(e => e.Unit == walker.Id));
     }
+
+    [Theory]
+    [InlineData(BattleAiLevel.HoldBack, "light.bless")]
+    [InlineData(BattleAiLevel.CastAhead, "arcana.magic-arrow")]
+    public void CastAhead_CastsWhatPaysWithinTheNextRound_NotWhatLooksBest(BattleAiLevel level, string cast)
+    {
+        // A slow stack far from the enemy: Bless looks worth more than the arrow (a share of its value for three rounds), but it cannot strike
+        // in the two rounds the look-ahead plays, so only one round of the blessing is left to count; the arrow's creatures stay dead.
+        var battle = TestBattle.Create(attackerCaster: Caster("light.bless", "arcana.magic-arrow"));
+        var walker = battle.Add(Attacker, TestBattle.Fixed("walker", 1, speed: 1) with { FightValue = 100 }, 8, 0, 10);
+        battle.Add(Defender, TestBattle.Fixed("target", 1, speed: 1) with { FightValue = 20 }, 10, 28, 10);
+        battle.StartWith(walker);
+        var options = BattleAi.CastOptions(battle.State, Attacker);
+        Assert.Equal("light.bless", options[0].Spell);
+        Assert.Contains(options, o => o.Spell == "arcana.magic-arrow");
+
+        BattleAi.Act(battle.State, battle.Engine, level);
+
+        Assert.Equal(cast, Assert.Single(battle.Events.OfType<BattleSpellCast>()).Spell);
+    }
+
+    [Fact]
+    public void CastAhead_PlaysItsCopiesUnheard_AndTheSameBattleTheSameWay()
+    {
+        List<IEvent> Turn()
+        {
+            var battle = TestBattle.Create(attackerCaster: Caster("light.bless", "arcana.magic-arrow", "arcana.slow"));
+            var hitter = battle.Add(Attacker, Hitter with { Speed = 6 }, 20, 2, 10);
+            battle.Add(Attacker, TestBattle.Fixed("archer", 2, shots: 10) with { FightValue = 30 }, 10, 0, 14);
+            battle.Add(Defender, TestBattle.Fixed("footman", 3, speed: 5) with { FightValue = 25 }, 15, 20, 10);
+            battle.Add(Defender, TestBattle.Fixed("archer", 2, shots: 10) with { FightValue = 30 }, 10, 28, 6);
+            battle.StartWith(hitter);
+            battle.Events.Clear();
+            BattleAi.Act(battle.State, battle.Engine, BattleAiLevel.CastAhead);
+            return battle.Events;
+        }
+
+        var events = Turn();
+        Assert.Equal(events, Turn());
+        Assert.True(events.OfType<BattleTurnStarted>().Count() <= 1); // the next unit's turn, nothing from the copies' turns
+        Assert.DoesNotContain(events, e => e is BattleRoundStarted);
+        Assert.Single(events.OfType<BattleSpellCast>());
+    }
+
+    [Fact]
+    public void Standing_IsTheHealthValueLessTheEnemys_PlusTheLastingSpellsLeft()
+    {
+        var battle = TestBattle.Create();
+        var own = battle.Add(Attacker, TestBattle.Fixed("own", 1) with { FightValue = 30 }, 10, 0, 10);
+        var enemy = battle.Add(Defender, TestBattle.Fixed("enemy", 1) with { FightValue = 20 }, 5, 20, 10);
+        battle.StartWith(own);
+        Assert.Equal((10 * 30) - (5 * 20), BattleAi.Standing(battle.State, Attacker));
+        Assert.Equal((5 * 20) - (10 * 30), BattleAi.Standing(battle.State, Defender));
+
+        // A buff with two rounds left (this one and the next) on the own stack, a curse of the attacker's on the enemy with one.
+        own.MutableSpells.Add(new ActiveSpell("buff", Attacker, new EternalWars.Core.Domain.Magic.SpellModifiers(Attack: 2), battle.State.Round + 1));
+        enemy.MutableSpells.Add(new ActiveSpell("curse", Attacker, new EternalWars.Core.Domain.Magic.SpellModifiers(Defense: -2), battle.State.Round));
+        var lasting = (10 * 30 * BattleAi.EnchantPercentPerRound * 2 / 100) + (5 * 20 * BattleAi.EnchantPercentPerRound / 100);
+        Assert.Equal((10 * 30) - (5 * 20) + lasting, BattleAi.Standing(battle.State, Attacker));
+    }
+
+    [Fact]
+    public void Sieges_AimTheSiegeEngineAtTheGate_ThenTheKeepAndTowers_ThenTheWallsBesideTheGate()
+    {
+        var siege = SiegeRules.Create(new SiegeSpec(3, 5));
+        var order = new List<SiegeStructureKind>();
+        var walls = new List<int>();
+        while (BattleAi.AimedStructure(siege) is { } next)
+        {
+            order.Add(next.Kind);
+            if (next.Kind == SiegeStructureKind.Wall)
+            {
+                walls.Add(next.Id);
+            }
+
+            next.Health = 0;
+        }
+
+        Assert.Equal(
+            [SiegeStructureKind.Gate, SiegeStructureKind.Keep, SiegeStructureKind.Tower, SiegeStructureKind.Tower, .. Enumerable.Repeat(SiegeStructureKind.Wall, 4)],
+            order);
+        Assert.Equal([2, 3], walls.Take(2).Order()); // the sections either side of the gate first
+    }
+
+    [Theory]
+    [InlineData(BattleAiLevel.CastAhead, false)]
+    [InlineData(BattleAiLevel.Sieges, true)]
+    public void Sieges_ABesiegerDoesNotReachTheGateAheadOfItsSide(BattleAiLevel level, bool gathers)
+    {
+        var battle = TestBattle.Create(siege: new SiegeSpec(1, 5));
+        var runner = battle.Add(Attacker, Hitter with { Speed = 10 }, 5, 14, 11);
+        battle.Add(Attacker, Hitter with { Speed = 1 }, 50, 0, 11); // most of the side, far behind
+        battle.Add(Defender, TestBattle.Fixed("footman", 1), 5, 32, 11);
+        battle.StartWith(runner);
+
+        BattleAi.Act(battle.State, battle.Engine, level);
+
+        var gate = battle.State.Siege!.Gate;
+        Assert.Equal(!gathers, battle.Events.OfType<SiegeStructureDamaged>().Any(e => e.Unit == runner.Id));
+        if (gathers)
+        {
+            Assert.Equal(BattleAi.GatherGap + 1, runner.Rect.GapTo(gate.Rect));
+        }
+    }
+
+    [Fact]
+    public void Sieges_ABesiegerGoesIn_WhenItsSideCanFollow()
+    {
+        var battle = TestBattle.Create(siege: new SiegeSpec(1, 5));
+        var runner = battle.Add(Attacker, Hitter with { Speed = 10 }, 5, 14, 11);
+        battle.Add(Attacker, Hitter with { Speed = 10 }, 50, 12, 15);
+        battle.Add(Defender, TestBattle.Fixed("footman", 1), 5, 32, 11);
+        battle.StartWith(runner);
+
+        BattleAi.Act(battle.State, battle.Engine, BattleAiLevel.Sieges);
+
+        Assert.Contains(battle.Events.OfType<SiegeStructureDamaged>(), e => e.Unit == runner.Id);
+    }
+
+    [Theory]
+    [InlineData(BattleAiLevel.CastAhead, false)]
+    [InlineData(BattleAiLevel.Sieges, true)]
+    public void Sieges_ADefenderBlocksTheBrokenGate(BattleAiLevel level, bool blocks)
+    {
+        var battle = TestBattle.Create(siege: new SiegeSpec(1, 5));
+        battle.State.Siege!.Gate.Health = 0;
+        battle.Add(Attacker, Hitter with { Speed = 4 }, 5, 4, 11);
+        var guard = battle.Add(Defender, TestBattle.Fixed("guard", 1, speed: 10), 5, 33, 11);
+        battle.StartWith(guard);
+
+        BattleAi.Act(battle.State, battle.Engine, level);
+
+        var gate = battle.State.Siege.Gate;
+        Assert.Equal(blocks, guard.Rect.GapTo(gate.Rect) == 0);
+        Assert.True(guard.Position.X >= SiegeRules.WallX); // it never goes out
+    }
+
+    private static BattleCaster Caster(params string[] spells) => new(
+        0, 1, spells.Select(s => new KnownSpell(EternalWars.Core.Domain.Magic.SpellCatalog.Default.Get(s), 1, EternalWars.Core.Domain.Magic.SpellCatalog.Default.Get(s).Mana)).ToList(), null, 100);
 
     private static readonly CreatureDefinition Hitter = TestBattle.Fixed("hitter", 10, speed: 2);
 

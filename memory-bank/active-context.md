@@ -8,10 +8,12 @@ the owner's missing-mechanics picks, the arena and LAN multiplayer are built. Th
 plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-188 finished: the battle AI's last steps. (e) `CastAhead`: the hero casts on its side's first turn of a round, choosing between its
+  three best spells and nothing by playing each out on a copy of the battle to the end of the next round. (f) `Sieges`: an aimed siege
+  engine breaks the gate first, besiegers go in together, defenders block an open way in. `Latest` is `Sieges`. `sim ai`/`sim battle`
+  take `--spells` and `--siege`, `sim battle` also `--trace`. Only the gate-first aim measurably pays in AI-against-AI sieges (ADR-188).
 - ADR-225 / ADR-227: the new-game screen's options tidied; difficulty renamed Easy … Master with five chess-piece buttons (map
   format v41 migrates the old names); a colour per player and the crest picker; "×" on every window; the calendar on the status bar.
-- The docs were split: human documents stay in `docs/`, this memory bank holds the ADRs (by category), the roadmap, the open
-  questions and the owner's notes.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).

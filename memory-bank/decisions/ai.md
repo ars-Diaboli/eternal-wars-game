@@ -11,7 +11,7 @@
 | [160](#adr-160-the-adventure-ai-on-an-arena-maps-preparation-day-adr-097-adr-158-2026-11-09) | The adventure AI on an arena map's preparation day (ADR-097, ADR-158, 2026-11-09) | implemented |
 | [184](#adr-184-the-adventure-ai-casts-adventure-spells-two-towns-rush-and-starting-armies-adr-059-adr-112-adr-119-adr-120-adr-123-2026-11-16) | The adventure AI casts adventure spells; Two Towns' rush and starting armies (ADR-059, ADR-112, ADR-119, ADR-120, ADR-123, 2026-11-16) | implemented |
 | [187](#adr-187-a-fight-value-per-creature-for-the-battle-ai-adr-118-owner-notes-2026-11-16) | A Fight Value per creature for the battle AI (ADR-118, owner notes, 2026-11-16) | accepted |
-| [188](#adr-188-cmb-13-answered-a-cleverer-battle-ai-in-steps-adr-187-2026-11-16) | CMB-13 answered: a cleverer battle AI, in steps (ADR-187, 2026-11-16) | accepted |
+| [188](#adr-188-cmb-13-answered-a-cleverer-battle-ai-in-steps-adr-187-2026-11-16) | CMB-13 answered: a cleverer battle AI, in steps (ADR-187, 2026-11-16) | implemented |
 | [189](#adr-189-the-adventure-ai-trades-at-its-marketplace-adr-067-adr-059-roadmap-2026-11-16) | The adventure AI trades at its marketplace (ADR-067, ADR-059, roadmap, 2026-11-16) | accepted |
 | [206](#adr-206-the-ais-battle-estimates-play-battles-of-their-own-and-are-kept-from-turn-to-turn-adr-059-adr-106-2026-11-17) | The AI's battle estimates play battles of their own and are kept from turn to turn (ADR-059, ADR-106, 2026-11-17) | implemented |
 | [220](#adr-220-the-adventure-ai-is-a-coordinator-of-parts-with-tunable-weights-adr-059-adr-119-2026-11-19) | The adventure AI is a coordinator of parts, with tunable weights (ADR-059, ADR-119, 2026-11-19) | implemented |
@@ -192,8 +192,8 @@ fill-ins. The rest of the note ("a cleverer battle AI") is ADR-188.
 - Not a map or save format change; the content table gains a column (other content changes the replay digest, as any table change does).
 
 ### ADR-188: CMB-13 answered: a cleverer battle AI, in steps (ADR-187, 2026-11-16)
-**Status**: accepted (2026-11-16); steps (a), (d), (b) and (c) built (2026-11-16, `BattleAiLevel.FocusFire` … `HoldBack`), (e) and (f)
-not built. The owner's answer: a
+**Status**: implemented; steps (a), (d), (b) and (c) built (2026-11-16, `BattleAiLevel.FocusFire` … `HoldBack`), (e) and (f) built
+(2026-11-19, `CastAhead`, `Sieges`). The owner's answer: a
 stack's **Fight Value × its count** is the measure to use where it fits; the proposals for the rest.
 
 - **The measure**: a stack's threat is its Fight Value (ADR-187) × the creatures in it, so a big stack of weak creatures can outrank a few
@@ -234,7 +234,30 @@ stack's **Fight Value × its count** is the measure to use where it fits; the pr
   matches 61.7 % / 64.3 %); `ProtectShooters` against `AvoidRetaliation` 49.2 % / 51 %, about even (kept: it does no harm, and (c) builds on
   it); `HoldBack` against `ProtectShooters` 75.7 % / 59.3 % (mirror 87.3 % / 72.9 %), largely because the older AI walks into the waiting
   stacks and the shooters' fire. Against a human the gain will be smaller.
-- **Not built**: (e) spells weighed a round ahead and (f) sieges; own shooters stepping away from a blocker.
+- **Built, step (e)** (`CastAhead`): a hero casts once a round, on its side's first turn (every other own stack but a war machine still to
+  act). Of the casts it can afford, worth something by the spell's own measure (ADR-120, ADR-123), the best aim of each of the **3** best
+  spells *(proposal)* and casting nothing are each played out on a copy of the battle (`BattleState.Copy` with a generator of its own, mixed
+  from the battle's state, so it neither foresees nor draws the battle's rolls) to the end of the next round, every stack played by the same
+  AI, the side's hero casting nothing more there (each option is one cast against none) and the enemy's as usual. The option whose copy
+  leaves the side best off is cast: the Fight Value of its stacks' health less the enemy's (copies left out, a beaten side's counted as
+  none), plus the lasting spells still on the stacks at the usual share a round (4 %, 10 % for control, 20 % for a taken stack) for the
+  rounds or turns left, for their caster. On a tie the best-looking cast wins, so nothing changes where the look-ahead sees no difference.
+  Creature casters are as before.
+- **Built, step (f)** (`Sieges`), all *(proposal)*: a besieger's walking stack with nothing to hit, outside the walls, stops 4 cells short of
+  the way in (the nearest open breach or broken gate, else the standing gate) while less than half of its side's other walking stacks
+  outside that can move (by Fight Value × count) could get within 3 of it on their next move, so the stacks go in, or break the gate,
+  together. A siege engine the hero aims (Ballistics) fires at the gate first (one hit breaks it and opens the bridged way, with no moat),
+  then the keep, the towers, then the wall sections, those beside the gate first; without Ballistics it fires by itself as before
+  (ADR-106). A defender's walking stack with nothing to hit walks to the placement inside the walls (the gap itself allowed) nearest the
+  open breach or broken gate closest to the attackers' walking stacks, so they come in through it under the defenders' fire.
+- **Measured** with `sim ai` (32 battles a side; base armies / upgraded): `CastAhead` against `HoldBack` with both heroes knowing the same 5
+  battle spells of levels 1–3 drawn per battle (Spell Power 3, Knowledge 4; `--spells`) 59.3 % / 54.3 % (mirror 66.4 % / 54.7 %); it plays
+  each battle with casters about three times as long. `Sieges` against `CastAhead` in Castle sieges with a besieger 75 % larger and Basic
+  Ballistics (`--siege`; at equal size the town wins every siege) 64.7 % / 60.4 % (mirror 69.5 % / 63.3 %). The gain is all the gate-first
+  aim: without it 50.7 %, without the gathering 64.4 %, without the blocking 65.1 %; with no Ballistics (the engine firing by itself)
+  `Sieges` wins 50.7 % / 51.5 %, 50.9 % without the gathering. The gathering and the blocking are kept as they do no measurable harm and
+  answer what a person does better than this AI (picking off stacks that come in one by one, walking in through an unguarded breach).
+- **Not built**: own shooters stepping away from a blocker; creature casters' spells weighed ahead.
 
 ### ADR-189: The adventure AI trades at its marketplace (ADR-067, ADR-059, roadmap, 2026-11-16)
 **Status**: accepted (2026-11-16), built (2026-11-16): `AdventureAi.Market.cs`. Lifts ADR-067's "no AI trading for now" for town

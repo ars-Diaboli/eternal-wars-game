@@ -63,7 +63,7 @@ public sealed class SimCommandLineTests
     [Fact]
     public void Parse_MissingOrExtraPositionals_AndMissingRequiredOptions_AreErrors()
     {
-        Assert.StartsWith("battle: missing <defender army> (battle takes <attacker army> <defender army>; valid options: --runs, --seed)", Error("battle", "a:1"), StringComparison.Ordinal);
+        Assert.StartsWith("battle: missing <defender army> (battle takes <attacker army> <defender army>; valid options: --runs, --seed, --spells, --siege, --trace)", Error("battle", "a:1"), StringComparison.Ordinal);
         Assert.StartsWith("replay: unexpected argument 'b'", Error("replay", "a", "b"), StringComparison.Ordinal);
         Assert.StartsWith("selftest: unexpected argument 'now' (selftest takes no arguments)", Error("selftest", "now"), StringComparison.Ordinal);
         Assert.StartsWith("generate: --out is required", Error("generate", "duel", "--seed", "2"), StringComparison.Ordinal);
