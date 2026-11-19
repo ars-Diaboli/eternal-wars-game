@@ -57,11 +57,13 @@ $Out = (Resolve-Path $Out).Path
 $connectionsMap = Join-Path $Out 'connections.ewmap.json'
 $emberMap = Join-Path $Out 'ember.ewmap.json'
 $replayFile = Join-Path $Out 'smoke.ewreplay.json'
+$computerReplayFile = Join-Path $Out 'smoke-computer.ewreplay.json'
 $sim = Join-Path $PSScriptRoot 'EternalWars.Tools.Sim'
 $simFailed = @(
     @{ What = 'Generating the connections map'; Args = @('generate', (Join-Path $PSScriptRoot 'smoke/connections.ewtemplate.json'), '--out', $connectionsMap, '--seed', '1') },
     @{ What = 'Exporting Ember March'; Args = @('export', 'ember', '--out', $emberMap) },
-    @{ What = 'Recording the replay'; Args = @('record', $replayFile, '--days', '4') }
+    @{ What = 'Recording the replay'; Args = @('record', $replayFile, '--days', '4') },
+    @{ What = 'Recording the replay with a computer player'; Args = @('record', $computerReplayFile, '--days', '4', '--computer') }
 ) | ForEach-Object -Parallel {
     $simArgs = $_.Args
     dotnet run --project $using:sim --no-build -- @simArgs | Out-Null
@@ -156,6 +158,15 @@ $scenarios = @(
     # by itself, then the replay plays to its end.
     @{ Name = 'game-replay-viewer'; App = 'EternalWars.Game'; Frames = 130; Replay = $replayFile
        Input = '3:key:Space;6:click:@Normal;9:choose:Fast;12:press:Next day;16:press:Next day;20:press:Next day;24:press:Next turn;28:click:@Fast;31:choose:Normal;34:key:Space;90:press:Skip to the result' },
+    # A battle only the computer fights taken over (ADR-233): the same record and steps as game-replay-viewer, then Play from here in Red's battle
+    # with the wolves: it starts again from its start with Red commanded by hand; quick combat, Enter on the result: back to the replay, paused.
+    @{ Name = 'game-replay-take-over'; App = 'EternalWars.Game'; Frames = 130; Replay = $replayFile
+       Input = '3:key:Space;6:click:@Normal;9:choose:Fast;12:press:Next day;16:press:Next day;20:press:Next day;24:press:Next turn;28:click:@Fast;31:choose:Normal;34:key:Space;88:press:Play from here;100:key:Q;118:key:Enter' },
+    # A battle only the computer fought taken over (ADR-233): the record with Red a computer player (`sim record --computer`), the same steps; Red's
+    # battle with the wolves was fought within its move, so Play from here starts it again from its start with Red commanded by hand; quick
+    # combat, Enter on the result: back to the replay, paused.
+    @{ Name = 'game-replay-computer-battle'; App = 'EternalWars.Game'; Frames = 130; Replay = $computerReplayFile
+       Input = '3:key:Space;6:click:@Normal;9:choose:Fast;12:press:Next day;16:press:Next day;20:press:Next day;24:press:Next turn;28:click:@Fast;31:choose:Normal;34:key:Space;88:press:Play from here;100:key:Q;118:key:Enter' },
     # "Play from here" on the map (ADR-185): the same record paused, next day (Blue's day 2), Play from here: the viewer's bar goes, the game's
     # HUD comes with End turn; End turn passes to Red.
     @{ Name = 'game-replay-play-on'; App = 'EternalWars.Game'; Frames = 40; Replay = $replayFile

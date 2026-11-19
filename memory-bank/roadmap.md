@@ -95,7 +95,7 @@ Content draft: [artifacts.md](../docs/content/artifacts.md).
 - [x] Replay viewer: Replays and Saves tabs; reveal-all or a player's eyes; play, pause, speeds, next turn / day, back to a day; battles
       with "skip to the result"; "Play from here" in battles (ADR-101, UI-2, ADR-164)
 - [x] Replay viewer: "Play from here" on the adventure map, the game played on as the player's own (ADR-185)
-- [ ] Replay viewer: a battle where only the computer fights taken over by the viewer
+- [x] Replay viewer: a battle where only the computer fights taken over by the viewer, from its start (ADR-233)
 - [ ] Save/load: a state snapshot if replays get too slow
 
 ### Arena mode (ADR-097, ADR-100; before 1.0, after the Phase 3 exit)

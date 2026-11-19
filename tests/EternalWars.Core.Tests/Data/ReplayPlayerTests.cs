@@ -154,6 +154,122 @@ public class ReplayPlayerTests
     }
 
     [Fact]
+    public void ABattleEndedByQuickCombat_IsTakenOver_FromJustBeforeItsEnd()
+    {
+        // ADR-233: quick combat plays the rest of the battle in one command, which the viewer then shows move by move.
+        var record = Recorded(out _);
+        var player = ReplayPlayer.Open(record);
+        player.Seek(5);
+        var end = player.BattleEndPosition()!.Value;
+        Assert.IsType<AutoResolveBattleCommand>(record.Commands[end - 1]);
+        player.Seek(end - 1);
+        var before = GameStateDigest.Describe(player.Session.State);
+
+        player.Seek(end);
+        Assert.True(player.TakesOverBeforeItsEnd);
+        Assert.False(player.TakesOverFromTheStart);
+        Assert.True(player.CanTakeOver);
+        var own = player.TakeOver();
+
+        Assert.Equal(before, GameStateDigest.Describe(own.State));
+        Assert.Equal(TestWorld.Blue, own.Battles.Commander(BattleSide.Attacker));
+        Assert.Equal(end, player.Position);
+        Assert.True(player.Step());
+        Assert.False(player.CanTakeOver);
+    }
+
+    /// <summary>
+    /// Blue, a person, ends its turn; Red, the computer, steps its hero into trolls, a battle the core fights within that one command (position
+    /// 2 is after it); then Red ends its turn.
+    /// </summary>
+    internal static GameRecordDocument RecordedComputerBattle()
+    {
+        var state = TestWorld.Create(".A.....", ".......", "......B");
+        state.GetHero(TestWorld.B).Army.Set(1, new CreatureStack(BuiltInCreatures.Archer, 15));
+        var monster = TestWorld.Add<MonsterGuard>(state, BuiltInMapObjects.Monster, 5, 1);
+        (monster.Creature, monster.Count, monster.Disposition) = (BuiltInCreatures.Troll, 4, GuardDisposition.Savage);
+        state.GetPlayer(TestWorld.Red).IsHuman = false; // in the map, so the record replays it as the computer
+        var map = MapConverter.ToDocument(state);
+        var session = new GameSession(MapConverter.ToGameState(map, options: new GameOptions(Seed: 78)));
+        session.Start();
+        session.Execute(new EndTurnCommand(TestWorld.Blue)).ThrowIfRejected();
+        session.Execute(new StepHeroCommand(TestWorld.Red, TestWorld.B, Direction.NorthWest)).ThrowIfRejected();
+        Assert.Null(session.State.Battle); // fought whole within the step
+        session.Execute(new EndTurnCommand(TestWorld.Red)).ThrowIfRejected();
+        var recorded = GameReplay.Record(map, session);
+        return GameRecordSerializer.Deserialize(GameRecordSerializer.Serialize(recorded));
+    }
+
+    [Fact]
+    public void ABattleOnlyTheComputerFought_IsTakenOver_FromItsStart_WithAPersonCommandingTheAttacker()
+    {
+        // ADR-233: the battle has no point between its moves in the record, so it is fought again from its start.
+        var player = ReplayPlayer.Open(RecordedComputerBattle());
+        player.Seek(1); // before the step: nothing to take over
+        Assert.False(player.CanTakeOver);
+        Assert.Null(player.TakeOverAttacker);
+
+        Assert.True(player.Step());
+        Assert.False(player.IsInBattle(player.Position));
+        Assert.True(player.TakesOverFromTheStart);
+        Assert.True(player.CanTakeOver);
+        Assert.Equal(TestWorld.Red, player.TakeOverAttacker);
+        var watched = GameStateDigest.Describe(player.Session.State);
+
+        var own = player.TakeOver();
+
+        Assert.NotSame(player.Session, own);
+        Assert.True(own.State.GetPlayer(TestWorld.Red).IsHuman);
+        Assert.NotNull(own.State.Battle);
+        Assert.Equal(TestWorld.Red, own.Battles.Commander(BattleSide.Attacker));
+        Assert.Null(own.Battles.Commander(BattleSide.Defender)); // the trolls stay the computer's
+        own.Execute(new AutoResolveBattleCommand(TestWorld.Red)).ThrowIfRejected();
+        Assert.Null(own.State.Battle);
+
+        // The record and the watched game do not change.
+        Assert.False(player.Session.State.GetPlayer(TestWorld.Red).IsHuman);
+        Assert.Equal(watched, GameStateDigest.Describe(player.Session.State));
+        Assert.Equal(2, player.Position);
+        Assert.True(player.Step());
+        Assert.False(player.CanTakeOver); // only right after the battle's command
+    }
+
+    [Fact]
+    public void TheController_TakesOverTheComputersBattle_AndSaysWhoThePersonPlays()
+    {
+        var replay = new ReplayController(ReplayPlayer.Open(RecordedComputerBattle()));
+        replay.Seek(2);
+        Assert.True(replay.CanPlayFromHere(battleShown: true));
+
+        var session = replay.TakeOver(out var problem);
+
+        Assert.NotNull(session);
+        Assert.Null(problem);
+        Assert.Contains("from its start as Red", replay.TakeOverStatus, StringComparison.Ordinal);
+        Assert.True(replay.BackToReplay());
+        Assert.Empty(replay.TakeOverStatus);
+    }
+
+    [Fact]
+    public void AComputersColour_IsHandedToAPerson_OnceAndOnlyWhileInTheGame()
+    {
+        var player = ReplayPlayer.Open(RecordedComputerBattle());
+        player.Seek(1); // Red's turn
+        var session = player.Session;
+        var handed = new List<PlayerId>();
+        session.Events.Subscribe<PlayerHandedToPerson>(e => handed.Add(e.Player));
+
+        session.Execute(new HandToPersonCommand(TestWorld.Red)).ThrowIfRejected();
+
+        Assert.True(session.State.GetPlayer(TestWorld.Red).IsHuman);
+        Assert.Equal([TestWorld.Red], handed);
+        Assert.False(session.Execute(new HandToPersonCommand(TestWorld.Red)).IsAccepted); // a person plays it already
+        session.State.GetPlayer(TestWorld.Red).IsHuman = false;
+        session.State.GetPlayer(TestWorld.Red).IsDefeated = true;
+        Assert.False(session.Execute(new HandToPersonCommand(TestWorld.Red)).IsAccepted); // out of the game
+    }
+
+    [Fact]
     public void OnTheMap_TheGameMayBePlayedOn_AsItsOwnGame_WhoseLogIsTheRecordCutThere()
     {
         var record = Recorded(out _);

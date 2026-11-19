@@ -69,6 +69,9 @@ public sealed class ReplayController(ReplayPlayer player, AnimationSpeed speed =
     /// <summary>Whether a battle is being played on from the replay (<see cref="TakeOver"/>).</summary>
     public bool IsTakingOver { get; private set; }
 
+    /// <summary>What the battle played on from the replay is, for the status line; empty when none is (<see cref="TakeOver"/>).</summary>
+    public string TakeOverStatus { get; private set; } = string.Empty;
+
     /// <summary>Whose eyes the map is seen through in <paramref name="state"/>: null for the whole map.</summary>
     public PlayerId? Viewer(GameState state) =>
         ViewerIndex > 0 && ViewerIndex <= state.Players.Count ? state.Players[ViewerIndex - 1].Id : null;
@@ -158,17 +161,33 @@ public sealed class ReplayController(ReplayPlayer player, AnimationSpeed speed =
     }
 
     /// <summary>
-    /// "Play from here" in a battle: a separate session at this point, in which the battle goes on by hand while the replay waits, paused; null
-    /// when the battle cannot be taken over.
+    /// "Play from here" in a battle: a separate session at this point, in which the battle goes on by hand while the replay waits, paused; a
+    /// battle only the computer fought starts again from its start, the person commanding the attacker (ADR-233). Null when the battle cannot be
+    /// taken over (<paramref name="problem"/> then says why, when it was offered but did not start again).
     /// </summary>
-    public GameSession? TakeOver()
+    public GameSession? TakeOver(out string? problem)
     {
+        problem = null;
         if (IsTakingOver || !Player.CanTakeOver)
         {
             return null;
         }
 
-        var session = Player.TakeOver();
+        var attacker = Player.TakeOverAttacker;
+        GameSession session;
+        try
+        {
+            session = Player.TakeOver();
+        }
+        catch (InvalidOperationException e)
+        {
+            problem = e.Message;
+            return null;
+        }
+
+        TakeOverStatus = attacker is { } person
+            ? $"Playing the computer's battle from its start as {session.State.GetPlayer(person).Name}: a separate game, not ranked; the replay stays as it is."
+            : "Playing the battle on from the replay: a separate game, not ranked; the replay stays as it is.";
         (IsTakingOver, _playing) = (true, false);
         return session;
     }
@@ -181,7 +200,7 @@ public sealed class ReplayController(ReplayPlayer player, AnimationSpeed speed =
             return false;
         }
 
-        IsTakingOver = false;
+        (IsTakingOver, TakeOverStatus) = (false, string.Empty);
         return true;
     }
 

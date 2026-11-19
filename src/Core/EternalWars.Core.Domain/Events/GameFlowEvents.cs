@@ -22,6 +22,10 @@ public sealed record GracePeriodEnded(PlayerId Player) : IEvent;
 [SeenBy(Audience.Everyone)]
 public sealed record PlayerHandedToComputer(PlayerId Player) : IEvent;
 
+/// <summary>A person plays <see cref="Player"/> from now on (ADR-233): the replay viewer took over a computer's battle.</summary>
+[SeenBy(Audience.Everyone)]
+public sealed record PlayerHandedToPerson(PlayerId Player) : IEvent;
+
 /// <summary>A simultaneous day began (MP-2, ADR-197): <paramref name="Players"/>, every person in the game, play it at once.</summary>
 [SeenBy(Audience.Everyone)]
 public sealed record SimultaneousDayStarted(GameDate Date, IReadOnlyList<PlayerId> Players) : IEvent;

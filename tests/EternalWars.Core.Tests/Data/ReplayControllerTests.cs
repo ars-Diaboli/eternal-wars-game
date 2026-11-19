@@ -108,17 +108,17 @@ public class ReplayControllerTests
     public void ABattle_IsPlayedOn_InASeparateGame_WhileTheReplayWaitsPaused()
     {
         var replay = Open();
-        Assert.Null(replay.TakeOver()); // on the map: "Play from here" plays the game on instead
+        Assert.Null(replay.TakeOver(out _)); // on the map: "Play from here" plays the game on instead
         Assert.False(replay.BackToReplay());
 
         replay.Seek(5);
-        var session = replay.TakeOver();
+        var session = replay.TakeOver(out _);
 
         Assert.NotNull(session);
         Assert.NotSame(replay.Player.Session, session);
         Assert.True(replay.IsTakingOver);
         Assert.False(replay.IsPlaying);
-        Assert.Null(replay.TakeOver()); // once
+        Assert.Null(replay.TakeOver(out _)); // once
 
         Assert.True(replay.BackToReplay());
         Assert.False(replay.IsTakingOver);

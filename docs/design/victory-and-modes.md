@@ -47,9 +47,10 @@ ADR-092, ADR-101, built ADR-102 … ADR-104, the viewer ADR-164.
   to that day's first turn), the whole map or a player's eyes, and the main menu. In a battle, **"Skip to the result"** plays its moves at
   once and shows the result, which closes by itself after a moment (Enter at once). A save plays to its last command and stops. Nothing is
   ranked, saved or autosaved.
-- **"Play from here"**, in a battle: only one a person commands (the computer's own battles cannot be taken over). The battle goes on by
-  hand as a separate game, not ranked, the computer's side played as usual; when its result screen is left, the viewer comes back paused
-  where it was, the replay unchanged.
+- **"Play from here"**, in a battle: the battle goes on by hand as a separate game, not ranked, the computer's side played as usual; when
+  its result screen is left, the viewer comes back paused where it was, the replay unchanged. A battle a person commands goes on from the
+  move shown, one ended by quick combat from just before it. A battle only the computer fights starts again from its start, the viewer
+  commanding the attacker (the defender stays the computer's; the battlefield width is the one the computer fought on).
 - **"Play from here"**, on the adventure map (ADR-185): while the game is not over and a person is still in it. The viewer closes and the
   game goes on from that command as the player's own, as if a save made there were loaded: saving, autosave, the end screen and the ranking
   as usual; the players stay as recorded, and on a computer's turn the computer plays on first. The replay file does not change.

@@ -458,9 +458,11 @@ public sealed class GameHost : ICommandRoute, IDisposable
             return;
         }
 
-        if (send.Command is HandToComputerCommand)
+        if (send.Command is HandToComputerCommand or HandToPersonCommand)
         {
-            peer.Connection.Send(new CommandRefused(send.Sequence, "Only the host lets the computer play a colour."));
+            peer.Connection.Send(new CommandRefused(send.Sequence, send.Command is HandToComputerCommand
+                ? "Only the host lets the computer play a colour."
+                : "Only the replay viewer hands a computer's colour to a person."));
             return;
         }
 

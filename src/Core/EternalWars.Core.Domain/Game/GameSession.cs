@@ -107,6 +107,7 @@ public sealed class GameSession
             Battles.HandToComputer(c.Player);
             Turns.LeaveOpenTurns(c.Player); // on a simultaneous day the computer plays its turn after the people (ADR-197)
         });
+        _handlers.Add<HandToPersonCommand>(c => Flow.HandToPerson(c.Player));
         _handlers.Add<PlayTurnByTurnCommand>(c => Turns.PlayTurnByTurn(c.Reason));
     }
 

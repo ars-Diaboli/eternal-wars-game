@@ -62,6 +62,24 @@ public sealed class GameFlowService(GameState state, IEventPublisher events)
         events.Publish(new PlayerHandedToComputer(player));
     }
 
+    /// <summary>A person plays <paramref name="player"/> from now on (ADR-233). Refused for a player a person plays already and for one that is out.</summary>
+    internal void HandToPerson(PlayerId player)
+    {
+        var who = state.GetPlayer(player);
+        if (who.IsHuman)
+        {
+            throw new CommandRefusedException($"A person already plays {who.Name}.");
+        }
+
+        if (who.IsDefeated)
+        {
+            throw new CommandRefusedException($"{who.Name} is out of the game.");
+        }
+
+        who.IsHuman = true;
+        events.Publish(new PlayerHandedToPerson(player));
+    }
+
     /// <summary>
     /// Who is in the game: players with a hero or a town at the start; how many teams they make; what heroes there are (for hero conditions,
     /// <see cref="GameState.Tracking"/>).

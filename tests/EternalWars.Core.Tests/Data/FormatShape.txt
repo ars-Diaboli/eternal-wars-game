@@ -1072,6 +1072,7 @@ object GameCommand
   type=giveWarMachine -> GiveWarMachineCommand
   type=guard -> RespondToGuardCommand
   type=handToComputer -> HandToComputerCommand
+  type=handToPerson -> HandToPersonCommand
   type=hillFort -> UpgradeAtHillFortCommand
   type=hireAtTavern -> HireAtMapTavernCommand
   type=hireHero -> HireHeroCommand
@@ -1180,6 +1181,8 @@ object GuardDocument
   creature: String
 enum GuardMode: Classic, Area
 object HandToComputerCommand
+  player: PlayerId
+object HandToPersonCommand
   player: PlayerId
 enum HeroClass: Warrior, Mage
 object HeroClassCondition
