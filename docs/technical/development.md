@@ -45,7 +45,7 @@ missing or bad value, an option given twice or a missing argument is `error: ...
 | Command | Does |
 |---|---|
 | `battle haven.pikeman:20,haven.archer:10 inferno.hell-hound:12 [--runs N] [--seed S]` | battle statistics |
-| `record <file> [--days N] [--seed S] [--computer]` / `replay <file>` | record a game (`--computer`: Red is a computer player, its battles fought within one command) / verify a replay |
+| `record <file> [--days N] [--seed S] [--computer]` / `replay <file>` | record a game (`--computer`: Red is a computer player, its battles fought within one command) / verify a replay and print how long reading and replaying it took (what loading it costs) |
 | `selftest` | determinism + replay check (CI) |
 | `game --map towns [--days N] [--runs N] [--record f]` | AI plays every slot; prints fights won/lost by kind, what is left on the map, garrison hero moves |
 | `game --template duel [--size N] [--players N]` | same on a new generated map per run (as the new-game screen would) |

@@ -18,8 +18,8 @@ public sealed record ReplayTurn(int Position, GameDate Date, PlayerId Player);
 /// Plays a game record (a replay or a save, ADR-101) one command at a time for the replay viewer. <see cref="Open"/> replays the whole record
 /// once to check it (a refused command or another final digest fails like a load: "made with other content") and to note where every turn
 /// and day starts. <see cref="Session"/> is the game being watched; <see cref="Step"/> runs its next command, so the views see the events.
-/// <see cref="Seek"/> puts a new session at any point (replayed unheard from the start, ADR-058), which is how the viewer jumps to a turn or a
-/// day, back or forward. <see cref="TakeOver"/> (in a battle) and <see cref="PlayOn"/> (on the adventure map) give a separate session at the
+/// <see cref="Seek"/> is how the viewer jumps to a turn or a day: forward, the watched session plays the commands in between unheard by the
+/// views (ADR-234); back, a new session is replayed unheard from the start to that point (ADR-058). <see cref="TakeOver"/> (in a battle) and <see cref="PlayOn"/> (on the adventure map) give a separate session at the
 /// current point, for "Play from here"; the record and the watched session do not change.
 /// </summary>
 public sealed class ReplayPlayer
@@ -48,7 +48,7 @@ public sealed class ReplayPlayer
 
     public GameRecordDocument Record { get; }
 
-    /// <summary>The session being watched; replaced by <see cref="Seek"/>.</summary>
+    /// <summary>The session being watched; replaced by a jump back (<see cref="Seek"/>) and by <see cref="Reload"/>.</summary>
     public GameSession Session { get; private set; }
 
     /// <summary>How many of the record's commands the watched session has played.</summary>
@@ -140,13 +140,33 @@ public sealed class ReplayPlayer
         return true;
     }
 
-    /// <summary>Puts a new watched session after <paramref name="position"/> commands (clamped to the record); the old one is dropped.</summary>
+    /// <summary>
+    /// Puts the watched game after <paramref name="position"/> commands (clamped to the record). Forward, the watched session runs the commands in
+    /// between with its events unheard by <see cref="GameSession.Events"/>' subscribers (<see cref="GameSession.Unheard"/>), so a jump costs only
+    /// the commands it skips (ADR-234); the views are then built again on its state. Back, a new session is replayed from the start and the old
+    /// one is dropped.
+    /// </summary>
     public void Seek(int position)
     {
         position = Math.Clamp(position, 0, Count);
-        Session = Build(position);
-        Position = position;
+        if (position < Position)
+        {
+            Session = Build(position);
+            Position = position;
+            return;
+        }
+
+        using (Session.Unheard())
+        {
+            while (Position < position)
+            {
+                Step();
+            }
+        }
     }
+
+    /// <summary>A new watched session replayed from the start to <see cref="Position"/>: the record's game put back when the watched one differs from it.</summary>
+    public void Reload() => Session = Build(Position);
 
     /// <summary>Where the next turn starts (the end of the record after the last turn).</summary>
     public int NextTurnPosition() => Turns.FirstOrDefault(t => t.Position > Position)?.Position ?? Count;

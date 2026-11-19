@@ -72,6 +72,39 @@ public class ReplayPlayerTests
     }
 
     [Fact]
+    public void AJumpForward_PlaysOnTheWatchedGame_UnheardByItsViews_ToTheSameState()
+    {
+        // ADR-234: a jump forward costs only the commands it skips; the views are built again on the state afterwards.
+        var record = Recorded(out var played);
+        var player = ReplayPlayer.Open(record);
+        player.Seek(2);
+        var watched = player.Session;
+        var heard = 0;
+        watched.Events.Subscribe<CommandExecuted>(_ => heard++);
+
+        player.Seek(player.Count);
+
+        Assert.Same(watched, player.Session);
+        Assert.Equal(0, heard);
+        Assert.Equal(player.Count, player.Position);
+        Assert.Equal(GameStateDigest.Describe(played.State), GameStateDigest.Describe(player.Session.State));
+
+        player.Seek(4); // back: a new game replayed from the start
+        Assert.NotSame(watched, player.Session);
+        Assert.Equal(4, player.Position);
+        var fresh = ReplayPlayer.Open(record);
+        fresh.Seek(4);
+        Assert.Equal(GameStateDigest.Describe(fresh.Session.State), GameStateDigest.Describe(player.Session.State));
+
+        player.Step();
+        var stepped = player.Session;
+        player.Reload(); // the record's game put back where it is
+        Assert.NotSame(stepped, player.Session);
+        Assert.Equal(5, player.Position);
+        Assert.Equal(GameStateDigest.Describe(stepped.State), GameStateDigest.Describe(player.Session.State));
+    }
+
+    [Fact]
     public void TheTurns_AreIndexed_ByWhereTheyStart_TheirDayAndPlayer()
     {
         var player = ReplayPlayer.Open(Recorded(out _));
