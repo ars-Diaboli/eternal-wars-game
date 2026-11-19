@@ -30,6 +30,9 @@ public interface IViewSink
     /// <summary>A hero leaves the view.</summary>
     void RemoveHero(Hero hero);
 
+    /// <summary>A hero in the view took the host's values in place, its place among them, past its setters.</summary>
+    void HeroChanged(Hero hero);
+
     /// <summary>An object comes into the view, at <paramref name="index"/> in the objects' order (the end when null).</summary>
     void AddObject(MapObject mapObject, int? index);
 
@@ -87,6 +90,8 @@ internal sealed class ViewSink(GameState state) : IViewSink
     public void AddHero(Hero hero) => state.AddHero(hero);
 
     public void RemoveHero(Hero hero) => state.RemoveHero(hero);
+
+    public void HeroChanged(Hero hero) => state.ForgetHeroPlaces();
 
     public void AddObject(MapObject mapObject, int? index) => state.AddObject(mapObject, index);
 

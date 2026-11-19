@@ -59,7 +59,7 @@ public class LivePlayTests
         Assert.Equal(acted, blueSaw.Count);
         Assert.Equal(session.State.Battle!.Round, red.Session!.State.Battle!.Round);
         Assert.Equal(session.State.Battle.ActiveUnit!.Id, blue.Session.State.Battle!.ActiveUnit!.Id);
-        Assert.NotEmpty(redRefusals.Where(r => r.Length > 0)); // Red tried to act in Blue's turn, at least once
+        Assert.Contains(redRefusals, r => r.Length > 0); // Red tried to act in Blue's turn, at least once
     }
 
     [Fact]

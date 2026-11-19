@@ -274,7 +274,7 @@ public sealed partial class AdventureAi
     }
 
     /// <summary>
-    /// For tuning (<c>sim game --explain</c>): the hero's best candidate targets as <see cref="TargetValuer.ChooseTarget"/> sees them, with their value, the
+    /// For tuning (<c>EW_SIM_EXPLAIN</c> with <c>sim game</c>): the hero's best candidate targets as <see cref="TargetValuer.ChooseTarget"/> sees them, with their value, the
     /// opponent's power, whether the simulated fight is safe and the route's cost; then the exploring tile. Changes nothing.
     /// </summary>
     public IReadOnlyList<string> Explain(HeroId id, int count = 12) => _values.Explain(id, count);

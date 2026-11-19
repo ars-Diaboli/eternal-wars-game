@@ -208,7 +208,7 @@ public class SimultaneousDayTests
         Assert.True(state.CanSee(Blue, state.GetHero(B)));
         Assert.Null(state.SimultaneousConflict);
         Assert.True(state.IsSimultaneous);
-        Assert.Empty(MapValidator.Validate(state).Where(i => i.Message.Contains("start zones touch", StringComparison.Ordinal)));
+        Assert.DoesNotContain(MapValidator.Validate(state), i => i.Message.Contains("start zones touch", StringComparison.Ordinal));
     }
 
     [Fact]

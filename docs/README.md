@@ -52,6 +52,7 @@ The game design document, split by mechanic. Start at the overview.
 | [ideas.md](project/ideas.md) | Owner's raw notes; each leaves once it becomes an ADR or an open question |
 | [archive/code-review-2026-11.md](project/archive/code-review-2026-11.md) | The November 2026 code review and what became of each item (ADR-165 … ADR-175), read-only |
 | [archive/relief-plan.md](project/archive/relief-plan.md) | How the adventure map's relief was built in five steps (ADR-181, ADR-182), read-only |
+| [archive/refactoring-plan-2026-11.md](project/archive/refactoring-plan-2026-11.md) | The November 2026 codebase review and refactoring plan, its baselines and how each item was checked (ADR-202 … ADR-226), read-only |
 
 Rules for keeping these in step: a decision goes into `decisions.md` and the matching design doc; an answered question
 moves to the Answered list of `open-questions.md`; roadmap checkboxes follow the code. Numbers that live in data files

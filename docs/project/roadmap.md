@@ -287,6 +287,28 @@ Box (MAP-35, ADR-105), hero limit (MAP-14), generator placement (`TreasurePlacer
 - [ ] Scenario chaining and hero carry-over (campaign variables: see Map events, FLOW-1, EVT-1)
 - [ ] Dialogue and campaign triggers, built on the map events and their editor "Events" tab (ADR-096)
 
+## Code health (ADR-226; what the refactoring plan left, [archive](archive/refactoring-plan-2026-11.md))
+- [ ] LAN hardening: cap joined-but-unseated peers in the lobby (`LobbyHost.Join`) and rate-limit chat; host sends that cannot block a
+      frame (no write timeout today: a client that stops reading freezes `GameHost.Poll`); the record limit per colour, not per link
+- [ ] Schema hash (ADR-218): stop the field walk at the first base type outside Domain (`Exception`, `Collection<T>` pull in runtime
+      fields), and hash enum names and values (the codec sends enums as numbers)
+- [ ] `GameSession.ChangeStamp` misses a LAN client's view writes (the hover preview's last-route cache); `FogOfWar.SightOf` hands out
+      its live set
+- [ ] Game app `Main` policy to move out (ADR-222): when to autosave, the rematch (its seed from `System.Random.Shared`), loading a save's
+      seats (`HandToComputer`, `PlayTurnByTurn`), lobby seat and join-listing rules, replay hold and recovery, camera and focus rules
+- [ ] Main-menu "Continue" offers a save whose commands no longer load (labels are read alone since ADR-224); fall back to the next one
+- [ ] `EventsPanel` rebuilds whole on every `UndoHistoryChanged`, unmerged; give it a `RefreshScheduler` or sections
+- [ ] AI tuning numbers still inline (`TargetValuer`, `TownManager`, `DecisionResponder`, `AiContext`: 0.85 creature share, the 0.7
+      power share, the +3000 gold cushion, the third of the gold kept, …) into `AiWeights`; `AiWeights.With` to refuse negative values
+- [ ] Switches on the map-event action type left in Domain (`MapEventState.Expressions`, `MapEventText`, `TargetValuer.Events`) into
+      the handlers, and a test that a handler of an action with an amount overrides `Fix`
+- [ ] Map-event `Answer` / `ChooseArmy` through `DecisionSteps.TakeDecision`; `PandorasBoxOpened` no longer carries the box's event
+      for `MapEventService` to run (an event used as a request, ADR-214)
+- [ ] From the review, never planned: typed content ids; `InfoSheets` returning structured lines, not English text; `CheckRefusals`
+      not a process-wide static; `ThirdCatalogue.Buyers` / `Stock` not public mutable collections
+- [ ] Small: `Main.Network`'s `_director!` delegates after `LeaveGame`; chat offsets as `UiTheme` tokens; `ConditionKind.ReleaseHero`
+      tested outside its handler (`GameFlowService`); `IScenarioConditionHandler`'s comment names `MapValidator`
+
 ## Risks
 | Risk | Mitigation |
 |---|---|

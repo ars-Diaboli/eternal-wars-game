@@ -1,5 +1,9 @@
 # Eternal Wars codebase review and refactoring plan
 
+> **Archived (2026-11-19), read-only.** Phases 0–4 are done (ADR-202 … ADR-224); the closing review, its fixes and every item left
+> open are in ADR-226 (`docs/project/decisions.md`) and the "Code health" section of `docs/project/roadmap.md`. The plan below is kept
+> as written; "Closing review" at the end records how each item was checked.
+
 The architecture is in good shape. What needs work is performance and the networking code, not the design.
 
 I read about 73k lines of source and 34k lines of tests (four reviewers working in parallel). The build is clean; the only warnings are 3 xUnit analyzer warnings in tests, and there are no TODO/FIXME markers. I checked the most serious claims myself in the code and all of them held. No profiling was done, so every cost below is an estimate from reading the code.
@@ -345,10 +349,30 @@ The order is: safety first, then a measurement baseline, then cheap performance 
 - [x] **Panels:** split `TownPanel` and `HeroPanel` into sections with their own subscriptions and schedulers. Give the inspector one section per object type. Add a `FormBuilder.AddOwnerChoice` helper. Move colours and sizes into `UiTheme` tokens.
   - Done (ADR-223). Nine town screen sections and eight hero screen sections, each a `ScreenSection` with its own `RefreshScheduler` and events; the screens rebuild them all only when they open, on the turn and on the few events every section reads.
   - The inspector: an `InspectorSection<T>` per object type (19, in `InspectorSections`; a type listed twice throws), `HeroInspector` and the shared `InspectorForm`. The tests cannot see Godot, so the registry has no completeness test; fields stay optional for a kind.
-- [ ] **Lower priority:** typed content ids, `InfoSheets` returning structured lines instead of English text, splitting the sim tool's `Program.cs` into one class per command with strict option parsing, autosave written straight to a stream, and save listing that reads only the header.
+- [x] **Lower priority:** typed content ids, `InfoSheets` returning structured lines instead of English text, splitting the sim tool's `Program.cs` into one class per command with strict option parsing, autosave written straight to a stream, and save listing that reads only the header.
   - Done (ADR-224): the sim tool's commands, autosave to a stream, save listing from the header.
+  - Not done, moved to the roadmap's "Code health" (ADR-226): typed content ids, structured `InfoSheets` lines.
 
 **What to watch:**
 - Digests: Phases 1–2 must not change the random draw order or tie-breaks. Run the replay and digest pin tests after each step.
 - AI behaviour: Phase 2 changes to the AI and the estimator need a sim A/B comparison of win rates, not only green tests.
 - Recording decisions: each Phase 3 and 4 change that alters a documented rule needs an ADR in `docs/project/decisions.md`.
+
+## Closing review (2026-11-19)
+
+Each item was checked against the code at `633c9dc` by five reviewers, one per phase (commits `8c9b767` … `633c9dc`), who also read the
+diffs for bugs. Build: 0 warnings (after fixing the 3 xUnit analyzer warnings); tests: 2,531 pass. Smoke scenarios and sim baselines were
+not run again.
+
+| Phase | Verdict | Fixed now (ADR-226) | Left (roadmap "Code health") |
+|---|---|---|---|
+| 0 Guardrails | Done as written | | Lobby join cap, blocking sends, per-link record limit |
+| 1 Cheap wins | Done as written, one bug | `HeroAt` stale on a LAN client | |
+| 2 Algorithms | Done as written | | One cost map per hero (it is one, for the last hero asked); `ChangeStamp` misses LAN view writes; `SightOf` is live |
+| 3 Cleanup | Done; two gaps | | Schema hash: base-class runtime fields in, enum values out; two map-event answers check the decision by hand; `PandorasBoxOpened` carries a request |
+| 4 Large classes | Done; two overstated | Partial file on a failed save; stale `--explain` comment | Policy still in the game app's `Main`; `EventsPanel` rebuild; AI numbers still inline; switches on action type in Domain; `Fix` not enforced |
+
+Items of the review never put into the plan, and not done: typed content ids, `InfoSheets` building English text, `CheckRefusals` as a
+process-wide static, `ThirdCatalogue.Buyers`/`Stock` as public mutable collections, the battle unit occupancy grid (skipped by choice, see
+Phase 2 "Battle reach").
+
