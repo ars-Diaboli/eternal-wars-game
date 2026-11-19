@@ -25,7 +25,7 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>Artifacts (ADR-061): the catalog, wearing and carrying, effects, pickups, loot, map data and the AI.</summary>
 public class ArtifactTests
 {
-    private static void Outfit(GameState state, HeroId hero, string[]? worn = null, string[]? backpack = null)
+    private static void Outfit(GameState state, HeroId hero, ArtifactId[]? worn = null, ArtifactId[]? backpack = null)
     {
         var h = state.GetHero(hero);
         h.Artifacts.ReplaceWith(worn ?? [], backpack ?? [], state.Artifacts);
@@ -129,7 +129,7 @@ public class ArtifactTests
         Assert.Throws<CommandRefusedException>(() => artifacts.ReplaceWith(["rusted-blade", "centaurs-ax"], [], state.Artifacts));
         artifacts.ReplaceWith(["iron-band", "ring-of-pale-fire"], [], state.Artifacts); // two rings fit
         Assert.Throws<CommandRefusedException>(() => artifacts.ReplaceWith(["iron-band", "ring-of-pale-fire", "ring-of-the-wayfarer"], [], state.Artifacts));
-        Assert.Throws<CommandRefusedException>(() => artifacts.ReplaceWith([], Enumerable.Repeat("rusted-blade", ArtifactSlots.BackpackSize + 1), state.Artifacts));
+        Assert.Throws<CommandRefusedException>(() => artifacts.ReplaceWith([], Enumerable.Repeat(new ArtifactId("rusted-blade"), ArtifactSlots.BackpackSize + 1), state.Artifacts));
         Assert.Throws<KeyNotFoundException>(() => artifacts.ReplaceWith(["no-such-artifact"], [], state.Artifacts));
         Assert.Equal(2, artifacts.Worn(ArtifactSlot.Ring).Count); // the failed replaces left it alone
     }
@@ -288,7 +288,7 @@ public class ArtifactTests
     public void Unequipping_NeedsRoomInTheBackpack_AndTheArtifactToBeWorn()
     {
         var state = Create("A.B");
-        Outfit(state, A, worn: ["rusted-blade"], backpack: Enumerable.Repeat("iron-band", ArtifactSlots.BackpackSize).ToArray());
+        Outfit(state, A, worn: ["rusted-blade"], backpack: Enumerable.Repeat(new ArtifactId("iron-band"), ArtifactSlots.BackpackSize).ToArray());
         var session = Start(state);
 
         Assert.False(session.Execute(new UnequipArtifactCommand(Blue, A, "rusted-blade")).IsAccepted);
@@ -376,7 +376,7 @@ public class ArtifactTests
     [Fact]
     public void Giving_ToWear_NeedsBackpackRoomOnlyForTheSwappedOne()
     {
-        var full = Enumerable.Repeat("iron-band", ArtifactSlots.BackpackSize).ToArray();
+        var full = Enumerable.Repeat(new ArtifactId("iron-band"), ArtifactSlots.BackpackSize).ToArray();
         var state = Create("AC.B");
         Outfit(state, A, backpack: ["centaurs-ax", "rusted-blade"]);
         Outfit(state, C, backpack: full);
@@ -415,7 +415,7 @@ public class ArtifactTests
     {
         var state = Create("A.B");
         Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), 1, 0).Artifact = "rusted-blade";
-        Outfit(state, A, backpack: Enumerable.Repeat("iron-band", ArtifactSlots.BackpackSize).ToArray());
+        Outfit(state, A, backpack: Enumerable.Repeat(new ArtifactId("iron-band"), ArtifactSlots.BackpackSize).ToArray());
         var session = Start(state);
         var full = new List<ArtifactBackpackFull>();
         session.Events.Subscribe<ArtifactBackpackFull>(full.Add);
@@ -438,14 +438,14 @@ public class ArtifactTests
         Start(state);
 
         var rolled = state.ObjectsOf<ArtifactPickup>().Select(p => p.Artifact).ToList();
-        Assert.All(rolled, id => Assert.Equal(ArtifactTier.Relic, state.Artifacts.Get(id!).Tier));
+        Assert.All(rolled, id => Assert.Equal(ArtifactTier.Relic, state.Artifacts.Get(id!.Value).Tier));
         Assert.Equal(6, rolled.Distinct().Count());
     }
 
     [Fact]
     public void RollingIsDeterministic_AndSkipsWhatHeroesCarry()
     {
-        static List<string?> Roll(string[]? carried = null)
+        static List<ArtifactId?> Roll(ArtifactId[]? carried = null)
         {
             var state = Create("A..........B", "............");
             Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), 3, 0);
@@ -461,7 +461,7 @@ public class ArtifactTests
 
         Assert.Equal(Roll(), Roll());
         var all = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).Select(a => a.Id).Take(12).ToArray();
-        Assert.DoesNotContain(Roll(all)[0], all);
+        Assert.DoesNotContain(Roll(all)[0]!.Value, all);
     }
 
     [Fact]
@@ -483,7 +483,7 @@ public class ArtifactTests
     {
         var state = Create("A.B");
         state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10));
-        Outfit(state, A, backpack: Enumerable.Repeat("iron-band", ArtifactSlots.BackpackSize - 2).ToArray()); // room for two
+        Outfit(state, A, backpack: Enumerable.Repeat(new ArtifactId("iron-band"), ArtifactSlots.BackpackSize - 2).ToArray()); // room for two
         Outfit(state, B, worn: ["squires-shield", "ogres-club-of-havoc"], backpack: ["iron-band", "endless-sack-of-gold"]);
         var session = Start(state);
         var lost = new List<ArtifactLost>();
@@ -517,7 +517,7 @@ public class ArtifactTests
     {
         var state = Create("A.B");
         state.GetHero(A).Army.Set(0, new CreatureStack(BuiltInCreatures.Champion, 10));
-        Outfit(state, A, backpack: Enumerable.Repeat("iron-band", ArtifactSlots.BackpackSize).ToArray());
+        Outfit(state, A, backpack: Enumerable.Repeat(new ArtifactId("iron-band"), ArtifactSlots.BackpackSize).ToArray());
         Outfit(state, B, backpack: ["rusted-blade"]);
         var session = Start(state);
         var lost = new List<ArtifactLost>();
@@ -541,7 +541,7 @@ public class ArtifactTests
 
         var loaded = TestFormat.RoundTrip(state);
 
-        Assert.Equal(["rusted-blade", "iron-band"], loaded.GetHero(A).Artifacts.AllWorn.Select(w => w.Id).Order(StringComparer.Ordinal).Reverse());
+        Assert.Equal(["rusted-blade", "iron-band"], loaded.GetHero(A).Artifacts.AllWorn.Select(w => w.Id).Order().Reverse());
         Assert.Equal(["scholars-cap"], loaded.GetHero(A).Artifacts.Backpack);
         Assert.Equal(loaded.GetHero(A).Attack + 1, loaded.GetHero(A).TotalAttack);
         Assert.Equal(["hunters-mark", null], loaded.ObjectsOf<ArtifactPickup>().OrderBy(p => p.Id.Value).Select(p => p.Artifact));

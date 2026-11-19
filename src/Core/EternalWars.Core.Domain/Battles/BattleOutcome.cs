@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Battles;
 /// <param name="Experience">The winning hero's experience: 0 without a winning hero and in an arena map's battle (ADR-097).</param>
 /// <param name="Loot">The defeated hero's artifacts the winning hero takes, best first (empty unless a hero beat a hero that did not flee).</param>
 internal sealed record BattleOutcome(
-    BattleSide Winner, BattleEndReason Reason, IReadOnlyList<BattleCasualty> Casualties, int Experience, IReadOnlyList<string> Loot)
+    BattleSide Winner, BattleEndReason Reason, IReadOnlyList<BattleCasualty> Casualties, int Experience, IReadOnlyList<Common.ArtifactId> Loot)
 {
     /// <summary>The outcome of <paramref name="battle"/>, which has a winner.</summary>
     public static BattleOutcome Of(GameState state, BattleState battle)
@@ -26,7 +26,7 @@ internal sealed record BattleOutcome(
         var losing = battle.Participant(winner.Opponent());
         var arena = state.Arena is { Result: ArenaResult.Fighting };
         var experience = winning.Hero is null || arena ? 0 : ExperienceOf(battle);
-        IReadOnlyList<string> loot = reason == BattleEndReason.Defeated && winning.Hero is not null && losing.Hero is { } loserId
+        IReadOnlyList<Common.ArtifactId> loot = reason == BattleEndReason.Defeated && winning.Hero is not null && losing.Hero is { } loserId
             ? ArtifactValue.BestFirst(state.Artifacts, state.GetHero(loserId).Artifacts.AllWorn.Select(w => w.Id).Concat(state.GetHero(loserId).Artifacts.Backpack)).ToList()
             : [];
         return new BattleOutcome(winner, reason, CasualtiesOf(battle), experience, loot);

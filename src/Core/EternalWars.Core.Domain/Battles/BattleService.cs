@@ -58,7 +58,7 @@ public sealed class BattleService
     /// <inheritdoc cref="BattleStarter.BeginArenaBattle"/>
     internal void BeginArenaBattle(Hero attacker, Hero defender, MapPosition location) => _starter.BeginArenaBattle(attacker, defender, location);
 
-    internal void BeginGuardBattle(Hero attacker, MapObject guard, string creature, int count) => _starter.BeginGuardBattle(attacker, guard, creature, count);
+    internal void BeginGuardBattle(Hero attacker, MapObject guard, Common.CreatureId creature, int count) => _starter.BeginGuardBattle(attacker, guard, creature, count);
 
     /// <inheritdoc cref="BattleStarter.BeginBankBattle"/>
     internal void BeginBankBattle(Hero attacker, CreatureBank bank) => _starter.BeginBankBattle(attacker, bank);
@@ -89,7 +89,7 @@ public sealed class BattleService
     internal void UseWarcry(PlayerId player, Warcry warcry) => _commands.UseWarcry(player, warcry);
 
     /// <inheritdoc cref="BattleCommandHandler.Cast"/>
-    internal void Cast(PlayerId player, string spell, int? target, CellPosition? cell, int? second = null) => _commands.Cast(player, spell, target, cell, second);
+    internal void Cast(PlayerId player, Common.SpellId spell, int? target, CellPosition? cell, int? second = null) => _commands.Cast(player, spell, target, cell, second);
 
     /// <inheritdoc cref="BattleCommandHandler.Retreat"/>
     internal void Retreat(PlayerId player) => _commands.Retreat(player);

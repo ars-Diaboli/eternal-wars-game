@@ -7,7 +7,7 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 /// <summary>The defaults of a <see cref="IAdventureSpellHandler"/>: no cell to pick, no conditions of its own, the default prompt.</summary>
 internal abstract class AdventureSpellHandler : IAdventureSpellHandler
 {
-    public abstract string Spell { get; }
+    public abstract Common.SpellId Spell { get; }
 
     public virtual bool NeedsTarget(GameState state, Hero hero) => false;
 

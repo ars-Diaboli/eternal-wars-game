@@ -206,7 +206,7 @@ public sealed class BattleNarrator(Func<GameState> state)
     /// <summary>A stack that came onto the field during the battle; one already known (a summoned stack that grew) keeps its name.</summary>
     private void Join(BattleUnitInfo info) => _units.TryAdd(info.Unit, state().Creatures.Get(info.Creature).Name);
 
-    private string SpellName(string spell) => state().Spells.TryGet(spell, out var definition) ? definition.Name : spell;
+    private string SpellName(Common.SpellId spell) => state().Spells.TryGet(spell, out var definition) ? definition.Name : spell.Value;
 
     private static string NameOf(GameState state, BattleParticipant participant)
     {

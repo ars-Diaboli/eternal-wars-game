@@ -29,7 +29,7 @@ public sealed record RandomMapSlot(string Name, bool HumanAllowed, bool HumanByD
 /// One player of a random map as set up: the slot, human or computer, the town (null = random) and hero (null = random), the team (null = the
 /// template's, when locked) and the start town's tier-1 dwelling (a base creature id; null = random).
 /// </summary>
-public sealed record RandomMapPlayer(int Slot, bool IsHuman, string? Town, string? Hero, int? Team, string? Tier1Dwelling = null);
+public sealed record RandomMapPlayer(int Slot, bool IsHuman, string? Town, string? Hero, int? Team, Core.Domain.Common.CreatureId? Tier1Dwelling = null);
 
 /// <summary>
 /// What the screen asks the generator for: the map size, the players (the first slots, in order), the game options (their seed is the map's) and
@@ -1035,7 +1035,7 @@ public partial class NewGameScreen : PanelContainer
             SelectedTown,
             Hero.Selected <= 0 || Hero.Selected > _heroes.Count ? null : _heroes[Hero.Selected - 1].Id,
             _teamsLocked ? null : (int)Team.Value,
-            Dwelling.Selected <= 0 || Dwelling.Selected > _dwellings.Count ? null : _dwellings[Dwelling.Selected - 1].Id);
+            Dwelling.Selected <= 0 || Dwelling.Selected > _dwellings.Count ? (Core.Domain.Common.CreatureId?)null : _dwellings[Dwelling.Selected - 1].Id);
 
         private bool IsHuman => Control.GetSelectedId() != Computer;
 
@@ -1046,7 +1046,7 @@ public partial class NewGameScreen : PanelContainer
 
         /// <summary>The row's choices, with the player's <paramref name="colour"/>.</summary>
         public RandomPlayerChoice Choice(int colour) => new(
-            Control.GetSelectedId(), SelectedTown, Player.Hero, Player.Tier1Dwelling, (int)Team.Value, colour);
+            Control.GetSelectedId(), SelectedTown, Player.Hero, Player.Tier1Dwelling?.Value, (int)Team.Value, colour);
 
         /// <summary>
         /// Takes another row's choices: the controller when this slot allows it, the town, then the hero and dwelling when this slot offers them, and

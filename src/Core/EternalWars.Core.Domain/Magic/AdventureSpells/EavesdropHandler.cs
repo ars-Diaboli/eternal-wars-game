@@ -11,7 +11,7 @@ namespace EternalWars.Core.Domain.Magic.AdventureSpells;
 /// </summary>
 internal sealed class EavesdropHandler : AdventureSpellHandler
 {
-    public override string Spell => AdventureMagic.Eavesdrop;
+    public override Common.SpellId Spell => AdventureMagic.Eavesdrop;
 
     public override bool NeedsTarget(GameState state, Hero hero) => true;
 
@@ -45,7 +45,7 @@ internal sealed class EavesdropHandler : AdventureSpellHandler
         var listened = AdventureMagic.EavesdropTown(cast.State, cast.Target)!;
         if (cast.Rank >= 3)
         {
-            cast.Mark(new HeroStatus(cast.Spell, HeroStatusKind.Cast, listened.Id.Value, StatusExpiry.EndOfWeek));
+            cast.Mark(new HeroStatus(cast.Spell.Value, HeroStatusKind.Cast, listened.Id.Value, StatusExpiry.EndOfWeek));
         }
 
         cast.Events.Publish(new TownOverheard(hero.Id, hero.Owner, AdventureIntel.Town(cast.State, listened, hero.Owner)));

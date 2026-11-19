@@ -118,7 +118,7 @@ public static class DemoScenario
         ReliefShaper.Shape(map, objects);
         return new GameState(map, players, heroes, objects, content: content);
 
-        void Monster(string creature, int? count, GuardDisposition disposition, MapPosition position)
+        void Monster(Common.CreatureId creature, int? count, GuardDisposition disposition, MapPosition position)
         {
             var monster = (MonsterGuard)Place(BuiltInMapObjects.Monster, position);
             (monster.Creature, monster.Count, monster.Disposition) = (creature, count, disposition);

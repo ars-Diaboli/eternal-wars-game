@@ -128,7 +128,7 @@ public sealed class BattleStage(
         AddUnit(e.Unit);
     }));
 
-    public void OnZoneCreated(BattleZoneCreated e) => Step(null, Then(e, () => AddZone(e.Zone, e.Spell, e.Rect)));
+    public void OnZoneCreated(BattleZoneCreated e) => Step(null, Then(e, () => AddZone(e.Zone, e.Spell.Value, e.Rect)));
 
     /// <summary>Rubble a spell left (Meteor Shower III, ADR-177) stands on the field from now on.</summary>
     public void OnRubbleFell(BattleRubbleFell e) => Step(null, Then(e, () =>

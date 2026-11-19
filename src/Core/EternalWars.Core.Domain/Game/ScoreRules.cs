@@ -29,7 +29,7 @@ public static class ScoreRules
     /// Rank titles from the weakest to a dragon: the lowest score of each band and the creature it is named after (14 bands, placeholder
     /// bounds).
     /// </summary>
-    public static IReadOnlyList<(int MinScore, string Creature)> Titles { get; } =
+    public static IReadOnlyList<(int MinScore, Common.CreatureId Creature)> Titles { get; } =
     [
         (0, "inferno.imp"),
         (20, "stronghold.goblin"),
@@ -87,7 +87,7 @@ public static class ScoreRules
         Math.Max(MinimumBase, BaseDays - days) * DifficultyPercent(difficulty) * TurnTimerPercent(turnTimerMinutes) / 10_000;
 
     /// <summary>The rank title (a creature id) of a score.</summary>
-    public static string Title(int score) => Titles.Last(t => score >= t.MinScore).Creature;
+    public static string Title(int score) => Titles.Last(t => score >= t.MinScore).Creature.Value;
 
     /// <summary>
     /// The scores of a finished game: one per human winner, in player order; none when the game is not over, nobody won, only computer players

@@ -27,7 +27,7 @@ internal sealed class CreaturesCommand : SimCommand
     {
         var catalog = sim.Catalog;
         var towns = SimContext.PlayableTowns;
-        var upgrades = catalog.All.Where(c => c.UpgradesTo is not null).Select(c => c.UpgradesTo!).ToHashSet();
+        var upgrades = catalog.All.Where(c => c.UpgradesTo is not null).Select(c => c.UpgradesTo!.Value).ToHashSet();
         var bases = catalog.All.Where(c => !upgrades.Contains(c.Id)).ToList();
         var medians = Enumerable.Range(CreatureDefinition.MinTier, CreatureDefinition.MaxTier).ToDictionary(t => t, t =>
         {

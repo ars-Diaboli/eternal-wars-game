@@ -334,7 +334,7 @@ public sealed record PrimaryStatAction(PrimaryStat Stat, EventExpr Amount) : Eve
 public sealed record SkillAction(string Skill, SkillLevel Level) : EventAction;
 
 /// <summary>Gives an artifact to the hero's backpack, or takes one it wears or carries.</summary>
-public sealed record ArtifactAction(string Artifact, bool Take = false) : EventAction;
+public sealed record ArtifactAction(Common.ArtifactId Artifact, bool Take = false) : EventAction;
 
 /// <summary>Gives or takes one of our war machines (ADR-056).</summary>
 public sealed record WarMachineAction(WarMachineSlot Slot, bool Take = false) : EventAction;
@@ -343,7 +343,7 @@ public sealed record WarMachineAction(WarMachineSlot Slot, bool Take = false) : 
 public sealed record SpellBookAction : EventAction;
 
 /// <summary>Teaches the hero a spell (it needs a spell book).</summary>
-public sealed record SpellAction(string Spell) : EventAction;
+public sealed record SpellAction(Common.SpellId Spell) : EventAction;
 
 /// <summary>Changes the hero's mana: up to twice its maximum, down to 0.</summary>
 public sealed record ManaAction(EventExpr Amount) : EventAction;
@@ -358,10 +358,10 @@ public sealed record MoraleAction(int Morale, int Luck) : EventAction;
 /// Gives creatures to the hero (a town event: to the garrison), or takes them when negative. A person's hero without room chooses what to leave
 /// (EVT-4 e); a computer player's keeps its strongest stacks.
 /// </summary>
-public sealed record CreaturesAction(string Creature, EventExpr Count) : EventAction;
+public sealed record CreaturesAction(Common.CreatureId Creature, EventExpr Count) : EventAction;
 
 /// <summary>Adds creatures to hire in the town, to the dwelling of <see cref="Line"/> (its base creature); negative takes them away.</summary>
-public sealed record AvailableCreaturesAction(string Line, EventExpr Count) : EventAction;
+public sealed record AvailableCreaturesAction(Common.CreatureId Line, EventExpr Count) : EventAction;
 
 /// <summary>
 /// Builds a town building, or a creature line's dwelling (a base creature id), up to <see cref="Level"/>: it ignores bans and the day's build and

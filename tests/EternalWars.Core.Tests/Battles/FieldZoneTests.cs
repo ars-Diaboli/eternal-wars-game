@@ -57,7 +57,7 @@ public class FieldZoneTests
         var zone = Assert.Single(battle.State.Zones);
         Assert.Equal(new CellRect(10, 0, 1, 3), zone.Rect);
         Assert.Equal(4, zone.UntilRound); // the rest of round 1 and three more
-        Assert.Contains(battle.Events, e => e is BattleZoneCreated { Spell: "chaos.fire-wall", UntilRound: 4 });
+        Assert.Contains(battle.Events, e => e is BattleZoneCreated { Spell.Value: "chaos.fire-wall", UntilRound: 4 });
 
         for (var round = 0; round < 4; round++)
         {
@@ -65,7 +65,7 @@ public class FieldZoneTests
         }
 
         Assert.Empty(battle.State.Zones);
-        Assert.Contains(battle.Events, e => e is BattleZoneExpired { Spell: "chaos.fire-wall" });
+        Assert.Contains(battle.Events, e => e is BattleZoneExpired { Spell.Value: "chaos.fire-wall" });
     }
 
     // Fire Wall --------------------------------------------------------------------------------

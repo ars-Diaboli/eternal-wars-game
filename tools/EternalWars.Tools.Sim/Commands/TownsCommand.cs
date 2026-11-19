@@ -23,7 +23,7 @@ internal sealed class TownsCommand : SimCommand
         {
             var powers = armies.Select(Power).ToList();
             Console.WriteLine($"{town,-15} power {powers.Min(),6}–{powers.Max(),-6} " +
-                              string.Join("  ", sim.Catalog.BaseCreaturesOf(town).Select(c => $"T{c.Tier} {c.Name} {c.WeeklyGrowth}×{sim.Catalog.Get(upgraded ? c.UpgradesTo! : c.Id).FightValue}")));
+                              string.Join("  ", sim.Catalog.BaseCreaturesOf(town).Select(c => $"T{c.Tier} {c.Name} {c.WeeklyGrowth}×{sim.Catalog.Get(upgraded ? c.UpgradesTo!.Value : c.Id).FightValue}")));
         }
 
         Console.WriteLine($"Win rate of the row town over the column town ({runs} battles per side, {(upgraded ? "upgraded" : "base")} one-week armies)");

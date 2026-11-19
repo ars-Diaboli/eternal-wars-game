@@ -55,7 +55,7 @@ public class ControlChangeTests
         var friend = battle.Add(Defender, Sturdy("friend"), 1, 22, 0);
         battle.StartWith(own);
         Assert.Null(battle.Engine.Cast(Attacker, "chaos.frenzy", enemy.Id, null));
-        Assert.Contains(battle.Events, e => e is BattleSpellApplied { Spell: "chaos.frenzy", Turns: 1 });
+        Assert.Contains(battle.Events, e => e is BattleSpellApplied { Spell.Value: "chaos.frenzy", Turns: 1 });
 
         battle.State.ActiveUnit = enemy;
         BattleAi.ActFrenzied(battle.State, battle.Engine);
@@ -63,7 +63,7 @@ public class ControlChangeTests
         Assert.Contains(battle.Events, e => e is BattleUnitAttacked { Kind: BattleAttackKind.Melee } a && a.Attacker == enemy.Id && a.Target == friend.Id);
         Assert.Contains(battle.Events, e => e is BattleUnitAttacked { Kind: BattleAttackKind.Retaliation } a && a.Attacker == friend.Id);
         Assert.Empty(enemy.Spells); // its one turn is used
-        Assert.Contains(battle.Events, e => e is BattleSpellExpired { Spell: "chaos.frenzy" } x && x.Unit == enemy.Id);
+        Assert.Contains(battle.Events, e => e is BattleSpellExpired { Spell.Value: "chaos.frenzy" } x && x.Unit == enemy.Id);
     }
 
     [Fact]

@@ -19,7 +19,7 @@ public static class PlaceholderRules
     public static IReadOnlyList<CreatureDefinition> MonsterCandidates(CreatureCatalog creatures, int tier) =>
         creatures.All
             .Where(c => c.WeeklyGrowth > 0 && (c.Town is null || BuiltInMapObjects.PlayableTowns.Contains(c.Town)) && (tier == 0 || c.Tier == tier))
-            .OrderBy(c => c.Id, StringComparer.Ordinal)
+            .OrderBy(c => c.Id)
             .ToList();
 
 }

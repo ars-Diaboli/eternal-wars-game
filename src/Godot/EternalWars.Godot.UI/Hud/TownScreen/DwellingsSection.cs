@@ -70,10 +70,9 @@ internal sealed class DwellingsSection(TownPanel panel) : TownSection(panel)
                     recruit.WithCost(TownRules.CreatureCost(state, town, creature), " each");
                 }
 
-                var id = creature?.Id;
-                recruit.Pressed += () => Recruit(town, id!, count);
-                if (id is not null)
+                if (creature?.Id is { } id)
                 {
+                    recruit.Pressed += () => Recruit(town, id, count);
                     recruit.WithInfo(detailed => InfoSheets.Creature(Session.State, id, detailed));
                 }
 
@@ -90,7 +89,7 @@ internal sealed class DwellingsSection(TownPanel panel) : TownSection(panel)
             .On<ResourcesChanged>(events)
             .On<DwellingOwnerChanged>(events);
 
-    private void Recruit(Town town, string creature, int count)
+    private void Recruit(Town town, Core.Domain.Common.CreatureId creature, int count)
     {
         var hero = Panel.RecruitToHero ? TownRules.VisitingHero(State, town)?.Id : null;
         Run(new RecruitCommand(Player, town.Id, creature, count, hero));

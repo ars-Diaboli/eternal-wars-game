@@ -15,7 +15,7 @@ namespace EternalWars.Core.Domain.Magic;
 /// </summary>
 public sealed record ScoutedHero(
     int Level, int Attack, int Defense, int SpellPower, int Knowledge, IReadOnlyList<WarMachineSlot>? WarMachines,
-    IReadOnlyDictionary<string, SkillLevel>? Skills, IReadOnlyList<string>? Spells);
+    IReadOnlyDictionary<string, SkillLevel>? Skills, IReadOnlyList<Common.SpellId>? Spells);
 
 /// <summary>
 /// How a player is shown the armies it does not own on the adventure map (ADR-125): every count as an amount word with its range unless the
@@ -48,7 +48,7 @@ public static partial class AdventureIntel
     /// <summary>A neutral map stack as Scouting shows it: its count from Basic, else its amount.</summary>
     public static ShownArmy ScoutMonster(GameState state, MonsterGuard monster, PlayerId viewer)
     {
-        var name = state.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature;
+        var name = state.Creatures.TryGet(monster.Creature, out var creature) ? creature.Name : monster.Creature.Value;
         var stacks = monster.Count is { } count ? [Shown(monster.Creature, count, ScoutingAt(state, viewer, monster.Position) < SkillLevel.Basic)] : Array.Empty<ShownStack>();
         return new ShownArmy(monster.Position, name, null, null, monster.Id, stacks, [], false, false);
     }
@@ -90,7 +90,7 @@ public static partial class AdventureIntel
         var veiledInside = !own && town.GarrisonHero is { } inside && inside.Owner != viewer && AdventureMagic.VeilRank(inside) >= 1;
         var garrisonShown = scouting >= (veiledInside ? SkillLevel.Expert : SkillLevel.Advanced);
         var available = scouting >= SkillLevel.Expert
-            ? town.Available.Where(a => a.Value > 0).OrderBy(a => a.Key, StringComparer.Ordinal).Select(a => Shown(a.Key, a.Value, hidden: false)).ToList()
+            ? town.Available.Where(a => a.Value > 0).OrderBy(a => a.Key).Select(a => Shown(a.Key, a.Value, hidden: false)).ToList()
             : null;
         return new TownIntel(
             town.Id, town.Name, town.TownType, town.Owner, null, available, Stacks(town.Garrison.Stacks.Select(s => s.Stack), !garrisonShown),

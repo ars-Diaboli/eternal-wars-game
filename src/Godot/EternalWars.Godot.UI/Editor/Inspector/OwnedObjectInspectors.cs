@@ -12,7 +12,7 @@ internal sealed class DwellingInspector : InspectorSection<CreatureDwelling>
         var row = new HBoxContainer();
         form.Box.AddChild(row);
         var lines = form.Creatures().Where(c => !form.Scenario.Creatures.IsUpgrade(c.Id)).ToList();
-        var creature = row.AddChoice("Creature", lines, dwelling.Creature);
+        var creature = row.AddChoice("Creature", lines, dwelling.Creature.Value);
         var owner = row.AddOwnerChoice(form.Scenario.Players, dwelling.Owner);
         var amountRow = new HBoxContainer();
         form.Box.AddChild(amountRow);
@@ -48,7 +48,7 @@ internal sealed class MineInspector : InspectorSection<Mine>
 
         var guardRow = new HBoxContainer();
         form.Box.AddChild(guardRow);
-        var guardCreature = guardRow.AddChoice("Guard", new[] { ("None", "") }.Concat(form.Creatures()), mine.Guard?.Creature ?? "");
+        var guardCreature = guardRow.AddChoice("Guard", new[] { ("None", "") }.Concat(form.Creatures()), mine.Guard?.Creature.Value ?? "");
         var guardCount = guardRow.AddSpin("Count (0 = rolled)", mine.Guard?.Count ?? 0, 0, 999);
         void ApplyGuard() => form.Edit(() => form.Editor.Objects.SetMineGuard(mine.Id, guardCreature.Value() is { Length: > 0 } id
             ? new GuardStack(id, guardCount.Value > 0 ? (int)guardCount.Value : null)

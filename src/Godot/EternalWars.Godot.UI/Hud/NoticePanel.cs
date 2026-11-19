@@ -109,7 +109,7 @@ public partial class NoticePanel : PanelContainer
         }
 
         gains.AddRange(c.Skills.Select(s => $"{Core.Domain.Heroes.BuiltInSkills.Get(s.Key).Name} ({s.Value})"));
-        gains.AddRange(c.Artifacts.Select(a => state.Artifacts.TryGet(a, out var artifact) ? artifact.Name : a));
+        gains.AddRange(c.Artifacts.Select(a => state.Artifacts.TryGet(a, out var artifact) ? artifact.Name : a.Value));
         gains.AddRange(c.Creatures.Select(s => $"{s.Count} × {(state.Creatures.TryGet(s.Creature, out var creature) ? creature.Name : s.Creature)}"));
         var found = gains.Count == 0 ? "The box is empty, or nothing in it was of use." : $"Inside: {string.Join(", ", gains)}.";
         return opened.Message is { } message ? $"{message}\n\n{found}" : found;

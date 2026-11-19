@@ -162,7 +162,7 @@ public sealed partial class AdventureAi
                 .Select(id => _state.Artifacts.TryGet(id, out var def) ? def : null)
                 .OfType<ArtifactDefinition>()
                 .Where(def => Worth(def) > 0 && Fits(hero, def) && (hero.Artifacts.HasRoomToWear(def.Slot) || Worth(def) > 1.2 * WorstWornScore(hero, def.Slot)))
-                .OrderByDescending(Worth).ThenBy(def => def.Id, StringComparer.Ordinal)
+                .OrderByDescending(Worth).ThenBy(def => def.Id)
                 .FirstOrDefault();
             if (candidate is null || !_ai.Execute(new EquipArtifactCommand(player, hero.Id, candidate.Id)).IsAccepted)
             {

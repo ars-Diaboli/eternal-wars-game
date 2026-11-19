@@ -179,13 +179,13 @@ internal sealed class BattleEstimator(GameState state)
     /// </summary>
     private readonly struct FightKey : IEquatable<FightKey>
     {
-        private readonly string?[] _creatures;
+        private readonly Common.CreatureId?[] _creatures;
         private readonly int[] _numbers;
         private readonly int _hash;
 
         public FightKey(Hero attacker, Army defender, int defenderAttack, int defenderDefense, SiegeSpec? siege)
         {
-            _creatures = new string?[Army.SlotCount * 2];
+            _creatures = new Common.CreatureId?[Army.SlotCount * 2];
             _numbers = new int[(Army.SlotCount * 2) + 7];
             var hash = new HashCode();
             for (var slot = 0; slot < Army.SlotCount; slot++)
@@ -218,12 +218,12 @@ internal sealed class BattleEstimator(GameState state)
         {
             _creatures[index] = stack?.Creature;
             _numbers[index] = stack?.Count ?? 0;
-            hash.Add(stack?.Creature, StringComparer.Ordinal);
+            hash.Add(stack?.Creature);
             hash.Add(_numbers[index]);
         }
 
         public bool Equals(FightKey other) =>
-            _hash == other._hash && _numbers.AsSpan().SequenceEqual(other._numbers) && _creatures.AsSpan().SequenceEqual(other._creatures, StringComparer.Ordinal);
+            _hash == other._hash && _numbers.AsSpan().SequenceEqual(other._numbers) && _creatures.AsSpan().SequenceEqual(other._creatures);
 
         public override bool Equals(object? obj) => obj is FightKey other && Equals(other);
 

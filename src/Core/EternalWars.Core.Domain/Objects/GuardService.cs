@@ -85,7 +85,7 @@ public sealed class GuardService(GameState state, IEventPublisher events, Battle
             }
         }
 
-        int Roll(string creature)
+        int Roll(Common.CreatureId creature)
         {
             var (min, max) = CountRange(state.Creatures.Get(creature).Tier);
             return state.Random.NextInclusive(min, max);

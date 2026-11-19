@@ -36,7 +36,7 @@ public sealed record BoxContents
     /// <summary>Skill id → the level the hero gets it at, at least.</summary>
     public IReadOnlyDictionary<string, SkillLevel> Skills { get; init; } = new Dictionary<string, SkillLevel>();
 
-    public IReadOnlyList<string> Artifacts { get; init; } = [];
+    public IReadOnlyList<Common.ArtifactId> Artifacts { get; init; } = [];
 
     public IReadOnlyList<CreatureStack> Creatures { get; init; } = [];
 

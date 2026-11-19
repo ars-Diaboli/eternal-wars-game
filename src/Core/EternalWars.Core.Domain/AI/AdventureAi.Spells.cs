@@ -21,20 +21,20 @@ public sealed partial class AdventureAi
     private readonly Dictionary<HeroId, int> _doorChecks = [];
 
     /// <summary>Whether the hero could cast the spell now (before picking any cell).</summary>
-    private bool CanCast(Hero hero, string spell) => AdventureMagic.Refusal(_state, hero, spell, null, aimed: false) is null;
+    private bool CanCast(Hero hero, Common.SpellId spell) => AdventureMagic.Refusal(_state, hero, spell, null, aimed: false) is null;
 
     /// <summary>
     /// Whether the hero can spare the mana for a convenience spell: what is left still pays for its dearest battle spell (a fight may come
     /// today).
     /// </summary>
-    private bool Spares(Hero hero, string spell)
+    private bool Spares(Hero hero, Common.SpellId spell)
     {
         var keep = MagicRules.Known(hero, _state.Spells).Where(k => !k.Spell.IsAdventure)
             .Select(k => ManaRules.SpellCost(hero, k.Spell.Mana)).DefaultIfEmpty(0).Max();
         return hero.Mana - AdventureMagic.Cost(_state, hero, spell) >= keep;
     }
 
-    private bool Cast(PlayerId player, Hero hero, string spell, MapPosition? target = null) =>
+    private bool Cast(PlayerId player, Hero hero, Common.SpellId spell, MapPosition? target = null) =>
         _ai.Execute(new CastAdventureSpellCommand(player, hero.Id, spell, target)).IsAccepted;
 
     /// <summary>The spells cast before the hero picks where to go: they change what it knows (View Terrain) or last past today.</summary>

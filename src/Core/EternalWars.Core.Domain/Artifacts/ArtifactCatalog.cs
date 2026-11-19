@@ -27,7 +27,7 @@ public static class ArtifactTable
     public static IReadOnlyList<ArtifactDefinition> ParseArtifacts(string text) =>
         CsvTable.Parse(text, "Artifact", [Id, Name, Slot, Tier])
             .Read(row => row.Text(Id) is { Length: > 0 } id
-                ? new ArtifactDefinition(id, row.Text(Name), row.Enum<ArtifactSlot>(Slot), row.Enum<ArtifactTier>(Tier), row.Optional(Set), ReadEffects(row), row.Optional(Notes) ?? "", row.List(Pieces))
+                ? new ArtifactDefinition(id, row.Text(Name), row.Enum<ArtifactSlot>(Slot), row.Enum<ArtifactTier>(Tier), row.Optional(Set), ReadEffects(row), row.Optional(Notes) ?? "", [.. row.List(Pieces).Select(p => new Common.ArtifactId(p))])
                 : null)
             .OfType<ArtifactDefinition>()
             .ToList();
@@ -54,10 +54,10 @@ public static class ArtifactTable
 /// <summary>The artifacts of a game by id, with their sets. Start from <see cref="Default"/> (the embedded tables) or a designer's copy.</summary>
 public sealed class ArtifactCatalog
 {
-    private readonly Dictionary<string, ArtifactDefinition> _artifacts = new(StringComparer.Ordinal);
+    private readonly Dictionary<Common.ArtifactId, ArtifactDefinition> _artifacts = [];
     private readonly Dictionary<string, ArtifactSetDefinition> _sets = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, string> _relicOf = new(StringComparer.Ordinal);
-    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, ArtifactDefinition> _written = new(StringComparer.Ordinal);
+    private readonly Dictionary<Common.ArtifactId, Common.ArtifactId> _relicOf = [];
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<Common.ArtifactId, ArtifactDefinition> _written = new();
 
     /// <summary>
     /// Between a scroll's id and the spell written on it (ADR-136): <c>spell-scroll-1:light.bless</c>. The catalog holds one blank scroll per spell
@@ -69,10 +69,10 @@ public sealed class ArtifactCatalog
     public const int MaxRolledScrollLevel = 3;
 
     /// <summary>The id of a scroll with a spell written on it: <c>spell-scroll-1:light.bless</c>.</summary>
-    public static string WithSpell(string scroll, string spell) => $"{BaseOf(scroll)}{SpellSeparator}{spell}";
+    public static Common.ArtifactId WithSpell(Common.ArtifactId scroll, Common.SpellId spell) => $"{BaseOf(scroll)}{SpellSeparator}{spell}";
 
     /// <summary>The catalog row of an artifact id: a written scroll's blank scroll, otherwise the id itself.</summary>
-    public static string BaseOf(string id) => id.IndexOf(SpellSeparator, StringComparison.Ordinal) is var at and >= 0 ? id[..at] : id;
+    public static Common.ArtifactId BaseOf(Common.ArtifactId id) => id.Value.IndexOf(SpellSeparator, StringComparison.Ordinal) is var at and >= 0 ? id.Value[..at] : id;
 
     /// <param name="artifacts">The artifact rows.</param>
     /// <param name="sets">The set rows.</param>
@@ -90,7 +90,7 @@ public sealed class ArtifactCatalog
 
         foreach (var artifact in artifacts)
         {
-            if (artifact.Id.Contains(SpellSeparator, StringComparison.Ordinal) || !_artifacts.TryAdd(artifact.Id, artifact))
+            if (artifact.Id.Value.Contains(SpellSeparator, StringComparison.Ordinal) || !_artifacts.TryAdd(artifact.Id, artifact))
             {
                 throw new FormatException($"Duplicate artifact '{artifact.Id}', or a '{SpellSeparator}' in its id.");
             }
@@ -118,7 +118,7 @@ public sealed class ArtifactCatalog
             CheckRelic(relic);
         }
 
-        if (_relicOf.Keys.FirstOrDefault(p => _artifacts[p].IsScroll) is { } piece)
+        if (_relicOf.Keys.Where(p => _artifacts[p].IsScroll).Select(p => (Common.ArtifactId?)p).FirstOrDefault() is { } piece)
         {
             throw new FormatException($"The scroll '{piece}' cannot be a piece of an assembled relic.");
         }
@@ -128,12 +128,12 @@ public sealed class ArtifactCatalog
     public Magic.SpellCatalog Spells { get; }
 
     /// <summary>The spells a scroll of the level can hold, by id.</summary>
-    public IReadOnlyList<string> ScrollSpells(int level) =>
-        Spells.All.Where(s => s.Level == level).Select(s => s.Id).Order(StringComparer.Ordinal).ToList();
+    public IReadOnlyList<Common.SpellId> ScrollSpells(int level) =>
+        Spells.All.Where(s => s.Level == level).Select(s => s.Id).Order().ToList();
 
     private void CheckRelic(ArtifactDefinition relic)
     {
-        if (relic.Pieces.Count < 2 || relic.Pieces.Distinct(StringComparer.Ordinal).Count() != relic.Pieces.Count)
+        if (relic.Pieces.Count < 2 || relic.Pieces.Distinct().Count() != relic.Pieces.Count)
         {
             throw new FormatException($"Assembled relic '{relic.Id}' needs at least two different pieces.");
         }
@@ -166,19 +166,19 @@ public sealed class ArtifactCatalog
     public IEnumerable<ArtifactSetDefinition> Sets => _sets.Values;
 
     /// <summary>Whether the id is an artifact: a catalog row, or a scroll with a spell of its level written on it.</summary>
-    public bool Contains(string id) => TryGet(id, out _);
+    public bool Contains(Common.ArtifactId id) => TryGet(id, out _);
 
     /// <summary>The artifact of an id, a written scroll (<c>spell-scroll-1:light.bless</c>) too.</summary>
-    public bool TryGet(string id, out ArtifactDefinition artifact)
+    public bool TryGet(Common.ArtifactId id, out ArtifactDefinition artifact)
     {
         if (_artifacts.TryGetValue(id, out artifact!))
         {
             return true;
         }
 
-        var at = id.IndexOf(SpellSeparator, StringComparison.Ordinal);
-        if (at < 0 || !_artifacts.TryGetValue(id[..at], out var blank) || !blank.IsScroll
-            || !Spells.TryGet(id[(at + 1)..], out var spell) || spell.Level != blank.ScrollLevel)
+        var at = id.Value.IndexOf(SpellSeparator, StringComparison.Ordinal);
+        if (at < 0 || !_artifacts.TryGetValue(id.Value[..at], out var blank) || !blank.IsScroll
+            || !Spells.TryGet(id.Value[(at + 1)..], out var spell) || spell.Level != blank.ScrollLevel)
         {
             artifact = null!;
             return false;
@@ -188,13 +188,13 @@ public sealed class ArtifactCatalog
         {
             Id = id,
             Name = $"Scroll of {spell.Name}",
-            Effects = [new ArtifactEffect(ArtifactEffectKind.Scroll, spell.Level, spell.Id)],
+            Effects = [new ArtifactEffect(ArtifactEffectKind.Scroll, spell.Level, spell.Id.Value)],
             Spell = spell.Id,
         });
         return true;
     }
 
-    public ArtifactDefinition Get(string id) =>
+    public ArtifactDefinition Get(Common.ArtifactId id) =>
         TryGet(id, out var artifact) ? artifact : throw new KeyNotFoundException($"Unknown artifact '{id}'.");
 
     public ArtifactSetDefinition GetSet(string id) =>
@@ -210,16 +210,16 @@ public sealed class ArtifactCatalog
         _artifacts.Values.Where(a => a.Tier == tier && !a.IsAssembled && !(a.ScrollLevel > MaxRolledScrollLevel) && !a.IsGrail);
 
     /// <summary>The Grail's row (<see cref="ArtifactDefinition.IsGrail"/>), or null when the table has none.</summary>
-    public ArtifactDefinition? Grail => _artifacts.Values.Where(a => a.IsGrail).OrderBy(a => a.Id, StringComparer.Ordinal).FirstOrDefault();
+    public ArtifactDefinition? Grail => _artifacts.Values.Where(a => a.IsGrail).OrderBy(a => a.Id).FirstOrDefault();
 
     /// <summary>The blank spell scrolls, one per spell level, in id order.</summary>
-    public IEnumerable<ArtifactDefinition> Scrolls => _artifacts.Values.Where(a => a.IsScroll).OrderBy(a => a.Id, StringComparer.Ordinal);
+    public IEnumerable<ArtifactDefinition> Scrolls => _artifacts.Values.Where(a => a.IsScroll).OrderBy(a => a.Id);
 
     /// <summary>The assembled relics, in id order.</summary>
-    public IEnumerable<ArtifactDefinition> Relics => _artifacts.Values.Where(a => a.IsAssembled).OrderBy(a => a.Id, StringComparer.Ordinal);
+    public IEnumerable<ArtifactDefinition> Relics => _artifacts.Values.Where(a => a.IsAssembled).OrderBy(a => a.Id);
 
     /// <summary>The assembled relic an artifact is a piece of, or null.</summary>
-    public string? RelicOf(string piece) => _relicOf.GetValueOrDefault(piece);
+    public Common.ArtifactId? RelicOf(Common.ArtifactId piece) => _relicOf.TryGetValue(piece, out var relic) ? relic : (Common.ArtifactId?)null;
 
     /// <summary>The slots an artifact blocks besides its own: an assembled relic's other pieces' slots (none for an ordinary one).</summary>
     public IReadOnlyList<ArtifactSlot> BlockedSlots(ArtifactDefinition artifact) => [.. artifact.Pieces.Skip(1).Select(p => Get(p).Slot)];

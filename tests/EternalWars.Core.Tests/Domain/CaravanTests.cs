@@ -423,7 +423,7 @@ public class CaravanTests
         var state = Create(Grass(20));
         var dwelling = Add<CreatureDwelling>(state, BuiltInMapObjects.Dwelling, 6, 5);
         dwelling.Creature = Footman;
-        var crusader = state.Creatures.Get(Footman).UpgradesTo!;
+        var crusader = state.Creatures.Get(Footman).UpgradesTo!.Value;
         var editor = new MapEditorSession(state);
 
         Assert.Equal(EditResult.UpgradedCreature, editor.Objects.SetDwelling(dwelling.Id, crusader, null, null));

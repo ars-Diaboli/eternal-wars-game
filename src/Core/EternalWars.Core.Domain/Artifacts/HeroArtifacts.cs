@@ -13,33 +13,33 @@ namespace EternalWars.Core.Domain.Artifacts;
 /// </summary>
 public sealed class HeroArtifacts
 {
-    private readonly Dictionary<ArtifactSlot, List<string>> _worn = [];
-    private readonly List<string> _backpack = [];
+    private readonly Dictionary<ArtifactSlot, List<Common.ArtifactId>> _worn = [];
+    private readonly List<Common.ArtifactId> _backpack = [];
 
     // The slots worn assembled relics block (ADR-108, ADR-121): one entry per relic worn, its other pieces' slots.
-    private readonly List<(string Relic, IReadOnlyList<ArtifactSlot> Slots)> _blocks = [];
+    private readonly List<(Common.ArtifactId Relic, IReadOnlyList<ArtifactSlot> Slots)> _blocks = [];
 
-    public IReadOnlyList<string> Backpack => _backpack;
+    public IReadOnlyList<Common.ArtifactId> Backpack => _backpack;
 
     public bool BackpackFull => _backpack.Count >= ArtifactSlots.BackpackSize;
 
-    public IReadOnlyList<string> Worn(ArtifactSlot slot) => _worn.TryGetValue(slot, out var list) ? list : [];
+    public IReadOnlyList<Common.ArtifactId> Worn(ArtifactSlot slot) => _worn.TryGetValue(slot, out var list) ? list : [];
 
     /// <summary>Everything worn, in paper-doll order.</summary>
-    public IEnumerable<(ArtifactSlot Slot, string Id)> AllWorn =>
+    public IEnumerable<(ArtifactSlot Slot, Common.ArtifactId Id)> AllWorn =>
         ArtifactSlots.All.SelectMany(slot => Worn(slot).Select(id => (slot, id)));
 
     public bool IsEmpty => _backpack.Count == 0 && _worn.Values.All(l => l.Count == 0);
 
-    public bool IsWorn(string id) => AllWorn.Any(w => w.Id == id);
+    public bool IsWorn(Common.ArtifactId id) => AllWorn.Any(w => w.Id == id);
 
-    public bool Has(string id) => _backpack.Contains(id) || IsWorn(id);
+    public bool Has(Common.ArtifactId id) => _backpack.Contains(id) || IsWorn(id);
 
     /// <summary>How many places of a slot worn assembled relics block.</summary>
     public int Blocked(ArtifactSlot slot) => _blocks.Sum(b => b.Slots.Count(s => s == slot));
 
     /// <summary>Every blocked place: the slot and the relic blocking it, in paper-doll order.</summary>
-    public IEnumerable<(ArtifactSlot Slot, string Relic)> AllBlocked =>
+    public IEnumerable<(ArtifactSlot Slot, Common.ArtifactId Relic)> AllBlocked =>
         ArtifactSlots.All.SelectMany(slot => _blocks.SelectMany(b => b.Slots.Where(s => s == slot).Select(_ => (slot, b.Relic))));
 
     public bool HasRoomToWear(ArtifactSlot slot) => Free(slot) > 0;
@@ -75,7 +75,7 @@ public sealed class HeroArtifacts
         return true;
     }
 
-    internal bool RemoveWorn(string id)
+    internal bool RemoveWorn(Common.ArtifactId id)
     {
         foreach (var list in _worn.Values)
         {
@@ -94,7 +94,7 @@ public sealed class HeroArtifacts
         return false;
     }
 
-    internal bool AddToBackpack(string id)
+    internal bool AddToBackpack(Common.ArtifactId id)
     {
         if (BackpackFull)
         {
@@ -105,14 +105,14 @@ public sealed class HeroArtifacts
         return true;
     }
 
-    internal bool RemoveFromBackpack(string id) => _backpack.Remove(id);
+    internal bool RemoveFromBackpack(Common.ArtifactId id) => _backpack.Remove(id);
 
     /// <summary>
     /// Sets everything at once (map data, the editor): <paramref name="worn"/> go to the slots their definitions name.
     /// Throws <see cref="InvalidOperationException"/> when something does not fit, <see cref="KeyNotFoundException"/> for an
     /// unknown artifact; the hero is unchanged then.
     /// </summary>
-    internal void ReplaceWith(IEnumerable<string> worn, IEnumerable<string> backpack, ArtifactCatalog catalog)
+    internal void ReplaceWith(IEnumerable<Common.ArtifactId> worn, IEnumerable<Common.ArtifactId> backpack, ArtifactCatalog catalog)
     {
         var next = new HeroArtifacts();
         foreach (var id in worn)
@@ -226,7 +226,7 @@ public sealed record ArtifactBonuses
     public IReadOnlySet<int> SpellLevels { get; init; } = new HashSet<int>();
 
     /// <summary>The spells of the worn scrolls (ADR-136), by id.</summary>
-    public IReadOnlySet<string> ScrollSpells { get; init; } = new HashSet<string>();
+    public IReadOnlySet<Common.SpellId> ScrollSpells { get; init; } = new HashSet<Common.SpellId>();
 
     /// <summary>The highest spell level either side may cast in the hero's battles, or null.</summary>
     public int? SpellLevelCap { get; init; }
@@ -247,7 +247,7 @@ public sealed record ArtifactBonuses
     public static ArtifactBonuses Compute(ArtifactCatalog catalog, HeroArtifacts artifacts)
     {
         var effects = new List<ArtifactEffect>();
-        var wornIds = new HashSet<string>(StringComparer.Ordinal);
+        var wornIds = new HashSet<Common.ArtifactId>();
         foreach (var (_, id) in artifacts.AllWorn)
         {
             if (catalog.TryGet(id, out var artifact))
@@ -279,7 +279,7 @@ public sealed record ArtifactBonuses
         var immunities = new HashSet<string>(StringComparer.Ordinal);
         var elements = new Dictionary<string, int>(StringComparer.Ordinal);
         var spellLevels = new HashSet<int>();
-        var scrollSpells = new HashSet<string>(StringComparer.Ordinal);
+        var scrollSpells = new HashSet<Common.SpellId>();
         int? cap = null;
         foreach (var e in list)
         {
@@ -406,7 +406,7 @@ public sealed record ArtifactBonuses
 
         if (ScrollSpells.Count > 0)
         {
-            var names = ScrollSpells.Order(StringComparer.Ordinal).Select(id => spells is not null && spells.TryGet(id, out var spell) ? spell.Name : id);
+            var names = ScrollSpells.Order().Select(id => spells is not null && spells.TryGet(id, out var spell) ? spell.Name : id.Value);
             parts.Add($"casts {string.Join(", ", names)} from a scroll");
         }
 

@@ -250,7 +250,7 @@ public sealed class ObjectShopService(ObjectInteractionContext context, Progress
     }
 
     /// <summary>An artifact the hero wears or carries goes on the altar for 2000 / 5000 / 10 000 experience by tier (Light and Wild heroes only).</summary>
-    internal void SacrificeArtifact(PlayerId player, MapObjectId altarId, string artifact)
+    internal void SacrificeArtifact(PlayerId player, MapObjectId altarId, Common.ArtifactId artifact)
     {
         var hero = context.HeroAt<SacrificialAltar>(player, altarId, out var altar);
         if (!SacrificeRules.For(ProgressionService.TownOf(State, hero)).HasFlag(SacrificeKind.Artifacts))

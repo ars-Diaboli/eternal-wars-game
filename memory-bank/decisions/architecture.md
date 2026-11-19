@@ -40,6 +40,7 @@
 | [237](#adr-237-a-map-event-actions-handler-tells-what-the-action-holds-its-editor-line-and-its-worth-to-the-ai-adr-219-adr-226-2026-11-19) | A map event action's handler tells what the action holds, its editor line and its worth to the AI (ADR-219, ADR-226, 2026-11-19) | implemented |
 | [238](#adr-238-map-event-answers-take-their-decision-through-the-decision-steps-a-pandoras-box-queues-its-hero-event-itself-adr-215-adr-226-2026-11-19) | Map-event answers take their decision through the decision steps; a Pandora's Box queues its hero event itself (ADR-215, ADR-226, 2026-11-19) | implemented |
 | [239](#adr-239-code-health-every-smoke-scenario-has-a-seed-of-its-own-the-refusal-check-is-a-runtime-switch-map-objects-hand-out-read-only-collections-adr-165-adr-226-adr-235-2026-11-19) | Code health: every smoke scenario has a seed of its own, the refusal check is a runtime switch, map objects hand out read-only collections (ADR-165, ADR-226, ADR-235, 2026-11-19) | implemented |
+| [243](#adr-243-code-health-creature-spell-artifact-and-building-ids-are-types-of-their-own-adr-226-adr-239-2026-11-19) | Code health: creature, spell, artifact and building ids are types of their own (ADR-226, ADR-239, 2026-11-19) | implemented |
 
 
 ### ADR-001: Godot 4.7.2 (.NET) + C# on .NET 10
@@ -629,3 +630,28 @@ changes.
   the way. `MapObjectCollectionsTests` fails for any map object property whose type is a collection that can be changed.
 - **Not done**: typed content ids (large, its own job) and `InfoSheets` lines as data, not English text. That needs a decision on how
   text is localised (keys, the English table, plurals), and it touches about 160 lines of text and the tests that read them.
+
+### ADR-243: Code health: creature, spell, artifact and building ids are types of their own (ADR-226, ADR-239, 2026-11-19)
+**Status**: implemented. No rule, save, map or LAN format change: the files and messages are the same byte for byte (the pinned samples and
+the JSON shape did not move). The LAN schema hash changes (the field types it hashes).
+
+- **The types** (`Common/ContentIds.cs`): `CreatureId`, `SpellId`, `ArtifactId` and `BuildingId`, each a `readonly record struct` around the id's
+  string with an ordinal `CompareTo`, sharing `IContentId<T>` (`Value`, `From`). One kind cannot be passed where another is wanted.
+- **Conversions**: a string turns into an id without a cast (the content tables, files, editor choices and the literals and `BuiltIn*`
+  constants in code and tests, which stay `const string`); an id turns into a string only through `.Value`. *(choice: implicit from string
+  keeps the change small and literals readable; what it buys is that kinds no longer mix.)* A `null` string must not reach an id: with
+  nullable warnings on everywhere (and errors in the core), the build shows any such conversion; `cond ? null : id` needs a typed
+  `(CreatureId?)null`.
+- **Files and messages**: `ContentIdJsonConverterFactory` writes an id as its string, as a value and as a dictionary key; `StateCodec` treats
+  an id as a scalar string. The format pin shows an id as `String`.
+- **Where ids are typed**: the definitions (`CreatureDefinition.Id`, `UpgradesTo`, `SpellDefinition.Id`, `ArtifactDefinition.Id` and
+  `Pieces`), the catalogs' lookups, armies and stacks, towns' buildings, dwellings, stock and guild spells, a hero's spells, artifacts and
+  preferred creature, commands, events, decisions, map objects, map event actions that name one kind, the editor's calls, the campaign's
+  carried heroes and the map documents' fields.
+- **Left as strings** *(choice)*: the map's bans (one list helper for four kinds), a quantity's id in map events (resources, skills and
+  more), a map event's build action and a template's start buildings (a building or a creature line), a hero status's source, creature
+  caster parameters and artifact effect targets (free-form), and the editor's choice lists (the UI edge, converted back on the call).
+- **A value type is never null**: `FirstOrDefault()` over ids gives an empty id, not null, so `… FirstOrDefault() is { } x` always matches;
+  such code selects `(TId?)` first. Three places were found and fixed this way (the relic-scroll check, a relic's missing piece, a town's
+  first dwelling in the editor's checks).
+- Skills, roster heroes, town types and map object definitions keep string ids for now.

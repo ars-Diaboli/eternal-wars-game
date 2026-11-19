@@ -16,7 +16,7 @@ public class RefugeeCampAndAltarTests
     {
         var (session, camp) = World<RefugeeCamp>(BuiltInMapObjects.RefugeeCamp);
         var state = session.State;
-        var creature = state.Creatures.Get(camp.Creature!);
+        var creature = state.Creatures.Get(camp.Creature!.Value);
         Assert.InRange(creature.Tier, 3, 5);
         Assert.Equal(creature.Id, state.Creatures.BaseOf(creature.Id));
         Assert.Contains(creature.Town, BuiltInMapObjects.PlayableTowns);
@@ -34,8 +34,8 @@ public class RefugeeCampAndAltarTests
         for (var week = 0; week < 12; week++)
         {
             session.ObjectLifecycle.StartWeek(restock: false);
-            seen.Add(camp.Creature!);
-            Assert.Equal(state.Creatures.Get(camp.Creature!).WeeklyGrowth, camp.Available);
+            seen.Add(camp.Creature!.Value.Value);
+            Assert.Equal(state.Creatures.Get(camp.Creature!.Value).WeeklyGrowth, camp.Available);
         }
 
         Assert.True(seen.Count > 1);

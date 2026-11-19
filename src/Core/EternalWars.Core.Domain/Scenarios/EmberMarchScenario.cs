@@ -159,9 +159,9 @@ public static class EmberMarchScenario
             (mine.Owner, mine.Guard) = (owner, guard);
         }
 
-        void Dwelling(string creature, MapPosition topLeft) => ((CreatureDwelling)Place(BuiltInMapObjects.Dwelling, topLeft)).Creature = creature;
+        void Dwelling(Common.CreatureId creature, MapPosition topLeft) => ((CreatureDwelling)Place(BuiltInMapObjects.Dwelling, topLeft)).Creature = creature;
 
-        void Monster(string creature, int count, MapPosition at, GuardDisposition disposition)
+        void Monster(Common.CreatureId creature, int count, MapPosition at, GuardDisposition disposition)
         {
             var monster = (MonsterGuard)Place(BuiltInMapObjects.Monster, at);
             (monster.Creature, monster.Count, monster.Disposition) = (creature, count, disposition);

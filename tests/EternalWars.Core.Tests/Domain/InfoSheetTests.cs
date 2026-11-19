@@ -49,7 +49,7 @@ public class InfoSheetTests
         var fireball = SpellCatalog.Default.Get("chaos.fireball");
         var renamed = new SpellCatalog(SpellCatalog.Default.All.Select(s => s.Id == fireball.Id ? s with { Name = "Ember Storm" } : s));
 
-        Assert.Equal("Casts Ember Storm 2 times a battle.", InfoSheets.Capability(new CreatureCapability(CapabilityKind.Caster, 2, fireball.Id), renamed));
+        Assert.Equal("Casts Ember Storm 2 times a battle.", InfoSheets.Capability(new CreatureCapability(CapabilityKind.Caster, 2, fireball.Id.Value), renamed));
     }
 
     [Fact]

@@ -108,7 +108,7 @@ public sealed class GrailService(ObjectInteractionContext context, ArtifactServi
 
         hero.MovementPoints = 0;
         var position = hero.Position;
-        string? found = null;
+        Common.ArtifactId? found = null;
         if (!state.Grail.IsFound && state.Grail.Position == position && state.Artifacts.Grail is { } grail)
         {
             if (!artifacts.Grant(hero, grail.Id, ArtifactSource.Found))

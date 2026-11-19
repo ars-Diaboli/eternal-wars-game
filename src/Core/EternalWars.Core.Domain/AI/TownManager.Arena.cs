@@ -65,7 +65,7 @@ internal sealed partial class TownManager
         {
             if (TownRules.NextDwellingLevel(_state, town, line) is not { } next
                 || (next.Level == 1 && TownRules.CheckDwellingChoice(_state, town, line.Id, 1) is not null)
-                || Steps(town, new ArenaStep(true, line.Id, line.Tier, next)) is not { } steps
+                || Steps(town, new ArenaStep(true, line.Id.Value, line.Tier, next)) is not { } steps
                 || steps.Any(s => s.Dwelling ? TownRules.CheckDwellingChoice(_state, town, s.Id, s.Level.Level) is not null : TownRules.CheckCapitol(_state, town, s.Level) is not null))
             {
                 continue;
@@ -94,7 +94,7 @@ internal sealed partial class TownManager
             }
             else
             {
-                var upgraded = _state.Creatures.Get(line.UpgradesTo!);
+                var upgraded = _state.Creatures.Get(line.UpgradesTo!.Value);
                 var count = town.AvailableOf(line.Id) + ArmiesOf(town).Sum(a => a.Slots.Stacks.Where(s => s.Stack.Creature == line.Id).Sum(s => s.Stack.Count));
                 gain = (long)count * (upgraded.FightValue - line.FightValue);
                 if (gain <= 0)
@@ -113,11 +113,11 @@ internal sealed partial class TownManager
     /// <summary>The steps to <paramref name="target"/>, what it needs first (recursively, lowest levels first), or null when it cannot be planned.</summary>
     private List<ArenaStep>? Steps(Town town, ArenaStep target)
     {
-        var planned = new Dictionary<string, int>(StringComparer.Ordinal);
+        var planned = new Dictionary<Common.BuildingId, int>();
         var steps = new List<ArenaStep>();
         return Add(target, 0) ? steps : null;
 
-        int LevelOf(string building) => planned.TryGetValue(building, out var level) ? level : TownRules.Level(_state, town, building);
+        int LevelOf(Common.BuildingId building) => planned.TryGetValue(building, out var level) ? level : TownRules.Level(_state, town, building);
 
         bool Add(ArenaStep step, int depth)
         {
@@ -144,20 +144,20 @@ internal sealed partial class TownManager
     }
 
     /// <summary>The step that raises <paramref name="building"/> to <paramref name="level"/>; for a dwelling tier, its most valuable line that may take it.</summary>
-    private ArenaStep? NextStep(Town town, string building, int level)
+    private ArenaStep? NextStep(Town town, Common.BuildingId building, int level)
     {
         if (BuiltInBuildings.DwellingTier(building) is { } tier)
         {
             var lines = TownRules.Lines(_state, town).Where(l => l.Tier == tier);
             var line = level == 1
                 ? lines.Where(l => TownRules.CheckDwellingChoice(_state, town, l.Id, 1) is null)
-                    .OrderByDescending(l => (long)l.FightValue * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault()
-                : lines.Where(l => town.DwellingLevel(l.Id) == level - 1 && l.UpgradesTo is not null).OrderByDescending(l => l.FightValue).ThenBy(l => l.Id, StringComparer.Ordinal).FirstOrDefault();
-            return line is not null && TownRules.NextDwellingLevel(_state, town, line) is { } next && next.Level == level ? new ArenaStep(true, line.Id, tier, next) : null;
+                    .OrderByDescending(l => (long)l.FightValue * TownRules.WeeklyGrowth(_state, town, l)).ThenBy(l => l.Id).FirstOrDefault()
+                : lines.Where(l => town.DwellingLevel(l.Id) == level - 1 && l.UpgradesTo is not null).OrderByDescending(l => l.FightValue).ThenBy(l => l.Id).FirstOrDefault();
+            return line is not null && TownRules.NextDwellingLevel(_state, town, line) is { } next && next.Level == level ? new ArenaStep(true, line.Id.Value, tier, next) : null;
         }
 
         var catalog = TownRules.Buildings(_state, town);
-        return catalog.Contains(building) && level <= catalog.MaxLevel(building) ? new ArenaStep(false, building, 0, catalog.Get(building, level)) : null;
+        return catalog.Contains(building) && level <= catalog.MaxLevel(building) ? new ArenaStep(false, building.Value, 0, catalog.Get(building, level)) : null;
     }
 
     /// <summary>The hero in the town takes every garrison stack (nobody attacks the town before the battle): into the same creature, a free slot, or in place of a weaker stack.</summary>

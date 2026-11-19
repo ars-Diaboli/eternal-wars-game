@@ -35,14 +35,14 @@ public static class TownRules
             town.Buildings.Where(b => buildings.TownBuildings.Contains(b.Key)).ToDictionary(b => b.Key, b => Math.Min(b.Value, buildings.MaxLevel(b.Key))),
             Moved(town.Dwellings), Moved(town.Available), new Armies.Army(town.Garrison.Slots), town.LastBuilt) { Governor = town.Governor };
 
-        Dictionary<string, int> Moved(IReadOnlyDictionary<string, int> values) =>
+        Dictionary<Common.CreatureId, int> Moved(IReadOnlyDictionary<Common.CreatureId, int> values) =>
             values.Where(v => lines.ContainsKey(v.Key)).ToDictionary(v => lines[v.Key], v => v.Value);
     }
 
     /// <summary>Pairs each old line with the new type's line of the same tier at the same place in tier order; lines without a partner drop out.</summary>
-    private static Dictionary<string, string> MatchLines(IReadOnlyList<CreatureDefinition> from, IReadOnlyList<CreatureDefinition> to)
+    private static Dictionary<Common.CreatureId, Common.CreatureId> MatchLines(IReadOnlyList<CreatureDefinition> from, IReadOnlyList<CreatureDefinition> to)
     {
-        var pairs = new Dictionary<string, string>(StringComparer.Ordinal);
+        var pairs = new Dictionary<Common.CreatureId, Common.CreatureId>();
         foreach (var tier in from.Select(l => l.Tier).Distinct())
         {
             var newLines = to.Where(l => l.Tier == tier).ToList();
@@ -147,7 +147,7 @@ public static class TownRules
         state.Creatures.BaseCreaturesOf(town.TownType).ToList();
 
     /// <summary>The line a creature is recruited from: its own line or, for an upgraded creature, its base line.</summary>
-    public static CreatureDefinition? LineOf(GameState state, Town town, string creature) =>
+    public static CreatureDefinition? LineOf(GameState state, Town town, Common.CreatureId creature) =>
         Lines(state, town).FirstOrDefault(l => l.Id == creature || l.UpgradesTo == creature);
 
     /// <summary>An own hero standing on the town's entrance: recruits and garrison stacks can go to it.</summary>
@@ -155,13 +155,13 @@ public static class TownRules
         state.HeroAt(town.VisitPosition) is { } hero && hero.Owner == town.Owner ? hero : null;
 
     /// <summary>The level a building has in the town; a dwelling id (<c>dwelling-3</c>) counts its best dwelling of that tier.</summary>
-    public static int Level(GameState state, Town town, string building) =>
+    public static int Level(GameState state, Town town, Common.BuildingId building) =>
         BuiltInBuildings.DwellingTier(building) is { } tier
             ? Lines(state, town).Where(l => l.Tier == tier).Select(l => town.DwellingLevel(l.Id)).DefaultIfEmpty(0).Max()
             : town.Level(building);
 
     /// <summary>The next level of a building, or null when it is fully built.</summary>
-    public static BuildingLevel? NextLevel(GameState state, Town town, string building)
+    public static BuildingLevel? NextLevel(GameState state, Town town, Common.BuildingId building)
     {
         var level = town.Level(building) + 1;
         return level <= Buildings(state, town).MaxLevel(building) ? Buildings(state, town).Get(building, level) : null;
@@ -178,7 +178,7 @@ public static class TownRules
     }
 
     /// <summary>Whether the town may build the next level of <paramref name="building"/> today.</summary>
-    public static string? CheckBuild(GameState state, Town town, string building)
+    public static string? CheckBuild(GameState state, Town town, Common.BuildingId building)
     {
         if (BuiltInBuildings.DwellingTier(building) is not null || !Buildings(state, town).Contains(building))
         {
@@ -194,7 +194,7 @@ public static class TownRules
     }
 
     /// <summary>Whether the town may build (or upgrade) the dwelling of <paramref name="line"/> today.</summary>
-    public static string? CheckDwelling(GameState state, Town town, string line)
+    public static string? CheckDwelling(GameState state, Town town, Common.CreatureId line)
     {
         if (Lines(state, town).FirstOrDefault(l => l.Id == line) is not { } definition)
         {
@@ -218,7 +218,7 @@ public static class TownRules
     /// The 7-of-9 rule (ADR-030): at most <see cref="MaxDwellings"/> dwellings, and never so many that a tier could no
     /// longer get one. Checks the town as it would be with <paramref name="line"/> at <paramref name="level"/>.
     /// </summary>
-    public static string? CheckDwellingChoice(GameState state, Town town, string line, int level)
+    public static string? CheckDwellingChoice(GameState state, Town town, Common.CreatureId line, int level)
     {
         var lines = Lines(state, town);
         var built = lines.Where(l => l.Id == line ? level > 0 : town.DwellingLevel(l.Id) > 0).ToList();
@@ -331,7 +331,7 @@ public static class TownRules
 
     /// <summary>The price difference for upgrading <paramref name="count"/> creatures of a line.</summary>
     public static ResourceSet UpgradeCost(GameState state, Town town, CreatureDefinition line, int count) =>
-        StewardshipRules.DiscountCreatures(state, town, state.Creatures.Get(line.UpgradesTo!).Cost - line.Cost) * count;
+        StewardshipRules.DiscountCreatures(state, town, state.Creatures.Get(line.UpgradesTo!.Value).Cost - line.Cost) * count;
 
     /// <summary>What an owned town pays every day: the income of the highest level of every building.</summary>
     public static ResourceSet DailyIncome(GameState state, Town town) =>
@@ -344,9 +344,9 @@ public static class TownRules
     /// consistent. Checks the town as it would be with <paramref name="building"/> at <paramref name="level"/>: the editor
     /// asks before pre-building or removing something, the validator for whole maps.
     /// </summary>
-    public static string? UnmetRequirement(GameState state, Town town, string? building = null, int level = 0)
+    public static string? UnmetRequirement(GameState state, Town town, Common.BuildingId? building = null, int level = 0)
     {
-        int LevelOf(string id) => id == building ? level : Level(state, town, id);
+        int LevelOf(Common.BuildingId id) => id == building ? level : Level(state, town, id);
 
         var built = Buildings(state, town).TownBuildings.Select(b => (Building: b, Level: Math.Min(LevelOf(b), Buildings(state, town).MaxLevel(b))))
             .Concat(Lines(state, town).Select(l => (Building: BuiltInBuildings.Dwelling(l.Tier), Level: town.DwellingLevel(l.Id))));

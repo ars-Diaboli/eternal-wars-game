@@ -23,7 +23,7 @@ internal sealed class BattleCommand : SimCommand
     {
         var wins = 0;
         var rounds = 0L;
-        var losses = new Dictionary<(BattleSide, string), long>();
+        var losses = new Dictionary<(BattleSide, EternalWars.Core.Domain.Common.CreatureId), long>();
         for (var run = 0; run < runs; run++)
         {
             var result = Fights.FightOnce(sim, attacker, defender, seed + (ulong)run, setup: setup, trace: trace && run == 0 ? e => Console.WriteLine($"  {e}") : null);

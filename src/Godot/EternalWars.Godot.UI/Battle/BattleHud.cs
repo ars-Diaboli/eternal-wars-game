@@ -178,7 +178,7 @@ public partial class BattleHud : Control
         _close.Pressed += Continue;
         resultBox.AddChild(_close);
         this.SubscribeWhileInTree<UndeadRaised>(session.Events, e => _raised =
-            $"Necromancy\n\n{_session.State.GetHero(e.Hero).Name} raises {string.Join(", ", e.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature)}"))}.");
+            $"Necromancy\n\n{_session.State.GetHero(e.Hero).Name} raises {string.Join(", ", e.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature.Value)}"))}.");
 
         view.Opened += () =>
         {
@@ -345,7 +345,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        (ArmedSpell, _creatureArmed, _armedArea) = (known.Spell.Id, true, HitsArea(known));
+        (ArmedSpell, _creatureArmed, _armedArea) = (known.Spell.Id.Value, true, HitsArea(known));
         _status.Text = $"{known.Spell.Name} (the stack's own spell): click a target (Esc cancels).";
     }
 
@@ -366,7 +366,7 @@ public partial class BattleHud : Control
             return;
         }
 
-        (ArmedSpell, _creatureArmed, _firstAim, _armedArea) = (known.Spell.Id, false, null, HitsArea(known));
+        (ArmedSpell, _creatureArmed, _firstAim, _armedArea) = (known.Spell.Id.Value, false, null, HitsArea(known));
         _status.Text = known.Effect.TwoClicks
             ? $"{known.Spell.Name}: click the stack, then {(!known.Effect.SecondIsStack ? "where it goes" : known.Effect.DrainPercent > 0 ? "the own stack it heals" : "the own stack that takes its blows")} (Esc cancels)."
             : $"{known.Spell.Name}: click a target (Esc cancels).";
@@ -385,7 +385,7 @@ public partial class BattleHud : Control
         // A creature caster's own spell (ADR-120): its action, no mana.
         if (BattleMagic.CreatureSpell(battle, active) is { Effect: not null } own)
         {
-            var casts = active.CastsLeft[own.Spell.Id];
+            var casts = active.CastsLeft[own.Spell.Id.Value];
             var cast = new Button { Text = $"{active.Creature.Name}: {own.Spell.Name} ({casts} left)", TooltipText = $"The stack casts it as its action. {own.Spell.Notes}" };
             cast.Pressed += () => ArmCreature(own);
             var ownId = own.Spell.Id;
@@ -553,7 +553,7 @@ public partial class BattleHud : Control
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
             var lost = ended.Casualties.Where(c => c.Side == side)
-                .Select(c => $"{c.Lost} {CreatureName(c.Creature)}")
+                .Select(c => $"{c.Lost} {CreatureName(c.Creature.Value)}")
                 .ToList();
             lines.Add($"{_view.SideName(side)} lost: {(lost.Count > 0 ? string.Join(", ", lost) : "nothing")}");
         }

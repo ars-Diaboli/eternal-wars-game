@@ -130,7 +130,7 @@ public class MapFormatPinTests
         while (pending.TryDequeue(out var type))
         {
             type = Nullable.GetUnderlyingType(type) ?? type;
-            if (!seen.Add(type) || type.IsPrimitive || type == typeof(string) || type == typeof(decimal))
+            if (!seen.Add(type) || type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || IsContentId(type))
             {
                 continue;
             }
@@ -179,8 +179,13 @@ public class MapFormatPinTests
         return string.Concat(blocks.Values);
     }
 
+    /// <summary>A content id (ADR-243) is written as its string, so the shape shows it as one: a typed id changes no file.</summary>
+    private static bool IsContentId(Type type) =>
+        (Nullable.GetUnderlyingType(type) ?? type).GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(EternalWars.Core.Domain.Common.IContentId<>));
+
     private static string Name(Type type) =>
-        Nullable.GetUnderlyingType(type) is { } inner ? Name(inner) + "?"
+        IsContentId(type) ? "String"
+        : Nullable.GetUnderlyingType(type) is { } inner ? Name(inner) + "?"
         : type.IsArray ? Name(type.GetElementType()!) + "[]"
         : type.IsGenericType ? $"{type.Name[..type.Name.IndexOf('`', StringComparison.Ordinal)]}<{string.Join(", ", type.GetGenericArguments().Select(Name))}>"
         : type.Name;

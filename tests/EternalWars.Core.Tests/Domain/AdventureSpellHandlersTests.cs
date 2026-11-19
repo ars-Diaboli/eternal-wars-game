@@ -9,7 +9,7 @@ namespace EternalWars.Core.Tests.Domain;
 /// </summary>
 public sealed class AdventureSpellHandlersTests
 {
-    public static TheoryData<string> AdventureSpells() => [.. SpellCatalog.Default.All.Where(s => s.IsAdventure).Select(s => s.Id)];
+    public static TheoryData<string> AdventureSpells() => [.. SpellCatalog.Default.All.Where(s => s.IsAdventure).Select(s => s.Id.Value)];
 
     [Theory]
     [MemberData(nameof(AdventureSpells))]
@@ -23,9 +23,9 @@ public sealed class AdventureSpellHandlersTests
     public void TheRegistry_HoldsNothingElse_AndIsWhatIsBuilt()
     {
         Assert.Equal(
-            SpellCatalog.Default.All.Where(s => s.IsAdventure).Select(s => s.Id).Order(StringComparer.Ordinal),
-            AdventureSpellHandlers.All.Select(h => h.Spell).Order(StringComparer.Ordinal));
-        Assert.Equal(AdventureMagic.Built.Order(StringComparer.Ordinal), AdventureSpellHandlers.All.Select(h => h.Spell).Order(StringComparer.Ordinal));
+            SpellCatalog.Default.All.Where(s => s.IsAdventure).Select(s => s.Id).Order(),
+            AdventureSpellHandlers.All.Select(h => h.Spell).Order());
+        Assert.Equal(AdventureMagic.Built.Order(), AdventureSpellHandlers.All.Select(h => h.Spell).Order());
     }
 
     [Fact]

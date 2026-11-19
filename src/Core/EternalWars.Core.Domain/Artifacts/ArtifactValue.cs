@@ -57,8 +57,8 @@ public static class ArtifactValue
     });
 
     /// <summary>Artifact ids best first: by value, then rarer tier, then id. Unknown ids come last.</summary>
-    public static IEnumerable<string> BestFirst(ArtifactCatalog catalog, IEnumerable<string> ids) =>
+    public static IEnumerable<Common.ArtifactId> BestFirst(ArtifactCatalog catalog, IEnumerable<Common.ArtifactId> ids) =>
         ids.OrderByDescending(id => catalog.TryGet(id, out var a) ? Of(catalog, a) : double.MinValue)
             .ThenByDescending(id => catalog.TryGet(id, out var a) ? (int)a.Tier : -1)
-            .ThenBy(id => id, StringComparer.Ordinal);
+            .ThenBy(id => id);
 }

@@ -87,7 +87,7 @@ public static class UniqueBuildings
     ];
 
     /// <summary>The unique building with this id, or null.</summary>
-    public static UniqueBuilding? Get(string building) => All.FirstOrDefault(b => b.Id == building);
+    public static UniqueBuilding? Get(Common.BuildingId building) => All.FirstOrDefault(b => b.Id == building);
 
     /// <summary>The town's built unique buildings, in table order.</summary>
     public static IEnumerable<UniqueBuilding> Built(Town town) => All.Where(b => town.Level(b.Id) > 0);

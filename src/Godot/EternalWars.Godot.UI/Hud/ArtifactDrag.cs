@@ -5,7 +5,7 @@ using Godot;
 namespace EternalWars.Godot.UI.Hud;
 
 /// <summary>An artifact being moved on the hero or exchange screen: whose, which, and whether it is the worn copy.</summary>
-public sealed record ArtifactInHand(HeroId Hero, string Id, bool Worn);
+public sealed record ArtifactInHand(HeroId Hero, Core.Domain.Common.ArtifactId Id, bool Worn);
 
 /// <summary>Where an artifact is dropped: a hero's paper doll (put on) or its backpack (carry).</summary>
 public sealed record ArtifactPlace(HeroId Hero, bool Doll);
@@ -45,7 +45,7 @@ public static class ArtifactDrag
                     return default;
                 }
 
-                control.SetDragPreview(Preview(name ?? item.Id));
+                control.SetDragPreview(Preview(name ?? item.Id.Value));
                 return Variant.From(new ArtifactDragPayload { Item = item });
             }),
             Callable.From<Vector2, Variant, bool>((_, data) => data.Obj is ArtifactDragPayload { Item: { } held } && Accepts(held, place)),

@@ -14,7 +14,7 @@ internal sealed class BattleWounds(BattleState battle, IEventPublisher events)
     private readonly HashSet<BattleUnit> _hitWhileBlind = [];
 
     /// <summary>Martyrs' shares of a blow (ADR-152), dealt once the blow's stack is buried.</summary>
-    private readonly List<(BattleUnit Martyr, BattleUnit Guarded, string Spell, int Damage)> _shields = [];
+    private readonly List<(BattleUnit Martyr, BattleUnit Guarded, Common.SpellId Spell, int Damage)> _shields = [];
 
     /// <summary>What the stack's move from <paramref name="from"/> costs it: the moat, then the field zones' damage on the way (<paramref name="hits"/>).</summary>
     public void Landed(BattleUnit unit, CellPosition from, IReadOnlyList<(BattleZone Zone, int Damage)> hits)
@@ -46,7 +46,7 @@ internal sealed class BattleWounds(BattleState battle, IEventPublisher events)
     }
 
     /// <summary>A spell's damage to a stack (a cast, a burning spell, thorns): wounded, reported, buried; a blind stack hit wakes (ADR-123).</summary>
-    public void SpellDamage(BattleUnit unit, string spell, int damage, bool shieldable = true)
+    public void SpellDamage(BattleUnit unit, Common.SpellId spell, int damage, bool shieldable = true)
     {
         var killed = Take(unit, damage, shieldable);
         events.Publish(new BattleUnitSpellDamaged(unit.Id, spell, damage, killed, unit.Count, unit.TopHealth));
@@ -58,7 +58,7 @@ internal sealed class BattleWounds(BattleState battle, IEventPublisher events)
     /// A spell takes <paramref name="creatures"/> of the stack's creatures (Slay, decay), the wounded top creature first; it is not a blow, so no
     /// martyr shares it.
     /// </summary>
-    public void KillCreatures(BattleUnit unit, string spell, int creatures) => SpellDamage(unit, spell, unit.HealthOf(creatures), shieldable: false);
+    public void KillCreatures(BattleUnit unit, Common.SpellId spell, int creatures) => SpellDamage(unit, spell, unit.HealthOf(creatures), shieldable: false);
 
     /// <summary>
     /// The stack's top creature regains up to <paramref name="amount"/> health, never above its maximum; nothing happens (and nothing is reported)
@@ -78,7 +78,7 @@ internal sealed class BattleWounds(BattleState battle, IEventPublisher events)
     /// Health back to the stack (ADR-123): its top creature first, then its dead up to its count when the battle started. Creatures revived
     /// without <paramref name="lasting"/> are lost again when the battle ends. A stack destroyed earlier stands again and acts from the next round.
     /// </summary>
-    public void Revive(BattleUnit unit, string spell, int health, bool lasting)
+    public void Revive(BattleUnit unit, Common.SpellId spell, int health, bool lasting)
     {
         var total = (long)Math.Min(BattleMagic.Missing(unit), health);
         if (total <= 0)
@@ -221,7 +221,7 @@ internal sealed class BattleWounds(BattleState battle, IEventPublisher events)
     {
         copy.Count = 0;
         copy.TopHealth = 0;
-        events.Publish(new BattleCopyVanished(copy.Id, copy.CopySpell ?? string.Empty));
+        events.Publish(new BattleCopyVanished(copy.Id, copy.CopySpell ?? default));
     }
 
     /// <summary>A stack that is gone leaves the round's order; a Phoenix with its rebirth left rises instead (ADR-120).</summary>

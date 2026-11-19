@@ -230,7 +230,7 @@ public partial class ToolPalette : VBoxContainer
 
     private IEnumerable<(string, string)> Creatures() =>
         _editor.Scenario.Creatures.All.OrderBy(c => c.Town ?? "~").ThenBy(c => c.Tier).ThenBy(c => c.Name, StringComparer.Ordinal)
-            .Select(c => ($"{c.Name} (T{c.Tier})", c.Id));
+            .Select(c => ($"{c.Name} (T{c.Tier})", c.Id.Value));
 
     private void Radius()
     {

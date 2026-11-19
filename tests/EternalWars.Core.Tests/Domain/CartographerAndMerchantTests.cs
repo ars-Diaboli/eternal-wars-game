@@ -59,11 +59,11 @@ public class CartographerAndMerchantTests
         var (session, merchant) = World<ArtifactMerchant>(BuiltInMapObjects.ArtifactMerchant);
         var state = session.State;
         Assert.Equal(ArtifactMerchant.StockSize, merchant.Stock.Count);
-        Assert.All(merchant.Stock, a => Assert.Contains(state.Artifacts.Get(a!).Tier, new[] { ArtifactTier.Minor, ArtifactTier.Major }));
+        Assert.All(merchant.Stock, a => Assert.Contains(state.Artifacts.Get(a!.Value).Tier, new[] { ArtifactTier.Minor, ArtifactTier.Major }));
         Assert.False(session.Execute(new BuyArtifactCommand(Blue, merchant.Id, 0)).IsAccepted); // nobody stands there
 
         session.Step(A, Direction.North);
-        var artifact = merchant.Stock[0]!;
+        var artifact = merchant.Stock[0]!.Value;
         var price = ArtifactMerchantRules.Price(state.Artifacts.Get(artifact));
         Assert.Equal(2 * ArtifactMerchantRules.Value(state.Artifacts.Get(artifact).Tier), price.Gold);
         session.Execute(new BuyArtifactCommand(Blue, merchant.Id, 0)).ThrowIfRejected();
@@ -76,6 +76,6 @@ public class CartographerAndMerchantTests
         session.ObjectLifecycle.StartWeek(restock: false);
         Assert.Null(merchant.Stock[0]); // a sold slot waits for the month
         session.ObjectLifecycle.StartWeek(restock: true);
-        Assert.All(merchant.Stock, Assert.NotNull);
+        Assert.All(merchant.Stock, a => Assert.NotNull(a));
     }
 }

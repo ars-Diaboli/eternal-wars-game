@@ -5,7 +5,7 @@ namespace EternalWars.Core.Domain.Events;
 
 /// <summary>A hero learned spells from a town's mage guild (ADR-110), in guild order.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record SpellsLearned(HeroId Hero, MapObjectId Town, IReadOnlyList<string> Spells) : IEvent;
+public sealed record SpellsLearned(HeroId Hero, MapObjectId Town, IReadOnlyList<Common.SpellId> Spells) : IEvent;
 
 /// <summary>
 /// A hero's known spells rose to the rank its school's Mastery allows, free, in a town whose guild or spell building offers them (ADR-072, ADR-122):
@@ -15,7 +15,7 @@ public sealed record SpellsLearned(HeroId Hero, MapObjectId Town, IReadOnlyList<
 public sealed record SpellsRaised(HeroId Hero, MapObjectId Town, IReadOnlyList<SpellRank> Spells) : IEvent;
 
 /// <summary>A spell at a rank (1–3).</summary>
-public sealed record SpellRank(string Spell, int Rank);
+public sealed record SpellRank(Common.SpellId Spell, int Rank);
 
 /// <summary>A hero learned the warcries up to <paramref name="Level"/> at a town's war lodge (ADR-071, placeholder).</summary>
 [SeenBy(Audience.Witnesses)]

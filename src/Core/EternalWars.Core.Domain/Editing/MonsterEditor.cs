@@ -18,7 +18,7 @@ public sealed class MonsterEditor
     /// <summary>Places a neutral monster; a null <paramref name="count"/> is rolled from its tier at game start.</summary>
     public EditResult Place(
         MapPosition position,
-        string creature,
+        Common.CreatureId creature,
         int? count,
         GuardDisposition disposition,
         bool neverFlees,
@@ -53,7 +53,7 @@ public sealed class MonsterEditor
         return EditResult.Ok;
     }
 
-    public EditResult Set(MapObjectId id, string creature, int? count, GuardDisposition disposition, bool neverFlees)
+    public EditResult Set(MapObjectId id, Common.CreatureId creature, int? count, GuardDisposition disposition, bool neverFlees)
     {
         if (_context.Object<MonsterGuard>(id) is not { } monster)
         {
@@ -95,7 +95,7 @@ public sealed class MonsterEditor
         }
 
         var shown = tier is > 0 and var t ? Game.PlaceholderRules.MonsterCandidates(Scenario.Creatures, t).FirstOrDefault()?.Id ?? monster.Creature : monster.Creature;
-        _context.Edit<(int?, string)>(tier is null ? "Make the monster fixed" : "Make the monster random", () => (monster.RandomTier, monster.Creature), value =>
+        _context.Edit<(int?, Common.CreatureId)>(tier is null ? "Make the monster fixed" : "Make the monster random", () => (monster.RandomTier, monster.Creature), value =>
         {
             (monster.RandomTier, monster.Creature) = value;
             _context.Publish(new MapObjectChanged(monster.Id));

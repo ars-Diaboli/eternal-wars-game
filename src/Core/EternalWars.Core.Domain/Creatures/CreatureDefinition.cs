@@ -99,7 +99,7 @@ public enum CapabilityKind
 public sealed record CreatureCapability(CapabilityKind Kind, int Value = 0, string? Parameter = null)
 {
     /// <summary>Throws <see cref="FormatException"/> when the kind's value or parameter is missing.</summary>
-    public void Validate(string creature)
+    public void Validate(Common.CreatureId creature)
     {
         var problem = Kind switch
         {
@@ -182,7 +182,7 @@ public enum CreatureCategory
 /// <see cref="Speed"/> is battlefield cells per turn, <see cref="MapSpeed"/> is the HoMM3-scale value the
 /// adventure-map movement table uses (ADR-037).
 /// </summary>
-public sealed record CreatureDefinition(string Id, string Name, int Tier, CreatureSize Size)
+public sealed record CreatureDefinition(Common.CreatureId Id, string Name, int Tier, CreatureSize Size)
 {
     public const int MinTier = 1;
     public const int MaxTier = 5;
@@ -194,7 +194,7 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
     public string? Town { get; init; }
 
     /// <summary>Id of the upgraded form; null when the creature has no upgrade (or is the upgrade).</summary>
-    public string? UpgradesTo { get; init; }
+    public Common.CreatureId? UpgradesTo { get; init; }
 
     /// <summary>The line's class A or B (ADR-135); <see cref="CreatureCategory.None"/> for uncategorised creatures.</summary>
     public CreatureCategory Category { get; init; }
@@ -310,7 +310,7 @@ public sealed record CreatureDefinition(string Id, string Name, int Tier, Creatu
     /// <summary>Throws <see cref="FormatException"/> for values the rules cannot work with.</summary>
     public void Validate()
     {
-        if (string.IsNullOrWhiteSpace(Id))
+        if (string.IsNullOrWhiteSpace(Id.Value))
         {
             throw new FormatException("Creature definition needs an id.");
         }

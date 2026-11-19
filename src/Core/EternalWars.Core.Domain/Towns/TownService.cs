@@ -36,7 +36,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
     void Turns.ITurnPhaseParticipant.PrepareTurn(PlayerId player) => AppointVisitors(player);
 
-    internal void Build(PlayerId player, MapObjectId townId, string building)
+    internal void Build(PlayerId player, MapObjectId townId, Common.BuildingId building)
     {
         var town = OwnTown(player, townId);
         Refuse(TownRules.CheckBuild(state, town, building));
@@ -48,7 +48,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         _construction.Raise(town, building, level.Level);
     }
 
-    internal void BuildDwelling(PlayerId player, MapObjectId townId, string line)
+    internal void BuildDwelling(PlayerId player, MapObjectId townId, Common.CreatureId line)
     {
         var town = OwnTown(player, townId);
         Refuse(TownRules.CheckDwelling(state, town, line));
@@ -61,7 +61,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         _construction.RaiseDwelling(town, definition, level.Level);
     }
 
-    internal void Recruit(PlayerId player, MapObjectId townId, string creature, int count, HeroId? heroId)
+    internal void Recruit(PlayerId player, MapObjectId townId, Common.CreatureId creature, int count, HeroId? heroId)
     {
         var town = OwnTown(player, townId);
         var line = TownRules.LineOf(state, town, creature) ?? throw new CommandRefusedException($"{town.Name} does not recruit '{creature}'.");
@@ -102,8 +102,8 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         }
 
         Pay(player, TownRules.UpgradeCost(state, town, line, stack.Count));
-        army.Set(slot, new CreatureStack(line.UpgradesTo!, stack.Count));
-        events.Publish(new StackUpgraded(town.Id, hero?.Id, slot, line.Id, line.UpgradesTo!, stack.Count));
+        army.Set(slot, new CreatureStack(line.UpgradesTo!.Value, stack.Count));
+        events.Publish(new StackUpgraded(town.Id, hero?.Id, slot, line.Id, line.UpgradesTo!.Value, stack.Count));
         PublishArmy(town, hero);
     }
 
@@ -314,7 +314,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
                 town.SetAvailable(line.Id, town.AvailableOf(line.Id) + week.Growth(state.Creatures, line.Id, TownRules.WeeklyGrowth(state, town, line, artifacts)));
             }
 
-            events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));
+            events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<Common.CreatureId, int>(town.Available)));
         }
     }
 
@@ -333,7 +333,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
                 town.SetAvailable(line, count / 2);
             }
 
-            events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<string, int>(town.Available, StringComparer.Ordinal)));
+            events.Publish(new TownCreaturesGrew(town.Id, new Dictionary<Common.CreatureId, int>(town.Available)));
         }
     }
 
@@ -358,12 +358,12 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
         var towns = state.ObjectsOf<Town>().OrderBy(t => t.Id.Value).ToList();
         foreach (var town in towns)
         {
-            var guild = new Dictionary<int, IReadOnlyList<string>>();
+            var guild = new Dictionary<int, IReadOnlyList<Common.SpellId>>();
             for (var level = 1; level <= perLevel.Count; level++)
             {
                 // The map's fixed spells stay even when banned; the draw skips banned ones unless the level has no other (ADR-126).
                 var all = state.Spells.Of(town.TownType, level).Select(s => s.Id).ToList();
-                var drawn = town.FixedGuildSpells.Where(all.Contains).Distinct(StringComparer.Ordinal).Take(perLevel[level - 1]).ToList();
+                var drawn = town.FixedGuildSpells.Where(all.Contains).Distinct().Take(perLevel[level - 1]).ToList();
                 var pool = MapBans.Allowed(all, state.Rules.Bans.BansSpell).Where(s => !drawn.Contains(s)).ToList();
                 while (drawn.Count < perLevel[level - 1] && pool.Count > 0)
                 {
@@ -374,7 +374,7 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
                 if (drawn.Count > 0)
                 {
-                    drawn.Sort(StringComparer.Ordinal);
+                    drawn.Sort();
                     guild[level] = drawn;
                 }
             }
@@ -384,10 +384,10 @@ public sealed class TownService(GameState state, IEventPublisher events, Economy
 
         foreach (var town in towns)
         {
-            var schools = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+            var schools = new Dictionary<string, IReadOnlyList<Common.SpellId>>(StringComparer.Ordinal);
             foreach (var school in TownRules.Buildings(state, town).TownBuildings.Select(BuiltInBuildings.SchoolOf).OfType<string>().Distinct().Order(StringComparer.Ordinal))
             {
-                var spells = new List<string>();
+                var spells = new List<Common.SpellId>();
                 for (var level = 1; level <= perLevel.Count; level++)
                 {
                     var pool = MapBans.Allowed(state.Spells.Of(school, level), s => state.Rules.Bans.BansSpell(s.Id));

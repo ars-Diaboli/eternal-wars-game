@@ -23,15 +23,15 @@ public static class QuestForms
             proposal, rewards);
 
     /// <summary>The hero brings the artifacts (one of each listed, as often as listed); the stage takes them.</summary>
-    public static QuestStage Artifacts(IReadOnlyList<string> artifacts, string proposal, params EventAction[] rewards) =>
-        new(All(artifacts.GroupBy(a => a, StringComparer.Ordinal).Select(g => AtLeast(Quantity.Artifacts, g.Key, g.Count()))), proposal,
+    public static QuestStage Artifacts(IReadOnlyList<Common.ArtifactId> artifacts, string proposal, params EventAction[] rewards) =>
+        new(All(artifacts.GroupBy(a => a).Select(g => AtLeast(Quantity.Artifacts, g.Key.Value, g.Count()))), proposal,
             [.. artifacts.Select(a => new ArtifactAction(a, Take: true)), .. rewards]);
 
     /// <summary>The hero brings the creatures; the stage takes them.</summary>
     public static QuestStage Creatures(IReadOnlyList<CreatureStack> creatures, string proposal, params EventAction[] rewards)
     {
-        var asked = creatures.GroupBy(s => s.Creature, StringComparer.Ordinal).Select(g => (Creature: g.Key, Count: g.Sum(s => s.Count))).ToList();
-        return new(All(asked.Select(c => AtLeast(Quantity.Creatures, c.Creature, c.Count))), proposal,
+        var asked = creatures.GroupBy(s => s.Creature).Select(g => (Creature: g.Key, Count: g.Sum(s => s.Count))).ToList();
+        return new(All(asked.Select(c => AtLeast(Quantity.Creatures, c.Creature.Value, c.Count))), proposal,
             [.. asked.Select(c => new CreaturesAction(c.Creature, new NumberExpr(-c.Count))), .. rewards]);
     }
 

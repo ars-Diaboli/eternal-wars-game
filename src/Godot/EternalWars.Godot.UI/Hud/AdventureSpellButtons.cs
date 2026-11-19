@@ -39,11 +39,11 @@ internal static class AdventureSpellButtons
             {
                 if (AdventureMagic.NeedsTarget(state, hero, id))
                 {
-                    arm(id);
+                    arm(id.Value);
                 }
                 else
                 {
-                    cast(id);
+                    cast(id.Value);
                 }
             };
             buttons.Add(button);

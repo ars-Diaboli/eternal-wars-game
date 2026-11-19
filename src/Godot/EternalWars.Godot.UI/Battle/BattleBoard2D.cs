@@ -110,7 +110,7 @@ public partial class BattleBoard2D : Control
         // Field zones (ADR-149) under the stacks.
         foreach (var zone in battle.Zones)
         {
-            DrawRect(ToRect(zone.Rect), ZoneLook.Of(zone.Spell));
+            DrawRect(ToRect(zone.Rect), ZoneLook.Of(zone.Spell.Value));
         }
 
         // A siege (ADR-106) in the town's colours (ADR-144): the moat, then the wall sections and the gate on the wall line; the keep and towers

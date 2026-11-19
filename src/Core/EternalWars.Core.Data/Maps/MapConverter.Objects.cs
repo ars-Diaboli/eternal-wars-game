@@ -311,6 +311,10 @@ public static partial class MapConverter
     private static Dictionary<string, int> Sorted(IReadOnlyDictionary<string, int> values) =>
         values.OrderBy(v => v.Key, StringComparer.Ordinal).ToDictionary(v => v.Key, v => v.Value, StringComparer.Ordinal);
 
+    private static Dictionary<TId, int> Sorted<TId>(IReadOnlyDictionary<TId, int> values)
+        where TId : struct, Domain.Common.IContentId<TId> =>
+        values.OrderBy(v => v.Key).ToDictionary(v => v.Key, v => v.Value);
+
     private static Town ToTown(TownDocument town, ObjectContext context)
     {
         foreach (var line in (town.Dwellings?.Keys ?? []).Concat(town.Available?.Keys ?? []))

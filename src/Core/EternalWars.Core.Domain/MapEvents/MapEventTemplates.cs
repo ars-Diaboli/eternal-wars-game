@@ -25,10 +25,10 @@ public static class MapEventTemplates
     /// <summary>One action of every type, with a label for the menu.</summary>
     public static IReadOnlyList<(string Label, EventAction Action)> Actions(GameState state, string? otherEvent = null, string? variable = null)
     {
-        var creature = state.Creatures.All.OrderBy(c => c.Tier).ThenBy(c => c.Id, StringComparer.Ordinal).FirstOrDefault()?.Id ?? "creature";
-        var line = state.Creatures.All.Where(c => !state.Creatures.IsUpgrade(c.Id)).OrderBy(c => c.Tier).ThenBy(c => c.Id, StringComparer.Ordinal).FirstOrDefault()?.Id ?? creature;
-        var artifact = state.Artifacts.All.OrderBy(a => a.Id, StringComparer.Ordinal).FirstOrDefault()?.Id ?? "artifact";
-        var spell = state.Spells.All.OrderBy(s => s.Level).ThenBy(s => s.Id, StringComparer.Ordinal).FirstOrDefault()?.Id ?? "spell";
+        var creature = state.Creatures.All.OrderBy(c => c.Tier).ThenBy(c => c.Id).FirstOrDefault()?.Id ?? "creature";
+        var line = state.Creatures.All.Where(c => !state.Creatures.IsUpgrade(c.Id)).OrderBy(c => c.Tier).ThenBy(c => c.Id).FirstOrDefault()?.Id ?? creature;
+        var artifact = state.Artifacts.All.OrderBy(a => a.Id).FirstOrDefault()?.Id ?? "artifact";
+        var spell = state.Spells.All.OrderBy(s => s.Level).ThenBy(s => s.Id).FirstOrDefault()?.Id ?? "spell";
         var hero = state.HeroRoster.All.OrderBy(h => h.Id, StringComparer.Ordinal).FirstOrDefault()?.Id ?? "hero";
         var x = variable ?? "x";
         return

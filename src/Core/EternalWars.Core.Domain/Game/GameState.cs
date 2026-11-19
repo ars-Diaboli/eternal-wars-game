@@ -131,7 +131,7 @@ public sealed class GameState
     internal GameRandom Random { get; }
 
     /// <summary>Relics handed out as rewards since the pool was last refilled (<c>ArtifactService.Draw</c>, ADR-068).</summary>
-    internal SortedSet<string> DrawnRelics { get; } = new(StringComparer.Ordinal);
+    internal SortedSet<Common.ArtifactId> DrawnRelics { get; } = [];
 
     /// <summary>Current state of the game RNG (saves, replay checks).</summary>
     public ulong RandomState => Random.State;

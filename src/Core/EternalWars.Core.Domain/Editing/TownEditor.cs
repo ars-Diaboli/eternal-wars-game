@@ -112,7 +112,7 @@ public sealed class TownEditor
     /// Pre-builds a town building up to <paramref name="level"/> (0 = not built). Requirements hold as in play: a level
     /// needs what it requires, and nothing built may lose a building it requires.
     /// </summary>
-    public EditResult SetBuilding(MapObjectId id, string building, int level)
+    public EditResult SetBuilding(MapObjectId id, Common.BuildingId building, int level)
     {
         if (_context.Object<Town>(id) is not { } town ||
             BuiltInBuildings.DwellingTier(building) is not null || !TownRules.Buildings(Scenario, town).Contains(building))
@@ -138,7 +138,7 @@ public sealed class TownEditor
     /// Pre-builds a line's dwelling: 0 none, 1 built, 2 upgraded; the 7-of-9 rule (ADR-030) and the dwelling's
     /// requirements (the fort, ADR-066) apply.
     /// </summary>
-    public EditResult SetDwelling(MapObjectId id, string line, int level)
+    public EditResult SetDwelling(MapObjectId id, Common.CreatureId line, int level)
     {
         if (_context.Object<Town>(id) is not { } town)
         {
@@ -201,7 +201,7 @@ public sealed class TownEditor
     /// The spells a town's mage guild is fixed to teach (map v30): spells of the town's school, at most 3 / 3 / 2 / 2 per level, each once
     /// (<see cref="Magic.MagicRules.GuildSpellsProblem"/>); the game-start draw fills the rest. Empty = everything drawn. The order is kept as given.
     /// </summary>
-    public EditResult SetGuildSpells(MapObjectId id, IReadOnlyList<string> spells)
+    public EditResult SetGuildSpells(MapObjectId id, IReadOnlyList<Common.SpellId> spells)
     {
         if (_context.Object<Town>(id) is not { } town)
         {
@@ -213,9 +213,9 @@ public sealed class TownEditor
             return EditResult.InvalidValue;
         }
 
-        IReadOnlyList<string> next = [.. spells];
+        IReadOnlyList<Common.SpellId> next = [.. spells];
         Edit(town, $"Set guild spells of {town.Name}", () => town.FixedGuildSpells, value => town.FixedGuildSpells = value, next,
-            EditorContext.SameItems<string>);
+            EditorContext.SameItems<Common.SpellId>);
         return EditResult.Ok;
     }
 

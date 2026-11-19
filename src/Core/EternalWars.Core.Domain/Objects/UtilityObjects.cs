@@ -115,7 +115,7 @@ public static class HillFortRules
     public const int MaxTier = 3;
 
     /// <summary>The creature a stack becomes at a hill fort, or null when it cannot be upgraded there.</summary>
-    public static CreatureDefinition? UpgradeOf(CreatureCatalog creatures, string creature) =>
+    public static CreatureDefinition? UpgradeOf(CreatureCatalog creatures, Common.CreatureId creature) =>
         creatures.TryGet(creature, out var line) && line.Tier <= MaxTier && line.UpgradesTo is { } upgrade && creatures.TryGet(upgrade, out var upgraded)
             ? upgraded
             : null;

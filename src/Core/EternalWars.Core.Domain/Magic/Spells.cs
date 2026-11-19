@@ -398,7 +398,7 @@ public sealed record SpellEffect(
 /// <paramref name="Rank3"/> are the whole battle effect at ranks II and III (ADR-122); null means the rank below's (its change is not built yet).
 /// </summary>
 public sealed record SpellDefinition(
-    string Id, string Name, string School, int Level, int Mana, SpellElement Element, IReadOnlyList<string> Tags, bool IsAdventure, SpellEffect? Effect,
+    Common.SpellId Id, string Name, string School, int Level, int Mana, SpellElement Element, IReadOnlyList<string> Tags, bool IsAdventure, SpellEffect? Effect,
     string Notes = "", SpellEffect? Rank2 = null, SpellEffect? Rank3 = null)
 {
     public bool HasTag(string tag) => Tags.Contains(tag, StringComparer.Ordinal);
@@ -407,11 +407,11 @@ public sealed record SpellDefinition(
     /// The elements the spell counts as (ADR-106, ADR-123): its own; all four for Magic Arrow; for Bind Elemental the kind it binds (the element
     /// in the creature's id, <c>conflux.fire-elemental</c>), none while that is not known.
     /// </summary>
-    public IReadOnlyList<SpellElement> ElementsFor(string? creature = null) => Element switch
+    public IReadOnlyList<SpellElement> ElementsFor(Common.CreatureId? creature = null) => Element switch
     {
         SpellElement.All => [SpellElement.Air, SpellElement.Earth, SpellElement.Fire, SpellElement.Water],
         SpellElement.Bound => creature is null ? [] : [.. new[] { SpellElement.Air, SpellElement.Earth, SpellElement.Fire, SpellElement.Water }
-            .Where(e => creature.Split('.')[^1].StartsWith(e.ToString().ToLowerInvariant() + "-", StringComparison.Ordinal))],
+            .Where(e => creature.Value.Value.Split('.')[^1].StartsWith(e.ToString().ToLowerInvariant() + "-", StringComparison.Ordinal))],
         var element => [element],
     };
 
@@ -497,7 +497,7 @@ public static class SpellTable
 /// <summary>The spells of a game by id. Start from <see cref="Default"/> (the embedded table).</summary>
 public sealed class SpellCatalog
 {
-    private readonly Dictionary<string, SpellDefinition> _spells = new(StringComparer.Ordinal);
+    private readonly Dictionary<Common.SpellId, SpellDefinition> _spells = [];
 
     public SpellCatalog(IEnumerable<SpellDefinition> spells)
     {
@@ -533,16 +533,16 @@ public sealed class SpellCatalog
 
     public IEnumerable<SpellDefinition> All => _spells.Values;
 
-    public bool Contains(string id) => _spells.ContainsKey(id);
+    public bool Contains(Common.SpellId id) => _spells.ContainsKey(id);
 
-    public bool TryGet(string id, out SpellDefinition spell) => _spells.TryGetValue(id, out spell!);
+    public bool TryGet(Common.SpellId id, out SpellDefinition spell) => _spells.TryGetValue(id, out spell!);
 
-    public SpellDefinition Get(string id) =>
+    public SpellDefinition Get(Common.SpellId id) =>
         _spells.TryGetValue(id, out var spell) ? spell : throw new KeyNotFoundException($"Unknown spell '{id}'.");
 
     /// <summary>The spells of a school (town id) at one level, by id.</summary>
     public IReadOnlyList<SpellDefinition> Of(string school, int level) =>
-        _spells.Values.Where(s => s.School == school && s.Level == level).OrderBy(s => s.Id, StringComparer.Ordinal).ToList();
+        _spells.Values.Where(s => s.School == school && s.Level == level).OrderBy(s => s.Id).ToList();
 }
 
 /// <summary>The shipped spell table, embedded at build time (<c>data/spells.csv</c>).</summary>

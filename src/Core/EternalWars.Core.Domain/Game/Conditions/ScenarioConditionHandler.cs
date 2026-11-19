@@ -60,8 +60,8 @@ internal abstract class ScenarioConditionHandler : IScenarioConditionHandler
         ? found is Towns.Town town ? town.Name : $"the {found.Definition.Name} at {found.Position.X.ToString(CultureInfo.InvariantCulture)}, {found.Position.Y.ToString(CultureInfo.InvariantCulture)}"
         : "an object";
 
-    protected static string ArtifactName(GameState state, string? id) =>
-        id is not null && state.Artifacts.TryGet(id, out var artifact) ? artifact.Name : "an artifact";
+    protected static string ArtifactName(GameState state, Common.ArtifactId? id) =>
+        id is { } known && state.Artifacts.TryGet(known, out var artifact) ? artifact.Name : "an artifact";
 
     /// <summary>The roster hero held in a prison, while the prison stands and its prisoner is known.</summary>
     protected static string PrisonerName(GameState state, MapObjectId? id) =>

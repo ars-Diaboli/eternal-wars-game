@@ -97,7 +97,7 @@ public static class ThievesGuild
                 detail = best is null ? null : $"{best.Name} (level {best.Level})";
                 return best?.Level ?? 0;
             default:
-                var creature = Stacks(state, player).Select(s => state.Creatures.Get(s.Creature)).OrderByDescending(c => c.FightValue).ThenBy(c => c.Id, StringComparer.Ordinal).FirstOrDefault();
+                var creature = Stacks(state, player).Select(s => state.Creatures.Get(s.Creature)).OrderByDescending(c => c.FightValue).ThenBy(c => c.Id).FirstOrDefault();
                 detail = creature?.Name;
                 return creature?.FightValue ?? 0;
         }

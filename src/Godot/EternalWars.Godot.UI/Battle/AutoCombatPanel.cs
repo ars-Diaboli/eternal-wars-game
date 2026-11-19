@@ -142,7 +142,7 @@ public partial class AutoCombatPanel : CenterContainer
         };
         foreach (var side in new[] { BattleSide.Attacker, BattleSide.Defender })
         {
-            var lost = preview.Casualties.Where(c => c.Side == side).Select(c => $"{c.Lost} {CreatureName(c.Creature)}").ToList();
+            var lost = preview.Casualties.Where(c => c.Side == side).Select(c => $"{c.Lost} {CreatureName(c.Creature.Value)}").ToList();
             lines.Add($"{SideName(battle, side)} would lose: {(lost.Count > 0 ? string.Join(", ", lost) : "nothing")}");
         }
 
@@ -153,7 +153,7 @@ public partial class AutoCombatPanel : CenterContainer
 
         if (preview.Raised.Count > 0)
         {
-            lines.Add($"Necromancy would raise {string.Join(", ", preview.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature)}"))}.");
+            lines.Add($"Necromancy would raise {string.Join(", ", preview.Raised.Select(r => $"{r.Count} {CreatureName(r.Creature.Value)}"))}.");
         }
 
         if (preview.Artifacts.Count > 0)
@@ -210,7 +210,7 @@ public partial class AutoCombatPanel : CenterContainer
         var participant = battle.Participant(side);
         var state = _session.State;
         return participant.Hero is { } hero ? state.GetHero(hero).Name
-            : participant.Guard is { } guard && state.FindObject(guard) is Core.Domain.Objects.MonsterGuard monster ? $"Neutral {CreatureName(monster.Creature)}"
+            : participant.Guard is { } guard && state.FindObject(guard) is Core.Domain.Objects.MonsterGuard monster ? $"Neutral {CreatureName(monster.Creature.Value)}"
             : participant.Guard is { } other && state.FindObject(other) is { } held ? held.Definition.Name
             : participant.Owner is { } owner ? state.GetPlayer(owner).Name
             : "The neutrals";

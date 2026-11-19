@@ -16,13 +16,13 @@ public class GuildSpellsFormatTests
 {
     private static readonly string[] WideMap = [.. Enumerable.Repeat("....................", 8), "A..................B"];
 
-    private static List<string> Haven(int level) => [.. SpellCatalog.Default.Of(TownIds.Haven, level).Select(s => s.Id)];
+    private static List<string> Haven(int level) => [.. SpellCatalog.Default.Of(TownIds.Haven, level).Select(s => s.Id.Value)];
 
     private static (GameState State, Town Town) World(IReadOnlyList<string> fixedSpells, ulong seed = 1)
     {
         var state = Create(GameOptions.Default with { Seed = seed }, WideMap);
         var town = AddTown(state, TownIds.Haven, 0, 0, Blue);
-        town.FixedGuildSpells = fixedSpells;
+        town.FixedGuildSpells = [.. fixedSpells.Select(s => new SpellId(s))];
         return (state, town);
     }
 
@@ -39,7 +39,7 @@ public class GuildSpellsFormatTests
         Assert.Contains(one[0], town.GuildSpells[1]);
         Assert.Contains(one[1], town.GuildSpells[1]);
         Assert.Equal(3, town.GuildSpells[1].Distinct().Count());
-        Assert.Equal(new[] { four[0], four[1] }.Order(StringComparer.Ordinal), town.GuildSpells[4]);
+        Assert.Equal(new[] { four[0], four[1] }.Order(StringComparer.Ordinal), town.GuildSpells[4].Select(s => s.Value));
         Assert.Equal(3, town.GuildSpells[2].Count);
         Assert.Equal(2, town.GuildSpells[3].Count);
         Assert.All(town.GuildSpells.SelectMany(l => l.Value), s => Assert.Equal(TownIds.Haven, state.Spells.Get(s).School));
@@ -53,7 +53,7 @@ public class GuildSpellsFormatTests
         {
             var (state, town) = World(all, seed);
             Start(state);
-            Assert.Equal(all.Order(StringComparer.Ordinal), town.GuildSpells.OrderBy(l => l.Key).SelectMany(l => l.Value).Order(StringComparer.Ordinal));
+            Assert.Equal(all.Order(StringComparer.Ordinal), town.GuildSpells.OrderBy(l => l.Key).SelectMany(l => l.Value).Order().Select(s => s.Value));
         }
     }
 
@@ -87,7 +87,7 @@ public class GuildSpellsFormatTests
         var restored = TestFormat.Load(json);
 
         var towns = restored.ObjectsOf<Town>().OrderBy(t => t.Position.X).ToList();
-        Assert.Equal(spells, towns[0].FixedGuildSpells);
+        Assert.Equal(spells, towns[0].FixedGuildSpells.Select(s => s.Value));
         Assert.Empty(towns[1].FixedGuildSpells);
     }
 
@@ -115,14 +115,14 @@ public class GuildSpellsFormatTests
         var one = Haven(1);
         string[] spells = wrong switch
         {
-            "other-school" => [SpellCatalog.Default.Of(TownIds.Inferno, 1)[0].Id],
+            "other-school" => [SpellCatalog.Default.Of(TownIds.Inferno, 1)[0].Id.Value],
             "twice" => [one[0], one[0]],
             "too-many" => [one[0], one[1], one[2], one[3]],
             _ => [wrong],
         };
         var (state, _) = World(spells);
 
-        Assert.NotNull(MagicRules.GuildSpellsProblem(state.Spells, TownIds.Haven, spells));
+        Assert.NotNull(MagicRules.GuildSpellsProblem(state.Spells, TownIds.Haven, [.. spells.Select(s => new SpellId(s))]));
         Assert.Contains(MapValidator.Validate(state), i => i.Severity == IssueSeverity.Error && i.Message.Contains("guild spells", StringComparison.Ordinal));
         Assert.Throws<FormatException>(() => MapConverter.ToGameState(MapConverter.ToDocument(state)));
     }

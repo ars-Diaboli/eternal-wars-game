@@ -51,7 +51,7 @@ internal sealed class TownInspector : InspectorSection<Town>
         foreach (var building in catalog.TownBuildings)
         {
             var id = building;
-            var level = buildings.AddSpin(building, town.Level(building), 0, catalog.MaxLevel(building));
+            var level = buildings.AddSpin(building.Value, town.Level(building), 0, catalog.MaxLevel(building));
             level.ValueChanged += value => form.Edit(() => editor.Towns.SetBuilding(town.Id, id, (int)value));
         }
 
@@ -86,13 +86,13 @@ internal sealed class TownInspector : InspectorSection<Town>
         var choices = new List<Choice<string>>();
         for (var level = 1; level <= MagicRules.GuildSpellsPerLevel.Count; level++)
         {
-            var items = new[] { ("— drawn —", "") }.Concat(spells.Of(town.TownType, level).OrderBy(s => s.Name).Select(s => (s.Name, s.Id))).ToList();
+            var items = new[] { ("— drawn —", "") }.Concat(spells.Of(town.TownType, level).OrderBy(s => s.Name).Select(s => (s.Name, s.Id.Value))).ToList();
             var fixedHere = town.FixedGuildSpells.Where(s => spells.TryGet(s, out var spell) && spell.Level == level).ToList();
             var row = new HFlowContainer();
             form.Box.AddChild(row);
             for (var slot = 0; slot < MagicRules.GuildSpellsPerLevel[level - 1]; slot++)
             {
-                choices.Add(row.AddChoice(slot == 0 ? $"L{level}" : "", items, fixedHere.ElementAtOrDefault(slot) ?? ""));
+                choices.Add(row.AddChoice(slot == 0 ? $"L{level}" : "", items, fixedHere.Select(s => s.Value).ElementAtOrDefault(slot) ?? ""));
             }
         }
 

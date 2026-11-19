@@ -259,11 +259,11 @@ public sealed record ArtifactEffect(ArtifactEffectKind Kind, int Value, string? 
 /// <c>Effects</c> are what it adds to its pieces' effects.
 /// </summary>
 public sealed record ArtifactDefinition(
-    string Id, string Name, ArtifactSlot Slot, ArtifactTier Tier, string? Set, IReadOnlyList<ArtifactEffect> Effects, string Notes = "",
-    IReadOnlyList<string>? Pieces = null)
+    Common.ArtifactId Id, string Name, ArtifactSlot Slot, ArtifactTier Tier, string? Set, IReadOnlyList<ArtifactEffect> Effects, string Notes = "",
+    IReadOnlyList<Common.ArtifactId>? Pieces = null)
 {
     /// <summary>The artifacts it is joined from; empty for an ordinary artifact.</summary>
-    public IReadOnlyList<string> Pieces { get; init; } = Pieces ?? [];
+    public IReadOnlyList<Common.ArtifactId> Pieces { get; init; } = Pieces ?? [];
 
     /// <summary>Whether it is an assembled relic (never dropped, only joined from its pieces).</summary>
     public bool IsAssembled => Pieces.Count > 0;
@@ -278,7 +278,7 @@ public sealed record ArtifactDefinition(
     public bool IsGrail => Effects.Any(e => e.Kind == ArtifactEffectKind.Grail);
 
     /// <summary>The spell written on a scroll (<c>spell-scroll-1:light.bless</c>, ADR-136); null for a blank scroll and any other artifact.</summary>
-    public string? Spell { get; init; }
+    public Common.SpellId? Spell { get; init; }
 }
 
 /// <summary>Worn together, the pieces of a set add <see cref="Bonus"/> to the individual effects.</summary>

@@ -488,7 +488,7 @@ public class TownTests
         Assert.Equal(new ResourceSet(Gold: 4000, Lumber: 8, Ore: 8, Mercury: 2), catalog.Get(BuiltInBuildings.Dwelling(4), 2).Cost);
         Assert.Equal(new ResourceSet(Gold: 2000), catalog.Get(BuiltInBuildings.TownHall, 3).Income);
         Assert.Equal([new BuildingRequirement(BuiltInBuildings.Tavern, 1)], catalog.Get(BuiltInBuildings.Fort, 1).Requires);
-        Assert.DoesNotContain(catalog.TownBuildings, b => b.StartsWith("dwelling", StringComparison.Ordinal));
+        Assert.DoesNotContain(catalog.TownBuildings, b => b.Value.StartsWith("dwelling", StringComparison.Ordinal));
 
         var dwellings = string.Concat(Enumerable.Range(1, 5).Select(t => $"dwelling-{t},1,D,1\ndwelling-{t},2,U,1\n"));
         const string header = "id,level,name,gold,requires\n";

@@ -475,7 +475,7 @@ internal static class BattleAi
     }
 
     /// <summary>A hero's cast the AI weighs: the spell, its aim and second aim, and what it is worth by the spell's own measure.</summary>
-    internal readonly record struct CastOption(long Value, string Spell, int? Target, CellPosition? Cell, int? Second);
+    internal readonly record struct CastOption(long Value, Common.SpellId Spell, int? Target, CellPosition? Cell, int? Second);
 
     /// <summary>
     /// Every cast of the hero's spells it has the mana for, with what it is worth (the creature value of the hit points it takes off enemy stacks,
@@ -485,7 +485,7 @@ internal static class BattleAi
     {
         var caster = battle.Participant(side).Caster!;
         var options = new List<CastOption>();
-        foreach (var known in caster.Spells.Where(s => s.Effect is not null).OrderBy(s => s.Spell.Id, StringComparer.Ordinal))
+        foreach (var known in caster.Spells.Where(s => s.Effect is not null).OrderBy(s => s.Spell.Id))
         {
             if (battle.ManaOf(side) < BattleMagic.Cost(battle, side, known))
             {

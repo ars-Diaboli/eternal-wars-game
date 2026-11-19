@@ -43,14 +43,14 @@ public class MapBanAndPlaceholderTests
         Assert.Equal(["a"], bans.With(MapBanKind.Spell, "b", false).Spells);
         Assert.Equal(bans, MapBans.None.With(MapBanKind.Spell, "a", true).With(MapBanKind.Spell, "b", true));
 
-        Assert.Equal(["c"], MapBans.Allowed(["a", "b", "c"], bans.BansSpell));
-        Assert.Equal(["a", "b"], MapBans.Allowed(["a", "b"], bans.BansSpell));
+        Assert.Equal(["c"], MapBans.Allowed(["a", "b", "c"], s => bans.BansSpell(s)));
+        Assert.Equal(["a", "b"], MapBans.Allowed(["a", "b"], s => bans.BansSpell(s)));
     }
 
     [Fact]
     public void ArtifactRolls_SkipBannedArtifacts_UnlessTheWholeTierIsBanned()
     {
-        var minors = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).Select(a => a.Id).Order(StringComparer.Ordinal).ToList();
+        var minors = ArtifactCatalog.Default.OfTier(ArtifactTier.Minor).Select(a => a.Id.Value).Order(StringComparer.Ordinal).ToList();
         var kept = minors[3];
         var state = World(BanAllBut(MapBanKind.Artifact, minors, kept));
         var pickups = Enumerable.Range(0, 4).Select(i => Add<ArtifactPickup>(state, BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), 2 + (i * 2), 2)).ToList();
@@ -60,7 +60,7 @@ public class MapBanAndPlaceholderTests
         var everything = World(BanAllBut(MapBanKind.Artifact, minors));
         var pickup = Add<ArtifactPickup>(everything, BuiltInMapObjects.ArtifactId(ArtifactTier.Minor), 2, 2);
         Start(everything);
-        Assert.Contains(pickup.Artifact, minors);
+        Assert.Contains(pickup.Artifact!.Value.Value, minors);
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class MapBanAndPlaceholderTests
     [Fact]
     public void GuildDraws_SkipBannedSpells_ButKeepTheMapsFixedOnes()
     {
-        var one = SpellCatalog.Default.Of(TownIds.Haven, 1).Select(s => s.Id).ToList();
+        var one = SpellCatalog.Default.Of(TownIds.Haven, 1).Select(s => s.Id.Value).ToList();
         Assert.True(one.Count >= 4);
         var bans = BanAllBut(MapBanKind.Spell, one, one[1], one[2]);
         foreach (var seed in new ulong[] { 1, 2, 3 })
@@ -91,14 +91,14 @@ public class MapBanAndPlaceholderTests
             var town = AddTown(state, TownIds.Haven, 10, 0, Blue);
             town.FixedGuildSpells = [one[0]]; // banned, but placed by hand
             Start(state);
-            Assert.Equal(new[] { one[0], one[1], one[2] }.Order(StringComparer.Ordinal), town.GuildSpells[1]);
+            Assert.Equal(new[] { one[0], one[1], one[2] }.Order(StringComparer.Ordinal), town.GuildSpells[1].Select(s => s.Value));
         }
     }
 
     [Fact]
     public void ShrinesLevelUpsAndWitchHuts_SkipBannedSpellsAndSkills()
     {
-        var levelOne = ShrineRules.Candidates(SpellCatalog.Default, 1).Select(s => s.Id).ToList();
+        var levelOne = ShrineRules.Candidates(SpellCatalog.Default, 1).Select(s => s.Id.Value).ToList();
         var spellBans = BanAllBut(MapBanKind.Spell, levelOne, levelOne[5]);
         var random = new GameRandom(7);
         for (var i = 0; i < 20; i++)

@@ -105,7 +105,7 @@ public sealed class HeroEditor
     /// Sets what a hero wears (ids; each goes to the slot its definition names) and carries (ADR-061). Refused when an
     /// artifact is unknown, does not fit its slots, or the backpack would overflow.
     /// </summary>
-    public EditResult SetArtifacts(HeroId id, IReadOnlyList<string> worn, IReadOnlyList<string> backpack)
+    public EditResult SetArtifacts(HeroId id, IReadOnlyList<Common.ArtifactId> worn, IReadOnlyList<Common.ArtifactId> backpack)
     {
         if (_context.Hero(id) is not { } hero)
         {
@@ -187,7 +187,7 @@ public sealed class HeroEditor
             StatsChanged(hero);
         }
 
-        void Restore((string? Definition, string Name, HeroClass Class, string? Preferred, HeroSpecialty? Specialty, int Attack, int Defense,
+        void Restore((string? Definition, string Name, HeroClass Class, Common.CreatureId? Preferred, HeroSpecialty? Specialty, int Attack, int Defense,
             int SpellPower, int Knowledge, Dictionary<string, SkillLevel> Skills) snapshot)
         {
             (hero.Definition, hero.Name, hero.Class, hero.PreferredCreature, hero.Specialty, hero.Attack, hero.Defense, hero.SpellPower, hero.Knowledge) =
@@ -197,7 +197,7 @@ public sealed class HeroEditor
             StatsChanged(hero);
         }
 
-        static (string?, string, HeroClass, string?, HeroSpecialty?, int, int, int, int, Dictionary<string, SkillLevel>) Snapshot(Hero h) =>
+        static (string?, string, HeroClass, Common.CreatureId?, HeroSpecialty?, int, int, int, int, Dictionary<string, SkillLevel>) Snapshot(Hero h) =>
             (h.Definition, h.Name, h.Class, h.PreferredCreature, h.Specialty, h.Attack, h.Defense, h.SpellPower, h.Knowledge,
              h.Skills.Levels.ToDictionary(s => s.Key, s => s.Value));
     }
@@ -245,14 +245,14 @@ public sealed class HeroEditor
     }
 
     /// <summary>A hero's spell book and the spells in it (ADR-120): known spell ids, none without a book.</summary>
-    public EditResult SetSpells(HeroId id, bool spellBook, IReadOnlyList<string> spells)
+    public EditResult SetSpells(HeroId id, bool spellBook, IReadOnlyList<Common.SpellId> spells)
     {
         if (_context.Hero(id) is not { } hero)
         {
             return EditResult.InvalidTarget;
         }
 
-        if ((!spellBook && spells.Count > 0) || spells.Any(s => !Scenario.Spells.Contains(s)) || spells.Distinct(StringComparer.Ordinal).Count() != spells.Count)
+        if ((!spellBook && spells.Count > 0) || spells.Any(s => !Scenario.Spells.Contains(s)) || spells.Distinct().Count() != spells.Count)
         {
             return EditResult.InvalidValue;
         }

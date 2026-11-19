@@ -59,8 +59,8 @@ internal sealed class PandorasBoxInspector : InspectorSection<PandorasBox>
         }).ToList();
 
         panel.AddHeading("Artifacts");
-        var artifactItems = new[] { ("— none —", "") }.Concat(scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", a.Id))).ToList();
-        var artifacts = c.Artifacts.Append("").Select(id =>
+        var artifactItems = new[] { ("— none —", "") }.Concat(scenario.Artifacts.All.OrderBy(a => a.Tier).ThenBy(a => a.Name).Select(a => ($"{a.Name} ({a.Tier})", a.Id.Value))).ToList();
+        var artifacts = c.Artifacts.Select(a => a.Value).Append("").Select(id =>
         {
             var row = new HBoxContainer();
             panel.AddChild(row);
@@ -78,7 +78,7 @@ internal sealed class PandorasBoxInspector : InspectorSection<PandorasBox>
             {
                 var row = new HBoxContainer();
                 panel.AddChild(row);
-                var creature = row.AddChoice("", stackItems, stack?.Creature ?? "");
+                var creature = row.AddChoice("", stackItems, stack?.Creature.Value ?? "");
                 var count = row.AddSpin("×", stack?.Count ?? 1, 1, 99999);
                 changed.Add(apply => creature.Button.ItemSelected += _ => apply());
                 changed.Add(apply => count.ValueChanged += _ => apply());

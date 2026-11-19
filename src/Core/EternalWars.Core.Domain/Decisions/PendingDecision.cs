@@ -135,7 +135,7 @@ public enum GuardOffer
 }
 
 /// <summary>A neutral guard reacted to the hero (ADR-040). Accept = take the offer, decline = fight.</summary>
-public sealed record GuardEncounterDecision(HeroId Hero, MapObjectId Guard, GuardOffer Offer, string Creature, int Count)
+public sealed record GuardEncounterDecision(HeroId Hero, MapObjectId Guard, GuardOffer Offer, CreatureId Creature, int Count)
     : PendingDecision(Hero);
 
 /// <summary>

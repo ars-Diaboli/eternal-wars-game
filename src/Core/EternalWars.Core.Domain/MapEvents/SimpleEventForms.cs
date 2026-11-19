@@ -31,7 +31,7 @@ public sealed record SimpleRewards
 
     public IReadOnlyList<CreatureStack> Creatures { get; init; } = [];
 
-    public IReadOnlyList<string> Artifacts { get; init; } = [];
+    public IReadOnlyList<Common.ArtifactId> Artifacts { get; init; } = [];
 
     public static SimpleRewards None { get; } = new();
 

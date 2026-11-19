@@ -76,7 +76,7 @@ public class RankThreeSpellTests
 
         Assert.Equal(61, own.TopHealth);
         Assert.Equal(["light.bless"], own.Spells.Select(s => s.Spell));
-        Assert.Contains(battle.Events, e => e is BattleSpellDispelled { Spell: "death.weakness", By: "light.heal" });
+        Assert.Contains(battle.Events, e => e is BattleSpellDispelled { Spell.Value: "death.weakness", By: "light.heal" });
     }
 
     [Theory]

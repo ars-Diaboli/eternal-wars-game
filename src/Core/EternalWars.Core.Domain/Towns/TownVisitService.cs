@@ -63,7 +63,7 @@ public sealed class TownVisitService(GameState state, IEventPublisher events, Pr
 
         if (hero.HasSpellBook)
         {
-            var raised = offered.Distinct(StringComparer.Ordinal)
+            var raised = offered.Distinct()
                 .Where(id => state.Spells.TryGet(id, out var spell) && hero.RaiseSpell(id, MagicRules.MaxRank(hero, spell)))
                 .Select(id => new SpellRank(id, hero.Spells[id]))
                 .ToList();

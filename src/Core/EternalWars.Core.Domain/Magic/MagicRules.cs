@@ -47,7 +47,7 @@ public static class MagicRules
     /// Why the spells a map fixes for a town's guild (<see cref="Town.FixedGuildSpells"/>, map v30) are wrong, or null: each must be a known spell of
     /// the town's school, of a level the guild has, listed once, and no level may list more than the guild offers there (3 / 3 / 2 / 2).
     /// </summary>
-    public static string? GuildSpellsProblem(SpellCatalog spells, string townType, IReadOnlyList<string> fixedSpells)
+    public static string? GuildSpellsProblem(SpellCatalog spells, string townType, IReadOnlyList<Common.SpellId> fixedSpells)
     {
         foreach (var id in fixedSpells)
         {
@@ -67,7 +67,7 @@ public static class MagicRules
             }
         }
 
-        if (fixedSpells.GroupBy(s => s, StringComparer.Ordinal).FirstOrDefault(g => g.Count() > 1) is { } twice)
+        if (fixedSpells.GroupBy(s => s).FirstOrDefault(g => g.Count() > 1) is { } twice)
         {
             return $"{spells.Get(twice.Key).Name} is listed twice.";
         }
@@ -95,24 +95,24 @@ public static class MagicRules
             return [];
         }
 
-        var known = hero.Spells.Where(s => spells.Contains(s.Key)).ToDictionary(s => s.Key, s => (Spell: spells.Get(s.Key), Rank: s.Value), StringComparer.Ordinal);
+        var known = hero.Spells.Where(s => spells.Contains(s.Key)).ToDictionary(s => s.Key, s => (Spell: spells.Get(s.Key), Rank: s.Value));
         foreach (var spell in spells.All.Where(s => hero.Bonus.SpellLevels.Contains(s.Level)))
         {
             known.TryAdd(spell.Id, (spell, 1));
         }
 
-        foreach (var id in hero.Bonus.ScrollSpells.Where(spells.Contains))
+        foreach (var id in hero.Bonus.ScrollSpells.Where(s => spells.Contains(s)))
         {
             var spell = spells.Get(id);
             var rank = MaxRank(hero, spell);
             known[id] = (spell, Math.Max(rank, known.TryGetValue(id, out var already) ? already.Rank : 1));
         }
 
-        return known.Values.OrderBy(k => k.Spell.Id, StringComparer.Ordinal);
+        return known.Values.OrderBy(k => k.Spell.Id);
     }
 
     /// <summary>The spells the town's guild teaches now: its drawn spells up to the guild's level, then those of its built spell buildings.</summary>
-    public static IEnumerable<string> Offered(GameState state, Town town) =>
+    public static IEnumerable<Common.SpellId> Offered(GameState state, Town town) =>
         town.GuildSpells.Where(l => l.Key <= town.Level(BuiltInBuildings.MageGuild)).OrderBy(l => l.Key).SelectMany(l => l.Value)
             .Concat(SchoolBuildings(town).SelectMany(school => SchoolSpells(state, town, school).Take(town.Level(BuiltInBuildings.MageGuild))));
 
@@ -125,7 +125,7 @@ public static class MagicRules
     /// level 1 to 4, in level order; a guild of level L teaches the first L. They are drawn at game start from the game's random source like the
     /// guild's (<see cref="TownService.DrawGuilds"/>; the map does not fix them). A level without spells of the school is skipped; empty before the game starts.
     /// </summary>
-    public static IReadOnlyList<string> SchoolSpells(GameState state, Town town, string school) =>
+    public static IReadOnlyList<Common.SpellId> SchoolSpells(GameState state, Town town, string school) =>
         town.SchoolSpells.GetValueOrDefault(school) ?? [];
 
     /// <summary>Why the visiting hero cannot buy a spell book here, or null: it needs a mage guild, an own hero without a book, and 500 gold.</summary>

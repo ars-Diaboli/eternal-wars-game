@@ -84,7 +84,7 @@ public sealed record BattleTriggered(HeroId Attacker, HeroId Defender, bool IsAm
 
 /// <summary>A hero cast an adventure spell (ADR-120): it paid <paramref name="Cost"/> mana and 500 movement points; what the spell does follows.</summary>
 [SeenBy(Audience.Witnesses)]
-public sealed record AdventureSpellCast(HeroId Hero, string Spell, MapPosition? Target, int Cost, int Mana, int MovementPoints) : IEvent;
+public sealed record AdventureSpellCast(HeroId Hero, Common.SpellId Spell, MapPosition? Target, int Cost, int Mana, int MovementPoints) : IEvent;
 
 /// <summary>
 /// An area around <paramref name="Center"/> was revealed for <paramref name="Owner"/> (View Terrain, ADR-120; a map event's reveal): already

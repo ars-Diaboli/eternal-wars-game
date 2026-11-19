@@ -180,10 +180,10 @@ public partial class ExchangePanel : PanelContainer
                 };
                 var id = artifact?.Id;
                 button.Pressed += () => ClickDoll(hero.Id, id);
-                button.WithArtifactDrag(id is null ? null : new ArtifactInHand(hero.Id, id, true), artifact?.Name, new ArtifactPlace(hero.Id, Doll: true), Drop);
-                if (id is not null)
+                button.WithArtifactDrag(id is { } held ? new ArtifactInHand(hero.Id, held, true) : null, artifact?.Name, new ArtifactPlace(hero.Id, Doll: true), Drop);
+                if (id is { } shown)
                 {
-                    button.WithInfo(detailed => InfoSheets.Artifact(_session.State, id, detailed));
+                    button.WithInfo(detailed => InfoSheets.Artifact(_session.State, shown, detailed));
                 }
 
                 doll.AddChild(button);
@@ -255,19 +255,19 @@ public partial class ExchangePanel : PanelContainer
     }
 
     /// <summary>A paper-doll slot of <paramref name="hero"/>, wearing <paramref name="worn"/> or empty.</summary>
-    private void ClickDoll(HeroId hero, string? worn) => Click(new ArtifactPlace(hero, Doll: true), worn);
+    private void ClickDoll(HeroId hero, Core.Domain.Common.ArtifactId? worn) => Click(new ArtifactPlace(hero, Doll: true), worn);
 
     /// <summary>The backpack of <paramref name="hero"/>: one of its artifacts (<paramref name="carried"/>) or the "Into the backpack" button.</summary>
-    private void ClickBackpack(HeroId hero, string? carried) => Click(new ArtifactPlace(hero, Doll: false), carried);
+    private void ClickBackpack(HeroId hero, Core.Domain.Common.ArtifactId? carried) => Click(new ArtifactPlace(hero, Doll: false), carried);
 
     /// <summary>
     /// A click on an artifact place: with nothing picked, picks the artifact shown there; with one picked, moves it there (<see cref="Move"/>),
     /// or, when that would do nothing, picks the one shown there instead (or drops the pick).
     /// </summary>
-    private void Click(ArtifactPlace place, string? shown)
+    private void Click(ArtifactPlace place, Core.Domain.Common.ArtifactId? shown)
     {
         _picked = null;
-        var here = shown is null ? null : new ArtifactInHand(place.Hero, shown, place.Doll);
+        var here = shown is { } held ? new ArtifactInHand(place.Hero, held, place.Doll) : null;
         if (_artifact is { } picked && ArtifactDrag.Accepts(picked, place))
         {
             _artifact = null;

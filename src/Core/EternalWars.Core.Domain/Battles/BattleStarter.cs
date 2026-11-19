@@ -55,7 +55,7 @@ internal sealed class BattleStarter(GameState state, IEventPublisher events, Art
         Begin(attacker, battle, Stacks(attacker), Stacks(defender));
     }
 
-    public void BeginGuardBattle(Hero attacker, MapObject guard, string creature, int count)
+    public void BeginGuardBattle(Hero attacker, MapObject guard, Common.CreatureId creature, int count)
     {
         var neutral = new BattleParticipant(BattleSide.Defender, null, null, guard.Id, 0, 0, SkillLevel.None, IsComputer: true);
         var battle = Create(Participant(BattleSide.Attacker, attacker), neutral, guard.VisitPosition, isAmbush: false, guard.Definition.BattleTerrain);

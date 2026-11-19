@@ -63,8 +63,8 @@ public class TwoClickSpellTests
         Assert.Null(battle.Engine.Cast(Attacker, "arcana.teleport", own.Id, new CellPosition(8, 6)));
 
         Assert.Equal(new CellPosition(8, 6), own.Position);
-        Assert.Contains(battle.Events, e => e is BattleUnitTeleported { Spell: "arcana.teleport" } t && t.Unit == own.Id && t.From == new CellPosition(0, 0));
-        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell: "arcana.teleport" } c && c.Cell == new CellPosition(8, 6));
+        Assert.Contains(battle.Events, e => e is BattleUnitTeleported { Spell.Value: "arcana.teleport" } t && t.Unit == own.Id && t.From == new CellPosition(0, 0));
+        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell.Value: "arcana.teleport" } c && c.Cell == new CellPosition(8, 6));
         Assert.Same(own, battle.State.ActiveUnit);
     }
 
@@ -197,7 +197,7 @@ public class TwoClickSpellTests
 
         Assert.Equal(950, enemy.TotalHealth);
         Assert.Equal(925, own.TopHealth);
-        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell: "death.drain-life" } c && c.Second == own.Id);
+        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell.Value: "death.drain-life" } c && c.Second == own.Id);
         Assert.Contains(battle.Events, e => e is BattleUnitHealed { Healed: 25 } h && h.Unit == own.Id);
     }
 
@@ -261,7 +261,7 @@ public class TwoClickSpellTests
 
         BattleAi.Act(battle.State, battle.Engine);
 
-        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell: "death.drain-life" } c && c.Second == wounded.Id);
+        Assert.Contains(battle.Events, e => e is BattleSpellCast { Spell.Value: "death.drain-life" } c && c.Second == wounded.Id);
     }
 
     private static string? Refusal(TestBattle battle, string spell, BattleUnit unit, CellPosition? to) =>

@@ -620,7 +620,7 @@ public partial class EventsPanel : ScrollContainer
         var luck = rewards.AddSpin("Luck", 0, -3, 3);
         var creatureRow = Row();
         creatureRow.AddChild(new Label { Text = "Creatures" });
-        var creatures = scenario.Creatures.All.OrderBy(c => c.Town).ThenBy(c => c.Tier).ThenBy(c => c.Id, StringComparer.Ordinal).ToList();
+        var creatures = scenario.Creatures.All.OrderBy(c => c.Town).ThenBy(c => c.Tier).ThenBy(c => c.Id).ToList();
         var creature = creatureRow.AddOptions([.. creatures.Select(c => $"{c.Name} ({c.Town})")]);
         var count = creatureRow.AddSpin(null, 0, -9999, 9999);
         creatureRow.AddChild(new Label { Text = "Artifact" });
@@ -657,7 +657,7 @@ public partial class EventsPanel : ScrollContainer
                     "town" => SimpleEventForms.Town(eventName, [.. towns.Where(t => t.Box.ButtonPressed).Select(t => t.Id)], message.Text, (int)first!.Value,
                         (int)every!.Value, who, reward,
                         [.. buildings!.Text.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)],
-                        growth!.Value == 0 || lines.Count == 0 ? new Dictionary<string, int>() : new Dictionary<string, int> { [lines[line!.Selected].Id] = (int)growth.Value }),
+                        growth!.Value == 0 || lines.Count == 0 ? new Dictionary<string, int>() : new Dictionary<string, int> { [lines[line!.Selected].Id.Value] = (int)growth.Value }),
                     _ => new MapEventDefinition(eventName, MapEventKind.Quest, [])
                     {
                         Stages = [Quest(questKind!.Selected, (int)amount!.Value, questId!.Text.Trim(), message.Text, reward)],

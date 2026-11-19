@@ -16,7 +16,7 @@ namespace EternalWars.Core.Tests.Domain;
 /// <summary>The artifact re-draft's new effect kinds (ADR-111): sight, mana, creature health, growth, Necromancy, immunities, no retreat, the magic ones.</summary>
 public class ArtifactEffectTests
 {
-    private static Hero Outfit(GameState state, HeroId id, params string[] worn)
+    private static Hero Outfit(GameState state, HeroId id, params ArtifactId[] worn)
     {
         var hero = state.GetHero(id);
         hero.Artifacts.ReplaceWith(worn, [], state.Artifacts);
@@ -162,7 +162,7 @@ public class ArtifactEffectTests
 
         hero.HasSpellBook = true;
         var caster = BattleCaster.For(hero, state.Spells)!;
-        Assert.Equal(state.Spells.All.Where(s => s.Level <= 2).Select(s => s.Id).Order(StringComparer.Ordinal), caster.Spells.Select(s => s.Spell.Id));
+        Assert.Equal(state.Spells.All.Where(s => s.Level <= 2).Select(s => s.Id).Order(), caster.Spells.Select(s => s.Spell.Id));
         Assert.All(caster.Spells, s => Assert.Equal(1, s.Rank));
         Assert.Equal(25, caster.ElementBonus(state.Spells.Get("chaos.firebolt")));
     }

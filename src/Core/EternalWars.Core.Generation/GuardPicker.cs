@@ -37,7 +37,7 @@ public static class GuardPicker
             // Nothing fits: the creature whose own range is nearest to the stack the value asks for.
             var nearest = BaseCreatures(creatures)
                 .OrderBy(c => Distance(Needed(value, c), CountsFor(c.Tier)) > 0 ? 1 : 0).ThenBy(c => Error(value, c, Needed(value, c))).ThenBy(c => Distance(Needed(value, c), CountsFor(c.Tier)))
-                .ThenBy(c => c.Id, StringComparer.Ordinal).First();
+                .ThenBy(c => c.Id).First();
             var (min, max) = CountsFor(nearest.Tier);
             return (nearest, Math.Clamp(Needed(value, nearest), min, max));
         }
@@ -51,7 +51,7 @@ public static class GuardPicker
     private static List<(CreatureDefinition Creature, int Count)> Candidates(CreatureCatalog creatures, int value) =>
         BaseCreatures(creatures).Select(c => (Creature: c, Count: Needed(value, c)))
             .Where(c => c.Count >= CountsFor(c.Creature.Tier).Min && c.Count <= CountsFor(c.Creature.Tier).Max && Error(value, c.Creature, c.Count) <= MaxError)
-            .OrderBy(c => c.Creature.Id, StringComparer.Ordinal).ToList();
+            .OrderBy(c => c.Creature.Id).ToList();
 
     /// <summary>How far (relative) a stack of this many is from the wanted power; a stack of one dragon is no guard for 3000.</summary>
     private static double Error(int value, CreatureDefinition creature, int count) => Math.Abs((double)count * creature.FightValue - value) / value;
@@ -62,9 +62,9 @@ public static class GuardPicker
     /// <summary>The base forms (not upgrades) of the playable towns' creatures and the neutrals, in id order.</summary>
     private static IEnumerable<CreatureDefinition> BaseCreatures(CreatureCatalog creatures)
     {
-        var upgrades = creatures.All.Where(c => c.UpgradesTo is not null).Select(c => c.UpgradesTo!).ToHashSet(StringComparer.Ordinal);
+        var upgrades = creatures.All.Where(c => c.UpgradesTo is not null).Select(c => c.UpgradesTo!.Value).ToHashSet();
         return creatures.All.Where(c => !upgrades.Contains(c.Id) && (c.Town is null || Domain.Objects.BuiltInMapObjects.PlayableTowns.Contains(c.Town)))
-            .OrderBy(c => c.Id, StringComparer.Ordinal);
+            .OrderBy(c => c.Id);
     }
 
     private static int Needed(int value, CreatureDefinition creature) => Math.Max(1, (int)Math.Round((double)value / creature.FightValue));

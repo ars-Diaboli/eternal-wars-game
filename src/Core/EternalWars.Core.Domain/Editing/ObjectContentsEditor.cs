@@ -36,14 +36,14 @@ public sealed class ObjectContentsEditor
     }
 
     /// <summary>Fixes which artifact a pickup holds (null = rolled from its tier when the game starts).</summary>
-    public EditResult SetArtifactPickup(MapObjectId id, string? artifact)
+    public EditResult SetArtifactPickup(MapObjectId id, Common.ArtifactId? artifact)
     {
         if (_context.Object<ArtifactPickup>(id) is not { } pickup)
         {
             return EditResult.InvalidTarget;
         }
 
-        if (artifact is not null && !Scenario.Artifacts.Contains(artifact))
+        if (artifact is { } chosen && !Scenario.Artifacts.Contains(chosen))
         {
             return EditResult.InvalidValue;
         }
@@ -168,7 +168,7 @@ public sealed class ObjectContentsEditor
     }
 
     /// <summary>A shrine's spell (ADR-120): a spell of the shrine's level, or null for one drawn when the game starts.</summary>
-    public EditResult SetShrineSpell(MapObjectId id, string? spell)
+    public EditResult SetShrineSpell(MapObjectId id, Common.SpellId? spell)
     {
         if (_context.Object<Shrine>(id) is not { } shrine)
         {
