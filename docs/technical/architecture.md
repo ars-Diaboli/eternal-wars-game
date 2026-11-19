@@ -277,7 +277,7 @@ into Core.Domain; `data/templates` into Core.Data. Apps use the embedded copy (`
   `Directory.Build.props` and would insert `net8.0`).
 - View composition (`Godot.Shared/Map`): `MapViewContext` (viewing player, shown level; raises a C# event) →
   `AdventureWorldView` composes per level `AdventureMapView` (the ground: meshes of 32 × 32 tiles, ADR-207, each tile 2 × 2 squares on the smooth surface, ADR-209, splat-shaded by `TerrainSplat` /
-  `shaders/terrain_splat.gdshader`, the tile grid as its overlay, `MapViewContext.ShowGrid`; ADR-183, height blend ADR-200), `MapObjectsView` (viewer's `ObjectMemory`, or live objects
+  `shaders/terrain_splat.gdshader`, the tile grid as its overlay, `MapViewContext.ShowGrid`; ADR-183, height blend ADR-200, adventure-only pictures and normal / roughness / occlusion maps ADR-240), `MapObjectsView` (viewer's `ObjectMemory`, or live objects
   without a viewer; object cells as one `MultiMesh` per box size, captions nearby or under the pointer, `MapViewContext.Pointed`, ADR-208), `FogView`, `HeroView`s, `PathPreview`. Game and editor both use it. Panels live in `Godot.UI`
   (`Hud`, `Setup`, `Editor`, `Battle`, `Debugging`). The game's adventure HUD and its screens are one `AdventureHud`; the map's and the
   battle scene's clicks and keys are `AdventureInputController` and `BattleInputController` (deployment drags: `DeploymentDragController`);

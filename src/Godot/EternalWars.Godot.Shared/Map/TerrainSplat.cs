@@ -8,10 +8,18 @@ namespace EternalWars.Godot.Shared.Map;
 /// one texture array, built once and shared by every level and map; which terrain a tile has is read from a map-sized texture
 /// (<see cref="TerrainMap"/>), so painting a tile is one texel, not a new mesh. A layer's alpha is its ground's height (bright = raised),
 /// which the shader's height blend reads: from <c>&lt;terrain&gt;_height.png</c> when there is one, else from the picture's brightness.
+/// A picture in <c>textures/terrain/adventure/</c> is used here instead of the shared one (the battlefield keeps that), and a picture with
+/// <c>_normal</c>, <c>_roughness</c> or <c>_ao</c> maps beside it gets a layer of a second array: normal XY, roughness, ambient occlusion.
 /// </summary>
 internal static class TerrainSplat
 {
     private const string ShaderPath = "res://shared/shaders/terrain_splat.gdshader";
+
+    /// <summary>Pictures only the adventure map uses, in place of the shared ones of the same name.</summary>
+    private const string AdventureFolder = "res://shared/textures/terrain/adventure/";
+
+    /// <summary>A flat normal, the ground's usual roughness (0.95) and no occlusion: the detail of a picture without maps.</summary>
+    private static readonly Color FlatDetail = Color.Color8(128, 128, 242, 255);
 
     /// <summary>Every layer has this size (a texture array needs one size); other pictures are resized.</summary>
     private const int LayerSize = 1024;
@@ -32,6 +40,8 @@ internal static class TerrainSplat
         material.SetShaderParameter("albedo_layers", layers.Textures);
         material.SetShaderParameter("layer_of", layers.LayerOf);
         material.SetShaderParameter("tint_of", layers.TintOf);
+        material.SetShaderParameter("detail_layers", layers.Details);
+        material.SetShaderParameter("detail_of", layers.DetailOf);
         material.SetShaderParameter("uv_scale", 1f / worldUnitsPerRepeat);
         return material;
     }
@@ -58,12 +68,17 @@ internal static class TerrainSplat
         white.Fill(new Color(1f, 1f, 1f, 0.5f));
         white.GenerateMipmaps();
         var images = new global::Godot.Collections.Array<Image> { white };
-        var layerOfPath = new Dictionary<string, int>(StringComparer.Ordinal);
+        var flat = Image.CreateEmpty(LayerSize, LayerSize, false, Image.Format.Rgba8);
+        flat.Fill(FlatDetail);
+        flat.GenerateMipmaps();
+        var details = new global::Godot.Collections.Array<Image> { flat };
+        var layerOfPath = new Dictionary<string, (int Layer, int Detail)>(StringComparer.Ordinal);
         var layerOf = new int[MaxTerrains];
+        var detailOf = new int[MaxTerrains];
         var tintOf = Enumerable.Repeat(Colors.Magenta, MaxTerrains).ToArray();
         foreach (var terrain in Enum.GetValues<TerrainType>())
         {
-            var path = AdventureMapView.TexturePath(terrain);
+            var path = AdventurePath(AdventureMapView.TexturePath(terrain));
             if (!ResourceLoader.Exists(path))
             {
                 tintOf[(int)terrain] = Palette.ForTerrain(terrain);
@@ -72,23 +87,36 @@ internal static class TerrainSplat
 
             if (!layerOfPath.TryGetValue(path, out var layer))
             {
-                layer = images.Count;
+                layer = (images.Count, 0);
                 images.Add(LayerImage(path));
+                if (DetailImage(path) is { } detail)
+                {
+                    layer.Detail = details.Count;
+                    details.Add(detail);
+                }
+
                 layerOfPath[path] = layer;
             }
 
-            layerOf[(int)terrain] = layer;
+            layerOf[(int)terrain] = layer.Layer;
+            detailOf[(int)terrain] = layer.Detail;
             tintOf[(int)terrain] = AdventureMapView.Tint(terrain);
         }
 
         var textures = new Texture2DArray();
         var error = textures.CreateFromImages(images);
+        var detailTextures = new Texture2DArray();
+        if (detailTextures.CreateFromImages(details) is var detailError && detailError != Error.Ok)
+        {
+            error = detailError;
+        }
+
         if (error != Error.Ok)
         {
             GD.PushError($"The terrain textures could not be put together: {error}");
         }
 
-        return new Layers(textures, layerOf, tintOf);
+        return new Layers(textures, layerOf, tintOf, detailTextures, detailOf);
     }
 
     /// <summary>The picture in RGB and its height in A.</summary>
@@ -113,8 +141,47 @@ internal static class TerrainSplat
         return image;
     }
 
+    /// <summary>
+    /// Normal XY in RG, roughness in B, ambient occlusion in A, from <c>&lt;picture&gt;_normal</c>, <c>_roughness</c> and <c>_ao</c>; a missing
+    /// one is flat, 0.95 and none. Null when the picture has none of them.
+    /// </summary>
+    private static Image? DetailImage(string path)
+    {
+        var normal = Load(Suffixed(path, "normal"));
+        var roughness = Load(Suffixed(path, "roughness"));
+        var occlusion = Load(Suffixed(path, "ao"));
+        if (normal is null && roughness is null && occlusion is null)
+        {
+            return null;
+        }
+
+        var rgba = new byte[LayerSize * LayerSize * 4];
+        for (var i = 0; i < LayerSize * LayerSize; i++)
+        {
+            rgba[i * 4] = normal?[i * 3] ?? (byte)FlatDetail.R8;
+            rgba[(i * 4) + 1] = normal?[(i * 3) + 1] ?? (byte)FlatDetail.G8;
+            rgba[(i * 4) + 2] = roughness?[i * 3] ?? (byte)FlatDetail.B8;
+            rgba[(i * 4) + 3] = occlusion?[i * 3] ?? (byte)FlatDetail.A8;
+        }
+
+        var image = Image.CreateFromData(LayerSize, LayerSize, false, Image.Format.Rgba8, rgba);
+        image.GenerateMipmaps();
+        return image;
+
+        static byte[]? Load(string path) => ResourceLoader.Exists(path) ? LoadSquare(path).GetData() : null;
+    }
+
+    /// <summary><c>textures/terrain/grass.png</c> → <c>textures/terrain/adventure/grass.png</c> when that exists.</summary>
+    private static string AdventurePath(string path)
+    {
+        var adventure = AdventureFolder + path[(path.LastIndexOf('/') + 1)..];
+        return ResourceLoader.Exists(adventure) ? adventure : path;
+    }
+
     /// <summary><c>textures/terrain/sand.png</c> → <c>textures/terrain/sand_height.png</c>.</summary>
-    private static string HeightPath(string albedoPath) => albedoPath[..^".png".Length] + "_height.png";
+    private static string HeightPath(string albedoPath) => Suffixed(albedoPath, "height");
+
+    private static string Suffixed(string albedoPath, string map) => $"{albedoPath[..^".png".Length]}_{map}.png";
 
     private static Image LoadSquare(string path)
     {
@@ -178,5 +245,5 @@ internal static class TerrainSplat
         }
     }
 
-    private sealed record Layers(Texture2DArray Textures, int[] LayerOf, Color[] TintOf);
+    private sealed record Layers(Texture2DArray Textures, int[] LayerOf, Color[] TintOf, Texture2DArray Details, int[] DetailOf);
 }

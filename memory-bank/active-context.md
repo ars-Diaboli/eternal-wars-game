@@ -8,10 +8,10 @@ the owner's missing-mechanics picks, the arena and LAN multiplayer are built. Th
 plan is in [docs/papers](../docs/papers/refactoring-plan-2026-11.md)). Detail: [roadmap.md](roadmap.md).
 
 ## Last work
+- ADR-240 (presentation): the splat reads adventure-only pictures (`textures/terrain/adventure/`) and `_normal` / `_roughness` / `_ao`
+  maps beside a picture; no terrain has them yet (the owner's PBR grass set was tried and dropped).
 - ADR-239 (code health): every smoke scenario has its own seed (`game-battle-control` passes); `CheckRefusals` is a runtime switch the
   test project sets; map objects hand out read-only collections (`MapObjectCollectionsTests`).
-- ADR-238 (code health): map-event answers take their decision through `DecisionSteps`; a Pandora's Box queues its hero event itself
-  (`MapEventState.QueueHeroEvent`), and `PandorasBoxOpened` no longer carries it.
 
 ## Next
 1. A person's full game on Ember March (the Phase 3 exit's last check).

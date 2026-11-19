@@ -27,6 +27,7 @@
 | [210](#adr-210-the-adventure-maps-action-buttons-are-a-3--3-grid-in-a-corner-of-their-own-with-a-spell-book-adr-156-adr-191-adr-204-owner-notes-2026-11-18) | The adventure map's action buttons are a 3 × 3 grid in a corner of their own, with a spell book (ADR-156, ADR-191, ADR-204, owner notes, 2026-11-18) | implemented |
 | [211](#adr-211-faction-crests-stand-beside-a-faction-wherever-the-ui-names-one-owners-heraldry-sheets-2026-11-18) | Faction crests stand beside a faction wherever the UI names one (owner's heraldry sheets, 2026-11-18) | — |
 | [212](#adr-212-terrain-borders-blend-over-two-thirds-of-a-tile-a-picture-repeats-every-16-tiles-with-the-repeat-hidden-owner-2026-11-18) | Terrain borders blend over two thirds of a tile; a picture repeats every 16 tiles with the repeat hidden (owner, 2026-11-18) | — |
+| [240](#adr-240-the-splat-reads-adventure-only-pictures-and-normal-roughness-and-occlusion-maps-owner-adr-183-2026-11-19) | The splat reads adventure-only pictures and normal, roughness and occlusion maps (owner, ADR-183, 2026-11-19) | implemented |
 
 
 ### ADR-008: HoMM-inspired, not a clone; dark-fantasy realistic presentation
@@ -445,3 +446,18 @@ map format changes. Changes ADR-183's and ADR-207's mesh (a vertex per corner an
 - **Repeat hidden**: the ground is cut into cells 7 tiles wide (`variation_cell`, along the same wandering lines, off the tile edges);
   each cell shows each terrain's picture shifted by a random amount of its own, and neighbouring cells meet with the same height blend over
   the same band. A pixel inside a cell reads each terrain once, near a cell border twice, at a corner four times.
+
+### ADR-240: The splat reads adventure-only pictures and normal, roughness and occlusion maps (owner, ADR-183, 2026-11-19)
+**Status**: implemented. View only: no rule, save, map format or LAN change.
+
+- **Adventure-only pictures**: a picture in `textures/terrain/adventure/` is the adventure map's in place of the shared one of the same
+  name; the battlefield keeps the shared one. No picture uses it yet: the owner tried a 1024 px PBR grass set (albedo, height, normal,
+  roughness, occlusion) and dropped it; the support stays for the next set.
+- **Detail maps**: beside a picture, `<name>_normal.png`, `_roughness.png` and `_ao.png` (any of them) give it a layer of a second texture
+  array (`detail_layers`: normal XY, roughness, occlusion; `detail_of` per terrain, 0 for none). The splat mixes the detail with the same
+  height-blend shares as the colour. The normal map is read from above only (OpenGL convention, green up the picture) and added to the
+  mesh's normal; steep sides stay flat. A terrain without maps is flat, roughness 0.95 (as before) and unoccluded.
+- **Strength** (owner: the first cut looked flat): the map is lit almost only by the sun, and Godot's `AO` darkens only ambient light, so
+  the occlusion also darkens direct light (`occlusion_light_affect` 1) and is deepened (`occlusion_power` 2); the normal map is bent
+  harder (`normal_strength` 2.5), because a high sun shows little of a gentle one. *(placeholders, tune by eye)*
+- A metallic map is not read: ground is not metal, and the shader's default is 0.

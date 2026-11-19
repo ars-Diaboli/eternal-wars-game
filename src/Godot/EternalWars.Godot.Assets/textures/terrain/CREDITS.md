@@ -21,5 +21,8 @@ falls back to the flat `Palette` colour. Snow and ice have no texture yet.
 | water.png | ganges_river_pebbles (Poly Haven), tinted blue in the material | CC0 |
 | beach.png | coast_land_rocks_01 (Poly Haven) | CC0 |
 
+Pictures in an `adventure/` folder here (none yet) are the adventure map's in place of the shared ones of the same name (the battlefield keeps those), with
+`_normal`, `_roughness`, `_ao` and `_height` maps beside them (ADR-240).
+
 Shallow water, rocky ground, cursed lands and ice borrow the water, rough, wasteland and snow textures with a
 tint (`AdventureMapView.TextureOf`); ice and snow have no texture yet, so they use their palette colours.
